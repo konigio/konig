@@ -1,0 +1,192 @@
+package io.konig.core.impl;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.openrdf.model.BNode;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.ValueFactoryImpl;
+
+import io.konig.core.Edge;
+import io.konig.core.Graph;
+import io.konig.core.Transaction;
+import io.konig.core.TransactionWorker;
+import io.konig.core.Traversal;
+import io.konig.core.Vertex;
+
+/**
+ * An in-memory Graph
+ * @author Greg
+ *
+ */
+public class MemoryGraph implements Graph, Transaction {
+	
+	private ValueFactory valueFactory = new ValueFactoryImpl();
+	
+	private Map<Resource, Vertex> vertexMap = new LinkedHashMap<Resource, Vertex>();
+	private List<Edge> txn;
+	private List<Edge> sink;
+	private Transaction.Status status = Transaction.Status.CLOSED;
+	private List<TransactionWorker> workerList = new ArrayList<TransactionWorker>();
+
+	public Vertex vertex(Resource id) {
+		
+		if (id instanceof ResourceVertex) {
+			ResourceVertex rv = (ResourceVertex) id;
+			Vertex v = rv.getVertex();
+			if (v.getGraph() == this) {
+				return v;
+			}
+		}
+		
+		Vertex v = vertexMap.get(id);
+		if (v == null) {
+			v = new VertexImpl(this, id);
+			vertexMap.put(id, v);
+		}
+		return v;
+	}
+
+	public Vertex getVertex(Resource id) {
+		return vertexMap.get(id);
+	}
+
+	public Vertex vertex(String id) {
+		Resource node = createResource(id);
+		return vertex(node);
+	}
+	
+	private Resource createResource(String id) {
+		return id.startsWith("_:") ?
+			valueFactory.createBNode(id.substring(2)) :
+			valueFactory.createURI(id);
+	}
+
+	public Vertex getVertex(String id) {
+		
+		return getVertex(createResource(id));
+	}
+	
+	private ResourceVertex wrap(Resource object) {
+
+		if (object instanceof ResourceVertex) {
+			ResourceVertex rv = (ResourceVertex) object;
+			Vertex v = rv.getVertexImpl();
+			if (v.getGraph() == this) {
+				return rv;
+			}
+			object = v.getId();
+		}
+		
+		if (object instanceof URI) {
+			Vertex objectVertex = vertex((Resource) object);
+			return new URIVertex(object.stringValue(), objectVertex);
+		}
+		if (object instanceof BNode) {
+			Vertex objectVertex = vertex((BNode)object);
+			return new BNodeVertex(object.stringValue(), objectVertex);
+		}
+		
+		return null;
+		
+	}
+
+	public Edge edge(Resource subject, URI predicate, Value object) {
+		
+		ResourceVertex s = (ResourceVertex) wrap(subject);
+		ResourceVertex o = null;
+		if (object instanceof Resource) {
+			object = o = wrap((Resource)object);
+		}
+		
+		
+		Edge e = new EdgeImpl(s, predicate, object);
+		s.getVertexImpl().add(e);
+		
+		if (o != null) {
+			o.getVertexImpl().add(e);
+		}
+		if (sink != null) {
+			sink.add(e);
+		}
+		
+		return e;
+	}
+
+	public Edge edge(Vertex subject, URI predicate, Vertex object) {
+		return edge(subject.getId(), predicate, object.getId());
+	}
+
+	public Collection<Vertex> vertices() {
+		return vertexMap.values();
+	}
+
+	public Traversal v(Resource subject) {
+		return vertex(subject).asTraversal();
+	}
+
+	public Transaction tx() {
+		return this;
+	}
+
+	public void open() {
+		txn = sink = new ArrayList<Edge>();
+		status = Transaction.Status.OPEN;
+		
+	}
+
+	public Status getStatus() {
+		return status;
+	}
+
+	public void commit() {
+		if (status != Status.OPEN) {
+			// We only allow commit when a transaction is open.
+			// Consider throwing an exception here.
+			return;
+		}
+		status = Status.VOTE;
+		
+		sink = new ArrayList<Edge>();
+		
+		while (status == Status.VOTE) {
+			for (TransactionWorker worker : workerList) {
+				worker.commit(this);
+				if (status == Status.ROLLBACK) {
+					break;
+				}
+			}
+			if (sink.isEmpty() && status==Status.VOTE) {
+				status = Status.COMMIT;
+			} else {
+				txn = sink;
+				sink = new ArrayList<Edge>();
+			}
+		}
+		
+	}
+
+	public void rollback() {
+		status = Status.ROLLBACK;
+	}
+
+	public List<Edge> asList() {
+		return txn;
+	}
+
+	public void addWorker(TransactionWorker worker) {
+		workerList.add(worker);
+	}
+
+	public void removeWorker(TransactionWorker worker) {
+		workerList.remove(worker);
+	}
+	
+
+}
