@@ -1,7 +1,5 @@
 package io.konig.core.io;
 
-import static org.junit.Assert.fail;
-
 import java.io.StringWriter;
 
 import org.junit.Test;

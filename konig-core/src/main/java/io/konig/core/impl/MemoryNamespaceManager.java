@@ -9,7 +9,7 @@ import org.openrdf.model.impl.NamespaceImpl;
 import io.konig.core.NamespaceManager;
 
 public class MemoryNamespaceManager implements NamespaceManager {
-	private Map<String, Namespace> map = new HashMap<String, Namespace>();
+	protected Map<String, Namespace> map = new HashMap<String, Namespace>();
 
 	public Namespace findByPrefix(String prefix) {
 		return map.get(prefix);
@@ -28,5 +28,6 @@ public class MemoryNamespaceManager implements NamespaceManager {
 	public NamespaceManager add(String prefix, String namespace) {
 		return add(new NamespaceImpl(prefix, namespace));
 	}
+	
 
 }

@@ -5,13 +5,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.StringWriter;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 
-import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -262,7 +260,6 @@ public class GraphReadWriteTest extends KonigTest {
 		GraphBuffer buffer = new GraphBuffer();
 		byte[] data = buffer.writeGraph(graph, context);
 		
-		Graph g = new MemoryGraph();
 		
 		StringWriter writer = new StringWriter();
 		
