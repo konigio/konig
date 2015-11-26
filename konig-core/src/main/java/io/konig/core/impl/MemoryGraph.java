@@ -187,6 +187,22 @@ public class MemoryGraph implements Graph, Transaction {
 	public void removeWorker(TransactionWorker worker) {
 		workerList.remove(worker);
 	}
+
+	public Edge add(Edge edge) {
+		return edge(edge.getSubject(), edge.getPredicate(), edge.getObject());
+	}
+
+	public void remove(Edge edge) {
+		
+		Vertex subject = vertex(edge.getSubject());
+		subject.remove(edge);
+		
+		if (edge.getObject() instanceof Resource) {
+			Vertex object = vertex((Resource)edge.getObject());
+			object.remove(edge);
+		}
+		
+	}
 	
 
 }

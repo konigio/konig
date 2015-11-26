@@ -2,7 +2,15 @@ package io.konig.core;
 
 import org.openrdf.model.URI;
 
-public class Term {
+public class Term implements Comparable<Term>{
+	public static enum Kind {
+		NAMESPACE,
+		CLASS,
+		PROPERTY,
+		INDIVIDUAL,
+		ANY
+	}
+	
 	private String key;
 	private String id;
 	private String language;
@@ -10,6 +18,14 @@ public class Term {
 	private URI expandedType;
 	private URI expandedId;
 	private int index=-1;
+	private Kind kind = Kind.ANY;
+	
+	
+	public Term(String key, String id, Kind kind) {
+		this.key = key;
+		this.id = id;
+		this.kind = kind;
+	}
 	
 	public Term(String key, String id, String language, String type) {
 		this.key = key;
@@ -24,6 +40,14 @@ public class Term {
 
 	public String getId() {
 		return id;
+	}
+	
+	public Kind getKind() {
+		return kind;
+	}
+	
+	public void setKind(Kind kind) {
+		this.kind = kind;
 	}
 
 	public String getLanguage() {
@@ -46,7 +70,7 @@ public class Term {
 		return expandedId;
 	}
 
-	void setExpandedId(URI expandedId) {
+	public void setExpandedId(URI expandedId) {
 		this.expandedId = expandedId;
 	}
 
@@ -89,6 +113,16 @@ public class Term {
 		return expandedId!=null ? expandedId.stringValue() :
 			id != null ? id :
 			null;
+	}
+
+	public int compareTo(Term other) {
+		
+		int delta = kind.ordinal() - other.kind.ordinal();
+		if (delta == 0) {
+			delta = key.compareTo(other.key);
+		}
+		
+		return delta;
 	}
 
 }

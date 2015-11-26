@@ -1,5 +1,6 @@
 package io.konig.core.impl;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.LiteralImpl;
 
@@ -30,6 +31,25 @@ public class KonigLiteral extends LiteralImpl {
 			return stringValue() + "@" + language;
 		}
 		return stringValue();
+	}
+	
+	public boolean equals(Object other) {
+		if (other instanceof Literal) {
+			
+			Literal b = (Literal) other;
+			
+			String value = this.stringValue();
+			URI type = this.getDatatype();
+			String language = this.getLanguage();
+			
+			return 
+				value.equals(b.stringValue()) &&
+				(type==null || type.equals(b.getDatatype())) &&
+				(language==null || language.equals(b.getLanguage()));
+			
+			
+		}
+		return false;
 	}
 
 }

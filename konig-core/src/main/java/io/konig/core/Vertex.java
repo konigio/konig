@@ -42,5 +42,7 @@ public interface Vertex {
 	
 	Traversal asTraversal();
 	
+	void remove(Edge edge);
+	
 	
 }

@@ -62,5 +62,18 @@ public class VertexImpl implements Vertex {
 		return new TraversalImpl(this);
 	}
 
+	public void remove(Edge edge) {
+		
+		if (edge.getSubject().equals(id)) {
+			Set<Edge> out = outProperty(edge.getPredicate());
+			out.remove(edge);
+		}
+		if (edge.getObject().equals(id)) {
+			Set<Edge> in = inProperty(edge.getPredicate());
+			in.remove(edge);
+		}
+		
+	}
+
 
 }

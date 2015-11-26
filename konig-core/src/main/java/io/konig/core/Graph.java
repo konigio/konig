@@ -52,6 +52,14 @@ public interface Graph {
 	
 	Edge edge(Vertex subject, URI predicate, Vertex object);
 	
+	Edge add(Edge edge);
+	
+	/**
+	 * Remove the specified edge from this graph
+	 * @param edge The edge to be removed.
+	 */
+	void remove(Edge edge);
+	
 	Traversal v(Resource subject);
 	
 	/**
