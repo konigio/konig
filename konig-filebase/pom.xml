@@ -8,22 +8,23 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   
-  <artifactId>konig-core</artifactId>
+  <artifactId>konig-filebase</artifactId>
   <packaging>jar</packaging>
 
-  <name>konig-core</name>
-  <url>http://maven.apache.org</url>
+  <name>Konig File Storage</name>
+  <url>http://www.konig.io</url>
 
+  <description>
+  	A file-based datastore for named graphs and other resources. 
+	This is intended to be used for testing and debugging, not in a
+	production setting
+  </description>
+  
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <dependencies>
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-			<version>1.10</version>
-		</dependency>        
 	<dependency>
 		<groupId>org.openrdf.sesame</groupId>
 		<artifactId>sesame-model</artifactId>
@@ -36,11 +37,6 @@
 		<version>${sesame.version}</version>
 	</dependency>
 	
-	<dependency>
-	    <groupId>com.github.jsonld-java</groupId>
-	    <artifactId>jsonld-java</artifactId>
-	    <version>${jsonld-java.version}</version>
-	</dependency>
 	
 	<dependency>
 		<groupId>org.slf4j</groupId>

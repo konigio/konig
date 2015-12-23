@@ -12,8 +12,7 @@ import io.konig.core.Graph;
 
 public class GraphReader extends BaseGraphReader {
 	
-	private Graph graph;
-	
+	private Graph graph;	
 	
 
 	/**

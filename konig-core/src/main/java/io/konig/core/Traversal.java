@@ -88,6 +88,16 @@ public interface Traversal {
 	Value firstValue(URI predicate);
 	
 	/**
+	 * Iterate over the vertices in this traversal, get the object of the first outgoing edge having the specified predicate,
+	 * and return it as a Vertex.
+	 * @param predicate The predicate for the Vertex requested
+	 * @return The Vertex requested, or null if no such Vertex exists.
+	 */
+	Vertex firstVertex(URI predicate);
+	
+	URI firstIRI(URI predicate);
+	
+	/**
 	 * Move from the current set of vertices in this traversal to a new set of vertices by following outgoing edges
 	 * labeled by a given predicate.
 	 * 
@@ -95,6 +105,21 @@ public interface Traversal {
 	 * @return A new Traversal encapsulating the vertices at the other end of the outgoing edges with the specified predicate.
 	 */
 	Traversal out(URI predicate);
+	
+	/**
+	 * Move from the current set of vertices in this traversal to a new set of vertices by
+	 * following incoming edges labeled by a given predicate.
+	 * 
+	 * @param predicate The label for the edges to be traversed.
+	 * @return A new Traversal encapsulating the vertices at the other end of the incoming edges.
+	 */
+	Traversal in(URI predicate);
+	
+	/**
+	 * From the current set of vertices in this traversal, get the first one.
+	 * @return The first vertex in this traversal.
+	 */
+	Vertex firstVertex();
 	
 
 }

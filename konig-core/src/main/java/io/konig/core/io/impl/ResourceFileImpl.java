@@ -57,4 +57,16 @@ public class ResourceFileImpl implements ResourceFile {
 		return (Enumeration<String>) properties.propertyNames();
 	}
 
+	@Override
+	public ResourceFile replaceContent(byte[] entityBody) {
+		Properties p = new Properties();
+		Enumeration<String> sequence = propertyNames();
+		while (sequence.hasMoreElements()) {
+			String key = sequence.nextElement();
+			p.setProperty(key, getProperty(key));
+			
+		}
+		return new ResourceFileImpl(entityBody, p);
+	}
+
 }

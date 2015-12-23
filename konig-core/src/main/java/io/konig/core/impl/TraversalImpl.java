@@ -109,6 +109,23 @@ public class TraversalImpl implements Traversal {
 	public Traversal addLiteral(URI property, String value) {
 		return addProperty(property, literal(value));
 	}
+
+	@Override
+	public URI firstIRI(URI predicate) {
+		for (Object e : list) {
+			if (e instanceof Vertex) {
+				Vertex v = (Vertex)e;
+				Resource r = v.getId();
+				if (r instanceof URI) {
+					return (URI) r;
+				}
+			}
+			if (e instanceof URI) {
+				return (URI) e;
+			}
+		}
+		return null;
+	}
 	
 	public Value firstValue(URI predicate) {
 		for (Object e : list) {
@@ -166,6 +183,54 @@ public class TraversalImpl implements Traversal {
 		}
 		
 		return result;
+	}
+	@Override
+	public Vertex firstVertex(URI predicate) {
+
+		for (Object e : list) {
+			
+			if (e instanceof Vertex) {
+				Vertex v = (Vertex)e;
+				
+				Set<Edge> set = v.outProperty(predicate);
+				for (Edge edge : set) {
+					Value object = edge.getObject();
+					if (object instanceof Resource) {
+						return graph.vertex((Resource)object);
+					}
+				}
+				
+			}
+		}
+		return null;
+	}
+	@Override
+	public Traversal in(URI predicate) {
+		TraversalImpl result = new TraversalImpl(graph);
+		List<Object> sink = result.list;
+		for (Object e : list) {
+			if (e instanceof Vertex) {
+				Vertex v = (Vertex) e;
+
+				Set<Edge> set = v.inProperty(predicate);
+				for (Edge edge : set) {
+					Resource subject = edge.getSubject();
+					sink.add(graph.vertex(subject));
+				}
+			}
+		}
+		
+		return result;
+	}
+	@Override
+	public Vertex firstVertex() {
+		
+		for (Object obj : list) {
+			if (obj instanceof Vertex) {
+				return (Vertex) obj;
+			}
+		}
+		return null;
 	}
 	
 	

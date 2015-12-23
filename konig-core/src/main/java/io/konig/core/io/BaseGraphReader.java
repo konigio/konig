@@ -196,7 +196,13 @@ abstract public class BaseGraphReader {
 		int token = peekToken();
 		
 		switch (token) {
-
+/* This block was added in haste to work around a bug. TODO: Confirm this makes sense */
+		case TERM :
+		case QNAME: 
+		case IRI:
+			return readIRI();
+/* End questionable block */
+			
 		case RESOURCE 		: return resourceReference();
 		case BNODE    		: return readBNode();
 		case PLAIN			: return readPlainLiteral();

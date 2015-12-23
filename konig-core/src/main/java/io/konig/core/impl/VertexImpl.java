@@ -24,7 +24,9 @@ public class VertexImpl implements Vertex {
 
 	public VertexImpl(Graph graph, Resource id) {
 		this.graph = graph;
-		this.id = id;
+		this.id = id instanceof URI ? 
+			new URIVertex(id.stringValue(), this) : 
+			new BNodeVertex(id.stringValue(), this);
 	}
 
 	public Resource getId() {
@@ -73,6 +75,37 @@ public class VertexImpl implements Vertex {
 			in.remove(edge);
 		}
 		
+	}
+	
+	public String toString() {
+		StringBuffer buffer = new StringBuffer();
+		
+		buffer.append(id.stringValue());
+		buffer.append('\n');
+		Set<Entry<URI,Set<Edge>>> out = outEdges();
+		for (Entry<URI,Set<Edge>> entry : out) {
+			URI predicate = entry.getKey();
+			Set<Edge> edges = entry.getValue();
+			buffer.append("  ");
+			buffer.append(predicate.stringValue());
+			if (edges.size()==1) {
+				buffer.append("  ");
+				String value = edges.iterator().next().getObject().stringValue();
+				buffer.append(value);
+				buffer.append('\n');
+			} else {
+				buffer.append('\n');
+				for (Edge e : edges) {
+					String value = e.getObject().stringValue();
+					buffer.append("    ");
+					buffer.append(value);
+					buffer.append('\n');
+				}
+			}
+		}
+		
+		
+		return buffer.toString();
 	}
 
 

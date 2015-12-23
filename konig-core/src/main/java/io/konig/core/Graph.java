@@ -9,6 +9,18 @@ import org.openrdf.model.Value;
 public interface Graph {
 	
 	/**
+	 * Get the identifier this Graph as a named graph.
+	 * @return The identifier for this Graph or null if it has no identifier.
+	 */
+	Resource getId();
+	
+	/**
+	 * Set the identifier for this Graph as a named graph.
+	 * @param id The identifier for this Graph
+	 */
+	void setId(Resource id);
+	
+	/**
 	 * A convenience method that gets or creates a Vertex from a string IRI identifier.
 	 * @param id The IRI for the vertex that is to be returned.
 	 * @return The Vertex with the specified IRI.  If no such vertex exists in this Graph, it will be created.
@@ -55,11 +67,26 @@ public interface Graph {
 	Edge add(Edge edge);
 	
 	/**
+	 * Add all the outgoing statements from the given vertex.
+	 * If the object of any outgoing statement is a BNode, then recursively add its 
+	 * outgoing statements also.
+	 * 
+	 * @param vertex The vertex whose outgoing statements will be added to this graph.
+	 */
+	void add(Vertex vertex);
+	
+	/**
 	 * Remove the specified edge from this graph
 	 * @param edge The edge to be removed.
 	 */
 	void remove(Edge edge);
 	
+	/**
+	 * Return a traversal for the specified subject.
+	 * A vertex for this subject will be added to the graph as a side-effect if it does not already exist.
+	 * @param subject
+	 * @return
+	 */
 	Traversal v(Resource subject);
 	
 	/**
