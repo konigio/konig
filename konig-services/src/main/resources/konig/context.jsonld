@@ -1,0 +1,57 @@
+{
+
+	"@context" : {
+		"as" : "http://www.w3.org/ns/activitystreams#",
+		"schema" : "http://schema.org/",
+		"ks" : "http://www.konig.io/ns/core/",
+		"ke" : "http://www.konig.io/entity/",
+		"owl" : "http://www.w3.org/2002/07/owl#",
+		"rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+		"sh" : "http://www.w3.org/ns/shacl#",
+		"vann" : "http://purl.org/vocab/vann/",
+		"xsd" : "http://www.w3.org/2001/XMLSchema#",
+		"Class" : {
+			"@id" : "owl:Class",
+			"@type" : "@id"
+		},
+		"Ontology" : {
+			"@id" : "owl:Ontology",
+			"@type" : "@id"
+		},
+		"Person" : {
+			"@id" : "schema:Person",
+			"@type" : "@id"
+		},
+		"Shape" : {
+			"@id" : "sh:Shape",
+			"@type" : "@id"
+		},
+		"actor" :  {
+			"@id" : "as:actor",
+			"@type" : "@id"
+		},
+		"comment" : {
+			"@id" : "rdfs:comment",
+			"@type" : "xsd:string"
+		},
+		"givenName" : {
+			"@id" : "schema:givenName",
+			"@type" : "xsd:string"
+		},
+		"familyName" : {
+			"@id" : "schema:familyName",
+			"@type" : "xsd:string"
+		},
+		"object" : {
+			"@id" : "as:object",
+			"@type" : "@id"
+		},
+		"preferredNamespacePrefix" : {
+			"@id" : "vann:preferredNamespacePrefix",
+			"@type" : "xsd:string"
+		},
+		"property" : "sh:property"
+	
+	},
+	"@id" : "http://www.konig.io/context"
+}
