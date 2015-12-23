@@ -1,0 +1,50 @@
+<div id="ontodoc-class-edit-template">
+<div class="ontodoc-class-edit">
+ 	<h1 class="page-title" id="class-name-edit" contentEditable="true">{{localName}}</h1>
+	<h4>
+		<span class="breadcrumbs"></span>
+	</h4>
+ 	<table class="definition-table">
+ 		<thead>
+ 			<tr>
+ 				<th>Property</th>
+ 				<th>Expected Type</th>
+ 				<th>Cardinality</th>
+ 				<th>Description</th>
+ 				<th></th>
+ 			</tr>
+ 			
+ 		</thead>
+		{{#propertyBlock}}
+		<tbody>
+			<tr class="supertype">
+				<th class="supertype-name"  colspan="3">
+					Properties from 
+					<a>{{fromClass.localName}}</a>
+				</th>
+			</tr>
+		</tbody>
+		{{#propertyList}}
+		<tbody class="supertype">
+			<tr typeof="rdfs:Property" resource="schema:givenName">
+				<th class="prop-nam">
+					<code class="prop-nam-edit" property="rdfs:label" contentEditable="true">{{propertyName}}</code>
+				</th>
+				<td class="prop-ect">
+                    {{#expectedType}}
+					<span  resource="{{stringValue}}" contentEditable="true">{{localName}}</span>{{#or}} or{{/or}}
+                    {{/expectedType}}
+				</td>
+				<td><span class="cardinality-edit">{{cardinality}}</span></td>
+				<td class="prop-desc"><div class="prop-desc-edit">
+					{{description.stringValue}}</div>
+				</td>
+        <td class="delete-button"></td>
+			</tr>
+		</tbody>
+		{{/propertyList}}
+		{{/propertyBlock}}
+ 	</table>
+	<button id="add-property-button">Add Property</button>
+</div>
+</div>

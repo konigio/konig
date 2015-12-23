@@ -1,0 +1,119 @@
+@CHARSET "ISO-8859-1";
+
+body {
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Tahoma, Arial, sans-serif;
+}
+
+.data-table {
+	font-size: 90%;
+}
+
+.delete-button:hover {
+	background-image: url("images/delete-icon.png");
+	
+}
+.delete-button {
+	background-image: url("images/delete-icon-gray.png");
+	width: 16px;
+	background-repeat: no-repeat;
+}
+.data-table td {
+	padding-left: 1em;
+}
+.ontodoc-header  {
+	background-color: rgb(153, 0, 0);
+	width: 100%;
+}
+.ontodoc-header-wrapper {
+	display: inline-block;
+	padding: 10px;
+	width: auto;
+}
+#ontodoc-api-name {
+	font-family: Helvetica, Arial, sans-serif;
+	color: white;
+	font-weight: bold;
+}
+
+#edit-button.enabled {
+	background-color:  rgb(100, 0, 0);
+}
+#edit-button:focus {
+	outline: 0;
+}
+#edit-button:active {
+	background-color: rgb(100, 0, 0);
+	border: 1px solid white;
+}
+
+#edit-button:hover {
+	border: 1px solid rgb(204, 204, 204);
+}
+#edit-button {
+	position: absolute;
+	background-color: rgb(153, 0, 0);
+	right: 10px;
+	top: 10px;
+	display: inline-block;
+	border: 1px solid rgb(153, 0, 0);
+	width: 26px;
+	height: 26px;
+	background-image: url(images/edit.png);
+}
+
+.ontodoc-navigation {
+	padding: 0px !important;
+	background-color: rgb(153, 0, 0) !important;
+}
+
+.ui-layout-center {
+	border: 1px solid  #660000 !important;
+}
+.ui-layout-west {
+	border: 1px solid  #660000 !important;
+	padding: 0px !important;
+	background-color: rgb(153, 0, 0) !important;
+}
+.ui-layout-north {
+	border: 1px solid  #660000 !important;
+	padding: 0px !important;
+}
+
+.ui-layout-resizer {
+	background-color: #660000 !important;
+}
+
+#navigation a {
+	color: white;
+	border-bottom-style: dotted;
+	border-bottom-color: white;
+}
+
+#navigation a:hover {
+	color: white;
+	border-bottom-style: solid;
+	border-bottom-color: #660000;
+}
+
+#ontodoc-ontology-list {
+	padding: 10px;
+}
+#ontodoc-class-list {
+	padding: 10px;
+}
+.ontodoc-index-entry {
+	color: white;
+	cursor: pointer;
+}
+
+.definition-table th {
+	font-size: 0.8em;
+}
+
+.definition-table td {
+	font-size: 0.8em;
+}
+
+.prop-ect a[resource] {
+	cursor: pointer;
+}

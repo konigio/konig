@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Konig</title>   
+    <link rel="stylesheet" href="css/jstree-themes/default/style.min.css">  
+  	<link rel="stylesheet" href="css/jquery-ui/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" href="css/konig.css"> 
+    <script src="js/uuid.js"></script>
+    <script src="js/sha1.js"></script>
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/jquery.layout.min.js"></script>
+    <script src="js/jstree.js"></script>
+    <script src="js/uri-iri.min.js"></script>
+    <script src="js/mustache.js"></script>
+		<script src="js/jsonld.js"></script>
+    <script src="js/snap.svg.js"></script>
+    <script src="test/digestive-system-graph.js"></script>
+    <script src="test/protein-biosynthesis.js"></script>
+    <script src="js/konig-jsonld.js"></script>
+    <script src="js/konig-rdf-model.js"></script>
+    <script src="js/konig-context.js"></script>
+    <script src="js/konig-history-manager.js"></script>
+    <script src="js/konig-view.js"></script>
+    <script src="test/konig-mock-services.js"></script>
+    <script src="js/konig-rdf-controller.js"></script>
+    <script src="js/konig-workspace.js"></script>
+    <script src="js/konig-ui.js"></script>
+    <script>
+    
+    $(document).ready(function() {
+
+    	var ui = konig.ui;
+    	
+    	ui.graphLoader.loadModel('http://www.konig.io/entity/940f0efa-cbde-4cd2-8508-e8f4f092fbf5', function() {
+    		ui.index.updateIndex();
+    	});
+
+    });
+    </script>
+</head>
+<body>
+		
+<div class='ui-layout-center'>
+   <svg id="konig-map" width="800" height="600"
+     xmlns="http://www.w3.org/2000/svg" 
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:konig="http://schema.konig.io/ns/view/"
+     prefix="ks: http://www.konig.io/schema/ ke: http://www.konig.io/entity/"
+     />
+</div>
+<div class="ui-layout-north">
+	<div class="konig-titlebar"><span id="konig-frame-name" contenteditable="true">Untitled Frame</span></div>
+	<div class="konig-menubar">
+		<span id="fileMenu" class="konig-menu" data-container="fileItems">File</span>
+		<ul id="fileItems" class="konig-menu-container">
+			<li>New</li>
+			<li>Open...</li>
+			<li>Move to Folder...</li>
+		</ul>
+	</div>
+</div>
+<div class="ui-layout-west">
+	<div class="konig-pane-heading">Index</div>
+	<div id="konig-concept-list"></div>
+</div>
+<div id="konig-vertex-dialog" style="display: none">
+	<table>
+	<tr>
+		<td id="konig-vertex-dialog-item-type">Item Type</td>
+		<td>
+			<select id="konig-vertex-dialog-item-type-select">
+				<option value="ke:Entity">Entity</option>
+				<option value="xsd:string">Text</option>
+				<option value="xsd:double">Number</option>
+				<option value="xsd:date">Date</option>
+				<option value="xsd:time">Time</option>
+				<option value="xsd:dateTime">Date & Time</option>
+				<option value="xsd:boolean">Boolean (True/False)</option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td id="konig-vertex-name-fieldname">Name</td>
+		<td><input id="konig-vertex-name-input" value="{{nameValue}}"></input></td>
+	</tr>
+	</table>
+</div>
+</body>
+</html>

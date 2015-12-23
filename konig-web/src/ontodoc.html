@@ -1,0 +1,170 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Ontodoc</title>
+  <meta name="description" content="Browse and edit documentation for RDF ontologies">
+  <meta name="author" content="Greg McFall">
+
+  <link rel="stylesheet" href="css/jquery-ui/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" href="css/schemaorg.css">
+  <link rel="stylesheet" href="css/konig-ontodoc.css">
+  
+
+</head>
+
+<body prefix="sh: http://www.w3.org/ns/shacl#">
+	
+<div class='ui-layout-center ontodoc-main-content'>
+
+<script id="ontodoc-class-edit-template" type="x-tmpl-mustache">
+<div class="ontodoc-class-edit">
+ 	<h1 class="page-title" id="class-name-edit" contentEditable="true">{{localName}}</h1>
+	<h4>
+		<span class="breadcrumbs"></span>
+	</h4>
+ 	<table class="definition-table">
+ 		<thead>
+ 			<tr>
+ 				<th>Property</th>
+ 				<th>Expected Type</th>
+ 				<th>Cardinality</th>
+ 				<th>Description</th>
+ 				<th></th>
+ 			</tr>
+ 			
+ 		</thead>
+		{{#propertyBlock}}
+		<tbody>
+			<tr class="supertype">
+				<th class="supertype-name"  colspan="3">
+					Properties from 
+					<a>{{fromClass.localName}}</a>
+				</th>
+			</tr>
+		</tbody>
+		{{#propertyList}}
+		<tbody class="supertype">
+			<tr typeof="rdfs:Property" resource="schema:givenName">
+				<th class="prop-nam">
+					<code class="prop-nam-edit" property="rdfs:label" contentEditable="true">{{propertyName}}</code>
+				</th>
+				<td class="prop-ect">
+                    {{#expectedType}}
+					<span  resource="{{stringValue}}" contentEditable="true">{{localName}}</span>{{#or}} or{{/or}}
+                    {{/expectedType}}
+				</td>
+				<td><span class="cardinality-edit">{{cardinality}}</span></td>
+				<td class="prop-desc"><div class="prop-desc-edit">
+					{{description.stringValue}}</div>
+				</td>
+        <td class="delete-button"></td>
+			</tr>
+		</tbody>
+		{{/propertyList}}
+		{{/propertyBlock}}
+ 	</table>
+	<button id="add-property-button">Add Property</button>
+</div>
+</script>
+
+<script id="ontodoc-class-template" type="x-tmpl-mustache">
+	
+<div class="ontodoc-class">
+ 	<h1 class="page-title">{{localName}}</h1>
+	<h4>
+		<span class="breadcrumbs"></span>
+	</h4>
+ 	<table class="definition-table">
+ 		<thead>
+ 			<tr>
+ 				<th>Property</th>
+ 				<th>Expected Type</th>
+ 				<th>Description</th>
+ 			</tr>
+ 			
+ 		</thead>
+		{{#propertyBlock}}
+		<tbody>
+			<tr class="supertype">
+				<th class="supertype-name"  colspan="3">
+					Properties from 
+					<a>{{fromClass.localName}}</a>
+				</th>
+			</tr>
+		</tbody>
+		{{#propertyList}}
+		<tbody class="supertype">
+			<tr typeof="rdfs:Property" resource="schema:givenName">
+				<th class="prop-nam">
+					<code property="rdfs:label">{{propertyName}}</code>
+				</th>
+				<td class="prop-ect">
+                    {{#expectedType}}
+					<a href="#{{stringValue}}">{{localName}}{{#or}} or{{/or}}</a>
+                    {{/expectedType}}
+				</td>
+				<td class="prop-desc">
+					{{description.stringValue}}
+				</td>
+			</tr>
+		</tbody>
+		{{/propertyList}}
+		{{/propertyBlock}}
+ 	</table>
+</div>
+	
+</script>	
+
+<script id="ontodoc-ontology-template" type="x-tmpl-mustache">
+<div class="ontodoc-ontology">
+ 	<h1 class="page-title">{{label}}</h1>
+ 	<div>{{description}}</div>
+ 	<table class="data-table">
+ 		<tr>
+ 			<th>Namespace Address</th>
+ 			<td>{{namespaceAddress}}</td>
+ 		</tr>
+ 		<tr>
+ 			<th>Namespace Prefix</th>
+ 			<td>{{namespacePrefix}}</td>
+ 		</tr>
+ 	</table>
+</div>
+</script>
+</div>
+<div class="ui-layout-north">
+	<div class="ontodoc-header">
+	    <div class="ontodoc-header-wrapper">
+			<span id="ontodoc-api-name" contenteditable="true">Untitled Frame</span>
+	    </div>
+		<button id="edit-button" title="Edit"></button>
+	</div>
+</div>
+<div class="ui-layout-west" id="navigation">
+  <div class="ui-layout-north ontodoc-navigation">
+  	<div id="ontodoc-ontology-list"></div>
+  </div>
+  <div class="ui-layout-center ontodoc-navigation">
+		<div id="ontodoc-class-list"></div>
+	</div>
+</div>
+<div id="templates" style="display: none;"></div>
+
+<script src="js/jquery.js"></script>
+<script src="js/jquery-ui.js"></script>
+<script src="js/jquery.layout.min.js"></script>
+<script src="js/mustache.js"></script>
+<script src="js/sha1.js"></script>
+<script src="js/uuid.js"></script>
+<script src="js/konig-jsonld.js"></script>
+<script src="js/konig-rdf-model.js"></script>
+<script src="js/konig-context.js"></script>
+<script src="js/konig-history-manager.js"></script>
+<script src="js/konig-ontodoc-services.js"></script>
+<script src="js/konig-ontodoc.js"></script>
+<script src="js/konig-ontodoc-edit.js"></script>
+</body>
+</html>
