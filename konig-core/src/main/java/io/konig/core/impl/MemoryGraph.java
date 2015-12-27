@@ -19,6 +19,7 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
+import io.konig.core.GraphBuilder;
 import io.konig.core.Transaction;
 import io.konig.core.TransactionWorker;
 import io.konig.core.Traversal;
@@ -253,10 +254,19 @@ public class MemoryGraph implements Graph, Transaction {
 		
 		for (Vertex v : vertices()) {
 			buffer.append(v.toString());
+			Graph namedGraph = v.asNamedGraph();
+			if (namedGraph != null) {
+				buffer.append("BEGIN GRAPH\n");
+				buffer.append(namedGraph.toString());
+				buffer.append("END GRAPH\n");
+			}
+			
 		}
 		
 		return buffer.toString();
 	}
+	
+	
 
 	@Override
 	public Resource getId() {
@@ -266,6 +276,24 @@ public class MemoryGraph implements Graph, Transaction {
 	@Override
 	public void setId(Resource id) {
 		this.id = id;
+	}
+
+	@Override
+	public Vertex vertex() {
+
+		BNode id = new BNodeImpl(uid.next());
+		Vertex vertex = new VertexImpl(this, id);
+		id = (BNode) vertex.getId();
+		
+		bnodeMap.put(id.stringValue(), vertex);
+		vertexMap.put(id, vertex);
+		
+		return vertex;
+	}
+
+	@Override
+	public GraphBuilder builder() {
+		return new GraphBuilder(this);
 	}
 	
 

@@ -47,20 +47,29 @@ public class GraphWriter {
 	short bnodeCount = 1;
 	
 	private Map<String, Short> bnodeMap = new HashMap<String, Short>();
-	private Map<String, Integer> subjectMap = new HashMap<String, Integer>(); 
-	private Map<String, List<Promise>> promiseMap = new HashMap<String, List<Promise>>();
+	
+	private PromiseInfo promiseInfo;
+	private List<PromiseInfo> promiseInfoList = new ArrayList<>();
+	
+//	private Map<String, Integer> subjectMap = new HashMap<String, Integer>(); 
+//	private Map<String, List<Promise>> promiseMap = new HashMap<String, List<Promise>>();
+	
+	
 	
 	public GraphWriter(Graph graph, Context context) {
 		this.graph = graph;
 		this.context = context;
 		
 		this.inverse = context.inverse();
+		promiseInfo = new PromiseInfo();
+		promiseInfoList.add(promiseInfo);
 	}
 	
 	
 	public byte[] write() throws IOException {
 		out = new ByteArrayOutputStream();
 		data = new DataOutputStream(out);
+		
 		
 		data.writeShort(VERSION);
 		writeString(context.getContextIRI());
@@ -79,20 +88,11 @@ public class GraphWriter {
 	}
 	
 	private void deliverPromises(byte[] array) {
-		ByteBuffer buffer = ByteBuffer.wrap(array);
-		
-		for (Entry<String, List<Promise>> e : promiseMap.entrySet()) {
-			String resourceKey = e.getKey();
-			Integer position = subjectMap.get(resourceKey);
-			
-			List<Promise> list = e.getValue();
-			for (Promise promise : list) {
-				buffer.position(promise.mark);
-				buffer.putInt(position);
-			}
+		for (PromiseInfo info : promiseInfoList) {
+			info.deliverPromises(array);
 		}
-		
 	}
+	
 
 
 	private void writeVertex(Vertex v) throws IOException {
@@ -111,7 +111,7 @@ public class GraphWriter {
 		}
 		
 		int position = out.size();
-		subjectMap.put(v.getId().stringValue(), new Integer(position));
+		promiseInfo.putSubject(v.getId().stringValue(), new Integer(position));
 		
 		if (id instanceof URI) {
 			writeIRI((URI)id);
@@ -135,21 +135,69 @@ public class GraphWriter {
 			}
 			
 		}
+		
+		Graph namedGraph = v.asNamedGraph();
+		if (namedGraph != null) {
+
+			logger.debug("WRITE: GRAPH {}", id.stringValue());
+
+			PromiseInfo oldInfo = promiseInfo;
+			promiseInfo = new PromiseInfo();
+			promiseInfoList.add(promiseInfo);
+			
+			Collection<Vertex> list = namedGraph.vertices();
+			short size = (short)list.size();
+			
+			data.writeByte(GRAPH);
+			data.writeShort(size);
+			for (Vertex vertex : list) {
+				writeVertex(vertex);
+			}
+			
+			promiseInfo = oldInfo;
+		}
+	}
+	
+	static class PromiseInfo {
+		Map<String,Integer> subjectMap = new HashMap<String, Integer>(); 
+		Map<String, List<Promise>> promiseMap = new HashMap<String, List<Promise>>();
+		
+		private void putSubject(String resource, Integer index) {
+			subjectMap.put(resource, index);
+		}
+		
+
+		private void addPromise(int mark, Resource target) {
+			Promise promise = new Promise(target, mark);
+			String key = target.stringValue();
+			List<Promise> list = promiseMap.get(key);
+			if (list == null) {
+				list = new ArrayList<Promise>();
+				promiseMap.put(key, list);
+			}
+			list.add(promise);
+		}
+
+
+		private void deliverPromises(byte[] array) {
+			ByteBuffer buffer = ByteBuffer.wrap(array);
+			
+			for (Entry<String, List<Promise>> e : promiseMap.entrySet()) {
+				String resourceKey = e.getKey();
+				Integer position = subjectMap.get(resourceKey);
+				
+				List<Promise> list = e.getValue();
+				for (Promise promise : list) {
+					buffer.position(promise.mark);
+					buffer.putInt(position);
+				}
+			}
+			
+		}
+		
 	}
 	
 
-
-	private void addPromise(Resource target) {
-		int mark = out.size();
-		Promise promise = new Promise(target, mark);
-		String key = target.stringValue();
-		List<Promise> list = promiseMap.get(key);
-		if (list == null) {
-			list = new ArrayList<Promise>();
-			promiseMap.put(key, list);
-		}
-		list.add(promise);
-	}
 
 
 	private void writeObject(Value object) throws IOException {
@@ -161,10 +209,12 @@ public class GraphWriter {
 				data.writeByte(TERM);
 				data.writeShort(term.getIndex());
 			} else {
-				Integer position = subjectMap.get(object.stringValue());
+				Integer position = promiseInfo.subjectMap.get(object.stringValue());
 				data.writeByte(RESOURCE);
+
 				if (position == null) {
-					addPromise((Resource)object);
+					int mark = out.size();
+					promiseInfo.addPromise(mark, (Resource)object);
 					data.writeInt(0); // Zero is a placeholder until the promise is fulfilled.
 				} else {
 					data.writeInt(position.intValue());

@@ -7,6 +7,19 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 public interface Vertex {
+	
+	/**
+	 * Get a representation of this Vertex as a named graph.
+	 * @return The Graph representation of this Vertex, or null if this Vertex is not a named graph
+	 */
+	Graph asNamedGraph();
+	
+	/**
+	 * Assert that this Vertex is a named graph and get that graph.
+	 * @return The Graph representation of this Vertex.  A graph representation will be created
+	 * if it does not exist.
+	 */
+	Graph assertNamedGraph();
 
 	/**
 	 * Get the graph that contains this vertex.

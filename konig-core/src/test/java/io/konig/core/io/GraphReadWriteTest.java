@@ -5,27 +5,88 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.StringWriter;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 
+import io.konig.core.ChangeSet;
 import io.konig.core.Context;
 import io.konig.core.ContextBuilder;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.KonigTest;
 import io.konig.core.Traversal;
+import io.konig.core.Vertex;
+import io.konig.core.impl.ChangeSetImpl;
 import io.konig.core.impl.ContextManagerImpl;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.TraversalImpl;
 import io.konig.core.vocab.Schema;
 
 public class GraphReadWriteTest extends KonigTest {
+	
+	@Test
+	public void testNamedGraph() throws Exception {
+		Context context = new ContextBuilder("http://www.konig.io/context")
+			.namespace("ks", "http://www.konig.io/ns/core/")
+			.namespace("schema", "http://schema.org/")
+			.namespace("xsd", XMLSchema.NAMESPACE)
+			.term("addition", "ks:addition")
+			.term("removal", "ks:removal")
+			.term("string", "xsd:string")
+			.property("givenName", "schema:givenName", "xsd:string")
+			.property("familyName", "schema:familyName", "xsd:string")
+			.getContext();
+
+		ContextManager manager = new ContextManagerImpl();
+		manager.add(context);
+		context.compile();
+
+		URI alice = uri("http://example.com/alice");
+		URI bob = uri("http://example.com/bob");
+		
+		Graph graph = new MemoryGraph();
+		ChangeSet changeSet = new ChangeSetImpl(graph);
+		
+		changeSet.assertRemoval().asNamedGraph().builder()
+			.literalProperty(bob, Schema.givenName, "Robert");
+		
+		changeSet.assertAddition().asNamedGraph().builder()
+			.literalProperty(alice, Schema.givenName, "Alice")
+			.literalProperty(alice, Schema.familyName, "Smith")
+			.literalProperty(bob, Schema.givenName, "Bob");
+
+		
+		GraphBuffer buffer = new GraphBuffer();
+		byte[] array = buffer.writeGraph(graph, context);
+		
+		
+		
+		Graph g =  new MemoryGraph();
+		buffer.readGraph(array, g, manager);
+		
+		ChangeSet loaded = new ChangeSetImpl(g.vertices().iterator().next());
+		Vertex addition = loaded.getAddition();
+		assertTrue(addition != null);
+		Graph a = addition.asNamedGraph();
+		assertTrue(a != null);
+		assertTrue(a.v(bob).hasValue(Schema.givenName, "Bob").size() == 1);
+		assertTrue(a.v(alice).hasValue(Schema.givenName, "Alice").size()==1);
+		assertTrue(a.v(alice).hasValue(Schema.familyName, "Smith").size()==1);
+		
+		Vertex removal = loaded.getRemoval();
+		assertTrue(removal != null);
+		Graph r = removal.asNamedGraph();
+		assertTrue(r != null);
+		assertTrue(r.v(bob).hasValue(Schema.givenName, "Robert").size() == 1);
+	}
 
 	@Test
 	public void testEmptyContext() throws Exception {

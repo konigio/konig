@@ -32,6 +32,11 @@ public class GraphBuilder {
 		return this;
 	}
 	
+	public GraphBuilder literalProperty(Resource subject, URI predicate, String object) {
+		graph.edge(subject, predicate, literal(object));
+		return this;
+	}
+	
 	public Literal literal(String value) {
 		return valueFactory.createLiteral(value);
 	}

@@ -112,10 +112,7 @@ public class Context {
 				String id = term.getId();
 				if (id != null) {
 					String expandedId = expandIRI(id);
-					if (expandedId != id) {
-						term.setExpandedId(new URIImpl(expandedId));
-					}
-					
+					term.setExpandedId(new URIImpl(expandedId));
 				}
 				String type = term.getType();
 				if (type != null) {

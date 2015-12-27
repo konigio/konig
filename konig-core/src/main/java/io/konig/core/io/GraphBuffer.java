@@ -1,6 +1,8 @@
 package io.konig.core.io;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
@@ -12,11 +14,10 @@ import io.konig.core.Graph;
 public class GraphBuffer {
 	
 	
-	
 	public byte[] writeGraph(Graph graph, Context context) throws IOException {
 		
-		GraphWriter writer = new GraphWriter(graph, context);
-		return writer.write();
+		BinaryGraphWriter writer = new BinaryGraphWriter();
+		return writer.write(graph, context);
 	}
 	
 	public void readGraph(byte[] data, Graph graph, ContextManager manager) throws KonigReadException {

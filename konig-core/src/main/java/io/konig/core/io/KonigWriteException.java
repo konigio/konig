@@ -9,6 +9,10 @@ public class KonigWriteException extends KonigException {
 		super(message, cause);
 	}
 	
+	public KonigWriteException(Throwable cause) {
+		super(cause);
+	}
+	
 	public KonigWriteException(String message) {
 		super(message);
 	}

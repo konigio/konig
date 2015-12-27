@@ -8,6 +8,8 @@ import org.openrdf.model.Value;
 
 public interface Graph {
 	
+	GraphBuilder builder();
+	
 	/**
 	 * Get the identifier this Graph as a named graph.
 	 * @return The identifier for this Graph or null if it has no identifier.
@@ -19,6 +21,12 @@ public interface Graph {
 	 * @param id The identifier for this Graph
 	 */
 	void setId(Resource id);
+	
+	/**
+	 * A convenience method that creates a new Vertex with a BNode identifier.
+	 * @return The newly created Vertex with a BNode identifier.
+	 */
+	Vertex vertex();
 	
 	/**
 	 * A convenience method that gets or creates a Vertex from a string IRI identifier.

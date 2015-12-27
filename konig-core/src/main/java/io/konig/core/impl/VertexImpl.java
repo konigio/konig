@@ -14,6 +14,7 @@ import io.konig.core.Vertex;
 
 public class VertexImpl implements Vertex {
 	private transient Graph graph;
+	private Graph namedGraph;
 	private Resource id;
 	
 	private EdgeMapImpl out = new EdgeMapImpl();
@@ -106,6 +107,20 @@ public class VertexImpl implements Vertex {
 		
 		
 		return buffer.toString();
+	}
+
+	@Override
+	public Graph asNamedGraph() {
+		return namedGraph;
+	}
+
+	@Override
+	public Graph assertNamedGraph() {
+		if (namedGraph == null) {
+			namedGraph = new MemoryGraph();
+			namedGraph.setId(id);
+		}
+		return namedGraph;
 	}
 
 

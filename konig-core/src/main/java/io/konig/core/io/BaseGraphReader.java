@@ -2,6 +2,7 @@ package io.konig.core.io;
 
 import static io.konig.core.io.GraphConstants.BNODE;
 import static io.konig.core.io.GraphConstants.IRI;
+import static io.konig.core.io.GraphConstants.GRAPH;
 import static io.konig.core.io.GraphConstants.LANG;
 import static io.konig.core.io.GraphConstants.LITERAL_IRI;
 import static io.konig.core.io.GraphConstants.LITERAL_QNAME;
@@ -11,6 +12,7 @@ import static io.konig.core.io.GraphConstants.QNAME;
 import static io.konig.core.io.GraphConstants.RESOURCE;
 import static io.konig.core.io.GraphConstants.TERM;
 import static io.konig.core.io.GraphConstants.VERSION;
+import static io.konig.core.io.GraphConstants.LABEL;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.core.Context;
 import io.konig.core.ContextManager;
+import io.konig.core.Graph;
 import io.konig.core.Term;
 import io.konig.core.impl.KonigLiteral;
 
@@ -35,7 +38,6 @@ import io.konig.core.impl.KonigLiteral;
 abstract public class BaseGraphReader {
 	
 	private static final Logger logger = LoggerFactory.getLogger(BaseGraphReader.class);
-	
 	protected Context context;
 	private ByteBuffer data;
 	private Resource subject;
@@ -130,6 +132,7 @@ abstract public class BaseGraphReader {
 			term = qnameTerm = null;
 			
 			readProperties();
+			readNamedGraph();
 			
 			endSubject();
 			
@@ -137,6 +140,47 @@ abstract public class BaseGraphReader {
 		
 	}
 	
+	protected Object beginNamedGraph(Resource subject) {
+		return null;
+	}
+	
+	protected void endNamedGraph(Object state) {
+		
+	}
+	
+	private void readNamedGraph() {
+	
+		byte token = peekToken();
+		if (token == GRAPH) {
+			data.get();
+			
+			Resource oldSubject = subject;
+			Object oldState = beginNamedGraph(subject);
+			
+			short count = data.getShort();
+			
+			logger.debug("READ: GRAPH {} count={}", subject.stringValue(), count);
+			
+			for (int i=0; i<count; i++) {
+
+				subject = readResource();
+				
+				beginSubject(subject, term, qnameTerm);
+				term = qnameTerm = null;
+				
+				readProperties();
+				readNamedGraph();
+				
+				endSubject();
+			}
+			
+			subject = oldSubject;
+			endNamedGraph(oldState);
+		}
+		
+	}
+
+
 	private Resource readResource() {
 		byte token = peekToken();
 		
@@ -160,9 +204,6 @@ abstract public class BaseGraphReader {
 		for (int i=0; i<count; i++) {
 			
 			predicate = readIRI();
-			
-			
-			
 			readObjects();
 		}
 		
@@ -254,7 +295,10 @@ abstract public class BaseGraphReader {
 
 	private Value readTermLiteral() {
 		assertToken(LITERAL_TERM);
-		return term();
+		URI type = term();
+		String value = readString();
+		
+		return new KonigLiteral(value, type);
 	}
 
 	private Value readLanguageLiteral() {

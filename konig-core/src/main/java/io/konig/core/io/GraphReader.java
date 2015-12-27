@@ -8,6 +8,7 @@ import org.openrdf.model.Value;
 
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
+import io.konig.core.Vertex;
 
 
 public class GraphReader extends BaseGraphReader {
@@ -27,6 +28,17 @@ public class GraphReader extends BaseGraphReader {
 		read(data, manager);
 	}
 
+
+	protected Object beginNamedGraph(Resource subject) {
+		Vertex v = graph.vertex(subject);
+		Graph oldGraph = graph;
+		graph = v.assertNamedGraph();
+		return oldGraph;
+	}
+	
+	protected void endNamedGraph(Object state) {
+		graph = (Graph) state;
+	}
 
 
 	@Override

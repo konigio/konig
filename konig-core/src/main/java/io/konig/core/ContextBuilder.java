@@ -61,6 +61,13 @@ public class ContextBuilder {
 		return property(predicate.getLocalName(), id, typeId);
 	}
 	
+	public ContextBuilder term(String key, String id) {
+		Term term = new Term(key, id, null, null);
+		context.add(term);
+		return this;
+	}
+	
+	
 	public ContextBuilder property(String key, String id, String type) {
 		Term term = new Term(key, id, null, type);
 		context.add(term);
