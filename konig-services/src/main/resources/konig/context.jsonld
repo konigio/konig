@@ -26,6 +26,7 @@
 			"@id" : "sh:Shape",
 			"@type" : "@id"
 		},
+		"addition" : "ks:addition",
 		"actor" :  {
 			"@id" : "as:actor",
 			"@type" : "@id"
@@ -50,7 +51,8 @@
 			"@id" : "vann:preferredNamespacePrefix",
 			"@type" : "xsd:string"
 		},
-		"property" : "sh:property"
+		"property" : "sh:property",
+		"removal" : "sh:removal"
 	
 	},
 	"@id" : "http://www.konig.io/context"

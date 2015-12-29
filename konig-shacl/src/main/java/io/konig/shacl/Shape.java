@@ -5,7 +5,10 @@ import java.util.List;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.BNodeImpl;
 
+import io.konig.core.UidGenerator;
+import io.konig.core.impl.UidGeneratorImpl;
 import io.konig.shacl.impl.EmptyList;
 
 public class Shape {
@@ -14,6 +17,12 @@ public class Shape {
 	private Resource id;
 	private URI scopeClass;
 	private List<PropertyConstraint> property;
+	private Constraint constraint;
+	
+	public Shape() {
+		String bnodeId = UidGenerator.INSTANCE.next();
+		id = new BNodeImpl(bnodeId);
+	}
 	
 	public Shape(Resource id) {
 		this.id = id;
@@ -21,6 +30,15 @@ public class Shape {
 	
 	public List<PropertyConstraint> getProperty() {
 		return property==null ? EMPTY_PROPERTY_LIST : property;
+	}
+	
+	public Constraint getConstraint() {
+		return constraint;
+	}
+	
+	public Shape setConstraint(Constraint constraint) {
+		this.constraint = constraint;
+		return this;
 	}
 	
 	/**
@@ -39,17 +57,17 @@ public class Shape {
 		return null;
 	}
 	
-	public PropertyConstraint add(PropertyConstraint c) {
+	public Shape add(PropertyConstraint c) {
 		if (property == null) {
 			property  = new ArrayList<PropertyConstraint>();
 		}
 		for (PropertyConstraint p : property) {
 			if (p.getPredicate().equals(c)) {
-				return p;
+				return this;
 			}
 		}
 		property.add(c);
-		return c;
+		return this;
 	}
 
 	public URI getScopeClass() {

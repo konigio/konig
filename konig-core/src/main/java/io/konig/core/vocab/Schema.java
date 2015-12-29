@@ -13,6 +13,7 @@ public class Schema {
 	public static final URI addressRegion = new URIImpl("http://schema.org/addressRegion");
 	public static final URI givenName = new URIImpl("http://schema.org/givenName");
 	public static final URI familyName = new URIImpl("http://schema.org/familyName");
+	public static final URI name = new URIImpl("http://schema.org/name");
 	public static final URI children = new URIImpl("http://schema.org/children");
 	public static final URI parent = new URIImpl("http://schema.org/parent");
 	public static final URI email = new URIImpl("http://schema.org/email");

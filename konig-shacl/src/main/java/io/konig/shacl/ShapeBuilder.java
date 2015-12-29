@@ -1,5 +1,8 @@
 package io.konig.shacl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -13,12 +16,40 @@ public class ShapeBuilder {
 	
 	private ShapeManager shapeManager;
 	private ValueFactory valueFactory = new ValueFactoryImpl();
-	private Shape shape;
+	
+	private List<Object> stack = new ArrayList<>();
+
+	
+	public ShapeBuilder(ShapeManager shapeManager, ValueFactory valueFactory, Shape shape) {
+		this.shapeManager = shapeManager;
+		this.valueFactory = valueFactory;
+		stack.add(shape);
+	}
+	
+	private ShapeConsumer peekConsumer() {
+		Object result = peek();
+		return (result instanceof ShapeConsumer) ? (ShapeConsumer) result : null;
+	}
+	
+	private Object peek() {
+		return stack.isEmpty() ? null : stack.get(stack.size()-1);
+	}
+	
+	private Shape peekShape() {
+		Object result = peek();
+		return (result instanceof Shape) ? (Shape) result : null;
+	}
+
 
 	public ShapeBuilder(Shape shape) {
 		shapeManager = new MemoryShapeManager();
-		this.shape = shape;
+		stack.add(shape);
 		shapeManager.addShape(shape);
+	}
+	
+	
+	public ShapeBuilder() {
+		shapeManager = new MemoryShapeManager();
 	}
 	
 	public ShapeBuilder(String shapeId) {
@@ -34,34 +65,89 @@ public class ShapeBuilder {
 	}
 	
 	public ShapeBuilder shape(String shapeIRI) {
-		return this.shape(new URIImpl(shapeIRI));
+		return this.beginShape(new URIImpl(shapeIRI));
 	}
 	
 	public ShapeBuilder scopeClass(URI type) {
-		shape.setScopeClass(type);
+		peekShape().setScopeClass(type);
 		return this;
 	}
 	
 	public PropertyBuilder property(URI predicate) {
 		BNode id = valueFactory.createBNode();
 		PropertyConstraint p = new PropertyConstraint(id, predicate);
-		shape.add(p);
+		peekShape().add(p);
 		return new PropertyBuilder(this, p);
 	}
 	
-	public ShapeBuilder shape(URI shapeId) {
-		shape = shapeManager.getShapeById(shapeId);
+	public ShapeBuilder beginShape(URI shapeId) {
+		Shape shape = shapeManager.getShapeById(shapeId);
 		if (shape == null) {
 			shape = new Shape(shapeId);
 			shapeManager.addShape(shape);
+		}
+		stack.add(shape);
+		return this;
+	}
+	
+	public ShapeBuilder beginOr() {
+		OrConstraint constraint = new OrConstraint();
+		peekShape().setConstraint(constraint);
+		stack.add(constraint);
+		
+		return this;
+	}
+	
+	public ShapeBuilder endOr() {
+		return pop();
+	}
+	
+	public ShapeBuilder beginAnd() {
+		AndConstraint constraint = new AndConstraint();
+		peekShape().setConstraint(constraint);
+		stack.add(constraint);
+		
+		return this;
+	}
+	
+	public ShapeBuilder endAnd() {
+		return pop();
+	}
+	
+	
+	public ShapeBuilder beginShape() {
+		BNode shapeId = valueFactory.createBNode();
+		Shape shape = new Shape(shapeId);
+		
+		ShapeConsumer consumer = peekConsumer();
+		if (consumer != null) {
+			consumer.add(shape);
+		}
+		
+		stack.add(shape);
+		return this;
+	}
+	
+	public ShapeBuilder endShape() {
+		return pop();
+	}
+	
+
+	
+	private ShapeBuilder pop() {
+		if (!stack.isEmpty()) {
+			stack.remove(stack.size()-1);
 		}
 		return this;
 	}
 	
 	
 	public Shape shape() {
-		return shape;
+		return peekShape();
 	}
+	
+
+	
 	
 	
 	static public class PropertyBuilder {
@@ -112,6 +198,10 @@ public class ShapeBuilder {
 		
 		public Shape shape() {
 			return parent.shape();
+		}
+		
+		public ShapeBuilder endShape() {
+			return parent.endShape();
 		}
 	}
 

@@ -6,10 +6,11 @@ import java.util.List;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.BNodeImpl;
+
+import io.konig.core.UidGenerator;
 
 public class PropertyConstraint {
-	
-	private static final List<Value> EMPTY_VALUE_LIST = new ArrayList<Value>();
 
 	private Resource id;
 	private URI predicate;
@@ -23,6 +24,10 @@ public class PropertyConstraint {
 	private Shape valueShape;
 
 
+	public PropertyConstraint(URI predicate) {
+		this.id = new BNodeImpl(UidGenerator.INSTANCE.next());
+		this.predicate = predicate;
+	}
 	public PropertyConstraint(Resource id, URI predicate) {
 		this.id = id;
 		this.predicate = predicate;
@@ -52,7 +57,7 @@ public class PropertyConstraint {
 	 * @return
 	 */
 	public List<Value> getAllowedValues() {
-		return allowedValues == null ? EMPTY_VALUE_LIST : allowedValues;
+		return allowedValues;
 	}
 
 	public Integer getMinCount() {
