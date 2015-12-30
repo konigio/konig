@@ -1,5 +1,7 @@
 package io.konig.shacl;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * konig-shacl
@@ -38,6 +40,12 @@ public class NotConstraint implements Constraint {
 	@Override
 	public boolean accept(Vertex v) {
 		return !GraphFilter.INSTANCE.matches(v, shape);
+	}
+
+	@Override
+	public boolean hasPropertyConstraint(URI predicate) {
+		
+		return shape.hasPropertyConstraint(predicate);
 	}
 	
 	

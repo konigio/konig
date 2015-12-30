@@ -62,6 +62,32 @@ public class Shape {
 		return this;
 	}
 	
+	public PropertyConstraint getPropertyConstraint(URI predicate) {
+		
+		if (property!=null) {
+			for (PropertyConstraint c : property) {
+				if (predicate.equals(c.getPredicate())) {
+					return c;
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	public boolean hasPropertyConstraint(URI predicate) {
+		
+		if (getPropertyConstraint(predicate) != null) {
+			return true;
+		}
+		
+		if (constraint != null) {
+			return constraint.hasPropertyConstraint(predicate);
+		}
+		
+		return false;
+	}
+	
 	/**
 	 * Get the PropertyConstraint with the specified predicate.
 	 * @param predicate The predicate of the requested PropertyConstraint

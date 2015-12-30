@@ -1,5 +1,7 @@
 package io.konig.shacl;
 
+import java.util.List;
+
 /*
  * #%L
  * konig-shacl
@@ -28,6 +30,20 @@ import io.konig.core.UnnamedResourceException;
 public interface ShapeManager {
 	
 	Shape getShapeById(URI shapeId);
+	
+	/**
+	 * Get the list of shapes that have a PropertyConstraint for the specified predicate.
+	 * @param predicate The predicate of interest
+	 * @return The list of shapes that have a PropertyConstraint for the specified predicate
+	 */
+	List<Shape> getShapesByPredicate(URI predicate);
+	
+	/**
+	 * Get the list of shapes that have a given scope class.
+	 * @param scopeClass The Class of interest
+	 * @return The list of shapes that have a given scope class.
+	 */
+	List<Shape> getShapesByScopeClass(URI scopeClass);
 	
 	/**
 	 * Add a Shape to this manager.

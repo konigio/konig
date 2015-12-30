@@ -1,5 +1,7 @@
 package io.konig.shacl.impl;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * konig-shacl
@@ -22,6 +24,7 @@ package io.konig.shacl.impl;
 
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.openrdf.model.BNode;
@@ -44,6 +47,30 @@ public class MemoryShapeManager implements ShapeManager {
 			throw new UnnamedResourceException("Cannot add unnamed Shape to this manager");
 		}
 		shapeMap.put(shape.getId().stringValue(), shape);
+	}
+
+	@Override
+	public List<Shape> getShapesByPredicate(URI predicate) {
+		List<Shape> list = new ArrayList<>();
+		
+		for (Shape s : shapeMap.values()) {
+			if (s.hasPropertyConstraint(predicate)) {
+				list.add(s);
+			}
+		}
+		
+		return list;
+	}
+
+	@Override
+	public List<Shape> getShapesByScopeClass(URI scopeClass) {
+		List<Shape> list = new ArrayList<>();
+		for (Shape s : shapeMap.values()) {
+			if (scopeClass.equals(s.getScopeClass())) {
+				list.add(s);
+			}
+		}
+		return list;
 	}
 
 }

@@ -1,5 +1,7 @@
 package io.konig.shacl;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * konig-shacl
@@ -31,4 +33,11 @@ public interface Constraint {
 	 * @return True if the vertex satisfies this constraint and false otherwise
 	 */
 	boolean accept(Vertex v);
+	
+	/**
+	 * 
+	 * @param predicate
+	 * @return
+	 */
+	boolean hasPropertyConstraint(URI predicate);
 }

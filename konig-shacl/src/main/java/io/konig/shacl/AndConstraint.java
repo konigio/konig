@@ -24,6 +24,8 @@ package io.konig.shacl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openrdf.model.URI;
+
 import io.konig.core.Vertex;
 
 public class AndConstraint implements Constraint, ShapeConsumer {
@@ -50,5 +52,16 @@ public class AndConstraint implements Constraint, ShapeConsumer {
 		}
 		
 		return true;
+	}
+
+	@Override
+	public boolean hasPropertyConstraint(URI predicate) {
+		
+		for (Shape s : shapes) {
+			if (s.hasPropertyConstraint(predicate)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
