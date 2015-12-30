@@ -3,7 +3,7 @@
   <parent>
     <groupId>io.konig</groupId>
     <artifactId>konig-parent</artifactId>
-    <version>1</version>
+    <version>0.0.1-SNAPSHOT</version>
     <relativePath>../konig-parent/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -23,6 +23,27 @@
   </properties>
 
   <dependencies>
+  
+	<dependency>
+		<groupId>io.konig</groupId>
+		<artifactId>konig-core</artifactId>
+		<version>${konig.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>io.konig</groupId>
+		<artifactId>konig-shacl</artifactId>
+		<version>${konig.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>io.konig</groupId>
+		<artifactId>konig-core</artifactId>
+		<version>${konig.version}</version>
+    <type>test-jar</type>
+    <scope>test</scope>
+ </dependency>
+  
 	<dependency>
 		<groupId>org.openrdf.sesame</groupId>
 		<artifactId>sesame-model</artifactId>
@@ -56,4 +77,72 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  
+  
+  <build>
+	  <plugins>
+	      <plugin>
+	        <groupId>org.codehaus.mojo</groupId>
+	        <artifactId>license-maven-plugin</artifactId>
+	        <version>1.8</version>
+	        <configuration>
+	          <verbose>false</verbose>
+	        </configuration>
+	        <executions>
+	          <execution>
+	            <id>first</id>
+	            <goals>
+	              <goal>update-file-header</goal>
+	            </goals>
+	            <phase>process-sources</phase>
+	            <configuration>
+	              <licenseName>apache_v2</licenseName>
+	              <roots>
+	                <root>src/main/java</root>
+	                <root>src/test</root>
+	              </roots>
+	            </configuration>
+	          </execution>
+	        </executions>
+	      </plugin>
+	  </plugins>
+	  <pluginManagement>
+	  	<plugins>
+	  		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+	  		<plugin>
+	  			<groupId>org.eclipse.m2e</groupId>
+	  			<artifactId>lifecycle-mapping</artifactId>
+	  			<version>1.0.0</version>
+	  			<configuration>
+	  				<lifecycleMappingMetadata>
+	  					<pluginExecutions>
+	  						<pluginExecution>
+	  							<pluginExecutionFilter>
+	  								<groupId>
+	  									org.codehaus.mojo
+	  								</groupId>
+	  								<artifactId>
+	  									license-maven-plugin
+	  								</artifactId>
+	  								<versionRange>
+	  									[1.8,)
+	  								</versionRange>
+	  								<goals>
+	  									<goal>
+	  										update-file-header
+	  									</goal>
+	  								</goals>
+	  							</pluginExecutionFilter>
+	  							<action>
+	  								<ignore></ignore>
+	  							</action>
+	  						</pluginExecution>
+	  					</pluginExecutions>
+	  				</lifecycleMappingMetadata>
+	  			</configuration>
+	  		</plugin>
+	  	</plugins>
+	  </pluginManagement>
+  </build>
+  
 </project>
