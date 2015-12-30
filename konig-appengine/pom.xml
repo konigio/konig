@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<parent>
+    <groupId>io.konig</groupId>
+    <artifactId>konig-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../konig-parent/pom.xml</relativePath>
+  </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>war</packaging>
     <version>0.0.1-SNAPSHOT</version>
@@ -27,6 +32,12 @@
 
     <dependencies>
         <!-- Compile/runtime dependencies -->
+				<dependency>
+					<groupId>io.konig</groupId>
+					<artifactId>konig-services</artifactId>
+					<version>${konig.version}</version>
+				</dependency>
+	
 				<dependency>
 					<groupId>commons-codec</groupId>
 					<artifactId>commons-codec</artifactId>
@@ -93,6 +104,30 @@
         <!-- for hot reload of the web application-->
         <outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>
         <plugins>
+			      <plugin>
+			        <groupId>org.codehaus.mojo</groupId>
+			        <artifactId>license-maven-plugin</artifactId>
+			        <version>1.8</version>
+			        <configuration>
+			          <verbose>false</verbose>
+			        </configuration>
+			        <executions>
+			          <execution>
+			            <id>first</id>
+			            <goals>
+			              <goal>update-file-header</goal>
+			            </goals>
+			            <phase>process-sources</phase>
+			            <configuration>
+			              <licenseName>apache_v2</licenseName>
+			              <roots>
+			                <root>src/main/java</root>
+			                <root>src/test/java</root>
+			              </roots>
+			            </configuration>
+			          </execution>
+			        </executions>
+			      </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
@@ -184,6 +219,27 @@
         								<goals>
         									<goal>
         										display-dependency-updates
+        									</goal>
+        								</goals>
+        							</pluginExecutionFilter>
+        							<action>
+        								<ignore></ignore>
+        							</action>
+        						</pluginExecution>
+        						<pluginExecution>
+        							<pluginExecutionFilter>
+        								<groupId>
+        									org.codehaus.mojo
+        								</groupId>
+        								<artifactId>
+        									license-maven-plugin
+        								</artifactId>
+        								<versionRange>
+        									[1.8,)
+        								</versionRange>
+        								<goals>
+        									<goal>
+        										update-file-header
         									</goal>
         								</goals>
         							</pluginExecutionFilter>
