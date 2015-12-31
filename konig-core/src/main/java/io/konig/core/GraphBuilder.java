@@ -1,5 +1,9 @@
 package io.konig.core;
 
+import java.util.LinkedList;
+
+import org.openrdf.model.BNode;
+
 /*
  * #%L
  * konig-core
@@ -26,12 +30,16 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.BNodeImpl;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
 public class GraphBuilder {
 	
 	private Graph graph;
 	private ValueFactory valueFactory;
+	
+	private LinkedList<Resource> stack = new LinkedList<>();
 
 	public GraphBuilder(Graph graph) {
 		this.graph = graph;
@@ -64,6 +72,37 @@ public class GraphBuilder {
 	
 	public URI uri(String value) {
 		return valueFactory.createURI(value);
+	}
+	
+	public GraphBuilder beginSubject() {
+		BNode bnode = new BNodeImpl(UidGenerator.INSTANCE.next());
+		return beginSubject(bnode);
+	}
+	
+	public GraphBuilder beginSubject(String iri) {
+		return beginSubject(new URIImpl(iri));
+	}
+	
+	public GraphBuilder beginSubject(Resource subject) {
+		stack.add(subject);
+		return this;
+	}
+	
+	public GraphBuilder endSubject() {
+		stack.removeLast();
+		return this;
+	}
+	
+	public Resource peek() {
+		return stack.getLast();
+	}
+	
+	public Resource pop() {
+		return stack.removeLast();
+	}
+	
+	public GraphBuilder addProperty(URI predicate, Value object) {
+		return statement(peek(), predicate, object);
 	}
 	
 	

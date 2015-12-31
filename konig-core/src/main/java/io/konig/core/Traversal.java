@@ -1,5 +1,8 @@
 package io.konig.core;
 
+import java.util.List;
+import java.util.Set;
+
 /*
  * #%L
  * konig-core
@@ -141,6 +144,15 @@ public interface Traversal {
 	 * @return The first vertex in this traversal.
 	 */
 	Vertex firstVertex();
+	
+	List<Vertex> toVertexList();
+	
+	/**
+	 * Add the values in this traversal to a given Set.
+	 * @param set The set into which values should be added.
+	 */
+	void addValues(Set<Value> set);
+	
 	
 
 }

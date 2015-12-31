@@ -254,6 +254,30 @@ public class TraversalImpl implements Traversal {
 		return null;
 	}
 	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Vertex> toVertexList() {
+		if (list.isEmpty() || list.get(0) instanceof Vertex) {
+			return (List<Vertex>) ((Object)list);
+		}
+		return null;
+	}
+	@Override
+	public void addValues(Set<Value> set) {
+		
+		for (Object obj : list) {
+			if (obj instanceof Value) {
+				set.add((Value)obj);
+			} else if (obj instanceof Vertex) {
+				Vertex v = (Vertex)obj;
+				set.add(v.getId());
+			}
+		}
+		
+	}
+	
+	
+	
 	
 
 }
