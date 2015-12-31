@@ -29,6 +29,7 @@ public class Schema {
 	public static final URI Person = new URIImpl("http://schema.org/Person");
 	public static final URI PostalAddress = new URIImpl("http://schema.org/PostalAddress");
 	public static final URI address = new URIImpl("http://schema.org/address");
+	public static final URI datePublished = new URIImpl("http://schema.org/datePublished");
 	public static final URI streetAddress = new URIImpl("http://schema.org/streetAddress");
 	public static final URI addressLocality = new URIImpl("http://schema.org/addressLocality");
 	public static final URI addressRegion = new URIImpl("http://schema.org/addressRegion");
@@ -40,5 +41,6 @@ public class Schema {
 	public static final URI parent = new URIImpl("http://schema.org/parent");
 	public static final URI email = new URIImpl("http://schema.org/email");
 	public static final URI knows = new URIImpl("http://schema.org/knows");
+	public static final URI thumbnailUrl = new URIImpl("http://schema.org/thumbnailUrl");
 
 }
