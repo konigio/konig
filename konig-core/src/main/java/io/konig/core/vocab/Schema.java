@@ -32,6 +32,7 @@ public class Schema {
 	public static final URI streetAddress = new URIImpl("http://schema.org/streetAddress");
 	public static final URI addressLocality = new URIImpl("http://schema.org/addressLocality");
 	public static final URI addressRegion = new URIImpl("http://schema.org/addressRegion");
+	public static final URI exampleOfWork = new URIImpl("http://schema.org/exampleOfWork");
 	public static final URI givenName = new URIImpl("http://schema.org/givenName");
 	public static final URI familyName = new URIImpl("http://schema.org/familyName");
 	public static final URI name = new URIImpl("http://schema.org/name");

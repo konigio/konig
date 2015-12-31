@@ -31,4 +31,5 @@ public class KC {
 	public static final URI removal = new URIImpl("http://www.konig.io/ns/core/removal");
 	public static final URI ChangeSet = new URIImpl("http://www.konig.io/ns/core/ChangeSet");
 	
+	
 }
