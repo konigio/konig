@@ -23,11 +23,11 @@ $(document).ready(function(){
 /**
  * A mock implementation of the OntologyService.  Used for testing
  */
-function MockOntologyService() {
+function StaticOntologyService() {
 	
 }
 
-MockOntologyService.prototype.getOntologyGraph = function() {
+StaticOntologyService.prototype.getOntologyGraph = function() {
 	return {
 		  "@context" : {
 			    "bibo" : "http://purl.org/ontology/bibo/",
@@ -545,6 +545,6 @@ MockOntologyService.prototype.getOntologyGraph = function() {
 }
 
 
-konig.buildOntodoc(new MockOntologyService());
+konig.buildOntodoc(new StaticOntologyService());
 	
 });
