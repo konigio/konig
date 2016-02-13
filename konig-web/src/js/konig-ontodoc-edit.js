@@ -19,7 +19,7 @@
  */
 $(function(){
 var Ontodoc = konig.ontodoc.constructor;
-var ClassInfo = konig.ClassInfo;
+var ShapeInfo = konig.ShapeInfo;
 var PropertyBlock = konig.PropertyBlock;
 
 
@@ -39,7 +39,7 @@ PropertyBlock.prototype.renameClass = function(oldIRI, newIRI) {
 	}
 }
 /*****************************************************************************/	
-ClassInfo.prototype.renameClass = function(oldIRI, newIRI) {
+ShapeInfo.prototype.renameClass = function(oldIRI, newIRI) {
 	if (this.owlClass.stringValue === oldIRI.stringValue) {
 		this.owlClass = newIRI;
 		this.localName = newIRI.localName;
@@ -63,12 +63,12 @@ Ontodoc.prototype.initEdit = function() {
 
 }	
 
-Ontodoc.prototype.editClass = function(classInfo) {
+Ontodoc.prototype.editClass = function(shapeInfo) {
 	var self = this;
 	$("#class-name-edit").keyup(function(){
 		var value = $(this).text();
 		
-		var classId = classInfo.owlClass.stringValue;
+		var classId = shapeInfo.owlClass.stringValue;
 		
 		var indexElement = $('.ontodoc-index-entry>a[href="#' + classId + '"]');
 		indexElement.text(value);
@@ -85,8 +85,8 @@ Ontodoc.prototype.editClass = function(classInfo) {
 Ontodoc.prototype.renameClass = function(oldIRI, newIRI) {
 
 	for (var key in this.classMap) {
-		var classInfo = this.classMap[key];
-		classInfo.renameClass(oldIRI, newIRI);
+		var shapeInfo = this.classMap[key];
+		shapeInfo.renameClass(oldIRI, newIRI);
 	}
 	
 	var info = this.classMap[oldIRI.stringValue];

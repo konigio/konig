@@ -105,9 +105,9 @@ OWL = {
 	THING : new IRI("http://www.w3.org/2002/07/owl#Thing")
 	
 };
-RDFS = {
+rdfs = {
 	LABEL : new IRI('http://www.w3.org/2000/01/rdf-schema#label'),
-	SUBCLASSOF : new IRI('http://www.w3.org/2000/01/rdf-schema#subClassOf')
+	subClassOf : new IRI('http://www.w3.org/2000/01/rdf-schema#subClassOf')
 }
 
 // Deprecated.  Use rdf.type and rdf.Property instead
@@ -116,10 +116,11 @@ RDF = {
 	PROPERTY: new IRI('http://www.w3.org/1999/02/22-rdf-syntax-ns#Property')
 };
 
-XSD = {
+xsd = {
 	NAMESPACE: "http://www.w3.org/2001/XMLSchema#",
-	INTEGER : new IRI('http://www.w3.org/2001/XMLSchema#integer'),
-	DOUBLE : new IRI('http://www.w3.org/2001/XMLSchema#double')
+	int : new IRI('http://www.w3.org/2001/XMLSchema#int'),
+	integer : new IRI('http://www.w3.org/2001/XMLSchema#integer'),
+	double : new IRI('http://www.w3.org/2001/XMLSchema#double')
 }
 
 
@@ -166,7 +167,7 @@ Literal.prototype.isResource = function() {
 Literal.prototype.serialize = function() {
 	if (this.type) {
 		
-		if (this.type.equals(XSD.DOUBLE)) {
+		if (this.type.equals(xsd.double)) {
 			return Number.parseFloat(this.stringValue);
 		}
 		
@@ -188,7 +189,7 @@ Literal.prototype.serialize = function() {
 }
 
 Literal.prototype.toString = function() {
-	if (XSD.INTEGER===this.type || XSD.DOUBLE===this.type) {
+	if (xsd.integer===this.type || xsd.double===this.type) {
 		return this.stringValue;
 	}
 	if (this.language) {
@@ -344,6 +345,24 @@ Vertex = function(id, graph) {
 	this.statementMap = {};
 }
 
+Vertex.prototype.toList = function() {
+	if (!this.elements) {
+		this.elements = [];
+	}
+	return this.elements;
+}
+
+Vertex.prototype.instanceOf = function(type) {
+	return this.v().instanceOf(type).first() ? true : false;
+}
+
+Vertex.prototype.push = function(vertex) {
+	if (!this.elements) {
+		this.elements = [];
+	}
+	this.elements.push(vertex);
+}
+
 Vertex.prototype.replaceIRI = function(oldId, newId, defaultMemory) {
 	var memory = defaultMemory || {};
 	if (oldId.stringValue == this.id.stringValue) {
@@ -362,7 +381,23 @@ Vertex.prototype.equals = function(other) {
 }
 
 Vertex.prototype.toJson = function() {
-	var json = {};
+	if (this.elements) {
+		
+		var out = [];
+		for (var i=0; i<this.elements.length; i++) {
+			var e = this.elements[i];
+			if (e instanceof Vertex) {
+				out.push(e.toJson());
+			} else if (e.stringValue) {
+				out.push(e.stringValue);
+			}
+		}
+		
+		return out;
+		
+	}
+	var json = {id: this.id};
+	
 	var list = this.outStatements();
 	for (var i=0; i<list.length; i++) {
 		var s = list[i];
@@ -480,6 +515,9 @@ Vertex.prototype.inward = function(property) {
 
 Vertex.prototype.add = function(statement) {
 	
+	if (!statement.predicate) {
+		console.log("invalid statement", statement);
+	}
 	var predicateKey = statement.predicate.key();
 	var propertySet = this.statementMap[predicateKey];
 	if (!propertySet) {
@@ -632,32 +670,244 @@ AddVertexStep.prototype.execute = function(traverser) {
 	return next;
 }
 /*****************************************************************************/
-function InwardStep(predicate) {
-	this.predicate = predicate;
+function InwardStep() {
+	this.predicateList = arguments;
 }
 
 InwardStep.prototype.execute = function(traverser) {
 	var graph = traverser.graph;
 	var next = new Traverser(traverser, this);
 	var list = traverser.itemList;
-	for (var i=0; i<list.length; i++) {
-		var item = list[i];
-		var path = traverser.path(i);
-		if (item instanceof Vertex) {
-			var edges = item.inward(this.predicate);
-			for (var i=0; i<edges.length; i++) {
-				var e = edges[i];
-				var subject = edges[i].subject;
-				if (subject instanceof RdfResource) {
-					subject = graph.vertex(subject);
+	
+	var plist = this.predicateList;
+	
+	for (var k=0; k<plist.length; k++) {
+		var predicate = plist[k];
+		for (var i=0; i<list.length; i++) {
+			var item = list[i];
+			var path = traverser.path(i);
+			if (item instanceof Vertex) {
+				var edges = item.inward(predicate);
+				for (var j=0; j<edges.length; j++) {
+					var e = edges[j];
+					var subject = edges[j].subject;
+					if (subject instanceof RdfResource) {
+						subject = graph.vertex(subject);
+					}
+					next.add(subject, path);
 				}
-				next.add(subject, path);
+			}
+			// TODO: Handle the case where the item is an Edge.
+			
+		}
+	}
+	
+	
+	return next;
+}
+
+/*****************************************************************************/
+function InwardTransitiveClosureStep(predicate) {
+	this.predicate = rdf.iri(predicate);
+}
+
+InwardTransitiveClosureStep.prototype.execute = function(traverser) {
+	var i;
+	var list = [];
+	var key;
+	var map = {};
+	
+	for (i=0; i<traverser.itemList.length; i++) {
+		var item = traverser.itemList[i];
+		var key = item.id.stringValue;
+		if (!map[key]) {
+			map[key] = item;
+			list.push(item);
+		}
+	}
+	
+	var graph = traverser.graph;
+
+	for (i=0; i<list.length; i++) {
+		var item = list[i];
+		if (item instanceof Vertex) {
+			
+			var entityList = item.v().inward(this.predicate).toList();
+			for (var j=0; j<entityList.length; j++) {
+				var entity = entityList[j];
+				key = entity.id.stringValue;
+				if (!map[key]) {
+					list.push(entity);
+				}
 			}
 		}
-		// TODO: Handle the case where the item is an Edge.
-		
 	}
-	return next;
+	traverser.itemList = list;
+	traverser.addFilter(this);
+	
+	return traverser;
+}
+/*****************************************************************************/
+function TransitiveClosureStep(predicate) {
+	this.predicate = rdf.iri(predicate);
+}
+
+TransitiveClosureStep.prototype.execute = function(traverser) {
+	var i;
+	var list = [];
+	var key;
+	var map = {};
+	
+	for (i=0; i<traverser.itemList.length; i++) {
+		var item = traverser.itemList[i];
+		var key = item.id.stringValue;
+		if (!map[key]) {
+			map[key] = item;
+			list.push(item);
+		}
+	}
+	
+	var graph = traverser.graph;
+
+	for (i=0; i<list.length; i++) {
+		var item = list[i];
+		if (item instanceof Vertex) {
+			
+			var entityList = item.v().out(this.predicate).toList();
+			for (var j=0; j<entityList.length; j++) {
+				var entity = entityList[j];
+				key = entity.id.stringValue;
+				if (!map[key]) {
+					list.push(entity);
+				}
+			}
+		}
+	}
+	traverser.itemList = list;
+	traverser.addFilter(this);
+	
+	return traverser;
+}
+/*****************************************************************************/
+function HasTransitiveStep(predicate, value) {
+	this.predicate = rdf.iri(predicate);
+	this.value = rdf.node(value);
+}
+
+HasTransitiveStep.prototype.execute = function(traverser) {
+	var filtered = [];
+	var list = traverser.itemList;
+	
+	var graph = traverser.graph;
+	
+	for (var i=0; i<list.length; i++) {
+		var item = list[i];
+		if (item instanceof Vertex) {
+			
+			var valueList = item.v().out(this.predicate).toList();
+			var map = {};
+			for (var j=0; j<valueList.length; j++) {
+				var value = valueList[j];
+				if (value instanceof Statement) {
+					value = value.object;
+				}
+				if (this.value.equals(value)) {
+					filtered.push(item);
+					break;
+				} else if (value instanceof Vertex) {
+					// Check to see if we have traversed value yet.
+					var key = value.id.stringValue;
+					if (!map[key]) {
+						// We have not yet traversed value, so traverse it now
+						// and add any outgoing nodes to the valueList.
+						map[key] = value;
+						var next = value.v().out(this.predicate).toList();
+						for (var k=0; k<next.length; k++) {
+							valueList.push(next[k]);
+						}
+					}
+				}
+			}
+		}
+	}
+	traverser.itemList = filtered;
+	traverser.addFilter(this);
+	
+	return traverser;
+}
+/*****************************************************************************/
+function InstanceOfStep(owlClass) {
+	this.owlClass = rdf.node(owlClass);
+}
+
+InstanceOfStep.prototype.execute = function(traverser) {
+	var filtered = [];
+	var list = traverser.itemList;
+	var wantedIRI = this.owlClass.stringValue;
+	var graph = traverser.graph;
+	
+	for (var i=0; i<list.length; i++) {
+		var item = list[i];
+		if (item instanceof Vertex) {
+			var superMap = {};
+			var typeList = item.v().out(rdf.type).toList();
+			for (var j=0; j<typeList.length; j++) {
+				var type = typeList[j];
+				if (type.id.stringValue === wantedIRI) {
+					filtered.push(item);
+					break;
+				} else {
+					var superList = type.v().out(rdfs.subClassOf).toList();
+					for (var k=0; k<superList.length; k++) {
+						var superType = superList[k];
+						var key = superType.id.stringValue;
+						if (!superMap[key]) {
+							superMap[key] = superType;
+							typeList.push(superType);
+						}
+					}
+				}
+			}
+		}
+	}
+	traverser.itemList = filtered;
+	traverser.addFilter(this);
+	
+	return traverser;
+}
+/*****************************************************************************/
+function NodeKindStep(nodeKindList) {
+	this.nodeKindList = [];
+	for (var i=0; i<nodeKindList.length; i++) {
+		this.nodeKindList[i] = rdf.iri(nodeKindList[i]);
+	}
+}
+
+NodeKindStep.prototype.execute = function(traverser) {
+	var iri = "http://www.w3.org/ns/shacl#IRI";
+	var bnode = "http://www.w3.org/ns/shacl#BlankNode";
+	var literal = "http://www.w3.org/ns/shacl#Literal";
+	var kind = this.nodeKindList;
+	var filtered = [];
+	var list = traverser.itemList;
+	for (var i=0; i<list.length; i++) {
+		var item = list[i];
+		if (item instanceof Vertex) {
+			var id = item.id;
+			for (var j=0; j<kind.length; j++) {
+				var nodeKind = kind[j].stringValue;
+				if ((id instanceof IRI) && nodeKind===iri) {
+					filtered.push(item);
+				} else if (id instanceof BNode && nodeKind===bnode) {
+					filtered.push(item);
+				}
+			}
+		}
+	}
+	traverser.itemList = filtered;
+	traverser.addFilter(this);
+	
+	return traverser;
 }
 /*****************************************************************************/
 function HasStep(predicate, value) {
@@ -749,6 +999,53 @@ AddRelationshipStep.prototype.execute = function(traverser) {
 	}
 	
 	return traverser;
+}
+
+/*****************************************************************************/
+function UniqueStep() {
+	
+}
+
+UniqueStep.prototype.execute = function(traverser) {
+	var filtered = [];
+	var map = {};
+	var list = traverser.itemList;
+	for (var i=0; i<list.length; i++) {
+		var item = list[i];
+		if (item instanceof Vertex) {
+			if (!map[item.id.stringValue]) {
+				map[item.id.stringValue] = item;
+				filtered.push(item);
+			}
+		}
+	}
+	
+	traverser.itemList = filtered;
+	traverser.addFilter(this);
+	return traverser;
+}
+/*****************************************************************************/
+
+function UnionStep(traversalList) {
+	this.traversalList = traversalList;
+}
+
+UnionStep.prototype.execute = function(traverser) {
+	var next = new Traverser(traverser, this);
+	
+	for (var i=0; i<this.traversalList.length; i++) {
+		var traversal = this.traversalList[i];
+		traversal.source = traverser.clone();
+		
+		var result = traversal.toList();
+		for (var j=0; j<result.length; j++) {
+			var item = result[j];
+			var path = traverser.path(i);
+			next.add(item, path);
+		}
+	}
+	
+	return next;
 }
 
 /*****************************************************************************/
@@ -888,6 +1185,19 @@ PathStep.prototype.buildPath = function(sink, sequence, pathElement) {
 }
 
 /*****************************************************************************/
+function TraversalFactory() {
+	
+}
+
+TraversalFactory.prototype.out = function() {
+	return Traversal.prototype.out.apply(new Traversal(), arguments);
+}
+
+TraversalFactory.prototype.inward = function(predicate) {
+	return new Traversal().inward(predicate);
+}
+
+/*****************************************************************************/
 
 function Traversal(source) {
 	this.source = source;
@@ -895,6 +1205,7 @@ function Traversal(source) {
 	this.firstStep = null;
 	this.result = null;
 }
+
 
 Traversal.prototype.first = function() {
 	var list = this.execute();
@@ -913,6 +1224,10 @@ Traversal.prototype.path = function() {
 	}
 	
 	return this.addStep(new PathStep());
+}
+
+Traversal.prototype.nodeKind = function() {
+	return this.addStep(new NodeKindStep(arguments));
 }
 
 Traversal.prototype.until = function(condition) {
@@ -940,6 +1255,14 @@ Traversal.prototype.addRelationship = function(predicate, object) {
 	return this.addStep( new AddRelationshipStep(predicate, object) );
 }
 
+Traversal.prototype.instanceOf = function(type) {
+	return this.addStep(new InstanceOfStep(type));
+}
+
+Traversal.prototype.union = function() {
+	return this.addStep( new UnionStep(arguments));
+}
+
 Traversal.prototype.hasNot = function(predicate, value) {
 	return this.addStep( new HasNotStep(predicate, value) );
 }
@@ -952,12 +1275,28 @@ Traversal.prototype.hasType = function(value) {
 	return this.addStep( new HasStep(RDF.TYPE, value));
 }
 
+Traversal.prototype.hasTransitive = function(predicate, value) {
+	return this.addStep( new HasTransitiveStep(predicate, value) );
+}
+
+Traversal.prototype.inwardTransitiveClosure = function(predicate) {
+	return this.addStep(new InwardTransitiveClosureStep(predicate));
+}
+
+Traversal.prototype.transitiveClosure = function(predicate) {
+	return this.addStep(new TransitiveClosureStep(predicate));
+}
+
+Traversal.prototype.unique = function() {
+	return this.addStep( new UniqueStep() );
+}
+
 Traversal.prototype.has = function(predicate, value) {
 	return this.addStep( new HasStep(predicate, value) );
 }
 
-Traversal.prototype.inward = function(predicate) {
-	return this.addStep(new InwardStep(predicate));
+Traversal.prototype.inward = function() {
+	return this.addStep(InwardStep.construct(arguments));
 }
 
 Traversal.prototype.addStep = function(step) {
@@ -1119,9 +1458,14 @@ Statement.prototype.toString = function() {
 }
 
 Statement.prototype.key = function() {
-	var value = Sha1.hash(this.predicate.key() + '|' + this.object.key()).substring(0,32);
-	var data = this.subject.key() + '#' + value;
-	return data;
+	try {
+
+		var value = Sha1.hash(this.predicate.key() + '|' + this.object.key()).substring(0,32);
+		var data = this.subject.key() + '#' + value;
+		return data;
+	} catch (e) {
+		console.log(e);
+	}
 }
 
 Statement.prototype.serialize = function() {
@@ -1207,6 +1551,10 @@ Graph.prototype.removeHandler = function(handler) {
 }
 
 Graph.prototype.vertex = function(id, readOnly) {
+	if (!id) {
+		id = this.resource();
+	}
+	
 	if (id instanceof Vertex) {
 		if (id.graph === this) {
 			return id;
@@ -1231,10 +1579,14 @@ Graph.prototype.vertex = function(id, readOnly) {
 	
 }
 
-Graph.prototype.V = function(id) {
-	var vertex = this.vertex(id);
+Graph.prototype.V = function() {
+
 	var source = new Traverser(null, null, this);
-	source.add(vertex);
+	for (var i=0; i<arguments.length; i++) {
+		var id = arguments[i];
+		var vertex = this.vertex(id);
+		source.add(vertex);
+	}
 	return new Traversal(source);
 }
 
@@ -1348,7 +1700,7 @@ Graph.prototype.instanceOf = function(subject, type) {
 		if (object.stringValue === type) {
 			return true;
 		}
-		appendUnique(this.select(object, RDFS.SUBCLASSOF, null), stack);
+		appendUnique(this.select(object, rdfs.subClassOf, null), stack);
 	}
 	return false;
 }
@@ -1400,6 +1752,14 @@ Graph.prototype.statement = function(subject, predicate, object) {
 	}
 	if (object instanceof Vertex) {
 		object = object.id;
+	}
+	
+	if (typeof(object) === 'number') {
+		if (object !== (object|0) ) {
+			object = this.typedLiteral(object.toString(), xsd.double);
+		} else {
+			object = this.typedLiteral(object.toString(), xsd.integer);
+		}
 	}
 	
 	if (typeof(subject) === 'string') {
@@ -1527,22 +1887,24 @@ Graph.prototype.resource = function(stringValue) {
 	
 	stringValue = rdf.stringValue(stringValue);
 	
-	if (stringValue.startsWith('_:')) {
+	if (!stringValue || stringValue.startsWith('_:')) {
 		if (!this.bnodeMap) {
 			this.bnodeMap = {};
 		}
-		var bnode = this.bnodeMap[stringValue];
+		var bnode = stringValue ? this.bnodeMap[stringValue] : null;
 		if (bnode) {
 			return bnode;
 		}
-		var vertex = this.vertexMap[stringValue];
+		var vertex = stringValue ? this.vertexMap[stringValue] : null;
 		if (vertex) {
 			return vertex.id;
 		}
 		
 		var id = '_:' + uuid.v4();
 		bnode = new BNode(id);
-		this.bnodeMap[stringValue] = bnode;
+		if (stringValue) {
+			this.bnodeMap[stringValue] = bnode;
+		}
 		this.vertex(bnode);
 		return bnode;
 		
@@ -1612,9 +1974,9 @@ Graph.prototype.literal = function(stringValue) {
 	} else if (type === 'number') {
 		var integer = parseInt(stringValue);
 		if (integer == stringValue) {
-			return this.typedLiteral(stringValue, XSD.INTEGER);
+			return this.typedLiteral(stringValue, xsd.integer);
 		}
-		return this.typedLiteral(stringValue, XSD.DOUBLE);
+		return this.typedLiteral(stringValue, xsd.double);
 	}
 	
 	var obj = stringValue;
@@ -1688,8 +2050,8 @@ RdfModule = function() {
 	this.Context = Context;
 	this.IRI = IRI;
 	this.RDF = RDF;
-	this.RDFS = RDFS;
-	this.XSD = XSD;
+	this.rdfs = rdfs;
+	this.xsd = xsd;
 	this.BNode = BNode;
 	this.OWL = OWL;
 	this.ChangeSet = ChangeSet;
@@ -1701,6 +2063,7 @@ RdfModule = function() {
 	this.type = RDF.TYPE;
 	this.Property = RDF.PROPERTY;
 	this.Graph = Graph;
+	this.__ = new TraversalFactory();
 
 	this.type = new IRI('http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
 	this.Property = new IRI('http://www.w3.org/1999/02/22-rdf-syntax-ns#Property');
@@ -1753,6 +2116,18 @@ RdfModule = function() {
 	};
 }
 
+RdfModule.prototype.iri = function(value) {
+	if (value instanceof IRI) {
+		return value;
+	}
+	if (value instanceof Vertex) {
+		return value.id;
+	}
+	if (typeof(value) === "string") {
+		return new IRI(value);
+	}
+	throw new Error("Illegal argument: " + value);
+}
 
 RdfModule.prototype.node = function(value) {
 	if (value instanceof RdfNode) {
@@ -1769,6 +2144,9 @@ RdfModule.prototype.node = function(value) {
 }
 
 RdfModule.prototype.stringValue = function( node ) {
+	if (!node) {
+		return null;
+	}
 	if (node.stringValue) {
 		return node.stringValue;
 	}

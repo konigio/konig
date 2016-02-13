@@ -26,7 +26,7 @@ var ChangeSet = rdf.ChangeSet;
 var ApplyChangeSet = rdf.ApplyChangeSet;
 var IRI = rdf.IRI;
 var RDF = rdf.RDF;
-var XSD = rdf.XSD;
+var xsd = rdf.xsd;
 var KE = konig.ke;
 
 var skos = konig.skos;
@@ -1625,7 +1625,7 @@ RdfController.prototype.getRdfObjectFromView = function(vertexView) {
 			// TODO: Implement more generic type handling mechanism.
 			
 			var namespace = iri.namespace;
-			if (namespace === XSD.NAMESPACE) {
+			if (namespace === xsd.NAMESPACE) {
 				return this.graph.typedLiteral(value, iri);
 			}
 		}

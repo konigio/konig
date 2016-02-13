@@ -25,12 +25,17 @@ var owl = konig.owl;
 var rdfs = konig.rdfs;
 var vann = konig.vann;
 var dcterms = konig.dcterms;
+var dc = konig.dc;
 var schema = konig.schema;
 var sh = konig.sh;
+var kol = konig.kol;
+var xsd = rdf.xsd;
 var step = rdf.step;
 var stringValue = rdf.stringValue;
 var IRI = rdf.IRI;
 var HistoryManager = konig.HistoryManager;
+var BNode = rdf.BNode;
+var __ = rdf.__;
 
 /*****************************************************************************/
 var SHACL = {
@@ -41,6 +46,70 @@ var OWL = {
 	Ontology: new IRI("http://www.w3.org/2002/07/owl#Ontology")	
 };
 /*****************************************************************************/
+function PropertyOverview(propertyVertex) {
+	this.propertyVertex = propertyVertex;
+	this.init();
+}
+
+PropertyOverview.prototype.init = function() {
+	var comment = this.propertyVertex.v().out(rdfs.comment, dcterms.description, dc.description).first();
+	if (comment) {
+		this.comment = comment.stringValue;
+	}
+	this.analyzeRange();
+	this.analyzeDomain();
+	this.analyzeInverse();
+}
+
+PropertyOverview.prototype.analyzeInverse = function() {
+
+	this.inverseOf = this.propertyVertex.v().union(
+		__.out(owl.inverseOf),
+		__.inward(owl.inverseOf)
+	).unique().toList();
+	
+	console.log(this.inverseOf);
+}
+
+PropertyOverview.prototype.analyzeRange = function() {
+	var list = this.rangeList = [];
+	var range = this.propertyVertex.v().out(rdfs.range).first();
+	if (range) {
+		// TODO: check if range is a union class
+		list.push(range.id);
+	} 
+}
+
+PropertyOverview.prototype.analyzeDomain = function() {
+	var list = this.domainList = [];
+	var domain = this.propertyVertex.v().out(rdfs.domain).first();
+	if (domain) {
+		// TODO: check if domain is a union class
+		list.push(domain.id);
+	}
+}
+
+/*****************************************************************************/
+function PropertyManager(graph) {
+	this.graph = graph;
+	this.propertyMap = {};
+}
+
+PropertyManager.prototype.getPropertyOverview = function(propertyId) {
+	var propertyVertex = this.graph.vertex(propertyId);
+	
+	var key = propertyVertex.id.stringValue;
+	
+	var overview = this.propertyMap[key];
+	if (!overview) {
+		// TODO: compute range and domain
+		overview = new PropertyOverview(propertyVertex);
+		this.propertyMap[key] = overview;
+	}
+	
+	return overview;
+}
+/*****************************************************************************/
 function PropertyInfo(predicate, expectedType, minCount, maxCount, description) {
 	this.predicate = predicate;
 	this.propertyName = predicate.localName;
@@ -49,11 +118,56 @@ function PropertyInfo(predicate, expectedType, minCount, maxCount, description) 
 	this.maxCount = maxCount;
 	this.description = description;
 	this.or = false;
+	
+	if (expectedType.length) {
+		expectedType[expectedType.length-1].last = true;
+	}
 }
+
+PropertyInfo.addType = function(list, typeVertex) {
+	var type = typeVertex.id;
+	
+	if (type instanceof IRI) {
+
+		var value = type.stringValue;
+		for (var i=0; i<list.length; i++) {
+			var item = list[i];
+			if (item.stringValue === value) {
+				return;
+			}
+		}
+		list.push({
+			stringValue: type.stringValue,
+			localName: type.localName
+		});
+		
+	} else {
+		var unionVertex = typeVertex.v().out(owl.unionOf).first();
+		if (unionVertex) {
+			var union = unionVertex.toList();
+			for (var i=0; i<union.length; i++) {
+				PropertyInfo.addType(list, union[i]);
+			}
+		}
+	}
+}
+
 /*****************************************************************************/
-function PropertyBlock(fromClass) {
-	this.fromClass = fromClass;
+function PropertyBlock(fromClassVertex) {
+	this.fromClassVertex = fromClassVertex;
+	this.blockSize = 0;
 	this.propertyList = [];
+}
+
+PropertyBlock.prototype.propertyInfoForPredicate = function(predicate) {
+	var idValue = rdf.node(predicate).stringValue;
+	for (var i=0; i<this.propertyList.length; i++) {
+		var info = this.propertyList[i];
+		if (info.predicate.stringValue === idValue) {
+			return info;
+		}
+	}
+	return null;
 }
 /*****************************************************************************/
 function RenameClass(ontodoc, oldIRI, newIRI) {
@@ -66,21 +180,23 @@ RenameClass.prototype.redo = function() {
 	this.ontodoc.renameClass(oldIRI, newIRI);
 }
 /*****************************************************************************/	
-function HierarchyInfo(classInfo) {
-	this.classInfo = classInfo;
+function HierarchyInfo(shapeInfo) {
+	this.shapeInfo = shapeInfo;
 	this.child = [];
 	this.parent = [];
 }
 
 
 /*****************************************************************************/	
-function OntologyInfo(ontodoc, ontologyVertex) {
-	this.ontodoc = ontodoc;
+function OntologyInfo(manager, ontologyVertex) {
+	this.manager = manager;
 	this.vertex = ontologyVertex;
-	this.label = ontodoc.ontologyLabel(ontologyVertex);
+	this.label = manager.ontologyLabel(ontologyVertex);
 	this.description = this.ontologyDescription();
 	this.namespaceAddress = ontologyVertex.id.stringValue;
 	this.namespacePrefix = this.ontologyPrefix();
+	this.classList = [];
+	this.propertyList = [];
 }
 
 OntologyInfo.prototype.ontologyPrefix = function() {
@@ -90,7 +206,7 @@ OntologyInfo.prototype.ontologyPrefix = function() {
 	}
 	
 	// TODO: Refactor to support a list of contexts
-	var inverse = this.ontodoc.context.inverse();
+	var inverse = this.manager.context.inverse();
 	var term = inverse[this.vertex.id.stringValue];
 	return term ? term : "";
 }
@@ -101,13 +217,507 @@ OntologyInfo.prototype.ontologyDescription = function() {
 	return description ? description.stringValue : null;
 }
 
-/*****************************************************************************/	
-function ClassInfo(owlClass, canonicalShape) {
-	this.owlClass = owlClass;
-	this.localName = owlClass.localName;
-	this.canonicalShape =  canonicalShape;
-	this.propertyBlock = null;
+/*****************************************************************************/
+function OntologyManager(context, graph) {
+	this.context = context;
+	this.graph = graph;
+	this.ontologyMap = {};
+	this.ontologyList = [];
+	this.init();
 }
+
+OntologyManager.prototype.init = function() {
+
+	var ontoList = this.graph.V(owl.Ontology).inward(rdf.type).toList();
+	for (var i=0; i<ontoList.length; i++) {
+		var ontoVertex = ontoList[i];
+		
+		var info = new OntologyInfo(this, ontoVertex);
+		this.ontologyMap[ontoVertex.id.stringValue] = info;
+		this.ontologyList.push(info);
+	}
+	this.ontologyList.sort(function(a,b){
+		return a.label.localeCompare(b.label);
+	});
+	this.analyzeProperties();
+}
+
+OntologyManager.prototype.analyzeProperties = function() {
+	var map = {};
+	
+	var list = this.graph.V(
+		owl.ObjectProperty, rdf.Property, owl.DatatypeProperty, owl.FunctionalProperty, owl.InverseFunctionalProperty, 
+		owl.SymmetricProperty, owl.TransitiveProperty).inward(rdf.type).toList();
+	
+	list.sort(function(a,b){
+		return a.id.localName.localeCompare(b.id.localName);
+	});
+	
+	for (var i=0; i<list.length; i++) {
+		var propertyId = list[i].id;
+		if (!map[propertyId.stringValue]) {
+			map[propertyId.stringValue] = propertyId;
+
+			var ontologyInfo = this.getOntologyInfo(propertyId.namespace);
+			ontologyInfo.propertyList.push(propertyId);
+
+		}
+	}
+	
+}
+
+OntologyManager.prototype.getOntologyInfo = function(ontologyId) {
+	var ontologyVertex = this.graph.vertex(ontologyId);
+	var key = ontologyVertex.id.stringValue;
+	var info = this.ontologyMap[key];
+	if (!info) {
+		info = new OntologyInfo(this, ontologyVertex);
+		this.ontologyMap[key] = info;
+	}
+	return info;
+}
+
+
+OntologyManager.prototype.ontologyLabel = function(ontology) {
+	
+	var label = ontology.v().out(rdfs.label, dcterms.title, dc.title).first();
+	if (label) {
+		return label.stringValue;
+	}
+	
+	return ontology.id.stringValue;
+	
+}
+
+/*****************************************************************************/
+function ClassManager(ontologyManager, graph) {
+	this.ontologyManager = ontologyManager;
+	this.graph = graph;
+	this.classMap = {};
+	this.classList = [];
+	this.shapeMap = {};
+	this.init();
+}
+
+ClassManager.prototype.init = function() {
+	var classList = this.graph.V(rdfs.Class, owl.Class).inwardTransitiveClosure(rdfs.subClassOf).inward(rdf.type)
+		.nodeKind(sh.IRI).toList();
+	for (var i=0; i<classList.length; i++) {
+		var owlClass = classList[i];
+		var classInfo = this.getOrCreateClassInfo(owlClass);
+	}
+	
+
+	this.classList.sort(function(a,b){
+		return a.classVertex.id.localName.localeCompare(b.classVertex.id.localName);
+	});
+	
+	this.assignUniqueNames();
+}
+
+ClassManager.prototype.assignUniqueNames = function() {
+	var list = this.classList;
+	var prevLocalName = null;
+	for (var i=0; i<list.length; i++) {
+		var classInfo = list[i];
+		var localName = classInfo.classVertex.id.localName;
+		classInfo.uniqueName = localName;
+		if (
+			(localName === prevLocalName) ||
+			(
+				(i<list.length-1) && 
+				(list[i+1].classVertex.id.localName === localName)
+			)
+		) {
+			var namespace = classInfo.classVertex.id.namespace;
+			var ontoInfo = this.ontologyManager.getOntologyInfo(namespace);
+			var prefix = ontoInfo.namespacePrefix;
+			if (prefix) {
+				classInfo.uniqueName = prefix + ":" + localName;
+			}
+		} 
+		
+		prevLocalName = localName;
+		
+	}
+}
+
+ClassManager.prototype.getOrCreateClassInfo = function(owlClass) {
+	var classId = rdf.node(owlClass);
+	var classInfo = this.classMap[classId.stringValue];
+	if (classInfo == null) {
+		classInfo = new ClassInfo(owlClass, this);
+		this.classMap[classId.stringValue] = classInfo;
+		this.classList.push(classInfo);
+		// TODO: remove the next line to support lazy creation of shapeInfo
+//		classInfo.getLogicalShape();
+	}
+	return classInfo;
+}
+
+ClassManager.prototype.getOrCreateShapeInfo = function(shape) {
+	var shapeId = rdf.node(shape);
+	var shapeInfo = this.shapeMap[shapeId.stringValue];
+	if (!shapeInfo) {
+		shape = this.graph.vertex(shape);
+		
+		var scopeClass = shape.v().out(sh.scopeClass).first();
+		if (!scopeClass) {
+			console.log("scopeClass not defined for shape: " + shapeId.stringValue);
+			return null;
+		}
+		
+		var classInfo = this.getOrCreateClassInfo(scopeClass);
+		
+		shapeInfo = new ShapeInfo(classInfo, shape);
+		this.shapeMap[shapeId.stringValue] = shapeInfo;
+	}
+	
+	return shapeInfo;
+}
+
+
+ClassManager.prototype.logicalShapeName = function(owlClass) {
+	var uri = rdf.node(owlClass);
+	var prefixNode = this.graph.V(uri.namespace).out(vann.preferredNamespacePrefix).first(); 
+	var prefix = prefixNode ? prefixNode.stringValue : "default";
+	
+	return "http://www.konig.io/shape/logical." + prefix + "." + uri.localName;
+	
+}
+
+/*****************************************************************************/
+function ClassInfo(owlClass, classManager) {
+	var graph = classManager.graph;
+	this.classVertex = graph.vertex(owlClass);
+	this.classManager = classManager;
+	this.analyzeComment();
+}
+
+ClassInfo.prototype.getSubClassList = function() {
+	if (!this.subClassList) {
+		this.subClassList = this.classVertex.v().inward(rdfs.subClassOf).toList();
+	}
+	
+	return this.subClassList;
+}
+
+ClassInfo.prototype.analyzeComment = function() {
+	var comment = this.classVertex.v().out(rdfs.comment, dcterms.description, dc.description).first();
+	if (comment) {
+		this.comment = comment.stringValue;
+	}
+}
+
+ClassInfo.prototype.getLogicalShape = function() {
+	if (!this.logicalShape) {
+		var logicalShape = this.classVertex.v().inward(sh.scopeShape).hasType(kol.LogicalShape).first();
+		if (!logicalShape) {
+
+			var graph = this.classManager.graph;
+
+			var owlClass = this.classVertex;
+			var shapeName = this.classManager.logicalShapeName(owlClass);
+			logicalShape = graph.vertex(shapeName);
+			graph.statement(logicalShape, sh.scopeClass, owlClass);
+
+			var isLiteral = owlClass.v().hasTransitive(rdfs.subClassOf, rdfs.Literal).first();
+			if (!isLiteral) {
+				this.addDirectProperties(owlClass, logicalShape);
+				var classMap = {};
+				this.addSuperProperties(owlClass, logicalShape, classMap);
+			}
+		}
+		this.logicalShape = this.classManager.getOrCreateShapeInfo(logicalShape);
+	}
+	return this.logicalShape;
+}
+
+ClassInfo.prototype.addSuperProperties = function(owlClass, shape, classMap) {
+	var manager = this.classManager;
+	var graph = manager.graph;
+	
+	var superList = owlClass.v().out(rdfs.subClassOf).toList();
+	if (superList.length > 0) {
+		var andConstraint = graph.vertex();
+		graph.statement(shape, sh.constraint, andConstraint);
+	
+		var listVertex = graph.vertex();
+		graph.statement(andConstraint, sh.and, listVertex);
+
+		var sink = listVertex.toList();
+		
+		for (var i=0; i<superList.length; i++) {
+			var supertype = superList[i];
+			if (!classMap[supertype.id.stringValue]) {
+				classMap[supertype.id.stringValue] = supertype;
+				
+				var superInfo = manager.getOrCreateClassInfo(supertype);
+				var logicalShape = superInfo.getLogicalShape();
+				sink.push(logicalShape.rawShape);
+			}
+		}
+	}
+}
+
+ClassInfo.prototype.addDirectProperties = function(owlClass, shape) {
+	
+	var graph = this.classManager.graph;
+	var propertyList = owlClass.v().inward(rdfs.domain, schema.domainIncludes).unique().toList();
+	
+	
+	for (var i=0; i<propertyList.length; i++) {
+		this.addPropertyConstraint(shape, propertyList[i]);
+	}
+	
+	
+}
+
+var appendUnique = function(list, element) {
+	if (element) {
+		var node = rdf.node(element);
+		for (var i=0; i<list.length; i++) {
+			var n = rdf.node(list[i]);
+			if (n.stringValue === node.stringValue) {
+				return;
+			}
+		}
+		list.push(element);		
+	}
+}
+
+ClassInfo.prototype.addPropertyConstraint = function(shape, property) {
+	var predicate = rdf.node(property);
+	var graph = this.classManager.graph;
+	
+	var result = shape.v().out(sh.property).has(sh.predicate, predicate).first();
+	if (!result) {
+		result = graph.vertex();
+		graph.statement(shape, sh.property, result);
+		graph.statement(result, sh.predicate, predicate);
+		
+		if (property.v().hasType(owl.FunctionalProperty).first()) {
+			graph.statement(result, sh.maxCount, 1);
+		}
+		
+		var description = Ontodoc.shaclDescription(property);
+		if (description) {
+			graph.statement(result, sh.description, description);
+		}
+		
+		var propertyType = this.propertyType(property);
+		var range = this.rangeValue(property);
+			
+		if (propertyType.equals(owl.DatatypeProperty) || range.v().instanceOf(rdfs.Datatype)) {
+			graph.statement(result, sh.datatype, range);
+		} else {
+			graph.statement(result, sh.valueClass, range);
+		}
+	}
+		
+		
+	
+}
+
+ClassInfo.prototype.rangeValue = function(property) {
+	var rangeIncludes = property.v().out(schema.rangeIncludes).toList();
+	appendUnique(rangeIncludes, property.v().out(rdfs.range).first());
+	
+	if (rangeIncludes.length == 0) {
+		return owl.Thing;
+	}
+	
+	if (rangeIncludes.length == 1) {
+		return rangeIncludes[0];
+	}
+
+	var graph = this.classManager.graph;
+	
+	var unionClass = graph.vertex();
+	var listVertex = graph.vertex();
+	graph.statement(unionClass, rdf.type, owl.Class);
+	graph.statement(unionClass, owl.unionOf, listVertex);
+	listVertex.elements = rangeIncludes;
+	
+	return unionClass;
+}
+
+ClassInfo.prototype.propertyType = function(property) {
+	if (property.v().hasType(owl.ObjectProperty).first()) {
+		return owl.ObjectProperty;
+	}
+	
+	if (property.v().hasType(owl.DatatypeProperty).first()) {
+		return owl.DatatypeProperty;
+	}
+	return rdf.Property;
+}
+
+
+/*****************************************************************************/	
+function ShapeInfo(classInfo, rawShape) {
+	this.classInfo = classInfo;
+	this.rawShape = rawShape;
+	this.init();
+}
+
+ShapeInfo.prototype.init = function() {
+
+	this.propertyBlock = [];
+
+	this.addDirectProperties();
+	this.addSuperProperties(this.rawShape, true);
+}
+
+ShapeInfo.prototype.addSuperProperties = function(shape, isDirect) {
+	
+	var constraint = shape.v().out(sh.constraint).first();
+	if (constraint) {
+		var and = constraint.v().out(sh.and).first();
+		if (and) {
+			this.analyzeAnd(and, isDirect);
+		} else {
+			var or = contraint.v().out(sh.or).first();
+			if (or) {
+				this.analyzeOr(or, isDirect);
+			} else {
+				var not = constraint.v().out(sh.not).first();
+				if (not) {
+					this.analyzeNot(not, isDirect);
+				} else {
+					// TODO: analyze custom constraint
+				}
+			}
+		}
+	}
+	
+}
+
+ShapeInfo.prototype.propertyBlockForClass = function(owlClassVertex) {
+	var classId = rdf.node(owlClassVertex);
+	var list = this.propertyBlock;
+	for (var i=0; i<list.length; i++) {
+		var block = list[i];
+		if (block.fromClassVertex === owlClassVertex) {
+			return block;
+		}
+	}
+	
+	var block = new PropertyBlock(owlClassVertex);
+	list.push(block);
+	
+	return block;
+	
+}
+
+ShapeInfo.prototype.analyzeAnd = function(and, isDirect) {
+	var classManager = this.classInfo.classManager;
+	var andList = and.toList();
+	for (var i=0; i<andList.length; i++) {
+		var shape = andList[i];
+		
+		if (shape.id instanceof IRI) {
+			shapeInfo = classManager.getOrCreateShapeInfo(shape.id);
+			this.copyPropertyBlocks(shapeInfo);
+			
+			
+		} else {
+			console.log("TODO: add local properties from and clause")
+		}
+	}
+}
+
+ShapeInfo.prototype.copyPropertyBlocks = function(shapeInfo) {
+	var blockList = shapeInfo.propertyBlock;
+	var directBlock = this.directProperties;
+	for (var i=0; i<blockList.length; i++) {
+		var block = blockList[i];
+		var list = block.propertyList;
+		if (list.length > 0) {
+			var sinkBlock = this.propertyBlockForClass(block.fromClassVertex);
+			var sink = sinkBlock.propertyList;
+			
+			for (var j=0; j<list.length; j++) {
+				
+				var propertyInfo = list[j];
+				
+				if (directBlock) {
+					var prior = directBlock.propertyInfoForPredicate(propertyInfo.predicate);
+					if (prior) {
+						continue;
+					}
+				}
+				sink.push(propertyInfo);
+			}
+			sinkBlock.blockSize = sink.length;
+		}
+	}
+}
+
+ShapeInfo.prototype.analyzeOr = function(or, isDirect) {
+	console.log("TODO: implement analyzeOr");
+}
+
+ShapeInfo.prototype.analyzeNot = function(not, isDirect) {
+	console.log("TODO: implement analyzeNot");
+}
+
+
+ShapeInfo.prototype.addDirectProperties = function() {
+	var classManager = this.classInfo.classManager;
+	var owlClass = this.classInfo.classVertex;
+	var block = new PropertyBlock(owlClass);
+	var sink = block.propertyList;
+	
+	
+	
+	var source = this.rawShape.v().out(sh.property).toList();
+	for (var i=0; i<source.length; i++) {
+		var property = source[i];
+		var description = Ontodoc.shaclDescription(property);
+		var predicate = property.v().out(sh.predicate).first();
+		var expectedType = [];
+		var datatype = property.v().out(sh.datatype).first();
+		var objectType = property.v().out(sh.objectType).first();
+		var directValueType = property.v().out(sh.directValueType).first();
+		var valueClass = property.v().out(sh.valueClass).first();
+		var valueShape = property.v().out(sh.valueShape).first();
+		var minCount = property.v().out(sh.minCount).first();
+		var maxCount = property.v().out(sh.maxCount).first();
+		if (datatype) {
+			PropertyInfo.addType(expectedType, datatype);
+		} else if (objectType) {
+			PropertyInfo.addType(expectedType, objectType);
+		} else if (directValueType) {
+			PropertyInfo.addType(expectedType, directValueType);
+		} else if (valueClass) {
+			PropertyInfo.addType(expectedType, valueClass);
+		} else if (valueShape) {
+			var scopeClass = valueShape.v().out(sh.scopeClass).first();
+			if (!scopeClass) {
+				// TODO: surface this warning in the user interface
+				console.log("WARNING: Scope class not found for valueShape of  " + predicate.id.localName + " on " + shape.id.stringValue);
+				scopeClass = this.graph.vertex(owl.Thing);
+			}
+			classManager.getOrCreateShapeInfo(scopeClass);
+			PropertyInfo.addType(expectedType, scopeClass);
+		}
+
+		var propertyInfo = new PropertyInfo(
+			predicate.id, expectedType, minCount, maxCount, description
+		);
+		
+		sink.push(propertyInfo);
+	}
+	if (sink.length > 0) {
+		this.directProperties = block;
+		
+		this.propertyBlock.push(block);
+		block.blockSize = sink.length;
+	}
+	
+}
+
 /*****************************************************************************/	
 function Ontodoc(ontologyService) {
 	
@@ -121,6 +731,9 @@ function Ontodoc(ontologyService) {
 			north: {
 				resizable: true,
 				closable: false
+			},
+			west: {
+				size: "250"
 			}
 		}
 	);
@@ -137,10 +750,14 @@ function Ontodoc(ontologyService) {
 	
 	this.buildGraph();
 	
+	this.ontologyManager = new OntologyManager(this.context, this.graph);
 	
-	this.buildClassMap();
-	this.analyzeClasses();
-	this.analyzeProperties();
+	this.classManager = new ClassManager(this.ontologyManager, this.graph);
+	this.propertyManager = new PropertyManager(this.graph);
+	
+//	this.buildClassMap();
+//	this.analyzeProperties();
+//	this.analyzeSuperProperties();
 	this.inferOntologies();
 	this.renderOntologyList();
 	this.renderClassList();
@@ -148,6 +765,7 @@ function Ontodoc(ontologyService) {
 	this.classTemplate = $('#ontodoc-class-template').html();
 	this.ontologyTemplate = $('#ontodoc-ontology-template').html();
 	this.classEditTemplate = $('#ontodoc-class-edit-template').html();
+	this.propertyTemplate = $('#ontodoc-property-template').html();
 	
 	var self = this;
 	$(window).bind("hashchange", function(event){
@@ -160,6 +778,46 @@ function Ontodoc(ontologyService) {
 }
 
 
+Ontodoc.shaclDescription = function(vertex) {
+	// TODO: support multiple languages
+	
+	var description = vertex.v().out(sh.description).first();
+	if (description == null) {
+		description = vertex.v().out(rdfs.comment).first();
+	}
+	
+	return description;
+}
+
+Ontodoc.prototype.analyzeSuperProperties = function() {
+
+	var list = this.shapeInfoList();
+	for (var i=0; i<list.length; i++) {
+		var shapeInfo = list[i];
+		var map = {};
+		this.mapProperties(shapeInfo, map);
+		this.addSuperProperties(shapeInfo, map);
+	}
+}
+
+Ontodoc.prototype.mapProperties = function(shapeInfo, map) {
+	var list = shapeInfo.propertyBlock;
+	map[shapeInfo.owlClass.stringValue] = shapeInfo;
+	if (list) {
+		for (var i=0; i<list.length; i++) {
+			var block = list[i];
+			for (var j=0; j<block.propertyList.length; j++) {
+				var propertyInfo = block.propertyList[j];
+				map[propertyInfo.predicate.stringValue] = propertyInfo;
+			}
+		}
+	}
+}
+
+Ontodoc.prototype.addSuperProperties = function(shapeInfo, map) {
+
+}
+
 Ontodoc.prototype.onHashChange = function() {
 	var location = window.location;
 	var hash = location.hash;
@@ -169,20 +827,29 @@ Ontodoc.prototype.onHashChange = function() {
 		if (!vertex) {
 			// TODO: fetch the resource via an ajax call.
 		} else {
-			var typeList = vertex.v().out(rdf.type).toList();
-			for (var i=0; i<typeList.length; i++) {
-				var type = typeList[i];
-				if (type.equals(owl.Ontology)) {
-					this.renderOntology(vertex);
-				} else if (type.equals(owl.Class)) {
-					this.renderClass(hash);
-				}
+			
+			if (vertex.instanceOf(owl.Ontology)) {
+				this.renderOntology(vertex);
+			} else if (vertex.instanceOf(owl.Class) || vertex.instanceOf(rdfs.Class)) {
+				this.renderClass(hash);
+			} else if (vertex.instanceOf(rdf.Property)) {
+				this.renderProperty(vertex);
 			}
+			
+//			var typeList = vertex.v().out(rdf.type).toList();
+//			for (var i=0; i<typeList.length; i++) {
+//				var type = typeList[i];
+//				if (type.equals(owl.Ontology)) {
+//					this.renderOntology(vertex);
+//				} else if (type.equals(owl.Class)) {
+//					this.renderClass(hash);
+//				}
+//			}
 		}
 	}
 }
 
-Ontodoc.prototype.getClassInfo = function(owlClassIRI) {
+Ontodoc.prototype.getShapeInfo = function(owlClassIRI) {
 	var key = stringValue(owlClassIRI);
 	return this.classMap[key];
 }
@@ -203,52 +870,23 @@ Ontodoc.prototype.buildGraph = function() {
 	this.graph.loadFlattened(flat['@graph']);
 }
 
-Ontodoc.prototype.analyzeClasses = function() {
-	
-	var owlClassList = this.graph.V(owl.Class).inward(rdf.type).toList();
-	for (var i=0; i<owlClassList.length; i++) {
-		var owlClass = owlClassList[i];
-		this.getOrCreateClassInfo(owlClass);
+
+
+
+Ontodoc.prototype.isLiteralClass = function(owlClass) {
+	if (!owlClass) {
+		return false;
 	}
-	var shapeList = this.graph.V(sh.Shape).inward(rdf.type).toList();
-	for (var i=0; i<shapeList.length; i++) {
-		var shape = shapeList[i];
-		var scopeClass = shape.v().out(sh.scopeClass).first();
-		if (scopeClass) {
-			this.getOrCreateClassInfo(scopeClass);
-		}
+	var uri = rdf.node(owlClass);
+	if (xsd.NAMESPACE === uri.namespace) {
+		return true;
 	}
-	
+	// TODO: Implement more robust test for Literal class
+	return false;
 }
 
-Ontodoc.prototype.buildClassMap = function() {
-	this.classMap = {};
-	this.shapeMap = {};
-	var graph = this.ontologyGraph['@graph'];
-	for (var i=0; i<graph.length; i++) {
-		var shape = graph[i];
 
-		var shapeId = this.context.expandIRI(shape["@id"]);
-		
-		if (this.context.hasType(shape, SHACL.Shape)) {
-			this.shapeMap[shapeId] = shape;
-			
-		}
-		if (shape.scopeClass) {
-			var iri = new IRI(this.context.expandIRI(shape.scopeClass));
-			var info = this.classMap[iri.stringValue];
-			if (info) {
-				console.log("TODO: Handle multiple shapes for a given owl class.");
-			} else {
-				var classInfo = this.getOrCreateClassInfo(iri);
-				classInfo.canonicalShape = shape;
-			}
-		}
-	}
-	
-}
-
-Ontodoc.prototype.classInfoList = function() {
+Ontodoc.prototype.shapeInfoList = function() {
 	var list = [];
 
 	for (var key in this.classMap) {
@@ -259,7 +897,7 @@ Ontodoc.prototype.classInfoList = function() {
 
 Ontodoc.prototype.analyzeProperties = function() {
 	
-	var list = this.classInfoList();
+	var list = this.shapeInfoList();
 	
 	while (list.length > 0) {
 		this.extraClasses = [];
@@ -274,25 +912,25 @@ Ontodoc.prototype.analyzeProperties = function() {
 	delete this.extraClasses;
 }
 
-Ontodoc.prototype.buildProperties = function(classInfo) {
+Ontodoc.prototype.buildProperties = function(shapeInfo) {
 	
 	// Get the list of shapes that reference the specified OWL class.
-	var shapeList = this.graph.V(classInfo.owlClass).inward(sh.scopeClass).toList();
+	var shapeList = this.graph.V(shapeInfo.owlClass).inward(sh.scopeClass).toList();
 	for (var i=0; i<shapeList.length; i++) {
-		this.addPropertiesFromShape(classInfo, shapeList[i]);
+		this.addPropertiesFromShape(shapeInfo, shapeList[i]);
 	}
 }
 
-Ontodoc.prototype.addPropertiesFromShape = function(classInfo, shape) {
-	var owlClass = classInfo.owlClass;
-	if (!classInfo.localProperties) {
-		classInfo.localProperties = new PropertyBlock(owlClass);
+Ontodoc.prototype.addPropertiesFromShape = function(shapeInfo, shape) {
+	var owlClass = shapeInfo.owlClass;
+	if (!shapeInfo.localProperties) {
+		shapeInfo.localProperties = new PropertyBlock(owlClass);
 	}
-	if (!classInfo.propertyBlock) {
-		classInfo.propertyBlock = [];
+	if (!shapeInfo.propertyBlock) {
+		shapeInfo.propertyBlock = [];
 	}
-	var propertyBlock = classInfo.localProperties;
-	classInfo.propertyBlock.push(propertyBlock);
+	var propertyBlock = shapeInfo.localProperties;
+	shapeInfo.propertyBlock.push(propertyBlock);
 	
 	var propertyList = shape.v().out(sh.property).toList();
 	for (var i=0; i<propertyList.length; i++) {
@@ -309,18 +947,21 @@ Ontodoc.prototype.addPropertiesFromShape = function(classInfo, shape) {
 			var expectedType = [];
 			var datatype = property.v().out(sh.datatype).first();
 			var objectType = property.v().out(sh.objectType).first();
-			var directType = property.v().out(sh.directType).first();
+			var directValueType = property.v().out(sh.directValueType).first();
+			var valueClass = property.v().out(sh.valueClass).first();
 			var valueShape = property.v().out(sh.valueShape).first();
 			var minCount = property.v().out(sh.minCount).first();
 			var maxCount = property.v().out(sh.maxCount).first();
 			// TODO: support description in multiple languages
 			var description = property.v().out(sh.description).first();
 			if (datatype) {
-				expectedType.push(datatype.id);
+				PropertyInfo.addType(expectedType, datatype);
 			} else if (objectType) {
-				expectedType.push(objectType.id);
-			} else if (directType) {
-				expectedType.push(directType.id);
+				PropertyInfo.addType(expectedType, objectType);
+			} else if (directValueType) {
+				PropertyInfo.addType(expectedType, directValueType);
+			} else if (valueClass) {
+				PropertyInfo.addType(expectedType, valueClass);
 			} else if (valueShape) {
 				var scopeClass = valueShape.v().out(sh.scopeClass).first();
 				if (!scopeClass) {
@@ -328,8 +969,8 @@ Ontodoc.prototype.addPropertiesFromShape = function(classInfo, shape) {
 					console.log("WARNING: Scope class not found for valueShape of  " + predicate.id.localName + " on " + shape.id.stringValue);
 					scopeClass = this.graph.vertex(owl.Thing);
 				}
-				this.getOrCreateClassInfo(scopeClass);
-				expectedType.push(scopeClass.id);
+				this.getOrCreateShapeInfo(scopeClass);
+				PropertyInfo.addType(expectedType, scopeClass);
 			}
 
 			var propertyInfo = new PropertyInfo(
@@ -341,92 +982,17 @@ Ontodoc.prototype.addPropertiesFromShape = function(classInfo, shape) {
 	}
 }
 
-// TODO: delete this function since it is now obsolete
-Ontodoc.prototype.createPropertyBlocks = function(classInfo) {
-	if (!classInfo.propertyBlock) {
-		classInfo.propertyBlock = [];
-		var shape = classInfo.canonicalShape;
-		if (!shape) {
-			return;
-		}
-		var list = shape.property;
-		if (list) {
-			var block = new PropertyBlock(classInfo);
-			classInfo.propertyBlock.push(block);
-			
-			for (var i=0; i<list.length; i++) {
-				var p = list[i];
-				var predicate = new IRI(this.context.expandIRI(p.predicate));
-				var expectedType = [];
-				if (p.datatype) {
-					var datatype = new IRI(this.context.expandIRI(p.datatype));
-					expectedType.push(datatype);
-				} else if (p.objectType) {
-					expectedType.push(this.getOrCreateClassInfo(p.objectType));
-				} else if (p.directType) {
-					expectedType.push(this.getOrCreateClassInfo(p.directType));
-				} else if (p.valueShape) {
-					var valueShapeId = this.context.expandIRI(p.valueShape);
-					var valueShape = this.shapeMap[valueShapeId];
-					if (!valueShape) {
-						console.log("value shape not found: " + valueShapeId);
-					} else {
-						var scopeClassId = valueShape.scopeClass;
-						if (!scopeClassId) {
-							console.log("TODO: handle Shape without scopeClass");
-						} else {
-							scopeClassId = this.context.expandIRI(scopeClassId);
-							var valueClassInfo = this.classMap[scopeClassId];
-							if (!valueClassInfo) {
-								expectedType.push(new IRI(scopeClassId));
-							} else {
-								expectedType.push(valueClassInfo);
-							}
-						}
-					}
-				}
-				
-				var propertyInfo = new PropertyInfo(
-					predicate, expectedType, p.minCount, p.maxCount, p.description
-				);
-				block.propertyList.push(propertyInfo);
-				
-			}
-		}
-	}
-}
 
-Ontodoc.prototype.getOrCreateClassInfo = function(owlClass) {
+Ontodoc.prototype.renderProperty = function(propertyVertex) {
+	var overview = this.propertyManager.getPropertyOverview(propertyVertex);
 	
-	var iri = 
-		(owlClass instanceof IRI) ? owlClass :
-		(owlClass instanceof Vertex) ? owlClass.id :
-		(typeof(owlClass)==="string") ? new IRI(this.context.expandIRI(owlClass)) :
-		null;
-		
-	if (iri == null) {
-		throw new Error("Invalid argument: " + owlClass);
-	}
-	
-	var info = this.classMap[iri.stringValue];
-	if (!info) {
-		info = new ClassInfo(iri);
-		this.classMap[iri.stringValue] = info;
-		if (this.extraClasses) {
-			this.extraClass.push(info);
-		}
-		var vertex = this.graph.vertex(iri);
-		if (!vertex.v().hasType(owl.Class).first()) {
-			vertex.v().addType(owl.Class).execute();
-		}
-	}
-	
-	return info;
+	var rendered = Mustache.render(this.propertyTemplate, overview);
+	$(".ontodoc-main-content").empty().append(rendered);
 }
 
 Ontodoc.prototype.renderOntology = function(ontologyId) {
-	var vertex = this.graph.vertex(ontologyId);
-	var info = new OntologyInfo(this, vertex);
+	
+	var info = this.ontologyManager.getOntologyInfo(ontologyId);
 	
 	var rendered = Mustache.render(this.ontologyTemplate, info);
 	$(".ontodoc-main-content").empty().append(rendered);
@@ -435,11 +1001,20 @@ Ontodoc.prototype.renderOntology = function(ontologyId) {
 
 Ontodoc.prototype.renderClass = function(owlClassIRI) {
 	
-	var classInfo = this.classMap[owlClassIRI];
+	var classInfo = this.classManager.classMap[owlClassIRI];
 	if (classInfo) {
+	
+		var shapeInfo = classInfo.getLogicalShape();
+		
+		shapeInfo.subClassList = classInfo.getSubClassList();
+		
+		if (!shapeInfo.comment) {
+			shapeInfo.comment = classInfo.comment;
+		}
+		
 		var rendered = this.editMode ?
-			Mustache.render(this.classEditTemplate, classInfo) :
-			Mustache.render(this.classTemplate, classInfo);
+			Mustache.render(this.classEditTemplate, shapeInfo) :
+			Mustache.render(this.classTemplate, shapeInfo);
 		
 		$(".ontodoc-main-content").empty().append(rendered);
 		this.renderClassBreadcrumbs(owlClassIRI);
@@ -452,17 +1027,18 @@ Ontodoc.prototype.renderClass = function(owlClassIRI) {
 		});
 		
 		if (this.editMode) {
-			this.editClass(classInfo);
+			this.editClass(shapeInfo);
 		}
 	}
 	
+	$(".ontodoc-main-content")[0].scrollTop = 0;
 	
 }
 
 
 
 Ontodoc.prototype.renderClassBreadcrumbs = function(owlClassIRI) {
-	
+	var classManager = this.classManager;
 	var breadcrumbs = $('.ontodoc-class .breadcrumbs');
 	
 	var pathList = this.graph
@@ -474,8 +1050,9 @@ Ontodoc.prototype.renderClassBreadcrumbs = function(owlClassIRI) {
 		for (var i=path.length-1; i>=0; i--) {
 			var vertex = path[i];
 			
-			var anchor = Mustache.render('<a href="#{{href}}">{{localName}}</a>', {
-				localName: vertex.id.localName,
+			var info = classManager.getOrCreateClassInfo(vertex);
+			var anchor = Mustache.render('<a href="#{{href}}" title="{{href}}">{{localName}}</a>', {
+				localName: info.uniqueName,
 				href: vertex.id.stringValue
 			});
 			
@@ -489,9 +1066,11 @@ Ontodoc.prototype.renderClassBreadcrumbs = function(owlClassIRI) {
 }
 
 Ontodoc.prototype.inferOntologies = function() {
-	for (var key in this.classMap) {
-		var info = this.classMap[key];
-		var owlClass = this.graph.vertex(info.owlClass);
+	var classMap = this.classManager.classMap;
+	
+	for (var key in classMap) {
+		var info = classMap[key];
+		var owlClass = info.classVertex;
 		
 		var namespace = this.graph.vertex(owlClass.id.namespace);
 		
@@ -504,53 +1083,52 @@ Ontodoc.prototype.inferOntologies = function() {
 
 Ontodoc.prototype.renderOntologyList = function() {
 	var container = $('#ontodoc-ontology-list');
-	var ontoList = this.graph.V(owl.Ontology).inward(rdf.type).toList();
-	for (var i=0; i<ontoList.length; i++) {
-		var onto = ontoList[i];
-		var label = this.ontologyLabel(onto);
-		
+	
+	var infoList = this.ontologyManager.ontologyList;
+	for (var i=0; i<infoList.length; i++) {
+
+		var info = infoList[i];
 		var anchor = Mustache.render(
 			'<div class="ontodoc-index-entry"><a href="#{{{href}}}">{{label}}</a></div>', {
-			href: onto.id.stringValue,
-			label: label
+			href: info.vertex.id.stringValue,
+			label: info.label
 		});
-		
-		
 		container.append(anchor);
-		
 	}
+	
+//	var ontoList = this.graph.V(owl.Ontology).inward(rdf.type).toList();
+//	for (var i=0; i<ontoList.length; i++) {
+//		var onto = ontoList[i];
+//		var label = this.ontologyLabel(onto);
+//		
+//		var anchor = Mustache.render(
+//			'<div class="ontodoc-index-entry"><a href="#{{{href}}}">{{label}}</a></div>', {
+//			href: onto.id.stringValue,
+//			label: label
+//		});
+//		
+//		
+//		container.append(anchor);
+//		
+//	}
 }
 
-Ontodoc.prototype.ontologyLabel = function(ontology) {
-	
-	var label = ontology.v().out(rdfs.label).first();
-	if (label) {
-		return label.stringValue;
-	}
-	
-	return ontology.id.stringValue;
-	
-}
 
 Ontodoc.prototype.renderClassList = function() {
 	
-	
-	var list = [];
-	for (var key in this.classMap) {
-		var info = this.classMap[key];
-		list.push(info);
-	}
-	// TODO: sort the list alphabetically
+	var list = this.classManager.classList;
 	
 	var container = $("#ontodoc-class-list");
 	for (var i=0; i<list.length; i++) {
-		var info = list[i];
-		
+		var classInfo = list[i];
+		var classId = classInfo.classVertex.id;
+		var ontologyInfo = this.ontologyManager.getOntologyInfo(classId.namespace);
+		ontologyInfo.classList.push(classId);
 		
 		var anchor = Mustache.render(
 				'<div class="ontodoc-index-entry"><a href="#{{{href}}}">{{label}}</a></div>', {
-				href: info.owlClass.stringValue,
-				label: info.owlClass.localName
+				href: classId.stringValue,
+				label: classInfo.uniqueName
 			});
 		
 		container.append(anchor);
@@ -565,8 +1143,11 @@ Ontodoc.prototype.clickClassName = function(owlClass) {
 	}
 }
 
-konig.ontodoc = new Ontodoc();
-konig.ClassInfo = ClassInfo;
+konig.Ontodoc = Ontodoc;
+konig.buildOntodoc = function(ontologyService) {
+	konig.ontodoc = new Ontodoc(ontologyService);
+}
+konig.ShapeInfo = ShapeInfo;
 konig.PropertyBlock = PropertyBlock;
 	
 	
