@@ -1,0 +1,90 @@
+@prefix kol: <http://www.konig.io/ns/kol/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kol: a owl:Ontology ;
+	rdfs:label "Konig Ontology Language" ;
+	rdfs:comment """Provides terms that extend OWL and SHACL.
+		<p>A description of this ontology in Turtle syntax is available at 
+		<a href="http://www.konig.io/ns/kol/.ttl">http://www.konig.io/ns/kol/.ttl</a></p>""" ;
+	vann:preferredNamespacePrefix "kol"
+	.
+
+
+kol:Graph a owl:Class ;
+	rdfs:comment "A set of statements which collectively form a (possibly disconnected) graph."
+	.
+
+kol:LogicalShape a owl:Class ;
+	rdfs:subClassOf sh:Shape ;
+	rdfs:comment """
+		A Shape that provides a logical model for the Class identified as the <code>scopeClass</code>.  
+		A <code>LogicalShape</code> lists all the known properties of the <code>scopeClass</code>.  
+		It does not prescribe a <code>valueShape</code> for any related entities."""
+	.
+	
+kol:ForeignKey a owl:Class ;
+	rdfs:subClassOf sh:Constraint ;
+	rdfs:comment "A foreign key constraint on a Shape." .
+
+kol:uniqueIn	a owl:ObjectProperty ;
+	rdfs:domain rdfs:Datatype ;
+	rdfs:range rdfs:Resource ;
+	rdfs:comment "A property which asserts that values of the subject Datatype are unique within some entity that serves as a namespace."
+	.
+	
+kol:valueUniqueIn a owl:ObjectProperty ;
+	rdfs:domain sh:PropertyConstraint ;	
+	rdfs:range rdfs:Resource ;
+	rdfs:comment "Asserts that values of the given property are unique within some entity that serves as a namespace."
+	.
+	
+kol:tableName a owl:DatatypeProperty ;
+	rdfs:domain sh:Shape ;
+	rdfs:range	xsd:string ;	
+	rdfs:comment "The preferred name for an RDBMS table that contains instances of the subject Shape" .
+	
+kol:columnName a owl:DatatypeProperty ;
+	rdfs:domain sh:PropertyConstraint ;
+	rdfs:range xsd:string ;
+	rdfs:comment "The preferred name for an RDBMS column that contains values of the <code>predicate</code>" .
+	
+kol:foreignKey a owl:ObjectProperty, owl:FunctionalProperty ;
+	rdfs:domain kol:ForeignKey ;
+	rdfs:range rdf:List ;
+	rdfs:comment """
+		A property that lists the predicate(s) which form a foreign key.  
+		The value of this property is a List so that composite keys can be supported.  The type of entity
+		referenced by the foreign key is given by the <code>kol:referencedClass</code> property.  
+		The corresponding primary key on the referenced class is given by the <code>kol:referencedKey</code>. """ .	
+		
+kol:referencedClass a owl:ObjectProperty, owl:FunctionalProperty ;
+	rdfs:domain kol:ForeignKey ;
+	rdfs:range rdfs:Class ;
+	rdfs:comment "The type of entity referenced by the foreign key." .
+	
+kol:referencedKey a owl:ObjectProperty, owl:FunctionalProperty ;
+	rdfs:domain kol:ForeignKey ;
+	rdfs:range rdf:List ;
+	rdfs:comment """
+		A property that lists the predicate(s) on the referenced entity corresponding to 
+		the foreign keys on the source entity.  The value of this property is a List so that
+		composite keys can be supported.  The elements of the List are in one-to-one correspondence with
+		the elements of the <code>foreignKey</code> List.""" .
+		
+kol:equivalentSemanticProperty a owl:ObjectProperty, owl:FunctionalProperty ;
+	rdfs:domain kol:ForeignKey ;
+	rdfs:range rdf:Property ;
+	rdfs:comment "An equivalent semantic property that expresses the same relationship as this foreign key." .
+	
+kol:propertyOf a owl:ObjectProperty ;
+	rdfs:domain sh:PropertyConstraint ;
+	rdfs:range sh:Shape ;
+	owl:inverseOf sh:property ;
+	rdfs:comment "The <code>Shape</code> to which the subject <code>PropertyConstraint</code> applies" .
+		
+			
+		

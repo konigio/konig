@@ -1,0 +1,218 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+xsd: a owl:Ontology ;
+	dc:title "XML Schema" ;
+	rdfs:comment "A vocabulary for expressing constraints about XML documents." ;
+	vann:preferredNamespacePrefix "xsd"  . 
+	
+xsd:anyURI a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral ;
+	rdfs:comment """The class of URI (Uniform Resource Identifier) values. 
+		This datatype corresponds normatively to the XLink href attribute. Its value space includes the 
+		URIs defined by RFCs 2396 and 2732, but its lexical space doesn't require the character escapes 
+		needed to include non-ASCII characters in a URIs."""
+	.
+	
+xsd:base64Binary a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral ;
+	rdfs:comment """Binary content coded as 'base64'.
+		The value space of xsd:base64Binary is the set of arbitrary binary contents. Its lexical space is 
+		the same set after base64 coding. This coding is described in Section 6.8 of RFC 2045."""
+	.
+	
+xsd:boolean a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral ;
+	rdfs:comment """The class of boolean (true or false) values."""
+	.
+	
+xsd:byte a owl:Class ;
+	rdfs:subClassOf xsd:short ;
+	rdfs:comment """A signed integer of 8 bits.
+		<p>The value space of <code>xsd:byte</code> includes the integers between -128 and 127&#8212;the signed 
+		values that can fit in a word of 8 bits. Its lexical space allows an optional sign and leading 
+		zeros before the significant digits.</p>"""
+	.
+	
+xsd:dateTime a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral ;
+	rdfs:comment """An instant in time.
+		<p>This datatype describes instances identified by the combination of a
+		date and a time. Its value space is described as a combination of
+		date and time of day in Chapter 5.4 of ISO 8601. Its lexical space is
+		the extended format:</p><table xmlns="http://www.w3.org/TR/xhtml1/transitional" border="0" bgcolor="#E0E0E0" width="90%">
+			<tr><td><pre class="programlisting"> [-]CCYY-MM-DDThh:mm:ss[Z|(+|-)hh:mm]</pre></td></tr></table><p>
+			The time zone may be specified as <code>Z</code> (UTC) or
+		<tt class="literal">(+|-)hh:mm</tt>. Time zones that
+		aren't specified are considered undetermined.</p>"""
+	.
+	
+xsd:decimal a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral ;
+	rdfs:comment """Decimal numbers. <code>xsd:decimal</code> is the datatype that represents 
+		the set of all decimal numbers with arbitrary lengths. 
+		Its lexical space allows any number of insignificant leading and trailing zeros (after the decimal point)."""
+	.
+	
+xsd:double a owl:Class ;
+	rdfs:subClassOf xsd:decimal ;
+	rdfs:comment """IEEE 64-bit floating-point. 
+		<p>The value space of <tt class="literal">xsd:double</tt> is double (64 bits)
+		floating-point numbers as defined by the IEEE (Institute of
+		Electrical and Electronic Engineers). The lexical space uses a
+		decimal format with optional scientific notation. The match between
+		lexical (powers of 10) and value (powers of 2) spaces is approximate
+		and done on the closest value.</p><p>This datatype differentiates positive (0) and negative (-0) zeros,
+		and includes the special values -INF (negative infinity), INF
+		(positive infinity) and NaN (Not a Number).</p><p>Note that the lexical spaces of <tt class="literal">xsd:float</tt> and
+		<tt class="literal">xsd:double</tt> are exactly the same; the only
+		difference is the precision used to convert the values in the value
+		space.</p>"""
+	.
+	
+xsd:dayTimeDuration a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral ;
+	rdfs:comment """<p>The type <code>xsd:dayTimeDuration</code> represents a duration of time expressed as a number 
+		of days, hours, minutes, and seconds.  The format of <code>xsd:dayTimeDuration</code> is <code>PnDTnHnMnS</code>, 
+		where <code>P</code> is a literal value that starts the expression, <code>nD</code> is the number of days followed 
+		by a literal <code>D</code>, <code>T</code> is a literal value that separates the date and time, <code>nH</code> 
+		is the number of hours followed by a literal <code>H</code>,  <code>nM</code> is the number of minutes followed 
+		by a literal <code>M</code>, and  <code>nS</code> is the number of seconds followed by a literal <code>S</code>.  
+		The following rules apply to <code>xsd:dayTimeDuration</code> values:</p><ul><li><p>Any of these numbers and 
+		corresponding designators may be absent if they are equal to 0, but at least one number and designator must 
+		appear.</p></li><li><p>The numbers may be any unsigned integer, with the exception of the number of seconds, 
+		which may be an unsigned decimal number.</p></li><li><p>If a decimal point appears in the number of seconds, 
+		there must be at least one digit after the decimal point.</p></li><li><p>A minus sign may appear before the 
+		<code>P</code> to specify a negative duration.</p></li><li><p>If no time items (hour, minute, second) are present, 
+		the letter <code>T</code> must not appear.</p></li></ul>"""
+	.
+	
+	
+xsd:float a owl:Class ;
+	rdfs:subClassOf xsd:double ;
+	rdfs:comment """IEEE 32-bit floating-point.
+		<p>The value space of <tt class="literal">xsd:float</tt> is
+		'float,' 32-bit floating-point
+		numbers as defined by the IEEE. The lexical space uses a decimal
+		format with optional scientific notation. The match between lexical
+		(powers of 10) and value (powers of 2) spaces is approximate and maps
+		to the closest value.</p><p>This datatype differentiates positive (0) and negative (-0) zeros,
+		and includes the special values -INF (negative infinity), INF
+		(positive infinity), and NaN (Not a Number).</p><p>Note that the lexical spaces of <code>xsd:float</code> and
+		<tt class="literal">xsd:double</tt> are exactly the same; the only
+		difference is the precision used to convert the values in the value
+		space.</p>"""
+	.
+	
+xsd:hexBinary a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral ;
+	rdfs:comment """Binary contents coded in hexadecimal.
+		<p>The value space of xsd:hexBinary is the set of all binary contents; its lexical space is a simple coding 
+		of each octet as its hexadecimal value.</p>"""
+	.
+	
+xsd:int a owl:Class ;
+	rdfs:subClassOf xsd:long ;
+	rdfs:comment """The class of 32-bit signed integers.
+		<p>The value space of <code>xsd:int</code> is the set of common single-size integers (32 bits), the integers between 
+		-2147483648 and 2147483647. Its lexical space allows any number of insignificant leading zeros.</p>"""
+	.
+	
+xsd:integer a owl:Class ;
+	rdfs:subClassOf xsd:decimal ;
+	rdfs:comment """The class of signed integers of arbitrary length.
+		<p>The value space of <code>xsd:integer</code> includes the set of all the signed integers, with no restriction on range. 
+		Its lexical space allows any number of insignificant leading zeros.</p>"""
+	.
+	
+xsd:language a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral ;
+	rdfs:comment """The class of RFC 1766 language codes."""
+	.
+	
+xsd:long a owl:Class ;
+	rdfs:subClassOf xsd:integer ;
+	rdfs:comment """The class of 64-bit signed integers.
+		<p>The value space of <code>xsd:long</code> is the set of common double-size integers (64 bits)&#8212;the integers between 
+		-9223372036854775808 and 9223372036854775807. Its lexical space allows any number of insignificant leading zeros.</p>"""
+	.
+	
+
+xsd:negativeInteger a owl:Class ;
+	rdfs:subClassOf xsd:integer ;
+	rdfs:comment """Strictly negative integers of arbitrary length.
+		<p>The value space of <code>xsd:negativeInteger</code> includes the set of all the strictly negative integers 
+		(excluding zero), with no restriction of range. Its lexical space allows any number of insignificant 
+		leading zeros.</p>"""
+	.
+	
+	
+xsd:nonNegativeInteger a owl:Class ;
+	rdfs:subClassOf xsd:integer ;
+	rdfs:comment """Integers of arbitrary length positive or equal to zero.
+		<p>The value space of <code>xsd:nonNegativeInteger</code> includes the set of all the integers greater than or 
+		equal to zero, with no restriction of range. Its lexical space allows any number of insignificant leading zeros.</p>"""
+	.
+	
+xsd:nonPositiveInteger a owl:Class ;
+	rdfs:subClassOf xsd:integer ;
+	rdfs:comment """Integers of arbitrary length negative or equal to zero.
+		<p>The value space of <code>xsd:nonPositiveInteger</code> includes the set of all the integers less than or equal to zero,
+		with no restriction of range. Its lexical space allows any number of insignificant leading zeros.</p>"""
+	.
+	
+xsd:positiveInteger a owl:Class ;
+	rdfs:subClassOf xsd:integer ;
+	rdfs:comment """The class of strictly positive integers of arbitrary length.
+		<p>The value space of <code>xsd:positiveInteger</code> includes the set of the strictly positive integers 
+		(excluding zero), with no restriction of range. Its lexical space allows any number of insignificant leading zeros.</p>"""
+	.
+	
+xsd:short a owl:Class ;
+	rdfs:subClassOf xsd:int ;
+	rdfs:comment """The class of 16-bit signed integers.
+		<p>The value space of <code>xsd:short</code> is the set of common short integers (16 bits)&#8212;the integers between
+		 -32768 and 32767. Its lexical space allows any number of insignificant leading zeros.</p>"""
+	.
+	
+xsd:string a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral ;
+	rdfs:comment """The class of string values."""
+	.
+	
+xsd:unsignedByte a owl:Class ;
+	rdfs:subClassOf xsd:unsignedShort ;
+	rdfs:comment """Unsigned integers of 8 bits.
+		<p>The value space of <code>xsd:unsignedByte</code> is the range of integers between 0 and 255&#8212;the unsigned 
+		values that can fit in a word of 8 bits. Its lexical space allows an optional + sign and leading zeros before 
+		the significant digits.</p>"""
+	.
+	
+xsd:unsignedInt a owl:Class ;
+	rdfs:subClassOf xsd:unsignedLong ;
+	rdfs:comment """The class of unsigned, 32-bit integers.
+		<p>The value space of <code>xsd:unsignedInt</code> is the range of integers between 0 and 4294967295 &#8212;the unsigned 
+		values that can fit in a word of 32 bits. Its lexical space allows an optional + sign and leading zeros before the 
+		significant digits.</p>"""
+	.
+	
+xsd:unsignedLong a owl:Class ;
+	rdfs:subClassOf xsd:nonNegativeInteger ;
+	rdfs:comment """The class of unsigned, 64-bit integers.
+		<p>The value space of <code>xsd:unsignedLong</code> is the range of integers between 0 and 18446744073709551615 &#8212; 
+		the unsigned values that can fit in a word of 64 bits. Its lexical space allows an optional + sign and leading zeros 
+		before the significant digits.</p>"""
+	.
+	
+xsd:unsignedShort a owl:Class ;
+	rdfs:subClassOf xsd:unsignedInt ;
+	rdfs:comment """The class of unsigned, 16-bit integers.
+		<p>The value space of <code>xsd:unsignedShort</code> is the range of integers between 0 and 65535
+		&#8212;the unsigned values that can fit in a word of 16 bits. Its lexical space allows an optional + sign and 
+		leading zeros before the significant digits.</p>"""
+	.
+	
