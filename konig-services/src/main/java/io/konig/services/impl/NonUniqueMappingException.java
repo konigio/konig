@@ -1,10 +1,10 @@
-package io.konig.services;
+package io.konig.services.impl;
 
 /*
  * #%L
  * Konig Services
  * %%
- * Copyright (C) 2015 Gregory McFall
+ * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,19 +21,14 @@ package io.konig.services;
  */
 
 
-import io.konig.core.Context;
-import io.konig.core.ContextManager;
-import io.konig.core.RewriteService;
-import io.konig.core.io.ResourceManager;
-import io.konig.shacl.ShapeManager;
+import io.konig.core.Vertex;
 
-public interface KonigConfig {
+public class NonUniqueMappingException extends RuntimeException {
+	private static final long serialVersionUID = 1L;
 	
-	Context getDefaultContext();
-	ContextManager getContextManager();
-	ShapeManager getShapeManager();
-	ResourceManager getResourceManager();
-	GraphService getGraphService();
-	RewriteService getRewriteService();
+	public NonUniqueMappingException(Vertex x, Vertex y1, Vertex y2) {
+		super("Node " + x.getId().stringValue() + " maps to more than one node: " + y1.getId().stringValue() + " and " + y2.getId().stringValue());
+	}
+
 
 }

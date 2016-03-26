@@ -4,7 +4,7 @@ package io.konig.services;
  * #%L
  * Konig Services
  * %%
- * Copyright (C) 2015 Gregory McFall
+ * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,19 +21,15 @@ package io.konig.services;
  */
 
 
-import io.konig.core.Context;
-import io.konig.core.ContextManager;
-import io.konig.core.RewriteService;
-import io.konig.core.io.ResourceManager;
-import io.konig.shacl.ShapeManager;
+import org.openrdf.model.URI;
 
-public interface KonigConfig {
+public interface VersionNamer {
 	
-	Context getDefaultContext();
-	ContextManager getContextManager();
-	ShapeManager getShapeManager();
-	ResourceManager getResourceManager();
-	GraphService getGraphService();
-	RewriteService getRewriteService();
+	/**
+	 * Mint a URI that identifies a next version of a specified resource.
+	 * @param subjectOfChange  The resource that 
+	 * @return
+	 */
+	URI nextVersionId(URI subjectOfChange);
 
 }

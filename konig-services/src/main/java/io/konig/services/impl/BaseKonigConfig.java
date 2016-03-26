@@ -27,7 +27,9 @@ import java.io.InputStream;
 import io.konig.core.Context;
 import io.konig.core.ContextManager;
 import io.konig.core.KonigException;
-import io.konig.core.impl.ContextManagerImpl;
+import io.konig.core.RewriteService;
+import io.konig.core.impl.MemoryContextManager;
+import io.konig.core.impl.SimpleRewriteService;
 import io.konig.core.io.ContextReader;
 import io.konig.core.io.ResourceManager;
 import io.konig.core.io.impl.MemoryResourceManager;
@@ -44,7 +46,8 @@ public class BaseKonigConfig implements KonigConfig {
 	private ShapeManager shapeManager;
 	protected ResourceManager resourceManager;
 	private GraphService graphService;
-	private ContextManager contextManager;
+	protected ContextManager contextManager;
+	protected RewriteService rewriteService;
 
 	
 	public Context getDefaultContext() {
@@ -86,10 +89,24 @@ public class BaseKonigConfig implements KonigConfig {
 
 	public ContextManager getContextManager() {
 		if (contextManager == null) {
-			contextManager = new ContextManagerImpl();
+			contextManager = new MemoryContextManager();
 			contextManager.add(getDefaultContext());
 		}
 		return contextManager;
 	}
+
+	@Override
+	public RewriteService getRewriteService() {
+		if (rewriteService == null) {
+			rewriteService = createRewriteService();
+		}
+		return rewriteService;
+	}
+
+	protected RewriteService createRewriteService() {
+		return new SimpleRewriteService("http://localhost:8000/", "http://www.konig.io/");
+	}
+	
+	
 
 }

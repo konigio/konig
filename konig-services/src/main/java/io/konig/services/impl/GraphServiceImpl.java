@@ -125,11 +125,11 @@ public class GraphServiceImpl implements GraphService {
 				
 				List<PropertyConstraint> list = shape.getProperty();
 				for (PropertyConstraint p : list) {
-					URI shapeId = p.getValueShapeId();
+					Resource shapeId = p.getValueShapeId();
 					if (shapeId != null) {
 						Shape valueShape = p.getValueShape();
 						if (valueShape == null) {
-							valueShape = shapeManager.getShapeById(shapeId);
+							valueShape = (shapeId instanceof URI) ? shapeManager.getShapeById((URI)shapeId) : null;
 							if (valueShape == null) {
 								throw new StorageException("Shape not found: " + shapeId);
 							}
