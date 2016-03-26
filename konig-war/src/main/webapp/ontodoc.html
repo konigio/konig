@@ -1,0 +1,224 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Ontodoc</title>
+  <meta name="description" content="Browse and edit documentation for RDF ontologies">
+  <meta name="author" content="Greg McFall">
+
+  <link rel="stylesheet" href="css/jquery-ui/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" href="css/schemaorg.css">
+  <link rel="stylesheet" href="css/konig-ontodoc.css">
+  
+
+</head>
+
+<body prefix="sh: http://www.w3.org/ns/shacl#">
+	
+<div class='ui-layout-center ontodoc-main-content'>
+
+<script id="ontodoc-class-edit-template" type="x-tmpl-mustache">
+<div class="ontodoc-class-edit">
+ 	<h1 class="page-title" id="class-name-edit" contentEditable="true">{{localName}}</h1>
+	<h4>
+		<span class="breadcrumbs"></span>
+	</h4>
+ 	<table class="definition-table">
+ 		<thead>
+ 			<tr>
+ 				<th>Property</th>
+ 				<th>Expected Type</th>
+ 				<th>Cardinality</th>
+ 				<th>Description</th>
+ 				<th></th>
+ 			</tr>
+ 			
+ 		</thead>
+		{{#propertyBlock}}
+		<tbody>
+			<tr class="supertype">
+				<th class="supertype-name"  colspan="3">
+					Properties from 
+					<a>{{fromClassVertex.id.localName}}</a>
+				</th>
+			</tr>
+		</tbody>
+		{{#propertyList}}
+		<tbody class="supertype">
+			<tr typeof="rdfs:Property" resource="schema:givenName">
+				<th class="prop-nam">
+					<code class="prop-nam-edit" property="rdfs:label" contentEditable="true">{{propertyName}}</code>
+				</th>
+				<td class="prop-ect">
+                    {{#expectedType}}
+					<span  resource="{{stringValue}}" contentEditable="true">{{localName}}</span>{{#or}} or{{/or}}
+                    {{/expectedType}}
+				</td>
+				<td><span class="cardinality-edit">{{cardinality}}</span></td>
+				<td class="prop-desc"><div class="prop-desc-edit">
+					{{{description.stringValue}}}</div>
+				</td>
+        <td class="delete-button"></td>
+			</tr>
+		</tbody>
+		{{/propertyList}}
+		{{/propertyBlock}}
+ 	</table>
+	<button id="add-property-button">Add Property</button>
+</div>
+</script>
+
+<script id="ontodoc-class-template" type="x-tmpl-mustache">
+	
+<div class="ontodoc-class">
+ 	<h1 class="page-title">{{classInfo.uniqueName}}</h1>
+	<h4>
+		<span class="breadcrumbs"></span>
+	</h4>
+	{{{comment}}}
+
+	{{#propertyBlock.length}}
+ 	<table class="definition-table">
+ 		<thead>
+ 			<tr>
+ 				<th>Property</th>
+ 				<th>Expected Type</th>
+ 				<th>Description</th>
+ 			</tr>
+ 			
+ 		</thead>
+		{{#propertyBlock}}
+		{{#blockSize}}
+		<tbody>
+			<tr class="supertype">
+				<th class="supertype-name"  colspan="3">
+					Properties from 
+					<a href="#{{fromClassVertex.id.stringValue}}" title="{{fromClassVertex.id.stringValue}}">{{fromClassVertex.id.localName}}</a>
+				</th>
+			</tr>
+		</tbody>
+		{{#propertyList}}
+		<tbody class="supertype">
+			<tr typeof="rdfs:Property" resource="schema:givenName">
+				<th class="prop-nam">
+					<a href="#{{predicate.stringValue}}" title="{{predicate.stringValue}}"><code property="rdfs:label">{{propertyName}}</code></a>
+				</th>
+				<td class="prop-ect">
+                    {{#expectedType}}
+					<a href="#{{stringValue}}">{{localName}}{{#or}} or{{/or}}</a>
+                    {{/expectedType}}
+				</td>
+				<td class="prop-desc">
+					{{{description.stringValue}}}
+				</td>
+			</tr>
+		</tbody>
+		{{/propertyList}}
+		{{/blockSize}}
+		{{/propertyBlock}}
+ 	</table>
+	{{/propertyBlock.length}}
+	{{#subClassList.length}}
+  <div>
+	<br>
+	<b>More specific types</b>
+	<ul>{{#subClassList}}
+		<li>
+			<a href="#{{id.stringValue}}">{{id.localName}}</a>
+		</li>{{/subClassList}}
+	</ul>
+	</div>
+	{{/subClassList.length}}
+</div>
+	
+</script>	
+
+<script id="ontodoc-ontology-template" type="x-tmpl-mustache">
+<div class="ontodoc-ontology">
+ 	<h1 class="page-title">{{label}}</h1>
+ 	<div>{{{description}}}</div>
+	<br>
+ 	<table class="data-table">
+ 		<tr>
+ 			<th>Namespace&nbsp;Address</th>
+ 			<td>{{namespaceAddress}}</td>
+ 		</tr>
+ 		<tr>
+ 			<th>Namespace&nbsp;Prefix</th>
+ 			<td>{{namespacePrefix}}</td>
+ 		</tr>{{#classList.length}}
+		<tr class="spaceAbove">
+			<th>Classes</th>
+      <td>| {{#classList}}<a href="#{{stringValue}}">{{localName}}</a> | {{/classList}}</td>
+		</tr>{{/classList.length}}{{#propertyList.length}}
+		<tr class="spaceAbove">
+			<th>Properties</th>
+      <td>| {{#propertyList}}<a href="#{{stringValue}}">{{localName}}</a> | {{/propertyList}}</td>
+		</tr>{{/propertyList.length}}
+		
+ 	</table>
+</div>
+</script>
+
+<script id="ontodoc-property-template" type="x-tmpl-mustache">
+<div>
+	<h1 class="page-title">{{propertyVertex.id.localName}}</h1>
+	<div>{{{comment}}}</div>{{#rangeList.length}}
+	<table class="definition-table">
+		<thead>
+	  	<tr>
+				<th>Values expected to be of one of these types</th>
+	  	</tr>
+		</thead>
+		<tbody>{{#rangeList}}
+			<tr>
+				<td>
+					<a href="#{{stringValue}}">{{localName}}</a>
+				</td>
+			</tr>{{/rangeList}}
+		</tbody>
+	</table>{{/rangeList.length}}
+
+	<table class="definition-table">
+		<thead>
+	  	<tr>
+				<th>Used on these types</th>
+	  	</tr>
+		</thead>
+		<tbody>{{#domainList}}
+			<tr>
+				<td>
+					<a href="#{{stringValue}}">{{localName}}</a>
+				</td>
+			</tr>{{/domainList}}
+		</tbody>
+	</table>
+</div>
+</script>
+
+
+
+</div>
+<div class="ui-layout-north">
+	<div class="ontodoc-header">
+	    <div class="ontodoc-header-wrapper">
+			<span id="ontodoc-api-name" contenteditable="true">Data Modeling Vocabularies</span>
+	    </div>
+		<button id="edit-button" title="Edit"></button>
+	</div>
+</div>
+<div class="ui-layout-west" id="navigation">
+  <div class="ui-layout-north ontodoc-navigation">
+  	<div id="ontodoc-ontology-list"></div>
+  </div>
+  <div class="ui-layout-center ontodoc-navigation">
+		<div id="ontodoc-class-list"></div>
+	</div>
+</div>
+<div id="templates" style="display: none;"></div>
+
+<script src="js/ontodoc-all-min.js"></script>
+</body>
+</html>

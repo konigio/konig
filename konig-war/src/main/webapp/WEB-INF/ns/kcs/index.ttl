@@ -1,0 +1,51 @@
+@prefix kcs: <http://www.konig.io/ns/kcs/> .
+@prefix kol: <http://www.konig.io/ns/kol/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix cs: <http://purl.org/vocab/changeset/schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+kcs: a owl:Ontology ;
+	rdfs:label "Konig ChangeSet" ;
+	rdfs:comment """This vocabulary extends the <em>defacto</em> standard 
+	  <a href="http://vocab.org/changeset/">ChangeSet ontology</a>
+    so that <code>additions</code> and <code>removals</code> can be expressed as graphs rather than collections
+    of <code>rdf:Statement</code> instances, and it introduces the notion of a <em>reference</em> graph
+    which is used to identify blank nodes that have been modified.</p>""" ;
+	vann:preferredNamespacePrefix "kcs" 
+	.
+	
+kcs:reference a owl:ObjectProperty ;
+	rdfs:comment """A collection of statements that uniquely identify the initial state of any blank nodes
+	  that are modified by the <code>ChangeSet</code>.  
+		<p>For each blank node undergoing a change, the statements must provide enough information to distinguish that node
+		from any other node in the starting state of the target graph.  This information could consist of a complete 
+		enumeration of all the node's properties, values of functional or inverse functional properties, etc.</p>""" ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range kol:Graph
+	.
+	
+kcs:trace a owl:ObjectProperty ;
+  rdfs:comment """A statement which helps trace the identity of a blank node.  The collection of all
+    such statements within the <code>ChangeSet</code> forms the <code>reference</code> graph which
+    contains enough information to distinguish each blank node from any other blank node.""" ;
+  rdfs:domain cs:ChangeSet ;
+  rdfs:range rdf:Statement 
+  .	
+	
+kcs:add a owl:ObjectProperty ;
+	rdfs:comment "A graph of statements to be added to the target resource." ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range kol:Graph
+	.
+	
+kcs:remove a owl:ObjectProperty ;	
+	rdfs:comment "A graph of statements to be removed from the target resource." ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range kol:Graph
+	.
+
+	
