@@ -1,5 +1,7 @@
 package io.konig.core.impl;
 
+import java.util.Collection;
+
 /*
  * #%L
  * konig-core
@@ -30,24 +32,30 @@ import org.openrdf.model.impl.NamespaceImpl;
 import io.konig.core.NamespaceManager;
 
 public class MemoryNamespaceManager implements NamespaceManager {
-	protected Map<String, Namespace> map = new HashMap<String, Namespace>();
+	protected Map<String, Namespace> byPrefix = new HashMap<String, Namespace>();
+	protected Map<String,Namespace> byName = new HashMap<>();
 
 	public Namespace findByPrefix(String prefix) {
-		return map.get(prefix);
+		return byPrefix.get(prefix);
 	}
 
 	public Namespace findByName(String name) {
-		return map.get(name);
+		return byName.get(name);
 	}
 
 	public NamespaceManager add(Namespace ns) {
-		map.put(ns.getPrefix(), ns);
-		map.put(ns.getName(), ns);
+		byPrefix.put(ns.getPrefix(), ns);
+		byName.put(ns.getName(), ns);
 		return this;
 	}
 
 	public NamespaceManager add(String prefix, String namespace) {
 		return add(new NamespaceImpl(prefix, namespace));
+	}
+
+	@Override
+	public Collection<Namespace> listNamespaces() {
+		return byPrefix.values();
 	}
 	
 

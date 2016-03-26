@@ -22,12 +22,13 @@ package io.konig.core;
 
 
 import java.util.Collection;
+import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
-public interface Graph {
+public interface Graph extends Set<Edge> {
 	
 	GraphBuilder builder();
 	
@@ -93,7 +94,7 @@ public interface Graph {
 	
 	Edge edge(Vertex subject, URI predicate, Vertex object);
 	
-	Edge add(Edge edge);
+	Edge edge(Edge edge);
 	
 	/**
 	 * Add all the outgoing statements from the given vertex.

@@ -1,5 +1,7 @@
 package io.konig.core;
 
+import java.io.IOException;
+
 /*
  * #%L
  * konig-core
@@ -23,6 +25,8 @@ package io.konig.core;
 
 import org.openrdf.model.URI;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+
 public class Term implements Comparable<Term>{
 	public static enum Kind {
 		NAMESPACE,
@@ -36,6 +40,7 @@ public class Term implements Comparable<Term>{
 	private String id;
 	private String language;
 	private String type;
+	private String container;
 	private URI expandedType;
 	private URI expandedId;
 	private int index=-1;
@@ -55,6 +60,15 @@ public class Term implements Comparable<Term>{
 		this.type = type;
 	}
 
+	
+	public Term(String key, String id, String language, String type, String container) {
+		this.key = key;
+		this.id = id;
+		this.language = language;
+		this.type = type;
+		this.container = container;
+	}
+
 	public String getKey() {
 		return key;
 	}
@@ -67,6 +81,10 @@ public class Term implements Comparable<Term>{
 		return kind;
 	}
 	
+	public String getContainer() {
+		return container;
+	}
+
 	public void setKind(Kind kind) {
 		this.kind = kind;
 	}
@@ -83,7 +101,7 @@ public class Term implements Comparable<Term>{
 		return expandedType;
 	}
 
-	void setExpandedType(URI expandedType) {
+	public void setExpandedType(URI expandedType) {
 		this.expandedType = expandedType;
 	}
 
@@ -144,6 +162,25 @@ public class Term implements Comparable<Term>{
 		}
 		
 		return delta;
+	}
+	
+	public void toJson(JsonGenerator json) throws IOException {
+		if (id!=null && type==null && language==null && container==null) {
+			json.writeString(id);
+		} else {
+			json.writeStartObject();
+			json.writeStringField("@id", id);
+			if (type!=null) {
+				json.writeStringField("@type", type);
+			}
+			if (language!=null) {
+				json.writeStringField("@languge", language);
+			}
+			if (container!=null) {
+				json.writeStringField("@container", container);
+			}
+			json.writeEndObject();
+		}
 	}
 
 }

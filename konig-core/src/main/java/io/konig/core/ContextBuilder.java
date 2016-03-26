@@ -26,6 +26,8 @@ import java.util.Map;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.impl.BasicContext;
+
 public class ContextBuilder {
 	private Context context;
 	private Map<String,String> namespaceMap = new HashMap<String, String>();
@@ -34,7 +36,7 @@ public class ContextBuilder {
 	}
 	
 	public ContextBuilder(String contextIRI) {
-		context = new Context(contextIRI);
+		context = new BasicContext(contextIRI);
 	}
 	
 	public Context getContext() {

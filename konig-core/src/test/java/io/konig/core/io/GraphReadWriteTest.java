@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.StringWriter;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
@@ -45,8 +44,9 @@ import io.konig.core.Graph;
 import io.konig.core.KonigTest;
 import io.konig.core.Traversal;
 import io.konig.core.Vertex;
+import io.konig.core.impl.BasicContext;
 import io.konig.core.impl.ChangeSetImpl;
-import io.konig.core.impl.ContextManagerImpl;
+import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.TraversalImpl;
 import io.konig.core.vocab.Schema;
@@ -66,7 +66,7 @@ public class GraphReadWriteTest extends KonigTest {
 			.property("familyName", "schema:familyName", "xsd:string")
 			.getContext();
 
-		ContextManager manager = new ContextManagerImpl();
+		ContextManager manager = new MemoryContextManager();
 		manager.add(context);
 		context.compile();
 
@@ -116,8 +116,8 @@ public class GraphReadWriteTest extends KonigTest {
 		URI bob = uri("http://example.com/bob");
 		URI likes = uri("http://example.com/likes");
 		
-		Context context = new Context("http://example.com/context");
-		ContextManager manager = new ContextManagerImpl();
+		Context context = new BasicContext("http://example.com/context");
+		ContextManager manager = new MemoryContextManager();
 		manager.add(context);
 		
 		
@@ -148,7 +148,7 @@ public class GraphReadWriteTest extends KonigTest {
 			.objectProperty("likes", "http://example.com/likes")
 			.getContext();
 		
-		ContextManager manager = new ContextManagerImpl();
+		ContextManager manager = new MemoryContextManager();
 		manager.add(context);
 		
 		
@@ -178,7 +178,7 @@ public class GraphReadWriteTest extends KonigTest {
 			.objectProperty("givenName", "http://schema.org/givenName")
 			.getContext();
 		
-		ContextManager manager = new ContextManagerImpl();
+		ContextManager manager = new MemoryContextManager();
 		manager.add(context);
 		
 		
@@ -200,7 +200,7 @@ public class GraphReadWriteTest extends KonigTest {
 	@Test
 	public void testTwoResources() throws Exception {
 		Context context = personContext().namespace("ex", "http://example.com/").getContext();
-		ContextManager manager = new ContextManagerImpl();
+		ContextManager manager = new MemoryContextManager();
 		manager.add(context);
 		
 
@@ -238,7 +238,7 @@ public class GraphReadWriteTest extends KonigTest {
 	@Test
 	public void testInverseAttribute() throws Exception {
 		Context context = personContext().namespace("ex", "http://example.com/").getContext();
-		ContextManager manager = new ContextManagerImpl();
+		ContextManager manager = new MemoryContextManager();
 		manager.add(context);
 		
 
@@ -278,7 +278,7 @@ public class GraphReadWriteTest extends KonigTest {
 	public void testBNode() throws Exception {
 
 		Context context = personContext().namespace("ex", "http://example.com/").getContext();
-		ContextManager manager = new ContextManagerImpl();
+		ContextManager manager = new MemoryContextManager();
 		manager.add(context);
 		
 
@@ -319,7 +319,7 @@ public class GraphReadWriteTest extends KonigTest {
 	public void testJsonWriter() throws Exception {
 
 		Context context = personContext().namespace("ex", "http://example.com/").getContext();
-		ContextManager manager = new ContextManagerImpl();
+		ContextManager manager = new MemoryContextManager();
 		manager.add(context);
 		
 

@@ -26,14 +26,16 @@ import org.openrdf.model.Resource;
 import io.konig.core.ChangeSet;
 import io.konig.core.Graph;
 import io.konig.core.Vertex;
-import io.konig.core.vocab.KC;
+import io.konig.core.vocab.KCS;
 
 public class ChangeSetImpl implements ChangeSet {
 	private Vertex self;
 	private Graph main;
-	private Vertex priorState;
-	private Vertex addition;
-	private Vertex removal;
+	private Vertex reference;
+	private Vertex add;
+	private Vertex remove;
+	private Vertex source;
+	private Vertex target;
 
 	public ChangeSetImpl(Graph main) {
 		this.main = main;
@@ -62,56 +64,72 @@ public class ChangeSetImpl implements ChangeSet {
 
 	@Override
 	public Vertex assertPriorState() {
-		if (priorState == null) {
-			priorState = main.vertex();
-			priorState.assertNamedGraph();
-			main.edge(getId(), KC.priorState, priorState.getId());
+		if (reference == null) {
+			reference = main.vertex();
+			reference.assertNamedGraph();
+			main.edge(getId(), KCS.reference, reference.getId());
 		}
-		return priorState;
+		return reference;
 	}
 
 	@Override
 	public Vertex assertAddition() {
-		if (addition == null) {
-			addition = main.vertex();
-			addition.assertNamedGraph();
-			main.edge(getId(), KC.addition, addition.getId());
+		if (add == null) {
+			add = main.vertex();
+			add.assertNamedGraph();
+			main.edge(getId(), KCS.add, add.getId());
 		}
-		return addition;
+		return add;
 	}
 
 	@Override
 	public Vertex assertRemoval() {
-		if (removal == null) {
-			removal = main.vertex();
-			removal.assertNamedGraph();
-			main.edge(getId(), KC.removal, removal.getId());
+		if (remove == null) {
+			remove = main.vertex();
+			remove.assertNamedGraph();
+			main.edge(getId(), KCS.remove, remove.getId());
 		}
-		return removal;
+		return remove;
 	}
 
 	@Override
-	public Vertex getPriorState() {
-		if (priorState == null) {
-			priorState = self.asTraversal().firstVertex(KC.priorState);
+	public Vertex getReference() {
+		if (reference == null) {
+			reference = self.asTraversal().firstVertex(KCS.reference);
 		}
-		return priorState;
+		return reference;
 	}
 
 	@Override
 	public Vertex getAddition() {
-		if (addition == null) {
-			addition = self.asTraversal().firstVertex(KC.addition);
+		if (add == null) {
+			add = self.asTraversal().firstVertex(KCS.add);
 		}
-		return addition;
+		return add;
 	}
 
 	@Override
 	public Vertex getRemoval() {
-		if (removal == null) {
-			removal = self.asTraversal().firstVertex(KC.removal);
+		if (remove == null) {
+			remove = self.asTraversal().firstVertex(KCS.remove);
 		}
-		return removal;
+		return remove;
+	}
+
+	@Override
+	public Vertex getSource() {
+		if (source == null) {
+			source = self.asTraversal().firstVertex(KCS.source);
+		}
+		return source;
+	}
+
+	@Override
+	public Vertex getTarget() {
+		if (target == null) {
+			target = self.asTraversal().firstVertex(KCS.target);
+		}
+		return target;
 	}
 
 

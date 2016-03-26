@@ -24,6 +24,8 @@ package io.konig.core.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,7 @@ import java.util.Set;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
+import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
@@ -236,7 +239,7 @@ public class MemoryGraph implements Graph, Transaction {
 		workerList.remove(worker);
 	}
 
-	public Edge add(Edge edge) {
+	public Edge edge(Edge edge) {
 		return edge(edge.getSubject(), edge.getPredicate(), edge.getObject());
 	}
 
@@ -259,7 +262,7 @@ public class MemoryGraph implements Graph, Transaction {
 		for (Entry<URI,Set<Edge>> e : out) {
 			Set<Edge> set = e.getValue();
 			for (Edge edge : set) {
-				add(edge);
+				edge(edge);
 				Value object = edge.getObject();
 				if (object instanceof BNode) {
 					Vertex bnode = vertex((Resource)object);
@@ -315,6 +318,196 @@ public class MemoryGraph implements Graph, Transaction {
 	@Override
 	public GraphBuilder builder() {
 		return new GraphBuilder(this);
+	}
+	
+	public boolean add(Statement statement) {
+		return add(new EdgeImpl(statement.getSubject(), statement.getPredicate(), statement.getObject()));
+	}
+
+	@Override
+	public boolean add(Edge edge) {
+		edge(edge);
+		return true;
+	}
+
+	@Override
+	public boolean addAll(Collection<? extends Edge> sequence) {
+		for (Edge e : sequence) {
+			edge(e);
+		}
+		return true;
+	}
+
+	@Override
+	public void clear() {
+		bnodeMap = new HashMap<>();
+		vertexMap = new LinkedHashMap<Resource, Vertex>();
+		txn = null;
+		sink=null;
+		status = Transaction.Status.CLOSED;
+	}
+
+	@Override
+	public boolean contains(Object obj) {
+		Edge edge = null;
+		if (obj instanceof Edge) {
+			edge = (Edge) obj;
+		} else if (obj instanceof Statement) {
+			Statement s = (Statement) obj;
+			edge = new EdgeImpl(s.getSubject(), s.getPredicate(), s.getObject());
+		}
+		if (edge != null) {
+			Resource subject = edge.getSubject();
+			
+			Vertex subjectVertex = getVertex(subject);
+			if (subjectVertex != null) {
+				return subjectVertex.hasEdge(edge);
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean containsAll(Collection<?> collection) {
+		for (Object obj : collection) {
+			if (!contains(obj)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return vertexMap.isEmpty();
+	}
+
+	@Override
+	public Iterator<Edge> iterator() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean remove(Object obj) {
+		if (obj instanceof Edge) {
+			remove((Edge) obj);
+		}
+		if (obj instanceof Statement) {
+			Statement s = (Statement) obj;
+			remove(new EdgeImpl(s.getSubject(), s.getPredicate(), s.getObject()));
+		}
+		return true;
+	}
+
+	@Override
+	public boolean removeAll(Collection<?> collection) {
+		for (Object obj : collection) {
+			remove(obj);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean retainAll(Collection<?> arg0) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int size() {
+		int count = 0;
+		Iterator<Edge> sequence = iterator();
+		while (sequence.hasNext()) {
+			sequence.next();
+			count++;
+		}
+		return count;
+	}
+
+	@Override
+	public Object[] toArray() {
+		List<Edge> list = new ArrayList<>();
+		Iterator<Edge> sequence = iterator();
+		while (sequence.hasNext()) {
+			list.add(sequence.next());
+		}
+		
+		return list.toArray();
+	}
+
+	@Override
+	public <T> T[] toArray(T[] arg0) {
+		throw new UnsupportedOperationException();
+	}
+	
+	static class StatementIterator implements Iterator<Edge> {
+		
+		private Edge current;
+		private Iterator<Vertex> vertexSequence;
+		private Iterator<Entry<URI, Set<Edge>>> predicateIterator;
+		private Iterator<Edge> edgeSequence;
+		
+
+		public StatementIterator(Iterator<Vertex> vertexSequence) {
+			this.vertexSequence = vertexSequence;
+			lookAhead();
+		}
+
+		private void lookAhead() {
+			current = null;
+			if (edgeSequence != null) {
+				while (edgeSequence.hasNext()) {
+					current = edgeSequence.next();
+					return;
+				}
+				edgeSequence = null;
+			} 
+			
+			if (predicateIterator!=null) {
+				while (predicateIterator.hasNext()) {
+					edgeSequence = predicateIterator.next().getValue().iterator();
+					while (edgeSequence.hasNext()) {
+						current = edgeSequence.next();
+						return;
+					}
+					edgeSequence = null;
+				}
+				predicateIterator = null;
+			}
+			
+			while (vertexSequence.hasNext()) {
+				Vertex v = vertexSequence.next();
+				predicateIterator = v.outEdges().iterator();
+				while (predicateIterator.hasNext()) {
+					edgeSequence = predicateIterator.next().getValue().iterator();
+					while (edgeSequence.hasNext()) {
+						current = edgeSequence.next();
+						return;
+					}
+					edgeSequence = null;
+				}
+				predicateIterator = null;
+			}
+			
+		}
+
+		@Override
+		public boolean hasNext() {
+			return current != null;
+		}
+
+		@Override
+		public Edge next() {
+			Edge result = current;
+			lookAhead();
+			return result;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+			
+		}
+		
 	}
 	
 

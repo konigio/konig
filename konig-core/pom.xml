@@ -16,6 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <license.roots>src/main/java,src/test/java</license.roots>
   </properties>
 
   <dependencies>
@@ -94,10 +95,6 @@
 	            <phase>process-sources</phase>
 	            <configuration>
 	              <licenseName>apache_v2</licenseName>
-	              <roots>
-	                <root>src/main/java</root>
-	                <root>src/test</root>
-	              </roots>
 	            </configuration>
 	          </execution>
 	        </executions>

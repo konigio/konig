@@ -83,6 +83,11 @@ public class BinaryGraphWriter {
 		this.graph = source;
 		this.context = context;
 		
+		long contextVersion = context.getVersionNumber();
+		if (contextVersion < 1) {
+			throw new KonigWriteException("JSON-LD context version number is not defined");
+		}
+		
 		this.inverse = context.inverse();
 		promiseInfo = new PromiseInfo();
 		promiseInfoList.add(promiseInfo);
@@ -92,7 +97,7 @@ public class BinaryGraphWriter {
 
 		try {
 			data.writeShort(VERSION);
-			writeString(context.getContextIRI());
+			data.writeLong(contextVersion);
 
 			Collection<Vertex> list = graph.vertices();
 			

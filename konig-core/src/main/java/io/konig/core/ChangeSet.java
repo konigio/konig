@@ -32,8 +32,13 @@ public interface ChangeSet {
 	Vertex assertAddition();
 	Vertex assertRemoval();
 	
-	Vertex getPriorState();
+	
+	Vertex getReference();
 	Vertex getAddition();
 	Vertex getRemoval();
+	
+	Vertex getSource();
+	
+	Vertex getTarget();
 
 }

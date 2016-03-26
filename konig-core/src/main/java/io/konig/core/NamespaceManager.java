@@ -1,5 +1,7 @@
 package io.konig.core;
 
+import java.util.Collection;
+
 /*
  * #%L
  * konig-core
@@ -29,5 +31,6 @@ public interface NamespaceManager {
 	Namespace findByName(String name);
 	NamespaceManager add(Namespace ns);
 	NamespaceManager add(String prefix, String namespace);
+	Collection<Namespace> listNamespaces();
 
 }

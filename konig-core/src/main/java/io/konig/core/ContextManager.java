@@ -1,5 +1,7 @@
 package io.konig.core;
 
+import java.util.List;
+
 /*
  * #%L
  * konig-core
@@ -25,8 +27,16 @@ import org.openrdf.model.URI;
 
 public interface ContextManager {
 	
+	List<String> listContexts();
 	void add(Context context);
 	Context getContextByURI(URI contextURI);
 	Context getContextByURI(String contextURI);
+	Context getContextByMediaType(String mediaType);
+	Context getContextByVersionNumber(long versionNumber);
+	
+	/**
+	 * Get a JSON-LD context which contains simple terms for every namespace, class, property, and taxon.
+	 */
+	Context getUniversalContext();
 
 }

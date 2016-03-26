@@ -31,6 +31,14 @@ public class ResourceFileImpl implements ResourceFile {
 	
 	private byte[] entityBody;
 	private Properties properties;
+	
+	public static ResourceFile create(String contentLocation, String contentType, String entityBody) {
+		byte[] data = entityBody.getBytes();
+		Properties p = new Properties();
+		p.setProperty(CONTENT_LOCATION, contentLocation);
+		p.setProperty(CONTENT_TYPE, contentType);
+		return new ResourceFileImpl(data, p);
+	}
 
 	public ResourceFileImpl(byte[] entityBody, Properties properties) {
 		this.entityBody = entityBody;
@@ -88,6 +96,17 @@ public class ResourceFileImpl implements ResourceFile {
 			
 		}
 		return new ResourceFileImpl(entityBody, p);
+	}
+
+	@Override
+	public void setContentLocation(String contentLocation) {
+		setProperty(CONTENT_LOCATION, contentLocation);
+		
+	}
+
+	@Override
+	public void setContentType(String contentType) {
+		setProperty(CONTENT_TYPE, contentType);
 	}
 
 }

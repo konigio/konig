@@ -1,5 +1,7 @@
 package io.konig.core;
 
+import java.util.List;
+
 /*
  * #%L
  * konig-core
@@ -26,6 +28,7 @@ import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 
 public interface Vertex {
 	
@@ -59,6 +62,20 @@ public interface Vertex {
 	 */
 	Set<Entry<URI, Set<Edge>>> outEdges();
 	
+	Set<Entry<URI, Set<Edge>>> inEdges();
+	
+	/**
+	 * Returns a set containing all of the incoming edges
+	 */
+	Set<Edge> inEdgeSet();
+	
+	/**
+	 * Returns a set containing all of the outgoing edges
+	 */
+	Set<Edge> outEdgeSet();
+	
+	boolean hasEdge(Edge edge);
+	
 	/**
 	 * Get the Set of outgoing edges with the specified predicate.
 	 * @param predicate The predicate for the outgoing edges
@@ -77,6 +94,8 @@ public interface Vertex {
 	Traversal asTraversal();
 	
 	void remove(Edge edge);
+	
+	List<Value> asList();
 	
 	
 }

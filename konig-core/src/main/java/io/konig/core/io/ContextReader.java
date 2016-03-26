@@ -27,14 +27,30 @@ import java.util.Iterator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.konig.core.Context;
+import io.konig.core.ContextManager;
 import io.konig.core.Term;
+import io.konig.core.impl.BasicContext;
+import io.konig.core.impl.CompositeContext;
 
 public class ContextReader {
+	
+	private ContextManager contextManager;
 
 	public ContextReader() {
+	}
+	
+	
+	public ContextReader(ContextManager contextManager) {
+		this.contextManager = contextManager;
+	}
+
+
+	public Context parse(ObjectNode node) throws KonigReadException {
+		return parseObject(node, false);
 	}
 	
 	public Context read(InputStream input) throws KonigReadException {
@@ -45,8 +61,17 @@ public class ContextReader {
 			node = mapper.readTree(input);
 
 			if (node instanceof ObjectNode) {
-				return parse((ObjectNode)node);
-			}
+				ObjectNode object = (ObjectNode) node;
+				Context context = parseObject(object, true);
+				if (context != null) {
+					JsonNode mimeType = object.get("vendorType");
+					if (mimeType != null) {
+						String vendorType = mimeType.textValue();
+						context.setVendorType(vendorType);
+					}
+				}
+				return context;
+			} 
 		} catch (IOException e) {
 			throw new KonigReadException(e);
 		}
@@ -54,38 +79,100 @@ public class ContextReader {
 		throw new KonigReadException("Root node in stream is not a JSON object");
 		
 	}
-
-	private Context parse(ObjectNode node) throws KonigReadException {
-		JsonNode id = node.get("@id");
-		if (id == null) {
-			throw new KonigReadException("@id of context is not defined");
-		}
-		String contextIRI = id.asText();
-		Context context = new Context(contextIRI);
-		JsonNode set = node.get("@context");
-		if (set instanceof ObjectNode) {
-			ObjectNode terms = (ObjectNode) set;
-			Iterator<String> sequence = terms.fieldNames();
-			while (sequence.hasNext()) {
-				String key = sequence.next();
-				JsonNode termNode = terms.get(key);
-				String idValue=null;
-				String language=null;
-				String type=null;
-				
-				Term term = null;
-				if (termNode.isTextual()) {
-					idValue = termNode.asText();
-				} else if (termNode.isObject()) {
-					ObjectNode termObject = (ObjectNode) termNode;
-					idValue = stringValue(termObject, "@id");
-					language = stringValue(termObject, "@language");
-					type = stringValue(termObject, "@type");
+	
+	private Context parseArray(ArrayNode array) throws KonigReadException {
+		CompositeContext composite = new CompositeContext();
+		for (int i=0; i<array.size(); i++) {
+			JsonNode node = array.get(i);
+			if (node.isTextual()) {
+				String contextIRI = node.asText();
+				if (contextManager == null) {
+					throw new KonigReadException("Cannot load context because manager is not defined: " + contextIRI);
 				}
+				Context context = contextManager.getContextByURI(contextIRI);
+				if (context == null) {
+					throw new KonigReadException("Context not found: " + contextIRI);
+				}
+				composite.append(context);
 				
-				term = new Term(key, idValue, language, type);
-				context.add(term);
+			} else if (node instanceof ObjectNode) {
+				ObjectNode terms = (ObjectNode) node;
+				Context context = new BasicContext(null);
+				parseTerms(terms, context);
+				composite.append(context);
 			}
+		}
+		return composite;
+	}
+	
+	private void parseTerms(ObjectNode terms, Context context) {
+		Iterator<String> sequence = terms.fieldNames();
+		while (sequence.hasNext()) {
+			String key = sequence.next();
+			JsonNode termNode = terms.get(key);
+			String idValue=null;
+			String language=null;
+			String type=null;
+			String container=null;
+			
+			Term term = null;
+			if (termNode.isTextual()) {
+				idValue = termNode.asText();
+			} else if (termNode.isObject()) {
+				ObjectNode termObject = (ObjectNode) termNode;
+				idValue = stringValue(termObject, "@id");
+				language = stringValue(termObject, "@language");
+				type = stringValue(termObject, "@type");
+				container = stringValue(termObject, "@container");
+			}
+			
+			term = new Term(key, idValue, language, type, container);
+			context.add(term);
+		}
+	}
+	
+
+	private Context parseObject(ObjectNode node, boolean useId) throws KonigReadException {
+		String contextIRI = null;
+		if (useId) {
+			JsonNode id = node.get("@id");
+			if (id != null) {
+				contextIRI = id.asText();
+				if (contextManager!=null) {
+					Context context = contextManager.getContextByURI(contextIRI);
+					if (context != null) {
+						return context;
+					}
+				}
+			}
+		}
+		
+		
+		JsonNode contextNode = node.get("@context");
+		
+		if (contextNode instanceof ArrayNode) {
+			return parseArray((ArrayNode)contextNode);
+		}
+		Context context = null;
+		if (contextNode.isTextual()) {
+			contextIRI = contextNode.asText();
+			if (contextManager!=null) {
+				context = contextManager.getContextByURI(contextIRI);
+			}
+			if (context == null) {
+				throw new KonigReadException("Context not found: " + contextIRI);
+			}
+			return context;
+					
+		}
+		
+		context = new BasicContext(contextIRI);
+		if (contextManager != null && contextIRI!=null) {
+			contextManager.add(context);
+		}
+		
+		if (contextNode instanceof ObjectNode) {
+			parseTerms((ObjectNode)contextNode, context);
 		}
 		
 		return context;

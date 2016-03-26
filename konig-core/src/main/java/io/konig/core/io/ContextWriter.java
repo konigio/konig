@@ -43,6 +43,20 @@ public class ContextWriter {
 		
 		json.writeEndObject();
 		json.writeStringField("@id", context.getContextIRI());
+		if (context.getVendorType()!=null) {
+			json.writeStringField("vendorType", context.getVendorType());
+		}
+		if (context.getVersionNumber()>0) {
+			json.writeNumberField("versionNumber", context.getVersionNumber());
+		}
+		json.writeEndObject();
+	}
+	
+	public void writeContext(Context context, JsonGenerator json) throws IOException {
+		json.writeStartObject();
+		for (Term term : context.asList()) {
+			write(term, json);
+		}
 		json.writeEndObject();
 	}
 	

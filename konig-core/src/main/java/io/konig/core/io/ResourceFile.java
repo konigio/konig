@@ -30,8 +30,12 @@ public interface ResourceFile {
 	String asText();
 	
 	byte[] getEntityBody();
+	
 	String getContentLocation();
+	void setContentLocation(String contentLocation);
+	
 	String getContentType();
+	void setContentType(String contentType);
 
 	Enumeration<String> propertyNames();
 	String getProperty(String key);

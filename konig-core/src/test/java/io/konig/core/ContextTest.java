@@ -19,18 +19,18 @@ package io.konig.core;
  * limitations under the License.
  * #L%
  */
-
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+
+import io.konig.core.impl.BasicContext;
 
 public class ContextTest {
 
 	@Test
 	public void testExpandIRI() {
 		
-		Context context = new Context("");
+		Context context = new BasicContext("");
 		
 		context.addTerm("schema", "http://schema.org/");
 		context.addTerm("Person", "schema:Person");

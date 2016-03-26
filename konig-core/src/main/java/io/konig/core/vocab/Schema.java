@@ -42,5 +42,9 @@ public class Schema {
 	public static final URI email = new URIImpl("http://schema.org/email");
 	public static final URI knows = new URIImpl("http://schema.org/knows");
 	public static final URI thumbnailUrl = new URIImpl("http://schema.org/thumbnailUrl");
+	public static final URI timeRequired = new URIImpl("http://schema.org/timeRequired");
+	public static final URI contactPoint = new URIImpl("http://schema.org/contactPoint");
+	public static final URI contactType = new URIImpl("http://schema.org/contactType");
+	public static final URI hasPart = new URIImpl("http://schema.org/hasPart");
 
 }

@@ -34,6 +34,8 @@ import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
+import io.konig.core.impl.KonigLiteral;
+
 public class GraphBuilder {
 	
 	private Graph graph;
@@ -79,8 +81,18 @@ public class GraphBuilder {
 		return beginSubject(bnode);
 	}
 	
+	public GraphBuilder beginSubject(Vertex v) {
+		return beginSubject(v.getId());
+	}
+	
 	public GraphBuilder beginSubject(String iri) {
 		return beginSubject(new URIImpl(iri));
+	}
+	
+	public GraphBuilder beginBNode(URI predicate) {
+		Vertex v = graph.vertex();
+		addProperty(predicate, v.getId());
+		return beginSubject(v.getId());
 	}
 	
 	public GraphBuilder beginSubject(Resource subject) {
@@ -101,8 +113,20 @@ public class GraphBuilder {
 		return stack.removeLast();
 	}
 	
+	public GraphBuilder addProperty(URI predicate, Vertex object) {
+		return addProperty(predicate, object.getId());
+	}
+	
 	public GraphBuilder addProperty(URI predicate, Value object) {
 		return statement(peek(), predicate, object);
+	}
+	
+	public GraphBuilder addLiteral(URI predicate, String object) {
+		return addProperty(predicate, new KonigLiteral(object));
+	}
+	
+	public GraphBuilder addLiteral(URI predicate, String value, URI datatype) {
+		return addProperty(predicate, new KonigLiteral(value, datatype));
 	}
 	
 	

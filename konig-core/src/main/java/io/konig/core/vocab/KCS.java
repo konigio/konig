@@ -1,4 +1,4 @@
-package io.konig.core.impl;
+package io.konig.core.vocab;
 
 /*
  * #%L
@@ -21,30 +21,17 @@ package io.konig.core.impl;
  */
 
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
-import io.konig.core.Context;
-import io.konig.core.ContextManager;
+public class KCS {
 
-public class ContextManagerImpl implements ContextManager {
+	public static final URI add = new URIImpl("http://www.konig.io/ns/kcs/add");
+	public static final URI reference = new URIImpl("http://www.konig.io/ns/kcs/reference");
+	public static final URI remove = new URIImpl("http://www.konig.io/ns/kcs/remove");
+	public static final URI source = new URIImpl("http://www.konig.io/ns/kcs/source");
+	public static final URI target = new URIImpl("http://www.konig.io/ns/kcs/target");
+	public static final URI ChangeSet = new URIImpl("http://www.konig.io/ns/core/ChangeSet");
 	
-	private Map<String,Context> map = new HashMap<String, Context>();
-
-	public Context getContextByURI(URI contextURI) {
-		
-		return map.get(contextURI.stringValue());
-	}
-
-	public Context getContextByURI(String contextURI) {
-		return map.get(contextURI);
-	}
-
-	public void add(Context context) {
-		map.put(context.getContextIRI(), context);
-		
-	}
-
+	
 }

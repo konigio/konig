@@ -87,11 +87,11 @@ abstract public class BaseGraphReader {
 			throw new KonigReadException("Unsupported version " + version);
 		}
 		
-		String contextURI = readString();
+		long contextVersion = this.data.getLong();
 		
-		context = manager.getContextByURI(contextURI);
+		context = manager.getContextByVersionNumber(contextVersion);
 		if (context == null) {
-			throw new KonigReadException("Context not found: " + contextURI);
+			throw new KonigReadException("Context not found: " + contextVersion);
 		}
 		context.compile();
 		

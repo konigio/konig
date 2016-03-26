@@ -22,11 +22,16 @@ package io.konig.core.io;
 
 
 import java.io.IOException;
+import java.util.Collection;
 
 public interface ResourceManager {
+	
+	ResourceFile createResource(String location, String type, String entityBody);
 	
 	void delete(String contentLocation) throws IOException;
 	ResourceFile get(String contentLocation) throws IOException;
 	void put(ResourceFile file) throws IOException;
+	
+	Collection<ResourceFile> get(Iterable<String> resourceLocations) throws IOException; 
 
 }

@@ -22,7 +22,10 @@ package io.konig.core.io.impl;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.konig.core.io.ResourceFile;
@@ -46,5 +49,24 @@ public class MemoryResourceManager implements ResourceManager {
 		map.put(file.getContentLocation(), file);
 	}
 
+	@Override
+	public ResourceFile createResource(String location, String type, String entityBody) {
+		return ResourceFileImpl.create(location, type, entityBody);
+	}
+
+
+	@Override
+	public Collection<ResourceFile> get(Iterable<String> resourceLocations) throws IOException {
+		
+		List<ResourceFile> list = new ArrayList<>();
+		for (String location : resourceLocations) {
+			ResourceFile file = get(location);
+			if (file != null) {
+				list.add(file);
+			}
+		}
+		
+		return list;
+	}
 
 }

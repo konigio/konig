@@ -1,5 +1,7 @@
 package io.konig.core.impl;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * konig-core
@@ -22,11 +24,15 @@ package io.konig.core.impl;
 
 
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
@@ -77,6 +83,12 @@ public class VertexImpl implements Vertex {
 		Set<Edge> result = in.get(predicate);
 		return result == null ? emptySet : result;
 	}
+
+	@Override
+	public Set<Entry<URI, Set<Edge>>> inEdges() {
+		return in.entries();
+	}
+
 
 	public Set<Entry<URI, Set<Edge>>> outEdges() {
 		return out.entries();
@@ -143,6 +155,63 @@ public class VertexImpl implements Vertex {
 		}
 		return namedGraph;
 	}
+
+	@Override
+	public boolean hasEdge(Edge edge) {
+		
+		Set<Edge> set = edge.getSubject().equals(id) ? 
+			outProperty(edge.getPredicate()) :
+			inProperty(edge.getPredicate());
+		
+		return set.contains(edge);
+	}
+
+	@Override
+	public Set<Edge> outEdgeSet() {
+		return new OutEdgeSet(this, this.outEdges());
+	}
+
+	@Override
+	public Set<Edge> inEdgeSet() {
+		return new InEdgeSet(this, this.in.entries());
+	}
+
+	@Override
+	public List<Value> asList() {
+		
+		List<Value> result = new ArrayList<>();
+		
+		Vertex v = this;
+		while (v != null) {
+			Vertex w = v;
+			v = null;
+			Set<Edge> first = w.outProperty(RDF.FIRST);
+			if (first != null) {
+				Iterator<Edge> sequence = first.iterator();
+				if (sequence.hasNext()) {
+					Edge firstEdge = sequence.next();
+					Value object = firstEdge.getObject();
+					result.add(object);
+					
+					Set<Edge> rest = w.outProperty(RDF.REST);
+					if (rest != null) {
+						sequence = rest.iterator();
+						if (sequence.hasNext()) {
+							Edge restEdge = sequence.next();
+							object = restEdge.getObject();
+							if (!RDF.NIL.equals(object) && object instanceof Resource) {
+								v = graph.getVertex((Resource) object);
+							}
+						}
+					}
+					
+				}
+			}
+		}
+		
+		return result;
+	}
+	
 
 
 }
