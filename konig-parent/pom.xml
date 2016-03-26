@@ -8,8 +8,10 @@
   <packaging>pom</packaging>
   <properties>
   	<konig.version>0.0.1-SNAPSHOT</konig.version>
+  	<license.licenseName>apache_v2</license.licenseName>
   	<license.inceptionYear>2015</license.inceptionYear>
   	<license.organizationName>Gregory McFall</license.organizationName>
+    <license.excludes>src/test/resources/jsonld/owlshapes.json</license.excludes>
   	<sesame.version>2.8.7</sesame.version>
   	<junit.version>4.12</junit.version>
   	<slf4j.version>1.7.10</slf4j.version>
@@ -22,7 +24,8 @@
   	<module>../konig-filebase</module>
   	<module>../konig-shacl</module>
   	<module>../konig-services</module>
-  	<module>../konig-web</module>
+  	<module>../konig-webapp</module>
+  	<module>../konig-war</module>
   </modules>
   
   <build>
