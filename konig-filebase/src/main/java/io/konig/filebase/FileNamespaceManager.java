@@ -65,7 +65,7 @@ public class FileNamespaceManager extends MemoryNamespaceManager {
 		
 		FileWriter writer = new FileWriter(file);
 		try {
-			Collection<Namespace> set = map.values();
+			Collection<Namespace> set = byPrefix.values();
 			Properties properties = new Properties();
 			for (Namespace ns : set) {
 				String key = ns.getPrefix();

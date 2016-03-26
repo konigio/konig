@@ -25,7 +25,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 
 import io.konig.core.io.ResourceFile;
@@ -132,6 +135,25 @@ public class FileManager implements ResourceManager {
 		
 		
 		
+	}
+
+	@Override
+	public ResourceFile createResource(String location, String type, String entityBody) {
+		return ResourceFileImpl.create(location, type, entityBody);
+	}
+
+	@Override
+	public Collection<ResourceFile> get(Iterable<String> resourceLocations) throws IOException {
+		
+		List<ResourceFile> list = new ArrayList<>();
+		for (String location : resourceLocations) {
+			ResourceFile file = get(location);
+			if (file != null) {
+				list.add(file);
+			}
+		}
+		
+		return list;
 	}
 
 
