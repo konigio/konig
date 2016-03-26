@@ -82,7 +82,7 @@ public class GraphFilter {
 		Integer minCount = p.getMinCount();
 		Integer maxCount = p.getMaxCount();
 		URI datatype = p.getDatatype();
-		URI directType = p.getDirectType();
+		URI directType = p.getDirectValueType();
 		Shape valueShape = p.getValueShape();
 		List<Value> allowedValues = p.getAllowedValues();
 		

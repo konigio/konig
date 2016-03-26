@@ -16,6 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <license.roots>src/main/java,src/test/java</license.roots>
   </properties>
 
   <dependencies>
@@ -44,6 +45,12 @@
 	<dependency>
 		<groupId>org.openrdf.sesame</groupId>
 		<artifactId>sesame-rio-api</artifactId>
+		<version>${sesame.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.openrdf.sesame</groupId>
+		<artifactId>sesame-rio-turtle</artifactId>
 		<version>${sesame.version}</version>
 	</dependency>
 	

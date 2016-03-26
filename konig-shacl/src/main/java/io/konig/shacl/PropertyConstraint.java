@@ -1,5 +1,8 @@
 package io.konig.shacl;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
 /*
  * #%L
  * konig-shacl
@@ -22,13 +25,19 @@ package io.konig.shacl;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+
+import io.konig.core.Term;
 import io.konig.core.UidGenerator;
 
 public class PropertyConstraint {
@@ -38,11 +47,23 @@ public class PropertyConstraint {
 	private List<Value> allowedValues;
 	private Integer minCount;
 	private Integer maxCount;
+	private Integer minLength;
+	private Integer maxLength;
+	private Double minExclusive;
+	private Double maxExclusive;
+	private Double minInclusive;
+	private Double maxInclusive;
 	private URI datatype;
 	private URI type;
 	private URI directType;
-	private URI valueShapeId;
+	private Resource valueShapeId;
 	private Shape valueShape;
+	private NodeKind nodeKind;
+	private Set<Value> hasValue;
+	private String pattern;
+	private Resource valueClass;
+	
+	private Term term;
 
 
 	public PropertyConstraint(URI predicate) {
@@ -57,20 +78,88 @@ public class PropertyConstraint {
 	public Resource getId() {
 		return id;
 	}
+	
+	public Integer getMinLength() {
+		return minLength;
+	}
+	public void setMinLength(Integer minLength) {
+		this.minLength = minLength;
+	}
+	public Integer getMaxLength() {
+		return maxLength;
+	}
+	public void setMaxLength(Integer maxLength) {
+		this.maxLength = maxLength;
+	}
+	public Double getMinExclusive() {
+		return minExclusive;
+	}
+	public void setMinExclusive(Double minExclusive) {
+		this.minExclusive = minExclusive;
+	}
+	public Double getMaxExclusive() {
+		return maxExclusive;
+	}
+	public void setMaxExclusive(Double maxExclusive) {
+		this.maxExclusive = maxExclusive;
+	}
+	/**
+	 * Get the default JSON-LD term for the predicate
+	 * @return The default JSON-LD term for the predicate
+	 */
+	public Term getTerm() {
+		return term;
+	}
 
-
-
+	/**
+	 * Set the default JSON-LD term for the predicate
+	 * @param term The default JSON-LD term for the predicate
+	 */
+	public void setTerm(Term term) {
+		this.term = term;
+	}
+	public Double getMinInclusive() {
+		return minInclusive;
+	}
+	public void setMinInclusive(Double minInclusive) {
+		this.minInclusive = minInclusive;
+	}
+	public Double getMaxInclusive() {
+		return maxInclusive;
+	}
+	public void setMaxInclusive(Double maxInclusive) {
+		this.maxInclusive = maxInclusive;
+	}
 	public URI getPredicate() {
 		return predicate;
 	}
+	
+	public void setPredicate(URI predicate) {
+		this.predicate = predicate;
+	}
 
-
-
+	public NodeKind getNodeKind() {
+		return nodeKind;
+	}
+	public void setNodeKind(NodeKind nodeKind) {
+		this.nodeKind = nodeKind;
+	}
 	public void addAllowedValue(Value value) {
 		if (allowedValues == null) {
 			allowedValues = new ArrayList<Value>();
 		}
 		allowedValues.add(value);
+	}
+	
+	public void addHasValue(Value value) {
+		if (hasValue == null) {
+			hasValue = new HashSet<>();
+		}
+		hasValue.add(value);
+	}
+	
+	public Set<Value> getHasValue() {
+		return hasValue;
 	}
 	
 	/**
@@ -105,23 +194,16 @@ public class PropertyConstraint {
 		this.datatype = datatype;
 	}
 
-	public URI getType() {
-		return type;
-	}
 
-	public void setType(URI type) {
-		this.type = type;
-	}
-
-	public URI getDirectType() {
+	public URI getDirectValueType() {
 		return directType;
 	}
 
-	public void setDirectType(URI directType) {
+	public void setDirectValueType(URI directType) {
 		this.directType = directType;
 	}
 
-	public URI getValueShapeId() {
+	public Resource getValueShapeId() {
 		return valueShapeId;
 	}
 
@@ -135,6 +217,73 @@ public class PropertyConstraint {
 
 	public void setValueShape(Shape valueShape) {
 		this.valueShape = valueShape;
+		this.valueShapeId = valueShape.getId();
+	}
+	
+	public String toString() {
+		
+		StringWriter out = new StringWriter();
+		JsonFactory factory = new JsonFactory();
+		
+		try {
+			JsonGenerator json = factory.createGenerator(out);
+			json.useDefaultPrettyPrinter();
+			toJson(json);
+			json.flush();
+			
+		} catch (IOException e) {
+			return "ERROR:" + e.getMessage();
+		}
+		
+		return out.toString();
+	}
+	
+	public void toJson(JsonGenerator json) throws IOException {
+		json.writeStartObject();
+		if (predicate != null) {
+			json.writeStringField("predicate", predicate.toString());
+		}
+		if (minCount!=null) {
+			json.writeNumberField("minCount", minCount);
+		}
+		if (maxCount!=null) {
+			json.writeNumberField("maxCount", maxCount);
+		}
+		if (datatype != null) {
+			json.writeStringField("datatype", datatype.stringValue());
+		}
+		if (directType != null) {
+			json.writeStringField("directType", directType.stringValue());
+		}
+		if (minInclusive != null) {
+			json.writeNumberField("minInclusive", minInclusive);
+		}
+		if (maxInclusive != null) {
+			json.writeNumberField("maxInclusive", maxInclusive);
+		}
+		if (nodeKind != null) {
+			json.writeStringField("nodeKind", "sh:" + nodeKind.getLocalName());
+		}
+		if (valueShape != null) {
+			json.writeFieldName("valueShape");
+			valueShape.toJson(json);
+			
+		} else if (valueShapeId != null) {
+			json.writeStringField("valueShape", valueShapeId.toString());
+		}
+		json.writeEndObject();
+	}
+	public String getPattern() {
+		return pattern;
+	}
+	public void setPattern(String pattern) {
+		this.pattern = pattern;
+	}
+	public Resource getValueClass() {
+		return valueClass;
+	}
+	public void setValueClass(Resource valueClass) {
+		this.valueClass = valueClass;
 	}
 	
 	

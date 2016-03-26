@@ -67,7 +67,7 @@ public class ReplaceTransform {
 			}
 		}
 		for (Edge e : newEdge) {
-			targetGraph.add(e);
+			targetGraph.edge(e);
 		}
 		
 	}

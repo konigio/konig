@@ -1,5 +1,6 @@
 package io.konig.shacl.impl;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 
 /*
@@ -29,10 +30,15 @@ import java.util.Map;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import io.konig.core.ContextManager;
 import io.konig.core.UnnamedResourceException;
+import io.konig.core.io.JsonldParser;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.io.ShapeRdfHandler;
 
 public class MemoryShapeManager implements ShapeManager {
 	private Map<String, Shape> shapeMap = new HashMap<String, Shape>();
@@ -49,7 +55,6 @@ public class MemoryShapeManager implements ShapeManager {
 		shapeMap.put(shape.getId().stringValue(), shape);
 	}
 
-	@Override
 	public List<Shape> getShapesByPredicate(URI predicate) {
 		List<Shape> list = new ArrayList<>();
 		
@@ -72,5 +77,11 @@ public class MemoryShapeManager implements ShapeManager {
 		}
 		return list;
 	}
+
+	@Override
+	public List<Shape> listShapes() {
+		return new ArrayList<>(shapeMap.values());
+	}
+	
 
 }

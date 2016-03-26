@@ -27,24 +27,40 @@ import java.util.List;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
+import io.konig.core.UidGenerator;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShapeBuilder {
 	
+	private PropertyBuilder propertyBuilder;
 	private ShapeManager shapeManager;
 	private ValueFactory valueFactory = new ValueFactoryImpl();
 	
 	private List<Object> stack = new ArrayList<>();
 
+
+	public ShapeBuilder(PropertyBuilder propertyBuilder, ShapeManager shapeManager, 
+			ValueFactory valueFactory, Shape shape) {
+		this.propertyBuilder = propertyBuilder;
+		this.shapeManager = shapeManager;
+		this.valueFactory = valueFactory;
+		stack.add(shape);
+	}
 	
 	public ShapeBuilder(ShapeManager shapeManager, ValueFactory valueFactory, Shape shape) {
 		this.shapeManager = shapeManager;
 		this.valueFactory = valueFactory;
 		stack.add(shape);
+	}
+	
+	public PropertyBuilder endValueShape() {
+		return propertyBuilder;
 	}
 	
 	private ShapeConsumer peekConsumer() {
@@ -94,6 +110,10 @@ public class ShapeBuilder {
 		return this;
 	}
 	
+	public PropertyBuilder beginProperty(URI predicate) {
+		return property(predicate);
+	}
+	
 	public PropertyBuilder property(URI predicate) {
 		BNode id = valueFactory.createBNode();
 		PropertyConstraint p = new PropertyConstraint(id, predicate);
@@ -135,6 +155,26 @@ public class ShapeBuilder {
 		return pop();
 	}
 	
+	public ShapeBuilder beginShape(Resource resource) {
+		Shape shape = new Shape(resource);
+		
+		if (resource instanceof URI) {
+			shapeManager.addShape(shape);
+		}
+		
+		ShapeConsumer consumer = peekConsumer();
+		if (consumer != null) {
+			consumer.add(shape);
+		}
+		stack.add(shape);
+		
+		return this;
+	}
+	
+	public ShapeBuilder beginShape(String iri) {
+		URI uri = valueFactory.createURI(iri);
+		return beginShape(uri);
+	}
 	
 	public ShapeBuilder beginShape() {
 		BNode shapeId = valueFactory.createBNode();
@@ -169,14 +209,66 @@ public class ShapeBuilder {
 	
 
 	
-	
-	
 	static public class PropertyBuilder {
 		private ShapeBuilder parent;
 		private PropertyConstraint property;
+		
 		PropertyBuilder(ShapeBuilder parent, PropertyConstraint property) {
 			this.parent = parent;
 			this.property = property;
+		}
+		
+		public ShapeBuilder beginValueShape(String iri) {
+			URI uri = parent.valueFactory.createURI(iri);
+			return beginValueShape(uri);
+		}
+
+		
+		public ShapeBuilder endProperty() {
+			return parent;
+		}
+		
+		public PropertyBuilder endValueShape() {
+			return parent.endValueShape();
+		}
+		
+		public ShapeBuilder beginValueShape(URI shapeId) {
+			
+			Shape shape = parent.shapeManager.getShapeById(shapeId);
+			if (shape == null) {
+				shape = new Shape(shapeId);
+				parent.shapeManager.addShape(shape);
+			}
+			
+			property.setValueShapeId(shapeId);
+			property.setValueShape(shape);
+			
+			return new ShapeBuilder(this, parent.shapeManager, parent.valueFactory, shape);
+		}
+		
+		public PropertyBuilder nodeKind(NodeKind kind) {
+			property.setNodeKind(kind);
+			return this;
+		}
+		
+		public PropertyBuilder allowedValue(Value value) {
+			property.addAllowedValue(value);
+			return this;
+		}
+		
+		public PropertyBuilder allowedIRI(String iri) {
+			property.addAllowedValue(new URIImpl(iri));
+			return this;
+		}
+		
+		public PropertyBuilder minInclusive(double value) {
+			property.setMinInclusive(value);
+			return this;
+		}
+		
+		public PropertyBuilder maxInclusive(double value) {
+			property.setMaxInclusive(value);
+			return this;
 		}
 		
 		public PropertyBuilder datatype(URI type) {
@@ -195,17 +287,24 @@ public class ShapeBuilder {
 		}
 		
 		public PropertyBuilder valueShape(URI shapeId) {
+			
+			Shape shape = parent.shapeManager.getShapeById(shapeId);
+			if (shape == null) {
+				shape = new Shape(shapeId);
+				parent.shapeManager.addShape(shape);
+			}
 			property.setValueShapeId(shapeId);
+			property.setValueShape(shape);
 			return this;
 		}
 		
-		public PropertyBuilder type(URI type) {
-			property.setType(type);
+		public PropertyBuilder valueClass(URI type) {
+			property.setValueClass(type);
 			return this;
 		}
 		
 		public PropertyBuilder directType(URI type) {
-			property.setDirectType(type);
+			property.setDirectValueType(type);
 			return this;
 		}
 		

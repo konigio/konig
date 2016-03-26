@@ -1,10 +1,10 @@
-package io.konig.shacl.context;
+package io.konig.shacl.io;
 
 /*
  * #%L
  * konig-shacl
  * %%
- * Copyright (C) 2015 Gregory McFall
+ * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,27 +21,11 @@ package io.konig.shacl.context;
  */
 
 
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
-
-/**
- * A ContextNamer that appends a suffix to the URI for a data shape to form
- * the URI for the corresponding JSON-LD context.
- * @author Greg McFall
- *
- */
-public class SuffixContextNamer implements ContextNamer {
+public class ShapeLoadException extends RuntimeException {
+	private static final long serialVersionUID = 1L;
 	
-	private String suffix;
-
-	public SuffixContextNamer(String suffix) {
-		this.suffix = suffix;
+	public ShapeLoadException(Throwable cause) {
+		super(cause);
 	}
-
-	public URI forShape(URI shapeId) {
-		String value = shapeId.stringValue() + suffix;
-		return new URIImpl(value);
-	}
-
 
 }

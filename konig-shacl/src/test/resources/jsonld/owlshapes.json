@@ -1,0 +1,86 @@
+{
+	"@context" : {
+		"sh" : "http://www.w3.org/ns/shacl#",
+		"xsd" : "http://www.w3.org/2001/XMLSchema#",
+		"Shape" : "sh:Shape",
+		"not" : "sh:not",
+		"and" : {
+			"@id" : "sh:and",
+			"@container" : "@list"
+		},
+		"or" : {
+			"@id" : "sh:or",
+			"@container" : "@list"
+		},
+		"constraint" : "sh:constraint",
+		"allowedValues" : "sh:allowedValues",
+		"datatype" : "sh:allowedValues",
+		"directValueType" : "sh:allowedValues",
+		"scopeClass" : {
+			"@id" : "sh:scopeClass",
+			"@type" : "@id"
+		},
+		"predicate" : {
+			"@id" : "sh:predicate",
+			"@type" : "@id"
+		},
+		"hasValue" : {
+			"@id" : "sh:hasValue",
+			"@container" : "@set"
+		},
+		"minCount" : {
+			"@id" : "sh:minCount",
+			"@type" : "xsd:int"
+		},
+		"maxCount" : {
+			"@id" : "sh:maxCount",
+			"@type" : "xsd:int"
+		},
+		"minLength" : {
+			"@id" : "sh:minLength",
+			"@type" : "xsd:int"
+		},
+		"maxLength" : {
+			"@id" : "sh:maxLength",
+			"@type" : "xsd:int"
+		},
+		"minInclusive" : {
+			"@id" : "sh:minInclusive",
+			"@type" : "xsd:double"
+		},
+		"maxInclusive" : {
+			"@id" : "sh:maxInclusive",
+			"@type" : "xsd:double"
+		},
+		"minExclusive" : {
+			"@id" : "sh:minExclusive",
+			"@type" : "xsd:double"
+		},
+		"maxExclusive" : {
+			"@id" : "sh:maxExclusive",
+			"@type" : "xsd:double"
+		},
+		"nodeKind" : {
+			"@id" : "sh:nodeKind",
+			"@type" : "@id"
+		},
+		"pattern" : {
+			"@id" : "sh:pattern",
+			"@type" : "xsd:string"
+		},
+		"valueClass" : {
+			"@id" : "sh:valueClass",
+			"@type" : "@id"
+		},
+		"valueShape" : {
+			"@id" : "sh:valueShape",
+			"@type" : "@id"
+		},
+		"property" : {
+			"@id" : "sh:property",
+			"@container" : "@set"
+		}
+		
+	},
+	"@id" : "http://www.konig.io/ctx/owlshapes"
+}

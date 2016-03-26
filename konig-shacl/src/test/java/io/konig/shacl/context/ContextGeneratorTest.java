@@ -33,6 +33,9 @@ import io.konig.core.io.ContextWriter;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
+import io.konig.shacl.jsonld.ContextGenerator;
+import io.konig.shacl.jsonld.ContextNamer;
+import io.konig.shacl.jsonld.SuffixContextNamer;
 
 public class ContextGeneratorTest {
 
@@ -66,7 +69,7 @@ public class ContextGeneratorTest {
 		Shape shape = builder.shape();
 		
 		ContextGenerator generator = new ContextGenerator(
-			builder.getShapeManager(), namespaceManager, namer);
+			builder.getShapeManager(), namespaceManager, namer, null);
 		
 		Context context = generator.forShape(shape);
 		

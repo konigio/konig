@@ -1,0 +1,74 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix v1: <http://www.konig.io/shape/schema/v1/> .
+@prefix v2: <http://www.konig.io/shape/schema/v2/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix schema: <http://schema.org/> .
+
+v1:Person
+	sh:scopeClass schema:Person ;
+	sh:property [
+		sh:predicate schema:givenName ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate schema:familyName ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate schema:address ;
+		sh:valueShape v1:PostalAddress ;
+		sh:minCount 0 ;
+		sh:maxCount 1
+	] .
+	
+v1:PostalAddress
+	sh:scopeClass schema:PostalAddress ;
+	sh:property [
+		sh:predicate schema:streetAddress ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate schema:addressLocality ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate schema:addressRegion ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate schema:postalCode ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	] .
+	
+v2:Person
+	sh:scopeClass schema:Person ;
+	sh:constraint [
+		sh:or ([
+			sh:property [
+				sh:predicate schema:givenName ;
+				sh:datatype xsd:string ;
+				sh:minCount 1 ;
+				sh:maxCount 1
+			], [
+				sh:predicate schema:familyName ;
+				sh:datatype xsd:string ;
+				sh:minCount 1 ;
+				sh:maxCount 1
+			]
+		] [
+			sh:property [
+				sh:predicate schema:name ;
+				sh:datatype xsd:string ;
+				sh:minCount 1 ;
+				sh:maxCount 1
+			]
+		])
+	] .
+			

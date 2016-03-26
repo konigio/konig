@@ -1,0 +1,82 @@
+{
+	"@context" : [
+	     "http://www.konig.io/ctx/owlshapes",
+	     {
+	    	 "v1" : "http://www.konig.io/shape/schema/v1/",
+	    	 "v2" : "http://www.konig.io/shape/schema/v2/",
+	    	 "schema" : "http://schema.org/"
+	     }
+	],
+	"@graph" : [
+	     {
+	    	 "@id" : "v1:Person",
+	    	 "scopeClass" : "schema:Person",
+	    	 "property" : [{
+	    		 "predicate" : "schema:givenName",
+	    		 "datatype" : "xsd:string",
+	    		 "minCount" : 1,
+	    		 "maxCount" : 1
+	    	 }, {
+	    		 "predicate" : "schema:familyName",
+	    		 "datatype" : "xsd:string",
+	    		 "minCount" : 1,
+	    		 "maxCount" : 1
+	    	 }, {
+	    		 "predicate" : "schema:address",
+	    		 "valueShape" : "v1:PostalAddress",
+	    		 "minCount" : 0,
+	    		 "maxCount" : 1
+	    	 }]
+	     },{
+	    	 "@id" : "v1:PostalAddress",
+	    	 "scopeClass" : "schema:PostalAddress",
+	    	 "property" : [{
+	    		 "predicate" : "schema:streetAddress",
+	    		 "datatype" : "xsd:string",
+	    		 "minCount" : 1,
+	    		 "maxCount" : 1
+	    	 },{
+	    		 "predicate" : "schema:addressLocality",
+	    		 "datatype" : "xsd:string",
+	    		 "minCount" : 1,
+	    		 "maxCount" : 1 
+	    	 },{
+	    		 "predicate" : "schema:addressRegion",
+	    		 "datatype" : "xsd:string",
+	    		 "minCount" : 1,
+	    		 "maxCount" : 1 
+	    	 },{
+	    		 "predicate" : "schema:postalCode",
+	    		 "datatype" : "xsd:string",
+	    		 "minCount" : 1,
+	    		 "maxCount" : 1 
+	    	 }]
+	     },{
+	    	 "@id" : "v2:Person",
+	    	 "scopeClass" : "schema:Person",
+	    	 "constraint" : {
+	    		 "or" : [{
+	    			 "property" : [{
+	    				 "predicate" : "schema:givenName",
+	    	    		 "datatype" : "xsd:string",
+	    	    		 "minCount" : 1,
+	    	    		 "maxCount" : 1
+	    			 },{
+	    				 "predicate" : "schema:familyName",
+	    	    		 "datatype" : "xsd:string",
+	    	    		 "minCount" : 1,
+	    	    		 "maxCount" : 1
+	    			 }]
+	    		 },{
+	    			 "property" : [{
+	    				 "predicate" : "schema:name",
+	    	    		 "datatype" : "xsd:string",
+	    	    		 "minCount" : 1,
+	    	    		 "maxCount" : 1
+	    			 }]
+	    		 }]
+	    	 }
+	     }  
+	]
+	
+}

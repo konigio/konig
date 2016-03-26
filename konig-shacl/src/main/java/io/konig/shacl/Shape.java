@@ -1,5 +1,8 @@
 package io.konig.shacl;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
 /*
  * #%L
  * konig-shacl
@@ -28,6 +31,10 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.BNodeImpl;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+
+import io.konig.core.Context;
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.UidGeneratorImpl;
 import io.konig.shacl.impl.EmptyList;
@@ -39,6 +46,7 @@ public class Shape {
 	private URI scopeClass;
 	private List<PropertyConstraint> property;
 	private Constraint constraint;
+	private Context jsonldContext;
 	
 	public Shape() {
 		String bnodeId = UidGenerator.INSTANCE.next();
@@ -108,8 +116,10 @@ public class Shape {
 		if (property == null) {
 			property  = new ArrayList<PropertyConstraint>();
 		}
+		URI id = c.getPredicate();
 		for (PropertyConstraint p : property) {
-			if (p.getPredicate().equals(c)) {
+			URI predicate = p.getPredicate();
+			if (predicate!=null && predicate.equals(id)) {
 				return this;
 			}
 		}
@@ -129,7 +139,60 @@ public class Shape {
 		return id;
 	}
 	
+
+	public String toString() {
+		
+		StringWriter out = new StringWriter();
+		JsonFactory factory = new JsonFactory();
+		
+		try {
+			JsonGenerator json = factory.createGenerator(out);
+			json.useDefaultPrettyPrinter();
+			toJson(json);
+			json.flush();
+			
+		} catch (IOException e) {
+			return "ERROR: " + e.getMessage();
+		}
+		
+		return out.toString();
+	}
 	
+	public void toJson(JsonGenerator json) throws IOException {
+		json.writeStartObject();
+		json.writeStringField("id", id.toString());
+		if (scopeClass != null) {
+			json.writeStringField("scopeClass", scopeClass.stringValue());
+		}
+		
+		if (property!=null && !property.isEmpty()) {
+			json.writeFieldName("property");
+			json.writeStartArray();
+			for (PropertyConstraint p : property) {
+				p.toJson(json);
+			}
+			json.writeEndArray();
+		}
+		
+		json.writeEndObject();
+		
+	}
+
+	/**
+	 * Get the default JSON-LD context for this shape.
+	 * @return The default JSON-LD context for this shape.
+	 */
+	public Context getJsonldContext() {
+		return jsonldContext;
+	}
+
+	/**
+	 * Set the default JSON-LD context for this shape
+	 * @param jsonldContext The default JSON-LD context for this shape
+	 */
+	public void setJsonldContext(Context jsonldContext) {
+		this.jsonldContext = jsonldContext;
+	}
 	
 	
 	

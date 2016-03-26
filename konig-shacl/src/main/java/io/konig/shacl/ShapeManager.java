@@ -32,11 +32,10 @@ public interface ShapeManager {
 	Shape getShapeById(URI shapeId);
 	
 	/**
-	 * Get the list of shapes that have a PropertyConstraint for the specified predicate.
-	 * @param predicate The predicate of interest
-	 * @return The list of shapes that have a PropertyConstraint for the specified predicate
+	 * Get the list of all shapes known to this ShapeManager.
+	 * @return The list of all shapes known to this ShapeManager.
 	 */
-	List<Shape> getShapesByPredicate(URI predicate);
+	List<Shape> listShapes();
 	
 	/**
 	 * Get the list of shapes that have a given scope class.
