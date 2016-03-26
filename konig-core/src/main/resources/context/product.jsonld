@@ -1,0 +1,8 @@
+{
+	"@context" : {
+		"schema" : "http://schema.org/",
+		"Product" : "schema:Product"
+	},
+	"@id" : "http://www.konig.io/context/v1.schema.product",
+	"vendorType" : "application/vnd.konig.v1.schema.product"
+}

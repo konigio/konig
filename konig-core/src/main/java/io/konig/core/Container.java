@@ -1,10 +1,10 @@
-package io.konig.core.vocab;
+package io.konig.core;
 
 /*
  * #%L
  * konig-core
  * %%
- * Copyright (C) 2015 Gregory McFall
+ * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,16 @@ package io.konig.core.vocab;
  */
 
 
+import java.util.Collection;
+
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
 
-public class KC {
+public interface Container {
 
-	public static final URI addition = new URIImpl("http://www.konig.io/ns/core/addition");
-	public static final URI priorState = new URIImpl("http://www.konig.io/ns/core/priorState");
-	public static final URI removal = new URIImpl("http://www.konig.io/ns/core/removal");
-	public static final URI ChangeSet = new URIImpl("http://www.konig.io/ns/core/ChangeSet");
-	
-	
+	URI getContainerId();
+	Collection<URI> members();
+	void add(URI member);
+	void remove(URI member);
+	void reload();
+
 }
