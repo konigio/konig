@@ -86,5 +86,9 @@ kol:propertyOf a owl:ObjectProperty ;
 	owl:inverseOf sh:property ;
 	rdfs:comment "The <code>Shape</code> to which the subject <code>PropertyConstraint</code> applies" .
 		
-			
+kol:knownIndividual a owl:ObjectProperty ;
+	rdfs:domain sh:PropertyConstraint ;
+	rdfs:range owl:NamedIndividual ;
+	rdfs:comment "A named individual that is known to be a possible value for the property."
+	.			
 		

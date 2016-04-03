@@ -33,6 +33,7 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.impl.KonigLiteral;
 
@@ -119,6 +120,27 @@ public class GraphBuilder {
 	
 	public GraphBuilder addProperty(URI predicate, Value object) {
 		return statement(peek(), predicate, object);
+	}
+	
+	public GraphBuilder addList(URI predicate, Value...object) {
+		Resource subject = peek();
+		Resource list = graph.vertex().getId();
+		graph.edge(subject, predicate, list);
+		for (int i=0; i<object.length; i++) {
+			graph.edge(list, RDF.FIRST, object[i]);
+			if (i == object.length-1) {
+				graph.edge(list, RDF.REST, RDF.NIL);
+			} else {
+				Resource rest = graph.vertex().getId();
+				graph.edge(list, RDF.REST, rest);
+				list = rest;
+			}
+		}
+		return this;
+	}
+	
+	public GraphBuilder addProperty(URI predicate, int value) {
+		return addProperty(predicate, valueFactory.createLiteral(value));
 	}
 	
 	public GraphBuilder addLiteral(URI predicate, String object) {

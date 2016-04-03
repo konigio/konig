@@ -28,12 +28,14 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
+import org.openrdf.rio.turtle.TurtleParser;
 
 import io.konig.core.ContextManager;
 import io.konig.core.KonigValueFactory;
 import io.konig.core.NamespaceManager;
 import io.konig.core.io.CompositeRdfHandler;
 import io.konig.core.io.JsonldParser;
+import io.konig.core.io.ListRdfHandler;
 import io.konig.shacl.ShapeManager;
 
 public class ShapeLoader {
@@ -62,8 +64,20 @@ public class ShapeLoader {
 		this.namespaceManager = namespaceManager;
 		this.valueFactory = valueFactory;
 	}
+	
+	public void loadTurtle(InputStream input) throws ShapeLoadException {
+		TurtleParser parser = new TurtleParser();
+		ShapeRdfHandler shapeHandler = new ShapeRdfHandler(shapeManager);
+		ListRdfHandler listHandler = new ListRdfHandler(shapeHandler, shapeHandler);
+		parser.setRDFHandler(listHandler);
+		try {
+			parser.parse(input, "");
+		} catch (RDFParseException | RDFHandlerException | IOException e) {
+			throw new ShapeLoadException(e);
+		}
+	}
 
-	public void load(InputStream input) throws ShapeLoadException {
+	public void loadJsonld(InputStream input) throws ShapeLoadException {
 		load(input, null);
 	}
 	

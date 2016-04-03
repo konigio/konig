@@ -211,6 +211,13 @@ public class VertexImpl implements Vertex {
 		
 		return result;
 	}
+
+	@Override
+	public Value getValue(URI predicate) {
+		Set<Edge> set = outProperty(predicate);
+		
+		return set==null || set.isEmpty() ? null : set.iterator().next().getObject();
+	}
 	
 
 

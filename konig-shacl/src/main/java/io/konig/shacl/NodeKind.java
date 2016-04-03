@@ -39,4 +39,18 @@ public class NodeKind extends URIImpl {
 		return this;
 	}
 
+	
+	public static NodeKind fromURI(URI uri) {
+		if (IRI.equals(uri)) {
+			return IRI;
+		}
+		if (BlankNode.equals(uri)) {
+			return BlankNode;
+		}
+		if (Literal.equals(uri)) {
+			return Literal;
+		}
+		
+		return null;
+	}
 }

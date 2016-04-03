@@ -221,6 +221,8 @@ public class MemoryGraph implements Graph, Transaction {
 			}
 		}
 		
+		bnodeMap = new HashMap<>();
+		
 	}
 
 	public void rollback() {

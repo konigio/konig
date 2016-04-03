@@ -62,6 +62,8 @@ public class PropertyConstraint {
 	private Set<Value> hasValue;
 	private String pattern;
 	private Resource valueClass;
+	private String documentation;
+	private List<Value> knownValue;
 	
 	private Term term;
 
@@ -75,10 +77,17 @@ public class PropertyConstraint {
 		this.predicate = predicate;
 	}
 	
+	
 	public Resource getId() {
 		return id;
 	}
 	
+	public String getDocumentation() {
+		return documentation;
+	}
+	public void setDocumentation(String documentation) {
+		this.documentation = documentation;
+	}
 	public Integer getMinLength() {
 		return minLength;
 	}
@@ -149,6 +158,17 @@ public class PropertyConstraint {
 			allowedValues = new ArrayList<Value>();
 		}
 		allowedValues.add(value);
+	}
+	
+	public void addKnownValue(Value value) {
+		if (knownValue == null) {
+			knownValue = new ArrayList<>();
+		}
+		knownValue.add(value);
+	}
+	
+	public List<Value> getKnownValue() {
+		return knownValue;
 	}
 	
 	public void addHasValue(Value value) {

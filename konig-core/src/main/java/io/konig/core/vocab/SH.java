@@ -27,15 +27,16 @@ import org.openrdf.model.impl.URIImpl;
 public class SH {
 
 	public static final URI IRI = new URIImpl("http://www.w3.org/ns/shacl#IRI");
+	public static final URI Shape = new URIImpl("http://www.w3.org/ns/shacl#Shape");
 	public static final URI BlankNode = new URIImpl("http://www.w3.org/ns/shacl#BlankNode");
 	public static final URI Literal = new URIImpl("http://www.w3.org/ns/shacl#Literal");
 
 	public static final URI predicate = new URIImpl("http://www.w3.org/ns/shacl#predicate");
-	public static final URI allowedValues = new URIImpl("http://www.w3.org/ns/shacl#allowedValues");
+	public static final URI in = new URIImpl("http://www.w3.org/ns/shacl#in");
 	public static final URI and = new URIImpl("http://www.w3.org/ns/shacl#and");
 	public static final URI constraint = new URIImpl("http://www.w3.org/ns/shacl#constraint");
 	public static final URI datatype = new URIImpl("http://www.w3.org/ns/shacl#datatype");
-	public static final URI directValueType = new URIImpl("http://www.w3.org/ns/shacl#directValueType");
+	public static final URI directType = new URIImpl("http://www.w3.org/ns/shacl#directType");
 	public static final URI hasValue = new URIImpl("http://www.w3.org/ns/shacl#hasValue");
 	public static final URI minCount = new URIImpl("http://www.w3.org/ns/shacl#minCount");
 	public static final URI maxCount = new URIImpl("http://www.w3.org/ns/shacl#maxCount");
@@ -47,7 +48,7 @@ public class SH {
 	public static final URI not = new URIImpl("http://www.w3.org/ns/shacl#not");
 	public static final URI or = new URIImpl("http://www.w3.org/ns/shacl#or");
 	public static final URI pattern = new URIImpl("http://www.w3.org/ns/shacl#pattern");
-	public static final URI valueClass = new URIImpl("http://www.w3.org/ns/shacl#valueClass");
+	public static final URI valueClass = new URIImpl("http://www.w3.org/ns/shacl#class");
 	public static final URI valueShape = new URIImpl("http://www.w3.org/ns/shacl#valueShape");
 	public static final URI qualifiedValueShape = new URIImpl("http://www.w3.org/ns/shacl#qualifiedValueShape");
 	public static final URI qualifiedMinCount = new URIImpl("http://www.w3.org/ns/shacl#qualifiedMinCount");

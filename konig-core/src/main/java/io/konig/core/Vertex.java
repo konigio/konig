@@ -85,6 +85,14 @@ public interface Vertex {
 	Set<Edge> outProperty(URI predicate);
 	
 	/**
+	 * Get the value of a specified property.
+	 * @param predicate The predicate that identifies the property whose value is to be returned.
+	 * @return A value for the specified property, or null if no such property exists.  If the vertex
+	 * contains more than one value for the given property, the returned value is indeterminant.
+	 */
+	Value getValue(URI predicate);
+	
+	/**
 	 * Get the Set of incoming edges with the specified predicate.
 	 * @param predicate The predicate for the incoming edges
 	 * @return The set of incoming edges with the specified predicate

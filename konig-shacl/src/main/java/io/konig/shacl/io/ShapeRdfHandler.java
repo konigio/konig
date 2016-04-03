@@ -77,7 +77,7 @@ public class ShapeRdfHandler extends RDFHandlerBase implements ListHandler{
 			property(subject).setPredicate((URI)object);
 		} else if (predicate.equals(SH.datatype)) {
 			property(subject).setDatatype((URI)object);
-		} else if (predicate.equals(SH.directValueType)) {
+		} else if (predicate.equals(SH.directType)) {
 			property(subject).setDirectValueType((URI)object);
 		} else if (predicate.equals(SH.hasValue)) {
 			property(subject).addHasValue(object);
@@ -207,7 +207,7 @@ public class ShapeRdfHandler extends RDFHandlerBase implements ListHandler{
 	@Override
 	public void handleList(Resource subject, URI predicate, List<Value> list) throws RDFHandlerException {
 		
-		if (predicate.equals(SH.allowedValues)) {
+		if (predicate.equals(SH.in)) {
 			PropertyConstraint property = property(subject);
 			for (Value value : list) {
 				property.addAllowedValue(value);

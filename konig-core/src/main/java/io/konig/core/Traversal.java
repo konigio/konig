@@ -79,6 +79,12 @@ public interface Traversal {
 	 */
 	Traversal addObject(String property, String iri);
 	
+	/**
+	 * Filter the elements in this traversal so that each value is unique.
+	 * @return This traversal
+	 */
+	Traversal distinct();
+	
 	
 	/**
 	 * Add a literal property value to all vertices in this traversal.
@@ -131,6 +137,22 @@ public interface Traversal {
 	Traversal out(URI predicate);
 	
 	/**
+	 * Move outward from the current set of vertices in this traversal to the transitive closure of a given predicate.
+	 * @param predicate The predicate whose transitive closure is to be computed.
+	 * @return This traversal updated with the transitive closure.
+	 */
+	Traversal outTransitive(URI predicate);
+	
+	/**
+	 * Move inward from the current set of vertices in this traversal to the transitive closure of a given predicate.
+	 * @param predicate The predicate whose transitive closure is to be computed.
+	 * @return This traversal updated with the transitive closure.
+	 */
+	Traversal inTransitive(URI predicate);
+	
+	
+	
+	/**
 	 * Move from the current set of vertices in this traversal to a new set of vertices by
 	 * following incoming edges labeled by a given predicate.
 	 * 
@@ -146,6 +168,8 @@ public interface Traversal {
 	Vertex firstVertex();
 	
 	List<Vertex> toVertexList();
+	
+	List<Value> toValueList();
 	
 	/**
 	 * Add the values in this traversal to a given Set.

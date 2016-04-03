@@ -1,8 +1,9 @@
 package io.konig.core.impl;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 /*
@@ -121,6 +122,32 @@ public class MemoryContextManager implements ContextManager {
 			close(input);
 		}
 				
+	}
+	
+	public void loadFromFile(File source) throws IOException {
+		if (source.isDirectory()) {
+			File[] kids = source.listFiles();
+			for (File file : kids) {
+				loadFromFile(file);
+			}
+		} else {
+			String name = source.getName();
+			if (name.endsWith(".json") || name.endsWith(".jsonld")) {
+				ContextReader reader = new ContextReader();
+				FileInputStream input = new FileInputStream(source);
+				try {
+					Context context = reader.read(input);
+					if (context.getContextIRI() != null) {
+						add(context);
+					} else {
+						logger.warn("Ignoring JSON-LD context because it does not have an @id value: "  + source.getAbsolutePath());
+					}
+				} finally {
+					close(input);
+				}
+			}
+				
+		}
 	}
 
 	private void close(InputStream input) {

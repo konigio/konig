@@ -22,7 +22,9 @@ package io.konig.core.impl;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.openrdf.model.Literal;
@@ -43,11 +45,17 @@ public class TraversalImpl implements Traversal {
 	
 	public TraversalImpl(Graph g) {
 		this.graph = g;
-		
 	}
+	
 	public TraversalImpl(Vertex v) {
 		graph = v.getGraph();
 		list.add(v);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public TraversalImpl(Graph g, List<?> list) {
+		this.graph = g;
+		this.list = (List<Object>) list;
 	}
 
 	public Traversal has(URI property) {
@@ -274,6 +282,97 @@ public class TraversalImpl implements Traversal {
 			}
 		}
 		
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Value> toValueList() {
+		if (list.isEmpty() || list.get(0) instanceof Value) {
+			return (List<Value>) ((Object)list);
+		}
+		List<Value> result = new ArrayList<>();
+		for (Object obj : list) {
+			if (obj instanceof Vertex) {
+				Vertex v = (Vertex) obj;
+				result.add(v.getId());
+			} else if (obj instanceof Value) {
+				result.add((Value)obj);
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public Traversal distinct() {
+		Map<String,Object> map = new HashMap<>();
+		for (Object value : list) {
+			if (value instanceof Vertex) {
+				Vertex v = (Vertex) value;
+				map.put(v.getId().stringValue(), v);
+			} else if (value instanceof Value) {
+				Value v = (Value) value;
+				map.put(v.stringValue(), value);
+			}
+		}
+
+		list = new ArrayList<>(map.values());
+		return this;
+	}
+
+	@Override
+	public Traversal outTransitive(URI predicate) {
+		
+		Map<String,Object> closure = new HashMap<>();
+		
+		for (int i=0; i<list.size(); i++) {
+			Object element = list.get(i);
+			Vertex v = (element instanceof Vertex) ? (Vertex) element :
+				(element instanceof Resource) ? graph.vertex((Resource) element) :
+				null;
+				
+			if (v != null) {
+				Set<Edge> out = v.outProperty(predicate);
+				for (Edge e : out) {
+					Value object = e.getObject();
+					if (!closure.containsKey(object.stringValue()) && object instanceof Resource) {
+						Vertex next = graph.vertex((Resource)object);
+						list.add(next);
+						closure.put(object.stringValue(), next);
+					}
+				}
+			}
+		}
+		
+		list = new ArrayList<>(closure.values());
+		return this;
+	}
+
+	@Override
+	public Traversal inTransitive(URI predicate) {
+
+		Map<String,Object> closure = new HashMap<>();
+		
+		for (int i=0; i<list.size(); i++) {
+			Object element = list.get(i);
+			Vertex v = (element instanceof Vertex) ? (Vertex) element :
+				(element instanceof Resource) ? graph.vertex((Resource) element) :
+				null;
+				
+			if (v != null) {
+				Set<Edge> in = v.inProperty(predicate);
+				for (Edge e : in) {
+					Value subject = e.getSubject();
+					if (!closure.containsKey(subject.stringValue()) && subject instanceof Resource) {
+						Vertex next = graph.vertex((Resource)subject);
+						list.add(next);
+						closure.put(subject.stringValue(), next);
+					}
+				}
+			}
+		}
+		
+		list = new ArrayList<>(closure.values());
+		return this;
 	}
 	
 	
