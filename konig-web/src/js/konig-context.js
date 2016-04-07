@@ -151,6 +151,7 @@ $(document).ready(function() {
 		addressRegion : new IRI("http://schema.org/addressRegion"),
 		contactPoint: new IRI("http://schema.org/contactPoint"),
 		contactType: new IRI("http://schema.org/contactType"),
+		creator: new IRI("http://schema.org/creator"),
 		description: new IRI("http://schema.org/description"),
 		givenName : new IRI("http://schema.org/givenName"),
 		familyName : new IRI("http://schema.org/familyName"),

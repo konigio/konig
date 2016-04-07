@@ -1,5 +1,9 @@
 package io.konig.shacl.io;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
 /*
  * #%L
  * konig-shacl
@@ -23,23 +27,31 @@ package io.konig.shacl.io;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 
 import org.openrdf.model.ValueFactory;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.turtle.TurtleParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.ContextManager;
+import io.konig.core.Edge;
+import io.konig.core.Graph;
 import io.konig.core.KonigValueFactory;
 import io.konig.core.NamespaceManager;
 import io.konig.core.io.CompositeRdfHandler;
 import io.konig.core.io.JsonldParser;
 import io.konig.core.io.ListRdfHandler;
+import io.konig.core.io.NamespaceRDFHandler;
 import io.konig.shacl.ShapeManager;
 
 public class ShapeLoader {
 
+	private static final Logger logger = LoggerFactory.getLogger(ShapeLoader.class);
+	
 	private ContextManager contextManager;
 	private ShapeManager shapeManager;
 	private NamespaceManager namespaceManager;
@@ -65,10 +77,49 @@ public class ShapeLoader {
 		this.valueFactory = valueFactory;
 	}
 	
+	public void loadAll(File source) throws ShapeLoadException {
+		
+		if (source.isDirectory()) {
+			File[] kids = source.listFiles();
+			for (File file : kids) {
+				loadAll(file);
+			}
+		} else {
+			try {
+				FileInputStream input = new FileInputStream(source);
+				try {
+
+					String name = source.getName();
+					if (name.endsWith(".ttl")) {
+						loadTurtle(input);
+					} else if (name.endsWith(".jsonld")) {
+						loadJsonld(input);
+					}
+				} finally {
+					close(input);
+				}
+			} catch (FileNotFoundException e) {
+				throw new ShapeLoadException(e);
+			}
+		}
+	}
+	
+	private void close(FileInputStream input) {
+		try {
+			input.close();
+		} catch (IOException e) {
+			logger.warn("Failed to close file input stream", e);
+		}
+		
+	}
+
 	public void loadTurtle(InputStream input) throws ShapeLoadException {
 		TurtleParser parser = new TurtleParser();
 		ShapeRdfHandler shapeHandler = new ShapeRdfHandler(shapeManager);
-		ListRdfHandler listHandler = new ListRdfHandler(shapeHandler, shapeHandler);
+		RDFHandler listHandler = new ListRdfHandler(shapeHandler, shapeHandler);
+		if (namespaceManager != null) {
+			listHandler = new CompositeRdfHandler(listHandler, new NamespaceRDFHandler(namespaceManager));
+		}
 		parser.setRDFHandler(listHandler);
 		try {
 			parser.parse(input, "");
@@ -79,6 +130,21 @@ public class ShapeLoader {
 
 	public void loadJsonld(InputStream input) throws ShapeLoadException {
 		load(input, null);
+	}
+	
+	public void load(Graph graph) throws ShapeLoadException {
+		RDFHandler handler = new ShapeRdfHandler(shapeManager);
+		try {
+			handler.startRDF();
+			Iterator<Edge> sequence = graph.iterator();
+			while (sequence.hasNext()) {
+				Edge edge = sequence.next();
+				handler.handleStatement(edge);
+			}
+			handler.endRDF();
+		} catch (RDFHandlerException e) {
+			throw new ShapeLoadException(e);
+		}
 	}
 	
 	public void load(InputStream input, RDFHandler handler) throws ShapeLoadException {

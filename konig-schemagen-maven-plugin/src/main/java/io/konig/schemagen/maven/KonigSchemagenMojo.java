@@ -1,5 +1,8 @@
 package io.konig.schemagen.maven;
 
+import java.io.File;
+import java.io.IOException;
+
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
  *
@@ -18,17 +21,25 @@ package io.konig.schemagen.maven;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
 
+import io.konig.core.ContextManager;
+import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
+import io.konig.core.impl.MemoryContextManager;
+import io.konig.core.impl.MemoryGraph;
+import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.schemagen.avro.ShapeToAvro;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import io.konig.schemagen.jsonld.ShapeToJsonldContext;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.ShapeMediaTypeNamer;
+import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
+import io.konig.shacl.io.ShapeLoader;
+import io.konig.shacl.jsonld.ContextNamer;
+import io.konig.shacl.jsonld.SuffixContextNamer;
 
 /**
  * Goal which generates Avro schemas from SHACL data shapes
@@ -39,18 +50,35 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     /**
      * Location of the file.
      */
-    @Parameter( defaultValue = "${basedir}/target/generated/avro", property = "targetDir", required = true )
-    private File targetDir;
+    @Parameter( defaultValue = "${basedir}/target/generated/avro", property = "avroDir", required = true )
+    private File avroDir;
     
     @Parameter( defaultValue="${basedir}/src/main/resources/shapes", property="sourceDir", required=true)
     private File sourceDir;
+    
+    @Parameter( defaultValue="${basedir}/target/generated/jsonld", property="jsonldDir", required=true)
+    private File jsonldDir;
 
     public void execute() throws MojoExecutionException   {
     	
     	try {
-			ShapeToAvro worker = new ShapeToAvro(null);
 			
-			worker.generateAvro(sourceDir, targetDir);
+			ShapeManager shapeManager = new MemoryShapeManager();
+			NamespaceManager nsManager = new MemoryNamespaceManager();
+			ContextNamer contextNamer = new SuffixContextNamer("/context");
+			ShapeMediaTypeNamer mediaTypeNamer = new SimpleShapeMediaTypeNamer();
+			Graph owlGraph = new MemoryGraph();
+			ContextManager contextManager = new MemoryContextManager();
+			
+			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
+			shapeLoader.loadAll(sourceDir);
+			
+			ShapeToJsonldContext jsonld = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, mediaTypeNamer, owlGraph);
+			jsonld.generateAll(jsonldDir);
+			
+			ShapeToAvro avro = new ShapeToAvro(null);
+			avro.generateAvro(sourceDir, avroDir);
+			
 		} catch (IOException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
 		}

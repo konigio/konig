@@ -31,7 +31,6 @@ var KE = konig.ke;
 
 var skos = konig.skos;
 var rdfs = konig.rdfs;
-var RDFS = rdf.RDFS;
 var RdfResource = rdf.RdfResource;
 var RdfVertex = rdf.Vertex;
 var Literal = rdf.Literal;
@@ -256,11 +255,11 @@ ResourceNamer.prototype.isLabelProperty = function(predicateNodeOrStringValue) {
 	var value = (typeof(predicateNodeOrStringValue) === 'string') ?
 			predicateNodeOrStringValue : predicateNodeOrStringValue.stringValue;
 	
-	return RDFS.LABEL.stringValue == value;
+	return rdfs.label.stringValue == value;
 }
 
 ResourceNamer.prototype.vertexLabel = function(vertex) {
-	var label = vertex.propertyValue(RDFS.LABEL);
+	var label = vertex.propertyValue(rdfs.label);
 	if (!label && (vertex.id instanceof IRI)) {
 		return vertex.id.localName;
 	}
@@ -1658,7 +1657,7 @@ RdfController.prototype.changeArcEndLabel = function(end) {
 			var predicate = new IRI(this.namer.createIRI());
 			var statement = this.graph.statement(subject, predicate, object);
 			var s2 = this.graph.statement(predicate, RDF.TYPE, RDF.PROPERTY);
-			var s3 = this.graph.statement(predicate, RDFS.LABEL, label);
+			var s3 = this.graph.statement(predicate, rdfs.label, label);
 			
 			this.bindStatement(statement, end);
 
@@ -1889,7 +1888,7 @@ RdfController.prototype.createConcept = function(type, conceptIRI, label, langua
 		
 	
 	var s1 = this.graph.statement(subject, RDF.TYPE, type);
-	var s2 = this.graph.statement(subject, RDFS.LABEL, literal);
+	var s2 = this.graph.statement(subject, rdfs.label, literal);
 	
 	var changeSet = new ChangeSet();
 	changeSet.addStatement(s1);
@@ -2047,7 +2046,7 @@ RdfController.prototype.vertexData = function(x, y, rdfNode, statement) {
 
 RdfController.prototype.resourceLabel = function(rdfVertex) {
 	var label = null;
-	var labelLiteral = rdfVertex.propertyValue(RDFS.LABEL);
+	var labelLiteral = rdfVertex.propertyValue(rdfs.label);
 	if (labelLiteral) {
 		label = labelLiteral.stringValue;
 	} else {

@@ -386,7 +386,7 @@ public class MemoryGraph implements Graph, Transaction {
 
 	@Override
 	public Iterator<Edge> iterator() {
-		throw new UnsupportedOperationException();
+		return new EdgeIterator(this);
 	}
 
 	@Override

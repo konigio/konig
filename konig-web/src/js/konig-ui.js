@@ -146,8 +146,11 @@ KonigIndex.prototype.onRdfStatementBind = function(event) {
 	var treeNodeId = this.indexObjectId(statement);
 	
 	var tree = this.conceptTree.jstree();
-	var node = document.getElementById(treeNodeId);
-	if (!node) {
+	var treeNode = tree.get_node(treeNodeId);
+	
+	
+	if (!treeNode) {
+
 		var graph = this.konigUI.graph;
 		var subject = statement.subject;
 		var subjectIndexId = this.indexSubject(statement.subject);

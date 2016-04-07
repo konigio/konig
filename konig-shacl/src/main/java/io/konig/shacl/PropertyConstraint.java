@@ -284,6 +284,9 @@ public class PropertyConstraint {
 		if (nodeKind != null) {
 			json.writeStringField("nodeKind", "sh:" + nodeKind.getLocalName());
 		}
+		if (valueClass != null) {
+			json.writeStringField("class", valueClass.stringValue());
+		}
 		if (valueShape != null) {
 			json.writeFieldName("valueShape");
 			valueShape.toJson(json);

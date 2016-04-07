@@ -73,6 +73,7 @@ public class ContextWriter {
 		JsonGenerator generator = factory.createGenerator(writer);
 		generator.setPrettyPrinter(new DefaultPrettyPrinter());
 		write(context, generator);
+		generator.flush();
 	}
 
 	private void write(Term term, JsonGenerator json) throws IOException {

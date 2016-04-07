@@ -34,50 +34,48 @@ public class VertexEdgeIterator implements Iterator<Edge> {
 	private Iterator<Entry<URI, Set<Edge>>> outer;
 	private Iterator<Edge> inner;
 	
-	private Edge current;
 	
 	public VertexEdgeIterator(Iterator<Entry<URI, Set<Edge>>> outer) {
 		this.outer = outer;
-		while (outer.hasNext()) {
-			inner = outer.next().getValue().iterator();
-		}
-		doNext();
 	}
-
 	@Override
 	public boolean hasNext() {
-		return current!=null;
-	}
-
-	@Override
-	public Edge next() {
-		Edge result = current;
-		doNext();
-		return result;
-	}
-
-	private void doNext() {
-		current = null;
+		
 		if (inner == null) {
-			return;
-		}
-		if (inner.hasNext()) {
-			current = inner.next();
-		} else {
 			while (outer.hasNext()) {
-				inner = outer.next().getValue().iterator();
+				Entry<URI, Set<Edge>> e = outer.next();
+				Set<Edge> set = e.getValue();
+				inner = set.iterator();
 				if (inner.hasNext()) {
-					current = inner.next();
-					break;
+					return true;
+				}
+			}
+		} else {
+			
+			if (inner.hasNext()) {
+				return true;
+			}
+			
+			while (outer.hasNext()) {
+				Entry<URI, Set<Edge>> e = outer.next();
+				Set<Edge> set = e.getValue();
+				inner = set.iterator();
+				if (inner.hasNext()) {
+					return true;
 				}
 			}
 		}
+		
+		
+		return false;
 	}
-
+	@Override
+	public Edge next() {
+		return inner.next();
+	}
 	@Override
 	public void remove() {
-		throw new UnsupportedOperationException();
-		
+		throw new RuntimeException("Operation not supported");
 	}
-
+	
 }
