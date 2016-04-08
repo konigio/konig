@@ -31,7 +31,6 @@
     <url>https://github.com/konigio/konig</url>
     <connection>scm:git:git://github.com/konigio/konig</connection>  	
     <developerConnection>scm:git:git@github.com:konigio/konig.git</developerConnection>
-    <tag>konig-1.0.0</tag>
   </scm>
   
   <developers>
