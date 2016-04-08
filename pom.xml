@@ -7,6 +7,14 @@
   <description>The root project from which all the konig modules are built</description>
   <packaging>pom</packaging>
   
+  
+  <scm>
+    <url>scm:git:ssh://git@github.com/konigio/konig.git</url>
+    <connection>scm:git:ssh://git@github.com/konigio/konig.git</connection>  	
+    <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+  
   <modules>
   	<module>konig-core</module>
   	<module>konig-filebase</module>
@@ -17,6 +25,77 @@
   	<module>konig-webapp</module>
   	<module>konig-war</module>
   </modules>
-  
+  <build>
+   <plugins>
+    	<plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.3</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.3</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      
+    </plugins>
+  </build>
+   <profiles>
+  	<profile>
+  		<id>release-profile</id>
+  		<activation>
+  			<property>
+  				<name>performRelease</name>
+  				<value>true</value>
+  			</property>
+  		</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+  	</profile>
+  	
+  </profiles>
   
 </project>
