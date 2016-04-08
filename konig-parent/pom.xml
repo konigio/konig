@@ -28,9 +28,9 @@
   </licenses>
   
   <scm>
-    <url>https://github.com/konigio/konig</url>
-    <connection>scm:git:git://github.com/konigio/konig</connection>  	
-    <developerConnection>scm:git:git@github.com:konigio/konig.git</developerConnection>
+    <url>scm:git:ssh://git@github.com/konigio/konig.git</url>
+    <connection>scm:git:ssh://git@github.com/konigio/konig.git</connection>  	
+    <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
   </scm>
   
   <developers>
