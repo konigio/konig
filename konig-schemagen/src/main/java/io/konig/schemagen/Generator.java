@@ -1,0 +1,198 @@
+package io.konig.schemagen;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import org.openrdf.model.Namespace;
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+
+import io.konig.core.NamespaceManager;
+import io.konig.core.impl.RdfUtil;
+import io.konig.shacl.PropertyConstraint;
+
+public class Generator {
+	
+	protected NamespaceManager nsManager;
+	
+	
+
+	public Generator(NamespaceManager nsManager) {
+		this.nsManager = nsManager;
+	}
+
+	protected String documentation(PropertyConstraint p) {
+		String doc = p.getDocumentation();
+		if (doc != null) {
+			doc = RdfUtil.normalize(doc);
+		}
+		
+		
+		if (doc == null) {
+			doc = "";
+		}
+		StringBuilder builder = new StringBuilder(doc);
+		
+		addHasValueDocumentation(p, builder);
+		addKnownValueDocumentation(p, builder);
+		
+		
+		doc = builder.toString();
+		return doc.length()==0 ? null : doc;
+	}
+	
+	private void addKnownValueDocumentation(PropertyConstraint p, StringBuilder builder) {
+		List<Value> possibleValues = p.getKnownValue();
+		
+		if (possibleValues !=null) {
+			List<String> list = curieList(possibleValues);
+			Set<Value> hasValue = p.getHasValue();
+			if (hasValue != null) {
+				for (Value v : hasValue) {
+					String value = curie(v);
+					list.remove(value);
+				}
+			}
+			if (!list.isEmpty()) {
+				beginClause(builder);
+				builder.append("Possible values include (but are not limited to): ");
+				writeList(builder, list);
+			}
+		}
+		
+	}
+	
+
+	private void addHasValueDocumentation(PropertyConstraint p, StringBuilder builder) {
+		Set<Value> hasValue = p.getHasValue();
+		
+		if (hasValue != null && !hasValue.isEmpty()) {
+
+			Integer maxCount = p.getMaxCount();
+			if (maxCount == null || maxCount > 1) {
+				beginClause(builder);
+				
+				builder.append("The set of values must include ");
+
+				List<String> list = curieList(hasValue);
+				if (list.size()>1) {
+					builder.append(" all of ");
+				}
+				writeList(builder, list);
+			}
+			
+			
+		}
+		
+	}
+
+	private void writeList(StringBuilder builder, List<String> list) {
+		
+		for (int i=0; i<list.size(); i++) {
+			if (i>0) {
+				if (i==list.size()-1) {
+					builder.append(" and ");
+				} else {
+					builder.append(", ");
+				}
+			}
+			String value = list.get(i);
+			builder.append("'");
+			builder.append(value);
+			builder.append("'");
+		}
+		
+	}
+
+	private List<String> curieList(Collection<Value> source) {
+		List<String> result = new ArrayList<>();
+		for (Value value : source) {
+			if (value instanceof URI) {
+				result.add(curie((URI)value));
+			} else {
+				result.add(value.stringValue());
+			}
+		}
+		Collections.sort(result);
+		return result;
+	}
+
+	private void beginClause(StringBuilder builder) {
+		
+		if (builder.length()>0) {
+			char c = builder.charAt(builder.length()-1);
+			if (c != '.') {
+				builder.append('.');
+			}
+			builder.append(' ');
+		}
+		
+	}
+
+
+	protected String curie(Value value) {
+		if (!(value instanceof URI)) {
+			return value.stringValue();
+		}
+		URI uri = (URI) value;
+		String result = null;
+		if (nsManager == null) {
+			result = uri.stringValue();
+		} else {
+			Namespace ns = nsManager.findByName(uri.getNamespace());
+			if (ns != null) {
+				StringBuilder builder = new StringBuilder();
+				builder.append(ns.getPrefix());
+				builder.append(':');
+				builder.append(uri.getLocalName());
+				result = builder.toString();
+			} else {
+				result = uri.stringValue();
+			}
+		}
+		return result;
+	}
+
+	protected List<String> enumList(PropertyConstraint property) {
+		
+		List<Value> valueList = property.getAllowedValues();
+		if (valueList != null && !valueList.isEmpty()) {
+			List<String> result = new ArrayList<>();
+			for (Value value : valueList) {
+				if (value instanceof URI) {
+					// TODO: delegate to name the decision to use CURIEs
+					URI uri = (URI) value;
+					result.add(curie(uri));
+				} else {
+					result.add(value.stringValue());
+				}
+			}
+			return result;
+		}
+		return null;
+		
+	}
+	
+
+
+	protected String strictValue(PropertyConstraint property) {
+		
+		Integer maxCount = property.getMaxCount();
+		if (maxCount != null && maxCount==1) {
+			
+			Set<Value> valueSet = property.getHasValue();
+			if (valueSet != null && valueSet.size()==1) {
+				Value value = valueSet.iterator().next();
+				if (value instanceof URI) {
+					return curie((URI)value);
+				}
+				return value.stringValue();
+			}
+		}
+		
+		return null;
+	}
+}

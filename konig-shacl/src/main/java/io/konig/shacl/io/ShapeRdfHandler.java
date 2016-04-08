@@ -32,6 +32,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
@@ -107,6 +108,11 @@ public class ShapeRdfHandler extends RDFHandlerBase implements ListHandler{
 			property(subject).setValueShape(shape((Resource)object));
 		} else if (predicate.equals(SH.constraint)) {
 			constraintList.add(st);
+		} else if (predicate.equals(RDFS.COMMENT)) {
+			PropertyConstraint p = getProperty(subject);
+			if (p != null) {
+				p.setDocumentation(object.stringValue());
+			}
 		}
 		
 	}
@@ -175,6 +181,9 @@ public class ShapeRdfHandler extends RDFHandlerBase implements ListHandler{
 	}
 
 
+	private PropertyConstraint getProperty(Value id) {
+		return propertyConstraint.get(id.stringValue());
+	}
 
 	private PropertyConstraint property(Value id) {
 		PropertyConstraint property = propertyConstraint.get(id.stringValue());

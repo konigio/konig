@@ -33,6 +33,12 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.schemagen.avro.ShapeToAvro;
 import io.konig.schemagen.jsonld.ShapeToJsonldContext;
+import io.konig.schemagen.jsonschema.JsonSchemaGenerator;
+import io.konig.schemagen.jsonschema.JsonSchemaNamer;
+import io.konig.schemagen.jsonschema.JsonSchemaTypeMapper;
+import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
+import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
+import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaTypeMapper;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -53,11 +59,15 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter( defaultValue = "${basedir}/target/generated/avro", property = "avroDir", required = true )
     private File avroDir;
     
-    @Parameter( defaultValue="${basedir}/src/main/resources/shapes", property="sourceDir", required=true)
-    private File sourceDir;
-    
     @Parameter( defaultValue="${basedir}/target/generated/jsonld", property="jsonldDir", required=true)
     private File jsonldDir;
+    
+    @Parameter( defaultValue="${basedir}/target/generated/jsonschema", property="jsonSchemaDir", required=true)
+    private File jsonSchemaDir;
+
+    
+    @Parameter( defaultValue="${basedir}/src/main/resources/shapes", property="sourceDir", required=true)
+    private File sourceDir;
 
     public void execute() throws MojoExecutionException   {
     	
@@ -78,6 +88,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			ShapeToAvro avro = new ShapeToAvro(null);
 			avro.generateAvro(sourceDir, avroDir);
+			
+			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SimpleJsonSchemaTypeMapper();
+			JsonSchemaNamer jsonSchemaNamer = new SimpleJsonSchemaNamer("/jsonschema", mediaTypeNamer);
+			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
+			ShapeToJsonSchema jsonSchema = new ShapeToJsonSchema(jsonSchemaGenerator);
+			jsonSchema.generateAll(shapeManager.listShapes(), jsonSchemaDir);
 			
 		} catch (IOException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
