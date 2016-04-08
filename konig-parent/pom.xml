@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.konig</groupId>
   <artifactId>konig-parent</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <name>Konig Parent</name>
   <description>The parent project from which all the konig modules are built</description>
   <packaging>pom</packaging>
   <properties>
-  	<konig.version>0.0.1-SNAPSHOT</konig.version>
+  	<konig.version>1.0.0-SNAPSHOT</konig.version>
   	<license.licenseName>apache_v2</license.licenseName>
   	<license.inceptionYear>2015</license.inceptionYear>
   	<license.organizationName>Gregory McFall</license.organizationName>
@@ -19,17 +19,44 @@
   	<jsonld-java.version>0.7.0</jsonld-java.version>
   </properties>
   
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  
+  <scm>
+    <connection>scm:git:git@github.com:konigio/konig.git</connection>
+    <url>scm:git:git@github.com:konigio/konig.git</url>  	
+  </scm>
+  
+  <developers>
+    <developer>
+      <id>gmcfall</id>
+      <name>Greg McFall</name>
+      <email>gregory.mcfall@gmail.com</email>
+    </developer>
+  </developers>
+  
+  <distributionManagement>
+    <repository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Nexus Snapshots Repository</name>
+      <url>http://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+    </repository>
+  </distributionManagement>
+  
   <modules>
   	<module>../konig-core</module>
   	<module>../konig-filebase</module>
   	<module>../konig-shacl</module>
   	<module>../konig-schemagen</module>
   	<module>../konig-schemagen-maven-plugin</module>
-<!--   	
   	<module>../konig-services</module>
   	<module>../konig-webapp</module>
   	<module>../konig-war</module>
-  	 -->
   </modules>
   
   <build>
@@ -47,4 +74,57 @@
       
     </plugins>
   </build>
+   <profiles>
+  	<profile>
+  		<id>release-profile</id>
+  		<activation>
+  			<property>
+  				<name>performRelease</name>
+  				<value>true</value>
+  			</property>
+  		</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+  	</profile>
+  	
+  </profiles>
 </project>

@@ -3,19 +3,19 @@
   <parent>
     <groupId>io.konig</groupId>
     <artifactId>konig-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../konig-parent/pom.xml</relativePath>
   </parent>
   <groupId>io.konig</groupId>
   <artifactId>konig-schemagen</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.1-SNAPSHOT</version>
   <name>Konig Schema Generator</name>
   <description>Tools for generating schemas from OWL+SHACL specifications</description>
   <dependencies>
   	<dependency>
   		<groupId>io.konig</groupId>
   		<artifactId>konig-shacl</artifactId>
-  		<version>0.0.1-SNAPSHOT</version>
+  		<version>0.0.1</version>
   	</dependency>
     <dependency>
       <groupId>junit</groupId>
