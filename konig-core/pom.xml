@@ -9,12 +9,6 @@
   
   <artifactId>konig-core</artifactId>
   <packaging>jar</packaging>
-  
-  <scm>
-    <url>scm:git:ssh://git@github.com/konigio/konig.git</url>
-    <connection>scm:git:ssh://git@github.com/konigio/konig.git</connection>  	
-    <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
-  </scm>
 
   <name>konig-core</name>
   <url>http://maven.apache.org</url>
