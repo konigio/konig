@@ -2,7 +2,7 @@
   <parent>
     <groupId>io.konig</groupId>
     <artifactId>konig-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <relativePath>../konig-parent/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -24,13 +24,13 @@
 	<dependency>
 		<groupId>io.konig</groupId>
 		<artifactId>konig-core</artifactId>
-		<version>1.0.0</version>
+		<version>1.0.1-SNAPSHOT</version>
 	</dependency>
 	
 	<dependency>
 		<groupId>io.konig</groupId>
 		<artifactId>konig-core</artifactId>
-		<version>1.0.0</version>
+		<version>1.0.1-SNAPSHOT</version>
     <type>test-jar</type>
     <scope>test</scope>
  </dependency>
