@@ -33,7 +33,7 @@
 				<dependency>
 					<groupId>io.konig</groupId>
 					<artifactId>konig-webapp</artifactId>
-					<version>${konig.version}</version>
+					<version>1.0.0-SNAPSHOT</version>
 				</dependency>
 	    
         <dependency>

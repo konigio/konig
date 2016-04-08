@@ -30,6 +30,7 @@
   <scm>
     <connection>scm:git:git@github.com:konigio/konig.git</connection>
     <url>scm:git:git@github.com:konigio/konig.git</url>  	
+    <tag>konig-parent-1.0.0</tag>
   </scm>
   
   <developers>

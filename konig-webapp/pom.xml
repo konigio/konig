@@ -24,7 +24,7 @@
 	<dependency>
 		<groupId>io.konig</groupId>
 		<artifactId>konig-services</artifactId>
-		<version>${konig.version}</version>
+		<version>1.0.0-SNAPSHOT</version>
 	</dependency>
 	<dependency>
 		<groupId>javax.servlet</groupId>
