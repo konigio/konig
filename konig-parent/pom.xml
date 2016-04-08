@@ -4,7 +4,7 @@
   <artifactId>konig-parent</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <name>Konig Parent</name>
-  <description>The parent project from which all the konig modules are built.</description>
+  <description>The parent project from which all the konig modules are built</description>
   <packaging>pom</packaging>
   <properties>
   	<konig.version>1.0.0-SNAPSHOT</konig.version>
@@ -30,6 +30,7 @@
   <scm>
     <url>https://github.com/konigio/konig</url>
     <connection>scm:git:git://github.com/konigio/konig</connection>  	
+    <developerConnection>scm:git:git@github.com:konigio/konig.git</developerConnection>
     <tag>konig-1.0.0</tag>
   </scm>
   
