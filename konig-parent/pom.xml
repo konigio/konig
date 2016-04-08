@@ -50,17 +50,6 @@
     </repository>
   </distributionManagement>
   
-  <modules>
-  	<module>../konig-core</module>
-  	<module>../konig-filebase</module>
-  	<module>../konig-shacl</module>
-  	<module>../konig-schemagen</module>
-  	<module>../konig-schemagen-maven-plugin</module>
-  	<module>../konig-services</module>
-  	<module>../konig-webapp</module>
-  	<module>../konig-war</module>
-  </modules>
-  
   <build>
       
     <plugins>
@@ -68,9 +57,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
         <version>2.5.3</version>
-        <configuration>
-        	<pushChanges>false</pushChanges>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
