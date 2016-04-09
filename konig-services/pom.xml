@@ -26,19 +26,19 @@
 	<dependency>
 		<groupId>io.konig</groupId>
 		<artifactId>konig-core</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>${konig.version}</version>
 	</dependency>
 	
 	<dependency>
 		<groupId>io.konig</groupId>
 		<artifactId>konig-shacl</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>${konig.version}</version>
 	</dependency>
 	
 	<dependency>
 		<groupId>io.konig</groupId>
 		<artifactId>konig-core</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>${konig.version}</version>
     <type>test-jar</type>
     <scope>test</scope>
  </dependency>
@@ -77,13 +77,6 @@
     </dependency>
   </dependencies>
   
-  
-  <scm>
-    <url>scm:git:ssh://git@github.com/konigio/konig.git</url>
-    <connection>scm:git:ssh://git@github.com/konigio/konig.git</connection>  	
-    <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
-    <tag>HEAD</tag>
-  </scm>
   <build>
 	  <plugins>
 	      <plugin>
