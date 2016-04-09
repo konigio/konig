@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.konig</groupId>
   <artifactId>konig-parent</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <name>Konig Parent</name>
   <description>The parent project from which all the konig modules are built</description>
   <packaging>pom</packaging>
   <properties>
-  	<konig.version>1.0.1</konig.version>
+  	<konig.version>1.0.2</konig.version>
   	<license.licenseName>apache_v2</license.licenseName>
   	<license.inceptionYear>2015</license.inceptionYear>
   	<license.organizationName>Gregory McFall</license.organizationName>
@@ -40,9 +40,11 @@
   	<module>../konig-shacl</module>
   	<module>../konig-schemagen</module>
   	<module>../konig-schemagen-maven-plugin</module>
+<!--   	
   	<module>../konig-services</module>
   	<module>../konig-webapp</module>
   	<module>../konig-war</module>
+ -->  	
   </modules>
   
   <developers>

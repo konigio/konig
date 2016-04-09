@@ -3,7 +3,7 @@
   <parent>
     <groupId>io.konig</groupId>
     <artifactId>konig-parent</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <relativePath>../konig-parent/pom.xml</relativePath>
   </parent>
   <groupId>io.konig</groupId>
@@ -16,7 +16,7 @@
   	<dependency>
   		<groupId>io.konig</groupId>
   		<artifactId>konig-shacl</artifactId>
-  		<version>0.0.1</version>
+			<version>${konig.version}</version>
   	</dependency>
     <dependency>
       <groupId>junit</groupId>

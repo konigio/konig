@@ -63,6 +63,7 @@ public class ContextGenerator {
 	private Graph owl;
 	
 	private boolean ignoreTermNameClass = true;
+	private boolean ignoreShapeId = true;
 	
 
 	public ContextGenerator(ShapeManager shapeManager, NamespaceManager nsManager, ContextNamer namer, Graph owl) {
@@ -116,7 +117,7 @@ public class ContextGenerator {
 				return;
 			}
 			memory.add(shapeId.stringValue());
-			if (shapeId instanceof URI) {
+			if (shapeId instanceof URI && !ignoreShapeId) {
 				addIndividual((URI)shapeId);
 			}
 			addClassHierarchy(shape.getScopeClass());
