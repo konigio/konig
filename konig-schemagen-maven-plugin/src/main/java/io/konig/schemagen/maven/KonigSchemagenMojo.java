@@ -1,6 +1,7 @@
 package io.konig.schemagen.maven;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 /*
@@ -31,6 +32,7 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.avro.ShapeToAvro;
 import io.konig.schemagen.jsonld.ShapeToJsonldContext;
 import io.konig.schemagen.jsonschema.JsonSchemaGenerator;
@@ -64,10 +66,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     @Parameter( defaultValue="${basedir}/target/generated/jsonschema", property="jsonSchemaDir", required=true)
     private File jsonSchemaDir;
-
     
     @Parameter( defaultValue="${basedir}/src/main/resources/shapes", property="sourceDir", required=true)
     private File sourceDir;
+    
+    @Parameter (defaultValue="${basedir}/target/generated/overview.ttl", property="overviewFile", required=true)
+    private File overviewFile;
 
     public void execute() throws MojoExecutionException   {
     	
@@ -95,9 +99,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ShapeToJsonSchema jsonSchema = new ShapeToJsonSchema(jsonSchemaGenerator);
 			jsonSchema.generateAll(shapeManager.listShapes(), jsonSchemaDir);
 			
+			writeSummary(nsManager, owlGraph);
+			
+			
 		} catch (IOException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
 		}
       
     }
+
+	private void writeSummary(NamespaceManager nsManager, Graph owlGraph)  {
+		
+		overviewFile.getParentFile().mkdirs();
+
+		OntologySummarizer summarizer = new OntologySummarizer();
+		summarizer.summarize(nsManager, owlGraph, overviewFile);
+	}
 }

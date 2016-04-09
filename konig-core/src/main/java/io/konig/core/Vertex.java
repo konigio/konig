@@ -76,6 +76,8 @@ public interface Vertex {
 	
 	boolean hasEdge(Edge edge);
 	
+	void addProperty(URI property, Value value);
+	
 	/**
 	 * Get the Set of outgoing edges with the specified predicate.
 	 * @param predicate The predicate for the outgoing edges
@@ -91,6 +93,14 @@ public interface Vertex {
 	 * contains more than one value for the given property, the returned value is indeterminant.
 	 */
 	Value getValue(URI predicate);
+	
+	/**
+	 * Test whether the Vertex has a given value for a specified property. 
+	 * @param predicate The property to be tested
+	 * @param value The value to be tested
+	 * @return True if the vertex has the given value for the specified property and false otherwise
+	 */
+	boolean hasProperty(URI predicate, Value value);
 	
 	/**
 	 * Get the Set of incoming edges with the specified predicate.

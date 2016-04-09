@@ -218,6 +218,22 @@ public class VertexImpl implements Vertex {
 		
 		return set==null || set.isEmpty() ? null : set.iterator().next().getObject();
 	}
+
+	@Override
+	public boolean hasProperty(URI predicate, Value value) {
+		Set<Edge> set = outProperty(predicate);
+		for (Edge e : set) {
+			if (value.equals(e.getObject())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public void addProperty(URI property, Value value) {
+		graph.add(new EdgeImpl(id, property, value));
+	}
 	
 
 

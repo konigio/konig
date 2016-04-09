@@ -26,6 +26,7 @@ import org.openrdf.model.impl.URIImpl;
 
 public class VANN {
 
+	public static URI NAMESPACE_URI = new URIImpl("http://purl.org/vocab/vann/");
 	public static URI preferredNamespacePrefix = new URIImpl("http://purl.org/vocab/vann/preferredNamespacePrefix");
 
 }
