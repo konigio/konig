@@ -21,7 +21,7 @@ To use the schema generator, you must add a maven plugin to your project as show
   		<plugin>
 	  		<groupId>io.konig</groupId>
 	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
-	  		<version>1.0.1</version>
+	  		<version>1.0.2</version>
 	  		<configuration>
 	  			<avroDir>${basedir}/src/main/resources/avro</avroDir>
 	  			<jsonldDir>${basedir}/src/main/resources/jsonld</jsonldDir>
