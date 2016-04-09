@@ -54,15 +54,14 @@
       
     <plugins>
     	<plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.3</version>
+        <groupId>com.github.danielflower.mavenplugins</groupId>
+        <artifactId>multi-module-maven-release-plugin</artifactId>
+        <version>1.4.6</version>
         <configuration>
-					<autoVersionSubmodules>true</autoVersionSubmodules>
-					<localCheckout>true</localCheckout>
-					<pushChanges>false</pushChanges>
-					<tagNameFormat>v@{project.version}</tagNameFormat>
-				</configuration>
+            <releaseGoals>
+                <releaseGoal>deploy</releaseGoal>
+            </releaseGoals>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
