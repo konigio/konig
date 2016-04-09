@@ -24,6 +24,13 @@
         <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
     </properties>
 
+  <scm>
+    <url>scm:git:ssh://git@github.com/konigio/konig.git</url>
+    <connection>scm:git:ssh://git@github.com/konigio/konig.git</connection>  	
+    <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+  
     <prerequisites>
         <maven>3.1.0</maven>
     </prerequisites>

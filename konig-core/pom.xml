@@ -13,6 +13,12 @@
   <name>konig-core</name>
   <url>http://maven.apache.org</url>
 
+  <scm>
+    <url>scm:git:ssh://git@github.com/konigio/konig.git</url>
+    <connection>scm:git:ssh://git@github.com/konigio/konig.git</connection>  	
+    <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <license.roots>src/main/java,src/test/java</license.roots>
@@ -54,6 +60,7 @@
 		<version>${jackson.version}</version>
 	</dependency>
 	
+  
   
     <dependency>
       <groupId>junit</groupId>

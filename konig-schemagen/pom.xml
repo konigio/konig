@@ -11,6 +11,14 @@
   <packaging>jar</packaging>
   <name>Konig Schema Generator</name>
   <description>Tools for generating schemas from OWL+SHACL specifications</description>
+  
+  <scm>
+    <url>scm:git:ssh://git@github.com/konigio/konig.git</url>
+    <connection>scm:git:ssh://git@github.com/konigio/konig.git</connection>  	
+    <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+  
   <dependencies>
   	<dependency>
   		<groupId>io.konig</groupId>

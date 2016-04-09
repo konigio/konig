@@ -75,6 +75,12 @@
     </dependency>
   </dependencies>
   
+  <scm>
+    <url>scm:git:ssh://git@github.com/konigio/konig.git</url>
+    <connection>scm:git:ssh://git@github.com/konigio/konig.git</connection>  	
+    <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
   
   <build>
 	  <plugins>
