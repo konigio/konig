@@ -41,7 +41,7 @@ To use the schema generator, you must add a maven plugin to your project as show
 </project>
 ```
 
-The configuration is optional.  See the discussion about configuration parameters below.
+The configuration is optional.  For the default values, see the discussion about configuration parameters below.
 
 To run the generator, simply invoke the following command in your project's base directory:
 
@@ -53,7 +53,7 @@ To run the generator, simply invoke the following command in your project's base
 
 | Parameter       | Description                                                                                                                             |
 |-----------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| sourceDir       |  The directory that contains the source SHACL and OWL files<br>Default: `${basedir}/src/main/resources/shapes`               |
+| sourceDir       |  The directory that contains the source SHACL and OWL files from which schemas will be generated<br>Default: `${basedir}/src/main/resources/shapes` |
 | avroDir         | The output directory that will contain the generated Avro Schema files<br>Default: `${basedir}/target/generated/avro`         |
 | jsonSchemaDir   | The output directory that will contain the generated JSON Schema files<br>Default: `${basedir}/target/generated/jsonschema` |
 | jsonldDir       | The output directory that will contain the generated JSON-LD context files<br>Default: `${basedir}/target/generated/jsonld`  |
@@ -104,10 +104,10 @@ the URL for the data shape.
  
 Continuing with our example, you would have the following artifacts:
 
-| Artifact        | URL                                                            |
-|-----------------|----------------------------------------------------------------|
-| JSON-LD Context | http://www.your-company.com/shapes/v1/schema/Person/context    |
-| JSON Schema     | http://www.your-company.com/shapes/v1/schema/Person/jsonschema |
+| Artifact        | URL                                                       |
+|-----------------|-----------------------------------------------------------|
+| JSON-LD Context | http://www.example.com/shapes/v1/schema/Person/context    |
+| JSON Schema     | http://www.example.com/shapes/v1/schema/Person/jsonschema |
 
 The URL for the JSON Schema appears as the `id` field in the JSON Schema specification.
 
@@ -129,8 +129,8 @@ For our example, you would have the following Avro Schema name:
 
 The generator is subject to the following limitations:
 
-* sh:datatype values must come from the XML Schema namespace (e.g. xsd:string).
-* Generic constraints such as sh:not, sh:or, sh:and, etc. are not supported.
+* `sh:datatype` values must come from the XML Schema namespace (e.g. `xsd:string`).
+* Generic constraints such as `sh:not`, `sh:or`, `sh:and`, etc. are not supported.
 
 We hope to remove these limitations in the future.   
 
