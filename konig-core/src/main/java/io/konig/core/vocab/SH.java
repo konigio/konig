@@ -26,6 +26,7 @@ import org.openrdf.model.impl.URIImpl;
 
 public class SH {
 
+	public static final URI NAMESPACE_URI = new URIImpl("http://www.w3.org/ns/shacl#");
 	public static final URI IRI = new URIImpl("http://www.w3.org/ns/shacl#IRI");
 	public static final URI Shape = new URIImpl("http://www.w3.org/ns/shacl#Shape");
 	public static final URI BlankNode = new URIImpl("http://www.w3.org/ns/shacl#BlankNode");

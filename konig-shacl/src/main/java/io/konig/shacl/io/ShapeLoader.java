@@ -56,12 +56,27 @@ public class ShapeLoader {
 	private ShapeManager shapeManager;
 	private NamespaceManager namespaceManager;
 	private ValueFactory valueFactory;
+	private RDFHandler listener;
 	
 	
 	
 	public ShapeLoader(ContextManager contextManager, ShapeManager shapeManager) {
 		this(contextManager, shapeManager, null, null);
 	}
+	
+	
+
+	public RDFHandler getListener() {
+		return listener;
+	}
+
+
+
+	public void setListener(RDFHandler listener) {
+		this.listener = listener;
+	}
+
+
 
 	public ShapeLoader(ContextManager contextManager, ShapeManager shapeManager, NamespaceManager namespaceManager) {
 		this(contextManager, shapeManager, namespaceManager, null);
@@ -117,10 +132,16 @@ public class ShapeLoader {
 		TurtleParser parser = new TurtleParser();
 		ShapeRdfHandler shapeHandler = new ShapeRdfHandler(shapeManager);
 		RDFHandler listHandler = new ListRdfHandler(shapeHandler, shapeHandler);
+		
+		CompositeRdfHandler composite = new CompositeRdfHandler(listHandler);
+		
 		if (namespaceManager != null) {
-			listHandler = new CompositeRdfHandler(listHandler, new NamespaceRDFHandler(namespaceManager));
+			composite.add(new NamespaceRDFHandler(namespaceManager));
 		}
-		parser.setRDFHandler(listHandler);
+		if (listener != null) {
+			composite.add(listener);
+		}
+		parser.setRDFHandler(composite);
 		try {
 			parser.parse(input, "");
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
@@ -129,6 +150,7 @@ public class ShapeLoader {
 	}
 
 	public void loadJsonld(InputStream input) throws ShapeLoadException {
+		
 		load(input, null);
 	}
 	
@@ -149,14 +171,16 @@ public class ShapeLoader {
 	
 	public void load(InputStream input, RDFHandler handler) throws ShapeLoadException {
 		RDFHandler rdfHandler = new ShapeRdfHandler(shapeManager);
+		CompositeRdfHandler composite = new CompositeRdfHandler(rdfHandler);
+		
 		if (handler != null) {
-			CompositeRdfHandler composite = new CompositeRdfHandler();
-			composite.add(rdfHandler);
 			composite.add(handler);
-			handler = composite;
+		}
+		if (listener != null) {
+			composite.add(listener);
 		}
 		JsonldParser parser = new JsonldParser(contextManager, namespaceManager, valueFactory);
-		parser.setRDFHandler(rdfHandler);
+		parser.setRDFHandler(composite);
 		try {
 			parser.parse(input, "");
 		} catch (RDFParseException | RDFHandlerException | IOException e) {

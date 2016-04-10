@@ -13,7 +13,6 @@ kol: a owl:Ontology ;
 	vann:preferredNamespacePrefix "kol"
 	.
 
-
 kol:Graph a owl:Class ;
 	rdfs:comment "A set of statements which collectively form a (possibly disconnected) graph."
 	.
@@ -90,5 +89,11 @@ kol:knownIndividual a owl:ObjectProperty ;
 	rdfs:domain sh:PropertyConstraint ;
 	rdfs:range owl:NamedIndividual ;
 	rdfs:comment "A named individual that is known to be a possible value for the property."
-	.			
+	.		
+	
+kol:mediaTypeBaseName a owl:DatatypeProperty ;	
+	rdfs:domain sh:Shape ;
+	rdfs:range xsd:string ;
+	rdfs:comment "The base name for the vendor-specific media type associated with this Shape"
+	.
 		

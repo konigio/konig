@@ -41,8 +41,10 @@
   	<module>../konig-schemagen</module>
   	<module>../konig-schemagen-maven-plugin</module>
   	<module>../konig-services</module>
+<!-- 
   	<module>../konig-webapp</module>
   	<module>../konig-war</module>
+  	 -->  	
   </modules>
   
   <developers>

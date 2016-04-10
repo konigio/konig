@@ -26,6 +26,7 @@ import org.openrdf.model.impl.URIImpl;
 
 public class Schema {
 
+	public static final URI NAMESPACE_URI = new URIImpl("http://schema.org/");
 	public static final URI Person = new URIImpl("http://schema.org/Person");
 	public static final URI PostalAddress = new URIImpl("http://schema.org/PostalAddress");
 	public static final URI Organization = new URIImpl("http://schema.org/Organization");

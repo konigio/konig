@@ -32,6 +32,8 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.io.GraphLoadHandler;
+import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.avro.ShapeToAvro;
 import io.konig.schemagen.jsonld.ShapeToJsonldContext;
@@ -70,8 +72,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter( defaultValue="${basedir}/src/main/resources/shapes", property="sourceDir", required=true)
     private File sourceDir;
     
-    @Parameter (defaultValue="${basedir}/target/generated/overview.ttl", property="overviewFile", required=true)
-    private File overviewFile;
+    @Parameter (defaultValue="${basedir}/target/generated/summary", property="summaryDir", required=true)
+    private File summaryDir;
 
     public void execute() throws MojoExecutionException   {
     	
@@ -85,6 +87,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ContextManager contextManager = new MemoryContextManager();
 			
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
+			shapeLoader.setListener(new GraphLoadHandler(owlGraph));
 			shapeLoader.loadAll(sourceDir);
 			
 			ShapeToJsonldContext jsonld = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, mediaTypeNamer, owlGraph);
@@ -108,11 +111,18 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
 
-	private void writeSummary(NamespaceManager nsManager, Graph owlGraph)  {
+	private void writeSummary(NamespaceManager nsManager, Graph owlGraph) throws IOException  {
 		
-		overviewFile.getParentFile().mkdirs();
+		summaryDir.mkdirs();
+		
+		File namespacesFile = new File(summaryDir, "namespaces.ttl");
+		File projectFile = new File(summaryDir, "project.jsonld");
 
 		OntologySummarizer summarizer = new OntologySummarizer();
-		summarizer.summarize(nsManager, owlGraph, overviewFile);
+		summarizer.summarize(nsManager, owlGraph, namespacesFile);
+		
+		AllJsonldWriter all = new AllJsonldWriter();
+		all.writeJSON(nsManager, owlGraph, projectFile);
+		
 	}
 }
