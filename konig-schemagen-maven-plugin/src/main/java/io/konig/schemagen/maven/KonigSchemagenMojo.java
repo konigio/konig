@@ -35,6 +35,7 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.io.GraphLoadHandler;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
+import io.konig.schemagen.ShapeMediaTypeLinker;
 import io.konig.schemagen.avro.ShapeToAvro;
 import io.konig.schemagen.jsonld.ShapeToJsonldContext;
 import io.konig.schemagen.jsonschema.JsonSchemaGenerator;
@@ -101,6 +102,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
 			ShapeToJsonSchema jsonSchema = new ShapeToJsonSchema(jsonSchemaGenerator);
 			jsonSchema.generateAll(shapeManager.listShapes(), jsonSchemaDir);
+			
+			ShapeMediaTypeLinker linker = new ShapeMediaTypeLinker(mediaTypeNamer);
+			linker.assignAll(shapeManager.listShapes(), owlGraph);
 			
 			writeSummary(nsManager, owlGraph);
 			
