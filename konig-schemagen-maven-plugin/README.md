@@ -136,8 +136,7 @@ models contained in your project.  The following table describes these output fi
 | File                                    | Description                                |
 |-----------------------------------------|--------------------------------------------|
 | `${summaryDir}/namespaces.ttl` | Provides an overview of the namespaces used in your project.  Each namespace is declared to be an `owl:Ontology` and your prefix for the namespace is declared to be the `vann:preferredNamespacePrefix`. |
-| `${summaryDir}/project.json`   | Collects all of the statements from your input files and serializes them within this document in JSON-LD format.  This single document is suitable for rendering documentation about your data model 
-in a tool like [Ontodoc](https://github.com/konigio/konig-ontodoc) |
+| `${summaryDir}/project.json`   | Collects all of the statements from your input files and serializes them within this document in JSON-LD format.  This single document is suitable for rendering documentation about your data model in a tool like [Ontodoc](https://github.com/konigio/konig-ontodoc) |
 
 The schema generator publishes to `namespaces.ttl` any additional statements about your namespaces.
 As a best practice, you should supply at least the `rdfs:label` and `rdfs:comment` properties.  
