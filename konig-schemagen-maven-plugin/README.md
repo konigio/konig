@@ -146,7 +146,8 @@ Thus, for each namespace, you should have statements like the following:
 	<http://www.konig.io/ns/kcs> a owl:Ontology ;
 		rdfs:label "Konig Change Set Vocabulary" ;
 		rdfs:comment "A vocabulary for describing the differences between two graphs of data" .
-```$
+```
+
 ## Limitations
 
 The generator is subject to the following limitations:
