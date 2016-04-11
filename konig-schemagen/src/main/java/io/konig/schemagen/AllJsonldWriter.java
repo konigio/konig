@@ -16,8 +16,10 @@ import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +31,24 @@ import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
+import io.konig.core.vocab.KOL;
 import io.konig.core.vocab.SH;
+import io.konig.core.vocab.VS;
 
 public class AllJsonldWriter {
 	private static final Logger logger = LoggerFactory.getLogger(AllJsonldWriter.class);
+	
+	private static final Set<URI> ONTOLOGY_SKIP = new HashSet<>();
+	static {
+		ONTOLOGY_SKIP.add(new URIImpl(OWL.NAMESPACE));
+		ONTOLOGY_SKIP.add(new URIImpl(RDF.NAMESPACE));
+		ONTOLOGY_SKIP.add(new URIImpl(RDFS.NAMESPACE));
+		ONTOLOGY_SKIP.add(new URIImpl(XMLSchema.NAMESPACE));
+		ONTOLOGY_SKIP.add(new URIImpl(VS.NAMESPACE));
+		ONTOLOGY_SKIP.add(new URIImpl(KOL.NAMESPACE));
+		ONTOLOGY_SKIP.add(SH.NAMESPACE_URI);
+		
+	}
 	
 	private static class Worker {
 		private Set<String> memory = new HashSet<>();
@@ -40,7 +56,6 @@ public class AllJsonldWriter {
 		private NamespaceManager nsManager;
 		private Graph graph;
 		private JsonGenerator json;
-		
 		
 		private void push(Vertex v) {
 			
@@ -67,7 +82,7 @@ public class AllJsonldWriter {
 			addContext();
 			json.writeArrayFieldStart("@graph");
 			
-			writeInstances(OWL.ONTOLOGY);
+			writeInstances(OWL.ONTOLOGY, ONTOLOGY_SKIP);
 			writeInstances(OWL.CLASS);
 			writeInstances(RDF.PROPERTY);
 			writeInstances(OWL.OBJECTPROPERTY);
@@ -87,18 +102,24 @@ public class AllJsonldWriter {
 			json.flush();
 			
 		}
-
 		
 		private void writeInstances(URI type) throws IOException {
+			writeInstances(type, null);
+		}
+
+		
+		private void writeInstances(URI type, Set<URI> skip) throws IOException {
 			List<Vertex> list = graph.v(type).in(RDF.TYPE).toVertexList();
 			Collections.sort(list, new LocalnameComparator());
-			writeVertices(list);
+			writeVertices(list, skip);
 
 		}
 		
-		private void writeVertices(List<Vertex> list) throws IOException {
+		private void writeVertices(List<Vertex> list, Set<URI> skip) throws IOException {
 			for (Vertex v : list) {
-				writeVertex(v);
+				if (skip==null || !skip.contains(v.getId())) {
+					writeVertex(v);
+				}
 			}
 		}
 

@@ -197,6 +197,10 @@ public class OntologySummarizer {
 			v.addProperty(RDFS.COMMENT, literal("A vocabulary for annotating ontologies with examples and usage notes."));
 		}
 		
+		if (v.outProperty(RDFS.LABEL).isEmpty()) {
+			v.addProperty(RDFS.LABEL, literal("Vocabulary Annotation"));
+		}
+		
 		
 	}
 
