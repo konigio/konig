@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.konig</groupId>
   <artifactId>konig-parent</artifactId>
-  <version>1.0.3</version>
+  <version>1.0.4-SNAPSHOT</version>
   <name>Konig Parent</name>
   <description>The parent project from which all the konig modules are built</description>
   <packaging>pom</packaging>
   <properties>
-  	<konig.version>1.0.3</konig.version>
+  	<konig.version>1.0.4-SNAPSHOT</konig.version>
   	<license.licenseName>apache_v2</license.licenseName>
   	<license.inceptionYear>2015</license.inceptionYear>
   	<license.organizationName>Gregory McFall</license.organizationName>
