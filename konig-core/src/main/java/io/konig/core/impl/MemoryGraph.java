@@ -67,6 +67,10 @@ public class MemoryGraph implements Graph, Transaction {
 	private List<Edge> sink;
 	private Transaction.Status status = Transaction.Status.CLOSED;
 	private List<TransactionWorker> workerList = new ArrayList<TransactionWorker>();
+	
+	public MemoryGraph() {
+		
+	}
 
 	public Vertex vertex(Resource id) {
 		

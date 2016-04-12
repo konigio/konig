@@ -19,7 +19,7 @@ public class ShapeToAvroTest {
 		
 		ShapeToAvro generator = new ShapeToAvro(null);
 		
-		generator.generateAvro(sourceDir, targetDir);
+		generator.generateAvro(sourceDir, targetDir, null);
 		
 		
 		File personFile = new File("target/avro/io.konig.shape.v1.schema.Person");

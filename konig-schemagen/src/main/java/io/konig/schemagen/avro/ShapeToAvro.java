@@ -13,6 +13,7 @@ import org.openrdf.rio.turtle.TurtleParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
@@ -38,9 +39,10 @@ public class ShapeToAvro {
 		}
 	}
 	
-	public void generateAvro(File sourceDir, File targetDir) throws IOException {
+	public void generateAvro(File sourceDir, File targetDir, Graph graph) throws IOException {
 		targetDir.mkdirs();
-		MemoryGraph graph = new MemoryGraph();
+		if (graph == null) {graph = new MemoryGraph();
+		}
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		
 		loadGraph(nsManager, sourceDir, graph);
@@ -52,7 +54,7 @@ public class ShapeToAvro {
 	}
 
 
-	private void loadGraph(NamespaceManager nsManager, File source, MemoryGraph graph) throws IOException {
+	private void loadGraph(NamespaceManager nsManager, File source, Graph graph) throws IOException {
 		
 		if (source.isDirectory()) {
 			File[] kids = source.listFiles();
@@ -71,7 +73,7 @@ public class ShapeToAvro {
 	}
 
 
-	private void loadTurtle(NamespaceManager nsManager, File source, MemoryGraph graph) throws IOException {
+	private void loadTurtle(NamespaceManager nsManager, File source, Graph graph) throws IOException {
 		
 		TurtleParser parser = new TurtleParser();
 		GraphLoadHandler handler = new GraphLoadHandler(graph);
@@ -99,7 +101,7 @@ public class ShapeToAvro {
 		
 	}
 
-	private void loadJsonld(File source, MemoryGraph graph) throws IOException {
+	private void loadJsonld(File source, Graph graph) throws IOException {
 		JsonldParser parser = new JsonldParser(contextManager);
 		GraphLoadHandler handler = new GraphLoadHandler(graph);
 		parser.setRDFHandler(handler);

@@ -17,11 +17,22 @@ public class ShapeToJsonSchema {
 	
 	private JsonSchemaGenerator generator;
 	private ObjectMapper mapper;
+	private JsonSchemaListener listener;
 	
 	public ShapeToJsonSchema(JsonSchemaGenerator generator) {
 		this.generator = generator;
 		mapper = new ObjectMapper();
 		mapper.enable(SerializationFeature.INDENT_OUTPUT);
+	}
+
+
+	public JsonSchemaListener getListener() {
+		return listener;
+	}
+
+
+	public void setListener(JsonSchemaListener listener) {
+		this.listener = listener;
 	}
 
 
@@ -50,6 +61,9 @@ public class ShapeToJsonSchema {
 	public void generateJsonSchema(Shape shape, File jsonSchemaFile) throws SchemaGeneratorException {
 		ObjectNode json = generator.generateJsonSchema(shape);
 		try {
+			if (listener != null) {
+				listener.handleJsonSchema(shape, json);
+			}
 			mapper.writeValue(jsonSchemaFile, json);
 		} catch (IOException e) {
 			throw new SchemaGeneratorException(e);

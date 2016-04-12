@@ -30,5 +30,7 @@ public class KOL {
 	public static final URI knownValue = new URIImpl("http://www.konig.io/ns/kol/knownValue");
 	public static final URI id = new URIImpl("http://www.konig.io/ns/kol/id");
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/kol/mediaTypeBaseName");
+	public static final URI jsonSchemaRendition = new URIImpl("http://www.konig.io/ns/kol/jsonSchemaRendition");
+	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/kol/avroSchemaRendition");
 	
 }

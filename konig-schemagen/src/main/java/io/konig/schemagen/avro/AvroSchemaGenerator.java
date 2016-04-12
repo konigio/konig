@@ -2,13 +2,12 @@ package io.konig.schemagen.avro;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
@@ -82,6 +81,11 @@ public class AvroSchemaGenerator extends Generator {
 			
 			ResourceFile result = ResourceFileImpl.create(schemaAddress, "application/json", entityBody);
 			result.setProperty(AVRO_SCHEMA, avroName);
+			
+			
+			URI schemaId = new URIImpl(result.getContentLocation());
+			shape.getGraph().edge(id, KOL.avroSchemaRendition, schemaId);
+			
 			return result;
 		}
 		

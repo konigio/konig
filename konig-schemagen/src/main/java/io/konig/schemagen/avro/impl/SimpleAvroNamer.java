@@ -82,7 +82,7 @@ public class SimpleAvroNamer implements AvroNamer {
 		StringBuilder builder = new StringBuilder();
 		builder.append(base);
 		builder.append('/');
-		builder.append("avro.json");
+		builder.append("avro");
 		
 		return builder.toString();
 	}

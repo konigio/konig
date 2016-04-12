@@ -17,6 +17,14 @@ kol:Graph a owl:Class ;
 	rdfs:comment "A set of statements which collectively form a (possibly disconnected) graph."
 	.
 
+kol:JsonSchemaSpecification a owl:Class ;
+	rdfs:comment "A document containing a JSON Schema specification"
+	.
+	
+kol:AvroSchemaSpecification a owl:Class ;
+	rdfs:comment "A document containing an Avro Schema specification"
+	.	
+
 kol:LogicalShape a owl:Class ;
 	rdfs:subClassOf sh:Shape ;
 	rdfs:comment """
@@ -96,4 +104,17 @@ kol:mediaTypeBaseName a owl:DatatypeProperty ;
 	rdfs:range xsd:string ;
 	rdfs:comment "The base name for the vendor-specific media type associated with this Shape"
 	.
+	
+kol:jsonSchemaRendition	a owl:ObjectProperty ;
+	rdfs:domain sh:Shape ;
+	rdfs:range kol:JsonSchemaSpecification ;
+	rdfs:comment "The JSON Schema specification corresponding to this Shape"
+	.
+	
+kol:avroSchemaRendition a owl:ObjectProperty ;
+	rdfs:domain sh:Shape ;
+	rdfs:range kol:JsonSchemaSpecification ;
+	rdfs:comment "The Avro Schema specification corresponding to this Shape"
+	.
+		
 		

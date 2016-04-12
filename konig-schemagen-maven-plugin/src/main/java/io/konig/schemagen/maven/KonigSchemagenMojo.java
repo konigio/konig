@@ -42,6 +42,7 @@ import io.konig.schemagen.jsonschema.JsonSchemaGenerator;
 import io.konig.schemagen.jsonschema.JsonSchemaNamer;
 import io.konig.schemagen.jsonschema.JsonSchemaTypeMapper;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
+import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
 import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaTypeMapper;
 import io.konig.shacl.ShapeManager;
@@ -95,12 +96,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			jsonld.generateAll(jsonldDir);
 			
 			ShapeToAvro avro = new ShapeToAvro(null);
-			avro.generateAvro(sourceDir, avroDir);
+			avro.generateAvro(sourceDir, avroDir, owlGraph);
 			
 			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SimpleJsonSchemaTypeMapper();
 			JsonSchemaNamer jsonSchemaNamer = new SimpleJsonSchemaNamer("/jsonschema", mediaTypeNamer);
 			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
 			ShapeToJsonSchema jsonSchema = new ShapeToJsonSchema(jsonSchemaGenerator);
+			jsonSchema.setListener(new ShapeToJsonSchemaLinker(owlGraph));
 			jsonSchema.generateAll(shapeManager.listShapes(), jsonSchemaDir);
 			
 			ShapeMediaTypeLinker linker = new ShapeMediaTypeLinker(mediaTypeNamer);
