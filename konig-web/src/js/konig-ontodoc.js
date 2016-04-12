@@ -315,6 +315,8 @@ ClassManager.prototype.init = function() {
 	this.assignUniqueNames();
 }
 
+
+
 ClassManager.prototype.assignUniqueNames = function() {
 	var list = this.classList;
 	var prevLocalName = null;
@@ -409,11 +411,47 @@ ClassInfo.prototype.analyzeComment = function() {
 	}
 }
 
+ClassInfo.prototype.getMediaTypeList = function() {
+	if (!this.mediaTypeList) {
+		var sink = this.mediaTypeList = [];
+		var shapeList = this.classVertex.v().inward(sh.scopeClass).toList();
+		
+		for (var i=0; i<shapeList.length; i++) {
+			var shape = shapeList[i];
+			var name = shape.v().out(kol.mediaTypeBaseName).first();
+			if (!name) {
+				// TODO: Generate media type name
+				console.log("Failed to find mediaTypeBaseName for shape " + shape.id.stringValue);
+			} else {
+				sink.push({ mediaTypeName: name.stringValue});
+			}
+		}
+		
+	}
+	
+	return this.mediaTypeList;
+}
+
 ClassInfo.prototype.getLogicalShape = function() {
 	if (!this.logicalShape) {
-		var logicalShape = this.classVertex.v().inward(sh.scopeShape).hasType(kol.LogicalShape).first();
+		var logicalShape = this.classVertex.v().inward(sh.scopeClass).hasType(kol.LogicalShape).first();
 		if (!logicalShape) {
 
+			// Get any old shape and treat it as the logical shape.
+			// This is a temporary hack.
+			// If there are other shapes we ought to merge the property constraints
+			// into the OWL description
+			
+			// BEGIN HACK
+//			logicalShape = this.classVertex.v().inward(sh.scopeClass).first();
+//			if (logicalShape) {
+//				console.log("Found a pre-defined shape");
+//				this.logicalShape = this.classManager.getOrCreateShapeInfo(logicalShape);
+//				return this.logicalShape;
+//			}
+//			console.log("No pre-defined Shape was found for class " + this.classVertex.id.stringValue);
+			// END HACK
+			
 			var graph = this.classManager.graph;
 
 			var owlClass = this.classVertex;
@@ -426,12 +464,45 @@ ClassInfo.prototype.getLogicalShape = function() {
 				this.addDirectProperties(owlClass, logicalShape);
 				var classMap = {};
 				this.addSuperProperties(owlClass, logicalShape, classMap);
+				this.addShapeProperties(owlClass, logicalShape);
 			}
 		}
 		this.logicalShape = this.classManager.getOrCreateShapeInfo(logicalShape);
 	}
 	return this.logicalShape;
 }
+
+ClassInfo.prototype.addShapeProperties = function(owlClass, logicalVertex) {
+	var graph = this.classManager.graph;
+	
+	// Get the list of shapes that have owlClass as the scopeClass
+	var shapeList = owlClass.v().inward(sh.scopeClass).toList();
+	
+	console.log(logicalVertex.toJson());
+	
+	for (var i=0; i<shapeList.length; i++) {
+		var shape = shapeList[i];
+		var propertyList = shape.v().out(sh.property).toList();
+		for (var j=0; j<propertyList.length; j++) {
+			var property = propertyList[j];
+			var predicate = property.propertyValue(sh.predicate);
+			console.log(predicate.stringValue);
+			// Do we have an existing PropertyConstraint for the given predicate?
+			var prior = logicalVertex.v().out(sh.property).has(sh.predicate, predicate).first();
+			if (!prior) {
+				// There is no existing PropertyConstraint for the given predicate.
+				// Clone the one that we found, and add it to the logical shape.
+				
+				var clone = property.shallowClone();
+				graph.statement(logicalVertex, sh.property, clone);
+			} else {
+				console.log("TODO: merge multiple property constraints");
+			}
+		}
+	}
+	
+}
+
 
 ClassInfo.prototype.addSuperProperties = function(owlClass, shape, classMap) {
 	var manager = this.classManager;
@@ -570,7 +641,7 @@ ShapeInfo.prototype.init = function() {
 }
 
 ShapeInfo.prototype.addSuperProperties = function(shape, isDirect) {
-	
+	if (!shape) return;
 	var constraint = shape.v().out(sh.constraint).first();
 	if (constraint) {
 		var and = constraint.v().out(sh.and).first();
@@ -669,8 +740,6 @@ ShapeInfo.prototype.addDirectProperties = function() {
 	var block = new PropertyBlock(owlClass);
 	var sink = block.propertyList;
 	
-	
-	
 	var source = this.rawShape.v().out(sh.property).toList();
 	for (var i=0; i<source.length; i++) {
 		var property = source[i];
@@ -723,7 +792,7 @@ function Ontodoc(ontologyService) {
 	
 	this.actionHistory = new HistoryManager();
 	this.editMode = false;
-	
+	this.multipleShapesPerClass = false;
 	this.ontologyService = ontologyService || konig.ontologyService;
 	this.layout = $('body').layout(
 		{
@@ -749,6 +818,7 @@ function Ontodoc(ontologyService) {
 	this.context = new konig.jsonld.Context(this.ontologyGraph['@context']);
 	
 	this.buildGraph();
+	this.inferClasses();
 	
 	this.ontologyManager = new OntologyManager(this.context, this.graph);
 	
@@ -774,6 +844,30 @@ function Ontodoc(ontologyService) {
 	$(window).trigger('hashchange');
 	
 	
+	
+}
+
+/**
+ * Given statements of the form:
+ * <pre>
+ *    ?x sh:scopeClass ?y
+ * </pre>
+ * 
+ * infer
+ * <pre>
+ *    ?y rdf:type owl:Class
+ * </pre>
+ */
+Ontodoc.prototype.inferClasses = function() {
+	var graph = this.graph;
+	var shapeList = graph.V(sh.Shape).inward(rdf.type).toList();
+	for (var i=0; i<shapeList.length; i++) {
+		var shape = shapeList[i];
+		var scopeClass = shape.propertyValue(sh.scopeClass);
+		if (scopeClass) {
+			graph.statement(scopeClass, rdf.type, owl.Class);
+		}
+	}
 	
 }
 
@@ -1010,6 +1104,10 @@ Ontodoc.prototype.renderClass = function(owlClassIRI) {
 		
 		if (!shapeInfo.comment) {
 			shapeInfo.comment = classInfo.comment;
+		}
+		
+		if (this.multipleShapesPerClass) {
+			shapeInfo.mediaTypeList = classInfo.getMediaTypeList();
 		}
 		
 		var rendered = this.editMode ?

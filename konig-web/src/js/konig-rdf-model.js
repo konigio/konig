@@ -563,6 +563,23 @@ Vertex.prototype.isEmpty = function() {
 	return true;
 }
 
+Vertex.prototype.shallowClone = function(id) {
+	var graph = this.graph;
+	
+	var clone = graph.vertex(id);
+	for (var key in this.statementMap) {
+		var set = this.statementMap[key];
+		var edgeList = [];
+		set.select(this.id, null, edgeList);
+		for (var i=0; i<edgeList.length; i++) {
+			var edge = edgeList[i];
+			var subject = edge.subject;
+			graph.statement(clone, edge.predicate, edge.object);
+		}
+	}
+	return clone;
+}
+
 Vertex.prototype.outStatements = function() {
 	var list = [];
 	for (var key in this.statementMap) {

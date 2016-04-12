@@ -164,7 +164,8 @@ $(document).ready(function() {
 		rangeIncludes : new IRI("http://schema.org/rangeIncludes")
 	};
 	konig.kol = {
-		LogicalShape : new IRI("http://www.konig.io/ns/kol/LogicalShape")	
+		LogicalShape : new IRI("http://www.konig.io/ns/kol/LogicalShape"),	
+		mediaTypeBaseName : new IRI("http://www.konig.io/ns/kol/mediaTypeBaseName")
 	};
 	
 });

@@ -79,6 +79,16 @@
 	</h4>
 	{{{comment}}}
 
+  {{#mediaTypeList.length}}
+	<div>
+  <select id="konig-class-media-type">
+		{{#mediaTypeList}}
+    <option>{{mediaTypeName}}</option>
+    {{/mediaTypeList}}
+  </select>
+	</div>
+	{{/mediaTypeList.length}}
+
 	{{#propertyBlock.length}}
  	<table class="definition-table">
  		<thead>
@@ -244,7 +254,7 @@
 <script src="js/konig-context.js"></script>
 <script src="js/konig-history-manager.js"></script>
 <script src="js/konig-ontodoc.js"></script>
-<script src="js/konig-ontodoc-services.js"></script>
+<script src="test/gdm.js"></script>
 <script src="js/konig-ontodoc-edit.js"></script>
 </body>
 </html>
