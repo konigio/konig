@@ -323,6 +323,7 @@ ClassManager.prototype.assignUniqueNames = function() {
 	for (var i=0; i<list.length; i++) {
 		var classInfo = list[i];
 		var localName = classInfo.classVertex.id.localName;
+		console.log("assignUniqueNames", classInfo.classVertex.id.stringValue, localName);
 		classInfo.uniqueName = localName;
 		if (
 			(localName === prevLocalName) ||
@@ -1133,20 +1134,40 @@ Ontodoc.prototype.renderClass = function(owlClassIRI) {
 	
 }
 
+/**
+ * Compute the sequence of ancestors in the type hierarchy for a given OWL Class
+ * 
+ * @param owlClassVertex
+ * @returns {vertex[]} The list of vertices starting with the given owlClassVertex
+ * and ending with the most distant ancestor at the top of the class hierarchy, or
+ * null if the tree of ancestors is not linear.
+ */
+Ontodoc.prototype.subClassSequence = function(owlClassVertex) {
+	
+	var list = [];
+	
+	while (owlClassVertex != null) {
+		list.push(owlClassVertex);
+		var superList = owlClassVertex.v().out(rdfs.subClassOf).toList();
+		if (superList.length > 1) {
+			return null;
+		}
+		owlClassVertex = superList.length==0 ? null : superList[0];
+	}
+	return list;
+}
 
 
 Ontodoc.prototype.renderClassBreadcrumbs = function(owlClassIRI) {
 	var classManager = this.classManager;
 	var breadcrumbs = $('.ontodoc-class .breadcrumbs');
 	
-	var pathList = this.graph
-		.V(owlClassIRI).until(step().hasNot(rdfs.subClassOf))
-		.repeat(step().out(rdfs.subClassOf)).path().execute();
+	var owlClassVertex = this.graph.vertex(owlClassIRI);
+	var pathList = this.subClassSequence(owlClassVertex);
 	
-	if (pathList.length == 1) {
-		var path = pathList[0];
-		for (var i=path.length-1; i>=0; i--) {
-			var vertex = path[i];
+	if (pathList) {
+		for (var i=pathList.length-1; i>=0; i--) {
+			var vertex = pathList[i];
 			
 			var info = classManager.getOrCreateClassInfo(vertex);
 			var anchor = Mustache.render('<a href="#{{href}}" title="{{href}}">{{localName}}</a>', {
@@ -1154,11 +1175,18 @@ Ontodoc.prototype.renderClassBreadcrumbs = function(owlClassIRI) {
 				href: vertex.id.stringValue
 			});
 			
-			if (i!=path.length-1) {
-				breadcrumbs.append("<span> &gt; </span>");
+			if (i!=pathList.length-1) {
+				 breadcrumbs.append("<span> &gt; </span>");
 			}
 			breadcrumbs.append(anchor);
 		}
+	} else {
+		var canvas = document.createElement("canvas");
+		breadcrumbs[0].appendChild(canvas);
+		$(canvas).rdfspringy({
+			vertex: owlClassVertex,
+			property: rdfs.subClassOf
+		});
 	}
 	
 }

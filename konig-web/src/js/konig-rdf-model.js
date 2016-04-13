@@ -1806,6 +1806,9 @@ Graph.prototype.statement = function(subject, predicate, object) {
 }
 
 Graph.prototype.loadJSON = function(json, context) {
+	if (!context) {
+		context = new konig.jsonld.Context(json['@context']);
+	}
 	var expanded = context.expand(json);
 	var flat = context.flatten(expanded);
 	this.loadFlattened(flat['@graph']);

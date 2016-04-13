@@ -21,6 +21,7 @@
     "r.js": "~2.1.22",
     "jstree": "~3.2.1",
     "Snap.svg": "~0.4.1",
-    "node-uuid": "~1.4.7"
+    "node-uuid": "~1.4.7",
+    "Springy": "https://github.com/dhotson/springy.git#~2.7.1"
   }
 }
