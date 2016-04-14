@@ -123,7 +123,7 @@ public class AvroSchemaGenerator extends Generator {
 			shape.setScopeClass((URI) scopeClass);
 		}
 		
-		List<Vertex> propertyList = shapeVertex.asTraversal().out(SH.property).toVertexList();
+		List<Vertex> propertyList = shapeVertex.asTraversal().out(SH.property).distinct().toVertexList();
 		boolean fieldStart = false;
 		for (Vertex p : propertyList) {
 			if (!fieldStart) {

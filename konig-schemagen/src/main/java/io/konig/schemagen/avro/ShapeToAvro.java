@@ -41,11 +41,14 @@ public class ShapeToAvro {
 	
 	public void generateAvro(File sourceDir, File targetDir, Graph graph) throws IOException {
 		targetDir.mkdirs();
-		if (graph == null) {graph = new MemoryGraph();
+		GraphLoadHandler loadHandler = null;
+		if (graph == null) {
+			graph = new MemoryGraph();
+			loadHandler = new GraphLoadHandler(graph);
 		}
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		
-		loadGraph(nsManager, sourceDir, graph);
+		loadGraph(nsManager, sourceDir, graph, loadHandler);
 		ResourceManager resourceManager = new FileManager(targetDir);
 		SimpleAvroNamer namer = new SimpleAvroNamer();
 		AvroSchemaGenerator generator = new AvroSchemaGenerator(namer, nsManager);
@@ -54,17 +57,17 @@ public class ShapeToAvro {
 	}
 
 
-	private void loadGraph(NamespaceManager nsManager, File source, Graph graph) throws IOException {
+	private void loadGraph(NamespaceManager nsManager, File source, Graph graph, GraphLoadHandler loadHandler) throws IOException {
 		
 		if (source.isDirectory()) {
 			File[] kids = source.listFiles();
 			for (int i=0; i<kids.length; i++) {
-				loadGraph(nsManager, kids[i], graph);
+				loadGraph(nsManager, kids[i], graph, loadHandler);
 			}
 		} else {
 			String name = source.getName();
 			if (name.endsWith(".ttl")) {
-				loadTurtle(nsManager, source, graph);
+				loadTurtle(nsManager, source, graph, loadHandler);
 			} else if (name.endsWith(".json") || name.endsWith(".jsonld")) {
 				loadJsonld(source, graph);
 			}
@@ -73,13 +76,15 @@ public class ShapeToAvro {
 	}
 
 
-	private void loadTurtle(NamespaceManager nsManager, File source, Graph graph) throws IOException {
+	private void loadTurtle(NamespaceManager nsManager, File source, Graph graph, GraphLoadHandler loadHandler) throws IOException {
 		
 		TurtleParser parser = new TurtleParser();
-		GraphLoadHandler handler = new GraphLoadHandler(graph);
 		NamespaceRDFHandler nsHandler = new NamespaceRDFHandler(nsManager);
 		
-		CompositeRdfHandler composite = new CompositeRdfHandler(nsHandler, handler);
+		CompositeRdfHandler composite = new CompositeRdfHandler(nsHandler);
+		if (loadHandler != null) {
+			composite.add(loadHandler);
+		}
 		parser.setRDFHandler(composite);
 		
 		FileReader input = new FileReader(source);
