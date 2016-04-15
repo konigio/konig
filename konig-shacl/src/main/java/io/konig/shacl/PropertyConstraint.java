@@ -29,16 +29,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;
+import io.konig.core.impl.KonigLiteral;
 
 public class PropertyConstraint {
 
@@ -66,15 +69,42 @@ public class PropertyConstraint {
 	private List<Value> knownValue;
 	
 	private Term term;
-
-
+	
 	public PropertyConstraint(URI predicate) {
 		this.id = new BNodeImpl(UidGenerator.INSTANCE.next());
 		this.predicate = predicate;
 	}
+	
 	public PropertyConstraint(Resource id, URI predicate) {
 		this.id = id;
 		this.predicate = predicate;
+	}
+	
+	public PropertyConstraint clone() {
+		PropertyConstraint other = new PropertyConstraint(id, predicate);
+		other.allowedValues = allowedValues;
+		other.datatype = datatype;
+		other.directType = directType;
+		other.documentation = documentation;
+		other.hasValue = hasValue;
+		other.knownValue = knownValue;
+		other.maxCount = maxCount;
+		other.maxExclusive = maxExclusive;
+		other.maxInclusive = maxInclusive;
+		other.maxLength = maxLength;
+		other.minCount = minCount;
+		other.minExclusive = minExclusive;
+		other.minInclusive = minInclusive;
+		other.minLength = minLength;
+		other.nodeKind = nodeKind;
+		other.pattern = pattern;
+		other.term = term;
+		other.type = type;
+		other.valueClass = valueClass;
+		other.valueShape = valueShape;
+		other.valueShapeId = valueShapeId;
+		
+		return other;
 	}
 	
 	
@@ -175,11 +205,27 @@ public class PropertyConstraint {
 		if (hasValue == null) {
 			hasValue = new HashSet<>();
 		}
+		
+		// Coerce String literals into untyped literal.
+		// This ensures that we don't have multiple values of the same literal.
+		if (value instanceof Literal) {
+			Literal literal = (Literal) value;
+			URI datatype = literal.getDatatype();
+			if (datatype != null && XMLSchema.STRING.equals(datatype)) {
+				value = new KonigLiteral(literal.stringValue());
+			}
+		}
+		
+		
 		hasValue.add(value);
 	}
 	
 	public Set<Value> getHasValue() {
 		return hasValue;
+	}
+	
+	public void setHasValue(Set<Value> set) {
+		this.hasValue = set;
 	}
 	
 	/**

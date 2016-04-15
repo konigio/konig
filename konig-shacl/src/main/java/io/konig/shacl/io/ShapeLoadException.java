@@ -27,5 +27,9 @@ public class ShapeLoadException extends RuntimeException {
 	public ShapeLoadException(Throwable cause) {
 		super(cause);
 	}
+	
+	public ShapeLoadException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
 }

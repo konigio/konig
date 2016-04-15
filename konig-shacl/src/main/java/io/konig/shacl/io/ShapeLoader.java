@@ -110,6 +110,8 @@ public class ShapeLoader {
 					} else if (name.endsWith(".jsonld")) {
 						loadJsonld(input);
 					}
+				} catch (Throwable oops) {
+					throw new ShapeLoadException("Failed to load " + source.getName(), oops);
 				} finally {
 					close(input);
 				}
