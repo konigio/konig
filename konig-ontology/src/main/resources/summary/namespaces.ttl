@@ -1,0 +1,145 @@
+@prefix cs: <http://purl.org/vocab/changeset/schema#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix grddl: <http://www.w3.org/2003/g/data-view#> .
+@prefix kcs: <http://www.konig.io/ns/kcs/> .
+@prefix kol: <http://www.konig.io/ns/kol/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix vs: <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://purl.org/vocab/changeset/schema#> a owl:Ontology ;
+	skos:changeNote _:wVEi9g2gKKEAAAFUF0tIkg , _:TfZnok44MuMAAAFUF0tIlg ;
+	rdfs:comment """
+      This vocabulary defines a set of terms for describing changes to resource descriptions.
+      <p>
+      The vocabulary introduces the notion of a ChangeSet which encapsulates the delta between two versions of a 
+      resource description. In this context a resource description is the set of triples that in some way comprise a 
+      description of a resource. The delta is represented by two sets of triples: additions and removals. A ChangeSet can be used to 
+      modify a resource description by first removing all triples from the description that are in the removals set and
+      adding the triples in the additions set.</p>
+    """@en ;
+	dc:creator "Sam Tunnicliffe" , <http://iandavis.com/id/me> ;
+	dc:date "2006-03-21" ;
+	vann:example <http://vocab.org/changeset/changesets-example3-20060321.html> , <http://vocab.org/changeset/changesets-example2-20060321.html> , <http://vocab.org/changeset/changesets-example-20060321.html> ;
+	skos:historyNote _:wSJ3VKJRjroAAAFUF0tIlw , _:HpYwOnvIk6cAAAFUF0tIlw ;
+	dc:identifier "http://purl.org/vocab/changeset/schema-20060321" ;
+	dc:isVersionOf <http://purl.org/vocab/changeset/schema#> ;
+	dc:issued "2005-12-14" ;
+	vann:preferredNamespacePrefix "cs" ;
+	vann:preferredNamespaceUri "http://purl.org/vocab/changeset/schema#" ;
+	dc:replaces <http://purl.org/vocab/changeset/schema-20051214> ;
+	dc:rights "Copyright ? 2005 Talis Information Ltd." ;
+	dc:title "Changeset"@en .
+
+<http://purl.org/dc/elements/1.1/> a owl:Ontology ;
+	vann:preferredNamespacePrefix "dc" .
+
+<http://xmlns.com/foaf/0.1/> a owl:Ontology ;
+	vann:preferredNamespacePrefix "foaf" .
+
+<http://www.w3.org/2003/g/data-view#> a owl:Ontology ;
+	vann:preferredNamespacePrefix "grddl" .
+
+<http://www.konig.io/ns/kcs/> a owl:Ontology ;
+	rdfs:comment """This vocabulary extends the <em>defacto</em> standard 
+	  <a href=\"http://vocab.org/changeset/\">ChangeSet ontology</a>
+    so that <code>additions</code> and <code>removals</code> can be expressed as graphs rather than collections
+    of <code>rdf:Statement</code> instances, and it introduces the notion of a <em>reference</em> graph
+    which is used to identify blank nodes that have been modified.</p>""" ;
+	rdfs:label "Konig ChangeSet" ;
+	vann:preferredNamespacePrefix "kcs" .
+
+<http://www.konig.io/ns/kol/> a owl:Ontology ;
+	rdfs:comment """Provides terms that extend OWL and SHACL.
+		<p>A description of this ontology in Turtle syntax is available at 
+		<a href=\"http://www.konig.io/ns/kol/.ttl\">http://www.konig.io/ns/kol/.ttl</a></p>""" ;
+	rdfs:label "Konig Ontology Language" ;
+	vann:preferredNamespacePrefix "kol" .
+
+<http://www.w3.org/2002/07/owl#> a owl:Ontology ;
+	rdfs:comment """
+  This ontology partially describes the built-in classes and
+  properties that together form the basis of the RDF/XML syntax of OWL 2.
+  The content of this ontology is based on Tables 6.1 and 6.2
+  in Section 6.4 of the OWL 2 RDF-Based Semantics specification,
+  available at http://www.w3.org/TR/owl2-rdf-based-semantics/.
+  Please note that those tables do not include the different annotations
+  (labels, comments and rdfs:isDefinedBy links) used in this file.
+  Also note that the descriptions provided in this ontology do not
+  provide a complete and correct formal description of either the syntax
+  or the semantics of the introduced terms (please see the OWL 2
+  recommendations for the complete and normative specifications).
+  Furthermore, the information provided by this ontology may be
+  misleading if not used with care. This ontology SHOULD NOT be imported
+  into OWL ontologies. Importing this file into an OWL 2 DL ontology
+  will cause it to become an OWL 2 Full ontology and may have other,
+  unexpected, consequences.
+   """ ;
+	owl:imports <http://www.w3.org/2000/01/rdf-schema> ;
+	rdfs:isDefinedBy <http://www.w3.org/TR/owl2-syntax/> , <http://www.w3.org/TR/owl2-rdf-based-semantics/> , <http://www.w3.org/TR/owl2-mapping-to-rdf/> ;
+	grddl:namespaceTransformation <http://dev.w3.org/cvsweb/2009/owl-grddl/owx2rdf.xsl> ;
+	vann:preferredNamespacePrefix "owl" ;
+	rdfs:seeAlso <http://www.w3.org/TR/owl2-rdf-based-semantics/#table-axiomatic-classes> , <http://www.w3.org/TR/owl2-rdf-based-semantics/#table-axiomatic-properties> ;
+	dc:title "OWL" ;
+	owl:versionIRI <http://www.w3.org/2002/07/owl> ;
+	owl:versionInfo "$Date: 2009/11/15 10:54:12 $" .
+
+<http://www.w3.org/1999/02/22-rdf-syntax-ns#> a owl:Ontology ;
+	dc:description "This is the RDF Schema for the RDF vocabulary terms in the RDF Namespace, defined in RDF 1.1 Concepts." ;
+	vann:preferredNamespacePrefix "rdf" ;
+	dc:title "RDF Syntax" .
+
+<http://www.w3.org/2000/01/rdf-schema#> a owl:Ontology ;
+	vann:preferredNamespacePrefix "rdfs" ;
+	rdfs:seeAlso <http://www.w3.org/2000/01/rdf-schema-more> ;
+	dc:title "RDF Schema" .
+
+<http://www.w3.org/ns/shacl#> a owl:Ontology ;
+	<http://purl.org/dc/terms/dateCopyrighted> "2015" ;
+	<http://purl.org/dc/terms/description> """
+<p>
+This vocabulary defines terms used in SHACL, the W3C Shapes Constraint Language.
+</p>
+<p>
+This vocabulary is under development by the W3C Data Shapes Working Group.
+The status of each term in this vocabulary is indicated using
+<a href=\"http://www.w3.org/2003/06/sw-vocab-status/note\">Term-centric Semantic Web Vocabulary Annotations</a>.
+All terms that appeared in the
+<a href=\"http://www.w3.org/TR/2015/WD-shacl-20151008/\"> Shapes Constaint Language (SHACL) W3C First Public Working Draft 08 October 2015</a>
+have been marked as <em>stable</em>.
+Other terms are marked as <em>unstable</em>, <em>testing</em>, or <em>archaic</em> according to the
+current level of consensus within the Working Group.
+</p>
+"""^^rdf:XMLLiteral ;
+	rdfs:label "SHACL Vocabulary" ;
+	<http://purl.org/dc/terms/license> <http://www.w3.org/Consortium/Legal/2015/doc-license> ;
+	vann:preferredNamespacePrefix "sh" ;
+	rdfs:seeAlso <https://www.w3.org/2014/data-shapes/wiki/Main_Page> , <http://www.w3.org/TR/2015/WD-shacl-20151008/> , <http://www.w3.org/TR/2015/WD-shacl-ucr-20150414/> ;
+	<http://purl.org/dc/terms/source> <https://raw.githubusercontent.com/w3c/data-shapes/gh-pages/shacl/shacl-vocab.ttl> ;
+	<http://purl.org/dc/terms/title> "W3C Shapes Constraint Language (SHACL) Vocabulary" .
+
+<http://www.w3.org/2004/02/skos/core#> a owl:Ontology ;
+	vann:preferredNamespacePrefix "skos" .
+
+<http://purl.org/vocab/vann/> a owl:Ontology ;
+	rdfs:comment "A vocabulary for annotating ontologies with examples and usage notes." ;
+	rdfs:label "Vocabulary Annotation" ;
+	vann:preferredNamespacePrefix "vann" .
+
+<http://www.w3.org/2003/06/sw-vocab-status/ns#> a owl:Ontology ;
+	vann:preferredNamespacePrefix "vs" .
+
+<http://www.w3.org/XML/1998/namespace> a owl:Ontology ;
+	vann:preferredNamespacePrefix "xml" .
+
+<http://www.w3.org/2001/XMLSchema#> a owl:Ontology ;
+	rdfs:comment "A vocabulary for expressing constraints about XML documents." ;
+	vann:preferredNamespacePrefix "xsd" ;
+	dc:title "XML Schema" .

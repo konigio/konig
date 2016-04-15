@@ -50,12 +50,15 @@ kcs:remove a owl:ObjectProperty ;
 
 kcs:source a owl:ObjectProperty ;
 	rdfs:comment """A Graph that provides a complete description of the initial state of the 
-		<code>subjectOfChange</code>."""
+		<code>subjectOfChange</code>.""" ;
 	rdfs:domain cs:ChangeSet ;
 	rdfs:range kol:Graph 
 	.
 	
 kcs:target a owl:ObjectProperty ;
 	rdfs:comment """A Graph that provides a complete description of the final state of the 
-		<code>subjectOfChange</code> after it has been mutated by the ChangeSet."""	
+		<code>subjectOfChange</code> after it has been mutated by the ChangeSet."""	;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range kol:Graph
+	.
 	
