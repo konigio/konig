@@ -11,7 +11,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.konig.core.NamespaceManager;
+import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
+import io.konig.schemagen.ShapeTransformer;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -20,6 +22,12 @@ public class JsonSchemaGenerator extends Generator {
 	
 	private JsonSchemaNamer namer;
 	private JsonSchemaTypeMapper typeMapper;
+
+	/**
+	 * For now, we hard-code a GeneratedMediaTypeTransformer.  In the future, the shape
+	 * transformer really ought to be passed to the constructor.
+	 */
+	private ShapeTransformer shapeTransformer = new GeneratedMediaTypeTransformer("+json");
 	
 	public JsonSchemaGenerator(JsonSchemaNamer namer, NamespaceManager nsManager, JsonSchemaTypeMapper typeMapper) {
 		super(nsManager);
@@ -69,6 +77,10 @@ public class JsonSchemaGenerator extends Generator {
 				ObjectNode properties = mapper.createObjectNode();
 				json.put("properties", properties);
 				for (PropertyConstraint constraint : list) {
+					
+					if (shapeTransformer != null) {
+						constraint = shapeTransformer.transform(shape, constraint);
+					}
 					putProperty(properties, constraint);
 				}
 			}
@@ -78,6 +90,7 @@ public class JsonSchemaGenerator extends Generator {
 		}
 
 		private void putProperty(ObjectNode properties, PropertyConstraint property) {
+			
 			
 			URI propertyId = property.getPredicate();
 			

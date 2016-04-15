@@ -24,8 +24,10 @@ import io.konig.core.io.ResourceManager;
 import io.konig.core.io.impl.ResourceFileImpl;
 import io.konig.core.vocab.KOL;
 import io.konig.core.vocab.SH;
+import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
 import io.konig.schemagen.SchemaGeneratorException;
+import io.konig.schemagen.ShapeTransformer;
 import io.konig.schemagen.avro.impl.SimpleAvroDatatypeMapper;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
@@ -36,6 +38,12 @@ public class AvroSchemaGenerator extends Generator {
 	
 	private AvroNamer namer;
 	private AvroDatatypeMapper datatypeMapper = new SimpleAvroDatatypeMapper();
+	
+	/**
+	 * For now, we hard-code a GeneratedMediaTypeTransformer.  In the future, the shape
+	 * transformer really ought to be passed to the constructor.
+	 */
+	private ShapeTransformer shapeTransformer = new GeneratedMediaTypeTransformer("+avro");
 	
 	public AvroSchemaGenerator(AvroNamer namer, NamespaceManager nsManager) {
 		super(nsManager);
@@ -144,6 +152,9 @@ public class AvroSchemaGenerator extends Generator {
 
 		
 		PropertyConstraint property = asPropertyConstraint(shape, propertyVertex);
+		if (property == null) {
+			return;
+		}
 		URI predicate = property.getPredicate();
 		
 		String fieldName = predicate.getLocalName();
@@ -280,6 +291,10 @@ public class AvroSchemaGenerator extends Generator {
 		p.setValueShapeId(uri(propertyVertex, SH.valueShape));
 
 		addKnownValues(shape, propertyVertex, p);
+		
+		if (shapeTransformer != null) {
+			p = shapeTransformer.transform(shape, p);
+		}
 		
 		return p;
 		
