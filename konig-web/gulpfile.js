@@ -19,12 +19,16 @@ gulp.task('minify', function(){
            './src/js/jquery.layout.min.js',
            './src/js/mustache.js',
            './src/js/sha1.js',
+           './src/js/springy.js',
+           './src/js/springyui.js',
            './src/js/uuid.js',
            './src/js/konig-jsonld.js',
            './src/js/konig-rdf-model.js',
            './src/js/konig-context.js',
            './src/js/konig-history-manager.js',
-           './src/js/konig-ontodoc.js'
+           './src/js/konig-rdfspringy.js',
+           './src/js/konig-ontodoc.js',
+           './src/js/konig-ajax-ontology-service.js'
        ])
 		.pipe(concat('ontodoc-all.js',{'newline': '\n'}))
 		.pipe(minify({ignoreFiles: ['-min.js']}))
@@ -34,9 +38,6 @@ gulp.task('minify', function(){
 gulp.task('copy-files' , function() {
 	gulp.src('./src/ontodoc.html')
 		.pipe(gulp.dest('./dist/'));
-	
-	gulp.src('./src/js/konig-ontodoc-services.js')
-		.pipe(gulp.dest('./dist/js/'));
 });
 
 gulp.task('css', function(){

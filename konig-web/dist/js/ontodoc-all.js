@@ -27894,6 +27894,1129 @@ if (typeof String.prototype.utf8Decode == 'undefined') {
 if (typeof module != 'undefined' && module.exports) module.exports = Sha1; // CommonJs export
 if (typeof define == 'function' && define.amd) define([], function() { return Sha1; }); // AMD
 
+/**
+ * Springy v2.7.1
+ *
+ * Copyright (c) 2010-2013 Dennis Hotson
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(function () {
+            return (root.returnExportsGlobal = factory());
+        });
+    } else if (typeof exports === 'object') {
+        // Node. Does not work with strict CommonJS, but
+        // only CommonJS-like enviroments that support module.exports,
+        // like Node.
+        module.exports = factory();
+    } else {
+        // Browser globals
+        root.Springy = factory();
+    }
+}(this, function() {
+
+	var Springy = {};
+
+	var Graph = Springy.Graph = function() {
+		this.nodeSet = {};
+		this.nodes = [];
+		this.edges = [];
+		this.adjacency = {};
+
+		this.nextNodeId = 0;
+		this.nextEdgeId = 0;
+		this.eventListeners = [];
+	};
+
+	var Node = Springy.Node = function(id, data) {
+		this.id = id;
+		this.data = (data !== undefined) ? data : {};
+
+	// Data fields used by layout algorithm in this file:
+	// this.data.mass
+	// Data used by default renderer in springyui.js
+	// this.data.label
+	};
+
+	var Edge = Springy.Edge = function(id, source, target, data) {
+		this.id = id;
+		this.source = source;
+		this.target = target;
+		this.data = (data !== undefined) ? data : {};
+
+	// Edge data field used by layout alorithm
+	// this.data.length
+	// this.data.type
+	};
+
+	Graph.prototype.addNode = function(node) {
+		if (!(node.id in this.nodeSet)) {
+			this.nodes.push(node);
+		}
+
+		this.nodeSet[node.id] = node;
+
+		this.notify();
+		return node;
+	};
+
+	Graph.prototype.addNodes = function() {
+		// accepts variable number of arguments, where each argument
+		// is a string that becomes both node identifier and label
+		for (var i = 0; i < arguments.length; i++) {
+			var name = arguments[i];
+			var node = new Node(name, {label:name});
+			this.addNode(node);
+		}
+	};
+
+	Graph.prototype.addEdge = function(edge) {
+		var exists = false;
+		this.edges.forEach(function(e) {
+			if (edge.id === e.id) { exists = true; }
+		});
+
+		if (!exists) {
+			this.edges.push(edge);
+		}
+
+		if (!(edge.source.id in this.adjacency)) {
+			this.adjacency[edge.source.id] = {};
+		}
+		if (!(edge.target.id in this.adjacency[edge.source.id])) {
+			this.adjacency[edge.source.id][edge.target.id] = [];
+		}
+
+		exists = false;
+		this.adjacency[edge.source.id][edge.target.id].forEach(function(e) {
+				if (edge.id === e.id) { exists = true; }
+		});
+
+		if (!exists) {
+			this.adjacency[edge.source.id][edge.target.id].push(edge);
+		}
+
+		this.notify();
+		return edge;
+	};
+
+	Graph.prototype.addEdges = function() {
+		// accepts variable number of arguments, where each argument
+		// is a triple [nodeid1, nodeid2, attributes]
+		for (var i = 0; i < arguments.length; i++) {
+			var e = arguments[i];
+			var node1 = this.nodeSet[e[0]];
+			if (node1 == undefined) {
+				throw new TypeError("invalid node name: " + e[0]);
+			}
+			var node2 = this.nodeSet[e[1]];
+			if (node2 == undefined) {
+				throw new TypeError("invalid node name: " + e[1]);
+			}
+			var attr = e[2];
+
+			this.newEdge(node1, node2, attr);
+		}
+	};
+
+	Graph.prototype.newNode = function(data) {
+		var node = new Node(this.nextNodeId++, data);
+		this.addNode(node);
+		return node;
+	};
+
+	Graph.prototype.newEdge = function(source, target, data) {
+		var edge = new Edge(this.nextEdgeId++, source, target, data);
+		this.addEdge(edge);
+		return edge;
+	};
+
+
+	// add nodes and edges from JSON object
+	Graph.prototype.loadJSON = function(json) {
+	/**
+	Springy's simple JSON format for graphs.
+
+	historically, Springy uses separate lists
+	of nodes and edges:
+
+		{
+			"nodes": [
+				"center",
+				"left",
+				"right",
+				"up",
+				"satellite"
+			],
+			"edges": [
+				["center", "left"],
+				["center", "right"],
+				["center", "up"]
+			]
+		}
+
+	**/
+		// parse if a string is passed (EC5+ browsers)
+		if (typeof json == 'string' || json instanceof String) {
+			json = JSON.parse( json );
+		}
+
+		if ('nodes' in json || 'edges' in json) {
+			this.addNodes.apply(this, json['nodes']);
+			this.addEdges.apply(this, json['edges']);
+		}
+	}
+
+
+	// find the edges from node1 to node2
+	Graph.prototype.getEdges = function(node1, node2) {
+		if (node1.id in this.adjacency
+			&& node2.id in this.adjacency[node1.id]) {
+			return this.adjacency[node1.id][node2.id];
+		}
+
+		return [];
+	};
+
+	// remove a node and it's associated edges from the graph
+	Graph.prototype.removeNode = function(node) {
+		if (node.id in this.nodeSet) {
+			delete this.nodeSet[node.id];
+		}
+
+		for (var i = this.nodes.length - 1; i >= 0; i--) {
+			if (this.nodes[i].id === node.id) {
+				this.nodes.splice(i, 1);
+			}
+		}
+
+		this.detachNode(node);
+	};
+
+	// removes edges associated with a given node
+	Graph.prototype.detachNode = function(node) {
+		var tmpEdges = this.edges.slice();
+		tmpEdges.forEach(function(e) {
+			if (e.source.id === node.id || e.target.id === node.id) {
+				this.removeEdge(e);
+			}
+		}, this);
+
+		this.notify();
+	};
+
+	// remove a node and it's associated edges from the graph
+	Graph.prototype.removeEdge = function(edge) {
+		for (var i = this.edges.length - 1; i >= 0; i--) {
+			if (this.edges[i].id === edge.id) {
+				this.edges.splice(i, 1);
+			}
+		}
+
+		for (var x in this.adjacency) {
+			for (var y in this.adjacency[x]) {
+				var edges = this.adjacency[x][y];
+
+				for (var j=edges.length - 1; j>=0; j--) {
+					if (this.adjacency[x][y][j].id === edge.id) {
+						this.adjacency[x][y].splice(j, 1);
+					}
+				}
+
+				// Clean up empty edge arrays
+				if (this.adjacency[x][y].length == 0) {
+					delete this.adjacency[x][y];
+				}
+			}
+
+			// Clean up empty objects
+			if (isEmpty(this.adjacency[x])) {
+				delete this.adjacency[x];
+			}
+		}
+
+		this.notify();
+	};
+
+	/* Merge a list of nodes and edges into the current graph. eg.
+	var o = {
+		nodes: [
+			{id: 123, data: {type: 'user', userid: 123, displayname: 'aaa'}},
+			{id: 234, data: {type: 'user', userid: 234, displayname: 'bbb'}}
+		],
+		edges: [
+			{from: 0, to: 1, type: 'submitted_design', directed: true, data: {weight: }}
+		]
+	}
+	*/
+	Graph.prototype.merge = function(data) {
+		var nodes = [];
+		data.nodes.forEach(function(n) {
+			nodes.push(this.addNode(new Node(n.id, n.data)));
+		}, this);
+
+		data.edges.forEach(function(e) {
+			var from = nodes[e.from];
+			var to = nodes[e.to];
+
+			var id = (e.directed)
+				? (id = e.type + "-" + from.id + "-" + to.id)
+				: (from.id < to.id) // normalise id for non-directed edges
+					? e.type + "-" + from.id + "-" + to.id
+					: e.type + "-" + to.id + "-" + from.id;
+
+			var edge = this.addEdge(new Edge(id, from, to, e.data));
+			edge.data.type = e.type;
+		}, this);
+	};
+
+	Graph.prototype.filterNodes = function(fn) {
+		var tmpNodes = this.nodes.slice();
+		tmpNodes.forEach(function(n) {
+			if (!fn(n)) {
+				this.removeNode(n);
+			}
+		}, this);
+	};
+
+	Graph.prototype.filterEdges = function(fn) {
+		var tmpEdges = this.edges.slice();
+		tmpEdges.forEach(function(e) {
+			if (!fn(e)) {
+				this.removeEdge(e);
+			}
+		}, this);
+	};
+
+
+	Graph.prototype.addGraphListener = function(obj) {
+		this.eventListeners.push(obj);
+	};
+
+	Graph.prototype.notify = function() {
+		this.eventListeners.forEach(function(obj){
+			obj.graphChanged();
+		});
+	};
+
+	// -----------
+	var Layout = Springy.Layout = {};
+	Layout.ForceDirected = function(graph, stiffness, repulsion, damping, minEnergyThreshold) {
+		this.graph = graph;
+		this.stiffness = stiffness; // spring stiffness constant
+		this.repulsion = repulsion; // repulsion constant
+		this.damping = damping; // velocity damping factor
+		this.minEnergyThreshold = minEnergyThreshold || 0.01; //threshold used to determine render stop
+
+		this.nodePoints = {}; // keep track of points associated with nodes
+		this.edgeSprings = {}; // keep track of springs associated with edges
+	};
+
+	Layout.ForceDirected.prototype.point = function(node) {
+		if (!(node.id in this.nodePoints)) {
+			var mass = (node.data.mass !== undefined) ? node.data.mass : 1.0;
+			this.nodePoints[node.id] = new Layout.ForceDirected.Point(Vector.random(), mass);
+		}
+
+		return this.nodePoints[node.id];
+	};
+
+	Layout.ForceDirected.prototype.spring = function(edge) {
+		if (!(edge.id in this.edgeSprings)) {
+			var length = (edge.data.length !== undefined) ? edge.data.length : 1.0;
+
+			var existingSpring = false;
+
+			var from = this.graph.getEdges(edge.source, edge.target);
+			from.forEach(function(e) {
+				if (existingSpring === false && e.id in this.edgeSprings) {
+					existingSpring = this.edgeSprings[e.id];
+				}
+			}, this);
+
+			if (existingSpring !== false) {
+				return new Layout.ForceDirected.Spring(existingSpring.point1, existingSpring.point2, 0.0, 0.0);
+			}
+
+			var to = this.graph.getEdges(edge.target, edge.source);
+			from.forEach(function(e){
+				if (existingSpring === false && e.id in this.edgeSprings) {
+					existingSpring = this.edgeSprings[e.id];
+				}
+			}, this);
+
+			if (existingSpring !== false) {
+				return new Layout.ForceDirected.Spring(existingSpring.point2, existingSpring.point1, 0.0, 0.0);
+			}
+
+			this.edgeSprings[edge.id] = new Layout.ForceDirected.Spring(
+				this.point(edge.source), this.point(edge.target), length, this.stiffness
+			);
+		}
+
+		return this.edgeSprings[edge.id];
+	};
+
+	// callback should accept two arguments: Node, Point
+	Layout.ForceDirected.prototype.eachNode = function(callback) {
+		var t = this;
+		this.graph.nodes.forEach(function(n){
+			callback.call(t, n, t.point(n));
+		});
+	};
+
+	// callback should accept two arguments: Edge, Spring
+	Layout.ForceDirected.prototype.eachEdge = function(callback) {
+		var t = this;
+		this.graph.edges.forEach(function(e){
+			callback.call(t, e, t.spring(e));
+		});
+	};
+
+	// callback should accept one argument: Spring
+	Layout.ForceDirected.prototype.eachSpring = function(callback) {
+		var t = this;
+		this.graph.edges.forEach(function(e){
+			callback.call(t, t.spring(e));
+		});
+	};
+
+
+	// Physics stuff
+	Layout.ForceDirected.prototype.applyCoulombsLaw = function() {
+		this.eachNode(function(n1, point1) {
+			this.eachNode(function(n2, point2) {
+				if (point1 !== point2)
+				{
+					var d = point1.p.subtract(point2.p);
+					var distance = d.magnitude() + 0.1; // avoid massive forces at small distances (and divide by zero)
+					var direction = d.normalise();
+
+					// apply force to each end point
+					point1.applyForce(direction.multiply(this.repulsion).divide(distance * distance * 0.5));
+					point2.applyForce(direction.multiply(this.repulsion).divide(distance * distance * -0.5));
+				}
+			});
+		});
+	};
+
+	Layout.ForceDirected.prototype.applyHookesLaw = function() {
+		this.eachSpring(function(spring){
+			var d = spring.point2.p.subtract(spring.point1.p); // the direction of the spring
+			var displacement = spring.length - d.magnitude();
+			var direction = d.normalise();
+
+			// apply force to each end point
+			spring.point1.applyForce(direction.multiply(spring.k * displacement * -0.5));
+			spring.point2.applyForce(direction.multiply(spring.k * displacement * 0.5));
+		});
+	};
+
+	Layout.ForceDirected.prototype.attractToCentre = function() {
+		this.eachNode(function(node, point) {
+			var direction = point.p.multiply(-1.0);
+			point.applyForce(direction.multiply(this.repulsion / 50.0));
+		});
+	};
+
+
+	Layout.ForceDirected.prototype.updateVelocity = function(timestep) {
+		this.eachNode(function(node, point) {
+			// Is this, along with updatePosition below, the only places that your
+			// integration code exist?
+			point.v = point.v.add(point.a.multiply(timestep)).multiply(this.damping);
+			point.a = new Vector(0,0);
+		});
+	};
+
+	Layout.ForceDirected.prototype.updatePosition = function(timestep) {
+		this.eachNode(function(node, point) {
+			// Same question as above; along with updateVelocity, is this all of
+			// your integration code?
+			point.p = point.p.add(point.v.multiply(timestep));
+		});
+	};
+
+	// Calculate the total kinetic energy of the system
+	Layout.ForceDirected.prototype.totalEnergy = function(timestep) {
+		var energy = 0.0;
+		this.eachNode(function(node, point) {
+			var speed = point.v.magnitude();
+			energy += 0.5 * point.m * speed * speed;
+		});
+
+		return energy;
+	};
+
+	var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }; // stolen from coffeescript, thanks jashkenas! ;-)
+
+	Springy.requestAnimationFrame = __bind(this.requestAnimationFrame ||
+		this.webkitRequestAnimationFrame ||
+		this.mozRequestAnimationFrame ||
+		this.oRequestAnimationFrame ||
+		this.msRequestAnimationFrame ||
+		(function(callback, element) {
+			this.setTimeout(callback, 10);
+		}), this);
+
+
+	/**
+	 * Start simulation if it's not running already.
+	 * In case it's running then the call is ignored, and none of the callbacks passed is ever executed.
+	 */
+	Layout.ForceDirected.prototype.start = function(render, onRenderStop, onRenderStart) {
+		var t = this;
+
+		if (this._started) return;
+		this._started = true;
+		this._stop = false;
+
+		if (onRenderStart !== undefined) { onRenderStart(); }
+
+		Springy.requestAnimationFrame(function step() {
+			t.tick(0.03);
+
+			if (render !== undefined) {
+				render();
+			}
+
+			// stop simulation when energy of the system goes below a threshold
+			if (t._stop || t.totalEnergy() < t.minEnergyThreshold) {
+				t._started = false;
+				if (onRenderStop !== undefined) { onRenderStop(); }
+			} else {
+				Springy.requestAnimationFrame(step);
+			}
+		});
+	};
+
+	Layout.ForceDirected.prototype.stop = function() {
+		this._stop = true;
+	}
+
+	Layout.ForceDirected.prototype.tick = function(timestep) {
+		this.applyCoulombsLaw();
+		this.applyHookesLaw();
+		this.attractToCentre();
+		this.updateVelocity(timestep);
+		this.updatePosition(timestep);
+	};
+
+	// Find the nearest point to a particular position
+	Layout.ForceDirected.prototype.nearest = function(pos) {
+		var min = {node: null, point: null, distance: null};
+		var t = this;
+		this.graph.nodes.forEach(function(n){
+			var point = t.point(n);
+			var distance = point.p.subtract(pos).magnitude();
+
+			if (min.distance === null || distance < min.distance) {
+				min = {node: n, point: point, distance: distance};
+			}
+		});
+
+		return min;
+	};
+
+	// returns [bottomleft, topright]
+	Layout.ForceDirected.prototype.getBoundingBox = function() {
+		var bottomleft = new Vector(-2,-2);
+		var topright = new Vector(2,2);
+
+		this.eachNode(function(n, point) {
+			if (point.p.x < bottomleft.x) {
+				bottomleft.x = point.p.x;
+			}
+			if (point.p.y < bottomleft.y) {
+				bottomleft.y = point.p.y;
+			}
+			if (point.p.x > topright.x) {
+				topright.x = point.p.x;
+			}
+			if (point.p.y > topright.y) {
+				topright.y = point.p.y;
+			}
+		});
+
+		var padding = topright.subtract(bottomleft).multiply(0.07); // ~5% padding
+
+		return {bottomleft: bottomleft.subtract(padding), topright: topright.add(padding)};
+	};
+
+
+	// Vector
+	var Vector = Springy.Vector = function(x, y) {
+		this.x = x;
+		this.y = y;
+	};
+
+	Vector.random = function() {
+		return new Vector(10.0 * (Math.random() - 0.5), 10.0 * (Math.random() - 0.5));
+	};
+
+	Vector.prototype.add = function(v2) {
+		return new Vector(this.x + v2.x, this.y + v2.y);
+	};
+
+	Vector.prototype.subtract = function(v2) {
+		return new Vector(this.x - v2.x, this.y - v2.y);
+	};
+
+	Vector.prototype.multiply = function(n) {
+		return new Vector(this.x * n, this.y * n);
+	};
+
+	Vector.prototype.divide = function(n) {
+		return new Vector((this.x / n) || 0, (this.y / n) || 0); // Avoid divide by zero errors..
+	};
+
+	Vector.prototype.magnitude = function() {
+		return Math.sqrt(this.x*this.x + this.y*this.y);
+	};
+
+	Vector.prototype.normal = function() {
+		return new Vector(-this.y, this.x);
+	};
+
+	Vector.prototype.normalise = function() {
+		return this.divide(this.magnitude());
+	};
+
+	// Point
+	Layout.ForceDirected.Point = function(position, mass) {
+		this.p = position; // position
+		this.m = mass; // mass
+		this.v = new Vector(0, 0); // velocity
+		this.a = new Vector(0, 0); // acceleration
+	};
+
+	Layout.ForceDirected.Point.prototype.applyForce = function(force) {
+		this.a = this.a.add(force.divide(this.m));
+	};
+
+	// Spring
+	Layout.ForceDirected.Spring = function(point1, point2, length, k) {
+		this.point1 = point1;
+		this.point2 = point2;
+		this.length = length; // spring length at rest
+		this.k = k; // spring constant (See Hooke's law) .. how stiff the spring is
+	};
+
+	// Layout.ForceDirected.Spring.prototype.distanceToPoint = function(point)
+	// {
+	// 	// hardcore vector arithmetic.. ohh yeah!
+	// 	// .. see http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment/865080#865080
+	// 	var n = this.point2.p.subtract(this.point1.p).normalise().normal();
+	// 	var ac = point.p.subtract(this.point1.p);
+	// 	return Math.abs(ac.x * n.x + ac.y * n.y);
+	// };
+
+	/**
+	 * Renderer handles the layout rendering loop
+	 * @param onRenderStop optional callback function that gets executed whenever rendering stops.
+	 * @param onRenderStart optional callback function that gets executed whenever rendering starts.
+	 */
+	var Renderer = Springy.Renderer = function(layout, clear, drawEdge, drawNode, onRenderStop, onRenderStart) {
+		this.layout = layout;
+		this.clear = clear;
+		this.drawEdge = drawEdge;
+		this.drawNode = drawNode;
+		this.onRenderStop = onRenderStop;
+		this.onRenderStart = onRenderStart;
+
+		this.layout.graph.addGraphListener(this);
+	}
+
+	Renderer.prototype.graphChanged = function(e) {
+		this.start();
+	};
+
+	/**
+	 * Starts the simulation of the layout in use.
+	 *
+	 * Note that in case the algorithm is still or already running then the layout that's in use
+	 * might silently ignore the call, and your optional <code>done</code> callback is never executed.
+	 * At least the built-in ForceDirected layout behaves in this way.
+	 *
+	 * @param done An optional callback function that gets executed when the springy algorithm stops,
+	 * either because it ended or because stop() was called.
+	 */
+	Renderer.prototype.start = function(done) {
+		var t = this;
+		this.layout.start(function render() {
+			t.clear();
+
+			t.layout.eachEdge(function(edge, spring) {
+				t.drawEdge(edge, spring.point1.p, spring.point2.p);
+			});
+
+			t.layout.eachNode(function(node, point) {
+				t.drawNode(node, point.p);
+			});
+		}, this.onRenderStop, this.onRenderStart);
+	};
+
+	Renderer.prototype.stop = function() {
+		this.layout.stop();
+	};
+
+	// Array.forEach implementation for IE support..
+	//https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach
+	if ( !Array.prototype.forEach ) {
+		Array.prototype.forEach = function( callback, thisArg ) {
+			var T, k;
+			if ( this == null ) {
+				throw new TypeError( " this is null or not defined" );
+			}
+			var O = Object(this);
+			var len = O.length >>> 0; // Hack to convert O.length to a UInt32
+			if ( {}.toString.call(callback) != "[object Function]" ) {
+				throw new TypeError( callback + " is not a function" );
+			}
+			if ( thisArg ) {
+				T = thisArg;
+			}
+			k = 0;
+			while( k < len ) {
+				var kValue;
+				if ( k in O ) {
+					kValue = O[ k ];
+					callback.call( T, kValue, k, O );
+				}
+				k++;
+			}
+		};
+	}
+
+	var isEmpty = function(obj) {
+		for (var k in obj) {
+			if (obj.hasOwnProperty(k)) {
+				return false;
+			}
+		}
+		return true;
+	};
+
+  return Springy;
+}));
+
+/**
+Copyright (c) 2010 Dennis Hotson
+
+ Permission is hereby granted, free of charge, to any person
+ obtaining a copy of this software and associated documentation
+ files (the "Software"), to deal in the Software without
+ restriction, including without limitation the rights to use,
+ copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following
+ conditions:
+
+ The above copyright notice and this permission notice shall be
+ included in all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+(function() {
+
+jQuery.fn.springy = function(params) {
+	var graph = this.graph = params.graph || new Springy.Graph();
+	var nodeFont = "16px Verdana, sans-serif";
+	var edgeFont = "8px Verdana, sans-serif";
+	var stiffness = params.stiffness || 400.0;
+	var repulsion = params.repulsion || 400.0;
+	var damping = params.damping || 0.5;
+	var minEnergyThreshold = params.minEnergyThreshold || 0.00001;
+	var nodeSelected = params.nodeSelected || null;
+	var nodeImages = {};
+	var edgeLabelsUpright = true;
+
+	var canvas = this[0];
+	var ctx = canvas.getContext("2d");
+
+	var layout = this.layout = new Springy.Layout.ForceDirected(graph, stiffness, repulsion, damping, minEnergyThreshold);
+
+	// calculate bounding box of graph layout.. with ease-in
+	var currentBB = layout.getBoundingBox();
+	var targetBB = {bottomleft: new Springy.Vector(-2, -2), topright: new Springy.Vector(2, 2)};
+
+	// auto adjusting bounding box
+	Springy.requestAnimationFrame(function adjust() {
+		targetBB = layout.getBoundingBox();
+		// current gets 20% closer to target every iteration
+		currentBB = {
+			bottomleft: currentBB.bottomleft.add( targetBB.bottomleft.subtract(currentBB.bottomleft)
+				.divide(10)),
+			topright: currentBB.topright.add( targetBB.topright.subtract(currentBB.topright)
+				.divide(10))
+		};
+
+		Springy.requestAnimationFrame(adjust);
+	});
+
+	// convert to/from screen coordinates
+	var toScreen = function(p) {
+		var size = currentBB.topright.subtract(currentBB.bottomleft);
+		var sx = p.subtract(currentBB.bottomleft).divide(size.x).x * canvas.width;
+		var sy = p.subtract(currentBB.bottomleft).divide(size.y).y * canvas.height;
+		return new Springy.Vector(sx, sy);
+	};
+
+	var fromScreen = function(s) {
+		var size = currentBB.topright.subtract(currentBB.bottomleft);
+		var px = (s.x / canvas.width) * size.x + currentBB.bottomleft.x;
+		var py = (s.y / canvas.height) * size.y + currentBB.bottomleft.y;
+		return new Springy.Vector(px, py);
+	};
+
+	// half-assed drag and drop
+	var selected = null;
+	var nearest = null;
+	var dragged = null;
+
+	jQuery(canvas).mousedown(function(e) {
+		var pos = jQuery(this).offset();
+		var p = fromScreen({x: e.pageX - pos.left, y: e.pageY - pos.top});
+		selected = nearest = dragged = layout.nearest(p);
+
+		if (selected.node !== null) {
+			dragged.point.m = 10000.0;
+
+			if (nodeSelected) {
+				nodeSelected(selected.node);
+			}
+		}
+
+		renderer.start();
+	});
+
+	// Basic double click handler
+	jQuery(canvas).dblclick(function(e) {
+		var pos = jQuery(this).offset();
+		var p = fromScreen({x: e.pageX - pos.left, y: e.pageY - pos.top});
+		selected = layout.nearest(p);
+		node = selected.node;
+		if (node && node.data && node.data.ondoubleclick) {
+			node.data.ondoubleclick();
+		}
+	});
+
+	jQuery(canvas).mousemove(function(e) {
+		var pos = jQuery(this).offset();
+		var p = fromScreen({x: e.pageX - pos.left, y: e.pageY - pos.top});
+		nearest = layout.nearest(p);
+
+		if (dragged !== null && dragged.node !== null) {
+			dragged.point.p.x = p.x;
+			dragged.point.p.y = p.y;
+		}
+
+		renderer.start();
+	});
+
+	jQuery(window).bind('mouseup',function(e) {
+		dragged = null;
+	});
+
+	var getTextWidth = function(node) {
+		var text = (node.data.label !== undefined) ? node.data.label : node.id;
+		if (node._width && node._width[text])
+			return node._width[text];
+
+		ctx.save();
+		ctx.font = (node.data.font !== undefined) ? node.data.font : nodeFont;
+		var width = ctx.measureText(text).width;
+		ctx.restore();
+
+		node._width || (node._width = {});
+		node._width[text] = width;
+
+		return width;
+	};
+
+	var getTextHeight = function(node) {
+		return 16;
+		// In a more modular world, this would actually read the font size, but I think leaving it a constant is sufficient for now.
+		// If you change the font size, I'd adjust this too.
+	};
+
+	var getImageWidth = function(node) {
+		var width = (node.data.image.width !== undefined) ? node.data.image.width : nodeImages[node.data.image.src].object.width;
+		return width;
+	}
+
+	var getImageHeight = function(node) {
+		var height = (node.data.image.height !== undefined) ? node.data.image.height : nodeImages[node.data.image.src].object.height;
+		return height;
+	}
+
+	Springy.Node.prototype.getHeight = function() {
+		var height;
+		if (this.data.image == undefined) {
+			height = getTextHeight(this);
+		} else {
+			if (this.data.image.src in nodeImages && nodeImages[this.data.image.src].loaded) {
+				height = getImageHeight(this);
+			} else {height = 10;}
+		}
+		return height;
+	}
+
+	Springy.Node.prototype.getWidth = function() {
+		var width;
+		if (this.data.image == undefined) {
+			width = getTextWidth(this);
+		} else {
+			if (this.data.image.src in nodeImages && nodeImages[this.data.image.src].loaded) {
+				width = getImageWidth(this);
+			} else {width = 10;}
+		}
+		return width;
+	}
+
+	var renderer = this.renderer = new Springy.Renderer(layout,
+		function clear() {
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+		},
+		function drawEdge(edge, p1, p2) {
+			var x1 = toScreen(p1).x;
+			var y1 = toScreen(p1).y;
+			var x2 = toScreen(p2).x;
+			var y2 = toScreen(p2).y;
+
+			var direction = new Springy.Vector(x2-x1, y2-y1);
+			var normal = direction.normal().normalise();
+
+			var from = graph.getEdges(edge.source, edge.target);
+			var to = graph.getEdges(edge.target, edge.source);
+
+			var total = from.length + to.length;
+
+			// Figure out edge's position in relation to other edges between the same nodes
+			var n = 0;
+			for (var i=0; i<from.length; i++) {
+				if (from[i].id === edge.id) {
+					n = i;
+				}
+			}
+
+			//change default to  10.0 to allow text fit between edges
+			var spacing = 12.0;
+
+			// Figure out how far off center the line should be drawn
+			var offset = normal.multiply(-((total - 1) * spacing)/2.0 + (n * spacing));
+
+			var paddingX = 6;
+			var paddingY = 6;
+
+			var s1 = toScreen(p1).add(offset);
+			var s2 = toScreen(p2).add(offset);
+
+			var boxWidth = edge.target.getWidth() + paddingX;
+			var boxHeight = edge.target.getHeight() + paddingY;
+
+			var intersection = intersect_line_box(s1, s2, {x: x2-boxWidth/2.0, y: y2-boxHeight/2.0}, boxWidth, boxHeight);
+
+			if (!intersection) {
+				intersection = s2;
+			}
+
+			var stroke = (edge.data.color !== undefined) ? edge.data.color : '#000000';
+
+			var arrowWidth;
+			var arrowLength;
+
+			var weight = (edge.data.weight !== undefined) ? edge.data.weight : 1.0;
+
+			ctx.lineWidth = Math.max(weight *  2, 0.1);
+			arrowWidth = 1 + ctx.lineWidth;
+			arrowLength = 8;
+
+			var directional = (edge.data.directional !== undefined) ? edge.data.directional : true;
+
+			// line
+			var lineEnd;
+			if (directional) {
+				lineEnd = intersection.subtract(direction.normalise().multiply(arrowLength * 0.5));
+			} else {
+				lineEnd = s2;
+			}
+
+			ctx.strokeStyle = stroke;
+			ctx.beginPath();
+			ctx.moveTo(s1.x, s1.y);
+			ctx.lineTo(lineEnd.x, lineEnd.y);
+			ctx.stroke();
+
+			// arrow
+			if (directional) {
+				ctx.save();
+				ctx.fillStyle = stroke;
+				ctx.translate(intersection.x, intersection.y);
+				ctx.rotate(Math.atan2(y2 - y1, x2 - x1));
+				ctx.beginPath();
+				ctx.moveTo(-arrowLength, arrowWidth);
+				ctx.lineTo(0, 0);
+				ctx.lineTo(-arrowLength, -arrowWidth);
+				ctx.lineTo(-arrowLength * 0.8, -0);
+				ctx.closePath();
+				ctx.fill();
+				ctx.restore();
+			}
+
+			// label
+			if (edge.data.label !== undefined) {
+				text = edge.data.label
+				ctx.save();
+				ctx.textAlign = "center";
+				ctx.textBaseline = "top";
+				ctx.font = (edge.data.font !== undefined) ? edge.data.font : edgeFont;
+				ctx.fillStyle = stroke;
+				var angle = Math.atan2(s2.y - s1.y, s2.x - s1.x);
+				var displacement = -8;
+				if (edgeLabelsUpright && (angle > Math.PI/2 || angle < -Math.PI/2)) {
+					displacement = 8;
+					angle += Math.PI;
+				}
+				var textPos = s1.add(s2).divide(2).add(normal.multiply(displacement));
+				ctx.translate(textPos.x, textPos.y);
+				ctx.rotate(angle);
+				ctx.fillText(text, 0,-2);
+				ctx.restore();
+			}
+
+		},
+		function drawNode(node, p) {
+			var s = toScreen(p);
+
+			ctx.save();
+
+			// Pulled out the padding aspect sso that the size functions could be used in multiple places
+			// These should probably be settable by the user (and scoped higher) but this suffices for now
+			var paddingX = 6;
+			var paddingY = 6;
+
+			var contentWidth = node.getWidth();
+			var contentHeight = node.getHeight();
+			var boxWidth = contentWidth + paddingX;
+			var boxHeight = contentHeight + paddingY;
+
+			// clear background
+			ctx.clearRect(s.x - boxWidth/2, s.y - boxHeight/2, boxWidth, boxHeight);
+
+			// fill background
+			if (selected !== null && selected.node !== null && selected.node.id === node.id) {
+				ctx.fillStyle = "#FFFFE0";
+			} else if (nearest !== null && nearest.node !== null && nearest.node.id === node.id) {
+				ctx.fillStyle = "#EEEEEE";
+			} else {
+				ctx.fillStyle = "#FFFFFF";
+			}
+			ctx.fillRect(s.x - boxWidth/2, s.y - boxHeight/2, boxWidth, boxHeight);
+
+			if (node.data.image == undefined) {
+				ctx.textAlign = "left";
+				ctx.textBaseline = "top";
+				ctx.font = (node.data.font !== undefined) ? node.data.font : nodeFont;
+				ctx.fillStyle = "#000000";
+				var text = (node.data.label !== undefined) ? node.data.label : node.id;
+				ctx.fillText(text, s.x - contentWidth/2, s.y - contentHeight/2);
+			} else {
+				// Currently we just ignore any labels if the image object is set. One might want to extend this logic to allow for both, or other composite nodes.
+				var src = node.data.image.src;  // There should probably be a sanity check here too, but un-src-ed images aren't exaclty a disaster.
+				if (src in nodeImages) {
+					if (nodeImages[src].loaded) {
+						// Our image is loaded, so it's safe to draw
+						ctx.drawImage(nodeImages[src].object, s.x - contentWidth/2, s.y - contentHeight/2, contentWidth, contentHeight);
+					}
+				}else{
+					// First time seeing an image with this src address, so add it to our set of image objects
+					// Note: we index images by their src to avoid making too many duplicates
+					nodeImages[src] = {};
+					var img = new Image();
+					nodeImages[src].object = img;
+					img.addEventListener("load", function () {
+						// HTMLImageElement objects are very finicky about being used before they are loaded, so we set a flag when it is done
+						nodeImages[src].loaded = true;
+					});
+					img.src = src;
+				}
+			}
+			ctx.restore();
+		}
+	);
+
+	renderer.start();
+
+	// helpers for figuring out where to draw arrows
+	function intersect_line_line(p1, p2, p3, p4) {
+		var denom = ((p4.y - p3.y)*(p2.x - p1.x) - (p4.x - p3.x)*(p2.y - p1.y));
+
+		// lines are parallel
+		if (denom === 0) {
+			return false;
+		}
+
+		var ua = ((p4.x - p3.x)*(p1.y - p3.y) - (p4.y - p3.y)*(p1.x - p3.x)) / denom;
+		var ub = ((p2.x - p1.x)*(p1.y - p3.y) - (p2.y - p1.y)*(p1.x - p3.x)) / denom;
+
+		if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+			return false;
+		}
+
+		return new Springy.Vector(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
+	}
+
+	function intersect_line_box(p1, p2, p3, w, h) {
+		var tl = {x: p3.x, y: p3.y};
+		var tr = {x: p3.x + w, y: p3.y};
+		var bl = {x: p3.x, y: p3.y + h};
+		var br = {x: p3.x + w, y: p3.y + h};
+
+		var result;
+		if (result = intersect_line_line(p1, p2, tl, tr)) { return result; } // top
+		if (result = intersect_line_line(p1, p2, tr, br)) { return result; } // right
+		if (result = intersect_line_line(p1, p2, br, bl)) { return result; } // bottom
+		if (result = intersect_line_line(p1, p2, bl, tl)) { return result; } // left
+
+		return false;
+	}
+
+	return this;
+}
+
+})();
+
 //     uuid.js
 //
 //     Copyright (c) 2010-2012 Robert Kieffer
@@ -29211,6 +30334,23 @@ Vertex.prototype.isEmpty = function() {
 	return true;
 }
 
+Vertex.prototype.shallowClone = function(id) {
+	var graph = this.graph;
+	
+	var clone = graph.vertex(id);
+	for (var key in this.statementMap) {
+		var set = this.statementMap[key];
+		var edgeList = [];
+		set.select(this.id, null, edgeList);
+		for (var i=0; i<edgeList.length; i++) {
+			var edge = edgeList[i];
+			var subject = edge.subject;
+			graph.statement(clone, edge.predicate, edge.object);
+		}
+	}
+	return clone;
+}
+
 Vertex.prototype.outStatements = function() {
 	var list = [];
 	for (var key in this.statementMap) {
@@ -30437,6 +31577,9 @@ Graph.prototype.statement = function(subject, predicate, object) {
 }
 
 Graph.prototype.loadJSON = function(json, context) {
+	if (!context) {
+		context = new konig.jsonld.Context(json['@context']);
+	}
 	var expanded = context.expand(json);
 	var flat = context.flatten(expanded);
 	this.loadFlattened(flat['@graph']);
@@ -31060,6 +32203,7 @@ $(document).ready(function() {
 		addressRegion : new IRI("http://schema.org/addressRegion"),
 		contactPoint: new IRI("http://schema.org/contactPoint"),
 		contactType: new IRI("http://schema.org/contactType"),
+		creator: new IRI("http://schema.org/creator"),
 		description: new IRI("http://schema.org/description"),
 		givenName : new IRI("http://schema.org/givenName"),
 		familyName : new IRI("http://schema.org/familyName"),
@@ -31072,7 +32216,8 @@ $(document).ready(function() {
 		rangeIncludes : new IRI("http://schema.org/rangeIncludes")
 	};
 	konig.kol = {
-		LogicalShape : new IRI("http://www.konig.io/ns/kol/LogicalShape")	
+		LogicalShape : new IRI("http://www.konig.io/ns/kol/LogicalShape"),	
+		mediaTypeBaseName : new IRI("http://www.konig.io/ns/kol/mediaTypeBaseName")
 	};
 	
 });
@@ -31261,6 +32406,71 @@ konig.CompositeAction = CompositeAction;
 
 });
 
+$(function(){
+	
+function LocalNameLabeler() {
+}	
+
+LocalNameLabeler.prototype.label = function(vertex) {
+	return vertex.id.localName || vertex.id.stringValue;
+}
+
+function buildGraph(memory, springy, vertex, property, labeler) {
+	
+	var key = vertex.id.stringValue;
+	var subject = memory[key];
+	if (!subject) {
+		var labelValue = labeler.label(vertex);
+		subject = springy.newNode({label: labelValue});
+		memory[key] = subject;
+		
+		var list = vertex.v().out(property).toList();
+		for (var i=0; i<list.length; i++) {
+			var objectVertex = list[i];
+			var object = buildGraph(memory, springy, list[i], property, labeler);
+			springy.newEdge(subject, object);
+		}
+	}
+	return subject;
+}
+
+function canvasWidth(nodeMap) {
+	// Assume default font size of 16 pixels per em
+	var pixelsPerEm = 16;
+	
+	// Assume spacing of at least 30 pixels between nodes
+	var spacing = 30;
+	var count = 0;
+	var size = 0;
+	for (var key in nodeMap) {
+		count++;
+		var node = nodeMap[key];
+		var label = node.data.label;
+		size += label.length;
+	}
+	
+	var canvasWidth = Math.min(size*pixelsPerEm + count*spacing, 800);
+	return canvasWidth;
+}
+
+$.fn.rdfspringy = function(options) {
+	var vertex = options.vertex;
+	var property = options.property;
+	var labeler = options.labeler || new LocalNameLabeler();
+	var springy  = new Springy.Graph();
+	
+	var map = {};
+	buildGraph(map, springy, vertex, property, labeler);
+	var widthValue = canvasWidth(map);
+	var heightValue = Math.min(2*widthValue/3, 300);
+	var canvas = this[0];
+	canvas.setAttribute('width', widthValue);
+	canvas.setAttribute('height', heightValue);
+	
+	return this.springy({graph: springy});
+}
+	
+});
 /*
  * #%L
  * konig-web
@@ -31578,12 +32788,15 @@ ClassManager.prototype.init = function() {
 	this.assignUniqueNames();
 }
 
+
+
 ClassManager.prototype.assignUniqueNames = function() {
 	var list = this.classList;
 	var prevLocalName = null;
 	for (var i=0; i<list.length; i++) {
 		var classInfo = list[i];
 		var localName = classInfo.classVertex.id.localName;
+		console.log("assignUniqueNames", classInfo.classVertex.id.stringValue, localName);
 		classInfo.uniqueName = localName;
 		if (
 			(localName === prevLocalName) ||
@@ -31672,11 +32885,47 @@ ClassInfo.prototype.analyzeComment = function() {
 	}
 }
 
+ClassInfo.prototype.getMediaTypeList = function() {
+	if (!this.mediaTypeList) {
+		var sink = this.mediaTypeList = [];
+		var shapeList = this.classVertex.v().inward(sh.scopeClass).toList();
+		
+		for (var i=0; i<shapeList.length; i++) {
+			var shape = shapeList[i];
+			var name = shape.v().out(kol.mediaTypeBaseName).first();
+			if (!name) {
+				// TODO: Generate media type name
+				console.log("Failed to find mediaTypeBaseName for shape " + shape.id.stringValue);
+			} else {
+				sink.push({ mediaTypeName: name.stringValue});
+			}
+		}
+		
+	}
+	
+	return this.mediaTypeList;
+}
+
 ClassInfo.prototype.getLogicalShape = function() {
 	if (!this.logicalShape) {
-		var logicalShape = this.classVertex.v().inward(sh.scopeShape).hasType(kol.LogicalShape).first();
+		var logicalShape = this.classVertex.v().inward(sh.scopeClass).hasType(kol.LogicalShape).first();
 		if (!logicalShape) {
 
+			// Get any old shape and treat it as the logical shape.
+			// This is a temporary hack.
+			// If there are other shapes we ought to merge the property constraints
+			// into the OWL description
+			
+			// BEGIN HACK
+//			logicalShape = this.classVertex.v().inward(sh.scopeClass).first();
+//			if (logicalShape) {
+//				console.log("Found a pre-defined shape");
+//				this.logicalShape = this.classManager.getOrCreateShapeInfo(logicalShape);
+//				return this.logicalShape;
+//			}
+//			console.log("No pre-defined Shape was found for class " + this.classVertex.id.stringValue);
+			// END HACK
+			
 			var graph = this.classManager.graph;
 
 			var owlClass = this.classVertex;
@@ -31689,12 +32938,45 @@ ClassInfo.prototype.getLogicalShape = function() {
 				this.addDirectProperties(owlClass, logicalShape);
 				var classMap = {};
 				this.addSuperProperties(owlClass, logicalShape, classMap);
+				this.addShapeProperties(owlClass, logicalShape);
 			}
 		}
 		this.logicalShape = this.classManager.getOrCreateShapeInfo(logicalShape);
 	}
 	return this.logicalShape;
 }
+
+ClassInfo.prototype.addShapeProperties = function(owlClass, logicalVertex) {
+	var graph = this.classManager.graph;
+	
+	// Get the list of shapes that have owlClass as the scopeClass
+	var shapeList = owlClass.v().inward(sh.scopeClass).toList();
+	
+	console.log(logicalVertex.toJson());
+	
+	for (var i=0; i<shapeList.length; i++) {
+		var shape = shapeList[i];
+		var propertyList = shape.v().out(sh.property).toList();
+		for (var j=0; j<propertyList.length; j++) {
+			var property = propertyList[j];
+			var predicate = property.propertyValue(sh.predicate);
+			console.log(predicate.stringValue);
+			// Do we have an existing PropertyConstraint for the given predicate?
+			var prior = logicalVertex.v().out(sh.property).has(sh.predicate, predicate).first();
+			if (!prior) {
+				// There is no existing PropertyConstraint for the given predicate.
+				// Clone the one that we found, and add it to the logical shape.
+				
+				var clone = property.shallowClone();
+				graph.statement(logicalVertex, sh.property, clone);
+			} else {
+				console.log("TODO: merge multiple property constraints");
+			}
+		}
+	}
+	
+}
+
 
 ClassInfo.prototype.addSuperProperties = function(owlClass, shape, classMap) {
 	var manager = this.classManager;
@@ -31833,7 +33115,7 @@ ShapeInfo.prototype.init = function() {
 }
 
 ShapeInfo.prototype.addSuperProperties = function(shape, isDirect) {
-	
+	if (!shape) return;
 	var constraint = shape.v().out(sh.constraint).first();
 	if (constraint) {
 		var and = constraint.v().out(sh.and).first();
@@ -31932,8 +33214,6 @@ ShapeInfo.prototype.addDirectProperties = function() {
 	var block = new PropertyBlock(owlClass);
 	var sink = block.propertyList;
 	
-	
-	
 	var source = this.rawShape.v().out(sh.property).toList();
 	for (var i=0; i<source.length; i++) {
 		var property = source[i];
@@ -31982,12 +33262,11 @@ ShapeInfo.prototype.addDirectProperties = function() {
 }
 
 /*****************************************************************************/	
-function Ontodoc(ontologyService) {
-	
+function Ontodoc(graphJSON) {
+	this.ontologyGraph = graphJSON;
 	this.actionHistory = new HistoryManager();
 	this.editMode = false;
-	
-	this.ontologyService = ontologyService || konig.ontologyService;
+	this.multipleShapesPerClass = false;
 	this.layout = $('body').layout(
 		{
 			applyDefaultStyles:true,
@@ -32007,11 +33286,11 @@ function Ontodoc(ontologyService) {
 		}
 	});
 	
-	this.ontologyGraph = this.ontologyService.getOntologyGraph();
 	
 	this.context = new konig.jsonld.Context(this.ontologyGraph['@context']);
 	
 	this.buildGraph();
+	this.inferClasses();
 	
 	this.ontologyManager = new OntologyManager(this.context, this.graph);
 	
@@ -32036,7 +33315,33 @@ function Ontodoc(ontologyService) {
 	});
 	$(window).trigger('hashchange');
 	
+	if (this.initEdit) {
+		this.initEdit();
+	}
 	
+}
+
+/**
+ * Given statements of the form:
+ * <pre>
+ *    ?x sh:scopeClass ?y
+ * </pre>
+ * 
+ * infer
+ * <pre>
+ *    ?y rdf:type owl:Class
+ * </pre>
+ */
+Ontodoc.prototype.inferClasses = function() {
+	var graph = this.graph;
+	var shapeList = graph.V(sh.Shape).inward(rdf.type).toList();
+	for (var i=0; i<shapeList.length; i++) {
+		var shape = shapeList[i];
+		var scopeClass = shape.propertyValue(sh.scopeClass);
+		if (scopeClass) {
+			graph.statement(scopeClass, rdf.type, owl.Class);
+		}
+	}
 	
 }
 
@@ -32275,6 +33580,10 @@ Ontodoc.prototype.renderClass = function(owlClassIRI) {
 			shapeInfo.comment = classInfo.comment;
 		}
 		
+		if (this.multipleShapesPerClass) {
+			shapeInfo.mediaTypeList = classInfo.getMediaTypeList();
+		}
+		
 		var rendered = this.editMode ?
 			Mustache.render(this.classEditTemplate, shapeInfo) :
 			Mustache.render(this.classTemplate, shapeInfo);
@@ -32298,20 +33607,40 @@ Ontodoc.prototype.renderClass = function(owlClassIRI) {
 	
 }
 
+/**
+ * Compute the sequence of ancestors in the type hierarchy for a given OWL Class
+ * 
+ * @param owlClassVertex
+ * @returns {vertex[]} The list of vertices starting with the given owlClassVertex
+ * and ending with the most distant ancestor at the top of the class hierarchy, or
+ * null if the tree of ancestors is not linear.
+ */
+Ontodoc.prototype.subClassSequence = function(owlClassVertex) {
+	
+	var list = [];
+	
+	while (owlClassVertex != null) {
+		list.push(owlClassVertex);
+		var superList = owlClassVertex.v().out(rdfs.subClassOf).toList();
+		if (superList.length > 1) {
+			return null;
+		}
+		owlClassVertex = superList.length==0 ? null : superList[0];
+	}
+	return list;
+}
 
 
 Ontodoc.prototype.renderClassBreadcrumbs = function(owlClassIRI) {
 	var classManager = this.classManager;
 	var breadcrumbs = $('.ontodoc-class .breadcrumbs');
 	
-	var pathList = this.graph
-		.V(owlClassIRI).until(step().hasNot(rdfs.subClassOf))
-		.repeat(step().out(rdfs.subClassOf)).path().execute();
+	var owlClassVertex = this.graph.vertex(owlClassIRI);
+	var pathList = this.subClassSequence(owlClassVertex);
 	
-	if (pathList.length == 1) {
-		var path = pathList[0];
-		for (var i=path.length-1; i>=0; i--) {
-			var vertex = path[i];
+	if (pathList) {
+		for (var i=pathList.length-1; i>=0; i--) {
+			var vertex = pathList[i];
 			
 			var info = classManager.getOrCreateClassInfo(vertex);
 			var anchor = Mustache.render('<a href="#{{href}}" title="{{href}}">{{localName}}</a>', {
@@ -32319,11 +33648,18 @@ Ontodoc.prototype.renderClassBreadcrumbs = function(owlClassIRI) {
 				href: vertex.id.stringValue
 			});
 			
-			if (i!=path.length-1) {
-				breadcrumbs.append("<span> &gt; </span>");
+			if (i!=pathList.length-1) {
+				 breadcrumbs.append("<span> &gt; </span>");
 			}
 			breadcrumbs.append(anchor);
 		}
+	} else {
+		var canvas = document.createElement("canvas");
+		breadcrumbs[0].appendChild(canvas);
+		$(canvas).rdfspringy({
+			vertex: owlClassVertex,
+			property: rdfs.subClassOf
+		});
 	}
 	
 }
@@ -32406,12 +33742,57 @@ Ontodoc.prototype.clickClassName = function(owlClass) {
 	}
 }
 
+function OntodocBootstrap(graphJSON) {
+	konig.ontodoc = new Ontodoc(graphJSON);
+}
+
 konig.Ontodoc = Ontodoc;
 konig.buildOntodoc = function(ontologyService) {
-	konig.ontodoc = new Ontodoc(ontologyService);
+	
+	ontologyService.getOntologyGraph(OntodocBootstrap);
 }
 konig.ShapeInfo = ShapeInfo;
 konig.PropertyBlock = PropertyBlock;
 	
 	
+});
+
+$(function(){
+	
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)", "i"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+	
+function AjaxOntologyService(defaultGraph) {
+	this.defaultGraph = defaultGraph;
+}
+
+AjaxOntologyService.prototype.getOntologyGraph = function(callback) {
+	var src = getParameterByName('src');
+	if (!src && typeof(this.defaultGraph)==="string") {
+		src = this.defaultGraph;
+	}
+	if (src) {
+		$.get(src, null, function(data) {
+			var object = JSON.parse(data);
+			callback(object);
+		});
+	} else if (this.defaultGraph) {
+		callback(this.defaultGraph);
+	}
+}
+
+if (typeof(konig)==="undefined") {
+	konig = {}
+}
+
+konig.AjaxOntologyService = AjaxOntologyService;
+
+
 });

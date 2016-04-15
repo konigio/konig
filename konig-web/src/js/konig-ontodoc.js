@@ -789,12 +789,11 @@ ShapeInfo.prototype.addDirectProperties = function() {
 }
 
 /*****************************************************************************/	
-function Ontodoc(ontologyService) {
-	
+function Ontodoc(graphJSON) {
+	this.ontologyGraph = graphJSON;
 	this.actionHistory = new HistoryManager();
 	this.editMode = false;
 	this.multipleShapesPerClass = false;
-	this.ontologyService = ontologyService || konig.ontologyService;
 	this.layout = $('body').layout(
 		{
 			applyDefaultStyles:true,
@@ -814,7 +813,6 @@ function Ontodoc(ontologyService) {
 		}
 	});
 	
-	this.ontologyGraph = this.ontologyService.getOntologyGraph();
 	
 	this.context = new konig.jsonld.Context(this.ontologyGraph['@context']);
 	
@@ -844,7 +842,9 @@ function Ontodoc(ontologyService) {
 	});
 	$(window).trigger('hashchange');
 	
-	
+	if (this.initEdit) {
+		this.initEdit();
+	}
 	
 }
 
@@ -1269,9 +1269,14 @@ Ontodoc.prototype.clickClassName = function(owlClass) {
 	}
 }
 
+function OntodocBootstrap(graphJSON) {
+	konig.ontodoc = new Ontodoc(graphJSON);
+}
+
 konig.Ontodoc = Ontodoc;
 konig.buildOntodoc = function(ontologyService) {
-	konig.ontodoc = new Ontodoc(ontologyService);
+	
+	ontologyService.getOntologyGraph(OntodocBootstrap);
 }
 konig.ShapeInfo = ShapeInfo;
 konig.PropertyBlock = PropertyBlock;

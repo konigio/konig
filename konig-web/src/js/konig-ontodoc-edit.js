@@ -18,7 +18,7 @@
  * #L%
  */
 $(function(){
-var Ontodoc = konig.ontodoc.constructor;
+var Ontodoc = konig.Ontodoc;
 var ShapeInfo = konig.ShapeInfo;
 var PropertyBlock = konig.PropertyBlock;
 
@@ -115,6 +115,5 @@ Ontodoc.prototype.doRenameClass = function() {
 	}
 }
 
-konig.ontodoc.initEdit();
 	
 });

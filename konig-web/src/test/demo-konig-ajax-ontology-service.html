@@ -1,0 +1,36 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Hierarchy Builder</title>
+  <meta name="description" content="Generate a graphical representation of a hierarchy">
+  <meta name="author" content="Greg McFall">
+
+  <link rel="stylesheet" href="../css/jquery-ui/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" href="../css/schemaorg.css">
+  <link rel="stylesheet" href="../css/konig-ontodoc.css">
+  
+
+</head>
+
+<body>
+
+<canvas id="springy-canvas" width="600", height="200"></canvas>
+
+<script src="../js/jquery.js"></script>
+<script src="../js/konig-ajax-ontology-service.js"></script>
+<script>
+$(function(){
+
+	var service = new konig.AjaxOntologyService;
+	
+	service.getOntologyGraph(function(graphJSON){
+			console.log(graphJSON);
+	});
+});
+
+</script>
+</body>
+</html>

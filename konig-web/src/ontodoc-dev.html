@@ -257,7 +257,78 @@
 <script src="js/konig-history-manager.js"></script>
 <script src="js/konig-rdfspringy.js"></script>
 <script src="js/konig-ontodoc.js"></script>
-<script src="js/konig-ontodoc-services.js"></script>
+<script src="js/konig-ajax-ontology-service.js"></script>
 <script src="js/konig-ontodoc-edit.js"></script>
+<script>
+$(function(){
+	
+var defaultGraph = {
+		  "@context" : {
+			    "owl" : "http://www.w3.org/2002/07/owl#",
+			    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+			    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+			    "schema" : "http://schema.org/",
+			    "sh" : "http://www.w3.org/ns/shacl#",
+			    "vann" : "http://purl.org/vocab/vann/",
+			    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+			  },
+			  "@graph" : [ {
+			    "@id" : "schema:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "schema"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Schema.org Vocabulary"
+			    }
+			  }, {
+			    "@id" : "schema:Person",
+			    "@type" : "owl:Class"
+			  }, {
+			    "@id" : "http://example.com/shapes/v1/schema/Person",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "schema:Person"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "schema:familyName"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "schema:givenName"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ]
+			  } ]
+			};
+			
+var ontologyService = new konig.AjaxOntologyService(defaultGraph);
+konig.buildOntodoc(ontologyService);
+
+});
+
+</script>
 </body>
 </html>

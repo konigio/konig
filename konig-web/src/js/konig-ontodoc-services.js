@@ -122,18 +122,6 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      "@value" : "\r\n  \tAn extension of the W3C Provenance Ontology\r\n  "
 			    }
 			  }, {
-			    "@id" : "vann:",
-			    "@type" : "owl:Ontology",
-			    "vann:preferredNamespacePrefix" : {
-			      "@value" : "vann"
-			    },
-			    "rdfs:label" : {
-			      "@value" : "Vocabulary Annotation"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "A vocabulary for annotating ontologies with examples and usage notes."
-			    }
-			  }, {
 			    "@id" : "xowl:",
 			    "@type" : "owl:Ontology",
 			    "vann:preferredNamespacePrefix" : {
@@ -217,6 +205,12 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      "@value" : "The component of PearsonWriter responsible for implementing the 'Cite a source' feature"
 			    }
 			  }, {
+			    "@id" : "schema:CreativeWork",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "The most generic kind of creative work including learning resources"
+			    }
+			  }, {
 			    "@id" : "sys:DesktopApplication",
 			    "@type" : "owl:Class",
 			    "rdfs:subClassOf" : {
@@ -235,6 +229,15 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			    } ],
 			    "rdfs:comment" : {
 			      "@value" : "The component of PearsonWriter responsible for implementing the 'Find a source' feature"
+			    }
+			  }, {
+			    "@id" : "xas:Load",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "as:Activity"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The action of loading some resource into a browser or mobile device"
 			    }
 			  }, {
 			    "@id" : "xas:Login",
@@ -284,6 +287,15 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      "@value" : "A software application"
 			    }
 			  }, {
+			    "@id" : "xas:Unload",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "as:Activity"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The action of unloading some resource from a browser or mobile device"
+			    }
+			  }, {
 			    "@id" : "schema:WebApplication",
 			    "@type" : "owl:Class",
 			    "rdfs:subClassOf" : {
@@ -291,12 +303,6 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			    },
 			    "rdfs:comment" : {
 			      "@value" : "A web-based application"
-			    }
-			  }, {
-			    "@id" : "schema:WebPage",
-			    "@type" : "owl:Class",
-			    "rdfs:subClassOf" : {
-			      "@id" : "cnt:CitationSource"
 			    }
 			  }, {
 			    "@id" : "as:actor",
@@ -351,37 +357,6 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      }
 			    }, {
 			      "sh:predicate" : {
-			        "@id" : "rdf:type"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "Specifies the type of this entity"
-			      },
-			      "sh:nodeKind" : {
-			        "@id" : "sh:IRI"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      },
-			      "sh:hasValue" : {
-			        "@id" : "cnt:Citation"
-			      }
-			    }, {
-			      "sh:predicate" : {
-			        "@id" : "cnt:source"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "The work that is being cited"
-			      },
-			      "sh:valueShape" : {
-			        "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      }
-			    }, {
-			      "sh:predicate" : {
 			        "@id" : "prov:wasGeneratedBy"
 			      },
 			      "rdfs:comment" : {
@@ -395,6 +370,20 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      },
 			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "cnt:source"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The work that is being cited"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource"
+			      },
+			      "sh:minCount" : {
 			        "@value" : "1",
 			        "@type" : "xsd:integer"
 			      }
@@ -416,7 +405,30 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@value" : "1",
 			        "@type" : "xsd:integer"
 			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Specifies the type of this entity"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@id" : "cnt:Citation"
+			      }
 			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.cnt.citation"
 			    }
@@ -448,6 +460,12 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    },
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationProvenance/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationProvenance/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.cnt.citationprovenance"
 			    }
@@ -458,20 +476,6 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      "@id" : "cnt:CitationSource"
 			    },
 			    "sh:property" : [ {
-			      "sh:predicate" : {
-			        "@id" : "rdf:type"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "The type of source that was cited."
-			      },
-			      "sh:nodeKind" : {
-			        "@id" : "sh:IRI"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      }
-			    }, {
 			      "sh:predicate" : {
 			        "@id" : "kol:id"
 			      },
@@ -486,6 +490,20 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      },
 			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of source that was cited."
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
 			        "@value" : "1",
 			        "@type" : "xsd:integer"
 			      }
@@ -508,6 +526,12 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.cnt.citationsource"
 			    }
@@ -518,6 +542,97 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      "@id" : "cnt:Citation"
 			    },
 			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "as:object"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The Citation object that was created"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for this Citation activity"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:instrument"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The software application used to perform the action"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/SoftwareApplication"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:actor"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The person who performed the Citation action"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/Person"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of activity that occurred."
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : [ {
+			        "@id" : "as:Create"
+			      }, {
+			        "@id" : "xas:CreateCitation"
+			      } ]
+			    }, {
 			      "sh:predicate" : {
 			        "@id" : "as:location"
 			      },
@@ -551,61 +666,6 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      }
 			    }, {
 			      "sh:predicate" : {
-			        "@id" : "as:instrument"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "The software application used to perform the action"
-			      },
-			      "sh:valueShape" : {
-			        "@id" : "http://schema.pearson.com/shapes/v1/schema/SoftwareApplication"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      },
-			      "sh:maxCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      }
-			    }, {
-			      "sh:predicate" : {
-			        "@id" : "rdf:type"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "The type of activity that occurred."
-			      },
-			      "sh:nodeKind" : {
-			        "@id" : "sh:IRI"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      },
-			      "sh:hasValue" : [ {
-			        "@id" : "xas:CreateCitation"
-			      }, {
-			        "@id" : "as:Create"
-			      } ]
-			    }, {
-			      "sh:predicate" : {
-			        "@id" : "prov:wasGeneratedBy"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "Provenance information which describes the process that generated this Activity record"
-			      },
-			      "sh:valueShape" : {
-			        "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      },
-			      "sh:maxCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      }
-			    }, {
-			      "sh:predicate" : {
 			        "@id" : "as:target"
 			      },
 			      "rdfs:comment" : {
@@ -624,49 +684,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      }
 			    }, {
 			      "sh:predicate" : {
-			        "@id" : "as:actor"
+			        "@id" : "prov:wasGeneratedBy"
 			      },
 			      "rdfs:comment" : {
-			        "@value" : "The person who performed the Citation action"
+			        "@value" : "Provenance information which describes the process that generated this Activity record"
 			      },
 			      "sh:valueShape" : {
-			        "@id" : "http://schema.pearson.com/shapes/v1/schema/Person"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      },
-			      "sh:maxCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      }
-			    }, {
-			      "sh:predicate" : {
-			        "@id" : "xowl:guid"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "A globally unique identifier for this Citation activity"
-			      },
-			      "sh:datatype" : {
-			        "@id" : "xsd:string"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      },
-			      "sh:maxCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      }
-			    }, {
-			      "sh:predicate" : {
-			        "@id" : "as:object"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "The Citation object that was created"
-			      },
-			      "sh:valueShape" : {
-			        "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation"
+			        "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance"
 			      },
 			      "sh:minCount" : {
 			        "@value" : "1",
@@ -677,6 +701,12 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitation/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitation/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.xas.createcitation"
 			    }
@@ -726,8 +756,282 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@value" : "application/vnd.pearson.v1.xas.createcitation+json"
 			      }
 			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.xas.createcitationprovenance"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "schema:CreativeWork"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "schema:name"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A human-friendly name or title for the resource"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for the resource"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "kol:id"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The URI of the resource"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.schema.creativework"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/Load",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "xas:Load"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "as:instrumentType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of software application used to perform the action"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "prov:wasGeneratedBy"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Provenance information which describes the process that generated this Activity record"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:eventTime"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The time at which the load action occurred, as recorded on the client-side"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:dateTime"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for this Load activity"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "\r\n\t\t\tThe type of activity that occurred. Multiple values are allowed so that we can support other vocabularies.  \r\n\t\t\tThe set of values MUST include 'xas:Load'.\r\n\t\t"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@id" : "xas:Load"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:location"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "\r\n\t\t\tThe logical location(s) where the activity occurred.  This could include, for example, the\r\n\t\t\tcourse section and/or educational institution within which the activity occurred.\r\n\t\t"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:object"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The resource that was loaded into the browser or mobile device"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v2/xas/LoginPage"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:actor"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The person who performed the Load action"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/Person"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Load/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Load/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.load"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "prov:Activity"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "xas:generatedMediaType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The media type of the Login message"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@value" : "application/vnd.pearson.v1.xas.load+json"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xprov:generator"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The system that generated the Login message"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.loadprovenance"
 			    }
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/xas/Login",
@@ -773,41 +1077,6 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      }
 			    }, {
 			      "sh:predicate" : {
-			        "@id" : "prov:wasGeneratedBy"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "Provenance information which describes the process that generated this Activity record"
-			      },
-			      "sh:valueShape" : {
-			        "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      },
-			      "sh:maxCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      }
-			    }, {
-			      "sh:predicate" : {
-			        "@id" : "as:instrumentType"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "The type of software application used to perform the action"
-			      },
-			      "sh:nodeKind" : {
-			        "@id" : "sh:IRI"
-			      },
-			      "sh:class" : {
-			        "@id" : "schema:SoftwareApplication"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      }
-			    }, {
-			      "sh:predicate" : {
 			        "@id" : "as:location"
 			      },
 			      "rdfs:comment" : {
@@ -817,6 +1086,24 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing"
 			      },
 			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:object"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The WebPage where the login activity occurred"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v2/xas/LoginPage"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
 			        "@value" : "1",
 			        "@type" : "xsd:integer"
 			      }
@@ -836,24 +1123,6 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      },
 			      "sh:hasValue" : {
 			        "@id" : "xas:Login"
-			      }
-			    }, {
-			      "sh:predicate" : {
-			        "@id" : "as:object"
-			      },
-			      "rdfs:comment" : {
-			        "@value" : "The WebPage where the login activity occurred"
-			      },
-			      "sh:valueShape" : {
-			        "@id" : "http://schema.pearson.com/shapes/v2/xas/LoginPage"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      },
-			      "sh:maxCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
 			      }
 			    }, {
 			      "sh:predicate" : {
@@ -891,7 +1160,48 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@value" : "1",
 			        "@type" : "xsd:integer"
 			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:instrumentType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of software application used to perform the action"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:class" : {
+			        "@id" : "schema:SoftwareApplication"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "prov:wasGeneratedBy"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Provenance information which describes the process that generated this Activity record"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
 			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Login/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Login/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.xas.login"
 			    }
@@ -934,6 +1244,12 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v2/xas/LoginPage/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v2/xas/LoginPage/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v2.xas.loginpage"
 			    }
@@ -983,6 +1299,12 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.xas.loginprovenance"
 			    }
@@ -1023,6 +1345,12 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/org/Membership/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/org/Membership/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.org.membership"
 			    }
@@ -1063,6 +1391,12 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/Person/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/Person/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.schema.person"
 			    }
@@ -1084,6 +1418,12 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    },
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/SoftwareApplication/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/SoftwareApplication/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.schema.softwareapplication"
 			    }
@@ -1095,36 +1435,6 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			    },
 			    "sh:property" : [ {
 			      "sh:predicate" : {
-			        "@id" : "kol:id"
-			      },
-			      "sh:nodeKind" : {
-			        "@id" : "sh:IRI"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      },
-			      "sh:maxCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      }
-			    }, {
-			      "sh:predicate" : {
-			        "@id" : "kol:id"
-			      },
-			      "sh:nodeKind" : {
-			        "@id" : "sh:IRI"
-			      },
-			      "sh:minCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      },
-			      "sh:maxCount" : {
-			        "@value" : "1",
-			        "@type" : "xsd:integer"
-			      }
-			    }, {
-			      "sh:predicate" : {
 			        "@id" : "rdf:type"
 			      },
 			      "sh:nodeKind" : {
@@ -1134,7 +1444,43 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@value" : "1",
 			        "@type" : "xsd:integer"
 			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "kol:id"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "kol:id"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
 			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing/jsonschema"
+			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.owl.thing"
 			    }
@@ -1162,6 +1508,12 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@value" : "1",
 			        "@type" : "xsd:integer"
 			      }
+			    },
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/WebPage/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/WebPage/jsonschema"
 			    },
 			    "kol:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.schema.webpage"
