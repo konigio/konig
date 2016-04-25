@@ -1,5 +1,6 @@
 package io.konig.schemagen.avro.impl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -11,6 +12,16 @@ import io.konig.schemagen.avro.AvroNamer;
 import io.konig.shacl.PropertyConstraint;
 
 public class SimpleAvroNamer implements AvroNamer {
+	
+	private File idlDir;
+
+	public SimpleAvroNamer(File idlDir) {
+		this.idlDir = idlDir;
+	}
+	
+	public SimpleAvroNamer() {
+		
+	}
 
 	@Override
 	public String toAvroNamespace(String uriNamespace) {
@@ -96,6 +107,12 @@ public class SimpleAvroNamer implements AvroNamer {
 		builder.append("Enum");
 		
 		return builder.toString();
+	}
+
+	@Override
+	public File idlFile(URI shapeIRI) {
+		String fileName = toAvroFullName(shapeIRI) + ".avdl";
+		return idlDir==null ? new File(fileName) : new File(idlDir, fileName);
 	}
 
 	

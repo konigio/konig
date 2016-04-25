@@ -38,6 +38,8 @@ public interface ResourceFile {
 	void setContentType(String contentType);
 
 	Enumeration<String> propertyNames();
+	
+	int getInt(String key);
 	String getProperty(String key);
 	void setProperty(String key, String value);
 	

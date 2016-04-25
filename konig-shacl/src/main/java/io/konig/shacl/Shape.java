@@ -48,6 +48,7 @@ public class Shape {
 	private Constraint constraint;
 	private Context jsonldContext;
 	
+	
 	public Shape() {
 		String bnodeId = UidGenerator.INSTANCE.next();
 		id = new BNodeImpl(bnodeId);

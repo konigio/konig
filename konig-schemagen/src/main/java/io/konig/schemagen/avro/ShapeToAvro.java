@@ -39,8 +39,9 @@ public class ShapeToAvro {
 		}
 	}
 	
-	public void generateAvro(File sourceDir, File targetDir, Graph graph) throws IOException {
+	public void generateAvro(File sourceDir, File targetDir, File importDir, Graph graph) throws IOException {
 		targetDir.mkdirs();
+		importDir.mkdirs();
 		GraphLoadHandler loadHandler = null;
 		if (graph == null) {
 			graph = new MemoryGraph();
@@ -49,7 +50,7 @@ public class ShapeToAvro {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		
 		loadGraph(nsManager, sourceDir, graph, loadHandler);
-		ResourceManager resourceManager = new FileManager(targetDir);
+		ResourceManager resourceManager = new FileManager(targetDir, importDir);
 		SimpleAvroNamer namer = new SimpleAvroNamer();
 		AvroSchemaGenerator generator = new AvroSchemaGenerator(namer, nsManager);
 		
@@ -124,10 +125,12 @@ public class ShapeToAvro {
 
 	private static class FileManager implements ResourceManager {
 		private File outDir;
+		private File importDir;
 		
 
-		public FileManager(File outDir) {
+		public FileManager(File outDir, File importDir) {
 			this.outDir = outDir;
+			this.importDir = importDir;
 		}
 
 		@Override
@@ -150,8 +153,12 @@ public class ShapeToAvro {
 
 		@Override
 		public void put(ResourceFile file) throws IOException {
-			String avroName = file.getProperty(AvroSchemaGenerator.AVRO_SCHEMA);
-			File outFile = new File(outDir, avroName);
+			String avroName = file.getProperty(AvroSchemaGenerator.AVRO_SCHEMA) + ".avsc";
+			int usageCount = file.getInt(AvroSchemaGenerator.USAGE_COUNT);
+			
+			File dir = (usageCount>0) ? importDir : outDir;
+			
+			File outFile = new File(dir, avroName);
 			
 			FileWriter writer = new FileWriter(outFile);
 			try {

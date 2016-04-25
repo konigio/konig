@@ -19,10 +19,10 @@ public class ShapeToAvroTest {
 		
 		ShapeToAvro generator = new ShapeToAvro(null);
 		
-		generator.generateAvro(sourceDir, targetDir, null);
+		generator.generateAvro(sourceDir, targetDir, targetDir, null);
 		
 		
-		File personFile = new File("target/avro/io.konig.shape.v1.schema.Person");
+		File personFile = new File("target/avro/io.konig.shape.v1.schema.Person.avsc");
 		
 		assertTrue(personFile.exists());
 		

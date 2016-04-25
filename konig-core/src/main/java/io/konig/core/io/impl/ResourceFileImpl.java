@@ -109,4 +109,17 @@ public class ResourceFileImpl implements ResourceFile {
 		setProperty(CONTENT_TYPE, contentType);
 	}
 
+	@Override
+	public int getInt(String key) {
+		String value = getProperty(key);
+		if (value != null) {
+			try {
+				return Integer.parseInt(value);
+			} catch (Throwable ignore) {
+				
+			}
+		}
+		return 0;
+	}
+
 }

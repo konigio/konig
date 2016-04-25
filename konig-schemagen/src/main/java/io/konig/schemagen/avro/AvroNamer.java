@@ -1,5 +1,7 @@
 package io.konig.schemagen.avro;
 
+import java.io.File;
+
 import org.openrdf.model.URI;
 
 import io.konig.core.Vertex;
@@ -26,6 +28,13 @@ public interface AvroNamer {
 	 * @return The name for the Avro enumeration given by the PropertyConstraint
 	 */
 	String enumName(String recordName, PropertyConstraint constraint, Vertex vertex);
+	
+	/**
+	 * Get the Avro IDL file for a given Shape.
+	 * @param shapeIRI The IRI for the Shape for which the corresponding Avro IDL file is requested
+	 * @return The Avro IDL file for the given Shape
+	 */
+	File idlFile(URI shapeIRI);
 	
 	
 

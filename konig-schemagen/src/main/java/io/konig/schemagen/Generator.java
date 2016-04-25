@@ -17,8 +17,7 @@ import io.konig.shacl.PropertyConstraint;
 public class Generator {
 	
 	protected NamespaceManager nsManager;
-	
-	
+	protected IriEnumStyle iriEnumStyle = IriEnumStyle.CURIE;
 
 	public Generator(NamespaceManager nsManager) {
 		this.nsManager = nsManager;
@@ -163,20 +162,34 @@ public class Generator {
 			List<String> result = new ArrayList<>();
 			for (Value value : valueList) {
 				if (value instanceof URI) {
-					// TODO: delegate to name the decision to use CURIEs
 					URI uri = (URI) value;
+					switch (iriEnumStyle) {
+					case CURIE : 	result.add(curie(uri)); break;
+					case ABSOLUTE:	result.add(uri.stringValue()); break;
+					case NONE: // Do nothing
+					}
+					
 					result.add(curie(uri));
 				} else {
-					result.add(value.stringValue());
+					String text = value.stringValue();
+					if (validEnumValue(text)) {
+						result.add(value.stringValue());
+					}
 				}
 			}
-			return result;
+			if (!result.isEmpty()) {
+				return result;
+			}
 		}
 		return null;
 		
 	}
 	
 
+
+	protected boolean validEnumValue(String text) {
+		return true;
+	}
 
 	protected String strictValue(PropertyConstraint property) {
 		
@@ -187,9 +200,17 @@ public class Generator {
 			if (valueSet != null && valueSet.size()==1) {
 				Value value = valueSet.iterator().next();
 				if (value instanceof URI) {
-					return curie((URI)value);
+					URI uri = (URI) value;
+					switch (iriEnumStyle) {
+					case CURIE : return curie(uri); 
+					case ABSOLUTE: return uri.stringValue();
+					case NONE: return null;
+					}
 				}
-				return value.stringValue();
+				String text = value.stringValue();
+				if (validEnumValue(text)) {
+					return text;
+				}
 			}
 		}
 		

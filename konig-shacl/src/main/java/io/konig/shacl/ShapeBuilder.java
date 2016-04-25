@@ -89,6 +89,7 @@ public class ShapeBuilder {
 		shapeManager = new MemoryShapeManager();
 	}
 	
+	
 	public ShapeBuilder(String shapeId) {
 		this(new URIImpl(shapeId));
 	}
@@ -99,6 +100,10 @@ public class ShapeBuilder {
 	
 	public ShapeManager getShapeManager() {
 		return shapeManager;
+	}
+	
+	public ShapeBuilder documentation(String text) {
+		return this;
 	}
 	
 	public ShapeBuilder shape(String shapeIRI) {
@@ -244,6 +249,11 @@ public class ShapeBuilder {
 			property.setValueShape(shape);
 			
 			return new ShapeBuilder(this, parent.shapeManager, parent.valueFactory, shape);
+		}
+		
+		public PropertyBuilder documentation(String text) {
+			property.setDocumentation(text);
+			return this;
 		}
 		
 		public PropertyBuilder nodeKind(NodeKind kind) {

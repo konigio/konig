@@ -3,6 +3,8 @@ package io.konig.schemagen.avro;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -26,6 +28,7 @@ import io.konig.core.vocab.KOL;
 import io.konig.core.vocab.SH;
 import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
+import io.konig.schemagen.IriEnumStyle;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeTransformer;
 import io.konig.schemagen.avro.impl.SimpleAvroDatatypeMapper;
@@ -35,9 +38,13 @@ import io.konig.shacl.Shape;
 
 public class AvroSchemaGenerator extends Generator {
 	public static final String AVRO_SCHEMA = "Avro-Schema";
+	public static final String USAGE_COUNT = "Usage-Count";
 	
 	private AvroNamer namer;
 	private AvroDatatypeMapper datatypeMapper = new SimpleAvroDatatypeMapper();
+	private boolean embedValueShape = true;
+	
+	private static final Pattern enumSymbolPattern = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
 	
 	/**
 	 * For now, we hard-code a GeneratedMediaTypeTransformer.  In the future, the shape
@@ -49,8 +56,35 @@ public class AvroSchemaGenerator extends Generator {
 		super(nsManager);
 		this.namer = namer;
 		this.nsManager = nsManager;
+		
+		this.iriEnumStyle = IriEnumStyle.NONE;
 	}
 	
+	
+	/**
+	 * Get the configuration setting that determines whether the generator embeds nested
+	 * schemas for related entities.
+	 * @return True if the generator embeds nested schemas for related entities, and false
+	 * if the generator merely provides a reference.
+	 */
+	public boolean isEmbedValueShape() {
+		return embedValueShape;
+	}
+
+
+	/**
+	 * Set the configuration property which determines whether the generator embeds nested
+	 * schemas for related entities.
+	 * @param embedValueShape A boolean value which, if true, directs the generator to embed
+	 * nested schemas for related entities. If false, the generator will merely provide
+	 * a named reference to the schema.
+	 */
+	public void setEmbedValueShape(boolean embedValueShape) {
+		this.embedValueShape = embedValueShape;
+	}
+
+
+
 	public void generateAll(Graph graph, ResourceManager resourceManager) throws IOException {
 		
 		List<Vertex> shapeList = graph.v(SH.Shape).in(RDF.TYPE).toVertexList();
@@ -86,9 +120,11 @@ public class AvroSchemaGenerator extends Generator {
 
 			String entityBody = writer.toString();
 			String schemaAddress = namer.toAvroSchemaURI(uri.stringValue());
+			int usageCount = shape.asTraversal().in(SH.valueShape).toVertexList().size();
 			
 			ResourceFile result = ResourceFileImpl.create(schemaAddress, "application/json", entityBody);
 			result.setProperty(AVRO_SCHEMA, avroName);
+			result.setProperty(USAGE_COUNT, Integer.toString(usageCount));
 			
 			
 			URI schemaId = new URIImpl(result.getContentLocation());
@@ -103,6 +139,13 @@ public class AvroSchemaGenerator extends Generator {
 	}
 
 
+
+	@Override
+	protected boolean validEnumValue(String text) {
+		Matcher matcher = enumSymbolPattern.matcher(text);
+		boolean result = matcher.matches();
+		return result;
+	}
 	private String doGenerateSchema(URI uri, Vertex shape, JsonGenerator json) throws IOException {
 				
 		String avroName = namer.toAvroFullName(uri);
@@ -170,9 +213,11 @@ public class AvroSchemaGenerator extends Generator {
 		
 		if (maxCount == null || maxCount>1) {
 			
+			json.writeObjectFieldStart("type");
 			json.writeStringField("type", "array");
 			json.writeFieldName("items");
 			writeType(recordName, propertyVertex, property, json);
+			json.writeEndObject();
 			
 		} else if (minCount == null || minCount==0) {
 
@@ -247,7 +292,15 @@ public class AvroSchemaGenerator extends Generator {
 			
 			
 		} else if (valueShapeId instanceof URI) {
-			json.writeString(namer.toAvroFullName((URI)valueShapeId));
+			URI valueShapeURI = (URI) valueShapeId;
+			
+			if (embedValueShape) {
+				Vertex embeddedShape = propertyVertex.getGraph().getVertex(valueShapeURI);
+				doGenerateSchema(valueShapeURI, embeddedShape, json);
+				
+			} else {
+				json.writeString(namer.toAvroFullName((URI)valueShapeId));
+			}
 		}
 		
 	}
