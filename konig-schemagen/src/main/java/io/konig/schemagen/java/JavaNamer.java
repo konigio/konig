@@ -17,4 +17,11 @@ public interface JavaNamer {
 	 * @return The Java class name for the DataWriter that writes the given media type.
 	 */
 	String writerName(String mediaType);
+	
+	/**
+	 * Get the name of the Namespaces utility class which provides a method
+	 * for computing CURIEs.
+	 * @return The name of the Namespaces utility class
+	 */
+	String namespacesClass();
 }

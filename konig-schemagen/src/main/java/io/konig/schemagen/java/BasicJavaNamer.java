@@ -11,10 +11,12 @@ import io.konig.core.NamespaceManager;
 
 public class BasicJavaNamer implements JavaNamer {
 	private static final Logger logger = LoggerFactory.getLogger(BasicJavaNamer.class);
+	private static final String NAMESPACES_CLASS = "util.Namespaces";
 	private String basePackage;
 	private String defaultPrefix = "default";
 	private NamespaceManager nsManager;
 	private String writerPackage;
+	private String namespacesClass;
 	
 
 	public BasicJavaNamer(String basePackage, NamespaceManager nsManager) {
@@ -34,6 +36,7 @@ public class BasicJavaNamer implements JavaNamer {
 		this.basePackage = basePackage;
 		this.nsManager = nsManager;
 		this.writerPackage = writerPackage;
+		this.namespacesClass = basePackage + NAMESPACES_CLASS;
 	}
 
 	@Override
@@ -71,6 +74,11 @@ public class BasicJavaNamer implements JavaNamer {
 		mediaType = mediaType.replace('+', '.');
 		
 		return writerPackage + mediaType;
+	}
+
+	@Override
+	public String namespacesClass() {
+		return namespacesClass;
 	}
 
 }

@@ -162,7 +162,17 @@ public class DataWriterBuilder {
 		if (fieldType == String.class) {
 			block.invoke(jsonGenerator, "writeStringField").arg(JExpr.lit(fieldName)).arg(fieldValue);
 		} else {
+			// TODO: handle other types
 			logger.warn("Ignoring simple field of type "  + fieldType.getSimpleName()  );
+		}
+	}
+	
+	public void writeSimpleValue(JBlock block, JVar jsonGenerator, Class<?> fieldType, JExpression value) {
+		if (fieldType == String.class) {
+			block.invoke(jsonGenerator, "writeString").arg(value);
+		} else {
+			// TODO: handle other types
+			logger.warn("Ignoring simple field of type " + fieldType.getSimpleName());
 		}
 	}
 

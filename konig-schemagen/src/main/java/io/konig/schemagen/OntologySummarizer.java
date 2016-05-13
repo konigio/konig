@@ -8,16 +8,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
-import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
@@ -35,12 +34,116 @@ import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.KonigLiteral;
+import io.konig.core.impl.MemoryGraph;
 import io.konig.core.vocab.VANN;
+import io.konig.schemagen.domain.DomainManager;
+import io.konig.shacl.ShapeManager;
 
 public class OntologySummarizer {
 	
 	private static final Logger logger = LoggerFactory.getLogger(OntologySummarizer.class);
 	
+	
+	/**
+	 * Extract the OWL classes and relationships between those classes from a broader
+	 * collection of OWL and SHACL statements.
+	 * 
+	 * @param source  The source of OWL and SHACL statements from which the domain model will be extracted.
+	 * @return The domain model extracted from the source.
+	 */
+	public Graph domainModel(Graph source, ShapeManager shapeManager) {
+		
+		Graph sink = new MemoryGraph();
+		
+		DomainManager manager = new DomainManager(shapeManager, null);
+		manager.load(source);
+		manager.export(sink);
+		
+		return sink;
+		
+	}
+	
+	public void writePrototypeModel(NamespaceManager nsManager, Graph source, ShapeManager shapeManager, File outFile) throws SchemaGeneratorException {
+		Graph sink = new MemoryGraph();
+		DomainManager manager = new DomainManager(shapeManager, nsManager);
+		manager.load(source);
+		manager.exportPrototype(sink);
+		
+		try {
+			FileWriter out = new FileWriter(outFile);
+			try {
+				writeTurtle(nsManager, sink, out);
+			} finally {
+				close(out);
+			}
+		} catch (IOException e) {
+			throw new SchemaGeneratorException(e);
+		}
+	}
+	
+	public void writeDomainModel(NamespaceManager nsManager, Graph source, ShapeManager shapeManager, File outFile) throws SchemaGeneratorException {
+		Graph sink = domainModel(source, shapeManager);
+		
+		try {
+			FileWriter out = new FileWriter(outFile);
+			try {
+				writeTurtle(nsManager, sink, out);
+			} finally {
+				close(out);
+			}
+		} catch (IOException e) {
+			throw new SchemaGeneratorException(e);
+		}
+	}
+	
+	
+	public void writeTurtle(NamespaceManager nsManager, Graph graph, Writer writer) throws SchemaGeneratorException {
+		TurtleWriterFactory factory = new TurtleWriterFactory();
+		RDFWriter turtle = factory.getWriter(writer);
+		turtle.getWriterConfig().set(BasicWriterSettings.XSD_STRING_TO_PLAIN_LITERAL, true);
+
+		try {
+			turtle.startRDF();
+			writeNamespaces(nsManager, turtle);
+			writeStatements(graph, turtle);
+			turtle.endRDF();
+			writer.flush();
+		} catch (RDFHandlerException | IOException e) {
+			throw new SchemaGeneratorException(e);
+		}
+		
+	}
+
+	private void writeStatements(Graph graph, RDFWriter turtle) throws RDFHandlerException {
+		
+		Iterator<Edge> sequence = graph.iterator();
+		while (sequence.hasNext()) {
+			Edge edge = sequence.next();
+			turtle.handleStatement(edge);
+		}
+	}
+
+
+	private void writeNamespaces(NamespaceManager nsManager, RDFWriter turtle) throws RDFHandlerException {
+		
+		List<Namespace> list = new ArrayList<>(nsManager.listNamespaces());
+		
+		Collections.sort(list, new Comparator<Namespace>(){
+
+			@Override
+			public int compare(Namespace a, Namespace b) {
+				return a.getPrefix().compareTo(b.getPrefix());
+			}});
+		
+		for (Namespace ns : list) {
+			turtle.handleNamespace(ns.getPrefix(), ns.getName());
+		}
+		
+		 
+		
+	}
+
+
 	public void summarize(NamespaceManager nsManager, Graph input, Writer writer) throws SchemaGeneratorException {
 
 		try {
