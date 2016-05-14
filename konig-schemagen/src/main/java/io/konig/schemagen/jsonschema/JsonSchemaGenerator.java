@@ -108,18 +108,20 @@ public class JsonSchemaGenerator extends Generator {
 			
 			if (maxCount==null || maxCount>1) {
 				field.put("type", "array");
-				field.put("items", createType(fieldName, property, field));
+				field.put("items", createType(fieldName, property, null));
 			
 			} else {
-				field.put("type", createType(fieldName, property, field));
+				createType(fieldName, property, field);
 			}
 			
 			
 		}
 		
-		private JsonNode createType(String fieldName, PropertyConstraint property, ObjectNode field) {
+		
+		private ObjectNode createType(String fieldName, PropertyConstraint property, ObjectNode field) {
 			
-			JsonNode result = null;
+			
+			ObjectNode object = (field == null) ? mapper.createObjectNode() : field;
 			NodeKind nodeKind = property.getNodeKind();
 			URI datatype = property.getDatatype();
 			Resource valueShapeId = property.getValueShapeId();
@@ -133,52 +135,59 @@ public class JsonSchemaGenerator extends Generator {
 			String strictValue = strictValue(property);
 			
 			if (strictValue != null) {
-				ObjectNode object = (ObjectNode) mapper.createObjectNode();
 				object.put("type", "string");
 				ArrayNode array = mapper.createArrayNode();
 				object.put("enum", array);
 				array.add(strictValue);
-				result = object;
 				
 			} else if (enumList != null) {
-				ObjectNode object = (ObjectNode) mapper.createObjectNode();
 				object.put("type", "string");
 				ArrayNode array = mapper.createArrayNode();
 				object.put("enum", array);
 				for (String value : enumList) {
 					array.add(value);
 				}
-				result = object;
 			} else if (nodeKind == NodeKind.IRI) {
-				ObjectNode object = (ObjectNode) mapper.createObjectNode();
 				object.put("type", "string");
 				object.put("format", "uri");
-				result = object;
 				
 			} else if (datatype != null) {
 				JsonSchemaDatatype jsonType = typeMapper.type(property);
 				String typeName = jsonType.getTypeName();
 				String format = jsonType.getFormat();
+				Number minimum = jsonType.getMinimum();
+				Number maximum = jsonType.getMaximum();
+				Boolean exclusiveMaximum = jsonType.getExclusiveMaximum();
+				Boolean exclusiveMinimum = jsonType.getExclusiveMinimum();
 
-				if (field != null && format==null) {
-					result = mapper.getNodeFactory().textNode(typeName);
+				if (field != null && format==null && minimum==null && maximum==null) {
+					object.put("type", typeName);
 				} else {
 
-					ObjectNode object = (ObjectNode) mapper.createObjectNode();
 					object.put("type", typeName);
 					if (format != null) {
 						object.put("format", format);
 					}
-					result = object;
+					if (minimum != null) {
+						object.put("minimum", (Double)minimum);
+						if (exclusiveMinimum != null) {
+							object.put("exclusiveMinimum", (Boolean)exclusiveMinimum);
+						}
+					}
+					if (maximum != null) {
+						object.put("maximum", (Double)maximum);
+						if (exclusiveMaximum != null) {
+							object.put("exclusiveMaximum", (Boolean)exclusiveMaximum);
+						}
+					}
 				}
 				
 			} else if (valueShapeId != null) {
 				Shape valueShape = property.getValueShape();
-				result = generateJsonSchema(valueShape);
+				object.put("type",  generateJsonSchema(valueShape));
 			}
 			
-			
-			return result;
+			return object;
 		}
 
 	}

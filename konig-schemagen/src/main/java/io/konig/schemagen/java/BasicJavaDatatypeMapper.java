@@ -12,7 +12,7 @@ import io.konig.core.Graph;
 public class BasicJavaDatatypeMapper implements JavaDatatypeMapper {
 
 	@Override
-	public Class<?> javaDatatype(URI rdfDatatype, Graph ontology) {
+	public Class<?> javaDatatype(URI rdfDatatype) {
 
 		
 		if (XMLSchema.STRING.equals(rdfDatatype)) {

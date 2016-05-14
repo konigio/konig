@@ -29,7 +29,7 @@ var dc = konig.dc;
 var schema = konig.schema;
 var sh = konig.sh;
 var kol = konig.kol;
-var xsd = rdf.xsd;
+var xsd = konig.xsd;
 var step = rdf.step;
 var stringValue = rdf.stringValue;
 var IRI = rdf.IRI;
@@ -110,18 +110,80 @@ PropertyManager.prototype.getPropertyOverview = function(propertyId) {
 	return overview;
 }
 /*****************************************************************************/
-function PropertyInfo(predicate, expectedType, minCount, maxCount, description) {
+function PropertyInfo(predicate, expectedType, minCount, maxCount, description, nodeKind, valueShape) {
 	this.predicate = predicate;
 	this.propertyName = predicate.localName;
 	this.expectedType = expectedType;
 	this.minCount = minCount;
 	this.maxCount = maxCount;
 	this.description = description;
+	this.nodeKind = nodeKind;
+	this.valueShape = valueShape;
 	this.or = false;
 	
 	if (expectedType.length) {
 		expectedType[expectedType.length-1].last = true;
 	}
+}
+
+PropertyInfo.prototype.toJsonSchema = function() {
+	
+	if (!this.valueShape && sh.IRI.equals(this.nodeKind)) {
+		this.expectedType = [{
+			stringValue: xsd.string.stringValue,
+			localName: xsd.string.localName,
+			last: true,
+			modifier: "uri"
+		}];
+	} else if (
+		this.expectedTypeContains(xsd.dateTime) ||
+		this.expectedTypeContains(xsd.date)
+	) {
+		this.expectedType = [{
+			stringValue: xsd.string.stringValue,
+			localName: xsd.string.localName,
+			last: true,
+			modifier: "date-time"
+		}];
+	} else if (this.valueShape && this.expectedType.length==1) {
+		
+		// TODO: Handle the case of more than one expected type.
+		
+		var typeName = this.expectedType[0].localName;
+		
+		var jsonRendition = this.valueShape.v().out(kol.jsonSchemaRendition).first();
+		
+		if (jsonRendition) {
+			this.expectedType = [{
+				stringValue: jsonRendition.id.stringValue,
+				localName: 'object',
+				last: true,
+				modifier: typeName
+			}];
+		} else {
+			console.log("WARNING: failed to find jsonRendition of " + this.propertyName);
+		}
+	}
+}
+
+PropertyInfo.prototype.expectedTypeContains = function(value) {
+	if (!(typeof(value)==="string")) {
+		value = rdf.node(value).stringValue;
+	}
+	if (this.expectedType) {
+		for (var i=0;i<this.expectedType.length; i++) {
+			if (value === this.expectedType[i].stringValue) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+PropertyInfo.prototype.clone = function() {
+	var other = new PropertyInfo(this.predicate, this.expectedType, this.minCount,
+			this.maxCount, this.description, this.nodeKind, this.valueShape);
+	return other;
 }
 
 PropertyInfo.addType = function(list, typeVertex) {
@@ -155,8 +217,13 @@ PropertyInfo.addType = function(list, typeVertex) {
 /*****************************************************************************/
 function PropertyBlock(fromClassVertex) {
 	this.fromClassVertex = fromClassVertex;
-	this.blockSize = 0;
 	this.propertyList = [];
+}
+
+PropertyBlock.prototype.toJsonSchema = function() {
+	for (var i=0; i<this.propertyList.length; i++) {
+		this.propertyList[i].toJsonSchema();
+	}
 }
 
 PropertyBlock.prototype.propertyInfoForPredicate = function(predicate) {
@@ -168,6 +235,15 @@ PropertyBlock.prototype.propertyInfoForPredicate = function(predicate) {
 		}
 	}
 	return null;
+}
+
+PropertyBlock.prototype.clone = function() {
+	var other = new PropertyBlock(this.fromClassVertex);
+	for (var i=0; i<this.propertyList.length; i++) {
+		other.propertyList.push(this.propertyList[i].clone());
+	}
+	
+	return other;
 }
 /*****************************************************************************/
 function RenameClass(ontodoc, oldIRI, newIRI) {
@@ -279,7 +355,6 @@ OntologyManager.prototype.getOntologyInfo = function(ontologyId) {
 
 
 OntologyManager.prototype.ontologyLabel = function(ontology) {
-	
 	var label = ontology.v().out(rdfs.label, dcterms.title, dc.title).first();
 	if (label) {
 		return label.stringValue;
@@ -300,7 +375,7 @@ function ClassManager(ontologyManager, graph) {
 }
 
 ClassManager.prototype.init = function() {
-	var classList = this.graph.V(rdfs.Class, owl.Class).inwardTransitiveClosure(rdfs.subClassOf).inward(rdf.type)
+	var classList = this.graph.V(rdfs.Class, owl.Class, rdfs.Datatype).inwardTransitiveClosure(rdfs.subClassOf).inward(rdf.type)
 		.nodeKind(sh.IRI).toList();
 	for (var i=0; i<classList.length; i++) {
 		var owlClass = classList[i];
@@ -323,7 +398,6 @@ ClassManager.prototype.assignUniqueNames = function() {
 	for (var i=0; i<list.length; i++) {
 		var classInfo = list[i];
 		var localName = classInfo.classVertex.id.localName;
-		console.log("assignUniqueNames", classInfo.classVertex.id.stringValue, localName);
 		classInfo.uniqueName = localName;
 		if (
 			(localName === prevLocalName) ||
@@ -356,6 +430,56 @@ ClassManager.prototype.getOrCreateClassInfo = function(owlClass) {
 //		classInfo.getLogicalShape();
 	}
 	return classInfo;
+}
+
+ClassManager.prototype.computeShapeInfo = function(id) {
+	var vertex = this.graph.vertex(id);
+	
+	if (vertex.instanceOf(owl.Class) || vertex.instanceOf(rdfs.Class)) {
+
+		var owlClassIRI = vertex.id.stringValue;
+		var classInfo = this.classMap[owlClassIRI];
+		
+		if (classInfo) {
+		
+			var shapeInfo = classInfo.getLogicalShape();
+			
+			shapeInfo.subClassList = classInfo.getSubClassList();
+			
+			if (!shapeInfo.comment) {
+				shapeInfo.comment = classInfo.comment;
+			}
+			
+			return shapeInfo;
+		}
+	} else if (vertex.instanceOf(rdfs.Datatype)) {
+		var classInfo = this.getOrCreateClassInfo(vertex);
+		var shapeInfo = new ShapeInfo(classInfo);
+		return shapeInfo;
+		
+	} else {
+		var schemaType = "";
+		var rawShape = vertex.v().inward(kol.avroSchemaRendition).first();
+		if (rawShape) {
+			schemaType = "Avro";
+		} else {
+			rawShape = vertex.v().inward(kol.jsonSchemaRendition).first();
+			if (rawShape) {
+				schemaType = "JsonSchema";
+			}
+		}
+		
+		if (rawShape) {
+			var shapeInfo = this.getOrCreateShapeInfo(rawShape);
+			
+			switch (schemaType) {
+			case "Avro" : return shapeInfo.toAvroSchema(vertex.id.stringValue);
+			case "JsonSchema" : return shapeInfo.toJsonSchema(vertex.id.stringValue);
+			}
+			
+		}
+	}
+	return null;
 }
 
 ClassManager.prototype.getOrCreateShapeInfo = function(shape) {
@@ -395,6 +519,8 @@ function ClassInfo(owlClass, classManager) {
 	this.classVertex = graph.vertex(owlClass);
 	this.classManager = classManager;
 	this.analyzeComment();
+	
+	
 }
 
 ClassInfo.prototype.getSubClassList = function() {
@@ -416,15 +542,36 @@ ClassInfo.prototype.getMediaTypeList = function() {
 	if (!this.mediaTypeList) {
 		var sink = this.mediaTypeList = [];
 		var shapeList = this.classVertex.v().inward(sh.scopeClass).toList();
-		
-		for (var i=0; i<shapeList.length; i++) {
-			var shape = shapeList[i];
-			var name = shape.v().out(kol.mediaTypeBaseName).first();
-			if (!name) {
-				// TODO: Generate media type name
-				console.log("Failed to find mediaTypeBaseName for shape " + shape.id.stringValue);
-			} else {
-				sink.push({ mediaTypeName: name.stringValue});
+		if (shapeList.length > 1) {
+
+			this.mediaTypeList.push({
+				id: this.classVertex.id.stringValue,
+				mediaTypeName: ""
+			});
+			
+			for (var i=0; i<shapeList.length; i++) {
+				var shape = shapeList[i];
+				var name = shape.v().out(kol.mediaTypeBaseName).first();
+				if (!name) {
+					// TODO: Generate media type name
+					console.log("Failed to find mediaTypeBaseName for shape " + shape.id.stringValue);
+				} else {
+					var avro = shape.v().out(kol.avroSchemaRendition).first();
+					var json = shape.v().out(kol.jsonSchemaRendition).first();
+					
+					if (avro) {
+						sink.push({
+							id: avro.id.stringValue,
+							mediaTypeName : name.stringValue + "+avro"
+						});
+					};
+					if (json) {
+						sink.push({
+							id: json.id.stringValue,
+							mediaTypeName : name.stringValue + "+json"
+						});
+					}
+				}
 			}
 		}
 		
@@ -479,15 +626,12 @@ ClassInfo.prototype.addShapeProperties = function(owlClass, logicalVertex) {
 	// Get the list of shapes that have owlClass as the scopeClass
 	var shapeList = owlClass.v().inward(sh.scopeClass).toList();
 	
-	console.log(logicalVertex.toJson());
-	
 	for (var i=0; i<shapeList.length; i++) {
 		var shape = shapeList[i];
 		var propertyList = shape.v().out(sh.property).toList();
 		for (var j=0; j<propertyList.length; j++) {
 			var property = propertyList[j];
 			var predicate = property.propertyValue(sh.predicate);
-			console.log(predicate.stringValue);
 			// Do we have an existing PropertyConstraint for the given predicate?
 			var prior = logicalVertex.v().out(sh.property).has(sh.predicate, predicate).first();
 			if (!prior) {
@@ -579,8 +723,9 @@ ClassInfo.prototype.addPropertyConstraint = function(shape, property) {
 		
 		var propertyType = this.propertyType(property);
 		var range = this.rangeValue(property);
+		
 			
-		if (propertyType.equals(owl.DatatypeProperty) || range.v().instanceOf(rdfs.Datatype)) {
+		if (propertyType.equals(owl.DatatypeProperty) || (range.v && range.v().instanceOf(rdfs.Datatype))) {
 			graph.statement(result, sh.datatype, range);
 		} else {
 			graph.statement(result, sh.valueClass, range);
@@ -630,7 +775,27 @@ ClassInfo.prototype.propertyType = function(property) {
 function ShapeInfo(classInfo, rawShape) {
 	this.classInfo = classInfo;
 	this.rawShape = rawShape;
-	this.init();
+	if (rawShape) {
+		this.init();
+	}
+}
+
+ShapeInfo.prototype.toAvroSchema = function() {
+	return this;
+}
+
+ShapeInfo.prototype.toJsonSchema = function(format) {
+	if (this.directProperties) {
+		this.directProperties.toJsonSchema();
+	}
+	for (var i=0; i<this.propertyBlock.length; i++) {
+		if (this.propertyBlock[i] != this.directProperties) {
+			this.propertyBlock[i].toJsonSchema();
+		}
+	}
+	this.format = format;
+	
+	return this;
 }
 
 ShapeInfo.prototype.init = function() {
@@ -639,6 +804,21 @@ ShapeInfo.prototype.init = function() {
 
 	this.addDirectProperties();
 	this.addSuperProperties(this.rawShape, true);
+}
+
+ShapeInfo.prototype.clone = function() {
+	var other = new ShapeInfo(this.classInfo);
+	other.rawShape = this.rawShape;
+	other.propertyBlock = [];
+	
+	for (var i=0; i<this.propertyBlock.length; i++) {
+		other.propertyBlock.push(this.propertyBlock[i].clone());
+	}
+	if (this.directProperties) {
+		other.directProperties = this.directProperties.clone();
+	}
+	
+	return other;
 }
 
 ShapeInfo.prototype.addSuperProperties = function(shape, isDirect) {
@@ -721,7 +901,6 @@ ShapeInfo.prototype.copyPropertyBlocks = function(shapeInfo) {
 				}
 				sink.push(propertyInfo);
 			}
-			sinkBlock.blockSize = sink.length;
 		}
 	}
 }
@@ -754,6 +933,8 @@ ShapeInfo.prototype.addDirectProperties = function() {
 		var valueShape = property.v().out(sh.valueShape).first();
 		var minCount = property.v().out(sh.minCount).first();
 		var maxCount = property.v().out(sh.maxCount).first();
+		var nodeKind = property.v().out(sh.nodeKind).first();
+		var valueShape = property.v().out(sh.valueShape).first();
 		if (datatype) {
 			PropertyInfo.addType(expectedType, datatype);
 		} else if (objectType) {
@@ -774,7 +955,7 @@ ShapeInfo.prototype.addDirectProperties = function() {
 		}
 
 		var propertyInfo = new PropertyInfo(
-			predicate.id, expectedType, minCount, maxCount, description
+			predicate.id, expectedType, minCount, maxCount, description, nodeKind, valueShape
 		);
 		
 		sink.push(propertyInfo);
@@ -783,17 +964,17 @@ ShapeInfo.prototype.addDirectProperties = function() {
 		this.directProperties = block;
 		
 		this.propertyBlock.push(block);
-		block.blockSize = sink.length;
 	}
 	
 }
 
 /*****************************************************************************/	
-function Ontodoc(graphJSON) {
-	this.ontologyGraph = graphJSON;
+function Ontodoc(options) {
+	this.ontologyGraph = options.ontologyGraph;
 	this.actionHistory = new HistoryManager();
-	this.editMode = false;
-	this.multipleShapesPerClass = false;
+	this.editMode = typeof(options.edit)==="undefined" ? false : options.edit;
+	this.multipleShapesPerClass = typeof(options.multipleShapesPerClass)==="undefined" ?
+			false : options.multipleShapesPerClass;
 	this.layout = $('body').layout(
 		{
 			applyDefaultStyles:true,
@@ -824,9 +1005,6 @@ function Ontodoc(graphJSON) {
 	this.classManager = new ClassManager(this.ontologyManager, this.graph);
 	this.propertyManager = new PropertyManager(this.graph);
 	
-//	this.buildClassMap();
-//	this.analyzeProperties();
-//	this.analyzeSuperProperties();
 	this.inferOntologies();
 	this.renderOntologyList();
 	this.renderClassList();
@@ -880,6 +1058,12 @@ Ontodoc.shaclDescription = function(vertex) {
 	if (description == null) {
 		description = vertex.v().out(rdfs.comment).first();
 	}
+	if (description == null) {
+		var predicate = vertex.v().out(sh.predicate).first();
+		if (predicate) {
+			description = predicate.v().out(schema.description, dcterms.description, rdfs.comment).first();
+		}
+	}
 	
 	return description;
 }
@@ -913,33 +1097,32 @@ Ontodoc.prototype.addSuperProperties = function(shapeInfo, map) {
 
 }
 
+Ontodoc.prototype.isMediaTypeDescriptor = function(vertex) {
+	return 
+		vertex.v().inward(kol.avroSchemaRendition).first() ||
+		vertex.v().inward(kol.jsonSchemaRendition.first());
+}
+
 Ontodoc.prototype.onHashChange = function() {
 	var location = window.location;
 	var hash = location.hash;
 	if (hash) {
 		hash = hash.substring(1);
 		var vertex = this.graph.vertex(hash, true);
+		
 		if (!vertex) {
-			// TODO: fetch the resource via an ajax call.
+			// TODO: fetch the resource via ajax call.
 		} else {
 			
-			if (vertex.instanceOf(owl.Ontology)) {
+			var shapeInfo = this.classManager.computeShapeInfo(vertex);
+			
+			if (shapeInfo) {
+				this.renderShape(shapeInfo);
+			} else if (vertex.instanceOf(owl.Ontology)) {
 				this.renderOntology(vertex);
-			} else if (vertex.instanceOf(owl.Class) || vertex.instanceOf(rdfs.Class)) {
-				this.renderClass(hash);
 			} else if (vertex.instanceOf(rdf.Property)) {
 				this.renderProperty(vertex);
 			}
-			
-//			var typeList = vertex.v().out(rdf.type).toList();
-//			for (var i=0; i<typeList.length; i++) {
-//				var type = typeList[i];
-//				if (type.equals(owl.Ontology)) {
-//					this.renderOntology(vertex);
-//				} else if (type.equals(owl.Class)) {
-//					this.renderClass(hash);
-//				}
-//			}
 		}
 	}
 }
@@ -1047,6 +1230,8 @@ Ontodoc.prototype.addPropertiesFromShape = function(shapeInfo, shape) {
 			var valueShape = property.v().out(sh.valueShape).first();
 			var minCount = property.v().out(sh.minCount).first();
 			var maxCount = property.v().out(sh.maxCount).first();
+			var nodeKind = property.v().out(sh.nodeKind).first();
+			var valueShape = property.v().out(sh.valueShape).first();
 			// TODO: support description in multiple languages
 			var description = property.v().out(sh.description).first();
 			if (datatype) {
@@ -1069,7 +1254,7 @@ Ontodoc.prototype.addPropertiesFromShape = function(shapeInfo, shape) {
 			}
 
 			var propertyInfo = new PropertyInfo(
-				predicate.id, expectedType, minCount, maxCount, description
+				predicate.id, expectedType, minCount, maxCount, description, nodeKind, valueShape
 			);
 			propertyBlock.propertyList.push(propertyInfo);
 		}
@@ -1094,43 +1279,73 @@ Ontodoc.prototype.renderOntology = function(ontologyId) {
 	
 }
 
+Ontodoc.prototype.renderShape = function(shapeInfo) {
+	
+	var classInfo = shapeInfo.classInfo;
+	var owlClassIRI = classInfo.classVertex.id.stringValue;
+	
+
+	if (this.multipleShapesPerClass) {
+		shapeInfo.mediaTypeList = shapeInfo.classInfo.getMediaTypeList();
+	}
+
+	shapeInfo.subClassList = classInfo.getSubClassList();
+	
+	if (!shapeInfo.comment) {
+		shapeInfo.comment = classInfo.comment;
+	}
+	
+	if (this.multipleShapesPerClass) {
+		shapeInfo.mediaTypeList = classInfo.getMediaTypeList();
+	}
+	
+	var rendered = this.editMode ?
+			Mustache.render(this.classEditTemplate, shapeInfo) :
+			Mustache.render(this.classTemplate, shapeInfo);
+		
+	$(".ontodoc-main-content").empty().append(rendered);
+	this.renderClassBreadcrumbs(owlClassIRI);
+	
+	var self = this;
+	$(".prop-ect a[resource]").each(function(index, element){
+		var e = $(this);
+		var className = e.attr("resource");
+		e.click(self.clickClassName(className));
+	});
+	
+	if (this.multipleShapesPerClass) {
+		$("#konig-class-media-type").change(function(){
+			var value = $(this).val();
+			
+			window.location.hash = value;
+		});
+	}
+	
+	if (this.editMode) {
+		this.editClass(shapeInfo);
+	}
+	
+	if (shapeInfo.format) {
+		$("#konig-class-media-type").val(shapeInfo.format)
+	}
+	
+	$(".ontodoc-main-content")[0].scrollTop = 0;
+}
+
 Ontodoc.prototype.renderClass = function(owlClassIRI) {
 	
+	
 	var classInfo = this.classManager.classMap[owlClassIRI];
+	
+	
+	
 	if (classInfo) {
 	
 		var shapeInfo = classInfo.getLogicalShape();
 		
-		shapeInfo.subClassList = classInfo.getSubClassList();
-		
-		if (!shapeInfo.comment) {
-			shapeInfo.comment = classInfo.comment;
-		}
-		
-		if (this.multipleShapesPerClass) {
-			shapeInfo.mediaTypeList = classInfo.getMediaTypeList();
-		}
-		
-		var rendered = this.editMode ?
-			Mustache.render(this.classEditTemplate, shapeInfo) :
-			Mustache.render(this.classTemplate, shapeInfo);
-		
-		$(".ontodoc-main-content").empty().append(rendered);
-		this.renderClassBreadcrumbs(owlClassIRI);
-		
-		var self = this;
-		$(".prop-ect a[resource]").each(function(index, element){
-			var e = $(this);
-			var className = e.attr("resource");
-			e.click(self.clickClassName(className));
-		});
-		
-		if (this.editMode) {
-			this.editClass(shapeInfo);
-		}
+		this.renderShape(shapeInfo);
 	}
 	
-	$(".ontodoc-main-content")[0].scrollTop = 0;
 	
 }
 
@@ -1148,7 +1363,7 @@ Ontodoc.prototype.subClassSequence = function(owlClassVertex) {
 	
 	while (owlClassVertex != null) {
 		list.push(owlClassVertex);
-		var superList = owlClassVertex.v().out(rdfs.subClassOf).toList();
+		var superList = owlClassVertex.v().out(rdfs.subClassOf).iri().toList();
 		if (superList.length > 1) {
 			return null;
 		}
@@ -1269,14 +1484,14 @@ Ontodoc.prototype.clickClassName = function(owlClass) {
 	}
 }
 
-function OntodocBootstrap(graphJSON) {
-	konig.ontodoc = new Ontodoc(graphJSON);
-}
-
 konig.Ontodoc = Ontodoc;
-konig.buildOntodoc = function(ontologyService) {
+konig.buildOntodoc = function(options) {
+	var ontologyService = options.ontologyService;
 	
-	ontologyService.getOntologyGraph(OntodocBootstrap);
+	ontologyService.getOntologyGraph(function(graphValue){
+		options.ontologyGraph = graphValue;
+		konig.ontodoc = new Ontodoc(options);
+	});
 }
 konig.ShapeInfo = ShapeInfo;
 konig.PropertyBlock = PropertyBlock;

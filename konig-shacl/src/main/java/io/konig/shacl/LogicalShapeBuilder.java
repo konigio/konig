@@ -24,7 +24,6 @@ package io.konig.shacl;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,17 +31,30 @@ import java.util.Set;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
+import io.konig.core.AmbiguousPreferredClassException;
+import io.konig.core.OwlReasoner;
+
 public class LogicalShapeBuilder {
 	
+	private OwlReasoner reasoner;
 	private LogicalShapeNamer shapeNamer;
 	private Set<URI> stack;
 	
 	
-	public LogicalShapeBuilder(LogicalShapeNamer shapeNamer) {
+	public LogicalShapeBuilder(OwlReasoner reasoner, LogicalShapeNamer shapeNamer) {
+		this.reasoner = reasoner;
 		this.shapeNamer = shapeNamer;
 	}
 
 
+	private URI scopeClass(Shape shape) {
+		URI scopeClass = shape.getScopeClass();
+		try {
+			return scopeClass == null ? null : reasoner.preferredClassAsURI(scopeClass);
+		} catch (AmbiguousPreferredClassException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	public void buildLogicalShapes(ShapeManager shapeManager, ClassManager classManager) {
 		
@@ -51,7 +63,7 @@ public class LogicalShapeBuilder {
 		
 		stack = new HashSet<>();
 		for (Shape shape : list) {
-			URI scopeClass = shape.getScopeClass();
+			URI scopeClass = scopeClass(shape);
 			
 			Shape logicalShape = classManager.getLogicalShape(scopeClass);
 			if (logicalShape == null) {
@@ -60,6 +72,7 @@ public class LogicalShapeBuilder {
 		}
 
 		for (URI owlClass : stack) {
+			
 			Shape prior = classManager.getLogicalShape(owlClass);
 			if (prior == null) {
 				URI shapeId = shapeNamer.logicalShapeForOwlClass(owlClass);
@@ -95,6 +108,14 @@ public class LogicalShapeBuilder {
 		}
 		
 	}
+	
+	private Resource preferredClass(Resource owlClass) {
+		try {
+			return owlClass==null ? null : reasoner.preferredClass(owlClass).getId();
+		} catch (AmbiguousPreferredClassException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	private void mergeProperties(Shape shape, List<PropertyConstraint> pList) {
 		
@@ -122,22 +143,22 @@ public class LogicalShapeBuilder {
 				constraint.setMaxCount(maxCountB);
 			}
 			
-			URI datatypeA = constraint.getDatatype();
-			URI datatypeB = p.getDatatype();
+			Resource datatypeA = preferredClass(constraint.getDatatype());
+			Resource datatypeB = preferredClass(p.getDatatype());
 			
-			Resource classA = constraint.getValueClass();
-			Resource classB = p.getValueClass();
+			Resource classA = preferredClass(constraint.getValueClass());
+			Resource classB = preferredClass(p.getValueClass());
 			Shape valueShapeA = constraint.getValueShape();
 			Shape valueShapeB = p.getValueShape();
 			
 			if (valueShapeB!=null) {
-				classB = leastUpperBound(shape, p, "sh:class", valueShapeB.getScopeClass(), classB);
+				classB = leastUpperBound(shape, p, "sh:class", scopeClass(valueShapeB), classB);
 			}
 			if (valueShapeA!=null && classA==null) {
 				classA = valueShapeA.getScopeClass();
 			}
 			if (valueShapeA!=null && classA != null) {
-				classA = leastUpperBound(shape, p, "sh:class", valueShapeA.getScopeClass(), classA);
+				classA = leastUpperBound(shape, p, "sh:class", scopeClass(valueShapeA), classA);
 			}
 			
 			classB = leastUpperBound(shape, p, "sh:class", classB, classA);
@@ -148,7 +169,7 @@ public class LogicalShapeBuilder {
 			}
 			
 			constraint.setValueClass(classB);
-			constraint.setDatatype(datatypeB);
+			constraint.setDatatype((URI) datatypeB);
 			
 		}
 		
@@ -204,9 +225,10 @@ public class LogicalShapeBuilder {
 
 
 	private List<Shape> filterByScopeClass(List<Shape> list, URI scopeClass) {
+	
 		List<Shape> result = new ArrayList<>();
 		for (Shape shape : list) {
-			if (scopeClass.equals(shape.getScopeClass())) {
+			if (scopeClass.equals(scopeClass(shape))) {
 				result.add(shape);
 			}
 		}

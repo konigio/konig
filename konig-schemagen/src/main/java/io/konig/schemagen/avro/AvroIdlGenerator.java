@@ -184,7 +184,7 @@ public class AvroIdlGenerator  {
 		
 		private String avroType(URI datatype, URI valueShape, NodeKind nodeKind) throws IOException {
 			if (datatype != null) {
-				return datatypeMapper.toAvroDatatype(datatype, graph).getTypeName();
+				return datatypeMapper.toAvroDatatype(datatype).getTypeName();
 			} else if (valueShape != null) {
 				return toAvroName(valueShape);
 			} else if (nodeKind == NodeKind.IRI) {

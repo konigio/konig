@@ -853,6 +853,26 @@ HasTransitiveStep.prototype.execute = function(traverser) {
 	return traverser;
 }
 /*****************************************************************************/
+function IRIFilterStep() {
+	
+}
+IRIFilterStep.prototype.execute = function(traverser) {
+	var filtered = [];
+	var list = traverser.itemList;
+	for (var i=0; i<list.length; i++) {
+		var item = list[i];
+		if (item instanceof Vertex) {
+			if (item.id instanceof IRI) {
+				filtered.push(item);
+			}
+		}
+	}
+	
+	traverser.itemList = filtered;
+	traverser.addFilter(this);
+	return traverser;
+}
+/*****************************************************************************/
 function InstanceOfStep(owlClass) {
 	this.owlClass = rdf.node(owlClass);
 }
@@ -1253,6 +1273,10 @@ Traversal.prototype.until = function(condition) {
 
 Traversal.prototype.repeat = function(traversal) {
 	return this.addStep(new RepeatStep(traversal));
+}
+
+Traversal.prototype.iri = function() {
+	return this.addStep(new IRIFilterStep());
 }
 
 Traversal.prototype.v = function(resourceId) {
@@ -2222,6 +2246,10 @@ RdfModule.prototype.rdfaExpand = function(element, value) {
 	var colon = value.indexOf(':');
 	if (colon >= 0) {
 		var prefix = value.substring(0, colon);
+		if (prefix == "_") {
+			// This is a hack for BNodes.  Fix this hack!
+			return value;
+		}
 		var namespace = this.rdfaNamespace(element, prefix);
 		if (namespace) {
 			var localName = value.substring(colon+1);

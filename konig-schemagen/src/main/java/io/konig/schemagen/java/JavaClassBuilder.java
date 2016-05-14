@@ -25,7 +25,9 @@ import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
 
+import io.konig.core.AmbiguousPreferredClassException;
 import io.konig.core.Graph;
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.ClassManager;
@@ -36,17 +38,20 @@ import io.konig.shacl.Shape;
 public class JavaClassBuilder {
 	private static final Logger logger = LoggerFactory.getLogger(JavaClassBuilder.class);
 	private JavaNamer namer;
-	private JavaDatatypeMapper mapper = new BasicJavaDatatypeMapper();
+	private JavaDatatypeMapper mapper;
 	private ClassManager classManager;
+	private OwlReasoner reasoner;
 	private Graph graph;
 	private LogicalShapeNamer logicalShapeNamer;
 	private JClass owlThing;
 	
-	public JavaClassBuilder(ClassManager classManager, LogicalShapeNamer logicalShapeNamer, JavaNamer namer, Graph graph) {
+	public JavaClassBuilder(ClassManager classManager, LogicalShapeNamer logicalShapeNamer, JavaNamer namer, OwlReasoner reasoner) {
 		this.classManager = classManager;
 		this.logicalShapeNamer = logicalShapeNamer;
 		this.namer = namer;
-		this.graph = graph;
+		this.reasoner = reasoner;
+		this.graph = reasoner.getGraph();
+		mapper = new SmartJavaDatatypeMapper(reasoner);
 	}
 	
 	public void buildAll(Collection<Shape> collection, JCodeModel model) throws SchemaGeneratorException {
@@ -117,6 +122,13 @@ public class JavaClassBuilder {
 		
 		URI scopeClass = shape.getScopeClass();
 		
+		try {
+			Vertex preferred = reasoner.preferredClass(scopeClass);
+			scopeClass = (URI) preferred.getId();
+		} catch (AmbiguousPreferredClassException e1) {
+			throw new SchemaGeneratorException(e1);
+		}
+		
 		String javaClassName = namer.javaClassName(scopeClass);
 
 		JClass prior = model._getClass(javaClassName);
@@ -165,19 +177,27 @@ public class JavaClassBuilder {
 			Vertex superVertex = superClassList.get(0);
 			Resource superId = superVertex.getId();
 			if (superId instanceof URI) {
-				URI superIRI = (URI) superId;
 				
-				Shape superShape = classManager.getLogicalShape(superIRI);
-				if (superShape == null) {
-					URI shapeId = logicalShapeNamer.logicalShapeForOwlClass(superIRI);
-					superShape = new Shape(shapeId);
-					superShape.setScopeClass(superIRI);
-					classManager.addLogicalShape(shape);
-				}
-				
-				JClass jSuper = buildClass(superShape, model);
-				
-				dc._extends(jSuper);
+				try {
+
+					URI superIRI = reasoner.preferredClassAsURI((URI) superId);
+					
+					
+					Shape superShape = classManager.getLogicalShape(superIRI);
+					if (superShape == null) {
+						URI shapeId = logicalShapeNamer.logicalShapeForOwlClass(superIRI);
+						superShape = new Shape(shapeId);
+						superShape.setScopeClass(superIRI);
+						classManager.addLogicalShape(shape);
+					}
+					
+					JClass jSuper = buildClass(superShape, model);
+					
+					dc._extends(jSuper);
+					
+				} catch (AmbiguousPreferredClassException e) {
+					throw new SchemaGeneratorException(e);
+				} 
 			}
 			
 		} else {
@@ -263,9 +283,7 @@ public class JavaClassBuilder {
 		JClass result = model._getClass(className);
 		if (result == null) {
 			Shape shape = classManager.getLogicalShape(owlClass);
-			if (shape == null) {
-				
-			}
+			
 			result = buildClass(shape, model);
 		}
 		return result;
@@ -279,7 +297,7 @@ public class JavaClassBuilder {
 		String fieldName = predicate.getLocalName();
 		String methodBaseName = fieldName;
 		
-		Class<?> javaType = mapper.javaDatatype(datatype, graph);
+		Class<?> javaType = mapper.javaDatatype(datatype);
 		JClass jClass = model.ref(javaType);
 		
 		Integer maxCount = p.getMaxCount();

@@ -85,6 +85,20 @@ public interface Traversal {
 	 */
 	Traversal distinct();
 	
+	/**
+	 * Add a vertex to this Traversal.
+	 * @param v The vertex to be added.
+	 * @return This traversal
+	 */
+	Traversal union(Vertex v);
+	
+	/**
+	 * Add a value to this Traversal.
+	 * @param v The value to be added.
+	 * @return This traversal
+	 */
+	Traversal union(Value v);
+	
 	
 	/**
 	 * Add a literal property value to all vertices in this traversal.

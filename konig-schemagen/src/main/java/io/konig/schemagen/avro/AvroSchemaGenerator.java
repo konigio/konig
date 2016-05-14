@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.TraversalImpl;
@@ -41,7 +42,7 @@ public class AvroSchemaGenerator extends Generator {
 	public static final String USAGE_COUNT = "Usage-Count";
 	
 	private AvroNamer namer;
-	private AvroDatatypeMapper datatypeMapper = new SimpleAvroDatatypeMapper();
+	private AvroDatatypeMapper datatypeMapper;
 	private boolean embedValueShape = true;
 	
 	private static final Pattern enumSymbolPattern = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
@@ -52,8 +53,9 @@ public class AvroSchemaGenerator extends Generator {
 	 */
 	private ShapeTransformer shapeTransformer = new GeneratedMediaTypeTransformer("+avro");
 	
-	public AvroSchemaGenerator(AvroNamer namer, NamespaceManager nsManager) {
+	public AvroSchemaGenerator(AvroDatatypeMapper datatypeMapper, AvroNamer namer, NamespaceManager nsManager) {
 		super(nsManager);
+		this.datatypeMapper = datatypeMapper;
 		this.namer = namer;
 		this.nsManager = nsManager;
 		
@@ -276,7 +278,11 @@ public class AvroSchemaGenerator extends Generator {
 		} else if (nodeKind == NodeKind.IRI) {
 			json.writeString("string");
 		} else if (datatype != null) {
-			AvroDatatype avroDatatype = datatypeMapper.toAvroDatatype(datatype, propertyVertex.getGraph());
+			AvroDatatype avroDatatype = datatypeMapper.toAvroDatatype(datatype);
+			
+			if (avroDatatype == null) {
+				throw new IOException("AvroDatatype not found: " + datatype);
+			}
 			
 			String typeName = avroDatatype.getTypeName();
 			String logicalType = avroDatatype.getLogicalType();

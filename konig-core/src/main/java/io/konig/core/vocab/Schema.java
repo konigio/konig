@@ -34,6 +34,7 @@ public class Schema {
 	public static final URI Organization = new URIImpl("http://schema.org/Organization");
 	public static final URI WebPage = new URIImpl("http://schema.org/WebPage");
 	public static final URI address = new URIImpl("http://schema.org/address");
+	public static final URI alumniOf = new URIImpl("http://schema.org/alumniOf");
 	public static final URI datePublished = new URIImpl("http://schema.org/datePublished");
 	public static final URI streetAddress = new URIImpl("http://schema.org/streetAddress");
 	public static final URI addressLocality = new URIImpl("http://schema.org/addressLocality");

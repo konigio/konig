@@ -1038,6 +1038,9 @@ LayoutManager.prototype.analyzeStatements = function(direction, list) {
 		if (namer.isLabelProperty(statement.predicate)) {
 			continue;
 		}
+		
+		
+		
 		var subject = statement.subject;
 		var object = statement.object;
 		var target = (direction==OUT) ? object : subject;
@@ -1076,6 +1079,12 @@ LayoutManager.prototype.analyzeStatements = function(direction, list) {
 	this.joinPeerToPeer();
 }
 
+LayoutManager.prototype.arcExists = function(statement) {
+	var key = statement.key();
+	var controller = this.rdfController;
+	return controller.arcMap[key] ? true : false;
+}
+
 LayoutManager.prototype.layoutDataByRdfKey = function(key) {
 	for (var i=0; i<this.layoutDataList.length; i++) {
 		var data = this.layoutDataList[i];
@@ -1103,7 +1112,7 @@ LayoutManager.prototype.joinPeerToPeer = function() {
 		var outStatements = rdfVertex.outStatements();
 		for (var j=0; j<outStatements.length; j++) {
 			var s = outStatements[j];
-
+			
 			var objectKey = s.object.key();
 			if (objectKey !== originVertexKey) {
 				var objectView = this.rdfController.vertexViewById(s.object.key());
@@ -1124,6 +1133,9 @@ LayoutManager.prototype.joinPeerToPeer = function() {
 		var objectView = subjectView;
 		for (var j=0; j<inStatements.length; j++) {
 			var s = inStatements[j];
+
+			if (this.arcExists(s)) continue;
+			
 			if (s.subject.key() !== originVertexKey) {
 				subjectView = this.rdfController.vertexViewById(s.subject.key());
 				if (subjectView) {

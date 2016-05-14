@@ -79,11 +79,12 @@
 	</h4>
 	{{{comment}}}
 
+
   {{#mediaTypeList.length}}
-	<div>
+	<div>Media Type:
   <select id="konig-class-media-type">
 		{{#mediaTypeList}}
-    <option>{{mediaTypeName}}</option>
+    <option value="{{id}}">{{mediaTypeName}}</option>
     {{/mediaTypeList}}
   </select>
 	</div>
@@ -100,7 +101,7 @@
  			
  		</thead>
 		{{#propertyBlock}}
-		{{#blockSize}}
+		{{#propertyList.length}}
 		<tbody>
 			<tr class="supertype">
 				<th class="supertype-name"  colspan="3">
@@ -117,7 +118,7 @@
 				</th>
 				<td class="prop-ect">
                     {{#expectedType}}
-					<a href="#{{stringValue}}">{{localName}}</a>{{^last}} or {{/last}}
+					<a href="#{{stringValue}}">{{localName}}</a>{{^last}} or {{/last}}{{#modifier}} ({{modifier}}){{/modifier}}
                     {{/expectedType}}
 				</td>
 				<td class="prop-desc">
@@ -126,7 +127,7 @@
 			</tr>
 		</tbody>
 		{{/propertyList}}
-		{{/blockSize}}
+		{{/propertyList.length}}
 		{{/propertyBlock}}
  	</table>
 	{{/propertyBlock.length}}
@@ -264,35 +265,1095 @@ $(function(){
 	
 var defaultGraph = {
 		  "@context" : {
+			    "as" : "http://www.w3.org/ns/activitystreams#",
+			    "asgn" : "http://schema.pearson.com/ns/assignment/",
+			    "cnt" : "http://schema.pearson.com/ns/content/",
+			    "data" : "http://schema.pearson.com/ns/data/",
+			    "dc" : "http://purl.org/dc/terms/",
+			    "kol" : "http://www.konig.io/ns/kol/",
+			    "ldp" : "http://www.w3.org/ns/ldp#",
+			    "lrn" : "http://schema.pearson.com/ns/learn/",
+			    "org" : "http://www.w3.org/ns/org#",
 			    "owl" : "http://www.w3.org/2002/07/owl#",
+			    "prov" : "http://www.w3.org/ns/prov#",
 			    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
 			    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+			    "reg" : "http://schema.pearson.com/ns/registrar/",
 			    "schema" : "http://schema.org/",
 			    "sh" : "http://www.w3.org/ns/shacl#",
+			    "skos" : "http://www.w3.org/2004/02/skos/core#",
+			    "sys" : "http://schema.pearson.com/ns/system/",
 			    "vann" : "http://purl.org/vocab/vann/",
+			    "vs" : "http://www.w3.org/2003/06/sw-vocab-status/ns#",
+			    "xas" : "http://schema.pearson.com/ns/activity/",
+			    "xkos" : "http://schema.pearson.com/ns/xkos/",
+			    "xowl" : "http://schema.pearson.com/ns/xowl/",
+			    "xprov" : "http://schema.pearson.com/ns/xprov/",
 			    "xsd" : "http://www.w3.org/2001/XMLSchema#"
 			  },
 			  "@graph" : [ {
+			    "@id" : "dc:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "dc"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Dublin Core"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "A general-purpose vocabulary for resource description including terms like author, title, etc."
+			    }
+			  }, {
+			    "@id" : "data:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "data"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Pearson Data Analysis Ontology"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tAn ontology containing terms useful for data analysis\r\n  "
+			    }
+			  }, {
+			    "@id" : "xkos:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespaceUri" : {
+			      "@value" : "http://schema.pearson.com/ns/xkos/"
+			    },
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "xkos"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Pearson extension of SKOS"
+			    },
+			    "owl:imports" : {
+			      "@id" : "skos:"
+			    }
+			  }, {
+			    "@id" : "lrn:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "lrn"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Pearson Pedagogy Ontology"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tAn ontology for pedagogical entities such as Educational Objectives, Misconceptions, \r\n  \tLearning Sequences, etc.\r\n  "
+			    }
+			  }, {
 			    "@id" : "schema:",
 			    "@type" : "owl:Ontology",
 			    "vann:preferredNamespacePrefix" : {
 			      "@value" : "schema"
 			    },
 			    "rdfs:label" : {
-			      "@value" : "Schema.org Vocabulary"
+			      "@value" : "Schema.org"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tA vocabulary developed by Google, Microsoft, Yahoo and others through a community \r\n  \tprocess to promote structured data on the Internet, on web pages, in email messages, and beyond.\r\n  "
 			    }
 			  }, {
-			    "@id" : "schema:Person",
+			    "@id" : "xas:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "xas"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Pearson Activity Streams"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "Pearson's extension of the W3C Activity vocabulary"
+			    }
+			  }, {
+			    "@id" : "xprov:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "xprov"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Pearson Provenance"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tAn extension of the W3C Provenance Ontology\r\n  "
+			    }
+			  }, {
+			    "@id" : "as:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "as"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "W3C Activity Streams"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "This vocabulary describes activities that people, groups, or software agents perform."
+			    }
+			  }, {
+			    "@id" : "prov:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "prov"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "W3C Provenance Ontology"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "A vocabulary for describing the provenance of resources -- i.e. the activities that produce resources"
+			    }
+			  }, {
+			    "@id" : "asgn:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "asgn"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Pearson Assignment Ontology"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tAn ontology for content or learning activities the instructor selects to include in the \r\n  \tprescribed set of materials for the course along with the due date of each \r\n  \tactivity, the points for it, the availability date, etc.  The idea being \r\n  \tthat the instructor is selecting content to include in his course and then \r\n  \tspecifying when it is due and how many points, etc. \r\n  "
+			    }
+			  }, {
+			    "@id" : "skos:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "skos"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "W3C Simple Knowledge Organization System"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tProvides a model for expressing the basic structure and content of concept schemes \r\n  \tsuch as thesauri, classification schemes, subject heading lists, taxonomies, \r\n  \tfolksonomies, and other similar types of controlled vocabulary. \r\n  "
+			    }
+			  }, {
+			    "@id" : "org:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "org"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "W3C Organization Ontology"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "A vocabulary for describing organization structures and roles"
+			    }
+			  }, {
+			    "@id" : "sys:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "sys"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Pearson Systems"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tControlled vocabularies for the various platforms and systems at Pearson.\r\n  "
+			    }
+			  }, {
+			    "@id" : "reg:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "reg"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Pearson Registrar Ontology"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tAn ontology for entities controlled by a registrar.\r\n  "
+			    }
+			  }, {
+			    "@id" : "xowl:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "xowl"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Pearson Ontology Language"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tProvides terms that extend OWL and SHACL.\r\n  "
+			    }
+			  }, {
+			    "@id" : "cnt:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "cnt"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Pearson Content"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tA vocabulary for describing learning resources.\r\n  "
+			    }
+			  }, {
+			    "@id" : "ldp:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "ldp"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "W3C Linked Data Platform"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n  \tDefines a set of rules for HTTP operations on web resources, some based on RDF, \r\n  \tto provide an architecture for read-write Linked Data on the web. \r\n  "
+			    }
+			  }, {
+			    "@id" : "as:Activity",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tIn general, an Activity encapsulates information about actions that have occurred, are in the process of occurring,\r\n\t\tor may occur in the future.  At Pearson, we almost always use Activity entities to describe actions that have already occurred."
+			    }
+			  }, {
+			    "@id" : "owl:Axiom",
 			    "@type" : "owl:Class"
 			  }, {
-			    "@id" : "http://example.com/shapes/v1/schema/Person",
+			    "@id" : "xkos:BroaderAxiom",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : [ {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "rdfs:isDefinedBy"
+			      },
+			      "owl:allValuesFrom" : {
+			        "@id" : "skos:ConceptScheme"
+			      }
+			    }, {
+			      "@id" : "owl:Axiom"
+			    }, {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "xowl:value"
+			      },
+			      "owl:allValuesFrom" : {
+			        "@id" : "skos:Concept"
+			      }
+			    } ],
+			    "rdfs:comment" : {
+			      "@value" : "A specialized OWL axiom that annotates a statement of the form (?x, skos:broader, ?y) by identifying the scheme in which the statement is true."
+			    }
+			  }, {
+			    "@id" : "xkos:BroaderContainer",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : [ {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "ldp:hasMemberRelation"
+			      },
+			      "owl:hasValue" : {
+			        "@id" : "xkos:hasBroader"
+			      }
+			    }, {
+			      "@id" : "ldp:DirectContainer"
+			    } ],
+			    "rdfs:comment" : {
+			      "@value" : "A container that holds axioms for the broader concepts related to a source concept which is identified as the membershipResource."
+			    }
+			  }, {
+			    "@id" : "sys:CitationGenerator",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "schema:SoftwareApplication"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of software applications that can generate citations"
+			    }
+			  }, {
+			    "@id" : "cnt:CitationSource",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "schema:CreativeWork"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of things that may by referenced by a Citation"
+			    }
+			  }, {
+			    "@id" : "sys:CiteASource",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : [ {
+			      "@id" : "sys:CitationGenerator"
+			    }, {
+			      "@id" : "sys:PearsonWriter"
+			    } ],
+			    "rdfs:comment" : {
+			      "@value" : "The component of PearsonWriter responsible for implementing the 'Cite a source' feature"
+			    }
+			  }, {
+			    "@id" : "lrn:Condition",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tThe abstract base class for any condition that must be satisfied in order to enter a learning sequence.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "xas:CreateCitation",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "as:Activity"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The action of creating a Citation"
+			    }
+			  }, {
+			    "@id" : "xas:CreateProject",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "as:Activity"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The action of creating a Project"
+			    }
+			  }, {
+			    "@id" : "schema:CreativeWork",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "The most generic kind of creative work including learning resources"
+			    }
+			  }, {
+			    "@id" : "sys:DesktopApplication",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "schema:SoftwareApplication"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tThe class of all desktop software applications such as Microsoft Word, \r\n\t\tPhotoshop, etc.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "ldp:DirectContainer",
+			    "@type" : "owl:Class"
+			  }, {
+			    "@id" : "sys:FindASource",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : [ {
+			      "@id" : "sys:PearsonWriter"
+			    }, {
+			      "@id" : "sys:CitationGenerator"
+			    } ],
+			    "rdfs:comment" : {
+			      "@value" : "The component of PearsonWriter responsible for implementing the 'Find a source' feature"
+			    }
+			  }, {
+			    "@id" : "lrn:HasMisconception",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "lrn:MisconceptionCondition"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA condition that is true if there is evidence that the learner currently has a particular misconception.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "xkos:IdentifierAxiom",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : [ {
+			      "@id" : "owl:Axiom"
+			    }, {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "rdfs:isDefinedBy"
+			      },
+			      "owl:allValuesFrom" : {
+			        "@id" : "skos:ConceptScheme"
+			      }
+			    }, {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "xowl:value"
+			      },
+			      "owl:allValuesFrom" : {
+			        "@id" : "xsd:string"
+			      }
+			    } ],
+			    "rdfs:comment" : {
+			      "@value" : "A specialized OWL axiom that annotates statements of the form (?x, dct:identifier, ?y) by specifying the scheme in which the statement is defined."
+			    }
+			  }, {
+			    "@id" : "xkos:IdentifierContainer",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : [ {
+			      "@id" : "ldp:DirectContainer"
+			    }, {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "ldp:hasMemberRelation"
+			      },
+			      "owl:hasValue" : {
+			        "@id" : "xkos:hasIdentifier"
+			      }
+			    } ],
+			    "rdfs:comment" : {
+			      "@value" : "A container that holds axioms for the identifiers of a source concept which is identified as the membershipResource."
+			    }
+			  }, {
+			    "@id" : "lrn:LearningSequence",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA multiply linked list that prescribes a set of alternative pathways for learning\r\n\t\ttasks. Each instance of LearningSequence represents\ta single step within the overall linked list. \r\n\t\tBut you can also think of a given LearningSequence as a complete list consisting of the given step\r\n\t\tas the head, plus the transitive closure of all the subsequent steps.\r\n\t\t<p>\r\n\t\tA given LearningSequence instance may have multiple \"next\" steps each of which represents an \r\n\t\talternative subsequence emanating from the current step.   \r\n\t\t</p>  \r\n\t"
+			    }
+			  }, {
+			    "@id" : "xas:Load",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "as:Activity"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The action of loading some resource into a browser or mobile device"
+			    }
+			  }, {
+			    "@id" : "xas:Login",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "as:Activity"
+			    },
+			    "rdfs:comment" : [ {
+			      "@value" : "The action of creating a session by logging into an application or web site"
+			    }, {
+			      "@value" : "Describes the action of logging into some system"
+			    } ]
+			  }, {
+			    "@id" : "sys:LoginPage",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "schema:WebPage"
+			    }
+			  }, {
+			    "@id" : "lrn:MisconceptionCondition",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "lrn:Condition"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tThe abstract base class for any Condition that evaluates misconception statements.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "lrn:MisconceptionStatement",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tAn observable which reports that the observedPerson has the observedMisconception with the observedLikelihood.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "schema:MobileApplication",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "schema:SoftwareApplication"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "A software application designed specifically to work well on a mobile device"
+			    }
+			  }, {
+			    "@id" : "xkos:NextAxiom",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : [ {
+			      "@id" : "owl:Axiom"
+			    }, {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "xowl:value"
+			      },
+			      "owl:allValuesFrom" : {
+			        "@id" : "skos:Concept"
+			      }
+			    }, {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "rdfs:isDefinedBy"
+			      },
+			      "owl:allValuesFrom" : {
+			        "@id" : "skos:ConceptScheme"
+			      }
+			    } ],
+			    "rdfs:comment" : {
+			      "@value" : "A specialized OWL axiom that annotates statements of the form (?x, xkos:next, ?y) by specifying the scheme in which the statement is defined."
+			    }
+			  }, {
+			    "@id" : "lrn:Observable",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tThe abstract base class for all events which signify that a given person has been observed to have a particular \r\n\t\tcharacteristic. \r\n\t"
+			    }
+			  }, {
+			    "@id" : "sys:PearsonWriter",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "schema:SoftwareApplication"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of all software applications that power PearsonWriter"
+			    }
+			  }, {
+			    "@id" : "sys:PearsonWriterWordPlugin",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : [ {
+			      "@id" : "sys:PearsonWriter"
+			    }, {
+			      "@id" : "sys:DesktopApplication"
+			    } ],
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tThe PearsonWriter plugin for Microsoft Word. This application allows users to\r\n\t\tauthor content in Word and push it to PearsonWriter in the cloud.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "xkos:PreviousAxiom",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : [ {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "xowl:value"
+			      },
+			      "owl:allValuesFrom" : {
+			        "@id" : "skos:Concept"
+			      }
+			    }, {
+			      "@id" : "owl:Axiom"
+			    }, {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "rdfs:isDefinedBy"
+			      },
+			      "owl:allValuesFrom" : {
+			        "@id" : "skos:ConceptScheme"
+			      }
+			    } ],
+			    "rdfs:comment" : {
+			      "@value" : "A specialized OWL axiom that annotates statements of the form (?x, xkos:previous, ?y) by specifying the scheme in which the statement is defined."
+			    }
+			  }, {
+			    "@id" : "asgn:Project",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "An assignable project that may have several components"
+			    }
+			  }, {
+			    "@id" : "reg:Session",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "A user session within some application (typically a web application)"
+			    }
+			  }, {
+			    "@id" : "schema:SoftwareApplication",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "A software application"
+			    }
+			  }, {
+			    "@id" : "lrn:TargetTaskCondition",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "lrn:Condition"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tThe abstract base class for any Condition that evaluates observables emitted by a particular target task.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "xkos:TopOfContainer",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : [ {
+			      "@id" : "ldp:DirectContainer"
+			    }, {
+			      "@type" : "owl:Restriction",
+			      "owl:onProperty" : {
+			        "@id" : "ldp:hasMemberRelation"
+			      },
+			      "owl:hasValue" : {
+			        "@id" : "skos:topConceptOf"
+			      }
+			    } ],
+			    "rdfs:comment" : {
+			      "@value" : "A container that holds axioms for the identifiers of a source concept which is identified as the membershipResource."
+			    }
+			  }, {
+			    "@id" : "xas:Unload",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "as:Activity"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The action of unloading some resource from a browser or mobile device"
+			    }
+			  }, {
+			    "@id" : "lrn:WasCorrect",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "lrn:TargetTaskCondition"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA condition which is satisfied if and only if the learner successfully completed a particular task.\r\n\t\tOnly the most recent attempt on the task is considered when this condition is evaluated.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "lrn:WasIncorrect",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "lrn:TargetTaskCondition"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA condition which is satisfied if and only if the learner failed to complete a particular task successfully.\r\n\t\tOnly the most recent attempt on the task is considered when this condition is evaluated.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "schema:WebApplication",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "schema:SoftwareApplication"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "A web-based application"
+			    }
+			  }, {
+			    "@id" : "schema:WebPage",
+			    "@type" : "owl:Class"
+			  }, {
+			    "@id" : "as:actor",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The person who performed the action"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "as:Activity"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "as:Actor"
+			    }
+			  }, {
+			    "@id" : "xkos:broaderSubject",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:subPropertyOf" : {
+			      "@id" : "owl:annotatedSource"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "xkos:BroaderAxiom"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:inverseOf" : {
+			      "@id" : "xkos:hasBroader"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The <code>Concept</code> that is the subject of this axiom."
+			    }
+			  }, {
+			    "@id" : "xprov:generator",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:subPropertyOf" : {
+			      "@id" : "prov:wasInfluencedBy"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "prov:Activity"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "prov:Agent"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The individual person, group, or thing that was responsible for generating the \r\n\t\toutput of this Activity"
+			    }
+			  }, {
+			    "@id" : "lrn:guard",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "A condition that must be satisfied to enter this learning sequence step"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "lrn:LearningSequence"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "lrn:Condition"
+			    }
+			  }, {
+			    "@id" : "xkos:hasBroader",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "xkos:BroaderAxiom"
+			    },
+			    "rdfs:inverseOf" : {
+			      "@id" : "xkos:broaderSubject"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "An axiom that specifies an objective that is broader than this one together with some framework in which the broader relationship is defined."
+			    }
+			  }, {
+			    "@id" : "xkos:hasIdentifier",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "xkos:IdentifierAxiom"
+			    },
+			    "rdfs:inverseOf" : {
+			      "@id" : "xkos:identifierSubject"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "An axiom that specifies an identifier for this concept within some framework."
+			    }
+			  }, {
+			    "@id" : "xkos:hasNext",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "xkos:NextAxiom"
+			    },
+			    "rdfs:inverseOf" : {
+			      "@id" : "xkos:nextSubject"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "An axiom that specifies an objective follows this one within some framework in which the <code>next</code> relationship is defined."
+			    }
+			  }, {
+			    "@id" : "xkos:identifierSubject",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:subPropertyOf" : {
+			      "@id" : "owl:annotatedSource"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "xkos:IdentifierAxiom"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:inverseOf" : {
+			      "@id" : "xkos:hasIdentifier"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The <code>Concept</code> that is the subject of this axiom."
+			    }
+			  }, {
+			    "@id" : "xkos:identifiers",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "xkos:IdentifierContainer"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The container holding the <code>IdentifierAxiom<code>s for this Concept."
+			    }
+			  }, {
+			    "@id" : "xas:instrumentType",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The type of software application used to perform some action"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "as:Activity"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "owl:Class"
+			    }
+			  }, {
+			    "@id" : "as:location",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "as:Activity"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "owl:Thing"
+			    }
+			  }, {
+			    "@id" : "lrn:next",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "A possible subsequence that comes after this LearningSequence node"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "lrn:LearningSequence"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "lrn:LearningSequence"
+			    }
+			  }, {
+			    "@id" : "xkos:next",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "owl:inverseOf" : {
+			      "@id" : "xkos:previous"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "Identifies another objective that comes after this one.  This relationship can be qualified by a BroaderAxiom which identifies the framework in which it is defined."
+			    }
+			  }, {
+			    "@id" : "xkos:nextSubject",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:subPropertyOf" : {
+			      "@id" : "owl:annotatedSource"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "xkos:NextAxiom"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:inverseOf" : {
+			      "@id" : "xkos:hasNext"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The <code>Concept</code> that is the subject of this axiom."
+			    }
+			  }, {
+			    "@id" : "as:object",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "as:Activity"
+			    }
+			  }, {
+			    "@id" : "lrn:observedMisconception",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The misconception that was observed."
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "lrn:MisconceptionStatement"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "lrn:Misconception"
+			    }
+			  }, {
+			    "@id" : "lrn:observedPerson",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The person who was observed."
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "lrn:Observable"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "schema:Person"
+			    }
+			  }, {
+			    "@id" : "xkos:parents",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "xkos:BroaderContainer"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The container holding the <code>BroaderAxiom</code>s for this concept/"
+			    }
+			  }, {
+			    "@id" : "xkos:predecessors",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "xkos:PreviousContainer"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The container holding the <code>PreviousAxiom</code>s for this concept/"
+			    }
+			  }, {
+			    "@id" : "xkos:previous",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "owl:inverseOf" : {
+			      "@id" : "xkos:next"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "Identifies another objective that comes before this one.  This relationship can be qualified by a PreviousAxiom which identifies the framework in which it is defined."
+			    }
+			  }, {
+			    "@id" : "xkos:previousSubject",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:subPropertyOf" : {
+			      "@id" : "owl:annotatedSource"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "xkos:PreviousAxiom"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:inverseOf" : {
+			      "@id" : "xkos:hasPrevious"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The <code>Concept</code> that is the subject of this axiom."
+			    }
+			  }, {
+			    "@id" : "xkos:successors",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "xkos:NextContainer"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The container holding the <code>NextAxiom</code>s for this concept/"
+			    }
+			  }, {
+			    "@id" : "as:target",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "as:Activity"
+			    }
+			  }, {
+			    "@id" : "lrn:targetMisconception",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The target misconception evaluated by this Condition"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "lrn:MisconceptionCondition"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "lrn:Misconception"
+			    }
+			  }, {
+			    "@id" : "lrn:targetTask",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The target task that emits observables evaluated by this Condition"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "lrn:TargetTaskCondition"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "lrn:CreativeWork"
+			    }
+			  }, {
+			    "@id" : "lrn:task",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The task to be performed by the student at this step within the overall sequence."
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "lrn:LearningSequence"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "schema:CreativeWork"
+			    }
+			  }, {
+			    "@id" : "xkos:topOf",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "skos:Concept"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "xkos:TopOfContainer"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The container holding the frameworks in which this objective appears as a top-level objective"
+			    }
+			  }, {
+			    "@id" : "lrn:triggeredBy",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "A CreativeWork (such as an Assessment Item) that can trigger this LearningSequence"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "lrn:LearningSequence"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "schema:CreativeWork"
+			    },
+			    "owl:inverseOf" : {
+			      "@id" : "lrn:triggers"
+			    }
+			  }, {
+			    "@id" : "lrn:triggers",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "A learning sequence that is triggered when the activity defined by this CreativeWork is complete"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "schema:CreativeWork"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "lrn:LearningSequence"
+			    },
+			    "owl:inverseOf" : {
+			      "@id" : "lrn:triggeredBy"
+			    }
+			  }, {
+			    "@id" : "prov:wasGeneratedBy",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:range" : {
+			      "@id" : "prov:Activity"
+			    }
+			  }, {
+			    "@id" : "lrn:observedLikelihood",
+			    "@type" : "owl:DatatypeProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The likelihood that the observed Person has the attribute described by this Observable"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "lrn:Observable"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "data:Probability"
+			    }
+			  }, {
+			    "@id" : "lrn:observedTime",
+			    "@type" : "owl:DatatypeProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The date/time when the observed Person acquired the attribute described by this Observable"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "lrn:Observable"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "xsd:dateTime"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/as/Activity",
 			    "@type" : "sh:Shape",
 			    "sh:scopeClass" : {
-			      "@id" : "schema:Person"
+			      "@id" : "as:Activity"
+			    },
+			    "sh:property" : {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for the Activity"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    },
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/as/Activity/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/as/Activity/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.as.activity"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "cnt:Citation"
 			    },
 			    "sh:property" : [ {
 			      "sh:predicate" : {
-			        "@id" : "schema:familyName"
+			        "@id" : "xowl:guid"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for this Citation entity"
 			      },
 			      "sh:datatype" : {
 			        "@id" : "xsd:string"
@@ -307,7 +1368,148 @@ var defaultGraph = {
 			      }
 			    }, {
 			      "sh:predicate" : {
-			        "@id" : "schema:givenName"
+			        "@id" : "kol:id"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The URI that identifies this Citation"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "schema:partOf"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A container (such as a Project) within which this citation is found"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "prov:wasGeneratedBy"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Provenance information which describes the process that generated this Citation entity"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationProvenance"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "cnt:source"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The work that is being cited"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Specifies the type of this entity"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@id" : "cnt:Citation"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.cnt.citation"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationProvenance",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "prov:Activity"
+			    },
+			    "sh:property" : {
+			      "sh:predicate" : {
+			        "@id" : "xprov:generator"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The system that generated the Citation message"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:class" : {
+			        "@id" : "sys:CitationGenerator"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    },
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationProvenance/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationProvenance/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.cnt.citationprovenance"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "cnt:CitationSource"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "schema:name"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The name or title of the source"
 			      },
 			      "sh:datatype" : {
 			        "@id" : "xsd:string"
@@ -320,12 +1522,1795 @@ var defaultGraph = {
 			        "@value" : "1",
 			        "@type" : "xsd:integer"
 			      }
-			    } ]
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "kol:id"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A URI that identifies the source"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of source that was cited."
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.cnt.citationsource"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitation",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "xas:CreateCitation"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "as:object"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The Citation object that was created"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:target"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The web page to which the user agent was redirected after login."
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/WebPage"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "0",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "prov:wasGeneratedBy"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Provenance information which describes the process that generated this Activity record"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:eventTime"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The time at which the login action occurred, as recorded on the server-side"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:dateTime"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:actor"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The person who performed the Citation action"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/Person"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:Message_Version"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The version of the message as defined by the PLA team"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of activity that occurred."
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : [ {
+			        "@id" : "xas:CreateCitation"
+			      }, {
+			        "@id" : "as:Create"
+			      } ]
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:location"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "\r\n\t\t\tThe logical location(s) where the application occurred. \r\n\t\t\tIn principle, a login activity should not have a location.  We include a location in the login activity\r\n\t\t\tso that we can capture the user's institutional affiliation.  It is likely that the location will be\r\n\t    removed from the schema in the future.\r\n\t\t"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:instrumentType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of software application used to perform the action"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for this Citation activity"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitation/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitation/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.createcitation"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "prov:Activity"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "xprov:generator"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The system that generated the Citation message"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:generatedMediaType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The media type of the Citation message"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@value" : "application/vnd.pearson.v1.xas.createcitation"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.createcitationprovenance"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateProject",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "xas:CreateProject"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of activity that occurred."
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : [ {
+			        "@id" : "as:Create"
+			      }, {
+			        "@id" : "xas:CreateProject"
+			      } ]
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "prov:wasGeneratedBy"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Provenance information which describes the process that generated this Activity record"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateProjectProvenance"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:object"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The Project that was created"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/asgn/Project"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:eventTime"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The time at which the Project was created, as recorded on the server-side"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:dateTime"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for this CreateProject activity"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:location"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "\r\n\t\t\tThe logical location(s) where the project was created.  For instance, this could be\r\n\t\t\ta course section within which the project was created; it could be a location within \r\n\t\t\tthe content hierarchy, etc.\r\n\t\t"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:instrumentType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The software application used to perform the action"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:actor"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The person who created the Project"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/Person"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:Message_Version"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The version of the message as defined by the PLA team"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateProject/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateProject/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.createproject"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateProjectProvenance",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "prov:Activity"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "xprov:generator"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The system that generated the CreateProject message"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:generatedMediaType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The media type of the CreateProject message"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@value" : "application/vnd.pearson.v1.xas.createproject"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateProjectProvenance/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateProjectProvenance/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.createprojectprovenance"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "schema:CreativeWork"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "schema:name"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A human-friendly name or title for the resource"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "kol:id"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The URI of the resource"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for the resource"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.schema.creativework"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/Load",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "xas:Load"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "xas:instrumentType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of software application used to perform the action"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:subActivityOf"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "0",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/as/Activity"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:location"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "\r\n\t\t\tThe logical location(s) where the activity occurred.  This could include, for example, the\r\n\t\t\tcourse section and/or educational institution within which the activity occurred.\r\n\t\t"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for this Load activity"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "prov:wasGeneratedBy"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Provenance information which describes the process that generated this Activity record"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "\r\n\t\t\tThe type of activity that occurred. Multiple values are allowed so that we can support other vocabularies.  \r\n\t\t\tThe set of values MUST include 'xas:Load'.\r\n\t\t"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@id" : "xas:Load"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:Message_Version"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The version of the message as defined by the PLA team"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:eventTime"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The time at which the load action occurred, as recorded on the client-side"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:dateTime"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:actor"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The person who performed the Load action"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/Person"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:object"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The resource that was loaded into the browser or mobile device"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Load/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Load/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.load"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "prov:Activity"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "xas:generatedMediaType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The media type of the Login message"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@value" : "application/vnd.pearson.v1.xas.load"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xprov:generator"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The system that generated the Login message"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.loadprovenance"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/Login",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "xas:Login"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "as:eventTime"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The time at which the login action occurred, as recorded on the server-side"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:dateTime"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:target"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The web page to which the user agent was redirected after login."
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/WebPage"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "0",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:Message_Version"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The version of the message as defined by the PLA team"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:location"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "\r\n\t\t\tThe logical location(s) where the login activity occurred. \r\n\t\t\tIn principle, a login activity should not have a location.  We include a location in the login activity\r\n\t\t\tso that we can capture the user's institutional affiliation.  It is likely that the location will be\r\n\t    removed from the schema in the future.\r\n\t\t"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:actor"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The person who performed the login action"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/Person"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "\r\n\t\t\tThe type of activity that occurred. Multiple values are allowed so that we can support other vocabularies.  \r\n\t\t\tThe set of values MUST include 'xas:Login'.\r\n\t\t"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@id" : "xas:Login"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "prov:wasGeneratedBy"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Provenance information which describes the process that generated this Activity record"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:instrumentType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of software application used to perform the action"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:object"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The session created by the login action"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/reg/Session"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for this Login activity"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Login/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Login/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.login"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "prov:Activity"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "xas:generatedMediaType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The media type of the Login message"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@value" : "application/vnd.pearson.v1.xas.login"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xprov:generator"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The system that generated the Login message"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.loginprovenance"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/org/Membership",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "org:Membership"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "org:organization"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "org:role"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/org/Membership/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/org/Membership/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.org.membership"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/lrn/MisconceptionStatement",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "lrn:MisconceptionStatement"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "lrn:observedTime"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:dateTime"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "lrn:observedPerson"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:class" : {
+			        "@id" : "schema:Person"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "lrn:observedMisconception"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:class" : {
+			        "@id" : "lrn:Misconception"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "lrn:observedLikelihood"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "data:Probability"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@id" : "lrn:MisconceptionStatement"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/lrn/MisconceptionStatement/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/lrn/MisconceptionStatement/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.lrn.misconceptionstatement"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/schema/Person",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "schema:Person"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "org:hasMember"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/org/Membership"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "kol:id"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/Person/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/Person/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.schema.person"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/asgn/Project",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "asgn:Project"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for this Project entity"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "kol:id"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A URI that identifies this Project"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "schema:dateCreated"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The date/time when this Project was first created"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:dateTime"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "asgn:dueDateTime"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The date/time when the Project is due"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:dateTime"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Specifies the type of this entity"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@id" : "asgn:Project"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/asgn/Project/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/asgn/Project/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.asgn.project"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/reg/Session",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "reg:Session"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "reg:loginPage"
+			      },
+			      "sh:class" : {
+			        "@id" : "sys:LoginPage"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "sh:hasValue" : {
+			        "@id" : "reg:Session"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/reg/Session/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/reg/Session/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.reg.session"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/schema/SoftwareApplication",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "schema:SoftwareApplication"
+			    },
+			    "sh:property" : {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    },
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/SoftwareApplication/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/SoftwareApplication/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.schema.softwareapplication"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "owl:Thing"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "kol:id"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.owl.thing"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/Unload",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "xas:Unload"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "as:object"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The resource that was unloaded into the browser or mobile device"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "prov:wasGeneratedBy"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "Provenance information which describes the process that generated this Activity record"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/xas/UnloadProvenance"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:location"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "\r\n\t\t\tThe logical location(s) where the activity occurred.  This could include, for example, the\r\n\t\t\tcourse section and/or educational institution within which the activity occurred.\r\n\t\t"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:actor"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The person who performed the Unload action"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/schema/Person"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xowl:guid"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "A globally unique identifier for this Unload activity"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "as:eventTime"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The time at which the load action occurred, as recorded on the client-side"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:dateTime"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:Message_Version"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The version of the message as defined by the PLA team"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "rdf:type"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "\r\n\t\t\tThe type of activity that occurred. Multiple values are allowed so that we can support other vocabularies.  \r\n\t\t\tThe set of values MUST include 'xas:Unload'.\r\n\t\t"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@id" : "xas:Unload"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:instrumentType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The type of software application used to perform the action"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xas:subActivityOf"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "0",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:valueShape" : {
+			        "@id" : "http://schema.pearson.com/shapes/v1/as/Activity"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Unload/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Unload/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.unload"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/xas/UnloadProvenance",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "prov:Activity"
+			    },
+			    "sh:property" : [ {
+			      "sh:predicate" : {
+			        "@id" : "xas:generatedMediaType"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The media type of the Login message"
+			      },
+			      "sh:datatype" : {
+			        "@id" : "xsd:string"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:hasValue" : {
+			        "@value" : "application/vnd.pearson.v1.xas.unload"
+			      }
+			    }, {
+			      "sh:predicate" : {
+			        "@id" : "xprov:generator"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The system that generated the Login message"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    } ],
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/UnloadProvenance/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/xas/UnloadProvenance/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.xas.unloadprovenance"
+			    }
+			  }, {
+			    "@id" : "http://schema.pearson.com/shapes/v1/schema/WebPage",
+			    "@type" : "sh:Shape",
+			    "sh:scopeClass" : {
+			      "@id" : "schema:WebPage"
+			    },
+			    "sh:property" : {
+			      "sh:predicate" : {
+			        "@id" : "kol:id"
+			      },
+			      "rdfs:comment" : {
+			        "@value" : "The address of the WebPage"
+			      },
+			      "sh:nodeKind" : {
+			        "@id" : "sh:IRI"
+			      },
+			      "sh:minCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      },
+			      "sh:maxCount" : {
+			        "@value" : "1",
+			        "@type" : "xsd:integer"
+			      }
+			    },
+			    "kol:avroSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/WebPage/avro"
+			    },
+			    "kol:jsonSchemaRendition" : {
+			      "@id" : "http://schema.pearson.com/shapes/v1/schema/WebPage/jsonschema"
+			    },
+			    "kol:mediaTypeBaseName" : {
+			      "@value" : "application/vnd.pearson.v1.schema.webpage"
+			    }
+			  }, {
+			    "@id" : "data:Probability",
+			    "@type" : "rdfs:Datatype",
+			    "rdfs:comment" : {
+			      "@value" : "A decimal number in the range [0, 1] used to represent a probability value"
+			    },
+			    "owl:onDatatype" : {
+			      "@id" : "xsd:decimal"
+			    },
+			    "owl:withRestrictions" : {
+			      "rdf:first" : {
+			        "xsd:minInclusive" : {
+			          "@value" : "0",
+			          "@type" : "xsd:integer"
+			        }
+			      },
+			      "rdf:rest" : {
+			        "rdf:first" : {
+			          "xsd:maxInclusive" : {
+			            "@value" : "1",
+			            "@type" : "xsd:integer"
+			          }
+			        },
+			        "rdf:rest" : {
+			          "@id" : "rdf:nil"
+			        }
+			      }
+			    }
 			  } ]
 			};
 			
 var ontologyService = new konig.AjaxOntologyService(defaultGraph);
-konig.buildOntodoc(ontologyService);
+konig.buildOntodoc({
+	ontologyService: ontologyService,
+	multipleShapesPerClass: true
+});
 
 });
 

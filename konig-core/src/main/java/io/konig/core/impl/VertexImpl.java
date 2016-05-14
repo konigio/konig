@@ -234,6 +234,32 @@ public class VertexImpl implements Vertex {
 	public void addProperty(URI property, Value value) {
 		graph.add(new EdgeImpl(id, property, value));
 	}
+
+	@Override
+	public Integer integerValue(URI predicate) {
+		Value value = getValue(predicate);
+		
+		return value == null ? null : Integer.parseInt(value.stringValue());
+	}
+
+	@Override
+	public String stringValue(URI predicate) {
+		Value value = getValue(predicate);
+		return value==null ? null : value.stringValue();
+	}
+
+	@Override
+	public Double doubleValue(URI predicate) {
+		Value value = getValue(predicate);
+		
+		return value==null ? null : Double.parseDouble(value.stringValue());
+	}
+
+	@Override
+	public Vertex vertexValue(URI predicate) {
+		Value value = getValue(predicate);
+		return value instanceof Resource ? graph.vertex((Resource)value) : null;
+	}
 	
 
 

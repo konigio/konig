@@ -15,6 +15,7 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.io.ResourceFile;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
+import io.konig.schemagen.avro.impl.SimpleAvroDatatypeMapper;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 
 public class AvroSchemaGeneratorTest {
@@ -71,7 +72,7 @@ public class AvroSchemaGeneratorTest {
 		
 		Vertex shapeVertex = graph.vertex(shapeId);
 		
-		AvroSchemaGenerator avro = new AvroSchemaGenerator(namer, nsManager);
+		AvroSchemaGenerator avro = new AvroSchemaGenerator(new SimpleAvroDatatypeMapper(), namer, nsManager);
 		
 		ResourceFile file = avro.generateSchema(shapeVertex);
 		

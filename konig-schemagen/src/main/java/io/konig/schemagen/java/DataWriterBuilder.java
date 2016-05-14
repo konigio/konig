@@ -146,12 +146,12 @@ public class DataWriterBuilder {
 	}
 	
 	public JClass datatype(URI owlClass) {
-		Class<?> javaClass = datatypeMapper.javaDatatype(owlClass, ontology);
+		Class<?> javaClass = datatypeMapper.javaDatatype(owlClass);
 		return model.ref(javaClass);
 	}
 	
 	public Class<?> javaDatatype(URI owlClass) {
-		return datatypeMapper.javaDatatype(owlClass, ontology);
+		return datatypeMapper.javaDatatype(owlClass);
 	}
 	
 	public JClass ref(Class<?> clazz) {

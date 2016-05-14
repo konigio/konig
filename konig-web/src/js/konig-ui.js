@@ -379,7 +379,13 @@ KonigIndex.prototype.nodeText = function(node) {
 		vertex.v().out(rdfs.label).first() ||
 		null;
 	
-	return label ? label.stringValue : vertex.id.localName;
+	if (label) {
+		return label.stringValue;
+	}
+	
+	
+	
+	return vertex.id instanceof IRI ?  vertex.id.localName : vertex.id.id;
 	
 	
 }
@@ -490,6 +496,9 @@ KonigIndex.prototype.addVertex = function(rdfVertex) {
 		var id = $(list[i]).attr('id');
 		var node = tree.get_node('#' + id);
 		
+		if (typeof(label)==="undefined") {
+			console.log("Failed");
+		}
 		if (label.localeCompare(node.text) <= 0) {
 			treeNodeId = tree.create_node('#', newNode, i);
 			break;

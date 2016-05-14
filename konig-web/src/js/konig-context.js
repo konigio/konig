@@ -66,6 +66,16 @@ $(document).ready(function() {
 		altLabel: new IRI("http://www.w3.org/2004/02/skos/core#prefLabel")
 	};
 	
+	konig.xsd = {
+		NAMESPACE: "http://www.w3.org/2001/XMLSchema#",
+		int : new IRI('http://www.w3.org/2001/XMLSchema#int'),
+		integer : new IRI('http://www.w3.org/2001/XMLSchema#integer'),
+		double : new IRI('http://www.w3.org/2001/XMLSchema#double'),
+		string : new IRI('http://www.w3.org/2001/XMLSchema#string'),
+		date : new IRI('http://www.w3.org/2001/XMLSchema#date'),
+		dateTime : new IRI('http://www.w3.org/2001/XMLSchema#dateTime')
+	}
+	
 	konig.foaf = {
 		NAMESPACE: "http://xmlns.com/foaf/0.1/",
 		isPrimaryTopicOf : new IRI("http://xmlns.com/foaf/0.1/isPrimaryTopicOf")
@@ -101,9 +111,10 @@ $(document).ready(function() {
 		datatype: new IRI("http://www.w3.org/ns/shacl#datatype"),
 		objectType: new IRI("http://www.w3.org/ns/shacl#class"),
 		directValueType: new IRI("http://www.w3.org/ns/shacl#directValueType"),
+		nodeKind: new IRI("http://www.w3.org/ns/shacl#nodeKind"),
 		shapes: new IRI("http://www.w3.org/ns/shacl#shapes"),
 		valueShape: new IRI("http://www.w3.org/ns/shacl#valueShape"),
-		valueClass: new IRI("http://www.w3.org/ns/shacl#valueClass"),
+		valueClass: new IRI("http://www.w3.org/ns/shacl#class"),
 		maxCount: new IRI("http://www.w3.org/ns/shacl#maxCount"),
 		minCount: new IRI("http://www.w3.org/ns/shacl#minCount"),
 		IRI : new IRI("http://www.w3.org/ns/shacl#IRI"),
@@ -137,7 +148,8 @@ $(document).ready(function() {
 		domain : new IRI('http://www.w3.org/2000/01/rdf-schema#domain'),
 		range : new IRI('http://www.w3.org/2000/01/rdf-schema#range'),
 		Class : new IRI('http://www.w3.org/2000/01/rdf-schema#Class'),
-		Literal : new IRI('http://www.w3.org/2000/01/rdf-schema#Literal')
+		Literal : new IRI('http://www.w3.org/2000/01/rdf-schema#Literal'),
+		Datatype : new IRI('http://www.w3.org/2000/01/rdf-schema#Datatype')
 	};
 	konig.schema = {
 		CollegeOrUniversity : new IRI("http://schema.org/CollegeOrUniversity"),
@@ -165,7 +177,9 @@ $(document).ready(function() {
 	};
 	konig.kol = {
 		LogicalShape : new IRI("http://www.konig.io/ns/kol/LogicalShape"),	
-		mediaTypeBaseName : new IRI("http://www.konig.io/ns/kol/mediaTypeBaseName")
+		mediaTypeBaseName : new IRI("http://www.konig.io/ns/kol/mediaTypeBaseName"),
+		avroSchemaRendition : new IRI("http://www.konig.io/ns/kol/avroSchemaRendition"),
+		jsonSchemaRendition : new IRI("http://www.konig.io/ns/kol/jsonSchemaRendition")
 	};
 	
 });

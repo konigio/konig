@@ -94,6 +94,14 @@ public interface Vertex {
 	 */
 	Value getValue(URI predicate);
 	
+	Integer integerValue(URI predicate);
+	
+	String stringValue(URI predicate);
+	
+	Double doubleValue(URI predicate);
+	
+	Vertex vertexValue(URI predicate);
+	
 	/**
 	 * Test whether the Vertex has a given value for a specified property. 
 	 * @param predicate The property to be tested

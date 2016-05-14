@@ -6,6 +6,8 @@ import java.io.File;
 
 import org.junit.Test;
 
+import io.konig.schemagen.avro.impl.SimpleAvroDatatypeMapper;
+
 public class ShapeToAvroTest {
 
 	@Test
@@ -17,7 +19,7 @@ public class ShapeToAvroTest {
 		remove(targetDir);
 		
 		
-		ShapeToAvro generator = new ShapeToAvro(null);
+		ShapeToAvro generator = new ShapeToAvro(new SimpleAvroDatatypeMapper());
 		
 		generator.generateAvro(sourceDir, targetDir, targetDir, null);
 		

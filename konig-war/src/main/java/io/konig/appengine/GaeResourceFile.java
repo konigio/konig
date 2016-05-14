@@ -100,4 +100,11 @@ public class GaeResourceFile implements ResourceFile {
 		
 	}
 
+	@Override
+	public int getInt(String key) {
+		String value = getProperty(key);
+		
+		return value==null ? 0 : Integer.parseInt(value);
+	}
+
 }

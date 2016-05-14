@@ -10,7 +10,7 @@ import io.konig.schemagen.avro.AvroDatatypeMapper;
 public class SimpleAvroDatatypeMapper implements AvroDatatypeMapper {
 
 	@Override
-	public AvroDatatype toAvroDatatype(URI rdfDatatype, Graph ontology) {
+	public AvroDatatype toAvroDatatype(URI rdfDatatype) {
 		
 		if (XMLSchema.STRING.equals(rdfDatatype)) {
 			return AvroDatatype.STRING;

@@ -6,12 +6,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.DC;
 import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.vocab.Schema;
 
@@ -37,6 +40,19 @@ import io.konig.core.vocab.Schema;
 
 
 public class RdfUtil {
+	
+	public static String curie(NamespaceManager nsManager, URI uri) {
+		Namespace ns = nsManager.findByName(uri.getNamespace());
+		if (ns != null) {
+			StringBuilder builder = new StringBuilder();
+			builder.append(ns.getPrefix());
+			builder.append(':');
+			builder.append(uri.getLocalName());
+			return builder.toString();
+		}
+		
+		return uri.stringValue();
+	}
 
 	public static String getDescription(Vertex subject) {
 		
@@ -137,5 +153,22 @@ public class RdfUtil {
 		}
 		
 		return result;
+	}
+	
+	public static boolean isSubClassOf(Vertex subject, Resource target) {
+		
+		List<Vertex> list = subject.asTraversal().out(RDFS.SUBCLASSOF).toVertexList();
+		for (Vertex v : list) {
+			if (v.getId().equals(target)) {
+				return true;
+			}
+		}
+		for (Vertex v : list) {
+			if (isSubClassOf(v, target)) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }

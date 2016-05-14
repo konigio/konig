@@ -374,6 +374,43 @@ public class TraversalImpl implements Traversal {
 		list = new ArrayList<>(closure.values());
 		return this;
 	}
+
+	@Override
+	public Traversal union(Vertex v) {
+		for (Object obj : list) {
+			if (obj instanceof Vertex) {
+				Vertex w = (Vertex) obj;
+				if (w.getId().equals(v.getId())) {
+					return this;
+				}
+			}
+			if (obj instanceof Value) {
+				Value w = (Value) obj;
+				if (v.getId().stringValue().equals(w.stringValue())) {
+					return this;
+				}
+			}
+		}
+		list.add(v);
+		return this;
+	}
+
+	@Override
+	public Traversal union(Value v) {
+		if (v instanceof Resource) {
+			return union(graph.vertex((Resource)v));
+		}
+		for (Object obj : list) {
+			if (obj instanceof Value) {
+				Value w = (Value) obj;
+				if (w.equals(v)) {
+					return this;
+				}
+			}
+		}
+		list.add(v);
+		return this;
+	}
 	
 	
 	

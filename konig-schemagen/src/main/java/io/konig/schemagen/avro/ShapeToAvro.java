@@ -31,12 +31,11 @@ public class ShapeToAvro {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ShapeToAvro.class);
 	
-	private MemoryContextManager contextManager;
 	
-	public ShapeToAvro(File contextDir) throws IOException {
-		if (contextDir != null) {
-			contextManager.loadFromFile(contextDir);
-		}
+	private AvroDatatypeMapper datatypeMapper;
+	
+	public ShapeToAvro(AvroDatatypeMapper datatypeMapper) throws IOException {
+		this.datatypeMapper = datatypeMapper;
 	}
 	
 	public void generateAvro(File sourceDir, File targetDir, File importDir, Graph graph) throws IOException {
@@ -52,7 +51,7 @@ public class ShapeToAvro {
 		loadGraph(nsManager, sourceDir, graph, loadHandler);
 		ResourceManager resourceManager = new FileManager(targetDir, importDir);
 		SimpleAvroNamer namer = new SimpleAvroNamer();
-		AvroSchemaGenerator generator = new AvroSchemaGenerator(namer, nsManager);
+		AvroSchemaGenerator generator = new AvroSchemaGenerator(datatypeMapper, namer, nsManager);
 		
 		generator.generateAll(graph, resourceManager);
 	}
@@ -69,9 +68,7 @@ public class ShapeToAvro {
 			String name = source.getName();
 			if (name.endsWith(".ttl")) {
 				loadTurtle(nsManager, source, graph, loadHandler);
-			} else if (name.endsWith(".json") || name.endsWith(".jsonld")) {
-				loadJsonld(source, graph);
-			}
+			} 
 		}
 		
 	}
@@ -107,22 +104,7 @@ public class ShapeToAvro {
 		
 	}
 
-	private void loadJsonld(File source, Graph graph) throws IOException {
-		JsonldParser parser = new JsonldParser(contextManager);
-		GraphLoadHandler handler = new GraphLoadHandler(graph);
-		parser.setRDFHandler(handler);
-		
-		FileReader input = new FileReader(source);
-		try {
-			parser.parse(input, "");
-		} catch (RDFParseException | RDFHandlerException e) {
-			throw new GraphLoadException("Failed to load file " + source.getName(), e);
-		} finally {
-			close(input);
-		}
-		
-	}
-
+	
 	private static class FileManager implements ResourceManager {
 		private File outDir;
 		private File importDir;

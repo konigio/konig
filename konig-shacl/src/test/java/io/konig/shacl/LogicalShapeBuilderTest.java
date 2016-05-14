@@ -19,9 +19,8 @@ package io.konig.shacl;
  * limitations under the License.
  * #L%
  */
-
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.openrdf.model.URI;
@@ -29,6 +28,8 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
+import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.impl.BasicLogicalShapeNamer;
@@ -75,8 +76,8 @@ public class LogicalShapeBuilderTest {
 		nsManager.add("schema", "http://schema.org/");
 		MemoryClassManager classManager = new MemoryClassManager();
 		LogicalShapeNamer namer = new BasicLogicalShapeNamer("http://example.com/shapes/logical/", nsManager);
-		
-		LogicalShapeBuilder builder = new LogicalShapeBuilder(namer);
+		OwlReasoner reasoner = new OwlReasoner(new MemoryGraph());
+		LogicalShapeBuilder builder = new LogicalShapeBuilder(reasoner, namer);
 		builder.buildLogicalShapes(shapeManager, classManager);
 		
 		Shape personShape = classManager.getLogicalShape(Schema.Person);

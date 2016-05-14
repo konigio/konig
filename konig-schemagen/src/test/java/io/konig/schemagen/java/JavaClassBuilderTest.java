@@ -1,7 +1,5 @@
 package io.konig.schemagen.java;
 
-import static org.junit.Assert.fail;
-
 import java.io.File;
 
 import org.junit.Test;
@@ -14,6 +12,7 @@ import com.sun.codemodel.JCodeModel;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.KOL;
@@ -21,12 +20,10 @@ import io.konig.core.vocab.Schema;
 import io.konig.shacl.LogicalShapeBuilder;
 import io.konig.shacl.LogicalShapeNamer;
 import io.konig.shacl.NodeKind;
-import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.BasicLogicalShapeNamer;
 import io.konig.shacl.impl.MemoryClassManager;
-import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 
 public class JavaClassBuilderTest {
 
@@ -86,16 +83,17 @@ public class JavaClassBuilderTest {
 		nsManager.add("schema", "http://schema.org/");
 		MemoryClassManager classManager = new MemoryClassManager();
 		LogicalShapeNamer namer = new BasicLogicalShapeNamer("http://example.com/shapes/logical/", nsManager);
-		
-		LogicalShapeBuilder builder = new LogicalShapeBuilder(namer);
+
+		Graph graph = new MemoryGraph();
+		OwlReasoner reasoner = new OwlReasoner(graph);
+		LogicalShapeBuilder builder = new LogicalShapeBuilder(reasoner, namer);
 		builder.buildLogicalShapes(shapeManager, classManager);
 		
-		Graph graph = new MemoryGraph();
 		graph.edge(Schema.WebPage, RDFS.SUBCLASSOF, Schema.CreativeWork);
 		
 		JCodeModel model = new JCodeModel();
 		JavaNamer javaNamer = new BasicJavaNamer("com.example.", nsManager);
-		JavaClassBuilder classBuilder = new JavaClassBuilder(classManager, namer, javaNamer, graph);
+		JavaClassBuilder classBuilder = new JavaClassBuilder(classManager, namer, javaNamer, new OwlReasoner(graph));
 		
 		classBuilder.buildAll(classManager.list(), model);
 		

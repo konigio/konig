@@ -30,6 +30,7 @@ import com.sun.codemodel.JCodeModel;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
@@ -38,6 +39,7 @@ import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.ShapeMediaTypeLinker;
 import io.konig.schemagen.avro.ShapeToAvro;
+import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
 import io.konig.schemagen.java.BasicJavaNamer;
 import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
@@ -48,7 +50,7 @@ import io.konig.schemagen.jsonschema.JsonSchemaTypeMapper;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
 import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
-import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaTypeMapper;
+import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.shacl.LogicalShapeBuilder;
 import io.konig.shacl.LogicalShapeNamer;
 import io.konig.shacl.Shape;
@@ -111,15 +113,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			shapeLoader.setListener(new GraphLoadHandler(owlGraph));
 			shapeLoader.loadAll(sourceDir);
 			
+
+			OwlReasoner reasoner = new OwlReasoner(owlGraph);
+			
 			ShapeToJsonldContext jsonld = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, mediaTypeNamer, owlGraph);
 			jsonld.generateAll(jsonldDir);
 			
-			ShapeToAvro avro = new ShapeToAvro(null);
+			SmartAvroDatatypeMapper avroMapper = new SmartAvroDatatypeMapper(reasoner);
+			ShapeToAvro avro = new ShapeToAvro(avroMapper);
 			avro.generateAvro(sourceDir, avscDir, avroImports, owlGraph);
 			
 			
 			
-			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SimpleJsonSchemaTypeMapper();
+			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SmartJsonSchemaTypeMapper(reasoner);
 			JsonSchemaNamer jsonSchemaNamer = new SimpleJsonSchemaNamer("/jsonschema", mediaTypeNamer);
 			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
 			ShapeToJsonSchema jsonSchema = new ShapeToJsonSchema(jsonSchemaGenerator);
@@ -129,10 +135,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ShapeMediaTypeLinker linker = new ShapeMediaTypeLinker(mediaTypeNamer);
 			linker.assignAll(shapeManager.listShapes(), owlGraph);
 			
-			writeSummary(nsManager, owlGraph);
+			reasoner.inferClassFromSubclassOf();
+			writeSummary(nsManager, shapeManager, owlGraph);
 			
 			if (javaDir != null && javaPackageRoot!=null) {
-				generateJavaCode(owlGraph, nsManager, shapeManager);
+				generateJavaCode(reasoner, nsManager, shapeManager);
 			}
 			
 			
@@ -142,18 +149,18 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
 
-	private void generateJavaCode(Graph owlGraph, NamespaceManager nsManager, ShapeManager shapeManager) throws IOException {
+	private void generateJavaCode(OwlReasoner reasoner, NamespaceManager nsManager, ShapeManager shapeManager) throws IOException {
 		
 
 		MemoryClassManager classManager = new MemoryClassManager();
 		LogicalShapeNamer namer = new BasicLogicalShapeNamer("http://example.com/shapes/logical/", nsManager);
 		
-		LogicalShapeBuilder builder = new LogicalShapeBuilder(namer);
+		LogicalShapeBuilder builder = new LogicalShapeBuilder(reasoner, namer);
 		builder.buildLogicalShapes(shapeManager, classManager);
 		
 		JCodeModel model = new JCodeModel();
 		JavaNamer javaNamer = new BasicJavaNamer(javaPackageRoot, nsManager);
-		JavaClassBuilder classBuilder = new JavaClassBuilder(classManager, namer, javaNamer, owlGraph);
+		JavaClassBuilder classBuilder = new JavaClassBuilder(classManager, namer, javaNamer, reasoner);
 		
 		for (Shape shape : classManager.list()) {
 			classBuilder.buildClass(shape, model);
@@ -164,15 +171,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 
-	private void writeSummary(NamespaceManager nsManager, Graph owlGraph) throws IOException  {
+	private void writeSummary(NamespaceManager nsManager, ShapeManager shapeManager, Graph owlGraph) throws IOException  {
 		
 		summaryDir.mkdirs();
 		
 		File namespacesFile = new File(summaryDir, "namespaces.ttl");
 		File projectFile = new File(summaryDir, "project.jsonld");
+		File domainFile = new File(summaryDir, "domain.ttl");
+		File prototypeFile = new File(summaryDir, "prototype.ttl");
 
 		OntologySummarizer summarizer = new OntologySummarizer();
 		summarizer.summarize(nsManager, owlGraph, namespacesFile);
+		summarizer.writeDomainModel(nsManager, owlGraph, shapeManager, domainFile);
+		summarizer.writePrototypeModel(nsManager, owlGraph, shapeManager, prototypeFile);
 		
 		AllJsonldWriter all = new AllJsonldWriter();
 		all.writeJSON(nsManager, owlGraph, projectFile);

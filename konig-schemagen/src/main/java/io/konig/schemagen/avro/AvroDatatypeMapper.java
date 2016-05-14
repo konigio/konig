@@ -11,5 +11,5 @@ import io.konig.core.Graph;
  */
 public interface AvroDatatypeMapper {
 
-	AvroDatatype toAvroDatatype(URI rdfDatatype, Graph ontology);
+	AvroDatatype toAvroDatatype(URI rdfDatatype);
 }

@@ -6,7 +6,7 @@ import io.konig.core.Graph;
 
 public interface JavaDatatypeMapper {
 
-	Class<?> javaDatatype(URI datatype, Graph ontology);
+	Class<?> javaDatatype(URI datatype);
 	
 	Class<?> primitive(Class<?> javaType);
 	

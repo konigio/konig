@@ -32,5 +32,6 @@ public class KOL {
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/kol/mediaTypeBaseName");
 	public static final URI jsonSchemaRendition = new URIImpl("http://www.konig.io/ns/kol/jsonSchemaRendition");
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/kol/avroSchemaRendition");
+	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/kol/PreferredClass");
 	
 }

@@ -12,6 +12,7 @@ import com.sun.codemodel.JCodeModel;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.KOL;
@@ -106,11 +107,13 @@ public class AvonWriterBuilderTest {
 		nsManager.add("schema", "http://schema.org/");
 		MemoryClassManager classManager = new MemoryClassManager();
 		LogicalShapeNamer namer = new BasicLogicalShapeNamer("http://example.com/shapes/logical/", nsManager);
+
+		Graph graph = new MemoryGraph();
+		OwlReasoner reasoner = new OwlReasoner(graph);
+		LogicalShapeBuilder builder = new LogicalShapeBuilder(reasoner, namer);
 		
-		LogicalShapeBuilder builder = new LogicalShapeBuilder(namer);
 		builder.buildLogicalShapes(shapeManager, classManager);
 		
-		Graph graph = new MemoryGraph();
 		graph.edge(Schema.WebPage, RDFS.SUBCLASSOF, Schema.CreativeWork);
 		
 		JCodeModel model = new JCodeModel();

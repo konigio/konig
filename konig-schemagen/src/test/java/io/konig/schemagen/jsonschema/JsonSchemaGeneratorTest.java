@@ -33,7 +33,6 @@ public class JsonSchemaGeneratorTest {
 	@Test
 	public void test() {
 		
-		JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", "http://schema.org/");
 		nsManager.add("institution", "http://www.konig.io/institution/");
@@ -87,7 +86,8 @@ public class JsonSchemaGeneratorTest {
 		
 		JsonSchemaNamer namer = new SimpleJsonSchemaNamer("/json-schema", mediaTypeNamer);
 		Shape shape = shapeManager.getShapeById(shapeId);
-		
+
+		JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
 		JsonSchemaGenerator generator = new JsonSchemaGenerator(namer, nsManager, typeMapper);
 		ObjectNode json = generator.generateJsonSchema(shape);
 		
