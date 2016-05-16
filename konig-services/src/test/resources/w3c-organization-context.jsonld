@@ -1,9 +1,0 @@
-{
-	"@context" : {
-		"org" : "http://www.w3.org/ns/org#",
-		"schema" : "http://schema.org/",
-		"Organization" : "org:Organization",
-		"Person" : "schema:Person"		
-	}
-
-}
