@@ -18,13 +18,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
-import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.TraversalImpl;
-import io.konig.core.io.ResourceFile;
-import io.konig.core.io.ResourceManager;
-import io.konig.core.io.impl.ResourceFileImpl;
 import io.konig.core.vocab.KOL;
 import io.konig.core.vocab.SH;
 import io.konig.schemagen.GeneratedMediaTypeTransformer;
@@ -32,7 +28,6 @@ import io.konig.schemagen.Generator;
 import io.konig.schemagen.IriEnumStyle;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeTransformer;
-import io.konig.schemagen.avro.impl.SimpleAvroDatatypeMapper;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -87,13 +82,13 @@ public class AvroSchemaGenerator extends Generator {
 
 
 
-	public void generateAll(Graph graph, ResourceManager resourceManager) throws IOException {
+	public void generateAll(Graph graph, AvroSchemaListener listener) throws IOException {
 		
 		List<Vertex> shapeList = graph.v(SH.Shape).in(RDF.TYPE).toVertexList();
 		for (Vertex v : shapeList) {
-			ResourceFile file = generateSchema(v);
-			if (file != null) {
-				resourceManager.put(file);
+			AvroSchemaResource resource = generateSchema(v);
+			if (resource != null) {
+				listener.handleSchema(resource);
 			}
 		}
 	}
@@ -105,7 +100,7 @@ public class AvroSchemaGenerator extends Generator {
 	 * @return A ResourceFile that encapsulates a description of the Avro schema.
 	 * @throws IOException
 	 */
-	public ResourceFile generateSchema(Vertex shape) throws IOException {
+	public AvroSchemaResource generateSchema(Vertex shape) throws IOException {
 		
 		Resource id = shape.getId();
 		
@@ -124,15 +119,14 @@ public class AvroSchemaGenerator extends Generator {
 			String schemaAddress = namer.toAvroSchemaURI(uri.stringValue());
 			int usageCount = shape.asTraversal().in(SH.valueShape).toVertexList().size();
 			
-			ResourceFile result = ResourceFileImpl.create(schemaAddress, "application/json", entityBody);
-			result.setProperty(AVRO_SCHEMA, avroName);
-			result.setProperty(USAGE_COUNT, Integer.toString(usageCount));
+			AvroSchemaResource resource = new AvroSchemaResource(entityBody, avroName, usageCount);
 			
 			
-			URI schemaId = new URIImpl(result.getContentLocation());
+			
+			URI schemaId = new URIImpl(schemaAddress);
 			shape.getGraph().edge(id, KOL.avroSchemaRendition, schemaId);
 			
-			return result;
+			return resource;
 		}
 		
 		

@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Collection;
 
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -15,15 +14,11 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
-import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.io.CompositeRdfHandler;
 import io.konig.core.io.GraphLoadHandler;
-import io.konig.core.io.JsonldParser;
 import io.konig.core.io.NamespaceRDFHandler;
-import io.konig.core.io.ResourceFile;
-import io.konig.core.io.ResourceManager;
 import io.konig.schemagen.GraphLoadException;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 
@@ -49,7 +44,7 @@ public class ShapeToAvro {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		
 		loadGraph(nsManager, sourceDir, graph, loadHandler);
-		ResourceManager resourceManager = new FileManager(targetDir, importDir);
+		FileManager resourceManager = new FileManager(targetDir, importDir);
 		SimpleAvroNamer namer = new SimpleAvroNamer();
 		AvroSchemaGenerator generator = new AvroSchemaGenerator(datatypeMapper, namer, nsManager);
 		
@@ -105,7 +100,7 @@ public class ShapeToAvro {
 	}
 
 	
-	private static class FileManager implements ResourceManager {
+	private static class FileManager implements AvroSchemaListener {
 		private File outDir;
 		private File importDir;
 		
@@ -115,41 +110,8 @@ public class ShapeToAvro {
 			this.importDir = importDir;
 		}
 
-		@Override
-		public ResourceFile createResource(String location, String type, String entityBody) {
-			// TODO Auto-generated method stub
-			return null;
-		}
+		
 
-		@Override
-		public void delete(String contentLocation) throws IOException {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public ResourceFile get(String contentLocation) throws IOException {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public void put(ResourceFile file) throws IOException {
-			String avroName = file.getProperty(AvroSchemaGenerator.AVRO_SCHEMA) + ".avsc";
-			int usageCount = file.getInt(AvroSchemaGenerator.USAGE_COUNT);
-			
-			File dir = (usageCount>0) ? importDir : outDir;
-			
-			File outFile = new File(dir, avroName);
-			
-			FileWriter writer = new FileWriter(outFile);
-			try {
-				writer.write(file.asText());
-			} finally {
-				close(writer);
-			}
-			
-		}
 
 		private void close(FileWriter writer) {
 			try {
@@ -160,12 +122,28 @@ public class ShapeToAvro {
 			
 		}
 
+
+
 		@Override
-		public Collection<ResourceFile> get(Iterable<String> resourceLocations) throws IOException {
+		public void handleSchema(AvroSchemaResource resource) throws IOException {
+
+			String avroName = resource.getSchemaName() + ".avsc";
+			int usageCount = resource.getUsageCount();
 			
+			File dir = (usageCount>0) ? importDir : outDir;
 			
-			return null;
+			File outFile = new File(dir, avroName);
+			
+			FileWriter writer = new FileWriter(outFile);
+			try {
+				writer.write(resource.getText());
+			} finally {
+				close(writer);
+			}
+			
 		}
+
+	
 		
 	}
 

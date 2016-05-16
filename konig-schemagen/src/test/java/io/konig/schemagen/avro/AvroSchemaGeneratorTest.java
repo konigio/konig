@@ -3,7 +3,6 @@ package io.konig.schemagen.avro;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 
@@ -12,7 +11,6 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.io.ResourceFile;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.schemagen.avro.impl.SimpleAvroDatatypeMapper;
@@ -74,12 +72,9 @@ public class AvroSchemaGeneratorTest {
 		
 		AvroSchemaGenerator avro = new AvroSchemaGenerator(new SimpleAvroDatatypeMapper(), namer, nsManager);
 		
-		ResourceFile file = avro.generateSchema(shapeVertex);
+		avro.generateSchema(shapeVertex);
 		
-		System.out.println("Content-Location: " + file.getContentLocation());
-		System.out.println();
 		
-		System.out.println(file.asText());
 		
 	}
 	
