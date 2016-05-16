@@ -32,7 +32,7 @@
         <!-- Compile/runtime dependencies -->
 				<dependency>
 					<groupId>io.konig</groupId>
-					<artifactId>konig-webapp</artifactId>
+					<artifactId>konig-ldp</artifactId>
 					<version>${konig.version}</version>
 				</dependency>
 	    
