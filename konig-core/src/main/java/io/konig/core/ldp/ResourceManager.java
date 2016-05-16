@@ -1,0 +1,39 @@
+package io.konig.core.ldp;
+
+/*
+ * #%L
+ * konig-core
+ * %%
+ * Copyright (C) 2015 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
+import java.io.IOException;
+import java.util.Collection;
+
+public interface ResourceManager {
+	
+	ResourceFile createResource(String contentLocation, String contentType, String entityBody);
+	
+	Container createContainer(String contentLocation, ContainerType containerType);
+	
+	void delete(String contentLocation) throws IOException;
+	ResourceFile get(String contentLocation) throws IOException;
+	void put(ResourceFile file) throws IOException;
+	
+	Collection<ResourceFile> get(Iterable<String> resourceLocations) throws IOException; 
+
+}

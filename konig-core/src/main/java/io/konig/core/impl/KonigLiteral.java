@@ -30,7 +30,7 @@ public class KonigLiteral extends LiteralImpl {
 	
 	public KonigLiteral(String value) {
 		super(value);
-		setDatatype(null);
+//		setDatatype(null);
 	}
 	
 	public KonigLiteral(String value, String language) {

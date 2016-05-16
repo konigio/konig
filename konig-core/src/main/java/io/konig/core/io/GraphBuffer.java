@@ -31,7 +31,11 @@ import io.konig.core.Context;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 
-
+/**
+ * @deprecated
+ * @author Greg McFall
+ *
+ */
 public class GraphBuffer {
 	
 	

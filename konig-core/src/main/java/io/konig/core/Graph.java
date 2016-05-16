@@ -32,6 +32,9 @@ public interface Graph extends Set<Edge> {
 	
 	GraphBuilder builder();
 	
+	NamespaceManager getNamespaceManager();
+	void setNamespaceManager(NamespaceManager nsManager);
+	
 	/**
 	 * Get the identifier this Graph as a named graph.
 	 * @return The identifier for this Graph or null if it has no identifier.
@@ -125,4 +128,6 @@ public interface Graph extends Set<Edge> {
 	 * @return The Transactional view of this Graph, or null if the Graph is not transactional
 	 */
 	Transaction tx();
+	
+	boolean contains(Resource subject, URI predicate, Value object);
 }

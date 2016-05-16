@@ -24,7 +24,6 @@ package io.konig.core.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,11 +38,13 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.BNodeImpl;
+import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.GraphBuilder;
+import io.konig.core.NamespaceManager;
 import io.konig.core.Transaction;
 import io.konig.core.TransactionWorker;
 import io.konig.core.Traversal;
@@ -67,6 +68,7 @@ public class MemoryGraph implements Graph, Transaction {
 	private List<Edge> sink;
 	private Transaction.Status status = Transaction.Status.CLOSED;
 	private List<TransactionWorker> workerList = new ArrayList<TransactionWorker>();
+	private NamespaceManager nsManager;
 	
 	public MemoryGraph() {
 		
@@ -514,6 +516,22 @@ public class MemoryGraph implements Graph, Transaction {
 			
 		}
 		
+	}
+
+	@Override
+	public NamespaceManager getNamespaceManager() {
+		return nsManager;
+	}
+
+	@Override
+	public void setNamespaceManager(NamespaceManager nsManager) {
+		this.nsManager = nsManager;
+	}
+
+	@Override
+	public boolean contains(Resource subject, URI predicate, Value object) {
+		EdgeImpl s = new EdgeImpl(subject, predicate, object);
+		return contains(s);
 	}
 	
 

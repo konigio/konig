@@ -197,6 +197,8 @@ public class JsonldParser extends RDFParserBase {
 					
 					if (term != null) {
 						fieldName = term.getExpandedIdValue();
+					} else if (context != null) {
+						fieldName = context.expandIRI(fieldName);
 					}
 					
 					predicate = valueFactory.createURI(fieldName);

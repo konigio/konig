@@ -22,9 +22,11 @@ package io.konig.core.io.impl;
 
 
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Properties;
 
-import io.konig.core.io.ResourceFile;
+import io.konig.core.ldp.ResourceFile;
+
 import static io.konig.core.io.HttpHeaders.*;
 
 public class ResourceFileImpl implements ResourceFile {
@@ -82,16 +84,16 @@ public class ResourceFileImpl implements ResourceFile {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Enumeration<String> propertyNames() {
-		return (Enumeration<String>) properties.propertyNames();
+	public Iterator<String> propertyNames() {
+		return (Iterator<String>)((Object)properties.keySet().iterator());
 	}
 
 	@Override
 	public ResourceFile replaceContent(byte[] entityBody) {
 		Properties p = new Properties();
-		Enumeration<String> sequence = propertyNames();
-		while (sequence.hasMoreElements()) {
-			String key = sequence.nextElement();
+		Iterator<String> sequence = propertyNames();
+		while (sequence.hasNext()) {
+			String key = sequence.next();
 			p.setProperty(key, getProperty(key));
 			
 		}

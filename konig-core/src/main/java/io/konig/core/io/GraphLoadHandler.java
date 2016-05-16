@@ -29,6 +29,7 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
 
 public class GraphLoadHandler extends RDFHandlerBase {
 	
@@ -39,6 +40,15 @@ public class GraphLoadHandler extends RDFHandlerBase {
 		this.graph = graph;
 	}
 
+	@Override
+	public void handleNamespace(String prefix, String name) throws RDFHandlerException {
+		NamespaceManager ns = graph.getNamespaceManager();
+		if (ns != null) {
+			ns.add(prefix, name);
+		}
+	}
+	
+	
 	@Override
 	public void handleStatement(Statement statement) throws RDFHandlerException {
 		Resource subject = statement.getSubject();

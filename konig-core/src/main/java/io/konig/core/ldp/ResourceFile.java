@@ -1,10 +1,10 @@
-package io.konig.core.io;
+package io.konig.core.ldp;
 
 /*
  * #%L
  * konig-core
  * %%
- * Copyright (C) 2015 Gregory McFall
+ * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ package io.konig.core.io;
  * #L%
  */
 
-
-import java.util.Enumeration;
+import java.util.Iterator;
 
 public interface ResourceFile {
 	public static final String CONTENT_LOCATION = "Content-Location";
@@ -37,7 +36,7 @@ public interface ResourceFile {
 	String getContentType();
 	void setContentType(String contentType);
 
-	Enumeration<String> propertyNames();
+	Iterator<String> propertyNames();
 	
 	int getInt(String key);
 	String getProperty(String key);

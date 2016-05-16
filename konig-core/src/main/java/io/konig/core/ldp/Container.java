@@ -1,10 +1,12 @@
-package io.konig.core.io;
+package io.konig.core.ldp;
+
+import java.io.IOException;
 
 /*
  * #%L
  * konig-core
  * %%
- * Copyright (C) 2015 Gregory McFall
+ * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +23,14 @@ package io.konig.core.io;
  */
 
 
-import java.io.IOException;
-import java.util.Collection;
+public interface Container extends ResourceFile  {
 
-public interface ResourceManager {
 	
-	ResourceFile createResource(String location, String type, String entityBody);
+	/**
+	 * Get the ResourceFiles within this Container
+	 * @return An Iterable through which the set of ResourceFiles within this Container may be accessed.
+	 */
+	Iterable<ResourceFile> list();
 	
-	void delete(String contentLocation) throws IOException;
-	ResourceFile get(String contentLocation) throws IOException;
-	void put(ResourceFile file) throws IOException;
-	
-	Collection<ResourceFile> get(Iterable<String> resourceLocations) throws IOException; 
 
 }
