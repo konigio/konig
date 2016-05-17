@@ -67,7 +67,7 @@ public class SimpleResourceBuilder implements ResourceBuilder {
 	@Override
 	public ResourceFile resource() {
 		if (type == ResourceType.BasicContainer) {
-			return new BasicMemoryContainer(contentLocation, contentType, type, body);
+			return createBasicContainer(contentLocation, contentType, type, body);
 		}
 		if (type == ResourceType.RDFSource) {
 			return new RdfSourceImpl(contentLocation, contentType, type, body);
@@ -75,6 +75,10 @@ public class SimpleResourceBuilder implements ResourceBuilder {
 		
 
 		return new ResourceFileImpl(contentLocation, contentType, type, body);
+	}
+	
+	protected BasicContainer createBasicContainer(String contentLocation, String contentType, ResourceType type, byte[] body) {
+		return new BasicMemoryContainer(contentLocation, contentType, type, body);
 	}
 
 	@Override

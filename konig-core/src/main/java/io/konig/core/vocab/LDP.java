@@ -26,8 +26,10 @@ import org.openrdf.model.impl.URIImpl;
 
 public class LDP {
 
-	public static final String NAMESPACE = "http://www.w3.org/ns/ldp/";
-	public static final URI BasicContainer = new URIImpl("http://www.w3.org/ns/ldp/BasicContainer");
-	public static final URI DirectContainer = new URIImpl("http://www.w3.org/ns/ldp/DirectContainer");
-	public static final URI contains = new URIImpl("http://www.w3.org/ns/ldp/contains");
+	public static final String NAMESPACE = "http://www.w3.org/ns/ldp#";
+	public static final URI Resource = new URIImpl("http://www.w3.org/ns/ldp#Resource");
+	public static final URI RDFSource = new URIImpl("http://www.w3.org/ns/ldp#RDFSource");
+	public static final URI BasicContainer = new URIImpl("http://www.w3.org/ns/ldp#BasicContainer");
+	public static final URI DirectContainer = new URIImpl("http://www.w3.org/ns/ldp#DirectContainer");
+	public static final URI contains = new URIImpl("http://www.w3.org/ns/ldp#contains");
 }

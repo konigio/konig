@@ -1,4 +1,4 @@
-package io.konig.ldp;
+package io.konig.ldp.impl;
 
 /*
  * #%L
@@ -21,7 +21,28 @@ package io.konig.ldp;
  */
 
 
-public interface ResourceBuilderFactory {
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-	ResourceBuilder createBuilder();
+import io.konig.ldp.LdpHeader;
+
+public class MemoryLdpHeader implements LdpHeader {
+	private Map<String, String> map = new HashMap<>();
+
+	@Override
+	public Collection<String> getHeaderNames() {
+		return map.keySet();
+	}
+
+	@Override
+	public void put(String name, String value) {
+		map.put(name, value);
+	}
+
+	@Override
+	public String getHeader(String name) {
+		return map.get(name);
+	}
+
 }

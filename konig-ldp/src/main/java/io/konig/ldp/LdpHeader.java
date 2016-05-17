@@ -1,4 +1,4 @@
-package io.konig.ldp.impl;
+package io.konig.ldp;
 
 /*
  * #%L
@@ -21,14 +21,17 @@ package io.konig.ldp.impl;
  */
 
 
-import io.konig.ldp.ResourceBuilder;
-import io.konig.ldp.ResourceBuilderFactory;
+import java.util.Collection;
 
-public class SimpleResourceBuilderFactory implements ResourceBuilderFactory {
-
-	@Override
-	public ResourceBuilder createBuilder() {
-		return new SimpleResourceBuilder();
-	}
+/**
+ * An interface used to set the headers that accompany a Linked Data Platform response.
+ * @author Greg McFall
+ *
+ */
+public interface LdpHeader {
+	
+	Collection<String> getHeaderNames();
+	void put(String name, String value);
+	String getHeader(String name);
 
 }

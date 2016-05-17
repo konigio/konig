@@ -49,14 +49,10 @@ import io.konig.ldp.LinkedDataPlatform;
 import io.konig.ldp.RdfSource;
 import io.konig.ldp.ResourceFile;
 
-public class AbstractPlatformTest {
-	
+abstract public class LinkedDataPlatformTest {
+	public static final String ROOT = "http://example.com/resources/";
 	protected LinkedDataPlatform platform;
 	
-	@Before
-	public void setUp() {
-		platform = new MemoryPlatform("http://example.com/resources/");
-	}
 
 	
 	
@@ -185,7 +181,7 @@ public class AbstractPlatformTest {
 
 
 
-	@Ignore
+	@Test
 	public void testPost() throws Exception {
 		String containerId = "http://example.com/person/";
 		

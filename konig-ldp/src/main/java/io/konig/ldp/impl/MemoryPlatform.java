@@ -27,6 +27,7 @@ import java.util.Map;
 
 import io.konig.ldp.HttpStatusCode;
 import io.konig.ldp.LdpResponse;
+import io.konig.ldp.ResourceBuilder;
 import io.konig.ldp.ResourceFile;
 
 public class MemoryPlatform extends AbstractPlatform {
@@ -34,7 +35,7 @@ public class MemoryPlatform extends AbstractPlatform {
 	private Map<String, ResourceFile> map = new HashMap<>();
 	
 	public MemoryPlatform(String root) {
-		super(root, new SimpleResourceBuilderFactory());
+		super(root);
 		
 	}
 	@Override
@@ -58,7 +59,7 @@ public class MemoryPlatform extends AbstractPlatform {
 		map.remove(resourceIRI);
 	}
 	@Override
-	public LdpResponse createResponse() {
-		return new LdpResponseImpl(null);
+	public ResourceBuilder getResourceBuilder() {
+		return new SimpleResourceBuilder();
 	}
 }

@@ -35,6 +35,7 @@ import io.konig.ldp.BasicContainer;
 import io.konig.ldp.Container;
 import io.konig.ldp.HttpStatusCode;
 import io.konig.ldp.LdpException;
+import io.konig.ldp.LdpHeader;
 import io.konig.ldp.LdpRequest;
 import io.konig.ldp.LdpResponse;
 import io.konig.ldp.LdpWriter;
@@ -42,28 +43,22 @@ import io.konig.ldp.LinkedDataPlatform;
 import io.konig.ldp.MediaType;
 import io.konig.ldp.RdfSource;
 import io.konig.ldp.RequestBuilder;
-import io.konig.ldp.ResourceBuilder;
-import io.konig.ldp.ResourceBuilderFactory;
 import io.konig.ldp.ResourceFile;
+import io.konig.ldp.ResourceType;
 
 public abstract class AbstractPlatform implements LinkedDataPlatform {
 	
 	private String root;
-	private ResourceBuilderFactory builderFactory;
 	private LdpWriter ldpWriter;
 	
 	
 
-	public AbstractPlatform(String root, ResourceBuilderFactory builderFactory) {
+	public AbstractPlatform(String root) {
 		this.root = root;
-		this.builderFactory = builderFactory;
 		ldpWriter = new GenericLdpWriter();
 	}
 
-	@Override
-	public ResourceBuilder getResourceBuilder() {
-		return builderFactory.createBuilder();
-	}
+	
 
 	@Override
 	public void post(String containerId, ResourceFile resource) throws IOException, LdpException {
@@ -74,6 +69,7 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 				.contentLocation(containerId)
 				.basicContainer();
 			
+			save(target);
 			put(target, false);
 			getParentContainer(target.getContentLocation());
 		}
@@ -85,11 +81,6 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 		save(resource);
 		container.add(resource);
 	}
-
-	protected void setBuilderFactory(ResourceBuilderFactory builderFactory) {
-		this.builderFactory = builderFactory;
-	}
-
 
 	private Container getParentContainer(String resourceId) throws IOException, LdpException {
 		String containerId = parentId(resourceId);
@@ -104,11 +95,13 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 				.contentType("text/turtle")
 				.basicContainer();
 			
+			save(container);
+			
 			put(container, true);
 		}
 		return container.asBasicContainer();
 	}
-	
+
 	private String parentId(String resourceId) {
 		int end = resourceId.length()-1;
 		if (resourceId.charAt(end)=='/') {
@@ -125,6 +118,8 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 		if (contentType == null) {
 			throw new LdpException("Content-Type must be defined", HttpStatusCode.BAD_REQUEST);
 		}
+
+		
 		Container container = null;
 		if (createContainer) {
 			container = getParentContainer(resource.getContentLocation());
@@ -133,7 +128,6 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 		if (container != null) {
 			container.add(resource);
 		}
-		
 		return result;
 	}
 
@@ -151,14 +145,18 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 		
 	}
 
-	protected abstract void doDelete(String resourceIRI);
+	protected abstract void doDelete(String resourceIRI) throws IOException, LdpException;
 
 	@Override
 	public void serve(LdpRequest request, LdpResponse response) throws IOException, LdpException {
 		
+		if (response.getHeader()==null) {
+			response.setHeader(new MemoryLdpHeader());
+		}
 		if (response.getOutputStream() == null) {
 			response.setOutputStream(new ByteArrayOutputStream());
 		}
+		
 		
 		setTargetMediaType(request, response);
 		
@@ -209,6 +207,9 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 
 	private void doGet(LdpRequest request, LdpResponse response) throws IOException, LdpException {
 		
+		putContentType(response);
+		putLinkHeader(response);
+		
 		ResourceFile file = get(request.getResourceId());
 		response.setResource(file);
 		
@@ -217,6 +218,37 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 		}
 		
 		ldpWriter.write(response);
+		
+	}
+
+	private void putContentType(LdpResponse response) throws LdpException {
+		MediaType target = response.getTargetMediaType();
+		if (target == null) {
+			throw new LdpException(
+				"Content-Type for the response is not know.  Please set the Accept header in the request.",
+				HttpStatusCode.BAD_REQUEST);
+		}
+		
+		LdpHeader header = response.getHeader();
+		header.put("Content-Type", target.getFullName());
+		
+	}
+
+	private void putLinkHeader(LdpResponse response) throws LdpException {
+		
+		ResourceFile resource = response.getResource();
+		ResourceType type = ResourceType.Resource;
+		if (resource != null && resource.getType()!=null) {
+			type = resource.getType();
+		}
+		
+		StringBuilder builder = new StringBuilder();
+		builder.append('<');
+		builder.append(type.getURI().stringValue());
+		builder.append("> rel=\"type\"");
+		
+		response.getHeader().put("Link", builder.toString());
+		
 		
 	}
 
@@ -243,6 +275,11 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 	@Override
 	public LdpResponse createResponse(OutputStream out) {
 		return new LdpResponseImpl(out);
+	}
+
+	@Override
+	public LdpResponse createResponse() {
+		return new LdpResponseImpl(null);
 	}
 
 	@Override

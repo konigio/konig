@@ -45,11 +45,6 @@ public class MemoryContainer extends RdfSourceImpl implements BasicContainer, Re
 	}
 
 	@Override
-	public Iterable<ResourceFile> getMembers() {
-		return map.values();
-	}
-
-	@Override
 	public Iterable<String> getMemberIds() {
 		return map.keySet();
 	}

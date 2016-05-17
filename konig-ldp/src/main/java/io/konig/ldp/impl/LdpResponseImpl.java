@@ -27,11 +27,13 @@ import java.io.OutputStream;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
+import io.konig.ldp.LdpHeader;
 import io.konig.ldp.LdpResponse;
 import io.konig.ldp.MediaType;
 import io.konig.ldp.ResourceFile;
 
 public class LdpResponseImpl implements LdpResponse {
+	private LdpHeader header;
 	private OutputStream output;
 	private ResourceFile resource;
 	private MediaType targetMediaType;
@@ -95,6 +97,16 @@ public class LdpResponseImpl implements LdpResponse {
 			}
 		}
 		return json;
+	}
+
+	@Override
+	public LdpHeader getHeader() {
+		return header;
+	}
+
+	@Override
+	public void setHeader(LdpHeader header) {
+		this.header = header;
 	}
 
 }

@@ -20,17 +20,24 @@ package io.konig.ldp;
  * #L%
  */
 
+import org.openrdf.model.URI;
 
-import org.openrdf.model.impl.URIImpl;
+import io.konig.core.vocab.LDP;
 
-public class ResourceType extends URIImpl {
-	private static final long serialVersionUID = 1L;
+public enum ResourceType  {
+	Resource(LDP.Resource),
+	RDFSource(LDP.RDFSource),
+	BasicContainer(LDP.BasicContainer) ;
 	
-	public static final ResourceType RDFSource = new ResourceType("http://www.w3.org/ns/ldp#RDFSource");
-	public static final ResourceType BasicContainer = new ResourceType("http://www.w3.org/ns/ldp#BasicContainer");
+	URI uri;
+
 	
-	private ResourceType(String value) {
-		super(value);
+	private ResourceType(URI uri) {
+		this.uri = uri;
+	}
+	
+	public URI getURI() {
+		return uri;
 	}
 
 }

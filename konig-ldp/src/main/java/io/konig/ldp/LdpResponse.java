@@ -28,6 +28,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 public interface LdpResponse {
 	
+	LdpHeader getHeader();
+	void setHeader(LdpHeader header);
+	
 	OutputStream getOutputStream();
 	void setOutputStream(OutputStream out);
 	

@@ -1,4 +1,4 @@
-package io.konig.ldp;
+package io.konig.ldp.impl;
 
 /*
  * #%L
@@ -21,23 +21,12 @@ package io.konig.ldp;
  */
 
 
-public interface ResourceFile {
+import org.junit.Before;
 
-	String getContentLocation();
-	String getContentType();
-	byte[] getEntityBody();
-	ResourceType getType();
-	
-	void setEntityBody(byte[] body);
-	
-	String getEntityBodyText();
-	
-	boolean isRdfSource();
-	boolean isContainer();
-	boolean isBasicContainer();
-	
-	RdfSource asRdfSource();
-	Container asContainer();
-	BasicContainer asBasicContainer();
-	
+public class MemoryPlatformTest extends LinkedDataPlatformTest {
+
+	@Before
+	public void setUp() {
+		platform = new MemoryPlatform(LinkedDataPlatformTest.ROOT);
+	}
 }

@@ -25,7 +25,6 @@ import java.io.IOException;
 
 public interface Container extends RdfSource {
 
-	Iterable<ResourceFile> getMembers();
 	
 	Iterable<String> getMemberIds();
 
