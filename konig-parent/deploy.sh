@@ -1,6 +1,6 @@
 #!/bin/bash   
 
-PROJECT=(konig-core konig-shacl konig-schemagen konig-schemagen-maven-plugin)
+PROJECT=(konig-core konig-shacl konig-schemagen konig-schemagen-maven-plugin konig-ldp konig-ldp-maven-plugin)
 
 cd ..
 
