@@ -5,29 +5,34 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
-		<servlet>
-			<servlet-name>JsonldContextServlet</servlet-name>
-			<servlet-class>io.konig.webapp.JsonldContextServlet</servlet-class>
-			<init-param>
-				<param-name>KonigConfig.class</param-name>
-				<param-value>io.konig.appengine.GaeKonigConfig</param-value>
-			</init-param>
-		</servlet>
+	
 
     <servlet>
         <servlet-name>OntologyRedirect</servlet-name>
         <servlet-class>io.konig.war.RedirectOntologyServlet</servlet-class>
     </servlet>
     
-    <servlet-mapping>
-        <servlet-name>JsonldContextServlet</servlet-name>
-        <url-pattern>/context/*</url-pattern>
-    </servlet-mapping>
+    <servlet>
+        <servlet-name>LinkedDataPlatform</servlet-name>
+        <servlet-class>io.konig.appengine.ldp.GaeLdpServlet</servlet-class>
+        <init-param>
+        	<param-name>baseURL</param-name>
+        	<param-value>http://www.konig.io/resources/</param-value>
+        </init-param>
+    </servlet>
+    
     
     <servlet-mapping>
+        <servlet-name>LinkedDataPlatform</servlet-name>
+        <url-pattern>/resources/*</url-pattern>
+    </servlet-mapping>
+    
+     <servlet-mapping>
         <servlet-name>OntologyRedirect</servlet-name>
         <url-pattern>/ns/*</url-pattern>
     </servlet-mapping>
+    
+    
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
