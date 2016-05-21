@@ -21,7 +21,7 @@ AjaxOntologyService.prototype.getOntologyGraph = function(callback) {
 	}
 	if (src) {
 		$.get(src, null, function(data) {
-			var object = JSON.parse(data);
+			var object = (typeof(data) === "object") ? data : JSON.parse(data);
 			callback(object);
 		});
 	} else if (this.defaultGraph) {
