@@ -31,6 +31,8 @@ import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Graph;
 import io.konig.core.vocab.LDP;
+import io.konig.ldp.AcceptList;
+import io.konig.ldp.AcceptableMediaType;
 import io.konig.ldp.BasicContainer;
 import io.konig.ldp.Container;
 import io.konig.ldp.HttpStatusCode;
@@ -58,6 +60,10 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 		ldpWriter = new GenericLdpWriter();
 	}
 
+	
+	public String getBaseURL() {
+		return root;
+	}
 	
 
 	@Override
@@ -112,7 +118,11 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 	}
 
 	@Override
-	public int put(ResourceFile resource, boolean createContainer) throws IOException, LdpException {
+	public int put(ResourceFile resource) throws IOException, LdpException {
+		return put(resource, true);
+	}
+	
+	protected int put(ResourceFile resource, boolean createContainer) throws IOException, LdpException {
 		
 		String contentType = resource.getContentType();
 		if (contentType == null) {
@@ -148,8 +158,8 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 	protected abstract void doDelete(String resourceIRI) throws IOException, LdpException;
 
 	@Override
-	public void serve(LdpRequest request, LdpResponse response) throws IOException, LdpException {
-		
+	public int serve(LdpRequest request, LdpResponse response) throws IOException, LdpException {
+		int result = HttpStatusCode.OK;
 		if (response.getHeader()==null) {
 			response.setHeader(new MemoryLdpHeader());
 		}
@@ -157,13 +167,10 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 			response.setOutputStream(new ByteArrayOutputStream());
 		}
 		
-		
-		setTargetMediaType(request, response);
-		
 		switch (request.getMethod()) {
 		case GET :	doGet(request, response); break;
 		case POST: doPost(request, response); break;
-		case PUT: doPut(request, response); break;
+		case PUT: result=doPut(request, response); break;
 		case DELETE:
 		default:
 			throw new LdpException("Method not supported: " + request.getMethod());
@@ -179,12 +186,13 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 			}
 		}
 		
+		return result;
 	}
 
-	private void doPut(LdpRequest request, LdpResponse response) throws IOException, LdpException {
+	private int doPut(LdpRequest request, LdpResponse response) throws IOException, LdpException {
 		
 		RdfSource source = request.asRdfSource();
-		put(source, true);
+		return put(source, true);
 		// TODO: send headers
 		
 	}
@@ -198,17 +206,9 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 		
 	}
 
-	private void setTargetMediaType(LdpRequest request, LdpResponse response) {
-		
-		MediaType selected = request.getAcceptList().getSelected();
-		response.setTargetMediaType(selected);
-		
-	}
 
 	private void doGet(LdpRequest request, LdpResponse response) throws IOException, LdpException {
 		
-		putContentType(response);
-		putLinkHeader(response);
 		
 		ResourceFile file = get(request.getResourceId());
 		response.setResource(file);
@@ -216,21 +216,46 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 		if (file.isBasicContainer()) {
 			getBasicContainer(request, response);
 		}
+
+		setContentType(request, response);
+		putLinkHeader(response);
 		
 		ldpWriter.write(response);
 		
 	}
 
-	private void putContentType(LdpResponse response) throws LdpException {
-		MediaType target = response.getTargetMediaType();
-		if (target == null) {
+	private void setContentType(LdpRequest request, LdpResponse response) throws LdpException {
+		
+		MediaType selectedType = null;
+		String defaultType = response.getResource().getContentType();
+		boolean isRdfSource = response.getResource().getType().isSubClassOf(ResourceType.RDFSource);
+		AcceptList list = request.getAcceptList();
+		if (list==null || list.isEmpty()) {
+			selectedType = MediaType.instance(defaultType);
+		} else {
+			list.sort();
+			for (AcceptableMediaType x : list) {
+				MediaType mediaType = x.getMediaType();
+				if (mediaType.getFullName().equals(defaultType)) {
+					selectedType = mediaType;
+					break;
+				}
+				if (isRdfSource && LDPUtil.isRdfSourceMediaType(mediaType.getFullName())) {
+					selectedType = mediaType;
+					break;
+				}
+			}
+		}
+		
+		if (selectedType == null) {
 			throw new LdpException(
-				"Content-Type for the response is not know.  Please set the Accept header in the request.",
+				"Content-Type for the response is not known.  Please set the Accept header in the request.",
 				HttpStatusCode.BAD_REQUEST);
 		}
 		
+		response.setTargetMediaType(selectedType);
 		LdpHeader header = response.getHeader();
-		header.put("Content-Type", target.getFullName());
+		header.put("Content-Type", selectedType.getFullName());
 		
 	}
 

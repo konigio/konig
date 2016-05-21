@@ -22,6 +22,8 @@ package io.konig.ldp;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class AcceptList extends ArrayList<AcceptableMediaType> {
 	private static final long serialVersionUID = 1L;
@@ -29,7 +31,7 @@ public class AcceptList extends ArrayList<AcceptableMediaType> {
 	
 	public MediaType getSelected() {
 		if (selected == null) {
-			int max = 0;
+			float max = 0;
 			for (AcceptableMediaType m : this) {
 				if (m.getQValue() > max) {
 					max = m.getQValue();
@@ -43,8 +45,39 @@ public class AcceptList extends ArrayList<AcceptableMediaType> {
 		
 		return selected;
 	}
+	
 	public void setSelected(MediaType selected) {
 		this.selected = selected;
+	}
+	
+	/**
+	 * Sort this list by q value, descending.
+	 */
+	public void sort() {
+		Collections.sort(this, new Comparator<AcceptableMediaType>() {
+
+			@Override
+			public int compare(AcceptableMediaType a, AcceptableMediaType b) {
+				float delta = b.getQValue() - a.getQValue();
+				return delta < 0 ? -1 : delta>0 ? 1 : 0;
+			}
+		});
+	}
+	
+	
+	
+	public String toString() {
+		if (isEmpty()) {
+			return "";
+		}
+		StringBuilder builder = new StringBuilder();
+		String comma = "";
+		for (AcceptableMediaType m : this) {
+			builder.append(comma);
+			m.append(builder);
+			comma = ", ";
+		}
+		return builder.toString();
 	}
 	
 }

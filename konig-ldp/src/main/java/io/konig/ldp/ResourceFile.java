@@ -27,6 +27,7 @@ public interface ResourceFile {
 	String getContentType();
 	byte[] getEntityBody();
 	ResourceType getType();
+	void setType(ResourceType type);
 	
 	void setEntityBody(byte[] body);
 	

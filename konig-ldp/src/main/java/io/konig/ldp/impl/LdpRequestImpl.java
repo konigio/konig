@@ -35,7 +35,8 @@ public class LdpRequestImpl implements LdpRequest {
 	private String resourceId;
 	private AcceptList acceptList;
 	private byte[] body;
-	private Map<String, String> headerMap;
+	private String contentType;
+	private String slug;
 	
 	
 
@@ -44,8 +45,8 @@ public class LdpRequestImpl implements LdpRequest {
 		this.method = method;
 		this.resourceId = resourceId;
 		this.acceptList = acceptList;
+		this.contentType = headerMap.get("Content-Type");
 		this.body = body;
-		this.headerMap = headerMap;
 	}
 
 	@Override
@@ -68,30 +69,20 @@ public class LdpRequestImpl implements LdpRequest {
 		return body;
 	}
 
-	@Override
-	public Iterable<String> getHeaderNames() {
-		return headerMap.keySet();
-	}
-
-	@Override
-	public String getHeader(String headerName) {
-		return headerMap.get(headerName);
-	}
 
 	@Override
 	public String getSlug() {
-		return getHeader("Slug");
+		return slug;
 	}
 
 	@Override
 	public String getContentType() {
-		return getHeader("Content-Type");
+		return contentType;
 	}
 
 	@Override
 	public void setContentType(String contentType) {
-		headerMap.put("Content-Type", contentType);
-		
+		this.contentType = contentType;
 	}
 
 	@Override

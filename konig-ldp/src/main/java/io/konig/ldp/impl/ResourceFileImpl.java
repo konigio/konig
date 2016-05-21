@@ -101,4 +101,9 @@ public class ResourceFileImpl implements ResourceFile {
 	public RdfSource asRdfSource() {
 		throw new RuntimeException("Cannot convert to RdfSource");
 	}
+
+	@Override
+	public void setType(ResourceType type) {
+		this.type = type;
+	}
 }

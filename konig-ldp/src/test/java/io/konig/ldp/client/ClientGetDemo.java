@@ -1,4 +1,4 @@
-package io.konig.ldp;
+package io.konig.ldp.client;
 
 /*
  * #%L
@@ -21,27 +21,18 @@ package io.konig.ldp;
  */
 
 
-import java.io.IOException;
-import java.io.OutputStream;
+import io.konig.ldp.ResourceFile;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+public class ClientGetDemo {
 
-public interface LdpResponse {
-	
-	LdpHeader getHeader();
-	void setHeader(LdpHeader header);
-	
-	OutputStream getOutputStream();
-	void setOutputStream(OutputStream out);
-	
-	JsonGenerator getJsonGenerator();
-	
-	ResourceFile getResource();
-	void setResource(ResourceFile resource);
-	
-	MediaType getTargetMediaType();
-	void setTargetMediaType(MediaType target);
-	
-	void flush() throws IOException;
-	
+	public static void main(String[] args) throws Exception {
+		String resourceId = "http://localhost:8888/resources/pearson/gdm";
+
+		LdpClient client = new LdpClient();
+		
+		ResourceFile loaded = client.get(resourceId);
+		
+		System.out.println(loaded.getEntityBodyText());
+	}
+
 }

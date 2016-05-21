@@ -26,18 +26,47 @@ import io.konig.core.vocab.LDP;
 
 public enum ResourceType  {
 	Resource(LDP.Resource),
-	RDFSource(LDP.RDFSource),
-	BasicContainer(LDP.BasicContainer) ;
+	RDFSource(LDP.RDFSource, Resource),
+	NonRDFSource(LDP.NonRDFSource, Resource),
+	Container(LDP.Container, RDFSource),
+	BasicContainer(LDP.BasicContainer, Container),
+	DirectContainer(LDP.DirectContainer, Container),
+	IndirectContainer(LDP.IndirectContainer, DirectContainer);
 	
-	URI uri;
-
+	private URI uri;
+	private ResourceType superType;
 	
 	private ResourceType(URI uri) {
 		this.uri = uri;
 	}
+	private ResourceType(URI uri, ResourceType superType) {
+		this.uri = uri;
+		this.superType = superType;
+	}
 	
 	public URI getURI() {
 		return uri;
+	}
+	public ResourceType getSuperType() {
+		return superType;
+	}
+	
+	public boolean isSubClassOf(ResourceType superClass) {
+		return this==superClass || (
+			superType != null && 
+			(superType==superClass || superType.isSubClassOf(superClass))
+		);
+	}
+	
+	public static ResourceType fromURI(String uriValue) {
+		ResourceType[] list = values();
+		for (int i=0; i<list.length; i++) {
+			ResourceType type = list[i];
+			if (type.uri.stringValue().equals(uriValue)) {
+				return type;
+			}
+		}
+		return null;
 	}
 
 }

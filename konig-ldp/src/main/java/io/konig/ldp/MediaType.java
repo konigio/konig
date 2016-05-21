@@ -29,6 +29,10 @@ public class MediaType {
 	private String type;
 	private String subtype;
 	
+	public static MediaType instance(String fullName) {
+		return new MediaType(fullName);
+	}
+	
 	public MediaType(String fullName) {
 		this.fullName = fullName;
 		int slash = fullName.indexOf('/');
@@ -48,5 +52,7 @@ public class MediaType {
 		return subtype;
 	}
 
-	
+	public String toString() {
+		return fullName;
+	}
 }

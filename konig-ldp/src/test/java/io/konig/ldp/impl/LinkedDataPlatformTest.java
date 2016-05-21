@@ -53,8 +53,6 @@ abstract public class LinkedDataPlatformTest {
 	public static final String ROOT = "http://example.com/resources/";
 	protected LinkedDataPlatform platform;
 	
-
-	
 	
 	@Test
 	public void testGetContainer() throws Exception {
@@ -118,7 +116,7 @@ abstract public class LinkedDataPlatformTest {
 			.contentType("text/turtle")
 			.rdfSource();
 		
-		platform.put(file,  true);
+		platform.put(file);
 	}
 	
 	@Test
@@ -181,7 +179,7 @@ abstract public class LinkedDataPlatformTest {
 
 
 
-	@Test
+	@Ignore
 	public void testPost() throws Exception {
 		String containerId = "http://example.com/person/";
 		
@@ -320,7 +318,7 @@ abstract public class LinkedDataPlatformTest {
 			.contentLocation("http://example.com/resources/alpha/beta/gamma")
 			.contentType("text/turtle")
 			.rdfSource();
-		platform.put(file, true);
+		platform.put(file);
 		
 		ResourceFile root = platform.get("http://example.com/resources/alpha/");
 		assertTrue(root != null);
@@ -342,7 +340,7 @@ abstract public class LinkedDataPlatformTest {
 			.body(body)
 			.rdfSource();
 		
-		platform.put(file, false);
+		platform.put(file);
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		

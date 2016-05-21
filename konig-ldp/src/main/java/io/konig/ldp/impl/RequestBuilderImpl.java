@@ -78,8 +78,10 @@ public class RequestBuilderImpl implements RequestBuilder {
 
 	@Override
 	public RequestBuilder accept(String contentType) {
-		AcceptableMediaType mediaType = new AcceptableMediaType(new MediaType(contentType), 1);
-		acceptList.add(mediaType);
+		if (contentType!=null && contentType.length()>0) {
+			AcceptableMediaType mediaType = new AcceptableMediaType(new MediaType(contentType), 1);
+			acceptList.add(mediaType);
+		}
 		
 		return this;
 	}

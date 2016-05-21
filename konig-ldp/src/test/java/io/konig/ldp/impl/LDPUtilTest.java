@@ -1,4 +1,4 @@
-package io.konig.ldp;
+package io.konig.ldp.impl;
 
 /*
  * #%L
@@ -21,27 +21,26 @@ package io.konig.ldp;
  */
 
 
-import java.io.IOException;
-import java.io.OutputStream;
+import static org.junit.Assert.*;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import org.junit.Test;
 
-public interface LdpResponse {
-	
-	LdpHeader getHeader();
-	void setHeader(LdpHeader header);
-	
-	OutputStream getOutputStream();
-	void setOutputStream(OutputStream out);
-	
-	JsonGenerator getJsonGenerator();
-	
-	ResourceFile getResource();
-	void setResource(ResourceFile resource);
-	
-	MediaType getTargetMediaType();
-	void setTargetMediaType(MediaType target);
-	
-	void flush() throws IOException;
-	
+import io.konig.ldp.ResourceType;
+
+public class LDPUtilTest {
+
+	@Test
+	public void test() {
+		String value =
+				  "<http://www.w3.org/ns/ldp#Resource>; rel=\"type\",  "
+				+ "<http://www.w3.org/ns/ldp#DirectContainer>; rel=\"type\", "
+				+ "<http://www.w3.org/ns/ldp#Container>; rel=\"type\"";
+		
+		
+		ResourceType type = LDPUtil.getResourceType(value);
+		
+		assertEquals(ResourceType.DirectContainer, type);
+		
+	}
+
 }

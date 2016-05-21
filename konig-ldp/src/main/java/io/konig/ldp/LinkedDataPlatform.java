@@ -35,24 +35,24 @@ public interface LinkedDataPlatform {
 	ResourceFile get(String resourceIRI) throws IOException, LdpException;
 	
 	/**
-	 * Create or update the specified resource, and optionally create an LDP container to
-	 * hold the resource.
+	 * Create or update the specified resource.
+	 * If the resource already exists in the server, it will be updated.  Otherwise, it will 
+	 * be created and added to the container indicated by its path location.  If that container
+	 * does not already exist, it will be created automatically as a BasicContainer.  This
+	 * process will continue recursively until the root container within the LDP is reached.
+	 * 
 	 * @param resource The resource that is being created or updated within the server.
-	 * @param createContainer A flag which specifies whether a container should be created to
-	 * hold the resource.  If true, the server will construct an IRI for the container by removing
-	 * the local name from the supplied resource.  If a container with that IRI does not exist,
-	 * the server will construct a Basic Container with the IRI.  Moreover, it will cascade the 
-	 * creation of containers until the root container within this server is reached.
+	 * 
 	 * @return The status code of the operation, either 200 OK for a successful update, or 
 	 * 201 Created if the resource is newly created.
 	 * @throws IOException
 	 * @throws LdpException
 	 */
-	int put(ResourceFile resource, boolean createContainer) throws IOException, LdpException;
+	int put(ResourceFile resource) throws IOException, LdpException;
 	
 	
 	void delete(String resourceIRI) throws IOException, LdpException;
 	
 	
-	void serve(LdpRequest request, LdpResponse response) throws IOException, LdpException;
+	int serve(LdpRequest request, LdpResponse response) throws IOException, LdpException;
 }

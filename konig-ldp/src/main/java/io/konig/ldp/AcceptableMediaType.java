@@ -23,9 +23,9 @@ package io.konig.ldp;
 
 public class AcceptableMediaType {
 	private MediaType mediaType;
-	private int qValue;
+	private float qValue;
 	
-	public AcceptableMediaType(MediaType mediaType, int qValue) {
+	public AcceptableMediaType(MediaType mediaType, float qValue) {
 		this.mediaType = mediaType;
 		this.qValue = qValue;
 	}
@@ -34,8 +34,25 @@ public class AcceptableMediaType {
 		return mediaType;
 	}
 
-	public int getQValue() {
+	public float getQValue() {
 		return qValue;
+	}
+	
+	public void append(StringBuilder builder) {
+		builder.append(mediaType.toString());
+		if (qValue > 0) {
+			builder.append("; q=");
+			builder.append(qValue);
+		}
+	}
+	
+	public String toString() {
+		if (qValue == 0) {
+			return mediaType.toString();
+		}
+		StringBuilder builder = new StringBuilder();
+		append(builder);
+		return builder.toString();
 	}
 	
 	

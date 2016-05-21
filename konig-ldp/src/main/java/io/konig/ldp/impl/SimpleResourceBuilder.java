@@ -66,13 +66,14 @@ public class SimpleResourceBuilder implements ResourceBuilder {
 
 	@Override
 	public ResourceFile resource() {
+		inferType();
 		if (type == ResourceType.BasicContainer) {
 			return createBasicContainer(contentLocation, contentType, type, body);
 		}
 		if (type == ResourceType.RDFSource) {
 			return new RdfSourceImpl(contentLocation, contentType, type, body);
 		}
-		
+		// TODO: handle other LDP resource types
 
 		return new ResourceFileImpl(contentLocation, contentType, type, body);
 	}
@@ -91,6 +92,17 @@ public class SimpleResourceBuilder implements ResourceBuilder {
 	public RdfSource rdfSource() {
 		type = ResourceType.RDFSource;
 		return (RdfSource) resource();
+	}
+
+	private void inferType() {
+		if (type == null) {
+			if (
+				"text/turtle".equals(contentType) ||
+				"application/ld+json".equals(contentType)
+			) {
+				type = ResourceType.RDFSource;
+			} 
+		}
 	}
 
 }

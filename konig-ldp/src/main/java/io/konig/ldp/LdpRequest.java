@@ -43,18 +43,6 @@ public interface LdpRequest {
 	 */
 	byte[] getEntityBody();
 	
-	/**
-	 * Get a list of the names for all HTTP Request headers
-	 * @return A list of the names for all HTTP Request headers
-	 */
-	Iterable<String> getHeaderNames();
-	
-	/**
-	 * Get the value of a given header
-	 * @param headerName The name of the header to be returned
-	 * @return The header value.
-	 */
-	String getHeader(String headerName);
 	
 	/**
 	 * Get the Slug header value. This header is defined in RFC5023.  It is used
