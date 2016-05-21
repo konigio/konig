@@ -17,23 +17,53 @@
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   },
   "@graph" : [ {
-    "@id" : "dc:",
-    "vann:preferredNamespacePrefix" : {
-      "@value" : "dc"
+    "@id" : "rdfs:",
+    "@type" : "owl:Ontology",
+    "dc:title" : {
+      "@value" : "RDF Schema"
     },
-    "@type" : "owl:Ontology"
+    "vann:preferredNamespacePrefix" : {
+      "@value" : "rdfs"
+    },
+    "rdfs:seeAlso" : {
+      "@id" : "http://www.w3.org/2000/01/rdf-schema-more"
+    }
   }, {
-    "@id" : "skos:",
-    "vann:preferredNamespacePrefix" : {
-      "@value" : "skos"
+    "@id" : "owl:",
+    "@type" : "owl:Ontology",
+    "dc:title" : {
+      "@value" : "OWL"
     },
-    "@type" : "owl:Ontology"
-  }, {
-    "@id" : "grddl:",
-    "vann:preferredNamespacePrefix" : {
-      "@value" : "grddl"
+    "rdfs:comment" : {
+      "@value" : "\r\n  This ontology partially describes the built-in classes and\r\n  properties that together form the basis of the RDF/XML syntax of OWL 2.\r\n  The content of this ontology is based on Tables 6.1 and 6.2\r\n  in Section 6.4 of the OWL 2 RDF-Based Semantics specification,\r\n  available at http://www.w3.org/TR/owl2-rdf-based-semantics/.\r\n  Please note that those tables do not include the different annotations\r\n  (labels, comments and rdfs:isDefinedBy links) used in this file.\r\n  Also note that the descriptions provided in this ontology do not\r\n  provide a complete and correct formal description of either the syntax\r\n  or the semantics of the introduced terms (please see the OWL 2\r\n  recommendations for the complete and normative specifications).\r\n  Furthermore, the information provided by this ontology may be\r\n  misleading if not used with care. This ontology SHOULD NOT be imported\r\n  into OWL ontologies. Importing this file into an OWL 2 DL ontology\r\n  will cause it to become an OWL 2 Full ontology and may have other,\r\n  unexpected, consequences.\r\n   "
     },
-    "@type" : "owl:Ontology"
+    "rdfs:isDefinedBy" : [ {
+      "@id" : "http://www.w3.org/TR/owl2-syntax/"
+    }, {
+      "@id" : "http://www.w3.org/TR/owl2-rdf-based-semantics/"
+    }, {
+      "@id" : "http://www.w3.org/TR/owl2-mapping-to-rdf/"
+    } ],
+    "rdfs:seeAlso" : [ {
+      "@id" : "http://www.w3.org/TR/owl2-rdf-based-semantics/#table-axiomatic-classes"
+    }, {
+      "@id" : "http://www.w3.org/TR/owl2-rdf-based-semantics/#table-axiomatic-properties"
+    } ],
+    "owl:imports" : {
+      "@id" : "http://www.w3.org/2000/01/rdf-schema"
+    },
+    "owl:versionIRI" : {
+      "@id" : "http://www.w3.org/2002/07/owl"
+    },
+    "owl:versionInfo" : {
+      "@value" : "$Date: 2009/11/15 10:54:12 $"
+    },
+    "grddl:namespaceTransformation" : {
+      "@id" : "http://dev.w3.org/cvsweb/2009/owl-grddl/owx2rdf.xsl"
+    },
+    "vann:preferredNamespacePrefix" : {
+      "@value" : "owl"
+    }
   }, {
     "@id" : "kcs:",
     "@type" : "owl:Ontology",
@@ -47,11 +77,29 @@
       "@value" : "kcs"
     }
   }, {
-    "@id" : "foaf:",
-    "vann:preferredNamespacePrefix" : {
-      "@value" : "foaf"
+    "@id" : "kol:",
+    "@type" : "owl:Ontology",
+    "rdfs:label" : {
+      "@value" : "Konig Ontology Language"
     },
-    "@type" : "owl:Ontology"
+    "rdfs:comment" : {
+      "@value" : "Provides terms that extend OWL and SHACL.\r\n\t\t<p>A description of this ontology in Turtle syntax is available at \r\n\t\t<a href=\"http://www.konig.io/ns/kol/.ttl\">http://www.konig.io/ns/kol/.ttl</a></p>"
+    },
+    "vann:preferredNamespacePrefix" : {
+      "@value" : "kol"
+    }
+  }, {
+    "@id" : "vann:",
+    "vann:preferredNamespacePrefix" : {
+      "@value" : "vann"
+    },
+    "@type" : "owl:Ontology",
+    "rdfs:comment" : {
+      "@value" : "A vocabulary for annotating ontologies with examples and usage notes."
+    },
+    "rdfs:label" : {
+      "@value" : "Vocabulary Annotation"
+    }
   }, {
     "@id" : "cs:",
     "@type" : "owl:Ontology",
@@ -103,18 +151,6 @@
     },
     "skos:changeNote" : [ {
       "rdfs:label" : {
-        "@value" : "Improved documentation",
-        "@language" : "en",
-        "@type" : "rdf:langString"
-      },
-      "dc:date" : {
-        "@value" : "2006-03-21"
-      },
-      "dc:creator" : {
-        "@id" : "http://iandavis.com/id/me"
-      }
-    }, {
-      "rdfs:label" : {
         "@value" : "Fixed invalid RDF",
         "@language" : "en",
         "@type" : "rdf:langString"
@@ -125,20 +161,20 @@
       "dc:creator" : {
         "@id" : "http://iandavis.com/id/me"
       }
-    } ],
-    "skos:historyNote" : [ {
+    }, {
       "rdfs:label" : {
-        "@value" : "Updated dublin core properties to new namespace",
+        "@value" : "Improved documentation",
         "@language" : "en",
         "@type" : "rdf:langString"
       },
       "dc:date" : {
-        "@value" : "2009-05-18"
+        "@value" : "2006-03-21"
       },
       "dc:creator" : {
         "@id" : "http://iandavis.com/id/me"
       }
-    }, {
+    } ],
+    "skos:historyNote" : [ {
       "rdfs:label" : {
         "@value" : "Introduced statement property",
         "@language" : "en",
@@ -150,13 +186,75 @@
       "dc:creator" : {
         "@id" : "http://iandavis.com/id/me"
       }
+    }, {
+      "rdfs:label" : {
+        "@value" : "Updated dublin core properties to new namespace",
+        "@language" : "en",
+        "@type" : "rdf:langString"
+      },
+      "dc:date" : {
+        "@value" : "2009-05-18"
+      },
+      "dc:creator" : {
+        "@id" : "http://iandavis.com/id/me"
+      }
     } ]
   }, {
-    "@id" : "http://www.w3.org/XML/1998/namespace",
-    "vann:preferredNamespacePrefix" : {
-      "@value" : "xml"
+    "@id" : "rdf:",
+    "@type" : "owl:Ontology",
+    "dc:title" : {
+      "@value" : "RDF Syntax"
     },
-    "@type" : "owl:Ontology"
+    "dc:description" : {
+      "@value" : "This is the RDF Schema for the RDF vocabulary terms in the RDF Namespace, defined in RDF 1.1 Concepts."
+    },
+    "vann:preferredNamespacePrefix" : {
+      "@value" : "rdf"
+    }
+  }, {
+    "@id" : "xsd:",
+    "@type" : "owl:Ontology",
+    "dc:title" : {
+      "@value" : "XML Schema"
+    },
+    "rdfs:comment" : {
+      "@value" : "A vocabulary for expressing constraints about XML documents."
+    },
+    "vann:preferredNamespacePrefix" : {
+      "@value" : "xsd"
+    }
+  }, {
+    "@id" : "sh:",
+    "@type" : "owl:Ontology",
+    "dc:title" : {
+      "@value" : "W3C Shapes Constraint Language (SHACL) Vocabulary"
+    },
+    "dc:description" : {
+      "@value" : "\r\n<p>\r\nThis vocabulary defines terms used in SHACL, the W3C Shapes Constraint Language.\r\n</p>\r\n<p>\r\nThis vocabulary is under development by the W3C Data Shapes Working Group.\r\nThe status of each term in this vocabulary is indicated using\r\n<a href=\"http://www.w3.org/2003/06/sw-vocab-status/note\">Term-centric Semantic Web Vocabulary Annotations</a>.\r\nAll terms that appeared in the\r\n<a href=\"http://www.w3.org/TR/2015/WD-shacl-20151008/\"> Shapes Constaint Language (SHACL) W3C First Public Working Draft 08 October 2015</a>\r\nhave been marked as <em>stable</em>.\r\nOther terms are marked as <em>unstable</em>, <em>testing</em>, or <em>archaic</em> according to the\r\ncurrent level of consensus within the Working Group.\r\n</p>\r\n",
+      "@type" : "rdf:XMLLiteral"
+    },
+    "rdfs:label" : {
+      "@value" : "SHACL Vocabulary"
+    },
+    "vann:preferredNamespacePrefix" : {
+      "@value" : "sh"
+    },
+    "rdfs:seeAlso" : [ {
+      "@id" : "https://www.w3.org/2014/data-shapes/wiki/Main_Page"
+    }, {
+      "@id" : "http://www.w3.org/TR/2015/WD-shacl-20151008/"
+    }, {
+      "@id" : "http://www.w3.org/TR/2015/WD-shacl-ucr-20150414/"
+    } ],
+    "dc:source" : {
+      "@id" : "https://raw.githubusercontent.com/w3c/data-shapes/gh-pages/shacl/shacl-vocab.ttl"
+    },
+    "dc:license" : {
+      "@id" : "http://www.w3.org/Consortium/Legal/2015/doc-license"
+    },
+    "dc:dateCopyrighted" : {
+      "@value" : "2015"
+    }
   }, {
     "@id" : "sh:AllObjectsScope",
     "@type" : "owl:Class",
@@ -221,83 +319,6 @@
       "@value" : "A document containing an Avro Schema specification"
     }
   }, {
-    "@type" : "owl:Class",
-    "owl:intersectionOf" : {
-      "rdf:first" : {
-        "@type" : "owl:Restriction",
-        "owl:onProperty" : {
-          "@id" : "cs:statement"
-        },
-        "owl:minCardinality" : {
-          "@value" : "1",
-          "@type" : "xsd:nonNegativeInteger"
-        }
-      },
-      "rdf:rest" : {
-        "rdf:first" : {
-          "@type" : "owl:Restriction",
-          "owl:onProperty" : {
-            "@id" : "cs:previousChangeSet"
-          },
-          "owl:maxCardinality" : {
-            "@value" : "1",
-            "@type" : "xsd:nonNegativeInteger"
-          }
-        },
-        "rdf:rest" : {
-          "rdf:first" : {
-            "@type" : "owl:Restriction",
-            "owl:onProperty" : {
-              "@id" : "cs:subjectOfChange"
-            },
-            "owl:maxCardinality" : {
-              "@value" : "1",
-              "@type" : "xsd:nonNegativeInteger"
-            }
-          },
-          "rdf:rest" : {
-            "rdf:first" : {
-              "@type" : "owl:Restriction",
-              "owl:onProperty" : {
-                "@id" : "cs:createdDate"
-              },
-              "owl:maxCardinality" : {
-                "@value" : "1",
-                "@type" : "xsd:nonNegativeInteger"
-              }
-            },
-            "rdf:rest" : {
-              "rdf:first" : {
-                "@type" : "owl:Restriction",
-                "owl:onProperty" : {
-                  "@id" : "cs:creatorName"
-                },
-                "owl:maxCardinality" : {
-                  "@value" : "1",
-                  "@type" : "xsd:nonNegativeInteger"
-                }
-              },
-              "rdf:rest" : {
-                "rdf:first" : {
-                  "@type" : "owl:Restriction",
-                  "owl:onProperty" : {
-                    "@id" : "cs:changeReason"
-                  },
-                  "owl:maxCardinality" : {
-                    "@value" : "1",
-                    "@type" : "xsd:nonNegativeInteger"
-                  }
-                },
-                "rdf:rest" : {
-                  "@id" : "rdf:nil"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, {
     "@id" : "cs:ChangeSet",
     "@type" : "owl:Class",
     "rdfs:label" : {
@@ -339,7 +360,82 @@
       }
     },
     "rdfs:subClassOf" : {
-      "@id" : "_:BTK5BSVr2K8AAAFUF0tIow"
+      "@type" : "owl:Class",
+      "owl:intersectionOf" : {
+        "rdf:first" : {
+          "@type" : "owl:Restriction",
+          "owl:onProperty" : {
+            "@id" : "cs:statement"
+          },
+          "owl:minCardinality" : {
+            "@value" : "1",
+            "@type" : "xsd:nonNegativeInteger"
+          }
+        },
+        "rdf:rest" : {
+          "rdf:first" : {
+            "@type" : "owl:Restriction",
+            "owl:onProperty" : {
+              "@id" : "cs:previousChangeSet"
+            },
+            "owl:maxCardinality" : {
+              "@value" : "1",
+              "@type" : "xsd:nonNegativeInteger"
+            }
+          },
+          "rdf:rest" : {
+            "rdf:first" : {
+              "@type" : "owl:Restriction",
+              "owl:onProperty" : {
+                "@id" : "cs:subjectOfChange"
+              },
+              "owl:maxCardinality" : {
+                "@value" : "1",
+                "@type" : "xsd:nonNegativeInteger"
+              }
+            },
+            "rdf:rest" : {
+              "rdf:first" : {
+                "@type" : "owl:Restriction",
+                "owl:onProperty" : {
+                  "@id" : "cs:createdDate"
+                },
+                "owl:maxCardinality" : {
+                  "@value" : "1",
+                  "@type" : "xsd:nonNegativeInteger"
+                }
+              },
+              "rdf:rest" : {
+                "rdf:first" : {
+                  "@type" : "owl:Restriction",
+                  "owl:onProperty" : {
+                    "@id" : "cs:creatorName"
+                  },
+                  "owl:maxCardinality" : {
+                    "@value" : "1",
+                    "@type" : "xsd:nonNegativeInteger"
+                  }
+                },
+                "rdf:rest" : {
+                  "rdf:first" : {
+                    "@type" : "owl:Restriction",
+                    "owl:onProperty" : {
+                      "@id" : "cs:changeReason"
+                    },
+                    "owl:maxCardinality" : {
+                      "@value" : "1",
+                      "@type" : "xsd:nonNegativeInteger"
+                    }
+                  },
+                  "rdf:rest" : {
+                    "@id" : "rdf:nil"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }, {
     "@id" : "sh:ClosedShapeConstraint",
@@ -718,6 +814,21 @@
     },
     "vs:term_status" : {
       "@value" : "stable"
+    }
+  }, {
+    "@id" : "rdf:XMLLiteral",
+    "@type" : [ "owl:Class", "rdfs:Datatype" ],
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Literal"
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdf:"
+    },
+    "rdfs:label" : {
+      "@value" : "XMLLiteral"
+    },
+    "rdfs:comment" : {
+      "@value" : "The datatype of XML literal values."
     }
   }, {
     "@id" : "xsd:anyURI",
@@ -2787,7 +2898,7 @@
     },
     "skos:historyNote" : [ {
       "rdf:value" : {
-        "@value" : "Made a sub-property of statement"
+        "@value" : "Made owl:ObjectProperty"
       },
       "dc:date" : {
         "@value" : "2006-03-21"
@@ -2797,7 +2908,7 @@
       }
     }, {
       "rdf:value" : {
-        "@value" : "Made owl:ObjectProperty"
+        "@value" : "Made a sub-property of statement"
       },
       "dc:date" : {
         "@value" : "2006-03-21"
@@ -3037,7 +3148,7 @@
     },
     "skos:historyNote" : [ {
       "rdf:value" : {
-        "@value" : "Made owl:ObjectProperty"
+        "@value" : "Made a sub-property of statement"
       },
       "dc:date" : {
         "@value" : "2006-03-21"
@@ -3047,7 +3158,7 @@
       }
     }, {
       "rdf:value" : {
-        "@value" : "Made a sub-property of statement"
+        "@value" : "Made owl:ObjectProperty"
       },
       "dc:date" : {
         "@value" : "2006-03-21"
@@ -3437,19 +3548,19 @@
       "@value" : "The empty list, with no items in it. If the rest of a list is nil then the list has no more items in it."
     }
   }, {
-    "@id" : "rdf:XMLLiteral",
-    "@type" : "rdfs:Datatype",
-    "rdfs:subClassOf" : {
-      "@id" : "rdfs:Literal"
-    },
+    "@id" : "rdfs:Literal",
+    "@type" : "rdfs:Class",
     "rdfs:isDefinedBy" : {
-      "@id" : "rdf:"
+      "@id" : "rdfs:"
     },
     "rdfs:label" : {
-      "@value" : "XMLLiteral"
+      "@value" : "Literal"
     },
     "rdfs:comment" : {
-      "@value" : "The datatype of XML literal values."
+      "@value" : "The class of literal values, eg. textual strings and integers."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
     }
   }, {
     "@id" : "rdfs:Class",
@@ -3494,33 +3605,6 @@
       "@id" : "rdfs:Resource"
     }
   }, {
-    "@id" : "rdfs:",
-    "@type" : "owl:Ontology",
-    "dc:title" : {
-      "@value" : "RDF Schema"
-    },
-    "vann:preferredNamespacePrefix" : {
-      "@value" : "rdfs"
-    },
-    "rdfs:seeAlso" : {
-      "@id" : "http://www.w3.org/2000/01/rdf-schema-more"
-    }
-  }, {
-    "@id" : "rdfs:Literal",
-    "@type" : "rdfs:Class",
-    "rdfs:isDefinedBy" : {
-      "@id" : "rdfs:"
-    },
-    "rdfs:label" : {
-      "@value" : "Literal"
-    },
-    "rdfs:comment" : {
-      "@value" : "The class of literal values, eg. textual strings and integers."
-    },
-    "rdfs:subClassOf" : {
-      "@id" : "rdfs:Resource"
-    }
-  }, {
     "@id" : "rdfs:Datatype",
     "@type" : "rdfs:Class",
     "rdfs:isDefinedBy" : {
@@ -3549,18 +3633,6 @@
     },
     "rdfs:subClassOf" : {
       "@id" : "rdfs:Resource"
-    }
-  }, {
-    "@id" : "rdf:",
-    "@type" : "owl:Ontology",
-    "dc:title" : {
-      "@value" : "RDF Syntax"
-    },
-    "dc:description" : {
-      "@value" : "This is the RDF Schema for the RDF vocabulary terms in the RDF Namespace, defined in RDF 1.1 Concepts."
-    },
-    "vann:preferredNamespacePrefix" : {
-      "@value" : "rdf"
     }
   }, {
     "@id" : "rdf:Statement",

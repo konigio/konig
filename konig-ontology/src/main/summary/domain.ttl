@@ -1,0 +1,283 @@
+@prefix cs: <http://purl.org/vocab/changeset/schema#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix grddl: <http://www.w3.org/2003/g/data-view#> .
+@prefix kcs: <http://www.konig.io/ns/kcs/> .
+@prefix kol: <http://www.konig.io/ns/kol/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix vs: <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+cs:ChangeSet a owl:Class .
+
+sh:ValidationResult a owl:Class .
+
+kol:Graph a owl:Class .
+
+xsd:unsignedInt a owl:Class ;
+	rdfs:subClassOf xsd:unsignedLong .
+
+xsd:unsignedLong a owl:Class ;
+	rdfs:subClassOf xsd:nonNegativeInteger .
+
+sh:NotEqualConstraint a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+sh:Constraint a owl:Class .
+
+owl:Nothing a owl:Class ;
+	rdfs:subClassOf owl:Thing .
+
+owl:Thing a owl:Class .
+
+xsd:nonNegativeInteger a owl:Class ;
+	rdfs:subClassOf xsd:integer .
+
+xsd:byte a owl:Class ;
+	rdfs:subClassOf xsd:short .
+
+xsd:short a owl:Class ;
+	rdfs:subClassOf xsd:int .
+
+xsd:anyURI a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+rdf:XMLLiteral a owl:Class ;
+	rdfs:subClassOf rdfs:Literal .
+
+sh:Severity a owl:Class .
+
+sh:OrConstraint a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+rdfs:Literal a owl:Class .
+
+kol:LogicalShape a owl:Class ;
+	rdfs:subClassOf sh:Shape .
+
+sh:Shape a owl:Class .
+
+_:zkcJKnwXsaQAAAFU1FuRwQ a owl:Class .
+
+sh:Template a owl:Class .
+
+sh:AndConstraint a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+rdf:List a owl:Class ;
+	rdfs:subClassOf rdfs:Resource .
+
+rdfs:Resource a owl:Class .
+
+xsd:integer a owl:Class ;
+	rdfs:subClassOf xsd:decimal .
+
+xsd:negativeInteger a owl:Class ;
+	rdfs:subClassOf xsd:integer .
+
+xsd:hexBinary a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+sh:AllSubjectsScope a owl:Class ;
+	rdfs:subClassOf sh:Scope .
+
+sh:Scope a owl:Class .
+
+xsd:decimal a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+xsd:language a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+kol:ForeignKey a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+xsd:positiveInteger a owl:Class ;
+	rdfs:subClassOf xsd:integer .
+
+xsd:int a owl:Class ;
+	rdfs:subClassOf xsd:long .
+
+xsd:float a owl:Class ;
+	rdfs:subClassOf xsd:double .
+
+xsd:double a owl:Class ;
+	rdfs:subClassOf xsd:decimal .
+
+xsd:base64Binary a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+rdfs:Class a owl:Class ;
+	rdfs:subClassOf rdfs:Resource .
+
+xsd:unsignedShort a owl:Class ;
+	rdfs:subClassOf xsd:unsignedInt .
+
+xsd:dateTime a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+sh:PropertyScope a owl:Class ;
+	rdfs:subClassOf sh:Scope .
+
+sh:ClosedShapeConstraint a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+sh:NodeKind a owl:Class .
+
+xsd:dayTimeDuration a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+sh:AllObjectsScope a owl:Class ;
+	rdfs:subClassOf sh:Scope .
+
+sh:LessThanConstraint a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+rdf:Property a owl:Class ;
+	rdfs:subClassOf rdfs:Resource .
+
+xsd:long a owl:Class ;
+	rdfs:subClassOf xsd:integer .
+
+sh:InversePropertyScope a owl:Class ;
+	rdfs:subClassOf sh:Scope .
+
+owl:Individual a owl:Class .
+
+xsd:string a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+sh:EqualConstraint a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+sh:PropertyConstraint a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+rdf:Statement a owl:Class ;
+	rdfs:subClassOf rdfs:Resource .
+
+xsd:unsignedByte a owl:Class ;
+	rdfs:subClassOf xsd:unsignedShort .
+
+kol:AvroSchemaSpecification a owl:Class .
+
+xsd:boolean a owl:Class ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+sh:Function a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+sh:NotConstraint a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+xsd:nonPositiveInteger a owl:Class ;
+	rdfs:subClassOf xsd:integer .
+
+owl:NamedIndividual a owl:Class ;
+	rdfs:subClassOf owl:Individual .
+
+kol:JsonSchemaSpecification a owl:Class .
+
+sh:LessThanOrEqualConstraint a owl:Class ;
+	rdfs:subClassOf sh:Constraint .
+
+rdfs:Datatype a owl:Class ;
+	rdfs:subClassOf rdfs:Class .
+
+kcs:reference a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range kol:Graph .
+
+kol:referencedKey a owl:ObjectProperty ;
+	rdfs:domain kol:ForeignKey ;
+	rdfs:range rdf:List .
+
+cs:precedingChangeSet a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range cs:ChangeSet .
+
+kol:avroSchemaRendition a owl:ObjectProperty ;
+	rdfs:domain sh:Shape ;
+	rdfs:range kol:JsonSchemaSpecification .
+
+kcs:trace a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range rdf:Statement .
+
+kcs:remove a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range kol:Graph .
+
+cs:subjectOfChange a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range rdfs:Resource .
+
+kol:propertyOf a owl:ObjectProperty ;
+	rdfs:domain sh:PropertyConstraint ;
+	rdfs:range sh:Shape .
+
+kol:uniqueIn a owl:ObjectProperty ;
+	rdfs:domain rdfs:Datatype ;
+	rdfs:range rdfs:Resource .
+
+kcs:add a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range kol:Graph .
+
+kcs:target a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range kol:Graph .
+
+kol:knownIndividual a owl:ObjectProperty ;
+	rdfs:domain sh:PropertyConstraint ;
+	rdfs:range owl:NamedIndividual .
+
+kol:referencedClass a owl:ObjectProperty ;
+	rdfs:domain kol:ForeignKey ;
+	rdfs:range rdfs:Class .
+
+owl:bottomObjectProperty a owl:ObjectProperty ;
+	rdfs:domain owl:Thing ;
+	rdfs:range owl:Thing .
+
+kol:jsonSchemaRendition a owl:ObjectProperty ;
+	rdfs:domain sh:Shape ;
+	rdfs:range kol:JsonSchemaSpecification .
+
+cs:addition a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range rdf:Statement .
+
+kol:valueUniqueIn a owl:ObjectProperty ;
+	rdfs:domain sh:PropertyConstraint ;
+	rdfs:range rdfs:Resource .
+
+kcs:source a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range kol:Graph .
+
+kol:foreignKey a owl:ObjectProperty ;
+	rdfs:domain kol:ForeignKey ;
+	rdfs:range rdf:List .
+
+owl:topObjectProperty a owl:ObjectProperty ;
+	rdfs:domain owl:Thing ;
+	rdfs:range owl:Thing .
+
+cs:removal a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range rdf:Statement .
+
+cs:statement a owl:ObjectProperty ;
+	rdfs:domain cs:ChangeSet ;
+	rdfs:range rdf:Statement .
+
+kol:equivalentSemanticProperty a owl:ObjectProperty ;
+	rdfs:domain kol:ForeignKey ;
+	rdfs:range rdf:Property .

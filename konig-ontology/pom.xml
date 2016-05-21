@@ -5,14 +5,26 @@
   <version>0.0.1</version>
   <name>Konig Ontology</name>
   
+  <properties>
+  	<konig.version>1.0.7-SNAPSHOT</konig.version>
+  </properties>
+  
   <build>
   	<plugins>
   		<plugin>
 	  		<groupId>io.konig</groupId>
 	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
-	  		<version>1.0.5</version>
+	  		<version>${konig.version}</version>
 	  		<configuration>
-	  			<summaryDir>${basedir}/src/main/resources/summary</summaryDir>
+	  			<summaryDir>${basedir}/src/main/summary</summaryDir>
+	  			<excludeNamespace>
+	  				<param>http://purl.org/dc/elements/1.1/</param>
+	  				<param>http://www.w3.org/2003/g/data-view#</param>
+	  				<param>http://www.w3.org/2004/02/skos/core#</param>
+	  				<param>http://www.w3.org/XML/1998/namespace</param>
+	  				<param>http://xmlns.com/foaf/0.1/</param>
+	  				<param>http://www.w3.org/2003/06/sw-vocab-status/ns#</param>
+	  			</excludeNamespace>
 	  		</configuration>
 	  		<executions>
 	  			<execution>

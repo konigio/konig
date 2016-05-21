@@ -1,0 +1,212 @@
+@prefix cs: <http://purl.org/vocab/changeset/schema#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix grddl: <http://www.w3.org/2003/g/data-view#> .
+@prefix kcs: <http://www.konig.io/ns/kcs/> .
+@prefix kol: <http://www.konig.io/ns/kol/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix vs: <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+cs:ChangeSet rdfs:label "cs:ChangeSet" ;
+	kcs:reference kol:Graph ;
+	cs:precedingChangeSet cs:ChangeSet ;
+	kcs:trace rdf:Statement ;
+	kcs:remove kol:Graph ;
+	cs:subjectOfChange rdfs:Resource ;
+	kcs:add kol:Graph ;
+	kcs:target kol:Graph ;
+	cs:addition rdf:Statement ;
+	kcs:source kol:Graph ;
+	cs:removal rdf:Statement ;
+	cs:statement rdf:Statement .
+
+sh:ValidationResult rdfs:label "sh:ValidationResult" .
+
+kol:Graph rdfs:label "kol:Graph" .
+
+xsd:unsignedInt rdfs:label "xsd:unsignedInt" ;
+	rdfs:subClassOf xsd:unsignedLong .
+
+xsd:unsignedLong rdfs:label "xsd:unsignedLong" ;
+	rdfs:subClassOf xsd:nonNegativeInteger .
+
+sh:NotEqualConstraint rdfs:label "sh:NotEqualConstraint" ;
+	rdfs:subClassOf sh:Constraint .
+
+sh:Constraint rdfs:label "sh:Constraint" .
+
+owl:Nothing rdfs:label "owl:Nothing" ;
+	rdfs:subClassOf owl:Thing .
+
+owl:Thing rdfs:label "owl:Thing" ;
+	owl:bottomObjectProperty owl:Thing ;
+	owl:topObjectProperty owl:Thing .
+
+xsd:nonNegativeInteger rdfs:label "xsd:nonNegativeInteger" ;
+	rdfs:subClassOf xsd:integer .
+
+xsd:byte rdfs:label "xsd:byte" ;
+	rdfs:subClassOf xsd:short .
+
+xsd:short rdfs:label "xsd:short" ;
+	rdfs:subClassOf xsd:int .
+
+xsd:anyURI rdfs:label "xsd:anyURI" ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+rdf:XMLLiteral rdfs:label "rdf:XMLLiteral" ;
+	rdfs:subClassOf rdfs:Literal .
+
+sh:Severity rdfs:label "sh:Severity" .
+
+sh:OrConstraint rdfs:label "sh:OrConstraint" ;
+	rdfs:subClassOf sh:Constraint .
+
+rdfs:Literal rdfs:label "rdfs:Literal" .
+
+kol:LogicalShape rdfs:label "kol:LogicalShape" ;
+	rdfs:subClassOf sh:Shape .
+
+sh:Shape rdfs:label "sh:Shape" ;
+	kol:avroSchemaRendition kol:JsonSchemaSpecification ;
+	kol:jsonSchemaRendition kol:JsonSchemaSpecification .
+
+sh:Template rdfs:label "sh:Template" .
+
+sh:AndConstraint rdfs:label "sh:AndConstraint" ;
+	rdfs:subClassOf sh:Constraint .
+
+rdf:List rdfs:label "rdf:List" ;
+	rdfs:subClassOf rdfs:Resource .
+
+rdfs:Resource rdfs:label "rdfs:Resource" .
+
+xsd:integer rdfs:label "xsd:integer" ;
+	rdfs:subClassOf xsd:decimal .
+
+xsd:negativeInteger rdfs:label "xsd:negativeInteger" ;
+	rdfs:subClassOf xsd:integer .
+
+xsd:hexBinary rdfs:label "xsd:hexBinary" ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+sh:AllSubjectsScope rdfs:label "sh:AllSubjectsScope" ;
+	rdfs:subClassOf sh:Scope .
+
+sh:Scope rdfs:label "sh:Scope" .
+
+xsd:decimal rdfs:label "xsd:decimal" ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+xsd:language rdfs:label "xsd:language" ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+kol:ForeignKey rdfs:label "kol:ForeignKey" ;
+	rdfs:subClassOf sh:Constraint ;
+	kol:referencedKey rdf:List ;
+	kol:referencedClass rdfs:Class ;
+	kol:foreignKey rdf:List ;
+	kol:equivalentSemanticProperty rdf:Property .
+
+xsd:positiveInteger rdfs:label "xsd:positiveInteger" ;
+	rdfs:subClassOf xsd:integer .
+
+xsd:int rdfs:label "xsd:int" ;
+	rdfs:subClassOf xsd:long .
+
+xsd:float rdfs:label "xsd:float" ;
+	rdfs:subClassOf xsd:double .
+
+xsd:double rdfs:label "xsd:double" ;
+	rdfs:subClassOf xsd:decimal .
+
+xsd:base64Binary rdfs:label "xsd:base64Binary" ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+rdfs:Class rdfs:label "rdfs:Class" ;
+	rdfs:subClassOf rdfs:Resource .
+
+xsd:unsignedShort rdfs:label "xsd:unsignedShort" ;
+	rdfs:subClassOf xsd:unsignedInt .
+
+xsd:dateTime rdfs:label "xsd:dateTime" ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+sh:PropertyScope rdfs:label "sh:PropertyScope" ;
+	rdfs:subClassOf sh:Scope .
+
+sh:ClosedShapeConstraint rdfs:label "sh:ClosedShapeConstraint" ;
+	rdfs:subClassOf sh:Constraint .
+
+sh:NodeKind rdfs:label "sh:NodeKind" .
+
+xsd:dayTimeDuration rdfs:label "xsd:dayTimeDuration" ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+sh:AllObjectsScope rdfs:label "sh:AllObjectsScope" ;
+	rdfs:subClassOf sh:Scope .
+
+sh:LessThanConstraint rdfs:label "sh:LessThanConstraint" ;
+	rdfs:subClassOf sh:Constraint .
+
+rdf:Property rdfs:label "rdf:Property" ;
+	rdfs:subClassOf rdfs:Resource .
+
+xsd:long rdfs:label "xsd:long" ;
+	rdfs:subClassOf xsd:integer .
+
+sh:InversePropertyScope rdfs:label "sh:InversePropertyScope" ;
+	rdfs:subClassOf sh:Scope .
+
+owl:Individual rdfs:label "owl:Individual" .
+
+xsd:string rdfs:label "xsd:string" ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+sh:EqualConstraint rdfs:label "sh:EqualConstraint" ;
+	rdfs:subClassOf sh:Constraint .
+
+sh:PropertyConstraint rdfs:label "sh:PropertyConstraint" ;
+	rdfs:subClassOf sh:Constraint ;
+	kol:propertyOf sh:Shape ;
+	kol:knownIndividual owl:NamedIndividual ;
+	kol:valueUniqueIn rdfs:Resource .
+
+rdf:Statement rdfs:label "rdf:Statement" ;
+	rdfs:subClassOf rdfs:Resource .
+
+xsd:unsignedByte rdfs:label "xsd:unsignedByte" ;
+	rdfs:subClassOf xsd:unsignedShort .
+
+kol:AvroSchemaSpecification rdfs:label "kol:AvroSchemaSpecification" .
+
+xsd:boolean rdfs:label "xsd:boolean" ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+sh:Function rdfs:label "sh:Function" ;
+	rdfs:subClassOf sh:Constraint .
+
+sh:NotConstraint rdfs:label "sh:NotConstraint" ;
+	rdfs:subClassOf sh:Constraint .
+
+xsd:nonPositiveInteger rdfs:label "xsd:nonPositiveInteger" ;
+	rdfs:subClassOf xsd:integer .
+
+owl:NamedIndividual rdfs:label "owl:NamedIndividual" ;
+	rdfs:subClassOf owl:Individual .
+
+kol:JsonSchemaSpecification rdfs:label "kol:JsonSchemaSpecification" .
+
+sh:LessThanOrEqualConstraint rdfs:label "sh:LessThanOrEqualConstraint" ;
+	rdfs:subClassOf sh:Constraint .
+
+rdfs:Datatype rdfs:label "rdfs:Datatype" ;
+	rdfs:subClassOf rdfs:Class ;
+	kol:uniqueIn rdfs:Resource .
