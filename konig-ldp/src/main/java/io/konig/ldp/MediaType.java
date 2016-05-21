@@ -55,4 +55,14 @@ public class MediaType {
 	public String toString() {
 		return fullName;
 	}
+	
+	public boolean matches(MediaType other) {
+		
+		return 
+			fullName.equals(other.fullName) ||
+			(
+				("*".equals(type)    || "*".equals(other.type)    ||    type.equals(other.type)) &&
+				("*".equals(subtype) || "*".equals(other.subtype) || subtype.equals(other.subtype))
+			);
+	}
 }

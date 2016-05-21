@@ -166,6 +166,7 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 		if (response.getOutputStream() == null) {
 			response.setOutputStream(new ByteArrayOutputStream());
 		}
+		response.getHeader().put("Access-Control-Allow-Origin", "*");
 		
 		switch (request.getMethod()) {
 		case GET :	doGet(request, response); break;
@@ -233,11 +234,12 @@ public abstract class AbstractPlatform implements LinkedDataPlatform {
 		if (list==null || list.isEmpty()) {
 			selectedType = MediaType.instance(defaultType);
 		} else {
+			MediaType actualType = MediaType.instance(defaultType);
 			list.sort();
 			for (AcceptableMediaType x : list) {
 				MediaType mediaType = x.getMediaType();
-				if (mediaType.getFullName().equals(defaultType)) {
-					selectedType = mediaType;
+				if (mediaType.matches(actualType)) {
+					selectedType = actualType;
 					break;
 				}
 				if (isRdfSource && LDPUtil.isRdfSourceMediaType(mediaType.getFullName())) {
