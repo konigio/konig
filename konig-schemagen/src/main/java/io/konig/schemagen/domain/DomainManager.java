@@ -224,14 +224,20 @@ public class DomainManager {
 
 		List<DomainClass> list = new ArrayList<>(classMap.values());
 		for (DomainClass c : list) {
-			URI subject = (URI) c.getClassVertex().getId();
-			String curie = RdfUtil.curie(nsManager, subject);
-			sink.edge(subject, RDFS.LABEL, literal(curie));
 			
-			Set<URI> superList = c.getSuperClass();
-			for (URI superClass : superList) {
-				sink.edge(subject, RDFS.SUBCLASSOF, superClass);
+			Resource resource = c.getClassVertex().getId();
+			if (resource instanceof URI) {
+				URI subject = (URI) resource;
+				String curie = RdfUtil.curie(nsManager, subject);
+				sink.edge(subject, RDFS.LABEL, literal(curie));
+				
+				Set<URI> superList = c.getSuperClass();
+				for (URI superClass : superList) {
+					sink.edge(subject, RDFS.SUBCLASSOF, superClass);
+				}
 			}
+			
+			
 			
 		}
 		
