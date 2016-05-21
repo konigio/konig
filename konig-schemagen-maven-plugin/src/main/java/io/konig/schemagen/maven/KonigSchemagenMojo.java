@@ -2,6 +2,7 @@ package io.konig.schemagen.maven;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -94,6 +95,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     @Parameter(property="javaPackageRoot")
     private String javaPackageRoot;
+    
+    @Parameter
+    private HashSet<String> excludeNamespace;
 
     public void execute() throws MojoExecutionException   {
     	
@@ -185,8 +189,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		summarizer.writeDomainModel(nsManager, owlGraph, shapeManager, domainFile);
 		summarizer.writePrototypeModel(nsManager, owlGraph, shapeManager, prototypeFile);
 		
+		
 		AllJsonldWriter all = new AllJsonldWriter();
-		all.writeJSON(nsManager, owlGraph, projectFile);
+		all.writeJSON(nsManager, owlGraph, excludeNamespace, projectFile);
 		
 	}
 }

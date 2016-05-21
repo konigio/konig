@@ -68,7 +68,7 @@ public class AllJsonldWriterTest {
 		
 		AllJsonldWriter allWriter = new AllJsonldWriter();
 		
-		allWriter.writeJSON(nsManager, graph, json);
+		allWriter.writeJSON(nsManager, graph, null, json);
 		
 		String text = out.toString();
 		System.out.println(text);

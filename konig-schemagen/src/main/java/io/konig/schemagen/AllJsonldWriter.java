@@ -58,6 +58,7 @@ public class AllJsonldWriter {
 		private NamespaceManager nsManager;
 		private Graph graph;
 		private JsonGenerator json;
+		private Set<URI> excludeNamespaces;
 		
 		private void push(Vertex v) {
 			
@@ -75,16 +76,18 @@ public class AllJsonldWriter {
 			}
 		}
 
-		public void writeJSON(NamespaceManager nsManager, Graph graph, JsonGenerator json) throws IOException {
+		public void writeJSON(NamespaceManager nsManager, Graph graph, Set<String> excludeNamespaces, JsonGenerator json) throws IOException {
 			this.nsManager = nsManager;
 			this.graph = graph;
 			this.json = json;
+			
+			excludeNamespaces(excludeNamespaces);
 			json.writeStartObject();
 			
 			addContext();
 			json.writeArrayFieldStart("@graph");
 			
-			writeInstances(OWL.ONTOLOGY, ONTOLOGY_SKIP);
+			writeInstances(OWL.ONTOLOGY, this.excludeNamespaces);
 			writeInstances(OWL.CLASS);
 			writeInstances(RDF.PROPERTY);
 			writeInstances(OWL.OBJECTPROPERTY);
@@ -105,6 +108,20 @@ public class AllJsonldWriter {
 			
 		}
 		
+		private void excludeNamespaces(Set<String> set) {
+			if (set == null) {
+				excludeNamespaces = ONTOLOGY_SKIP;
+			} else {
+				excludeNamespaces = new HashSet<>();
+				for (String namespace : set) {
+					if (namespace!=null && namespace.length()>0) {
+						excludeNamespaces.add(new URIImpl(namespace));
+					}
+				}
+			}
+			
+		}
+
 		private void writeInstances(URI type) throws IOException {
 			writeInstances(type, null);
 		}
@@ -296,14 +313,14 @@ public class AllJsonldWriter {
 		}
 	}
 	
-	public void writeJSON(NamespaceManager nsManager, Graph graph, File outFile) throws IOException {
+	public void writeJSON(NamespaceManager nsManager, Graph graph, Set<String> excludeNamespaces, File outFile) throws IOException {
 		JsonFactory factory = new JsonFactory();
 		
 		FileWriter writer = new FileWriter(outFile);
 		try {
 			JsonGenerator generator = factory.createGenerator(writer);
 			generator.useDefaultPrettyPrinter();
-			writeJSON(nsManager, graph, generator);
+			writeJSON(nsManager, graph, excludeNamespaces, generator);
 		} finally {
 			close(writer);
 		}
@@ -319,10 +336,10 @@ public class AllJsonldWriter {
 		
 	}
 
-	public void writeJSON(NamespaceManager nsManager, Graph graph, JsonGenerator json) throws IOException {
+	public void writeJSON(NamespaceManager nsManager, Graph graph, Set<String> excludeNamespaces, JsonGenerator json) throws IOException {
 		
 		Worker worker = new Worker();
-		worker.writeJSON(nsManager, graph, json);
+		worker.writeJSON(nsManager, graph, excludeNamespaces, json);
 		
 	}
 
