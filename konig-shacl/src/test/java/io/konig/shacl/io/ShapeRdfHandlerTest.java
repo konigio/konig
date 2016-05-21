@@ -25,12 +25,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.InputStream;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.rio.turtle.TurtleParser;
-
-import com.github.jsonldjava.core.RDFParser;
 
 import io.konig.core.KonigTest;
 import io.konig.core.impl.MemoryContextManager;
