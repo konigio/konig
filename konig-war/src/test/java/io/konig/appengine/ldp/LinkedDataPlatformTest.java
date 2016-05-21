@@ -53,8 +53,6 @@ abstract public class LinkedDataPlatformTest {
 	public static final String ROOT = "http://example.com/resources/";
 	protected LinkedDataPlatform platform;
 	
-
-	
 	
 	@Test
 	public void testGetContainer() throws Exception {

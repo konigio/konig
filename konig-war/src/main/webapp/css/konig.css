@@ -27,6 +27,10 @@ ul.ui-autocomplete {
     z-index: 1100;
 }
 
+.data-table {
+	margin-top: 1em;
+}
+
 .konig-menu-container {
 	display: none;
 	position: absolute;
@@ -63,6 +67,42 @@ ul.ui-autocomplete {
 .konig-selected-arrowhead {
 	stroke: red;
 	fill: red;
+}
+
+.konig-dialog-error-message {
+	color: red;
+	padding-left: 1em;
+}
+.konig-dialog-buttonbar {
+	margin-top: 20px;
+}
+.konig-dialog {
+	font-size: 75%;
+}
+
+.konig-page-header {
+	padding-left: 2em;
+	padding-bottom: 0.5em;
+	margin-top: 0.5em;
+	margin-bottom: 2em;
+	border-bottom: 1px solid gray;
+}
+.konig-page-title {
+	font-size: 120%;
+	font-weight: bold;
+}
+
+.konig-page-body {
+	padding-left: 2em;
+}
+
+.konig-entity-summary {
+	margin-top: 5px;
+}
+
+.konig-inline-buttonbar {
+	padding-left: 3em;
+	font-size: 75%;
 }
 
 .konig-multiselect-rect {

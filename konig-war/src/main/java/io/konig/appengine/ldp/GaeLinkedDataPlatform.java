@@ -196,10 +196,10 @@ public class GaeLinkedDataPlatform extends AbstractPlatform {
 		
 		
 		e.setProperty(GaeLDP.TYPE, resourceType);
-
+		e.setProperty(GaeLDP.CONTENT_TYPE, resource.getContentType());
+		
 		if (body != null) {
 			Blob blob =  new Blob(body);
-			e.setProperty(GaeLDP.CONTENT_TYPE, resource.getContentType());
 			e.setProperty(GaeLDP.BODY, blob);
 		}
 		return e;
