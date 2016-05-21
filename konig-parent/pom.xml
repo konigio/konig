@@ -43,10 +43,10 @@
   	<module>../konig-schemagen-maven-plugin</module>
   	<module>../konig-ldp</module>
   	<module>../konig-ldp-maven-plugin</module>
+  	<module>../konig-war</module>
 <!--   	
   	<module>../konig-services</module>
   	<module>../konig-webapp</module>
-  	<module>../konig-war</module>
 -->
   </modules>
   
