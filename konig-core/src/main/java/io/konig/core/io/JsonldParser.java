@@ -208,7 +208,7 @@ public class JsonldParser extends RDFParserBase {
 				if (value instanceof ArrayNode) {
 					
 					
-					if ("@list".equals(term.getContainer())) {
+					if (term!=null && "@list".equals(term.getContainer())) {
 						handleListField(subject, predicate, term, (ArrayNode) value);
 					} else {
 						handleSetField(subject, predicate, term, (ArrayNode) value);
@@ -373,6 +373,8 @@ public class JsonldParser extends RDFParserBase {
 							}
 						}
 					}
+				} else if (predicate.equals(RDF.TYPE)){ 
+					object = iri(text);
 				} else {
 					object = valueFactory.createLiteral(text);
 				}
