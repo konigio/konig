@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.konig</groupId>
   <artifactId>konig-parent</artifactId>
-  <version>1.7.0</version>
+  <version>1.0.8-SNAPSHOT</version>
   <name>Konig Parent</name>
   <description>The parent project from which all the konig modules are built</description>
   <url>http://developers.konig.io/</url>
@@ -35,7 +35,7 @@
     <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
-  
+ 
   <modules>
   	<module>../konig-core</module>
   	<module>../konig-shacl</module>
@@ -43,13 +43,9 @@
   	<module>../konig-schemagen-maven-plugin</module>
   	<module>../konig-ldp</module>
   	<module>../konig-ldp-maven-plugin</module>
-  	<module>../konig-war</module>
-<!--   	
-  	<module>../konig-services</module>
-  	<module>../konig-webapp</module>
--->
+  	<module>../konig-appengine</module>
   </modules>
-  
+
   <developers>
     <developer>
       <id>gmcfall</id>
