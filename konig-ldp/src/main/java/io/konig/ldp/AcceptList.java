@@ -38,7 +38,7 @@ public class AcceptList extends ArrayList<AcceptableMediaType> {
 	}
 	
 	public void parse(String acceptHeader) {
-		if (acceptHeader != null) {
+		if (acceptHeader != null && acceptHeader.trim().length()>0) {
 			Pattern pattern = Pattern.compile("q=([.\\d]+)");
 			String[] array = acceptHeader.split(",");
 			for (int i=0; i<array.length; i++) {
