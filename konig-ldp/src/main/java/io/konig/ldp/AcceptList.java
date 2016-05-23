@@ -24,10 +24,52 @@ package io.konig.ldp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AcceptList extends ArrayList<AcceptableMediaType> {
 	private static final long serialVersionUID = 1L;
 	private MediaType selected;
+	
+	
+	
+	public AcceptList() {
+		
+	}
+	
+	public void parse(String acceptHeader) {
+		if (acceptHeader != null) {
+			Pattern pattern = Pattern.compile("q=([.\\d]+)");
+			String[] array = acceptHeader.split(",");
+			for (int i=0; i<array.length; i++) {
+				String value = array[i];
+				int semiColon = value.indexOf(';');
+				String mediaType = null;
+				
+				
+				float qValue = 1;
+				
+				if (semiColon > 0) {
+					mediaType = value.substring(0, semiColon).trim();
+					String qValueText = value.substring(semiColon).trim();
+					
+					Matcher matcher = pattern.matcher(qValueText);
+					if (matcher.find()) {
+						qValueText = matcher.group(1);
+						qValue = Float.parseFloat(qValueText);
+					}
+				} else {
+					mediaType = value.trim();
+				}
+				
+				MediaType type = MediaType.instance(mediaType);
+				AcceptableMediaType accept = new AcceptableMediaType(type, qValue);
+				add(accept);
+			}
+			
+		}
+		
+	}
 	
 	public MediaType getSelected() {
 		if (selected == null) {
@@ -59,7 +101,8 @@ public class AcceptList extends ArrayList<AcceptableMediaType> {
 			@Override
 			public int compare(AcceptableMediaType a, AcceptableMediaType b) {
 				float delta = b.getQValue() - a.getQValue();
-				return delta < 0 ? -1 : delta>0 ? 1 : 0;
+				return delta < 0 ? -1 : delta>0 ? 1 : 
+					a.getMediaType().getFullName().compareTo(b.getMediaType().getFullName());
 			}
 		});
 	}
