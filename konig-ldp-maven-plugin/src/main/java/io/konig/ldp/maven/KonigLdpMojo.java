@@ -35,7 +35,7 @@ import io.konig.ldp.client.LdpClient;
  * Goal which publishes artifacts to a Linked Data Platform server
  *
  */
-@Mojo( name = "install", defaultPhase = LifecyclePhase.INSTALL )
+@Mojo( name = "publish" )
 public class KonigLdpMojo  extends AbstractMojo {
 	
     
