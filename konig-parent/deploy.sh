@@ -1,6 +1,6 @@
 #!/bin/bash   
 
-declare -a PROJECT=(konig-core konig-shacl konig-schemagen konig-schemagen-maven-plugin konig-ldp konig-ldp-maven-plugin konig-war)
+declare -a PROJECT=(konig-parent konig-core konig-shacl konig-schemagen konig-schemagen-maven-plugin konig-ldp konig-ldp-maven-plugin konig-war)
 
 cd ..
 
