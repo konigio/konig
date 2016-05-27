@@ -1146,6 +1146,11 @@ Ontodoc.prototype.buildGraph = function() {
 	var expand = context.expand(doc);
 	var flat = context.flatten(expand);
 	this.graph.loadFlattened(flat['@graph']);
+	
+	var g = this.graph;
+	
+	g.statement(owl.ObjectProperty, rdfs.subClassOf, rdf.Property);
+	g.statement(owl.DatatypeProperty, rdfs.subClassOf, rdf.Property);
 }
 
 
