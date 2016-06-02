@@ -14,7 +14,7 @@
 
     <properties>
         <app.id>konig-id</app.id>
-        <app.version>1-0-2</app.version>
+        <app.version>1-7-2</app.version>
         <appengine.version>1.9.25</appengine.version>
         <gcloud.plugin.version>2.0.9.74.v20150814</gcloud.plugin.version>
 
