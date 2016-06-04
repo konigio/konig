@@ -44,8 +44,6 @@ public class DataGeneratorTest {
 		DataGenerator generator = new DataGenerator(nsManager, shapeManager, mediaTypeNamer);
 		generator.generate(config, outDir);
 		
-		
-		fail("Not yet implemented");
 	}
 	
 	private InputStream resource(String path) {
