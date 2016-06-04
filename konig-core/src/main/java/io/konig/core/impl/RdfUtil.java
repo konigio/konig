@@ -1,5 +1,7 @@
 package io.konig.core.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -12,10 +14,17 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.DC;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
+import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.turtle.TurtleParserFactory;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
+import io.konig.core.io.CompositeRdfHandler;
+import io.konig.core.io.GraphLoadHandler;
+import io.konig.core.io.NamespaceRDFHandler;
 import io.konig.core.vocab.Schema;
 
 /*
@@ -97,6 +106,27 @@ public class RdfUtil {
 		}
 		
 		return value;
+	}
+	
+	public static void loadTurtle(Graph graph, NamespaceManager nsManager, InputStream input, String baseURL)
+		throws IOException, RDFParseException, RDFHandlerException {
+	
+		CompositeRdfHandler handler = new CompositeRdfHandler(
+			new GraphLoadHandler(graph),
+			new NamespaceRDFHandler(nsManager)
+		);
+		RDFParser parser = new TurtleParserFactory().getParser();
+		parser.setRDFHandler(handler);
+		parser.parse(input, baseURL);
+	}
+	
+	public static void loadTurtle(Graph graph, InputStream input, String baseURL) 
+		throws IOException, RDFParseException, RDFHandlerException {
+		
+		GraphLoadHandler handler = new GraphLoadHandler(graph);
+		RDFParser parser = new TurtleParserFactory().getParser();
+		parser.setRDFHandler(handler);
+		parser.parse(input, baseURL);
 	}
 	
 	/**

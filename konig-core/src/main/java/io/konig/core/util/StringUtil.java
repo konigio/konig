@@ -22,6 +22,18 @@ package io.konig.core.util;
 
 
 public class StringUtil {
+	
+	public static final String capitalize(String text) {
+		StringBuilder builder = new StringBuilder(text.length());
+		for (int i=0; i<text.length(); i++) {
+			char c = text.charAt(i);
+			if (i == 0) {
+				c = Character.toUpperCase(c);
+			}
+			builder.append(c);
+		}
+		return builder.toString();
+	}
 
 	public static final String firstLetterLowerCase(String text) {
 		StringBuilder builder = new StringBuilder(text.length());

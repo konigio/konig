@@ -1,0 +1,15 @@
+
+@prefix : <http://www.konig.io/ns/datagen/> .
+
+[] a :DataGeneratorConfig ;
+	:generate [	
+		:targetShape <http://schema.pearson.com/shapes/x1/schema/School> ;
+		:shapeCount 2				
+	], [
+		:targetShape <http://schema.pearson.com/shapes/x1/reg/CourseSection> ;
+		:shapeCount 10	
+	], [
+		:targetShape <http://schema.pearson.com/shapes/x1/org/Membership> ;
+		:shapeCount 20	
+	]
+	.

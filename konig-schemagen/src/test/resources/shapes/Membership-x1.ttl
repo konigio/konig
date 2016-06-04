@@ -1,0 +1,37 @@
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix xsd:	 <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix reg: <http://schema.pearson.com/ns/registrar/>.
+
+<http://schema.pearson.com/shapes/x1/org/Membership> a sh:Shape ;
+	sh:scopeClass org:Membership ;
+	sh:property [
+		sh:predicate org:member ;
+		rdfs:comment "The person who has a membership within the given organization" ;
+		sh:nodeKind sh:IRI ;
+		sh:class schema:Person;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate org:role ;
+		rdfs:comment """
+			The role of the person within the organization.
+		""" ;
+		sh:nodeKind sh:IRI ;
+		sh:class org:Role ;
+		sh:hasValue reg:Student ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate org:organization ;
+		rdfs:comment "The organization within which the person has a membership" ;
+		sh:nodeKind sh:IRI ;
+		sh:class reg:CourseSection ;
+		sh:minCount 1 ;
+		sh:maxCount 1;
+	]
+	.
+	
