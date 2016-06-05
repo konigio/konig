@@ -1,0 +1,15 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/>.
+
+[] a gcp:BigQueryTable ;
+	gcp:tableReference [
+		gcp:projectId "skilled-cargo-133211" ;
+		gcp:datasetId "test-dataset" ;
+		gcp:tableId "Memberships" ;
+	] ;
+	
+	gcp:description """
+		A table that stores Membership records which assert that a given person is a 
+		member of a given Organization with a given role
+	""" ;
+	gcp:tableShape <http://schema.pearson.com/shapes/x1/org/Membership>
+	.

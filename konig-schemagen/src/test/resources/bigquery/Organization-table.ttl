@@ -1,0 +1,12 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/>.
+
+[] a gcp:BigQueryTable ;
+	gcp:tableReference [
+		gcp:projectId "skilled-cargo-133211" ;
+		gcp:datasetId "test-dataset" ;
+		gcp:tableId "Organizations" ;
+	] ;
+	
+	gcp:description "An organizational unit, such as a study group or course section" ;
+	gcp:tableShape <http://schema.pearson.com/shapes/x1/schema/Organization>
+	.

@@ -7,6 +7,7 @@ import io.konig.annotation.RdfProperty;
 
 public class DataGeneratorConfig {
 	private List<ShapeConfig> shapeConfig = new ArrayList<>();
+	private List<ClassConstraint> classConstraint = new ArrayList<>();
 	
 	@RdfProperty("http://www.konig.io/ns/datagen/generate")
 	public void addShapeConfig(ShapeConfig config) {
@@ -17,5 +18,11 @@ public class DataGeneratorConfig {
 		return shapeConfig;
 	}
 	
-
+	public void addClassConstraint(ClassConstraint constraint) {
+		classConstraint.add(constraint);
+	}
+	
+	public List<ClassConstraint> getClassConstraintList() {
+		return classConstraint;
+	}
 }

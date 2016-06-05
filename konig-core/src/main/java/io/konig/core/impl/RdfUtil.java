@@ -1,5 +1,8 @@
 package io.konig.core.impl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -14,6 +17,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.DC;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
@@ -120,6 +124,39 @@ public class RdfUtil {
 		parser.parse(input, baseURL);
 	}
 	
+	/**
+	 * From a given source directory, load all files with the *.ttl suffix into a given Graph.
+	 * This method will search subdirectories recursively for Turtle files.
+	 * @param sourceDir The source directory containing Turtle files.
+	 * @param graph The graph into which RDF statements will be placed.
+	 */
+	public static void loadTurtle(File sourceDir, Graph graph, NamespaceManager nsManager)
+		throws IOException, RDFParseException, RDFHandlerException {
+		 
+		RDFHandler handler = new GraphLoadHandler(graph);
+		if (nsManager != null) {
+			handler = new CompositeRdfHandler(handler, new NamespaceRDFHandler(nsManager));
+		}
+		RDFParser parser = new TurtleParserFactory().getParser();
+		parser.setRDFHandler(handler);
+		
+		loadTurtle(sourceDir, parser);
+		
+	}
+	
+	private static void loadTurtle(File sourceDir, RDFParser parser) throws IOException, RDFParseException, RDFHandlerException {
+		File[] array = sourceDir.listFiles();
+		for (File file : array) {
+			if (file.isDirectory()) {
+				loadTurtle(file, parser);
+			} else if (file.getName().endsWith(".ttl")){
+				FileInputStream input = new FileInputStream(file);
+				parser.parse(input, "");
+			}
+		}
+		
+	}
+
 	public static void loadTurtle(Graph graph, InputStream input, String baseURL) 
 		throws IOException, RDFParseException, RDFHandlerException {
 		

@@ -1,0 +1,46 @@
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix schema: <http://schema.org/> .
+@prefix xsd:	 <http://www.w3.org/2001/XMLSchema#> .
+@prefix qa: <http://schema.pearson.com/ns/qa/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix kol: <http://www.konig.io/ns/kol/> .
+@prefix xowl: <http://schema.pearson.com/ns/xowl/> .
+@prefix org:      <http://www.w3.org/ns/org#> .
+@prefix reg: <http://schema.pearson.com/ns/registrar/>.
+
+<http://schema.pearson.com/shapes/x1/schema/Organization> a sh:Shape ;
+	sh:scopeClass schema:Organization ;
+	sh:property [
+		sh:predicate rdf:type ;
+		sh:nodeKind sh:IRI ;
+		sh:class owl:Class ;
+		sh:hasValue schema:Organization ;
+		sh:minCount 1
+	],  [
+		sh:predicate kol:id ;
+		rdfs:comment "The URI of the resource" ;
+		sh:nodeKind sh:IRI ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate schema:name ;
+		rdfs:comment "The name of this Organization" ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate schema:description ;
+		rdfs:comment "A description of this Organization" ;
+		sh:datatype xsd:string ;
+		sh:minCount 0 ;
+		sh:maxCount 1
+	], [
+		sh:predicate org:subOrganizationOf ;
+		rdfs:comment "A parent organization within which this organization unit is nested." ;
+		sh:nodeKind sh:IRI ;
+		sh:class schema:Organization ;
+		sh:minCount 1 ;
+	]
+	.

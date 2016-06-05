@@ -146,6 +146,25 @@ public class DataGenerator {
 				
 			}
 			
+			handleClassConstraints();
+			
+		}
+
+		private void handleClassConstraints() {
+			List<ClassConstraint> list = config.getClassConstraintList();
+			for (ClassConstraint c : list) {
+				URI targetClass = c.getTargetClass();
+				int count = c.getInstanceCount();
+				
+				String key = targetClass.stringValue();
+				Counter counter = counterMap.get(key);
+				if (counter == null || counter.max<count) {
+					counterMap.put(key, new Counter(count));
+				}
+				
+			}
+			
+			
 		}
 
 		private void generate(ShapeConfig s) throws DataGeneratorException, IOException {
