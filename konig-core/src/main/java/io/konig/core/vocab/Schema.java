@@ -29,9 +29,13 @@ public class Schema {
 	public static final URI NAMESPACE_URI = new URIImpl("http://schema.org/");
 	public static final URI ContactPoint = new URIImpl("http://schema.org/ContactPoint");
 	public static final URI CreativeWork = new URIImpl("http://schema.org/CreativeWork");
+	public static final URI DataType = new URIImpl("http://schema.org/DataType");
+	public static final URI MediaObject = new URIImpl("http://schema.org/MediaObject");
 	public static final URI Person = new URIImpl("http://schema.org/Person");
 	public static final URI PostalAddress = new URIImpl("http://schema.org/PostalAddress");
 	public static final URI Organization = new URIImpl("http://schema.org/Organization");
+	public static final URI Thing = new URIImpl("http://schema.org/Thing");
+	public static final URI VideoObject = new URIImpl("http://schema.org/VideoObject");
 	public static final URI WebPage = new URIImpl("http://schema.org/WebPage");
 	public static final URI address = new URIImpl("http://schema.org/address");
 	public static final URI alumniOf = new URIImpl("http://schema.org/alumniOf");

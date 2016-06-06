@@ -1,5 +1,7 @@
 package io.konig.core;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * konig-core
@@ -23,11 +25,10 @@ package io.konig.core;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.xml.bind.annotation.XmlSchema;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -36,8 +37,10 @@ import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.KOL;
 import io.konig.core.vocab.OwlVocab;
+import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.XSD;
 
 public class OwlReasoner {
@@ -45,6 +48,7 @@ public class OwlReasoner {
 	private Graph graph;
 	private Map<String, EquivalenceClass> equivalentClassMap;
 	private Map<String, DatatypeRestriction> datatypeMap;
+	private boolean inferredClassesFromSubclass;
 	
 	public OwlReasoner(Graph graph) {
 		this.graph = graph;
@@ -60,7 +64,10 @@ public class OwlReasoner {
 	 */
 	private void buildEquivalentClasses() {
 		if (equivalentClassMap == null) {
-			List<Vertex> list = graph.v(OWL.CLASS).union(RDFS.CLASS).distinct().in(RDF.TYPE).distinct().toVertexList();
+			inferClassFromSubclassOf();
+			List<Vertex> list = graph.v(OWL.CLASS)
+				.union(RDFS.CLASS).union(RDFS.DATATYPE).union(Schema.DataType).union(RDFS.LITERAL)
+				.distinct().in(RDF.TYPE).distinct().toVertexList();
 			equivalentClassMap = new HashMap<>();
 			
 			assembleEquivalenceClasses(list, equivalentClassMap);
@@ -175,6 +182,110 @@ public class OwlReasoner {
 		return owlClass;
 	}
 	
+	public boolean isDatatype(Resource id) {
+		Vertex v = graph.getVertex(id);
+		if (v != null) {
+			boolean truth = !v.asTraversal().hasValue(RDF.TYPE, RDFS.DATATYPE).toVertexList().isEmpty();
+			if (truth) {
+				return truth;
+			}
+			// TODO: apply other kinds of inference
+		}
+		return false;
+	}
+
+	/**
+	 * Compute the least common super datatype between two given datatypes.
+	 * @param aType The first class
+	 * @param bType The second class
+	 * @return The least common super class between the two classes.
+	 */
+	public Resource leastCommonSuperDatatype(Resource aType, Resource bType) {
+		Vertex a = graph.vertex(aType);
+		Vertex b = graph.vertex(bType);
+		if (RdfUtil.isSubClassOf(a, bType)) {
+			return bType;
+		}
+		if (RdfUtil.isSubClassOf(b, aType)) {
+			return aType;
+		}
+		
+		Set<String> set = superClasses(a);
+		List<Vertex> stack = b.asTraversal().out(RDFS.SUBCLASSOF).toVertexList();
+		for (int i=0; i<stack.size(); i++) {
+			Vertex w = stack.get(i);
+			Resource id = w.getId();
+			String key = id.stringValue();
+			if (set.contains(key)) {
+				return (URI) id;
+			}
+			
+		}
+		
+		
+		return RDFS.DATATYPE;
+	}
+	
+	/**
+	 * Compute the least common super class between two given classes.
+	 * @param aClass The first class
+	 * @param bClass The second class
+	 * @return The least common super class between the two classes.
+	 */
+	public Resource leastCommonSuperClass(Resource aClass, Resource bClass) {
+		if (aClass.equals(bClass)) {
+			return aClass;
+		}
+		Vertex a = graph.vertex(aClass);
+		Vertex b = graph.vertex(bClass);
+		if (RdfUtil.isSubClassOf(a, bClass)) {
+			return bClass;
+		}
+		if (RdfUtil.isSubClassOf(b, aClass)) {
+			return aClass;
+		}
+		
+		Set<String> set = superClasses(a);
+		List<Vertex> stack = b.asTraversal().out(RDFS.SUBCLASSOF).toVertexList();
+		for (int i=0; i<stack.size(); i++) {
+			Vertex w = stack.get(i);
+			Resource id = w.getId();
+			String key = id.stringValue();
+			if (set.contains(key)) {
+				return (URI) id;
+			}
+		}
+		
+		
+		return OWL.THING;
+	}
+	
+	
+	
+	private Set<String> superClasses(Vertex a) {
+		Set<String> set = new HashSet<>();
+		List<Vertex> stack = new ArrayList<>();
+		stack.addAll(equivalentClasses(a.getId()));
+		
+		for (int i=0; i<stack.size(); i++) {
+			Vertex w = stack.get(i);
+			List<Vertex> next = w.asTraversal().out(RDFS.SUBCLASSOF).toVertexList();
+			for (Vertex v : next) {
+				Set<Vertex> eq = equivalentClasses(v.getId());
+				for (Vertex u : eq) {
+					if (!stack.contains(u)) {
+						stack.add(u);
+						if (u.getId() instanceof URI) {
+							set.add(u.getId().stringValue());
+						}
+					}
+				}
+			}
+		}
+		
+		return set;
+	}
+
 	public Set<Vertex> equivalentClasses(Resource owlClass) {
 		buildEquivalentClasses();
 
@@ -191,11 +302,15 @@ public class OwlReasoner {
 	}
 	
 	public void inferClassFromSubclassOf() {
-		List<Vertex> list = graph.v(OWL.CLASS).in(RDF.TYPE).out(RDFS.SUBCLASSOF).toVertexList();
-		for (Vertex v : list) {
-			Resource subject = v.getId();
-			if (subject instanceof URI) {
-				graph.edge(subject, RDF.TYPE, OWL.CLASS);
+		if (!inferredClassesFromSubclass) {
+			inferredClassesFromSubclass = true;
+			List<Edge> list = new ArrayList<>(graph);
+			for (Edge e : list) {
+				URI predicate = e.getPredicate();
+				if (predicate.equals(RDFS.SUBCLASSOF)) {
+					graph.edge(e.getSubject(), RDF.TYPE, OWL.CLASS);
+					graph.edge((Resource) e.getObject(), RDF.TYPE, OWL.CLASS);
+				}
 			}
 		}
 	}

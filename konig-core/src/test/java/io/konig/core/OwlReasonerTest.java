@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Set;
 
 import org.junit.Test;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
@@ -38,6 +39,21 @@ import io.konig.core.vocab.ORG;
 import io.konig.core.vocab.Schema;
 
 public class OwlReasonerTest {
+	
+	@Test
+	public void testLeastCommonSubclass() {
+
+		Graph graph = new MemoryGraph();
+		graph.edge(Schema.VideoObject, RDFS.SUBCLASSOF, Schema.MediaObject);
+		graph.edge(Schema.MediaObject, RDFS.SUBCLASSOF, Schema.CreativeWork);
+		graph.edge(Schema.WebPage, RDFS.SUBCLASSOF, Schema.CreativeWork);
+		graph.edge(Schema.CreativeWork, RDFS.SUBCLASSOF, Schema.Thing);
+		
+		OwlReasoner owl = new OwlReasoner(graph);
+		
+		Resource actual = owl.leastCommonSuperClass(Schema.VideoObject, Schema.WebPage);
+		assertEquals(Schema.CreativeWork, actual);
+	}
 
 	@Test
 	public void test() throws AmbiguousPreferredClassException {

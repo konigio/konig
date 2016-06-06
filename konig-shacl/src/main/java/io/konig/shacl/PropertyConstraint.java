@@ -57,7 +57,6 @@ public class PropertyConstraint {
 	private Double minInclusive;
 	private Double maxInclusive;
 	private URI datatype;
-	private URI type;
 	private URI directType;
 	private Resource valueShapeId;
 	private Shape valueShape;
@@ -99,7 +98,6 @@ public class PropertyConstraint {
 		other.nodeKind = nodeKind;
 		other.pattern = pattern;
 		other.term = term;
-		other.type = type;
 		other.valueClass = valueClass;
 		other.valueShape = valueShape;
 		other.valueShapeId = valueShapeId;
@@ -183,11 +181,16 @@ public class PropertyConstraint {
 	public void setNodeKind(NodeKind nodeKind) {
 		this.nodeKind = nodeKind;
 	}
+	
 	public void addAllowedValue(Value value) {
 		if (allowedValues == null) {
 			allowedValues = new ArrayList<Value>();
 		}
 		allowedValues.add(value);
+	}
+	
+	public void setAllowedValue(List<Value> list) {
+		allowedValues = list;
 	}
 	
 	public void addKnownValue(Value value) {

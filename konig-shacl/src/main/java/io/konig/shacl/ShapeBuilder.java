@@ -63,6 +63,10 @@ public class ShapeBuilder {
 		return propertyBuilder;
 	}
 	
+	public Shape getShape(String uri) {
+		return shapeManager.getShapeById(new URIImpl(uri));
+	}
+	
 	private ShapeConsumer peekConsumer() {
 		Object result = peek();
 		return (result instanceof ShapeConsumer) ? (ShapeConsumer) result : null;

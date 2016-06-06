@@ -5,16 +5,16 @@
 [] a :DataGeneratorConfig ;
 	:classConstraint [
 		:targetClass schema:Person ;
-		:instanceCount 10
+		:instanceCount 10000
 	];
 	:generate [	
 		:targetShape <http://schema.pearson.com/shapes/x1/schema/School> ;
-		:shapeCount 2				
+		:shapeCount 50				
 	], [
 		:targetShape <http://schema.pearson.com/shapes/x1/reg/CourseSection> ;
-		:shapeCount 10	
+		:shapeCount 500
 	], [
 		:targetShape <http://schema.pearson.com/shapes/x1/org/Membership> ;
-		:shapeCount 20	
+		:shapeCount 20000	
 	]
 	.
