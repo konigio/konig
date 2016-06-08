@@ -14,7 +14,11 @@ import java.io.StringWriter;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -22,17 +26,91 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.AS;
 import io.konig.core.vocab.GCP;
+import io.konig.core.vocab.Schema;
 import io.konig.pojo.io.PojoFactory;
 import io.konig.pojo.io.SimplePojoFactory;
+import io.konig.schemagen.gcp.BigQueryGenerator;
+import io.konig.schemagen.gcp.BigQueryTable;
+import io.konig.schemagen.gcp.BigQueryTableReference;
+import io.konig.schemagen.gcp.GoogleCloudProject;
+import io.konig.schemagen.merge.ShapeNamer;
+import io.konig.schemagen.merge.SimpleShapeNamer;
+import io.konig.shacl.NodeKind;
+import io.konig.shacl.ShapeBuilder;
+import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
 public class BigQueryGeneratorTest {
+	
+	@Test
+	public void testTableClass() throws Exception {
+		Graph graph = new MemoryGraph();
+		graph.edge(Schema.VideoObject, RDFS.SUBCLASSOF, Schema.MediaObject);
+		graph.edge(Schema.MediaObject, RDFS.SUBCLASSOF, Schema.CreativeWork);
+		graph.edge(Schema.WebPage, RDFS.SUBCLASSOF, Schema.CreativeWork);
+		graph.edge(Schema.CreativeWork, RDFS.SUBCLASSOF, Schema.Thing);
+		
+		OwlReasoner owl = new OwlReasoner(graph);
+		
+		String aName = "http://example.com/v1/as/Activity";
+		String bName = "http://example.com/v2/as/Activity";
+		
+		String videoShapeName = "http://example.com/v1/schema/VideoObject";
+		String webPageShapeName = "http://example.com/v1/schema/WebPage";
+		
+		URI bitrate = uri("http://schema.org/bitrate");
+		URI author = uri("http://schema.org/author");
+		
+		ShapeBuilder builder = new ShapeBuilder()
+			.beginShape(aName)
+				.scopeClass(AS.Activity)
+				.beginProperty(AS.object)
+					.beginValueShape(videoShapeName)
+						.scopeClass(Schema.VideoObject)
+						.beginProperty(bitrate)
+							.datatype(XMLSchema.STRING)
+							.minCount(1)
+							.maxCount(1)
+						.endProperty()
+					.endValueShape()
+				.endProperty()
+			.endShape()
+			.beginShape(bName)
+				.scopeClass(AS.Activity)
+				.beginProperty(AS.object)
+					.beginValueShape(webPageShapeName)
+						.scopeClass(Schema.WebPage)
+						.beginProperty(author)
+							.nodeKind(NodeKind.IRI)
+							.valueClass(Schema.Person)
+						.endProperty()
+					.endValueShape()
+				.endProperty()
+			.endShape()
+			;
+		
+		ShapeManager shapeManager = builder.getShapeManager();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", "http://schema.org/");
+		
+		ShapeNamer shapeNamer = new SimpleShapeNamer(nsManager, "http://example.com/dw/");
+		BigQueryGenerator bigquery = new BigQueryGenerator(shapeManager, shapeNamer, owl);
+	}
+	
+
+	private URI uri(String string) {
+		return new URIImpl(string);
+	}
 
 	@Test
 	public void testScan() throws Exception {
@@ -80,15 +158,17 @@ public class BigQueryGeneratorTest {
 	}
 
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
 		MemoryGraph graph = new MemoryGraph();
-		RdfUtil.loadTurtle(graph, resource("bigquery/Organization-table.ttl"), "");
+		RdfUtil.loadTurtle(graph, resource("bigquery/gcp-project.ttl"), "");
 		PojoFactory factory = new SimplePojoFactory();
 		
-		Vertex v = graph.v(GCP.BigQueryTable).in(RDF.TYPE).firstVertex();
-		BigQueryTable table = factory.create(v, BigQueryTable.class);
+		Vertex v = graph.v(GCP.GoogleCloudProject).in(RDF.TYPE).firstVertex();
+		
+		GoogleCloudProject project = factory.create(v, GoogleCloudProject.class);
+		BigQueryTable table = project.dataset("test-dataset").table("Organization");
 		
 		JsonFactory jsonFactory = new JsonFactory();
 		StringWriter buffer = new StringWriter();

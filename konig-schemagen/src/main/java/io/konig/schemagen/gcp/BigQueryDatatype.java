@@ -1,4 +1,4 @@
-package io.konig.schemagen.bigquery;
+package io.konig.schemagen.gcp;
 
 public enum BigQueryDatatype {
 	

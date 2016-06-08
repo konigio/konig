@@ -1,0 +1,20 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/>.
+
+[] a gcp:GoogleCloudProject ;
+	gcp:projectId "skilled-cargo-133211" ;
+	gcp:dataset [
+		gcp:datasetId "test-dataset" ;
+		gcp:table [
+			gcp:tableId "Membership" ;
+			gcp:description """
+				An association entity which asserts that a given Person is a 
+				member of a given Organization with a given Role
+			""" ;
+			gcp:tableShape <http://schema.pearson.com/shapes/x1/org/Membership>
+		], [
+			gcp:tableId "Organization" ;
+			gcp:description "An organizational unit, such as a study group or course section" ;
+			gcp:tableShape <http://schema.pearson.com/shapes/x1/schema/Organization>
+		]
+	]
+	.

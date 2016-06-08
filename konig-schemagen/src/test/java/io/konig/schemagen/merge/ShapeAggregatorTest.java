@@ -92,59 +92,7 @@ public class ShapeAggregatorTest {
 		assertTrue(c != null);
 	}
 
-	@Test
-	public void testMergeAll() throws Exception {
-		Graph graph = new MemoryGraph();
-		graph.edge(Schema.VideoObject, RDFS.SUBCLASSOF, Schema.MediaObject);
-		graph.edge(Schema.MediaObject, RDFS.SUBCLASSOF, Schema.CreativeWork);
-		graph.edge(Schema.WebPage, RDFS.SUBCLASSOF, Schema.CreativeWork);
-		graph.edge(Schema.CreativeWork, RDFS.SUBCLASSOF, Schema.Thing);
-		
-		OwlReasoner owl = new OwlReasoner(graph);
-		
-		String aName = "http://example.com/v1/as/Activity";
-		String bName = "http://example.com/v2/as/Activity";
-		
-		String videoShapeName = "http://example.com/v1/schema/VideoObject";
-		String webPageShapeName = "http://example.com/v1/schema/WebPage";
-		
-		URI bitrate = uri("http://schema.org/bitrate");
-		URI author = uri("http://schema.org/author");
-		
-		ShapeBuilder builder = new ShapeBuilder()
-			.beginShape(aName)
-				.scopeClass(AS.Activity)
-				.beginProperty(AS.object)
-					.beginValueShape(videoShapeName)
-						.scopeClass(Schema.VideoObject)
-						.beginProperty(bitrate)
-							.datatype(XMLSchema.STRING)
-							.minCount(1)
-							.maxCount(1)
-						.endProperty()
-					.endValueShape()
-				.endProperty()
-			.endShape()
-			.beginShape(bName)
-				.scopeClass(AS.Activity)
-				.beginProperty(AS.object)
-					.beginValueShape(webPageShapeName)
-						.scopeClass(Schema.WebPage)
-						.beginProperty(author)
-							.nodeKind(NodeKind.IRI)
-							.valueClass(Schema.Person)
-						.endProperty()
-					.endValueShape()
-				.endProperty()
-			.endShape()
-			;
-		
-		Shape a = builder.getShape(aName);
-		Shape b = builder.getShape(bName);
-		
-		ShapeAggregator aggregator = new ShapeAggregator(owl, builder.getShapeManager());
-		
-	}
+	
 	
 	@Test
 	public void testValueClass() {

@@ -1,4 +1,4 @@
-package io.konig.schemagen.bigquery;
+package io.konig.schemagen.gcp;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;

@@ -1,4 +1,4 @@
-package io.konig.schemagen.bigquery;
+package io.konig.schemagen.gcp;
 
 public class BigQueryTableReference {
 	
@@ -6,6 +6,18 @@ public class BigQueryTableReference {
 	private String datasetId;
 	private String tableId;
 	
+	public BigQueryTableReference() {
+		
+	}
+	
+	
+	public BigQueryTableReference(String projectId, String datasetId, String tableId) {
+		this.projectId = projectId;
+		this.datasetId = datasetId;
+		this.tableId = tableId;
+	}
+
+
 	public String getProjectId() {
 		return projectId;
 	}

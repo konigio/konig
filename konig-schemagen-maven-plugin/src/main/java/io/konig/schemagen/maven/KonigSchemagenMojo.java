@@ -25,6 +25,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 
 import com.sun.codemodel.JCodeModel;
 
@@ -35,12 +37,15 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.GraphLoadHandler;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
+import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
 import io.konig.schemagen.avro.ShapeToAvro;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
+import io.konig.schemagen.gcp.BigQueryGenerator;
 import io.konig.schemagen.java.BasicJavaNamer;
 import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
@@ -52,6 +57,8 @@ import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
 import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
+import io.konig.schemagen.merge.ShapeNamer;
+import io.konig.schemagen.merge.SimpleShapeNamer;
 import io.konig.shacl.LogicalShapeBuilder;
 import io.konig.shacl.LogicalShapeNamer;
 import io.konig.shacl.Shape;
@@ -74,20 +81,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     /**
      * Location of the file.
      */
-    @Parameter( defaultValue = "${basedir}/main/avro", property = "avroDir", required = true )
+    @Parameter( defaultValue = "${basedir}/src/main/avro", property = "avroDir", required = true )
     private File avroDir;
     
     
-    @Parameter( defaultValue="${basedir}/main/jsonld", property="jsonldDir", required=true)
+    @Parameter( defaultValue="${basedir}/src/main/jsonld", property="jsonldDir", required=true)
     private File jsonldDir;
     
-    @Parameter( defaultValue="${basedir}/main/jsonschema", property="jsonSchemaDir", required=true)
+    @Parameter( defaultValue="${basedir}/src/main/jsonschema", property="jsonSchemaDir", required=true)
     private File jsonSchemaDir;
     
     @Parameter( defaultValue="${basedir}/src/main/shapes", property="sourceDir", required=true)
     private File sourceDir;
     
-    @Parameter (defaultValue="${basedir}/main/summary", property="summaryDir", required=true)
+    @Parameter (defaultValue="${basedir}/src/main/summary", property="summaryDir", required=true)
     private File summaryDir;
     
     @Parameter(property="javaDir")
@@ -98,6 +105,15 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     @Parameter
     private HashSet<String> excludeNamespace;
+    
+    @Parameter
+    private String bqShapeBaseURL;
+    
+    @Parameter(defaultValue="${basedir}/src/main/bigquery", property="bqOutDir")
+    private File bqOutDir;
+    
+    @Parameter
+    private File bqSourceDir;
 
     public void execute() throws MojoExecutionException   {
     	
@@ -120,14 +136,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			OwlReasoner reasoner = new OwlReasoner(owlGraph);
 			
+			if (bqShapeBaseURL != null) {
+				generateBigQueryTables(owlGraph, nsManager, shapeManager, reasoner);
+			}
+			
 			ShapeToJsonldContext jsonld = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, mediaTypeNamer, owlGraph);
 			jsonld.generateAll(jsonldDir);
 			
 			SmartAvroDatatypeMapper avroMapper = new SmartAvroDatatypeMapper(reasoner);
 			ShapeToAvro avro = new ShapeToAvro(avroMapper);
 			avro.generateAvro(sourceDir, avscDir, avroImports, owlGraph);
-			
-			
 			
 			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SmartJsonSchemaTypeMapper(reasoner);
 			JsonSchemaNamer jsonSchemaNamer = new SimpleJsonSchemaNamer("/jsonschema", mediaTypeNamer);
@@ -146,12 +164,24 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				generateJavaCode(reasoner, nsManager, shapeManager);
 			}
 			
+		
 			
-		} catch (IOException e) {
+			
+		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
 		}
       
     }
+
+	private void generateBigQueryTables(Graph graph, NamespaceManager nsManager, ShapeManager shapeManager, OwlReasoner reasoner) throws SchemaGeneratorException, IOException, RDFParseException, RDFHandlerException {
+		
+		if (bqSourceDir != null) {
+			RdfUtil.loadTurtle(bqSourceDir, graph, nsManager);
+		}
+		ShapeNamer shapeNamer = new SimpleShapeNamer(nsManager, bqShapeBaseURL);
+		BigQueryGenerator generator = new BigQueryGenerator(shapeManager, shapeNamer, reasoner);
+		generator.writeTableDefinitions(graph, bqOutDir);
+	}
 
 	private void generateJavaCode(OwlReasoner reasoner, NamespaceManager nsManager, ShapeManager shapeManager) throws IOException {
 		

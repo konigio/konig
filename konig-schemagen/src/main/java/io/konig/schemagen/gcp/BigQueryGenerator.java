@@ -1,4 +1,4 @@
-package io.konig.schemagen.bigquery;
+package io.konig.schemagen.gcp;
 
 import java.io.Closeable;
 import java.io.File;
@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.core.Graph;
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
@@ -25,6 +26,8 @@ import io.konig.core.vocab.GCP;
 import io.konig.pojo.io.PojoFactory;
 import io.konig.pojo.io.SimplePojoFactory;
 import io.konig.schemagen.SchemaGeneratorException;
+import io.konig.schemagen.merge.ShapeAggregator;
+import io.konig.schemagen.merge.ShapeNamer;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -38,10 +41,18 @@ public class BigQueryGenerator {
 	private static Logger logger = LoggerFactory.getLogger(BigQueryGenerator.class);
 	private ShapeManager shapeManager;
 	private BigQueryDatatypeMapper datatypeMap = new BigQueryDatatypeMapper();
+	private OwlReasoner owl;
+	private ShapeNamer shapeNamer;
 	
 	
 	public BigQueryGenerator(ShapeManager shapeManager) {
 		this.shapeManager = shapeManager;
+	}
+
+	public BigQueryGenerator(ShapeManager shapeManager, ShapeNamer shapeNamer, OwlReasoner reasoner) {
+		this.shapeManager = shapeManager;
+		this.shapeNamer = shapeNamer;
+		owl = reasoner;
 	}
 	
 	/**
@@ -52,30 +63,36 @@ public class BigQueryGenerator {
 	 * @throws SchemaGeneratorException
 	 */
 	public void writeTableDefinitions(Graph graph, File outDir) throws IOException, SchemaGeneratorException {
-		List<Vertex> list = graph.v(GCP.BigQueryTable).in(RDF.TYPE).toVertexList();
+		outDir.mkdirs();
+		List<Vertex> list = graph.v(GCP.GoogleCloudProject).in(RDF.TYPE).toVertexList();
 
 		JsonFactory jsonFactory = new JsonFactory();
 		PojoFactory factory = new SimplePojoFactory();	
 		for (Vertex v : list) {
-			BigQueryTable table = factory.create(v, BigQueryTable.class);
-			String tableFileName = tableFileName(table);
-			File outFile = new File(outDir, tableFileName);
-			FileWriter writer = new FileWriter(outFile);
-			try {
-				JsonGenerator json = jsonFactory.createGenerator(writer);
-				json.useDefaultPrettyPrinter();
-				writeTableDefinition(table, json);
-				json.flush();
-			} finally {
-				close(writer);
+			GoogleCloudProject project = factory.create(v, GoogleCloudProject.class);
+			
+			for (BigQueryDataset dataset : project.getDatasetList()) {
+				for (BigQueryTable table : dataset.getTableList()) {
+					String tableFileName = tableFileName(table);
+					File outFile = new File(outDir, tableFileName);
+					FileWriter writer = new FileWriter(outFile);
+					try {
+						JsonGenerator json = jsonFactory.createGenerator(writer);
+						json.useDefaultPrettyPrinter();
+						writeTableDefinition(table, json);
+						json.flush();
+					} finally {
+						close(writer);
+					}
+				}
 			}
+			
 		}
 	}
 
 
 	public void writeTableDefinitions(File sourceDir, File outDir) throws IOException, SchemaGeneratorException {
 		Graph graph = new MemoryGraph();
-		outDir.mkdirs();
 		try {
 			RdfUtil.loadTurtle(sourceDir, graph, null);
 			writeTableDefinitions(graph, outDir);
@@ -136,6 +153,8 @@ public class BigQueryGenerator {
 		String projectId = ref.getProjectId();
 		String description = table.getDescription();
 		URI tableShapeId = table.getTableShape();
+		URI tableClassId = table.getTableClass();
+		
 		if (tableId == null) {
 			throw new SchemaGeneratorException("tableId is not defined");
 		}
@@ -145,11 +164,41 @@ public class BigQueryGenerator {
 		if (projectId == null) {
 			throw new SchemaGeneratorException("projectId is not defined for table " + tableId);
 		}
-		if (tableShapeId == null) {
-			throw new SchemaGeneratorException("tableShape is not defined for table " + tableId);
+		if (tableShapeId == null && tableClassId == null) {
+			throw new SchemaGeneratorException("tableShape or tableClass must be defined for table " + tableId);
 		}
 		
-		Shape shape = shapeManager.getShapeById(tableShapeId);
+		Shape shape = null;
+		
+		if (tableShapeId != null) {
+			shape = shapeManager.getShapeById(tableShapeId);
+		} else {
+			
+			List<Shape> shapeList = shapeManager.getShapesByScopeClass(tableClassId);
+			
+			if (shapeList.isEmpty()) {
+				throw new SchemaGeneratorException("No shapes found for class " + tableClassId);
+			}
+			
+			if (shapeList.size()==1) {
+				shape = shapeList.get(0);
+			} else {
+				URI shapeId = shapeNamer.shapeName(tableClassId);
+				shape = shapeManager.getShapeById(shapeId);
+				if (shape == null) {
+					ShapeAggregator aggregator = new ShapeAggregator(owl, shapeManager);
+					for (Shape s : shapeList) {
+						if (shape == null) {
+							shape = s;
+						} else {
+							shape = aggregator.merge(shapeId, shape, s);
+						}
+					}
+				}
+			}
+			
+			
+		}
 		if (shape == null) {
 			throw new SchemaGeneratorException("Shape not found: " + tableShapeId);
 		}
@@ -203,7 +252,6 @@ public class BigQueryGenerator {
 		json.writeStringField("name", fieldName);
 		json.writeStringField("type", type.toString());
 		json.writeStringField("mode", fieldMode.toString());
-		json.writeEndObject();
 		
 		if (type == BigQueryDatatype.RECORD) {
 
@@ -212,13 +260,16 @@ public class BigQueryGenerator {
 				Resource shapeId = p.getValueShapeId();
 				if (shapeId instanceof URI) {
 					valueShape = shapeManager.getShapeById((URI) shapeId);
-					writeFields(valueShape, json);
+					if (valueShape == null) {
+						throw new SchemaGeneratorException("Shape not found: " + shapeId.stringValue());
+					}
 				} else {
 					throw new SchemaGeneratorException("Blank nodes not support for valueShape identifier");
 				}
-				
 			}
+			writeFields(valueShape, json);
 		} 
+		json.writeEndObject();
 	}
 	
 	private FieldMode fieldMode(PropertyConstraint p) {
