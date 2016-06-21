@@ -54,6 +54,7 @@ public class GraphLoadHandler extends RDFHandlerBase {
 		Resource subject = statement.getSubject();
 		URI predicate = statement.getPredicate();
 		Value object = statement.getObject();
+		
 		graph.edge(subject, predicate, object);
 	}
 

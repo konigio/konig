@@ -66,6 +66,9 @@ public class PropertyConstraint {
 	private Resource valueClass;
 	private String documentation;
 	private List<Value> knownValue;
+	private boolean uniqueCountKey;
+	private URI dimensionTerm;
+	private boolean timeParam;
 	
 	private Term term;
 	
@@ -79,6 +82,16 @@ public class PropertyConstraint {
 		this.predicate = predicate;
 	}
 	
+	public PropertyConstraint() {
+		
+	}
+	
+	
+	
+	public void setId(Resource id) {
+		this.id = id;
+	}
+
 	public PropertyConstraint clone() {
 		PropertyConstraint other = new PropertyConstraint(id, predicate);
 		other.allowedValues = allowedValues;
@@ -331,7 +344,7 @@ public class PropertyConstraint {
 			json.writeNumberField("maxInclusive", maxInclusive);
 		}
 		if (nodeKind != null) {
-			json.writeStringField("nodeKind", "sh:" + nodeKind.getLocalName());
+			json.writeStringField("nodeKind", "sh:" + nodeKind.getURI().getLocalName());
 		}
 		if (valueClass != null) {
 			json.writeStringField("class", valueClass.stringValue());
@@ -356,6 +369,30 @@ public class PropertyConstraint {
 	}
 	public void setValueClass(Resource valueClass) {
 		this.valueClass = valueClass;
+	}
+
+	public boolean isUniqueCountKey() {
+		return uniqueCountKey;
+	}
+
+	public void setUniqueCountKey(boolean uniqueCountKey) {
+		this.uniqueCountKey = uniqueCountKey;
+	}
+
+	public URI getDimensionTerm() {
+		return dimensionTerm;
+	}
+
+	public void setDimensionTerm(URI dimensionTerm) {
+		this.dimensionTerm = dimensionTerm;
+	}
+
+	public boolean isTimeParam() {
+		return timeParam;
+	}
+
+	public void setTimeParam(boolean timeParam) {
+		this.timeParam = timeParam;
 	}
 	
 	

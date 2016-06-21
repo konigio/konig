@@ -24,21 +24,20 @@ package io.konig.shacl;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
-public class NodeKind extends URIImpl {
-	private static final long serialVersionUID = 1L;
+public enum NodeKind  {
 
-	public static final NodeKind IRI = new NodeKind("http://www.w3.org/ns/shacl#IRI");
-	public static final NodeKind BlankNode = new NodeKind("http://www.w3.org/ns/shacl#BlankNode");
-	public static final NodeKind Literal = new NodeKind("http://www.w3.org/ns/shacl#Literal");
+	IRI("http://www.w3.org/ns/shacl#IRI"),
+	BlankNode("http://www.w3.org/ns/shacl#BlankNode"),
+	Literal("http://www.w3.org/ns/shacl#Literal");
 
-	private NodeKind(String uriString) {
-		super(uriString);
+	private URI uri;
+	private NodeKind(String value) {
+		uri = new URIImpl(value);
 	}
 	
-	public URI asURI() {
-		return this;
+	public URI getURI() {
+		return uri;
 	}
-
 	
 	public static NodeKind fromURI(URI uri) {
 		if (IRI.equals(uri)) {

@@ -25,6 +25,8 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 public class SH {
+	
+	public static final String PROPERTY = "http://www.w3.org/ns/shacl#property";
 
 	public static final URI NAMESPACE_URI = new URIImpl("http://www.w3.org/ns/shacl#");
 	public static final URI IRI = new URIImpl("http://www.w3.org/ns/shacl#IRI");
@@ -63,7 +65,7 @@ public class SH {
 	public static final URI OrConstraint = new URIImpl("http://www.w3.org/ns/shacl#OrConstraint");
 	public static final URI ClosedShapeConstraint = new URIImpl("http://www.w3.org/ns/shacl#ClosedShapeConstraint");
 	public static final URI scopeClass = new URIImpl("http://www.w3.org/ns/shacl#scopeClass");
-	public static final URI property = new URIImpl("http://www.w3.org/ns/shacl#property");
+	public static final URI property = new URIImpl(PROPERTY);
 	public static final URI minLength = new URIImpl("http://www.w3.org/ns/shacl#minLength");
 	public static final URI maxLength = new URIImpl("http://www.w3.org/ns/shacl#maxLength");
 

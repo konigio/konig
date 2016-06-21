@@ -31,9 +31,11 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.BNodeImpl;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.impl.KonigLiteral;
 
@@ -145,6 +147,10 @@ public class GraphBuilder {
 	
 	public GraphBuilder addLiteral(URI predicate, String object) {
 		return addProperty(predicate, new KonigLiteral(object));
+	}
+	
+	public GraphBuilder addFloat(URI predicate, float value) {
+		return addProperty(predicate, new LiteralImpl(Float.toString(value), XMLSchema.FLOAT));
 	}
 	
 	public GraphBuilder addLiteral(URI predicate, String value, URI datatype) {

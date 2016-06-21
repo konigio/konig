@@ -34,9 +34,12 @@ import org.openrdf.model.impl.BNodeImpl;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
+import io.konig.annotation.RdfProperty;
 import io.konig.core.Context;
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.UidGeneratorImpl;
+import io.konig.core.vocab.AS;
+import io.konig.core.vocab.SH;
 import io.konig.shacl.impl.EmptyList;
 
 public class Shape {
@@ -113,6 +116,7 @@ public class Shape {
 		return null;
 	}
 	
+	@RdfProperty(SH.PROPERTY)
 	public Shape add(PropertyConstraint c) {
 		if (property == null) {
 			property  = new ArrayList<PropertyConstraint>();
