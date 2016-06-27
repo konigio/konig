@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.openrdf.model.Resource;
@@ -16,6 +17,9 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.api.services.bigquery.model.Table;
+import com.google.api.services.bigquery.model.TableFieldSchema;
+import com.google.api.services.bigquery.model.TableSchema;
 
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
@@ -37,24 +41,108 @@ import io.konig.shacl.ShapeManager;
  * @author Greg McFall
  *
  */
-public class BigQueryGenerator {
-	private static Logger logger = LoggerFactory.getLogger(BigQueryGenerator.class);
+public class BigQueryTableGenerator {
+	private static Logger logger = LoggerFactory.getLogger(BigQueryTableGenerator.class);
 	private ShapeManager shapeManager;
 	private BigQueryDatatypeMapper datatypeMap = new BigQueryDatatypeMapper();
 	private OwlReasoner owl;
 	private ShapeNamer shapeNamer;
+	private BigQueryTableHandler handler;
 	
 	
-	public BigQueryGenerator(ShapeManager shapeManager) {
+	public BigQueryTableGenerator(ShapeManager shapeManager) {
 		this.shapeManager = shapeManager;
 	}
 
-	public BigQueryGenerator(ShapeManager shapeManager, ShapeNamer shapeNamer, OwlReasoner reasoner) {
+	public BigQueryTableGenerator(ShapeManager shapeManager, ShapeNamer shapeNamer, OwlReasoner reasoner) {
 		this.shapeManager = shapeManager;
 		this.shapeNamer = shapeNamer;
 		owl = reasoner;
 	}
 	
+	
+	public BigQueryTableHandler getHandler() {
+		return handler;
+	}
+
+	public void setHandler(BigQueryTableHandler handler) {
+		this.handler = handler;
+	}
+	
+	public Table toTable(BigQueryTable source) {
+		
+		Table sink = new Table();
+		TableSchema schema = toTableSchema(source);
+		sink.setSchema(schema);
+		return sink;
+	}
+	
+	public TableSchema toTableSchema(BigQueryTable source) {
+		URI shapeId = source.getTableShape();
+		if (shapeId == null) {
+			throw new SchemaGeneratorException("Shape is not defined");
+		}
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		if (shape == null) {
+			throw new SchemaGeneratorException("Shape not found: " + shapeId);
+		}
+		
+		
+		return toTableSchema(shape);
+	}
+	
+	public TableSchema toTableSchema(Shape shape) {
+		TableSchema schema = new TableSchema();
+		schema.setFields(listFields(shape));
+		return schema;
+	}
+	
+	private List<TableFieldSchema> listFields(Shape shape) {
+		List<TableFieldSchema> list = new ArrayList<>();
+
+		List<PropertyConstraint> plist = shape.getProperty();
+		
+		
+		for (PropertyConstraint p : plist) {
+			TableFieldSchema field = toField(p);
+			list.add(field);
+		}
+		return list;
+	}
+
+	private TableFieldSchema toField(PropertyConstraint p) {
+		
+		TableFieldSchema result = new TableFieldSchema();
+		String fieldName = p.getPredicate().getLocalName();
+		FieldMode fieldMode = fieldMode(p);
+		BigQueryDatatype fieldType = datatypeMap.type(p);
+		
+		result.setName(fieldName);
+		result.setType(fieldType.name());
+		result.setMode(fieldMode.name());
+		
+		if (fieldType == BigQueryDatatype.RECORD) {
+			Shape valueShape = p.getValueShape();
+			if (valueShape == null) {
+				Resource shapeId = p.getValueShapeId();
+				if (valueShape instanceof URI) {
+					valueShape = shapeManager.getShapeById((URI) shapeId);
+					if (valueShape == null) {
+						throw new SchemaGeneratorException("Shape not found: " + shapeId.stringValue());
+					}
+				} else {
+					throw new SchemaGeneratorException("Blank nodes not supported for valueShape identifier");
+				}
+			}
+			TableSchema fieldSchema = toTableSchema(valueShape);
+			result.setFields(fieldSchema.getFields());
+		}
+		
+		
+		return result;
+	}
+
 	/**
 	 * Generate a BigQuery table definition for each resource of type gcp:BigQueryTable within a given graph.
 	 * @param graph The graph containing BigQueryTable resources.
@@ -221,6 +309,10 @@ public class BigQueryGenerator {
 		json.writeEndObject();
 		
 		json.writeEndObject();
+		
+		if (handler != null) {
+			handler.add(table);
+		}
 		
 	}
 

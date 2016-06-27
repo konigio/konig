@@ -255,6 +255,11 @@ public class ShapeBuilder {
 			return new ShapeBuilder(this, parent.shapeManager, parent.valueFactory, shape);
 		}
 		
+		public PropertyBuilder isTimeParam(boolean truth) {
+			property.setTimeParam(truth);
+			return this;
+		}
+		
 		public PropertyBuilder documentation(String text) {
 			property.setDocumentation(text);
 			return this;
@@ -287,6 +292,11 @@ public class ShapeBuilder {
 		
 		public PropertyBuilder datatype(URI type) {
 			property.setDatatype(type);
+			return this;
+		}
+		
+		public PropertyBuilder dimension(URI dimension) {
+			property.setDimensionTerm(dimension);
 			return this;
 		}
 		

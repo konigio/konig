@@ -45,7 +45,7 @@ import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
 import io.konig.schemagen.avro.ShapeToAvro;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
-import io.konig.schemagen.gcp.BigQueryGenerator;
+import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.schemagen.java.BasicJavaNamer;
 import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
@@ -179,7 +179,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			RdfUtil.loadTurtle(bqSourceDir, graph, nsManager);
 		}
 		ShapeNamer shapeNamer = new SimpleShapeNamer(nsManager, bqShapeBaseURL);
-		BigQueryGenerator generator = new BigQueryGenerator(shapeManager, shapeNamer, reasoner);
+		BigQueryTableGenerator generator = new BigQueryTableGenerator(shapeManager, shapeNamer, reasoner);
 		generator.writeTableDefinitions(graph, bqOutDir);
 	}
 

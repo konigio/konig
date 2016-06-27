@@ -25,6 +25,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.bigquery.model.TableSchema;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -38,13 +40,14 @@ import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Schema;
 import io.konig.pojo.io.PojoFactory;
 import io.konig.pojo.io.SimplePojoFactory;
-import io.konig.schemagen.gcp.BigQueryGenerator;
 import io.konig.schemagen.gcp.BigQueryTable;
+import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.schemagen.gcp.BigQueryTableReference;
 import io.konig.schemagen.gcp.GoogleCloudProject;
 import io.konig.schemagen.merge.ShapeNamer;
 import io.konig.schemagen.merge.SimpleShapeNamer;
 import io.konig.shacl.NodeKind;
+import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -75,6 +78,7 @@ public class BigQueryGeneratorTest {
 			.beginShape(aName)
 				.scopeClass(AS.Activity)
 				.beginProperty(AS.object)
+					.maxCount(1)
 					.beginValueShape(videoShapeName)
 						.scopeClass(Schema.VideoObject)
 						.beginProperty(bitrate)
@@ -103,8 +107,17 @@ public class BigQueryGeneratorTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", "http://schema.org/");
 		
+		Shape aShape = builder.getShape(aName);
+		
 		ShapeNamer shapeNamer = new SimpleShapeNamer(nsManager, "http://example.com/dw/");
-		BigQueryGenerator bigquery = new BigQueryGenerator(shapeManager, shapeNamer, owl);
+		BigQueryTableGenerator bigquery = new BigQueryTableGenerator(shapeManager, shapeNamer, owl);
+		
+		TableSchema table = bigquery.toTableSchema(aShape);
+		table.setFactory(new JacksonFactory());
+		
+		System.out.println(table.toPrettyString());
+		
+		
 	}
 	
 
@@ -112,7 +125,7 @@ public class BigQueryGeneratorTest {
 		return new URIImpl(string);
 	}
 
-	@Test
+	@Ignore
 	public void testScan() throws Exception {
 		MemoryShapeManager shapeManager = new MemoryShapeManager();
 		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
@@ -125,7 +138,7 @@ public class BigQueryGeneratorTest {
 		File sourceDir = new File("src/test/resources/bigquery");
 		File outDir = new File("target/bigquery");
 		outDir.mkdirs();
-		BigQueryGenerator generator = new BigQueryGenerator(shapeManager);
+		BigQueryTableGenerator generator = new BigQueryTableGenerator(shapeManager);
 		generator.writeTableDefinitions(sourceDir, outDir);
 	}
 	
@@ -158,7 +171,7 @@ public class BigQueryGeneratorTest {
 	}
 
 
-	@Test
+	@Ignore
 	public void test() throws Exception {
 		
 		MemoryGraph graph = new MemoryGraph();
@@ -181,7 +194,7 @@ public class BigQueryGeneratorTest {
 		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
 		shapeLoader.loadTurtle(resource("shapes/Organization-x1.ttl"));
 
-		BigQueryGenerator generator = new BigQueryGenerator(shapeManager);
+		BigQueryTableGenerator generator = new BigQueryTableGenerator(shapeManager);
 		generator.writeTableDefinition(table, json);
 		json.flush();
 		

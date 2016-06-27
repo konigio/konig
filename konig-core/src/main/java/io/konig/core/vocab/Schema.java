@@ -60,5 +60,6 @@ public class Schema {
 	public static final URI hasPart = new URIImpl("http://schema.org/hasPart");
 	public static final URI memberOf = new URIImpl("http://schema.org/memberOf");
 	public static final URI lastReviewed = new URIImpl("http://schema.org/lastReviewed");
+	public static final URI dateCreated = new URIImpl("http://schema.org/dateCreated");
 
 }

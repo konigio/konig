@@ -37,6 +37,9 @@ public class BigQueryTableReference {
 		this.tableId = tableId;
 	}
 	
+	public String toString() {
+		return projectId + ":" + datasetId + "." + tableId;
+	}
 	
 	
 

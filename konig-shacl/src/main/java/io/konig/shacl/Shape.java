@@ -40,6 +40,7 @@ import io.konig.core.UidGenerator;
 import io.konig.core.impl.UidGeneratorImpl;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.SH;
+import io.konig.core.vocab.TemporalUnit;
 import io.konig.shacl.impl.EmptyList;
 
 public class Shape {
@@ -72,6 +73,29 @@ public class Shape {
 	public Shape setConstraint(Constraint constraint) {
 		this.constraint = constraint;
 		return this;
+	}
+	
+	public PropertyConstraint getTimeParam() {
+		if (property != null) {
+			for (PropertyConstraint c : property) {
+				if (c.isTimeParam()) {
+					return c;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public PropertyConstraint getDimensionConstraint(URI dimension) {
+		if (property != null) {
+			for (PropertyConstraint c : property) {
+				URI d = c.getDimensionTerm();
+				if (dimension.equals(d)) {
+					return c;
+				}
+			}
+		}
+		return null;
 	}
 	
 	public PropertyConstraint getPropertyConstraint(URI predicate) {
