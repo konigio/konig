@@ -40,13 +40,13 @@ public enum NodeKind  {
 	}
 	
 	public static NodeKind fromURI(URI uri) {
-		if (IRI.equals(uri)) {
+		if (IRI.uri.equals(uri)) {
 			return IRI;
 		}
-		if (BlankNode.equals(uri)) {
+		if (BlankNode.uri.equals(uri)) {
 			return BlankNode;
 		}
-		if (Literal.equals(uri)) {
+		if (Literal.uri.equals(uri)) {
 			return Literal;
 		}
 		

@@ -2,7 +2,9 @@ package io.konig.schemagen.avro;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +43,11 @@ public class AvroSchemaGenerator extends Generator {
 	private boolean embedValueShape = true;
 	
 	private static final Pattern enumSymbolPattern = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
+	
+	/**
+	 * The set of names for schemas already processed.
+	 */
+	private Set<String> alreadyProcessed;
 	
 	/**
 	 * For now, we hard-code a GeneratedMediaTypeTransformer.  In the future, the shape
@@ -101,10 +108,12 @@ public class AvroSchemaGenerator extends Generator {
 	 * @throws IOException
 	 */
 	public AvroSchemaResource generateSchema(Vertex shape) throws IOException {
+
 		
 		Resource id = shape.getId();
 		
 		if (id instanceof URI) {
+			alreadyProcessed = new HashSet<>();
 			URI uri = (URI) id;
 			StringWriter writer = new StringWriter();
 			JsonFactory factory = new JsonFactory();
@@ -125,6 +134,7 @@ public class AvroSchemaGenerator extends Generator {
 			
 			URI schemaId = new URIImpl(schemaAddress);
 			shape.getGraph().edge(id, KOL.avroSchemaRendition, schemaId);
+			alreadyProcessed = null;
 			
 			return resource;
 		}
@@ -142,17 +152,25 @@ public class AvroSchemaGenerator extends Generator {
 		boolean result = matcher.matches();
 		return result;
 	}
+	
 	private String doGenerateSchema(URI uri, Vertex shape, JsonGenerator json) throws IOException {
 				
 		String avroName = namer.toAvroFullName(uri);
 		
-		json.writeStartObject();
-		json.writeStringField("name", avroName);
-		json.writeStringField("type", "record");
+		if (alreadyProcessed.contains(avroName)) {
+			json.writeString(avroName);
+		} else {
+
+			alreadyProcessed.add(avroName);
+			json.writeStartObject();
+			json.writeStringField("name", avroName);
+			json.writeStringField("type", "record");
+			
+			generateFields(avroName, shape, json);
+			
+			json.writeEndObject();
+		}
 		
-		generateFields(avroName, shape, json);
-		
-		json.writeEndObject();
 		
 		return avroName;
 		

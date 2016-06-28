@@ -153,15 +153,11 @@ public class ShapeRdfHandler extends RDFHandlerBase implements ListHandler{
 
 
 	private NodeKind nodeKind(Value object) throws RDFHandlerException {
-		
-		if (SH.IRI.equals(object)) {
-			return NodeKind.IRI;
-		}
-		if (SH.BlankNode.equals(object)) {
-			return NodeKind.BlankNode;
-		}
-		if (SH.Literal.equals(object)) {
-			return NodeKind.Literal;
+		if (object instanceof URI) {
+			NodeKind result = NodeKind.fromURI((URI) object);
+			if (result != null) {
+				return result;
+			}
 		}
 		throw new RDFHandlerException("Invalid nodeKind: " + object.stringValue());
 	}
