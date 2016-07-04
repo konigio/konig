@@ -176,24 +176,24 @@
     } ],
     "skos:historyNote" : [ {
       "rdfs:label" : {
-        "@value" : "Introduced statement property",
-        "@language" : "en",
-        "@type" : "rdf:langString"
-      },
-      "dc:date" : {
-        "@value" : "2006-03-21"
-      },
-      "dc:creator" : {
-        "@id" : "http://iandavis.com/id/me"
-      }
-    }, {
-      "rdfs:label" : {
         "@value" : "Updated dublin core properties to new namespace",
         "@language" : "en",
         "@type" : "rdf:langString"
       },
       "dc:date" : {
         "@value" : "2009-05-18"
+      },
+      "dc:creator" : {
+        "@id" : "http://iandavis.com/id/me"
+      }
+    }, {
+      "rdfs:label" : {
+        "@value" : "Introduced statement property",
+        "@language" : "en",
+        "@type" : "rdf:langString"
+      },
+      "dc:date" : {
+        "@value" : "2006-03-21"
       },
       "dc:creator" : {
         "@id" : "http://iandavis.com/id/me"
@@ -3501,7 +3501,7 @@
     },
     "skos:historyNote" : [ {
       "rdf:value" : {
-        "@value" : "Made owl:ObjectProperty"
+        "@value" : "Made a sub-property of statement"
       },
       "dc:date" : {
         "@value" : "2006-03-21"
@@ -3511,7 +3511,7 @@
       }
     }, {
       "rdf:value" : {
-        "@value" : "Made a sub-property of statement"
+        "@value" : "Made owl:ObjectProperty"
       },
       "dc:date" : {
         "@value" : "2006-03-21"
@@ -3561,6 +3561,18 @@
     },
     "rdfs:range" : {
       "@id" : "owl:ObjectProperty"
+    }
+  }, {
+    "@id" : "kol:equivalentRelationalShape",
+    "@type" : "owl:ObjectProperty",
+    "rdfs:comment" : {
+      "@value" : "\r\n\t\tA Shape equivalent to this one, but where object properties are replaced by\t\t\r\n\t\tForeignKeyProperties where possible.\r\n\t"
+    },
+    "rdfs:domain" : {
+      "@id" : "sh:Shape"
+    },
+    "rdfs:range" : {
+      "@id" : "sh:Shape"
     }
   }, {
     "@id" : "kol:jsonSchemaRendition",

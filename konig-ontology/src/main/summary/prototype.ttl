@@ -112,7 +112,8 @@ kol:LogicalShape rdfs:label "kol:LogicalShape" ;
 
 sh:Shape rdfs:label "sh:Shape" ;
 	kol:avroSchemaRendition kol:JsonSchemaSpecification ;
-	kol:jsonSchemaRendition kol:JsonSchemaSpecification .
+	kol:jsonSchemaRendition kol:JsonSchemaSpecification ;
+	kol:equivalentRelationalShape sh:Shape .
 
 rdf:Bag rdfs:label "rdf:Bag" ;
 	rdfs:subClassOf rdfs:Container .

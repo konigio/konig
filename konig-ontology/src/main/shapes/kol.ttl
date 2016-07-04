@@ -115,4 +115,12 @@ kol:avroSchemaRendition a owl:ObjectProperty ;
 	rdfs:comment "The Avro Schema specification corresponding to this Shape"
 	.
 		
+kol:equivalentRelationalShape a owl:ObjectProperty ;
+	rdfs:comment """
+		A Shape equivalent to this one, but where object properties are replaced by		
+		ForeignKeyProperties where possible.
+	""" ;
+	rdfs:domain sh:Shape ;
+	rdfs:range sh:Shape
+	.
 		
