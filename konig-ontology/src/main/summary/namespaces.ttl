@@ -15,7 +15,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <http://purl.org/vocab/changeset/schema#> a owl:Ontology ;
-	skos:changeNote _:bQp3alHKySoAAAFU1FuQzg , _:rBJLTCw1ybMAAAFU1FuQyQ ;
+	skos:changeNote _:vMwODGLrHj0AAAFVtgGgBg , _:2NRiRapfqXYAAAFVtgGgAg ;
 	rdfs:comment """
       This vocabulary defines a set of terms for describing changes to resource descriptions.
       <p>
@@ -28,7 +28,7 @@
 	dc:creator "Sam Tunnicliffe" , <http://iandavis.com/id/me> ;
 	dc:date "2006-03-21" ;
 	vann:example <http://vocab.org/changeset/changesets-example3-20060321.html> , <http://vocab.org/changeset/changesets-example2-20060321.html> , <http://vocab.org/changeset/changesets-example-20060321.html> ;
-	skos:historyNote _:LTWsDgPJz5cAAAFU1FuQzg , _:kzuBnitvOqoAAAFU1FuQzg ;
+	skos:historyNote _:mQkRP5WwCGwAAAFVtgGgBw , _:61F1OqAOAAYAAAFVtgGgBw ;
 	dc:identifier "http://purl.org/vocab/changeset/schema-20060321" ;
 	dc:isVersionOf <http://purl.org/vocab/changeset/schema#> ;
 	dc:issued "2005-12-14" ;

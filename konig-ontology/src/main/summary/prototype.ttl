@@ -292,7 +292,8 @@ xsd:nonPositiveInteger rdfs:label "xsd:nonPositiveInteger" ;
 
 kol:ForeignKeyProperty rdfs:label "kol:ForeignKeyProperty" ;
 	rdfs:subClassOf rdfs:Property ;
-	kol:equivalentObjectProperty owl:ObjectProperty .
+	kol:equivalentObjectProperty owl:ObjectProperty ;
+	kol:keyProperty owl:InverseFunctionalProperty .
 
 owl:NamedIndividual rdfs:label "owl:NamedIndividual" ;
 	rdfs:subClassOf owl:Individual .

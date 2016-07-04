@@ -151,24 +151,24 @@
     },
     "skos:changeNote" : [ {
       "rdfs:label" : {
-        "@value" : "Improved documentation",
-        "@language" : "en",
-        "@type" : "rdf:langString"
-      },
-      "dc:date" : {
-        "@value" : "2006-03-21"
-      },
-      "dc:creator" : {
-        "@id" : "http://iandavis.com/id/me"
-      }
-    }, {
-      "rdfs:label" : {
         "@value" : "Fixed invalid RDF",
         "@language" : "en",
         "@type" : "rdf:langString"
       },
       "dc:date" : {
         "@value" : "2006-06-23"
+      },
+      "dc:creator" : {
+        "@id" : "http://iandavis.com/id/me"
+      }
+    }, {
+      "rdfs:label" : {
+        "@value" : "Improved documentation",
+        "@language" : "en",
+        "@type" : "rdf:langString"
+      },
+      "dc:date" : {
+        "@value" : "2006-03-21"
       },
       "dc:creator" : {
         "@id" : "http://iandavis.com/id/me"
@@ -254,83 +254,6 @@
     },
     "dc:dateCopyrighted" : {
       "@value" : "2015"
-    }
-  }, {
-    "@type" : "owl:Class",
-    "owl:intersectionOf" : {
-      "rdf:first" : {
-        "@type" : "owl:Restriction",
-        "owl:onProperty" : {
-          "@id" : "cs:statement"
-        },
-        "owl:minCardinality" : {
-          "@value" : "1",
-          "@type" : "xsd:nonNegativeInteger"
-        }
-      },
-      "rdf:rest" : {
-        "rdf:first" : {
-          "@type" : "owl:Restriction",
-          "owl:onProperty" : {
-            "@id" : "cs:previousChangeSet"
-          },
-          "owl:maxCardinality" : {
-            "@value" : "1",
-            "@type" : "xsd:nonNegativeInteger"
-          }
-        },
-        "rdf:rest" : {
-          "rdf:first" : {
-            "@type" : "owl:Restriction",
-            "owl:onProperty" : {
-              "@id" : "cs:subjectOfChange"
-            },
-            "owl:maxCardinality" : {
-              "@value" : "1",
-              "@type" : "xsd:nonNegativeInteger"
-            }
-          },
-          "rdf:rest" : {
-            "rdf:first" : {
-              "@type" : "owl:Restriction",
-              "owl:onProperty" : {
-                "@id" : "cs:createdDate"
-              },
-              "owl:maxCardinality" : {
-                "@value" : "1",
-                "@type" : "xsd:nonNegativeInteger"
-              }
-            },
-            "rdf:rest" : {
-              "rdf:first" : {
-                "@type" : "owl:Restriction",
-                "owl:onProperty" : {
-                  "@id" : "cs:creatorName"
-                },
-                "owl:maxCardinality" : {
-                  "@value" : "1",
-                  "@type" : "xsd:nonNegativeInteger"
-                }
-              },
-              "rdf:rest" : {
-                "rdf:first" : {
-                  "@type" : "owl:Restriction",
-                  "owl:onProperty" : {
-                    "@id" : "cs:changeReason"
-                  },
-                  "owl:maxCardinality" : {
-                    "@value" : "1",
-                    "@type" : "xsd:nonNegativeInteger"
-                  }
-                },
-                "rdf:rest" : {
-                  "@id" : "rdf:nil"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   }, {
     "@id" : "owl:AllDifferent",
@@ -572,7 +495,82 @@
       }
     },
     "rdfs:subClassOf" : {
-      "@id" : "_:316hBpWfe4UAAAFVtd46Xg"
+      "@type" : "owl:Class",
+      "owl:intersectionOf" : {
+        "rdf:first" : {
+          "@type" : "owl:Restriction",
+          "owl:onProperty" : {
+            "@id" : "cs:statement"
+          },
+          "owl:minCardinality" : {
+            "@value" : "1",
+            "@type" : "xsd:nonNegativeInteger"
+          }
+        },
+        "rdf:rest" : {
+          "rdf:first" : {
+            "@type" : "owl:Restriction",
+            "owl:onProperty" : {
+              "@id" : "cs:previousChangeSet"
+            },
+            "owl:maxCardinality" : {
+              "@value" : "1",
+              "@type" : "xsd:nonNegativeInteger"
+            }
+          },
+          "rdf:rest" : {
+            "rdf:first" : {
+              "@type" : "owl:Restriction",
+              "owl:onProperty" : {
+                "@id" : "cs:subjectOfChange"
+              },
+              "owl:maxCardinality" : {
+                "@value" : "1",
+                "@type" : "xsd:nonNegativeInteger"
+              }
+            },
+            "rdf:rest" : {
+              "rdf:first" : {
+                "@type" : "owl:Restriction",
+                "owl:onProperty" : {
+                  "@id" : "cs:createdDate"
+                },
+                "owl:maxCardinality" : {
+                  "@value" : "1",
+                  "@type" : "xsd:nonNegativeInteger"
+                }
+              },
+              "rdf:rest" : {
+                "rdf:first" : {
+                  "@type" : "owl:Restriction",
+                  "owl:onProperty" : {
+                    "@id" : "cs:creatorName"
+                  },
+                  "owl:maxCardinality" : {
+                    "@value" : "1",
+                    "@type" : "xsd:nonNegativeInteger"
+                  }
+                },
+                "rdf:rest" : {
+                  "rdf:first" : {
+                    "@type" : "owl:Restriction",
+                    "owl:onProperty" : {
+                      "@id" : "cs:changeReason"
+                    },
+                    "owl:maxCardinality" : {
+                      "@value" : "1",
+                      "@type" : "xsd:nonNegativeInteger"
+                    }
+                  },
+                  "rdf:rest" : {
+                    "@id" : "rdf:nil"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }, {
     "@id" : "owl:Class",
@@ -3575,6 +3573,18 @@
     },
     "rdfs:comment" : {
       "@value" : "The JSON Schema specification corresponding to this Shape"
+    }
+  }, {
+    "@id" : "kol:keyProperty",
+    "@type" : "owl:ObjectProperty",
+    "rdfs:comment" : {
+      "@value" : "\r\n\t\tThe property on the related entity whose value is the same as the value of this ForeignKeyProperty.\r\n\t"
+    },
+    "rdfs:domain" : {
+      "@id" : "kol:ForeignKeyProperty"
+    },
+    "rdfs:range" : {
+      "@id" : "owl:InverseFunctionalProperty"
     }
   }, {
     "@id" : "kol:knownIndividual",

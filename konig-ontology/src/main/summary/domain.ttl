@@ -14,10 +14,12 @@
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-cs:ChangeSet a owl:Class .
+_:QuWBQzd3wtQAAAFVtgGhGA a owl:Class .
 
 owl:Class a owl:Class ;
 	rdfs:subClassOf rdfs:Class .
+
+cs:ChangeSet a owl:Class .
 
 rdf:HTML a owl:Class ;
 	rdfs:subClassOf rdfs:Literal .
@@ -221,8 +223,6 @@ sh:AllObjectsScope a owl:Class ;
 owl:AllDifferent a owl:Class ;
 	rdfs:subClassOf rdfs:Resource .
 
-_:uaCm7AvypkEAAAFVtd479w a owl:Class .
-
 xsd:long a owl:Class ;
 	rdfs:subClassOf xsd:integer .
 
@@ -342,6 +342,10 @@ owl:bottomObjectProperty a owl:ObjectProperty ;
 kol:jsonSchemaRendition a owl:ObjectProperty ;
 	rdfs:domain sh:Shape ;
 	rdfs:range kol:JsonSchemaSpecification .
+
+kol:keyProperty a owl:ObjectProperty ;
+	rdfs:domain kol:ForeignKeyProperty ;
+	rdfs:range owl:InverseFunctionalProperty .
 
 cs:addition a owl:ObjectProperty ;
 	rdfs:domain cs:ChangeSet ;

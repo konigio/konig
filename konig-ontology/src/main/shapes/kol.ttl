@@ -51,7 +51,16 @@ kol:equivalentObjectProperty a owl:ObjectProperty ;
 	""" ;
 	rdfs:domain kol:ForeignKeyProperty ;
 	rdfs:range owl:ObjectProperty
-	. 	
+	.
+	
+kol:keyProperty a owl:ObjectProperty ;
+	rdfs:comment """
+		The property on the related entity whose value is the same as the value of this ForeignKeyProperty.
+	""" ;
+	rdfs:domain kol:ForeignKeyProperty ;
+	rdfs:range 	owl:InverseFunctionalProperty
+	.
+	
 
 kol:uniqueIn	a owl:ObjectProperty ;
 	rdfs:domain rdfs:Datatype ;
