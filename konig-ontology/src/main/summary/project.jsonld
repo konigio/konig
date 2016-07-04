@@ -151,24 +151,24 @@
     },
     "skos:changeNote" : [ {
       "rdfs:label" : {
-        "@value" : "Fixed invalid RDF",
-        "@language" : "en",
-        "@type" : "rdf:langString"
-      },
-      "dc:date" : {
-        "@value" : "2006-06-23"
-      },
-      "dc:creator" : {
-        "@id" : "http://iandavis.com/id/me"
-      }
-    }, {
-      "rdfs:label" : {
         "@value" : "Improved documentation",
         "@language" : "en",
         "@type" : "rdf:langString"
       },
       "dc:date" : {
         "@value" : "2006-03-21"
+      },
+      "dc:creator" : {
+        "@id" : "http://iandavis.com/id/me"
+      }
+    }, {
+      "rdfs:label" : {
+        "@value" : "Fixed invalid RDF",
+        "@language" : "en",
+        "@type" : "rdf:langString"
+      },
+      "dc:date" : {
+        "@value" : "2006-06-23"
       },
       "dc:creator" : {
         "@id" : "http://iandavis.com/id/me"
@@ -256,6 +256,128 @@
       "@value" : "2015"
     }
   }, {
+    "@type" : "owl:Class",
+    "owl:intersectionOf" : {
+      "rdf:first" : {
+        "@type" : "owl:Restriction",
+        "owl:onProperty" : {
+          "@id" : "cs:statement"
+        },
+        "owl:minCardinality" : {
+          "@value" : "1",
+          "@type" : "xsd:nonNegativeInteger"
+        }
+      },
+      "rdf:rest" : {
+        "rdf:first" : {
+          "@type" : "owl:Restriction",
+          "owl:onProperty" : {
+            "@id" : "cs:previousChangeSet"
+          },
+          "owl:maxCardinality" : {
+            "@value" : "1",
+            "@type" : "xsd:nonNegativeInteger"
+          }
+        },
+        "rdf:rest" : {
+          "rdf:first" : {
+            "@type" : "owl:Restriction",
+            "owl:onProperty" : {
+              "@id" : "cs:subjectOfChange"
+            },
+            "owl:maxCardinality" : {
+              "@value" : "1",
+              "@type" : "xsd:nonNegativeInteger"
+            }
+          },
+          "rdf:rest" : {
+            "rdf:first" : {
+              "@type" : "owl:Restriction",
+              "owl:onProperty" : {
+                "@id" : "cs:createdDate"
+              },
+              "owl:maxCardinality" : {
+                "@value" : "1",
+                "@type" : "xsd:nonNegativeInteger"
+              }
+            },
+            "rdf:rest" : {
+              "rdf:first" : {
+                "@type" : "owl:Restriction",
+                "owl:onProperty" : {
+                  "@id" : "cs:creatorName"
+                },
+                "owl:maxCardinality" : {
+                  "@value" : "1",
+                  "@type" : "xsd:nonNegativeInteger"
+                }
+              },
+              "rdf:rest" : {
+                "rdf:first" : {
+                  "@type" : "owl:Restriction",
+                  "owl:onProperty" : {
+                    "@id" : "cs:changeReason"
+                  },
+                  "owl:maxCardinality" : {
+                    "@value" : "1",
+                    "@type" : "xsd:nonNegativeInteger"
+                  }
+                },
+                "rdf:rest" : {
+                  "@id" : "rdf:nil"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }, {
+    "@id" : "owl:AllDifferent",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "AllDifferent"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of collections of pairwise different individuals."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
+    }
+  }, {
+    "@id" : "owl:AllDisjointClasses",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "AllDisjointClasses"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of collections of pairwise disjoint classes."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
+    }
+  }, {
+    "@id" : "owl:AllDisjointProperties",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "AllDisjointProperties"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of collections of pairwise disjoint properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
+    }
+  }, {
     "@id" : "sh:AllObjectsScope",
     "@type" : "owl:Class",
     "rdfs:subClassOf" : {
@@ -294,6 +416,21 @@
       "@value" : "stable"
     }
   }, {
+    "@id" : "rdf:Alt",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdf:"
+    },
+    "rdfs:label" : {
+      "@value" : "Alt"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of containers of alternatives."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Container"
+    }
+  }, {
     "@id" : "sh:AndConstraint",
     "@type" : "owl:Class",
     "rdfs:subClassOf" : {
@@ -313,10 +450,85 @@
       "@value" : "stable"
     }
   }, {
+    "@id" : "owl:Annotation",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "Annotation"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of annotated annotations for which the RDF serialization consists of an annotated subject, predicate and object."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
+    }
+  }, {
+    "@id" : "owl:AnnotationProperty",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "AnnotationProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of annotation properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdf:Property"
+    }
+  }, {
+    "@id" : "owl:AsymmetricProperty",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "AsymmetricProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of asymmetric properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "owl:ObjectProperty"
+    }
+  }, {
     "@id" : "kol:AvroSchemaSpecification",
     "@type" : "owl:Class",
     "rdfs:comment" : {
       "@value" : "A document containing an Avro Schema specification"
+    }
+  }, {
+    "@id" : "owl:Axiom",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "Axiom"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of annotated axioms for which the RDF serialization consists of an annotated subject, predicate and object."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
+    }
+  }, {
+    "@id" : "rdf:Bag",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdf:"
+    },
+    "rdfs:label" : {
+      "@value" : "Bag"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of unordered containers."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Container"
     }
   }, {
     "@id" : "cs:ChangeSet",
@@ -360,82 +572,37 @@
       }
     },
     "rdfs:subClassOf" : {
-      "@type" : "owl:Class",
-      "owl:intersectionOf" : {
-        "rdf:first" : {
-          "@type" : "owl:Restriction",
-          "owl:onProperty" : {
-            "@id" : "cs:statement"
-          },
-          "owl:minCardinality" : {
-            "@value" : "1",
-            "@type" : "xsd:nonNegativeInteger"
-          }
-        },
-        "rdf:rest" : {
-          "rdf:first" : {
-            "@type" : "owl:Restriction",
-            "owl:onProperty" : {
-              "@id" : "cs:previousChangeSet"
-            },
-            "owl:maxCardinality" : {
-              "@value" : "1",
-              "@type" : "xsd:nonNegativeInteger"
-            }
-          },
-          "rdf:rest" : {
-            "rdf:first" : {
-              "@type" : "owl:Restriction",
-              "owl:onProperty" : {
-                "@id" : "cs:subjectOfChange"
-              },
-              "owl:maxCardinality" : {
-                "@value" : "1",
-                "@type" : "xsd:nonNegativeInteger"
-              }
-            },
-            "rdf:rest" : {
-              "rdf:first" : {
-                "@type" : "owl:Restriction",
-                "owl:onProperty" : {
-                  "@id" : "cs:createdDate"
-                },
-                "owl:maxCardinality" : {
-                  "@value" : "1",
-                  "@type" : "xsd:nonNegativeInteger"
-                }
-              },
-              "rdf:rest" : {
-                "rdf:first" : {
-                  "@type" : "owl:Restriction",
-                  "owl:onProperty" : {
-                    "@id" : "cs:creatorName"
-                  },
-                  "owl:maxCardinality" : {
-                    "@value" : "1",
-                    "@type" : "xsd:nonNegativeInteger"
-                  }
-                },
-                "rdf:rest" : {
-                  "rdf:first" : {
-                    "@type" : "owl:Restriction",
-                    "owl:onProperty" : {
-                      "@id" : "cs:changeReason"
-                    },
-                    "owl:maxCardinality" : {
-                      "@value" : "1",
-                      "@type" : "xsd:nonNegativeInteger"
-                    }
-                  },
-                  "rdf:rest" : {
-                    "@id" : "rdf:nil"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+      "@id" : "_:316hBpWfe4UAAAFVtd46Xg"
+    }
+  }, {
+    "@id" : "owl:Class",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "Class"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of OWL classes."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Class"
+    }
+  }, {
+    "@id" : "rdfs:Class",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdfs:"
+    },
+    "rdfs:label" : {
+      "@value" : "Class"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of classes."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
     }
   }, {
     "@id" : "sh:ClosedShapeConstraint",
@@ -473,6 +640,111 @@
       "@value" : "stable"
     }
   }, {
+    "@id" : "rdfs:Container",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdfs:"
+    },
+    "rdfs:label" : {
+      "@value" : "Container"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of RDF containers."
+    }
+  }, {
+    "@id" : "rdfs:ContainerMembershipProperty",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdfs:"
+    },
+    "rdfs:label" : {
+      "@value" : "ContainerMembershipProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of container membership properties, rdf:_1, rdf:_2, ...,\r\n                    all of which are sub-properties of 'member'."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdf:Property"
+    }
+  }, {
+    "@id" : "owl:DataRange",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "DataRange"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of OWL data ranges, which are special kinds of datatypes. Note: The use of the IRI owl:DataRange has been deprecated as of OWL 2. The IRI rdfs:Datatype SHOULD be used instead."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Datatype"
+    }
+  }, {
+    "@id" : "rdfs:Datatype",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdfs:"
+    },
+    "rdfs:label" : {
+      "@value" : "Datatype"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of RDF datatypes."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Class"
+    }
+  }, {
+    "@id" : "owl:DatatypeProperty",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "DatatypeProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of data properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdf:Property"
+    }
+  }, {
+    "@id" : "owl:DeprecatedClass",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "DeprecatedClass"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of deprecated classes."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Class"
+    }
+  }, {
+    "@id" : "owl:DeprecatedProperty",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "DeprecatedProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of deprecated properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdf:Property"
+    }
+  }, {
     "@id" : "sh:EqualConstraint",
     "@type" : "owl:Class",
     "rdfs:subClassOf" : {
@@ -492,14 +764,14 @@
       "@value" : "stable"
     }
   }, {
-    "@id" : "kol:ForeignKey",
-    "@type" : "owl:Class",
+    "@id" : "kol:ForeignKeyProperty",
     "rdfs:subClassOf" : {
-      "@id" : "sh:Constraint"
+      "@id" : "rdfs:Property"
     },
     "rdfs:comment" : {
-      "@value" : "A foreign key constraint on a Shape."
-    }
+      "@value" : "\r\n\t\tA property whose value is a foreign key that uniquely identifies some related entity.\r\n\t\tThat is, the value is identical to the value of some inverse functional property of the \r\n\t\trelated entity.  This style of expressing a relationship is discouraged\r\n\t\tbecause it does not follow linked data principles.  However, it is useful for expressing relationships\r\n\t\tdefined by an RDBMS schema or a REST API that does not adhere to linked data principles.\r\n\t"
+    },
+    "@type" : "owl:Class"
   }, {
     "@id" : "sh:Function",
     "@type" : "owl:Class",
@@ -520,10 +792,67 @@
       "@value" : "unstable"
     }
   }, {
+    "@id" : "owl:FunctionalProperty",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "FunctionalProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of functional properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdf:Property"
+    }
+  }, {
     "@id" : "kol:Graph",
     "@type" : "owl:Class",
     "rdfs:comment" : {
       "@value" : "A set of statements which collectively form a (possibly disconnected) graph."
+    }
+  }, {
+    "@id" : "rdf:HTML",
+    "@type" : [ "owl:Class", "rdfs:Datatype" ],
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Literal"
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdf:"
+    },
+    "rdfs:seeAlso" : {
+      "@id" : "http://www.w3.org/TR/rdf11-concepts/#section-html"
+    },
+    "rdfs:label" : {
+      "@value" : "HTML"
+    },
+    "rdfs:comment" : {
+      "@value" : "The datatype of RDF literals storing fragments of HTML content"
+    }
+  }, {
+    "@id" : "owl:Individual",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:comment" : {
+      "@value" : "The class of all individuals including named and anonymous individuals."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "owl:Thing"
+    }
+  }, {
+    "@id" : "owl:InverseFunctionalProperty",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "InverseFunctionalProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of inverse-functional properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "owl:ObjectProperty"
     }
   }, {
     "@id" : "sh:InversePropertyScope",
@@ -543,6 +872,21 @@
     },
     "vs:term_status" : {
       "@value" : "stable"
+    }
+  }, {
+    "@id" : "owl:IrreflexiveProperty",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "IrreflexiveProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of irreflexive properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "owl:ObjectProperty"
     }
   }, {
     "@id" : "kol:JsonSchemaSpecification",
@@ -589,6 +933,36 @@
       "@value" : "stable"
     }
   }, {
+    "@id" : "rdf:List",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdf:"
+    },
+    "rdfs:label" : {
+      "@value" : "List"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of RDF Lists."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
+    }
+  }, {
+    "@id" : "rdfs:Literal",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdfs:"
+    },
+    "rdfs:label" : {
+      "@value" : "Literal"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of literal values, eg. textual strings and integers."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
+    }
+  }, {
     "@id" : "kol:LogicalShape",
     "@type" : "owl:Class",
     "rdfs:subClassOf" : {
@@ -596,6 +970,36 @@
     },
     "rdfs:comment" : {
       "@value" : "\r\n\t\tA Shape that provides a logical model for the Class identified as the <code>scopeClass</code>.  \r\n\t\tA <code>LogicalShape</code> lists all the known properties of the <code>scopeClass</code>.  \r\n\t\tIt does not prescribe a <code>valueShape</code> for any related entities."
+    }
+  }, {
+    "@id" : "owl:NamedIndividual",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "NamedIndividual"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of named individuals."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "owl:Individual"
+    }
+  }, {
+    "@id" : "owl:NegativePropertyAssertion",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "NegativePropertyAssertion"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of negative property assertions."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
     }
   }, {
     "@id" : "sh:NodeKind",
@@ -667,6 +1071,51 @@
       "@id" : "owl:Thing"
     }
   }, {
+    "@id" : "owl:ObjectProperty",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "ObjectProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of object properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdf:Property"
+    }
+  }, {
+    "@id" : "owl:Ontology",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "Ontology"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of ontologies."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
+    }
+  }, {
+    "@id" : "owl:OntologyProperty",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "OntologyProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of ontology properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdf:Property"
+    }
+  }, {
     "@id" : "sh:OrConstraint",
     "@type" : "owl:Class",
     "rdfs:subClassOf" : {
@@ -684,6 +1133,42 @@
     },
     "vs:term_status" : {
       "@value" : "stable"
+    }
+  }, {
+    "@id" : "rdf:PlainLiteral",
+    "@type" : [ "owl:Class", "rdfs:Datatype" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdf:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Literal"
+    },
+    "rdfs:seeAlso" : {
+      "@id" : "http://www.w3.org/TR/rdf-plain-literal/"
+    },
+    "rdfs:label" : {
+      "@value" : "PlainLiteral"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of plain (i.e. untyped) literal values, as used in RIF and OWL 2"
+    }
+  }, {
+    "@id" : "rdfs:Property",
+    "@type" : "owl:Class"
+  }, {
+    "@id" : "rdf:Property",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdf:"
+    },
+    "rdfs:label" : {
+      "@value" : "Property"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of RDF properties."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
     }
   }, {
     "@id" : "sh:PropertyConstraint",
@@ -724,6 +1209,48 @@
       "@value" : "stable"
     }
   }, {
+    "@id" : "owl:ReflexiveProperty",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "ReflexiveProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of reflexive properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "owl:ObjectProperty"
+    }
+  }, {
+    "@id" : "rdfs:Resource",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdfs:"
+    },
+    "rdfs:label" : {
+      "@value" : "Resource"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class resource, everything."
+    }
+  }, {
+    "@id" : "owl:Restriction",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "Restriction"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of property restrictions."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "owl:Class"
+    }
+  }, {
     "@id" : "sh:Scope",
     "@type" : "owl:Class",
     "rdfs:isDefinedBy" : {
@@ -738,6 +1265,21 @@
     },
     "vs:term_status" : {
       "@value" : "stable"
+    }
+  }, {
+    "@id" : "rdf:Seq",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdf:"
+    },
+    "rdfs:label" : {
+      "@value" : "Seq"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of ordered containers."
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Container"
     }
   }, {
     "@id" : "sh:Severity",
@@ -772,6 +1314,36 @@
       "@value" : "stable"
     }
   }, {
+    "@id" : "rdf:Statement",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdf:"
+    },
+    "rdfs:label" : {
+      "@value" : "Statement"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Resource"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of RDF statements."
+    }
+  }, {
+    "@id" : "owl:SymmetricProperty",
+    "@type" : [ "rdfs:Class", "owl:Class" ],
+    "rdfs:label" : {
+      "@value" : "SymmetricProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of symmetric properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "owl:ObjectProperty"
+    }
+  }, {
     "@id" : "sh:Template",
     "@type" : "owl:Class",
     "rdfs:isDefinedBy" : {
@@ -798,6 +1370,21 @@
     },
     "rdfs:isDefinedBy" : {
       "@id" : "owl:"
+    }
+  }, {
+    "@id" : "owl:TransitiveProperty",
+    "@type" : [ "owl:Class", "rdfs:Class" ],
+    "rdfs:label" : {
+      "@value" : "TransitiveProperty"
+    },
+    "rdfs:comment" : {
+      "@value" : "The class of transitive properties."
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "owl:"
+    },
+    "rdfs:subClassOf" : {
+      "@id" : "owl:ObjectProperty"
     }
   }, {
     "@id" : "sh:ValidationResult",
@@ -937,6 +1524,24 @@
     },
     "rdfs:comment" : {
       "@value" : "The class of signed integers of arbitrary length.\r\n\t\t<p>The value space of <code>xsd:integer</code> includes the set of all the signed integers, with no restriction on range. \r\n\t\tIts lexical space allows any number of insignificant leading zeros.</p>"
+    }
+  }, {
+    "@id" : "rdf:langString",
+    "@type" : [ "owl:Class", "rdfs:Datatype" ],
+    "rdfs:subClassOf" : {
+      "@id" : "rdfs:Literal"
+    },
+    "rdfs:isDefinedBy" : {
+      "@id" : "rdf:"
+    },
+    "rdfs:seeAlso" : {
+      "@id" : "http://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal"
+    },
+    "rdfs:label" : {
+      "@value" : "langString"
+    },
+    "rdfs:comment" : {
+      "@value" : "The datatype of language-tagged string values"
     }
   }, {
     "@id" : "xsd:language",
@@ -2948,28 +3553,16 @@
       "@id" : "owl:Thing"
     }
   }, {
-    "@id" : "kol:equivalentSemanticProperty",
-    "@type" : [ "owl:FunctionalProperty", "owl:ObjectProperty" ],
+    "@id" : "kol:equivalentObjectProperty",
+    "@type" : "owl:ObjectProperty",
+    "rdfs:comment" : {
+      "@value" : "\r\n\t\tA property that expresses the same relationship as this ForeignKeyProperty, but as an ObjectProperty\r\n\t\twhose value is the related entity (as opposed to the value of a unique key that identifies the related entity).\r\n\t"
+    },
     "rdfs:domain" : {
-      "@id" : "kol:ForeignKey"
+      "@id" : "kol:ForeignKeyProperty"
     },
     "rdfs:range" : {
-      "@id" : "rdf:Property"
-    },
-    "rdfs:comment" : {
-      "@value" : "An equivalent semantic property that expresses the same relationship as this foreign key."
-    }
-  }, {
-    "@id" : "kol:foreignKey",
-    "@type" : [ "owl:ObjectProperty", "owl:FunctionalProperty" ],
-    "rdfs:domain" : {
-      "@id" : "kol:ForeignKey"
-    },
-    "rdfs:range" : {
-      "@id" : "rdf:List"
-    },
-    "rdfs:comment" : {
-      "@value" : "\r\n\t\tA property that lists the predicate(s) which form a foreign key.  \r\n\t\tThe value of this property is a List so that composite keys can be supported.  The type of entity\r\n\t\treferenced by the foreign key is given by the <code>kol:referencedClass</code> property.  \r\n\t\tThe corresponding primary key on the referenced class is given by the <code>kol:referencedKey</code>. "
+      "@id" : "owl:ObjectProperty"
     }
   }, {
     "@id" : "kol:jsonSchemaRendition",
@@ -3077,30 +3670,6 @@
     },
     "rdfs:range" : {
       "@id" : "kol:Graph"
-    }
-  }, {
-    "@id" : "kol:referencedClass",
-    "@type" : [ "owl:FunctionalProperty", "owl:ObjectProperty" ],
-    "rdfs:domain" : {
-      "@id" : "kol:ForeignKey"
-    },
-    "rdfs:range" : {
-      "@id" : "rdfs:Class"
-    },
-    "rdfs:comment" : {
-      "@value" : "The type of entity referenced by the foreign key."
-    }
-  }, {
-    "@id" : "kol:referencedKey",
-    "@type" : [ "owl:ObjectProperty", "owl:FunctionalProperty" ],
-    "rdfs:domain" : {
-      "@id" : "kol:ForeignKey"
-    },
-    "rdfs:range" : {
-      "@id" : "rdf:List"
-    },
-    "rdfs:comment" : {
-      "@value" : "\r\n\t\tA property that lists the predicate(s) on the referenced entity corresponding to \r\n\t\tthe foreign keys on the source entity.  The value of this property is a List so that\r\n\t\tcomposite keys can be supported.  The elements of the List are in one-to-one correspondence with\r\n\t\tthe elements of the <code>foreignKey</code> List."
     }
   }, {
     "@id" : "cs:removal",
@@ -3546,108 +4115,6 @@
     },
     "rdfs:comment" : {
       "@value" : "The empty list, with no items in it. If the rest of a list is nil then the list has no more items in it."
-    }
-  }, {
-    "@id" : "rdfs:Literal",
-    "@type" : "rdfs:Class",
-    "rdfs:isDefinedBy" : {
-      "@id" : "rdfs:"
-    },
-    "rdfs:label" : {
-      "@value" : "Literal"
-    },
-    "rdfs:comment" : {
-      "@value" : "The class of literal values, eg. textual strings and integers."
-    },
-    "rdfs:subClassOf" : {
-      "@id" : "rdfs:Resource"
-    }
-  }, {
-    "@id" : "rdfs:Class",
-    "@type" : "rdfs:Class",
-    "rdfs:isDefinedBy" : {
-      "@id" : "rdfs:"
-    },
-    "rdfs:label" : {
-      "@value" : "Class"
-    },
-    "rdfs:comment" : {
-      "@value" : "The class of classes."
-    },
-    "rdfs:subClassOf" : {
-      "@id" : "rdfs:Resource"
-    }
-  }, {
-    "@id" : "rdfs:Resource",
-    "@type" : "rdfs:Class",
-    "rdfs:isDefinedBy" : {
-      "@id" : "rdfs:"
-    },
-    "rdfs:label" : {
-      "@value" : "Resource"
-    },
-    "rdfs:comment" : {
-      "@value" : "The class resource, everything."
-    }
-  }, {
-    "@id" : "rdf:Property",
-    "@type" : "rdfs:Class",
-    "rdfs:isDefinedBy" : {
-      "@id" : "rdf:"
-    },
-    "rdfs:label" : {
-      "@value" : "Property"
-    },
-    "rdfs:comment" : {
-      "@value" : "The class of RDF properties."
-    },
-    "rdfs:subClassOf" : {
-      "@id" : "rdfs:Resource"
-    }
-  }, {
-    "@id" : "rdfs:Datatype",
-    "@type" : "rdfs:Class",
-    "rdfs:isDefinedBy" : {
-      "@id" : "rdfs:"
-    },
-    "rdfs:label" : {
-      "@value" : "Datatype"
-    },
-    "rdfs:comment" : {
-      "@value" : "The class of RDF datatypes."
-    },
-    "rdfs:subClassOf" : {
-      "@id" : "rdfs:Class"
-    }
-  }, {
-    "@id" : "rdf:List",
-    "@type" : "rdfs:Class",
-    "rdfs:isDefinedBy" : {
-      "@id" : "rdf:"
-    },
-    "rdfs:label" : {
-      "@value" : "List"
-    },
-    "rdfs:comment" : {
-      "@value" : "The class of RDF Lists."
-    },
-    "rdfs:subClassOf" : {
-      "@id" : "rdfs:Resource"
-    }
-  }, {
-    "@id" : "rdf:Statement",
-    "@type" : "rdfs:Class",
-    "rdfs:isDefinedBy" : {
-      "@id" : "rdf:"
-    },
-    "rdfs:label" : {
-      "@value" : "Statement"
-    },
-    "rdfs:subClassOf" : {
-      "@id" : "rdfs:Resource"
-    },
-    "rdfs:comment" : {
-      "@value" : "The class of RDF statements."
     }
   } ]
 }

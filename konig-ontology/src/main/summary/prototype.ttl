@@ -27,9 +27,33 @@ cs:ChangeSet rdfs:label "cs:ChangeSet" ;
 	cs:removal rdf:Statement ;
 	cs:statement rdf:Statement .
 
+rdf:HTML rdfs:label "rdf:HTML" ;
+	rdfs:subClassOf rdfs:Literal .
+
+rdfs:Literal rdfs:label "rdfs:Literal" ;
+	rdfs:subClassOf rdfs:Resource .
+
+owl:Class rdfs:label "owl:Class" ;
+	rdfs:subClassOf rdfs:Class .
+
+rdfs:Class rdfs:label "rdfs:Class" ;
+	rdfs:subClassOf rdfs:Resource .
+
+owl:AsymmetricProperty rdfs:label "owl:AsymmetricProperty" ;
+	rdfs:subClassOf owl:ObjectProperty .
+
+owl:ObjectProperty rdfs:label "owl:ObjectProperty" ;
+	rdfs:subClassOf rdf:Property .
+
 sh:ValidationResult rdfs:label "sh:ValidationResult" .
 
 kol:Graph rdfs:label "kol:Graph" .
+
+owl:OntologyProperty rdfs:label "owl:OntologyProperty" ;
+	rdfs:subClassOf rdf:Property .
+
+rdf:Property rdfs:label "rdf:Property" ;
+	rdfs:subClassOf rdfs:Resource .
 
 xsd:unsignedInt rdfs:label "xsd:unsignedInt" ;
 	rdfs:subClassOf xsd:unsignedLong .
@@ -41,6 +65,12 @@ sh:NotEqualConstraint rdfs:label "sh:NotEqualConstraint" ;
 	rdfs:subClassOf sh:Constraint .
 
 sh:Constraint rdfs:label "sh:Constraint" .
+
+rdf:Alt rdfs:label "rdf:Alt" ;
+	rdfs:subClassOf rdfs:Container .
+
+rdfs:Container rdfs:label "rdfs:Container" ;
+	rdfs:subClassOf rdfs:Resource .
 
 owl:Nothing rdfs:label "owl:Nothing" ;
 	rdfs:subClassOf owl:Thing .
@@ -69,7 +99,13 @@ sh:Severity rdfs:label "sh:Severity" .
 sh:OrConstraint rdfs:label "sh:OrConstraint" ;
 	rdfs:subClassOf sh:Constraint .
 
-rdfs:Literal rdfs:label "rdfs:Literal" .
+owl:FunctionalProperty rdfs:label "owl:FunctionalProperty" ;
+	rdfs:subClassOf rdf:Property .
+
+rdfs:Resource rdfs:label "rdfs:Resource" .
+
+owl:NegativePropertyAssertion rdfs:label "owl:NegativePropertyAssertion" ;
+	rdfs:subClassOf rdfs:Resource .
 
 kol:LogicalShape rdfs:label "kol:LogicalShape" ;
 	rdfs:subClassOf sh:Shape .
@@ -77,6 +113,17 @@ kol:LogicalShape rdfs:label "kol:LogicalShape" ;
 sh:Shape rdfs:label "sh:Shape" ;
 	kol:avroSchemaRendition kol:JsonSchemaSpecification ;
 	kol:jsonSchemaRendition kol:JsonSchemaSpecification .
+
+rdf:Bag rdfs:label "rdf:Bag" ;
+	rdfs:subClassOf rdfs:Container .
+
+owl:DatatypeProperty rdfs:label "owl:DatatypeProperty" ;
+	rdfs:subClassOf rdf:Property .
+
+owl:Annotation rdfs:label "owl:Annotation" ;
+	rdfs:subClassOf rdfs:Resource .
+
+rdfs:Property rdfs:label "rdfs:Property" .
 
 sh:Template rdfs:label "sh:Template" .
 
@@ -86,16 +133,20 @@ sh:AndConstraint rdfs:label "sh:AndConstraint" ;
 rdf:List rdfs:label "rdf:List" ;
 	rdfs:subClassOf rdfs:Resource .
 
-rdfs:Resource rdfs:label "rdfs:Resource" .
-
 xsd:integer rdfs:label "xsd:integer" ;
 	rdfs:subClassOf xsd:decimal .
+
+xsd:hexBinary rdfs:label "xsd:hexBinary" ;
+	rdfs:subClassOf rdf:XMLLiteral .
 
 xsd:negativeInteger rdfs:label "xsd:negativeInteger" ;
 	rdfs:subClassOf xsd:integer .
 
-xsd:hexBinary rdfs:label "xsd:hexBinary" ;
-	rdfs:subClassOf rdf:XMLLiteral .
+rdf:langString rdfs:label "rdf:langString" ;
+	rdfs:subClassOf rdfs:Literal .
+
+owl:DeprecatedProperty rdfs:label "owl:DeprecatedProperty" ;
+	rdfs:subClassOf rdf:Property .
 
 sh:AllSubjectsScope rdfs:label "sh:AllSubjectsScope" ;
 	rdfs:subClassOf sh:Scope .
@@ -108,15 +159,33 @@ xsd:decimal rdfs:label "xsd:decimal" ;
 xsd:language rdfs:label "xsd:language" ;
 	rdfs:subClassOf rdf:XMLLiteral .
 
-kol:ForeignKey rdfs:label "kol:ForeignKey" ;
-	rdfs:subClassOf sh:Constraint ;
-	kol:referencedKey rdf:List ;
-	kol:referencedClass rdfs:Class ;
-	kol:foreignKey rdf:List ;
-	kol:equivalentSemanticProperty rdf:Property .
+owl:DataRange rdfs:label "owl:DataRange" ;
+	rdfs:subClassOf rdfs:Datatype .
+
+rdfs:Datatype rdfs:label "rdfs:Datatype" ;
+	rdfs:subClassOf rdfs:Class ;
+	kol:uniqueIn rdfs:Resource .
 
 xsd:positiveInteger rdfs:label "xsd:positiveInteger" ;
 	rdfs:subClassOf xsd:integer .
+
+owl:AllDisjointProperties rdfs:label "owl:AllDisjointProperties" ;
+	rdfs:subClassOf rdfs:Resource .
+
+owl:SymmetricProperty rdfs:label "owl:SymmetricProperty" ;
+	rdfs:subClassOf owl:ObjectProperty .
+
+owl:AnnotationProperty rdfs:label "owl:AnnotationProperty" ;
+	rdfs:subClassOf rdf:Property .
+
+owl:TransitiveProperty rdfs:label "owl:TransitiveProperty" ;
+	rdfs:subClassOf owl:ObjectProperty .
+
+owl:Restriction rdfs:label "owl:Restriction" ;
+	rdfs:subClassOf owl:Class .
+
+owl:DeprecatedClass rdfs:label "owl:DeprecatedClass" ;
+	rdfs:subClassOf rdfs:Class .
 
 xsd:int rdfs:label "xsd:int" ;
 	rdfs:subClassOf xsd:long .
@@ -127,11 +196,11 @@ xsd:float rdfs:label "xsd:float" ;
 xsd:double rdfs:label "xsd:double" ;
 	rdfs:subClassOf xsd:decimal .
 
+owl:ReflexiveProperty rdfs:label "owl:ReflexiveProperty" ;
+	rdfs:subClassOf owl:ObjectProperty .
+
 xsd:base64Binary rdfs:label "xsd:base64Binary" ;
 	rdfs:subClassOf rdf:XMLLiteral .
-
-rdfs:Class rdfs:label "rdfs:Class" ;
-	rdfs:subClassOf rdfs:Resource .
 
 xsd:unsignedShort rdfs:label "xsd:unsignedShort" ;
 	rdfs:subClassOf xsd:unsignedInt .
@@ -139,24 +208,33 @@ xsd:unsignedShort rdfs:label "xsd:unsignedShort" ;
 xsd:dateTime rdfs:label "xsd:dateTime" ;
 	rdfs:subClassOf rdf:XMLLiteral .
 
-sh:PropertyScope rdfs:label "sh:PropertyScope" ;
-	rdfs:subClassOf sh:Scope .
+owl:IrreflexiveProperty rdfs:label "owl:IrreflexiveProperty" ;
+	rdfs:subClassOf owl:ObjectProperty .
+
+rdf:Seq rdfs:label "rdf:Seq" ;
+	rdfs:subClassOf rdfs:Container .
+
+sh:NodeKind rdfs:label "sh:NodeKind" .
 
 sh:ClosedShapeConstraint rdfs:label "sh:ClosedShapeConstraint" ;
 	rdfs:subClassOf sh:Constraint .
 
-sh:NodeKind rdfs:label "sh:NodeKind" .
+sh:PropertyScope rdfs:label "sh:PropertyScope" ;
+	rdfs:subClassOf sh:Scope .
 
 xsd:dayTimeDuration rdfs:label "xsd:dayTimeDuration" ;
 	rdfs:subClassOf rdf:XMLLiteral .
 
-sh:AllObjectsScope rdfs:label "sh:AllObjectsScope" ;
-	rdfs:subClassOf sh:Scope .
+rdf:PlainLiteral rdfs:label "rdf:PlainLiteral" ;
+	rdfs:subClassOf rdfs:Literal .
 
 sh:LessThanConstraint rdfs:label "sh:LessThanConstraint" ;
 	rdfs:subClassOf sh:Constraint .
 
-rdf:Property rdfs:label "rdf:Property" ;
+sh:AllObjectsScope rdfs:label "sh:AllObjectsScope" ;
+	rdfs:subClassOf sh:Scope .
+
+owl:AllDifferent rdfs:label "owl:AllDifferent" ;
 	rdfs:subClassOf rdfs:Resource .
 
 xsd:long rdfs:label "xsd:long" ;
@@ -165,13 +243,11 @@ xsd:long rdfs:label "xsd:long" ;
 sh:InversePropertyScope rdfs:label "sh:InversePropertyScope" ;
 	rdfs:subClassOf sh:Scope .
 
-owl:Individual rdfs:label "owl:Individual" .
+owl:Individual rdfs:label "owl:Individual" ;
+	rdfs:subClassOf owl:Thing .
 
-xsd:string rdfs:label "xsd:string" ;
-	rdfs:subClassOf rdf:XMLLiteral .
-
-sh:EqualConstraint rdfs:label "sh:EqualConstraint" ;
-	rdfs:subClassOf sh:Constraint .
+owl:AllDisjointClasses rdfs:label "owl:AllDisjointClasses" ;
+	rdfs:subClassOf rdfs:Resource .
 
 sh:PropertyConstraint rdfs:label "sh:PropertyConstraint" ;
 	rdfs:subClassOf sh:Constraint ;
@@ -179,16 +255,31 @@ sh:PropertyConstraint rdfs:label "sh:PropertyConstraint" ;
 	kol:knownIndividual owl:NamedIndividual ;
 	kol:valueUniqueIn rdfs:Resource .
 
+sh:EqualConstraint rdfs:label "sh:EqualConstraint" ;
+	rdfs:subClassOf sh:Constraint .
+
+xsd:string rdfs:label "xsd:string" ;
+	rdfs:subClassOf rdf:XMLLiteral .
+
+owl:Ontology rdfs:label "owl:Ontology" ;
+	rdfs:subClassOf rdfs:Resource .
+
 rdf:Statement rdfs:label "rdf:Statement" ;
 	rdfs:subClassOf rdfs:Resource .
+
+owl:InverseFunctionalProperty rdfs:label "owl:InverseFunctionalProperty" ;
+	rdfs:subClassOf owl:ObjectProperty .
+
+kol:AvroSchemaSpecification rdfs:label "kol:AvroSchemaSpecification" .
 
 xsd:unsignedByte rdfs:label "xsd:unsignedByte" ;
 	rdfs:subClassOf xsd:unsignedShort .
 
-kol:AvroSchemaSpecification rdfs:label "kol:AvroSchemaSpecification" .
-
 xsd:boolean rdfs:label "xsd:boolean" ;
 	rdfs:subClassOf rdf:XMLLiteral .
+
+owl:Axiom rdfs:label "owl:Axiom" ;
+	rdfs:subClassOf rdfs:Resource .
 
 sh:Function rdfs:label "sh:Function" ;
 	rdfs:subClassOf sh:Constraint .
@@ -199,6 +290,10 @@ sh:NotConstraint rdfs:label "sh:NotConstraint" ;
 xsd:nonPositiveInteger rdfs:label "xsd:nonPositiveInteger" ;
 	rdfs:subClassOf xsd:integer .
 
+kol:ForeignKeyProperty rdfs:label "kol:ForeignKeyProperty" ;
+	rdfs:subClassOf rdfs:Property ;
+	kol:equivalentObjectProperty owl:ObjectProperty .
+
 owl:NamedIndividual rdfs:label "owl:NamedIndividual" ;
 	rdfs:subClassOf owl:Individual .
 
@@ -207,6 +302,5 @@ kol:JsonSchemaSpecification rdfs:label "kol:JsonSchemaSpecification" .
 sh:LessThanOrEqualConstraint rdfs:label "sh:LessThanOrEqualConstraint" ;
 	rdfs:subClassOf sh:Constraint .
 
-rdfs:Datatype rdfs:label "rdfs:Datatype" ;
-	rdfs:subClassOf rdfs:Class ;
-	kol:uniqueIn rdfs:Resource .
+rdfs:ContainerMembershipProperty rdfs:label "rdfs:ContainerMembershipProperty" ;
+	rdfs:subClassOf rdf:Property .

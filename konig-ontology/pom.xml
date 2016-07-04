@@ -6,7 +6,7 @@
   <name>Konig Ontology</name>
   
   <properties>
-  	<konig.version>1.0.7-SNAPSHOT</konig.version>
+  	<konig.version>1.7.3</konig.version>
   </properties>
   
   <build>

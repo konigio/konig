@@ -33,9 +33,25 @@ kol:LogicalShape a owl:Class ;
 		It does not prescribe a <code>valueShape</code> for any related entities."""
 	.
 	
-kol:ForeignKey a owl:Class ;
-	rdfs:subClassOf sh:Constraint ;
-	rdfs:comment "A foreign key constraint on a Shape." .
+kol:ForeignKeyProperty 
+	rdfs:subClassOf rdfs:Property ;
+	rdfs:comment """
+		A property whose value is a foreign key that uniquely identifies some related entity.
+		That is, the value is identical to the value of some inverse functional property of the 
+		related entity.  This style of expressing a relationship is discouraged
+		because it does not follow linked data principles.  However, it is useful for expressing relationships
+		defined by an RDBMS schema or a REST API that does not adhere to linked data principles.
+	"""
+	.
+	
+kol:equivalentObjectProperty a owl:ObjectProperty ;
+	rdfs:comment """
+		A property that expresses the same relationship as this ForeignKeyProperty, but as an ObjectProperty
+		whose value is the related entity (as opposed to the value of a unique key that identifies the related entity).
+	""" ;
+	rdfs:domain kol:ForeignKeyProperty ;
+	rdfs:range owl:ObjectProperty
+	. 	
 
 kol:uniqueIn	a owl:ObjectProperty ;
 	rdfs:domain rdfs:Datatype ;
@@ -58,35 +74,8 @@ kol:columnName a owl:DatatypeProperty ;
 	rdfs:domain sh:PropertyConstraint ;
 	rdfs:range xsd:string ;
 	rdfs:comment "The preferred name for an RDBMS column that contains values of the <code>predicate</code>" .
-	
-kol:foreignKey a owl:ObjectProperty, owl:FunctionalProperty ;
-	rdfs:domain kol:ForeignKey ;
-	rdfs:range rdf:List ;
-	rdfs:comment """
-		A property that lists the predicate(s) which form a foreign key.  
-		The value of this property is a List so that composite keys can be supported.  The type of entity
-		referenced by the foreign key is given by the <code>kol:referencedClass</code> property.  
-		The corresponding primary key on the referenced class is given by the <code>kol:referencedKey</code>. """ .	
 		
-kol:referencedClass a owl:ObjectProperty, owl:FunctionalProperty ;
-	rdfs:domain kol:ForeignKey ;
-	rdfs:range rdfs:Class ;
-	rdfs:comment "The type of entity referenced by the foreign key." .
-	
-kol:referencedKey a owl:ObjectProperty, owl:FunctionalProperty ;
-	rdfs:domain kol:ForeignKey ;
-	rdfs:range rdf:List ;
-	rdfs:comment """
-		A property that lists the predicate(s) on the referenced entity corresponding to 
-		the foreign keys on the source entity.  The value of this property is a List so that
-		composite keys can be supported.  The elements of the List are in one-to-one correspondence with
-		the elements of the <code>foreignKey</code> List.""" .
-		
-kol:equivalentSemanticProperty a owl:ObjectProperty, owl:FunctionalProperty ;
-	rdfs:domain kol:ForeignKey ;
-	rdfs:range rdf:Property ;
-	rdfs:comment "An equivalent semantic property that expresses the same relationship as this foreign key." .
-	
+
 kol:propertyOf a owl:ObjectProperty ;
 	rdfs:domain sh:PropertyConstraint ;
 	rdfs:range sh:Shape ;
