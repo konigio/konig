@@ -1,11 +1,12 @@
 # Konig Schema Generator
 
-The Konig Schema Generator takes [SHACL](https://www.w3.org/TR/shacl/) and 
+The Konig Schema Generator takes [SHACL](https://www.w3.org/TR/shacl/) and
 [OWL](https://en.wikipedia.org/wiki/Web_Ontology_Language) statements as input, and it
 produces various schemas as output, including:
 
 * [JSON Schema](http://spacetelescope.github.io/understanding-json-schema/)
 * [Avro Schema](https://avro.apache.org/docs/1.8.0/spec.html)
+* [Google BigQuery Table Definition](https://cloud.google.com/bigquery/docs/reference/v2/tables)
 
 The generator also produces a JSON-LD context for each addressable data shape.
 
@@ -15,7 +16,7 @@ The generator has been implemented as a Maven plugin.  To use it, you must first
 
 To use the schema generator, add a maven plugin to your project as shown below.
 
-```
+```xml
 <project>
   ...
   <build>
@@ -25,9 +26,11 @@ To use the schema generator, add a maven plugin to your project as shown below.
 	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
 	  		<version>1.0.2</version>
 	  		<configuration>
-	  			<avroDir>${basedir}/src/main/resources/avro</avroDir>
-	  			<jsonldDir>${basedir}/src/main/resources/jsonld</jsonldDir>
-	  			<jsonSchemaDir>${basedir}/src/main/resources/jsonschema</jsonSchemaDir>
+	  			<avroDir>${basedir}/src/main/avro</avroDir>
+	  			<jsonldDir>${basedir}/src/main/jsonld</jsonldDir>
+	  			<jsonSchemaDir>${basedir}/src/main/jsonschema</jsonSchemaDir>
+          <bqSourceDir>${basedir}/src/main/bq-config</bqSourceDir>
+          <bqOutDir>${basedir}/src/main/bigquery</bqOutDir>
 	  		</configuration>
 	  		<executions>
 	  			<execution>
@@ -60,10 +63,13 @@ To run the generator, simply invoke the following command in your project's base
 | jsonSchemaDir   | The output directory that will contain the generated JSON Schema files<br>Default: `${basedir}/target/generated/jsonschema` |
 | jsonldDir       | The output directory that will contain the generated JSON-LD context files<br>Default: `${basedir}/target/generated/jsonld`  |
 | summaryDir      | The output directory that contains summary information about the semantic model<br>Default: `${basedir}/target/generated/summary` |
+| bqSourceDir     | The source directory that contains BigQuery configuration details. See [BigQuery Configiguration](#bq-config)  |
+| bqOutDir        | The output directory where generated BigQuery table definitions will be stored |
+| bqShapeBaseURL  | The base URL for tables created for a given OWL class (as opposed to tables based on a specific shape) |
 
 ## Naming Conventions
 
-The generator utilizes a set of rigid naming conventions.  In the future, we hope to support pluggable, 
+The generator utilizes a set of rigid naming conventions.  In the future, we hope to support pluggable,
 user-defined naming conventions.  But for now the naming conventions are fixed.
 
 SHACL data shapes must have names of the form
@@ -88,7 +94,7 @@ each data format.  The base name for the media types has the form:
    vnd.{your-domain-name}.{version}.{namespace-prefix}.{local-class-name}
 ```
 
-You add a suffix to get the name of a vendor specific media 
+You add a suffix to get the name of a vendor specific media
 type for the data shape in a particular format.
 
 For the example given above, you would have the following media types:
@@ -102,9 +108,9 @@ For the example given above, you would have the following media types:
 
 ### JSON-LD Context and JSON Schema URLs
 
-The URL for the associated JSON-LD context and JSON Schema is formed by appending a suffix to 
+The URL for the associated JSON-LD context and JSON Schema is formed by appending a suffix to
 the URL for the data shape.
- 
+
 Continuing with our example, you would have the following artifacts:
 
 | Artifact        | URL                                                       |
@@ -147,6 +153,68 @@ Thus, for each namespace, you should have statements like the following:
 		rdfs:label "Konig Change Set Vocabulary" ;
 		rdfs:comment "A vocabulary for describing the differences between two graphs of data" .
 ```
+## <a name="bg-config"></a>BigQuery Configuration
+If you want to generate Google BigQuery Table definitions you must define the,
+`bqShapeBaseURL` property, and you must provide a bit of configuration.
+
+The configuration information is typically stored in a single file, but you can
+distribute the information across multiple files.  By default, the Konig maven
+plugin will search recursively under `${sourceDir}` for BigQuery configuration files.
+If you want to put the configuration files in a different directory you must set
+the `bqSourceDir` property.
+
+Here's an example of a BigQuery configuration file, expressed in Turtle syntax:
+
+```
+@prefix gcp: <http://www.konig.io/ns/gcp/>.
+
+[] a gcp:GoogleCloudProject ;
+	gcp:projectId "example-dw" ;
+	gcp:dataset [
+		gcp:datasetId "directory" ;
+		gcp:table [
+			gcp:tableId "Person" ;
+			gcp:description "Stores records about individual Person entities" ;
+			gcp:tableShape <http://example.com/shapes/v1/schema/Person>
+		],[
+			gcp:tableId "Organization" ;
+			gcp:description """
+        Stores records about organizations such as schools, NGOs,
+        corporations, clubs, etc.
+      """ ;
+			gcp:tableClass <http://schema.org/Organization>
+		]
+	]
+	.
+```
+
+In a nutshell, the configuration file defines a Google Cloud Platform Project.
+Each project contains one or more Datasets.  Each Dataset contains one or more
+tables.  After loading the configuration file, the maven plugin will search for
+resources of type `gcp:GoogleCloudProject` and will drill down to discover
+the encapsulated datasets and tables.
+
+The properties in a configuration file are listed below:
+
+| Property        | Description                                                |
+|-----------------|------------------------------------------------------------|
+| projectId       | The identifier for the GCP project |
+| dataset         | A Dataset contained within the specified project |
+| datasetId       | The identifier for the GCP Dataset |
+| description     | A description of the specified entity (Project, Dataset or Table) |
+| tableShape      | The SHACL Shape used to generate the table definition |
+| tableClass      | The OWL class for which a table definition will be generated |
+
+For a given table, either `tableShape` or `tableClass` must be defined.
+If `tableShape` is defined, the Maven plugin will generate a BigQuery table
+definition based on that particular shape.  If `tableClass` is
+defined, the Maven plugin will first generate a new Shape that merges the
+PropertyConstraints from all shapes that list the `tableClass` or a class derived
+from `tableClass` as the `scopeClass`.  The plugin will then generate a table
+definition based on the merged shape.  The IRI of the merged shape will be created
+by appending the local name of the `tableClass` to the URL given by the
+`bqShapeBaseURL` property.
+
 
 ## Limitations
 
@@ -156,8 +224,3 @@ The generator is subject to the following limitations:
 * Generic constraints such as `sh:not`, `sh:or`, `sh:and`, etc. are not supported.
 
 We hope to remove these limitations in the future.  
-
-
-
-
-
