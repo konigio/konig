@@ -63,7 +63,7 @@ To run the generator, simply invoke the following command in your project's base
 | jsonSchemaDir   | The output directory that will contain the generated JSON Schema files<br>Default: `${basedir}/target/generated/jsonschema` |
 | jsonldDir       | The output directory that will contain the generated JSON-LD context files<br>Default: `${basedir}/target/generated/jsonld`  |
 | summaryDir      | The output directory that contains summary information about the semantic model<br>Default: `${basedir}/target/generated/summary` |
-| bqSourceDir     | The source directory that contains BigQuery configuration details. See [BigQuery Configiguration](#bq-config)  |
+| bqSourceDir     | The source directory that contains BigQuery configuration details. See [BigQuery Configuration](#bq-config)  |
 | bqOutDir        | The output directory where generated BigQuery table definitions will be stored |
 | bqShapeBaseURL  | The base URL for tables created for a given OWL class (as opposed to tables based on a specific shape) |
 
@@ -154,11 +154,11 @@ Thus, for each namespace, you should have statements like the following:
 		rdfs:comment "A vocabulary for describing the differences between two graphs of data" .
 ```
 ## <a name="bg-config"></a>BigQuery Configuration
-If you want to generate Google BigQuery Table definitions you must define the,
+If you want to generate Google BigQuery Table definitions you must define the
 `bqShapeBaseURL` property, and you must provide a bit of configuration.
 
 The configuration information is typically stored in a single file, but you can
-distribute the information across multiple files.  By default, the Konig maven
+distribute the information across multiple files if you prefer.  By default, the Konig maven
 plugin will search recursively under `${sourceDir}` for BigQuery configuration files.
 If you want to put the configuration files in a different directory you must set
 the `bqSourceDir` property.
