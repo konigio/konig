@@ -146,12 +146,14 @@ public class RdfUtil {
 	
 	private static void loadTurtle(File sourceDir, RDFParser parser) throws IOException, RDFParseException, RDFHandlerException {
 		File[] array = sourceDir.listFiles();
-		for (File file : array) {
-			if (file.isDirectory()) {
-				loadTurtle(file, parser);
-			} else if (file.getName().endsWith(".ttl")){
-				FileInputStream input = new FileInputStream(file);
-				parser.parse(input, "");
+		if (array != null) {
+			for (File file : array) {
+				if (file.isDirectory()) {
+					loadTurtle(file, parser);
+				} else if (file.getName().endsWith(".ttl")){
+					FileInputStream input = new FileInputStream(file);
+					parser.parse(input, "");
+				}
 			}
 		}
 		
