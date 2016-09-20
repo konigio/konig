@@ -44,10 +44,8 @@ Right click the newly created tag and choose `Push tag...`
 
 ## Deploy to Maven Central
 
-In shell (e.g. Git Bash on Windows)
-
 ```
-	./deploy.sh
+	mvn clean deploy -DperformRelease=true
 ```
 
 
