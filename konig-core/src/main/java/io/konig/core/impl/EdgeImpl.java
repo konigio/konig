@@ -1,5 +1,8 @@
 package io.konig.core.impl;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+
 /*
  * #%L
  * konig-core
@@ -30,9 +33,31 @@ import io.konig.core.Edge;
 
 public class EdgeImpl extends StatementImpl implements Edge  {
 	private static final long serialVersionUID = 1L;
+	
+	private HashMap<URI,Value> properties;
 	public EdgeImpl(Resource subject, URI predicate, Value object) {
 		super(subject, predicate, object);
 	}
+	
+	public EdgeImpl(Edge other) {
+		super(other.getSubject(), other.getPredicate(), other.getObject());
+	}
+	
+	@Override
+	public Value getProperty(URI predicate) {
+		return properties==null ? null : properties.get(predicate);
+	}
+	@Override
+	public void setProperty(URI predicate, Value value) {
+		if (properties == null) {
+			properties = new LinkedHashMap<>();
+		}
+		properties.put(predicate, value);
+		
+	}
 
-
+	@Override
+	public Value removeProperty(URI predicate) {
+		return properties==null ? null : properties.remove(predicate);
+	}
 }

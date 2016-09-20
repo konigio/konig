@@ -4,7 +4,7 @@ package io.konig.core.impl;
  * #%L
  * konig-core
  * %%
- * Copyright (C) 2015 Gregory McFall
+ * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,117 +21,37 @@ package io.konig.core.impl;
  */
 
 
-import org.openrdf.model.Resource;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import io.konig.core.ChangeSet;
-import io.konig.core.Graph;
-import io.konig.core.Vertex;
-import io.konig.core.vocab.KCS;
+import io.konig.core.Trail;
 
 public class ChangeSetImpl implements ChangeSet {
-	private Vertex self;
-	private Graph main;
-	private Vertex reference;
-	private Vertex add;
-	private Vertex remove;
-	private Vertex source;
-	private Vertex target;
+	
+	private Set<Trail> additions = new LinkedHashSet<>();
+	private Set<Trail> removals = new LinkedHashSet<>();
 
-	public ChangeSetImpl(Graph main) {
-		this.main = main;
-		self = main.vertex();
+	@Override
+	public void add(Trail addition) {
+		additions.add(addition);
+	}
+
+	@Override
+	public void remove(Trail removal) {
+		removals.add(removal);
+	}
+
+	@Override
+	public Set<Trail> getAdditions() {
+		return additions;
+	}
+
+	@Override
+	public Set<Trail> getRemovals() {
+		return removals;
 	}
 	
-	public ChangeSetImpl(Vertex v) {
-		self = v;
-		main = v.getGraph();
-	}
 	
-	public ChangeSetImpl(Resource id) {
-		main = new MemoryGraph();
-		self = main.vertex(id);
-	}
-
-	@Override
-	public Vertex asVertex() {
-		return self;
-	}
-
-	@Override
-	public Resource getId() {
-		return self.getId();
-	}
-
-	@Override
-	public Vertex assertPriorState() {
-		if (reference == null) {
-			reference = main.vertex();
-			reference.assertNamedGraph();
-			main.edge(getId(), KCS.reference, reference.getId());
-		}
-		return reference;
-	}
-
-	@Override
-	public Vertex assertAddition() {
-		if (add == null) {
-			add = main.vertex();
-			add.assertNamedGraph();
-			main.edge(getId(), KCS.add, add.getId());
-		}
-		return add;
-	}
-
-	@Override
-	public Vertex assertRemoval() {
-		if (remove == null) {
-			remove = main.vertex();
-			remove.assertNamedGraph();
-			main.edge(getId(), KCS.remove, remove.getId());
-		}
-		return remove;
-	}
-
-	@Override
-	public Vertex getReference() {
-		if (reference == null) {
-			reference = self.asTraversal().firstVertex(KCS.reference);
-		}
-		return reference;
-	}
-
-	@Override
-	public Vertex getAddition() {
-		if (add == null) {
-			add = self.asTraversal().firstVertex(KCS.add);
-		}
-		return add;
-	}
-
-	@Override
-	public Vertex getRemoval() {
-		if (remove == null) {
-			remove = self.asTraversal().firstVertex(KCS.remove);
-		}
-		return remove;
-	}
-
-	@Override
-	public Vertex getSource() {
-		if (source == null) {
-			source = self.asTraversal().firstVertex(KCS.source);
-		}
-		return source;
-	}
-
-	@Override
-	public Vertex getTarget() {
-		if (target == null) {
-			target = self.asTraversal().firstVertex(KCS.target);
-		}
-		return target;
-	}
-
-
 
 }

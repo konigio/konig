@@ -33,5 +33,8 @@ public class KOL {
 	public static final URI jsonSchemaRendition = new URIImpl("http://www.konig.io/ns/kol/jsonSchemaRendition");
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/kol/avroSchemaRendition");
 	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/kol/PreferredClass");
+	public static final URI localKey = new URIImpl("http://www.konig.io/ns/kol/localKey");
+
+	public static final URI equivalentRelationalShape = new URIImpl("http://www.konig.io/ns/kol/equivalentRelationalShape");
 	
 }

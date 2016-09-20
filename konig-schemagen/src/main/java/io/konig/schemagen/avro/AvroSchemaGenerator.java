@@ -254,7 +254,7 @@ public class AvroSchemaGenerator extends Generator {
 
 	private void writeType(String recordName, Vertex propertyVertex, PropertyConstraint property, JsonGenerator json) throws IOException {
 		
-		List<String> enumList = null;
+		Set<String> enumList = null;
 
 		NodeKind nodeKind = property.getNodeKind();
 		URI datatype = property.getDatatype();
@@ -289,7 +289,27 @@ public class AvroSchemaGenerator extends Generator {
 			json.writeEndObject();
 		} else if (nodeKind == NodeKind.IRI) {
 			json.writeString("string");
+			
+		} else if (RDF.LANGSTRING.equals(datatype)) {
+			
+			json.writeStartObject();
+			json.writeStringField("type", "record");
+			json.writeFieldName("fields");
+			json.writeStartArray();
+			json.writeStartObject();
+			json.writeStringField("name", "@value");
+			json.writeStringField("type", "string");
+			json.writeEndObject();
+			json.writeStartObject();
+			json.writeStringField("name", "@language");
+			json.writeStringField("type", "string");
+			json.writeEndObject();
+			json.writeEndArray();
+			json.writeEndObject();
+			
 		} else if (datatype != null) {
+		
+			
 			AvroDatatype avroDatatype = datatypeMapper.toAvroDatatype(datatype);
 			
 			if (avroDatatype == null) {

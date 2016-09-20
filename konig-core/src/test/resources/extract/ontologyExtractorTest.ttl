@@ -1,0 +1,62 @@
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:	 <http://www.w3.org/2001/XMLSchema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+
+<http://schema.org/> a owl:Ontology ;
+  vann:preferredNamespacePrefix "schema" ;
+  rdfs:label "Schema.org" ;
+  rdfs:comment """
+  	A vocabulary developed by Google, Microsoft, Yahoo and others through a community 
+  	process to promote structured data on the Internet, on web pages, in email messages, and beyond.
+  """
+  .
+  
+skos: a owl:Ontology ;
+  vann:preferredNamespacePrefix "skos" ;
+  rdfs:label "W3C Simple Knowledge Organization System" ;
+  rdfs:comment """
+  	Provides a model for expressing the basic structure and content of concept schemes 
+  	such as thesauri, classification schemes, subject heading lists, taxonomies, 
+  	folksonomies, and other similar types of controlled vocabulary. 
+  """
+  .  
+  
+schema:Person a owl:Class ;
+	rdfs:label "Person" ;
+	rdfs:comment "A person (alive, dead, undead, or fictional)" 
+	.
+	
+skos:Concept a owl:Class ;
+	rdfs:label "Concept" ;
+	rdfs:comment """
+		A SKOS concept can be viewed as an idea or notion; a unit of thought. 
+		However, what constitutes a unit of thought is subjective, and this 
+		definition is meant to be suggestive, rather than restrictive.
+	"""
+	.
+	
+schema:Organization a owl:Class ;
+	rdfs:label "Organization" ;
+	rdfs:comment "An organization such as a school, NGO, corporation, club, etc."
+	.
+	
+schema:givenName a owl:DatatypeProperty ;
+	rdfs:domain schema:Person ;
+	rdfs:range xsd:string
+	.	
+	
+schema:Male a schema:GenderType, owl:NamedIndividual	;
+	rdfs:label "Male" ;
+	rdfs:comment "The male gender"
+	.
+	
+schema:Female a schema:GenderType, owl:NamedIndividual ;
+	rdfs:label "Female" ;
+	rdfs:comment "The female gender"
+	.	

@@ -3,7 +3,7 @@
   <parent>
     <groupId>io.konig</groupId>
     <artifactId>konig-parent</artifactId>
-    <version>1.7.3</version>
+    <version>1.7.5</version>
     <relativePath>../konig-parent/pom.xml</relativePath>
   </parent>
   <groupId>io.konig</groupId>
@@ -16,6 +16,11 @@
   	<dependency>
   		<groupId>io.konig</groupId>
   		<artifactId>konig-shacl</artifactId>
+			<version>${konig.version}</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-spreadsheet</artifactId>
 			<version>${konig.version}</version>
   	</dependency>
   	<dependency>

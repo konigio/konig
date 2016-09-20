@@ -10,6 +10,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -220,8 +221,9 @@ public class JavaClassBuilder {
 		
 		URI datatype = p.getDatatype();
 		Resource owlClass = p.getValueClass();
-		
-		if (datatype != null) {
+		if (RDF.LANGSTRING.equals(datatype)) {
+			// TODO: implement rdf:langString value
+		} else if (datatype != null) {
 			createDatatypeField(model, p, dc);
 		} else if (owlClass instanceof URI) {
 			createObjectField(model, p, dc);

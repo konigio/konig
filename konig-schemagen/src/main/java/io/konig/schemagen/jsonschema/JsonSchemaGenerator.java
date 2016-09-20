@@ -1,11 +1,12 @@
 package io.konig.schemagen.jsonschema;
 
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -75,7 +76,7 @@ public class JsonSchemaGenerator extends Generator {
 			List<PropertyConstraint> list = shape.getProperty();
 			if (list != null && !list.isEmpty()) {
 				ObjectNode properties = mapper.createObjectNode();
-				json.put("properties", properties);
+				json.set("properties", properties);
 				for (PropertyConstraint constraint : list) {
 					
 					if (shapeTransformer != null) {
@@ -99,7 +100,7 @@ public class JsonSchemaGenerator extends Generator {
 			Integer maxCount = property.getMaxCount();
 			
 			ObjectNode field = mapper.createObjectNode();
-			properties.put(fieldName, field);
+			properties.set(fieldName, field);
 			
 			String doc = documentation(property);
 			if (doc != null) {
@@ -108,7 +109,7 @@ public class JsonSchemaGenerator extends Generator {
 			
 			if (maxCount==null || maxCount>1) {
 				field.put("type", "array");
-				field.put("items", createType(fieldName, property, null));
+				field.set("items", createType(fieldName, property, null));
 			
 			} else {
 				createType(fieldName, property, field);
@@ -126,7 +127,7 @@ public class JsonSchemaGenerator extends Generator {
 			URI datatype = property.getDatatype();
 			Resource valueShapeId = property.getValueShapeId();
 			
-			List<String> enumList = null;
+			Set<String> enumList = null;
 			
 			
 			if (valueShapeId == null) {
@@ -137,19 +138,41 @@ public class JsonSchemaGenerator extends Generator {
 			if (strictValue != null) {
 				object.put("type", "string");
 				ArrayNode array = mapper.createArrayNode();
-				object.put("enum", array);
+				object.set("enum", array);
 				array.add(strictValue);
 				
 			} else if (enumList != null) {
 				object.put("type", "string");
 				ArrayNode array = mapper.createArrayNode();
-				object.put("enum", array);
+				object.set("enum", array);
 				for (String value : enumList) {
 					array.add(value);
 				}
 			} else if (nodeKind == NodeKind.IRI) {
 				object.put("type", "string");
 				object.put("format", "uri");
+				
+			} else if (RDF.LANGSTRING.equals(datatype)) {
+				
+				object.put("type", "object");
+				ObjectNode properties = mapper.createObjectNode();
+				object.set("properties", properties);
+				
+				ObjectNode value = mapper.createObjectNode();
+				properties.set("@value", value);
+				value.put("type", "string");
+				
+				ObjectNode language = mapper.createObjectNode();
+				properties.set("@language", language);
+				
+				language.put("type", "string");
+				
+				ArrayNode array = mapper.createArrayNode();
+				object.set("required", array);
+				
+				array.add("@value");
+				array.add("@language");
+				
 				
 			} else if (datatype != null) {
 				JsonSchemaDatatype jsonType = typeMapper.type(property);

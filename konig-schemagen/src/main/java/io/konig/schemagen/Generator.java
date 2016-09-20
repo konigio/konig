@@ -3,6 +3,7 @@ package io.konig.schemagen;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -155,11 +156,11 @@ public class Generator {
 		return result;
 	}
 
-	protected List<String> enumList(PropertyConstraint property) {
+	protected Set<String> enumList(PropertyConstraint property) {
 		
 		List<Value> valueList = property.getAllowedValues();
 		if (valueList != null && !valueList.isEmpty()) {
-			List<String> result = new ArrayList<>();
+			Set<String> result = new HashSet<>();
 			for (Value value : valueList) {
 				if (value instanceof URI) {
 					URI uri = (URI) value;

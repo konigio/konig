@@ -28,4 +28,5 @@ public class OwlVocab {
 
 	public static final URI onDatatype = new URIImpl("http://www.w3.org/2002/07/owl#onDatatype");
 	public static final URI withRestrictions = new URIImpl("http://www.w3.org/2002/07/owl#withRestrictions");
+	public static final URI NamedIndividual = new URIImpl("http://www.w3.org/2002/07/owl#NamedIndividual");
 }

@@ -22,7 +22,25 @@ package io.konig.core;
 
 
 import org.openrdf.model.Statement;
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 
-public interface Edge extends Statement {
+public interface Edge extends Statement, Cloneable {
+
+	/**
+	 * Get a property of this edge.
+	 * @param predicate The predicate that identifies the property whose value is to be returned.
+	 * @return The value of the specified property
+	 */
+	Value getProperty(URI predicate);
+	
+	/**
+	 * Set a property on this edge
+	 * @param predicate The predicate that identifies the property to be set
+	 * @param value The value of the property to be set.
+	 */
+	void setProperty(URI predicate, Value value);
+	
+	Value removeProperty(URI predicate);
 
 }

@@ -68,5 +68,6 @@ public class SH {
 	public static final URI property = new URIImpl(PROPERTY);
 	public static final URI minLength = new URIImpl("http://www.w3.org/ns/shacl#minLength");
 	public static final URI maxLength = new URIImpl("http://www.w3.org/ns/shacl#maxLength");
+	public static final URI uniqueLang = new URIImpl("http://www.w3.org/ns/shacl#uniqueLang");
 
 }

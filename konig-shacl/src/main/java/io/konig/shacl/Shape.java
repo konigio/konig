@@ -51,6 +51,7 @@ public class Shape {
 	private List<PropertyConstraint> property;
 	private Constraint constraint;
 	private Context jsonldContext;
+	private URI equivalentRelationalShape;
 	
 	
 	public Shape() {
@@ -221,6 +222,14 @@ public class Shape {
 	 */
 	public void setJsonldContext(Context jsonldContext) {
 		this.jsonldContext = jsonldContext;
+	}
+
+	public URI getEquivalentRelationalShape() {
+		return equivalentRelationalShape;
+	}
+
+	public void setEquivalentRelationalShape(URI equivalentRelationalShape) {
+		this.equivalentRelationalShape = equivalentRelationalShape;
 	}
 	
 	

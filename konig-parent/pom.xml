@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.konig</groupId>
   <artifactId>konig-parent</artifactId>
-  <version>1.7.3</version>
+  <version>1.7.5</version>
   <name>Konig Parent</name>
   <description>The parent project from which all the konig modules are built</description>
   <url>http://developers.konig.io/</url>
@@ -19,6 +19,7 @@
   	<jackson.version>2.6.3</jackson.version>
   	<jsonld-java.version>0.7.0</jsonld-java.version>
   	<httpclient.version>4.5.2</httpclient.version>
+  	<poi.version>3.14</poi.version>
   </properties>
   
   <licenses>
@@ -40,6 +41,7 @@
   	<module>../konig-core</module>
   	<module>../konig-shacl</module>
   	<module>../konig-schemagen</module>
+  	<module>../konig-spreadsheet</module>
   	<module>../konig-schemagen-maven-plugin</module>
   	<module>../konig-ldp</module>
   	<module>../konig-ldp-maven-plugin</module>

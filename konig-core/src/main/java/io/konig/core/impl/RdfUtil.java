@@ -2,12 +2,17 @@ package io.konig.core.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -21,11 +26,17 @@ import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.RioSetting;
+import org.openrdf.rio.helpers.BasicWriterSettings;
+import org.openrdf.rio.helpers.RioSettingImpl;
 import org.openrdf.rio.turtle.TurtleParserFactory;
 
+import io.konig.core.DepthFirstEdgeIterable;
+import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
+import io.konig.core.io.CompactTurtleWriter;
 import io.konig.core.io.CompositeRdfHandler;
 import io.konig.core.io.GraphLoadHandler;
 import io.konig.core.io.NamespaceRDFHandler;
@@ -54,6 +65,80 @@ import io.konig.core.vocab.Schema;
 
 public class RdfUtil {
 	
+	public static List<Namespace> collectNamespaces(NamespaceManager nsManager, Collection<Edge> edgeList) {
+		Map<String, Namespace> map = new HashMap<>();
+		for (Edge e : edgeList) {
+			Resource subject = e.getSubject();
+			URI predicate = e.getPredicate();
+			Value object = e.getObject();
+			if (subject instanceof URI) {
+				addNamespace(map, nsManager, (URI)subject);
+			}
+			addNamespace(map, nsManager, predicate);
+			if (object instanceof URI) {
+				addNamespace(map, nsManager, (URI)object);
+			}
+			
+		}
+		return new ArrayList<Namespace>(map.values());
+	}
+	
+	/**
+	 * Filter the namespaces within a given NamespaceManager and produce a new manager that contains only those 
+	 * namespaces that are used within a certain reference graph.
+	 * @param graph The reference graph
+	 * @param nsManager The source NamespaceManager whose namespaces will be filtered based on the reference graph
+	 * @return A new NamespaceManager that contains the subset of namespaces from nsManager that are used by the given graph.
+	 */
+	public static NamespaceManager filterNamespaces(Graph graph, NamespaceManager nsManager) {
+		NamespaceManager sink = new MemoryNamespaceManager();
+		
+		for (Edge e : graph) {
+			Resource subject = e.getSubject();
+			URI predicate = e.getPredicate();
+			Value object = e.getObject();
+
+			copyNamespace(nsManager, subject, sink);
+			copyNamespace(nsManager, predicate, sink);
+			copyNamespace(nsManager, object, sink);
+		}
+		
+		return sink;
+	}
+	
+	private static void copyNamespace(NamespaceManager source, Value value, NamespaceManager sink) {
+		if (value instanceof URI) {
+			URI uri = (URI) value;
+			String name = uri.getNamespace();
+			Namespace ns = source.findByName(name);
+			if (ns != null) {
+				sink.add(ns);
+			}
+		}
+		
+	}
+
+	public static void sortByPrefix(List<Namespace> list) {
+		Collections.sort(list, new Comparator<Namespace>() {
+
+			@Override
+			public int compare(Namespace a, Namespace b) {
+				String x = a.getPrefix();
+				String y = b.getPrefix();
+				return x.compareTo(y);
+			}
+		});
+	}
+	
+	private static void addNamespace(Map<String, Namespace> map, NamespaceManager nsManager, URI uri) {
+		String key = uri.getNamespace();
+		Namespace ns = nsManager.findByName(key);
+		if (ns != null) {
+			map.put(key, ns);
+		}
+		
+	}
+
 	public static String curie(NamespaceManager nsManager, URI uri) {
 		Namespace ns = nsManager.findByName(uri.getNamespace());
 		if (ns != null) {
@@ -111,7 +196,47 @@ public class RdfUtil {
 		
 		return value;
 	}
+
+	public static void prettyPrintTurtle(Graph graph, Writer writer) throws IOException, RDFHandlerException {
+		prettyPrintTurtle(graph.getNamespaceManager(), graph, writer);
+	}
 	
+	public static void prettyPrintTurtle(NamespaceManager nsManager, Graph graph, Writer writer) throws IOException, RDFHandlerException {
+		
+		nsManager = nsManager==null ? null : filterNamespaces(graph, nsManager);
+		
+		CompactTurtleWriter turtle = new CompactTurtleWriter(writer);
+		turtle.getWriterConfig().set(BasicWriterSettings.PRETTY_PRINT, true);
+		DepthFirstEdgeIterable sequence = new DepthFirstEdgeIterable(graph);
+		
+		turtle.startRDF();
+		printNamespaces(nsManager, turtle);
+		
+		for (Edge e : sequence) {
+			turtle.handleStatement(e);
+			
+		}
+		turtle.endRDF();
+	}
+	
+	private static void printNamespaces(NamespaceManager namespaceManager, CompactTurtleWriter turtle) throws RDFHandlerException {
+		
+		if (namespaceManager != null) {
+			List<Namespace> list = new ArrayList<>(namespaceManager.listNamespaces());
+			Collections.sort(list, new Comparator<Namespace>() {
+
+				@Override
+				public int compare(Namespace a, Namespace b) {
+					return a.getPrefix().compareTo(b.getPrefix());
+				}
+			});
+			for (Namespace n : list) {
+				turtle.handleNamespace(n.getPrefix(), n.getName());
+			}
+		}
+		
+	}
+
 	public static void loadTurtle(Graph graph, NamespaceManager nsManager, InputStream input, String baseURL)
 		throws IOException, RDFParseException, RDFHandlerException {
 	

@@ -37,6 +37,7 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import io.konig.core.ListHandler;
+import io.konig.core.vocab.KOL;
 import io.konig.core.vocab.SH;
 import io.konig.shacl.AndConstraint;
 import io.konig.shacl.Constraint;
@@ -74,6 +75,9 @@ public class ShapeRdfHandler extends RDFHandlerBase implements ListHandler{
 			shape(subject).add(property(object));
 		} else if (predicate.equals(SH.scopeClass)) {
 			shape(subject).setScopeClass((URI)object);
+			
+		} else if (predicate.equals(KOL.equivalentRelationalShape) && object instanceof URI) {
+			shape(subject).setEquivalentRelationalShape((URI) object);
 		} else if (predicate.equals(SH.predicate)) {
 			property(subject).setPredicate((URI)object);
 		} else if (predicate.equals(SH.datatype)) {

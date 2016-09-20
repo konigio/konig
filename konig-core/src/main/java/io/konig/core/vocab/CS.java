@@ -26,6 +26,10 @@ import org.openrdf.model.impl.URIImpl;
 
 public class CS {
 	
-	public static final URI ChangeSet = new URIImpl("http://purl.org/vocab/changeset/schema#ChangeSet");
-
+	public static final URI ChangeSet = new URIImpl("http://www.konig.io/ns/kcs/ChangeSet");
+	public static final URI Add = new URIImpl("http://www.konig.io/ns/kcs/Add");
+	public static final URI Remove = new URIImpl("http://www.konig.io/ns/kcs/Remove");
+	public static final URI Key = new URIImpl("http://www.konig.io/ns/kcs/Key");
+	public static final URI function  = new URIImpl("http://www.konig.io/ns/kcs/function");
+	
 }

@@ -4,7 +4,7 @@ package io.konig.core;
  * #%L
  * konig-core
  * %%
- * Copyright (C) 2015 Gregory McFall
+ * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,25 +20,32 @@ package io.konig.core;
  * #L%
  */
 
-
-import org.openrdf.model.Resource;
+import java.util.Set;
 
 public interface ChangeSet {
 	
-	Vertex asVertex();
-	Resource getId();
+	/**
+	 * Record an edge was added.
+	 * @param addition The edge that was added.
+	 */
+	void add(Trail addition);
 	
-	Vertex assertPriorState();
-	Vertex assertAddition();
-	Vertex assertRemoval();
+	/**
+	 * Record an edge that was removed
+	 * @param removal The Edge that was removed.
+	 */
+	void remove(Trail removal);
 	
+	/**
+	 * Get the set of edges that were added.
+	 * @return
+	 */
+	Set<Trail> getAdditions();
 	
-	Vertex getReference();
-	Vertex getAddition();
-	Vertex getRemoval();
-	
-	Vertex getSource();
-	
-	Vertex getTarget();
+	/**
+	 * Get the set of edges that were removed.
+	 * @return
+	 */
+	Set<Trail> getRemovals();
 
 }
