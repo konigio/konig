@@ -26,6 +26,8 @@ To use the schema generator, add a maven plugin to your project as shown below.
 	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
 	  		<version>1.0.2</version>
 	  		<configuration>
+	  		  <workbookFile>${basedir}/src/dataModel.xlsx</workbookFile>
+	  		  <rdfOutDir>${basedir}/target/rdf</rdfOutDir>
 	  			<avroDir>${basedir}/src/main/avro</avroDir>
 	  			<jsonldDir>${basedir}/src/main/jsonld</jsonldDir>
 	  			<jsonSchemaDir>${basedir}/src/main/jsonschema</jsonSchemaDir>
@@ -36,6 +38,7 @@ To use the schema generator, add a maven plugin to your project as shown below.
 	  			<execution>
 		  			<phase>generate-sources</phase>
 		  			<goals>
+		  			  <goal>generate-rdf</goal>
 		  				<goal>generate</goal>
 		  			</goals>
 	  			</execution>
@@ -53,12 +56,23 @@ To run the generator, simply invoke the following command in your project's base
 ```
     mvn generate-sources
 ```    
+## Goals
+
+| Goal          | Description |
+|---------------|---------------------------------------------------------------------------------------------|
+| generate-rdf  | Read the contents of a Microsoft Excel workbook that contains a description of the data model, and produce a collection of OWL and SHACL files from the workbook |
+| generate      | Generate Avro, JSON Schema, JSON-LD Context, BigQuery table definitions from the project's OWL and SHACL statements. |
+
+The generate-rdf goal is relevant only if you are using spreadsheets to describe your data model.  
+For now, there are no tools to merge the generated OWL and SHACL files into your project; you'll need to merge them manually.
+We hope to provide merge tools in the future.
+
 
 ## Configuration Parameters
 
 | Parameter       | Description                                                                                                                             |
 |-----------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| sourceDir       |  The directory that contains the source SHACL and OWL files from which schemas will be generated<br>Default: `${basedir}/src/main/resources/shapes` |
+| sourceDir       | The directory that contains the source SHACL and OWL files from which schemas will be generated<br>Default: `${basedir}/src/main/resources/shapes` |
 | avroDir         | The output directory that will contain the generated Avro Schema files<br>Default: `${basedir}/target/generated/avro`         |
 | jsonSchemaDir   | The output directory that will contain the generated JSON Schema files<br>Default: `${basedir}/target/generated/jsonschema` |
 | jsonldDir       | The output directory that will contain the generated JSON-LD context files<br>Default: `${basedir}/target/generated/jsonld`  |
@@ -66,6 +80,8 @@ To run the generator, simply invoke the following command in your project's base
 | bqSourceDir     | The source directory that contains BigQuery configuration details. See [BigQuery Configuration](#bq-config)  |
 | bqOutDir        | The output directory where generated BigQuery table definitions will be stored |
 | bqShapeBaseURL  | The base URL for tables created for a given OWL class (as opposed to tables based on a specific shape) |
+| workbookFile    | A Microsoft Excel workbook (*.xlsx) containing a description of the data model<br>Default: `${basedir}/src/dataModel.xlsx`  |
+| rdfOutDir       | The output directory where the generated OWL and SHACL files will be stored after processing the workbookFile.<br>Default: `${basedir}/target/rdf` |
 
 ## Naming Conventions
 
@@ -153,7 +169,7 @@ Thus, for each namespace, you should have statements like the following:
 		rdfs:label "Konig Change Set Vocabulary" ;
 		rdfs:comment "A vocabulary for describing the differences between two graphs of data" .
 ```
-## <a name="bg-config"></a>BigQuery Configuration
+## <a name="bq-config"></a>BigQuery Configuration
 If you want to generate Google BigQuery Table definitions you must define the
 `bqShapeBaseURL` property, and you must provide a bit of configuration.
 
