@@ -19,6 +19,7 @@ git status
 ```
 cd konig-parent
 mvn versions:set -DnewVersion=1.2.1
+mvn install -N
 mvn versions:commit
 ```
 
