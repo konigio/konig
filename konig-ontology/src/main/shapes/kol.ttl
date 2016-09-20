@@ -53,6 +53,13 @@ kol:equivalentObjectProperty a owl:ObjectProperty ;
 	rdfs:range owl:ObjectProperty
 	.
 	
+kol:referencedClass a owl:ObjectPropery ;
+	rdfs:comment "The OWL Class for the type of entity referenced by the foreign key" ;
+	rdfs:domain kol:ForeignKeyProperty ;
+	rdfs:range owl:Class
+	.
+			
+	
 kol:keyProperty a owl:ObjectProperty ;
 	rdfs:comment """
 		The property on the related entity whose value is the same as the value of this ForeignKeyProperty.
