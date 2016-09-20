@@ -8,6 +8,7 @@ import java.util.StringTokenizer;
 import org.openrdf.model.URI;
 
 import io.konig.core.Vertex;
+import io.konig.core.util.StringUtil;
 import io.konig.schemagen.avro.AvroNamer;
 import io.konig.shacl.PropertyConstraint;
 
@@ -102,8 +103,7 @@ public class SimpleAvroNamer implements AvroNamer {
 	public String enumName(String recordName, PropertyConstraint constraint, Vertex vertex) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(recordName);
-		builder.append('.');
-		builder.append(constraint.getPredicate().getLocalName());
+		builder.append(StringUtil.capitalize(constraint.getPredicate().getLocalName()));
 		builder.append("Enum");
 		
 		return builder.toString();
