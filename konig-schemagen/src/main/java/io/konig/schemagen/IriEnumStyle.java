@@ -4,5 +4,6 @@ public enum IriEnumStyle {
 
 	NONE,
 	ABSOLUTE,
-	CURIE
+	CURIE,
+	LOCAL
 }

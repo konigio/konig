@@ -167,10 +167,10 @@ public class Generator {
 					switch (iriEnumStyle) {
 					case CURIE : 	result.add(curie(uri)); break;
 					case ABSOLUTE:	result.add(uri.stringValue()); break;
+					case LOCAL: result.add(uri.getLocalName()); break;
 					case NONE: // Do nothing
 					}
 					
-					result.add(curie(uri));
 				} else {
 					String text = value.stringValue();
 					if (validEnumValue(text)) {

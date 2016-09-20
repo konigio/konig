@@ -23,6 +23,7 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.TraversalImpl;
+import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.KOL;
 import io.konig.core.vocab.SH;
 import io.konig.schemagen.GeneratedMediaTypeTransformer;
@@ -61,7 +62,7 @@ public class AvroSchemaGenerator extends Generator {
 		this.namer = namer;
 		this.nsManager = nsManager;
 		
-		this.iriEnumStyle = IriEnumStyle.NONE;
+		this.iriEnumStyle = IriEnumStyle.LOCAL;
 	}
 	
 	
@@ -293,15 +294,16 @@ public class AvroSchemaGenerator extends Generator {
 		} else if (RDF.LANGSTRING.equals(datatype)) {
 			
 			json.writeStartObject();
+			json.writeStringField("name", extendedValueName(property));
 			json.writeStringField("type", "record");
 			json.writeFieldName("fields");
 			json.writeStartArray();
 			json.writeStartObject();
-			json.writeStringField("name", "@value");
+			json.writeStringField("name", "value");
 			json.writeStringField("type", "string");
 			json.writeEndObject();
 			json.writeStartObject();
-			json.writeStringField("name", "@language");
+			json.writeStringField("name", "language");
 			json.writeStringField("type", "string");
 			json.writeEndObject();
 			json.writeEndArray();
@@ -344,6 +346,16 @@ public class AvroSchemaGenerator extends Generator {
 	}
 
 
+
+
+	private String extendedValueName(PropertyConstraint property) {
+		URI predicate = property.getPredicate();
+		StringBuilder builder = new StringBuilder();
+		builder.append(StringUtil.capitalize(predicate.getLocalName()));
+		builder.append("Value");
+		
+		return builder.toString();
+	}
 
 
 	private PropertyConstraint asPropertyConstraint(Shape shape, Vertex propertyVertex) {
