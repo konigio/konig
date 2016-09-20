@@ -13,17 +13,19 @@ import io.konig.showl.WorkbookToTurtleTransformer;
 @Mojo( name = "generate-rdf", defaultPhase = LifecyclePhase.GENERATE_SOURCES )
 public class KonigSheetMojo extends AbstractMojo {
 	
-	 @Parameter (defaultValue="${basedir}/src/dataModel.xlsx", property="workbookFile", required=true)
+	 @Parameter (defaultValue="${basedir}/src/dataModel.xlsx", property="workbookFile", required=false)
 	 private File workbookFile;
 	 
-	 @Parameter (defaultValue="${basedir}/target/rdf", property="outDir", required=true)
-	 private File outDir;
+	 @Parameter (defaultValue="${basedir}/target/rdf", property="rdfOutDir", required=false)
+	 private File rdfOutDir;
 	 
 	 public void execute() throws MojoExecutionException   {
 		 try {
 
-			 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer();
-			 transformer.transform(workbookFile, outDir);
+			 if (workbookFile!=null && workbookFile.exists()) {
+				 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer();
+				 transformer.transform(workbookFile, rdfOutDir);
+			 }
 		 } catch (Throwable oops) {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
 		 }
