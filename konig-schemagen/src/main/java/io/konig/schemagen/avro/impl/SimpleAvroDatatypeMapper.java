@@ -44,6 +44,10 @@ public class SimpleAvroDatatypeMapper implements AvroDatatypeMapper {
 			return AvroDatatype.DURATION;
 		}
 		
+		if (XMLSchema.DOUBLE.equals(rdfDatatype)) {
+			return AvroDatatype.DOUBLE;
+		}
+		
 		if (XMLSchema.DECIMAL.equals(rdfDatatype)) {
 			return AvroDatatype.DOUBLE;
 		}

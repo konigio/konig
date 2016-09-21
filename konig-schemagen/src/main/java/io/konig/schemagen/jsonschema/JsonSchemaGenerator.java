@@ -1,5 +1,6 @@
 package io.konig.schemagen.jsonschema;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -55,19 +56,23 @@ public class JsonSchemaGenerator extends Generator {
 	private class Worker {
 
 		private ObjectMapper mapper = new ObjectMapper();
+		private Set<String> memory = new HashSet<>();
 
 		public ObjectNode generateJsonSchema(Shape shape) {
 			
 			String schemaId = namer.schemaId(shape);
-			
-			
 			ObjectNode json = mapper.createObjectNode();
-			json.put("$schema", "http://json-schema.org/draft-04/schema#");
-			json.put("id", schemaId);
-			json.put("type", "object");
-			
-			putProperties(json, shape);
-			
+			if (memory.contains(schemaId)) {
+				json.put("$ref", schemaId);
+			} else {
+				memory.add(schemaId);
+				
+				json.put("$schema", "http://json-schema.org/draft-04/schema#");
+				json.put("id", schemaId);
+				json.put("type", "object");
+				
+				putProperties(json, shape);
+			}
 			return json;
 		}
 

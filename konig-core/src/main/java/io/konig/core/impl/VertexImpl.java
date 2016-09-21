@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
@@ -112,34 +113,66 @@ public class VertexImpl implements Vertex {
 	}
 	
 	public String toString() {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder builder = new StringBuilder();
 		
-		buffer.append(id.stringValue());
-		buffer.append('\n');
-		Set<Entry<URI,Set<Edge>>> out = outEdges();
+		builder.append(id.stringValue());
+		builder.append('\n');
+		appendProperties(builder, this, 1);
+		
+		return builder.toString();
+	}
+	
+	private void appendValue(StringBuilder builder, Value value, int depth) {
+	
+		if (value instanceof BNode) {
+			appendBNode(builder, (BNode)value, depth);
+		} else {
+			builder.append(value.stringValue());
+			builder.append('\n');
+		}
+	}
+	
+	private void appendBNode(StringBuilder builder, BNode value, int depth) {
+		Vertex node = graph.getVertex(value);
+		builder.append("[\n");
+		depth++;
+		appendProperties(builder, node, depth);
+		depth--;
+		indent(builder, depth);
+		builder.append("]\n");
+	}
+
+	private void appendProperties(StringBuilder builder, Vertex node, int depth) {
+		Set<Entry<URI,Set<Edge>>> out = node.outEdges();
 		for (Entry<URI,Set<Edge>> entry : out) {
 			URI predicate = entry.getKey();
 			Set<Edge> edges = entry.getValue();
-			buffer.append("  ");
-			buffer.append(predicate.stringValue());
+			indent(builder, depth);
+			builder.append(predicate.getLocalName());
 			if (edges.size()==1) {
-				buffer.append("  ");
-				String value = edges.iterator().next().getObject().stringValue();
-				buffer.append(value);
-				buffer.append('\n');
+				Value value = edges.iterator().next().getObject();
+				builder.append(' ');
+				appendValue(builder, value, depth);
+				
 			} else {
-				buffer.append('\n');
+				builder.append('\n');
+				depth++;
 				for (Edge e : edges) {
-					String value = e.getObject().stringValue();
-					buffer.append("    ");
-					buffer.append(value);
-					buffer.append('\n');
+					Value value = e.getObject();
+					indent(builder, depth);
+					appendValue(builder, value, depth);
 				}
+				depth--;
 			}
 		}
 		
+	}
+
+	private void indent(StringBuilder builder, int depth) {
+		for (int i=0; i<depth; i++) {
+			builder.append("  ");
+		}
 		
-		return buffer.toString();
 	}
 
 	@Override

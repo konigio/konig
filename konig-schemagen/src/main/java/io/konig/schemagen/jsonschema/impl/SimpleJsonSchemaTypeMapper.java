@@ -39,6 +39,10 @@ public class SimpleJsonSchemaTypeMapper implements JsonSchemaTypeMapper {
 			return JsonSchemaDatatype.TIMESTAMP;
 		}
 		
+		if (XMLSchema.DOUBLE.equals(rdfDatatype)) {
+			return JsonSchemaDatatype.DOUBLE;
+		}
+		
 		if (XMLSchema.DECIMAL.equals(rdfDatatype)) {
 			return JsonSchemaDatatype.DOUBLE;
 		}

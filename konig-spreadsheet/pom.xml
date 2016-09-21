@@ -3,7 +3,7 @@
   <parent>
     <groupId>io.konig</groupId>
     <artifactId>konig-parent</artifactId>
-    <version>1.7.6</version>
+    <version>1.7.7</version>
   </parent>
   <artifactId>konig-spreadsheet</artifactId>
   <name>Konig Spreadsheet</name>

@@ -43,6 +43,10 @@ public class BasicJavaDatatypeMapper implements JavaDatatypeMapper {
 			return Duration.class;
 		}
 		
+		if (XMLSchema.DOUBLE.equals(rdfDatatype)) {
+			return Double.class;
+		}
+		
 		if (XMLSchema.DECIMAL.equals(rdfDatatype)) {
 			return Double.class;
 		}

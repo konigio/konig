@@ -300,6 +300,9 @@ public class JavaClassBuilder {
 		String methodBaseName = fieldName;
 		
 		Class<?> javaType = mapper.javaDatatype(datatype);
+		if (javaType == null) {
+			throw new RuntimeException("Java datatype not defined: " + datatype.stringValue() + " for property " + p.getPredicate().getLocalName() + " on " + dc.fullName());
+		}
 		JClass jClass = model.ref(javaType);
 		
 		Integer maxCount = p.getMaxCount();
