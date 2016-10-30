@@ -94,6 +94,22 @@ public interface Vertex {
 	 */
 	Value getValue(URI predicate);
 	
+	/**
+	 * Get the value of a specified property as a URI.
+	 * @param predicate The predicate that identifies the properties whose value is to be returned.
+	 * @return The URI value for the specified propety.  If no such property exists or does not have 
+	 * a URI value, this method returns null.
+	 */
+	URI getURI(URI predicate);
+	
+	/**
+	 * Get the value of a property as a Vertex
+	 * @param predicate The predicate that identifies the property
+	 * @return A Vertex representing the value of the specified property, or null if no such value exists.
+	 * @throws KonigException If there is more than one value for the specified property
+	 */
+	Vertex getVertex(URI predicate) throws KonigException;
+	
 	Integer integerValue(URI predicate);
 	
 	String stringValue(URI predicate);
@@ -123,5 +139,10 @@ public interface Vertex {
 	
 	List<Value> asList();
 	
+	/**
+	 * Test whether the Vertex has any incoming edges.
+	 * @return True if there are no incoming edges and false otherwise
+	 */
+	boolean isOrphan();
 	
 }

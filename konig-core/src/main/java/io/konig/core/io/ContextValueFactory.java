@@ -1,4 +1,4 @@
-package io.konig.core.delta;
+package io.konig.core.io;
 
 /*
  * #%L
@@ -21,22 +21,23 @@ package io.konig.core.delta;
  */
 
 
-import java.util.List;
-
+import org.openrdf.model.Resource;
+import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.impl.ContextStatementImpl;
+import org.openrdf.model.impl.ValueFactoryImpl;
 
-import io.konig.core.Edge;
-import io.konig.core.Vertex;
-
-/**
- * An interface used to extract a key for a BNode suitable for use in an index.
- * The key must uniquely identify the BNode within the context(s) from which it is accessed.
- * @author Greg McFall
- *
- */
-public interface KeyExtractor {
-
+public class ContextValueFactory extends ValueFactoryImpl {
 	
-	BNodeKey extractKeys(URI predicate, Vertex object);
+	private Resource context;
+
+	public ContextValueFactory(Resource context) {
+		this.context = context;
+	}
 	
+	public Statement createStatement(Resource subject, URI predicate, Value object) {
+		return new ContextStatementImpl(subject, predicate, object, context);
+	}
+
 }

@@ -2,6 +2,8 @@ package io.konig.core.impl;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /*
  * #%L
@@ -27,37 +29,109 @@ import java.util.LinkedHashMap;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
-import org.openrdf.model.impl.StatementImpl;
+import org.openrdf.model.impl.ContextStatementImpl;
 
 import io.konig.core.Edge;
+import io.konig.core.ValueSet;
 
-public class EdgeImpl extends StatementImpl implements Edge  {
+public class EdgeImpl extends ContextStatementImpl implements Edge  {
 	private static final long serialVersionUID = 1L;
 	
 	private HashMap<URI,Value> properties;
 	public EdgeImpl(Resource subject, URI predicate, Value object) {
-		super(subject, predicate, object);
+		super(subject, predicate, object, null);
+	}
+	
+	public EdgeImpl(Resource subject, URI predicate, Value object, Resource context) {
+		super(subject, predicate, object, context);
 	}
 	
 	public EdgeImpl(Edge other) {
-		super(other.getSubject(), other.getPredicate(), other.getObject());
+		super(other.getSubject(), other.getPredicate(), other.getObject(), other.getContext());
 	}
 	
 	@Override
-	public Value getProperty(URI predicate) {
-		return properties==null ? null : properties.get(predicate);
+	public Value getAnnotation(URI predicate) {
+		Value value = properties==null ? null : properties.get(predicate);
+		if (value instanceof ValueSet) {
+			ValueSet set = (ValueSet) value;
+			if (set.isEmpty()) {
+				value = null;
+			} else if (set.size()==1) {
+				value = set.iterator().next();
+			}
+		}
+		return value;
 	}
 	@Override
-	public void setProperty(URI predicate, Value value) {
+	public Edge setAnnotation(URI predicate, Value value) {
 		if (properties == null) {
 			properties = new LinkedHashMap<>();
 		}
 		properties.put(predicate, value);
+		return this;
+	}
+
+	@Override
+	public Value removeAnnotation(URI predicate) {
+		return properties==null ? null : properties.remove(predicate);
+	}
+
+	@Override
+	public void copyAnnotations(Edge edge) {
+		if (properties != null) {
+			Set<Entry<URI,Value>> set = properties.entrySet();
+			for (Entry<URI,Value> e : set) {
+				edge.setAnnotation(e.getKey(), e.getValue());
+			}
+		}
 		
 	}
 
 	@Override
-	public Value removeProperty(URI predicate) {
-		return properties==null ? null : properties.remove(predicate);
+	public ValueSet getAnnotationSet(URI predicate) {
+		Value result = getAnnotation(predicate);
+		if (!(result instanceof ValueSet)) {
+			ValueSet set = new ValueSet();
+			if (result != null) {
+				set.add(result);
+			}
+			result = set;
+		}
+		return (ValueSet) result;
+	}
+
+	@Override
+	public Edge addAnnotation(URI predicate, Value value) {
+		ValueSet set = null;
+		Value result = getAnnotation(predicate);
+		if (result instanceof ValueSet) {
+			set = (ValueSet) result;
+		} else if (result == null) {
+			setAnnotation(predicate, value);
+			return this;
+		} else {
+			set = new ValueSet();
+			set.add(result);
+			setAnnotation(predicate, set);
+			
+		}
+
+		set.add(value);
+		return this;
+	}
+
+	@Override
+	public boolean matches(Value a, Value b) {
+		if (a instanceof ValueSet) {
+			ValueSet set = (ValueSet) a;
+			return set.contains(b);
+		}
+		
+		if (b instanceof ValueSet) {
+			ValueSet set = (ValueSet) b;
+			return set.contains(a);
+		}
+		return a.equals(b);
 	}
 }

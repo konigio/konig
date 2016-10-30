@@ -62,6 +62,13 @@ public interface Traversal {
 	Traversal hasValue(URI property, String value);
 	
 	/**
+	 * Filter this traversal so that it includes only named individuals, i.e. resources 
+	 * identified by an IRI.
+	 * @return A new Traversal that is a filtered copy of this one.
+	 */
+	Traversal isIRI();
+	
+	/**
 	 * Add a property to all vertices in this traversal
 	 * @param property The IRI for the property being added
 	 * @param value The value of the property being added.

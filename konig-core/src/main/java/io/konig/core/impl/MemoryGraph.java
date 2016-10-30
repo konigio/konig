@@ -70,9 +70,25 @@ public class MemoryGraph implements Graph, Transaction {
 	private List<TransactionWorker> workerList = new ArrayList<TransactionWorker>();
 	private NamespaceManager nsManager;
 	
+	private boolean copyEdgeAttributes=false;
+	
 	public MemoryGraph() {
 		
 	}
+	
+	
+
+	public boolean isCopyEdgeAttributes() {
+		return copyEdgeAttributes;
+	}
+
+
+
+	public void setCopyEdgeAttributes(boolean copyEdgeAttributes) {
+		this.copyEdgeAttributes = copyEdgeAttributes;
+	}
+
+
 
 	public Vertex vertex(Resource id) {
 		
@@ -151,8 +167,11 @@ public class MemoryGraph implements Graph, Transaction {
 		return null;
 		
 	}
-
 	public Edge edge(Resource subject, URI predicate, Value object) {
+		return edge(subject, predicate, object, null);
+	}
+
+	public Edge edge(Resource subject, URI predicate, Value object, Resource context) {
 		
 		ResourceVertex s = (ResourceVertex) wrap(subject);
 		ResourceVertex o = null;
@@ -161,7 +180,7 @@ public class MemoryGraph implements Graph, Transaction {
 		}
 		
 		
-		Edge e = new EdgeImpl(s, predicate, object);
+		Edge e = new EdgeImpl(s, predicate, object, context);
 		s.getVertexImpl().add(e);
 		
 		if (o != null) {
@@ -248,7 +267,11 @@ public class MemoryGraph implements Graph, Transaction {
 	}
 
 	public Edge edge(Edge edge) {
-		return edge(edge.getSubject(), edge.getPredicate(), edge.getObject());
+		Edge result = edge(edge.getSubject(), edge.getPredicate(), edge.getObject(), edge.getContext());
+		if (copyEdgeAttributes) {
+			result.copyAnnotations(edge);
+		}
+		return result;
 	}
 
 	public void remove(Edge edge) {
@@ -285,6 +308,19 @@ public class MemoryGraph implements Graph, Transaction {
 		StringBuffer buffer = new StringBuffer();
 		
 		for (Vertex v : vertices()) {
+			
+			// Only display BNodes that have no incoming edges
+			Resource id = v.getId();
+			if (id instanceof BNode) {
+				Set<Edge> inSet = v.inEdgeSet();
+				if (!inSet.isEmpty()) {
+					continue;
+				}
+			}
+			
+			// At this point, we've determined that the vertex
+			// is an IRI or a BNode with no incoming edges.
+			
 			buffer.append(v.toString());
 			Graph namedGraph = v.asNamedGraph();
 			if (namedGraph != null) {
@@ -532,6 +568,78 @@ public class MemoryGraph implements Graph, Transaction {
 	public boolean contains(Resource subject, URI predicate, Value object) {
 		EdgeImpl s = new EdgeImpl(subject, predicate, object);
 		return contains(s);
+	}
+
+
+
+	@Override
+	public void remove(Vertex v) {
+		if (v == null) {
+			return;
+		}
+		
+		Resource id = v.getId();
+		
+		Graph g = v.getGraph();
+		if (g != this) {
+			v = getVertex(id);
+			id = v.getId();
+		}
+		
+		vertexMap.remove(id);
+		
+		// Remove incoming edges
+		
+		Set<Entry<URI, Set<Edge>>> inSet = v.inEdges();
+		for (Entry<URI,Set<Edge>> entry : inSet) {
+			Iterator<Edge> iterator = entry.getValue().iterator();
+			URI predicate = entry.getKey();
+			while (iterator.hasNext()) {
+				Edge edge = iterator.next();
+
+				iterator.remove();
+				Resource subjectId = edge.getSubject();
+				Vertex subject = getVertex(subjectId);
+				
+				if (subject != null) {
+					Set<Edge> set = subject.outProperty(predicate);
+					set.remove(edge);
+					edge = null;
+				}
+			}
+		}
+		
+		// Remove outgoing edges, and orphaned object nodes
+		Set<Entry<URI,Set<Edge>>> outSet = v.outEdges();
+		for (Entry<URI,Set<Edge>> entry : outSet) {
+			Iterator<Edge> iterator = entry.getValue().iterator();
+			URI predicate = entry.getKey();
+			while (iterator.hasNext()) {
+				Edge edge = iterator.next();
+				
+				Value value = edge.getObject();
+				
+				if (value instanceof Resource) {
+					iterator.remove();
+					Resource objectId = (Resource) value;
+					Vertex object = getVertex(objectId);
+					if (object != null) {
+						Set<Edge> set = object.inProperty(predicate);
+						set.remove(edge);
+						if (object.isOrphan()) {
+							remove(object);
+						}
+					}
+				}				
+			}
+		}
+	}
+
+
+
+	@Override
+	public void remove(Resource resource) {
+		remove(getVertex(resource));
 	}
 	
 

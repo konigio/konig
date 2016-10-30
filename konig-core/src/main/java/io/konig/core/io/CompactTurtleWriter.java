@@ -35,6 +35,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.turtle.TurtleUtil;
 import org.openrdf.rio.turtle.TurtleWriter;
 
 /**
@@ -54,7 +55,42 @@ public class CompactTurtleWriter extends TurtleWriter {
 	public CompactTurtleWriter(Writer writer) {
 		super(writer);
 		stack.add(new Context());
-	}
+	}protected void writeURI(URI uri)
+			throws IOException
+		{
+			String uriString = uri.toString();
+
+			// Try to find a prefix for the URI's namespace
+			String prefix = null;
+
+			int splitIdx = TurtleUtil.findURISplitIndex(uriString);
+			String localName = null;
+			if (splitIdx > 0) {
+				String namespace = uriString.substring(0, splitIdx);
+				
+				prefix = namespaceTable.get(namespace);
+				localName = uriString.substring(splitIdx);
+			}
+			if (prefix == null) {
+				prefix = namespaceTable.get(uriString);
+				if (prefix != null) {
+					localName = "";
+				}
+			}
+
+			if (prefix != null) {
+				// Namespace is mapped to a prefix; write abbreviated URI
+				writer.write(prefix);
+				writer.write(":");
+				writer.write(localName);
+			} 
+			else {
+				// Write full URI
+				writer.write("<");
+				writer.write(TurtleUtil.encodeURIString(uriString));
+				writer.write(">");
+			}
+		}
 	
 	@Override
     public void handleStatement(Statement st) throws RDFHandlerException {

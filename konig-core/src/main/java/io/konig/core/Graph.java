@@ -94,8 +94,10 @@ public interface Graph extends Set<Edge> {
 	 * @return The edge that was added to this Graph
 	 */
 	Edge edge(Resource subject, URI predicate, Value object);
+	Edge edge(Resource subject, URI predicate, Value object, Resource context);
 	
 	Edge edge(Vertex subject, URI predicate, Vertex object);
+
 	
 	Edge edge(Edge edge);
 	
@@ -113,6 +115,25 @@ public interface Graph extends Set<Edge> {
 	 * @param edge The edge to be removed.
 	 */
 	void remove(Edge edge);
+	
+	/**
+	 * Remove a vertex from this graph.
+	 * Removes all statements that include the vertex as a subject or predicate.
+	 * All BNodes orphaned by this process will also be removed.
+	 * @param v The vertex to be removed
+	 */
+	void remove(Vertex v);
+	
+	/**
+	 * Remove a resource from this graph.
+	 * This is a convenience method equivalent to the following snippet:
+	 * <pre>
+	 *   Vertex v = graph.getVertex(resource);
+	 *   graph.remove(v);
+	 * </pre>
+	 * @param resource
+	 */
+	void remove(Resource resource);
 	
 	/**
 	 * Return a traversal for the specified subject.

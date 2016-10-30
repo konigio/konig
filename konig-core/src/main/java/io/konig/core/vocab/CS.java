@@ -26,10 +26,9 @@ import org.openrdf.model.impl.URIImpl;
 
 public class CS {
 	
-	public static final URI ChangeSet = new URIImpl("http://www.konig.io/ns/kcs/ChangeSet");
-	public static final URI Add = new URIImpl("http://www.konig.io/ns/kcs/Add");
-	public static final URI Remove = new URIImpl("http://www.konig.io/ns/kcs/Remove");
-	public static final URI Key = new URIImpl("http://www.konig.io/ns/kcs/Key");
-	public static final URI function  = new URIImpl("http://www.konig.io/ns/kcs/function");
+	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/kcs/Dictum");
+	public static final URI Falsity = new URIImpl("http://www.konig.io/ns/kcs/Falsity");
+	public static final URI KeyValue = new URIImpl("http://www.konig.io/ns/kcs/KeyValue");
+	public static final URI KeyTerm = new URIImpl("http://www.konig.io/ns/kcs/KeyTerm");
 	
 }

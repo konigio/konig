@@ -37,6 +37,7 @@ import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.Traversal;
 import io.konig.core.Vertex;
 
@@ -134,7 +135,10 @@ public class VertexImpl implements Vertex {
 	
 	private void appendBNode(StringBuilder builder, BNode value, int depth) {
 		Vertex node = graph.getVertex(value);
-		builder.append("[\n");
+		builder.append("[ <");
+		builder.append(value.getID());
+		builder.append(">\n");
+//		builder.append("[\n");
 		depth++;
 		appendProperties(builder, node, depth);
 		depth--;
@@ -143,26 +147,32 @@ public class VertexImpl implements Vertex {
 	}
 
 	private void appendProperties(StringBuilder builder, Vertex node, int depth) {
+		if (node == null) {
+			return;
+		}
 		Set<Entry<URI,Set<Edge>>> out = node.outEdges();
 		for (Entry<URI,Set<Edge>> entry : out) {
 			URI predicate = entry.getKey();
 			Set<Edge> edges = entry.getValue();
 			indent(builder, depth);
-			builder.append(predicate.getLocalName());
-			if (edges.size()==1) {
-				Value value = edges.iterator().next().getObject();
-				builder.append(' ');
-				appendValue(builder, value, depth);
-				
-			} else {
-				builder.append('\n');
-				depth++;
-				for (Edge e : edges) {
-					Value value = e.getObject();
-					indent(builder, depth);
+			int size = edges.size();
+			if (size > 0) {
+				builder.append(predicate.getLocalName());
+				if (size==1) {
+					Value value = edges.iterator().next().getObject();
+					builder.append(' ');
 					appendValue(builder, value, depth);
+					
+				} else {
+					builder.append('\n');
+					depth++;
+					for (Edge e : edges) {
+						Value value = e.getObject();
+						indent(builder, depth);
+						appendValue(builder, value, depth);
+					}
+					depth--;
 				}
-				depth--;
 			}
 		}
 		
@@ -246,10 +256,13 @@ public class VertexImpl implements Vertex {
 	}
 
 	@Override
-	public Value getValue(URI predicate) {
+	public Value getValue(URI predicate) throws KonigException {
 		Set<Edge> set = outProperty(predicate);
-		
-		return set==null || set.isEmpty() ? null : set.iterator().next().getObject();
+		if (set==null || set.isEmpty()) {
+			return null;
+		}
+		Iterator<Edge> sequence = set.iterator();
+		return sequence.next().getObject();
 	}
 
 	@Override
@@ -293,7 +306,40 @@ public class VertexImpl implements Vertex {
 		Value value = getValue(predicate);
 		return value instanceof Resource ? graph.vertex((Resource)value) : null;
 	}
-	
 
+	@Override
+	public boolean isOrphan() {
+		Set<Entry<URI,Set<Edge>>> set = inEdges();
+		for (Entry<URI,Set<Edge>> entry : set) {
+			Set<Edge> s = entry.getValue();
+			if (!s.isEmpty()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public Vertex getVertex(URI predicate) throws KonigException {
+		Value value = getValue(predicate);
+		
+		return (value instanceof Resource) ? graph.getVertex((Resource) value) : null;
+	}
+
+	@Override
+	public URI getURI(URI predicate) {
+
+		Set<Edge> set = outProperty(predicate);
+		if (set==null || set.isEmpty()) {
+			return null;
+		}
+		for (Edge edge : set) {
+			Value value = edge.getObject();
+			if (value instanceof URI) {
+				return (URI) value;
+			}
+		}
+		return null;
+	}
 
 }

@@ -1,0 +1,56 @@
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix org:      <http://www.w3.org/ns/org#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix schema: <http://schema.org/> .
+
+<http://www.w3.org/ns/org#> a owl:Ontology ;
+  vann:preferredNamespacePrefix "org" ;
+  rdfs:label "W3C Organization Ontology" ;
+  rdfs:comment "A vocabulary for describing organization structures and roles"
+  .
+  
+org:Membership
+	a owl:Class ;
+	rdfs:comment """
+		An association entity which specifies that a given individual is a member of
+		a given organization with some role.
+	"""
+	.  
+	
+org:Role
+	a owl:Class ;
+	rdfs:comment """
+		The class of all roles that an individual may take within some organizational unit.
+		The members of this class form a controlled vocabulary for the possible roles.
+	"""
+	.	
+	
+org:member
+	a owl:ObjectProperty ;
+	rdfs:comment "The individual who is a member within the organizational unit" ;
+	rdfs:domain org:Membership ;
+	schema:rangeIncludes schema:Person
+	.
+	
+org:organization
+	a owl:ObjectProperty ;
+	rdfs:comment "The organization within which the individual is a member" ;
+	rdfs:domain org:Membership ;
+	rdfs:range schema:Organization 
+	.
+	
+org:role
+	a owl:ObjectProperty ;
+	rdfs:comment "The role of the individual within the organizational unit" ;
+	rdfs:domain org:Membership ;
+	rdfs:range org:Role
+	.
+	
+org:subOrganizationOf
+	a owl:ObjectProperty ;
+	rdfs:comment "An parent organization within which this organization unit is nested." ;
+	rdfs:domain schema:Organization ;
+	rdfs:range schema:Organization
+	.
+		

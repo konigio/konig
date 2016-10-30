@@ -1,0 +1,21 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+
+schema: a owl:Ontology ;
+	rdfs:comment "An ontology defined by Google, Yahoo, Bing, and others to support SEO" 
+	.
+	
+schema:Person a owl:Class ;
+	rdfs:comment "A person (alive, dead, undead, or fictional)"
+	.
+	
+schema:familyName a owl:DatatypeProperty ;
+	rdfs:comment "The family name of the Person. In the U.S., also known as the last name." ;
+	rdfs:domain schema:Person ;
+	rdfs:range xsd:string
+	.	

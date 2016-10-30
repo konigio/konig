@@ -411,6 +411,25 @@ public class TraversalImpl implements Traversal {
 		list.add(v);
 		return this;
 	}
+
+	@Override
+	public Traversal isIRI() {
+		TraversalImpl result = new TraversalImpl(graph);
+
+		List<Object> sink = result.list;
+		
+		for (Object obj : list) {
+			if (obj instanceof Vertex) {
+				Vertex v = (Vertex) obj;
+				Resource id = v.getId();
+				if (id instanceof URI) {
+					sink.add(v);
+				}
+
+			}
+		}
+		return result;
+	}
 	
 	
 	

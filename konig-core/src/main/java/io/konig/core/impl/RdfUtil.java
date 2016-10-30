@@ -2,6 +2,7 @@ package io.konig.core.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
@@ -13,9 +14,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.openrdf.model.BNode;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -26,9 +29,7 @@ import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
-import org.openrdf.rio.RioSetting;
 import org.openrdf.rio.helpers.BasicWriterSettings;
-import org.openrdf.rio.helpers.RioSettingImpl;
 import org.openrdf.rio.turtle.TurtleParserFactory;
 
 import io.konig.core.DepthFirstEdgeIterable;
@@ -83,6 +84,7 @@ public class RdfUtil {
 		return new ArrayList<Namespace>(map.values());
 	}
 	
+	
 	/**
 	 * Filter the namespaces within a given NamespaceManager and produce a new manager that contains only those 
 	 * namespaces that are used within a certain reference graph.
@@ -104,6 +106,25 @@ public class RdfUtil {
 		}
 		
 		return sink;
+	}
+	
+	public static void deepCopy(Vertex v, Graph target) {
+		if (v != null) {
+			Graph g = v.getGraph();
+			Set<Entry<URI,Set<Edge>>> out = v.outEdges();
+			for (Entry<URI,Set<Edge>> entry : out) {
+				Set<Edge> set = entry.getValue();
+				for (Edge e : set) {
+					target.edge(e);
+					Value object = e.getObject();
+					if (object instanceof BNode) {
+						BNode bnode = (BNode) object;
+						Vertex w = g.getVertex(bnode);
+						deepCopy(w, target);
+					}
+				}
+			}
+		}
 	}
 	
 	private static void copyNamespace(NamespaceManager source, Value value, NamespaceManager sink) {
@@ -217,6 +238,16 @@ public class RdfUtil {
 			
 		}
 		turtle.endRDF();
+	}
+	
+	public static void prettyPrintTurtle(NamespaceManager nsManager, Graph graph, File file) throws IOException, RDFHandlerException {
+		file.getParentFile().mkdirs();
+		FileWriter writer = new FileWriter(file);
+		try {
+			prettyPrintTurtle(nsManager, graph, writer);
+		} finally {
+			writer.close();
+		}
 	}
 	
 	private static void printNamespaces(NamespaceManager namespaceManager, CompactTurtleWriter turtle) throws RDFHandlerException {

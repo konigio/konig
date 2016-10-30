@@ -37,6 +37,7 @@ import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
@@ -45,10 +46,16 @@ import io.konig.core.Vertex;
 import io.konig.core.vocab.CS;
 
 public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
-	private static final String ADD    = "+    ";
-	private static final String REMOVE = "-    ";
-	private static final String KEY    = "     ";
-	private static final String NONE   = "x   ";
+	private static final String ADD             = "+    ";
+	private static final String REMOVE          = "-    ";
+	private static final String KEYVALUE        = " *   ";
+	private static final String KEYTERM         = " #   ";
+	private static final String ADD_KEYVALUE    = "+*   ";
+	private static final String REMOVE_KEYVALUE = "-*   ";
+	private static final String ADD_KEYTERM     = "+#   ";
+	private static final String REMOVE_KEYTERM  = "-#   ";
+	private static final String PRESERVE        = " %   ";
+	private static final String NONE            = "?    ";
 	
 	private NamespaceManager nsManager;
 	private int indentSize = 4;
@@ -264,12 +271,21 @@ public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 		}
 
 		private String functionString(Edge edge) {
-			Value value = edge.getProperty(CS.function);
-			return 
-				CS.Add.equals(value)    ? ADD :
-				CS.Remove.equals(value) ? REMOVE :
-				CS.Key.equals(value)    ? KEY :
+			Value value = edge.getAnnotation(RDF.TYPE);
+			String result = 
+				CS.Dictum.equals(value)      ? ADD :
+				CS.Falsity.equals(value)   ? REMOVE :
+				CS.KeyValue.equals(value) ? KEYVALUE :
+				match(edge, CS.Falsity, CS.KeyValue, value) ? REMOVE_KEYVALUE :
+				match(edge, CS.Dictum,    CS.KeyValue, value) ? ADD_KEYVALUE :
+				match(edge, CS.Falsity, CS.KeyTerm, value)  ? REMOVE_KEYTERM :
+				match(edge, CS.Dictum,    CS.KeyTerm, value)  ? ADD_KEYTERM :
 				NONE;
+			return result;
+		}
+		
+		private boolean match(Edge e, URI a, URI b, Value value) {
+			return e.matches(a, value) && e.matches(b, value);
 		}
 		
 		

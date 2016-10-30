@@ -24,6 +24,7 @@ package io.konig.core.extract;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -31,6 +32,7 @@ import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
@@ -38,7 +40,9 @@ import org.openrdf.model.vocabulary.RDFS;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.Vertex;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.OwlVocab;
+import io.konig.core.vocab.SH;
 
 /**
  * A utility that extracts the elements within an ontology from a broader graph.
@@ -55,6 +59,56 @@ public class OntologyExtractor {
 	public void extract(Vertex ontology, Graph target) throws ExtractException {
 		Worker worker = new Worker(ontology, target);
 		worker.run();
+	}
+	
+	/**
+	 * Get a list of the namespaces for shapes contained in a given graph.
+	 * @param graph A graph containing sh:Shape nodes.
+	 * @return The set of namespaces for all sh:Shape nodes in the graph.
+	 */
+	public Set<String> shapeNamespaces(Graph graph) {
+
+		Set<String> set = new HashSet<>();
+		List<Vertex> list = graph.v(SH.Shape).in(RDF.TYPE).toVertexList();
+		for (Vertex v : list) {
+			Resource id = v.getId();
+			if (id instanceof URI) {
+				URI uri = (URI) id;
+				set.add(uri.getNamespace());
+			}
+		}
+		return set;
+	}
+	
+	/**
+	 * Collect OWL Ontologies from a given graph, but exclude those from a supplied set.
+	 * @param source The source graph from which OWL Ontologies will be collected.
+	 * @param exclude The set of IRI values for ontologies to be excluded.
+	 * @return The OWL Ontologies from the source graph that are not referenced in the exclude set.
+	 */
+	public Set<String> collectOwlOntologies(Graph source, Set<String> exclude) {
+		Set<String> result = new HashSet<>();
+		List<Vertex> list = source.v(OWL.ONTOLOGY).in(RDF.TYPE).isIRI().toVertexList();
+		for (Vertex v : list) {
+			Resource id = v.getId();
+			String value = id.stringValue();
+			if (!exclude.contains(value)) {
+				result.add(value);
+			}
+		}
+		
+		return result;
+	}
+	
+	public void collectShapeOntologies(Graph source, Set<String> namespaceSet, Graph target) {
+
+		List<String> list = new ArrayList<>(namespaceSet);
+		Collections.sort(list);
+		
+		for (String ns : list) {
+			Vertex v = source.getVertex(new URIImpl(ns));
+			RdfUtil.deepCopy(v, target);
+		}
 	}
 	
 	private class Worker {
