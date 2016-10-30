@@ -146,7 +146,7 @@ public class BigQueryGeneratorTest {
 	private void loadShape(ShapeLoader shapeLoader, String path) throws FileNotFoundException {
 		InputStream stream = file(path);
 		try {
-			shapeLoader.loadTurtle(stream);
+			shapeLoader.loadTurtle(stream, null);
 		} finally {
 			close(stream);
 		}
@@ -192,7 +192,7 @@ public class BigQueryGeneratorTest {
 		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
 		
 		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
-		shapeLoader.loadTurtle(resource("shapes/Organization-x1.ttl"));
+		shapeLoader.loadTurtle(resource("shapes/Organization-x1.ttl"), null);
 
 		BigQueryTableGenerator generator = new BigQueryTableGenerator(shapeManager);
 		generator.writeTableDefinition(table, json);
