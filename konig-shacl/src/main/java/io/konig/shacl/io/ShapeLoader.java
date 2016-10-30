@@ -29,7 +29,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 
+import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -43,6 +45,7 @@ import io.konig.core.Graph;
 import io.konig.core.KonigValueFactory;
 import io.konig.core.NamespaceManager;
 import io.konig.core.io.CompositeRdfHandler;
+import io.konig.core.io.ContextValueFactory;
 import io.konig.core.io.JsonldParser;
 import io.konig.core.io.ListRdfHandler;
 import io.konig.core.io.NamespaceRDFHandler;
@@ -104,9 +107,10 @@ public class ShapeLoader {
 				FileInputStream input = new FileInputStream(source);
 				try {
 
+					URI fileContext = new URIImpl("file://localhost/" + source.getAbsolutePath());
 					String name = source.getName();
 					if (name.endsWith(".ttl")) {
-						loadTurtle(input);
+						loadTurtle(input, fileContext);
 					} else if (name.endsWith(".jsonld")) {
 						loadJsonld(input);
 					}
@@ -131,7 +135,11 @@ public class ShapeLoader {
 	}
 
 	public void loadTurtle(InputStream input) throws ShapeLoadException {
-		TurtleParser parser = new TurtleParser();
+		loadTurtle(input, null);
+	}
+	
+	public void loadTurtle(InputStream input, URI context) throws ShapeLoadException {
+		TurtleParser parser = new TurtleParser(new ContextValueFactory(context));
 		ShapeRdfHandler shapeHandler = new ShapeRdfHandler(shapeManager);
 		RDFHandler listHandler = new ListRdfHandler(shapeHandler, shapeHandler);
 		
