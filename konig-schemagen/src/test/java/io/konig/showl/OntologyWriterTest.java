@@ -62,7 +62,7 @@ public class OntologyWriterTest {
 				"@prefix schema: <http://schema.org/> .\n" + 
 				"@prefix vann: <http://purl.org/vocab/vann/> .\n" + 
 				"\n" + 
-				"<http://schema.org/> a owl:Ontology ; \n" + 
+				"schema: a owl:Ontology ; \n" + 
 				"	vann:preferredNamespacePrefix \"schema\" . \n" + 
 				"\n" + 
 				"schema:Person a owl:Class ; \n" + 

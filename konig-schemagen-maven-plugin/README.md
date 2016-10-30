@@ -26,20 +26,20 @@ To use the schema generator, add a maven plugin to your project as shown below.
 	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
 	  		<version>1.0.2</version>
 	  		<configuration>
-	  		  <workbookFile>${basedir}/src/dataModel.xlsx</workbookFile>
-	  		  <rdfOutDir>${basedir}/target/rdf</rdfOutDir>
+                <workbookFile>${basedir}/src/dataModel.xlsx</workbookFile>
+                <rdfOutDir>${basedir}/target/rdf</rdfOutDir>
 	  			<avroDir>${basedir}/src/main/avro</avroDir>
 	  			<jsonldDir>${basedir}/src/main/jsonld</jsonldDir>
 	  			<jsonSchemaDir>${basedir}/src/main/jsonschema</jsonSchemaDir>
-          <bqSourceDir>${basedir}/src/main/bq-config</bqSourceDir>
-          <bqOutDir>${basedir}/src/main/bigquery</bqOutDir>
+                <bqSourceDir>${basedir}/src/main/bq-config</bqSourceDir>
+                <bqOutDir>${basedir}/src/main/bigquery</bqOutDir>
 	  		</configuration>
 	  		<executions>
 	  			<execution>
-		  			<phase>generate-sources</phase>
+                    <phase>generate-sources</phase>
 		  			<goals>
-		  			  <goal>generate-rdf</goal>
-		  				<goal>generate</goal>
+                        <goal>generate-rdf</goal>
+                        <goal>generate</goal>
 		  			</goals>
 	  			</execution>
 	  		</executions>

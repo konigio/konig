@@ -32,6 +32,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
@@ -42,7 +43,7 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.CS;
 import io.konig.core.vocab.Schema;
 
-public class ChangeSetMakerTest {
+public class ChangeSetFactoryTest {
 	
 	@Ignore
 	@Test
@@ -72,8 +73,8 @@ public class ChangeSetMakerTest {
 				.addList(itemList, apple, orange, grape, plum, pear)
 			.endSubject();
 
-		ChangeSetMaker maker = new ChangeSetMaker();
-		Graph delta = maker.computeDelta(source, target, null);
+		ChangeSetFactory maker = new ChangeSetFactory();
+		Graph delta = maker.createChangeSet(source, target, null);
 		
 	}
 
@@ -109,16 +110,16 @@ public class ChangeSetMakerTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", "http://schema.org/");
 		
-		ChangeSetMaker maker = new ChangeSetMaker();
-		KeyExtractor keyExtractor = new SimpleKeyExtractor(Schema.contactPoint, Schema.contactType);
-		Graph delta = maker.computeDelta(source, target, keyExtractor);
+		ChangeSetFactory maker = new ChangeSetFactory();
+		BNodeKeyFactory keyExtractor = new SimpleKeyFactory(Schema.contactPoint, Schema.contactType);
+		Graph delta = maker.createChangeSet(source, target, keyExtractor);
 		
 		Vertex aliceNode = delta.getVertex(alice);
 		assertTrue(aliceNode != null);
 		
 		assertUndefined(aliceNode, Schema.givenName);
-		assertLiteral(aliceNode, Schema.familyName, "Jones", CS.Remove);
-		assertLiteral(aliceNode, Schema.familyName, "Smith", CS.Add);
+		assertLiteral(aliceNode, Schema.familyName, "Jones", CS.Falsity);
+		assertLiteral(aliceNode, Schema.familyName, "Smith", CS.Dictum);
 		
 		PlainTextChangeSetReportWriter reporter = new PlainTextChangeSetReportWriter(nsManager);
 		reporter.write(delta, System.out);
@@ -127,13 +128,13 @@ public class ChangeSetMakerTest {
 		assertEquals(1, contactPoint.size());
 		
 		Edge contactPointEdge = contactPoint.iterator().next();
-		assertEquals(CS.Key, contactPointEdge.getProperty(CS.function));
+		assertEquals(CS.KeyValue, contactPointEdge.getAnnotation(RDF.TYPE));
 		
 		Vertex contactPointNode = aliceNode.asTraversal().out(Schema.contactPoint).firstVertex();
-		assertLiteral(contactPointNode, Schema.contactType, "Work", CS.Key);
-		assertLiteral(contactPointNode, Schema.telephone, "555-123-4567", CS.Remove);
-		assertLiteral(contactPointNode, Schema.telephone, "555-987-6543", CS.Add);
-		assertValue(contactPointNode, Schema.gender, Schema.Female, CS.Add);
+		assertLiteral(contactPointNode, Schema.contactType, "Work", CS.KeyValue);
+		assertLiteral(contactPointNode, Schema.telephone, "555-123-4567", CS.Falsity);
+		assertLiteral(contactPointNode, Schema.telephone, "555-987-6543", CS.Dictum);
+		assertValue(contactPointNode, Schema.gender, Schema.Female, CS.Dictum);
 		
 	}
 
@@ -144,7 +145,7 @@ public class ChangeSetMakerTest {
 		for (Edge edge : set) {
 			Value v = edge.getObject();
 			if (v.equals(object)) {
-				assertEquals(function, edge.getProperty(CS.function));
+				assertEquals(function, edge.getAnnotation(RDF.TYPE));
 				return;
 			}
 		}
@@ -164,7 +165,7 @@ public class ChangeSetMakerTest {
 		for (Edge edge : set) {
 			Value v = edge.getObject();
 			if (v.equals(object)) {
-				assertEquals(function, edge.getProperty(CS.function));
+				assertEquals(function, edge.getAnnotation(RDF.TYPE));
 				return;
 			}
 		}
