@@ -10,7 +10,6 @@
   <artifactId>konig-schemagen-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
 
-  <name>konig-schemagen-maven-plugin Maven Plugin</name>
 
   <!-- FIXME change it to the project's website -->
   <url>http://maven.apache.org</url>
@@ -124,4 +123,6 @@
       </build>
     </profile>
   </profiles>
+  <name>Konig Schema Generator Maven Plugin</name>
+  <description>A Maven plugin for generating code based on semantic models</description>
 </project>

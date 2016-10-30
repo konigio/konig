@@ -10,7 +10,7 @@
   <artifactId>konig-shacl</artifactId>
   <packaging>jar</packaging>
 
-  <name>konig-shacl</name>
+  <name>Konig SHACL</name>
   <url>http://www.konig.io</url>
 
   <properties>
@@ -140,4 +140,5 @@
 	  	</plugins>
 	  </pluginManagement>
   </build>
+  <description>A library for managing data shapes in accordance with the W3C SHACL standard</description>
 </project>

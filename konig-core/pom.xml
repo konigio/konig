@@ -10,8 +10,9 @@
   <artifactId>konig-core</artifactId>
   <packaging>jar</packaging>
 
-  <name>konig-core</name>
+  <name>Konig Core</name>
   <url>http://maven.apache.org</url>
+  <description>A library for core classes (Graph, Vertex, Edge, etc.)</description>
   
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

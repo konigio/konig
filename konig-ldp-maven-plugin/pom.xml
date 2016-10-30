@@ -108,4 +108,5 @@
       </build>
     </profile>
   </profiles>
+  <description>A Maven plugin used to deploy resources to a linked data platform</description>
 </project>

@@ -10,7 +10,6 @@
   <artifactId>konig-schemagen</artifactId>
   <packaging>jar</packaging>
   <name>Konig Schema Generator</name>
-  <description>Tools for generating schemas from OWL+SHACL specifications</description>
   
   <dependencies>
   	<dependency>
@@ -52,4 +51,5 @@
 	  <plugins>
 		</plugins>
 	</build>
+  <description>Tools for building code generators based on semantic models</description>
 </project>
