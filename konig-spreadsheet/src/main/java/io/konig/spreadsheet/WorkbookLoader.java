@@ -92,6 +92,7 @@ public class WorkbookLoader {
 	
 	public WorkbookLoader(NamespaceManager nsManager) {
 		this.nsManager = nsManager;
+		nsManager.add("vann", "http://purl.org/vocab/vann/");
 	}
 
 	public void load(Workbook book, Graph graph) throws SpreadsheetException {
