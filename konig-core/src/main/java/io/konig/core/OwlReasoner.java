@@ -38,7 +38,7 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.XSD;
@@ -173,7 +173,7 @@ public class OwlReasoner {
 		buildEquivalentClasses();
 		EquivalenceClass e = equivalentClassMap.get(owlClass.getId().stringValue());
 		if (e != null) {
-			Vertex result =  e.getPreferredEntity(KOL.PreferredClass);
+			Vertex result =  e.getPreferredEntity(Konig.PreferredClass);
 			if (result != null) {
 				owlClass = result;
 			}

@@ -38,7 +38,7 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
-import io.konig.core.vocab.CS;
+import io.konig.core.vocab.Konig;
 
 public class ChangeSetFactory {
 	
@@ -245,7 +245,7 @@ public class ChangeSetFactory {
 			for (Entry<URI, Set<Edge>> entry : out) {
 				Set<Edge> set = entry.getValue();
 				for (Edge e : set) {
-					changes.edge(e).addAnnotation(RDF.TYPE, CS.Dictum);
+					changes.edge(e).addAnnotation(RDF.TYPE, Konig.Dictum);
 					Value object = e.getObject();
 					if (object instanceof BNode) {
 						BNode bnode = (BNode)object;
@@ -258,7 +258,7 @@ public class ChangeSetFactory {
 
 
 		private void add(Resource subject, URI predicate, Value object) {
-			changes.edge(subject, predicate, object).addAnnotation(RDF.TYPE, CS.Dictum);
+			changes.edge(subject, predicate, object).addAnnotation(RDF.TYPE, Konig.Dictum);
 		}
 
 
@@ -302,7 +302,7 @@ public class ChangeSetFactory {
 							
 							if (targetBNode == null) {
 								// No matching bnode in the target
-								changes.edge(e).addAnnotation(RDF.TYPE, CS.Falsity);
+								changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsity);
 								removeBNode(sourceBNode, childKey);
 								
 							} else {
@@ -314,7 +314,7 @@ public class ChangeSetFactory {
 									changes.remove(doomed);
 								}
 								
-								changes.edge(e).addAnnotation(RDF.TYPE, CS.KeyValue);
+								changes.edge(e).addAnnotation(RDF.TYPE, Konig.KeyValue);
 								
 								
 								
@@ -326,7 +326,7 @@ public class ChangeSetFactory {
 						
 					} else if (!w.hasProperty(predicate, object1)){
 						
-						Edge edge = changes.edge(e).addAnnotation(RDF.TYPE, CS.Falsity);
+						Edge edge = changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsity);
 						if (keyPart!=null) {
 							edge.addAnnotation(RDF.TYPE, keyPart);
 						}
@@ -359,14 +359,14 @@ public class ChangeSetFactory {
 
 		private Edge key(Edge e) {
 			Edge edge = changes.edge(e);
-			edge.addAnnotation(RDF.TYPE, CS.KeyValue);
+			edge.addAnnotation(RDF.TYPE, Konig.KeyValue);
 			return edge;
 		}
 
 
 
 		private void removeEdge(Edge e) {
-			changes.edge(e).addAnnotation(RDF.TYPE, CS.Falsity);
+			changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsity);
 		}
 
 		private void remove(Vertex v, BNodeKey bnodeKey) {

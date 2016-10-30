@@ -22,16 +22,14 @@ package io.konig.core.delta;
 
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.Vertex;
-import io.konig.core.vocab.CS;
+import io.konig.core.vocab.Konig;
 
 public class OwlRestrictionKeyFactory implements BNodeKeyFactory {
 
@@ -50,8 +48,8 @@ public class OwlRestrictionKeyFactory implements BNodeKeyFactory {
 					String text = builder.toString();
 					String hash = ShaBNodeHasher.SHA1(text);
 					Map<String, URI> map = new HashMap<>();
-					map.put(OWL.ONPROPERTY.stringValue(), CS.KeyValue);
-					map.put(constraint.stringValue(), CS.KeyTerm);
+					map.put(OWL.ONPROPERTY.stringValue(), Konig.KeyValue);
+					map.put(constraint.stringValue(), Konig.KeyTerm);
 					
 					return new BNodeKey(hash, map, this);
 				}
