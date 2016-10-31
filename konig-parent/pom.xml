@@ -37,7 +37,7 @@
     <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
-<!--   
+ 
   <modules>
   	<module>../konig-core</module>
   	<module>../konig-shacl</module>
@@ -48,7 +48,7 @@
   	<module>../konig-ldp-maven-plugin</module>
   	<module>../konig-gae-datastore</module>
   </modules>
- -->
+
   <developers>
     <developer>
       <id>gmcfall</id>
