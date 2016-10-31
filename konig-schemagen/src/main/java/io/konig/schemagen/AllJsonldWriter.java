@@ -31,7 +31,7 @@ import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.VS;
@@ -46,7 +46,7 @@ public class AllJsonldWriter {
 		ONTOLOGY_SKIP.add(new URIImpl(RDFS.NAMESPACE));
 		ONTOLOGY_SKIP.add(new URIImpl(XMLSchema.NAMESPACE));
 		ONTOLOGY_SKIP.add(new URIImpl(VS.NAMESPACE));
-		ONTOLOGY_SKIP.add(new URIImpl(KOL.NAMESPACE));
+		ONTOLOGY_SKIP.add(new URIImpl(Konig.NAMESPACE));
 		ONTOLOGY_SKIP.add(VANN.NAMESPACE_URI);
 		ONTOLOGY_SKIP.add(SH.NAMESPACE_URI);
 		

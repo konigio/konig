@@ -18,7 +18,7 @@ import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -324,7 +324,7 @@ public class DomainManager {
 		Resource valueClass = constraint.getValueClass();
 		
 		URI predicate = constraint.getPredicate();
-		if (predicate.equals(KOL.id)) {
+		if (predicate.equals(Konig.id)) {
 			return null;
 		}
 		

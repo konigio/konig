@@ -14,7 +14,6 @@ import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JForEach;
 import com.sun.codemodel.JMethod;
@@ -23,7 +22,7 @@ import com.sun.codemodel.JOp;
 import com.sun.codemodel.JVar;
 
 import io.konig.core.util.StringUtil;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -293,7 +292,7 @@ public class AvonWriterBuilder {
 				
 				
 				
-			} else if (p.getPredicate().equals(KOL.id)) {
+			} else if (p.getPredicate().equals(Konig.id)) {
 				
 				JClass uriClass = dataWriter.getModel().ref(URI.class);
 				JVar idVar = block.decl(uriClass, "id", JExpr.invoke(subjectVar, "getId"));

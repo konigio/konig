@@ -34,7 +34,7 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.impl.MemoryGraph;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.ORG;
 import io.konig.core.vocab.Schema;
 
@@ -67,7 +67,7 @@ public class OwlReasonerTest {
 		graph.edge(foafOrg, RDF.TYPE, OWL.CLASS);
 		graph.edge(w3cOrg, RDF.TYPE, OWL.CLASS);
 		graph.edge(schemaOrg, RDF.TYPE, RDFS.CLASS);
-		graph.edge(schemaOrg, RDF.TYPE, KOL.PreferredClass);
+		graph.edge(schemaOrg, RDF.TYPE, Konig.PreferredClass);
 		graph.edge(Schema.Person, RDF.TYPE, OWL.CLASS);
 		graph.edge(foafOrg, OWL.EQUIVALENTCLASS, w3cOrg);
 		graph.edge(w3cOrg, OWL.EQUIVALENTCLASS, schemaOrg);

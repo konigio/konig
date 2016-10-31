@@ -9,7 +9,7 @@ public class DataGeneratorConfig {
 	private List<ShapeConfig> shapeConfig = new ArrayList<>();
 	private List<ClassConstraint> classConstraint = new ArrayList<>();
 	
-	@RdfProperty("http://www.konig.io/ns/datagen/generate")
+	@RdfProperty("http://www.konig.io/ns/core/generate")
 	public void addShapeConfig(ShapeConfig config) {
 		shapeConfig.add(config);
 	}

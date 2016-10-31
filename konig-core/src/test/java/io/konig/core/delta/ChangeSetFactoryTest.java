@@ -40,7 +40,7 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.vocab.CS;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 
 public class ChangeSetFactoryTest {
@@ -118,8 +118,8 @@ public class ChangeSetFactoryTest {
 		assertTrue(aliceNode != null);
 		
 		assertUndefined(aliceNode, Schema.givenName);
-		assertLiteral(aliceNode, Schema.familyName, "Jones", CS.Falsity);
-		assertLiteral(aliceNode, Schema.familyName, "Smith", CS.Dictum);
+		assertLiteral(aliceNode, Schema.familyName, "Jones", Konig.Falsity);
+		assertLiteral(aliceNode, Schema.familyName, "Smith", Konig.Dictum);
 		
 		PlainTextChangeSetReportWriter reporter = new PlainTextChangeSetReportWriter(nsManager);
 		reporter.write(delta, System.out);
@@ -128,13 +128,13 @@ public class ChangeSetFactoryTest {
 		assertEquals(1, contactPoint.size());
 		
 		Edge contactPointEdge = contactPoint.iterator().next();
-		assertEquals(CS.KeyValue, contactPointEdge.getAnnotation(RDF.TYPE));
+		assertEquals(Konig.KeyValue, contactPointEdge.getAnnotation(RDF.TYPE));
 		
 		Vertex contactPointNode = aliceNode.asTraversal().out(Schema.contactPoint).firstVertex();
-		assertLiteral(contactPointNode, Schema.contactType, "Work", CS.KeyValue);
-		assertLiteral(contactPointNode, Schema.telephone, "555-123-4567", CS.Falsity);
-		assertLiteral(contactPointNode, Schema.telephone, "555-987-6543", CS.Dictum);
-		assertValue(contactPointNode, Schema.gender, Schema.Female, CS.Dictum);
+		assertLiteral(contactPointNode, Schema.contactType, "Work", Konig.KeyValue);
+		assertLiteral(contactPointNode, Schema.telephone, "555-123-4567", Konig.Falsity);
+		assertLiteral(contactPointNode, Schema.telephone, "555-987-6543", Konig.Dictum);
+		assertValue(contactPointNode, Schema.gender, Schema.Female, Konig.Dictum);
 		
 	}
 

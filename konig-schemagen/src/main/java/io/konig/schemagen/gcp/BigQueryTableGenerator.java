@@ -26,7 +26,7 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.vocab.GCP;
+import io.konig.core.vocab.Konig;
 import io.konig.pojo.io.PojoFactory;
 import io.konig.pojo.io.SimplePojoFactory;
 import io.konig.schemagen.SchemaGeneratorException;
@@ -152,7 +152,7 @@ public class BigQueryTableGenerator {
 	 */
 	public void writeTableDefinitions(Graph graph, File outDir) throws IOException, SchemaGeneratorException {
 		outDir.mkdirs();
-		List<Vertex> list = graph.v(GCP.GoogleCloudProject).in(RDF.TYPE).toVertexList();
+		List<Vertex> list = graph.v(Konig.GoogleCloudProject).in(RDF.TYPE).toVertexList();
 
 		JsonFactory jsonFactory = new JsonFactory();
 		PojoFactory factory = new SimplePojoFactory();	

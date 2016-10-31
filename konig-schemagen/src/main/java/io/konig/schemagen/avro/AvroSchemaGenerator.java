@@ -24,7 +24,7 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.TraversalImpl;
 import io.konig.core.util.StringUtil;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
@@ -134,7 +134,7 @@ public class AvroSchemaGenerator extends Generator {
 			
 			
 			URI schemaId = new URIImpl(schemaAddress);
-			shape.getGraph().edge(id, KOL.avroSchemaRendition, schemaId);
+			shape.getGraph().edge(id, Konig.avroSchemaRendition, schemaId);
 			alreadyProcessed = null;
 			
 			return resource;
@@ -437,7 +437,7 @@ public class AvroSchemaGenerator extends Generator {
 		
 
 			
-			if (KOL.id.equals(p.getPredicate())) {
+			if (Konig.id.equals(p.getPredicate())) {
 
 				URI scopeClass = shape.getScopeClass();
 				if (scopeClass != null) {

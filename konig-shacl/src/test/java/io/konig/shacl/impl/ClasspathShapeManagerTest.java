@@ -1,8 +1,8 @@
-package io.konig.core.vocab;
+package io.konig.shacl.impl;
 
 /*
  * #%L
- * konig-core
+ * Konig SHACL
  * %%
  * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
@@ -21,15 +21,37 @@ package io.konig.core.vocab;
  */
 
 
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
-public class KDG {
+import io.konig.core.vocab.Schema;
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
 
-	public static final URI DataGeneratorConfig = new URIImpl("http://www.konig.io/ns/datagen/DataGeneratorConfig");
-	public static final URI ShapeConfig = new URIImpl("http://www.konig.io/ns/datagen/ShapeConfig");
-	public static final URI generate = new URIImpl("http://www.konig.io/ns/datagen/generate");
-	public static final URI targetShape = new URIImpl("http://www.konig.io/ns/datagen/targetShape");
-	public static final URI shapeCount = new URIImpl("http://www.konig.io/ns/datagen/shapeCount");
-	
+public class ClasspathShapeManagerTest {
+
+	@Test
+	public void test() {
+		
+		ClasspathShapeManager manager = ClasspathShapeManager.instance();
+		
+		
+		URI personShapeId = uri("http://example.com/shape/Person");
+		
+		Shape shape = manager.getShapeById(personShapeId);
+		
+		assertTrue(shape != null);
+		
+		PropertyConstraint p = shape.getPropertyConstraint(Schema.givenName);
+		assertTrue(p != null);
+		
+	}
+
+	private URI uri(String value) {
+		return new URIImpl(value);
+	}
+
 }

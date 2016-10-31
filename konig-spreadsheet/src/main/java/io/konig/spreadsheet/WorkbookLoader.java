@@ -23,7 +23,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
@@ -350,7 +350,7 @@ public class WorkbookLoader {
 				graph.edge(shapeId, SH.scopeClass, scopeClass);
 			}
 			if (mediaType != null) {
-				graph.edge(shapeId, KOL.mediaTypeBaseName, mediaType);
+				graph.edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			}
 			
 		}

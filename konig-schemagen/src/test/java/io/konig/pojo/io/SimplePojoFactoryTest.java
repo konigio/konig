@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -12,7 +13,7 @@ import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
-import io.konig.core.vocab.KDG;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.TemporalUnit;
 import io.konig.datagen.DataGeneratorConfig;
@@ -27,14 +28,14 @@ public class SimplePojoFactoryTest {
 		MemoryGraph graph = new MemoryGraph();
 	
 		graph.builder().beginSubject()
-			.addProperty(RDF.TYPE, KDG.DataGeneratorConfig)
-			.beginBNode(KDG.generate)
-				.addProperty(KDG.targetShape, targetShape)
-				.addProperty(KDG.shapeCount, 5)
+			.addProperty(RDF.TYPE, Konig.DataGeneratorConfig)
+			.beginBNode(Konig.generate)
+				.addProperty(Konig.targetShape, targetShape)
+				.addProperty(Konig.shapeCount, 5)
 			.endSubject()
 		.endSubject();
 		
-		Vertex v = graph.v(KDG.DataGeneratorConfig).in(RDF.TYPE).firstVertex();
+		Vertex v = graph.v(Konig.DataGeneratorConfig).in(RDF.TYPE).firstVertex();
 		
 		
 		SimplePojoFactory factory = new SimplePojoFactory();
@@ -51,7 +52,7 @@ public class SimplePojoFactoryTest {
 		assertEquals(new Integer(5), shapeConfig.getShapeCount());
 		
 	}
-	
+
 	@Test
 	public void testList() {
 		MemoryGraph graph = new MemoryGraph();
@@ -69,7 +70,7 @@ public class SimplePojoFactoryTest {
 		List<String> list = person.getName();
 		assertTrue(list != null);
 	}
-	
+
 	@Test
 	public void testEnumValue() {
 		

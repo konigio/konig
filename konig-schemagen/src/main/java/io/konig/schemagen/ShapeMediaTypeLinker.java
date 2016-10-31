@@ -6,7 +6,7 @@ import org.openrdf.model.Literal;
 
 import io.konig.core.Graph;
 import io.konig.core.impl.KonigLiteral;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeMediaTypeNamer;
 
@@ -26,7 +26,7 @@ public class ShapeMediaTypeLinker {
 	public void assignMediaType(Shape shape, Graph graph) {
 		String mediaTypeName = mediaTypeNamer.baseMediaTypeName(shape);
 		Literal literal = new KonigLiteral(mediaTypeName);
-		graph.edge(shape.getId(), KOL.mediaTypeBaseName, literal);
+		graph.edge(shape.getId(), Konig.mediaTypeBaseName, literal);
 	}
 	
 	/**
