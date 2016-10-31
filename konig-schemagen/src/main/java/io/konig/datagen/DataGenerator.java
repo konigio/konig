@@ -129,16 +129,16 @@ public class DataGenerator {
 				if (shape == null) {
 					throw new DataGeneratorException("Shape not found: " + targetShape);
 				}
-				URI scopeClass = shape.getScopeClass();
-				if (scopeClass == null) {
-					throw new DataGeneratorException("scopeClass not defined for shape " + targetShape);
+				URI targetClass = shape.getTargetClass();
+				if (targetClass == null) {
+					throw new DataGeneratorException("targetClass not defined for shape " + targetShape);
 				}
 				Integer shapeCount = s.getShapeCount();
 				if (shapeCount == null) {
 					shapeCount = 1;
 				}
 				
-				String key = scopeClass.stringValue();
+				String key = targetClass.stringValue();
 				Counter c = counterMap.get(key);
 				if (c == null || c.max<shapeCount) {
 					counterMap.put(key, new Counter(shapeCount));
@@ -244,10 +244,10 @@ public class DataGenerator {
 			
 			if (Konig.id.equals(predicate)) {
 				
-				URI scopeClass = shape.getScopeClass();
-				Counter c = counterMap.get(scopeClass.stringValue());
+				URI targetClass = shape.getTargetClass();
+				Counter c = counterMap.get(targetClass.stringValue());
 				int index = index(c, depth);
-				URI id = iriGenerator.createIRI(shape.getScopeClass(), index);
+				URI id = iriGenerator.createIRI(shape.getTargetClass(), index);
 				json.writeStringField(fieldName, id.stringValue());
 				
 			} else if (datatype != null) {

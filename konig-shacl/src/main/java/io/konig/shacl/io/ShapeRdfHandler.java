@@ -73,8 +73,8 @@ public class ShapeRdfHandler extends RDFHandlerBase implements ListHandler{
 		
 		if (predicate.equals(SH.property)) {
 			shape(subject).add(property(object));
-		} else if (predicate.equals(SH.scopeClass)) {
-			shape(subject).setScopeClass((URI)object);
+		} else if (predicate.equals(SH.targetClass)) {
+			shape(subject).setTargetClass((URI)object);
 			
 		} else if (predicate.equals(Konig.equivalentRelationalShape) && object instanceof URI) {
 			shape(subject).setEquivalentRelationalShape((URI) object);

@@ -7,7 +7,7 @@
 @prefix reg: <http://schema.pearson.com/ns/registrar/>.
 
 <http://schema.pearson.com/shapes/x1/org/Membership> a sh:Shape ;
-	sh:scopeClass org:Membership ;
+	sh:targetClass org:Membership ;
 	sh:property [
 		sh:predicate org:member ;
 		rdfs:comment "The person who has a membership within the given organization" ;
