@@ -29,7 +29,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
 import io.konig.core.Vertex;
-import io.konig.core.vocab.CS;
+import io.konig.core.vocab.Konig;
 
 public class SimpleKeyFactory implements BNodeKeyFactory {
 
@@ -42,7 +42,7 @@ public class SimpleKeyFactory implements BNodeKeyFactory {
 	public SimpleKeyFactory(URI accessor, URI keyPredicate) {
 		this.accessor = accessor;
 		this.keyPredicate = keyPredicate;
-		part.put(keyPredicate.stringValue(), CS.KeyValue);
+		part.put(keyPredicate.stringValue(), Konig.KeyValue);
 	}
 
 	@Override

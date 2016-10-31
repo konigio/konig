@@ -26,7 +26,7 @@ import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
-import io.konig.core.vocab.CS;
+import io.konig.core.vocab.Konig;
 
 /**
  * A processor that applies a ChangeSet to a source graph.
@@ -50,9 +50,9 @@ public class ChangeSetProcessor {
 			Value value = e.getAnnotation(RDF.TYPE);
 			
 			
-			if (e.matches(CS.Falsity, value)) {
+			if (e.matches(Konig.Falsity, value)) {
 				target.remove(e);
-			} else if (e.matches(CS.Dictum, value)) {
+			} else if (e.matches(Konig.Dictum, value)) {
 				target.edge(e);
 			}
 		}

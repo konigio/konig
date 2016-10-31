@@ -43,7 +43,7 @@ import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
-import io.konig.core.vocab.CS;
+import io.konig.core.vocab.Konig;
 
 public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 	private static final String ADD             = "+    ";
@@ -54,7 +54,6 @@ public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 	private static final String REMOVE_KEYVALUE = "-*   ";
 	private static final String ADD_KEYTERM     = "+#   ";
 	private static final String REMOVE_KEYTERM  = "-#   ";
-	private static final String PRESERVE        = " %   ";
 	private static final String NONE            = "?    ";
 	
 	private NamespaceManager nsManager;
@@ -273,13 +272,13 @@ public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 		private String functionString(Edge edge) {
 			Value value = edge.getAnnotation(RDF.TYPE);
 			String result = 
-				CS.Dictum.equals(value)      ? ADD :
-				CS.Falsity.equals(value)   ? REMOVE :
-				CS.KeyValue.equals(value) ? KEYVALUE :
-				match(edge, CS.Falsity, CS.KeyValue, value) ? REMOVE_KEYVALUE :
-				match(edge, CS.Dictum,    CS.KeyValue, value) ? ADD_KEYVALUE :
-				match(edge, CS.Falsity, CS.KeyTerm, value)  ? REMOVE_KEYTERM :
-				match(edge, CS.Dictum,    CS.KeyTerm, value)  ? ADD_KEYTERM :
+				Konig.Dictum.equals(value)      ? ADD :
+				Konig.Falsity.equals(value)   ? REMOVE :
+				Konig.KeyValue.equals(value) ? KEYVALUE :
+				match(edge, Konig.Falsity, Konig.KeyValue, value) ? REMOVE_KEYVALUE :
+				match(edge, Konig.Dictum,  Konig.KeyValue, value) ? ADD_KEYVALUE :
+				match(edge, Konig.Falsity, Konig.KeyTerm, value)  ? REMOVE_KEYTERM :
+				match(edge, Konig.Dictum,  Konig.KeyTerm, value)  ? ADD_KEYTERM :
 				NONE;
 			return result;
 		}
