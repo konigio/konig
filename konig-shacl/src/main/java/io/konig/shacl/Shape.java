@@ -47,7 +47,7 @@ public class Shape {
 	private static final List<PropertyConstraint> EMPTY_PROPERTY_LIST = new EmptyList<PropertyConstraint>();
 	
 	private Resource id;
-	private URI scopeClass;
+	private URI targetClass;
 	private List<PropertyConstraint> property;
 	private Constraint constraint;
 	private Context jsonldContext;
@@ -157,12 +157,12 @@ public class Shape {
 		return this;
 	}
 
-	public URI getScopeClass() {
-		return scopeClass;
+	public URI getTargetClass() {
+		return targetClass;
 	}
 
-	public void setScopeClass(URI scopeClass) {
-		this.scopeClass = scopeClass;
+	public void setTargetClass(URI targetClass) {
+		this.targetClass = targetClass;
 	}
 
 	public Resource getId() {
@@ -191,8 +191,8 @@ public class Shape {
 	public void toJson(JsonGenerator json) throws IOException {
 		json.writeStartObject();
 		json.writeStringField("id", id.toString());
-		if (scopeClass != null) {
-			json.writeStringField("scopeClass", scopeClass.stringValue());
+		if (targetClass != null) {
+			json.writeStringField("targetClass", targetClass.stringValue());
 		}
 		
 		if (property!=null && !property.isEmpty()) {

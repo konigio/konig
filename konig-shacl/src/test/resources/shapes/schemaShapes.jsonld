@@ -10,7 +10,7 @@
 	"@graph" : [
 	     {
 	    	 "@id" : "v1:Person",
-	    	 "scopeClass" : "schema:Person",
+	    	 "targetClass" : "schema:Person",
 	    	 "property" : [{
 	    		 "predicate" : "schema:givenName",
 	    		 "datatype" : "xsd:string",
@@ -29,7 +29,7 @@
 	    	 }]
 	     },{
 	    	 "@id" : "v1:PostalAddress",
-	    	 "scopeClass" : "schema:PostalAddress",
+	    	 "targetClass" : "schema:PostalAddress",
 	    	 "property" : [{
 	    		 "predicate" : "schema:streetAddress",
 	    		 "datatype" : "xsd:string",
@@ -53,7 +53,7 @@
 	    	 }]
 	     },{
 	    	 "@id" : "v2:Person",
-	    	 "scopeClass" : "schema:Person",
+	    	 "targetClass" : "schema:Person",
 	    	 "constraint" : {
 	    		 "or" : [{
 	    			 "property" : [{

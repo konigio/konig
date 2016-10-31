@@ -47,7 +47,7 @@ public class DomainProperty {
 		}
 		URI result = null;
 		for (ShapeProperty p : shapePropertyList) {
-			URI d = p.getShape().getScopeClass();
+			URI d = p.getShape().getTargetClass();
 			if (d != null) {
 				if (result == null) {
 					result = d;

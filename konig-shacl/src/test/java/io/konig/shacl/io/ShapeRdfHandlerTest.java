@@ -80,7 +80,7 @@ public class ShapeRdfHandlerTest extends KonigTest {
 		
 		Shape addressShape = address.getValueShape();
 		assertTrue(addressShape != null);
-		assertEquals(Schema.PostalAddress, addressShape.getScopeClass());
+		assertEquals(Schema.PostalAddress, addressShape.getTargetClass());
 		
 		Shape person2 = shapeManager.getShapeById(uri("http://www.konig.io/shape/schema/v2/Person"));
 		assertTrue(person2 != null);
@@ -128,7 +128,7 @@ public class ShapeRdfHandlerTest extends KonigTest {
 		
 		Shape addressShape = address.getValueShape();
 		assertTrue(addressShape != null);
-		assertEquals(Schema.PostalAddress, addressShape.getScopeClass());
+		assertEquals(Schema.PostalAddress, addressShape.getTargetClass());
 		
 		Shape person2 = shapeManager.getShapeById(uri("http://www.konig.io/shape/schema/v2/Person"));
 		assertTrue(person2 != null);

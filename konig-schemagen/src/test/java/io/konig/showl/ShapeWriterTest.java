@@ -39,7 +39,7 @@ public class ShapeWriterTest {
 		graph.builder()
 			.beginSubject(personShape)
 				.addProperty(RDF.TYPE, SH.Shape)
-				.addProperty(SH.scopeClass, Schema.Person)
+				.addProperty(SH.targetClass, Schema.Person)
 			.endSubject()
 			;
 		
@@ -57,7 +57,7 @@ public class ShapeWriterTest {
 				"@prefix sh: <http://www.w3.org/ns/shacl#> .\n" + 
 				"\n" + 
 				"schema1:Person a sh:Shape ; \n" + 
-				"	sh:scopeClass schema:Person .";
+				"	sh:targetClass schema:Person .";
 		
 		String actual = readFile("target/test/ShapeWriter/schema1_Person.ttl").replace("\r", "").trim();
 		

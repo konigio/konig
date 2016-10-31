@@ -5,7 +5,7 @@
 @prefix schema: <http://schema.org/> .
 
 v1:Person
-	sh:scopeClass schema:Person ;
+	sh:targetClass schema:Person ;
 	sh:property [
 		sh:predicate schema:givenName ;
 		sh:datatype xsd:string ;
@@ -24,7 +24,7 @@ v1:Person
 	] .
 	
 v1:PostalAddress
-	sh:scopeClass schema:PostalAddress ;
+	sh:targetClass schema:PostalAddress ;
 	sh:property [
 		sh:predicate schema:streetAddress ;
 		sh:datatype xsd:string ;
@@ -48,7 +48,7 @@ v1:PostalAddress
 	] .
 	
 v2:Person
-	sh:scopeClass schema:Person ;
+	sh:targetClass schema:Person ;
 	sh:constraint [
 		sh:or ([
 			sh:property [

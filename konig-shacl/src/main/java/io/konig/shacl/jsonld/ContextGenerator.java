@@ -120,7 +120,7 @@ public class ContextGenerator {
 			if (shapeId instanceof URI && !ignoreShapeId) {
 				addIndividual((URI)shapeId);
 			}
-			addClassHierarchy(shape.getScopeClass());
+			addClassHierarchy(shape.getTargetClass());
 			addProperties(shape);
 		}
 		

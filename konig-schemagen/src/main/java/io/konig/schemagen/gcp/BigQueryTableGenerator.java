@@ -262,7 +262,7 @@ public class BigQueryTableGenerator {
 			shape = shapeManager.getShapeById(tableShapeId);
 		} else {
 			
-			List<Shape> shapeList = shapeManager.getShapesByScopeClass(tableClassId);
+			List<Shape> shapeList = shapeManager.getShapesByTargetClass(tableClassId);
 			
 			if (shapeList.isEmpty()) {
 				throw new SchemaGeneratorException("No shapes found for class " + tableClassId);

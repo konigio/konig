@@ -46,10 +46,10 @@ public class LogicalShapeBuilderTest {
 		
 		shapeBuilder
 			.beginShape("http://example.com/shapes/v1/schema/Organization")
-				.scopeClass(Schema.Organization)
+				.targetClass(Schema.Organization)
 			.endShape()
 			.beginShape(personShapeId)
-				.scopeClass(Schema.Person)
+				.targetClass(Schema.Person)
 				.beginProperty(Schema.givenName)
 					.datatype(XMLSchema.STRING)
 					.maxCount(1)
@@ -60,7 +60,7 @@ public class LogicalShapeBuilderTest {
 				.endProperty()
 			.endShape()
 			.beginShape("http://example.com/shapes/v2/schema/Person")
-				.scopeClass(Schema.Person)
+				.targetClass(Schema.Person)
 				.beginProperty(Schema.givenName)
 					.maxCount(2)
 					.minCount(1)
@@ -83,7 +83,7 @@ public class LogicalShapeBuilderTest {
 		Shape personShape = classManager.getLogicalShape(Schema.Person);
 		
 		assertTrue(personShape != null);
-		assertEquals(Schema.Person, personShape.getScopeClass());
+		assertEquals(Schema.Person, personShape.getTargetClass());
 		
 		PropertyConstraint p = personShape.getPropertyConstraint(Schema.givenName);
 		assertEquals(p.getMinCount(), new Integer(0));

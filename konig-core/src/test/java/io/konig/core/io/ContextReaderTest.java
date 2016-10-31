@@ -51,7 +51,7 @@ public class ContextReaderTest {
 
 		Context context = contextReader.parse((ObjectNode)node);
 		
-		Term term = context.getTerm("scopeClass");
+		Term term = context.getTerm("targetClass");
 		assertTrue(term != null);
 		
 		term = context.getTerm("schema");
