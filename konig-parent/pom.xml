@@ -20,6 +20,7 @@
   	<jsonld-java.version>0.7.0</jsonld-java.version>
   	<httpclient.version>4.5.2</httpclient.version>
   	<poi.version>3.14</poi.version>
+    <appengine.version>1.9.25</appengine.version>
   </properties>
   
   <licenses>
@@ -45,6 +46,7 @@
   	<module>../konig-schemagen-maven-plugin</module>
   	<module>../konig-ldp</module>
   	<module>../konig-ldp-maven-plugin</module>
+  	<module>../konig-gae-datastore</module>
 <!--   	
   	<module>../konig-appengine</module>
 -->
