@@ -15,7 +15,7 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.LogicalShapeBuilder;
 import io.konig.shacl.LogicalShapeNamer;
@@ -37,7 +37,7 @@ public class JavaClassBuilderTest {
 		shapeBuilder
 			.beginShape(personShapeId)
 				.scopeClass(Schema.Person)
-				.beginProperty(KOL.id)
+				.beginProperty(Konig.id)
 					.nodeKind(NodeKind.IRI)
 					.maxCount(1)
 					.minCount(1)

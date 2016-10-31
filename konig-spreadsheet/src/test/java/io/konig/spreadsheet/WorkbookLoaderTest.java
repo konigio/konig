@@ -26,7 +26,7 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
@@ -103,7 +103,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDF.TYPE, SH.Shape);
 		assertValue(v, RDFS.COMMENT, "A light-weight data shape for a person.");
 		assertValue(v, SH.scopeClass, Schema.Person);
-		assertValue(v, KOL.mediaTypeBaseName, "application/vnd.example.v1.schema.person");
+		assertValue(v, Konig.mediaTypeBaseName, "application/vnd.example.v1.schema.person");
 		
 		
 	}

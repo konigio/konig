@@ -1,5 +1,5 @@
 
-@prefix : <http://www.konig.io/ns/datagen/> .
+@prefix : <http://www.konig.io/ns/core/> .
 @prefix schema: <http://schema.org/> .
 
 [] a :DataGeneratorConfig ;

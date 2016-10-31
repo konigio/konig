@@ -36,7 +36,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.AS;
-import io.konig.core.vocab.GCP;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.pojo.io.PojoFactory;
 import io.konig.pojo.io.SimplePojoFactory;
@@ -178,7 +178,7 @@ public class BigQueryGeneratorTest {
 		RdfUtil.loadTurtle(graph, resource("bigquery/gcp-project.ttl"), "");
 		PojoFactory factory = new SimplePojoFactory();
 		
-		Vertex v = graph.v(GCP.GoogleCloudProject).in(RDF.TYPE).firstVertex();
+		Vertex v = graph.v(Konig.GoogleCloudProject).in(RDF.TYPE).firstVertex();
 		
 		GoogleCloudProject project = factory.create(v, GoogleCloudProject.class);
 		BigQueryTable table = project.dataset("test-dataset").table("Organization");

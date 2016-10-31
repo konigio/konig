@@ -28,7 +28,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.util.StringUtil;
-import io.konig.core.vocab.KOL;
+import io.konig.core.vocab.Konig;
 import io.konig.schemagen.jsonschema.JsonSchemaDatatype;
 import io.konig.schemagen.jsonschema.JsonSchemaTypeMapper;
 import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaTypeMapper;
@@ -242,7 +242,7 @@ public class DataGenerator {
 			
 			String fieldName = predicate.getLocalName();
 			
-			if (KOL.id.equals(predicate)) {
+			if (Konig.id.equals(predicate)) {
 				
 				URI scopeClass = shape.getScopeClass();
 				Counter c = counterMap.get(scopeClass.stringValue());
