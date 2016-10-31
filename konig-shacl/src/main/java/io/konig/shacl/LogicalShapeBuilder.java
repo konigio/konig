@@ -47,10 +47,10 @@ public class LogicalShapeBuilder {
 	}
 
 
-	private URI scopeClass(Shape shape) {
-		URI scopeClass = shape.getScopeClass();
+	private URI targetClass(Shape shape) {
+		URI targetClass = shape.getTargetClass();
 		try {
-			return scopeClass == null ? null : reasoner.preferredClassAsURI(scopeClass);
+			return targetClass == null ? null : reasoner.preferredClassAsURI(targetClass);
 		} catch (AmbiguousPreferredClassException e) {
 			throw new RuntimeException(e);
 		}
@@ -63,11 +63,11 @@ public class LogicalShapeBuilder {
 		
 		stack = new HashSet<>();
 		for (Shape shape : list) {
-			URI scopeClass = scopeClass(shape);
+			URI targetClass = targetClass(shape);
 			
-			Shape logicalShape = classManager.getLogicalShape(scopeClass);
+			Shape logicalShape = classManager.getLogicalShape(targetClass);
 			if (logicalShape == null) {
-				buildLogicalShape(list, scopeClass, classManager);
+				buildLogicalShape(list, targetClass, classManager);
 			}
 		}
 
@@ -77,7 +77,7 @@ public class LogicalShapeBuilder {
 			if (prior == null) {
 				URI shapeId = shapeNamer.logicalShapeForOwlClass(owlClass);
 				Shape shape = new Shape(shapeId);
-				shape.setScopeClass(owlClass);
+				shape.setTargetClass(owlClass);
 				classManager.addLogicalShape(shape);
 			}
 		}
@@ -88,19 +88,19 @@ public class LogicalShapeBuilder {
 
 
 
-	private void buildLogicalShape(List<Shape> list, URI scopeClass, ClassManager classManager) {
+	private void buildLogicalShape(List<Shape> list, URI targetClass, ClassManager classManager) {
 		
-		if (scopeClass == null) {
+		if (targetClass == null) {
 			return;
 		}
 		
-		URI shapeId = shapeNamer.logicalShapeForOwlClass(scopeClass);
+		URI shapeId = shapeNamer.logicalShapeForOwlClass(targetClass);
 		
 		Shape shape = new Shape(shapeId);
-		shape.setScopeClass(scopeClass);
+		shape.setTargetClass(targetClass);
 		classManager.addLogicalShape(shape);
 		
-		List<Shape> filter = filterByScopeClass(list, scopeClass);
+		List<Shape> filter = filterByTargetClass(list, targetClass);
 		
 		Map<String, List<PropertyConstraint>> map = buildPropertyMap(filter);
 		for (List<PropertyConstraint> pList : map.values()) {
@@ -152,13 +152,13 @@ public class LogicalShapeBuilder {
 			Shape valueShapeB = p.getValueShape();
 			
 			if (valueShapeB!=null) {
-				classB = leastUpperBound(shape, p, "sh:class", scopeClass(valueShapeB), classB);
+				classB = leastUpperBound(shape, p, "sh:class", targetClass(valueShapeB), classB);
 			}
 			if (valueShapeA!=null && classA==null) {
-				classA = valueShapeA.getScopeClass();
+				classA = valueShapeA.getTargetClass();
 			}
 			if (valueShapeA!=null && classA != null) {
-				classA = leastUpperBound(shape, p, "sh:class", scopeClass(valueShapeA), classA);
+				classA = leastUpperBound(shape, p, "sh:class", targetClass(valueShapeA), classA);
 			}
 			
 			classB = leastUpperBound(shape, p, "sh:class", classB, classA);
@@ -193,7 +193,7 @@ public class LogicalShapeBuilder {
 			// TODO: compute least upper bound via semantic reasoning
 			throw new RuntimeException("Conflicting " + context + " detected on property " + 
 					p.getPredicate().getLocalName() + " of " +
-					shape.getScopeClass().getLocalName());
+					shape.getTargetClass().getLocalName());
 		}
 		return null;
 	}
@@ -224,11 +224,11 @@ public class LogicalShapeBuilder {
 
 
 
-	private List<Shape> filterByScopeClass(List<Shape> list, URI scopeClass) {
+	private List<Shape> filterByTargetClass(List<Shape> list, URI targetClass) {
 	
 		List<Shape> result = new ArrayList<>();
 		for (Shape shape : list) {
-			if (scopeClass.equals(scopeClass(shape))) {
+			if (targetClass.equals(targetClass(shape))) {
 				result.add(shape);
 			}
 		}

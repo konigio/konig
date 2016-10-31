@@ -335,7 +335,7 @@ public class WorkbookLoader {
 			
 			URI shapeId = uriValue(row, shapeIdCol);
 			Literal shapeComment = stringLiteral(row, shapeCommentCol);
-			URI scopeClass = uriValue(row, shapeScopeCol);
+			URI targetClass = uriValue(row, shapeScopeCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			
 			if (shapeId == null) {
@@ -346,8 +346,8 @@ public class WorkbookLoader {
 			if (shapeComment != null) {
 				graph.edge(shapeId, RDFS.COMMENT, shapeComment);
 			}
-			if (scopeClass != null) {
-				graph.edge(shapeId, SH.scopeClass, scopeClass);
+			if (targetClass != null) {
+				graph.edge(shapeId, SH.targetClass, targetClass);
 			}
 			if (mediaType != null) {
 				graph.edge(shapeId, Konig.mediaTypeBaseName, mediaType);

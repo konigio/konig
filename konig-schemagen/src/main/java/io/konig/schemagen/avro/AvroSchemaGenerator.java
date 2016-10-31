@@ -184,9 +184,9 @@ public class AvroSchemaGenerator extends Generator {
 		
 		Shape shape = new Shape();
 		
-		Value scopeClass = shapeVertex.getValue(SH.scopeClass);
-		if (scopeClass instanceof URI) {
-			shape.setScopeClass((URI) scopeClass);
+		Value targetClass = shapeVertex.getValue(SH.targetClass);
+		if (targetClass instanceof URI) {
+			shape.setTargetClass((URI) targetClass);
 		}
 		
 		List<Vertex> propertyList = shapeVertex.asTraversal().out(SH.property).distinct().toVertexList();
@@ -421,9 +421,9 @@ public class AvroSchemaGenerator extends Generator {
 		List<Vertex> typeList = null;
 		URI predicate = p.getPredicate();
 		if (RDF.TYPE.equals(predicate)) {
-			URI scopeClass = shape.getScopeClass();
-			if (scopeClass != null) {
-				Vertex scopeVertex = graph.vertex(scopeClass);
+			URI targetClass = shape.getTargetClass();
+			if (targetClass != null) {
+				Vertex scopeVertex = graph.vertex(targetClass);
 				typeList = RdfUtil.subtypeList(scopeVertex);
 				typeList.add(scopeVertex);
 				for (Vertex v : typeList) {
@@ -439,9 +439,9 @@ public class AvroSchemaGenerator extends Generator {
 			
 			if (Konig.id.equals(p.getPredicate())) {
 
-				URI scopeClass = shape.getScopeClass();
-				if (scopeClass != null) {
-					Vertex scopeVertex = graph.vertex(scopeClass);
+				URI targetClass = shape.getTargetClass();
+				if (targetClass != null) {
+					Vertex scopeVertex = graph.vertex(targetClass);
 					typeList = RdfUtil.subtypeList(scopeVertex);
 					typeList.add(scopeVertex);
 				}
@@ -462,7 +462,7 @@ public class AvroSchemaGenerator extends Generator {
 			} 
 			
 			if (typeList.isEmpty()) {
-				typeList = propertyVertex.asTraversal().out(SH.valueShape).out(SH.scopeClass).distinct().toVertexList();
+				typeList = propertyVertex.asTraversal().out(SH.valueShape).out(SH.targetClass).distinct().toVertexList();
 				List<Vertex> subtypes = RdfUtil.listSubtypes(typeList);
 				typeList.addAll(subtypes);
 			}

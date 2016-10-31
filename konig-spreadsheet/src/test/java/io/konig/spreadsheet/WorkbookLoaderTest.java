@@ -102,7 +102,7 @@ public class WorkbookLoaderTest {
 		
 		assertValue(v, RDF.TYPE, SH.Shape);
 		assertValue(v, RDFS.COMMENT, "A light-weight data shape for a person.");
-		assertValue(v, SH.scopeClass, Schema.Person);
+		assertValue(v, SH.targetClass, Schema.Person);
 		assertValue(v, Konig.mediaTypeBaseName, "application/vnd.example.v1.schema.person");
 		
 		

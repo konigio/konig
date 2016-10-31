@@ -114,8 +114,8 @@ public class ShapeBuilder {
 		return this.beginShape(new URIImpl(shapeIRI));
 	}
 	
-	public ShapeBuilder scopeClass(URI type) {
-		peekShape().setScopeClass(type);
+	public ShapeBuilder targetClass(URI type) {
+		peekShape().setTargetClass(type);
 		return this;
 	}
 	

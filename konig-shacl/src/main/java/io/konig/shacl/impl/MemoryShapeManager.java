@@ -68,10 +68,10 @@ public class MemoryShapeManager implements ShapeManager {
 	}
 
 	@Override
-	public List<Shape> getShapesByScopeClass(URI scopeClass) {
+	public List<Shape> getShapesByTargetClass(URI targetClass) {
 		List<Shape> list = new ArrayList<>();
 		for (Shape s : shapeMap.values()) {
-			if (scopeClass.equals(s.getScopeClass())) {
+			if (targetClass.equals(s.getTargetClass())) {
 				list.add(s);
 			}
 		}

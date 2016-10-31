@@ -64,7 +64,7 @@ public class SH {
 	public static final URI AndConstraint = new URIImpl("http://www.w3.org/ns/shacl#AndConstraint");
 	public static final URI OrConstraint = new URIImpl("http://www.w3.org/ns/shacl#OrConstraint");
 	public static final URI ClosedShapeConstraint = new URIImpl("http://www.w3.org/ns/shacl#ClosedShapeConstraint");
-	public static final URI scopeClass = new URIImpl("http://www.w3.org/ns/shacl#scopeClass");
+	public static final URI targetClass = new URIImpl("http://www.w3.org/ns/shacl#targetClass");
 	public static final URI property = new URIImpl(PROPERTY);
 	public static final URI minLength = new URIImpl("http://www.w3.org/ns/shacl#minLength");
 	public static final URI maxLength = new URIImpl("http://www.w3.org/ns/shacl#maxLength");

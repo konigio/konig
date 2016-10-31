@@ -9,7 +9,7 @@
 	"@graph" : [
 	     {
 	    	 "@id" : "v1:Person",
-	    	 "scopeClass" : "schema:Person",
+	    	 "targetClass" : "schema:Person",
 	    	 "property" : [{
 	    		 "predicate" : "schema:firstName",
 	    		 "datatype" : "xsd:string",
