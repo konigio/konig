@@ -10,6 +10,19 @@
   <description>Tools for managing entities in Google Datastore</description>
 
 	<dependencies>
+	
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-shacl</artifactId>
+			<version>${konig.version}</version>
+  	</dependency>
+  	
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>${jodatime.version}</version>
+		</dependency>
+	
 		<dependency>
 			<groupId>com.google.appengine</groupId>
 			<artifactId>appengine-api-1.0-sdk</artifactId>
