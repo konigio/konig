@@ -169,6 +169,9 @@ public class Shape {
 		return id;
 	}
 	
+	public void setId(Resource id) {
+		this.id = id;
+	}
 
 	public String toString() {
 		

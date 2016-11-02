@@ -11,10 +11,13 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.URIImpl;
 
+import io.konig.annotation.InverseOf;
 import io.konig.annotation.RdfProperty;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.Vertex;
 import io.konig.schemagen.SchemaGeneratorException;
 
@@ -26,49 +29,75 @@ public class SimplePojoFactory implements PojoFactory {
 	public <T> T create(Vertex v, Class<T> type) throws ParseException {
 		
 
-		try {
+		Worker worker = new Worker();
+		return worker.create(v, type);
+	}
+	
+	private class Worker {
+		private Map<Resource,Object> objectMap = new HashMap<>();
+		
+		public <T> T create(Vertex v, Class<T> type) throws ParseException {
 			
-			ClassInfo<T> info = getClassInfo(type);
-			return create(v, info);
+
+			try {
+				
+				ClassInfo<T> info = getClassInfo(type);
+				return create(v, info);
+				
+			} catch (
+				InstantiationException | IllegalAccessException | IllegalArgumentException | 
+				InvocationTargetException | NoSuchMethodException | SecurityException e
+			) {
+				throw new ParseException(e);
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		private <T> T create(Vertex v, ClassInfo<T> info) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+			Resource resourceId = v.getId();
+			Object instance = objectMap.get(resourceId);
 			
-		} catch (
-			InstantiationException | IllegalAccessException | IllegalArgumentException | 
-			InvocationTargetException | NoSuchMethodException | SecurityException e
-		) {
-			throw new ParseException(e);
+			if (instance!=null && info.getJavaType().isAssignableFrom(instance.getClass())) {
+				return (T) instance;
+			}
+			
+			if (instance!=null) {
+				throw new KonigException("Type conflict for resource <" + resourceId + ">.  Expected " + 
+						info.getJavaType().getName() + " but found " + instance.getClass().getName());
+			}
+			
+			T pojo = null;
+			pojo = info.getJavaType().newInstance();
+			objectMap.put(resourceId, pojo);
+			Set<Edge> edgeSet = v.outEdgeSet();
+			info.setIdProperty(pojo, v);
+			Graph g = v.getGraph();
+			for (Edge e : edgeSet) {
+				URI predicate = e.getPredicate();
+				PropertyInfo p = info.getPropertyInfo(predicate);
+				if (p != null) {
+					Value value = e.getObject();
+					p.set(this, g, pojo, value);
+				}
+			}
+			
+			return pojo;
+		}
+
+		private <T> ClassInfo<T> getClassInfo(Class<T> javaType) {
+			@SuppressWarnings("unchecked")
+			ClassInfo<T> result = (ClassInfo<T>) classInfo.get(javaType.getName());
+			
+			if (result == null) {
+				result = new ClassInfo<T>(javaType);
+				classInfo.put(javaType.getName(), result);
+			}
+			return result;
 		}
 	}
 
-	private <T> T create(Vertex v, ClassInfo<T> info) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		T pojo = null;
-		pojo = info.getJavaType().newInstance();
-		Set<Edge> edgeSet = v.outEdgeSet();
-		info.setIdProperty(pojo, v);
-		Graph g = v.getGraph();
-		for (Edge e : edgeSet) {
-			System.out.println(e.toString());
-			URI predicate = e.getPredicate();
-			PropertyInfo p = info.getPropertyInfo(predicate);
-			if (p != null) {
-				Value value = e.getObject();
-				p.set(g, pojo, value);
-			}
-		}
-		
-		return pojo;
-	}
 	
 	
-	private <T> ClassInfo<T> getClassInfo(Class<T> javaType) {
-		@SuppressWarnings("unchecked")
-		ClassInfo<T> result = (ClassInfo<T>) classInfo.get(javaType.getName());
-		
-		if (result == null) {
-			result = new ClassInfo<T>(javaType);
-			classInfo.put(javaType.getName(), result);
-		}
-		return result;
-	}
 	
 	private class ClassInfo<T> {
 		private Class<T> javaType;
@@ -98,7 +127,7 @@ public class SimplePojoFactory implements PojoFactory {
 				String name = m.getName();
 				if ("setId".equals(name)) {
 					Class<?>[] typeList = m.getParameterTypes();
-					if (typeList.length==1 && URI.class==typeList[0]) {
+					if (typeList.length==1 && Resource.class.isAssignableFrom(typeList[0])) {
 						idSetter = m;
 						break;
 					}
@@ -175,7 +204,7 @@ public class SimplePojoFactory implements PojoFactory {
 			return predicate;
 		}
 
-		void set(Graph g, Object instance, Value value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		void set(Worker worker, Graph g, Object instance, Value value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 						
 			Class<?>[] typeArray = setter.getParameterTypes();
 			if (typeArray.length==1) {
@@ -198,14 +227,52 @@ public class SimplePojoFactory implements PojoFactory {
 					setter.invoke(instance,  (URI) value);
 				} else if (value instanceof Resource) {
 					Vertex vertex = g.vertex((Resource)value);
+					Object object = worker.create(vertex, type);
 					
-					Object object = create(vertex, type);
 					setter.invoke(instance, object);
+					
+					setInverse(worker, instance, object);
 				} else if (type== boolean.class) {
 					Boolean booleanValue = Boolean.parseBoolean(value.stringValue());
 					setter.invoke(instance, booleanValue);
 				}
 			}
+			
+			
+		}
+
+		/**
+		 * If the predicate associated with this PropertyInfo has an inverse, then
+		 * set the inverse.
+		 * @param worker
+		 * @param subject
+		 * @param object
+		 */
+		private void setInverse(Worker worker, Object subject, Object object) {
+			
+			InverseOf annotation = setter.getAnnotation(InverseOf.class);
+			
+			if (annotation != null) {
+				URI inverseId = new URIImpl(annotation.value());
+
+				Class<?> objectType = object.getClass();
+				ClassInfo<?> classInfo = worker.getClassInfo(objectType);
+				
+				PropertyInfo inverseInfo = classInfo.getPropertyInfo(inverseId);
+				if (inverseInfo != null) {
+					try {
+						// TODO:  If the setter is an 'add' method (i.e. adds to a collection), then
+						//  we need to check the collection to ensure that the relationship has not
+						//  already been established.
+						inverseInfo.setter.invoke(object, subject);
+					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+						throw new KonigException(e);
+					}
+				}
+			}
+			
+			
+			
 			
 			
 		}
