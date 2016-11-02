@@ -27,7 +27,7 @@ import org.openrdf.model.impl.URIImpl;
 public class Konig {
 	
 	public static final String NAMESPACE = "http://www.konig.io/ns/core/";
-
+	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
 	public static final URI Falsity = new URIImpl("http://www.konig.io/ns/core/Falsity");
@@ -52,6 +52,18 @@ public class Konig {
 	public static final URI localKey = new URIImpl("http://www.konig.io/ns/core/localKey");
 
 	public static final URI equivalentRelationalShape = new URIImpl("http://www.konig.io/ns/core/equivalentRelationalShape");
+	
+	// Project Management terms
+
+	public static final URI GooglePubSubTopic = new URIImpl("http://www.konig.io/ns/core/GooglePubSubTopic");
+	public static final URI projectName = new URIImpl("http://www.konig.io/ns/core/projectName");
+	public static final URI topicName = new URIImpl("http://www.konig.io/ns/core/topicName");
+	public static final URI acceptsShape = new URIImpl("http://www.konig.io/ns/core/acceptsShape");
+	public static final URI jsonTemplate = new URIImpl("http://www.konig.io/ns/core/jsonTemplate");
+	public static final URI topicProject = new URIImpl("http://www.konig.io/ns/core/topicProject");
+	public static final URI projectTopic = new URIImpl("http://www.konig.io/ns/core/projectTopic");
+	public static final URI datasetTemplate = new URIImpl("http://www.konig.io/ns/core/datasetTemplate");
+
 	
 	// Google Cloud Platform terms
 
