@@ -69,6 +69,7 @@ public class Schema {
 	public static final URI memberOf = new URIImpl("http://schema.org/memberOf");
 	public static final URI name = new URIImpl("http://schema.org/name");
 	public static final URI parent = new URIImpl("http://schema.org/parent");
+	public static final URI postalCode = new URIImpl("http://schema.org/postalCode");
 	public static final URI streetAddress = new URIImpl("http://schema.org/streetAddress");
 	public static final URI thumbnailUrl = new URIImpl("http://schema.org/thumbnailUrl");
 	public static final URI timeRequired = new URIImpl("http://schema.org/timeRequired");
