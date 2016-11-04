@@ -4,6 +4,7 @@
     <groupId>io.konig</groupId>
     <artifactId>konig-parent</artifactId>
     <version>2.0.0</version>
+    <relativePath>../konig-parent/pom.xml</relativePath>
   </parent>
   <artifactId>konig-spreadsheet</artifactId>
   <name>Konig Spreadsheet</name>
