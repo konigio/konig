@@ -20,21 +20,23 @@ public interface AvroNamer {
 	 */
 	String toAvroSchemaURI(String shapeIRI);
 	
-	/**
-	 * Construct a name for the enumeration defined by a PropertyConstraint
-	 * @param recordName The fully-qualified name of the Avro record in which the property is defined.
-	 * @param constraint  A PropertyConstraint containing a list of allowed values
-	 * @param vertex The Vertex for the supplied constraint.
-	 * @return The name for the Avro enumeration given by the PropertyConstraint
-	 */
-	String enumName(String recordName, PropertyConstraint constraint, Vertex vertex);
-	
+		
 	/**
 	 * Get the Avro IDL file for a given Shape.
 	 * @param shapeIRI The IRI for the Shape for which the corresponding Avro IDL file is requested
 	 * @return The Avro IDL file for the given Shape
 	 */
 	File idlFile(URI shapeIRI);
+	
+	/**
+	 * Construct a name for the enumeration defined by a PropertyConstraint
+	 * @param recordName The fully-qualified name of the Avro record in which the property is defined.
+	 * @param constraint  A PropertyConstraint containing a list of allowed values
+	 * @return The name for the Avro enumeration given by the PropertyConstraint
+	 */
+	String enumName(String recordName, PropertyConstraint constraint);
+	
+	String valueShapeName(String recordName, PropertyConstraint constraint);
 	
 	
 

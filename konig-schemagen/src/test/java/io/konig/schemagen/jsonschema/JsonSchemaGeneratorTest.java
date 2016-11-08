@@ -1,7 +1,9 @@
 package io.konig.schemagen.jsonschema;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -9,6 +11,8 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.konig.core.ContextManager;
@@ -17,11 +21,14 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.io.impl.JsonUtil;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaTypeMapper;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeBuilder;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -29,8 +36,42 @@ import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.io.ShapeLoader;
 
 public class JsonSchemaGeneratorTest {
-
+	
 	@Test
+	public void testNodeKind() {
+		
+		URI shapeId = uri("http://example.com/shapes/v1/schema/Person");
+		
+		ShapeBuilder shapeBuilder = new ShapeBuilder();
+		shapeBuilder.beginShape(shapeId)
+			.targetClass(Schema.Person)
+			.nodeKind(NodeKind.IRI)
+		.endShape();
+
+
+		ShapeMediaTypeNamer mediaTypeNamer = new SimpleShapeMediaTypeNamer();
+		JsonSchemaNamer namer = new SimpleJsonSchemaNamer("/json-schema", mediaTypeNamer);
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", "http://schema.org/");
+		JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
+		JsonSchemaGenerator generator = new JsonSchemaGenerator(namer, nsManager, typeMapper);
+		
+		Shape shape = shapeBuilder.getShape(shapeId);
+		ObjectNode objectNode = generator.generateJsonSchema(shape);
+		
+		ObjectNode propertyMap = (ObjectNode) objectNode.get("properties");
+		assertTrue(propertyMap != null);
+		
+		ObjectNode idNode = (ObjectNode) propertyMap.get("id");
+		assertTrue(idNode!=null);
+		JsonNode typeValue = idNode.get("type");
+		assertTrue(typeValue!=null);
+		assertEquals("string", typeValue.asText());
+		
+	
+	}
+
+	@Ignore
 	public void test() {
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();

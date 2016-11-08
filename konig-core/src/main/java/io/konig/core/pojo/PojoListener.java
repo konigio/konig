@@ -1,8 +1,8 @@
-package io.konig.shacl.json;
+package io.konig.core.pojo;
 
 /*
  * #%L
- * Konig SHACL
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
@@ -21,27 +21,20 @@ package io.konig.shacl.json;
  */
 
 
-import java.io.IOException;
+import org.openrdf.model.Resource;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.konig.core.Vertex;
-import io.konig.shacl.Shape;
-
-public class JsonShapeWriterImpl implements JsonShapeWriter {
-
-
-	@Override
-	public void toJson(Vertex subject, Shape shape, JsonGenerator json) throws IOException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public ObjectNode toJson(Vertex subject, Shape shape) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+/**
+ * A listener that reacts to the mapping of an RDF resource to a Java POJO.
+ * @author Greg McFall
+ *
+ */
+public interface PojoListener {
+	
+	/**
+	 * React to the mapping of an RDF resource to a Java POJO
+	 * @param id The identifier for the RDF resource
+	 * @param pojo The POJO that was created for the RDF Resource.
+	 */
+	void map(Resource id, Object pojo);
 
 }

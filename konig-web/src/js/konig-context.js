@@ -25,7 +25,7 @@ $(document).ready(function() {
 		foaf: "http://xmlns.com/foaf/0.1/",
 		ks: "http://www.konig.io/schema/",
 		ke: "http://www.konig.io/entity/",
-		kol: "http://www.konig.io/ns/kol/",
+		konig: "http://www.konig.io/ns/core/",
 		prov: "http://www.w3.org/ns/prov#",
 		owl: "http://www.w3.org/2002/07/owl#",
 		rdfs: "http://www.w3.org/2000/01/rdf-schema#",
@@ -73,7 +73,8 @@ $(document).ready(function() {
 		double : new IRI('http://www.w3.org/2001/XMLSchema#double'),
 		string : new IRI('http://www.w3.org/2001/XMLSchema#string'),
 		date : new IRI('http://www.w3.org/2001/XMLSchema#date'),
-		dateTime : new IRI('http://www.w3.org/2001/XMLSchema#dateTime')
+		dateTime : new IRI('http://www.w3.org/2001/XMLSchema#dateTime'),
+		anyURI : new IRI('http://www.w3.org/2001/XMLSchema#anyURI')
 	}
 	
 	konig.foaf = {
@@ -119,6 +120,7 @@ $(document).ready(function() {
 		minCount: new IRI("http://www.w3.org/ns/shacl#minCount"),
 		IRI : new IRI("http://www.w3.org/ns/shacl#IRI"),
 		BlankNode : new IRI("http://www.w3.org/ns/shacl#BlankNode"),
+		BlankNodeOrIRI : new IRI("http://www.w3.org/ns/shacl#BlankNodeOrIRI"),
 		Literal : new IRI("http://www.w3.org/ns/shacl#Literal")
 	};
 	
@@ -175,11 +177,12 @@ $(document).ready(function() {
 		domainIncludes : new IRI("http://schema.org/domainIncludes"),
 		rangeIncludes : new IRI("http://schema.org/rangeIncludes")
 	};
-	konig.kol = {
-		LogicalShape : new IRI("http://www.konig.io/ns/kol/LogicalShape"),	
-		mediaTypeBaseName : new IRI("http://www.konig.io/ns/kol/mediaTypeBaseName"),
-		avroSchemaRendition : new IRI("http://www.konig.io/ns/kol/avroSchemaRendition"),
-		jsonSchemaRendition : new IRI("http://www.konig.io/ns/kol/jsonSchemaRendition")
+	konig.konig = {
+		id : new IRI("http://www.konig.io/ns/core/id"),
+		LogicalShape : new IRI("http://www.konig.io/ns/core/LogicalShape"),	
+		mediaTypeBaseName : new IRI("http://www.konig.io/ns/core/mediaTypeBaseName"),
+		avroSchemaRendition : new IRI("http://www.konig.io/ns/core/avroSchemaRendition"),
+		jsonSchemaRendition : new IRI("http://www.konig.io/ns/core/jsonSchemaRendition")
 	};
 	
 });

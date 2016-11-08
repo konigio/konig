@@ -17,8 +17,14 @@ import org.openrdf.model.vocabulary.RDFS;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
@@ -183,14 +189,46 @@ public class AvroSchemaGenerator extends Generator {
 		
 		
 		Shape shape = new Shape();
+
+		boolean fieldStart = false;
+		
 		
 		Value targetClass = shapeVertex.getValue(SH.targetClass);
 		if (targetClass instanceof URI) {
 			shape.setTargetClass((URI) targetClass);
 		}
 		
+		Value nodeKind = shapeVertex.getValue(SH.nodeKind);
+		if (nodeKind != null) {
+			json.writeArrayFieldStart("fields");
+			json.writeStartObject();
+			fieldStart = true;
+
+			json.writeStringField("name", "id");
+			
+			if (SH.IRI.equals(nodeKind)) {
+
+				json.writeStringField("type", "string");
+				
+			} else {
+				json.writeArrayFieldStart("type");
+				json.writeString("null");
+				json.writeString("string");
+				json.writeEndArray();
+			}
+
+			if (targetClass instanceof URI) {
+				URI targetClassId = (URI) targetClass;
+				String doc = "A URI that identifies the " + targetClassId.getLocalName();
+				json.writeStringField("doc", doc);
+			} else {
+				json.writeStringField("doc", "A URI that identifies the resource");
+			}
+			
+			json.writeEndObject();
+		}
+		
 		List<Vertex> propertyList = shapeVertex.asTraversal().out(SH.property).distinct().toVertexList();
-		boolean fieldStart = false;
 		for (Vertex p : propertyList) {
 			if (!fieldStart) {
 				json.writeArrayFieldStart("fields");
@@ -271,7 +309,7 @@ public class AvroSchemaGenerator extends Generator {
 		if (strictValue != null) {
 			json.writeStartObject();
 			json.writeStringField("type", "enum");
-			json.writeStringField("name", namer.enumName(recordName, property, propertyVertex));
+			json.writeStringField("name", namer.enumName(recordName, property));
 			json.writeFieldName("symbols");
 			json.writeStartArray();
 			json.writeString(strictValue);
@@ -280,7 +318,7 @@ public class AvroSchemaGenerator extends Generator {
 		} else if (enumList != null) {
 			json.writeStartObject();
 			json.writeStringField("type", "enum");
-			json.writeStringField("name", namer.enumName(recordName, property, propertyVertex));
+			json.writeStringField("name", namer.enumName(recordName, property));
 			json.writeFieldName("symbols");
 			json.writeStartArray();
 			for (String value : enumList) {
@@ -348,15 +386,6 @@ public class AvroSchemaGenerator extends Generator {
 
 
 
-	private String extendedValueName(PropertyConstraint property) {
-		URI predicate = property.getPredicate();
-		StringBuilder builder = new StringBuilder();
-		builder.append(StringUtil.capitalize(predicate.getLocalName()));
-		builder.append("Value");
-		
-		return builder.toString();
-	}
-
 
 	private PropertyConstraint asPropertyConstraint(Shape shape, Vertex propertyVertex) {
 
@@ -388,7 +417,7 @@ public class AvroSchemaGenerator extends Generator {
 		}
 		if (allowedValues != null) {
 			for (Value value : allowedValues) {
-				p.addAllowedValue(value);
+				p.addIn(value);
 			}
 		}
 		p.setValueShapeId(uri(propertyVertex, SH.valueShape));
@@ -413,7 +442,7 @@ public class AvroSchemaGenerator extends Generator {
 		Graph graph = propertyVertex.getGraph();
 		
 		
-		List<Value> allowed = p.getAllowedValues();
+		List<Value> allowed = p.getIn();
 		if (allowed!=null && !allowed.isEmpty()) {
 			return;
 		}
@@ -510,6 +539,213 @@ public class AvroSchemaGenerator extends Generator {
 		return v.asTraversal().firstValue(predicate);
 	}
 	
+
 	
+	public ObjectNode generateSchema(Shape shape) throws KonigException {
+		Worker worker = new Worker();
+
+		Resource shapeId = shape.getId();
+		if (shapeId instanceof URI) {
+			URI shapeURI = (URI) shapeId;
+
+			String avroName = namer.toAvroFullName(shapeURI);
+			return worker.createSchema(shape, avroName);
+		}
+		
+		throw new KonigException("Shape must have a URI id");
+		
+	}
+	
+	private class Worker {
+		private JsonNodeFactory factory;
+		private ObjectMapper mapper;
+		private Set<String> memory;
+		
+		Worker() {
+			factory = JsonNodeFactory.instance;
+			mapper = new ObjectMapper();
+			memory = new HashSet<>();
+		}
+		
+		ObjectNode createSchema(Shape shape, String avroName) {
+			memory.add(avroName);
+			
+			ObjectNode json = factory.objectNode();
+			json.put("name",  avroName);
+			json.put("type", "record");
+			addFields(avroName, shape, json);
+			return json;
+		}
+
+		private void addFields(String avroName, Shape shape, ObjectNode json)  {
+			ArrayNode fieldArray = null;
+			NodeKind nodeKind = shape.getNodeKind();
+			URI targetClass = shape.getTargetClass();
+			if (nodeKind != null) {
+				fieldArray = mapper.createArrayNode();
+				json.set("fields", fieldArray);
+				
+				ObjectNode idField = mapper.createObjectNode();
+				fieldArray.add(idField);
+				
+				idField.put("name", "id");
+				if (SH.IRI.equals(nodeKind)) {
+					idField.put("type", "string");
+				} else {
+					ArrayNode typeValue = mapper.createArrayNode();
+					idField.set("type", typeValue);
+					typeValue.add("null");
+					typeValue.add("string");
+				}
+				if (targetClass != null) {
+					String doc = "A URI that identifies the " + targetClass.getLocalName();
+					json.put("doc", doc);
+				} else {
+					json.put("doc", "A URI that identifies the resource");
+				}
+			}
+			
+			List<PropertyConstraint> propertyList = shape.getProperty();
+			
+			for (PropertyConstraint p : propertyList) {
+				if (fieldArray == null) {
+					fieldArray = mapper.createArrayNode();
+					json.set("fields", fieldArray);
+				}
+				addField(shape, avroName, p, fieldArray);
+			}
+			
+		}
+
+		private void addField(Shape shape, String avroName, PropertyConstraint p, ArrayNode fieldArray) {
+			URI predicate = p.getPredicate();
+			String fieldName = predicate.getLocalName();
+			
+			ObjectNode field = mapper.createObjectNode();
+			fieldArray.add(field);
+			
+			field.put("name", fieldName);
+			Integer maxCount = p.getMaxCount();
+			Integer minCount = p.getMinCount();
+			String doc = documentation(p);
+			if (doc != null) {
+				field.put("doc", doc);
+			}
+			
+			if (maxCount==null || maxCount>1) {
+				ObjectNode typeValue = mapper.createObjectNode();
+				field.set("type", typeValue);
+				typeValue.put("type", "array");
+				JsonNode itemType = type(avroName, p);
+				typeValue.set("items", itemType);
+				
+			} else if (minCount==null || minCount==0) {
+				JsonNode typeValue = type(avroName, p);
+				field.set("type", typeValue);
+				
+			} else {
+				field.set("type", type(avroName, p));
+			}
+			
+			
+		}
+
+		private JsonNode type(String avroName, PropertyConstraint p) {
+			
+			NodeKind nodeKind = p.getNodeKind();
+			
+			Set<String> enumList = enumList(p);
+			URI datatype = p.getDatatype();
+			Shape valueShape = p.getValueShape();
+			
+			String strictValue = strictValue(p);
+			
+			if (strictValue != null) {
+				ObjectNode typeValue = mapper.createObjectNode();
+				typeValue.put("type", "enum");
+				typeValue.put("name", namer.enumName(avroName, p));
+				ArrayNode symbolList = mapper.createArrayNode();
+				typeValue.set("symbols", symbolList);
+				symbolList.add(strictValue);
+				
+				return typeValue;
+			} else if (enumList != null) {
+				ObjectNode typeValue = mapper.createObjectNode();
+				typeValue.put("type", "enum");
+				typeValue.put("name", namer.enumName(avroName, p));
+				ArrayNode symbolList = mapper.createArrayNode();
+				typeValue.set("symbols", symbolList);
+				for (String value : enumList) {
+					symbolList.add(value);
+				}
+				return typeValue;
+				
+			} else if (nodeKind == NodeKind.IRI) {
+				return factory.textNode("string");
+			} else if (RDF.LANGSTRING.equals(datatype)) {
+				ObjectNode typeValue = factory.objectNode();
+				typeValue.put("name", extendedValueName(p));
+				typeValue.put("name", "record");
+				ArrayNode array = factory.arrayNode();
+				typeValue.set("fields", array);
+				ObjectNode valueField = factory.objectNode();
+				array.add(valueField);
+				valueField.put("name", "value");
+				valueField.put("type", "string");
+				
+				ObjectNode langField = factory.objectNode();
+				array.add(langField);
+				langField.put("name", "language");
+				langField.put("type", "string");
+				
+				return typeValue;
+				
+			} if (datatype != null) {
+				AvroDatatype avroDatatype = datatypeMapper.toAvroDatatype(datatype);
+				if (avroDatatype == null) {
+					throw new KonigException("AvroDatatype not found " + datatype);
+				}
+				String typeName = avroDatatype.getTypeName();
+				String logicalType = avroDatatype.getLogicalType();
+				
+				if (logicalType == null) {
+					return factory.textNode(typeName);
+				} else {
+					ObjectNode typeValue = factory.objectNode();
+					typeValue.put("type", typeName);
+					typeValue.put("logicalType", logicalType);
+					return typeValue;
+				}
+			} else if (valueShape != null) {
+				
+				Resource id = valueShape.getId();
+				String shapeName = null;
+				if (id instanceof URI) {
+					shapeName = namer.toAvroFullName((URI)id);
+				} else {
+					shapeName = namer.valueShapeName(avroName, p);
+				}
+				
+				if (memory.contains(shapeName)) {
+					return factory.textNode(shapeName);
+				}
+				
+				return createSchema(valueShape, shapeName);
+			}
+			
+			
+			return null;
+		}
+	}
+
+
+	private String extendedValueName(PropertyConstraint property) {
+		URI predicate = property.getPredicate();
+		StringBuilder builder = new StringBuilder();
+		builder.append(StringUtil.capitalize(predicate.getLocalName()));
+		builder.append("Value");
+		
+		return builder.toString();
+	}
 
 }

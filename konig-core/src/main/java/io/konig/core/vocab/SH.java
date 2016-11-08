@@ -33,6 +33,9 @@ public class SH {
 	public static final URI Shape = new URIImpl("http://www.w3.org/ns/shacl#Shape");
 	public static final URI BlankNode = new URIImpl("http://www.w3.org/ns/shacl#BlankNode");
 	public static final URI Literal = new URIImpl("http://www.w3.org/ns/shacl#Literal");
+	public static final URI BlankNodeOrIRI = new URIImpl("http://www.w3.org/ns/shacl#BlankNodeOrIRI");
+	public static final URI BlankNodeOrLiteral = new URIImpl("http://www.w3.org/ns/shacl#BlankNodeOrLiteral");
+	public static final URI IRIOrLiteral = new URIImpl("http://www.w3.org/ns/shacl#IRIOrLiteral");
 
 	public static final URI predicate = new URIImpl("http://www.w3.org/ns/shacl#predicate");
 	public static final URI in = new URIImpl("http://www.w3.org/ns/shacl#in");

@@ -1,8 +1,8 @@
-package io.konig.shacl.json;
+package io.konig.pojo.io;
 
 /*
  * #%L
- * Konig SHACL
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
@@ -21,27 +21,26 @@ package io.konig.shacl.json;
  */
 
 
-import java.io.IOException;
+public class TestPerson {
+	
+	private String name;
+	private TestAddress address;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.konig.core.Vertex;
-import io.konig.shacl.Shape;
-
-public class JsonShapeWriterImpl implements JsonShapeWriter {
-
-
-	@Override
-	public void toJson(Vertex subject, Shape shape, JsonGenerator json) throws IOException {
-		// TODO Auto-generated method stub
-
+	public String getName() {
+		return name;
 	}
 
-	@Override
-	public ObjectNode toJson(Vertex subject, Shape shape) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+	public void setName(String name) {
+		this.name = name;
 	}
 
+	public TestAddress getAddress() {
+		return address;
+	}
+
+	public void setAddress(TestAddress address) {
+		this.address = address;
+	}
+
+	
 }

@@ -33,7 +33,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			    "as" : "http://www.w3.org/ns/activitystreams#",
 			    "cnt" : "http://schema.pearson.com/ns/content/",
 			    "dc" : "http://purl.org/dc/terms/",
-			    "kol" : "http://www.konig.io/ns/kol/",
+			    "konig" : "http://www.konig.io/ns/core/",
 			    "org" : "http://www.w3.org/ns/org#",
 			    "owl" : "http://www.w3.org/2002/07/owl#",
 			    "prov" : "http://www.w3.org/ns/prov#",
@@ -423,13 +423,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@id" : "cnt:Citation"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.cnt.citation"
 			    }
 			  }, {
@@ -460,13 +460,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    },
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationProvenance/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationProvenance/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.cnt.citationprovenance"
 			    }
 			  }, {
@@ -477,7 +477,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			    },
 			    "sh:property" : [ {
 			      "sh:predicate" : {
-			        "@id" : "kol:id"
+			        "@id" : "konig:id"
 			      },
 			      "rdfs:comment" : {
 			        "@value" : "A URI that identifies the source"
@@ -526,13 +526,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.cnt.citationsource"
 			    }
 			  }, {
@@ -701,13 +701,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitation/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitation/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.xas.createcitation"
 			    }
 			  }, {
@@ -756,13 +756,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@value" : "application/vnd.pearson.v1.xas.createcitation+json"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.xas.createcitationprovenance"
 			    }
 			  }, {
@@ -801,7 +801,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      }
 			    }, {
 			      "sh:predicate" : {
-			        "@id" : "kol:id"
+			        "@id" : "konig:id"
 			      },
 			      "rdfs:comment" : {
 			        "@value" : "The URI of the resource"
@@ -818,13 +818,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.schema.creativework"
 			    }
 			  }, {
@@ -969,13 +969,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Load/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Load/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.xas.load"
 			    }
 			  }, {
@@ -1024,13 +1024,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.xas.loadprovenance"
 			    }
 			  }, {
@@ -1196,13 +1196,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Login/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/Login/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.xas.login"
 			    }
 			  }, {
@@ -1227,7 +1227,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      }
 			    }, {
 			      "sh:predicate" : {
-			        "@id" : "kol:id"
+			        "@id" : "konig:id"
 			      },
 			      "rdfs:comment" : {
 			        "@value" : "The address of the login page"
@@ -1244,13 +1244,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v2/xas/LoginPage/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v2/xas/LoginPage/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v2.xas.loginpage"
 			    }
 			  }, {
@@ -1299,13 +1299,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.xas.loginprovenance"
 			    }
 			  }, {
@@ -1345,13 +1345,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/org/Membership/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/org/Membership/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.org.membership"
 			    }
 			  }, {
@@ -1377,7 +1377,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      }
 			    }, {
 			      "sh:predicate" : {
-			        "@id" : "kol:id"
+			        "@id" : "konig:id"
 			      },
 			      "sh:nodeKind" : {
 			        "@id" : "sh:IRI"
@@ -1391,13 +1391,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/schema/Person/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/schema/Person/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.schema.person"
 			    }
 			  }, {
@@ -1418,13 +1418,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    },
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/schema/SoftwareApplication/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/schema/SoftwareApplication/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.schema.softwareapplication"
 			    }
 			  }, {
@@ -1446,7 +1446,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      }
 			    }, {
 			      "sh:predicate" : {
-			        "@id" : "kol:id"
+			        "@id" : "konig:id"
 			      },
 			      "sh:nodeKind" : {
 			        "@id" : "sh:IRI"
@@ -1461,7 +1461,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			      }
 			    }, {
 			      "sh:predicate" : {
-			        "@id" : "kol:id"
+			        "@id" : "konig:id"
 			      },
 			      "sh:nodeKind" : {
 			        "@id" : "sh:IRI"
@@ -1475,13 +1475,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    } ],
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.owl.thing"
 			    }
 			  }, {
@@ -1492,7 +1492,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			    },
 			    "sh:property" : {
 			      "sh:predicate" : {
-			        "@id" : "kol:id"
+			        "@id" : "konig:id"
 			      },
 			      "rdfs:comment" : {
 			        "@value" : "The address of the WebPage"
@@ -1509,13 +1509,13 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			        "@type" : "xsd:integer"
 			      }
 			    },
-			    "kol:avroSchemaRendition" : {
+			    "konig:avroSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/schema/WebPage/avro"
 			    },
-			    "kol:jsonSchemaRendition" : {
+			    "konig:jsonSchemaRendition" : {
 			      "@id" : "http://schema.pearson.com/shapes/v1/schema/WebPage/jsonschema"
 			    },
-			    "kol:mediaTypeBaseName" : {
+			    "konig:mediaTypeBaseName" : {
 			      "@value" : "application/vnd.pearson.v1.schema.webpage"
 			    }
 			  } ]

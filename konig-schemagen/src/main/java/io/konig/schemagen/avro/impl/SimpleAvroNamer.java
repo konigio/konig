@@ -100,9 +100,8 @@ public class SimpleAvroNamer implements AvroNamer {
 	}
 
 	@Override
-	public String enumName(String recordName, PropertyConstraint constraint, Vertex vertex) {
+	public String enumName(String recordName, PropertyConstraint constraint) {
 		StringBuilder builder = new StringBuilder();
-		builder.append(recordName);
 		builder.append(StringUtil.capitalize(constraint.getPredicate().getLocalName()));
 		builder.append("Enum");
 		
@@ -113,6 +112,17 @@ public class SimpleAvroNamer implements AvroNamer {
 	public File idlFile(URI shapeIRI) {
 		String fileName = toAvroFullName(shapeIRI) + ".avdl";
 		return idlDir==null ? new File(fileName) : new File(idlDir, fileName);
+	}
+
+	@Override
+	public String valueShapeName(String recordName, PropertyConstraint constraint) {
+		String fieldName = constraint.getPredicate().getLocalName();
+		StringBuilder builder = new StringBuilder();
+		builder.append(recordName);
+		builder.append('.');
+		builder.append(fieldName);
+		builder.append("Shape");
+		return builder.toString();
 	}
 
 	

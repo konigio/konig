@@ -47,7 +47,7 @@ public class PropertyConstraint {
 
 	private Resource id;
 	private URI predicate;
-	private List<Value> allowedValues;
+	private List<Value> in;
 	private Integer minCount;
 	private Integer maxCount;
 	private Integer minLength;
@@ -94,7 +94,7 @@ public class PropertyConstraint {
 
 	public PropertyConstraint clone() {
 		PropertyConstraint other = new PropertyConstraint(id, predicate);
-		other.allowedValues = allowedValues;
+		other.in = in;
 		other.datatype = datatype;
 		other.directType = directType;
 		other.documentation = documentation;
@@ -126,6 +126,11 @@ public class PropertyConstraint {
 	public String getDocumentation() {
 		return documentation;
 	}
+	
+	public void setComment(String comment) {
+		this.documentation = comment;
+	}
+	
 	public void setDocumentation(String documentation) {
 		this.documentation = documentation;
 	}
@@ -195,15 +200,15 @@ public class PropertyConstraint {
 		this.nodeKind = nodeKind;
 	}
 	
-	public void addAllowedValue(Value value) {
-		if (allowedValues == null) {
-			allowedValues = new ArrayList<Value>();
+	public void addIn(Value value) {
+		if (in == null) {
+			in = new ArrayList<Value>();
 		}
-		allowedValues.add(value);
+		in.add(value);
 	}
 	
-	public void setAllowedValue(List<Value> list) {
-		allowedValues = list;
+	public void setIn(List<Value> list) {
+		in = list;
 	}
 	
 	public void addKnownValue(Value value) {
@@ -248,8 +253,8 @@ public class PropertyConstraint {
 	 * Get read-only list of allowed-values for this property constraint.
 	 * @return
 	 */
-	public List<Value> getAllowedValues() {
-		return allowedValues;
+	public List<Value> getIn() {
+		return in;
 	}
 
 	public Integer getMinCount() {
