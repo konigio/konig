@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.konig.core.Graph;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
+import io.konig.core.json.JsonBuilder;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;

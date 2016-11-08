@@ -13,7 +13,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
-import io.konig.pojo.io.SimplePojoFactory;
+import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.shacl.Shape;
 
 public class GooglePubSubTopicTest {

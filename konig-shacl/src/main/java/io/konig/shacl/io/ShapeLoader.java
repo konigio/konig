@@ -27,8 +27,9 @@ import java.io.FileNotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.Map;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.URIImpl;
@@ -40,15 +41,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.ContextManager;
-import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigValueFactory;
 import io.konig.core.NamespaceManager;
-import io.konig.core.io.CompositeRdfHandler;
-import io.konig.core.io.ContextValueFactory;
-import io.konig.core.io.JsonldParser;
-import io.konig.core.io.ListRdfHandler;
-import io.konig.core.io.NamespaceRDFHandler;
+import io.konig.core.impl.MemoryGraph;
+import io.konig.core.io.GraphLoadHandler;
+import io.konig.core.io.JsonldLoader;
+import io.konig.core.pojo.PojoContext;
+import io.konig.core.pojo.PojoListener;
+import io.konig.core.pojo.SimplePojoFactory;
+import io.konig.core.vocab.SH;
+import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class ShapeLoader {
@@ -139,64 +142,57 @@ public class ShapeLoader {
 	}
 	
 	public void loadTurtle(InputStream input, URI context) throws ShapeLoadException {
-		TurtleParser parser = new TurtleParser(new ContextValueFactory(context));
-		ShapeRdfHandler shapeHandler = new ShapeRdfHandler(shapeManager);
-		RDFHandler listHandler = new ListRdfHandler(shapeHandler, shapeHandler);
 		
-		CompositeRdfHandler composite = new CompositeRdfHandler(listHandler);
+		Graph graph = new MemoryGraph();
 		
-		if (namespaceManager != null) {
-			composite.add(new NamespaceRDFHandler(namespaceManager));
-		}
-		if (listener != null) {
-			composite.add(listener);
-		}
-		parser.setRDFHandler(composite);
+		GraphLoadHandler handler = new GraphLoadHandler(graph);
+		handler.setQuadContext(context);
+		TurtleParser turtle  = new TurtleParser();
+		turtle.setRDFHandler(handler);
 		try {
-			parser.parse(input, "");
-		} catch (RDFParseException | RDFHandlerException | IOException e) {
-			throw new ShapeLoadException(e);
+			turtle.parse(input, "");
+		} catch (Throwable oops) {
+			throw new ShapeLoadException(oops);
 		}
+		
+		load(graph);
+		
+		
 	}
 
 	public void loadJsonld(InputStream input) throws ShapeLoadException {
-		
-		load(input, null);
+		Graph graph = new MemoryGraph();
+		JsonldLoader loader = new JsonldLoader();
+		try {
+			loader.load(input, graph, contextManager, namespaceManager);
+			load(graph);
+		} catch (RDFParseException | RDFHandlerException | IOException e) {
+			
+			throw new ShapeLoadException(e);
+		}
 	}
 	
 	public void load(Graph graph) throws ShapeLoadException {
-		RDFHandler handler = new ShapeRdfHandler(shapeManager);
-		try {
-			handler.startRDF();
-			Iterator<Edge> sequence = graph.iterator();
-			while (sequence.hasNext()) {
-				Edge edge = sequence.next();
-				handler.handleStatement(edge);
+		
+		SimplePojoFactory factory = new SimplePojoFactory();
+		PojoContext context = new PojoContext();
+		context.setListener(new PojoListener() {
+
+			@Override
+			public void map(Resource id, Object pojo) {
+				if ((pojo instanceof Shape) && (id instanceof URI)) {
+					shapeManager.addShape((Shape)pojo);
+				}
+				
 			}
-			handler.endRDF();
-		} catch (RDFHandlerException e) {
-			throw new ShapeLoadException(e);
-		}
+		
+			
+		});
+		context.mapClass(SH.Shape, Shape.class);
+		factory.createAll(graph, context);
+		
 	}
 	
-	public void load(InputStream input, RDFHandler handler) throws ShapeLoadException {
-		RDFHandler rdfHandler = new ShapeRdfHandler(shapeManager);
-		CompositeRdfHandler composite = new CompositeRdfHandler(rdfHandler);
-		
-		if (handler != null) {
-			composite.add(handler);
-		}
-		if (listener != null) {
-			composite.add(listener);
-		}
-		JsonldParser parser = new JsonldParser(contextManager, namespaceManager, valueFactory);
-		parser.setRDFHandler(composite);
-		try {
-			parser.parse(input, "");
-		} catch (RDFParseException | RDFHandlerException | IOException e) {
-			throw new ShapeLoadException(e);
-		}
-	}
 
 	public ContextManager getContextManager() {
 		return contextManager;

@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.poi.common.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -212,6 +213,21 @@ public class WorkbookLoader {
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
 			
 				
+			if (Konig.id.equals(propertyId)) {
+				int min = minCount==null ? 0 : minCount.intValue();
+				int max = maxCount==null ? -1 : maxCount.intValue();
+				
+				if (max > 1) {
+					String msg = MessageFormat.format(
+						"Invalid maxCount for property konig:id on Shape <{0}>: must be less than or equal to 1.",
+						shapeId);
+					throw new SpreadsheetException(msg);
+				}
+								
+				URI nodeKind =	min==0 ? SH.BlankNodeOrIRI : SH.IRI ;
+				edge(shapeId, SH.nodeKind, nodeKind);
+				return;
+			}
 			
 			Resource constraint = graph.vertex().getId();
 			
@@ -867,6 +883,12 @@ public class WorkbookLoader {
 					case Cell.CELL_TYPE_STRING :
 						text = cell.getStringCellValue();
 						break;
+						
+					case Cell.CELL_TYPE_FORMULA :
+						Hyperlink link = cell.getHyperlink();
+						if (link != null) {
+							text = link.getAddress();
+						}
 						
 					}
 					

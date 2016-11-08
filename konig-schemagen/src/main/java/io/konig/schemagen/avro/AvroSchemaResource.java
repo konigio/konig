@@ -1,5 +1,9 @@
 package io.konig.schemagen.avro;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.konig.core.io.impl.JsonUtil;
+
 public class AvroSchemaResource {
 	private String text;
 	private String schemaName;
@@ -21,5 +25,9 @@ public class AvroSchemaResource {
 
 	public int getUsageCount() {
 		return usageCount;
+	}
+	
+	public ObjectNode toObjectNode() {
+		return JsonUtil.parse(text);
 	}
 }

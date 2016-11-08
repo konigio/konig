@@ -110,7 +110,7 @@ public class OntologySummarizerTest {
 		System.out.println(text);
 		
 		assertTrue(text.contains("@prefix schema: <http://schema.org/> ."));
-		assertTrue(text.contains("schema:Person a owl:Class ;"));
+		assertTrue(text.contains("schema:Person a owl:Class "));
 		assertTrue(text.contains("schema:Organization a owl:Class ."));
 		
 		
