@@ -158,7 +158,7 @@ public class Generator {
 
 	protected Set<String> enumList(PropertyConstraint property) {
 		
-		List<Value> valueList = property.getAllowedValues();
+		List<Value> valueList = property.getIn();
 		if (valueList != null && !valueList.isEmpty()) {
 			Set<String> result = new HashSet<>();
 			for (Value value : valueList) {

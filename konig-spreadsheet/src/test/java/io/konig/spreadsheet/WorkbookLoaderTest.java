@@ -47,7 +47,6 @@ public class WorkbookLoaderTest {
 		
 		loader.load(book, graph);
 
-		System.out.println(graph);
 		
 		checkOntologySheet(graph);
 		checkNamespaces(nsManager);
@@ -65,6 +64,9 @@ public class WorkbookLoaderTest {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));
 		assertTrue(shape!=null);
+		
+		Vertex id = propertyConstraint(shape, Konig.id);
+		assertTrue(id == null);
 		
 		Vertex givenName = propertyConstraint(shape, Schema.givenName);
 		assertValue(givenName, SH.datatype, XMLSchema.STRING);
@@ -103,6 +105,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDF.TYPE, SH.Shape);
 		assertValue(v, RDFS.COMMENT, "A light-weight data shape for a person.");
 		assertValue(v, SH.targetClass, Schema.Person);
+		assertValue(v, SH.nodeKind, SH.IRI);
 		assertValue(v, Konig.mediaTypeBaseName, "application/vnd.example.v1.schema.person");
 		
 		

@@ -23,17 +23,19 @@ package io.konig.shacl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.BNode;
+import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.BNodeImpl;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
-import io.konig.core.UidGenerator;
+import io.konig.shacl.ShapeBuilder.PropertyBuilder;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShapeBuilder {
@@ -59,8 +61,19 @@ public class ShapeBuilder {
 		stack.add(shape);
 	}
 	
+	public ShapeBuilder nodeKind(NodeKind kind) {
+		peekShape().setNodeKind(kind);
+		return this;
+	}
+	
 	public PropertyBuilder endValueShape() {
 		return propertyBuilder;
+	}
+	
+
+	
+	public Shape getShape(URI uri) {
+		return shapeManager.getShapeById(uri);
 	}
 	
 	public Shape getShape(String uri) {
@@ -271,12 +284,12 @@ public class ShapeBuilder {
 		}
 		
 		public PropertyBuilder allowedValue(Value value) {
-			property.addAllowedValue(value);
+			property.addIn(value);
 			return this;
 		}
 		
 		public PropertyBuilder allowedIRI(String iri) {
-			property.addAllowedValue(new URIImpl(iri));
+			property.addIn(new URIImpl(iri));
 			return this;
 		}
 		
@@ -347,6 +360,21 @@ public class ShapeBuilder {
 		public ShapeBuilder endShape() {
 			return parent.endShape();
 		}
+
+		public PropertyBuilder in(Object...objects) {
+			List<Value> list = new ArrayList<>();
+			for (Object v : objects) {
+				if (v instanceof String) {
+					String text = (String) v;
+					list.add(new LiteralImpl(text));
+				} else if (v instanceof URI) {
+					list.add((URI)v);
+				}
+			}
+			property.setIn(list);
+			return this;
+		}
+
 	}
 
 }

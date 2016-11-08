@@ -1,10 +1,33 @@
-package io.konig.pojo.io;
+package io.konig.core.pojo;
+
+/*
+ * #%L
+ * Konig Core
+ * %%
+ * Copyright (C) 2015 - 2016 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.openrdf.model.Literal;
@@ -12,6 +35,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.annotation.InverseOf;
 import io.konig.annotation.RdfProperty;
@@ -19,24 +43,56 @@ import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.Vertex;
-import io.konig.schemagen.SchemaGeneratorException;
 
 public class SimplePojoFactory implements PojoFactory {
 
 	private Map<String, ClassInfo<?>> classInfo = new HashMap<>();
 	
 	@Override
-	public <T> T create(Vertex v, Class<T> type) throws ParseException {
+	public <T> T create(Vertex v, Class<T> type) throws KonigException {
 		
+		PojoContext config = new PojoContext();
 
-		Worker worker = new Worker();
+		Worker worker = new Worker(config);
 		return worker.create(v, type);
+	}
+
+
+	@Override
+	public void createAll(Graph graph, PojoContext config) throws KonigException {
+		
+		Worker worker = new Worker(config);
+		worker.createAll(graph);
+		
 	}
 	
 	private class Worker {
-		private Map<Resource,Object> objectMap = new HashMap<>();
+		private PojoContext config;
 		
-		public <T> T create(Vertex v, Class<T> type) throws ParseException {
+		
+		public Worker(PojoContext config) {
+			this.config = config;
+		}
+
+		public void createAll(Graph graph) {
+			
+			Set<Entry<Resource, Class<?>>> entries = config.getClassMap().entrySet();
+			for (Entry<Resource,Class<?>> e : entries) {
+				Resource owlClass = e.getKey();
+				Class<?> javaClass = e.getValue();
+				
+				List<Vertex> list = graph.v(owlClass).in(RDF.TYPE).toVertexList();
+				for (Vertex v : list) {
+					create(v, javaClass);
+				}
+				
+			}
+			
+		}
+
+		
+
+		public <T> T create(Vertex v, Class<T> type) throws KonigException {
 			
 
 			try {
@@ -48,14 +104,14 @@ public class SimplePojoFactory implements PojoFactory {
 				InstantiationException | IllegalAccessException | IllegalArgumentException | 
 				InvocationTargetException | NoSuchMethodException | SecurityException e
 			) {
-				throw new ParseException(e);
+				throw new KonigException(e);
 			}
 		}
 
 		@SuppressWarnings("unchecked")
 		private <T> T create(Vertex v, ClassInfo<T> info) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 			Resource resourceId = v.getId();
-			Object instance = objectMap.get(resourceId);
+			Object instance = config.getIndividual(resourceId);
 			
 			if (instance!=null && info.getJavaType().isAssignableFrom(instance.getClass())) {
 				return (T) instance;
@@ -68,9 +124,9 @@ public class SimplePojoFactory implements PojoFactory {
 			
 			T pojo = null;
 			pojo = info.getJavaType().newInstance();
-			objectMap.put(resourceId, pojo);
 			Set<Edge> edgeSet = v.outEdgeSet();
 			info.setIdProperty(pojo, v);
+			config.mapObject(resourceId, pojo);
 			Graph g = v.getGraph();
 			for (Edge e : edgeSet) {
 				URI predicate = e.getPredicate();
@@ -210,7 +266,9 @@ public class SimplePojoFactory implements PojoFactory {
 			if (typeArray.length==1) {
 				Class<?> type = typeArray[0];
 				
-				if (type == String.class) {
+				if (type.isAssignableFrom(Value.class)) {
+					setter.invoke(instance, value);
+				} else if (type == String.class) {
 					setter.invoke(instance, value.stringValue());
 				} else if (type.isEnum()) {
 					Object enumValue = getEnumValue(type, value);
@@ -292,7 +350,7 @@ public class SimplePojoFactory implements PojoFactory {
 				return valueToEnum.invoke(null, uriValue);
 				
 			} else {
-				throw new SchemaGeneratorException("Cannot convert value to enum because value is not a URI " + value.stringValue());
+				throw new KonigException("Cannot convert value to enum because value is not a URI " + value.stringValue());
 			}
 		}
 		

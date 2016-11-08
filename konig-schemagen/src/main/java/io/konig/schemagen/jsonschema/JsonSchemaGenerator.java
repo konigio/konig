@@ -79,9 +79,24 @@ public class JsonSchemaGenerator extends Generator {
 		private void putProperties(ObjectNode json, Shape shape) {
 			
 			List<PropertyConstraint> list = shape.getProperty();
-			if (list != null && !list.isEmpty()) {
-				ObjectNode properties = mapper.createObjectNode();
+			ObjectNode properties = null;
+			
+			NodeKind nodeKind = shape.getNodeKind();
+			
+			if (nodeKind != null) {
+				properties = mapper.createObjectNode();
 				json.set("properties", properties);
+				ObjectNode idSchema = mapper.createObjectNode();
+				properties.set("id", idSchema);
+				idSchema.put("type", "string");
+			}
+			
+			
+			if (list != null && !list.isEmpty()) {
+				if (properties == null) {
+					properties = mapper.createObjectNode();
+					json.set("properties", properties);
+				}
 				for (PropertyConstraint constraint : list) {
 					
 					if (shapeTransformer != null) {

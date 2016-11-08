@@ -60,6 +60,7 @@ public class JsonldParser extends RDFParserBase {
 	
 	private ContextReader contextReader;
 	private NamespaceManager namespaceManager;
+	private URI quadContext;
 
 	public JsonldParser(ContextManager contextManager) {
 		this(contextManager, new KonigValueFactory());
@@ -81,6 +82,19 @@ public class JsonldParser extends RDFParserBase {
 	public JsonldParser(ContextManager contextManager, ValueFactory valueFactory) {
 		this(contextManager, null, valueFactory);
 	}
+	
+	
+	
+
+	public URI getQuadContext() {
+		return quadContext;
+	}
+
+
+	public void setQuadContext(URI quadContext) {
+		this.quadContext = quadContext;
+	}
+
 
 	@Override
 	public RDFFormat getRDFFormat() {
@@ -264,7 +278,10 @@ public class JsonldParser extends RDFParserBase {
 			
 			for (int i=0; i<array.size(); i++) {
 				Value value = toValue(subject, predicate, term, array.get(i));
-				Statement s = valueFactory.createStatement(subject, predicate, value);
+				Statement s = (quadContext==null) ? 
+						valueFactory.createStatement(subject, predicate, value) :
+						valueFactory.createStatement(subject, predicate, value, quadContext);
+						
 				rdfHandler.handleStatement(s);
 			}
 			
