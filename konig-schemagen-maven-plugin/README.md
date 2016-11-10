@@ -26,20 +26,20 @@ To use the schema generator, add a maven plugin to your project as shown below.
 	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
 	  		<version>1.0.2</version>
 	  		<configuration>
-                <workbookFile>${basedir}/src/dataModel.xlsx</workbookFile>
-                <rdfOutDir>${basedir}/target/rdf</rdfOutDir>
+          <workbookFile>${basedir}/src/dataModel.xlsx</workbookFile>
+          <rdfOutDir>${basedir}/target/rdf</rdfOutDir>
 	  			<avroDir>${basedir}/src/main/avro</avroDir>
 	  			<jsonldDir>${basedir}/src/main/jsonld</jsonldDir>
 	  			<jsonSchemaDir>${basedir}/src/main/jsonschema</jsonSchemaDir>
-                <bqSourceDir>${basedir}/src/main/bq-config</bqSourceDir>
-                <bqOutDir>${basedir}/src/main/bigquery</bqOutDir>
+          <bqSourceDir>${basedir}/src/main/bq-config</bqSourceDir>
+          <bqOutDir>${basedir}/src/main/bigquery</bqOutDir>
 	  		</configuration>
 	  		<executions>
 	  			<execution>
-                    <phase>generate-sources</phase>
+            <phase>generate-sources</phase>
 		  			<goals>
-                        <goal>generate-rdf</goal>
-                        <goal>generate</goal>
+                <goal>generate-rdf</goal>
+                <goal>generate</goal>
 		  			</goals>
 	  			</execution>
 	  		</executions>
@@ -72,16 +72,17 @@ We hope to provide merge tools in the future.
 
 | Parameter       | Description                                                                                                                             |
 |-----------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| sourceDir       | The directory that contains the source SHACL and OWL files from which schemas will be generated<br>Default: `${basedir}/src/main/resources/shapes` |
-| avroDir         | The output directory that will contain the generated Avro Schema files<br>Default: `${basedir}/target/generated/avro`         |
-| jsonSchemaDir   | The output directory that will contain the generated JSON Schema files<br>Default: `${basedir}/target/generated/jsonschema` |
-| jsonldDir       | The output directory that will contain the generated JSON-LD context files<br>Default: `${basedir}/target/generated/jsonld`  |
-| summaryDir      | The output directory that contains summary information about the semantic model<br>Default: `${basedir}/target/generated/summary` |
+| sourceDir       | The directory that contains the source SHACL and OWL files from which schemas will be generated<br>Default: `${basedir}/src/main/rdf` |
+| avroDir         | The output directory that will contain the generated Avro Schema files<br>Default: `${basedir}/src/main/avro`         |
+| jsonSchemaDir   | The output directory that will contain the generated JSON Schema files<br>Default: `${basedir}/src/main/jsonschema` |
+| jsonldDir       | The output directory that will contain the generated JSON-LD context files<br>Default: `${basedir}/src/main/jsonld`  |
+| summaryDir      | The output directory that contains summary information about the semantic model<br>Default: `${basedir}/src/main/summary` |
 | bqSourceDir     | The source directory that contains BigQuery configuration details. See [BigQuery Configuration](#bq-config)  |
 | bqOutDir        | The output directory where generated BigQuery table definitions will be stored |
 | bqShapeBaseURL  | The base URL for tables created for a given OWL class (as opposed to tables based on a specific shape) |
 | workbookFile    | A Microsoft Excel workbook (*.xlsx) containing a description of the data model<br>Default: `${basedir}/src/dataModel.xlsx`  |
-| rdfOutDir       | The output directory where the generated OWL and SHACL files will be stored after processing the workbookFile.<br>Default: `${basedir}/target/rdf` |
+| owlOutDir       | The output directory where the generated OWL files will be stored after processing the workbookFile.<br>Default: `${basedir}/src/main/rdf/owl` |
+| shapesOutDir    | The output directory where the generated SHACL files will be stored after processing the workbookFile.<br>Default: `${basedir}/src/main/rdf/shapes` |
 
 ## Naming Conventions
 
