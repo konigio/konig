@@ -2,21 +2,21 @@ package io.konig.datagen;
 
 import org.openrdf.model.URI;
 
-public class ClassConstraint {
+public class ClassConstraints {
 
 	private URI targetClass;
 	private int instanceCount;
 	
-	public URI getTargetClass() {
+	public URI getConstrainedClass() {
 		return targetClass;
 	}
-	public void setTargetClass(URI targetClass) {
+	public void setConstrainedClass(URI targetClass) {
 		this.targetClass = targetClass;
 	}
-	public int getInstanceCount() {
+	public int getClassInstanceCount() {
 		return instanceCount;
 	}
-	public void setInstanceCount(int instanceCount) {
+	public void setClassInstanceCount(int instanceCount) {
 		this.instanceCount = instanceCount;
 	}
 	

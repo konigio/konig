@@ -30,29 +30,37 @@ public class Konig {
 	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
-	public static final URI Falsity = new URIImpl("http://www.konig.io/ns/core/Falsity");
+	public static final URI Falsehood = new URIImpl("http://www.konig.io/ns/core/Falsehood");
 	public static final URI KeyValue = new URIImpl("http://www.konig.io/ns/core/KeyValue");
 	public static final URI KeyTerm = new URIImpl("http://www.konig.io/ns/core/KeyTerm");
 	
 	// Data generator terms
-	public static final URI DataGeneratorConfig = new URIImpl("http://www.konig.io/ns/core/DataGeneratorConfig");
-	public static final URI ShapeConfig = new URIImpl("http://www.konig.io/ns/core/ShapeConfig");
-	public static final URI generate = new URIImpl("http://www.konig.io/ns/core/generate");
-	public static final URI targetShape = new URIImpl("http://www.konig.io/ns/core/targetShape");
-	public static final URI shapeCount = new URIImpl("http://www.konig.io/ns/core/shapeCount");
+	public static final URI SyntheticGraphConstraints = new URIImpl("http://www.konig.io/ns/core/SyntheticGraphConstraints");
+	public static final URI SyntheticClassConstraints = new URIImpl("http://www.konig.io/ns/core/SyntheticClassConstraints");
+	public static final URI SyntheticShapeConstraints = new URIImpl("http://www.konig.io/ns/core/SyntheticShapeConstraints");
+	public static final URI classConstraints = new URIImpl("http://www.konig.io/ns/core/classConstraints");
+	public static final URI shapeConstraints = new URIImpl("http://www.konig.io/ns/core/shapeConstraints");
+	public static final URI constrainedClass = new URIImpl("http://www.konig.io/ns/core/constrainedClass");
+	public static final URI constrainedShape = new URIImpl("http://www.konig.io/ns/core/constrainedShape");
+	public static final URI classInstanceCount = new URIImpl("http://www.konig.io/ns/core/classInstanceCount");
+	public static final URI shapeInstanceCount = new URIImpl("http://www.konig.io/ns/core/shapeInstanceCount");
 	
-	// Konig Ontology Language terms
+	// Generic Data Modeling
 
-	public static final URI knownValue = new URIImpl("http://www.konig.io/ns/core/knownValue");
 	public static final URI id = new URIImpl("http://www.konig.io/ns/core/id");
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/core/mediaTypeBaseName");
 	public static final URI jsonSchemaRendition = new URIImpl("http://www.konig.io/ns/core/jsonSchemaRendition");
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/core/avroSchemaRendition");
 	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/core/PreferredClass");
-	public static final URI localKey = new URIImpl("http://www.konig.io/ns/core/localKey");
-
-	public static final URI equivalentRelationalShape = new URIImpl("http://www.konig.io/ns/core/equivalentRelationalShape");
 	
+	// Fact Modeling
+
+	public static final URI measure = new URIImpl("http://www.konig.io/ns/core/measure");
+	public static final URI dimension = new URIImpl("http://www.konig.io/ns/core/dimension");
+	public static final URI attribute = new URIImpl("http://www.konig.io/ns/core/attribute");
+	public static final URI predicateKind = new URIImpl("http://www.konig.io/ns/core/predicateKind");
+	
+
 	// Project Management terms
 
 	public static final URI GooglePubSubTopic = new URIImpl("http://www.konig.io/ns/core/GooglePubSubTopic");

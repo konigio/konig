@@ -67,8 +67,9 @@ public class WorkbookLoader {
 	private static final String MAX_COUNT = "Max Count";
 	private static final String UNIQUE_LANG = "Unique Lang";
 	private static final String VALUE_CLASS = "Value Class";
+	private static final String PREDICATE_KIND = "Predicate Kind";
 	
-	
+	private static final String UNBOUNDED = "unbounded";
 	
 	private static final int ONTOLOGY_FLAG = 0x1;
 	private static final int CLASS_FLAG = 0x2;
@@ -141,6 +142,7 @@ public class WorkbookLoader {
 		private int pcUniqueLangCol = UNDEFINED;
 		private int pcValueClassCol = UNDEFINED;
 		private int pcCommentCol = UNDEFINED;
+		private int pcPredicateKindCol = UNDEFINED;
 		
 		public Worker(Workbook book, Graph graph) {
 			this.book = book;
@@ -210,6 +212,7 @@ public class WorkbookLoader {
 			Literal minCount = intLiteral(row, pcMinCountCol);
 			Literal maxCount = intLiteral(row, pcMaxCountCol);
 			URI valueClass = uriValue(row, pcValueClassCol);
+			URI predicateKind = uriValue(row, pcPredicateKindCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
 			
 				
@@ -244,14 +247,11 @@ public class WorkbookLoader {
 			} else {
 				edge(constraint, SH.valueShape, valueType);
 			}
-
+			
 			edge(constraint, SH.minCount, minCount);
 			edge(constraint, SH.maxCount, maxCount);
 			edge(constraint, SH.uniqueLang, uniqueLang);
-			
-			
-			
-			
+			edge(constraint, Konig.predicateKind, predicateKind);
 			
 		}
 
@@ -281,6 +281,13 @@ public class WorkbookLoader {
 				if (cell != null) {
 					
 					int cellType = cell.getCellType();
+					if (cellType==Cell.CELL_TYPE_STRING) {
+						String value = cell.getStringCellValue();
+						if (UNBOUNDED.equalsIgnoreCase(value)) {
+							return null;
+						}
+					}
+						
 					if (cellType==Cell.CELL_TYPE_NUMERIC) {
 						int value = (int) cell.getNumericCellValue();
 						literal = vf.createLiteral(value);
@@ -302,7 +309,7 @@ public class WorkbookLoader {
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
 			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol =
-				pcValueClassCol = UNDEFINED;
+				pcValueClassCol = pcPredicateKindCol = UNDEFINED;
 				
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -326,6 +333,7 @@ public class WorkbookLoader {
 					case MAX_COUNT : pcMaxCountCol = i; break;
 					case UNIQUE_LANG : pcUniqueLangCol = i; break;
 					case VALUE_CLASS : pcValueClassCol = i; break;
+					case PREDICATE_KIND : pcPredicateKindCol = i; break;
 						
 					}
 				}

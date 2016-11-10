@@ -302,7 +302,7 @@ public class ChangeSetFactory {
 							
 							if (targetBNode == null) {
 								// No matching bnode in the target
-								changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsity);
+								changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsehood);
 								removeBNode(sourceBNode, childKey);
 								
 							} else {
@@ -326,7 +326,7 @@ public class ChangeSetFactory {
 						
 					} else if (!w.hasProperty(predicate, object1)){
 						
-						Edge edge = changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsity);
+						Edge edge = changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsehood);
 						if (keyPart!=null) {
 							edge.addAnnotation(RDF.TYPE, keyPart);
 						}
@@ -366,7 +366,7 @@ public class ChangeSetFactory {
 
 
 		private void removeEdge(Edge e) {
-			changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsity);
+			changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsehood);
 		}
 
 		private void remove(Vertex v, BNodeKey bnodeKey) {

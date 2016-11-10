@@ -6,23 +6,23 @@ import java.util.List;
 import io.konig.annotation.RdfProperty;
 
 public class DataGeneratorConfig {
-	private List<ShapeConfig> shapeConfig = new ArrayList<>();
-	private List<ClassConstraint> classConstraint = new ArrayList<>();
+	private List<ShapeConstraints> shapeConfig = new ArrayList<>();
+	private List<ClassConstraints> classConstraint = new ArrayList<>();
 	
 	@RdfProperty("http://www.konig.io/ns/core/generate")
-	public void addShapeConfig(ShapeConfig config) {
+	public void addShapeConfig(ShapeConstraints config) {
 		shapeConfig.add(config);
 	}
 	
-	public List<ShapeConfig> getShapeConfigList() {
+	public List<ShapeConstraints> getShapeConfigList() {
 		return shapeConfig;
 	}
 	
-	public void addClassConstraint(ClassConstraint constraint) {
+	public void addClassConstraints(ClassConstraints constraint) {
 		classConstraint.add(constraint);
 	}
 	
-	public List<ClassConstraint> getClassConstraintList() {
+	public List<ClassConstraints> getClassConstraintsList() {
 		return classConstraint;
 	}
 }

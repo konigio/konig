@@ -113,18 +113,18 @@ public class DataGenerator {
 		private void run() throws IOException, DataGeneratorException {
 			
 			buildCounterMap();
-			List<ShapeConfig> list = config.getShapeConfigList();
+			List<ShapeConstraints> list = config.getShapeConfigList();
 			
-			for (ShapeConfig s : list) {
+			for (ShapeConstraints s : list) {
 				generate(s);
 			}
 		}
 
 		private void buildCounterMap() throws DataGeneratorException {
 
-			List<ShapeConfig> list = config.getShapeConfigList();
-			for (ShapeConfig s : list) {
-				URI targetShape = s.getTargetShape();
+			List<ShapeConstraints> list = config.getShapeConfigList();
+			for (ShapeConstraints s : list) {
+				URI targetShape = s.getConstrainedShape();
 				Shape shape = shapeManager.getShapeById(targetShape);
 				if (shape == null) {
 					throw new DataGeneratorException("Shape not found: " + targetShape);
@@ -133,7 +133,7 @@ public class DataGenerator {
 				if (targetClass == null) {
 					throw new DataGeneratorException("targetClass not defined for shape " + targetShape);
 				}
-				Integer shapeCount = s.getShapeCount();
+				Integer shapeCount = s.getShapeInstanceCount();
 				if (shapeCount == null) {
 					shapeCount = 1;
 				}
@@ -151,10 +151,10 @@ public class DataGenerator {
 		}
 
 		private void handleClassConstraints() {
-			List<ClassConstraint> list = config.getClassConstraintList();
-			for (ClassConstraint c : list) {
-				URI targetClass = c.getTargetClass();
-				int count = c.getInstanceCount();
+			List<ClassConstraints> list = config.getClassConstraintsList();
+			for (ClassConstraints c : list) {
+				URI targetClass = c.getConstrainedClass();
+				int count = c.getClassInstanceCount();
 				
 				String key = targetClass.stringValue();
 				Counter counter = counterMap.get(key);
@@ -167,10 +167,10 @@ public class DataGenerator {
 			
 		}
 
-		private void generate(ShapeConfig s) throws DataGeneratorException, IOException {
+		private void generate(ShapeConstraints s) throws DataGeneratorException, IOException {
 			
-			URI targetShapeId = s.getTargetShape();
-			Integer shapeCount = s.getShapeCount();
+			URI targetShapeId = s.getConstrainedShape();
+			Integer shapeCount = s.getShapeInstanceCount();
 			int count = shapeCount==null ? 1 : shapeCount;
 			
 			if (targetShapeId != null) {
