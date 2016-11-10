@@ -68,7 +68,7 @@ public class WorkbookLoader {
 	private static final String UNIQUE_LANG = "Unique Lang";
 	private static final String VALUE_CLASS = "Value Class";
 	
-	
+	private static final String UNBOUNDED = "unbounded";
 	
 	private static final int ONTOLOGY_FLAG = 0x1;
 	private static final int CLASS_FLAG = 0x2;
@@ -244,14 +244,10 @@ public class WorkbookLoader {
 			} else {
 				edge(constraint, SH.valueShape, valueType);
 			}
-
+			
 			edge(constraint, SH.minCount, minCount);
 			edge(constraint, SH.maxCount, maxCount);
 			edge(constraint, SH.uniqueLang, uniqueLang);
-			
-			
-			
-			
 			
 		}
 
@@ -281,6 +277,13 @@ public class WorkbookLoader {
 				if (cell != null) {
 					
 					int cellType = cell.getCellType();
+					if (cellType==Cell.CELL_TYPE_STRING) {
+						String value = cell.getStringCellValue();
+						if (UNBOUNDED.equalsIgnoreCase(value)) {
+							return null;
+						}
+					}
+						
 					if (cellType==Cell.CELL_TYPE_NUMERIC) {
 						int value = (int) cell.getNumericCellValue();
 						literal = vf.createLiteral(value);

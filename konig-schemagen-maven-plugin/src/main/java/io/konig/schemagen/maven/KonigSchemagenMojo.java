@@ -91,7 +91,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter( defaultValue="${basedir}/src/main/jsonschema", property="jsonSchemaDir", required=true)
     private File jsonSchemaDir;
     
-    @Parameter( defaultValue="${basedir}/src/main/shapes", property="sourceDir", required=true)
+    @Parameter( defaultValue="${basedir}/src/main/rdf", property="sourceDir", required=true)
     private File sourceDir;
     
     @Parameter (defaultValue="${basedir}/src/main/summary", property="summaryDir", required=true)
