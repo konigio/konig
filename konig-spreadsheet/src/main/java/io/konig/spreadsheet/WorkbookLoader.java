@@ -62,6 +62,7 @@ public class WorkbookLoader {
 	private static final String SHAPE_ID = "Shape Id";
 	private static final String SCOPE_CLASS = "Scope Class";
 	private static final String MEDIA_TYPE = "Media Type";
+	private static final String INPUT_CLASS = "Input Class";
 	
 	private static final String VALUE_TYPE = "Value Type";
 	private static final String MIN_COUNT = "Min Count";
@@ -134,6 +135,7 @@ public class WorkbookLoader {
 		private int shapeIdCol = UNDEFINED;
 		private int shapeCommentCol = UNDEFINED;
 		private int shapeScopeCol = UNDEFINED;
+		private int shapeInputClassCol = UNDEFINED;
 		private int shapeMediaTypeCol = UNDEFINED;
 		
 		private int pcShapeIdCol = UNDEFINED;
@@ -408,22 +410,18 @@ public class WorkbookLoader {
 			URI shapeId = uriValue(row, shapeIdCol);
 			Literal shapeComment = stringLiteral(row, shapeCommentCol);
 			URI targetClass = uriValue(row, shapeScopeCol);
+			URI inputClass = uriValue(row, shapeInputClassCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			
 			if (shapeId == null) {
 				return;
 			}
 			
-			graph.edge(shapeId, RDF.TYPE, SH.Shape);
-			if (shapeComment != null) {
-				graph.edge(shapeId, RDFS.COMMENT, shapeComment);
-			}
-			if (targetClass != null) {
-				graph.edge(shapeId, SH.targetClass, targetClass);
-			}
-			if (mediaType != null) {
-				graph.edge(shapeId, Konig.mediaTypeBaseName, mediaType);
-			}
+			edge(shapeId, RDF.TYPE, SH.Shape);
+			edge(shapeId, RDFS.COMMENT, shapeComment);
+			edge(shapeId, SH.targetClass, targetClass);
+			edge(shapeId, Konig.inputClass, inputClass);
+			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			
 		}
 
@@ -445,6 +443,7 @@ public class WorkbookLoader {
 					case SHAPE_ID :  shapeIdCol = i; break;
 					case COMMENT : shapeCommentCol = i; break;
 					case SCOPE_CLASS : shapeScopeCol = i; break;
+					case INPUT_CLASS : shapeInputClassCol = i; break;
 					case MEDIA_TYPE : shapeMediaTypeCol = i; break;
 						
 					}
