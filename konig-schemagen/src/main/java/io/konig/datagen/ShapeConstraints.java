@@ -4,25 +4,25 @@ import org.openrdf.model.URI;
 
 import io.konig.annotation.OwlClass;
 
-@OwlClass("http://www.konig.io/ns/datagen/ShapeConfig")
-public class ShapeConfig {
+@OwlClass("http://www.konig.io/ns/core/SyntheticShapeConstraints")
+public class ShapeConstraints {
 
 	private URI targetShape;
 	private Integer shapeCount;
 	
-	public URI getTargetShape() {
+	public URI getConstrainedShape() {
 		return targetShape;
 	}
 
-	public void setTargetShape(URI targetShape) {
+	public void setConstrainedShape(URI targetShape) {
 		this.targetShape = targetShape;
 	}
 
-	public Integer getShapeCount() {
+	public Integer getShapeInstanceCount() {
 		return shapeCount;
 	}
 
-	public void setShapeCount(Integer shapeCount) {
+	public void setShapeInstanceCount(Integer shapeCount) {
 		this.shapeCount = shapeCount;
 	}
 	

@@ -42,6 +42,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.KonigLiteral;
+import io.konig.core.vocab.Konig;
 
 public class PropertyConstraint {
 
@@ -69,6 +70,7 @@ public class PropertyConstraint {
 	private boolean uniqueCountKey;
 	private URI dimensionTerm;
 	private boolean timeParam;
+	private URI stereotype;
 	
 	private Term term;
 	
@@ -400,6 +402,27 @@ public class PropertyConstraint {
 		this.timeParam = timeParam;
 	}
 	
+	public URI getStereotype() {
+		return stereotype;
+	}
+
+	public void setStereotype(URI stereotype) {
+		this.stereotype = stereotype;
+	}
+
+	public void setMeasure(URI measure) {
+		predicate = measure;
+		stereotype = Konig.measure;
+	}
 	
+	public void setDimension(URI dimension) {
+		predicate = dimension;
+		stereotype = Konig.dimension;
+	}
+	
+	public void setAttribute(URI attribute) {
+		predicate = attribute;
+		stereotype = Konig.attribute;
+	}
 	
 }

@@ -2,19 +2,19 @@
 @prefix : <http://www.konig.io/ns/core/> .
 @prefix schema: <http://schema.org/> .
 
-[] a :DataGeneratorConfig ;
-	:classConstraint [
-		:targetClass schema:Person ;
-		:instanceCount 10000
+[] a :SyntheticGraphConstraints ;
+	:classConstraints [
+		:constrainedClass schema:Person ;
+		:classInstanceCount 10000
 	];
-	:generate [	
-		:targetShape <http://schema.pearson.com/shapes/x1/schema/School> ;
-		:shapeCount 50				
+	:shapeConstraints [	
+		:constrainedShape <http://schema.pearson.com/shapes/x1/schema/School> ;
+		:shapeInstanceCount 50				
 	], [
-		:targetShape <http://schema.pearson.com/shapes/x1/reg/CourseSection> ;
-		:shapeCount 500
+		:constrainedShape <http://schema.pearson.com/shapes/x1/reg/CourseSection> ;
+		:shapeInstanceCount 500
 	], [
-		:targetShape <http://schema.pearson.com/shapes/x1/org/Membership> ;
-		:shapeCount 20000	
+		:constrainedShape <http://schema.pearson.com/shapes/x1/org/Membership> ;
+		:shapeInstanceCount 20000	
 	]
 	.

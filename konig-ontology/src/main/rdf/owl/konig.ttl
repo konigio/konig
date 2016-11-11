@@ -1,0 +1,223 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix schema: <http://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+konig: a owl:Ontology ;
+	rdfs:label "Konig Core Ontology" ;
+	rdfs:comment """Provides terms that extend OWL and SHACL.
+		<p>A description of this ontology in Turtle syntax is available at 
+		<a href="http://www.konig.io/ns/kol/.ttl">http://www.konig.io/ns/kol/.ttl</a></p>""" ;
+	vann:preferredNamespacePrefix "kol"
+	.
+
+
+###### Generic Data Modeling Terms
+		
+
+konig:id a owl:DatatypeProperty, owl:FunctionalProperty ;
+	rdfs:comment """
+		A pseudo-property whose value is equal to the IRI used to identify the subject.
+		We call it a "pseudo-property" because (by convention) neither OWL nor SHACL models 
+		expect an explicit property for the IRI value.  Instead, an OWL model may declare a class
+		to be a subclass of owl:NamedIndividual to indicate that all instances of the class must be
+		identified by an IRI.  Similarly, a SHACL model will use
+		sh:nodeKind to specify whether a given entity is identified by an IRI or a BlankNode.
+		These OWL and SHACL conventions can be inconvenient.  Sometimes we want to treat the IRI for a resource on 
+		equal footing with other properties.  The konig:id property allows us to do that.
+		A PropertyConstraint with konig:id as the sh:predicate and sh:minCount equal to 1 
+		is equivalent to specifying that sh:nodeKind is sh:IRI on the parent shape.
+		A PropertyConstraint with konig:id as the predicate and sh:minCount equal to zero 
+		(or undefined) is equivalent to specifying that sh:nodeKind is sh:BlankNodeOrIRI.
+	""" ;
+	rdfs:range xsd:anyURI
+.
+
+konig:JsonSchema a owl:Class ;
+	rdfs:comment "The class of all JSON Schema definitions"
+.
+
+konig:AvroSchema a owl:Class ;
+	rdfs:comment "The class of all Avro Schema definitions"
+.
+
+konig:mediaTypeBaseName a owl:DatatypeProperty ;	
+	rdfs:domain sh:Shape ;
+	rdfs:range xsd:string ;
+	rdfs:comment """
+		The base name for the vendor-specific media type associated with this Shape.
+		The mediaTypeBaseName includes all parts of the media type name except the suffix.
+	"""
+.
+
+konig:jsonSchemaRendition	a owl:ObjectProperty ;
+	rdfs:domain sh:Shape ;
+	rdfs:range konig:JsonSchema ;
+	rdfs:comment "The JSON Schema rendition of the Shape"
+.
+
+konig:avroSchemaRendition	a owl:ObjectProperty ;
+	rdfs:domain sh:Shape ;
+	rdfs:range konig:AvroSchema ;
+	rdfs:comment "The Avro Schema rendition of the Shape"
+.
+
+konig:PreferredClass a owl:Class ;
+	rdfs:subClassOf owl:Class ;
+	rdfs:comment """
+		A type value which distinguishes one member from a set of equivalent classes as the
+		"preferred" member.  This is useful if you want to provide metaprograms with a 
+		hint about which class name to use when generating source code. Technically, the
+		concept of a PreferredClass is nonsense.  According to the rules of owl:equivalentClass,
+		any property asserted on one member of the equivalence relation applies equally well
+		to all other members.
+    In other words, if you have the statements (A owl:equivalentClass B) and
+		(A rdf:type konig:PreferredClass), then a semantic reasoner can infer
+		(B rdf:type konig:PreferredClass).  Nevertheless, this construct is useful so long
+		as the metaprogram captures the PreferredClass distinction before applying any 
+		semantic reasoning.
+	"""
+.	
+	
+###### GraphDiff terms
+
+konig:GraphDiff a owl:Class ;
+	rdfs:subClassOf konig:Graph ;
+	rdfs:comment """
+		A collection of annotated statements that prescribe the delta between two versions of some
+		graph.
+	"""
+	.
+
+konig:Dictum a owl:Class ;
+	rdfs:subClassOf rdf:Statement ;
+	rdfs:comment """
+		A Statement that is known to be true. A semantic reasoner may convert individual 
+		Dictum statements into simple (non-reified) triples of the form (subject predicate object). 
+		Dictum statements are included in a konig:GraphDiff to describe statements that must be
+		added to the source graph to produce the target revision. 
+	"""
+.
+
+konig:Falsehood a owl:Class ;
+	rdfs:subClassOf rdf:Statement ;
+	rdfs:comment """
+		A Statement that is known to be false. A semantic reasoner should remove any Triple that is
+		defined as a Falsehood.  Falsehood statements are included in a konig:GraphDiff to define
+		statements that must be removed from the source graph to produce the target revision. 
+	"""
+.
+
+konig:KeyValue a owl:Class ;
+	rdfs:subClassOf rdf:Statement ;
+	rdfs:comment """
+		A Statement which asserts that the (predicate object) pair is a unique key for
+		the subject.
+	"""
+.
+
+konig:KeyTerm a owl:Class ;
+	rdfs:subClassOf rdf:Statement ;
+	rdfs:comment """
+		A reified Statement which asserts that the predicate is a unique key for the subject.
+	"""
+.
+
+###### Data Generator Terms
+
+konig:SyntheticGraphConstraints a owl:Class ;
+	rdfs:comment """
+		Constraints on the structure of a synthetic graph.  This resource is used by 
+		tools that generate synthetic graphs for testing purposes.
+	"""
+.
+
+konig:SyntheticClassConstraints a owl:Class ;
+	rdfs:comment """
+		A resource that governs the generation of synthetic instances of a given
+		OWL Class for testing purposes.
+	"""
+.	
+
+konig:SyntheticShapeConstraints a owl:Class ;
+	rdfs:comment """
+		A resource that governs the generation of synthetic instances of a given 
+		data shape for testing purposes.
+	"""
+.	
+
+konig:classConstraints a owl:ObjectProperty ;
+	rdfs:comment """
+		A constraint on instances of a given OWL Class within the synthetic graph
+	""" ;
+	rdfs:domain konig:SyntheticGraphConstraints ;
+	rdfs:range konig:SyntheticClassConstraints
+.
+
+konig:constrainedClass a owl:ObjectProperty ;
+	rdfs:comment "The class that is being constrained." ;
+	rdfs:domain konig:SyntheticClassConstraints ;
+	rdfs:range owl:Class
+.
+
+konig:shapeConstraints a owl:ObjectProperty ;
+	rdfs:comment """
+		A constraint on instances of a given Shape within the synthetic graph
+	""" ;
+	rdfs:domain konig:SyntheticGraphConstraints ;
+	rdfs:domain konig:SyntheticShapeConstraints
+.
+
+konig:constrainedShape a owl:ObjectProperty ;
+	rdfs:comment "The Shape that is being constrained." ;
+	rdfs:domain konig:SyntheticShapeConstraints ;
+	rdfs:range sh:Shape
+.
+
+konig:classInstanceCount a owl:DatatypeProperty ;
+	rdfs:comment "The number of instances of the class to be generated" ;
+	rdfs:domain konig:SyntheticClassConstraints ;
+	rdfs:range xsd:int
+.
+
+konig:shapeInstanceCount a owl:DatatypeProperty ;
+	rdfs:comment "The number of instances of the shape to be generated" ;
+	rdfs:domain konig:SyntheticShapeConstraints ;
+	rdfs:range xsd:int
+.	
+
+	
+###### Fact Modeling
+
+konig:measure a owl:ObjectProperty ;
+	rdfs:subPropertyOf sh:predicate ;
+	rdfs:comment "A predicate whose value is an observed or computed measure."
+.	
+
+konig:dimension a owl:ObjectProperty ;
+	rdfs:subPropertyOf sh:predicate ;
+	rdfs:comment "A predicate whose value is one dimension of a fact"
+.
+
+konig:attribute a owl:ObjectProperty ;
+	rdfs:subPropertyOf sh:predicate ;
+	rdfs:comment "A predicate whose value is an attribute of some dimension"
+.
+
+konig:stereotype a owl:ObjectProperty ;
+	rdfs:comment """
+		An annotation on a PropertyConstraint which identifies the role of the property
+		in some external framework.  By "external" we mean external to the SHACL vocabulary.
+		A stereotype allows one to understand how the property will be used.  In this sense,
+		it is similar to a UML stereotype (hence the name).  As an example, one could use stereotypes
+		to distinguish measures, dimensions and attributes in an OLAP cube.
+	""" ;
+	rdfs:domain sh:PropertyConstraint ;
+	rdfs:range rdf:Property
+.	
+
+

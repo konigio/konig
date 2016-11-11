@@ -25,7 +25,7 @@ public class DataGeneratorTest {
 		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
 		Graph graph = new MemoryGraph();
 		RdfUtil.loadTurtle(graph, resource("DataGeneratorTest.ttl"), "");
-		Vertex v = graph.v(Konig.DataGeneratorConfig).in(RDF.TYPE).firstVertex();
+		Vertex v = graph.v(Konig.SyntheticGraphConstraints).in(RDF.TYPE).firstVertex();
 		
 		DataGeneratorConfig config = new SimplePojoFactory().create(v, DataGeneratorConfig.class);
 		
