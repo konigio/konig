@@ -60,6 +60,10 @@ public class Konig {
 	public static final URI attribute = new URIImpl("http://www.konig.io/ns/core/attribute");
 	public static final URI stereotype = new URIImpl("http://www.konig.io/ns/core/stereotype");
 	public static final URI totalCount = new URIImpl("http://www.konig.io/ns/core/totalCount");
+	public static final URI durationUnit = new URIImpl("http://www.konig.io/ns/core/durationUnit");
+	public static final URI Week = new URIImpl("http://www.konig.io/ns/core/Week");
+	public static final URI Month = new URIImpl("http://www.konig.io/ns/core/Month");
+	public static final URI Year = new URIImpl("http://www.konig.io/ns/core/Year");
 	
 	
 

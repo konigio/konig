@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -261,12 +262,18 @@ public class SimplePojoFactory implements PojoFactory {
 		}
 
 		void set(Worker worker, Graph g, Object instance, Value value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-						
+					
+			Vertex valueVertex = null;
+			List<Value> valueList = null;
+			if (value instanceof BNode) {
+				valueVertex = g.getVertex((BNode)value);
+				valueList = valueVertex.asList();
+			}
 			Class<?>[] typeArray = setter.getParameterTypes();
 			if (typeArray.length==1) {
 				Class<?> type = typeArray[0];
 				
-				if (type.isAssignableFrom(Value.class)) {
+				if (type.isAssignableFrom(Value.class) && valueList==null) {
 					setter.invoke(instance, value);
 				} else if (type == String.class) {
 					setter.invoke(instance, value.stringValue());
@@ -284,12 +291,22 @@ public class SimplePojoFactory implements PojoFactory {
 				} else if (type == URI.class && value instanceof URI) {
 					setter.invoke(instance,  (URI) value);
 				} else if (value instanceof Resource) {
-					Vertex vertex = g.vertex((Resource)value);
-					Object object = worker.create(vertex, type);
 					
-					setter.invoke(instance, object);
+					if (valueList != null) {
+						for (Value v : valueList) {
+							set(worker, g, instance, v);
+						}
+					} else {
+
+						if (valueVertex == null) {
+							valueVertex = g.getVertex((Resource)value);
+						}
+						Object object = worker.create(valueVertex, type);
+						setter.invoke(instance, object);
+						setInverse(worker, instance, object);
+					}
 					
-					setInverse(worker, instance, object);
+					
 				} else if (type== boolean.class) {
 					Boolean booleanValue = Boolean.parseBoolean(value.stringValue());
 					setter.invoke(instance, booleanValue);

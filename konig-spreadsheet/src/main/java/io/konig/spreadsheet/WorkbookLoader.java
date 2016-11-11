@@ -3,6 +3,7 @@ package io.konig.spreadsheet;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.apache.poi.common.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Cell;
@@ -68,6 +69,7 @@ public class WorkbookLoader {
 	private static final String UNIQUE_LANG = "Unique Lang";
 	private static final String VALUE_CLASS = "Value Class";
 	private static final String STEREOTYPE = "Stereotype";
+	private static final String VALUE_IN = "Value In";
 	
 	private static final String UNBOUNDED = "unbounded";
 	
@@ -141,6 +143,7 @@ public class WorkbookLoader {
 		private int pcMaxCountCol = UNDEFINED;
 		private int pcUniqueLangCol = UNDEFINED;
 		private int pcValueClassCol = UNDEFINED;
+		private int pcValueInCol = UNDEFINED;
 		private int pcCommentCol = UNDEFINED;
 		private int pcPredicateKindCol = UNDEFINED;
 		
@@ -213,6 +216,7 @@ public class WorkbookLoader {
 			Literal maxCount = intLiteral(row, pcMaxCountCol);
 			URI valueClass = uriValue(row, pcValueClassCol);
 			URI predicateKind = uriValue(row, pcPredicateKindCol);
+			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
 			
 				
@@ -252,7 +256,50 @@ public class WorkbookLoader {
 			edge(constraint, SH.maxCount, maxCount);
 			edge(constraint, SH.uniqueLang, uniqueLang);
 			edge(constraint, Konig.stereotype, predicateKind);
+			edge(constraint, SH.in, valueIn);
 			
+		}
+
+		private void edge(Resource subject, URI predicate, List<Value> object) {
+			if (subject!=null && object!=null) {
+				Vertex first = null;
+				Vertex prev = null;
+				
+				for (Value value : object) {
+					Vertex list = graph.vertex();
+					if (first == null) {
+						first = list;
+						graph.edge(subject, predicate, list.getId());
+					}
+					if (prev != null) {
+						graph.edge(prev.getId(), RDF.REST, list.getId());
+					}
+					graph.edge(list.getId(), RDF.FIRST, value);
+					prev = list;
+				}
+				if (prev != null) {
+					graph.edge(prev.getId(), RDF.REST, RDF.NIL);
+				}
+				
+			}
+			
+		}
+
+		private List<Value> valueList(Row row, int column) throws SpreadsheetException {
+			if (column > 0) {
+				String text = stringValue(row, column);
+				if (text != null) {
+					StringTokenizer tokens = new StringTokenizer(text, " \r\n\t");
+					List<Value> list = new ArrayList<>();
+					while (tokens.hasMoreTokens()) {
+						URI curie = expandCurie(tokens.nextToken());
+						list.add(curie);
+					}
+					return list;
+				}
+				
+			}
+			return null;
 		}
 
 		private void edge(Resource subject, URI predicate, Value object) {
@@ -333,6 +380,7 @@ public class WorkbookLoader {
 					case MAX_COUNT : pcMaxCountCol = i; break;
 					case UNIQUE_LANG : pcUniqueLangCol = i; break;
 					case VALUE_CLASS : pcValueClassCol = i; break;
+					case VALUE_IN :	pcValueInCol = i; break;
 					case STEREOTYPE : pcPredicateKindCol = i; break;
 						
 					}
