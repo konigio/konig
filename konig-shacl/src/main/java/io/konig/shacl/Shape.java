@@ -53,6 +53,7 @@ public class Shape {
 	private Context jsonldContext;
 	private URI equivalentRelationalShape;
 	private NodeKind nodeKind;
+	private URI inputClass;
 	
 	
 	public Shape() {
@@ -242,6 +243,14 @@ public class Shape {
 
 	public void setNodeKind(NodeKind nodeKind) {
 		this.nodeKind = nodeKind;
+	}
+
+	public URI getInputClass() {
+		return inputClass;
+	}
+
+	public void setInputClass(URI inputClass) {
+		this.inputClass = inputClass;
 	}
 	
 	

@@ -267,5 +267,8 @@ konig:intervalStart a owl:ObjectProperty ;
 	schema:rangeIncludes xsd:date , xsd:dateTime
 .	
 		
-
-
+konig:inputClass a owl:ObjectProperty ;
+	rdfs:comment "The class of entities from which instances of this Shape are derived." ;
+	rdfs:domain sh:Shape ;
+	rdfs:range owl:Class
+.	

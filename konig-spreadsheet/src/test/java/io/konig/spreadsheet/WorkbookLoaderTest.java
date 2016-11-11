@@ -42,6 +42,31 @@ import io.konig.shacl.Shape;
 public class WorkbookLoaderTest {
 	
 	@Test
+	public void testInputClass() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
+		
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+
+		
+		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
+		Vertex shapeVertex = graph.getVertex(shapeId);
+		assertTrue(shapeVertex != null);
+		
+		SimplePojoFactory pojoFactory = new SimplePojoFactory();
+		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
+		
+		URI actual = shape.getInputClass();
+		assertEquals(Schema.BuyAction, actual);
+		
+	}
+	
+	@Ignore
 	public void testIn() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");

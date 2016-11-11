@@ -30,6 +30,7 @@ public class Schema {
 	
 	
 	public static final URI Boolean = new URIImpl("http://schema.org/Boolean");
+	public static final URI BuyAction = new URIImpl("http://schema.org/BuyAction");
 	public static final URI ContactPoint = new URIImpl("http://schema.org/ContactPoint");
 	public static final URI CreativeWork = new URIImpl("http://schema.org/CreativeWork");
 	public static final URI DataType = new URIImpl("http://schema.org/DataType");
