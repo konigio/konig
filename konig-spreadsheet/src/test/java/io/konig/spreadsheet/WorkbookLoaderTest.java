@@ -1,14 +1,17 @@
 package io.konig.spreadsheet;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.text.MessageFormat;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -26,15 +29,53 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.RdfUtil;
+import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
 
 public class WorkbookLoaderTest {
+	
+	@Test 
+	public void testStereotype() throws Exception {
 
-	@Test
+		
+		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
+		
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+		
+		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
+		Vertex shapeVertex = graph.getVertex(shapeId);
+		assertTrue(shapeVertex != null);
+		
+		SimplePojoFactory pojoFactory = new SimplePojoFactory();
+		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
+		
+		PropertyConstraint totalCount = shape.getPropertyConstraint(Konig.totalCount);
+		assertTrue(totalCount!=null);
+		assertEquals(Konig.measure, totalCount.getStereotype());
+		
+		URI cityId = uri("http://example.com/ns/alias/city");
+		PropertyConstraint city = shape.getPropertyConstraint(cityId);
+		assertTrue(city != null);
+		assertEquals(Konig.dimension, city.getStereotype());
+		
+		RdfUtil.prettyPrintTurtle(nsManager, graph, new OutputStreamWriter(System.out));
+		
+	}
+
+	@Ignore
 	public void test() throws Exception {
 		
 		InputStream input = getClass().getClassLoader().getResourceAsStream("test.xlsx");

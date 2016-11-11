@@ -70,7 +70,7 @@ public class PropertyConstraint {
 	private boolean uniqueCountKey;
 	private URI dimensionTerm;
 	private boolean timeParam;
-	private URI predicateKind;
+	private URI stereotype;
 	
 	private Term term;
 	
@@ -401,28 +401,28 @@ public class PropertyConstraint {
 	public void setTimeParam(boolean timeParam) {
 		this.timeParam = timeParam;
 	}
-
-	public URI getPredicateKind() {
-		return predicateKind;
-	}
-
-	public void setPredicateKind(URI predicateKind) {
-		this.predicateKind = predicateKind;
-	}
 	
+	public URI getStereotype() {
+		return stereotype;
+	}
+
+	public void setStereotype(URI stereotype) {
+		this.stereotype = stereotype;
+	}
+
 	public void setMeasure(URI measure) {
 		predicate = measure;
-		predicateKind = Konig.measure;
+		stereotype = Konig.measure;
 	}
 	
 	public void setDimension(URI dimension) {
 		predicate = dimension;
-		predicateKind = Konig.dimension;
+		stereotype = Konig.dimension;
 	}
 	
 	public void setAttribute(URI attribute) {
 		predicate = attribute;
-		predicateKind = Konig.attribute;
+		stereotype = Konig.attribute;
 	}
 	
 }

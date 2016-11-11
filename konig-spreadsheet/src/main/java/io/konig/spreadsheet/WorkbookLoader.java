@@ -67,7 +67,7 @@ public class WorkbookLoader {
 	private static final String MAX_COUNT = "Max Count";
 	private static final String UNIQUE_LANG = "Unique Lang";
 	private static final String VALUE_CLASS = "Value Class";
-	private static final String PREDICATE_KIND = "Predicate Kind";
+	private static final String STEREOTYPE = "Stereotype";
 	
 	private static final String UNBOUNDED = "unbounded";
 	
@@ -251,7 +251,7 @@ public class WorkbookLoader {
 			edge(constraint, SH.minCount, minCount);
 			edge(constraint, SH.maxCount, maxCount);
 			edge(constraint, SH.uniqueLang, uniqueLang);
-			edge(constraint, Konig.predicateKind, predicateKind);
+			edge(constraint, Konig.stereotype, predicateKind);
 			
 		}
 
@@ -333,7 +333,7 @@ public class WorkbookLoader {
 					case MAX_COUNT : pcMaxCountCol = i; break;
 					case UNIQUE_LANG : pcUniqueLangCol = i; break;
 					case VALUE_CLASS : pcValueClassCol = i; break;
-					case PREDICATE_KIND : pcPredicateKindCol = i; break;
+					case STEREOTYPE : pcPredicateKindCol = i; break;
 						
 					}
 				}
@@ -873,7 +873,9 @@ public class WorkbookLoader {
 		}
 
 		private String stringValue(Row row, int column) {
-			
+			if (row == null) {
+				return null;
+			}
 			String text = null;
 			if (column>=0) {
 				Cell cell = row.getCell(column);

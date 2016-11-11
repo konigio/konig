@@ -8,7 +8,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 konig: a owl:Ontology ;
-	rdfs:label "Konig Ontology Language" ;
+	rdfs:label "Konig Core Ontology" ;
 	rdfs:comment """Provides terms that extend OWL and SHACL.
 		<p>A description of this ontology in Turtle syntax is available at 
 		<a href="http://www.konig.io/ns/kol/.ttl">http://www.konig.io/ns/kol/.ttl</a></p>""" ;
@@ -22,10 +22,12 @@ konig: a owl:Ontology ;
 konig:id a owl:DatatypeProperty, owl:FunctionalProperty ;
 	rdfs:comment """
 		A pseudo-property whose value is equal to the IRI used to identify the subject.
-		We call it a "pseudo-property" because (by convention) SHACL models do 
-		not explicitly include a property for the IRI value.  Instead, a SHACL model will use
-		sh:nodeKind to specify whether the subject is identified by an IRI, a BlankNode or a Literal.
-		This convention	can be inconvenient.  Sometimes we want to treat the IRI for the resource on 
+		We call it a "pseudo-property" because (by convention) neither OWL nor SHACL models 
+		expect an explicit property for the IRI value.  Instead, an OWL model may declare a class
+		to be a subclass of owl:NamedIndividual to indicate that all instances of the class must be
+		identified by an IRI.  Similarly, a SHACL model will use
+		sh:nodeKind to specify whether a given entity is identified by an IRI or a BlankNode.
+		These OWL and SHACL conventions can be inconvenient.  Sometimes we want to treat the IRI for a resource on 
 		equal footing with other properties.  The konig:id property allows us to do that.
 		A PropertyConstraint with konig:id as the sh:predicate and sh:minCount equal to 1 
 		is equivalent to specifying that sh:nodeKind is sh:IRI on the parent shape.
@@ -206,12 +208,13 @@ konig:attribute a owl:ObjectProperty ;
 	rdfs:comment "A predicate whose value is an attribute of some dimension"
 .
 
-konig:predicateKind a owl:ObjectProperty ;
+konig:stereotype a owl:ObjectProperty ;
 	rdfs:comment """
-		An annotation on a PropertyConstraint which identifies the specific kind of predicate
-		that is being described.  For example, the statement (?x konig:measure konig:totalCount) 
-		is equivalent to the following two statements: (?x sh:predicate konig:totalCount) AND
-		(?x konig:predicateKind konig:measure).
+		An annotation on a PropertyConstraint which identifies the role of the property
+		in some external framework.  By "external" we mean external to the SHACL vocabulary.
+		A stereotype allows one to understand how the property will be used.  In this sense,
+		it is similar to a UML stereotype (hence the name).  As an example, one could use stereotypes
+		to distinguish measures, dimensions and attributes in an OLAP cube.
 	""" ;
 	rdfs:domain sh:PropertyConstraint ;
 	rdfs:range rdf:Property
