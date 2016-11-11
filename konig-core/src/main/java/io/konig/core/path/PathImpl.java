@@ -80,5 +80,11 @@ public class PathImpl implements Path {
 		return new PathImpl(new ArrayList<>(stepList));
 	}
 
+	@Override
+	public Path has(URI predicate, Value value) {
+		stepList.add(new HasStep(predicate, value));
+		return this;
+	}
+
 
 }
