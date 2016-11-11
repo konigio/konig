@@ -30,7 +30,7 @@ import io.konig.shacl.io.ShapeLoader;
 
 public class OntologySummarizerTest {
 
-	@Ignore
+	@Test
 	public void testSummarize() throws Exception {
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();

@@ -69,7 +69,7 @@ public class AvroSchemaGeneratorTest {
 			.endArray();
 	}
 	
-	@Ignore
+	@Test
 	public void testValueShape() {
 
 		URI shapeId = uri("http://example.com/shape/PersonShape");
@@ -126,7 +126,7 @@ public class AvroSchemaGeneratorTest {
 		
 	}
 	
-	@Ignore 
+	@Test 
 	public void testSimpleFields() {
 		
 		URI shapeId = uri("http://example.com/shape/Foo");
@@ -194,7 +194,7 @@ public class AvroSchemaGeneratorTest {
 	}
 
 
-	@Ignore
+	@Test
 	public void testBNodeOrIRINodeKind() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/v1/schema/Person");
 		NamespaceManager nsManager = new MemoryNamespaceManager();
@@ -233,7 +233,7 @@ public class AvroSchemaGeneratorTest {
 		assertEquals(secondValue.asText(), "string");
 	}
 	
-	@Ignore
+	@Test
 	public void testIRINodeKind() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/v1/schema/Person");
 		NamespaceManager nsManager = new MemoryNamespaceManager();
@@ -285,7 +285,7 @@ public class AvroSchemaGeneratorTest {
 
 
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();

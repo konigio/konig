@@ -27,7 +27,7 @@ import io.konig.core.vocab.Schema;
 public class ModelMergeJobTest {
 	private ValueFactory factory = new ValueFactoryImpl();
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
 		File oldDir = new File("src/test/resources/showl/v1");

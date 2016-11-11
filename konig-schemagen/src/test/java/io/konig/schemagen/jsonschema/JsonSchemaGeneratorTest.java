@@ -71,7 +71,7 @@ public class JsonSchemaGeneratorTest {
 	
 	}
 
-	@Ignore
+	@Test
 	public void test() {
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();

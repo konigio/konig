@@ -125,7 +125,7 @@ public class BigQueryGeneratorTest {
 		return new URIImpl(string);
 	}
 
-	@Ignore
+	@Test
 	public void testScan() throws Exception {
 		MemoryShapeManager shapeManager = new MemoryShapeManager();
 		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();

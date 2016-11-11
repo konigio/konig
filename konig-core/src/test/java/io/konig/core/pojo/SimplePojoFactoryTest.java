@@ -86,7 +86,7 @@ public class SimplePojoFactoryTest {
 		assertEquals(motoG4, actual.get(2).getId());
 	}
 	
-	@Ignore
+	@Test
 	public void testRdfList() throws Exception {
 
 		URI wishlist = uri("http://example.com/vocab/wishlist");
@@ -114,7 +114,7 @@ public class SimplePojoFactoryTest {
 		assertEquals(motoG4, actual.get(2));
 	}
 	
-	@Ignore
+	@Test
 	public void testAll() {
 		URI aliceId = uri("http://example.com/person/alice");
 		URI bobId = uri("http://example.com/person/bob");
@@ -145,7 +145,7 @@ public class SimplePojoFactoryTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void test() {
 		
 		URI aliceId = uri("http://example.com/person/alice");
@@ -179,7 +179,7 @@ public class SimplePojoFactoryTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testList() {
 		MemoryGraph graph = new MemoryGraph();
 		URI aliceId = uri("http://example.com/alice");
@@ -198,7 +198,7 @@ public class SimplePojoFactoryTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testEnumValue() {
 		
 		URI TimeValueClass = uri("http://schema.example.com/TimeValue");
