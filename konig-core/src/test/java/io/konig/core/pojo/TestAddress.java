@@ -1,4 +1,4 @@
-package io.konig.pojo.io;
+package io.konig.core.pojo;
 
 /*
  * #%L

@@ -1,4 +1,4 @@
-package io.konig.pojo.io;
+package io.konig.core.pojo;
 
 /*
  * #%L
@@ -27,21 +27,94 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
-import io.konig.core.pojo.PojoContext;
-import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.TemporalUnit;
 
 public class SimplePojoFactoryTest {
 	
 	@Test
+	public void testStructuredList() throws Exception {
+		
+		URI wishlist = uri("http://example.com/vocab/wishlist");
+		URI wishlistOwner = uri("http://example.com/vocab/wishlistOwner");
+		URI wishlistId = uri("http://example.com/list/1");
+		URI aliceId = uri("http://example.com/person/alice");
+		URI galaxy7 = uri("http://example.com/product/galaxy7");
+		URI iphone7 = uri("http://example.com/product/iphone7");
+		URI motoG4 = uri("http://example.com/product/motoG4");
+		
+		MemoryGraph graph = new MemoryGraph();
+		graph.builder()
+			.beginSubject(galaxy7)
+				.addLiteral(Schema.name, "Galaxy 7")
+			.endSubject()
+			.beginSubject(iphone7)
+				.addLiteral(Schema.name, "iPhone 7")
+			.endSubject()
+			.beginSubject(motoG4)
+				.addLiteral(Schema.name, "Moto G4")
+			.endSubject()
+			.beginSubject(wishlistId)
+				.addProperty(wishlistOwner, aliceId)
+				.beginSubject(aliceId)
+					.addLiteral(Schema.name, "Alice")
+				.endSubject()
+				.addList(wishlist, galaxy7, iphone7, motoG4)
+			.endSubject();
+	
+		Vertex v = graph.getVertex(wishlistId);
+		
+		SimplePojoFactory factory = new SimplePojoFactory();
+		StructuredWishlist pojo = factory.create(v, StructuredWishlist.class);
+		TestPerson alice = pojo.getWishlistOwner();
+		assertEquals(alice.getName(), "Alice");
+		
+		
+		List<Product> actual = pojo.getWishlist();
+		assertEquals(galaxy7, actual.get(0).getId());
+		assertEquals("Galaxy 7", actual.get(0).getName());
+		assertEquals(iphone7, actual.get(1).getId());
+		assertEquals(motoG4, actual.get(2).getId());
+	}
+	
+	@Ignore
+	public void testRdfList() throws Exception {
+
+		URI wishlist = uri("http://example.com/vocab/wishlist");
+		URI aliceId = uri("http://example.com/person/alice");
+		URI galaxy7 = uri("http://example.com/product/galaxy7");
+		URI iphone7 = uri("http://example.com/product/iphone7");
+		URI motoG4 = uri("http://example.com/product/motoG4");
+		
+		MemoryGraph graph = new MemoryGraph();
+		graph.builder()
+			.beginSubject(aliceId)
+				.addLiteral(Schema.name, "Alice")
+				.addList(wishlist, galaxy7, iphone7, motoG4)
+			.endSubject();
+	
+		Vertex v = graph.getVertex(aliceId);
+		
+		SimplePojoFactory factory = new SimplePojoFactory();
+		PersonWishlist pojo = factory.create(v, PersonWishlist.class);
+		assertEquals(pojo.getName(), "Alice");
+		
+		List<URI> actual = pojo.getWishlist();
+		assertEquals(galaxy7, actual.get(0));
+		assertEquals(iphone7, actual.get(1));
+		assertEquals(motoG4, actual.get(2));
+	}
+	
+	@Ignore
 	public void testAll() {
 		URI aliceId = uri("http://example.com/person/alice");
 		URI bobId = uri("http://example.com/person/bob");
@@ -72,7 +145,7 @@ public class SimplePojoFactoryTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void test() {
 		
 		URI aliceId = uri("http://example.com/person/alice");
@@ -106,7 +179,7 @@ public class SimplePojoFactoryTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testList() {
 		MemoryGraph graph = new MemoryGraph();
 		URI aliceId = uri("http://example.com/alice");
@@ -125,7 +198,7 @@ public class SimplePojoFactoryTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testEnumValue() {
 		
 		URI TimeValueClass = uri("http://schema.example.com/TimeValue");
@@ -194,6 +267,92 @@ public class SimplePojoFactoryTest {
 		}
 		public void setTimeUnit(TemporalUnit timeUnit) {
 			this.timeUnit = timeUnit;
+		}
+	}
+	
+	public static class Product {
+		private Resource id;
+		private String name;
+		public Resource getId() {
+			return id;
+		}
+		public void setId(Resource id) {
+			this.id = id;
+		}
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		
+		
+	}
+	
+	public static class StructuredWishlist {
+		private Resource id;
+		private TestPerson wishlistOwner;
+		private List<Product> wishlist;
+		
+		
+		
+		public TestPerson getWishlistOwner() {
+			return wishlistOwner;
+		}
+		public void setWishlistOwner(TestPerson wishlistOwner) {
+			this.wishlistOwner = wishlistOwner;
+		}
+		public List<Product> getWishlist() {
+			return wishlist;
+		}
+		public void setWishlist(List<Product> wishlist) {
+			this.wishlist = wishlist;
+		}
+		
+		public void addWishlist(Product product) {
+			if (wishlist == null) {
+				wishlist = new ArrayList<>();
+			}
+			wishlist.add(product);
+		}
+		public Resource getId() {
+			return id;
+		}
+		public void setId(Resource id) {
+			this.id = id;
+		}
+		
+	}
+	
+	public static class PersonWishlist {
+		private Resource id;
+		private String name;
+		private List<URI> wishlist;
+		
+		public Resource getId() {
+			return id;
+		}
+		public void setId(Resource id) {
+			this.id = id;
+		}
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		public List<URI> getWishlist() {
+			return wishlist;
+		}
+		public void setWishlist(List<URI> wishlist) {
+			this.wishlist = wishlist;
+		}
+		
+		public void addWishlist(URI value) {
+			if (wishlist == null) {
+				wishlist = new ArrayList<>();
+			}
+			wishlist.add(value);
 		}
 	}
 

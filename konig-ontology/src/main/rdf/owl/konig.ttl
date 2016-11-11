@@ -193,6 +193,31 @@ konig:shapeInstanceCount a owl:DatatypeProperty ;
 	
 ###### Fact Modeling
 
+konig:Fact a owl:Class ;
+	rdfs:comment "The class of all facts.  Each fact has a measure and some dimensions." 
+.	
+
+konig:TimeInterval a owl:Class ;
+	rdfs:comment "An interval of time that has an explicit starting point and a duration"
+.	
+
+konig:TimeUnit a owl:Class ;
+	rdfs:subClassOf owl:NamedIndividual ;
+	rdfs:comment "The class of all possible time unit values (Day, Week, Month, Year, etc.)" 
+.
+
+konig:Week a konig:TimeUnit ;	
+	rdfs:comment "A unit of time that is one week in duration"
+.
+
+konig:Month a konig:TimeUnit ;
+	rdfs:comment "The unit of time that is one month in duration"
+.
+
+konig:Year a konig:TimeUnit ;
+	rdfs:comment "The unit of time that is one year in duration"
+.
+
 konig:measure a owl:ObjectProperty ;
 	rdfs:subPropertyOf sh:predicate ;
 	rdfs:comment "A predicate whose value is an observed or computed measure."
@@ -219,5 +244,28 @@ konig:stereotype a owl:ObjectProperty ;
 	rdfs:domain sh:PropertyConstraint ;
 	rdfs:range rdf:Property
 .	
+
+
+konig:totalCount a owl:DatatypeProperty ;
+	rdfs:comment """
+		A measure which records the total number of times that some data Shape
+		occurs.
+	""" ;
+	rdfs:domain konig:Fact ;
+	rdfs:range xsd:int
+.
+
+konig:durationUnit a owl:ObjectProperty ;
+	rdfs:comment "The unit of time used to define the duration of the TimeInterval" ;
+	rdfs:domain konig:TimeInterval ;
+	rdfs:range konig:TimeUnit
+.	
+
+konig:intervalStart a owl:ObjectProperty ;
+	rdfs:comment "The point in time when the interval started." ;
+	rdfs:domain konig:TimeInterval ;
+	schema:rangeIncludes xsd:date , xsd:dateTime
+.	
+		
 
 

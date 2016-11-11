@@ -41,7 +41,38 @@ import io.konig.shacl.Shape;
 
 public class WorkbookLoaderTest {
 	
-	@Test 
+	@Test
+	public void testIn() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
+		
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+
+		
+		URI shapeId = uri("http://example.com/shapes/v1/konig/WeekMonthYearShape");
+		Vertex shapeVertex = graph.getVertex(shapeId);
+		assertTrue(shapeVertex != null);
+		
+		SimplePojoFactory pojoFactory = new SimplePojoFactory();
+		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
+		
+		PropertyConstraint p = shape.getPropertyConstraint(Konig.durationUnit);
+		assertTrue(p!=null);
+		
+		List<Value> list = p.getIn();
+		assertTrue(list != null);
+		assertEquals(Konig.Week, list.get(0));
+		assertEquals(Konig.Month, list.get(1));
+		assertEquals(Konig.Year, list.get(2));
+	}
+	
+	@Ignore 
 	public void testStereotype() throws Exception {
 
 		
