@@ -50,8 +50,8 @@ public class InStep implements Step {
 				Vertex subject = graph.vertex((Resource)s);
 				Set<Edge> edges = subject.inProperty(predicate);
 				for (Edge edge : edges) {
-					Value object = edge.getObject();
-					traverser.addResult(object);
+					Resource target = edge.getSubject();
+					traverser.addResult(target);
 				}
 			}
 		}

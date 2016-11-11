@@ -1,8 +1,8 @@
-package io.konig.core;
+package io.konig.core.path;
 
 /*
  * #%L
- * konig-core
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
@@ -21,22 +21,40 @@ package io.konig.core;
  */
 
 
-import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
-import io.konig.core.path.Step;
+import io.konig.core.Graph;
+import io.konig.core.TraversalException;
 
-public interface Path {
+public class HasStep implements Step {
+
+	private URI predicate;
+	private Value value;
 	
-	Path out(URI predicate);
-	Path in(URI predicate);
-	Path has(URI predicate, Value value);
-	Path copy();
-	
-	Set<Value> traverse(Vertex source);
-	
-	List<Step> asList();
+	public HasStep(URI predicate, Value value) {
+		this.predicate = predicate;
+		this.value = value;
+	}
+
+	@Override
+	public void traverse(Traverser traverser) throws TraversalException {
+
+		Graph graph = traverser.getGraph();
+		Set<Value> source = traverser.getSource();
+		
+		for (Value s : source) {
+			if (s instanceof Resource) {
+				Resource subject = (Resource) s;
+				if (graph.contains(subject, predicate, value)) {
+					traverser.addResult(s);
+				}
+			}
+		}
+
+	}
+
 }

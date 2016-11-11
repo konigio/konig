@@ -42,6 +42,7 @@ public class Schema {
 	public static final URI Number = new URIImpl("http://schema.org/Number");
 	public static final URI Organization = new URIImpl("http://schema.org/Organization");
 	public static final URI Person = new URIImpl("http://schema.org/Person");
+	public static final URI Product = new URIImpl("http://schema.org/Product");
 	public static final URI PostalAddress = new URIImpl("http://schema.org/PostalAddress");
 	public static final URI Text = new URIImpl("http://schema.org/Text");
 	public static final URI Thing = new URIImpl("http://schema.org/Thing");
