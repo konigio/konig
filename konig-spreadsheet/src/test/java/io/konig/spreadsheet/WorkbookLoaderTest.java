@@ -66,7 +66,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIn() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -97,7 +97,7 @@ public class WorkbookLoaderTest {
 		assertEquals(Konig.Year, list.get(2));
 	}
 	
-	@Ignore 
+	@Test 
 	public void testStereotype() throws Exception {
 
 		
@@ -131,7 +131,7 @@ public class WorkbookLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
 		InputStream input = getClass().getClassLoader().getResourceAsStream("test.xlsx");

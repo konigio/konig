@@ -46,7 +46,6 @@ import io.konig.core.vocab.Schema;
 public class ChangeSetFactoryTest {
 	
 	@Ignore
-	@Test
 	public void testList() throws Exception {
 		
 		URI itemList = uri("http://schema.example.com/itemList");
