@@ -1,4 +1,4 @@
-package io.konig.core.path;
+package io.konig.core;
 
 /*
  * #%L
@@ -22,41 +22,47 @@ package io.konig.core.path;
 
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.openrdf.model.Value;
 
-import io.konig.core.Graph;
+import io.konig.core.path.Step;
 
 public class Traverser {
 	private Graph graph;
 	private Set<Value> source;
 	private Set<Value> resultSet;
 	
+	public Traverser(Graph graph) {
+		this.graph = graph;
+		resultSet = new LinkedHashSet<>();
+	}
+	
 	public Traverser(Graph graph, Set<Value> source) {
 		this.graph = graph;
 		this.resultSet = source;
 	}
 	
-	void visit(Step step) {
+	public void visit(Step step) {
 		source = resultSet;
 		resultSet = new HashSet<>();
 		step.traverse(this);
 	}
 	
-	Graph getGraph() {
+	public Graph getGraph() {
 		return graph;
 	}
 
-	Set<Value> getSource() {
+	public Set<Value> getSource() {
 		return source;
 	}
 	
-	Set<Value> getResultSet() {
+	public Set<Value> getResultSet() {
 		return resultSet;
 	}
 	
-	void addResult(Value result) {
+	public void addResult(Value result) {
 		resultSet.add(result);
 	}
 

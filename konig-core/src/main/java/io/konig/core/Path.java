@@ -24,6 +24,7 @@ package io.konig.core;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
@@ -31,12 +32,19 @@ import io.konig.core.path.Step;
 
 public interface Path {
 	
+	/**
+	 * Explicitly add one or more resources to the path.
+	 * @param resource A resource to be added to the path
+	 * @return This Path
+	 */
+	Path v(Resource...resource);
 	Path out(URI predicate);
 	Path in(URI predicate);
 	Path has(URI predicate, Value value);
 	Path copy();
 	
 	Set<Value> traverse(Vertex source);
+	Set<Value> traverse(Traverser traverser);
 	
 	List<Step> asList();
 }

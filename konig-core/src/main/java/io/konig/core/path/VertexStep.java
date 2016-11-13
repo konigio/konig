@@ -2,7 +2,7 @@ package io.konig.core.path;
 
 /*
  * #%L
- * konig-core
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
@@ -24,40 +24,38 @@ package io.konig.core.path;
 import java.util.Set;
 
 import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
-import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.TraversalException;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
 
-public class InStep implements Step {
+/**
+ * A step which explicitly adds one or more vertices to the traversal
+ * @author Greg McFall
+ *
+ */
+public class VertexStep implements Step {
+	Resource[] resource;
 	
-	private URI predicate;
-
-	public InStep(URI predicate) {
-		this.predicate = predicate;
+	public VertexStep(Resource[] object) {
+		this.resource = object;
 	}
+
 
 	@Override
 	public void traverse(Traverser traverser) throws TraversalException {
-		
 		Graph graph = traverser.getGraph();
-		Set<Value> source = traverser.getSource();
-		for (Value s : source) {
-			if (s instanceof Resource) {
-				Vertex subject = graph.vertex((Resource)s);
-				Set<Edge> edges = subject.inProperty(predicate);
-				for (Edge edge : edges) {
-					Resource target = edge.getSubject();
-					traverser.addResult(target);
-				}
-			}
+		Set<Value> value = traverser.getSource();
+		for (Value v : value) {
+			traverser.addResult(v);
 		}
-		
-		
+		for (Resource r : resource) {
+			Vertex v = graph.vertex(r);
+			traverser.addResult(v.getId());
+		}
+
 	}
 
 }

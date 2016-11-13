@@ -649,18 +649,25 @@ public class MemoryGraph implements Graph, Transaction {
 	public Set<URI> lookupLocalName(String localName) {
 		Set<URI> result = new LinkedHashSet<>();
 		
-		Collection<Vertex> sequence = vertices();
-		for (Vertex v : sequence) {
-			Resource id = v.getId();
-			if (id instanceof URI) {
-				URI uri = (URI) id;
-				if (localName.equals(uri.getLocalName())) {
-					result.add(uri);
-				}
-			}
+		for (Edge e : this) {
+			matchLocalName(result, localName, e.getSubject());
+			matchLocalName(result, localName, e.getPredicate());
+			matchLocalName(result, localName, e.getObject());
 		}
 		
 		return result;
+	}
+
+
+
+	private void matchLocalName(Set<URI> result, String localName, Value value) {
+		if (value instanceof URI) {
+			URI uri = (URI) value;
+			if (localName.equals(uri.getLocalName())) {
+				result.add(uri);
+			}
+		}
+		
 	}
 	
 

@@ -2,7 +2,7 @@ package io.konig.core.path;
 
 /*
  * #%L
- * konig-core
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
@@ -21,10 +21,21 @@ package io.konig.core.path;
  */
 
 
-import io.konig.core.TraversalException;
-import io.konig.core.Traverser;
+import io.konig.core.KonigException;
 
-public interface Step {
+public class PathParseException extends KonigException {
+	private static final long serialVersionUID = 1L;
 
-	void traverse(Traverser traverser) throws TraversalException;
+	public PathParseException(String arg0) {
+		super(arg0);
+	}
+
+	public PathParseException(Throwable arg0) {
+		super(arg0);
+	}
+
+	public PathParseException(String arg0, Throwable arg1) {
+		super(arg0, arg1);
+	}
+
 }

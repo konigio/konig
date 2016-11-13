@@ -1,8 +1,8 @@
-package io.konig.core.path;
+package io.konig.core;
 
 /*
  * #%L
- * konig-core
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2016 Gregory McFall
  * %%
@@ -21,10 +21,21 @@ package io.konig.core.path;
  */
 
 
-import io.konig.core.TraversalException;
-import io.konig.core.Traverser;
+import java.util.Set;
 
-public interface Step {
+import org.openrdf.model.URI;
 
-	void traverse(Traverser traverser) throws TraversalException;
+/**
+ * A service that provides a method to lookup the URI values that have a given local name.
+ * @author Greg McFall
+ *
+ */
+public interface LocalNameService {
+	
+	/**
+	 * Lookup the URI values that have the given local name.
+	 * @param localName The local name to be matched
+	 * @return The set of all URI values that have the given localName
+	 */
+	Set<URI> lookupLocalName(String localName);
 }
