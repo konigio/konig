@@ -90,14 +90,19 @@ public interface Vertex {
 	 * Get the value of a specified property.
 	 * @param predicate The predicate that identifies the property whose value is to be returned.
 	 * @return A value for the specified property, or null if no such property exists.  If the vertex
-	 * contains more than one value for the given property, the returned value is indeterminant.
+	 * contains more than one value for the given property, the returned value is indeterminate.
 	 */
 	Value getValue(URI predicate);
 	
 	/**
+	 * Get the set of values of a specified property
+	 */
+	Set<Value> getValueSet(URI predicate);
+	
+	/**
 	 * Get the value of a specified property as a URI.
 	 * @param predicate The predicate that identifies the properties whose value is to be returned.
-	 * @return The URI value for the specified propety.  If no such property exists or does not have 
+	 * @return The URI value for the specified property.  If no such property exists or does not have 
 	 * a URI value, this method returns null.
 	 */
 	URI getURI(URI predicate);

@@ -42,6 +42,32 @@ import io.konig.shacl.Shape;
 public class WorkbookLoaderTest {
 	
 	@Test
+	public void testEquivalentPath() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
+		
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+
+		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
+		Vertex shapeVertex = graph.getVertex(shapeId);
+		assertTrue(shapeVertex != null);
+		
+		SimplePojoFactory pojoFactory = new SimplePojoFactory();
+		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
+		
+		URI state = uri("http://example.com/ns/alias/state");
+		PropertyConstraint p = shape.getPropertyConstraint(state);
+		assertEquals("!city!containedInPlace", p.getEquivalentPath());
+
+	}
+	
+	@Test
 	public void testInputClass() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -127,7 +153,7 @@ public class WorkbookLoaderTest {
 		assertTrue(city != null);
 		assertEquals(Konig.dimension, city.getStereotype());
 		
-		RdfUtil.prettyPrintTurtle(nsManager, graph, new OutputStreamWriter(System.out));
+//		RdfUtil.prettyPrintTurtle(nsManager, graph, new OutputStreamWriter(System.out));
 		
 	}
 

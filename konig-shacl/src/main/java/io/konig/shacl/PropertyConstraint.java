@@ -39,9 +39,11 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
+import io.konig.core.Path;
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.KonigLiteral;
+import io.konig.core.path.PathFactory;
 import io.konig.core.vocab.Konig;
 
 public class PropertyConstraint {
@@ -71,6 +73,8 @@ public class PropertyConstraint {
 	private URI dimensionTerm;
 	private boolean timeParam;
 	private URI stereotype;
+	private String equivalentPath;
+	private Path compiledEquivalentPath;
 	
 	private Term term;
 	
@@ -424,5 +428,31 @@ public class PropertyConstraint {
 		predicate = attribute;
 		stereotype = Konig.attribute;
 	}
+
+	public String getEquivalentPath() {
+		return equivalentPath;
+	}
+
+	public void setEquivalentPath(String equivalentPath) {
+		this.equivalentPath = equivalentPath;
+	}
+
+	public Path getCompiledEquivalentPath() {
+		return compiledEquivalentPath;
+	}
+	
+	public Path getCompiledEquivalentPath(PathFactory factory) {
+		
+		if (compiledEquivalentPath == null && equivalentPath!=null) {
+			compiledEquivalentPath = factory.createPath(equivalentPath);
+		}
+		return compiledEquivalentPath;
+	}
+
+	public void setCompiledEquivalentPath(Path compiledEquivalentPath) {
+		this.compiledEquivalentPath = compiledEquivalentPath;
+	}
+	
+	
 	
 }

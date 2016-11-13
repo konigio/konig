@@ -52,6 +52,7 @@ public class Konig {
 	public static final URI jsonSchemaRendition = new URIImpl("http://www.konig.io/ns/core/jsonSchemaRendition");
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/core/avroSchemaRendition");
 	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/core/PreferredClass");
+	public static final URI equivalentPath = new URIImpl("http://www.konig.io/ns/core/equivalentPath");
 	
 	// Fact Modeling
 

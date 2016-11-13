@@ -25,6 +25,7 @@ import java.util.ArrayList;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -347,6 +348,18 @@ public class VertexImpl implements Vertex {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public Set<Value> getValueSet(URI predicate) {
+		
+		Set<Edge> edgeSet = outProperty(predicate);
+		Set<Value> result = new LinkedHashSet<>();
+		
+		for (Edge e : edgeSet) {
+			result.add(e.getObject());
+		}
+		return result;
 	}
 
 }

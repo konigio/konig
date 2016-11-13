@@ -323,6 +323,11 @@ public class ShapeBuilder {
 			return this;
 		}
 		
+		public PropertyBuilder equivalentPath(String value) {
+			property.setEquivalentPath(value);
+			return this;
+		}
+		
 		public PropertyBuilder valueShape(URI shapeId) {
 			
 			Shape shape = parent.shapeManager.getShapeById(shapeId);
