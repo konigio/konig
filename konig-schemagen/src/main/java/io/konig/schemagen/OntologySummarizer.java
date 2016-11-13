@@ -158,12 +158,9 @@ public class OntologySummarizer {
 
 			turtle.startRDF();
 			for (Vertex v : list) {
-				Value node = v.getValue(VANN.preferredNamespacePrefix);
-				if (node != null) {
-					String prefix = node.stringValue();
-					String namespace = v.getId().stringValue();
-					turtle.handleNamespace(prefix, namespace);
-				}
+				String prefix = v.getValue(VANN.preferredNamespacePrefix).stringValue();
+				String namespace = v.getId().stringValue();
+				turtle.handleNamespace(prefix, namespace);
 			}
 			
 			for (Vertex v : list) {

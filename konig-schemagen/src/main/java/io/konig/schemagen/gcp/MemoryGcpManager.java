@@ -36,7 +36,7 @@ public class MemoryGcpManager implements GcpManager, BigQueryTableHandler {
 			if (shapeId != null) {
 				Shape shape = shapeManager.getShapeById(shapeId);
 				if (shape != null) {
-					owlClass = shape.getTargetClass();
+					owlClass = shape.getScopeClass();
 				}
 			}
 		}

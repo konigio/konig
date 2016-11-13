@@ -54,12 +54,12 @@ public class ContextGeneratorTest {
 		ShapeBuilder builder = new ShapeBuilder(addressShape);
 		
 		builder
-			.targetClass(Schema.PostalAddress)
+			.scopeClass(Schema.PostalAddress)
 			.property(Schema.streetAddress).datatype(XMLSchema.STRING)
 			.property(Schema.addressLocality).datatype(XMLSchema.STRING)
 			.property(Schema.addressRegion).datatype(XMLSchema.STRING)
 			.shape("http://www.konig.io/shape/schema/Person-v1")
-			.targetClass(Schema.Person)
+			.scopeClass(Schema.Person)
 			.property(Schema.email).datatype(XMLSchema.STRING)
 			.property(Schema.givenName).datatype(XMLSchema.STRING).maxCount(1)
 			.property(Schema.familyName).datatype(XMLSchema.STRING).maxCount(1)

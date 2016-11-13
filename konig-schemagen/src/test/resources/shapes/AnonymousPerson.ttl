@@ -9,7 +9,7 @@
 
 
 <http://example.com/v1/schema/Person> a sh:Shape ;
-	sh:targetClass schema:Person ;
+	sh:scopeClass schema:Person ;
 	sh:property [
 		sh:predicate ex:anonymousId;
 		sh:datatype xsd:string ;

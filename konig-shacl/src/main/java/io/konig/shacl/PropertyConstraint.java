@@ -42,13 +42,12 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.KonigLiteral;
-import io.konig.core.vocab.Konig;
 
 public class PropertyConstraint {
 
 	private Resource id;
 	private URI predicate;
-	private List<Value> in;
+	private List<Value> allowedValues;
 	private Integer minCount;
 	private Integer maxCount;
 	private Integer minLength;
@@ -70,7 +69,6 @@ public class PropertyConstraint {
 	private boolean uniqueCountKey;
 	private URI dimensionTerm;
 	private boolean timeParam;
-	private URI stereotype;
 	
 	private Term term;
 	
@@ -96,7 +94,7 @@ public class PropertyConstraint {
 
 	public PropertyConstraint clone() {
 		PropertyConstraint other = new PropertyConstraint(id, predicate);
-		other.in = in;
+		other.allowedValues = allowedValues;
 		other.datatype = datatype;
 		other.directType = directType;
 		other.documentation = documentation;
@@ -128,11 +126,6 @@ public class PropertyConstraint {
 	public String getDocumentation() {
 		return documentation;
 	}
-	
-	public void setComment(String comment) {
-		this.documentation = comment;
-	}
-	
 	public void setDocumentation(String documentation) {
 		this.documentation = documentation;
 	}
@@ -202,15 +195,15 @@ public class PropertyConstraint {
 		this.nodeKind = nodeKind;
 	}
 	
-	public void addIn(Value value) {
-		if (in == null) {
-			in = new ArrayList<Value>();
+	public void addAllowedValue(Value value) {
+		if (allowedValues == null) {
+			allowedValues = new ArrayList<Value>();
 		}
-		in.add(value);
+		allowedValues.add(value);
 	}
 	
-	public void setIn(List<Value> list) {
-		in = list;
+	public void setAllowedValue(List<Value> list) {
+		allowedValues = list;
 	}
 	
 	public void addKnownValue(Value value) {
@@ -255,8 +248,8 @@ public class PropertyConstraint {
 	 * Get read-only list of allowed-values for this property constraint.
 	 * @return
 	 */
-	public List<Value> getIn() {
-		return in;
+	public List<Value> getAllowedValues() {
+		return allowedValues;
 	}
 
 	public Integer getMinCount() {
@@ -402,27 +395,6 @@ public class PropertyConstraint {
 		this.timeParam = timeParam;
 	}
 	
-	public URI getStereotype() {
-		return stereotype;
-	}
-
-	public void setStereotype(URI stereotype) {
-		this.stereotype = stereotype;
-	}
-
-	public void setMeasure(URI measure) {
-		predicate = measure;
-		stereotype = Konig.measure;
-	}
 	
-	public void setDimension(URI dimension) {
-		predicate = dimension;
-		stereotype = Konig.dimension;
-	}
-	
-	public void setAttribute(URI attribute) {
-		predicate = attribute;
-		stereotype = Konig.attribute;
-	}
 	
 }

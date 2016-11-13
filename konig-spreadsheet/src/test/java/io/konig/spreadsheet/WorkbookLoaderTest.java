@@ -1,17 +1,14 @@
 package io.konig.spreadsheet;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.text.MessageFormat;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -29,107 +26,13 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.RdfUtil;
-import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
-import io.konig.shacl.PropertyConstraint;
-import io.konig.shacl.Shape;
 
 public class WorkbookLoaderTest {
-	
-	@Test
-	public void testInputClass() throws Exception {
-		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
-		
-		Workbook book = WorkbookFactory.create(input);
-		Graph graph = new MemoryGraph();
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		
-		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
-
-		
-		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
-		Vertex shapeVertex = graph.getVertex(shapeId);
-		assertTrue(shapeVertex != null);
-		
-		SimplePojoFactory pojoFactory = new SimplePojoFactory();
-		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
-		
-		URI actual = shape.getInputClass();
-		assertEquals(Schema.BuyAction, actual);
-		
-	}
-	
-	@Test
-	public void testIn() throws Exception {
-
-		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
-		
-		Workbook book = WorkbookFactory.create(input);
-		Graph graph = new MemoryGraph();
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		
-		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
-
-		
-		URI shapeId = uri("http://example.com/shapes/v1/konig/WeekMonthYearShape");
-		Vertex shapeVertex = graph.getVertex(shapeId);
-		assertTrue(shapeVertex != null);
-		
-		SimplePojoFactory pojoFactory = new SimplePojoFactory();
-		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
-		
-		PropertyConstraint p = shape.getPropertyConstraint(Konig.durationUnit);
-		assertTrue(p!=null);
-		
-		List<Value> list = p.getIn();
-		assertTrue(list != null);
-		assertEquals(Konig.Week, list.get(0));
-		assertEquals(Konig.Month, list.get(1));
-		assertEquals(Konig.Year, list.get(2));
-	}
-	
-	@Test 
-	public void testStereotype() throws Exception {
-
-		
-		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
-		
-		Workbook book = WorkbookFactory.create(input);
-		Graph graph = new MemoryGraph();
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		
-		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
-		
-		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
-		Vertex shapeVertex = graph.getVertex(shapeId);
-		assertTrue(shapeVertex != null);
-		
-		SimplePojoFactory pojoFactory = new SimplePojoFactory();
-		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
-		
-		PropertyConstraint totalCount = shape.getPropertyConstraint(Konig.totalCount);
-		assertTrue(totalCount!=null);
-		assertEquals(Konig.measure, totalCount.getStereotype());
-		
-		URI cityId = uri("http://example.com/ns/alias/city");
-		PropertyConstraint city = shape.getPropertyConstraint(cityId);
-		assertTrue(city != null);
-		assertEquals(Konig.dimension, city.getStereotype());
-		
-		RdfUtil.prettyPrintTurtle(nsManager, graph, new OutputStreamWriter(System.out));
-		
-	}
 
 	@Test
 	public void test() throws Exception {
@@ -144,6 +47,7 @@ public class WorkbookLoaderTest {
 		
 		loader.load(book, graph);
 
+		System.out.println(graph);
 		
 		checkOntologySheet(graph);
 		checkNamespaces(nsManager);
@@ -161,9 +65,6 @@ public class WorkbookLoaderTest {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));
 		assertTrue(shape!=null);
-		
-		Vertex id = propertyConstraint(shape, Konig.id);
-		assertTrue(id == null);
 		
 		Vertex givenName = propertyConstraint(shape, Schema.givenName);
 		assertValue(givenName, SH.datatype, XMLSchema.STRING);
@@ -201,8 +102,7 @@ public class WorkbookLoaderTest {
 		
 		assertValue(v, RDF.TYPE, SH.Shape);
 		assertValue(v, RDFS.COMMENT, "A light-weight data shape for a person.");
-		assertValue(v, SH.targetClass, Schema.Person);
-		assertValue(v, SH.nodeKind, SH.IRI);
+		assertValue(v, SH.scopeClass, Schema.Person);
 		assertValue(v, Konig.mediaTypeBaseName, "application/vnd.example.v1.schema.person");
 		
 		

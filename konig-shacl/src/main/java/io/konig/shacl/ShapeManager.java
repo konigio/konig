@@ -39,10 +39,10 @@ public interface ShapeManager {
 	
 	/**
 	 * Get the list of shapes that have a given scope class.
-	 * @param targetClass The Class of interest
+	 * @param scopeClass The Class of interest
 	 * @return The list of shapes that have a given scope class.
 	 */
-	List<Shape> getShapesByTargetClass(URI targetClass);
+	List<Shape> getShapesByScopeClass(URI scopeClass);
 	
 	/**
 	 * Add a Shape to this manager.

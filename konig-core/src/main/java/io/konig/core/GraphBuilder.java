@@ -124,14 +124,6 @@ public class GraphBuilder {
 		return statement(peek(), predicate, object);
 	}
 	
-	public GraphBuilder addLangString(URI predicate, String value, String language) {
-		return addProperty(predicate, new LiteralImpl(value, language));
-	}
-	
-	public GraphBuilder addTypedLiteral(URI predicate, String value, URI type) {
-		return addProperty(predicate, new LiteralImpl(value, type));
-	}
-	
 	public GraphBuilder addList(URI predicate, Value...object) {
 		Resource subject = peek();
 		Resource list = graph.vertex().getId();
@@ -153,10 +145,6 @@ public class GraphBuilder {
 		return addProperty(predicate, valueFactory.createLiteral(value));
 	}
 	
-	public GraphBuilder addProperty(URI predicate, boolean truth) {
-		return addProperty(predicate, valueFactory.createLiteral(truth));
-	}
-	
 	public GraphBuilder addLiteral(URI predicate, String object) {
 		return addProperty(predicate, new KonigLiteral(object));
 	}
@@ -167,10 +155,6 @@ public class GraphBuilder {
 	
 	public GraphBuilder addLiteral(URI predicate, String value, URI datatype) {
 		return addProperty(predicate, new KonigLiteral(value, datatype));
-	}
-
-	public GraphBuilder addDouble(URI predicate, double value) {
-		return addProperty(predicate, new LiteralImpl(Double.toString(value), XMLSchema.DOUBLE));
 	}
 	
 	

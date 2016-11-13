@@ -47,8 +47,8 @@ public class AvonWriterBuilder {
 
 		public void buildWriter(Shape shape) throws SchemaGeneratorException {
 			
-			URI targetClass = shape.getTargetClass();
-			if (targetClass != null) {
+			URI scopeClass = shape.getScopeClass();
+			if (scopeClass != null) {
 				String className = avonWriterJavaClassName(shape);
 				JCodeModel model = dataWriter.getModel();
 				
@@ -68,10 +68,10 @@ public class AvonWriterBuilder {
 						method.body()._return(mediaTypeField);
 						method.annotate(Override.class);
 
-						String javaClassName = dataWriter.getJavaNamer().javaClassName(targetClass);
-						JClass javaTargetClass = model.ref(javaClassName);
+						String javaClassName = dataWriter.getJavaNamer().javaClassName(scopeClass);
+						JClass javaScopeClass = model.ref(javaClassName);
 						
-						buildWriteMethod(model, dc, javaTargetClass, shape);
+						buildWriteMethod(model, dc, javaScopeClass, shape);
 						
 						
 					} catch (JClassAlreadyExistsException e) {
@@ -84,8 +84,8 @@ public class AvonWriterBuilder {
 		private String avonMediaType(Shape shape) {
 
 			String result = null;
-			URI targetClass = shape.getTargetClass();
-			if (targetClass != null) {
+			URI scopeClass = shape.getScopeClass();
+			if (scopeClass != null) {
 				ShapeMediaTypeNamer mediaTypeNamer = dataWriter.getMediaTypeNamer();
 				String mediaTypeBaseName = mediaTypeNamer.baseMediaTypeName(shape);
 				result = mediaTypeBaseName + "+avon";
@@ -99,23 +99,23 @@ public class AvonWriterBuilder {
 
 			String className = null;
 			
-			URI targetClass = shape.getTargetClass();
-			if (targetClass != null) {
+			URI scopeClass = shape.getScopeClass();
+			if (scopeClass != null) {
 				ShapeMediaTypeNamer mediaTypeNamer = dataWriter.getMediaTypeNamer();
 				String mediaTypeBaseName = mediaTypeNamer.baseMediaTypeName(shape);
-				className = mediaTypeBaseName + '.' + targetClass.getLocalName() + "AvonWriter";
+				className = mediaTypeBaseName + '.' + scopeClass.getLocalName() + "AvonWriter";
 				className = dataWriter.getJavaNamer().writerName(className);
 				
 			} else {
-				throw new SchemaGeneratorException("targetClass not defined for Shape: " + shape.getId());
+				throw new SchemaGeneratorException("scopeClass not defined for Shape: " + shape.getId());
 			}
 			
 			return className;
 		}
 
-		private void buildWriteMethod(JCodeModel model, JDefinedClass dc, JClass javaTargetClass, Shape shape) {
+		private void buildWriteMethod(JCodeModel model, JDefinedClass dc, JClass javaScopeClass, Shape shape) {
 			
-			URI targetClass = shape.getTargetClass();
+			URI scopeClass = shape.getScopeClass();
 			JMethod method = dc.method(JMod.PUBLIC, void.class, "write");
 			JVar dataVar = method.param(Object.class, "data");
 			JVar outVar = method.param(dataWriter.getDataSinkClass(), "out");
@@ -123,14 +123,14 @@ public class AvonWriterBuilder {
 			method._throws(dataWriter.getValidationExceptionClass());
 			method._throws(model.ref(IOException.class));
 			
-			JConditional conditional = method.body()._if(dataVar._instanceof(javaTargetClass));
+			JConditional conditional = method.body()._if(dataVar._instanceof(javaScopeClass));
 			
 			JBlock block = conditional._then();
 			JBlock elseBlock = conditional._else();
 			
 			elseBlock._throw(
 				JExpr._new(dataWriter.getValidationExceptionClass()).arg(
-					JExpr.lit("Invalid argument.  Expected data object of type " + targetClass.getLocalName())
+					JExpr.lit("Invalid argument.  Expected data object of type " + scopeClass.getLocalName())
 				)
 			);
 			
@@ -138,12 +138,12 @@ public class AvonWriterBuilder {
 			
 			JVar jsonVar = block.decl(jsonGeneratorClass, "json", JExpr.invoke(outVar, "getJsonGenerator"));
 
-			JVar subjectVar = block.decl(javaTargetClass, "subject", JExpr.cast(javaTargetClass, dataVar));
+			JVar subjectVar = block.decl(javaScopeClass, "subject", JExpr.cast(javaScopeClass, dataVar));
 			
 			block.invoke(jsonVar, "writeStartObject");
 			
 			for (PropertyConstraint p : shape.getProperty()) {
-				handleProperty(block, outVar, subjectVar, jsonVar, p, targetClass);
+				handleProperty(block, outVar, subjectVar, jsonVar, p, scopeClass);
 				
 			}
 			
@@ -384,7 +384,7 @@ public class AvonWriterBuilder {
 				if (owlClass == null) {
 					Shape valueShape = p.getValueShape();
 					if (valueShape != null) {
-						owlClass = valueShape.getTargetClass();
+						owlClass = valueShape.getScopeClass();
 					}
 				}
 			}

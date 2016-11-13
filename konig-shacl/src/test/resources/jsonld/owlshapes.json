@@ -16,8 +16,8 @@
 		"allowedValues" : "sh:allowedValues",
 		"datatype" : "sh:allowedValues",
 		"directValueType" : "sh:allowedValues",
-		"targetClass" : {
-			"@id" : "sh:targetClass",
+		"scopeClass" : {
+			"@id" : "sh:scopeClass",
 			"@type" : "@id"
 		},
 		"predicate" : {
