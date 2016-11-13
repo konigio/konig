@@ -22,6 +22,7 @@
   	<poi.version>3.14</poi.version>
     <appengine.version>1.9.25</appengine.version>
 		<jodatime.version>2.9.3</jodatime.version>
+		<antlr.version>4.5.3</antlr.version>
   </properties>
   
   <licenses>
@@ -40,6 +41,7 @@
   </scm>
  
   <modules>
+  	<module>../konig-path-parser</module>
   	<module>../konig-core</module>
   	<module>../konig-shacl</module>
   	<module>../konig-schemagen</module>

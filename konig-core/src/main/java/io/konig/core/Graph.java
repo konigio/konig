@@ -28,7 +28,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
-public interface Graph extends Set<Edge> {
+public interface Graph extends Set<Edge>, LocalNameService {
 	
 	GraphBuilder builder();
 	

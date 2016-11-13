@@ -30,6 +30,7 @@ import org.openrdf.model.Value;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.TraversalException;
+import io.konig.core.Traverser;
 import io.konig.core.Vertex;
 
 public class OutStep implements Step {

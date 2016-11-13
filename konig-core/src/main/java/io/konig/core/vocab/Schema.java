@@ -26,7 +26,8 @@ import org.openrdf.model.impl.URIImpl;
 
 public class Schema {
 
-	public static final URI NAMESPACE_URI = new URIImpl("http://schema.org/");
+	public static final String NAMESPACE = "http://schema.org/";
+	public static final URI NAMESPACE_URI = new URIImpl(NAMESPACE);
 	
 	
 	public static final URI Boolean = new URIImpl("http://schema.org/Boolean");
@@ -53,6 +54,7 @@ public class Schema {
 	public static final URI addressLocality = new URIImpl("http://schema.org/addressLocality");
 	public static final URI addressRegion = new URIImpl("http://schema.org/addressRegion");
 	public static final URI alumniOf = new URIImpl("http://schema.org/alumniOf");
+	public static final URI agent = new URIImpl("http://schema.org/agent");
 	public static final URI author = new URIImpl("http://schema.org/author");
 	public static final URI children = new URIImpl("http://schema.org/children");
 	public static final URI contactPoint = new URIImpl("http://schema.org/contactPoint");
@@ -70,6 +72,7 @@ public class Schema {
 	public static final URI lastReviewed = new URIImpl("http://schema.org/lastReviewed");
 	public static final URI memberOf = new URIImpl("http://schema.org/memberOf");
 	public static final URI name = new URIImpl("http://schema.org/name");
+	public static final URI object = new URIImpl("http://schema.org/object");
 	public static final URI parent = new URIImpl("http://schema.org/parent");
 	public static final URI postalCode = new URIImpl("http://schema.org/postalCode");
 	public static final URI streetAddress = new URIImpl("http://schema.org/streetAddress");
@@ -85,6 +88,9 @@ public class Schema {
 	public static final URI HearingImpairedSupported = new URIImpl("http://schema.org/HearingImpairedSupported");
 	public static final URI TollFree = new URIImpl("http://schema.org/TollFree");
 	public static final URI areaServed = new URIImpl("http://schema.org/areaServed");
+	public static final URI TradeAction = new URIImpl("http://schema.org/TradeAction");
+	public static final URI price = new URIImpl("http://schema.org/price");
+	public static final URI birthDate = new URIImpl("http://schema.org/birthDate");
 	
 	
 

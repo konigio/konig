@@ -23,21 +23,30 @@ package io.konig.core.path;
 
 import java.util.Set;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
+import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.TraversalException;
+import io.konig.core.Traverser;
+import io.konig.core.Vertex;
+import io.konig.core.impl.RdfUtil;
 
 public class HasStep implements Step {
 
 	private URI predicate;
 	private Value value;
+	private Object javaValue;
 	
 	public HasStep(URI predicate, Value value) {
 		this.predicate = predicate;
 		this.value = value;
+		if (value instanceof Literal) {
+			javaValue = RdfUtil.javaValue((Literal)value);
+		}
 	}
 
 	@Override
@@ -49,12 +58,33 @@ public class HasStep implements Step {
 		for (Value s : source) {
 			if (s instanceof Resource) {
 				Resource subject = (Resource) s;
-				if (graph.contains(subject, predicate, value)) {
+				if (javaValue != null) {
+					
+					Vertex vertex = graph.getVertex(subject);
+					if (hasValue(vertex)) {
+						traverser.addResult(s);
+					}
+					
+				} else if (graph.contains(subject, predicate, value)) {
 					traverser.addResult(s);
 				}
 			}
 		}
 
+	}
+
+	private boolean hasValue(Vertex vertex) {
+		Set<Edge> set = vertex.outProperty(predicate);
+		for (Edge e : set) {
+			Value value = e.getObject();
+			if (value instanceof Literal) {
+				Object object = RdfUtil.javaValue((Literal)value);
+				if (RdfUtil.nearEqual(javaValue, object)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 }

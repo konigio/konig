@@ -19,12 +19,14 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.openrdf.model.BNode;
+import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.DC;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -82,6 +84,57 @@ public class RdfUtil {
 			
 		}
 		return new ArrayList<Namespace>(map.values());
+	}
+	
+	public static boolean nearEqual(Object a, Object b) {
+		if (a instanceof Long && b instanceof Long) {
+			return a.equals(b);
+		}
+		if (a instanceof Number && b instanceof Number) {
+			Number x = (Number) a;
+			Number y = (Number) b;
+			
+			double p = x.doubleValue();
+			double q = y.doubleValue();
+			
+			double delta = Math.abs( q-p );
+			double base = (q+p)/2;
+			
+			double fraction = delta/base;
+			if (fraction < 0.00000000000001) {
+				return true;
+			} 
+			return false;
+			
+		
+		}
+		
+		return a.equals(b);
+		
+	}
+	
+	public static Object javaValue(Literal literal) {
+		String value = literal.getLabel();
+		URI type = literal.getDatatype();
+		
+		if (
+			XMLSchema.INTEGER.equals(type) ||
+			XMLSchema.INT.equals(type) ||
+			XMLSchema.LONG.equals(type) ||
+			Schema.Integer.equals(type)
+		) {
+			return Long.parseLong(value);
+		} else if (
+			XMLSchema.DOUBLE.equals(type) ||
+			XMLSchema.FLOAT.equals(type) ||
+			XMLSchema.DECIMAL.equals(type) ||
+			Schema.Float.equals(type) ||
+			Schema.Number.equals(type)
+		) {
+			return Double.parseDouble(value);
+		}
+		
+		return literal;
 	}
 	
 	
