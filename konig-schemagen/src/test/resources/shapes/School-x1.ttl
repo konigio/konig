@@ -11,7 +11,7 @@
 @prefix reg: <http://schema.pearson.com/ns/registrar/>.
 
 <http://schema.pearson.com/shapes/x1/schema/School> a sh:Shape ;
-	sh:targetClass schema:School ;
+	sh:scopeClass schema:School ;
 	sh:property [
 		sh:predicate rdf:type ;
 		sh:nodeKind sh:IRI ;

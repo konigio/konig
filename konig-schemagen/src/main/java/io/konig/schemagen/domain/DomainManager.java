@@ -93,7 +93,7 @@ public class DomainManager {
 
 	private void owlClass(Shape shape) {
 		if (shape != null) {
-			owlClass(shape.getTargetClass());
+			owlClass(shape.getScopeClass());
 		}
 		
 	}
@@ -312,7 +312,7 @@ public class DomainManager {
 	}
 
 	private URI domainOf(ShapeProperty a) {
-		return a.getShape().getTargetClass();
+		return a.getShape().getScopeClass();
 	}
 
 	private URI rangeOf(ShapeProperty s) {
@@ -345,9 +345,9 @@ public class DomainManager {
 		
 		Shape valueShape = constraint.getValueShape();
 		if (valueShape != null) {
-			URI targetClass = valueShape.getTargetClass();
-			if (targetClass != null) {
-				return targetClass.equals(range) ? null : targetClass;
+			URI scopeClass = valueShape.getScopeClass();
+			if (scopeClass != null) {
+				return scopeClass.equals(range) ? null : scopeClass;
 			}
 		}
 		

@@ -205,8 +205,8 @@ public class ShapeAggregator {
 
 	private void setAllowedValues(PropertyConstraint p, PropertyConstraint x, PropertyConstraint y) {
 		
-		List<Value> xList = x.getIn();
-		List<Value> yList = y.getIn();
+		List<Value> xList = x.getAllowedValues();
+		List<Value> yList = y.getAllowedValues();
 		
 		if (xList!=null && yList!=null) {
 			Set<Value> set = new HashSet<>();
@@ -214,7 +214,7 @@ public class ShapeAggregator {
 			set.addAll(yList);
 			
 			List<Value> list = new ArrayList<>(set);
-			p.setIn(list);
+			p.setAllowedValue(list);
 		}
 		
 	}

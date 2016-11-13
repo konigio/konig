@@ -222,7 +222,7 @@ public class VertexImpl implements Vertex {
 	@Override
 	public List<Value> asList() {
 		
-		List<Value> result = null;
+		List<Value> result = new ArrayList<>();
 		
 		Vertex v = this;
 		while (v != null) {
@@ -234,9 +234,6 @@ public class VertexImpl implements Vertex {
 				if (sequence.hasNext()) {
 					Edge firstEdge = sequence.next();
 					Value object = firstEdge.getObject();
-					if (result == null) {
-						result = new ArrayList<>();
-					}
 					result.add(object);
 					
 					Set<Edge> rest = w.outProperty(RDF.REST);
@@ -253,10 +250,6 @@ public class VertexImpl implements Vertex {
 					
 				}
 			}
-		}
-		
-		if (result == null && (RDF.NIL.equals(id) || hasProperty(RDF.TYPE, RDF.LIST))) {
-			result = new ArrayList<>();
 		}
 		
 		return result;

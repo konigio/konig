@@ -26,7 +26,7 @@ public class AvroIdlGeneratorTest {
 		
 		ShapeBuilder builder = new ShapeBuilder();
 		builder.beginShape(personShapeId)
-			.targetClass(uri("http://schema.org/Person"))
+			.scopeClass(uri("http://schema.org/Person"))
 			.beginProperty(uri("http://schema.org/givenName"))
 				.documentation("The person's given name")
 				.datatype(XMLSchema.STRING)

@@ -26,12 +26,10 @@ import org.openrdf.model.impl.URIImpl;
 
 public class Schema {
 
-	public static final String NAMESPACE = "http://schema.org/";
-	public static final URI NAMESPACE_URI = new URIImpl(NAMESPACE);
+	public static final URI NAMESPACE_URI = new URIImpl("http://schema.org/");
 	
 	
 	public static final URI Boolean = new URIImpl("http://schema.org/Boolean");
-	public static final URI BuyAction = new URIImpl("http://schema.org/BuyAction");
 	public static final URI ContactPoint = new URIImpl("http://schema.org/ContactPoint");
 	public static final URI CreativeWork = new URIImpl("http://schema.org/CreativeWork");
 	public static final URI DataType = new URIImpl("http://schema.org/DataType");
@@ -43,7 +41,6 @@ public class Schema {
 	public static final URI Number = new URIImpl("http://schema.org/Number");
 	public static final URI Organization = new URIImpl("http://schema.org/Organization");
 	public static final URI Person = new URIImpl("http://schema.org/Person");
-	public static final URI Product = new URIImpl("http://schema.org/Product");
 	public static final URI PostalAddress = new URIImpl("http://schema.org/PostalAddress");
 	public static final URI Text = new URIImpl("http://schema.org/Text");
 	public static final URI Thing = new URIImpl("http://schema.org/Thing");
@@ -54,7 +51,6 @@ public class Schema {
 	public static final URI addressLocality = new URIImpl("http://schema.org/addressLocality");
 	public static final URI addressRegion = new URIImpl("http://schema.org/addressRegion");
 	public static final URI alumniOf = new URIImpl("http://schema.org/alumniOf");
-	public static final URI agent = new URIImpl("http://schema.org/agent");
 	public static final URI author = new URIImpl("http://schema.org/author");
 	public static final URI children = new URIImpl("http://schema.org/children");
 	public static final URI contactPoint = new URIImpl("http://schema.org/contactPoint");
@@ -72,9 +68,7 @@ public class Schema {
 	public static final URI lastReviewed = new URIImpl("http://schema.org/lastReviewed");
 	public static final URI memberOf = new URIImpl("http://schema.org/memberOf");
 	public static final URI name = new URIImpl("http://schema.org/name");
-	public static final URI object = new URIImpl("http://schema.org/object");
 	public static final URI parent = new URIImpl("http://schema.org/parent");
-	public static final URI postalCode = new URIImpl("http://schema.org/postalCode");
 	public static final URI streetAddress = new URIImpl("http://schema.org/streetAddress");
 	public static final URI thumbnailUrl = new URIImpl("http://schema.org/thumbnailUrl");
 	public static final URI timeRequired = new URIImpl("http://schema.org/timeRequired");
@@ -88,9 +82,6 @@ public class Schema {
 	public static final URI HearingImpairedSupported = new URIImpl("http://schema.org/HearingImpairedSupported");
 	public static final URI TollFree = new URIImpl("http://schema.org/TollFree");
 	public static final URI areaServed = new URIImpl("http://schema.org/areaServed");
-	public static final URI TradeAction = new URIImpl("http://schema.org/TradeAction");
-	public static final URI price = new URIImpl("http://schema.org/price");
-	public static final URI birthDate = new URIImpl("http://schema.org/birthDate");
 	
 	
 

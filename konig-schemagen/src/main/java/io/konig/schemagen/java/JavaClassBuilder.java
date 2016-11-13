@@ -121,16 +121,16 @@ public class JavaClassBuilder {
 			owlThing = buildOwlThing(model);
 		}
 		
-		URI targetClass = shape.getTargetClass();
+		URI scopeClass = shape.getScopeClass();
 		
 		try {
-			Vertex preferred = reasoner.preferredClass(targetClass);
-			targetClass = (URI) preferred.getId();
+			Vertex preferred = reasoner.preferredClass(scopeClass);
+			scopeClass = (URI) preferred.getId();
 		} catch (AmbiguousPreferredClassException e1) {
 			throw new SchemaGeneratorException(e1);
 		}
 		
-		String javaClassName = namer.javaClassName(targetClass);
+		String javaClassName = namer.javaClassName(scopeClass);
 
 		JClass prior = model._getClass(javaClassName);
 		if (prior != null) {
@@ -139,7 +139,7 @@ public class JavaClassBuilder {
 		
 		try {
 			JDefinedClass dc = model._class(javaClassName);
-			declareStaticTypeVar(model, dc, targetClass);
+			declareStaticTypeVar(model, dc, scopeClass);
 			declareSuperClass(model, dc, shape);
 			declareCtor(model, dc);
 			createFields(model, shape, dc);
@@ -158,18 +158,18 @@ public class JavaClassBuilder {
 		
 	}
 
-	private void declareStaticTypeVar(JCodeModel model, JDefinedClass dc, URI targetClass) {
+	private void declareStaticTypeVar(JCodeModel model, JDefinedClass dc, URI scopeClass) {
 		
 		JClass uriClass = model.ref(URIImpl.class);
 		
 		dc.field(JMod.STATIC | JMod.PUBLIC | JMod.FINAL, URI.class, "TYPE").init(
-			JExpr._new(uriClass).arg(JExpr.lit(targetClass.stringValue())));
+			JExpr._new(uriClass).arg(JExpr.lit(scopeClass.stringValue())));
 	}
 
 	private void declareSuperClass(JCodeModel model, JDefinedClass dc, Shape shape) {
-		URI targetClassId = shape.getTargetClass();
+		URI scopeClassId = shape.getScopeClass();
 		
-		List<Vertex> superClassList = graph.v(targetClassId).out(RDFS.SUBCLASSOF).toVertexList();
+		List<Vertex> superClassList = graph.v(scopeClassId).out(RDFS.SUBCLASSOF).toVertexList();
 		
 		if (superClassList.isEmpty()) {
 			dc._extends(owlThing);
@@ -188,7 +188,7 @@ public class JavaClassBuilder {
 					if (superShape == null) {
 						URI shapeId = logicalShapeNamer.logicalShapeForOwlClass(superIRI);
 						superShape = new Shape(shapeId);
-						superShape.setTargetClass(superIRI);
+						superShape.setScopeClass(superIRI);
 						classManager.addLogicalShape(shape);
 					}
 					
@@ -202,7 +202,7 @@ public class JavaClassBuilder {
 			}
 			
 		} else {
-			logger.warn("Ignoring subClassOf statement for class " + targetClassId.getLocalName() + 
+			logger.warn("Ignoring subClassOf statement for class " + scopeClassId.getLocalName() + 
 				": multiple inheritance not supported yet");
 		}
 		

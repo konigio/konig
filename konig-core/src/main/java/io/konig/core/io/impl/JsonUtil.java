@@ -1,8 +1,5 @@
 package io.konig.core.io.impl;
 
-import java.io.IOException;
-import java.io.PrintStream;
-
 /*
  * #%L
  * konig-core
@@ -31,43 +28,11 @@ import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.konig.core.Context;
-import io.konig.core.KonigException;
 import io.konig.core.Term;
 import io.konig.core.impl.BasicContext;
 
 public class JsonUtil {
-	
-	public static ObjectNode parse(String text) {
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			return (ObjectNode) mapper.readTree(text);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public static void prettyPrint(JsonNode node, PrintStream out)  {
-		out.println(toPrettyString(node));
-	}
-
-	public static String toPrettyString(JsonNode node) {
-		if (node != null) {
-
-			ObjectMapper mapper = new ObjectMapper();
-			try {
-				return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(node);
-			} catch (JsonProcessingException e) {
-				throw new KonigException(e);
-			}
-		}
-		return null;
-	}
 	
 	public static Context createContext(Collection<Namespace> set) {
 		Context context = new BasicContext(null);

@@ -28,7 +28,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
-public interface Graph extends Set<Edge>, LocalNameService {
+public interface Graph extends Set<Edge> {
 	
 	GraphBuilder builder();
 	
@@ -151,11 +151,4 @@ public interface Graph extends Set<Edge>, LocalNameService {
 	Transaction tx();
 	
 	boolean contains(Resource subject, URI predicate, Value object);
-	
-	/**
-	 * Compute the set of all URI values in this graph which have a given local name
-	 * @param localName The local name to be matched
-	 * @return The set of all URI values that have the given localName
-	 */
-	Set<URI> lookupLocalName(String localName);
 }

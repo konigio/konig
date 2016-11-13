@@ -16,19 +16,15 @@ public class KonigSheetMojo extends AbstractMojo {
 	 @Parameter (defaultValue="${basedir}/src/dataModel.xlsx", property="workbookFile", required=false)
 	 private File workbookFile;
 	 
-	 @Parameter (defaultValue="${basedir}/target/rdf/owl", property="owlOutDir", required=false)
-	 private File owlOutDir;
-
-	 
-	 @Parameter (defaultValue="${basedir}/target/rdf/shapes", property="shapesOutDir", required=false)
-	 private File shapesOutDir;
+	 @Parameter (defaultValue="${basedir}/target/rdf", property="rdfOutDir", required=false)
+	 private File rdfOutDir;
 	 
 	 public void execute() throws MojoExecutionException   {
 		 try {
 
 			 if (workbookFile!=null && workbookFile.exists()) {
 				 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer();
-				 transformer.transform(workbookFile, owlOutDir, shapesOutDir);
+				 transformer.transform(workbookFile, rdfOutDir);
 			 }
 		 } catch (Throwable oops) {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);

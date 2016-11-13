@@ -47,7 +47,7 @@ public class MemoryClassManager implements ClassManager {
 
 	@Override
 	public void addLogicalShape(Shape shape) {
-		shapeMap.put(shape.getTargetClass().stringValue(), shape);
+		shapeMap.put(shape.getScopeClass().stringValue(), shape);
 	}
 
 }

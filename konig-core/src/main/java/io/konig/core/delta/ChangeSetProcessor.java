@@ -50,7 +50,7 @@ public class ChangeSetProcessor {
 			Value value = e.getAnnotation(RDF.TYPE);
 			
 			
-			if (e.matches(Konig.Falsehood, value)) {
+			if (e.matches(Konig.Falsity, value)) {
 				target.remove(e);
 			} else if (e.matches(Konig.Dictum, value)) {
 				target.edge(e);

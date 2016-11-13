@@ -1,5 +1,6 @@
 package io.konig.shacl.impl;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 
 /*
@@ -28,14 +29,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.openrdf.model.BNode;
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import io.konig.core.KonigException;
+import io.konig.core.ContextManager;
 import io.konig.core.UnnamedResourceException;
-import io.konig.shacl.PropertyConstraint;
+import io.konig.core.io.JsonldParser;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.io.ShapeRdfHandler;
 
 public class MemoryShapeManager implements ShapeManager {
 	private Map<String, Shape> shapeMap = new HashMap<String, Shape>();
@@ -63,33 +66,12 @@ public class MemoryShapeManager implements ShapeManager {
 		
 		return list;
 	}
-	
-	/**
-	 * Scan the shapes in the manager and set the valueShapes so that the reference a Shape object.
-	 */
-	public void link() {
-		List<Shape> list = new ArrayList<>( shapeMap.values() );
-		for (Shape shape : list) {
-			List<PropertyConstraint> constraints = shape.getProperty();
-			for (PropertyConstraint p : constraints) {
-				Resource resource = p.getValueShapeId();
-				if (resource instanceof URI) {
-					URI uri = (URI) resource;
-					Shape valueShape = getShapeById(uri);
-					if (valueShape == null) {
-						throw new KonigException("Shape not found: " + uri);
-					}
-					p.setValueShape(valueShape);
-				}
-			}
-		}
-	}
 
 	@Override
-	public List<Shape> getShapesByTargetClass(URI targetClass) {
+	public List<Shape> getShapesByScopeClass(URI scopeClass) {
 		List<Shape> list = new ArrayList<>();
 		for (Shape s : shapeMap.values()) {
-			if (targetClass.equals(s.getTargetClass())) {
+			if (scopeClass.equals(s.getScopeClass())) {
 				list.add(s);
 			}
 		}

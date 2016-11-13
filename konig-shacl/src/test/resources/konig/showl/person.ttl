@@ -4,7 +4,7 @@
 
 
 <http://example.com/shape/Person> a sh:Shape ;
-	sh:targetClass schema:Person ;
+	sh:scopeClass schema:Person ;
 	sh:property [
 		sh:predicate schema:givenName ;
 		sh:datatype xsd:string ;
