@@ -26,11 +26,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
 import io.konig.core.Graph;
 import io.konig.core.Path;
+import io.konig.core.Traverser;
 import io.konig.core.Vertex;
 
 public class PathImpl implements Path {
@@ -43,6 +45,14 @@ public class PathImpl implements Path {
 	
 	public PathImpl(List<Step> list) {
 		stepList = list;
+	}
+	
+	void add(Step step) {
+		stepList.add(step);
+	}
+	
+	List<Step> getStepList() {
+		return stepList;
 	}
 
 	@Override
@@ -58,6 +68,29 @@ public class PathImpl implements Path {
 	}
 
 	@Override
+	public List<Step> asList() {
+		return stepList;
+	}
+
+	@Override
+	public Path copy() {
+		return new PathImpl(new ArrayList<>(stepList));
+	}
+
+	@Override
+	public Path has(URI predicate, Value value) {
+		stepList.add(new HasStep(predicate, value));
+		return this;
+	}
+
+	@Override
+	public Path v(Resource... resource) {
+		add(new VertexStep(resource));
+		return this;
+	}
+
+
+	@Override
 	public Set<Value> traverse(Vertex source) {
 		Set<Value> input = new HashSet<>();
 		input.add(source.getId());
@@ -71,13 +104,11 @@ public class PathImpl implements Path {
 	}
 
 	@Override
-	public List<Step> asList() {
-		return stepList;
-	}
-
-	@Override
-	public Path copy() {
-		return new PathImpl(new ArrayList<>(stepList));
+	public Set<Value> traverse(Traverser traverser) {
+		for (Step step : stepList) {
+			traverser.visit(step);
+		}
+		return traverser.getResultSet();
 	}
 
 

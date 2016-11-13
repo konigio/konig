@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.konig</groupId>
   <artifactId>konig-parent</artifactId>
-  <version>1.7.7</version>
+  <version>2.0.0</version>
   <name>Konig Parent</name>
   <description>The parent project from which all the konig modules are built</description>
   <url>http://developers.konig.io/</url>
@@ -20,6 +20,9 @@
   	<jsonld-java.version>0.7.0</jsonld-java.version>
   	<httpclient.version>4.5.2</httpclient.version>
   	<poi.version>3.14</poi.version>
+    <appengine.version>1.9.25</appengine.version>
+		<jodatime.version>2.9.3</jodatime.version>
+		<antlr.version>4.5.3</antlr.version>
   </properties>
   
   <licenses>
@@ -36,8 +39,9 @@
     <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
-  
+ 
   <modules>
+  	<module>../konig-path-parser</module>
   	<module>../konig-core</module>
   	<module>../konig-shacl</module>
   	<module>../konig-schemagen</module>
@@ -45,11 +49,9 @@
   	<module>../konig-schemagen-maven-plugin</module>
   	<module>../konig-ldp</module>
   	<module>../konig-ldp-maven-plugin</module>
-<!--   	
-  	<module>../konig-appengine</module>
--->
+  	<module>../konig-gae-datastore</module>
   </modules>
- 
+
   <developers>
     <developer>
       <id>gmcfall</id>

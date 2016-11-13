@@ -3,7 +3,9 @@ package io.konig.spreadsheet;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
+import org.apache.poi.common.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -60,14 +62,17 @@ public class WorkbookLoader {
 	private static final String SHAPE_ID = "Shape Id";
 	private static final String SCOPE_CLASS = "Scope Class";
 	private static final String MEDIA_TYPE = "Media Type";
+	private static final String INPUT_CLASS = "Input Class";
 	
 	private static final String VALUE_TYPE = "Value Type";
 	private static final String MIN_COUNT = "Min Count";
 	private static final String MAX_COUNT = "Max Count";
 	private static final String UNIQUE_LANG = "Unique Lang";
 	private static final String VALUE_CLASS = "Value Class";
+	private static final String STEREOTYPE = "Stereotype";
+	private static final String VALUE_IN = "Value In";
 	
-	
+	private static final String UNBOUNDED = "unbounded";
 	
 	private static final int ONTOLOGY_FLAG = 0x1;
 	private static final int CLASS_FLAG = 0x2;
@@ -130,6 +135,7 @@ public class WorkbookLoader {
 		private int shapeIdCol = UNDEFINED;
 		private int shapeCommentCol = UNDEFINED;
 		private int shapeScopeCol = UNDEFINED;
+		private int shapeInputClassCol = UNDEFINED;
 		private int shapeMediaTypeCol = UNDEFINED;
 		
 		private int pcShapeIdCol = UNDEFINED;
@@ -139,7 +145,9 @@ public class WorkbookLoader {
 		private int pcMaxCountCol = UNDEFINED;
 		private int pcUniqueLangCol = UNDEFINED;
 		private int pcValueClassCol = UNDEFINED;
+		private int pcValueInCol = UNDEFINED;
 		private int pcCommentCol = UNDEFINED;
+		private int pcPredicateKindCol = UNDEFINED;
 		
 		public Worker(Workbook book, Graph graph) {
 			this.book = book;
@@ -209,9 +217,26 @@ public class WorkbookLoader {
 			Literal minCount = intLiteral(row, pcMinCountCol);
 			Literal maxCount = intLiteral(row, pcMaxCountCol);
 			URI valueClass = uriValue(row, pcValueClassCol);
+			URI predicateKind = uriValue(row, pcPredicateKindCol);
+			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
 			
 				
+			if (Konig.id.equals(propertyId)) {
+				int min = minCount==null ? 0 : minCount.intValue();
+				int max = maxCount==null ? -1 : maxCount.intValue();
+				
+				if (max > 1) {
+					String msg = MessageFormat.format(
+						"Invalid maxCount for property konig:id on Shape <{0}>: must be less than or equal to 1.",
+						shapeId);
+					throw new SpreadsheetException(msg);
+				}
+								
+				URI nodeKind =	min==0 ? SH.BlankNodeOrIRI : SH.IRI ;
+				edge(shapeId, SH.nodeKind, nodeKind);
+				return;
+			}
 			
 			Resource constraint = graph.vertex().getId();
 			
@@ -228,15 +253,55 @@ public class WorkbookLoader {
 			} else {
 				edge(constraint, SH.valueShape, valueType);
 			}
-
+			
 			edge(constraint, SH.minCount, minCount);
 			edge(constraint, SH.maxCount, maxCount);
 			edge(constraint, SH.uniqueLang, uniqueLang);
+			edge(constraint, Konig.stereotype, predicateKind);
+			edge(constraint, SH.in, valueIn);
 			
+		}
+
+		private void edge(Resource subject, URI predicate, List<Value> object) {
+			if (subject!=null && object!=null) {
+				Vertex first = null;
+				Vertex prev = null;
+				
+				for (Value value : object) {
+					Vertex list = graph.vertex();
+					if (first == null) {
+						first = list;
+						graph.edge(subject, predicate, list.getId());
+					}
+					if (prev != null) {
+						graph.edge(prev.getId(), RDF.REST, list.getId());
+					}
+					graph.edge(list.getId(), RDF.FIRST, value);
+					prev = list;
+				}
+				if (prev != null) {
+					graph.edge(prev.getId(), RDF.REST, RDF.NIL);
+				}
+				
+			}
 			
-			
-			
-			
+		}
+
+		private List<Value> valueList(Row row, int column) throws SpreadsheetException {
+			if (column > 0) {
+				String text = stringValue(row, column);
+				if (text != null) {
+					StringTokenizer tokens = new StringTokenizer(text, " \r\n\t");
+					List<Value> list = new ArrayList<>();
+					while (tokens.hasMoreTokens()) {
+						URI curie = expandCurie(tokens.nextToken());
+						list.add(curie);
+					}
+					return list;
+				}
+				
+			}
+			return null;
 		}
 
 		private void edge(Resource subject, URI predicate, Value object) {
@@ -265,6 +330,13 @@ public class WorkbookLoader {
 				if (cell != null) {
 					
 					int cellType = cell.getCellType();
+					if (cellType==Cell.CELL_TYPE_STRING) {
+						String value = cell.getStringCellValue();
+						if (UNBOUNDED.equalsIgnoreCase(value)) {
+							return null;
+						}
+					}
+						
 					if (cellType==Cell.CELL_TYPE_NUMERIC) {
 						int value = (int) cell.getNumericCellValue();
 						literal = vf.createLiteral(value);
@@ -286,7 +358,7 @@ public class WorkbookLoader {
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
 			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol =
-				pcValueClassCol = UNDEFINED;
+				pcValueClassCol = pcPredicateKindCol = UNDEFINED;
 				
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -310,6 +382,8 @@ public class WorkbookLoader {
 					case MAX_COUNT : pcMaxCountCol = i; break;
 					case UNIQUE_LANG : pcUniqueLangCol = i; break;
 					case VALUE_CLASS : pcValueClassCol = i; break;
+					case VALUE_IN :	pcValueInCol = i; break;
+					case STEREOTYPE : pcPredicateKindCol = i; break;
 						
 					}
 				}
@@ -335,23 +409,19 @@ public class WorkbookLoader {
 			
 			URI shapeId = uriValue(row, shapeIdCol);
 			Literal shapeComment = stringLiteral(row, shapeCommentCol);
-			URI scopeClass = uriValue(row, shapeScopeCol);
+			URI targetClass = uriValue(row, shapeScopeCol);
+			URI inputClass = uriValue(row, shapeInputClassCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			
 			if (shapeId == null) {
 				return;
 			}
 			
-			graph.edge(shapeId, RDF.TYPE, SH.Shape);
-			if (shapeComment != null) {
-				graph.edge(shapeId, RDFS.COMMENT, shapeComment);
-			}
-			if (scopeClass != null) {
-				graph.edge(shapeId, SH.scopeClass, scopeClass);
-			}
-			if (mediaType != null) {
-				graph.edge(shapeId, Konig.mediaTypeBaseName, mediaType);
-			}
+			edge(shapeId, RDF.TYPE, SH.Shape);
+			edge(shapeId, RDFS.COMMENT, shapeComment);
+			edge(shapeId, SH.targetClass, targetClass);
+			edge(shapeId, Konig.inputClass, inputClass);
+			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			
 		}
 
@@ -373,6 +443,7 @@ public class WorkbookLoader {
 					case SHAPE_ID :  shapeIdCol = i; break;
 					case COMMENT : shapeCommentCol = i; break;
 					case SCOPE_CLASS : shapeScopeCol = i; break;
+					case INPUT_CLASS : shapeInputClassCol = i; break;
 					case MEDIA_TYPE : shapeMediaTypeCol = i; break;
 						
 					}
@@ -849,7 +920,9 @@ public class WorkbookLoader {
 		}
 
 		private String stringValue(Row row, int column) {
-			
+			if (row == null) {
+				return null;
+			}
 			String text = null;
 			if (column>=0) {
 				Cell cell = row.getCell(column);
@@ -867,6 +940,12 @@ public class WorkbookLoader {
 					case Cell.CELL_TYPE_STRING :
 						text = cell.getStringCellValue();
 						break;
+						
+					case Cell.CELL_TYPE_FORMULA :
+						Hyperlink link = cell.getHyperlink();
+						if (link != null) {
+							text = link.getAddress();
+						}
 						
 					}
 					

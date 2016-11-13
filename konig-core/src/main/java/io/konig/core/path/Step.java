@@ -22,6 +22,7 @@ package io.konig.core.path;
 
 
 import io.konig.core.TraversalException;
+import io.konig.core.Traverser;
 
 public interface Step {
 

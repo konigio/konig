@@ -11,8 +11,8 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Konig;
-import io.konig.pojo.io.SimplePojoFactory;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.io.ShapeLoader;
@@ -25,7 +25,7 @@ public class DataGeneratorTest {
 		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
 		Graph graph = new MemoryGraph();
 		RdfUtil.loadTurtle(graph, resource("DataGeneratorTest.ttl"), "");
-		Vertex v = graph.v(Konig.DataGeneratorConfig).in(RDF.TYPE).firstVertex();
+		Vertex v = graph.v(Konig.SyntheticGraphConstraints).in(RDF.TYPE).firstVertex();
 		
 		DataGeneratorConfig config = new SimplePojoFactory().create(v, DataGeneratorConfig.class);
 		

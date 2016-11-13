@@ -28,7 +28,7 @@ var dcterms = konig.dcterms;
 var dc = konig.dc;
 var schema = konig.schema;
 var sh = konig.sh;
-var kol = konig.kol;
+var kol = konig.konig;
 var xsd = konig.xsd;
 var step = rdf.step;
 var stringValue = rdf.stringValue;
@@ -128,7 +128,7 @@ function PropertyInfo(predicate, expectedType, minCount, maxCount, description, 
 
 PropertyInfo.prototype.toJsonSchema = function() {
 	
-	if (!this.valueShape && sh.IRI.equals(this.nodeKind)) {
+	if (!this.valueShape && (sh.IRI.equals(this.nodeKind) || sh.BlankNodeOrIRI.equals(this.nodeKind))) {
 		this.expectedType = [{
 			stringValue: xsd.string.stringValue,
 			localName: xsd.string.localName,
@@ -821,6 +821,25 @@ ShapeInfo.prototype.clone = function() {
 	return other;
 }
 
+
+ShapeInfo.prototype.addIdProperty = function(sink) {
+	var shape = this.rawShape;
+	if (shape) {
+		
+		var nodeKind = shape.v().out(sh.nodeKind).first();
+		if (sh.IRI.equals(nodeKind) || sh.BlankNodeOrIRI.equals(nodeKind)) {
+			// TODO: confirm that we do not already have an Id property.
+			var description = "An IRI identifier for the resource";
+			
+			var propertyInfo = new PropertyInfo(
+					kol.id, xsd.anyURI, 1, 1, description, nodeKind
+				);
+			sink.push(propertyInfo);
+		} 
+		
+	}
+}
+
 ShapeInfo.prototype.addSuperProperties = function(shape, isDirect) {
 	if (!shape) return;
 	var constraint = shape.v().out(sh.constraint).first();
@@ -919,6 +938,9 @@ ShapeInfo.prototype.addDirectProperties = function() {
 	var owlClass = this.classInfo.classVertex;
 	var block = new PropertyBlock(owlClass);
 	var sink = block.propertyList;
+	
+
+	this.addIdProperty(sink);
 	
 	var source = this.rawShape.v().out(sh.property).toList();
 	for (var i=0; i<source.length; i++) {

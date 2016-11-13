@@ -29,6 +29,9 @@ $(document).ready(function(){
 
 RdfNode = function() {}
 RdfNode.prototype.equals = function(other) {
+	if (other instanceof Vertex) {
+		other = other.id;
+	}
 	if (other instanceof RdfNode) {
 		return this.key() === other.key();
 	}

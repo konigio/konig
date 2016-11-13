@@ -47,11 +47,13 @@ public class Shape {
 	private static final List<PropertyConstraint> EMPTY_PROPERTY_LIST = new EmptyList<PropertyConstraint>();
 	
 	private Resource id;
-	private URI scopeClass;
+	private URI targetClass;
 	private List<PropertyConstraint> property;
 	private Constraint constraint;
 	private Context jsonldContext;
 	private URI equivalentRelationalShape;
+	private NodeKind nodeKind;
+	private URI inputClass;
 	
 	
 	public Shape() {
@@ -157,18 +159,21 @@ public class Shape {
 		return this;
 	}
 
-	public URI getScopeClass() {
-		return scopeClass;
+	public URI getTargetClass() {
+		return targetClass;
 	}
 
-	public void setScopeClass(URI scopeClass) {
-		this.scopeClass = scopeClass;
+	public void setTargetClass(URI targetClass) {
+		this.targetClass = targetClass;
 	}
 
 	public Resource getId() {
 		return id;
 	}
 	
+	public void setId(Resource id) {
+		this.id = id;
+	}
 
 	public String toString() {
 		
@@ -191,8 +196,8 @@ public class Shape {
 	public void toJson(JsonGenerator json) throws IOException {
 		json.writeStartObject();
 		json.writeStringField("id", id.toString());
-		if (scopeClass != null) {
-			json.writeStringField("scopeClass", scopeClass.stringValue());
+		if (targetClass != null) {
+			json.writeStringField("targetClass", targetClass.stringValue());
 		}
 		
 		if (property!=null && !property.isEmpty()) {
@@ -230,6 +235,22 @@ public class Shape {
 
 	public void setEquivalentRelationalShape(URI equivalentRelationalShape) {
 		this.equivalentRelationalShape = equivalentRelationalShape;
+	}
+
+	public NodeKind getNodeKind() {
+		return nodeKind;
+	}
+
+	public void setNodeKind(NodeKind nodeKind) {
+		this.nodeKind = nodeKind;
+	}
+
+	public URI getInputClass() {
+		return inputClass;
+	}
+
+	public void setInputClass(URI inputClass) {
+		this.inputClass = inputClass;
 	}
 	
 	

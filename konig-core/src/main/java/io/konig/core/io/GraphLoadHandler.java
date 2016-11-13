@@ -34,6 +34,7 @@ import io.konig.core.NamespaceManager;
 public class GraphLoadHandler extends RDFHandlerBase {
 	
 	private Graph graph;
+	private URI quadContext;
 	
 	public GraphLoadHandler(Graph graph) {
 		super();
@@ -56,7 +57,18 @@ public class GraphLoadHandler extends RDFHandlerBase {
 		Value object = statement.getObject();
 		Resource context = statement.getContext();
 		
+		if (context == null) {
+			context = quadContext;
+		}
+		
 		graph.edge(subject, predicate, object, context);
 	}
 
+	public URI getQuadContext() {
+		return quadContext;
+	}
+
+	public void setQuadContext(URI quadContext) {
+		this.quadContext = quadContext;
+	}
 }

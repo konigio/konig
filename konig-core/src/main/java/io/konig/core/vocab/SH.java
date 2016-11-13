@@ -33,6 +33,9 @@ public class SH {
 	public static final URI Shape = new URIImpl("http://www.w3.org/ns/shacl#Shape");
 	public static final URI BlankNode = new URIImpl("http://www.w3.org/ns/shacl#BlankNode");
 	public static final URI Literal = new URIImpl("http://www.w3.org/ns/shacl#Literal");
+	public static final URI BlankNodeOrIRI = new URIImpl("http://www.w3.org/ns/shacl#BlankNodeOrIRI");
+	public static final URI BlankNodeOrLiteral = new URIImpl("http://www.w3.org/ns/shacl#BlankNodeOrLiteral");
+	public static final URI IRIOrLiteral = new URIImpl("http://www.w3.org/ns/shacl#IRIOrLiteral");
 
 	public static final URI predicate = new URIImpl("http://www.w3.org/ns/shacl#predicate");
 	public static final URI in = new URIImpl("http://www.w3.org/ns/shacl#in");
@@ -64,7 +67,7 @@ public class SH {
 	public static final URI AndConstraint = new URIImpl("http://www.w3.org/ns/shacl#AndConstraint");
 	public static final URI OrConstraint = new URIImpl("http://www.w3.org/ns/shacl#OrConstraint");
 	public static final URI ClosedShapeConstraint = new URIImpl("http://www.w3.org/ns/shacl#ClosedShapeConstraint");
-	public static final URI scopeClass = new URIImpl("http://www.w3.org/ns/shacl#scopeClass");
+	public static final URI targetClass = new URIImpl("http://www.w3.org/ns/shacl#targetClass");
 	public static final URI property = new URIImpl(PROPERTY);
 	public static final URI minLength = new URIImpl("http://www.w3.org/ns/shacl#minLength");
 	public static final URI maxLength = new URIImpl("http://www.w3.org/ns/shacl#maxLength");

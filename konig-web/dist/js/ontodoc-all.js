@@ -29800,6 +29800,9 @@ $(document).ready(function(){
 
 RdfNode = function() {}
 RdfNode.prototype.equals = function(other) {
+	if (other instanceof Vertex) {
+		other = other.id;
+	}
 	if (other instanceof RdfNode) {
 		return this.key() === other.key();
 	}
@@ -32105,7 +32108,7 @@ $(document).ready(function() {
 		foaf: "http://xmlns.com/foaf/0.1/",
 		ks: "http://www.konig.io/schema/",
 		ke: "http://www.konig.io/entity/",
-		kol: "http://www.konig.io/ns/kol/",
+		konig: "http://www.konig.io/ns/core/",
 		prov: "http://www.w3.org/ns/prov#",
 		owl: "http://www.w3.org/2002/07/owl#",
 		rdfs: "http://www.w3.org/2000/01/rdf-schema#",
@@ -32153,7 +32156,8 @@ $(document).ready(function() {
 		double : new IRI('http://www.w3.org/2001/XMLSchema#double'),
 		string : new IRI('http://www.w3.org/2001/XMLSchema#string'),
 		date : new IRI('http://www.w3.org/2001/XMLSchema#date'),
-		dateTime : new IRI('http://www.w3.org/2001/XMLSchema#dateTime')
+		dateTime : new IRI('http://www.w3.org/2001/XMLSchema#dateTime'),
+		anyURI : new IRI('http://www.w3.org/2001/XMLSchema#anyURI')
 	}
 	
 	konig.foaf = {
@@ -32199,6 +32203,7 @@ $(document).ready(function() {
 		minCount: new IRI("http://www.w3.org/ns/shacl#minCount"),
 		IRI : new IRI("http://www.w3.org/ns/shacl#IRI"),
 		BlankNode : new IRI("http://www.w3.org/ns/shacl#BlankNode"),
+		BlankNodeOrIRI : new IRI("http://www.w3.org/ns/shacl#BlankNodeOrIRI"),
 		Literal : new IRI("http://www.w3.org/ns/shacl#Literal")
 	};
 	
@@ -32255,11 +32260,12 @@ $(document).ready(function() {
 		domainIncludes : new IRI("http://schema.org/domainIncludes"),
 		rangeIncludes : new IRI("http://schema.org/rangeIncludes")
 	};
-	konig.kol = {
-		LogicalShape : new IRI("http://www.konig.io/ns/kol/LogicalShape"),	
-		mediaTypeBaseName : new IRI("http://www.konig.io/ns/kol/mediaTypeBaseName"),
-		avroSchemaRendition : new IRI("http://www.konig.io/ns/kol/avroSchemaRendition"),
-		jsonSchemaRendition : new IRI("http://www.konig.io/ns/kol/jsonSchemaRendition")
+	konig.konig = {
+		id : new IRI("http://www.konig.io/ns/core/id"),
+		LogicalShape : new IRI("http://www.konig.io/ns/core/LogicalShape"),	
+		mediaTypeBaseName : new IRI("http://www.konig.io/ns/core/mediaTypeBaseName"),
+		avroSchemaRendition : new IRI("http://www.konig.io/ns/core/avroSchemaRendition"),
+		jsonSchemaRendition : new IRI("http://www.konig.io/ns/core/jsonSchemaRendition")
 	};
 	
 });
@@ -32543,7 +32549,7 @@ var dcterms = konig.dcterms;
 var dc = konig.dc;
 var schema = konig.schema;
 var sh = konig.sh;
-var kol = konig.kol;
+var kol = konig.konig;
 var xsd = konig.xsd;
 var step = rdf.step;
 var stringValue = rdf.stringValue;
@@ -32643,7 +32649,7 @@ function PropertyInfo(predicate, expectedType, minCount, maxCount, description, 
 
 PropertyInfo.prototype.toJsonSchema = function() {
 	
-	if (!this.valueShape && sh.IRI.equals(this.nodeKind)) {
+	if (!this.valueShape && (sh.IRI.equals(this.nodeKind) || sh.BlankNodeOrIRI.equals(this.nodeKind))) {
 		this.expectedType = [{
 			stringValue: xsd.string.stringValue,
 			localName: xsd.string.localName,
@@ -33336,6 +33342,25 @@ ShapeInfo.prototype.clone = function() {
 	return other;
 }
 
+
+ShapeInfo.prototype.addIdProperty = function(sink) {
+	var shape = this.rawShape;
+	if (shape) {
+		
+		var nodeKind = shape.v().out(sh.nodeKind).first();
+		if (sh.IRI.equals(nodeKind) || sh.BlankNodeOrIRI.equals(nodeKind)) {
+			// TODO: confirm that we do not already have an Id property.
+			var description = "An IRI identifier for the resource";
+			
+			var propertyInfo = new PropertyInfo(
+					kol.id, xsd.anyURI, 1, 1, description, nodeKind
+				);
+			sink.push(propertyInfo);
+		} 
+		
+	}
+}
+
 ShapeInfo.prototype.addSuperProperties = function(shape, isDirect) {
 	if (!shape) return;
 	var constraint = shape.v().out(sh.constraint).first();
@@ -33434,6 +33459,9 @@ ShapeInfo.prototype.addDirectProperties = function() {
 	var owlClass = this.classInfo.classVertex;
 	var block = new PropertyBlock(owlClass);
 	var sink = block.propertyList;
+	
+
+	this.addIdProperty(sink);
 	
 	var source = this.rawShape.v().out(sh.property).toList();
 	for (var i=0; i<source.length; i++) {

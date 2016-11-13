@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -640,6 +641,33 @@ public class MemoryGraph implements Graph, Transaction {
 	@Override
 	public void remove(Resource resource) {
 		remove(getVertex(resource));
+	}
+
+
+
+	@Override
+	public Set<URI> lookupLocalName(String localName) {
+		Set<URI> result = new LinkedHashSet<>();
+		
+		for (Edge e : this) {
+			matchLocalName(result, localName, e.getSubject());
+			matchLocalName(result, localName, e.getPredicate());
+			matchLocalName(result, localName, e.getObject());
+		}
+		
+		return result;
+	}
+
+
+
+	private void matchLocalName(Set<URI> result, String localName, Value value) {
+		if (value instanceof URI) {
+			URI uri = (URI) value;
+			if (localName.equals(uri.getLocalName())) {
+				result.add(uri);
+			}
+		}
+		
 	}
 	
 

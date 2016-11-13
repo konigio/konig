@@ -30,6 +30,7 @@ import org.openrdf.model.Value;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.TraversalException;
+import io.konig.core.Traverser;
 import io.konig.core.Vertex;
 
 public class InStep implements Step {
@@ -50,8 +51,8 @@ public class InStep implements Step {
 				Vertex subject = graph.vertex((Resource)s);
 				Set<Edge> edges = subject.inProperty(predicate);
 				for (Edge edge : edges) {
-					Value object = edge.getObject();
-					traverser.addResult(object);
+					Resource target = edge.getSubject();
+					traverser.addResult(target);
 				}
 			}
 		}

@@ -46,7 +46,6 @@ import io.konig.core.vocab.Schema;
 public class ChangeSetFactoryTest {
 	
 	@Ignore
-	@Test
 	public void testList() throws Exception {
 		
 		URI itemList = uri("http://schema.example.com/itemList");
@@ -118,7 +117,7 @@ public class ChangeSetFactoryTest {
 		assertTrue(aliceNode != null);
 		
 		assertUndefined(aliceNode, Schema.givenName);
-		assertLiteral(aliceNode, Schema.familyName, "Jones", Konig.Falsity);
+		assertLiteral(aliceNode, Schema.familyName, "Jones", Konig.Falsehood);
 		assertLiteral(aliceNode, Schema.familyName, "Smith", Konig.Dictum);
 		
 		PlainTextChangeSetReportWriter reporter = new PlainTextChangeSetReportWriter(nsManager);
@@ -132,7 +131,7 @@ public class ChangeSetFactoryTest {
 		
 		Vertex contactPointNode = aliceNode.asTraversal().out(Schema.contactPoint).firstVertex();
 		assertLiteral(contactPointNode, Schema.contactType, "Work", Konig.KeyValue);
-		assertLiteral(contactPointNode, Schema.telephone, "555-123-4567", Konig.Falsity);
+		assertLiteral(contactPointNode, Schema.telephone, "555-123-4567", Konig.Falsehood);
 		assertLiteral(contactPointNode, Schema.telephone, "555-987-6543", Konig.Dictum);
 		assertValue(contactPointNode, Schema.gender, Schema.Female, Konig.Dictum);
 		

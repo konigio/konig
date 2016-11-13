@@ -91,7 +91,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter( defaultValue="${basedir}/src/main/jsonschema", property="jsonSchemaDir", required=true)
     private File jsonSchemaDir;
     
-    @Parameter( defaultValue="${basedir}/src/main/shapes", property="sourceDir", required=true)
+    @Parameter( defaultValue="${basedir}/src/main/rdf", property="sourceDir", required=true)
     private File sourceDir;
     
     @Parameter (defaultValue="${basedir}/src/main/summary", property="summaryDir", required=true)
@@ -128,10 +128,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ShapeMediaTypeNamer mediaTypeNamer = new SimpleShapeMediaTypeNamer();
 			Graph owlGraph = new MemoryGraph();
 			ContextManager contextManager = new MemoryContextManager();
-			
+
+			RdfUtil.loadTurtle(sourceDir, owlGraph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
-			shapeLoader.setListener(new GraphLoadHandler(owlGraph));
-			shapeLoader.loadAll(sourceDir);
+			shapeLoader.load(owlGraph);
 			
 
 			OwlReasoner reasoner = new OwlReasoner(owlGraph);
@@ -139,6 +139,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if (bqShapeBaseURL != null) {
 				generateBigQueryTables(owlGraph, nsManager, shapeManager, reasoner);
 			}
+			
 			
 			ShapeToJsonldContext jsonld = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, mediaTypeNamer, owlGraph);
 			jsonld.generateAll(jsonldDir);
