@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -111,6 +112,50 @@ public class RdfUtil {
 		
 		return a.equals(b);
 		
+	}
+	
+	public static Object javaValue(Value value) {
+		if (value instanceof Literal) {
+			return javaValue((Literal)value);
+		}
+		return value;
+	}
+	
+	public static void append(StringBuilder builder, Resource id) {
+
+		if (id instanceof BNode) {
+			builder.append("_:");
+			builder.append(id.stringValue());
+		} else {
+			builder.append('<');
+			builder.append(id.stringValue());
+			builder.append('>');
+		}
+	}
+	
+	public static void append(StringBuilder builder, Object value) {
+		if (value instanceof String) {
+			builder.append('"');
+			builder.append(value.toString());
+			builder.append('"');
+		} else {
+			builder.append(value);
+		}
+	}
+	
+	public static String idValue(Resource id) {
+		StringBuilder builder = new StringBuilder();
+		append(builder, id);
+		return builder.toString();
+	}
+	
+	public static Set<Object> toJavaValue(Set<Value> source) {
+		Set<Object> sink = new LinkedHashSet<>();
+		for (Value v : source) {
+			sink.add(javaValue(v));
+		}
+		
+		return sink;
 	}
 	
 	public static Object javaValue(Literal literal) {

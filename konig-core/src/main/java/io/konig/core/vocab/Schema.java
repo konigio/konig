@@ -91,6 +91,7 @@ public class Schema {
 	public static final URI TradeAction = new URIImpl("http://schema.org/TradeAction");
 	public static final URI price = new URIImpl("http://schema.org/price");
 	public static final URI birthDate = new URIImpl("http://schema.org/birthDate");
+	public static final URI location = new URIImpl("http://schema.org/location");
 	
 	
 

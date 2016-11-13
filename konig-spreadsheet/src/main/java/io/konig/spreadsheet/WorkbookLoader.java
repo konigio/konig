@@ -71,6 +71,7 @@ public class WorkbookLoader {
 	private static final String VALUE_CLASS = "Value Class";
 	private static final String STEREOTYPE = "Stereotype";
 	private static final String VALUE_IN = "Value In";
+	private static final String EQUIVALENT_PATH = "Equivalent Path";
 	
 	private static final String UNBOUNDED = "unbounded";
 	
@@ -148,6 +149,7 @@ public class WorkbookLoader {
 		private int pcValueInCol = UNDEFINED;
 		private int pcCommentCol = UNDEFINED;
 		private int pcPredicateKindCol = UNDEFINED;
+		private int pcEquivalentPathCol = UNDEFINED;
 		
 		public Worker(Workbook book, Graph graph) {
 			this.book = book;
@@ -220,6 +222,7 @@ public class WorkbookLoader {
 			URI predicateKind = uriValue(row, pcPredicateKindCol);
 			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
+			Literal equivalentPath = stringLiteral(row, pcEquivalentPathCol);
 			
 				
 			if (Konig.id.equals(propertyId)) {
@@ -257,8 +260,9 @@ public class WorkbookLoader {
 			edge(constraint, SH.minCount, minCount);
 			edge(constraint, SH.maxCount, maxCount);
 			edge(constraint, SH.uniqueLang, uniqueLang);
-			edge(constraint, Konig.stereotype, predicateKind);
 			edge(constraint, SH.in, valueIn);
+			edge(constraint, Konig.equivalentPath, equivalentPath);
+			edge(constraint, Konig.stereotype, predicateKind);
 			
 		}
 
@@ -384,6 +388,7 @@ public class WorkbookLoader {
 					case VALUE_CLASS : pcValueClassCol = i; break;
 					case VALUE_IN :	pcValueInCol = i; break;
 					case STEREOTYPE : pcPredicateKindCol = i; break;
+					case EQUIVALENT_PATH : pcEquivalentPathCol = i; break;
 						
 					}
 				}

@@ -82,6 +82,15 @@ konig:PreferredClass a owl:Class ;
 		semantic reasoning.
 	"""
 .	
+
+konig:equivalentPath a owl:DatatypeProperty ;
+	rdfs:comment """
+		A string value that describes a path from the focus node to a value that is equal to the
+		value of the property described by this PropertyConstraint.
+	""" ;
+	rdfs:domain sh:PropertyConstraint ;
+	rdfs:range xsd:string
+.	
 	
 ###### GraphDiff terms
 
