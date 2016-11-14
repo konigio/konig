@@ -58,6 +58,11 @@ public class SimpleJsonSchemaTypeMapper implements JsonSchemaTypeMapper {
 		if (XMLSchema.INTEGER.equals(rdfDatatype)) {
 			return JsonSchemaDatatype.LONG;
 		}
+
+		
+		if (XMLSchema.LONG.equals(rdfDatatype)) {
+			return JsonSchemaDatatype.LONG;
+		}
 		
 		if (XMLSchema.NEGATIVE_INTEGER.equals(rdfDatatype)) {
 			return JsonSchemaDatatype.LONG;

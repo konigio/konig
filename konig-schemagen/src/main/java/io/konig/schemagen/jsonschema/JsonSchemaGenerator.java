@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
@@ -196,6 +197,9 @@ public class JsonSchemaGenerator extends Generator {
 				
 			} else if (datatype != null) {
 				JsonSchemaDatatype jsonType = typeMapper.type(property);
+				if (jsonType == null) {
+					throw new KonigException("Datatype not supported: " + datatype.stringValue());
+				}
 				String typeName = jsonType.getTypeName();
 				String format = jsonType.getFormat();
 				Number minimum = jsonType.getMinimum();
