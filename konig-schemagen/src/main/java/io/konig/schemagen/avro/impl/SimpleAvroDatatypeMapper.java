@@ -63,6 +63,11 @@ public class SimpleAvroDatatypeMapper implements AvroDatatypeMapper {
 		if (XMLSchema.INTEGER.equals(rdfDatatype)) {
 			return AvroDatatype.LONG;
 		}
+
+		
+		if (XMLSchema.LONG.equals(rdfDatatype)) {
+			return AvroDatatype.LONG;
+		}
 		
 		if (XMLSchema.NEGATIVE_INTEGER.equals(rdfDatatype)) {
 			return AvroDatatype.LONG;
