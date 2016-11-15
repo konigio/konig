@@ -32187,7 +32187,7 @@ $(document).ready(function() {
 		and: 	new IRI("http://www.w3.org/ns/shacl#and"),
 		or: 	new IRI("http://www.w3.org/ns/shacl#or"),
 		not: 	new IRI("http://www.w3.org/ns/shacl#not"),
-		scopeClass: new IRI("http://www.w3.org/ns/shacl#scopeClass"),
+		targetClass: new IRI("http://www.w3.org/ns/shacl#targetClass"),
 		constraint: new IRI("http://www.w3.org/ns/shacl#constraint"),
 		description: new IRI("http://www.w3.org/ns/shacl#description"),
 		property: new IRI("http://www.w3.org/ns/shacl#property"),
@@ -33009,13 +33009,13 @@ ClassManager.prototype.getOrCreateShapeInfo = function(shape) {
 	if (!shapeInfo) {
 		shape = this.graph.vertex(shape);
 		
-		var scopeClass = shape.v().out(sh.scopeClass).first();
-		if (!scopeClass) {
-			console.log("scopeClass not defined for shape: " + shapeId.stringValue);
+		var targetClass = shape.v().out(sh.targetClass).first();
+		if (!targetClass) {
+			console.log("targetClass not defined for shape: " + shapeId.stringValue);
 			return null;
 		}
 		
-		var classInfo = this.getOrCreateClassInfo(scopeClass);
+		var classInfo = this.getOrCreateClassInfo(targetClass);
 		
 		shapeInfo = new ShapeInfo(classInfo, shape);
 		this.shapeMap[shapeId.stringValue] = shapeInfo;
@@ -33062,7 +33062,7 @@ ClassInfo.prototype.analyzeComment = function() {
 ClassInfo.prototype.getMediaTypeList = function() {
 	if (!this.mediaTypeList) {
 		var sink = this.mediaTypeList = [];
-		var shapeList = this.classVertex.v().inward(sh.scopeClass).toList();
+		var shapeList = this.classVertex.v().inward(sh.targetClass).toList();
 		if (shapeList.length > 1) {
 
 			this.mediaTypeList.push({
@@ -33103,7 +33103,7 @@ ClassInfo.prototype.getMediaTypeList = function() {
 
 ClassInfo.prototype.getLogicalShape = function() {
 	if (!this.logicalShape) {
-		var logicalShape = this.classVertex.v().inward(sh.scopeClass).hasType(kol.LogicalShape).first();
+		var logicalShape = this.classVertex.v().inward(sh.targetClass).hasType(kol.LogicalShape).first();
 		if (!logicalShape) {
 
 			// Get any old shape and treat it as the logical shape.
@@ -33112,7 +33112,7 @@ ClassInfo.prototype.getLogicalShape = function() {
 			// into the OWL description
 			
 			// BEGIN HACK
-//			logicalShape = this.classVertex.v().inward(sh.scopeClass).first();
+//			logicalShape = this.classVertex.v().inward(sh.targetClass).first();
 //			if (logicalShape) {
 //				console.log("Found a pre-defined shape");
 //				this.logicalShape = this.classManager.getOrCreateShapeInfo(logicalShape);
@@ -33126,7 +33126,7 @@ ClassInfo.prototype.getLogicalShape = function() {
 			var owlClass = this.classVertex;
 			var shapeName = this.classManager.logicalShapeName(owlClass);
 			logicalShape = graph.vertex(shapeName);
-			graph.statement(logicalShape, sh.scopeClass, owlClass);
+			graph.statement(logicalShape, sh.targetClass, owlClass);
 
 			var isLiteral = owlClass.v().hasTransitive(rdfs.subClassOf, rdfs.Literal).first();
 			if (!isLiteral) {
@@ -33144,8 +33144,8 @@ ClassInfo.prototype.getLogicalShape = function() {
 ClassInfo.prototype.addShapeProperties = function(owlClass, logicalVertex) {
 	var graph = this.classManager.graph;
 	
-	// Get the list of shapes that have owlClass as the scopeClass
-	var shapeList = owlClass.v().inward(sh.scopeClass).toList();
+	// Get the list of shapes that have owlClass as the targetClass
+	var shapeList = owlClass.v().inward(sh.targetClass).toList();
 	
 	for (var i=0; i<shapeList.length; i++) {
 		var shape = shapeList[i];
@@ -33487,14 +33487,14 @@ ShapeInfo.prototype.addDirectProperties = function() {
 		} else if (valueClass) {
 			PropertyInfo.addType(expectedType, valueClass);
 		} else if (valueShape) {
-			var scopeClass = valueShape.v().out(sh.scopeClass).first();
-			if (!scopeClass) {
+			var targetClass = valueShape.v().out(sh.targetClass).first();
+			if (!targetClass) {
 				// TODO: surface this warning in the user interface
 				console.log("WARNING: Scope class not found for valueShape of  " + predicate.id.localName + " on " + shape.id.stringValue);
-				scopeClass = this.graph.vertex(owl.Thing);
+				targetClass = this.graph.vertex(owl.Thing);
 			}
-			classManager.getOrCreateShapeInfo(scopeClass);
-			PropertyInfo.addType(expectedType, scopeClass);
+			classManager.getOrCreateShapeInfo(targetClass);
+			PropertyInfo.addType(expectedType, targetClass);
 		}
 
 		var propertyInfo = new PropertyInfo(
@@ -33572,7 +33572,7 @@ function Ontodoc(options) {
 /**
  * Given statements of the form:
  * <pre>
- *    ?x sh:scopeClass ?y
+ *    ?x sh:targetClass ?y
  * </pre>
  * 
  * infer
@@ -33585,9 +33585,9 @@ Ontodoc.prototype.inferClasses = function() {
 	var shapeList = graph.V(sh.Shape).inward(rdf.type).toList();
 	for (var i=0; i<shapeList.length; i++) {
 		var shape = shapeList[i];
-		var scopeClass = shape.propertyValue(sh.scopeClass);
-		if (scopeClass) {
-			graph.statement(scopeClass, rdf.type, owl.Class);
+		var targetClass = shape.propertyValue(sh.targetClass);
+		if (targetClass) {
+			graph.statement(targetClass, rdf.type, owl.Class);
 		}
 	}
 	
@@ -33741,7 +33741,7 @@ Ontodoc.prototype.analyzeProperties = function() {
 Ontodoc.prototype.buildProperties = function(shapeInfo) {
 	
 	// Get the list of shapes that reference the specified OWL class.
-	var shapeList = this.graph.V(shapeInfo.owlClass).inward(sh.scopeClass).toList();
+	var shapeList = this.graph.V(shapeInfo.owlClass).inward(sh.targetClass).toList();
 	for (var i=0; i<shapeList.length; i++) {
 		this.addPropertiesFromShape(shapeInfo, shapeList[i]);
 	}
@@ -33791,14 +33791,14 @@ Ontodoc.prototype.addPropertiesFromShape = function(shapeInfo, shape) {
 			} else if (valueClass) {
 				PropertyInfo.addType(expectedType, valueClass);
 			} else if (valueShape) {
-				var scopeClass = valueShape.v().out(sh.scopeClass).first();
-				if (!scopeClass) {
+				var targetClass = valueShape.v().out(sh.targetClass).first();
+				if (!targetClass) {
 					// TODO: surface this warning in the user interface
 					console.log("WARNING: Scope class not found for valueShape of  " + predicate.id.localName + " on " + shape.id.stringValue);
-					scopeClass = this.graph.vertex(owl.Thing);
+					targetClass = this.graph.vertex(owl.Thing);
 				}
-				this.getOrCreateShapeInfo(scopeClass);
-				PropertyInfo.addType(expectedType, scopeClass);
+				this.getOrCreateShapeInfo(targetClass);
+				PropertyInfo.addType(expectedType, targetClass);
 			}
 
 			var propertyInfo = new PropertyInfo(
