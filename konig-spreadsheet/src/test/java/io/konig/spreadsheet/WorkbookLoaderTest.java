@@ -63,7 +63,7 @@ public class WorkbookLoaderTest {
 		
 		URI state = uri("http://example.com/ns/alias/state");
 		PropertyConstraint p = shape.getPropertyConstraint(state);
-		assertEquals("!city!containedInPlace", p.getEquivalentPath());
+		assertEquals("/city/containedInPlace", p.getEquivalentPath());
 
 	}
 	

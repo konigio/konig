@@ -68,7 +68,7 @@ public class ShapeReasonerTest {
 		ShapeBuilder builder = new ShapeBuilder();
 		builder.beginShape(shapeId)
 			.beginProperty(grandparent)
-				.equivalentPath("!parent!parent")
+				.equivalentPath("/parent/parent")
 			.endProperty()
 		.endShape();
 			
