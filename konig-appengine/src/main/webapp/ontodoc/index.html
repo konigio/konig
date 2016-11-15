@@ -8,9 +8,9 @@
   <meta name="description" content="Browse and edit documentation for RDF ontologies">
   <meta name="author" content="Greg McFall">
 
-  <link rel="stylesheet" href="css/jquery-ui/themes/smoothness/jquery-ui.css">
-  <link rel="stylesheet" href="css/schemaorg.css">
-  <link rel="stylesheet" href="css/konig-ontodoc.css">
+  <link rel="stylesheet" href="/css/jquery-ui/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" href="/css/schemaorg.css">
+  <link rel="stylesheet" href="/css/konig-ontodoc.css">
   
 
 </head>
@@ -245,39 +245,36 @@
 <div id="templates" style="display: none;"></div>
 
 
-<script src="js/ontodoc-all-min.js"></script>
+<script src="/js/ontodoc-all-min.js"></script>
 <script>
 $(function(){
 	
 var defaultGraph = {
 		  "@context" : {
-			    "cs" : "http://purl.org/vocab/changeset/schema#",
 			    "dc" : "http://purl.org/dc/elements/1.1/",
-			    "foaf" : "http://xmlns.com/foaf/0.1/",
 			    "grddl" : "http://www.w3.org/2003/g/data-view#",
-			    "kcs" : "http://www.konig.io/ns/kcs/",
-			    "kol" : "http://www.konig.io/ns/kol/",
+			    "konig" : "http://www.konig.io/ns/core/",
 			    "owl" : "http://www.w3.org/2002/07/owl#",
 			    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
 			    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+			    "schema" : "http://schema.org/",
 			    "sh" : "http://www.w3.org/ns/shacl#",
-			    "skos" : "http://www.w3.org/2004/02/skos/core#",
 			    "vann" : "http://purl.org/vocab/vann/",
 			    "vs" : "http://www.w3.org/2003/06/sw-vocab-status/ns#",
 			    "xml" : "http://www.w3.org/XML/1998/namespace",
 			    "xsd" : "http://www.w3.org/2001/XMLSchema#"
 			  },
 			  "@graph" : [ {
-			    "@id" : "rdfs:",
+			    "@id" : "konig:",
 			    "@type" : "owl:Ontology",
-			    "dc:title" : {
-			      "@value" : "RDF Schema"
+			    "rdfs:label" : {
+			      "@value" : "Konig Core Ontology"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "Provides terms that extend OWL and SHACL.\r\n\t\t<p>A description of this ontology in Turtle syntax is available at \r\n\t\t<a href=\"http://www.konig.io/ns/core/.ttl\">http://www.konig.io/ns/core/.ttl</a></p>"
 			    },
 			    "vann:preferredNamespacePrefix" : {
-			      "@value" : "rdfs"
-			    },
-			    "rdfs:seeAlso" : {
-			      "@id" : "http://www.w3.org/2000/01/rdf-schema-more"
+			      "@value" : "kol"
 			    }
 			  }, {
 			    "@id" : "owl:",
@@ -289,11 +286,11 @@ var defaultGraph = {
 			      "@value" : "\r\n  This ontology partially describes the built-in classes and\r\n  properties that together form the basis of the RDF/XML syntax of OWL 2.\r\n  The content of this ontology is based on Tables 6.1 and 6.2\r\n  in Section 6.4 of the OWL 2 RDF-Based Semantics specification,\r\n  available at http://www.w3.org/TR/owl2-rdf-based-semantics/.\r\n  Please note that those tables do not include the different annotations\r\n  (labels, comments and rdfs:isDefinedBy links) used in this file.\r\n  Also note that the descriptions provided in this ontology do not\r\n  provide a complete and correct formal description of either the syntax\r\n  or the semantics of the introduced terms (please see the OWL 2\r\n  recommendations for the complete and normative specifications).\r\n  Furthermore, the information provided by this ontology may be\r\n  misleading if not used with care. This ontology SHOULD NOT be imported\r\n  into OWL ontologies. Importing this file into an OWL 2 DL ontology\r\n  will cause it to become an OWL 2 Full ontology and may have other,\r\n  unexpected, consequences.\r\n   "
 			    },
 			    "rdfs:isDefinedBy" : [ {
-			      "@id" : "http://www.w3.org/TR/owl2-syntax/"
+			      "@id" : "http://www.w3.org/TR/owl2-mapping-to-rdf/"
 			    }, {
 			      "@id" : "http://www.w3.org/TR/owl2-rdf-based-semantics/"
 			    }, {
-			      "@id" : "http://www.w3.org/TR/owl2-mapping-to-rdf/"
+			      "@id" : "http://www.w3.org/TR/owl2-syntax/"
 			    } ],
 			    "rdfs:seeAlso" : [ {
 			      "@id" : "http://www.w3.org/TR/owl2-rdf-based-semantics/#table-axiomatic-classes"
@@ -316,141 +313,6 @@ var defaultGraph = {
 			      "@value" : "owl"
 			    }
 			  }, {
-			    "@id" : "kcs:",
-			    "@type" : "owl:Ontology",
-			    "rdfs:label" : {
-			      "@value" : "Konig ChangeSet"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "This vocabulary extends the <em>defacto</em> standard \r\n\t  <a href=\"http://vocab.org/changeset/\">ChangeSet ontology</a>\r\n    so that <code>additions</code> and <code>removals</code> can be expressed as graphs rather than collections\r\n    of <code>rdf:Statement</code> instances, and it introduces the notion of a <em>reference</em> graph\r\n    which is used to identify blank nodes that have been modified.</p>"
-			    },
-			    "vann:preferredNamespacePrefix" : {
-			      "@value" : "kcs"
-			    }
-			  }, {
-			    "@id" : "kol:",
-			    "@type" : "owl:Ontology",
-			    "rdfs:label" : {
-			      "@value" : "Konig Ontology Language"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "Provides terms that extend OWL and SHACL.\r\n\t\t<p>A description of this ontology in Turtle syntax is available at \r\n\t\t<a href=\"http://www.konig.io/ns/kol/.ttl\">http://www.konig.io/ns/kol/.ttl</a></p>"
-			    },
-			    "vann:preferredNamespacePrefix" : {
-			      "@value" : "kol"
-			    }
-			  }, {
-			    "@id" : "vann:",
-			    "vann:preferredNamespacePrefix" : {
-			      "@value" : "vann"
-			    },
-			    "@type" : "owl:Ontology",
-			    "rdfs:comment" : {
-			      "@value" : "A vocabulary for annotating ontologies with examples and usage notes."
-			    },
-			    "rdfs:label" : {
-			      "@value" : "Vocabulary Annotation"
-			    }
-			  }, {
-			    "@id" : "cs:",
-			    "@type" : "owl:Ontology",
-			    "dc:date" : {
-			      "@value" : "2006-03-21"
-			    },
-			    "dc:title" : {
-			      "@value" : "Changeset",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "\r\n      This vocabulary defines a set of terms for describing changes to resource descriptions.\r\n      <p>\r\n      The vocabulary introduces the notion of a ChangeSet which encapsulates the delta between two versions of a \r\n      resource description. In this context a resource description is the set of triples that in some way comprise a \r\n      description of a resource. The delta is represented by two sets of triples: additions and removals. A ChangeSet can be used to \r\n      modify a resource description by first removing all triples from the description that are in the removals set and\r\n      adding the triples in the additions set.</p>\r\n    ",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "dc:identifier" : {
-			      "@value" : "http://purl.org/vocab/changeset/schema-20060321"
-			    },
-			    "dc:isVersionOf" : {
-			      "@id" : "cs:"
-			    },
-			    "dc:creator" : [ {
-			      "@value" : "Sam Tunnicliffe"
-			    }, {
-			      "@id" : "http://iandavis.com/id/me"
-			    } ],
-			    "dc:rights" : {
-			      "@value" : "Copyright ? 2005 Talis Information Ltd."
-			    },
-			    "dc:replaces" : {
-			      "@id" : "http://purl.org/vocab/changeset/schema-20051214"
-			    },
-			    "vann:preferredNamespaceUri" : {
-			      "@value" : "http://purl.org/vocab/changeset/schema#"
-			    },
-			    "vann:preferredNamespacePrefix" : {
-			      "@value" : "cs"
-			    },
-			    "vann:example" : [ {
-			      "@id" : "http://vocab.org/changeset/changesets-example3-20060321.html"
-			    }, {
-			      "@id" : "http://vocab.org/changeset/changesets-example2-20060321.html"
-			    }, {
-			      "@id" : "http://vocab.org/changeset/changesets-example-20060321.html"
-			    } ],
-			    "dc:issued" : {
-			      "@value" : "2005-12-14"
-			    },
-			    "skos:changeNote" : [ {
-			      "rdfs:label" : {
-			        "@value" : "Fixed invalid RDF",
-			        "@language" : "en",
-			        "@type" : "rdf:langString"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-06-23"
-			      },
-			      "dc:creator" : {
-			        "@id" : "http://iandavis.com/id/me"
-			      }
-			    }, {
-			      "rdfs:label" : {
-			        "@value" : "Improved documentation",
-			        "@language" : "en",
-			        "@type" : "rdf:langString"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@id" : "http://iandavis.com/id/me"
-			      }
-			    } ],
-			    "skos:historyNote" : [ {
-			      "rdfs:label" : {
-			        "@value" : "Introduced statement property",
-			        "@language" : "en",
-			        "@type" : "rdf:langString"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@id" : "http://iandavis.com/id/me"
-			      }
-			    }, {
-			      "rdfs:label" : {
-			        "@value" : "Updated dublin core properties to new namespace",
-			        "@language" : "en",
-			        "@type" : "rdf:langString"
-			      },
-			      "dc:date" : {
-			        "@value" : "2009-05-18"
-			      },
-			      "dc:creator" : {
-			        "@id" : "http://iandavis.com/id/me"
-			      }
-			    } ]
-			  }, {
 			    "@id" : "rdf:",
 			    "@type" : "owl:Ontology",
 			    "dc:title" : {
@@ -463,16 +325,28 @@ var defaultGraph = {
 			      "@value" : "rdf"
 			    }
 			  }, {
-			    "@id" : "xsd:",
+			    "@id" : "rdfs:",
 			    "@type" : "owl:Ontology",
 			    "dc:title" : {
-			      "@value" : "XML Schema"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "A vocabulary for expressing constraints about XML documents."
+			      "@value" : "RDF Schema"
 			    },
 			    "vann:preferredNamespacePrefix" : {
-			      "@value" : "xsd"
+			      "@value" : "rdfs"
+			    },
+			    "rdfs:seeAlso" : {
+			      "@id" : "http://www.w3.org/2000/01/rdf-schema-more"
+			    }
+			  }, {
+			    "@id" : "schema:",
+			    "@type" : "owl:Ontology",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "schema"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Schema.org"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "An ontology developed by Google, Yahoo!, Microsoft and others to describe people, places, and things commonly found on the web."
 			    }
 			  }, {
 			    "@id" : "sh:",
@@ -493,9 +367,9 @@ var defaultGraph = {
 			    "rdfs:seeAlso" : [ {
 			      "@id" : "https://www.w3.org/2014/data-shapes/wiki/Main_Page"
 			    }, {
-			      "@id" : "http://www.w3.org/TR/2015/WD-shacl-20151008/"
-			    }, {
 			      "@id" : "http://www.w3.org/TR/2015/WD-shacl-ucr-20150414/"
+			    }, {
+			      "@id" : "http://www.w3.org/TR/2015/WD-shacl-20151008/"
 			    } ],
 			    "dc:source" : {
 			      "@id" : "https://raw.githubusercontent.com/w3c/data-shapes/gh-pages/shacl/shacl-vocab.ttl"
@@ -505,6 +379,75 @@ var defaultGraph = {
 			    },
 			    "dc:dateCopyrighted" : {
 			      "@value" : "2015"
+			    }
+			  }, {
+			    "@id" : "xsd:",
+			    "@type" : "owl:Ontology",
+			    "dc:title" : {
+			      "@value" : "XML Schema"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "A vocabulary for expressing constraints about XML documents."
+			    },
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "xsd"
+			    }
+			  }, {
+			    "@id" : "vann:",
+			    "vann:preferredNamespacePrefix" : {
+			      "@value" : "vann"
+			    },
+			    "@type" : "owl:Ontology",
+			    "rdfs:comment" : {
+			      "@value" : "A vocabulary for annotating ontologies with examples and usage notes."
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Vocabulary Annotation"
+			    }
+			  }, {
+			    "@id" : "owl:AllDifferent",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "AllDifferent"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of collections of pairwise different individuals."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
+			    }
+			  }, {
+			    "@id" : "owl:AllDisjointClasses",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "AllDisjointClasses"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of collections of pairwise disjoint classes."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
+			    }
+			  }, {
+			    "@id" : "owl:AllDisjointProperties",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "AllDisjointProperties"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of collections of pairwise disjoint properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
 			    }
 			  }, {
 			    "@id" : "sh:AllObjectsScope",
@@ -545,6 +488,21 @@ var defaultGraph = {
 			      "@value" : "stable"
 			    }
 			  }, {
+			    "@id" : "rdf:Alt",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Alt"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of containers of alternatives."
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Container"
+			    }
+			  }, {
 			    "@id" : "sh:AndConstraint",
 			    "@type" : "owl:Class",
 			    "rdfs:subClassOf" : {
@@ -564,129 +522,115 @@ var defaultGraph = {
 			      "@value" : "stable"
 			    }
 			  }, {
-			    "@id" : "kol:AvroSchemaSpecification",
-			    "@type" : "owl:Class",
-			    "rdfs:comment" : {
-			      "@value" : "A document containing an Avro Schema specification"
-			    }
-			  }, {
-			    "@id" : "cs:ChangeSet",
-			    "@type" : "owl:Class",
+			    "@id" : "owl:Annotation",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
 			    "rdfs:label" : {
-			      "@value" : "ChangeSet",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
+			      "@value" : "Annotation"
 			    },
-			    "skos:definition" : {
-			      "@value" : "The encapsulation of a delta between two versions of a resource description",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
+			    "rdfs:comment" : {
+			      "@value" : "The class of annotated annotations for which the RDF serialization consists of an annotated subject, predicate and object."
 			    },
 			    "rdfs:isDefinedBy" : {
-			      "@id" : "http://purl.org/vocab/changeset/schema"
-			    },
-			    "dc:issued" : {
-			      "@value" : "2005-12-14"
-			    },
-			    "skos:changeNote" : {
-			      "rdf:value" : {
-			        "@value" : "Improved documentation"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    },
-			    "skos:historyNote" : {
-			      "rdf:value" : {
-			        "@value" : "Added property cardinality restrictions"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
+			      "@id" : "owl:"
 			    },
 			    "rdfs:subClassOf" : {
-			      "@type" : "owl:Class",
-			      "owl:intersectionOf" : {
-			        "rdf:first" : {
-			          "@type" : "owl:Restriction",
-			          "owl:onProperty" : {
-			            "@id" : "cs:statement"
-			          },
-			          "owl:minCardinality" : {
-			            "@value" : "1",
-			            "@type" : "xsd:nonNegativeInteger"
-			          }
-			        },
-			        "rdf:rest" : {
-			          "rdf:first" : {
-			            "@type" : "owl:Restriction",
-			            "owl:onProperty" : {
-			              "@id" : "cs:previousChangeSet"
-			            },
-			            "owl:maxCardinality" : {
-			              "@value" : "1",
-			              "@type" : "xsd:nonNegativeInteger"
-			            }
-			          },
-			          "rdf:rest" : {
-			            "rdf:first" : {
-			              "@type" : "owl:Restriction",
-			              "owl:onProperty" : {
-			                "@id" : "cs:subjectOfChange"
-			              },
-			              "owl:maxCardinality" : {
-			                "@value" : "1",
-			                "@type" : "xsd:nonNegativeInteger"
-			              }
-			            },
-			            "rdf:rest" : {
-			              "rdf:first" : {
-			                "@type" : "owl:Restriction",
-			                "owl:onProperty" : {
-			                  "@id" : "cs:createdDate"
-			                },
-			                "owl:maxCardinality" : {
-			                  "@value" : "1",
-			                  "@type" : "xsd:nonNegativeInteger"
-			                }
-			              },
-			              "rdf:rest" : {
-			                "rdf:first" : {
-			                  "@type" : "owl:Restriction",
-			                  "owl:onProperty" : {
-			                    "@id" : "cs:creatorName"
-			                  },
-			                  "owl:maxCardinality" : {
-			                    "@value" : "1",
-			                    "@type" : "xsd:nonNegativeInteger"
-			                  }
-			                },
-			                "rdf:rest" : {
-			                  "rdf:first" : {
-			                    "@type" : "owl:Restriction",
-			                    "owl:onProperty" : {
-			                      "@id" : "cs:changeReason"
-			                    },
-			                    "owl:maxCardinality" : {
-			                      "@value" : "1",
-			                      "@type" : "xsd:nonNegativeInteger"
-			                    }
-			                  },
-			                  "rdf:rest" : {
-			                    "@id" : "rdf:nil"
-			                  }
-			                }
-			              }
-			            }
-			          }
-			        }
-			      }
+			      "@id" : "rdfs:Resource"
+			    }
+			  }, {
+			    "@id" : "owl:AnnotationProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "AnnotationProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of annotation properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdf:Property"
+			    }
+			  }, {
+			    "@id" : "owl:AsymmetricProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "AsymmetricProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of asymmetric properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:ObjectProperty"
+			    }
+			  }, {
+			    "@id" : "konig:AvroSchema",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "The class of all Avro Schema definitions"
+			    }
+			  }, {
+			    "@id" : "owl:Axiom",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "Axiom"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of annotated axioms for which the RDF serialization consists of an annotated subject, predicate and object."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
+			    }
+			  }, {
+			    "@id" : "rdf:Bag",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Bag"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of unordered containers."
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Container"
+			    }
+			  }, {
+			    "@id" : "owl:Class",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "Class"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of OWL classes."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Class"
+			    }
+			  }, {
+			    "@id" : "rdfs:Class",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdfs:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Class"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of classes."
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
 			    }
 			  }, {
 			    "@id" : "sh:ClosedShapeConstraint",
@@ -724,6 +668,120 @@ var defaultGraph = {
 			      "@value" : "stable"
 			    }
 			  }, {
+			    "@id" : "rdfs:Container",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdfs:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Container"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of RDF containers."
+			    }
+			  }, {
+			    "@id" : "rdfs:ContainerMembershipProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdfs:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "ContainerMembershipProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of container membership properties, rdf:_1, rdf:_2, ...,\r\n                    all of which are sub-properties of 'member'."
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdf:Property"
+			    }
+			  }, {
+			    "@id" : "owl:DataRange",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "DataRange"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of OWL data ranges, which are special kinds of datatypes. Note: The use of the IRI owl:DataRange has been deprecated as of OWL 2. The IRI rdfs:Datatype SHOULD be used instead."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Datatype"
+			    }
+			  }, {
+			    "@id" : "rdfs:Datatype",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdfs:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Datatype"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of RDF datatypes."
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Class"
+			    }
+			  }, {
+			    "@id" : "owl:DatatypeProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "DatatypeProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of data properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdf:Property"
+			    }
+			  }, {
+			    "@id" : "owl:DeprecatedClass",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "DeprecatedClass"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of deprecated classes."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Class"
+			    }
+			  }, {
+			    "@id" : "owl:DeprecatedProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "DeprecatedProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of deprecated properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdf:Property"
+			    }
+			  }, {
+			    "@id" : "konig:Dictum",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdf:Statement"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA Statement that is known to be true. A semantic reasoner may convert individual \r\n\t\tDictum statements into simple (non-reified) triples of the form (subject predicate object). \r\n\t\tDictum statements are included in a konig:GraphDiff to describe statements that must be\r\n\t\tadded to the source graph to produce the target revision. \r\n\t"
+			    }
+			  }, {
 			    "@id" : "sh:EqualConstraint",
 			    "@type" : "owl:Class",
 			    "rdfs:subClassOf" : {
@@ -743,13 +801,19 @@ var defaultGraph = {
 			      "@value" : "stable"
 			    }
 			  }, {
-			    "@id" : "kol:ForeignKey",
+			    "@id" : "konig:Fact",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "The class of all facts.  Each fact has a measure and some dimensions."
+			    }
+			  }, {
+			    "@id" : "konig:Falsehood",
 			    "@type" : "owl:Class",
 			    "rdfs:subClassOf" : {
-			      "@id" : "sh:Constraint"
+			      "@id" : "rdf:Statement"
 			    },
 			    "rdfs:comment" : {
-			      "@value" : "A foreign key constraint on a Shape."
+			      "@value" : "\r\n\t\tA Statement that is known to be false. A semantic reasoner should remove any Triple that is\r\n\t\tdefined as a Falsehood.  Falsehood statements are included in a konig:GraphDiff to define\r\n\t\tstatements that must be removed from the source graph to produce the target revision. \r\n\t"
 			    }
 			  }, {
 			    "@id" : "sh:Function",
@@ -771,10 +835,73 @@ var defaultGraph = {
 			      "@value" : "unstable"
 			    }
 			  }, {
-			    "@id" : "kol:Graph",
-			    "@type" : "owl:Class",
+			    "@id" : "owl:FunctionalProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "FunctionalProperty"
+			    },
 			    "rdfs:comment" : {
-			      "@value" : "A set of statements which collectively form a (possibly disconnected) graph."
+			      "@value" : "The class of functional properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdf:Property"
+			    }
+			  }, {
+			    "@id" : "konig:Graph",
+			    "@type" : "owl:Class"
+			  }, {
+			    "@id" : "konig:GraphDiff",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "konig:Graph"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA collection of annotated statements that prescribe the delta between two versions of some\r\n\t\tgraph.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "rdf:HTML",
+			    "@type" : [ "rdfs:Datatype", "owl:Class" ],
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Literal"
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:seeAlso" : {
+			      "@id" : "http://www.w3.org/TR/rdf11-concepts/#section-html"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "HTML"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The datatype of RDF literals storing fragments of HTML content"
+			    }
+			  }, {
+			    "@id" : "owl:Individual",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:comment" : {
+			      "@value" : "The class of all individuals including named and anonymous individuals."
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:Thing"
+			    }
+			  }, {
+			    "@id" : "owl:InverseFunctionalProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "InverseFunctionalProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of inverse-functional properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:ObjectProperty"
 			    }
 			  }, {
 			    "@id" : "sh:InversePropertyScope",
@@ -796,10 +923,43 @@ var defaultGraph = {
 			      "@value" : "stable"
 			    }
 			  }, {
-			    "@id" : "kol:JsonSchemaSpecification",
+			    "@id" : "owl:IrreflexiveProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "IrreflexiveProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of irreflexive properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:ObjectProperty"
+			    }
+			  }, {
+			    "@id" : "konig:JsonSchema",
 			    "@type" : "owl:Class",
 			    "rdfs:comment" : {
-			      "@value" : "A document containing a JSON Schema specification"
+			      "@value" : "The class of all JSON Schema definitions"
+			    }
+			  }, {
+			    "@id" : "konig:KeyTerm",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdf:Statement"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA reified Statement which asserts that the predicate is a unique key for the subject.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "konig:KeyValue",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdf:Statement"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA Statement which asserts that the (predicate object) pair is a unique key for\r\n\t\tthe subject.\r\n\t"
 			    }
 			  }, {
 			    "@id" : "sh:LessThanConstraint",
@@ -840,13 +1000,64 @@ var defaultGraph = {
 			      "@value" : "stable"
 			    }
 			  }, {
-			    "@id" : "kol:LogicalShape",
-			    "@type" : "owl:Class",
-			    "rdfs:subClassOf" : {
-			      "@id" : "sh:Shape"
+			    "@id" : "rdf:List",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "List"
 			    },
 			    "rdfs:comment" : {
-			      "@value" : "\r\n\t\tA Shape that provides a logical model for the Class identified as the <code>scopeClass</code>.  \r\n\t\tA <code>LogicalShape</code> lists all the known properties of the <code>scopeClass</code>.  \r\n\t\tIt does not prescribe a <code>valueShape</code> for any related entities."
+			      "@value" : "The class of RDF Lists."
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
+			    }
+			  }, {
+			    "@id" : "rdfs:Literal",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdfs:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Literal"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of literal values, eg. textual strings and integers."
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
+			    }
+			  }, {
+			    "@id" : "owl:NamedIndividual",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "NamedIndividual"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of named individuals."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:Individual"
+			    }
+			  }, {
+			    "@id" : "owl:NegativePropertyAssertion",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "NegativePropertyAssertion"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of negative property assertions."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
 			    }
 			  }, {
 			    "@id" : "sh:NodeKind",
@@ -918,6 +1129,51 @@ var defaultGraph = {
 			      "@id" : "owl:Thing"
 			    }
 			  }, {
+			    "@id" : "owl:ObjectProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "ObjectProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of object properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdf:Property"
+			    }
+			  }, {
+			    "@id" : "owl:Ontology",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "Ontology"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of ontologies."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
+			    }
+			  }, {
+			    "@id" : "owl:OntologyProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "OntologyProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of ontology properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdf:Property"
+			    }
+			  }, {
 			    "@id" : "sh:OrConstraint",
 			    "@type" : "owl:Class",
 			    "rdfs:subClassOf" : {
@@ -935,6 +1191,48 @@ var defaultGraph = {
 			    },
 			    "vs:term_status" : {
 			      "@value" : "stable"
+			    }
+			  }, {
+			    "@id" : "rdf:PlainLiteral",
+			    "@type" : [ "rdfs:Datatype", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Literal"
+			    },
+			    "rdfs:seeAlso" : {
+			      "@id" : "http://www.w3.org/TR/rdf-plain-literal/"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "PlainLiteral"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of plain (i.e. untyped) literal values, as used in RIF and OWL 2"
+			    }
+			  }, {
+			    "@id" : "konig:PreferredClass",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:Class"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA type value which distinguishes one member from a set of equivalent classes as the\r\n\t\t\"preferred\" member.  This is useful if you want to provide metaprograms with a \r\n\t\thint about which class name to use when generating source code. Technically, the\r\n\t\tconcept of a PreferredClass is nonsense.  According to the rules of owl:equivalentClass,\r\n\t\tany property asserted on one member of the equivalence relation applies equally well\r\n\t\tto all other members.\r\n    In other words, if you have the statements (A owl:equivalentClass B) and\r\n\t\t(A rdf:type konig:PreferredClass), then a semantic reasoner can infer\r\n\t\t(B rdf:type konig:PreferredClass).  Nevertheless, this construct is useful so long\r\n\t\tas the metaprogram captures the PreferredClass distinction before applying any \r\n\t\tsemantic reasoning.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "rdf:Property",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Property"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of RDF properties."
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
 			    }
 			  }, {
 			    "@id" : "sh:PropertyConstraint",
@@ -975,6 +1273,48 @@ var defaultGraph = {
 			      "@value" : "stable"
 			    }
 			  }, {
+			    "@id" : "owl:ReflexiveProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "ReflexiveProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of reflexive properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:ObjectProperty"
+			    }
+			  }, {
+			    "@id" : "rdfs:Resource",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdfs:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Resource"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class resource, everything."
+			    }
+			  }, {
+			    "@id" : "owl:Restriction",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "Restriction"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of property restrictions."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:Class"
+			    }
+			  }, {
 			    "@id" : "sh:Scope",
 			    "@type" : "owl:Class",
 			    "rdfs:isDefinedBy" : {
@@ -989,6 +1329,21 @@ var defaultGraph = {
 			    },
 			    "vs:term_status" : {
 			      "@value" : "stable"
+			    }
+			  }, {
+			    "@id" : "rdf:Seq",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Seq"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of ordered containers."
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Container"
 			    }
 			  }, {
 			    "@id" : "sh:Severity",
@@ -1023,6 +1378,54 @@ var defaultGraph = {
 			      "@value" : "stable"
 			    }
 			  }, {
+			    "@id" : "rdf:Statement",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "Statement"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Resource"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of RDF statements."
+			    }
+			  }, {
+			    "@id" : "owl:SymmetricProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "SymmetricProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of symmetric properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:ObjectProperty"
+			    }
+			  }, {
+			    "@id" : "konig:SyntheticClassConstraints",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA resource that governs the generation of synthetic instances of a given\r\n\t\tOWL Class for testing purposes.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "konig:SyntheticGraphConstraints",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tConstraints on the structure of a synthetic graph.  This resource is used by \r\n\t\ttools that generate synthetic graphs for testing purposes.\r\n\t"
+			    }
+			  }, {
+			    "@id" : "konig:SyntheticShapeConstraints",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA resource that governs the generation of synthetic instances of a given \r\n\t\tdata shape for testing purposes.\r\n\t"
+			    }
+			  }, {
 			    "@id" : "sh:Template",
 			    "@type" : "owl:Class",
 			    "rdfs:isDefinedBy" : {
@@ -1051,6 +1454,36 @@ var defaultGraph = {
 			      "@id" : "owl:"
 			    }
 			  }, {
+			    "@id" : "konig:TimeInterval",
+			    "@type" : "owl:Class",
+			    "rdfs:comment" : {
+			      "@value" : "An interval of time that has an explicit starting point and a duration"
+			    }
+			  }, {
+			    "@id" : "konig:TimeUnit",
+			    "@type" : "owl:Class",
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:NamedIndividual"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of all possible time unit values (Day, Week, Month, Year, etc.)"
+			    }
+			  }, {
+			    "@id" : "owl:TransitiveProperty",
+			    "@type" : [ "rdfs:Class", "owl:Class" ],
+			    "rdfs:label" : {
+			      "@value" : "TransitiveProperty"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The class of transitive properties."
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "owl:"
+			    },
+			    "rdfs:subClassOf" : {
+			      "@id" : "owl:ObjectProperty"
+			    }
+			  }, {
 			    "@id" : "sh:ValidationResult",
 			    "@type" : "owl:Class",
 			    "rdfs:isDefinedBy" : {
@@ -1068,7 +1501,7 @@ var defaultGraph = {
 			    }
 			  }, {
 			    "@id" : "rdf:XMLLiteral",
-			    "@type" : [ "owl:Class", "rdfs:Datatype" ],
+			    "@type" : [ "rdfs:Datatype", "owl:Class" ],
 			    "rdfs:subClassOf" : {
 			      "@id" : "rdfs:Literal"
 			    },
@@ -1188,6 +1621,24 @@ var defaultGraph = {
 			    },
 			    "rdfs:comment" : {
 			      "@value" : "The class of signed integers of arbitrary length.\r\n\t\t<p>The value space of <code>xsd:integer</code> includes the set of all the signed integers, with no restriction on range. \r\n\t\tIts lexical space allows any number of insignificant leading zeros.</p>"
+			    }
+			  }, {
+			    "@id" : "rdf:langString",
+			    "@type" : [ "rdfs:Datatype", "owl:Class" ],
+			    "rdfs:subClassOf" : {
+			      "@id" : "rdfs:Literal"
+			    },
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:seeAlso" : {
+			      "@id" : "http://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "langString"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The datatype of language-tagged string values"
 			    }
 			  }, {
 			    "@id" : "xsd:language",
@@ -1636,6 +2087,18 @@ var defaultGraph = {
 			    },
 			    "rdfs:domain" : {
 			      "@id" : "rdf:Property"
+			    }
+			  }, {
+			    "@id" : "schema:domainIncludes",
+			    "@type" : "rdf:Property",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA Class that is known to be in the domain of this Property.  This is a modeling construct invented by the Schema.org\r\n\t\tconsortium as an alternative to rdfs:domain.  It allows one to identify one of many possible classes that can have\r\n\t\tthe specified property instead of defining exactly one class (or a complicated equivalent class).\r\n\t"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "rdf:Property"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "rdfs:Class"
 			    }
 			  }, {
 			    "@id" : "owl:equivalentClass",
@@ -2253,6 +2716,24 @@ var defaultGraph = {
 			      "@value" : "stable"
 			    }
 			  }, {
+			    "@id" : "rdf:object",
+			    "@type" : "rdf:Property",
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "object"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The object of the subject RDF statement."
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "rdf:Statement"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "rdfs:Resource"
+			    }
+			  }, {
 			    "@id" : "sh:object",
 			    "@type" : "rdf:Property",
 			    "rdfs:comment" : {
@@ -2273,24 +2754,6 @@ var defaultGraph = {
 			    },
 			    "vs:term_status" : {
 			      "@value" : "stable"
-			    }
-			  }, {
-			    "@id" : "rdf:object",
-			    "@type" : "rdf:Property",
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "rdf:"
-			    },
-			    "rdfs:label" : {
-			      "@value" : "object"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The object of the subject RDF statement."
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "rdf:Statement"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdfs:Resource"
 			    }
 			  }, {
 			    "@id" : "owl:onClass",
@@ -2620,6 +3083,18 @@ var defaultGraph = {
 			      "@id" : "rdf:Property"
 			    }
 			  }, {
+			    "@id" : "schema:rangeIncludes",
+			    "@type" : "rdf:Property",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA Class that is known to be in the range of this Property.  This is a modeling construct invented by the Schema.org\r\n\t\tconsortium as an alternative to rdfs:range.  It allows one to identify one of many possible values for a property\r\n\t\tinstead of specifying exactly one class (or a complicated equivalent class).\r\n\t"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "rdf:Property"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "rdfs:Class"
+			    }
+			  }, {
 			    "@id" : "rdf:rest",
 			    "@type" : "rdf:Property",
 			    "rdfs:isDefinedBy" : {
@@ -2900,6 +3375,24 @@ var defaultGraph = {
 			      "@id" : "rdf:Property"
 			    }
 			  }, {
+			    "@id" : "rdf:subject",
+			    "@type" : "rdf:Property",
+			    "rdfs:isDefinedBy" : {
+			      "@id" : "rdf:"
+			    },
+			    "rdfs:label" : {
+			      "@value" : "subject"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The subject of the subject RDF statement."
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "rdf:Statement"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "rdfs:Resource"
+			    }
+			  }, {
 			    "@id" : "sh:subject",
 			    "@type" : "rdf:Property",
 			    "rdfs:comment" : {
@@ -2920,24 +3413,6 @@ var defaultGraph = {
 			    },
 			    "vs:term_status" : {
 			      "@value" : "stable"
-			    }
-			  }, {
-			    "@id" : "rdf:subject",
-			    "@type" : "rdf:Property",
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "rdf:"
-			    },
-			    "rdfs:label" : {
-			      "@value" : "subject"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The subject of the subject RDF statement."
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "rdf:Statement"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdfs:Resource"
 			    }
 			  }, {
 			    "@id" : "owl:targetIndividual",
@@ -3092,93 +3567,25 @@ var defaultGraph = {
 			      "@id" : "rdf:List"
 			    }
 			  }, {
-			    "@id" : "kcs:add",
+			    "@id" : "konig:attribute",
 			    "@type" : "owl:ObjectProperty",
+			    "rdfs:subPropertyOf" : {
+			      "@id" : "sh:predicate"
+			    },
 			    "rdfs:comment" : {
-			      "@value" : "A graph of statements to be added to the target resource."
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "kol:Graph"
+			      "@value" : "A predicate whose value is an attribute of some dimension"
 			    }
 			  }, {
-			    "@id" : "cs:addition",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:label" : {
-			      "@value" : "addition",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "skos:definition" : {
-			      "@value" : "a triple to be added to the resource description",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "\r\n      By convention the subject of the triple being added should be the same as the subjectOfChange\r\n    ",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "rdfs:subPropertyOf" : {
-			      "@id" : "cs:statement"
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "http://purl.org/vocab/changeset/schema"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdf:Statement"
-			    },
-			    "dc:issued" : {
-			      "@value" : "2005-12-14"
-			    },
-			    "skos:changeNote" : {
-			      "rdf:value" : {
-			        "@value" : "Added definitition and documentation"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    },
-			    "skos:historyNote" : [ {
-			      "rdf:value" : {
-			        "@value" : "Made owl:ObjectProperty"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    }, {
-			      "rdf:value" : {
-			        "@value" : "Made a sub-property of statement"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    } ]
-			  }, {
-			    "@id" : "kol:avroSchemaRendition",
+			    "@id" : "konig:avroSchemaRendition",
 			    "@type" : "owl:ObjectProperty",
 			    "rdfs:domain" : {
 			      "@id" : "sh:Shape"
 			    },
 			    "rdfs:range" : {
-			      "@id" : "kol:JsonSchemaSpecification"
+			      "@id" : "konig:AvroSchema"
 			    },
 			    "rdfs:comment" : {
-			      "@value" : "The Avro Schema specification corresponding to this Shape"
+			      "@value" : "The Avro Schema rendition of the Shape"
 			    }
 			  }, {
 			    "@id" : "owl:bottomObjectProperty",
@@ -3199,332 +3606,131 @@ var defaultGraph = {
 			      "@id" : "owl:Thing"
 			    }
 			  }, {
-			    "@id" : "kol:equivalentSemanticProperty",
-			    "@type" : [ "owl:FunctionalProperty", "owl:ObjectProperty" ],
+			    "@id" : "konig:classConstraints",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA constraint on instances of a given OWL Class within the synthetic graph\r\n\t"
+			    },
 			    "rdfs:domain" : {
-			      "@id" : "kol:ForeignKey"
+			      "@id" : "konig:SyntheticGraphConstraints"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "konig:SyntheticClassConstraints"
+			    }
+			  }, {
+			    "@id" : "konig:constrainedClass",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The class that is being constrained."
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "konig:SyntheticClassConstraints"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "owl:Class"
+			    }
+			  }, {
+			    "@id" : "konig:constrainedShape",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The Shape that is being constrained."
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "konig:SyntheticShapeConstraints"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "sh:Shape"
+			    }
+			  }, {
+			    "@id" : "konig:dimension",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:subPropertyOf" : {
+			      "@id" : "sh:predicate"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "A predicate whose value is one dimension of a fact"
+			    }
+			  }, {
+			    "@id" : "konig:durationUnit",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The unit of time used to define the duration of the TimeInterval"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "konig:TimeInterval"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "konig:TimeUnit"
+			    }
+			  }, {
+			    "@id" : "konig:inputClass",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The class of entities from which instances of this Shape are derived."
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "sh:Shape"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "owl:Class"
+			    }
+			  }, {
+			    "@id" : "konig:intervalStart",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The point in time when the interval started."
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "konig:TimeInterval"
+			    },
+			    "schema:rangeIncludes" : [ {
+			      "@id" : "xsd:date"
+			    }, {
+			      "@id" : "xsd:dateTime"
+			    } ]
+			  }, {
+			    "@id" : "konig:jsonSchemaRendition",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:domain" : {
+			      "@id" : "sh:Shape"
+			    },
+			    "rdfs:range" : {
+			      "@id" : "konig:JsonSchema"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "The JSON Schema rendition of the Shape"
+			    }
+			  }, {
+			    "@id" : "konig:measure",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:subPropertyOf" : {
+			      "@id" : "sh:predicate"
+			    },
+			    "rdfs:comment" : {
+			      "@value" : "A predicate whose value is an observed or computed measure."
+			    }
+			  }, {
+			    "@id" : "konig:shapeConstraints",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA constraint on instances of a given Shape within the synthetic graph\r\n\t"
+			    },
+			    "rdfs:domain" : [ {
+			      "@id" : "konig:SyntheticGraphConstraints"
+			    }, {
+			      "@id" : "konig:SyntheticShapeConstraints"
+			    } ]
+			  }, {
+			    "@id" : "konig:stereotype",
+			    "@type" : "owl:ObjectProperty",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tAn annotation on a PropertyConstraint which identifies the role of the property\r\n\t\tin some external framework.  By \"external\" we mean external to the SHACL vocabulary.\r\n\t\tA stereotype allows one to understand how the property will be used.  In this sense,\r\n\t\tit is similar to a UML stereotype (hence the name).  As an example, one could use stereotypes\r\n\t\tto distinguish measures, dimensions and attributes in an OLAP cube.\r\n\t"
+			    },
+			    "rdfs:domain" : {
+			      "@id" : "sh:PropertyConstraint"
 			    },
 			    "rdfs:range" : {
 			      "@id" : "rdf:Property"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "An equivalent semantic property that expresses the same relationship as this foreign key."
-			    }
-			  }, {
-			    "@id" : "kol:foreignKey",
-			    "@type" : [ "owl:ObjectProperty", "owl:FunctionalProperty" ],
-			    "rdfs:domain" : {
-			      "@id" : "kol:ForeignKey"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdf:List"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "\r\n\t\tA property that lists the predicate(s) which form a foreign key.  \r\n\t\tThe value of this property is a List so that composite keys can be supported.  The type of entity\r\n\t\treferenced by the foreign key is given by the <code>kol:referencedClass</code> property.  \r\n\t\tThe corresponding primary key on the referenced class is given by the <code>kol:referencedKey</code>. "
-			    }
-			  }, {
-			    "@id" : "kol:jsonSchemaRendition",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:domain" : {
-			      "@id" : "sh:Shape"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "kol:JsonSchemaSpecification"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The JSON Schema specification corresponding to this Shape"
-			    }
-			  }, {
-			    "@id" : "kol:knownIndividual",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:domain" : {
-			      "@id" : "sh:PropertyConstraint"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "owl:NamedIndividual"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "A named individual that is known to be a possible value for the property."
-			    }
-			  }, {
-			    "@id" : "cs:precedingChangeSet",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:label" : {
-			      "@value" : "precedingChangeSet",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "skos:definition" : {
-			      "@value" : "the changeset that immediately precedes this one",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "rdfs:comment" : [ {
-			      "@value" : "\r\n      In systems that assume a closed world, the most recent ChangeSet for a particular resource description \r\n      can be discovered by looking for the ChangeSet that is not the value of a precedingChangeSet property. \r\n      Conversely, the earliest ChangeSet is the one that is not the subject of a precedingChangeSet property.\r\n    ",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    }, {
-			      "@value" : "\r\n      This property can be used to build a history of changes to a particular resource description. The first\r\n      ChangeSet in the history will have no precedingChangeSet property. Each subsequent ChangeSet added\r\n      to the history references the preceding one resulting in a singly-linked list of changes.  Care must be taken\r\n      not to introduce cycles in the history.\r\n    ",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    } ],
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "http://purl.org/vocab/changeset/schema"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "dc:issued" : {
-			      "@value" : "2005-12-14"
-			    },
-			    "skos:changeNote" : {
-			      "rdf:value" : {
-			        "@value" : "Added definitition and documentation"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    },
-			    "skos:historyNote" : {
-			      "rdf:value" : {
-			        "@value" : "Made owl:ObjectProperty"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    }
-			  }, {
-			    "@id" : "kol:propertyOf",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:domain" : {
-			      "@id" : "sh:PropertyConstraint"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "sh:Shape"
-			    },
-			    "owl:inverseOf" : {
-			      "@id" : "sh:property"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The <code>Shape</code> to which the subject <code>PropertyConstraint</code> applies"
-			    }
-			  }, {
-			    "@id" : "kcs:reference",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:comment" : {
-			      "@value" : "A collection of statements that uniquely identify the initial state of any blank nodes\r\n\t  that are modified by the <code>ChangeSet</code>.  \r\n\t\t<p>For each blank node undergoing a change, the statements must provide enough information to distinguish that node\r\n\t\tfrom any other node in the starting state of the target graph.  This information could consist of a complete \r\n\t\tenumeration of all the node's properties, values of functional or inverse functional properties, etc.</p>"
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "kol:Graph"
-			    }
-			  }, {
-			    "@id" : "kol:referencedClass",
-			    "@type" : [ "owl:FunctionalProperty", "owl:ObjectProperty" ],
-			    "rdfs:domain" : {
-			      "@id" : "kol:ForeignKey"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdfs:Class"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The type of entity referenced by the foreign key."
-			    }
-			  }, {
-			    "@id" : "kol:referencedKey",
-			    "@type" : [ "owl:ObjectProperty", "owl:FunctionalProperty" ],
-			    "rdfs:domain" : {
-			      "@id" : "kol:ForeignKey"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdf:List"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "\r\n\t\tA property that lists the predicate(s) on the referenced entity corresponding to \r\n\t\tthe foreign keys on the source entity.  The value of this property is a List so that\r\n\t\tcomposite keys can be supported.  The elements of the List are in one-to-one correspondence with\r\n\t\tthe elements of the <code>foreignKey</code> List."
-			    }
-			  }, {
-			    "@id" : "cs:removal",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:label" : {
-			      "@value" : "removal",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "skos:definition" : {
-			      "@value" : "a triple to be removed from the resource description",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "\r\n      By convention the subject of the triple being removed should be the same as the subjectOfChange\r\n    ",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "rdfs:subPropertyOf" : {
-			      "@id" : "cs:statement"
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "http://purl.org/vocab/changeset/schema"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdf:Statement"
-			    },
-			    "dc:issued" : {
-			      "@value" : "2005-12-14"
-			    },
-			    "skos:changeNote" : {
-			      "rdf:value" : {
-			        "@value" : "Added definitition and documentation"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    },
-			    "skos:historyNote" : [ {
-			      "rdf:value" : {
-			        "@value" : "Made a sub-property of statement"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    }, {
-			      "rdf:value" : {
-			        "@value" : "Made owl:ObjectProperty"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    } ]
-			  }, {
-			    "@id" : "kcs:remove",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:comment" : {
-			      "@value" : "A graph of statements to be removed from the target resource."
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "kol:Graph"
-			    }
-			  }, {
-			    "@id" : "kcs:source",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:comment" : {
-			      "@value" : "A Graph that provides a complete description of the initial state of the \r\n\t\t<code>subjectOfChange</code>."
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "kol:Graph"
-			    }
-			  }, {
-			    "@id" : "cs:statement",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:label" : {
-			      "@value" : "statement",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "skos:definition" : {
-			      "@value" : "a triple included in this set of changes",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "http://purl.org/vocab/changeset/schema"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdf:Statement"
-			    },
-			    "dc:issued" : {
-			      "@value" : "2006-03-21"
-			    }
-			  }, {
-			    "@id" : "cs:subjectOfChange",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:label" : {
-			      "@value" : "subjectOfChange",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "skos:definition" : {
-			      "@value" : "the resource to which this set of changes applies",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "http://purl.org/vocab/changeset/schema"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdfs:Resource"
-			    },
-			    "dc:issued" : {
-			      "@value" : "2005-12-14"
-			    },
-			    "skos:changeNote" : {
-			      "rdf:value" : {
-			        "@value" : "Added definitition and documentation"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    },
-			    "skos:historyNote" : {
-			      "rdf:value" : {
-			        "@value" : "Made owl:ObjectProperty"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    }
-			  }, {
-			    "@id" : "kcs:target",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:comment" : {
-			      "@value" : "A Graph that provides a complete description of the final state of the \r\n\t\t<code>subjectOfChange</code> after it has been mutated by the ChangeSet."
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "kol:Graph"
 			    }
 			  }, {
 			    "@id" : "owl:topObjectProperty",
@@ -3545,42 +3751,6 @@ var defaultGraph = {
 			      "@id" : "owl:Thing"
 			    }
 			  }, {
-			    "@id" : "kcs:trace",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:comment" : {
-			      "@value" : "A statement which helps trace the identity of a blank node.  The collection of all\r\n    such statements within the <code>ChangeSet</code> forms the <code>reference</code> graph which\r\n    contains enough information to distinguish each blank node from any other blank node."
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdf:Statement"
-			    }
-			  }, {
-			    "@id" : "kol:uniqueIn",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:domain" : {
-			      "@id" : "rdfs:Datatype"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdfs:Resource"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "A property which asserts that values of the subject Datatype are unique within some entity that serves as a namespace."
-			    }
-			  }, {
-			    "@id" : "kol:valueUniqueIn",
-			    "@type" : "owl:ObjectProperty",
-			    "rdfs:domain" : {
-			      "@id" : "sh:PropertyConstraint"
-			    },
-			    "rdfs:range" : {
-			      "@id" : "rdfs:Resource"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "Asserts that values of the given property are unique within some entity that serves as a namespace."
-			    }
-			  }, {
 			    "@id" : "owl:bottomDataProperty",
 			    "@type" : "owl:DatatypeProperty",
 			    "rdfs:label" : {
@@ -3599,132 +3769,40 @@ var defaultGraph = {
 			      "@id" : "rdfs:Literal"
 			    }
 			  }, {
-			    "@id" : "cs:changeReason",
+			    "@id" : "konig:classInstanceCount",
 			    "@type" : "owl:DatatypeProperty",
-			    "rdfs:label" : {
-			      "@value" : "changeReason",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "skos:definition" : {
-			      "@value" : "a  short, human readable description of the purpose for the changeset",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
+			    "rdfs:comment" : {
+			      "@value" : "The number of instances of the class to be generated"
 			    },
 			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "http://purl.org/vocab/changeset/schema"
+			      "@id" : "konig:SyntheticClassConstraints"
 			    },
 			    "rdfs:range" : {
-			      "@id" : "rdfs:Literal"
-			    },
-			    "dc:issued" : {
-			      "@value" : "2005-12-14"
-			    },
-			    "skos:historyNote" : {
-			      "rdf:value" : {
-			        "@value" : "Made owl:DatatypeProperty"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
+			      "@id" : "xsd:int"
 			    }
 			  }, {
-			    "@id" : "kol:columnName",
+			    "@id" : "konig:equivalentPath",
 			    "@type" : "owl:DatatypeProperty",
+			    "rdfs:comment" : {
+			      "@value" : "\r\n\t\tA string value that describes a path from the focus node to a value that is equal to the\r\n\t\tvalue of the property described by this PropertyConstraint.\r\n\t"
+			    },
 			    "rdfs:domain" : {
 			      "@id" : "sh:PropertyConstraint"
 			    },
 			    "rdfs:range" : {
 			      "@id" : "xsd:string"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The preferred name for an RDBMS column that contains values of the <code>predicate</code>"
 			    }
 			  }, {
-			    "@id" : "cs:createdDate",
-			    "@type" : "owl:DatatypeProperty",
-			    "rdfs:label" : {
-			      "@value" : "createdDate",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "skos:definition" : {
-			      "@value" : "the date that the changeset was created",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
+			    "@id" : "konig:id",
+			    "@type" : [ "owl:DatatypeProperty", "owl:FunctionalProperty" ],
 			    "rdfs:comment" : {
-			      "@value" : "\r\n      The date should be in W3CDTF format\r\n    ",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:subPropertyOf" : {
-			      "@id" : "dc:date"
-			    },
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "http://purl.org/vocab/changeset/schema"
-			    },
-			    "dc:issued" : {
-			      "@value" : "2005-12-14"
-			    },
-			    "skos:historyNote" : {
-			      "rdf:value" : {
-			        "@value" : "Made owl:DatatypeProperty"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
-			    }
-			  }, {
-			    "@id" : "cs:creatorName",
-			    "@type" : "owl:DatatypeProperty",
-			    "rdfs:label" : {
-			      "@value" : "creatorName",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "skos:definition" : {
-			      "@value" : "the name of the entity responsible for creating the changeset",
-			      "@language" : "en",
-			      "@type" : "rdf:langString"
-			    },
-			    "rdfs:domain" : {
-			      "@id" : "cs:ChangeSet"
-			    },
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "http://purl.org/vocab/changeset/schema"
+			      "@value" : "\r\n\t\tA pseudo-property whose value is equal to the IRI used to identify the subject.\r\n\t\tWe call it a \"pseudo-property\" because (by convention) neither OWL nor SHACL models \r\n\t\texpect an explicit property for the IRI value.  Instead, an OWL model may declare a class\r\n\t\tto be a subclass of owl:NamedIndividual to indicate that all instances of the class must be\r\n\t\tidentified by an IRI.  Similarly, a SHACL model will use\r\n\t\tsh:nodeKind to specify whether a given entity is identified by an IRI or a BlankNode.\r\n\t\tThese OWL and SHACL conventions can be inconvenient.  Sometimes we want to treat the IRI for a resource on \r\n\t\tequal footing with other properties.  The konig:id property allows us to do that.\r\n\t\tA PropertyConstraint with konig:id as the sh:predicate and sh:minCount equal to 1 \r\n\t\tis equivalent to specifying that sh:nodeKind is sh:IRI on the parent shape.\r\n\t\tA PropertyConstraint with konig:id as the predicate and sh:minCount equal to zero \r\n\t\t(or undefined) is equivalent to specifying that sh:nodeKind is sh:BlankNodeOrIRI.\r\n\t"
 			    },
 			    "rdfs:range" : {
-			      "@id" : "rdfs:Literal"
-			    },
-			    "dc:issued" : {
-			      "@value" : "2005-12-14"
-			    },
-			    "skos:historyNote" : {
-			      "rdf:value" : {
-			        "@value" : "Made owl:DatatypeProperty"
-			      },
-			      "dc:date" : {
-			        "@value" : "2006-03-21"
-			      },
-			      "dc:creator" : {
-			        "@value" : "Ian Davis"
-			      }
+			      "@id" : "xsd:anyURI"
 			    }
 			  }, {
-			    "@id" : "kol:mediaTypeBaseName",
+			    "@id" : "konig:mediaTypeBaseName",
 			    "@type" : "owl:DatatypeProperty",
 			    "rdfs:domain" : {
 			      "@id" : "sh:Shape"
@@ -3733,19 +3811,19 @@ var defaultGraph = {
 			      "@id" : "xsd:string"
 			    },
 			    "rdfs:comment" : {
-			      "@value" : "The base name for the vendor-specific media type associated with this Shape"
+			      "@value" : "\r\n\t\tThe base name for the vendor-specific media type associated with this Shape.\r\n\t\tThe mediaTypeBaseName includes all parts of the media type name except the suffix.\r\n\t"
 			    }
 			  }, {
-			    "@id" : "kol:tableName",
+			    "@id" : "konig:shapeInstanceCount",
 			    "@type" : "owl:DatatypeProperty",
+			    "rdfs:comment" : {
+			      "@value" : "The number of instances of the shape to be generated"
+			    },
 			    "rdfs:domain" : {
-			      "@id" : "sh:Shape"
+			      "@id" : "konig:SyntheticShapeConstraints"
 			    },
 			    "rdfs:range" : {
-			      "@id" : "xsd:string"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The preferred name for an RDBMS table that contains instances of the subject Shape"
+			      "@id" : "xsd:int"
 			    }
 			  }, {
 			    "@id" : "owl:topDataProperty",
@@ -3766,139 +3844,16 @@ var defaultGraph = {
 			      "@id" : "rdfs:Literal"
 			    }
 			  }, {
-			    "@id" : "http://iandavis.com/id/me",
-			    "@type" : "foaf:Person",
-			    "foaf:name" : {
-			      "@value" : "Ian Davis"
-			    }
-			  }, {
-			    "@id" : "http://vocab.org/changeset/changesets-example3-20060321.html",
-			    "dc:title" : {
-			      "@value" : "Implementing Undo With ChangeSets"
-			    }
-			  }, {
-			    "@id" : "http://vocab.org/changeset/changesets-example2-20060321.html",
-			    "dc:title" : {
-			      "@value" : "Linked ChangeSets"
-			    }
-			  }, {
-			    "@id" : "http://vocab.org/changeset/changesets-example-20060321.html",
-			    "dc:title" : {
-			      "@value" : "A Simple ChangeSet"
-			    }
-			  }, {
-			    "@id" : "rdf:nil",
-			    "@type" : "rdf:List",
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "rdf:"
-			    },
-			    "rdfs:label" : {
-			      "@value" : "nil"
-			    },
+			    "@id" : "konig:totalCount",
+			    "@type" : "owl:DatatypeProperty",
 			    "rdfs:comment" : {
-			      "@value" : "The empty list, with no items in it. If the rest of a list is nil then the list has no more items in it."
-			    }
-			  }, {
-			    "@id" : "rdfs:Literal",
-			    "@type" : "rdfs:Class",
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "rdfs:"
+			      "@value" : "\r\n\t\tA measure which records the total number of times that some data Shape\r\n\t\toccurs.\r\n\t"
 			    },
-			    "rdfs:label" : {
-			      "@value" : "Literal"
+			    "rdfs:domain" : {
+			      "@id" : "konig:Fact"
 			    },
-			    "rdfs:comment" : {
-			      "@value" : "The class of literal values, eg. textual strings and integers."
-			    },
-			    "rdfs:subClassOf" : {
-			      "@id" : "rdfs:Resource"
-			    }
-			  }, {
-			    "@id" : "rdfs:Class",
-			    "@type" : "rdfs:Class",
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "rdfs:"
-			    },
-			    "rdfs:label" : {
-			      "@value" : "Class"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The class of classes."
-			    },
-			    "rdfs:subClassOf" : {
-			      "@id" : "rdfs:Resource"
-			    }
-			  }, {
-			    "@id" : "rdfs:Resource",
-			    "@type" : "rdfs:Class",
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "rdfs:"
-			    },
-			    "rdfs:label" : {
-			      "@value" : "Resource"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The class resource, everything."
-			    }
-			  }, {
-			    "@id" : "rdf:Property",
-			    "@type" : "rdfs:Class",
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "rdf:"
-			    },
-			    "rdfs:label" : {
-			      "@value" : "Property"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The class of RDF properties."
-			    },
-			    "rdfs:subClassOf" : {
-			      "@id" : "rdfs:Resource"
-			    }
-			  }, {
-			    "@id" : "rdfs:Datatype",
-			    "@type" : "rdfs:Class",
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "rdfs:"
-			    },
-			    "rdfs:label" : {
-			      "@value" : "Datatype"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The class of RDF datatypes."
-			    },
-			    "rdfs:subClassOf" : {
-			      "@id" : "rdfs:Class"
-			    }
-			  }, {
-			    "@id" : "rdf:List",
-			    "@type" : "rdfs:Class",
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "rdf:"
-			    },
-			    "rdfs:label" : {
-			      "@value" : "List"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The class of RDF Lists."
-			    },
-			    "rdfs:subClassOf" : {
-			      "@id" : "rdfs:Resource"
-			    }
-			  }, {
-			    "@id" : "rdf:Statement",
-			    "@type" : "rdfs:Class",
-			    "rdfs:isDefinedBy" : {
-			      "@id" : "rdf:"
-			    },
-			    "rdfs:label" : {
-			      "@value" : "Statement"
-			    },
-			    "rdfs:subClassOf" : {
-			      "@id" : "rdfs:Resource"
-			    },
-			    "rdfs:comment" : {
-			      "@value" : "The class of RDF statements."
+			    "rdfs:range" : {
+			      "@id" : "xsd:int"
 			    }
 			  } ]
 			};
