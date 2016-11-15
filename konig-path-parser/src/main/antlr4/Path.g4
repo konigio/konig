@@ -12,7 +12,7 @@ path : step+ ;
 step : start | in | out | filter ;
 start : iri ;
 in : '^' iri ;
-out : '!' iri ;
+out : '/' iri ;
 resource : iri | bnode ;
 filter : '[' WS? hasStep WS? (';' WS? hasStep)* ']' ;
 

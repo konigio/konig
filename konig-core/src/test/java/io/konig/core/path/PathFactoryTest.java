@@ -345,7 +345,7 @@ public class PathFactoryTest {
 		
 		Vertex alice = graph.getVertex(aliceId);
 		
-		path = factory.createPath("!schema:parent[schema:gender schema:Male]");
+		path = factory.createPath("/schema:parent[schema:gender schema:Male]");
 		result = path.traverse(alice);
 		assertEquals(1, result.size());
 		assertTrue(result.contains(bobId));
