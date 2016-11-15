@@ -334,7 +334,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/cnt/Citation",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "cnt:Citation"
 			    },
 			    "sh:property" : [ {
@@ -435,7 +435,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationProvenance",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "prov:Activity"
 			    },
 			    "sh:property" : {
@@ -472,7 +472,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/cnt/CitationSource",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "cnt:CitationSource"
 			    },
 			    "sh:property" : [ {
@@ -538,7 +538,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitation",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "cnt:Citation"
 			    },
 			    "sh:property" : [ {
@@ -713,7 +713,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/xas/CreateCitationProvenance",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "prov:Activity"
 			    },
 			    "sh:property" : [ {
@@ -768,7 +768,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/schema/CreativeWork",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "schema:CreativeWork"
 			    },
 			    "sh:property" : [ {
@@ -830,7 +830,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/xas/Load",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "xas:Load"
 			    },
 			    "sh:property" : [ {
@@ -981,7 +981,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/xas/LoadProvenance",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "prov:Activity"
 			    },
 			    "sh:property" : [ {
@@ -1036,7 +1036,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/xas/Login",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "xas:Login"
 			    },
 			    "sh:property" : [ {
@@ -1208,7 +1208,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v2/xas/LoginPage",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "xas:LoginPage"
 			    },
 			    "sh:property" : [ {
@@ -1256,7 +1256,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/xas/LoginProvenance",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "prov:Activity"
 			    },
 			    "sh:property" : [ {
@@ -1311,7 +1311,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/org/Membership",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "org:Membership"
 			    },
 			    "sh:property" : [ {
@@ -1357,7 +1357,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/schema/Person",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "schema:Person"
 			    },
 			    "sh:property" : [ {
@@ -1403,7 +1403,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/schema/SoftwareApplication",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "schema:SoftwareApplication"
 			    },
 			    "sh:property" : {
@@ -1430,7 +1430,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/owl/Thing",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "owl:Thing"
 			    },
 			    "sh:property" : [ {
@@ -1487,7 +1487,7 @@ StaticOntologyService.prototype.getOntologyGraph = function() {
 			  }, {
 			    "@id" : "http://schema.pearson.com/shapes/v1/schema/WebPage",
 			    "@type" : "sh:Shape",
-			    "sh:scopeClass" : {
+			    "sh:targetClass" : {
 			      "@id" : "schema:WebPage"
 			    },
 			    "sh:property" : {

@@ -104,7 +104,7 @@ $(document).ready(function() {
 		and: 	new IRI("http://www.w3.org/ns/shacl#and"),
 		or: 	new IRI("http://www.w3.org/ns/shacl#or"),
 		not: 	new IRI("http://www.w3.org/ns/shacl#not"),
-		scopeClass: new IRI("http://www.w3.org/ns/shacl#scopeClass"),
+		targetClass: new IRI("http://www.w3.org/ns/shacl#targetClass"),
 		constraint: new IRI("http://www.w3.org/ns/shacl#constraint"),
 		description: new IRI("http://www.w3.org/ns/shacl#description"),
 		property: new IRI("http://www.w3.org/ns/shacl#property"),
