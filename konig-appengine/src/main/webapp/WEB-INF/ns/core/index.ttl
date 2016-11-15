@@ -11,7 +11,7 @@ konig: a owl:Ontology ;
 	rdfs:label "Konig Core Ontology" ;
 	rdfs:comment """Provides terms that extend OWL and SHACL.
 		<p>A description of this ontology in Turtle syntax is available at 
-		<a href="http://www.konig.io/ns/core/.ttl">http://www.konig.io/ns/core/.ttl</a></p>""" ;
+		<a href="http://www.konig.io/ns/kol/.ttl">http://www.konig.io/ns/core/.ttl</a></p>""" ;
 	vann:preferredNamespacePrefix "kol"
 	.
 
