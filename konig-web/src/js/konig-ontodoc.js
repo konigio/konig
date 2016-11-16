@@ -514,12 +514,40 @@ ClassManager.prototype.logicalShapeName = function(owlClass) {
 }
 
 /*****************************************************************************/
+function IndividualInfo(individualVertex) {
+	this.individualVertex = individualVertex;
+	this.label = individualVertex.propertyValue(rdfs.label);
+	if (!this.label) {
+		this.label = individualVertex.id.localName;
+	}
+	this.comment = individualVertex.propertyValue(rdfs.comment);
+	if (this.comment) {
+		this.comment = "";
+	}
+	
+}
+
+/*****************************************************************************/
 function ClassInfo(owlClass, classManager) {
 	var graph = classManager.graph;
 	this.classVertex = graph.vertex(owlClass);
 	this.classManager = classManager;
 	this.analyzeComment();
+	this.individualList = this.collectIndividuals();
 	
+}
+
+ClassInfo.prototype.collectIndividuals = function() {
+	var sink = [];
+	if (this.classVertex.v().has(rdfs.subClassOf, owl.NamedIndividual).count()>0) {
+		var list = this.classVertex.v().inward(rdf.type).toList();
+		for (var i=0; i<list.length; i++) {
+			var v = list[i];
+			var individual = new IndividualInfo(v);
+			sink.push(individual);
+		}
+	}
+	return sink;
 	
 }
 

@@ -142,6 +142,18 @@
 	</ul>
 	</div>
 	{{/subClassList.length}}
+	{{#classInfo.individualList.length}}
+	<div>
+	<br>
+	<b>Controlled Vocabulary Members</b>
+	<ul>{{#classInfo.individualList}}
+		<li>
+			{{label}}
+		</li>{{/classInfo.individualList}}
+	</ul>
+	</div>
+	{{/classInfo.individualList.length}}
+
 </div>
 	
 </script>	
@@ -3854,6 +3866,24 @@ var defaultGraph = {
 			    },
 			    "rdfs:range" : {
 			      "@id" : "xsd:int"
+			    }
+			  }, {
+			    "@id" : "konig:Week",
+			    "@type" : "konig:TimeUnit",
+			    "rdfs:comment" : {
+			      "@value" : "A unit of time that is one week in duration"
+			    }
+			  }, {
+			    "@id" : "konig:Year",
+			    "@type" : "konig:TimeUnit",
+			    "rdfs:comment" : {
+			      "@value" : "The unit of time that is one year in duration"
+			    }
+			  }, {
+			    "@id" : "konig:Month",
+			    "@type" : "konig:TimeUnit",
+			    "rdfs:comment" : {
+			      "@value" : "The unit of time that is one month in duration"
 			    }
 			  } ]
 			};

@@ -138,6 +138,7 @@ $(document).ready(function() {
 		DatatypeProperty:  new IRI('http://www.w3.org/2002/07/owl#DatatypeProperty'),
 		FunctionalProperty:  new IRI('http://www.w3.org/2002/07/owl#FunctionalProperty'),
 		InverseFunctionalProperty:  new IRI('http://www.w3.org/2002/07/owl#InverseFunctionalProperty'),
+		NamedIndividual:  new IRI('http://www.w3.org/2002/07/owl#NamedIndividual'),
 		ObjectProperty:  new IRI('http://www.w3.org/2002/07/owl#ObjectProperty'),
 		OntologyProperty:  new IRI('http://www.w3.org/2002/07/owl#OntologyProperty'),
 		SymmetricProperty:  new IRI('http://www.w3.org/2002/07/owl#SymmetricProperty'),
