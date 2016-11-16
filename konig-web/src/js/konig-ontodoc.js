@@ -997,8 +997,8 @@ ShapeInfo.prototype.addDirectProperties = function() {
 			var targetClass = valueShape.v().out(sh.targetClass).first();
 			if (!targetClass) {
 				// TODO: surface this warning in the user interface
-				console.log("WARNING: Scope class not found for valueShape of  " + predicate.id.localName + " on " + shape.id.stringValue);
-				targetClass = this.graph.vertex(owl.Thing);
+				console.log("WARNING: Scope class not found for valueShape of  " + predicate.id.localName + " on " + valueShape.id.stringValue);
+				targetClass = valueShape.graph.vertex(owl.Thing);
 			}
 			classManager.getOrCreateShapeInfo(targetClass);
 			PropertyInfo.addType(expectedType, targetClass);
