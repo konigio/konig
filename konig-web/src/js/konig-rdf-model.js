@@ -1335,6 +1335,10 @@ Traversal.prototype.unique = function() {
 	return this.addStep( new UniqueStep() );
 }
 
+Traversal.prototype.count = function() {
+	return this.toList().length;
+}
+
 Traversal.prototype.has = function(predicate, value) {
 	return this.addStep( new HasStep(predicate, value) );
 }

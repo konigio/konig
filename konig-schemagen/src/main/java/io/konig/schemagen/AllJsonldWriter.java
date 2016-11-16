@@ -32,6 +32,7 @@ import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.VS;
@@ -93,6 +94,7 @@ public class AllJsonldWriter {
 			writeInstances(OWL.OBJECTPROPERTY);
 			writeInstances(OWL.DATATYPEPROPERTY);
 			writeInstances(OWL.FUNCTIONALPROPERTY);
+			writeControlledVocabularies();
 			writeInstances(SH.Shape);
 			
 			for (int i=0; i<stack.size(); i++) {
@@ -108,6 +110,13 @@ public class AllJsonldWriter {
 			
 		}
 		
+		private void writeControlledVocabularies() throws IOException {
+
+			List<Vertex> list = graph.v(OwlVocab.NamedIndividual).in(RDFS.SUBCLASSOF).in(RDF.TYPE).distinct().toVertexList();
+			writeVertices(list, null);
+			
+		}
+
 		private void excludeNamespaces(Set<String> set) {
 			if (set == null) {
 				excludeNamespaces = ONTOLOGY_SKIP;
