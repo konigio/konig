@@ -146,13 +146,16 @@
 	<div>
 	<br>
 	<b>Controlled Vocabulary Members</b>
-	<ul>{{#classInfo.individualList}}
-		<li>
-			{{label}}
-		</li>{{/classInfo.individualList}}
-	</ul>
-	</div>
-	{{/classInfo.individualList.length}}
+	<table class="enum-table">{{#classInfo.individualList}}
+		<tr>
+			<td>{{label}}</td>
+			<td>
+          {{#comment}}{{comment}}{{/comment}}
+          <div class="konig-literal-url">&lt;{{individualVertex.id.stringValue}}&gt;</div>
+      </td>
+		</tr>{{/classInfo.individualList}}
+	</table>
+  </div>{{/classInfo.individualList.length}}
 
 </div>
 	
