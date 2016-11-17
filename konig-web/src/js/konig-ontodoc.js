@@ -520,9 +520,11 @@ function IndividualInfo(individualVertex) {
 	if (!this.label) {
 		this.label = individualVertex.id.localName;
 	}
-	this.comment = individualVertex.propertyValue(rdfs.comment);
-	if (this.comment) {
+	var comment = individualVertex.propertyValue(rdfs.comment);
+	if (!comment) {
 		this.comment = "";
+	} else {
+		this.comment = comment.stringValue;
 	}
 	
 }

@@ -31,6 +31,16 @@ tr.spaceAbove > th {
 	padding-top: 2em;
 }
 
+.enum-table td {
+	font-size: 0.8em;
+	vertical-align: top;
+	padding: 1em;
+}
+
+.konig-literal-url {
+	color: #660000;
+}
+
 .data-table {
 	font-size: 90%;
 }
