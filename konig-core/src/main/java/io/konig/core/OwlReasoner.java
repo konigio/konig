@@ -336,35 +336,34 @@ public class OwlReasoner {
 		Vertex withRestrictions = v.vertexValue(OwlVocab.withRestrictions);
 		if (withRestrictions != null) {
 			List<Value> list = withRestrictions.asList();
-			if (list != null) {
-				for (Value value : list) {
-					if (value instanceof Resource) {
-						Vertex w = graph.vertex((Resource)value);
+			
+			for (Value value : list) {
+				if (value instanceof Resource) {
+					Vertex w = graph.vertex((Resource)value);
 
-						Double maxExclusive = w.doubleValue(XSD.maxExclusive);
-						Double maxInclusive = w.doubleValue(XSD.maxInclusive);
-						Integer maxLength = w.integerValue(XSD.maxLength);
-						Double minExclusive = w.doubleValue(XSD.minExclusive);
-						Double minInclusive = w.doubleValue(XSD.minInclusive);
-						String pattern = w.stringValue(XSD.pattern);
-						if (maxExclusive != null) {
-							r.setMaxExclusive(maxExclusive);
-						}
-						if (maxInclusive != null) {
-							r.setMaxInclusive(maxInclusive);
-						}
-						if (maxLength != null) {
-							r.setMaxLength(maxLength);
-						}
-						if (minExclusive != null) {
-							r.setMinExclusive(minExclusive);
-						}
-						if (minInclusive != null) {
-							r.setMinInclusive(minInclusive);
-						}
-						if (pattern != null) {
-							r.setPattern(pattern);
-						}
+					Double maxExclusive = w.doubleValue(XSD.maxExclusive);
+					Double maxInclusive = w.doubleValue(XSD.maxInclusive);
+					Integer maxLength = w.integerValue(XSD.maxLength);
+					Double minExclusive = w.doubleValue(XSD.minExclusive);
+					Double minInclusive = w.doubleValue(XSD.minInclusive);
+					String pattern = w.stringValue(XSD.pattern);
+					if (maxExclusive != null) {
+						r.setMaxExclusive(maxExclusive);
+					}
+					if (maxInclusive != null) {
+						r.setMaxInclusive(maxInclusive);
+					}
+					if (maxLength != null) {
+						r.setMaxLength(maxLength);
+					}
+					if (minExclusive != null) {
+						r.setMinExclusive(minExclusive);
+					}
+					if (minInclusive != null) {
+						r.setMinInclusive(minInclusive);
+					}
+					if (pattern != null) {
+						r.setPattern(pattern);
 					}
 				}
 			}

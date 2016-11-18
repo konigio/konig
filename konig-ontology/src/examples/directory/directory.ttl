@@ -1,0 +1,230 @@
+@prefix schema: <http://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix bibo: <http://purl.org/ontology/bibo/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ;
+	rdfs:comment "An ontology for structured data on the Internet sponsored by Google, Microsoft, Yahoo and Yandex." ;
+	vann:preferredNamespacePrefix "schema" 
+	.
+	
+schema:DataType rdfs:subClassOf rdfs:Datatype .
+
+schema:Date rdfs:subClassOf xsd:date .
+schema:Text rdfs:subClassOf xsd:string .
+
+schema:Thing
+  a rdfs:Class ;
+  rdfs:label "Thing" ;
+  rdfs:comment "The most generic type of item." .
+
+schema:DataType
+  a rdfs:Class ;
+  rdfs:label "DataType" ;
+  rdfs:comment "The basic data types such as Integers, Strings, etc." ;
+  rdfs:subClassOf rdfs:Class .
+
+schema:Text
+  a rdfs:Class, schema:DataType ;
+  rdfs:label "Text" ;
+  rdfs:comment "Data type: Text." .
+
+schema:Person
+  a rdfs:Class ;
+  rdfs:label "Person" ;
+  rdfs:comment "A person (alive, dead, undead, or fictional)." ;
+  rdfs:subClassOf schema:Thing ;
+  owl:equivalentClass foaf:Person ;
+  dc:source <http://www.w3.org/wiki/WebSchemas/SchemaDotOrgSources#source_rNews> .
+
+schema:ContactPoint
+  a rdfs:Class ;
+  rdfs:label "ContactPoint" ;
+  rdfs:comment "A contact point&#x2014;for example, a Customer Complaints department." ;
+  rdfs:subClassOf schema:StructuredValue .
+
+schema:subOrganization
+  a rdf:Property ;
+  rdfs:label "subOrganization" ;
+  rdfs:comment "A relationship between two organizations where the first includes the second, e.g., as a subsidiary. See also: the more specific 'department' property." ;
+  schema:domainIncludes schema:Organization ;
+  schema:rangeIncludes schema:Organization ;
+  schema:inverseOf schema:parentOrganization .
+
+schema:parentOrganization
+  a rdf:Property ;
+  rdfs:label "parentOrganization" ;
+  rdfs:comment "The larger organization that this organization is a branch of, if any." ;
+  schema:domainIncludes schema:Organization ;
+  schema:rangeIncludes schema:Organization ;
+  schema:inverseOf schema:subOrganization .
+
+schema:telephone
+  a rdf:Property ;
+  rdfs:label "telephone" ;
+  rdfs:comment "The telephone number." ;
+  schema:domainIncludes schema:Organization, schema:Place, schema:ContactPoint, schema:Person ;
+  schema:rangeIncludes schema:Text .
+
+schema:contactPoint
+  a rdf:Property ;
+  rdfs:label "contactPoint" ;
+  rdfs:comment "A contact point for a person or organization." ;
+  schema:domainIncludes schema:Organization, schema:Person ;
+  schema:rangeIncludes schema:ContactPoint .
+
+schema:email
+  a rdf:Property ;
+  rdfs:label "email" ;
+  rdfs:comment "Email address." ;
+  schema:domainIncludes schema:Organization, schema:ContactPoint, schema:Person ;
+  schema:rangeIncludes schema:Text .
+
+schema:contactType
+  a rdf:Property ;
+  rdfs:label "contactType" ;
+  rdfs:comment "A person or organization can have different contact points, for different purposes. For example, a sales contact point, a PR contact point and so on. This property is used to specify the kind of contact point." ;
+  schema:domainIncludes schema:ContactPoint ;
+  schema:rangeIncludes schema:Text .
+
+schema:worksFor
+  a rdf:Property ;
+  rdfs:label "worksFor" ;
+  rdfs:comment "Organizations that the person works for." ;
+  schema:domainIncludes schema:Person ;
+  schema:rangeIncludes schema:Organization .
+
+schema:parent
+  a rdf:Property ;
+  rdfs:label "parent" ;
+  rdfs:comment "A parent of this person." ;
+  schema:domainIncludes schema:Person ;
+  schema:rangeIncludes schema:Person .
+
+schema:givenName
+  a rdf:Property ;
+  rdfs:label "givenName" ;
+  rdfs:comment "Given name. In the U.S., the first name of a Person. This can be used along with familyName instead of the name property." ;
+  schema:domainIncludes schema:Person ;
+  schema:rangeIncludes schema:Text .
+
+schema:familyName
+  a rdf:Property ;
+  rdfs:label "familyName" ;
+  rdfs:comment "Family name. In the U.S., the last name of an Person. This can be used along with givenName instead of the name property." ;
+  schema:domainIncludes schema:Person ;
+  schema:rangeIncludes schema:Text .
+
+schema:children
+  a rdf:Property ;
+  rdfs:label "children" ;
+  rdfs:comment "A child of the person." ;
+  schema:domainIncludes schema:Person ;
+  schema:rangeIncludes schema:Person .
+
+
+schema:birthDate
+  a rdf:Property ;
+  rdfs:label "birthDate" ;
+  rdfs:comment "Date of birth." ;
+  schema:domainIncludes schema:Person ;
+  schema:rangeIncludes schema:Date .
+
+schema:Date
+  a rdfs:Class, schema:DataType ;
+  rdfs:label "Date" ;
+  rdfs:comment "A date value in <a href='http://en.wikipedia.org/wiki/ISO_8601'>ISO 8601 date format</a>." .
+
+schema:PostalAddress
+  a rdfs:Class ;
+  rdfs:label "PostalAddress" ;
+  rdfs:comment "The mailing address." ;
+  rdfs:subClassOf schema:ContactPoint .
+
+schema:Organization
+  a rdfs:Class ;
+  rdfs:label "Organization" ;
+  rdfs:comment "An organization such as a school, NGO, corporation, club, etc." ;
+  rdfs:subClassOf schema:Thing .
+  
+  
+  
+schema:member
+  a rdf:Property ;
+  rdfs:label "member" ;
+  rdfs:comment "A member of an Organization or a ProgramMembership. Organizations can be members of organizations; ProgramMembership is typically for individuals." ;
+  schema:inverseOf schema:memberOf ;
+  schema:domainIncludes schema:Organization, schema:ProgramMembership ;
+  schema:rangeIncludes schema:Organization, schema:Person .
+
+schema:memberOf
+  a rdf:Property ;
+  rdfs:label "memberOf" ;
+  rdfs:comment "An Organization (or ProgramMembership) to which this Person or Organization belongs." ;
+  schema:inverseOf schema:member ;
+  schema:domainIncludes schema:Person, schema:Organization ;
+  schema:rangeIncludes schema:Organization .
+
+
+schema:streetAddress
+  a rdf:Property ;
+  rdfs:label "streetAddress" ;
+  rdfs:comment "The street address. For example, 1600 Amphitheatre Pkwy." ;
+  schema:domainIncludes schema:PostalAddress ;
+  schema:rangeIncludes schema:Text .
+
+schema:addressCountry
+  a rdf:Property ;
+  rdfs:label "addressCountry" ;
+  rdfs:comment "The country. For example, USA. You can also provide the two-letter <a href='http://en.wikipedia.org/wiki/ISO_3166-1'>ISO 3166-1 alpha-2 country code</a>." ;
+  schema:domainIncludes schema:PostalAddress, schema:GeoCoordinates, schema:GeoShape ;
+  schema:rangeIncludes schema:Text, schema:Country .
+
+schema:addressLocality
+  a rdf:Property ;
+  rdfs:label "addressLocality" ;
+  rdfs:comment "The locality. For example, Mountain View." ;
+  schema:domainIncludes schema:PostalAddress ;
+  schema:rangeIncludes schema:Text .
+
+schema:addressRegion
+  a rdf:Property ;
+  rdfs:label "addressRegion" ;
+  rdfs:comment "The region. For example, CA." ;
+  schema:domainIncludes schema:PostalAddress ;
+  schema:rangeIncludes schema:Text .
+
+schema:postalCode
+  a rdf:Property ;
+  rdfs:label "postalCode" ;
+  rdfs:comment "The postal code. For example, 94043." ;
+  schema:domainIncludes schema:PostalAddress, schema:GeoShape, schema:GeoCoordinates ;
+  schema:rangeIncludes schema:Text .
+
+schema:postOfficeBoxNumber
+  a rdf:Property ;
+  rdfs:label "postOfficeBoxNumber" ;
+  rdfs:comment "The post office box number for PO box addresses." ;
+  schema:domainIncludes schema:PostalAddress ;
+  schema:rangeIncludes schema:Text .
+  
+
+schema:affiliation
+  a rdf:Property ;
+  rdfs:label "affiliation" ;
+  rdfs:comment "An organization that this person is affiliated with. For example, a school/university, a club, or a team." ;
+  rdfs:subPropertyOf schema:memberOf ;
+  schema:domainIncludes schema:Person ;
+  schema:rangeIncludes schema:Organization .
+  
+  
+  
+  
+  

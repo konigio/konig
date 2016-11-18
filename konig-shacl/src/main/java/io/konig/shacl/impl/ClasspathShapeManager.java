@@ -46,7 +46,6 @@ public class ClasspathShapeManager extends MemoryShapeManager {
 		if (INSTANCE==null) {
 			INSTANCE = new ClasspathShapeManager();
 			INSTANCE.load(RESOURCE_FOLDER);
-			INSTANCE.link();
 		}
 		return INSTANCE;
 	}

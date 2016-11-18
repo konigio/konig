@@ -21,7 +21,6 @@
 
   <dependencies>
   
-  
 		<dependency>
 			<groupId>io.konig</groupId>
 			<artifactId>konig-path-parser</artifactId>

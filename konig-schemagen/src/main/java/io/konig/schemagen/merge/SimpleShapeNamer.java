@@ -17,8 +17,8 @@ public class SimpleShapeNamer implements ShapeNamer {
 	}
 
 	@Override
-	public URI shapeName(URI targetClass) throws SchemaGeneratorException {
-		String namespace = targetClass.getNamespace();
+	public URI shapeName(URI scopeClass) throws SchemaGeneratorException {
+		String namespace = scopeClass.getNamespace();
 		Namespace ns = nsManager.findByName(namespace);
 		if (ns == null) {
 			throw new SchemaGeneratorException("Prefix not found for namespace " + namespace);
@@ -26,7 +26,7 @@ public class SimpleShapeNamer implements ShapeNamer {
 		StringBuilder builder = new StringBuilder(baseURL);
 		builder.append(ns.getPrefix());
 		builder.append('/');
-		builder.append(targetClass.getLocalName());
+		builder.append(scopeClass.getLocalName());
 		
 		return new URIImpl(builder.toString());
 	}

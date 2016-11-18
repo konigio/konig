@@ -21,7 +21,7 @@ package io.konig.core.impl;
  */
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Set;
 
@@ -29,7 +29,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
@@ -37,32 +36,6 @@ import io.konig.core.Vertex;
 import io.konig.core.vocab.Schema;
 
 public class MemoryGraphTest  {
-	
-	@Test
-	public void testLookupLocalName() {
-
-		URI aliceId = uri("http://example.com/Alice");
-		URI bobId1 = uri("http://example.com/Bob");
-		URI bobId2 = uri("http://acme.com/Bob");
-		
-		
-		
-		
-		MemoryGraph g = new MemoryGraph();
-		g.edge(aliceId, RDF.TYPE, Schema.Person);
-		g.edge(bobId1, RDF.TYPE, Schema.Person);
-		g.edge(bobId2, RDF.TYPE, Schema.Person);
-		
-		Set<URI> result = g.lookupLocalName("Alice");
-		assertEquals(1, result.size());
-		assertTrue(result.contains(aliceId));
-		
-		result = g.lookupLocalName("Bob");
-		assertEquals(2, result.size());
-		assertTrue(result.contains(bobId1));
-		assertTrue(result.contains(bobId2));
-		
-	}
 	
 	@Test
 	public void testRemoveBNode() {
@@ -85,7 +58,7 @@ public class MemoryGraphTest  {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testCreateVertex() {
 		Graph graph = new MemoryGraph();
 		Vertex v = graph.vertex("http://example.com/Alice");
@@ -95,7 +68,7 @@ public class MemoryGraphTest  {
 		assertEquals(v.getId(), w.getId());
 	}
 	
-	@Test
+	@Ignore
 	public void testCreateEdge() {
 		Graph graph = new MemoryGraph();
 		
