@@ -68,7 +68,7 @@ public class WorkbookLoaderTest {
 	}
 	
 	@Test
-	public void testInputClass() throws Exception {
+	public void testAggregationOf() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
 		Workbook book = WorkbookFactory.create(input);
@@ -87,7 +87,7 @@ public class WorkbookLoaderTest {
 		SimplePojoFactory pojoFactory = new SimplePojoFactory();
 		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
 		
-		URI actual = shape.getInputClass();
+		URI actual = shape.getAggregationOf();
 		assertEquals(Schema.BuyAction, actual);
 		
 	}

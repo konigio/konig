@@ -53,7 +53,7 @@ public class Shape {
 	private Context jsonldContext;
 	private URI equivalentRelationalShape;
 	private NodeKind nodeKind;
-	private URI inputClass;
+	private URI aggregationOf;
 	
 	
 	public Shape() {
@@ -245,16 +245,13 @@ public class Shape {
 		this.nodeKind = nodeKind;
 	}
 
-	public URI getInputClass() {
-		return inputClass;
+	public URI getAggregationOf() {
+		return aggregationOf;
 	}
 
-	public void setInputClass(URI inputClass) {
-		this.inputClass = inputClass;
+	public void setAggregationOf(URI aggregationOf) {
+		this.aggregationOf = aggregationOf;
 	}
-	
-	
-	
 	
 
 }
