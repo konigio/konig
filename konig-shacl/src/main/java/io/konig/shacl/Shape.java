@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -36,11 +37,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.Context;
+import io.konig.core.Graph;
 import io.konig.core.UidGenerator;
-import io.konig.core.impl.UidGeneratorImpl;
-import io.konig.core.vocab.AS;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
-import io.konig.core.vocab.TemporalUnit;
 import io.konig.shacl.impl.EmptyList;
 
 public class Shape {
@@ -54,6 +54,7 @@ public class Shape {
 	private URI equivalentRelationalShape;
 	private NodeKind nodeKind;
 	private URI aggregationOf;
+	private URI rollUpBy;
 	
 	
 	public Shape() {
@@ -65,6 +66,41 @@ public class Shape {
 		this.id = id;
 	}
 	
+	/**
+	 * Save this shape in a given Graph
+	 * @param graph The graph into which this shape will be saved.
+	 */
+	public void save(Graph graph) {
+		if (id == null) {
+			id = graph.vertex().getId();
+		}
+		edge(graph, SH.targetClass, targetClass);
+		edge(graph, SH.nodeKind, nodeKind==null ? null : nodeKind.getURI());
+		edge(graph, Konig.aggregationOf, aggregationOf);
+		edge(graph, Konig.rollUpBy, rollUpBy);
+		
+		if (property!=null) {
+			for (PropertyConstraint p : property) {
+				
+				Resource pId = p.getId();
+				if (pId == null) {
+					pId = graph.vertex().getId();
+					p.setId(pId);
+					
+				}
+				edge(graph, SH.property, p.getId());
+				p.save(graph);
+			}
+		}
+		
+	}
+	
+	private void edge(Graph graph, URI predicate, Value value) {
+		if (value != null) {
+			graph.edge(id, predicate, value);
+		}
+	}
+
 	public List<PropertyConstraint> getProperty() {
 		return property==null ? EMPTY_PROPERTY_LIST : property;
 	}
@@ -252,6 +288,13 @@ public class Shape {
 	public void setAggregationOf(URI aggregationOf) {
 		this.aggregationOf = aggregationOf;
 	}
-	
+
+	public URI getRollUpBy() {
+		return rollUpBy;
+	}
+
+	public void setRollUpBy(URI rollUpBy) {
+		this.rollUpBy = rollUpBy;
+	}
 
 }

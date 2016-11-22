@@ -41,6 +41,7 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
@@ -668,6 +669,29 @@ public class MemoryGraph implements Graph, Transaction {
 			}
 		}
 		
+	}
+
+
+
+	@Override
+	public Edge edge(Resource subject, URI predicate, List<? extends Value> list) {
+		Edge result = null;
+		if (list != null) {
+			Vertex prev = null;
+			for (Value value : list) {
+				Vertex next = vertex();
+				
+				if (prev == null) {
+					result = edge(subject, predicate, next.getId());
+				} else {
+					edge(prev.getId(), RDF.REST, next.getId());
+				}
+				edge(next.getId(), RDF.FIRST, value);
+				prev = next;
+			}
+			
+		}
+		return result;
 	}
 	
 

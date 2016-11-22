@@ -22,6 +22,7 @@ package io.konig.core;
 
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.Resource;
@@ -97,6 +98,8 @@ public interface Graph extends Set<Edge>, LocalNameService {
 	Edge edge(Resource subject, URI predicate, Value object, Resource context);
 	
 	Edge edge(Vertex subject, URI predicate, Vertex object);
+	
+	Edge edge(Resource subject, URI predicate, List<? extends Value> list);
 
 	
 	Edge edge(Edge edge);
