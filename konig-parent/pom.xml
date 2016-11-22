@@ -41,6 +41,7 @@
   </scm>
   
   <modules>
+  	<module>../konig-path-parser</module>
   	<module>../konig-core</module>
   	<module>../konig-shacl</module>
   	<module>../konig-spreadsheet</module>
@@ -49,9 +50,7 @@
   	<module>../konig-ldp</module>
   	<module>../konig-ldp-maven-plugin</module>
   	<module>../konig-gae-datastore</module>
-  	<!-- 
   	<module>../konig-appengine</module>
-  	 -->
   </modules>
  
   <developers>

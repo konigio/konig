@@ -66,6 +66,7 @@ public class Konig {
 	public static final URI Month = new URIImpl("http://www.konig.io/ns/core/Month");
 	public static final URI Year = new URIImpl("http://www.konig.io/ns/core/Year");
 	public static final URI inputClass = new URIImpl("http://www.konig.io/ns/core/inputClass");
+	public static final URI aggregationOf = new URIImpl("http://www.konig.io/ns/core/aggregationOf");
 	
 	
 
