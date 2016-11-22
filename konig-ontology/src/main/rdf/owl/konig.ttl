@@ -254,6 +254,14 @@ konig:stereotype a owl:ObjectProperty ;
 	rdfs:range rdf:Property
 .	
 
+konig:timeInterval a owl:ObjectProperty ;
+	rdfs:comment """
+		The time interval covered by the Fact.
+	""" ;
+	rdfs:domain konig:Fact ;
+	rdfs:range konig:TimeInterval
+.	
+
 
 konig:totalCount a owl:DatatypeProperty ;
 	rdfs:comment """
@@ -277,7 +285,23 @@ konig:intervalStart a owl:ObjectProperty ;
 .	
 		
 konig:aggregationOf a owl:ObjectProperty ;
-	rdfs:comment "The OWL class or data Shape that is aggregated to produce this Fact." ;
-	rdfs:domain sh:Shape ;
+	rdfs:comment """
+		The OWL class or data Shape that is aggregated to produce this Fact.
+		We sometimes call this value the 'aggregation source' entity.
+	""" ;
+	schema:domainIncludes sh:Shape, owl:Class ;
 	rdfs:range owl:Class
 .	
+
+		
+konig:rollUpBy a owl:ObjectProperty ;
+	rdfs:comment "The dimension in the source Fact that is held constant to create this aggregation." ;
+	rdfs:domain sh:Shape ;
+	rdfs:range rdf:Property
+.	
+
+konig:fromAggregationSource ;
+	rdfs:comment "A path from the aggregation source entity that yields a value for the target property." ;
+	rdfs:domain sh:PropertyConstraint ;
+	rdfs:range rdf:Property
+	.

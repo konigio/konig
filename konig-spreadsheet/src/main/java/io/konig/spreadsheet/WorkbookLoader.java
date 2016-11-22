@@ -2,7 +2,9 @@ package io.konig.spreadsheet;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.poi.common.usermodel.Hyperlink;
@@ -24,12 +26,21 @@ import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.Path;
 import io.konig.core.Vertex;
+import io.konig.core.path.OutStep;
+import io.konig.core.path.PathFactory;
+import io.konig.core.path.Step;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 
 /**
  * A utility that loads the contents of a workbook into a Graph.
@@ -63,6 +74,7 @@ public class WorkbookLoader {
 	private static final String SCOPE_CLASS = "Scope Class";
 	private static final String MEDIA_TYPE = "Media Type";
 	private static final String AGGREGATION_OF = "Aggregation Of";
+	private static final String ROLL_UP_BY = "Roll-up By";
 	
 	private static final String VALUE_TYPE = "Value Type";
 	private static final String MIN_COUNT = "Min Count";
@@ -94,6 +106,7 @@ public class WorkbookLoader {
 	
 	
 	private NamespaceManager nsManager;
+	private ShapeManager shapeManager;
 	private ValueFactory vf = new ValueFactoryImpl();
 	
 	public WorkbookLoader(NamespaceManager nsManager) {
@@ -106,9 +119,14 @@ public class WorkbookLoader {
 		worker.run();
 	}
 	
+	public ShapeManager getShapeManager() {
+		return shapeManager;
+	}
+	
 	private class Worker {
 		private Workbook book;
 		private Graph graph;
+		private PathFactory pathFactory;
 		
 		private int ontologyNameCol=UNDEFINED;
 		private int ontologyCommentCol=UNDEFINED;
@@ -137,6 +155,7 @@ public class WorkbookLoader {
 		private int shapeCommentCol = UNDEFINED;
 		private int shapeScopeCol = UNDEFINED;
 		private int shapeAggregationOfCol = UNDEFINED;
+		private int shapeRollUpByCol = UNDEFINED;
 		private int shapeMediaTypeCol = UNDEFINED;
 		
 		private int pcShapeIdCol = UNDEFINED;
@@ -154,6 +173,10 @@ public class WorkbookLoader {
 		public Worker(Workbook book, Graph graph) {
 			this.book = book;
 			this.graph = graph;
+			if (shapeManager == null) {
+				shapeManager = new MemoryShapeManager();
+			}
+			pathFactory = new PathFactory(graph.getNamespaceManager(), graph);
 		}
 		
 		private void run() throws SpreadsheetException {
@@ -161,6 +184,119 @@ public class WorkbookLoader {
 				Sheet sheet = book.getSheetAt(i);
 				loadSheet(sheet);
 			}
+			buildRollUpShapes();
+		}
+
+		private void buildRollUpShapes() throws SpreadsheetException {
+			ShapeLoader loader = new ShapeLoader(null, shapeManager);
+			loader.load(this.graph);
+			
+			Set<String> memory = new HashSet<>();
+			
+			List<Shape> shapeList = shapeManager.listShapes();
+			for (Shape shape : shapeList) {
+				URI rollUpBy = shape.getRollUpBy();
+				if (rollUpBy != null) {
+					buildRollUpShape(shape, memory);
+				}
+			}
+			
+			
+		}
+
+		private void buildRollUpShape(Shape shape, Set<String> memory) throws SpreadsheetException {
+			if (memory.contains(shape.getId().stringValue())) {
+				return;
+			}
+			memory.add(shape.getId().stringValue());
+			URI aggregationOf = shape.getAggregationOf();
+			if (aggregationOf == null) {
+				String message = "Cannot roll-up Fact " + shape.getId().stringValue() + ": aggregationOf property is not defined";
+				throw new SpreadsheetException(message);
+			}
+			
+			Shape sourceFact = shapeManager.getShapeById(aggregationOf);
+			if (sourceFact == null) {
+				String message = "Cannot roll-up Fact " + shape.getId().stringValue() + "... source fact not found: " +
+						aggregationOf.stringValue();
+				throw new SpreadsheetException(message);
+			}
+			
+			URI sourceRollUpBy = sourceFact.getRollUpBy();
+			if (sourceRollUpBy != null) {
+				buildRollUpShape(sourceFact, memory);
+			}
+			
+			URI rollUpBy = shape.getRollUpBy();
+			
+			PropertyConstraint p = sourceFact.getPropertyConstraint(rollUpBy);
+			if (p == null) {
+				String message = "Cannot roll-up Fact " + shape.getId().stringValue() + "... rollUpBy property not found in source fact.";
+				throw new SpreadsheetException(message);
+			}
+			
+			Set<URI> dependsOn = new HashSet<>();
+			buildDependsOnSet(sourceFact, p, dependsOn);
+			
+			List<PropertyConstraint> pList = sourceFact.getProperty();
+			for (PropertyConstraint property : pList) {
+				
+				URI predicate = property.getPredicate();
+				if (!dependsOn.contains(predicate)) {
+					PropertyConstraint clone = property.clone();
+					clone.setId(null);
+					
+					if (predicate.equals(rollUpBy)) {
+						clone.setStereotype(Konig.dimension);
+						clone.setEquivalentPath(null);
+						clone.setCompiledEquivalentPath(null);
+					} 
+					
+					if (!clone.getStereotype().equals(Konig.measure)) {
+
+						String curie = curie(predicate);
+						String fromPath = "/" + curie;
+						clone.setFromAggregationSource(fromPath);
+					} else {
+						clone.setDocumentation(null);
+					}
+					
+					shape.add(clone);
+				}
+			}
+			shape.save(graph);
+		}
+
+
+		private void buildDependsOnSet(Shape sourceFact, PropertyConstraint p, Set<URI> dependsOn) {
+			String pathText = p.getEquivalentPath();
+			if (pathText != null) {
+				Path path = p.getCompiledEquivalentPath(pathFactory);
+				List<Step> stepList = path.asList();
+				if (!stepList.isEmpty()) {
+					Step first = stepList.get(0);
+					if (first instanceof OutStep) {
+						OutStep out = (OutStep) first;
+						URI predicate = out.getPredicate();
+						dependsOn.add(predicate);
+					}
+				}
+			}
+			
+			if (dependsOn.isEmpty()) {
+				URI aggregationOf = sourceFact.getAggregationOf();
+				if (aggregationOf != null) {
+					Shape shape = shapeManager.getShapeById(aggregationOf);
+					if (shape != null) {
+						p = shape.getPropertyConstraint(p.getPredicate());
+						if (p != null) {
+							buildDependsOnSet(shape, p, dependsOn);
+						}
+					}
+				}
+			}
+			
+			
 		}
 
 		private void loadSheet(Sheet sheet) throws SpreadsheetException {
@@ -416,6 +552,7 @@ public class WorkbookLoader {
 			Literal shapeComment = stringLiteral(row, shapeCommentCol);
 			URI targetClass = uriValue(row, shapeScopeCol);
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
+			URI rollUpBy = uriValue(row, shapeRollUpByCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			
 			if (shapeId == null) {
@@ -426,6 +563,7 @@ public class WorkbookLoader {
 			edge(shapeId, RDFS.COMMENT, shapeComment);
 			edge(shapeId, SH.targetClass, targetClass);
 			edge(shapeId, Konig.aggregationOf, aggregationOf);
+			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			
 		}
@@ -449,6 +587,7 @@ public class WorkbookLoader {
 					case COMMENT : shapeCommentCol = i; break;
 					case SCOPE_CLASS : shapeScopeCol = i; break;
 					case AGGREGATION_OF : shapeAggregationOfCol = i; break;
+					case ROLL_UP_BY : shapeRollUpByCol = i; break;
 					case MEDIA_TYPE : shapeMediaTypeCol = i; break;
 						
 					}

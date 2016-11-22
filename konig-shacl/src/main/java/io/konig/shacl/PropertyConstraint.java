@@ -34,17 +34,22 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
+import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
+import io.konig.core.Graph;
 import io.konig.core.Path;
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.KonigLiteral;
 import io.konig.core.path.PathFactory;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.SH;
 
 public class PropertyConstraint {
 
@@ -75,6 +80,7 @@ public class PropertyConstraint {
 	private URI stereotype;
 	private String equivalentPath;
 	private Path compiledEquivalentPath;
+	private String fromAggregationSource;
 	
 	private Term term;
 	
@@ -92,8 +98,66 @@ public class PropertyConstraint {
 		
 	}
 	
+	public void save(Graph graph) {
+		if (id == null) {
+			id = graph.vertex().getId();
+		}
+		edge(graph, SH.predicate, predicate);
+		
+		if (in != null) {
+			graph.edge(id, SH.in, in);
+		}
+		edge(graph, SH.minCount, minCount);
+		edge(graph, SH.maxCount, maxCount);
+		edge(graph, SH.minLength, minLength);
+		edge(graph, SH.minExclusive, minExclusive);
+		edge(graph, SH.maxExclusive, maxExclusive);
+		edge(graph, SH.minInclusive, minInclusive);
+		edge(graph, SH.maxInclusive, maxInclusive);
+		edge(graph, SH.datatype, datatype);
+		edge(graph, SH.valueShape, valueShapeId);
+		edge(graph, SH.nodeKind, nodeKind==null ? null : nodeKind.getURI());
+		
+		if (hasValue != null) {
+			for (Value value : hasValue) {
+				graph.edge(id, SH.hasValue, value);
+			}
+		}
+		
+		edge(graph, SH.nodeKind, literal(pattern));
+		edge(graph, SH.valueClass, valueClass);
+		edge(graph, RDFS.COMMENT, literal(documentation));
+		edge(graph, Konig.stereotype, stereotype);
+		edge(graph, Konig.equivalentPath, literal(equivalentPath));
+		edge(graph, Konig.fromAggregationSource, literal(fromAggregationSource));
+		
+	}
 	
+	private Literal literal(String value) {
+		return value == null ? null : new LiteralImpl(value);
+	}
 	
+	private void edge(Graph graph, URI predicte, Double value) {
+		if (value != null) {
+			Value object = ValueFactoryImpl.getInstance().createLiteral(value);
+			graph.edge(id, predicate, object);
+		}
+	}
+
+	private void edge(Graph graph, URI predicate, Integer value) {
+		if (value != null) {
+			Value object = ValueFactoryImpl.getInstance().createLiteral(value);
+			graph.edge(id, predicate, object);
+		}
+		
+	}
+
+	private void edge(Graph graph, URI predicate, Value value) {
+		if (value != null) {
+			graph.edge(id, predicate, value);
+		}
+	}
+
 	public void setId(Resource id) {
 		this.id = id;
 	}
@@ -120,6 +184,9 @@ public class PropertyConstraint {
 		other.valueClass = valueClass;
 		other.valueShape = valueShape;
 		other.valueShapeId = valueShapeId;
+		other.equivalentPath = equivalentPath;
+		other.compiledEquivalentPath = compiledEquivalentPath;
+		other.stereotype = stereotype;
 		
 		return other;
 	}
@@ -452,7 +519,12 @@ public class PropertyConstraint {
 	public void setCompiledEquivalentPath(Path compiledEquivalentPath) {
 		this.compiledEquivalentPath = compiledEquivalentPath;
 	}
-	
-	
-	
+
+	public String getFromAggregationSource() {
+		return fromAggregationSource;
+	}
+
+	public void setFromAggregationSource(String fromAggregationSource) {
+		this.fromAggregationSource = fromAggregationSource;
+	}
 }
