@@ -124,6 +124,11 @@ public class SimplePojoFactory implements PojoFactory {
 			}
 			
 			T pojo = null;
+			
+			Class<?> javaType = info.getJavaType();
+			if (javaType == Resource.class) {
+				return (T) v.getId();
+			}
 			pojo = info.getJavaType().newInstance();
 			Set<Edge> edgeSet = v.outEdgeSet();
 			info.setIdProperty(pojo, v);

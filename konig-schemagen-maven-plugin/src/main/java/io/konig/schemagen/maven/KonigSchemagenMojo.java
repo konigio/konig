@@ -1,6 +1,9 @@
 package io.konig.schemagen.maven;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
 
@@ -38,7 +41,6 @@ import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.io.GraphLoadHandler;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
@@ -59,6 +61,9 @@ import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.merge.ShapeNamer;
 import io.konig.schemagen.merge.SimpleShapeNamer;
+import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
+import io.konig.schemagen.plantuml.PlantumlGeneratorException;
+import io.konig.shacl.ClassManager;
 import io.konig.shacl.LogicalShapeBuilder;
 import io.konig.shacl.LogicalShapeNamer;
 import io.konig.shacl.Shape;
@@ -71,6 +76,7 @@ import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.shacl.jsonld.SuffixContextNamer;
+import net.sourceforge.plantuml.SourceFileReader;
 
 /**
  * Goal which generates Avro schemas from SHACL data shapes
@@ -97,6 +103,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter (defaultValue="${basedir}/src/main/summary", property="summaryDir", required=true)
     private File summaryDir;
     
+
+    @Parameter (defaultValue="${basedir}/src/main/summary/domain.plantuml", property="plantUMLDomainModelFile")
+    private File plantUMLDomainModelFile;
+
+    @Parameter (defaultValue="${basedir}/src/main/summary/domain.png", property="domain.png")
+    private File domainModelPngFile;
+    
+    @Parameter (property="skipPlantUMLDomainModel")
+    private boolean skipPlantUMLDomainModel=false;
+    
     @Parameter(property="javaDir")
     private File javaDir;
     
@@ -114,6 +130,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     @Parameter
     private File bqSourceDir;
+    
+    private NamespaceManager nsManager;
+    private ClassManager classManager;
+    private OwlReasoner owlReasoner;
+    private LogicalShapeNamer logicalShapeNamer;
+    private ShapeManager shapeManager;
 
     public void execute() throws MojoExecutionException   {
     	
@@ -122,8 +144,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		File avscDir = new File(avroDir, "avsc");
     		File avroImports = new File(avroDir, "imports");
 			
-			ShapeManager shapeManager = new MemoryShapeManager();
-			NamespaceManager nsManager = new MemoryNamespaceManager();
+			shapeManager = new MemoryShapeManager();
+			nsManager = new MemoryNamespaceManager();
 			ContextNamer contextNamer = new SuffixContextNamer("/context");
 			ShapeMediaTypeNamer mediaTypeNamer = new SimpleShapeMediaTypeNamer();
 			Graph owlGraph = new MemoryGraph();
@@ -134,21 +156,21 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			shapeLoader.load(owlGraph);
 			
 
-			OwlReasoner reasoner = new OwlReasoner(owlGraph);
+			owlReasoner = new OwlReasoner(owlGraph);
 			
 			if (bqShapeBaseURL != null) {
-				generateBigQueryTables(owlGraph, nsManager, shapeManager, reasoner);
+				generateBigQueryTables(owlGraph, nsManager, shapeManager, owlReasoner);
 			}
 			
 			
 			ShapeToJsonldContext jsonld = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, mediaTypeNamer, owlGraph);
 			jsonld.generateAll(jsonldDir);
 			
-			SmartAvroDatatypeMapper avroMapper = new SmartAvroDatatypeMapper(reasoner);
+			SmartAvroDatatypeMapper avroMapper = new SmartAvroDatatypeMapper(owlReasoner);
 			ShapeToAvro avro = new ShapeToAvro(avroMapper);
 			avro.generateAvro(sourceDir, avscDir, avroImports, owlGraph);
 			
-			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SmartJsonSchemaTypeMapper(reasoner);
+			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SmartJsonSchemaTypeMapper(owlReasoner);
 			JsonSchemaNamer jsonSchemaNamer = new SimpleJsonSchemaNamer("/jsonschema", mediaTypeNamer);
 			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
 			ShapeToJsonSchema jsonSchema = new ShapeToJsonSchema(jsonSchemaGenerator);
@@ -158,21 +180,51 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ShapeMediaTypeLinker linker = new ShapeMediaTypeLinker(mediaTypeNamer);
 			linker.assignAll(shapeManager.listShapes(), owlGraph);
 			
-			reasoner.inferClassFromSubclassOf();
+			owlReasoner.inferClassFromSubclassOf();
 			writeSummary(nsManager, shapeManager, owlGraph);
 			
+			if (!skipPlantUMLDomainModel) {
+				generatePlantUMLDomainModel();
+			}
+			
 			if (javaDir != null && javaPackageRoot!=null) {
-				generateJavaCode(reasoner, nsManager, shapeManager);
+				generateJavaCode(shapeManager);
 			}
 			
 		
 			
 			
-		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException e) {
+		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | PlantumlGeneratorException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
 		}
       
     }
+
+	private void generatePlantUMLDomainModel() throws IOException, PlantumlGeneratorException {
+		
+		ClassManager classManager = getClassManager();
+		PlantumlClassDiagramGenerator generator = new PlantumlClassDiagramGenerator(owlReasoner, shapeManager);
+		FileWriter writer = new FileWriter(plantUMLDomainModelFile);
+		try {
+			generator.generateDomainModel(classManager, writer);
+		} finally {
+			close(writer);
+		}
+		
+//		FileOutputStream imageFile = new FileOutputStream(domainModelPngFile);
+		SourceFileReader reader = new SourceFileReader(plantUMLDomainModelFile);
+		reader.getGeneratedImages();
+		
+	}
+
+	private void close(Closeable stream) {
+		try {
+			stream.close();
+		} catch (IOException oops) {
+			oops.printStackTrace();
+		}
+		
+	}
 
 	private void generateBigQueryTables(Graph graph, NamespaceManager nsManager, ShapeManager shapeManager, OwlReasoner reasoner) throws SchemaGeneratorException, IOException, RDFParseException, RDFHandlerException {
 		
@@ -183,19 +235,36 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		BigQueryTableGenerator generator = new BigQueryTableGenerator(shapeManager, shapeNamer, reasoner);
 		generator.writeTableDefinitions(graph, bqOutDir);
 	}
+	
+	private ClassManager getClassManager() {
+		if (classManager == null) {
+			classManager = new MemoryClassManager();
 
-	private void generateJavaCode(OwlReasoner reasoner, NamespaceManager nsManager, ShapeManager shapeManager) throws IOException {
+			LogicalShapeNamer namer = getLogicalShapeNamer();
+			LogicalShapeBuilder builder = new LogicalShapeBuilder(owlReasoner, namer);
+			builder.buildLogicalShapes(shapeManager, classManager);
+			
+		}
+		return classManager;
+	}
+	
+	private LogicalShapeNamer getLogicalShapeNamer() {
+		if (logicalShapeNamer == null) {
+			logicalShapeNamer = new BasicLogicalShapeNamer("http://example.com/shapes/logical/", nsManager);
+		}
+		return logicalShapeNamer;
+	}
+
+	private void generateJavaCode(ShapeManager shapeManager) throws IOException {
 		
 
-		MemoryClassManager classManager = new MemoryClassManager();
-		LogicalShapeNamer namer = new BasicLogicalShapeNamer("http://example.com/shapes/logical/", nsManager);
+		ClassManager classManager = getClassManager();
+		LogicalShapeNamer namer = getLogicalShapeNamer();
 		
-		LogicalShapeBuilder builder = new LogicalShapeBuilder(reasoner, namer);
-		builder.buildLogicalShapes(shapeManager, classManager);
 		
 		JCodeModel model = new JCodeModel();
 		JavaNamer javaNamer = new BasicJavaNamer(javaPackageRoot, nsManager);
-		JavaClassBuilder classBuilder = new JavaClassBuilder(classManager, namer, javaNamer, reasoner);
+		JavaClassBuilder classBuilder = new JavaClassBuilder(classManager, namer, javaNamer, owlReasoner);
 		
 		for (Shape shape : classManager.list()) {
 			classBuilder.buildClass(shape, model);

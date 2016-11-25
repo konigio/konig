@@ -2,6 +2,7 @@ package io.konig.core.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -398,15 +399,26 @@ public class RdfUtil {
 		
 	}
 	
-	private static void loadTurtle(File sourceDir, RDFParser parser) throws IOException, RDFParseException, RDFHandlerException {
+	private static void loadTurtle(File sourceDir, RDFParser parser) throws RDFParseException, RDFHandlerException, IOException  {
 		File[] array = sourceDir.listFiles();
 		if (array != null) {
 			for (File file : array) {
 				if (file.isDirectory()) {
 					loadTurtle(file, parser);
 				} else if (file.getName().endsWith(".ttl")){
-					FileInputStream input = new FileInputStream(file);
-					parser.parse(input, "");
+					
+
+						try {
+							FileInputStream input = new FileInputStream(file);
+							parser.parse(input, "");
+						} catch (RDFParseException e) {
+							throw new RDFParseException("Failed to parse file: " + file.getAbsolutePath(), e);
+						} catch (RDFHandlerException e) {
+							throw new RDFHandlerException("Failed to parse file: " + file.getAbsolutePath(), e);
+						} catch (IOException e) {
+							throw new IOException("Failed to parse file: " + file.getAbsolutePath(), e);
+						}
+				
 				}
 			}
 		}

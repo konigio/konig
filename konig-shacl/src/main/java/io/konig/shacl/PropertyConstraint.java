@@ -42,6 +42,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
+import io.konig.annotation.RdfProperty;
 import io.konig.core.Graph;
 import io.konig.core.Path;
 import io.konig.core.Term;
@@ -374,6 +375,13 @@ public class PropertyConstraint {
 	public Shape getValueShape() {
 		return valueShape;
 	}
+	
+	public Shape getValueShape(ShapeManager manager) {
+		if (valueShape == null && valueShapeId instanceof URI) {
+			valueShape = manager.getShapeById((URI)valueShapeId);
+		}
+		return valueShape;
+	}
 
 	public void setValueShape(Shape valueShape) {
 		this.valueShape = valueShape;
@@ -445,6 +453,8 @@ public class PropertyConstraint {
 	public Resource getValueClass() {
 		return valueClass;
 	}
+	
+	@RdfProperty("http://www.w3.org/ns/shacl#class")
 	public void setValueClass(Resource valueClass) {
 		this.valueClass = valueClass;
 	}
