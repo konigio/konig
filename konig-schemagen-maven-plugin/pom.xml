@@ -48,6 +48,13 @@
       <artifactId>plexus-utils</artifactId>
       <version>3.0.8</version>
     </dependency>
+    
+    <dependency>
+	    <groupId>net.sourceforge.plantuml</groupId>
+	    <artifactId>plantuml</artifactId>
+	    <version>8050</version>
+		</dependency>
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

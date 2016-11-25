@@ -33,6 +33,8 @@ import io.konig.shacl.Shape;
 public class MemoryClassManager implements ClassManager {
 	private Map<String, Shape> shapeMap = new HashMap<String, Shape>();
 	
+	public MemoryClassManager() {}
+	
 
 	@Override
 	public Shape getLogicalShape(Resource owlClass) {

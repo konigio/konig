@@ -36,6 +36,7 @@ import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
@@ -183,11 +184,17 @@ public class OwlReasoner {
 	}
 	
 	public boolean isDatatype(Resource id) {
+		if (id instanceof URI) {
+			URI uri = (URI) id;
+			if (XMLSchema.NAMESPACE.equals(uri.getNamespace())) {
+				return true;
+			}
+		}
 		Vertex v = graph.getVertex(id);
 		if (v != null) {
 			boolean truth = !v.asTraversal().hasValue(RDF.TYPE, RDFS.DATATYPE).toVertexList().isEmpty();
 			if (truth) {
-				return truth;
+				return true;
 			}
 			// TODO: apply other kinds of inference
 		}
@@ -313,6 +320,11 @@ public class OwlReasoner {
 				}
 			}
 		}
+	}
+	
+	public boolean isEnumerationClass(URI owlClass) {
+		// TODO: Change to Schema.Enumeration
+		return graph.v(owlClass).hasValue(RDFS.SUBCLASSOF, OwlVocab.NamedIndividual).size()>0;
 	}
 	
 	public DatatypeRestriction datatypeRestriction(URI datatype) {
