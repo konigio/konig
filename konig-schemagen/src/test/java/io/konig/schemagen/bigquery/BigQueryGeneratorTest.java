@@ -199,7 +199,7 @@ public class BigQueryGeneratorTest {
 		json.flush();
 		
 		String text = buffer.toString();
-		System.out.println(text);
+//		System.out.println(text);
 		
 		validateOrganizationTable(text, table);
 		
