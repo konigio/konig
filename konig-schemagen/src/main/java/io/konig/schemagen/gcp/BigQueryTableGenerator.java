@@ -32,6 +32,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.merge.ShapeAggregator;
 import io.konig.schemagen.merge.ShapeNamer;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -103,6 +104,13 @@ public class BigQueryTableGenerator {
 
 		List<PropertyConstraint> plist = shape.getProperty();
 		
+		if (shape.getNodeKind() == NodeKind.IRI) {
+			TableFieldSchema idField = new TableFieldSchema();
+			idField.setName("id");
+			idField.setType(BigQueryDatatype.STRING.name());
+			idField.setMode(FieldMode.REPEATED.name());
+			list.add(idField);
+		}
 		
 		for (PropertyConstraint p : plist) {
 			TableFieldSchema field = toField(p);
@@ -323,6 +331,15 @@ public class BigQueryTableGenerator {
 		
 		json.writeFieldName("fields");
 		json.writeStartArray();
+		
+		if (shape.getNodeKind() == NodeKind.IRI) {
+
+			json.writeStartObject();
+			json.writeStringField("name", "id");
+			json.writeStringField("type", BigQueryDatatype.STRING.name());
+			json.writeStringField("mode", FieldMode.REQUIRED.name());
+			json.writeEndObject();
+		}
 		
 		for (PropertyConstraint p : list) {
 			writeProperty(p, json);
