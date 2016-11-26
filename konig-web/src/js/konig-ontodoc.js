@@ -541,7 +541,7 @@ function ClassInfo(owlClass, classManager) {
 
 ClassInfo.prototype.collectIndividuals = function() {
 	var sink = [];
-	if (this.classVertex.v().has(rdfs.subClassOf, owl.NamedIndividual).count()>0) {
+	if (this.classVertex.v().has(rdfs.subClassOf, schema.Enumeration).count()>0) {
 		var list = this.classVertex.v().inward(rdf.type).toList();
 		for (var i=0; i<list.length; i++) {
 			var v = list[i];
