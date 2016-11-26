@@ -34,6 +34,7 @@ import io.konig.core.Vertex;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
+import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.VS;
 
@@ -112,7 +113,7 @@ public class AllJsonldWriter {
 		
 		private void writeControlledVocabularies() throws IOException {
 
-			List<Vertex> list = graph.v(OwlVocab.NamedIndividual).in(RDFS.SUBCLASSOF).in(RDF.TYPE).distinct().toVertexList();
+			List<Vertex> list = graph.v(Schema.Enumeration).in(RDFS.SUBCLASSOF).in(RDF.TYPE).distinct().toVertexList();
 			writeVertices(list, null);
 			
 		}

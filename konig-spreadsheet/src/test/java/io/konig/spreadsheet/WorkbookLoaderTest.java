@@ -283,7 +283,7 @@ public class WorkbookLoaderTest {
 		Vertex v = graph.getVertex(uri("http://schema.org/OrderPaymentDue"));
 		assertTrue(v!=null);
 		
-		assertValue(v, RDF.TYPE, OwlVocab.NamedIndividual);
+		assertValue(v, RDF.TYPE, Schema.Enumeration);
 		assertValue(v, RDF.TYPE, OrderStatus);
 		assertValue(v, RDFS.COMMENT, "Payment is due");
 		assertValue(v, RDFS.LABEL, "Payment Due");

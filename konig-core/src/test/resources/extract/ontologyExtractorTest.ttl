@@ -51,12 +51,12 @@ schema:givenName a owl:DatatypeProperty ;
 	rdfs:range xsd:string
 	.	
 	
-schema:Male a schema:GenderType, owl:NamedIndividual	;
+schema:Male a schema:GenderType, schema:Enumeration	;
 	rdfs:label "Male" ;
 	rdfs:comment "The male gender"
 	.
 	
-schema:Female a schema:GenderType, owl:NamedIndividual ;
+schema:Female a schema:GenderType, schema:Enumeration ;
 	rdfs:label "Female" ;
 	rdfs:comment "The female gender"
 	.	

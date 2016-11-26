@@ -155,6 +155,7 @@ $(document).ready(function() {
 	konig.schema = {
 		CollegeOrUniversity : new IRI("http://schema.org/CollegeOrUniversity"),
 		EducationalOrganization : new IRI("http://schema.org/EducationalOrganization"),
+		Enumeration : new IRI("http://schema.org/Enumeration"),
 		Organization : new IRI("http://schema.org/Organization"),
 		Person : new IRI("http://schema.org/Person"),
 		Thing : new IRI("http://schema.org/Thing"),

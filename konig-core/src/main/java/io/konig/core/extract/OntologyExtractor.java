@@ -43,6 +43,7 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
+import io.konig.core.vocab.Schema;
 
 /**
  * A utility that extracts the elements within an ontology from a broader graph.
@@ -196,7 +197,7 @@ public class OntologyExtractor {
 				v.hasProperty(RDF.TYPE, OWL.INVERSEFUNCTIONALPROPERTY) 
 			) {
 				propertyList.add(v);
-			} else if (v.hasProperty(RDF.TYPE, OwlVocab.NamedIndividual)) {
+			} else if (v.hasProperty(RDF.TYPE, Schema.Enumeration)) {
 				namedIndividualList.add(v);
 			}
 			

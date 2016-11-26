@@ -617,10 +617,10 @@ public class WorkbookLoader {
 			if (individualId == null) {
 				return;
 			}
-			graph.edge(individualId, RDF.TYPE, OwlVocab.NamedIndividual);
+			graph.edge(individualId, RDF.TYPE, Schema.Enumeration);
 			if (typeList != null) {
 				for (URI value : typeList) {
-					if (!value.equals(OwlVocab.NamedIndividual)) {
+					if (!value.equals(Schema.Enumeration)) {
 						graph.edge(individualId, RDF.TYPE, value);
 					}
 				}
