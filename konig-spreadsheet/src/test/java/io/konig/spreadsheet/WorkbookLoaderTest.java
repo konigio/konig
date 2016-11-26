@@ -19,6 +19,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.DC;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
@@ -41,7 +42,7 @@ import io.konig.shacl.Shape;
 
 public class WorkbookLoaderTest {
 	
-	@Ignore
+	@Test
 	public void testEquivalentPath() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -109,7 +110,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAggregationOf() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -134,7 +135,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIn() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -165,7 +166,7 @@ public class WorkbookLoaderTest {
 		assertEquals(Konig.Year, list.get(2));
 	}
 	
-	@Ignore
+	@Test
 	public void testStereotype() throws Exception {
 
 		
@@ -199,10 +200,10 @@ public class WorkbookLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
-		InputStream input = getClass().getClassLoader().getResourceAsStream("test.xlsx");
+		InputStream input = getClass().getClassLoader().getResourceAsStream("person-model.xlsx");
 		
 		Workbook book = WorkbookFactory.create(input);
 		Graph graph = new MemoryGraph();
@@ -287,6 +288,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDF.TYPE, OrderStatus);
 		assertValue(v, RDFS.COMMENT, "Payment is due");
 		assertValue(v, RDFS.LABEL, "Payment Due");
+		assertValue(v, DC.IDENTIFIER, "40");
 		
 		
 	}

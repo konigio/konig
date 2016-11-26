@@ -9,6 +9,7 @@ import java.util.StringTokenizer;
 
 import org.apache.poi.common.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -19,6 +20,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.vocabulary.DC;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
@@ -69,6 +71,7 @@ public class WorkbookLoader {
 	private static final String INDIVIDUAL_NAME = "Individual Name";
 	private static final String INDIVIDUAL_ID = "Individual Id";
 	private static final String INDIVIDUAL_TYPE = "Individual Type";
+	private static final String INDIVIDUAL_CODE_VALUE = "Code Value";
 	
 	private static final String SHAPE_ID = "Shape Id";
 	private static final String SCOPE_CLASS = "Scope Class";
@@ -108,6 +111,7 @@ public class WorkbookLoader {
 	private NamespaceManager nsManager;
 	private ShapeManager shapeManager;
 	private ValueFactory vf = new ValueFactoryImpl();
+	private DataFormatter formatter = new DataFormatter(true);
 	
 	public WorkbookLoader(NamespaceManager nsManager) {
 		this.nsManager = nsManager;
@@ -150,6 +154,7 @@ public class WorkbookLoader {
 		private int individualCommentCol = UNDEFINED;
 		private int individualIdCol = UNDEFINED;
 		private int individualTypeCol = UNDEFINED;
+		private int individualCodeValueCol = UNDEFINED;
 		
 		private int shapeIdCol = UNDEFINED;
 		private int shapeCommentCol = UNDEFINED;
@@ -614,6 +619,7 @@ public class WorkbookLoader {
 			Literal comment = stringLiteral(row, individualCommentCol);
 			URI individualId = uriValue(row, individualIdCol);
 			List<URI> typeList = uriList(row, individualTypeCol);
+			Literal codeValue = stringLiteral(row, individualCodeValueCol);
 			if (individualId == null) {
 				return;
 			}
@@ -626,12 +632,9 @@ public class WorkbookLoader {
 				}
 			}
 			
-			if (label != null) {
-				graph.edge(individualId, LABEL, label);
-			}
-			if (comment != null) {
-				graph.edge(individualId, RDFS.COMMENT, comment);
-			}
+			edge(individualId, RDFS.LABEL, label);
+			edge(individualId, RDFS.COMMENT, comment);
+			edge(individualId, DC.IDENTIFIER, codeValue);
 		}
 
 		private void readIndividualHeader(Sheet sheet) {
@@ -654,6 +657,7 @@ public class WorkbookLoader {
 					case COMMENT : individualCommentCol = i; break;
 					case INDIVIDUAL_ID : individualIdCol = i; break;
 					case INDIVIDUAL_TYPE : individualTypeCol = i; break;
+					case INDIVIDUAL_CODE_VALUE : individualCodeValueCol = i; break;
 						
 					}
 				}
@@ -1078,7 +1082,7 @@ public class WorkbookLoader {
 						break;
 						
 					case Cell.CELL_TYPE_NUMERIC :
-						text = Double.toString(cell.getNumericCellValue());
+						text = formatter.formatCellValue(cell);
 						break;
 						
 					case Cell.CELL_TYPE_STRING :
