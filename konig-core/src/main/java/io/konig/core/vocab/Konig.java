@@ -102,6 +102,7 @@ public class Konig {
 	public static final URI datasetId = new URIImpl("http://www.konig.io/ns/core/datasetId");
 	public static final URI tableId = new URIImpl("http://www.konig.io/ns/core/tableId");
 	public static final URI GenerateEnumTables = new URIImpl("http://www.konig.io/ns/core/GenerateEnumTables");
+	public static final URI bigQueryTableId = new URIImpl("http://www.konig.io/ns/core/bigQueryTableId");
 	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();

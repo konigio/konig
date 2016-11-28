@@ -59,6 +59,7 @@ public class Shape {
 	private URI rollUpBy;
 	
 	private Activity wasGeneratedBy;
+	private String bigQueryTableId;
 	
 	
 	public Shape() {
@@ -307,6 +308,14 @@ public class Shape {
 
 	public void setWasGeneratedBy(Activity wasGeneratedBy) {
 		this.wasGeneratedBy = wasGeneratedBy;
+	}
+
+	public String getBigQueryTableId() {
+		return bigQueryTableId;
+	}
+
+	public void setBigQueryTableId(String bigQueryTableId) {
+		this.bigQueryTableId = bigQueryTableId;
 	}
 	
 }

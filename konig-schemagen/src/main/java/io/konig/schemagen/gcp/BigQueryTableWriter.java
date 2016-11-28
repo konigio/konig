@@ -74,20 +74,14 @@ public class BigQueryTableWriter implements BigQueryTableHandler {
 		}
 		String tableId = ref.getTableId();
 		String datasetId = ref.getDatasetId();
-		String projectId = ref.getProjectId();
 		if (tableId == null) {
 			throw new SchemaGeneratorException("tableId is not defined");
 		}
 		if (datasetId == null) {
 			throw new SchemaGeneratorException("datasetId is not defined for table " + tableId);
 		}
-		if (projectId == null) {
-			throw new SchemaGeneratorException("projectId is not defined for table " + tableId);
-		}
 		
 		StringBuilder builder = new StringBuilder();
-		builder.append(projectId);
-		builder.append('.');
 		builder.append(datasetId);
 		builder.append('.');
 		builder.append(tableId);
