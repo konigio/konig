@@ -1,5 +1,7 @@
 package io.konig.core.pojo;
 
+import org.openrdf.model.Resource;
+
 /*
  * #%L
  * Konig Core
@@ -23,8 +25,19 @@ package io.konig.core.pojo;
 
 public class TestPerson {
 	
+	private Resource id;
 	private String name;
 	private TestAddress address;
+	
+	
+
+	public Resource getId() {
+		return id;
+	}
+
+	public void setId(Resource id) {
+		this.id = id;
+	}
 
 	public String getName() {
 		return name;

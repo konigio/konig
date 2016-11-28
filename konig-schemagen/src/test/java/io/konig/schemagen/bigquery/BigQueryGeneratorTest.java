@@ -40,12 +40,12 @@ import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
+import io.konig.schemagen.ShapeNamer;
+import io.konig.schemagen.SimpleShapeNamer;
 import io.konig.schemagen.gcp.BigQueryTable;
 import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.schemagen.gcp.BigQueryTableReference;
 import io.konig.schemagen.gcp.GoogleCloudProject;
-import io.konig.schemagen.merge.ShapeNamer;
-import io.konig.schemagen.merge.SimpleShapeNamer;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
@@ -181,7 +181,7 @@ public class BigQueryGeneratorTest {
 		Vertex v = graph.v(Konig.GoogleCloudProject).in(RDF.TYPE).firstVertex();
 		
 		GoogleCloudProject project = factory.create(v, GoogleCloudProject.class);
-		BigQueryTable table = project.dataset("test-dataset").table("Organization");
+		BigQueryTable table = project.findProjectDataset("test-dataset").findDatasetTable("Organization");
 		
 		JsonFactory jsonFactory = new JsonFactory();
 		StringWriter buffer = new StringWriter();

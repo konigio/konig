@@ -31,12 +31,6 @@
 	
 	<dependency>
 		<groupId>io.konig</groupId>
-		<artifactId>konig-shacl</artifactId>
-		<version>${konig.version}</version>
-	</dependency>
-	
-	<dependency>
-		<groupId>io.konig</groupId>
 		<artifactId>konig-core</artifactId>
 		<version>${konig.version}</version>
     <type>test-jar</type>

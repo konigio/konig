@@ -1,5 +1,12 @@
 package io.konig.core.pojo;
 
+import java.lang.reflect.Method;
+import java.util.Calendar;
+
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+import org.openrdf.model.Literal;
+
 /*
  * #%L
  * Konig Core
@@ -22,10 +29,16 @@ package io.konig.core.pojo;
 
 
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.util.StringUtil;
 
 public class BeanUtil {
+
+	private static DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime();
 	
 	public static String setterName(URI predicate) {
 		StringBuilder builder = new StringBuilder();
@@ -47,6 +60,49 @@ public class BeanUtil {
 		builder.append(StringUtil.capitalize(predicate.getLocalName()));
 		
 		return builder.toString();
+	}
+	
+	public static String getterName(URI predicate) {
+		StringBuilder builder = new StringBuilder();
+		String localName = predicate.getLocalName();
+		builder.append("get");
+		builder.append(StringUtil.capitalize(localName));
+		
+		return builder.toString();
+	}
+	
+	public static Value toValue(Object object)  {
+		ValueFactory valueFactory = ValueFactoryImpl.getInstance();
+
+		if (object instanceof URI) {
+			URI uri = (URI) object;
+			return uri;
+		}
+		if (object instanceof String) {
+			return valueFactory.createLiteral(object.toString());
+		}
+		if (object instanceof Integer) {
+			return valueFactory.createLiteral((Integer)object);
+		}
+		if (object instanceof Calendar) {
+			Calendar calendar = (Calendar) object;
+			String value = dateTimeFormatter.print(calendar.getTimeInMillis());
+			return valueFactory.createLiteral(value, XMLSchema.DATETIME);
+		}
+		
+		if (object instanceof Enum) {
+			try {
+				Method getURI = object.getClass().getMethod("getURI");
+				if (URI.class.isAssignableFrom(getURI.getReturnType())) {
+					return (URI) getURI.invoke(object);
+				}
+			} catch (Throwable e) {
+				// Ignore
+			}
+		}
+		
+		
+		return null;
 	}
 
 }

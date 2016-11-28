@@ -2,7 +2,6 @@ package io.konig.core.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,7 +35,6 @@ import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.BasicWriterSettings;
 import org.openrdf.rio.turtle.TurtleParserFactory;
 
-import io.konig.core.DepthFirstEdgeIterable;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -202,6 +200,14 @@ public class RdfUtil {
 			copyNamespace(nsManager, subject, sink);
 			copyNamespace(nsManager, predicate, sink);
 			copyNamespace(nsManager, object, sink);
+			
+			if (object instanceof Literal) {
+				Literal literal = (Literal) object;
+				URI type = literal.getDatatype();
+				if (type != null) {
+					copyNamespace(nsManager, type, sink);
+				}
+			}
 		}
 		
 		return sink;
@@ -327,7 +333,7 @@ public class RdfUtil {
 		
 		CompactTurtleWriter turtle = new CompactTurtleWriter(writer);
 		turtle.getWriterConfig().set(BasicWriterSettings.PRETTY_PRINT, true);
-		DepthFirstEdgeIterable sequence = new DepthFirstEdgeIterable(graph);
+		NaturalEdgeIterable sequence = new NaturalEdgeIterable(graph);
 		
 		turtle.startRDF();
 		printNamespaces(nsManager, turtle);

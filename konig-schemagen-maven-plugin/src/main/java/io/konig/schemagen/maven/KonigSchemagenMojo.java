@@ -2,7 +2,6 @@ package io.konig.schemagen.maven;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
@@ -45,9 +44,16 @@ import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
+import io.konig.schemagen.SimpleShapeNamer;
 import io.konig.schemagen.avro.ShapeToAvro;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
 import io.konig.schemagen.gcp.BigQueryTableGenerator;
+import io.konig.schemagen.gcp.BigQueryTableMapper;
+import io.konig.schemagen.gcp.GoogleCloudConfig;
+import io.konig.schemagen.gcp.LocalNameTableMapper;
+import io.konig.schemagen.gcp.MemoryGoogleCloudManager;
+import io.konig.schemagen.gcp.NamespaceDatasetMapper;
+import io.konig.schemagen.gcp.SimpleProjectMapper;
 import io.konig.schemagen.java.BasicJavaNamer;
 import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
@@ -59,8 +65,6 @@ import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
 import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
-import io.konig.schemagen.merge.ShapeNamer;
-import io.konig.schemagen.merge.SimpleShapeNamer;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.shacl.ClassManager;
@@ -73,6 +77,7 @@ import io.konig.shacl.impl.BasicLogicalShapeNamer;
 import io.konig.shacl.impl.MemoryClassManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
+import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.shacl.jsonld.SuffixContextNamer;
@@ -130,6 +135,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     @Parameter
     private File bqSourceDir;
+
+	 @Parameter (defaultValue="${basedir}/target/rdf/shapes", property="shapesOutDir", required=false)
+	 private File shapesOutDir;
     
     private NamespaceManager nsManager;
     private ClassManager classManager;
@@ -156,10 +164,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			shapeLoader.load(owlGraph);
 			
 
+			
 			owlReasoner = new OwlReasoner(owlGraph);
 			
+			
+			
 			if (bqShapeBaseURL != null) {
-				generateBigQueryTables(owlGraph, nsManager, shapeManager, owlReasoner);
+				generateBigQueryTables(owlGraph);
 			}
 			
 			
@@ -176,6 +187,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ShapeToJsonSchema jsonSchema = new ShapeToJsonSchema(jsonSchemaGenerator);
 			jsonSchema.setListener(new ShapeToJsonSchemaLinker(owlGraph));
 			jsonSchema.generateAll(shapeManager.listShapes(), jsonSchemaDir);
+			
+			
 			
 			ShapeMediaTypeLinker linker = new ShapeMediaTypeLinker(mediaTypeNamer);
 			linker.assignAll(shapeManager.listShapes(), owlGraph);
@@ -199,6 +212,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
       
     }
+
 
 	private void generatePlantUMLDomainModel() throws IOException, PlantumlGeneratorException {
 		
@@ -226,14 +240,34 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 
-	private void generateBigQueryTables(Graph graph, NamespaceManager nsManager, ShapeManager shapeManager, OwlReasoner reasoner) throws SchemaGeneratorException, IOException, RDFParseException, RDFHandlerException {
+	private void generateBigQueryTables(Graph graph) throws SchemaGeneratorException, IOException, RDFParseException, RDFHandlerException {
 		
 		if (bqSourceDir != null) {
 			RdfUtil.loadTurtle(bqSourceDir, graph, nsManager);
 		}
-		ShapeNamer shapeNamer = new SimpleShapeNamer(nsManager, bqShapeBaseURL);
-		BigQueryTableGenerator generator = new BigQueryTableGenerator(shapeManager, shapeNamer, reasoner);
-		generator.writeTableDefinitions(graph, bqOutDir);
+		SimpleShapeNamer shapeNamer = new SimpleShapeNamer(nsManager, bqShapeBaseURL);
+		shapeNamer.setPrefixBase("bq");
+		BigQueryTableGenerator generator = new BigQueryTableGenerator(shapeManager, shapeNamer, owlReasoner);
+		
+		MemoryGoogleCloudManager cloudManager = new MemoryGoogleCloudManager();
+		
+		GoogleCloudConfig config = new GoogleCloudConfig(cloudManager, generator);
+		
+		// For now, we hardcode the project and dataset id.
+		// We'll fix this later.
+		
+		config.load(graph);
+		
+		ShapeFileGetter shapeFileGetter = new ShapeFileGetter(shapesOutDir, nsManager);
+		cloudManager.setProjectMapper(new SimpleProjectMapper("test"));
+		cloudManager.setDatasetMapper(new NamespaceDatasetMapper(nsManager));
+		BigQueryTableMapper tableMapper = new LocalNameTableMapper();
+		generator.setTableMapper(tableMapper);
+		generator.generateEnumTables(graph, cloudManager);
+		config.writeEnumTableShapes(nsManager, shapeFileGetter);
+		
+		config.writeBigQueryTableDefinitions(bqOutDir);
+		
 	}
 	
 	private ClassManager getClassManager() {

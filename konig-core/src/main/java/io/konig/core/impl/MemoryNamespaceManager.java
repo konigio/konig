@@ -30,10 +30,28 @@ import org.openrdf.model.Namespace;
 import org.openrdf.model.impl.NamespaceImpl;
 
 import io.konig.core.NamespaceManager;
+import io.konig.core.vocab.AS;
+import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.PROV;
+import io.konig.core.vocab.SH;
 
 public class MemoryNamespaceManager implements NamespaceManager {
+	private static final MemoryNamespaceManager INSTANCE = new MemoryNamespaceManager();
+	
 	protected Map<String, Namespace> byPrefix = new HashMap<String, Namespace>();
 	protected Map<String,Namespace> byName = new HashMap<>();
+	
+	static {
+		INSTANCE.add("konig", Konig.NAMESPACE);
+		INSTANCE.add("as", AS.NAMESPACE);
+		INSTANCE.add("sh", SH.NAMESPACE);
+		INSTANCE.add("prov", PROV.NAMESPACE);
+		INSTANCE.add("activity", Konig.ACTIVIY_BASE_URL);
+	}
+	
+	public static MemoryNamespaceManager getDefaultInstance() {
+		return INSTANCE;
+	}
 
 	public Namespace findByPrefix(String prefix) {
 		return byPrefix.get(prefix);

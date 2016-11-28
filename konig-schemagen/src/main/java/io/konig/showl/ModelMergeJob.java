@@ -27,6 +27,7 @@ import io.konig.core.extract.OntologyExtractor;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.io.FileGetter;
 
 /**
  * A job that merges two versions of an ontology to create a new version.

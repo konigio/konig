@@ -2,6 +2,7 @@ package io.konig.spreadsheet;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,7 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import io.konig.activity.Activity;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
@@ -33,8 +35,10 @@ import io.konig.core.Vertex;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.PathFactory;
 import io.konig.core.path.Step;
+import io.konig.core.pojo.BeanUtil;
+import io.konig.core.vocab.AS;
 import io.konig.core.vocab.Konig;
-import io.konig.core.vocab.OwlVocab;
+import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
@@ -175,6 +179,8 @@ public class WorkbookLoader {
 		private int pcPredicateKindCol = UNDEFINED;
 		private int pcEquivalentPathCol = UNDEFINED;
 		
+		private URI activityId;
+		
 		public Worker(Workbook book, Graph graph) {
 			this.book = book;
 			this.graph = graph;
@@ -182,6 +188,8 @@ public class WorkbookLoader {
 				shapeManager = new MemoryShapeManager();
 			}
 			pathFactory = new PathFactory(graph.getNamespaceManager(), graph);
+			activityId = Activity.nextActivityId();
+			
 		}
 		
 		private void run() throws SpreadsheetException {
@@ -190,6 +198,14 @@ public class WorkbookLoader {
 				loadSheet(sheet);
 			}
 			buildRollUpShapes();
+			emitProvenance();
+		}
+
+		private void emitProvenance() {
+			Value endTime = BeanUtil.toValue(GregorianCalendar.getInstance());
+			graph.edge(activityId, RDF.TYPE, Konig.LoadModelFromSpreadsheet);
+			graph.edge(activityId, AS.endTime, endTime);
+			
 		}
 
 		private void buildRollUpShapes() throws SpreadsheetException {
@@ -565,6 +581,7 @@ public class WorkbookLoader {
 			}
 			
 			edge(shapeId, RDF.TYPE, SH.Shape);
+			edge(shapeId, PROV.wasGeneratedBy, activityId);
 			edge(shapeId, RDFS.COMMENT, shapeComment);
 			edge(shapeId, SH.targetClass, targetClass);
 			edge(shapeId, Konig.aggregationOf, aggregationOf);

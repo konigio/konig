@@ -31,8 +31,13 @@ import io.konig.core.UidGenerator;
 
 public class UidGeneratorImpl implements UidGenerator {
 	
+	private static UidGeneratorImpl INSTANCE = new UidGeneratorImpl();
+	
 	private Random random = new Random(new Date().getTime());
 	
+	public static UidGenerator getInstance() {
+		return INSTANCE;
+	}
 
 	@Override
 	public String next() {

@@ -23,16 +23,16 @@ public class BigQueryDataset {
 		this.datasetProject = project;
 	}
 	
-	public void addTable(BigQueryTable table) {
+	public void addDatasetTable(BigQueryTable table) {
 		tableList.add(table);
 		table.setTableDataset(this);
 	}
 	
-	public List<BigQueryTable> getTableList() {
+	public List<BigQueryTable> getDatasetTable() {
 		return tableList;
 	}
 	
-	public BigQueryTable table(String tableId) {
+	public BigQueryTable findDatasetTable(String tableId) {
 		for (BigQueryTable t : tableList) {
 			if (tableId.equals(t.getTableId())) {
 				return t;

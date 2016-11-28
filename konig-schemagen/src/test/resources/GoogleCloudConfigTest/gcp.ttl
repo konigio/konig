@@ -1,0 +1,14 @@
+@prefix konig: <http://www.konig.io/ns/core/>.
+@prefix schema: <http://schema.org/> .
+
+[] a konig:GoogleCloudProject ;
+    konig:projectId "test-project" ;
+    konig:projectDataset [
+        konig:datasetId "test-dataset" ;
+        konig:datasetTable [
+            konig:tableId "Person" ;
+            schema:description "A person (alive, dead, undead, or fictional)" ;
+            konig:tableShape <http://example.com/shape/v1/schema/Person>
+        ]
+    ]
+.

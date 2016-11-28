@@ -26,6 +26,8 @@ import org.openrdf.model.impl.URIImpl;
 
 public class SH {
 	
+	public static final String NAMESPACE = "http://www.w3.org/ns/shacl#";
+	
 	public static final String PROPERTY = "http://www.w3.org/ns/shacl#property";
 
 	public static final URI NAMESPACE_URI = new URIImpl("http://www.w3.org/ns/shacl#");

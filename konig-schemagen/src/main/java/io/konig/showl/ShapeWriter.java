@@ -16,6 +16,7 @@ import io.konig.core.Vertex;
 import io.konig.core.extract.ResourceExtractor;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.io.FileGetter;
 import io.konig.core.vocab.SH;
 
 /**

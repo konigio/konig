@@ -157,6 +157,17 @@ public class CompactTurtleWriter extends TurtleWriter {
 			throw new RDFHandlerException(e);
 		}
 	}
+
+	protected void writeResource(Resource res)
+		throws IOException
+	{
+		if (res instanceof URI) {
+			writeURI((URI)res);
+		}
+		else {
+			writer.write("[]");
+		}
+	}
 	
 	protected void writeLiteral(Literal lit)
 			throws IOException {
@@ -186,7 +197,10 @@ public class CompactTurtleWriter extends TurtleWriter {
 			if (subject.equals(context.lastSubject)) {
 				break;
 			}
-		}		
+		}	
+		if (context == null) {
+			context = peek();
+		}
 		return context;
 	}
 	
@@ -206,7 +220,9 @@ public class CompactTurtleWriter extends TurtleWriter {
 	}
 
 	private Context peek() {
-		
+		if (stack.isEmpty()) {
+			return null;
+		}
 		return stack.get(stack.size()-1);
 	}
 
