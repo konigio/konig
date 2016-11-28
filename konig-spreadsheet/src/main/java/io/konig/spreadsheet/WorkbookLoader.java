@@ -82,6 +82,7 @@ public class WorkbookLoader {
 	private static final String MEDIA_TYPE = "Media Type";
 	private static final String AGGREGATION_OF = "Aggregation Of";
 	private static final String ROLL_UP_BY = "Roll-up By";
+	private static final String BIGQUERY_TABLE = "BigQuery Table";
 	
 	private static final String VALUE_TYPE = "Value Type";
 	private static final String MIN_COUNT = "Min Count";
@@ -166,6 +167,7 @@ public class WorkbookLoader {
 		private int shapeAggregationOfCol = UNDEFINED;
 		private int shapeRollUpByCol = UNDEFINED;
 		private int shapeMediaTypeCol = UNDEFINED;
+		private int shapeBigQueryTableCol = UNDEFINED;
 		
 		private int pcShapeIdCol = UNDEFINED;
 		private int pcPropertyIdCol = UNDEFINED;
@@ -575,6 +577,7 @@ public class WorkbookLoader {
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
+			Literal bigqueryTable = bigQueryTableId(row, targetClass);
 			
 			if (shapeId == null) {
 				return;
@@ -587,7 +590,34 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.aggregationOf, aggregationOf);
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
+			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
 			
+		}
+
+		private Literal bigQueryTableId(Row row, URI targetClass) throws SpreadsheetException {
+
+			if (targetClass != null) {
+
+				String text = stringValue(row, shapeBigQueryTableCol);
+				if (text != null) {
+					if ("x".equalsIgnoreCase(text)) {
+						String name = targetClass.getNamespace();
+						Namespace ns = nsManager.findByName(name);
+						if (ns == null) {
+							throw new SpreadsheetException("Namespace prefix not found: " + name);
+						}
+						String prefix = ns.getPrefix();
+						String localName = targetClass.getLocalName();
+						StringBuilder builder = new StringBuilder();
+						builder.append(prefix);
+						builder.append('.');
+						builder.append(localName);
+						text = builder.toString();
+					}
+					return literal(text);
+				}
+			}
+			return null;
 		}
 
 		private void readShapeHeader(Sheet sheet) {
@@ -611,6 +641,7 @@ public class WorkbookLoader {
 					case AGGREGATION_OF : shapeAggregationOfCol = i; break;
 					case ROLL_UP_BY : shapeRollUpByCol = i; break;
 					case MEDIA_TYPE : shapeMediaTypeCol = i; break;
+					case BIGQUERY_TABLE : shapeBigQueryTableCol = i; break;
 						
 					}
 				}

@@ -258,8 +258,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 		config.load(graph);
 		
+		generator.generateBigQueryTables(cloudManager);
 		ShapeFileGetter shapeFileGetter = new ShapeFileGetter(shapesOutDir, nsManager);
-		cloudManager.setProjectMapper(new SimpleProjectMapper("test"));
+		cloudManager.setProjectMapper(new SimpleProjectMapper("testProject"));
 		cloudManager.setDatasetMapper(new NamespaceDatasetMapper(nsManager));
 		BigQueryTableMapper tableMapper = new LocalNameTableMapper();
 		generator.setTableMapper(tableMapper);

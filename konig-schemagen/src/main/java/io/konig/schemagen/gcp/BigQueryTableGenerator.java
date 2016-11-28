@@ -71,7 +71,6 @@ public class BigQueryTableGenerator {
 	
 	public BigQueryTableGenerator() {
 	}
-	
 
 	public BigQueryTableGenerator(ShapeManager shapeManager, ShapeNamer shapeNamer, OwlReasoner reasoner) {
 		this.shapeManager = shapeManager;
@@ -114,6 +113,53 @@ public class BigQueryTableGenerator {
 
 	public void setHandler(BigQueryTableHandler handler) {
 		this.handler = handler;
+	}
+	
+	/**
+	 * Generate a BigQuery table for each Shape that has a bigQueryTableId property.
+	 * @param manager The GoogleCloudManager into which BigQueryTable definitions will be injected.
+	 */
+	public void generateBigQueryTables(GoogleCloudManager manager) {
+		if (shapeManager == null) {
+			throw new GoogleCloudException("Cannot generate BigQueryTables: shapeManager is not defined");
+		}
+		
+		for (Shape shape : shapeManager.listShapes()) {
+			Resource shapeId = shape.getId();
+			String fullId = shape.getBigQueryTableId();
+			if (fullId != null && shapeId instanceof URI) {
+				String[] idList = fullId.split("[.]");
+				if (idList.length==2) {
+					String projectId = "testProject";
+					String datasetId = idList[0];
+					String tableId = idList[1];
+					
+					GoogleCloudProject project = manager.getProjectById(projectId);
+					if (project == null) {
+						project = new GoogleCloudProject();
+						project.setProjectId(projectId);
+						manager.add(project);
+					}
+					
+					BigQueryDataset dataset = project.findProjectDataset(datasetId);
+					if (dataset == null) {
+						dataset = new BigQueryDataset();
+						dataset.setDatasetId(datasetId);
+						project.addProjectDataset(dataset);
+					}
+					BigQueryTable table = new BigQueryTable();
+					URI shapeURI = (URI) shapeId;
+					
+					table.setTableShape(shapeURI);
+					table.setTableId(tableId);
+					dataset.addDatasetTable(table);
+					
+					
+				} else {
+					throw new GoogleCloudException("Invalid bigQueryTableId: " + fullId);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -262,7 +308,7 @@ public class BigQueryTableGenerator {
 			TableFieldSchema idField = new TableFieldSchema();
 			idField.setName("id");
 			idField.setType(BigQueryDatatype.STRING.name());
-			idField.setMode(FieldMode.REPEATED.name());
+			idField.setMode(FieldMode.REQUIRED.name());
 			list.add(idField);
 		}
 		

@@ -28,7 +28,7 @@ public class BigQueryTableWriterTest {
 	public void test() throws Exception {
 
 		File outDir = new File("target/test/tables");
-		File tableFile = new File(outDir, "myproject.mydataset.Person");
+		File tableFile = new File(outDir, "mydataset.Person");
 		
 		if (tableFile.exists()) {
 			tableFile.delete();
