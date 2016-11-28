@@ -12,6 +12,7 @@ import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.spreadsheet.SpreadsheetException;
 import io.konig.spreadsheet.WorkbookLoader;
 

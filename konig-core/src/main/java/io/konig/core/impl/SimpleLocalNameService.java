@@ -1,5 +1,8 @@
 package io.konig.core.impl;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
 /*
  * #%L
  * Konig Core
@@ -27,16 +30,44 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.LocalNameService;
+import io.konig.core.vocab.AS;
+import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.PROV;
+import io.konig.core.vocab.SH;
+import io.konig.core.vocab.Schema;
 
 public class SimpleLocalNameService implements LocalNameService {
+	
+	private static final SimpleLocalNameService DEFAULT = new SimpleLocalNameService();
+	
+	static {
+		DEFAULT.addStaticFields(Konig.class);
+		DEFAULT.addStaticFields(SH.class);
+		DEFAULT.addStaticFields(AS.class);
+		DEFAULT.addStaticFields(Schema.class);
+		DEFAULT.addStaticFields(PROV.class);
+		DEFAULT.addStaticFields(RDF.class);
+		DEFAULT.addStaticFields(RDFS.class);
+	}
+	
+	public static SimpleLocalNameService getDefaultInstance() {
+		return DEFAULT;
+	}
 	
 	private static final Set<URI> EMPTYSET = new HashSet<>();
 	
 	private Map<String, Set<URI>> map = new HashMap<>();
 
 	public SimpleLocalNameService() {
+	}
+	
+	
+	public void add(URI uri) {
+		add(uri.getLocalName(), uri);
 	}
 	
 	public void add(String localName, URI uri) {
@@ -51,8 +82,30 @@ public class SimpleLocalNameService implements LocalNameService {
 	@Override
 	public Set<URI> lookupLocalName(String localName) {
 		Set<URI> result = map.get(localName);
-		
 		return result==null ? EMPTYSET : result;
+	}
+	
+	/**
+	 * Use reflection to scan a Java Class for static fields of type URI, and register
+	 * those URI values.
+	 * @param javaClass  The Java Class to be scanned.
+	 */
+	public void addStaticFields(Class<?> javaClass) {
+		Field[] declaredFields = javaClass.getDeclaredFields();
+		for (Field field : declaredFields) {
+			if (
+				Modifier.isStatic(field.getModifiers()) && 
+				URI.class.isAssignableFrom(field.getType())
+			) {
+				try {
+					URI value = (URI) field.get(null);
+					add(value);
+					
+				} catch (Throwable e) {
+					// Ignore
+				}
+			}
+		}
 	}
 
 }

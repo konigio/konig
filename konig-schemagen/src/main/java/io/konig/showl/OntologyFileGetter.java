@@ -7,6 +7,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.io.FileGetter;
 
 /**
  * A utility that gets the File that holds the description of a given ontology.

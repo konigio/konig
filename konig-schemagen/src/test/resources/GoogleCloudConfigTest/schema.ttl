@@ -1,0 +1,21 @@
+@prefix mdm: <http://schema.pearson.com/ns/mdm/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rights: <http://schema.pearson.com/ns/rights/> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	<http://www.w3.org/2000/01/rdf-schema#label> "Schema.org Ontology" ; 
+	<http://www.w3.org/2000/01/rdf-schema#comment> "The namespace for an upper-level ontology defined by Google, Microsoft, Yahoo, and Yandex." . 
+
+schema:Enumeration a owl:Class . 
+
+schema:GenderType a owl:Class ;
+	rdfs:subClassOf schema:Enumeration
+.	
+
+schema:Male a schema:GenderType .
+
+schema:Female a schema:GenderType .

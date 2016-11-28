@@ -19,6 +19,7 @@ import io.konig.core.extract.ExtractException;
 import io.konig.core.extract.OntologyExtractor;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.io.FileGetter;
 
 public class OntologyHandlerImpl implements OntologyHandler {
 

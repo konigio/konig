@@ -14,7 +14,7 @@
 	
   	<dependency>
   		<groupId>io.konig</groupId>
-  		<artifactId>konig-shacl</artifactId>
+  		<artifactId>konig-core</artifactId>
 			<version>${konig.version}</version>
   	</dependency>
   	

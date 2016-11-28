@@ -28,6 +28,9 @@ public class Konig {
 	
 	public static final String NAMESPACE = "http://www.konig.io/ns/core/";
 	
+	public static final String JAVA_NAMESPACE = "http://www.konig.io/ns/java/";
+	public static final String ACTIVIY_BASE_URL = "http://www.konig.io/activity/";
+	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
 	public static final URI Falsehood = new URIImpl("http://www.konig.io/ns/core/Falsehood");
@@ -53,6 +56,9 @@ public class Konig {
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/core/avroSchemaRendition");
 	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/core/PreferredClass");
 	public static final URI equivalentPath = new URIImpl("http://www.konig.io/ns/core/equivalentPath");
+	public static final URI LoadModelFromSpreadsheet = new URIImpl("http://www.konig.io/ns/core/LoadModelFromSpreadsheet");
+	
+
 	
 	// Fact Modeling
 
@@ -90,4 +96,19 @@ public class Konig {
 	public static final URI GoogleCloudProject = new URIImpl("http://www.konig.io/ns/core/GoogleCloudProject");
 	public static final URI BigQueryTable = new URIImpl("http://www.konig.io/ns/core/BigQueryTable");
 	public static final URI tableShape = new URIImpl("http://www.konig.io/ns/core/tableShape");
+	public static final URI projectDataset = new URIImpl("http://www.konig.io/ns/core/projectDataset");
+	public static final URI datasetTable = new URIImpl("http://www.konig.io/ns/core/datasetTable");
+	public static final URI projectId = new URIImpl("http://www.konig.io/ns/core/projectId");
+	public static final URI datasetId = new URIImpl("http://www.konig.io/ns/core/datasetId");
+	public static final URI tableId = new URIImpl("http://www.konig.io/ns/core/tableId");
+	public static final URI GenerateEnumTables = new URIImpl("http://www.konig.io/ns/core/GenerateEnumTables");
+	
+	public static URI javaMethodId(Class<?> javaClass, String methodName) {
+		StringBuilder builder = new StringBuilder();
+		builder.append(Konig.JAVA_NAMESPACE);
+		builder.append(javaClass.getName());
+		builder.append("#");
+		builder.append(methodName);
+		return new URIImpl(builder.toString());
+	}
 }

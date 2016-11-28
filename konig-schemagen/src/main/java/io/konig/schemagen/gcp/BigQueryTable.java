@@ -2,6 +2,8 @@ package io.konig.schemagen.gcp;
 
 import org.openrdf.model.URI;
 
+import io.konig.activity.Activity;
+
 public class BigQueryTable {
 
 	private String tableId;
@@ -9,6 +11,8 @@ public class BigQueryTable {
 	private String description;
 	private URI tableShape;
 	private URI tableClass;
+	
+	private Activity wasGeneratedBy;
 
 	public BigQueryTableReference getTableReference() {
 		
@@ -89,8 +93,12 @@ public class BigQueryTable {
 	}
 
 
-	
-	
-	
+	public Activity getWasGeneratedBy() {
+		return wasGeneratedBy;
+	}
+
+	public void setWasGeneratedBy(Activity wasGeneratedBy) {
+		this.wasGeneratedBy = wasGeneratedBy;
+	}
 	
 }

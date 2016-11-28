@@ -23,6 +23,7 @@ import io.konig.core.extract.ExtractException;
 import io.konig.core.extract.OntologyExtractor;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.io.FileGetter;
 import io.konig.core.vocab.SH;
 
 public class OntologyWriter {

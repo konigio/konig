@@ -18,6 +18,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.Schema;
+import io.konig.schemagen.SimpleShapeNamer;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;

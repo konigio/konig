@@ -18,6 +18,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
+import io.konig.shacl.io.ShapeFileGetter;
 
 public class ShapeWriterTest {
 
