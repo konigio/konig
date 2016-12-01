@@ -49,10 +49,12 @@ import io.konig.schemagen.avro.ShapeToAvro;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
 import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
+import io.konig.schemagen.gcp.DatasetMapper;
 import io.konig.schemagen.gcp.GoogleCloudConfig;
 import io.konig.schemagen.gcp.LocalNameTableMapper;
 import io.konig.schemagen.gcp.MemoryGoogleCloudManager;
 import io.konig.schemagen.gcp.NamespaceDatasetMapper;
+import io.konig.schemagen.gcp.SimpleDatasetMapper;
 import io.konig.schemagen.gcp.SimpleProjectMapper;
 import io.konig.schemagen.java.BasicJavaNamer;
 import io.konig.schemagen.java.JavaClassBuilder;
@@ -81,6 +83,7 @@ import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.shacl.jsonld.SuffixContextNamer;
+import io.konig.showl.WorkbookToTurtleTransformer;
 import net.sourceforge.plantuml.SourceFileReader;
 
 /**
@@ -89,6 +92,10 @@ import net.sourceforge.plantuml.SourceFileReader;
  */
 @Mojo( name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES )
 public class KonigSchemagenMojo  extends AbstractMojo {
+	
+	private static final String SCHEMA = "schema";
+	private static final String DATA = "data";
+	
     /**
      * Location of the file.
      */
@@ -136,14 +143,25 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private File bqSourceDir;
 
-	 @Parameter (defaultValue="${basedir}/target/rdf/shapes", property="shapesOutDir", required=false)
-	 private File shapesOutDir;
+	@Parameter (defaultValue="${basedir}/target/rdf/shapes", property="shapesOutDir", required=false)
+	private File shapesOutDir;
+	
+	@Parameter(property="bigQueryDatasetId", required=false)
+	private String bigQueryDatasetId;
+	
+	 @Parameter (defaultValue="${basedir}/src/dataModel.xlsx", property="workbookFile", required=false)
+	 private File workbookFile;
+	 
+	 @Parameter (defaultValue="${basedir}/target/rdf/owl", property="owlOutDir", required=false)
+	 private File owlOutDir;
+
     
     private NamespaceManager nsManager;
     private ClassManager classManager;
     private OwlReasoner owlReasoner;
     private LogicalShapeNamer logicalShapeNamer;
     private ShapeManager shapeManager;
+    private DatasetMapper datasetMapper;
 
     public void execute() throws MojoExecutionException   {
     	
@@ -159,6 +177,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			Graph owlGraph = new MemoryGraph();
 			ContextManager contextManager = new MemoryContextManager();
 
+			loadSpreadsheet();
+			
 			RdfUtil.loadTurtle(sourceDir, owlGraph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
 			shapeLoader.load(owlGraph);
@@ -212,6 +232,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
       
     }
+    private void loadSpreadsheet() throws MojoExecutionException   {
+		 try {
+
+			 if (workbookFile!=null && workbookFile.exists()) {
+				 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer(datasetMapper());
+				 transformer.transform(workbookFile, owlOutDir, shapesOutDir);
+			 }
+		 } catch (Throwable oops) {
+			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
+		 }
+	 }
 
 
 	private void generatePlantUMLDomainModel() throws IOException, PlantumlGeneratorException {
@@ -251,26 +282,49 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 		MemoryGoogleCloudManager cloudManager = new MemoryGoogleCloudManager();
 		
+		
 		GoogleCloudConfig config = new GoogleCloudConfig(cloudManager, generator);
 		
-		// For now, we hardcode the project and dataset id.
-		// We'll fix this later.
+		BigQueryTableMapper tableMapper = createTableMapper();
+		
 		
 		config.load(graph);
 		
 		generator.generateBigQueryTables(cloudManager);
 		ShapeFileGetter shapeFileGetter = new ShapeFileGetter(shapesOutDir, nsManager);
 		cloudManager.setProjectMapper(new SimpleProjectMapper("testProject"));
-		cloudManager.setDatasetMapper(new NamespaceDatasetMapper(nsManager));
-		BigQueryTableMapper tableMapper = new LocalNameTableMapper();
+		cloudManager.setDatasetMapper(datasetMapper());
 		generator.setTableMapper(tableMapper);
 		generator.generateEnumTables(graph, cloudManager);
 		config.writeEnumTableShapes(nsManager, shapeFileGetter);
 		
-		config.writeBigQueryTableDefinitions(bqOutDir);
+		
+		File bqSchemaDir = new File(bqOutDir, SCHEMA);
+		File bqDataDir = new File(bqOutDir, DATA);
+		
+		config.writeBigQueryTableDefinitions(bqSchemaDir);
+		config.writeBigQueryEnumMembers(graph, bqDataDir);
 		
 	}
 	
+	private BigQueryTableMapper createTableMapper() {
+		return new LocalNameTableMapper();
+	}
+
+
+	private DatasetMapper datasetMapper() {
+		if (datasetMapper == null) {
+
+			if (bigQueryDatasetId != null) {
+				datasetMapper = new SimpleDatasetMapper(bigQueryDatasetId);
+			} else {
+				datasetMapper = new NamespaceDatasetMapper(nsManager);
+			}
+		}
+		return datasetMapper;
+	}
+
+
 	private ClassManager getClassManager() {
 		if (classManager == null) {
 			classManager = new MemoryClassManager();

@@ -23,4 +23,10 @@ public class SimpleDatasetMapper implements DatasetMapper {
 		return datasetId;
 	}
 
+
+	@Override
+	public String idForClass(Vertex owlClass) {
+		return datasetForClass(owlClass);
+	}
+
 }

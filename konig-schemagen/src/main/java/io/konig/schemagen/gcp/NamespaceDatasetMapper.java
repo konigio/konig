@@ -42,4 +42,11 @@ public class NamespaceDatasetMapper implements DatasetMapper {
 		throw new KonigException("Namespace not found for class: " + id);
 	}
 
+
+
+	@Override
+	public String idForClass(Vertex owlClass) {
+		return datasetForClass(owlClass);
+	}
+
 }

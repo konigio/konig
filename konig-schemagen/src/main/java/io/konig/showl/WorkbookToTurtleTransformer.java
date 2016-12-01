@@ -13,6 +13,7 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.shacl.io.ShapeFileGetter;
+import io.konig.spreadsheet.IdMapper;
 import io.konig.spreadsheet.SpreadsheetException;
 import io.konig.spreadsheet.WorkbookLoader;
 
@@ -23,6 +24,14 @@ import io.konig.spreadsheet.WorkbookLoader;
  *
  */
 public class WorkbookToTurtleTransformer {
+
+	private IdMapper datasetMapper;
+	
+	
+	
+	public WorkbookToTurtleTransformer(IdMapper datasetMapper) {
+		this.datasetMapper = datasetMapper;
+	}
 
 	public void transform(File workbookFile, File owlOutDir, File shapesOutDir) throws IOException, SpreadsheetException, RDFHandlerException {
 		
@@ -38,6 +47,7 @@ public class WorkbookToTurtleTransformer {
 			graph.setNamespaceManager(nsManager);
 			
 			WorkbookLoader loader = new WorkbookLoader(nsManager);
+			loader.setDatasetMapper(datasetMapper);
 			loader.load(workbook, graph);
 			
 			
@@ -53,11 +63,4 @@ public class WorkbookToTurtleTransformer {
 		}
 	}
 	
-	public static void main(String[] args) throws Exception {
-		File workbookFile = new File(args[0]);
-		File owlOutDir = new File(args[1]);
-		File shapesOutDir = new File(args[2]);
-		WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer();
-		transformer.transform(workbookFile, owlOutDir, shapesOutDir);
-	}
 }
