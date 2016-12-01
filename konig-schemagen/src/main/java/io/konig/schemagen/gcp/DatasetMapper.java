@@ -1,6 +1,7 @@
 package io.konig.schemagen.gcp;
 
 import io.konig.core.Vertex;
+import io.konig.spreadsheet.IdMapper;
 
 /**
  * An interface that maps a given OWL class to the Google Cloud Platform Dataset
@@ -8,7 +9,7 @@ import io.konig.core.Vertex;
  * @author Greg McFall
  *
  */
-public interface DatasetMapper {
+public interface DatasetMapper extends IdMapper {
 
 	/**
 	 * Get the Id of the Dataset that contains the given owlClass.

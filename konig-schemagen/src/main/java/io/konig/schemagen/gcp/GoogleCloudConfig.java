@@ -43,6 +43,7 @@ public class GoogleCloudConfig {
 	}
 	
 	
+
 	public GoogleCloudManager getManager() {
 		return manager;
 	}
@@ -61,7 +62,19 @@ public class GoogleCloudConfig {
 		}
 	}
 	
+	public void writeBigQueryEnumMembers(Graph graph, File outDir) throws IOException {
+		outDir.mkdirs();
+		ShapeManager shapeManager = bigQueryGenerator.getShapeManager();
+		BigQueryEnumGenerator generator = new BigQueryEnumGenerator(shapeManager);
+
+		DatasetMapper datasetMapper = manager.getDatasetMapper();
+		BigQueryTableMapper tableMapper = bigQueryGenerator.getTableMapper();
+		DataFileMapperImpl dataFileMapper = new DataFileMapperImpl(outDir, datasetMapper, tableMapper);
+		generator.generate(graph, dataFileMapper);
+	}
+	
 	public void writeBigQueryTableDefinitions(File outDir) {
+		outDir.mkdirs();
 		BigQueryTableWriter tableWriter = new BigQueryTableWriter(outDir, bigQueryGenerator);
 		
 		Collection<GoogleCloudProject> projectList = manager.listProjects();

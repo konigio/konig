@@ -117,11 +117,23 @@ public class WorkbookLoader {
 	private ShapeManager shapeManager;
 	private ValueFactory vf = new ValueFactoryImpl();
 	private DataFormatter formatter = new DataFormatter(true);
+	private IdMapper datasetMapper;
 	
 	public WorkbookLoader(NamespaceManager nsManager) {
 		this.nsManager = nsManager;
 		nsManager.add("vann", "http://purl.org/vocab/vann/");
 	}
+	
+
+	public IdMapper getDatasetMapper() {
+		return datasetMapper;
+	}
+
+
+	public void setDatasetMapper(IdMapper datasetMapper) {
+		this.datasetMapper = datasetMapper;
+	}
+
 
 	public void load(Workbook book, Graph graph) throws SpreadsheetException {
 		Worker worker = new Worker(book, graph);
@@ -182,6 +194,8 @@ public class WorkbookLoader {
 		private int pcEquivalentPathCol = UNDEFINED;
 		
 		private URI activityId;
+		
+		private List<Runnable> promiseList = new ArrayList<>();
 		
 		public Worker(Workbook book, Graph graph) {
 			this.book = book;
@@ -601,15 +615,19 @@ public class WorkbookLoader {
 				String text = stringValue(row, shapeBigQueryTableCol);
 				if (text != null) {
 					if ("x".equalsIgnoreCase(text)) {
-						String name = targetClass.getNamespace();
-						Namespace ns = nsManager.findByName(name);
-						if (ns == null) {
-							throw new SpreadsheetException("Namespace prefix not found: " + name);
+						if (datasetMapper == null) {
+							throw new SpreadsheetException("datasetMapper is not defined");
 						}
-						String prefix = ns.getPrefix();
+						Vertex vertex = graph.vertex(targetClass);
+						String datasetId = datasetMapper.idForClass(vertex);
+						
+						if (datasetId == null) {
+							throw new SpreadsheetException("Dataset id not defined for class: " + targetClass);
+						}
+					
 						String localName = targetClass.getLocalName();
 						StringBuilder builder = new StringBuilder();
-						builder.append(prefix);
+						builder.append(datasetId);
 						builder.append('.');
 						builder.append(localName);
 						text = builder.toString();
@@ -663,7 +681,7 @@ public class WorkbookLoader {
 
 		private void loadIndividualRow(Row row) throws SpreadsheetException {
 			
-			Literal label = stringLiteral(row, individualNameCol);
+			Literal name = stringLiteral(row, individualNameCol);
 			Literal comment = stringLiteral(row, individualCommentCol);
 			URI individualId = uriValue(row, individualIdCol);
 			List<URI> typeList = uriList(row, individualTypeCol);
@@ -680,7 +698,7 @@ public class WorkbookLoader {
 				}
 			}
 			
-			edge(individualId, RDFS.LABEL, label);
+			edge(individualId, Schema.name, name);
 			edge(individualId, RDFS.COMMENT, comment);
 			edge(individualId, DC.IDENTIFIER, codeValue);
 		}
@@ -821,24 +839,28 @@ public class WorkbookLoader {
 		 * schema:Text, or schema:Time.
 		 */
 		private boolean isDatatype(URI subject) {
-			if (XMLSchema.NAMESPACE.equals(subject.getNamespace())) {
-				return true;
-			}
 			
-			if (subject.equals(Schema.Boolean) ||
-				subject.equals(Schema.Date) ||
-				subject.equals(Schema.DateTime) ||
-				subject.equals(Schema.Number) ||
-				subject.equals(Schema.Float) ||
-				subject.equals(Schema.Integer) ||
-				subject.equals(Schema.Text) ||
-				subject.equals(Schema.Time) ||
-				subject.equals(RDFS.LITERAL) ||
-				subject.equals(RDFS.DATATYPE) ||
-				subject.equals(RDF.XMLLITERAL)
+			if (subject != null) {
+
+				if (XMLSchema.NAMESPACE.equals(subject.getNamespace())) {
+					return true;
+				}
 				
-			) {
-				return true;
+				if (subject.equals(Schema.Boolean) ||
+					subject.equals(Schema.Date) ||
+					subject.equals(Schema.DateTime) ||
+					subject.equals(Schema.Number) ||
+					subject.equals(Schema.Float) ||
+					subject.equals(Schema.Integer) ||
+					subject.equals(Schema.Text) ||
+					subject.equals(Schema.Time) ||
+					subject.equals(RDFS.LITERAL) ||
+					subject.equals(RDFS.DATATYPE) ||
+					subject.equals(RDF.XMLLITERAL)
+					
+				) {
+					return true;
+				}
 			}
 				
 			

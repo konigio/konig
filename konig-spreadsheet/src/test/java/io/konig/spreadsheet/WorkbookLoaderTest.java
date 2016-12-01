@@ -287,7 +287,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDF.TYPE, Schema.Enumeration);
 		assertValue(v, RDF.TYPE, OrderStatus);
 		assertValue(v, RDFS.COMMENT, "Payment is due");
-		assertValue(v, RDFS.LABEL, "Payment Due");
+		assertValue(v, Schema.name, "Payment Due");
 		assertValue(v, DC.IDENTIFIER, "40");
 		
 		

@@ -14,6 +14,8 @@ public interface GoogleCloudManager extends BigQueryTableHandler {
 	
 	Collection<GoogleCloudProject> listProjects();
 	
+	DatasetMapper getDatasetMapper();
+	
 	
 	/**
 	 * Get a collection of tables and/or views that describe a given OWL class.

@@ -238,7 +238,13 @@ public class BigQueryTableGenerator {
 									p.setMaxCount(maxCount);
 									shape.add(p);
 								}
+								StringBuilder builder = new StringBuilder();
+								builder.append(dataset.getDatasetId());
+								builder.append('.');
+								builder.append(tableId);
+								String bigQueryTableId = builder.toString();
 								
+								shape.setBigQueryTableId(bigQueryTableId);
 								shapeManager.addShape(shape);
 							}
 
