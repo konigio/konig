@@ -810,15 +810,18 @@ public class WorkbookLoader {
 		private List<URI> analyzePropertyType(Vertex subject, List<URI> propertyType, List<URI> range) {
 			if (propertyType == null) {
 				propertyType = new ArrayList<>();
+				
 				boolean datatypeProperty = false;
 				boolean objectProperty = false;
 				
-				for (URI type : range) {
-					
-					if (isDatatype(type)) {
-						datatypeProperty = true;
-					} else {
-						objectProperty = true;
+				if (range != null) {
+					for (URI type : range) {
+						
+						if (isDatatype(type)) {
+							datatypeProperty = true;
+						} else {
+							objectProperty = true;
+						}
 					}
 				}
 				
