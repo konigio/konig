@@ -35,6 +35,7 @@ public class SimpleShapeMediaTypeNamer implements ShapeMediaTypeNamer {
 		
 		Resource id = shape.getId();
 		if (id instanceof URI) {
+			URI targetClass = shape.getTargetClass();
 			String value = id.stringValue();
 			String[] array = value.split("/");
 			String host = array[2];
@@ -46,17 +47,20 @@ public class SimpleShapeMediaTypeNamer implements ShapeMediaTypeNamer {
 			String[] hostParts = host.split("[.]");
 			
 			host = hostParts[hostParts.length-2];
+
+			int len = array.length;
+			String className = targetClass == null ? array[len-1].toLowerCase() :
+				targetClass.getLocalName().toLowerCase();
 			
 			StringBuilder builder = new StringBuilder();
 			builder.append("application/vnd.");
 			builder.append(host);
 			builder.append('.');
-			int len = array.length;
 			builder.append(array[len-3].toLowerCase());
 			builder.append('.');
 			builder.append(array[len-2].toLowerCase());
 			builder.append('.');
-			builder.append(array[len-1].toLowerCase());
+			builder.append(className);
 			
 			
 			result = builder.toString();
