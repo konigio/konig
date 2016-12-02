@@ -71,11 +71,13 @@ public class Konig {
 	public static final URI Week = new URIImpl("http://www.konig.io/ns/core/Week");
 	public static final URI Month = new URIImpl("http://www.konig.io/ns/core/Month");
 	public static final URI Year = new URIImpl("http://www.konig.io/ns/core/Year");
-	public static final URI inputClass = new URIImpl("http://www.konig.io/ns/core/inputClass");
 	public static final URI aggregationOf = new URIImpl("http://www.konig.io/ns/core/aggregationOf");
 	public static final URI rollUpBy = new URIImpl("http://www.konig.io/ns/core/rollUpBy");
 	public static final URI fromAggregationSource = new URIImpl("http://www.konig.io/ns/core/fromAggregationSource");
 	public static final URI timeInterval = new URIImpl("http://www.konig.io/ns/core/timeInterval");
+	public static final URI sourcePath = new URIImpl("http://www.konig.io/ns/core/sourcePath");
+	public static final URI partitionOf = new URIImpl("http://www.konig.io/ns/core/partitionOf");
+	
 	
 	
 

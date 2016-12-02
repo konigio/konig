@@ -92,6 +92,8 @@ public class WorkbookLoader {
 	private static final String STEREOTYPE = "Stereotype";
 	private static final String VALUE_IN = "Value In";
 	private static final String EQUIVALENT_PATH = "Equivalent Path";
+	private static final String SOURCE_PATH = "Source Path";
+	private static final String PARTITION_OF = "Partition Of";
 	
 	private static final String UNBOUNDED = "unbounded";
 	
@@ -192,11 +194,11 @@ public class WorkbookLoader {
 		private int pcCommentCol = UNDEFINED;
 		private int pcPredicateKindCol = UNDEFINED;
 		private int pcEquivalentPathCol = UNDEFINED;
+		private int pcSourcePathCol = UNDEFINED;
+		private int pcPartitionOfCol = UNDEFINED;
 		
 		private URI activityId;
-		
-		private List<Runnable> promiseList = new ArrayList<>();
-		
+				
 		public Worker(Workbook book, Graph graph) {
 			this.book = book;
 			this.graph = graph;
@@ -396,6 +398,8 @@ public class WorkbookLoader {
 			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
 			Literal equivalentPath = stringLiteral(row, pcEquivalentPathCol);
+			Literal sourcePath = stringLiteral(row, pcSourcePathCol);
+			Literal partitionOf = stringLiteral(row, pcPartitionOfCol);
 			
 				
 			if (Konig.id.equals(propertyId)) {
@@ -436,6 +440,8 @@ public class WorkbookLoader {
 			edge(constraint, SH.in, valueIn);
 			edge(constraint, Konig.equivalentPath, equivalentPath);
 			edge(constraint, Konig.stereotype, predicateKind);
+			edge(constraint, Konig.sourcePath, sourcePath);
+			edge(constraint, Konig.partitionOf, partitionOf);
 			
 		}
 
@@ -562,6 +568,8 @@ public class WorkbookLoader {
 					case VALUE_IN :	pcValueInCol = i; break;
 					case STEREOTYPE : pcPredicateKindCol = i; break;
 					case EQUIVALENT_PATH : pcEquivalentPathCol = i; break;
+					case SOURCE_PATH : pcSourcePathCol = i; break;
+					case PARTITION_OF : pcPartitionOfCol = i; break;
 						
 					}
 				}
