@@ -99,33 +99,27 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     /**
      * Location of the file.
      */
-    @Parameter( defaultValue = "${basedir}/src/main/avro", property = "avroDir", required = true )
+    @Parameter
     private File avroDir;
     
     
-    @Parameter( defaultValue="${basedir}/src/main/jsonld", property="jsonldDir", required=true)
+    @Parameter
     private File jsonldDir;
     
-    @Parameter( defaultValue="${basedir}/src/main/jsonschema", property="jsonSchemaDir", required=true)
+    @Parameter
     private File jsonSchemaDir;
     
-    @Parameter( defaultValue="${basedir}/src/main/rdf", property="sourceDir", required=true)
+    @Parameter(property="sourceDir", required=true)
     private File sourceDir;
     
-    @Parameter (defaultValue="${basedir}/src/main/summary", property="summaryDir", required=true)
-    private File summaryDir;
-    
 
-    @Parameter(property="plantUMLDomainModelFile")
-    private File plantUMLDomainModelFile;
-
-    @Parameter (defaultValue="${basedir}/src/main/summary/domain.png", property="domain.png")
+    @Parameter
     private File domainModelPngFile;
     
-    @Parameter(property="javaDir")
+    @Parameter
     private File javaDir;
     
-    @Parameter(property="javaPackageRoot")
+    @Parameter
     private String javaPackageRoot;
     
     @Parameter
@@ -134,23 +128,32 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private String bqShapeBaseURL;
     
-    @Parameter(defaultValue="${basedir}/src/main/bigquery", property="bqOutDir")
+    @Parameter
     private File bqOutDir;
     
     @Parameter
     private File bqSourceDir;
 
-	@Parameter (defaultValue="${basedir}/target/rdf/shapes", property="shapesOutDir", required=false)
+	@Parameter
 	private File shapesOutDir;
 	
-	@Parameter(property="bigQueryDatasetId", required=false)
+	@Parameter
 	private String bigQueryDatasetId;
 	
-	 @Parameter (defaultValue="${basedir}/src/dataModel.xlsx", property="workbookFile", required=false)
+	 @Parameter
 	 private File workbookFile;
 	 
-	 @Parameter (defaultValue="${basedir}/target/rdf/owl", property="owlOutDir", required=false)
+	 @Parameter
 	 private File owlOutDir;
+
+    @Parameter
+    private File plantUMLDomainModelFile;
+	    
+	 @Parameter
+	 private File namespacesFile;
+	 
+	 @Parameter
+	 private File projectJsonldFile;
 
     
     private NamespaceManager nsManager;
@@ -159,53 +162,28 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private LogicalShapeNamer logicalShapeNamer;
     private ShapeManager shapeManager;
     private DatasetMapper datasetMapper;
+    private ShapeMediaTypeNamer mediaTypeNamer;
+    private Graph owlGraph;
+    private ContextManager contextManager;
 
     public void execute() throws MojoExecutionException   {
     	
     	try {
     		
-    		File avscDir = new File(avroDir, "avsc");
-    		File avroImports = new File(avroDir, "imports");
-			
 			shapeManager = new MemoryShapeManager();
 			nsManager = new MemoryNamespaceManager();
-			ContextNamer contextNamer = new SuffixContextNamer("/context");
-			ShapeMediaTypeNamer mediaTypeNamer = new SimpleShapeMediaTypeNamer();
-			Graph owlGraph = new MemoryGraph();
-			ContextManager contextManager = new MemoryContextManager();
-
-			loadSpreadsheet();
-			
-			RdfUtil.loadTurtle(sourceDir, owlGraph, nsManager);
-			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
-			shapeLoader.load(owlGraph);
-			
-
-			
+			mediaTypeNamer = new SimpleShapeMediaTypeNamer();
+			owlGraph = new MemoryGraph();
+			contextManager = new MemoryContextManager();
 			owlReasoner = new OwlReasoner(owlGraph);
+
+			loadResources();
+
+			generateBigQueryTables();
 			
-			
-			
-			if (bqShapeBaseURL != null) {
-				generateBigQueryTables(owlGraph);
-			}
-			
-			
-			ShapeToJsonldContext jsonld = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, mediaTypeNamer, owlGraph);
-			jsonld.generateAll(jsonldDir);
-			
-			SmartAvroDatatypeMapper avroMapper = new SmartAvroDatatypeMapper(owlReasoner);
-			ShapeToAvro avro = new ShapeToAvro(avroMapper);
-			avro.generateAvro(sourceDir, avscDir, avroImports, owlGraph);
-			
-			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SmartJsonSchemaTypeMapper(owlReasoner);
-			JsonSchemaNamer jsonSchemaNamer = new SimpleJsonSchemaNamer("/jsonschema", mediaTypeNamer);
-			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
-			ShapeToJsonSchema jsonSchema = new ShapeToJsonSchema(jsonSchemaGenerator);
-			jsonSchema.setListener(new ShapeToJsonSchemaLinker(owlGraph));
-			jsonSchema.generateAll(shapeManager.listShapes(), jsonSchemaDir);
-			
-			
+			generateJsonld();
+			generateAvro();
+			generateJsonSchema();
 			
 			ShapeMediaTypeLinker linker = new ShapeMediaTypeLinker(mediaTypeNamer);
 			linker.assignAll(shapeManager.listShapes(), owlGraph);
@@ -213,12 +191,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			owlReasoner.inferClassFromSubclassOf();
 			writeSummary(nsManager, shapeManager, owlGraph);
 			
-			
 			generatePlantUMLDomainModel();
-			
-			if (javaDir != null && javaPackageRoot!=null) {
-				generateJavaCode(shapeManager);
-			}
+			generateJava();
 			
 		
 			
@@ -228,7 +202,59 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
       
     }
-    private void loadSpreadsheet() throws MojoExecutionException   {
+    
+    private void loadResources() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException {
+
+		loadSpreadsheet();
+		
+		RdfUtil.loadTurtle(sourceDir, owlGraph, nsManager);
+		ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
+		shapeLoader.load(owlGraph);
+		
+	}
+
+	private void generateJava() throws IOException {
+
+		if (javaDir != null && javaPackageRoot!=null) {
+			generateJavaCode(shapeManager);
+		}
+		
+	}
+
+	private void generateJsonSchema() {
+
+		if (jsonSchemaDir != null) {
+
+			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SmartJsonSchemaTypeMapper(owlReasoner);
+			JsonSchemaNamer jsonSchemaNamer = new SimpleJsonSchemaNamer("/jsonschema", mediaTypeNamer);
+			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
+			ShapeToJsonSchema jsonSchema = new ShapeToJsonSchema(jsonSchemaGenerator);
+			jsonSchema.setListener(new ShapeToJsonSchemaLinker(owlGraph));
+			jsonSchema.generateAll(shapeManager.listShapes(), jsonSchemaDir);
+		}
+		
+	}
+
+	private void generateAvro() throws IOException {
+    	if (avroDir != null) {
+    		File avroImports = new File(avroDir, "imports");
+    		File avscDir = new File(avroDir, "avsc");
+			SmartAvroDatatypeMapper avroMapper = new SmartAvroDatatypeMapper(owlReasoner);
+			ShapeToAvro avro = new ShapeToAvro(avroMapper);
+			avro.generateAvro(sourceDir, avscDir, avroImports, owlGraph);
+		}
+		
+	}
+	private void generateJsonld() throws SchemaGeneratorException, IOException {
+
+		if (jsonldDir != null) {
+			ContextNamer contextNamer = new SuffixContextNamer("/context");
+			ShapeToJsonldContext jsonld = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, mediaTypeNamer, owlGraph);
+			jsonld.generateAll(jsonldDir);
+		}
+		
+	}
+	private void loadSpreadsheet() throws MojoExecutionException   {
 		 try {
 
 			 if (workbookFile!=null && workbookFile.exists()) {
@@ -270,39 +296,41 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 
-	private void generateBigQueryTables(Graph graph) throws SchemaGeneratorException, IOException, RDFParseException, RDFHandlerException {
-		
-		if (bqSourceDir != null) {
-			RdfUtil.loadTurtle(bqSourceDir, graph, nsManager);
+	private void generateBigQueryTables() throws SchemaGeneratorException, IOException, RDFParseException, RDFHandlerException {
+
+		if (bqShapeBaseURL != null) {
+			if (bqSourceDir != null) {
+				RdfUtil.loadTurtle(bqSourceDir, owlGraph, nsManager);
+			}
+			SimpleShapeNamer shapeNamer = new SimpleShapeNamer(nsManager, bqShapeBaseURL);
+			shapeNamer.setPrefixBase("bq");
+			BigQueryTableGenerator generator = new BigQueryTableGenerator(shapeManager, shapeNamer, owlReasoner);
+			
+			MemoryGoogleCloudManager cloudManager = new MemoryGoogleCloudManager();
+			
+			
+			GoogleCloudConfig config = new GoogleCloudConfig(cloudManager, generator);
+			
+			BigQueryTableMapper tableMapper = createTableMapper();
+			
+			
+			config.load(owlGraph);
+			
+			generator.generateBigQueryTables(cloudManager);
+			ShapeFileGetter shapeFileGetter = new ShapeFileGetter(shapesOutDir, nsManager);
+			cloudManager.setProjectMapper(new SimpleProjectMapper("testProject"));
+			cloudManager.setDatasetMapper(datasetMapper());
+			generator.setTableMapper(tableMapper);
+			generator.generateEnumTables(owlGraph, cloudManager);
+			config.writeEnumTableShapes(nsManager, shapeFileGetter);
+			
+			
+			File bqSchemaDir = new File(bqOutDir, SCHEMA);
+			File bqDataDir = new File(bqOutDir, DATA);
+			
+			config.writeBigQueryTableDefinitions(bqSchemaDir);
+			config.writeBigQueryEnumMembers(owlGraph, bqDataDir);
 		}
-		SimpleShapeNamer shapeNamer = new SimpleShapeNamer(nsManager, bqShapeBaseURL);
-		shapeNamer.setPrefixBase("bq");
-		BigQueryTableGenerator generator = new BigQueryTableGenerator(shapeManager, shapeNamer, owlReasoner);
-		
-		MemoryGoogleCloudManager cloudManager = new MemoryGoogleCloudManager();
-		
-		
-		GoogleCloudConfig config = new GoogleCloudConfig(cloudManager, generator);
-		
-		BigQueryTableMapper tableMapper = createTableMapper();
-		
-		
-		config.load(graph);
-		
-		generator.generateBigQueryTables(cloudManager);
-		ShapeFileGetter shapeFileGetter = new ShapeFileGetter(shapesOutDir, nsManager);
-		cloudManager.setProjectMapper(new SimpleProjectMapper("testProject"));
-		cloudManager.setDatasetMapper(datasetMapper());
-		generator.setTableMapper(tableMapper);
-		generator.generateEnumTables(graph, cloudManager);
-		config.writeEnumTableShapes(nsManager, shapeFileGetter);
-		
-		
-		File bqSchemaDir = new File(bqOutDir, SCHEMA);
-		File bqDataDir = new File(bqOutDir, DATA);
-		
-		config.writeBigQueryTableDefinitions(bqSchemaDir);
-		config.writeBigQueryEnumMembers(graph, bqDataDir);
 		
 	}
 	
@@ -365,21 +393,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 	private void writeSummary(NamespaceManager nsManager, ShapeManager shapeManager, Graph owlGraph) throws IOException  {
 		
-		summaryDir.mkdirs();
-		
-		File namespacesFile = new File(summaryDir, "namespaces.ttl");
-		File projectFile = new File(summaryDir, "project.jsonld");
-		File domainFile = new File(summaryDir, "domain.ttl");
-		File prototypeFile = new File(summaryDir, "prototype.ttl");
-
 		OntologySummarizer summarizer = new OntologySummarizer();
-		summarizer.summarize(nsManager, owlGraph, namespacesFile);
-		summarizer.writeDomainModel(nsManager, owlGraph, shapeManager, domainFile);
-		summarizer.writePrototypeModel(nsManager, owlGraph, shapeManager, prototypeFile);
+		
+		if (namespacesFile != null) {
+			namespacesFile.getParentFile().mkdirs();
+
+			summarizer.summarize(nsManager, owlGraph, namespacesFile);
+		}
 		
 		
-		AllJsonldWriter all = new AllJsonldWriter();
-		all.writeJSON(nsManager, owlGraph, excludeNamespace, projectFile);
+		if (projectJsonldFile != null) {
+			projectJsonldFile.getParentFile().mkdirs();
+			AllJsonldWriter all = new AllJsonldWriter();
+			all.writeJSON(nsManager, owlGraph, excludeNamespace, projectJsonldFile);
+		}
 		
 	}
 }
