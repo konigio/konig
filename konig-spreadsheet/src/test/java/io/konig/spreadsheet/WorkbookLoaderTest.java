@@ -67,6 +67,54 @@ public class WorkbookLoaderTest {
 		assertEquals("/city/containedInPlace", p.getEquivalentPath());
 
 	}
+
+	
+	@Test
+	public void testPartitionOf() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
+		
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+		
+		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
+		Shape shape = loader.getShapeManager().getShapeById(shapeId);
+		assertTrue(shape != null);
+		
+		PropertyConstraint p = shape.getPropertyConstraint(Konig.timeInterval);
+		assertTrue(p != null);
+		
+		String partitionOf = p.getPartitionOf();
+		assertEquals("/schema:endTime", partitionOf);
+	}
+	
+	@Test
+	public void testSourcePath() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
+		
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+		
+		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
+		Shape shape = loader.getShapeManager().getShapeById(shapeId);
+		assertTrue(shape != null);
+		
+		URI propertyId = uri("http://example.com/ns/alias/city");
+		PropertyConstraint p = shape.getPropertyConstraint(propertyId);
+		assertTrue(p != null);
+		
+		String sourcePath = p.getSourcePath();
+		assertEquals("/location[type City]", sourcePath);
+	}
 	
 	@Test
 	public void testRollUpBy() throws Exception {

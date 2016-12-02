@@ -82,6 +82,10 @@ public class PropertyConstraint {
 	private String equivalentPath;
 	private Path compiledEquivalentPath;
 	private String fromAggregationSource;
+	private String sourcePath;
+	private Path compiledSourcePath;
+	private String partitionOf;
+	private Path compiledPartitionOf;
 	
 	private Term term;
 	
@@ -131,6 +135,8 @@ public class PropertyConstraint {
 		edge(graph, Konig.stereotype, stereotype);
 		edge(graph, Konig.equivalentPath, literal(equivalentPath));
 		edge(graph, Konig.fromAggregationSource, literal(fromAggregationSource));
+		edge(graph, Konig.sourcePath, literal(sourcePath));
+		edge(graph, Konig.partitionOf, literal(partitionOf));
 		
 	}
 	
@@ -531,6 +537,29 @@ public class PropertyConstraint {
 	public void setCompiledEquivalentPath(Path compiledEquivalentPath) {
 		this.compiledEquivalentPath = compiledEquivalentPath;
 	}
+	
+
+	public String getSourcePath() {
+		return sourcePath;
+	}
+
+	public void setSourcePath(String sourcePath) {
+		this.sourcePath = sourcePath;
+	}
+	public Path getCompiledSourcePath(PathFactory factory) {
+		if (compiledSourcePath == null && sourcePath!=null) {
+			compiledSourcePath = factory.createPath(sourcePath);
+		}
+		return compiledSourcePath;
+	}
+	
+	public Path getCompiledSourcePath() {
+		return compiledSourcePath;
+	}
+
+	public void setCompiledSourcePath(Path compiledSourcePath) {
+		this.compiledSourcePath = compiledSourcePath;
+	}
 
 	public String getFromAggregationSource() {
 		return fromAggregationSource;
@@ -539,4 +568,28 @@ public class PropertyConstraint {
 	public void setFromAggregationSource(String fromAggregationSource) {
 		this.fromAggregationSource = fromAggregationSource;
 	}
+
+	public String getPartitionOf() {
+		return partitionOf;
+	}
+
+	public void setPartitionOf(String partitionOf) {
+		this.partitionOf = partitionOf;
+	}
+
+	public Path getCompiledPartitionOf() {
+		return compiledPartitionOf;
+	}
+
+	public void setCompiledPartitionOf(Path compiledPartitionOf) {
+		this.compiledPartitionOf = compiledPartitionOf;
+	}
+	
+	public Path getCompiledPartitionOf(PathFactory factory) {
+		if (compiledPartitionOf == null && partitionOf != null) {
+			compiledPartitionOf = factory.createPath(partitionOf);
+		}
+		return compiledPartitionOf;
+	}
+	
 }
