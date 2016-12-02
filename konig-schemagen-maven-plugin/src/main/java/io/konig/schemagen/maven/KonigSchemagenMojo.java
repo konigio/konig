@@ -116,14 +116,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private File summaryDir;
     
 
-    @Parameter (defaultValue="${basedir}/src/main/summary/domain.plantuml", property="plantUMLDomainModelFile")
+    @Parameter(property="plantUMLDomainModelFile")
     private File plantUMLDomainModelFile;
 
     @Parameter (defaultValue="${basedir}/src/main/summary/domain.png", property="domain.png")
     private File domainModelPngFile;
-    
-    @Parameter (property="skipPlantUMLDomainModel")
-    private boolean skipPlantUMLDomainModel=false;
     
     @Parameter(property="javaDir")
     private File javaDir;
@@ -216,9 +213,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			owlReasoner.inferClassFromSubclassOf();
 			writeSummary(nsManager, shapeManager, owlGraph);
 			
-			if (!skipPlantUMLDomainModel) {
-				generatePlantUMLDomainModel();
-			}
+			
+			generatePlantUMLDomainModel();
 			
 			if (javaDir != null && javaPackageRoot!=null) {
 				generateJavaCode(shapeManager);
@@ -246,19 +242,22 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 
 	private void generatePlantUMLDomainModel() throws IOException, PlantumlGeneratorException {
-		
-		ClassManager classManager = getClassManager();
-		PlantumlClassDiagramGenerator generator = new PlantumlClassDiagramGenerator(owlReasoner, shapeManager);
-		FileWriter writer = new FileWriter(plantUMLDomainModelFile);
-		try {
-			generator.generateDomainModel(classManager, writer);
-		} finally {
-			close(writer);
+		if (plantUMLDomainModelFile != null) {
+
+			plantUMLDomainModelFile.getParentFile().mkdirs();
+			
+			ClassManager classManager = getClassManager();
+			PlantumlClassDiagramGenerator generator = new PlantumlClassDiagramGenerator(owlReasoner, shapeManager);
+			FileWriter writer = new FileWriter(plantUMLDomainModelFile);
+			try {
+				generator.generateDomainModel(classManager, writer);
+			} finally {
+				close(writer);
+			}
+			
+			SourceFileReader reader = new SourceFileReader(plantUMLDomainModelFile);
+			reader.getGeneratedImages();
 		}
-		
-//		FileOutputStream imageFile = new FileOutputStream(domainModelPngFile);
-		SourceFileReader reader = new SourceFileReader(plantUMLDomainModelFile);
-		reader.getGeneratedImages();
 		
 	}
 
