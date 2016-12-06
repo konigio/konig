@@ -12,6 +12,21 @@ public interface JavaNamer {
 	String javaClassName(URI owlClass);
 	
 	/**
+	 * Compute the name for the Java interface that describes a given OWL class.
+	 * @param owlClass The OWL class for which a Java interface name is requested
+	 * @return The fully qualified Java interface name for the given OWL class.
+	 */
+	String javaInterfaceName(URI owlClass);
+	
+	/**
+	 * Compute the name for the Java class that implements the data writer for a given Shape.
+	 * @param shapeId  The identifier for the target Shape
+	 * @param format The output format of the writer.
+	 * @return The name of the data writer for the given Shape in the given format.
+	 */
+	String writerName(URI shapeId, Format format);
+	
+	/**
 	 * Compute the Java class name for the DataWriter that writes a given media type.
 	 * @param mediaType The media type name
 	 * @return The Java class name for the DataWriter that writes the given media type.

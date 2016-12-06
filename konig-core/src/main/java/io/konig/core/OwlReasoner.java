@@ -59,6 +59,10 @@ public class OwlReasoner {
 		return graph;
 	}
 	
+	public List<Vertex> owlClassList() {
+		return graph.v(OWL.CLASS).in(RDF.TYPE).toVertexList();
+	}
+	
 	/**
 	 * Ensure that every member within a set of equivalent classes contains 
 	 * an owl:equivalentClass property whose value is the preferred class.
@@ -240,6 +244,14 @@ public class OwlReasoner {
 	 * @return The least common super class between the two classes.
 	 */
 	public Resource leastCommonSuperClass(Resource aClass, Resource bClass) {
+		
+		if (aClass==null) {
+			return bClass;
+		}
+		if (bClass==null) {
+			return aClass;
+		}
+		
 		if (aClass.equals(bClass)) {
 			return aClass;
 		}
@@ -292,6 +304,20 @@ public class OwlReasoner {
 		
 		return set;
 	}
+	
+	/**
+	 * Check whether one type is a subClassOf another.
+	 * @param a The identifier for one OWL Class
+	 * @param b The identifier for another OWL Class.
+	 * @return True if a and b are equal or a is a subClassOf b (or one of b's ancestors).
+	 */
+	public boolean isSubClassOf(Resource a, Resource b) {
+		if (a.equals(b)) {
+			return true;
+		}
+		Vertex va = graph.getVertex(a);
+		return RdfUtil.isSubClassOf(va, b);
+	}
 
 	public Set<Vertex> equivalentClasses(Resource owlClass) {
 		buildEquivalentClasses();
@@ -323,8 +349,7 @@ public class OwlReasoner {
 	}
 	
 	public boolean isEnumerationClass(URI owlClass) {
-		// TODO: Change to Schema.Enumeration
-		return graph.v(owlClass).hasValue(RDFS.SUBCLASSOF, OwlVocab.NamedIndividual).size()>0;
+		return graph.v(owlClass).hasValue(RDFS.SUBCLASSOF, Schema.Enumeration).size()>0;
 	}
 	
 	public DatatypeRestriction datatypeRestriction(URI datatype) {

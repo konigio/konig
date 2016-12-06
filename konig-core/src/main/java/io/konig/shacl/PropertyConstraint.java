@@ -404,7 +404,8 @@ public class PropertyConstraint {
 		try {
 			JsonGenerator json = factory.createGenerator(out);
 			json.useDefaultPrettyPrinter();
-			toJson(json);
+			Set<Shape> memory = new HashSet<>();
+			toJson(memory, json);
 			json.flush();
 			
 		} catch (IOException e) {
@@ -414,7 +415,7 @@ public class PropertyConstraint {
 		return out.toString();
 	}
 	
-	public void toJson(JsonGenerator json) throws IOException {
+	public void toJson(Set<Shape> memory, JsonGenerator json) throws IOException {
 		json.writeStartObject();
 		if (predicate != null) {
 			json.writeStringField("predicate", predicate.toString());
@@ -445,7 +446,11 @@ public class PropertyConstraint {
 		}
 		if (valueShape != null) {
 			json.writeFieldName("valueShape");
-			valueShape.toJson(json);
+			if (memory.contains(valueShape)) {
+				json.writeString( valueShape.getId().toString());
+			} else {
+				valueShape.toJson(memory, json);
+			}
 			
 		} else if (valueShapeId != null) {
 			json.writeStringField("valueShape", valueShapeId.toString());

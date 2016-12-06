@@ -401,6 +401,11 @@ public class WorkbookLoader {
 			Literal sourcePath = stringLiteral(row, pcSourcePathCol);
 			Literal partitionOf = stringLiteral(row, pcPartitionOfCol);
 			
+			if (RDF.TYPE.equals(propertyId)) {
+				valueType = null;
+				valueClass = OWL.CLASS;
+			}
+			
 				
 			if (Konig.id.equals(propertyId)) {
 				int min = minCount==null ? 0 : minCount.intValue();
@@ -415,11 +420,17 @@ public class WorkbookLoader {
 								
 				URI nodeKind =	min==0 ? SH.BlankNodeOrIRI : SH.IRI ;
 				edge(shapeId, SH.nodeKind, nodeKind);
+
+				if (valueClass!=null) {
+					edge(shapeId, SH.targetClass, valueClass);
+				}
+				
 				return;
 			}
 			
 			Resource constraint = graph.vertex().getId();
 			
+			edge(shapeId, RDF.TYPE, SH.Shape);
 			edge(shapeId, SH.property, constraint);
 			edge(constraint, SH.predicate, propertyId);
 			edge(constraint, RDFS.COMMENT, comment);
@@ -427,7 +438,9 @@ public class WorkbookLoader {
 			if (valueClass != null && (valueType==null || XMLSchema.ANYURI.equals(valueType))) {
 				edge(constraint, SH.valueClass, valueClass);
 				edge(constraint, SH.nodeKind, SH.IRI);
-				edge(valueClass, RDF.TYPE, OWL.CLASS);
+				if (!RDF.TYPE.equals(propertyId)) {
+					edge(valueClass, RDF.TYPE, OWL.CLASS);
+				}
 			} else if (isDatatype(valueType)) {
 				edge(constraint, SH.datatype, valueType);
 			} else {
@@ -442,6 +455,7 @@ public class WorkbookLoader {
 			edge(constraint, Konig.stereotype, predicateKind);
 			edge(constraint, Konig.sourcePath, sourcePath);
 			edge(constraint, Konig.partitionOf, partitionOf);
+			
 			
 		}
 
@@ -609,10 +623,13 @@ public class WorkbookLoader {
 			edge(shapeId, PROV.wasGeneratedBy, activityId);
 			edge(shapeId, RDFS.COMMENT, shapeComment);
 			edge(shapeId, SH.targetClass, targetClass);
+			edge(targetClass, RDF.TYPE, OWL.CLASS);
 			edge(shapeId, Konig.aggregationOf, aggregationOf);
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
+			
+			
 			
 		}
 
@@ -702,6 +719,8 @@ public class WorkbookLoader {
 				for (URI value : typeList) {
 					if (!value.equals(Schema.Enumeration)) {
 						graph.edge(individualId, RDF.TYPE, value);
+						graph.edge(value, RDF.TYPE, OWL.CLASS);
+						graph.edge(value, RDFS.SUBCLASSOF, Schema.Enumeration);
 					}
 				}
 			}
@@ -882,10 +901,11 @@ public class WorkbookLoader {
 			List<URI> result = null;
 			String text = stringValue(row, col);
 			if (text != null) {
-				String[] array = text.split(" \t\r\n");
-				if (array.length>0) {
+				StringTokenizer tokens = new StringTokenizer(text, " \n\t\r");
+				if (tokens.hasMoreTokens()) {
 					result = new ArrayList<>();
-					for (String value : array) {
+					while (tokens.hasMoreTokens()) {
+						String value = tokens.nextToken();
 						result.add(expandCurie(value));
 					}
 				}
@@ -963,7 +983,7 @@ public class WorkbookLoader {
 			Literal className = stringLiteral(row, classNameCol);
 			Literal comment = stringLiteral(row, classCommentCol);
 			URI classId = uriValue(row, classIdCol);
-			URI subclassOf = uriValue(row, classSubclassOfCol);
+			List<URI> subclassOf = uriList(row, classSubclassOfCol);
 			
 			if (classId != null) {
 				graph.edge(classId, RDF.TYPE, OWL.CLASS);
@@ -973,9 +993,12 @@ public class WorkbookLoader {
 				if (comment != null) {
 					graph.edge(classId, RDFS.COMMENT, comment);
 				}
-				if (subclassOf != null) {
-					graph.edge(classId, RDFS.SUBCLASSOF, subclassOf);
-					graph.edge(subclassOf, RDF.TYPE, OWL.CLASS);
+				if (subclassOf != null && !subclassOf.isEmpty()) {
+					for (URI subclassId : subclassOf) {
+						graph.edge(classId, RDFS.SUBCLASSOF, subclassId);
+						graph.edge(subclassId, RDF.TYPE, OWL.CLASS);
+					}
+					
 				}
 			}
 			

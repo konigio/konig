@@ -1,14 +1,22 @@
 package io.konig.schemagen.java;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.OWL;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JMethod;
+import com.sun.codemodel.JType;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -24,8 +32,98 @@ import io.konig.shacl.ShapeBuilder;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.BasicLogicalShapeNamer;
 import io.konig.shacl.impl.MemoryClassManager;
+import io.konig.shacl.impl.MemoryShapeManager;
 
 public class JavaClassBuilderTest {
+	
+	@Test
+	public void testEnumeration() throws Exception {
+
+		MemoryGraph graph = new MemoryGraph();
+		graph.edge(Schema.GenderType, RDF.TYPE, OWL.CLASS);
+		graph.edge(Schema.GenderType, RDFS.SUBCLASSOF, Schema.Enumeration);
+		graph.edge(Schema.Male, RDF.TYPE, Schema.GenderType);
+		graph.edge(Schema.Female, RDF.TYPE, Schema.GenderType);
+		JCodeModel model = new JCodeModel();
+		NamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
+		ShapeManager shapeManager = new MemoryShapeManager();
+		OwlReasoner owlReasoner = new OwlReasoner(graph);
+		
+		JavaNamer javaNamer = new BasicJavaNamer("com.example", nsManager);
+		JavaClassBuilder classBuilder = new JavaClassBuilder(shapeManager, javaNamer, owlReasoner);
+		
+		classBuilder.buildClass(Schema.GenderType, model);
+
+		File file = new File("target/test/JavaClassBuilderTest/enumeration");
+		file.mkdirs();
+		model.build(file);
+	}
+	
+	@Ignore
+	public void testMultipleInheritance() throws Exception {
+		MemoryGraph graph = new MemoryGraph();
+		graph.edge(Schema.Place, 		 RDF.TYPE, OWL.CLASS);
+		graph.edge(Schema.Organization,  RDF.TYPE, OWL.CLASS);
+		graph.edge(Schema.LocalBusiness, RDF.TYPE, OWL.CLASS);
+		graph.edge(Schema.LocalBusiness, RDFS.SUBCLASSOF, Schema.Place);
+		graph.edge(Schema.LocalBusiness, RDFS.SUBCLASSOF, Schema.Organization);
+		
+		URI placeShapeId = uri("http://example.com/shape/v1/schema/Place");
+		URI orgShapeId = uri("http://example.com/shape/v1/schema/Organization");
+		
+		ShapeBuilder builder = new ShapeBuilder();
+		builder.beginShape(placeShapeId) 
+			.targetClass(Schema.Place)
+			.beginProperty(Schema.name)
+				.minCount(0)
+				.maxCount(1)
+				.datatype(XMLSchema.STRING)
+			.endProperty()
+			.beginProperty(Schema.containedInPlace)
+				.minCount(0)
+				.valueShape(placeShapeId)
+			.endProperty()
+		.endShape()
+		.beginShape(orgShapeId)
+			.targetClass(Schema.Organization)
+			.beginProperty(Schema.name)
+				.minCount(1)
+				.maxCount(1)
+				.datatype(XMLSchema.STRING)
+			.endProperty()
+			
+
+			.beginProperty(Schema.legalName)
+				.minCount(0)
+				.maxCount(1)
+				.datatype(XMLSchema.STRING)
+			.endProperty()			
+		
+		.endShape();
+		ShapeManager shapeManager = builder.getShapeManager();
+		
+		OwlReasoner owlReasoner = new OwlReasoner(graph);
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", "http://schema.org/");
+
+		JCodeModel model = new JCodeModel();
+		JavaNamer javaNamer = new BasicJavaNamer("com.example", nsManager);
+		JavaClassBuilder classBuilder = new JavaClassBuilder(shapeManager, javaNamer, owlReasoner);
+		
+		classBuilder.buildClass(Schema.LocalBusiness, model);
+		
+		JDefinedClass javaClass = model._getClass("com.example.model.schema.LocalBusiness");
+		assertTrue(javaClass != null);
+		
+		JMethod method = javaClass.getMethod("getName", new JType[]{});
+		assertTrue(method != null);
+		
+
+		File file = new File("target/JavaClassBuilderTest/multipleInheritance");
+		file.mkdirs();
+		model.build(file);
+		
+	}
 
 	@Test
 	public void test() throws Exception {
@@ -93,11 +191,11 @@ public class JavaClassBuilderTest {
 		
 		JCodeModel model = new JCodeModel();
 		JavaNamer javaNamer = new BasicJavaNamer("com.example.", nsManager);
-		JavaClassBuilder classBuilder = new JavaClassBuilder(classManager, namer, javaNamer, new OwlReasoner(graph));
+		JavaClassBuilder classBuilder = new JavaClassBuilder(shapeManager, javaNamer, new OwlReasoner(graph));
 		
 		classBuilder.buildAll(classManager.list(), model);
 		
-		File file = new File("target/java/src");
+		File file = new File("target/test/JavaClassBuilderTest/general");
 		file.mkdirs();
 		model.build(file);
 		

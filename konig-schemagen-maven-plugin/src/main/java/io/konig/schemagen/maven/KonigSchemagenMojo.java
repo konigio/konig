@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -27,6 +28,10 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.OWL;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
@@ -36,6 +41,7 @@ import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
@@ -59,6 +65,8 @@ import io.konig.schemagen.gcp.SimpleProjectMapper;
 import io.konig.schemagen.java.BasicJavaNamer;
 import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
+import io.konig.schemagen.java.JsonWriterBuilder;
+import io.konig.schemagen.java.ShapeHandler;
 import io.konig.schemagen.jsonld.ShapeToJsonldContext;
 import io.konig.schemagen.jsonschema.JsonSchemaGenerator;
 import io.konig.schemagen.jsonschema.JsonSchemaNamer;
@@ -373,18 +381,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 	private void generateJavaCode(ShapeManager shapeManager) throws IOException {
 		
-
-		ClassManager classManager = getClassManager();
-		LogicalShapeNamer namer = getLogicalShapeNamer();
-		
-		
-		JCodeModel model = new JCodeModel();
+		final JCodeModel model = new JCodeModel();
 		JavaNamer javaNamer = new BasicJavaNamer(javaPackageRoot, nsManager);
-		JavaClassBuilder classBuilder = new JavaClassBuilder(classManager, namer, javaNamer, owlReasoner);
+		JavaClassBuilder classBuilder = new JavaClassBuilder(shapeManager, javaNamer, owlReasoner);
+		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(owlReasoner, shapeManager, javaNamer);
 		
-		for (Shape shape : classManager.list()) {
-			classBuilder.buildClass(shape, model);
-		}
+		classBuilder.buildAllClasses(model);
+		writerBuilder.buildAll(shapeManager.listShapes(), model);
 		
 		javaDir.mkdirs();
 		model.build(javaDir);

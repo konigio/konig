@@ -93,8 +93,13 @@ public class Schema {
 	public static final URI TradeAction = new URIImpl("http://schema.org/TradeAction");
 	public static final URI price = new URIImpl("http://schema.org/price");
 	public static final URI birthDate = new URIImpl("http://schema.org/birthDate");
+	public static final URI birthPlace = new URIImpl("http://schema.org/birthPlace");
 	public static final URI location = new URIImpl("http://schema.org/location");
 	public static final URI worksFor = new URIImpl("http://schema.org/worksFor");
+	public static final URI Place = new URIImpl("http://schema.org/Place");
+	public static final URI LocalBusiness = new URIImpl("http://schema.org/LocalBusiness");
+	public static final URI containedInPlace = new URIImpl("http://schema.org/containedInPlace");
+	public static final URI legalName = new URIImpl("http://schema.org/legalName");
 	
 	
 
