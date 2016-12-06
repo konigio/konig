@@ -142,6 +142,8 @@ public class JsonWriterBuilder {
 		
 		body.invoke(jsonVar, "writeStartObject");
 		
+		handleIdProperty(model, body, shape, sourceVar, jsonVar);
+		
 		List<PropertyConstraint> propertyList = shape.getProperty();
 		for (PropertyConstraint p : propertyList) {
 			
@@ -253,6 +255,25 @@ public class JsonWriterBuilder {
 	}
 
 
+
+
+	private void handleIdProperty(JCodeModel model, JBlock body, Shape shape, JVar sourceVar, JVar jsonVar) {
+		
+		
+		if (shape.getNodeKind() == NodeKind.IRI) {
+			URI targetClass = shape.getTargetClass();
+			JBlock then = body._if(sourceVar.invoke("getId").ne(JExpr._null()))._then();
+			
+			String methodName = owlReasoner.isEnumerationClass(targetClass) ? "getLocalName" : "stringValue";
+			
+			then.add(
+				jsonVar.invoke("writeStringField").arg(JExpr.lit("id")).arg(
+					sourceVar.invoke("getId").invoke(methodName))
+			);
+			
+		}
+		
+	}
 
 
 	private void handleIriReference(JCodeModel model, JBlock body, PropertyConstraint p, JVar sourceVar, JVar jsonVar) throws ValidationException {

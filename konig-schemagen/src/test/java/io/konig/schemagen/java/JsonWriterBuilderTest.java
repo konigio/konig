@@ -34,6 +34,41 @@ import io.konig.shacl.ShapeManager;
 public class JsonWriterBuilderTest {
 	
 	@Test
+	public void testEnumId() throws Exception {
+		String basePackage = "com.example";
+		URI genderTypeShapeId = uri("http://example.com/shapes/v1/schema/GenderType");
+
+		MemoryNamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
+		ShapeBuilder builder = new ShapeBuilder();
+		builder.beginShape(genderTypeShapeId)
+			.targetClass(Schema.GenderType)
+			.nodeKind(NodeKind.IRI)
+			.property(Schema.name)
+				.minCount(1)
+				.maxCount(1)
+				.datatype(XMLSchema.STRING)
+			.endProperty()
+		.endShape();
+		
+		ShapeManager shapeManager = builder.getShapeManager();
+		Shape shape = shapeManager.getShapeById(genderTypeShapeId);
+		
+		Graph graph = new MemoryGraph();
+		graph.edge(Schema.GenderType, RDFS.SUBCLASSOF, Schema.Enumeration);
+		OwlReasoner reasoner = new OwlReasoner(graph);
+		
+		JavaNamer javaNamer = new BasicJavaNamer(basePackage, nsManager);
+		JsonWriterBuilder writerBuilder = new JsonWriterBuilder(reasoner, shapeManager, javaNamer);
+
+		JCodeModel model = new JCodeModel();
+		writerBuilder.buildJsonWriter(shape, model);
+
+		File outDir = new File("target/test/JsonWriterBuilderTest/testEnumId");
+		outDir.mkdirs();
+		model.build(outDir);
+	}
+	
+	@Test
 	public void testMultipleEnum() throws Exception {
 		String basePackage = "com.example";
 		URI personShapeId = uri("http://example.com/shapes/v1/schema/Person");
@@ -42,6 +77,7 @@ public class JsonWriterBuilderTest {
 		ShapeBuilder builder = new ShapeBuilder();
 		builder.beginShape(personShapeId)
 			.targetClass(Schema.Person)
+			.nodeKind(NodeKind.IRI)
 			.property(Schema.gender)
 				.minCount(1)
 				.nodeKind(NodeKind.IRI)
