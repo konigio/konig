@@ -33,6 +33,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.AmbiguousPreferredClassException;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
 
 public class LogicalShapeBuilder {
 	
@@ -68,6 +69,18 @@ public class LogicalShapeBuilder {
 			Shape logicalShape = classManager.getLogicalShape(targetClass);
 			if (logicalShape == null) {
 				buildLogicalShape(list, targetClass, classManager);
+			}
+		}
+		
+		List<Vertex> classList = reasoner.owlClassList();
+		for (Vertex v : classList) {
+			Resource id = v.getId();
+			if (id instanceof URI) {
+				URI uri = (URI) id;
+				Shape logicalShape = classManager.getLogicalShape(uri);
+				if (logicalShape == null) {
+					buildLogicalShape(null, uri, classManager);
+				}
 			}
 		}
 
@@ -227,9 +240,11 @@ public class LogicalShapeBuilder {
 	private List<Shape> filterByTargetClass(List<Shape> list, URI targetClass) {
 	
 		List<Shape> result = new ArrayList<>();
-		for (Shape shape : list) {
-			if (targetClass.equals(targetClass(shape))) {
-				result.add(shape);
+		if (list != null) {
+			for (Shape shape : list) {
+				if (targetClass.equals(targetClass(shape))) {
+					result.add(shape);
+				}
 			}
 		}
 		

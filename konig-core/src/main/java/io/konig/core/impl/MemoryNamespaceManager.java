@@ -34,6 +34,7 @@ import io.konig.core.vocab.AS;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
+import io.konig.core.vocab.Schema;
 
 public class MemoryNamespaceManager implements NamespaceManager {
 	private static final MemoryNamespaceManager INSTANCE = new MemoryNamespaceManager();
@@ -47,6 +48,7 @@ public class MemoryNamespaceManager implements NamespaceManager {
 		INSTANCE.add("sh", SH.NAMESPACE);
 		INSTANCE.add("prov", PROV.NAMESPACE);
 		INSTANCE.add("activity", Konig.ACTIVIY_BASE_URL);
+		INSTANCE.add("schema", Schema.NAMESPACE);
 	}
 	
 	public static MemoryNamespaceManager getDefaultInstance() {

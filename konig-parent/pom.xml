@@ -41,6 +41,7 @@
   </scm>
   
   <modules>
+  	<module>../konig-java</module>
   	<module>../konig-path-parser</module>
   	<module>../konig-core</module>
   	<module>../konig-spreadsheet</module>

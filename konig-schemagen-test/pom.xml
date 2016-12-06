@@ -1,0 +1,87 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>io.konig</groupId>
+    <artifactId>konig-parent</artifactId>
+    <version>2.0.0-1</version>
+    <relativePath>../konig-parent/pom.xml</relativePath>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  
+  <artifactId>konig-schemagen-test</artifactId>
+  <name>Konig Schema Generator Test</name>
+  <description>A module used to test the schema generator</description>
+  
+  
+  <build>
+  	<plugins>
+  		<plugin>
+	  		<groupId>io.konig</groupId>
+	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
+	  		<version>${konig.version}</version>
+	  		<configuration>
+	  			<workbookFile>${basedir}/src/schema-generator-test.xlsx</workbookFile>
+	  			<owlOutDir>${basedir}/target/generated/src/rdf/owl</owlOutDir>
+	  			<shapesOutDir>${basedir}/target/generated/src/rdf/shapes</shapesOutDir>
+	  		  <sourceDir>${basedir}/target/generated/src/rdf</sourceDir>
+	  		  <javaDir>${basedir}/target/generated/src/main/java</javaDir>
+	  		  <javaPackageRoot>io.konig.test</javaPackageRoot>
+	  			<excludeNamespace>
+	  				<param>http://purl.org/dc/elements/1.1/</param>
+	  				<param>http://www.w3.org/2003/g/data-view#</param>
+	  				<param>http://www.w3.org/2004/02/skos/core#</param>
+	  				<param>http://www.w3.org/XML/1998/namespace</param>
+	  				<param>http://xmlns.com/foaf/0.1/</param>
+	  				<param>http://www.w3.org/2003/06/sw-vocab-status/ns#</param>
+	  				<param>http://www.w3.org/1999/02/22-rdf-syntax-ns#</param>
+	  				<param>http://www.w3.org/2000/01/rdf-schema#</param>
+	  				<param>http://www.w3.org/2002/07/owl#</param>
+	  				<param>http://www.w3.org/ns/shacl#</param>
+	  				<param>http://www.konig.io/ns/core/</param>
+	  				<param>http://purl.org/vocab/vann/</param>
+	  				<param>http://example.com/shapes/v1/schema/</param>
+	  				<param>http://www.w3.org/2001/XMLSchema#</param>
+	  			</excludeNamespace>
+	  		</configuration>
+	  		<executions>
+	  			<execution>
+		  			<phase>generate-sources</phase>
+		  			<goals>
+		  				<goal>generate</goal>
+		  			</goals>
+	  			</execution>
+	  		</executions>
+  		</plugin>
+  			
+ 			<plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.5.3</version>
+        <configuration>
+          <descriptor>src/assembly/dep.xml</descriptor>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-archive</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>  			
+  			
+			<!-- Skip default jar packaging -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <id>default-jar</id>
+            <phase/>
+          </execution>
+        </executions>
+      </plugin>
+        			
+  	</plugins>
+  </build>
+</project>

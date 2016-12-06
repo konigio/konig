@@ -25,13 +25,14 @@ import java.io.StringWriter;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
-import org.openrdf.model.impl.URIImpl;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -58,6 +59,9 @@ public class Shape {
 	private URI aggregationOf;
 	private URI rollUpBy;
 	
+	private AndConstraint and;
+	private OrConstraint or;
+	
 	private Activity wasGeneratedBy;
 	private String bigQueryTableId;
 	
@@ -70,6 +74,8 @@ public class Shape {
 	public Shape(Resource id) {
 		this.id = id;
 	}
+	
+	
 	
 	/**
 	 * Save this shape in a given Graph
@@ -110,6 +116,30 @@ public class Shape {
 		return property==null ? EMPTY_PROPERTY_LIST : property;
 	}
 	
+	
+	public void setProperty(List<PropertyConstraint> list) {
+		property = list;
+	}
+	
+	
+	public AndConstraint getAnd() {
+		return and;
+	}
+
+	public void setAnd(AndConstraint and) {
+		this.and = and;
+	}
+	
+	
+
+	public OrConstraint getOr() {
+		return or;
+	}
+
+	public void setOr(OrConstraint or) {
+		this.or = or;
+	}
+
 	public Constraint getConstraint() {
 		return constraint;
 	}
@@ -224,35 +254,42 @@ public class Shape {
 		try {
 			JsonGenerator json = factory.createGenerator(out);
 			json.useDefaultPrettyPrinter();
-			toJson(json);
+			Set<Shape> memory = new HashSet<>();
+			toJson(memory, json);
 			json.flush();
 			
-		} catch (IOException e) {
+		} catch (Throwable e) {
 			return "ERROR: " + e.getMessage();
 		}
 		
 		return out.toString();
 	}
 	
-	public void toJson(JsonGenerator json) throws IOException {
+	public void toJson(Set<Shape> memory, JsonGenerator json) throws IOException {
 		json.writeStartObject();
 		json.writeStringField("id", id.toString());
 		if (targetClass != null) {
 			json.writeStringField("targetClass", targetClass.stringValue());
 		}
 		
-		if (property!=null && !property.isEmpty()) {
-			json.writeFieldName("property");
-			json.writeStartArray();
-			for (PropertyConstraint p : property) {
-				p.toJson(json);
+		if (!memory.contains(this)) {
+			memory.add(this);
+			if (property!=null && !property.isEmpty()) {
+				json.writeFieldName("property");
+				json.writeStartArray();
+				for (PropertyConstraint p : property) {
+					p.toJson(memory, json);
+				}
+				json.writeEndArray();
 			}
-			json.writeEndArray();
+			
 		}
-		
 		json.writeEndObject();
 		
+		
 	}
+	
+	
 
 	/**
 	 * Get the default JSON-LD context for this shape.

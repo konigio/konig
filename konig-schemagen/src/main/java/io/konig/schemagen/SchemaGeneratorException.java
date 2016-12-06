@@ -10,5 +10,9 @@ public class SchemaGeneratorException extends RuntimeException {
 	public SchemaGeneratorException(Throwable cause) {
 		super(cause);
 	}
+	
+	public SchemaGeneratorException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
 }
