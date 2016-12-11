@@ -174,8 +174,7 @@ public class OntologyExtractor {
 			for (Vertex v : source.vertices()) {
 				id = v.getId();
 				if (id instanceof URI) {
-					String ns = ((URI)id).getNamespace();
-					if (ns.equals(namespace)) {
+					if (id.stringValue().startsWith(namespace)) {
 						collectElement(v);
 					}
 				}

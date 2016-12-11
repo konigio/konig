@@ -1,5 +1,7 @@
 package io.konig.core.path;
 
+import io.konig.core.SPARQLBuilder;
+
 /*
  * #%L
  * konig-core
@@ -27,4 +29,5 @@ import io.konig.core.Traverser;
 public interface Step {
 
 	void traverse(Traverser traverser) throws TraversalException;
+	void visit(SPARQLBuilder builder);
 }

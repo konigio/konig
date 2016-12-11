@@ -55,6 +55,7 @@ public class Schema {
 	public static final URI address = new URIImpl("http://schema.org/address");
 	public static final URI addressLocality = new URIImpl("http://schema.org/addressLocality");
 	public static final URI addressRegion = new URIImpl("http://schema.org/addressRegion");
+	public static final URI addressCountry = new URIImpl("http://schema.org/addressCountry");
 	public static final URI alumniOf = new URIImpl("http://schema.org/alumniOf");
 	public static final URI agent = new URIImpl("http://schema.org/agent");
 	public static final URI author = new URIImpl("http://schema.org/author");

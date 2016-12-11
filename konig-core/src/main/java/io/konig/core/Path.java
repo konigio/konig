@@ -47,4 +47,6 @@ public interface Path {
 	Set<Value> traverse(Traverser traverser);
 	
 	List<Step> asList();
+	
+	public void visit(SPARQLBuilder builder);
 }

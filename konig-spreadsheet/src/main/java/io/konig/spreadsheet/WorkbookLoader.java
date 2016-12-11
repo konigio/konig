@@ -2,6 +2,8 @@ package io.konig.spreadsheet;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
@@ -26,12 +28,17 @@ import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.activity.Activity;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
+import io.konig.core.SPARQLBuilder;
 import io.konig.core.Vertex;
+import io.konig.core.path.DataInjector;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.PathFactory;
 import io.konig.core.path.Step;
@@ -54,6 +61,7 @@ import io.konig.shacl.io.ShapeLoader;
  *
  */
 public class WorkbookLoader {
+	private static final Logger logger = LoggerFactory.getLogger(WorkbookLoader.class);
 	private static final URI LABEL = RDFS.LABEL;
 	private static final int UNDEFINED = -1;
 	private static final String ONTOLOGY_NAME = "Ontology Name";
@@ -150,6 +158,8 @@ public class WorkbookLoader {
 		private Workbook book;
 		private Graph graph;
 		private PathFactory pathFactory;
+		private OwlReasoner owlReasoner;
+		private DataInjector dataInjector;
 		
 		private int ontologyNameCol=UNDEFINED;
 		private int ontologyCommentCol=UNDEFINED;
@@ -205,8 +215,11 @@ public class WorkbookLoader {
 			if (shapeManager == null) {
 				shapeManager = new MemoryShapeManager();
 			}
-			pathFactory = new PathFactory(graph.getNamespaceManager(), graph);
+			pathFactory = new PathFactory(nsManager, graph);
 			activityId = Activity.nextActivityId();
+			
+			owlReasoner = new OwlReasoner(graph);
+			dataInjector = new DataInjector();
 			
 		}
 		
@@ -216,7 +229,111 @@ public class WorkbookLoader {
 				loadSheet(sheet);
 			}
 			buildRollUpShapes();
+			loadIndividualProperties();
 			emitProvenance();
+		}
+
+		private void loadIndividualProperties() throws SpreadsheetException {
+			
+			for (int i=0; i<book.getNumberOfSheets(); i++) {
+				Sheet sheet = book.getSheetAt(i);
+				int sheetType = sheetType(sheet);
+				if (sheetType == INDIVIDUAL_FLAG) {
+					loadIndividualProperties(sheet);
+				}
+			}
+			
+		}
+
+		private void loadIndividualProperties(Sheet sheet) throws SpreadsheetException {
+			
+			Row header = readIndividualHeader(sheet);
+			int rowSize = sheet.getLastRowNum()+1;
+			
+			List<PathInfo> pathInfo = loadPathInfo(header);
+			Collections.sort(pathInfo, new Comparator<PathInfo>() {
+
+				@Override
+				public int compare(PathInfo a, PathInfo b) {
+					return a.pathString.compareTo(b.pathString);
+				}
+			});
+			
+			for (int i=sheet.getFirstRowNum()+1; i<rowSize; i++) {
+				Row row = sheet.getRow(i);
+				loadIndividualPropertiesRow(pathInfo, row);
+			}
+			
+			
+		}
+
+		private List<PathInfo> loadPathInfo(Row header) throws SpreadsheetException {
+			
+			List<PathInfo> list = new ArrayList<>();
+
+			int colSize = header.getLastCellNum() + 1;
+			
+
+			for (int i=header.getFirstCellNum(); i<colSize; i++) {
+				Cell cell = header.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				
+				String headerValue = cell.getStringCellValue();
+				if (headerValue != null && headerValue.startsWith("/")) {
+
+					Path path = pathFactory.createPath(headerValue);
+					
+					list.add(new PathInfo(i, path));
+				}
+				
+			
+				
+			}
+			
+			return list;
+		}
+
+		private void loadIndividualPropertiesRow(List<PathInfo> pathList, Row row) throws SpreadsheetException {
+
+			URI individualId = uriValue(row, individualIdCol);
+			if (individualId != null) {
+				Vertex v = graph.getVertex(individualId);
+				owlReasoner.inferTypeOfSuperClass(v);
+
+				for (PathInfo pathInfo : pathList) {
+					
+					Value value = getValue(row, pathInfo);
+					if (value != null) {
+						
+						assignValue(individualId, pathInfo, value);
+					}
+					
+				}
+			}
+			
+			
+		}
+
+		private void assignValue(URI individualId, PathInfo pathInfo, Value value) {
+			Vertex subject = graph.vertex(individualId);
+			dataInjector.inject(subject, pathInfo.path, value);
+			
+		}
+
+		private Value getValue(Row row, PathInfo pathInfo) throws SpreadsheetException {
+			
+			if (pathInfo.datatype != null) {
+				return literal(row, pathInfo.column, pathInfo.datatype);
+			}
+			
+			return uriValue(row, pathInfo.column);
+		}
+
+		private Value literal(Row row, int col, URI datatype) throws SpreadsheetException {
+			String text = stringValue(row, col);
+			return text==null ? null : vf.createLiteral(text, datatype);
 		}
 
 		private void emitProvenance() {
@@ -339,6 +456,22 @@ public class WorkbookLoader {
 		}
 
 		private void loadSheet(Sheet sheet) throws SpreadsheetException {
+			
+			int bits = sheetType(sheet);
+			
+			switch (bits) {
+			case ONTOLOGY_FLAG : loadOntologies(sheet); break;
+			case CLASS_FLAG : loadClasses(sheet); break;
+			case PROPERTY_FLAG : loadProperties(sheet); break;
+			case INDIVIDUAL_FLAG : loadIndividuals(sheet); break;
+			case SHAPE_FLAG :loadShapes(sheet); break;
+			case CONSTRAINT_FLAG : loadPropertyConstraints(sheet);
+			
+			}
+			
+		}
+		
+		private int sheetType(Sheet sheet) {
 			Row header = sheet.getRow(sheet.getFirstRowNum());
 			
 			int colSize = header.getLastCellNum()+1;
@@ -359,16 +492,7 @@ public class WorkbookLoader {
 				}
 			}
 			
-			switch (bits) {
-			case ONTOLOGY_FLAG : loadOntologies(sheet); break;
-			case CLASS_FLAG : loadClasses(sheet); break;
-			case PROPERTY_FLAG : loadProperties(sheet); break;
-			case INDIVIDUAL_FLAG : loadIndividuals(sheet); break;
-			case SHAPE_FLAG :loadShapes(sheet); break;
-			case CONSTRAINT_FLAG : loadPropertyConstraints(sheet);
-			
-			}
-			
+			return bits;
 		}
 		
 		
@@ -714,6 +838,10 @@ public class WorkbookLoader {
 			if (individualId == null) {
 				return;
 			}
+			Vertex prior = graph.getVertex(individualId);
+			if (prior != null) {
+				logger.warn("Duplicate definition of named individual: {}", individualId.stringValue());
+			}
 			graph.edge(individualId, RDF.TYPE, Schema.Enumeration);
 			if (typeList != null) {
 				for (URI value : typeList) {
@@ -730,7 +858,7 @@ public class WorkbookLoader {
 			edge(individualId, DC.IDENTIFIER, codeValue);
 		}
 
-		private void readIndividualHeader(Sheet sheet) {
+		private Row readIndividualHeader(Sheet sheet) {
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -755,6 +883,7 @@ public class WorkbookLoader {
 					}
 				}
 			}
+			return row;
 			
 		}
 
@@ -1259,6 +1388,47 @@ public class WorkbookLoader {
 				throw new MissingColumnException(PREFIX, sheetName);
 			}
 			
+		}
+
+		
+		private class PathInfo {
+			private int column;
+			private String pathString;
+			private Path path;
+			private URI datatype;
+
+			public PathInfo(int column, Path path) throws SpreadsheetException {
+				this.column = column;
+				this.path = path;
+				
+				SPARQLBuilder builder = new SPARQLBuilder(nsManager, owlReasoner);
+				path.visit(builder);
+				pathString = builder.toString();
+				
+				List<Step> stepList = path.asList();
+				Step lastStep = stepList.get(stepList.size()-1);
+				if (lastStep instanceof OutStep) {
+					URI predicate = ((OutStep) lastStep).getPredicate();
+					Set<URI> valueClassSet = owlReasoner.valueType(graph.vertex(predicate));
+					for (URI valueClass : valueClassSet ) {
+						if (owlReasoner.isDatatype(valueClass)) {
+							if (datatype == null) {
+								datatype = valueClass;
+							} else if (!datatype.equals(valueClass)) {
+								StringBuilder msg = new StringBuilder();
+								msg.append("Conflicting value types for predicate ");
+								msg.append(predicate.getLocalName());
+								msg.append(": ");
+								msg.append(datatype);
+								msg.append(" AND ");
+								msg.append(valueClass);
+								throw new SpreadsheetException(msg.toString());
+							}
+						}
+					}
+				}
+				
+			}
 			
 		}
 	}

@@ -23,6 +23,7 @@ package io.konig.core.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -302,6 +303,25 @@ public class TraversalImpl implements Traversal {
 		return result;
 	}
 
+
+	@Override
+	public Set<URI> toUriSet() {
+		Set<URI> result = new HashSet<>();
+		for (Object obj : list) {
+			if (obj instanceof Vertex) {
+				Vertex v = (Vertex) obj;
+				if (v.getId() instanceof URI) {
+					result.add((URI) v.getId());
+				}
+			} else if (obj instanceof URI) {
+				result.add((URI) obj);
+			}
+		}
+		return result;
+	}
+	
+	
+
 	@Override
 	public Traversal distinct() {
 		Map<String,Object> map = new HashMap<>();
@@ -430,7 +450,6 @@ public class TraversalImpl implements Traversal {
 		}
 		return result;
 	}
-	
 	
 	
 	

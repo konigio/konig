@@ -184,6 +184,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			owlGraph = new MemoryGraph();
 			contextManager = new MemoryContextManager();
 			owlReasoner = new OwlReasoner(owlGraph);
+			owlGraph.setNamespaceManager(nsManager);
 
 			loadResources();
 

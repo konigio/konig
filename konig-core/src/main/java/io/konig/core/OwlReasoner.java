@@ -25,7 +25,6 @@ import java.util.ArrayList;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +40,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
+import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.XSD;
 
@@ -204,6 +204,18 @@ public class OwlReasoner {
 		}
 		return false;
 	}
+	
+	public Set<URI> valueType(Vertex predicate) {
+		
+		Set<URI> set = new HashSet<>();
+		set.addAll(predicate.asTraversal().out(RDFS.RANGE).toUriSet());
+		set.addAll(predicate.asTraversal().in(SH.predicate).out(SH.datatype).toUriSet());
+		set.addAll(predicate.asTraversal().in(SH.predicate).out(SH.valueClass).toUriSet());
+		set.addAll(predicate.asTraversal().in(SH.predicate).out(SH.valueShape).out(SH.targetClass).toUriSet());
+		
+		
+		return set;
+	}
 
 	/**
 	 * Compute the least common super datatype between two given datatypes.
@@ -334,6 +346,55 @@ public class OwlReasoner {
 		return (URI) preferredClass(graph.vertex(owlClass)).getId();
 	}
 	
+	public void inferTypeOfSuperClass(Vertex thing) {
+		Set<URI> typeSet = thing.asTraversal().out(RDF.TYPE).toUriSet();
+		
+		Set<URI> superSet = new HashSet<>();
+		for (URI uri : typeSet) {
+			getTransitiveClosure(uri, RDFS.SUBCLASSOF, superSet);
+		}
+		
+		for (URI superClass : superSet) {
+			graph.edge(thing.getId(), RDF.TYPE, superClass);
+		}
+		
+	}
+	
+	public void getTransitiveClosure(Resource source, URI predicate, Set<URI> sink) {
+		Vertex v = graph.getVertex(source);
+		if (v != null) {
+			Set<Edge> out = v.outProperty(predicate);
+			for (Edge e : out) {
+				Value object = e.getObject();
+				if (object instanceof URI) {
+					URI uri = (URI) object;
+					if (!sink.contains(uri)) {
+						sink.add(uri);
+						getTransitiveClosure(uri, predicate, sink);
+					}
+				}
+			}
+		}
+	}
+	
+	public URI mostSpecificType(Iterable<URI> collection, URI filter) {
+		URI best = null;
+		for (URI candidate : collection) {
+			
+			if (filter != null && !candidate.equals(filter) && !isSubClassOf(candidate, filter)) {
+				continue;
+			}
+			
+			if (best == null) {
+				best = candidate;
+			} else if (isSubClassOf(candidate, best)) {
+				best = candidate;
+			} 
+		}
+		
+		return best;
+	}
+	
 	public void inferClassFromSubclassOf() {
 		if (!inferredClassesFromSubclass) {
 			inferredClassesFromSubclass = true;
@@ -346,6 +407,76 @@ public class OwlReasoner {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Test whether a given Resource is an instance of a given OWL Class.
+	 * This method checks the rdf:type relationship, and infers based on rdfs:subClassOf relationships.
+	 * 
+	 * @param subject The Resource whose type is to be tested.
+	 * @param owlClass The OWL Class to be matched
+	 * @return True if the subject is an instance of the specified owlClass and false otherwise.
+	 */
+	public boolean instanceOf(Resource subject, URI owlClass) {
+		Vertex v = graph.getVertex(subject);
+		if (v != null) {
+			Set<URI> typeSet = v.asTraversal().out(RDF.TYPE).toUriSet();
+			for (URI type : typeSet) {
+				if (type.equals(owlClass)) {
+					return true;
+				}
+			}
+			
+			Set<URI> superTypeSet = new HashSet<>();
+			for (URI type : typeSet) {
+				getTransitiveClosure(type, RDFS.SUBCLASSOF, superTypeSet);
+			}
+			
+			for (URI superType : superTypeSet) {
+				if (superType.equals(owlClass)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public boolean isRealNumber(URI owlClass) {
+		return 
+				XMLSchema.DECIMAL.equals(owlClass) ||
+				XMLSchema.DOUBLE.equals(owlClass) ||
+				XMLSchema.FLOAT.equals(owlClass) ||
+				Schema.Float.equals(owlClass) ||
+				Schema.Number.equals(owlClass);
+	}
+	
+	public boolean isBooleanType(URI owlClass) {
+		return
+				XMLSchema.BOOLEAN.equals(owlClass) ||
+				Schema.Boolean.equals(owlClass);
+	}
+	
+	public boolean isPlainLiteral(URI owlClass) {
+		return
+				XMLSchema.STRING.equals(owlClass) ||
+				Schema.Text.equals(owlClass);
+	}
+	
+	public boolean isIntegerDatatype(URI owlClass) {
+		return
+				XMLSchema.BYTE.equals(owlClass) ||
+				XMLSchema.INT.equals(owlClass) ||
+				XMLSchema.INTEGER.equals(owlClass) ||
+				XMLSchema.NEGATIVE_INTEGER.equals(owlClass) ||
+				XMLSchema.NON_NEGATIVE_INTEGER.equals(owlClass) ||
+				XMLSchema.NON_POSITIVE_INTEGER.equals(owlClass) ||
+				XMLSchema.SHORT.equals(owlClass) ||
+				XMLSchema.UNSIGNED_BYTE.equals(owlClass) ||
+				XMLSchema.UNSIGNED_INT.equals(owlClass) ||
+				XMLSchema.UNSIGNED_LONG.equals(owlClass) ||
+				XMLSchema.UNSIGNED_SHORT.equals(owlClass) ||
+				Schema.Integer.equals(owlClass);
+			
 	}
 	
 	public boolean isEnumerationClass(URI owlClass) {
