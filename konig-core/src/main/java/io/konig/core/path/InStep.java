@@ -29,6 +29,7 @@ import org.openrdf.model.Value;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
+import io.konig.core.SPARQLBuilder;
 import io.konig.core.TraversalException;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
@@ -58,6 +59,21 @@ public class InStep implements Step {
 		}
 		
 		
+	}
+
+	@Override
+	public void visit(SPARQLBuilder builder) {
+
+		builder.append('^');
+		builder.append(predicate);
+		
+	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append('^');
+		builder.append(predicate.getLocalName());
+		return builder.toString();
 	}
 
 }

@@ -192,6 +192,8 @@ public interface Traversal {
 	
 	List<Value> toValueList();
 	
+	Set<URI> toUriSet();
+	
 	/**
 	 * Add the values in this traversal to a given Set.
 	 * @param set The set into which values should be added.

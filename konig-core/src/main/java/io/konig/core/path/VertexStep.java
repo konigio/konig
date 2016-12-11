@@ -27,6 +27,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.Value;
 
 import io.konig.core.Graph;
+import io.konig.core.SPARQLBuilder;
 import io.konig.core.TraversalException;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
@@ -56,6 +57,41 @@ public class VertexStep implements Step {
 			traverser.addResult(v.getId());
 		}
 
+	}
+
+
+	@Override
+	public void visit(SPARQLBuilder builder) {
+		if (resource.length==1) {
+			builder.append(resource[0]);
+		} else {
+			builder.append('(');
+			String delim = "";
+			for (Resource r : resource) {
+				builder.append(delim);
+				builder.append(r);
+				delim = "|";
+			}
+			builder.append(')');
+		}
+		
+	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		if (resource.length==1) {
+			builder.append(resource[0]);
+		} else {
+			builder.append('(');
+			String delim = "";
+			for (Resource r : resource) {
+				builder.append(delim);
+				builder.append(r);
+				delim = "|";
+			}
+			builder.append(')');
+		}
+		return builder.toString();
 	}
 
 }

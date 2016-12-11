@@ -32,6 +32,7 @@ import org.openrdf.model.Value;
 
 import io.konig.core.Graph;
 import io.konig.core.Path;
+import io.konig.core.SPARQLBuilder;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
 
@@ -110,6 +111,25 @@ public class PathImpl implements Path {
 		}
 		return traverser.getResultSet();
 	}
+
+	@Override
+	public void visit(SPARQLBuilder builder) {
+		
+		for (Step s : stepList) {
+			s.visit(builder);
+		}
+		
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		for (Step step : stepList) {
+			builder.append(step.toString());
+		}
+		return builder.toString();
+	}
+	
 
 
 }
