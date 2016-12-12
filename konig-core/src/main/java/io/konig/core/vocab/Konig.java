@@ -78,6 +78,8 @@ public class Konig {
 	public static final URI sourcePath = new URIImpl("http://www.konig.io/ns/core/sourcePath");
 	public static final URI partitionOf = new URIImpl("http://www.konig.io/ns/core/partitionOf");
 	public static final URI TimeUnit = new URIImpl("http://www.konig.io/ns/core/TimeUnit");
+	public static final URI TimeInterval = new URIImpl("http://www.konig.io/ns/core/TimeInterval");
+	public static final URI intervalStart = new URIImpl("http://www.konig.io/ns/core/intervalStart");
 	
 	
 	

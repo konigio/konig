@@ -264,6 +264,7 @@ public class ShapeBuilder {
 			return parent.endValueShape();
 		}
 		
+		
 		public ShapeBuilder beginValueShape(URI shapeId) {
 			Shape shape = null;
 			
@@ -282,6 +283,11 @@ public class ShapeBuilder {
 			property.setValueShape(shape);
 			
 			return new ShapeBuilder(this, parent.shapeManager, parent.valueFactory, shape);
+		}
+		
+		public PropertyBuilder stereotype(URI stereotype) {
+			property.setStereotype(stereotype);
+			return this;
 		}
 		
 		public PropertyBuilder isTimeParam(boolean truth) {

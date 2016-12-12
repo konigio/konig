@@ -46,6 +46,10 @@ import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.gae.datastore.CodeGeneratorException;
+import io.konig.gae.datastore.FactDaoGenerator;
+import io.konig.gae.datastore.SimpleDaoNamer;
+import io.konig.gae.datastore.impl.SimpleEntityNamer;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
@@ -162,6 +166,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 
 	 @Parameter
 	 private File projectJsonldFile;
+	 
+	 @Parameter
+	 private String daoPackage;
 
     
     private NamespaceManager nsManager;
@@ -203,10 +210,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generatePlantUMLDomainModel();
 			generateJava();
 			
-		
 			
-			
-		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | PlantumlGeneratorException e) {
+		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | PlantumlGeneratorException | CodeGeneratorException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
 		}
       
@@ -222,7 +227,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 
-	private void generateJava() throws IOException {
+	private void generateJava() throws IOException, CodeGeneratorException {
 
 		if (javaDir != null && javaPackageRoot!=null) {
 			generateJavaCode(shapeManager);
@@ -380,7 +385,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		return logicalShapeNamer;
 	}
 
-	private void generateJavaCode(ShapeManager shapeManager) throws IOException {
+	private void generateJavaCode(ShapeManager shapeManager) throws IOException, CodeGeneratorException {
 		
 		final JCodeModel model = new JCodeModel();
 		JavaNamer javaNamer = new BasicJavaNamer(javaPackageRoot, nsManager);
@@ -389,6 +394,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 		classBuilder.buildAllClasses(model);
 		writerBuilder.buildAll(shapeManager.listShapes(), model);
+		
+		if (daoPackage != null) {
+			SimpleEntityNamer entityNamer = new SimpleEntityNamer();
+			SimpleDaoNamer daoNamer = new SimpleDaoNamer(daoPackage, nsManager);
+			FactDaoGenerator daoGenerator = new FactDaoGenerator()
+				.setDaoNamer(daoNamer)
+				.setDatatypeMapper(classBuilder.getMapper())
+				.setEntityNamer(entityNamer)
+				.setJavaNamer(javaNamer)
+				.setShapeManager(shapeManager);
+			
+			daoGenerator.generateAllFactDaos(model);
+		}
 		
 		javaDir.mkdirs();
 		model.build(javaDir);

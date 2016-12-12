@@ -67,6 +67,24 @@ public class JavaClassBuilder {
 	
 	
 	
+	
+	
+	public JavaDatatypeMapper getMapper() {
+		return mapper;
+	}
+
+
+
+
+
+	public void setMapper(JavaDatatypeMapper mapper) {
+		this.mapper = mapper;
+	}
+
+
+
+
+
 	public ShapeHandler getShapeHandler() {
 		return shapeHandler;
 	}
