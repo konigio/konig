@@ -1,0 +1,115 @@
+package io.konig.gae.datastore;
+
+import java.io.File;
+
+import org.junit.Test;
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
+
+import com.sun.codemodel.JCodeModel;
+
+import io.konig.core.NamespaceManager;
+import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.Schema;
+import io.konig.core.vocab.TIME;
+import io.konig.gae.datastore.impl.SimpleEntityNamer;
+import io.konig.schemagen.java.BasicJavaDatatypeMapper;
+import io.konig.schemagen.java.BasicJavaNamer;
+import io.konig.schemagen.java.JavaDatatypeMapper;
+import io.konig.schemagen.java.JavaNamer;
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeBuilder;
+import io.konig.shacl.ShapeManager;
+
+public class FactDaoGeneratorTest {
+
+	@Test
+	public void testGenerateDao() throws Exception {
+		
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("fact", "http://example.com/ns/fact/");
+		nsManager.add("schema", Schema.NAMESPACE);
+		nsManager.add("time", TIME.NAMESPACE);
+		nsManager.add("konig", Konig.NAMESPACE);
+		
+		EntityNamer entityNamer = new SimpleEntityNamer();
+		JavaNamer javaNamer = new BasicJavaNamer("com.example", nsManager);
+		DaoNamer daoNamer = new SimpleDaoNamer("com.example.gae.datastore", nsManager);
+		URI shapeId = uri("http://example.com/shape/v1/fact/LoginTotalCountBySchoolShape");
+		URI factClass = uri("http://example.com/ns/fact/LoginTotalCountBySchool");
+		URI schoolProperty = uri("http://example.com/ns/alias/school");
+		URI intervalShapeId = uri("http://example.com/shape/v1/konig/TimeIntervalShape");
+		
+		
+		ShapeBuilder builder = new ShapeBuilder();
+		builder.beginShape(shapeId)
+			.targetClass(factClass)
+			.beginProperty(Konig.totalCount)
+				.datatype(XMLSchema.INT)
+				.stereotype(Konig.measure)
+				.minCount(1)
+				.maxCount(1)
+			.endProperty()
+			.beginProperty(schoolProperty)
+				.valueClass(Schema.School)
+				.stereotype(Konig.dimension)
+				.minCount(1)
+				.maxCount(1)
+			.endProperty()
+			.beginProperty(Konig.timeInterval)
+				.valueShape(intervalShapeId)
+				.stereotype(Konig.dimension)
+				.minCount(1)
+				.maxCount(1)
+			.endProperty()
+		.endShape()
+		.beginShape(intervalShapeId)
+			.targetClass(Konig.TimeInterval)
+			
+			.beginProperty(Konig.intervalStart)
+				.datatype(XMLSchema.DATE)
+				.stereotype(Konig.dimension)
+				.minCount(1)
+				.maxCount(1)
+			.endProperty()
+
+			.beginProperty(Konig.durationUnit)
+				.valueClass(TIME.TemporalUnit)
+				.stereotype(Konig.dimension)
+				.minCount(1)
+				.maxCount(1)
+			.endProperty()
+			
+		.endShape();
+		
+		ShapeManager shapeManager = builder.getShapeManager();
+		Shape shape = shapeManager.getShapeById(shapeId);
+		JavaDatatypeMapper datatypeMapper = new BasicJavaDatatypeMapper();
+
+		JCodeModel model = new JCodeModel();
+		
+		FactDaoGenerator generator = new FactDaoGenerator()
+			.setDaoNamer(daoNamer)
+			.setDatatypeMapper(datatypeMapper)
+			.setEntityNamer(entityNamer)
+			.setJavaNamer(javaNamer)
+			.setFindByDimensionOnly(false)
+			.setShapeManager(shapeManager);
+		
+		generator.generateDao(shape, model);
+		
+
+
+		File file = new File("target/test/DatastoreDaoGenerator/generateDao");
+		file.mkdirs();
+		model.build(file);
+		
+	}
+	
+	private URI uri(String value) {
+		return new URIImpl(value);
+	}
+
+}
