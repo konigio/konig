@@ -1,7 +1,9 @@
 package io.konig.schemagen.jsonschema;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -9,6 +11,9 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.konig.core.ContextManager;
@@ -22,6 +27,7 @@ import io.konig.core.vocab.Schema;
 import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaTypeMapper;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeBuilder;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -29,6 +35,68 @@ import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.io.ShapeLoader;
 
 public class JsonSchemaGeneratorTest {
+	
+	@Test
+	public void testOrConstraint() throws Exception {
+
+		URI partyShapeId = uri("http://example.com/shapes/v1/schema/PartyShape");
+		URI personShapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/v1/schema/OrganizationShape");
+		
+		ShapeBuilder shapeBuilder = new ShapeBuilder();
+		
+		shapeBuilder
+		
+			.beginShape(partyShapeId)
+				.or(personShapeId, orgShapeId)
+			.endShape()
+			
+			.beginShape(personShapeId)
+				.beginProperty(Schema.familyName)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+			.endShape()
+			
+			.beginShape(orgShapeId)
+				.beginProperty(Schema.name)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)				
+				.endProperty()
+			.endShape()
+			;
+		
+		ShapeManager shapeManager = shapeBuilder.getShapeManager();
+
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", "http://schema.org/");
+
+		ShapeMediaTypeNamer mediaTypeNamer = new SimpleShapeMediaTypeNamer();
+		
+		JsonSchemaNamer namer = new SimpleJsonSchemaNamer("/json-schema", mediaTypeNamer);
+		JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
+		JsonSchemaGenerator generator = new JsonSchemaGenerator(namer, nsManager, typeMapper);
+		
+		Shape shape = shapeManager.getShapeById(partyShapeId);
+		ObjectNode node = generator.generateJsonSchema(shape);
+		
+		ArrayNode anyOf = (ArrayNode) node.get("anyOf");
+		assertEquals(2, anyOf.size());
+		ObjectNode personShape = (ObjectNode) anyOf.get(0);
+		ObjectNode properties = (ObjectNode) personShape.get("properties");
+		ObjectNode familyName = (ObjectNode) properties.get("familyName");
+		assertEquals("string", familyName.get("type").asText());
+		
+		ObjectNode orgShape = (ObjectNode) anyOf.get(1);
+		properties = (ObjectNode) orgShape.get("properties");
+		ObjectNode name = (ObjectNode) properties.get("name");
+		assertEquals("string", name.get("type").asText());
+		
+		
+		
+	}
 
 	@Test
 	public void test() {

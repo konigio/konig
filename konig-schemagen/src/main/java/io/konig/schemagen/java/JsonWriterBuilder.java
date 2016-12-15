@@ -13,8 +13,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JForEach;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
@@ -28,9 +30,11 @@ import io.konig.runtime.io.BaseJsonWriter;
 import io.konig.runtime.io.ValidationException;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.NodeKind;
+import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.impl.ClassAnalyzer;
 
 public class JsonWriterBuilder {
 	
@@ -38,6 +42,7 @@ public class JsonWriterBuilder {
 	private JavaNamer javaNamer;
 	private JavaDatatypeMapper datatypeMapper;
 	private OwlReasoner owlReasoner;
+	private ClassAnalyzer classAnalyzer;
 	
 	
 	
@@ -46,6 +51,7 @@ public class JsonWriterBuilder {
 		this.shapeManager = shapeManager;
 		this.javaNamer = javaNamer;
 		datatypeMapper = new BasicJavaDatatypeMapper();
+		classAnalyzer = new ClassAnalyzer(shapeManager, owlReasoner);
 	}
 
 
@@ -192,7 +198,12 @@ public class JsonWriterBuilder {
 					thenBlock.add(jsonVar.invoke("writeEndArray"));
 				}
 			} else if (valueShape != null) {
-				if (!(valueShape.getId() instanceof URI)) {
+				OrConstraint or = valueShape.getOr();
+				if (or != null) {
+					handleOrContraint(model, body, sourceVar, jsonVar, p, or, fieldName, getterName, maxCount);
+					continue;
+				}
+				if (or==null && !(valueShape.getId() instanceof URI)) {
 					throw new SchemaGeneratorException("Id is not defined for shape");
 				}
 				URI valueShapeId = (URI) valueShape.getId();
@@ -255,6 +266,108 @@ public class JsonWriterBuilder {
 	}
 
 
+
+
+	private void handleOrContraint(
+		JCodeModel model, JBlock body, JVar sourceVar, JVar jsonVar, PropertyConstraint p, OrConstraint or, 
+		String fieldName, String getterName, Integer maxCount) {
+		
+		Resource fieldType = classAnalyzer.mergeTargetClass(or.getShapes());
+
+		if (!(fieldType instanceof URI)) {
+			return;
+		}
+		
+		String valueClassName = javaNamer.javaInterfaceName((URI)fieldType);
+		JClass propertyType = model.ref(valueClassName);
+		
+		if (maxCount != null && maxCount==1) {
+
+			JVar fieldValue = body.decl(propertyType, fieldName).init(sourceVar.invoke(getterName));	
+			
+			JBlock notNull = body._if(fieldValue.ne(JExpr._null()))._then();
+			
+			notNull.add(jsonVar.invoke("writeFieldName").arg(JExpr.lit(fieldName)));
+			
+			
+			
+			JConditional conditional = null;
+			
+			for (Shape s : or.getShapes()) {
+				
+				URI targetClass = s.getTargetClass();
+				if (targetClass == null) {
+					throw new SchemaGeneratorException("Target Class is not defined on Shape: " + s.getId());
+				}
+				JClass classOption = model.ref(javaNamer.javaInterfaceName(targetClass));
+				
+				JExpression instanceOfClass = fieldValue._instanceof(classOption);
+				if (conditional == null) {
+					conditional = notNull._if(instanceOfClass);
+				} else {
+					conditional = conditional._elseif(instanceOfClass);
+				}
+
+				URI valueShapeId = (URI) s.getId();
+				String writerClassName = javaNamer.writerName(valueShapeId, Format.JSON);
+				
+				JClass writerClass = model.ref(writerClassName);
+				
+				conditional._then()
+					
+					.add(writerClass.staticInvoke("instance").invoke("write")
+						.arg(fieldValue).arg(jsonVar));
+				
+				
+			}
+		} else {
+
+			JClass setType = model.ref(Set.class).narrow(propertyType);
+			
+			JVar setVar = body.decl(setType, fieldName + "Set").init(sourceVar.invoke(getterName));	
+			
+			JBlock notNull = body._if(setVar.ne(JExpr._null()))._then();
+
+			notNull.add(jsonVar.invoke("writeArrayFieldStart").arg(JExpr.lit(fieldName)));
+			
+			JForEach forEach = notNull.forEach(propertyType, fieldName, setVar);
+			JVar elemVar = forEach.var();
+			JBlock forEachBody = forEach.body();
+					
+			JConditional conditional = null;
+			
+			for (Shape s : or.getShapes()) {
+				
+				URI targetClass = s.getTargetClass();
+				if (targetClass == null) {
+					throw new SchemaGeneratorException("Target Class is not defined on Shape: " + s.getId());
+				}
+				JClass classOption = model.ref(javaNamer.javaInterfaceName(targetClass));
+				
+				JExpression instanceOfClass = elemVar._instanceof(classOption);
+				if (conditional == null) {
+					conditional = forEachBody._if(instanceOfClass);
+				} else {
+					conditional = conditional._elseif(instanceOfClass);
+				}
+
+				URI valueShapeId = (URI) s.getId();
+				String writerClassName = javaNamer.writerName(valueShapeId, Format.JSON);
+				
+				JClass writerClass = model.ref(writerClassName);
+				
+				conditional._then()
+					
+					.add(writerClass.staticInvoke("instance").invoke("write")
+						.arg(elemVar).arg(jsonVar));
+				
+				
+			}
+			notNull.add(jsonVar.invoke("writeEndArray"));
+			
+		}
+		
+	}
 
 
 	private void handleIdProperty(JCodeModel model, JBlock body, Shape shape, JVar sourceVar, JVar jsonVar) {

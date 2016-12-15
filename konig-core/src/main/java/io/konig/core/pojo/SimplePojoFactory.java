@@ -39,6 +39,7 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.annotation.InverseOf;
+import io.konig.annotation.RdfList;
 import io.konig.annotation.RdfProperty;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
@@ -251,22 +252,59 @@ public class SimplePojoFactory implements PojoFactory {
 		
 	}
 	
+	private class ListInfo {
+		private Class<?> javaListContainer;
+		private PropertyInfo propertyInfo;
+		
+		public ListInfo(Class<?> javaListContainer, PropertyInfo info) {
+			this.javaListContainer = javaListContainer;
+			this.propertyInfo = info;
+		}
+		
+		
+	}
+	
 	
 	private class PropertyInfo {
 		private URI predicate;
 		private Method setter;
 		private Method valueToEnum;
 		
+		private ListInfo listInfo;
+		
 		public PropertyInfo(URI predicate, Method setter) {
 			this.predicate = predicate;
 			this.setter = setter;
+			
+			
+			Class<?>[] paramTypes = setter.getParameterTypes();
+			if (paramTypes.length == 1) {
+				Class<?> listContainerType = paramTypes[0];
+				RdfList annotation = listContainerType.getAnnotation(RdfList.class);
+				if (annotation != null) {
+					
+					Method[] methodList = listContainerType.getMethods();
+					for (Method method : methodList) {
+						if (method.getName().equals("add") && method.getParameterTypes().length==1) {
+							PropertyInfo listPropertyInfo = new PropertyInfo(predicate, method);
+							listInfo = new ListInfo(listContainerType, listPropertyInfo);
+							break;
+						}
+					}
+					if (listInfo == null) {
+						throw new KonigException("'add' method not found on class with RdfList annotation: " 
+								+ listContainerType.getSimpleName());
+					}
+				}
+			}
+			
 		}
 
 		public URI getPredicate() {
 			return predicate;
 		}
 
-		void set(Worker worker, Graph g, Object instance, Value value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		void set(Worker worker, Graph g, Object instance, Value value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, InstantiationException {
 					
 			Vertex valueVertex = null;
 			List<Value> valueList = null;
@@ -298,9 +336,16 @@ public class SimplePojoFactory implements PojoFactory {
 				} else if (value instanceof Resource) {
 					
 					if (valueList != null) {
-						for (Value v : valueList) {
-							set(worker, g, instance, v);
+						
+						if (listInfo != null) {
+							buildList(worker, g, instance, valueList);
+						} else {
+							for (Value v : valueList) {
+								set(worker, g, instance, v);
+							}
 						}
+						
+						
 					} else {
 
 						if (valueVertex == null) {
@@ -318,6 +363,17 @@ public class SimplePojoFactory implements PojoFactory {
 				}
 			}
 			
+			
+		}
+
+		private void buildList(Worker worker, Graph g, Object instance, List<Value> valueList) 
+			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+			
+			Object listContainer = listInfo.javaListContainer.newInstance();
+			setter.invoke(instance, listContainer);
+			for (Value value : valueList) {
+				listInfo.propertyInfo.set(worker, g, listContainer, value);
+			}
 			
 		}
 

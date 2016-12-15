@@ -335,6 +335,12 @@ public class OwlReasoner {
 		buildEquivalentClasses();
 
 		EquivalenceClass e = equivalentClassMap.get(owlClass.stringValue());
+		if (e == null) {
+			Vertex v = graph.vertex(owlClass);
+			Set<Vertex> result = new HashSet<>();
+			result.add(v);
+			return result;
+		}
 		return e.getMembers();
 	}
 	

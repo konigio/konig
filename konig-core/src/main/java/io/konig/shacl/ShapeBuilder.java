@@ -104,6 +104,24 @@ public class ShapeBuilder {
 		shapeManager = new MemoryShapeManager();
 	}
 	
+	public ShapeBuilder or(Resource...shapeId) {
+		OrConstraint constraint = peekShape().getOr();
+		if (constraint == null) {
+			constraint = new OrConstraint();
+			peekShape().setOr(constraint);
+		}
+		for (Resource id : shapeId) {
+			Shape shape = shapeManager.getShapeById(id);
+			if (shape == null) {
+				shape = new Shape(id);
+				shapeManager.addShape(shape);
+			}
+			constraint.add(shape);
+		}
+		
+		return this;
+	}
+	
 	
 	public ShapeBuilder(String shapeId) {
 		this(new URIImpl(shapeId));

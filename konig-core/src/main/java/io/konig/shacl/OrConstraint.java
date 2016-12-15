@@ -26,11 +26,17 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 
+import io.konig.annotation.RdfList;
 import io.konig.core.Vertex;
 
+@RdfList
 public class OrConstraint implements Constraint, ShapeConsumer {
 
 	private List<Shape> shapes = new ArrayList<>();
+	
+	public OrConstraint() {
+		
+	}
 
 	public List<Shape> getShapes() {
 		return shapes;

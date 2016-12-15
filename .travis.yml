@@ -1,4 +1,5 @@
 language: java
 
 before_install: 
+  - cd konig-parent
   - mvn install -N

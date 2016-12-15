@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.apache.poi.common.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -160,6 +160,7 @@ public class WorkbookLoader {
 		private PathFactory pathFactory;
 		private OwlReasoner owlReasoner;
 		private DataInjector dataInjector;
+		private DataFormatter dataFormatter;
 		
 		private int ontologyNameCol=UNDEFINED;
 		private int ontologyCommentCol=UNDEFINED;
@@ -220,6 +221,7 @@ public class WorkbookLoader {
 			
 			owlReasoner = new OwlReasoner(graph);
 			dataInjector = new DataInjector();
+			dataFormatter = new DataFormatter(true);
 			
 		}
 		
@@ -507,6 +509,45 @@ public class WorkbookLoader {
 			}
 			
 		}
+		
+		private Resource valueType(Row row, int col) throws SpreadsheetException {
+
+			String text = stringValue(row, col);
+			
+			if (text != null) {
+				if (text.indexOf('|') >= 0) {
+					return orContraint(text);
+				}
+
+				return expandCurie(text);
+			}
+			return null;
+		}
+
+		private Resource orContraint(String text) throws SpreadsheetException {
+			Resource shapeId = graph.vertex().getId();
+			
+			StringTokenizer tokenizer = new StringTokenizer(text, "|");
+			
+			Resource listId = graph.vertex().getId();
+			
+			edge(shapeId, SH.or, listId);
+			
+			while (tokenizer.hasMoreTokens()) {
+				String token = tokenizer.nextToken().trim();
+				URI arg = expandCurie(token);
+				
+				edge(listId, RDF.FIRST, arg);
+				
+				if (tokenizer.hasMoreTokens()) {
+					Resource nextId = graph.vertex().getId();
+					edge(listId, RDF.REST, nextId);
+					listId = nextId;
+				}
+				
+			}
+			return shapeId;
+		}
 
 		private void loadPropertyConstraintRow(Row row) throws SpreadsheetException {
 			URI shapeId = uriValue(row, pcShapeIdCol);
@@ -514,7 +555,7 @@ public class WorkbookLoader {
 			URI propertyId = uriValue(row, pcPropertyIdCol);
 			if (propertyId==null) return;
 			Literal comment = stringLiteral(row, pcCommentCol);
-			URI valueType = uriValue(row, pcValueTypeCol);
+			Resource valueType = valueType(row, pcValueTypeCol);
 			Literal minCount = intLiteral(row, pcMinCountCol);
 			Literal maxCount = intLiteral(row, pcMaxCountCol);
 			URI valueClass = uriValue(row, pcValueClassCol);
@@ -997,11 +1038,11 @@ public class WorkbookLoader {
 		 * rdfs:Literal, rdfs:Datatype, rdf:XMLLiteral, schema:Boolean, schema:Date, schema:DateTime, schema:Number, 
 		 * schema:Text, or schema:Time.
 		 */
-		private boolean isDatatype(URI subject) {
+		private boolean isDatatype(Resource subject) {
 			
-			if (subject != null) {
+			if (subject instanceof URI) {
 
-				if (XMLSchema.NAMESPACE.equals(subject.getNamespace())) {
+				if (XMLSchema.NAMESPACE.equals(((URI)subject).getNamespace())) {
 					return true;
 				}
 				
@@ -1268,12 +1309,12 @@ public class WorkbookLoader {
 			
 			if (namespaceURI==null) {
 				throw new SpreadsheetException(
-					format("'{0}' is missing on row {1} of the '{2}' sheet.", NAMESPACE_URI, row.getRowNum(), sheetName));
+					format("''{0}'' is missing on row {1} of the ''{2}'' sheet.", NAMESPACE_URI, row.getRowNum(), sheetName));
 			}
 			
 			if (prefix==null) {
 				throw new SpreadsheetException(
-					format("'{0}' is missing on row {1} of the '{2}' sheet.", PREFIX, row.getRowNum(), sheetName));
+					format("''{0}'' is missing on row {1} of the ''{2}'' sheet.", PREFIX, row.getRowNum(), sheetName));
 			}
 
 			nsManager.add(prefix, namespaceURI);
@@ -1309,27 +1350,12 @@ public class WorkbookLoader {
 				Cell cell = row.getCell(column);
 				if (cell != null) {
 					
-					switch (cell.getCellType()) {
-					case Cell.CELL_TYPE_BOOLEAN :
-						text = Boolean.toString(cell.getBooleanCellValue());
-						break;
-						
-					case Cell.CELL_TYPE_NUMERIC :
-						text = formatter.formatCellValue(cell);
-						break;
-						
-					case Cell.CELL_TYPE_STRING :
-						text = cell.getStringCellValue();
-						break;
-						
-					case Cell.CELL_TYPE_FORMULA :
-						Hyperlink link = cell.getHyperlink();
-						if (link != null) {
-							text = link.getAddress();
-						}
-						
+					Hyperlink link = cell.getHyperlink();
+					if (link != null) {
+						return link.getAddress();
 					}
 					
+					text = dataFormatter.formatCellValue(cell);
 					if (text != null) {
 						text = text.trim();
 						if (text.length() == 0) {
@@ -1432,5 +1458,7 @@ public class WorkbookLoader {
 			
 		}
 	}
+	
+	
 
 }

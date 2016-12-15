@@ -34,6 +34,138 @@ import io.konig.shacl.ShapeManager;
 public class JsonWriterBuilderTest {
 	
 	@Test
+	public void testOrConstraintLoop() throws Exception {
+
+		URI partyShapeId = uri("http://example.com/shapes/v1/schema/PartyShape");
+		URI personShapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/v1/schema/OrganizationShape");
+		
+		URI personShapeId2 = uri("http://example.com/shapes/v2/schema/PersonShape");
+		
+		ShapeBuilder shapeBuilder = new ShapeBuilder();
+		
+		shapeBuilder
+		
+			.beginShape(partyShapeId)
+				.or(personShapeId, orgShapeId)
+			.endShape()
+			
+			.beginShape(personShapeId)
+				.targetClass(Schema.Person)
+				.beginProperty(Schema.familyName)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+			.endShape()
+			
+			.beginShape(orgShapeId)
+				.targetClass(Schema.Organization)
+				.beginProperty(Schema.name)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)				
+				.endProperty()
+			.endShape()
+			
+			
+			.beginShape(personShapeId2)
+				.targetClass(Schema.Person)
+				.beginProperty(Schema.sponsor)
+					.valueShape(partyShapeId)
+					.minCount(0)
+				.endProperty()
+			.endShape()
+			
+			;
+		
+		ShapeManager shapeManager = shapeBuilder.getShapeManager();
+		Shape shape = shapeManager.getShapeById(personShapeId2);
+		
+		Graph graph = new MemoryGraph();
+		OwlReasoner reasoner = new OwlReasoner(graph);
+
+		String basePackage = "com.example";
+		MemoryNamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
+		JavaNamer javaNamer = new BasicJavaNamer(basePackage, nsManager);
+		JsonWriterBuilder writerBuilder = new JsonWriterBuilder(reasoner, shapeManager, javaNamer);
+
+		JCodeModel model = new JCodeModel();
+		writerBuilder.buildJsonWriter(shape, model);
+
+		File outDir = new File("target/test/JsonWriterBuilderTest/orConstraintLoop");
+		outDir.mkdirs();
+		model.build(outDir);
+	}
+	
+	
+	@Ignore
+	public void testOrConstraint() throws Exception {
+
+		URI partyShapeId = uri("http://example.com/shapes/v1/schema/PartyShape");
+		URI personShapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/v1/schema/OrganizationShape");
+		
+		URI personShapeId2 = uri("http://example.com/shapes/v2/schema/PersonShape");
+		
+		ShapeBuilder shapeBuilder = new ShapeBuilder();
+		
+		shapeBuilder
+		
+			.beginShape(partyShapeId)
+				.or(personShapeId, orgShapeId)
+			.endShape()
+			
+			.beginShape(personShapeId)
+				.targetClass(Schema.Person)
+				.beginProperty(Schema.familyName)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+			.endShape()
+			
+			.beginShape(orgShapeId)
+				.targetClass(Schema.Organization)
+				.beginProperty(Schema.name)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)				
+				.endProperty()
+			.endShape()
+			
+			
+			.beginShape(personShapeId2)
+				.targetClass(Schema.Person)
+				.beginProperty(Schema.sponsor)
+					.valueShape(partyShapeId)
+					.maxCount(1)
+					.minCount(0)
+				.endProperty()
+			.endShape()
+			
+			;
+		
+		ShapeManager shapeManager = shapeBuilder.getShapeManager();
+		Shape shape = shapeManager.getShapeById(personShapeId2);
+		
+		Graph graph = new MemoryGraph();
+		OwlReasoner reasoner = new OwlReasoner(graph);
+
+		String basePackage = "com.example";
+		MemoryNamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
+		JavaNamer javaNamer = new BasicJavaNamer(basePackage, nsManager);
+		JsonWriterBuilder writerBuilder = new JsonWriterBuilder(reasoner, shapeManager, javaNamer);
+
+		JCodeModel model = new JCodeModel();
+		writerBuilder.buildJsonWriter(shape, model);
+
+		File outDir = new File("target/test/JsonWriterBuilderTest/orConstraint");
+		outDir.mkdirs();
+		model.build(outDir);
+	}
+	
+	@Ignore
 	public void testEnumId() throws Exception {
 		String basePackage = "com.example";
 		URI genderTypeShapeId = uri("http://example.com/shapes/v1/schema/GenderType");
@@ -63,12 +195,12 @@ public class JsonWriterBuilderTest {
 		JCodeModel model = new JCodeModel();
 		writerBuilder.buildJsonWriter(shape, model);
 
-		File outDir = new File("target/test/JsonWriterBuilderTest/testEnumId");
+		File outDir = new File("target/test/JsonWriterBuilderTest/enumId");
 		outDir.mkdirs();
 		model.build(outDir);
 	}
 	
-	@Test
+	@Ignore
 	public void testMultipleEnum() throws Exception {
 		String basePackage = "com.example";
 		URI personShapeId = uri("http://example.com/shapes/v1/schema/Person");

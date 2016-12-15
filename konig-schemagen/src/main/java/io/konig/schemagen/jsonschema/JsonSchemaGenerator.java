@@ -18,6 +18,7 @@ import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
 import io.konig.schemagen.ShapeTransformer;
 import io.konig.shacl.NodeKind;
+import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -66,15 +67,44 @@ public class JsonSchemaGenerator extends Generator {
 			if (memory.contains(schemaId)) {
 				json.put("$ref", schemaId);
 			} else {
-				memory.add(schemaId);
+				if (memory.isEmpty()) {
+					json.put("$schema", "http://json-schema.org/draft-04/schema#");
+				}
 				
-				json.put("$schema", "http://json-schema.org/draft-04/schema#");
+				memory.add(schemaId);
 				json.put("id", schemaId);
 				json.put("type", "object");
 				
 				putProperties(json, shape);
+				putOrConstraint(json, shape);
 			}
 			return json;
+		}
+
+		private void putOrConstraint(ObjectNode json, Shape shape) {
+			
+			OrConstraint orConstraint = shape.getOr();
+			if (orConstraint != null) {
+				
+				ArrayNode array = mapper.createArrayNode();
+				json.set("anyOf", array);
+				
+				List<Shape> shapeList = orConstraint.getShapes();
+				for (Shape s : shapeList) {
+					String schemaId = namer.schemaId(s);
+					if (memory.contains(schemaId)) {
+						ObjectNode node = mapper.createObjectNode();
+						node.put("$ref", schemaId);
+						array.add(node);
+					} else {
+						ObjectNode node = generateJsonSchema(s);
+						array.add(node);
+					}
+				}
+				
+				
+			}
+			
 		}
 
 		private void putProperties(ObjectNode json, Shape shape) {

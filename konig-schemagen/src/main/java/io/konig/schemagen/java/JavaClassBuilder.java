@@ -99,7 +99,9 @@ public class JavaClassBuilder {
 
 	public void buildAll(Collection<Shape> collection, JCodeModel model) throws SchemaGeneratorException {
 		for (Shape shape : collection) {
-			buildClass(shape, model);
+			if (shape.getOr() == null) {
+				buildClass(shape, model);
+			}
 		}
 	}
 	
@@ -444,6 +446,16 @@ public class JavaClassBuilder {
 		
 		URI datatype = p.getDatatype();
 		Resource owlClass = p.getValueClass();
+		
+//		Shape valueShape = p.getValueShape(classAnalyzer.getShapeManager());
+//		
+//		if (valueShape != null) {
+//			if (owlClass == null) {
+//				owlClass = valueShape.getTargetClass();
+//			}
+//		}
+		
+		
 		if (RDF.LANGSTRING.equals(datatype)) {
 			// TODO: implement rdf:langString value
 		} else if (datatype != null) {
