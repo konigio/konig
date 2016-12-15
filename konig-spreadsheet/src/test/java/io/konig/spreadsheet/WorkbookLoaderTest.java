@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.text.MessageFormat;
 import java.util.List;
 
@@ -30,22 +29,59 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Konig;
-import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
-import io.konig.core.vocab.TIME;
 import io.konig.core.vocab.VANN;
+import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
 	
 	@Test
+	public void testOrConstraint() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("or-constraint.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		
+		loader.load(book, graph);
+		
+		ShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager);
+		shapeLoader.load(graph);
+		
+		URI shapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape != null);
+		
+		PropertyConstraint sponsor = shape.getPropertyConstraint(Schema.sponsor);
+		assertTrue(sponsor != null);
+		
+		Shape sponsorShape = sponsor.getValueShape();
+		assertTrue(sponsorShape != null);
+		
+		OrConstraint constraint = sponsorShape.getOr();
+		
+		assertTrue(constraint != null);
+		List<Shape> list = constraint.getShapes();
+		assertEquals(2, list.size());
+		
+	}
+	
+	@Test
 	public void testPlaceData() throws Exception {
-	InputStream input = getClass().getClassLoader().getResourceAsStream("place-data.xlsx");
+		InputStream input = getClass().getClassLoader().getResourceAsStream("place-data.xlsx");
 		
 		Workbook book = WorkbookFactory.create(input);
 		Graph graph = new MemoryGraph();
@@ -71,7 +107,7 @@ public class WorkbookLoaderTest {
 		assertValue(address, Schema.addressRegion, "NJ");
 	}
 	
-	@Ignore
+	@Test
 	public void testEquivalentPath() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -98,7 +134,7 @@ public class WorkbookLoaderTest {
 	}
 
 	
-	@Ignore
+	@Test
 	public void testPartitionOf() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -121,7 +157,7 @@ public class WorkbookLoaderTest {
 		assertEquals("/schema:endTime", partitionOf);
 	}
 	
-	@Ignore
+	@Test
 	public void testSourcePath() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -145,7 +181,7 @@ public class WorkbookLoaderTest {
 		assertEquals("/location[type City]", sourcePath);
 	}
 	
-	@Ignore
+	@Test
 	public void testRollUpBy() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -187,7 +223,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAggregationOf() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -212,7 +248,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIn() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -244,7 +280,7 @@ public class WorkbookLoaderTest {
 //		assertEquals(TIME.unitYear, list.get(2));
 	}
 	
-	@Ignore
+	@Test
 	public void testStereotype() throws Exception {
 
 		
@@ -278,7 +314,7 @@ public class WorkbookLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
 		InputStream input = getClass().getClassLoader().getResourceAsStream("person-model.xlsx");

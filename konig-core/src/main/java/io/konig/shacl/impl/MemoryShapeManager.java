@@ -40,15 +40,15 @@ import io.konig.shacl.ShapeManager;
 public class MemoryShapeManager implements ShapeManager {
 	private Map<String, Shape> shapeMap = new HashMap<String, Shape>();
 
-	public Shape getShapeById(URI shapeId) {
+	public Shape getShapeById(Resource shapeId) {
 		return shapeMap.get(shapeId.stringValue());
 	}
 
-	public void addShape(Shape shape) throws UnnamedResourceException {
-		
-		if (shape.getId() instanceof BNode) {
-			throw new UnnamedResourceException("Cannot add unnamed Shape to this manager");
+	public void addShape(Shape shape)  {
+		if (shape.getId() == null) {
+			throw new KonigException("Shape has no id value");
 		}
+		
 		shapeMap.put(shape.getId().stringValue(), shape);
 	}
 

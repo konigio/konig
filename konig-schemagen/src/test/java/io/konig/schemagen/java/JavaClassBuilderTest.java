@@ -36,7 +36,139 @@ import io.konig.shacl.impl.MemoryShapeManager;
 
 public class JavaClassBuilderTest {
 	
+	
 	@Test
+	public void testOrConstraint() throws Exception {
+
+		
+		URI partyShapeId = uri("http://example.com/shapes/v1/schema/PartyShape");
+		URI personShapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/v1/schema/OrganizationShape");
+		
+		URI personShapeId2 = uri("http://example.com/shapes/v2/schema/PersonShape");
+		
+		ShapeBuilder shapeBuilder = new ShapeBuilder();
+		
+		shapeBuilder
+		
+			.beginShape(partyShapeId)
+				.or(personShapeId, orgShapeId)
+			.endShape()
+			
+			.beginShape(personShapeId)
+				.targetClass(Schema.Person)
+				.beginProperty(Schema.familyName)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+			.endShape()
+			
+			.beginShape(orgShapeId)
+				.targetClass(Schema.Organization)
+				.beginProperty(Schema.name)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)				
+				.endProperty()
+			.endShape()
+			
+			
+			.beginShape(personShapeId2)
+				.targetClass(Schema.Person)
+				.beginProperty(Schema.sponsor)
+					.valueShape(partyShapeId)
+					.maxCount(1)
+					.minCount(0)
+				.endProperty()
+			.endShape()
+			
+			;
+		
+		JCodeModel model = new JCodeModel();
+		NamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
+		ShapeManager shapeManager = shapeBuilder.getShapeManager();
+		OwlReasoner owlReasoner = new OwlReasoner(new MemoryGraph());
+		
+		JavaNamer javaNamer = new BasicJavaNamer("com.example", nsManager);
+		JavaClassBuilder classBuilder = new JavaClassBuilder(shapeManager, javaNamer, owlReasoner);
+		
+		classBuilder.buildClass(Schema.Person, model);
+
+		File file = new File("target/test/JavaClassBuilderTest/orConstraint");
+		file.mkdirs();
+		model.build(file);
+	}
+	
+	@Ignore
+	public void testValueShape() throws Exception {
+		
+		URI personShapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
+		URI addressShapeId = uri("http://example.com/shapes/v1/schema/AddressShape");
+		
+		
+		
+		ShapeBuilder shapeBuilder = new ShapeBuilder();
+		
+		shapeBuilder
+		
+			.beginShape(personShapeId)
+			
+				.targetClass(Schema.Person)
+				.beginProperty(Schema.name)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+				
+				.beginProperty(Schema.address)
+					.valueShape(addressShapeId)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+					
+				
+			.endShape()
+		
+			.beginShape(addressShapeId)
+			
+				.targetClass(Schema.PostalAddress)
+				.beginProperty(Schema.streetAddress)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+				
+				.beginProperty(Schema.addressLocality)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+
+				.beginProperty(Schema.addressRegion)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+				
+			.endShape();
+		
+		JCodeModel model = new JCodeModel();
+		NamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
+		ShapeManager shapeManager = shapeBuilder.getShapeManager();
+		OwlReasoner owlReasoner = new OwlReasoner(new MemoryGraph());
+		
+		JavaNamer javaNamer = new BasicJavaNamer("com.example", nsManager);
+		JavaClassBuilder classBuilder = new JavaClassBuilder(shapeManager, javaNamer, owlReasoner);
+		
+		classBuilder.buildClass(Schema.Person, model);
+
+		File file = new File("target/test/JavaClassBuilderTest/valueShape");
+		file.mkdirs();
+		model.build(file);
+	}
+	
+	@Ignore
 	public void testEnumeration() throws Exception {
 
 		MemoryGraph graph = new MemoryGraph();
@@ -119,13 +251,13 @@ public class JavaClassBuilderTest {
 		assertTrue(method != null);
 		
 
-		File file = new File("target/JavaClassBuilderTest/multipleInheritance");
+		File file = new File("target/test/JavaClassBuilderTest/multipleInheritance");
 		file.mkdirs();
 		model.build(file);
 		
 	}
 
-	@Test
+	@Ignore
 	public void test() throws Exception {
 		
 		ShapeBuilder shapeBuilder = new ShapeBuilder();

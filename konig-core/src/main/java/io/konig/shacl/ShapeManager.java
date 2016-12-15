@@ -2,6 +2,8 @@ package io.konig.shacl;
 
 import java.util.List;
 
+import org.openrdf.model.Resource;
+
 /*
  * #%L
  * konig-shacl
@@ -29,7 +31,7 @@ import io.konig.core.UnnamedResourceException;
 
 public interface ShapeManager {
 	
-	Shape getShapeById(URI shapeId);
+	Shape getShapeById(Resource shapeId);
 	
 	/**
 	 * Get the list of all shapes known to this ShapeManager.

@@ -36,10 +36,58 @@ import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
+import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.TemporalUnit;
+import io.konig.shacl.OrConstraint;
+import io.konig.shacl.Shape;
 
 public class SimplePojoFactoryTest {
+	
+	@Test
+	public void testRdfListAnnotation() throws Exception {
+		
+		
+		URI partyShapeId = uri("http://example.com/shapes/1/schema/PartyShape");
+		URI personShapeId = uri("http://example.com/shapes/1/schema/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/1/schema/OrganizationShape");
+		
+		MemoryGraph graph = new MemoryGraph();
+		graph.builder()
+		
+			.beginSubject(partyShapeId)
+				.addProperty(RDF.TYPE, SH.Shape)
+				.addList(SH.or, personShapeId, orgShapeId)
+			.endSubject()
+			
+			.beginSubject(personShapeId)
+				.addProperty(RDF.TYPE, SH.Shape)
+			.endSubject()
+
+			.beginSubject(orgShapeId)
+				.addProperty(RDF.TYPE, SH.Shape)
+			.endSubject();
+		
+		Vertex v = graph.getVertex(partyShapeId);
+		
+
+		SimplePojoFactory factory = new SimplePojoFactory();
+		
+		Shape shape = factory.create(v, Shape.class);
+		
+		OrConstraint orList = shape.getOr();
+		
+		assertTrue(orList != null);
+		
+		List<Shape> list = orList.getShapes();
+		
+		assertTrue(list != null);
+		assertEquals(2, list.size());
+		
+		assertEquals(list.get(0).getId(), personShapeId);
+		assertEquals(list.get(1).getId(), orgShapeId);
+		
+	}
 	
 	@Test
 	public void testStructuredList() throws Exception {

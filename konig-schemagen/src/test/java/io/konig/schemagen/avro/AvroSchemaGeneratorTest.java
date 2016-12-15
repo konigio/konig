@@ -1,80 +1,108 @@
 package io.konig.schemagen.avro;
 
 import org.junit.Test;
+import static org.junit.Assert.*;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 
-import io.konig.core.GraphBuilder;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.konig.core.NamespaceManager;
-import io.konig.core.Vertex;
-import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.schemagen.avro.impl.SimpleAvroDatatypeMapper;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeBuilder;
+import io.konig.shacl.ShapeManager;
 
 public class AvroSchemaGeneratorTest {
 	
 
 	@Test
-	public void test() throws Exception {
+	public void testOrConstraint() throws Exception {
 		
+	
+		URI partyShapeId = uri("http://example.com/shapes/v1/schema/PartyShape");
+		URI personShapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/v1/schema/OrganizationShape");
+		
+		URI personShapeId2 = uri("http://example.com/shapes/v2/schema/PersonShape");
+		
+		ShapeBuilder shapeBuilder = new ShapeBuilder();
+		
+		shapeBuilder
+		
+			.beginShape(partyShapeId)
+				.or(personShapeId, orgShapeId)
+			.endShape()
+			
+			.beginShape(personShapeId)
+				.beginProperty(Schema.familyName)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+			.endShape()
+			
+			.beginShape(orgShapeId)
+				.beginProperty(Schema.name)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)				
+				.endProperty()
+			.endShape()
+			
+			
+			.beginShape(personShapeId2)
+				.beginProperty(Schema.sponsor)
+					.valueShape(partyShapeId)
+					.maxCount(1)
+					.minCount(0)
+				.endProperty()
+			.endShape()
+			
+			;
+		
+		ShapeManager shapeManager = shapeBuilder.getShapeManager();
+
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", "http://schema.org/");
-		nsManager.add("institution", "http://www.konig.io/institution/");
-		
+		AvroDatatypeMapper datatypeMapper = new SimpleAvroDatatypeMapper();
 		AvroNamer namer = new SimpleAvroNamer();
 		
-		URI addressShapeId = uri("http://www.konig.io/shapes/v1/schema/Address");
-		URI shapeId = uri("http://www.konig.io/shapes/v1/schema/Person");
+		Shape shape = shapeManager.getShapeById(personShapeId2);
 		
-		MemoryGraph graph = new MemoryGraph();
-		GraphBuilder builder = new GraphBuilder(graph);
-		builder.beginSubject(uri("http://www.konig.io/institution/Stanford"))
-			.addProperty(RDF.TYPE, Schema.Organization)
-		.endSubject()
-		.beginSubject(uri("http://www.konig.io/institution/Princeton"))
-			.addProperty(RDF.TYPE, Schema.Organization)
-		.endSubject()
-		.beginSubject(shapeId)
-			.addProperty(RDF.TYPE, SH.Shape)
-			.beginBNode(SH.property)
-				.addProperty(SH.predicate, RDF.TYPE)
-				.addProperty(SH.hasValue, uri("http://schema.org/Person"))
-				.addProperty(SH.maxCount, 1)
-				.addProperty(SH.minCount, 1)
-			.endSubject()
-			.beginBNode(SH.property)
-				.addProperty(SH.predicate, Schema.givenName)
-				.addProperty(SH.datatype, XMLSchema.STRING)
-				.addProperty(SH.minCount, 1)
-				.addProperty(SH.maxCount, 1)
-			.endSubject()
-			.beginBNode(SH.property)
-				.addProperty(SH.predicate, Schema.address)
-				.addProperty(SH.valueShape, addressShapeId)
-				.addProperty(SH.minCount, 1)
-				.addProperty(SH.maxCount, 1)
-			.endSubject()
-			.beginBNode(SH.property)
-				.addProperty(SH.predicate, Schema.memberOf)
-				.addProperty(SH.valueClass, Schema.Organization)
-				.addProperty(SH.nodeKind, SH.IRI)
-				.addProperty(SH.minCount, 0)
-				.addProperty(SH.maxCount, 1)
-			.endSubject()
-		.endSubject();
+		AvroSchemaGenerator avroGenerator = new AvroSchemaGenerator(datatypeMapper, namer, nsManager);
 		
-		Vertex shapeVertex = graph.vertex(shapeId);
-		
-		AvroSchemaGenerator avro = new AvroSchemaGenerator(new SimpleAvroDatatypeMapper(), namer, nsManager);
-		
-		avro.generateSchema(shapeVertex);
+		ObjectNode json = avroGenerator.generateSchema(shape);
 		
 		
+		JsonNode fields = json.get("fields");
+		JsonNode sponsor = fields.get(0);
+		
+		assertEquals("sponsor", sponsor.get("name").asText());
+		
+		JsonNode sponsorType = sponsor.get("type");
+		
+		assertTrue(sponsorType.get(0).isNull());
+		
+		JsonNode personShape = sponsorType.get(1);
+		
+		fields = personShape.get("fields");
+		assertEquals("familyName", fields.get(0).get("name").asText());
+		assertEquals("string", fields.get(0).get("type").asText());
+		
+		
+		JsonNode orgShape = sponsorType.get(2);
+		
+		fields = orgShape.get("fields");
+		assertEquals("name", fields.get(0).get("name").asText());
+		assertEquals("string", fields.get(0).get("type").asText());	
 		
 	}
 	

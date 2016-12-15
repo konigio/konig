@@ -33,6 +33,7 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JFieldRef;
 import com.sun.codemodel.JForEach;
+import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JTryBlock;
@@ -117,6 +118,10 @@ public class FactDaoGenerator {
 
 	public void generateDao(Shape shape, JCodeModel model) throws CodeGeneratorException {
 		
+		if (shape.getOr() != null) {
+			throw new CodeGeneratorException("Cannot create DAO for facts with an sh:or constraint: " + shape.getId());
+		}
+		
 		try {
 
 			URI targetClass = shape.getTargetClass();
@@ -174,7 +179,7 @@ public class FactDaoGenerator {
 		
 		JVar filterListVar = body.decl(filterListClass, "filterList");
 		filterListVar.init(JExpr._new(filterArrayListClass));
-		buildFilter(info, body, info.shape, filterListVar, param);
+		buildFilter(info, body, info.shape, filterListVar, param, null);
 		
 		JClass queryClass = model.ref(Query.class);
 		
@@ -220,18 +225,18 @@ public class FactDaoGenerator {
 		
 	}
 
-	private void buildFilter(DaoInfo info, JBlock body, Shape shape, JVar filterListVar, JVar constraints) throws CodeGeneratorException {
+	private void buildFilter(DaoInfo info, JBlock body, Shape shape, JVar filterListVar, JVar constraints, String fieldPrefix) throws CodeGeneratorException {
 		
 		JBlock thenBlock = body._if(constraints.ne(JExpr._null()))._then();
 		
 		for (PropertyConstraint p : shape.getProperty()) {
-			buildFilter(info, thenBlock, p, filterListVar, constraints);
+			buildFilter(info, thenBlock, p, filterListVar, constraints, fieldPrefix);
 		}
 		
 	}
 
 	private void buildFilter(DaoInfo info, JBlock block, PropertyConstraint p, JVar filterListVar,
-			JVar constraints) throws CodeGeneratorException {
+			JVar constraints, String fieldPrefix) throws CodeGeneratorException {
 		
 		JCodeModel model = info.model;
 		URI predicate = p.getPredicate();
@@ -245,6 +250,7 @@ public class FactDaoGenerator {
 		}
 		
 		String fieldName = predicate.getLocalName();
+		String fieldPath = fieldPath(fieldPrefix, fieldName);
 		String getterMethod = BeanUtil.getterName(predicate);
 		JClass uriType = model.ref(URI.class);
 
@@ -260,6 +266,7 @@ public class FactDaoGenerator {
 		if (datatype != null) {
 			
 			Class<?> javaType = datatypeMapper.javaDatatype(datatype);
+			boolean temporal = javaType == GregorianCalendar.class;
 			
 			JClass fieldType = null;
 			boolean isRange = false;
@@ -279,36 +286,42 @@ public class FactDaoGenerator {
 			JVar field = block.decl(fieldType, fieldName);
 			field.init(constraints.invoke(getterMethod));
 			
+			
+			
 			JBlock thenBlock = block._if(field.ne(JExpr._null()))._then();
 			if (isRange) {
 
 				JExpression value = field.invoke("getMinInclusive");
+				
+				
+				
 				JBlock block2 = thenBlock._if(value.ne(JExpr._null()))._then();
 
 				block2.add(filterListVar.invoke("add").arg(JExpr._new(filterPredicateClass)
-						.arg(JExpr.lit(fieldName))
+						.arg(JExpr.lit(fieldPath))
 						.arg(greaterThanOrEqual)
-						.arg(value)
+						.arg(rangeValue(temporal, value))
 				));
 				
 				value = field.invoke("getMinExclusive");
 				
+				
 				block2 = thenBlock._if(value.ne(JExpr._null()))._then();
 
 				block2.add(filterListVar.invoke("add").arg(JExpr._new(filterPredicateClass)
-						.arg(JExpr.lit(fieldName))
+						.arg(JExpr.lit(fieldPath))
 						.arg(greaterThan)
-						.arg(value)
+						.arg(rangeValue(temporal, value))
 				));
 				
-				value = field.invoke("getMaxInclusive");
+				value =  field.invoke("getMaxInclusive");
 				
 				block2 = thenBlock._if(value.ne(JExpr._null()))._then();
 
 				block2.add(filterListVar.invoke("add").arg(JExpr._new(filterPredicateClass)
-						.arg(JExpr.lit(fieldName))
+						.arg(JExpr.lit(fieldPath))
 						.arg(lessThanOrEqual)
-						.arg(value)
+						.arg(rangeValue(temporal, value))
 				));
 				
 				value = field.invoke("getMaxExclusive");
@@ -316,9 +329,9 @@ public class FactDaoGenerator {
 				block2 = thenBlock._if(value.ne(JExpr._null()))._then();
 
 				block2.add(filterListVar.invoke("add").arg(JExpr._new(filterPredicateClass)
-						.arg(JExpr.lit(fieldName))
+						.arg(JExpr.lit(fieldPath))
 						.arg(lessThan)
-						.arg(value)
+						.arg(rangeValue(temporal, value))
 				));
 				
 				
@@ -328,7 +341,7 @@ public class FactDaoGenerator {
 				JBlock block2 = thenBlock._if(field.ne(JExpr._null()))._then();
 
 				block2.add(filterListVar.invoke("add").arg(JExpr._new(filterPredicateClass)
-						.arg(JExpr.lit(fieldName))
+						.arg(JExpr.lit(fieldPath))
 						.arg(equal)
 						.arg(field)
 				));
@@ -347,7 +360,7 @@ public class FactDaoGenerator {
 					JBlock thenBlock = block._if(field.ne(JExpr._null()))._then();
 
 					thenBlock.add(filterListVar.invoke("add").arg(JExpr._new(filterPredicateClass)
-							.arg(JExpr.lit(fieldName))
+							.arg(JExpr.lit(fieldPath))
 							.arg(equal)
 							.arg(field.invoke("stringValue"))));
 					
@@ -364,13 +377,35 @@ public class FactDaoGenerator {
 					JVar field = block.decl(fieldType, fieldName);
 					field.init(constraints.invoke(getterMethod));
 					
-					buildFilter(info, block, shape, filterListVar, field);
+					buildFilter(info, block, shape, filterListVar, field, concatFieldPrefix(fieldPrefix, fieldName));
 				}
 			}
 			
 		}
 		
 		
+	}
+	
+	private String fieldPath(String prefix, String fieldName) {
+		return prefix == null ? fieldName : prefix + fieldName;
+	}
+	
+	private String concatFieldPrefix(String a, String b) {
+		StringBuilder builder = new StringBuilder();
+		if (a != null) {
+			builder.append(a);
+		}
+		builder.append(b);
+		builder.append('.');
+		
+		return builder.toString();
+	}
+
+	private JExpression rangeValue(boolean temporal, JExpression value) {
+		if (temporal) {
+			value = value.invoke("getTime");
+		}
+		return value;
 	}
 
 	private void declareConstraintsClass(DaoInfo info) throws JClassAlreadyExistsException, CodeGeneratorException {

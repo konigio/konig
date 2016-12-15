@@ -60,6 +60,10 @@ public class ClassAnalyzer {
 		this.shapeManager = shapeManager;
 		this.owlReasoner = owlReasoner;
 	}
+	
+	public ShapeManager getShapeManager() {
+		return shapeManager;
+	}
 
 	/**
 	 * Create a shape that aggregates all the known shapes for a given class.
@@ -249,7 +253,7 @@ public class ClassAnalyzer {
 						mergeMinCount(a, b);
 						mergeMaxCount(a, b);
 						mergeDatatype(shape, a, b);
-						mergeValueClass(shape, a, b);
+						mergeValueClass(a, b);
 					}
 				}
 			}
@@ -279,7 +283,7 @@ public class ClassAnalyzer {
 		
 	}
 
-	private void mergeValueClass(Shape shape, PropertyConstraint a, PropertyConstraint b) {
+	private void mergeValueClass(PropertyConstraint a, PropertyConstraint b) {
 		Resource valueClassA = a.getValueClass();
 		Resource valueClassB = valueClass(b);
 		
@@ -312,12 +316,28 @@ public class ClassAnalyzer {
 			Shape valueShape = a.getValueShape(shapeManager);
 			if (valueShape != null) {
 				valueClass = valueShape.getTargetClass();
+				if (valueClass == null && valueShape.getOr()!=null) {
+					valueClass = mergeTargetClass(valueShape.getOr().getShapes());
+				}
 			}
 		}
 		return valueClass;
 	}
 	
 	
+
+	public Resource mergeTargetClass(List<Shape> shapes) {
+		Resource result = null;
+		for (Shape s : shapes) {
+			URI targetClass = s.getTargetClass();
+			if (result == null) {
+				result = targetClass;
+			} else {
+				result = owlReasoner.leastCommonSuperClass(result, targetClass);
+			}
+		}
+		return result;
+	}
 
 	private Map<URI, List<PropertyConstraint>> orPropertyMap(Shape shape) {
 		Map<URI,List<PropertyConstraint>> map = new HashMap<>();
