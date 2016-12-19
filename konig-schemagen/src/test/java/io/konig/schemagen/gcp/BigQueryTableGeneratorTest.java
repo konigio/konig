@@ -3,6 +3,8 @@ package io.konig.schemagen.gcp;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
@@ -14,19 +16,57 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import com.google.api.services.bigquery.model.TableFieldSchema;
+import com.google.api.services.bigquery.model.TableSchema;
+
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.Schema;
 import io.konig.schemagen.SimpleShapeNamer;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeBuilder;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class BigQueryTableGeneratorTest {
+	
+	@Test
+	public void testNullableIdField() {
 
-	@Ignore
+		URI shapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
+		ShapeBuilder builder = new ShapeBuilder();
+		
+		builder.beginShape(shapeId)
+			.nodeKind(NodeKind.BlankNodeOrIRI)
+		.endShape();
+		
+		ShapeManager shapeManager = builder.getShapeManager();
+		Shape shape = shapeManager.getShapeById(shapeId);
+
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", "http://schema.org/");
+
+		BigQueryTableGenerator generator = new BigQueryTableGenerator()
+			.setShapeManager(shapeManager)
+			.setShapeNamer(new SimpleShapeNamer(nsManager, "http://example.com/shapes/"))
+			.setTableMapper(new LocalNameTableMapper());
+		
+		TableSchema schema = generator.toTableSchema(shape);
+		List<TableFieldSchema> list = schema.getFields();
+		assertEquals(1, list.size());
+		
+		TableFieldSchema fieldSchema = list.get(0);
+		assertEquals("id", fieldSchema.getName());
+		assertEquals("NULLABLE", fieldSchema.getMode());
+		assertEquals("STRING", fieldSchema.getType());
+		
+		
+	}
+
+	@Test
 	public void testGenerateEnumTables() {
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();
@@ -106,7 +146,7 @@ public class BigQueryTableGeneratorTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testGenerateEnumTablesRequiredIdentifier() {
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();

@@ -316,6 +316,13 @@ public class BigQueryTableGenerator {
 			idField.setType(BigQueryDatatype.STRING.name());
 			idField.setMode(FieldMode.REQUIRED.name());
 			list.add(idField);
+		} else if (shape.getNodeKind() == NodeKind.BlankNodeOrIRI) {
+
+			TableFieldSchema idField = new TableFieldSchema();
+			idField.setName("id");
+			idField.setType(BigQueryDatatype.STRING.name());
+			idField.setMode(FieldMode.NULLABLE.name());
+			list.add(idField);
 		}
 		
 		for (PropertyConstraint p : plist) {
@@ -544,6 +551,14 @@ public class BigQueryTableGenerator {
 			json.writeStringField("name", "id");
 			json.writeStringField("type", BigQueryDatatype.STRING.name());
 			json.writeStringField("mode", FieldMode.REQUIRED.name());
+			json.writeEndObject();
+			
+		} else if (shape.getNodeKind() == NodeKind.BlankNodeOrIRI) {
+
+			json.writeStartObject();
+			json.writeStringField("name", "id");
+			json.writeStringField("type", BigQueryDatatype.STRING.name());
+			json.writeStringField("mode", FieldMode.NULLABLE.name());
 			json.writeEndObject();
 		}
 		
