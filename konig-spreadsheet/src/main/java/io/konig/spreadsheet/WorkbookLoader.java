@@ -566,12 +566,7 @@ public class WorkbookLoader {
 			Literal sourcePath = stringLiteral(row, pcSourcePathCol);
 			Literal partitionOf = stringLiteral(row, pcPartitionOfCol);
 			
-			if (RDF.TYPE.equals(propertyId)) {
-				valueType = null;
-				valueClass = OWL.CLASS;
-			}
 			
-				
 			if (Konig.id.equals(propertyId)) {
 				int min = minCount==null ? 0 : minCount.intValue();
 				int max = maxCount==null ? -1 : maxCount.intValue();
@@ -594,6 +589,12 @@ public class WorkbookLoader {
 			}
 			
 			Resource constraint = graph.vertex().getId();
+			
+			if (RDF.TYPE.equals(propertyId) && !valueType.equals(XMLSchema.ANYURI)) {
+
+				logger.warn("As a best practice, rdf:type fields should use a URI reference, but this shape uses a embedded shape: " + shapeId.stringValue());
+				
+			}
 			
 			edge(shapeId, RDF.TYPE, SH.Shape);
 			edge(shapeId, SH.property, constraint);
