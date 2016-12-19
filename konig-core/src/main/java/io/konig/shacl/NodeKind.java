@@ -24,10 +24,13 @@ package io.konig.shacl;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
+import io.konig.core.vocab.SH;
+
 public enum NodeKind  {
 
 	IRI("http://www.w3.org/ns/shacl#IRI"),
 	BlankNode("http://www.w3.org/ns/shacl#BlankNode"),
+	BlankNodeOrIRI(SH.BlankNodeOrIRI.stringValue()),
 	Literal("http://www.w3.org/ns/shacl#Literal");
 
 	private URI uri;
@@ -48,6 +51,10 @@ public enum NodeKind  {
 		}
 		if (Literal.uri.equals(uri)) {
 			return Literal;
+		}
+		
+		if (BlankNodeOrIRI.uri.equals(uri)) {
+			return BlankNodeOrIRI;
 		}
 		
 		return null;
