@@ -473,6 +473,7 @@ public class OwlReasoner {
 				XMLSchema.BYTE.equals(owlClass) ||
 				XMLSchema.INT.equals(owlClass) ||
 				XMLSchema.INTEGER.equals(owlClass) ||
+				XMLSchema.LONG.equals(owlClass) ||
 				XMLSchema.NEGATIVE_INTEGER.equals(owlClass) ||
 				XMLSchema.NON_NEGATIVE_INTEGER.equals(owlClass) ||
 				XMLSchema.NON_POSITIVE_INTEGER.equals(owlClass) ||
