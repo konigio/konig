@@ -601,6 +601,33 @@ public class FactDaoGenerator {
 				thenBlock.add(calendarVar.invoke("setTime").arg(var));
 				thenBlock.add(pojoVar.invoke(setterMethod).arg(calendarVar));
 				
+			} else if (javaType == Short.class) {
+
+				JClass longType = model.ref(Long.class);
+				
+				JVar var = body.decl(longType, propertyName);
+				
+				JExpression initValue = (JExpression)
+					JExpr.cast(longType, entityVar.invoke("getProperty").arg(JExpr.lit(propertyName)));
+				
+				var.init(initValue);
+				
+				JBlock thenBlock = body._if(var.ne(JExpr._null()))._then();
+				thenBlock.add(pojoVar.invoke(setterMethod).arg(var.invoke("shortValue")));
+				
+			} else if (javaType == Integer.class) {
+
+				JClass longType = model.ref(Long.class);
+				
+				JVar var = body.decl(longType, propertyName);
+				
+				JExpression initValue = (JExpression)
+					JExpr.cast(longType, entityVar.invoke("getProperty").arg(JExpr.lit(propertyName)));
+				
+				var.init(initValue);
+				
+				JBlock thenBlock = body._if(var.ne(JExpr._null()))._then();
+				thenBlock.add(pojoVar.invoke(setterMethod).arg(var.invoke("intValue")));
 				
 			} else {
 				JClass propertyType = model.ref(javaType);
@@ -820,7 +847,7 @@ public class FactDaoGenerator {
 						embeddedVar.init(JExpr._new(embeddedType));
 						
 						setEntityValues(model, thenBlock, embeddedVar, var, shape);
-						thenBlock.add(entityVar.invoke("setProperty")
+						thenBlock.add(entityVar.invoke("setIndexedProperty")
 							.arg(JExpr.lit(varName))
 							.arg(embeddedVar)
 						);
