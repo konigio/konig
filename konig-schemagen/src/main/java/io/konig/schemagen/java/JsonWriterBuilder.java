@@ -8,6 +8,7 @@ import java.util.Set;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.sun.codemodel.JBlock;
@@ -160,7 +161,13 @@ public class JsonWriterBuilder {
 			Shape valueShape = p.getValueShape(shapeManager);
 			Integer maxCount = p.getMaxCount();
 			NodeKind nodeKind = p.getNodeKind();
-			if (datatype != null) {
+			
+			if (XMLSchema.ANYURI.equals(datatype)) {
+
+				handleIriReference(model, body, p, sourceVar, jsonVar);
+				
+			} else 	if (datatype != null) {
+				
 				Class<?> javaType = datatypeMapper.javaDatatype(datatype);
 				JClass propertyType = model.ref(javaType);
 				

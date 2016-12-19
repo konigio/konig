@@ -20,7 +20,7 @@
   	<jsonld-java.version>0.7.0</jsonld-java.version>
   	<httpclient.version>4.5.2</httpclient.version>
   	<poi.version>3.15</poi.version>
-    <appengine.version>1.9.25</appengine.version>
+    <appengine.version>1.9.48</appengine.version>
 		<jodatime.version>2.9.3</jodatime.version>
 		<antlr.version>4.5.3</antlr.version>
   </properties>
