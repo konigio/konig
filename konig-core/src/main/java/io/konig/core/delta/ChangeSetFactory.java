@@ -45,6 +45,8 @@ public class ChangeSetFactory {
 	private static final URI KEYLIST = new URIImpl("http://www.konig.io/ns/kcs/keyList");
 	
 	private boolean preserveNamedIndividuals;
+	
+	private Set<String> ignoreNamespace;
 
 	/**
 	 * Compute the difference between two graphs.
@@ -59,6 +61,20 @@ public class ChangeSetFactory {
 	}
 	
 	
+	public Set<String> getIgnoreNamespace() {
+		return ignoreNamespace;
+	}
+
+
+
+
+	public void setIgnoreNamespace(Set<String> ignoreNamespace) {
+		this.ignoreNamespace = ignoreNamespace;
+	}
+
+
+
+
 	/**
 	 * Get the configuration setting for preserving named individuals.
 	 * @return True if named individuals should be preserved and false otherwise.
@@ -109,6 +125,12 @@ public class ChangeSetFactory {
 			
 			for (Vertex w : target.vertices()) {
 				if (w.getId() instanceof URI) {
+					if (ignoreNamespace != null) {
+						URI uri = (URI) w.getId();
+						if (ignoreNamespace.contains(uri.getNamespace())) {
+							continue;
+						}
+					}
 					Vertex v = source.getVertex(w.getId());
 					if (v == null) {
 						add(w);
@@ -123,6 +145,13 @@ public class ChangeSetFactory {
 		private void scanSource() {
 			for (Vertex v : source.vertices()) {
 				if (v.getId() instanceof URI) {
+					
+					if (ignoreNamespace != null) {
+						URI uri = (URI) v.getId();
+						if (ignoreNamespace.contains(uri.getNamespace())) {
+							continue;
+						}
+					}
 					handleSourceURI(v);
 				}
 			}
@@ -177,6 +206,9 @@ public class ChangeSetFactory {
 					BNode bnode = (BNode) value;
 					Vertex object = graph.getVertex(bnode);
 					BNodeKey bnodeKey = keyFactory.createKey(predicate, object);
+					if (bnodeKey == null) {
+						throw new KonigException("BNode key not found for predicate: " + predicate);
+					}
 					String key = bnodeKey.getHash();
 					map.put(key, object);
 				}
@@ -195,10 +227,9 @@ public class ChangeSetFactory {
 		 * @return true if there is a difference between the two vertices, and false otherwise.
 		 */
 		private boolean diff(Vertex v, Vertex w, BNodeKey bnodeKey) {
-			int initialSize = changes.size();
-			diffSource(v, w, bnodeKey);
-			diffTarget(v, w);
-			return initialSize != changes.size();
+			int count =	diffSource(v, w, bnodeKey);
+			count += diffTarget(v, w);
+			return count!=0;
 			
 		}
 
@@ -210,8 +241,9 @@ public class ChangeSetFactory {
 		 * @param v The source vertex
 		 * @param w the target vertex
 		 */
-		private void diffTarget(Vertex v, Vertex w) {
+		private int diffTarget(Vertex v, Vertex w) {
 
+			int count = 0;
 			Resource subject = v.getId();
 			Set<Entry<URI,Set<Edge>>> out = w.outEdges();
 			for (Entry<URI, Set<Edge>> entry : out) {
@@ -220,12 +252,21 @@ public class ChangeSetFactory {
 				for (Edge e : set) {
 					Value object2 = e.getObject();
 					
+					if (ignoreNamespace !=null && object2 instanceof URI) {
+						URI uri = (URI) object2;
+						if (ignoreNamespace.contains(uri.getNamespace())) {
+							continue;
+						}
+					}
+					
 					if (object2 instanceof BNode) {
 						BNode bnode2 = (BNode) object2;
 						Vertex vertex2 = target.getVertex(bnode2);
 						Vertex vertex1 = bnodeMap.get(vertex2);
 						if (vertex1 == null) {
 							add(subject, predicate, vertex2.getId());
+							count++;
+							
 							add(vertex2);
 						}
 					} else if (!v.hasProperty(predicate, object2)) {
@@ -233,26 +274,30 @@ public class ChangeSetFactory {
 					}
 				}
 			}
+			return count;
 			
 		}
 
 
 
-		private void add(Vertex v) {
-			
+		private int add(Vertex v) {
+			int count = 0;
 			Set<Entry<URI,Set<Edge>>> out = v.outEdges();
 			
 			for (Entry<URI, Set<Edge>> entry : out) {
 				Set<Edge> set = entry.getValue();
 				for (Edge e : set) {
 					changes.edge(e).addAnnotation(RDF.TYPE, Konig.Dictum);
+					count++;
 					Value object = e.getObject();
 					if (object instanceof BNode) {
 						BNode bnode = (BNode)object;
-						add(target.getVertex(bnode));
+						count += add(target.getVertex(bnode));
 					}
 				}
 			}
+			
+			return count;
 		}
 
 
@@ -272,8 +317,9 @@ public class ChangeSetFactory {
 		 * @param w
 		 * @param bnodeKey
 		 */
-		private void diffSource(Vertex v, Vertex w, BNodeKey bnodeKey) {
+		private int diffSource(Vertex v, Vertex w, BNodeKey bnodeKey) {
 			
+			int count = 0;
 			
 			Set<Entry<URI,Set<Edge>>> out = v.outEdges();
 			for (Entry<URI, Set<Edge>> entry : out) {
@@ -285,6 +331,15 @@ public class ChangeSetFactory {
 				
 				for (Edge e : set) {
 					Value object1 = e.getObject();
+					
+
+					if (ignoreNamespace !=null && object1 instanceof URI) {
+						URI uri = (URI) object1;
+						if (ignoreNamespace.contains(uri.getNamespace())) {
+							continue;
+						}
+					}
+					
 					
 					if (object1 instanceof BNode) {
 						
@@ -303,20 +358,22 @@ public class ChangeSetFactory {
 							if (targetBNode == null) {
 								// No matching bnode in the target
 								changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsehood);
-								removeBNode(sourceBNode, childKey);
+								count++;
+								count += removeBNode(sourceBNode, childKey);
 								
 							} else {
 								// found a matching bnode in the target
 								
 								Edge edge = key(e);
+								count++;
 								if (!diff(sourceBNode, targetBNode, childKey)) {
-									Resource doomed = (Resource) edge.getObject();
-									changes.remove(doomed);
+									BNode doomed = (BNode) edge.getObject();
+									count += removeBNode(doomed);
+									changes.remove(edge);
+									count--;
+								} else {
+									changes.edge(e).addAnnotation(RDF.TYPE, Konig.KeyValue);
 								}
-								
-								changes.edge(e).addAnnotation(RDF.TYPE, Konig.KeyValue);
-								
-								
 								
 							}
 							
@@ -327,6 +384,7 @@ public class ChangeSetFactory {
 					} else if (!w.hasProperty(predicate, object1)){
 						
 						Edge edge = changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsehood);
+						count++;
 						if (keyPart!=null) {
 							edge.addAnnotation(RDF.TYPE, keyPart);
 						}
@@ -337,20 +395,41 @@ public class ChangeSetFactory {
 					}
 				}
 			}
-			
+			return count;
 		}
 
 
 
-		private void removeBNode(Vertex bnode, BNodeKey key) {
+		private int removeBNode(Resource doomed) {
+			int count = 0;
+			Vertex v = changes.getVertex(doomed);
+			Set<Edge> out = v.outEdgeSet();
+			for (Edge edge : out) {
+				changes.remove(edge);
+				count--;
+				Value object = edge.getObject();
+				if (object instanceof BNode) {
+					count += removeBNode((BNode) object);
+				}
+				
+			}
+			return count;
+		}
+
+
+
+		private int  removeBNode(Vertex bnode, BNodeKey key) {
+			int count = 0;
 			Set<Edge> out = bnode.outEdgeSet();
 			for (Edge e : out) {
 				URI predicate = e.getPredicate();
 				URI part = key.keyPart(predicate);
 				if (part != null) {
 					changes.edge(e).addAnnotation(RDF.TYPE, part);
+					count++;
 				}
 			}
+			return count;
 			
 		}
 
