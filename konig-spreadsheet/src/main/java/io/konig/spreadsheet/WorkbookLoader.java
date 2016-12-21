@@ -567,6 +567,12 @@ public class WorkbookLoader {
 			Literal partitionOf = stringLiteral(row, pcPartitionOfCol);
 			
 			
+			Vertex prior = getPropertyConstraint(shapeId, propertyId);
+			if (prior != null) {
+				
+				logger.warn("Duplicate definition of property '{}' on '{}'", propertyId.getLocalName(), shapeId.getLocalName());
+			}
+			
 			if (Konig.id.equals(propertyId)) {
 				int min = minCount==null ? 0 : minCount.intValue();
 				int max = maxCount==null ? -1 : maxCount.intValue();
@@ -623,6 +629,10 @@ public class WorkbookLoader {
 			edge(constraint, Konig.partitionOf, partitionOf);
 			
 			
+		}
+
+		private Vertex getPropertyConstraint(URI shapeId, URI predicate) {
+			return graph.v(shapeId).out(SH.property).hasValue(SH.predicate, predicate).firstVertex();
 		}
 
 		private void edge(Resource subject, URI predicate, List<Value> object) {
