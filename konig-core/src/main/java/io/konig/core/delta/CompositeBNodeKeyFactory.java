@@ -1,4 +1,4 @@
-package io.konig.core.vocab;
+package io.konig.core.delta;
 
 /*
  * #%L
@@ -21,14 +21,33 @@ package io.konig.core.vocab;
  */
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
 
-public class PROV {
+import io.konig.core.Vertex;
 
-	public static final String NAMESPACE = "http://www.w3.org/ns/prov#";
+public class CompositeBNodeKeyFactory implements BNodeKeyFactory {
 	
-	public static final URI wasGeneratedBy = new URIImpl("http://www.w3.org/ns/prov#wasGeneratedBy");
-	public static final URI endedAtTime = new URIImpl("http://www.w3.org/ns/prov#endedAtTime");
+	private Map<URI, BNodeKeyFactory> map = new HashMap<>();
+
+	public CompositeBNodeKeyFactory() {
+	}
+	
+	public void register(URI predicate, BNodeKeyFactory delegate) {
+		map.put(predicate, delegate);
+	}
+
+	@Override
+	public BNodeKey createKey(URI predicate, Vertex object) {
+
+		BNodeKeyFactory delegate = map.get(predicate);
+		if (delegate != null) {
+			return delegate.createKey(predicate, object);
+		}
+		
+		return null;
+	}
 
 }

@@ -96,7 +96,7 @@ import net.sourceforge.plantuml.SourceFileReader;
  * Goal which generates Avro schemas from SHACL data shapes
  *
  */
-@Mojo( name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES )
+@Mojo( name = "generate")
 public class KonigSchemagenMojo  extends AbstractMojo {
 	
 	private static final String SCHEMA = "schema";

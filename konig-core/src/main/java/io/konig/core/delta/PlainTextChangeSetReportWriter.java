@@ -48,12 +48,12 @@ import io.konig.core.vocab.Konig;
 public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 	private static final String ADD             = "+    ";
 	private static final String REMOVE          = "-    ";
-	private static final String KEYVALUE        = " *   ";
-	private static final String KEYTERM         = " #   ";
-	private static final String ADD_KEYVALUE    = "+*   ";
-	private static final String REMOVE_KEYVALUE = "-*   ";
-	private static final String ADD_KEYTERM     = "+#   ";
-	private static final String REMOVE_KEYTERM  = "-#   ";
+	private static final String KEYVALUE        = "*    ";
+	private static final String KEYTERM         = "*    ";
+	private static final String ADD_KEYVALUE    = "+    ";
+	private static final String REMOVE_KEYVALUE = "-    ";
+	private static final String ADD_KEYTERM     = "+    ";
+	private static final String REMOVE_KEYTERM  = "-    ";
 	private static final String NONE            = "?    ";
 	
 	private NamespaceManager nsManager;
@@ -88,6 +88,16 @@ public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 			
 			writeAll(graph, false);
 			if (graph.size() > 0) {
+				
+				while (!stack.isEmpty()) {
+					Context context = pop();
+					if (context.lastSubject instanceof BNode) {
+						writer.print(']');
+					} else {
+						break;
+					}
+				}
+				
 				writer.println(" .");
 			} else {
 				writer.println();
@@ -96,6 +106,10 @@ public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 			
 		}
 		
+		private Context pop() {
+			return stack.isEmpty() ?  null : stack.remove(stack.size()-1);
+		}
+
 		private void writeAll(Collection<Edge> collection, boolean includeBNode) {
 			for (Edge e : collection) {
 				
@@ -274,7 +288,8 @@ public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 			String result = 
 				Konig.Dictum.equals(value)      ? ADD :
 				Konig.Falsehood.equals(value)   ? REMOVE :
-				Konig.KeyValue.equals(value) ? KEYVALUE :
+				Konig.KeyValue.equals(value) 	? KEYVALUE :
+				Konig.KeyTerm.equals(value) 	? KEYTERM :
 				match(edge, Konig.Falsehood, Konig.KeyValue, value) ? REMOVE_KEYVALUE :
 				match(edge, Konig.Dictum,  Konig.KeyValue, value) ? ADD_KEYVALUE :
 				match(edge, Konig.Falsehood, Konig.KeyTerm, value)  ? REMOVE_KEYTERM :
