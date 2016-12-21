@@ -173,6 +173,10 @@ public class GraphBuilder {
 		return addProperty(predicate, new LiteralImpl(Double.toString(value), XMLSchema.DOUBLE));
 	}
 	
+	public GraphBuilder addInt(URI predicate, int value) {
+		return addProperty(predicate, new LiteralImpl(Integer.toString(value), XMLSchema.INT));
+	}
+	
 	
 	
 

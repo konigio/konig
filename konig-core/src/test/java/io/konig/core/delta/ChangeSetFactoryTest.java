@@ -19,10 +19,10 @@ package io.konig.core.delta;
  * limitations under the License.
  * #L%
  */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-
-import static org.junit.Assert.*;
-
+import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Ignore;
@@ -32,7 +32,9 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.FOAF;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
@@ -41,11 +43,161 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.PROV;
+import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 
 public class ChangeSetFactoryTest {
 	
-	@Ignore
+	@Test
+	public void testIgnoreNamespace() throws Exception {
+		
+		URI shapeId = uri("http://example.com/shapes/v1/Person");
+		URI activity1Id = uri("http://example.com/activity/1");
+		URI activity2Id = uri("http://example.com/activity/2");
+		
+		Graph source = new MemoryGraph();
+		source.builder()
+			.beginSubject(shapeId)
+				.addProperty(SH.targetClass, FOAF.PERSON)
+				.addProperty(PROV.wasGeneratedBy, activity1Id)
+			.endSubject()
+			.beginSubject(activity1Id)
+				.addLiteral(PROV.endedAtTime, "2016-12-21T08:00", XMLSchema.DATETIME)
+			.endSubject()
+			
+			;
+		
+
+		Graph target = new MemoryGraph();
+		target.builder()
+			.beginSubject(shapeId)
+				.addProperty(SH.targetClass, Schema.Person)
+				.addProperty(PROV.wasGeneratedBy, activity2Id)
+			.endSubject()
+			.beginSubject(activity2Id)
+				.addLiteral(PROV.endedAtTime, "2016-12-22T09:00", XMLSchema.DATETIME)
+			.endSubject();
+		
+		SimpleKeyFactory keyFactory = new SimpleKeyFactory(SH.property, SH.predicate);
+
+		Set<String> ignoreNamespace = new HashSet<>();
+		ignoreNamespace.add("http://example.com/activity/");
+		
+		ChangeSetFactory maker = new ChangeSetFactory();
+		maker.setIgnoreNamespace(ignoreNamespace);
+		Graph delta = maker.createChangeSet(source, target, keyFactory);
+		
+		
+		Vertex shape = delta.getVertex(shapeId);
+		assertTrue(shape != null);
+		
+		assertChange(shape, SH.targetClass, FOAF.PERSON, Konig.Falsehood);
+		assertChange(shape, SH.targetClass, Schema.Person, Konig.Dictum);
+		assertEquals(2, delta.size());
+		
+		
+//		NamespaceManager nsManager = new MemoryNamespaceManager();
+//		nsManager.add("schema", Schema.NAMESPACE);
+//		nsManager.add("sh", SH.NAMESPACE);
+//		nsManager.add("foaf", FOAF.NAMESPACE);
+//		nsManager.add("prov", PROV.NAMESPACE);
+//		nsManager.add("activity", "http://example.com/activity/");
+//		
+//		
+//		PlainTextChangeSetReportWriter reporter = new PlainTextChangeSetReportWriter(nsManager);
+//	
+//		reporter.write(delta, System.out);
+		
+	}
+	
+	private void assertChange(Vertex shape, URI predicate, Value object, URI disposition) {
+		
+		Set<Edge> set = shape.outProperty(predicate);
+		for (Edge edge : set) {
+			
+			Value value = edge.getObject();
+			if (value.equals(object)) {
+				assertEquals(disposition, edge.getAnnotation(RDF.TYPE));
+				return;
+			}
+		}
+		
+	}
+
+	@Test
+	public void testNoChangeBNode() throws Exception {
+		URI shapeId = uri("http://example.com/shapes/v1/Person");
+		
+		Graph source = new MemoryGraph();
+		
+		source.builder()
+			.beginSubject(shapeId)
+				.beginBNode(SH.property)
+					.addProperty(SH.predicate, Schema.email)
+					.addInt(SH.minCount, 0)
+					.addInt(SH.maxCount, 1)
+				.endSubject()
+			.endSubject();
+		
+		Graph target = new MemoryGraph();
+		target.builder()
+			.beginSubject(shapeId)
+				.beginBNode(SH.property)
+					.addProperty(SH.predicate, Schema.email)
+					.addInt(SH.minCount, 0)
+					.addInt(SH.maxCount, 1)
+				.endSubject()
+			.endSubject();
+
+		
+		SimpleKeyFactory keyFactory = new SimpleKeyFactory(SH.property, SH.predicate);
+		
+		ChangeSetFactory maker = new ChangeSetFactory();
+		Graph delta = maker.createChangeSet(source, target, keyFactory);
+		
+		assertEquals(0, delta.size());
+	}
+	
+	
+	@Test
+	public void testPropertyConstraint() throws Exception {
+		NamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
+		URI shapeId = uri("http://example.com/shapes/v1/Person");
+		
+		Graph source = new MemoryGraph();
+		
+		source.builder()
+			.beginSubject(shapeId)
+				.beginBNode(SH.property)
+					.addProperty(SH.predicate, Schema.email)
+					.addInt(SH.minCount, 0)
+					.addInt(SH.maxCount, 1)
+				.endSubject()
+			.endSubject();
+		
+		Graph target = new MemoryGraph();
+		target.builder()
+			.beginSubject(shapeId)
+				.beginBNode(SH.property)
+					.addProperty(SH.predicate, Schema.email)
+					.addInt(SH.minCount, 0)
+				.endSubject()
+			.endSubject();
+
+		
+		SimpleKeyFactory keyFactory = new SimpleKeyFactory(SH.property, SH.predicate);
+		
+		ChangeSetFactory maker = new ChangeSetFactory();
+		Graph delta = maker.createChangeSet(source, target, keyFactory);
+		
+		// TODO: add tests
+		
+//		PlainTextChangeSetReportWriter writer = new PlainTextChangeSetReportWriter(nsManager);
+//		writer.write(delta, System.out);
+	}
+	
+	@Test
 	public void testList() throws Exception {
 		
 		URI itemList = uri("http://schema.example.com/itemList");
@@ -58,7 +210,10 @@ public class ChangeSetFactoryTest {
 		
 		URI cart = uri("http://data.example.com/cart/1");
 		
-		
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", "http://schema.org/");
+		nsManager.add("dbpedia", "http://dbpedia.org/resource/" );
+		nsManager.add("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 		
 		Graph source = new MemoryGraph();
 		source.builder()
@@ -72,8 +227,14 @@ public class ChangeSetFactoryTest {
 				.addList(itemList, apple, orange, grape, plum, pear)
 			.endSubject();
 
+		GenericBNodeKeyFactory keyFactory = new GenericBNodeKeyFactory();
 		ChangeSetFactory maker = new ChangeSetFactory();
-		Graph delta = maker.createChangeSet(source, target, null);
+		Graph delta = maker.createChangeSet(source, target, keyFactory);
+		
+		// TODO: Add assertions
+
+//		PlainTextChangeSetReportWriter reporter = new PlainTextChangeSetReportWriter(nsManager);
+//		reporter.write(delta, System.out);
 		
 	}
 
@@ -120,8 +281,8 @@ public class ChangeSetFactoryTest {
 		assertLiteral(aliceNode, Schema.familyName, "Jones", Konig.Falsehood);
 		assertLiteral(aliceNode, Schema.familyName, "Smith", Konig.Dictum);
 		
-		PlainTextChangeSetReportWriter reporter = new PlainTextChangeSetReportWriter(nsManager);
-		reporter.write(delta, System.out);
+//		PlainTextChangeSetReportWriter reporter = new PlainTextChangeSetReportWriter(nsManager);
+//		reporter.write(delta, System.out);
 		
 		Set<Edge> contactPoint = aliceNode.outProperty(Schema.contactPoint);
 		assertEquals(1, contactPoint.size());
