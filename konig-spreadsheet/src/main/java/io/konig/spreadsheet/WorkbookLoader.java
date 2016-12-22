@@ -225,10 +225,24 @@ public class WorkbookLoader {
 			
 		}
 		
-		private void run() throws SpreadsheetException {
+		private List<SheetInfo> collectSheetInfo() {
+			List<SheetInfo> list = new ArrayList<>();
 			for (int i=0; i<book.getNumberOfSheets(); i++) {
 				Sheet sheet = book.getSheetAt(i);
-				loadSheet(sheet);
+
+				int sheetType = sheetType(sheet);
+				list.add(new SheetInfo(sheetType, i));
+			}
+			return list;
+		}
+		
+		private void run() throws SpreadsheetException {
+			
+			List<SheetInfo> list = collectSheetInfo();
+			Collections.sort(list);
+			
+			for (SheetInfo info : list) {	
+				loadSheet(info);
 			}
 			buildRollUpShapes();
 			loadIndividualProperties();
@@ -457,9 +471,10 @@ public class WorkbookLoader {
 			
 		}
 
-		private void loadSheet(Sheet sheet) throws SpreadsheetException {
+		private void loadSheet(SheetInfo info) throws SpreadsheetException {
 			
-			int bits = sheetType(sheet);
+			Sheet sheet = book.getSheetAt(info.sheetIndex);
+			int bits = info.sheetType;
 			
 			switch (bits) {
 			case ONTOLOGY_FLAG : loadOntologies(sheet); break;
@@ -573,6 +588,14 @@ public class WorkbookLoader {
 				logger.warn("Duplicate definition of property '{}' on '{}'", propertyId.getLocalName(), shapeId.getLocalName());
 			}
 			
+			if (valueClass != null && (valueType instanceof URI) && !XMLSchema.NAMESPACE.equals(((URI)valueType).getNamespace())) {
+				prior = getTargetClass(valueType);
+				if (prior == null) {
+					edge(valueType, RDF.TYPE, SH.Shape);
+					edge(valueType, SH.targetClass, valueClass);
+				}
+			}
+			
 			if (Konig.id.equals(propertyId)) {
 				int min = minCount==null ? 0 : minCount.intValue();
 				int max = maxCount==null ? -1 : maxCount.intValue();
@@ -629,6 +652,11 @@ public class WorkbookLoader {
 			edge(constraint, Konig.partitionOf, partitionOf);
 			
 			
+		}
+
+		private Vertex getTargetClass(Resource valueType) {
+			
+			return graph.v(valueType).out(SH.targetClass).firstVertex();
 		}
 
 		private Vertex getPropertyConstraint(URI shapeId, URI predicate) {
@@ -1470,6 +1498,23 @@ public class WorkbookLoader {
 		}
 	}
 	
-	
+	static class SheetInfo implements Comparable<SheetInfo> {
+		int sheetType;
+		int sheetIndex;
+		
+		public SheetInfo(int sheetType, int sheetIndex) {
+			this.sheetType = sheetType;
+			this.sheetIndex = sheetIndex;
+		}
+
+		@Override
+		public int compareTo(SheetInfo other) {
+			int result = sheetType - other.sheetType;
+			if (result == 0) {
+				result = sheetIndex - other.sheetIndex;
+			}
+			return result;
+		}
+	}
 
 }
