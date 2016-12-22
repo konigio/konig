@@ -72,14 +72,14 @@ public class MemoryShapeManager implements ShapeManager {
 		for (Shape shape : list) {
 			List<PropertyConstraint> constraints = shape.getProperty();
 			for (PropertyConstraint p : constraints) {
-				Resource resource = p.getValueShapeId();
+				Resource resource = p.getShapeId();
 				if (resource instanceof URI) {
 					URI uri = (URI) resource;
 					Shape valueShape = getShapeById(uri);
 					if (valueShape == null) {
 						throw new KonigException("Shape not found: " + uri);
 					}
-					p.setValueShape(valueShape);
+					p.setShape(valueShape);
 				}
 			}
 		}

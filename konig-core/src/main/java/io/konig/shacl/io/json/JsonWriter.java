@@ -169,10 +169,10 @@ public class JsonWriter {
 				throw new KonigException("Resource not found: " + id);
 			}
 			
-			if (p.getValueShapeId() != null) {
-				Shape shape = p.getValueShape();
+			if (p.getShapeId() != null) {
+				Shape shape = p.getShape();
 				if (shape == null) {
-					throw new KonigException("Shape not found: " + p.getValueShapeId());
+					throw new KonigException("Shape not found: " + p.getShapeId());
 				}
 				
 				write(shape, object);

@@ -133,7 +133,7 @@ public class JsonSchemaGeneratorTest {
 			.endSubject()
 			.beginBNode(SH.property)
 				.addProperty(SH.predicate, Schema.address)
-				.addProperty(SH.valueShape, addressShapeId)
+				.addProperty(SH.shape, addressShapeId)
 				.addProperty(SH.minCount, 1)
 				.addProperty(SH.maxCount, 1)
 			.endSubject()

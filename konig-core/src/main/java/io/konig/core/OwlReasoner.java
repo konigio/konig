@@ -211,7 +211,7 @@ public class OwlReasoner {
 		set.addAll(predicate.asTraversal().out(RDFS.RANGE).toUriSet());
 		set.addAll(predicate.asTraversal().in(SH.predicate).out(SH.datatype).toUriSet());
 		set.addAll(predicate.asTraversal().in(SH.predicate).out(SH.valueClass).toUriSet());
-		set.addAll(predicate.asTraversal().in(SH.predicate).out(SH.valueShape).out(SH.targetClass).toUriSet());
+		set.addAll(predicate.asTraversal().in(SH.predicate).out(SH.shape).out(SH.targetClass).toUriSet());
 		
 		
 		return set;

@@ -86,13 +86,13 @@ public class ShapeAggregator {
 
 	private void setValueShape(Shape parent, PropertyConstraint p, PropertyConstraint x, PropertyConstraint y) {
 		
-		Resource aId = x.getValueShapeId();
-		Resource bId = y.getValueShapeId();
+		Resource aId = x.getShapeId();
+		Resource bId = y.getShapeId();
 		
 		if (aId !=null && bId==null) {
-			setValueShape(p, aId, x.getValueShape());
+			setValueShape(p, aId, x.getShape());
 		} else if (aId==null && bId!=null) {
-			setValueShape(p, bId, y.getValueShape());
+			setValueShape(p, bId, y.getShape());
 		} else if (aId!=null && bId!=null) {
 			Shape c = valueShape(x);
 			Shape d = valueShape(y);
@@ -102,9 +102,9 @@ public class ShapeAggregator {
 			
 			URI uri = new URIImpl(builder.toString());
 			
-			p.setValueShapeId(uri);
+			p.setShapeId(uri);
 			Shape valueShape = merge(uri, c, d);
-			p.setValueShape(valueShape);
+			p.setShape(valueShape);
 			if (shapeManager != null) {
 				shapeManager.addShape(valueShape);
 			}
@@ -114,13 +114,13 @@ public class ShapeAggregator {
 	}
 
 	private Shape valueShape(PropertyConstraint x) {
-		Shape s = x.getValueShape();
+		Shape s = x.getShape();
 		if (s == null) {
 			if (shapeManager == null) {
 				throw new SchemaGeneratorException("shapeManager is not defined");
 			}
 			
-			Resource id = x.getValueShapeId();
+			Resource id = x.getShapeId();
 			if (id instanceof URI) {
 				s = shapeManager.getShapeById((URI)id);
 				if (s == null) {
@@ -138,7 +138,7 @@ public class ShapeAggregator {
 	private void setValueShape(PropertyConstraint p, Resource id, Shape shape) {
 		if (id instanceof URI) {
 			URI uri = (URI) id;
-			p.setValueShapeId(uri);
+			p.setShapeId(uri);
 			
 			if (shape == null && shapeManager!=null) {
 				shape = shapeManager.getShapeById(uri);
@@ -148,7 +148,7 @@ public class ShapeAggregator {
 			throw new SchemaGeneratorException("Blank node not supported for value shape");
 		}
 
-		p.setValueShape(shape);
+		p.setShape(shape);
 		
 	}
 

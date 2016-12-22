@@ -297,8 +297,8 @@ public class ShapeBuilder {
 				}
 			}
 			
-			property.setValueShapeId(shapeId);
-			property.setValueShape(shape);
+			property.setShapeId(shapeId);
+			property.setShape(shape);
 			
 			return new ShapeBuilder(this, parent.shapeManager, parent.valueFactory, shape);
 		}
@@ -375,8 +375,8 @@ public class ShapeBuilder {
 				shape = new Shape(shapeId);
 				parent.shapeManager.addShape(shape);
 			}
-			property.setValueShapeId(shapeId);
-			property.setValueShape(shape);
+			property.setShapeId(shapeId);
+			property.setShape(shape);
 			return this;
 		}
 		

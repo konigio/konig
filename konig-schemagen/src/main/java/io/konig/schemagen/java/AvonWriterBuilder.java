@@ -172,7 +172,7 @@ public class AvonWriterBuilder {
 		private void handleMultiValue(JBlock block, JVar outVar, JVar subjectVar, JVar jsonVar, PropertyConstraint p, URI subjectClass) {
 			JCodeModel model = dataWriter.getModel();
 			JClass uriClass = model.ref(URI.class);
-			Shape valueShape = p.getValueShape();
+			Shape valueShape = p.getShape();
 			URI datatype = p.getDatatype();
 
 			String fieldName = p.getPredicate().getLocalName() + "List";
@@ -254,7 +254,7 @@ public class AvonWriterBuilder {
 
 		private void handleSingleValue(JBlock block, JVar outVar, JVar subjectVar, JVar jsonVar, PropertyConstraint p, URI subjectClass, boolean required) {
 			
-			Shape valueShape = p.getValueShape();
+			Shape valueShape = p.getShape();
 
 			String fieldName = p.getPredicate().getLocalName();
 			String getterName = JavaClassBuilder.getterName(fieldName);
@@ -382,7 +382,7 @@ public class AvonWriterBuilder {
 			} else {
 				owlClass = p.getDirectValueType();
 				if (owlClass == null) {
-					Shape valueShape = p.getValueShape();
+					Shape valueShape = p.getShape();
 					if (valueShape != null) {
 						owlClass = valueShape.getTargetClass();
 					}

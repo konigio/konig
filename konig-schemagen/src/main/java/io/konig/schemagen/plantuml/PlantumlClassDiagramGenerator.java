@@ -80,7 +80,7 @@ public class PlantumlClassDiagramGenerator {
 			if (valueClass instanceof URI) {
 				return (URI) valueClass;
 			}
-			Shape shape = p.getValueShape(shapeManager);
+			Shape shape = p.getShape(shapeManager);
 			if (shape != null) {
 				Resource shapeId = shape.getId();
 				if (shapeId instanceof URI) {
@@ -95,7 +95,7 @@ public class PlantumlClassDiagramGenerator {
 			NodeKind nodeKind = p.getNodeKind();
 			Resource valueClass = p.getValueClass();
 			URI datatype = p.getDatatype();
-			Resource valueShapeId = p.getValueShapeId();
+			Resource valueShapeId = p.getShapeId();
 			
 			return 
 				(datatype==null) ||

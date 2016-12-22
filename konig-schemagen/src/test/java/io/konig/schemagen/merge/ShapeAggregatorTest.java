@@ -79,7 +79,7 @@ public class ShapeAggregatorTest {
 		PropertyConstraint c = s.getPropertyConstraint(AS.object);
 		assertTrue(c != null);
 		
-		Shape obj = c.getValueShape();
+		Shape obj = c.getShape();
 		assertTrue(obj != null);
 		assertEquals("http://example.com/shape/dw/as/Activity.object", obj.getId().stringValue());
 		

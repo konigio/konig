@@ -67,8 +67,8 @@ public class PropertyConstraint {
 	private Double maxInclusive;
 	private URI datatype;
 	private URI directType;
-	private Resource valueShapeId;
-	private Shape valueShape;
+	private Resource shapeId;
+	private Shape shape;
 	private NodeKind nodeKind;
 	private Set<Value> hasValue;
 	private String pattern;
@@ -120,7 +120,7 @@ public class PropertyConstraint {
 		edge(graph, SH.minInclusive, minInclusive);
 		edge(graph, SH.maxInclusive, maxInclusive);
 		edge(graph, SH.datatype, datatype);
-		edge(graph, SH.valueShape, valueShapeId);
+		edge(graph, SH.shape, shapeId);
 		edge(graph, SH.nodeKind, nodeKind==null ? null : nodeKind.getURI());
 		
 		if (hasValue != null) {
@@ -189,8 +189,8 @@ public class PropertyConstraint {
 		other.pattern = pattern;
 		other.term = term;
 		other.valueClass = valueClass;
-		other.valueShape = valueShape;
-		other.valueShapeId = valueShapeId;
+		other.shape = shape;
+		other.shapeId = shapeId;
 		other.equivalentPath = equivalentPath;
 		other.compiledEquivalentPath = compiledEquivalentPath;
 		other.stereotype = stereotype;
@@ -372,28 +372,28 @@ public class PropertyConstraint {
 		this.directType = directType;
 	}
 
-	public Resource getValueShapeId() {
-		return valueShapeId;
+	public Resource getShapeId() {
+		return shapeId;
 	}
 
-	public void setValueShapeId(URI valueShape) {
-		this.valueShapeId = valueShape;
+	public void setShapeId(URI valueShape) {
+		this.shapeId = valueShape;
 	}
 
-	public Shape getValueShape() {
-		return valueShape;
+	public Shape getShape() {
+		return shape;
 	}
 	
-	public Shape getValueShape(ShapeManager manager) {
-		if (valueShape == null && valueShapeId instanceof URI) {
-			valueShape = manager.getShapeById((URI)valueShapeId);
+	public Shape getShape(ShapeManager manager) {
+		if (shape == null && shapeId instanceof URI) {
+			shape = manager.getShapeById((URI)shapeId);
 		}
-		return valueShape;
+		return shape;
 	}
 
-	public void setValueShape(Shape valueShape) {
-		this.valueShape = valueShape;
-		this.valueShapeId = valueShape.getId();
+	public void setShape(Shape valueShape) {
+		this.shape = valueShape;
+		this.shapeId = valueShape.getId();
 	}
 	
 	public String toString() {
@@ -444,16 +444,16 @@ public class PropertyConstraint {
 		if (valueClass != null) {
 			json.writeStringField("class", valueClass.stringValue());
 		}
-		if (valueShape != null) {
+		if (shape != null) {
 			json.writeFieldName("valueShape");
-			if (memory.contains(valueShape)) {
-				json.writeString( valueShape.getId().toString());
+			if (memory.contains(shape)) {
+				json.writeString( shape.getId().toString());
 			} else {
-				valueShape.toJson(memory, json);
+				shape.toJson(memory, json);
 			}
 			
-		} else if (valueShapeId != null) {
-			json.writeStringField("valueShape", valueShapeId.toString());
+		} else if (shapeId != null) {
+			json.writeStringField("valueShape", shapeId.toString());
 		}
 		json.writeEndObject();
 	}

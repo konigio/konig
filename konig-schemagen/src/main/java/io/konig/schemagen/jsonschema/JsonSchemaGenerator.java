@@ -161,7 +161,7 @@ public class JsonSchemaGenerator extends Generator {
 			ObjectNode object = (field == null) ? mapper.createObjectNode() : field;
 			NodeKind nodeKind = property.getNodeKind();
 			URI datatype = property.getDatatype();
-			Resource valueShapeId = property.getValueShapeId();
+			Resource valueShapeId = property.getShapeId();
 			
 			Set<String> enumList = null;
 			
@@ -245,7 +245,7 @@ public class JsonSchemaGenerator extends Generator {
 				}
 				
 			} else if (valueShapeId != null) {
-				Shape valueShape = property.getValueShape();
+				Shape valueShape = property.getShape();
 				object.put("type",  generateJsonSchema(valueShape));
 			}
 			

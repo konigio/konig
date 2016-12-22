@@ -115,7 +115,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private File jsonSchemaDir;
     
-    @Parameter(property="sourceDir", required=true)
+    @Parameter(property="sourceDir")
     private File sourceDir;
     
 
@@ -215,9 +215,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 		loadSpreadsheet();
 		
-		RdfUtil.loadTurtle(sourceDir, owlGraph, nsManager);
-		ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
-		shapeLoader.load(owlGraph);
+		if (sourceDir != null) {
+			RdfUtil.loadTurtle(sourceDir, owlGraph, nsManager);
+			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
+			shapeLoader.load(owlGraph);
+		}
 		
 	}
 

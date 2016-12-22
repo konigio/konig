@@ -639,7 +639,7 @@ public class WorkbookLoader {
 			} else if (isDatatype(valueType)) {
 				edge(constraint, SH.datatype, valueType);
 			} else {
-				edge(constraint, SH.valueShape, valueType);
+				edge(constraint, SH.shape, valueType);
 			}
 			
 			edge(constraint, SH.minCount, minCount);
