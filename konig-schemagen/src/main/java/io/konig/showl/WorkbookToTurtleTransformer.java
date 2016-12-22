@@ -26,11 +26,18 @@ import io.konig.spreadsheet.WorkbookLoader;
 public class WorkbookToTurtleTransformer {
 
 	private IdMapper datasetMapper;
-	
-	
+	private WorkbookLoader workbookLoader;
+	private NamespaceManager nsManager;
 	
 	public WorkbookToTurtleTransformer(IdMapper datasetMapper) {
 		this.datasetMapper = datasetMapper;
+
+		nsManager = new MemoryNamespaceManager();
+		workbookLoader = new WorkbookLoader(nsManager);
+	}
+	
+	public WorkbookLoader getWorkbookLoader() {
+		return workbookLoader;
 	}
 
 	public void transform(File workbookFile, File owlOutDir, File shapesOutDir) throws IOException, SpreadsheetException, RDFHandlerException {
@@ -42,15 +49,13 @@ public class WorkbookToTurtleTransformer {
 			shapesOutDir.mkdirs();
 			Workbook workbook = new XSSFWorkbook(input);
 			
-			NamespaceManager nsManager = new MemoryNamespaceManager();
 			Graph graph = new MemoryGraph();
 			graph.setNamespaceManager(nsManager);
 			
-			WorkbookLoader loader = new WorkbookLoader(nsManager);
-			loader.setDatasetMapper(datasetMapper);
-			loader.load(workbook, graph);
+			workbookLoader.setDatasetMapper(datasetMapper);
+			workbookLoader.load(workbook, graph);
 			
-			nsManager = loader.getNamespaceManager();
+			nsManager = workbookLoader.getNamespaceManager();
 			graph.setNamespaceManager(nsManager);
 			
 			OntologyWriter ontologyWriter = new OntologyWriter(new OntologyFileGetter(owlOutDir, nsManager));

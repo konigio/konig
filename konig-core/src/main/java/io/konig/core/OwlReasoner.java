@@ -78,6 +78,72 @@ public class OwlReasoner {
 			assembleEquivalenceClasses(list, equivalentClassMap);
 		}
 	}
+	
+	public void inferRdfPropertiesFromPropertyConstraints(Graph sink) {
+		if (sink == null) {
+			sink = graph;
+		}
+		
+		List<Vertex> shapeList = graph.v(SH.Shape).in(RDF.TYPE).toVertexList();
+		
+		for (Vertex shape : shapeList) {
+			URI targetClass = shape.getURI(SH.targetClass);
+			List<Vertex> constraintList = shape.asTraversal().out(SH.property).toVertexList();
+		
+			for (Vertex p : constraintList) {
+				Vertex property = p.getVertex(SH.predicate);
+				URI predicate = p.getURI(SH.predicate);
+				if (predicate != null) {
+					
+					URI propertyType = property.getURI(RDF.TYPE);
+					URI range = property.getURI(RDFS.RANGE);
+					URI domain = property.getURI(RDFS.RANGE);
+					if (domain != null) {
+						targetClass = null;
+					}
+					
+					URI datatype =  p.getURI(SH.datatype);
+					if (datatype != null) {
+						URI type = propertyType==null ? OWL.DATATYPEPROPERTY : null;
+						edge(sink, predicate, RDF.TYPE, type);
+						edge(sink, predicate, Schema.domainIncludes, targetClass);
+						edge(sink, predicate, Schema.rangeIncludes, datatype);
+					} else {
+						URI valueClass = range==null ? p.getURI(SH.valueClass) : null;
+						URI type = propertyType==null ? OWL.OBJECTPROPERTY : null;
+						if (valueClass != null) {
+							edge(sink, predicate, RDF.TYPE, type);
+							edge(sink, predicate, Schema.domainIncludes, targetClass);
+							edge(sink, predicate, Schema.rangeIncludes, valueClass);
+						} else {
+							Vertex valueShape = p.getVertex(SH.shape);
+							if (valueShape != null) {
+								valueClass = valueShape.getURI(SH.targetClass);
+								if (valueClass != null) {
+									edge(sink, predicate, RDF.TYPE, type);
+									edge(sink, predicate, Schema.domainIncludes, targetClass);
+									edge(sink, predicate, Schema.rangeIncludes, valueClass);
+								} else {
+									edge(sink, predicate, RDF.TYPE, type);
+									edge(sink, predicate, Schema.domainIncludes, targetClass);
+								}
+							} else {
+								edge(sink, predicate, RDF.TYPE, type);
+								edge(sink, predicate, Schema.domainIncludes, targetClass);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+	}
+	
+	private void edge(Graph sink, Resource subject, URI predicate, Value object) {
+		if (sink!=null && subject!=null && predicate!=null && object!=null) {
+			sink.edge(subject, predicate, object);
+		}
+	}
 
 
 	private void assembleEquivalenceClasses(List<Vertex> list, Map<String, EquivalenceClass> map) {

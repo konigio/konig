@@ -163,6 +163,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 
 	 @Parameter
 	 private String daoPackage;
+	 
+	 @Parameter
+	 private boolean inferRdfPropertyDefinitions;
 
     
     private NamespaceManager nsManager;
@@ -272,6 +275,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			 if (workbookFile!=null && workbookFile.exists()) {
 				 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer(datasetMapper());
+				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(inferRdfPropertyDefinitions);
 				 transformer.transform(workbookFile, owlOutDir, shapesOutDir);
 			 }
 		 } catch (Throwable oops) {
