@@ -57,7 +57,7 @@ public class SH {
 	public static final URI or = new URIImpl("http://www.w3.org/ns/shacl#or");
 	public static final URI pattern = new URIImpl("http://www.w3.org/ns/shacl#pattern");
 	public static final URI valueClass = new URIImpl("http://www.w3.org/ns/shacl#class");
-	public static final URI valueShape = new URIImpl("http://www.w3.org/ns/shacl#valueShape");
+	public static final URI shape = new URIImpl("http://www.w3.org/ns/shacl#shape");
 	public static final URI qualifiedValueShape = new URIImpl("http://www.w3.org/ns/shacl#qualifiedValueShape");
 	public static final URI qualifiedMinCount = new URIImpl("http://www.w3.org/ns/shacl#qualifiedMinCount");
 	public static final URI qualifiedMaxCount = new URIImpl("http://www.w3.org/ns/shacl#qualifiedMaxCount");

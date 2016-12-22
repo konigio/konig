@@ -40,7 +40,7 @@ public class BigQueryDatatypeMapper {
 		if (c.getNodeKind() == NodeKind.IRI) {
 			return BigQueryDatatype.STRING;
 		}
-		if (c.getValueShapeId() != null) {
+		if (c.getShapeId() != null) {
 			return BigQueryDatatype.RECORD;
 		}
 		

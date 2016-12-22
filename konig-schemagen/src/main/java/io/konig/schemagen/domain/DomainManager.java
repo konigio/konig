@@ -88,7 +88,7 @@ public class DomainManager {
 	private void analyze(PropertyConstraint p) {
 		owlClass(p.getValueClass());
 		owlClass(p.getDirectValueType());
-		owlClass(p.getValueShape());
+		owlClass(p.getShape());
 	}
 
 	private void owlClass(Shape shape) {
@@ -343,7 +343,7 @@ public class DomainManager {
 			return directType.equals(range) ? null : directType;
 		}
 		
-		Shape valueShape = constraint.getValueShape();
+		Shape valueShape = constraint.getShape();
 		if (valueShape != null) {
 			URI targetClass = valueShape.getTargetClass();
 			if (targetClass != null) {

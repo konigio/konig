@@ -109,7 +109,7 @@ public class AvroIdlGenerator  {
 			List<PropertyConstraint> list = shape.getProperty();
 			for (PropertyConstraint property : list) {
 				
-				Resource valueShapeId = property.getValueShapeId();
+				Resource valueShapeId = property.getShapeId();
 				if (valueShapeId instanceof URI) {
 					
 					File file = namer.idlFile((URI)valueShapeId);
@@ -143,7 +143,7 @@ public class AvroIdlGenerator  {
 			URI datatype = property.getDatatype();
 			String fieldName = property.getPredicate().getLocalName();
 			String comment = property.getDocumentation();
-			Resource valueShapeId = property.getValueShapeId();
+			Resource valueShapeId = property.getShapeId();
 			URI valueShape = (valueShapeId instanceof URI) ? (URI) valueShapeId : null;
 			NodeKind nodeKind = property.getNodeKind();
 			

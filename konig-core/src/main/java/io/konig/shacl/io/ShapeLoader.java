@@ -70,6 +70,9 @@ public class ShapeLoader {
 		this(contextManager, shapeManager, null, null);
 	}
 	
+	public ShapeLoader(ShapeManager shapeManager) {
+		this(null, shapeManager, null, null);
+	}
 	
 
 	public RDFHandler getListener() {

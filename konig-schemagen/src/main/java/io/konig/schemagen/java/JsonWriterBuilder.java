@@ -158,7 +158,7 @@ public class JsonWriterBuilder {
 			String fieldName = predicate.getLocalName();
 			String getterName = BeanUtil.getterName(predicate);
 			URI datatype = p.getDatatype();
-			Shape valueShape = p.getValueShape(shapeManager);
+			Shape valueShape = p.getShape(shapeManager);
 			Integer maxCount = p.getMaxCount();
 			NodeKind nodeKind = p.getNodeKind();
 			

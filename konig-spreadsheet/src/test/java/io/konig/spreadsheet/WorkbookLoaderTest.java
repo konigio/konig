@@ -68,7 +68,7 @@ public class WorkbookLoaderTest {
 		PropertyConstraint sponsor = shape.getPropertyConstraint(Schema.sponsor);
 		assertTrue(sponsor != null);
 		
-		Shape sponsorShape = sponsor.getValueShape();
+		Shape sponsorShape = sponsor.getShape();
 		assertTrue(sponsorShape != null);
 		
 		OrConstraint constraint = sponsorShape.getOr();
@@ -219,7 +219,7 @@ public class WorkbookLoaderTest {
 		
 		PropertyConstraint timeInterval = shape.getPropertyConstraint(Konig.timeInterval);
 		assertTrue(timeInterval != null);
-		assertEquals(uri("http://example.com/shapes/v1/konig/WeekMonthYearShape"), timeInterval.getValueShapeId());
+		assertEquals(uri("http://example.com/shapes/v1/konig/WeekMonthYearShape"), timeInterval.getShapeId());
 		
 	}
 	
@@ -357,7 +357,7 @@ public class WorkbookLoaderTest {
 		assertInt(familyName, SH.minCount, 1);
 		
 		Vertex address = propertyConstraint(shape, Schema.address);
-		assertValue(address, SH.valueShape, uri("http://example.com/shapes/v1/schema/Address"));
+		assertValue(address, SH.shape, uri("http://example.com/shapes/v1/schema/Address"));
 		
 		Vertex worksFor = propertyConstraint(shape, uri("http://schema.org/worksFor"));
 		assertValue(worksFor, SH.valueClass, Schema.Organization);

@@ -161,8 +161,8 @@ public class LogicalShapeBuilder {
 			
 			Resource classA = preferredClass(constraint.getValueClass());
 			Resource classB = preferredClass(p.getValueClass());
-			Shape valueShapeA = constraint.getValueShape();
-			Shape valueShapeB = p.getValueShape();
+			Shape valueShapeA = constraint.getShape();
+			Shape valueShapeB = p.getShape();
 			
 			if (valueShapeB!=null) {
 				classB = leastUpperBound(shape, p, "sh:class", targetClass(valueShapeB), classB);

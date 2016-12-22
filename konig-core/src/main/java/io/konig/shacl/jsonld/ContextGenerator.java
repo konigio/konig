@@ -147,7 +147,7 @@ public class ContextGenerator {
 			} else {
 
 				Resource valueClass = p.getValueClass();
-				Shape valueShape = p.getValueShape();
+				Shape valueShape = p.getShape();
 				URI directValueType = p.getDirectValueType();
 				NodeKind nodeKind = p.getNodeKind();
 				

@@ -344,9 +344,9 @@ public class BigQueryTableGenerator {
 		result.setMode(fieldMode.name());
 		
 		if (fieldType == BigQueryDatatype.RECORD) {
-			Shape valueShape = p.getValueShape();
+			Shape valueShape = p.getShape();
 			if (valueShape == null) {
-				Resource shapeId = p.getValueShapeId();
+				Resource shapeId = p.getShapeId();
 				if (valueShape instanceof URI) {
 					valueShape = shapeManager.getShapeById((URI) shapeId);
 					if (valueShape == null) {
@@ -585,9 +585,9 @@ public class BigQueryTableGenerator {
 		
 		if (type == BigQueryDatatype.RECORD) {
 
-			Shape valueShape = p.getValueShape();
+			Shape valueShape = p.getShape();
 			if (valueShape == null) {
-				Resource shapeId = p.getValueShapeId();
+				Resource shapeId = p.getShapeId();
 				if (shapeId instanceof URI) {
 					valueShape = shapeManager.getShapeById((URI) shapeId);
 					if (valueShape == null) {

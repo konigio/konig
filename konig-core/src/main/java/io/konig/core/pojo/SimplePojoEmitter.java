@@ -122,7 +122,7 @@ public class SimplePojoEmitter implements PojoEmitter {
 								Value object = toValue(value);
 								sink.edge(subject, predicate, object);
 								
-								Shape valueShape = p.getValueShape();
+								Shape valueShape = p.getShape();
 								if (valueShape != null) {
 									emit(valueShape, value);
 								}
@@ -149,7 +149,7 @@ public class SimplePojoEmitter implements PojoEmitter {
 			for (Object value : collection) {
 				Value object = toValue(value);
 				sink.edge(subject, predicate, object);
-				Shape valueShape = p.getValueShape();
+				Shape valueShape = p.getShape();
 				if (valueShape != null) {
 					emit(valueShape, value);
 				}

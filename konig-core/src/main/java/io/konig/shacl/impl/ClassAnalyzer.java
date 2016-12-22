@@ -313,7 +313,7 @@ public class ClassAnalyzer {
 	private Resource valueClass(PropertyConstraint a) {
 		Resource valueClass = a.getValueClass();
 		if (valueClass == null) {
-			Shape valueShape = a.getValueShape(shapeManager);
+			Shape valueShape = a.getShape(shapeManager);
 			if (valueShape != null) {
 				valueClass = valueShape.getTargetClass();
 				if (valueClass == null && valueShape.getOr()!=null) {

@@ -216,7 +216,7 @@ public class AvroSchemaGenerator extends Generator {
 			
 			Set<String> enumList = enumList(p);
 			URI datatype = p.getDatatype();
-			Shape valueShape = p.getValueShape();
+			Shape valueShape = p.getShape();
 			
 			String strictValue = strictValue(p);
 			

@@ -352,7 +352,7 @@ public class FactDaoGenerator {
 			
 			if (valueClass != null) {
 
-				if (p.getValueShapeId() == null) {
+				if (p.getShapeId() == null) {
 
 					JVar field = block.decl(uriType, fieldName);
 					field.init(constraints.invoke(getterMethod));
@@ -365,9 +365,9 @@ public class FactDaoGenerator {
 							.arg(field.invoke("stringValue"))));
 					
 				} else {
-					Shape shape = p.getValueShape(shapeManager);
+					Shape shape = p.getShape(shapeManager);
 					if (shape == null) {
-						throw new CodeGeneratorException("Shape not found: " + p.getValueShapeId());
+						throw new CodeGeneratorException("Shape not found: " + p.getShapeId());
 					}
 					URI targetClass = shape.getTargetClass();
 
@@ -469,14 +469,14 @@ public class FactDaoGenerator {
 			
 			if (valueClass != null) {
 
-				if (p.getValueShapeId() == null) {
+				if (p.getShapeId() == null) {
 					JVar field = dc.field(JMod.PRIVATE, uriType, fieldName);
 					buildGetterField(dc, uriType, predicate, field);
 					buildSetterField(dc, uriType, predicate, field);
 				} else {
-					Shape shape = p.getValueShape(shapeManager);
+					Shape shape = p.getShape(shapeManager);
 					if (shape == null) {
-						throw new CodeGeneratorException("Shape not found: " + p.getValueShapeId());
+						throw new CodeGeneratorException("Shape not found: " + p.getShapeId());
 					}
 					JDefinedClass fieldType = nestedConstraints(info, shape);
 					JVar field = dc.field(JMod.PRIVATE, fieldType, fieldName);
@@ -653,7 +653,7 @@ public class FactDaoGenerator {
 				JClass uriImpl = model.ref(URIImpl.class);
 				
 				
-				if (p.getValueShapeId() == null) {
+				if (p.getShapeId() == null) {
 					JClass stringClass = model.ref(String.class);
 					
 					JVar var = body.decl(stringClass, propertyName);
@@ -673,9 +673,9 @@ public class FactDaoGenerator {
 					
 					
 				} else {
-					Shape valueShape = p.getValueShape(shapeManager);
+					Shape valueShape = p.getShape(shapeManager);
 					if (valueShape == null) {
-						throw new CodeGeneratorException("Shape not found: " + p.getValueShapeId());
+						throw new CodeGeneratorException("Shape not found: " + p.getShapeId());
 					}
 					
 					JClass embeddedType = model.ref(EmbeddedEntity.class);
@@ -835,12 +835,12 @@ public class FactDaoGenerator {
 				
 				JBlock thenBlock = body._if(var.ne(JExpr._null()))._then();
 				
-				if (p.getValueShapeId()==null) {
+				if (p.getShapeId()==null) {
 					thenBlock.add(entityVar.invoke("setProperty")
 						.arg(JExpr.lit(varName))
 						.arg(var.invoke("getId").invoke("stringValue")));
 				} else {
-					Shape shape = p.getValueShape(shapeManager);
+					Shape shape = p.getShape(shapeManager);
 					if (shape != null) {
 						JClass embeddedType = model.ref(EmbeddedEntity.class);
 						JVar embeddedVar = thenBlock.decl(embeddedType, "embedded");
@@ -864,9 +864,9 @@ public class FactDaoGenerator {
 		if (valueClass instanceof URI) {
 			return (URI) valueClass;
 		}
-		Resource shapeId = p.getValueShapeId();
+		Resource shapeId = p.getShapeId();
 		if (shapeId instanceof URI) {
-			Shape valueShape = p.getValueShape(shapeManager);
+			Shape valueShape = p.getShape(shapeManager);
 			if (valueShape != null) {
 				return valueShape.getTargetClass();
 			}
