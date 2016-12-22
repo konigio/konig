@@ -38,6 +38,8 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
 import io.konig.core.SPARQLBuilder;
 import io.konig.core.Vertex;
+import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.NamespaceManagerList;
 import io.konig.core.path.DataInjector;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.PathFactory;
@@ -130,8 +132,23 @@ public class WorkbookLoader {
 	private IdMapper datasetMapper;
 	
 	public WorkbookLoader(NamespaceManager nsManager) {
-		this.nsManager = nsManager;
-		nsManager.add("vann", "http://purl.org/vocab/vann/");
+		
+		NamespaceManagerList list =  new NamespaceManagerList();
+		list.add(nsManager);
+		
+		MemoryNamespaceManager defaults = new MemoryNamespaceManager();
+		list.add(defaults);
+
+		defaults.add("vann", "http://purl.org/vocab/vann/");
+		defaults.add("owl", OWL.NAMESPACE);
+		defaults.add("sh", SH.NAMESPACE);
+		defaults.add("rdf", RDF.NAMESPACE);
+		defaults.add("rdfs", RDFS.NAMESPACE);
+		defaults.add("konig", Konig.NAMESPACE);
+		defaults.add("xsd", XMLSchema.NAMESPACE);
+		
+		this.nsManager = list;
+		
 	}
 	
 
