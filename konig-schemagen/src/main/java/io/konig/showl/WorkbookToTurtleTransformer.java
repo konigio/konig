@@ -50,6 +50,8 @@ public class WorkbookToTurtleTransformer {
 			loader.setDatasetMapper(datasetMapper);
 			loader.load(workbook, graph);
 			
+			nsManager = loader.getNamespaceManager();
+			graph.setNamespaceManager(nsManager);
 			
 			OntologyWriter ontologyWriter = new OntologyWriter(new OntologyFileGetter(owlOutDir, nsManager));
 			ShapeWriter shapeWriter = new ShapeWriter(new ShapeFileGetter(shapesOutDir, nsManager));
