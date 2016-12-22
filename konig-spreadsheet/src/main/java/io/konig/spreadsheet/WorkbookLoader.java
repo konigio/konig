@@ -152,6 +152,11 @@ public class WorkbookLoader {
 	}
 	
 
+	public NamespaceManager getNamespaceManager() {
+		return nsManager;
+	}
+
+
 	public IdMapper getDatasetMapper() {
 		return datasetMapper;
 	}
