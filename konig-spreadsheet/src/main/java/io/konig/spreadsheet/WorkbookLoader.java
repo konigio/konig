@@ -130,6 +130,7 @@ public class WorkbookLoader {
 	private ValueFactory vf = new ValueFactoryImpl();
 	private DataFormatter formatter = new DataFormatter(true);
 	private IdMapper datasetMapper;
+	private boolean inferRdfPropertyDefinitions;
 	
 	public WorkbookLoader(NamespaceManager nsManager) {
 		
@@ -159,6 +160,16 @@ public class WorkbookLoader {
 
 	public IdMapper getDatasetMapper() {
 		return datasetMapper;
+	}
+
+
+	public boolean isInferRdfPropertyDefinitions() {
+		return inferRdfPropertyDefinitions;
+	}
+
+
+	public void setInferRdfPropertyDefinitions(boolean inferRdfPropertyDefinitions) {
+		this.inferRdfPropertyDefinitions = inferRdfPropertyDefinitions;
 	}
 
 
@@ -269,6 +280,14 @@ public class WorkbookLoader {
 			buildRollUpShapes();
 			loadIndividualProperties();
 			emitProvenance();
+			inferPropertyDefinitions();
+		}
+
+		private void inferPropertyDefinitions() {
+			if (inferRdfPropertyDefinitions) {
+				OwlReasoner reasoner = new OwlReasoner(graph);
+				reasoner.inferRdfPropertiesFromPropertyConstraints(graph);
+			}
 		}
 
 		private void loadIndividualProperties() throws SpreadsheetException {
@@ -1410,17 +1429,24 @@ public class WorkbookLoader {
 			if (column>=0) {
 				Cell cell = row.getCell(column);
 				if (cell != null) {
-					
-					Hyperlink link = cell.getHyperlink();
-					if (link != null) {
-						return link.getAddress();
-					}
-					
+
 					text = dataFormatter.formatCellValue(cell);
-					if (text != null) {
+					if (text != null && !text.startsWith("HYPERLINK(")) {
 						text = text.trim();
 						if (text.length() == 0) {
 							text = null;
+						}
+					} else {
+
+						Hyperlink link = cell.getHyperlink();
+						if (link != null) {
+							text = link.getLabel();
+							if (text == null) {
+								text = link.getAddress();
+							}
+							if (text != null) {
+								text = text.trim();
+							}
 						}
 					}
 				}
