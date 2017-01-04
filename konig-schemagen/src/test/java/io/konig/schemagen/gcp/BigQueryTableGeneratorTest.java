@@ -5,13 +5,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.DC;
+import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -119,7 +118,7 @@ public class BigQueryTableGeneratorTest {
 		graph.edge(Schema.GenderType, RDFS.SUBCLASSOF, Schema.Enumeration);
 		graph.edge(Schema.Male, RDF.TYPE, Schema.GenderType);
 		graph.edge(Schema.Female, RDF.TYPE, Schema.GenderType);
-		graph.edge(Schema.Female, DC.IDENTIFIER, literal("F"));
+		graph.edge(Schema.Female, DCTERMS.IDENTIFIER, literal("F"));
 		
 		ShapeManager shapeManager = new MemoryShapeManager();
 		BigQueryTableGenerator generator = new BigQueryTableGenerator()
@@ -140,7 +139,7 @@ public class BigQueryTableGeneratorTest {
 		assertTrue(shape != null);
 		
 		assertProperty(shape, Schema.name, XMLSchema.STRING, 1, 1);
-		assertProperty(shape, DC.IDENTIFIER, XMLSchema.STRING, 0, 1);
+		assertProperty(shape, DCTERMS.IDENTIFIER, XMLSchema.STRING, 0, 1);
 		
 		
 		
@@ -156,8 +155,8 @@ public class BigQueryTableGeneratorTest {
 		graph.edge(Schema.GenderType, RDFS.SUBCLASSOF, Schema.Enumeration);
 		graph.edge(Schema.Male, RDF.TYPE, Schema.GenderType);
 		graph.edge(Schema.Female, RDF.TYPE, Schema.GenderType);
-		graph.edge(Schema.Female, DC.IDENTIFIER, literal("F"));
-		graph.edge(Schema.Male, DC.IDENTIFIER, literal("M"));
+		graph.edge(Schema.Female, DCTERMS.IDENTIFIER, literal("F"));
+		graph.edge(Schema.Male, DCTERMS.IDENTIFIER, literal("M"));
 		
 		ShapeManager shapeManager = new MemoryShapeManager();
 		BigQueryTableGenerator generator = new BigQueryTableGenerator()
@@ -178,7 +177,7 @@ public class BigQueryTableGeneratorTest {
 		assertTrue(shape != null);
 		
 		assertProperty(shape, Schema.name, XMLSchema.STRING, 1, 1);
-		assertProperty(shape, DC.IDENTIFIER, XMLSchema.STRING, 1, 1);
+		assertProperty(shape, DCTERMS.IDENTIFIER, XMLSchema.STRING, 1, 1);
 		
 	}
 	

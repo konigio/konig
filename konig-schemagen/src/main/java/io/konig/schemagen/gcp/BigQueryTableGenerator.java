@@ -12,8 +12,7 @@ import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.DC;
+import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -33,11 +32,9 @@ import io.konig.activity.Activity;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
-import io.konig.core.UidGenerator;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.impl.UidGeneratorImpl;
 import io.konig.core.pojo.PojoFactory;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Konig;
@@ -223,7 +220,7 @@ public class BigQueryTableGenerator {
 								int minCount = memberList.isEmpty() ? 0 : 1;
 								int maxCount = 0;
 								for (Vertex m : memberList) {
-									Set<Edge>  set = m.outProperty(DC.IDENTIFIER);
+									Set<Edge>  set = m.outProperty(DCTERMS.IDENTIFIER);
 									if (set.isEmpty()) {
 										minCount=0;
 									} else {
@@ -232,7 +229,7 @@ public class BigQueryTableGenerator {
 								}
 								
 								if (maxCount > 0) {
-									PropertyConstraint p = new PropertyConstraint(DC.IDENTIFIER);
+									PropertyConstraint p = new PropertyConstraint(DCTERMS.IDENTIFIER);
 									p.setDatatype(XMLSchema.STRING);
 									p.setMinCount(minCount);
 									p.setMaxCount(maxCount);

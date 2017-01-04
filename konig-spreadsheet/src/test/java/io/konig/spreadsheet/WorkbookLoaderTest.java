@@ -18,7 +18,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.DC;
+import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
@@ -402,7 +402,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDF.TYPE, OrderStatus);
 		assertValue(v, RDFS.COMMENT, "Payment is due");
 		assertValue(v, Schema.name, "Payment Due");
-		assertValue(v, DC.IDENTIFIER, "40");
+		assertValue(v, DCTERMS.IDENTIFIER, "40");
 		
 		
 	}

@@ -25,7 +25,7 @@ import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
-import org.openrdf.model.vocabulary.DC;
+import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandler;
@@ -283,7 +283,7 @@ public class RdfUtil {
 		Value value =null;
 		return 
 			((value=subject.getValue(RDFS.COMMENT))!=null) 			? value.stringValue() :
-			((value=subject.getValue(DC.DESCRIPTION)) != null)		? value.stringValue() :
+			((value=subject.getValue(DCTERMS.DESCRIPTION)) != null)		? value.stringValue() :
 			((value=subject.getValue(Schema.description)) != null)	? value.stringValue() :
 			null;
 	}
