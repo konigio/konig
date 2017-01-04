@@ -23,7 +23,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.vocabulary.DC;
+import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
@@ -976,7 +976,7 @@ public class WorkbookLoader {
 			
 			edge(individualId, Schema.name, name);
 			edge(individualId, RDFS.COMMENT, comment);
-			edge(individualId, DC.IDENTIFIER, codeValue);
+			edge(individualId, DCTERMS.IDENTIFIER, codeValue);
 		}
 
 		private Row readIndividualHeader(Sheet sheet) {
