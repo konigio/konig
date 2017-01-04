@@ -25,6 +25,8 @@ import org.openrdf.model.URI;
 
 public interface SQLNamer {
 	
+	URI rdfId(String fullSqlName);
+	
 	URI schemaId(SQLSchema schema);
 	URI tableId(SQLTableSchema table);
 	URI rdfPredicate(SQLColumnSchema column);
