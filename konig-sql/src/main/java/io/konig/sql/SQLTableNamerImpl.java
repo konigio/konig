@@ -68,28 +68,56 @@ public class SQLTableNamerImpl implements SQLNamer {
 		URI result = map.get(schemaName);
 		if (result == null) {
 			StringBuilder builder = new StringBuilder();
-			builder.append(baseNamespace);
-			builder.append(schemaName);
-			char c = schemaName.charAt(schemaName.length()-1);
-			if (c != '/' && c!= '#' && c!= ':') {
-				builder.append('/');
-			}
+			appendSchema(builder, schemaName);
 			result = new URIImpl(builder.toString());
 			map.put(schemaName, result);
 		}
 		return result;
 	}
+
+
+	private void appendSchema(StringBuilder builder, String schemaName) {
+		builder.append(baseNamespace);
+		builder.append(schemaName);
+		char c = schemaName.charAt(schemaName.length()-1);
+		if (c != '/' && c!= '#' && c!= ':') {
+			builder.append('/');
+		}
+	}
+	
+	private void appendTableShape(StringBuilder builder, String schemaName, String tableName) {
+		URI schemaId = map.get(schemaName);
+		if (schemaId == null) {
+			appendSchema(builder, schemaName);
+		} else {
+			builder.append(schemaId.stringValue());
+		}
+		builder.append(tableName);
+		builder.append("Shape");
+	}
+	
 	
 
 	@Override
 	public URI tableId(SQLTableSchema table) {
-		StringBuilder builder = new StringBuilder();
-		appendTableId(table, builder);
 		
-		return new URIImpl(builder.toString());
+		String key = table.getFullName();
+		URI result = map.get(key);
+		
+		if (result == null) {
+
+			StringBuilder builder = new StringBuilder();
+			appendTableId(table, builder);
+			
+			result = new URIImpl(builder.toString());
+		}
+		
+		return result;
+		
 	}
 	
 	private void appendTableId(SQLTableSchema table, StringBuilder builder) {
+		
 
 		URI namespace = schemaId(table.getSchema().getSchemaName().toLowerCase());
 		builder.append(namespace);
@@ -103,29 +131,75 @@ public class SQLTableNamerImpl implements SQLNamer {
 		if (id != null) {
 			return id;
 		}
-		StringBuilder builder = new StringBuilder();
+		SQLTableSchema table = column.getColumnTable();
+		SQLSchema schema = table.getSchema();
 		
-		if (aliasNamespace != null) {
-			builder.append(aliasNamespace);
-			builder.append(column.getColumnName());
-			return new URIImpl(builder.toString());
-		}
-		
-		appendTableId(column.getColumnTable(), builder);
-		
-		char c = builder.charAt(builder.length()-1);
-		if (c != '/' && c != '#' && c!=':') {
-			builder.append('#');
-		}
-		builder.append(column.getColumnName());
-		
-		return new URIImpl(builder.toString());
+		return rdfPredicate(schema.getSchemaName(), table.getTableName(), column.getColumnName());
 	}
 
 	@Override
 	public URI schemaId(SQLSchema schema) {
 		return schemaId(schema.getSchemaName());
 	}
+	
+	
+
+	@Override
+	public URI rdfId(String fullSqlName) {
+		
+		URI result = map.get(fullSqlName);
+		if (result != null) {
+			return result;
+		}
+		
+		String[] part = fullSqlName.split("[.]");
+		switch (part.length) {
+		case 1 :
+			return schemaId(fullSqlName);
+			
+		case 2 :
+			return tableId(part[0], part[1]);
+			
+		case 3:
+			return rdfPredicate(part[0], part[1], part[2]);
+		}
+		return null;
+	}
+
+	private URI tableId(String schemaName, String tableName) {
+		URI result = map.get(schemaName + "." + tableName);
+		if (result == null) {
+			StringBuilder builder = new StringBuilder();
+			appendTableShape(builder, schemaName, tableName);
+			result = new URIImpl(builder.toString());
+		}
+		return result;
+	}
+
+	private URI rdfPredicate(String schemaName, String tableName, String columnName) {
+
+		StringBuilder builder = new StringBuilder();
+		if (aliasNamespace != null) {
+			builder.append(aliasNamespace);
+			builder.append(columnName);
+			return new URIImpl(builder.toString());
+		}
+		
+		String tableId = tableId(schemaName, tableName).stringValue();
+		builder.append(tableId);
+		
+		
+		char c = tableId.charAt(tableId.length()-1);
+		if (c != '/' && c != '#' && c!=':') {
+			builder.append('#');
+		}
+		builder.append(columnName);
+		
+		return new URIImpl(builder.toString());
+	}
+
+
+	
 
 
 }

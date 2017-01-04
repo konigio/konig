@@ -38,6 +38,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.activity.Activity;
+import io.konig.annotation.OwlClass;
 import io.konig.annotation.RdfProperty;
 import io.konig.core.Context;
 import io.konig.core.Graph;
@@ -75,7 +76,9 @@ public class Shape {
 		this.id = id;
 	}
 	
-	
+	public URI getType() {
+		return SH.Shape;
+	}
 	
 	/**
 	 * Save this shape in a given Graph

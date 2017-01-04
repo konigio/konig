@@ -31,7 +31,7 @@ public class XsdSQLDatatypeMapper implements SQLDatatypeMapper {
 	@Override
 	public URI rdfDatatype(SQLDatatype sqlType) {
 		switch (sqlType) {
-		case BIGINT: return XMLSchema.INTEGER;
+		case BIGINT: return XMLSchema.LONG;
 		case BINARY: return XMLSchema.BASE64BINARY;
 		case BLOB: return XMLSchema.BASE64BINARY;
 		case CHAR: return XMLSchema.STRING;
@@ -43,7 +43,7 @@ public class XsdSQLDatatypeMapper implements SQLDatatypeMapper {
 		case FLOAT: return XMLSchema.FLOAT;
 		case IMAGE: return XMLSchema.BASE64BINARY;
 		case INT: return XMLSchema.INT;
-		case INTEGER: return XMLSchema.INTEGER;
+		case INTEGER: return XMLSchema.LONG;
 		case NCHAR: return XMLSchema.STRING;
 		case NCLOB: return XMLSchema.STRING;
 		case NTEXT: return XMLSchema.STRING;
