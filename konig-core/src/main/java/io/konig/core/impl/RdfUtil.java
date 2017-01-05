@@ -25,6 +25,7 @@ import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -37,6 +38,7 @@ import org.openrdf.rio.turtle.TurtleParserFactory;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.io.CompactTurtleWriter;
@@ -263,6 +265,40 @@ public class RdfUtil {
 			map.put(key, ns);
 		}
 		
+	}
+	
+	public static URI expand(NamespaceManager nsManager, String curie) throws KonigException {
+		URI result = null;
+		if (curie != null) {
+
+			if (
+				!curie.startsWith("http://") &&
+				!curie.startsWith("https://") &&
+				!curie.startsWith("ftp://") &&
+				!curie.startsWith("ftps://") &&
+				!curie.startsWith("urn:")
+			) {
+
+				int colon = curie.indexOf(':');
+				if (colon >0) {
+					String prefix = curie.substring(0, colon);
+					Namespace ns = nsManager.findByPrefix(prefix);
+					if (ns != null) {
+						StringBuilder builder = new StringBuilder();
+						builder.append(ns.getName());
+						builder.append(curie.substring(colon+1));
+						result = new URIImpl(builder.toString());
+					} else {
+						throw new KonigException("Namespace not found for prefix: " + prefix);
+					}
+					
+				}
+			} else {
+				result = new URIImpl(curie);
+			}
+		}
+		
+		return result;
 	}
 
 	public static String curie(NamespaceManager nsManager, URI uri) {

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SQLParserTest {
@@ -30,11 +31,27 @@ public class SQLParserTest {
 	}
 	
 	@Test
+	public void testTableForeignKey() throws Exception {
+		String text = "CREATE TABLE registrar.Person ("
+				+ "person_id BIGINT PRIMARY KEY NOT NULL,"
+				+ "parent_id VARCHAR(255) NOT NULL,"
+				+ "name VARCHAR(255), "
+				+ "CONSTRAINT fk_parent FOREIGN KEY (parent_id) REFERENCES registrar.Person (person_id)"
+				+ ");";
+		
+		SQLParser parser = new SQLParser();
+		
+		parser.parseTable(text);
+		
+		
+	}
+	
+	@Test
 	public void testTablePrimaryKey() throws Exception {
 		String text = "CREATE TABLE registrar.Person ("
 				+ "taxID VARCHAR(255) NOT NULL,"
 				+ "name VARCHAR(255), "
-				+ "CONSTRAINT PRIMARY KEY (taxID));";
+				+ "CONSTRAINT pk_taxId PRIMARY KEY (taxID));";
 		
 		SQLParser parser = new SQLParser();
 		

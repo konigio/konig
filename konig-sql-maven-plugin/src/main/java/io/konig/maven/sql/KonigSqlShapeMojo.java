@@ -3,9 +3,7 @@ package io.konig.maven.sql;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -19,12 +17,12 @@ import org.openrdf.rio.RDFHandlerException;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.io.ShapeWriter;
-import io.konig.sql.SQLColumnSchema;
 import io.konig.sql.SQLFileLoader;
 import io.konig.sql.SQLSchema;
 import io.konig.sql.SQLSchemaManager;
@@ -48,7 +46,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 	private String aliasNamespace;
 	
 	@Parameter
-	private List<SqlElement> elements = new ArrayList<>();
+	private List<Schema> schemas = new ArrayList<>();
 	
 	@Parameter
 	private List<Namespace> namespaces = new ArrayList<>();
@@ -57,7 +55,6 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 	private NamespaceManager nsManager;
 	private SQLTableNamerImpl sqlNamer;
 	private SQLTableShapeGenerator generator;
-	private Map<String, SqlElement> elementMap;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -82,7 +79,6 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 			addCustomNamespaces();
 			
 			addRdfIdentifiers();
-			mapElements();
 			
 			for (SQLSchema schema : schemaManager.listSchemas()) {
 				processSchema(schema);
@@ -94,13 +90,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 
 	}
 
-	private void mapElements() throws MojoExecutionException {
-		elementMap = new HashMap<>();
-		for (SqlElement e : elements) {
-			elementMap.put(e.getSqlId(), e);
-		}
-		
-	}
+	
 
 	private void addCustomNamespaces() throws MojoExecutionException {
 		for (Namespace ns : namespaces) {
@@ -118,31 +108,46 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 	}
 
 	private void addRdfIdentifiers() throws MojoExecutionException {
-		for (SqlElement info : elements) {
-			String sqlId = info.getSqlId();
-			String rdfId = info.getIri();
+		
+		for (Schema s : schemas) {
+			String schemaName = s.getName();
+			String schemaIRI = s.getIri();
+			if (schemaName == null) {
+				throw new MojoExecutionException("Schema element is missing a 'name' property");
+			}
+			if (schemaIRI != null) {
+				sqlNamer.put(schemaName, uri(schemaIRI));
+			}
 			
-			if (sqlId != null && rdfId!=null) {
-
-				URI uri = new URIImpl(rdfId);
-				String[] array = sqlId.split("[.]");
-				if (array.length==3) {
-					String columnName = columnName(sqlId);
-					if (!columnName.equals(uri.getLocalName())) {
-						throw new MojoExecutionException("Mismatched name. The local name of the iri property must match the local name of the column:" +
-								sqlId + " <=> " + rdfId);
-					}
+			for (Table t : s.getTables()) {
+				String tableName = t.getName();
+				if (tableName == null) {
+					throw new MojoExecutionException("Table element is missing a 'name' property");
+				}
+				String tableFullName = schemaName + "." + tableName;
+				String tableIRI = t.getIri();
+				if (tableIRI != null) {
+					sqlNamer.put(tableFullName, uri(tableIRI));
 				}
 				
-				sqlNamer.put(sqlId, uri);
+				for (Column c : t.getColumns()) {
+					String columnName = c.getName();
+					if (columnName == null) {
+						throw new MojoExecutionException("Column element is missing a 'name' property");
+					}
+					String columnIRI = c.getIri();
+					if (columnIRI != null) {
+						String columnFullName = tableFullName + "." + columnName;
+						sqlNamer.put(columnFullName, uri(columnIRI));
+					}
+				}
 			}
 		}
 		
 	}
-
-	private String columnName(String sqlId) {
-		int start = sqlId.lastIndexOf('.')+1;
-		return sqlId.substring(start);
+	
+	private URI uri(String value) {
+		return new URIImpl(value);
 	}
 
 	private void addSchemaNamespaces(SQLSchemaManager schemaManager) {
@@ -153,7 +158,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 		}
 	}
 
-	private void processSchema(SQLSchema schema) throws RDFHandlerException, IOException {
+	private void processSchema(SQLSchema schema) throws RDFHandlerException, IOException, MojoExecutionException {
 		
 		for (SQLTableSchema table : schema.listTables()) {
 			processTable(table);
@@ -161,7 +166,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 		
 	}
 
-	private void processTable(SQLTableSchema table) throws RDFHandlerException, IOException {
+	private void processTable(SQLTableSchema table) throws RDFHandlerException, IOException, MojoExecutionException {
 		
 		File file = shapeFile(table);
 		Shape shape = generator.toShape(table);
@@ -171,23 +176,52 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 		shapeWriter.writeTurtle(nsManager, shape, file);
 	}
 
-	private void processElements(Shape shape, SQLTableSchema table) {
-		
-		for (SQLColumnSchema column : table.listColumns()) {
-			String fullName = column.getFullName();
-			SqlElement element = elementMap.get(fullName);
-			if (element != null) {
-				String equivalentPath = element.getEquivalentPath();
-				if (equivalentPath != null) {
-					URI predicate = sqlNamer.rdfPredicate(column);
-					PropertyConstraint c = shape.getPropertyConstraint(predicate);
-					if (c != null) {
-						c.setEquivalentPath(equivalentPath);
+	private void processElements(Shape shape, SQLTableSchema table) throws MojoExecutionException {
+		Schema schema = getSchemaByName(table.getSchema().getSchemaName());
+		if (schema != null) {
+			String schemaName = schema.getName();
+			String tableName = table.getTableName();
+			Table t = schema.getTableByName(tableName);
+			
+			if (t != null) {
+				
+				String targetClass = t.getTargetClass();
+				if (targetClass != null) {
+					shape.setTargetClass(expand(targetClass));
+				}
+				
+				for (Column c : t.getColumns()) {
+					String columnName = c.getName();
+					
+					URI predicate = sqlNamer.rdfPredicate(schemaName, tableName, columnName);
+					PropertyConstraint p = shape.getPropertyConstraint(predicate);
+					if (p == null) {
+						throw new MojoExecutionException("Column not found: " + schemaName + "." + tableName + "." + columnName);
 					}
+					p.setEquivalentPath(c.getEquivalentPath());
 				}
 			}
+			
+			
 		}
-		
+	}
+	
+
+
+
+	private URI expand(String value) {
+		return RdfUtil.expand(nsManager, value);
+	}
+
+
+
+	private Schema getSchemaByName(String name)  {
+		for (Schema s : schemas) {
+			if (name.equals(s.getName())) {
+				return s;
+			}
+		}
+		return null;
 	}
 
 	private File shapeFile(SQLTableSchema table) {
