@@ -20,11 +20,13 @@ schemaName : id ;
 
 tableName : id ;
 
-tableConstraint : CONSTRAINT constraintName? tableConstraintPhrase ;
+tableConstraint : (CONSTRAINT constraintName)? tableConstraintPhrase ;
 
-tableConstraintPhrase : tablePrimaryKey | uniqueKeyConstraint | foreignKeyConstraint ;
+tableConstraintPhrase : tablePrimaryKey | uniqueKeyConstraint | tableForeignKey ;
 
-foreignKeyConstraint : FOREIGN KEY columnList referencesClause ;
+tableForeignKey : FOREIGN KEY  referencingColumnList referencesClause ;
+
+referencingColumnList : columnList ;
 
 referencesClause : REFERENCES tableId columnList ;
 
@@ -32,7 +34,7 @@ uniqueKeyConstraint : UNIQUE columnList ;
 
 tablePrimaryKey : PRIMARY KEY columnList ;
 
-columnList : '(' simpleColumnName (',' simpleColumnName )* ')' ;
+columnList : '(' simpleColumnName ( ',' simpleColumnName )* ')' ;
 
 simpleColumnName : id ;
 

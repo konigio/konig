@@ -166,7 +166,7 @@ public class SQLTableNamerImpl implements SQLNamer {
 		return null;
 	}
 
-	private URI tableId(String schemaName, String tableName) {
+	public URI tableId(String schemaName, String tableName) {
 		URI result = map.get(schemaName + "." + tableName);
 		if (result == null) {
 			StringBuilder builder = new StringBuilder();
@@ -176,7 +176,7 @@ public class SQLTableNamerImpl implements SQLNamer {
 		return result;
 	}
 
-	private URI rdfPredicate(String schemaName, String tableName, String columnName) {
+	public URI rdfPredicate(String schemaName, String tableName, String columnName) {
 
 		StringBuilder builder = new StringBuilder();
 		if (aliasNamespace != null) {

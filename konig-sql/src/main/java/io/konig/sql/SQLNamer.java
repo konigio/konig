@@ -30,5 +30,9 @@ public interface SQLNamer {
 	URI schemaId(SQLSchema schema);
 	URI tableId(SQLTableSchema table);
 	URI rdfPredicate(SQLColumnSchema column);
+	
+	URI schemaId(String schemaName);
+	URI tableId(String schemaName, String tableName);
+	URI rdfPredicate(String schemaName, String tableName, String columnName);
 
 }
