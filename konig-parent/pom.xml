@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.konig</groupId>
   <artifactId>konig-parent</artifactId>
-  <version>2.0.0-6</version>
+  <version>2.0.0-7</version>
   <name>Konig Parent</name>
   <description>The parent project from which all the konig modules are built</description>
   <url>http://developers.konig.io/</url>
