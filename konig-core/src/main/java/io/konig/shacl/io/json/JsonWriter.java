@@ -194,17 +194,19 @@ public class JsonWriter {
 
 	private void writeId(Shape shape, Vertex subject) throws IOException {
 		
-		if (shape.getNodeKind() == NodeKind.IRI) {
+		NodeKind nodeKind = shape.getNodeKind();
+		if (nodeKind == NodeKind.IRI || nodeKind==NodeKind.BlankNodeOrIRI) {
 			Resource id = subject.getId();
-			if (!(id instanceof URI)) {
-				throw new KonigException("Invalid shape: expecting IRI id");
-			} else {
+			
+			if (id instanceof URI) {
 				URI uri = (URI) id;
 				Namespace ns = nsManager==null ? null : nsManager.findByName(uri.getNamespace());
 				
 				String idValue = ns!=null && !ns.getName().endsWith(":") ? uri.getLocalName() : uri.stringValue();
 				
 				json.writeStringField("id", idValue);
+			} else if (nodeKind==NodeKind.IRI) {
+				throw new KonigException("Invalid shape: expecting IRI id");
 			}
 		}
 		

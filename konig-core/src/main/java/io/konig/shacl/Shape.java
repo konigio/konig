@@ -275,6 +275,10 @@ public class Shape {
 			json.writeStringField("targetClass", targetClass.stringValue());
 		}
 		
+		if (nodeKind!=null) {
+			json.writeStringField("nodeKind", nodeKind.getURI().getLocalName());
+		}
+		
 		if (!memory.contains(this)) {
 			memory.add(this);
 			if (property!=null && !property.isEmpty()) {
