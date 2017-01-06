@@ -61,7 +61,6 @@ public class SQLTableShapeGeneratorTest {
 		assertTrue(pc != null);
 		assertEquals(pc.getDatatype(), XMLSchema.STRING);
 		
-		assertEquals(NodeKind.IRI, shape.getNodeKind());
 		
 	}
 	

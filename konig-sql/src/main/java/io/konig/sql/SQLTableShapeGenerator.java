@@ -23,7 +23,6 @@ package io.konig.sql;
 
 import org.openrdf.model.URI;
 
-import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -57,9 +56,6 @@ public class SQLTableShapeGenerator {
 			addProperty(shape, column);
 		}
 		
-		if (tableSchema.getPrimaryKeyConstraint() != null) {
-			shape.setNodeKind(NodeKind.IRI);
-		}
 		
 		
 		return shape;
