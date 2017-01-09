@@ -22,16 +22,116 @@ package io.konig.core.util;
 
 
 public class StringUtil {
+    
+
+	
+	private static final int DELIM = 0;
+	private static final int LOWER = 1;
+	private static final int UPPER = 2;
+	
+	
+	
+	private static final String DELIMITER = "_-./:";
 	
 	public static final String capitalize(String text) {
 		StringBuilder builder = new StringBuilder(text.length());
 		for (int i=0; i<text.length(); i++) {
 			char c = text.charAt(i);
+			
 			if (i == 0) {
 				c = Character.toUpperCase(c);
 			}
 			builder.append(c);
 		}
+		return builder.toString();
+	}
+	
+	
+	
+	
+	public static String PascalCase(String text) {
+	
+		
+		StringBuilder builder = new StringBuilder();
+		
+
+		int charType = DELIM;
+		
+		for (int i=0; i<text.length(); ) {
+			int c = text.codePointAt(i);
+			i += Character.charCount(c);
+			
+			if (DELIMITER.indexOf(c)>=0) {
+				// skip delimiters
+				charType = DELIM;
+				continue;
+			}
+			
+			
+			int newCharType = Character.isUpperCase(c) ? UPPER : LOWER;
+			
+			if (charType == DELIM) {
+				c = Character.toUpperCase(c);
+				newCharType = UPPER;
+				
+			} else if (charType==LOWER && newCharType==UPPER) {
+				// Do nothing
+				
+			} else {
+				c = Character.toLowerCase(c);
+			}
+			charType = newCharType;
+			
+			builder.appendCodePoint(c);
+			
+		}
+		
+		return builder.toString();
+	}
+	
+	
+	public static String camelCase(String text) {
+		
+		StringBuilder builder = new StringBuilder();
+		
+
+		boolean firstWord = true;
+		int charType = DELIM;
+		
+		for (int i=0; i<text.length(); ) {
+			int c = text.codePointAt(i);
+			i += Character.charCount(c);
+			
+			if (DELIMITER.indexOf(c)>=0) {
+				// skip delimiters
+				charType = DELIM;
+				continue;
+			}
+			
+			
+			int newCharType = Character.isUpperCase(c) ? UPPER : LOWER;
+			
+			if (charType == DELIM) {
+				if (firstWord) {
+					c = Character.toLowerCase(c);
+					firstWord = false;
+				} else {
+					c = Character.toUpperCase(c);
+				}
+				newCharType = UPPER;
+				
+			} else if (charType==LOWER && newCharType==UPPER) {
+				// Do nothing
+				
+			} else {
+				c = Character.toLowerCase(c);
+			}
+			charType = newCharType;
+			
+			builder.appendCodePoint(c);
+			
+		}
+		
 		return builder.toString();
 	}
 

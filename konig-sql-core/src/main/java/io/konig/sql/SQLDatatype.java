@@ -3,11 +3,13 @@ package io.konig.sql;
 public enum SQLDatatype {
 	BIGINT, 
 	BINARY, 
+	BIT,
 	BLOB,
 	CHAR, 
 	CLOB,
 	DATE, 
 	DATETIME, 
+	DATETIME2, 
 	DECIMAL, 
 	DOUBLE,
 	FLOAT,

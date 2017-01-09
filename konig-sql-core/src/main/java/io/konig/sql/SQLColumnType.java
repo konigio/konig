@@ -3,6 +3,7 @@ package io.konig.sql;
 public class SQLColumnType {
 	private SQLDatatype datatype;
 	Integer size;
+	Integer precision;
 
 	public SQLColumnType() {
 	}
@@ -10,6 +11,12 @@ public class SQLColumnType {
 	public SQLColumnType(SQLDatatype datatype, Integer size) {
 		this.datatype = datatype;
 		this.size = size;
+	}
+
+	public SQLColumnType(SQLDatatype datatype, Integer size, Integer precision) {
+		this.datatype = datatype;
+		this.size = size;
+		this.precision = precision;
 	}
 
 	public SQLDatatype getDatatype() {
@@ -26,6 +33,14 @@ public class SQLColumnType {
 
 	public void setSize(Integer size) {
 		this.size = size;
+	}
+
+	public Integer getPrecision() {
+		return precision;
+	}
+
+	public void setPrecision(Integer precision) {
+		this.precision = precision;
 	}
 	
 	

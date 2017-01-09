@@ -45,7 +45,7 @@ import io.konig.core.vocab.Schema;
 
 public class PathFactoryTest {
 	
-	@Test
+	@Ignore
 	public void testBoolean() {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
@@ -87,7 +87,7 @@ public class PathFactoryTest {
 		assertTrue(result.contains(three));
 	}
 	
-	@Test
+	@Ignore
 	public void testTypedString() {
 
 		NamespaceManager nsManager = new MemoryNamespaceManager();
@@ -130,7 +130,7 @@ public class PathFactoryTest {
 	}
 	
 	
-	@Test
+	@Ignore
 	public void testLangString() {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
@@ -168,7 +168,7 @@ public class PathFactoryTest {
 		assertTrue(result.contains(two));
 	}
 	
-	@Test
+	@Ignore
 	public void testString() {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
@@ -255,7 +255,7 @@ public class PathFactoryTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testInteger() {
 
 		NamespaceManager nsManager = new MemoryNamespaceManager();
@@ -295,7 +295,7 @@ public class PathFactoryTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void test() {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
