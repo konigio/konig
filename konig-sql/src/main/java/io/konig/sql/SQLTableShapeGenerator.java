@@ -49,8 +49,12 @@ public class SQLTableShapeGenerator {
 			datatypeMapper = new XsdSQLDatatypeMapper();
 		}
 		
-		URI tableId = tableNamer.tableId(tableSchema);
+		URI tableId = tableSchema.getTableShapeId();
+		if (tableId == null) {
+			tableId = tableNamer.tableId(tableSchema);
+		}
 		Shape shape = new Shape(tableId);
+		shape.setTargetClass(tableSchema.getTargetClass());
 		
 		for (SQLColumnSchema column : tableSchema.listColumns()) {
 			addProperty(shape, column);
@@ -66,7 +70,10 @@ public class SQLTableShapeGenerator {
 
 	private void addProperty(Shape shape, SQLColumnSchema column) {
 		
-		URI predicate = tableNamer.rdfPredicate(column);
+		URI predicate = column.getColumnPredicate();
+		if (predicate == null) {
+			predicate = tableNamer.rdfPredicate(column);
+		}
 		URI datatype = datatypeMapper.rdfDatatype(column.getColumnType().getDatatype());
 		
 		PropertyConstraint p = new PropertyConstraint(predicate);
@@ -75,6 +82,7 @@ public class SQLTableShapeGenerator {
 		int minCount = column.isNotNull() ? 1 : 0;
 		p.setMinCount(minCount);
 		p.setMaxCount(1);
+		p.setEquivalentPath(column.getEquivalentPath());
 		
 		shape.add(p);
 		

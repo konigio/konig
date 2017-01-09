@@ -33,11 +33,13 @@ public class XsdSQLDatatypeMapper implements SQLDatatypeMapper {
 		switch (sqlType) {
 		case BIGINT: return XMLSchema.LONG;
 		case BINARY: return XMLSchema.BASE64BINARY;
+		case BIT : return XMLSchema.BOOLEAN;
 		case BLOB: return XMLSchema.BASE64BINARY;
-		case CHAR: return XMLSchema.STRING;
+		case CHAR: 
 		case CLOB: return XMLSchema.STRING;
 		case DATE: return XMLSchema.DATE;
-		case DATETIME: return XMLSchema.DATETIME;
+		case DATETIME:
+		case DATETIME2: return XMLSchema.DATETIME;
 		case DECIMAL: return XMLSchema.DECIMAL;
 		case DOUBLE: return XMLSchema.DOUBLE;
 		case FLOAT: return XMLSchema.FLOAT;

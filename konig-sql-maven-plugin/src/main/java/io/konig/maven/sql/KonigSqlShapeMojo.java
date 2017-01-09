@@ -77,9 +77,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 			
 			addSchemaNamespaces(schemaManager);
 			addCustomNamespaces();
-			
-			addRdfIdentifiers();
-			
+						
 			for (SQLSchema schema : schemaManager.listSchemas()) {
 				processSchema(schema);
 			}

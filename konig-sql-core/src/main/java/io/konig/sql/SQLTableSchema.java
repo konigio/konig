@@ -6,14 +6,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openrdf.model.URI;
+
+import io.konig.core.NamespaceManager;
+import io.konig.core.util.IriTemplate;
+import io.konig.core.util.LinkedValueMap;
+import io.konig.core.util.ValueFormat;
+import io.konig.core.util.ValueMap;
+
 public class SQLTableSchema {
 	
 	private String tableName;
 	private SQLSchema schema;
 	
 	private List<SQLConstraint> constraints = new ArrayList<>();
-	
 	private Map<String,SQLColumnSchema> columnMap = new HashMap<>();
+	
+	// Semantic Properties
+	private NamespaceManager nsManager;
+	private URI targetClass;
+	private URI tableShapeId;
+	private IriTemplate columnPredicateIriTemplate;
+	private ValueFormat columnPathTemplate;
+	
 	
 
 	public SQLTableSchema() {
@@ -106,4 +121,76 @@ public class SQLTableSchema {
 		return null;
 	}
 
+
+	public NamespaceManager getNamespaceManager() {
+		return nsManager;
+	}
+
+
+	public void setNamespaceManager(NamespaceManager nsManager) {
+		this.nsManager = nsManager;
+	}
+
+
+	public URI getTableShapeId() {
+		return tableShapeId;
+	}
+
+
+	public void setTableShapeId(URI tableShapeId) {
+		this.tableShapeId = tableShapeId;
+	}
+
+
+	public URI getTargetClass() {
+		return targetClass;
+	}
+
+
+	public void setTargetClass(URI targetClass) {
+		this.targetClass = targetClass;
+	}
+
+
+	public IriTemplate getColumnPredicateIriTemplate() {
+		return columnPredicateIriTemplate;
+	}
+
+
+	public void setColumnPredicateIriTemplate(IriTemplate columnPredicateIriTemplate) {
+		this.columnPredicateIriTemplate = columnPredicateIriTemplate;
+	}
+
+
+	public ValueFormat getColumnPathTemplate() {
+		return columnPathTemplate;
+	}
+	
+	public void setColumnPathTemplate(ValueFormat columnPathTemplate) {
+		this.columnPathTemplate = columnPathTemplate;
+	}
+	
+	public void applyTemplates(ValueMap map) {
+		IriTemplate predicateTemplate = getColumnPredicateIriTemplate();
+		ValueFormat pathTemplate = getColumnPathTemplate();
+		
+		if (predicateTemplate != null || pathTemplate!=null) {
+			for (SQLColumnSchema column : listColumns()) {
+				
+				if (column.getColumnPredicate()==null) {
+					if (predicateTemplate != null) {
+						LinkedValueMap tableMap = new LinkedValueMap(new ColumnValueMap(column), map);
+						column.setColumnPredicate(predicateTemplate.expand(tableMap));
+					}
+				}
+				
+				if (column.getEquivalentPath()==null && pathTemplate!=null) {
+
+					LinkedValueMap tableMap = new LinkedValueMap(new ColumnValueMap(column), map);
+					column.setEquivalentPath(pathTemplate.format(tableMap));
+				}
+			}
+		}
+	}
+	
 }

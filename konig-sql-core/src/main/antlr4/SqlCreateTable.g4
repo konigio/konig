@@ -4,15 +4,44 @@ grammar SqlCreateTable;
 	package io.konig.sql.antlr;
 } 
 
-sql : createTable+ ;
+sql : sqlElement+ ;
 
-createTable : CREATE GLOBAL? TEMPORARY? TABLE tableId tableParts ';' ;
+sqlElement : semanticDirective | createTable ;
+
+semanticDirective 
+	: prefixDirective 
+	| tableShapeIriTemplate 
+	| tableTargetClassIriTemplate 
+	| columnPredicateIriTemplate 
+	| columnPathTemplate ;
+	
+tableShapeIriTemplate : '@tableShapeIriTemplate' iriRef '.' ;
+tableTargetClassIriTemplate : '@tableTargetClassIriTemplate' iriRef '.' ;
+columnPredicateIriTemplate : '@columnPredicateIriTemplate' iriRef '.' ; 
+columnPathTemplate : '@columnPathTemplate' pathValue  '.' ;
+
+createTable : CREATE GLOBAL? TEMPORARY? TABLE tableId tableParts tableSemantics? ';' ;
+
+tableSemantics : SEMANTICS tableSemanticStatement (',' tableSemanticStatement)*;
+
+tableSemanticStatement : tableShapeId | tableTargetClass | tableColumnPredicateIriTemplate | tableColumnPathTemplate ;
+
+tableColumnPathTemplate : 'columnPathTemplate' pathValue ;
+
+tableTargetClass : 'targetClass' iri ;
+tableColumnPredicateIriTemplate : 'columnPredicateIriTemplate' iriRef ;
+
+tableShapeId : 'hasShape' iri ;
 
 tableParts : '(' tablePart (',' tablePart)* ')';
 
 tablePart : columnDef | tableConstraint ;
 
 id : (LETTER | '_' | keyword) (LETTER | DIGIT | '_' | keyword)* ;
+
+iri : iriRef | curie  ;
+
+curie : '{'? id '}'? ':' '{'? id '}'? ;
 
 tableId : (schemaName '.')? tableName ;
 
@@ -40,15 +69,30 @@ simpleColumnName : id ;
 
 constraintName : id ;
 
-columnDef : columnName columnType columnConstraintDef* ;
+columnDef : columnName columnType columnConstraintDef* columnSemantics?;
+
+columnSemantics : SEMANTICS columnSemanticStatement (',' columnSemanticStatement)* ;
+
+columnSemanticStatement :  columnPredicate | columnPath ;
+
+columnPath : 'path' pathValue ;
+
+pathValue : step+ ;
+
+step : iri | '^' iri | '/' iri | FILTER ;
+
+
+columnPredicate : 'predicate' iri ;
 
 columnConstraintDef : constraintNameDef? columnConstraint ;
 
 constraintNameDef : CONSTRAINT constraintName ;
 
-columnConstraint : notNull | uniqueSpec ;
+columnConstraint : nullConstraint | notNull | uniqueSpec ;
 
 uniqueSpec : columnUnique | columnPrimaryKey ;
+
+nullConstraint : NULL ;
 
 notNull : NOT NULL;
 
@@ -58,24 +102,34 @@ columnPrimaryKey : PRIMARY KEY ;
 
 columnName : id ;
 
-columnType : datatype maxSize? ;
+columnType : datatype columnSize? ;
 
-maxSize : '(' sizeValue ')' ;
+columnSize : '(' sizeValue (',' precision)? ')' ;
 
-sizeValue : DIGIT+ ;
+precision : DIGIT+ ;
 
-datatype : BIGINT | BINARY | BIT | CHAR | CREATE | DATE | DATETIME | DECIMAL | FLOAT |
+sizeValue : DIGIT+ | MAX ;
+
+datatype : BIGINT | BINARY | BIT | CHAR |  DATE | DATETIME | DATETIME2 | DECIMAL | FLOAT |
 	IMAGE | INT | NCHAR | NTEXT | NUMERIC | NVARCHAR |REAL | SMALLDATETIME |
 	SMALLINT | TEMPORARY | TEXT | TIME | TIMESTAMP | TINYINT |
 	UNIQUEIDENTIFIER | VARBINARY | VARCHAR | XML ;
 
-keyword :	datatype |TABLE | GLOBAL | NOT | NULL | PRIMARY | KEY | UNIQUE | FOREIGN | REFERENCES ; 
+keyword :	datatype | CREATE |TABLE | GLOBAL | MAX | NOT | NULL | PRIMARY | KEY | UNIQUE | FOREIGN | REFERENCES | SEMANTICS; 
+
+prefixDirective : '@prefix' nsPrefix ':' iriRef '.' ;
+
+nsPrefix : id ;
+
+iriRef : IRIREF ;
+
+FILTER : '[' ( ~[[\]] | FILTER )+ ']' ;
+
+IRIREF : '<' ~[<]* '>' ;
 
 DIGIT : [0-9] ;
 
 LETTER : ([a-z]|[A-Z]) ;   
-
-
 
 BIGINT : B I G I N T ;
 BINARY : B I N A R Y ;
@@ -85,6 +139,7 @@ CONSTRAINT : C O N S T R A I N T ;
 CREATE : C R E A T E ;
 DATE : D A T E ;
 DATETIME : D A T E T I M E ;
+DATETIME2 : D A T E T I M E '2' ;
 DECIMAL : D E C I M A L ;
 FLOAT : F L O A T ;
 FOREIGN : F O R E I G N ;
@@ -92,6 +147,7 @@ GLOBAL : G L O B A L ;
 IMAGE : I M A G E ;
 INT : I N T ;
 KEY : K E Y ;
+MAX : M A X ;
 NCHAR : N C H A R ;
 NOT : N O T ;
 NTEXT : N T E X T ;
@@ -114,7 +170,9 @@ UNIQUEIDENTIFIER : U N I Q U E I D E N T I F I E R ;
 VARBINARY : V A R B I N A R Y ;
 VARCHAR : V A R C H A R ;
 XML : X M L ;
+SEMANTICS : S E M A N T I C S ;
 
+SPECIALCHAR : '!' | '#' | '$' | '%' | '&' | '=' | '?' | '@' | '*' | '+' | ',' | '-' | '[' | ']' | '{' | '}' | '~';
 
 WS : [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines
 
@@ -144,3 +202,4 @@ fragment W:('w'|'W');
 fragment X:('x'|'X');
 fragment Y:('y'|'Y');
 fragment Z:('z'|'Z');
+
