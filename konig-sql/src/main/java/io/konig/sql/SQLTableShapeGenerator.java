@@ -1,5 +1,9 @@
 package io.konig.sql;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /*
  * #%L
  * Konig SQL
@@ -23,24 +27,37 @@ package io.konig.sql;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.KonigException;
+import io.konig.core.NamespaceManager;
+import io.konig.core.Path;
+import io.konig.core.impl.RdfUtil;
+import io.konig.core.path.OutStep;
+import io.konig.core.path.PathFactory;
+import io.konig.core.path.Step;
+import io.konig.core.util.PathPattern;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class SQLTableShapeGenerator {
 	
 	private SQLDatatypeMapper datatypeMapper;
-	private SQLNamer tableNamer;
 	
 	
 	
-	public SQLTableShapeGenerator(SQLDatatypeMapper datatypeMapper, SQLNamer tableNamer) {
+	public SQLTableShapeGenerator(SQLDatatypeMapper datatypeMapper) {
 		this.datatypeMapper = datatypeMapper;
-		this.tableNamer = tableNamer;
 	}
 
 
-	public SQLTableShapeGenerator(SQLNamer tableNamer) {
-		this.tableNamer = tableNamer;
+	public SQLTableShapeGenerator() {
+	}
+	
+	public Shape toStructuredShape(SQLTableSchema tableSchema) {
+
+		StructuredShapeGenerator delegate = new StructuredShapeGenerator();
+		
+		
+		return delegate.toShape(tableSchema);
 	}
 
 	public Shape toShape(SQLTableSchema tableSchema) {
@@ -51,7 +68,7 @@ public class SQLTableShapeGenerator {
 		
 		URI tableId = tableSchema.getTableShapeId();
 		if (tableId == null) {
-			tableId = tableNamer.tableId(tableSchema);
+			throw new KonigException("Shape Id is not defined for table " + tableSchema.getFullName());
 		}
 		Shape shape = new Shape(tableId);
 		shape.setTargetClass(tableSchema.getTargetClass());
@@ -72,7 +89,7 @@ public class SQLTableShapeGenerator {
 		
 		URI predicate = column.getColumnPredicate();
 		if (predicate == null) {
-			predicate = tableNamer.rdfPredicate(column);
+			throw new KonigException("predicate is not defined for column: " + column.getFullName());
 		}
 		URI datatype = datatypeMapper.rdfDatatype(column.getColumnType().getDatatype());
 		
@@ -88,5 +105,140 @@ public class SQLTableShapeGenerator {
 		
 		
 	}
+	
+	private class StructuredShapeGenerator {
+		
+		private Map<String,Shape> shapeMap = new HashMap<>();
+		private Map<String, URI> targetClassMap = new HashMap<>();
+		private PathFactory pathFactory;
+		private NamespaceManager nsManager;
+	
+		
+		public Shape toShape(SQLTableSchema tableSchema) {
+			nsManager = tableSchema.getNamespaceManager();
+			pathFactory = new PathFactory(nsManager);
+			
+			if (datatypeMapper == null) {
+				datatypeMapper = new XsdSQLDatatypeMapper();
+			}
+			
+			buildTargetClassMap(tableSchema);
+			
+			Shape shape = new Shape();
+			shape.setTargetClass(tableSchema.getTargetClass());
+			
+			for (SQLColumnSchema column : tableSchema.listColumns()) {
+				addStructuredProperty(shape, column);
+			}
+			
+			return shape;
+		}
+
+		private void buildTargetClassMap(SQLTableSchema tableSchema) {
+			
+			List<PathPattern> list = tableSchema.getPathPatternList();
+			for (PathPattern p : list) {
+				Path path = p.getPath();
+				String key = path.toString(nsManager);
+				URI targetClass = p.getTargetClass();
+				targetClassMap.put(key, targetClass);
+			}
+			
+		}
+
+		private void addStructuredProperty(Shape shape, SQLColumnSchema column) {
+			
+			Path path = null;
+			Shape targetShape = null;
+			
+			String equivalentPath = column.getEquivalentPath();
+			
+			
+			if (equivalentPath != null) {
+				
+				path = pathFactory.createPath(equivalentPath);
+				targetShape = shapeForPath(shape, path);
+				
+			} else {
+				targetShape = shape;
+			}
+			
+			
+			
+			URI predicate = path==null ? column.getColumnPredicate() : lastPredicate(path);
+			
+			if (predicate == null) {
+				throw new KonigException("predicate not defined for column: " + column.getFullName());
+			}
+			URI datatype = datatypeMapper.rdfDatatype(column.getColumnType().getDatatype());
+			
+			PropertyConstraint p = new PropertyConstraint(predicate);
+			p.setDatatype(datatype);
+			
+			int minCount = column.isNotNull() ? 1 : 0;
+			p.setMinCount(minCount);
+			p.setMaxCount(1);
+			
+			targetShape.add(p);
+			
+		}
+
+		private URI lastPredicate(Path path) {
+			
+			List<Step> list = path.asList();
+			OutStep last = (OutStep)list.get(list.size()-1);
+			return last.getPredicate();
+		}
+
+		private Shape shapeForPath(Shape root, Path path) {
+			List<Step> stepList = path.asList();
+			int last = stepList.size()-1;
+			
+			Shape parent = root;
+			Shape shape = null;
+			StringBuilder key = new StringBuilder();
+			for (int i=0; i<last; i++) {
+				Step step = stepList.get(i);
+				if (step instanceof OutStep) {
+					OutStep out = (OutStep) step;
+					URI predicate = out.getPredicate();
+					String curie = RdfUtil.curie(nsManager, predicate);
+					
+					PropertyConstraint p = new PropertyConstraint(predicate);
+					parent.add(p);
+					
+					
+					key.append('/');
+					key.append(curie);
+					String keyValue = key.toString();
+					
+					shape = shapeMap.get(keyValue);
+					
+					parent = shape;
+					
+					if (shape == null) {
+						shape = new Shape();
+						shapeMap.put(keyValue, shape);
+						URI targetClass = targetClassMap.get(keyValue);
+						shape.setTargetClass(targetClass);
+					}
+					p.setShape(shape);
+					
+				} else {
+					throw new KonigException("Step type not supported: " + step.getClass().getSimpleName());
+				}
+				
+				
+			}
+			if (shape == null) {
+				shape = root;
+			}
+			
+			return shape;
+		}
+		
+		
+	}
+	
 
 }

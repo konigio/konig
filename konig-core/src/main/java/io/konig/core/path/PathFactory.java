@@ -64,7 +64,6 @@ public class PathFactory {
 		PathLexer lexer = new PathLexer(stream);
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		PathParser parser = new PathParser(tokens);
-		parser.setTrace(true);
 		Listener listener = new Listener();
 		parser.addParseListener(listener);
 		

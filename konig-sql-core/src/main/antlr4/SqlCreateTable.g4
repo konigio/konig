@@ -11,6 +11,7 @@ sqlElement : semanticDirective | createTable ;
 semanticDirective 
 	: prefixDirective 
 	| tableShapeIriTemplate 
+	| tableTargetShapeIriTemplate
 	| tableTargetClassIriTemplate 
 	| columnPredicateIriTemplate 
 	| columnPathTemplate ;
@@ -19,19 +20,39 @@ tableShapeIriTemplate : '@tableShapeIriTemplate' iriRef '.' ;
 tableTargetClassIriTemplate : '@tableTargetClassIriTemplate' iriRef '.' ;
 columnPredicateIriTemplate : '@columnPredicateIriTemplate' iriRef '.' ; 
 columnPathTemplate : '@columnPathTemplate' pathValue  '.' ;
+tableTargetShapeIriTemplate : '@tableTargetShapeIriTemplate' iriRef '.' ;
 
-createTable : CREATE GLOBAL? TEMPORARY? TABLE tableId tableParts tableSemantics? ';' ;
+createTable : CREATE GLOBAL? TEMPORARY? TABLE tableId tableParts tableSemantics?  ;
 
-tableSemantics : SEMANTICS tableSemanticStatement (',' tableSemanticStatement)*;
+tableId : tableRef ;
 
-tableSemanticStatement : tableShapeId | tableTargetClass | tableColumnPredicateIriTemplate | tableColumnPathTemplate ;
+tableSemantics : SEMANTICS tableSemanticStatement (',' tableSemanticStatement)* '.';
+
+tableSemanticStatement 
+	: tableShapeId 
+	| tableTargetShapeId
+	| tableTargetClass 
+	| tableColumnPredicateIriTemplate 
+	| tableColumnPathTemplate 
+	| tablePathPattern ;
+	
+tablePathPattern : PathPattern '(' patternPrefix ',' patternClass ',' patternPath ')';
+
+patternPrefix : id ;
+
+patternClass : iri ;
+
+patternPath : pathValue ;
+	
 
 tableColumnPathTemplate : 'columnPathTemplate' pathValue ;
 
-tableTargetClass : 'targetClass' iri ;
+tableTargetClass : TargetClass iri ;
 tableColumnPredicateIriTemplate : 'columnPredicateIriTemplate' iriRef ;
 
-tableShapeId : 'hasShape' iri ;
+tableTargetShapeId : TargetShape iri ;
+
+tableShapeId : HasShape iri ;
 
 tableParts : '(' tablePart (',' tablePart)* ')';
 
@@ -39,11 +60,15 @@ tablePart : columnDef | tableConstraint ;
 
 id : (LETTER | '_' | keyword) (LETTER | DIGIT | '_' | keyword)* ;
 
+curiePart : (LETTER | '_' | keyword | '{' ) (LETTER | DIGIT | '_' | keyword | '{' | '}')* ;
+
+
+
 iri : iriRef | curie  ;
 
-curie : '{'? id '}'? ':' '{'? id '}'? ;
+curie : curiePart ':' curiePart ;
 
-tableId : (schemaName '.')? tableName ;
+tableRef : (schemaName '.')? tableName ;
 
 schemaName : id ;
 
@@ -57,7 +82,7 @@ tableForeignKey : FOREIGN KEY  referencingColumnList referencesClause ;
 
 referencingColumnList : columnList ;
 
-referencesClause : REFERENCES tableId columnList ;
+referencesClause : REFERENCES tableRef columnList ;
 
 uniqueKeyConstraint : UNIQUE columnList ;
 
@@ -71,18 +96,18 @@ constraintName : id ;
 
 columnDef : columnName columnType columnConstraintDef* columnSemantics?;
 
-columnSemantics : SEMANTICS columnSemanticStatement (',' columnSemanticStatement)* ;
+columnSemantics : SEMANTICS columnSemanticStatement (';' columnSemanticStatement)* ;
 
 columnSemanticStatement :  columnPredicate | columnPath ;
 
-columnPath : 'path' pathValue ;
+columnPath : Path pathValue ;
 
 pathValue : step+ ;
 
 step : iri | '^' iri | '/' iri | FILTER ;
 
 
-columnPredicate : 'predicate' iri ;
+columnPredicate : Predicate iri ;
 
 columnConstraintDef : constraintNameDef? columnConstraint ;
 
@@ -115,13 +140,21 @@ datatype : BIGINT | BINARY | BIT | CHAR |  DATE | DATETIME | DATETIME2 | DECIMAL
 	SMALLINT | TEMPORARY | TEXT | TIME | TIMESTAMP | TINYINT |
 	UNIQUEIDENTIFIER | VARBINARY | VARCHAR | XML ;
 
-keyword :	datatype | CREATE |TABLE | GLOBAL | MAX | NOT | NULL | PRIMARY | KEY | UNIQUE | FOREIGN | REFERENCES | SEMANTICS; 
+keyword 
+	:	datatype | CREATE |TABLE | GLOBAL | MAX | NOT | NULL | PRIMARY | KEY | UNIQUE | FOREIGN | REFERENCES 
+	| SEMANTICS | PathPattern | TargetClass | TargetShape | HasShape | Path | Predicate; 
 
 prefixDirective : '@prefix' nsPrefix ':' iriRef '.' ;
 
 nsPrefix : id ;
 
 iriRef : IRIREF ;
+Predicate : 'predicate' ;
+Path : 'path' ;
+HasShape : 'hasShape' ;
+TargetShape : 'targetShape' ;
+TargetClass : 'targetClass' ;
+PathPattern : 'pathPattern' ;
 
 FILTER : '[' ( ~[[\]] | FILTER )+ ']' ;
 

@@ -103,6 +103,7 @@ public class Schema {
 	public static final URI containedInPlace = new URIImpl("http://schema.org/containedInPlace");
 	public static final URI legalName = new URIImpl("http://schema.org/legalName");
 	public static final URI sponsor = new URIImpl("http://schema.org/sponsor");
+	public static final URI founder = new URIImpl("http://schema.org/founder");
 	
 	
 

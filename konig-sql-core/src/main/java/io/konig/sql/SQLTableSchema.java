@@ -11,7 +11,8 @@ import org.openrdf.model.URI;
 import io.konig.core.NamespaceManager;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.LinkedValueMap;
-import io.konig.core.util.ValueFormat;
+import io.konig.core.util.PathPattern;
+import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueMap;
 
 public class SQLTableSchema {
@@ -26,8 +27,10 @@ public class SQLTableSchema {
 	private NamespaceManager nsManager;
 	private URI targetClass;
 	private URI tableShapeId;
+	private URI tableTargetShapeId;
 	private IriTemplate columnPredicateIriTemplate;
-	private ValueFormat columnPathTemplate;
+	private SimpleValueFormat columnPathTemplate;
+	private List<PathPattern> pathPatternList = new ArrayList<>();
 	
 	
 
@@ -162,19 +165,19 @@ public class SQLTableSchema {
 	}
 
 
-	public ValueFormat getColumnPathTemplate() {
+	public SimpleValueFormat getColumnPathTemplate() {
 		return columnPathTemplate;
 	}
 	
-	public void setColumnPathTemplate(ValueFormat columnPathTemplate) {
+	public void setColumnPathTemplate(SimpleValueFormat columnPathTemplate) {
 		this.columnPathTemplate = columnPathTemplate;
 	}
 	
 	public void applyTemplates(ValueMap map) {
 		IriTemplate predicateTemplate = getColumnPredicateIriTemplate();
-		ValueFormat pathTemplate = getColumnPathTemplate();
+		SimpleValueFormat pathTemplate = getColumnPathTemplate();
 		
-		if (predicateTemplate != null || pathTemplate!=null) {
+		if (predicateTemplate != null || pathTemplate!=null || !pathPatternList.isEmpty()) {
 			for (SQLColumnSchema column : listColumns()) {
 				
 				if (column.getColumnPredicate()==null) {
@@ -184,13 +187,48 @@ public class SQLTableSchema {
 					}
 				}
 				
-				if (column.getEquivalentPath()==null && pathTemplate!=null) {
+				if (column.getEquivalentPath()==null ) {
 
-					LinkedValueMap tableMap = new LinkedValueMap(new ColumnValueMap(column), map);
-					column.setEquivalentPath(pathTemplate.format(tableMap));
+					PathPattern pattern = findPathPattern(column);
+					if (pattern != null && nsManager!=null) {
+						String path = pattern.transform(column.getColumnName(), nsManager);
+						column.setEquivalentPath(path);
+					} else	if (pathTemplate!=null) {
+
+						LinkedValueMap tableMap = new LinkedValueMap(new ColumnValueMap(column), map);
+						column.setEquivalentPath(pathTemplate.format(tableMap));
+					}
 				}
 			}
 		}
 	}
+	
+	public PathPattern findPathPattern(SQLColumnSchema column) {
+		for (PathPattern pattern : pathPatternList) {
+			if (pattern.matches(column.getColumnName())) {
+				return pattern;
+			}
+		}
+		return null;
+	}
+
+
+	public void add(PathPattern p) {
+		pathPatternList.add(p);
+	}
+	
+	public List<PathPattern> getPathPatternList() {
+		return pathPatternList;
+	}
+
+	public URI getTableTargetShapeId() {
+		return tableTargetShapeId;
+	}
+
+	public void setTableTargetShapeId(URI tableTargetShapeId) {
+		this.tableTargetShapeId = tableTargetShapeId;
+	}
+	
+	
 	
 }

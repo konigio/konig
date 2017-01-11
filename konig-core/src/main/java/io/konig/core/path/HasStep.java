@@ -30,6 +30,7 @@ import org.openrdf.model.Value;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
 import io.konig.core.SPARQLBuilder;
 import io.konig.core.TraversalException;
 import io.konig.core.Traverser;
@@ -106,6 +107,12 @@ public class HasStep implements Step {
 		builder.append(value);
 		builder.append(']');
 		return builder.toString();
+	}
+
+	@Override
+	public void append(StringBuilder builder, NamespaceManager nsManager) {
+		throw new RuntimeException("Not implemented");
+		
 	}
 
 }
