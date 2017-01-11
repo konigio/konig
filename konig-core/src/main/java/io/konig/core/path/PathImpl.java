@@ -31,6 +31,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
 import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
 import io.konig.core.SPARQLBuilder;
 import io.konig.core.Traverser;
@@ -128,6 +129,26 @@ public class PathImpl implements Path {
 			builder.append(step.toString());
 		}
 		return builder.toString();
+	}
+
+	@Override
+	public Path subpath(int start, int end) {
+		PathImpl result = new PathImpl();
+		for (int i=start; i<end; i++) {
+			result.add(stepList.get(i));
+		}
+		return result;
+	}
+
+	@Override
+	public String toString(NamespaceManager nsManager) {
+		StringBuilder builder = new StringBuilder();
+
+		for (Step step : stepList) {
+			step.append(builder, nsManager);
+		}
+		return builder.toString();
+		
 	}
 	
 

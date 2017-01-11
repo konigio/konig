@@ -35,7 +35,7 @@ public class ValueFormatTest {
 		map.put("givenName", "Alice");
 		map.put("familyName", "Jones");
 		
-		ValueFormat message = new ValueFormat("Hello {givenName} {familyName}!");
+		SimpleValueFormat message = new SimpleValueFormat("Hello {givenName} {familyName}!");
 		String result = message.format(map);
 		
 		assertEquals("Hello Alice Jones!", result);

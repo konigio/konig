@@ -19,23 +19,61 @@ package io.konig.sql;
  * limitations under the License.
  * #L%
  */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-
-import static org.junit.Assert.*;
-
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.vocab.Schema;
-import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class SQLTableShapeGeneratorTest {
-
+	
 	@Test
+	public void testStructured() {
+		String sql =
+			  "@prefix schema: <http://schema.org/> ."
+			+ "CREATE TABLE registrar.Organization ("
+			+ "  founder_given_name VARCHAR(64)"
+			+ ")"
+			+ "SEMANTICS "
+			+ "  pathPattern(founder_, schema:Person, /schema:founder) ;"
+			;
+		
+		SQLSchemaManager schemaManager = new SQLSchemaManager();
+		SQLParser parser = new SQLParser();
+		parser.setSchemaManager(schemaManager);
+		
+		parser.parseAll(sql);
+		
+		SQLTableSchema table = schemaManager.getSchemaByName("registrar").getTableByName("Organization");
+		
+		SQLTableShapeGenerator generator = new SQLTableShapeGenerator(null);
+		
+		Shape shape = generator.toStructuredShape(table);
+		
+		PropertyConstraint p = shape.getPropertyConstraint(Schema.founder);
+		assertTrue(p != null);
+		
+		
+		Shape founderShape = p.getShape();
+		assertTrue(founderShape != null);
+
+		assertEquals(Schema.Person, founderShape.getTargetClass());
+		
+		p = founderShape.getPropertyConstraint(Schema.givenName);
+		assertTrue(p != null);
+		
+		
+		
+	}
+
+	@Ignore
 	public void test() {
 		
 		String text =
@@ -49,8 +87,7 @@ public class SQLTableShapeGeneratorTest {
 		
 		SQLTableSchema table  = parser.parseTable(text);
 		
-		SQLTableNamerImpl tableNamer = new SQLTableNamerImpl("http://example.com/sql/");
-		SQLTableShapeGenerator generator = new SQLTableShapeGenerator(tableNamer);
+		SQLTableShapeGenerator generator = new SQLTableShapeGenerator();
 		
 		Shape shape = generator.toShape(table);
 		

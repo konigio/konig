@@ -9,16 +9,20 @@ import java.util.List;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.Path;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.path.PathFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.LinkedValueMap;
 import io.konig.core.util.NamespaceValueMap;
-import io.konig.core.util.ValueFormat;
+import io.konig.core.util.PathPattern;
+import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueMap;
 import io.konig.sql.antlr.SqlCreateTableBaseListener;
 import io.konig.sql.antlr.SqlCreateTableLexer;
@@ -36,6 +40,13 @@ public class SQLParser {
 		
 	}
 	
+	
+	public SQLParser(NamespaceManager namespaceManager, SQLSchemaManager schemaManager) {
+		this.schemaManager = schemaManager;
+		this.namespaceManager = namespaceManager;
+	}
+
+
 	public SQLParser(SQLSchemaManager schemaManager) {
 		this.schemaManager = schemaManager;
 	}
@@ -139,6 +150,7 @@ public class SQLParser {
 
 	private class Listener extends SqlCreateTableBaseListener {
 		private SQLSchema schema;
+		private SQLTableSchema tableRef;
 		private SQLTableSchema table;
 		private SQLTableSchema targetTable;
 		
@@ -151,16 +163,21 @@ public class SQLParser {
 		private SQLConstraint primaryKey;
 		
 		private NamespaceManager nsManager;
+		private PathFactory pathFactory;
 		private String nsPrefix;
 		private String iriValue;
 		private IriTemplate tableShapeIriTemplate;
+		private IriTemplate tableTargetShapeIriTemplate;
 		private IriTemplate tableTargetClassIriTemplate;
 		private IriTemplate columnPredicateIriTemplate;
 		private ValueMap tableValueMap;
 		private NamespaceValueMap nsValueMap;
 		private URI columnPredicate;
 		private String columnPath;
-		private ValueFormat columnPathTemplate;
+		private SimpleValueFormat columnPathTemplate;
+		
+		private String patternPrefix;
+		private URI patternClass;
 		
 		private List<SQLColumnSchema> columnList;
 		
@@ -188,15 +205,57 @@ public class SQLParser {
 		SQLTableSchema getTargetTable() {
 			return targetTable;
 		}
+		
+
+		
+		
+		@Override 
+		public void exitTablePathPattern(SqlCreateTableParser.TablePathPatternContext ctx) { 
+			PathFactory factory = pathFactory();
+			Path path = factory.createPath(columnPath);
+			
+			PathPattern pattern = new PathPattern(patternPrefix, path, patternClass);
+			table.add(pattern);
+			
+		}
+
+		private PathFactory pathFactory() {
+			if (pathFactory == null) {
+				pathFactory = new PathFactory(nsManager);
+			}
+			return pathFactory;
+		}
+
+
+		@Override 
+		public void exitTableId(SqlCreateTableParser.TableIdContext ctx) { 
+			table = tableRef;
+		}
+
+		@Override 
+		public void enterTablePathPattern(SqlCreateTableParser.TablePathPatternContext ctx) { 
+			iriValue = null;
+			columnPath = null;
+		}
+
+		@Override 
+		public void exitPatternClass(SqlCreateTableParser.PatternClassContext ctx) { 
+			patternClass = iri();
+		}
+
+		@Override 
+		public void exitPatternPrefix(SqlCreateTableParser.PatternPrefixContext ctx) { 
+			patternPrefix = ctx.getText();
+		}
 
 		@Override 
 		public void exitTableColumnPathTemplate(SqlCreateTableParser.TableColumnPathTemplateContext ctx) { 
-			table.setColumnPathTemplate(new ValueFormat(ctx.getText()));
+			table.setColumnPathTemplate(new SimpleValueFormat(ctx.getText()));
 		}
 
 		@Override 
 		public void exitColumnPathTemplate(SqlCreateTableParser.ColumnPathTemplateContext ctx) { 
-			columnPathTemplate = new ValueFormat(columnPath);
+			columnPathTemplate = new SimpleValueFormat(columnPath);
 		}
 
 		@Override 
@@ -210,7 +269,14 @@ public class SQLParser {
 		public void exitCurie(SqlCreateTableParser.CurieContext ctx) { 
 			iriValue = ctx.getText();
 		}
+
+		@Override 
+		public void exitTableTargetShapeIriTemplate(SqlCreateTableParser.TableTargetShapeIriTemplateContext ctx) { 
+			tableTargetShapeIriTemplate = new IriTemplate(iriValue);
+		}
 		
+		
+
 		@Override 
 		public void exitTableShapeIriTemplate(SqlCreateTableParser.TableShapeIriTemplateContext ctx) { 
 			tableShapeIriTemplate = new IriTemplate(iriValue);
@@ -243,6 +309,11 @@ public class SQLParser {
 			}
 			
 			ValueMap map = tableValueMap();
+
+			if (tableTargetShapeIriTemplate != null) {
+				URI targetShapeId = tableTargetShapeIriTemplate.expand(map);
+				table.setTableTargetShapeId(targetShapeId);
+			}
 			table.applyTemplates(map);
 		}
 		
@@ -258,11 +329,17 @@ public class SQLParser {
 		}
 
 		@Override 
+		public void exitTableTargetShapeId(SqlCreateTableParser.TableTargetShapeIdContext ctx) { 
+			table.setTableTargetShapeId(iri());
+		}
+
+		@Override 
 		public void exitTableShapeId(SqlCreateTableParser.TableShapeIdContext ctx) { 
 			table.setTableShapeId(iri());
 		}
 		
 
+		
 		private URI iri() {
 			return RdfUtil.expand(nsManager, iriValue);
 		}
@@ -278,7 +355,11 @@ public class SQLParser {
 			table.setTargetClass(iri());
 		}
 
-		
+
+		@Override 
+		public void exitTableRef(SqlCreateTableParser.TableRefContext ctx) { 
+			
+		}
 		
 
 		@Override 
@@ -336,7 +417,7 @@ public class SQLParser {
 		public void exitTableName(SqlCreateTableParser.TableNameContext ctx) { 
 			SQLSchema schema = getSchema();
 			String tableName = ctx.getText();
-			table = getOrCreateTable(schema, tableName);
+			tableRef = getOrCreateTable(schema, tableName);
 		}
 
 		private SQLTableSchema getOrCreateTable(SQLSchema schema, String tableName) {
@@ -346,6 +427,7 @@ public class SQLParser {
 				table.setNamespaceManager(nsManager);
 				table.setColumnPredicateIriTemplate(columnPredicateIriTemplate);
 				table.setColumnPathTemplate(columnPathTemplate);
+				
 			}
 			return table;
 		}

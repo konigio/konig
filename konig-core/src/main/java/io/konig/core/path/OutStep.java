@@ -29,10 +29,12 @@ import org.openrdf.model.Value;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
 import io.konig.core.SPARQLBuilder;
 import io.konig.core.TraversalException;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
+import io.konig.core.impl.RdfUtil;
 
 public class OutStep implements Step {
 	URI predicate;
@@ -79,6 +81,22 @@ public class OutStep implements Step {
 		builder.append('/');
 		builder.append(predicate.getLocalName());
 		return builder.toString();
+	}
+
+
+	@Override
+	public void append(StringBuilder builder, NamespaceManager nsManager) {
+		builder.append('/');
+		String curie = RdfUtil.curie(nsManager, predicate);
+		String value = predicate.stringValue();
+		if (value.equals(curie)) {
+			builder.append('<');
+			builder.append(value);
+			builder.append('>');
+		} else {
+			builder.append(curie);
+		}
+		
 	}
 
 }

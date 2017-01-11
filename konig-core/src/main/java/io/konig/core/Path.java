@@ -48,5 +48,9 @@ public interface Path {
 	
 	List<Step> asList();
 	
+	String toString(NamespaceManager nsManager);
+	
+	Path subpath(int start, int end);
+	
 	public void visit(SPARQLBuilder builder);
 }

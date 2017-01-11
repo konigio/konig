@@ -26,5 +26,7 @@ import org.openrdf.model.impl.URIImpl;
 
 public class ORG {
 
-	public static final URI Organization = new URIImpl("http://www.w3.org/ns/org#");
+	public static final String NAMESPACE = "http://www.w3.org/ns/org#";
+	public static final URI Organization = new URIImpl("http://www.w3.org/ns/org#Organization");
+	public static final URI member = new URIImpl("http://www.w3.org/ns/org#member");
 }

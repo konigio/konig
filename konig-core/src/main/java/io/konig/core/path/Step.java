@@ -1,5 +1,6 @@
 package io.konig.core.path;
 
+import io.konig.core.NamespaceManager;
 import io.konig.core.SPARQLBuilder;
 
 /*
@@ -30,4 +31,5 @@ public interface Step {
 
 	void traverse(Traverser traverser) throws TraversalException;
 	void visit(SPARQLBuilder builder);
+	void append(StringBuilder builder, NamespaceManager nsManager);
 }

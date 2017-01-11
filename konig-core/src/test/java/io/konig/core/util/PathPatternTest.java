@@ -21,7 +21,28 @@ package io.konig.core.util;
  */
 
 
-public interface ValueFormat {
+import static org.junit.Assert.assertEquals;
 
-	String format(ValueMap map);
+import org.junit.Test;
+
+import io.konig.core.NamespaceManager;
+import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.vocab.ORG;
+import io.konig.core.vocab.Schema;
+
+public class PathPatternTest {
+
+	@Test
+	public void test() {
+		
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("org", ORG.NAMESPACE);
+		nsManager.add("schema", Schema.NAMESPACE);
+		
+		PathPattern pattern = new PathPattern("foo_bar_", Schema.Person, ORG.member);
+		String actual = pattern.transform("foo_bar_given_name", nsManager);
+		
+		assertEquals("/org:member/schema:givenName", actual);
+	}
+
 }

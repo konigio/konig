@@ -27,6 +27,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.Value;
 
 import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
 import io.konig.core.SPARQLBuilder;
 import io.konig.core.TraversalException;
 import io.konig.core.Traverser;
@@ -92,6 +93,13 @@ public class VertexStep implements Step {
 			builder.append(')');
 		}
 		return builder.toString();
+	}
+
+
+	@Override
+	public void append(StringBuilder builder, NamespaceManager nsManager) {
+		throw new RuntimeException("Not implemented");
+		
 	}
 
 }

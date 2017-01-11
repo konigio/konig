@@ -25,6 +25,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import io.konig.core.NamespaceManager;
+
 public class SQLFileLoader {
 
 	private SQLParser parser;
@@ -33,6 +35,9 @@ public class SQLFileLoader {
 		this(new SQLParser());
 	}
 	
+	public SQLFileLoader(NamespaceManager nsManager, SQLSchemaManager schemaManager) {
+		this(new SQLParser(nsManager, schemaManager));
+	}
 	public SQLFileLoader(SQLSchemaManager schemaManager) {
 		this(new SQLParser(schemaManager));
 	}

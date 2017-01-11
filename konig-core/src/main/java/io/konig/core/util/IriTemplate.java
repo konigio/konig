@@ -20,95 +20,21 @@ package io.konig.core.util;
  * #L%
  */
 
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
-public class IriTemplate {
-	
-	private String text;
-	private List<Element> elements;
+public class IriTemplate extends SimpleValueFormat {
 	
 	
 	public IriTemplate(String text) {
-		this.text = text.trim();
-		
-		compile();
-		
-	}
-
-	private void compile() {
-		
-		elements = new ArrayList<>();
-		
-		StringBuilder buffer = new StringBuilder();
-		
-		for (int i=0; i<text.length(); ) {
-			int c = text.codePointAt(i);
-			i += Character.charCount(c);
-			
-			if (c=='{') {
-				if (buffer.length()>0) {
-					String value = buffer.toString();
-					elements.add(new Element(value));
-					buffer = new StringBuilder();
-				}
-			} else if (c=='}') {
-				String value = buffer.toString();
-				elements.add(new Variable(value));
-				buffer = new StringBuilder();
-			} else {
-				buffer.appendCodePoint(c);
-			}
-		}
-		
-		if (buffer.length()>0) {
-			String value = buffer.toString();
-			elements.add(new Element(value));
-		}
+		super(text);
 		
 	}
 
 	public URI expand(ValueMap map) {
-		StringBuilder builder = new StringBuilder();
-		for (Element e : elements) {
-			String value = e.get(map);
-			builder.append(value);
-		}
 		
-		return new URIImpl(builder.toString());
+		return new URIImpl(format(map));
 		
-	}
-	
-	public String toString() {
-		return text;
-	}
-	private static class Element {
-		protected String text;
-		
-		
-		
-		public Element(String text) {
-			this.text = text;
-		}
-
-		String get(ValueMap map) {
-			return text;
-		}
-	}
-	
-	private static class Variable extends Element {
-		
-		public Variable(String text) {
-			super(text);
-		}
-
-		String get(ValueMap map) {
-			return map.get(text);
-		}
 	}
 	
 }
