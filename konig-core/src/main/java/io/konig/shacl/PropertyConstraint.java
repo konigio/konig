@@ -463,10 +463,12 @@ public class PropertyConstraint {
 	public void setPattern(String pattern) {
 		this.pattern = pattern;
 	}
+	
+	@RdfProperty("http://www.w3.org/ns/shacl#class")
 	public Resource getValueClass() {
 		return valueClass;
 	}
-	
+
 	@RdfProperty("http://www.w3.org/ns/shacl#class")
 	public void setValueClass(Resource valueClass) {
 		this.valueClass = valueClass;

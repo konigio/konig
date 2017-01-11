@@ -17,6 +17,7 @@ import io.konig.core.vocab.Schema;
 
 public class SQLParserTest {
 	
+	
 	@Test
 	public void testTableTargetShapeIriTemplate() throws Exception {
 		String text = 
@@ -345,14 +346,30 @@ public class SQLParserTest {
 	public void testTableForeignKey() throws Exception {
 		String text = "CREATE TABLE registrar.Person ("
 				+ "person_id BIGINT PRIMARY KEY NOT NULL,"
-				+ "parent_id VARCHAR(255) NOT NULL,"
+				+ "employer_id VARCHAR(255) NOT NULL,"
 				+ "name VARCHAR(255), "
-				+ "CONSTRAINT fk_parent FOREIGN KEY (parent_id) REFERENCES registrar.Person (person_id)"
+				+ "CONSTRAINT fk_employer FOREIGN KEY (employer_id) REFERENCES registrar.Organization (org_id)"
 				+ ")";
 		
 		SQLParser parser = new SQLParser();
 		
-		parser.parseTable(text);
+		SQLTableSchema table = parser.parseTable(text);
+		List<SQLConstraint> constraintList = table.getConstraints();
+		
+		assertEquals(1, constraintList.size());
+		
+		assertTrue(constraintList.get(0) instanceof ForeignKeyConstraint);
+		
+		ForeignKeyConstraint fk = (ForeignKeyConstraint) constraintList.get(0);
+		List<SQLColumnSchema> sourceList = fk.getSource();
+		assertEquals(1, sourceList.size());
+		
+		assertEquals("employer_id", sourceList.get(0).getColumnName());
+		List<SQLColumnSchema> targetList = fk.getTarget();
+		
+		SQLColumnSchema target = targetList.get(0);
+		assertEquals("org_id", target.getColumnName());
+		assertEquals("Organization", target.getColumnTable().getTableName());
 		
 		
 	}

@@ -180,6 +180,7 @@ public class SQLParser {
 		private URI patternClass;
 		
 		private List<SQLColumnSchema> columnList;
+		private List<SQLColumnSchema> referencingColumnList;
 		
 		private Listener() {
 			
@@ -382,7 +383,16 @@ public class SQLParser {
 		@Override 
 		public void exitSimpleColumnName(SqlCreateTableParser.SimpleColumnNameContext ctx) { 
 			String columnName = ctx.getText();
-			columnList.add(new SQLColumnSchema(columnName));
+			columnList.add(getOrCreateColumn(columnName));
+		}
+		
+		private SQLColumnSchema getOrCreateColumn(String name) {
+			SQLColumnSchema column = tableRef.getColumnByName(name);
+			if (column == null) {
+				column = new SQLColumnSchema(name);
+				tableRef.addColumn(column);
+			}
+			return column;
 		}
 
 		@Override 
@@ -392,6 +402,24 @@ public class SQLParser {
 			columnList = null;
 			table.addConstraint(primaryKey);
 		
+		}
+
+		@Override 
+		public void enterTablePrimaryKey(SqlCreateTableParser.TablePrimaryKeyContext ctx) { 
+			tableRef = table;
+		}
+
+		@Override public void exitReferencingColumnList(SqlCreateTableParser.ReferencingColumnListContext ctx) { 
+			referencingColumnList = columnList;
+		}
+
+		@Override public void exitTableForeignKey(SqlCreateTableParser.TableForeignKeyContext ctx) { 
+			ForeignKeyConstraint constraint = new ForeignKeyConstraint();
+			constraint.setSource(referencingColumnList);
+			constraint.setTarget(columnList);
+			
+			table.addConstraint(constraint);
+			tableRef = table;
 		}
 		
 		
@@ -493,13 +521,15 @@ public class SQLParser {
 
 		@Override 
 		public void exitColumnDef(SqlCreateTableParser.ColumnDefContext ctx) { 
+			tableRef = targetTable;
 			SQLColumnType columnType = new SQLColumnType(datatype, sizeValue, precision);
-			SQLColumnSchema column = new SQLColumnSchema(targetTable, columnName, columnType);
+			SQLColumnSchema column = getOrCreateColumn(columnName);
+			 
+			column.setColumnType(columnType);
 			column.setPrimaryKey(primaryKey);
 			column.setNotNull(notNull);
 			column.setColumnPredicate(columnPredicate);
 			column.setEquivalentPath(columnPath);
-			
 		}
 		
 		@Override
