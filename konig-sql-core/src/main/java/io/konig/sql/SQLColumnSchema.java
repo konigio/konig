@@ -11,6 +11,7 @@ public class SQLColumnSchema {
 	private SQLConstraint primaryKey;
 	private URI columnPredicate;
 	private String equivalentPath;
+	private ForeignKeyConstraint foreignKey;
 
 	public SQLColumnSchema() {
 		
@@ -110,6 +111,18 @@ public class SQLColumnSchema {
 
 	public void setEquivalentPath(String equivalentPath) {
 		this.equivalentPath = equivalentPath;
+	}
+
+	public ForeignKeyConstraint getForeignKey() {
+		return foreignKey;
+	}
+
+	public void setForeignKey(ForeignKeyConstraint foreignKey) {
+		this.foreignKey = foreignKey;
+	}
+	
+	public String toString() {
+		return getFullName();
 	}
 
 }

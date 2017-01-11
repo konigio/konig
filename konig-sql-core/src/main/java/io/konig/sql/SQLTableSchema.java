@@ -73,6 +73,7 @@ public class SQLTableSchema {
 			throw new SQLSchemaException("Column name must be defined");
 		}
 		columnMap.put(columnSchema.getColumnName(), columnSchema);
+		columnSchema.setColumnTable(this);
 	}
 	
 	public SQLColumnSchema getColumnByName(String columnName) {
@@ -228,7 +229,21 @@ public class SQLTableSchema {
 	public void setTableTargetShapeId(URI tableTargetShapeId) {
 		this.tableTargetShapeId = tableTargetShapeId;
 	}
-	
+
+	public ForeignKeyConstraint getForeignKeyConstraint(SQLColumnSchema column) {
+		
+		for (SQLConstraint c : constraints) {
+			if (c instanceof ForeignKeyConstraint) {
+				ForeignKeyConstraint fk = (ForeignKeyConstraint) c;
+				
+				if (fk.getSource().contains(column)) {
+					return fk;
+				}
+			}
+		}
+		
+		return null;
+	}
 	
 	
 }

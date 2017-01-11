@@ -35,6 +35,7 @@ import io.konig.core.path.OutStep;
 import io.konig.core.path.PathFactory;
 import io.konig.core.path.Step;
 import io.konig.core.util.PathPattern;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -149,23 +150,26 @@ public class SQLTableShapeGenerator {
 		private void addStructuredProperty(Shape shape, SQLColumnSchema column) {
 			
 			Path path = null;
-			Shape targetShape = null;
-			
+			Shape targetShape = shape;
+
+			SQLTableSchema table = column.getColumnTable();
+			ForeignKeyConstraint fk = table.getForeignKeyConstraint(column);
 			String equivalentPath = column.getEquivalentPath();
 			
+			
+			URI predicate = column.getColumnPredicate();
 			
 			if (equivalentPath != null) {
 				
 				path = pathFactory.createPath(equivalentPath);
-				targetShape = shapeForPath(shape, path);
+				if (fk == null) {
+					predicate = lastPredicate(path);
+					targetShape = shapeForPath(shape, path);
+				} else {
+					predicate = firstPredicate(path);
+				}
 				
-			} else {
-				targetShape = shape;
 			}
-			
-			
-			
-			URI predicate = path==null ? column.getColumnPredicate() : lastPredicate(path);
 			
 			if (predicate == null) {
 				throw new KonigException("predicate not defined for column: " + column.getFullName());
@@ -173,14 +177,37 @@ public class SQLTableShapeGenerator {
 			URI datatype = datatypeMapper.rdfDatatype(column.getColumnType().getDatatype());
 			
 			PropertyConstraint p = new PropertyConstraint(predicate);
-			p.setDatatype(datatype);
 			
 			int minCount = column.isNotNull() ? 1 : 0;
 			p.setMinCount(minCount);
 			p.setMaxCount(1);
 			
+			if (fk == null || equivalentPath == null) {
+				p.setDatatype(datatype);
+			} else {
+				p.setNodeKind(NodeKind.IRI);
+				List<SQLColumnSchema> target = fk.getTarget();
+				if (target.size()==1) {
+					SQLColumnSchema targetColumn = target.get(0);
+					SQLTableSchema targetTable = targetColumn.getColumnTable();
+					URI targetClass = targetTable.getTargetClass();
+					if (targetClass != null) {
+						p.setValueClass(targetClass);
+					}
+				}
+			}
+			
+			
+			
 			targetShape.add(p);
 			
+		}
+
+		private URI firstPredicate(Path path) {
+
+			List<Step> list = path.asList();
+			OutStep last = (OutStep)list.get(0);
+			return last.getPredicate();
 		}
 
 		private URI lastPredicate(Path path) {
