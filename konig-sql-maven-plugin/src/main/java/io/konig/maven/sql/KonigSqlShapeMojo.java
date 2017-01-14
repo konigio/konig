@@ -109,6 +109,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 		builder.append(table.getSchema().getSchemaName());
 		builder.append('_');
 		builder.append(table.getTableName());
+		builder.append(".ttl");
 		
 		return new File(originShapeDir(), builder.toString());
 	}
@@ -123,6 +124,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 			builder.append('_');
 		}
 		builder.append(shapeId.getLocalName());
+		builder.append(".ttl");
 		
 		return new File(targetShapeDir(), builder.toString());
 	}
