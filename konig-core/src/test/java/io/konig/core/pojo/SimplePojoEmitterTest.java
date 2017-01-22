@@ -19,13 +19,14 @@ package io.konig.core.pojo;
  * limitations under the License.
  * #L%
  */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-
-import static org.junit.Assert.*;
-
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
@@ -35,12 +36,41 @@ import io.konig.core.Graph;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.io.GraphLoadHandler;
+import io.konig.core.util.IriTemplate;
+import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
+import io.konig.shacl.Shape;
 
 public class SimplePojoEmitterTest {
-
+	
 	@Test
+	public void testToValueMethod() throws Exception {
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		Shape shape = new Shape(shapeId);
+		shape.addType(SH.Shape);
+		
+		IriTemplate iriTemplate = new IriTemplate("http://example.com/person/{person_id}");
+		shape.setIriTemplate(iriTemplate);
+		
+		Graph graph = new MemoryGraph();
+		
+		
+		SimplePojoEmitter emitter = new SimplePojoEmitter();
+		EmitContext context = new EmitContext(graph);
+		
+		emitter.emit(context, shape, graph);
+		
+		Vertex v = graph.getVertex(shapeId);
+		
+		Value actual = v.getValue(Konig.iriTemplate);
+		assertTrue(actual != null);
+		
+		assertEquals("http://example.com/person/{person_id}", actual.stringValue());
+		
+	}
+
+	@Ignore
 	public void test()  throws Exception {
 		
 		Graph graph = new MemoryGraph();

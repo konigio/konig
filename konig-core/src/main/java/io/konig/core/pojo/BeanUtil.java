@@ -1,11 +1,11 @@
 package io.konig.core.pojo;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Calendar;
 
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.openrdf.model.Literal;
 
 /*
  * #%L
@@ -34,6 +34,7 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import io.konig.core.KonigException;
 import io.konig.core.util.StringUtil;
 
 public class BeanUtil {
@@ -72,6 +73,9 @@ public class BeanUtil {
 	}
 	
 	public static Value toValue(Object object)  {
+		if (object == null) {
+			return null;
+		}
 		ValueFactory valueFactory = ValueFactoryImpl.getInstance();
 
 		if (object instanceof URI) {
@@ -101,6 +105,19 @@ public class BeanUtil {
 			}
 		}
 		
+		Method[] methodList = object.getClass().getMethods();
+		for (Method m : methodList) {
+			if ("toValue".equals(m.getName()) 
+					&& m.getParameterTypes().length==0 
+					&& Value.class.isAssignableFrom(m.getReturnType())
+				) {
+				try {
+					return (Value) m.invoke(object);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					throw new KonigException("Failed to get value", e);
+				}
+			}
+		}
 		
 		return null;
 	}

@@ -156,7 +156,7 @@ public class ShapeAggregatorTest {
 		Shape b = builder.getShape(bName);
 		
 
-		ShapeAggregator aggregator = new ShapeAggregator();
+		ShapeAggregator aggregator = new ShapeAggregator(null, builder.getShapeManager());
 		URI name = namer().shapeName(Schema.Person);
 		Shape s = aggregator.merge(name, a, b);
 		
@@ -189,7 +189,7 @@ public class ShapeAggregatorTest {
 		Shape b = builder.getShape(bName);
 		
 
-		ShapeAggregator aggregator = new ShapeAggregator();
+		ShapeAggregator aggregator = new ShapeAggregator(null, builder.getShapeManager());
 		URI name = namer().shapeName(Schema.Person);
 		Shape s = aggregator.merge(name, a, b);
 		
@@ -224,7 +224,7 @@ public class ShapeAggregatorTest {
 		Shape a = builder.getShape(aName);
 		Shape b = builder.getShape(bName);
 		
-		ShapeAggregator aggregator = new ShapeAggregator();
+		ShapeAggregator aggregator = new ShapeAggregator(null, builder.getShapeManager());
 		URI name = namer().shapeName(Schema.Person);
 		Shape s = aggregator.merge(name, a, b);
 		
@@ -266,7 +266,7 @@ public class ShapeAggregatorTest {
 		Shape b = builder.getShape(bName);
 		
 
-		ShapeAggregator aggregator = new ShapeAggregator();
+		ShapeAggregator aggregator = new ShapeAggregator(null, builder.getShapeManager());
 		URI name = namer().shapeName(Schema.Person);
 		Shape s = aggregator.merge(name, a, b);
 		

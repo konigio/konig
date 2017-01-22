@@ -55,6 +55,10 @@ public class PathFactory {
 		this.nsManager = nsManager;
 		this.localNameService = localNameService;
 	}
+	
+	public NamespaceManager getNamespaceManager() {
+		return nsManager;
+	}
 
 
 

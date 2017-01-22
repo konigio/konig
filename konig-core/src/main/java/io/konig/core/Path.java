@@ -50,7 +50,22 @@ public interface Path {
 	
 	String toString(NamespaceManager nsManager);
 	
+	/**
+	 * Get a sub-path
+	 * @param start The initial index of the subpath.
+	 * @param end The end of the subpath.
+	 * @return The path consisting of steps from <code>start</code> through <code>end-1</code>
+	 */
 	Path subpath(int start, int end);
+	
+	/**
+	 * Get a sub-path from a given index to the end of this Path.
+	 * @param start
+	 * @return Return the Path from the given index to the end of this Path
+	 */
+	Path subpath(int start);
+	
+	int length();
 	
 	public void visit(SPARQLBuilder builder);
 }

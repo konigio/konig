@@ -44,6 +44,8 @@
   	<module>../konig-java</module>
   	<module>../konig-path-parser</module>
   	<module>../konig-core</module>
+  	<module>../konig-transform</module>
+  	<module>../konig-transform-maven-plugin</module>
   	<module>../konig-maven-diff</module>
   	<module>../konig-gae-datastore</module>
   	<module>../konig-spreadsheet</module>

@@ -49,6 +49,15 @@ public class OutStep implements Step {
 		return predicate;
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		boolean result = false;
+		if (other instanceof OutStep) {
+			OutStep b = (OutStep) other;
+			result = predicate.equals(b.predicate);
+		}
+		return result;
+	}
 
 	@Override
 	public void traverse(Traverser traverser) throws TraversalException {

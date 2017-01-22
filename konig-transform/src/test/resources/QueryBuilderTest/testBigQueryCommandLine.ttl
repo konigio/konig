@@ -1,0 +1,48 @@
+@prefix schema: <http://schema.org/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix acme: <http://example.com/ns/acme/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix origin : <http://example.com/shapes/origin/> .
+@prefix warehouse: <http://example.com/shapes/warehouse/> .
+@prefix data : <http://example.com/resources/> .
+@prefix dc : <http://purl.org/dc/terms/> .
+
+origin:PersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	konig:bigQueryTableId "staging.Person" ;
+	sh:property [
+		sh:predicate alias:first_name ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+		konig:equivalentPath "/schema:givenName" ;
+	] , [
+		sh:predicate alias:last_name ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+		konig:equivalentPath "/schema:familyName" ;
+	]
+.
+
+warehouse:PersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	konig:shapeOf [
+		a konig:GoogleBigQueryTable ;
+		dc:identifier "acme.Person"
+	] ;
+	sh:property [
+		sh:predicate schema:givenName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string
+	] , [
+		sh:predicate schema:familyName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string
+	]
+.
+	

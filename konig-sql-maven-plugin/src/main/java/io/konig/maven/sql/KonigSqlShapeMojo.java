@@ -27,30 +27,33 @@ import io.konig.sql.SQLTableShapeGenerator;
 @Mojo( name = "generate")
 public class KonigSqlShapeMojo extends AbstractMojo {
 	
-	@Parameter
-	private File sourceDir;
-	
-	@Parameter
-	private File outDir;
+	@Parameter(defaultValue="${basedir}/src/sql")
+	private File sqlSourceDir;
 	
 	
 	private ShapeWriter shapeWriter;
 	private NamespaceManager nsManager;
 	private SQLTableShapeGenerator generator;
 	
+	@Parameter(defaultValue="${basedir}/target/generated/rdf/shapes/origin")
 	private File originShapeDir;
+	
+	@Parameter(defaultValue="${basedir}/target/generated/rdf/shapes/target")
 	private File targetShapeDir;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		
 
+		originShapeDir.mkdirs();
+		targetShapeDir.mkdirs();
+		
 		nsManager = new MemoryNamespaceManager();
 		SQLSchemaManager schemaManager = new SQLSchemaManager();
 		
 		SQLFileLoader loader = new SQLFileLoader(nsManager, schemaManager);
 		try {
-			loader.load(sourceDir);
+			loader.load(sqlSourceDir);
 			
 			generator = new SQLTableShapeGenerator();
 			shapeWriter = new ShapeWriter();
@@ -111,7 +114,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 		builder.append(table.getTableName());
 		builder.append(".ttl");
 		
-		return new File(originShapeDir(), builder.toString());
+		return new File(originShapeDir, builder.toString());
 	}
 
 
@@ -126,24 +129,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 		builder.append(shapeId.getLocalName());
 		builder.append(".ttl");
 		
-		return new File(targetShapeDir(), builder.toString());
+		return new File(targetShapeDir, builder.toString());
 	}
 	
-	private File originShapeDir() {
-		if (originShapeDir == null) {
-			originShapeDir = new File(outDir, "origin");
-			originShapeDir.mkdirs();
-		}
-		return originShapeDir;
-	}
-	
-	private File targetShapeDir() {
-		if (targetShapeDir == null) {
-			targetShapeDir = new File(outDir, "target");
-			targetShapeDir.mkdirs();
-		}
-		
-		return targetShapeDir;
-	}
-
 }

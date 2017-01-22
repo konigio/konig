@@ -1,5 +1,9 @@
 package io.konig.core.path;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /*
  * #%L
  * Konig Core
@@ -39,16 +43,44 @@ import io.konig.core.impl.RdfUtil;
 
 public class HasStep implements Step {
 
-	private URI predicate;
-	private Value value;
-	private Object javaValue;
+	private List<PredicateValuePair> list = new ArrayList<>();
 	
 	public HasStep(URI predicate, Value value) {
-		this.predicate = predicate;
-		this.value = value;
-		if (value instanceof Literal) {
-			javaValue = RdfUtil.javaValue((Literal)value);
+		list.add(new PredicateValuePair(predicate, value));
+		
+	}
+	
+	public void add(URI predicate, Value value) {
+		list.add(new PredicateValuePair(predicate, value));
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		boolean result = false;
+		
+		if (other instanceof HasStep) {
+			HasStep b = (HasStep) other;
+			
+			if (b.list.size() == list.size()) {
+				if (list.size()==1) {
+					result = list.get(0).compareTo(b.list.get(0))==0;
+				} else {
+					result = true;
+					List<PredicateValuePair> mine = new ArrayList<>(list);
+					List<PredicateValuePair> yours = new ArrayList<>(b.list);
+					Collections.sort(mine);
+					Collections.sort(yours);
+					for (int i=0; i<mine.size(); i++) {
+						if (mine.get(i).compareTo(yours.get(i)) != 0) {
+							result = false;
+							break;
+						}
+					}
+				}
+			}
 		}
+		
+		return result;
 	}
 
 	@Override
@@ -60,28 +92,34 @@ public class HasStep implements Step {
 		for (Value s : source) {
 			if (s instanceof Resource) {
 				Resource subject = (Resource) s;
-				if (javaValue != null) {
+				
+				for (PredicateValuePair pair : list) {
 					
-					Vertex vertex = graph.getVertex(subject);
-					if (hasValue(vertex)) {
+					if (pair.javaValue != null) {
+						
+						Vertex vertex = graph.getVertex(subject);
+						if (hasValue(vertex, pair)) {
+							traverser.addResult(s);
+						}
+						
+					} else if (graph.contains(subject, pair.predicate, pair.value)) {
 						traverser.addResult(s);
 					}
-					
-				} else if (graph.contains(subject, predicate, value)) {
-					traverser.addResult(s);
 				}
+				
+				
 			}
 		}
 
 	}
 
-	private boolean hasValue(Vertex vertex) {
-		Set<Edge> set = vertex.outProperty(predicate);
+	private boolean hasValue(Vertex vertex, PredicateValuePair pair) {
+		Set<Edge> set = vertex.outProperty(pair.predicate);
 		for (Edge e : set) {
 			Value value = e.getObject();
 			if (value instanceof Literal) {
 				Object object = RdfUtil.javaValue((Literal)value);
-				if (RdfUtil.nearEqual(javaValue, object)) {
+				if (RdfUtil.nearEqual(pair.javaValue, object)) {
 					return true;
 				}
 			}
@@ -91,20 +129,30 @@ public class HasStep implements Step {
 
 	@Override
 	public void visit(SPARQLBuilder builder) {
+		String comma = "";
 		builder.append('[');
-		builder.append(predicate);
-		builder.append(' ');
-		builder.append(value);
+		for (PredicateValuePair pair : list) {
+			builder.append(comma);
+			builder.append(pair.predicate);
+			builder.append(' ');
+			builder.append(pair.value);
+			comma = ",\n";
+		}
 		builder.append(']');
 		
 	}
 	
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
+		String comma = "";
 		builder.append('[');
-		builder.append(predicate.getLocalName());
-		builder.append(' ');
-		builder.append(value);
+		for (PredicateValuePair pair : list) {
+			builder.append(comma);
+			builder.append(pair.predicate.getLocalName());
+			builder.append(' ');
+			builder.append(pair.value);
+			comma = ",\n";
+		}
 		builder.append(']');
 		return builder.toString();
 	}
@@ -112,6 +160,32 @@ public class HasStep implements Step {
 	@Override
 	public void append(StringBuilder builder, NamespaceManager nsManager) {
 		throw new RuntimeException("Not implemented");
+		
+	}
+	
+	static class PredicateValuePair implements Comparable<PredicateValuePair> {
+		private URI predicate;
+		private Value value;
+		private Object javaValue;
+		public PredicateValuePair(URI predicate, Value object) {
+			this.predicate = predicate;
+			this.value = object;
+			if (value instanceof Literal) {
+				javaValue = RdfUtil.javaValue((Literal)value);
+			}
+		}
+		
+		@Override
+		public int compareTo(PredicateValuePair other) {
+			int result = predicate.stringValue().compareTo(other.predicate.stringValue());
+			if (result == 0) {
+				result = value.stringValue().compareTo(other.value.stringValue());
+			}
+			return result;
+		}
+		
+		
+		
 		
 	}
 

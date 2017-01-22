@@ -42,6 +42,16 @@ public class InStep implements Step {
 	public InStep(URI predicate) {
 		this.predicate = predicate;
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		boolean result = false;
+		if (other instanceof InStep) {
+			InStep b = (InStep) other;
+			result = predicate.equals(b.predicate);
+		}
+		return result;
+	}
 
 	@Override
 	public void traverse(Traverser traverser) throws TraversalException {

@@ -1,0 +1,33 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.konig</groupId>
+    <artifactId>konig-parent</artifactId>
+    <version>2.0.0-8</version>
+    <relativePath>../konig-parent/pom.xml</relativePath>
+  </parent>
+  <groupId>io.konig</groupId>
+  <artifactId>konig-transform</artifactId>
+  <packaging>jar</packaging>
+  <name>Konig Transform</name>
+  
+  <dependencies>
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-core</artifactId>
+			<version>${konig.version}</version>
+  	</dependency>
+  	
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+	  <plugins>
+		</plugins>
+	</build>
+  <description>Tools for building code generators based on semantic models</description>
+</project>

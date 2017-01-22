@@ -38,13 +38,14 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.activity.Activity;
-import io.konig.annotation.OwlClass;
 import io.konig.annotation.RdfProperty;
 import io.konig.core.Context;
 import io.konig.core.Graph;
 import io.konig.core.UidGenerator;
+import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.impl.EmptyList;
 
 public class Shape {
@@ -65,19 +66,23 @@ public class Shape {
 	
 	private Activity wasGeneratedBy;
 	private String bigQueryTableId;
+	private List<URI> type;
+	
+	private IriTemplate iriTemplate;
+	private URI sourceShape;
+	
+	private List<DataSource> shapeOf;
 	
 	
 	public Shape() {
 		String bnodeId = UidGenerator.INSTANCE.next();
 		id = new BNodeImpl(bnodeId);
+		addType(SH.Shape);
 	}
 	
 	public Shape(Resource id) {
 		this.id = id;
-	}
-	
-	public URI getType() {
-		return SH.Shape;
+		addType(SH.Shape);
 	}
 	
 	/**
@@ -354,12 +359,70 @@ public class Shape {
 		this.wasGeneratedBy = wasGeneratedBy;
 	}
 
+	@RdfProperty("http://www.konig.io/ns/core/bigQueryTableId")
 	public String getBigQueryTableId() {
 		return bigQueryTableId;
 	}
 
+	@RdfProperty("http://www.konig.io/ns/core/bigQueryTableId")
 	public void setBigQueryTableId(String bigQueryTableId) {
 		this.bigQueryTableId = bigQueryTableId;
 	}
+
+	public void addType(URI type) {
+		if (this.type == null) {
+			this.type = new ArrayList<>();
+		}
+		if (!this.type.contains(type)) {
+			this.type.add(type);
+		}
+		
+	}
+	
+
+	@RdfProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+	public List<URI> getType() {
+		return type;
+	}
+
+	public void setType(List<URI> type) {
+		this.type = type;
+	}
+
+	@RdfProperty(Konig.NAMESPACE + "iriTemplate")
+	public IriTemplate getIriTemplate() {
+		return iriTemplate;
+	}
+
+	public void setIriTemplate(IriTemplate iriTemplate) {
+		this.iriTemplate = iriTemplate;
+	}
+
+	public URI getSourceShape() {
+		return sourceShape;
+	}
+
+	public void setSourceShape(URI sourceShape) {
+		this.sourceShape = sourceShape;
+	}
+
+	@RdfProperty(Konig.SHAPE_OF)
+	public List<DataSource> getShapeOf() {
+		return shapeOf;
+	}
+	
+	public void addShapeOf(DataSource dataSource) {
+		if (shapeOf == null) {
+			shapeOf = new ArrayList<>();
+		}
+		shapeOf.add(dataSource);
+	}
+
+	@RdfProperty(Konig.SHAPE_OF)
+	public void setShapeOf(List<DataSource> shapeOf) {
+		this.shapeOf = shapeOf;
+	}
+	
+	
 	
 }

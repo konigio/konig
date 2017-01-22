@@ -1,0 +1,86 @@
+@prefix schema: <http://schema.org/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonFullShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	konig:bigQueryTableId "acme.PersonFull" ;
+	sh:property [
+		sh:predicate schema:givenName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:familyName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:telephone ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:address ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:shape shape:PostalAddressFullShape ;
+	] 
+.
+
+shape:PostalAddressFullShape a sh:Shape ;
+	sh:targetClass schema:PostalAddress ;
+	sh:property [
+		sh:predicate schema:streetAddress ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:addressLocality ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:addressRegion ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:postalCode ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	]
+.
+
+shape:PersonLiteShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:property [
+		sh:predicate schema:givenName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:familyName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:address ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:shape shape:PostalAddressLiteShape ;
+	] 
+.	
+	
+shape:PostalAddressLiteShape a sh:Shape ;
+	sh:targetClass schema:PostalAddress ;
+	sh:property  [
+		sh:predicate schema:postalCode ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	]
+.

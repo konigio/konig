@@ -102,12 +102,9 @@ public class ShapeAggregator {
 			
 			URI uri = new URIImpl(builder.toString());
 			
-			p.setShapeId(uri);
 			Shape valueShape = merge(uri, c, d);
 			p.setShape(valueShape);
-			if (shapeManager != null) {
-				shapeManager.addShape(valueShape);
-			}
+			shapeManager.addShape(valueShape);
 			
 		}
 		
@@ -136,16 +133,12 @@ public class ShapeAggregator {
 
 
 	private void setValueShape(PropertyConstraint p, Resource id, Shape shape) {
-		if (id instanceof URI) {
-			URI uri = (URI) id;
-			p.setShapeId(uri);
-			
-			if (shape == null && shapeManager!=null) {
-				shape = shapeManager.getShapeById(uri);
+		
+		if (shape == null) {
+			shape = shapeManager.getShapeById(id);
+			if (shape == null) {
+				throw new SchemaGeneratorException("Shape not found: " + id);
 			}
-			
-		} else {
-			throw new SchemaGeneratorException("Blank node not supported for value shape");
 		}
 
 		p.setShape(shape);

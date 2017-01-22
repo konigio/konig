@@ -38,9 +38,7 @@ public interface PojoFactory {
 	/**
 	 * Map individuals from a graph into Java objects.
 	 * @param graph  The graph containing individuals that are to be mapped into Java objects.
-	 * @param config  A configuration entity that controls the mapping of OWL classes to Java classes and
-	 * records the mapping of individuals to Java objects.
 	 * @throws ParseException
 	 */
-	public void createAll(Graph graph, PojoContext config) throws KonigException;
+	public void createAll(Graph graph) throws KonigException;
 }
