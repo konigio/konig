@@ -72,17 +72,19 @@ public class SQLTableShapeGenerator {
 			throw new KonigException("Shape Id is not defined for table " + tableSchema.getFullName());
 		}
 		Shape shape = new Shape(tableId);
+		shape.setBigQueryTableId(tableSchema.getStagingTableId());
 		shape.setTargetClass(tableSchema.getTargetClass());
+		shape.setIriTemplate(tableSchema.getIriTemplate());
 		
 		for (SQLColumnSchema column : tableSchema.listColumns()) {
 			addProperty(shape, column);
 		}
 		
 		
-		
 		return shape;
 	}
 	
+
 
 
 
@@ -127,9 +129,19 @@ public class SQLTableShapeGenerator {
 			
 			Shape shape = new Shape();
 			shape.setTargetClass(tableSchema.getTargetClass());
+			shape.setBigQueryTableId(tableSchema.getTargetTableId());
+			
+			if (tableSchema.getIriTemplate() != null) {
+				shape.setNodeKind(NodeKind.IRI);
+			}
 			
 			for (SQLColumnSchema column : tableSchema.listColumns()) {
 				addStructuredProperty(shape, column);
+			}
+			
+			URI tableShapeId = tableSchema.getTableShapeId();
+			if (tableShapeId != null) {
+				shape.setSourceShape(tableShapeId);
 			}
 			
 			return shape;

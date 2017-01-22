@@ -36,6 +36,8 @@ import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
+import io.konig.core.util.IriTemplate;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.TemporalUnit;
@@ -43,6 +45,35 @@ import io.konig.shacl.OrConstraint;
 import io.konig.shacl.Shape;
 
 public class SimplePojoFactoryTest {
+	
+	@Test
+	public void testStringLiteralConstructor() throws Exception {
+		
+		URI personShapeId = uri("http://example.com/shapes/1/schema/PersonShape");
+		
+		MemoryGraph graph = new MemoryGraph();
+		
+		graph.builder()
+		
+			
+			.beginSubject(personShapeId)
+				.addProperty(RDF.TYPE, SH.Shape)
+				.addLiteral(Konig.iriTemplate, "http://example.com/person/{person_id}" )
+			.endSubject()
+			;
+		
+		Vertex v = graph.getVertex(personShapeId);
+		
+
+		SimplePojoFactory factory = new SimplePojoFactory();
+		
+		Shape shape = factory.create(v, Shape.class);
+		
+		IriTemplate template = shape.getIriTemplate();
+		assertTrue(template != null);
+		
+		assertEquals("http://example.com/person/{person_id}", template.toString());
+	}
 	
 	@Test
 	public void testRdfListAnnotation() throws Exception {
@@ -180,8 +211,8 @@ public class SimplePojoFactoryTest {
 		PojoContext context = new PojoContext();
 		context.mapClass(Schema.Person, TestPerson.class);
 		
-		SimplePojoFactory factory = new SimplePojoFactory();
-		factory.createAll(graph, context);
+		SimplePojoFactory factory = new SimplePojoFactory(context);
+		factory.createAll(graph);
 		
 		TestPerson alice = context.getIndividual(aliceId, TestPerson.class);
 		assertTrue(alice != null);
@@ -212,8 +243,8 @@ public class SimplePojoFactoryTest {
 		PojoContext context = new PojoContext();
 		context.mapClass(Schema.Person, TestPerson.class);
 		
-		SimplePojoFactory factory = new SimplePojoFactory();
-		factory.createAll(graph, context);
+		SimplePojoFactory factory = new SimplePojoFactory(context);
+		factory.createAll(graph);
 		
 		TestPerson alice = context.getIndividual(aliceId, TestPerson.class);
 		assertTrue(alice != null);

@@ -81,7 +81,13 @@ public class PathImpl implements Path {
 
 	@Override
 	public Path has(URI predicate, Value value) {
-		stepList.add(new HasStep(predicate, value));
+		Step last = stepList.isEmpty() ? null : stepList.get(stepList.size()-1);
+		if (last instanceof HasStep) {
+			HasStep step = (HasStep) last;
+			step.add(predicate, value);
+		} else {
+			stepList.add(new HasStep(predicate, value));
+		}
 		return this;
 	}
 
@@ -149,6 +155,39 @@ public class PathImpl implements Path {
 		}
 		return builder.toString();
 		
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		boolean result = false;
+		if (other instanceof Path) {
+			Path p = (Path) other;
+			List<Step> otherList = p.asList();
+			
+			result = otherList.size() == stepList.size();
+			if (result) {
+				for (int i=0; i<stepList.size(); i++) {
+					Step a = stepList.get(i);
+					Step b = otherList.get(i);
+					result = a.equals(b);
+					if (!result) {
+						break;
+					}
+				}
+			}
+		}
+		
+		return result;
+	}
+
+	@Override
+	public int length() {
+		return stepList.size();
+	}
+
+	@Override
+	public Path subpath(int start) {
+		return subpath(start, stepList.size());
 	}
 	
 

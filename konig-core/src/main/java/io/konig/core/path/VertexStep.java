@@ -1,5 +1,7 @@
 package io.konig.core.path;
 
+import java.util.HashSet;
+
 /*
  * #%L
  * Konig Core
@@ -43,6 +45,30 @@ public class VertexStep implements Step {
 	
 	public VertexStep(Resource[] object) {
 		this.resource = object;
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		
+		boolean result = false;
+		if (other instanceof VertexStep) {
+			VertexStep b = (VertexStep) other;
+			if (resource.length == b.resource.length) {
+				result = true;
+				Set<Resource> set = new HashSet<>();
+				for (Resource r : b.resource) {
+					set.add(r);
+				}
+				
+				for (Resource r : resource) {
+					if (!set.contains(r)) {
+						result = false; 
+						break;
+					}
+				}
+			}
+		}
+		return result;
 	}
 
 

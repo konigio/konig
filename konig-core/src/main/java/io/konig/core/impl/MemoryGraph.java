@@ -78,6 +78,9 @@ public class MemoryGraph implements Graph, Transaction {
 		
 	}
 	
+	public MemoryGraph(NamespaceManager nsManager) {
+		this.nsManager = nsManager;
+	}
 	
 
 	public boolean isCopyEdgeAttributes() {

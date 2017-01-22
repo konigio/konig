@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
@@ -23,6 +24,7 @@ import io.konig.core.util.LinkedValueMap;
 import io.konig.core.util.NamespaceValueMap;
 import io.konig.core.util.PathPattern;
 import io.konig.core.util.SimpleValueFormat;
+import io.konig.core.util.ValueFormat;
 import io.konig.core.util.ValueMap;
 import io.konig.sql.antlr.SqlCreateTableBaseListener;
 import io.konig.sql.antlr.SqlCreateTableLexer;
@@ -161,6 +163,8 @@ public class SQLParser {
 		private String constraintName = null;
 		private SQLConstraint notNull;
 		private SQLConstraint primaryKey;
+		private String idValue;
+		private String defaultColumnNamespace;
 		
 		private NamespaceManager nsManager;
 		private PathFactory pathFactory;
@@ -169,10 +173,14 @@ public class SQLParser {
 		private IriTemplate tableShapeIriTemplate;
 		private IriTemplate tableTargetShapeIriTemplate;
 		private IriTemplate tableTargetClassIriTemplate;
-		private IriTemplate columnPredicateIriTemplate;
+		private ValueFormat tableIdTemplate;
+		private ValueFormat tableStagingIdTemplate;
+		private ValueFormat tableTargetIdTemplate;
+		private String fullTableRef;
+		
 		private ValueMap tableValueMap;
 		private NamespaceValueMap nsValueMap;
-		private URI columnPredicate;
+		private String columnNamespace;
 		private String columnPath;
 		private SimpleValueFormat columnPathTemplate;
 		
@@ -208,6 +216,28 @@ public class SQLParser {
 		}
 		
 
+
+		@Override 
+		public void exitId(SqlCreateTableParser.IdContext ctx) { 
+			idValue = ctx.getText();
+		}
+
+		@Override 
+		public void enterTableColumnNamespace(SqlCreateTableParser.TableColumnNamespaceContext ctx) { 
+			idValue = null;
+			iriValue = null;
+		}
+
+		@Override 
+		public void exitColumnNamespaceDirective(SqlCreateTableParser.ColumnNamespaceDirectiveContext ctx) {
+			defaultColumnNamespace = idValue==null ? iriValue : idValue;
+		}
+
+		@Override 
+		public void exitTableColumnNamespace(SqlCreateTableParser.TableColumnNamespaceContext ctx) { 
+			String namespace = idValue==null ? iriValue : idValue;
+			table.setColumnNamespace(namespace);
+		}
 		
 		
 		@Override 
@@ -237,6 +267,11 @@ public class SQLParser {
 		public void enterTablePathPattern(SqlCreateTableParser.TablePathPatternContext ctx) { 
 			iriValue = null;
 			columnPath = null;
+		}
+
+		@Override 
+		public void exitTableIriTemplate(SqlCreateTableParser.TableIriTemplateContext ctx) { 
+			table.setIriTemplate(new IriTemplate(iriValue));
 		}
 
 		@Override 
@@ -284,37 +319,73 @@ public class SQLParser {
 		}
 
 		@Override 
-		public void exitColumnPredicateIriTemplate(SqlCreateTableParser.ColumnPredicateIriTemplateContext ctx) { 
-			columnPredicateIriTemplate = new IriTemplate(iriValue);
-		}
-
-		@Override 
 		public void exitTableTargetClassIriTemplate(SqlCreateTableParser.TableTargetClassIriTemplateContext ctx) { 
 			tableTargetClassIriTemplate = new IriTemplate(iriValue);
 		}
 
 		@Override 
+		public void exitFullTableRef(SqlCreateTableParser.FullTableRefContext ctx) { 
+			fullTableRef = ctx.getText();
+		}
+
+		@Override 
+		public void exitTableStagingId(SqlCreateTableParser.TableStagingIdContext ctx) {
+			table.setStagingTableId(fullTableRef);
+		}
+
+
+		@Override
+		public void exitTableTargetId(SqlCreateTableParser.TableTargetIdContext ctx) { 
+			table.setTargetTableId(fullTableRef);
+		}
+
+
+		@Override 
+		public void exitTableTargetIdTemplate(SqlCreateTableParser.TableTargetIdTemplateContext ctx) {
+			tableTargetIdTemplate = tableIdTemplate;
+		}
+		
+		@Override 
+		public void exitTableStagingIdTemplate(SqlCreateTableParser.TableStagingIdTemplateContext ctx) { 
+			tableStagingIdTemplate = tableIdTemplate;
+		}
+		
+		@Override 
+		public void exitTableIdTemplate(SqlCreateTableParser.TableIdTemplateContext ctx) { 
+			tableIdTemplate = new SimpleValueFormat(ctx.getText());
+		}
+
+		@Override 
 		public void exitCreateTable(SqlCreateTableParser.CreateTableContext ctx) { 
 			tableValueMap = null;
-			
+
+			ValueMap map = tableValueMap();
 			if (table.getTableShapeId()==null && tableShapeIriTemplate!=null) {
-				ValueMap map = tableValueMap();
 				URI shapeId = tableShapeIriTemplate.expand(map);
 				table.setTableShapeId(shapeId);
 			}
 			
 			if (table.getTargetClass()==null && tableTargetClassIriTemplate!=null) {
-				ValueMap map = tableValueMap();
 				URI targetClass = tableTargetClassIriTemplate.expand(map);
 				table.setTargetClass(targetClass);
 			}
 			
-			ValueMap map = tableValueMap();
 
 			if (tableTargetShapeIriTemplate != null) {
 				URI targetShapeId = tableTargetShapeIriTemplate.expand(map);
 				table.setTableTargetShapeId(targetShapeId);
 			}
+			
+			if (tableStagingIdTemplate != null && table.getStagingTableId()==null) {
+				String tableId = tableStagingIdTemplate.format(map);
+				table.setStagingTableId(tableId);
+			}
+			
+			if (tableTargetIdTemplate != null && table.getTargetTableId()==null) {
+				String tableId = tableTargetIdTemplate.format(map);
+				table.setTargetTableId(tableId);
+			}
+			
 			table.applyTemplates(map);
 		}
 		
@@ -343,12 +414,6 @@ public class SQLParser {
 		
 		private URI iri() {
 			return RdfUtil.expand(nsManager, iriValue);
-		}
-
-		@Override 
-		public void exitTableColumnPredicateIriTemplate(SqlCreateTableParser.TableColumnPredicateIriTemplateContext ctx) { 
-			IriTemplate template = new IriTemplate(iriValue);
-			table.setColumnPredicateIriTemplate(template);
 		}
 
 		@Override 
@@ -453,8 +518,8 @@ public class SQLParser {
 			if (table == null) {
 				table = new SQLTableSchema(schema, tableName);
 				table.setNamespaceManager(nsManager);
-				table.setColumnPredicateIriTemplate(columnPredicateIriTemplate);
 				table.setColumnPathTemplate(columnPathTemplate);
+				table.setColumnNamespace(defaultColumnNamespace);
 				
 			}
 			return table;
@@ -473,7 +538,7 @@ public class SQLParser {
 			constraintName = null;
 			notNull = null;
 			primaryKey = null;
-			columnPredicate = null;
+			columnNamespace = null;
 			columnPath = null;
 		}
 
@@ -514,24 +579,37 @@ public class SQLParser {
 		}
 
 
-		@Override 
-		public void exitColumnPredicate(SqlCreateTableParser.ColumnPredicateContext ctx) { 
-			columnPredicate = iri();
+		@Override public void exitColumnNamespace(SqlCreateTableParser.ColumnNamespaceContext ctx) { 
+			columnNamespace =  idValue==null ? iriValue : idValue;
 		}
-
+		
 		@Override 
 		public void exitColumnDef(SqlCreateTableParser.ColumnDefContext ctx) { 
 			tableRef = targetTable;
 			SQLColumnType columnType = new SQLColumnType(datatype, sizeValue, precision);
 			SQLColumnSchema column = getOrCreateColumn(columnName);
+			
 			 
 			column.setColumnType(columnType);
 			column.setPrimaryKey(primaryKey);
 			column.setNotNull(notNull);
-			column.setColumnPredicate(columnPredicate);
+			column.setColumnPredicate(columnPredicate());
 			column.setEquivalentPath(columnPath);
 		}
 		
+		private URI columnPredicate() {
+			if (columnNamespace != null) {
+				if (columnNamespace.indexOf(':')==-1) {
+					Namespace ns = nsManager.findByPrefix(columnNamespace);
+					if (ns != null) {
+						columnNamespace = ns.getName();
+					}
+				}
+				return new URIImpl(columnNamespace + columnName);
+			}
+			return null;
+		}
+
 		@Override
 		public void exitConstraintName(SqlCreateTableParser.ConstraintNameContext ctx) { 
 			constraintName = ctx.getText();

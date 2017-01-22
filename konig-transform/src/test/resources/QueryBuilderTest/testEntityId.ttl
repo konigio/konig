@@ -1,0 +1,37 @@
+@prefix schema: <http://schema.org/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix acme: <http://example.com/ns/acme/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix shape : <http://example.com/shapes/> .
+@prefix data : <http://example.com/resources/> .
+
+shape:PersonOriginShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	konig:bigQueryTableId "acme.OriginPerson" ;
+	konig:iriTemplate "{data}person/{person_id}" ;
+	sh:property [
+		sh:predicate alias:person_id ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:long 
+	] , [
+		sh:predicate schema:name ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string 
+	]
+.
+
+shape:PersonSemanticShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:nodeKind sh:IRI ;
+	konig:bigQueryTableId "acme.Person" ;
+	sh:property  [
+		sh:predicate schema:name ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string 
+	] 
+.

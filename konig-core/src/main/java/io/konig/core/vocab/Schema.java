@@ -60,6 +60,7 @@ public class Schema {
 	public static final URI alumniOf = new URIImpl("http://schema.org/alumniOf");
 	public static final URI agent = new URIImpl("http://schema.org/agent");
 	public static final URI author = new URIImpl("http://schema.org/author");
+	public static final URI brand = new URIImpl("http://schema.org/brand");
 	public static final URI children = new URIImpl("http://schema.org/children");
 	public static final URI contactPoint = new URIImpl("http://schema.org/contactPoint");
 	public static final URI contactType = new URIImpl("http://schema.org/contactType");

@@ -13,30 +13,54 @@ semanticDirective
 	| tableShapeIriTemplate 
 	| tableTargetShapeIriTemplate
 	| tableTargetClassIriTemplate 
-	| columnPredicateIriTemplate 
+	| tableStagingIdTemplate
+	| tableTargetIdTemplate
+	| columnNamespaceDirective 
 	| columnPathTemplate ;
 	
 tableShapeIriTemplate : '@tableShapeIriTemplate' iriRef '.' ;
+
 tableTargetClassIriTemplate : '@tableTargetClassIriTemplate' iriRef '.' ;
-columnPredicateIriTemplate : '@columnPredicateIriTemplate' iriRef '.' ; 
+
 columnPathTemplate : '@columnPathTemplate' pathValue  '.' ;
+
 tableTargetShapeIriTemplate : '@tableTargetShapeIriTemplate' iriRef '.' ;
+
+tableStagingIdTemplate : '@tableStagingIdTemplate' tableIdTemplate '.' ;
+
+tableTargetIdTemplate : '@tableTargetIdTemplate' tableIdTemplate '.' ;
+
+columnNamespaceDirective : '@columnNamespace' (id | iriRef) '.' ;
+
 
 createTable : CREATE GLOBAL? TEMPORARY? TABLE tableId tableParts tableSemantics?  ;
 
 tableId : tableRef ;
 
-tableSemantics : SEMANTICS tableSemanticStatement (',' tableSemanticStatement)* '.';
+tableSemantics : SEMANTICS tableSemanticStatement (';' tableSemanticStatement)* '.';
 
 tableSemanticStatement 
 	: tableShapeId 
 	| tableTargetShapeId
 	| tableTargetClass 
-	| tableColumnPredicateIriTemplate 
-	| tableColumnPathTemplate 
-	| tablePathPattern ;
+	| tableColumnNamespace 
+	| tableColumnPathTemplate
+	| tablePathPattern 
+	| tableStagingId
+	| tableTargetId
+	| tableIriTemplate
+	;
+	
+tableIriTemplate : IriTemplate iriRef ;
 	
 tablePathPattern : PathPattern '(' patternPrefix ',' patternClass ',' patternPath ')';
+
+tableStagingId : StagingTableId fullTableRef ;
+
+tableTargetId : TargetTableId fullTableRef ;
+
+tableColumnNamespace : ColumnNamespace (id | iriRef);
+
 
 patternPrefix : id ;
 
@@ -48,7 +72,6 @@ patternPath : pathValue ;
 tableColumnPathTemplate : 'columnPathTemplate' pathValue ;
 
 tableTargetClass : TargetClass iri ;
-tableColumnPredicateIriTemplate : 'columnPredicateIriTemplate' iriRef ;
 
 tableTargetShapeId : TargetShape iri ;
 
@@ -69,6 +92,16 @@ iri : iriRef | curie  ;
 curie : curiePart ':' curiePart ;
 
 tableRef : (schemaName '.')? tableName ;
+
+fullTableRef : (projectName '.')? schemaName '.' tableName ;
+
+tableIdTemplate : (idTemplate '.') ? idTemplate '.' idTemplate ;
+
+idTemplate : idTemplatePart+ ;
+
+idTemplatePart :  id | '{' (LETTER | DIGIT | '_' | keyword)+ '}';
+
+projectName : id ;
 
 schemaName : id ;
 
@@ -98,7 +131,9 @@ columnDef : columnName columnType columnConstraintDef* columnSemantics?;
 
 columnSemantics : SEMANTICS columnSemanticStatement (';' columnSemanticStatement)* ;
 
-columnSemanticStatement :  columnPredicate | columnPath ;
+columnSemanticStatement 
+	: columnNamespace 
+	| columnPath ;
 
 columnPath : Path pathValue ;
 
@@ -107,7 +142,7 @@ pathValue : step+ ;
 step : iri | '^' iri | '/' iri | FILTER ;
 
 
-columnPredicate : Predicate iri ;
+columnNamespace : ColumnNamespace (id | iriRef);
 
 columnConstraintDef : constraintNameDef? columnConstraint ;
 
@@ -142,19 +177,24 @@ datatype : BIGINT | BINARY | BIT | CHAR |  DATE | DATETIME | DATETIME2 | DECIMAL
 
 keyword 
 	:	datatype | CREATE |TABLE | GLOBAL | MAX | NOT | NULL | PRIMARY | KEY | UNIQUE | FOREIGN | REFERENCES 
-	| SEMANTICS | PathPattern | TargetClass | TargetShape | HasShape | Path | Predicate; 
+	| SEMANTICS | PathPattern | TargetClass | TargetShape | HasShape | Path | StagingTableId 
+	| TargetTableId | ColumnNamespace | IriTemplate ; 
 
 prefixDirective : '@prefix' nsPrefix ':' iriRef '.' ;
 
 nsPrefix : id ;
 
 iriRef : IRIREF ;
-Predicate : 'predicate' ;
 Path : 'path' ;
 HasShape : 'hasShape' ;
 TargetShape : 'targetShape' ;
 TargetClass : 'targetClass' ;
 PathPattern : 'pathPattern' ;
+StagingTableId : 'stagingTableId' ;
+TargetTableId : 'targetTableId' ;
+ColumnNamespace : 'columnNamespace' ;
+IriTemplate : 'iriTemplate';
+
 
 FILTER : '[' ( ~[[\]] | FILTER )+ ']' ;
 

@@ -19,25 +19,87 @@ package io.konig.shacl.io;
  * limitations under the License.
  * #L%
  */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-
-import static org.junit.Assert.*;
+import java.util.List;
 
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Graph;
 import io.konig.core.impl.MemoryGraph;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
+import io.konig.datasource.DataSource;
+import io.konig.datasource.GoogleBigQueryTable;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShapeLoaderTest {
+	
+	@Test
+	public void testShapeOf() {
+		URI shapeId = uri("http://example.com/PersonShape");
+		
+		Graph graph = new MemoryGraph();
+		graph.builder()
+			.beginSubject(shapeId)
+				.addProperty(RDF.TYPE, SH.Shape)
+				.beginBNode(Konig.shapeOf)
+					.addProperty(RDF.TYPE, Konig.GoogleBigQueryTable)
+					.addLiteral(DCTERMS.IDENTIFIER, "acme.Person")
+				.endSubject()
+			.endSubject();
+		
+		ShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader loader = new ShapeLoader(shapeManager);
+		loader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		
+		List<DataSource> dataSourceList = shape.getShapeOf();
+		assertTrue(dataSourceList != null);
+		assertEquals(1, dataSourceList.size());
+		DataSource dataSource = dataSourceList.get(0);
+		assertTrue(dataSource instanceof GoogleBigQueryTable);
+		assertEquals("acme.Person", dataSource.getIdentifier());
+	}
+	
+	@Test
+	public void testType() {
+		
+		URI shapeId = uri("http://example.com/PersonShape");
+		URI OriginShape = uri("http://example.com/ns/OriginShape");
+		
+		Graph graph = new MemoryGraph();
+		
+		graph.edge(shapeId, RDF.TYPE, SH.Shape);
+		graph.edge(shapeId, RDF.TYPE, OriginShape);
+		
+		ShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader loader = new ShapeLoader(shapeManager);
+		
+		loader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		
+		List<URI> typeList = shape.getType();
+		assertTrue(typeList != null);
+		assertEquals(2, typeList.size());
+		assertEquals(SH.Shape, typeList.get(0));
+		assertEquals(OriginShape, typeList.get(1));
+		
+		
+	}
 
 	@Test
 	public void testShape() {

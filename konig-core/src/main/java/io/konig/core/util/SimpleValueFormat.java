@@ -23,6 +23,9 @@ package io.konig.core.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openrdf.model.Value;
+import org.openrdf.model.impl.LiteralImpl;
+
 public class SimpleValueFormat implements ValueFormat {
 
 
@@ -107,6 +110,35 @@ public class SimpleValueFormat implements ValueFormat {
 		String get(ValueMap map) {
 			return map.get(text);
 		}
+	}
+
+	@Override
+	public void traverse(ValueFormatVisitor visitor) {
+		
+		for (Element e : elements) {
+			if (e instanceof Variable) {
+				visitor.visitVariable(e.text);
+			} else {
+				visitor.visitText(e.text);
+			}
+		}
+		
+	}
+	
+	public Value toValue() {
+		return new LiteralImpl(text);
+	}
+
+	@Override
+	public List<String> listVariables() {
+		List<String> result = new ArrayList<>();
+		for (Element e : elements) {
+			if (e instanceof Variable) {
+				result.add(e.text);
+			}
+		}
+		
+		return result;
 	}
 	
 }

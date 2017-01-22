@@ -1,5 +1,7 @@
 package io.konig.core.util;
 
+import java.util.List;
+
 /*
  * #%L
  * Konig Core
@@ -24,4 +26,8 @@ package io.konig.core.util;
 public interface ValueFormat {
 
 	String format(ValueMap map);
+	
+	List<String> listVariables();
+	
+	void traverse(ValueFormatVisitor visitor);
 }

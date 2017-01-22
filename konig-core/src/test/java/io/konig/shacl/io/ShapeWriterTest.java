@@ -4,7 +4,7 @@ package io.konig.shacl.io;
  * #%L
  * Konig Core
  * %%
- * Copyright (C) 2015 - 2016 Gregory McFall
+ * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,6 @@ package io.konig.shacl.io;
  * #L%
  */
 
-
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.GregorianCalendar;
@@ -30,18 +27,51 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Test;
+import static org.junit.Assert.*;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.DCTERMS;
+import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.activity.Activity;
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.Vertex;
+import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.io.FileGetter;
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.GoogleBigQueryTable;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 
 public class ShapeWriterTest {
+	
+
+	@Test 
+	public void testShapeOf() throws Exception {
+		
+		URI shapeId = uri("http://example.com/PersonShape");
+		
+		
+		Shape shape = new Shape(shapeId);
+		GoogleBigQueryTable datasource = new GoogleBigQueryTable();
+		datasource.setIdentifier("acme.Person");
+		shape.addShapeOf(datasource);
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		
+		Graph graph = new MemoryGraph();
+		shapeWriter.emitShape(shape, graph);
+		
+		Vertex v = graph.getVertex(shapeId);
+		
+		Vertex w = v.getVertex(Konig.shapeOf);
+		assertTrue(w!=null);
+		
+		assertEquals(Konig.GoogleBigQueryTable, w.getURI(RDF.TYPE));
+		assertEquals("acme.Person", w.getValue(DCTERMS.IDENTIFIER).stringValue());
+	}
 
 	@Test
 	public void test() throws Exception {

@@ -29,6 +29,7 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.vocab.Schema;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -38,11 +39,15 @@ public class SQLTableShapeGeneratorTest {
 	public void testStructured() {
 		String sql =
 			  "@prefix schema: <http://schema.org/> ."
+			+ "@columnNamespace <http://example.com/ns/alias/> ."
+					  
 			+ "CREATE TABLE registrar.Organization ("
+			+ "  org_id BIGINT PRIMARY KEY NOT NULL,"
 			+ "  founder_given_name VARCHAR(64)"
 			+ ")"
 			+ "SEMANTICS "
-			+ "  pathPattern(founder_, schema:Person, /schema:founder) ;"
+			+ "  iriTemplate <http://example.com/org/{org_id}> ;"
+			+ "  pathPattern(founder_, schema:Person, /schema:founder) ."
 			;
 		
 		SQLSchemaManager schemaManager = new SQLSchemaManager();
@@ -69,37 +74,14 @@ public class SQLTableShapeGeneratorTest {
 		p = founderShape.getPropertyConstraint(Schema.givenName);
 		assertTrue(p != null);
 		
+		assertEquals(NodeKind.IRI, shape.getNodeKind());
+		
+		
 		
 		
 	}
 
-	@Ignore
-	public void test() {
-		
-		String text =
-			"CREATE TABLE registrar.Person ("
-			+ "givenName VARCHAR(64), "
-			+ "familyName VARCHAR(64), "
-			+ "taxID VARCHAR(64) PRIMARY KEY"
-			+ ");";
-		
-		SQLParser parser = new SQLParser();
-		
-		SQLTableSchema table  = parser.parseTable(text);
-		
-		SQLTableShapeGenerator generator = new SQLTableShapeGenerator();
-		
-		Shape shape = generator.toShape(table);
-		
-		
-		assertEquals(uri("http://example.com/sql/registrar/PersonShape"), shape.getId());
-		
-		PropertyConstraint pc = shape.getPropertyConstraint(uri("http://example.com/sql/registrar/PersonShape#taxID"));
-		assertTrue(pc != null);
-		assertEquals(pc.getDatatype(), XMLSchema.STRING);
-		
-		
-	}
+	
 	
 	private URI uri(String value) {
 		return new URIImpl(value);

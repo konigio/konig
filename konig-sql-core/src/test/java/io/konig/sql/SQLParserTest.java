@@ -12,6 +12,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.NamespaceManager;
+import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.util.PathPattern;
 import io.konig.core.vocab.Schema;
 
@@ -126,13 +127,13 @@ public class SQLParserTest {
 	
 
 	@Test
-	public void testTableColumnPredicateIriTemplate() throws Exception {
+	public void testTableColumnNamespace() throws Exception {
 		String text = 
 				  "@prefix alias : <http://example.com/alias/> . "
 				
 				+ "CREATE TABLE registrar.Person ("
 				+ "given_name VARCHAR(255) NOT NULL)"
-				+ "SEMANTICS columnPredicateIriTemplate <{alias}{columnName}> .";
+				+ "SEMANTICS columnNamespace alias .";
 		
 		SQLParser parser = new SQLParser();
 		
@@ -149,10 +150,10 @@ public class SQLParserTest {
 	
 	
 	@Test
-	public void testColumnPredicateIriTemplate() throws Exception {
+	public void testColumnNamespaceDirective() throws Exception {
 		String text = 
-				  "@prefix schema : <http://schema.org/> . "
-				+ "@columnPredicateIriTemplate <{schema}{columnNameCamelCase}> ."
+				  "@prefix alias : <http://example.com/ns/alias/> . "
+				+ "@columnNamespace alias ."
 				
 				+ "CREATE TABLE registrar.Person ("
 				+ "given_name VARCHAR(255) NOT NULL)";
@@ -166,16 +167,16 @@ public class SQLParserTest {
 		
 		URI predicate = givenName.getColumnPredicate();
 		assertTrue(predicate != null);
-		assertEquals(Schema.givenName, predicate);
+		assertEquals(uri("http://example.com/ns/alias/given_name"), predicate);
 	}
 
 	@Test
-	public void testColumnPredicate() throws Exception {
+	public void testColumnNamespace() throws Exception {
 		String text = 
-				  "@prefix schema : <http://schema.org/> . "
+				  "@prefix alias : <http://example.com/ns/alias/> ."
 				
 				+ "CREATE TABLE registrar.Person ("
-				+ "given_name VARCHAR(255) NOT NULL SEMANTICS predicate schema:givenName"
+				+ "given_name VARCHAR(255) NOT NULL SEMANTICS columnNamespace alias"
 				+ ") ";
 		
 		SQLParser parser = new SQLParser();
@@ -187,7 +188,7 @@ public class SQLParserTest {
 		
 		URI predicate = givenName.getColumnPredicate();
 		assertTrue(predicate != null);
-		assertEquals(Schema.givenName, predicate);
+		assertEquals(uri("http://example.com/ns/alias/given_name"), predicate);
 	}
 	
 	

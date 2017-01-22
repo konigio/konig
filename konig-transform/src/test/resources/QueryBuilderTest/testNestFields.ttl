@@ -1,0 +1,74 @@
+@prefix schema: <http://schema.org/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix acme: <http://example.com/ns/acme/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix schema1 : <http://example.com/shapes/v1/schema/> .
+@prefix schema2: <http://example.com/shapes/v2/schema/> .
+@prefix data : <http://example.com/resources/> .
+
+schema1:PersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	konig:bigQueryTableId "staging.Person" ;
+	sh:property [
+		sh:predicate alias:first_name ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+		konig:equivalentPath "/schema:givenName" ;
+	] , [
+		sh:predicate alias:last_name ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+		konig:equivalentPath "/schema:familyName" ;
+	] , [
+		sh:predicate alias:city ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+		konig:equivalentPath "/schema:address/schema:addressLocality" 
+	] , [
+		sh:predicate alias:state ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+		konig:equivalentPath "/schema:address/schema:addressRegion"
+	] 
+.
+
+
+schema2:PersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	konig:bigQueryTableId "staging.Person" ;
+	sh:property [
+		sh:predicate schema:givenName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string 
+	] , [
+		sh:predicate schema:familyName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string 
+	], [
+		sh:predicate schema:address ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:shape [
+			sh:targetClass schema:PostalAddress ;
+			sh:property [
+				sh:predicate schema:addressLocality ;
+				sh:minCount 0 ;
+				sh:maxCount 1 ;
+				sh:datatype xsd:string 
+			] , [
+				sh:predicate schema:addressRegion ;
+				sh:minCount 0 ;
+				sh:maxCount 1 ;
+				sh:datatype xsd:string 
+			]  
+		]
+	] 
+.

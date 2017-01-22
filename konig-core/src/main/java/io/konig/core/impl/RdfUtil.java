@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
@@ -40,11 +41,14 @@ import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.Path;
 import io.konig.core.Vertex;
 import io.konig.core.io.CompactTurtleWriter;
 import io.konig.core.io.CompositeRdfHandler;
 import io.konig.core.io.GraphLoadHandler;
 import io.konig.core.io.NamespaceRDFHandler;
+import io.konig.core.path.OutStep;
+import io.konig.core.path.Step;
 import io.konig.core.vocab.Schema;
 
 /*
@@ -272,10 +276,7 @@ public class RdfUtil {
 		if (curie != null) {
 
 			if (
-				!curie.startsWith("http://") &&
-				!curie.startsWith("https://") &&
-				!curie.startsWith("ftp://") &&
-				!curie.startsWith("ftps://") &&
+				!commonInternetScheme(curie) &&
 				!curie.startsWith("urn:")
 			) {
 
@@ -299,6 +300,48 @@ public class RdfUtil {
 		}
 		
 		return result;
+	}
+	
+
+	private static final int WORD = 1;
+	private static final int COLON = 2;
+	private static final int SLASH = 3;
+	private static boolean commonInternetScheme(String curie) {
+		
+		int state = WORD;
+		
+		for (int i=0; i<curie.length(); i++) {
+			char c = curie.charAt(i);
+			switch (state) {
+			case WORD :
+				if (c==':') {
+					state = COLON;
+				} else if (!Character.isLowerCase(c) && !Character.isDigit(c) && c!='.' && c!='-' && c!='+') {
+					return false;
+				}
+				break;
+				
+			case COLON :
+				if (c=='/') {
+					state = SLASH;
+				} else {
+					return false;
+				}
+				
+				break;
+				
+			case SLASH :
+				if (c == '/') {
+					return true;
+				} else {
+					return false;
+				}
+			}
+			
+		}
+		
+		
+		return false;
 	}
 
 	public static String curie(NamespaceManager nsManager, URI uri) {
@@ -530,6 +573,19 @@ public class RdfUtil {
 		}
 		
 		return result;
+	}
+
+	public static URI out(Path path, int index) {
+		if (path != null) {
+			List<Step> list = path.asList();
+			if (index < list.size()) {
+				Step s = list.get(index);
+				if (s instanceof OutStep) {
+					return ((OutStep) s).getPredicate();
+				}
+			}
+		}
+		return null;
 	}
 	
 	public static boolean isSubClassOf(Vertex subject, Resource target) {

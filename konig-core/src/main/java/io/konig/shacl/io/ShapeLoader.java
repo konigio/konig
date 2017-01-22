@@ -50,7 +50,10 @@ import io.konig.core.io.JsonldLoader;
 import io.konig.core.pojo.PojoContext;
 import io.konig.core.pojo.PojoListener;
 import io.konig.core.pojo.SimplePojoFactory;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
+import io.konig.datasource.GoogleBigQueryTable;
+import io.konig.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
@@ -147,6 +150,7 @@ public class ShapeLoader {
 	public void loadTurtle(InputStream input, URI context) throws ShapeLoadException {
 		
 		Graph graph = new MemoryGraph();
+		graph.setNamespaceManager(namespaceManager);
 		
 		GraphLoadHandler handler = new GraphLoadHandler(graph);
 		handler.setQuadContext(context);
@@ -177,7 +181,6 @@ public class ShapeLoader {
 	
 	public void load(Graph graph) throws ShapeLoadException {
 		
-		SimplePojoFactory factory = new SimplePojoFactory();
 		PojoContext context = new PojoContext();
 		context.setListener(new PojoListener() {
 
@@ -192,7 +195,10 @@ public class ShapeLoader {
 			
 		});
 		context.mapClass(SH.Shape, Shape.class);
-		factory.createAll(graph, context);
+		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
+		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
+		SimplePojoFactory factory = new SimplePojoFactory(context);
+		factory.createAll(graph);
 		
 	}
 	

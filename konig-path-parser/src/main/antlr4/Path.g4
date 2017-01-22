@@ -58,7 +58,7 @@ qname : prefix ':' localName ;
 
 prefix : LETTER (LETTER | DIGIT | '_' | '-')+ ;
 
-localName : (LETTER | DIGIT | '_' + '-')+ ;
+localName : (LETTER | DIGIT | '_' | '-')+ ;
 
 bareLocalName : (LETTER | '_') localName ;
 

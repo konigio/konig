@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.util.IriTemplate;
@@ -28,11 +29,13 @@ public class SQLTableSchema {
 	private URI targetClass;
 	private URI tableShapeId;
 	private URI tableTargetShapeId;
-	private IriTemplate columnPredicateIriTemplate;
+	private String columnNamespace;
 	private SimpleValueFormat columnPathTemplate;
 	private List<PathPattern> pathPatternList = new ArrayList<>();
 	
-	
+	private String targetTableId;
+	private String stagingTableId;
+	private IriTemplate iriTemplate;
 
 	public SQLTableSchema() {
 	}
@@ -156,15 +159,6 @@ public class SQLTableSchema {
 	}
 
 
-	public IriTemplate getColumnPredicateIriTemplate() {
-		return columnPredicateIriTemplate;
-	}
-
-
-	public void setColumnPredicateIriTemplate(IriTemplate columnPredicateIriTemplate) {
-		this.columnPredicateIriTemplate = columnPredicateIriTemplate;
-	}
-
 
 	public SimpleValueFormat getColumnPathTemplate() {
 		return columnPathTemplate;
@@ -175,16 +169,16 @@ public class SQLTableSchema {
 	}
 	
 	public void applyTemplates(ValueMap map) {
-		IriTemplate predicateTemplate = getColumnPredicateIriTemplate();
+		String predicateNamespace = predicateNamespace(map);
 		SimpleValueFormat pathTemplate = getColumnPathTemplate();
 		
-		if (predicateTemplate != null || pathTemplate!=null || !pathPatternList.isEmpty()) {
+		if (predicateNamespace != null || pathTemplate!=null || !pathPatternList.isEmpty()) {
 			for (SQLColumnSchema column : listColumns()) {
 				
 				if (column.getColumnPredicate()==null) {
-					if (predicateTemplate != null) {
-						LinkedValueMap tableMap = new LinkedValueMap(new ColumnValueMap(column), map);
-						column.setColumnPredicate(predicateTemplate.expand(tableMap));
+					if (predicateNamespace != null) {
+						URI predicate = new URIImpl(predicateNamespace + column.getColumnName());
+						column.setColumnPredicate(predicate);
 					}
 				}
 				
@@ -204,6 +198,31 @@ public class SQLTableSchema {
 		}
 	}
 	
+	private String predicateNamespace(ValueMap map) {
+		if (columnNamespace != null) {
+			if (columnNamespace.indexOf(':')==-1) {
+				return map.get(columnNamespace);
+			}
+			return columnNamespace;
+		}
+		return null;
+	}
+
+
+	/**
+	 * Get the default namespace used for sh:predicate values.
+	 * @return Either a fully-qualified namespace or a namespace prefix.
+	 */
+	public String getColumnNamespace() {
+		return columnNamespace;
+	}
+
+
+	public void setColumnNamespace(String columnNamespace) {
+		this.columnNamespace = columnNamespace;
+	}
+
+
 	public PathPattern findPathPattern(SQLColumnSchema column) {
 		for (PathPattern pattern : pathPatternList) {
 			if (pattern.matches(column.getColumnName())) {
@@ -244,6 +263,37 @@ public class SQLTableSchema {
 		
 		return null;
 	}
+
+
+	public String getTargetTableId() {
+		return targetTableId;
+	}
+
+
+	public void setTargetTableId(String targetTableId) {
+		this.targetTableId = targetTableId;
+	}
+
+
+	public String getStagingTableId() {
+		return stagingTableId;
+	}
+
+
+	public void setStagingTableId(String stagingTableId) {
+		this.stagingTableId = stagingTableId;
+	}
+
+
+	public IriTemplate getIriTemplate() {
+		return iriTemplate;
+	}
+
+
+	public void setIriTemplate(IriTemplate iriTemplate) {
+		this.iriTemplate = iriTemplate;
+	}
+	
 	
 	
 }
