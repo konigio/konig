@@ -45,7 +45,7 @@ import io.konig.core.vocab.Schema;
 
 public class PathFactoryTest {
 	
-	@Ignore
+	@Test
 	public void testBoolean() {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
@@ -87,7 +87,7 @@ public class PathFactoryTest {
 		assertTrue(result.contains(three));
 	}
 	
-	@Ignore
+	@Test
 	public void testTypedString() {
 
 		NamespaceManager nsManager = new MemoryNamespaceManager();
@@ -122,7 +122,7 @@ public class PathFactoryTest {
 		Path path;
 		Set<Value> result;
 		
-		path = factory.createPath("schema:Person^rdf:type[schema:birthDate \"1996-11-13\"^xsd:date]");
+		path = factory.createPath("schema:Person^rdf:type[schema:birthDate \"1996-11-13\"^^xsd:date]");
 		result = path.traverse(new Traverser(graph));
 		assertEquals(2, result.size());
 		assertTrue(result.contains(aliceId));
@@ -130,7 +130,7 @@ public class PathFactoryTest {
 	}
 	
 	
-	@Ignore
+	@Test
 	public void testLangString() {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
@@ -168,7 +168,7 @@ public class PathFactoryTest {
 		assertTrue(result.contains(two));
 	}
 	
-	@Ignore
+	@Test
 	public void testString() {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
@@ -255,7 +255,7 @@ public class PathFactoryTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testInteger() {
 
 		NamespaceManager nsManager = new MemoryNamespaceManager();
@@ -295,7 +295,7 @@ public class PathFactoryTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void test() {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
