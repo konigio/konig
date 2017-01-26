@@ -50,6 +50,10 @@ public class HasStep implements Step {
 		
 	}
 	
+	public HasStep() {
+		
+	}
+	
 	public void add(URI predicate, Value value) {
 		list.add(new PredicateValuePair(predicate, value));
 	}
