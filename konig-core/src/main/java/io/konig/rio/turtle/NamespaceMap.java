@@ -24,6 +24,6 @@ package io.konig.rio.turtle;
 public interface NamespaceMap {
 	
 	String get(String prefix);
-	String put(String prefix, String name);
+	void put(String prefix, String name);
 
 }

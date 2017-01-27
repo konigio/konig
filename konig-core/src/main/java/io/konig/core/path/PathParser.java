@@ -202,8 +202,9 @@ public class PathParser extends TurtleParser {
 	 * <pre>
 	 * namedIndividual ::= iri
 	 * </pre>
+	 * @throws RDFHandlerException 
 	 */
-	private Step namedIndividual() throws RDFParseException, IOException {
+	private Step namedIndividual() throws RDFParseException, IOException, RDFHandlerException {
 		URI iri = iri();
 		return new VertexStep(new Resource[]{iri});
 	}
@@ -235,8 +236,9 @@ public class PathParser extends TurtleParser {
 	 * <pre>
 	 * in ::= '^' iri
 	 * </pre>
+	 * @throws RDFHandlerException 
 	 */
-	private Step in() throws RDFParseException, IOException {
+	private Step in() throws RDFParseException, IOException, RDFHandlerException {
 		read('^');
 		URI predicate = iri();
 		return new InStep(predicate);
@@ -246,8 +248,9 @@ public class PathParser extends TurtleParser {
 	 * <pre>
 	 * out ::= '/' iri
 	 * </pre>
+	 * @throws RDFHandlerException 
 	 */
-	private Step out() throws RDFParseException, IOException {
+	private Step out() throws RDFParseException, IOException, RDFHandlerException {
 		read('/');
 		URI predicate = iri();
 		return new OutStep(predicate);
@@ -323,10 +326,8 @@ public class PathParser extends TurtleParser {
 		}
 
 		@Override
-		public String put(String prefix, String name) {
-			String result = get(prefix);
+		public void put(String prefix, String name) {
 			nsManager.add(prefix, name);
-			return result;
 		}
 		
 	}
