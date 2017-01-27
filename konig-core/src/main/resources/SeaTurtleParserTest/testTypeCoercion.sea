@@ -1,0 +1,13 @@
+
+@prefix schema: <http://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix person: <http://example.com/person/> .
+
+@context {
+	"birthDate" : {
+		"@id" : "schema:birthDate",
+		"@type" : "xsd:date"
+	}
+}
+
+person:alice birthDate "2001-10-15" .

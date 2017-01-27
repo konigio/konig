@@ -21,24 +21,18 @@ package io.konig.rio.turtle;
  */
 
 
-import java.util.HashMap;
-import java.util.Map;
+import io.konig.core.Context;
+import io.konig.core.impl.ChainedContext;
 
-public class HashNamespaceMap  implements NamespaceMap {
-	private Map<String,String> map = new HashMap<>();
-
-	public HashNamespaceMap() {
-	}
-
-	@Override
-	public String get(String prefix) {
-		return map.get(prefix);
-	}
-
-	@Override
-	public void put(String prefix, String name) {
-		map.put(prefix, name);
-	}
-
+/**
+ * A handler that is notified when a new context is added or removed.  
+ * @author Greg McFall
+ *
+ */
+public interface ContextHandler {
+	
+	void addContext(ChainedContext context);
+	
+	void removeContext(ChainedContext context);
 
 }

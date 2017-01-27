@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openrdf.model.impl.URIImpl;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.core.Context;
@@ -39,6 +41,7 @@ public class ChainedContext implements Context {
 	private Context inverse;
 	
 	private long versionNumber;
+	private boolean compiled = false;
 	
 	
 	public ChainedContext(Context parent, Context self) {
@@ -48,6 +51,10 @@ public class ChainedContext implements Context {
 
 	public Context getParent() {
 		return parent;
+	}
+	
+	public Context getDefaultContext() {
+		return self;
 	}
 
 	@Override
@@ -71,7 +78,9 @@ public class ChainedContext implements Context {
 
 	@Override
 	public Term addTerm(String key, String id) {
-		return self.addTerm(key, id);
+		Term term = new Term(key, id, null);
+		add(term);
+		return term;
 	}
 
 	@Override
@@ -128,6 +137,8 @@ public class ChainedContext implements Context {
 	@Override
 	public void add(Term term) {
 		self.add(term);
+		compiled = false;
+		inverse = null;
 	}
 
 	@Override
@@ -164,7 +175,33 @@ public class ChainedContext implements Context {
 
 	@Override
 	public void compile() {
-		self.compile();
+		if (parent != null) {
+			parent.compile();
+		}
+		
+		if (!compiled) {
+			compiled = true;
+			
+			List<Term> list = self.asList();
+			
+			for (int i=0; i<list.size(); i++) {
+				Term term = list.get(i);
+				term.setIndex(i);
+				String id = term.getId();
+				if (id != null) {
+					String expandedId = expandIRI(id);
+					term.setExpandedId(new URIImpl(expandedId));
+				}
+				String type = term.getType();
+				if (type != null) {
+					String expandedType = expandIRI(type);
+					if (expandedType != type) {
+						term.setExpandedType(new URIImpl(expandedType));
+					}
+				}
+			}
+		}
+		
 	}
 
 	@Override

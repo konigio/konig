@@ -1,0 +1,18 @@
+
+
+@context {
+	"schema" : "http://schema.org/" ,
+	"givenName" : "http://example.com/givenName"
+}
+
+@prefix person: <http://example.com/person/> .
+
+person:alice givenName "Alice" .
+
+{
+	@context {
+		"givenName" : "schema:givenName"
+	} 
+	@id person:bob ;
+	givenName "Bob"
+} .

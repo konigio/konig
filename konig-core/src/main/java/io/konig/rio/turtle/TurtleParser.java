@@ -33,6 +33,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFFormat;
@@ -43,7 +44,7 @@ import org.openrdf.rio.helpers.RDFParserBase;
 public class TurtleParser extends RDFParserBase {
 	
 	protected PushbackReader reader;
-	private StringBuilder buffer = new StringBuilder();
+	protected StringBuilder buffer = new StringBuilder();
 	private String baseURI;
 	private int lineNumber=1;
 	private int columnNumber;
@@ -54,6 +55,11 @@ public class TurtleParser extends RDFParserBase {
 	}
 	
 	public TurtleParser(NamespaceMap namespaceMap) {
+		this.namespaceMap = namespaceMap;
+	}
+	
+	public TurtleParser(NamespaceMap namespaceMap, ValueFactory valueFactory) {
+		super(valueFactory);
 		this.namespaceMap = namespaceMap;
 	}
 	
@@ -93,19 +99,25 @@ public class TurtleParser extends RDFParserBase {
 		
 	}
 
-	private void directive(int c) throws IOException, RDFParseException, RDFHandlerException {
+	protected void directive(int c) throws IOException, RDFParseException, RDFHandlerException {
 		
 		
 		if (tryWord("prefix")) {
 			prefixID();
 			
 		} else if (tryWord("base")) {
-			fail("TODO: Implement '@base' directive");
+			base();
 		}
 		
 		
 	}
 
+
+	protected void base() throws RDFParseException {
+		fail("@base directive is not supported");
+		// TODO: implement @base directive
+		
+	}
 
 	/**
 	 * <pre>
@@ -113,7 +125,7 @@ public class TurtleParser extends RDFParserBase {
 	 * </pre>
 	 * This method assumes we have already read '@prefix'
 	 */
-	private void prefixID() throws RDFParseException, IOException, RDFHandlerException {
+	protected void prefixID() throws RDFParseException, IOException, RDFHandlerException {
 
 		readSpace();
 		String prefix = pname_ns();
@@ -231,7 +243,7 @@ public class TurtleParser extends RDFParserBase {
 		;
 	}
 
-	private boolean inRange(int c, int min, int max) {
+	protected boolean inRange(int c, int min, int max) {
 		
 		return c>=min && c<=max;
 	}
@@ -245,7 +257,7 @@ public class TurtleParser extends RDFParserBase {
 		
 	}
 
-	private void triples(int c) throws RDFParseException, IOException, RDFHandlerException {
+	protected void triples(int c) throws RDFParseException, IOException, RDFHandlerException {
 		boolean done = false;
 		if (c == '[') {
 			BNode subject = tryBlankNodePropertyList(c);
@@ -265,7 +277,7 @@ public class TurtleParser extends RDFParserBase {
 		
 	}
 
-	private void predicateObjectList(Resource subject) throws IOException, RDFParseException, RDFHandlerException {
+	protected void predicateObjectList(Resource subject) throws IOException, RDFParseException, RDFHandlerException {
 		URI predicate = verb();
 		objectList(subject, predicate);
 		
@@ -299,7 +311,7 @@ public class TurtleParser extends RDFParserBase {
 		
 	}
 
-	private void statement(Resource subject, URI predicate, Value object) throws RDFHandlerException {
+	protected void statement(Resource subject, URI predicate, Value object) throws RDFHandlerException {
 		
 		if (rdfHandler != null) {
 			Statement st = valueFactory.createStatement(subject, predicate, object);
@@ -353,7 +365,7 @@ public class TurtleParser extends RDFParserBase {
 	 * @throws RDFHandlerException 
 	 * @throws RDFParseException 
 	 */
-	private BNode tryBlankNodePropertyList(int c) throws IOException, RDFParseException, RDFHandlerException {
+	protected BNode tryBlankNodePropertyList(int c) throws IOException, RDFParseException, RDFHandlerException {
 		if (c != '[') {
 			return null;
 		}
@@ -397,8 +409,9 @@ public class TurtleParser extends RDFParserBase {
 	 * </pre>
 	 * @throws IOException 
 	 * @throws RDFParseException 
+	 * @throws RDFHandlerException 
 	 */
-	private Literal tryLiteral(int c) throws IOException, RDFParseException {
+	private Literal tryLiteral(int c) throws IOException, RDFParseException, RDFHandlerException {
 		
 		Literal value = null;
 		value =
@@ -638,8 +651,9 @@ public class TurtleParser extends RDFParserBase {
 	 * </pre>
 	 * @throws IOException 
 	 * @throws RDFParseException 
+	 * @throws RDFHandlerException 
 	 */
-	private Literal tryRDFLiteral(int c) throws RDFParseException, IOException {
+	private Literal tryRDFLiteral(int c) throws RDFParseException, IOException, RDFHandlerException {
 		
 		Literal result = null;
 		if (c=='\'' || c=='"') {
@@ -655,8 +669,9 @@ public class TurtleParser extends RDFParserBase {
 	 * </pre>
 	 * @throws IOException 
 	 * @throws RDFParseException 
+	 * @throws RDFHandlerException 
 	 */
-	private Literal rdfLiteral(int c) throws IOException, RDFParseException {
+	private Literal rdfLiteral(int c) throws IOException, RDFParseException, RDFHandlerException {
 		Literal result = null;
 		string(c, buffer());
 		c = read();
@@ -785,7 +800,7 @@ public class TurtleParser extends RDFParserBase {
 		assertEquals('"', c);
 	}
 
-	private void assertEquals(int expected, int actual) throws RDFParseException {
+	protected void assertEquals(int expected, int actual) throws RDFParseException {
 		
 		if (actual != expected) {
 			err();
@@ -814,6 +829,11 @@ public class TurtleParser extends RDFParserBase {
 		}
 		
 		
+	}
+	
+	protected void assertNext(int expected) throws IOException, RDFParseException {
+		int actual = ws();
+		assertEquals(expected, actual);
 	}
 
 	private boolean stringQuoteChar(int c, StringBuilder builder) throws IOException, RDFParseException {
@@ -1133,7 +1153,7 @@ public class TurtleParser extends RDFParserBase {
 		return null;
 	}
 
-	private URI verb() throws IOException, RDFParseException {
+	protected URI verb() throws IOException, RDFParseException, RDFHandlerException {
 		int c = ws();
 		if (c == 'a') {
 			int cc = read();
@@ -1151,8 +1171,9 @@ public class TurtleParser extends RDFParserBase {
 	 * <pre>
 	 * subject	::=	iri | BlankNode | collection
 	 * </pre>
+	 * @throws RDFHandlerException 
 	 */
-	private Resource subject(int c) throws RDFParseException, IOException {
+	protected Resource subject(int c) throws RDFParseException, IOException, RDFHandlerException {
 		Resource result = null;
 		if (c == '_' || c=='[') {
 			result = tryBlankNode(c);
@@ -1176,14 +1197,15 @@ public class TurtleParser extends RDFParserBase {
 		return result;
 	}
 	
-	protected URI iri() throws RDFParseException, IOException {
+	protected URI iri() throws RDFParseException, IOException, RDFHandlerException {
 		return iri(read());
 	}
 
 	/**
 	 * iri	::=	IRIREF | PrefixedName
+	 * @throws RDFHandlerException 
 	 */
-	private URI iri(int c) throws RDFParseException, IOException {
+	protected URI iri(int c) throws RDFParseException, IOException, RDFHandlerException {
 		if (c == '<') {
 			String text = iriRef(c);
 			return valueFactory.createURI(text);
@@ -1329,7 +1351,7 @@ public class TurtleParser extends RDFParserBase {
 		return true;
 	}
 
-	private String iriRef(int c) throws IOException, RDFParseException {
+	protected String iriRef(int c) throws IOException, RDFParseException {
 
 		if (c != '<') {
 			StringBuilder builder = err();
@@ -1397,7 +1419,7 @@ public class TurtleParser extends RDFParserBase {
 		
 	}
 
-	private char hex() throws IOException, RDFParseException {
+	protected char hex() throws IOException, RDFParseException {
 		int c = read();
 		if (!inRange(c, 'a', 'f') &&
 			!inRange(c, 'A', 'F') &&
@@ -1513,12 +1535,13 @@ public class TurtleParser extends RDFParserBase {
 	}
 	
 
-	private boolean tryWord(String text) throws IOException {
+	protected boolean tryWord(String text) throws IOException {
 		for (int i=0; i<text.length(); i++) {
 			char c = text.charAt(i);
 			int k = read();
 			if (k != c) {
-				for (int j=i; j>=0; j--) {
+				unread(k);
+				for (int j=i-1; j>=0; j--) {
 					unread(text.charAt(j));
 				}
 				return false;
@@ -1531,5 +1554,11 @@ public class TurtleParser extends RDFParserBase {
 		
 		int k = ws();
 		assertEquals(c, k);
+	}
+	
+	protected int peek() throws IOException {
+		int c = ws();
+		unread(c);
+		return c;
 	}
 }
