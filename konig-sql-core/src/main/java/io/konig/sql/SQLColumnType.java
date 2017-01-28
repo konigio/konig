@@ -1,6 +1,9 @@
 package io.konig.sql;
 
 public class SQLColumnType {
+	
+	public static final Integer MAX = new Integer(-1);
+	
 	private SQLDatatype datatype;
 	Integer size;
 	Integer precision;

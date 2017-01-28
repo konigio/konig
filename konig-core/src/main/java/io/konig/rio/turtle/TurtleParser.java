@@ -41,7 +41,10 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.helpers.RDFParserBase;
 
+import io.konig.core.util.IriTemplate;
+
 public class TurtleParser extends RDFParserBase {
+
 	
 	protected PushbackReader reader;
 	protected StringBuilder buffer = new StringBuilder();
@@ -55,7 +58,7 @@ public class TurtleParser extends RDFParserBase {
 	}
 	
 	public TurtleParser(NamespaceMap namespaceMap) {
-		this.namespaceMap = namespaceMap;
+		this.namespaceMap = namespaceMap==null ? new HashNamespaceMap() : namespaceMap;
 	}
 	
 	public TurtleParser(NamespaceMap namespaceMap, ValueFactory valueFactory) {
@@ -68,6 +71,10 @@ public class TurtleParser extends RDFParserBase {
 		return buffer;
 	}
 	
+	public NamespaceMap getNamespaceMap() {
+		return namespaceMap;
+	}
+
 	private void turtleDoc() throws IOException, RDFParseException, RDFHandlerException {
 		lineNumber = 1;
 		columnNumber = 0;
@@ -77,7 +84,7 @@ public class TurtleParser extends RDFParserBase {
 		int c = 0;
 		while (c != -1) {
 			statement();
-			c = ws();
+			c = next();
 			unread(c);
 		}
 		
@@ -88,7 +95,7 @@ public class TurtleParser extends RDFParserBase {
 	}
 	
 	private void statement() throws IOException, RDFParseException, RDFHandlerException {
-		int c = ws();
+		int c = next();
 		
 		if (c == '@') {
 			directive(c);
@@ -129,14 +136,18 @@ public class TurtleParser extends RDFParserBase {
 
 		readSpace();
 		String prefix = pname_ns();
-		String iriRef = iriRef(ws());
+		String iriRef = iriRef(next());
 		read('.');
 		
 		namespaceMap.put(prefix, iriRef);
+		namespace(prefix, iriRef);
+	}
+	
+	protected void namespace(String prefix, String name) throws RDFHandlerException {
+
 		if (rdfHandler!=null) {
-			rdfHandler.handleNamespace(prefix, iriRef);
+			rdfHandler.handleNamespace(prefix, name);
 		}
-		
 	}
 
 	/**
@@ -144,17 +155,17 @@ public class TurtleParser extends RDFParserBase {
 	 * PNAME_NS	::=	PN_PREFIX? ':'
 	 * </pre>
 	 */
-	private String pname_ns() throws IOException, RDFParseException {
+	protected String pname_ns() throws IOException, RDFParseException {
 		StringBuilder builder = buffer();
 
-		int c = ws();
+		int c = next();
 		pn_prefix(c);
 		
-		c = ws();
+		c = next();
 		if (c != ':') {
 			builder = err();
 			builder.append("Expected ':' but found '");
-			builder.appendCodePoint(c);
+			appendCodePoint(builder, c);
 			builder.append("'");
 			fail(builder);
 		}
@@ -165,7 +176,7 @@ public class TurtleParser extends RDFParserBase {
 	
 	protected String pn_prefix() throws RDFParseException, IOException {
 		buffer();
-		int c = ws();
+		int c = next();
 		pn_prefix(c);
 		return buffer.toString();
 	}
@@ -173,7 +184,7 @@ public class TurtleParser extends RDFParserBase {
 	/**
 	 * PN_PREFIX	::=	PN_CHARS_BASE ((PN_CHARS | '.')* PN_CHARS)?
 	 */
-	private void pn_prefix(int c) throws IOException, RDFParseException {
+	protected void pn_prefix(int c) throws IOException, RDFParseException {
 		if (pn_chars_base(c)) {
 			buffer.appendCodePoint(c);
 			
@@ -248,12 +259,30 @@ public class TurtleParser extends RDFParserBase {
 		return c>=min && c<=max;
 	}
 
-	private void readSpace() throws IOException, RDFParseException {
+	protected void readSpace() throws IOException, RDFParseException {
 		
 		int c = read();
 		if (!isWhitespace(c)) {
-			fail("Expected whitespace");
+			StringBuilder err = err();
+			err.append("Expected whitespace but found '");
+			appendCodePoint(err, c);
+			err.append("'");
+			fail(err);
 		}
+		skipSpace();
+		
+	}
+	
+	protected boolean skipSpace() throws IOException {
+		boolean result = false;
+		int c = read();
+		while (isWhitespace(c)) {
+			result = true;
+			c = read();
+		}
+		unread(c);
+		
+		return result;
 		
 	}
 
@@ -263,7 +292,7 @@ public class TurtleParser extends RDFParserBase {
 			BNode subject = tryBlankNodePropertyList(c);
 			if (subject != null) {
 				done = true;
-				c = ws();
+				c = next();
 				unread(c);
 				if (c != '.') {
 					predicateObjectList(subject);
@@ -281,12 +310,12 @@ public class TurtleParser extends RDFParserBase {
 		URI predicate = verb();
 		objectList(subject, predicate);
 		
-		int c = ws();
+		int c = next();
 		
 		while (c == ';') {
 			predicate = verb();
 			objectList(subject, predicate);
-			c = ws();
+			c = next();
 		}
 
 		unread(c);
@@ -294,17 +323,17 @@ public class TurtleParser extends RDFParserBase {
 	}
 
 	private void objectList(Resource subject, URI predicate) throws IOException, RDFHandlerException, RDFParseException {
-		int c = ws();
+		int c = next();
 		
 		Value object = object(c);
 		statement(subject, predicate, object);
 		
-		c = ws();
+		c = next();
 		while (c == ',') {
-			c = ws();
+			c = next();
 			object = object(c);
 			statement(subject, predicate, object);
-			c = ws();
+			c = next();
 		}
 		unread(c);
 		
@@ -370,7 +399,7 @@ public class TurtleParser extends RDFParserBase {
 			return null;
 		}
 
-		c = ws();
+		c = next();
 		unread(c);
 		if (c == ']') {
 			// No properties inside this BNode.
@@ -381,7 +410,7 @@ public class TurtleParser extends RDFParserBase {
 		BNode bnode = valueFactory.createBNode();
 		predicateObjectList(bnode);
 		
-		c = ws();
+		c = next();
 		if (c != ']') {
 			StringBuilder builder = err();
 			builder.append("Expected ']' but found '");
@@ -393,7 +422,7 @@ public class TurtleParser extends RDFParserBase {
 		return bnode;
 	}
 
-	private void appendCodePoint(StringBuilder builder, int c) {
+	protected void appendCodePoint(StringBuilder builder, int c) {
 
 		if (c == -1) {
 			builder.append("<<EOF>>");
@@ -638,8 +667,12 @@ public class TurtleParser extends RDFParserBase {
 		
 		return result;
 	}
+	
+	protected boolean isLetter(int c) {
+		return inRange(c, 'a', 'z') || inRange(c, 'A', 'Z');
+	}
 
-	private boolean isDigit(int c) {
+	protected boolean isDigit(int c) {
 		
 		return c>='0' && c<='9';
 	}
@@ -798,8 +831,35 @@ public class TurtleParser extends RDFParserBase {
 		
 		while ( stringQuoteChar(c=read(), builder));
 		assertEquals('"', c);
-	}
+	}	
 
+	protected void assertEqualsIgnoreCase(int expected, int actual) throws RDFParseException {
+		if (Character.toUpperCase(expected) != Character.toUpperCase(actual)) {
+			StringBuilder err = err();
+			int lower = Character.toLowerCase(expected);
+			int upper = Character.toUpperCase(expected);
+			
+			err.append("Expected '");
+			err.appendCodePoint(lower);
+			err.append("' or '");
+			err.appendCodePoint(upper);
+			err.append("' but found '");
+			appendCodePoint(err, actual);
+			err.append("'");
+			fail(err);
+			
+		}
+	}
+	
+	protected void assertIgnoreCase(String expected) throws IOException, RDFParseException {
+		for (int i=0; i<expected.length();) {
+			int c = expected.codePointAt(i);
+			i += Character.charCount(c);
+			int d = read();
+			assertEqualsIgnoreCase(c, d);
+		}
+	}
+	
 	protected void assertEquals(int expected, int actual) throws RDFParseException {
 		
 		if (actual != expected) {
@@ -832,8 +892,15 @@ public class TurtleParser extends RDFParserBase {
 	}
 	
 	protected void assertNext(int expected) throws IOException, RDFParseException {
-		int actual = ws();
+		int actual = next();
 		assertEquals(expected, actual);
+	}
+	
+	protected void assertWhitespace() throws IOException, RDFParseException {
+		int c = read();
+		if (!isWhitespace(c)) {
+			fail("Expected whitespace");
+		}
 	}
 
 	private boolean stringQuoteChar(int c, StringBuilder builder) throws IOException, RDFParseException {
@@ -1088,7 +1155,7 @@ public class TurtleParser extends RDFParserBase {
 		if (c != '[') {
 			return null;
 		}
-		c = ws();
+		c = next();
 		if (c != ']') {
 			unread(c);
 			return null;
@@ -1154,7 +1221,7 @@ public class TurtleParser extends RDFParserBase {
 	}
 
 	protected URI verb() throws IOException, RDFParseException, RDFHandlerException {
-		int c = ws();
+		int c = next();
 		if (c == 'a') {
 			int cc = read();
 			if (isWhitespace(cc)) {
@@ -1350,16 +1417,16 @@ public class TurtleParser extends RDFParserBase {
 		buffer.appendCodePoint(c);
 		return true;
 	}
+	
+	protected IriTemplate iriTemplate() throws RDFParseException, IOException {
+		int c = next();
+		String text = iriRef(c);
+		return new IriTemplate(text);
+	}
 
 	protected String iriRef(int c) throws IOException, RDFParseException {
 
-		if (c != '<') {
-			StringBuilder builder = err();
-			builder.append("Expected '<' but found '");
-			builder.appendCodePoint(c);
-			builder.append("'");
-			fail(builder);
-		}
+		assertEquals('<', c);
 		StringBuilder builder = buffer();
 
 		c = read();
@@ -1371,13 +1438,7 @@ public class TurtleParser extends RDFParserBase {
 			}
 			c=read();
 		}
-		if (c != '>') {
-			builder = err();
-			builder.append("Expected '>' but found '");
-			builder.appendCodePoint(c);
-			builder.append("'");
-			fail(builder);
-		}
+		assertEquals('>', c);
 		
 		return builder.toString();
 	}
@@ -1441,7 +1502,7 @@ public class TurtleParser extends RDFParserBase {
 		buffer.append(lineNumber);
 		if (columnNumber > 0) {
 			buffer.append(':');
-			buffer.append(columnNumber);
+			buffer.append(columnNumber-1);
 		}
 		buffer.append(' ');
 		
@@ -1460,7 +1521,7 @@ public class TurtleParser extends RDFParserBase {
 		throw new RDFParseException(builder.toString());
 	}
 
-	protected int ws() throws IOException {
+	protected int next() throws IOException {
 		int c = read();
 		
 		while (isWhitespace(c)) {
@@ -1481,12 +1542,17 @@ public class TurtleParser extends RDFParserBase {
 		InputStreamReader reader = new InputStreamReader(in);
 		parse(reader, baseURI);
 	}
+	
+	protected void initParse(Reader reader, String baseURI) {
+		if (this.reader != reader) {
+			this.reader = new PushbackReader(reader, 20);
+		}
+		this.baseURI = baseURI;
+	}
 
 	@Override
 	public void parse(Reader reader, String baseURI) throws IOException, RDFParseException, RDFHandlerException {
-		this.reader = new PushbackReader(reader, 8);
-		this.baseURI = baseURI;
-		
+		initParse(reader, baseURI);
 		turtleDoc();
 	}
 	
@@ -1530,9 +1596,11 @@ public class TurtleParser extends RDFParserBase {
 		}
 	}
 	
-	private boolean isWhitespace(int c) {
+	protected boolean isWhitespace(int c) {
 		return c==' ' || c=='\t' || c=='\r' || c=='\n';
 	}
+	
+
 	
 
 	protected boolean tryWord(String text) throws IOException {
@@ -1552,12 +1620,12 @@ public class TurtleParser extends RDFParserBase {
 
 	protected void read(char c) throws IOException, RDFParseException {
 		
-		int k = ws();
+		int k = next();
 		assertEquals(c, k);
 	}
 	
 	protected int peek() throws IOException {
-		int c = ws();
+		int c = read();
 		unread(c);
 		return c;
 	}

@@ -2,6 +2,8 @@ package io.konig.sql;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.Path;
+
 public class SQLColumnSchema {
 	
 	private SQLTableSchema columnTable;
@@ -9,9 +11,11 @@ public class SQLColumnSchema {
 	private SQLColumnType columnType;
 	private SQLConstraint notNull;
 	private SQLConstraint primaryKey;
+	private UniqueConstraint unique;
 	private URI columnPredicate;
-	private String equivalentPath;
+	private Path equivalentPath;
 	private ForeignKeyConstraint foreignKey;
+	private NullConstraint nullConstraint;
 
 	public SQLColumnSchema() {
 		
@@ -105,11 +109,11 @@ public class SQLColumnSchema {
 		this.columnPredicate = columnPredicate;
 	}
 
-	public String getEquivalentPath() {
+	public Path getEquivalentPath() {
 		return equivalentPath;
 	}
 
-	public void setEquivalentPath(String equivalentPath) {
+	public void setEquivalentPath(Path equivalentPath) {
 		this.equivalentPath = equivalentPath;
 	}
 
@@ -123,6 +127,22 @@ public class SQLColumnSchema {
 	
 	public String toString() {
 		return getFullName();
+	}
+
+	public UniqueConstraint getUnique() {
+		return unique;
+	}
+
+	public void setUnique(UniqueConstraint unique) {
+		this.unique = unique;
+	}
+
+	public NullConstraint getNullConstraint() {
+		return nullConstraint;
+	}
+
+	public void setNullConstraint(NullConstraint nullConstraint) {
+		this.nullConstraint = nullConstraint;
 	}
 
 }

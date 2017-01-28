@@ -3,14 +3,14 @@ package io.konig.sql;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SQLPrimaryKeyConstraint extends SQLConstraint {
+public class PrimaryKeyConstraint extends SQLConstraint {
 	
 	private List<SQLColumnSchema> columnList = new ArrayList<>();
 
-	public SQLPrimaryKeyConstraint() {
+	public PrimaryKeyConstraint() {
 	}
 
-	public SQLPrimaryKeyConstraint(String name) {
+	public PrimaryKeyConstraint(String name) {
 		super(name);
 	}
 	

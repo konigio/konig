@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SQLSchemaManager {
+	
+	public static final String DEFAULT_SCHEMA_NAME = "_DEFAULT_";
 
 	private Map<String, SQLSchema> schemaMap = new HashMap<>();
 	

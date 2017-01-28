@@ -1,0 +1,112 @@
+
+sqlDoc ::= sqlElement+ 
+
+sqlElement ::= semanticDirective | createTable 
+
+semanticDirective ::=
+    prefixDirective 
+	| classDirective 
+	| originShapeDirective
+	| targetShapeDirective
+	| columnNamespaceDirective
+	
+
+classDirective ::= '@class' iriTemplate
+
+originShapeDirective ::= '@originShape' iriTemplate
+
+targetShapeDirective ::= '@targetShape' iriTemplate 
+
+columnNamespaceDirective ::= '@columnNamespace' (PN_PREFIX | iriRef) 
+
+
+iriTemplate ::= 	'<' ([^#x00-#x20<>"|^`\] | UCHAR)* '>'
+
+
+createTable ::= "CREATE" "GLOBAL"? "TEMPORARY"? "TABLE" tableId tableParts tableSemantics?  
+
+tableId ::= tableRef 
+
+tableRef ::= (schemaName '.')? tableName 
+
+id ::= (LETTER | '_' ) (LETTER | DIGIT | '_' )* 
+
+
+tableParts ::= '(' tablePart (',' tablePart)* ')'
+
+tablePart ::= columnDef | tableConstraint 
+
+columnDef ::= columnName columnType columnConstraintDef* columnSemantics?
+
+columnName ::= id 
+
+
+columnType ::= datatype columnSize? 
+
+columnSize ::= '(' sizeValue (',' precision)? ')' 
+
+precision ::= DIGIT+ 
+
+sizeValue ::= DIGIT+ | "MAX" 
+
+datatype ::= BIGINT | BINARY | BIT | CHAR |  DATE | DATETIME | DATETIME2 | DECIMAL | FLOAT |
+	IMAGE | INT | NCHAR | NTEXT | NUMERIC | NVARCHAR |REAL | SMALLDATETIME |
+	SMALLINT | TEMPORARY | TEXT | TIME | TIMESTAMP | TINYINT |
+	UNIQUEIDENTIFIER | VARBINARY | VARCHAR | XML ;
+
+columnConstraintDef ::= constraintNameDef? columnConstraint
+
+constraintNameDef ::= CONSTRAINT constraintName
+
+columnConstraint ::= nullConstraint | notNull | uniqueSpec
+
+constraintName ::= id 
+
+nullConstraint ::= "NULL" 
+
+notNull ::= "NOT" "NULL"
+
+columnUnique ::= UNIQUE
+
+columnPrimaryKey ::= "PRIMARY" "KEY"
+
+uniqueSpec ::= columnUnique | columnPrimaryKey
+
+tableConstraint ::= constraintNameDef? tableConstraintPhrase 
+
+tableConstraintPhrase ::= tablePrimaryKey | uniqueKeyConstraint | tableForeignKey
+
+tableForeignKey ::= FOREIGN KEY  referencingColumnList referencesClause
+
+referencingColumnList ::= columnList
+
+referencesClause ::= "REFERENCES" tableRef columnList
+
+columnList ::= '(' simpleColumnName ( ',' simpleColumnName )* ')' 
+
+tablePrimaryKey ::= "PRIMARY" "KEY" columnList
+
+uniqueKeyConstraint ::= UNIQUE columnList 
+
+columnSemantics ::= SEMANTICS columnSemanticStatement (';' columnSemanticStatement)* 
+
+columnSemanticStatement ::= columnNamespace | columnPath 
+
+columnNamespace ::= "NAMESPACE" (PN_PREFIX | iriRef)
+
+columnPath ::= "PATH" path
+
+tableSemantics ::= SEMANTICS tableSemanticStatement (';' tableSemanticStatement)* '.' 
+
+tableSemanticStatement ::= 
+	  columnNamespaceDirective
+	| class
+	| physical 
+	| logical
+
+class ::=	"CLASS"  iri
+
+physical ::= "PHYSICAL" IriPropertyList
+
+logical ::= "LOGICAL" IriPropertyList
+

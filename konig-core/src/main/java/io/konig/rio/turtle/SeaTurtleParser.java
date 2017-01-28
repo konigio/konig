@@ -27,7 +27,7 @@ import java.io.Reader;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandlerException;
@@ -57,9 +57,13 @@ public class SeaTurtleParser extends TurtleParser {
 	
 	@Override
 	public void parse(Reader reader, String baseURI) throws IOException, RDFParseException, RDFHandlerException {
-		
-		currentContext = defaultContext;
 		super.parse(reader, baseURI);
+	}
+
+	@Override
+	protected void initParse(Reader reader, String baseURI) {
+		super.initParse(reader, baseURI);
+		currentContext = defaultContext;
 	}
 
 	public ContextHandler getContextHandler() {
@@ -112,11 +116,11 @@ public class SeaTurtleParser extends TurtleParser {
 		Term term = term();
 		context.add(term);
 		
-		int c = ws();
+		int c = next();
 		while (c == ',') {
 			term = term();
 			context.add(term);
-			c = ws();
+			c = next();
 		}
 		assertEquals('}', c);
 		
@@ -192,6 +196,7 @@ public class SeaTurtleParser extends TurtleParser {
 	private Term term() throws IOException, RDFParseException {
 		String termName = termName();
 		assertNext(':');
+		readSpace();
 		
 		return termDefinition(termName);
 	}
@@ -367,7 +372,7 @@ public class SeaTurtleParser extends TurtleParser {
 			}
 			
 		
-			int c = ws();
+			int c = next();
 			if (c == '}') {
 				break;
 			}
@@ -394,6 +399,11 @@ public class SeaTurtleParser extends TurtleParser {
 			return prefixedName(c);
 		}
 	}
+	
+	protected URI iriPropertyList() throws RDFParseException, RDFHandlerException, IOException {
+		read('{');
+		return iriPropertyList('{');
+	}
 
 
 	/**
@@ -409,7 +419,7 @@ public class SeaTurtleParser extends TurtleParser {
 		Context initialContext = currentContext;
 		
 		URI id = null;
-		c = ws();
+		c = next();
 		while (c=='@') {
 			
 			if (tryWord("context")) {
@@ -418,11 +428,11 @@ public class SeaTurtleParser extends TurtleParser {
 				}
 				contextTermList();
 			} else if (tryWord("id")) {
-				id = iri(ws());
+				id = iri(next());
 			} else {
 				fail("Expected '@context' or '@id'");
 			}
-			c = ws();
+			c = next();
 		}
 
 		if (id == null) {
@@ -467,7 +477,7 @@ public class SeaTurtleParser extends TurtleParser {
 			subject = tryBlankNodePropertyList(c);
 			if (subject != null) {
 
-				c = ws();
+				c = next();
 				unread(c);
 				if (c != '.') {
 					predicateObjectList(subject);
@@ -477,7 +487,7 @@ public class SeaTurtleParser extends TurtleParser {
 		}  else if (c== '{') {
 			subject = iriPropertyList(c);
 			
-			c = ws();
+			c = next();
 			unread(c);
 			if (c != '.') {
 				predicateObjectList(subject);
