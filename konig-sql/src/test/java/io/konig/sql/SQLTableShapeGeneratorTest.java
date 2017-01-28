@@ -35,7 +35,7 @@ import io.konig.shacl.Shape;
 
 public class SQLTableShapeGeneratorTest {
 	
-	@Test
+	@Ignore
 	public void testStructured() {
 		String sql =
 			  "@prefix schema: <http://schema.org/> ."

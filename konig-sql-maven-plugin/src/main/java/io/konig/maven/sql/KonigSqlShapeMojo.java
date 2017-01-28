@@ -11,6 +11,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryNamespaceManager;
@@ -67,7 +68,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 				processSchema(schema);
 			}
 			
-		} catch (IOException | RDFHandlerException e) {
+		} catch (IOException | RDFHandlerException | RDFParseException e) {
 			throw new MojoExecutionException("Failed to load SQL files", e);
 		}
 

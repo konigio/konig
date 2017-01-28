@@ -10,11 +10,13 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.NamespaceManager;
+import io.konig.core.path.PathFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.LinkedValueMap;
 import io.konig.core.util.PathPattern;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueMap;
+import io.konig.shacl.Shape;
 
 public class SQLTableSchema {
 	
@@ -28,6 +30,9 @@ public class SQLTableSchema {
 	private NamespaceManager nsManager;
 	private URI targetClass;
 	private URI tableShapeId;
+	private Shape physicalShape;
+	private Shape logicalShape;
+	
 	private URI tableTargetShapeId;
 	private String columnNamespace;
 	private SimpleValueFormat columnPathTemplate;
@@ -36,6 +41,7 @@ public class SQLTableSchema {
 	private String targetTableId;
 	private String stagingTableId;
 	private IriTemplate iriTemplate;
+	
 
 	public SQLTableSchema() {
 	}
@@ -112,15 +118,15 @@ public class SQLTableSchema {
 		constraints.add(constraint);
 	}
 
-	public SQLPrimaryKeyConstraint getPrimaryKeyConstraint() {
+	public PrimaryKeyConstraint getPrimaryKeyConstraint() {
 		for (SQLConstraint c : constraints) {
-			if (c instanceof SQLPrimaryKeyConstraint) {
-				return (SQLPrimaryKeyConstraint) c;
+			if (c instanceof PrimaryKeyConstraint) {
+				return (PrimaryKeyConstraint) c;
 			}
 		}
 		for (SQLColumnSchema col : listColumns()) {
 			if (col.getPrimaryKey() != null) {
-				SQLPrimaryKeyConstraint constraint = new SQLPrimaryKeyConstraint();
+				PrimaryKeyConstraint constraint = new PrimaryKeyConstraint();
 				constraint.addColumn(col);
 				return constraint;
 			}
@@ -184,14 +190,17 @@ public class SQLTableSchema {
 				
 				if (column.getEquivalentPath()==null ) {
 
+					PathFactory factory = new PathFactory(nsManager);
 					PathPattern pattern = findPathPattern(column);
 					if (pattern != null && nsManager!=null) {
 						String path = pattern.transform(column.getColumnName(), nsManager);
-						column.setEquivalentPath(path);
+						
+						column.setEquivalentPath(factory.createPath(path));
 					} else	if (pathTemplate!=null) {
 
 						LinkedValueMap tableMap = new LinkedValueMap(new ColumnValueMap(column), map);
-						column.setEquivalentPath(pathTemplate.format(tableMap));
+						String text = pathTemplate.format(tableMap);
+						column.setEquivalentPath(factory.createPath(text));
 					}
 				}
 			}
@@ -293,7 +302,24 @@ public class SQLTableSchema {
 	public void setIriTemplate(IriTemplate iriTemplate) {
 		this.iriTemplate = iriTemplate;
 	}
-	
-	
-	
+
+
+	public Shape getPhysicalShape() {
+		return physicalShape;
+	}
+
+
+	public void setPhysicalShape(Shape physicalShape) {
+		this.physicalShape = physicalShape;
+	}
+
+
+	public Shape getLogicalShape() {
+		return logicalShape;
+	}
+
+
+	public void setLogicalShape(Shape logicalShape) {
+		this.logicalShape = logicalShape;
+	}
 }

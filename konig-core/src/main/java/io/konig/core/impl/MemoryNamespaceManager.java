@@ -54,6 +54,16 @@ public class MemoryNamespaceManager implements NamespaceManager {
 	public static MemoryNamespaceManager getDefaultInstance() {
 		return INSTANCE;
 	}
+	
+	public MemoryNamespaceManager() {
+		
+	}
+	
+	public MemoryNamespaceManager(NamespaceManager copy) {
+		for (Namespace n : copy.listNamespaces()) {
+			add(n);
+		}
+	}
 
 	public Namespace findByPrefix(String prefix) {
 		return byPrefix.get(prefix);

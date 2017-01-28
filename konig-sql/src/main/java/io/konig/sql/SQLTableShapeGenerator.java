@@ -102,7 +102,7 @@ public class SQLTableShapeGenerator {
 		int minCount = column.isNotNull() ? 1 : 0;
 		p.setMinCount(minCount);
 		p.setMaxCount(1);
-		p.setEquivalentPath(column.getEquivalentPath());
+		p.setCompiledEquivalentPath(column.getEquivalentPath());
 		
 		shape.add(p);
 		
@@ -166,14 +166,14 @@ public class SQLTableShapeGenerator {
 
 			SQLTableSchema table = column.getColumnTable();
 			ForeignKeyConstraint fk = table.getForeignKeyConstraint(column);
-			String equivalentPath = column.getEquivalentPath();
+			Path equivalentPath = column.getEquivalentPath();
 			
 			
 			URI predicate = column.getColumnPredicate();
 			
 			if (equivalentPath != null) {
 				
-				path = pathFactory.createPath(equivalentPath);
+				path = equivalentPath;
 				if (fk == null) {
 					predicate = lastPredicate(path);
 					targetShape = shapeForPath(shape, path);

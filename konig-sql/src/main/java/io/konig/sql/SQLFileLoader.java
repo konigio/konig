@@ -25,6 +25,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
+
 import io.konig.core.NamespaceManager;
 
 public class SQLFileLoader {
@@ -59,7 +62,7 @@ public class SQLFileLoader {
 		this.parser = parser;
 	}
 
-	public void load(File file) throws IOException {
+	public void load(File file) throws IOException, RDFParseException, RDFHandlerException {
 		if (file.isDirectory()) {
 			File[] array = file.listFiles();
 			for (File child : array) {

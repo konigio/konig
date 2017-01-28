@@ -9,6 +9,10 @@ public class ForeignKeyConstraint extends SQLConstraint {
 	public ForeignKeyConstraint() {
 	}
 
+	public ForeignKeyConstraint(String name) {
+		super(name);
+	}
+
 	public List<SQLColumnSchema> getSource() {
 		return source;
 	}

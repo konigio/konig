@@ -50,11 +50,14 @@ public class PathParser extends TurtleParser {
 	private LocalNameService localNameService;
 
 	public PathParser(NamespaceManager nsManager) {
-		super(new NamespaceMapAdapter(nsManager));
-		setRDFHandler(new Handler());
+		this(new NamespaceMapAdapter(nsManager), null);
 	}
 	
-	
+	public PathParser(NamespaceMap map, PushbackReader reader) {
+		super(map);
+		setRDFHandler(new Handler());
+		this.reader = reader;
+	}
 	
 	public LocalNameService getLocalNameService() {
 		return localNameService;
@@ -66,9 +69,7 @@ public class PathParser extends TurtleParser {
 
 	public Path path(Reader input) throws KonigException {
 		
-		if (reader == null) {
-			reader = new PushbackReader(input, 8);
-		}
+		super.initParse(input, "");
 		
 		return path();
 	}
@@ -167,7 +168,7 @@ public class PathParser extends TurtleParser {
 		try {
 		
 			int c;
-			while ((c=read()) != -1) {
+			while (!done(c=next())) {
 				unread(c);
 				Step step=null;
 				switch (c) {
@@ -197,6 +198,10 @@ public class PathParser extends TurtleParser {
 
 
 
+
+	protected boolean done(int c) throws IOException {
+		return c==-1;
+	}
 
 	/**
 	 * <pre>
