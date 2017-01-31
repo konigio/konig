@@ -57,6 +57,7 @@ public class ShapeWriter {
 	
 	public void writeTurtle(NamespaceManager nsManager, Shape shape, Writer writer) throws RDFHandlerException, IOException {
 		MemoryGraph graph = new MemoryGraph();
+		graph.setNamespaceManager(nsManager);
 		
 		emitShape(shape, graph);
 		
@@ -67,6 +68,7 @@ public class ShapeWriter {
 	public void writeTurtle(NamespaceManager nsManager, Shape shape, File file) throws RDFHandlerException, IOException {
 
 		MemoryGraph graph = new MemoryGraph();
+		graph.setNamespaceManager(nsManager);
 		
 		emitShape(shape, graph);
 		

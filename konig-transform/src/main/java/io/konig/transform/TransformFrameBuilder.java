@@ -7,7 +7,6 @@ import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.core.KonigException;
 import io.konig.core.Path;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.path.PathFactory;

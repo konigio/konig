@@ -3,6 +3,8 @@ package io.konig.sql;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -13,14 +15,43 @@ import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
-import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.path.PathFactory;
-import io.konig.core.util.PathPattern;
+import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Schema;
 
 public class SQLParserTest {
 	
+	@Test
+	public void testRegistrar() throws Exception {
+		
+		Reader reader = getReader("SQLParserTest/testRegistrar.sql");
+		SQLParser parser = new SQLParser();
+		
+		parser.parseAll(reader);
+		
+		SQLTableSchema table = parser.getSchemaManager().getSchemaByName("registrar").getTableByName("Role");
+		
+		SQLColumnSchema column = table.getColumnByName("role_id");
+		
+		
+		assertTrue(column!=null);
+		assertTrue(column.getColumnType() != null);
+
+		Path path = column.getEquivalentPath();
+		assertTrue(path != null);
+		assertEquals("/registrarId", path.toString());
+		
+		IriTemplate template = table.getPhysicalShape().getIriTemplate();
+		assertTrue(template != null);
+		
+		assertEquals("http://example.com/role/{role_name}", template.toString());
+	}
 	
+	private Reader getReader(String resource) {
+		
+		return new InputStreamReader(getClass().getClassLoader().getResourceAsStream(resource));
+	}
+
 	@Test
 	public void testColumnPath() throws Exception {
 		String text = 

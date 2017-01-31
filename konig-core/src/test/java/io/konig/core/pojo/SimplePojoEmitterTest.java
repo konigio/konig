@@ -33,16 +33,55 @@ import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
+import io.konig.core.Path;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.path.PathImpl;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class SimplePojoEmitterTest {
+	
+	@Test
+	public void testToValueMethodWithNamespaceManager() throws Exception {
+
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("alias", "http://example.com/alias/");
+		URI propertyId = uri("http://example.com/property/1");
+		URI first_name = uri("http://example.com/alias/first_name");
+		PropertyConstraint p = new PropertyConstraint(first_name);
+		
+		
+		
+		Path path = new PathImpl();
+		path.out(first_name);
+		
+		p.setId(propertyId);
+		p.setCompiledEquivalentPath(path);
+		
+		Graph graph = new MemoryGraph();
+		graph.setNamespaceManager(nsManager);
+
+		SimplePojoEmitter emitter = new SimplePojoEmitter();
+		EmitContext context = new EmitContext(graph);
+		
+		emitter.emit(context, p, graph);
+		
+		Vertex v = graph.getVertex(propertyId);
+		assertTrue(v != null);
+		
+		Value pathValue = v.getValue(Konig.equivalentPath);
+		assertTrue(pathValue != null);
+		
+		assertEquals("/<http://example.com/alias/first_name>", pathValue.stringValue());
+		
+	}
 	
 	@Test
 	public void testToValueMethod() throws Exception {
@@ -70,7 +109,7 @@ public class SimplePojoEmitterTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void test()  throws Exception {
 		
 		Graph graph = new MemoryGraph();

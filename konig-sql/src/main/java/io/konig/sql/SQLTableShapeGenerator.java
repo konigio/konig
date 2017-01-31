@@ -53,7 +53,7 @@ public class SQLTableShapeGenerator {
 	public SQLTableShapeGenerator() {
 	}
 	
-	public Shape toStructuredShape(SQLTableSchema tableSchema) {
+	public Shape toLogicalShape(SQLTableSchema tableSchema) {
 
 		StructuredShapeGenerator delegate = new StructuredShapeGenerator();
 		
@@ -66,24 +66,19 @@ public class SQLTableShapeGenerator {
 		if (datatypeMapper == null) {
 			datatypeMapper = new XsdSQLDatatypeMapper();
 		}
-		
-		URI tableId = tableSchema.getTableShapeId();
-		if (tableId == null) {
-			throw new KonigException("Shape Id is not defined for table " + tableSchema.getFullName());
+		Shape shape = tableSchema.getPhysicalShape();
+		if (shape == null) {
+			throw new KonigException("Physical shape must be defined for table " + tableSchema.getFullName());
 		}
-		Shape shape = new Shape(tableId);
-		shape.setBigQueryTableId(tableSchema.getStagingTableId());
-		shape.setTargetClass(tableSchema.getTargetClass());
-		shape.setIriTemplate(tableSchema.getIriTemplate());
 		
 		for (SQLColumnSchema column : tableSchema.listColumns()) {
 			addProperty(shape, column);
 		}
 		
-		
 		return shape;
 	}
 	
+
 
 
 
@@ -94,7 +89,11 @@ public class SQLTableShapeGenerator {
 		if (predicate == null) {
 			throw new KonigException("predicate is not defined for column: " + column.getFullName());
 		}
-		URI datatype = datatypeMapper.rdfDatatype(column.getColumnType().getDatatype());
+		SQLColumnType columnType = column.getColumnType();
+		if (columnType == null) {
+			throw new KonigException("Column type not defined for column: " + column.getFullName());
+		}
+		URI datatype = datatypeMapper.rdfDatatype(columnType.getDatatype());
 		
 		PropertyConstraint p = new PropertyConstraint(predicate);
 		p.setDatatype(datatype);
@@ -127,9 +126,10 @@ public class SQLTableShapeGenerator {
 			
 			buildTargetClassMap(tableSchema);
 			
-			Shape shape = new Shape();
-			shape.setTargetClass(tableSchema.getTargetClass());
-			shape.setBigQueryTableId(tableSchema.getTargetTableId());
+			Shape shape = tableSchema.getLogicalShape();
+			if (shape == null) {
+				return null;
+			}
 			
 			if (tableSchema.getIriTemplate() != null) {
 				shape.setNodeKind(NodeKind.IRI);
@@ -137,11 +137,6 @@ public class SQLTableShapeGenerator {
 			
 			for (SQLColumnSchema column : tableSchema.listColumns()) {
 				addStructuredProperty(shape, column);
-			}
-			
-			URI tableShapeId = tableSchema.getTableShapeId();
-			if (tableShapeId != null) {
-				shape.setSourceShape(tableShapeId);
 			}
 			
 			return shape;

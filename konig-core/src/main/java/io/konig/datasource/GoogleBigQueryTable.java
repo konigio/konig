@@ -21,16 +21,35 @@ package io.konig.datasource;
  */
 
 
-import org.openrdf.model.URI;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
+import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.Konig;
 
 public class GoogleBigQueryTable extends DataSource {
+	
+	private Set<DataSource> bigQuerySource;
 
-	@Override
-	public URI getType() {
-		return Konig.GoogleBigQueryTable;
+	public GoogleBigQueryTable() {
+		addType(Konig.GoogleBigQueryTable);
 	}
 
-	
+	public void addBigQuerySource(DataSource source) {
+		if (bigQuerySource == null) {
+			bigQuerySource = new LinkedHashSet<>();
+		}
+		bigQuerySource.add(source);
+	}
+
+	@RdfProperty(Konig.BIG_QUERY_SOURCE)
+	public Set<DataSource> getBigQuerySource() {
+		return bigQuerySource;
+	}
+
+	public void setBigQuerySource(Set<DataSource> bigQuerySource) {
+		this.bigQuerySource = bigQuerySource;
+	}
+
+
 }

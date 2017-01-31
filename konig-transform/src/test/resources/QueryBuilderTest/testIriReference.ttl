@@ -6,10 +6,15 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix shape : <http://example.com/shapes/> .
 @prefix data : <http://example.com/resources/> .
+@prefix dc: <http://purl.org/dc/terms/> .
 
 shape:PersonOriginShape a sh:Shape ;
 	sh:targetClass schema:Person ;
-	konig:bigQueryTableId "acme.OriginPerson" ;
+	konig:shapeDataSource [
+		a konig:AuthoritativeDataSource ;
+		a konig:GoogleBigQueryTable ;
+		dc:identifier "acme.OriginPerson"
+	] ;
 	sh:property [
 		sh:predicate schema:name ;
 		sh:minCount 0 ;
@@ -26,7 +31,10 @@ shape:PersonOriginShape a sh:Shape ;
 
 shape:PersonWarehouseShape a sh:Shape ;
 	sh:targetClass schema:Person ;
-	konig:bigQueryTableId "acme.Person" ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable ;
+		dc:identifier "acme.Person"
+	] ;
 	sh:property  [
 		sh:predicate schema:name ;
 		sh:minCount 0 ;

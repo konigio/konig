@@ -1,15 +1,11 @@
 package io.konig.transform.sql.query;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 
-import io.konig.core.KonigException;
-import io.konig.datasource.DataSource;
-import io.konig.datasource.GoogleBigQueryTable;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
@@ -55,15 +51,7 @@ public class QueryBuilder {
 	}
 	
 	private String bigQueryTableId(TransformFrame frame) {
-		List<DataSource> list = frame.getTargetShape().getShapeOf();
-		if (list != null) {
-			for (DataSource d : list) {
-				if (d instanceof GoogleBigQueryTable) {
-					return d.getIdentifier();
-				}
-			}
-		}
-		return null;
+		return frame.getTargetShape().bigQueryTableId();
 	}
 
 	public SelectExpression selectExpression(TransformFrame frame) {
@@ -121,7 +109,7 @@ public class QueryBuilder {
 			MappedProperty m = attr.getMappedProperty();
 			if (m != null) {
 				Shape sourceShape = m.getSourceShape();
-				String tableId = sourceShape.getBigQueryTableId();
+				String tableId = sourceShape.bigQueryTableId();
 				if (tableId != null) {
 					set.add(tableId);
 				}

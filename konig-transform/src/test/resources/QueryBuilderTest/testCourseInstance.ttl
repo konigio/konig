@@ -1,0 +1,75 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:CourseInstanceMasterShape sh:property  [ 
+		konig:equivalentPath "/<http://schema.org/endDate>" ; 
+		sh:datatype xsd:date ; 
+		sh:predicate alias:end_date ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		konig:equivalentPath "/<http://example.com/ns/registrar/registrarId>" ; 
+		sh:datatype xsd:long ; 
+		sh:predicate alias:section_id ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		konig:equivalentPath "/<http://schema.org/startDate>" ; 
+		sh:datatype xsd:date ; 
+		sh:predicate alias:start_date ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		konig:equivalentPath "/<http://schema.org/name>" ; 
+		sh:datatype xsd:string ; 
+		sh:predicate alias:section_name ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	konig:iriTemplate "http://example.com/section/{section_id}" ; 
+	sh:targetClass schema:CourseInstance ; 
+	konig:shapeDataSource <http://example.com/db/schemas/registrar/tables/CourseSection> , <gs://com.example.prod.course_instance> , <urn:bigquery:example.registrar.CourseInstance> . 
+
+<http://example.com/db/schemas/registrar/tables/CourseSection> a konig:OracleTable , konig:AuthoritativeDataSource . 
+
+<gs://com.example.prod.course_instance> a konig:GoogleCloudStorageBucket . 
+
+<urn:bigquery:example.registrar.CourseInstance> konig:bigQuerySource <gs://com.example.prod.course_instance> ; 
+	a konig:GoogleBigQueryTable . 
+	
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix reg: <http://example.com/ns/registrar/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:CourseInstanceReportingShape sh:property  [ 
+		sh:datatype xsd:date ; 
+		sh:predicate schema:endDate ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		sh:datatype xsd:long ; 
+		sh:predicate reg:registrarId ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		sh:datatype xsd:date ; 
+		sh:predicate schema:startDate ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		sh:datatype xsd:string ; 
+		sh:predicate schema:name ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	sh:targetClass schema:CourseInstance ; 
+	konig:shapeDataSource <urn:bigquery:example.registrar.CourseInstance> . 
+
+<urn:bigquery:example.registrar.CourseInstance> a konig:GoogleBigQueryTable . 	

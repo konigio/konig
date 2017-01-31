@@ -8,6 +8,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandlerException;
@@ -96,13 +97,13 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 		
 		shapeWriter.writeTurtle(nsManager, shape, file);
 		
-		
-		URI targetShapeId = table.getTableTargetShapeId();
-		if (targetShapeId != null) {
-			Shape targetShape = generator.toStructuredShape(table);
-			targetShape.setId(targetShapeId);
-			file = targetShapeFile(targetShapeId);
-			shapeWriter.writeTurtle(nsManager, targetShape, file);
+		Shape logicalShape = generator.toLogicalShape(table);
+		if (logicalShape != null) {
+			Resource id = logicalShape.getId();
+			if (id instanceof URI) {
+				file = logicalShapeFile((URI) id);
+				shapeWriter.writeTurtle(nsManager, logicalShape, file);
+			}
 		}
 	}
 
@@ -119,7 +120,7 @@ public class KonigSqlShapeMojo extends AbstractMojo {
 	}
 
 
-	private File targetShapeFile(URI shapeId) {
+	private File logicalShapeFile(URI shapeId) {
 		
 		StringBuilder builder = new StringBuilder();
 		org.openrdf.model.Namespace ns = nsManager.findByName(shapeId.getNamespace());

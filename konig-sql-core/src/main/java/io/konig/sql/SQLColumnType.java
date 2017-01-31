@@ -21,6 +21,24 @@ public class SQLColumnType {
 		this.size = size;
 		this.precision = precision;
 	}
+	
+	@Override 
+	public boolean equals(Object other) {
+		if (other instanceof SQLColumnType) {
+			SQLColumnType c = (SQLColumnType) other;
+			return (
+				(datatype==null && c.datatype==null) ||
+				(datatype!=null) && datatype.equals(c.datatype)
+			) && (
+				(size==null && c.size==null) ||
+				(size!=null && size.equals(c.size))
+			) && (
+				(precision==null && c.precision==null) ||
+				(precision!=null && precision==c.precision)
+			);
+		}
+		return false;
+	}
 
 	public SQLDatatype getDatatype() {
 		return datatype;

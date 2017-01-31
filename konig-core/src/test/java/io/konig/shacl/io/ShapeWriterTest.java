@@ -1,5 +1,8 @@
 package io.konig.shacl.io;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /*
  * #%L
  * Konig Core
@@ -26,8 +29,8 @@ import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
@@ -40,24 +43,28 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.io.FileGetter;
+import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
-import io.konig.datasource.GoogleBigQueryTable;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 
 public class ShapeWriterTest {
 	
-
 	@Test 
-	public void testShapeOf() throws Exception {
+	public void testShapeDataSource() throws Exception {
 		
 		URI shapeId = uri("http://example.com/PersonShape");
+		URI dataSourceId = uri("urn:bigquery:acme.Person");
 		
-		
+		String iriTemplateValue = "http://example.com/user/{user_id}";
 		Shape shape = new Shape(shapeId);
-		GoogleBigQueryTable datasource = new GoogleBigQueryTable();
+		DataSource datasource = new DataSource();
+		shape.setIriTemplate(new IriTemplate(iriTemplateValue));
 		datasource.setIdentifier("acme.Person");
-		shape.addShapeOf(datasource);
+		datasource.setId(dataSourceId);
+		datasource.addType(Konig.GoogleBigQueryTable);
+		shape.addShapeDataSource(datasource);
 		
 		ShapeWriter shapeWriter = new ShapeWriter();
 		
@@ -65,10 +72,11 @@ public class ShapeWriterTest {
 		shapeWriter.emitShape(shape, graph);
 		
 		Vertex v = graph.getVertex(shapeId);
+		assertEquals(iriTemplateValue, v.getValue(Konig.iriTemplate).stringValue());
 		
-		Vertex w = v.getVertex(Konig.shapeOf);
+		Vertex w = v.getVertex(Konig.shapeDataSource);
 		assertTrue(w!=null);
-		
+
 		assertEquals(Konig.GoogleBigQueryTable, w.getURI(RDF.TYPE));
 		assertEquals("acme.Person", w.getValue(DCTERMS.IDENTIFIER).stringValue());
 	}

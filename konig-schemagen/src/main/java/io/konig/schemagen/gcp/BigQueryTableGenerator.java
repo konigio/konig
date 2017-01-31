@@ -123,7 +123,7 @@ public class BigQueryTableGenerator {
 		
 		for (Shape shape : shapeManager.listShapes()) {
 			Resource shapeId = shape.getId();
-			String fullId = shape.getBigQueryTableId();
+			String fullId = shape.bigQueryTableId();
 			if (fullId != null && shapeId instanceof URI) {
 				String[] idList = fullId.split("[.]");
 				if (idList.length==2) {

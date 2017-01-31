@@ -29,7 +29,7 @@ public class SemanticSqlParserTest {
 	private SQLSchemaManager schemaManager = new SQLSchemaManager();
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private NamespaceManager nsManager = new MemoryNamespaceManager();	
-	private SemanticSqlParser sqlParser = new SemanticSqlParser(schemaManager, shapeManager);
+	private SemanticSqlParser sqlParser = new SemanticSqlParser(schemaManager, shapeManager, nsManager);
 	
 	@Before 
 	public void setUp() throws Exception {
@@ -468,23 +468,57 @@ public class SemanticSqlParserTest {
 	}
 	
 	@Test
-	public void testLogicalShape() throws Exception {
+	public void testLogicalAndPhysicalShape() throws Exception {
+
 		String text =
 				  "@prefix alias: <http://example.com/alias/> .\n"
 				+ "@prefix schema: <http://schema.org/> .\n"
 				+ "@prefix shape: <http://example.com/shapes/> .\n"
+				+ "@prefix konig: <http://www.konig.io/ns/core/> .\n"
 					
 				+ "CREATE TABLE foo.bar (\n"
 				+ "  first_name VARCHAR(32)\n "
 				+ ") SEMANTICS \n"
+				+ "physical {\n"
+				+ "  @id shape:PersonPhysicalShape\n"
+				+ "} ;\n" 
 				+ "logical {\n"
-				+ "  @id shape:PersonLogicalShape"
+				+ "  @id shape:PersonLogicalShape ;"
+				+ "  konig:shapeDataSource {"
+				+ "    @id <urn:bigquery:com.example.person> "
+				+ "  }"
 				+ "} .";
 			
 			parse(text);
 			
 			SQLTableSchema table = getTable("foo", "bar");
-			Shape shape = table.getPhysicalShape();
+			Shape shape = table.getLogicalShape();
+			assertTrue(shape != null);
+			assertEquals(uri("http://example.com/shapes/PersonLogicalShape"), shape.getId());
+	}
+	
+	@Test
+	public void testLogicalShape() throws Exception {
+		String text =
+				  "@prefix alias: <http://example.com/alias/> .\n"
+				+ "@prefix schema: <http://schema.org/> .\n"
+				+ "@prefix shape: <http://example.com/shapes/> .\n"
+				+ "@prefix konig: <http://www.konig.io/ns/core/> .\n"
+					
+				+ "CREATE TABLE foo.bar (\n"
+				+ "  first_name VARCHAR(32)\n "
+				+ ") SEMANTICS \n"
+				+ "logical {\n"
+				+ "  @id shape:PersonLogicalShape ;"
+				+ "  konig:shapeDataSource {"
+				+ "    @id <urn:bigquery:com.example.person> "
+				+ "  }"
+				+ "} .";
+			
+			parse(text);
+			
+			SQLTableSchema table = getTable("foo", "bar");
+			Shape shape = table.getLogicalShape();
 			assertTrue(shape != null);
 			assertEquals(uri("http://example.com/shapes/PersonLogicalShape"), shape.getId());
 	}

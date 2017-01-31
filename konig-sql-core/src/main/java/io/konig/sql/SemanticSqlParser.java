@@ -25,6 +25,7 @@ import io.konig.rio.turtle.NamespaceMap;
 import io.konig.rio.turtle.SeaTurtleParser;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
 public class SemanticSqlParser extends SeaTurtleParser {
@@ -42,11 +43,14 @@ public class SemanticSqlParser extends SeaTurtleParser {
 	private IriTemplate classId;
 	private PathParser pathParser;
 
-	public SemanticSqlParser(SQLSchemaManager sqlSchemaManager, ShapeManager shapeManager) {
+	public SemanticSqlParser(SQLSchemaManager sqlSchemaManager, ShapeManager shapeManager, NamespaceManager nsManager) {
+		if (shapeManager == null) {
+			shapeManager = new MemoryShapeManager();
+		}
 		this.sqlSchemaManager = sqlSchemaManager;
 		this.shapeManager = shapeManager;
 		
-		namespaceManager = new MemoryNamespaceManager();
+		namespaceManager = nsManager==null ? new MemoryNamespaceManager() : nsManager;
 		
 		shapeLoader = new ShapeLoader(shapeManager);
 	}
@@ -174,6 +178,10 @@ public class SemanticSqlParser extends SeaTurtleParser {
 	}
 
 	private void afterCreateTable(SQLTableSchema table) {
+		
+		setTargetClass(table.getTargetClass(), table.getPhysicalShape());
+		setTargetClass(table.getTargetClass(), table.getLogicalShape());
+		
 
 		table.setNamespaceManager(namespaceManager);
 		String namespace = table.getColumnNamespace();
@@ -188,6 +196,12 @@ public class SemanticSqlParser extends SeaTurtleParser {
 			}
 		}
 		
+	}
+
+	private void setTargetClass(URI targetClass, Shape shape) {
+		if (targetClass!=null && shape != null) {
+			shape.setTargetClass(targetClass);
+		}
 	}
 
 	/**
@@ -241,7 +255,7 @@ public class SemanticSqlParser extends SeaTurtleParser {
 		if (tryIgnoreCase("LOGICAL")) {
 			readSpace();
 			Shape shape = readShape();
-			table.setPhysicalShape(shape);
+			table.setLogicalShape(shape);
 			
 			return true;
 		}
@@ -614,10 +628,21 @@ public class SemanticSqlParser extends SeaTurtleParser {
 		return result;
 	}
 
-	private SQLColumnSchema getOrCreateColumn(SQLTableSchema table, String columnName, SQLColumnType columnType) {
+	private SQLColumnSchema getOrCreateColumn(SQLTableSchema table, String columnName, SQLColumnType columnType) throws RDFParseException {
 		SQLColumnSchema column = table.getColumnByName(columnName);
 		if (column == null) {
 			column = new SQLColumnSchema(table, columnName, columnType);
+		} else {
+			SQLColumnType oldType = column.getColumnType();
+			if (oldType == null) {
+				column.setColumnType(columnType);
+			} else if (columnType != null && !columnType.equals(oldType)) {
+				StringBuilder err = err();
+				err.append("Conflicting type for column '");
+				err.append(column.getFullName());
+				err.append("'");
+				fail(err);
+			}
 		}
 		return column;
 	}

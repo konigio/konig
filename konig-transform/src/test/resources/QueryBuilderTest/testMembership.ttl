@@ -1,0 +1,97 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:MembershipMasterShape sh:property  [ 
+		konig:equivalentPath "/<http://www.w3.org/ns/org#role>/<http://example.com/ns/registrar/registrarId>" ; 
+		sh:datatype xsd:long ; 
+		sh:predicate alias:role_id ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		konig:equivalentPath "/<http://www.w3.org/ns/org#member>/<http://example.com/ns/registrar/registrarId>" ; 
+		sh:datatype xsd:long ; 
+		sh:predicate alias:person_id ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		konig:equivalentPath "/<http://www.w3.org/ns/org#organization>/<http://example.com/ns/registrar/registrarId>" ; 
+		sh:datatype xsd:long ; 
+		sh:predicate alias:section_id ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	sh:targetClass org:Membership ; 
+	konig:shapeDataSource <http://example.com/db/schemas/registrar/tables/CourseSectionPerson> , <gs://com.example.prod.course_section_person> , <urn:bigquery:example.registrar.Membership> . 
+
+<http://example.com/db/schemas/registrar/tables/CourseSectionPerson> a konig:OracleTable , konig:AuthoritativeDataSource . 
+
+<gs://com.example.prod.course_section_person> a konig:GoogleCloudStorageBucket . 
+
+<urn:bigquery:example.registrar.Membership> konig:bigQuerySource <gs://com.example.prod.course_section_person> ; 
+	a konig:GoogleBigQueryTable . 
+	
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:MembershipReportingShape sh:property  [ 
+		sh:predicate org:role ; 
+		sh:nodeKind sh:IRI ; 
+		sh:class org:Role ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		sh:predicate org:member ; 
+		sh:nodeKind sh:IRI ; 
+		sh:class schema:Person ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		sh:predicate org:organization ; 
+		sh:nodeKind sh:IRI ; 
+		sh:class schema:CourseInstance ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	sh:targetClass org:Membership ; 
+	konig:shapeDataSource <urn:bigquery:example.registrar.Membership> . 
+
+<urn:bigquery:example.registrar.Membership> a konig:GoogleBigQueryTable . 	
+
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:RoleMasterShape sh:property  [ 
+		konig:equivalentPath "/<http://example.com/ns/registrar/registrarId>" ; 
+		sh:datatype xsd:long ; 
+		sh:predicate alias:role_id ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		konig:equivalentPath "/<http://schema.org/name>" ; 
+		sh:datatype xsd:string ; 
+		sh:predicate alias:role_name ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	konig:iriTemplate "http://example.com/role/{role_name}" ; 
+	sh:targetClass org:Role ; 
+	konig:shapeDataSource <http://example.com/db/schemas/registrar/tables/Role> , <gs://com.example.prod.role> , <urn:bigquery:example.registrar.Role> . 
+
+<http://example.com/db/schemas/registrar/tables/Role> a konig:OracleTable , konig:AuthoritativeDataSource . 
+
+<gs://com.example.prod.role> a konig:GoogleCloudStorageBucket . 
+
+<urn:bigquery:example.registrar.Role> konig:bigQuerySource <gs://com.example.prod.role> ; 
+	a konig:GoogleBigQueryTable . 

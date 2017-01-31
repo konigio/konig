@@ -80,7 +80,7 @@ public class SQLParser {
 	public void parseAll(Reader input) throws IOException, RDFParseException, RDFHandlerException {
 		init();
 		
-		SemanticSqlParser parser = new SemanticSqlParser(schemaManager, shapeManager);
+		SemanticSqlParser parser = new SemanticSqlParser(schemaManager, shapeManager, namespaceManager);
 		parser.parse(input);
 		
 	}

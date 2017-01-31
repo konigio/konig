@@ -3,10 +3,14 @@
 @prefix shape: <http://example.com/shapes/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dc: <http://purl.org/dc/terms/> .
 
 shape:PersonFullShape a sh:Shape ;
 	sh:targetClass schema:Person ;
-	konig:bigQueryTableId "acme.PersonFull" ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable ;
+		dc:identifier "acme.PersonFull"
+	] ;
 	sh:property [
 		sh:predicate schema:givenName ;
 		sh:minCount 0 ;
@@ -57,6 +61,9 @@ shape:PostalAddressFullShape a sh:Shape ;
 
 shape:PersonLiteShape a sh:Shape ;
 	sh:targetClass schema:Person ;
+	konig:shapeDataSource [
+		a konig:AuthoritativeDataSource 
+	] ;
 	sh:property [
 		sh:predicate schema:givenName ;
 		sh:minCount 0 ;

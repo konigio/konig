@@ -1,5 +1,7 @@
 package io.konig.sql;
 
+import static org.junit.Assert.*;
+
 /*
  * #%L
  * Konig SQL
@@ -19,68 +21,74 @@ package io.konig.sql;
  * limitations under the License.
  * #L%
  */
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
-import org.junit.Ignore;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.XMLSchema;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 
-import io.konig.core.vocab.Schema;
-import io.konig.shacl.NodeKind;
+import io.konig.core.Path;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class SQLTableShapeGeneratorTest {
 	
-	@Ignore
-	public void testStructured() {
-		String sql =
-			  "@prefix schema: <http://schema.org/> ."
-			+ "@columnNamespace <http://example.com/ns/alias/> ."
-					  
-			+ "CREATE TABLE registrar.Organization ("
-			+ "  org_id BIGINT PRIMARY KEY NOT NULL,"
-			+ "  founder_given_name VARCHAR(64)"
-			+ ")"
-			+ "SEMANTICS "
-			+ "  iriTemplate <http://example.com/org/{org_id}> ;"
-			+ "  pathPattern(founder_, schema:Person, /schema:founder) ."
-			;
+	private SQLSchemaManager schemaManager = new SQLSchemaManager();
+	SQLParser parser = new SQLParser(schemaManager);
+	
+	SQLTableShapeGenerator generator = new SQLTableShapeGenerator();
+	
+	@Test
+	public void testRegistrar() throws Exception {
 		
-		SQLSchemaManager schemaManager = new SQLSchemaManager();
-		SQLParser parser = new SQLParser();
-		parser.setSchemaManager(schemaManager);
+		parseFile("SQLTableShapeGeneratorTest/registrar.sql");
 		
-		parser.parseAll(sql);
+		SQLSchema schema = schemaManager.getSchemaByName("registrar");
 		
-		SQLTableSchema table = schemaManager.getSchemaByName("registrar").getTableByName("Organization");
+		SQLTableSchema personTable = schema.getTableByName("Person");
 		
-		SQLTableShapeGenerator generator = new SQLTableShapeGenerator(null);
+		Shape personShape = generator.toShape(personTable);
 		
-		Shape shape = generator.toStructuredShape(table);
+		assertTrue(personShape != null);
 		
-		PropertyConstraint p = shape.getPropertyConstraint(Schema.founder);
+		SQLTableSchema courseInstanceTable = schema.getTableByName("CourseSection");
+		Shape courseInstanceShape = generator.toShape(courseInstanceTable);
+		
+		assertTrue(courseInstanceShape != null);
+		
+		SQLTableSchema membershipTable = schema.getTableByName("CourseSectionPerson");
+		Shape membershipShape = generator.toShape(membershipTable);
+		
+		assertTrue(membershipShape != null);
+		
+		SQLTableSchema roleTable = schema.getTableByName("Role");
+		Shape roleShape = generator.toShape(roleTable);
+		
+		assertTrue(roleShape != null);
+		
+		PropertyConstraint p = roleShape.getPropertyConstraint(uri("http://example.com/ns/alias/role_id"));
 		assertTrue(p != null);
 		
-		
-		Shape founderShape = p.getShape();
-		assertTrue(founderShape != null);
-
-		assertEquals(Schema.Person, founderShape.getTargetClass());
-		
-		p = founderShape.getPropertyConstraint(Schema.givenName);
-		assertTrue(p != null);
-		
-		assertEquals(NodeKind.IRI, shape.getNodeKind());
-		
-		
+		Path path = p.getCompiledEquivalentPath();
+		assertTrue(path != null);
+		assertEquals("/registrarId", path.toString());
 		
 		
 	}
 
+	private Reader getReader(String resource) {
+		return new InputStreamReader(getClass().getClassLoader().getResourceAsStream(resource));
+	}
+	
+	private void parseFile(String resource) throws RDFParseException, RDFHandlerException, IOException {
+		Reader reader = getReader(resource);
+		parser.parseAll(reader);
+	}
 	
 	
 	private URI uri(String value) {

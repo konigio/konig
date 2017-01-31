@@ -7,10 +7,15 @@
 @prefix origin : <http://example.com/shapes/origin/> .
 @prefix warehouse: <http://example.com/shapes/warehouse/> .
 @prefix data : <http://example.com/resources/> .
+@prefix dc: <http://purl.org/dc/terms/> .
 
 origin:PersonShape a sh:Shape ;
 	sh:targetClass schema:Person ;
-	konig:bigQueryTableId "staging.Person" ;
+	konig:shapeDataSource [
+		a konig:AuthoritativeDataSource ;
+		a konig:GoogleBigQueryTable ;
+		dc:identifier "staging.Person"
+	] ;
 	sh:property [
 		sh:predicate alias:first_name ;
 		sh:minCount 0 ;
@@ -28,7 +33,10 @@ origin:PersonShape a sh:Shape ;
 
 warehouse:PersonShape a sh:Shape ;
 	sh:targetClass schema:Person ;
-	konig:bigQueryTableId "mdm.Person" ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable ;
+		dc:identifier "mdm.Person"
+	] ;
 	sh:property [
 		sh:predicate schema:givenName ;
 		sh:minCount 0 ;

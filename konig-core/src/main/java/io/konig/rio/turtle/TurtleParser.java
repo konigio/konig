@@ -354,7 +354,7 @@ public class TurtleParser extends RDFParserBase {
 	 * object	::=	iri | BlankNode | collection | blankNodePropertyList | literal
 	 * </pre>
 	 */
-	private Value object(int c) throws RDFParseException, IOException, RDFHandlerException {
+	protected Value object(int c) throws RDFParseException, IOException, RDFHandlerException {
 		
 		Value value = null;
 		value =
