@@ -45,6 +45,8 @@ import io.konig.core.path.OutStep;
 import io.konig.core.path.PathFactory;
 import io.konig.core.path.Step;
 import io.konig.core.pojo.BeanUtil;
+import io.konig.core.util.SimpleValueFormat;
+import io.konig.core.util.ValueFormat;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
@@ -114,6 +116,14 @@ public class WorkbookLoader {
 	private static final int SHAPE_FLAG = 0x10;
 	private static final int CONSTRAINT_FLAG = 0x14;
 	
+	private static final String GCP_DATASET_FORMAT = 
+			"https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{datasetId}";
+	
+	private static final String GCP_BIGQUERY_TABLE_FORMAT = 
+			"https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{datasetId}/tables/{tableId}";
+	
+	private static final String GCP_BIGQUERY_TABLE_ID_FORMAT = "{shapeLocalName}";
+	
 	private static final String[] CELL_TYPE = new String[6];
 	static {
 		CELL_TYPE[Cell.CELL_TYPE_BLANK] = "Blank";
@@ -130,6 +140,10 @@ public class WorkbookLoader {
 	private ValueFactory vf = new ValueFactoryImpl();
 	private DataFormatter formatter = new DataFormatter(true);
 	private IdMapper datasetMapper;
+	private ValueFormat gcpDatasetFormat;
+	private ValueFormat gcpBigQueryTableFormat;
+	private ValueFormat gcpBigQueryTableIdFormat;
+	
 	private boolean inferRdfPropertyDefinitions;
 	
 	public WorkbookLoader(NamespaceManager nsManager) {
@@ -157,10 +171,51 @@ public class WorkbookLoader {
 		return nsManager;
 	}
 
+	
+
+	public ValueFormat getGcpDatasetFormat() {
+		if (gcpDatasetFormat == null) {
+			gcpDatasetFormat = new SimpleValueFormat(GCP_DATASET_FORMAT);
+		}
+		return gcpDatasetFormat;
+	}
+
+
+	public void setGcpDatasetFormat(ValueFormat gcpDatasetFormat) {
+		this.gcpDatasetFormat = gcpDatasetFormat;
+	}
+
+
+	public ValueFormat getBigQueryTableFormat() {
+		if (gcpBigQueryTableFormat == null) {
+			gcpBigQueryTableFormat = new SimpleValueFormat(GCP_BIGQUERY_TABLE_FORMAT);
+		}
+		return gcpBigQueryTableFormat;
+	}
+
+
+	public void setBigqueryTableFormat(ValueFormat gcpBigqueryTableFormat) {
+		this.gcpBigQueryTableFormat = gcpBigqueryTableFormat;
+	}
+
+
+	public ValueFormat getGcpBigQueryTableIdFormat() {
+		if (gcpBigQueryTableIdFormat == null) {
+			gcpBigQueryTableIdFormat = new SimpleValueFormat(GCP_BIGQUERY_TABLE_ID_FORMAT);
+		}
+		return gcpBigQueryTableIdFormat;
+	}
+
+
+	public void setGcpBigQueryTableIdFormat(ValueFormat gcpBigQueryTableIdFormat) {
+		this.gcpBigQueryTableIdFormat = gcpBigQueryTableIdFormat;
+	}
+
 
 	public IdMapper getDatasetMapper() {
 		return datasetMapper;
 	}
+
 
 
 	public boolean isInferRdfPropertyDefinitions() {
@@ -872,6 +927,7 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.aggregationOf, aggregationOf);
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
+//			edge(shapeId, Konig.shapeDataSource)
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
 			
 			
@@ -889,7 +945,7 @@ public class WorkbookLoader {
 							throw new SpreadsheetException("datasetMapper is not defined");
 						}
 						Vertex vertex = graph.vertex(targetClass);
-						String datasetId = datasetMapper.idForClass(vertex);
+						String datasetId = datasetMapper.getId(vertex);
 						
 						if (datasetId == null) {
 							throw new SpreadsheetException("Dataset id not defined for class: " + targetClass);
