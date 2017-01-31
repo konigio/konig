@@ -1,5 +1,8 @@
 package io.konig.datasource;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 /*
  * #%L
  * Konig Core
@@ -24,17 +27,21 @@ package io.konig.datasource;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
-import io.konig.annotation.OwlClass;
 import io.konig.annotation.RdfProperty;
+import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.DC;
 import io.konig.core.vocab.Konig;
 
-@OwlClass(Konig.DATA_SOURCE)
-public abstract class DataSource {
+public class DataSource {
 	
 	private Resource id;
 	private String identifier;
+	private Set<URI> type = new LinkedHashSet<>();
+	private IriTemplate iriTemplate;
 
+	public boolean isA(URI type) {
+		return this.type.contains(type) || Konig.DataSource.equals(type);
+	}
 
 	@RdfProperty(DC.IDENTIFIER)
 	public String getIdentifier() {
@@ -45,9 +52,15 @@ public abstract class DataSource {
 	public void setIdentifier(String identifier) {
 		this.identifier = identifier;
 	}
+	
+	public void addType(URI type) {
+		this.type.add(type);
+	}
 
 	@RdfProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
-	abstract public URI getType();
+	public Set<URI> getType() {
+		return type;
+	}
 
 	public Resource getId() {
 		return id;
@@ -57,4 +70,27 @@ public abstract class DataSource {
 		this.id = id;
 	}
 
+	@RdfProperty(Konig.IRI_TEMPLATE)
+	public IriTemplate getIriTemplate() {
+		return iriTemplate;
+	}
+
+	@RdfProperty(Konig.IRI_TEMPLATE)
+	public void setIriTemplate(IriTemplate iriTemplate) {
+		this.iriTemplate = iriTemplate;
+	}
+	
+	@Override
+	public int hashCode() {
+		return id.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof DataSource) {
+			return id.equals(((DataSource) other).getId());
+		}
+		return false;
+	}
+	
 }

@@ -1,5 +1,7 @@
 package io.konig.core.util;
 
+import org.openrdf.model.Literal;
+
 /*
  * #%L
  * Konig Core
@@ -21,7 +23,9 @@ package io.konig.core.util;
  */
 
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 public class IriTemplate extends SimpleValueFormat {
 	
@@ -35,6 +39,10 @@ public class IriTemplate extends SimpleValueFormat {
 		
 		return new URIImpl(format(map));
 		
+	}
+	
+	public Literal toValue() {
+		return new LiteralImpl(toString(), XMLSchema.STRING);
 	}
 	
 }

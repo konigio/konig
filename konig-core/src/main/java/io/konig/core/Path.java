@@ -49,6 +49,7 @@ public interface Path {
 	List<Step> asList();
 	
 	String toString(NamespaceManager nsManager);
+	Value toValue();
 	
 	/**
 	 * Get a sub-path
@@ -67,5 +68,5 @@ public interface Path {
 	
 	int length();
 	
-	public void visit(SPARQLBuilder builder);
+	void visit(SPARQLBuilder builder);
 }

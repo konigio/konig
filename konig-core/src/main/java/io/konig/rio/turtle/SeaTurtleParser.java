@@ -27,6 +27,7 @@ import java.io.Reader;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -403,6 +404,16 @@ public class SeaTurtleParser extends TurtleParser {
 	protected URI iriPropertyList() throws RDFParseException, RDFHandlerException, IOException {
 		read('{');
 		return iriPropertyList('{');
+	}
+	
+	protected Value object(int c) throws RDFParseException, IOException, RDFHandlerException {
+		
+		if (c == '{') {
+			unread(c);
+			return iriPropertyList();
+		}
+		
+		return super.object(c);
 	}
 
 

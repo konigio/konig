@@ -27,7 +27,6 @@ import java.io.FileNotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -52,8 +51,8 @@ import io.konig.core.pojo.PojoListener;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
+import io.konig.datasource.DataSource;
 import io.konig.datasource.GoogleBigQueryTable;
-import io.konig.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
@@ -196,7 +195,6 @@ public class ShapeLoader {
 		});
 		context.mapClass(SH.Shape, Shape.class);
 		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
-		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
 		SimplePojoFactory factory = new SimplePojoFactory(context);
 		factory.createAll(graph);
 		

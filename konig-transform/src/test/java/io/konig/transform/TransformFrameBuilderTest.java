@@ -43,6 +43,8 @@ public class TransformFrameBuilderTest {
 		TransformFrameBuilder frameBuilder = new TransformFrameBuilder(shapeManager, pathFactory);
 		TransformFrame frame = frameBuilder.create(targetShape);
 		
+//		System.out.println(frame);
+		
 		Collection<TransformAttribute> attributes = frame.getAttributes();
 		
 		assertEquals(2, attributes.size());

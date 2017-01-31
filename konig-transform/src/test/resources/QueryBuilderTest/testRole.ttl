@@ -1,0 +1,55 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:RoleMasterShape sh:property  [ 
+		sh:datatype xsd:long ; 
+		sh:predicate alias:role_id ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		konig:equivalentPath "/<http://example.com/ns/registrar/registrarId>"
+	 ]  ,  [ 
+		sh:datatype xsd:string ; 
+		sh:predicate alias:role_name ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		konig:equivalentPath "/<http://schema.org/name>" ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <http://example.com/db/schemas/registrar/tables/Role> , <gs://com.example.prod.role> , <urn:bigquery:example.registrar.Role> ; 
+	sh:targetClass org:Role ; 
+	konig:iriTemplate "http://example.com/role/{role_name}" . 
+
+<http://example.com/db/schemas/registrar/tables/Role> a konig:OracleTable , konig:AuthoritativeDataSource . 
+
+<gs://com.example.prod.role> a konig:GoogleCloudStorageBucket . 
+
+<urn:bigquery:example.registrar.Role> konig:bigQuerySource <gs://com.example.prod.role> ; 
+	a konig:GoogleBigQueryTable . 
+	
+	
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix reg: <http://example.com/ns/registrar/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:RoleReportingShape sh:property  [ 
+		sh:datatype xsd:long ; 
+		sh:predicate reg:registrarId ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		sh:datatype xsd:string ; 
+		sh:predicate schema:name ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <urn:bigquery:example.registrar.Role> ; 
+	sh:targetClass org:Role . 
+
+<urn:bigquery:example.registrar.Role> a konig:GoogleBigQueryTable . 	

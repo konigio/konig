@@ -33,7 +33,10 @@ public class Konig {
 	
 	public static final String DATA_SOURCE = "http://www.konig.io/ns/core/DataSource"; 
 	public static final String GOOGLE_BIG_QUERY_TABLE = "http://www.konig.io/ns/core/GoogleBigQueryTable";
-	public static final String SHAPE_OF = "http://www.konig.io/ns/core/shapeOf";
+	public static final String SHAPE_DATA_SOURCE = "http://www.konig.io/ns/core/shapeDataSource";
+	public static final String IRI_TEMPLATE = "http://www.konig.io/ns/core/iriTemplate";
+	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
+	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
@@ -59,15 +62,21 @@ public class Konig {
 	public static final URI jsonSchemaRendition = new URIImpl("http://www.konig.io/ns/core/jsonSchemaRendition");
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/core/avroSchemaRendition");
 	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/core/PreferredClass");
-	public static final URI equivalentPath = new URIImpl("http://www.konig.io/ns/core/equivalentPath");
+
+	public static final URI equivalentPath = new URIImpl(EQUIVALENT_PATH);
 	public static final URI LoadModelFromSpreadsheet = new URIImpl("http://www.konig.io/ns/core/LoadModelFromSpreadsheet");
-	public static final URI iriTemplate = new URIImpl("http://www.konig.io/ns/core/iriTemplate");
+	public static final URI iriTemplate = new URIImpl(IRI_TEMPLATE);
 	
 	// Data Sources
 
 	public static final URI DataSource = new URIImpl(DATA_SOURCE);
+	public static final URI AuthoritativeDataSource = new URIImpl("http://www.konig.io/ns/core/AuthoritativeDataSource");
+	public static final URI StagingDataSource = new URIImpl("http://www.konig.io/ns/core/StagingDataSource");
+	public static final URI ReportingDataSource = new URIImpl("http://www.konig.io/ns/core/ReportingDataSource");
 	public static final URI GoogleCloudStorageBucket = new URIImpl("http://www.konig.io/ns/core/GoogleCloudStorageBucket");
-	public static final URI shapeOf = new URIImpl(SHAPE_OF);
+	public static final URI OracleTable = new URIImpl("http://www.konig.io/ns/core/OracleDatabase");
+	public static final URI shapeDataSource = new URIImpl(SHAPE_DATA_SOURCE);
+	public static final URI bigQuerySource = new URIImpl(BIG_QUERY_SOURCE);
 	
 	// Shape Transform Vocabulary
 	

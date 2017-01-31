@@ -24,12 +24,15 @@ origin:PersonShape a sh:Shape ;
 		sh:maxCount 1 ;
 		sh:datatype xsd:string ;
 		konig:equivalentPath "/schema:familyName" ;
+	] ;
+	konig:shapeDataSource [
+		a konig:AuthoritativeDataSource
 	]
 .
 
 warehouse:PersonShape a sh:Shape ;
 	sh:targetClass schema:Person ;
-	konig:shapeOf [
+	konig:shapeDataSource [
 		a konig:GoogleBigQueryTable ;
 		dc:identifier "acme.Person"
 	] ;

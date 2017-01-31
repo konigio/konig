@@ -517,6 +517,7 @@ public class PropertyConstraint {
 		this.equivalentPath = equivalentPath;
 	}
 
+	@RdfProperty(Konig.EQUIVALENT_PATH)
 	public Path getCompiledEquivalentPath() {
 		return compiledEquivalentPath;
 	}

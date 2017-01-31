@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 import org.openrdf.model.URI;
@@ -43,18 +44,23 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShapeLoaderTest {
+
 	
 	@Test
-	public void testShapeOf() {
+	public void testShapeDataSource() {
 		URI shapeId = uri("http://example.com/PersonShape");
+		URI bucketId = uri("gs://com.example.person");
+		String iriTemplateValue = "http://example.com/users/{user_id}";
 		
 		Graph graph = new MemoryGraph();
 		graph.builder()
 			.beginSubject(shapeId)
 				.addProperty(RDF.TYPE, SH.Shape)
-				.beginBNode(Konig.shapeOf)
+				.addLiteral(Konig.iriTemplate, iriTemplateValue)
+				.beginBNode(Konig.shapeDataSource)
 					.addProperty(RDF.TYPE, Konig.GoogleBigQueryTable)
 					.addLiteral(DCTERMS.IDENTIFIER, "acme.Person")
+					.addProperty(Konig.bigQuerySource, bucketId)
 				.endSubject()
 			.endSubject();
 		
@@ -64,13 +70,24 @@ public class ShapeLoaderTest {
 		
 		Shape shape = shapeManager.getShapeById(shapeId);
 		assertTrue(shape!=null);
+		assertTrue(shape.getIriTemplate()!=null);
+		assertEquals(iriTemplateValue, shape.getIriTemplate().toString());
 		
-		List<DataSource> dataSourceList = shape.getShapeOf();
+		List<DataSource> dataSourceList = shape.getShapeDataSource();
 		assertTrue(dataSourceList != null);
 		assertEquals(1, dataSourceList.size());
 		DataSource dataSource = dataSourceList.get(0);
+		DataSource source = dataSourceList.get(0);
 		assertTrue(dataSource instanceof GoogleBigQueryTable);
 		assertEquals("acme.Person", dataSource.getIdentifier());
+		GoogleBigQueryTable table = (GoogleBigQueryTable) source;
+		
+		Set<DataSource> set = table.getBigQuerySource();
+		assertTrue(set != null && set.size()==1);
+		
+		DataSource bucket = set.iterator().next();
+		assertEquals(bucketId, bucket.getId());
+	
 	}
 	
 	@Test

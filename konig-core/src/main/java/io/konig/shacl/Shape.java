@@ -69,9 +69,8 @@ public class Shape {
 	private List<URI> type;
 	
 	private IriTemplate iriTemplate;
-	private URI sourceShape;
 	
-	private List<DataSource> shapeOf;
+	private List<DataSource> shapeDataSource;
 	
 	
 	public Shape() {
@@ -398,31 +397,49 @@ public class Shape {
 		this.iriTemplate = iriTemplate;
 	}
 
-	public URI getSourceShape() {
-		return sourceShape;
-	}
-
-	public void setSourceShape(URI sourceShape) {
-		this.sourceShape = sourceShape;
-	}
-
-	@RdfProperty(Konig.SHAPE_OF)
-	public List<DataSource> getShapeOf() {
-		return shapeOf;
+	@RdfProperty(Konig.SHAPE_DATA_SOURCE)
+	public List<DataSource> getShapeDataSource() {
+		return shapeDataSource;
 	}
 	
-	public void addShapeOf(DataSource dataSource) {
-		if (shapeOf == null) {
-			shapeOf = new ArrayList<>();
+	public void addShapeDataSource(DataSource dataSource) {
+		if (shapeDataSource == null) {
+			shapeDataSource = new ArrayList<>();
 		}
-		shapeOf.add(dataSource);
+		shapeDataSource.add(dataSource);
 	}
 
-	@RdfProperty(Konig.SHAPE_OF)
-	public void setShapeOf(List<DataSource> shapeOf) {
-		this.shapeOf = shapeOf;
+	@RdfProperty(Konig.SHAPE_DATA_SOURCE)
+	public void setShapeDataSource(List<DataSource> shapeDataSource) {
+		this.shapeDataSource = shapeDataSource;
 	}
 	
+	public boolean hasDataSourceType(URI type) {
+		if (shapeDataSource != null) {
+			for (DataSource s : shapeDataSource) {
+				if (s.isA(type)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	
+	public String bigQueryTableId() {
+
+		String result = null;
+		if (shapeDataSource != null) {
+			for (DataSource s : shapeDataSource) {
+				if (s.isA(Konig.GoogleBigQueryTable)) {
+					result = s.getIdentifier();
+					if (s.getId() instanceof URI) {
+						result = ((URI)s.getId()).getLocalName();
+					}
+					break;
+				}
+			}
+		}
+		return result;
+	}
 	
 }

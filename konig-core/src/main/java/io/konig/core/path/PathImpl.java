@@ -29,6 +29,8 @@ import java.util.Set;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -36,6 +38,7 @@ import io.konig.core.Path;
 import io.konig.core.SPARQLBuilder;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
+import io.konig.core.impl.EmptyNamespaceManager;
 
 public class PathImpl implements Path {
 	
@@ -189,7 +192,12 @@ public class PathImpl implements Path {
 	public Path subpath(int start) {
 		return subpath(start, stepList.size());
 	}
-	
+
+	@Override
+	public Value toValue() {
+		String text = toString(EmptyNamespaceManager.getInstance());
+		return new LiteralImpl(text, XMLSchema.STRING);
+	}
 
 
 }

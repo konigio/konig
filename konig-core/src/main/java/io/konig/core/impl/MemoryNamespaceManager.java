@@ -28,9 +28,11 @@ import java.util.Map;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.impl.NamespaceImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.vocab.AS;
+import io.konig.core.vocab.DC;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
@@ -49,6 +51,8 @@ public class MemoryNamespaceManager implements NamespaceManager {
 		INSTANCE.add("prov", PROV.NAMESPACE);
 		INSTANCE.add("activity", Konig.ACTIVIY_BASE_URL);
 		INSTANCE.add("schema", Schema.NAMESPACE);
+		INSTANCE.add("xsd", XMLSchema.NAMESPACE);
+		INSTANCE.add("dc", DC.NAMESPACE);
 	}
 	
 	public static MemoryNamespaceManager getDefaultInstance() {
