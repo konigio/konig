@@ -17,6 +17,8 @@ import io.konig.core.extract.ResourceExtractor;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.FileGetter;
+import io.konig.core.vocab.GCP;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 
 /**
@@ -32,6 +34,8 @@ public class ShapeWriter {
 	public ShapeWriter(FileGetter fileGetter) {
 		this.fileGetter = fileGetter;
 		extractor = new ResourceExtractor();
+		extractor.include(Konig.shapeDataSource);
+		extractor.include(GCP.tableReference);
 	}
 	
 	public void writeShapes(Graph graph) throws IOException, RDFHandlerException {

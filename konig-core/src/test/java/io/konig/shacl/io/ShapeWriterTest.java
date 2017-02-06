@@ -32,6 +32,7 @@ import java.util.Set;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDF;
@@ -42,10 +43,14 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.FileGetter;
 import io.konig.core.util.IriTemplate;
+import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.BigQueryTableReference;
 import io.konig.datasource.DataSource;
+import io.konig.datasource.GoogleBigQueryTable;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 
@@ -59,26 +64,43 @@ public class ShapeWriterTest {
 		
 		String iriTemplateValue = "http://example.com/user/{user_id}";
 		Shape shape = new Shape(shapeId);
-		DataSource datasource = new DataSource();
 		shape.setIriTemplate(new IriTemplate(iriTemplateValue));
-		datasource.setIdentifier("acme.Person");
-		datasource.setId(dataSourceId);
-		datasource.addType(Konig.GoogleBigQueryTable);
-		shape.addShapeDataSource(datasource);
+		GoogleBigQueryTable table = new GoogleBigQueryTable();
+		table.setId(dataSourceId);
+		BigQueryTableReference tableRef = new BigQueryTableReference("myproject", "acme", "Person");
+		table.setTableReference(tableRef);
+		
+		shape.addShapeDataSource(table);
 		
 		ShapeWriter shapeWriter = new ShapeWriter();
 		
 		Graph graph = new MemoryGraph();
 		shapeWriter.emitShape(shape, graph);
 		
+	
 		Vertex v = graph.getVertex(shapeId);
+		assertTrue(v != null);
 		assertEquals(iriTemplateValue, v.getValue(Konig.iriTemplate).stringValue());
 		
 		Vertex w = v.getVertex(Konig.shapeDataSource);
 		assertTrue(w!=null);
 
+
 		assertEquals(Konig.GoogleBigQueryTable, w.getURI(RDF.TYPE));
-		assertEquals("acme.Person", w.getValue(DCTERMS.IDENTIFIER).stringValue());
+		
+		Vertex u = w.getVertex(GCP.tableReference);
+		assertTrue(u != null);
+		assertLiteral(u, GCP.projectId, "myproject");
+		assertLiteral(u, GCP.datasetId, "acme");
+		assertLiteral(u, GCP.tableId, "Person");
+	}
+
+	private void assertLiteral(Vertex u, URI predicate, String expected) {
+		Value v = u.getValue(predicate);
+		assertTrue("Failed to get value '" + predicate.getLocalName() + "'", v != null);
+		assertEquals(expected, v.stringValue());
+	
+		
 	}
 
 	@Test

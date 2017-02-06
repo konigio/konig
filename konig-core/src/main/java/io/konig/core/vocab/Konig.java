@@ -123,9 +123,9 @@ public class Konig {
 	public static final URI tableShape = new URIImpl("http://www.konig.io/ns/core/tableShape");
 	public static final URI projectDataset = new URIImpl("http://www.konig.io/ns/core/projectDataset");
 	public static final URI datasetTable = new URIImpl("http://www.konig.io/ns/core/datasetTable");
-	public static final URI projectId = new URIImpl("http://www.konig.io/ns/core/projectId");
-	public static final URI datasetId = new URIImpl("http://www.konig.io/ns/core/datasetId");
-	public static final URI tableId = new URIImpl("http://www.konig.io/ns/core/tableId");
+//	public static final URI projectId = new URIImpl("http://www.konig.io/ns/core/projectId");
+//	public static final URI datasetId = new URIImpl("http://www.konig.io/ns/core/datasetId");
+//	public static final URI tableId = new URIImpl("http://www.konig.io/ns/core/tableId");
 	public static final URI GenerateEnumTables = new URIImpl("http://www.konig.io/ns/core/GenerateEnumTables");
 	public static final URI bigQueryTableId = new URIImpl("http://www.konig.io/ns/core/bigQueryTableId");
 	

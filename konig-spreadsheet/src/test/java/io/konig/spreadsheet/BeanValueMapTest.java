@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import io.konig.core.util.BeanValueMap;
 import io.konig.core.util.SimpleValueFormat;
 
 public class BeanValueMapTest {

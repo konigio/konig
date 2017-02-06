@@ -1,5 +1,7 @@
 package io.konig.spreadsheet;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,6 +9,7 @@ import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -33,20 +36,18 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.activity.Activity;
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
 import io.konig.core.SPARQLBuilder;
 import io.konig.core.Vertex;
-import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.NamespaceManagerList;
 import io.konig.core.path.DataInjector;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.PathFactory;
 import io.konig.core.path.Step;
 import io.konig.core.pojo.BeanUtil;
-import io.konig.core.util.SimpleValueFormat;
-import io.konig.core.util.ValueFormat;
+import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
@@ -56,8 +57,11 @@ import io.konig.core.vocab.VANN;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.ShapeVisitor;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
+import io.konig.shacl.io.ShapeWriter;
+import io.konig.shacl.services.ShapeProducer;
 
 /**
  * A utility that loads the contents of a workbook into a Graph.
@@ -95,6 +99,10 @@ public class WorkbookLoader {
 	private static final String AGGREGATION_OF = "Aggregation Of";
 	private static final String ROLL_UP_BY = "Roll-up By";
 	private static final String BIGQUERY_TABLE = "BigQuery Table";
+	private static final String DATASOURCE = "Datasource";
+	
+	private static final String SETTING_NAME = "Setting Name";
+	private static final String SETTING_VALUE = "Setting Value";
 	
 	private static final String VALUE_TYPE = "Value Type";
 	private static final String MIN_COUNT = "Min Count";
@@ -106,6 +114,9 @@ public class WorkbookLoader {
 	private static final String EQUIVALENT_PATH = "Equivalent Path";
 	private static final String SOURCE_PATH = "Source Path";
 	private static final String PARTITION_OF = "Partition Of";
+
+	private static final String ENUMERATION_DATASOURCE_TEMPLATE = "enumerationDatasourceTemplate";
+	private static final String ENUMERATION_SHAPE_ID = "enumerationShapeId";
 	
 	private static final String UNBOUNDED = "unbounded";
 	
@@ -115,6 +126,8 @@ public class WorkbookLoader {
 	private static final int INDIVIDUAL_FLAG = 0x8;
 	private static final int SHAPE_FLAG = 0x10;
 	private static final int CONSTRAINT_FLAG = 0x14;
+	private static final int SETTINGS_FLAG = 0x20;
+	
 	
 	private static final String GCP_DATASET_FORMAT = 
 			"https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{datasetId}";
@@ -140,30 +153,39 @@ public class WorkbookLoader {
 	private ValueFactory vf = new ValueFactoryImpl();
 	private DataFormatter formatter = new DataFormatter(true);
 	private IdMapper datasetMapper;
-	private ValueFormat gcpDatasetFormat;
-	private ValueFormat gcpBigQueryTableFormat;
-	private ValueFormat gcpBigQueryTableIdFormat;
+	
+	private DataSourceGenerator dataSourceGenerator;
 	
 	private boolean inferRdfPropertyDefinitions;
 	
 	public WorkbookLoader(NamespaceManager nsManager) {
 		
-		NamespaceManagerList list =  new NamespaceManagerList();
-		list.add(nsManager);
-		
-		MemoryNamespaceManager defaults = new MemoryNamespaceManager();
-		list.add(defaults);
 
-		defaults.add("vann", "http://purl.org/vocab/vann/");
-		defaults.add("owl", OWL.NAMESPACE);
-		defaults.add("sh", SH.NAMESPACE);
-		defaults.add("rdf", RDF.NAMESPACE);
-		defaults.add("rdfs", RDFS.NAMESPACE);
-		defaults.add("konig", Konig.NAMESPACE);
-		defaults.add("xsd", XMLSchema.NAMESPACE);
+		nsManager.add("vann", "http://purl.org/vocab/vann/");
+		nsManager.add("owl", OWL.NAMESPACE);
+		nsManager.add("sh", SH.NAMESPACE);
+		nsManager.add("rdf", RDF.NAMESPACE);
+		nsManager.add("rdfs", RDFS.NAMESPACE);
+		nsManager.add("konig", Konig.NAMESPACE);
+		nsManager.add("xsd", XMLSchema.NAMESPACE);
 		
-		this.nsManager = list;
+		this.nsManager = nsManager;
+
+		try {
+
+			Properties properties = new Properties();
+			properties.load(getClass().getClassLoader().getResourceAsStream("WorkbookLoader/settings.properties"));
+			
+			dataSourceGenerator = new DataSourceGenerator(nsManager, null, properties);
+			
+		} catch (IOException e) {
+			throw new KonigException("Failed to create DataSourceGenerator", e);
+		} 
 		
+	}
+	
+	public void setTemplateDir(File templateDir) {
+		dataSourceGenerator.setTemplateDir(templateDir);
 	}
 	
 
@@ -173,47 +195,16 @@ public class WorkbookLoader {
 
 	
 
-	public ValueFormat getGcpDatasetFormat() {
-		if (gcpDatasetFormat == null) {
-			gcpDatasetFormat = new SimpleValueFormat(GCP_DATASET_FORMAT);
-		}
-		return gcpDatasetFormat;
-	}
-
-
-	public void setGcpDatasetFormat(ValueFormat gcpDatasetFormat) {
-		this.gcpDatasetFormat = gcpDatasetFormat;
-	}
-
-
-	public ValueFormat getBigQueryTableFormat() {
-		if (gcpBigQueryTableFormat == null) {
-			gcpBigQueryTableFormat = new SimpleValueFormat(GCP_BIGQUERY_TABLE_FORMAT);
-		}
-		return gcpBigQueryTableFormat;
-	}
-
-
-	public void setBigqueryTableFormat(ValueFormat gcpBigqueryTableFormat) {
-		this.gcpBigQueryTableFormat = gcpBigqueryTableFormat;
-	}
-
-
-	public ValueFormat getGcpBigQueryTableIdFormat() {
-		if (gcpBigQueryTableIdFormat == null) {
-			gcpBigQueryTableIdFormat = new SimpleValueFormat(GCP_BIGQUERY_TABLE_ID_FORMAT);
-		}
-		return gcpBigQueryTableIdFormat;
-	}
-
-
-	public void setGcpBigQueryTableIdFormat(ValueFormat gcpBigQueryTableIdFormat) {
-		this.gcpBigQueryTableIdFormat = gcpBigQueryTableIdFormat;
-	}
-
-
 	public IdMapper getDatasetMapper() {
 		return datasetMapper;
+	}
+	
+	public DataSourceGenerator getDataSourceGenerator() throws IOException {
+		
+		
+		
+		return dataSourceGenerator;
+
 	}
 
 
@@ -250,6 +241,8 @@ public class WorkbookLoader {
 		private DataInjector dataInjector;
 		private DataFormatter dataFormatter;
 		
+		private Properties settings = new Properties();
+		
 		private int ontologyNameCol=UNDEFINED;
 		private int ontologyCommentCol=UNDEFINED;
 		private int namespaceUriCol=UNDEFINED;
@@ -281,6 +274,7 @@ public class WorkbookLoader {
 		private int shapeRollUpByCol = UNDEFINED;
 		private int shapeMediaTypeCol = UNDEFINED;
 		private int shapeBigQueryTableCol = UNDEFINED;
+		private int shapeDatasourceCol = UNDEFINED;
 		
 		private int pcShapeIdCol = UNDEFINED;
 		private int pcPropertyIdCol = UNDEFINED;
@@ -295,6 +289,9 @@ public class WorkbookLoader {
 		private int pcEquivalentPathCol = UNDEFINED;
 		private int pcSourcePathCol = UNDEFINED;
 		private int pcPartitionOfCol = UNDEFINED;
+		
+		private int settingNameCol = UNDEFINED;
+		private int settingValueCol = UNDEFINED;
 		
 		private URI activityId;
 				
@@ -336,6 +333,57 @@ public class WorkbookLoader {
 			loadIndividualProperties();
 			emitProvenance();
 			inferPropertyDefinitions();
+			loadShapes();
+			produceEnumShapes();
+		}
+
+		private void loadShapes() {
+			ShapeLoader loader = new ShapeLoader(getShapeManager());
+			loader.load(graph);
+		}
+
+		private void produceEnumShapes() throws SpreadsheetException {
+			
+			try {
+
+				IriTemplate shapeIdTemplate = enumShapeIdTemplate();
+				
+				if (shapeIdTemplate != null) {
+					
+					List<String> dataSourceTemplates = enumDatasourceTemplates();
+					
+					ShapeProducer producer = new ShapeProducer(nsManager, getShapeManager());
+					producer.setVisitor(new EnumShapeVistor(new ShapeWriter(), getShapeManager(), graph));
+					
+					EnumShapeGenerator generator = new EnumShapeGenerator(producer, getDataSourceGenerator());
+					generator.generateShapes(graph, shapeIdTemplate, dataSourceTemplates);
+				}
+				
+				
+			} catch (IOException e) {
+				throw new SpreadsheetException("Failed to produce Enumeration shapes", e);
+			}
+			
+		}
+
+		private List<String> enumDatasourceTemplates() {
+			List<String> result = null;
+			String text = settings.getProperty(ENUMERATION_DATASOURCE_TEMPLATE);
+			if (text != null) {
+				result = new ArrayList<>();
+				StringTokenizer tokenizer = new StringTokenizer(text, " \t\r\n");
+				while (tokenizer.hasMoreTokens()) {
+					String token = tokenizer.nextToken();
+					result.add(token);
+				}
+			}
+			return result;
+		}
+
+		private IriTemplate enumShapeIdTemplate() {
+			
+			String templateText = settings.getProperty(ENUMERATION_SHAPE_ID);
+			return templateText == null ? null : new IriTemplate(templateText);
 		}
 
 		private void inferPropertyDefinitions() {
@@ -579,6 +627,7 @@ public class WorkbookLoader {
 			case INDIVIDUAL_FLAG : loadIndividuals(sheet); break;
 			case SHAPE_FLAG :loadShapes(sheet); break;
 			case CONSTRAINT_FLAG : loadPropertyConstraints(sheet);
+			case SETTINGS_FLAG : loadSettings(sheet); break;
 			
 			}
 			
@@ -602,13 +651,33 @@ public class WorkbookLoader {
 				case PROPERTY_ID : bits = bits | PROPERTY_FLAG; break;
 				case INDIVIDUAL_ID : bits = bits | INDIVIDUAL_FLAG; break;
 				case SHAPE_ID : bits = bits | SHAPE_FLAG; break;
+				case SETTING_NAME : bits = bits | SETTINGS_FLAG; break;
 				}
 			}
 			
 			return bits;
 		}
 		
-		
+		private void loadSettings(Sheet sheet) throws SpreadsheetException {
+			readSettingHeader(sheet);
+			int rowSize = sheet.getLastRowNum()+1;
+			
+			for (int i=sheet.getFirstRowNum()+1; i<rowSize; i++) {
+				Row row = sheet.getRow(i);
+				loadSettingsRow(row);
+			}
+		}
+
+		private void loadSettingsRow(Row row) {
+			
+			String name = stringValue(row, settingNameCol);
+			String value = stringValue(row, settingValueCol);
+			
+			if (name != null && value!=null) {
+				settings.setProperty(name, value);
+			}
+			
+		}
 
 		private void loadPropertyConstraints(Sheet sheet) throws SpreadsheetException {
 			readPropertyConstraintHeader(sheet);
@@ -852,6 +921,31 @@ public class WorkbookLoader {
 			}
 			return literal;
 		}
+		
+		private void readSettingHeader(Sheet sheet) {
+			settingNameCol = settingValueCol = UNDEFINED;
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
+			
+			int colSize = row.getLastCellNum() + 1;
+			for (int i=row.getFirstCellNum(); i<colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+					
+					switch (text) {
+					case SETTING_NAME :  settingNameCol = i; break;
+					case SETTING_VALUE : settingValueCol = i; break;
+						
+					}
+				}
+			}
+			
+		}
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
 			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol =
@@ -915,6 +1009,8 @@ public class WorkbookLoader {
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			Literal bigqueryTable = bigQueryTableId(row, targetClass);
 			
+			List<String> dataSourceList = dataSourceList(row);
+			
 			if (shapeId == null) {
 				return;
 			}
@@ -927,11 +1023,43 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.aggregationOf, aggregationOf);
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
-//			edge(shapeId, Konig.shapeDataSource)
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
 			
+			if (dataSourceList != null) {
+				try {
+					DataSourceGenerator generator = getDataSourceGenerator();
+
+					Shape shape = new Shape(shapeId);
+					shape.setTargetClass(targetClass);
+					for (String templateName : dataSourceList) {
+						generator.generate(shape, templateName, graph);
+					}
+					
+				} catch (IOException e) {
+					throw new SpreadsheetException("Failed to create DataSourceGenerator", e);
+				}
+			}
 			
 			
+			
+			
+			
+		}
+
+		private List<String> dataSourceList(Row row) {
+			String text = stringValue(row, shapeDatasourceCol);
+			if (text == null) {
+				return null;
+			}
+			
+			List<String> list = new ArrayList<>();
+			StringTokenizer tokenizer = new StringTokenizer(text, " \r\n\t");
+			while (tokenizer.hasMoreTokens()) {
+				String token = tokenizer.nextToken();
+				list.add(token);
+			}
+			
+			return list.isEmpty() ? null : list;
 		}
 
 		private Literal bigQueryTableId(Row row, URI targetClass) throws SpreadsheetException {
@@ -986,6 +1114,7 @@ public class WorkbookLoader {
 					case ROLL_UP_BY : shapeRollUpByCol = i; break;
 					case MEDIA_TYPE : shapeMediaTypeCol = i; break;
 					case BIGQUERY_TABLE : shapeBigQueryTableCol = i; break;
+					case DATASOURCE : shapeDatasourceCol = i; break;
 						
 					}
 				}
@@ -1502,12 +1631,14 @@ public class WorkbookLoader {
 							}
 							if (text != null) {
 								text = text.trim();
+								
 							}
 						}
 					}
 				}
 			}
-			return text;
+			
+			return text==null || text.isEmpty() ? null : text;
 		}
 
 		private void readOntologyHeader(Sheet sheet) throws SpreadsheetException {
@@ -1620,5 +1751,27 @@ public class WorkbookLoader {
 			return result;
 		}
 	}
+	
+	static class EnumShapeVistor implements ShapeVisitor {
+		
+		private ShapeWriter shapeWriter;
+		private ShapeManager shapeManager;
+		private Graph graph;
+
+		public EnumShapeVistor(ShapeWriter shapeWriter, ShapeManager shapeManager, Graph graph) {
+			this.shapeWriter = shapeWriter;
+			this.shapeManager = shapeManager;
+			this.graph = graph;
+		}
+
+		@Override
+		public void visit(Shape shape) {
+			shapeManager.addShape(shape);
+			shapeWriter.emitShape(shape, graph);
+		}
+		
+	}
+	
+
 
 }

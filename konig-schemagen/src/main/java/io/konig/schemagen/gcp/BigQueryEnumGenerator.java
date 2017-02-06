@@ -20,7 +20,9 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.json.JsonWriter;
@@ -56,6 +58,8 @@ public class BigQueryEnumGenerator {
 					
 					Shape shape = getBigQueryTableShape(enumClassId);
 					if (shape != null) {
+						
+						file.getParentFile().mkdirs();
 
 						FileWriter out = new FileWriter(file);
 						
@@ -93,8 +97,13 @@ public class BigQueryEnumGenerator {
 
 		List<Shape> shapeList = shapeManager.getShapesByTargetClass(enumClassId);
 		for (Shape shape : shapeList) {
-			if (shape.getBigQueryTableId() != null) {
-				return shape;
+			List<DataSource> datasourceList = shape.getShapeDataSource();
+			if (datasourceList != null) {
+				for (DataSource source : datasourceList) {
+					if (source.isA(Konig.GoogleBigQueryTable)) {
+						return shape;
+					}
+				}
 			}
 		}
 		return null;

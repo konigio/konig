@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,7 +20,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.regex.Pattern;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
@@ -400,6 +401,12 @@ public class RdfUtil {
 		}
 		
 		return value;
+	}
+	
+	public static void prettyPrintTurtle(Graph graph, OutputStream out) throws IOException, RDFHandlerException {
+		OutputStreamWriter writer = new OutputStreamWriter(out);
+		prettyPrintTurtle(graph.getNamespaceManager(), graph, writer);
+		writer.flush();
 	}
 
 	public static void prettyPrintTurtle(Graph graph, Writer writer) throws IOException, RDFHandlerException {

@@ -2,9 +2,9 @@ package io.konig.shacl;
 
 /*
  * #%L
- * Konig SHACL
+ * Konig Core
  * %%
- * Copyright (C) 2015 - 2016 Gregory McFall
+ * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,81 +20,155 @@ package io.konig.shacl;
  * #L%
  */
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import static org.junit.Assert.*;
+import java.io.IOException;
+import java.io.InputStream;
 
-import java.util.List;
-
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.SimpleLocalNameService;
-import io.konig.core.path.PathFactory;
-import io.konig.core.vocab.Schema;
+import io.konig.core.impl.RdfUtil;
+import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 
 public class ShapeValidatorTest {
+	private ShapeManager shapeManager = new MemoryShapeManager();
+	private NamespaceManager nsManager = new MemoryNamespaceManager();
+	private ShapeValidator validator = new ShapeValidator();
+	private ValidationReport report = new ValidationReport();
+	
+	@Test
+	public void testNodeKind() throws Exception {
+		Graph graph = loadGraph("ShapeValidatorTest/testNodeKind.ttl");
+		
+		Vertex alice = graph.getVertex(uri("http://example.com/person/alice"));
+		Shape shape = shapeManager.getShapeById(uri("http://example.com/shapes/PersonShape"));
+		boolean ok = validator.validate(alice, shape, report);
+		
+		assertTrue(!ok);
+		assertEquals(1, report.getValidationResult().size());
+		ValidationResult result = report.getValidationResult().get(0);
+		assertEquals("/schema:address", result.getPath().toString(nsManager));
+		assertEquals("Expected an IRI but found  a BNode", result.getMessage());
+	}
+	
+	@Test
+	public void testEmbeddedShape() throws Exception {
+		Graph graph = loadGraph("ShapeValidatorTest/testEmbeddedShape.ttl");
+		
+		Vertex alice = graph.getVertex(uri("http://example.com/person/alice"));
+		Shape shape = shapeManager.getShapeById(uri("http://example.com/shapes/PersonShape"));
+		boolean ok = validator.validate(alice, shape, report);
+		
+		assertTrue(!ok);
+		assertEquals(1, report.getValidationResult().size());
+		ValidationResult result = report.getValidationResult().get(0);
+		assertEquals("/schema:address/schema:addressRegion", result.getPath().toString(nsManager));
+		assertEquals("Expected at least 1 value but found 0", result.getMessage());
+	}
+	
+	@Test
+	public void testExpectResourceButFounLiteral() throws Exception {
+		Graph graph = loadGraph("ShapeValidatorTest/testExpectResourceButFoundLiteral.ttl");
+		
+		Vertex alice = graph.getVertex(uri("http://example.com/person/alice"));
+		Shape shape = shapeManager.getShapeById(uri("http://example.com/shapes/PersonShape"));
+		boolean ok = validator.validate(alice, shape, report);
+		
+		assertTrue(!ok);
+		assertEquals(1, report.getValidationResult().size());
+		ValidationResult result = report.getValidationResult().get(0);
+		assertEquals("/schema:address", result.getPath().toString(nsManager));
+		assertEquals("Value must not be a literal but found '101 Main Street'", result.getMessage());
+		
+	}
 
 	@Test
-	public void test() {
+	public void testMinCount() throws Exception {
+		Graph graph = loadGraph("ShapeValidatorTest/testMinCount.ttl");
 		
+		Vertex alice = graph.getVertex(uri("http://example.com/person/alice"));
+		Shape shape = shapeManager.getShapeById(uri("http://example.com/shapes/PersonShape"));
+		boolean ok = validator.validate(alice, shape, report);
 		
-		SimpleLocalNameService localNameService = new SimpleLocalNameService();
-		localNameService.add("parent", Schema.parent);
+		assertTrue(!ok);
+		assertEquals(1, report.getValidationResult().size());
+		ValidationResult result = report.getValidationResult().get(0);
+		assertEquals("/schema:familyName", result.getPath().toString(nsManager));
+		assertEquals("Expected at least 1 value but found 0", result.getMessage());
 		
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		nsManager.add("schema", Schema.NAMESPACE);
+	}
 
-		URI aliceId = uri("http://example.com/person/alice");
-		URI bobId = uri("http://example.com/person/bob");
-		URI cathyId = uri("http://example.com/person/cathy");
-		URI donId = uri("http://example.com/person/don");
-		URI estherId = uri("http://example.com/person/esther");
-		
-		URI shapeId = uri("http://example.com/shapes/v1/schema/Person");
-		URI grandparent = uri("http://example.com/ns/grandparent");
-		
-		
-		MemoryGraph data = new MemoryGraph();
-		data.builder()
-			.beginSubject(aliceId)
-				.addProperty(Schema.parent, bobId)
-				.addProperty(grandparent, donId)
-				.addProperty(grandparent, estherId)
-			.endSubject()
-			.beginSubject(bobId)
-				.addProperty(Schema.parent, cathyId)
-				.addProperty(Schema.parent, donId)
-			.endSubject();
-			
-		ShapeBuilder builder = new ShapeBuilder();
-		builder.beginShape(shapeId)
-			.beginProperty(grandparent)
-				.equivalentPath("/parent/parent")
-			.endProperty()
-		.endShape();
-			
 
-		PathFactory factory = new PathFactory(nsManager, localNameService);
+	@Test
+	public void testMaxCount() throws Exception {
+		Graph graph = loadGraph("ShapeValidatorTest/testMaxCount.ttl");
 		
-		ValidationReport report = new ValidationReport();
-		ShapeValidator validator = new ShapeValidator(factory);
+		Vertex alice = graph.getVertex(uri("http://example.com/person/alice"));
+		Shape shape = shapeManager.getShapeById(uri("http://example.com/shapes/PersonShape"));
+		boolean ok = validator.validate(alice, shape, report);
 		
-		Vertex alice = data.getVertex(aliceId);
-		Shape shape = builder.getShape(shapeId);
+		assertTrue(!ok);
+		assertEquals(1, report.getValidationResult().size());
+		ValidationResult result = report.getValidationResult().get(0);
+		assertEquals("/schema:familyName", result.getPath().toString(nsManager));
+		assertEquals("Expected at most 1 value but found 2", result.getMessage());
 		
-		validator.validate(alice, shape, report);
-		
-		List<ValidationResult> resultList = report.getValidationResult();
-		assertEquals(1, resultList.size());
-		
+	}
+	
+	@Test
+	public void testDatatype() throws Exception {
 
-		ValidationResult result = resultList.get(0);
-		System.out.println(result.getMessage());
+		Graph graph = loadGraph("ShapeValidatorTest/testDatatype.ttl");
+		
+		Vertex alice = graph.getVertex(uri("http://example.com/person/alice"));
+		Shape shape = shapeManager.getShapeById(uri("http://example.com/shapes/PersonShape"));
+		boolean ok = validator.validate(alice, shape, report);
+		
+		assertTrue(!ok);
+		assertEquals(1, report.getValidationResult().size());
+		ValidationResult result = report.getValidationResult().get(0);
+		assertEquals("/schema:birthDate", result.getPath().toString(nsManager));
+		assertEquals("Expected value of type xsd:date but found xsd:dateTime", result.getMessage());
+	}
+
+	
+	@Test
+	public void testClosed() throws Exception {
+
+		Graph graph = loadGraph("ShapeValidatorTest/testClosed.ttl");
+		
+		Vertex alice = graph.getVertex(uri("http://example.com/person/alice"));
+		Shape shape = shapeManager.getShapeById(uri("http://example.com/shapes/PersonShape"));
+		validator.setClosed(true);
+		boolean ok = validator.validate(alice, shape, report);
+		
+		assertTrue(!ok);
+		assertEquals(1, report.getValidationResult().size());
+		ValidationResult result = report.getValidationResult().get(0);
+		assertEquals("/schema:familyName", result.getPath().toString(nsManager));
+		assertEquals("Property not permitted in closed shape", result.getMessage());
+	}
+
+	private Graph loadGraph(String resource) throws RDFParseException, RDFHandlerException, IOException {
+		Graph graph = new MemoryGraph(nsManager);
+		InputStream input = getClass().getClassLoader().getResourceAsStream(resource);
+		RdfUtil.loadTurtle(graph, input, "");
+		ShapeLoader loader = new ShapeLoader(shapeManager);
+		loader.load(graph);
+		
+		return graph;
 	}
 
 	private URI uri(String value) {
