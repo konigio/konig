@@ -51,6 +51,7 @@ import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
+import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
@@ -97,6 +98,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 	private static final String SCHEMA = "schema";
 	private static final String DATA = "data";
+	private static final String DATASET = "dataset";
 	
     /**
      * Location of the file.
@@ -313,6 +315,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if (bqOutDir != null) {
 
 			File bqSchemaDir = new File(bqOutDir, SCHEMA);
+			File bqDatasetDir = new File(bqOutDir, DATASET);
 			GoogleCloudResourceGenerator resourceGenerator = new GoogleCloudResourceGenerator();
 			resourceGenerator.generateBigQueryTables(shapeManager.listShapes(), bqSchemaDir);
 			
@@ -324,6 +327,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			DataFileMapperImpl dataFileMapper = new DataFileMapperImpl(bqDataDir, datasetMapper, createTableMapper());
 			enumGenerator.generate(owlGraph, dataFileMapper);
+			
+			BigQueryDatasetGenerator datasetGenerator = new BigQueryDatasetGenerator(bqSchemaDir, bqDatasetDir);
+			datasetGenerator.run();
+			
+		
 		}
 	}
 
