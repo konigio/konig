@@ -3,45 +3,33 @@ package io.konig.schemagen.gcp;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringWriter;
 
 import com.google.api.client.json.JsonGenerator;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.bigquery.model.Table;
+import com.google.api.services.bigquery.model.TableReference;
 
 import io.konig.core.KonigException;
-import io.konig.schemagen.SchemaGeneratorException;
+import io.konig.core.util.IOUtil;
 
-public class BigQueryTableWriter implements BigQueryTableHandler {
-
-	private File outDir;
-	private BigQueryTableGenerator generator;
+public class BigQueryTableWriter implements BigQueryTableVisitor {
 	
+	private File baseDir;
 
-	public BigQueryTableWriter(File outDir, BigQueryTableGenerator generator) {
-		this.outDir = outDir;
-		this.generator = generator;
-		outDir.mkdirs();
+	public BigQueryTableWriter(File baseDir) {
+		this.baseDir = baseDir;
+		baseDir.mkdirs();
 	}
-
-	public BigQueryTableGenerator getGenerator() {
-		return generator;
-	}
-
 
 	@Override
-	public void add(BigQueryTable source) {
+	public void visit(Table table) {
 		
-		Table table = generator.toTable(source);
-		
+		File tableFile = tableFile(table);
 		JacksonFactory factory = JacksonFactory.getDefaultInstance();
 
-		String fileName = tableFileName(source);
-		File file = new File(outDir, fileName);
-		
 		FileWriter writer = null;
 		try {
-			writer = new FileWriter(file);
+			writer = new FileWriter(tableFile);
 
 			JsonGenerator generator = factory.createJsonGenerator(writer);
 			generator.enablePrettyPrint();
@@ -51,42 +39,35 @@ public class BigQueryTableWriter implements BigQueryTableHandler {
 		} catch (IOException e) {
 			throw new KonigException(e);
 		} finally {
-			close(writer);
-		}
-		
-	}
-	private void close(FileWriter writer) {
-		if (writer != null) {
-			try {
-				writer.close();
-			} catch (Throwable oops) {
-				oops.printStackTrace(System.err);
-			}
+			IOUtil.close(writer, tableFile.getName());
 		}
 		
 	}
 
-
-	private String tableFileName(BigQueryTable table) {
-		BigQueryTableReference ref = table.getTableReference();
-		if (ref ==null) {
-			throw new SchemaGeneratorException("tableReference is not defined");
+	private File tableFile(Table table) {
+		
+		TableReference tableRef = table.getTableReference();
+		if (tableRef == null) {
+			throw new KonigException("Table reference");
 		}
-		String tableId = ref.getTableId();
-		String datasetId = ref.getDatasetId();
+		String tableId = tableRef.getTableId();
 		if (tableId == null) {
-			throw new SchemaGeneratorException("tableId is not defined");
+			throw new KonigException("tableId is not defined");
 		}
+		String datasetId = tableRef.getDatasetId();
 		if (datasetId == null) {
-			throw new SchemaGeneratorException("datasetId is not defined for table " + tableId);
+			throw new KonigException("Dataset Id is not defined for table: " + tableId);
 		}
 		
 		StringBuilder builder = new StringBuilder();
 		builder.append(datasetId);
 		builder.append('.');
 		builder.append(tableId);
+		builder.append(".json");
 		
-		return builder.toString();
+		return new File(baseDir, builder.toString());
 	}
+	
+
 
 }

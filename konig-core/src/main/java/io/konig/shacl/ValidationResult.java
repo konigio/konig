@@ -24,11 +24,13 @@ package io.konig.shacl;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
+import io.konig.core.Path;
+
 public class ValidationResult {
 
 	private Resource id;
 	private Resource focusNode;
-	private URI path;
+	private Path path;
 	private String message;
 	private Resource sourceShape;
 	private Severity severity;
@@ -45,10 +47,10 @@ public class ValidationResult {
 	public void setFocusNode(Resource focusNode) {
 		this.focusNode = focusNode;
 	}
-	public URI getPath() {
+	public Path getPath() {
 		return path;
 	}
-	public void setPath(URI path) {
+	public void setPath(Path path) {
 		this.path = path;
 	}
 	public String getMessage() {

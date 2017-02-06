@@ -29,18 +29,24 @@ import org.openrdf.model.impl.LiteralImpl;
 public class SimpleValueFormat implements ValueFormat {
 
 
-	private String text;
-	private List<Element> elements;
+	protected String text;
+	protected List<Element> elements;
 	
 	
 	public SimpleValueFormat(String text) {
-		this.text = text.trim();
-		
-		compile();
+		if (text != null) {
+			this.text = text.trim();
+			
+			compile();
+		}
 		
 	}
+	
+	protected Element createVariable(String text) {
+		return new Variable(text);
+	}
 
-	private void compile() {
+	protected void compile() {
 		
 		elements = new ArrayList<>();
 		
@@ -58,7 +64,7 @@ public class SimpleValueFormat implements ValueFormat {
 				}
 			} else if (c=='}') {
 				String value = buffer.toString();
-				elements.add(new Variable(value));
+				elements.add(createVariable(value));
 				buffer = new StringBuilder();
 			} else {
 				buffer.appendCodePoint(c);
@@ -77,17 +83,22 @@ public class SimpleValueFormat implements ValueFormat {
 		StringBuilder builder = new StringBuilder();
 		for (Element e : elements) {
 			String value = e.get(map);
-			builder.append(value);
+			if (value == null) {
+				builder.append('{');
+				builder.append(e.text);
+				builder.append('}');
+			} else {
+				builder.append(value);
+			}
 		}
 		
 		return builder.toString();
 		
 	}
-	
 	public String toString() {
 		return text;
 	}
-	private static class Element {
+	static class Element {
 		protected String text;
 		
 		
@@ -101,7 +112,7 @@ public class SimpleValueFormat implements ValueFormat {
 		}
 	}
 	
-	private static class Variable extends Element {
+	static class Variable extends Element {
 		
 		public Variable(String text) {
 			super(text);

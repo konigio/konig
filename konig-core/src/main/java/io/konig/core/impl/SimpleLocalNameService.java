@@ -35,6 +35,7 @@ import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.LocalNameService;
 import io.konig.core.vocab.AS;
+import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
@@ -52,6 +53,7 @@ public class SimpleLocalNameService implements LocalNameService {
 		DEFAULT.addStaticFields(PROV.class);
 		DEFAULT.addStaticFields(RDF.class);
 		DEFAULT.addStaticFields(RDFS.class);
+		DEFAULT.addStaticFields(GCP.class);
 	}
 	
 	public static SimpleLocalNameService getDefaultInstance() {

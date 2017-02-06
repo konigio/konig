@@ -25,11 +25,13 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 
 public class GoogleBigQueryTable extends DataSource {
 	
 	private Set<DataSource> bigQuerySource;
+	private BigQueryTableReference tableReference;
 
 	public GoogleBigQueryTable() {
 		addType(Konig.GoogleBigQueryTable);
@@ -51,5 +53,15 @@ public class GoogleBigQueryTable extends DataSource {
 		this.bigQuerySource = bigQuerySource;
 	}
 
+	@RdfProperty(GCP.TABLE_REFERENCE)
+	public BigQueryTableReference getTableReference() {
+		return tableReference;
+	}
+
+	public void setTableReference(BigQueryTableReference tableReference) {
+		this.tableReference = tableReference;
+	}
+	
+	
 
 }

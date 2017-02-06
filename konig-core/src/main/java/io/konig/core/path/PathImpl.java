@@ -199,5 +199,10 @@ public class PathImpl implements Path {
 		return new LiteralImpl(text, XMLSchema.STRING);
 	}
 
+	@Override
+	public Step remove(int index) {
+		return stepList.remove(index);
+	}
+
 
 }

@@ -24,7 +24,6 @@ import java.util.HashSet;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.openrdf.rio.RDFHandlerException;
@@ -48,20 +47,18 @@ import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
-import io.konig.schemagen.SimpleShapeNamer;
 import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
-import io.konig.schemagen.gcp.BigQueryTableGenerator;
+import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
+import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
-import io.konig.schemagen.gcp.GoogleCloudConfig;
+import io.konig.schemagen.gcp.GoogleCloudResourceGenerator;
 import io.konig.schemagen.gcp.LocalNameTableMapper;
-import io.konig.schemagen.gcp.MemoryGoogleCloudManager;
 import io.konig.schemagen.gcp.NamespaceDatasetMapper;
 import io.konig.schemagen.gcp.SimpleDatasetMapper;
-import io.konig.schemagen.gcp.SimpleProjectMapper;
 import io.konig.schemagen.java.BasicJavaNamer;
 import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
@@ -85,7 +82,6 @@ import io.konig.shacl.impl.BasicLogicalShapeNamer;
 import io.konig.shacl.impl.MemoryClassManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
-import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.shacl.jsonld.SuffixContextNamer;
@@ -312,44 +308,25 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
+	
+	private void generateBigQueryTables() throws IOException {
+		if (bqOutDir != null) {
 
-	private void generateBigQueryTables() throws SchemaGeneratorException, IOException, RDFParseException, RDFHandlerException {
-
-		if (bqShapeBaseURL != null) {
-			if (bqSourceDir != null) {
-				RdfUtil.loadTurtle(bqSourceDir, owlGraph, nsManager);
-			}
-			SimpleShapeNamer shapeNamer = new SimpleShapeNamer(nsManager, bqShapeBaseURL);
-			shapeNamer.setPrefixBase("bq");
-			BigQueryTableGenerator generator = new BigQueryTableGenerator(shapeManager, shapeNamer, owlReasoner);
-			
-			MemoryGoogleCloudManager cloudManager = new MemoryGoogleCloudManager();
-			
-			
-			GoogleCloudConfig config = new GoogleCloudConfig(cloudManager, generator);
-			
-			BigQueryTableMapper tableMapper = createTableMapper();
-			
-			
-			config.load(owlGraph);
-			
-			generator.generateBigQueryTables(cloudManager);
-			ShapeFileGetter shapeFileGetter = new ShapeFileGetter(shapesOutDir, nsManager);
-			cloudManager.setProjectMapper(new SimpleProjectMapper("testProject"));
-			cloudManager.setDatasetMapper(datasetMapper());
-			generator.setTableMapper(tableMapper);
-			generator.generateEnumTables(owlGraph, cloudManager);
-			config.writeEnumTableShapes(nsManager, shapeFileGetter);
-			
-			
 			File bqSchemaDir = new File(bqOutDir, SCHEMA);
+			GoogleCloudResourceGenerator resourceGenerator = new GoogleCloudResourceGenerator();
+			resourceGenerator.generateBigQueryTables(shapeManager.listShapes(), bqSchemaDir);
+			
+			BigQueryEnumGenerator enumGenerator = new BigQueryEnumGenerator(shapeManager);
+
+			
 			File bqDataDir = new File(bqOutDir, DATA);
 			
-			config.writeBigQueryTableDefinitions(bqSchemaDir);
-			config.writeBigQueryEnumMembers(owlGraph, bqDataDir);
+
+			DataFileMapperImpl dataFileMapper = new DataFileMapperImpl(bqDataDir, datasetMapper, createTableMapper());
+			enumGenerator.generate(owlGraph, dataFileMapper);
 		}
-		
 	}
+
 	
 	private BigQueryTableMapper createTableMapper() {
 		return new LocalNameTableMapper();

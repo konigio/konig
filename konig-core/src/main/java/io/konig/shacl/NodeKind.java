@@ -28,18 +28,34 @@ import io.konig.core.vocab.SH;
 
 public enum NodeKind  {
 
-	IRI("http://www.w3.org/ns/shacl#IRI"),
-	BlankNode("http://www.w3.org/ns/shacl#BlankNode"),
-	BlankNodeOrIRI(SH.BlankNodeOrIRI.stringValue()),
-	Literal("http://www.w3.org/ns/shacl#Literal");
+	IRI(SH.IRI, 1),
+	BlankNode(SH.BlankNode, 2),
+	BlankNodeOrIRI(SH.BlankNodeOrIRI, 3),
+	Literal(SH.Literal, 4),
+	IRIOrLiteral(SH.IRIOrLiteral, 5),
+	BlankNodeOrLiteral(SH.BlankNodeOrLiteral, 6),
+	;
 
 	private URI uri;
-	private NodeKind(String value) {
-		uri = new URIImpl(value);
+	private int index;
+	
+	
+	private NodeKind(URI uri, int index) {
+		this.uri = uri;
+		this.index = index;
+		
 	}
 	
 	public URI getURI() {
 		return uri;
+	}
+	
+	public static NodeKind or(NodeKind a, NodeKind b) {
+		int index = (a==null ? 0 : a.index) | (b==null ? 0 : b.index) - 1;
+		
+		return (index<0) ? null : values()[index];
+		
+		
 	}
 	
 	public static NodeKind fromURI(URI uri) {

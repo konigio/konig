@@ -1,0 +1,11 @@
+@prefix schema: <http://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.com/person/alice> a schema:Person ;
+	schema:givenName "Alice" ;
+	schema:address [
+		schema:addressLocality "Springfield" ;
+		schema:addressRegion "VA"
+	]
+.
+

@@ -1,0 +1,13 @@
+@prefix schema: <http://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema:parent rdfs:range schema:Person .
+
+<http://example.com/person/alice> a schema:Person ;
+	schema:givenName "Alice" ;
+	schema:parent <http://example.com/person/bob>
+.
+
+
+

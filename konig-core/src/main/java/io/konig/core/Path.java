@@ -66,6 +66,8 @@ public interface Path {
 	 */
 	Path subpath(int start);
 	
+	Step remove(int index);
+	
 	int length();
 	
 	void visit(SPARQLBuilder builder);

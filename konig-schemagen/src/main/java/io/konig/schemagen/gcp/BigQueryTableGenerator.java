@@ -5,17 +5,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.RDFS;
-import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
@@ -28,8 +22,6 @@ import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableSchema;
 
-import io.konig.activity.Activity;
-import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
@@ -38,7 +30,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.PojoFactory;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Konig;
-import io.konig.core.vocab.Schema;
+import io.konig.datasource.BigQueryTableReference;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeNamer;
 import io.konig.schemagen.merge.ShapeAggregator;
@@ -58,7 +50,6 @@ public class BigQueryTableGenerator {
 	private BigQueryDatatypeMapper datatypeMap = new BigQueryDatatypeMapper();
 	private OwlReasoner owl;
 	private ShapeNamer shapeNamer;
-	private BigQueryTableHandler handler;
 	private BigQueryTableMapper tableMapper;
 	
 	
@@ -102,163 +93,7 @@ public class BigQueryTableGenerator {
 		this.tableMapper = tableMapper;
 		return this;
 	}
-
-
-	public BigQueryTableHandler getHandler() {
-		return handler;
-	}
-
-	public void setHandler(BigQueryTableHandler handler) {
-		this.handler = handler;
-	}
 	
-	/**
-	 * Generate a BigQuery table for each Shape that has a bigQueryTableId property.
-	 * @param manager The GoogleCloudManager into which BigQueryTable definitions will be injected.
-	 */
-	public void generateBigQueryTables(GoogleCloudManager manager) {
-		if (shapeManager == null) {
-			throw new GoogleCloudException("Cannot generate BigQueryTables: shapeManager is not defined");
-		}
-		
-		for (Shape shape : shapeManager.listShapes()) {
-			Resource shapeId = shape.getId();
-			String fullId = shape.bigQueryTableId();
-			if (fullId != null && shapeId instanceof URI) {
-				String[] idList = fullId.split("[.]");
-				if (idList.length==2) {
-					String projectId = "testProject";
-					String datasetId = idList[0];
-					String tableId = idList[1];
-					
-					GoogleCloudProject project = manager.getProjectById(projectId);
-					if (project == null) {
-						project = new GoogleCloudProject();
-						project.setProjectId(projectId);
-						manager.add(project);
-					}
-					
-					BigQueryDataset dataset = project.findProjectDataset(datasetId);
-					if (dataset == null) {
-						dataset = new BigQueryDataset();
-						dataset.setDatasetId(datasetId);
-						project.addProjectDataset(dataset);
-					}
-					BigQueryTable table = new BigQueryTable();
-					URI shapeURI = (URI) shapeId;
-					
-					table.setTableShape(shapeURI);
-					table.setTableId(tableId);
-					dataset.addDatasetTable(table);
-					
-					
-				} else {
-					throw new GoogleCloudException("Invalid bigQueryTableId: " + fullId);
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Generate BigQuery tables for the sub-classes of schema:Enumeration.
-	 * @param sourceGraph The graph containing OWL class definitions.
-	 * @param manager The Google Cloud Project manager into which generated tables will be placed.
-	 */
-	public void generateEnumTables(Graph sourceGraph, GoogleCloudManager manager) {
-			
-		Activity activity = new Activity();
-		activity.setType(Konig.GenerateEnumTables);
-		activity.setId(Activity.nextActivityId());
-		
-		List<Vertex> list = sourceGraph.v(Schema.Enumeration).in(RDFS.SUBCLASSOF).isIRI().toVertexList();
-		for (Vertex owlClass : list) {
-			
-			URI classId = (URI) owlClass.getId();
-			Collection<BigQueryTable> prior = manager.tablesForClass(classId);
-			if (prior.isEmpty()) {
-				if (tableMapper == null) {
-					throw new GoogleCloudException("Cannot generate enum tables: tableMapper is not defined");
-				}
-				String tableId = tableMapper.tableForClass(owlClass);
-				if (tableId == null) {
-					continue;
-				}
-				if (shapeNamer == null) {
-					throw new GoogleCloudException("Cannot generate enum tables: shapeNamer is not defined");
-				}
-				if (shapeManager == null) {
-					throw new GoogleCloudException("Cannot generate enum tables: shapeManager is not defined");
-				}
-
-				BigQueryDataset dataset = manager.datasetForClass(owlClass);
-				if (dataset != null) {
-					BigQueryTable table = dataset.findDatasetTable(tableId);
-					if (table == null) {
-						table = new BigQueryTable();
-						table.setTableId(tableId);
-						table.setWasGeneratedBy(activity);
-						URI shapeId = shapeNamer.shapeName(classId);
-						if (shapeId != null) {
-							
-							Shape shape = shapeManager.getShapeById(shapeId);
-							if (shape == null) {
-								shape = new Shape();
-								shape.setId(shapeId);
-								shape.setNodeKind(NodeKind.IRI);
-								shape.setTargetClass(classId);
-								shape.setWasGeneratedBy(activity);
-								
-								PropertyConstraint nameProperty = new PropertyConstraint(Schema.name);
-								nameProperty.setDatatype(XMLSchema.STRING);
-								nameProperty.setMinCount(1);
-								nameProperty.setMaxCount(1);
-								shape.add(nameProperty);
-								
-								
-								List<Vertex> memberList = owlClass.asTraversal().in(RDF.TYPE).toVertexList();
-
-								int minCount = memberList.isEmpty() ? 0 : 1;
-								int maxCount = 0;
-								for (Vertex m : memberList) {
-									Set<Edge>  set = m.outProperty(DCTERMS.IDENTIFIER);
-									if (set.isEmpty()) {
-										minCount=0;
-									} else {
-										maxCount = 1;
-									}
-								}
-								
-								if (maxCount > 0) {
-									PropertyConstraint p = new PropertyConstraint(DCTERMS.IDENTIFIER);
-									p.setDatatype(XMLSchema.STRING);
-									p.setMinCount(minCount);
-									p.setMaxCount(maxCount);
-									shape.add(p);
-								}
-								StringBuilder builder = new StringBuilder();
-								builder.append(dataset.getDatasetId());
-								builder.append('.');
-								builder.append(tableId);
-								String bigQueryTableId = builder.toString();
-								
-								shape.setBigQueryTableId(bigQueryTableId);
-								shapeManager.addShape(shape);
-							}
-
-							dataset.addDatasetTable(table);
-							table.setTableShape(shapeId);
-						}
-						
-					}
-					
-				}
-				
-				
-			}
-			
-		}
-		activity.setEndTime((GregorianCalendar)GregorianCalendar.getInstance());
-	}
 	
 	
 
@@ -527,10 +362,6 @@ public class BigQueryTableGenerator {
 		json.writeEndObject();
 		
 		json.writeEndObject();
-		
-		if (handler != null) {
-			handler.add(table);
-		}
 		
 	}
 

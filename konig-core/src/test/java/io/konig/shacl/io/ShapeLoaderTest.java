@@ -22,6 +22,8 @@ package io.konig.shacl.io;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 
@@ -30,12 +32,17 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.Graph;
 import io.konig.core.impl.MemoryGraph;
+import io.konig.core.impl.RdfUtil;
+import io.konig.core.util.IOUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
+import io.konig.datasource.BigQueryTableReference;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.GoogleBigQueryTable;
 import io.konig.shacl.PropertyConstraint;
@@ -45,7 +52,44 @@ import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShapeLoaderTest {
 
+	@Test 
+	public void testBigQueryTableReference() throws Exception {
+		Graph graph = loadGraph("ShapeLoaderTest/testBigQueryTableReference.ttl");
+
+		ShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader loader = new ShapeLoader(shapeManager);
+		loader.load(graph);
+		URI shapeId = uri("http://example.com/shapes/PersonLiteShape");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		assertTrue(shape != null);
+		
+		List<DataSource> list = shape.getShapeDataSource();
+		assertTrue(list != null);
+		assertEquals(1, list.size());
+		
+		assertTrue(list.get(0) instanceof GoogleBigQueryTable);
+		GoogleBigQueryTable table = (GoogleBigQueryTable) list.get(0);
+		
+		BigQueryTableReference ref = table.getTableReference();
+		assertTrue(ref != null);
+		
+		assertEquals("{gcpProjectId}", ref.getProjectId());
+		assertEquals("schema", ref.getDatasetId());
+		assertEquals("Person", ref.getTableId());
+	}
 	
+	private Graph loadGraph(String resource) throws RDFParseException, RDFHandlerException, IOException {
+		Graph graph = new MemoryGraph();
+		InputStream input = getClass().getClassLoader().getResourceAsStream(resource);
+		try {
+			RdfUtil.loadTurtle(graph, input, "");
+		} finally {
+			IOUtil.close(input, resource);
+		}
+		return graph;
+	}
+
 	@Test
 	public void testShapeDataSource() {
 		URI shapeId = uri("http://example.com/PersonShape");

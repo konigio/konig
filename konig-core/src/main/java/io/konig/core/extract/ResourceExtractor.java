@@ -1,5 +1,7 @@
 package io.konig.core.extract;
 
+import java.util.HashSet;
+
 /*
  * #%L
  * konig-core
@@ -24,6 +26,8 @@ package io.konig.core.extract;
 import java.util.Set;
 
 import org.openrdf.model.BNode;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
 import io.konig.core.Edge;
@@ -37,6 +41,12 @@ import io.konig.core.Vertex;
  *
  */
 public class ResourceExtractor {
+	
+	private Set<URI> wanted = new HashSet<>();
+	
+	public void include(URI predicate) {
+		wanted.add(predicate);
+	}
 
 	/**
 	 * Copy all properties of a given resource into a specified graph.
@@ -49,9 +59,9 @@ public class ResourceExtractor {
 		for (Edge e : out) {
 			target.edge(e);
 			Value object = e.getObject();
-			if (object instanceof BNode) {
-				BNode bnode = (BNode) object;
-				Vertex v = source.getVertex(bnode);
+			if (object instanceof BNode || wanted.contains(e.getPredicate())) {
+				Resource node = (Resource) object;
+				Vertex v = source.getVertex(node);
 				extract(v, target);
 			}
 		}

@@ -60,6 +60,7 @@ public class Shape {
 	private NodeKind nodeKind;
 	private URI aggregationOf;
 	private URI rollUpBy;
+	private String comment;
 	
 	private AndConstraint and;
 	private OrConstraint or;
@@ -356,6 +357,14 @@ public class Shape {
 
 	public void setWasGeneratedBy(Activity wasGeneratedBy) {
 		this.wasGeneratedBy = wasGeneratedBy;
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
 	}
 
 	@RdfProperty("http://www.konig.io/ns/core/bigQueryTableId")

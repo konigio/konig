@@ -1,0 +1,26 @@
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix shape: <http://example.com/shapes/> .
+
+
+shape:PersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:property [
+		sh:predicate schema:givenName;
+		sh:minCount 0;
+		sh:maxCount 1;
+		sh:datatype xsd:string;
+	] , [
+		
+		sh:predicate schema:familyName;
+		sh:minCount 1;
+		sh:maxCount 1;
+		sh:datatype xsd:string;
+	]
+.
+
+<http://example.com/person/alice> a schema:Person ;
+	schema:givenName "Alice" ;
+	schema:familyName "Jones", "Smith"
+.	

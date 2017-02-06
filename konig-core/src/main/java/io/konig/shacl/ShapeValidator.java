@@ -2,9 +2,9 @@ package io.konig.shacl;
 
 /*
  * #%L
- * Konig SHACL
+ * Konig Core
  * %%
- * Copyright (C) 2015 - 2016 Gregory McFall
+ * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,102 +20,392 @@ package io.konig.shacl;
  * #L%
  */
 
-
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import org.openrdf.model.BNode;
+import org.openrdf.model.Literal;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.XMLSchema;
 
-import io.konig.core.Path;
+import io.konig.core.Edge;
+import io.konig.core.KonigException;
+import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.path.PathFactory;
+import io.konig.core.path.PathImpl;
 
 public class ShapeValidator {
 	
-	private PathFactory pathFactory;
+	private boolean failFast = true;
+	private boolean closed = false;
+	
 
-	public ShapeValidator(PathFactory pathFactory) {
-		this.pathFactory = pathFactory;
+	public ShapeValidator() {
+	}
+	
+	
+	
+	public boolean isFailFast() {
+		return failFast;
+	}
+	
+	public void setFailFast(boolean failFast) {
+		this.failFast = failFast;
 	}
 
-	public void validate(Vertex focusNode, Shape shape, ValidationReport report) {
-		validateEquivalentPath(focusNode, shape, report);
+
+
+	public boolean isClosed() {
+		return closed;
 	}
 
-	private void validateEquivalentPath(Vertex focusNode, Shape shape, ValidationReport report) {
+
+
+	public void setClosed(boolean closed) {
+		this.closed = closed;
+	}
+
+
+
+	public boolean conforms(Vertex focusNode, Shape shape) {
+		return validate(focusNode, shape, null);
+	}
+
+	public boolean validate(Vertex focusNode, Shape shape, ValidationReport report) {
 		
-		for (PropertyConstraint p : shape.getProperty()) {
-			validateEquivalentPath(focusNode, shape, p, report);
+		Context context = report==null ? null : new Context(report, focusNode, shape);
+		return doValidate(focusNode, shape, context);
+	}
+	
+	
+
+
+	private boolean doValidate(Vertex focusNode, Shape shape, Context context) {
+
+		boolean ok = true;
+		List<PropertyConstraint> list = shape.getProperty();
+		for (PropertyConstraint p : list) {
+			if (!validateProperty(focusNode, shape, p, context)) {
+				ok = false;
+				if (failFast) {
+					break;
+				}
+			}
 		}
 		
+		if (closed) {
+			Set<Entry<URI,Set<Edge>>> out = focusNode.outEdges();
+			for (Entry<URI,Set<Edge>> e : out) {
+				URI predicate = e.getKey();
+				if (predicate.equals(RDF.TYPE)) {
+					continue;
+				}
+				if (context != null) {
+					context.push(predicate);
+				}
+				PropertyConstraint p = shape.getPropertyConstraint(predicate);
+				if (p == null) {
+					ok = false;
+					if (context != null) {
+						context.violation("Property not permitted in closed shape");
+					}
+					if (failFast) {
+						return ok;
+					}
+				}
+				
+				if (context != null) {
+					context.pop();
+				}
+			}
+		}
+		
+		return ok;
 	}
 
-	private void validateEquivalentPath(Vertex focusNode, Shape shape, PropertyConstraint p, ValidationReport report) {
+	private boolean validateProperty(Vertex focusNode, Shape shape, PropertyConstraint p, Context context) {
+		boolean ok = true;
 		
-		String equivalentPath = p.getEquivalentPath();
-		if (equivalentPath != null) {
+		URI predicate = p.getPredicate();
+		if (predicate != null) {
 			
-			URI predicate = p.getPredicate();
-			Set<Object> actual = RdfUtil.toJavaValue( focusNode.getValueSet(predicate) );
-			
-			Path path = p.getCompiledEquivalentPath();
-			if (path == null) {
-				path = pathFactory.createPath(equivalentPath);
-				p.setCompiledEquivalentPath(path);
+			if (context != null) {
+				context.push(predicate);
 			}
 			
-			Set<Object> expected = RdfUtil.toJavaValue( path.traverse(focusNode) );
+			Set<Edge> set = focusNode.outProperty(predicate);
+			Integer minCount = p.getMinCount();
 			
-			boolean ok = expected.size() == actual.size();
-			if (ok) {
-				for (Object a : expected) {
-					if (!actual.contains(a)) {
+			if (minCount!=null && set.size()<minCount) {
+				ok = false;
+				if (context!=null) {
+					StringBuilder msg = new StringBuilder();
+					msg.append("Expected at least ");
+					msg.append(minCount);
+					msg.append(minCount==1 ? " value but found " : " values but found ");
+					msg.append(set.size());
+					
+					context.violation().setMessage(msg.toString());
+
+					if (failFast) {
+						return false;
+					}
+				}
+			}
+			
+			Integer maxCount = p.getMaxCount();
+			if (maxCount != null && set.size()>maxCount) {
+				ok = false;
+				if (context!=null) {
+					StringBuilder msg = new StringBuilder();
+					msg.append("Expected at most ");
+					msg.append(maxCount);
+					msg.append(maxCount==1 ? " value but found " : " values but found ");
+					msg.append(set.size());
+					
+					context.violation().setMessage(msg.toString());
+
+					if (failFast) {
+						return false;
+					}
+				}
+			}
+
+			URI datatype = p.getDatatype();
+			Shape childShape = p.getShape();
+			NodeKind nodeKind = p.getNodeKind();
+			
+			for (Edge edge : set) {
+
+				Value object = edge.getObject();
+				if (datatype != null) {
+					if (object instanceof Literal) {
+						Literal literal = (Literal) object;
+						URI type = literal.getDatatype();
+						if (type == null) {
+							type = XMLSchema.STRING;
+						}
+						if (!datatype.equals(type)) {
+							ok = false;
+							if (context != null) {
+
+								StringBuilder msg = new StringBuilder();
+								msg.append("Expected value of type ");
+								msg.append(context.curie(datatype));
+								msg.append(" but found ");
+								msg.append(context.curie(type));
+								
+								context.violation(msg.toString());
+							}
+							if (failFast) {
+								return ok;
+							}
+						}
+					} else {
 						ok = false;
+						if (context != null) {
+							StringBuilder msg = new StringBuilder();
+							msg.append("Expected value of type ");
+							msg.append(context.curie(datatype));
+							msg.append(" but found ");
+							if (object instanceof BNode) {
+								msg.append(" a BNode");
+							} else {
+								msg.append(" <");
+								msg.append(object.stringValue());
+								msg.append(">");
+							}
+							context.violation(msg.toString());
+						}
+						if (failFast) {
+							return ok;
+						}
+					}
+				}
+				
+				if (childShape != null) {
+					
+					if (object instanceof Literal) {
+						ok = false;
+						if (context != null) {
+							StringBuilder msg = new StringBuilder();
+							msg.append("Value must not be a literal but found '");
+							msg.append(object.stringValue());
+							msg.append("'");
+							context.violation(msg.toString());
+						}
+						if (failFast) {
+							return ok;
+						}
+					} else {
+						Vertex child = context.getVertex(object);
+						if (child == null) {
+							throw new KonigException("Resource not found: " + object.stringValue());
+						}
+						
+						ok = doValidate(child, childShape, context);
+						if (!ok && failFast) {
+							return ok;
+						}
+					}
+				}
+				
+				if (nodeKind != null) {
+					switch (nodeKind) {
+					case BlankNode:
+						
+						if (!(object instanceof BNode)) {
+							ok = false;
+							if (context != null) {
+								StringBuilder msg = new StringBuilder();
+								msg.append("Expected a BNode but found ");
+								if (object instanceof URI) {
+									msg.append("<");
+									msg.append(object.stringValue());
+									msg.append('>');
+								} else {
+									msg.append("'");
+									msg.append(object.stringValue());
+									msg.append("'");
+								}
+								context.violation(msg.toString());
+							}
+							if (failFast) {
+								return ok;
+							}
+						}
+						
 						break;
-					}
-				}
-			}
-			
-			if (!ok) {
-				StringBuilder message = new StringBuilder();
-				RdfUtil.append(message, focusNode.getId());
-				message.append('!');
-				message.append(predicate.getLocalName());
-				message.append(" equivalentPath :");
-				message.append(" Expected ");
-				String comma = "";
-				for (Object v : expected) {
-					message.append(comma);
-					comma = ", ";
-					RdfUtil.append(message, v);
-				}
-				message.append( " ...but found... ");
-				
-				
-				if (actual.isEmpty()) {
-					message.append("NULL");
-				} else {
+						
+					case BlankNodeOrIRI:
+						if (object instanceof Literal) {
+							ok = false;
+							if (context != null) {
+								StringBuilder msg = new StringBuilder();
+								msg.append("Expected a BNode or IRI but found '");
+								msg.append(object.stringValue());
+								msg.append("'");
+								context.violation(msg.toString());
+							}
+							if (failFast) {
+								return ok;
+							}
+						}
+						break;
+						
+					case IRI:
+						if (!(object instanceof URI)) {
 
-					comma = "";
-					for (Object v : actual) {
-						message.append(comma);
-						comma = ", ";
-						RdfUtil.append(message, v);
+							ok = false;
+							if (context != null) {
+								StringBuilder msg = new StringBuilder();
+								msg.append("Expected an IRI but found ");
+								if (object instanceof BNode) {
+									msg.append(" a BNode");
+								} else {
+									msg.append("'");
+									msg.append(object.stringValue());
+									msg.append("'");
+								}
+								context.violation(msg.toString());
+							}
+							if (failFast) {
+								return ok;
+							}
+						}
+						break;
+						
+					case Literal:
+						if (!(object instanceof Literal)) {
+							ok = false;
+							if (context != null) {
+								StringBuilder msg = new StringBuilder();
+								msg.append("Expected a Literal but found ");
+								if (object instanceof URI) {
+									msg.append("<");
+									msg.append(object.stringValue());
+									msg.append('>');
+								} else {
+									msg.append("a BNode");
+								}
+								context.violation(msg.toString());
+							}
+							if (failFast) {
+								return ok;
+							}
+						}
+						break;
+					
 					}
 				}
-				
-				ValidationResult result = new ValidationResult();
-				result.setFocusNode(focusNode.getId());
-				result.setMessage(message.toString());
-				result.setPath(predicate);
-				result.setSeverity(Severity.WARNING);
-				result.setSourceShape(shape.getId());
-				report.addValidationResult(result);
 			}
 			
+			if (context!=null) {
+				context.pop();
+			}
+		}
+		
+		return ok;
+		
+	}
+
+
+	static class Context {
+		PathImpl path;
+		ValidationReport report;
+		Vertex focusNode;
+		Shape sourceShape;
+		
+		public Context(ValidationReport report, Vertex focusNode, Shape sourceShape) {
+			this.focusNode = focusNode;
+			this.sourceShape = sourceShape;
+			this.report = report;
+			path = new PathImpl();
+			
+		}
+		
+		public Vertex getVertex(Value object) {
+			if (object instanceof Resource) {
+				return focusNode.getGraph().getVertex((Resource) object);
+			}
+			return null;
+		}
+
+		public void push(URI predicate) {
+			path.out(predicate);
+		}
+		
+		public void pop() {
+			path.remove(path.length()-1);
+		}
+
+		public Object curie(URI uri) {
+			NamespaceManager nsManager = focusNode.getGraph().getNamespaceManager();
+			if (nsManager == null) {
+				return "<" + uri.stringValue() + ">";
+			}
+			return RdfUtil.curie(nsManager, uri);
+		}
+		
+		void violation(String message) {
+			violation().setMessage(message);
+		}
+
+		ValidationResult violation() {
+			ValidationResult result = new ValidationResult();
+			result.setFocusNode(focusNode.getId());
+			result.setPath(path.copy());
+			result.setSeverity(Severity.VIOLATION);
+			result.setSourceShape(sourceShape.getId());
+			report.addValidationResult(result);
+			return result;
 		}
 		
 		
 	}
-
 }
