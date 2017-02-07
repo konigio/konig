@@ -23,6 +23,7 @@ package io.konig.core.util;
 
 import static org.junit.Assert.*;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class RecursiveValueFormatTest {
@@ -41,6 +42,26 @@ public class RecursiveValueFormatTest {
 		String value = template.format(map);
 		
 		assertEquals("StagingPersonBucket", value);
+		
+	}
+	
+
+	@Test
+	public void test2() {
+		
+		RecursiveValueFormat template = new RecursiveValueFormat();
+		
+		template.put("gcpBucketName", "{shapeLocalNameLowercase}.{gcpBucketSuffix}");
+		template.put("gcpBucketSuffix", "example.com");
+		template.compile("<gs://{gcpBucketName}>");
+		
+		SimpleValueMap map = new SimpleValueMap();
+		map.put("classLocalName", "Person");
+		map.put("shapeLocalNameLowercase", "personshape");
+		
+		String value = template.format(map);
+		
+		assertEquals("<gs://personshape.example.com>", value);
 		
 	}
 

@@ -40,14 +40,16 @@ public class DataSourceGenerator {
 	public DataSourceGenerator(NamespaceManager nsManager, File templateDir, Properties properties) {
 		this.nsManager = nsManager;
 		this.templateDir = templateDir;
-		
-		RecursiveValueFormat tmp = new RecursiveValueFormat(variableMap);
-		tmp.put(properties);
+		put(properties);
 		
 		this.templateDir = templateDir;
 	}
 	
-	
+	public void put(Properties properties) {
+
+		RecursiveValueFormat tmp = new RecursiveValueFormat(variableMap);
+		tmp.put(properties);
+	}
 	
 	public File getTemplateDir() {
 		return templateDir;
@@ -83,6 +85,7 @@ public class DataSourceGenerator {
 			putURI(map, "shape", (URI)shape.getId());
 		}
 		putURI(map, "class", shape.getTargetClass());
+		
 		
 		
 
@@ -154,6 +157,7 @@ public class DataSourceGenerator {
 			
 			map.put(name+"Id", value.stringValue());
 			map.put(name+"LocalName", value.getLocalName());
+			map.put(name+"LocalNameLowercase", value.getLocalName().toLowerCase());
 			
 			if (ns != null) {
 				map.put(name+"NamespacePrefix", ns.getPrefix());

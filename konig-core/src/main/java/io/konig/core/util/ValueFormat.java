@@ -27,7 +27,7 @@ public interface ValueFormat {
 
 	String format(ValueMap map);
 	
-	List<String> listVariables();
-	
 	void traverse(ValueFormatVisitor visitor);
+	
+	public String getPattern();
 }

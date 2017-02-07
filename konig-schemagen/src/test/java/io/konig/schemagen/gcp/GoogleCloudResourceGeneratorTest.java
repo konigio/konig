@@ -31,7 +31,8 @@ public class GoogleCloudResourceGeneratorTest {
 		expectedFile.delete();
 		
 		GoogleCloudResourceGenerator generator = new GoogleCloudResourceGenerator();
-		generator.generateBigQueryTables(shapeManager.listShapes(), outDir);
+		generator.addBigQueryGenerator(outDir);
+		generator.dispatch(shapeManager.listShapes());
 		
 		assertTrue(expectedFile.exists());
 	}

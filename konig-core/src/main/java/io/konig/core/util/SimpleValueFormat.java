@@ -110,6 +110,10 @@ public class SimpleValueFormat implements ValueFormat {
 		String get(ValueMap map) {
 			return text;
 		}
+		
+		public String toString() {
+			return text;
+		}
 	}
 	
 	static class Variable extends Element {
@@ -141,15 +145,8 @@ public class SimpleValueFormat implements ValueFormat {
 	}
 
 	@Override
-	public List<String> listVariables() {
-		List<String> result = new ArrayList<>();
-		for (Element e : elements) {
-			if (e instanceof Variable) {
-				result.add(e.text);
-			}
-		}
-		
-		return result;
+	public String getPattern() {
+		return text;
 	}
 	
 }
