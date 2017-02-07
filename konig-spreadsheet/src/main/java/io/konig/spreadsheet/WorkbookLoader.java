@@ -119,14 +119,14 @@ public class WorkbookLoader {
 	private static final String ENUMERATION_SHAPE_ID = "enumerationShapeId";
 	
 	private static final String UNBOUNDED = "unbounded";
-	
-	private static final int ONTOLOGY_FLAG = 0x1;
-	private static final int CLASS_FLAG = 0x2;
-	private static final int PROPERTY_FLAG = 0x4;
-	private static final int INDIVIDUAL_FLAG = 0x8;
-	private static final int SHAPE_FLAG = 0x10;
-	private static final int CONSTRAINT_FLAG = 0x14;
-	private static final int SETTINGS_FLAG = 0x20;
+
+	private static final int SETTINGS_FLAG = 0x1;
+	private static final int ONTOLOGY_FLAG = 0x10;
+	private static final int CLASS_FLAG = 0x20;
+	private static final int PROPERTY_FLAG = 0x40;
+	private static final int INDIVIDUAL_FLAG = 0x80;
+	private static final int SHAPE_FLAG = 0x100;
+	private static final int CONSTRAINT_FLAG = 0x140;
 	
 	
 	private static final String GCP_DATASET_FORMAT = 
@@ -666,6 +666,8 @@ public class WorkbookLoader {
 				Row row = sheet.getRow(i);
 				loadSettingsRow(row);
 			}
+			
+			dataSourceGenerator.put(settings);
 		}
 
 		private void loadSettingsRow(Row row) {

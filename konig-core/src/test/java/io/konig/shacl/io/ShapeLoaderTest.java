@@ -45,12 +45,41 @@ import io.konig.core.vocab.Schema;
 import io.konig.datasource.BigQueryTableReference;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.GoogleBigQueryTable;
+import io.konig.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShapeLoaderTest {
+
+	@Test 
+	public void testCloudStorageBucket() throws Exception {
+		Graph graph = loadGraph("ShapeLoaderTest/testCloudStorageBucket.ttl");
+
+		ShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader loader = new ShapeLoader(shapeManager);
+		loader.load(graph);
+		URI shapeId = uri("http://example.com/shapes/PersonLiteShape");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		assertTrue(shape != null);
+		
+		List<DataSource> list = shape.getShapeDataSource();
+		assertTrue(list != null);
+		assertEquals(1, list.size());
+		
+		assertTrue(list.get(0) instanceof GoogleCloudStorageBucket);
+		GoogleCloudStorageBucket bucket = (GoogleCloudStorageBucket) list.get(0);
+		
+		
+		
+		assertEquals("{gcpProjectId}", bucket.getProjectId());
+		assertEquals("multi_regional", bucket.getStorageClass());
+		assertEquals("us", bucket.getLocation());
+		assertEquals("person.staging.edw.pearson.com", bucket.getName());
+	}
+	
 
 	@Test 
 	public void testBigQueryTableReference() throws Exception {

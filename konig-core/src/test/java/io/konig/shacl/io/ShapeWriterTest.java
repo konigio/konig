@@ -51,10 +51,45 @@ import io.konig.core.vocab.Konig;
 import io.konig.datasource.BigQueryTableReference;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.GoogleBigQueryTable;
+import io.konig.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 
 public class ShapeWriterTest {
+	
+	@Test
+	public void testCloudStorageBucket() throws Exception {
+
+		URI shapeId = uri("http://example.com/PersonShape");
+		URI dataSourceId = uri("gs://person.example.com");
+		
+		Shape shape = new Shape(shapeId);
+		GoogleCloudStorageBucket bucket = new GoogleCloudStorageBucket();
+		bucket.setId(dataSourceId);
+		bucket.setName("person.example.com");
+		bucket.setStorageClass("multi_regional");
+		bucket.setLocation("us");
+		bucket.setProjectId("myproject");
+		
+		shape.addShapeDataSource(bucket);
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		
+		Graph graph = new MemoryGraph();
+		shapeWriter.emitShape(shape, graph);
+		
+		Vertex v = graph.getVertex(shapeId);
+		assertTrue(v!=null);
+		
+		Vertex datasource = v.getVertex(Konig.shapeDataSource);
+		assertTrue(datasource!=null);
+		
+		assertLiteral(datasource, GCP.projectId, "myproject");
+		assertLiteral(datasource, GCP.name, "person.example.com");
+		assertLiteral(datasource, GCP.storageClass, "multi_regional");
+		assertLiteral(datasource, GCP.location, "us");
+		
+	}
 	
 	@Test 
 	public void testShapeDataSource() throws Exception {

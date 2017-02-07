@@ -96,6 +96,8 @@ import net.sourceforge.plantuml.SourceFileReader;
 @Mojo( name = "generate")
 public class KonigSchemagenMojo  extends AbstractMojo {
 	
+	private static final String BIGQUERY = "bigquery";
+	private static final String CLOUD_STORAGE = "cloudstorage";
 	private static final String SCHEMA = "schema";
 	private static final String DATA = "data";
 	private static final String DATASET = "dataset";
@@ -133,7 +135,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private String bqShapeBaseURL;
     
     @Parameter
-    private File bqOutDir;
+    private File gcpDir;
     
     @Parameter
     private File bqSourceDir;
@@ -312,12 +314,18 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 	
 	private void generateBigQueryTables() throws IOException {
-		if (bqOutDir != null) {
-
+		if (gcpDir != null) {
+			
+			File bqOutDir = new File(gcpDir, BIGQUERY);
 			File bqSchemaDir = new File(bqOutDir, SCHEMA);
 			File bqDatasetDir = new File(bqOutDir, DATASET);
+			File bucketDir = new File(gcpDir, CLOUD_STORAGE);
+			
 			GoogleCloudResourceGenerator resourceGenerator = new GoogleCloudResourceGenerator();
-			resourceGenerator.generateBigQueryTables(shapeManager.listShapes(), bqSchemaDir);
+	
+			resourceGenerator.addBigQueryGenerator(bqSchemaDir);
+			resourceGenerator.addCloudStorageBucketWriter(bucketDir);
+			resourceGenerator.dispatch(shapeManager.listShapes());
 			
 			BigQueryEnumGenerator enumGenerator = new BigQueryEnumGenerator(shapeManager);
 
@@ -330,8 +338,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			BigQueryDatasetGenerator datasetGenerator = new BigQueryDatasetGenerator(bqSchemaDir, bqDatasetDir);
 			datasetGenerator.run();
-			
-		
 		}
 	}
 
