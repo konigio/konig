@@ -4,6 +4,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/shape/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
 
 shape:MembershipMasterShape sh:property  [ 
 		konig:equivalentPath "/<http://www.w3.org/ns/org#role>/<http://example.com/ns/registrar/registrarId>" ; 
@@ -32,7 +33,13 @@ shape:MembershipMasterShape sh:property  [
 <gs://com.example.prod.course_section_person> a konig:GoogleCloudStorageBucket . 
 
 <urn:bigquery:example.registrar.Membership> konig:bigQuerySource <gs://com.example.prod.course_section_person> ; 
-	a konig:GoogleBigQueryTable . 
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "example" ;
+		gcp:datasetId "registrar" ;
+		gcp:tableId   "Membership" 
+	]
+.
 	
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix org: <http://www.w3.org/ns/org#> .
@@ -63,7 +70,14 @@ shape:MembershipReportingShape sh:property  [
 	sh:targetClass org:Membership ; 
 	konig:shapeDataSource <urn:bigquery:example.registrar.Membership> . 
 
-<urn:bigquery:example.registrar.Membership> a konig:GoogleBigQueryTable . 	
+<urn:bigquery:example.registrar.Membership> 
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "example" ;
+		gcp:datasetId "registrar" ;
+		gcp:tableId   "Membership" 
+	]
+. 	
 
 @prefix alias: <http://example.com/ns/alias/> .
 @prefix konig: <http://www.konig.io/ns/core/> .
@@ -94,4 +108,10 @@ shape:RoleMasterShape sh:property  [
 <gs://com.example.prod.role> a konig:GoogleCloudStorageBucket . 
 
 <urn:bigquery:example.registrar.Role> konig:bigQuerySource <gs://com.example.prod.role> ; 
-	a konig:GoogleBigQueryTable . 
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "example" ;
+		gcp:datasetId "registrar" ;
+		gcp:tableId   "Role" 
+	]
+.

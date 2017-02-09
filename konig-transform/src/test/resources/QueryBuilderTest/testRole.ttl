@@ -4,6 +4,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/shape/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
 
 shape:RoleMasterShape sh:property  [ 
 		sh:datatype xsd:long ; 
@@ -27,7 +28,13 @@ shape:RoleMasterShape sh:property  [
 <gs://com.example.prod.role> a konig:GoogleCloudStorageBucket . 
 
 <urn:bigquery:example.registrar.Role> konig:bigQuerySource <gs://com.example.prod.role> ; 
-	a konig:GoogleBigQueryTable . 
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "example" ;
+		gcp:datasetId "registrar" ;
+		gcp:tableId   "Role" 
+	]
+.
 	
 	
 @prefix konig: <http://www.konig.io/ns/core/> .
@@ -52,4 +59,11 @@ shape:RoleReportingShape sh:property  [
 	konig:shapeDataSource <urn:bigquery:example.registrar.Role> ; 
 	sh:targetClass org:Role . 
 
-<urn:bigquery:example.registrar.Role> a konig:GoogleBigQueryTable . 	
+<urn:bigquery:example.registrar.Role>
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "example" ;
+		gcp:datasetId "registrar" ;
+		gcp:tableId   "Role" 
+	]
+.

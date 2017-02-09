@@ -4,6 +4,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/shape/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
 
 shape:CourseInstanceMasterShape sh:property  [ 
 		konig:equivalentPath "/<http://schema.org/endDate>" ; 
@@ -39,7 +40,13 @@ shape:CourseInstanceMasterShape sh:property  [
 <gs://com.example.prod.course_instance> a konig:GoogleCloudStorageBucket . 
 
 <urn:bigquery:example.registrar.CourseInstance> konig:bigQuerySource <gs://com.example.prod.course_instance> ; 
-	a konig:GoogleBigQueryTable . 
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "example" ;
+		gcp:datasetId "registrar" ;
+		gcp:tableId   "CourseInstance" 
+	]
+.
 	
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix reg: <http://example.com/ns/registrar/> .
@@ -70,6 +77,13 @@ shape:CourseInstanceReportingShape sh:property  [
 		sh:minCount 1 ]  ; 
 	a sh:Shape ; 
 	sh:targetClass schema:CourseInstance ; 
-	konig:shapeDataSource <urn:bigquery:example.registrar.CourseInstance> . 
+	konig:shapeDataSource <urn:bigquery:example.registrar.CourseInstanceReporting> . 
 
-<urn:bigquery:example.registrar.CourseInstance> a konig:GoogleBigQueryTable . 	
+<urn:bigquery:example.registrar.CourseInstanceReporting> 
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "example" ;
+		gcp:datasetId "registrar" ;
+		gcp:tableId   "CourseInstanceReporting" 
+	]
+.

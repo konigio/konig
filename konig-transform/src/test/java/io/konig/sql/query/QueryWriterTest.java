@@ -1,10 +1,12 @@
 package io.konig.sql.query;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.StringWriter;
 
 import org.junit.Test;
+
+import io.konig.core.io.PrettyPrintWriter;
 
 public class QueryWriterTest {
 
@@ -20,12 +22,12 @@ public class QueryWriterTest {
 		select.add(new AliasExpression(new ColumnExpression("family_name"), "familyName"));
 		select.add(new AliasExpression(address, "address"));
 		
-		select.addFrom("registrar", "Person");
+		select.getFrom().add(new TableNameExpression("registrar.Person"));
 		
 		StringWriter buffer = new StringWriter();
-		
-		QueryWriter writer = new QueryWriter(buffer);
-		writer.print(select);
+		PrettyPrintWriter writer = new PrettyPrintWriter(buffer);
+		select.print(writer);
+		writer.close();
 		String expected = 
 				"SELECT\n" + 
 				"   given_name AS givenName,\n" + 
@@ -34,7 +36,7 @@ public class QueryWriterTest {
 				"      address_locality AS addressLocality,\n" + 
 				"      address_region AS addressRegion\n" + 
 				"   ) AS address\n" + 
-				"FROM registrar.Person;";
+				"FROM registrar.Person";
 				
 		
 		String actual = buffer.toString().replace("\r", "");

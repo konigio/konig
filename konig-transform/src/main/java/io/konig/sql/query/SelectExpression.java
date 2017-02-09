@@ -1,5 +1,7 @@
 package io.konig.sql.query;
 
+import io.konig.core.io.PrettyPrintWriter;
+
 public class SelectExpression extends BaseValueContainer implements ValueContainer, QueryExpression {
 	
 	
@@ -8,48 +10,25 @@ public class SelectExpression extends BaseValueContainer implements ValueContain
 	public FromExpression getFrom() {
 		return from;
 	}
-	
-	public void addFrom(String datasetName, String tableName) {
-		TableNameExpression e = new TableNameExpression(datasetName, tableName);
-		from.add(e);
-	}
-	
-	public TableItemExpression fromTable(String datasetName, String tableName) {
-		
-		for (TableItemExpression e : from.getTableItems() ) {
-			if (e instanceof TableAliasExpression) {
-				TableAliasExpression alias = (TableAliasExpression) e;
-				if (matches(alias.getTableName(), datasetName, tableName)) {
-					return alias;
-				}
-			} else if (e instanceof TableNameExpression) {
-				TableNameExpression t = (TableNameExpression) e;
-				if (matches(t, datasetName, tableName)) {
-					return t;
-				}
-			}
-		}
-		
-		return null;
-	}
-
-	private boolean matches(TableNameExpression e, String datasetName, String tableName) {
-		
-		return tableName.equals(e.getTableName()) && datasetName.equals(e.getDatasetName());
-	}
 
 	@Override
-	public void append(StringBuilder builder) {
+	public void print(PrettyPrintWriter out) {
 		
-		builder.append("SELECT ");
+		out.print("SELECT");
+		out.pushIndent();
 		String comma = "";
 		for (ValueExpression value : getValues()) {
-			builder.append(comma);
-			value.append(builder);
-			comma = ", ";
+			out.print(comma);
+			out.println();
+			out.indent();
+			value.print(out);
+			comma = ",";
 		}
-		builder.append(' ');
-		from.append(builder);
+		out.popIndent();
+		out.println();
+		if (from != null) {
+			from.print(out);
+		}
 		
 	}
 	

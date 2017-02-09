@@ -1,22 +1,17 @@
 package io.konig.sql.query;
 
+import io.konig.core.io.PrettyPrintWriter;
+
 public class TableNameExpression extends AbstractExpression implements TableItemExpression {
 	
-	private String datasetName;
 	private String tableName;
-	public TableNameExpression(String datasetName, String tableName) {
-		this.datasetName = datasetName;
+	public TableNameExpression(String tableName) {
 		this.tableName = tableName;
 	}
 	@Override
-	public void append(StringBuilder builder) {
-		builder.append(datasetName);
-		builder.append('.');
-		builder.append(tableName);
+	public void print(PrettyPrintWriter out) {
+		out.print(tableName);
 		
-	}
-	public String getDatasetName() {
-		return datasetName;
 	}
 	public String getTableName() {
 		return tableName;

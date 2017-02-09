@@ -8,12 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.NamespaceManager;
+import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.path.PathFactory;
+import io.konig.core.util.IOUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.sql.query.BigQueryCommandLine;
-import io.konig.sql.query.QueryWriter;
 import io.konig.sql.query.SelectExpression;
 import io.konig.transform.sql.query.QueryBuilder;
 
@@ -36,9 +37,9 @@ public class TransformGenerator {
 		outDir.mkdirs();
 		File scriptFile = scriptFile(outDir);
 		FileWriter scriptFileWriter = new FileWriter(scriptFile);
+		PrettyPrintWriter scriptQueryWriter = new PrettyPrintWriter(scriptFileWriter);
 		try {
 
-			QueryWriter scriptQueryWriter = new QueryWriter(scriptFileWriter);
 			
 			for (Shape shape : shapeManager.listShapes()) {
 				
@@ -58,25 +59,17 @@ public class TransformGenerator {
 				}
 			}
 		} finally {
-			close(scriptFileWriter);
+			IOUtil.close(scriptQueryWriter, scriptFile.getName());
 		}
 	}
 
 
 
-	private void addScript(QueryWriter scriptQueryWriter, File sqlFile, BigQueryCommandLine cmdline) {
+	private void addScript(PrettyPrintWriter out, File sqlFile, BigQueryCommandLine cmdline) {
 		String fileName = sqlFile.getName();
-		scriptQueryWriter.print(cmdline, fileName);
+		cmdline.print(out, fileName);
 	}
 
-	private void close(FileWriter writer) {
-		try {
-			writer.close();
-		} catch (Exception ignore) {
-			logger.warn("Failed to close file", ignore);
-		}
-		
-	}
 
 	private File scriptFile(File outDir) {
 		return new File(outDir, SCRIPT_FILE_NAME);
@@ -86,11 +79,13 @@ public class TransformGenerator {
 		
 		File sqlFile = sqlFile(outDir, shape);
 		FileWriter fileWriter = new FileWriter(sqlFile);
+		PrettyPrintWriter queryWriter = new PrettyPrintWriter(fileWriter);
 		try {
-			QueryWriter queryWriter = new QueryWriter(fileWriter);
+			select.print(queryWriter);
 			queryWriter.print(select);
+			queryWriter.println(';');
 		} finally {
-			close(fileWriter);
+			IOUtil.close(queryWriter, sqlFile.getName());
 		}
 		
 		return sqlFile;

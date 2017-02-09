@@ -8,13 +8,18 @@
 @prefix schema2: <http://example.com/shapes/v2/schema/> .
 @prefix data : <http://example.com/resources/> .
 @prefix dc: <http://purl.org/dc/terms/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
 
 schema1:PersonShape a sh:Shape ;
 	sh:targetClass schema:Person ;
 	konig:shapeDataSource [
 		a konig:AuthoritativeDataSource ;
 		a konig:GoogleBigQueryTable ;
-		dc:identifier "staging.Person"
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "staging" ;
+			gcp:tableId   "Person" 
+		]
 	] ;
 	sh:property [
 		sh:predicate alias:first_name ;
@@ -49,7 +54,11 @@ schema2:PersonShape a sh:Shape ;
 	konig:shapeDataSource [
 		a konig:AuthoritativeDataSource ;
 		a konig:GoogleBigQueryTable ;
-		dc:identifier "warehouse.Person"
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "warehouse" ;
+			gcp:tableId   "Person" 
+		]
 	] ;
 	sh:property [
 		sh:predicate schema:givenName ;

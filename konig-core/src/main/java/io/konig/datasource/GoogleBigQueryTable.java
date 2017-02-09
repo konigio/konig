@@ -25,10 +25,11 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import io.konig.annotation.RdfProperty;
+import io.konig.core.KonigException;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 
-public class GoogleBigQueryTable extends DataSource {
+public class GoogleBigQueryTable extends DataSource implements TableDataSource {
 	
 	private Set<DataSource> bigQuerySource;
 	private BigQueryTableReference tableReference;
@@ -60,6 +61,28 @@ public class GoogleBigQueryTable extends DataSource {
 
 	public void setTableReference(BigQueryTableReference tableReference) {
 		this.tableReference = tableReference;
+	}
+
+	@Override
+	public String getTableIdentifier() {
+		
+		if (tableReference == null) {
+			throw new KonigException("tableReference must be defined for <" + getId() + ">");
+		}
+		
+		StringBuilder builder = new StringBuilder();
+		String projectId = tableReference.getProjectId();
+		String datasetId = tableReference.getDatasetId();
+		String tableId = tableReference.getTableId();
+		
+		if (projectId != null) {
+			builder.append(projectId);
+			builder.append('.');
+		}
+		builder.append(datasetId);
+		builder.append('.');
+		builder.append(tableId);
+		return builder.toString();
 	}
 	
 	

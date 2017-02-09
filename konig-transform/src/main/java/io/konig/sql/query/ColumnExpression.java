@@ -1,5 +1,7 @@
 package io.konig.sql.query;
 
+import io.konig.core.io.PrettyPrintWriter;
+
 public class ColumnExpression extends AbstractExpression
 implements ItemExpression, ValueExpression {
 	
@@ -11,8 +13,8 @@ implements ItemExpression, ValueExpression {
 	}
 
 	@Override
-	public void append(StringBuilder builder) {
-		builder.append(columnName);
+	public void print(PrettyPrintWriter out) {
+		out.print(columnName);
 	}
 
 	@Override

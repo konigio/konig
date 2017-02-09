@@ -1,7 +1,9 @@
 package io.konig.sql.query;
 
+import io.konig.core.io.PrettyPrintWriter;
+
 public interface QueryExpression {
 	
-	void append(StringBuilder builder);
+	void print(PrettyPrintWriter out);
 
 }

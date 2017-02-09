@@ -1,13 +1,15 @@
 package io.konig.sql.query;
 
+import io.konig.core.io.PrettyPrintWriter;
+
 public class TableAliasExpression extends AbstractExpression implements TableItemExpression {
 	
-	private TableNameExpression tableName;
+	private TableItemExpression tableName;
 	private String alias;
 	
 	
 
-	public TableAliasExpression(TableNameExpression tableName, String alias) {
+	public TableAliasExpression(TableItemExpression tableName, String alias) {
 		this.tableName = tableName;
 		this.alias = alias;
 	}
@@ -15,10 +17,10 @@ public class TableAliasExpression extends AbstractExpression implements TableIte
 
 
 	@Override
-	public void append(StringBuilder builder) {
-		tableName.append(builder);
-		builder.append(" AS ");
-		builder.append(alias);
+	public void print(PrettyPrintWriter out) {
+		tableName.print(out);
+		out.print(" AS ");
+		out.print(alias);
 	}
 
 	public String getAlias() {
@@ -27,7 +29,7 @@ public class TableAliasExpression extends AbstractExpression implements TableIte
 
 
 
-	public TableNameExpression getTableName() {
+	public TableItemExpression getTableName() {
 		return tableName;
 	}
 }

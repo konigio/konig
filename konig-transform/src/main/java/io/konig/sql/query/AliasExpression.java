@@ -1,5 +1,7 @@
 package io.konig.sql.query;
 
+import io.konig.core.io.PrettyPrintWriter;
+
 public class AliasExpression extends AbstractExpression 
 implements ValueExpression {
 	private QueryExpression expression;
@@ -23,10 +25,10 @@ implements ValueExpression {
 
 
 	@Override
-	public void append(StringBuilder builder) {
-		expression.append(builder);
-		builder.append(" AS ");
-		builder.append(alias);
+	public void print(PrettyPrintWriter out) {
+		expression.print(out);
+		out.append(" AS ");
+		out.append(alias);
 	}
 
 	@Override

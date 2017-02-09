@@ -8,10 +8,10 @@
 @prefix warehouse: <http://example.com/shapes/warehouse/> .
 @prefix data : <http://example.com/resources/> .
 @prefix dc : <http://purl.org/dc/terms/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
 
 origin:PersonShape a sh:Shape ;
 	sh:targetClass schema:Person ;
-	konig:bigQueryTableId "staging.Person" ;
 	sh:property [
 		sh:predicate alias:first_name ;
 		sh:minCount 0 ;
@@ -26,15 +26,24 @@ origin:PersonShape a sh:Shape ;
 		konig:equivalentPath "/schema:familyName" ;
 	] ;
 	konig:shapeDataSource [
-		a konig:AuthoritativeDataSource
+		a konig:AuthoritativeDataSource, konig:GoogleBigQueryTable, konig:DataSource;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "staging" ;
+			gcp:tableId   "Person" 
+		]
 	]
 .
 
 warehouse:PersonShape a sh:Shape ;
 	sh:targetClass schema:Person ;
 	konig:shapeDataSource [
-		a konig:GoogleBigQueryTable ;
-		dc:identifier "acme.Person"
+		a konig:AuthoritativeDataSource, konig:GoogleBigQueryTable, konig:DataSource;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "Person" 
+		]
 	] ;
 	sh:property [
 		sh:predicate schema:givenName ;

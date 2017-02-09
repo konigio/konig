@@ -4,12 +4,18 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix dc: <http://purl.org/dc/terms/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+
 
 shape:PersonFullShape a sh:Shape ;
 	sh:targetClass schema:Person ;
 	konig:shapeDataSource [
 		a konig:GoogleBigQueryTable ;
-		dc:identifier "acme.PersonFull"
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "PersonFull" 
+		]
 	] ;
 	sh:property [
 		sh:predicate schema:givenName ;
