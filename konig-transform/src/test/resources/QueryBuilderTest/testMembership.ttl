@@ -32,11 +32,11 @@ shape:MembershipMasterShape sh:property  [
 
 <gs://com.example.prod.course_section_person> a konig:GoogleCloudStorageBucket . 
 
-<urn:bigquery:example.registrar.Membership> konig:bigQuerySource <gs://com.example.prod.course_section_person> ; 
+<urn:bigquery:example.master.Membership> konig:bigQuerySource <gs://com.example.prod.course_section_person> ; 
 	a konig:GoogleBigQueryTable, konig:DataSource;
 	gcp:tableReference [
 		gcp:projectId "example" ;
-		gcp:datasetId "registrar" ;
+		gcp:datasetId "master" ;
 		gcp:tableId   "Membership" 
 	]
 .

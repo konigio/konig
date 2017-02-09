@@ -71,14 +71,9 @@ public class GoogleBigQueryTable extends DataSource implements TableDataSource {
 		}
 		
 		StringBuilder builder = new StringBuilder();
-		String projectId = tableReference.getProjectId();
 		String datasetId = tableReference.getDatasetId();
 		String tableId = tableReference.getTableId();
 		
-		if (projectId != null) {
-			builder.append(projectId);
-			builder.append('.');
-		}
 		builder.append(datasetId);
 		builder.append('.');
 		builder.append(tableId);
