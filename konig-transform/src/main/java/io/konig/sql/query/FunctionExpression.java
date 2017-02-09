@@ -3,6 +3,8 @@ package io.konig.sql.query;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.konig.core.io.PrettyPrintWriter;
+
 public class FunctionExpression extends AbstractExpression {
 	private String functionName;
 	private List<QueryExpression> argList = new ArrayList<>();
@@ -15,18 +17,18 @@ public class FunctionExpression extends AbstractExpression {
 	}
 
 	@Override
-	public void append(StringBuilder builder) {
+	public void print(PrettyPrintWriter out) {
 		
-		builder.append(functionName);
-		builder.append('(');
+		out.print(functionName);
+		out.print('(');
 		String comma = "";
 		for (QueryExpression e : argList) {
-			builder.append(comma);
-			e.append(builder);
+			out.print(comma);
+			e.print(out);
 			comma = ", ";
 		}
 		
-		builder.append(')');
+		out.print(')');
 		
 	}
 

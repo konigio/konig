@@ -1,20 +1,33 @@
 package io.konig.sql.query;
 
+import io.konig.core.io.PrettyPrintWriter;
+
 public class StructExpression extends BaseValueContainer
 implements ItemExpression, ValueContainer {
 	
 	
 	@Override
-	public void append(StringBuilder builder) {
+	public void print(PrettyPrintWriter out) {
+		boolean prettyPrint = out.isPrettyPrint();
 		
-		builder.append("STRUCT(");
+		out.print("STRUCT(");
+		out.pushIndent();
 		String comma = "";
 		for (QueryExpression field : getValues()) {
-			builder.append(comma);
-			field.append(builder);
-			comma = ", ";
+			out.print(comma);
+			if (prettyPrint || comma.length()>0) {
+				out.println();
+			}
+			out.indent();
+			field.print(out);
+			comma = ",";
 		}
-		builder.append(')');
+		if (prettyPrint) {
+			out.print('\n');
+		}
+		out.popIndent();
+		out.indent();
+		out.print(')');
 	}
 
 }

@@ -63,7 +63,7 @@ public class TransformFrameWriter {
 			}
 		}
 		
-		if (attrList != null) {
+		if (attrList != null && !attrList.isEmpty()) {
 			println(';');
 			indent();
 			print("attribute ");
@@ -79,7 +79,8 @@ public class TransformFrameWriter {
 		
 		indent--;
 		out.println();
-		out.println("}");
+		indent();
+		out.println("]");
 		
 		out.flush();
 		
@@ -92,6 +93,7 @@ public class TransformFrameWriter {
 	private void print(TransformAttribute attr) {
 		URI predicate = attr.getPredicate();
 		MappedProperty m = attr.getMappedProperty();
+		TransformFrame embedded = attr.getEmbeddedFrame();
 		
 		println('[');
 		indent++;
@@ -100,14 +102,24 @@ public class TransformFrameWriter {
 		printResource(predicate);
 		println(';');
 		
-		indent();
-		print("mappedProperty ");
-		print(m);
-		println();
+		if (m!=null) {
+			indent();
+			print("mappedProperty ");
+			print(m);
+			println();
+		}
+		
+		if (embedded != null) {
+			indent();
+			print("embeddedFrame ");
+			write(embedded);
+			println();
+		}
 		
 		indent--;
 		indent();
 		print(']');
+		
 		
 		
 		

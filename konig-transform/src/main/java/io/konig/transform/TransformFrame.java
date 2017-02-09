@@ -35,7 +35,11 @@ public class TransformFrame {
 	
 	
 	public TransformFrame(Shape targetShape) {
-		this(targetShape, new HashMap<Shape,TransformFrame>());
+		this.targetShape = targetShape;
+	}
+	
+	public void addAttribute(TransformAttribute attr) {
+		attributes.put(attr.getPredicate(), attr);
 	}
 	
 	public void addIdMapping(MappedId m) {
@@ -53,30 +57,6 @@ public class TransformFrame {
 	
 	public MappedId getIdMapping(Shape sourceShape) {
 		return idMap.get(sourceShape);
-	}
-	
-	private TransformFrame(Shape targetShape, Map<Shape,TransformFrame> shapeMap) {
-		this.targetShape = targetShape;
-		shapeMap.put(targetShape, this);
-		
-		for (PropertyConstraint p : targetShape.getProperty()) {
-			
-			URI predicate = p.getPredicate();
-			if (predicate != null) {
-				TransformAttribute attr = new TransformAttribute(p);
-				attributes.put(predicate, attr);
-				
-				Shape valueShape = p.getShape();
-				if (valueShape != null) {
-					TransformFrame embeddedFrame = shapeMap.get(valueShape);
-					if (embeddedFrame == null) {
-						embeddedFrame = new TransformFrame(valueShape, shapeMap);
-					}
-					attr.setEmbeddedFrame(embeddedFrame);
-				}
-			}
-		}
-		
 	}
 	
 	public TransformAttribute getAttribute(URI predicate) {

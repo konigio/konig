@@ -3,6 +3,9 @@ package io.konig.sql.query;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.konig.core.KonigException;
+import io.konig.core.io.PrettyPrintWriter;
+
 public class FromExpression extends AbstractExpression implements QueryExpression {
 	
 	private List<TableItemExpression> tableItems = new ArrayList<>();
@@ -14,17 +17,20 @@ public class FromExpression extends AbstractExpression implements QueryExpressio
 	}
 
 	public void add(TableItemExpression e) {
+		if (e == null) {
+			throw new KonigException("TableItem must not be null");
+		}
 		tableItems.add(e);
 	}
 
 	@Override
-	public void append(StringBuilder builder) {
+	public void print(PrettyPrintWriter out) {
 	
-		builder.append("FROM ");
+		out.print("FROM ");
 		String comma = "";
 		for (TableItemExpression item : tableItems) {
-			builder.append(comma);
-			item.append(builder);
+			out.print(comma);
+			item.print(out);
 			comma = ", ";
 		}
 		

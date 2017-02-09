@@ -1,5 +1,7 @@
 package io.konig.sql.query;
 
+import io.konig.core.io.PrettyPrintWriter;
+
 public class StringLiteralExpression extends AbstractExpression {
 	
 	private String value;
@@ -9,10 +11,10 @@ public class StringLiteralExpression extends AbstractExpression {
 	}
 
 	@Override
-	public void append(StringBuilder builder) {
-		builder.append('"');
-		builder.append(value);
-		builder.append('"');
+	public void print(PrettyPrintWriter out) {
+		out.print('"');
+		out.print(value);
+		out.print('"');
 	}
 
 	public String getValue() {

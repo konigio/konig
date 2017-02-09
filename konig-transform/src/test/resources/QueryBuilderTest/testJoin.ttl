@@ -1,0 +1,113 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+
+shape:PersonShape 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI ;
+	sh:targetClass schema:Person ;
+	sh:property  [ 
+		sh:predicate schema:givenName ;  
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  , [ 
+		sh:predicate schema:familyName ;  
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ] , [ 
+		sh:predicate schema:worksFor ;  
+		sh:class schema:Organization ; 
+		sh:nodeKind sh:IRI ;
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ] ;
+	konig:shapeDataSource 
+		<https://www.googleapis.com/bigquery/v2/projects/warehouse/datasets/directory/tables/Person> 
+.
+	
+<https://www.googleapis.com/bigquery/v2/projects/warehouse/datasets/directory/tables/Person>
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "warehouse" ;
+		gcp:datasetId "directory" ;
+		gcp:tableId   "Person" 
+	]
+.
+
+shape:OrganizationShape 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI ;
+	sh:targetClass schema:Organization ;
+	sh:property [ 
+		sh:predicate schema:name ;  
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ] , [
+		sh:predicate schema:email ;  
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ] ;   
+	konig:shapeDataSource 
+		<https://www.googleapis.com/bigquery/v2/projects/warehouse/datasets/directory/tables/Organization> 
+.
+	
+<https://www.googleapis.com/bigquery/v2/projects/warehouse/datasets/directory/tables/Organization>
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "warehouse" ;
+		gcp:datasetId "directory" ;
+		gcp:tableId   "Organization" 
+	]
+.
+
+shape:EmployeeShape 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI ;
+	sh:targetClass schema:Person ;
+	sh:property  [ 
+		sh:predicate schema:givenName ;  
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  , [ 
+		sh:predicate schema:familyName ;  
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ] , [ 
+		sh:predicate schema:worksFor ;  
+		sh:shape shape:OrganizationRefShape ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ] ;
+	konig:shapeDataSource 
+		<https://www.googleapis.com/bigquery/v2/projects/warehouse/datasets/directory/tables/Employee> 
+.
+<https://www.googleapis.com/bigquery/v2/projects/warehouse/datasets/directory/tables/Employee>
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "warehouse" ;
+		gcp:datasetId "directory" ;
+		gcp:tableId   "Employee" 
+	]
+.
+
+shape:OrganizationRefShape 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI ;
+	sh:targetClass schema:Organization ;
+	sh:property [ 
+		sh:predicate schema:name ;  
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ] 
+.
+

@@ -1,6 +1,7 @@
 package io.konig.transform.sql.query;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -15,13 +16,13 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.path.PathFactory;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.sql.query.BigQueryCommandLine;
-import io.konig.sql.query.QueryWriter;
 import io.konig.sql.query.SelectExpression;
 import io.konig.transform.TransformFrame;
 import io.konig.transform.TransformFrameBuilder;
@@ -36,8 +37,39 @@ public class QueryBuilderTest {
 	private QueryBuilder queryBuilder = new QueryBuilder();
 	
 
+	@Test
+	public void testJoin() throws Exception  {
+		loadShapes("QueryBuilderTest/testJoin.ttl");
+		
+		URI targetShapeId = uri("http://example.com/shape/EmployeeShape");
+		
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		
+		TransformFrame frame = frameBuilder.create(targetShape);
+		
+		
+		SelectExpression select = queryBuilder.selectExpression(frame);
+		
+		String actual = toText(select);
+		
+		String expected = 
+			"SELECT\n" + 
+			"   p.givenName,\n" + 
+			"   p.familyName,\n" + 
+			"   STRUCT(\n" + 
+			"      o.name\n" + 
+			"   ) AS worksFor\n" + 
+			"FROM \n" + 
+			"   warehouse.directory.Person AS p\n" + 
+			" JOIN\n" + 
+			"   warehouse.directory.Organization AS o\n" + 
+			" ON\n" + 
+			"   p.worksFor=o.id";
+		
+		assertEquals(expected, actual);
+	}
 	
-	@Ignore
+	@Test
 	public void testCourseInstance() throws Exception  {
 		loadShapes("QueryBuilderTest/testCourseInstance.ttl");
 		
@@ -58,12 +90,12 @@ public class QueryBuilderTest {
 				"   section_id AS registrarId,\n" + 
 				"   start_date AS startDate,\n" + 
 				"   section_name AS name\n" + 
-				"FROM ;";
+				"FROM example.registrar.CourseInstance";
 		
 		assertEquals(expected, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testMembership() throws Exception {
 
 		loadShapes("QueryBuilderTest/testMembership.ttl");
@@ -102,13 +134,13 @@ public class QueryBuilderTest {
 				"   CONCAT(\"http://example.com/role/\", role_name) AS id,\n" + 
 				"   role_id AS registrarId,\n" + 
 				"   role_name AS name\n" + 
-				"FROM registrar.Role;";
+				"FROM example.registrar.Role";
 		
 		assertEquals(expected, actual);
 	}
 
 	
-	@Ignore
+	@Test
 	public void testFilter() throws Exception {
 		loadGraph("QueryBuilderTest/testFilter.ttl");
 		
@@ -124,14 +156,14 @@ public class QueryBuilderTest {
 			"   STRUCT(\n" + 
 			"      postalCode\n" + 
 			"   ) AS address\n" + 
-			"FROM acme.PersonFull;";
+			"FROM example.acme.PersonFull";
 		
 		String actual = toText(select);
 		
 		assertEquals(expected, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testBigQueryCommandLine() throws Exception {
 		loadGraph("QueryBuilderTest/testBigQueryCommandLine.ttl");
 		
@@ -144,7 +176,7 @@ public class QueryBuilderTest {
 		assertEquals("acme.Person", cmd.getDestinationTable());
 	}
 	
-	@Ignore
+	@Test
 	public void testEntityId() throws Exception {
 		loadGraph("QueryBuilderTest/testEntityId.ttl");
 		
@@ -157,7 +189,7 @@ public class QueryBuilderTest {
 			"SELECT\n" + 
 			"   CONCAT(\"http://example.com/resources/person/\", person_id) AS id,\n" + 
 			"   name\n" + 
-			"FROM acme.OriginPerson;";
+			"FROM example.acme.OriginPerson";
 		
 		String actual = toText(select);
 		
@@ -165,7 +197,7 @@ public class QueryBuilderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIriReference() throws Exception {
 		loadGraph("QueryBuilderTest/testIriReference.ttl");
 		
@@ -178,7 +210,7 @@ public class QueryBuilderTest {
 			"SELECT\n" + 
 			"   name,\n" + 
 			"   CONCAT(\"http://example.com/resources/org/\", graduated_from) AS alumniOf\n" + 
-			"FROM acme.OriginPerson;";
+			"FROM example.acme.OriginPerson";
 		String actual = toText(select);
 		
 		
@@ -186,7 +218,7 @@ public class QueryBuilderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testNestFields() throws Exception {
 		loadGraph("QueryBuilderTest/testNestFields.ttl");
 		
@@ -203,13 +235,13 @@ public class QueryBuilderTest {
 				"      city AS addressLocality,\n" + 
 				"      state AS addressRegion\n" + 
 				"   ) AS address\n" + 
-				"FROM staging.Person;";
+				"FROM example.staging.Person";
 		String actual = toText(select);
 		assertEquals(expected, actual);
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameFields() throws Exception {
 		loadGraph("QueryBuilderTest/testRenameFields.ttl");
 		
@@ -222,7 +254,7 @@ public class QueryBuilderTest {
 				"SELECT\n" + 
 				"   first_name AS givenName,\n" + 
 				"   last_name AS familyName\n" + 
-				"FROM staging.Person;";
+				"FROM example.staging.Person";
 		String actual = toText(select);
 		
 		assertEquals(expected, actual);
@@ -231,9 +263,9 @@ public class QueryBuilderTest {
 
 	private String toText(SelectExpression select) {
 		StringWriter buffer = new StringWriter();
-		QueryWriter writer = new QueryWriter(buffer);
-		
-		writer.print(select);
+		PrettyPrintWriter writer = new PrettyPrintWriter(buffer);
+		select.print(writer);
+		writer.close();
 		
 		return buffer.toString();
 	}

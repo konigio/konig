@@ -1,5 +1,9 @@
 package io.konig.sql.query;
 
+import java.io.PrintWriter;
+
+import io.konig.core.io.PrettyPrintWriter;
+
 public class BigQueryCommandLine extends AbstractExpression {
 	
 	private String projectId;
@@ -42,26 +46,51 @@ public class BigQueryCommandLine extends AbstractExpression {
 		this.select = select;
 	}
 
-	@Override
-	public void append(StringBuilder builder) {
+	public void print(PrintWriter out, String fileName) {
 		
-		builder.append("bq query");
+		out.print("bq query");
 		if (projectId!= null) {
-			builder.append(" --project_id=");
-			builder.append(projectId);
+			out.print(" --project_id=");
+			out.print(projectId);
 		}
 		if (destinationTable!=null) {
-			builder.append(" --destination_table=");
-			builder.append(destinationTable);
+			out.print(" --destination_table=");
+			out.print(destinationTable);
 		}
-		builder.append(" --use_legacy_sql=");
-		builder.append(useLegacySql);
-		builder.append(' ');
-		builder.append('"');
-		select.append(builder);
-		builder.append('"');
+		out.print(" --use_legacy_sql=");
+		out.print(useLegacySql);
+		out.print(" `cat ");
+		out.print(fileName);
+		out.print('`');
+		out.print('\n');
 		
 	}
+	
+	@Override
+	public void print(PrettyPrintWriter out) {
+		boolean pretty = out.isPrettyPrint();
+		out.setPrettyPrint(false);
+		
+		out.print("bq query");
+		if (projectId!= null) {
+			out.print(" --project_id=");
+			out.print(projectId);
+		}
+		if (destinationTable!=null) {
+			out.print(" --destination_table=");
+			out.print(destinationTable);
+		}
+		out.print(" --use_legacy_sql=");
+		out.print(useLegacySql);
+		out.print('"');
+		select.print(out);
+		out.print('"');
+		out.println();
+		
+		out.setPrettyPrint(pretty);
+	}
+	
+	
 
 	
 }

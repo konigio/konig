@@ -7,13 +7,18 @@
 @prefix shape : <http://example.com/shapes/> .
 @prefix data : <http://example.com/resources/> .
 @prefix dc: <http://purl.org/dc/terms/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
 
 shape:PersonOriginShape a sh:Shape ;
 	sh:targetClass schema:Person ;
 	konig:shapeDataSource [
 		a konig:AuthoritativeDataSource ;
 		a konig:GoogleBigQueryTable ;
-		dc:identifier "acme.OriginPerson"
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "OriginPerson" 
+		]
 	] ;
 	konig:iriTemplate "{data}person/{person_id}" ;
 	sh:property [
@@ -34,7 +39,11 @@ shape:PersonSemanticShape a sh:Shape ;
 	sh:nodeKind sh:IRI ;
 	konig:shapeDataSource [
 		a konig:GoogleBigQueryTable ;
-		dc:identifier "acme.Person"
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "Person" 
+		]
 	] ;
 	sh:property  [
 		sh:predicate schema:name ;
