@@ -60,9 +60,9 @@ public class QueryBuilderTest {
 			"      o.name\n" + 
 			"   ) AS worksFor\n" + 
 			"FROM \n" + 
-			"   warehouse.directory.Person AS p\n" + 
+			"   directory.Person AS p\n" + 
 			" JOIN\n" + 
-			"   warehouse.directory.Organization AS o\n" + 
+			"   directory.Organization AS o\n" + 
 			" ON\n" + 
 			"   p.worksFor=o.id";
 		
@@ -90,12 +90,12 @@ public class QueryBuilderTest {
 				"   section_id AS registrarId,\n" + 
 				"   start_date AS startDate,\n" + 
 				"   section_name AS name\n" + 
-				"FROM example.registrar.CourseInstance";
+				"FROM registrar.CourseInstance";
 		
 		assertEquals(expected, actual);
 	}
 	
-	@Test
+	@Ignore
 	public void testMembership() throws Exception {
 
 		loadShapes("QueryBuilderTest/testMembership.ttl");
@@ -112,7 +112,7 @@ public class QueryBuilderTest {
 		
 		String expected = "";
 		
-//		assertEquals(expected, actual);
+		assertEquals(expected, actual);
 	}
 	
 	@Test
@@ -134,7 +134,7 @@ public class QueryBuilderTest {
 				"   CONCAT(\"http://example.com/role/\", role_name) AS id,\n" + 
 				"   role_id AS registrarId,\n" + 
 				"   role_name AS name\n" + 
-				"FROM example.registrar.Role";
+				"FROM registrar.Role";
 		
 		assertEquals(expected, actual);
 	}
@@ -156,7 +156,7 @@ public class QueryBuilderTest {
 			"   STRUCT(\n" + 
 			"      postalCode\n" + 
 			"   ) AS address\n" + 
-			"FROM example.acme.PersonFull";
+			"FROM acme.PersonFull";
 		
 		String actual = toText(select);
 		
@@ -189,7 +189,7 @@ public class QueryBuilderTest {
 			"SELECT\n" + 
 			"   CONCAT(\"http://example.com/resources/person/\", person_id) AS id,\n" + 
 			"   name\n" + 
-			"FROM example.acme.OriginPerson";
+			"FROM acme.OriginPerson";
 		
 		String actual = toText(select);
 		
@@ -210,7 +210,7 @@ public class QueryBuilderTest {
 			"SELECT\n" + 
 			"   name,\n" + 
 			"   CONCAT(\"http://example.com/resources/org/\", graduated_from) AS alumniOf\n" + 
-			"FROM example.acme.OriginPerson";
+			"FROM acme.OriginPerson";
 		String actual = toText(select);
 		
 		
@@ -235,7 +235,7 @@ public class QueryBuilderTest {
 				"      city AS addressLocality,\n" + 
 				"      state AS addressRegion\n" + 
 				"   ) AS address\n" + 
-				"FROM example.staging.Person";
+				"FROM staging.Person";
 		String actual = toText(select);
 		assertEquals(expected, actual);
 		
@@ -254,7 +254,7 @@ public class QueryBuilderTest {
 				"SELECT\n" + 
 				"   first_name AS givenName,\n" + 
 				"   last_name AS familyName\n" + 
-				"FROM example.staging.Person";
+				"FROM staging.Person";
 		String actual = toText(select);
 		
 		assertEquals(expected, actual);
