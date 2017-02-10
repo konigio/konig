@@ -42,6 +42,10 @@ public class CurieTerm extends AbstractFormula implements PathTerm {
 		this.context = context;
 	}
 
+	public Context getContext() {
+		return context;
+	}
+
 	public String getNamespacePrefix() {
 		return namespacePrefix;
 	}
@@ -68,6 +72,13 @@ public class CurieTerm extends AbstractFormula implements PathTerm {
 		builder.append(localName);
 		
 		return new URIImpl(builder.toString());
+	}
+
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		visitor.exit(this);
+		
 	}
 
 }

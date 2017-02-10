@@ -44,7 +44,16 @@ public class PathStep extends AbstractFormula {
 	public void print(PrettyPrintWriter out) {
 		
 		direction.print(out);
-		out.print(term);
+		term.print(out);
+	}
+
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		direction.dispatch(visitor);
+		term.dispatch(visitor);
+		visitor.exit(this);
 	}
 
 }

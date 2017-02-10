@@ -55,4 +55,15 @@ public class UnaryExpression extends AbstractFormula {
 
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		if (operator != null) {
+			operator.dispatch(visitor);
+		}
+		primary.dispatch(visitor);
+		visitor.exit(this);
+	}
+
 }

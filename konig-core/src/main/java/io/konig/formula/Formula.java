@@ -26,5 +26,6 @@ import io.konig.core.io.PrettyPrintWriter;
 public interface Formula {
 
 	void print(PrettyPrintWriter out);
+	void dispatch(FormulaVisitor visitor);
 
 }

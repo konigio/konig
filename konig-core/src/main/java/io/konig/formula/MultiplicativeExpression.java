@@ -57,4 +57,16 @@ public class MultiplicativeExpression extends AbstractFormula {
 		
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		left.dispatch(visitor);
+		for (Factor f : multiplierList) {
+			f.dispatch(visitor);
+		}
+		visitor.exit(this);
+		
+	}
+
 }

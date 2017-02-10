@@ -39,6 +39,12 @@ public enum MultiplicativeOperator implements Formula {
 	public char getSymbol() {
 		return symbol;
 	}
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		visitor.exit(this);
+	}
 	
 	
 

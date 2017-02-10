@@ -44,6 +44,10 @@ public class LocalNameTerm extends AbstractFormula implements PathTerm {
 		return localName;
 	}
 	
+	public Context getContext() {
+		return context;
+	}
+
 	@Override
 	public void print(PrettyPrintWriter out) {
 		
@@ -58,6 +62,13 @@ public class LocalNameTerm extends AbstractFormula implements PathTerm {
 			throw new KonigException("Cannot resolve localName: " + localName);
 		}
 		return new URIImpl(term.getExpandedIdValue());
+	}
+
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		visitor.exit(this);
 	}
 
 	

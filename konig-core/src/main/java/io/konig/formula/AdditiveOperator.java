@@ -40,6 +40,12 @@ public enum AdditiveOperator implements Formula {
 	public void print(PrettyPrintWriter out) {
 		out.print(symbol);
 	}
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		visitor.exit(this);
+		
+	}
 	
 	
 }

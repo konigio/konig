@@ -1,0 +1,181 @@
+package io.konig.shacl;
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.openrdf.model.Namespace;
+import org.openrdf.model.URI;
+
+import io.konig.core.Context;
+import io.konig.core.NameMap;
+import io.konig.core.NamespaceManager;
+import io.konig.core.Term;
+import io.konig.core.Term.Kind;
+import io.konig.formula.CurieTerm;
+import io.konig.formula.Expression;
+import io.konig.formula.Formula;
+import io.konig.formula.FormulaVisitor;
+import io.konig.formula.LocalNameTerm;
+
+public class FormulaContextBuilder implements ShapeVisitor {
+	
+	private NamespaceManager nsManager;
+	private NameMap map;
+	private Map<String, Warning> warnings = new HashMap<>();
+	private Worker worker = new Worker();
+	
+	public FormulaContextBuilder(NamespaceManager nsManager, NameMap map) {
+		this.nsManager = nsManager;
+		this.map = map;
+	}
+
+	@Override
+	public void visit(Shape shape) {
+		worker.setShape(shape);
+		
+		for (PropertyConstraint p : shape.getProperty()) {
+			Expression formula = p.getFormula();
+			if (formula != null) {
+				worker.setProperty(p);
+				formula.dispatch(worker);
+			}
+			
+		}
+		
+
+	}
+	
+	public interface Warning {
+	}
+	
+	static public class NameNotDefinedWarning implements Warning {
+		private String name;
+		private Shape shape;
+		private PropertyConstraint property;
+		public NameNotDefinedWarning(String name, Shape shape, PropertyConstraint property) {
+			this.name = name;
+			this.shape = shape;
+			this.property = property;
+		}
+		public String getName() {
+			return name;
+		}
+		public Shape getShape() {
+			return shape;
+		}
+		public PropertyConstraint getProperty() {
+			return property;
+		}
+		
+	}
+	
+	static public class NamespaceNotFoundWarning implements Warning {
+		private String namespacePrefix;
+		private Shape shape;
+		private PropertyConstraint property;
+		public NamespaceNotFoundWarning(String prefix, Shape shape, PropertyConstraint property) {
+			this.namespacePrefix = prefix;
+			this.shape = shape;
+			this.property = property;
+		}
+		public String getNamespacePrefix() {
+			return namespacePrefix;
+		}
+		public Shape getShape() {
+			return shape;
+		}
+		public PropertyConstraint getProperty() {
+			return property;
+		}
+		
+	}
+	
+	class Worker implements FormulaVisitor {
+		
+		
+		private Shape shape;
+		private PropertyConstraint property;
+		
+		void setShape(Shape shape) {
+			this.shape = shape;
+		}
+
+		void setProperty(PropertyConstraint property) {
+			this.property = property;
+		}
+
+		void namespaceNotFound(String prefix) {
+			warnings.put(prefix, new NamespaceNotFoundWarning(prefix, shape, property));
+		}
+
+		@Override
+		public void enter(Formula formula) {
+		}
+
+		@Override
+		public void exit(Formula formula) {
+			if (formula instanceof LocalNameTerm) {
+				visitLocalNameTerm((LocalNameTerm) formula);
+			} else if (formula instanceof CurieTerm) {
+				visitCurieTerm((CurieTerm) formula);
+			}
+			
+		}
+
+		private void visitCurieTerm(CurieTerm curie) {
+
+			Context context = curie.getContext();
+			String prefix = curie.getNamespacePrefix();
+			
+			Term term = context.getTerm(prefix);
+			if (term == null) {
+				Namespace ns = nsManager.findByPrefix(prefix);
+				if (ns == null) {
+					namespaceNotFound(prefix);
+				} else {
+					term = new Term(prefix, ns.getName(), Kind.NAMESPACE);
+					context.add(term);
+				}
+			}
+		}
+
+		private void visitLocalNameTerm(LocalNameTerm formula) {
+			
+			String name = formula.getLocalName();
+			URI uri = map.get(name);
+			if (uri == null) {
+				warnings.put(name, new NameNotDefinedWarning(name, shape, property));
+			} else {
+				Context context = formula.getContext();
+				Term term = context.getTerm(name);
+				if (term == null) {
+					
+					Namespace ns = nsManager.findByName(uri.getNamespace());
+					if (ns != null) {
+						
+						Term nsTerm = context.getTerm(ns.getPrefix());
+						if (nsTerm == null) {
+							context.add(nsTerm=new Term(ns.getPrefix(), ns.getName(), Kind.NAMESPACE));
+						}
+						
+						if (nsTerm.getId().equals(ns.getName())) {
+							StringBuilder value = new StringBuilder();
+							value.append(ns.getPrefix());
+							value.append(':');
+							value.append(name);
+							
+							context.addTerm(name, value.toString());
+							return;
+						}
+					}
+					context.addTerm(name, uri.stringValue());
+					
+				}
+			}
+			
+		}
+		
+	}
+
+}

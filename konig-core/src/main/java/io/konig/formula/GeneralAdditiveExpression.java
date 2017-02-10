@@ -55,4 +55,16 @@ public class GeneralAdditiveExpression extends AbstractFormula implements Additi
 		}
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		left.dispatch(visitor);
+		for (Addend a : addendList) {
+			a.dispatch(visitor);
+		}
+		visitor.exit(this);
+		
+	}
+
 }

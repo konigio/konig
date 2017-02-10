@@ -36,4 +36,11 @@ public class IriFormula extends AbstractFormula implements PrimaryExpression {
 		RdfUtil.writeURI(out, uri);
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		visitor.exit(this);
+	}
+
 }

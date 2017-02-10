@@ -42,4 +42,12 @@ public class BrackettedExpression extends AbstractFormula implements PrimaryExpr
 		out.print(')');
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		expression.dispatch(visitor);
+		visitor.exit(this);
+	}
+
+	
 }

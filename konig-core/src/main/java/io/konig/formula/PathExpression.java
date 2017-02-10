@@ -58,4 +58,15 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		for (PathStep s : stepList) {
+			s.dispatch(visitor);
+		}
+		visitor.exit(this);
+		
+	}
+
 }

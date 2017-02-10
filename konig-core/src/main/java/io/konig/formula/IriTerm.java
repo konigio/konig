@@ -46,4 +46,10 @@ public class IriTerm extends AbstractFormula implements PathTerm {
 
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		visitor.exit(this);
+	}
+
 }

@@ -49,4 +49,13 @@ public class Factor extends AbstractFormula {
 		right.print(out);
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		operator.dispatch(visitor);
+		right.dispatch(visitor);
+		visitor.exit(this);
+	}
+
 }

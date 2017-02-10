@@ -44,6 +44,12 @@ public enum ContainmentOperator implements Formula {
 		out.print(text);
 		out.print(' ');
 	}
+
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		visitor.exit(this);
+	}
 	
 	
 }
