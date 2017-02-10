@@ -1,5 +1,12 @@
 package io.konig.formula;
 
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
+
+import io.konig.core.Context;
+import io.konig.core.KonigException;
+import io.konig.core.Term;
+
 /*
  * #%L
  * Konig Core
@@ -26,8 +33,10 @@ import io.konig.core.io.PrettyPrintWriter;
 public class LocalNameTerm extends AbstractFormula implements PathTerm {
 	
 	private String localName;
+	private Context context;
 
-	public LocalNameTerm(String localName) {
+	public LocalNameTerm(Context context, String localName) {
+		this.context = context;
 		this.localName = localName;
 	}
 
@@ -40,6 +49,15 @@ public class LocalNameTerm extends AbstractFormula implements PathTerm {
 		
 		out.print(localName);
 		
+	}
+
+	@Override
+	public URI getIri() {
+		Term term = context.getTerm(localName);
+		if (term == null) {
+			throw new KonigException("Cannot resolve localName: " + localName);
+		}
+		return new URIImpl(term.getExpandedIdValue());
 	}
 
 	

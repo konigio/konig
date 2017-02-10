@@ -29,12 +29,16 @@ import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.rio.RDFParseException;
 
+import io.konig.core.Context;
 import io.konig.core.KonigException;
+import io.konig.core.Term;
+import io.konig.core.Term.Kind;
 import io.konig.core.io.PrettyPrintWriter;
 
 public class Expression extends AbstractFormula {
 
 	private List<ConditionalAndExpression> orList;
+	private Context context;
 	
 	public Expression(String text) {
 		FormulaParser parser = new FormulaParser();
@@ -50,6 +54,14 @@ public class Expression extends AbstractFormula {
 		 orList = new ArrayList<>();
 	}
 	
+	public Context getContext() {
+		return context;
+	}
+
+	public void setContext(Context context) {
+		this.context = context;
+	}
+
 	public void add(ConditionalAndExpression expr) {
 		orList.add(expr);
 	}
@@ -61,6 +73,16 @@ public class Expression extends AbstractFormula {
 	@Override
 	public void print(PrettyPrintWriter out) {
 		
+		if (context != null) {
+
+			List<Term> termList = context.asList();
+			int remainder = printNamespaces(out, termList);
+			if (remainder>0) {
+				printContext(out, termList);
+			}
+			
+		}
+		
 		String operator = "";
 		for (ConditionalAndExpression e : orList) {
 			out.print(operator);
@@ -69,6 +91,54 @@ public class Expression extends AbstractFormula {
 		}
 	}
 	
+
+
+	private void printContext(PrettyPrintWriter out, List<Term> termList) {
+		
+		out.print("@context {");
+		out.pushIndent();
+		
+		String comma = "";
+		for (Term term : termList) {
+			if (term.getKind() != Kind.NAMESPACE ||
+				term.getContainer()!=null ||
+				term.getLanguage()!=null ||
+				term.getType()!=null
+			) {
+				out.println(comma);
+				term.print(out);
+				comma = ",";
+			}
+		}
+		out.println();
+		out.popIndent();
+		out.println('}');
+		
+	}
+
+	private int printNamespaces(PrettyPrintWriter out, List<Term> termList) {
+		int count = 0;
+		for (Term term : termList) {
+			if (term.getKind() == Kind.NAMESPACE && 
+				term.getContainer()==null &&
+				term.getLanguage()==null &&
+				term.getType()==null
+			) {
+				
+				out.print("@prefix ");
+				out.print(term.getKey());
+				out.print(": <");
+				out.print(term.getExpandedIdValue());
+				out.println("> .");
+			} else {
+				count++;
+			}
+		}
+		
+		return count;
+		
+	}
+
 	public Value toValue() {
 		String text = toString();
 		return new LiteralImpl(text);

@@ -23,12 +23,46 @@ package io.konig.formula;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Ignore;
 import org.junit.Test;
+
+import io.konig.core.vocab.Schema;
 
 public class FormulaParserTest {
 	
 	private FormulaParser parser = new FormulaParser();
 
+	@Test
+	public void testContext() throws Exception {
+		
+		String text =
+			  "@prefix schema: <http://schema.org/> .\n"
+			+ "@context {\n"
+			+ "   \"knows\" : \"schema:knows\",\n"
+			+ "   \"Alice\" : {\n"
+			+ "      \"@id\" : \"http://example.com/Alice\",\n"
+			+ "      \"@type\" : \"@vocab\"\n"
+			+ "   }\n"
+			+ "}\n"
+			+ "knows.knows = Alice";
+
+		Expression e = parser.parse(text);
+		
+		String actual = e.toString();
+	
+		assertEquals(text, actual);
+		
+		ConditionalAndExpression and = e.getOrList().iterator().next();
+		
+		BinaryRelationalExpression binary = (BinaryRelationalExpression) and.getAndList().iterator().next();
+		
+		GeneralAdditiveExpression left = (GeneralAdditiveExpression) binary.getLeft();
+		
+		PathExpression path = (PathExpression) left.getLeft().getLeft().getPrimary();
+		PathTerm term = path.getStepList().get(0).getTerm();
+		
+		assertEquals(Schema.knows, term.getIri());
+	}
 
 	@Test
 	public void testConditional() throws Exception {

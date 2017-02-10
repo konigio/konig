@@ -32,6 +32,7 @@ public class IriTerm extends AbstractFormula implements PathTerm {
 		this.uri = uri;
 	}
 
+	@Override
 	public URI getIri() {
 		return uri;
 	}

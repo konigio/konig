@@ -31,7 +31,6 @@ public abstract class AbstractFormula implements Formula {
 	public String toString() {
 		StringWriter buffer = new StringWriter();
 		PrettyPrintWriter writer = new PrettyPrintWriter(buffer);
-		writer.setPrettyPrint(false);
 		print(writer);
 		writer.close();
 		

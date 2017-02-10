@@ -76,6 +76,16 @@ public class SeaTurtleParser extends TurtleParser {
 	}
 
 
+	protected void prologue() throws IOException, RDFParseException, RDFHandlerException {
+		
+		int c = next();
+		while (c == '@') {
+			directive(c);
+			c = next();
+		}
+		unread(c);
+		
+	}
 
 	/**
 	 * <pre>
@@ -323,6 +333,10 @@ public class SeaTurtleParser extends TurtleParser {
 			term = expandedTermDefinition(termName);
 		}
 		return term;
+	}
+	
+	protected Context getContext() {
+		return currentContext;
 	}
 
 	/**

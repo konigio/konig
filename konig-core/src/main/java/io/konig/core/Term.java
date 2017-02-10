@@ -27,6 +27,8 @@ import org.openrdf.model.URI;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
+import io.konig.core.io.PrettyPrintWriter;
+
 public class Term implements Comparable<Term>{
 	public static enum Kind {
 		NAMESPACE,
@@ -180,6 +182,54 @@ public class Term implements Comparable<Term>{
 				json.writeStringField("@container", container);
 			}
 			json.writeEndObject();
+		}
+	}
+	
+	public void print(PrettyPrintWriter out) {
+		out.indent();
+		out.print('"');
+		out.print(key);
+		out.print("\" : ");
+		if (container==null && language==null && type==null) {
+			out.print('"');
+			out.print(id);
+			out.print('"');
+		} else {
+			out.println('{');
+			out.pushIndent();
+			
+
+			out.indent();
+			out.print("\"@id\" : \"");
+			out.print(id);
+			out.print('"');
+			
+			if (type != null) {
+				out.println(',');
+				out.indent();
+				out.print("\"@type\" : \"");
+				out.print(type);
+				out.print('"');
+			}
+			if (container != null) {
+				out.println(',');
+				out.indent();
+				out.print("\"@container\" : \"");
+				out.print(container);
+				out.print('"');
+			}
+			if (language!=null) {
+				out.println(',');
+				out.indent();
+				out.print("\"@language\" : \"");
+				out.print(language);
+				out.print('"');
+			}
+			out.println();
+			out.popIndent();
+			out.indent();
+			out.print('}');
+			
 		}
 	}
 
