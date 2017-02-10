@@ -43,4 +43,11 @@ public class LiteralFormula extends AbstractFormula implements PrimaryExpression
 		RdfUtil.writeLiteral(out, literal);
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		visitor.exit(this);
+	}
+
 }

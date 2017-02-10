@@ -45,6 +45,8 @@ public class Expression extends AbstractFormula {
 		try {
 			Expression self = parser.parse(text);
 			orList = self.getOrList();
+			context = self.getContext();
+			
 		} catch (RDFParseException | IOException e) {
 			throw new KonigException(e);
 		}
@@ -142,5 +144,14 @@ public class Expression extends AbstractFormula {
 	public Value toValue() {
 		String text = toString();
 		return new LiteralImpl(text);
+	}
+
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		for (ConditionalAndExpression and : orList) {
+			and.dispatch(visitor);
+		}
+		visitor.exit(this);
 	}
 }

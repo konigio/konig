@@ -28,7 +28,6 @@ public enum UnaryOperator implements Formula {
 	NOT('!')
 	;
 	
-
 	private char symbol;
 	private UnaryOperator(char symbol) {
 		this.symbol = symbol;
@@ -41,6 +40,13 @@ public enum UnaryOperator implements Formula {
 	
 	public char getSymbol() {
 		return symbol;
+	}
+
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		visitor.exit(this);
 	}
 	
 }

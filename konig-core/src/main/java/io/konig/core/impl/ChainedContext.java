@@ -22,6 +22,7 @@ package io.konig.core.impl;
 
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.core.Context;
 import io.konig.core.Term;
+import io.konig.core.io.PrettyPrintWriter;
 
 public class ChainedContext implements Context {
 	private static final long serialVersionUID = 1L;
@@ -243,5 +245,33 @@ public class ChainedContext implements Context {
 	@Override
 	public void setVersionNumber(long versionNumber) {
 		this.versionNumber = versionNumber;
+	}
+	
+	public String toString() {
+		StringWriter buffer = new StringWriter();
+		PrettyPrintWriter out = new PrettyPrintWriter(buffer);
+		this.print(out);
+		out.close();
+		return buffer.toString();
+	}
+	
+	public void print(PrettyPrintWriter out) {
+		List<Term> termList = asList();
+		String comma = "";
+		out.print('{');
+		out.pushIndent();
+		
+		for (Term term : termList) {
+			out.println(comma);
+			comma = ",";
+			term.print(out);
+		}
+		out.println();
+		
+		out.popIndent();
+		out.indent();
+		out.print('}');
+		
+		
 	}
 }

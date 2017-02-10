@@ -58,4 +58,15 @@ public class ListRelationalExpression extends AbstractFormula implements Relatio
 
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		operator.dispatch(visitor);
+		left.dispatch(visitor);
+		right.dispatch(visitor);
+		visitor.exit(this);
+		
+	}
+
 }

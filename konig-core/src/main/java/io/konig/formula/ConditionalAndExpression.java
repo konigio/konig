@@ -48,4 +48,14 @@ public class ConditionalAndExpression extends AbstractFormula {
 		}
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		for (ValueLogical logical : andList) {
+			logical.dispatch(visitor);
+		}
+		visitor.exit(this);
+		
+	}
+
 }

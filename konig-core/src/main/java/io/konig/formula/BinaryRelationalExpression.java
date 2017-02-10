@@ -57,4 +57,17 @@ public class BinaryRelationalExpression extends AbstractFormula implements Relat
 
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		left.dispatch(visitor);
+		if (operator!=null) {
+			operator.dispatch(visitor);
+			right.dispatch(visitor);
+		}
+		visitor.exit(this);
+		
+	}
+	
+
 }

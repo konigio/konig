@@ -59,4 +59,14 @@ public class ConditionalExpression extends AbstractFormula implements Relational
 
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		condition.dispatch(visitor);
+		whenTrue.dispatch(visitor);
+		whenFalse.dispatch(visitor);
+		visitor.exit(this);
+		
+	}
+
 }

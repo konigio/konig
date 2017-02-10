@@ -53,4 +53,14 @@ public class ExpressionList extends ArrayList<Expression> implements Formula {
 		return buffer.toString();
 	}
 
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+
+		visitor.enter(this);
+		for (Expression e : this) {
+			e.dispatch(visitor);
+		}
+		visitor.exit(this);
+	}
+
 }
