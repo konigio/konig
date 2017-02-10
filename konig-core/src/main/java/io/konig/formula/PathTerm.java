@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * Konig Core
@@ -23,4 +25,5 @@ package io.konig.formula;
 
 public interface PathTerm extends Formula {
 
+	URI getIri();
 }

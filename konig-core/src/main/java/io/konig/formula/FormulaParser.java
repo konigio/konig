@@ -31,25 +31,16 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.KonigException;
-import io.konig.core.NamespaceManager;
-import io.konig.core.path.NamespaceMapAdapter;
-import io.konig.rio.turtle.NamespaceMap;
-import io.konig.rio.turtle.TurtleParser;
+import io.konig.rio.turtle.SeaTurtleParser;
 
 
 public class FormulaParser {
 	
-	private NamespaceManager nsManager;
 	
 	
 	public FormulaParser() {
 	}
 	
-
-	public FormulaParser(NamespaceManager nsManager) {
-		this.nsManager = nsManager;
-	}
-
 
 
 	public Expression parse(String text) throws RDFParseException, IOException {
@@ -58,30 +49,35 @@ public class FormulaParser {
 	}
 
 	public Expression parse(Reader reader) throws RDFParseException, IOException {
-		NamespaceMap ns = nsManager==null ? null : new NamespaceMapAdapter(nsManager);
-		Worker worker = new Worker(ns, reader);
+		Worker worker = new Worker(reader);
 		
 		try {
-			return worker.expression();
+			return worker.formula();
 		} catch (RDFHandlerException e) {
 			throw new KonigException(e);
 		}
 	}
 	
-	private class Worker extends TurtleParser {
+	private class Worker extends SeaTurtleParser {
 		
-		private Worker(NamespaceMap map, Reader reader) {
-			super(map);
+		private Worker(Reader reader) {
 			initParse(reader, "");
 		}
 		
-		Expression expression() throws RDFParseException, IOException, RDFHandlerException {
+		private Expression formula() throws RDFParseException, IOException, RDFHandlerException {
+			
+			prologue();
+			return expression();
+		}
+		
+		private Expression expression() throws RDFParseException, IOException, RDFHandlerException {
 			
 			return conditionalOrExpression();
 		}
 
 		private ConditionalOrExpression conditionalOrExpression() throws RDFParseException, IOException, RDFHandlerException {
 			ConditionalOrExpression or = new ConditionalOrExpression();
+			or.setContext(getContext());
 			ConditionalAndExpression and = conditionalAndExpression();
 			or.add(and);
 			while ((and=tryConditionalAndExpression()) != null) {
@@ -442,7 +438,7 @@ public class FormulaParser {
 						} while (Character.isLetter(c) || Character.isDigit(c) || c=='_');
 						String localName = buffer.toString();
 						unread(c);
-						return new CurieTerm(predicate, localName);
+						return new CurieTerm(getContext(), predicate, localName);
 					} else {
 						fail("Expected a letter");
 					}
@@ -461,7 +457,7 @@ public class FormulaParser {
 			}
 
 			
-			return predicate == null ? null : new LocalNameTerm(predicate);
+			return predicate == null ? null : new LocalNameTerm(getContext(), predicate);
 		}
 
 		private LiteralFormula tryLiteralFormula() throws RDFParseException, RDFHandlerException, IOException {

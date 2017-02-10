@@ -1,4 +1,26 @@
+Formula ::= Prologue Expression
 
+Prologue	  ::=  	( PrefixDecl | ContextDecl )*
+
+PrefixDecl	::=  	('PREFIX' PNAME_NS IRIREF | '@' PNAME_NS ':' IRIREF '.')
+
+ContextDecl ::= '@context' '{' (Term)+ '}'
+
+Term ::= JsonString ':' TermValue 
+
+JsonString ::= '"' JsonChar* '"'
+
+JsonChar ::= UnescapedJsonChar | EscapedJsonChar
+
+UnescapedJsonChar ::= [#x20-#x21] | [#x23-#x5b] | [#x5D=#x10FFF]
+
+EscapedJsonChar ::= '\' ( ["\\bfnrt] | 'u' HEX HEX HEX HEX )
+
+TermValue ::= JsonString | ExpandedTerm
+
+ExpandedTerm ::= '{' (JsonldKeyword ':' JsonString)* '}'
+
+JsonldKeyword ::= '@id' | '@type' | '@language'
 
 Expression	  ::=  	ConditionalOrExpression
 

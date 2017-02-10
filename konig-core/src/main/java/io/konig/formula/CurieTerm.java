@@ -1,5 +1,12 @@
 package io.konig.formula;
 
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
+
+import io.konig.core.Context;
+import io.konig.core.KonigException;
+import io.konig.core.Term;
+
 /*
  * #%L
  * Konig Core
@@ -27,12 +34,12 @@ public class CurieTerm extends AbstractFormula implements PathTerm {
 	
 	private String namespacePrefix;
 	private String localName;
-	
-	
+	private Context context;
 
-	public CurieTerm(String namespacePrefix, String localName) {
+	public CurieTerm(Context context, String namespacePrefix, String localName) {
 		this.namespacePrefix = namespacePrefix;
 		this.localName = localName;
+		this.context = context;
 	}
 
 	public String getNamespacePrefix() {
@@ -48,6 +55,19 @@ public class CurieTerm extends AbstractFormula implements PathTerm {
 		out.print(namespacePrefix);
 		out.print(':');
 		out.print(localName);
+	}
+
+	@Override
+	public URI getIri() {
+		
+		Term term = context.getTerm(namespacePrefix);
+		if (term == null) {
+			throw new KonigException("Cannot resolve namespace prefix: " + namespacePrefix);
+		}
+		StringBuilder builder = new StringBuilder(term.getExpandedIdValue());
+		builder.append(localName);
+		
+		return new URIImpl(builder.toString());
 	}
 
 }
