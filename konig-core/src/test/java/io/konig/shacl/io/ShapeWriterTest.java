@@ -29,12 +29,10 @@ import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.activity.Activity;
@@ -43,19 +41,44 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.FileGetter;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.SH;
 import io.konig.datasource.BigQueryTableReference;
-import io.konig.datasource.DataSource;
 import io.konig.datasource.GoogleBigQueryTable;
 import io.konig.datasource.GoogleCloudStorageBucket;
+import io.konig.formula.Expression;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 
 public class ShapeWriterTest {
+	
+	@Test
+	public void testFormula() throws Exception {
+
+		URI shapeId = uri("http://example.com/IssueShape");
+		URI completedPoints = uri("http://example.com/ns/completedPoints");
+		Shape shape = new Shape(shapeId);
+		PropertyConstraint p = new PropertyConstraint(completedPoints);
+		shape.add(p);
+		p.setFormula(new Expression("(status = ex:Complete) ? estimatedPoints : 0"));
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		Graph graph = new MemoryGraph();
+		shapeWriter.emitShape(shape, graph);
+
+		Vertex v = graph.getVertex(shapeId);
+		assertTrue(v!=null);
+		
+		Vertex w = v.getVertex(SH.property);
+		assertTrue(w != null);
+		
+		assertLiteral(w, Konig.formula, "(status = ex:Complete) ? estimatedPoints : 0");
+		
+	}
 	
 	@Test
 	public void testCloudStorageBucket() throws Exception {

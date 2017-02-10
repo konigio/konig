@@ -431,6 +431,15 @@ public class TurtleParser extends RDFParserBase {
 		}
 		
 	}
+	
+	protected Literal tryLiteral() throws IOException, RDFParseException, RDFHandlerException {
+		int c = read();
+		Literal literal = tryLiteral(c);
+		if (literal == null) {
+			unread(c);
+		}
+		return literal;
+	}
 
 	/**
 	 * <pre>
@@ -476,7 +485,7 @@ public class TurtleParser extends RDFParserBase {
 		return result;
 	}
 
-	private void unread(String text) throws IOException {
+	protected void unread(String text) throws IOException {
 		for (int i=text.length()-1; i>=0; i--) {
 			unread(text.charAt(i));
 		}
@@ -901,6 +910,7 @@ public class TurtleParser extends RDFParserBase {
 		if (!isWhitespace(c)) {
 			fail("Expected whitespace");
 		}
+		skipSpace();
 	}
 
 	private boolean stringQuoteChar(int c, StringBuilder builder) throws IOException, RDFParseException {
@@ -1603,6 +1613,15 @@ public class TurtleParser extends RDFParserBase {
 
 	
 
+	protected boolean tryWhitespace() throws IOException {
+		int c = read();
+		if (isWhitespace(c)) {
+			skipSpace();
+			return true;
+		}
+		unread(c);
+		return false;
+	}
 	protected boolean tryWord(String text) throws IOException {
 		for (int i=0; i<text.length(); i++) {
 			char c = text.charAt(i);

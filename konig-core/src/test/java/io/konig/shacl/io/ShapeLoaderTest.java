@@ -46,12 +46,30 @@ import io.konig.datasource.BigQueryTableReference;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.GoogleBigQueryTable;
 import io.konig.datasource.GoogleCloudStorageBucket;
+import io.konig.formula.Expression;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShapeLoaderTest {
+	
+	@Test 
+	public void testFormula() throws Exception {
+		Graph graph = loadGraph("ShapeLoaderTest/testFormula.ttl");
+
+		ShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader loader = new ShapeLoader(shapeManager);
+		loader.load(graph);
+		URI shapeId = uri("http://example.com/shapes/IssueShape");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		URI completedPoints = uri("http://example.com/ns/completedPoints");
+		PropertyConstraint p = shape.getPropertyConstraint(completedPoints);
+		Expression formula = p.getFormula();
+		assertTrue(formula != null);
+		assertEquals("(status = ex:Complete) ? estimatedPoints : 0", formula.toString());
+	}
 
 	@Test 
 	public void testCloudStorageBucket() throws Exception {

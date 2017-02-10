@@ -1,0 +1,52 @@
+
+
+Expression	  ::=  	ConditionalOrExpression
+
+ConditionalOrExpression	  ::=  	ConditionalAndExpression ( '||' ConditionalAndExpression )*
+
+ConditionalAndExpression	  ::=  	ValueLogical ( '&&' ValueLogical )*
+
+ValueLogical	  ::=  	RelationalExpression
+
+RelationalExpression	  ::=  	
+	NumericExpression ( 
+			'=' NumericExpression 
+		| '!=' NumericExpression 
+		| '<' NumericExpression 
+		| '>' NumericExpression 
+		| '<=' NumericExpression 
+		| '>=' NumericExpression
+		| 'IN' ExpressionList
+		| 'NOT' 'IN' ExpressionList
+		| '?' NumericExpression '|' NumericExpression
+	)?
+
+ExpressionList ::= '(' Expression ( ',' Expression )* ')'
+		
+NumericExpression	  ::=  	AdditiveExpression
+
+AdditiveExpression	  ::=  	
+	MultiplicativeExpression ( 
+			'+' MultiplicativeExpression 
+		| '-' MultiplicativeExpression 
+	)*
+
+MultiplicativeExpression	  ::=  	UnaryExpression ( '*' UnaryExpression | '/' UnaryExpression )*
+
+UnaryExpression	  ::=  	  
+		'!' PrimaryExpression 
+	|	'+' PrimaryExpression 
+	|	'-' PrimaryExpression 
+	|	PrimaryExpression
+	
+PrimaryExpression	  ::=  	BrackettedExpression | Path | Literal
+
+BrackettedExpression	  ::=  	'(' Expression ')'
+
+Path	::= (InStep | PathTerm) ( OutStep | InStep)*
+
+PathTerm ::= IRI | CURIE | LocalName
+
+OutStep ::= '.' PathTerm
+
+InStep ::= '^' PathTerm

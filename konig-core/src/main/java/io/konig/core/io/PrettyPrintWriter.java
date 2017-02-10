@@ -28,11 +28,15 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
+import io.konig.core.NamespaceManager;
+
 public class PrettyPrintWriter extends PrintWriter {
 	
 	private boolean prettyPrint = true;
 	private int indentLevel;
 	private String indentText = "   ";
+	
+	private NamespaceManager nsManager;
 
 	public PrettyPrintWriter(Writer arg0) {
 		super(arg0);
@@ -66,6 +70,16 @@ public class PrettyPrintWriter extends PrintWriter {
 		super(arg0, arg1);
 	}
 	
+	
+	
+	public NamespaceManager getNamespaceManager() {
+		return nsManager;
+	}
+
+	public void setNamespaceManager(NamespaceManager nsManager) {
+		this.nsManager = nsManager;
+	}
+
 	public void pushIndent() {
 		indentLevel++;
 	}

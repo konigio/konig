@@ -27,7 +27,9 @@ import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.datatypes.XMLDatatypeUtil;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.util.Literals;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -37,6 +39,7 @@ import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.BasicWriterSettings;
 import org.openrdf.rio.turtle.TurtleParserFactory;
+import org.openrdf.rio.turtle.TurtleUtil;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
@@ -48,6 +51,7 @@ import io.konig.core.io.CompactTurtleWriter;
 import io.konig.core.io.CompositeRdfHandler;
 import io.konig.core.io.GraphLoadHandler;
 import io.konig.core.io.NamespaceRDFHandler;
+import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.vocab.Schema;
@@ -610,5 +614,67 @@ public class RdfUtil {
 		}
 		
 		return false;
+	}
+	
+	public static void writeLiteral(PrettyPrintWriter writer, Literal literal) {
+
+		String label = literal.getLabel();
+		URI datatype = literal.getDatatype();
+		
+		if (XMLSchema.INTEGER.equals(datatype) || XMLSchema.DECIMAL.equals(datatype)
+				|| XMLSchema.DOUBLE.equals(datatype) || XMLSchema.BOOLEAN.equals(datatype))
+		{
+			try {
+				writer.write(XMLDatatypeUtil.normalize(label, datatype));
+				return; // done
+			}
+			catch (IllegalArgumentException e) {
+				// not a valid numeric typed literal. ignore error and write
+				// as
+				// quoted string instead.
+			}
+		}
+
+		if (label.indexOf('\n') != -1 || label.indexOf('\r') != -1 || label.indexOf('\t') != -1) {
+			// Write label as long string
+			writer.write("\"\"\"");
+			writer.write(TurtleUtil.encodeLongString(label));
+			writer.write("\"\"\"");
+		}
+		else {
+			// Write label as normal string
+			writer.write("\"");
+			writer.write(TurtleUtil.encodeString(label));
+			writer.write("\"");
+		}
+
+		if (Literals.isLanguageLiteral(literal)) {
+			// Append the literal's language
+			writer.write("@");
+			writer.write(literal.getLanguage());
+		}
+		else if (!XMLSchema.STRING.equals(datatype) ) {
+			// Append the literal's datatype (possibly written as an abbreviated
+			// URI)
+			writer.write("^^");
+			writeURI(writer, datatype);
+		}
+		
+	}
+
+	public static void writeURI(PrettyPrintWriter out, URI uri) {
+		NamespaceManager nsManager = out.getNamespaceManager();
+		if (nsManager != null) {
+			Namespace ns = nsManager.findByName(uri.getNamespace());
+			if (ns != null) {
+				out.print(ns.getPrefix());
+				out.print(':');
+				out.print(uri.getLocalName());
+				return;
+			}
+		}
+		out.print('<');
+		out.print(uri.stringValue());
+		out.print('>');
 	}
 }

@@ -315,26 +315,5 @@ public class PathParser extends TurtleParser {
 	}
 
 
-	private static class NamespaceMapAdapter implements NamespaceMap {
-		private NamespaceManager nsManager;
-		
-		
-
-		public NamespaceMapAdapter(NamespaceManager nsManager) {
-			this.nsManager = nsManager;
-		}
-
-		@Override
-		public String get(String prefix) {
-			Namespace ns = nsManager.findByPrefix(prefix);
-			return (ns==null) ? null : ns.getName();
-		}
-
-		@Override
-		public void put(String prefix, String name) {
-			nsManager.add(prefix, name);
-		}
-		
-	}
 
 }

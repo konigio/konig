@@ -51,6 +51,7 @@ import io.konig.core.impl.KonigLiteral;
 import io.konig.core.path.PathFactory;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
+import io.konig.formula.Expression;
 
 public class PropertyConstraint {
 
@@ -85,6 +86,7 @@ public class PropertyConstraint {
 	private Path compiledSourcePath;
 	private String partitionOf;
 	private Path compiledPartitionOf;
+	private Expression formula;
 	
 	private Term term;
 	
@@ -586,6 +588,14 @@ public class PropertyConstraint {
 			compiledPartitionOf = factory.createPath(partitionOf);
 		}
 		return compiledPartitionOf;
+	}
+
+	public Expression getFormula() {
+		return formula;
+	}
+
+	public void setFormula(Expression formula) {
+		this.formula = formula;
 	}
 	
 }
