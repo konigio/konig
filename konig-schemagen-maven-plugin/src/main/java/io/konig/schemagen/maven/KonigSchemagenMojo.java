@@ -137,9 +137,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private File gcpDir;
     
-    @Parameter
-    private File bqSourceDir;
-
 	@Parameter
 	private File shapesOutDir;
 	
@@ -201,7 +198,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ShapeMediaTypeLinker linker = new ShapeMediaTypeLinker(mediaTypeNamer);
 			linker.assignAll(shapeManager.listShapes(), owlGraph);
 			
-			owlReasoner.inferClassFromSubclassOf();
 			writeSummary(nsManager, shapeManager, owlGraph);
 			
 			generatePlantUMLDomainModel();
