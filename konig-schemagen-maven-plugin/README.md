@@ -23,7 +23,7 @@ The generator has been implemented as a Maven plugin.  To use it, you must first
 ## Usage
 
 If you are going to generate OWL and SHACL statements from a spreadsheet, you 
-should start by making a copy of the 
+should start by making a copy of the <br>
 [Data Model Workbook](https://docs.google.com/spreadsheets/d/1mhL1hylgRJuMBft0sHg7onKwxscdlIJRuzNlF_iDKK0/edit?usp=sharing) 
 template.
 
