@@ -17,8 +17,17 @@ The generator has been implemented as a Maven plugin.  To use it, you must first
 To use the schema generator, add a maven plugin to your project as shown below.
 
 ```xml
-<project>
-  ...
+<project 
+	xmlns="http://maven.apache.org/POM/4.0.0" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>data-model</artifactId>
+  <version>1.0.0</version>
+  <name>Example Data Model</name>
+
   <build>
   	<plugins>
   		<plugin>
