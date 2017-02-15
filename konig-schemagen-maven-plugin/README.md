@@ -1,18 +1,31 @@
 # Konig Schema Generator
 
-The Konig Schema Generator takes [SHACL](https://www.w3.org/TR/shacl/) and
-[OWL](https://en.wikipedia.org/wiki/Web_Ontology_Language) statements as input, and it
-produces various schemas as output, including:
+The Konig Schema Generator can generate [OWL](https://en.wikipedia.org/wiki/Web_Ontology_Language) 
+and [SHACL](https://www.w3.org/TR/shacl/) statements from information in a spreadsheet, 
+or it can start with OWL and SHACL statements as input.
+ 
+The generator can produce the following kinds of output:
 
 * [JSON Schema](http://spacetelescope.github.io/understanding-json-schema/)
 * [Avro Schema](https://avro.apache.org/docs/1.8.0/spec.html)
+* [JSON-LD](https://www.w3.org/TR/json-ld/) Contexts
 * [Google BigQuery Table Definition](https://cloud.google.com/bigquery/docs/reference/v2/tables)
+* [PlantUML](http://plantuml.com/) Models
+* Java POJOs
+* Java Data Access Objects
+* Ontology Summary
+* Online documentation of your Ontology
 
-The generator also produces a JSON-LD context for each addressable data shape.
 
-The generator has been implemented as a Maven plugin.  To use it, you must first [install Maven](https://maven.apache.org/install.html).
+The generator has been implemented as a Maven plugin.  To use it, you must first 
+[install Maven](https://maven.apache.org/install.html).
 
 ## Usage
+
+If you are going to generate OWL and SHACL statements from a spreadsheet, you 
+should start by making a copy of the 
+[Data Model Workbook](https://docs.google.com/spreadsheets/d/1mhL1hylgRJuMBft0sHg7onKwxscdlIJRuzNlF_iDKK0/edit?usp=sharing) 
+template.
 
 To use the schema generator, add a maven plugin to your project as shown below.
 
