@@ -8,9 +8,9 @@ The generator can produce the following kinds of output:
 
 * [JSON Schema](http://spacetelescope.github.io/understanding-json-schema/)
 * [Avro Schema](https://avro.apache.org/docs/1.8.0/spec.html)
-* [JSON-LD](https://www.w3.org/TR/json-ld/) Contexts
+* [JSON-LD Contexts](https://www.w3.org/TR/json-ld/)
 * [Google BigQuery Table Definition](https://cloud.google.com/bigquery/docs/reference/v2/tables)
-* [PlantUML](http://plantuml.com/) Models
+* [PlantUML Models](http://plantuml.com/)
 * Java POJOs
 * Java Data Access Objects
 * Ontology Summary
