@@ -24,22 +24,40 @@ To use the schema generator, add a maven plugin to your project as shown below.
   		<plugin>
 	  		<groupId>io.konig</groupId>
 	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
-	  		<version>1.0.2</version>
+	  		<version>2.0.0-8</version>
 	  		<configuration>
-                <workbookFile>${basedir}/src/dataModel.xlsx</workbookFile>
-                <rdfOutDir>${basedir}/target/rdf</rdfOutDir>
-	  			<avroDir>${basedir}/src/main/avro</avroDir>
-	  			<jsonldDir>${basedir}/src/main/jsonld</jsonldDir>
-	  			<jsonSchemaDir>${basedir}/src/main/jsonschema</jsonSchemaDir>
-                <bqSourceDir>${basedir}/src/main/bq-config</bqSourceDir>
-                <bqOutDir>${basedir}/src/main/bigquery</bqOutDir>
+          <workbookFile>${basedir}/src/dataModel.xlsx</workbookFile>
+          <inferRdfPropertyDefinitions>true</inferRdfPropertyDefinitions>
+          <owlOutDir>${basedir}/target/generated/src/main/rdf/owl</owlOutDir>
+          <shapesOutDir>${basedir}/target/generated/src/main/rdf/shapes</shapesOutDir>
+          <sourceDir>${basedir}/target/generated/src/main/rdf</sourceDir>
+	  			<jsonldDir>${basedir}/target/generated/src/main/jsonld</jsonldDir>
+          <bqOutDir>${basedir}/target/generated/src/main/bigquery</bqOutDir>
+	  			<avroDir>${basedir}/target/generated/src/main/avro</avroDir>
+	  			<jsonSchemaDir>${basedir}/target/generated/src/main/jsonschema</jsonSchemaDir>
+	  			<javaDir>${basedir}/target/generated/src/main/java</javaDir>
+	  			<javaPackageRoot>com.example</javaPackageRoot>
+	  			<gcpDir>${basedir}/target/generated/src/main/gcp</gcpDir>
+	  			<plantUMLDomainModelFile>${basedir}/target/generated/src/main/domainModel.plantuml</plantUMLDomainModelFile>
+	  			<domainModelPngFile>${basedir}/target/generated/src/main/domainModel.png</domainModelPngFile>
+	  			<projectJsonldFile>${basedir}/target/generated/src/main/summary/project.jsonld</projectJsonldFile>
+	  			<namespacesFile>${basedir}/target/generated/src/main/summary/namespaces.ttl</namespacesFile>
+	  			<daoPackage>com.example.dao</daoPackage>
+	  			<excludeNamespace>
+			  				<param>http://www.w3.org/1999/02/22-rdf-syntax-ns#</param>
+			  				<param>http://www.w3.org/2000/01/rdf-schema#</param>
+			  				<param>http://www.w3.org/2002/07/owl#</param>
+			  				<param>http://www.w3.org/ns/shacl#</param>
+			  				<param>http://www.konig.io/ns/core/</param>
+			  				<param>http://purl.org/vocab/vann/</param>
+			  				<param>http://www.w3.org/2001/XMLSchema#</param>
+	  			</excludeNamespace>
 	  		</configuration>
 	  		<executions>
 	  			<execution>
-                    <phase>generate-sources</phase>
+            <phase>generate-sources</phase>
 		  			<goals>
-                        <goal>generate-rdf</goal>
-                        <goal>generate</goal>
+              <goal>generate</goal>
 		  			</goals>
 	  			</execution>
 	  		</executions>
@@ -48,8 +66,6 @@ To use the schema generator, add a maven plugin to your project as shown below.
   </build>
 </project>
 ```
-
-The configuration is optional.  For the default values, see the discussion about configuration parameters below.
 
 To run the generator, simply invoke the following command in your project's base directory:
 
@@ -60,28 +76,38 @@ To run the generator, simply invoke the following command in your project's base
 
 | Goal          | Description |
 |---------------|---------------------------------------------------------------------------------------------|
-| generate-rdf  | Read the contents of a Microsoft Excel workbook that contains a description of the data model, and produce a collection of OWL and SHACL files from the workbook |
-| generate      | Generate Avro, JSON Schema, JSON-LD Context, BigQuery table definitions from the project's OWL and SHACL statements. |
-
-The generate-rdf goal is relevant only if you are using spreadsheets to describe your data model.  
-For now, there are no tools to merge the generated OWL and SHACL files into your project; you'll need to merge them manually.
-We hope to provide merge tools in the future.
+| generate      | Generate the artifacts specified in the configuration                                       |
 
 
 ## Configuration Parameters
 
-| Parameter       | Description                                                                                                                             |
-|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| sourceDir       | The directory that contains the source SHACL and OWL files from which schemas will be generated<br>Default: `${basedir}/src/main/resources/shapes` |
-| avroDir         | The output directory that will contain the generated Avro Schema files<br>Default: `${basedir}/target/generated/avro`         |
-| jsonSchemaDir   | The output directory that will contain the generated JSON Schema files<br>Default: `${basedir}/target/generated/jsonschema` |
-| jsonldDir       | The output directory that will contain the generated JSON-LD context files<br>Default: `${basedir}/target/generated/jsonld`  |
-| summaryDir      | The output directory that contains summary information about the semantic model<br>Default: `${basedir}/target/generated/summary` |
-| bqSourceDir     | The source directory that contains BigQuery configuration details. See [BigQuery Configuration](#bq-config)  |
-| bqOutDir        | The output directory where generated BigQuery table definitions will be stored |
-| bqShapeBaseURL  | The base URL for tables created for a given OWL class (as opposed to tables based on a specific shape) |
-| workbookFile    | A Microsoft Excel workbook (*.xlsx) containing a description of the data model<br>Default: `${basedir}/src/dataModel.xlsx`  |
-| rdfOutDir       | The output directory where the generated OWL and SHACL files will be stored after processing the workbookFile.<br>Default: `${basedir}/target/rdf` |
+| Parameter          | Description                                                                                                    |
+|--------------------|----------------------------------------------------------------------------------------------------------------|
+| sourceDir          | The directory that contains the source SHACL and OWL files from which schemas will be generated                |
+| avroDir            | The output directory that will contain the generated Avro Schema files                                         |
+| jsonSchemaDir      | The output directory that will contain the generated JSON Schema files                                         |
+| jsonldDir          | The output directory that will contain the generated JSON-LD context files                                     |
+| bqOutDir           | The output directory where generated BigQuery table definitions will be stored                                 |
+| bqShapeBaseURL     | The base URL for tables created for a given OWL class (as opposed to tables based on a specific shape)         |
+| workbookFile       | A Microsoft Excel workbook (*.xlsx) containing a description of the data model                                 |
+| javaDir            | The directory where generated POJO source code will be stored                                                  |
+| javaPackageRoot    | The root package name under which POJO classes will be generated.                                              |
+| excludeNamespace   | The set of namespaces to be excluded from the projectJsonldFile                                                |
+| gcpDir             | The output directory for generated Google Cloud Platform resources                                             |
+| workbookFile       | The location of a workbook that contains definitions for ontologies, classes, properties, individuals, shapes and property constraints |
+| shapesOutDir       | The output directory into which shapes generated from the `workbookFile` will be stored                    |
+| owlOutDir          | The location where OWL ontologies from the `workbookFile` will be stored                                   |
+| plantUMLDomainModelFile | The location where a PlantUML domain model will be stored                                                 |
+| domainModelPngFile | The location where a PlantUML domain model image will be stored                                                |
+| namespacesFile     | The location where a summary of namespace prefixes in Turtle format will be stored                             |
+| projectJsonldFile  | The location where a JSON-LD file containing a description of the OWL ontologies and SHACL Shapes will be stored |
+| daoPackage         | The root package under which Java Data Access Objects will be stored                                           |
+| inferRdfPropertyDefinitions | Infer RDF Property definitions from SHACL Property Constraints                                       |
+
+
+
+
+
 
 ## Naming Conventions
 
@@ -149,87 +175,6 @@ For our example, you would have the following Avro Schema name:
 ```
    com.example.shapes.v1.schema.Person
 ```
-
-## Summary information
-
-The schema generator produces two files that summarize information about the semantic
-models contained in your project.  The following table describes these output files.
-
-| File                                    | Description                                |
-|-----------------------------------------|--------------------------------------------|
-| `${summaryDir}/namespaces.ttl` | Provides an overview of the namespaces used in your project.  Each namespace is declared to be an `owl:Ontology` and your prefix for the namespace is declared to be the `vann:preferredNamespacePrefix`. |
-| `${summaryDir}/project.json`   | Collects all of the statements from your input files and serializes them within this document in JSON-LD format.  This single document is suitable for rendering documentation about your data model in a tool like [Ontodoc](https://github.com/konigio/konig-ontodoc) |
-
-The schema generator publishes to `namespaces.ttl` any additional statements about your namespaces.
-As a best practice, you should supply at least the `rdfs:label` and `rdfs:comment` properties.  
-Thus, for each namespace, you should have statements like the following:
-
-```
-	<http://www.konig.io/ns/kcs> a owl:Ontology ;
-		rdfs:label "Konig Change Set Vocabulary" ;
-		rdfs:comment "A vocabulary for describing the differences between two graphs of data" .
-```
-## <a name="bq-config"></a>BigQuery Configuration
-If you want to generate Google BigQuery Table definitions you must define the
-`bqShapeBaseURL` property, and you must provide a bit of configuration.
-
-The configuration information is typically stored in a single file, but you can
-distribute the information across multiple files if you prefer.  By default, the Konig maven
-plugin will search recursively under `${sourceDir}` for BigQuery configuration files.
-If you want to put the configuration files in a different directory you must set
-the `bqSourceDir` property.
-
-Here's an example of a BigQuery configuration file, expressed in Turtle syntax:
-
-```
-@prefix gcp: <http://www.konig.io/ns/gcp/>.
-
-[] a gcp:GoogleCloudProject ;
-	gcp:projectId "example-dw" ;
-	gcp:dataset [
-		gcp:datasetId "directory" ;
-		gcp:table [
-			gcp:tableId "Person" ;
-			gcp:description "Stores records about individual Person entities" ;
-			gcp:tableShape <http://example.com/shapes/v1/schema/Person>
-		],[
-			gcp:tableId "Organization" ;
-			gcp:description """
-        Stores records about organizations such as schools, NGOs,
-        corporations, clubs, etc.
-      """ ;
-			gcp:tableClass <http://schema.org/Organization>
-		]
-	]
-	.
-```
-
-In a nutshell, the configuration file defines a Google Cloud Platform Project.
-Each project contains one or more Datasets.  Each Dataset contains one or more
-tables.  After loading the configuration file, the maven plugin will search for
-resources of type `gcp:GoogleCloudProject` and will drill down to discover
-the encapsulated datasets and tables.
-
-The properties in a configuration file are listed below:
-
-| Property        | Description                                                |
-|-----------------|------------------------------------------------------------|
-| projectId       | The identifier for the GCP project |
-| dataset         | A Dataset contained within the specified project |
-| datasetId       | The identifier for the GCP Dataset |
-| description     | A description of the specified entity (Project, Dataset or Table) |
-| tableShape      | The SHACL Shape used to generate the table definition |
-| tableClass      | The OWL class for which a table definition will be generated |
-
-For a given table, either `tableShape` or `tableClass` must be defined.
-If `tableShape` is defined, the Maven plugin will generate a BigQuery table
-definition based on that particular shape.  If `tableClass` is
-defined, the Maven plugin will first generate a new Shape that merges the
-PropertyConstraints from all shapes that list the `tableClass` or a class derived
-from `tableClass` as the `scopeClass`.  The plugin will then generate a table
-definition based on the merged shape.  The IRI of the merged shape will be created
-by appending the local name of the `tableClass` to the URL given by the
-`bqShapeBaseURL` property.
 
 
 ## Limitations
