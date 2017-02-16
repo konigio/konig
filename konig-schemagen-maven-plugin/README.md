@@ -30,62 +30,61 @@ template.
 To use the schema generator, add a maven plugin to your project as shown below.
 
 ```xml
-<project 
-	xmlns="http://maven.apache.org/POM/4.0.0" 
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+<project
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.example</groupId>
-  <artifactId>data-model</artifactId>
-  <version>1.0.0</version>
-  <name>Example Data Model</name>
-
-  <build>
-  	<plugins>
-  		<plugin>
-	  		<groupId>io.konig</groupId>
-	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
-	  		<version>2.0.0-8</version>
-	  		<configuration>
-          <workbookFile>${basedir}/src/dataModel.xlsx</workbookFile>
-          <inferRdfPropertyDefinitions>true</inferRdfPropertyDefinitions>
-          <owlOutDir>${basedir}/target/generated/src/main/rdf/owl</owlOutDir>
-          <shapesOutDir>${basedir}/target/generated/src/main/rdf/shapes</shapesOutDir>
-          <sourceDir>${basedir}/target/generated/src/main/rdf</sourceDir>
-	  			<jsonldDir>${basedir}/target/generated/src/main/jsonld</jsonldDir>
-          <bqOutDir>${basedir}/target/generated/src/main/bigquery</bqOutDir>
-	  			<avroDir>${basedir}/target/generated/src/main/avro</avroDir>
-	  			<jsonSchemaDir>${basedir}/target/generated/src/main/jsonschema</jsonSchemaDir>
-	  			<javaDir>${basedir}/target/generated/src/main/java</javaDir>
-	  			<javaPackageRoot>com.example</javaPackageRoot>
-	  			<gcpDir>${basedir}/target/generated/src/main/gcp</gcpDir>
-	  			<plantUMLDomainModelFile>${basedir}/target/generated/src/main/domainModel.plantuml</plantUMLDomainModelFile>
-	  			<domainModelPngFile>${basedir}/target/generated/src/main/domainModel.png</domainModelPngFile>
-	  			<projectJsonldFile>${basedir}/target/generated/src/main/summary/project.jsonld</projectJsonldFile>
-	  			<namespacesFile>${basedir}/target/generated/src/main/summary/namespaces.ttl</namespacesFile>
-	  			<daoPackage>com.example.dao</daoPackage>
-	  			<excludeNamespace>
-			  				<param>http://www.w3.org/1999/02/22-rdf-syntax-ns#</param>
-			  				<param>http://www.w3.org/2000/01/rdf-schema#</param>
-			  				<param>http://www.w3.org/2002/07/owl#</param>
-			  				<param>http://www.w3.org/ns/shacl#</param>
-			  				<param>http://www.konig.io/ns/core/</param>
-			  				<param>http://purl.org/vocab/vann/</param>
-			  				<param>http://www.w3.org/2001/XMLSchema#</param>
-	  			</excludeNamespace>
-	  		</configuration>
-	  		<executions>
-	  			<execution>
-            <phase>generate-sources</phase>
-		  			<goals>
-              <goal>generate</goal>
-		  			</goals>
-	  			</execution>
-	  		</executions>
-  		</plugin>
-  	</plugins>
-  </build>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.example</groupId>
+	<artifactId>data-model</artifactId>
+	<version>1.0.0</version>
+	<name>Example Data Model</name>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>io.konig</groupId>
+				<artifactId>konig-schemagen-maven-plugin</artifactId>
+				<version>2.0.0-8</version>
+				<configuration>
+					<workbookFile>${basedir}/src/dataModel.xlsx</workbookFile>
+					<inferRdfPropertyDefinitions>true</inferRdfPropertyDefinitions>
+					<owlOutDir>${basedir}/target/generated/src/main/rdf/owl</owlOutDir>
+					<shapesOutDir>${basedir}/target/generated/src/main/rdf/shapes</shapesOutDir>
+					<sourceDir>${basedir}/target/generated/src/main/rdf</sourceDir>
+					<jsonldDir>${basedir}/target/generated/src/main/jsonld</jsonldDir>
+					<bqOutDir>${basedir}/target/generated/src/main/bigquery</bqOutDir>
+					<avroDir>${basedir}/target/generated/src/main/avro</avroDir>
+					<jsonSchemaDir>${basedir}/target/generated/src/main/jsonschema</jsonSchemaDir>
+					<javaDir>${basedir}/target/generated/src/main/java</javaDir>
+					<javaPackageRoot>com.example</javaPackageRoot>
+					<gcpDir>${basedir}/target/generated/src/main/gcp</gcpDir>
+					<plantUMLDomainModelFile>${basedir}/target/generated/src/main/domainModel.plantuml</plantUMLDomainModelFile>
+					<domainModelPngFile>${basedir}/target/generated/src/main/domainModel.png</domainModelPngFile>
+					<projectJsonldFile>${basedir}/target/generated/src/main/summary/project.jsonld</projectJsonldFile>
+					<namespacesFile>${basedir}/target/generated/src/main/summary/namespaces.ttl</namespacesFile>
+					<daoPackage>com.example.dao</daoPackage>
+					<excludeNamespace>
+						<param>http://www.w3.org/1999/02/22-rdf-syntax-ns#</param>
+						<param>http://www.w3.org/2000/01/rdf-schema#</param>
+						<param>http://www.w3.org/2002/07/owl#</param>
+						<param>http://www.w3.org/ns/shacl#</param>
+						<param>http://www.konig.io/ns/core/</param>
+						<param>http://purl.org/vocab/vann/</param>
+						<param>http://www.w3.org/2001/XMLSchema#</param>
+					</excludeNamespace>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
 ```
 
