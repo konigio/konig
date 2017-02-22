@@ -23,6 +23,7 @@
     <appengine.version>1.9.48</appengine.version>
 		<jodatime.version>2.9.3</jodatime.version>
 		<antlr.version>4.5.3</antlr.version>
+		<google-api-services.version>v2-rev334-1.22.0</google-api-services.version>
   </properties>
   
   <licenses>
