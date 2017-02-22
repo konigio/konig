@@ -46,7 +46,9 @@ public class WorkbookToTurtleTransformer {
 		try {
 
 			owlOutDir.mkdirs();
-			shapesOutDir.mkdirs();
+			if (shapesOutDir != null) {
+				shapesOutDir.mkdirs();
+			}
 			Workbook workbook = new XSSFWorkbook(input);
 			
 			Graph graph = new MemoryGraph();
@@ -59,10 +61,12 @@ public class WorkbookToTurtleTransformer {
 			graph.setNamespaceManager(nsManager);
 			
 			OntologyWriter ontologyWriter = new OntologyWriter(new OntologyFileGetter(owlOutDir, nsManager));
-			ShapeWriter shapeWriter = new ShapeWriter(new ShapeFileGetter(shapesOutDir, nsManager));
-			
 			ontologyWriter.writeOntologies(graph);
-			shapeWriter.writeShapes(graph);
+			
+			if (shapesOutDir != null) {
+				ShapeWriter shapeWriter = new ShapeWriter(new ShapeFileGetter(shapesOutDir, nsManager));
+				shapeWriter.writeShapes(graph);
+			}
 			
 			
 		} finally {
