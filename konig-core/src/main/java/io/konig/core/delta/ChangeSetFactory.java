@@ -357,20 +357,24 @@ public class ChangeSetFactory {
 							
 							if (targetBNode == null) {
 								// No matching bnode in the target
+																
 								changes.edge(e).addAnnotation(RDF.TYPE, Konig.Falsehood);
 								count++;
 								count += removeBNode(sourceBNode, childKey);
 								
 							} else {
 								// found a matching bnode in the target
+
 								
 								Edge edge = key(e);
-								count++;
+								
 								if (!diff(sourceBNode, targetBNode, childKey)) {
+
+									
 									BNode doomed = (BNode) edge.getObject();
-									count += removeBNode(doomed);
+									removeBNode(doomed);
 									changes.remove(edge);
-									count--;
+									
 								} else {
 									changes.edge(e).addAnnotation(RDF.TYPE, Konig.KeyValue);
 								}
