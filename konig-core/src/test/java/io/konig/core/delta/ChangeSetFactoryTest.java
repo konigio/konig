@@ -28,6 +28,7 @@ import java.util.Set;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
@@ -49,6 +50,39 @@ import io.konig.core.vocab.Schema;
 
 public class ChangeSetFactoryTest {
 	
+	
+	@Test
+	public void testDoublyNestedBNodes() throws Exception {
+		
+		URI aliceId = uri("http://example.com/alice");
+		
+		Graph original = new MemoryGraph();
+		
+		Resource address = original.vertex().getId();
+		Resource hoursAvailable = original.vertex().getId();
+		
+		original.edge(aliceId, Schema.address, address);
+		original.edge(address, Schema.streetAddress, literal("101 Main St"));
+		original.edge(address, Schema.hoursAvailable, hoursAvailable);
+		original.edge(hoursAvailable, Schema.opens, time("08:00:00"));
+		original.edge(hoursAvailable, Schema.closes, time("10:00:00"));
+		
+		Graph clone = new MemoryGraph(original);
+		
+		GenericBNodeKeyFactory keyFactory = new GenericBNodeKeyFactory();
+
+		ChangeSetFactory maker = new ChangeSetFactory();
+		Graph delta = maker.createChangeSet(original, clone, keyFactory);
+		
+		assertEquals(0,  delta.size());
+		
+		
+	}
+	
+	private Value time(String value) {
+		return new LiteralImpl(value, XMLSchema.TIME);
+	}
+
 	@Test
 	public void testIgnoreNamespace() throws Exception {
 		

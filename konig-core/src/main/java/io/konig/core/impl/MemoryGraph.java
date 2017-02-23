@@ -78,6 +78,12 @@ public class MemoryGraph implements Graph, Transaction {
 		
 	}
 	
+	public MemoryGraph(Collection<Edge> source) {
+		for (Edge e : source) {
+			add(e);
+		}
+	}
+	
 	public MemoryGraph(NamespaceManager nsManager) {
 		this.nsManager = nsManager;
 	}
