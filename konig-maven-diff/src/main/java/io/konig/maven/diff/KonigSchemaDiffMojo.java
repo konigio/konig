@@ -4,18 +4,23 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
-
+import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
+import info.aduna.io.FileUtil;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.delta.BNodeKeyFactoryList;
@@ -32,6 +37,7 @@ import io.konig.core.vocab.SH;
 
 @Mojo( name = "diff" )
 public class KonigSchemaDiffMojo extends AbstractMojo {
+	private static final String ARCHIVE_DIR = "target/archive/";
 
 	@Parameter(property="konig.originalModelDir")
 	private File originalModelDir;
@@ -43,11 +49,34 @@ public class KonigSchemaDiffMojo extends AbstractMojo {
 	@Parameter(property="konig.diffReportFile")
 	private File diffReportFile;
 	
+	@Parameter(property="konig.originalVersion")
+	private String originalVersion;
+
+	@Parameter(property="konig.originalModelPath")
+	private String originalModelPath;
+	
+	@Parameter(property="konig.revisedVersion")
+	private String revisedVersion;
+
+	@Parameter(property="konig.revisedModelPath")
+	private String revisedModelPath;
+	
 	@Parameter
 	private Set<String> ignoreNamespace;
+	
+	@Component
+	private MavenProject mavenProject;
+
+	@Component
+	private MavenSession mavenSession;
+
+	@Component
+	private BuildPluginManager pluginManager;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
+		
+		unpack();
 		
 		if (originalModelDir == null || revisedModelDir == null) {
 			return;
@@ -98,6 +127,74 @@ public class KonigSchemaDiffMojo extends AbstractMojo {
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
 			throw new MojoExecutionException("Failed to compute model difference", e);
 		}
+	}
+
+	private void unpack() throws MojoExecutionException {
+		
+		if (originalVersion != null) {
+			originalModelDir = unpack(originalVersion, originalModelPath, "originalModelPath");
+		}
+		
+		if (revisedVersion != null) {
+			revisedModelDir = unpack(revisedVersion, revisedModelPath, "revisedModelPath");
+		}
+		
+	}
+
+	private File unpack(String version, String path, String paramName) throws MojoExecutionException {
+		
+		if (path == null) {
+			throw new MojoExecutionException("The '" + paramName + "' configuration parameter must be defined.");
+		}
+		
+		String groupId = mavenProject.getGroupId();
+		String artifactId = mavenProject.getArtifactId();
+		
+		File basedir = mavenProject.getBasedir();
+		File archiveDir = new File(basedir, ARCHIVE_DIR + version);
+		
+		deleteDir(archiveDir);
+		archiveDir.mkdirs();
+		
+		executeMojo(
+			plugin(
+				groupId("org.apache.maven.plugins"),
+				artifactId("maven-dependency-plugin"),
+				version("2.10")
+			),
+			goal("unpack"),
+			configuration(
+				element(name("outputDirectory"), archiveDir.getAbsolutePath()),
+				element(name("artifactItems"),
+					element(name("artifactItem"), 
+						element(name("groupId"), groupId),
+						element(name("artifactId"), artifactId),
+						element(name("version"), version),
+						element(name("classifier"), "bin"),
+						element(name("overWrite"), "true"),
+						element(name("type"), "zip")
+					)
+				)
+			),
+			executionEnvironment(
+				mavenProject,
+				mavenSession,
+				pluginManager
+			)
+		);
+		return new File(archiveDir, path);
+	}
+
+	private void deleteDir(File doomed) throws MojoExecutionException {
+		
+		if (doomed.exists()) {
+			try {
+				FileUtil.deleteDir(doomed);
+			} catch (IOException e) {
+				throw new MojoExecutionException("Failed to delete directory: " + doomed.getAbsolutePath(), e);
+			}
+		}
+		
 	}
 
 }
