@@ -9,7 +9,7 @@
 
   <name>Konig Diff</name>
   <description>A Maven plugin for reporting changes to a semantic model</description>
-  <artifactId>diff</artifactId>
+  <artifactId>konig-diff-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
 
 
@@ -21,6 +21,12 @@
   </properties>
 
   <dependencies>
+  
+    <dependency>
+        <groupId>org.twdata.maven</groupId>
+        <artifactId>mojo-executor</artifactId>
+        <version>2.2.0</version>
+    </dependency>
 
   	<dependency>
 			<groupId>com.sun.codemodel</groupId>
