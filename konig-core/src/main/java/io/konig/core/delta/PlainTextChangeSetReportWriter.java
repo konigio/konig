@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -59,6 +60,7 @@ public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 	private NamespaceManager nsManager;
 	private int indentSize = 4;
 	
+	private Set<URI> exclude = new HashSet<>();
 	
 
 	public PlainTextChangeSetReportWriter(NamespaceManager nsManager) {
@@ -66,6 +68,9 @@ public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 	}
 
 
+	public void exclude(URI term) {
+		exclude.add(term);
+	}
 
 	@Override
 	public void write(Graph changeSet, Writer writer) throws IOException {
@@ -112,6 +117,19 @@ public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 
 		private void writeAll(Collection<Edge> collection, boolean includeBNode) {
 			for (Edge e : collection) {
+				
+				Resource subject = e.getSubject();
+				Value object = e.getObject();
+				
+				URI subjectURI = subject instanceof URI ? (URI) subject : null;
+				URI objectURI = object instanceof URI ? (URI) object : null;
+				
+				
+				if (exclude.contains(e.getPredicate()) || 
+					exclude.contains(subjectURI) ||
+					exclude.contains(objectURI)) {
+					continue;
+				}
 				
 				if (includeBNode || (e.getSubject() instanceof URI)) {
 					handleStatement(e);

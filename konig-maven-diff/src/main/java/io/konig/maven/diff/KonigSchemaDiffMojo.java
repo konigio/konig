@@ -1,10 +1,22 @@
 package io.konig.maven.diff;
 
+import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
+import java.util.StringTokenizer;
+
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
@@ -14,6 +26,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
@@ -64,6 +77,9 @@ public class KonigSchemaDiffMojo extends AbstractMojo {
 	@Parameter
 	private Set<String> ignoreNamespace;
 	
+	@Parameter(property="konig.excludedTerms")
+	private String excludedTerms;
+	
 	@Component
 	private MavenProject mavenProject;
 
@@ -109,6 +125,7 @@ public class KonigSchemaDiffMojo extends AbstractMojo {
 			Graph changeSet = factory.createChangeSet(original, revised, keyFactoryList);
 			
 			PlainTextChangeSetReportWriter reporter = new PlainTextChangeSetReportWriter(nsManager);
+			setExclusions(reporter);
 			
 			if (diffReportFile != null) {
 				diffReportFile.getParentFile().mkdirs();
@@ -127,6 +144,17 @@ public class KonigSchemaDiffMojo extends AbstractMojo {
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
 			throw new MojoExecutionException("Failed to compute model difference", e);
 		}
+	}
+
+	private void setExclusions(PlainTextChangeSetReportWriter reporter) {
+		if (excludedTerms != null) {
+			StringTokenizer tokenizer = new StringTokenizer(excludedTerms, " \t\r\n");
+			while (tokenizer.hasMoreTokens()) {
+				String term = tokenizer.nextToken();
+				reporter.exclude(new URIImpl(term));
+			}
+		}
+		
 	}
 
 	private void unpack() throws MojoExecutionException {
