@@ -1,14 +1,16 @@
 package io.konig.schemagen.gcp;
 
+import java.net.URI;
 import java.util.List;
 
+import com.google.api.services.bigquery.model.ExternalDataConfiguration;
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableSchema;
 
-import io.konig.datasource.BigQueryTableReference;
 import io.konig.datasource.DataSource;
-import io.konig.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.BigQueryTableReference;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
 
@@ -56,6 +58,7 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 		
 		TableSchema tableSchema = tableGenerator.toTableSchema(shape);
 		table.setSchema(tableSchema);
+		table.setExternalDataConfiguration(dataSource.getExternalDataConfiguration());
 		
 		return table;
 		

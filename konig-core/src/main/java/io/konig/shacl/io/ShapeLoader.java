@@ -49,16 +49,18 @@ import io.konig.core.io.JsonldLoader;
 import io.konig.core.pojo.PojoContext;
 import io.konig.core.pojo.PojoListener;
 import io.konig.core.pojo.SimplePojoFactory;
-import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
-import io.konig.datasource.GoogleBigQueryTable;
-import io.konig.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class ShapeLoader {
 
 	private static final Logger logger = LoggerFactory.getLogger(ShapeLoader.class);
+	
+	public static final PojoContext CONTEXT = new PojoContext();
+	static {
+		CONTEXT.mapClass(SH.Shape, Shape.class);
+	}
 	
 	private ContextManager contextManager;
 	private ShapeManager shapeManager;
@@ -180,7 +182,7 @@ public class ShapeLoader {
 	
 	public void load(Graph graph) throws ShapeLoadException {
 		
-		PojoContext context = new PojoContext();
+		PojoContext context = new PojoContext(CONTEXT);
 		context.setListener(new PojoListener() {
 
 			@Override
@@ -193,9 +195,6 @@ public class ShapeLoader {
 		
 			
 		});
-		context.mapClass(SH.Shape, Shape.class);
-		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
-		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
 		SimplePojoFactory factory = new SimplePojoFactory(context);
 		factory.createAll(graph);
 		

@@ -40,7 +40,7 @@ import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
-import io.konig.datasource.BigQueryTableReference;
+import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.schemagen.ShapeNamer;
 import io.konig.schemagen.SimpleShapeNamer;
 import io.konig.schemagen.gcp.BigQueryTable;

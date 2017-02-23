@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.InputStream;
 import java.io.StringWriter;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
@@ -18,6 +19,7 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.path.PathFactory;
+import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -36,6 +38,10 @@ public class QueryBuilderTest {
 	private TransformFrameBuilder frameBuilder = new TransformFrameBuilder(shapeManager, pathFactory);
 	private QueryBuilder queryBuilder = new QueryBuilder();
 	
+	@Before
+	public void setUp() {
+		GcpShapeConfig.init();
+	}
 
 	@Test
 	public void testJoin() throws Exception  {

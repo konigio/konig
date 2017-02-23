@@ -12,6 +12,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.path.PathFactory;
+import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
@@ -29,6 +30,7 @@ public class KonigTransformMojo extends AbstractMojo{
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
+		GcpShapeConfig.init();
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		ShapeManager shapeManager = new MemoryShapeManager();

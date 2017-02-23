@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.core.KonigException;
 import io.konig.datasource.DataSource;
-import io.konig.datasource.GoogleCloudStorageBucket;
+import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
 

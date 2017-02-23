@@ -1,4 +1,4 @@
-package io.konig.datasource;
+package io.konig.gcp.datasource;
 
 /*
  * #%L
@@ -24,6 +24,7 @@ package io.konig.datasource;
 import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.DataSource;
 
 public class GoogleCloudStorageBucket extends DataSource {
 	

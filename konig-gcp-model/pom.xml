@@ -7,21 +7,15 @@
     <relativePath>../konig-parent/pom.xml</relativePath>
   </parent>
   <groupId>io.konig</groupId>
-  <artifactId>konig-transform</artifactId>
+  <artifactId>konig-gcp-model</artifactId>
   <packaging>jar</packaging>
-  <name>Konig Transform</name>
+  <name>Konig Google Cloud Platform Model</name>
   
   <dependencies>
   	<dependency>
   		<groupId>io.konig</groupId>
   		<artifactId>konig-core</artifactId>
 			<version>${konig.version}</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>io.konig</groupId>
-  		<artifactId>konig-gcp-model</artifactId>
-  		<version>${konig.version}</version>
-  		<scope>test</scope>
   	</dependency>
   	
     <dependency>
@@ -30,6 +24,13 @@
       <version>4.8.2</version>
       <scope>test</scope>
     </dependency>
+    
+		<dependency>
+		    <groupId>com.google.apis</groupId>
+		    <artifactId>google-api-services-bigquery</artifactId>
+		    <version>v2-rev306-1.22.0</version>
+		</dependency>
+    
   </dependencies>
   <build>
 	  <plugins>

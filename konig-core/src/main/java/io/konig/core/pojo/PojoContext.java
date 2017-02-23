@@ -39,6 +39,11 @@ public class PojoContext {
 		classMap = new LinkedHashMap<>();
 		individualMap = new LinkedHashMap<>();
 	}
+	
+	public PojoContext(PojoContext copy) {
+		classMap = copy.classMap;
+		individualMap = new LinkedHashMap<>();
+	}
 
 	public PojoContext(Graph ontology) {
 		this.ontology = ontology;

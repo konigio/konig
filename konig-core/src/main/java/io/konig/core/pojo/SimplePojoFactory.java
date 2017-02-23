@@ -25,6 +25,9 @@ import java.lang.reflect.Constructor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -208,6 +211,7 @@ public class SimplePojoFactory implements PojoFactory {
 					String setterName = BeanUtil.setterName(predicate);
 					String adderName = BeanUtil.adderName(predicate);
 					
+					Method listSetter = null;
 					for (Method m : methods) {
 						String name = m.getName();
 						
@@ -216,6 +220,10 @@ public class SimplePojoFactory implements PojoFactory {
 							Class<?>[] typeList = m.getParameterTypes();
 							if (typeList.length == 1) {
 								Class<?> typeParam = typeList[0];
+								
+								if (List.class.isAssignableFrom(typeParam)) {
+									listSetter = m;
+								}
 								if (Collection.class.isAssignableFrom(typeParam)) {
 									continue;
 								}
@@ -235,6 +243,13 @@ public class SimplePojoFactory implements PojoFactory {
 						}
 					}
 					
+					if (result == null && listSetter!=null) {
+						ListInfo listInfo = listInfo(predicate, listSetter);
+						if (listInfo != null) {
+							result = new PropertyInfo(predicate, listInfo);
+						}
+					}
+					
 					if (result != null) {
 						add(result);
 					}
@@ -243,6 +258,28 @@ public class SimplePojoFactory implements PojoFactory {
 				return result;
 			}
 			
+			private ListInfo listInfo(URI predicate, Method listSetter) {
+				Type[] genericParamTypes = listSetter.getGenericParameterTypes();
+				for (Type genericParamType : genericParamTypes) {
+					if (genericParamType instanceof ParameterizedType) {
+						ParameterizedType pType = (ParameterizedType) genericParamType;
+						Type[] argTypes = pType.getActualTypeArguments();
+						if (argTypes.length==1) {
+							Class<?> argType = (Class<?>) argTypes[0];
+							if (argType == String.class) {
+								String getterName = BeanUtil.getterName(predicate);
+								for (Method m : methods) {
+									if (m.getName().equals(getterName) && m.getParameterTypes().length==0) {
+										return new ListInfo(listSetter, m);
+									}
+								}
+							}
+						}
+					}
+				}
+				return null;
+			}
+
 			private void add(PropertyInfo info) {
 				propertyMap.put(info.getPredicate(), info);
 			}
@@ -250,11 +287,11 @@ public class SimplePojoFactory implements PojoFactory {
 			
 		}
 		
-		private class ListInfo {
+		private class AdderInfo {
 			Class<?> javaListContainer;
 			PropertyInfo propertyInfo;
 			
-			public ListInfo(Class<?> javaListContainer, PropertyInfo info) {
+			public AdderInfo(Class<?> javaListContainer, PropertyInfo info) {
 				this.javaListContainer = javaListContainer;
 				this.propertyInfo = info;
 			}
@@ -262,13 +299,41 @@ public class SimplePojoFactory implements PojoFactory {
 			
 		}
 		
+		private static class ListInfo {
+			private Method setter;
+			private Method getter;
+			
+			
+			
+			public ListInfo(Method setter, Method getter) {
+				this.setter = setter;
+				this.getter = getter;
+			}
+
+
+
+			void set(SimplePojoFactory worker, Graph g, Object instance, Value value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+				List<String> list = (List<String>) getter.invoke(instance);
+				if (list == null) {
+					list = new ArrayList<>();
+					setter.invoke(instance, list);
+				}
+				list.add(value.stringValue());
+			}
+		}
 		
 		private class PropertyInfo {
 			private URI predicate;
 			private Method setter;
 			private Method valueToEnum;
 			
+			private AdderInfo adderInfo;
 			private ListInfo listInfo;
+			
+			public PropertyInfo(URI predicate, ListInfo listInfo) {
+				this.predicate = predicate;
+				this.listInfo = listInfo;
+			}
 			
 			public PropertyInfo(URI predicate, Method setter) {
 				this.predicate = predicate;
@@ -285,11 +350,11 @@ public class SimplePojoFactory implements PojoFactory {
 						for (Method method : methodList) {
 							if (method.getName().equals("add") && method.getParameterTypes().length==1) {
 								PropertyInfo listPropertyInfo = new PropertyInfo(predicate, method);
-								listInfo = new ListInfo(listContainerType, listPropertyInfo);
+								adderInfo = new AdderInfo(listContainerType, listPropertyInfo);
 								break;
 							}
 						}
-						if (listInfo == null) {
+						if (adderInfo == null) {
 							throw new KonigException("'add' method not found on class with RdfList annotation: " 
 									+ listContainerType.getSimpleName());
 						}
@@ -309,6 +374,10 @@ public class SimplePojoFactory implements PojoFactory {
 				if (value instanceof BNode) {
 					valueVertex = g.getVertex((BNode)value);
 					valueList = valueVertex.asList();
+				}
+				if (listInfo != null) {
+					listInfo.set(worker, g, instance, value);
+					return;
 				}
 				Class<?>[] typeArray = setter.getParameterTypes();
 				if (typeArray.length==1) {
@@ -335,7 +404,7 @@ public class SimplePojoFactory implements PojoFactory {
 						
 						if (valueList != null) {
 							
-							if (listInfo != null) {
+							if (adderInfo != null) {
 								buildList(worker, g, instance, valueList);
 							} else {
 								for (Value v : valueList) {
@@ -394,10 +463,10 @@ public class SimplePojoFactory implements PojoFactory {
 			private void buildList(SimplePojoFactory worker, Graph g, Object instance, List<Value> valueList) 
 				throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 				
-				Object listContainer = listInfo.javaListContainer.newInstance();
+				Object listContainer = adderInfo.javaListContainer.newInstance();
 				setter.invoke(instance, listContainer);
 				for (Value value : valueList) {
-					listInfo.propertyInfo.set(worker, g, listContainer, value);
+					adderInfo.propertyInfo.set(worker, g, listContainer, value);
 				}
 				
 			}

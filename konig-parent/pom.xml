@@ -43,6 +43,7 @@
   <modules>
   	<module>../konig-java</module>
   	<module>../konig-core</module>
+  	<module>../konig-gcp-model</module>
   	<module>../konig-transform</module>
   	<module>../konig-transform-maven-plugin</module>
   	<module>../konig-maven-diff</module>
