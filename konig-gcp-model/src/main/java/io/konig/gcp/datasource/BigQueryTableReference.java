@@ -1,4 +1,4 @@
-package io.konig.datasource;
+package io.konig.gcp.datasource;
 
 /*
  * #%L

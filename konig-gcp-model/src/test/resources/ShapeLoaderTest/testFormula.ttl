@@ -1,0 +1,15 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+ 
+
+shape:IssueShape a sh:Shape ;  
+	sh:property  [ 
+		sh:predicate <http://example.com/ns/completedPoints> ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ;
+		konig:formula "(status = ex:Complete) ? estimatedPoints : 0" 
+	 ] 
+. 

@@ -31,6 +31,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 
@@ -46,6 +48,31 @@ import io.konig.shacl.Shape;
 
 public class SimplePojoFactoryTest {
 	
+	@Test
+	public void testStringList() throws Exception {
+		
+		URI alice = uri("http://example.com/alice");
+		
+		MemoryGraph graph = new MemoryGraph();
+		graph.edge(alice, Schema.email, literal("alice@example.com"));
+		
+		Vertex v = graph.vertex(alice);
+		SimplePojoFactory factory = new SimplePojoFactory();
+		
+		PersonEmail pojo = factory.create(v, PersonEmail.class);
+		
+		List<String> email = pojo.getEmail();
+		assertTrue(email != null);
+		assertEquals(1, email.size());
+		assertEquals("alice@example.com", email.get(0));
+		
+	}
+	
+	private Value literal(String value) {
+		
+		return new LiteralImpl(value);
+	}
+
 	@Test
 	public void testStringLiteralConstructor() throws Exception {
 		

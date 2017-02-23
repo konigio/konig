@@ -3,6 +3,7 @@ package io.konig.datagen;
 import java.io.File;
 import java.io.InputStream;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.model.vocabulary.RDF;
 
@@ -13,11 +14,17 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Konig;
+import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.io.ShapeLoader;
 
 public class DataGeneratorTest {
+	
+	@Before
+	public void setUp() {
+		GcpShapeConfig.init();
+	}
 
 	@Test
 	public void test() throws Exception {

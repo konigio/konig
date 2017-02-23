@@ -30,7 +30,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.PojoFactory;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Konig;
-import io.konig.datasource.BigQueryTableReference;
+import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeNamer;
 import io.konig.schemagen.merge.ShapeAggregator;

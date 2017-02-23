@@ -1,4 +1,4 @@
-package io.konig.datasource;
+package io.konig.gcp.datasource;
 
 /*
  * #%L
@@ -24,15 +24,20 @@ package io.konig.datasource;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.google.api.services.bigquery.model.ExternalDataConfiguration;
+
 import io.konig.annotation.RdfProperty;
 import io.konig.core.KonigException;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.DataSource;
+import io.konig.datasource.TableDataSource;
 
 public class GoogleBigQueryTable extends DataSource implements TableDataSource {
 	
 	private Set<DataSource> bigQuerySource;
 	private BigQueryTableReference tableReference;
+	private ExternalDataConfiguration externalDataConfiguration;
 
 	public GoogleBigQueryTable() {
 		addType(Konig.GoogleBigQueryTable);
@@ -78,6 +83,14 @@ public class GoogleBigQueryTable extends DataSource implements TableDataSource {
 		builder.append('.');
 		builder.append(tableId);
 		return builder.toString();
+	}
+
+	public ExternalDataConfiguration getExternalDataConfiguration() {
+		return externalDataConfiguration;
+	}
+
+	public void setExternalDataConfiguration(ExternalDataConfiguration externalDataConfiguration) {
+		this.externalDataConfiguration = externalDataConfiguration;
 	}
 	
 	

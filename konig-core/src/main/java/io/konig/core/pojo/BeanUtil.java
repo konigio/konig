@@ -88,6 +88,9 @@ public class BeanUtil {
 		if (object instanceof Integer) {
 			return valueFactory.createLiteral((Integer)object);
 		}
+		if (object instanceof Long) {
+			return valueFactory.createLiteral((Long)object);
+		}
 		if (object instanceof Calendar) {
 			Calendar calendar = (Calendar) object;
 			String value = dateTimeFormatter.print(calendar.getTimeInMillis());

@@ -1,0 +1,35 @@
+
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix gcp:   <http://www.konig.io/ns/gcp/> .
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{gcpDatasetId}/tables/{bigQueryTableId}>
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "{gcpProjectId}" ;
+		gcp:datasetId "{gcpDatasetId}" ;
+		gcp:tableId   "{bigQueryTableId}" 
+	] ;
+	gcp:externalDataConfiguration [
+		gcp:sourceUris <gs://{gcpBucketName}> ;
+		gcp:sourceFormat "CSV" ;
+		gcp:csvOptions [
+			gcp:skipLeadingRows 1
+		]
+	] ;
+.
+
+<{shapeId}> konig:shapeDataSource 
+	<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{gcpDatasetId}/tables/{bigQueryTableId}> ,
+	<gs://{gcpBucketName}>
+.
+
+<gs://{gcpBucketName}>
+	a konig:GoogleCloudStorageBucket, konig:DataSource;
+	gcp:name "{gcpBucketName}" ;
+	gcp:projectId "{gcpProjectId}" ;
+	gcp:storageClass "{gcpBucketStorageClass}" ;
+	gcp:location   "{gcpBucketLocation}" 
+.
+
+<{shapeId}> konig:shapeDataSource <gs://{gcpBucketName}>
+.	

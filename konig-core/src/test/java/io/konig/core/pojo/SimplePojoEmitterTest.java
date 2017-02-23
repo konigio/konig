@@ -49,6 +49,28 @@ import io.konig.shacl.Shape;
 public class SimplePojoEmitterTest {
 	
 	@Test
+	public void testLong() throws Exception {
+		URI id = uri("http://example.com/question");
+		Question question = new Question(id, 1L);
+		Graph graph = new MemoryGraph();
+		SimplePojoEmitter emitter = new SimplePojoEmitter();
+
+		EmitContext context = new EmitContext(graph);
+		
+		emitter.emit(context, question, graph);
+		
+		Vertex v = graph.getVertex(id);
+		assertTrue(v != null);
+		
+		URI predicate = uri("http://schema.org/answerCount");
+		Value value = v.getValue(predicate);
+		assertTrue(value instanceof Literal);
+		Literal literal = (Literal) value;
+		assertEquals(1L, literal.longValue());
+		
+	}
+	
+	@Test
 	public void testToValueMethodWithNamespaceManager() throws Exception {
 
 		NamespaceManager nsManager = new MemoryNamespaceManager();

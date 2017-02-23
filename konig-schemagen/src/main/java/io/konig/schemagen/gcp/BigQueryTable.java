@@ -3,7 +3,7 @@ package io.konig.schemagen.gcp;
 import org.openrdf.model.URI;
 
 import io.konig.activity.Activity;
-import io.konig.datasource.BigQueryTableReference;
+import io.konig.gcp.datasource.BigQueryTableReference;
 
 public class BigQueryTable {
 

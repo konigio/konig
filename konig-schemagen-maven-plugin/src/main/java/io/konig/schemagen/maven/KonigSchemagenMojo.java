@@ -43,6 +43,7 @@ import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
 import io.konig.gae.datastore.impl.SimpleEntityNamer;
+import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
@@ -212,6 +213,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     private void loadResources() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException {
 
+    	GcpShapeConfig.init();
+    	
 		loadSpreadsheet();
 		
 		if (sourceDir != null) {

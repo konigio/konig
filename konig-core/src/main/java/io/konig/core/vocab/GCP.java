@@ -41,5 +41,10 @@ public class GCP {
 	public static final URI name = new URIImpl(NAME);
 	public static final URI location = new URIImpl(LOCATION);
 	public static final URI storageClass = new URIImpl(STORAGE_CLASS);
+	public static final URI externalDataConfiguration = new URIImpl("http://www.konig.io/ns/gcp/externalDataConfiguration");
+	public static final URI sourceUris = new URIImpl("http://www.konig.io/ns/gcp/sourceUris");
+	public static final URI sourceFormat = new URIImpl("http://www.konig.io/ns/gcp/sourceFormat");
+	public static final URI csvOptions = new URIImpl("http://www.konig.io/ns/gcp/csvOptions");
+	public static final URI skipLeadingRows = new URIImpl("http://www.konig.io/ns/gcp/skipLeadingRows");
 	
 }
