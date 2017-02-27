@@ -45,7 +45,7 @@ public class TransformGenerator {
 				
 				if (
 					shape.hasDataSourceType(Konig.GoogleBigQueryTable) && 
-					!shape.hasDataSourceType(Konig.AuthoritativeDataSource)
+					!shape.hasDataSourceType(Konig.GoogleCloudStorageBucket)
 				) {
 					
 					TransformFrame frame = frameBuilder.create(shape);
@@ -82,7 +82,6 @@ public class TransformGenerator {
 		PrettyPrintWriter queryWriter = new PrettyPrintWriter(fileWriter);
 		try {
 			select.print(queryWriter);
-			queryWriter.print(select);
 			queryWriter.println(';');
 		} finally {
 			IOUtil.close(queryWriter, sqlFile.getName());

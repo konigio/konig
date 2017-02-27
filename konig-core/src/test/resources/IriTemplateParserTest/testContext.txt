@@ -1,0 +1,6 @@
+@context {
+  "schema" : "http://schema.org/",
+  "name" : "schema:name"
+}
+
+<http://example.com/product/{name}>

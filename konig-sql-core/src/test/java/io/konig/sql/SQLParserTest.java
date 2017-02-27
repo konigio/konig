@@ -44,7 +44,7 @@ public class SQLParserTest {
 		IriTemplate template = table.getPhysicalShape().getIriTemplate();
 		assertTrue(template != null);
 		
-		assertEquals("http://example.com/role/{role_name}", template.toString());
+		assertEquals("<http://example.com/role/{role_name}>", template.toString());
 	}
 	
 	private Reader getReader(String resource) {

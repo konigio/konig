@@ -99,7 +99,11 @@ shape:RoleMasterShape sh:property  [
 		sh:maxCount 1 ; 
 		sh:minCount 1 ]  ; 
 	a sh:Shape ; 
-	konig:iriTemplate "http://example.com/role/{role_name}" ; 
+	konig:iriTemplate '''
+	@context {
+		"role_name" : "http://example.com/ns/alias/role_name"
+	}
+	<http://example.com/role/{role_name}>''' ; 
 	sh:targetClass org:Role ; 
 	konig:shapeDataSource <http://example.com/db/schemas/registrar/tables/Role> , <gs://com.example.prod.role> , <urn:bigquery:example.registrar.Role> . 
 

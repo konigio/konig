@@ -10,7 +10,15 @@
 
 origin:ProductShape a sh:Shape ;
 	sh:targetClass schema:Product ;
-	konig:iriTemplate "{data}/product/{product_id}" ;
+	konig:iriTemplate '''
+		@context {
+			"alias" : "http://example.com/ns/alias/",
+			"data" : "http://example.com/resources/",
+			"product_id" : "alias:product_id"
+		}
+	
+		<{data}/product/{product_id}>
+''' ;
 	sh:property [
 		sh:predicate alias:product_id ;
 		sh:datatype xsd:long ;
@@ -36,7 +44,14 @@ warehouse:ProductShape a sh:Shape ;
 
 origin:OrganizationShape a sh:Shape ;
 	sh:targetClass schema:Organization ;
-	konig:iriTemplate "{data}/org/{org_id}" ;
+	konig:iriTemplate '''
+		@context {
+			"alias" : "http://example.com/ns/alias/",
+			"data" : "http://example.com/resources/",
+			"org_id" : "alias:org_id"
+		}
+		<{data}/org/{org_id}>
+	''' ;
 	sh:property [
 		sh:predicate alias:org_id ;
 		sh:datatype xsd:long ;

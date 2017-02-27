@@ -184,7 +184,7 @@ public class GcpShapeLoaderTest {
 		Shape shape = shapeManager.getShapeById(shapeId);
 		assertTrue(shape!=null);
 		assertTrue(shape.getIriTemplate()!=null);
-		assertEquals(iriTemplateValue, shape.getIriTemplate().toString());
+		assertEquals("<http://example.com/users/{user_id}>", shape.getIriTemplate().toString());
 		
 		List<DataSource> dataSourceList = shape.getShapeDataSource();
 		assertTrue(dataSourceList != null);

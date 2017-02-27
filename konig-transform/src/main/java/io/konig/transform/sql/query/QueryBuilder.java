@@ -120,7 +120,6 @@ public class QueryBuilder {
 	
 
 	private TableItemExpression buildFromExpression(Namer namer, TransformFrame frame, TableItemExpression left, MappedProperty leftM) {
-
 		
 		for (TransformAttribute attr : frame.getAttributes()) {
 			MappedProperty m = attr.getMappedProperty();

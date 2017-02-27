@@ -131,7 +131,7 @@ public class GcpShapeWriterTest {
 	
 		Vertex v = graph.getVertex(shapeId);
 		assertTrue(v != null);
-		assertEquals(iriTemplateValue, v.getValue(Konig.iriTemplate).stringValue());
+		assertEquals("<http://example.com/user/{user_id}>", v.getValue(Konig.iriTemplate).stringValue());
 		
 		Vertex w = v.getVertex(Konig.shapeDataSource);
 		assertTrue(w!=null);

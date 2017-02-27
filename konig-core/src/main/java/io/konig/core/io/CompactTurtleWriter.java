@@ -33,10 +33,16 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.datatypes.XMLDatatypeUtil;
+import org.openrdf.model.util.Literals;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.helpers.BasicWriterSettings;
 import org.openrdf.rio.turtle.TurtleUtil;
 import org.openrdf.rio.turtle.TurtleWriter;
+
+import info.aduna.io.IndentingWriter;
+import info.aduna.text.StringUtil;
 
 /**
  * A Turtle writer that uses compact BNode notation.
@@ -175,10 +181,115 @@ public class CompactTurtleWriter extends TurtleWriter {
 		if (XMLSchema.INT.equals(type)) {
 			writer.write(lit.getLabel());
 		} else {
-			super.writeLiteral(lit);
+
+			String label = lit.getLabel();
+			URI datatype = lit.getDatatype();
+			if (XMLSchema.INTEGER.equals(datatype) || XMLSchema.DECIMAL.equals(datatype)
+					|| XMLSchema.DOUBLE.equals(datatype) || XMLSchema.BOOLEAN.equals(datatype))
+			{
+				try {
+					writer.write(XMLDatatypeUtil.normalize(label, datatype));
+					return; // done
+				}
+				catch (IllegalArgumentException e) {
+					// not a valid numeric typed literal. ignore error and write as
+					// quoted string instead.
+				}
+			}
+			if (label.indexOf('\n') != -1 || label.indexOf('\r') != -1 || label.indexOf('\t') != -1) {
+				// Write label as long string
+				 writeLongString(writer, label);
+			}
+			else {
+				// Write label as normal string
+				writer.write("\"");
+				writer.write(TurtleUtil.encodeString(label));
+				writer.write("\"");
+			}
+
+			if (Literals.isLanguageLiteral(lit)) {
+				// Append the literal's language
+				writer.write("@");
+				writer.write(lit.getLanguage());
+			}
+			else if (!XMLSchema.STRING.equals(datatype) && datatype!=null) {
+				// Append the literal's datatype (possibly written as an abbreviated
+				// URI)
+				writer.write("^^");
+				writeURI(datatype);
+			}
 		}
 	}
 	
+private void writeLongString(IndentingWriter writer, String s) throws IOException {
+		
+	boolean singleQuote = s.indexOf('\'')==-1;
+
+	s = StringUtil.gsub("\\", "\\\\", s);
+	
+	if (singleQuote) {
+		writer.write("'''");
+		writer.write(s);
+		writer.write("'''");
+		
+	} else {
+		s = StringUtil.gsub("\"", "\\\"", s);
+		writer.write("\"\"\"");
+		writer.write(s);
+		writer.write("\"\"\"");
+	}
+	
+		
+}
+
+/*	
+	protected void writeLiteral(Literal lit)
+			throws IOException
+		{
+			String label = lit.getLabel();
+			URI datatype = lit.getDatatype();
+
+			if (getWriterConfig().get(BasicWriterSettings.PRETTY_PRINT)) {
+				if (XMLSchema.INTEGER.equals(datatype) || XMLSchema.DECIMAL.equals(datatype)
+						|| XMLSchema.DOUBLE.equals(datatype) || XMLSchema.BOOLEAN.equals(datatype))
+				{
+					try {
+						writer.write(XMLDatatypeUtil.normalize(label, datatype));
+						return; // done
+					}
+					catch (IllegalArgumentException e) {
+						// not a valid numeric typed literal. ignore error and write as
+						// quoted string instead.
+					}
+				}
+			}
+
+			if (label.indexOf('\n') != -1 || label.indexOf('\r') != -1 || label.indexOf('\t') != -1) {
+				// Write label as long string
+				writer.write("\"\"\"");
+				writer.write(TurtleUtil.encodeLongString(label));
+				writer.write("\"\"\"");
+			}
+			else {
+				// Write label as normal string
+				writer.write("\"");
+				writer.write(TurtleUtil.encodeString(label));
+				writer.write("\"");
+			}
+
+			if (Literals.isLanguageLiteral(lit)) {
+				// Append the literal's language
+				writer.write("@");
+				writer.write(lit.getLanguage());
+			}
+			else if (!XMLSchema.STRING.equals(datatype) || !xsdStringToPlainLiteral()) {
+				// Append the literal's datatype (possibly written as an abbreviated
+				// URI)
+				writer.write("^^");
+				writeURI(datatype);
+			}
+		}
+*/	
 	private Context closeBNode(Statement s) throws IOException {
 		Context context = null;
 		Resource subject = s.getSubject();

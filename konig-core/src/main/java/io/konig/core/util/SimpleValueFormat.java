@@ -32,6 +32,7 @@ public class SimpleValueFormat implements ValueFormat {
 	protected String text;
 	protected List<Element> elements;
 	
+	public SimpleValueFormat() {}
 	
 	public SimpleValueFormat(String text) {
 		if (text != null) {
@@ -98,7 +99,7 @@ public class SimpleValueFormat implements ValueFormat {
 	public String toString() {
 		return text;
 	}
-	static class Element {
+	static class Element implements ValueFormat.Element {
 		protected String text;
 		
 		
@@ -114,6 +115,16 @@ public class SimpleValueFormat implements ValueFormat {
 		public String toString() {
 			return text;
 		}
+
+		@Override
+		public ElementType getType() {
+			return ValueFormat.ElementType.TEXT;
+		}
+
+		@Override
+		public String getText() {
+			return text;
+		}
 	}
 	
 	static class Variable extends Element {
@@ -122,6 +133,12 @@ public class SimpleValueFormat implements ValueFormat {
 			super(text);
 		}
 
+
+		@Override
+		public ElementType getType() {
+			return ValueFormat.ElementType.VARIABLE;
+		}
+		
 		String get(ValueMap map) {
 			return map.get(text);
 		}
@@ -147,6 +164,39 @@ public class SimpleValueFormat implements ValueFormat {
 	@Override
 	public String getPattern() {
 		return text;
+	}
+
+	@Override
+	public List<? extends ValueFormat.Element> toList() {
+		return elements;
+	}
+
+	@Override
+	public void addText(String text) {
+		if (elements == null) {
+			elements = new ArrayList<>();
+		}
+		elements.add(new Element(text));
+		if (this.text == null) {
+			this.text = text;
+		} else {
+			this.text += text;
+		}
+		
+	}
+
+	@Override
+	public void addVariable(String variable) {
+		if (elements == null) {
+			elements = new ArrayList<>();
+		}
+		elements.add(new Variable(variable));
+		StringBuilder builder = this.text==null ? new StringBuilder() : new StringBuilder(this.text);
+		
+		builder.append('{');
+		builder.append(variable);
+		builder.append('}');
+		this.text = builder.toString();
 	}
 	
 }

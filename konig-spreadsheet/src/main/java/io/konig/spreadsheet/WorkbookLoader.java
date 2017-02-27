@@ -41,13 +41,19 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
 import io.konig.core.SPARQLBuilder;
+import io.konig.core.Term;
+import io.konig.core.Term.Kind;
 import io.konig.core.Vertex;
+import io.konig.core.impl.BasicContext;
 import io.konig.core.path.DataInjector;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.PathFactory;
 import io.konig.core.path.Step;
 import io.konig.core.pojo.BeanUtil;
 import io.konig.core.util.IriTemplate;
+import io.konig.core.util.SimpleValueFormat;
+import io.konig.core.util.ValueFormat.Element;
+import io.konig.core.util.ValueFormat.ElementType;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
@@ -100,6 +106,7 @@ public class WorkbookLoader {
 	private static final String ROLL_UP_BY = "Roll-up By";
 	private static final String BIGQUERY_TABLE = "BigQuery Table";
 	private static final String DATASOURCE = "Datasource";
+	private static final String IRI_TEMPLATE = "IRI Template";
 	
 	private static final String SETTING_NAME = "Setting Name";
 	private static final String SETTING_VALUE = "Setting Value";
@@ -168,6 +175,7 @@ public class WorkbookLoader {
 		nsManager.add("rdfs", RDFS.NAMESPACE);
 		nsManager.add("konig", Konig.NAMESPACE);
 		nsManager.add("xsd", XMLSchema.NAMESPACE);
+		nsManager.add("schema", Schema.NAMESPACE);
 		
 		this.nsManager = nsManager;
 
@@ -242,6 +250,7 @@ public class WorkbookLoader {
 		private DataFormatter dataFormatter;
 		
 		private Properties settings = new Properties();
+		private List<ShapeTemplate> shapeTemplateList = new ArrayList<>();
 		
 		private int ontologyNameCol=UNDEFINED;
 		private int ontologyCommentCol=UNDEFINED;
@@ -275,6 +284,7 @@ public class WorkbookLoader {
 		private int shapeMediaTypeCol = UNDEFINED;
 		private int shapeBigQueryTableCol = UNDEFINED;
 		private int shapeDatasourceCol = UNDEFINED;
+		private int shapeIriTemplateCol = UNDEFINED;
 		
 		private int pcShapeIdCol = UNDEFINED;
 		private int pcPropertyIdCol = UNDEFINED;
@@ -335,6 +345,28 @@ public class WorkbookLoader {
 			inferPropertyDefinitions();
 			loadShapes();
 			produceEnumShapes();
+			processShapeTemplates();
+		}
+
+
+		private void processShapeTemplates() throws SpreadsheetException {
+			
+			for (ShapeTemplate s : shapeTemplateList) {
+				processShapeTemplate(s);
+			}
+			
+		}
+
+		private void processShapeTemplate(ShapeTemplate s) throws SpreadsheetException {
+			
+			Shape shape = shapeManager.getShapeById(s.shapeId);
+			if (shape == null) {
+				throw new SpreadsheetException("Shape not found: " + s.shapeId);
+			}
+			
+			IriTemplate template = s.createTemplate(shape, nsManager);
+			shape.setIriTemplate(template);
+			graph.edge(s.shapeId, Konig.iriTemplate, literal(template.toString()));
 		}
 
 		private void loadShapes() {
@@ -1008,6 +1040,8 @@ public class WorkbookLoader {
 			URI targetClass = uriValue(row, shapeScopeCol);
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
+			
+			String iriTemplate = stringValue(row, shapeIriTemplateCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			Literal bigqueryTable = bigQueryTableId(row, targetClass);
 			
@@ -1026,6 +1060,10 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
+			
+			if (iriTemplate != null) {
+				shapeTemplateList.add(new ShapeTemplate(shapeId, iriTemplate));
+			}
 			
 			if (dataSourceList != null) {
 				try {
@@ -1117,6 +1155,7 @@ public class WorkbookLoader {
 					case MEDIA_TYPE : shapeMediaTypeCol = i; break;
 					case BIGQUERY_TABLE : shapeBigQueryTableCol = i; break;
 					case DATASOURCE : shapeDatasourceCol = i; break;
+					case IRI_TEMPLATE : shapeIriTemplateCol = i; break;
 						
 					}
 				}
@@ -1774,6 +1813,91 @@ public class WorkbookLoader {
 		
 	}
 	
+	static class ShapeTemplate {
+		private URI shapeId;
+		private String templateText;
+		public ShapeTemplate(URI shapeId, String iriTemplate) {
+			this.shapeId = shapeId;
+			this.templateText = iriTemplate;
+		}
+		
+		public IriTemplate createTemplate(Shape shape, NamespaceManager nsManager) throws SpreadsheetException {
+			SimpleValueFormat format = new SimpleValueFormat(templateText);
+			BasicContext context = new BasicContext(null);
+			IriTemplate iriTemplate = new IriTemplate();
+			iriTemplate.setContext(context);
+			
+			for (Element e : format.toList()) {
+				
+				switch (e.getType()) {
+				
+				case TEXT :
+					iriTemplate.addText(e.getText());
+					break;
+				
+				case VARIABLE :
+					String name = e.getText();
+					iriTemplate.addVariable(name);
+					int colon = name.indexOf(':');
+					if (colon > 0) {
+						String prefix = name.substring(0, colon);
+						
+						Term nsTerm = context.getTerm(prefix);
+						if (nsTerm == null) {
+							Namespace ns = nsManager.findByPrefix(prefix);
+							if (ns != null) {
+								nsTerm = new Term(prefix, ns.getName(), Kind.NAMESPACE);
+								context.add(nsTerm);
+							} else {
+								throw new SpreadsheetException("Namespace prefix not defined: " + prefix);
+							}
+						}
+					} else {
+						URI p = getPredicateByLocalName(shape, name);
+						if (p == null) {
+							
+							Namespace ns = nsManager.findByPrefix(name);
+							if (ns != null) {
+								context.add(new Term(name, ns.getName(), Kind.NAMESPACE));
+								break;
+							}
+							
+							
+							throw new SpreadsheetException(
+								"On Shape <" + shape.getId() + "> property not found: " + name);
+						}
+						String namespace = p.getNamespace();
+						Namespace ns = nsManager.findByName(namespace);
+						if (ns == null) {
+							context.add(new Term(name, p.stringValue(), Kind.PROPERTY));
+						} else {
+							String prefix = ns.getPrefix();
+							Term nsTerm = context.getTerm(prefix);
+							if (nsTerm == null) {
+								context.add(new Term(prefix, namespace, Kind.NAMESPACE));
+							}
+							context.add(new Term(name, prefix + ":" + name, Kind.PROPERTY));
+						}
+					}
+					break;
+				}
+			}
+			context.sort();
+			
+			
+			return iriTemplate;
+		}
+
+		private URI getPredicateByLocalName(Shape shape, String name) {
+			for (PropertyConstraint p : shape.getProperty()) {
+				URI predicate = p.getPredicate();
+				if (predicate != null && name.equals(predicate.getLocalName())) {
+					return predicate;
+				}
+			}
+			return null;
+		}
+	}
 
 
 }

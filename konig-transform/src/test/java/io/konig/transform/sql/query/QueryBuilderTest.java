@@ -116,6 +116,7 @@ public class QueryBuilderTest {
 		
 		String actual = toText(select);
 		
+		// TODO: finish this test case
 		String expected = "";
 		
 		assertEquals(expected, actual);
