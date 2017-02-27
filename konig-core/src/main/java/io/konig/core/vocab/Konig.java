@@ -67,6 +67,10 @@ public class Konig {
 	public static final URI equivalentPath = new URIImpl(EQUIVALENT_PATH);
 	public static final URI LoadModelFromSpreadsheet = new URIImpl("http://www.konig.io/ns/core/LoadModelFromSpreadsheet");
 	public static final URI iriTemplate = new URIImpl(IRI_TEMPLATE);
+	public static final URI idFormat = new URIImpl("http://www.konig.io/ns/core/idFormat");
+	public static final URI Curie = new URIImpl("http://www.konig.io/ns/core/Curie");
+	public static final URI LocalName = new URIImpl("http://www.konig.io/ns/core/LocalName");
+	
 	
 	// Data Sources
 

@@ -53,7 +53,6 @@ import io.konig.core.pojo.BeanUtil;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat.Element;
-import io.konig.core.util.ValueFormat.ElementType;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
@@ -367,6 +366,23 @@ public class WorkbookLoader {
 			IriTemplate template = s.createTemplate(shape, nsManager);
 			shape.setIriTemplate(template);
 			graph.edge(s.shapeId, Konig.iriTemplate, literal(template.toString()));
+			
+			URI targetClass = shape.getTargetClass();
+			if (owlReasoner.isSubClassOf(targetClass, Schema.Enumeration)) {
+
+				graph.edge(s.shapeId, Konig.idFormat, Konig.LocalName);
+			} else {
+
+				List<? extends Element> list = template.toList();
+				if (list.size() == 2) {
+					Element namespace = list.get(0);
+					Namespace ns = nsManager.findByPrefix(namespace.getText());
+					if (ns != null) {
+						graph.edge(s.shapeId, Konig.idFormat, Konig.Curie);
+					}
+				}
+			}
+			
 		}
 
 		private void loadShapes() {

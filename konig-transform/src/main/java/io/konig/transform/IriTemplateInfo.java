@@ -1,6 +1,7 @@
 package io.konig.transform;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
@@ -13,6 +14,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.util.ValueFormatVisitor;
+import io.konig.core.vocab.Konig;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -38,45 +40,84 @@ public class IriTemplateInfo extends ArrayList<IriTemplateElement> {
 			throw new ShapeTransformException("Context must be defined for IriTemplate of " + shape.getId());
 		}
 		context.compile();
-		
+
 		IriTemplateInfo info = new IriTemplateInfo(template);
-		for (Element e : template.toList()) {
-			switch (e.getType()) {
+		List<? extends Element> elements = template.toList();
+		URI idFormat = shape.getIdFormat();
+		if (Konig.Curie.equals(idFormat)) {
+			// For now, we only support Curie format if the template has the format {nsPrefix}{propertyName}
 			
-			case TEXT:
-				info.add(new IriTemplateElement(e.getText()));
-				break;
-				
-			case VARIABLE:
-				String varName = e.getText();
-				String iriValue = context.expandIRI(varName);
-				
-				if (iriValue.equals(varName)) {
-					info.add(new IriTemplateElement(e.getText()));
-				} else {
-					int colon = iriValue.indexOf(':');
-					if (colon<0) {
-						throw new ShapeTransformException("Invalid IRI: " + iriValue);
-					}
-					URI predicate = new URIImpl(iriValue);
-					PropertyConstraint p = shape.getPropertyConstraint(predicate);
-					if (p == null) {
-						
-						Namespace ns = nsManager.findByPrefix(varName);
-						if (ns == null) {
-							ns = new NamespaceImpl(varName, iriValue);
-						}
-						info.add(new IriTemplateElement(varName, ns));
-						
-					} else {
-						info.add(new IriTemplateElement(e.getText(), p));
+			if (elements.size()==2) {
+				// Confirm that the first element is a namespace prefix.
+				Element namespace = elements.get(0);
+				Namespace ns = nsManager.findByPrefix(namespace.getText());
+				if (ns == null) {
+					
+					String nsIri = context.expandIRI(namespace.getText());
+					if (!nsIri.endsWith("/") && !nsIri.endsWith("#") && !nsIri.endsWith(":")) {
+						throw new ShapeTransformException("Expected iriTemplate of the form {nsPrefix}{propertyName}");
 					}
 				}
+				String propertyName = elements.get(1).getText();
+				String predicateId = context.expandIRI(propertyName);
+				if (predicateId.indexOf(':') < 0) {
+					throw new ShapeTransformException("Failed to expand propertyName to a fully-qualified IRI: " + propertyName);
+				}
+				URI predicate = new URIImpl(predicateId);
+
+				PropertyConstraint p = shape.getPropertyConstraint(predicate);
+				if (p == null) {
+					throw new ShapeTransformException("Property not found: " + propertyName);
+				}
 				
+				info.add(new IriTemplateElement(namespace.getText() + ':'));
+				info.add(new IriTemplateElement(propertyName, p));
 				
-				break;
+			} else {
+				throw new ShapeTransformException("Expected iriTemplate of the form {nsPrefix}{propertyName}");
+			}
+			
+		} else {
+
+			for (Element e : elements) {
+				switch (e.getType()) {
+				
+				case TEXT:
+					info.add(new IriTemplateElement(e.getText()));
+					break;
+					
+				case VARIABLE:
+					String varName = e.getText();
+					String iriValue = context.expandIRI(varName);
+					
+					if (iriValue.equals(varName)) {
+						info.add(new IriTemplateElement(e.getText()));
+					} else {
+						int colon = iriValue.indexOf(':');
+						if (colon<0) {
+							throw new ShapeTransformException("Invalid IRI: " + iriValue);
+						}
+						URI predicate = new URIImpl(iriValue);
+						PropertyConstraint p = shape.getPropertyConstraint(predicate);
+						if (p == null) {
+							
+							Namespace ns = nsManager.findByPrefix(varName);
+							if (ns == null) {
+								ns = new NamespaceImpl(varName, iriValue);
+							}
+							info.add(new IriTemplateElement(varName, ns));
+							
+						} else {
+							info.add(new IriTemplateElement(e.getText(), p));
+						}
+					}
+					
+					
+					break;
+				}
 			}
 		}
+		
 		
 		
 		return info;
