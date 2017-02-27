@@ -37,6 +37,7 @@ import io.konig.core.Graph;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IOUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.formula.Expression;
@@ -46,6 +47,23 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShapeLoaderTest {
+	private ShapeManager shapeManager = new MemoryShapeManager();
+	private ShapeLoader loader = new ShapeLoader(shapeManager);
+	
+	@Test 
+	public void testIdFormat() throws Exception {
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		Graph graph = new MemoryGraph();
+		graph.edge(shapeId, RDF.TYPE, SH.Shape);
+		graph.edge(shapeId, Konig.idFormat, Konig.Curie);
+		
+		loader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		assertEquals(Konig.Curie, shape.getIdFormat());
+		
+	}
 	
 	@Test 
 	public void testFormula() throws Exception {

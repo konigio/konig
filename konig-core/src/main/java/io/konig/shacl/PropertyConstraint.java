@@ -87,6 +87,7 @@ public class PropertyConstraint {
 	private String partitionOf;
 	private Path compiledPartitionOf;
 	private Expression formula;
+	private URI idFormat;
 	
 	private Term term;
 	
@@ -596,6 +597,14 @@ public class PropertyConstraint {
 
 	public void setFormula(Expression formula) {
 		this.formula = formula;
+	}
+
+	public URI getIdFormat() {
+		return idFormat;
+	}
+
+	public void setIdFormat(URI idFormat) {
+		this.idFormat = idFormat;
 	}
 	
 }

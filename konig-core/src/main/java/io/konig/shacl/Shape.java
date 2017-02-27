@@ -70,6 +70,7 @@ public class Shape {
 	private List<URI> type;
 	
 	private IriTemplate iriTemplate;
+	private URI idFormat;
 	
 	private List<DataSource> shapeDataSource;
 	
@@ -450,5 +451,15 @@ public class Shape {
 		}
 		return result;
 	}
+
+	public URI getIdFormat() {
+		return idFormat;
+	}
+
+	public void setIdFormat(URI idFormat) {
+		this.idFormat = idFormat;
+	}
+	
+	
 	
 }

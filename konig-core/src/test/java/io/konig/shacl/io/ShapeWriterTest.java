@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Test;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
@@ -50,6 +51,23 @@ import io.konig.shacl.ShapeBuilder;
 
 public class ShapeWriterTest {
 	
+	private ShapeWriter shapeWriter = new ShapeWriter();
+	private Graph graph = new MemoryGraph();
+	
+	@Test
+	public void testIdFormat() throws Exception {
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		Shape shape = new Shape(shapeId);
+		shape.setIdFormat(Konig.Curie);
+		
+		shapeWriter.emitShape(shape, graph);
+		assertStatement(shapeId, Konig.idFormat, Konig.Curie);
+	}
+	
+	private void assertStatement(Resource subject, URI predicate, Value object) {
+		assertTrue(graph.contains(subject, predicate, object));
+	}
+
 	@Test
 	public void testFormula() throws Exception {
 
@@ -60,8 +78,6 @@ public class ShapeWriterTest {
 		shape.add(p);
 		p.setFormula(new Expression("(status = ex:Complete) ? estimatedPoints : 0"));
 		
-		ShapeWriter shapeWriter = new ShapeWriter();
-		Graph graph = new MemoryGraph();
 		shapeWriter.emitShape(shape, graph);
 
 		Vertex v = graph.getVertex(shapeId);
@@ -110,7 +126,6 @@ public class ShapeWriterTest {
 		activityWhitelist.add(Konig.GenerateEnumTables);
 		Collection<Shape> shapeList = builder.getShapeManager().listShapes();
 		
-		ShapeWriter shapeWriter = new ShapeWriter();
 		shapeWriter.writeGeneratedShapes(nsManager, shapeList, fileGetter, activityWhitelist);
 		
 		// TODO: implement assertions
