@@ -52,7 +52,7 @@ public class SemanticSqlParserTest {
 		IriTemplate actual = sqlParser.getOriginShapeId();
 		assertTrue(actual!=null);
 		
-		assertEquals("{foo}/bar", actual.toString());
+		assertEquals("<{foo}/bar>", actual.toString());
 		
 	}
 
@@ -65,7 +65,7 @@ public class SemanticSqlParserTest {
 		IriTemplate actual = sqlParser.getTargetShapeId();
 		assertTrue(actual!=null);
 		
-		assertEquals("{foo}/bar", actual.toString());
+		assertEquals("<{foo}/bar>", actual.toString());
 		
 	}
 
@@ -77,7 +77,7 @@ public class SemanticSqlParserTest {
 		IriTemplate actual = sqlParser.getClassId();
 		assertTrue(actual!=null);
 		
-		assertEquals("{foo}/bar", actual.toString());
+		assertEquals("<{foo}/bar>", actual.toString());
 		
 	}
 	

@@ -99,7 +99,7 @@ public class SimplePojoFactoryTest {
 		IriTemplate template = shape.getIriTemplate();
 		assertTrue(template != null);
 		
-		assertEquals("http://example.com/person/{person_id}", template.toString());
+		assertEquals("<http://example.com/person/{person_id}>", template.toString());
 	}
 	
 	@Test

@@ -116,7 +116,7 @@ public class SeaTurtleParser extends TurtleParser {
 	 *                 ::= '{' term ( ',' term)* '}'
 	 * </pre>
 	 */
-	private void contextTermList() throws IOException, RDFParseException {
+	protected void contextTermList() throws IOException, RDFParseException {
 		assertNext('{');
 		
 		Context parentContext = currentContext;

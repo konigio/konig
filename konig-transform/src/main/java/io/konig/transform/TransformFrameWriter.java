@@ -207,12 +207,14 @@ public class TransformFrameWriter {
 		indent();
 		print("sourceShape ");
 		printResource(sourceShape.getId());
-		println(';');
 		
 		
-		indent();
-		print("templateInfo ");
-		print(m.getTemplateInfo());
+		if (m.getTemplateInfo() != null) {
+			println(';');
+			indent();
+			print("templateInfo ");
+			print(m.getTemplateInfo());
+		}
 		println();
 		
 		

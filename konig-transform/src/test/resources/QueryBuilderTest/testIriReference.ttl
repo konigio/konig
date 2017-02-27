@@ -69,7 +69,14 @@ shape:OrganizationOriginShape a sh:Shape ;
 			gcp:tableId   "StagingOrganization" 
 		]
 	] ;
-	konig:iriTemplate "{data}org/{org_id}" ;
+	konig:iriTemplate '''
+		@context {
+			"data" : "http://example.com/resources/",
+			"acme" : "http://example.com/ns/acme/",
+			"org_id" : "acme:org_id"
+		}
+		<{data}org/{org_id}>
+''' ;
 	sh:property [
 		sh:predicate acme:org_id ;
 		sh:minCount 1 ;

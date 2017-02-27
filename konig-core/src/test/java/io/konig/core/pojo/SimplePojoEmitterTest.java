@@ -127,7 +127,7 @@ public class SimplePojoEmitterTest {
 		Value actual = v.getValue(Konig.iriTemplate);
 		assertTrue(actual != null);
 		
-		assertEquals("http://example.com/person/{person_id}", actual.stringValue());
+		assertEquals("<http://example.com/person/{person_id}>", actual.stringValue());
 		
 	}
 

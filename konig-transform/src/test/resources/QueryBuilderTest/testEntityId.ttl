@@ -20,7 +20,14 @@ shape:PersonOriginShape a sh:Shape ;
 			gcp:tableId   "OriginPerson" 
 		]
 	] ;
-	konig:iriTemplate "{data}person/{person_id}" ;
+	konig:iriTemplate '''
+	@context {
+		"data" : "http://example.com/resources/",
+		"alias" : "http://example.com/ns/alias/",
+		"person_id" : "alias:person_id"
+	}
+	<{data}person/{person_id}>
+''' ;
 	sh:property [
 		sh:predicate alias:person_id ;
 		sh:minCount 0 ;

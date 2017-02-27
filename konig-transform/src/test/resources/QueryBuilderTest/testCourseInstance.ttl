@@ -31,7 +31,13 @@ shape:CourseInstanceMasterShape sh:property  [
 		sh:maxCount 1 ; 
 		sh:minCount 1 ]  ; 
 	a sh:Shape ; 
-	konig:iriTemplate "http://example.com/section/{section_id}" ; 
+	konig:iriTemplate '''
+		@context {
+			"alias" : "http://example.com/ns/alias/",
+			"section_id" : "alias:section_id"
+		}
+		<http://example.com/section/{section_id}>
+''' ;
 	sh:targetClass schema:CourseInstance ; 
 	konig:shapeDataSource <http://example.com/db/schemas/registrar/tables/CourseSection> , <gs://com.example.prod.course_instance> , <urn:bigquery:example.registrar.CourseInstance> . 
 

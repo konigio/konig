@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.text.MessageFormat;
 import java.util.List;
 
@@ -32,6 +31,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.SimplePojoFactory;
+import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
@@ -45,6 +45,38 @@ import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
+	
+	@Test
+	public void testIriTemplate() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("test-iri-template.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/ProductShape");
+		Shape shape = loader.getShapeManager().getShapeById(shapeId);
+		
+		IriTemplate template = shape.getIriTemplate();
+		
+		String expected =
+			"@context {\n" + 
+			"   \"schema\" : \"http://schema.org/\",\n" + 
+			"   \"name\" : \"schema:name\"\n" + 
+			"}\n" + 
+			"\n" + 
+			"<http://example.com/product/{name}>";
+		
+		assertTrue(template != null);
+		assertEquals(expected, template.toString());
+		
+	}
 	
 	@Test
 	public void testDataSource() throws Exception {
@@ -61,7 +93,6 @@ public class WorkbookLoaderTest {
 		loader.load(book, graph);
 		input.close();
 		
-		RdfUtil.prettyPrintTurtle(graph, System.out);
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/PersonLiteShape"));
 		assertTrue(shape != null);
@@ -81,7 +112,7 @@ public class WorkbookLoaderTest {
 		assertValue(tableRef, GCP.tableId, "Person");
 	}
 	
-	@Ignore
+	@Test
 	public void testOrConstraint() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("or-constraint.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -117,7 +148,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testPlaceData() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("place-data.xlsx");
 		
@@ -145,7 +176,7 @@ public class WorkbookLoaderTest {
 		assertValue(address, Schema.addressRegion, "NJ");
 	}
 	
-	@Ignore
+	@Test
 	public void testEquivalentPath() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -172,7 +203,7 @@ public class WorkbookLoaderTest {
 	}
 
 	
-	@Ignore
+	@Test
 	public void testPartitionOf() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -195,7 +226,7 @@ public class WorkbookLoaderTest {
 		assertEquals("/schema:endTime", partitionOf);
 	}
 	
-	@Ignore
+	@Test
 	public void testSourcePath() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -219,7 +250,7 @@ public class WorkbookLoaderTest {
 		assertEquals("/location[type City]", sourcePath);
 	}
 	
-	@Ignore
+	@Test
 	public void testRollUpBy() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -261,7 +292,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAggregationOf() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -286,7 +317,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIn() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -318,7 +349,7 @@ public class WorkbookLoaderTest {
 //		assertEquals(TIME.unitYear, list.get(2));
 	}
 	
-	@Ignore
+	@Test
 	public void testStereotype() throws Exception {
 
 		
@@ -352,7 +383,7 @@ public class WorkbookLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
 		InputStream input = getClass().getClassLoader().getResourceAsStream("person-model.xlsx");

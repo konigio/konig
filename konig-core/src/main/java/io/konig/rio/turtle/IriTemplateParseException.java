@@ -1,6 +1,4 @@
-package io.konig.core.util;
-
-import java.util.List;
+package io.konig.rio.turtle;
 
 /*
  * #%L
@@ -23,26 +21,10 @@ import java.util.List;
  */
 
 
-public interface ValueFormat {
+public class IriTemplateParseException extends Exception {
+	private static final long serialVersionUID = 1L;
 
-	String format(ValueMap map);
-	
-	void traverse(ValueFormatVisitor visitor);
-	
-	String getPattern();
-	
-	List<? extends Element> toList();
-	
-	void addText(String text);
-	void addVariable(String variable);
-	
-	public static enum ElementType {
-		TEXT,
-		VARIABLE
-	}
-	
-	public interface Element {
-		ElementType getType();
-		String getText();
+	public IriTemplateParseException(Throwable cause) {
+		super(cause);
 	}
 }

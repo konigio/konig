@@ -1433,6 +1433,12 @@ public class TurtleParser extends RDFParserBase {
 		String text = iriRef(c);
 		return new IriTemplate(text);
 	}
+	
+	protected String iriRef() throws IOException, RDFParseException {
+		skipSpace();
+		int c = read();
+		return iriRef(c);
+	}
 
 	protected String iriRef(int c) throws IOException, RDFParseException {
 

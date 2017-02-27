@@ -25,7 +25,32 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import io.konig.core.impl.BasicContext;
+
 public class IriTemplateTest {
+	
+	@Test
+	public void testToString() {
+		
+		BasicContext context = new BasicContext(null);
+		context.addTerm("schema", "http://schema.org/");
+		context.addTerm("name",	"schema:name");
+		String text = "http://example.com/product/{name}";
+		
+		IriTemplate template = new IriTemplate(context, text);
+		
+		String actual = template.toString();
+		
+		String expected =
+			"@context {\n" + 
+			"   \"schema\" : \"http://schema.org/\",\n" + 
+			"   \"name\" : \"schema:name\"\n" + 
+			"}\n" + 
+			"\n" + 
+			"<http://example.com/product/{name}>";
+		assertEquals(expected, actual);
+		
+	}
 
 	@Test
 	public void test() {
