@@ -31,6 +31,22 @@ import io.konig.core.vocab.Schema;
 public class FormulaParserTest {
 	
 	private FormulaParser parser = new FormulaParser();
+	
+	@Test
+	public void testNotEquals() throws Exception {
+		String text = 
+			"@context {\n" + 
+			"   \"created\" : \"http://www.konig.io/ns/core/created\",\n" + 
+			"   \"modified\" : \"http://www.konig.io/ns/core/modified\"\n" + 
+			"}\n" + 
+			"created != modified";
+		
+		Expression e = parser.parse(text);
+		
+		String actual = e.toString();
+	
+		assertEquals(text, actual);
+	}
 
 	@Test
 	public void testContext() throws Exception {

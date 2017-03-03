@@ -86,6 +86,7 @@ public class Konig {
 	// Shape Transform Vocabulary
 	
 	public static final URI sourceShape = new URIImpl("http://www.konig.io/ns/core/sourceShape");
+	public static final URI updateWhen = new URIImpl("http://www.konig.io/ns/core/updateWhen");
 	
 	// Fact Modeling
 

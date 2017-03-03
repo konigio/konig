@@ -5,10 +5,10 @@ import io.konig.core.io.PrettyPrintWriter;
 public class ComparisonPredicate extends AbstractExpression implements BooleanTerm {
 
 	private ComparisonOperator operator;
-	private ColumnExpression left;
-	private ColumnExpression right;
+	private ValueExpression left;
+	private ValueExpression right;
 	
-	public ComparisonPredicate(ComparisonOperator operator, ColumnExpression left, ColumnExpression right) {
+	public ComparisonPredicate(ComparisonOperator operator, ValueExpression left, ValueExpression right) {
 		this.operator = operator;
 		this.left = left;
 		this.right = right;
@@ -20,13 +20,13 @@ public class ComparisonPredicate extends AbstractExpression implements BooleanTe
 	}
 
 
-	public ColumnExpression getLeft() {
+	public ValueExpression getLeft() {
 		return left;
 	}
 
 
 
-	public ColumnExpression getRight() {
+	public ValueExpression getRight() {
 		return right;
 	}
 

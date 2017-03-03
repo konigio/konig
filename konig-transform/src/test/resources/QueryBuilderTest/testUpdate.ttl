@@ -1,0 +1,135 @@
+@prefix schema: <http://schema.org/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+
+
+shape:PersonStagingShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	konig:iriTemplate '''
+		@context {
+			"identifier" : "http://purl.org/dc/terms/identifier"
+		}
+		<http://example.com/person/{identifier}>
+	''' ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable ;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "PersonStaging" 
+		]
+	] ;
+	konig:updateWhen '''
+		@context {
+			"created" : "http://www.konig.io/ns/core/created",
+			"modified" : "http://www.konig.io/ns/core/modified"
+		}
+		
+		created != modified
+	''' ;
+	
+	sh:property [
+		sh:predicate dc:identifier ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1 		
+	] , [
+		sh:predicate schema:givenName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:familyName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:telephone ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:address ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:shape shape:PostalAddressFullShape ;
+	], [
+		sh:predicate konig:created ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:dateTime ;
+	],  [
+		sh:predicate konig:modified ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:dateTime ;
+	] 
+.
+
+shape:PostalAddressFullShape a sh:Shape ;
+	sh:targetClass schema:PostalAddress ;
+	sh:property [
+		sh:predicate schema:streetAddress ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:addressLocality ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:addressRegion ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:postalCode ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	]
+.
+
+shape:PersonLiteShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:nodeKind sh:IRI ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable ;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "Person" 
+		]
+	] ;
+	sh:property [
+		sh:predicate schema:givenName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:familyName ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	] , [
+		sh:predicate schema:address ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:shape shape:PostalAddressLiteShape ;
+	] 
+.	
+	
+shape:PostalAddressLiteShape a sh:Shape ;
+	sh:targetClass schema:PostalAddress ;
+	sh:property  [
+		sh:predicate schema:postalCode ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string ;
+	]
+.

@@ -46,6 +46,7 @@ import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.datasource.DataSource;
+import io.konig.formula.Expression;
 import io.konig.shacl.impl.EmptyList;
 
 public class Shape {
@@ -68,11 +69,13 @@ public class Shape {
 	private Activity wasGeneratedBy;
 	private String bigQueryTableId;
 	private List<URI> type;
+
 	
 	private IriTemplate iriTemplate;
 	private URI idFormat;
 	
 	private List<DataSource> shapeDataSource;
+	private Expression updateWhen;
 	
 	
 	public Shape() {
@@ -458,6 +461,14 @@ public class Shape {
 
 	public void setIdFormat(URI idFormat) {
 		this.idFormat = idFormat;
+	}
+
+	public Expression getUpdateWhen() {
+		return updateWhen;
+	}
+
+	public void setUpdateWhen(Expression updateWhen) {
+		this.updateWhen = updateWhen;
 	}
 	
 	

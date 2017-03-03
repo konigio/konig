@@ -29,10 +29,10 @@ public class WorkbookToTurtleTransformer {
 	private WorkbookLoader workbookLoader;
 	private NamespaceManager nsManager;
 	
-	public WorkbookToTurtleTransformer(IdMapper datasetMapper) {
+	public WorkbookToTurtleTransformer(IdMapper datasetMapper, NamespaceManager nsManager) {
 		this.datasetMapper = datasetMapper;
 
-		nsManager = new MemoryNamespaceManager();
+		this.nsManager = nsManager;
 		workbookLoader = new WorkbookLoader(nsManager);
 	}
 	

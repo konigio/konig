@@ -3,7 +3,7 @@ package io.konig.sql.query;
 import io.konig.core.io.PrettyPrintWriter;
 
 public class ColumnExpression extends AbstractExpression
-implements ItemExpression, ValueExpression {
+implements ItemExpression, PathExpression, ValueExpression {
 	
 	private String columnName;
 	
@@ -15,11 +15,6 @@ implements ItemExpression, ValueExpression {
 	@Override
 	public void print(PrettyPrintWriter out) {
 		out.print(columnName);
-	}
-
-	@Override
-	public String getTargetName() {
-		return columnName;
 	}
 
 	public String getColumnName() {

@@ -15,6 +15,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.sql.query.BigQueryCommandLine;
+import io.konig.sql.query.DmlExpression;
 import io.konig.sql.query.SelectExpression;
 import io.konig.transform.sql.query.QueryBuilder;
 
@@ -75,7 +76,7 @@ public class TransformGenerator {
 		return new File(outDir, SCRIPT_FILE_NAME);
 	}
 
-	private File writeQuery(File outDir, Shape shape, SelectExpression select) throws IOException {
+	private File writeQuery(File outDir, Shape shape, DmlExpression select) throws IOException {
 		
 		File sqlFile = sqlFile(outDir, shape);
 		FileWriter fileWriter = new FileWriter(sqlFile);

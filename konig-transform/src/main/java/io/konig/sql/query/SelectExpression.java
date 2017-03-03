@@ -2,7 +2,7 @@ package io.konig.sql.query;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class SelectExpression extends BaseValueContainer implements ValueContainer, QueryExpression {
+public class SelectExpression extends BaseValueContainer implements ValueContainer, QueryExpression, DmlExpression {
 	
 	
 	private FromExpression from = new FromExpression();

@@ -7,6 +7,4 @@ public interface ValueContainer {
 	void add(ValueExpression value);
 	
 	List<ValueExpression> getValues();
-	ValueExpression findValue(String targetName);
-	ValueExpression getValue(String targetName);
 }

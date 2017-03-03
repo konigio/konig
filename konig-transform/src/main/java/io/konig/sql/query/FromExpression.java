@@ -22,6 +22,11 @@ public class FromExpression extends AbstractExpression implements QueryExpressio
 		}
 		tableItems.add(e);
 	}
+	
+	public boolean contains(TableItemExpression e) {
+		return tableItems.contains(e);
+	}
+	
 
 	@Override
 	public void print(PrettyPrintWriter out) {

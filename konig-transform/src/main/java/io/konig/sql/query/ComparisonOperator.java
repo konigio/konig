@@ -1,7 +1,8 @@
 package io.konig.sql.query;
 
 public enum ComparisonOperator {
-	EQUALS("=") ;
+	EQUALS("="),
+	NOT_EQUALS("<>");
 
 	private String text;
 	private ComparisonOperator(String text) {
