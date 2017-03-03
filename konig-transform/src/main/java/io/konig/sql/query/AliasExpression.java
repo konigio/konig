@@ -31,10 +31,5 @@ implements ValueExpression {
 		out.append(alias);
 	}
 
-	@Override
-	public String getTargetName() {
-		return alias;
-	}
-
 
 }

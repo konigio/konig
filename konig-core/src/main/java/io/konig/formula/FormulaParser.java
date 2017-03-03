@@ -213,6 +213,10 @@ public class FormulaParser {
 					operator = tryWord("=") ? BinaryOperator.GREATER_THAN_OR_EQUAL : BinaryOperator.GREATER_THAN;
 					break;
 					
+				case '!' :
+					operator = tryWord("=") ? BinaryOperator.NOT_EQUAL : null;
+					break;
+					
 				}
 				if (operator == null) {
 					unread(c);
@@ -326,6 +330,10 @@ public class FormulaParser {
 			int c = read();
 			UnaryOperator operator = null;
 			if (c == '!') {
+				int d = peek();
+				if (d == '=') {
+					return null;
+				}
 				operator = UnaryOperator.NOT;
 			} else {
 				unread(c);
