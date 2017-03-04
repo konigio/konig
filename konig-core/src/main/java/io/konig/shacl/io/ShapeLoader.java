@@ -44,6 +44,7 @@ import io.konig.core.Graph;
 import io.konig.core.KonigValueFactory;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.GraphLoadHandler;
 import io.konig.core.io.JsonldLoader;
 import io.konig.core.pojo.PojoContext;
@@ -69,7 +70,6 @@ public class ShapeLoader {
 	private RDFHandler listener;
 	
 	
-	
 	public ShapeLoader(ContextManager contextManager, ShapeManager shapeManager) {
 		this(contextManager, shapeManager, null, null);
 	}
@@ -77,18 +77,6 @@ public class ShapeLoader {
 	public ShapeLoader(ShapeManager shapeManager) {
 		this(null, shapeManager, null, null);
 	}
-	
-
-	public RDFHandler getListener() {
-		return listener;
-	}
-
-
-
-	public void setListener(RDFHandler listener) {
-		this.listener = listener;
-	}
-
 
 
 	public ShapeLoader(ContextManager contextManager, ShapeManager shapeManager, NamespaceManager namespaceManager) {
@@ -104,45 +92,30 @@ public class ShapeLoader {
 		this.namespaceManager = namespaceManager;
 		this.valueFactory = valueFactory;
 	}
+
+	public RDFHandler getListener() {
+		return listener;
+	}
+
+
+
+	public void setListener(RDFHandler listener) {
+		this.listener = listener;
+	}
+
+
 	
 	public void loadAll(File source) throws ShapeLoadException {
-		
-		if (source.isDirectory()) {
-			File[] kids = source.listFiles();
-			for (File file : kids) {
-				loadAll(file);
-			}
-		} else {
-			try {
-				FileInputStream input = new FileInputStream(source);
-				try {
-
-					URI fileContext = new URIImpl("file://localhost/" + source.getAbsolutePath());
-					String name = source.getName();
-					if (name.endsWith(".ttl")) {
-						loadTurtle(input, fileContext);
-					} else if (name.endsWith(".jsonld")) {
-						loadJsonld(input);
-					}
-				} catch (Throwable oops) {
-					throw new ShapeLoadException("Failed to load " + source.getName(), oops);
-				} finally {
-					close(input);
-				}
-			} catch (FileNotFoundException e) {
-				throw new ShapeLoadException(e);
-			}
+		Graph graph = new MemoryGraph();
+		try {
+			RdfUtil.loadTurtle(source, graph, namespaceManager);
+		} catch (RDFParseException | RDFHandlerException | IOException e1) {
+			throw new ShapeLoadException(e1);
 		}
+		
+		load(graph);
 	}
 	
-	private void close(FileInputStream input) {
-		try {
-			input.close();
-		} catch (IOException e) {
-			logger.warn("Failed to close file input stream", e);
-		}
-		
-	}
 
 	public void loadTurtle(InputStream input) throws ShapeLoadException {
 		loadTurtle(input, null);
