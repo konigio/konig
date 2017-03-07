@@ -46,8 +46,15 @@
 	<dependency>
     <groupId>com.google.apis</groupId>
     <artifactId>google-api-services-bigquery</artifactId>
-    <version>${google-api-services.version}</version>
+    <version>${google-api-services-bigquery.version}</version>
  </dependency>
+  
+  <!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-cloudresourcemanager -->
+<dependency>
+    <groupId>com.google.apis</groupId>
+    <artifactId>google-api-services-cloudresourcemanager</artifactId>
+    <version>${google-api-services-cloudrm.version}</version>
+</dependency>
   
   </dependencies>
   
