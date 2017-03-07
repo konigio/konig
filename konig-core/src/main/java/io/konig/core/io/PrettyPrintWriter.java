@@ -127,5 +127,17 @@ public class PrettyPrintWriter extends PrintWriter {
 		}
 	}
 	
+	public void print(PrettyPrintable object) {
+		if (object == null) {
+			print("null");
+		} else {
+			object.print(this);
+		}
+	}
+	
+	public void println(PrettyPrintable object) {
+		print(object);
+		println();
+	}
 	
 }

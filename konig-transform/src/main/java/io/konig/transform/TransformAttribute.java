@@ -1,8 +1,10 @@
 package io.konig.transform;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 
@@ -30,7 +32,7 @@ import io.konig.shacl.Shape;
 public class TransformAttribute {
 	
 	private PropertyConstraint property;
-	private Map<Shape, MappedProperty> propertyMap = new HashMap<>();
+	private Map<ShapePath, MappedProperty> propertyMap = new HashMap<>();
 
 	private TransformFrame embeddedFrame;
 	
@@ -42,13 +44,21 @@ public class TransformAttribute {
 	public PropertyConstraint getTargetProperty() {
 		return this.property;
 	}
+	
+	public MappedProperty getProperty(ShapePath shapePath) {
+		return propertyMap.get(shapePath);
+	}
 
 	public URI getPredicate() {
 		return property.getPredicate();
 	}
 	
+	public Set<ShapePath> getShapePaths() {
+		return propertyMap.keySet();
+	}
+	
 	public void add(MappedProperty m) {
-		propertyMap.put(m.getSourceShape(), m);
+		propertyMap.put(m.getShapePath(), m);
 	}
 
 	public TransformFrame getEmbeddedFrame() {
@@ -63,6 +73,9 @@ public class TransformAttribute {
 		return propertyMap.get(sourceShape);
 	}
 	
+	public Collection<MappedProperty> getMappedProperties() {
+		return propertyMap.values();
+	}
 	
 	public MappedProperty getMappedProperty() {
 		Iterator<MappedProperty> sequence = propertyMap.values().iterator();
@@ -70,4 +83,26 @@ public class TransformAttribute {
 	}
 	
 
+	public MappedProperty bestProperty() {
+		if (embeddedFrame != null) {
+			ShapePath best = embeddedFrame.bestShape();
+			if (best != null) {
+				MappedProperty m = getProperty(best);
+				if (m != null) {
+					return m;
+				}
+			}
+		}
+		
+	
+		return propertyMap.isEmpty() ? null : propertyMap.values().iterator().next();
+	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("TransformAttribute(");
+		builder.append(property.getPredicate().stringValue());
+		builder.append(")");
+		return builder.toString();
+	}
 }

@@ -68,7 +68,14 @@ shape:PostalAddressFullShape a sh:Shape ;
 shape:PersonLiteShape a sh:Shape ;
 	sh:targetClass schema:Person ;
 	konig:shapeDataSource [
-		a konig:AuthoritativeDataSource 
+		a konig:GoogleBigQueryTable ;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "PersonLite" 
+		]
+	] , [
+		a konig:GoogleCloudStorageBucket
 	] ;
 	sh:property [
 		sh:predicate schema:givenName ;

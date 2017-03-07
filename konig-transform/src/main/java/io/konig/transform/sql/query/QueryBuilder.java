@@ -1,28 +1,26 @@
 package io.konig.transform.sql.query;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.openrdf.model.Namespace;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.RDF;
 
+import io.konig.core.Graph;
 import io.konig.core.KonigException;
+import io.konig.core.OwlReasoner;
+import io.konig.core.Path;
+import io.konig.core.Vertex;
+import io.konig.core.path.OutStep;
+import io.konig.core.path.Step;
+import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
-import io.konig.formula.BinaryOperator;
-import io.konig.formula.BinaryRelationalExpression;
-import io.konig.formula.ConditionalAndExpression;
-import io.konig.formula.Expression;
-import io.konig.formula.GeneralAdditiveExpression;
-import io.konig.formula.MultiplicativeExpression;
-import io.konig.formula.NumericExpression;
-import io.konig.formula.PathExpression;
-import io.konig.formula.PathStep;
-import io.konig.formula.PathTerm;
-import io.konig.formula.PrimaryExpression;
-import io.konig.formula.UnaryExpression;
-import io.konig.formula.ValueLogical;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -38,6 +36,8 @@ import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.SelectExpression;
+import io.konig.sql.query.SimpleCase;
+import io.konig.sql.query.SimpleWhenClause;
 import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableAliasExpression;
@@ -51,6 +51,7 @@ import io.konig.transform.IriTemplateElement;
 import io.konig.transform.IriTemplateInfo;
 import io.konig.transform.MappedId;
 import io.konig.transform.MappedProperty;
+import io.konig.transform.ShapePath;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.TransformAttribute;
 import io.konig.transform.TransformFrame;
@@ -58,7 +59,15 @@ import io.konig.transform.TransformFrame;
 public class QueryBuilder {
 	
 	private String idColumnName = "id";
+	private Graph graph;
+	private OwlReasoner reasoner;
 	
+	
+	public QueryBuilder(Graph graph) {
+		this.graph = graph;
+		reasoner = new OwlReasoner(graph);
+	}
+
 	public BigQueryCommandLine updateCommand(TransformFrame frame) throws ShapeTransformException {
 		
 		BigQueryCommandLine cmd = null;
@@ -129,20 +138,81 @@ public class QueryBuilder {
 	}
 
 	
-	public SelectExpression selectExpression(TransformFrame frame) {
+	public SelectExpression selectExpression(TransformFrame frame) throws ShapeTransformException {
 
-		Namer namer = new Namer(frame);
+		SqlFrameFactory factory = new SqlFrameFactory();
+		SqlFrame s = factory.create(frame);
+		
 		SelectExpression select = new SelectExpression();
-
-		addFrom(namer, frame, select);
+		
+		addFrom(select, s);
 		
 		addIdAttribute(frame, select);
 		
-		for (TransformAttribute attr : frame.getAttributes()) {
-			addAttribute(namer, frame, select, attr);
+		for (SqlAttribute attr : s.getAttributes()) {
+			select.add(valueExpression(attr));
 		}
 		
 		return select;
+	}
+	
+
+	private ValueExpression valueExpression(SqlAttribute attr) throws ShapeTransformException {
+		
+		TransformAttribute attribute = attr.getAttribute();
+		SqlFrame embedded = attr.getEmbedded();
+		MappedProperty mappedProperty = attr.getMappedProperty();
+		TableName sourceTable = attr.getSourceTable();
+		
+		String sourceName = null;
+		ValueExpression result = attr.getValueExpression();
+		String targetName = attribute.getPredicate().getLocalName();
+		
+		if (result != null) {
+			result = new AliasExpression(result, targetName);
+		} else if (embedded == null) {
+			if (mappedProperty.isLeaf()) {
+				sourceName = mappedProperty.getProperty().getPredicate().getLocalName();
+				result = sourceTable.column(sourceName);
+				if (!targetName.equals(sourceName)) {
+					result = new AliasExpression(result, targetName);
+				}
+			} else if (mappedProperty.getTemplateInfo() != null) {
+				FunctionExpression func = QueryBuilder.idValue(null, mappedProperty.getTemplateInfo());
+				result = new AliasExpression(func, targetName);
+			} else {
+				
+				result = enumValue(attr, targetName);
+				if (result == null) {
+					result = iriRef(attr, targetName);
+				}
+			}
+			
+		} else {
+			StructExpression struct = new StructExpression();
+			for (SqlAttribute a : embedded.getAttributes()) {
+				struct.add(valueExpression(a));
+			}
+			result = new AliasExpression(struct, targetName);
+		}
+		if (result == null) {
+			throw new ShapeTransformException("Undefined value: " + attr.getAttribute().getPredicate().stringValue());
+		}
+
+		return result;
+	}
+
+	private ValueExpression iriRef(SqlAttribute attr, String targetName) {
+		
+		MappedProperty m = attr.getMappedProperty();
+		IriTemplateInfo template = m.getTemplateInfo();
+		ShapePath shape = m.getTemplateShape();
+		if (template != null && shape!=null) {
+			// TODO
+			System.out.println("TODO: fixme");
+			throw new KonigException("Unsupported operation");
+		}
+		return null;
 	}
 
 	private void addIdAttribute(TransformFrame frame, SelectExpression select) {
@@ -159,18 +229,7 @@ public class QueryBuilder {
 	}
 
 	
-
-	private FromExpression addFrom(Namer namer, TransformFrame frame, SelectExpression select) {
-		
-		
-		FromExpression from = select.getFrom();
-		
-		TableItemExpression tableItem = buildFromExpression(namer, frame, null, null);
-		from.add(tableItem);
-		
-		return from;
-	}
-
+	
 
 	private boolean addFrom(Namer namer, TransformFrame frame, UpdateExpression update, String path) throws ShapeTransformException {
 		
@@ -191,7 +250,6 @@ public class QueryBuilder {
 				if (tableName == null) {
 					continue;
 				}
-				TransformFrame child = attr.getEmbeddedFrame();
 				TableItemExpression tableItem = tableName.getItem();
 				if (tableItem == null) {
 					tableItem = new TableNameExpression(tableName.getFullName());
@@ -274,256 +332,159 @@ public class QueryBuilder {
 		return null;
 	}
 
-	private BooleanTerm toBooleanTerm(Expression e, Shape shape, TableName tableName) {
-		List<ConditionalAndExpression> orList = e.getOrList();
-		if (orList.size() != 1) {
-			// TODO: Handle OR list
-			throw new KonigException("Cannot handle OR list");
-		}
-		ConditionalAndExpression andExpression = orList.get(0);
-		List<ValueLogical> andList = andExpression.getAndList();
-		if (andList.size()!=1) {
-			// TODO: Handle AND list
-			throw new KonigException("Cannot handle AND list");
-		}
-		
-		ValueLogical logical = andList.get(0);
-		
-		if (logical instanceof BinaryRelationalExpression) {
-			BinaryRelationalExpression binary = (BinaryRelationalExpression) logical;
-			ComparisonOperator op = toComparisonOperator(binary.getOperator());
-			ColumnExpression left = toColumnExpression(binary.getLeft(), shape, tableName);
-			ColumnExpression right = toColumnExpression(binary.getRight(), shape, tableName);
+	private void addFrom(SelectExpression select, SqlFrame s) throws ShapeTransformException {
+		TableItemExpression left = null;
+		List<JoinInfo> list = s.getTableList();
+		boolean useTableAlias = list.size()>1;
+		for (JoinInfo joinInfo: list) {
 			
-			return new ComparisonPredicate(op, left, right);
 			
-		} else {
-			throw new KonigException("Cannot handle logical expression of type " + logical.getClass().getName());
-		}
-	}
-
-	private ColumnExpression toColumnExpression(NumericExpression e, Shape shape, TableName tableName) {
-		
-		if (e instanceof GeneralAdditiveExpression) {
-			GeneralAdditiveExpression a = (GeneralAdditiveExpression) e;
-			
-			if (a.getAddendList()!=null && !a.getAddendList().isEmpty()) {
-				// TODO: handle addend list
-				throw new KonigException("Cannot handle addend list");
+			TableName rightTableName = joinInfo.getRightTable();
+			if (!useTableAlias) {
+				rightTableName.setAlias(null);
 			}
 			
-			MultiplicativeExpression left = a.getLeft();
-			
-			if (left.getMultiplierList()!=null && !left.getMultiplierList().isEmpty()) {
-				// TODO: handle multiplier list
-				throw new KonigException("Cannot handle multiplier list");
-			}
-			
-			UnaryExpression unary = left.getLeft();
-			if (unary.getOperator() != null) {
-				// TODO: handle unary operator
-				throw new KonigException("Cannot handle unary operator");
-			}
-			
-			PrimaryExpression primary = unary.getPrimary();
-			
-			if (primary instanceof PathExpression) {
-				PathExpression path = (PathExpression) primary;
-				List<PathStep> stepList = path.getStepList();
-				
-				if (stepList.size()==1) {
-					PathStep step = stepList.get(0);
-					StringBuilder columnName = new StringBuilder();
-					if (tableName.getAlias()!=null) {
-						columnName.append(tableName.getAlias());
-					} else {
-						columnName.append(tableName.getFullName());
-					}
-					columnName.append('.');
-					PathTerm term = step.getTerm();
-					URI termId = term.getIri();
-					String localName = termId.getLocalName();
-					columnName.append(localName);
-					return new ColumnExpression(columnName.toString());
-					
-				} else {
-					// TODO: handle path list
-					throw new KonigException("Cannot handle path list");
-				}
+			if (left == null) {
+				left = rightTableName.getItem();
 			} else {
-				// TODO: handle other types of primary expression.
-				throw new KonigException("Cannot handle primary expression of type: " + primary.getClass().getName());
-			}
-			
-		} else {
-			throw new KonigException("Cannot handle NumericExpression of type " + e.getClass().getName());
-		}
-	}
-
-	private ComparisonOperator toComparisonOperator(BinaryOperator operator) {
-		switch(operator) {
-		case EQUALS: return ComparisonOperator.EQUALS;
-		case NOT_EQUAL: return ComparisonOperator.NOT_EQUALS;
-		default:
-			// TODO: Support other operators
-			throw new KonigException("BinaryOperator not supported: " + operator.getText());
-		}
-	
-	}
-
-	private BooleanTerm and(BooleanTerm a, BooleanTerm b) {
-		if (a == null) {
-			return b;
-		}
-		if (a instanceof AndExpression) {
-			AndExpression and = (AndExpression) a;
-			and.add(b);
-			return and;
-		} 
-		AndExpression and = new AndExpression();
-		and.add(a);
-		and.add(b);
-		return and;
-	}
-
-
-	private TableItemExpression buildFromExpression(Namer namer, TransformFrame frame, TableItemExpression left, MappedProperty leftM) {
-		
-		for (TransformAttribute attr : frame.getAttributes()) {
-			MappedProperty m = attr.getMappedProperty();
-			if (m != null) {
+				MappedProperty leftProperty = joinInfo.getLeftProperty();
+				TableName leftTableName = joinInfo.getLeftTable();
+				ShapePath rightShapePath = joinInfo.getRightShapePath();
 				
-				Shape sourceShape = m.getSourceShape();
-				TableName tableName = namer.getTableName(sourceShape);
 				
-				if (tableName == null) {
-					continue;
-				}
-
-				TransformFrame child = attr.getEmbeddedFrame();
-				TableItemExpression right = tableName.getItem();
 				
-				if (right == null) {
-					right = new TableNameExpression(tableName.getFullName());
-					if (tableName.getAlias() != null) {
-						right = new TableAliasExpression(right, tableName.getAlias());
-					}
-					tableName.setItem(right);
-				}
+				ValueExpression leftColumn = null;
 				
-				if (left != null && leftM != null  && left!=right) {
-					OnExpression joinSpecification = joinSpecification(namer, left, leftM, right, m);
-					left = new JoinExpression(left, right, joinSpecification);
+				if (leftProperty != null) {
+					leftColumn = leftTableName.column(leftProperty.getProperty());
 				} else {
-					left = right;
+					Shape leftShape = joinInfo.getLeftShape();
+					if (leftShape.getNodeKind() == NodeKind.IRI) {
+						leftColumn = leftTableName.column("id");
+					} else if (leftShape.getIriTemplate()!=null) {
+						IriTemplateInfo templateInfo = new IriTemplateInfo(leftShape.getIriTemplate());
+						leftColumn = idValue(leftTableName, templateInfo);
+					} else {
+						throw new ShapeTransformException("Shape must have nodeKind=IRI or supply an IRITemplate: " 
+								+ leftShape.getId().stringValue());
+					}
+				}
+				Shape rightShape = rightShapePath.getShape();
+				
+				ValueExpression leftValue = leftColumn;
+				ValueExpression rightValue = null;
+				
+				
+				if (rightShape.getNodeKind() == NodeKind.IRI) {
+					rightValue = rightTableName.column("id");
+				} else {
+					MappedProperty rightProperty = joinInfo.getRightProperty();
+					if (rightProperty == null || rightProperty.getTemplateInfo()==null) {
+						throw new ShapeTransformException(
+							"Expected Shape to have nodeKind=IRI or define an IRI template: " +
+							rightShape.getId().stringValue());
+					}
+					
+					rightValue = idValue(rightTableName, rightProperty.getTemplateInfo());
 				}
 				
-				if (child != null) {
-					left = buildFromExpression(namer, child, left, m);
-				} 
+				TableItemExpression rightItem = rightTableName.getItem();
+				OnExpression on = new OnExpression(
+					new ComparisonPredicate(
+						ComparisonOperator.EQUALS,
+						leftValue,
+						rightValue
+					)
+				);
+				left = new JoinExpression(left, rightItem, on);
 			}
+			
+//				
+//				MappedProperty m =j.getSourceProperty();
+//				Shape aShape = frame.getTargetShape();
+//
+//				Shape aShape = ap.getSourceShape();
+//				TableName aTable = namer.getTableName(aShape);
+//				String leftColumn = columnName(aTable, ap.getProperty());
+//				
+//				Shape bShape = bp.getSourceShape();
+//				TableName bTable = namer.getTableName(bShape);
+//				String rightColumn = columnName(bTable, "id");
+//				
+//				return new OnExpression(
+//					new ComparisonPredicate(
+//						ComparisonOperator.EQUALS, 
+//						new ColumnExpression(leftColumn), 
+//						new ColumnExpression(rightColumn)
+//					)
+//				);
+//				left = new JoinExpression(left, right, joinSpecification);
+//			}
 		}
-		
-		return left;
+		if (left == null) {
+			throw new ShapeTransformException("No tables found");
+		}
+		select.getFrom().add(left);
 		
 	}
+
+
 
 	
-	private OnExpression joinSpecification(
-		Namer namer, 
-		TableItemExpression a, 
-		MappedProperty ap, 
-		TableItemExpression b, 
-		MappedProperty bp
-	) {
-		
-		Shape aShape = ap.getSourceShape();
-		TableName aTable = namer.getTableName(aShape);
-		String leftColumn = columnName(aTable, ap.getProperty());
-		
-		Shape bShape = bp.getSourceShape();
-		TableName bTable = namer.getTableName(bShape);
-		String rightColumn = columnName(bTable, "id");
-		
-		return new OnExpression(
-			new ComparisonPredicate(
-				ComparisonOperator.EQUALS, 
-				new ColumnExpression(leftColumn), 
-				new ColumnExpression(rightColumn)
-			)
-		);
-	}
-
-	private void addAttribute(Namer namer, TransformFrame frame, ValueContainer container, TransformAttribute attr) {
-		
+	private ValueExpression enumValue(SqlAttribute attr, String aliasName) {
 		MappedProperty m = attr.getMappedProperty();
-		if (m == null) {
-			return;
-		}
-		
-		Shape sourceShape = m.getSourceShape();
-		TableName tableName = namer.getTableName(sourceShape);
-//		if (tableName == null) {
-//			throw new KonigException("TableName not found for shape <" + sourceShape.getId() + ">");
-//		}
+		PropertyConstraint p = m.getProperty();
+		if (p != null) {
+			Path path = p.getCompiledEquivalentPath();
+			if (path != null && path.length()==2) {
+				PropertyConstraint q = attr.getAttribute().getTargetProperty();
+				if (q != null) {
+					Resource targetClass = q.getValueClass();
+					if (targetClass != null && reasoner.isSubClassOf(targetClass, Schema.Enumeration)) {
+						Step step = path.asList().get(1);
+						
+						if (step instanceof OutStep) {
 
-		PropertyConstraint targetProperty = attr.getTargetProperty();
-		PropertyConstraint sourceProperty = m.getProperty();
-		
-		TransformFrame childFrame = attr.getEmbeddedFrame();
-		String aliasName = columnName(null, targetProperty);
-		if (childFrame == null) {
-			
-			
-			if (m.isLeaf()) {
-				String sourceColumn = columnName(tableName, sourceProperty);
-				
-				ValueExpression expr = new ColumnExpression(sourceColumn);
-				
-				if (requiresAlias(sourceColumn, aliasName)) {
-					expr = new AliasExpression(expr, aliasName);
+							OutStep out = (OutStep) step;
+							URI predicate = out.getPredicate();
+							Vertex classVertex = graph.getVertex(targetClass);
+							
+							
+							if (classVertex != null) {
+								List<Vertex> valueList = classVertex.asTraversal().in(RDF.TYPE).toVertexList();
+								List<SimpleWhenClause> whenClauseList = new ArrayList<>();
+								for (Vertex enumValue : valueList) {
+									Resource enumValueId = enumValue.getId();
+									if (enumValueId instanceof URI) {
+										String localName = ((URI) enumValueId).getLocalName();
+										Value value = enumValue.getValue(predicate);
+										if (value != null) {
+											StringLiteralExpression whenOperand = new StringLiteralExpression(value.stringValue());
+											StringLiteralExpression result = new StringLiteralExpression(localName);
+											SimpleWhenClause whenClause = new SimpleWhenClause(whenOperand, result);
+											whenClauseList.add(whenClause);
+										}
+									}
+								}
+								
+								TableName sourceTable = attr.getSourceTable();
+								ColumnExpression caseOperand = sourceTable.column(p);
+								
+								SimpleCase simpleCase = new SimpleCase(caseOperand, whenClauseList, null);
+								AliasExpression alias = new AliasExpression(simpleCase, aliasName);
+								return alias;
+							}
+						}
+						
+						
+					}
 				}
-				container.add(expr);
-			} else if (m.getTemplateInfo()!=null) {
-				addIriReference(container, m.getTemplateInfo(), aliasName);
 			}
-			
-			
-			 
-		} else {
-			
-			StructExpression struct = new StructExpression();
-			
-			for (TransformAttribute a : childFrame.getAttributes()) {
-				addAttribute(namer, childFrame, struct, a);
-			}
-			container.add(new AliasExpression(struct, aliasName));
 		}
-		
+		return null;
 	}
 
-	private boolean requiresAlias(String sourceColumn, String aliasName) {
-		int start = sourceColumn.lastIndexOf('.') + 1;
-		
-		if (start == 0) {
-			return !sourceColumn.equals(aliasName);
-		}
-		
-		int len = sourceColumn.length()-start;
-		if (len != aliasName.length()) {
-			return true;
-		}
-		
-		for (int i=0; i<len; i++) {
-			if (sourceColumn.charAt(start+i) != aliasName.charAt(i)) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	private FunctionExpression idValue(TableName tableName, IriTemplateInfo templateInfo) {
+	static FunctionExpression idValue(TableName tableName, IriTemplateInfo templateInfo) {
 		StringBuffer buffer = null;
 		FunctionExpression func = new FunctionExpression("CONCAT");
 		for (IriTemplateElement e : templateInfo) {
@@ -566,18 +527,7 @@ public class QueryBuilder {
 	}
 	
 
-	private String columnName(TableName tableName, String localName) {
-		if (tableName != null && tableName.getAlias()!=null) {
-			StringBuilder builder = new StringBuilder();
-			builder.append(tableName.getAlias());
-			builder.append('.');
-			builder.append(localName);
-			return builder.toString();
-		}
-		return localName;
-	}
-
-	private String columnName(TableName tableName, PropertyConstraint p) {
+	static String columnName(TableName tableName, PropertyConstraint p) {
 		URI predicate = p.getPredicate();
 		if (tableName != null && tableName.getAlias()!=null && predicate!=null) {
 			StringBuilder builder = new StringBuilder();
@@ -624,7 +574,6 @@ public class QueryBuilder {
 		private Map<Shape,TableName> tableNames = new HashMap<>();
 		private Map<String, TableName> pathTable = new HashMap<>();
 		private TableName targetTableName;
-		private int count;
 		
 		public Namer(TransformFrame frame) {
 			analyze(frame);
@@ -668,10 +617,6 @@ public class QueryBuilder {
 			
 			return name;
 			
-		}
-		
-		public TableName getTableName(Shape shape) {
-			return tableNames.get(shape);
 		}
 		
 		private TableName produceTableName(Shape shape) {
@@ -771,64 +716,6 @@ public class QueryBuilder {
 		}
 	}
 	
-	static private class TableName {
-		private String fullName;
-		private String alias;
-		private TableItemExpression item;
-		
-		public TableName(String fullName, String alias) {
-			this.fullName = fullName;
-			this.alias = alias;
-		}
-
-		public String columnName(String name) {
-			StringBuilder builder = new StringBuilder();
-			if (alias == null) {
-				builder.append(fullName);
-			} else {
-				builder.append(alias);
-			}
-			builder.append('.');
-			builder.append(name);
-			return builder.toString();
-		}
-
-
-		public ColumnExpression column(PropertyConstraint sourceProperty) {
-			return column(sourceProperty.getPredicate().getLocalName());
-		}
-		
-		public ColumnExpression column(String name) {
-			return new ColumnExpression(columnName(name));
-		}
-
-		public String getFullName() {
-			return fullName;
-		}
-
-		public String getAlias() {
-			return alias;
-		}
-
-		public void setAlias(String alias) {
-			this.alias = alias;
-		}
-
-		public TableItemExpression getItem() {
-			if (item == null) {
-				item = new TableNameExpression(fullName);
-				if (alias != null) {
-					item = new TableAliasExpression(item, alias);
-				}
-			}
-			return item;
-		}
-
-		public void setItem(TableItemExpression item) {
-			this.item = item;
-		}
 	
-		
-	}
 
 }

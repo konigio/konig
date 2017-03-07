@@ -3,6 +3,7 @@ package io.konig.sql.query;
 import java.io.StringWriter;
 
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.io.PrettyPrintable;
 
 public abstract class AbstractExpression implements QueryExpression {
 

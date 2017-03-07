@@ -1,0 +1,56 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix alias: <http://example.com/alias/> .
+@prefix dc: <	http://purl.org/dc/terms/> .
+
+shape:TargetCreativeWorkShape a sh:Shape ;
+	sh:targetClass schema:CreativeWork ;
+	sh:property [
+		sh:predicate sh:author ;
+		sh:nodeKind sh:IRI ;
+		sh:maxCount 1;
+		sh:class schema:Person
+	] ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "warehouse" ;
+			gcp:tableId   "CreativeWork" 
+		]
+	]
+.
+
+shape:SourceCreativeWorkShape a sh:Shape ;
+	sh:targetClass schema:CreativeWork ;
+	sh:property [
+		sh:predicate alias:author_id ;
+		sh:datatype xsd:string;
+		sh:maxCount 1 ;
+		konig:equivalentPath "/schema:author/dc:identifier"
+	] ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "warehouse" ;
+			gcp:tableId   "SourceCreativeWork" 
+		]
+	] , [
+		a konig:GoogleCloudStorageBucket
+	]
+.	
+
+shape:SourcePersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:property [
+		sh:predicate alias:author_id ;
+		sh:datatype xsd:string;
+		sh:maxCount 1;
+		konig:equivalentPath "/dc:identifier"
+	] ;
+	

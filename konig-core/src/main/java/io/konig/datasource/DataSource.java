@@ -38,6 +38,10 @@ public class DataSource {
 	private String identifier;
 	private Set<URI> type = new LinkedHashSet<>();
 	private IriTemplate iriTemplate;
+	
+	public DataSource() {
+		
+	}
 
 	public boolean isA(URI type) {
 		return this.type.contains(type) || Konig.DataSource.equals(type);

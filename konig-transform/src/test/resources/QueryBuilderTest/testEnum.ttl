@@ -1,0 +1,66 @@
+@prefix schema: <http://schema.org/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix acme: <http://example.com/ns/acme/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix shape : <http://example.com/shapes/> .
+@prefix data : <http://example.com/resources/> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+schema:GenderType a owl:Class ;
+	rdfs:subClassOf schema:Enumeration 
+.
+
+schema:Male a schema:GenderType ;
+	dc:identifier "M"
+.
+
+schema:Female a schema:GenderType ;
+	dc:identifier "F"
+.
+
+shape:PersonOriginShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:nodeKind sh:IRI ;
+	konig:shapeDataSource [
+		a konig:AuthoritativeDataSource ;
+		a konig:GoogleBigQueryTable ;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "OriginPerson" 
+		]
+	], [
+		a konig:GoogleCloudStorageBucket
+	] ;
+	sh:property [
+		sh:predicate alias:gender ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:long ;
+		konig:equivalentPath "/<http://schema.org/gender>/<http://purl.org/dc/terms/identifier>"
+	] 
+.
+
+shape:PersonTargetShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:nodeKind sh:IRI ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable ;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "Person" 
+		]
+	] ;
+	sh:property  [
+		sh:predicate schema:gender ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:nodeKind sh:IRI ;
+		sh:class schema:GenderType
+	] 
+.
