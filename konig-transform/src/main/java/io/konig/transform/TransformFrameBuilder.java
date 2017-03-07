@@ -36,7 +36,7 @@ public class TransformFrameBuilder {
 
 	public TransformFrame create(Shape targetShape) throws ShapeTransformException {
 		Worker worker = new Worker();
-		return worker.createFrame(targetShape);
+		return worker.createFrame("", targetShape);
 	}
 	
 	private class Worker {
@@ -44,15 +44,15 @@ public class TransformFrameBuilder {
 		
 		Map<Shape,TransformFrame> shapeMap = new HashMap<>();
 		
-		private TransformFrame produceFrame(Shape targetShape) throws ShapeTransformException {
+		private TransformFrame produceFrame(String targetContext, Shape targetShape) throws ShapeTransformException {
 			TransformFrame frame = shapeMap.get(targetShape);
 			if (frame == null) {
-				frame = createFrame(targetShape);
+				frame = createFrame(targetContext, targetShape);
 			}
 			return frame;
 		}
 		
-		private TransformFrame createFrame(Shape targetShape) throws ShapeTransformException {
+		private TransformFrame createFrame(String targetContext, Shape targetShape) throws ShapeTransformException {
 
 			URI targetClass = targetShape.getTargetClass();
 			if (targetClass == null) {
@@ -72,7 +72,7 @@ public class TransformFrameBuilder {
 					
 					Shape valueShape = p.getShape();
 					if (valueShape != null) {
-						TransformFrame embeddedFrame = produceFrame(valueShape);
+						TransformFrame embeddedFrame = produceFrame(targetContext, valueShape);
 						attr.setEmbeddedFrame(embeddedFrame);
 					}
 				}
@@ -82,7 +82,7 @@ public class TransformFrameBuilder {
 			for (Shape sourceShape : list) {
 				if (sourceShape != targetShape) {
 					addIdMapping(frame, sourceShape);
-					addSourceShape(frame, sourceShape);
+					addSourceShape(targetContext, frame, sourceShape);
 				}
 			}
 			return frame;
@@ -100,7 +100,7 @@ public class TransformFrameBuilder {
 		}
 		
 		
-		private void addSourceShape(TransformFrame frame, Shape sourceShape) throws ShapeTransformException {
+		private void addSourceShape(String targetContext, TransformFrame frame, Shape sourceShape) throws ShapeTransformException {
 			
 			for (PropertyConstraint p : sourceShape.getProperty()) {
 				URI predicate = p.getPredicate();
@@ -109,26 +109,26 @@ public class TransformFrameBuilder {
 					if (path == null) {
 						TransformAttribute attr = frame.getAttribute(predicate);
 						if (attr != null) {
-							MappedProperty m = new MappedProperty(sourceShape, p);
+							MappedProperty m = new MappedProperty(new ShapePath(targetContext, sourceShape), p);
 							attr.add(m);
 							
 							TransformFrame childFrame = attr.getEmbeddedFrame();
 							if (childFrame != null) {
 								Shape childShape = p.getShape();
 								if (childShape != null) {
-									addSourceShape(childFrame, childShape);
+									addSourceShape(targetContext, childFrame, childShape);
 								}
 							}
 						}
 					} else {
-						handlePath(frame, sourceShape, p, path);
+						handlePath(targetContext, frame, sourceShape, p, path);
 						
 					}
 				}
 			}
 		}
 
-		private void handlePath(TransformFrame frame, Shape sourceShape, PropertyConstraint p, Path path) throws ShapeTransformException {
+		private void handlePath(String targetContext, TransformFrame frame, Shape sourceShape, PropertyConstraint p, Path path) throws ShapeTransformException {
 			
 			int end = path.length()-1;
 			for (int i=0; i<=end; i++) {
@@ -138,7 +138,7 @@ public class TransformFrameBuilder {
 				} else {
 					TransformAttribute attr = frame.getAttribute(first);
 					if (attr != null) {
-						MappedProperty m = new MappedProperty(sourceShape, p, i);
+						MappedProperty m = new MappedProperty(new ShapePath(targetContext, sourceShape), p, i);
 						attr.add(m);
 						
 						if (i != end) {
@@ -169,6 +169,13 @@ public class TransformFrameBuilder {
 													
 													if (inject(info, p, subpath)) {
 														m.setTemplateInfo(info);
+													} else {
+														// Cannot satisfy the IRI template with currently available
+														// properties.  Must join with the valueShape where the
+														// template is defined.
+														
+														setTemplateShape(attr, m, targetContext, valueShape, info);
+														
 													}
 													
 													
@@ -186,6 +193,18 @@ public class TransformFrameBuilder {
 			}	
 		}
 		
+
+		private void setTemplateShape(TransformAttribute attr, MappedProperty m, String targetContext, Shape valueShape, IriTemplateInfo info) {
+			
+			StringBuilder nextContext = new StringBuilder();
+			nextContext.append(targetContext);
+			nextContext.append('.');
+			nextContext.append(attr.getPredicate().getLocalName());
+			
+			ShapePath nextShape = new ShapePath(nextContext.toString(), valueShape);
+			m.setTemplateShape(nextShape);
+			m.setTemplateInfo(info);
+		}
 
 		/**
 		 * Inject a PropertyConstraint into a given IriTemplateInfo if an existing element matches

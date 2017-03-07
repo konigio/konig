@@ -1,6 +1,8 @@
 package io.konig.transform;
 
 import io.konig.core.Path;
+import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -10,6 +12,7 @@ import io.konig.shacl.Shape;
  * <p>
  * A MappedProperty has the following fields:
  * <ul>
+ *   <li> targetContext: A string that identifies the path relative to the targetRoot where the sourceShape is utilized.
  *   <li> sourceShape: The Shape of the source entity.
  *   <li> property:  A property on the sourceShape that is mapped to a corresponding property on the target shape.
  *   <li> stepIndex: The index of the step within property.equivalentPath that is
@@ -24,24 +27,33 @@ import io.konig.shacl.Shape;
  * @author Greg McFall
  *
  */
-public class MappedProperty {
+public class MappedProperty extends AbstractPrettyPrintable {
 	
-	private Shape sourceShape;
+	private ShapePath shapePath;
 	private PropertyConstraint property;
 	private IriTemplateInfo template;
+	private ShapePath templateShape;
 	private int stepIndex = -1;
 	
-	public MappedProperty(Shape sourceShape, PropertyConstraint property, int stepIndex) {
-		this.sourceShape = sourceShape;
+	public MappedProperty(ShapePath shapePath, PropertyConstraint property, int stepIndex) {
+		this.shapePath = shapePath;
 		this.property = property;
 		this.stepIndex = stepIndex;
 	}
 
-	public MappedProperty(Shape sourceShape, PropertyConstraint property) {
-		this.sourceShape = sourceShape;
+	public MappedProperty(ShapePath shapePath, PropertyConstraint property) {
+		this.shapePath = shapePath;
 		this.property = property;
 	}
 	
+	public String getTargetContext() {
+		return shapePath.getPath();
+	}
+	
+	public ShapePath getShapePath() {
+		return shapePath;
+	}
+
 	public boolean isLeaf() {
 		Path path = property.getCompiledEquivalentPath();
 		return template==null && (path==null || stepIndex == path.length()-1);
@@ -56,7 +68,7 @@ public class MappedProperty {
 	}
 
 	public Shape getSourceShape() {
-		return sourceShape;
+		return shapePath.getShape();
 	}
 
 	public PropertyConstraint getProperty() {
@@ -69,4 +81,40 @@ public class MappedProperty {
 	
 	
 
+	public ShapePath getTemplateShape() {
+		return templateShape;
+	}
+
+	public void setTemplateShape(ShapePath templateShape) {
+		this.templateShape = templateShape;
+	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.indent();
+		out.print("property: <");
+		if (property.getPredicate() != null) {
+			out.print(property.getPredicate().stringValue());
+		}
+		out.println(">");
+		out.indent();
+		out.println("shapePath:");
+		out.pushIndent();
+		out.println(shapePath);
+		out.popIndent();
+		out.indent();
+		out.print("stepIndex: ");
+		out.println(stepIndex);
+		out.indent();
+		out.print("template: ");
+		if (template == null) {
+			out.println("null");
+		} else {
+			out.println(template.getTemplate().toString());
+		}
+		
+		
+		
+	}
+	
 }

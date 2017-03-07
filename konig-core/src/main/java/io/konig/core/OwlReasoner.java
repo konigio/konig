@@ -394,6 +394,9 @@ public class OwlReasoner {
 			return true;
 		}
 		Vertex va = graph.getVertex(a);
+		if (va == null) {
+			return false;
+		}
 		return RdfUtil.isSubClassOf(va, b);
 	}
 

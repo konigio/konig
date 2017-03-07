@@ -27,11 +27,16 @@ public class TransformGenerator {
 	private TransformFrameBuilder frameBuilder;
 	private QueryBuilder queryBuilder;
 	
-	public TransformGenerator(NamespaceManager nsManager, ShapeManager shapeManager, PathFactory pathFactory) {
+	public TransformGenerator(
+		NamespaceManager nsManager, 
+		ShapeManager shapeManager, 
+		PathFactory pathFactory, 
+		QueryBuilder queryBuilder
+	) {
 
 		this.shapeManager = shapeManager;
 		frameBuilder = new TransformFrameBuilder(shapeManager, pathFactory);
-		queryBuilder = new QueryBuilder();
+		this.queryBuilder = queryBuilder;
 	}
 	
 	public void generateAll(File outDir) throws ShapeTransformException, IOException {

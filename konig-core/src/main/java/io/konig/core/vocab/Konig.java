@@ -70,6 +70,7 @@ public class Konig {
 	public static final URI idFormat = new URIImpl("http://www.konig.io/ns/core/idFormat");
 	public static final URI Curie = new URIImpl("http://www.konig.io/ns/core/Curie");
 	public static final URI LocalName = new URIImpl("http://www.konig.io/ns/core/LocalName");
+	public static final URI modified = new URIImpl("http://www.konig.io/ns/core/modified");
 	
 	
 	// Data Sources

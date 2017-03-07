@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 
@@ -32,6 +33,7 @@ public class TransformFrame {
 	private Shape targetShape;
 	private Map<URI, TransformAttribute> attributes = new LinkedHashMap<>();
 	private Map<Shape, MappedId> idMap = new HashMap<>();
+	private boolean countedShapes = false;
 	
 	
 	public TransformFrame(Shape targetShape) {
@@ -49,6 +51,24 @@ public class TransformFrame {
 	public MappedId getMappedId() {
 		Iterator<MappedId> sequence = idMap.values().iterator();
 		return sequence.hasNext() ? sequence.next() : null;
+	}
+	
+	/**
+	 * Get the ShapePath that covers the most attributes
+	 */
+	public ShapePath bestShape() {
+		countShapes();
+		ShapePath best = null;
+		int bestCount = 0;
+		for (TransformAttribute attr : getAttributes()) {
+			for (ShapePath s : attr.getShapePaths()) {
+				if (s.getCount() > bestCount) {
+					bestCount = s.getCount();
+					best = s;
+				}
+			}
+		}
+		return best;
 	}
 	
 	public Collection<MappedId> getIdMappings() {
@@ -78,6 +98,22 @@ public class TransformFrame {
 		
 		
 		return buffer.toString();
+	}
+	
+	public void countShapes() {
+		if (!countedShapes) {
+			countedShapes = true;
+			for (TransformAttribute attr : getAttributes()) {
+				Set<ShapePath> set = attr.getShapePaths();
+				for (ShapePath s : set) {
+					s.incrementCount();
+					TransformFrame child = attr.getEmbeddedFrame();
+					if (child != null) {
+						child.countShapes();
+					}
+				}
+			}
+		}
 	}
 
 }

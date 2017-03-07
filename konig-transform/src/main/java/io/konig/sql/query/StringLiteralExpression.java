@@ -2,7 +2,7 @@ package io.konig.sql.query;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class StringLiteralExpression extends AbstractExpression {
+public class StringLiteralExpression extends AbstractExpression implements ValueExpression {
 	
 	private String value;
 

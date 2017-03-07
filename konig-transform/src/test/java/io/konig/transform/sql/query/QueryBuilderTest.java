@@ -37,11 +37,37 @@ public class QueryBuilderTest {
 	private Graph graph = new MemoryGraph(nsManager);
 	private PathFactory pathFactory = new PathFactory(nsManager, graph);
 	private TransformFrameBuilder frameBuilder = new TransformFrameBuilder(shapeManager, pathFactory);
-	private QueryBuilder queryBuilder = new QueryBuilder();
+	private QueryBuilder queryBuilder = new QueryBuilder(graph);
 	
 	@Before
 	public void setUp() {
 		GcpShapeConfig.init();
+	}
+	
+	@Test
+	public void testEnum() throws Exception {
+		loadShapes("QueryBuilderTest/testEnum.ttl");
+		
+		URI targetShapeId = uri("http://example.com/shapes/PersonTargetShape");
+		
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		
+		TransformFrame frame = frameBuilder.create(targetShape);
+		
+		SelectExpression dml = queryBuilder.selectExpression(frame);
+		assertTrue(dml != null);
+		
+		String actual = dml.toString();
+		
+		String expected = 
+			"SELECT\n" + 
+			"   CASE gender\n" + 
+			"      WHEN \"M\" THEN \"Male\"\n" + 
+			"      WHEN \"F\" THEN \"Female\"\n" + 
+			"   END AS gender\n" + 
+			"FROM acme.OriginPerson";
+		
+		assertEquals(expected, actual);
 	}
 	
 	@Ignore
@@ -66,7 +92,7 @@ public class QueryBuilderTest {
 		assertEquals(expected, actual);
 	}
 
-	@Ignore
+	@Test
 	public void testJoin() throws Exception  {
 		loadShapes("QueryBuilderTest/testJoin.ttl");
 		
@@ -83,22 +109,22 @@ public class QueryBuilderTest {
 		
 		String expected = 
 			"SELECT\n" + 
-			"   p.givenName,\n" + 
-			"   p.familyName,\n" + 
+			"   a.givenName,\n" + 
+			"   a.familyName,\n" + 
 			"   STRUCT(\n" + 
-			"      o.name\n" + 
+			"      b.name\n" + 
 			"   ) AS worksFor\n" + 
 			"FROM \n" + 
-			"   directory.Person AS p\n" + 
+			"   directory.Person AS a\n" + 
 			" JOIN\n" + 
-			"   directory.Organization AS o\n" + 
+			"   directory.Organization AS b\n" + 
 			" ON\n" + 
-			"   p.worksFor=o.id";
+			"   a.worksFor=b.id";
 		
 		assertEquals(expected, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testCourseInstance() throws Exception  {
 		loadShapes("QueryBuilderTest/testCourseInstance.ttl");
 		
@@ -124,28 +150,9 @@ public class QueryBuilderTest {
 		assertEquals(expected, actual);
 	}
 	
-	@Ignore
-	public void testMembership() throws Exception {
-
-		loadShapes("QueryBuilderTest/testMembership.ttl");
-		
-		URI targetShapeId = uri("http://example.com/shape/MembershipReportingShape");
-		
-		Shape targetShape = shapeManager.getShapeById(targetShapeId);
-		
-		TransformFrame frame = frameBuilder.create(targetShape);
-		
-		SelectExpression select = queryBuilder.selectExpression(frame);
-		
-		String actual = toText(select);
-		
-		// TODO: finish this test case
-		String expected = "";
-		
-		assertEquals(expected, actual);
-	}
 	
-	@Ignore
+	
+	@Test
 	public void testRole() throws Exception {
 
 		loadShapes("QueryBuilderTest/testRole.ttl");
@@ -170,7 +177,7 @@ public class QueryBuilderTest {
 	}
 
 	
-	@Ignore
+	@Test
 	public void testFilter() throws Exception {
 		loadGraph("QueryBuilderTest/testFilter.ttl");
 		
@@ -193,7 +200,7 @@ public class QueryBuilderTest {
 		assertEquals(expected, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testBigQueryCommandLine() throws Exception {
 		loadGraph("QueryBuilderTest/testBigQueryCommandLine.ttl");
 		
@@ -206,7 +213,7 @@ public class QueryBuilderTest {
 		assertEquals("acme.Person", cmd.getDestinationTable());
 	}
 	
-	@Ignore
+	@Test
 	public void testEntityId() throws Exception {
 		loadGraph("QueryBuilderTest/testEntityId.ttl");
 		
@@ -228,6 +235,24 @@ public class QueryBuilderTest {
 	}
 	
 	@Ignore
+	public void testJoinedIriTemplate() throws Exception {
+
+		loadGraph("QueryBuilderTest/testJoinedIriTemplate.ttl");
+		
+		Shape targetShape = shapeManager.getShapeById(uri("http://example.com/shapes/TargetCreativeWorkShape"));
+		
+		TransformFrame frame = frameBuilder.create(targetShape);
+		SelectExpression select = queryBuilder.selectExpression(frame);
+		
+		String expected = 
+			"";
+		String actual = toText(select);
+		
+		
+		assertEquals(expected, actual);
+	}
+	
+	@Test
 	public void testIriReference() throws Exception {
 		loadGraph("QueryBuilderTest/testIriReference.ttl");
 		
@@ -248,7 +273,7 @@ public class QueryBuilderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testNestFields() throws Exception {
 		loadGraph("QueryBuilderTest/testNestFields.ttl");
 		
@@ -271,7 +296,7 @@ public class QueryBuilderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameFields() throws Exception {
 		loadGraph("QueryBuilderTest/testRenameFields.ttl");
 		
@@ -317,9 +342,10 @@ public class QueryBuilderTest {
 	}
 
 	private void loadShapes(String resource) throws Exception {
-		
 		InputStream input = getClass().getClassLoader().getResourceAsStream(resource);
+		graph.setNamespaceManager(nsManager);
+		RdfUtil.loadTurtle(graph, input, "");
 		ShapeLoader loader = new ShapeLoader(shapeManager);
-		loader.loadTurtle(input);
+		loader.load(graph);
 	}
 }

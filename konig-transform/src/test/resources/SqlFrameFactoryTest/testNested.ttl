@@ -1,0 +1,78 @@
+@prefix schema: <http://schema.org/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix shape : <http://example.com/shapes/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+
+shape:TargetPersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:property [
+		sh:predicate schema:name ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	] , [
+		sh:predicate schema:address ;
+		sh:shape shape:TargetAddressShape ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	] ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable ;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "Person" 
+		]
+	] 
+.
+
+shape:TargetAddressShape a sh:Shape ;
+	sh:targetClass schema:PostalAddress ;
+	sh:property [
+		sh:predicate schema:addressLocality ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate schema:addressRegion ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	]
+.
+
+shape:SourcePersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:property [
+		sh:predicate alias:moniker ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		konig:equivalentPath "/schema:name"
+	] , [
+		sh:predicate alias:city ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		konig:equivalentPath "/schema:address/schema:addressLocality"
+	] , [
+		sh:predicate alias:state ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1 ;
+		konig:equivalentPath "/schema:address/schema:addressRegion"
+	] ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable ;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "SourcePerson" 
+		]
+	] , [
+		a konig:GoogleCloudStorageBucket
+	]
+.
