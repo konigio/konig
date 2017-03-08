@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,6 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.sql.query.BigQueryCommandLine;
 import io.konig.sql.query.DmlExpression;
-import io.konig.sql.query.SelectExpression;
 import io.konig.transform.sql.query.QueryBuilder;
 
 public class TransformGenerator {
@@ -49,10 +49,7 @@ public class TransformGenerator {
 			
 			for (Shape shape : shapeManager.listShapes()) {
 				
-				if (
-					shape.hasDataSourceType(Konig.GoogleBigQueryTable) && 
-					!shape.hasDataSourceType(Konig.GoogleCloudStorageBucket)
-				) {
+				if (requiresTransform(shape)) {
 					
 					TransformFrame frame = frameBuilder.create(shape);
 					if (frame != null) {
@@ -70,6 +67,23 @@ public class TransformGenerator {
 	}
 
 
+
+	private boolean requiresTransform(Shape shape) {
+		return
+				shape.hasDataSourceType(Konig.GoogleBigQueryTable) && 
+				!shape.hasDataSourceType(Konig.GoogleCloudStorageBucket) &&
+				bucketShapeExists(shape);
+	}
+
+	private boolean bucketShapeExists(Shape shape) {
+		URI targetClass = shape.getTargetClass();
+		for (Shape s : shapeManager.getShapesByTargetClass(targetClass)) {
+			if (s.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	private void addScript(PrettyPrintWriter out, File sqlFile, BigQueryCommandLine cmdline) {
 		String fileName = sqlFile.getName();

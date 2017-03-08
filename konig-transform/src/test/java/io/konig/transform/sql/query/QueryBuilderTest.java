@@ -61,6 +61,7 @@ public class QueryBuilderTest {
 		
 		String expected = 
 			"SELECT\n" + 
+			"   id,\n" + 
 			"   CASE gender\n" + 
 			"      WHEN \"M\" THEN \"Male\"\n" + 
 			"      WHEN \"F\" THEN \"Female\"\n" + 
@@ -109,6 +110,7 @@ public class QueryBuilderTest {
 		
 		String expected = 
 			"SELECT\n" + 
+			"   a.id,\n" + 
 			"   a.givenName,\n" + 
 			"   a.familyName,\n" + 
 			"   STRUCT(\n" + 
