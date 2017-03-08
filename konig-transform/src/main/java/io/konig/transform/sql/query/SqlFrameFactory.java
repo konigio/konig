@@ -76,7 +76,7 @@ public class SqlFrameFactory {
 						result.add(a);
 					} else {
 						// Theoretically, should never get here.
-						throw new ShapeTransformException("Unsupported join condition");
+						throw new ShapeTransformException("Unsupported join condition: " + attr.getPredicate().stringValue());
 					}
 					
 					

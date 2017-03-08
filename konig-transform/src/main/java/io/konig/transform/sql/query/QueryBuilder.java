@@ -147,7 +147,7 @@ public class QueryBuilder {
 		
 		addFrom(select, s);
 		
-		addIdAttribute(frame, select);
+		addIdAttribute(s, select);
 		
 		for (SqlAttribute attr : s.getAttributes()) {
 			select.add(valueExpression(attr));
@@ -215,14 +215,29 @@ public class QueryBuilder {
 		return null;
 	}
 
-	private void addIdAttribute(TransformFrame frame, SelectExpression select) {
-		
+	private void addIdAttribute(SqlFrame s, SelectExpression select) {
+		TransformFrame frame = s.getTransformFrame();
 		MappedId mappedId = frame.getMappedId();
 		if (mappedId != null) {
 			
 			IriTemplateInfo templateInfo = mappedId.getTemplateInfo();
 			if (templateInfo != null) {
 				addIriReference(select, templateInfo, idColumnName);
+			}
+		} else {
+			Shape shape = frame.getTargetShape();
+			if (shape.getNodeKind() == NodeKind.IRI || shape.getNodeKind()==NodeKind.BlankNodeOrIRI) {
+				
+				List<JoinInfo> tableList = s.getTableList();
+				if (!tableList.isEmpty()) {
+					JoinInfo join = tableList.get(0);
+					Shape rightShape = join.getRightShapePath().getShape();
+					if (rightShape.getNodeKind()==NodeKind.IRI || shape.getNodeKind()==NodeKind.BlankNodeOrIRI) {
+						TableName rightTable = join.getRightTable();
+						select.add(rightTable.column("id"));
+					}
+				}
+				
 			}
 		}
 		
