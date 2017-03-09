@@ -74,6 +74,11 @@ public class FormulaParser {
 			
 			return conditionalOrExpression();
 		}
+		
+		private BareExpression expr() throws RDFParseException, RDFHandlerException, IOException {
+			ConditionalOrExpression e = conditionalOrExpression();
+			return new BareExpression(e);
+		}
 
 		private ConditionalOrExpression conditionalOrExpression() throws RDFParseException, IOException, RDFHandlerException {
 			ConditionalOrExpression or = new ConditionalOrExpression();
@@ -350,11 +355,43 @@ public class FormulaParser {
 			
 			primary = 
 				(primary=tryBrackettedExpression()) != null ? primary :
+				(primary=tryBuiltInCall()) != null ? primary :
 				(primary=tryLiteralFormula()) != null ? primary :
 				(primary=tryPath()) != null ? primary :
 				null;
 			
 			return primary;
+		}
+
+		private BuiltInCall tryBuiltInCall() throws IOException, RDFParseException, RDFHandlerException {
+			BuiltInCall call = null;
+			
+			call = tryIfFunction();
+			
+			return call;
+		}
+
+		private IfFunction tryIfFunction() throws IOException, RDFParseException, RDFHandlerException {
+			skipSpace();
+			if (tryWord("IF")){
+				skipSpace();
+				int c = read();
+				if (c != '(') {
+					unread(c);
+				} else {
+					skipSpace();
+					Expression condition = expr();
+					read(',');
+					Expression whenTrue = expr();
+					read(',');
+					Expression whenFalse = expr();
+					assertNext(')');
+					
+					return new IfFunction(condition, whenTrue, whenFalse);
+				}
+			}
+			
+			return null;
 		}
 
 		private PathExpression tryPath() throws RDFParseException, IOException {

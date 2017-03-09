@@ -21,13 +21,6 @@ package io.konig.formula;
  */
 
 
-public class ConditionalOrExpression extends Expression {
-	
-
-	public ConditionalOrExpression(){}
-	
-	protected ConditionalOrExpression(Expression e) {
-		super(e);
-	}
+public interface BuiltInCall extends PrimaryExpression {
 
 }

@@ -6,6 +6,7 @@ import java.util.Calendar;
 
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.openrdf.model.Literal;
 
 /*
  * #%L
@@ -70,6 +71,24 @@ public class BeanUtil {
 		builder.append(StringUtil.capitalize(localName));
 		
 		return builder.toString();
+	}
+	
+	public static Object toJavaObject(Literal literal) {
+		URI datatype = literal.getDatatype();
+		if (XMLSchema.INT.equals(datatype)) {
+			return new Integer(literal.intValue());
+		}
+		if (XMLSchema.INTEGER.equals(datatype)) {
+			return new Long(literal.longValue());
+		}
+		if (XMLSchema.LONG.equals(datatype)) {
+			return new Long(literal.longValue());
+		}
+		if (datatype!=null && XMLSchema.NAMESPACE.equals(datatype.getNamespace())) {
+			return literal.stringValue();
+		}
+		
+		throw new KonigException("Unsupported datatype: " + datatype);
 	}
 	
 	public static Value toValue(Object object)  {

@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import io.konig.activity.Activity;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
+import io.konig.core.NameMap;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
@@ -59,6 +60,9 @@ import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
+import io.konig.formula.Expression;
+import io.konig.shacl.CompositeShapeVisitor;
+import io.konig.shacl.FormulaContextBuilder;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -120,6 +124,7 @@ public class WorkbookLoader {
 	private static final String EQUIVALENT_PATH = "Equivalent Path";
 	private static final String SOURCE_PATH = "Source Path";
 	private static final String PARTITION_OF = "Partition Of";
+	private static final String FORMULA = "Formula";
 
 	private static final String ENUMERATION_DATASOURCE_TEMPLATE = "enumerationDatasourceTemplate";
 	private static final String ENUMERATION_SHAPE_ID = "enumerationShapeId";
@@ -294,10 +299,11 @@ public class WorkbookLoader {
 		private int pcValueClassCol = UNDEFINED;
 		private int pcValueInCol = UNDEFINED;
 		private int pcCommentCol = UNDEFINED;
-		private int pcPredicateKindCol = UNDEFINED;
+		private int pcStereotypeCol = UNDEFINED;
 		private int pcEquivalentPathCol = UNDEFINED;
 		private int pcSourcePathCol = UNDEFINED;
 		private int pcPartitionOfCol = UNDEFINED;
+		private int pcFormulaCol = UNDEFINED;
 		
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
@@ -345,6 +351,8 @@ public class WorkbookLoader {
 			loadShapes();
 			produceEnumShapes();
 			processShapeTemplates();
+			visitShapes();
+			
 		}
 
 
@@ -390,6 +398,19 @@ public class WorkbookLoader {
 			loader.load(graph);
 		}
 
+
+		private void visitShapes() {
+
+			NameMap nameMap = new NameMap();
+			nameMap.addAll(graph);
+			ShapeVisitor visitor = new FormulaContextBuilder(nsManager, nameMap);
+			for (Shape shape : getShapeManager().listShapes()) {
+				visitor.visit(shape);
+			}
+			
+		}
+		
+		
 		private void produceEnumShapes() throws SpreadsheetException {
 			
 			try {
@@ -399,8 +420,9 @@ public class WorkbookLoader {
 				if (shapeIdTemplate != null) {
 					
 					List<String> dataSourceTemplates = enumDatasourceTemplates();
-					
+
 					ShapeProducer producer = new ShapeProducer(nsManager, getShapeManager());
+					
 					producer.setVisitor(new EnumShapeVistor(new ShapeWriter(), getShapeManager(), graph));
 					
 					EnumShapeGenerator generator = new EnumShapeGenerator(producer, getDataSourceGenerator());
@@ -682,7 +704,12 @@ public class WorkbookLoader {
 		}
 		
 		private int sheetType(Sheet sheet) {
-			Row header = sheet.getRow(sheet.getFirstRowNum());
+			int rowNum = sheet.getFirstRowNum();
+			
+			Row header = sheet.getRow(rowNum);
+			if (header == null) {
+				return 0;
+			}
 			
 			int colSize = header.getLastCellNum()+1;
 			
@@ -789,12 +816,14 @@ public class WorkbookLoader {
 			Literal minCount = intLiteral(row, pcMinCountCol);
 			Literal maxCount = intLiteral(row, pcMaxCountCol);
 			URI valueClass = uriValue(row, pcValueClassCol);
-			URI predicateKind = uriValue(row, pcPredicateKindCol);
+			URI stereotype = uriValue(row, pcStereotypeCol);
 			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
 			Literal equivalentPath = stringLiteral(row, pcEquivalentPathCol);
 			Literal sourcePath = stringLiteral(row, pcSourcePathCol);
 			Literal partitionOf = stringLiteral(row, pcPartitionOfCol);
+			Literal formula = stringLiteral(row, pcFormulaCol);
+			
 			
 			
 			Vertex prior = getPropertyConstraint(shapeId, propertyId);
@@ -840,8 +869,10 @@ public class WorkbookLoader {
 				
 			}
 			
+			URI property = Konig.derivedProperty.equals(stereotype) ? Konig.derivedProperty : SH.property;
+			
 			edge(shapeId, RDF.TYPE, SH.Shape);
-			edge(shapeId, SH.property, constraint);
+			edge(shapeId, property, constraint);
 			edge(constraint, SH.predicate, propertyId);
 			edge(constraint, RDFS.COMMENT, comment);
 			
@@ -862,9 +893,10 @@ public class WorkbookLoader {
 			edge(constraint, SH.uniqueLang, uniqueLang);
 			edge(constraint, SH.in, valueIn);
 			edge(constraint, Konig.equivalentPath, equivalentPath);
-			edge(constraint, Konig.stereotype, predicateKind);
+			edge(constraint, Konig.stereotype, stereotype);
 			edge(constraint, Konig.sourcePath, sourcePath);
 			edge(constraint, Konig.partitionOf, partitionOf);
+			edge(constraint, Konig.formula, formula);
 			
 			
 		}
@@ -999,7 +1031,8 @@ public class WorkbookLoader {
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
 			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol =
-				pcValueClassCol = pcPredicateKindCol = UNDEFINED;
+				pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = 
+				pcEquivalentPathCol= UNDEFINED;
 				
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1024,10 +1057,11 @@ public class WorkbookLoader {
 					case UNIQUE_LANG : pcUniqueLangCol = i; break;
 					case VALUE_CLASS : pcValueClassCol = i; break;
 					case VALUE_IN :	pcValueInCol = i; break;
-					case STEREOTYPE : pcPredicateKindCol = i; break;
+					case STEREOTYPE : pcStereotypeCol = i; break;
 					case EQUIVALENT_PATH : pcEquivalentPathCol = i; break;
 					case SOURCE_PATH : pcSourcePathCol = i; break;
 					case PARTITION_OF : pcPartitionOfCol = i; break;
+					case FORMULA : pcFormulaCol = i; break;
 						
 					}
 				}
@@ -1808,6 +1842,8 @@ public class WorkbookLoader {
 			return result;
 		}
 	}
+	
+	
 	
 	static class EnumShapeVistor implements ShapeVisitor {
 		

@@ -50,6 +50,23 @@ public class ShapeLoaderTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeLoader loader = new ShapeLoader(shapeManager);
 	
+	@Test
+	public void testDerivedProperty() throws Exception {
+
+		Graph graph = loadGraph("ShapeLoaderTest/testDerivedProperty.ttl");
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		loader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		List<PropertyConstraint> derived = shape.getDerivedProperty();
+		assertTrue(derived != null);
+		assertEquals(1, derived.size());
+		PropertyConstraint p =  derived.get(0);
+		assertEquals("happinessIndex",p.getPredicate().getLocalName());
+		assertEquals("1 + 2 + 3", p.getFormula().toString());
+	}
+	
 	@Test 
 	public void testIdFormat() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/PersonShape");

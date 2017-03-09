@@ -1,0 +1,67 @@
+@prefix schema: <http://schema.org/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix acme: <http://example.com/ns/acme/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix shape : <http://example.com/shapes/> .
+@prefix data : <http://example.com/resources/> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+
+shape:OriginPersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	konig:shapeDataSource [
+		a konig:AuthoritativeDataSource ;
+		a konig:GoogleBigQueryTable ;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "OriginPerson" 
+		]
+	] , [
+		a konig:GoogleCloudStorageBucket
+	];
+	sh:property [
+		sh:predicate schema:email ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string 
+	] , [
+		sh:predicate schema:award ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:string 
+	] ;
+	konig:derivedProperty [
+		sh:predicate schema:answerCount ;
+		sh:datatype xsd:int ;
+		sh:maxCount 1 ;
+		konig:formula '''
+			@context {
+			  "email" : "http://schema.org/email",
+			  "award" : "http://schema.org/award"
+			}
+			IF(email="alice@example.com", 1, 0)	+ IF(award="Best in Show", 1, 0)
+'''		
+	]
+.
+
+shape:TargetPersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:nodeKind sh:IRI ;
+	konig:shapeDataSource [
+		a konig:GoogleBigQueryTable ;
+		gcp:tableReference [
+			gcp:projectId "example" ;
+			gcp:datasetId "acme" ;
+			gcp:tableId   "Person" 
+		]
+	] ;
+	sh:property  [
+		sh:predicate schema:answerCount ;
+		sh:minCount 0 ;
+		sh:maxCount 1 ;
+		sh:datatype xsd:int
+	] 
+.

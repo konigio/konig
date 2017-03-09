@@ -22,8 +22,9 @@ package io.konig.formula;
 
 
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.io.PrettyPrintable;
 
-public enum AdditiveOperator implements Formula {
+public enum AdditiveOperator implements Formula, PrettyPrintable {
 
 	PLUS('+'),
 	MINUS('-')

@@ -45,6 +45,30 @@ public class QueryBuilderTest {
 	}
 	
 	@Test
+	public void testDerivedProperty() throws Exception {
+
+		loadShapes("QueryBuilderTest/testDerivedProperty.ttl");
+		
+		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
+		
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		
+		TransformFrame frame = frameBuilder.create(targetShape);
+		
+		SelectExpression dml = queryBuilder.selectExpression(frame);
+		assertTrue(dml != null);
+		
+		String actual = dml.toString();
+		
+		String expected = 
+			"SELECT\n" + 
+			"   IF(email=\"alice@example.com\" , 1 , 0) + IF(award=\"Best in Show\" , 1 , 0) AS answerCount\n" + 
+			"FROM acme.OriginPerson";
+		
+		assertEquals(expected, actual);
+	}
+	
+	@Test
 	public void testEnum() throws Exception {
 		loadShapes("QueryBuilderTest/testEnum.ttl");
 		
