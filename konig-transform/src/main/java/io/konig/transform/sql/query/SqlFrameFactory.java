@@ -39,11 +39,6 @@ public class SqlFrameFactory {
 		s.setTableList(joinList);
 		return s;
 	}
-	
-	
-
-
-
 
 
 	private SqlFrame produce(TransformFrame frame, ShapePath preferredShape, TableName preferredTable, MappedProperty joinProperty) throws ShapeTransformException {
@@ -74,6 +69,7 @@ public class SqlFrameFactory {
 					} else if (Konig.modified.equals(attr.getPredicate())) {
 						SqlAttribute a = new SqlAttribute(null, attr, current_date());
 						result.add(a);
+						
 					} else {
 						// Theoretically, should never get here.
 						throw new ShapeTransformException("Unsupported join condition: " + attr.getPredicate().stringValue());

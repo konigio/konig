@@ -23,6 +23,7 @@ package io.konig.shacl;
 
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.openrdf.model.Namespace;
@@ -55,18 +56,25 @@ public class FormulaContextBuilder implements ShapeVisitor {
 	public void visit(Shape shape) {
 		worker.setShape(shape);
 		
-		for (PropertyConstraint p : shape.getProperty()) {
-			Expression formula = p.getFormula();
-			if (formula != null) {
-				worker.setProperty(p);
-				formula.dispatch(worker);
-			}
-			
-		}
-		
+		visit(shape.getProperty());
+		visit(shape.getDerivedProperty());
 
 	}
 	
+	private void visit(List<PropertyConstraint> list) {
+		if (list != null) {
+			for (PropertyConstraint p : list) {
+				Expression formula = p.getFormula();
+				if (formula != null) {
+					worker.setProperty(p);
+					formula.dispatch(worker);
+				}
+				
+			}
+		}
+		
+	}
+
 	public interface Warning {
 	}
 	

@@ -21,6 +21,7 @@ import io.konig.core.path.Step;
 import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.formula.Expression;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -167,16 +168,30 @@ public class QueryBuilder {
 		String sourceName = null;
 		ValueExpression result = attr.getValueExpression();
 		String targetName = attribute.getPredicate().getLocalName();
+		PropertyConstraint p = mappedProperty==null ? null : mappedProperty.getProperty();
 		
 		if (result != null) {
 			result = new AliasExpression(result, targetName);
+			
+		} else if (p!=null && p.getFormula()!=null) {
+			SqlFormulaFactory factory = new SqlFormulaFactory();
+			result = factory.formula(sourceTable, p);
+			result = new AliasExpression(result, targetName);
+			
 		} else if (embedded == null) {
 			if (mappedProperty.isLeaf()) {
-				sourceName = mappedProperty.getProperty().getPredicate().getLocalName();
-				result = sourceTable.column(sourceName);
+				
+
+				sourceName = p.getPredicate().getLocalName();
+				
+				result = (p.getFormula()==null) ? 
+					sourceTable.column(sourceName) :
+					formula(p.getFormula());
+					
 				if (!targetName.equals(sourceName)) {
 					result = new AliasExpression(result, targetName);
 				}
+				
 			} else if (mappedProperty.getTemplateInfo() != null) {
 				FunctionExpression func = QueryBuilder.idValue(null, mappedProperty.getTemplateInfo());
 				result = new AliasExpression(func, targetName);
@@ -200,6 +215,11 @@ public class QueryBuilder {
 		}
 
 		return result;
+	}
+
+	private ColumnExpression formula(Expression formula) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	private ValueExpression iriRef(SqlAttribute attr, String targetName) {

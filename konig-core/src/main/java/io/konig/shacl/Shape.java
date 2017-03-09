@@ -55,6 +55,7 @@ public class Shape {
 	private Resource id;
 	private URI targetClass;
 	private List<PropertyConstraint> property;
+	private List<PropertyConstraint> derivedProperty;
 	private Constraint constraint;
 	private Context jsonldContext;
 	private URI equivalentRelationalShape;
@@ -470,7 +471,19 @@ public class Shape {
 	public void setUpdateWhen(Expression updateWhen) {
 		this.updateWhen = updateWhen;
 	}
+
+	public List<PropertyConstraint> getDerivedProperty() {
+		return derivedProperty;
+	}
+
+	public void setDerivedProperty(List<PropertyConstraint> derivedProperty) {
+		this.derivedProperty = derivedProperty;
+	}
 	
-	
-	
+	public void addDerivedProperty(PropertyConstraint p) {
+		if (derivedProperty == null) {
+			derivedProperty = new ArrayList<>();
+		}
+		derivedProperty.add(p);
+	}
 }

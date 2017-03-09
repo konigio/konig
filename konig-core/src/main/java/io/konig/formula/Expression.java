@@ -48,12 +48,17 @@ public class Expression extends AbstractFormula {
 			context = self.getContext();
 			
 		} catch (RDFParseException | IOException e) {
-			throw new KonigException(e);
+			throw new KonigException("Failed to parse Expression: " + text, e);
 		}
 	}
 	
 	public Expression() {
 		 orList = new ArrayList<>();
+	}
+	
+	protected Expression(Expression e) {
+		context = e.context;
+		orList = e.orList;
 	}
 	
 	public Context getContext() {
@@ -84,7 +89,11 @@ public class Expression extends AbstractFormula {
 			}
 			
 		}
-		
+		printOrList(out);
+	}
+	
+	protected void printOrList(PrettyPrintWriter out) {
+
 		String operator = "";
 		for (ConditionalAndExpression e : orList) {
 			out.print(operator);
@@ -136,9 +145,7 @@ public class Expression extends AbstractFormula {
 				count++;
 			}
 		}
-		
 		return count;
-		
 	}
 
 	public Value toValue() {

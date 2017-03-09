@@ -33,6 +33,34 @@ public class FormulaParserTest {
 	private FormulaParser parser = new FormulaParser();
 	
 	@Test
+	public void testIfPlus() throws Exception {
+		String text = 
+			"IF(reviewer0Approved, 1, 0)\n" + 
+			"+ IF(reviewer1Approved, 1, 0)\n" + 
+			"+ IF(reviewer2Approved, 1, 0)\n" + 
+			"+ IF(reviewer3Approved, 1, 0)";
+
+		Expression e = parser.parse(text);
+		String actual = e.toString();
+		
+		String expected = "IF(reviewer0Approved , 1 , 0) + IF(reviewer1Approved , 1 , 0) + IF(reviewer2Approved , 1 , 0) + IF(reviewer3Approved , 1 , 0)";
+		assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void testIfFunction() throws Exception {
+		
+		String text = "@context {\n" + 
+			"   \"email\" : \"http://schema.org/email\"\n" + 
+			"}\n" + 
+			"IF(email , 1 , 0)";
+		
+		Expression e = parser.parse(text);
+		String actual = e.toString();
+		assertEquals(text, actual);
+	}
+	
+	@Test
 	public void testNotEquals() throws Exception {
 		String text = 
 			"@context {\n" + 

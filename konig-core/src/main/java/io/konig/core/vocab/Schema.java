@@ -108,6 +108,7 @@ public class Schema {
 	public static final URI hoursAvailable = new URIImpl("http://schema.org/hoursAvailable");
 	public static final URI opens = new URIImpl("http://schema.org/opens");
 	public static final URI closes = new URIImpl("http://schema.org/closes");
+	public static final URI answerCount = new URIImpl("http://schema.org/answerCount");
 	
 	
 

@@ -1,4 +1,4 @@
-package io.konig.formula;
+package io.konig.shacl;
 
 /*
  * #%L
@@ -21,13 +21,18 @@ package io.konig.formula;
  */
 
 
-public class ConditionalOrExpression extends Expression {
-	
+import java.util.ArrayList;
 
-	public ConditionalOrExpression(){}
-	
-	protected ConditionalOrExpression(Expression e) {
-		super(e);
+public class CompositeShapeVisitor extends ArrayList<ShapeVisitor> implements ShapeVisitor {
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	public void visit(Shape shape) {
+		
+		for (ShapeVisitor v : this) {
+			v.visit(shape);
+		}
+
 	}
 
 }

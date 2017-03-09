@@ -61,7 +61,7 @@ UnaryExpression	  ::=
 	|	'-' PrimaryExpression 
 	|	PrimaryExpression
 	
-PrimaryExpression	  ::=  	BrackettedExpression | Path | Literal
+PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | Path | Literal
 
 BrackettedExpression	  ::=  	'(' Expression ')'
 
@@ -72,3 +72,5 @@ PathTerm ::= IRI | CURIE | LocalName
 OutStep ::= '.' PathTerm
 
 InStep ::= '^' PathTerm
+
+BuiltInCall ::= 'IF' '(' Expression ',' Expression ',' Expression ',' ')'

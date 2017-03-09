@@ -112,9 +112,10 @@ public class MappedProperty extends AbstractPrettyPrintable {
 		} else {
 			out.println(template.getTemplate().toString());
 		}
-		
-		
-		
+	}
+	
+	public boolean isDerivedProperty() {
+		return property!=null && property.getFormula()!=null;
 	}
 	
 }

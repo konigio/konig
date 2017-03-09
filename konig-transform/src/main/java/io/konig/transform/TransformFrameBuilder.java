@@ -1,5 +1,6 @@
 package io.konig.transform;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,28 +102,34 @@ public class TransformFrameBuilder {
 		
 		
 		private void addSourceShape(String targetContext, TransformFrame frame, Shape sourceShape) throws ShapeTransformException {
+			addSourceShape(targetContext, frame, sourceShape, sourceShape.getProperty());
+			addSourceShape(targetContext, frame, sourceShape, sourceShape.getDerivedProperty());
+		}
+
+		private void addSourceShape(String targetContext, TransformFrame frame, Shape sourceShape, List<PropertyConstraint> propertyList) throws ShapeTransformException {
 			
-			for (PropertyConstraint p : sourceShape.getProperty()) {
-				URI predicate = p.getPredicate();
-				if (predicate != null) {
-					Path path = p.getCompiledEquivalentPath(pathFactory);
-					if (path == null) {
-						TransformAttribute attr = frame.getAttribute(predicate);
-						if (attr != null) {
-							MappedProperty m = new MappedProperty(new ShapePath(targetContext, sourceShape), p);
-							attr.add(m);
-							
-							TransformFrame childFrame = attr.getEmbeddedFrame();
-							if (childFrame != null) {
-								Shape childShape = p.getShape();
-								if (childShape != null) {
-									addSourceShape(targetContext, childFrame, childShape);
+			if (propertyList != null) {
+				for (PropertyConstraint p : propertyList) {
+					URI predicate = p.getPredicate();
+					if (predicate != null) {
+						Path path = p.getCompiledEquivalentPath(pathFactory);
+						if (path == null) {
+							TransformAttribute attr = frame.getAttribute(predicate);
+							if (attr != null) {
+								MappedProperty m = new MappedProperty(new ShapePath(targetContext, sourceShape), p);
+								attr.add(m);
+								
+								TransformFrame childFrame = attr.getEmbeddedFrame();
+								if (childFrame != null) {
+									Shape childShape = p.getShape();
+									if (childShape != null) {
+										addSourceShape(targetContext, childFrame, childShape);
+									}
 								}
 							}
+						} else {
+							handlePath(targetContext, frame, sourceShape, p, path);
 						}
-					} else {
-						handlePath(targetContext, frame, sourceShape, p, path);
-						
 					}
 				}
 			}

@@ -1,0 +1,13 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <http://example.com/ns/> .
+
+shape:PersonShape a sh:Shape ;
+	konig:derivedProperty [
+		sh:predicate ex:happinessIndex ;
+		sh:datatype xsd:int ;
+		konig:formula "1 + 2 + 3"
+	]
+.

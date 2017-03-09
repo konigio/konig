@@ -21,13 +21,16 @@ package io.konig.formula;
  */
 
 
-public class ConditionalOrExpression extends Expression {
-	
+import io.konig.core.io.PrettyPrintWriter;
 
-	public ConditionalOrExpression(){}
-	
-	protected ConditionalOrExpression(Expression e) {
+public class BareExpression extends ConditionalOrExpression {
+
+	public BareExpression(ConditionalOrExpression e) {
 		super(e);
 	}
-
+	
+	@Override
+	public void print(PrettyPrintWriter out) {
+		printOrList(out);
+	}
 }
