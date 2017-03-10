@@ -91,27 +91,16 @@ public class MappedProperty extends AbstractPrettyPrintable {
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		out.indent();
-		out.print("property: <");
-		if (property.getPredicate() != null) {
+		out.beginObject(this);
+		if (property != null) {
+			out.fieldName("property");
 			out.print(property.getPredicate().stringValue());
 		}
-		out.println(">");
-		out.indent();
-		out.println("shapePath:");
-		out.pushIndent();
-		out.println(shapePath);
-		out.popIndent();
-		out.indent();
-		out.print("stepIndex: ");
-		out.println(stepIndex);
-		out.indent();
-		out.print("template: ");
-		if (template == null) {
-			out.println("null");
-		} else {
-			out.println(template.getTemplate().toString());
-		}
+		out.field("shapePath", shapePath);
+		out.field("stepIndex", stepIndex);
+		out.field("template", template);
+		out.field("templateShape", templateShape);
+		out.endObject();
 	}
 	
 	public boolean isDerivedProperty() {

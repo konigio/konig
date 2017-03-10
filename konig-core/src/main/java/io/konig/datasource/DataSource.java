@@ -86,7 +86,7 @@ public class DataSource {
 	
 	@Override
 	public int hashCode() {
-		return id.hashCode();
+		return id==null ? super.hashCode() : id.hashCode();
 	}
 
 	@Override

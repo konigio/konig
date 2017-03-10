@@ -197,9 +197,12 @@ public class QueryBuilder {
 				result = new AliasExpression(func, targetName);
 			} else {
 				
-				result = enumValue(attr, targetName);
+				result = enumValue(attr, targetName, false);
 				if (result == null) {
 					result = iriRef(attr, targetName);
+				}
+				if (result == null) {
+					result = incompletePath(attr, targetName);
 				}
 			}
 			
@@ -215,6 +218,38 @@ public class QueryBuilder {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Compute the ValueExpression in the case where the SqlAttribute
+	 * is defined by a MappedProperty that corresponds to a portion of 
+	 * the equivalentPath.
+	 * @param attr
+	 * @param targetName
+	 * @return
+	 * @throws ShapeTransformException 
+	 */
+	private ValueExpression incompletePath(SqlAttribute attr, String targetName) throws ShapeTransformException {
+		
+		MappedProperty m = attr.getMappedProperty();
+		if (m != null) {
+			int stepIndex = m.getStepIndex();
+			if (stepIndex > 0) {
+				Path path = m.getProperty().getCompiledEquivalentPath();
+				if (stepIndex < path.length()-1) {
+					PropertyConstraint targetConstraint = attr.getAttribute().getTargetProperty();
+					Resource valueClass = targetConstraint.getValueClass();
+					if (valueClass != null) {
+						if (reasoner.isSubClassOf(valueClass, Schema.Enumeration)) {
+							return enumValue(attr, targetName, true);
+						}
+					}
+					
+					throw new ShapeTransformException("Unsupported expression: " + targetConstraint.getPredicate().stringValue());
+				}
+			}
+		}
+		return null;
 	}
 
 	private ColumnExpression formula(Expression formula) {
@@ -466,17 +501,17 @@ public class QueryBuilder {
 
 
 	
-	private ValueExpression enumValue(SqlAttribute attr, String aliasName) {
+	private ValueExpression enumValue(SqlAttribute attr, String aliasName, boolean force) {
 		MappedProperty m = attr.getMappedProperty();
 		PropertyConstraint p = m.getProperty();
 		if (p != null) {
 			Path path = p.getCompiledEquivalentPath();
-			if (path != null && path.length()==2) {
+			if (path != null && (path.length()==2 || force)) {
 				PropertyConstraint q = attr.getAttribute().getTargetProperty();
 				if (q != null) {
 					Resource targetClass = q.getValueClass();
-					if (targetClass != null && reasoner.isSubClassOf(targetClass, Schema.Enumeration)) {
-						Step step = path.asList().get(1);
+					if (targetClass != null && (force || reasoner.isSubClassOf(targetClass, Schema.Enumeration))) {
+						Step step = path.asList().get(path.length()-1);
 						
 						if (step instanceof OutStep) {
 

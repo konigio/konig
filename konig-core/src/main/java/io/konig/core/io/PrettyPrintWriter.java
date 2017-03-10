@@ -140,4 +140,40 @@ public class PrettyPrintWriter extends PrintWriter {
 		println();
 	}
 	
+	public void fieldName(String name) {
+		indent();
+		print(name);
+		print(' ');
+	}
+	
+	public void beginObject(Object pojo) {
+		if (pojo == null) {
+			println("null");
+		} else {
+			Class<?> type = pojo.getClass();
+			print(type.getSimpleName());
+			print(':');
+			println(pojo.hashCode());
+		}
+		pushIndent();
+	}
+	
+	public void endObject() {
+		popIndent();
+	}
+
+	public void field(String fieldName, Object object) {
+		indent();
+		print(fieldName);
+		print(' ');
+		println(object);
+	}
+	
+	public void field(String fieldName, PrettyPrintable object) {
+		indent();
+		print(fieldName);
+		print(' ');
+		println(object);
+	}
+	
 }

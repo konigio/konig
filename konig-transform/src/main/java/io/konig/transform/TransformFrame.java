@@ -10,6 +10,8 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.io.AbstractPrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -29,7 +31,7 @@ import io.konig.shacl.Shape;
  * @author Greg McFall
  *
  */
-public class TransformFrame {
+public class TransformFrame extends AbstractPrettyPrintable {
 	private Shape targetShape;
 	private Map<URI, TransformAttribute> attributes = new LinkedHashMap<>();
 	private Map<Shape, MappedId> idMap = new HashMap<>();
@@ -91,15 +93,6 @@ public class TransformFrame {
 		return attributes.values();
 	}
 	
-	public String toString() {
-		StringWriter buffer = new StringWriter();
-		TransformFrameWriter writer = new TransformFrameWriter(buffer);
-		writer.write(this);
-		
-		
-		return buffer.toString();
-	}
-	
 	public void countShapes() {
 		if (!countedShapes) {
 			countedShapes = true;
@@ -114,6 +107,22 @@ public class TransformFrame {
 				}
 			}
 		}
+	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		
+		out.beginObject(this);
+		out.fieldName("attributes");
+		out.println();
+		out.pushIndent();
+		for (TransformAttribute a : attributes.values()) {
+			out.indent();
+			out.print(a);
+		}
+		out.popIndent();
+		out.endObject();
+		
 	}
 
 }
