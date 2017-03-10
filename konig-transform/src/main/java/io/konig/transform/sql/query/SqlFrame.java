@@ -7,7 +7,7 @@ import org.openrdf.model.URI;
 
 import io.konig.transform.TransformFrame;
 
-public class SqlFrame {
+public class SqlFrame  {
 	
 	private TransformFrame transformFrame;
 	private List<SqlAttribute> attributes = new ArrayList<>();
@@ -45,5 +45,6 @@ public class SqlFrame {
 	public TransformFrame getTransformFrame() {
 		return transformFrame;
 	}
+	
 	
 }

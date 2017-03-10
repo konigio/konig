@@ -9,8 +9,10 @@ import java.io.StringWriter;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -19,7 +21,9 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.path.PathFactory;
+import io.konig.core.vocab.Schema;
 import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -27,6 +31,8 @@ import io.konig.shacl.io.ShapeLoader;
 import io.konig.sql.query.BigQueryCommandLine;
 import io.konig.sql.query.DmlExpression;
 import io.konig.sql.query.SelectExpression;
+import io.konig.transform.MappedProperty;
+import io.konig.transform.TransformAttribute;
 import io.konig.transform.TransformFrame;
 import io.konig.transform.TransformFrameBuilder;
 
@@ -42,6 +48,64 @@ public class QueryBuilderTest {
 	@Before
 	public void setUp() {
 		GcpShapeConfig.init();
+	}
+	
+	@Test
+	public void testTypeOfNestedRecord() throws Exception {
+		loadShapes("QueryBuilderTest/testTypeOfNestedRecord.ttl");
+		
+		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
+		
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		
+		TransformFrame frame = frameBuilder.create(targetShape);
+		
+		// Let's validate that we are getting the expected SqlFrame...
+//		SqlFrameFactory sqlFactory = new SqlFrameFactory();
+//		SqlFrame sqlFrame = sqlFactory.create(frame);
+//		
+//		SqlAttribute worksFor = sqlFrame.getAttributes().get(0);
+//		assertEquals(Schema.worksFor, worksFor.getAttribute().getPredicate());
+//		
+//		URI employerType = uri("http://example.com/alias/employerType");
+//		MappedProperty m = worksFor.getMappedProperty();
+//		assertEquals(employerType, m.getProperty().getPredicate());
+//		assertEquals(0, m.getStepIndex());
+//		
+//		SqlFrame worksForFrame = worksFor.getEmbedded();
+//		assertTrue(worksForFrame != null);
+//		
+//		SqlAttribute type = worksForFrame.getAttributes().get(0);
+//		assertEquals(RDF.TYPE, type.getAttribute().getPredicate());
+//		
+//		m = type.getMappedProperty();
+//		assertEquals(employerType, m.getProperty().getPredicate());
+//		assertEquals(1, m.getStepIndex());
+//		
+//		TransformAttribute typeTarget = type.getAttribute();
+//		PropertyConstraint p = typeTarget.getTargetProperty();
+//		Resource valueClass = p.getValueClass();
+//		URI organizationType = uri("http://example.com/ns/OrganizationType");
+//		assertEquals(organizationType, valueClass);
+		
+	
+		
+		SelectExpression dml = queryBuilder.selectExpression(frame);
+		assertTrue(dml != null);
+		
+		String actual = dml.toString();
+		
+		String expected = 
+			"SELECT\n" + 
+			"   STRUCT(\n" + 
+			"      CASE employerType\n" + 
+			"         WHEN \"edu\" THEN \"EducationalOrganization\"\n" + 
+			"         WHEN \"com\" THEN \"Corporation\"\n" + 
+			"      END AS type\n" + 
+			"   ) AS worksFor\n" + 
+			"FROM ex.SourcePersonShape";
+		
+		assertEquals(expected, actual);
 	}
 	
 	@Test

@@ -8,6 +8,8 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.io.AbstractPrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -29,7 +31,7 @@ import io.konig.shacl.Shape;
  * @author Greg McFall
  *
  */
-public class TransformAttribute {
+public class TransformAttribute extends AbstractPrettyPrintable {
 	
 	private PropertyConstraint property;
 	private Map<ShapePath, MappedProperty> propertyMap = new HashMap<>();
@@ -104,5 +106,22 @@ public class TransformAttribute {
 		builder.append(property.getPredicate().stringValue());
 		builder.append(")");
 		return builder.toString();
+	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.beginObject(this);
+		
+		out.field("embeddedFrame", embeddedFrame);
+		out.fieldName("property");
+		out.beginObject(property);
+		out.field("predicate", property.getPredicate().stringValue());
+		out.field("equivalentPath", property.getEquivalentPath());
+		out.endObject();
+		
+		
+		out.endObject();
+		
+		
 	}
 }

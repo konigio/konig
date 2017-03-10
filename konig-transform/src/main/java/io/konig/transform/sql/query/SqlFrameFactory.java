@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.openrdf.model.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
@@ -22,6 +24,8 @@ import io.konig.transform.TransformAttribute;
 import io.konig.transform.TransformFrame;
 
 public class SqlFrameFactory {
+	
+	private static final Logger logger = LoggerFactory.getLogger(SqlFrameFactory.class);
 	
 	private ValueExpression currentDate = null;
 	
@@ -87,7 +91,8 @@ public class SqlFrameFactory {
 				if (m == null) {
 					// The preferred table does not contain a reference to the nested structure
 					// TODO: Implement a join to get the nested structure
-					throw new ShapeTransformException("Unsupported join condition");
+					logger.warn("Unsupported join condition for frame " + frame.getTargetShape().getId());
+					continue;
 				} else {
 					
 					MappedProperty best = attr.bestProperty();

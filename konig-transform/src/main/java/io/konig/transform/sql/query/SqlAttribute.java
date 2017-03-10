@@ -1,15 +1,39 @@
 package io.konig.transform.sql.query;
 
+import io.konig.core.io.AbstractPrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
 import io.konig.sql.query.ValueExpression;
 import io.konig.transform.MappedProperty;
 import io.konig.transform.TransformAttribute;
 
-public class SqlAttribute  {
+public class SqlAttribute extends AbstractPrettyPrintable  {
 
+	/**
+	 * The table from which this attribute is sourced.
+	 */
 	private TableName sourceTable;
+	
+	/**
+	 * A description of the target attribute
+	 */
 	private TransformAttribute attribute;
+	
+	/**
+	 * A description of the property from the source table that provides 
+	 * the value of the target attribute
+	 */
 	private MappedProperty mappedProperty;
+	
+	/**
+	 * If the target attribute is a nested record, this frame
+	 * provides a description of that record.
+	 */
 	private SqlFrame embedded;
+	
+	/**
+	 * An expression that represents a derived value for the
+	 * target attribute.
+	 */
 	private ValueExpression valueExpression;
 
 	public SqlAttribute(TableName sourceTable, TransformAttribute attribute, MappedProperty mappedProperty) {
@@ -49,5 +73,20 @@ public class SqlAttribute  {
 	public ValueExpression getValueExpression() {
 		return valueExpression;
 	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		
+		out.beginObject(this);
+		out.field("attribute", attribute);
+		out.field("embedded", embedded);
+		out.field("mappedProperty", mappedProperty);
+		out.field("sourceTable", sourceTable);
+		out.field("valueExpression", valueExpression);
+		
+		out.popIndent();
+		
+	}
+
 	
 }
