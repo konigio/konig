@@ -49,6 +49,38 @@ public class QueryBuilderTest {
 	public void setUp() {
 		GcpShapeConfig.init();
 	}
+
+	@Test
+	public void testJoinPersonOrgName() throws Exception {
+		loadShapes("QueryBuilderTest/testJoinPersonOrgName.ttl");
+		
+		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
+		
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		
+		TransformFrame frame = frameBuilder.create(targetShape);
+	
+		
+		SelectExpression dml = queryBuilder.selectExpression(frame);
+		assertTrue(dml != null);
+		
+		String actual = dml.toString();
+		
+		String expected = 
+			"SELECT\n" + 
+			"   CONCAT(\"http://example.com/person/\", a.ldapKey) AS id,\n" + 
+			"   STRUCT(\n" + 
+			"      b.name\n" + 
+			"   ) AS worksFor\n" + 
+			"FROM \n" + 
+			"   ex.SourcePersonShape AS a\n" + 
+			" JOIN\n" + 
+			"   ex.Organization AS b\n" + 
+			" ON\n" + 
+			"   a.employerKey=b.id";
+		
+		assertEquals(expected, actual);
+	}
 	
 	@Test
 	public void testTypeOfNestedRecord() throws Exception {
@@ -323,24 +355,7 @@ public class QueryBuilderTest {
 		assertEquals(expected, actual);
 		
 	}
-	
-	@Ignore
-	public void testJoinedIriTemplate() throws Exception {
 
-		loadGraph("QueryBuilderTest/testJoinedIriTemplate.ttl");
-		
-		Shape targetShape = shapeManager.getShapeById(uri("http://example.com/shapes/TargetCreativeWorkShape"));
-		
-		TransformFrame frame = frameBuilder.create(targetShape);
-		SelectExpression select = queryBuilder.selectExpression(frame);
-		
-		String expected = 
-			"";
-		String actual = toText(select);
-		
-		
-		assertEquals(expected, actual);
-	}
 	
 	@Test
 	public void testIriReference() throws Exception {

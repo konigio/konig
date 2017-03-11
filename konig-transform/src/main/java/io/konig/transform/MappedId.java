@@ -9,9 +9,9 @@ import io.konig.shacl.Shape;
  *
  */
 public class MappedId {
-	private Shape sourceShape;
+	private ShapePath sourceShape;
 	private IriTemplateInfo templateInfo;
-	public MappedId(Shape sourceShape, IriTemplateInfo templateInfo) {
+	public MappedId(ShapePath sourceShape, IriTemplateInfo templateInfo) {
 		this.sourceShape = sourceShape;
 		this.templateInfo = templateInfo;
 	}
@@ -20,6 +20,10 @@ public class MappedId {
 	 * Get the source shape from which an IRI may be generated.
 	 */
 	public Shape getSourceShape() {
+		return sourceShape.getShape();
+	}
+	
+	public ShapePath getShapePath() {
 		return sourceShape;
 	}
 	

@@ -5,6 +5,9 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 
+import io.konig.transform.MappedId;
+import io.konig.transform.ShapePath;
+import io.konig.transform.ShapeTransformException;
 import io.konig.transform.TransformFrame;
 
 public class SqlFrame  {
@@ -44,6 +47,22 @@ public class SqlFrame  {
 
 	public TransformFrame getTransformFrame() {
 		return transformFrame;
+	}
+
+	public TableName getTableName(MappedId mappedId) throws ShapeTransformException {
+		ShapePath s = mappedId.getShapePath();
+		for (JoinInfo join : tableList) {
+			ShapePath p = join.getLeftShapePath();
+			if (s.equals(p)) {
+				return join.getLeftTable();
+			}
+			p = join.getRightShapePath();
+			if (s.equals(p)) {
+				return join.getRightTable();
+			}
+			
+		}
+		throw new ShapeTransformException("Failed to find TableName for shape: " + transformFrame.getTargetShape().getId().stringValue());
 	}
 	
 	

@@ -33,6 +33,14 @@ public class IriTemplateInfo extends ArrayList<IriTemplateElement> {
 	}
 
 
+	/** 
+	 * TODO: Don't pass a NamespaceManager. It is not necessary since an IriTemplate now has a Context.
+	 * @param template
+	 * @param nsManager
+	 * @param shape
+	 * @return
+	 * @throws ShapeTransformException
+	 */
 	public static IriTemplateInfo create(IriTemplate template, NamespaceManager nsManager, Shape shape) throws ShapeTransformException {
 		
 		Context context = template.getContext();

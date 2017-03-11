@@ -82,7 +82,7 @@ public class TransformFrameBuilder {
 			List<Shape> list = shapeManager.getShapesByTargetClass(targetClass);
 			for (Shape sourceShape : list) {
 				if (sourceShape != targetShape) {
-					addIdMapping(frame, sourceShape);
+					addIdMapping(targetContext, frame, sourceShape);
 					addSourceShape(targetContext, frame, sourceShape);
 				}
 			}
@@ -90,12 +90,13 @@ public class TransformFrameBuilder {
 		}
 		
 		
-		private void addIdMapping(TransformFrame frame, Shape sourceShape) throws ShapeTransformException {
+		private void addIdMapping(String targetContext, TransformFrame frame, Shape sourceShape) throws ShapeTransformException {
 			
 			IriTemplate template = sourceShape.getIriTemplate();
 			if (template != null) {
 				IriTemplateInfo info = IriTemplateInfo.create(template, pathFactory.getNamespaceManager(), sourceShape);
-				frame.addIdMapping(new MappedId(sourceShape, info));
+				ShapePath shapePath = new ShapePath(targetContext, sourceShape);
+				frame.addIdMapping(new MappedId(shapePath, info));
 			}
 			
 		}
