@@ -49,6 +49,31 @@ public class QueryBuilderTest {
 	public void setUp() {
 		GcpShapeConfig.init();
 	}
+	
+	@Test
+	public void testModifiedTimestamp() throws Exception {
+		loadShapes("QueryBuilderTest/testModifiedTimestamp.ttl");
+		
+		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
+		
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		
+		TransformFrame frame = frameBuilder.create(targetShape);
+	
+		
+		SelectExpression dml = queryBuilder.selectExpression(frame);
+		assertTrue(dml != null);
+		
+		String actual = dml.toString();
+		
+		String expected = 
+			"SELECT\n" + 
+			"   CONCAT(\"http://example.com/person/\", ldapKey) AS id,\n" + 
+			"   TIMESTAMP(\"{modified}\") AS modified\n" + 
+			"FROM ex.SourcePersonShape";
+		
+		assertEquals(expected, actual);
+	}
 
 	@Test
 	public void testJoinPersonOrgName() throws Exception {
