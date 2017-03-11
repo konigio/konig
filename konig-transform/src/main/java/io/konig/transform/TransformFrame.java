@@ -70,6 +70,12 @@ public class TransformFrame extends AbstractPrettyPrintable {
 				}
 			}
 		}
+		if (best == null) {
+			for (MappedId mappedId : idMap.values()) {
+				best = mappedId.getShapePath();
+				break;
+			}
+		}
 		return best;
 	}
 	

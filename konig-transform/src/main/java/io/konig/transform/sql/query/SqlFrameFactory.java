@@ -16,6 +16,7 @@ import io.konig.datasource.TableDataSource;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.FunctionExpression;
+import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.ValueExpression;
 import io.konig.transform.MappedProperty;
 import io.konig.transform.ShapePath;
@@ -27,11 +28,15 @@ public class SqlFrameFactory {
 	
 	private static final Logger logger = LoggerFactory.getLogger(SqlFrameFactory.class);
 	
-	private ValueExpression currentDate = null;
+	private FunctionExpression currentDate = null;
 	
 	private int tableCount = 0;
 	private Map<ShapePath,TableName> tableMap = new HashMap<>();
 	private List<JoinInfo> joinList = new ArrayList<>();
+	
+	public SqlFrameFactory() {
+		
+	}
 
 	public SqlFrame create(TransformFrame frame) throws ShapeTransformException {
 		frame.countShapes();
@@ -70,7 +75,7 @@ public class SqlFrameFactory {
 						SqlAttribute a = new SqlAttribute(nextTable, attr, best);
 						result.add(a);
 						
-					} else if (Konig.modified.equals(attr.getPredicate())) {
+					} else if (attr.getPredicate().getLocalName().equals("modified")) {
 						SqlAttribute a = new SqlAttribute(null, attr, current_date());
 						result.add(a);
 						
@@ -126,7 +131,8 @@ public class SqlFrameFactory {
 
 	private ValueExpression current_date() {
 		if (currentDate == null) {
-			currentDate = new FunctionExpression("CURRENT_DATE");
+			currentDate = new FunctionExpression("TIMESTAMP");
+			currentDate.addArg(new StringLiteralExpression("{modified}"));
 		}
 		return currentDate;
 	}
