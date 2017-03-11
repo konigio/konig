@@ -65,7 +65,7 @@ public class SqlFrameFactory {
 						
 						TableName nextTable = preferredTable;
 						if (!compatible(joinProperty, best)) {
-							nextTable = tableName(preferredShape.getShape(), joinProperty, preferredTable, best.getShapePath(), best);
+							nextTable = tableName(preferredShape, joinProperty, preferredTable, best.getShapePath(), best);
 						}
 						SqlAttribute a = new SqlAttribute(nextTable, attr, best);
 						result.add(a);
@@ -104,7 +104,7 @@ public class SqlFrameFactory {
 						
 					} else {
 						
-						TableName nextTable = tableName(preferredShape.getShape(), m, preferredTable, best.getShapePath(), best);
+						TableName nextTable = tableName(preferredShape, m, preferredTable, best.getShapePath(), best);
 						SqlAttribute a = new SqlAttribute(nextTable, attr, best);
 						SqlFrame s = produce(childFrame, best.getShapePath(), nextTable, m);
 						a.setEmbedded(s);
@@ -169,7 +169,7 @@ public class SqlFrameFactory {
 
 
 	private TableName tableName(
-		Shape leftShape,
+		ShapePath leftShape,
 		MappedProperty leftProperty, 
 		TableName leftTable, 
 		ShapePath rightShapePath,

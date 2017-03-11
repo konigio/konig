@@ -18,6 +18,7 @@ import io.konig.core.Path;
 import io.konig.core.Vertex;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
+import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
@@ -270,14 +271,15 @@ public class QueryBuilder {
 		return null;
 	}
 
-	private void addIdAttribute(SqlFrame s, SelectExpression select) {
+	private void addIdAttribute(SqlFrame s, SelectExpression select) throws ShapeTransformException {
 		TransformFrame frame = s.getTransformFrame();
 		MappedId mappedId = frame.getMappedId();
 		if (mappedId != null) {
 			
 			IriTemplateInfo templateInfo = mappedId.getTemplateInfo();
 			if (templateInfo != null) {
-				addIriReference(select, templateInfo, idColumnName);
+				TableName tableName = s.getTableName(mappedId);
+				addIriReference(tableName, select, templateInfo, idColumnName);
 			}
 		} else {
 			Shape shape = frame.getTargetShape();
@@ -428,7 +430,7 @@ public class QueryBuilder {
 				if (leftProperty != null) {
 					leftColumn = leftTableName.column(leftProperty.getProperty());
 				} else {
-					Shape leftShape = joinInfo.getLeftShape();
+					Shape leftShape = joinInfo.getLeftShapePath().getShape();
 					if (leftShape.getNodeKind() == NodeKind.IRI) {
 						leftColumn = leftTableName.column("id");
 					} else if (leftShape.getIriTemplate()!=null) {
@@ -449,13 +451,19 @@ public class QueryBuilder {
 					rightValue = rightTableName.column("id");
 				} else {
 					MappedProperty rightProperty = joinInfo.getRightProperty();
-					if (rightProperty == null || rightProperty.getTemplateInfo()==null) {
-						throw new ShapeTransformException(
-							"Expected Shape to have nodeKind=IRI or define an IRI template: " +
-							rightShape.getId().stringValue());
+					IriTemplateInfo template = rightProperty.getTemplateInfo();
+					if (template == null) {
+						IriTemplate t = rightShape.getIriTemplate();
+						if (t != null) {
+							template = IriTemplateInfo.create(t, null, rightShape);
+						} else {
+							throw new ShapeTransformException(
+									"Expected Shape to have nodeKind=IRI or define an IRI template: " +
+									rightShape.getId().stringValue());
+						}
 					}
 					
-					rightValue = idValue(rightTableName, rightProperty.getTemplateInfo());
+					rightValue = idValue(rightTableName, template);
 				}
 				
 				TableItemExpression rightItem = rightTableName.getItem();
@@ -589,9 +597,9 @@ public class QueryBuilder {
 		return func;
 	}
 
-	private void addIriReference(ValueContainer container, IriTemplateInfo templateInfo, String aliasName) {
+	private void addIriReference(TableName tableName, ValueContainer container, IriTemplateInfo templateInfo, String aliasName) {
 		
-		FunctionExpression func = idValue(null, templateInfo);
+		FunctionExpression func = idValue(tableName, templateInfo);
 		container.add(new AliasExpression(func, aliasName));
 		
 	}

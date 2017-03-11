@@ -6,7 +6,7 @@ import io.konig.transform.ShapePath;
 
 public class JoinInfo {
 
-	private Shape leftShape;
+	private ShapePath leftShape;
 	private TableName leftTable;
 	private MappedProperty leftProperty;
 	
@@ -15,7 +15,7 @@ public class JoinInfo {
 	private MappedProperty rightProperty;
 	
 	public JoinInfo(
-		Shape leftShape,
+		ShapePath leftShape,
 		TableName leftTable, 
 		MappedProperty leftProperty,
 		TableName rightTable, 
@@ -45,7 +45,7 @@ public class JoinInfo {
 	public MappedProperty getRightProperty() {
 		return rightProperty;
 	}
-	public Shape getLeftShape() {
+	public ShapePath getLeftShapePath() {
 		return leftShape;
 	}
 	
