@@ -1,0 +1,89 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix ex: <http://example.com/ns/> .
+@prefix alias: <http://example.com/alias/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+
+shape:TargetPersonShape a sh:Shape ;
+  sh:nodeKind sh:IRI ;
+  sh:targetClass schema:Person ;
+  sh:property [
+    sh:predicate schema:worksFor ;
+    sh:shape shape:OrgNameShape ;
+    sh:maxCount 1;
+  ] ;
+  konig:shapeDataSource [
+    a konig:GoogleBigQueryTable ;
+    gcp:tableReference  [ 
+      gcp:projectId "{gcpProjectId}" ; 
+      gcp:datasetId "ex" ; 
+      gcp:tableId "Person"
+    ] 
+  ]
+.
+
+shape:OrgNameShape a sh:Shape ;
+  sh:nodeKind sh:IRI ;
+  sh:targetClass schema:Organization ;
+  sh:property [
+    sh:predicate schema:name ;
+    sh:datatype xsd:string ;
+    sh:maxCount 1
+  ]
+.
+
+shape:TargetOrganizationShape a sh:Shape ;
+  sh:nodeKind sh:IRI ;
+  sh:targetClass schema:Organization ;
+  sh:property [
+    sh:predicate schema:name ;
+    sh:datatype xsd:string ;
+    sh:maxCount 1
+  ] , [
+    sh:predicate ex:ldapKey ;
+    sh:datatype xsd:string ;
+    sh:maxCount 1
+  ] ;
+  konig:shapeDataSource [
+    a konig:GoogleBigQueryTable ;
+    gcp:tableReference  [ 
+      gcp:projectId "{gcpProjectId}" ; 
+      gcp:datasetId "ex" ; 
+      gcp:tableId "Organization"
+    ] 
+  ]
+.
+
+shape:SourcePersonShape a sh:Shape ;
+  sh:targetClass schema:Person ;
+  sh:property [
+    sh:predicate alias:employerKey ;
+    sh:datatype xsd:string ;
+    sh:maxCount 1;
+    konig:equivalentPath "/schema:worksFor/ex:ldapKey"
+  ] , [
+    sh:predicate ex:ldapKey ;
+    sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+  ] ;
+  konig:iriTemplate '''
+    @context {
+      "ldapKey" : "http://example.com/ns/ldapKey"
+    }
+    <http://example.com/person/{ldapKey}>
+''' ;
+  konig:shapeDataSource [
+    a konig:GoogleBigQueryTable ;
+    gcp:tableReference  [ 
+      gcp:projectId "{gcpProjectId}" ; 
+      gcp:datasetId "ex" ; 
+      gcp:tableId "SourcePersonShape"
+    ] 
+  ] , [
+    a konig:GoogleCloudStorageBucket
+  ]
+.

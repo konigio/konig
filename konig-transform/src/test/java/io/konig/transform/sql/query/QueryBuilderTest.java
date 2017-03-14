@@ -50,6 +50,7 @@ public class QueryBuilderTest {
 		GcpShapeConfig.init();
 	}
 	
+	
 	@Test
 	public void testModifiedTimestamp() throws Exception {
 		loadShapes("QueryBuilderTest/testModifiedTimestamp.ttl");
@@ -76,8 +77,8 @@ public class QueryBuilderTest {
 	}
 
 	@Test
-	public void testJoinPersonOrgName() throws Exception {
-		loadShapes("QueryBuilderTest/testJoinPersonOrgName.ttl");
+	public void testJoinKeyToEquivalentKey() throws Exception {
+		loadShapes("QueryBuilderTest/testJoinKeyToEquivalentKey.ttl");
 		
 		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
 		
@@ -102,7 +103,39 @@ public class QueryBuilderTest {
 			" JOIN\n" + 
 			"   ex.Organization AS b\n" + 
 			" ON\n" + 
-			"   a.employerKey=b.id";
+			"   a.employerKey=b.key";
+		
+		assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testJoinKeyToKey() throws Exception {
+		loadShapes("QueryBuilderTest/testJoinKeyToKey.ttl");
+		
+		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
+		
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		
+		TransformFrame frame = frameBuilder.create(targetShape);
+	
+		
+		SelectExpression dml = queryBuilder.selectExpression(frame);
+		assertTrue(dml != null);
+		
+		String actual = dml.toString();
+		
+		String expected = 
+			"SELECT\n" + 
+			"   CONCAT(\"http://example.com/person/\", a.ldapKey) AS id,\n" + 
+			"   STRUCT(\n" + 
+			"      b.name\n" + 
+			"   ) AS worksFor\n" + 
+			"FROM \n" + 
+			"   ex.SourcePersonShape AS a\n" + 
+			" JOIN\n" + 
+			"   ex.Organization AS b\n" + 
+			" ON\n" + 
+			"   a.employerKey=b.ldapKey";
 		
 		assertEquals(expected, actual);
 	}
