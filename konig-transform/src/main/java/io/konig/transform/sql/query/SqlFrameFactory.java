@@ -10,14 +10,18 @@ import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.core.vocab.Konig;
+import io.konig.core.Path;
+import io.konig.core.path.OutStep;
+import io.konig.core.path.Step;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.ValueExpression;
+import io.konig.transform.IriTemplateInfo;
 import io.konig.transform.MappedProperty;
 import io.konig.transform.ShapePath;
 import io.konig.transform.ShapeTransformException;
@@ -41,7 +45,11 @@ public class SqlFrameFactory {
 	public SqlFrame create(TransformFrame frame) throws ShapeTransformException {
 		frame.countShapes();
 		ShapePath best = frame.bestShape();
-		TableName tableName = tableName(null, null, null, best, null);
+		TableName tableName = produceTable(best);
+		
+		JoinElement joinElement = new JoinElement(best, tableName);
+		JoinInfo joinInfo = new JoinInfo(null, joinElement);
+		joinList.add(joinInfo);
 		
 		
 		SqlFrame s = produce(frame, best, tableName, null);
@@ -49,7 +57,14 @@ public class SqlFrameFactory {
 		return s;
 	}
 
-
+	/**
+	 * Produce a SqlFrame from a TransformFrame.
+	 * @param frame The TransformFrame from which the SqlFrame is to be produced.
+	 * @param preferredShape The preferred ShapePath to use when mapping attributes of the TransformFrame.
+	 * @param preferredTable The TableName associated with the preferredShape
+	 * @param joinProperty The mappedProperty through which the TransformFrame is accessed.
+	 * @return The SqlFrame produced from the supplied TransformFrame
+	 */	
 	private SqlFrame produce(TransformFrame frame, ShapePath preferredShape, TableName preferredTable, MappedProperty joinProperty) throws ShapeTransformException {
 		
 		SqlFrame result = new SqlFrame(frame);
@@ -64,13 +79,73 @@ public class SqlFrameFactory {
 				
 				if (m == null) {
 					
+					// The preferredShape does not have a Property that matches attr
+					
+					
 					MappedProperty best = attr.bestProperty();
 					if (best != null) {
 						
 						
 						TableName nextTable = preferredTable;
 						if (!compatible(joinProperty, best)) {
-							nextTable = tableName(preferredShape, joinProperty, preferredTable, best.getShapePath(), best);
+							
+							JoinElement left = null;
+							JoinElement right = null;
+
+							Shape rightShape = best.getShapePath().getShape();
+							
+							PropertyConstraint leftConstraint = joinProperty.getProperty();
+							if (leftConstraint.getDatatype() != null) {
+								Path leftPath = leftConstraint.getCompiledEquivalentPath();
+								if (leftPath != null) {
+									if (leftPath.length()==2) {
+										// Special case where the relationship is a unique key reference
+										Step end = leftPath.asList().get(1);
+										if (end instanceof OutStep) {
+											OutStep out = (OutStep) end;
+											URI predicate = out.getPredicate();
+											PropertyConstraint rightConstraint = rightShape.getPropertyConstraint(predicate);
+											if (rightConstraint != null) {
+												left = new JoinColumn(joinProperty.getShapePath(), preferredTable, leftConstraint.getPredicate().getLocalName());
+												nextTable = produceTable(best.getShapePath());
+												right = new JoinColumn(best.getShapePath(), nextTable, predicate.getLocalName());
+											} else {
+												// Check for a property on rightShape with an equivalentPath that maps to the predicate at the end of leftPath
+												for (PropertyConstraint p : rightShape.getProperty()) {
+													Path rightPath = p.getCompiledEquivalentPath();
+													if (rightPath != null && rightPath.length()==1) {
+														Step rightEnd = rightPath.asList().get(0);
+														if (rightEnd instanceof OutStep) {
+															OutStep rightOut = (OutStep) rightEnd;
+															if (predicate.equals(rightOut.getPredicate())) {
+
+																left = new JoinColumn(joinProperty.getShapePath(), preferredTable, leftConstraint.getPredicate().getLocalName());
+																nextTable = produceTable(best.getShapePath());
+																right = new JoinColumn(best.getShapePath(), nextTable, p.getPredicate().getLocalName());
+																break;
+															}
+														}
+													}
+												}
+												
+											}
+										}
+									}
+								}
+								
+							} else if (isIri(joinProperty)){
+								if (rightShape.getNodeKind()==NodeKind.IRI) {
+									nextTable = produceTable(best.getShapePath());
+									left = new JoinColumn(joinProperty.getShapePath(), preferredTable, leftConstraint.getPredicate().getLocalName());
+									right = new JoinColumn(best.getShapePath(), nextTable, "id");
+								}
+								
+							}
+							if (left==null || right==null) {
+								throw new ShapeTransformException("Unsupported join condition: " + attr.getPredicate().stringValue());
+							}
+							JoinInfo joinInfo = new JoinInfo(left, right);
+							joinList.add(joinInfo);
 						}
 						SqlAttribute a = new SqlAttribute(nextTable, attr, best);
 						result.add(a);
@@ -100,22 +175,13 @@ public class SqlFrameFactory {
 					continue;
 				} else {
 					
-					MappedProperty best = attr.bestProperty();
-					if (best == null || best.getShapePath().getCount()<=preferredShape.getCount()) {
-						SqlAttribute a = new SqlAttribute(preferredTable, attr, m);
-						SqlFrame s = produce(childFrame, preferredShape, preferredTable, m);
-						a.setEmbedded(s);
-						result.add(a);
-						
-					} else {
-						
-						TableName nextTable = tableName(preferredShape, m, preferredTable, best.getShapePath(), best);
-						SqlAttribute a = new SqlAttribute(nextTable, attr, best);
-						SqlFrame s = produce(childFrame, best.getShapePath(), nextTable, m);
-						a.setEmbedded(s);
-						result.add(a);
-						
-					}
+					// The preferred table contains a reference to the nested structure
+					
+					SqlAttribute a = new SqlAttribute(preferredTable, attr, m);
+					SqlFrame s = produce(childFrame, preferredShape, preferredTable, m);
+					a.setEmbedded(s);
+					result.add(a);
+					
 				}
 				
 			}
@@ -128,6 +194,55 @@ public class SqlFrameFactory {
 	}
 
 
+	private boolean isIri(MappedProperty joinProperty) {
+
+		PropertyConstraint p = joinProperty.getProperty();
+	
+		return p!=null && p.getNodeKind()==NodeKind.IRI;
+	}
+
+	private TableName produceTable(ShapePath shapePath) throws ShapeTransformException {
+		TableName rightTable = tableMap.get(shapePath);
+		if (rightTable == null) {
+			
+			Shape shape = shapePath.getShape();
+			List<DataSource> list = shape.getShapeDataSource();
+			String fullName = null;
+			if (list != null) {
+				for (DataSource source : list) {
+					if (source instanceof TableDataSource) {
+						TableDataSource table = (TableDataSource) source;
+						if (fullName == null) {
+							fullName = table.getTableIdentifier();
+						} else {
+							StringBuilder err = new StringBuilder();
+							err.append("Table name is ambiguous for shape <");
+							err.append(shape.getId().stringValue());
+							err.append(">.  Found '");
+							err.append(fullName);
+							err.append("' and '");
+							err.append(table.getTableIdentifier());
+							err.append("'");
+							throw new ShapeTransformException(err.toString());
+						}
+					}
+				}
+			}
+			
+			if (fullName == null) {
+				throw new ShapeTransformException("Table datasource not found for Shape: " + shape.getId());
+			}
+			
+			char c = (char)('a' + tableCount++);
+			String alias = new String(new char[]{c});
+			rightTable = new TableName(fullName, alias);
+			tableMap.put(shapePath, rightTable);
+		}
+		return rightTable;
+	}
+
+
+
 
 	private ValueExpression current_date() {
 		if (currentDate == null) {
@@ -138,19 +253,18 @@ public class SqlFrameFactory {
 	}
 
 
+	/**
+	 * @return true if the PropertyConstraint from 'a' has a value Shape
+	 * that contains the predicate from 'b'.
+	 */
+	private boolean compatible(MappedProperty a, MappedProperty b) {
 
-
-
-
-
-	private boolean compatible(MappedProperty joinProperty, MappedProperty m) {
-
-		if (joinProperty != null) {
-			PropertyConstraint p = m.getProperty();
+		if (a != null) {
+			PropertyConstraint p = b.getProperty();
 			if (p != null) {
 				URI predicate = p.getPredicate();
 				if (predicate != null) {
-					PropertyConstraint q = joinProperty.getProperty();
+					PropertyConstraint q = a.getProperty();
 					if (q != null) {
 						Shape shape = q.getShape();
 						if (shape != null) {
@@ -175,7 +289,7 @@ public class SqlFrameFactory {
 
 
 	private TableName tableName(
-		ShapePath leftShape,
+		ShapePath leftShapePath,
 		MappedProperty leftProperty, 
 		TableName leftTable, 
 		ShapePath rightShapePath,
@@ -212,17 +326,91 @@ public class SqlFrameFactory {
 		
 		
 		
-		TableName tableName = tableMap.get(rightShapePath);
-		if (tableName == null) {
+		TableName rightTable = tableMap.get(rightShapePath);
+		if (rightTable == null) {
 			char c = (char)('a' + tableCount++);
 			String alias = new String(new char[]{c});
-			tableName = new TableName(fullName, alias);
+			rightTable = new TableName(fullName, alias);
+
+			JoinElement left = null;
+			JoinElement right = null;
 			
-			JoinInfo join = new JoinInfo(leftShape, leftTable, leftProperty, tableName, rightShapePath, rightProperty);
+			if (leftShapePath == null) {
+				right = new JoinElement(rightShapePath, rightTable);
+				
+			} else {
+				Shape rightShape = rightShapePath.getShape();
+				
+				URI mappedPredicate = mappedPredicate(leftProperty);
+				PropertyConstraint rightConstraint = mappedPredicate==null ? null : rightShape.getPropertyConstraint(mappedPredicate);
+				
+				if (rightConstraint != null) {
+					left = new JoinColumn(leftShapePath, leftTable, leftProperty.getProperty().getPredicate().getLocalName());
+					right = new JoinColumn(rightShapePath, rightTable, mappedPredicate.getLocalName());
+				} else {
+					PropertyConstraint leftConstraint = leftProperty.getProperty();
+					if (leftConstraint.getNodeKind()==NodeKind.IRI && rightShape.getNodeKind()==NodeKind.IRI) {
+						left = new JoinColumn(leftShapePath, leftTable, leftConstraint.getPredicate().getLocalName());
+						right = new JoinColumn(rightShapePath, rightTable, "id");
+						
+					} else if (leftConstraint.getNodeKind()==NodeKind.IRI && rightShape.getIriTemplate()!=null) {
+						left = new JoinColumn(leftShapePath, leftTable, leftConstraint.getPredicate().getLocalName());
+						right = new JoinIriTemplate(rightShapePath, rightTable, new IriTemplateInfo(rightShape.getIriTemplate()));
+					} else {
+
+						
+						
+						Shape leftShape = leftShapePath.getShape();
+						Path leftPath = leftConstraint==null ? null : leftConstraint.getCompiledEquivalentPath();
+						String leftPathString = leftPath==null ? null : leftPath.toString();
+						
+						Path rightPath = rightConstraint==null ? null : rightConstraint.getCompiledEquivalentPath();
+						String rightPathString = rightPath==null ? null : rightPath.toString();
+						
+						StringBuilder msg = new StringBuilder();
+						msg.append("Failed to define join condition. \n");
+						msg.append("leftShape: ");
+						msg.append(leftShape.getId());
+						msg.append("\nleftProperty.property.predicate: ");
+						msg.append(leftProperty.getProperty().getPredicate().getLocalName());
+						msg.append("\nleftProperty.property.equivalentPath: ");
+						msg.append(leftPathString==null? "null" : leftPathString);
+						msg.append("\nleftProperty.stepIndex: ");
+						msg.append(leftProperty.getStepIndex());
+						msg.append("\nrightShape: ");
+						msg.append(rightShape.getId().stringValue());
+						msg.append("\nrightProperty.property.predicate: ");
+						msg.append(rightProperty.getProperty().getPredicate().getLocalName());
+						msg.append("\nrightProperty.property.equivalentPath: ");
+						msg.append(rightPathString==null ? null : rightPathString);
+						throw new ShapeTransformException(msg.toString());
+					}
+				} 
+			}
+			
+			JoinInfo join = new JoinInfo(left, right);
 			joinList.add(join);
-			tableMap.put(rightShapePath, tableName);
+			tableMap.put(rightShapePath, rightTable);
 		}
 		
-		return tableName;
+		return rightTable;
+	}
+
+	private URI mappedPredicate(MappedProperty mappedProperty) {
+		if (mappedProperty != null) {
+			PropertyConstraint p = mappedProperty.getProperty();
+			if (p != null) {
+				Path path = p.getCompiledEquivalentPath();
+				if (path != null) {
+					int last = path.length()-1;
+					Step step = path.asList().get(last);
+					if (step instanceof OutStep) {
+						OutStep out = (OutStep) step;
+						return out.getPredicate();
+					}
+				}
+			}
+		}
+		return null;
 	}
 }

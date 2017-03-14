@@ -52,13 +52,19 @@ public class SqlFrame  {
 	public TableName getTableName(MappedId mappedId) throws ShapeTransformException {
 		ShapePath s = mappedId.getShapePath();
 		for (JoinInfo join : tableList) {
-			ShapePath p = join.getLeftShapePath();
-			if (s.equals(p)) {
-				return join.getLeftTable();
+			JoinElement left = join.getLeft();
+			
+			if (left != null) {
+				ShapePath p = left.getShapePath();
+				if (s.equals(p)) {
+					return left.getTableName();
+				}
 			}
-			p = join.getRightShapePath();
+			
+			JoinElement right = join.getRight();
+			ShapePath p = right.getShapePath();
 			if (s.equals(p)) {
-				return join.getRightTable();
+				return right.getTableName();
 			}
 			
 		}

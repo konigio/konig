@@ -44,6 +44,10 @@ public class ShapePath extends AbstractPrettyPrintable {
 	public void incrementCount() {
 		count++;
 	}
+	
+	public void decrementCount() {
+		count--;
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

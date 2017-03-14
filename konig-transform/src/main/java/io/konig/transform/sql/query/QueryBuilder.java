@@ -288,9 +288,9 @@ public class QueryBuilder {
 				List<JoinInfo> tableList = s.getTableList();
 				if (!tableList.isEmpty()) {
 					JoinInfo join = tableList.get(0);
-					Shape rightShape = join.getRightShapePath().getShape();
+					Shape rightShape = join.getRight().getShapePath().getShape();
 					if (rightShape.getNodeKind()==NodeKind.IRI || shape.getNodeKind()==NodeKind.BlankNodeOrIRI) {
-						TableName rightTable = join.getRightTable();
+						TableName rightTable = join.getRight().getTableName();
 						select.add(rightTable.column("id"));
 					}
 				}
@@ -411,62 +411,19 @@ public class QueryBuilder {
 		for (JoinInfo joinInfo: list) {
 			
 			
-			TableName rightTableName = joinInfo.getRightTable();
+			TableName rightTableName = joinInfo.getRight().getTableName();
 			if (!useTableAlias) {
 				rightTableName.setAlias(null);
 			}
 			
+			TableItemExpression rightItem = rightTableName.getItem();
+			
 			if (left == null) {
-				left = rightTableName.getItem();
+				left = rightItem;
 			} else {
-				MappedProperty leftProperty = joinInfo.getLeftProperty();
-				TableName leftTableName = joinInfo.getLeftTable();
-				ShapePath rightShapePath = joinInfo.getRightShapePath();
-				
-				
-				
-				ValueExpression leftColumn = null;
-				
-				if (leftProperty != null) {
-					leftColumn = leftTableName.column(leftProperty.getProperty());
-				} else {
-					Shape leftShape = joinInfo.getLeftShapePath().getShape();
-					if (leftShape.getNodeKind() == NodeKind.IRI) {
-						leftColumn = leftTableName.column("id");
-					} else if (leftShape.getIriTemplate()!=null) {
-						IriTemplateInfo templateInfo = new IriTemplateInfo(leftShape.getIriTemplate());
-						leftColumn = idValue(leftTableName, templateInfo);
-					} else {
-						throw new ShapeTransformException("Shape must have nodeKind=IRI or supply an IRITemplate: " 
-								+ leftShape.getId().stringValue());
-					}
-				}
-				Shape rightShape = rightShapePath.getShape();
-				
-				ValueExpression leftValue = leftColumn;
-				ValueExpression rightValue = null;
-				
-				
-				if (rightShape.getNodeKind() == NodeKind.IRI) {
-					rightValue = rightTableName.column("id");
-				} else {
-					MappedProperty rightProperty = joinInfo.getRightProperty();
-					IriTemplateInfo template = rightProperty.getTemplateInfo();
-					if (template == null) {
-						IriTemplate t = rightShape.getIriTemplate();
-						if (t != null) {
-							template = IriTemplateInfo.create(t, null, rightShape);
-						} else {
-							throw new ShapeTransformException(
-									"Expected Shape to have nodeKind=IRI or define an IRI template: " +
-									rightShape.getId().stringValue());
-						}
-					}
-					
-					rightValue = idValue(rightTableName, template);
-				}
-				
-				TableItemExpression rightItem = rightTableName.getItem();
+				ValueExpression leftValue = joinInfo.getLeft().valueExpression();
+				ValueExpression rightValue = joinInfo.getRight().valueExpression();
+
 				OnExpression on = new OnExpression(
 					new ComparisonPredicate(
 						ComparisonOperator.EQUALS,
@@ -475,28 +432,76 @@ public class QueryBuilder {
 					)
 				);
 				left = new JoinExpression(left, rightItem, on);
+				
 			}
 			
+//			
+//			
+//			TableName rightTableName = joinInfo.getRightTable();
+//			if (!useTableAlias) {
+//				rightTableName.setAlias(null);
+//			}
+//			
+//			if (left == null) {
+//				left = rightTableName.getItem();
+//			} else {
+//				MappedProperty leftProperty = joinInfo.getLeftProperty();
+//				TableName leftTableName = joinInfo.getLeftTable();
+//				ShapePath rightShapePath = joinInfo.getRightShapePath();
 //				
-//				MappedProperty m =j.getSourceProperty();
-//				Shape aShape = frame.getTargetShape();
+//				
+//				
+//				ValueExpression leftColumn = null;
 //
-//				Shape aShape = ap.getSourceShape();
-//				TableName aTable = namer.getTableName(aShape);
-//				String leftColumn = columnName(aTable, ap.getProperty());
+//				Shape rightShape = rightShapePath.getShape();
 //				
-//				Shape bShape = bp.getSourceShape();
-//				TableName bTable = namer.getTableName(bShape);
-//				String rightColumn = columnName(bTable, "id");
+//				ValueExpression leftValue = leftColumn;
+//				ValueExpression rightValue = null;
 //				
-//				return new OnExpression(
+//				if (leftProperty != null) {
+//					leftColumn = leftTableName.column(leftProperty.getProperty());
+//				} else {
+//					Shape leftShape = joinInfo.getLeftShapePath().getShape();
+//					if (leftShape.getNodeKind() == NodeKind.IRI) {
+//						leftColumn = leftTableName.column("id");
+//					} else if (leftShape.getIriTemplate()!=null) {
+//						IriTemplateInfo templateInfo = new IriTemplateInfo(leftShape.getIriTemplate());
+//						leftColumn = idValue(leftTableName, templateInfo);
+//					} else {
+//						throw new ShapeTransformException("Shape must have nodeKind=IRI or supply an IRITemplate: " 
+//								+ leftShape.getId().stringValue());
+//					}
+//				}
+//				
+//				
+//				if (rightShape.getNodeKind() == NodeKind.IRI) {
+//					rightValue = rightTableName.column("id");
+//				} else {
+//					MappedProperty rightProperty = joinInfo.getRightProperty();
+//					IriTemplateInfo template = rightProperty.getTemplateInfo();
+//					if (template == null) {
+//						IriTemplate t = rightShape.getIriTemplate();
+//						if (t != null) {
+//							template = IriTemplateInfo.create(t, null, rightShape);
+//						} else {
+//							throw new ShapeTransformException(
+//									"Expected Shape to have nodeKind=IRI or define an IRI template: " +
+//									rightShape.getId().stringValue());
+//						}
+//					}
+//					
+//					rightValue = idValue(rightTableName, template);
+//				}
+//				
+//				TableItemExpression rightItem = rightTableName.getItem();
+//				OnExpression on = new OnExpression(
 //					new ComparisonPredicate(
-//						ComparisonOperator.EQUALS, 
-//						new ColumnExpression(leftColumn), 
-//						new ColumnExpression(rightColumn)
+//						ComparisonOperator.EQUALS,
+//						leftValue,
+//						rightValue
 //					)
 //				);
-//				left = new JoinExpression(left, right, joinSpecification);
+//				left = new JoinExpression(left, rightItem, on);
 //			}
 		}
 		if (left == null) {

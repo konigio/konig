@@ -28,6 +28,16 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
+import org.openrdf.model.BNode;
+import org.openrdf.model.Literal;
+import org.openrdf.model.Namespace;
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.datatypes.XMLDatatypeUtil;
+import org.openrdf.model.util.Literals;
+import org.openrdf.model.vocabulary.XMLSchema;
+import org.openrdf.rio.turtle.TurtleUtil;
+
 import io.konig.core.NamespaceManager;
 
 public class PrettyPrintWriter extends PrintWriter {
@@ -150,12 +160,52 @@ public class PrettyPrintWriter extends PrintWriter {
 		if (pojo == null) {
 			println("null");
 		} else {
-			Class<?> type = pojo.getClass();
-			print(type.getSimpleName());
-			print(':');
-			println(pojo.hashCode());
+			
+			objectRef(pojo);
 		}
 		pushIndent();
+	}
+	
+	public void objectRef(Object pojo) {
+		if (pojo == null) {
+			print("null");
+			return;
+		}
+		if (pojo instanceof Value) {
+			value((Value)pojo);
+			return;
+		} 
+		
+		Class<?> type = pojo.getClass();
+		print(type.getSimpleName());
+		print(':');
+		println(pojo.hashCode());
+	}
+	
+	private void value(Value value) {
+		if (value instanceof Literal) {
+			literal((Literal) value);
+		} else if (value instanceof URI) {
+			uri((URI)value);
+		} else if (value instanceof BNode) {
+			bnode((BNode)value);
+		}
+		
+	}
+
+	public boolean beginObjectField(String fieldName, Object pojo) {
+		if (pojo != null) {
+			fieldName(fieldName);
+			beginObject(pojo);
+			return true;
+		}
+		return false;
+	}
+	
+	public void endObjectField(Object pojo) {
+		if (pojo != null) {
+			endObject();
+		}
 	}
 	
 	public void endObject() {
@@ -166,7 +216,14 @@ public class PrettyPrintWriter extends PrintWriter {
 		indent();
 		print(fieldName);
 		print(' ');
-		println(object);
+		if (object instanceof Value) {
+			value((Value)object);
+		} else if (object instanceof String) {
+			literalString((String)object);
+		} else {
+			objectRef(object);
+		}
+		println();
 	}
 	
 	public void field(String fieldName, PrettyPrintable object) {
@@ -174,6 +231,78 @@ public class PrettyPrintWriter extends PrintWriter {
 		print(fieldName);
 		print(' ');
 		println(object);
+	}
+	
+	public void literal(Literal literal) {
+		
+		String label = literal.getLabel();
+		URI datatype = literal.getDatatype();
+		
+		if (XMLSchema.INTEGER.equals(datatype) || XMLSchema.DECIMAL.equals(datatype)
+				|| XMLSchema.DOUBLE.equals(datatype) || XMLSchema.BOOLEAN.equals(datatype))
+		{
+			try {
+				write(XMLDatatypeUtil.normalize(label, datatype));
+				return; // done
+			}
+			catch (IllegalArgumentException e) {
+				// not a valid numeric typed literal. ignore error and write
+				// as
+				// quoted string instead.
+			}
+		}
+
+		literalString(label);
+
+		if (Literals.isLanguageLiteral(literal)) {
+			// Append the literal's language
+			write("@");
+			write(literal.getLanguage());
+		}
+		else if (!XMLSchema.STRING.equals(datatype) ) {
+			// Append the literal's datatype (possibly written as an abbreviated
+			// URI)
+			write("^^");
+			uri(datatype);
+		}
+		
+	}
+	
+	public void literalString(String label) {
+
+		if (label.indexOf('\n') != -1 || label.indexOf('\r') != -1 || label.indexOf('\t') != -1) {
+			// Write label as long string
+			write("\"\"\"");
+			write(TurtleUtil.encodeLongString(label));
+			write("\"\"\"");
+		}
+		else {
+			// Write label as normal string
+			write("\"");
+			write(TurtleUtil.encodeString(label));
+			write("\"");
+		}
+		
+	}
+
+	public void bnode(BNode bnode) {
+		print("_:");
+		print(bnode.getID());
+	}
+
+	public void uri(URI uri) {
+		if (nsManager != null) {
+			Namespace ns = nsManager.findByName(uri.getNamespace());
+			if (ns != null) {
+				print(ns.getPrefix());
+				print(':');
+				print(uri.getLocalName());
+				return;
+			}
+		}
+		print('<');
+		print(uri.stringValue());
+		print('>');
 	}
 	
 }

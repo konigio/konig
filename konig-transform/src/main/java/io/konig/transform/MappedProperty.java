@@ -107,4 +107,8 @@ public class MappedProperty extends AbstractPrettyPrintable {
 		return property!=null && property.getFormula()!=null;
 	}
 	
+	public void utilize() {
+		shapePath.decrementCount();
+	}
+	
 }

@@ -84,8 +84,26 @@ public class TransformAttribute extends AbstractPrettyPrintable {
 		return sequence.hasNext() ? sequence.next() : null;
 	}
 	
-
 	public MappedProperty bestProperty() {
+		MappedProperty best = null;
+		int max = -1;
+		if (best == null) {
+			for (MappedProperty m : propertyMap.values()) {
+				int count = m.getShapePath().getCount();
+				if (count > max) {
+					best = m;
+					max = count;
+				}
+			}
+		}
+		
+		return best;
+	}
+	
+	/**
+	 * @deprecated
+	 */
+	public MappedProperty bestProperty0() {
 		if (embeddedFrame != null) {
 			ShapePath best = embeddedFrame.bestShape();
 			if (best != null) {
