@@ -1,0 +1,15 @@
+datasourceList ::= templateRef* 
+
+templateRef ::= templateName paramList?
+
+templateName ::= [a-zA-Z0-9]+
+
+paramList ::= '(' paramDef (',' paramDef)* ')'
+
+paramDef = paramName ':' paramValue 
+
+paramName ::= [a-zA-Z0-9]+
+
+paramValue ::= stringValue 
+
+stringValue ::= '"' [^"]* '"'

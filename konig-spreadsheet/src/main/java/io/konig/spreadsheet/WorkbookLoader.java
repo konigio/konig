@@ -1095,7 +1095,7 @@ public class WorkbookLoader {
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			Literal bigqueryTable = bigQueryTableId(row, targetClass);
 			
-			List<String> dataSourceList = dataSourceList(row);
+			List<Function> dataSourceList = dataSourceList(row);
 			
 			if (shapeId == null) {
 				return;
@@ -1121,8 +1121,8 @@ public class WorkbookLoader {
 
 					Shape shape = new Shape(shapeId);
 					shape.setTargetClass(targetClass);
-					for (String templateName : dataSourceList) {
-						generator.generate(shape, templateName, graph);
+					for (Function func : dataSourceList) {
+						generator.generate(shape, func, graph);
 					}
 					
 				} catch (IOException e) {
@@ -1136,18 +1136,23 @@ public class WorkbookLoader {
 			
 		}
 
-		private List<String> dataSourceList(Row row) {
+		private List<Function> dataSourceList(Row row) throws SpreadsheetException {
+			
+			
 			String text = stringValue(row, shapeDatasourceCol);
 			if (text == null) {
 				return null;
 			}
-			
-			List<String> list = new ArrayList<>();
-			StringTokenizer tokenizer = new StringTokenizer(text, " \r\n\t");
-			while (tokenizer.hasMoreTokens()) {
-				String token = tokenizer.nextToken();
-				list.add(token);
+
+			ListFunctionVisitor visitor = new ListFunctionVisitor();
+			FunctionParser parser = new FunctionParser(visitor);
+			try {
+				parser.parse(text);
+			} catch (FunctionParseException e) {
+				throw new SpreadsheetException("Failed to parse Datasource definition: " + text, e);
 			}
+			List<Function> list = visitor.getList();
+			
 			
 			return list.isEmpty() ? null : list;
 		}
