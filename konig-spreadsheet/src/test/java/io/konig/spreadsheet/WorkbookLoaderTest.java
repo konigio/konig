@@ -29,7 +29,6 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.GCP;
@@ -37,6 +36,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -45,6 +45,28 @@ import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
+	
+	@Test
+	public void testDatasourceParams() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("test-datasource-params.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/ProductShape");
+		
+		List<Value> list = graph.v(shapeId).out(Konig.shapeDataSource).out(GCP.tableReference).out(GCP.tableId).toValueList();
+		assertEquals(1, list.size());
+		assertEquals("CustomProduct", list.get(0).stringValue());
+		
+	}
 	
 	@Test
 	public void testIriTemplate() throws Exception {

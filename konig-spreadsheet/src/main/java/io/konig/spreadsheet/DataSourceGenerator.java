@@ -20,9 +20,11 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.util.LinkedValueMap;
 import io.konig.core.util.RecursiveValueFormat;
 import io.konig.core.util.SimpleValueMap;
 import io.konig.core.util.ValueFormat;
+import io.konig.core.util.ValueMap;
 import io.konig.shacl.Shape;
 
 /**
@@ -62,6 +64,48 @@ public class DataSourceGenerator {
 	}
 
 
+	public void generate(Shape shape, Function func, Graph graph) {
+		String templateName = func.getName();
+		ValueMap params = func.getParameters();
+
+		RecursiveValueFormat template = null;
+
+		try {
+			template = getTemplate(templateName);
+		} catch (IOException e) {
+			throw new KonigException(e);
+		}
+		
+		if (template == null) {
+			throw new KonigException("Template not found: " + templateName);
+		}
+		
+		SimpleValueMap defaultMap = defaultMap(shape);
+	
+		LinkedValueMap map = new LinkedValueMap(params, defaultMap);
+		
+
+		String result = template.format(map);
+		ByteArrayInputStream input = new ByteArrayInputStream(result.getBytes());
+		
+		try {
+			RdfUtil.loadTurtle(graph, input, "");
+		} catch (RDFParseException | RDFHandlerException | IOException e) {
+			throw new KonigException("Failed to render template", e);
+		}
+	}
+
+	private SimpleValueMap defaultMap(Shape shape) {
+
+		SimpleValueMap map = new SimpleValueMap();
+		
+		
+		if (shape.getId() instanceof URI) {
+			putURI(map, "shape", (URI)shape.getId());
+		}
+		putURI(map, "class", shape.getTargetClass());
+		return map;
+	}
 
 	public void generate(Shape shape, String templateName, Graph graph) {
 		
@@ -78,15 +122,7 @@ public class DataSourceGenerator {
 			throw new KonigException("Template not found: " + templateName);
 		}
 		
-		SimpleValueMap map = new SimpleValueMap();
-		
-		
-		if (shape.getId() instanceof URI) {
-			putURI(map, "shape", (URI)shape.getId());
-		}
-		putURI(map, "class", shape.getTargetClass());
-		
-		
+		SimpleValueMap map = defaultMap(shape);
 		
 
 		String result = template.format(map);
@@ -165,5 +201,6 @@ public class DataSourceGenerator {
 		}
 		
 	}
+
 
 }

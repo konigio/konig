@@ -86,7 +86,10 @@ public class RecursiveValueFormat extends SimpleValueFormat {
 		}
 
 		String get(ValueMap map) {
-			String result = format.format(map);
+			String result = map.get(text);
+			if (result == null) {
+				result = format.format(map);
+			}
 			return result;
 		}
 		
