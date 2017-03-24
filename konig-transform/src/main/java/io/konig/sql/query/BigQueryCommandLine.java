@@ -9,7 +9,7 @@ public class BigQueryCommandLine extends AbstractExpression {
 	private String projectId;
 	private String destinationTable;
 	private boolean useLegacySql;
-	private DmlExpression select;
+	private DmlExpression dml;
 	
 	
 
@@ -38,12 +38,12 @@ public class BigQueryCommandLine extends AbstractExpression {
 		this.useLegacySql = useLegacySql;
 	}
 
-	public DmlExpression getSelect() {
-		return select;
+	public DmlExpression getDml() {
+		return dml;
 	}
 
-	public void setSelect(DmlExpression select) {
-		this.select = select;
+	public void setDml(DmlExpression dml) {
+		this.dml = dml;
 	}
 
 	public void print(PrintWriter out, String fileName) {
@@ -83,7 +83,7 @@ public class BigQueryCommandLine extends AbstractExpression {
 		out.print(" --use_legacy_sql=");
 		out.print(useLegacySql);
 		out.print('"');
-		select.print(out);
+		dml.print(out);
 		out.print('"');
 		out.println();
 		

@@ -4,23 +4,24 @@
 @prefix acme: <http://example.com/ns/acme/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix schema1 : <http://example.com/shapes/v1/schema/> .
-@prefix schema2: <http://example.com/shapes/v2/schema/> .
+@prefix shape: <http://example.com/shapes/> .
 @prefix data : <http://example.com/resources/> .
 @prefix dc: <http://purl.org/dc/terms/> .
 @prefix gcp: <http://www.konig.io/ns/gcp/> .
 
-schema1:PersonShape a sh:Shape ;
+shape:SourcePersonShape a sh:Shape ;
 	sh:targetClass schema:Person ;
+	sh:nodeKind sh:IRI ;
 	konig:shapeDataSource [
-		a konig:AuthoritativeDataSource ;
 		a konig:GoogleBigQueryTable ;
 		gcp:tableReference [
 			gcp:projectId "example" ;
 			gcp:datasetId "staging" ;
 			gcp:tableId   "Person" 
 		]
-	] ;
+	], [
+    a konig:GoogleCloudStorageBucket
+  ]  ;
 	sh:property [
 		sh:predicate alias:first_name ;
 		sh:minCount 0 ;
@@ -49,18 +50,18 @@ schema1:PersonShape a sh:Shape ;
 .
 
 
-schema2:PersonShape a sh:Shape ;
+shape:TargetPersonShape a sh:Shape ;
 	sh:targetClass schema:Person ;
+	sh:nodeKind sh:IRI ;
 	konig:shapeDataSource [
+		a konig:CurrentState ;
 		a konig:GoogleBigQueryTable ;
 		gcp:tableReference [
 			gcp:projectId "example" ;
 			gcp:datasetId "warehouse" ;
 			gcp:tableId   "Person" 
 		]
-	] , [
-    a konig:GoogleCloudStorageBucket
-  ] ;
+	] ;
 	sh:property [
 		sh:predicate schema:givenName ;
 		sh:minCount 0 ;

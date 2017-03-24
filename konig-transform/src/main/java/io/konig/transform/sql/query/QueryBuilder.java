@@ -1,9 +1,7 @@
 package io.konig.transform.sql.query;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
@@ -18,37 +16,40 @@ import io.konig.core.Path;
 import io.konig.core.Vertex;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
-import io.konig.core.util.IriTemplate;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 import io.konig.formula.Expression;
+import io.konig.gcp.datasource.BigQueryTableReference;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
-import io.konig.sql.query.AndExpression;
 import io.konig.sql.query.BigQueryCommandLine;
-import io.konig.sql.query.BooleanTerm;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
+import io.konig.sql.query.ExistsExpression;
 import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
+import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.NotExpression;
 import io.konig.sql.query.OnExpression;
+import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.SelectExpression;
 import io.konig.sql.query.SimpleCase;
 import io.konig.sql.query.SimpleWhenClause;
 import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.StructExpression;
-import io.konig.sql.query.TableAliasExpression;
 import io.konig.sql.query.TableItemExpression;
-import io.konig.sql.query.TableNameExpression;
 import io.konig.sql.query.UpdateExpression;
 import io.konig.sql.query.UpdateItem;
 import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
+import io.konig.sql.query.WhereClause;
 import io.konig.transform.IriTemplateElement;
 import io.konig.transform.IriTemplateInfo;
 import io.konig.transform.MappedId;
@@ -69,41 +70,277 @@ public class QueryBuilder {
 		this.graph = graph;
 		reasoner = new OwlReasoner(graph);
 	}
+	
+	public BigQueryCommandLine insertCommand(TransformFrame frame) throws ShapeTransformException {
+		BigQueryCommandLine cmd = null;
+
+
+		BigQueryTableReference tableRef = currentStateTableRef(frame);
+		
+		if (tableRef != null) {
+			TableName targetTable = tableName(tableRef, null);
+			List<ColumnExpression> columnList = columnList(frame);
+
+			
+			SelectExpression select = insertSelect(targetTable, frame);
+			
+			InsertStatement insert = new InsertStatement(targetTable.getExpression(), columnList, select);
+			
+			cmd = new BigQueryCommandLine();
+			cmd.setProjectId(tableRef.getProjectId());
+			cmd.setDml(insert);
+			cmd.setUseLegacySql(false);
+			
+		}
+		
+		
+		
+		return cmd;
+	}
+	
+	private SelectExpression insertSelect(TableName targetTable, TransformFrame frame) throws ShapeTransformException {
+
+		SqlFrameFactory factory = new SqlFrameFactory();
+		SqlFrame s = factory.create(frame);
+		s.setAliasRequired(true);
+		s.setTargetTableName(targetTable);
+		SelectExpression select = selectExpression(s);
+				
+		addWhereClauseForInsert(s, select);
+		
+		return select;
+	}
+
+	private void addWhereClauseForInsert(SqlFrame s, SelectExpression select) throws ShapeTransformException {
+		
+		MappedId mappedId = s.getTransformFrame().getMappedId();
+		TableName selfJoinTable = nextTable(s, s.getTargetTableName().getFullName());
+		ColumnExpression leftColumn = null;
+		ColumnExpression rightColumn = null;
+		SelectExpression selectKey = new SelectExpression();
+		if (mappedId != null) {
+			IriTemplateInfo info = mappedId.getTemplateInfo();
+			PropertyConstraint primaryKey = getPrimaryKey(info);
+			if (primaryKey == null) {
+				throw new ShapeTransformException("Primary key not found for Shape: " + 
+						s.getTransformFrame().getTargetShape().getId());
+			}
+			
+			
+			
+			
+		
+			String leftColumnName = null;
+			if (primaryKey.getCompiledEquivalentPath() != null) {
+				
+				if (primaryKey.getCompiledEquivalentPath().asList().size()>1) {
+
+					throw new ShapeTransformException("Cannot handle equivalentPath for primary key on Shape: " + 
+							s.getTransformFrame().getTargetShape().getId());
+				}
+				
+				SqlAttribute attr = sqlAttrForSourceProperty(s, primaryKey);
+				leftColumnName = attr.getAttribute().getPredicate().getLocalName();
+			} else {
+				leftColumnName = primaryKey.getPredicate().getLocalName();
+			}
+
+			TableName sourceTable = s.getTableName(mappedId);
+			leftColumn = selfJoinTable.column(leftColumnName);
+			rightColumn = sourceTable.column(primaryKey);
+			selectKey.add(new ColumnExpression(primaryKey.getPredicate().getLocalName()));
+			
+		} else {
+			TableName sourceIdTable = sourceIdTable(s);
+			if (sourceIdTable != null) {
+				
+				leftColumn = selfJoinTable.column("id");
+				rightColumn = sourceIdTable.column("id");
+				selectKey.add(new ColumnExpression("id"));
+				
+			} else {
+				throw new ShapeTransformException("No identifier found for Shape "+ 
+						s.getTransformFrame().getTargetShape().getId());
+			}
+		}
+
+		ComparisonPredicate comparison = new ComparisonPredicate(ComparisonOperator.EQUALS, leftColumn, rightColumn);
+		
+		ExistsExpression exists = new ExistsExpression(selectKey);
+		NotExpression notExists = new NotExpression(exists);
+
+		selectKey.getFrom().add(selfJoinTable.getItem());
+		selectKey.setWhere(new WhereClause(comparison));
+		select.setWhere(new WhereClause(notExists));
+	
+		
+	}
+
+
+	private TableName sourceIdTable(SqlFrame s) {
+		TableName result = null;
+		Shape targetShape = s.getTransformFrame().getTargetShape();
+		if (targetShape.getNodeKind() == NodeKind.IRI) {
+
+			URI targetClass = targetShape.getTargetClass();
+			for (JoinInfo join : s.getTableList()) {
+				JoinElement right = join.getRight();
+				Shape shape = right.getShapePath().getShape();
+				if (targetClass.equals(shape.getTargetClass()) && shape.getNodeKind()==NodeKind.IRI) {
+					result = right.getTableName();
+					break;
+				}
+				
+			}
+		}
+		return result;
+	}
+
+	private SqlAttribute sqlAttrForSourceProperty(SqlFrame s, PropertyConstraint p) {
+		URI predicate = p.getPredicate();
+		for (SqlAttribute a : s.getAttributes()) {
+			if (a.getMappedProperty().getProperty().getPredicate().equals(predicate)) {
+				return a;
+			}
+		}
+		return null;
+	}
+
+	private TableName nextTable(SqlFrame s, String tableName) {
+		char c = (char)('a' + s.getTableList().size());
+		String alias = new String(new char[]{c});
+		
+		return new TableName(tableName, alias);
+	}
+
+	private PropertyConstraint getPrimaryKey(IriTemplateInfo info) throws ShapeTransformException {
+		PropertyConstraint key = null;
+		for (IriTemplateElement e : info) {
+			PropertyConstraint p = e.getProperty();
+			if (p != null) {
+				if (key != null) {
+					throw new ShapeTransformException("Dual keys are not supported");
+				}
+				key = p;
+			}
+		}
+		return key;
+	}
+
+	private List<ColumnExpression> columnList(TransformFrame frame) {
+		List<ColumnExpression> list = new ArrayList<>();
+		if (frame.getTargetShape().getNodeKind()==NodeKind.IRI) {
+			list.add(new ColumnExpression(idColumnName));
+		}
+		for (TransformAttribute attr : frame.getAttributes()) {
+			String columnName = attr.getPredicate().getLocalName();
+			list.add(new ColumnExpression(columnName));
+		}
+		return list;
+	}
+
+	private BigQueryTableReference currentStateTableRef(TransformFrame frame) {
+		Shape shape = frame.getTargetShape();
+		for (DataSource ds : shape.getShapeDataSource()) {
+			if (ds.isA(Konig.GoogleBigQueryTable) && ds.isA(Konig.CurrentState)) {
+				GoogleBigQueryTable bigQuery = (GoogleBigQueryTable) ds;
+				return bigQuery.getTableReference();
+			}
+		}
+		
+		return null;
+	}
+
+	private TableName tableName(BigQueryTableReference tableRef, String alias) {
+
+		StringBuilder builder = new StringBuilder();
+		builder.append(tableRef.getDatasetId());
+		builder.append('.');
+		builder.append(tableRef.getTableId());
+		String tableName = builder.toString();
+		return new TableName(tableName, alias);
+	}
+	
 
 	public BigQueryCommandLine updateCommand(TransformFrame frame) throws ShapeTransformException {
 		
-		BigQueryCommandLine cmd = null;
 
-		String destinationTable = bigQueryTableId(frame);
-		if (destinationTable != null) {
-			Namer namer = new Namer(frame);
-			TableRef tableId = new TableRef(destinationTable);
-			TableName tableName = namer.produceTargetTableName(tableId.datasetTable());
-			UpdateExpression update = updateExpression(namer, frame);
-			if (update != null) {
-				
-				update.setTable(tableName.getItem());
-				cmd = new BigQueryCommandLine();
-				cmd.setProjectId(tableId.projectName);
-				cmd.setUseLegacySql(false);
-				cmd.setSelect(update);
-			}
-		}
+		SqlFrameFactory factory = new SqlFrameFactory(1);
+		SqlFrame s = factory.create(frame);
+		s.setAliasRequired(true);
+
+		GoogleBigQueryTable bqTargetTable = bqTargetTable(s.getTransformFrame());
+		s.setTargetTableName(tableName(bqTargetTable.getTableReference(), "a"));
+		
+		UpdateExpression update = updateExpression(s);
+
+		BigQueryCommandLine cmd = new BigQueryCommandLine();
+		String projectId = bqTargetTable.getTableReference().getProjectId();
+		cmd.setProjectId(projectId);
+		cmd.setDml(update);
+		cmd.setUseLegacySql(false);
 		return cmd;
 	}
 
-	private UpdateExpression updateExpression(Namer namer, TransformFrame frame) throws ShapeTransformException {
+	private GoogleBigQueryTable bqTargetTable(TransformFrame transformFrame) {
+		GoogleBigQueryTable result = null;
+		Shape shape = transformFrame.getTargetShape();
+		for (DataSource ds : shape.getShapeDataSource()) {
+			if (ds instanceof GoogleBigQueryTable) {
+				result = (GoogleBigQueryTable) ds;
+				break;
+			}
+		}
+		return result;
+	}
+
+	private UpdateExpression updateExpression(SqlFrame s) throws ShapeTransformException {
+		
 		UpdateExpression update = new UpdateExpression();
-		addFrom(namer, frame, update, "");
-		if (update.getFrom() == null) {
-			return null;
+		update.setTable(s.getTableItem());
+		
+
+		TableName targetTable = s.getTargetTableName();
+		for (SqlAttribute attr : s.getAttributes()) {
+			ColumnExpression left = targetTable.column(attr.getAttribute().getTargetProperty());
+			QueryExpression right = valueExpression(attr);
+			UpdateItem item = new UpdateItem(left, right);
+			update.add(item);
 		}
 		
-		// TODO: add update items
-		// TODO: add where clause
+		
+		FromExpression from = new FromExpression();
+		from.add(fromExpression(s));
+		
+		update.setFrom(from);
+		
+		// Set the where clause
+		Shape targetShape = s.getTransformFrame().getTargetShape();
+		if (targetShape.getNodeKind() == NodeKind.IRI) {
+			
+			MappedId mappedId = s.getTransformFrame().getMappedId();
+			if (mappedId != null) {
+
+				IriTemplateInfo templateInfo = mappedId.getTemplateInfo();
+				if (templateInfo != null) {
+					TableName tableName = s.getTableName(mappedId);
+
+					FunctionExpression right = idValue(tableName, templateInfo);
+					
+					ColumnExpression left = targetTable.column("id");
+					ComparisonPredicate comparison = new ComparisonPredicate(ComparisonOperator.EQUALS, left, right);
+					update.setWhere(comparison);
+				}
+			}
+			
+		} else {
+			throw new ShapeTransformException("Expected Shape to have IRI node kind: " + targetShape.getId());
+		}
 		
 		return update;
 	}
+
+
 	public BigQueryCommandLine bigQueryCommandLine(TransformFrame frame) throws ShapeTransformException {
 		
 		String destinationTable = bigQueryTableId(frame);
@@ -119,7 +356,7 @@ public class QueryBuilder {
 		cmd.setProjectId(tableId.projectName);
 		cmd.setDestinationTable(tableId.datasetTable());
 		cmd.setUseLegacySql(false);
-		cmd.setSelect(select);
+		cmd.setDml(select);
 		
 		return cmd;
 	}
@@ -139,12 +376,7 @@ public class QueryBuilder {
 		return null;
 	}
 
-	
-	public SelectExpression selectExpression(TransformFrame frame) throws ShapeTransformException {
-
-		SqlFrameFactory factory = new SqlFrameFactory();
-		SqlFrame s = factory.create(frame);
-		
+	private SelectExpression selectExpression(SqlFrame s) throws ShapeTransformException {
 		SelectExpression select = new SelectExpression();
 		
 		addFrom(select, s);
@@ -156,6 +388,14 @@ public class QueryBuilder {
 		}
 		
 		return select;
+	}
+	public SelectExpression selectExpression(TransformFrame frame) throws ShapeTransformException {
+
+		SqlFrameFactory factory = new SqlFrameFactory();
+		SqlFrame s = factory.create(frame);
+		
+		return selectExpression(s);
+		
 	}
 	
 
@@ -302,112 +542,10 @@ public class QueryBuilder {
 
 	
 	
-
-	private boolean addFrom(Namer namer, TransformFrame frame, UpdateExpression update, String path) throws ShapeTransformException {
-		
-		boolean result = false;
-		FromExpression from = new FromExpression();
-		update.setFrom(from);
-	
-		TableName targetTable = namer.getTargetTableName();
-		
-		BooleanTerm where = null;
-		
-		for (TransformAttribute attr : frame.getAttributes()) {
-			MappedProperty m = attr.getMappedProperty();
-			if (m != null) {
-				Shape sourceShape = m.getSourceShape();
-				TableName tableName = namer.producePathTableName(path, sourceShape);
-				
-				if (tableName == null) {
-					continue;
-				}
-				TableItemExpression tableItem = tableName.getItem();
-				if (tableItem == null) {
-					tableItem = new TableNameExpression(tableName.getFullName());
-					if (tableName.getAlias() != null) {
-						tableItem = new TableAliasExpression(tableItem, tableName.getAlias());
-					}
-					tableName.setItem(tableItem);
-				}
-				if (!from.contains(tableItem)) {
-					from.add(tableItem);
-					
-					BooleanTerm updateJoin = updateJoin(frame, m, namer.getTargetTableName(), tableName);
-					if (where == null) {
-						where = updateJoin;
-					} else if (where instanceof AndExpression) {
-						AndExpression and = (AndExpression) where;
-						and.add(updateJoin);
-					} else {
-						AndExpression and = new AndExpression();
-						and.add(where);
-						and.add(updateJoin);
-					}
-				}
-				PropertyConstraint aProperty = attr.getTargetProperty();
-				if (aProperty != null) {
-
-					Integer aMaxCount = aProperty.getMaxCount();
-
-						
-					if (aMaxCount != null && aMaxCount==1) {
-
-						ColumnExpression left = targetTable.column(aProperty.getPredicate().getLocalName());
-						ColumnExpression right = tableName.column(m.getProperty().getPredicate().getLocalName());
-						
-						UpdateItem item = new UpdateItem(left, right);
-						update.add(item);
-					} 
-				}
-				
-			}
-		}
-		if (where != null) {
-			update.setWhere(where);
-		} 
-		
-		return result;
-		
-	}
-	
-	private BooleanTerm updateJoin(TransformFrame frame, MappedProperty m, TableName targetTable, TableName sourceTable) 
-	throws ShapeTransformException {
-		Shape sourceShape = m.getSourceShape();
-		NodeKind kind = frame.getTargetShape().getNodeKind();
-		if (kind != NodeKind.IRI) {
-			throw new ShapeTransformException("Update method requires IRI nodeKind for shape " + frame.getTargetShape().getId());
-		}
-		ValueExpression left = targetTable.column("id");
-		NodeKind sourceKind = sourceShape.getNodeKind();
-		ValueExpression right = (sourceKind==NodeKind.IRI) ? sourceTable.column("id") : idValue(frame, m, sourceTable);
-		if (right == null) {
-			throw new ShapeTransformException("Source shape must have nodeKind=IRI or an iriTemplate: " + sourceShape.getId());
-		}
-		
-		return new ComparisonPredicate(ComparisonOperator.EQUALS, left, right);
-		
-	}
-
-
-	private ValueExpression idValue(TransformFrame frame, MappedProperty m, TableName sourceTable) {
-		
-		MappedId mappedId = frame.getIdMapping(m.getSourceShape());
-		if (mappedId != null) {
-
-			IriTemplateInfo template = mappedId.getTemplateInfo();
-			if (template != null) {
-				return idValue(sourceTable, template);
-			}
-		}
-		
-		return null;
-	}
-
-	private void addFrom(SelectExpression select, SqlFrame s) throws ShapeTransformException {
+	private TableItemExpression fromExpression(SqlFrame s) throws ShapeTransformException {
 		TableItemExpression left = null;
 		List<JoinInfo> list = s.getTableList();
-		boolean useTableAlias = list.size()>1;
+		boolean useTableAlias = s.isAliasRequired();
 		for (JoinInfo joinInfo: list) {
 			
 			
@@ -507,6 +645,10 @@ public class QueryBuilder {
 		if (left == null) {
 			throw new ShapeTransformException("No tables found");
 		}
+		return left;
+	}
+	private void addFrom(SelectExpression select, SqlFrame s) throws ShapeTransformException {
+		TableItemExpression left = fromExpression(s);
 		select.getFrom().add(left);
 		
 	}
@@ -653,151 +795,6 @@ public class QueryBuilder {
 		}
 	}
 	
-	static private class Namer {
-		private Map<Shape,TableName> tableNames = new HashMap<>();
-		private Map<String, TableName> pathTable = new HashMap<>();
-		private TableName targetTableName;
-		
-		public Namer(TransformFrame frame) {
-			analyze(frame);
-			commit();
-		}
-
-		private void commit() {
-			if (tableNames.size()==1) {
-				TableName n = tableNames.values().iterator().next();
-				n.setAlias(null);
-			}
-		}
-		
-		public TableName produceTargetTableName(String tableRef) {
-			String alias = nextAlias();
-			targetTableName = new TableName(tableRef, alias);
-			pathTable.put("_", targetTableName);
-			
-			return targetTableName;
-		}
-		
-		public TableName getTargetTableName() {
-			return targetTableName;
-		}
-		
-		private String nextAlias() {
-			char[] bytes = new char[1];
-			bytes[0] = (char)('a' + pathTable.size());
-			return new String(bytes);
-		}
-
-		public TableName producePathTableName(String path, Shape shape) {
-			TableName name = pathTable.get(path);
-			if (name == null) {
-				TableName origin = produceTableName(shape);
-				String alias = nextAlias();
-				
-				name = new TableName(origin.getFullName(), alias);
-				pathTable.put(path, name);
-			}
-			
-			return name;
-			
-		}
-		
-		private TableName produceTableName(Shape shape) {
-			TableName n = tableNames.get(shape);
-			
-			if (n == null) {
-				n = createTableName(shape);
-			}
-			
-			return n;
-		}
-		
-		private void analyze(TransformFrame frame) {
-
-			for (TransformAttribute attr : frame.getAttributes()) {
-				MappedProperty m = attr.getMappedProperty();
-				if (m != null) {
-					Shape sourceShape = m.getSourceShape();
-					produceTableName(sourceShape);
-				}
-				TransformFrame child = attr.getEmbeddedFrame();
-				if (child != null) {
-					analyze(child);
-				}
-			}
-			
-		}
-		
-		
-		private TableName createTableName(Shape shape) {
-			List<DataSource> list = shape.getShapeDataSource();
-			String fullName = null;
-			if (list != null) {
-				for (DataSource source : list) {
-					if (source instanceof TableDataSource) {
-						TableDataSource table = (TableDataSource) source;
-						if (fullName == null) {
-							fullName = table.getTableIdentifier();
-						} else {
-							StringBuilder err = new StringBuilder();
-							err.append("Table name is ambiguous for shape <");
-							err.append(shape.getId().stringValue());
-							err.append(">.  Found '");
-							err.append(fullName);
-							err.append("' and '");
-							err.append(table.getTableIdentifier());
-							err.append("'");
-							throw new KonigException(err.toString());
-						}
-					}
-				}
-			}
-			if (fullName == null) {
-				return null;
-//				StringBuilder err = new StringBuilder();
-//				err.append("No TableDataSource found for shape <");
-//				err.append(shape.getId());
-//				err.append('>');
-//				throw new KonigException(err.toString());
-			}
-			
-			String alias = alias(fullName);
-			TableName n = new TableName(fullName, alias);
-			tableNames.put(shape, n);
-			return n;
-		}
-
-		public String alias(String tableFullName) {
-			int index = tableFullName.lastIndexOf('.')+1;
-			
-			char c = Character.toLowerCase(tableFullName.charAt(index));
-			
-			int count = countAliasStart(c);
-			
-			StringBuilder builder = new StringBuilder();
-			builder.append(c);
-			if (count > 0) {
-				builder.append(count+1);
-			}
-			
-			return builder.toString();
-		}
-
-		private int countAliasStart(char c) {
-			int count = 0;
-			for (TableName n : tableNames.values()) {
-				String alias = n.getAlias();
-				char b = Character.toLowerCase(alias.charAt(0));
-				if (c == b) {
-					count++;
-					if (alias.length()==1) {
-						n.setAlias(alias + 1);
-					}
-				}
-			}
-			return count;
-		}
-	}
 	
 	
 

@@ -49,6 +49,10 @@ public class TableName extends AbstractPrettyPrintable {
 	public void setAlias(String alias) {
 		this.alias = alias;
 	}
+	
+	public TableNameExpression getExpression() {
+		return new TableNameExpression(fullName);
+	}
 
 	public TableItemExpression getItem() {
 		if (item == null) {
