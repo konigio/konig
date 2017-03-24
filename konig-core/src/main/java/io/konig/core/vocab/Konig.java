@@ -77,6 +77,7 @@ public class Konig {
 	// Data Sources
 
 	public static final URI DataSource = new URIImpl(DATA_SOURCE);
+	public static final URI CurrentState = new URIImpl("http://www.konig.io/ns/core/CurrentState");
 	public static final URI AuthoritativeDataSource = new URIImpl("http://www.konig.io/ns/core/AuthoritativeDataSource");
 	public static final URI StagingDataSource = new URIImpl("http://www.konig.io/ns/core/StagingDataSource");
 	public static final URI ReportingDataSource = new URIImpl("http://www.konig.io/ns/core/ReportingDataSource");

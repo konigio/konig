@@ -7,12 +7,9 @@ import java.io.InputStream;
 import java.io.StringWriter;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -21,9 +18,7 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.path.PathFactory;
-import io.konig.core.vocab.Schema;
 import io.konig.gcp.datasource.GcpShapeConfig;
-import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -31,8 +26,6 @@ import io.konig.shacl.io.ShapeLoader;
 import io.konig.sql.query.BigQueryCommandLine;
 import io.konig.sql.query.DmlExpression;
 import io.konig.sql.query.SelectExpression;
-import io.konig.transform.MappedProperty;
-import io.konig.transform.TransformAttribute;
 import io.konig.transform.TransformFrame;
 import io.konig.transform.TransformFrameBuilder;
 
@@ -49,7 +42,113 @@ public class QueryBuilderTest {
 	public void setUp() {
 		GcpShapeConfig.init();
 	}
+
+	@Test
+	public void testInsertNestFields() throws Exception {
+
+		loadShapes("QueryBuilderTest/testInsertNestFields.ttl");
+		
+		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
+		
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		TransformFrame frame = frameBuilder.create(targetShape);
+
+		
+		BigQueryCommandLine cmd = queryBuilder.insertCommand(frame);
+		
+		assertTrue(cmd != null);
+		DmlExpression dml = cmd.getDml();
+		
+		String actual = dml.toString();
+		
+		String expected = 
+				"INSERT warehouse.Person (id, givenName, familyName, address)\n" + 
+				"SELECT\n" + 
+				"   a.id,\n" + 
+				"   a.first_name AS givenName,\n" + 
+				"   a.last_name AS familyName,\n" + 
+				"   STRUCT(\n" + 
+				"      a.city AS addressLocality,\n" + 
+				"      a.state AS addressRegion\n" + 
+				"   ) AS address\n" + 
+				"FROM staging.Person AS a\n" + 
+				"WHERE NOT EXISTS(\n" + 
+				"   SELECT id\n" + 
+				"   FROM warehouse.Person AS b\n" + 
+				"   WHERE b.id=a.id)\n" + 
+				"";
+		
+		assertEquals(expected, actual);
+		
+	}
+
+	@Test
+	public void testInsertWithTransformedKey() throws Exception {
+		loadShapes("QueryBuilderTest/testInsertWithTransformedKey.ttl");
+		
+		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
+		
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		
+		TransformFrame frame = frameBuilder.create(targetShape);
 	
+		BigQueryCommandLine cmd = queryBuilder.insertCommand(frame);
+		
+		assertTrue(cmd != null);
+		DmlExpression dml = cmd.getDml();
+		
+		String actual = dml.toString();
+		
+		String expected = 
+			"INSERT ex.Person (id, ldapKey, email, modified)\n" + 
+			"SELECT\n" + 
+			"   CONCAT(\"http://example.com/person/\", a.personKey) AS id,\n" + 
+			"   a.personKey AS ldapKey,\n" + 
+			"   a.email,\n" + 
+			"   TIMESTAMP(\"{modified}\") AS modified\n" + 
+			"FROM ex.SourcePersonShape AS a\n" + 
+			"WHERE NOT EXISTS(\n" + 
+			"   SELECT personKey\n" + 
+			"   FROM ex.Person AS b\n" + 
+			"   WHERE b.ldapKey=a.personKey)\n" + 
+			"";
+		
+		assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void testInsert() throws Exception {
+		loadShapes("QueryBuilderTest/testInsert.ttl");
+		
+		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
+		
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		
+		TransformFrame frame = frameBuilder.create(targetShape);
+	
+		BigQueryCommandLine cmd = queryBuilder.insertCommand(frame);
+		
+		assertTrue(cmd != null);
+		DmlExpression dml = cmd.getDml();
+		
+		String actual = dml.toString();
+		
+		String expected = 
+			"INSERT ex.Person (id, ldapKey, email, modified)\n" + 
+			"SELECT\n" + 
+			"   CONCAT(\"http://example.com/person/\", a.ldapKey) AS id,\n" + 
+			"   a.ldapKey,\n" + 
+			"   a.email,\n" + 
+			"   TIMESTAMP(\"{modified}\") AS modified\n" + 
+			"FROM ex.SourcePersonShape AS a\n" + 
+			"WHERE NOT EXISTS(\n" + 
+			"   SELECT ldapKey\n" + 
+			"   FROM ex.Person AS b\n" + 
+			"   WHERE b.ldapKey=a.ldapKey)\n" + 
+			"";
+		
+		assertEquals(expected, actual);
+	}
 	
 	@Test
 	public void testModifiedTimestamp() throws Exception {
@@ -249,7 +348,7 @@ public class QueryBuilderTest {
 		assertEquals(expected, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testUpdate() throws Exception {
 		loadShapes("QueryBuilderTest/testUpdate.ttl");
 		
@@ -260,13 +359,21 @@ public class QueryBuilderTest {
 		TransformFrame frame = frameBuilder.create(targetShape);
 		
 		BigQueryCommandLine command = queryBuilder.updateCommand(frame);
-		DmlExpression dml = command.getSelect();
+		DmlExpression dml = command.getDml();
 		assertTrue(dml != null);
 		
 		String actual = dml.toString();
 		
 		String expected = 
-			"";
+			"UPDATE acme.Person AS a\n" + 
+			"SET\n" + 
+			"   a.givenName = b.givenName,\n" + 
+			"   a.familyName = b.familyName,\n" + 
+			"   a.address = STRUCT(\n" + 
+			"      b.postalCode\n" + 
+			"   ) AS address\n" + 
+			"FROM acme.PersonStaging AS b\n" + 
+			"WHERE a.id=CONCAT(\"http://example.com/person/\", b.identifier)";
 		
 		assertEquals(expected, actual);
 	}

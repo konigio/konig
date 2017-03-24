@@ -71,10 +71,12 @@ public class UpdateExpression extends AbstractExpression implements DmlExpressio
 			out.indent();
 			from.print(out);
 		}
-		out.println();
-		out.indent();
-		out.print("WHERE ");
-		where.print(out);
+		if (where != null) {
+			out.println();
+			out.indent();
+			out.print("WHERE ");
+			where.print(out);
+		}
 
 	}
 

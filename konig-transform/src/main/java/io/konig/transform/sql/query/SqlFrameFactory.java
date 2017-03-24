@@ -41,6 +41,10 @@ public class SqlFrameFactory {
 	public SqlFrameFactory() {
 		
 	}
+	
+	public SqlFrameFactory(int tableCount) {
+		this.tableCount = tableCount;
+	}
 
 	public SqlFrame create(TransformFrame frame) throws ShapeTransformException {
 		frame.countShapes();
