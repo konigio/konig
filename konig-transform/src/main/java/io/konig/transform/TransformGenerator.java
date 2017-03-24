@@ -3,6 +3,8 @@ package io.konig.transform;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.openrdf.model.URI;
 import org.slf4j.Logger;
@@ -49,22 +51,30 @@ public class TransformGenerator {
 		PrettyPrintWriter scriptQueryWriter = new PrettyPrintWriter(scriptFileWriter);
 		try {
 
-			TransformFrame frame = null;
-			
+			List<CommandLineInfo> buffer = new ArrayList<>();
 			for (Shape shape : shapeManager.listShapes()) {
-				
+
+				TransformFrame frame = null;
 				if (isLoadTransform(shape)) {
-					frame = loadTransform(outDir, shape, scriptQueryWriter);
+					frame = loadTransform(outDir, shape, buffer);
 				}
 				if (isCurrentState(shape)) {
 					currentStateTransform(outDir, scriptQueryWriter, shape, frame);
 				}
 			}
+			writeBufferedCommands(scriptQueryWriter, buffer);
 		} finally {
 			IOUtil.close(scriptQueryWriter, scriptFile.getName());
 		}
 	}
 	
+
+	private void writeBufferedCommands(PrettyPrintWriter scriptQueryWriter, List<CommandLineInfo> buffer) {
+		
+		for (CommandLineInfo info : buffer) {
+			addScript(scriptQueryWriter, info.getFile(), info.getCommandLine());
+		}
+	}
 
 	private boolean isCurrentState(Shape shape) {
 		
@@ -85,14 +95,14 @@ public class TransformGenerator {
 		return null;
 	}
 
-	private TransformFrame loadTransform(File outDir, Shape shape, PrettyPrintWriter scriptQueryWriter) throws ShapeTransformException, IOException {
+	private TransformFrame loadTransform(File outDir, Shape shape, List<CommandLineInfo> buffer) throws ShapeTransformException, IOException {
 		TransformFrame frame = frameBuilder.create(shape);
 		if (frame != null) {
 			BigQueryCommandLine cmdline = queryBuilder.bigQueryCommandLine(frame);
 			if (cmdline != null) {
 				GoogleBigQueryTable table = loadTable(shape);
 				File sqlFile = writeDml(outDir, table, cmdline.getDml(), "Load");
-				addScript(scriptQueryWriter, sqlFile, cmdline);
+				buffer.add(new CommandLineInfo(sqlFile, cmdline));
 			}
 		}
 		return frame;
@@ -193,5 +203,21 @@ public class TransformGenerator {
 		return null;
 	}
 
+	private static class CommandLineInfo {
+		File file;
+		BigQueryCommandLine cmdLine;
+		public CommandLineInfo(File file, BigQueryCommandLine cmdLine) {
+			this.file = file;
+			this.cmdLine = cmdLine;
+		}
+		
+		public File getFile() {
+			return file;
+		}
+
+		public BigQueryCommandLine getCommandLine() {
+			return cmdLine;
+		}
+	}
 
 }
