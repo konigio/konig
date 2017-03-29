@@ -55,15 +55,21 @@ public class PageRequest {
 	}
 	
 	public Namespace findNamespaceByName(String name) throws DataCatalogException {
-		NamespaceManager nsManager = graph.getNamespaceManager();
-		if (nsManager == null) {
-			throw new DataCatalogException("NamespaceManager is not defined");
-		}
+		NamespaceManager nsManager = getNamespaceManager();
 		Namespace ns = nsManager.findByName(name);
 		if (ns == null) {
 			throw new DataCatalogException("Namespace not found: " + name);
 		}
 		return ns;
+	}
+
+	public NamespaceManager getNamespaceManager() throws DataCatalogException {
+
+		NamespaceManager nsManager = graph.getNamespaceManager();
+		if (nsManager == null) {
+			throw new DataCatalogException("NamespaceManager is not defined");
+		}
+		return nsManager;
 	}
 	
 }
