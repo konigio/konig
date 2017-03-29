@@ -46,6 +46,8 @@
   	<module>../konig-gcp-model</module>
   	<module>../konig-transform</module>
   	<module>../konig-transform-maven-plugin</module>
+  	<module>../konig-data-catalog</module>
+  	<module>../konig-data-catalog-maven-plugin</module>
   	<module>../konig-maven-diff</module>
   	<module>../konig-gae-datastore</module>
   	<module>../konig-spreadsheet</module>

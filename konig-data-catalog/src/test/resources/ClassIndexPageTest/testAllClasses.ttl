@@ -1,0 +1,8 @@
+@prefix schema: <http://schema.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+schema:Person a owl:Class .
+
+schema:Organization a owl:Class .
+
+schema:CreativeWork a owl:Class .

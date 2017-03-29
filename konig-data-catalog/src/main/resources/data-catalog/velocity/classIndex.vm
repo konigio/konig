@@ -1,0 +1,11 @@
+<html>
+<head>
+<title>Class Index</title>
+<link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
+</head>
+<body>
+#foreach( $type in $ClassList )
+	<div><a href="$type.href">$type.Name</a></div>
+#end
+</body>
+</html>

@@ -55,6 +55,7 @@ import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.vocab.Schema;
+import io.konig.shacl.PropertyConstraint;
 
 /*
  * #%L
@@ -370,6 +371,21 @@ public class RdfUtil {
 			((value=subject.getValue(DCTERMS.DESCRIPTION)) != null)		? value.stringValue() :
 			((value=subject.getValue(Schema.description)) != null)	? value.stringValue() :
 			null;
+	}
+	
+	public static String getDescription(PropertyConstraint p, Graph graph) {
+		
+		String result = p.getDocumentation();
+		if (result == null) {
+			URI predicate = p.getPredicate();
+			if (predicate != null && graph!=null) {
+				Vertex v = graph.getVertex(predicate);
+				if (v != null) {
+					result = getDescription(v);
+				}
+			}
+		}
+		return result;
 	}
 	
 	public static List<Vertex> listSubtypes(List<Vertex> typeList) {
