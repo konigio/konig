@@ -1,0 +1,190 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.konig</groupId>
+  <artifactId>konig-data-catalog-test</artifactId>
+  <version>1.0.0</version>
+  <name>Konig Data Catalog Test</name>
+  
+  <properties>
+  	<konig.version>2.0.0-8</konig.version>
+  </properties>
+  
+  <build>
+  	<plugins>
+  		<plugin>
+	  		<groupId>io.konig</groupId>
+	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
+	  		<version>${konig.version}</version>
+	  		<executions>
+	  			<execution>
+		  			<phase>generate-sources</phase>
+		  			<goals>
+		  				<goal>generate</goal>
+		  			</goals>
+
+			  		<configuration>
+							<workbookFile>${basedir}/src/test-data-catalog.xlsx</workbookFile>
+			  		  <owlOutDir>${basedir}/target/generated/src/rdf/owl</owlOutDir>
+			  		  <shapesOutDir>${basedir}/target/generated/src/rdf/shapes</shapesOutDir>
+							<sourceDir>${basedir}/target/generated/src/rdf/</sourceDir>
+			  		  <gcpDir>${basedir}/target/generated/src/gcp</gcpDir>
+			  		</configuration>		  			
+		  			
+	  			</execution>
+	  		</executions>
+  		</plugin>
+  	
+  		<plugin>
+	  		<groupId>io.konig</groupId>
+	  		<artifactId>konig-data-catalog-maven-plugin</artifactId>
+	  		<version>${konig.version}</version>
+	  		<configuration>
+	  			<rdfDir>target/generated/src/rdf</rdfDir>
+	  		</configuration>
+	  		<executions>
+	  			<execution>
+		  			<phase>generate-sources</phase>
+		  			<goals>
+		  				<goal>generate-site</goal>
+		  			</goals>
+	  			</execution>
+	  		</executions>
+  		</plugin>
+  		
+		  
+      
+  			
+			<!-- Skip default jar packaging -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <id>default-jar</id>
+            <phase/>
+          </execution>
+        </executions>
+      </plugin>
+        					  
+		  <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.5.3</version>
+        <configuration>
+          <descriptor>src/assembly/dep.xml</descriptor>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-archive</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>  	
+		  
+		  
+  	</plugins>
+  	<pluginManagement>
+  		<plugins>
+  			<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+  			<plugin>
+  				<groupId>org.eclipse.m2e</groupId>
+  				<artifactId>lifecycle-mapping</artifactId>
+  				<version>1.0.0</version>
+  				<configuration>
+  					<lifecycleMappingMetadata>
+  						<pluginExecutions>
+  							<pluginExecution>
+  								<pluginExecutionFilter>
+  									<groupId>io.konig</groupId>
+  									<artifactId>
+  										konig-transform-maven-plugin
+  									</artifactId>
+  									<versionRange>
+  										[2.0.0-8,)
+  									</versionRange>
+  									<goals>
+  										<goal>generate</goal>
+  									</goals>
+  								</pluginExecutionFilter>
+  								<action>
+  									<ignore></ignore>
+  								</action>
+  							</pluginExecution>
+  						</pluginExecutions>
+  					</lifecycleMappingMetadata>
+  				</configuration>
+  			</plugin>
+  		</plugins>
+  	</pluginManagement>
+  </build>
+  
+	<profiles>
+  	<profile>
+  		<id>diff</id>
+  		<activation>
+  			<property>
+  				<name>konig.originalVersion</name>
+  			</property>
+  		</activation>
+			<build>
+				<plugins>
+			    <plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<version>2.10</version>
+						<executions>
+							<execution>
+								<id>unpack</id>
+								<phase>initialize</phase>
+								<goals>
+									<goal>unpack</goal>
+								</goals>
+								<configuration>
+									<outputDirectory>${basedir}/target/diff/original</outputDirectory>
+									<stripVersion>true</stripVersion>
+									<artifactItems>
+										<artifactItem>
+											<groupId>com.pearson.gdm</groupId>
+											<artifactId>rights-and-royalties</artifactId>
+											<version>${konig.originalVersion}</version>
+											<classifier>bin</classifier>
+											<overWrite>true</overWrite>
+											<type>zip</type>
+										</artifactItem>
+									</artifactItems>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>	
+
+	      	<plugin>
+			  		<groupId>io.konig</groupId>
+			  		<artifactId>diff</artifactId>
+			  		<version>${konig.version}</version>
+			  		<executions>
+			  			<execution>
+				  			<phase>initialize</phase>
+				  			<goals>
+				  				<goal>diff</goal>
+				  			</goals>
+					  		<configuration>
+					  			<originalModelDir>${basedir}/target/diff/original/rdf</originalModelDir>
+					  			<revisedModelDir>${basedir}/src/main/rdf</revisedModelDir>
+					  			<diffReportFile>${basedir}/target/diff/report.txt</diffReportFile>
+					  			<ignoreNamespace>
+					  				<param>http://www.konig.io/activity/</param>
+					  			</ignoreNamespace>
+					  		</configuration>				  			
+			  			</execution>
+			  		</executions>
+		  		</plugin>		
+  							
+				</plugins>
+			</build>
+  	</profile>
+  	
+  </profiles>  
+</project>

@@ -25,6 +25,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
@@ -35,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.activity.Activity;
+import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NameMap;
@@ -60,8 +62,6 @@ import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
-import io.konig.formula.Expression;
-import io.konig.shacl.CompositeShapeVisitor;
 import io.konig.shacl.FormulaContextBuilder;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -140,6 +140,7 @@ public class WorkbookLoader {
 	private static final int CONSTRAINT_FLAG = 0x140;
 	
 	
+	
 	private static final String GCP_DATASET_FORMAT = 
 			"https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{datasetId}";
 	
@@ -164,6 +165,7 @@ public class WorkbookLoader {
 	private ValueFactory vf = new ValueFactoryImpl();
 	private DataFormatter formatter = new DataFormatter(true);
 	private IdMapper datasetMapper;
+	private Set<String> defaultNamespace = new HashSet<>();
 	
 	private DataSourceGenerator dataSourceGenerator;
 	
@@ -172,6 +174,8 @@ public class WorkbookLoader {
 	public WorkbookLoader(NamespaceManager nsManager) {
 		
 
+		defaultNamespace.add(Schema.NAMESPACE);
+		defaultNamespace.add(Konig.NAMESPACE);
 		nsManager.add("vann", "http://purl.org/vocab/vann/");
 		nsManager.add("owl", OWL.NAMESPACE);
 		nsManager.add("sh", SH.NAMESPACE);
@@ -352,9 +356,52 @@ public class WorkbookLoader {
 			produceEnumShapes();
 			processShapeTemplates();
 			visitShapes();
+			addDefaultOntologies();
 			
 		}
 
+
+		private void addDefaultOntologies() {
+			List<Edge> list = new ArrayList<Edge>(graph);
+			for (Edge e : list) {
+				if (RDF.TYPE.equals(e.getPredicate())) {
+					Resource subject = e.getSubject();
+					if (subject instanceof URI) {
+						addOntology(((URI)subject).getNamespace());
+					}
+					Value object = e.getObject();
+					if (object instanceof URI) {
+						addClassAndOntology(((URI)object));
+					}
+				}
+				
+				
+			}
+			
+		}
+
+		private void addClassAndOntology(URI type) {
+			graph.edge(type, RDF.TYPE, OWL.CLASS);
+			addOntology(type.getNamespace());
+			
+		}
+
+		private void addOntology(String namespace) {
+			
+			if (defaultNamespace.contains(namespace)) {
+				defaultNamespace.remove(namespace);
+				Namespace ns = nsManager.findByName(namespace);
+				if (ns != null) {
+
+					URI namespaceId = new URIImpl(namespace);
+					Vertex v = graph.getVertex(namespaceId);
+					if (v == null) {
+						graph.edge(namespaceId, RDF.TYPE, OWL.ONTOLOGY);
+						graph.edge(namespaceId, VANN.preferredNamespacePrefix, literal(ns.getPrefix()));
+					}
+				}
+			}
+		}
 
 		private void processShapeTemplates() throws SpreadsheetException {
 			

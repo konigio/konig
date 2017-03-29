@@ -77,10 +77,11 @@ public class TransformGenerator {
 	}
 
 	private boolean isCurrentState(Shape shape) {
-		
-		for (DataSource ds : shape.getShapeDataSource()) {
-			if (ds.isA(Konig.GoogleBigQueryTable) && ds.isA(Konig.CurrentState)) {
-				return true;
+		if (shape.getShapeDataSource() != null) {
+			for (DataSource ds : shape.getShapeDataSource()) {
+				if (ds.isA(Konig.GoogleBigQueryTable) && ds.isA(Konig.CurrentState)) {
+					return true;
+				}
 			}
 		}
 		

@@ -1,0 +1,25 @@
+@prefix xsd:	 <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <http://schema.org/> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+shape:PersonShape a sh:Shape ;
+	sh:targetClass schema:Person ;
+	sh:nodeKind sh:IRI ;
+	sh:property [
+		sh:predicate schema:givenName ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1 
+	],[
+		sh:predicate schema:familyName ;
+		sh:datatype xsd:string ;
+		sh:minCount 1 ;
+		sh:maxCount 1 
+	] .
+	
+schema:givenName a rdf:Property ;
+	rdfs:comment "Given name. In the U.S., the first name of a Person. This can be used along with familyName instead of the name property."
+.
