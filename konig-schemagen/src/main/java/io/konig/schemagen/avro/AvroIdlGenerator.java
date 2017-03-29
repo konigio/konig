@@ -142,7 +142,7 @@ public class AvroIdlGenerator  {
 			Integer minCount = property.getMinCount();
 			URI datatype = property.getDatatype();
 			String fieldName = property.getPredicate().getLocalName();
-			String comment = property.getDocumentation();
+			String comment = property.getComment();
 			Resource valueShapeId = property.getShapeId();
 			URI valueShape = (valueShapeId instanceof URI) ? (URI) valueShapeId : null;
 			NodeKind nodeKind = property.getNodeKind();

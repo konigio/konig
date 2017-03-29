@@ -312,8 +312,8 @@ public class ShapeBuilder {
 			return this;
 		}
 		
-		public PropertyBuilder documentation(String text) {
-			property.setDocumentation(text);
+		public PropertyBuilder comment(String text) {
+			property.setComment(text);
 			return this;
 		}
 		

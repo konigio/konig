@@ -25,7 +25,7 @@ public class Generator {
 	}
 
 	protected String documentation(PropertyConstraint p) {
-		String doc = p.getDocumentation();
+		String doc = p.getComment();
 		if (doc != null) {
 			doc = RdfUtil.normalize(doc);
 		}

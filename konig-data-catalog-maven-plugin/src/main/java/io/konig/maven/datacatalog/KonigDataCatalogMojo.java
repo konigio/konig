@@ -17,8 +17,10 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.datacatalog.DataCatalogBuilder;
 import io.konig.datacatalog.DataCatalogException;
+import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 
 @Mojo( name = "generate-site")
 public class KonigDataCatalogMojo extends AbstractMojo {
@@ -39,7 +41,10 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 		DataCatalogBuilder builder = new DataCatalogBuilder();
 		
 		try {
+			GcpShapeConfig.init();
 			RdfUtil.loadTurtle(rdfDir, graph, nsManager);
+			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
+			shapeLoader.load(graph);
 			builder.build(siteDir, graph, shapeManager);
 			
 		} catch (RDFParseException | RDFHandlerException | IOException | DataCatalogException e) {
