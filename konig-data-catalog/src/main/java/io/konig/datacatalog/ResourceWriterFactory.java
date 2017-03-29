@@ -8,10 +8,10 @@ import java.io.PrintWriter;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 
-public class ShapeWriterFactory implements WriterFactory {
+public class ResourceWriterFactory implements WriterFactory {
 	private File baseDir;
 	
-	public ShapeWriterFactory(File baseDir) {
+	public ResourceWriterFactory(File baseDir) {
 		this.baseDir = baseDir;
 	}
 

@@ -34,12 +34,14 @@ import org.openrdf.model.URI;
 import io.konig.core.AmbiguousPreferredClassException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.impl.RdfUtil;
 
 public class LogicalShapeBuilder {
 	
 	private OwlReasoner reasoner;
 	private LogicalShapeNamer shapeNamer;
 	private Set<URI> stack;
+	private boolean usePropertyConstraintComment;
 	
 	
 	public LogicalShapeBuilder(OwlReasoner reasoner, LogicalShapeNamer shapeNamer) {
@@ -47,6 +49,13 @@ public class LogicalShapeBuilder {
 		this.shapeNamer = shapeNamer;
 	}
 
+	public boolean isUsePropertyConstraintComment() {
+		return usePropertyConstraintComment;
+	}
+
+	public void setUsePropertyConstraintComment(boolean usePropertyConstraintComment) {
+		this.usePropertyConstraintComment = usePropertyConstraintComment;
+	}
 
 	private URI targetClass(Shape shape) {
 		URI targetClass = shape.getTargetClass();
@@ -137,6 +146,7 @@ public class LogicalShapeBuilder {
 		for (PropertyConstraint p : pList) {
 			if (constraint == null) {
 				constraint = new PropertyConstraint(p.getPredicate());
+				setDefaultComment(constraint);
 				shape.add(constraint);
 			}
 			
@@ -147,6 +157,8 @@ public class LogicalShapeBuilder {
 			} else if (minCountB == null || (minCountB < minCountA) ) {
 				constraint.setMinCount(minCountB);
 			}
+			
+			mergeComment(constraint, p);
 			
 			Integer maxCountA = constraint.getMaxCount();
 			Integer maxCountB = p.getMaxCount();
@@ -191,6 +203,25 @@ public class LogicalShapeBuilder {
 
 
 
+
+	private void mergeComment(PropertyConstraint a, PropertyConstraint b) {
+		if (usePropertyConstraintComment && a.getComment()==null) {
+			a.setComment(b.getComment());
+		}
+		
+	}
+
+	private void setDefaultComment(PropertyConstraint constraint) {
+		URI predicate = constraint.getPredicate();
+		Vertex v = reasoner.getGraph().getVertex(predicate);
+		if (v != null) {
+			String comment = RdfUtil.getDescription(v);
+			if (comment != null) {
+				constraint.setComment(comment);
+			}
+		}
+		
+	}
 
 	private Resource leastUpperBound(Shape shape, PropertyConstraint p, String context, Resource classA, Resource classB) {
 		if (classA!=null && classB==null) {

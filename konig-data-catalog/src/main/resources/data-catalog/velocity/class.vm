@@ -18,12 +18,39 @@
 #foreach( $pc in $PropertyList )
 			<tr typeof="sh:PropertyConstraint" resource="$pc.PredicateId">
 				<th class="prop-nam">$pc.PredicateLocalName</th>
-				<td class="prop-ect">$pc.TypeName</td>
+				<td class="prop-ect">
+#if($pc.TypeHref) 				
+					<a href="$pc.TypeHref">$pc.TypeName</a>
+#else
+					$pc.TypeName
+#end					
+				</td>	
 				<td class="prop-desc" property="rdfs:comment">$pc.Description</td>
 			</tr>
 #end		
 		</tbody>
 	</table>
+#if($ShapeList) 
+	<table class="definition-table">
+		<thead>
+			<tr>
+				<th>Shapes based on this Class</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>
+#foreach( $shape in $ShapeList )
+					<code>
+						<a href="$shape.Href">$shape.Name</a>
+					</code>
+					<br>
+#end					
+				</td>
+			</tr>
+		</tbody>
+	</table>
+#end	
 </div>
 </body>
 </html>

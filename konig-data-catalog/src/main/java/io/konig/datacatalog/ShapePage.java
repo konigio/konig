@@ -23,8 +23,9 @@ public class ShapePage {
 		VelocityContext context = request.getContext();
 		Shape shape = request.getShape();
 		Resource shapeId = shape.getId();
+		URI shapeURI = null;
 		if (shapeId instanceof URI) {
-			URI shapeURI = (URI) shapeId;
+			shapeURI = (URI) shapeId;
 			context.put("ShapeId", shapeURI.stringValue());
 			context.put("ShapeName", shapeURI.getLocalName());
 		}
@@ -32,7 +33,7 @@ public class ShapePage {
 		List<PropertyInfo> propertyList = new ArrayList<>();
 		context.put("PropertyList", propertyList);
 		for (PropertyConstraint p : shape.getProperty()) {
-			propertyList.add(new PropertyInfo(p, request));
+			propertyList.add(new PropertyInfo(shapeURI, p, request));
 		}
 		
 		Template template = engine.getTemplate(SHAPE_TEMPLATE);
