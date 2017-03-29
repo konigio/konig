@@ -691,7 +691,7 @@ public class WorkbookLoader {
 						String fromPath = "/" + curie;
 						clone.setFromAggregationSource(fromPath);
 					} else {
-						clone.setDocumentation(null);
+						clone.setComment(null);
 					}
 					
 					shape.add(clone);

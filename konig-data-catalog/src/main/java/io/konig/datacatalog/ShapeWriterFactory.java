@@ -5,19 +5,25 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 
 public class ShapeWriterFactory implements WriterFactory {
-	private File shapeDir;
+	private File baseDir;
 	
-	public ShapeWriterFactory(File shapeDir) {
-		this.shapeDir = shapeDir;
-		shapeDir.mkdirs();
+	public ShapeWriterFactory(File baseDir) {
+		this.baseDir = baseDir;
 	}
 
 	@Override
-	public PrintWriter createWriter(PageRequest request, URI resourceId) throws IOException {
-		File file = new File(shapeDir, resourceId.getLocalName());
+	public PrintWriter createWriter(PageRequest request, URI resourceId) throws IOException, DataCatalogException {
+		Namespace ns = request.findNamespaceByName(resourceId.getNamespace());
+		StringBuilder fileName = new StringBuilder();
+		fileName.append(resourceId.getLocalName());
+		fileName.append(".html");
+		File shapeDir = new File(baseDir, ns.getPrefix());
+		shapeDir.mkdirs();
+		File file = new File(shapeDir, fileName.toString());
 		FileWriter fileWriter = new FileWriter(file);
 		return new PrintWriter(fileWriter);
 	}

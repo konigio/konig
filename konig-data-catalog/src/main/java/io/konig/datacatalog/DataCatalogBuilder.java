@@ -25,7 +25,7 @@ public class DataCatalogBuilder {
 	public void build(File baseDir, Graph graph, ShapeManager shapeManager) throws DataCatalogException {
 
 		classIndexWriterFactory = new ClassIndexWriterFactory(baseDir);
-		shapeWriterFactory = new ShapeWriterFactory(new File(baseDir, "shapes"));
+		shapeWriterFactory = new ShapeWriterFactory(baseDir);
 		Properties properties = new Properties();
 		properties.put("resource.loader", "class");
 		properties.put("class.resource.loader.class", ClasspathResourceLoader.class.getName());

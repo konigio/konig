@@ -204,16 +204,12 @@ public class PropertyConstraint {
 		return id;
 	}
 	
-	public String getDocumentation() {
+	public String getComment() {
 		return documentation;
 	}
 	
 	public void setComment(String comment) {
 		this.documentation = comment;
-	}
-	
-	public void setDocumentation(String documentation) {
-		this.documentation = documentation;
 	}
 	public Integer getMinLength() {
 		return minLength;

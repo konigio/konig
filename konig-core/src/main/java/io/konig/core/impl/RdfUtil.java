@@ -375,7 +375,7 @@ public class RdfUtil {
 	
 	public static String getDescription(PropertyConstraint p, Graph graph) {
 		
-		String result = p.getDocumentation();
+		String result = p.getComment();
 		if (result == null) {
 			URI predicate = p.getPredicate();
 			if (predicate != null && graph!=null) {
