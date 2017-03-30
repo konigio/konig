@@ -1,14 +1,19 @@
 package io.konig.datacatalog;
 
+import java.util.List;
+
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.Namespace;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
 import io.konig.shacl.ShapeManager;
 
 public class PageRequest {
+	private static final String OWL_CLASS_LIST = "OwlClassList";
 
 	private VelocityEngine engine;
 	private VelocityContext context;
@@ -24,7 +29,7 @@ public class PageRequest {
 	
 	public PageRequest(PageRequest other) {
 		this.engine = other.getEngine();
-		this.context = other.getContext();
+		this.context = new VelocityContext();
 		this.graph = other.getGraph();
 		this.shapeManager = other.getShapeManager();
 	}
@@ -72,4 +77,15 @@ public class PageRequest {
 		return nsManager;
 	}
 	
+	public List<Vertex> getOwlClassList() {
+		@SuppressWarnings("unchecked")
+		List<Vertex> list = (List<Vertex>) context.get(OWL_CLASS_LIST);
+		if (list == null) {
+			OwlReasoner reasoner = new OwlReasoner(graph);
+			list = reasoner.owlClassList();
+			context.put(OWL_CLASS_LIST, list);
+		}
+		
+		return list;
+	}
 }

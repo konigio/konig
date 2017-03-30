@@ -11,12 +11,14 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.util.IOUtil;
 import io.konig.shacl.ClassManager;
 import io.konig.shacl.LogicalShapeBuilder;
 import io.konig.shacl.LogicalShapeNamer;
@@ -47,6 +49,7 @@ public class DataCatalogBuilder {
 
 		PageRequest request = new PageRequest(engine, context, graph, shapeManager);
 		try {
+			buildOntologyPages(request);
 			buildShapePages(request);
 			buildClassPages(request);
 			buildClassIndex(request);
@@ -55,6 +58,25 @@ public class DataCatalogBuilder {
 		}
 		
 	
+		
+	}
+
+	private void buildOntologyPages(PageRequest request) throws IOException, DataCatalogException {
+		
+		OwlReasoner reasoner = new OwlReasoner(request.getGraph());
+		List<Vertex> list = reasoner.ontologyList();
+		OntologyPage page = new OntologyPage();
+		for (Vertex v : list) {
+			if (v.getId() instanceof URI) {
+				URI ontologyId = (URI) v.getId();
+				OntologyRequest ontologyRequest = new OntologyRequest(request, v);
+				URI summary = DataCatalogUtil.ontologySummary(ontologyId.stringValue());
+				PrintWriter out = resourceWriterFactory.createWriter(ontologyRequest, summary);
+				PageResponse response = new PageResponseImpl(out);
+				page.render(ontologyRequest, response);
+				IOUtil.close(out, ontologyId.stringValue());
+			}
+		}
 		
 	}
 
@@ -77,6 +99,7 @@ public class DataCatalogBuilder {
 				PrintWriter writer = resourceWriterFactory.createWriter(classRequest, classId);
 				PageResponse response = new PageResponseImpl(writer);
 				page.render(classRequest, response);
+				IOUtil.close(writer, classId.stringValue());
 			}
 		}
 		
@@ -102,9 +125,11 @@ public class DataCatalogBuilder {
 			if (shapeId instanceof URI) {
 				URI shapeURI = (URI) shapeId;
 				request.setShape(shape);
-				PageResponse response = new PageResponseImpl(resourceWriterFactory.createWriter(request, shapeURI));
+				PrintWriter out = resourceWriterFactory.createWriter(request, shapeURI);
+				PageResponse response = new PageResponseImpl(out);
 				
 				shapePage.render(request, response);
+				IOUtil.close(out, shapeURI.stringValue());
 			}
 		}
 		

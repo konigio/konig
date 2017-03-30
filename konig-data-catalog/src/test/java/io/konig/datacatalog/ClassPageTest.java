@@ -127,6 +127,9 @@ public class ClassPageTest {
 			"			</tr>\r\n" + 
 			"		</tbody>\r\n" + 
 			"	</table>\r\n" + 
+			"	<p class=\"version\">\r\n" + 
+			"		Latest Version\r\n" + 
+			"	</p>\r\n" + 
 			"</div>\r\n" + 
 			"</body>\r\n" + 
 			"</html>";

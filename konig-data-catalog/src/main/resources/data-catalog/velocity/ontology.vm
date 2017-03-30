@@ -1,0 +1,70 @@
+<html>
+<head>
+<title>$OntologyLabel</title>
+<link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
+<style>
+.description {
+	margin-top: 1em;
+}
+</style>
+</head>
+<body>
+<div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$NamespaceURI">
+	<h1 property="rdfs:label" class="page-title">$OntologyLabel</h1>
+	<span class="canonicalUrl"><b>Canonical URL:</b> $NamespaceURI</span>
+#if($NamespacePrefix)
+	<div><b>Preferred Namespace Prefix:</b> $NamespacePrefix</div>
+#end
+#if($OntologyDescription)
+	<div class="description">$OntologyDescription</div>
+#end
+#if($ClassList)
+	<table class="definition-table">
+		<thead>
+			<tr>
+				<th>Class</th>
+				<th>Description</th>
+			</tr>
+		</thead>
+		<tbody>
+#foreach($type in $ClassList)
+			<tr>
+				<th><a href="$type.href">$type.name</a></th>
+				<td>
+#if( $type.Description )
+					$type.Description
+#end				
+				</td>
+			</tr>
+#end
+		</tbody>
+	</table>
+#end	
+#if( $ShapeList )
+	<table class="definition-table">
+		<thead>
+			<tr>
+				<th>Shape</th>
+				<th>Description</th>
+			</tr>
+		</thead>
+		<tbody>
+#foreach($shape in $ShapeList)
+			<tr>
+				<th><a href="$shape.href">$shape.name</a></th>
+				<td>
+#if( $shape.Description )
+					$shape.Description
+#end				
+				</td>
+			</tr>
+#end
+		</tbody>
+	</table>
+#end
+	<p class="version">
+		Latest Version
+	</p>
+</div>	
+</body>
+</html>
