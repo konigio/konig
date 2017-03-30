@@ -27,7 +27,10 @@ public class DataCatalogUtil {
 	}
 	
 	public static List<Vertex> ontologyList(PageRequest request) {
-		return request.getGraph().v(OWL.ONTOLOGY).in(RDF.TYPE).toVertexList();
+		
+		List<Vertex> list = request.getTargetOntology().asTraversal().out(OWL.IMPORTS).toVertexList();
+		list.add(request.getTargetOntology());
+		return list;
 	}
 	
 	public static String ontologyName(Vertex ontology) {

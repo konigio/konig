@@ -8,6 +8,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
@@ -30,6 +32,9 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	
 	@Parameter(defaultValue="${basedir}/target/generated/datacatalog")
 	private File siteDir;
+	
+	@Parameter
+	private String ontology;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -45,7 +50,8 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			RdfUtil.loadTurtle(rdfDir, graph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
 			shapeLoader.load(graph);
-			builder.build(siteDir, graph, shapeManager);
+			URI ontologyId = new URIImpl(ontology);
+			builder.build(ontologyId, siteDir, graph, shapeManager);
 			
 		} catch (RDFParseException | RDFHandlerException | IOException | DataCatalogException e) {
 			throw new MojoExecutionException("Failed to generate DataCatalog site", e);

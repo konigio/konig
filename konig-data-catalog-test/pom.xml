@@ -40,6 +40,7 @@
 	  		<version>${konig.version}</version>
 	  		<configuration>
 	  			<rdfDir>target/generated/src/rdf</rdfDir>
+	  			<ontology>http://example.com/ns/core/</ontology>
 	  		</configuration>
 	  		<executions>
 	  			<execution>
