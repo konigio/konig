@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
@@ -56,11 +57,25 @@ public class DataCatalogBuilder {
 			buildClassPages(request);
 			buildClassIndex(request);
 			buildOntologyIndex(request);
+			buildIndexPage(request);
 		} catch (IOException e) {
 			throw new DataCatalogException(e);
 		}
 		
 	
+		
+	}
+
+	private void buildIndexPage(PageRequest request) throws IOException {
+		
+		File index = new File(baseDir, "index.html");
+		VelocityEngine engine = request.getEngine();
+		VelocityContext context = request.getContext();
+		FileWriter out = new FileWriter(index);
+		Template template = engine.getTemplate("data-catalog/velocity/index.vm");
+		template.merge(context, out);
+		
+		IOUtil.close(out, "index.html");
 		
 	}
 

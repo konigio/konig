@@ -2,15 +2,17 @@
 <head>
 <title>Class Index</title>
 <link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
-.listing {
-	text-align: left;
-	margin-left: 1em;
-}
+<style>
+#include( "data-catalog/velocity/style.vm" )
+</style>
 </head>
 <body>
+<div class="index-heading">
+	Classes
+</div>
 <div class="listing">
 #foreach( $type in $ClassList )
-	<div><a href="$type.href">$type.Name</a></div>
+	<div><a href="$type.href" target="mainContentFrame">$type.Name</a></div>
 #end
 </div>
 </body>
