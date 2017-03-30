@@ -1,16 +1,18 @@
 <html>
 <head>
-<title>Class Index</title>
+<title>Ontology Index</title>
 <link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
+<style>
 .listing {
 	text-align: left;
 	margin-left: 1em;
 }
+</style>
 </head>
 <body>
-<div class="listing">
-#foreach( $type in $ClassList )
-	<div><a href="$type.href">$type.Name</a></div>
+<div  class="listing">
+#foreach( $ontology in $OntologyList )
+	<div><a href="$ontology.href">$ontology.Name</a></div>
 #end
 </div>
 </body>

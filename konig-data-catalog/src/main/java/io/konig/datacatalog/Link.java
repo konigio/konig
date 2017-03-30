@@ -1,6 +1,6 @@
 package io.konig.datacatalog;
 
-public class Link {
+public class Link implements Comparable<Link> {
 
 	private String name;
 	private String href;
@@ -16,6 +16,11 @@ public class Link {
 
 	public String getHref() {
 		return href;
+	}
+
+	@Override
+	public int compareTo(Link o) {
+		return name.compareToIgnoreCase(o.getName());
 	}
 	
 }

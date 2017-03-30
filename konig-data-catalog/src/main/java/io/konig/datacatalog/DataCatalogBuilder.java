@@ -1,6 +1,7 @@
 package io.konig.datacatalog;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
@@ -11,7 +12,6 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 
@@ -31,12 +31,14 @@ public class DataCatalogBuilder {
 	
 	private ResourceWriterFactory resourceWriterFactory;
 	private ClassIndexWriterFactory classIndexWriterFactory;
+	private File baseDir;
 	
 	public DataCatalogBuilder() {
 	}
 
 	public void build(File baseDir, Graph graph, ShapeManager shapeManager) throws DataCatalogException {
 
+		this.baseDir = baseDir;
 		classIndexWriterFactory = new ClassIndexWriterFactory(baseDir);
 		resourceWriterFactory = new ResourceWriterFactory(baseDir);
 		Properties properties = new Properties();
@@ -53,6 +55,7 @@ public class DataCatalogBuilder {
 			buildShapePages(request);
 			buildClassPages(request);
 			buildClassIndex(request);
+			buildOntologyIndex(request);
 		} catch (IOException e) {
 			throw new DataCatalogException(e);
 		}
@@ -108,10 +111,21 @@ public class DataCatalogBuilder {
 	private void buildClassIndex(PageRequest request) throws IOException, DataCatalogException {
 		
 		ClassIndexPage page = new ClassIndexPage();
-		
-		PageResponse response = new PageResponseImpl(classIndexWriterFactory.createWriter(request, null));
+		PrintWriter out = classIndexWriterFactory.createWriter(request, null);
+		PageResponse response = new PageResponseImpl(out);
 		page.render(request, response);
-		
+		IOUtil.close(out, "allclasses-index.html" );
+	}
+	
+
+
+	private void buildOntologyIndex(PageRequest request) throws IOException, DataCatalogException {
+		File file = new File(baseDir, DataCatalogUtil.ONTOLOGY_INDEX_FILE);
+		PrintWriter out = new PrintWriter(new FileWriter(file));
+		PageResponse response = new PageResponseImpl(out);
+		OntologyIndexPage page = new OntologyIndexPage();
+		page.render(request, response);
+		IOUtil.close(out, DataCatalogUtil.ONTOLOGY_INDEX_FILE);
 	}
 
 	private void buildShapePages(PageRequest baseRequest) throws IOException, DataCatalogException {
