@@ -3,16 +3,16 @@
 <title>Ontology Index</title>
 <link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
 <style>
-.listing {
-	text-align: left;
-	margin-left: 1em;
-}
+#include( "data-catalog/velocity/style.vm" )
 </style>
 </head>
 <body>
+<div class="index-heading">
+	Ontologies
+</div>
 <div  class="listing">
 #foreach( $ontology in $OntologyList )
-	<div><a href="$ontology.href">$ontology.Name</a></div>
+	<div><a href="$ontology.href" target="mainContentFrame">$ontology.Name</a></div>
 #end
 </div>
 </body>

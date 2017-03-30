@@ -1,0 +1,15 @@
+
+.listing {
+	text-align: left;
+	margin-left: 1em;
+	margin-top: 1em;
+}
+
+.index-heading {
+	text-align: left;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	padding-left: 1em;
+	color: #fff;
+	background-color: rgb(102, 0, 0);
+}
