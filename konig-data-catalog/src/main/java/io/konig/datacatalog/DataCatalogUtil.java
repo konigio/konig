@@ -8,6 +8,7 @@ public class DataCatalogUtil {
 
 	public static final String CLASSES_INDEX_FILE = "class-index.html";
 	private static final String ONTOLOGY_SUMMARY = "ontology-summary";
+	public static final String ONTOLOGY_INDEX_FILE = "ontology-index.html";
 	
 	public static String classIndexFileName(Namespace ns) {
 		StringBuilder builder = new StringBuilder();
@@ -26,6 +27,19 @@ public class DataCatalogUtil {
 		builder.append(ns.getPrefix());
 		builder.append('/');
 		builder.append(classId.getLocalName());
+		builder.append(".html");
+		return builder.toString();
+	}
+	
+	/**
+	 * The path to a resource relative to the base directory.
+	 */
+	public static String path(PageRequest request, URI resourceId) throws DataCatalogException {
+		StringBuilder builder = new StringBuilder();
+		Namespace ns = request.findNamespaceByName(resourceId.getNamespace());
+		builder.append(ns.getPrefix());
+		builder.append('/');
+		builder.append(resourceId.getLocalName());
 		builder.append(".html");
 		return builder.toString();
 	}

@@ -62,18 +62,24 @@ public class ClassIndexPageTest {
 		actual = actual.replace("\r", "");
 		
 		String expected = 
-			"<html>\n" + 
-			"<head>\n" + 
-			"<title>Class Index</title>\n" + 
-			"<link rel=\"stylesheet\" type=\"text/css\" href=\"http://schema.org/docs/schemaorg.css\">\n" + 
-			"</head>\n" + 
-			"<body>\n" + 
-			"	<div><a href=\"schema/CreativeWork.html\">CreativeWork</a></div>\n" + 
-			"	<div><a href=\"schema/Organization.html\">Organization</a></div>\n" + 
-			"	<div><a href=\"schema/Person.html\">Person</a></div>\n" + 
-			"</body>\n" + 
+			"<html>\r\n" + 
+			"<head>\r\n" + 
+			"<title>Class Index</title>\r\n" + 
+			"<link rel=\"stylesheet\" type=\"text/css\" href=\"http://schema.org/docs/schemaorg.css\">\r\n" + 
+			".listing {\r\n" + 
+			"	text-align: left;\r\n" + 
+			"	margin-left: 1em;\r\n" + 
+			"}\r\n" + 
+			"</head>\r\n" + 
+			"<body>\r\n" + 
+			"<div class=\"listing\">\r\n" + 
+			"	<div><a href=\"schema/CreativeWork.html\">CreativeWork</a></div>\r\n" + 
+			"	<div><a href=\"schema/Organization.html\">Organization</a></div>\r\n" + 
+			"	<div><a href=\"schema/Person.html\">Person</a></div>\r\n" + 
+			"</div>\r\n" + 
+			"</body>\r\n" + 
 			"</html>";
-		
+		expected = expected.replace("\r", "");
 		assertEquals(expected, actual);
 		
 	}
