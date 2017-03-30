@@ -25,7 +25,6 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
@@ -36,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.activity.Activity;
-import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NameMap;
@@ -356,52 +354,10 @@ public class WorkbookLoader {
 			produceEnumShapes();
 			processShapeTemplates();
 			visitShapes();
-			addDefaultOntologies();
 			
 		}
 
 
-		private void addDefaultOntologies() {
-			List<Edge> list = new ArrayList<Edge>(graph);
-			for (Edge e : list) {
-				if (RDF.TYPE.equals(e.getPredicate())) {
-					Resource subject = e.getSubject();
-					if (subject instanceof URI) {
-						addOntology(((URI)subject).getNamespace());
-					}
-					Value object = e.getObject();
-					if (object instanceof URI) {
-						addClassAndOntology(((URI)object));
-					}
-				}
-				
-				
-			}
-			
-		}
-
-		private void addClassAndOntology(URI type) {
-			graph.edge(type, RDF.TYPE, OWL.CLASS);
-			addOntology(type.getNamespace());
-			
-		}
-
-		private void addOntology(String namespace) {
-			
-			if (defaultNamespace.contains(namespace)) {
-				defaultNamespace.remove(namespace);
-				Namespace ns = nsManager.findByName(namespace);
-				if (ns != null) {
-
-					URI namespaceId = new URIImpl(namespace);
-					Vertex v = graph.getVertex(namespaceId);
-					if (v == null) {
-						graph.edge(namespaceId, RDF.TYPE, OWL.ONTOLOGY);
-						graph.edge(namespaceId, VANN.preferredNamespacePrefix, literal(ns.getPrefix()));
-					}
-				}
-			}
-		}
 
 		private void processShapeTemplates() throws SpreadsheetException {
 			
