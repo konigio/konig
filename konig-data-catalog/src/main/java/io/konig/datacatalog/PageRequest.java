@@ -15,12 +15,14 @@ import io.konig.shacl.ShapeManager;
 public class PageRequest {
 	private static final String OWL_CLASS_LIST = "OwlClassList";
 
+	private Vertex targetOntology;
 	private VelocityEngine engine;
 	private VelocityContext context;
 	private Graph graph;
 	private ShapeManager shapeManager;
 
-	public PageRequest(VelocityEngine engine, VelocityContext context, Graph graph, ShapeManager shapeManager) {
+	public PageRequest(Vertex targetOntology, VelocityEngine engine, VelocityContext context, Graph graph, ShapeManager shapeManager) {
+		this.targetOntology = targetOntology;
 		this.engine = engine;
 		this.context = context;
 		this.graph = graph;
@@ -28,6 +30,7 @@ public class PageRequest {
 	}
 	
 	public PageRequest(PageRequest other) {
+		this.targetOntology = other.targetOntology;
 		this.engine = other.getEngine();
 		this.context = new VelocityContext();
 		this.graph = other.getGraph();
@@ -59,6 +62,10 @@ public class PageRequest {
 		return shapeManager;
 	}
 	
+	public Vertex getTargetOntology() {
+		return targetOntology;
+	}
+
 	public Namespace findNamespaceByName(String name) throws DataCatalogException {
 		NamespaceManager nsManager = getNamespaceManager();
 		Namespace ns = nsManager.findByName(name);

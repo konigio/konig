@@ -24,7 +24,7 @@ public class OntologyIndexPage {
 
 	public void render(PageRequest request, PageResponse response) throws DataCatalogException {
 		
-		List<Vertex> source = request.getGraph().v(OWL.ONTOLOGY).in(RDF.TYPE).toVertexList();
+		List<Vertex> source = DataCatalogUtil.ontologyList(request);
 		
 		List<Link> ontologyList = new ArrayList<>();
 		for (Vertex v : source) {

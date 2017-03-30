@@ -32,16 +32,16 @@ public class DataCatalogBuilder {
 	
 	private ResourceWriterFactory resourceWriterFactory;
 	private ClassIndexWriterFactory classIndexWriterFactory;
-	private File baseDir;
+	private File outDir;
 	
 	public DataCatalogBuilder() {
 	}
 
-	public void build(File baseDir, Graph graph, ShapeManager shapeManager) throws DataCatalogException {
+	public void build(URI ontologyId, File outDir, Graph graph, ShapeManager shapeManager) throws DataCatalogException {
 
-		this.baseDir = baseDir;
-		classIndexWriterFactory = new ClassIndexWriterFactory(baseDir);
-		resourceWriterFactory = new ResourceWriterFactory(baseDir);
+		this.outDir = outDir;
+		classIndexWriterFactory = new ClassIndexWriterFactory(outDir);
+		resourceWriterFactory = new ResourceWriterFactory(outDir);
 		Properties properties = new Properties();
 		properties.put("resource.loader", "class");
 		properties.put("class.resource.loader.class", ClasspathResourceLoader.class.getName());
@@ -49,8 +49,12 @@ public class DataCatalogBuilder {
 		VelocityEngine engine = new VelocityEngine(properties);
 		VelocityContext context = new VelocityContext();
 		
+		Vertex targetOntology = graph.getVertex(ontologyId);
+		if (targetOntology == null) {
+			throw new DataCatalogException("Target Ontology not defined: " + ontologyId.stringValue());
+		}
 
-		PageRequest request = new PageRequest(engine, context, graph, shapeManager);
+		PageRequest request = new PageRequest(targetOntology, engine, context, graph, shapeManager);
 		try {
 			buildOntologyPages(request);
 			buildShapePages(request);
@@ -69,7 +73,7 @@ public class DataCatalogBuilder {
 
 	private void buildOverviewPage(PageRequest request) throws IOException, DataCatalogException {
 		
-		File overviewFile = new File(baseDir, "overview.html");
+		File overviewFile = new File(outDir, "overview.html");
 		PrintWriter out = new PrintWriter(new FileWriter(overviewFile));
 		PageResponse response = new PageResponseImpl(out);
 		OverviewPage page = new OverviewPage();
@@ -80,7 +84,7 @@ public class DataCatalogBuilder {
 
 	private void buildIndexPage(PageRequest request) throws IOException {
 		
-		File index = new File(baseDir, "index.html");
+		File index = new File(outDir, "index.html");
 		VelocityEngine engine = request.getEngine();
 		VelocityContext context = request.getContext();
 		FileWriter out = new FileWriter(index);
@@ -147,7 +151,7 @@ public class DataCatalogBuilder {
 
 
 	private void buildOntologyIndex(PageRequest request) throws IOException, DataCatalogException {
-		File file = new File(baseDir, DataCatalogUtil.ONTOLOGY_INDEX_FILE);
+		File file = new File(outDir, DataCatalogUtil.ONTOLOGY_INDEX_FILE);
 		PrintWriter out = new PrintWriter(new FileWriter(file));
 		PageResponse response = new PageResponseImpl(out);
 		OntologyIndexPage page = new OntologyIndexPage();
