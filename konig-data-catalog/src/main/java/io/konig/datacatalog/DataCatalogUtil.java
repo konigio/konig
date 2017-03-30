@@ -1,8 +1,17 @@
 package io.konig.datacatalog;
 
+import java.util.List;
+
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.OWL;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
+
+import io.konig.core.Vertex;
+import io.konig.core.vocab.VANN;
 
 public class DataCatalogUtil {
 
@@ -16,6 +25,20 @@ public class DataCatalogUtil {
 		builder.append("/class-index.html");
 		return builder.toString();
 	}
+	
+	public static List<Vertex> ontologyList(PageRequest request) {
+		return request.getGraph().v(OWL.ONTOLOGY).in(RDF.TYPE).toVertexList();
+	}
+	
+	public static String ontologyName(Vertex ontology) {
+		Value value = ontology.getValue(RDFS.LABEL);
+		if (value == null) {
+			value = ontology.getValue(VANN.preferredNamespacePrefix);
+		}
+		
+		return value == null ? ontology.getId().stringValue() : value.stringValue();
+	}
+	
 	
 	public static URI ontologySummary(String namespace) {
 		return new URIImpl(namespace + ONTOLOGY_SUMMARY);

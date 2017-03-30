@@ -63,13 +63,13 @@
 <frame src="ontology-index.html" name="packageListFrame" title="All Packages">
 <frame src="allclasses-index.html" name="packageFrame" title="All classes and interfaces (except non-static nested types)">
 </frameset>
-<frame src="overview-summary.html" name="mainContentFrame" title="Package, class and interface descriptions" scrolling="yes">
+<frame src="overview.html" name="mainContentFrame" title="Package, class and interface descriptions" scrolling="yes">
 <noframes>
 <noscript>
 <div>JavaScript is disabled on your browser.</div>
 </noscript>
 <h2>Frame Alert</h2>
-<p>This document is designed to be viewed using the frames feature. If you see this message, you are using a non-frame-capable web client. Link to <a href="overview-summary.html">Non-frame version</a>.</p>
+<p>This document is designed to be viewed using the frames feature. If you see this message, you are using a non-frame-capable web client. Link to <a href="overview.html">Non-frame version</a>.</p>
 </noframes>
 </frameset>
 </html>

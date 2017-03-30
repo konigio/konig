@@ -9,7 +9,7 @@ public class ResourceDescription {
 	public ResourceDescription(String href, String name, String description) {
 		this.href = href;
 		this.name = name;
-		this.description = description;
+		this.description = description==null ? "" : description;
 	}
 
 	public String getHref() {
