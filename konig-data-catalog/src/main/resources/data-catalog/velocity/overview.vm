@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>$ClassName</title>
+<link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
+</head>
+<body>
+<div id="mainContent">
+	<h1 property="rdfs:label" class="page-title">Overview</h1>
+
+	<table class="definition-table">
+		<thead>
+			<tr>
+				<th>Ontology</th>
+				<th>Description</th>
+			</tr>
+		</thead>
+		<tbody>
+#foreach( $ontology in $OntologyList ) 
+			<tr>
+				<th><a href="$ontology.Href">$ontology.Name</a></th>
+				<td>$ontology.Description</td>
+			</tr>
+#end		
+		</tbody>
+	</table>
+	
+
+	<p class="version">
+		Latest Version
+	</p>
+</div>
+</body>
+</html>

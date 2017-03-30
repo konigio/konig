@@ -58,11 +58,23 @@ public class DataCatalogBuilder {
 			buildClassIndex(request);
 			buildOntologyIndex(request);
 			buildIndexPage(request);
+			buildOverviewPage(request);
 		} catch (IOException e) {
 			throw new DataCatalogException(e);
 		}
 		
 	
+		
+	}
+
+	private void buildOverviewPage(PageRequest request) throws IOException, DataCatalogException {
+		
+		File overviewFile = new File(baseDir, "overview.html");
+		PrintWriter out = new PrintWriter(new FileWriter(overviewFile));
+		PageResponse response = new PageResponseImpl(out);
+		OverviewPage page = new OverviewPage();
+		page.render(request, response);
+		IOUtil.close(out, "overview.html");
 		
 	}
 
