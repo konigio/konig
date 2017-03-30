@@ -25,6 +25,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
@@ -83,6 +84,7 @@ public class WorkbookLoader {
 	private static final String COMMENT = "Comment";
 	private static final String NAMESPACE_URI = "Namespace URI";
 	private static final String PREFIX = "Prefix";
+	private static final String IMPORTS = "Imports";
 	
 	private static final String CLASS_NAME = "Class Name";
 	private static final String CLASS_ID = "Class Id";
@@ -257,11 +259,13 @@ public class WorkbookLoader {
 		
 		private Properties settings = new Properties();
 		private List<ShapeTemplate> shapeTemplateList = new ArrayList<>();
+		private List<ImportInfo> importList = new ArrayList<>();
 		
 		private int ontologyNameCol=UNDEFINED;
 		private int ontologyCommentCol=UNDEFINED;
 		private int namespaceUriCol=UNDEFINED;
 		private int prefixCol=UNDEFINED;
+		private int importsCol=UNDEFINED;
 		
 		private int classNameCol = UNDEFINED;
 		private int classCommentCol = UNDEFINED;
@@ -354,10 +358,41 @@ public class WorkbookLoader {
 			produceEnumShapes();
 			processShapeTemplates();
 			visitShapes();
-			
+			processImportStatements();
 		}
 
 
+
+		private void processImportStatements() throws SpreadsheetException {
+			
+			for (ImportInfo info : importList) {
+				URI subject = info.getTargetOntology();
+				
+				for (String prefix : info.getImportList()) {
+					
+					if (prefix.equals("*")) {
+						if (info.getImportList().size()>1) {
+							throw new SpreadsheetException("Cannot combine wildcard with namespace prefix when declaring imports for ontology: " 
+									+ subject.stringValue());
+						}
+						List<Vertex> objectList = graph.v(OWL.ONTOLOGY).in(RDF.TYPE).toVertexList();
+						for (Vertex v : objectList) {
+							if (!subject.equals(v.getId()) && v.getId() instanceof URI) {
+								graph.edge(subject, OWL.IMPORTS, v.getId());
+							}
+						}
+					} else {
+						Namespace ns = nsManager.findByPrefix(prefix);
+						if (ns == null) {
+							throw new SpreadsheetException("Cannot import into <" + subject.stringValue() + ">.  Namespace not found for prefix: " + prefix);
+						}
+						URI object = vf.createURI(ns.getName());
+						graph.edge(subject, OWL.IMPORTS, object);
+					}
+				}
+			}
+			
+		}
 
 		private void processShapeTemplates() throws SpreadsheetException {
 			
@@ -1664,6 +1699,7 @@ public class WorkbookLoader {
 			String comment = stringValue(row, ontologyCommentCol);
 			String namespaceURI = stringValue(row, namespaceUriCol);
 			String prefix = stringValue(row, prefixCol);
+			List<String> importList = imports(row, importsCol);
 			
 			if (ontologyName==null && comment==null && namespaceURI==null && prefix==null) {
 				return;
@@ -1695,8 +1731,28 @@ public class WorkbookLoader {
 				graph.edge(subject, RDFS.COMMENT, literal(comment));
 			}
 			
+			if (importList != null) {
+				this.importList.add(new ImportInfo(subject, importList));
+			}
+			
 		}
 		
+		private List<String> imports(Row row, int column) {
+			List<String> list = null;
+			String text = stringValue(row, column);
+			if (text != null) {
+				text = text.trim();
+				if (text.length()>0) {
+					list = new ArrayList<>();
+					StringTokenizer tokens = new StringTokenizer(text, " \t\r\n");
+					while (tokens.hasMoreTokens()) {
+						list.add(tokens.nextToken());
+					}
+				}
+			}
+			return list;
+		}
+
 		private URI uri(String text) {
 			return vf.createURI(text);
 		}
@@ -1746,6 +1802,7 @@ public class WorkbookLoader {
 			ontologyCommentCol=UNDEFINED;
 			namespaceUriCol=UNDEFINED;
 			prefixCol=UNDEFINED;
+			importsCol=UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1765,6 +1822,7 @@ public class WorkbookLoader {
 					case COMMENT : ontologyCommentCol = i; break;
 					case NAMESPACE_URI : namespaceUriCol = i; break;
 					case PREFIX : prefixCol = i; break;
+					case IMPORTS : importsCol = i; break;
 						
 					}
 				}
@@ -1959,5 +2017,18 @@ public class WorkbookLoader {
 		}
 	}
 
-
+	private static class ImportInfo {
+		URI targetOntology;
+		List<String> importList;
+		public ImportInfo(URI targetOntology, List<String> importList) {
+			this.targetOntology = targetOntology;
+			this.importList = importList;
+		}
+		public URI getTargetOntology() {
+			return targetOntology;
+		}
+		public List<String> getImportList() {
+			return importList;
+		}
+	}
 }
