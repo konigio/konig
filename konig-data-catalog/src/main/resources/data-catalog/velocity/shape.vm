@@ -24,6 +24,9 @@
 #end		
 		</tbody>
 	</table>
+	<p class="version">
+		Latest Version
+	</p>
 </div>
 </body>
 </html>

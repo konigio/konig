@@ -70,39 +70,43 @@ public class ShapePageTest {
 		actual = actual.replace("\r", "");
 		
 		String expected = 
-			"<html>\n" + 
-			"<head>\n" + 
-			"<title>PersonShape</title>\n" + 
-			"<link rel=\"stylesheet\" type=\"text/css\" href=\"http://schema.org/docs/schemaorg.css\">\n" + 
-			"</head>\n" + 
-			"<body>\n" + 
-			"<div id=\"mainContent\" prefix=\"sh: http://www.w3.org/ns/shacl#\"  typeof=\"sh:Shape\" resource=\"http://example.com/shapes/PersonShape\">\n" + 
-			"	<h1 property=\"rdfs:label\" class=\"page-title\">PersonShape</h1>\n" + 
-			"	<table class=\"definition-table\">\n" + 
-			"		<thead>\n" + 
-			"			<tr>\n" + 
-			"				<th>Property</th>\n" + 
-			"				<th>Type</th>\n" + 
-			"				<th>Description</th>\n" + 
-			"			</tr>\n" + 
-			"		</thead>\n" + 
-			"		<tbody class=\"supertype\">\n" + 
-			"			<tr typeof=\"sh:PropertyConstraint\" resource=\"http://schema.org/givenName\">\n" + 
-			"				<th class=\"prop-nam\">givenName</th>\n" + 
-			"				<td class=\"prop-ect\">string</td>\n" + 
-			"				<td class=\"prop-desc\" property=\"rdfs:comment\">Given name. In the U.S., the first name of a Person. This can be used along with familyName instead of the name property.</td>\n" + 
-			"			</tr>\n" + 
-			"			<tr typeof=\"sh:PropertyConstraint\" resource=\"http://schema.org/familyName\">\n" + 
-			"				<th class=\"prop-nam\">familyName</th>\n" + 
-			"				<td class=\"prop-ect\">string</td>\n" + 
-			"				<td class=\"prop-desc\" property=\"rdfs:comment\"></td>\n" + 
-			"			</tr>\n" + 
-			"		</tbody>\n" + 
-			"	</table>\n" + 
-			"</div>\n" + 
-			"</body>\n" + 
+			"<html>\r\n" + 
+			"<head>\r\n" + 
+			"<title>PersonShape</title>\r\n" + 
+			"<link rel=\"stylesheet\" type=\"text/css\" href=\"http://schema.org/docs/schemaorg.css\">\r\n" + 
+			"</head>\r\n" + 
+			"<body>\r\n" + 
+			"<div id=\"mainContent\" prefix=\"sh: http://www.w3.org/ns/shacl#\"  typeof=\"sh:Shape\" resource=\"http://example.com/shapes/PersonShape\">\r\n" + 
+			"	<h1 property=\"rdfs:label\" class=\"page-title\">PersonShape</h1>\r\n" + 
+			"	<table class=\"definition-table\">\r\n" + 
+			"		<thead>\r\n" + 
+			"			<tr>\r\n" + 
+			"				<th>Property</th>\r\n" + 
+			"				<th>Type</th>\r\n" + 
+			"				<th>Description</th>\r\n" + 
+			"			</tr>\r\n" + 
+			"		</thead>\r\n" + 
+			"		<tbody class=\"supertype\">\r\n" + 
+			"			<tr typeof=\"sh:PropertyConstraint\" resource=\"http://schema.org/givenName\">\r\n" + 
+			"				<th class=\"prop-nam\">givenName</th>\r\n" + 
+			"				<td class=\"prop-ect\">string</td>\r\n" + 
+			"				<td class=\"prop-desc\" property=\"rdfs:comment\">Given name. In the U.S., the first name of a Person. This can be used along with familyName instead of the name property.</td>\r\n" + 
+			"			</tr>\r\n" + 
+			"			<tr typeof=\"sh:PropertyConstraint\" resource=\"http://schema.org/familyName\">\r\n" + 
+			"				<th class=\"prop-nam\">familyName</th>\r\n" + 
+			"				<td class=\"prop-ect\">string</td>\r\n" + 
+			"				<td class=\"prop-desc\" property=\"rdfs:comment\"></td>\r\n" + 
+			"			</tr>\r\n" + 
+			"		</tbody>\r\n" + 
+			"	</table>\r\n" + 
+			"	<p class=\"version\">\r\n" + 
+			"		Latest Version\r\n" + 
+			"	</p>\r\n" + 
+			"</div>\r\n" + 
+			"</body>\r\n" + 
 			"</html>";
 		
+		expected = expected.replace("\r", "");
 		assertEquals(expected, actual);
 		
 	}

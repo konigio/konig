@@ -63,6 +63,10 @@ public class OwlReasoner {
 		return graph.v(OWL.CLASS).in(RDF.TYPE).toVertexList();
 	}
 	
+	public List<Vertex> ontologyList() {
+		return graph.v(OWL.ONTOLOGY).in(RDF.TYPE).toVertexList();
+	}
+	
 	/**
 	 * Ensure that every member within a set of equivalent classes contains 
 	 * an owl:equivalentClass property whose value is the preferred class.
