@@ -18,12 +18,18 @@ public class DataCatalogUtil {
 	public static final String CLASSES_INDEX_FILE = "class-index.html";
 	private static final String ONTOLOGY_SUMMARY = "ontology-summary";
 	public static final String ONTOLOGY_INDEX_FILE = "ontology-index.html";
+	public static final String SITE_NAME = "SiteName";
 	
 	public static String classIndexFileName(Namespace ns) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(ns);
 		builder.append("/class-index.html");
 		return builder.toString();
+	}
+	
+	public static void setSiteName(PageRequest request) {
+		String siteName = ontologyName(request.getTargetOntology());
+		request.getContext().put(SITE_NAME, siteName);
 	}
 	
 	public static List<Vertex> ontologyList(PageRequest request) {
@@ -67,24 +73,6 @@ public class DataCatalogUtil {
 		builder.append('/');
 		builder.append(resourceId.getLocalName());
 		builder.append(".html");
-		return builder.toString();
-	}
-	
-	public static String relativePath(PageRequest request, URI a, URI b) throws DataCatalogException {
-		if (a==null || b==null) {
-			return null;
-		}
-		StringBuilder builder = new StringBuilder();
-		Namespace na = request.findNamespaceByName(a.getNamespace());
-		Namespace nb = request.findNamespaceByName(b.getNamespace());
-		if (!na.getName().equals(nb.getName())) {
-			builder.append("../");
-			builder.append(nb.getPrefix());
-			builder.append('/');
-		} 
-		builder.append(b.getLocalName());
-		builder.append(".html");
-		
 		return builder.toString();
 	}
 }

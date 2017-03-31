@@ -19,7 +19,8 @@ public class OverviewPage {
 	
 	public void render(PageRequest request, PageResponse response) throws DataCatalogException {
 		
-		
+		request.setResourceId(DataCatalogBuilder.OVERVIEW_URI);
+		request.setActiveLink(DataCatalogBuilder.OVERVIEW_URI);
 		List<Vertex> list = DataCatalogUtil.ontologyList(request);
 		List<ResourceDescription> ontologyList = new ArrayList<>();
 		for (Vertex v : list) {

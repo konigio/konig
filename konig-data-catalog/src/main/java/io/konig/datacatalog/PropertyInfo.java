@@ -23,13 +23,13 @@ public class PropertyInfo {
 		} else if (constraint.getValueClass() instanceof URI) {
 			URI valueClass = (URI) constraint.getValueClass();
 			typeName = valueClass.getLocalName();
-			typeHref = DataCatalogUtil.relativePath(request, resourceId, valueClass);
+			typeHref = request.relativePath(resourceId, valueClass);
 		} else if (constraint.getShape() != null) {
 			URI targetClass = constraint.getShape().getTargetClass();
 			if (targetClass != null) {
 				typeName = targetClass.getLocalName();
 			}
-			typeHref = DataCatalogUtil.relativePath(request, resourceId, targetClass);
+			typeHref = request.relativePath(resourceId, targetClass);
 		}
 		description = RdfUtil.getDescription(constraint, request.getGraph());
 		if (description == null) {

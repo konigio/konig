@@ -4,6 +4,7 @@
 <link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
 </head>
 <body>
+#parse( "data-catalog/velocity/header.vm" )
 <div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$ShapeId">
 	<h1 property="rdfs:label" class="page-title">$ShapeName</h1>
 	<table class="definition-table">

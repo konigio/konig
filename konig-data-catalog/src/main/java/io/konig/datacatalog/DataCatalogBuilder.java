@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -11,8 +12,11 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.NamespaceImpl;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 
@@ -30,15 +34,29 @@ import io.konig.shacl.impl.MemoryClassManager;
 
 public class DataCatalogBuilder {
 	
+	public static final String OVERVIEW = "Overview";
+	public static final String CLASSES = "Classes";
+	
+	public static final String CATALOG_BASE_URI = "urn:datacatalog/";
+	public static final URI OVERVIEW_URI = new URIImpl("urn:datacatalog/overview");
+	
+	private static List<MenuItem> menu = new ArrayList<>();
+	static {
+		menu.add(new MenuItem(OVERVIEW_URI, "Overview"));
+	}
+	
 	private ResourceWriterFactory resourceWriterFactory;
 	private ClassIndexWriterFactory classIndexWriterFactory;
 	private File outDir;
 	
 	public DataCatalogBuilder() {
 	}
+	
 
 	public void build(URI ontologyId, File outDir, Graph graph, ShapeManager shapeManager) throws DataCatalogException {
 
+		graph.getNamespaceManager().add(new NamespaceImpl("_dcat_", CATALOG_BASE_URI));
+			
 		this.outDir = outDir;
 		classIndexWriterFactory = new ClassIndexWriterFactory(outDir);
 		resourceWriterFactory = new ResourceWriterFactory(outDir);
@@ -54,7 +72,7 @@ public class DataCatalogBuilder {
 			throw new DataCatalogException("Target Ontology not defined: " + ontologyId.stringValue());
 		}
 
-		PageRequest request = new PageRequest(targetOntology, engine, context, graph, shapeManager);
+		PageRequest request = new PageRequest(this, targetOntology, engine, context, graph, shapeManager);
 		try {
 			buildOntologyPages(request);
 			buildShapePages(request);
@@ -69,6 +87,23 @@ public class DataCatalogBuilder {
 		
 	
 		
+	}
+	
+	public List<Link> setActiveItem(PageRequest request, URI pageId) throws DataCatalogException {
+		List<Link> list = new ArrayList<>();
+		for (MenuItem item : menu) {
+			String name = item.getName();
+			String href = request.relativePath(item.getItemId());
+			
+			if (item.getItemId().equals(pageId)) {
+				list.add(new Link(name, href, "activelink"));
+			} else {
+				list.add(new Link(name, href));
+			}
+		}
+		request.getContext().put("Menu", list);
+		
+		return list;
 	}
 
 	private void buildOverviewPage(PageRequest request) throws IOException, DataCatalogException {
@@ -178,6 +213,33 @@ public class DataCatalogBuilder {
 			}
 		}
 		
+	}
+	
+
+	public String relativePath(PageRequest request, URI a, URI b) throws DataCatalogException {
+		if (a==null || b==null) {
+			return null;
+		}
+		StringBuilder builder = new StringBuilder();
+		Namespace na = request.findNamespaceByName(a.getNamespace());
+		Namespace nb = request.findNamespaceByName(b.getNamespace());
+		String aNamespace = na.getName();
+		String bNamespace = nb.getName();
+		
+		if (!aNamespace.equals(bNamespace)) {
+			
+			if (!aNamespace.equals(CATALOG_BASE_URI)) {
+				builder.append("../");
+			} 
+			if (!bNamespace.equals(CATALOG_BASE_URI)) {
+				builder.append(nb.getPrefix());
+				builder.append('/');
+			}
+		} 
+		builder.append(b.getLocalName());
+		builder.append(".html");
+		
+		return builder.toString();
 	}
 
 }

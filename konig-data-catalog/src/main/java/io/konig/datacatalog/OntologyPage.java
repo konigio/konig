@@ -32,9 +32,13 @@ public class OntologyPage {
 	public void render(OntologyRequest request, PageResponse response) throws DataCatalogException, IOException {
 		Vertex ontology = request.getOntologyVertex();
 		URI ontologyId = (URI) ontology.getId();
-		
+
+		DataCatalogUtil.setSiteName(request);
 		VelocityContext context = request.getContext();
 		context.put(NAMESPACE_URI, ontologyId.stringValue());
+		
+		request.setResourceId(ontologyId);
+		request.setActiveLink(null);
 		
 		Value prefix = ontology.getValue(VANN.preferredNamespacePrefix);
 		if (prefix != null) {
@@ -71,7 +75,7 @@ public class OntologyPage {
 				URI shapeId = (URI) id;
 				if (namespace.equals(shapeId.getNamespace())) {
 					String name = shapeId.getLocalName();
-					String href = DataCatalogUtil.relativePath(request, ontologyId, shapeId);
+					String href = request.relativePath(ontologyId, shapeId);
 					String description = shape.getComment();
 					result.add(new ResourceDescription(href, name, description));
 				}
@@ -94,7 +98,7 @@ public class OntologyPage {
 				URI classId = (URI) id;
 				if (namespace.equals(classId.getNamespace())) {
 					String name = classId.getLocalName();
-					String href = DataCatalogUtil.relativePath(request, ontologyId, classId);
+					String href = request.relativePath(ontologyId, classId);
 					String description = RdfUtil.getDescription(owlClass);
 					
 					result.add(new ResourceDescription(href, name, description));
