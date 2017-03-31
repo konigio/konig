@@ -9,6 +9,7 @@
 </style>
 </head>
 <body>
+#parse( "data-catalog/velocity/header.vm" )
 <div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$NamespaceURI">
 	<h1 property="rdfs:label" class="page-title">$OntologyLabel</h1>
 	<span class="canonicalUrl"><b>Canonical URL:</b> $NamespaceURI</span>

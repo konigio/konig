@@ -3,7 +3,8 @@
 <title>$ClassName</title>
 <link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
 </head>
-<body>
+<body class="mainsite">
+#parse( "data-catalog/velocity/header.vm" )
 <div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$ClassId">
 	<h1 property="rdfs:label" class="page-title">$ClassName</h1>
 	<table class="definition-table">

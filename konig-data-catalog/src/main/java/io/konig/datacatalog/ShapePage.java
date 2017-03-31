@@ -18,7 +18,8 @@ public class ShapePage {
 	private static final String SHAPE_TEMPLATE = "data-catalog/velocity/shape.vm";
 
 	public void render(ShapeRequest request, PageResponse response) throws DataCatalogException {
-		
+
+		DataCatalogUtil.setSiteName(request);
 		VelocityEngine engine = request.getEngine();
 		VelocityContext context = request.getContext();
 		Shape shape = request.getShape();
@@ -28,7 +29,11 @@ public class ShapePage {
 			shapeURI = (URI) shapeId;
 			context.put("ShapeId", shapeURI.stringValue());
 			context.put("ShapeName", shapeURI.getLocalName());
+		} else {
+			return;
 		}
+		request.setResourceId(shapeURI);
+		request.setActiveLink(null);
 		
 		List<PropertyInfo> propertyList = new ArrayList<>();
 		context.put("PropertyList", propertyList);

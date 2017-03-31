@@ -25,13 +25,15 @@ public class ClassPage {
 		
 		Vertex owlClass = request.getOwlClass();
 
-		
+		DataCatalogUtil.setSiteName(request);
 		Shape shape = classManager.getLogicalShape(owlClass.getId());
 
 		VelocityEngine engine = request.getEngine();
 		VelocityContext context = request.getContext();
 		
 		URI classId = (URI) owlClass.getId();
+		request.setResourceId(classId);
+		request.setActiveLink(null);
 		
 		context.put("ClassName", classId.getLocalName());
 		context.put("ClassId", classId.stringValue());
@@ -61,7 +63,7 @@ public class ClassPage {
 				if (id instanceof URI) {
 					URI shapeId = (URI) id;
 					String shapeName = shapeId.getLocalName();
-					String href = DataCatalogUtil.relativePath(request, classId, shapeId);
+					String href = request.relativePath(classId, shapeId);
 					
 					linkList.add(new Link(shapeName, href));
 				}

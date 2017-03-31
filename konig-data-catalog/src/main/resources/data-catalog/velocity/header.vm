@@ -1,0 +1,31 @@
+#if(!$SiteName)
+#set( $SiteName = "Data Catalog" )
+#end
+<div id="container">
+	<div id="intro">
+		<div id="pageHeader">
+			<div class="wrapper">
+				<div id="sitename">				
+					<h1>$SiteName</h1>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+#if( $Menu )
+<div id="selectionbar">
+	<div class="wrapper">
+		<ul>
+#foreach( $menuItem in $Menu )
+#if( $menuItem.ClassName )
+			<li class="$menuItem.ClassName">
+#else 
+			<li>
+#end
+				<a href="$menuItem.Href">$menuItem.Name</a>
+			</li>
+#end			
+		</ul>
+	</div>
+</div>
+#end
