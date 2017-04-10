@@ -49,7 +49,7 @@ public class ClassHierarchyTest {
 	private Graph graph;
 	private ShapeManager shapeManager;
 	private OwlReasoner owlReasoner;
-	private ClassHierarchy hierarchy;
+	private ClassStructure hierarchy;
 	
 	@Before
 	public void setUp() {
@@ -63,7 +63,7 @@ public class ClassHierarchyTest {
 		load("ClassHierarchyTest/model.ttl");
 
 		SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
-		hierarchy = new ClassHierarchy(iriTemplate, shapeManager, owlReasoner);
+		hierarchy = new ClassStructure(iriTemplate, shapeManager, owlReasoner);
 		Shape workShape = hierarchy.getShapeForClass(Schema.CreativeWork);
 		assertTrue(workShape != null);
 

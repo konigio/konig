@@ -53,7 +53,7 @@ import io.konig.core.vocab.Schema;
 import io.konig.runtime.io.BaseJsonReader;
 import io.konig.runtime.io.ValidationException;
 import io.konig.schemagen.SchemaGeneratorException;
-import io.konig.shacl.ClassHierarchy;
+import io.konig.shacl.ClassStructure;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
@@ -61,13 +61,13 @@ import io.konig.shacl.Shape;
 
 public class JsonReaderBuilder {
 
-	private ClassHierarchy hierarchy;
+	private ClassStructure hierarchy;
 	private JavaNamer javaNamer;
 	private JavaDatatypeMapper datatypeMapper;
 	private OwlReasoner owlReasoner;
 	
 	
-	public JsonReaderBuilder(ClassHierarchy hierarchy, JavaNamer javaNamer, JavaDatatypeMapper datatypeMapper,
+	public JsonReaderBuilder(ClassStructure hierarchy, JavaNamer javaNamer, JavaDatatypeMapper datatypeMapper,
 			OwlReasoner owlReasoner) {
 		this.hierarchy = hierarchy;
 		this.javaNamer = javaNamer;

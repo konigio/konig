@@ -48,21 +48,21 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.Schema;
 
-public class ClassHierarchy {
+public class ClassStructure {
 	
 	private Map<Resource, Shape> shapeMap = new HashMap<>();
 	private Map<URI,PropertyInfo> propertyMap = new HashMap<>();
 	private Shape nullShape = new Shape(Konig.NullShape);
 	private ValueFormat iriTemplate;
 	
-	public ClassHierarchy() {
+	public ClassStructure() {
 	}
 	
-	public ClassHierarchy(ValueFormat iriTemplate) {
+	public ClassStructure(ValueFormat iriTemplate) {
 		this.iriTemplate = iriTemplate;
 	}
 	
-	public ClassHierarchy(ValueFormat iriTemplate, ShapeManager shapeManager, OwlReasoner reasoner) {
+	public ClassStructure(ValueFormat iriTemplate, ShapeManager shapeManager, OwlReasoner reasoner) {
 		this.iriTemplate = iriTemplate;
 		init(shapeManager, reasoner);
 	}

@@ -46,7 +46,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.runtime.io.TypeSet;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.AndConstraint;
-import io.konig.shacl.ClassHierarchy;
+import io.konig.shacl.ClassStructure;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -55,17 +55,15 @@ public class JavaClassBuilder {
 	private static final Logger logger = LoggerFactory.getLogger(JavaClassBuilder.class);
 	private JavaNamer namer;
 	private JavaDatatypeMapper mapper;
-	private ClassHierarchy hierarchy;
-//	private ClassAnalyzer classAnalyzer;
+	private ClassStructure hierarchy;
 	private OwlReasoner reasoner;
 	private Graph graph;
 	private TypeInfo owlThing;
-//	private Map<Resource,Shape> shapeMap = new HashMap<>();
 	private ShapeHandler shapeHandler;
 	
 	public JavaClassBuilder(ShapeManager shapeManager, JavaNamer namer, OwlReasoner reasoner) {
 //		classAnalyzer = new ClassAnalyzer(shapeManager, reasoner);
-		hierarchy = new ClassHierarchy();
+		hierarchy = new ClassStructure();
 		hierarchy.init(shapeManager, reasoner);
 		
 		this.namer = namer;
@@ -73,10 +71,14 @@ public class JavaClassBuilder {
 		this.graph = reasoner.getGraph();
 		mapper = new SmartJavaDatatypeMapper(reasoner);
 	}
-	
-	
-	
-	
+
+	public JavaClassBuilder(ClassStructure structure, JavaNamer namer, OwlReasoner reasoner) {
+		hierarchy = structure;
+		this.namer = namer;
+		this.reasoner = reasoner;
+		this.graph = reasoner.getGraph();
+		mapper = new SmartJavaDatatypeMapper(reasoner);
+	}
 	
 	public JavaDatatypeMapper getMapper() {
 		return mapper;

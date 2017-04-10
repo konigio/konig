@@ -78,7 +78,7 @@ import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
-import io.konig.shacl.ClassHierarchy;
+import io.konig.shacl.ClassStructure;
 import io.konig.shacl.ClassManager;
 import io.konig.shacl.LogicalShapeBuilder;
 import io.konig.shacl.LogicalShapeNamer;
@@ -236,19 +236,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 		if (javaDir != null && javaPackageRoot!=null) {
 			javaDir.mkdirs();
+			SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
+			ClassStructure structure = new ClassStructure(iriTemplate, shapeManager, owlReasoner);
 			if (generateCanonicalJsonReaders) {
-				generateCanonicalJsonReaders();
+				generateCanonicalJsonReaders(structure);
 			}
-			generateJavaCode(shapeManager);
+			generateJavaCode(structure);
 		}
 		
 	}
 
-	private void generateCanonicalJsonReaders() throws IOException {
+	private void generateCanonicalJsonReaders(ClassStructure hierarchy) throws IOException {
 		JavaNamer javaNamer = new BasicJavaNamer(javaPackageRoot, nsManager);
 		BasicJavaDatatypeMapper datatypeMapper = new BasicJavaDatatypeMapper();
-		SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
-		ClassHierarchy hierarchy = new ClassHierarchy(iriTemplate, shapeManager, owlReasoner);
 		JsonReaderBuilder builder = new JsonReaderBuilder(hierarchy, javaNamer, datatypeMapper, owlReasoner);
 		JCodeModel model = new JCodeModel();
 		builder.produceAll(model);
@@ -401,11 +401,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		return logicalShapeNamer;
 	}
 
-	private void generateJavaCode(ShapeManager shapeManager) throws IOException, CodeGeneratorException {
+	private void generateJavaCode(ClassStructure structure) throws IOException, CodeGeneratorException {
 		
 		final JCodeModel model = new JCodeModel();
 		JavaNamer javaNamer = new BasicJavaNamer(javaPackageRoot, nsManager);
-		JavaClassBuilder classBuilder = new JavaClassBuilder(shapeManager, javaNamer, owlReasoner);
+		JavaClassBuilder classBuilder = new JavaClassBuilder(structure, javaNamer, owlReasoner);
 		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(owlReasoner, shapeManager, javaNamer);
 		
 		classBuilder.buildAllClasses(model);
