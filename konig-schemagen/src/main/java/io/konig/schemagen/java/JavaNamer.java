@@ -27,6 +27,15 @@ public interface JavaNamer {
 	String writerName(URI shapeId, Format format);
 	
 	/**
+	 * Compute the name of the Java class that implements the data reader for a 
+	 * given Shape.
+	 * @param shapeId The identifier for the target Shape
+	 * @param format The output format of the reader
+	 * @return The name of the data reader for the given Shape in the given format.
+	 */
+	String readerName(URI shapeId, Format format);
+	
+	/**
 	 * Compute the Java class name for the DataWriter that writes a given media type.
 	 * @param mediaType The media type name
 	 * @return The Java class name for the DataWriter that writes the given media type.
@@ -39,4 +48,6 @@ public interface JavaNamer {
 	 * @return The name of the Namespaces utility class
 	 */
 	String namespacesClass();
+	
+	String canonicalReaderName(URI owlClassId, Format format);
 }

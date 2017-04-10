@@ -1,4 +1,4 @@
-package io.konig.core.util;
+package io.konig.core.impl;
 
 /*
  * #%L
@@ -21,34 +21,34 @@ package io.konig.core.util;
  */
 
 
-import java.io.Closeable;
-import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openrdf.model.Resource;
 
-public class IOUtil {
-	
-	private static Logger logger = LoggerFactory.getLogger(IOUtil.class);
-	
-	public static void close(Closeable stream, String name) {
-		if (stream != null) {
-			try {
-				stream.close();
-			} catch (Throwable oops) {
-				logger.warn("Failed to close " + name, oops);
-			}
+public class DagVertex {
+
+	private Resource id;
+	private List<DagVertex> inward = new ArrayList<>();
+	private List<DagVertex> outward = new ArrayList<>();
+
+	public DagVertex(Resource id) {
+		if (id == null) {
+			throw new IllegalArgumentException("id cannot be null");
 		}
+		this.id = id;
 	}
 
-	public static void recursiveDelete(File file) {
-		if (file.isDirectory()) {
-			File[] array = file.listFiles();
-			for (File child : array) {
-				recursiveDelete(child);
-			}
-		}
-		file.delete();
+	public Resource getId() {
+		return id;
 	}
 
+	public List<DagVertex> getInward() {
+		return inward;
+	}
+
+	public List<DagVertex> getOutward() {
+		return outward;
+	}
+	
 }

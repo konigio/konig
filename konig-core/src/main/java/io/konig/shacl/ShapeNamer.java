@@ -1,4 +1,4 @@
-package io.konig.core.util;
+package io.konig.shacl;
 
 /*
  * #%L
@@ -21,34 +21,14 @@ package io.konig.core.util;
  */
 
 
-import java.io.Closeable;
-import java.io.File;
+import org.openrdf.model.URI;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public interface ShapeNamer {
 
-public class IOUtil {
-	
-	private static Logger logger = LoggerFactory.getLogger(IOUtil.class);
-	
-	public static void close(Closeable stream, String name) {
-		if (stream != null) {
-			try {
-				stream.close();
-			} catch (Throwable oops) {
-				logger.warn("Failed to close " + name, oops);
-			}
-		}
-	}
-
-	public static void recursiveDelete(File file) {
-		if (file.isDirectory()) {
-			File[] array = file.listFiles();
-			for (File child : array) {
-				recursiveDelete(child);
-			}
-		}
-		file.delete();
-	}
-
+	/**
+	 * Generate the name for a Shape that has a given OWL class as its scopeClass.
+	 * @param scopeClass The OWL Class that defines the scope for the Shape that is being named. 
+	 * @return The URI for the Shape
+	 */
+	public URI shapeName(URI scopeClass);
 }

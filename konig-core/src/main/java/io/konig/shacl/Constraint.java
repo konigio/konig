@@ -34,6 +34,8 @@ public interface Constraint {
 	 */
 	boolean accept(Vertex v);
 	
+	Shape findShapeByTargetClass(URI targetClass);
+	
 	/**
 	 * 
 	 * @param predicate

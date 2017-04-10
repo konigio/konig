@@ -41,8 +41,6 @@ import io.konig.core.vocab.AS;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.gcp.datasource.BigQueryTableReference;
-import io.konig.schemagen.ShapeNamer;
-import io.konig.schemagen.SimpleShapeNamer;
 import io.konig.schemagen.gcp.BigQueryTable;
 import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.schemagen.gcp.GoogleCloudProject;
@@ -50,6 +48,8 @@ import io.konig.shacl.NodeKind;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.ShapeNamer;
+import io.konig.shacl.SimpleShapeNamer;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 

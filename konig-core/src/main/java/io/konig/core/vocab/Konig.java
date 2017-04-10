@@ -55,6 +55,7 @@ public class Konig {
 	public static final URI classInstanceCount = new URIImpl("http://www.konig.io/ns/core/classInstanceCount");
 	public static final URI shapeInstanceCount = new URIImpl("http://www.konig.io/ns/core/shapeInstanceCount");
 	
+	
 	// Generic Data Modeling
 
 	public static final URI id = new URIImpl("http://www.konig.io/ns/core/id");
@@ -72,6 +73,9 @@ public class Konig {
 	public static final URI LocalName = new URIImpl("http://www.konig.io/ns/core/LocalName");
 	public static final URI modified = new URIImpl("http://www.konig.io/ns/core/modified");
 	public static final URI derivedProperty = new URIImpl("http://www.konig.io/ns/core/derivedProperty");
+	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
+	
+
 	
 	
 	// Data Sources

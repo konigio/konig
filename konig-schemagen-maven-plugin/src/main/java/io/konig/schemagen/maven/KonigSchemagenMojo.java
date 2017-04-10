@@ -39,6 +39,7 @@ import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.util.SimpleValueFormat;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
@@ -61,9 +62,11 @@ import io.konig.schemagen.gcp.GoogleCloudResourceGenerator;
 import io.konig.schemagen.gcp.LocalNameTableMapper;
 import io.konig.schemagen.gcp.NamespaceDatasetMapper;
 import io.konig.schemagen.gcp.SimpleDatasetMapper;
+import io.konig.schemagen.java.BasicJavaDatatypeMapper;
 import io.konig.schemagen.java.BasicJavaNamer;
 import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
+import io.konig.schemagen.java.JsonReaderBuilder;
 import io.konig.schemagen.java.JsonWriterBuilder;
 import io.konig.schemagen.jsonld.ShapeToJsonldContext;
 import io.konig.schemagen.jsonschema.JsonSchemaGenerator;
@@ -75,6 +78,7 @@ import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
+import io.konig.shacl.ClassHierarchy;
 import io.konig.shacl.ClassManager;
 import io.konig.shacl.LogicalShapeBuilder;
 import io.konig.shacl.LogicalShapeNamer;
@@ -164,6 +168,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 
 	 @Parameter
 	 private boolean inferRdfPropertyDefinitions;
+	 
+	 @Parameter
+	 private boolean generateCanonicalJsonReaders;
 
     
     private NamespaceManager nsManager;
@@ -228,9 +235,25 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private void generateJava() throws IOException, CodeGeneratorException {
 
 		if (javaDir != null && javaPackageRoot!=null) {
+			javaDir.mkdirs();
+			if (generateCanonicalJsonReaders) {
+				generateCanonicalJsonReaders();
+			}
 			generateJavaCode(shapeManager);
 		}
 		
+	}
+
+	private void generateCanonicalJsonReaders() throws IOException {
+		JavaNamer javaNamer = new BasicJavaNamer(javaPackageRoot, nsManager);
+		BasicJavaDatatypeMapper datatypeMapper = new BasicJavaDatatypeMapper();
+		SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
+		ClassHierarchy hierarchy = new ClassHierarchy(iriTemplate, shapeManager, owlReasoner);
+		JsonReaderBuilder builder = new JsonReaderBuilder(hierarchy, javaNamer, datatypeMapper, owlReasoner);
+		JCodeModel model = new JCodeModel();
+		builder.produceAll(model);
+		
+		model.build(javaDir);
 	}
 
 	private void generateJsonSchema() {
@@ -401,7 +424,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			daoGenerator.generateAllFactDaos(model);
 		}
 		
-		javaDir.mkdirs();
 		model.build(javaDir);
 		
 	}

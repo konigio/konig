@@ -148,4 +148,61 @@ public class BasicJavaNamer implements JavaNamer {
 		
 	}
 
+	@Override
+	public String readerName(URI shapeId, Format format) {
+		try {
+			URL url = new URL(shapeId.stringValue());
+			String path = url.getPath();
+			String[] pathParts = path.split("/");
+			
+			StringBuilder builder = new StringBuilder();
+		
+			builder.append(basePackage);
+			builder.append("io.");
+			String localName = shapeId.getLocalName();
+			if (localName.endsWith("Shape")) {
+				localName = localName.substring(0, localName.length()-5);
+			}
+			builder.append(localName);
+			
+			switch (format) {
+			case JSON:
+				builder.append("JsonReader");
+				break;
+			}
+
+			return builder.toString();
+		
+		} catch (Throwable e) {
+			throw new KonigException(e);
+		}
+	}
+
+	@Override
+	public String canonicalReaderName(URI owlClassId, Format format) {
+			
+		StringBuilder builder = new StringBuilder();
+	
+		builder.append(basePackage);
+		builder.append("io.canonical.");
+		
+		Namespace ns = nsManager.findByName(owlClassId.getNamespace());
+		if (ns == null) {
+			throw new KonigException("Prefix not found for namespace " + owlClassId.getNamespace());
+		}
+		
+		builder.append(ns.getPrefix());
+		builder.append('.');
+		builder.append(owlClassId.getLocalName());
+		
+		switch (format) {
+		case JSON:
+			builder.append("JsonReader");
+			break;
+		}
+
+		return builder.toString();
+		
+	}
+
 }

@@ -47,6 +47,12 @@ public class NotConstraint implements Constraint {
 		
 		return shape.hasPropertyConstraint(predicate);
 	}
+
+	@Override
+	public Shape findShapeByTargetClass(URI targetClass) {
+		
+		return targetClass.equals(shape.getTargetClass()) ? shape : null;
+	}
 	
 	
 

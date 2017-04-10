@@ -29,4 +29,7 @@ public class OwlVocab {
 	public static final URI onDatatype = new URIImpl("http://www.w3.org/2002/07/owl#onDatatype");
 	public static final URI withRestrictions = new URIImpl("http://www.w3.org/2002/07/owl#withRestrictions");
 	public static final URI NamedIndividual = new URIImpl("http://www.w3.org/2002/07/owl#NamedIndividual");
+	public static final URI ReflexiveProperty = new URIImpl("http://www.w3.org/2002/07/owl#ReflexiveProperty");
+	public static final URI IrreflexiveProperty = new URIImpl("http://www.w3.org/2002/07/owl#IrreflexiveProperty");
+	public static final URI AsymetricProperty = new URIImpl("http://www.w3.org/2002/07/owl#AsymetricProperty");
 }

@@ -416,19 +416,23 @@ public class TraversalImpl implements Traversal {
 	}
 
 	@Override
-	public Traversal union(Value v) {
-		if (v instanceof Resource) {
-			return union(graph.vertex((Resource)v));
-		}
-		for (Object obj : list) {
-			if (obj instanceof Value) {
-				Value w = (Value) obj;
-				if (w.equals(v)) {
-					return this;
+	public Traversal union(Value... param) {
+		for (Value v : param) {
+			if (v instanceof Resource) {
+				union(graph.vertex((Resource)v));
+				continue;
+			}
+			for (Object obj : list) {
+				if (obj instanceof Value) {
+					Value w = (Value) obj;
+					if (w.equals(v)) {
+						return this;
+					}
 				}
 			}
+			list.add(v);
 		}
-		list.add(v);
+		
 		return this;
 	}
 
