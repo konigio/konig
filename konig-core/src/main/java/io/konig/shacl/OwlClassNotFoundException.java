@@ -1,4 +1,4 @@
-package io.konig.core.util;
+package io.konig.shacl;
 
 /*
  * #%L
@@ -21,34 +21,15 @@ package io.konig.core.util;
  */
 
 
-import java.io.Closeable;
-import java.io.File;
+import org.openrdf.model.Resource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.konig.core.KonigException;
 
-public class IOUtil {
-	
-	private static Logger logger = LoggerFactory.getLogger(IOUtil.class);
-	
-	public static void close(Closeable stream, String name) {
-		if (stream != null) {
-			try {
-				stream.close();
-			} catch (Throwable oops) {
-				logger.warn("Failed to close " + name, oops);
-			}
-		}
-	}
+public class OwlClassNotFoundException extends KonigException {
+	private static final long serialVersionUID = 1L;
 
-	public static void recursiveDelete(File file) {
-		if (file.isDirectory()) {
-			File[] array = file.listFiles();
-			for (File child : array) {
-				recursiveDelete(child);
-			}
-		}
-		file.delete();
+	public OwlClassNotFoundException(Resource classId) {
+		super("OWL Class not found: " + classId);
 	}
 
 }

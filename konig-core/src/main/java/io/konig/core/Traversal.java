@@ -104,7 +104,7 @@ public interface Traversal {
 	 * @param v The value to be added.
 	 * @return This traversal
 	 */
-	Traversal union(Value v);
+	Traversal union(Value... v);
 	
 	
 	/**
@@ -200,6 +200,4 @@ public interface Traversal {
 	 */
 	void addValues(Set<Value> set);
 	
-	
-
 }

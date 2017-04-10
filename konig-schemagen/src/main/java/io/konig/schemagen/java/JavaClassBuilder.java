@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -31,34 +32,42 @@ import com.sun.codemodel.JFieldRef;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JOp;
+import com.sun.codemodel.JSwitch;
+import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
 import io.konig.core.AmbiguousPreferredClassException;
 import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.vocab.Konig;
 import io.konig.runtime.io.TypeSet;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.AndConstraint;
+import io.konig.shacl.ClassHierarchy;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.impl.ClassAnalyzer;
 
 public class JavaClassBuilder {
 	private static final Logger logger = LoggerFactory.getLogger(JavaClassBuilder.class);
 	private JavaNamer namer;
 	private JavaDatatypeMapper mapper;
-	private ClassAnalyzer classAnalyzer;
+	private ClassHierarchy hierarchy;
+//	private ClassAnalyzer classAnalyzer;
 	private OwlReasoner reasoner;
 	private Graph graph;
 	private TypeInfo owlThing;
-	private Map<Resource,Shape> shapeMap = new HashMap<>();
+//	private Map<Resource,Shape> shapeMap = new HashMap<>();
 	private ShapeHandler shapeHandler;
 	
 	public JavaClassBuilder(ShapeManager shapeManager, JavaNamer namer, OwlReasoner reasoner) {
-		classAnalyzer = new ClassAnalyzer(shapeManager, reasoner);
+//		classAnalyzer = new ClassAnalyzer(shapeManager, reasoner);
+		hierarchy = new ClassHierarchy();
+		hierarchy.init(shapeManager, reasoner);
+		
 		this.namer = namer;
 		this.reasoner = reasoner;
 		this.graph = reasoner.getGraph();
@@ -309,9 +318,20 @@ public class JavaClassBuilder {
 		
 	}
 	
-	private void createStaticIndividuals(JCodeModel model, TypeInfo typeInfo) {
+	private void createStaticIndividuals(JCodeModel model, TypeInfo typeInfo) throws JClassAlreadyExistsException {
 
 		if (reasoner.isEnumerationClass(typeInfo.owlClass)) {
+			
+			JDefinedClass factory = typeInfo.interfaceClass._class("Factory");
+			JType stringClass = model.ref(String.class);
+			JMethod valueOf = factory.method(JMod.PUBLIC, typeInfo.interfaceClass, "valueOf");
+			JVar nameVar = valueOf.param(stringClass, "name");
+			typeInfo.interfaceClass.field(JMod.PUBLIC | JMod.FINAL | JMod.STATIC, factory, "$").init(JExpr._new(factory));
+			JSwitch factorySwitch = valueOf.body()._switch(nameVar);
+			
+			NamespaceManager nsManager = graph.getNamespaceManager();
+			
+			
 			List<Vertex> list = reasoner.getGraph().v(typeInfo.owlClass).in(RDF.TYPE).toVertexList();
 			for (Vertex v : list) {
 				if (v.getId() instanceof URI) {
@@ -320,14 +340,33 @@ public class JavaClassBuilder {
 					JClass uriImplClass = model.ref(URIImpl.class);
 					
 					String name = id.getLocalName();
-					typeInfo.interfaceClass
+					JVar field = typeInfo.interfaceClass
 						.field(JMod.PUBLIC | JMod.STATIC | JMod.FINAL, typeInfo.interfaceClass, name)
 						.init(JExpr._new(typeInfo.implClass).arg(JExpr._new(uriImplClass).arg(JExpr.lit(id.stringValue()))));
+					
+					Namespace ns = nsManager.findByName(id.getNamespace());
+					if (ns == null) {
+						throw new SchemaGeneratorException("Prefix not found for namespace " + id.getNamespace());
+					}
+					StringBuilder curie = new StringBuilder();
+					curie.append(ns.getPrefix());
+					curie.append(':');
+					curie.append(id.getLocalName());
+					factorySwitch._case(JExpr.lit(id.stringValue()));
+					factorySwitch._case(JExpr.lit(curie.toString()));
+					factorySwitch._case(JExpr.lit(id.getLocalName())).body()._return(field);
 				}
 			}
+			
+			JClass exceptionClass = model.ref(IllegalArgumentException.class);
+			
+			valueOf.body()._throw(JExpr._new(exceptionClass).arg(JOp.plus(JExpr.lit("Invalid name: "), nameVar)));
+			
+			
 		}
 		
 	}
+	
 
 	private void createConstructors(JCodeModel model, TypeInfo typeInfo) {
 
@@ -360,20 +399,7 @@ public class JavaClassBuilder {
 	}
 	
 	private Shape getClassShape(Resource owlClass) {
-		Shape shape = shapeMap.get(owlClass);
-		if (shape == null) {
-			shape = classAnalyzer.aggregate(owlClass);
-			shapeMap.put(owlClass, shape);
-			classAnalyzer.merge(shape);
-			AndConstraint and = shape.getAnd();
-			if (and != null) {
-				List<Shape> list = and.getShapes();
-				if (list.size()>1) {
-					classAnalyzer.pullDown(shape);
-				}
-			}
-		}
-		return shape;
+		return hierarchy.getShapeForClass(owlClass);
 	}
 
 	private List<TypeInfo> superClassList(JCodeModel model, TypeInfo targetClass) {

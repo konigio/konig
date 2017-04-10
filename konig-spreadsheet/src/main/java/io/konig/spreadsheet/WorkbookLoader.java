@@ -901,10 +901,14 @@ public class WorkbookLoader {
 			
 			Resource constraint = graph.vertex().getId();
 			
-			if (RDF.TYPE.equals(propertyId) && !valueType.equals(XMLSchema.ANYURI)) {
-
-				logger.warn("As a best practice, rdf:type fields should use a URI reference, but this shape uses a embedded shape: " + shapeId.stringValue());
-				
+			if (RDF.TYPE.equals(propertyId)) {
+				if (valueType.equals(XMLSchema.ANYURI)) {
+					edge(constraint, SH.nodeKind, SH.IRI);
+					valueType = null;
+				} else {
+					logger.warn("As a best practice, rdf:type fields should use a URI reference, but this shape uses a embedded shape: "
+							+ shapeId.stringValue());
+				}
 			}
 			
 			URI property = Konig.derivedProperty.equals(stereotype) ? Konig.derivedProperty : SH.property;
@@ -922,7 +926,7 @@ public class WorkbookLoader {
 				}
 			} else if (isDatatype(valueType)) {
 				edge(constraint, SH.datatype, valueType);
-			} else {
+			} else if (valueType!=null) {
 				edge(constraint, SH.shape, valueType);
 			}
 			

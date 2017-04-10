@@ -37,7 +37,9 @@ public class AndConstraint implements Constraint, ShapeConsumer {
 	}
 	
 	public AndConstraint add(Shape shape) {
-		shapes.add(shape);
+		if (!shapes.contains(shape)) {
+			shapes.add(shape);
+		}
 		return this;
 	}
 
@@ -63,5 +65,15 @@ public class AndConstraint implements Constraint, ShapeConsumer {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public Shape findShapeByTargetClass(URI targetClass) {
+		for (Shape s : shapes) {
+			if (targetClass.equals(s.getTargetClass())) {
+				return s;
+			}
+		}
+		return null;
 	}
 }

@@ -27,6 +27,7 @@ import java.util.List;
 import org.openrdf.model.URI;
 
 import io.konig.annotation.RdfList;
+import io.konig.core.KonigException;
 import io.konig.core.Vertex;
 
 @RdfList
@@ -44,7 +45,12 @@ public class OrConstraint implements Constraint, ShapeConsumer {
 	
 	@Override
 	public OrConstraint add(Shape shape) {
-		shapes.add(shape);
+		if (shape == null) {
+			throw new KonigException("shape cannot be null");
+		}
+		if (!shapes.contains(shape)) {
+			shapes.add(shape);
+		}
 		return this;
 	}
 
@@ -67,5 +73,16 @@ public class OrConstraint implements Constraint, ShapeConsumer {
 			}
 		}
 		return false;
+	}
+
+
+	@Override
+	public Shape findShapeByTargetClass(URI targetClass) {
+		for (Shape s : shapes) {
+			if (targetClass.equals(s.getTargetClass())) {
+				return s;
+			}
+		}
+		return null;
 	}
 }

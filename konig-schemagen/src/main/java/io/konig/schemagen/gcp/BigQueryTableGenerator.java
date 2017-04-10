@@ -32,12 +32,12 @@ import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.Konig;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.schemagen.SchemaGeneratorException;
-import io.konig.schemagen.ShapeNamer;
 import io.konig.schemagen.merge.ShapeAggregator;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.ShapeNamer;
 
 /**
  * A utility that generates BigQuery table definitions from SHACL Shapes.

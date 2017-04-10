@@ -108,6 +108,14 @@ public interface Vertex {
 	URI getURI(URI predicate);
 	
 	/**
+	 * Get the value of a specified property as a Resource
+	 * @param predicate The predicate that identifies the property whose value is to be returned.
+	 * @return The value of the specified property.  If no such value exists or none of the values is a Resource,
+	 * this method returns null.
+	 */
+	Resource getResource(URI predicate);
+	
+	/**
 	 * Get the value of a property as a Vertex
 	 * @param predicate The predicate that identifies the property
 	 * @return A Vertex representing the value of the specified property, or null if no such value exists.

@@ -37,6 +37,8 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import io.konig.core.impl.Dag;
+import io.konig.core.impl.DagVertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
@@ -67,6 +69,56 @@ public class OwlReasoner {
 		return graph.v(OWL.ONTOLOGY).in(RDF.TYPE).toVertexList();
 	}
 	
+	public List<Vertex> subClasses(Vertex v) {
+		return v.asTraversal().in(RDFS.SUBCLASSOF).toVertexList();
+	}
+	
+	public Set<URI> subClasses(URI classId) {
+		return graph.v(classId).in(RDFS.SUBCLASSOF).toUriSet();
+	}
+	
+	public Set<Vertex> allSubClasses(Vertex v) {
+		Set<Vertex> set = new HashSet<>();
+		addSubClasses(set, subClasses(v));
+		return set;
+	}
+	
+	private void addSubClasses(Set<Vertex> set, List<Vertex> subClasses) {
+		for (Vertex v : subClasses) {
+			if (!set.contains(v)) {
+				set.add(v);
+				addSubClasses(set, subClasses(v));
+			}
+		}
+		
+	}
+
+	public Set<URI> namedSubClasses(Resource typeId) {
+		Vertex v = graph.getVertex(typeId);
+		if (v == null) {
+			return new HashSet<URI>();
+		}
+		return v.asTraversal().in(RDFS.SUBCLASSOF).toUriSet();
+	}
+	
+	public Set<URI> allNamedSubClasses(Resource typeId) {
+		Vertex v = graph.getVertex(typeId);
+		if (v == null) {
+			return new HashSet<URI>();
+		}
+		Set<URI> result = new HashSet<>();
+		Set<Vertex> vertices = allSubClasses(v);
+		for (Vertex u : vertices) {
+			if (u.getId() instanceof URI) {
+				result.add((URI) u.getId());
+			}
+		}
+		return result;
+		
+	}
+	
+	
+
 	/**
 	 * Ensure that every member within a set of equivalent classes contains 
 	 * an owl:equivalentClass property whose value is the preferred class.
@@ -632,5 +684,13 @@ public class OwlReasoner {
 			datatypeMap = new HashMap<>();
 		}
 		return datatypeMap;
+	}
+
+	public Set<URI> superClasses(URI targetClass) {
+		Vertex v = graph.getVertex(targetClass);
+		if (v == null) {
+			return new HashSet<>();
+		}
+		return v.asTraversal().out(RDFS.SUBCLASSOF).toUriSet();
 	}
 }

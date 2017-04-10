@@ -77,6 +77,7 @@ public class Shape {
 	
 	private List<DataSource> shapeDataSource;
 	private Expression updateWhen;
+	private int ordinal;
 	
 	
 	public Shape() {
@@ -486,4 +487,20 @@ public class Shape {
 		}
 		derivedProperty.add(p);
 	}
+
+	/**
+	 * A integer used to define the position of this shape within some ordering.
+	 */
+	public int getOrdinal() {
+		return ordinal;
+	}
+	
+	/**
+	 * Set integer used to define the position of this shape within some ordering.
+	 */
+	public void setOrdinal(int ordinal) {
+		this.ordinal = ordinal;
+	}
+	
+	
 }

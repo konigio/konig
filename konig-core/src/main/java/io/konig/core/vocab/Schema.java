@@ -1,5 +1,7 @@
 package io.konig.core.vocab;
 
+import org.openrdf.model.Resource;
+
 /*
  * #%L
  * konig-core
@@ -109,6 +111,9 @@ public class Schema {
 	public static final URI opens = new URIImpl("http://schema.org/opens");
 	public static final URI closes = new URIImpl("http://schema.org/closes");
 	public static final URI answerCount = new URIImpl("http://schema.org/answerCount");
+	public static final URI AudioObject = new URIImpl("http://schema.org/AudioObject");
+	public static final URI ImageObject = new URIImpl("http://schema.org/ImageObject");
+	public static final URI Barcode = new URIImpl("http://schema.org/Barcode");
 	
 	
 

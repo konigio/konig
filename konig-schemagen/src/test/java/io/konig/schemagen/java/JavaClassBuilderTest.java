@@ -171,13 +171,14 @@ public class JavaClassBuilderTest {
 	@Ignore
 	public void testEnumeration() throws Exception {
 
-		MemoryGraph graph = new MemoryGraph();
+		NamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
+		MemoryGraph graph = new MemoryGraph(nsManager);
 		graph.edge(Schema.GenderType, RDF.TYPE, OWL.CLASS);
 		graph.edge(Schema.GenderType, RDFS.SUBCLASSOF, Schema.Enumeration);
 		graph.edge(Schema.Male, RDF.TYPE, Schema.GenderType);
 		graph.edge(Schema.Female, RDF.TYPE, Schema.GenderType);
 		JCodeModel model = new JCodeModel();
-		NamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
+		
 		ShapeManager shapeManager = new MemoryShapeManager();
 		OwlReasoner owlReasoner = new OwlReasoner(graph);
 		

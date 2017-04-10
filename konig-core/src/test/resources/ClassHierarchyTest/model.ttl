@@ -1,0 +1,148 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org" ; 
+	rdfs:comment "An ontology developed by Google, Yahoo!, Microsoft and others to describe people, places, and things commonly found on the web." . 
+
+schema:Thing a owl:Class .
+
+schema:CreativeWork a owl:Class ;
+	rdfs:subClassOf schema:Thing . 
+
+schema:GenderType a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration . 
+
+schema:ImageObject a owl:Class ; 
+	rdfs:subClassOf schema:MediaObject . 
+
+schema:MediaObject a owl:Class ; 
+	rdfs:subClassOf schema:CreativeWork . 
+
+schema:VideoObject a owl:Class ; 
+	rdfs:subClassOf schema:MediaObject . 
+
+schema:Female a schema:Enumeration , schema:GenderType ; 
+	schema:name "Female" ; 
+	rdfs:comment "The female gender" . 
+
+schema:Male a schema:Enumeration , schema:GenderType ; 
+	schema:name "Male" ; 
+	rdfs:comment "The male gender" . 
+	
+schema:name a owl:DatatypeProperty ;
+	rdfs:range xsd:string .
+	
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonShape sh:property  [ 
+		rdfs:comment "Given name. In the U.S., the first name of a Person." ; 
+		sh:predicate schema:givenName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		rdfs:comment "Family name. In the U.S., the last name of an Person." ; 
+		sh:predicate schema:familyName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		rdfs:comment "The person's email address." ; 
+		sh:predicate schema:email ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		rdfs:comment "The person's postal address." ; 
+		sh:predicate schema:address ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:shape shape:PostalAddressShape
+	 ]  ,  [ 
+		rdfs:comment "Gender of the person." ; 
+		sh:predicate schema:gender ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:class schema:GenderType ]  ; 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:Person . 
+
+shape:PostalAddressShape sh:property  [ 
+		rdfs:comment "The street address.  For example, 1600 Ampitheatre Pkwy." ; 
+		sh:predicate schema:streetAddress ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		rdfs:comment "The locality.  For example, Mountain View." ; 
+		sh:predicate schema:addressLocality ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		rdfs:comment "The region. For example, CA." ; 
+		sh:predicate schema:addressRegion ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		rdfs:comment "The postal code. For example, 94043." ; 
+		sh:predicate schema:postalCode ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape ; 
+	sh:targetClass schema:PostalAddress . 
+	
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:CreativeWorkShape sh:property  [ 
+		rdfs:comment "The type of CreativeWork" ; 
+		sh:nodeKind sh:IRI ; 
+		sh:predicate rdf:type ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		rdfs:comment "The number of comments the CreativeWork has received." ; 
+		sh:datatype xsd:int ; 
+		sh:predicate schema:commentCount ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		rdfs:comment "The date/time when the CreativeWork was created" ; 
+		sh:datatype xsd:dateTime ; 
+		sh:predicate schema:dateCreated ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape ; 
+	sh:targetClass schema:CreativeWork ; 
+	sh:nodeKind sh:IRI . 
+	
+schema:MediaObject a owl:Class ;
+	rdfs:subClassOf schema:CreativeWork .
+	
+schema:encodingFormat a owl:DatatypeProperty ;
+	rdfs:domain schema:MediaObject ;
+	rdfs:range xsd:string .
+	
+schema:contentSize a owl:DatatypeProperty ;
+	rdfs:domain schema:MediaObject ;
+	rdfs:range xsd:string .		
+	

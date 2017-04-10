@@ -98,6 +98,23 @@ public class RdfUtil {
 		return new ArrayList<Namespace>(map.values());
 	}
 	
+	/**
+	 * Sort a list of properties alphabetically by local name.
+	 * @param properties
+	 */
+	public static void sortByLocalName(List<PropertyConstraint> properties) {
+		Collections.sort(properties, new Comparator<PropertyConstraint>() {
+
+			@Override
+			public int compare(PropertyConstraint a, PropertyConstraint b) {
+				String aName = a.getPredicate()==null ? "" : a.getPredicate().getLocalName();
+				String bName = b.getPredicate()==null ? "" : b.getPredicate().getLocalName();
+				
+				return aName.compareTo(bName);
+			}
+		});
+	}
+	
 	public static boolean nearEqual(Object a, Object b) {
 		if (a instanceof Long && b instanceof Long) {
 			return a.equals(b);

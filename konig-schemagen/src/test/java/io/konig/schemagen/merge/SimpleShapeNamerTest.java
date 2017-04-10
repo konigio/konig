@@ -7,7 +7,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.Schema;
-import io.konig.schemagen.SimpleShapeNamer;
+import io.konig.shacl.SimpleShapeNamer;
 
 public class SimpleShapeNamerTest {
 

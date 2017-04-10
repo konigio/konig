@@ -362,4 +362,20 @@ public class VertexImpl implements Vertex {
 		return result;
 	}
 
+	@Override
+	public Resource getResource(URI predicate) {
+
+		Set<Edge> set = outProperty(predicate);
+		if (set==null || set.isEmpty()) {
+			return null;
+		}
+		for (Edge edge : set) {
+			Value value = edge.getObject();
+			if (value instanceof Resource) {
+				return (Resource) value;
+			}
+		}
+		return null;
+	}
+
 }
