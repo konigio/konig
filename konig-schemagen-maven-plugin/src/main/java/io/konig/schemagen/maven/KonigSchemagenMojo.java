@@ -156,8 +156,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
     @Parameter
     private File plantUMLDomainModelFile;
-	    
+
 	 @Parameter
+    private boolean plantUMLShowAttributes;
+	 
+	 @Parameter
+    private boolean plantUMLShowSubClassOf;
+	 
+	 @Parameter
+	 private boolean plantUMLShowAssociations;
+	    
 	 private File namespacesFile;
 	 
 	 @Parameter
@@ -319,6 +327,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			plantUMLDomainModelFile.getParentFile().mkdirs();
 			
 			PlantumlClassDiagramGenerator generator = new PlantumlClassDiagramGenerator(owlReasoner);
+			generator.setShowAttributes(plantUMLShowAttributes);
+			generator.setShowSubclassOf(plantUMLShowSubClassOf);
+			generator.setShowAssociations(plantUMLShowAssociations);
+			
 			FileWriter writer = new FileWriter(plantUMLDomainModelFile);
 			try {
 				generator.generateDomainModel(classStructure(), writer);

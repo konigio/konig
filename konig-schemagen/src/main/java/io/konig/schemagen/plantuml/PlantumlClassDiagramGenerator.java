@@ -2,11 +2,15 @@ package io.konig.schemagen.plantuml;
 
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.OwlReasoner;
+import io.konig.core.impl.RdfUtil;
 import io.konig.shacl.AndConstraint;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.NodeKind;
@@ -19,6 +23,7 @@ public class PlantumlClassDiagramGenerator {
 	
 	private boolean showAssociations=true;
 	private boolean showSubclassOf = true;
+	private boolean showAttributes = false;
 	private OwlReasoner reasoner;
 
 	public PlantumlClassDiagramGenerator(OwlReasoner reasoner) {
@@ -30,6 +35,14 @@ public class PlantumlClassDiagramGenerator {
 		worker.run();
 	}
 	
+	public boolean isShowAttributes() {
+		return showAttributes;
+	}
+
+	public void setShowAttributes(boolean showAttributes) {
+		this.showAttributes = showAttributes;
+	}
+
 	public boolean isShowSubclassOf() {
 		return showSubclassOf;
 	}
@@ -68,14 +81,19 @@ public class PlantumlClassDiagramGenerator {
 			
 			URI domainClass = shape.getTargetClass();
 			if (domainClass != null) {
+
+				
 				if (showSubclassOf) {
 					showSubClassOf(shape);
 				}
+				if (showAttributes) {
+					showAttribues(shape);
+				}
 				if (showAssociations) {
-
 					for (PropertyConstraint p : shape.getProperty()) {
+						
 
-						if (isObjectProperty(p)) {
+						if (showAssociations && isObjectProperty(p)) {
 
 							URI rangeClass = rangeClass(p);
 							if (rangeClass != null  && !reasoner.isEnumerationClass(rangeClass)) {
@@ -95,6 +113,60 @@ public class PlantumlClassDiagramGenerator {
 		}
 
 		
+		private void showAttribues(Shape shape) {
+			URI targetClass = shape.getTargetClass();
+
+			out.print("class ");
+			out.print(targetClass.getLocalName());
+			out.println(" {");
+			List<PropertyConstraint> list = new ArrayList<>(shape.getProperty());
+			RdfUtil.sortByLocalName(list);
+			for (PropertyConstraint p : list) {
+				URI predicate = p.getPredicate();
+				if (RDF.TYPE.equals(predicate)) {
+					continue;
+				}
+				if (predicate != null) {
+					int minCount = p.getMinCount()==null ? 0 : p.getMinCount();
+					Integer maxCount = p.getMaxCount();
+					
+					String typeName = null;
+					
+					URI datatype = p.getDatatype();
+					if (datatype != null) {
+						typeName = datatype.getLocalName();
+					} else if (p.getValueClass() instanceof URI){
+						URI classType = (URI) p.getValueClass();
+						typeName = classType.getLocalName();
+					}
+					
+					out.print("  ");
+					out.print(predicate.getLocalName());
+					out.print(" : ");
+					out.print(typeName);
+					
+					if (maxCount == null) {
+						if (minCount==0) {
+							out.println("[*]");
+						} else {
+							out.print('[');
+							out.print(minCount);
+							out.println("..*]");
+						}
+					} else {
+						out.print('[');
+						out.print(minCount);
+						out.print("..");
+						out.print(maxCount);
+						out.println("]");
+					}
+					
+				}
+			}
+			out.println("}");
+			
+		}
+
 		private void showSubClassOf(Shape shape) {
 			if (shape.getId() instanceof URI) {
 				URI classId = (URI) shape.getId();
