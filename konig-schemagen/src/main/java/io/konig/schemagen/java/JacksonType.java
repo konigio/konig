@@ -16,6 +16,9 @@ public abstract class JacksonType {
 	public static final JacksonType STRING = new StringType();
 	public static final JacksonType DATE = new DateType();
 	public static final JacksonType DATETIME = new DatetimeType();
+	public static final JacksonType BOOLEAN = new BooleanType();
+	public static final JacksonType DURATION = new DurationType();
+	public static final JacksonType TIME = new TimeType();
 
 	
 	public abstract JStatement writeTypeField(JCodeModel model, JVar generator, String fieldName, JVar fieldValue);
@@ -51,6 +54,15 @@ public abstract class JacksonType {
 		
 		if (XMLSchema.DATE.equals(datatype)) {
 			return DATE;
+		}
+		if (XMLSchema.BOOLEAN.equals(datatype)) {
+			return BOOLEAN;
+		}
+		if (XMLSchema.TIME.equals(datatype)) {
+			return TIME;
+		}
+		if (XMLSchema.DAYTIMEDURATION.equals(datatype)) {
+			return DURATION;
 		}
 		
 		return STRING;
@@ -116,6 +128,20 @@ public abstract class JacksonType {
 		
 	}
 	
+	static class BooleanType extends JacksonType {
+		@Override
+		public JStatement writeTypeField(JCodeModel model, JVar generator, String fieldName, JVar fieldValue) {
+			return generator.invoke("writeBooleanField").arg(JExpr.lit(fieldName)).arg(fieldValue);
+			
+		}
+
+		@Override
+		public JStatement writeType(JCodeModel model, JVar generator, JVar value) {
+			return generator.invoke("writeBoolean").arg(value);
+			
+		}
+	}
+	
 	static class NumberType extends JacksonType {
 
 		@Override
@@ -132,5 +158,35 @@ public abstract class JacksonType {
 		
 	}
 	
-	
+
+	static class DurationType extends JacksonType {
+
+		@Override
+		public JStatement writeTypeField(JCodeModel model, JVar generator, String fieldName, JVar fieldValue) {
+			return generator.invoke("writeStringField").arg(JExpr.lit(fieldName)).arg(fieldValue.invoke("toString"));
+			
+		}
+
+		@Override
+		public JStatement writeType(JCodeModel model, JVar generator, JVar value) {
+			return generator.invoke("writeString").arg(value.invoke("toString"));
+			
+		}
+		
+	}
+	static class TimeType extends JacksonType {
+
+		@Override
+		public JStatement writeTypeField(JCodeModel model, JVar generator, String fieldName, JVar fieldValue) {
+			return generator.invoke("writeStringField").arg(JExpr.lit(fieldName)).arg(fieldValue.invoke("toString"));
+			
+		}
+
+		@Override
+		public JStatement writeType(JCodeModel model, JVar generator, JVar value) {
+			return generator.invoke("writeString").arg(value.invoke("toString"));
+			
+		}
+		
+	}
 }

@@ -403,7 +403,7 @@ public class JsonWriterBuilder {
 			handleTypeProperty(model, body, p, sourceVar, jsonVar);
 		} else {
 			if (!(p.getValueClass() instanceof URI)) {
-				throw new ValidationException("Value class is not a URI");
+				throw new ValidationException("Value class is not a URI for property " + predicate.stringValue());
 			}
 			String fieldName = predicate.getLocalName();
 			String getterName = BeanUtil.getterName(predicate);

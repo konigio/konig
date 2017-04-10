@@ -604,7 +604,7 @@ public class JsonReaderBuilder {
 				} else if (URI.class.equals(javaType)) {
 					uriValue(model, predicate, properties, isFunctional, pojoVar, jsonParser, caseBlock, setterName);
 				} else if (Byte.class.equals(javaType)) {
-					castInt(model, predicate, properties, isFunctional, pojoVar, jsonParser, caseBlock, setterName, model.ref(Byte.class));
+					castInt(model, predicate, properties, isFunctional, pojoVar, jsonParser, caseBlock, setterName, model.BYTE);
 				} else if (Duration.class.equals(javaType)) {
 					durationValue(model, predicate, properties, isFunctional, pojoVar, jsonParser, caseBlock);
 					

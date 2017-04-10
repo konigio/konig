@@ -182,6 +182,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private ShapeMediaTypeNamer mediaTypeNamer;
     private Graph owlGraph;
     private ContextManager contextManager;
+    private ClassStructure structure;
 
     public void execute() throws MojoExecutionException   {
     	
@@ -236,20 +237,26 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 		if (javaDir != null && javaPackageRoot!=null) {
 			javaDir.mkdirs();
-			SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
-			ClassStructure structure = new ClassStructure(iriTemplate, shapeManager, owlReasoner);
 			if (generateCanonicalJsonReaders) {
-				generateCanonicalJsonReaders(structure);
+				generateCanonicalJsonReaders();
 			}
 			generateJavaCode(structure);
 		}
 		
 	}
+	
+	private ClassStructure classStructure() {
+		if (structure == null) {
+			SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
+			structure = new ClassStructure(iriTemplate, shapeManager, owlReasoner);
+		}
+		return structure;
+	}
 
-	private void generateCanonicalJsonReaders(ClassStructure hierarchy) throws IOException {
+	private void generateCanonicalJsonReaders() throws IOException {
 		JavaNamer javaNamer = new BasicJavaNamer(javaPackageRoot, nsManager);
 		BasicJavaDatatypeMapper datatypeMapper = new BasicJavaDatatypeMapper();
-		JsonReaderBuilder builder = new JsonReaderBuilder(hierarchy, javaNamer, datatypeMapper, owlReasoner);
+		JsonReaderBuilder builder = new JsonReaderBuilder(classStructure(), javaNamer, datatypeMapper, owlReasoner);
 		JCodeModel model = new JCodeModel();
 		builder.produceAll(model);
 		
@@ -311,11 +318,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			plantUMLDomainModelFile.getParentFile().mkdirs();
 			
-			ClassManager classManager = getClassManager();
-			PlantumlClassDiagramGenerator generator = new PlantumlClassDiagramGenerator(owlReasoner, shapeManager);
+			PlantumlClassDiagramGenerator generator = new PlantumlClassDiagramGenerator(owlReasoner);
 			FileWriter writer = new FileWriter(plantUMLDomainModelFile);
 			try {
-				generator.generateDomainModel(classManager, writer);
+				generator.generateDomainModel(classStructure(), writer);
 			} finally {
 				close(writer);
 			}
