@@ -7,43 +7,57 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 import io.konig.core.OwlReasoner;
-import io.konig.shacl.ClassManager;
+import io.konig.shacl.AndConstraint;
+import io.konig.shacl.ClassStructure;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
-import io.konig.shacl.ShapeManager;
 
 public class PlantumlClassDiagramGenerator {
 	
 	private static final String TAB = "   ";
 	
-
+	private boolean showAssociations=true;
+	private boolean showSubclassOf = true;
 	private OwlReasoner reasoner;
-	private ShapeManager shapeManager;
-	
 
-	public PlantumlClassDiagramGenerator(OwlReasoner reasoner, ShapeManager shapeManager) {
+	public PlantumlClassDiagramGenerator(OwlReasoner reasoner) {
 		this.reasoner = reasoner;
-		this.shapeManager = shapeManager;
 	}
 
-	public void generateDomainModel(ClassManager classManager, Writer out) throws PlantumlGeneratorException {
-		Worker worker = new Worker(classManager, out);
+	public void generateDomainModel(ClassStructure structure, Writer out) throws PlantumlGeneratorException {
+		Worker worker = new Worker(structure, out);
 		worker.run();
 	}
 	
+	public boolean isShowSubclassOf() {
+		return showSubclassOf;
+	}
+
+	public void setShowSubclassOf(boolean showSubclassOf) {
+		this.showSubclassOf = showSubclassOf;
+	}
+
+	public boolean isShowAssociations() {
+		return showAssociations;
+	}
+
+	public void setShowAssociations(boolean showAssociations) {
+		this.showAssociations = showAssociations;
+	}
+
 	private class Worker {
-		private ClassManager classManager;
+		private ClassStructure structure;
 		private PrintWriter out;
 
-		public Worker(ClassManager classManager, Writer out) {
-			this.classManager = classManager;
+		public Worker(ClassStructure structure, Writer out) {
+			this.structure = structure;
 			this.out = (out instanceof PrintWriter) ? (PrintWriter) out : new PrintWriter(out);
 		}
 		
 		private void run() {
 			out.println("@startuml");
-			for (Shape shape : classManager.list()) {
+			for (Shape shape : structure.listClassShapes()) {
 				handleShape(shape);
 			}
 			out.println("@enduml");
@@ -54,20 +68,26 @@ public class PlantumlClassDiagramGenerator {
 			
 			URI domainClass = shape.getTargetClass();
 			if (domainClass != null) {
-				for (PropertyConstraint p : shape.getProperty()) {
+				if (showSubclassOf) {
+					showSubClassOf(shape);
+				}
+				if (showAssociations) {
 
-					if (isObjectProperty(p)) {
+					for (PropertyConstraint p : shape.getProperty()) {
 
-						URI rangeClass = rangeClass(p);
-						if (rangeClass != null  && !reasoner.isEnumerationClass(rangeClass)) {
-							out.print(domainClass.getLocalName());
-							out.print(" -- ");
-							out.print(rangeClass.getLocalName());
-							out.print(" : ");
-							out.print(p.getPredicate().getLocalName());
-							out.println(" >");
+						if (isObjectProperty(p)) {
+
+							URI rangeClass = rangeClass(p);
+							if (rangeClass != null  && !reasoner.isEnumerationClass(rangeClass)) {
+								out.print(domainClass.getLocalName());
+								out.print(" -- ");
+								out.print(rangeClass.getLocalName());
+								out.print(" : ");
+								out.print(p.getPredicate().getLocalName());
+								out.println(" >");
+							}
+							
 						}
-						
 					}
 				}
 			}
@@ -75,17 +95,32 @@ public class PlantumlClassDiagramGenerator {
 		}
 
 		
+		private void showSubClassOf(Shape shape) {
+			if (shape.getId() instanceof URI) {
+				URI classId = (URI) shape.getId();
+				String className = classId.getLocalName();
+				AndConstraint and = shape.getAnd();
+				if (and != null) {
+					for (Shape superShape : and.getShapes()) {
+						if (superShape.getId() instanceof URI) {
+							URI superId = (URI) superShape.getId();
+							String superName = superId.getLocalName();
+							
+							out.print(superName);
+							out.print(" <|-- ");
+							out.println(className);
+							
+						}
+					}
+				}
+			}
+			
+		}
+
 		private URI rangeClass(PropertyConstraint p) {
 			Resource valueClass = p.getValueClass();
 			if (valueClass instanceof URI) {
 				return (URI) valueClass;
-			}
-			Shape shape = p.getShape(shapeManager);
-			if (shape != null) {
-				Resource shapeId = shape.getId();
-				if (shapeId instanceof URI) {
-					return (URI) shapeId;
-				}
 			}
 			
 			return null;
