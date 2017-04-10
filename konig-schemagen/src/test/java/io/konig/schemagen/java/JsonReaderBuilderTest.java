@@ -28,7 +28,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.Schema;
-import io.konig.shacl.ClassHierarchy;
+import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeNamer;
@@ -44,7 +44,7 @@ public class JsonReaderBuilderTest {
 	private JavaNamer javaNamer;
 	private JavaDatatypeMapper datatypeMapper;
 	private OwlReasoner owlReasoner;
-	private ClassHierarchy hierarchy;
+	private ClassStructure hierarchy;
 	private JsonReaderBuilder builder;
 	
 	
@@ -57,7 +57,7 @@ public class JsonReaderBuilderTest {
 		datatypeMapper = new BasicJavaDatatypeMapper();
 		owlReasoner = new OwlReasoner(graph);
 		SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
-		hierarchy = new ClassHierarchy(iriTemplate);
+		hierarchy = new ClassStructure(iriTemplate);
 	}
 	
 	@Test
