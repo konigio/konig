@@ -165,6 +165,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 
 	 @Parameter
 	 private boolean plantUMLShowAssociations;
+	 
+	 @Parameter
+	 private boolean plantUMLShowOwlThing;
 	    
 	 private File namespacesFile;
 	 
@@ -330,6 +333,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generator.setShowAttributes(plantUMLShowAttributes);
 			generator.setShowSubclassOf(plantUMLShowSubClassOf);
 			generator.setShowAssociations(plantUMLShowAssociations);
+			generator.setShowOwlThing(plantUMLShowOwlThing);
 			
 			FileWriter writer = new FileWriter(plantUMLDomainModelFile);
 			try {
