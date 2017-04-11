@@ -115,24 +115,18 @@ public class BasicJavaNamer implements JavaNamer {
 
 	@Override
 	public String writerName(URI shapeId, Format format) {
-		try {
-			URL url = new URL(shapeId.stringValue());
-			String path = url.getPath();
-			String[] pathParts = path.split("/");
-			
+		try {			
 			StringBuilder builder = new StringBuilder();
 		
 			builder.append(basePackage);
-			builder.append("io.");
-			for (int i=0; i<pathParts.length; i++) {
-				String token = pathParts[i].trim();
-				if (token.length()>0) {
-					builder.append(pathParts[i]);
-					if (i<pathParts.length-1) {
-						builder.append('.');
-					}
-				}
+			builder.append("io.writer.");
+			Namespace ns = nsManager.findByName(shapeId.getNamespace());
+			if (ns == null) {
+				throw new KonigException("Prefix not found for namespace: " + shapeId.getNamespace());
 			}
+			builder.append(ns.getPrefix());
+			builder.append('.');
+			builder.append(shapeId.getLocalName());
 			
 			switch (format) {
 			case JSON:
@@ -184,7 +178,7 @@ public class BasicJavaNamer implements JavaNamer {
 		StringBuilder builder = new StringBuilder();
 	
 		builder.append(basePackage);
-		builder.append("io.canonical.");
+		builder.append("io.reader.");
 		
 		Namespace ns = nsManager.findByName(owlClassId.getNamespace());
 		if (ns == null) {

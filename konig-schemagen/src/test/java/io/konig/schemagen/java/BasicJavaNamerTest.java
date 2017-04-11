@@ -15,12 +15,14 @@ public class BasicJavaNamerTest {
 	@Test
 	public void testWriterName() {
 		URI shapeId = uri("http://example.com/shapes/v1/schema/Person");
+		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema1", "http://example.com/shapes/v1/schema/");
 		
 		String basePackage = "com.acme.base";
-		BasicJavaNamer namer = new BasicJavaNamer(basePackage, null);
+		BasicJavaNamer namer = new BasicJavaNamer(basePackage, nsManager);
 		
 		String className = namer.writerName(shapeId, Format.JSON);
-		assertEquals("com.acme.base.io.shapes.v1.schema.PersonJsonWriter", className);
+		assertEquals("com.acme.base.io.writer.schema1.PersonJsonWriter", className);
 	}
 
 	@Test
