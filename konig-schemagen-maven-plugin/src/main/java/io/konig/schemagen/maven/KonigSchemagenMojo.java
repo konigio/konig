@@ -128,10 +128,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private File domainModelPngFile;
     
     @Parameter
-    private File javaDir;
+    private JavaCodeGeneratorConfig javaCodeGenerator;
     
-    @Parameter
-    private String javaPackageRoot;
     
     @Parameter
     private HashSet<String> excludeNamespace;
@@ -163,14 +161,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 @Parameter
 	 private File projectJsonldFile;
 	 
-	 @Parameter
-	 private String daoPackage;
 	 
 	 @Parameter
 	 private boolean inferRdfPropertyDefinitions;
-	 
-	 @Parameter
-	 private boolean generateCanonicalJsonReaders;
 
     
     private NamespaceManager nsManager;
@@ -235,9 +228,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 	private void generateJava() throws IOException, CodeGeneratorException {
 
-		if (javaDir != null && javaPackageRoot!=null) {
-			javaDir.mkdirs();
-			if (generateCanonicalJsonReaders) {
+		if (javaCodeGenerator!=null) {
+			if (javaCodeGenerator.getJavaDir()==null) {
+				throw new CodeGeneratorException("javaCodeGenerator.javaDir must be defined");
+			}
+			javaCodeGenerator.getJavaDir().mkdirs();
+			if (javaCodeGenerator.isGenerateCanonicalJsonReaders()) {
 				generateCanonicalJsonReaders();
 			}
 			generateJavaCode(structure);
@@ -253,14 +249,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		return structure;
 	}
 
-	private void generateCanonicalJsonReaders() throws IOException {
-		JavaNamer javaNamer = new BasicJavaNamer(javaPackageRoot, nsManager);
+	private void generateCanonicalJsonReaders() throws IOException, CodeGeneratorException {
+		if (javaCodeGenerator.getPackageRoot() == null) {
+			throw new CodeGeneratorException("javaCodeGenerator.packageRoot must be defined");
+		}
+		JavaNamer javaNamer = new BasicJavaNamer(javaCodeGenerator.getPackageRoot(), nsManager);
 		BasicJavaDatatypeMapper datatypeMapper = new BasicJavaDatatypeMapper();
 		JsonReaderBuilder builder = new JsonReaderBuilder(classStructure(), javaNamer, datatypeMapper, owlReasoner);
 		JCodeModel model = new JCodeModel();
 		builder.produceAll(model);
 		
-		model.build(javaDir);
+		model.build(javaCodeGenerator.getJavaDir());
 	}
 
 	private void generateJsonSchema() {
@@ -418,16 +417,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private void generateJavaCode(ClassStructure structure) throws IOException, CodeGeneratorException {
 		
 		final JCodeModel model = new JCodeModel();
-		JavaNamer javaNamer = new BasicJavaNamer(javaPackageRoot, nsManager);
+		if (javaCodeGenerator.getPackageRoot()==null) {
+			throw new CodeGeneratorException("javaCodeGenerator.packageRoot must be defined");
+		}
+		JavaNamer javaNamer = new BasicJavaNamer(javaCodeGenerator.getPackageRoot(), nsManager);
 		JavaClassBuilder classBuilder = new JavaClassBuilder(structure, javaNamer, owlReasoner);
 		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(owlReasoner, shapeManager, javaNamer);
 		
 		classBuilder.buildAllClasses(model);
 		writerBuilder.buildAll(shapeManager.listShapes(), model);
 		
-		if (daoPackage != null) {
+		if (javaCodeGenerator.getGoogleDatastoreDaoPackage() != null) {
 			SimpleEntityNamer entityNamer = new SimpleEntityNamer();
-			SimpleDaoNamer daoNamer = new SimpleDaoNamer(daoPackage, nsManager);
+			SimpleDaoNamer daoNamer = new SimpleDaoNamer(javaCodeGenerator.getGoogleDatastoreDaoPackage(), nsManager);
 			FactDaoGenerator daoGenerator = new FactDaoGenerator()
 				.setDaoNamer(daoNamer)
 				.setDatatypeMapper(classBuilder.getMapper())
@@ -438,7 +440,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			daoGenerator.generateAllFactDaos(model);
 		}
 		
-		model.build(javaDir);
+		
+		model.build(javaCodeGenerator.getJavaDir());
 		
 	}
 
