@@ -120,8 +120,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private File jsonSchemaDir;
     
-    @Parameter(property="sourceDir")
-    private File sourceDir;
+    @Parameter
+    private File rdfSourceDir;
     
 
     @Parameter
@@ -129,6 +129,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     @Parameter
     private JavaCodeGeneratorConfig javaCodeGenerator;
+    
+    @Parameter
+    private WorkbookProcessor workbookProcessor;
     
     
     @Parameter
@@ -139,18 +142,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     @Parameter
     private File gcpDir;
-    
-	@Parameter
-	private File shapesOutDir;
 	
 	@Parameter
 	private String bigQueryDatasetId;
 	
-	 @Parameter
-	 private File workbookFile;
-	 
-	 @Parameter
-	 private File owlOutDir;
 
     @Parameter
     private PlantumlConfig plantUML;
@@ -161,9 +156,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 @Parameter
 	 private File projectJsonldFile;
 	 
-	 
-	 @Parameter
-	 private boolean inferRdfPropertyDefinitions;
 
     
     private NamespaceManager nsManager;
@@ -218,8 +210,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	
 		loadSpreadsheet();
 		
-		if (sourceDir != null) {
-			RdfUtil.loadTurtle(sourceDir, owlGraph, nsManager);
+		if (rdfSourceDir != null) {
+			RdfUtil.loadTurtle(rdfSourceDir, owlGraph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
 			shapeLoader.load(owlGraph);
 		}
@@ -301,10 +293,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private void loadSpreadsheet() throws MojoExecutionException   {
 		 try {
 
-			 if (workbookFile!=null && workbookFile.exists()) {
+			 if (workbookProcessor != null) {
+				 
 				 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer(datasetMapper(), nsManager);
-				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(inferRdfPropertyDefinitions);
-				 transformer.transform(workbookFile, owlOutDir, shapesOutDir);
+				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(workbookProcessor.isInferRdfPropertyDefinitions());
+				 transformer.transform(workbookProcessor.getWorkbookFile(), workbookProcessor.getOwlOutDir(), workbookProcessor.getShapesOutDir());
 			 }
 		 } catch (Throwable oops) {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);

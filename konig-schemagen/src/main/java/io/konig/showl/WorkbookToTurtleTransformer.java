@@ -46,6 +46,12 @@ public class WorkbookToTurtleTransformer {
 
 	public void transform(File workbookFile, File owlOutDir, File shapesOutDir) throws IOException, SpreadsheetException, RDFHandlerException {
 		
+		if (workbookFile == null) {
+			throw new SpreadsheetException("workbookFile must be defined");
+		}
+		if (!workbookFile.exists()) {
+			throw new SpreadsheetException("File not found: " + workbookFile);
+		}
 		FileInputStream input = new FileInputStream(workbookFile);
 		try {
 
