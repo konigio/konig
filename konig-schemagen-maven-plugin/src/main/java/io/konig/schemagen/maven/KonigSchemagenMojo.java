@@ -155,19 +155,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 private File owlOutDir;
 
     @Parameter
-    private File plantUMLDomainModelFile;
+    private PlantumlConfig plantUML;
 
-	 @Parameter
-    private boolean plantUMLShowAttributes;
-	 
-	 @Parameter
-    private boolean plantUMLShowSubClassOf;
-	 
-	 @Parameter
-	 private boolean plantUMLShowAssociations;
-	 
-	 @Parameter
-	 private boolean plantUMLShowOwlThing;
 	    
 	 private File namespacesFile;
 	 
@@ -324,25 +313,28 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 }
 
 
-	private void generatePlantUMLDomainModel() throws IOException, PlantumlGeneratorException {
-		if (plantUMLDomainModelFile != null) {
+	private void generatePlantUMLDomainModel() throws IOException, PlantumlGeneratorException, MojoExecutionException {
+		if (plantUML != null) {
 
-			plantUMLDomainModelFile.getParentFile().mkdirs();
+			plantUML.setNamespaceManager(nsManager);
+			
+			if (plantUML.getClassDiagramFile() == null) {
+				throw new MojoExecutionException("plantUML.classDiagramFile parameter must be defined");
+			}
+			
+			plantUML.getClassDiagramFile().getParentFile().mkdirs();
 			
 			PlantumlClassDiagramGenerator generator = new PlantumlClassDiagramGenerator(owlReasoner);
-			generator.setShowAttributes(plantUMLShowAttributes);
-			generator.setShowSubclassOf(plantUMLShowSubClassOf);
-			generator.setShowAssociations(plantUMLShowAssociations);
-			generator.setShowOwlThing(plantUMLShowOwlThing);
+			plantUML.configure(generator);
 			
-			FileWriter writer = new FileWriter(plantUMLDomainModelFile);
+			FileWriter writer = new FileWriter(plantUML.getClassDiagramFile());
 			try {
 				generator.generateDomainModel(classStructure(), writer);
 			} finally {
 				close(writer);
 			}
 			
-			SourceFileReader reader = new SourceFileReader(plantUMLDomainModelFile);
+			SourceFileReader reader = new SourceFileReader(plantUML.getClassDiagramFile());
 			reader.getGeneratedImages();
 		}
 		
