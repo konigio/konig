@@ -16,6 +16,7 @@ public class PlantumlConfig {
 	private boolean showSubClassOf = false;
 	private boolean showAttributes = false;
 	private boolean showOwlThing = false;
+	private boolean showEnumerationClasses = false;
 	private Set<String> includeClass = null;
 	private Set<String> excludeClass = null;
 	private NamespaceManager nsManager;
@@ -38,6 +39,14 @@ public class PlantumlConfig {
 
 	public void setClassDiagramFile(File classDiagramFile) {
 		this.classDiagramFile = classDiagramFile;
+	}
+
+	public boolean isShowEnumerationClasses() {
+		return showEnumerationClasses;
+	}
+
+	public void setShowEnumerationClasses(boolean showEnumerationClasses) {
+		this.showEnumerationClasses = showEnumerationClasses;
 	}
 
 	public boolean isShowAssociations() {
@@ -82,6 +91,7 @@ public class PlantumlConfig {
 		generator.setIncludeClass(uriSet(includeClass));
 		generator.setShowAssociations(showAssociations);
 		generator.setShowAttributes(showAttributes);
+		generator.setShowEnumerationClasses(showEnumerationClasses);
 		generator.setShowOwlThing(showOwlThing);
 		generator.setShowSubclassOf(showSubClassOf);
 	}

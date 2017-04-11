@@ -13,6 +13,7 @@ import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Schema;
 import io.konig.shacl.AndConstraint;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.NodeKind;
@@ -27,6 +28,7 @@ public class PlantumlClassDiagramGenerator {
 	private boolean showSubclassOf = true;
 	private boolean showAttributes = false;
 	private boolean showOwlThing = false;
+	private boolean showEnumerationClasses = false;
 	private Set<URI> includeClass = null;
 	private Set<URI> excludeClass = null;
 	private OwlReasoner reasoner;
@@ -40,6 +42,14 @@ public class PlantumlClassDiagramGenerator {
 		worker.run();
 	}
 	
+	public boolean isShowEnumerationClasses() {
+		return showEnumerationClasses;
+	}
+
+	public void setShowEnumerationClasses(boolean showEnumerationClasses) {
+		this.showEnumerationClasses = showEnumerationClasses;
+	}
+
 	public Set<URI> getIncludeClass() {
 		return includeClass;
 	}
@@ -108,6 +118,9 @@ public class PlantumlClassDiagramGenerator {
 					continue;
 				}
 				if (excludeClass!=null && excludeClass.contains(targetClass)) {
+					continue;
+				}
+				if (!showEnumerationClasses && reasoner.isSubClassOf(targetClass, Schema.Enumeration)) {
 					continue;
 				}
 				handleShape(shape);
