@@ -19,6 +19,7 @@ import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JForEach;
+import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
@@ -164,7 +165,11 @@ public class JsonWriterBuilder {
 			
 			if (XMLSchema.ANYURI.equals(datatype)) {
 
-				handleIriReference(model, body, p, sourceVar, jsonVar);
+				if (p.getValueClass()==null) {
+					anyURI(model, body, p, sourceVar, jsonVar);
+				} else {
+					handleIriReference(model, body, p, sourceVar, jsonVar);
+				}
 				
 			} else 	if (datatype != null) {
 				
@@ -273,6 +278,53 @@ public class JsonWriterBuilder {
 	}
 
 
+
+
+	private void anyURI(JCodeModel model, JBlock body, PropertyConstraint p, JVar sourceVar, JVar jsonVar) {
+		Integer maxCount = p.getMaxCount();
+		URI predicate = p.getPredicate();
+		String fieldName = predicate.getLocalName();
+		String getterName = BeanUtil.getterName(predicate);
+		
+		JClass propertyType = model.ref(URI.class);
+		
+		if (maxCount != null && maxCount==1) {
+
+			JVar fieldValue = body.decl(propertyType, fieldName).init(
+					
+				JExpr._this().invoke("value").arg(sourceVar.invoke(getterName)).arg(propertyType.staticRef("class"))
+			);		
+
+			JInvocation statement = jsonVar.invoke("writeStringField").arg(JExpr.lit(fieldName)).arg(fieldValue.invoke("stringValue"));
+			
+			body._if(fieldValue.ne(JExpr._null()))._then()
+				.add(statement);
+		} else {
+			
+			JClass collectionClass = model.ref(Collection.class);
+			JClass narrowCollection = collectionClass.narrow(propertyType);
+			
+			String setName = fieldName + "Set";
+			
+			JVar property = body.decl(narrowCollection, setName).init(sourceVar.invoke(getterName));
+			
+			JBlock thenBlock = body._if(property.ne(JExpr._null()))._then();
+			
+			JForEach forEach = thenBlock
+				.add(jsonVar.invoke("writeArrayFieldStart").arg(JExpr.lit(fieldName)))
+				.forEach(propertyType, fieldName, property);
+			
+			JVar fieldValue = forEach.var();
+			
+			JInvocation statement = jsonVar.invoke("writeString").arg(fieldValue.invoke("stringValue"));
+			
+			forEach.body()
+				.add(statement);
+			
+			thenBlock.add(jsonVar.invoke("writeEndArray"));
+		}
+		
+	}
 
 
 	private void handleOrContraint(
