@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -26,17 +27,35 @@ public class PlantumlClassDiagramGenerator {
 	private boolean showSubclassOf = true;
 	private boolean showAttributes = false;
 	private boolean showOwlThing = false;
+	private Set<URI> includeClass = null;
+	private Set<URI> excludeClass = null;
 	private OwlReasoner reasoner;
 
 	public PlantumlClassDiagramGenerator(OwlReasoner reasoner) {
 		this.reasoner = reasoner;
 	}
-
+	
 	public void generateDomainModel(ClassStructure structure, Writer out) throws PlantumlGeneratorException {
 		Worker worker = new Worker(structure, out);
 		worker.run();
 	}
 	
+	public Set<URI> getIncludeClass() {
+		return includeClass;
+	}
+
+	public void setIncludeClass(Set<URI> includeClass) {
+		this.includeClass = includeClass;
+	}
+
+	public Set<URI> getExcludeClass() {
+		return excludeClass;
+	}
+
+	public void setExcludeClass(Set<URI> excludeClass) {
+		this.excludeClass = excludeClass;
+	}
+
 	public boolean isShowAttributes() {
 		return showAttributes;
 	}
@@ -84,6 +103,13 @@ public class PlantumlClassDiagramGenerator {
 				if (!showOwlThing && OWL.THING.equals(shape.getTargetClass())) {
 					continue;
 				}
+				URI targetClass = shape.getTargetClass();
+				if (includeClass != null && !includeClass.isEmpty() && !includeClass.contains(targetClass)) {
+					continue;
+				}
+				if (excludeClass!=null && excludeClass.contains(targetClass)) {
+					continue;
+				}
 				handleShape(shape);
 			}
 			out.println("@enduml");
@@ -105,8 +131,11 @@ public class PlantumlClassDiagramGenerator {
 				if (showAssociations) {
 					for (PropertyConstraint p : shape.getProperty()) {
 						
-
-						if (showAssociations && isObjectProperty(p)) {
+						if (RDF.TYPE.equals(p.getPredicate())) {
+							continue;
+						}
+						
+						if (isObjectProperty(p)) {
 
 							URI rangeClass = rangeClass(p);
 							if (rangeClass != null  && !reasoner.isEnumerationClass(rangeClass)) {
@@ -153,7 +182,7 @@ public class PlantumlClassDiagramGenerator {
 						typeName = classType.getLocalName();
 					}
 					
-					out.print("  ");
+					out.print(TAB);
 					out.print(predicate.getLocalName());
 					out.print(" : ");
 					out.print(typeName);
