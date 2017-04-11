@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.OwlReasoner;
@@ -24,6 +25,7 @@ public class PlantumlClassDiagramGenerator {
 	private boolean showAssociations=true;
 	private boolean showSubclassOf = true;
 	private boolean showAttributes = false;
+	private boolean showOwlThing = false;
 	private OwlReasoner reasoner;
 
 	public PlantumlClassDiagramGenerator(OwlReasoner reasoner) {
@@ -51,6 +53,14 @@ public class PlantumlClassDiagramGenerator {
 		this.showSubclassOf = showSubclassOf;
 	}
 
+	public boolean isShowOwlThing() {
+		return showOwlThing;
+	}
+
+	public void setShowOwlThing(boolean showOwlThing) {
+		this.showOwlThing = showOwlThing;
+	}
+
 	public boolean isShowAssociations() {
 		return showAssociations;
 	}
@@ -71,6 +81,9 @@ public class PlantumlClassDiagramGenerator {
 		private void run() {
 			out.println("@startuml");
 			for (Shape shape : structure.listClassShapes()) {
+				if (!showOwlThing && OWL.THING.equals(shape.getTargetClass())) {
+					continue;
+				}
 				handleShape(shape);
 			}
 			out.println("@enduml");
@@ -174,6 +187,11 @@ public class PlantumlClassDiagramGenerator {
 				AndConstraint and = shape.getAnd();
 				if (and != null) {
 					for (Shape superShape : and.getShapes()) {
+					
+						if (!showOwlThing && OWL.THING.equals(superShape.getTargetClass())) {
+							continue;
+						}
+					
 						if (superShape.getId() instanceof URI) {
 							URI superId = (URI) superShape.getId();
 							String superName = superId.getLocalName();
