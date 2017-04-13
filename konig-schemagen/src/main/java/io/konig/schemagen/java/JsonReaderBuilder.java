@@ -49,6 +49,7 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.Dag;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.BeanUtil;
+import io.konig.core.util.JavaDatatypeMapper;
 import io.konig.core.vocab.Schema;
 import io.konig.runtime.io.BaseJsonReader;
 import io.konig.runtime.io.ValidationException;

@@ -58,6 +58,10 @@ public class HasStep implements Step {
 		list.add(new PredicateValuePair(predicate, value));
 	}
 	
+	public List<PredicateValuePair> getPairList() {
+		return list;
+	}
+	
 	@Override
 	public boolean equals(Object other) {
 		boolean result = false;
@@ -167,7 +171,7 @@ public class HasStep implements Step {
 		
 	}
 	
-	static class PredicateValuePair implements Comparable<PredicateValuePair> {
+	public static class PredicateValuePair implements Comparable<PredicateValuePair> {
 		private URI predicate;
 		private Value value;
 		private Object javaValue;
@@ -179,6 +183,14 @@ public class HasStep implements Step {
 			}
 		}
 		
+		public URI getPredicate() {
+			return predicate;
+		}
+
+		public Value getValue() {
+			return value;
+		}
+
 		@Override
 		public int compareTo(PredicateValuePair other) {
 			int result = predicate.stringValue().compareTo(other.predicate.stringValue());

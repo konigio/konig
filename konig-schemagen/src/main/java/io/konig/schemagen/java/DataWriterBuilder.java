@@ -22,6 +22,7 @@ import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JVar;
 
 import io.konig.core.Graph;
+import io.konig.core.util.JavaDatatypeMapper;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.ShapeMediaTypeNamer;
 

@@ -40,9 +40,9 @@ import com.sun.codemodel.JTryBlock;
 import com.sun.codemodel.JVar;
 
 import io.konig.core.pojo.BeanUtil;
+import io.konig.core.util.JavaDatatypeMapper;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.TIME;
-import io.konig.schemagen.java.JavaDatatypeMapper;
 import io.konig.schemagen.java.JavaNamer;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;

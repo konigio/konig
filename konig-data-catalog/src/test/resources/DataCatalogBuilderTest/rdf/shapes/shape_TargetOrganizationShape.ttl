@@ -1,0 +1,52 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:TargetOrganizationShape sh:property  [ 
+		rdfs:comment "The primary key for the organization within the enterprise CRM sytem." ; 
+		sh:predicate ex:crmId ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		rdfs:comment "The human-friendly name of the Organization suitable for display in reports." ; 
+		sh:predicate schema:name ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		rdfs:comment "The person who founded the oragnization." ; 
+		sh:predicate schema:founder ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:shape shape:FounderShape
+	 ]  ,  [ 
+		rdfs:comment "The date/time when this record was last modified." ; 
+		sh:predicate konig:modified ; 
+		sh:datatype xsd:dateTime ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	rdfs:comment "The data shape used to store Organization records in Google BigQuery" ; 
+	sh:targetClass schema:Organization ; 
+	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> ; 
+	sh:nodeKind sh:IRI . 
+
+shape:FounderShape sh:property  [ 
+		rdfs:comment "The family name of the Person" ; 
+		sh:predicate schema:familyName ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	rdfs:comment "A nested data shape for the founder of an Organization." ; 
+	sh:targetClass schema:Person ; 
+	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> ; 
+	sh:nodeKind sh:IRI . 
+
+<http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> a konig:LoadModelFromSpreadsheet . 

@@ -1,0 +1,40 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix ex: <http://example.com/ns/core/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:SourceOrganizationShape sh:property  [ 
+		rdfs:comment "The primary key of the Organization within the enterprise CRM system." ; 
+		sh:predicate ex:crmId ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		rdfs:comment "The human-friendly name of the Organization, suitable for display in reports." ; 
+		sh:predicate schema:name ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		rdfs:comment "The primary key of the founder as recorded in the enterprise CRM system." ; 
+		sh:predicate alias:founderId ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	rdfs:comment "The data shape for an Organization record stored in the enterprise CRM system." ; 
+	sh:targetClass schema:Organization ; 
+	konig:iriTemplate '''@context {
+   "ex" : "http://example.com/ns/core/",
+   "crmId" : "ex:crmId"
+}
+
+<http://example.com/product/{crmId}>''' ; 
+	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> . 
+
+<http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> a konig:LoadModelFromSpreadsheet . 

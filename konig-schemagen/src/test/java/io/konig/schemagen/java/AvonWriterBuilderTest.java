@@ -15,6 +15,8 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.util.BasicJavaDatatypeMapper;
+import io.konig.core.util.JavaDatatypeMapper;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.LogicalShapeBuilder;

@@ -1,0 +1,19 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org" ; 
+	rdfs:comment "A schema developed by Bing, Google, Yahoo! and other search vendors to promote structured data on the Internet, on web pages, in email, and beyond." . 
+
+schema:ContactPoint a owl:Class . 
+
+schema:Organization a owl:Class ; 
+	rdfs:comment "An organization such as a school, NGO, corporation, club, etc." . 
+
+schema:Person a owl:Class ; 
+	rdfs:comment "A person (alive, dead, undead, or fictional)." . 

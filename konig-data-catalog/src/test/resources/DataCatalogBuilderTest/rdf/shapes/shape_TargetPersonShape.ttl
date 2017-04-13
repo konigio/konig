@@ -1,0 +1,67 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:TargetPersonShape sh:property  [ 
+		rdfs:comment "The primary key of the Person within the enterprise CRM system." ; 
+		sh:predicate ex:crmId ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		rdfs:comment "The given name of the Person. In the US, the first name." ; 
+		sh:predicate schema:givenName ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		rdfs:comment "The family name of the Person. In the US, the last name." ; 
+		sh:predicate schema:familyName ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		rdfs:comment "The date/time when this record was last modified" ; 
+		sh:predicate konig:modified ; 
+		sh:datatype xsd:dateTime ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		rdfs:comment "A contact point for the Person." ; 
+		sh:predicate schema:contactPoint ; 
+		sh:minCount 0 ; 
+		sh:shape shape:ContactPointShape ]  ; 
+	a sh:Shape ; 
+	rdfs:comment "The data shape used to store Person records in Google BigQuery." ; 
+	sh:targetClass schema:Person ; 
+	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> ; 
+	sh:nodeKind sh:IRI . 
+
+shape:ContactPointShape sh:property  [ 
+		rdfs:comment "A person or organization can have different contact points, for different purposes. For example, a sales contact point, a PR contact point and so on. This property is used to specify the kind of contact point." ; 
+		sh:predicate schema:contactType ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		rdfs:comment "The email address" ; 
+		sh:predicate schema:email ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		rdfs:comment "The telephone number" ; 
+		sh:predicate schema:telephone ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ]  ; 
+	a sh:Shape ; 
+	sh:targetClass schema:ContactPoint ; 
+	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> . 
+
+<http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> a konig:LoadModelFromSpreadsheet . 

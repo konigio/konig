@@ -1,0 +1,21 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:FounderShape sh:property  [ 
+		rdfs:comment "The family name of the Person" ; 
+		sh:predicate schema:familyName ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	rdfs:comment "A nested data shape for the founder of an Organization." ; 
+	sh:targetClass schema:Person ; 
+	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> ; 
+	sh:nodeKind sh:IRI . 
+
+<http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> a konig:LoadModelFromSpreadsheet . 
