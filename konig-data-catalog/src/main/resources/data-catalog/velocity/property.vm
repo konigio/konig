@@ -1,0 +1,107 @@
+<html>
+<head>
+<title>$PropertyName</title>
+<link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
+<style>
+table {
+	font-size: 100%;
+}
+</style>
+</head>
+<body class="mainsite">
+#parse( "data-catalog/velocity/header.vm" )
+<div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$PropertyId">
+	<h1 property="rdfs:label" class="page-title">$PropertyName</h1>
+	<span class="canonicalUrl">Canonical URL: <a href="$PropertyId">$PropertyId</a></span>
+#if($EquivalentPath)
+	<div>
+	<span class="canonicalUrl">Canonical Path: 
+#foreach( $pathElement in $EquivalentPath )##
+#if($pathElement.Filter)[##
+#foreach( $pair in $pathElement.Filter)##
+<a href="$pair.PropertyName.Href"> $pair.PropertyName.Name</a> $pair.Value
+#end##
+]##
+#else##
+$pathElement.Operator<a href="$pathElement.Href">$pathElement.Name</a>##
+#end##
+#end	
+	</span>
+	</div>
+#end	
+	<h4>Property > $PropertyName</h4>
+	<div property="rdfs:comment">
+		$PropertyDescription
+	</div>
+	
+#if($RangeList) 
+	<table class="definition-table">
+		<thead>
+			<tr>
+				<th>Values expected to be one of these types</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>
+#foreach( $range in $RangeList )
+					<code>
+						<a href="$range.Href">$range.Name</a>
+					</code>
+					<br>
+#end					
+				</td>
+			</tr>
+		</tbody>
+	</table>
+#end	
+
+#if($DomainList) 
+	<table class="definition-table">
+		<thead>
+			<tr>
+				<th>Used in these Classes</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>
+#foreach( $domain in $DomainList )
+					<code>
+						<a href="$domain.Href">$domain.Name</a>
+					</code>
+					<br>
+#end					
+				</td>
+			</tr>
+		</tbody>
+	</table>
+#end	
+
+#if($ShapeList) 
+	<table class="definition-table">
+		<thead>
+			<tr>
+				<th>Used in these Schemas</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>
+#foreach( $shape in $ShapeList )
+					<code>
+						<a href="$shape.Href">$shape.Name</a>
+					</code>
+					<br>
+#end					
+				</td>
+			</tr>
+		</tbody>
+	</table>
+#end	
+	<p class="version">
+		Latest Version
+	</p>
+</div>
+</body>
+</html>

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.schemagen.java.Format;
 
 public class BasicJavaNamer implements JavaNamer {
 	private static final Logger logger = LoggerFactory.getLogger(BasicJavaNamer.class);

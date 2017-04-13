@@ -11,13 +11,13 @@ import com.sun.codemodel.JCodeModel;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.util.BasicJavaDatatypeMapper;
+import io.konig.core.util.JavaDatatypeMapper;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.TIME;
 import io.konig.gae.datastore.impl.SimpleEntityNamer;
-import io.konig.schemagen.java.BasicJavaDatatypeMapper;
 import io.konig.schemagen.java.BasicJavaNamer;
-import io.konig.schemagen.java.JavaDatatypeMapper;
 import io.konig.schemagen.java.JavaNamer;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;

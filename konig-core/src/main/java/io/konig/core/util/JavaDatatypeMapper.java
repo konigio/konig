@@ -1,4 +1,4 @@
-package io.konig.schemagen.java;
+package io.konig.core.util;
 
 import org.openrdf.model.URI;
 

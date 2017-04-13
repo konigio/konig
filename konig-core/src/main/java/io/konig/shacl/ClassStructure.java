@@ -42,7 +42,10 @@ import org.openrdf.model.vocabulary.RDFS;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Path;
 import io.konig.core.Vertex;
+import io.konig.core.impl.RdfUtil;
+import io.konig.core.path.PathFactory;
 import io.konig.core.util.SimpleValueMap;
 import io.konig.core.util.ValueFormat;
 import io.konig.core.vocab.Konig;
@@ -52,7 +55,7 @@ import io.konig.core.vocab.Schema;
 public class ClassStructure {
 	
 	private Map<Resource, Shape> shapeMap = new HashMap<>();
-	private Map<URI,PropertyInfo> propertyMap = new HashMap<>();
+	private Map<URI,PropertyStructure> propertyMap = new HashMap<>();
 	private Shape nullShape = new Shape(Konig.NullShape);
 	private ValueFormat iriTemplate;
 	
@@ -68,8 +71,16 @@ public class ClassStructure {
 		init(shapeManager, reasoner);
 	}
 	
+	public Collection<PropertyStructure> listProperties() {
+		return propertyMap.values();
+	}
+	
+	public PropertyStructure getProperty(URI propertyId) {
+		return propertyMap.get(propertyId);
+	}
+	
 	public Set<Resource> domainIncludes(URI propertyId) {
-		PropertyInfo info = propertyMap.get(propertyId);
+		PropertyStructure info = propertyMap.get(propertyId);
 		if (info == null) {
 			throw new KonigException("Property not found: " + propertyId);
 		}
@@ -287,10 +298,13 @@ public class ClassStructure {
 	private class Builder {
 		private ShapeManager shapeManager;
 		private OwlReasoner reasoner;
+		private PathFactory pathFactory;
 		
 		public Builder(ShapeManager shapeManager, OwlReasoner reasoner) {
 			this.shapeManager = shapeManager;
 			this.reasoner = reasoner;
+			Graph graph = reasoner.getGraph();
+			pathFactory = new PathFactory(graph.getNamespaceManager(), graph);
 		}
 		
 		private void build() {
@@ -376,7 +390,7 @@ public class ClassStructure {
 		}
 
 		private void buildShapes() {
-			for (PropertyInfo info : propertyMap.values()) {
+			for (PropertyStructure info : propertyMap.values()) {
 				Resource domain = info.getDomain();
 				if (domain != null) {
 					Shape shape = produceShape(domain);
@@ -404,10 +418,12 @@ public class ClassStructure {
 					for (PropertyConstraint p : shape.getProperty()) {
 						URI predicate = p.getPredicate();
 						if (predicate != null) {
-							PropertyInfo info = produceProperty(predicate);
+							PropertyStructure info = produceProperty(predicate);
+							info.addShape(shape);
 							setDomain(info, targetClass);
 							setDatatype(info, p.getDatatype());
 							setMaxCount(info, p.getMaxCount());
+							setEquivalentPath(info, p.getCompiledEquivalentPath(pathFactory));
 							setValueClass(info, p.getValueClass());
 							if (p.getShape() != null) {
 								setValueClass(info, p.getShape().getTargetClass());
@@ -437,7 +453,9 @@ public class ClassStructure {
 					boolean isFunctional = reasoner.instanceOf(propertyId, OWL.FUNCTIONALPROPERTY);
 					URI domain = v.getURI(RDFS.DOMAIN);
 					URI range = v.getURI(RDFS.RANGE);
-					PropertyInfo p = produceProperty(propertyId);
+					String comment = RdfUtil.getDescription(v);
+					PropertyStructure p = produceProperty(propertyId);
+					p.setDescription(comment);
 					if (domain != null) {
 						p.setDomain(domain);
 						p.setDomainLocked(true);
@@ -465,7 +483,7 @@ public class ClassStructure {
 			}
 		}
 
-		private void setDomain(PropertyInfo p, Resource value) {
+		private void setDomain(PropertyStructure p, Resource value) {
 			if (value != null) {
 				if (Schema.Thing.equals(value)) {
 					value = OWL.THING;
@@ -537,7 +555,7 @@ public class ClassStructure {
 			
 		}
 
-		private void setValueClass(PropertyInfo p, Resource value) {
+		private void setValueClass(PropertyStructure p, Resource value) {
 			if (value != null) {
 				if (p.getDatatype() != null) {
 					throw new KonigException("Property <" + p.getPredicate() + "> has sh:datatype <" + p.getDatatype() + "> and sh:class <" +
@@ -555,7 +573,7 @@ public class ClassStructure {
 			
 		}
 
-		private void setDatatype(PropertyInfo p, URI value) {
+		private void setDatatype(PropertyStructure p, URI value) {
 			if (value != null) {
 				if (p.getValueClass() != null) {
 					throw new KonigException("Property <" + p.getPredicate() + "> has sh:datatype <" + value + "> and sh:class <" +
@@ -573,8 +591,14 @@ public class ClassStructure {
 			}
 			
 		}
+		
+		private void setEquivalentPath(PropertyStructure p, Path path) {
+			if (path != null) {
+				p.setEquivalentPath(path);
+			}
+		}
 
-		private void setMaxCount(PropertyInfo p, Integer value) {
+		private void setMaxCount(PropertyStructure p, Integer value) {
 			if (value != null) {
 				Integer prior = p.getMaxCount();
 				if (prior==null || value>prior) {
@@ -583,10 +607,10 @@ public class ClassStructure {
 			}
 		}
 
-		private PropertyInfo produceProperty(URI predicate) {
-			PropertyInfo p = propertyMap.get(predicate);
+		private PropertyStructure produceProperty(URI predicate) {
+			PropertyStructure p = propertyMap.get(predicate);
 			if (p == null) {
-				p = new PropertyInfo(predicate);
+				p = new PropertyStructure(predicate);
 				propertyMap.put(predicate, p);
 			}
 			return p;
@@ -628,94 +652,6 @@ public class ClassStructure {
 		
 	}
 	
-	static class PropertyInfo {
-		private URI predicate;
-		private Resource domain;
-		private Resource datatype;
-		private Resource valueClass;
-		private Integer maxCount;
-		private Set<Resource> domainIncludes;
-		private boolean domainLocked;
-		private boolean domainIncludesLocked;
-		
-		public PropertyInfo(URI predicate) {
-			this.predicate = predicate;
-		}
-
-		public boolean isDomainIncludesLocked() {
-			return domainIncludesLocked;
-		}
-
-		public void setDomainIncludesLocked(boolean domainIncludesLocked) {
-			this.domainIncludesLocked = domainIncludesLocked;
-		}
-
-		public Set<Resource> getDomainIncludes() {
-			return domainIncludes;
-		}
-
-		public boolean isDomainLocked() {
-			return domainLocked;
-		}
-
-		public void setDomainLocked(boolean domainLocked) {
-			this.domainLocked = domainLocked;
-		}
-
-		public void domainIncludes(Resource owlClass) {
-			if (domainIncludes == null) {
-				domainIncludes = new HashSet<>();
-			}
-			domainIncludes.add(owlClass);
-		}
-
-		public URI getPredicate() {
-			return predicate;
-		}
-
-		public Resource getDomain() {
-			return domain;
-		}
-
-		public void setDomain(Resource domain) {
-			this.domain = domain;
-		}
-
-		public Resource getDatatype() {
-			return datatype;
-		}
-
-		public void setDatatype(Resource datatype) {
-			this.datatype = datatype;
-		}
-
-		public Resource getValueClass() {
-			return valueClass;
-		}
-
-		public void setValueClass(Resource valueClass) {
-			this.valueClass = valueClass;
-		}
-
-		public Integer getMaxCount() {
-			return maxCount;
-		}
-
-		public void setMaxCount(Integer maxCount) {
-			this.maxCount = maxCount;
-		}
-		
-		public PropertyConstraint asPropertyConstraint() {
-			PropertyConstraint p = new PropertyConstraint(predicate);
-			if (datatype instanceof URI) {
-				p.setDatatype((URI) datatype);
-			}
-			p.setValueClass(valueClass);
-			p.setMaxCount(maxCount);
-			
-			return p;
-		}
-	}
 
 	public List<URI> listSubclasses(Shape shape) {
 		List<URI> list = new ArrayList<>();

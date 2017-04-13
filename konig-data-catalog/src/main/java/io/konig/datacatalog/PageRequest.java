@@ -11,6 +11,7 @@ import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.shacl.ClassStructure;
 import io.konig.shacl.ShapeManager;
 
 public class PageRequest {
@@ -20,6 +21,7 @@ public class PageRequest {
 	private VelocityEngine engine;
 	private VelocityContext context;
 	private Graph graph;
+	private ClassStructure classStructure;
 	private ShapeManager shapeManager;
 	private DataCatalogBuilder builder;
 	private URI pageId;
@@ -28,15 +30,15 @@ public class PageRequest {
 		DataCatalogBuilder builder,
 		Vertex targetOntology, 
 		VelocityEngine engine, 
-		VelocityContext context, 
 		Graph graph, 
+		ClassStructure classStructure,
 		ShapeManager shapeManager
 	) {
 		this.builder = builder;
 		this.targetOntology = targetOntology;
 		this.engine = engine;
-		this.context = context;
 		this.graph = graph;
+		this.classStructure = classStructure;
 		this.shapeManager = shapeManager;
 	}
 	
@@ -46,11 +48,16 @@ public class PageRequest {
 		this.engine = other.getEngine();
 		this.context = new VelocityContext();
 		this.graph = other.getGraph();
+		this.classStructure = other.getClassStructure();
 		this.shapeManager = other.getShapeManager();
 	}
 
 	public DataCatalogBuilder getBuilder() {
 		return builder;
+	}
+
+	public ClassStructure getClassStructure() {
+		return classStructure;
 	}
 
 	public URI getPageId() {
@@ -78,7 +85,14 @@ public class PageRequest {
 		return engine;
 	}
 
+	public void setContext(VelocityContext context) {
+		this.context = context;
+	}
+
 	public VelocityContext getContext() {
+		if (context == null) {
+			context = new VelocityContext();
+		}
 		return context;
 	}
 

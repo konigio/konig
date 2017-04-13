@@ -1,0 +1,49 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix ex: <http://example.com/ns/core/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:SourcePersonShape sh:property  [ 
+		rdfs:comment "The primary key of the Person within the enterprise CRM system." ; 
+		sh:predicate ex:crmId ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		rdfs:comment "The Person's first name." ; 
+		sh:predicate alias:first_name ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		konig:equivalentPath "/schema:givenName"
+	 ]  ,  [ 
+		rdfs:comment "The Person's last name." ; 
+		sh:predicate alias:last_name ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		konig:equivalentPath "/schema:familyName"
+	 ]  ,  [ 
+		rdfs:comment "The Person's email address at work" ; 
+		sh:predicate alias:work_email ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ; 
+		konig:equivalentPath "/schema:contactPoint[schema:contactType \"work\"]/schema:email" ]  ; 
+	a sh:Shape ; 
+	rdfs:comment "The data shape for a Person record stored in the enterprise CRM system." ; 
+	sh:targetClass schema:Person ; 
+	konig:iriTemplate '''@context {
+   "ex" : "http://example.com/ns/core/",
+   "crmId" : "ex:crmId"
+}
+
+<http://example.com/person/{crmId}>''' ; 
+	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> . 
+
+<http://www.konig.io/activity/7oUJzTvgQRQAAAFbZaCYKw> a konig:LoadModelFromSpreadsheet . 

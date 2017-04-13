@@ -42,6 +42,8 @@ import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.util.JavaDatatypeMapper;
+import io.konig.core.util.SmartJavaDatatypeMapper;
 import io.konig.core.vocab.Konig;
 import io.konig.runtime.io.TypeSet;
 import io.konig.schemagen.SchemaGeneratorException;

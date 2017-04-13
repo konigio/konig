@@ -1,4 +1,4 @@
-package io.konig.schemagen.java;
+package io.konig.core.util;
 
 import java.util.GregorianCalendar;
 
@@ -6,8 +6,6 @@ import org.joda.time.Duration;
 import org.joda.time.LocalTime;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
-
-import io.konig.core.Graph;
 
 public class BasicJavaDatatypeMapper implements JavaDatatypeMapper {
 

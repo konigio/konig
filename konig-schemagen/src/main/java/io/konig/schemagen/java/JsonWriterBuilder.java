@@ -28,6 +28,8 @@ import com.sun.codemodel.JVar;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.pojo.BeanUtil;
+import io.konig.core.util.BasicJavaDatatypeMapper;
+import io.konig.core.util.JavaDatatypeMapper;
 import io.konig.runtime.io.BaseJsonWriter;
 import io.konig.runtime.io.ValidationException;
 import io.konig.schemagen.SchemaGeneratorException;

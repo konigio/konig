@@ -12,7 +12,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 import io.konig.core.Vertex;
-import io.konig.shacl.ClassManager;
+import io.konig.shacl.ClassStructure;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -21,12 +21,12 @@ public class ClassPage {
 
 	
 	public void render(ClassRequest request, PageResponse response) throws DataCatalogException, IOException {
-		ClassManager classManager = request.getClassManager();
+		ClassStructure structure = request.getClassStructure();
 		
 		Vertex owlClass = request.getOwlClass();
 
 		DataCatalogUtil.setSiteName(request);
-		Shape shape = classManager.getLogicalShape(owlClass.getId());
+		Shape shape = structure.getShapeForClass(owlClass.getId());
 
 		VelocityEngine engine = request.getEngine();
 		VelocityContext context = request.getContext();
