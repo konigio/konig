@@ -1,15 +1,16 @@
 package io.konig.datacatalog;
 
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 import io.konig.core.impl.RdfUtil;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.PropertyStructure;
 
 public class PropertyInfo {
 	private PropertyConstraint constraint;
 	private String predicateId;
 	private String predicateLocalName;
+	private String propertyHref;
 	private String typeName;
 	private String typeHref;
 	private String description;
@@ -33,8 +34,15 @@ public class PropertyInfo {
 		}
 		description = RdfUtil.getDescription(constraint, request.getGraph());
 		if (description == null) {
-			description = "";
+			PropertyStructure structure = request.getClassStructure().getProperty(constraint.getPredicate());
+			if (structure != null) {
+				description = structure.description();
+			}
+			if (description == null) {
+				description = "";
+			}
 		}
+		propertyHref = request.relativePath(resourceId, constraint.getPredicate());
 	}
 	
 	public String getTypeHref() {
@@ -58,6 +66,10 @@ public class PropertyInfo {
 	}
 	public String getDescription() {
 		return description;
+	}
+
+	public String getPropertyHref() {
+		return propertyHref;
 	}
 	
 }

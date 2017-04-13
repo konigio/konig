@@ -24,13 +24,11 @@ import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.util.IOUtil;
-import io.konig.shacl.ClassManager;
-import io.konig.shacl.LogicalShapeBuilder;
-import io.konig.shacl.LogicalShapeNamer;
+import io.konig.core.util.SimpleValueFormat;
+import io.konig.shacl.ClassStructure;
+import io.konig.shacl.PropertyStructure;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.impl.BasicLogicalShapeNamer;
-import io.konig.shacl.impl.MemoryClassManager;
 
 public class DataCatalogBuilder {
 	
@@ -65,18 +63,21 @@ public class DataCatalogBuilder {
 		properties.put("class.resource.loader.class", ClasspathResourceLoader.class.getName());
 		
 		VelocityEngine engine = new VelocityEngine(properties);
-		VelocityContext context = new VelocityContext();
 		
 		Vertex targetOntology = graph.getVertex(ontologyId);
 		if (targetOntology == null) {
 			throw new DataCatalogException("Target Ontology not defined: " + ontologyId.stringValue());
 		}
+		OwlReasoner reasoner = new OwlReasoner(graph);
+		SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
+		ClassStructure classStructure = new ClassStructure(iriTemplate, shapeManager, reasoner);
 
-		PageRequest request = new PageRequest(this, targetOntology, engine, context, graph, shapeManager);
+		PageRequest request = new PageRequest(this, targetOntology, engine, graph, classStructure, shapeManager);
 		try {
 			buildOntologyPages(request);
 			buildShapePages(request);
 			buildClassPages(request);
+			buildPropertyPages(request);
 			buildClassIndex(request);
 			buildOntologyIndex(request);
 			buildIndexPage(request);
@@ -89,6 +90,22 @@ public class DataCatalogBuilder {
 		
 	}
 	
+	private void buildPropertyPages(PageRequest baseRequest) throws IOException, DataCatalogException {
+		
+		PropertyRequest request = new PropertyRequest(baseRequest);
+		
+		PropertyPage page = new PropertyPage();
+		
+		for (PropertyStructure p : request.getClassStructure().listProperties()) {
+			request.setPropertyStructure(p);
+			PrintWriter writer = resourceWriterFactory.createWriter(request, p.getPredicate());
+			PageResponse response = new PageResponseImpl(writer);
+			request.setContext(new VelocityContext());
+			page.render(request, response);
+		}
+	}
+
+
 	public List<Link> setActiveItem(PageRequest request, URI pageId) throws DataCatalogException {
 		List<Link> list = new ArrayList<>();
 		for (MenuItem item : menu) {
@@ -150,15 +167,8 @@ public class DataCatalogBuilder {
 	}
 
 	private void buildClassPages(PageRequest request) throws IOException, DataCatalogException {
-		String baseURI = "http://www.io.konig.com/logical/shapes/";
-		ClassManager classManager = new MemoryClassManager();
-		OwlReasoner reasoner = new OwlReasoner(request.getGraph());
-		LogicalShapeNamer shapeNamer = new BasicLogicalShapeNamer(baseURI, request.getGraph().getNamespaceManager());
-		LogicalShapeBuilder builder = new LogicalShapeBuilder(reasoner, shapeNamer);
-		builder.setUsePropertyConstraintComment(true);
-		builder.buildLogicalShapes(request.getShapeManager(), classManager);
 		
-		ClassRequest classRequest = new ClassRequest(request, classManager);
+		ClassRequest classRequest = new ClassRequest(request);
 		List<Vertex> classList = request.getGraph().v(OWL.CLASS).in(RDF.TYPE).toVertexList();
 		ClassPage page = new ClassPage();
 		for (Vertex v : classList) {

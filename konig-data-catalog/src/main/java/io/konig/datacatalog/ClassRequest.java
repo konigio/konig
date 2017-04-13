@@ -2,19 +2,14 @@ package io.konig.datacatalog;
 
 import io.konig.core.Vertex;
 import io.konig.shacl.ClassManager;
+import io.konig.shacl.ClassStructure;
 
 public class ClassRequest extends PageRequest {
 
-	private ClassManager classManager;
 	private Vertex owlClass;
 
-	public ClassRequest(PageRequest other, ClassManager classManager) {
+	public ClassRequest(PageRequest other) {
 		super(other);
-		this.classManager = classManager;
-	}
-
-	public ClassManager getClassManager() {
-		return classManager;
 	}
 
 	public Vertex getOwlClass() {

@@ -18,7 +18,7 @@
 		<tbody class="supertype">
 #foreach( $pc in $PropertyList )
 			<tr typeof="sh:PropertyConstraint" resource="$pc.PredicateId">
-				<th class="prop-nam">$pc.PredicateLocalName</th>
+				<th class="prop-nam"><a href="$pc.PropertyHref">$pc.PredicateLocalName</a></th>
 				<td class="prop-ect">
 #if($pc.TypeHref) 				
 					<a href="$pc.TypeHref">$pc.TypeName</a>
