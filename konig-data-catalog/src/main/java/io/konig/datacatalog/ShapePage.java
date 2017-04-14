@@ -32,6 +32,8 @@ public class ShapePage {
 		} else {
 			return;
 		}
+		URI targetClass = shape.getTargetClass();
+		context.put("TargetClass", new Link(targetClass.getLocalName(), targetClass.stringValue()));
 		request.setResourceId(shapeURI);
 		request.setActiveLink(null);
 		
