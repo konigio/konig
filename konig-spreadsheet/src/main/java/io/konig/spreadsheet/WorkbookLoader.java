@@ -1230,6 +1230,9 @@ public class WorkbookLoader {
 		}
 
 		private void readShapeHeader(Sheet sheet) {
+			shapeIdCol = shapeCommentCol = shapeScopeCol = shapeAggregationOfCol
+					= shapeRollUpByCol = shapeMediaTypeCol = shapeBigQueryTableCol 
+					= shapeDatasourceCol = shapeIriTemplateCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 			

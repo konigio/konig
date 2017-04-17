@@ -51,7 +51,7 @@ public enum NodeKind  {
 	}
 	
 	public static NodeKind or(NodeKind a, NodeKind b) {
-		int index = (a==null ? 0 : a.index) | (b==null ? 0 : b.index) - 1;
+		int index = ((a==null ? 0 : a.index) | (b==null ? 0 : b.index)) - 1;
 		
 		return (index<0) ? null : values()[index];
 		
