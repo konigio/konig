@@ -1,0 +1,73 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonShape sh:property  [ 
+		rdfs:comment "The full name of the person." ; 
+		sh:predicate schema:name ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		rdfs:comment "Given name. In the U.S., the first name of a Person." ; 
+		sh:predicate schema:givenName ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		rdfs:comment "Family name. In the U.S., the last name of an Person." ; 
+		sh:predicate schema:familyName ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		rdfs:comment "The person's email address." ; 
+		sh:predicate schema:email ; 
+		sh:minCount 0 ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		rdfs:comment "The person's postal address." ; 
+		sh:predicate schema:address ; 
+		sh:maxCount 1 ; 
+		sh:shape shape:PostalAddressShape ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		rdfs:comment "Gender of the person." ; 
+		sh:predicate schema:gender ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ; 
+		sh:class schema:GenderType ; 
+		sh:nodeKind sh:IRI ]  ; 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:Person . 
+
+shape:PostalAddressShape sh:property  [ 
+		rdfs:comment "The street address.  For example, 1600 Ampitheatre Pkwy." ; 
+		sh:predicate schema:streetAddress ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		rdfs:comment "The locality.  For example, Mountain View." ; 
+		sh:predicate schema:addressLocality ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		rdfs:comment "The region. For example, CA." ; 
+		sh:predicate schema:addressRegion ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		rdfs:comment "The postal code. For example, 94043." ; 
+		sh:predicate schema:postalCode ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string ]  ; 
+	a sh:Shape ; 
+	sh:targetClass schema:PostalAddress . 

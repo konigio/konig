@@ -1,0 +1,108 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix test: <http://example.com/ns/test/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+test:KitchenSinkShape sh:property  [ 
+		sh:predicate test:stringProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		sh:predicate test:uriProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:anyURI
+	 ]  ,  [ 
+		sh:predicate test:booleanProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:boolean
+	 ]  ,  [ 
+		sh:predicate test:byteProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:byte
+	 ]  ,  [ 
+		sh:predicate test:dateProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:date
+	 ]  ,  [ 
+		sh:predicate test:dateTimeProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:dateTime
+	 ]  ,  [ 
+		sh:predicate test:dayTimeDurationProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:dayTimeDuration
+	 ]  ,  [ 
+		sh:predicate test:doubleProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:double
+	 ]  ,  [ 
+		sh:predicate test:decimalProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:decimal
+	 ]  ,  [ 
+		sh:predicate test:floatProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:float
+	 ]  ,  [ 
+		sh:predicate test:intProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:int
+	 ]  ,  [ 
+		sh:predicate test:integerProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:integer
+	 ]  ,  [ 
+		sh:predicate test:negativeIntegerProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:negativeInteger
+	 ]  ,  [ 
+		sh:predicate test:nonNegativeIntegerProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:nonNegativeInteger
+	 ]  ,  [ 
+		sh:predicate test:nonPositiveIntegerProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:nonPositiveInteger
+	 ]  ,  [ 
+		sh:predicate test:normalizedString ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:normalizedString
+	 ]  ,  [ 
+		sh:predicate test:positiveIntegerProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:positiveInteger
+	 ]  ,  [ 
+		sh:predicate test:shortProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:short
+	 ]  ,  [ 
+		sh:predicate test:timeProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:time
+	 ]  ,  [ 
+		sh:predicate test:tokenProperty ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:token ]  ; 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass test:KitchenSink . 

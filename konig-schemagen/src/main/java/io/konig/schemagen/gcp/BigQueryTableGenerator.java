@@ -235,7 +235,7 @@ public class BigQueryTableGenerator {
 	public void writeTableDefinitions(File sourceDir, File outDir) throws IOException, SchemaGeneratorException {
 		Graph graph = new MemoryGraph();
 		try {
-			RdfUtil.loadTurtle(sourceDir, graph, null);
+			RdfUtil.loadTurtle(sourceDir, graph);
 			writeTableDefinitions(graph, outDir);
 			
 		} catch (RDFParseException | RDFHandlerException e) {

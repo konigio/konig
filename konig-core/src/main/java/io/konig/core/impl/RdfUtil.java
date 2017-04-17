@@ -56,6 +56,8 @@ import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 
 /*
  * #%L
@@ -506,6 +508,18 @@ public class RdfUtil {
 		RDFParser parser = new TurtleParserFactory().getParser();
 		parser.setRDFHandler(handler);
 		parser.parse(input, baseURL);
+	}
+	
+	public static void loadTurtle(File sourceDir, Graph graph, ShapeManager shapeManager) 
+	throws RDFParseException, RDFHandlerException, IOException {
+		
+		loadTurtle(sourceDir, graph, graph.getNamespaceManager());
+		ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
+		shapeLoader.load(graph);
+	}
+	
+	public static void loadTurtle(File sourceDir, Graph graph) throws RDFParseException, RDFHandlerException, IOException {
+		loadTurtle(sourceDir, graph, graph.getNamespaceManager());
 	}
 	
 	/**
