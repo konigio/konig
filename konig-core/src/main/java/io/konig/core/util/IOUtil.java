@@ -1,5 +1,7 @@
 package io.konig.core.util;
 
+import java.io.BufferedReader;
+
 /*
  * #%L
  * Konig Core
@@ -23,6 +25,10 @@ package io.konig.core.util;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +55,22 @@ public class IOUtil {
 			}
 		}
 		file.delete();
+	}
+
+	public static String stringContent(File file) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		InputStream is = new FileInputStream(file);
+		BufferedReader buf = new BufferedReader(new InputStreamReader(is));
+		try {
+			String line = buf.readLine();
+			while (line != null) {
+				sb.append(line).append("\n");
+				line = buf.readLine();
+			}
+		} finally {
+			close(buf, file.getAbsolutePath());
+		}
+		return sb.toString();
 	}
 
 }

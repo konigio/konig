@@ -17,10 +17,11 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
-public class DataCatalogBuilderTest {
+public class DataCatalogBuilder_Test {
 	
 	private DataCatalogBuilder builder = new DataCatalogBuilder();
 
+	private File exampleDir = new File("src/test/resources/DataCatalogBuilder/examples");
 	private File outDir = new File("target/test/DataCatalogBuilder");
 	private NamespaceManager nsManager = new MemoryNamespaceManager();
 	private Graph graph = new MemoryGraph(nsManager);
@@ -39,7 +40,7 @@ public class DataCatalogBuilderTest {
 		
 		load("src/test/resources/DataCatalogBuilderTest/rdf");
 		URI ontologyId = uri("http://example.com/ns/core/");
-		builder.build(ontologyId, outDir, graph, shapeManager);
+		builder.build(ontologyId, outDir, exampleDir, graph, shapeManager);
 		
 	}
 

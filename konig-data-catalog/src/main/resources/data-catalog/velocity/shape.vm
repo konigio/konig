@@ -27,6 +27,14 @@
 #end		
 		</tbody>
 	</table>
+#foreach( $example in $JsonExamples )
+	<div style="margin-top: 2em">$example.Name</div>
+	<div class="ds-selector-tabs ds-selector">
+		<pre class="prettyprint lang-html linenums jsonld selected">
+$example.Text		
+		</pre>
+	</div>
+#end	
 	<p class="version">
 		Latest Version
 	</p>

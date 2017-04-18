@@ -51,7 +51,7 @@ public class DataCatalogBuilder {
 	}
 	
 
-	public void build(URI ontologyId, File outDir, Graph graph, ShapeManager shapeManager) throws DataCatalogException {
+	public void build(URI ontologyId, File outDir, File exampleDir, Graph graph, ShapeManager shapeManager) throws DataCatalogException {
 
 		graph.getNamespaceManager().add(new NamespaceImpl("_dcat_", CATALOG_BASE_URI));
 			
@@ -75,7 +75,7 @@ public class DataCatalogBuilder {
 		PageRequest request = new PageRequest(this, targetOntology, engine, graph, classStructure, shapeManager);
 		try {
 			buildOntologyPages(request);
-			buildShapePages(request);
+			buildShapePages(request, exampleDir);
 			buildClassPages(request);
 			buildPropertyPages(request);
 			buildClassIndex(request);
@@ -204,9 +204,9 @@ public class DataCatalogBuilder {
 		IOUtil.close(out, DataCatalogUtil.ONTOLOGY_INDEX_FILE);
 	}
 
-	private void buildShapePages(PageRequest baseRequest) throws IOException, DataCatalogException {
+	private void buildShapePages(PageRequest baseRequest, File exampleDir) throws IOException, DataCatalogException {
 
-		ShapeRequest request = new ShapeRequest(baseRequest);
+		ShapeRequest request = new ShapeRequest(baseRequest, exampleDir);
 		ShapeManager shapeManager = request.getShapeManager();
 		ShapePage shapePage = new ShapePage();
 		
