@@ -33,7 +33,10 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	@Parameter(defaultValue="${basedir}/target/generated/datacatalog")
 	private File siteDir;
 	
-	@Parameter
+	@Parameter(defaultValue="${basedir}/src/examples")
+	private File examplesDir;
+	
+	@Parameter(required=true)
 	private String ontology;
 
 	@Override
@@ -51,7 +54,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
 			shapeLoader.load(graph);
 			URI ontologyId = new URIImpl(ontology);
-			builder.build(ontologyId, siteDir, graph, shapeManager);
+			builder.build(ontologyId, siteDir, examplesDir, graph, shapeManager);
 			
 		} catch (RDFParseException | RDFHandlerException | IOException | DataCatalogException e) {
 			throw new MojoExecutionException("Failed to generate DataCatalog site", e);
