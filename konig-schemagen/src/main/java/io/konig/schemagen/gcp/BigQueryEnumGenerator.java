@@ -65,8 +65,9 @@ public class BigQueryEnumGenerator {
 						
 						JsonFactory factory = new JsonFactory();
 						JsonGenerator generator = factory.createGenerator(out);
-						JsonWriter jsonWriter = new JsonWriter(generator);
-						TypeSelector selector = new TypeSelector(enumClassId, new OwlReasoner(owlClass.getGraph()));
+						OwlReasoner reasoner = new OwlReasoner(owlClass.getGraph());
+						JsonWriter jsonWriter = new JsonWriter(reasoner, generator);
+						TypeSelector selector = new TypeSelector(enumClassId, reasoner);
 						jsonWriter.setValueSelector(selector);
 						
 						try {

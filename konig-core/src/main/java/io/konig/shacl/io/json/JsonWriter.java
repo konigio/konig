@@ -53,7 +53,10 @@ public class JsonWriter {
 	
 	
 
-	public JsonWriter(JsonGenerator json) {
+	public JsonWriter(OwlReasoner reasoner, JsonGenerator json) {
+		this.owlReasoner = reasoner;
+		this.graph = owlReasoner.getGraph();
+		this.nsManager = this.graph.getNamespaceManager();
 		this.json = json;
 	}
 
@@ -76,11 +79,7 @@ public class JsonWriter {
 	public void write(Shape shape, Vertex subject) throws IOException {
 		
 		Graph g = subject.getGraph();
-		if (g != graph) {
-			graph = g;
-			owlReasoner = new OwlReasoner(g);
-			nsManager = graph.getNamespaceManager();
-		}
+		
 		json.writeStartObject();
 		
 		writeId(shape, subject);
@@ -176,7 +175,7 @@ public class JsonWriter {
 				}
 				
 				write(shape, object);
-			} else if (nsManager!=null && id instanceof URI && owlReasoner.instanceOf(subject.getId(), Schema.Enumeration)) {
+			} else if (nsManager!=null && id instanceof URI && owlReasoner.instanceOf(id, Schema.Enumeration)) {
 				URI uri = (URI) id;
 				String namespace = uri.getNamespace();
 				Namespace ns = nsManager.findByName(namespace);

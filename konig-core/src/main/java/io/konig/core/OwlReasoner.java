@@ -611,7 +611,7 @@ public class OwlReasoner {
 			
 	}
 	
-	public boolean isEnumerationClass(URI owlClass) {
+	public boolean isEnumerationClass(Resource owlClass) {
 		return graph.v(owlClass).hasValue(RDFS.SUBCLASSOF, Schema.Enumeration).size()>0;
 	}
 	

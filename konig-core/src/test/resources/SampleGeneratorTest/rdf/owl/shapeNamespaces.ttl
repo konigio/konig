@@ -1,0 +1,17 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix test: <http://example.com/ns/test/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+test: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "test" ; 
+	rdfs:label "Test" ; 
+	rdfs:comment "An ontology that is used purely for testing purposes" . 
+
+shape: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "shape" ; 
+	rdfs:label "Shapes" ; 
+	rdfs:comment "A namespace for SHACL Shape instances" . 
