@@ -26,15 +26,16 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.StringWriter;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.Graph;
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -42,10 +43,28 @@ import io.konig.shacl.impl.MemoryShapeManager;
 public class SampleJsonGeneratorTest {
 	private Graph graph = new MemoryGraph(new MemoryNamespaceManager());
 	private ShapeManager shapeManager = new MemoryShapeManager();
-	private SampleJsonGenerator generator = new SampleJsonGenerator();
-
+	private SampleJsonGenerator generator = new SampleJsonGenerator(new OwlReasoner(graph));
+	
 	@Test
-	public void test() throws Exception {
+	public void testPerson() throws Exception {
+		load("SampleJsonGeneratorTest/rdf");
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		assertTrue(shape != null);
+		
+		StringWriter out = new StringWriter();
+		
+		generator.generate(shape, out);
+		out.close();
+		
+		System.out.println(out.toString());
+	}
+
+	@Ignore
+	public void testKitchenSink() throws Exception {
 		load("SampleJsonGeneratorTest/rdf");
 		
 		URI shapeId = uri("http://example.com/ns/test/KitchenSinkShape");
@@ -54,13 +73,12 @@ public class SampleJsonGeneratorTest {
 		
 		assertTrue(shape != null);
 		
-		StringWriter buffer = new StringWriter();
-		PrettyPrintWriter out = new PrettyPrintWriter(buffer);
+		StringWriter out = new StringWriter();
 		
 		generator.generate(shape, out);
 		out.close();
 		
-		System.out.println(buffer.toString());
+//		System.out.println(out.toString());
 	}
 
 	private URI uri(String value) {

@@ -19,9 +19,8 @@ package io.konig.shacl.sample;
  * limitations under the License.
  * #L%
  */
-
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
@@ -34,6 +33,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Context;
 import io.konig.core.Graph;
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.impl.BasicContext;
 import io.konig.core.impl.MemoryGraph;
@@ -49,7 +49,9 @@ import io.konig.shacl.impl.MemoryShapeManager;
 public class SampleGeneratorTest {
 	private Graph graph = new MemoryGraph(new MemoryNamespaceManager());
 	private ShapeManager shapeManager = new MemoryShapeManager();
-	private SampleGenerator generator = new SampleGenerator();
+	private SampleGenerator generator = new SampleGenerator(new OwlReasoner(graph));
+	
+	
 	
 	@Ignore
 	public void testIriTemplate() throws Exception {
@@ -77,6 +79,23 @@ public class SampleGeneratorTest {
 		
 		
 	}
+	
+	@Test
+	public void testPerson() throws Exception {
+		load("SampleGeneratorTest/rdf");
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		assertTrue(shape != null);
+		
+		Vertex v = generator.generate(shape, graph);
+		
+		assertTrue(v.getId() instanceof URI);
+		
+		System.out.println(v);
+	}
 
 	@Ignore
 	public void testKitchenSink() throws Exception {
@@ -92,7 +111,7 @@ public class SampleGeneratorTest {
 		
 		assertTrue(v.getId() instanceof URI);
 		
-		System.out.println(v);
+//		System.out.println(v);
 	}
 
 	private URI uri(String value) {

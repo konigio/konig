@@ -1,5 +1,7 @@
 package io.konig.shacl.sample;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -22,22 +24,29 @@ package io.konig.shacl.sample;
 
 
 import java.util.List;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
 import org.joda.time.LocalTime;
 import org.joda.time.format.ISODateTimeFormat;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import io.konig.core.Context;
+import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.path.HasStep.PredicateValuePair;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.RandomGenerator;
 import io.konig.core.util.SimpleValueMap;
@@ -63,6 +72,12 @@ public class SampleGenerator {
 	private int maxDouble = 10000;
 	private int maxInt = 100;
 	
+
+	private OwlReasoner reasoner;
+	
+	public SampleGenerator(OwlReasoner reasoner) {
+		this.reasoner = reasoner;
+	}
 
 	public Vertex generate(Shape shape, Graph graph) {
 		Worker worker = new Worker(graph);
@@ -94,7 +109,11 @@ public class SampleGenerator {
 		private void addProperties(Vertex v, Shape shape) {
 			for (PropertyConstraint p : shape.getProperty()) {
 				if (p.getPredicate() != null) {
-					addProperty(p, v);
+					
+					Set<Edge> set = v.outProperty(p.getPredicate());
+					if (set==null || set.isEmpty()) {
+						addProperty(p, v);
+					}
 				}
 			}
 			
@@ -106,8 +125,11 @@ public class SampleGenerator {
 			
 			int valueCount = (maxCount==null) ? maxValueCount : Math.min(maxValueCount, maxCount.intValue());
 			
+			if (valueCount == 0) {
+				return;
+			}
+			
 			if (minCount!=null) {
-				if (minCount==0) return;
 				valueCount = Math.max(valueCount, minCount.intValue());
 			}
 			
@@ -171,9 +193,42 @@ public class SampleGenerator {
 				
 				return new LiteralImpl(value, datatype);
 			}
+			Shape valueShape = p.getShape();
+			if (valueShape != null) {
+				return generateShape(valueShape).getId();
+				
+			}
+			Resource valueClass = p.getValueClass();
+			if (valueClass != null) {
+				return iriReference(valueClass);
+			}
 			throw new KonigException("Unsupported property: " + p.getPredicate());
 		}
 		
+		private Value iriReference(Resource valueClass) {
+			
+			if (reasoner.isEnumerationClass(valueClass)) {
+				Vertex owlClass = reasoner.getGraph().getVertex(valueClass);
+				if (owlClass == null) {
+					throw new KonigException("Enumeration values not defined for " + valueClass);
+				}
+				List<Value> list = owlClass.asTraversal().in(RDF.TYPE).toValueList();
+				if (list.isEmpty()) {
+					throw new KonigException("Enumeration values not defined for " + valueClass);
+				}
+				int index = random.nextInt(list.size());
+				return list.get(index);
+			}
+			
+			String typeName = "resource";
+			if (valueClass instanceof URI) {
+				URI uri = (URI) valueClass;
+				typeName = uri.getLocalName();
+			}
+			
+			return randomURI(typeName);
+		}
+
 		private String nextTime() {
 			long instant = random.nextLong(startDate, endDate);
 			LocalTime time = new LocalTime(instant);
@@ -230,6 +285,7 @@ public class SampleGenerator {
 				
 			} else {
 				URI id = generateIri(shape);
+				return graph.vertex(id);
 			}
 			return graph.vertex(new BNodeImpl(random.alphanumeric(8)));
 		}
@@ -237,21 +293,53 @@ public class SampleGenerator {
 		private URI generateIri(Shape shape) {
 			IriTemplate template = shape.getIriTemplate();
 			List<? extends Element> list = template.toList();
+			List<PredicateValuePair> valueList = new ArrayList<>();
+			
 			SimpleValueMap map = new SimpleValueMap();
+			Context context = template.getContext();
 			for (Element e : list) {
 				if (e.getType() == ElementType.VARIABLE) {
 					String propertyName = e.getText();
-					PropertyConstraint p = getProperty(shape, propertyName);
+					String propertyIri = context.expandIRI(propertyName);
+					URI predicate = new URIImpl(propertyIri);
+					PropertyConstraint p = shape.getPropertyConstraint(predicate);
+					if (p == null) {
+						throw new KonigException("On shape <" + shape.getId() + "> property not found: " + propertyName);
+					}
+					
+					Value value = generateIdValue(p);
+					valueList.add(new PredicateValuePair(predicate, value));
+					map.put(propertyName, value.stringValue());
 				}
 			}
-			return null;
+			URI subject = template.expand(map);
+			for (PredicateValuePair pair : valueList) {
+				URI predicate = pair.getPredicate();
+				Value object = pair.getValue();
+				
+				graph.edge(subject, predicate, object);
+			}
+			
+			return subject;
 		}
 
-		private PropertyConstraint getProperty(Shape shape, String propertyName) {
-			for (PropertyConstraint p : shape.getProperty()) {
-				URI predicate = p.getPredicate();
+		
+
+		private Value generateIdValue(PropertyConstraint p) {
+			URI datatype = p.getDatatype();
+			if (datatype != null) {
+				
+				if (
+					XMLSchema.STRING.equals(datatype) ||
+					XMLSchema.NORMALIZEDSTRING.equals(datatype) ||
+					XMLSchema.TOKEN.equals(datatype)
+				) {
+					String value = random.alphanumeric(9);
+					return new LiteralImpl(value, datatype);
+				} 
+				
 			}
-			return null;
+			return generateValue(p);
 		}
 
 		private URI randomURI(String typeName) {
