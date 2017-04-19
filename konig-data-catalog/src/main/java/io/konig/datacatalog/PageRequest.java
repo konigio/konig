@@ -1,6 +1,8 @@
 package io.konig.datacatalog;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -25,6 +27,7 @@ public class PageRequest {
 	private ShapeManager shapeManager;
 	private DataCatalogBuilder builder;
 	private URI pageId;
+	private Set<URI> indexSet;
 
 	public PageRequest(
 		DataCatalogBuilder builder,
@@ -40,6 +43,7 @@ public class PageRequest {
 		this.graph = graph;
 		this.classStructure = classStructure;
 		this.shapeManager = shapeManager;
+		indexSet = new HashSet<>();
 	}
 	
 	public PageRequest(PageRequest other) {
@@ -50,6 +54,11 @@ public class PageRequest {
 		this.graph = other.getGraph();
 		this.classStructure = other.getClassStructure();
 		this.shapeManager = other.getShapeManager();
+		this.indexSet = other.getIndexSet();
+	}
+
+	public Set<URI> getIndexSet() {
+		return indexSet;
 	}
 
 	public DataCatalogBuilder getBuilder() {
@@ -64,8 +73,15 @@ public class PageRequest {
 		return pageId;
 	}
 
-	public void setResourceId(URI pageId) {
+	public void setPageId(URI pageId) {
 		this.pageId = pageId;
+	
+		if (indexSet!=null && !pageId.stringValue().startsWith(DataCatalogBuilder.CATALOG_BASE_URI)) {
+			String localName = pageId.getLocalName();
+			if (localName.length()>0) {
+				indexSet.add(pageId);
+			}
+		}
 	}
 	
 	public void setActiveLink(URI targetId) throws DataCatalogException {

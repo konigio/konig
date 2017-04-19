@@ -37,10 +37,12 @@ public class DataCatalogBuilder {
 	
 	public static final String CATALOG_BASE_URI = "urn:datacatalog/";
 	public static final URI OVERVIEW_URI = new URIImpl("urn:datacatalog/overview");
+	public static final URI INDEX_ALL_URI = new URIImpl("urn:datacatalog/index-all");
 	
 	private static List<MenuItem> menu = new ArrayList<>();
 	static {
 		menu.add(new MenuItem(OVERVIEW_URI, "Overview"));
+		menu.add(new MenuItem(INDEX_ALL_URI, "Index"));
 	}
 	
 	private ResourceWriterFactory resourceWriterFactory;
@@ -82,6 +84,7 @@ public class DataCatalogBuilder {
 			buildOntologyIndex(request);
 			buildIndexPage(request);
 			buildOverviewPage(request);
+			buildIndexAllPage(request);
 		} catch (IOException e) {
 			throw new DataCatalogException(e);
 		}
@@ -89,7 +92,8 @@ public class DataCatalogBuilder {
 	
 		
 	}
-	
+
+
 	private void buildPropertyPages(PageRequest baseRequest) throws IOException, DataCatalogException {
 		
 		PropertyRequest request = new PropertyRequest(baseRequest);
@@ -131,6 +135,17 @@ public class DataCatalogBuilder {
 		OverviewPage page = new OverviewPage();
 		page.render(request, response);
 		IOUtil.close(out, "overview.html");
+		
+	}
+
+	
+	private void buildIndexAllPage(PageRequest request) throws IOException, DataCatalogException {
+		File indexAllFile = new File(outDir, "index-all.html");
+		PrintWriter out = new PrintWriter(new FileWriter(indexAllFile));
+		PageResponse response = new PageResponseImpl(out);
+		IndexAllPage page = new IndexAllPage();
+		page.render(request, response);
+		IOUtil.close(out, "index-all.html");
 		
 	}
 
