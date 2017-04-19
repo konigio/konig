@@ -42,6 +42,9 @@ public class ShapeFileGetter implements FileGetter {
 	}
 
 
+	public NamespaceManager getNamespaceManager() {
+		return nsManager;
+	}
 
 	@Override
 	public File getFile(URI shapeId) {

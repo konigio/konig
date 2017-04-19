@@ -56,9 +56,11 @@ import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
+import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
+import io.konig.schemagen.gcp.EnumShapeVisitor;
 import io.konig.schemagen.gcp.GoogleCloudResourceGenerator;
 import io.konig.schemagen.gcp.LocalNameTableMapper;
 import io.konig.schemagen.gcp.NamespaceDatasetMapper;
@@ -79,15 +81,14 @@ import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.shacl.ClassStructure;
-import io.konig.shacl.ClassManager;
-import io.konig.shacl.LogicalShapeBuilder;
-import io.konig.shacl.LogicalShapeNamer;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
-import io.konig.shacl.impl.BasicLogicalShapeNamer;
-import io.konig.shacl.impl.MemoryClassManager;
+import io.konig.shacl.ShapeNamer;
+import io.konig.shacl.ShapeVisitor;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
+import io.konig.shacl.impl.TemplateShapeNamer;
+import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.shacl.jsonld.SuffixContextNamer;
@@ -133,18 +134,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private WorkbookProcessor workbookProcessor;
     
+    @Parameter
+    private GoogleCloudPlatformConfig googleCloudPlatform;
+    
     
     @Parameter
     private HashSet<String> excludeNamespace;
     
-    @Parameter
-    private String bqShapeBaseURL;
-    
-    @Parameter
-    private File gcpDir;
-	
-	@Parameter
-	private String bigQueryDatasetId;
 	
 
     @Parameter
@@ -159,9 +155,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
     
     private NamespaceManager nsManager;
-    private ClassManager classManager;
     private OwlReasoner owlReasoner;
-    private LogicalShapeNamer logicalShapeNamer;
     private ShapeManager shapeManager;
     private DatasetMapper datasetMapper;
     private ShapeMediaTypeNamer mediaTypeNamer;
@@ -214,6 +208,25 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			RdfUtil.loadTurtle(rdfSourceDir, owlGraph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
 			shapeLoader.load(owlGraph);
+		}
+		generateEnumShapes();
+		
+	}
+
+	private void generateEnumShapes() throws MojoExecutionException {
+		File enumShapeDir = googleCloudPlatform==null ? null : googleCloudPlatform.getEnumShapeDir();
+		if (enumShapeDir!=null) {
+			
+			String enumShapeNameTemplate = googleCloudPlatform.getEnumShapeNameTemplate();
+			if (enumShapeNameTemplate == null) {
+				throw new MojoExecutionException("googleCloudPlatform.enumShapeNameTemplate must be defined");
+			}
+			ShapeFileGetter fileGetter = new ShapeFileGetter(enumShapeDir, nsManager);
+			
+			ShapeNamer shapeNamer = new TemplateShapeNamer(nsManager, new SimpleValueFormat(enumShapeNameTemplate));
+			ShapeVisitor shapeVisitor = new EnumShapeVisitor(fileGetter, shapeManager);
+			BigQueryEnumShapeGenerator generator = new BigQueryEnumShapeGenerator(datasetMapper(), createTableMapper(), shapeNamer, shapeManager, shapeVisitor);
+			generator.generateAll(owlReasoner);
 		}
 		
 	}
@@ -341,8 +354,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 	
-	private void generateBigQueryTables() throws IOException {
-		if (gcpDir != null) {
+	private void generateBigQueryTables() throws IOException, MojoExecutionException {
+		if (googleCloudPlatform != null) {
+			
+			File gcpDir = googleCloudPlatform.getGcpDir();
+			if (gcpDir == null) {
+				throw new MojoExecutionException("googleCloudPlatform.gcpDir must be defined");
+			}
 			
 			File bqOutDir = new File(gcpDir, BIGQUERY);
 			File bqSchemaDir = new File(bqOutDir, SCHEMA);
@@ -378,6 +396,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private DatasetMapper datasetMapper() {
 		if (datasetMapper == null) {
 
+			String bigQueryDatasetId = googleCloudPlatform==null ? null : googleCloudPlatform.getBigQueryDatasetId();
+			
 			if (bigQueryDatasetId != null) {
 				datasetMapper = new SimpleDatasetMapper(bigQueryDatasetId);
 			} else {
@@ -385,26 +405,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			}
 		}
 		return datasetMapper;
-	}
-
-
-	private ClassManager getClassManager() {
-		if (classManager == null) {
-			classManager = new MemoryClassManager();
-
-			LogicalShapeNamer namer = getLogicalShapeNamer();
-			LogicalShapeBuilder builder = new LogicalShapeBuilder(owlReasoner, namer);
-			builder.buildLogicalShapes(shapeManager, classManager);
-			
-		}
-		return classManager;
-	}
-	
-	private LogicalShapeNamer getLogicalShapeNamer() {
-		if (logicalShapeNamer == null) {
-			logicalShapeNamer = new BasicLogicalShapeNamer("http://example.com/shapes/logical/", nsManager);
-		}
-		return logicalShapeNamer;
 	}
 
 	private void generateJavaCode(ClassStructure structure) throws IOException, CodeGeneratorException {
