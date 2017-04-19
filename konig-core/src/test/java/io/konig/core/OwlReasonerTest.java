@@ -21,8 +21,9 @@ package io.konig.core;
  */
 
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Test;
@@ -53,6 +54,34 @@ public class OwlReasonerTest {
 		
 		Resource actual = owl.leastCommonSuperClass(Schema.VideoObject, Schema.WebPage);
 		assertEquals(Schema.CreativeWork, actual);
+	}
+	
+	@Test
+	public void testDisjointTypes() throws Exception {
+		Graph graph = new MemoryGraph();
+		graph.edge(Schema.Person, RDF.TYPE, OWL.CLASS);
+		graph.edge(Schema.VideoObject, RDFS.SUBCLASSOF, Schema.MediaObject);
+		graph.edge(Schema.AudioObject, RDFS.SUBCLASSOF, Schema.MediaObject);
+		graph.edge(Schema.MediaObject, RDFS.SUBCLASSOF, Schema.CreativeWork);
+		graph.edge(Schema.WebPage, RDFS.SUBCLASSOF, Schema.CreativeWork);
+		
+		Set<URI> set = new HashSet<>();
+		set.add(Schema.Person);
+		set.add(Schema.CreativeWork);
+		set.add(Schema.MediaObject);
+		set.add(Schema.VideoObject);
+		set.add(Schema.AudioObject);
+		set.add(Schema.WebPage);
+		
+		OwlReasoner reasoner = new OwlReasoner(graph);
+		
+		Set<URI> actual = reasoner.disjointTypes(set);
+		
+		assertEquals(4, actual.size());
+		assertTrue(actual.contains(Schema.Person));
+		assertTrue(actual.contains(Schema.VideoObject));
+		assertTrue(actual.contains(Schema.AudioObject));
+		assertTrue(actual.contains(Schema.WebPage));
 	}
 
 	@Test

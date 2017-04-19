@@ -2,6 +2,7 @@ package io.konig.spreadsheet;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,10 +33,13 @@ import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.activity.Activity;
+import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NameMap;
@@ -47,6 +51,8 @@ import io.konig.core.Term;
 import io.konig.core.Term.Kind;
 import io.konig.core.Vertex;
 import io.konig.core.impl.BasicContext;
+import io.konig.core.impl.MemoryGraph;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.path.DataInjector;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.PathFactory;
@@ -56,6 +62,7 @@ import io.konig.core.util.IriTemplate;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.AS;
+import io.konig.core.vocab.DC;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
@@ -184,6 +191,7 @@ public class WorkbookLoader {
 		nsManager.add("konig", Konig.NAMESPACE);
 		nsManager.add("xsd", XMLSchema.NAMESPACE);
 		nsManager.add("schema", Schema.NAMESPACE);
+		nsManager.add("dc", DC.NAMESPACE);
 		
 		this.nsManager = nsManager;
 
@@ -256,6 +264,7 @@ public class WorkbookLoader {
 		private OwlReasoner owlReasoner;
 		private DataInjector dataInjector;
 		private DataFormatter dataFormatter;
+		private Graph defaultOntologies;
 		
 		private Properties settings = new Properties();
 		private List<ShapeTemplate> shapeTemplateList = new ArrayList<>();
@@ -359,9 +368,56 @@ public class WorkbookLoader {
 			processShapeTemplates();
 			visitShapes();
 			processImportStatements();
+			declareDefaultOntologies();
 		}
 
 
+
+		private void declareDefaultOntologies() throws SpreadsheetException {
+			
+			Set<String> namespaceSet = new HashSet<>();
+			List<Edge> list = new ArrayList<>(graph);
+			
+			for (Edge e : list) {
+				declareDefaultOntology(namespaceSet, e.getSubject());
+				declareDefaultOntology(namespaceSet, e.getPredicate());
+				declareDefaultOntology(namespaceSet, e.getObject());
+			}
+			
+		}
+
+		private void declareDefaultOntology(Set<String> namespaceSet, Value value) throws SpreadsheetException {
+			if (value instanceof URI) {
+				URI uri = (URI) value;
+				String name = uri.getNamespace();
+				if (!namespaceSet.contains(name)) {
+					namespaceSet.add(name);
+					URI ontologyId = new URIImpl(name);
+					Vertex v = graph.getVertex(ontologyId);
+					if (v == null) {
+						Graph defaultOntologyGraph = getDefaultOntologyGraph();
+						v = defaultOntologyGraph.getVertex(ontologyId);
+						if (v != null) {
+							graph.addAll(v.outEdgeSet());
+						}
+					}
+				}
+			}
+			
+		}
+
+		private Graph getDefaultOntologyGraph() throws SpreadsheetException {
+			if (defaultOntologies == null) {
+				defaultOntologies = new MemoryGraph();
+				InputStream input = getClass().getClassLoader().getResourceAsStream("WorkbookLoader/defaultOntologies.ttl");
+				try {
+					RdfUtil.loadTurtle(defaultOntologies, input, "");
+				} catch (RDFParseException | RDFHandlerException | IOException e) {
+					throw new SpreadsheetException("Failed to load defaultOntologies.ttl");
+				}
+			}
+			return defaultOntologies;
+		}
 
 		private void processImportStatements() throws SpreadsheetException {
 			

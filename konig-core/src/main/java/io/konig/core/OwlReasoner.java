@@ -1,6 +1,7 @@
 package io.konig.core;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 /*
  * #%L
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,8 +39,6 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
-import io.konig.core.impl.Dag;
-import io.konig.core.impl.DagVertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
@@ -692,5 +692,56 @@ public class OwlReasoner {
 			return new HashSet<>();
 		}
 		return v.asTraversal().out(RDFS.SUBCLASSOF).toUriSet();
+	}
+	
+	public Set<URI> disjointTypes(Collection<URI> types) {
+		Set<URI> result = new HashSet<>();
+		
+		outerLoop :
+		for (URI a : types) {
+			Iterator<URI> sequence = result.iterator();
+			
+			while (sequence.hasNext()) {
+				URI b = sequence.next();
+				
+				
+				if (isSubClassOf(a, b)) {
+					sequence.remove();
+					break;
+				}
+				if (isSubClassOf(b, a)) {
+					continue outerLoop;
+				}
+			}
+			
+			result.add(a);
+			
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Compute the specific types of a given individual.
+	 * The returned set does not include any class that is a superclass of some other member of the set.
+	 */
+	public Set<URI> specificTypes(Resource individual) {
+		Set<URI> result = null;
+		Vertex v = graph.getVertex(individual);
+		if (v != null) {
+			Set<Edge> edges = v.outProperty(RDF.TYPE);
+			Set<URI> typeSet = new HashSet<>();
+			for (Edge e : edges) {
+				Value value = e.getObject();
+				if (value instanceof URI) {
+					typeSet.add((URI)value);
+				}
+			}
+			result = disjointTypes(typeSet);
+		} else {
+			result = new HashSet<>();
+		}
+		
+		return result;
 	}
 }

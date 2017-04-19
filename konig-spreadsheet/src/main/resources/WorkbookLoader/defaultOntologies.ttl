@@ -1,0 +1,13 @@
+@prefix schema: <http://schema.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix dc: <http://purl.org/dc/terms/> .
+
+schema: a owl:Ontology ;
+	vann:preferredNamespacePrefix "schema"
+.
+
+dc: a owl:Ontology ;
+	vann:preferredNamespacePrefix "dc"
+.
+
