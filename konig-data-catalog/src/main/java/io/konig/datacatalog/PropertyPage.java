@@ -38,7 +38,7 @@ public class PropertyPage {
 
 		
 		URI predicate = structure.getPredicate();
-		request.setResourceId(predicate);
+		request.setPageId(predicate);
 		VelocityEngine engine = request.getEngine();
 		VelocityContext context = request.getContext();
 		String description = structure.description();

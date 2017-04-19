@@ -42,7 +42,7 @@ public class ShapePage {
 		}
 		URI targetClass = shape.getTargetClass();
 		context.put("TargetClass", new Link(targetClass.getLocalName(), targetClass.stringValue()));
-		request.setResourceId(shapeURI);
+		request.setPageId(shapeURI);
 		request.setActiveLink(null);
 		
 		List<PropertyInfo> propertyList = new ArrayList<>();

@@ -37,7 +37,7 @@ public class OntologyPage {
 		VelocityContext context = request.getContext();
 		context.put(NAMESPACE_URI, ontologyId.stringValue());
 		
-		request.setResourceId(ontologyId);
+		request.setPageId(ontologyId);
 		request.setActiveLink(null);
 		
 		Value prefix = ontology.getValue(VANN.preferredNamespacePrefix);

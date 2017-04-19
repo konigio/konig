@@ -1,0 +1,32 @@
+<html>
+<head>
+<title>Index</title>
+<link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
+<style>
+#SectionLinks {
+	font-size: 150%;
+	margin-top: 1em;
+}
+</style>
+</head>
+<body class="mainsite">
+#parse( "data-catalog/velocity/header.vm" )
+<div id="mainContent">
+<div id="SectionLinks">
+#foreach( $entry in $Contents )
+#if( $entry.Href )
+<a href="$entry.Href">$entry.Name</a>
+#else
+$entry.Name
+#end
+#end
+</div>
+#foreach( $section in $SectionList )
+	<h1><a id="Section_$section.Name">$section.Name</a></h1>
+#foreach( $link in $section.LinkList )
+	<div><a href="$link.Href">$link.Name</a></div>
+#end
+#end
+</div>
+</body>
+</html>

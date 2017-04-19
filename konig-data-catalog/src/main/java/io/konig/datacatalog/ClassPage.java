@@ -32,7 +32,7 @@ public class ClassPage {
 		VelocityContext context = request.getContext();
 		
 		URI classId = (URI) owlClass.getId();
-		request.setResourceId(classId);
+		request.setPageId(classId);
 		request.setActiveLink(null);
 		
 		context.put("ClassName", classId.getLocalName());
