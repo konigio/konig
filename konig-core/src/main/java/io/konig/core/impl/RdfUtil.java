@@ -368,8 +368,30 @@ public class RdfUtil {
 		
 		return false;
 	}
+	
+	/**
+	 * Express a given URI as a Compact URI; fail if the namespace prefix is not defined.
+	 * @param uri
+	 * @param nsManager
+	 * @return
+	 */
+	public static String curie(URI uri, NamespaceManager nsManager) {
+		if (nsManager == null) {
+			throw new KonigException("NamespaceManager must be defined");
+		}
+		Namespace ns = nsManager.findByName(uri.getNamespace());
+		if (ns == null) {
+			throw new KonigException("Prefix not found for namespace: " + uri.getNamespace());
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append(ns.getPrefix());
+		builder.append(':');
+		builder.append(uri.getLocalName());
+		return builder.toString();
+		
+	}
 
-	public static String curie(NamespaceManager nsManager, URI uri) {
+	public static String optionalCurie(NamespaceManager nsManager, URI uri) {
 		Namespace ns = nsManager.findByName(uri.getNamespace());
 		if (ns != null) {
 			StringBuilder builder = new StringBuilder();

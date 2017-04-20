@@ -38,6 +38,8 @@ import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
@@ -197,11 +199,21 @@ public class JsonWriter {
 		if (nodeKind == NodeKind.IRI || nodeKind==NodeKind.BlankNodeOrIRI) {
 			Resource id = subject.getId();
 			
+			
+			
 			if (id instanceof URI) {
+
 				URI uri = (URI) id;
-				Namespace ns = nsManager==null ? null : nsManager.findByName(uri.getNamespace());
+				String idValue = null;
 				
-				String idValue = ns!=null && !ns.getName().endsWith(":") ? uri.getLocalName() : uri.stringValue();
+				URI idFormat = shape.getIdFormat();
+				if (Konig.Curie.equals(idFormat)) {
+					idValue = RdfUtil.curie(uri, nsManager);
+				} else if (Konig.LocalName.equals(idFormat)) {
+					idValue = uri.getLocalName();
+				} else {
+					idValue = uri.stringValue();
+				}
 				
 				json.writeStringField("id", idValue);
 			} else if (nodeKind==NodeKind.IRI) {

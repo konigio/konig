@@ -228,7 +228,7 @@ public class DomainManager {
 			Resource resource = c.getClassVertex().getId();
 			if (resource instanceof URI) {
 				URI subject = (URI) resource;
-				String curie = RdfUtil.curie(nsManager, subject);
+				String curie = RdfUtil.optionalCurie(nsManager, subject);
 				sink.edge(subject, RDFS.LABEL, literal(curie));
 				
 				Set<URI> superList = c.getSuperClass();

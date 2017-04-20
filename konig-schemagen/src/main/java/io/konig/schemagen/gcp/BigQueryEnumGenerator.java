@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
+import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.vocab.Konig;
@@ -68,6 +70,8 @@ public class BigQueryEnumGenerator {
 					list = owlClass.asTraversal().union(superClasses).in(RDF.TYPE).distinct().toVertexList();
 				}
 				
+				setIdFormat(reasoner, shape, list);
+				
 				if (!list.isEmpty()) {
 	
 					File file = dataFileMapper.fileForEnumRecords(owlClass);
@@ -104,6 +108,31 @@ public class BigQueryEnumGenerator {
 			
 		}
 		
+		
+	}
+
+	private void setIdFormat(OwlReasoner reasoner, Shape shape, List<Vertex> list) {
+		
+		if (shape.getIdFormat() == null) {
+			NamespaceManager nsManager = reasoner.getGraph().getNamespaceManager();
+			if (nsManager == null) {
+				shape.setIdFormat(Konig.FullyQualifiedIri);
+			} else {
+
+				for (Vertex v : list) {
+					Resource id = v.getId();
+					if (id instanceof URI) {
+						URI uri = (URI) id;
+						Namespace ns = nsManager.findByName(uri.getNamespace());
+						if (ns == null) {
+							shape.setIdFormat(Konig.FullyQualifiedIri);
+							return;
+						}
+					}
+				}
+				shape.setIdFormat(Konig.LocalName);
+			}
+		}
 		
 	}
 

@@ -389,7 +389,7 @@ public class ShapeValidator {
 			if (nsManager == null) {
 				return "<" + uri.stringValue() + ">";
 			}
-			return RdfUtil.curie(nsManager, uri);
+			return RdfUtil.optionalCurie(nsManager, uri);
 		}
 		
 		void violation(String message) {

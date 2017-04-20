@@ -96,7 +96,7 @@ public class OutStep implements Step {
 	@Override
 	public void append(StringBuilder builder, NamespaceManager nsManager) {
 		builder.append('/');
-		String curie = RdfUtil.curie(nsManager, predicate);
+		String curie = RdfUtil.optionalCurie(nsManager, predicate);
 		String value = predicate.stringValue();
 		if (value.equals(curie)) {
 			builder.append('<');
