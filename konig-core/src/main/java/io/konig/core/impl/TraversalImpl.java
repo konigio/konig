@@ -415,6 +415,28 @@ public class TraversalImpl implements Traversal {
 		return this;
 	}
 
+
+	@Override
+	public Traversal union(Set<? extends Value> param) {
+		for (Value v : param) {
+			if (v instanceof Resource) {
+				union(graph.vertex((Resource)v));
+				continue;
+			}
+			for (Object obj : list) {
+				if (obj instanceof Value) {
+					Value w = (Value) obj;
+					if (w.equals(v)) {
+						return this;
+					}
+				}
+			}
+			list.add(v);
+		}
+		
+		return this;
+	}
+
 	@Override
 	public Traversal union(Value... param) {
 		for (Value v : param) {
