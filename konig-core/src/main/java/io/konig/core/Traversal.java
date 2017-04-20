@@ -106,6 +106,8 @@ public interface Traversal {
 	 */
 	Traversal union(Value... v);
 	
+	Traversal union(Set<? extends Value> set);
+	
 	
 	/**
 	 * Add a literal property value to all vertices in this traversal.

@@ -23,6 +23,7 @@ import io.konig.core.Vertex;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.json.JsonWriter;
@@ -45,19 +46,32 @@ public class BigQueryEnumGenerator {
 
 	private void generate(Vertex owlClass, DataFileMapper dataFileMapper) throws IOException {
 		
+		OwlReasoner reasoner = new OwlReasoner(owlClass.getGraph());
+		
 		Resource id = owlClass.getId();
 		if (id instanceof URI) {
 			final URI enumClassId = (URI) id;
 
-			List<Vertex> list = owlClass.asTraversal().in(RDF.TYPE).toVertexList();
-			
-			if (!list.isEmpty()) {
+			Shape shape = getBigQueryTableShape(enumClassId);
 
-				File file = dataFileMapper.fileForEnumRecords(owlClass);
-				if (file != null) {
-					
-					Shape shape = getBigQueryTableShape(enumClassId);
-					if (shape != null) {
+			
+			if (shape != null) {
+		
+				
+				List<Vertex> list = null;
+				
+				if (shape.getPropertyConstraint(RDF.TYPE)==null) {
+					list = owlClass.asTraversal().in(RDF.TYPE).toVertexList();
+				} else {
+					Set<URI> superClasses = reasoner.superClasses(enumClassId);
+					superClasses.remove(Schema.Enumeration);
+					list = owlClass.asTraversal().union(superClasses).in(RDF.TYPE).distinct().toVertexList();
+				}
+				
+				if (!list.isEmpty()) {
+	
+					File file = dataFileMapper.fileForEnumRecords(owlClass);
+					if (file != null) {
 						
 						file.getParentFile().mkdirs();
 
@@ -65,7 +79,6 @@ public class BigQueryEnumGenerator {
 						
 						JsonFactory factory = new JsonFactory();
 						JsonGenerator generator = factory.createGenerator(out);
-						OwlReasoner reasoner = new OwlReasoner(owlClass.getGraph());
 						JsonWriter jsonWriter = new JsonWriter(reasoner, generator);
 						TypeSelector selector = new TypeSelector(enumClassId, reasoner);
 						jsonWriter.setValueSelector(selector);
@@ -101,8 +114,11 @@ public class BigQueryEnumGenerator {
 			List<DataSource> datasourceList = shape.getShapeDataSource();
 			if (datasourceList != null) {
 				for (DataSource source : datasourceList) {
-					if (source.isA(Konig.GoogleBigQueryTable)) {
-						return shape;
+					if (source instanceof GoogleBigQueryTable) {
+						GoogleBigQueryTable table = (GoogleBigQueryTable) source;
+						if (table.getExternalDataConfiguration() == null) {
+							return shape;
+						}
 					}
 				}
 			}
