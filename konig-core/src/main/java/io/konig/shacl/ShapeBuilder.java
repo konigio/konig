@@ -34,6 +34,7 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
 import io.konig.activity.Activity;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShapeBuilder {
@@ -102,6 +103,10 @@ public class ShapeBuilder {
 	
 	public ShapeBuilder() {
 		shapeManager = new MemoryShapeManager();
+	}
+	
+	public ShapeBuilder(ShapeManager shapeManager) {
+		this.shapeManager = shapeManager;
 	}
 	
 	public ShapeBuilder or(Resource...shapeId) {
@@ -232,6 +237,11 @@ public class ShapeBuilder {
 		}
 		
 		stack.add(shape);
+		return this;
+	}
+	
+	public ShapeBuilder datasource(DataSource ds) {
+		peekShape().addShapeDataSource(ds);
 		return this;
 	}
 	

@@ -1,6 +1,7 @@
 package io.konig.schemagen.gcp;
 
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.RDF;
@@ -13,6 +14,7 @@ import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeNamer;
@@ -44,7 +46,7 @@ public class BigQueryEnumShapeGenerator {
 		for (Vertex v : enumList) {
 			if (v.getId() instanceof URI) {
 				URI enumId = (URI) v.getId();
-				if (accept(enumId)) {
+				if (accept(enumId, reasoner)) {
 					
 					List<Vertex> individuals = v.asTraversal().in(RDF.TYPE).toVertexList();
 					if (!individuals.isEmpty()) {
@@ -71,21 +73,37 @@ public class BigQueryEnumShapeGenerator {
 	}
 
 
-	private boolean accept(URI enumId) {
-		List<Shape> shapeList = shapeManager.getShapesByTargetClass(enumId);
-		for (Shape shape : shapeList) {
-			List<DataSource> datasourceList = shape.getShapeDataSource();
-			if (datasourceList != null) {
-				for (DataSource datasource : datasourceList) {
-					if (datasource instanceof GoogleBigQueryTable) {
-						GoogleBigQueryTable bigquery = (GoogleBigQueryTable) datasource;
-						if (bigquery.getExternalDataConfiguration() == null) {
-							return false;
+	private boolean accept(URI enumId, OwlReasoner reasoner) {
+		Set<URI> types = reasoner.superClasses(enumId);
+		types.remove(Schema.Enumeration);
+		types.add(enumId);
+		
+		for (Shape shape : shapeManager.listShapes()) {
+			URI enumType = shape.getTargetClass();
+			if (types.contains(enumType)) {
+				List<DataSource> datasourceList = shape.getShapeDataSource();
+				if (datasourceList != null) {
+					for (DataSource datasource : datasourceList) {
+						if (datasource instanceof GoogleBigQueryTable) {
+							GoogleBigQueryTable bigquery = (GoogleBigQueryTable) datasource;
+							if (bigquery.getExternalDataConfiguration() == null) {
+								if (enumType.equals(enumId)) {
+									return false;
+								} else {
+									PropertyConstraint p = shape.getPropertyConstraint(RDF.TYPE);
+									if (p != null) {
+										return false;
+									}
+								}
+							}
 						}
 					}
 				}
 			}
+			
 		}
+		
+		
 		return true;
 	}
 
