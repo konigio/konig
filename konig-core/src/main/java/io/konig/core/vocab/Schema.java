@@ -102,6 +102,7 @@ public class Schema {
 	public static final URI location = new URIImpl("http://schema.org/location");
 	public static final URI worksFor = new URIImpl("http://schema.org/worksFor");
 	public static final URI Place = new URIImpl("http://schema.org/Place");
+	public static final URI Country = new URIImpl("http://schema.org/Country");
 	public static final URI LocalBusiness = new URIImpl("http://schema.org/LocalBusiness");
 	public static final URI containedInPlace = new URIImpl("http://schema.org/containedInPlace");
 	public static final URI legalName = new URIImpl("http://schema.org/legalName");
