@@ -236,7 +236,7 @@ public class SQLTableShapeGenerator {
 				if (step instanceof OutStep) {
 					OutStep out = (OutStep) step;
 					URI predicate = out.getPredicate();
-					String curie = RdfUtil.curie(nsManager, predicate);
+					String curie = RdfUtil.optionalCurie(nsManager, predicate);
 					
 					PropertyConstraint p = new PropertyConstraint(predicate);
 					parent.add(p);

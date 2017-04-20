@@ -88,7 +88,7 @@ public class PathPattern {
 				if (step instanceof OutStep) {
 					OutStep out = (OutStep) step;
 					URI predicate = out.getPredicate();
-					String curie = RdfUtil.curie(nsManager, predicate);
+					String curie = RdfUtil.optionalCurie(nsManager, predicate);
 					builder.append('/');
 					builder.append(curie);
 				} else {
