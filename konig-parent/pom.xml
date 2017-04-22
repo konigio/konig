@@ -59,6 +59,7 @@
   	<module>../konig-sql-core</module>
   	<module>../konig-sql</module>
   	<module>../konig-sql-maven-plugin</module>
+  	<module>../konig-model-merge-maven-plugin</module>
   </modules>
  
   <developers>
