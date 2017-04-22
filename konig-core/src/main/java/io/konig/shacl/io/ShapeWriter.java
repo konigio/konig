@@ -22,18 +22,24 @@ package io.konig.shacl.io;
 
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.rio.RDFHandlerException;
 
 import io.konig.activity.Activity;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.Vertex;
+import io.konig.core.extract.ExtractException;
+import io.konig.core.extract.OntologyExtractor;
 import io.konig.core.impl.CompositeLocalNameService;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
@@ -41,6 +47,8 @@ import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.io.FileGetter;
 import io.konig.core.pojo.EmitContext;
 import io.konig.core.pojo.SimplePojoEmitter;
+import io.konig.core.util.IOUtil;
+import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
 
 public class ShapeWriter {
@@ -104,6 +112,35 @@ public class ShapeWriter {
 				
 			}
 		}
+	}
+	
+	public void writeShapes(Graph graph, FileGetter fileGetter) throws IOException, ShapeWriteException {
+		OntologyExtractor extractor = new OntologyExtractor();
+		List<Vertex> list = graph.v(SH.Shape).in(RDF.TYPE).toVertexList();
+		for (Vertex shape : list) {
+			writeShape(shape, fileGetter, extractor);
+		}
+	}
+
+	private void writeShape(Vertex shape, FileGetter fileGetter, OntologyExtractor extractor) throws IOException, ShapeWriteException {
+		Resource shapeId = shape.getId();
+		if (shapeId instanceof URI) {
+			URI shapeURI = (URI) shapeId;
+			File file = fileGetter.getFile(shapeURI);
+			FileWriter out = new FileWriter(file);
+			Graph target = new MemoryGraph();
+			try {
+				extractor.extract(shape, target);
+				target.setNamespaceManager(shape.getGraph().getNamespaceManager());
+			
+				RdfUtil.prettyPrintTurtle(target, out);
+			} catch (ExtractException | RDFHandlerException e) {
+				throw new ShapeWriteException(e);
+			} finally {
+				IOUtil.close(out, file.getName());
+			}
+		}
+		
 	}
 
 }
