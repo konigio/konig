@@ -13,6 +13,8 @@ import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
@@ -23,6 +25,7 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class ShapePage {
+	private static final Logger logger = LoggerFactory.getLogger(ShapePage.class);
 	private static final String SHAPE_TEMPLATE = "data-catalog/velocity/shape.vm";
 
 	public void render(ShapeRequest request, PageResponse response) throws DataCatalogException {
@@ -41,6 +44,10 @@ public class ShapePage {
 			return;
 		}
 		URI targetClass = shape.getTargetClass();
+		if (targetClass == null) {
+			logger.warn("sh:targetClass not defined for shape <{}>", shape.getId().stringValue());
+			return;
+		}
 		context.put("TargetClass", new Link(targetClass.getLocalName(), targetClass.stringValue()));
 		request.setPageId(shapeURI);
 		request.setActiveLink(null);

@@ -1,6 +1,8 @@
 package io.konig.shacl.sample;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /*
  * #%L
@@ -39,6 +41,8 @@ import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.Context;
 import io.konig.core.Edge;
@@ -62,7 +66,7 @@ import io.konig.shacl.Shape;
  *
  */
 public class SampleGenerator {
-	
+	private static final Logger logger = LoggerFactory.getLogger(SampleGenerator.class);
 	private int maxValueCount = 3;
 	private int stringWordCount = 4;
 	private long startDate = 1492418400000L; // April 17, 2017 at 8:40 AM
@@ -71,12 +75,22 @@ public class SampleGenerator {
 
 	private int maxDouble = 10000;
 	private int maxInt = 100;
+	private boolean failWhenEnumHasNoMembers = false;
+	
 	
 
 	private OwlReasoner reasoner;
 	
 	public SampleGenerator(OwlReasoner reasoner) {
 		this.reasoner = reasoner;
+	}
+
+	public boolean isFailWhenEnumHasNoMembers() {
+		return failWhenEnumHasNoMembers;
+	}
+
+	public void setFailWhenEnumHasNoMembers(boolean failWhenEnumerationHasNoMembers) {
+		this.failWhenEnumHasNoMembers = failWhenEnumerationHasNoMembers;
 	}
 
 	public Vertex generate(Shape shape, Graph graph) {
@@ -88,6 +102,7 @@ public class SampleGenerator {
 
 		private Graph graph;
 		private RandomGenerator random;
+		private Set<Shape> memory = new HashSet<>();
 		
 		public Worker(Graph graph) {
 			this.graph = graph;
@@ -99,9 +114,12 @@ public class SampleGenerator {
 		}
 
 		private Vertex generateShape(Shape shape) {
-			
 			Vertex v = generateVertex(shape);
-			addProperties(v, shape);
+			
+			if (!memory.contains(shape)) {
+				memory.add(shape);
+				addProperties(v, shape);
+			}
 			
 			return v;
 		}
@@ -112,14 +130,14 @@ public class SampleGenerator {
 					
 					Set<Edge> set = v.outProperty(p.getPredicate());
 					if (set==null || set.isEmpty()) {
-						addProperty(p, v);
+						addProperty(shape, p, v);
 					}
 				}
 			}
 			
 		}
 
-		private void addProperty(PropertyConstraint p, Vertex v) {
+		private void addProperty(Shape shape, PropertyConstraint p, Vertex v) {
 			Integer maxCount = p.getMaxCount();
 			Integer minCount = p.getMinCount();
 			
@@ -134,12 +152,12 @@ public class SampleGenerator {
 			}
 			
 			for (int i=0; i<valueCount; i++) {
-				Value object = generateValue(p);
+				Value object = generateValue(shape, p);
 				v.addProperty(p.getPredicate(), object);
 			}
 		}
 
-		private Value generateValue(PropertyConstraint p) {
+		private Value generateValue(Shape shape, PropertyConstraint p) {
 			
 			URI datatype = p.getDatatype();
 			if (datatype != null) {
@@ -188,7 +206,9 @@ public class SampleGenerator {
 				} else if (XMLSchema.TOKEN.equals(datatype)) {
 					value = random.loremIpsum(1);
 				} else {
-					throw new KonigException("Unsupported datatype: " + datatype);
+					String msg = MessageFormat.format("On shape <{0}>, unsupported datatype: <{1}>", 
+							shape.getId().stringValue(), datatype.stringValue());
+					throw new KonigException(msg);
 				}
 				
 				return new LiteralImpl(value, datatype);
@@ -202,7 +222,14 @@ public class SampleGenerator {
 			if (valueClass != null) {
 				return iriReference(valueClass);
 			}
-			throw new KonigException("Unsupported property: " + p.getPredicate());
+			
+			if (RDF.TYPE.equals(p.getPredicate()) && shape.getTargetClass()!=null) {
+				return iriReference(shape.getTargetClass());
+			}
+			
+			String msg = MessageFormat.format("On shape <{0}>, unsupported property: <{1}>", 
+					shape.getId().stringValue(), p.getPredicate().stringValue());
+			throw new KonigException(msg);
 		}
 		
 		private Value iriReference(Resource valueClass) {
@@ -214,10 +241,15 @@ public class SampleGenerator {
 				}
 				List<Value> list = owlClass.asTraversal().in(RDF.TYPE).toValueList();
 				if (list.isEmpty()) {
-					throw new KonigException("Enumeration values not defined for " + valueClass);
+					if (failWhenEnumHasNoMembers) {
+						throw new KonigException("Enumeration values not defined for " + valueClass);
+					} else {
+						logger.warn("Enumeration values not defined for {}", valueClass.stringValue());
+					}
+				} else {
+					int index = random.nextInt(list.size());
+					return list.get(index);
 				}
-				int index = random.nextInt(list.size());
-				return list.get(index);
 			}
 			
 			String typeName = "resource";
@@ -307,7 +339,7 @@ public class SampleGenerator {
 						throw new KonigException("On shape <" + shape.getId() + "> property not found: " + propertyName);
 					}
 					
-					Value value = generateIdValue(p);
+					Value value = generateIdValue(shape, p);
 					valueList.add(new PredicateValuePair(predicate, value));
 					map.put(propertyName, value.stringValue());
 				}
@@ -325,7 +357,7 @@ public class SampleGenerator {
 
 		
 
-		private Value generateIdValue(PropertyConstraint p) {
+		private Value generateIdValue(Shape shape, PropertyConstraint p) {
 			URI datatype = p.getDatatype();
 			if (datatype != null) {
 				
@@ -339,7 +371,7 @@ public class SampleGenerator {
 				} 
 				
 			}
-			return generateValue(p);
+			return generateValue(shape, p);
 		}
 
 		private URI randomURI(String typeName) {

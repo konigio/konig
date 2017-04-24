@@ -1,15 +1,17 @@
 package io.konig.datacatalog;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
-import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
+import io.konig.core.Graph;
 import io.konig.core.Vertex;
 import io.konig.core.vocab.VANN;
 
@@ -28,15 +30,56 @@ public class DataCatalogUtil {
 	}
 	
 	public static void setSiteName(PageRequest request) {
-		String siteName = ontologyName(request.getTargetOntology());
+	
+		DataCatalogBuildRequest buildRequest = request.getBuildRequest();
+		String siteName = buildRequest.getSiteName();
+		if (siteName == null) {
+			URI ontologyId = buildRequest.getOntologyId();
+			if (ontologyId != null) {
+
+				Vertex targetOntology = buildRequest.getGraph().getVertex(ontologyId);
+				if (targetOntology != null) {
+					siteName = ontologyName(targetOntology);
+				} else {
+					siteName = "Data Catalog";
+				}
+			}
+			buildRequest.setSiteName(siteName);
+			
+		}
 		request.getContext().put(SITE_NAME, siteName);
 	}
 	
-	public static List<Vertex> ontologyList(PageRequest request) {
+	public static List<Vertex> ontologyList(PageRequest request) throws DataCatalogException {
 		
-		List<Vertex> list = request.getTargetOntology().asTraversal().out(OWL.IMPORTS).toVertexList();
-		list.add(request.getTargetOntology());
-		return list;
+		DataCatalogBuildRequest buildRequest = request.getBuildRequest();
+		
+		List<Vertex> result = buildRequest.getOntologyList();
+		if (result == null) {
+			Set<URI> ontologySet = buildRequest.getOntologyInclude();
+			Graph graph = buildRequest.getGraph();
+			if (ontologySet != null) {
+				result = new ArrayList<>();
+				for (URI id : ontologySet) {
+					Vertex v = graph.getVertex(id);
+					if (v == null) {
+						throw new DataCatalogException("Ontology not found: " + id);
+					}
+					result.add(v);
+				}
+			} else {
+				URI ontologyId = buildRequest.getOntologyId();
+				Vertex v = graph.getVertex(ontologyId);
+				if (v==null) {
+					throw new DataCatalogException("Ontology not found: " + ontologyId);
+				}
+				result = v.asTraversal().out(OWL.IMPORTS).toVertexList();
+				result.add(v);
+			}
+			buildRequest.setOntologyList(result);
+		}
+		
+		return result;
 	}
 	
 	public static String ontologyName(Vertex ontology) {

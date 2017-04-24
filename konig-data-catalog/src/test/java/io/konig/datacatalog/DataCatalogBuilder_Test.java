@@ -40,7 +40,15 @@ public class DataCatalogBuilder_Test {
 		
 		load("src/test/resources/DataCatalogBuilderTest/rdf");
 		URI ontologyId = uri("http://example.com/ns/core/");
-		builder.build(ontologyId, outDir, exampleDir, graph, shapeManager);
+		
+		DataCatalogBuildRequest request = new DataCatalogBuildRequest();
+		request.setExampleDir(exampleDir);
+		request.setGraph(graph);
+		request.setOntologyId(ontologyId);
+		request.setOutDir(outDir);
+		request.setShapeManager(shapeManager);
+		
+		builder.build(request);
 		
 	}
 

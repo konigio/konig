@@ -19,42 +19,38 @@ import io.konig.shacl.ShapeManager;
 public class PageRequest {
 	private static final String OWL_CLASS_LIST = "OwlClassList";
 
-	private Vertex targetOntology;
 	private VelocityEngine engine;
 	private VelocityContext context;
-	private Graph graph;
 	private ClassStructure classStructure;
-	private ShapeManager shapeManager;
+	private DataCatalogBuildRequest buildRequest;
 	private DataCatalogBuilder builder;
 	private URI pageId;
 	private Set<URI> indexSet;
 
 	public PageRequest(
+		DataCatalogBuildRequest buildRequest,
 		DataCatalogBuilder builder,
-		Vertex targetOntology, 
 		VelocityEngine engine, 
-		Graph graph, 
-		ClassStructure classStructure,
-		ShapeManager shapeManager
+		ClassStructure classStructure
 	) {
+		this.buildRequest = buildRequest;
 		this.builder = builder;
-		this.targetOntology = targetOntology;
 		this.engine = engine;
-		this.graph = graph;
 		this.classStructure = classStructure;
-		this.shapeManager = shapeManager;
 		indexSet = new HashSet<>();
 	}
 	
 	public PageRequest(PageRequest other) {
+		this.buildRequest = other.buildRequest;
 		this.builder = other.builder;
-		this.targetOntology = other.targetOntology;
 		this.engine = other.getEngine();
 		this.context = new VelocityContext();
-		this.graph = other.getGraph();
 		this.classStructure = other.getClassStructure();
-		this.shapeManager = other.getShapeManager();
 		this.indexSet = other.getIndexSet();
+	}
+
+	public DataCatalogBuildRequest getBuildRequest() {
+		return buildRequest;
 	}
 
 	public Set<URI> getIndexSet() {
@@ -113,15 +109,11 @@ public class PageRequest {
 	}
 
 	public Graph getGraph() {
-		return graph;
+		return buildRequest.getGraph();
 	}
 
 	public ShapeManager getShapeManager() {
-		return shapeManager;
-	}
-	
-	public Vertex getTargetOntology() {
-		return targetOntology;
+		return buildRequest.getShapeManager();
 	}
 
 	public Namespace findNamespaceByName(String name) throws DataCatalogException {
@@ -135,7 +127,7 @@ public class PageRequest {
 
 	public NamespaceManager getNamespaceManager() throws DataCatalogException {
 
-		NamespaceManager nsManager = graph.getNamespaceManager();
+		NamespaceManager nsManager = getGraph().getNamespaceManager();
 		if (nsManager == null) {
 			throw new DataCatalogException("NamespaceManager is not defined");
 		}
@@ -146,7 +138,7 @@ public class PageRequest {
 		@SuppressWarnings("unchecked")
 		List<Vertex> list = (List<Vertex>) context.get(OWL_CLASS_LIST);
 		if (list == null) {
-			OwlReasoner reasoner = new OwlReasoner(graph);
+			OwlReasoner reasoner = new OwlReasoner(getGraph());
 			list = reasoner.owlClassList();
 			context.put(OWL_CLASS_LIST, list);
 		}

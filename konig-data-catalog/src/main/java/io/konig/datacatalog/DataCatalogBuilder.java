@@ -53,11 +53,16 @@ public class DataCatalogBuilder {
 	}
 	
 
-	public void build(URI ontologyId, File outDir, File exampleDir, Graph graph, ShapeManager shapeManager) throws DataCatalogException {
+	public void build(DataCatalogBuildRequest buildRequest) throws DataCatalogException {
 
+		Graph graph = buildRequest.getGraph();
+		URI ontologyId = buildRequest.getOntologyId();
+		ShapeManager shapeManager = buildRequest.getShapeManager();
+		File exampleDir = buildRequest.getExampleDir();
+		
 		graph.getNamespaceManager().add(new NamespaceImpl("_dcat_", CATALOG_BASE_URI));
 			
-		this.outDir = outDir;
+		this.outDir = buildRequest.getOutDir();
 		classIndexWriterFactory = new ClassIndexWriterFactory(outDir);
 		resourceWriterFactory = new ResourceWriterFactory(outDir);
 		Properties properties = new Properties();
@@ -65,16 +70,11 @@ public class DataCatalogBuilder {
 		properties.put("class.resource.loader.class", ClasspathResourceLoader.class.getName());
 		
 		VelocityEngine engine = new VelocityEngine(properties);
-		
-		Vertex targetOntology = graph.getVertex(ontologyId);
-		if (targetOntology == null) {
-			throw new DataCatalogException("Target Ontology not defined: " + ontologyId.stringValue());
-		}
 		OwlReasoner reasoner = new OwlReasoner(graph);
 		SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
 		ClassStructure classStructure = new ClassStructure(iriTemplate, shapeManager, reasoner);
-
-		PageRequest request = new PageRequest(this, targetOntology, engine, graph, classStructure, shapeManager);
+		
+		PageRequest request = new PageRequest(buildRequest, this, engine, classStructure);
 		try {
 			buildOntologyPages(request);
 			buildShapePages(request, exampleDir);
