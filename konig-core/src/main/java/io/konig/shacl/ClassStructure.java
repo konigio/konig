@@ -38,6 +38,8 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
@@ -53,11 +55,12 @@ import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.Schema;
 
 public class ClassStructure {
-	
+	private static final Logger logger = LoggerFactory.getLogger(ClassStructure.class);
 	private Map<Resource, Shape> shapeMap = new HashMap<>();
 	private Map<URI,PropertyStructure> propertyMap = new HashMap<>();
 	private Shape nullShape = new Shape(Konig.NullShape);
 	private ValueFormat iriTemplate;
+	private boolean failOnDatatypeConflict = false;
 	
 	public ClassStructure() {
 	}
@@ -575,6 +578,11 @@ public class ClassStructure {
 
 		private void setDatatype(PropertyStructure p, URI value) {
 			if (value != null) {
+				if (p.getPredicate().equals(RDF.TYPE)) {
+					p.setDatatype(null);
+					p.setValueClass(OWL.CLASS);
+					return;
+				}
 				if (p.getValueClass() != null) {
 					throw new KonigException("Property <" + p.getPredicate() + "> has sh:datatype <" + value + "> and sh:class <" +
 							p.getValueClass() + ">"
@@ -582,9 +590,15 @@ public class ClassStructure {
 				}
 				Resource prior = p.getDatatype();
 				if (prior!=null && !prior.equals(value)) {
-					throw new KonigException("Conflicting datatype on property <" + p.getPredicate() + ">: Found <" +
-						prior + "> and <" + value + ">"
-					);
+					if (failOnDatatypeConflict) {
+						throw new KonigException("Conflicting datatype on property <" + p.getPredicate() + ">: Found <" +
+							prior + "> and <" + value + ">"
+						);
+					} else {
+						
+						logger.warn("Conflicting datatype on property <{}>: Found <{}> and <{}>. Using rdfs:Literal", p.getPredicate().stringValue(), prior.stringValue(), value.stringValue());
+						value = RDFS.LITERAL;
+					}
 				}
 				
 				p.setDatatype(value);

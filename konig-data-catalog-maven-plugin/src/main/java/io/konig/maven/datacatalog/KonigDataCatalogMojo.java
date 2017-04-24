@@ -17,6 +17,7 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.datacatalog.DataCatalogBuildRequest;
 import io.konig.datacatalog.DataCatalogBuilder;
 import io.konig.datacatalog.DataCatalogException;
 import io.konig.gcp.datasource.GcpShapeConfig;
@@ -36,7 +37,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	@Parameter(defaultValue="${basedir}/src/examples")
 	private File examplesDir;
 	
-	@Parameter(required=true)
+	@Parameter
 	private String ontology;
 
 	@Override
@@ -53,8 +54,22 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			RdfUtil.loadTurtle(rdfDir, graph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
 			shapeLoader.load(graph);
-			URI ontologyId = new URIImpl(ontology);
-			builder.build(ontologyId, siteDir, examplesDir, graph, shapeManager);
+			
+			URI ontologyId = ontology==null ? null : new URIImpl(ontology);
+			
+
+			DataCatalogBuildRequest request = new DataCatalogBuildRequest();
+			request.setExampleDir(examplesDir);
+			request.setGraph(graph);
+			request.setOntologyId(ontologyId);
+			request.setOutDir(siteDir);
+			request.setShapeManager(shapeManager);
+			
+			if (ontologyId==null) {
+				request.useDefaultOntologyList();
+			}
+			
+			builder.build(request);
 			
 		} catch (RDFParseException | RDFHandlerException | IOException | DataCatalogException e) {
 			throw new MojoExecutionException("Failed to generate DataCatalog site", e);
