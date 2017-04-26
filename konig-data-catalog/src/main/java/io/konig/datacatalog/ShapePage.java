@@ -57,7 +57,7 @@ public class ShapePage {
 		for (PropertyConstraint p : shape.getProperty()) {
 			propertyList.add(new PropertyInfo(shapeURI, p, request));
 		}
-		
+		DataCatalogUtil.sortProperties(propertyList);
 		addJsonSamples(request);
 		
 		Template template = engine.getTemplate(SHAPE_TEMPLATE);

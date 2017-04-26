@@ -10,6 +10,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Vertex;
 import io.konig.shacl.ClassStructure;
@@ -42,8 +43,13 @@ public class ClassPage {
 		List<PropertyInfo> propertyList = new ArrayList<>();
 		context.put("PropertyList", propertyList);
 		for (PropertyConstraint p : shape.getProperty()) {
+			if (RDF.TYPE.equals(p.getPredicate())) {
+				continue;
+			}
 			propertyList.add(new PropertyInfo(classId, p, request));
 		}
+		
+		DataCatalogUtil.sortProperties(propertyList);
 		
 		Template template = engine.getTemplate(CLASS_TEMPLATE);
 
@@ -51,6 +57,7 @@ public class ClassPage {
 		template.merge(context, out);
 		out.flush();
 	}
+
 
 
 	private void setShapes(ClassRequest request, URI classId) throws DataCatalogException {
