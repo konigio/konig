@@ -11,10 +11,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import io.konig.content.AssetBundle;
 import io.konig.content.AssetBundleReader;
-import io.konig.content.CheckBundleResponse;
+import io.konig.content.CheckInBundleResponse;
 import io.konig.content.ContentAccessException;
 
-public class GaeCheckBundleServlet extends HttpServlet {
+public class GaeCheckInBundleServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
 	protected void doPost(HttpServletRequest req,  HttpServletResponse resp)
@@ -26,7 +26,7 @@ public class GaeCheckBundleServlet extends HttpServlet {
 		try {
 			AssetBundle bundle = bundleReader.readBundle(reader);
 			GaeContentSystem contentSystem = new GaeContentSystem();
-			CheckBundleResponse response = contentSystem.checkBundle(bundle);
+			CheckInBundleResponse response = contentSystem.checkInBundle(bundle);
 			resp.setContentType("text/plain");
 			PrintWriter writer = resp.getWriter();
 			for (String path : response.getMissingAssets()) {

@@ -24,7 +24,7 @@ public class AssetBundleWriter {
 			writeMetadata(a, out);
 		}
 		
-		
+		out.flush();
 		
 	}
 

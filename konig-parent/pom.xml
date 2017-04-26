@@ -64,6 +64,8 @@
   	<module>../konig-model-merge-maven-plugin</module>
   	<module>../konig-content-system-common</module>
   	<module>../konig-content-system-gae</module>
+  	<module>../konig-content-system-client</module>
+  	<module>../konig-content-system-maven-plugin</module>
   </modules>
  
   <developers>
