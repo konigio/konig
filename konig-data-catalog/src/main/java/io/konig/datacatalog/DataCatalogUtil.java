@@ -1,6 +1,8 @@
 package io.konig.datacatalog;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -27,6 +29,42 @@ public class DataCatalogUtil {
 		builder.append(ns);
 		builder.append("/class-index.html");
 		return builder.toString();
+	}
+	
+
+
+	public static void sortResourceList(List<ResourceDescription> ontologyList) {
+		
+		Collections.sort(ontologyList, new Comparator<ResourceDescription>() {
+
+			@Override
+			public int compare(ResourceDescription a, ResourceDescription b) {
+				int result = a.getName().compareTo(b.getName());
+				if (result == 0) {
+					result = a.getHref().compareTo(b.getHref());
+				}
+				return result;
+			}
+		});
+		
+	}
+	
+
+
+	static public void sortProperties(List<PropertyInfo> propertyList) {
+		Collections.sort(propertyList, new Comparator<PropertyInfo>(){
+
+			@Override
+			public int compare(PropertyInfo a, PropertyInfo b) {
+				int result = a.getPredicateLocalName().compareTo(b.getPredicateLocalName());
+				if (result == 0) {
+					result = a.getPredicateId().compareTo(b.getPredicateId());
+				}
+				return result;
+			}
+			
+		});
+		
 	}
 	
 	public static void setSiteName(PageRequest request) {

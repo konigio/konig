@@ -37,6 +37,8 @@ public class OverviewPage {
 			}
 		}
 		
+		DataCatalogUtil.sortResourceList(ontologyList);
+		
 		VelocityContext context = request.getContext();
 		context.put(ONTOLOGY_LIST, ontologyList);
 		VelocityEngine engine = request.getEngine();
