@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>$ClassName</title>
-<link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
+<link rel="stylesheet" type="text/css" href="//schema.org/docs/schemaorg.css">
 </head>
 <body class="mainsite">
 #parse( "data-catalog/velocity/header.vm" )

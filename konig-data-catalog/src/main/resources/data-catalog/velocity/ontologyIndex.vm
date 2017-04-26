@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>Ontology Index</title>
-<link rel="stylesheet" type="text/css" href="http://schema.org/docs/schemaorg.css">
+<link rel="stylesheet" type="text/css" href="//schema.org/docs/schemaorg.css">
 <style>
 #include( "data-catalog/velocity/style.vm" )
 </style>
