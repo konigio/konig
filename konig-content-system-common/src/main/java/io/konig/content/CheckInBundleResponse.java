@@ -2,7 +2,7 @@ package io.konig.content;
 
 import java.util.List;
 
-public class CheckBundleResponse {
+public class CheckInBundleResponse {
 
 	private List<String> missingAssets;
 

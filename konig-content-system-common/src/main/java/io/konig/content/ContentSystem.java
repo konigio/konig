@@ -2,7 +2,7 @@ package io.konig.content;
 
 public interface ContentSystem {
 	
-	CheckBundleResponse checkBundle(AssetBundle bundle) throws ContentAccessException;
+	CheckInBundleResponse checkInBundle(AssetBundle bundle) throws ContentAccessException;
 	
 	int saveMetadata(AssetMetadata metadata) throws ContentAccessException;
 	
