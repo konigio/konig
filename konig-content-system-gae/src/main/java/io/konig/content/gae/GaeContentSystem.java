@@ -69,6 +69,10 @@ public class GaeContentSystem implements ContentSystem {
 		List<String> missingAssets = new ArrayList<>(etagMap.values());
 		response.setMissingAssets(missingAssets);
 		
+		for (AssetMetadata meta : metadataList) {
+			saveMetadata(meta);
+		}
+		
 		return response;
 	}
 	private Map<String, String> etagMap(List<AssetMetadata> metadataList) {
