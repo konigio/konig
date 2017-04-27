@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -33,6 +34,8 @@ public class ContentPublisher {
 		logger.info("Publishing to: {}", bundleKey.url(baseURL));
 		ContentSystemClient client = new ContentSystemClient(baseURL);
 		CheckInBundleResponse response = client.checkInBundle(bundle);
+		
+		Collections.sort(response.getMissingAssets());
 		
 		for (String path : response.getMissingAssets()) {
 			
