@@ -4,18 +4,24 @@ import java.io.File;
 
 public class WorkbookProcessor {
 	private File workbookFile;
-	private File owlOutDir;
-	private File shapesOutDir;
+	private File owlDir;
+	private File shapesDir;
 	private boolean inferRdfPropertyDefinitions;
 	
 	public File getWorkbookFile() {
 		return workbookFile;
 	}
-	public File getOwlOutDir() {
-		return owlOutDir;
+	public File getOwlDir() {
+		return owlDir;
 	}
-	public File getShapesOutDir() {
-		return shapesOutDir;
+	public File owlDir(RdfConfig defaults) {
+		return owlDir == null ? defaults.getOwlDir() : owlDir;
+	}
+	public File getShapesDir() {
+		return shapesDir;
+	}
+	public File shapesDir(RdfConfig defaults) {
+		return shapesDir == null ? defaults.getShapesDir() : shapesDir;
 	}
 	public boolean isInferRdfPropertyDefinitions() {
 		return inferRdfPropertyDefinitions;
@@ -26,11 +32,11 @@ public class WorkbookProcessor {
 	public void setWorkbookFile(File workbookFile) {
 		this.workbookFile = workbookFile;
 	}
-	public void setOwlOutDir(File owlOutDir) {
-		this.owlOutDir = owlOutDir;
+	public void setOwlDir(File owlOutDir) {
+		this.owlDir = owlOutDir;
 	}
-	public void setShapesOutDir(File shapesOutDir) {
-		this.shapesOutDir = shapesOutDir;
+	public void setShapesDir(File shapesOutDir) {
+		this.shapesDir = shapesOutDir;
 	}
 
 }

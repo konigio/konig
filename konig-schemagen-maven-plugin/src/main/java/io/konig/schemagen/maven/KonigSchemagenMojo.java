@@ -26,6 +26,8 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
@@ -81,6 +83,7 @@ import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.shacl.ClassStructure;
+import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
 import io.konig.shacl.ShapeNamer;
@@ -107,6 +110,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private static final String SCHEMA = "schema";
 	private static final String DATA = "data";
 	private static final String DATASET = "dataset";
+	
+	@Parameter
+	private RdfConfig defaults;
+	
+	@Parameter
+	private RdfConfig rdfOutput;
 	
     /**
      * Location of the file.
@@ -191,6 +200,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generatePlantUMLDomainModel();
 			generateJava();
 			
+			updateRdf();
+			
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | PlantumlGeneratorException | CodeGeneratorException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
@@ -198,8 +209,34 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
-    private void loadResources() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException {
+    private void updateRdf() throws RDFHandlerException, IOException {
+		if (rdfOutput != null) {
+			File shapesDir = rdfOutput.shapesDir(defaults);
+			if (shapesDir != null) {
+				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
+				io.konig.shacl.io.ShapeWriter shapeWriter = new io.konig.shacl.io.ShapeWriter();
+				for (Shape shape : shapeManager.listShapes()) {
+					Resource shapeId = shape.getId();
+					if (shapeId instanceof URI) {
+						URI shapeURI = (URI) shapeId;
 
+						Graph graph = new MemoryGraph();
+						shapeWriter.emitShape(shape, graph);
+						File shapeFile = fileGetter.getFile(shapeURI);
+						RdfUtil.prettyPrintTurtle(nsManager, graph, shapeFile);
+					}
+					
+				}
+			}
+		}
+		
+	}
+
+	private void loadResources() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException {
+
+    	if (defaults == null) {
+    		defaults = new RdfConfig();
+    	}
     	GcpShapeConfig.init();
     	
 		loadSpreadsheet();
@@ -311,7 +348,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				 
 				 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer(datasetMapper(), nsManager);
 				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
-				 transformer.transform(workbook.getWorkbookFile(), workbook.getOwlOutDir(), workbook.getShapesOutDir());
+				 transformer.transform(workbook.getWorkbookFile(), workbook.owlDir(defaults), workbook.shapesDir(defaults));
 			 }
 		 } catch (Throwable oops) {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);

@@ -45,10 +45,15 @@ To use the schema generator, add a maven plugin to your project as shown below.
         <artifactId>konig-schemagen-maven-plugin</artifactId>
         <version>2.0.0-8</version>
         <configuration>
+          <defaults>
+            <rdfDir>${basedir}/target/generated/rdf</rdfDir>
+            <owlDir>${basedir}/target/generated/rdf/owl</owlDir>
+            <shapesDir>${basedir}/target/generated/rdf/shapes</shapesDir>
+          </defaults>
           <workbook>
             <workbookFile>${basedir}/src/data-model.xlsx</workbookFile>
-            <owlOutDir>${basedir}/target/generated/rdf/owl</owlOutDir>
-            <shapesOutDir>${basedir}/target/generated/rdf/shapes</shapesOutDir>
+            <owlDir>${basedir}/target/generated/rdf/owl</owlDir>
+            <shapesDir>${basedir}/target/generated/rdf/shapes</shapesDir>
             <inferRdfPropertyDefinitions>true</inferRdfPropertyDefinitions>
           </workbook>
           <rdfSourceDir>${basedir}/target/generated/rdf</rdfSourceDir>
@@ -85,6 +90,11 @@ To use the schema generator, add a maven plugin to your project as shown below.
           </googleCloudPlatform>
           <avroDir>${basedir}/target/generated/src/main/avro</avroDir>
           <jsonSchemaDir>${basedir}/target/generated/src/main/json-schema</jsonSchemaDir>
+          <rdfOutput>
+            <rdfDir>${basedir}/target/generated/rdf</rdfDir>
+            <owlDir>${basedir}/target/generated/rdf/owl</owlDir>
+            <shapesDir>${basedir}/target/generated/rdf/shapes</shapesDir>
+          </rdfOutput>
         </configuration>
         <executions>
           <execution>
@@ -116,10 +126,14 @@ To run the generator, simply invoke the following command in your project's base
 
 | Parameter          | Description                                                                                                    |
 |--------------------|----------------------------------------------------------------------------------------------------------------|
+| defaults           | A container for default values                                                                        |
+| defaults/rdfDir    | The directory where RDF resources (OWL Ontologies, SHACL Shapes, etc.) are stored                     |
+| defaults/owlDir    | The directory where OWL ontologies are stored.  Typically a subdirectory of `rdfDir`.  By default, equals `${rdfDir}/owl`. |
+| defaults/shapesDir | The directory where SHACL Shape descriptions are stored.  Typically a subdirectory of `rdfDir`.  By default, equals `${rdfDir}/shapes`. |
 | workbook  | A container for the parameters that control the generation of data model artifacts from a spreadsheet          |
 | workbook/workbookFile | A Microsoft Excel workbook (*.xlsx) containing a description of the data model                     |
-| workbook/owlOutDir | The location where OWL ontologies from the `workbookFile` will be stored                              |
-| workbook/shapesOutDir | The output directory into which shapes generated from the `workbookFile` will be stored            |
+| workbook/owlDir | The location where OWL ontologies from the `workbookFile` will be stored                              |
+| workbook/shapesDir | The output directory into which shapes generated from the `workbookFile` will be stored            |
 | workbook/inferRdfPropertyDefinitions | A flag that specifies whether to infer RDF Property definitions from predicates described by SHACL Property Constraints |
 | rdfSourceDir       | The directory that contains the source SHACL and OWL files from which other artifacts will be generated        |
 | jsonldDir          | The output directory that will contain the generated JSON-LD context files                                     |
@@ -144,6 +158,9 @@ To run the generator, simply invoke the following command in your project's base
 | googleCloudPlatform/enumShapeNameTemplate | A template used to generate IRI values for SHACL shapes of BigQuery tables that contain reference data based on sub-classes of schema:Enumeration |
 | avroDir            | The output directory that will contain the generated Avro Schema files                                         |
 | jsonSchemaDir      | The output directory that will contain the generated JSON Schema files                                         |
+| rdfOutput          | Define this element if you want annotations on the RDF resources to be saved. |
+| rdfOutput/rdfDir   | The directory where RDF resources will be saved. If undefined the value from `${defaults.rdfDir}` will be used. |
+| rdfOutput/shapesDir   | The directory where RDF resources will be saved.  If undefined, the following defaults apply (in priority order): <ul><li>${defaults.shapesDir}</li><li>${rdfOutput.rdfDir}/shapes</li></ul> |
 
 
 

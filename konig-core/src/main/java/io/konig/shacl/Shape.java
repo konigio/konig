@@ -78,6 +78,7 @@ public class Shape {
 	private List<DataSource> shapeDataSource;
 	private Expression updateWhen;
 	private int ordinal;
+	private URI preferredJsonldContext;
 	
 	
 	public Shape() {
@@ -500,6 +501,14 @@ public class Shape {
 	 */
 	public void setOrdinal(int ordinal) {
 		this.ordinal = ordinal;
+	}
+
+	public URI getPreferredJsonldContext() {
+		return preferredJsonldContext;
+	}
+
+	public void setPreferredJsonldContext(URI preferredJsonldContext) {
+		this.preferredJsonldContext = preferredJsonldContext;
 	}
 	
 	

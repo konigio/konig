@@ -8,6 +8,7 @@ import java.util.List;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +16,10 @@ import io.konig.core.Context;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.io.ContextWriter;
+import io.konig.core.vocab.Konig;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.ShapeMediaTypeNamer;
 import io.konig.shacl.jsonld.ContextGenerator;
 import io.konig.shacl.jsonld.ContextNamer;
 
@@ -64,12 +65,16 @@ public class ShapeToJsonldContext {
 				fileName.append(uri.getLocalName());
 				
 				File file = new File(baseDir, fileName.toString());
-				generateJsonldContext(shape, file);
+				Context context = generateJsonldContext(shape, file);
+				
+				URI contextId = new URIImpl(context.getContextIRI());
+				shape.setPreferredJsonldContext(contextId);
+				owlGraph.edge(shapeId, Konig.preferredJsonldContext, contextId);
 			}
 		}
 	}
 
-	public void generateJsonldContext(Shape shape, File contextFile) throws SchemaGeneratorException, IOException {
+	public Context generateJsonldContext(Shape shape, File contextFile) throws SchemaGeneratorException, IOException {
 		ContextGenerator generator = new ContextGenerator(shapeManager, nsManager, contextNamer, owlGraph);
 		Context context = generator.forShape(shape);
 		
@@ -81,6 +86,7 @@ public class ShapeToJsonldContext {
 		} finally {
 			close(fileWriter);
 		}
+		return context;
 	}
 
 	private void close(FileWriter fileWriter) {
