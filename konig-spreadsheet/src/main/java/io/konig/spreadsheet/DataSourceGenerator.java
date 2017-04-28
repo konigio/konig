@@ -9,7 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
@@ -20,10 +22,9 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.util.LinkedValueMap;
-import io.konig.core.util.RecursiveValueFormat;
+import io.konig.core.util.CompositeValueMap;
+import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.SimpleValueMap;
-import io.konig.core.util.ValueFormat;
 import io.konig.core.util.ValueMap;
 import io.konig.shacl.Shape;
 
@@ -35,8 +36,8 @@ import io.konig.shacl.Shape;
 public class DataSourceGenerator {
 	
 	private NamespaceManager nsManager;
-	private Map<String,ValueFormat> variableMap = new HashMap<String, ValueFormat>();
-	private Map<String, RecursiveValueFormat> templateMap = new HashMap<>();
+	private SimpleValueMap settings = new SimpleValueMap();
+	private Map<String, SimpleValueFormat> templateMap = new HashMap<>();
 	private File templateDir;
 	
 	public DataSourceGenerator(NamespaceManager nsManager, File templateDir, Properties properties) {
@@ -49,8 +50,12 @@ public class DataSourceGenerator {
 	
 	public void put(Properties properties) {
 
-		RecursiveValueFormat tmp = new RecursiveValueFormat(variableMap);
-		tmp.put(properties);
+		Set<Entry<Object,Object>> entries = properties.entrySet();
+		for (Entry<Object,Object> e : entries) {
+			String key = e.getKey().toString();
+			String value = e.getValue().toString();
+			settings.put(key, value);
+		}
 	}
 	
 	public File getTemplateDir() {
@@ -68,7 +73,7 @@ public class DataSourceGenerator {
 		String templateName = func.getName();
 		ValueMap params = func.getParameters();
 
-		RecursiveValueFormat template = null;
+		SimpleValueFormat template = null;
 
 		try {
 			template = getTemplate(templateName);
@@ -82,7 +87,7 @@ public class DataSourceGenerator {
 		
 		SimpleValueMap defaultMap = defaultMap(shape);
 	
-		LinkedValueMap map = new LinkedValueMap(params, defaultMap);
+		CompositeValueMap map = new CompositeValueMap(params, defaultMap, settings);
 		
 
 		String result = template.format(map);
@@ -110,7 +115,7 @@ public class DataSourceGenerator {
 	public void generate(Shape shape, String templateName, Graph graph) {
 		
 		
-		RecursiveValueFormat template = null;
+		SimpleValueFormat template = null;
 		
 		try {
 			template = getTemplate(templateName);
@@ -123,9 +128,9 @@ public class DataSourceGenerator {
 		}
 		
 		SimpleValueMap map = defaultMap(shape);
-		
+		CompositeValueMap composite = new CompositeValueMap(map, settings);
 
-		String result = template.format(map);
+		String result = template.format(composite);
 		ByteArrayInputStream input = new ByteArrayInputStream(result.getBytes());
 		
 		try {
@@ -137,10 +142,9 @@ public class DataSourceGenerator {
 		
 	}
 
-	private RecursiveValueFormat getTemplate(String templateName) throws IOException {
-		RecursiveValueFormat template = templateMap.get(templateName);
+	private SimpleValueFormat getTemplate(String templateName) throws IOException {
+		SimpleValueFormat template = templateMap.get(templateName);
 		if (template == null) {
-			template = new RecursiveValueFormat(variableMap);
 			
 			InputStream stream = openTemplate(templateName);
 			if (stream == null) {
@@ -158,7 +162,9 @@ public class DataSourceGenerator {
 				}
 				
 				String text = out.toString("UTF-8");
-				template.compile(text);
+				template = new SimpleValueFormat(text);
+				templateMap.put(templateName, template);
+				
 			} finally {
 				stream.close();
 			}

@@ -8,8 +8,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -270,6 +273,7 @@ public class WorkbookLoader {
 		private Properties settings = new Properties();
 		private List<ShapeTemplate> shapeTemplateList = new ArrayList<>();
 		private List<ImportInfo> importList = new ArrayList<>();
+		private Map<URI,List<Function>> dataSourceMap = new HashMap<>();
 		
 		private int ontologyNameCol=UNDEFINED;
 		private int ontologyCommentCol=UNDEFINED;
@@ -367,12 +371,40 @@ public class WorkbookLoader {
 			loadShapes();
 			produceEnumShapes();
 			processShapeTemplates();
+			processDataSources();
 			visitShapes();
 			processImportStatements();
 			declareDefaultOntologies();
 		}
 
 
+
+		private void processDataSources() throws SpreadsheetException {
+			
+			for (Entry<URI,List<Function>> entry : dataSourceMap.entrySet()) {
+				URI shapeId = entry.getKey();
+				List<Function> dataSourceList = entry.getValue();
+				
+				try {
+					DataSourceGenerator generator = getDataSourceGenerator();
+
+					Vertex v = graph.getVertex(shapeId);
+
+					URI targetClass = v==null ? null : v.getURI(SH.targetClass);
+					Shape shape = new Shape(shapeId);
+					shape.setTargetClass(targetClass);
+					for (Function func : dataSourceList) {
+						generator.generate(shape, func, graph);
+					}
+					
+				} catch (IOException e) {
+					throw new SpreadsheetException("Failed to create DataSourceGenerator", e);
+				}
+			}
+
+			
+			
+		}
 
 		private void declareDefaultOntologies() throws SpreadsheetException {
 			
@@ -1205,6 +1237,8 @@ public class WorkbookLoader {
 				return;
 			}
 			
+			
+			
 			edge(shapeId, RDF.TYPE, SH.Shape);
 			edge(shapeId, PROV.wasGeneratedBy, activityId);
 			edge(shapeId, RDFS.COMMENT, shapeComment);
@@ -1220,18 +1254,7 @@ public class WorkbookLoader {
 			}
 			
 			if (dataSourceList != null) {
-				try {
-					DataSourceGenerator generator = getDataSourceGenerator();
-
-					Shape shape = new Shape(shapeId);
-					shape.setTargetClass(targetClass);
-					for (Function func : dataSourceList) {
-						generator.generate(shape, func, graph);
-					}
-					
-				} catch (IOException e) {
-					throw new SpreadsheetException("Failed to create DataSourceGenerator", e);
-				}
+				dataSourceMap.put(shapeId, dataSourceList);
 			}
 			
 			

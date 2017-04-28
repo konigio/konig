@@ -49,5 +49,22 @@ public class GoogleCloudPlatformConfig {
 	public void setEnumShapeNameTemplate(String enumShapeNameTemplate) {
 		this.enumShapeNameTemplate = enumShapeNameTemplate;
 	}
+
+	public File gcpDir(RdfConfig defaults) {
+		if (gcpDir == null) {
+			File root = defaults.getRootDir();
+			if (root != null) {
+				gcpDir = new File(root, "gcp");
+			}
+		}
+		return gcpDir;
+	}
+
+	public File enumShapeDir(RdfConfig defaults) {
+		if (enumShapeDir == null) {
+			enumShapeDir = defaults.getShapesDir();
+		}
+		return enumShapeDir;
+	}
 	
 }

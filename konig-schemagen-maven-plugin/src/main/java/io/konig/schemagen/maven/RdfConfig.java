@@ -4,19 +4,23 @@ import java.io.File;
 
 public class RdfConfig {
 	
+	private File rootDir;
 	private File rdfDir;
 	private File owlDir;
 	private File shapesDir;
 	
 	public File getRdfDir() {
+		if (rdfDir==null && rootDir != null) {
+			rdfDir = new File(rootDir, "rdf");
+		}
 		return rdfDir;
 	}
 	public void setRdfDir(File rdfDir) {
 		this.rdfDir = rdfDir;
 	}
 	public File getOwlDir() {
-		if (owlDir == null && rdfDir!=null) {
-			owlDir = new File(rdfDir, "owl");
+		if (owlDir == null && getRdfDir()!=null) {
+			owlDir = new File(getRdfDir(), "owl");
 		}
 		return owlDir;
 	}
@@ -24,8 +28,8 @@ public class RdfConfig {
 		this.owlDir = owlDir;
 	}
 	public File getShapesDir() {
-		if (shapesDir == null && rdfDir != null) {
-			shapesDir = new File(rdfDir, "shapes");
+		if (shapesDir == null && getRdfDir() != null) {
+			shapesDir = new File(getRdfDir(), "shapes");
 		}
 		return shapesDir;
 	}
@@ -41,6 +45,12 @@ public class RdfConfig {
 		return result;
 	}
 	
+	public File getRootDir() {
+		return rootDir;
+	}
+	public void setRootDir(File rootDir) {
+		this.rootDir = rootDir;
+	}
 	public File shapesDir(RdfConfig defaults) {
 		File result = getShapesDir();
 		if (result == null) {

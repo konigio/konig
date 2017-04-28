@@ -136,7 +136,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private File domainModelPngFile;
     
     @Parameter
-    private JavaCodeGeneratorConfig javaCodeGenerator;
+    private JavaCodeGeneratorConfig java;
     
     @Parameter
     private WorkbookProcessor workbook;
@@ -239,6 +239,18 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	
 		loadSpreadsheet();
 		
+		if (rdfSourceDir == null && 
+			(
+				jsonld!=null ||
+				java != null ||
+				plantUML != null ||
+				googleCloudPlatform!=null ||
+				jsonSchema!=null
+			)
+		) {
+			rdfSourceDir = defaults.getRdfDir();
+		}
+		
 		if (rdfSourceDir != null) {
 			RdfUtil.loadTurtle(rdfSourceDir, owlGraph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
@@ -246,34 +258,35 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		generateEnumShapes();
 		
+		
 	}
 
 	private void generateEnumShapes() throws MojoExecutionException {
-		File enumShapeDir = googleCloudPlatform==null ? null : googleCloudPlatform.getEnumShapeDir();
+		File enumShapeDir = googleCloudPlatform==null ? null : googleCloudPlatform.enumShapeDir(defaults);
 		if (enumShapeDir!=null) {
 			
 			String enumShapeNameTemplate = googleCloudPlatform.getEnumShapeNameTemplate();
-			if (enumShapeNameTemplate == null) {
-				throw new MojoExecutionException("googleCloudPlatform.enumShapeNameTemplate must be defined");
+			if (enumShapeNameTemplate != null) {
+				ShapeFileGetter fileGetter = new ShapeFileGetter(enumShapeDir, nsManager);
+				
+				ShapeNamer shapeNamer = new TemplateShapeNamer(nsManager, new SimpleValueFormat(enumShapeNameTemplate));
+				ShapeVisitor shapeVisitor = new EnumShapeVisitor(fileGetter, shapeManager);
+				BigQueryEnumShapeGenerator generator = new BigQueryEnumShapeGenerator(datasetMapper(), 
+						createTableMapper(), shapeNamer, shapeManager, shapeVisitor);
+				generator.generateAll(owlReasoner);
 			}
-			ShapeFileGetter fileGetter = new ShapeFileGetter(enumShapeDir, nsManager);
-			
-			ShapeNamer shapeNamer = new TemplateShapeNamer(nsManager, new SimpleValueFormat(enumShapeNameTemplate));
-			ShapeVisitor shapeVisitor = new EnumShapeVisitor(fileGetter, shapeManager);
-			BigQueryEnumShapeGenerator generator = new BigQueryEnumShapeGenerator(datasetMapper(), createTableMapper(), shapeNamer, shapeManager, shapeVisitor);
-			generator.generateAll(owlReasoner);
 		}
 		
 	}
 
 	private void generateJava() throws IOException, CodeGeneratorException {
 
-		if (javaCodeGenerator!=null) {
-			if (javaCodeGenerator.getJavaDir()==null) {
+		if (java!=null) {
+			if (java.getJavaDir()==null) {
 				throw new CodeGeneratorException("javaCodeGenerator.javaDir must be defined");
 			}
-			javaCodeGenerator.getJavaDir().mkdirs();
-			if (javaCodeGenerator.isGenerateCanonicalJsonReaders()) {
+			java.getJavaDir().mkdirs();
+			if (java.isGenerateCanonicalJsonReaders()) {
 				generateCanonicalJsonReaders();
 			}
 			generateJavaCode(structure);
@@ -290,16 +303,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 
 	private void generateCanonicalJsonReaders() throws IOException, CodeGeneratorException {
-		if (javaCodeGenerator.getPackageRoot() == null) {
+		if (java.getPackageRoot() == null) {
 			throw new CodeGeneratorException("javaCodeGenerator.packageRoot must be defined");
 		}
-		JavaNamer javaNamer = new BasicJavaNamer(javaCodeGenerator.getPackageRoot(), nsManager);
+		JavaNamer javaNamer = new BasicJavaNamer(java.getPackageRoot(), nsManager);
 		BasicJavaDatatypeMapper datatypeMapper = new BasicJavaDatatypeMapper();
 		JsonReaderBuilder builder = new JsonReaderBuilder(classStructure(), javaNamer, datatypeMapper, owlReasoner);
 		JCodeModel model = new JCodeModel();
 		builder.produceAll(model);
 		
-		model.build(javaCodeGenerator.getJavaDir());
+		model.build(java.getJavaDir());
 	}
 
 	private void generateJsonSchema() {
@@ -393,7 +406,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private void generateBigQueryTables() throws IOException, MojoExecutionException {
 		if (googleCloudPlatform != null) {
 			
-			File gcpDir = googleCloudPlatform.getGcpDir();
+			File gcpDir = googleCloudPlatform.gcpDir(defaults);
 			if (gcpDir == null) {
 				throw new MojoExecutionException("googleCloudPlatform.gcpDir must be defined");
 			}
@@ -446,19 +459,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private void generateJavaCode(ClassStructure structure) throws IOException, CodeGeneratorException {
 		
 		final JCodeModel model = new JCodeModel();
-		if (javaCodeGenerator.getPackageRoot()==null) {
+		if (java.getPackageRoot()==null) {
 			throw new CodeGeneratorException("javaCodeGenerator.packageRoot must be defined");
 		}
-		JavaNamer javaNamer = new BasicJavaNamer(javaCodeGenerator.getPackageRoot(), nsManager);
+		JavaNamer javaNamer = new BasicJavaNamer(java.getPackageRoot(), nsManager);
 		JavaClassBuilder classBuilder = new JavaClassBuilder(structure, javaNamer, owlReasoner);
 		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(owlReasoner, shapeManager, javaNamer);
 		
 		classBuilder.buildAllClasses(model);
 		writerBuilder.buildAll(shapeManager.listShapes(), model);
 		
-		if (javaCodeGenerator.getGoogleDatastoreDaoPackage() != null) {
+		if (java.getGoogleDatastoreDaoPackage() != null) {
 			SimpleEntityNamer entityNamer = new SimpleEntityNamer();
-			SimpleDaoNamer daoNamer = new SimpleDaoNamer(javaCodeGenerator.getGoogleDatastoreDaoPackage(), nsManager);
+			SimpleDaoNamer daoNamer = new SimpleDaoNamer(java.getGoogleDatastoreDaoPackage(), nsManager);
 			FactDaoGenerator daoGenerator = new FactDaoGenerator()
 				.setDaoNamer(daoNamer)
 				.setDatatypeMapper(classBuilder.getMapper())
@@ -470,7 +483,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 		
-		model.build(javaCodeGenerator.getJavaDir());
+		model.build(java.getJavaDir());
 		
 	}
 
