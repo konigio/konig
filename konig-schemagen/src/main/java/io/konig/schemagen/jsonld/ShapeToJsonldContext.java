@@ -5,6 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import org.openrdf.model.Namespace;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,17 +34,14 @@ public class ShapeToJsonldContext {
 	private NamespaceManager nsManager;
 	private ContextNamer contextNamer;
 	private Graph owlGraph;
-	private ShapeMediaTypeNamer mediaTypeNamer;
 	
 	
 
 	public ShapeToJsonldContext(ShapeManager shapeManager, NamespaceManager nsManager, ContextNamer contextNamer,
-			ShapeMediaTypeNamer mediaTypeNamer,
 			Graph owlGraph) {
 		this.shapeManager = shapeManager;
 		this.nsManager = nsManager;
 		this.contextNamer = contextNamer;
-		this.mediaTypeNamer = mediaTypeNamer;
 		this.owlGraph = owlGraph;
 	}
 	
@@ -50,12 +50,21 @@ public class ShapeToJsonldContext {
 		baseDir.mkdirs();
 		List<Shape> list = shapeManager.listShapes();
 		for (Shape shape : list) {
-			String mediaTypeName = mediaTypeNamer.baseMediaTypeName(shape);
-			if (mediaTypeName != null) {
-				String[] nameParts = mediaTypeName.split("/");
-				String baseName = nameParts[1];
-				File outFile = new File(baseDir, baseName);
-				generateJsonldContext(shape, outFile);
+			
+			Resource shapeId = shape.getId();
+			if (shapeId instanceof URI) {
+				URI uri = (URI) shapeId;
+				Namespace ns = nsManager.findByName(uri.getNamespace());
+				if (ns == null) {
+					throw new SchemaGeneratorException("Namespace not found: " + uri.getNamespace());
+				}
+				StringBuilder fileName = new StringBuilder();
+				fileName.append(ns.getPrefix());
+				fileName.append('.');
+				fileName.append(uri.getLocalName());
+				
+				File file = new File(baseDir, fileName.toString());
+				generateJsonldContext(shape, file);
 			}
 		}
 	}
