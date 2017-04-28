@@ -25,6 +25,15 @@ import java.util.ArrayList;
 
 public class CompositeShapeVisitor extends ArrayList<ShapeVisitor> implements ShapeVisitor {
 	private static final long serialVersionUID = 1L;
+	
+	public CompositeShapeVisitor() {
+	}
+	
+	public CompositeShapeVisitor(ShapeVisitor...visitors) {
+		for (ShapeVisitor v : visitors) {
+			add(v);
+		}
+	}
 
 	@Override
 	public void visit(Shape shape) {

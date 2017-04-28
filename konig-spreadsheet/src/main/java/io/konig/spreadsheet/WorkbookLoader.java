@@ -68,6 +68,7 @@ import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
+import io.konig.shacl.CompositeShapeVisitor;
 import io.konig.shacl.FormulaContextBuilder;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -497,7 +498,12 @@ public class WorkbookLoader {
 
 			NameMap nameMap = new NameMap();
 			nameMap.addAll(graph);
-			ShapeVisitor visitor = new FormulaContextBuilder(nsManager, nameMap);
+			
+			CompositeShapeVisitor visitor = new CompositeShapeVisitor(
+				new FormulaContextBuilder(nsManager, nameMap),
+				new TargetClassReasoner(graph)
+			);
+			
 			for (Shape shape : getShapeManager().listShapes()) {
 				visitor.visit(shape);
 			}
