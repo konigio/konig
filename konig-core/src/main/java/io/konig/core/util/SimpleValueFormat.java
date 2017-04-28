@@ -26,6 +26,8 @@ import java.util.List;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 
+import io.konig.core.util.ValueFormat.Element;
+
 public class SimpleValueFormat implements ValueFormat {
 
 
@@ -89,6 +91,7 @@ public class SimpleValueFormat implements ValueFormat {
 				builder.append(e.text);
 				builder.append('}');
 			} else {
+				value = ValueExpander.expand(value, map);
 				builder.append(value);
 			}
 		}
@@ -198,5 +201,6 @@ public class SimpleValueFormat implements ValueFormat {
 		builder.append('}');
 		this.text = builder.toString();
 	}
+	
 	
 }
