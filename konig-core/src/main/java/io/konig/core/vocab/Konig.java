@@ -60,7 +60,7 @@ public class Konig {
 
 	public static final URI id = new URIImpl("http://www.konig.io/ns/core/id");
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/core/mediaTypeBaseName");
-	public static final URI jsonSchemaRendition = new URIImpl("http://www.konig.io/ns/core/jsonSchemaRendition");
+	public static final URI preferredJsonSchema = new URIImpl("http://www.konig.io/ns/core/preferredJsonSchema");
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/core/avroSchemaRendition");
 	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/core/PreferredClass");
 	public static final URI formula = new URIImpl("http://www.konig.io/ns/core/formula");

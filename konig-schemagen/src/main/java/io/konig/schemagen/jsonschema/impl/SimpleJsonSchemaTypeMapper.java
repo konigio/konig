@@ -26,8 +26,12 @@ public class SimpleJsonSchemaTypeMapper implements JsonSchemaTypeMapper {
 			return JsonSchemaDatatype.BOOLEAN;
 		}
 		
-		if (XMLSchema.BOOLEAN.equals(rdfDatatype)) {
-			return JsonSchemaDatatype.BOOLEAN;
+		if (XMLSchema.BYTE.equals(rdfDatatype)) {
+			return JsonSchemaDatatype.INT;
+		}
+		
+		if (XMLSchema.DAYTIMEDURATION.equals(rdfDatatype)) {
+			return JsonSchemaDatatype.STRING;
 		}
 		
 		
