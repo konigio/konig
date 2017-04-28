@@ -26,7 +26,8 @@ public class ShapeToJsonSchemaLinker implements JsonSchemaListener {
 		Resource shapeId = shape.getId();
 		URI schemaId = new URIImpl(schema.get("id").asText());
 		
-		graph.edge(shapeId, Konig.jsonSchemaRendition, schemaId);
+		shape.setPreferredJsonSchema(schemaId);
+		graph.edge(shapeId, Konig.preferredJsonSchema, schemaId);
 	}
 
 }

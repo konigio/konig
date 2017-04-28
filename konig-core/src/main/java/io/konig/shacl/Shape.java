@@ -79,6 +79,7 @@ public class Shape {
 	private Expression updateWhen;
 	private int ordinal;
 	private URI preferredJsonldContext;
+	private URI preferredJsonSchema;
 	
 	
 	public Shape() {
@@ -510,6 +511,12 @@ public class Shape {
 	public void setPreferredJsonldContext(URI preferredJsonldContext) {
 		this.preferredJsonldContext = preferredJsonldContext;
 	}
-	
-	
+
+	public URI getPreferredJsonSchema() {
+		return preferredJsonSchema;
+	}
+
+	public void setPreferredJsonSchema(URI preferredJsonSchema) {
+		this.preferredJsonSchema = preferredJsonSchema;
+	}
 }

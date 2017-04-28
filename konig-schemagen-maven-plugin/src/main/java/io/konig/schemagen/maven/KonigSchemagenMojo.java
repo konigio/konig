@@ -78,7 +78,6 @@ import io.konig.schemagen.jsonschema.JsonSchemaNamer;
 import io.konig.schemagen.jsonschema.JsonSchemaTypeMapper;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
-import io.konig.schemagen.jsonschema.impl.SimpleJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
@@ -94,7 +93,6 @@ import io.konig.shacl.impl.TemplateShapeNamer;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
-import io.konig.shacl.jsonld.SuffixContextNamer;
 import io.konig.showl.WorkbookToTurtleTransformer;
 import net.sourceforge.plantuml.SourceFileReader;
 
@@ -128,7 +126,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private JsonldConfig jsonld;
     
     @Parameter
-    private File jsonSchemaDir;
+    private JsonSchemaConfig jsonSchema;
     
     @Parameter
     private File rdfSourceDir;
@@ -306,14 +304,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 	private void generateJsonSchema() {
 
-		if (jsonSchemaDir != null) {
+		if (jsonSchema != null) {
 
 			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SmartJsonSchemaTypeMapper(owlReasoner);
-			JsonSchemaNamer jsonSchemaNamer = new SimpleJsonSchemaNamer("/jsonschema", mediaTypeNamer);
+			JsonSchemaNamer jsonSchemaNamer = jsonSchema.namer(nsManager, shapeManager);
 			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
-			ShapeToJsonSchema jsonSchema = new ShapeToJsonSchema(jsonSchemaGenerator);
-			jsonSchema.setListener(new ShapeToJsonSchemaLinker(owlGraph));
-			jsonSchema.generateAll(shapeManager.listShapes(), jsonSchemaDir);
+			ShapeToJsonSchema generator = new ShapeToJsonSchema(jsonSchemaGenerator);
+			generator.setListener(new ShapeToJsonSchemaLinker(owlGraph));
+			generator.generateAll(shapeManager.listShapes(), jsonSchema.getJsonSchemaDir());
 		}
 		
 	}
