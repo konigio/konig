@@ -11,17 +11,13 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import io.konig.core.ContextManager;
 import io.konig.core.GraphBuilder;
 import io.konig.core.NamespaceManager;
-import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
-import io.konig.schemagen.avro.AvroNamer;
-import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.SuffixContextNamer;
 
@@ -34,6 +30,7 @@ public class ShapeToJsonldContextTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", "http://schema.org/");
 		nsManager.add("institution", "http://www.konig.io/institution/");
+		nsManager.add("shapes", "http://www.konig.io/shapes/v1/schema/");
 		
 		URI addressShapeId = uri("http://www.konig.io/shapes/v1/schema/Address");
 		URI shapeId = uri("http://www.konig.io/shapes/v1/schema/Person");
@@ -81,11 +78,10 @@ public class ShapeToJsonldContextTest {
 		ShapeLoader loader = new ShapeLoader(contextManager, shapeManager);
 		loader.load(graph);
 		
-		SimpleShapeMediaTypeNamer mediaTypeNamer = new SimpleShapeMediaTypeNamer();
 		
 		File baseDir = new File("target/generated/contexts");
 
-		ShapeToJsonldContext generator = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, mediaTypeNamer, graph);
+		ShapeToJsonldContext generator = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, graph);
 		generator.generateAll(baseDir);
 		
 		

@@ -10,7 +10,7 @@ The generator can produce the following kinds of output:
 * [Avro Schema](https://avro.apache.org/docs/1.8.0/spec.html)
 * [JSON-LD Contexts](https://www.w3.org/TR/json-ld/)
 * [Google BigQuery Table Definition](https://cloud.google.com/bigquery/docs/reference/v2/tables)
-* [PlantUML Models](http://plantuml.com/)
+* [plantUML Models](http://plantUML.com/)
 * Java POJOs
 * Java Data Access Objects
 
@@ -45,21 +45,25 @@ To use the schema generator, add a maven plugin to your project as shown below.
         <artifactId>konig-schemagen-maven-plugin</artifactId>
         <version>2.0.0-8</version>
         <configuration>
-          <workbookProcessor>
+          <workbook>
             <workbookFile>${basedir}/src/data-model.xlsx</workbookFile>
             <owlOutDir>${basedir}/target/generated/rdf/owl</owlOutDir>
             <shapesOutDir>${basedir}/target/generated/rdf/shapes</shapesOutDir>
             <inferRdfPropertyDefinitions>true</inferRdfPropertyDefinitions>
-          </workbookProcessor>
+          </workbook>
           <rdfSourceDir>${basedir}/target/generated/rdf</rdfSourceDir>
-          <javaCodeGeneratorConfig>
+          <jsonld>
+            <jsonldDir>${basedir}/target/generated/src/main/jsonld</jsonldDir>
+            <uriTemplate>http://example.com/jsonld/{shapeLocalName}</uriTemplate>
+          </jsonld>
+          <javaCodeGenerator>
             <javaDir>${basedir}/target/generated/java</javaDir>
             <packageRoot>com.example</packageRoot>
             <generateCanonicalJsonReaders>true</generateCanonicalJsonReaders>
             <googleDatastoreDaoPackage>com.example.gae.datastore</googleDatastoreDaoPackage>
-          </javaCodeGeneratorConfig>
-          <plantumlConfig>
-            <classDiagramFile>${basedir}/target/generated/docs/classDiagram.plantuml</classDiagramFile>
+          </javaCodeGenerator>
+          <plantUML>
+            <classDiagramFile>${basedir}/target/generated/docs/classDiagram.plantUML</classDiagramFile>
             <excludeClass>
               <param>http://example.com/ns/SomeClass</param>
               <param>http://example.com/ns/AnotherClass</param>
@@ -72,17 +76,15 @@ To use the schema generator, add a maven plugin to your project as shown below.
             <showEnumerationClasses>true</showEnumerationClasses>
             <showOwlThing>true</showOwlThing>
             <showSubClassOf>true</showSubClassOf>
-          </plantumlConfig>
-          <googleCloudPlatformConfig>
+          </plantUML>
+          <googleCloudPlatform>
             <gcpDir>${basedir}/target/generated/gcp</gcpDir>
             <bigQueryDatasetId>mydataset</bigQueryDatasetId>
             <enumShapeDir>${basedir}/target/generated/rdf/shapes</enumShapeDir>
             <enumShapeNameTemplate>http://example.com/shapes/Bq{targetClassLocalName}Shape</enumShapeNameTemplate>
-          </googleCloudPlatformConfig>
+          </googleCloudPlatform>
           <avroDir>${basedir}/target/generated/src/main/avro</avroDir>
           <jsonSchemaDir>${basedir}/target/generated/src/main/json-schema</jsonSchemaDir>
-          <jsonldDir>${basedir}/target/generated/src/main/jsonld</jsonldDir>
-
         </configuration>
         <executions>
           <execution>
@@ -114,31 +116,34 @@ To run the generator, simply invoke the following command in your project's base
 
 | Parameter          | Description                                                                                                    |
 |--------------------|----------------------------------------------------------------------------------------------------------------|
-| workbookProcessor  | A container for the parameters that control the generation of data model artifacts from a spreadsheet          |
-| workbookProcessor/workbookFile | A Microsoft Excel workbook (*.xlsx) containing a description of the data model                     |
-| workbookProcessor/owlOutDir | The location where OWL ontologies from the `workbookFile` will be stored                              |
-| workbookProcessor/shapesOutDir | The output directory into which shapes generated from the `workbookFile` will be stored            |
-| workbookProcessor/inferRdfPropertyDefinitions | A flag that specifies whether to infer RDF Property definitions from predicates described by SHACL Property Constraints |
+| workbook  | A container for the parameters that control the generation of data model artifacts from a spreadsheet          |
+| workbook/workbookFile | A Microsoft Excel workbook (*.xlsx) containing a description of the data model                     |
+| workbook/owlOutDir | The location where OWL ontologies from the `workbookFile` will be stored                              |
+| workbook/shapesOutDir | The output directory into which shapes generated from the `workbookFile` will be stored            |
+| workbook/inferRdfPropertyDefinitions | A flag that specifies whether to infer RDF Property definitions from predicates described by SHACL Property Constraints |
 | rdfSourceDir       | The directory that contains the source SHACL and OWL files from which other artifacts will be generated        |
-| javaCodeGeneratorConfig | A container for parameters that control Java code generation                                              |
-| javaCodeGeneratorConfig/javaDir | The output directory for generated Java code                                                      |
-| javaCodeGeneratorConfig/packageRoot | The default root package for generated Java code                                              |
-| javaCodeGeneratorConfig/googleDatastoreDaoPackage | The root package for generated data-access-objects for Google Datastore         |
-| javaCodeGeneratorConfig/generateCanonicalJsonReaders | A boolean flag that specifies whether canonical JSON readers should be generated |
-| plantumlConfig     | A container for the parameters that control the generation of PlantUML diagrams                                |
-| plantumlConfig/classDiagramFile | The location where the generated UML Class diagram should be saved                                |
-| plantumlConfig/excludeClass | A container of names (fully-qualified or CURIE) for OWL classes to be excluded from the diagram.      |
-| plantumlConfig/includeClass | A container of names (fully-qualified or CURIE) for OWL classes to be included in the diagram.        |
-| plantumlConfig/showAssociations | A boolean flag which specifies whether associations between classes should be displayed in the class diagram |
-| plantumlConfig/showEnumerationClasses | A boolean flag which specifies whether sub-classes of schema:Enumeration should be included in the class diagram |
-| googleCloudPlatformConfig | A container for the parameters that control the generation of Google Cloud resources                    |
-| googleCloudPlatformConfig/gcpDir | The output directory for generated Google Cloud Platform resources                               |
-| googleCloudPlatformConfig/bigQueryDatasetId | The default identifier to use for the Dataset to which BigQuery tables belong         |
-| googleCloudPlatformConfig/enumShapeDir | The output directory that holds generated SHACL shapes of BigQuery tables for reference data based on sub-classes of schema:Enumeration |
-| googleCloudPlatformConfig/enumShapeNameTemplate | A template used to generate IRI values for SHACL shapes of BigQuery tables that contain reference data based on sub-classes of schema:Enumeration |
+| jsonldDir          | The output directory that will contain the generated JSON-LD context files                                     |
+| jsonld            | A container for parameters that control the JSON-LD context generator                                     |
+| jsonld/jsonldDir  | The output directory for generated JSON-LD context resources                                              |
+| jsonld/uriTemplate | The URI template used to generate the `@id` for each JSON-LD context associated with a `sh:Shape`. The template may include any of the following variables: <ul><li>`shapeId`</li><li>`shapeLocalName`</li><li>`shapeNamespacePrefix`</li><li>`targetClassId`</li><li>`targetClassLocalName`</li><li>`targetClassNamespacePrefix`</li></ul> The default template is `{shapeId}/context` |
+| javaCodeGenerator | A container for parameters that control Java code generation                                              |
+| javaCodeGenerator/javaDir | The output directory for generated Java code                                                      |
+| javaCodeGenerator/packageRoot | The default root package for generated Java code                                              |
+| javaCodeGenerator/googleDatastoreDaoPackage | The root package for generated data-access-objects for Google Datastore         |
+| javaCodeGenerator/generateCanonicalJsonReaders | A boolean flag that specifies whether canonical JSON readers should be generated |
+| plantUML     | A container for the parameters that control the generation of plantUML diagrams                                |
+| plantUML/classDiagramFile | The location where the generated UML Class diagram should be saved                                |
+| plantUML/excludeClass | A container of names (fully-qualified or CURIE) for OWL classes to be excluded from the diagram.      |
+| plantUML/includeClass | A container of names (fully-qualified or CURIE) for OWL classes to be included in the diagram.        |
+| plantUML/showAssociations | A boolean flag which specifies whether associations between classes should be displayed in the class diagram |
+| plantUML/showEnumerationClasses | A boolean flag which specifies whether sub-classes of schema:Enumeration should be included in the class diagram |
+| googleCloudPlatform | A container for the parameters that control the generation of Google Cloud resources                    |
+| googleCloudPlatform/gcpDir | The output directory for generated Google Cloud Platform resources                               |
+| googleCloudPlatform/bigQueryDatasetId | The default identifier to use for the Dataset to which BigQuery tables belong         |
+| googleCloudPlatform/enumShapeDir | The output directory that holds generated SHACL shapes of BigQuery tables for reference data based on sub-classes of schema:Enumeration |
+| googleCloudPlatform/enumShapeNameTemplate | A template used to generate IRI values for SHACL shapes of BigQuery tables that contain reference data based on sub-classes of schema:Enumeration |
 | avroDir            | The output directory that will contain the generated Avro Schema files                                         |
 | jsonSchemaDir      | The output directory that will contain the generated JSON Schema files                                         |
-| jsonldDir          | The output directory that will contain the generated JSON-LD context files                                     |
 
 
 

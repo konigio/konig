@@ -116,7 +116,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     
     @Parameter
-    private File jsonldDir;
+    private JsonldConfig jsonld;
     
     @Parameter
     private File jsonSchemaDir;
@@ -132,7 +132,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private JavaCodeGeneratorConfig javaCodeGenerator;
     
     @Parameter
-    private WorkbookProcessor workbookProcessor;
+    private WorkbookProcessor workbook;
     
     @Parameter
     private GoogleCloudPlatformConfig googleCloudPlatform;
@@ -296,21 +296,22 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 	private void generateJsonld() throws SchemaGeneratorException, IOException {
 
-		if (jsonldDir != null) {
-			ContextNamer contextNamer = new SuffixContextNamer("/context");
-			ShapeToJsonldContext jsonld = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, mediaTypeNamer, owlGraph);
-			jsonld.generateAll(jsonldDir);
+		if (jsonld != null) {
+			
+			ContextNamer contextNamer = jsonld.contextNamer(nsManager, shapeManager);
+			ShapeToJsonldContext generator = new ShapeToJsonldContext(shapeManager, nsManager, contextNamer, owlGraph);
+			generator.generateAll(jsonld.getJsonldDir());
 		}
 		
 	}
 	private void loadSpreadsheet() throws MojoExecutionException   {
 		 try {
 
-			 if (workbookProcessor != null) {
+			 if (workbook != null) {
 				 
 				 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer(datasetMapper(), nsManager);
-				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(workbookProcessor.isInferRdfPropertyDefinitions());
-				 transformer.transform(workbookProcessor.getWorkbookFile(), workbookProcessor.getOwlOutDir(), workbookProcessor.getShapesOutDir());
+				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
+				 transformer.transform(workbook.getWorkbookFile(), workbook.getOwlOutDir(), workbook.getShapesOutDir());
 			 }
 		 } catch (Throwable oops) {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
