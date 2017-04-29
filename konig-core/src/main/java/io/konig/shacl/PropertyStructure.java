@@ -37,6 +37,7 @@ public class PropertyStructure {
 	private Resource datatype;
 	private Resource valueClass;
 	private Integer maxCount;
+	private Integer minCount;
 	private Set<Resource> domainIncludes;
 	private boolean domainLocked;
 	private boolean domainIncludesLocked;
@@ -111,6 +112,14 @@ public class PropertyStructure {
 		this.valueClass = valueClass;
 	}
 
+	public Integer getMinCount() {
+		return minCount;
+	}
+
+	public void setMinCount(Integer minCount) {
+		this.minCount = minCount;
+	}
+
 	public Integer getMaxCount() {
 		return maxCount;
 	}
@@ -156,6 +165,7 @@ public class PropertyStructure {
 		}
 		p.setValueClass(valueClass);
 		p.setMaxCount(maxCount);
+		p.setMinCount(minCount);
 		
 		return p;
 	}

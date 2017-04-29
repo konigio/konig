@@ -10,11 +10,11 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 
-public class PlantumlConfig {
-	private File classDiagramFile = null;
-	private boolean showAssociations=false;
-	private boolean showSubClassOf = false;
-	private boolean showAttributes = false;
+public class ClassDiagram {
+	private File file = null;
+	private boolean showAssociations=true;
+	private boolean showSubClassOf = true;
+	private boolean showAttributes = true;
 	private boolean showOwlThing = false;
 	private boolean showEnumerationClasses = false;
 	private Set<String> includeClass = null;
@@ -22,7 +22,7 @@ public class PlantumlConfig {
 	private NamespaceManager nsManager;
 	
 	
-	public PlantumlConfig() {
+	public ClassDiagram() {
 	}
 	
 	public NamespaceManager getNamespaceManager() {
@@ -33,12 +33,12 @@ public class PlantumlConfig {
 		this.nsManager = nsManager;
 	}
 
-	public File getClassDiagramFile() {
-		return classDiagramFile;
+	public File getFile() {
+		return file;
 	}
 
-	public void setClassDiagramFile(File classDiagramFile) {
-		this.classDiagramFile = classDiagramFile;
+	public void setFile(File classDiagramFile) {
+		this.file = classDiagramFile;
 	}
 
 	public boolean isShowEnumerationClasses() {

@@ -426,6 +426,7 @@ public class ClassStructure {
 							setDomain(info, targetClass);
 							setDatatype(info, p.getDatatype());
 							setMaxCount(info, p.getMaxCount());
+							setMinCount(info, p.getMinCount());
 							setEquivalentPath(info, p.getCompiledEquivalentPath(pathFactory));
 							setValueClass(info, p.getValueClass());
 							if (p.getShape() != null) {
@@ -441,7 +442,6 @@ public class ClassStructure {
 			}
 			
 		}
-
 
 		private void scanProperties() {
 			List<Vertex> propertyList = reasoner.getGraph().v(RDF.PROPERTY).union(
@@ -619,6 +619,18 @@ public class ClassStructure {
 					p.setMaxCount(value);
 				}
 			}
+		}
+
+
+
+		private void setMinCount(PropertyStructure info, Integer value) {
+			if (value != null) {
+				Integer prior = info.getMinCount();
+				if (prior==null || value<prior) {
+					info.setMinCount(value);
+				}
+			}
+			
 		}
 
 		private PropertyStructure produceProperty(URI predicate) {
