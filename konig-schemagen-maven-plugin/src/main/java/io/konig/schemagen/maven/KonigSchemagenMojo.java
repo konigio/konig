@@ -151,7 +151,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 
     @Parameter
-    private PlantumlConfig plantUML;
+    private ClassDiagram[] plantUML;
 
 	    
 	 private File namespacesFile;
@@ -369,27 +369,31 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 	private void generatePlantUMLDomainModel() throws IOException, PlantumlGeneratorException, MojoExecutionException {
 		if (plantUML != null) {
+			
+			for (ClassDiagram diagram : plantUML) {
+				diagram.setNamespaceManager(nsManager);
+				
+				if (diagram.getFile() == null) {
+					throw new MojoExecutionException("plantUML.file parameter must be defined");
+				}
+				
+				diagram.getFile().getParentFile().mkdirs();
+				
+				PlantumlClassDiagramGenerator generator = new PlantumlClassDiagramGenerator(owlReasoner);
+				diagram.configure(generator);
+				
+				FileWriter writer = new FileWriter(diagram.getFile());
+				try {
+					generator.generateDomainModel(classStructure(), writer);
+				} finally {
+					close(writer);
+				}
+				
+				SourceFileReader reader = new SourceFileReader(diagram.getFile());
+				reader.getGeneratedImages();
+			}
 
-			plantUML.setNamespaceManager(nsManager);
 			
-			if (plantUML.getClassDiagramFile() == null) {
-				throw new MojoExecutionException("plantUML.classDiagramFile parameter must be defined");
-			}
-			
-			plantUML.getClassDiagramFile().getParentFile().mkdirs();
-			
-			PlantumlClassDiagramGenerator generator = new PlantumlClassDiagramGenerator(owlReasoner);
-			plantUML.configure(generator);
-			
-			FileWriter writer = new FileWriter(plantUML.getClassDiagramFile());
-			try {
-				generator.generateDomainModel(classStructure(), writer);
-			} finally {
-				close(writer);
-			}
-			
-			SourceFileReader reader = new SourceFileReader(plantUML.getClassDiagramFile());
-			reader.getGeneratedImages();
 		}
 		
 	}

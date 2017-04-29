@@ -208,6 +208,10 @@ public class PlantumlClassDiagramGenerator {
 							out.print(minCount);
 							out.println("..*]");
 						}
+					} else if (minCount == maxCount) {
+						out.print('[');
+						out.print(minCount);
+						out.println(']');
 					} else {
 						out.print('[');
 						out.print(minCount);
