@@ -150,7 +150,8 @@ public class WorkbookLoader {
 	private static final int SHAPE_FLAG = 0x100;
 	private static final int CONSTRAINT_FLAG = 0x140;
 	
-	
+
+	private static final String USE_DEFAULT_NAME = "useDefaultName";
 	
 	private static final String GCP_DATASET_FORMAT = 
 			"https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{datasetId}";
@@ -346,6 +347,10 @@ public class WorkbookLoader {
 			dataInjector = new DataInjector();
 			dataFormatter = new DataFormatter(true);
 			
+		}
+		
+		private boolean useDefaultName() {
+			return "true".equalsIgnoreCase(settings.getProperty(USE_DEFAULT_NAME, "true"));
 		}
 		
 		private List<SheetInfo> collectSheetInfo() {
@@ -1387,7 +1392,9 @@ public class WorkbookLoader {
 					}
 				}
 			}
-			
+			if (name == null && useDefaultName()) {
+				name = literal(individualId.getLocalName());
+			}
 			edge(individualId, Schema.name, name);
 			edge(individualId, RDFS.COMMENT, comment);
 			edge(individualId, DCTERMS.IDENTIFIER, codeValue);
