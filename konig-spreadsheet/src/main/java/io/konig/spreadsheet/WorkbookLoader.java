@@ -669,8 +669,6 @@ public class WorkbookLoader {
 
 			URI individualId = uriValue(row, individualIdCol);
 			if (individualId != null) {
-				Vertex v = graph.getVertex(individualId);
-				owlReasoner.inferTypeOfSuperClass(v);
 
 				for (PathInfo pathInfo : pathList) {
 					
@@ -1384,7 +1382,6 @@ public class WorkbookLoader {
 			if (prior != null) {
 				logger.warn("Duplicate definition of named individual: {}", individualId.stringValue());
 			}
-			graph.edge(individualId, RDF.TYPE, Schema.Enumeration);
 			if (typeList != null) {
 				for (URI value : typeList) {
 					if (!value.equals(Schema.Enumeration)) {
@@ -1393,6 +1390,8 @@ public class WorkbookLoader {
 						graph.edge(value, RDFS.SUBCLASSOF, Schema.Enumeration);
 					}
 				}
+			} else {
+				graph.edge(individualId, RDF.TYPE, Schema.Enumeration);
 			}
 			if (name == null && useDefaultName()) {
 				name = literal(individualId.getLocalName());

@@ -612,9 +612,35 @@ public class OwlReasoner {
 	}
 	
 	public boolean isEnumerationClass(Resource owlClass) {
-		return graph.v(owlClass).hasValue(RDFS.SUBCLASSOF, Schema.Enumeration).size()>0;
+		return isTypeOf(owlClass, Schema.Enumeration);
 	}
 	
+	/**
+	 * Check whether a given individual is an instance of a given OWL Class.
+	 * @param individual The individual to be checked.
+	 * @param owlClass The target OWL Class.
+	 * @return True if the individual is an instance of the OWL Class, and false otherwise.
+	 */
+	public boolean isTypeOf(Resource individual, Resource owlClass) {
+		Vertex v = graph.getVertex(individual);
+		if (v != null) {
+			List<Vertex> typeList = v.asTraversal().out(RDF.TYPE).toVertexList();
+			for (Vertex type : typeList) {
+				if (type.getId().equals(owlClass)) {
+					return true;
+				}
+			}
+			
+			for (Vertex type : typeList) {
+				Resource typeId = type.getId();
+				if (isSubClassOf(typeId, owlClass)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	public DatatypeRestriction datatypeRestriction(URI datatype) {
 		getDatatypeMap();
 		DatatypeRestriction result = datatypeMap.get(datatype.stringValue());

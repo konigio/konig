@@ -39,9 +39,9 @@ import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.Edge;
 import io.konig.core.Graph;
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 
@@ -119,11 +119,13 @@ public class OntologyExtractor {
 		private List<Vertex> classList = new ArrayList<>();
 		private List<Vertex> propertyList = new ArrayList<>();
 		private List<Vertex> namedIndividualList = new ArrayList<>();
+		private OwlReasoner reasoner;
 		
 		private Worker(Vertex ontology, Graph target) {
 			this.ontology = ontology;
 			this.target = target;
 			source = ontology.getGraph();
+			reasoner = new OwlReasoner(source);
 		}
 		
 		private void run() throws ExtractException {
@@ -196,7 +198,7 @@ public class OntologyExtractor {
 				v.hasProperty(RDF.TYPE, OWL.INVERSEFUNCTIONALPROPERTY) 
 			) {
 				propertyList.add(v);
-			} else if (v.hasProperty(RDF.TYPE, Schema.Enumeration)) {
+			} else if (reasoner.isEnumerationClass(v.getId())) {
 				namedIndividualList.add(v);
 			}
 			
