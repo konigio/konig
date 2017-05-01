@@ -12,8 +12,10 @@ import org.openrdf.rio.RDFHandlerException;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.io.VertexCopier;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -86,22 +88,20 @@ public class WorkbookToTurtleTransformer {
 	private void writeShapes(File shapesOutDir) throws RDFHandlerException, IOException {
 		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesOutDir, nsManager);
 		ShapeManager shapeManager = workbookLoader.getShapeManager();
-		io.konig.shacl.io.ShapeWriter shapeWriter = new io.konig.shacl.io.ShapeWriter();
+		VertexCopier copier = new VertexCopier();
 		for (Shape shape : shapeManager.listShapes()) {
 			Resource shapeId = shape.getId();
 			if (shapeId instanceof URI) {
 				URI shapeURI = (URI) shapeId;
 
+				Vertex shapeVertex = workbookLoader.getGraph().getVertex(shapeURI);
 				Graph graph = new MemoryGraph();
-				shapeWriter.emitShape(shape, graph);
+				copier.deepCopy(shapeVertex, graph);
 				File shapeFile = fileGetter.getFile(shapeURI);
 				RdfUtil.prettyPrintTurtle(nsManager, graph, shapeFile);
 			}
 			
 		}
-
-//		ShapeWriter shapeWriter = new ShapeWriter();
-//		shapeWriter.writeShapes(graph);
 		
 	}
 	
