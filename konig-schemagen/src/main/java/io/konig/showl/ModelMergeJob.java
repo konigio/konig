@@ -368,42 +368,6 @@ public class ModelMergeJob {
 		}
 		
 	}
-
-	public void handleShapeOntologies(Graph shapeOntologies) throws ShowlException {
-
-		try {
-
-			File outFile = ontologyFileGetter.getFile(OntologyWriter.SHAPE_NAMESPACE_FILE);
-			if (outFile.exists()) {
-				reportUpdate(reportWriter, outFile);
-			} else {
-				reportCreate(reportWriter, outFile);
-			}
-			
-			if (reportWriter != null) {
-
-				MemoryGraph original = new MemoryGraph();
-				Set<String> namespaceSet = ontologyExtractor.shapeNamespaces(oldGraph);
-				ontologyExtractor.collectShapeOntologies(oldGraph, namespaceSet, original);
-				
-				
-				Graph delta = maker.createChangeSet(original, shapeOntologies, null);
-				delta.setNamespaceManager(nsManager);
-				
-				PlainTextChangeSetReportWriter worker = new PlainTextChangeSetReportWriter(nsManager);
-				worker.write(delta, reportWriter);
-				
-			}
-			
-			if (writeEnabled) {
-				RdfUtil.prettyPrintTurtle(nsManager, shapeOntologies, outFile);
-			}
-		} catch (IOException | RDFHandlerException e) {
-			throw new ShowlException("Failed to handle shape ontologies", e);
-		}
-		
-
-	}
 	
 
 }

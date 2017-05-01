@@ -7,6 +7,5 @@ import io.konig.core.Graph;
 public interface OntologyHandler {
 	
 	void handleOwlOntology(URI ontologyId, Graph ontologyGraph) throws ShowlException;
-	void handleShapeOntologies(Graph shapeOntologies) throws ShowlException;
 
 }

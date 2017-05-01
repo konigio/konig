@@ -17,7 +17,6 @@ import io.konig.core.io.FileGetter;
 public class OntologyFileGetter implements FileGetter {
 	private File baseDir;
 	private NamespaceManager nsManager;
-	private String shapesOntologyFileName = "shapeNamespaces.ttl";
 	
 	public OntologyFileGetter(File baseDir, NamespaceManager nsManager) {
 		this.baseDir = baseDir;
@@ -26,10 +25,6 @@ public class OntologyFileGetter implements FileGetter {
 
 	@Override
 	public File getFile(URI ontologyId) {
-		
-		if (ontologyId.equals(OntologyWriter.SHAPE_NAMESPACE_FILE)) {
-			return new File (baseDir, shapesOntologyFileName);
-		}
 		
 		Namespace namespace = nsManager.findByName(ontologyId.stringValue());
 		if (namespace == null) {
