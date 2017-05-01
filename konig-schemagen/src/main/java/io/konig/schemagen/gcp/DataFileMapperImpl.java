@@ -30,6 +30,7 @@ public class DataFileMapperImpl implements DataFileMapper {
 			builder.append(datasetId);
 			builder.append('.');
 			builder.append(tableId);
+			builder.append(".jsonl");
 			
 			file = new File(outDir, builder.toString());
 			
