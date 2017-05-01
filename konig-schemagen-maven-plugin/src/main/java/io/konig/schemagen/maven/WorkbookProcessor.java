@@ -6,7 +6,7 @@ public class WorkbookProcessor {
 	private File workbookFile;
 	private File owlDir;
 	private File shapesDir;
-	private boolean inferRdfPropertyDefinitions;
+	private boolean inferRdfPropertyDefinitions=true;
 	
 	public File getWorkbookFile() {
 		return workbookFile;
