@@ -99,41 +99,5 @@ public class OntologyHandlerImpl implements OntologyHandler {
 		
 	}
 
-	@Override
-	public void handleShapeOntologies(Graph shapeOntologies) throws ShowlException {
-
-		try {
-
-			File outFile = fileGetter.getFile(OntologyWriter.SHAPE_NAMESPACE_FILE);
-			if (outFile.exists()) {
-				dataModelManager.reportUpdate(reportWriter, outFile);
-			} else {
-				dataModelManager.reportCreate(reportWriter, outFile);
-			}
-			
-			if (reportWriter != null) {
-
-				MemoryGraph original = new MemoryGraph();
-				Set<String> namespaceSet = extractor.shapeNamespaces(source);
-				extractor.collectShapeOntologies(source, namespaceSet, original);
-				
-				
-				Graph delta = maker.createChangeSet(original, shapeOntologies, null);
-				delta.setNamespaceManager(nsManager);
-				
-				PlainTextChangeSetReportWriter worker = new PlainTextChangeSetReportWriter(nsManager);
-				worker.write(delta, reportWriter);
-				
-			}
-			
-			if (writeFile) {
-				RdfUtil.prettyPrintTurtle(nsManager, shapeOntologies, outFile);
-			}
-		} catch (IOException | RDFHandlerException e) {
-			throw new ShowlException("Failed to handle shape ontologies", e);
-		}
-		
-
-	}
 
 }
