@@ -31,6 +31,7 @@ import org.openrdf.model.datatypes.XMLDatatypeUtil;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.util.Literals;
 import org.openrdf.model.vocabulary.DCTERMS;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandler;
@@ -235,7 +236,7 @@ public class RdfUtil {
 			if (object instanceof Literal) {
 				Literal literal = (Literal) object;
 				URI type = literal.getDatatype();
-				if (type != null) {
+				if (type != null && !XMLSchema.STRING.equals(type)) {
 					copyNamespace(nsManager, type, sink);
 				}
 			}
@@ -264,7 +265,7 @@ public class RdfUtil {
 	}
 	
 	private static void copyNamespace(NamespaceManager source, Value value, NamespaceManager sink) {
-		if (value instanceof URI) {
+		if (value instanceof URI && !RDF.TYPE.equals(value)) {
 			URI uri = (URI) value;
 			String name = uri.getNamespace();
 			Namespace ns = source.findByName(name);
