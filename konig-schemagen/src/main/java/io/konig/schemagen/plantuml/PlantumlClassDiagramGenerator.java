@@ -151,7 +151,7 @@ public class PlantumlClassDiagramGenerator {
 						if (isObjectProperty(p)) {
 
 							URI rangeClass = rangeClass(p);
-							if (rangeClass != null  && !reasoner.isEnumerationClass(rangeClass)) {
+							if (rangeClass != null  && (showEnumerationClasses || !reasoner.isEnumerationClass(rangeClass))) {
 								out.print(domainClass.getLocalName());
 								out.print(" -- ");
 								out.print(rangeClass.getLocalName());

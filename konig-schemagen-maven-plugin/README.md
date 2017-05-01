@@ -68,19 +68,21 @@ To use the schema generator, add a maven plugin to your project as shown below.
             <googleDatastoreDaoPackage>com.example.gae.datastore</googleDatastoreDaoPackage>
           </javaCodeGenerator>
           <plantUML>
-            <classDiagramFile>${basedir}/target/generated/docs/classDiagram.plantUML</classDiagramFile>
-            <excludeClass>
-              <param>http://example.com/ns/SomeClass</param>
-              <param>http://example.com/ns/AnotherClass</param>
-            </excludeClass>
-            <includeClass>
-              <param>http://example.com/ns/WantedClass</param>
-              <param>http://example.com/ns/AnotherWantedClass</param>
-            </includeClass>
-            <showAssociations>true</showAssociations>
-            <showEnumerationClasses>true</showEnumerationClasses>
-            <showOwlThing>true</showOwlThing>
-            <showSubClassOf>true</showSubClassOf>
+            <classDiagram>
+              <file>${basedir}/target/generated/docs/classDiagram.plantUML</file>
+              <excludeClass>
+                <param>http://example.com/ns/SomeClass</param>
+                <param>http://example.com/ns/AnotherClass</param>
+              </excludeClass>
+              <includeClass>
+                <param>http://example.com/ns/WantedClass</param>
+                <param>http://example.com/ns/AnotherWantedClass</param>
+              </includeClass>
+              <showAssociations>true</showAssociations>
+              <showEnumerationClasses>true</showEnumerationClasses>
+              <showOwlThing>true</showOwlThing>
+              <showSubClassOf>true</showSubClassOf>
+            </classDiagram>
           </plantUML>
           <googleCloudPlatform>
             <gcpDir>${basedir}/target/generated/gcp</gcpDir>
@@ -146,11 +148,12 @@ To run the generator, simply invoke the following command in your project's base
 | javaCodeGenerator/googleDatastoreDaoPackage | The root package for generated data-access-objects for Google Datastore         |
 | javaCodeGenerator/generateCanonicalJsonReaders | A boolean flag that specifies whether canonical JSON readers should be generated |
 | plantUML     | A container for the parameters that control the generation of plantUML diagrams                                |
-| plantUML/classDiagramFile | The location where the generated UML Class diagram should be saved                                |
-| plantUML/excludeClass | A container of names (fully-qualified or CURIE) for OWL classes to be excluded from the diagram.      |
-| plantUML/includeClass | A container of names (fully-qualified or CURIE) for OWL classes to be included in the diagram.        |
-| plantUML/showAssociations | A boolean flag which specifies whether associations between classes should be displayed in the class diagram |
-| plantUML/showEnumerationClasses | A boolean flag which specifies whether sub-classes of schema:Enumeration should be included in the class diagram |
+| plantUML/classDiagram | A container for configuration parameters of a UML class diagram                                        |
+| plantUML/classDiagram/file | The location where the generated UML Class diagram should be saved.  The file name should end with the *.plantuml suffix  |
+| plantUML/classDiagram/excludeClass | A container of names (fully-qualified or CURIE) for OWL classes to be excluded from the diagram.      |
+| plantUML/classDiagram/includeClass | A container of names (fully-qualified or CURIE) for OWL classes to be included in the diagram.        |
+| plantUML/classDiagram/showAssociations | A boolean flag which specifies whether associations between classes should be displayed in the class diagram |
+| plantUML/classDiagram/showEnumerationClasses | A boolean flag which specifies whether sub-classes of schema:Enumeration should be included in the class diagram |
 | googleCloudPlatform | A container for the parameters that control the generation of Google Cloud resources                    |
 | googleCloudPlatform/gcpDir | The output directory for generated Google Cloud Platform resources                               |
 | googleCloudPlatform/bigQueryDatasetId | The default identifier to use for the Dataset to which BigQuery tables belong         |
