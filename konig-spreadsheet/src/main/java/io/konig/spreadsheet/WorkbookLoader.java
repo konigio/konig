@@ -173,6 +173,7 @@ public class WorkbookLoader {
 	
 	private NamespaceManager nsManager;
 	private ShapeManager shapeManager;
+	private Graph graph;
 	private ValueFactory vf = new ValueFactoryImpl();
 	private DataFormatter formatter = new DataFormatter(true);
 	private IdMapper datasetMapper;
@@ -222,6 +223,9 @@ public class WorkbookLoader {
 	}
 
 	
+	public Graph getGraph() {
+		return graph;
+	}
 
 	public IdMapper getDatasetMapper() {
 		return datasetMapper;
@@ -253,7 +257,8 @@ public class WorkbookLoader {
 
 
 	public void load(Workbook book, Graph graph) throws SpreadsheetException {
-		Worker worker = new Worker(book, graph);
+		this.graph = graph;
+		Worker worker = new Worker(book);
 		worker.run();
 	}
 	
@@ -263,7 +268,6 @@ public class WorkbookLoader {
 	
 	private class Worker {
 		private Workbook book;
-		private Graph graph;
 		private PathFactory pathFactory;
 		private OwlReasoner owlReasoner;
 		private DataInjector dataInjector;
@@ -330,9 +334,8 @@ public class WorkbookLoader {
 		
 		private URI activityId;
 				
-		public Worker(Workbook book, Graph graph) {
+		public Worker(Workbook book) {
 			this.book = book;
-			this.graph = graph;
 			if (shapeManager == null) {
 				shapeManager = new MemoryShapeManager();
 			}
@@ -707,7 +710,7 @@ public class WorkbookLoader {
 
 		private void buildRollUpShapes() throws SpreadsheetException {
 			ShapeLoader loader = new ShapeLoader(null, shapeManager);
-			loader.load(this.graph);
+			loader.load(graph);
 			
 			Set<String> memory = new HashSet<>();
 			
