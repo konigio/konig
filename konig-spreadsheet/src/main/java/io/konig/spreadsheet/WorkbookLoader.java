@@ -977,6 +977,7 @@ public class WorkbookLoader {
 				if (prior == null) {
 					edge(valueType, RDF.TYPE, SH.Shape);
 					edge(valueType, SH.targetClass, valueClass);
+					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
 			}
 			
@@ -996,6 +997,7 @@ public class WorkbookLoader {
 
 				if (valueClass!=null) {
 					edge(shapeId, SH.targetClass, valueClass);
+					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
 				
 				return;
