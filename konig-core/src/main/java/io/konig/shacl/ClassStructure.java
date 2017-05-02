@@ -119,6 +119,15 @@ public class ClassStructure {
 	 * (3) has an "AND" list of Shapes for all superclasses.
 	 */
 	public Shape getShapeForClass(Resource classId) throws OwlClassNotFoundException {
+		Shape result = shapeForClass(classId);
+		if (result == null) {
+			throw new OwlClassNotFoundException(classId);
+		}
+		return result;
+		
+	}
+	
+	public Shape shapeForClass(Resource classId) {
 		if (classId == null) {
 			throw new IllegalArgumentException("classId cannot be null");
 		}
@@ -126,9 +135,6 @@ public class ClassStructure {
 			classId = OWL.THING;
 		}
 		Shape result = shapeMap.get(classId);
-		if (result == null) {
-			throw new OwlClassNotFoundException(classId);
-		}
 		return result;
 	}
 	

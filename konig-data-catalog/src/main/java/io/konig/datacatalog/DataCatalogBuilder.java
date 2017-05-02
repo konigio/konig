@@ -241,30 +241,5 @@ public class DataCatalogBuilder {
 	}
 	
 
-	public String relativePath(PageRequest request, URI a, URI b) throws DataCatalogException {
-		if (a==null || b==null) {
-			return null;
-		}
-		StringBuilder builder = new StringBuilder();
-		Namespace na = request.findNamespaceByName(a.getNamespace());
-		Namespace nb = request.findNamespaceByName(b.getNamespace());
-		String aNamespace = na.getName();
-		String bNamespace = nb.getName();
-		
-		if (!aNamespace.equals(bNamespace)) {
-			
-			if (!aNamespace.equals(CATALOG_BASE_URI)) {
-				builder.append("../");
-			} 
-			if (!bNamespace.equals(CATALOG_BASE_URI)) {
-				builder.append(nb.getPrefix());
-				builder.append('/');
-			}
-		} 
-		builder.append(b.getLocalName());
-		builder.append(".html");
-		
-		return builder.toString();
-	}
 
 }
