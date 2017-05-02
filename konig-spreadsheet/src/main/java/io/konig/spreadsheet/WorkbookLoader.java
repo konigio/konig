@@ -114,6 +114,7 @@ public class WorkbookLoader {
 	private static final String INDIVIDUAL_CODE_VALUE = "Code Value";
 	
 	private static final String SHAPE_ID = "Shape Id";
+	private static final String TARGET_CLASS = "Target Class";
 	private static final String SCOPE_CLASS = "Scope Class";
 	private static final String MEDIA_TYPE = "Media Type";
 	private static final String AGGREGATION_OF = "Aggregation Of";
@@ -309,7 +310,7 @@ public class WorkbookLoader {
 		
 		private int shapeIdCol = UNDEFINED;
 		private int shapeCommentCol = UNDEFINED;
-		private int shapeScopeCol = UNDEFINED;
+		private int shapeTargetClassCol = UNDEFINED;
 		private int shapeAggregationOfCol = UNDEFINED;
 		private int shapeRollUpByCol = UNDEFINED;
 		private int shapeMediaTypeCol = UNDEFINED;
@@ -1233,7 +1234,7 @@ public class WorkbookLoader {
 			
 			URI shapeId = uriValue(row, shapeIdCol);
 			Literal shapeComment = stringLiteral(row, shapeCommentCol);
-			URI targetClass = uriValue(row, shapeScopeCol);
+			URI targetClass = uriValue(row, shapeTargetClassCol);
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
 			
@@ -1325,7 +1326,7 @@ public class WorkbookLoader {
 		}
 
 		private void readShapeHeader(Sheet sheet) {
-			shapeIdCol = shapeCommentCol = shapeScopeCol = shapeAggregationOfCol
+			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol
 					= shapeRollUpByCol = shapeMediaTypeCol = shapeBigQueryTableCol 
 					= shapeDatasourceCol = shapeIriTemplateCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
@@ -1344,7 +1345,8 @@ public class WorkbookLoader {
 					switch (text) {
 					case SHAPE_ID :  shapeIdCol = i; break;
 					case COMMENT : shapeCommentCol = i; break;
-					case SCOPE_CLASS : shapeScopeCol = i; break;
+					case SCOPE_CLASS : shapeTargetClassCol = i; break;
+					case TARGET_CLASS : shapeTargetClassCol = i; break;
 					case AGGREGATION_OF : shapeAggregationOfCol = i; break;
 					case ROLL_UP_BY : shapeRollUpByCol = i; break;
 					case MEDIA_TYPE : shapeMediaTypeCol = i; break;
