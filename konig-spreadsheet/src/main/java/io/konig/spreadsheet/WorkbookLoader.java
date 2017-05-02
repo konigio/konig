@@ -198,6 +198,8 @@ public class WorkbookLoader {
 		nsManager.add("xsd", XMLSchema.NAMESPACE);
 		nsManager.add("schema", Schema.NAMESPACE);
 		nsManager.add("dc", DC.NAMESPACE);
+		nsManager.add("prov", PROV.NAMESPACE);
+		nsManager.add("as", AS.NAMESPACE);
 		
 		this.nsManager = nsManager;
 
