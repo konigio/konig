@@ -8,6 +8,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.OWL;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.rio.RDFHandlerException;
 
 import io.konig.core.Graph;
@@ -16,6 +18,7 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.VertexCopier;
+import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -89,6 +92,8 @@ public class WorkbookToTurtleTransformer {
 		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesOutDir, nsManager);
 		ShapeManager shapeManager = workbookLoader.getShapeManager();
 		VertexCopier copier = new VertexCopier();
+		copier.excludeProperty(SH.shape, SH.predicate, SH.targetClass, SH.valueClass);
+		copier.excludeClass(OWL.CLASS, OWL.DATATYPEPROPERTY, OWL.OBJECTPROPERTY, OWL.FUNCTIONALPROPERTY, RDF.PROPERTY);
 		for (Shape shape : shapeManager.listShapes()) {
 			Resource shapeId = shape.getId();
 			if (shapeId instanceof URI) {
