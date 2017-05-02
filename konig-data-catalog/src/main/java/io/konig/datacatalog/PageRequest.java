@@ -147,10 +147,67 @@ public class PageRequest {
 	}
 	
 	public String relativePath(URI a, URI b) throws DataCatalogException {
-		return builder.relativePath(this, a, b);
+		if (a==null || b==null) {
+			return null;
+		}
+		StringBuilder builder = new StringBuilder();
+		Namespace na = findNamespaceByName(a.getNamespace());
+		Namespace nb = findNamespaceByName(b.getNamespace());
+		String aFolder = folderName(a);
+		String bFolder = folderName(b);
+		String aNamespace = na.getName();
+		String bNamespace = nb.getName();
+		
+		if (!aNamespace.equals(bNamespace)) {
+			
+			if (!aNamespace.equals(DataCatalogBuilder.CATALOG_BASE_URI)) {
+				builder.append("../");
+				if (aFolder != null) {
+					builder.append("../");
+				}
+			} 
+			if (!bNamespace.equals(DataCatalogBuilder.CATALOG_BASE_URI)) {
+				builder.append(nb.getPrefix());
+				builder.append('/');
+				if (bFolder != null) {
+					builder.append(bFolder);
+					builder.append('/');
+				}
+			}
+		} else {
+			if (!equals(aFolder, bFolder)) {
+				if (aFolder != null) {
+					builder.append("../");
+				}
+				if (bFolder != null) {
+					builder.append(bFolder);
+					builder.append('/');
+				}
+			}
+		}
+		builder.append(b.getLocalName());
+		builder.append(".html");
+		
+		return builder.toString();
 	}
 	
+	private boolean equals(String a, String b) {
+		
+		return (a==null && b==null) ||
+			(a!=null && a.equals(b));
+	}
+
+	public String folderName(URI entity) {
+		if (classStructure.shapeForClass(entity) != null) {
+			return "classes";
+		}
+		if (classStructure.getProperty(entity) != null) {
+			return "properties";
+		}
+		return null;
+	}
+
 	public String relativePath(URI target) throws DataCatalogException {
-		return builder.relativePath(this, pageId, target);
+		return relativePath(pageId, target);
 	}
 }

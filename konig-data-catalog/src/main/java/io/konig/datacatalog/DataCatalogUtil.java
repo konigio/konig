@@ -138,7 +138,7 @@ public class DataCatalogUtil {
 		Namespace ns = request.findNamespaceByName(classId.getNamespace());
 		StringBuilder builder = new StringBuilder();
 		builder.append(ns.getPrefix());
-		builder.append('/');
+		builder.append("/classes/");
 		builder.append(classId.getLocalName());
 		builder.append(".html");
 		return builder.toString();

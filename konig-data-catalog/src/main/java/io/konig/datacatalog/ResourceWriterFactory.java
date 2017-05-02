@@ -21,9 +21,15 @@ public class ResourceWriterFactory implements WriterFactory {
 		StringBuilder fileName = new StringBuilder();
 		fileName.append(resourceId.getLocalName());
 		fileName.append(".html");
-		File shapeDir = new File(baseDir, ns.getPrefix());
-		shapeDir.mkdirs();
-		File file = new File(shapeDir, fileName.toString());
+		File folder = new File(baseDir, ns.getPrefix());
+		String folderName = request.folderName(resourceId);
+		if (folderName != null) {
+			folder = new File(folder, folderName);
+		}
+		
+		folder.mkdirs();
+		
+		File file = new File(folder, fileName.toString());
 		FileWriter fileWriter = new FileWriter(file);
 		return new PrintWriter(fileWriter);
 	}
