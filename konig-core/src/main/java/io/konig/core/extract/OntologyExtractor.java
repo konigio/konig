@@ -198,7 +198,7 @@ public class OntologyExtractor {
 				v.hasProperty(RDF.TYPE, OWL.INVERSEFUNCTIONALPROPERTY) 
 			) {
 				propertyList.add(v);
-			} else if (reasoner.isEnumerationClass(v.getId())) {
+			} else if (reasoner.isEnumerationMember(v.getId())) {
 				namedIndividualList.add(v);
 			}
 			

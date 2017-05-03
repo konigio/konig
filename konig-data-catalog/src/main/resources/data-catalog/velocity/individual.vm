@@ -1,0 +1,15 @@
+<html>
+<head>
+<title>$IndividualName</title>
+<link rel="stylesheet" type="text/css" href="//schema.org/docs/schemaorg.css">
+</head>
+<body>
+#parse( "data-catalog/velocity/header.vm" )
+<div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$IndividualId">
+	<h1 property="rdfs:label" class="page-title">$IndividualName</h1>
+	<div><span class="canonicalUrl">Canonical URL: <a href="$IndividualId">$IndividualId</a></span></div>
+	<div><span class="canonicalUrl">Instance of: <a href="$EnumerationClass.Href">$EnumerationClass.Name</a></span></div>
+	<div property="rdfs:comment">$IndividualDescription</div>
+</div>
+</body>
+</html>

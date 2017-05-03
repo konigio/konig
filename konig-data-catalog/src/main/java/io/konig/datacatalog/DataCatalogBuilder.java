@@ -183,7 +183,7 @@ public class DataCatalogBuilder {
 
 	private void buildClassPages(PageRequest request) throws IOException, DataCatalogException {
 		
-		ClassRequest classRequest = new ClassRequest(request);
+		ClassRequest classRequest = new ClassRequest(request, resourceWriterFactory);
 		List<Vertex> classList = request.getGraph().v(OWL.CLASS).in(RDF.TYPE).toVertexList();
 		ClassPage page = new ClassPage();
 		for (Vertex v : classList) {

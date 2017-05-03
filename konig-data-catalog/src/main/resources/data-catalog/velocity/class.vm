@@ -31,6 +31,15 @@
 #end		
 		</tbody>
 	</table>
+#if($Members) 
+	<br>
+	<b>Enumeration members</b>
+	<ul>
+#foreach( $member in $Members )
+		<li><a href="$member.Href">$member.Name</a></li>
+#end	
+	</ul>
+#end	
 #if($ShapeList) 
 	<table class="definition-table">
 		<thead>

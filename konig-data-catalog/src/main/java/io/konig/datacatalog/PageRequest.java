@@ -204,6 +204,10 @@ public class PageRequest {
 		if (classStructure.getProperty(entity) != null) {
 			return "properties";
 		}
+		OwlReasoner reasoner = classStructure.getReasoner();
+		if (reasoner.isEnumerationMember(entity)) {
+			return "individuals";
+		}
 		return null;
 	}
 
