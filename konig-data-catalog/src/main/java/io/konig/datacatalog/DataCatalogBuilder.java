@@ -96,12 +96,11 @@ public class DataCatalogBuilder {
 
 	private void buildPropertyPages(PageRequest baseRequest) throws IOException, DataCatalogException {
 		
-		PropertyRequest request = new PropertyRequest(baseRequest);
 		
 		PropertyPage page = new PropertyPage();
 		
-		for (PropertyStructure p : request.getClassStructure().listProperties()) {
-			request.setPropertyStructure(p);
+		for (PropertyStructure p : baseRequest.getClassStructure().listProperties()) {
+			PropertyRequest request = new PropertyRequest(baseRequest, p);
 			PrintWriter writer = resourceWriterFactory.createWriter(request, p.getPredicate());
 			PageResponse response = new PageResponseImpl(writer);
 			request.setContext(new VelocityContext());
@@ -183,13 +182,12 @@ public class DataCatalogBuilder {
 
 	private void buildClassPages(PageRequest request) throws IOException, DataCatalogException {
 		
-		ClassRequest classRequest = new ClassRequest(request, resourceWriterFactory);
 		List<Vertex> classList = request.getGraph().v(OWL.CLASS).in(RDF.TYPE).toVertexList();
 		ClassPage page = new ClassPage();
 		for (Vertex v : classList) {
 			if (v.getId() instanceof URI) {
 				URI classId = (URI) v.getId();
-				classRequest.setOwlClass(v);
+				ClassRequest classRequest = new ClassRequest(request, v, resourceWriterFactory);
 				PrintWriter writer = resourceWriterFactory.createWriter(classRequest, classId);
 				PageResponse response = new PageResponseImpl(writer);
 				page.render(classRequest, response);
@@ -221,15 +219,14 @@ public class DataCatalogBuilder {
 
 	private void buildShapePages(PageRequest baseRequest, File exampleDir) throws IOException, DataCatalogException {
 
-		ShapeRequest request = new ShapeRequest(baseRequest, exampleDir);
-		ShapeManager shapeManager = request.getShapeManager();
+		ShapeManager shapeManager = baseRequest.getShapeManager();
 		ShapePage shapePage = new ShapePage();
 		
 		for (Shape shape : shapeManager.listShapes()) {
 			Resource shapeId = shape.getId();
 			if (shapeId instanceof URI) {
 				URI shapeURI = (URI) shapeId;
-				request.setShape(shape);
+				ShapeRequest request = new ShapeRequest(baseRequest, shape, exampleDir);
 				PrintWriter out = resourceWriterFactory.createWriter(request, shapeURI);
 				PageResponse response = new PageResponseImpl(out);
 				

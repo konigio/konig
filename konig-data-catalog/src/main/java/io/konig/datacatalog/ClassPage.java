@@ -73,8 +73,6 @@ public class ClassPage {
 			OwlReasoner reasoner = request.getClassStructure().getReasoner();
 			if (reasoner.isEnumerationClass(owlClass.getId())) {
 				IndividualPage individualPage = new IndividualPage();
-				IndividualRequest individual = new IndividualRequest(request);
-				individual.setEnumerationClass(classId);
 				Set<URI> set = owlClass.asTraversal().in(RDF.TYPE).toUriSet();
 				if (!set.isEmpty()) {
 					List<Link> memberList = new ArrayList<>();
@@ -84,9 +82,9 @@ public class ClassPage {
 						String href = request.relativePath(classId, memberId);
 						Link link = new Link(memberId.getLocalName(), href);
 						memberList.add(link);
-						
+
 						Vertex member = reasoner.getGraph().getVertex(memberId);
-						individual.setIndividual(member);
+						IndividualRequest individual = new IndividualRequest(request, member, classId);
 						Writer writer = request.getWriterFactory().createWriter(individual, memberId);
 						PageResponse individualResponse = new PageResponseImpl(writer);
 						individualPage.render(individual, individualResponse);
