@@ -7,9 +7,11 @@ import io.konig.shacl.ClassStructure;
 public class ClassRequest extends PageRequest {
 
 	private Vertex owlClass;
+	private ResourceWriterFactory writerFactory;
 
-	public ClassRequest(PageRequest other) {
+	public ClassRequest(PageRequest other, ResourceWriterFactory writerFactory) {
 		super(other);
+		this.writerFactory = writerFactory;
 	}
 
 	public Vertex getOwlClass() {
@@ -18,6 +20,10 @@ public class ClassRequest extends PageRequest {
 
 	public void setOwlClass(Vertex owlClass) {
 		this.owlClass = owlClass;
+	}
+
+	public ResourceWriterFactory getWriterFactory() {
+		return writerFactory;
 	}
 	
 }

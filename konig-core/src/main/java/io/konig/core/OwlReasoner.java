@@ -612,7 +612,7 @@ public class OwlReasoner {
 	}
 	
 	public boolean isEnumerationClass(Resource owlClass) {
-		return isTypeOf(owlClass, Schema.Enumeration);
+		return isSubClassOf(owlClass, Schema.Enumeration);
 	}
 	
 	/**
@@ -769,5 +769,9 @@ public class OwlReasoner {
 		}
 		
 		return result;
+	}
+
+	public boolean isEnumerationMember(Resource id) {
+		return isTypeOf(id, Schema.Enumeration);
 	}
 }

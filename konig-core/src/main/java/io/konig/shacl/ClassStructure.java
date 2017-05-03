@@ -61,6 +61,7 @@ public class ClassStructure {
 	private Shape nullShape = new Shape(Konig.NullShape);
 	private ValueFormat iriTemplate;
 	private boolean failOnDatatypeConflict = false;
+	private OwlReasoner reasoner;
 	
 	public ClassStructure() {
 	}
@@ -69,6 +70,10 @@ public class ClassStructure {
 		this.iriTemplate = iriTemplate;
 	}
 	
+	public OwlReasoner getReasoner() {
+		return reasoner;
+	}
+
 	public ClassStructure(ValueFormat iriTemplate, ShapeManager shapeManager, OwlReasoner reasoner) {
 		this.iriTemplate = iriTemplate;
 		init(shapeManager, reasoner);
@@ -306,12 +311,11 @@ public class ClassStructure {
 	
 	private class Builder {
 		private ShapeManager shapeManager;
-		private OwlReasoner reasoner;
 		private PathFactory pathFactory;
 		
 		public Builder(ShapeManager shapeManager, OwlReasoner reasoner) {
 			this.shapeManager = shapeManager;
-			this.reasoner = reasoner;
+			ClassStructure.this.reasoner = reasoner;
 			Graph graph = reasoner.getGraph();
 			pathFactory = new PathFactory(graph.getNamespaceManager(), graph);
 		}

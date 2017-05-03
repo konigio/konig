@@ -2,8 +2,10 @@ package io.konig.datacatalog;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -12,6 +14,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.RDF;
 
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.PropertyConstraint;
@@ -39,6 +42,7 @@ public class ClassPage {
 		context.put("ClassName", classId.getLocalName());
 		context.put("ClassId", classId.stringValue());
 		setShapes(request, classId);
+		defineEnumerationMembers(request);
 		
 		List<PropertyInfo> propertyList = new ArrayList<>();
 		context.put("PropertyList", propertyList);
@@ -56,6 +60,43 @@ public class ClassPage {
 		PrintWriter out = response.getWriter();
 		template.merge(context, out);
 		out.flush();
+	}
+
+
+
+	private void defineEnumerationMembers(ClassRequest request) throws DataCatalogException, IOException {
+		
+		Vertex owlClass = request.getOwlClass();
+		Resource id = owlClass.getId();
+		if (id instanceof URI) {
+			URI classId = (URI) id;
+			OwlReasoner reasoner = request.getClassStructure().getReasoner();
+			if (reasoner.isEnumerationClass(owlClass.getId())) {
+				IndividualPage individualPage = new IndividualPage();
+				IndividualRequest individual = new IndividualRequest(request);
+				individual.setEnumerationClass(classId);
+				Set<URI> set = owlClass.asTraversal().in(RDF.TYPE).toUriSet();
+				if (!set.isEmpty()) {
+					List<Link> memberList = new ArrayList<>();
+					request.getContext().put("Members", memberList);
+					
+					for (URI memberId : set) {
+						String href = request.relativePath(classId, memberId);
+						Link link = new Link(memberId.getLocalName(), href);
+						memberList.add(link);
+						
+						Vertex member = reasoner.getGraph().getVertex(memberId);
+						individual.setIndividual(member);
+						Writer writer = request.getWriterFactory().createWriter(individual, memberId);
+						PageResponse individualResponse = new PageResponseImpl(writer);
+						individualPage.render(individual, individualResponse);
+					}
+				}
+				
+				
+			}
+		}
+		
 	}
 
 

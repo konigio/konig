@@ -51,6 +51,9 @@ schema:givenName a owl:DatatypeProperty ;
 	rdfs:range xsd:string
 	.	
 	
+schema:GenderType a owl:Class ;
+	rdfs:subClassOf schema:Enumeration .
+	
 schema:Male a schema:GenderType, schema:Enumeration	;
 	rdfs:label "Male" ;
 	rdfs:comment "The male gender"
