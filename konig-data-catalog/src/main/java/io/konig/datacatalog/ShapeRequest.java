@@ -9,17 +9,14 @@ public class ShapeRequest extends PageRequest {
 	private Shape shape;
 	private File exampleDir;
 	
-	public ShapeRequest(PageRequest base, File exampleDir) {
+	public ShapeRequest(PageRequest base, Shape shape, File exampleDir) {
 		super(base);
+		this.shape = shape;
 		this.exampleDir = exampleDir;
 	}
 
 	public Shape getShape() {
 		return shape;
-	}
-
-	public void setShape(Shape shape) {
-		this.shape = shape;
 	}
 
 	public File getExamplesDir() {
