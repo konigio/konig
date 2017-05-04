@@ -358,6 +358,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			 if (workbook != null) {
 				 
 				 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer(datasetMapper(), nsManager);
+				 transformer.getWorkbookLoader().setFailOnWarnings(workbook.isFailOnWarnings());
 				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
 				 transformer.transform(workbook.getWorkbookFile(), workbook.owlDir(defaults), workbook.shapesDir(defaults));
 			 }
