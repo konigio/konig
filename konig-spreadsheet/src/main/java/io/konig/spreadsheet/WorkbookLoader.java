@@ -184,6 +184,7 @@ public class WorkbookLoader {
 	private DataSourceGenerator dataSourceGenerator;
 	
 	private boolean inferRdfPropertyDefinitions;
+	private boolean failOnWarnings = true;
 	
 	public WorkbookLoader(NamespaceManager nsManager) {
 		
@@ -221,6 +222,14 @@ public class WorkbookLoader {
 		dataSourceGenerator.setTemplateDir(templateDir);
 	}
 	
+
+	public boolean isFailOnWarnings() {
+		return failOnWarnings;
+	}
+
+	public void setFailOnWarnings(boolean failOnWarnings) {
+		this.failOnWarnings = failOnWarnings;
+	}
 
 	public NamespaceManager getNamespaceManager() {
 		return nsManager;
@@ -282,6 +291,7 @@ public class WorkbookLoader {
 		private List<ShapeTemplate> shapeTemplateList = new ArrayList<>();
 		private List<ImportInfo> importList = new ArrayList<>();
 		private Map<URI,List<Function>> dataSourceMap = new HashMap<>();
+		private List<String> warningList = new ArrayList<>();
 		
 		private int ontologyNameCol=UNDEFINED;
 		private int ontologyCommentCol=UNDEFINED;
@@ -386,9 +396,23 @@ public class WorkbookLoader {
 			visitShapes();
 			processImportStatements();
 			declareDefaultOntologies();
+			handleWarnings();
 		}
 
 
+
+		private void handleWarnings() throws WarningSpreadsheetException {
+			if (!warningList.isEmpty()) {
+				if (failOnWarnings) {
+					throw new WarningSpreadsheetException(warningList);
+				} else {
+					for (String text : warningList) {
+						logger.warn(text);
+					}
+				}
+			} 
+			
+		}
 
 		private void processDataSources() throws SpreadsheetException {
 			
@@ -1742,7 +1766,19 @@ public class WorkbookLoader {
 			}
 			StringBuilder builder = new StringBuilder();
 			builder.append(ns.getName());
-			builder.append(text.substring(colon+1));
+			
+			String localName = text.substring(colon+1);
+			
+			builder.append(localName);
+
+			
+			if (localName.indexOf('/')>=0) {
+				StringBuilder err = new StringBuilder();
+				err.append("The localname of a CURIE should not contain a slash, but found '");
+				err.append(text);
+				err.append("'");
+				warningList.add(err.toString());
+			}
 			
 			
 			return vf.createURI(builder.toString());

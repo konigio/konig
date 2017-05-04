@@ -179,7 +179,7 @@ public class WorkbookLoaderTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
+		loader.setFailOnWarnings(false);
 		loader.load(book, graph);
 
 		URI placeId = uri("http://example.com/place/us");
