@@ -12,7 +12,6 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
-import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.NamespaceImpl;
@@ -56,7 +55,6 @@ public class DataCatalogBuilder {
 	public void build(DataCatalogBuildRequest buildRequest) throws DataCatalogException {
 
 		Graph graph = buildRequest.getGraph();
-		URI ontologyId = buildRequest.getOntologyId();
 		ShapeManager shapeManager = buildRequest.getShapeManager();
 		File exampleDir = buildRequest.getExampleDir();
 		
@@ -70,11 +68,14 @@ public class DataCatalogBuilder {
 		properties.put("class.resource.loader.class", ClasspathResourceLoader.class.getName());
 		
 		VelocityEngine engine = new VelocityEngine(properties);
+		buildRequest.setCatalogBuilder(this);
+		buildRequest.setEngine(engine);
 		OwlReasoner reasoner = new OwlReasoner(graph);
 		SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
 		ClassStructure classStructure = new ClassStructure(iriTemplate, shapeManager, reasoner);
+		buildRequest.setClassStructure(classStructure);
 		
-		PageRequest request = new PageRequest(buildRequest, this, engine, classStructure);
+		PageRequest request = new PageRequest(buildRequest);
 		try {
 			buildOntologyPages(request);
 			buildShapePages(request, exampleDir);

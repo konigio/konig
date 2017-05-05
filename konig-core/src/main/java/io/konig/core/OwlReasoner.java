@@ -774,4 +774,19 @@ public class OwlReasoner {
 	public boolean isEnumerationMember(Resource id) {
 		return isTypeOf(id, Schema.Enumeration);
 	}
+
+	public boolean isProperty(URI target) {
+		return 
+			isTypeOf(target, RDF.PROPERTY) ||
+			isTypeOf(target, OWL.FUNCTIONALPROPERTY) ||
+			isTypeOf(target, OWL.DATATYPEPROPERTY) ||
+			isTypeOf(target, OWL.OBJECTPROPERTY) || 
+			isTypeOf(target, OWL.ANNOTATIONPROPERTY) ||
+			isTypeOf(target, OWL.DEPRECATEDPROPERTY) ||
+			isTypeOf(target, OWL.EQUIVALENTPROPERTY) ||
+			isTypeOf(target, OWL.INVERSEFUNCTIONALPROPERTY) ||
+			isTypeOf(target, OWL.ONTOLOGYPROPERTY) ||
+			isTypeOf(target, OWL.SYMMETRICPROPERTY) || 
+			isTypeOf(target, OWL.TRANSITIVEPROPERTY);
+	}
 }
