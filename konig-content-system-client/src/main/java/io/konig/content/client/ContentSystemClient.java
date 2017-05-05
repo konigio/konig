@@ -17,6 +17,8 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.content.Asset;
 import io.konig.content.AssetBundle;
@@ -27,6 +29,7 @@ import io.konig.content.ContentAccessException;
 import io.konig.content.ContentSystem;
 
 public class ContentSystemClient implements ContentSystem {
+	private static Logger logger = LoggerFactory.getLogger(ContentSystemClient.class);
 	private String baseURL;
 	
 
@@ -48,6 +51,7 @@ public class ContentSystemClient implements ContentSystem {
 			StringEntity entity = new StringEntity(text);
 
 			String bundleURL = bundle.getKey().url(baseURL);
+			
 			
 			HttpPost post = new HttpPost(bundleURL);
 			post.setEntity(entity);
@@ -105,7 +109,14 @@ public class ContentSystemClient implements ContentSystem {
 		int status = 0;
 		AssetMetadata meta = asset.getMetadata();
 		CloseableHttpClient client = HttpClients.createDefault();
-		HttpPost post = new HttpPost(meta.getBundleKey().assetURL(baseURL, meta));
+		String assetURL = meta.getBundleKey().assetURL(baseURL, meta);
+		
+		if (assetURL.indexOf('{')>=0) {
+			logger.warn("Skipping invalid URL: {}", assetURL);
+			return 400; // Bad Request
+		}
+		
+		HttpPost post = new HttpPost(assetURL);
 		if (meta.getContentType() != null) {
 			post.setHeader("Content-Type", meta.getContentType());
 		}
