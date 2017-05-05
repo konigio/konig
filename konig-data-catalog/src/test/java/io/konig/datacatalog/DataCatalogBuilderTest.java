@@ -3,6 +3,7 @@ package io.konig.datacatalog;
 import java.io.File;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -17,7 +18,7 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
-public class DataCatalogBuilder_Test {
+public class DataCatalogBuilderTest {
 	
 	private DataCatalogBuilder builder = new DataCatalogBuilder();
 
@@ -36,6 +37,24 @@ public class DataCatalogBuilder_Test {
 	}
 	
 	@Test
+	public void testHierarchicalNames() throws Exception {
+		URI ontologyId = uri("http://example.com/ns/categories/");
+		test("src/test/resources/DataCatalogBuilderTest/hierarchicalNames", ontologyId);
+	}
+	
+	private void test(String sourcePath, URI ontologyId) throws Exception {
+		load(sourcePath);
+		DataCatalogBuildRequest request = new DataCatalogBuildRequest();
+		request.setExampleDir(exampleDir);
+		request.setOntologyId(ontologyId);
+		request.setGraph(graph);
+		request.setOutDir(outDir);
+		request.setShapeManager(shapeManager);
+		
+		builder.build(request);
+	}
+
+	@Ignore
 	public void test() throws Exception {
 		
 		load("src/test/resources/DataCatalogBuilderTest/rdf");

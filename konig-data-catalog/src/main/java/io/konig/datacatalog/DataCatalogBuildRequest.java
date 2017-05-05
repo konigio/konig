@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
@@ -13,8 +14,11 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.vocab.SH;
+import io.konig.shacl.ClassStructure;
 import io.konig.shacl.ShapeManager;
 
 public class DataCatalogBuildRequest {
@@ -28,6 +32,10 @@ public class DataCatalogBuildRequest {
 	private Set<URI> ontologyExclude;
 	private List<Vertex> ontologyList;
 	
+	private PathFactory pathFactory;
+	private ClassStructure classStructure;
+	private DataCatalogBuilder catalogBuilder;
+	private VelocityEngine engine;
 	
 	public DataCatalogBuildRequest() {
 		
@@ -142,5 +150,37 @@ public class DataCatalogBuildRequest {
 		return new URIImpl(value);
 	}
 	
+	PathFactory getPathFactory() {
+		if (pathFactory == null) {
+			OwlReasoner reasoner = classStructure.getReasoner();
+			NamespaceManager nsManager = graph.getNamespaceManager();
+			pathFactory = new PathFactory(reasoner, nsManager);
+		}
+		return pathFactory;
+	}
+
+	ClassStructure getClassStructure() {
+		return classStructure;
+	}
+
+	void setClassStructure(ClassStructure classStructure) {
+		this.classStructure = classStructure;
+	}
+
+	DataCatalogBuilder getCatalogBuilder() {
+		return catalogBuilder;
+	}
+
+	void setCatalogBuilder(DataCatalogBuilder catalogBuilder) {
+		this.catalogBuilder = catalogBuilder;
+	}
+
+	VelocityEngine getEngine() {
+		return engine;
+	}
+
+	void setEngine(VelocityEngine engine) {
+		this.engine = engine;
+	}
 	
 }

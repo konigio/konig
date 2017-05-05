@@ -19,33 +19,21 @@ import io.konig.shacl.ShapeManager;
 public class PageRequest {
 	private static final String OWL_CLASS_LIST = "OwlClassList";
 
-	private VelocityEngine engine;
 	private VelocityContext context;
-	private ClassStructure classStructure;
 	private DataCatalogBuildRequest buildRequest;
-	private DataCatalogBuilder builder;
 	private URI pageId;
 	private Set<URI> indexSet;
 
 	public PageRequest(
-		DataCatalogBuildRequest buildRequest,
-		DataCatalogBuilder builder,
-		VelocityEngine engine, 
-		ClassStructure classStructure
+		DataCatalogBuildRequest buildRequest
 	) {
 		this.buildRequest = buildRequest;
-		this.builder = builder;
-		this.engine = engine;
-		this.classStructure = classStructure;
 		indexSet = new HashSet<>();
 	}
 	
 	public PageRequest(PageRequest other) {
 		this.buildRequest = other.buildRequest;
-		this.builder = other.builder;
-		this.engine = other.getEngine();
 		this.context = new VelocityContext();
-		this.classStructure = other.getClassStructure();
 		this.indexSet = other.getIndexSet();
 	}
 
@@ -58,11 +46,11 @@ public class PageRequest {
 	}
 
 	public DataCatalogBuilder getBuilder() {
-		return builder;
+		return buildRequest.getCatalogBuilder();
 	}
 
 	public ClassStructure getClassStructure() {
-		return classStructure;
+		return buildRequest.getClassStructure();
 	}
 
 	public URI getPageId() {
@@ -81,7 +69,7 @@ public class PageRequest {
 	}
 	
 	public void setActiveLink(URI targetId) throws DataCatalogException {
-		builder.setActiveItem(this, targetId);
+		getBuilder().setActiveItem(this, targetId);
 	}
 
 	public Object put(String key, Object value) {
@@ -94,7 +82,7 @@ public class PageRequest {
 	}
 
 	public VelocityEngine getEngine() {
-		return engine;
+		return buildRequest.getEngine();
 	}
 
 	public void setContext(VelocityContext context) {
@@ -146,70 +134,19 @@ public class PageRequest {
 		return list;
 	}
 	
+	/**
+	 * Get the relative path between two resources.
+	 * @param a Resource from which the path will be computed.
+	 * @param b Resource to which the path will be computed.
+	 * @return The relative path from a to b.
+	 * @throws DataCatalogException
+	 */
 	public String relativePath(URI a, URI b) throws DataCatalogException {
-		if (a==null || b==null) {
-			return null;
-		}
-		StringBuilder builder = new StringBuilder();
-		Namespace na = findNamespaceByName(a.getNamespace());
-		Namespace nb = findNamespaceByName(b.getNamespace());
-		String aFolder = folderName(a);
-		String bFolder = folderName(b);
-		String aNamespace = na.getName();
-		String bNamespace = nb.getName();
 		
-		if (!aNamespace.equals(bNamespace)) {
-			
-			if (!aNamespace.equals(DataCatalogBuilder.CATALOG_BASE_URI)) {
-				builder.append("../");
-				if (aFolder != null) {
-					builder.append("../");
-				}
-			} 
-			if (!bNamespace.equals(DataCatalogBuilder.CATALOG_BASE_URI)) {
-				builder.append(nb.getPrefix());
-				builder.append('/');
-				if (bFolder != null) {
-					builder.append(bFolder);
-					builder.append('/');
-				}
-			}
-		} else {
-			if (!equals(aFolder, bFolder)) {
-				if (aFolder != null) {
-					builder.append("../");
-				}
-				if (bFolder != null) {
-					builder.append(bFolder);
-					builder.append('/');
-				}
-			}
-		}
-		builder.append(b.getLocalName());
-		builder.append(".html");
-		
-		return builder.toString();
+		return buildRequest.getPathFactory().relativePath(a, b);
 	}
 	
-	private boolean equals(String a, String b) {
-		
-		return (a==null && b==null) ||
-			(a!=null && a.equals(b));
-	}
 
-	public String folderName(URI entity) {
-		if (classStructure.shapeForClass(entity) != null) {
-			return "classes";
-		}
-		if (classStructure.getProperty(entity) != null) {
-			return "properties";
-		}
-		OwlReasoner reasoner = classStructure.getReasoner();
-		if (reasoner.isEnumerationMember(entity)) {
-			return "individuals";
-		}
-		return null;
-	}
 
 	public String relativePath(URI target) throws DataCatalogException {
 		return relativePath(pageId, target);

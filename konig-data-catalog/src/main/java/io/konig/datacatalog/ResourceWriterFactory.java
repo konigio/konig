@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 
 public class ResourceWriterFactory implements WriterFactory {
@@ -17,19 +16,11 @@ public class ResourceWriterFactory implements WriterFactory {
 
 	@Override
 	public PrintWriter createWriter(PageRequest request, URI resourceId) throws IOException, DataCatalogException {
-		Namespace ns = request.findNamespaceByName(resourceId.getNamespace());
-		StringBuilder fileName = new StringBuilder();
-		fileName.append(resourceId.getLocalName());
-		fileName.append(".html");
-		File folder = new File(baseDir, ns.getPrefix());
-		String folderName = request.folderName(resourceId);
-		if (folderName != null) {
-			folder = new File(folder, folderName);
-		}
+		PathFactory factory = request.getBuildRequest().getPathFactory();
+		String path = factory.pagePath(resourceId);
 		
-		folder.mkdirs();
-		
-		File file = new File(folder, fileName.toString());
+		File file = new File(baseDir, path);
+		file.getParentFile().mkdirs();
 		FileWriter fileWriter = new FileWriter(file);
 		return new PrintWriter(fileWriter);
 	}
