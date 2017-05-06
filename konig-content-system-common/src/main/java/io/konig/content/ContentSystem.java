@@ -11,5 +11,7 @@ public interface ContentSystem {
 	int saveAsset(Asset asset) throws ContentAccessException;
 	
 	Asset getAsset(String path) throws ContentAccessException;
+	
+	int saveBundle(AssetBundleKey bundleKey, ZipArchive archive) throws ContentAccessException;
 
 }

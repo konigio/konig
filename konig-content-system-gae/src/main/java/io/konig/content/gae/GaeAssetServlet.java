@@ -23,22 +23,14 @@ public class GaeAssetServlet extends HttpServlet {
     throws ServletException, IOException {
 		
 		try {
-			String path = req.getPathInfo();
+			String pathInfo = req.getPathInfo();
 			
-			int bundleNameEnd = path.indexOf('/', 1);
-			int bundleVersionEnd = path.indexOf('/', bundleNameEnd+1);
-			String bundleVersion = path.substring(1, bundleNameEnd);
-			String bundleName = path.substring(bundleNameEnd+1, bundleVersionEnd);
 			String contentType = req.getContentType();
 			byte[] body = toByteArray(req.getInputStream());
 			String etag = EtagFactory.createEtag(body);
-			
-			AssetBundleKey bundleKey = new AssetBundleKey(bundleName, bundleVersion);
-			AssetMetadata metadata = new AssetMetadata();
-			metadata.setBundleKey(bundleKey);
-			metadata.setContentType(contentType);
+			AssetMetadata metadata = ContentSystemUtil.parsePathInfo(pathInfo);
 			metadata.setEtag(etag);
-			metadata.setPath(path);
+			metadata.setContentType(contentType);
 			
 			Asset asset = new Asset(metadata, body);
 			

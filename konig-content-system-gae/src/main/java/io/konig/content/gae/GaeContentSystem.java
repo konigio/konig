@@ -1,10 +1,16 @@
 package io.konig.content.gae;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.activation.MimetypesFileTypeMap;
 
 import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreService;
@@ -24,6 +30,9 @@ import io.konig.content.AssetMetadata;
 import io.konig.content.CheckInBundleResponse;
 import io.konig.content.ContentAccessException;
 import io.konig.content.ContentSystem;
+import io.konig.content.EtagFactory;
+import io.konig.content.ZipArchive;
+import io.konig.content.ZipItem;
 
 public class GaeContentSystem implements ContentSystem {
 	
@@ -87,7 +96,7 @@ public class GaeContentSystem implements ContentSystem {
 	@Override
 	public int saveMetadata(AssetMetadata metadata) throws ContentAccessException {
 		int status = 200;
-		Key key = createMetadataKey(metadata.getPath());
+		Key key = createMetadataKey(metadata);
 		
 		Entity entity = null;
 		DatastoreService service = DatastoreServiceFactory.getDatastoreService();
@@ -114,6 +123,7 @@ public class GaeContentSystem implements ContentSystem {
 
 	@Override
 	public AssetMetadata getMetadata(String path) throws ContentAccessException {
+		
 		Key key = createMetadataKey(path);
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		try {
@@ -123,7 +133,6 @@ public class GaeContentSystem implements ContentSystem {
 			return null;
 		}
 	}
-
 	private AssetMetadata toMetadata(Entity e) {
 		Key key = e.getKey();
 		String path = key.getName();
@@ -147,7 +156,24 @@ public class GaeContentSystem implements ContentSystem {
 		return new AssetBundleKey(name, version);
 	}
 
+	private Key createMetadataKey(AssetMetadata metadata) {
+		StringBuilder builder = new StringBuilder();
+		builder.append(metadata.getBundleKey().getName());
+		builder.append('/');
+		builder.append(metadata.getBundleKey().getVersion());
+		builder.append('/');
+		builder.append(metadata.getPath());
+		
+		return KeyFactory.createKey(METADATA, builder.toString());
+	}
+
+
+	
 	private Key createMetadataKey(String path) {
+		if (path.charAt(0)=='/') {
+			path = path.substring(1);
+		}
+		
 		return KeyFactory.createKey(METADATA, path);
 	}
 
@@ -202,6 +228,11 @@ public class GaeContentSystem implements ContentSystem {
 		return e;
 	}
 
+	private Entity toBodyEntity(Asset asset) throws IOException {
+		Key key = createAssetKey(asset.getMetadata().getEtag());
+		return toBodyEntity(key, asset);
+	}
+
 	private Entity toBodyEntity(Key key, Asset asset) throws IOException {
 		Entity e = new Entity(key);
 		Blob body = new Blob(asset.getBody());
@@ -233,6 +264,67 @@ public class GaeContentSystem implements ContentSystem {
 		
 		Blob body = (Blob) entity.getProperty(BODY);
 		return new Asset(metadata, body.getBytes());
+	}
+	
+	@Override
+	public int saveBundle(AssetBundleKey bundleKey, ZipArchive archive) throws ContentAccessException {
+
+		MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
+		ZipItem item = null;
+		List<Entity> list = new ArrayList<>();
+		while ( (item = archive.nextItem()) != null) {
+			Asset asset = toAsset(mimeMap, bundleKey, item);
+			list.add(toMetadataEntity(asset));
+			try {
+				list.add(toBodyEntity(asset));
+			} catch (IOException e) {
+				throw new ContentAccessException(e);
+			}
+		}
+
+		DatastoreService service = DatastoreServiceFactory.getDatastoreService();
+		service.put(list);
+		
+		return 0;
+	}
+	private Entity toMetadataEntity(Asset asset) {
+		Key key = createMetadataKey(asset.getMetadata());
+		Entity e = new Entity(key);
+		patchMetadata(asset.getMetadata(), e);
+		return e;
+	}
+	private Asset toAsset(MimetypesFileTypeMap mimeMap, AssetBundleKey bundleKey, ZipItem item) throws ContentAccessException {
+		
+		byte[] body = toByteArray(item.getInputStream());
+		
+		String contentType = mimeMap.getContentType(item.getName());
+		String etag = EtagFactory.createEtag(body);
+		
+		AssetMetadata metadata = new AssetMetadata();
+		metadata.setBundleKey(bundleKey);
+		metadata.setPath(item.getName());
+		metadata.setContentType(contentType);
+		metadata.setEtag(etag);
+		return new Asset(metadata, body);
+	}
+	
+	private byte[] toByteArray(InputStream is) throws ContentAccessException {
+		try {
+			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		
+			int nRead;
+			byte[] data = new byte[16384];
+		
+			while ((nRead = is.read(data, 0, data.length)) != -1) {
+			  buffer.write(data, 0, nRead);
+			}
+		
+			buffer.flush();
+		
+			return buffer.toByteArray();
+		} catch (IOException e) {
+			throw new ContentAccessException(e);
+		}
 	}
 
 }

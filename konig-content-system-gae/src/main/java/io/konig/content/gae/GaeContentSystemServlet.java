@@ -9,15 +9,21 @@ import javax.servlet.http.HttpServletResponse;
 
 public class GaeContentSystemServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	private static final String ZIP_CONTENT_TYPE = "application/zip";
 	
 	private GaeCheckInBundleServlet checkInBundle = new GaeCheckInBundleServlet();
 	private GaeAssetServlet asset = new GaeAssetServlet();
+	private GaeZipBundleServlet zipBundle = new GaeZipBundleServlet();
 
 	protected void doPost(HttpServletRequest req,  HttpServletResponse resp)
 	throws ServletException, IOException {
 		
 		if (isBundleRequest(req)) {
-			checkInBundle.doPost(req, resp);
+			if (ZIP_CONTENT_TYPE.equals(req.getContentType())) {
+				zipBundle.doPost(req, resp);
+			} else {
+				checkInBundle.doPost(req, resp);
+			}
 		} else {
 			asset.doPost(req, resp);
 		}
