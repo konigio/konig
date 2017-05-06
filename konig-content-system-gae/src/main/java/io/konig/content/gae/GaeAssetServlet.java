@@ -25,15 +25,10 @@ public class GaeAssetServlet extends HttpServlet {
 		try {
 			String path = req.getPathInfo();
 			
-			int bundleNameEnd = path.indexOf('/', 1);
-			int bundleVersionEnd = path.indexOf('/', bundleNameEnd+1);
-			String bundleVersion = path.substring(1, bundleNameEnd);
-			String bundleName = path.substring(bundleNameEnd+1, bundleVersionEnd);
+			AssetBundleKey bundleKey = ContentSystemUtil.bundleKey(req);
 			String contentType = req.getContentType();
 			byte[] body = toByteArray(req.getInputStream());
 			String etag = EtagFactory.createEtag(body);
-			
-			AssetBundleKey bundleKey = new AssetBundleKey(bundleName, bundleVersion);
 			AssetMetadata metadata = new AssetMetadata();
 			metadata.setBundleKey(bundleKey);
 			metadata.setContentType(contentType);

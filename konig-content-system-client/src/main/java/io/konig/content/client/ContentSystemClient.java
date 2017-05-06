@@ -22,11 +22,13 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.content.Asset;
 import io.konig.content.AssetBundle;
+import io.konig.content.AssetBundleKey;
 import io.konig.content.AssetBundleWriter;
 import io.konig.content.AssetMetadata;
 import io.konig.content.CheckInBundleResponse;
 import io.konig.content.ContentAccessException;
 import io.konig.content.ContentSystem;
+import io.konig.content.ZipArchive;
 
 public class ContentSystemClient implements ContentSystem {
 	private static Logger logger = LoggerFactory.getLogger(ContentSystemClient.class);
@@ -138,6 +140,11 @@ public class ContentSystemClient implements ContentSystem {
 	@Override
 	public Asset getAsset(String path) throws ContentAccessException {
 		throw new ContentAccessException("getAsset method is not supported by this client");
+	}
+
+	@Override
+	public int saveBundle(AssetBundleKey bundleKey, ZipArchive archive) throws ContentAccessException {
+		throw new ContentAccessException("Not implemented");
 	}
 
 }
