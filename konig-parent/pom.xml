@@ -70,6 +70,7 @@
   	<module>../konig-content-system-client</module>
   	<module>../konig-content-system-maven-plugin</module>
   	<module>../konig-google-download-maven-plugin</module>
+  	<module>../konig-gcp-deploy</module>
   </modules>
  
   <developers>
