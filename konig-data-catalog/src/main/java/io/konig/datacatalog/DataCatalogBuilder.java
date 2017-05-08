@@ -18,6 +18,7 @@ import org.openrdf.model.impl.NamespaceImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;

@@ -16,12 +16,14 @@ import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.util.ClassHierarchyPaths;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class ClassPage {
 	private static final String CLASS_TEMPLATE = "data-catalog/velocity/class.vm";
+	private static final String ANCESTOR_LIST = "AncestorList";
 
 	
 	public void render(ClassRequest request, PageResponse response) throws DataCatalogException, IOException {
@@ -41,6 +43,7 @@ public class ClassPage {
 		
 		context.put("ClassName", classId.getLocalName());
 		context.put("ClassId", classId.stringValue());
+		setAncestorPaths(request);
 		setShapes(request, classId);
 		defineEnumerationMembers(request);
 		
@@ -60,6 +63,27 @@ public class ClassPage {
 		PrintWriter out = response.getWriter();
 		template.merge(context, out);
 		out.flush();
+	}
+
+
+
+	private void setAncestorPaths(ClassRequest request) throws DataCatalogException {
+		
+		List<List<Link>> ancestorList = new ArrayList<>();
+		request.getContext().put(ANCESTOR_LIST, ancestorList);
+		Vertex owlClass = request.getOwlClass();
+		URI targetClassId = (URI) owlClass.getId();
+		ClassHierarchyPaths pathList = new ClassHierarchyPaths(owlClass);
+		for (List<URI> path : pathList) {
+			List<Link> linkList = new ArrayList<>();
+			ancestorList.add(linkList);
+			for (int i=path.size()-1; i>=0; i--) {
+				URI classId = path.get(i);
+				String relativePath = request.relativePath(targetClassId, classId);
+				String localName = request.localName(classId);
+				linkList.add(new Link(localName, relativePath));
+			}
+		}
 	}
 
 
