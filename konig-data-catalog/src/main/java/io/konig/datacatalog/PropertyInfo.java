@@ -29,8 +29,8 @@ public class PropertyInfo {
 			URI targetClass = constraint.getShape().getTargetClass();
 			if (targetClass != null) {
 				typeName = targetClass.getLocalName();
+				typeHref = request.relativePath(resourceId, targetClass);
 			}
-			typeHref = request.relativePath(resourceId, targetClass);
 		}
 		description = RdfUtil.getDescription(constraint, request.getGraph());
 		if (description == null) {

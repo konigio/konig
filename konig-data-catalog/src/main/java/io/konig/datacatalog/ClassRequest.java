@@ -1,5 +1,7 @@
 package io.konig.datacatalog;
 
+import org.openrdf.model.URI;
+
 import io.konig.core.Vertex;
 
 public class ClassRequest extends PageRequest {
@@ -19,6 +21,10 @@ public class ClassRequest extends PageRequest {
 
 	public ResourceWriterFactory getWriterFactory() {
 		return writerFactory;
+	}
+
+	public String localName(URI resourceId) {
+		return resourceId.getLocalName();
 	}
 	
 }

@@ -7,6 +7,13 @@
 #parse( "data-catalog/velocity/header.vm" )
 <div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$ClassId">
 	<h1 property="rdfs:label" class="page-title">$ClassName</h1>
+#foreach( $ancestorPath in $AncestorList )
+	<h4><span class="breadcrumbs"> Thing
+#foreach(	$ancestorLink in $ancestorPath )
+	&gt; <a href="$ancestorLink.Href">$ancestorLink.Name</a>	
+#end
+	</span></h4>
+#end	
 	<table class="definition-table">
 		<thead>
 			<tr>
