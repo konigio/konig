@@ -21,11 +21,45 @@ public class PathFactory {
 	}
 	
 	public String relativePath(URI a, URI b) throws DataCatalogException {
-		Path aPath = Paths.get(pagePath(a));
-		Path bPath = Paths.get(pagePath(b));
-		Path relative = aPath.relativize(bPath);
-		String result = relative.toString().replace('\\', '/');
-		return result;
+		String aPage = pagePath(a);
+		String bPage = pagePath(b);
+		
+		int aStart = 0;
+		int bStart = 0;
+		
+		
+		StringBuilder builder = new StringBuilder();
+		while (aStart >= 0 && bStart>=0) {
+			int aEnd = aPage.indexOf('/', aStart);
+			int bEnd = bPage.indexOf('/', bStart);
+			if (aEnd == bEnd && aEnd!=-1) {
+				String aPart = aPage.substring(aStart, aEnd);
+				String bPart = bPage.substring(bStart, bEnd);
+				
+				if (!aPart.equals(bPart)) {
+					break;
+				} 
+				
+				aStart = aEnd + 1;
+				bStart = bEnd + 1;
+			
+			} else {
+				break;
+			}
+		}
+		if (aStart>=0) {
+			aStart = aPage.indexOf('/', aStart+1);
+			while (aStart>0) {
+				builder.append("../");
+				aStart = aPage.indexOf('/', aStart+1);
+			}
+			if (bStart>=0 && bStart < bPage.length()) {
+				builder.append(bPage.substring(bStart));
+			}
+		}
+		
+		return builder.toString();
+		
 	}
 	
 	public String pagePath(URI target) throws DataCatalogException {
@@ -61,12 +95,12 @@ public class PathFactory {
 	}
 	
 	private String folderName(URI target) {
-		if (reasoner.isTypeOf(target, Schema.Enumeration)) {
-			return "individuals";
-		} else if (reasoner.isTypeOf(target, OWL.CLASS)) {
+		if (reasoner.isTypeOf(target, OWL.CLASS)) {
 			return "classes";
 		} else if (reasoner.isProperty(target)) {
 			return "properties";
+		} else if (reasoner.isTypeOf(target, Schema.Enumeration)) {
+			return "individuals";
 		}
 		return null;
 	}

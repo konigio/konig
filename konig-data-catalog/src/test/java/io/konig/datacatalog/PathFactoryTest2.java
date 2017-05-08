@@ -2,6 +2,7 @@ package io.konig.datacatalog;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -16,9 +17,28 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.Schema;
 
-public class PathFactoryTest {
+public class PathFactoryTest2 {
 	
-	@Test 
+	@Test
+	public void testRelativePathSameFolder() throws Exception {
+
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", "http://schema.org/");
+
+		Graph graph = new MemoryGraph(nsManager);
+		graph.edge(Schema.Person, RDF.TYPE, OWL.CLASS);
+		graph.edge(Schema.CreativeWork, RDF.TYPE, OWL.CLASS);
+
+		OwlReasoner reasoner = new OwlReasoner(graph);
+		PathFactory factory = new PathFactory(reasoner, nsManager);
+		
+		String actual = factory.relativePath(Schema.Person, Schema.CreativeWork);
+		String expected = "CreativeWork.html";
+		assertEquals(expected, actual);
+		
+	}
+	
+	@Test
 	public void testRelativePath() throws Exception {
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();
@@ -39,10 +59,10 @@ public class PathFactoryTest {
 		PathFactory factory = new PathFactory(reasoner, nsManager);
 		
 		String actual = factory.relativePath(target, Schema.CreativeWork);
-		assertEquals("../../../schema/classes/CreativeWork.html", actual);
+		assertEquals("../../schema/classes/CreativeWork.html", actual);
 		
 	}
-
+	
 	@Test
 	public void testPagePath() throws Exception {
 		
@@ -70,6 +90,5 @@ public class PathFactoryTest {
 	private URI uri(String value) {
 		return new URIImpl(value);
 	}
-
 
 }

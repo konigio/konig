@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ import io.konig.shacl.Shape;
 public class ClassPage {
 	private static final String CLASS_TEMPLATE = "data-catalog/velocity/class.vm";
 	private static final String ANCESTOR_LIST = "AncestorList";
+	private static final String SUBCLASS_LIST = "SubclassList";
 
 	
 	public void render(ClassRequest request, PageResponse response) throws DataCatalogException, IOException {
@@ -44,6 +46,7 @@ public class ClassPage {
 		context.put("ClassName", classId.getLocalName());
 		context.put("ClassId", classId.stringValue());
 		setAncestorPaths(request);
+		setSubClasses(request);
 		setShapes(request, classId);
 		defineEnumerationMembers(request);
 		
@@ -63,6 +66,29 @@ public class ClassPage {
 		PrintWriter out = response.getWriter();
 		template.merge(context, out);
 		out.flush();
+	}
+
+
+
+	private void setSubClasses(ClassRequest request) throws DataCatalogException {
+		Vertex owlClass = request.getOwlClass();
+		URI targetClass = (URI) owlClass.getId();
+		OwlReasoner reasoner = request.getClassStructure().getReasoner();
+		List<Vertex> subClassList = reasoner.subClasses(owlClass);
+		if (!subClassList.isEmpty()) {
+			List<Link> linkList = new ArrayList<>();
+			for (Vertex v : subClassList) {
+				if (v.getId() instanceof URI) {
+					URI subClassId = (URI) v.getId();
+					String name = request.localName(subClassId);
+					String href = request.relativePath(targetClass, subClassId);
+					Link link = new Link(name, href);
+					linkList.add(link);
+				}
+			}
+			Collections.sort(linkList);
+			request.getContext().put(SUBCLASS_LIST, linkList);
+		}
 	}
 
 

@@ -47,6 +47,15 @@
 #end	
 	</ul>
 #end	
+#if( $SubclassList )
+	<br>
+	<b>More specific Types</b>
+	<ul>
+#foreach( $subclassLink in $SubclassList ) 
+		<li><a href="$subclassLink.Href">$subclassLink.Name</a></li>
+#end	
+	</ul>
+#end
 #if($ShapeList) 
 	<table class="definition-table">
 		<thead>
