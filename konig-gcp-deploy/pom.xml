@@ -20,13 +20,7 @@
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-bigquery</artifactId>
       <version>${google-api-services-bigquery.version}</version>
-    </dependency>  	
-    
-		<dependency>
-	    <groupId>com.fasterxml.jackson.core</groupId>
-	    <artifactId>jackson-databind</artifactId>
-	    <version>${jackson.version}</version>
-		</dependency>
+    </dependency>
     
   	
     <dependency>
