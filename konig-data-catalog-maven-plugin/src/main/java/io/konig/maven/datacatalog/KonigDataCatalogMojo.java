@@ -39,6 +39,9 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	
 	@Parameter
 	private String ontology;
+	
+	@Parameter(defaultValue="${basedir}/target/velocity.log")
+	private File logFile;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -48,6 +51,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 		ShapeManager shapeManager = new MemoryShapeManager();
 		
 		DataCatalogBuilder builder = new DataCatalogBuilder();
+		builder.setVelocityLog(logFile);
 		
 		try {
 			GcpShapeConfig.init();
