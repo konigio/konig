@@ -1,8 +1,11 @@
 package io.konig.transform;
 
+import java.util.List;
+
 import io.konig.core.Path;
-import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.io.AbstractPrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.path.HasStep.PredicateValuePair;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -34,6 +37,7 @@ public class MappedProperty extends AbstractPrettyPrintable {
 	private IriTemplateInfo template;
 	private ShapePath templateShape;
 	private int stepIndex = -1;
+	private List<PredicateValuePair> hasValue;
 	
 	public MappedProperty(ShapePath shapePath, PropertyConstraint property, int stepIndex) {
 		this.shapePath = shapePath;
@@ -89,17 +93,35 @@ public class MappedProperty extends AbstractPrettyPrintable {
 		this.templateShape = templateShape;
 	}
 
+	public List<PredicateValuePair> getHasValue() {
+		return hasValue;
+	}
+
+	public void setHasValue(List<PredicateValuePair> hasValue) {
+		this.hasValue = hasValue;
+	}
+
 	@Override
 	public void print(PrettyPrintWriter out) {
 		out.beginObject(this);
 		if (property != null) {
-			out.fieldName("property");
-			out.print(property.getPredicate().stringValue());
+			out.field("property", property.getPredicate());
 		}
 		out.field("shapePath", shapePath);
 		out.field("stepIndex", stepIndex);
 		out.field("template", template);
 		out.field("templateShape", templateShape);
+		if (hasValue != null) {
+			out.fieldName("hasValue");
+			out.pushIndent();
+			for (PredicateValuePair pair : hasValue) {
+				out.beginObject(pair);
+				out.field("predicate", pair.getPredicate());
+				out.field("value", pair.getValue());
+				out.endObject();
+			}
+			out.popIndent();
+		}
 		out.endObject();
 	}
 	

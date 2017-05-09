@@ -51,17 +51,11 @@ public class ShapePath extends AbstractPrettyPrintable {
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		
-		out.indent();
-		out.print("path: ");
-		out.println(path);
-		out.indent();
-		out.print("shape: <");
-		out.print(shape.getId().stringValue());
-		out.println(">");
-		out.indent();
-		out.print("count: ");
-		out.println(count);
+		out.beginObject(this);
+		out.field("path", path);
+		out.field("shape", shape.getId());
+		out.field("count", count);
+		out.endObject();
 		
 	}
 	

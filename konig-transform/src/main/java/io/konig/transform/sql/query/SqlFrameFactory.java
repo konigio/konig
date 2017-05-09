@@ -5,14 +5,18 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.Path;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
+import io.konig.core.pojo.BeanUtil;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 import io.konig.shacl.NodeKind;
@@ -165,9 +169,29 @@ public class SqlFrameFactory {
 					
 					
 				} else {
-
-					SqlAttribute a = new SqlAttribute(preferredTable, attr, m);
-					result.add(a);
+					Set<Value> hasValue = m.getProperty().getHasValue();
+					if (hasValue==null || hasValue.isEmpty()) {
+						SqlAttribute a = new SqlAttribute(preferredTable, attr, m);
+						result.add(a);
+					} else {
+						URI predicate = m.getProperty().getPredicate();
+						if (hasValue.size()>1) {
+							throw new ShapeTransformException("Cannot support multiple values on property: " + predicate);
+						}
+						Value value = hasValue.iterator().next();
+						if (value instanceof Literal) {
+							Literal literal = (Literal) value;
+							Object javaValue = BeanUtil.toJavaObject(literal);
+							ValueExpression valueExpr = SqlUtil.literal(javaValue);
+							if (valueExpr == null) {
+								throw new ShapeTransformException("On property <" + predicate + ">, literal value not supported: " + value);
+							}
+							SqlAttribute a = new SqlAttribute(preferredTable, attr, valueExpr);
+							result.add(a);
+						} else {
+							throw new ShapeTransformException("Only literal values are supported on property: " + predicate);
+						}
+					}
 				}
 			} else {
 				// Nested Structure
