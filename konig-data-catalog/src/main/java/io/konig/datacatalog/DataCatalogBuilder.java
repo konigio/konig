@@ -48,10 +48,21 @@ public class DataCatalogBuilder {
 	private ResourceWriterFactory resourceWriterFactory;
 	private ClassIndexWriterFactory classIndexWriterFactory;
 	private File outDir;
+	private File velocityLog;
 	
 	public DataCatalogBuilder() {
 	}
 	
+
+	public File getVelocityLog() {
+		return velocityLog;
+	}
+
+
+	public void setVelocityLog(File velocityLog) {
+		this.velocityLog = velocityLog;
+	}
+
 
 	public void build(DataCatalogBuildRequest buildRequest) throws DataCatalogException {
 
@@ -67,6 +78,9 @@ public class DataCatalogBuilder {
 		Properties properties = new Properties();
 		properties.put("resource.loader", "class");
 		properties.put("class.resource.loader.class", ClasspathResourceLoader.class.getName());
+		if (velocityLog != null) {
+			properties.put("runtime.log", velocityLog.getAbsolutePath());
+		}
 		
 		VelocityEngine engine = new VelocityEngine(properties);
 		buildRequest.setCatalogBuilder(this);
