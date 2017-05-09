@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.openrdf.model.URI;
@@ -130,12 +131,25 @@ public class TransformAttribute extends AbstractPrettyPrintable {
 	public void print(PrettyPrintWriter out) {
 		out.beginObject(this);
 		
-		out.field("embeddedFrame", embeddedFrame);
 		out.fieldName("property");
 		out.beginObject(property);
 		out.field("predicate", property.getPredicate().stringValue());
 		out.field("equivalentPath", property.getEquivalentPath());
 		out.endObject();
+		out.field("embeddedFrame", embeddedFrame);
+	
+		if (!propertyMap.isEmpty()) {
+			out.fieldName("propertyMap");
+			out.pushIndent();
+			out.println();
+			for (MappedProperty mp : propertyMap.values()) {
+				out.indent();
+				out.print(mp);
+			}
+			out.popIndent();
+			
+		}
+		
 		
 		
 		out.endObject();

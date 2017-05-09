@@ -27,6 +27,8 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
@@ -168,11 +170,12 @@ public class PrettyPrintWriter extends PrintWriter {
 	
 	public void objectRef(Object pojo) {
 		if (pojo == null) {
-			print("null");
+			println("null");
 			return;
 		}
 		if (pojo instanceof Value) {
 			value((Value)pojo);
+			println();
 			return;
 		} 
 		
@@ -218,12 +221,40 @@ public class PrettyPrintWriter extends PrintWriter {
 		print(' ');
 		if (object instanceof Value) {
 			value((Value)object);
+			println();
+		} else if (object!=null && isPrimitiveOrWrapperType(object.getClass())) {
+			print(object.toString());
+			println();
 		} else if (object instanceof String) {
 			literalString((String)object);
+			println();
 		} else {
 			objectRef(object);
 		}
-		println();
+	}
+
+	private static boolean isPrimitiveOrWrapperType(Class<?> type) {
+		return type.isPrimitive() || isWrapperType(type);
+	}
+	
+	private static final Set<Class<?>> WRAPPER_TYPES = getWrapperTypes();
+
+	private static boolean isWrapperType(Class<?> clazz) {
+		return WRAPPER_TYPES.contains(clazz);
+	}
+
+	private static Set<Class<?>> getWrapperTypes() {
+		Set<Class<?>> ret = new HashSet<Class<?>>();
+		ret.add(Boolean.class);
+		ret.add(Character.class);
+		ret.add(Byte.class);
+		ret.add(Short.class);
+		ret.add(Integer.class);
+		ret.add(Long.class);
+		ret.add(Float.class);
+		ret.add(Double.class);
+		ret.add(Void.class);
+		return ret;
 	}
 	
 	public void field(String fieldName, PrettyPrintable object) {

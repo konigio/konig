@@ -3,10 +3,12 @@ package io.konig.transform.sql.query;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.StringWriter;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -41,6 +43,30 @@ public class QueryBuilderTest {
 	@Before
 	public void setUp() {
 		GcpShapeConfig.init();
+	}
+	
+	@Test
+	public void testHasValueConstraint() throws Exception {
+		load("src/test/resources/QueryBuilderTest/hasValueConstraint");
+		URI targetShapeId = uri("http://example.com/shapes/BqProductShape");
+		
+
+		Shape targetShape = shapeManager.getShapeById(targetShapeId);
+		TransformFrame frame = frameBuilder.create(targetShape);
+
+		SelectExpression select = queryBuilder.selectExpression(frame);
+		
+		String actual = toText(select);
+		
+		String expected = 
+			"SELECT\n" + 
+			"   STRUCT(\n" + 
+			"      PRD_PRICE AS price,\n" + 
+			"      \"USD\" AS priceCurrency\n" + 
+			"   ) AS offers\n" + 
+			"FROM schema.OriginProductShape";
+		
+		assertEquals(expected, actual);
 	}
 
 	@Test
@@ -611,6 +637,14 @@ public class QueryBuilderTest {
 		return new URIImpl(value);
 	}
 
+
+	private void load(String path) throws Exception {
+		File file = new File(path);
+		RdfUtil.loadTurtle(file, graph);
+		ShapeLoader loader = new ShapeLoader(shapeManager);
+		loader.load(graph);
+	}
+	
 	private void loadShapes(String resource) throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream(resource);
 		graph.setNamespaceManager(nsManager);

@@ -1,18 +1,23 @@
 package io.konig.transform;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.Path;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.path.HasStep;
+import io.konig.core.path.HasStep.PredicateValuePair;
+import io.konig.core.path.OutStep;
 import io.konig.core.path.PathFactory;
+import io.konig.core.path.Step;
 import io.konig.core.util.IriTemplate;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
@@ -139,68 +144,104 @@ public class TransformFrameBuilder {
 		private void handlePath(String targetContext, TransformFrame frame, Shape sourceShape, PropertyConstraint p, Path path) throws ShapeTransformException {
 			
 			int end = path.length()-1;
+			MappedProperty lastMappedProperty = null;
 			for (int i=0; i<=end; i++) {
-				URI first = RdfUtil.out(path, i);
-				if (first == null) {
-					break;
-				} else {
-					TransformAttribute attr = frame.getAttribute(first);
-					if (attr != null) {
-						MappedProperty m = new MappedProperty(new ShapePath(targetContext, sourceShape), p, i);
-						attr.add(m);
-						
-						if (i != end) {
+				Step step = path.asList().get(i);
+				if (step instanceof HasStep) {
+					if (lastMappedProperty != null) {
+						HasStep hasStep = (HasStep) step;
+						lastMappedProperty.setHasValue(hasStep.getPairList());
+						hasStep(targetContext, frame, lastMappedProperty);
+					}
+				} else if (step instanceof OutStep) {
+					OutStep outStep = (OutStep) step;
+					URI first = outStep.getPredicate();
+					if (first == null) {
+						break;
+					} else {
+						TransformAttribute attr = frame.getAttribute(first);
+						if (attr != null) {
+							MappedProperty m = new MappedProperty(new ShapePath(targetContext, sourceShape), p, i);
+							attr.add(m);
+							lastMappedProperty = m;
+							
+							if (i != end) {
 
-							frame = attr.getEmbeddedFrame();
-							if (frame == null) {
-								NodeKind targetNodeKind = attr.getTargetProperty().getNodeKind();
-								if (targetNodeKind == NodeKind.IRI) {
-									// The target is expecting an IRI reference, but the source path has not ended.
-									// Can we construct an IRI reference from the remaining
-									// information in the source path?
-									
-									Resource valueClass = attr.getTargetProperty().getValueClass();
-									if (valueClass instanceof URI) {
-										// The value of the IRI reference must be of type valueClass.
+								frame = attr.getEmbeddedFrame();
+								if (frame == null) {
+									NodeKind targetNodeKind = attr.getTargetProperty().getNodeKind();
+									if (targetNodeKind == NodeKind.IRI) {
+										// The target is expecting an IRI reference, but the source path has not ended.
+										// Can we construct an IRI reference from the remaining
+										// information in the source path?
 										
-										List<Shape> shapeList = shapeManager.getShapesByTargetClass((URI)valueClass);
-										for (Shape valueShape : shapeList) {
-											IriTemplate template = valueShape.getIriTemplate();
-											if (template != null) {
-												IriTemplateInfo info = IriTemplateInfo.create(
-													template, pathFactory.getNamespaceManager(), valueShape);
-												
-												if (info == null) {
-													logger.warn("Cannot expand IRI template: " + template.toString());
-												} else if (i==end-1) {
-													Path subpath = path.subpath(i+1);
+										Resource valueClass = attr.getTargetProperty().getValueClass();
+										if (valueClass instanceof URI) {
+											// The value of the IRI reference must be of type valueClass.
+											
+											List<Shape> shapeList = shapeManager.getShapesByTargetClass((URI)valueClass);
+											for (Shape valueShape : shapeList) {
+												IriTemplate template = valueShape.getIriTemplate();
+												if (template != null) {
+													IriTemplateInfo info = IriTemplateInfo.create(
+														template, pathFactory.getNamespaceManager(), valueShape);
 													
-													if (inject(info, p, subpath)) {
-														m.setTemplateInfo(info);
-													} else {
-														// Cannot satisfy the IRI template with currently available
-														// properties.  Must join with the valueShape where the
-														// template is defined.
+													if (info == null) {
+														logger.warn("Cannot expand IRI template: " + template.toString());
+													} else if (i==end-1) {
+														Path subpath = path.subpath(i+1);
 														
-														setTemplateShape(attr, m, targetContext, valueShape, info);
+														if (inject(info, p, subpath)) {
+															m.setTemplateInfo(info);
+														} else {
+															// Cannot satisfy the IRI template with currently available
+															// properties.  Must join with the valueShape where the
+															// template is defined.
+															
+															setTemplateShape(attr, m, targetContext, valueShape, info);
+															
+														}
+														
 														
 													}
-													
-													
 												}
 											}
 										}
 									}
+									break;
 								}
-								break;
 							}
+							
 						}
-						
 					}
 				}
+				
 			}	
 		}
 		
+
+
+		private void hasStep(String targetContext, TransformFrame frame, MappedProperty mappedProperty) throws ShapeTransformException {
+			for (PredicateValuePair pair : mappedProperty.getHasValue()) {
+				URI predicate = pair.getPredicate();
+				TransformAttribute attr = frame.getAttribute(predicate);
+				if (attr != null) {
+					Value value = pair.getValue();
+					if (value instanceof Literal) {
+						ShapePath shapePath = mappedProperty.getShapePath();
+						PropertyConstraint property = new PropertyConstraint(predicate);
+						property.addHasValue(value);
+						
+						MappedProperty m = new MappedProperty(shapePath, property);
+						attr.add(m);
+						
+					} else {
+						throw new ShapeTransformException("Resource values not supported");
+					}
+				}
+			}
+			
+		}
 
 		private void setTemplateShape(TransformAttribute attr, MappedProperty m, String targetContext, Shape valueShape, IriTemplateInfo info) {
 			
