@@ -45,9 +45,11 @@ public class TemplateShapeNamer implements ShapeNamer {
 	public URI shapeName(URI scopeClass) {
 		SimpleValueMap map = new SimpleValueMap();
 		map.put("targetClass.localName", scopeClass.getLocalName());
+		map.put("targetClassLocalName", scopeClass.getLocalName());
 		Namespace ns = nsManager.findByName(scopeClass.getNamespace());
 		if (ns != null) {
 			map.put("targetClass.namespacePrefix", ns.getPrefix());
+			map.put("targetClassNamespacePrefix", ns.getPrefix());
 		}
 		String value = format.format(map);
 		return new URIImpl(value);
