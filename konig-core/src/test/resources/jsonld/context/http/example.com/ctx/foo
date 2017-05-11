@@ -1,0 +1,7 @@
+{
+	"@context" : {
+		"schema" : "http://schema.org/",
+		"Person" : "schema:Person"
+	},
+	"@id" : "http://example.com/ctx/foo"
+}	
