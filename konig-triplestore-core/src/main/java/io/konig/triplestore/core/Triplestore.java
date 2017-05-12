@@ -23,13 +23,17 @@ package io.konig.triplestore.core;
 
 import java.util.Collection;
 
+import org.openrdf.model.Namespace;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 
 public interface Triplestore {
 
-	void save(URI resourceId, Collection<Statement> outEdges) throws TriplestoreException;
-	Collection<Statement> getOutEdges(URI resourceId) throws TriplestoreException;
-	Collection<Statement> getInEdges(URI resourceId) throws TriplestoreException;
+	void putNamespaces(Collection<Namespace> namespaces) throws TriplestoreException;
+	Collection<Namespace> getNamespacesByPrefix(Collection<String> prefixes) throws TriplestoreException;
+	Collection<Namespace> getNamespacesByName(Collection<String> names) throws TriplestoreException;
+	void putResource(URI resourceId, Collection<Statement> outEdges) throws TriplestoreException;
+	Collection<Statement> getStatements(URI subject, URI predicate, Value object) throws TriplestoreException;
 	void remove(URI resourceId) throws TriplestoreException;
 }
