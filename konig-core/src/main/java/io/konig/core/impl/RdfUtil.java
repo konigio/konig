@@ -42,11 +42,13 @@ import org.openrdf.rio.helpers.BasicWriterSettings;
 import org.openrdf.rio.turtle.TurtleParserFactory;
 import org.openrdf.rio.turtle.TurtleUtil;
 
+import io.konig.core.Context;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
+import io.konig.core.Term;
 import io.konig.core.Vertex;
 import io.konig.core.io.CompactTurtleWriter;
 import io.konig.core.io.CompositeRdfHandler;
@@ -746,5 +748,33 @@ public class RdfUtil {
 		out.print('<');
 		out.print(uri.stringValue());
 		out.print('>');
+	}
+	
+	public static String compactName(Context context, URI resource) {
+
+		String iriValue = resource.stringValue();
+		
+		if (context != null) {
+			Context inverse = context.inverse();
+			Term term = inverse.getTerm(iriValue);
+			if (term != null) {
+				return term.getId();
+			}
+			
+			term = inverse.getTerm(resource.getNamespace());
+			if (term != null) {
+				StringBuilder builder = new StringBuilder();
+				builder.append(term.getId());
+				builder.append(':');
+				builder.append(resource.getLocalName());
+				return builder.toString();
+			}
+		}
+		
+		StringBuilder builder = new StringBuilder();
+		builder.append('<');
+		builder.append(iriValue);
+		builder.append('>');
+		return builder.toString();
 	}
 }

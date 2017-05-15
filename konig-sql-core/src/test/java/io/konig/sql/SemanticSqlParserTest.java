@@ -402,8 +402,10 @@ public class SemanticSqlParserTest {
 		SQLColumnSchema column = getColumn(table, "first_name");
 		
 		Path path = column.getEquivalentPath();
+		String expected = 
+			"/<http://schema.org/givenName>";
 		
-		assertEquals("/schema:givenName", path.toString(nsManager));
+		assertEquals(expected, path.toString());
 		
 	}
 	

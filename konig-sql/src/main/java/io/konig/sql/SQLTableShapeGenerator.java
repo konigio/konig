@@ -32,7 +32,6 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.path.OutStep;
-import io.konig.core.path.PathFactory;
 import io.konig.core.path.Step;
 import io.konig.core.util.PathPattern;
 import io.konig.shacl.NodeKind;
@@ -101,7 +100,7 @@ public class SQLTableShapeGenerator {
 		int minCount = column.isNotNull() ? 1 : 0;
 		p.setMinCount(minCount);
 		p.setMaxCount(1);
-		p.setCompiledEquivalentPath(column.getEquivalentPath());
+		p.setEquivalentPath(column.getEquivalentPath());
 		
 		shape.add(p);
 		
@@ -112,13 +111,11 @@ public class SQLTableShapeGenerator {
 		
 		private Map<String,Shape> shapeMap = new HashMap<>();
 		private Map<String, URI> targetClassMap = new HashMap<>();
-		private PathFactory pathFactory;
 		private NamespaceManager nsManager;
 	
 		
 		public Shape toShape(SQLTableSchema tableSchema) {
 			nsManager = tableSchema.getNamespaceManager();
-			pathFactory = new PathFactory(nsManager);
 			
 			if (datatypeMapper == null) {
 				datatypeMapper = new XsdSQLDatatypeMapper();
@@ -147,7 +144,7 @@ public class SQLTableShapeGenerator {
 			List<PathPattern> list = tableSchema.getPathPatternList();
 			for (PathPattern p : list) {
 				Path path = p.getPath();
-				String key = path.toString(nsManager);
+				String key = path.toString();
 				URI targetClass = p.getTargetClass();
 				targetClassMap.put(key, targetClass);
 			}

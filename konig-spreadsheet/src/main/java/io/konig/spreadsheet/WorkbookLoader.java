@@ -29,6 +29,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
@@ -49,6 +50,7 @@ import io.konig.core.NameMap;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
+import io.konig.core.PathFactory;
 import io.konig.core.SPARQLBuilder;
 import io.konig.core.Term;
 import io.konig.core.Term.Kind;
@@ -58,7 +60,6 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.path.DataInjector;
 import io.konig.core.path.OutStep;
-import io.konig.core.path.PathFactory;
 import io.konig.core.path.Step;
 import io.konig.core.pojo.BeanUtil;
 import io.konig.core.util.IriTemplate;
@@ -292,6 +293,7 @@ public class WorkbookLoader {
 		private List<ImportInfo> importList = new ArrayList<>();
 		private Map<URI,List<Function>> dataSourceMap = new HashMap<>();
 		private List<String> warningList = new ArrayList<>();
+		private List<PathHandler> pathHandlers = new ArrayList<>();
 		
 		private int ontologyNameCol=UNDEFINED;
 		private int ontologyCommentCol=UNDEFINED;
@@ -353,7 +355,6 @@ public class WorkbookLoader {
 			if (shapeManager == null) {
 				shapeManager = new MemoryShapeManager();
 			}
-			pathFactory = new PathFactory(nsManager, graph);
 			activityId = Activity.nextActivityId();
 			
 			owlReasoner = new OwlReasoner(graph);
@@ -385,6 +386,7 @@ public class WorkbookLoader {
 			for (SheetInfo info : list) {	
 				loadSheet(info);
 			}
+			handlePaths();
 			buildRollUpShapes();
 			loadIndividualProperties();
 			emitProvenance();
@@ -400,6 +402,14 @@ public class WorkbookLoader {
 		}
 
 
+
+		private void handlePaths() throws SpreadsheetException {
+			NameMap nameMap = new NameMap(graph);
+			PathFactory pathFactory = new PathFactory(nsManager, nameMap);
+			for (PathHandler handler : pathHandlers) {
+				handler.execute(graph, pathFactory);
+			}
+		}
 
 		private void handleWarnings() throws WarningSpreadsheetException {
 			if (!warningList.isEmpty()) {
@@ -571,6 +581,8 @@ public class WorkbookLoader {
 				new TargetClassReasoner(graph)
 			);
 			
+			
+			
 			for (Shape shape : getShapeManager().listShapes()) {
 				visitor.visit(shape);
 			}
@@ -631,7 +643,8 @@ public class WorkbookLoader {
 		}
 
 		private void loadIndividualProperties() throws SpreadsheetException {
-			
+			NameMap nameMap = new NameMap(graph);
+			pathFactory = new PathFactory(nsManager, nameMap);
 			for (int i=0; i<book.getNumberOfSheets(); i++) {
 				Sheet sheet = book.getSheetAt(i);
 				int sheetType = sheetType(sheet);
@@ -800,7 +813,6 @@ public class WorkbookLoader {
 					if (predicate.equals(rollUpBy)) {
 						clone.setStereotype(Konig.dimension);
 						clone.setEquivalentPath(null);
-						clone.setCompiledEquivalentPath(null);
 					} 
 					
 					if (!clone.getStereotype().equals(Konig.measure)) {
@@ -820,9 +832,9 @@ public class WorkbookLoader {
 
 
 		private void buildDependsOnSet(Shape sourceFact, PropertyConstraint p, Set<URI> dependsOn) {
-			String pathText = p.getEquivalentPath();
+			Path pathText = p.getEquivalentPath();
 			if (pathText != null) {
-				Path path = p.getCompiledEquivalentPath(pathFactory);
+				Path path = p.getEquivalentPath();
 				List<Step> stepList = path.asList();
 				if (!stepList.isEmpty()) {
 					Step first = stepList.get(0);
@@ -984,9 +996,9 @@ public class WorkbookLoader {
 			URI stereotype = uriValue(row, pcStereotypeCol);
 			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
-			Literal equivalentPath = stringLiteral(row, pcEquivalentPathCol);
-			Literal sourcePath = stringLiteral(row, pcSourcePathCol);
-			Literal partitionOf = stringLiteral(row, pcPartitionOfCol);
+			String equivalentPath = stringValue(row, pcEquivalentPathCol);
+			String sourcePath = stringValue(row, pcSourcePathCol);
+			String partitionOf = stringValue(row, pcPartitionOfCol);
 			Literal formula = stringLiteral(row, pcFormulaCol);
 			
 			
@@ -1059,14 +1071,23 @@ public class WorkbookLoader {
 				edge(constraint, SH.shape, valueType);
 			}
 			
+			if (equivalentPath != null) {
+				pathHandlers.add(new PathHandler(shapeId, propertyId, Konig.equivalentPath, equivalentPath));
+			}
+			
+			if (sourcePath != null) {
+				pathHandlers.add(new PathHandler(shapeId, propertyId, Konig.sourcePath, sourcePath));
+			}
+			
+			if (partitionOf != null) {
+				pathHandlers.add(new PathHandler(shapeId, propertyId, Konig.partitionOf, partitionOf));
+			}
+			
 			edge(constraint, SH.minCount, minCount);
 			edge(constraint, SH.maxCount, maxCount);
 			edge(constraint, SH.uniqueLang, uniqueLang);
 			edge(constraint, SH.in, valueIn);
-			edge(constraint, Konig.equivalentPath, equivalentPath);
 			edge(constraint, Konig.stereotype, stereotype);
-			edge(constraint, Konig.sourcePath, sourcePath);
-			edge(constraint, Konig.partitionOf, partitionOf);
 			edge(constraint, Konig.formula, formula);
 			
 			
@@ -2172,6 +2193,39 @@ public class WorkbookLoader {
 		}
 		public List<String> getImportList() {
 			return importList;
+		}
+	}
+	
+	
+	
+	private static class PathHandler {
+
+		private URI shapeId;
+		private URI predicate;
+		private URI pathField;
+		private String pathText;
+		
+		
+
+		public PathHandler(URI shapeId, URI predicate, URI pathField, String pathText) {
+			this.shapeId = shapeId;
+			this.predicate = predicate;
+			this.pathField = pathField;
+			this.pathText = pathText;
+		}
+
+		void execute(Graph graph, PathFactory pathFactory) throws SpreadsheetException {
+			Vertex shape = graph.getVertex(shapeId);
+			if (shape == null) {
+				throw new SpreadsheetException("Shape not found: " + shapeId);
+			}
+			Vertex property = shape.asTraversal().out(SH.property).hasValue(SH.predicate, predicate).firstVertex();
+			if (property == null) {
+				throw new SpreadsheetException("On shape <" + shapeId + "> property not found: " + predicate);
+			}
+			Path path = pathFactory.createPath(pathText);
+			Literal pathValue = new LiteralImpl(path.toString());
+			property.addProperty(pathField, pathValue);
 		}
 	}
 }

@@ -53,7 +53,6 @@ public class GraphFilter {
 	public boolean matches(Vertex vertex, Shape shape) {
 		
 		List<PropertyConstraint> propertyList = shape.getProperty();
-		Constraint constraint = shape.getConstraint();
 		
 		for (PropertyConstraint p : propertyList) {
 			if (!satisfies(vertex, p)) {
@@ -61,11 +60,13 @@ public class GraphFilter {
 			}
 		}
 		
-		if (constraint != null && !constraint.accept(vertex)) {
-			return false;
-		}
+		return accept(shape.getOr(), vertex) && accept(shape.getAnd(), vertex);
+	}
+
+
+	private boolean accept(Constraint constraint, Vertex vertex) {
 		
-		return true;
+		return constraint==null || constraint.accept(vertex);
 	}
 
 

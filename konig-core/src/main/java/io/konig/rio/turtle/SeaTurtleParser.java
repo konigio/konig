@@ -35,6 +35,7 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.Context;
+import io.konig.core.NameMap;
 import io.konig.core.Term;
 import io.konig.core.Term.Kind;
 import io.konig.core.impl.BasicContext;
@@ -49,11 +50,29 @@ public class SeaTurtleParser extends TurtleParser {
 	private Term lastTerm = null;
 	private Term predicateTerm = null;
 	
+	protected NameMap nameMap;
+	
+	private NamespaceMap defaultNamespaceMap;
+	
 	public SeaTurtleParser() {
-		super((NamespaceMap) null, ValueFactoryImpl.getInstance());
+		this(null);
+	}
+	
+	public SeaTurtleParser(NamespaceMap map) {
+		super(null, ValueFactoryImpl.getInstance());
+		defaultNamespaceMap = map;
 		currentContext = defaultContext = new ChainedContext(null, new BasicContext(null));
 		namespaceMap = new ContextNamespaceMap();
 		setValueFactory(new CoercingValueFactory());
+	}
+
+
+	public NameMap getNameMap() {
+		return nameMap;
+	}
+
+	public void setNameMap(NameMap nameMap) {
+		this.nameMap = nameMap;
 	}
 	
 	@Override
@@ -173,6 +192,14 @@ public class SeaTurtleParser extends TurtleParser {
 			
 			Term term = lastTerm = currentContext.getTerm(prefix);
 			if (term == null) {
+				
+				if (nameMap!=null) {
+					URI result = nameMap.get(prefix);
+					if (result != null) {
+						return result;
+					}
+				}
+				
 				StringBuilder err = err();
 				err.append("Term not defined: ");
 				err.append(prefix);
@@ -532,7 +559,9 @@ public class SeaTurtleParser extends TurtleParser {
 			defaultContext.compile();
 			Term term = currentContext.getTerm(prefix);
 			
-			return term==null ? null : term.getExpandedIdValue();
+			
+			return term!=null ?  term.getExpandedIdValue() :
+				defaultNamespaceMap!=null ? defaultNamespaceMap.get(prefix) : null;
 		}
 
 		@Override

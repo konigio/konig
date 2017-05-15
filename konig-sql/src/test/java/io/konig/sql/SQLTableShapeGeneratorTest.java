@@ -74,9 +74,9 @@ public class SQLTableShapeGeneratorTest {
 		PropertyConstraint p = roleShape.getPropertyConstraint(uri("http://example.com/ns/alias/role_id"));
 		assertTrue(p != null);
 		
-		Path path = p.getCompiledEquivalentPath();
+		Path path = p.getEquivalentPath();
 		assertTrue(path != null);
-		assertEquals("/registrarId", path.toString());
+		assertEquals("/<http://example.com/ns/registrar/registrarId>", path.toString());
 		
 		
 	}

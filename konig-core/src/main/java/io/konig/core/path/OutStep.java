@@ -27,6 +27,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
+import io.konig.core.Context;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -35,6 +36,7 @@ import io.konig.core.TraversalException;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.util.TurtleElements;
 
 public class OutStep implements Step {
 	URI predicate;
@@ -86,10 +88,7 @@ public class OutStep implements Step {
 	}
 	
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append('/');
-		builder.append(predicate.getLocalName());
-		return builder.toString();
+		return toString(null);
 	}
 
 
@@ -106,6 +105,16 @@ public class OutStep implements Step {
 			builder.append(curie);
 		}
 		
+	}
+
+
+	@Override
+	public String toString(Context context) {
+
+		StringBuilder builder = new StringBuilder();
+		builder.append('/');
+		builder.append(TurtleElements.iri(context, predicate));
+		return builder.toString();
 	}
 
 }

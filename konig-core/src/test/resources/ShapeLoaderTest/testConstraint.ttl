@@ -1,0 +1,19 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:ShapeWithConstraint a sh:Shape ;
+	konig:constraint '''
+	@context {
+		"Activity" : "http://www.w3.org/ns/activitystreams#Activity",
+		"type" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+	}
+	?x.type = Activity
+''', '''
+	@context {
+		"actor" : "http://www.w3.org/ns/activitystreams#"
+	}
+	?x.actor = actor
+'''
+.

@@ -85,7 +85,7 @@ public class SimplePojoEmitterTest {
 		path.out(first_name);
 		
 		p.setId(propertyId);
-		p.setCompiledEquivalentPath(path);
+		p.setEquivalentPath(path);
 		
 		Graph graph = new MemoryGraph();
 		graph.setNamespaceManager(nsManager);

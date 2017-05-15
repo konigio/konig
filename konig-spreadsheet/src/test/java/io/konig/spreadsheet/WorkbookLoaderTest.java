@@ -26,6 +26,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.Path;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
@@ -220,7 +221,15 @@ public class WorkbookLoaderTest {
 		
 		URI state = uri("http://example.com/ns/alias/state");
 		PropertyConstraint p = shape.getPropertyConstraint(state);
-		assertEquals("/city/containedInPlace", p.getEquivalentPath());
+		String expected =
+			"@context {\n" + 
+			"  \"alias\" : \"http://example.com/ns/alias/\",\n" + 
+			"  \"city\" : \"alias:city\",\n" + 
+			"  \"schema\" : \"http://schema.org/\",\n" + 
+			"  \"containedInPlace\" : \"schema:containedInPlace\"\n" + 
+			"}\n" + 
+			"/city/containedInPlace";
+		assertEquals(expected, p.getEquivalentPath().toString());
 
 	}
 
@@ -244,8 +253,15 @@ public class WorkbookLoaderTest {
 		PropertyConstraint p = shape.getPropertyConstraint(Konig.timeInterval);
 		assertTrue(p != null);
 		
-		String partitionOf = p.getPartitionOf();
-		assertEquals("/schema:endTime", partitionOf);
+		Path partitionOf = p.getPartitionOf();
+		String expected = 
+			"@context {\n" + 
+			"  \"schema\" : \"http://schema.org/\",\n" + 
+			"  \"endTime\" : \"schema:endTime\"\n" + 
+			"}\n" + 
+			"/endTime";
+		
+		assertEquals(expected, partitionOf.toString());
 	}
 	
 	@Test
@@ -268,8 +284,17 @@ public class WorkbookLoaderTest {
 		PropertyConstraint p = shape.getPropertyConstraint(propertyId);
 		assertTrue(p != null);
 		
-		String sourcePath = p.getSourcePath();
-		assertEquals("/location[type City]", sourcePath);
+		Path sourcePath = p.getSourcePath();
+		String expected = 
+			"@context {\n" + 
+			"  \"schema\" : \"http://schema.org/\",\n" + 
+			"  \"location\" : \"schema:location\",\n" + 
+			"  \"rdf\" : \"http://www.w3.org/1999/02/22-rdf-syntax-ns#\",\n" + 
+			"  \"type\" : \"rdf:type\",\n" + 
+			"  \"City\" : \"schema:City\"\n" + 
+			"}\n" + 
+			"/location[type City]";
+		assertEquals(expected, sourcePath.toString());
 	}
 	
 	@Test
@@ -305,7 +330,15 @@ public class WorkbookLoaderTest {
 		
 		PropertyConstraint continent = shape.getPropertyConstraint(uri("http://example.com/ns/alias/continent"));
 		assertTrue(continent != null);
-		assertEquals("/country/containedInPlace", continent.getEquivalentPath());
+		String expected = 
+			"@context {\n" + 
+			"  \"alias\" : \"http://example.com/ns/alias/\",\n" + 
+			"  \"country\" : \"alias:country\",\n" + 
+			"  \"schema\" : \"http://schema.org/\",\n" + 
+			"  \"containedInPlace\" : \"schema:containedInPlace\"\n" + 
+			"}\n" + 
+			"/country/containedInPlace";
+		assertEquals(expected, continent.getEquivalentPath().toString());
 		assertEquals("/alias:continent", continent.getFromAggregationSource());
 		
 		PropertyConstraint timeInterval = shape.getPropertyConstraint(Konig.timeInterval);

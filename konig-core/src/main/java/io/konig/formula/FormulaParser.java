@@ -98,12 +98,23 @@ public class FormulaParser {
 				and = new ConditionalAndExpression();
 				and.add(value);
 				skipSpace();
-				while (tryWord("&&")) {
+				while (tryWord("&&") || tryWholeWord("AND")) {
 					value = valueLogical();
 					and.add(value);
 				}
 			}
 			return and;
+		}
+
+		private boolean tryWholeWord(String word) throws IOException {
+			if (tryWord(word)) {
+				int c = peek();
+				if (!Character.isLetterOrDigit(c) && c!='_') {
+					return true;
+				}
+				unread(word);
+			}
+			return false;
 		}
 
 		private ValueLogical valueLogical() throws RDFParseException, IOException, RDFHandlerException {
@@ -364,12 +375,35 @@ public class FormulaParser {
 		}
 
 		private BuiltInCall tryBuiltInCall() throws IOException, RDFParseException, RDFHandlerException {
-			BuiltInCall call = null;
+			BuiltInCall call = 
 			
-			call = tryIfFunction();
+			(call=tryIfFunction()) !=null ? call :
+			(call=trySumFunction()) != null ? call :
+			null;
 			
 			return call;
 		}
+		
+		
+		private BuiltInCall trySumFunction() throws IOException, RDFParseException, RDFHandlerException {
+			skipSpace();
+			if (tryWord("SUM")) {
+				int c = next();
+				if (c != '(') {
+					unread(c);
+					unread("SUM");
+				} else {
+					skipSpace();
+					Expression arg = expr();
+					assertNext(')');
+					return new FunctionExpression("SUM", arg);
+				}
+				
+			}
+			
+			return null;
+		}
+
 
 		private IfFunction tryIfFunction() throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
@@ -461,6 +495,14 @@ public class FormulaParser {
 				return new IriTerm(new URIImpl(value));
 			}
 			
+			if (c == '?') {
+				if (Character.isLetter(peek())) {
+					unread(c);
+					return variable();
+				}
+				
+			}
+			
 			
 			if (Character.isLetter(c)) {
 
@@ -503,6 +545,19 @@ public class FormulaParser {
 
 			
 			return predicate == null ? null : new LocalNameTerm(getContext(), predicate);
+		}
+
+		private VariableTerm variable() throws RDFParseException, IOException {
+			assertNext('?');
+			buffer = buffer();
+			int c = read();
+			do {
+				buffer.appendCodePoint(c);
+				c = read();
+			} while (Character.isLetter(c) || Character.isDigit(c) || c=='_');
+			unread(c);
+			String varName = buffer.toString();
+			return new VariableTerm(varName);
 		}
 
 		private LiteralFormula tryLiteralFormula() throws RDFParseException, RDFHandlerException, IOException {

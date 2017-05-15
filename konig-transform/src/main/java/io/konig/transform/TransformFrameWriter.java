@@ -169,7 +169,7 @@ public class TransformFrameWriter {
 	private void print(PropertyConstraint p) {
 		
 		URI predicate = p.getPredicate();
-		Path path = p.getCompiledEquivalentPath();
+		Path path = p.getEquivalentPath();
 		
 		println('[');
 		indent++;

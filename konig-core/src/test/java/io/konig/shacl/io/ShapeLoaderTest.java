@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -51,6 +52,31 @@ public class ShapeLoaderTest {
 	private ShapeLoader loader = new ShapeLoader(shapeManager);
 	
 	@Test
+	public void testConstraint() throws Exception {
+		Graph graph = loadGraph("ShapeLoaderTest/testConstraint.ttl");
+		URI shapeId = uri("http://example.com/shapes/ShapeWithConstraint");
+		
+		loader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		List<Expression> constraint = shape.getConstraint();
+		assertTrue(constraint!=null);
+		assertEquals(2, constraint.size());
+		
+		Expression expr = constraint.get(0);
+		
+		String expected = 
+			"@context {\n" + 
+			"   \"Activity\" : \"http://www.w3.org/ns/activitystreams#Activity\",\n" + 
+			"   \"type\" : \"http://www.w3.org/1999/02/22-rdf-syntax-ns#type\"\n" + 
+			"}\n" + 
+			"?x.type = Activity";
+		
+		String actual = expr.toString();
+		assertEquals(expected, actual);
+	}
+	
+	@Ignore
 	public void testDerivedProperty() throws Exception {
 
 		Graph graph = loadGraph("ShapeLoaderTest/testDerivedProperty.ttl");
@@ -67,7 +93,7 @@ public class ShapeLoaderTest {
 		assertEquals("1 + 2 + 3", p.getFormula().toString());
 	}
 	
-	@Test 
+	@Ignore 
 	public void testIdFormat() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		Graph graph = new MemoryGraph();
@@ -82,7 +108,7 @@ public class ShapeLoaderTest {
 		
 	}
 	
-	@Test 
+	@Ignore 
 	public void testFormula() throws Exception {
 		Graph graph = loadGraph("ShapeLoaderTest/testFormula.ttl");
 
@@ -114,7 +140,7 @@ public class ShapeLoaderTest {
 
 	
 	
-	@Test
+	@Ignore
 	public void testType() {
 		
 		URI shapeId = uri("http://example.com/PersonShape");
@@ -142,7 +168,7 @@ public class ShapeLoaderTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testShape() {
 		URI shapeId = uri("http://example.com/shape/PersonShape");
 		URI addressShapeId = uri("http://example.com/shape/PostalAddress");

@@ -45,9 +45,9 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
+import io.konig.core.PathFactory;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.path.PathFactory;
 import io.konig.core.util.SimpleValueMap;
 import io.konig.core.util.ValueFormat;
 import io.konig.core.vocab.Konig;
@@ -311,13 +311,11 @@ public class ClassStructure {
 	
 	private class Builder {
 		private ShapeManager shapeManager;
-		private PathFactory pathFactory;
 		
 		public Builder(ShapeManager shapeManager, OwlReasoner reasoner) {
 			this.shapeManager = shapeManager;
 			ClassStructure.this.reasoner = reasoner;
 			Graph graph = reasoner.getGraph();
-			pathFactory = new PathFactory(graph.getNamespaceManager(), graph);
 		}
 		
 		private void build() {
@@ -437,7 +435,7 @@ public class ClassStructure {
 							setDatatype(info, p.getDatatype());
 							setMaxCount(info, p.getMaxCount());
 							setMinCount(info, p.getMinCount());
-							setEquivalentPath(info, p.getCompiledEquivalentPath(pathFactory));
+							setEquivalentPath(info, p.getEquivalentPath());
 							setValueClass(info, p.getValueClass());
 							if (p.getShape() != null) {
 								setValueClass(info, p.getShape().getTargetClass());

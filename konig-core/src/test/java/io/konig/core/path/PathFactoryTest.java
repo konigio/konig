@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
@@ -37,6 +38,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
+import io.konig.core.PathFactory;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
@@ -44,6 +46,24 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.Schema;
 
 public class PathFactoryTest {
+	
+	private String context(NamespaceManager nsManager) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("@context {");
+		String comma = "\n  ";
+		for (Namespace ns : nsManager.listNamespaces()) {
+			builder.append(comma);
+			builder.append('"');
+			builder.append(ns.getPrefix());
+			builder.append("\" : \"");
+			builder.append(ns.getName());
+			builder.append('"');
+			comma = ",\n  ";
+		}
+		builder.append("\n}\n");
+		return builder.toString();
+	}
+	
 	
 	@Test
 	public void testBoolean() {
@@ -74,12 +94,12 @@ public class PathFactoryTest {
 			;
 		
 		
-		PathFactory factory = new PathFactory(nsManager, graph);
+		PathFactory factory = new PathFactory();
 		
 		Path path;
 		Set<Value> result;
 		
-		path = factory.createPath("schema:CreativeWork^rdf:type[schema:isFamilyFriendly true]");
+		path = factory.createPath(context(nsManager)+"schema:CreativeWork^rdf:type[schema:isFamilyFriendly true]");
 		result = path.traverse(new Traverser(graph));
 		
 		assertEquals(2, result.size());
@@ -117,12 +137,12 @@ public class PathFactoryTest {
 			;
 		
 		
-		PathFactory factory = new PathFactory(nsManager, graph);
+		PathFactory factory = new PathFactory();
 		
 		Path path;
 		Set<Value> result;
 		
-		path = factory.createPath("schema:Person^rdf:type[schema:birthDate \"1996-11-13\"^^xsd:date]");
+		path = factory.createPath(context(nsManager)+"schema:Person^rdf:type[schema:birthDate \"1996-11-13\"^^xsd:date]");
 		result = path.traverse(new Traverser(graph));
 		assertEquals(2, result.size());
 		assertTrue(result.contains(aliceId));
@@ -157,12 +177,12 @@ public class PathFactoryTest {
 			;
 		
 		
-		PathFactory factory = new PathFactory(nsManager, graph);
+		PathFactory factory = new PathFactory();
 		
 		Path path;
 		Set<Value> result;
 		
-		path = factory.createPath("schema:Thing^rdf:type[schema:name \"fruit\"@fr]");
+		path = factory.createPath(context(nsManager) + "schema:Thing^rdf:type[schema:name \"fruit\"@fr]");
 		result = path.traverse(new Traverser(graph));
 		assertEquals(1, result.size());
 		assertTrue(result.contains(two));
@@ -201,12 +221,12 @@ public class PathFactoryTest {
 			;
 		
 		
-		PathFactory factory = new PathFactory(nsManager, graph);
+		PathFactory factory = new PathFactory();
 		
 		Path path;
 		Set<Value> result;
 		
-		path = factory.createPath("schema:Person^rdf:type[schema:familyName \"Smith\"]");
+		path = factory.createPath(context(nsManager) + "schema:Person^rdf:type[schema:familyName \"Smith\"]");
 		result = path.traverse(new Traverser(graph));
 		
 		assertEquals(2, result.size());
@@ -221,6 +241,9 @@ public class PathFactoryTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
 		nsManager.add("rdf", RDF.NAMESPACE);
+		nsManager.add("TradeAction", Schema.TradeAction.stringValue());
+		nsManager.add("type", RDF.TYPE.stringValue());
+		nsManager.add("price", Schema.price.stringValue());
 
 		URI aliceId = uri("http://example.com/person/alice");
 		URI bobId = uri("http://example.com/person/bob");
@@ -244,12 +267,12 @@ public class PathFactoryTest {
 			;
 		
 
-		PathFactory factory = new PathFactory(nsManager, graph);
+		PathFactory factory = new PathFactory();
 		
 		Path path;
 		Set<Value> result;
 		
-		path = factory.createPath("TradeAction^type[price 20.99]");
+		path = factory.createPath(context(nsManager)+"TradeAction^type[price 20.99]");
 		result = path.traverse(new Traverser(graph));
 		assertEquals(1, result.size());
 		
@@ -261,6 +284,9 @@ public class PathFactoryTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
 		nsManager.add("rdf", RDF.NAMESPACE);
+		nsManager.add("TradeAction", Schema.TradeAction.stringValue());
+		nsManager.add("type", RDF.TYPE.stringValue());
+		nsManager.add("price", Schema.price.stringValue());
 
 		URI aliceId = uri("http://example.com/person/alice");
 		URI bobId = uri("http://example.com/person/bob");
@@ -284,12 +310,12 @@ public class PathFactoryTest {
 			;
 		
 
-		PathFactory factory = new PathFactory(nsManager, graph);
+		PathFactory factory = new PathFactory();
 		
 		Path path;
 		Set<Value> result;
 		
-		path = factory.createPath("TradeAction^type[price 20]");
+		path = factory.createPath(context(nsManager)+"TradeAction^type[price 20]");
 		result = path.traverse(new Traverser(graph));
 		assertEquals(1, result.size());
 		
@@ -300,6 +326,8 @@ public class PathFactoryTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
 		nsManager.add("rdf", RDF.NAMESPACE);
+		nsManager.add("Person", Schema.Person.stringValue());
+		nsManager.add("type", RDF.TYPE.stringValue());
 		
 		URI aliceId = uri("http://example.com/person/alice");
 		URI bobId = uri("http://example.com/person/bob");
@@ -325,19 +353,21 @@ public class PathFactoryTest {
 			;
 		
 		
-		PathFactory factory = new PathFactory(nsManager, graph);
+		PathFactory factory = new PathFactory();
 		
 		Path path;
 		Set<Value> result;
+		
+		String ctx = context(nsManager);
 
-		path = factory.createPath("schema:Person^rdf:type");
+		path = factory.createPath(ctx+"schema:Person^rdf:type");
 		result = path.traverse(new Traverser(graph));
 		assertEquals(3, result.size());
 		assertTrue(result.contains(aliceId));
 		assertTrue(result.contains(bobId));
 		assertTrue(result.contains(cathyId));
 		
-		path = factory.createPath("schema:Person^rdf:type[schema:gender schema:Female]");
+		path = factory.createPath(ctx+"schema:Person^rdf:type[schema:gender schema:Female]");
 		result = path.traverse(new Traverser(graph));
 		assertEquals(2, result.size());
 		assertTrue(result.contains(aliceId));
@@ -345,19 +375,19 @@ public class PathFactoryTest {
 		
 		Vertex alice = graph.getVertex(aliceId);
 		
-		path = factory.createPath("/schema:parent[schema:gender schema:Male]");
+		path = factory.createPath(ctx+"/schema:parent[schema:gender schema:Male]");
 		result = path.traverse(alice);
 		assertEquals(1, result.size());
 		assertTrue(result.contains(bobId));
 		
-		path=factory.createPath("<http://schema.org/Person>^<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>");
+		path=factory.createPath(ctx+"<http://schema.org/Person>^<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>");
 		result = path.traverse(new Traverser(graph));
 		assertEquals(3, result.size());
 		assertTrue(result.contains(aliceId));
 		assertTrue(result.contains(bobId));
 		assertTrue(result.contains(cathyId));
 		
-		path=factory.createPath("Person^type");
+		path=factory.createPath(ctx+"Person^type");
 		result = path.traverse(new Traverser(graph));
 		assertEquals(3, result.size());
 		assertTrue(result.contains(aliceId));

@@ -1,5 +1,8 @@
 package io.konig.core.path;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
 /*
  * #%L
  * konig-core
@@ -26,24 +29,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+
+import io.konig.core.Context;
 import io.konig.core.Graph;
-import io.konig.core.NamespaceManager;
+import io.konig.core.KonigException;
 import io.konig.core.Path;
 import io.konig.core.SPARQLBuilder;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
-import io.konig.core.impl.EmptyNamespaceManager;
+import io.konig.core.json.KonigJsonPrettyPrinter;
 
 public class PathImpl implements Path {
 	
 	private List<Step> stepList;
-
+	private Context context;
+	
 	public PathImpl() {
 		stepList =new ArrayList<>();
 	}
@@ -52,7 +59,7 @@ public class PathImpl implements Path {
 		stepList = list;
 	}
 	
-	void add(Step step) {
+	public void add(Step step) {
 		stepList.add(step);
 	}
 	
@@ -94,11 +101,6 @@ public class PathImpl implements Path {
 		return this;
 	}
 
-	@Override
-	public Path v(Resource... resource) {
-		add(new VertexStep(resource));
-		return this;
-	}
 
 
 	@Override
@@ -133,11 +135,29 @@ public class PathImpl implements Path {
 	
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		for (Step step : stepList) {
-			builder.append(step.toString());
+		try {
+
+			StringWriter buffer = new StringWriter();
+			JsonFactory factory = new JsonFactory();
+			JsonGenerator json = factory.createGenerator(buffer);
+			json.setPrettyPrinter(KonigJsonPrettyPrinter.INSTANCE);
+			
+			
+			if (context != null && !context.asList().isEmpty()) {
+				buffer.append("@context ");
+				context.toJson(json);
+				json.flush();
+				buffer.append("\n");
+			}
+			
+			for (Step step : stepList) {
+				buffer.append(step.toString(context));
+			}
+			return buffer.toString();
+			
+		} catch (IOException e) {
+			throw new KonigException(e);
 		}
-		return builder.toString();
 	}
 
 	@Override
@@ -147,17 +167,6 @@ public class PathImpl implements Path {
 			result.add(stepList.get(i));
 		}
 		return result;
-	}
-
-	@Override
-	public String toString(NamespaceManager nsManager) {
-		StringBuilder builder = new StringBuilder();
-
-		for (Step step : stepList) {
-			step.append(builder, nsManager);
-		}
-		return builder.toString();
-		
 	}
 	
 	@Override
@@ -195,13 +204,23 @@ public class PathImpl implements Path {
 
 	@Override
 	public Value toValue() {
-		String text = toString(EmptyNamespaceManager.getInstance());
+		String text = toString();
 		return new LiteralImpl(text, XMLSchema.STRING);
 	}
 
 	@Override
 	public Step remove(int index) {
 		return stepList.remove(index);
+	}
+
+	@Override
+	public Context getContext() {
+		return context;
+	}
+
+	@Override
+	public void setContext(Context context) {
+		this.context = context;
 	}
 
 

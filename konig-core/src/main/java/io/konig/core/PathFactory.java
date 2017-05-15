@@ -1,4 +1,4 @@
-package io.konig.core.path;
+package io.konig.core;
 
 /*
  * #%L
@@ -23,23 +23,26 @@ package io.konig.core.path;
 
 import java.io.StringReader;
 
-import io.konig.core.LocalNameService;
-import io.konig.core.NamespaceManager;
-import io.konig.core.Path;	
+import io.konig.core.path.PathParseException;
+import io.konig.core.path.PathParser;	
 
 public class PathFactory {
 	
 	private NamespaceManager nsManager;
-	private LocalNameService localNameService;
+	private NameMap nameMap;
+	
+	public PathFactory() {
+		
+	}
 	
 	public PathFactory(NamespaceManager nsManager) {
 		this.nsManager = nsManager;
 	}
 	
 	
-	public PathFactory(NamespaceManager nsManager, LocalNameService localNameService) {
+	public PathFactory(NamespaceManager nsManager, NameMap nameMap) {
 		this.nsManager = nsManager;
-		this.localNameService = localNameService;
+		this.nameMap = nameMap;
 	}
 	
 	public NamespaceManager getNamespaceManager() {
@@ -53,7 +56,7 @@ public class PathFactory {
 		
 		StringReader reader = new StringReader(text);
 		io.konig.core.path.PathParser parser = new io.konig.core.path.PathParser(nsManager);
-		parser.setLocalNameService(localNameService);
+		parser.setNameMap(nameMap);
 		
 		return parser.path(reader);
 	}

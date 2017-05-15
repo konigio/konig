@@ -34,6 +34,7 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
 import io.konig.activity.Activity;
+import io.konig.core.Path;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.impl.MemoryShapeManager;
 
@@ -184,7 +185,7 @@ public class ShapeBuilder {
 	
 	public ShapeBuilder beginOr() {
 		OrConstraint constraint = new OrConstraint();
-		peekShape().setConstraint(constraint);
+		peekShape().setOr(constraint);
 		stack.add(constraint);
 		
 		return this;
@@ -196,7 +197,7 @@ public class ShapeBuilder {
 	
 	public ShapeBuilder beginAnd() {
 		AndConstraint constraint = new AndConstraint();
-		peekShape().setConstraint(constraint);
+		peekShape().setAnd(constraint);
 		stack.add(constraint);
 		
 		return this;
@@ -372,7 +373,7 @@ public class ShapeBuilder {
 			return this;
 		}
 		
-		public PropertyBuilder equivalentPath(String value) {
+		public PropertyBuilder equivalentPath(Path value) {
 			property.setEquivalentPath(value);
 			return this;
 		}

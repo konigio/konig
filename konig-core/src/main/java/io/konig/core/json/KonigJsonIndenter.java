@@ -1,4 +1,4 @@
-package io.konig.core.vocab;
+package io.konig.core.json;
 
 /*
  * #%L
@@ -20,9 +20,28 @@ package io.konig.core.vocab;
  * #L%
  */
 
-public class VAR {
 
+import java.io.IOException;
 
-	public static final String NAMESPACE = "http://www.konig.io/ns/var/";
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter.Indenter;
+
+public class KonigJsonIndenter implements Indenter {
+	
+	String indent = "  ";
+	String newline = "\n";
+
+	@Override
+	public void writeIndentation(JsonGenerator jg, int level) throws IOException {
+		jg.writeRaw(newline);
+	      for (int i = 0; i < level; i++) {
+	        jg.writeRaw(indent);
+	      }
+	}
+
+	@Override
+	public boolean isInline() {
+		return false;
+	}
 
 }

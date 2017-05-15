@@ -1,4 +1,4 @@
-package io.konig.core.vocab;
+package io.konig.core.json;
 
 /*
  * #%L
@@ -20,9 +20,19 @@ package io.konig.core.vocab;
  * #L%
  */
 
-public class VAR {
 
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 
-	public static final String NAMESPACE = "http://www.konig.io/ns/var/";
+public class KonigJsonPrettyPrinter extends DefaultPrettyPrinter {
+	private static final long serialVersionUID = 1L;
+	
+	public static final KonigJsonPrettyPrinter INSTANCE = new KonigJsonPrettyPrinter();
+	
+	
+	public KonigJsonPrettyPrinter() {
+		Indenter indenter = new KonigJsonIndenter();
+		indentArraysWith(indenter);
+		indentObjectsWith(indenter);
+	}
 
 }

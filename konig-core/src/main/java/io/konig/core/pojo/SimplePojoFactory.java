@@ -330,6 +330,10 @@ public class SimplePojoFactory implements PojoFactory {
 			private AdderInfo adderInfo;
 			private ListInfo listInfo;
 			
+			private Object factory;
+			private Method factoryCreateMethod;
+			private boolean noFactory;
+			
 			public PropertyInfo(URI predicate, ListInfo listInfo) {
 				this.predicate = predicate;
 				this.listInfo = listInfo;
@@ -438,9 +442,64 @@ public class SimplePojoFactory implements PojoFactory {
 								setter.invoke(instance, stringObject);
 							}
 						}
+						// TODO: check for factory class in same package.
+						
+						tryValueFactory(type, instance, (Literal) value);
 					}
 				}
 				
+				
+			}
+
+			private void tryValueFactory(Class<?> type, Object instance, Literal value) {
+				
+				if (noFactory) {
+					return;
+				}
+				
+				try {
+					if (factory == null) {
+
+						String packageName = type.getPackage().getName();
+						String simpleName = type.getSimpleName();
+						
+						StringBuilder builder = new StringBuilder();
+						builder.append(packageName);
+						builder.append('.');
+						builder.append(simpleName);
+						builder.append("Factory");
+						
+						String factoryClassName = builder.toString();
+						Class<?> factoryClass = Class.forName(factoryClassName);
+						
+						builder = new StringBuilder();
+						builder.append("create");
+						builder.append(simpleName);
+						
+						String createMethodName = builder.toString();
+						
+						factoryCreateMethod = factoryClass.getMethod(createMethodName, String.class);
+						if (factoryCreateMethod.getReturnType() == type) {
+							Constructor<?> ctor = factoryClass.getConstructor();
+							factory = ctor.newInstance();
+						} else {
+							noFactory = true;
+						}
+					}
+					
+					
+				} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					noFactory = true;
+				}
+
+				if (factory!=null && factoryCreateMethod!=null) {
+					try {
+						Object propertyValue  = factoryCreateMethod.invoke(factory, value.stringValue());
+						setter.invoke(instance, propertyValue);
+					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+						throw new KonigException(e);
+					}
+				}
 				
 			}
 
