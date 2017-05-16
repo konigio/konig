@@ -1,5 +1,7 @@
 package io.konig.transform.rule;
 
+import io.konig.transform.assembly.TransformVariable;
+
 public class Variable<T> implements TransformVariable {
 
 	private String name;

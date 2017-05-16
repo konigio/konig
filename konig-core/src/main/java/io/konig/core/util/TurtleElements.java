@@ -23,6 +23,7 @@ package io.konig.core.util;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.datatypes.XMLDatatypeUtil;
@@ -126,6 +127,22 @@ public class TurtleElements {
 			return bnode((BNode)value);
 		}
 		return literal(context, (Literal) value);
+	}
+
+	public static String iri(Resource id) {
+		StringBuilder builder = new StringBuilder();
+		if (id == null) {
+			return "null";
+		}
+		if (id instanceof URI) {
+			builder.append('<');
+			builder.append(id.stringValue());
+			builder.append('>');
+		} else {
+			builder.append("_:");
+			builder.append(id.stringValue());
+		}
+		return builder.toString();
 	}
 	
 	

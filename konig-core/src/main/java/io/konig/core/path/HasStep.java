@@ -241,4 +241,9 @@ public class HasStep implements Step {
 		return builder.toString();
 	}
 
+	@Override
+	public URI getPredicate() {
+		return null;
+	}
+
 }

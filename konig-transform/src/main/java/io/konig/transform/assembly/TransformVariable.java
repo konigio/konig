@@ -1,4 +1,4 @@
-package io.konig.transform.rule;
+package io.konig.transform.assembly;
 
 public interface TransformVariable {
 

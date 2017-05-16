@@ -1,5 +1,7 @@
 package io.konig.core.path;
 
+import org.openrdf.model.URI;
+
 import io.konig.core.Context;
 import io.konig.core.NamespaceManager;
 import io.konig.core.SPARQLBuilder;
@@ -30,6 +32,10 @@ import io.konig.core.Traverser;
 
 public interface Step {
 
+	/**
+	 * Get the predicate associated with this step or null if there is none.
+	 */
+	URI getPredicate();
 	void traverse(Traverser traverser) throws TraversalException;
 	void visit(SPARQLBuilder builder);
 	void append(StringBuilder builder, NamespaceManager nsManager);

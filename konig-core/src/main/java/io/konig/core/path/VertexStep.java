@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
 import io.konig.core.Context;
@@ -102,6 +103,13 @@ public class VertexStep implements Step {
 	@Override
 	public String toString(Context context) {
 		return TurtleElements.value(context, resource);
+	}
+
+
+
+	@Override
+	public URI getPredicate() {
+		return null;
 	}
 
 }

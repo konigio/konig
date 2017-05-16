@@ -3,6 +3,8 @@ package io.konig.transform.rule;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openrdf.model.URI;
+
 import io.konig.shacl.Shape;
 
 /**
@@ -38,9 +40,19 @@ public class ShapeRule {
 	
 	public void addPropertyRule(PropertyRule rule) {
 		propertyRules.add(rule);
+		rule.setContainer(this);
 	}
 	
 	public List<PropertyRule> getPropertyRules() {
 		return propertyRules;
+	}
+	
+	public PropertyRule propertyRule(URI predicate) {
+		for (PropertyRule rule : propertyRules) {
+			if (rule.getFocusPredicate().equals(predicate)) {
+				return rule;
+			}
+		}
+		return null;
 	}
 }
