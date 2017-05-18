@@ -31,13 +31,11 @@ import org.openrdf.model.Value;
 import io.konig.core.path.Step;
 
 public interface Path {
+
+	Context getContext();
+	void setContext(Context context);
 	
-	/**
-	 * Explicitly add one or more resources to the path.
-	 * @param resource A resource to be added to the path
-	 * @return This Path
-	 */
-	Path v(Resource...resource);
+	
 	Path out(URI predicate);
 	Path in(URI predicate);
 	Path has(URI predicate, Value value);
@@ -47,8 +45,6 @@ public interface Path {
 	Set<Value> traverse(Traverser traverser);
 	
 	List<Step> asList();
-	
-	String toString(NamespaceManager nsManager);
 	Value toValue();
 	
 	/**
@@ -71,4 +67,6 @@ public interface Path {
 	int length();
 	
 	void visit(SPARQLBuilder builder);
+	
+	String toSimpleString();
 }

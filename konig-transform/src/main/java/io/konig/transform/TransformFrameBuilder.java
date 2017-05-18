@@ -11,12 +11,12 @@ import org.openrdf.model.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.path.HasStep;
 import io.konig.core.path.HasStep.PredicateValuePair;
 import io.konig.core.path.OutStep;
-import io.konig.core.path.PathFactory;
 import io.konig.core.path.Step;
 import io.konig.core.util.IriTemplate;
 import io.konig.shacl.NodeKind;
@@ -32,12 +32,12 @@ import io.konig.shacl.ShapeManager;
  */
 public class TransformFrameBuilder {
 	private static final Logger logger = LoggerFactory.getLogger(TransformFrameBuilder.class);
-	private PathFactory pathFactory;
 	private ShapeManager shapeManager;
+	private NamespaceManager nsManager;
 	
-	public TransformFrameBuilder(ShapeManager shapeManager, PathFactory pathFactory) {
+	public TransformFrameBuilder(ShapeManager shapeManager, NamespaceManager nsManager) {
 		this.shapeManager = shapeManager;
-		this.pathFactory = pathFactory;
+		this.nsManager = nsManager;
 	}
 
 	public TransformFrame create(Shape targetShape) throws ShapeTransformException {
@@ -99,7 +99,7 @@ public class TransformFrameBuilder {
 			
 			IriTemplate template = sourceShape.getIriTemplate();
 			if (template != null) {
-				IriTemplateInfo info = IriTemplateInfo.create(template, pathFactory.getNamespaceManager(), sourceShape);
+				IriTemplateInfo info = IriTemplateInfo.create(template, nsManager, sourceShape);
 				ShapePath shapePath = new ShapePath(targetContext, sourceShape);
 				frame.addIdMapping(new MappedId(shapePath, info));
 			}
@@ -118,7 +118,7 @@ public class TransformFrameBuilder {
 				for (PropertyConstraint p : propertyList) {
 					URI predicate = p.getPredicate();
 					if (predicate != null) {
-						Path path = p.getCompiledEquivalentPath(pathFactory);
+						Path path = p.getEquivalentPath();
 						if (path == null) {
 							TransformAttribute attr = frame.getAttribute(predicate);
 							if (attr != null) {
@@ -184,7 +184,7 @@ public class TransformFrameBuilder {
 												IriTemplate template = valueShape.getIriTemplate();
 												if (template != null) {
 													IriTemplateInfo info = IriTemplateInfo.create(
-														template, pathFactory.getNamespaceManager(), valueShape);
+														template, nsManager, valueShape);
 													
 													if (info == null) {
 														logger.warn("Cannot expand IRI template: " + template.toString());
@@ -278,7 +278,7 @@ public class TransformFrameBuilder {
 					if (count > 1) {
 						return false;
 					}
-					Path qpath = q.getCompiledEquivalentPath(pathFactory);
+					Path qpath = q.getEquivalentPath();
 					
 					if (qpath == null) {
 						if (last.equals(q.getPredicate())) {

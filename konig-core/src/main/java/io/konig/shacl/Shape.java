@@ -56,7 +56,6 @@ public class Shape {
 	private URI targetClass;
 	private List<PropertyConstraint> property;
 	private List<PropertyConstraint> derivedProperty;
-	private Constraint constraint;
 	private Context jsonldContext;
 	private URI equivalentRelationalShape;
 	private NodeKind nodeKind;
@@ -80,6 +79,7 @@ public class Shape {
 	private int ordinal;
 	private URI preferredJsonldContext;
 	private URI preferredJsonSchema;
+	private List<Expression> constraint;
 	
 	
 	public Shape() {
@@ -155,15 +155,6 @@ public class Shape {
 	public void setOr(OrConstraint or) {
 		this.or = or;
 	}
-
-	public Constraint getConstraint() {
-		return constraint;
-	}
-	
-	public Shape setConstraint(Constraint constraint) {
-		this.constraint = constraint;
-		return this;
-	}
 	
 	public PropertyConstraint getTimeParam() {
 		if (property != null) {
@@ -207,8 +198,12 @@ public class Shape {
 			return true;
 		}
 		
-		if (constraint != null) {
-			return constraint.hasPropertyConstraint(predicate);
+		if (and!=null && and.hasPropertyConstraint(predicate)) {
+			return true;
+		}
+		
+		if (or!=null && or.hasPropertyConstraint(predicate)) {
+			return true;
 		}
 		
 		return false;
@@ -519,4 +514,21 @@ public class Shape {
 	public void setPreferredJsonSchema(URI preferredJsonSchema) {
 		this.preferredJsonSchema = preferredJsonSchema;
 	}
+
+	public List<Expression> getConstraint() {
+		return constraint;
+	}
+	
+	public void addConstraint(Expression expr) {
+		if (constraint == null) {
+			constraint = new ArrayList<>();
+		}
+		constraint.add(expr);
+	}
+
+	public void setConstraint(List<Expression> constraint) {
+		this.constraint = constraint;
+	}
+	
+	
 }

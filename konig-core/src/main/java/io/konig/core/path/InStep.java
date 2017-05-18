@@ -27,6 +27,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
+import io.konig.core.Context;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -34,6 +35,7 @@ import io.konig.core.SPARQLBuilder;
 import io.konig.core.TraversalException;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
+import io.konig.core.util.TurtleElements;
 
 public class InStep implements Step {
 	
@@ -43,6 +45,10 @@ public class InStep implements Step {
 		this.predicate = predicate;
 	}
 	
+	public URI getPredicate() {
+		return predicate;
+	}
+
 	@Override
 	public boolean equals(Object other) {
 		boolean result = false;
@@ -76,21 +82,27 @@ public class InStep implements Step {
 	public void visit(SPARQLBuilder builder) {
 
 		builder.append('^');
-		builder.append(predicate);
+		builder.append(TurtleElements.iri(null, predicate));
 		
 	}
 	
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append('^');
-		builder.append(predicate.getLocalName());
-		return builder.toString();
+		return toString(null);
 	}
 
 	@Override
 	public void append(StringBuilder builder, NamespaceManager nsManager) {
 		throw new RuntimeException("Not implemented");
 		
+	}
+
+	@Override
+	public String toString(Context context) {
+
+		StringBuilder builder = new StringBuilder();
+		builder.append('^');
+		builder.append(TurtleElements.iri(context, predicate));
+		return builder.toString();
 	}
 
 }

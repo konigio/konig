@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.NamespaceManager;
+import io.konig.core.PathFactory;
 import io.konig.core.io.PrettyPrintWriter;
-import io.konig.core.path.PathFactory;
 import io.konig.core.util.IOUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
@@ -35,12 +35,11 @@ public class TransformGenerator {
 	public TransformGenerator(
 		NamespaceManager nsManager, 
 		ShapeManager shapeManager, 
-		PathFactory pathFactory, 
 		QueryBuilder queryBuilder
 	) {
 
 		this.shapeManager = shapeManager;
-		frameBuilder = new TransformFrameBuilder(shapeManager, pathFactory);
+		frameBuilder = new TransformFrameBuilder(shapeManager, nsManager);
 		this.queryBuilder = queryBuilder;
 	}
 	

@@ -32,6 +32,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
+import io.konig.core.Context;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -40,6 +41,7 @@ import io.konig.core.TraversalException;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.util.TurtleElements;
 
 public class HasStep implements Step {
 
@@ -200,9 +202,48 @@ public class HasStep implements Step {
 			return result;
 		}
 		
-		
-		
-		
+	}
+
+	@Override
+	public String toString(Context context) {
+
+		StringBuilder builder = new StringBuilder();
+		builder.append('[');
+		URI lastPredicate=null;
+		if (list.size()==1) {
+			PredicateValuePair pair = list.get(0);
+			String name = TurtleElements.iri(context, pair.getPredicate());
+			String value = TurtleElements.value(context, pair.value);
+			builder.append(name);
+			builder.append(' ');
+			builder.append(value);
+		} else {
+			for (PredicateValuePair pair : list) {
+				if (lastPredicate != null) {
+					if (lastPredicate.equals(pair.predicate)) {
+						builder.append(",\n  ");
+					} else {
+						builder.append(";\n  ");
+					}
+				} else {
+					builder.append("\n  ");
+				}
+				String name = TurtleElements.iri(context, pair.predicate);
+				builder.append(name);
+				builder.append(' ');
+				lastPredicate = pair.predicate;
+				String value = TurtleElements.value(context, pair.value);
+				builder.append(' ');
+				builder.append(value);
+			}
+		}
+		builder.append(']');
+		return builder.toString();
+	}
+
+	@Override
+	public URI getPredicate() {
+		return null;
 	}
 
 }

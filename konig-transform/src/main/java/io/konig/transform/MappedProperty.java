@@ -59,7 +59,7 @@ public class MappedProperty extends AbstractPrettyPrintable {
 	}
 
 	public boolean isLeaf() {
-		Path path = property.getCompiledEquivalentPath();
+		Path path = property.getEquivalentPath();
 		return template==null && (path==null || stepIndex == path.length()-1);
 	}
 

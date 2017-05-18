@@ -13,10 +13,10 @@ import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.PathFactory;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.path.PathFactory;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -52,7 +52,7 @@ public class KonigTransformMojo extends AbstractMojo{
 		
 		PathFactory pathFactory = new PathFactory(nsManager);
 		QueryBuilder queryBuilder = new QueryBuilder(graph);
-		TransformGenerator generator = new TransformGenerator(nsManager, shapeManager, pathFactory, queryBuilder);
+		TransformGenerator generator = new TransformGenerator(nsManager, shapeManager, queryBuilder);
 		
 		try {
 			generator.generateAll(outDir);

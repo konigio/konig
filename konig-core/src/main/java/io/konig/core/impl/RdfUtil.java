@@ -42,11 +42,13 @@ import org.openrdf.rio.helpers.BasicWriterSettings;
 import org.openrdf.rio.turtle.TurtleParserFactory;
 import org.openrdf.rio.turtle.TurtleUtil;
 
+import io.konig.core.Context;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
+import io.konig.core.Term;
 import io.konig.core.Vertex;
 import io.konig.core.io.CompactTurtleWriter;
 import io.konig.core.io.CompositeRdfHandler;
@@ -57,6 +59,7 @@ import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
@@ -83,6 +86,31 @@ import io.konig.shacl.io.ShapeLoader;
 
 public class RdfUtil {
 	
+	/**
+	 * Count the number of distinct PropertyConstraints within a given Shape
+	 */
+	public static int countDistinctProperties(Shape shape) {
+		Set<Shape> memory = new HashSet<>();
+		
+		return countProperties(memory, shape);
+	}
+	
+	private static int countProperties(Set<Shape> memory, Shape shape) {
+		int count = 0;
+		if (!memory.contains(shape)) {
+			memory.add(shape);
+			List<PropertyConstraint> list = shape.getProperty();
+			count += list.size();
+			for (PropertyConstraint p : list) {
+				Shape childShape = p.getShape();
+				if (childShape != null) {
+					count = countProperties(memory, childShape);
+				}
+			}
+		}
+		return count;
+	}
+
 	public static List<Namespace> collectNamespaces(NamespaceManager nsManager, Collection<Edge> edgeList) {
 		Map<String, Namespace> map = new HashMap<>();
 		for (Edge e : edgeList) {
@@ -746,5 +774,33 @@ public class RdfUtil {
 		out.print('<');
 		out.print(uri.stringValue());
 		out.print('>');
+	}
+	
+	public static String compactName(Context context, URI resource) {
+
+		String iriValue = resource.stringValue();
+		
+		if (context != null) {
+			Context inverse = context.inverse();
+			Term term = inverse.getTerm(iriValue);
+			if (term != null) {
+				return term.getId();
+			}
+			
+			term = inverse.getTerm(resource.getNamespace());
+			if (term != null) {
+				StringBuilder builder = new StringBuilder();
+				builder.append(term.getId());
+				builder.append(':');
+				builder.append(resource.getLocalName());
+				return builder.toString();
+			}
+		}
+		
+		StringBuilder builder = new StringBuilder();
+		builder.append('<');
+		builder.append(iriValue);
+		builder.append('>');
+		return builder.toString();
 	}
 }

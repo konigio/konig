@@ -20,15 +20,9 @@ package io.konig.core.vocab;
  * #L%
  */
 
-
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
-
 public class VAR {
 
 
 	public static final String NAMESPACE = "http://www.konig.io/ns/var/";
-	
-	public static final URI target = new URIImpl("http://www.konig.io/ns/var/target");
 
 }

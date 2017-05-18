@@ -115,6 +115,7 @@ public class Schema {
 	public static final URI AudioObject = new URIImpl("http://schema.org/AudioObject");
 	public static final URI ImageObject = new URIImpl("http://schema.org/ImageObject");
 	public static final URI Barcode = new URIImpl("http://schema.org/Barcode");
+	public static final URI category = new URIImpl("http://schema.org/category");
 	
 	
 

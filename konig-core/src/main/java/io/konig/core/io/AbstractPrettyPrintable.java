@@ -32,4 +32,5 @@ public abstract class AbstractPrettyPrintable implements PrettyPrintable {
 		out.close();
 		return buffer.toString();
 	}
+	
 }

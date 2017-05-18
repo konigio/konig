@@ -37,6 +37,7 @@ public class Konig {
 	public static final String IRI_TEMPLATE = "http://www.konig.io/ns/core/iriTemplate";
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
+	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
 	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
@@ -112,7 +113,7 @@ public class Konig {
 	public static final URI rollUpBy = new URIImpl("http://www.konig.io/ns/core/rollUpBy");
 	public static final URI fromAggregationSource = new URIImpl("http://www.konig.io/ns/core/fromAggregationSource");
 	public static final URI timeInterval = new URIImpl("http://www.konig.io/ns/core/timeInterval");
-	public static final URI sourcePath = new URIImpl("http://www.konig.io/ns/core/sourcePath");
+	public static final URI sourcePath = new URIImpl(SOURCE_PATH);
 	public static final URI partitionOf = new URIImpl("http://www.konig.io/ns/core/partitionOf");
 	public static final URI TimeUnit = new URIImpl("http://www.konig.io/ns/core/TimeUnit");
 	public static final URI TimeInterval = new URIImpl("http://www.konig.io/ns/core/TimeInterval");

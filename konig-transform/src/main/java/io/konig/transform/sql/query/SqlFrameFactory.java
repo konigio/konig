@@ -104,7 +104,7 @@ public class SqlFrameFactory {
 							
 							PropertyConstraint leftConstraint = joinProperty.getProperty();
 							if (leftConstraint.getDatatype() != null) {
-								Path leftPath = leftConstraint.getCompiledEquivalentPath();
+								Path leftPath = leftConstraint.getEquivalentPath();
 								if (leftPath != null) {
 									if (leftPath.length()==2) {
 										// Special case where the relationship is a unique key reference
@@ -120,7 +120,7 @@ public class SqlFrameFactory {
 											} else {
 												// Check for a property on rightShape with an equivalentPath that maps to the predicate at the end of leftPath
 												for (PropertyConstraint p : rightShape.getProperty()) {
-													Path rightPath = p.getCompiledEquivalentPath();
+													Path rightPath = p.getEquivalentPath();
 													if (rightPath != null && rightPath.length()==1) {
 														Step rightEnd = rightPath.asList().get(0);
 														if (rightEnd instanceof OutStep) {
@@ -389,10 +389,10 @@ public class SqlFrameFactory {
 						
 						
 						Shape leftShape = leftShapePath.getShape();
-						Path leftPath = leftConstraint==null ? null : leftConstraint.getCompiledEquivalentPath();
+						Path leftPath = leftConstraint==null ? null : leftConstraint.getEquivalentPath();
 						String leftPathString = leftPath==null ? null : leftPath.toString();
 						
-						Path rightPath = rightConstraint==null ? null : rightConstraint.getCompiledEquivalentPath();
+						Path rightPath = rightConstraint==null ? null : rightConstraint.getEquivalentPath();
 						String rightPathString = rightPath==null ? null : rightPath.toString();
 						
 						StringBuilder msg = new StringBuilder();
@@ -428,7 +428,7 @@ public class SqlFrameFactory {
 		if (mappedProperty != null) {
 			PropertyConstraint p = mappedProperty.getProperty();
 			if (p != null) {
-				Path path = p.getCompiledEquivalentPath();
+				Path path = p.getEquivalentPath();
 				if (path != null) {
 					int last = path.length()-1;
 					Step step = path.asList().get(last);

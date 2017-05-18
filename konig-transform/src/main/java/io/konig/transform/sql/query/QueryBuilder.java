@@ -131,9 +131,9 @@ public class QueryBuilder {
 			
 		
 			String leftColumnName = null;
-			if (primaryKey.getCompiledEquivalentPath() != null) {
+			if (primaryKey.getEquivalentPath() != null) {
 				
-				if (primaryKey.getCompiledEquivalentPath().asList().size()>1) {
+				if (primaryKey.getEquivalentPath().asList().size()>1) {
 
 					throw new ShapeTransformException("Cannot handle equivalentPath for primary key on Shape: " + 
 							s.getTransformFrame().getTargetShape().getId());
@@ -476,7 +476,7 @@ public class QueryBuilder {
 		if (m != null) {
 			int stepIndex = m.getStepIndex();
 			if (stepIndex > 0) {
-				Path path = m.getProperty().getCompiledEquivalentPath();
+				Path path = m.getProperty().getEquivalentPath();
 				if (stepIndex < path.length()-1) {
 					PropertyConstraint targetConstraint = attr.getAttribute().getTargetProperty();
 					Resource valueClass = targetConstraint.getValueClass();
@@ -660,7 +660,7 @@ public class QueryBuilder {
 		MappedProperty m = attr.getMappedProperty();
 		PropertyConstraint p = m.getProperty();
 		if (p != null) {
-			Path path = p.getCompiledEquivalentPath();
+			Path path = p.getEquivalentPath();
 			if (path != null && (path.length()==2 || force)) {
 				PropertyConstraint q = attr.getAttribute().getTargetProperty();
 				if (q != null) {

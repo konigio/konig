@@ -24,9 +24,13 @@ JsonldKeyword ::= '@id' | '@type' | '@language'
 
 Expression	  ::=  	ConditionalOrExpression
 
-ConditionalOrExpression	  ::=  	ConditionalAndExpression ( '||' ConditionalAndExpression )*
+ConditionalOrExpression	  ::=  	ConditionalAndExpression ( OrOperator ConditionalAndExpression )*
 
-ConditionalAndExpression	  ::=  	ValueLogical ( '&&' ValueLogical )*
+OrOperator ::= '||' | 'OR'
+
+ConditionalAndExpression	  ::=  	ValueLogical ( AndOperator ValueLogical )*
+
+AndOperator ::= '&&' | 'AND'
 
 ValueLogical	  ::=  	RelationalExpression
 
@@ -67,10 +71,14 @@ BrackettedExpression	  ::=  	'(' Expression ')'
 
 Path	::= (InStep | PathTerm) ( OutStep | InStep)*
 
-PathTerm ::= IRI | CURIE | LocalName
+PathTerm ::= IRI | CURIE | LocalName | Variable
+
+Variable ::= '?' [a-zA-Z][a-zA-Z0-9]*
 
 OutStep ::= '.' PathTerm
 
 InStep ::= '^' PathTerm
 
-BuiltInCall ::= 'IF' '(' Expression ',' Expression ',' Expression ',' ')'
+BuiltInCall ::= 
+		'IF' '(' Expression ',' Expression ',' Expression ',' ')'
+	| 'SUM' '(' Expression ')'

@@ -26,31 +26,33 @@ import java.io.PushbackReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.openrdf.model.BNode;
-import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.NumericLiteralImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
+import io.konig.core.Context;
 import io.konig.core.KonigException;
 import io.konig.core.LocalNameService;
+import io.konig.core.NameMap;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
 import io.konig.rio.turtle.NamespaceMap;
-import io.konig.rio.turtle.TurtleParser;
+import io.konig.rio.turtle.SeaTurtleParser;
 
-public class PathParser extends TurtleParser {
+public class PathParser extends SeaTurtleParser {
 	
-	private LocalNameService localNameService;
+	private NamespaceManager nsManager;
 
 	public PathParser(NamespaceManager nsManager) {
 		this(new NamespaceMapAdapter(nsManager), null);
+		this.nsManager = nsManager;
 	}
 	
 	public PathParser(NamespaceMap map, PushbackReader reader) {
@@ -58,13 +60,9 @@ public class PathParser extends TurtleParser {
 		setRDFHandler(new Handler());
 		this.reader = reader;
 	}
-	
-	public LocalNameService getLocalNameService() {
-		return localNameService;
-	}
 
-	public void setLocalNameService(LocalNameService localNameService) {
-		this.localNameService = localNameService;
+	public PathParser(NameMap nameMap) {
+		this.nameMap = nameMap;
 	}
 
 	public Path path(Reader input) throws KonigException {
@@ -73,6 +71,7 @@ public class PathParser extends TurtleParser {
 		
 		return path();
 	}
+	
 	/**
 	 * Here's the official Turtle 1.1 Syntax
 	 * <pre>
@@ -90,70 +89,71 @@ public class PathParser extends TurtleParser {
 	 * Notice that this customization requires that a bareLocalName is allowed only if it matches
 	 * the syntax of a namespace prefix.
 	 */
-	protected URI prefixedName(int c) throws IOException, RDFParseException {
-		unread(c);
-		
-		String prefix = pn_prefix();
-		
-		c = read();
-		
-		if (c != ':') {
-			unread(c);
-			// Treat the prefix as a bare local name.
-			if (localNameService != null) {
-				Set<URI> set = localNameService.lookupLocalName(prefix);
-				if (set.isEmpty()) {
-					StringBuilder err = err();
-					err.append("No URI found with local name '");
-					err.append(prefix);
-					err.append("'");
-					fail(err);
-				}
-				
-				if (set.size()>1) {
-					StringBuilder err = err();
-					err.append("Local name '");
-					err.append(prefix);
-					err.append("' is ambgious. Matching values include ");
-					
-					int count = 0;
-					for (URI uri : set) {
-						if (count > 0) {
-							err.append(", ");
-						}
-						err.append('<');
-						err.append(uri.stringValue());
-						err.append('>');
-						count++;
-						if (count >= 3) {
-							break;
-						}
-					}
-					if (set.size()>3) {
-						err.append(" ...");
-					}
-					fail(err);
-				}
-				return set.iterator().next();
-			} else {
-				StringBuilder err = err();
-				err.append("Bare local names not supported. ");
-				err.append("Use a fully-qualified IRI or a prefixed name, ");
-				err.append("or assign a LocalNameService to this PathParser.");
-				fail(err);
-			}
-
-		}
-		
-		String localName = pn_local();
-
-		String namespace = namespaceMap.get(prefix);
-		if (namespace == null) {
-			fail("Namespace not defined for prefix '" + prefix + "'");
-		}
-		
-		return valueFactory.createURI(namespace + localName);
-	}
+//	protected URI prefixedName(int c) throws IOException, RDFParseException {
+//		unread(c);
+//		
+//		String prefix = pn_prefix();
+//		
+//		c = read();
+//		
+//		if (c != ':') {
+//			unread(c);
+//			// Treat the prefix as a bare local name.
+//			if (localNameService != null) {
+//				Set<URI> set = localNameService.lookupLocalName(prefix);
+//				if (set.isEmpty()) {
+//					StringBuilder err = err();
+//					err.append("No URI found with local name '");
+//					err.append(prefix);
+//					err.append("'");
+//					fail(err);
+//				}
+//				
+//				if (set.size()>1) {
+//					StringBuilder err = err();
+//					err.append("Local name '");
+//					err.append(prefix);
+//					err.append("' is ambgious. Matching values include ");
+//					
+//					int count = 0;
+//					for (URI uri : set) {
+//						if (count > 0) {
+//							err.append(", ");
+//						}
+//						err.append('<');
+//						err.append(uri.stringValue());
+//						err.append('>');
+//						count++;
+//						if (count >= 3) {
+//							break;
+//						}
+//					}
+//					if (set.size()>3) {
+//						err.append(" ...");
+//					}
+//					fail(err);
+//				}
+//				return set.iterator().next();
+//			} else {
+//				
+//				StringBuilder err = err();
+//				err.append("Bare local names not supported. ");
+//				err.append("Use a fully-qualified IRI or a prefixed name, ");
+//				err.append("or assign a LocalNameService to this PathParser.");
+//				fail(err);
+//			}
+//
+//		}
+//		
+//		String localName = pn_local();
+//
+//		String namespace = namespaceMap.get(prefix);
+//		if (namespace == null) {
+//			fail("Namespace not defined for prefix '" + prefix + "'");
+//		}
+//		
+//		return valueFactory.createURI(namespace + localName);
+//	}
 	
 	/**
 	 * <pre>
@@ -166,7 +166,8 @@ public class PathParser extends TurtleParser {
 	private Path path() {
 		Path path = new PathImpl();
 		try {
-		
+			prologue();
+			path.setContext(getContext());
 			int c;
 			while (!done(c=next())) {
 				unread(c);
@@ -193,6 +194,12 @@ public class PathParser extends TurtleParser {
 		} catch (IOException | RDFParseException | RDFHandlerException e) {
 			throw new KonigException(e);
 		}
+		if (nameMap != null ) {
+			Context context = path.getContext();
+			if (context.asList().isEmpty() && nsManager != null) {
+				PathContextBuilder.buildContext(path, nsManager);
+			}
+		}
 		return path;
 	}
 
@@ -211,7 +218,7 @@ public class PathParser extends TurtleParser {
 	 */
 	private Step namedIndividual() throws RDFParseException, IOException, RDFHandlerException {
 		URI iri = iri();
-		return new VertexStep(new Resource[]{iri});
+		return new VertexStep(iri);
 	}
 	
 	private Handler handler() {

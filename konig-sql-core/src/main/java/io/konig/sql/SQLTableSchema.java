@@ -10,9 +10,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.NamespaceManager;
-import io.konig.core.path.PathFactory;
 import io.konig.core.util.IriTemplate;
-import io.konig.core.util.LinkedValueMap;
 import io.konig.core.util.PathPattern;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueMap;
@@ -190,18 +188,18 @@ public class SQLTableSchema {
 				
 				if (column.getEquivalentPath()==null ) {
 
-					PathFactory factory = new PathFactory(nsManager);
-					PathPattern pattern = findPathPattern(column);
-					if (pattern != null && nsManager!=null) {
-						String path = pattern.transform(column.getColumnName(), nsManager);
-						
-						column.setEquivalentPath(factory.createPath(path));
-					} else	if (pathTemplate!=null) {
-
-						LinkedValueMap tableMap = new LinkedValueMap(new ColumnValueMap(column), map);
-						String text = pathTemplate.format(tableMap);
-						column.setEquivalentPath(factory.createPath(text));
-					}
+//					PathFactory factory = new PathFactory(nsManager);
+//					PathPattern pattern = findPathPattern(column);
+//					if (pattern != null && nsManager!=null) {
+//						String path = pattern.transform(column.getColumnName(), nsManager);
+//						
+//						column.setEquivalentPath(factory.createPath(path));
+//					} else	if (pathTemplate!=null) {
+//
+//						LinkedValueMap tableMap = new LinkedValueMap(new ColumnValueMap(column), map);
+//						String text = pathTemplate.format(tableMap);
+//						column.setEquivalentPath(factory.createPath(text));
+//					}
 				}
 			}
 		}

@@ -15,7 +15,7 @@ import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
-import io.konig.core.path.PathFactory;
+import io.konig.core.PathFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Schema;
 
@@ -39,7 +39,7 @@ public class SQLParserTest {
 
 		Path path = column.getEquivalentPath();
 		assertTrue(path != null);
-		assertEquals("/registrarId", path.toString());
+		assertEquals("/<http://example.com/ns/registrar/registrarId>", path.toString());
 		
 		IriTemplate template = table.getPhysicalShape().getIriTemplate();
 		assertTrue(template != null);

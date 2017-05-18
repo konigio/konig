@@ -59,7 +59,7 @@ public class ShapeValidatorTest {
 		assertTrue(!ok);
 		assertEquals(1, report.getValidationResult().size());
 		ValidationResult result = report.getValidationResult().get(0);
-		assertEquals("/schema:address", result.getPath().toString(nsManager));
+		assertEquals("/<http://schema.org/address>", result.getPath().toString());
 		assertEquals("Expected an IRI but found  a BNode", result.getMessage());
 	}
 	
@@ -74,7 +74,7 @@ public class ShapeValidatorTest {
 		assertTrue(!ok);
 		assertEquals(1, report.getValidationResult().size());
 		ValidationResult result = report.getValidationResult().get(0);
-		assertEquals("/schema:address/schema:addressRegion", result.getPath().toString(nsManager));
+		assertEquals("/<http://schema.org/address>/<http://schema.org/addressRegion>", result.getPath().toString());
 		assertEquals("Expected at least 1 value but found 0", result.getMessage());
 	}
 	
@@ -89,7 +89,7 @@ public class ShapeValidatorTest {
 		assertTrue(!ok);
 		assertEquals(1, report.getValidationResult().size());
 		ValidationResult result = report.getValidationResult().get(0);
-		assertEquals("/schema:address", result.getPath().toString(nsManager));
+		assertEquals("/<http://schema.org/address>", result.getPath().toString());
 		assertEquals("Value must not be a literal but found '101 Main Street'", result.getMessage());
 		
 	}
@@ -105,7 +105,7 @@ public class ShapeValidatorTest {
 		assertTrue(!ok);
 		assertEquals(1, report.getValidationResult().size());
 		ValidationResult result = report.getValidationResult().get(0);
-		assertEquals("/schema:familyName", result.getPath().toString(nsManager));
+		assertEquals("/<http://schema.org/familyName>", result.getPath().toString());
 		assertEquals("Expected at least 1 value but found 0", result.getMessage());
 		
 	}
@@ -122,7 +122,7 @@ public class ShapeValidatorTest {
 		assertTrue(!ok);
 		assertEquals(1, report.getValidationResult().size());
 		ValidationResult result = report.getValidationResult().get(0);
-		assertEquals("/schema:familyName", result.getPath().toString(nsManager));
+		assertEquals("/<http://schema.org/familyName>", result.getPath().toString());
 		assertEquals("Expected at most 1 value but found 2", result.getMessage());
 		
 	}
@@ -139,7 +139,7 @@ public class ShapeValidatorTest {
 		assertTrue(!ok);
 		assertEquals(1, report.getValidationResult().size());
 		ValidationResult result = report.getValidationResult().get(0);
-		assertEquals("/schema:birthDate", result.getPath().toString(nsManager));
+		assertEquals("/<http://schema.org/birthDate>", result.getPath().toString());
 		assertEquals("Expected value of type xsd:date but found xsd:dateTime", result.getMessage());
 	}
 
@@ -157,7 +157,7 @@ public class ShapeValidatorTest {
 		assertTrue(!ok);
 		assertEquals(1, report.getValidationResult().size());
 		ValidationResult result = report.getValidationResult().get(0);
-		assertEquals("/schema:familyName", result.getPath().toString(nsManager));
+		assertEquals("/<http://schema.org/familyName>", result.getPath().toString());
 		assertEquals("Property not permitted in closed shape", result.getMessage());
 	}
 

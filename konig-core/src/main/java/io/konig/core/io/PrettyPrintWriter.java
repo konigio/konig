@@ -27,7 +27,9 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.BNode;
@@ -43,15 +45,22 @@ import org.openrdf.rio.turtle.TurtleUtil;
 import io.konig.core.NamespaceManager;
 
 public class PrettyPrintWriter extends PrintWriter {
+	private static enum AutoMode {
+		NONE,
+		INDENT,
+		NEWLINE_INDENT
+	}
 	
 	private boolean prettyPrint = true;
 	private int indentLevel;
 	private String indentText = "   ";
 	
 	private NamespaceManager nsManager;
+	private List<AutoMode> autoMode = new ArrayList<>();
 
 	public PrettyPrintWriter(Writer arg0) {
 		super(arg0);
+		autoMode.add(AutoMode.NONE);
 	}
 
 	public PrettyPrintWriter(OutputStream arg0) {
@@ -147,6 +156,11 @@ public class PrettyPrintWriter extends PrintWriter {
 		}
 	}
 	
+	public void print(Object object) {
+		autoWhitespace();
+		super.print(object);
+	}
+	
 	public void println(PrettyPrintable object) {
 		print(object);
 		println();
@@ -158,7 +172,28 @@ public class PrettyPrintWriter extends PrintWriter {
 		print(' ');
 	}
 	
+	private AutoMode autoMode() {
+		return autoMode.get(autoMode.size()-1);
+	}
+	
+	private void autoWhitespace() {
+		switch (autoMode()) {
+		case INDENT :
+			indent();
+			break;
+			
+		case NEWLINE_INDENT :
+			println();
+			indent();
+			break;
+			
+		case NONE :
+			// do nothing
+		}
+	}
+	
 	public void beginObject(Object pojo) {
+		autoWhitespace();
 		if (pojo == null) {
 			println("null");
 		} else {
@@ -197,6 +232,7 @@ public class PrettyPrintWriter extends PrintWriter {
 	}
 
 	public boolean beginObjectField(String fieldName, Object pojo) {
+		pushMode(AutoMode.NONE);
 		if (pojo != null) {
 			fieldName(fieldName);
 			beginObject(pojo);
@@ -206,6 +242,7 @@ public class PrettyPrintWriter extends PrintWriter {
 	}
 	
 	public void endObjectField(Object pojo) {
+		popMode();
 		if (pojo != null) {
 			endObject();
 		}
@@ -258,10 +295,12 @@ public class PrettyPrintWriter extends PrintWriter {
 	}
 	
 	public void field(String fieldName, PrettyPrintable object) {
-		indent();
-		print(fieldName);
-		print(' ');
-		println(object);
+		if (object != null) {
+			indent();
+			print(fieldName);
+			print(' ');
+			println(object);
+		}
 	}
 	
 	public void literal(Literal literal) {
@@ -334,6 +373,26 @@ public class PrettyPrintWriter extends PrintWriter {
 		print('<');
 		print(uri.stringValue());
 		print('>');
+	}
+
+	public void beginArray(String fieldName) {
+		fieldName(fieldName);
+		pushMode(AutoMode.NEWLINE_INDENT);
+		
+	}
+	
+	private void pushMode(AutoMode mode) {
+		autoMode.add(mode);
+	}
+
+	public void endArray(String fieldName) {
+		popIndent();
+		popMode();
+	}
+
+	private void popMode() {
+		autoMode.remove(autoMode.size()-1);
+		
 	}
 	
 }

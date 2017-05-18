@@ -45,10 +45,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import io.konig.annotation.RdfProperty;
 import io.konig.core.Graph;
 import io.konig.core.Path;
+import io.konig.core.PathFactory;
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.KonigLiteral;
-import io.konig.core.path.PathFactory;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.formula.Expression;
@@ -79,13 +79,10 @@ public class PropertyConstraint {
 	private URI dimensionTerm;
 	private boolean timeParam;
 	private URI stereotype;
-	private String equivalentPath;
-	private Path compiledEquivalentPath;
+	private Path equivalentPath;
 	private String fromAggregationSource;
-	private String sourcePath;
-	private Path compiledSourcePath;
-	private String partitionOf;
-	private Path compiledPartitionOf;
+	private Path sourcePath;
+	private Path partitionOf;
 	private Expression formula;
 	private URI idFormat;
 	
@@ -146,6 +143,10 @@ public class PropertyConstraint {
 		return value == null ? null : new LiteralImpl(value);
 	}
 	
+	private Literal literal(Object value) {
+		return value==null ? null : new LiteralImpl(value.toString());
+	}
+	
 	private void edge(Graph graph, URI predicte, Double value) {
 		if (value != null) {
 			Value object = ValueFactoryImpl.getInstance().createLiteral(value);
@@ -193,7 +194,6 @@ public class PropertyConstraint {
 		other.valueClass = valueClass;
 		other.shape = shape;
 		other.equivalentPath = equivalentPath;
-		other.compiledEquivalentPath = compiledEquivalentPath;
 		other.stereotype = stereotype;
 		
 		return other;
@@ -508,52 +508,23 @@ public class PropertyConstraint {
 		stereotype = Konig.attribute;
 	}
 
-	public String getEquivalentPath() {
+	@RdfProperty(Konig.EQUIVALENT_PATH)
+	public Path getEquivalentPath() {
 		return equivalentPath;
 	}
 
-	public void setEquivalentPath(String equivalentPath) {
+	public void setEquivalentPath(Path equivalentPath) {
 		this.equivalentPath = equivalentPath;
 	}
-
-	@RdfProperty(Konig.EQUIVALENT_PATH)
-	public Path getCompiledEquivalentPath() {
-		return compiledEquivalentPath;
-	}
-	
-	public Path getCompiledEquivalentPath(PathFactory factory) {
-		
-		if (compiledEquivalentPath == null && equivalentPath!=null) {
-			compiledEquivalentPath = factory.createPath(equivalentPath);
-		}
-		return compiledEquivalentPath;
-	}
-
-	public void setCompiledEquivalentPath(Path compiledEquivalentPath) {
-		this.compiledEquivalentPath = compiledEquivalentPath;
-	}
 	
 
-	public String getSourcePath() {
+	@RdfProperty(Konig.SOURCE_PATH)
+	public Path getSourcePath() {
 		return sourcePath;
 	}
 
-	public void setSourcePath(String sourcePath) {
+	public void setSourcePath(Path sourcePath) {
 		this.sourcePath = sourcePath;
-	}
-	public Path getCompiledSourcePath(PathFactory factory) {
-		if (compiledSourcePath == null && sourcePath!=null) {
-			compiledSourcePath = factory.createPath(sourcePath);
-		}
-		return compiledSourcePath;
-	}
-	
-	public Path getCompiledSourcePath() {
-		return compiledSourcePath;
-	}
-
-	public void setCompiledSourcePath(Path compiledSourcePath) {
-		this.compiledSourcePath = compiledSourcePath;
 	}
 
 	public String getFromAggregationSource() {
@@ -564,27 +535,12 @@ public class PropertyConstraint {
 		this.fromAggregationSource = fromAggregationSource;
 	}
 
-	public String getPartitionOf() {
+	public Path getPartitionOf() {
 		return partitionOf;
 	}
 
-	public void setPartitionOf(String partitionOf) {
+	public void setPartitionOf(Path partitionOf) {
 		this.partitionOf = partitionOf;
-	}
-
-	public Path getCompiledPartitionOf() {
-		return compiledPartitionOf;
-	}
-
-	public void setCompiledPartitionOf(Path compiledPartitionOf) {
-		this.compiledPartitionOf = compiledPartitionOf;
-	}
-	
-	public Path getCompiledPartitionOf(PathFactory factory) {
-		if (compiledPartitionOf == null && partitionOf != null) {
-			compiledPartitionOf = factory.createPath(partitionOf);
-		}
-		return compiledPartitionOf;
 	}
 
 	public Expression getFormula() {

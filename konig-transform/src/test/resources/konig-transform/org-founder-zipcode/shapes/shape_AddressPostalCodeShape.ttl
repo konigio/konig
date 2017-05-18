@@ -1,0 +1,12 @@
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:AddressPostalCodeShape a sh:Shape ; 
+	sh:targetClass schema:PostalAddress ; 
+	sh:property  [ 
+		sh:predicate schema:postalCode ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  . 
