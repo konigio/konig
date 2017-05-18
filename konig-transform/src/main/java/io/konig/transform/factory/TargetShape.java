@@ -8,16 +8,35 @@ import io.konig.shacl.Shape;
 
 public class TargetShape extends ShapeNode<TargetProperty> {
 	
+	public static enum State {
+		INITIALIZED,
+		FIRST_PASS,
+		OK,
+		FAILED
+	}
+	
 	public static TargetShape create(Shape shape) {
 		return TargetShapeFactory.INSTANCE.createShapeNode(shape);
 	}
 	
 	private List<SourceShape> sourceList = new ArrayList<>();
+	private State state = State.INITIALIZED;
 
 	public TargetShape(Shape shape) {
 		super(shape);
 	}
 	
+
+	public State getState() {
+		return state;
+	}
+
+
+	public void setState(State state) {
+		this.state = state;
+	}
+
+
 	public List<SourceShape> getSourceList() {
 		return sourceList;
 	}
@@ -73,7 +92,6 @@ public class TargetShape extends ShapeNode<TargetProperty> {
 		return count;
 	}
 	
-	
 	public List<TargetProperty> getUnmappedProperties() {
 		List<TargetProperty> list = new ArrayList<>();
 		addUnmappedProperties(list);
@@ -94,6 +112,47 @@ public class TargetShape extends ShapeNode<TargetProperty> {
 			}
 		}
 	}
+
+	
+	public TargetProperty getUnmappedProperty() {
+		boolean ok = true;
+		for (TargetProperty tp : getProperties()) {
+			if (tp.isDirectProperty()) {
+				if (tp.isLeaf() && tp.getPreferredMatch()==null) {
+					return tp;
+				} else {
+					TargetShape nested = tp.getNestedShape();
+					if (nested != null) {
+						
+						switch (nested.getState()) {
+						
+						case FAILED:
+							ok = false;
+							state = State.FAILED;
+							break;
+							
+						case OK :
+							break;
+							
+						default:
+
+							TargetProperty result = nested.getUnmappedProperty();
+							if (result != null) {
+								return result;
+							}
+						
+						}
+					}
+				}
+			}
+		}
+		if (ok) {
+			state = State.OK;
+		}
+		return null;
+	}
+	
+	
 	
 	public void match(SourceShape source) {
 		for (TargetProperty tp : getProperties()) {

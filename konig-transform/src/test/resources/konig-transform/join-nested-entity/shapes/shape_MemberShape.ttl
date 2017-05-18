@@ -1,0 +1,18 @@
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:MemberShape sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:Person ; 
+	a sh:Shape ; 
+	sh:property  [ 
+		sh:predicate schema:givenName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate schema:memberOf ; 
+		sh:shape shape:OriginOrganizationShape ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  . 

@@ -3,6 +3,7 @@ package io.konig.transform.factory;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.Shape;
 import io.konig.transform.rule.DataChannel;
+import io.konig.transform.rule.JoinStatement;
 
 public class SourceShape extends ShapeNode<SourceProperty> {
 	
@@ -11,6 +12,7 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 	}
 	
 	private DataChannel dataChannel;
+	private ProtoJoinStatement joinStatement;
 	
 	public SourceShape(Shape shape) {
 		super(shape);
@@ -87,6 +89,18 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 	protected void printLocalFields(PrettyPrintWriter out) {
 		
 		out.field("preferredPropertyCount", preferredPropertyCount());
+	}
+
+	public ProtoJoinStatement getProtoJoinStatement() {
+		return joinStatement;
+	}
+	
+	public JoinStatement getJoinStatement() {
+		return joinStatement == null ? null : joinStatement.toJoinStatement();
+	}
+
+	public void setProtoJoinStatement(ProtoJoinStatement joinStatement) {
+		this.joinStatement = joinStatement;
 	}
 	
 }

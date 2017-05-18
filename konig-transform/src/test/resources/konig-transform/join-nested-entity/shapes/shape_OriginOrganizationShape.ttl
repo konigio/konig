@@ -1,0 +1,13 @@
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:OriginOrganizationShape sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:Organization ; 
+	a sh:Shape ; 
+	sh:property  [ 
+		sh:predicate schema:name ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  . 

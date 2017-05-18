@@ -1,8 +1,11 @@
 package io.konig.transform.rule;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.openrdf.model.URI;
@@ -17,10 +20,10 @@ import io.konig.shacl.Shape;
  */
 public class ShapeRule extends AbstractPrettyPrintable {
 	
-	private Set<DataChannel> sourceShapes = new HashSet<>();
+	private List<DataChannel> channels = new ArrayList<>();
 	private Shape targetShape;
 	private IdRule idRule;
-	private List<PropertyRule> propertyRules = new ArrayList<>();
+	private Map<URI,PropertyRule> properties = new HashMap<>();
 
 	private PropertyRule accessor;
 	
@@ -28,8 +31,8 @@ public class ShapeRule extends AbstractPrettyPrintable {
 		this.targetShape = targetShape;
 	}
 	
-	public Set<DataChannel> getSourceShapes() {
-		return sourceShapes;
+	public List<DataChannel> getChannels() {
+		return channels;
 	}
 	
 	public Shape getTargetShape() {
@@ -45,23 +48,12 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	}
 	
 	public void addPropertyRule(PropertyRule rule) {
-		propertyRules.add(rule);
+		properties.put(rule.getPredicate(), rule);
 		rule.setContainer(this);
-		
-		sourceShapes.add(rule.getDataChannel());
 	}
 	
-	public List<PropertyRule> getPropertyRules() {
-		return propertyRules;
-	}
-	
-	public PropertyRule propertyRule(URI predicate) {
-		for (PropertyRule rule : propertyRules) {
-			if (rule.getPredicate().equals(predicate)) {
-				return rule;
-			}
-		}
-		return null;
+	public Collection<PropertyRule> getPropertyRules() {
+		return properties.values();
 	}
 
 	public PropertyRule getAccessor() {
@@ -78,15 +70,19 @@ public class ShapeRule extends AbstractPrettyPrintable {
 		out.beginObjectField("targetShape", targetShape);
 		out.field("id", targetShape.getId());
 		out.endObjectField(targetShape);
-		if (!propertyRules.isEmpty()) {
+		if (!properties.isEmpty()) {
 			out.beginArray("propertyRules");
-			for (PropertyRule p : propertyRules) {
+			for (PropertyRule p : getPropertyRules()) {
 				out.print(p);
 			}
 			
 			out.endArray("propertyRules");
 		}
 		
+	}
+
+	public PropertyRule getProperty(URI predicate) {
+		return properties.get(predicate);
 	}
 	
 	

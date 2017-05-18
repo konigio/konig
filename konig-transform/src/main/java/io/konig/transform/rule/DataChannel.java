@@ -4,28 +4,26 @@ import io.konig.shacl.Shape;
 
 public class DataChannel implements Comparable<DataChannel> {
 
-	private int ranking = 0;
 	private String name;
 	private Shape shape;
+	private JoinStatement joinStatement;
 	
 	public DataChannel(String name, Shape value) {
 		this.name = name;
 		this.shape = value;
 	}
-
-	public int getRanking() {
-		return ranking;
-	}
-	public void setRanking(int ranking) {
-		this.ranking = ranking;
-	}
 	
-	public void plusOne() {
-		ranking++;
+
+	public DataChannel(String name, Shape shape, JoinStatement joinStatement) {
+		this.name = name;
+		this.shape = shape;
+		this.joinStatement = joinStatement;
 	}
+
+
 	@Override
 	public int compareTo(DataChannel other) {
-		return ranking-other.getRanking();
+		return name.compareTo(other.name);
 	}
 	
 
@@ -36,4 +34,14 @@ public class DataChannel implements Comparable<DataChannel> {
 	public Shape getShape() {
 		return shape;
 	}
+
+	public JoinStatement getJoinStatement() {
+		return joinStatement;
+	}
+
+	public void setJoinStatement(JoinStatement joinStatement) {
+		this.joinStatement = joinStatement;
+	}
+	
+	
 }
