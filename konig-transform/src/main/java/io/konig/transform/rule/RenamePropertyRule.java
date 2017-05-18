@@ -6,7 +6,7 @@ import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
-public class RenamePropertyRule extends AbstractPropertyRule implements PropertyRule {
+public class RenamePropertyRule extends AbstractPropertyRule {
 	
 	private URI focusPredicate;
 	private PropertyConstraint sourceProperty;
@@ -14,12 +14,12 @@ public class RenamePropertyRule extends AbstractPropertyRule implements Property
 
 	public RenamePropertyRule(
 		URI focusPredicate, 
-		RankedVariable<Shape> sourceShape, 
+		DataChannel channel, 
 		PropertyConstraint sourceProperty,
 		int pathIndex
 	) {
+		super(channel);
 		this.focusPredicate = focusPredicate;
-		this.sourceShape = sourceShape;
 		this.sourceProperty = sourceProperty;
 		this.pathIndex = pathIndex;
 	}
@@ -28,25 +28,6 @@ public class RenamePropertyRule extends AbstractPropertyRule implements Property
 		return pathIndex;
 	}
 
-	@Override
-	public void print(PrettyPrintWriter out) {
-		
-		out.beginObject(this);
-		
-		out.field("targetPredicate", focusPredicate);
-		
-		out.beginObjectField("sourceShape", sourceShape);
-		out.field("name", sourceShape.getName());
-		out.field("value", sourceShape.getValue().getId());
-		out.endObject();
-		
-		out.beginObjectField("sourceProperty", sourceProperty);
-		out.field("predicate", sourceProperty.getPredicate());
-		out.endObjectField(sourceProperty);
-		
-		out.endObject();
-
-	}
 
 
 
@@ -57,13 +38,22 @@ public class RenamePropertyRule extends AbstractPropertyRule implements Property
 
 
 	@Override
-	public URI getFocusPredicate() {
+	public URI getPredicate() {
 		return focusPredicate;
 	}
 
 	@Override
-	public RankedVariable<Shape> getSourceShapeVariable() {
-		return sourceShape;
+	public DataChannel getDataChannel() {
+		return channel;
+	}
+
+	@Override
+	protected void printLocalFields(PrettyPrintWriter out) {
+
+		out.beginObjectField("sourceProperty", sourceProperty);
+		out.field("predicate", sourceProperty.getPredicate());
+		out.endObjectField(sourceProperty);
+		
 	}
 
 }

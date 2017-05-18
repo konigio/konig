@@ -129,7 +129,7 @@ public class TurtleElements {
 		return literal(context, (Literal) value);
 	}
 
-	public static String iri(Resource id) {
+	public static String resource(Resource id) {
 		StringBuilder builder = new StringBuilder();
 		if (id == null) {
 			return "null";

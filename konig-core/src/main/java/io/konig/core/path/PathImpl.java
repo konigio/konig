@@ -159,6 +159,7 @@ public class PathImpl implements Path {
 			throw new KonigException(e);
 		}
 	}
+	
 
 	@Override
 	public Path subpath(int start, int end) {
@@ -221,6 +222,16 @@ public class PathImpl implements Path {
 	@Override
 	public void setContext(Context context) {
 		this.context = context;
+	}
+
+	@Override
+	public String toSimpleString() {
+
+		StringBuilder buffer = new StringBuilder();
+		for (Step step : stepList) {
+			buffer.append(step.toString(context));
+		}
+		return buffer.toString();
 	}
 
 

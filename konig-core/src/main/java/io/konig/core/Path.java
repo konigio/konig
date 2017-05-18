@@ -67,4 +67,6 @@ public interface Path {
 	int length();
 	
 	void visit(SPARQLBuilder builder);
+	
+	String toSimpleString();
 }

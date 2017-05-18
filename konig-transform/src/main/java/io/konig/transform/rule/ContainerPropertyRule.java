@@ -3,15 +3,12 @@ package io.konig.transform.rule;
 import org.openrdf.model.URI;
 
 import io.konig.core.io.PrettyPrintWriter;
-import io.konig.shacl.Shape;
 
-public class ExactMatchPropertyRule extends AbstractPropertyRule  {
-	
+public class ContainerPropertyRule extends AbstractPropertyRule {
 	private URI predicate;
 
-	public ExactMatchPropertyRule(DataChannel sourceShape, URI predicate) {
-		super(sourceShape);
-		
+	public ContainerPropertyRule(URI predicate, DataChannel channel) {
+		super(channel);
 		this.predicate = predicate;
 	}
 
@@ -22,6 +19,7 @@ public class ExactMatchPropertyRule extends AbstractPropertyRule  {
 
 	@Override
 	protected void printLocalFields(PrettyPrintWriter out) {
-		out.field("predicate", predicate);
+
 	}
+
 }

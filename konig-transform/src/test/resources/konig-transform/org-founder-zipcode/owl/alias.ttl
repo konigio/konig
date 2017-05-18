@@ -1,0 +1,11 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+alias: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "alias" . 
+
+alias:founder_zipcode a owl:DatatypeProperty ; 
+	schema:rangeIncludes xsd:string . 

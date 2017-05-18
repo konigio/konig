@@ -23,13 +23,13 @@ public interface PropertyRule extends PrettyPrintable {
 	/**
 	 * The Shape from which the property is accessed
 	 */
-	RankedVariable<Shape> getSourceShapeVariable();
+	DataChannel getDataChannel();
 	
 	ShapeRule getNestedRule();
 	
 	/**
 	 * The predicate for property described by this Rule.
 	 */
-	URI getFocusPredicate();
+	URI getPredicate();
 	
 }
