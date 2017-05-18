@@ -373,37 +373,8 @@ public class FormulaParser {
 			
 			return primary;
 		}
-
-		private BuiltInCall tryBuiltInCall() throws IOException, RDFParseException, RDFHandlerException {
-			BuiltInCall call = 
-			
-			(call=tryIfFunction()) !=null ? call :
-			(call=trySumFunction()) != null ? call :
-			null;
-			
-			return call;
-		}
 		
 		
-		private BuiltInCall trySumFunction() throws IOException, RDFParseException, RDFHandlerException {
-			skipSpace();
-			if (tryWord("SUM")) {
-				int c = next();
-				if (c != '(') {
-					unread(c);
-					unread("SUM");
-				} else {
-					skipSpace();
-					Expression arg = expr();
-					assertNext(')');
-					return new FunctionExpression("SUM", arg);
-				}
-				
-			}
-			
-			return null;
-		}
-
 
 		private IfFunction tryIfFunction() throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
@@ -423,6 +394,38 @@ public class FormulaParser {
 					
 					return new IfFunction(condition, whenTrue, whenFalse);
 				}
+			}
+			
+			return null;
+		}
+
+		private BuiltInCall tryBuiltInCall() throws IOException, RDFParseException, RDFHandlerException {
+			BuiltInCall call = 
+			
+			(call=tryIfFunction()) !=null ? call :
+			(call=tryGenericFunction("SUM")) != null ? call :
+			(call=tryGenericFunction("AVG")) != null ? call :
+			null;
+			
+			return call;
+		}
+		
+		
+
+		private BuiltInCall tryGenericFunction(String functionName) throws IOException, RDFParseException, RDFHandlerException {
+			skipSpace();
+			if (tryWord(functionName)) {
+				int c = next();
+				if (c != '(') {
+					unread(c);
+					unread(functionName);
+				} else {
+					skipSpace();
+					Expression arg = expr();
+					assertNext(')');
+					return new FunctionExpression(functionName, arg);
+				}
+				
 			}
 			
 			return null;

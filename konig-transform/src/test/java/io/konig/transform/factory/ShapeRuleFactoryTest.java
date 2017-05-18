@@ -26,7 +26,7 @@ public class ShapeRuleFactoryTest extends TransformTest {
 	
 	private ShapeRuleFactory shapeRuleFactory = new ShapeRuleFactory(shapeManager);
 	
-	@Test
+	@Ignore
 	public void testJoinNestedEntity() throws Exception {
 
 		load("src/test/resources/konig-transform/join-nested-entity");

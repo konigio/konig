@@ -31,6 +31,24 @@ import io.konig.core.vocab.Schema;
 public class FormulaParserTest {
 	
 	private FormulaParser parser = new FormulaParser();
+
+	@Test
+	public void testAVG() throws Exception {
+		String text = 
+				"@context {\n" + 
+				"   \"object\" : \"http://www.w3.org/ns/activitystreams#object\",\n" + 
+				"   \"rawScore\" : \"http://schema.pearson.com/ns/assessment/rawScore\"\n" + 
+				"}\n" + 
+				"AVG(?x.object.rawScore)";
+		
+
+		Expression e = parser.parse(text);
+		String actual = e.toString();
+		
+		String expected = text;
+		assertEquals(expected, actual);
+	}
+	
 	
 	@Test
 	public void testSum() throws Exception {
