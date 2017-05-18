@@ -577,7 +577,7 @@ public class WorkbookLoader {
 			nameMap.addAll(graph);
 			
 			CompositeShapeVisitor visitor = new CompositeShapeVisitor(
-				new FormulaContextBuilder(nsManager, nameMap),
+				new FormulaContextBuilder(nsManager, nameMap, graph),
 				new TargetClassReasoner(graph)
 			);
 			
