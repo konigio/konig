@@ -31,39 +31,26 @@ import io.konig.core.vocab.Schema;
 public class FormulaParserTest {
 	
 	private FormulaParser parser = new FormulaParser();
+	
 
-	@Test
-	public void testAVG() throws Exception {
-		String text = 
-				"@context {\n" + 
-				"   \"object\" : \"http://www.w3.org/ns/activitystreams#object\",\n" + 
-				"   \"rawScore\" : \"http://schema.pearson.com/ns/assessment/rawScore\"\n" + 
-				"}\n" + 
-				"AVG(?x.object.rawScore)";
-		
-
-		Expression e = parser.parse(text);
-		String actual = e.toString();
-		
-		String expected = text;
-		assertEquals(expected, actual);
-	}
 	
 	
 	@Test
 	public void testSum() throws Exception {
 		String text = 
 			"@context {\n" + 
-			"  \"price\" : \"http://schema.org/price\"\n" + 
-			"}  \n" + 
-			"SUM(?x.price)";
+			"   \"price\" : \"http://schema.org/price\",\n" + 
+			"   \"OfferShape\" : \"http://example.com/ns/OfferShape\",\n" + 
+			"   \"hasShape\" : \"http://www.konig.io/ns/core/hasShape\"\n" + 
+			"}\n" + 
+			"SUM(?x.price)\n" + 
+			"WHERE\n" + 
+			"   ?x hasShape OfferShape .\n" + 
+			"";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.quantifiedExpression(text);
 		String actual = e.toString();
-		String expected = "@context {\n" + 
-				"   \"price\" : \"http://schema.org/price\"\n" + 
-				"}\n" + 
-				"SUM(?x.price)";
+		String expected = text;
 		assertEquals(expected, actual);
 		
 	}
@@ -76,7 +63,7 @@ public class FormulaParserTest {
 			"+ IF(reviewer2Approved, 1, 0)\n" + 
 			"+ IF(reviewer3Approved, 1, 0)";
 
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		String actual = e.toString();
 		
 		String expected = "IF(reviewer0Approved , 1 , 0) + IF(reviewer1Approved , 1 , 0) + IF(reviewer2Approved , 1 , 0) + IF(reviewer3Approved , 1 , 0)";
@@ -91,7 +78,7 @@ public class FormulaParserTest {
 			"}\n" + 
 			"IF(email , 1 , 0)";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		String actual = e.toString();
 		assertEquals(text, actual);
 	}
@@ -105,7 +92,7 @@ public class FormulaParserTest {
 			"}\n" + 
 			"created != modified";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
@@ -126,7 +113,7 @@ public class FormulaParserTest {
 			+ "}\n"
 			+ "knows.knows = Alice";
 
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
@@ -149,7 +136,7 @@ public class FormulaParserTest {
 
 		String text = "(sprintIssue.status = pmd:Complete) ? sprintIssue.timeEstimate : 0";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
@@ -161,7 +148,7 @@ public class FormulaParserTest {
 
 		String text = "ex:alpha.ex:beta NOT IN (ex:foo , ex:bar)";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
@@ -174,7 +161,7 @@ public class FormulaParserTest {
 
 		String text = "<http://example.com/alpha>.beta NOT IN (foo , bar)";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
@@ -186,7 +173,7 @@ public class FormulaParserTest {
 
 		String text = "alpha.beta NOT IN (foo , bar)";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
@@ -198,7 +185,7 @@ public class FormulaParserTest {
 
 		String text = "alpha.beta IN (foo , bar)";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
@@ -210,7 +197,7 @@ public class FormulaParserTest {
 
 		String text = "alpha.beta = one.two";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
@@ -222,7 +209,7 @@ public class FormulaParserTest {
 		
 		String text = "2.5 + 3";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
@@ -235,7 +222,7 @@ public class FormulaParserTest {
 
 		String text = "address.streetAddress + 3";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
@@ -247,7 +234,7 @@ public class FormulaParserTest {
 
 		String text = "(owner.age + 3*7)/(owner.weight*4)";
 		
-		Expression e = parser.parse(text);
+		Expression e = parser.expression(text);
 		
 		String expected = "(owner.age + 3 * 7) / (owner.weight * 4)";
 		String actual = e.toString();

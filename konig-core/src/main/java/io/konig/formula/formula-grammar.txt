@@ -24,6 +24,12 @@ JsonldKeyword ::= '@id' | '@type' | '@language'
 
 Expression	  ::=  	ConditionalOrExpression
 
+QuantifiedExpression ::= Expression WhereClause?
+
+WhereClause := 'WHERE' (Triple)+
+
+Triple ::= PathTerm IRI PathTerm '.'
+
 ConditionalOrExpression	  ::=  	ConditionalAndExpression ( OrOperator ConditionalAndExpression )*
 
 OrOperator ::= '||' | 'OR'
@@ -81,4 +87,5 @@ InStep ::= '^' PathTerm
 
 BuiltInCall ::= 
 		'IF' '(' Expression ',' Expression ',' Expression ',' ')'
-	| 'SUM' '(' Expression ')'
+	| 'SUM' '(' Expression ')' |
+	| 'AVG' '(' Expression ')'

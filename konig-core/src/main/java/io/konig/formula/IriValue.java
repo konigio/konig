@@ -21,35 +21,6 @@ package io.konig.formula;
  */
 
 
-import org.openrdf.model.URI;
-
-import io.konig.core.io.PrettyPrintWriter;
-
-public class IriTerm extends AbstractFormula implements IriValue {
-	private URI uri;
-	
-	public IriTerm(URI uri) {
-		this.uri = uri;
-	}
-
-	@Override
-	public URI getIri() {
-		return uri;
-	}
-
-	@Override
-	public void print(PrettyPrintWriter out) {
-		
-		out.print('<');
-		out.print(uri.stringValue());
-		out.print('>');
-
-	}
-
-	@Override
-	public void dispatch(FormulaVisitor visitor) {
-		visitor.enter(this);
-		visitor.exit(this);
-	}
+public interface IriValue extends PathTerm {
 
 }

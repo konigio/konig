@@ -13,10 +13,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Hyperlink;
@@ -405,6 +408,7 @@ public class WorkbookLoader {
 
 		private void handlePaths() throws SpreadsheetException {
 			NameMap nameMap = new NameMap(graph);
+			nameMap.addStaticFields(Konig.class);
 			PathFactory pathFactory = new PathFactory(nsManager, nameMap);
 			for (PathHandler handler : pathHandlers) {
 				handler.execute(graph, pathFactory);
@@ -575,6 +579,7 @@ public class WorkbookLoader {
 
 			NameMap nameMap = new NameMap();
 			nameMap.addAll(graph);
+			nameMap.addStaticFields(Konig.class);
 			
 			CompositeShapeVisitor visitor = new CompositeShapeVisitor(
 				new FormulaContextBuilder(nsManager, nameMap, graph),
@@ -644,6 +649,7 @@ public class WorkbookLoader {
 
 		private void loadIndividualProperties() throws SpreadsheetException {
 			NameMap nameMap = new NameMap(graph);
+			nameMap.addStaticFields(Konig.class);
 			pathFactory = new PathFactory(nsManager, nameMap);
 			for (int i=0; i<book.getNumberOfSheets(); i++) {
 				Sheet sheet = book.getSheetAt(i);
@@ -1000,6 +1006,19 @@ public class WorkbookLoader {
 			String sourcePath = stringValue(row, pcSourcePathCol);
 			String partitionOf = stringValue(row, pcPartitionOfCol);
 			Literal formula = stringLiteral(row, pcFormulaCol);
+			
+			if (formula != null) {
+				// Check that the user terminates the where clause with a dot.
+				String text = formula.stringValue().trim();
+
+				Pattern pattern = Pattern.compile("\\sWHERE\\s");
+				Matcher matcher = pattern.matcher(text);
+				if (matcher.find() && !text.endsWith(".")) {
+					text = text + " .";
+					formula = new LiteralImpl(text);
+				}
+				
+			}
 			
 			
 			

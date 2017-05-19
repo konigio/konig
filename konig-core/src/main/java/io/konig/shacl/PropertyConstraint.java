@@ -52,6 +52,7 @@ import io.konig.core.impl.KonigLiteral;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.formula.Expression;
+import io.konig.formula.QuantifiedExpression;
 
 public class PropertyConstraint {
 
@@ -83,7 +84,7 @@ public class PropertyConstraint {
 	private String fromAggregationSource;
 	private Path sourcePath;
 	private Path partitionOf;
-	private Expression formula;
+	private QuantifiedExpression formula;
 	private URI idFormat;
 	
 	private Term term;
@@ -543,11 +544,11 @@ public class PropertyConstraint {
 		this.partitionOf = partitionOf;
 	}
 
-	public Expression getFormula() {
+	public QuantifiedExpression getFormula() {
 		return formula;
 	}
 
-	public void setFormula(Expression formula) {
+	public void setFormula(QuantifiedExpression formula) {
 		this.formula = formula;
 	}
 

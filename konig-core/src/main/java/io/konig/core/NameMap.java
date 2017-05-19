@@ -1,8 +1,8 @@
 package io.konig.core;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 
 /*
  * #%L
@@ -49,6 +49,23 @@ public class NameMap extends HashMap<String,URI> {
 	
 	public NameMap(Graph graph) {
 		addAll(graph);
+	}
+	
+	public void addStaticFields(Class<?> type) {
+		Field[] declaredFields = type.getDeclaredFields();
+		for (Field field : declaredFields) {
+		    if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+		        if (URI.class.isAssignableFrom(field.getType())) {
+		        	try {
+						URI value = (URI) field.get(null);
+						put(value.getLocalName(), value);
+					} catch (IllegalArgumentException | IllegalAccessException e) {
+						throw new KonigException(e);
+					}
+		        	
+		        }
+		    }
+		}
 	}
 	
 	public void addAll(Graph graph) {
