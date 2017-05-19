@@ -5,6 +5,8 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -14,6 +16,7 @@ import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
@@ -26,6 +29,7 @@ public class ClassPage {
 	private static final String CLASS_TEMPLATE = "data-catalog/velocity/class.vm";
 	private static final String ANCESTOR_LIST = "AncestorList";
 	private static final String SUBCLASS_LIST = "SubclassList";
+	private static final String SUPERCLASS_PROPERTY_LIST = "SuperclassPropertyList";
 
 	
 	public void render(ClassRequest request, PageResponse response) throws DataCatalogException, IOException {
@@ -49,9 +53,25 @@ public class ClassPage {
 		setSubClasses(request);
 		setShapes(request, classId);
 		defineEnumerationMembers(request);
+		setSuperclassProperties(request);
 		
-		List<PropertyInfo> propertyList = new ArrayList<>();
+		List<PropertyInfo> propertyList = propertyList(request, shape);
+				
 		context.put("PropertyList", propertyList);
+		
+		
+		Template template = engine.getTemplate(CLASS_TEMPLATE);
+
+		PrintWriter out = response.getWriter();
+		template.merge(context, out);
+		out.flush();
+	}
+
+
+
+	private List<PropertyInfo> propertyList(ClassRequest request, Shape shape) throws DataCatalogException {
+		URI classId = shape.getTargetClass();
+		List<PropertyInfo> propertyList = new ArrayList<>();
 		for (PropertyConstraint p : shape.getProperty()) {
 			if (RDF.TYPE.equals(p.getPredicate())) {
 				continue;
@@ -60,12 +80,7 @@ public class ClassPage {
 		}
 		
 		DataCatalogUtil.sortProperties(propertyList);
-		
-		Template template = engine.getTemplate(CLASS_TEMPLATE);
-
-		PrintWriter out = response.getWriter();
-		template.merge(context, out);
-		out.flush();
+		return propertyList;
 	}
 
 
@@ -92,6 +107,48 @@ public class ClassPage {
 	}
 
 
+	private void setSuperclassProperties(ClassRequest request) throws DataCatalogException {
+		
+		Set<Resource> memory = new HashSet<>();
+		List<SuperclassProperties> list = new ArrayList<>();
+		
+		Vertex owlClass = request.getOwlClass();
+
+		URI classId = (URI) owlClass.getId();
+		LinkedList<Vertex> stack = new LinkedList<>();
+		stack.add(owlClass);
+		while (!stack.isEmpty()) {
+			Vertex v = stack.removeFirst();
+			List<Vertex> superlist = v.asTraversal().out(RDFS.SUBCLASSOF).toVertexList();
+			for (Vertex s : superlist) {
+				Resource id = s.getId();
+				if (!memory.contains(id)) {
+					memory.add(id);
+					stack.add(s);
+					if (id instanceof URI) {
+						URI superId = (URI) id;
+						
+						Shape shape = request.getClassStructure().getShapeForClass(superId);
+						List<PropertyInfo> propertyList = propertyList(request, shape);
+
+						if (!propertyList.isEmpty()) {
+							String name = superId.getLocalName();
+							String href = request.relativePath(classId, superId);
+							Link link = new Link(name, href);
+							
+							SuperclassProperties element = new SuperclassProperties(link, propertyList);
+							list.add(element);
+						}
+					}
+				}
+			}
+		}
+		
+		
+		if (!list.isEmpty()) {
+			request.getContext().put(SUPERCLASS_PROPERTY_LIST, list);
+		}
+	}
 
 	private void setAncestorPaths(ClassRequest request) throws DataCatalogException {
 		

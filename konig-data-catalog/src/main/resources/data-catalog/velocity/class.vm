@@ -35,7 +35,29 @@
 				</td>	
 				<td class="prop-desc" property="rdfs:comment">$pc.Description</td>
 			</tr>
+#end	
+#if($SuperclassPropertyList)
+#foreach( $sc in $SuperclassPropertyList )
+			<tr class="supertype">
+				<th class="supertype-name" colspan="3">
+					Properties from <a href="$sc.Superclass.Href">$sc.Superclass.Name</a>
+				</th>
+			</tr>
+#foreach( $sp in $sc.PropertyList )
+			<tr typeof="sh:PropertyConstraint" resource="$sp.PredicateId">
+				<th class="prop-nam"><a href="$sp.PropertyHref">$sp.PredicateLocalName</a></th>
+				<td class="prop-ect">
+#if($sp.TypeHref) 				
+					<a href="$sp.TypeHref">$sp.TypeName</a>
+#else
+					$sp.TypeName
+#end					
+				</td>	
+				<td class="prop-desc" property="rdfs:comment">$sp.Description</td>
+			</tr>			
 #end		
+#end
+#end	
 		</tbody>
 	</table>
 #if($Members) 
