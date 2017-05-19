@@ -37,13 +37,13 @@ import io.konig.core.io.PrettyPrintWriter;
 
 public class Expression extends AbstractFormula {
 
-	private List<ConditionalAndExpression> orList;
-	private Context context;
+	protected List<ConditionalAndExpression> orList;
+	protected Context context;
 	
 	public Expression(String text) {
 		FormulaParser parser = new FormulaParser();
 		try {
-			Expression self = parser.parse(text);
+			Expression self = parser.expression(text);
 			orList = self.getOrList();
 			context = self.getContext();
 			
@@ -159,6 +159,11 @@ public class Expression extends AbstractFormula {
 		for (ConditionalAndExpression and : orList) {
 			and.dispatch(visitor);
 		}
+		doDispatch(visitor);
 		visitor.exit(this);
+	}
+
+	protected void doDispatch(FormulaVisitor visitor) {
+		// Derived classes should override.
 	}
 }

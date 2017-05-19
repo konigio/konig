@@ -44,7 +44,7 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.io.FileGetter;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
-import io.konig.formula.Expression;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
@@ -76,7 +76,7 @@ public class ShapeWriterTest {
 		Shape shape = new Shape(shapeId);
 		PropertyConstraint p = new PropertyConstraint(completedPoints);
 		shape.add(p);
-		p.setFormula(new Expression("(status = ex:Complete) ? estimatedPoints : 0"));
+		p.setFormula(new QuantifiedExpression("(status = ex:Complete) ? estimatedPoints : 0"));
 		
 		shapeWriter.emitShape(shape, graph);
 

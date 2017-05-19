@@ -24,8 +24,11 @@ package io.konig.formula;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.openrdf.model.Literal;
+import org.openrdf.model.Statement;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -42,13 +45,27 @@ public class FormulaParser {
 	}
 	
 
-
-	public Expression parse(String text) throws RDFParseException, IOException {
+	public QuantifiedExpression quantifiedExpression(String text)  throws RDFParseException, IOException {
 		StringReader reader = new StringReader(text);
-		return parse(reader);
+		return quantifiedExpression(reader);
 	}
 
-	public Expression parse(Reader reader) throws RDFParseException, IOException {
+	public QuantifiedExpression quantifiedExpression(Reader reader) throws RDFParseException, IOException {
+		Worker worker = new Worker(reader);
+		
+		try {
+			return worker.quantifiedExpression();
+		} catch (RDFHandlerException e) {
+			throw new KonigException(e);
+		}
+	}
+
+	public Expression expression(String text)  throws RDFParseException, IOException {
+		StringReader reader = new StringReader(text);
+		return expression(reader);
+	}
+
+	public Expression expression(Reader reader) throws RDFParseException, IOException {
 		Worker worker = new Worker(reader);
 		
 		try {
@@ -63,13 +80,53 @@ public class FormulaParser {
 		private Worker(Reader reader) {
 			initParse(reader, "");
 		}
-		
+
 		private Expression formula() throws RDFParseException, IOException, RDFHandlerException {
 			
 			prologue();
 			return expression();
 		}
+
+		private QuantifiedExpression quantifiedExpression() throws RDFParseException, IOException, RDFHandlerException {
+			
+			prologue();
+			Expression e = expression();
+			List<Triple> statementList = whereClause();
+			
+			return new QuantifiedExpression(e, statementList);
+		}
 		
+		private List<Triple> whereClause() throws IOException, RDFParseException {
+			List<Triple> list = null;
+			skipSpace();
+			if (tryWord("WHERE")) {
+				list = new ArrayList<>();
+				Triple triple = null;
+				while ((triple=tryTriple()) != null) {
+					list.add(triple);
+				}
+			}
+			return list;
+		}
+
+		private Triple tryTriple() throws RDFParseException, IOException {
+			Triple triple = null;
+			PathTerm subject = tryPathTerm();
+			if (subject != null) {
+				PathTerm term = pathTerm();
+				if (!(term instanceof IriValue)) {
+					throw new RDFParseException("Expected curie, iri, or local name");
+				}
+				IriValue predicate = (IriValue) term;
+				PathTerm object = pathTerm();
+				assertNext('.');
+				triple = new Triple(subject, predicate, object);
+				
+			}
+			return triple;
+		}
+
+
 		private Expression expression() throws RDFParseException, IOException, RDFHandlerException {
 			
 			return conditionalOrExpression();
@@ -92,6 +149,10 @@ public class FormulaParser {
 		}
 
 		private ConditionalAndExpression tryConditionalAndExpression() throws IOException, RDFParseException, RDFHandlerException {
+			if (tryWord("WHERE")) {
+				unread("WHERE");
+				return null;
+			}
 			ConditionalAndExpression and = null;
 			ValueLogical value = tryValueLogical();
 			if (value != null) {
@@ -486,6 +547,18 @@ public class FormulaParser {
 				step = new PathStep(Direction.OUT, pathTerm());
 			}
 			return step;
+		}
+		
+		private IriTerm tryIriTerm() throws RDFParseException, IOException {
+
+			int c = read();
+			
+			if (c == '<') {
+				String value = iriRef(c);
+				return new IriTerm(new URIImpl(value));
+			}
+			unread(c);
+			return null;
 		}
 
 		private PathTerm tryPathTerm() throws RDFParseException, IOException {
