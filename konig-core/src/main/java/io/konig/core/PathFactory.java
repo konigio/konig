@@ -23,10 +23,14 @@ package io.konig.core;
 
 import java.io.StringReader;
 
-import io.konig.core.path.PathParseException;
-import io.konig.core.path.PathParser;	
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.konig.core.path.PathParseException;	
 
 public class PathFactory {
+	private static final Logger logger = LoggerFactory.getLogger(PathFactory.class);
+	public static boolean RETURN_NULL_ON_FAILURE = false;
 	
 	private NamespaceManager nsManager;
 	private NameMap nameMap;
@@ -53,12 +57,19 @@ public class PathFactory {
 
 
 	public Path createPath(String text) throws PathParseException {
-		
-		StringReader reader = new StringReader(text);
-		io.konig.core.path.PathParser parser = new io.konig.core.path.PathParser(nsManager);
-		parser.setNameMap(nameMap);
-		
-		return parser.path(reader);
+		try {
+			StringReader reader = new StringReader(text);
+			io.konig.core.path.PathParser parser = new io.konig.core.path.PathParser(nsManager);
+			parser.setNameMap(nameMap);
+			
+			return parser.path(reader);
+		} catch (PathParseException e) {
+			if (RETURN_NULL_ON_FAILURE) {
+				logger.warn("Failed to parse path: {}", text);
+				return null;
+			} 
+			throw e;
+		}
 	}
 	
 	

@@ -65,7 +65,7 @@ public class PathParser extends SeaTurtleParser {
 		this.nameMap = nameMap;
 	}
 
-	public Path path(Reader input) throws KonigException {
+	public Path path(Reader input) throws PathParseException {
 		
 		super.initParse(input, "");
 		
@@ -163,7 +163,7 @@ public class PathParser extends SeaTurtleParser {
 	 * 
 	 * @param path
 	 */
-	private Path path() {
+	private Path path() throws PathParseException {
 		Path path = new PathImpl();
 		try {
 			prologue();
@@ -192,7 +192,7 @@ public class PathParser extends SeaTurtleParser {
 			}
 		
 		} catch (IOException | RDFParseException | RDFHandlerException e) {
-			throw new KonigException(e);
+			throw new PathParseException(e);
 		}
 		if (nameMap != null ) {
 			Context context = path.getContext();
