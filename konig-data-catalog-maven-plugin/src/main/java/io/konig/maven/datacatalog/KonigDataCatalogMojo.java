@@ -14,6 +14,7 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.NamespaceManager;
+import io.konig.core.PathFactory;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
@@ -52,7 +53,8 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 		
 		DataCatalogBuilder builder = new DataCatalogBuilder();
 		builder.setVelocityLog(logFile);
-		
+
+		PathFactory.RETURN_NULL_ON_FAILURE = true;
 		try {
 			GcpShapeConfig.init();
 			RdfUtil.loadTurtle(rdfDir, graph, nsManager);
@@ -77,6 +79,8 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			
 		} catch (RDFParseException | RDFHandlerException | IOException | DataCatalogException e) {
 			throw new MojoExecutionException("Failed to generate DataCatalog site", e);
+		} finally {
+			PathFactory.RETURN_NULL_ON_FAILURE = false;
 		}
 
 	}
