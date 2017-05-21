@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -14,6 +15,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.Shape;
 import io.konig.transform.rule.BinaryBooleanExpression;
+import io.konig.transform.rule.BooleanExpression;
 import io.konig.transform.rule.BooleanOperator;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
@@ -26,18 +28,43 @@ public class ShapeRuleFactoryTest extends TransformTest {
 	
 	private ShapeRuleFactory shapeRuleFactory = new ShapeRuleFactory(shapeManager);
 	
-	@Ignore
+	@Test
 	public void testJoinNestedEntity() throws Exception {
 
 		load("src/test/resources/konig-transform/join-nested-entity");
-		URI shapeId = iri("http://example.com/shapes/MemberShape");
+		URI memberShapeId = iri("http://example.com/shapes/MemberShape");
+		URI originOrgShapeId = iri("http://example.com/shapes/OriginOrganizationShape");
+		URI originPersonShapeId = iri("http://example.com/shapes/OriginPersonShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule(memberShapeId);
 		assertTrue(shapeRule != null);
+		
+		PropertyRule memberOf = shapeRule.getProperty(Schema.memberOf);
+		assertTrue(memberOf != null);
+		
+		ShapeRule nested = memberOf.getNestedRule();
+		assertTrue(nested != null);
+		assertEquals(originOrgShapeId, nested.getTargetShape().getId());
 	
+		List<DataChannel> channels = nested.getChannels();
+		assertEquals(1, channels.size());
+		
+		DataChannel channel = channels.get(0);
+		JoinStatement join = channel.getJoinStatement();
+		assertTrue(join != null);
+		
+		assertEquals(originPersonShapeId, join.getLeft().getShape().getId());
+		assertEquals(originOrgShapeId, join.getRight().getShape().getId());
+		
+		BooleanExpression condition = join.getCondition();
+		assertTrue(condition instanceof BinaryBooleanExpression);
+		BinaryBooleanExpression binary = (BinaryBooleanExpression) condition;
+		assertEquals(BooleanOperator.EQUAL, binary.getOperator());
+		assertEquals(Schema.memberOf, binary.getLeftPredicate());
+		assertEquals(Konig.id, binary.getRightPredicate());
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinById() throws Exception {
 
 		load("src/test/resources/konig-transform/join-by-id");
@@ -53,6 +80,7 @@ public class ShapeRuleFactoryTest extends TransformTest {
 		assertTrue(shapeRule.getProperty(Schema.alumniOf) != null);
 		
 		List<DataChannel> channelList = shapeRule.getChannels();
+		Collections.sort(channelList);
 		assertEquals(2, channelList.size());
 		
 		DataChannel a = channelList.get(0);
@@ -77,7 +105,7 @@ public class ShapeRuleFactoryTest extends TransformTest {
 	
 	}
 	
-	@Ignore
+	@Test
 	public void testFlattenedField() throws Exception {
 
 		load("src/test/resources/konig-transform/flattened-field");
@@ -106,7 +134,7 @@ public class ShapeRuleFactoryTest extends TransformTest {
 	
 	}
 	
-	@Ignore
+	@Test
 	public void testExactMatchProperty() throws Exception {
 
 		load("src/test/resources/konig-transform/field-exact-match");
@@ -125,7 +153,7 @@ public class ShapeRuleFactoryTest extends TransformTest {
 	
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameProperty() throws Exception {
 		load("src/test/resources/konig-transform/rename-fields");
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");

@@ -27,6 +27,7 @@ import io.konig.content.AssetBundleKey;
 import io.konig.content.AssetMetadata;
 import io.konig.content.CheckInBundleResponse;
 import io.konig.content.ContentAccessException;
+import io.konig.content.ContentSystemUtil;
 import io.konig.content.EtagFactory;
 
 public class ContentPublisher {
@@ -60,7 +61,7 @@ public class ContentPublisher {
 				try {
 					for (String path : requiredAssets) {
 						
-						String filePath = path.substring(1);
+						String filePath = ContentSystemUtil.trimSlashes(path);
 						addZipEntry(zos, baseDir, filePath);
 					}
 					

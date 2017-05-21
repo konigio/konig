@@ -18,7 +18,7 @@ public class AssetMetadata {
 		return path;
 	}
 	public void setPath(String path) {
-		this.path = path;
+		this.path = ContentSystemUtil.trimSlashes(path);
 	}
 	public String getContentType() {
 		return contentType;

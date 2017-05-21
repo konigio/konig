@@ -193,13 +193,9 @@ public class PrettyPrintWriter extends PrintWriter {
 	}
 	
 	public void beginObject(Object pojo) {
-		autoWhitespace();
-		if (pojo == null) {
-			println("null");
-		} else {
-			
-			objectRef(pojo);
-		}
+		autoWhitespace();	
+		pushMode(AutoMode.NONE);
+		objectRef(pojo);
 		pushIndent();
 	}
 	
@@ -250,6 +246,7 @@ public class PrettyPrintWriter extends PrintWriter {
 	
 	public void endObject() {
 		popIndent();
+		popMode();
 	}
 
 	public void field(String fieldName, Object object) {
@@ -378,6 +375,7 @@ public class PrettyPrintWriter extends PrintWriter {
 	public void beginArray(String fieldName) {
 		fieldName(fieldName);
 		pushMode(AutoMode.NEWLINE_INDENT);
+		pushIndent();
 		
 	}
 	

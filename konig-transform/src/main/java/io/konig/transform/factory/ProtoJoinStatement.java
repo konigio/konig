@@ -2,6 +2,7 @@ package io.konig.transform.factory;
 
 import io.konig.transform.rule.BooleanExpression;
 import io.konig.transform.rule.JoinStatement;
+import io.konig.transform.rule.VariableNamer;
 
 public class ProtoJoinStatement {
 
@@ -26,10 +27,5 @@ public class ProtoJoinStatement {
 	public BooleanExpression getCondition() {
 		return condition;
 	}
-	
-	public JoinStatement toJoinStatement() {
-		return new JoinStatement(left.getDataChannel(), right.getDataChannel(), condition);
-	}
-	
 	
 }

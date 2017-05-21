@@ -1,5 +1,7 @@
 package io.konig.transform.rule;
 
-public interface BooleanExpression {
+import io.konig.core.io.PrettyPrintable;
+
+public interface BooleanExpression extends PrettyPrintable {
 
 }

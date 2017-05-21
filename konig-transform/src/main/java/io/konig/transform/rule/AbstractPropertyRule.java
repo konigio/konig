@@ -44,15 +44,30 @@ public abstract class AbstractPropertyRule extends AbstractPrettyPrintable imple
 		out.beginObject(this);
 		out.field("predicate", getPredicate());
 		if (channel != null) {
-			out.beginObjectField("sourceShape", channel);
+			out.beginObjectField("channel", channel);
 			out.field("name", channel.getName());
-			out.field("value", channel.getShape().getId());
 			out.endObjectField(channel);
 		}
 		out.field("nestedRule", nestedRule);
 		printLocalFields(out);
 		out.endObject();
 		
+	}
+
+
+	@Override
+	public int compareTo(PropertyRule other) {
+		if (other == this) {
+			return 0;
+		}
+		int result = channel.getName().compareTo(other.getDataChannel().getName());
+		if (result == 0) {
+			result = getPredicate().getLocalName().compareTo(other.getPredicate().getLocalName());
+			if (result == 0) {
+				result = getPredicate().stringValue().compareTo(other.getPredicate().stringValue());
+			}
+		}
+		return result;
 	}
 
 	abstract protected void printLocalFields(PrettyPrintWriter out);
