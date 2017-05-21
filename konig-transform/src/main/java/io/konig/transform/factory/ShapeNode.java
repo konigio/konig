@@ -66,6 +66,11 @@ abstract public class ShapeNode<P extends PropertyNode> extends AbstractPrettyPr
 			}
 			out.endArray("properties");
 		}
+		if (accessor != null) {
+			out.beginObjectField("accessor", accessor);
+			out.field("predicate", accessor.getPredicate());
+			out.endObjectField(accessor);
+		}
 		
 		printLocalFields(out);
 		

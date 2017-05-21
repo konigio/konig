@@ -2,11 +2,11 @@ package io.konig.transform.rule;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.openrdf.model.URI;
 
@@ -20,7 +20,7 @@ import io.konig.shacl.Shape;
  */
 public class ShapeRule extends AbstractPrettyPrintable {
 	
-	private List<DataChannel> channels = new ArrayList<>();
+	private LinkedList<DataChannel> channels = new LinkedList<>();
 	private Shape targetShape;
 	private IdRule idRule;
 	private Map<URI,PropertyRule> properties = new HashMap<>();
@@ -33,6 +33,10 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	
 	public List<DataChannel> getChannels() {
 		return channels;
+	}
+	
+	public void addChannel(DataChannel channel) {
+		channels.addFirst(channel);
 	}
 	
 	public Shape getTargetShape() {
@@ -70,12 +74,21 @@ public class ShapeRule extends AbstractPrettyPrintable {
 		out.beginObjectField("targetShape", targetShape);
 		out.field("id", targetShape.getId());
 		out.endObjectField(targetShape);
+		if (!channels.isEmpty()) {
+			out.beginArray("channels");
+			for (DataChannel dc : channels) {
+				out.print(dc);
+			}
+			out.endArray("channels");
+		}
 		if (!properties.isEmpty()) {
 			out.beginArray("propertyRules");
-			for (PropertyRule p : getPropertyRules()) {
+			List<PropertyRule> list = new ArrayList<>(getPropertyRules());
+			Collections.sort(list);
+			
+			for (PropertyRule p : list) {
 				out.print(p);
 			}
-			
 			out.endArray("propertyRules");
 		}
 		

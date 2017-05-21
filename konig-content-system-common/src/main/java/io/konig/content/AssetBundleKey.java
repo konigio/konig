@@ -6,9 +6,10 @@ public class AssetBundleKey {
 	private String version;
 	
 	public AssetBundleKey(String name, String version) {
-		this.name = name;
-		this.version = version;
+		this.name = ContentSystemUtil.trimSlashes(name);
+		this.version = ContentSystemUtil.trimSlashes(version);
 	}
+	
 	public String getName() {
 		return name;
 	}

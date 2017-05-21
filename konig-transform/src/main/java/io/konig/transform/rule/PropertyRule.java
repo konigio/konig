@@ -10,7 +10,7 @@ import io.konig.shacl.Shape;
  * @author Greg McFall
  *
  */
-public interface PropertyRule extends PrettyPrintable {
+public interface PropertyRule extends PrettyPrintable, Comparable<PropertyRule> {
 
 	/**
 	 * The ShapeRule within which this PropertyRule is contained.

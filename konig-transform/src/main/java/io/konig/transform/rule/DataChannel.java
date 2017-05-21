@@ -1,8 +1,10 @@
 package io.konig.transform.rule;
 
+import io.konig.core.io.AbstractPrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.Shape;
 
-public class DataChannel implements Comparable<DataChannel> {
+public class DataChannel extends AbstractPrettyPrintable implements Comparable<DataChannel> {
 
 	private String name;
 	private Shape shape;
@@ -41,6 +43,18 @@ public class DataChannel implements Comparable<DataChannel> {
 
 	public void setJoinStatement(JoinStatement joinStatement) {
 		this.joinStatement = joinStatement;
+	}
+
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.beginObject(this);
+		out.field("name", name);
+		out.beginObjectField("shape", shape);
+		out.field("id", shape.getId());
+		out.endObjectField(shape);
+		out.field("joinStatement", joinStatement);
+		out.endObject();		
 	}
 	
 	

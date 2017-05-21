@@ -4,6 +4,7 @@ import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.Shape;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.JoinStatement;
+import io.konig.transform.rule.VariableNamer;
 
 public class SourceShape extends ShapeNode<SourceProperty> {
 	
@@ -29,6 +30,22 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 	}
 	
 	public DataChannel getDataChannel() {
+		return dataChannel;
+	}
+	
+	public DataChannel produceDataChannel(VariableNamer namer) {
+		if (dataChannel == null) {
+			if (joinStatement != null) {
+				SourceShape left = joinStatement.getLeft();
+				DataChannel leftChannel = left.produceDataChannel(namer);
+				dataChannel = new DataChannel(namer.next(), getShape());
+
+				JoinStatement join = new JoinStatement(leftChannel, dataChannel, joinStatement.getCondition());
+				dataChannel.setJoinStatement(join);
+			} else {
+				dataChannel = new DataChannel(namer.next(), getShape());
+			}
+		}
 		return dataChannel;
 	}
 	
@@ -95,9 +112,7 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 		return joinStatement;
 	}
 	
-	public JoinStatement getJoinStatement() {
-		return joinStatement == null ? null : joinStatement.toJoinStatement();
-	}
+	
 
 	public void setProtoJoinStatement(ProtoJoinStatement joinStatement) {
 		this.joinStatement = joinStatement;

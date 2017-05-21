@@ -1,6 +1,9 @@
 package io.konig.transform.rule;
 
-public class JoinStatement {
+import io.konig.core.io.AbstractPrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
+
+public class JoinStatement extends AbstractPrettyPrintable {
 	
 	private DataChannel left;
 	private DataChannel right;
@@ -22,6 +25,23 @@ public class JoinStatement {
 
 	public BooleanExpression getCondition() {
 		return condition;
+	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.beginObject(this);
+		
+		out.beginObjectField("left", left);
+		out.field("name", left.getName());
+		out.endObjectField(left);
+
+		out.beginObjectField("right", right);
+		out.field("name", right.getName());
+		out.endObjectField(right);
+		
+		out.field("condition", condition);
+		out.endObject();
+		
 	}
 	
 	

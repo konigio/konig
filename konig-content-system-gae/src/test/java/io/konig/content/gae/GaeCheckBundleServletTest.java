@@ -20,13 +20,13 @@ public class GaeCheckBundleServletTest extends DatastoreTest {
 	@Test
 	public void testCheckBundle() throws Exception {
 
-		doPost("/quotes/1.0/shakespeare/hamlet.txt", "To thine own self be true");
-		doPost("/quotes/1.0/shakespeare/macbeth.txt", "Something wicked this way comes");
+		doPost("quotes/1.0/shakespeare/hamlet.txt", "To thine own self be true");
+		doPost("quotes/1.0/shakespeare/macbeth.txt", "Something wicked this way comes");
 		
 		String text = "format=Bundle-1.0,name=shakespeare,version=1.1\n" +
-				"/quotes/1.1/shakespeare/hamlet.txt,5x-j97k6uaofuqlj3KlAcpN4NhQ\r\n" + 
-				"/quotes/1.1/shakespeare/macbeth.txt,foobar\r\n" + 
-				"/quotes/1.1/shakespeare/othello.txt,gobbledygook";
+				"quotes/1.1/shakespeare/hamlet.txt,5x-j97k6uaofuqlj3KlAcpN4NhQ\r\n" + 
+				"quotes/1.1/shakespeare/macbeth.txt,foobar\r\n" + 
+				"quotes/1.1/shakespeare/othello.txt,gobbledygook";
 		
 		
 		StringWriter buffer = new StringWriter();
@@ -42,8 +42,8 @@ public class GaeCheckBundleServletTest extends DatastoreTest {
 		
 		String actual = buffer.toString().replace("\r", "");
 		String expected =
-			"/quotes/1.1/shakespeare/macbeth.txt\n" + 
-			"/quotes/1.1/shakespeare/othello.txt\n";
+			"quotes/1.1/shakespeare/macbeth.txt\n" + 
+			"quotes/1.1/shakespeare/othello.txt\n";
 		assertEquals(expected, actual);
 		
 		

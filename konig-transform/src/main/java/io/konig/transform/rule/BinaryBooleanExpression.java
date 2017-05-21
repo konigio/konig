@@ -2,7 +2,10 @@ package io.konig.transform.rule;
 
 import org.openrdf.model.URI;
 
-public class BinaryBooleanExpression implements BooleanExpression {
+import io.konig.core.io.AbstractPrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
+
+public class BinaryBooleanExpression extends AbstractPrettyPrintable implements BooleanExpression {
 
 	private BooleanOperator operator;
 	private URI leftPredicate;
@@ -21,6 +24,15 @@ public class BinaryBooleanExpression implements BooleanExpression {
 	}
 	public URI getRightPredicate() {
 		return rightPredicate;
+	}
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.beginObject(this);
+		out.field("operator", operator.toString());
+		out.field("leftPredicate", leftPredicate);
+		out.field("rightPredicate", rightPredicate);
+		out.endObject();
+		
 	}
 	
 	
