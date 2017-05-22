@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.util.IriTemplate;
 import io.konig.core.util.TurtleElements;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.NodeKind;
@@ -14,7 +15,7 @@ import io.konig.shacl.ShapeManager;
 import io.konig.transform.rule.AlphabeticVariableNamer;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
-import io.konig.transform.rule.BooleanOperator;
+import io.konig.transform.rule.TransformBinaryOperator;
 import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
@@ -28,9 +29,28 @@ public class ShapeRuleFactory {
 	private TransformStrategy strategy;
 
 	public ShapeRuleFactory(ShapeManager shapeManager) {
+		this(shapeManager, new SameShapeTransformStrategy());
+	}
+	
+
+
+	public ShapeRuleFactory(ShapeManager shapeManager, TransformStrategy strategy) {
 		this.shapeManager = shapeManager;
-		strategy = new SameShapeTransformStrategy();
-		strategy.init(this);
+		this.strategy = strategy;
+		if (strategy != null) {
+			strategy.init(this);
+		}
+	}
+
+	public TransformStrategy getStrategy() {
+		return strategy;
+	}
+
+	public void setStrategy(TransformStrategy strategy) {
+		this.strategy = strategy;
+		if (strategy != null) {
+			strategy.init(this);
+		}
 	}
 
 	public ShapeManager getShapeManager() {
@@ -116,10 +136,12 @@ public class ShapeRuleFactory {
 
 		private void addJoinStatement(TargetShape target, SourceShape right) throws TransformBuildException {
 
-			NodeKind rightNodeKind = right.getShape().getNodeKind();
+			Shape rightShape = right.getShape();
+			NodeKind rightNodeKind = rightShape.getNodeKind();
+			IriTemplate rightIriTemplate = rightShape.getIriTemplate();
 			TargetProperty ta = target.getAccessor();
 			
-			if (rightNodeKind == NodeKind.IRI) {
+			if (rightNodeKind == NodeKind.IRI || rightIriTemplate!=null) {
 				
 				if (ta != null) {
 					URI predicate = ta.getPredicate();
@@ -129,7 +151,7 @@ public class ShapeRuleFactory {
 						if (leftProperty != null) {
 							PropertyConstraint lpc = leftProperty.getPropertyConstraint();
 							if (lpc != null && lpc.getShape()==null) {
-								BooleanExpression condition = new BinaryBooleanExpression(BooleanOperator.EQUAL, predicate, Konig.id);
+								BooleanExpression condition = new BinaryBooleanExpression(TransformBinaryOperator.EQUAL, predicate, Konig.id);
 								ProtoJoinStatement proto = new ProtoJoinStatement(left, right, condition);
 								right.setProtoJoinStatement(proto);
 								return;
@@ -143,8 +165,8 @@ public class ShapeRuleFactory {
 
 					for (SourceShape left : sourceList) {
 						Shape leftShape = left.getShape();
-						if (leftShape.getNodeKind() == NodeKind.IRI) {
-							BooleanExpression condition = new BinaryBooleanExpression(BooleanOperator.EQUAL, Konig.id, Konig.id);
+						if (leftShape.getNodeKind() == NodeKind.IRI || leftShape.getIriTemplate()!=null) {
+							BooleanExpression condition = new BinaryBooleanExpression(TransformBinaryOperator.EQUAL, Konig.id, Konig.id);
 							ProtoJoinStatement proto = new ProtoJoinStatement(left, right, condition);
 							right.setProtoJoinStatement(proto);
 							return;
@@ -156,6 +178,8 @@ public class ShapeRuleFactory {
 					msg.append(TurtleElements.resource(right.getShape().getId()));
 					throw new TransformBuildException(msg.toString());
 				}
+				
+						
 				
 			} else {
 				List<SourceShape> sourceList = target.getSourceList();

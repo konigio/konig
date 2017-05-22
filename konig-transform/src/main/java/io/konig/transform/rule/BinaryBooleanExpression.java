@@ -7,16 +7,16 @@ import io.konig.core.io.PrettyPrintWriter;
 
 public class BinaryBooleanExpression extends AbstractPrettyPrintable implements BooleanExpression {
 
-	private BooleanOperator operator;
+	private TransformBinaryOperator operator;
 	private URI leftPredicate;
 	private URI rightPredicate;
 	
-	public BinaryBooleanExpression(BooleanOperator operator, URI leftPredicate, URI rightPredicate) {
+	public BinaryBooleanExpression(TransformBinaryOperator operator, URI leftPredicate, URI rightPredicate) {
 		this.operator = operator;
 		this.leftPredicate = leftPredicate;
 		this.rightPredicate = rightPredicate;
 	}
-	public BooleanOperator getOperator() {
+	public TransformBinaryOperator getOperator() {
 		return operator;
 	}
 	public URI getLeftPredicate() {

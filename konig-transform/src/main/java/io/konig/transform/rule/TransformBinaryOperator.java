@@ -1,6 +1,6 @@
 package io.konig.transform.rule;
 
-public enum BooleanOperator {
+public enum TransformBinaryOperator {
 	EQUAL,
 	NOT_EQUAL
 }
