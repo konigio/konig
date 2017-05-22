@@ -552,7 +552,7 @@ public class WorkbookLoader {
 			graph.edge(s.shapeId, Konig.iriTemplate, literal(template.toString()));
 			
 			URI targetClass = shape.getTargetClass();
-			if (owlReasoner.isSubClassOf(targetClass, Schema.Enumeration)) {
+			if (targetClass!=null && owlReasoner.isSubClassOf(targetClass, Schema.Enumeration)) {
 
 				graph.edge(s.shapeId, Konig.idFormat, Konig.LocalName);
 			} else {
