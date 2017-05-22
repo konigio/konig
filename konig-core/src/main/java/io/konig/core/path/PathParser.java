@@ -51,7 +51,7 @@ public class PathParser extends SeaTurtleParser {
 	private NamespaceManager nsManager;
 
 	public PathParser(NamespaceManager nsManager) {
-		this(new NamespaceMapAdapter(nsManager), null);
+		this(nsManager==null ? null : new NamespaceMapAdapter(nsManager), null);
 		this.nsManager = nsManager;
 	}
 	
