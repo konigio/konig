@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.Shape;
+import io.konig.transform.rule.IdRule;
 
 public class TargetShape extends ShapeNode<TargetProperty> {
 	
@@ -21,6 +22,7 @@ public class TargetShape extends ShapeNode<TargetProperty> {
 	
 	private List<SourceShape> sourceList = new ArrayList<>();
 	private State state = State.INITIALIZED;
+	private IdRule idRule;
 
 	public TargetShape(Shape shape) {
 		super(shape);
@@ -171,6 +173,18 @@ public class TargetShape extends ShapeNode<TargetProperty> {
 			
 		}
 	}
+	
+	
+
+	public IdRule getIdRule() {
+		return idRule;
+	}
+
+
+	public void setIdRule(IdRule idRule) {
+		this.idRule = idRule;
+	}
+
 
 	@Override
 	protected void printLocalFields(PrettyPrintWriter out) {

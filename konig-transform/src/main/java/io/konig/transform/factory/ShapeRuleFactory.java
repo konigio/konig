@@ -17,6 +17,7 @@ import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
 import io.konig.transform.rule.TransformBinaryOperator;
 import io.konig.transform.rule.ContainerPropertyRule;
+import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.PropertyRule;
@@ -113,8 +114,25 @@ public class ShapeRuleFactory {
 			}
 
 			createDataChannels(target);
+			createIdRule(target);
 			return assemble(target);
 
+		}
+
+		private void createIdRule(TargetShape target) throws TransformBuildException {
+			
+			if (target.getShape().getNodeKind() == NodeKind.IRI) {
+				for (SourceShape source : target.getSourceList()) {
+					Shape sourceShape = source.getShape();
+					if (sourceShape.getNodeKind() == NodeKind.IRI) {
+						CopyIdRule idRule = new CopyIdRule(source.getDataChannel());
+						target.setIdRule(idRule);
+						return;
+					}
+				}
+				throw new TransformBuildException("Could not create IdRule for " + TurtleElements.resource(target.getShape().getId()));
+			}
+			
 		}
 
 		private void secondPass(TargetShape target) throws TransformBuildException {
@@ -207,6 +225,7 @@ public class ShapeRuleFactory {
 					shapeRule.addPropertyRule(propertyRule);
 				}
 			}
+			shapeRule.setIdRule(target.getIdRule());
 
 			return shapeRule;
 		}
