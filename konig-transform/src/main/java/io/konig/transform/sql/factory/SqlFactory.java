@@ -11,6 +11,7 @@ import org.openrdf.model.URI;
 import io.konig.core.util.TurtleElements;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.sql.query.AliasExpression;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
@@ -30,6 +31,7 @@ import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.JoinStatement;
 import io.konig.transform.rule.PropertyRule;
+import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.rule.TransformBinaryOperator;
 
@@ -63,13 +65,20 @@ public class SqlFactory {
 		}
 
 		private ValueExpression column(PropertyRule p) throws TransformBuildException {
- 
+
+			DataChannel channel = p.getDataChannel();
+			TableItemExpression tableItem = simpleTableItem(channel);
+			URI predicate = p.getPredicate();
 			if (p instanceof ExactMatchPropertyRule) {
 
-				URI predicate = p.getPredicate();
-				DataChannel channel = p.getDataChannel();
-				TableItemExpression tableItem = simpleTableItem(channel);
 				return columnExpression(tableItem, predicate);
+			}
+			
+			if (p instanceof RenamePropertyRule) {
+				RenamePropertyRule renameRule = (RenamePropertyRule) p;
+				URI sourcePredicate = renameRule.getSourceProperty().getPredicate();
+				ValueExpression column = columnExpression(tableItem, sourcePredicate);
+				return new AliasExpression(column, predicate.getLocalName());
 			}
 			
 			throw new TransformBuildException("Unsupported PropertyRule: " + p.getClass().getName());
