@@ -1,6 +1,7 @@
 package io.konig.transform.factory;
 
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.JoinStatement;
@@ -13,6 +14,7 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 	}
 	
 	private DataChannel dataChannel;
+	private DataSource dataSource;
 	private ProtoJoinStatement joinStatement;
 	
 	public SourceShape(Shape shape) {
@@ -34,17 +36,18 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 	}
 	
 	public DataChannel produceDataChannel(VariableNamer namer) {
+		
 		if (dataChannel == null) {
-			if (joinStatement != null) {
-				SourceShape left = joinStatement.getLeft();
-				DataChannel leftChannel = left.produceDataChannel(namer);
-				dataChannel = new DataChannel(namer.next(), getShape());
-
-				JoinStatement join = new JoinStatement(leftChannel, dataChannel, joinStatement.getCondition());
-				dataChannel.setJoinStatement(join);
-			} else {
-				dataChannel = new DataChannel(namer.next(), getShape());
-			}
+			dataChannel = new DataChannel(namer.next(), getShape());
+		}
+		
+		if (joinStatement != null && dataChannel.getJoinStatement()==null) {
+			SourceShape left = joinStatement.getLeft();
+			DataChannel leftChannel = left.produceDataChannel(namer);
+			dataChannel.setJoinStatement(new JoinStatement(leftChannel, dataChannel, joinStatement.getCondition()));
+		}
+		if (dataSource!=null && dataChannel.getDatasource()==null) {
+			dataChannel.setDatasource(dataSource);
 		}
 		return dataChannel;
 	}
@@ -117,5 +120,15 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 	public void setProtoJoinStatement(ProtoJoinStatement joinStatement) {
 		this.joinStatement = joinStatement;
 	}
+
+	public DataSource getDataSource() {
+		return dataSource;
+	}
+
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+	
+	
 	
 }

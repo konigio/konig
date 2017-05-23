@@ -26,14 +26,13 @@ import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
 
-public class ShapeRuleFactoryTest extends TransformTest {
+public class ShapeRuleFactoryTest extends AbstractShapeRuleFactoryTest {
 	
-	private ShapeRuleFactory shapeRuleFactory = new ShapeRuleFactory(shapeManager);
 	
 	@Test
 	public void testJoinNestedEntityByPk() throws Exception {
 		
-		useBigQueryBucketStrategy();
+		useBigQueryTransformStrategy();
 
 		load("src/test/resources/konig-transform/join-nested-entity-by-pk");
 		URI memberShapeId = iri("http://example.com/shapes/TargetMemberShape");
@@ -44,14 +43,6 @@ public class ShapeRuleFactoryTest extends TransformTest {
 		PropertyRule memberOf = shapeRule.getProperty(Schema.memberOf);
 		assertTrue(memberOf != null);
 		
-		
-	}
-	
-	private void useBigQueryBucketStrategy() {
-		
-		List<URI> list = new ArrayList<>();
-		list.add(Konig.GoogleCloudStorageBucket);
-		shapeRuleFactory.setStrategy(new DatasourceFilterTransformStrategy(list));
 		
 	}
 
@@ -198,12 +189,6 @@ public class ShapeRuleFactoryTest extends TransformTest {
 		assertEquals(0, renameRule.getPathIndex());
 		assertEquals("first_name", renameRule.getSourceProperty().getPredicate().getLocalName());
 		
-	}
-
-	private ShapeRule createShapeRule(URI shapeId) throws Exception {
-		Shape shape = shapeManager.getShapeById(shapeId);
-		assertTrue(shape != null);
-		return shapeRuleFactory.createShapeRule(shape);
 	}
 
 }
