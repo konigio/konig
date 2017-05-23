@@ -1,11 +1,16 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix schema: <http://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/shapes/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-shape:OriginPersonShape sh:nodeKind sh:IRI ; 
+shape:OriginPersonShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/GOr48QgBcHoAAAFcNuEaSQ> ; 
+	sh:nodeKind sh:IRI ; 
 	sh:targetClass schema:Person ; 
-	a sh:Shape ; 
 	sh:property  [ 
 		sh:predicate schema:givenName ; 
 		sh:datatype xsd:string ; 
@@ -16,4 +21,26 @@ shape:OriginPersonShape sh:nodeKind sh:IRI ;
 		sh:class schema:Organization ; 
 		sh:nodeKind sh:IRI ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1 ]  . 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginPersonShape> , <gs://originpersonshape.{gcpBucketSuffix}> . 
+
+<http://www.konig.io/activity/GOr48QgBcHoAAAFcNuEaSQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-05-23T15:55:41.113-04:00"^^xsd:dateTime . 
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginPersonShape> a konig:GoogleBigQueryTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "OriginPersonShape"
+	 ]  ; 
+	gcp:externalDataConfiguration  [ 
+		gcp:sourceUris <gs://originpersonshape.{gcpBucketSuffix}> ; 
+		gcp:sourceFormat "CSV" ; 
+		gcp:csvOptions  [ 
+			gcp:skipLeadingRows 1 ]  ]  . 
+
+<gs://originpersonshape.{gcpBucketSuffix}> a konig:GoogleCloudStorageBucket , konig:DataSource ; 
+	gcp:name "originpersonshape.{gcpBucketSuffix}" ; 
+	gcp:projectId "{gcpProjectId}" ; 
+	gcp:storageClass "multi_regional" ; 
+	gcp:location "us" . 

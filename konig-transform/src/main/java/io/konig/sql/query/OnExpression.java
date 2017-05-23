@@ -10,6 +10,10 @@ public class OnExpression extends AbstractExpression implements SearchCondition 
 		this.searchCondition = searchCondition;
 	}
 
+	public SearchCondition getSearchCondition() {
+		return searchCondition;
+	}
+
 	@Override
 	public void print(PrettyPrintWriter out) {
 		out.println(" ON");
