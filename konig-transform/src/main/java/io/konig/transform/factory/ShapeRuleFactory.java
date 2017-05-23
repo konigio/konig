@@ -215,7 +215,7 @@ public class ShapeRuleFactory {
 
 			List<SourceShape> sourceList = target.getSourceList();
 			for (SourceShape source : sourceList) {
-				shapeRule.addChannel(source.getDataChannel());
+				shapeRule.addChannel(source.produceDataChannel(namer));
 			}
 
 		}
@@ -231,7 +231,7 @@ public class ShapeRuleFactory {
 
 		private PropertyRule createPropertyRule(TargetProperty tp) {
 			SourceProperty sp = tp.getPreferredMatch();
-			DataChannel channel = sp.getParent().getDataChannel();
+			DataChannel channel = sp.getParent().produceDataChannel(namer);
 
 			if (tp.getNestedShape() != null) {
 				ContainerPropertyRule rule = new ContainerPropertyRule(tp.getPredicate(), channel);

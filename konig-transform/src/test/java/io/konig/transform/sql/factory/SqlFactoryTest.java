@@ -15,6 +15,7 @@ import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.SelectExpression;
+import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.TableNameExpression;
 import io.konig.sql.query.ValueExpression;
@@ -31,6 +32,59 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	}
 	
 	@Test
+	public void testFlattenedField() throws Exception {
+		
+		load("src/test/resources/konig-transform/flattened-field");
+
+		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		FromExpression from = select.getFrom();
+		List<TableItemExpression> tableItems = from.getTableItems();
+		assertEquals(1, tableItems.size());
+		
+		TableItemExpression tableItem = tableItems.get(0);
+		assertTrue(tableItem instanceof TableNameExpression);
+		
+		TableNameExpression tableName = (TableNameExpression) tableItem;
+		assertEquals("schema.OriginPersonShape", tableName.getTableName());
+		
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(1, valueList.size());
+		
+		ValueExpression value = valueList.get(0);
+		assertTrue(value instanceof AliasExpression);
+		
+		AliasExpression aliasExpression = (AliasExpression) value;
+		assertEquals("address", aliasExpression.getAlias());
+		QueryExpression q = aliasExpression.getExpression();
+		assertTrue(q instanceof StructExpression);
+		
+		StructExpression struct = (StructExpression) q;
+		
+		valueList = struct.getValues();
+		assertEquals(1, valueList.size());
+		
+		value = valueList.get(0);
+		assertTrue(value instanceof AliasExpression);
+		
+		aliasExpression = (AliasExpression) value;
+		assertEquals("postalCode", aliasExpression.getAlias());
+		
+		q = aliasExpression.getExpression();
+		assertTrue(q instanceof ColumnExpression);
+		
+		ColumnExpression column = (ColumnExpression) q;
+		assertEquals("zipCode", column.getColumnName());
+		
+		
+		
+	}
+	
+	@Test
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -40,8 +94,6 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		ShapeRule shapeRule = createShapeRule(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
-		
-		System.out.println(select);
 		
 		FromExpression from = select.getFrom();
 		List<TableItemExpression> tableItems = from.getTableItems();
@@ -70,7 +122,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Ignore
+	@Test
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");

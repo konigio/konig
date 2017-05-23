@@ -20,13 +20,16 @@ import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.SearchCondition;
 import io.konig.sql.query.SelectExpression;
+import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableAliasExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.TableNameExpression;
+import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
 import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
+import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.JoinStatement;
@@ -54,7 +57,7 @@ public class SqlFactory {
 			return select;
 		}
 
-		private void addColumns(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
+		private void addColumns(ValueContainer select, ShapeRule shapeRule) throws TransformBuildException {
 			
 			List<PropertyRule> list = new ArrayList<>( shapeRule.getPropertyRules() );
 			Collections.sort(list);
@@ -80,9 +83,19 @@ public class SqlFactory {
 				ValueExpression column = columnExpression(tableItem, sourcePredicate);
 				return new AliasExpression(column, predicate.getLocalName());
 			}
+			if (p instanceof ContainerPropertyRule) {
+				ContainerPropertyRule containerRule = (ContainerPropertyRule) p;
+				StructExpression struct = new StructExpression();
+				ShapeRule nested = containerRule.getNestedRule();
+				addColumns(struct, nested);
+				
+				return new AliasExpression(struct, predicate.getLocalName());
+			}
 			
 			throw new TransformBuildException("Unsupported PropertyRule: " + p.getClass().getName());
 		}
+
+		
 
 		private void addDataChannels(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
 			List<DataChannel> channelList = shapeRule.getChannels();

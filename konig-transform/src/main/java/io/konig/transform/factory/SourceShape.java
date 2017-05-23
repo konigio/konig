@@ -1,5 +1,6 @@
 package io.konig.transform.factory;
 
+import io.konig.core.KonigException;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
@@ -37,8 +38,13 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 	
 	public DataChannel produceDataChannel(VariableNamer namer) {
 		
+		Shape shape = getShape();
+		if (dataChannel == null && shape==null) {
+			dataChannel = parentDataChannel(namer);
+		}
+		
 		if (dataChannel == null) {
-			dataChannel = new DataChannel(namer.next(), getShape());
+			dataChannel = new DataChannel(namer.next(), shape);
 		}
 		
 		if (joinStatement != null && dataChannel.getJoinStatement()==null) {
@@ -52,6 +58,17 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 		return dataChannel;
 	}
 	
+	private DataChannel parentDataChannel(VariableNamer namer) {
+		SourceProperty accessor = getAccessor();
+		if (accessor != null) {
+			SourceShape parent = accessor.getParent();
+			return parent.produceDataChannel(namer);
+		}
+
+		throw new KonigException("DataChannel not found");
+	}
+	
+
 	/**
 	 * Count the total number of properties from this SourceShape that
 	 * are the preferred properties.
