@@ -37,6 +37,7 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	
 	public void addChannel(DataChannel channel) {
 		channels.addFirst(channel);
+		channel.setParent(this);
 	}
 	
 	public Shape getTargetShape() {
