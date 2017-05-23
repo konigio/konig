@@ -37,24 +37,30 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 	}
 	
 	public DataChannel produceDataChannel(VariableNamer namer) {
-		
-		Shape shape = getShape();
-		if (dataChannel == null && shape==null) {
-			dataChannel = parentDataChannel(namer);
-		}
-		
 		if (dataChannel == null) {
-			dataChannel = new DataChannel(namer.next(), shape);
+			
+			if (joinStatement != null) {
+				joinStatement.getLeft().produceDataChannel(namer);
+			}
+
+			Shape shape = getShape();
+			if (shape==null) {
+				dataChannel = parentDataChannel(namer);
+			} else {
+				dataChannel = new DataChannel(namer.next(), shape);
+			}
+			
+			if (joinStatement != null && dataChannel.getJoinStatement()==null) {
+				SourceShape left = joinStatement.getLeft();
+				DataChannel leftChannel = left.produceDataChannel(namer);
+				dataChannel.setJoinStatement(new JoinStatement(leftChannel, dataChannel, joinStatement.getCondition()));
+			}
+			if (dataSource!=null && dataChannel.getDatasource()==null) {
+				dataChannel.setDatasource(dataSource);
+			}
 		}
 		
-		if (joinStatement != null && dataChannel.getJoinStatement()==null) {
-			SourceShape left = joinStatement.getLeft();
-			DataChannel leftChannel = left.produceDataChannel(namer);
-			dataChannel.setJoinStatement(new JoinStatement(leftChannel, dataChannel, joinStatement.getCondition()));
-		}
-		if (dataSource!=null && dataChannel.getDatasource()==null) {
-			dataChannel.setDatasource(dataSource);
-		}
+	
 		return dataChannel;
 	}
 	

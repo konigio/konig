@@ -51,6 +51,8 @@ public class SqlFactory {
 	class Worker {
 		
 		private Map<String, TableItemExpression> tableItemMap = new HashMap<>();
+		private boolean useAlias;
+		
 
 		private SelectExpression selectExpression(ShapeRule shapeRule) throws TransformBuildException {
 			SelectExpression select = new SelectExpression();
@@ -122,9 +124,8 @@ public class SqlFactory {
 		
 
 		private void addDataChannels(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
-			List<DataChannel> channelList = shapeRule.getChannels();
-			Collections.sort(channelList);
-
+			List<DataChannel> channelList = shapeRule.getAllChannels();
+			useAlias = channelList.size()>1;
 			FromExpression from = select.getFrom();
 			TableItemExpression item = null;
 			for (DataChannel channel : channelList) {
@@ -174,7 +175,6 @@ public class SqlFactory {
 					msg.append(". Specified datasource is not an instance of TableDataSource");
 					throw new TransformBuildException(msg.toString());
 				}
-				boolean useAlias = shapeRule.getChannels().size()>1;
 				TableDataSource tableSource = (TableDataSource) datasource;
 				String tableName = tableSource.getTableIdentifier();
 				tableItem = new TableNameExpression(tableName);

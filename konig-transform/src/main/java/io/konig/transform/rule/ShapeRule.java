@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 
@@ -97,6 +99,35 @@ public class ShapeRule extends AbstractPrettyPrintable {
 
 	public PropertyRule getProperty(URI predicate) {
 		return properties.get(predicate);
+	}
+
+	public List<DataChannel> getAllChannels() {
+		Set<ShapeRule> ruleSet = new HashSet<>();
+		addAll(ruleSet, this);
+		
+		Set<DataChannel> set = new HashSet<>();
+		for (ShapeRule s : ruleSet) {
+			set.addAll(s.getChannels());
+		}
+		List<DataChannel> list = new ArrayList<>(set);
+		
+		Collections.sort(list);
+		
+		return list;
+	}
+
+	private void addAll(Set<ShapeRule> ruleSet, ShapeRule shapeRule) {
+		
+		if (!ruleSet.contains(shapeRule)) {
+			ruleSet.add(shapeRule);
+			for (PropertyRule p : shapeRule.getPropertyRules()) {
+				ShapeRule nested = p.getNestedRule();
+				if (nested != null) {
+					addAll(ruleSet, nested);
+				}
+			}
+		}
+		
 	}
 	
 	

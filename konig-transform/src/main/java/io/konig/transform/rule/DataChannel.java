@@ -17,13 +17,6 @@ public class DataChannel extends AbstractPrettyPrintable implements Comparable<D
 		this.name = name;
 		this.shape = value;
 	}
-	
-
-	public DataChannel(String name, Shape shape, JoinStatement joinStatement) {
-		this.name = name;
-		this.shape = shape;
-		this.joinStatement = joinStatement;
-	}
 
 	public DataSource getDatasource() {
 		return datasource;
