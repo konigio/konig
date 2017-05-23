@@ -20,6 +20,7 @@ import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
+import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
@@ -122,6 +123,7 @@ public class ShapeRuleFactory {
 		private void createIdRule(TargetShape target) throws TransformBuildException {
 			
 			if (target.getShape().getNodeKind() == NodeKind.IRI) {
+				SourceShape sourceWithIriTemplate = null;
 				for (SourceShape source : target.getSourceList()) {
 					Shape sourceShape = source.getShape();
 					if (sourceShape.getNodeKind() == NodeKind.IRI) {
@@ -129,7 +131,19 @@ public class ShapeRuleFactory {
 						target.setIdRule(idRule);
 						return;
 					}
+					
+					if (sourceWithIriTemplate==null && sourceShape.getIriTemplate() != null) {
+						sourceWithIriTemplate = source;
+					}
 				}
+				
+				if (sourceWithIriTemplate != null) {
+					IriTemplateIdRule idRule = new IriTemplateIdRule(sourceWithIriTemplate.getDataChannel());
+					target.setIdRule(idRule);
+					return;
+					
+				}
+				
 				throw new TransformBuildException("Could not create IdRule for " + TurtleElements.resource(target.getShape().getId()));
 			}
 			
