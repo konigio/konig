@@ -46,7 +46,7 @@ public class ShapeRuleFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testJoinNestedEntity() throws Exception {
 
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -82,7 +82,7 @@ public class ShapeRuleFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals(Konig.id, binary.getRightPredicate());
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinById() throws Exception {
 
 		load("src/test/resources/konig-transform/join-by-id");
@@ -123,7 +123,7 @@ public class ShapeRuleFactoryTest extends AbstractShapeRuleFactoryTest {
 	
 	}
 	
-	@Ignore
+	@Test
 	public void testFlattenedField() throws Exception {
 
 		load("src/test/resources/konig-transform/flattened-field");
@@ -152,7 +152,7 @@ public class ShapeRuleFactoryTest extends AbstractShapeRuleFactoryTest {
 	
 	}
 	
-	@Ignore
+	@Test
 	public void testExactMatchProperty() throws Exception {
 
 		load("src/test/resources/konig-transform/field-exact-match");
@@ -171,7 +171,7 @@ public class ShapeRuleFactoryTest extends AbstractShapeRuleFactoryTest {
 	
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameProperty() throws Exception {
 		load("src/test/resources/konig-transform/rename-fields");
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");

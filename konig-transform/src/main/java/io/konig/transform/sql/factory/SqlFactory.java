@@ -9,6 +9,7 @@ import java.util.Map;
 import org.openrdf.model.URI;
 
 import io.konig.core.util.TurtleElements;
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 import io.konig.sql.query.AliasExpression;
@@ -30,8 +31,10 @@ import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
 import io.konig.transform.rule.ContainerPropertyRule;
+import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
+import io.konig.transform.rule.IdRule;
 import io.konig.transform.rule.JoinStatement;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
@@ -59,12 +62,33 @@ public class SqlFactory {
 
 		private void addColumns(ValueContainer select, ShapeRule shapeRule) throws TransformBuildException {
 			
+			addIdColumn(select, shapeRule);
+			
 			List<PropertyRule> list = new ArrayList<>( shapeRule.getPropertyRules() );
 			Collections.sort(list);
 			
 			for (PropertyRule p : list) {
 				select.add(column(p));
 			}
+		}
+
+		private void addIdColumn(ValueContainer select, ShapeRule shapeRule) throws TransformBuildException {
+			IdRule idRule = shapeRule.getIdRule();
+			if (idRule != null) {
+				if (idRule instanceof CopyIdRule) {
+					CopyIdRule copyRule = (CopyIdRule) idRule;
+					DataChannel channel = copyRule.getDataChannel();
+					TableItemExpression tableItem = simpleTableItem(channel);
+					String columnName = columnName(tableItem, Konig.id);
+					
+					ColumnExpression column = new ColumnExpression(columnName);
+					select.add(column);
+					
+				} else {
+					throw new TransformBuildException("Unsupported IdRule " + idRule.getClass().getName());
+				}
+			}
+			
 		}
 
 		private ValueExpression column(PropertyRule p) throws TransformBuildException {
@@ -102,10 +126,16 @@ public class SqlFactory {
 			Collections.sort(channelList);
 
 			FromExpression from = select.getFrom();
+			TableItemExpression item = null;
 			for (DataChannel channel : channelList) {
-				TableItemExpression item = toTableItemExpression(channel);
-				from.add(item);
+				item = toTableItemExpression(channel);
 			}
+			if (item == null) {
+				throw new TransformBuildException("No source tables found");
+			}
+			from.add(item);
+			
+			
 			
 		}
 		
@@ -209,6 +239,7 @@ public class SqlFactory {
 			}
 			return name;
 		}
+		
 
 		private ComparisonOperator comparisonOperator(TransformBinaryOperator operator) throws TransformBuildException {
 			switch (operator) {
