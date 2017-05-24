@@ -2,7 +2,14 @@ package io.konig.transform.factory;
 
 import java.util.List;
 
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+
+import io.konig.core.KonigException;
 import io.konig.core.Path;
+import io.konig.core.path.HasStep;
+import io.konig.core.path.HasStep.PredicateValuePair;
+import io.konig.core.path.InStep;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.shacl.PropertyConstraint;
@@ -41,20 +48,40 @@ abstract public class ShapeNodeFactory<S extends ShapeNode<P>, P extends Propert
 			
 			List<Step> stepList = path.asList();
 			P stepNode = null;
+			S parent = propertyNode.getParent();
 			int lastStep = stepList.size()-1;
 			for (int i=0; i<stepList.size(); i++) {
 				Step step = stepList.get(i);
 				if (step instanceof OutStep) {
 					
-					S parent = null;
 					if (i == 0) {
 						parent = propertyNode.getParent();
 					} else {
-						parent = shape(null);
-						stepNode.setNestedShape(parent);
+						parent = stepNode.getNestedShape();
+						if (parent ==null) {
+							parent = shape(null);
+							stepNode.setNestedShape(parent);
+						}
 					}
 					stepNode = property(p, i, i==lastStep ? preferredMatch : null);
 					parent.add(stepNode);
+				}
+				if (step instanceof HasStep) {
+					S container = stepNode.getNestedShape();
+					if (container == null) {
+						container = shape(null);
+						stepNode.setNestedShape(container);
+					}
+					HasStep hasStep = (HasStep) step;
+					for (PredicateValuePair pair : hasStep.getPairList()) {
+						URI predicate = pair.getPredicate();
+						Value value = pair.getValue();
+						P pNode = property(p, i, predicate, value);
+						container.add(pNode);
+					}
+				}
+				if (step instanceof InStep) {
+					throw new KonigException("In steps not supported");
 				}
 			}
 		}
@@ -68,6 +95,8 @@ abstract public class ShapeNodeFactory<S extends ShapeNode<P>, P extends Propert
 	abstract protected S shape(Shape shape);
 	
 	abstract protected P property(PropertyConstraint p, int pathIndex, SharedSourceProperty preferredMatch);
+	
+	abstract protected P property(PropertyConstraint p, int pathIndex, URI predicate, Value value);
 
 
 }

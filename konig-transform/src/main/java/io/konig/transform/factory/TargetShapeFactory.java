@@ -1,5 +1,9 @@
 package io.konig.transform.factory;
 
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+
+import io.konig.core.KonigException;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -31,6 +35,11 @@ public class TargetShapeFactory extends ShapeNodeFactory<TargetShape, TargetProp
 				return new LeafIndirectTargetProperty(p, pathIndex, preferredMatch);
 			}
 		}
+	}
+
+	@Override
+	protected TargetProperty property(PropertyConstraint p, int pathIndex, URI predicate, Value value) {
+		throw new KonigException("Value constraint not supported for property " + p.getPredicate());
 	}
 
 }
