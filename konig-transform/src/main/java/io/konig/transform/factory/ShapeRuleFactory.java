@@ -2,9 +2,16 @@ package io.konig.transform.factory;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.RDF;
 
+import io.konig.core.OwlReasoner;
+import io.konig.core.Path;
+import io.konig.core.Vertex;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.TurtleElements;
 import io.konig.core.vocab.Konig;
@@ -15,29 +22,32 @@ import io.konig.shacl.ShapeManager;
 import io.konig.transform.rule.AlphabeticVariableNamer;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
-import io.konig.transform.rule.TransformBinaryOperator;
 import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.IriTemplateIdRule;
+import io.konig.transform.rule.MapValueTransform;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
+import io.konig.transform.rule.TransformBinaryOperator;
 
 public class ShapeRuleFactory {
 
 	private ShapeManager shapeManager;
 	private TransformStrategy strategy;
+	private OwlReasoner owlReasoner;
 
-	public ShapeRuleFactory(ShapeManager shapeManager) {
-		this(shapeManager, new SameShapeTransformStrategy());
+	public ShapeRuleFactory(ShapeManager shapeManager, OwlReasoner owlReasoner) {
+		this(shapeManager, owlReasoner, new SameShapeTransformStrategy());
 	}
 	
 
 
-	public ShapeRuleFactory(ShapeManager shapeManager, TransformStrategy strategy) {
+	public ShapeRuleFactory(ShapeManager shapeManager, OwlReasoner owlReasoner, TransformStrategy strategy) {
 		this.shapeManager = shapeManager;
+		this.owlReasoner = owlReasoner;
 		this.strategy = strategy;
 		if (strategy != null) {
 			strategy.init(this);
@@ -227,7 +237,7 @@ public class ShapeRuleFactory {
 
 		}
 
-		private ShapeRule assemble(TargetShape target) {
+		private ShapeRule assemble(TargetShape target) throws TransformBuildException {
 
 			ShapeRule shapeRule = new ShapeRule(target.getShape());
 
@@ -262,7 +272,7 @@ public class ShapeRuleFactory {
 
 		}
 
-		private PropertyRule createPropertyRule(TargetProperty tp) {
+		private PropertyRule createPropertyRule(TargetProperty tp) throws TransformBuildException {
 			SourceProperty sp = tp.getPreferredMatch();
 			DataChannel channel = sp.getParent().produceDataChannel(namer);
 
@@ -282,7 +292,55 @@ public class ShapeRuleFactory {
 				return new ExactMatchPropertyRule(channel, predicate);
 			}
 
-			return new RenamePropertyRule(predicate, channel, sp.getPropertyConstraint(), sp.getPathIndex());
+			PropertyConstraint sourceProperty = sp.getPropertyConstraint();
+			RenamePropertyRule rename = new RenamePropertyRule(predicate, channel, sourceProperty, pathIndex);
+			Path path = sourceProperty.getEquivalentPath();
+			if (pathIndex < path.asList().size()-1) {
+				addValueTransform(rename, tp, pathIndex);
+			}
+			
+			return rename;
+		}
+
+		private void addValueTransform(RenamePropertyRule rename, TargetProperty tp, int pathIndex) throws TransformBuildException {
+			PropertyConstraint tpc = tp.getPropertyConstraint();
+			Resource owlClass = tpc.getValueClass();
+			if (owlReasoner.isEnumerationClass(owlClass)) {
+				
+
+				PropertyConstraint spc = rename.getSourceProperty();
+				// Get the equivalent path, relative to the source Shape.
+				Path path = spc.getEquivalentPath();
+				
+				// Get a path relative to the Enum member
+				Path subpath = path.subpath(pathIndex+1);
+				
+				MapValueTransform transform = new MapValueTransform();
+				rename.setValueTransform(transform);
+				
+				// Get all instances of the owlClass
+				List<Vertex> enumMemberList = owlReasoner.getGraph().v(owlClass).in(RDF.TYPE).toVertexList();
+				
+				for (Vertex member : enumMemberList) {
+					Resource id = member.getId();
+					Set<Value> valueSet = subpath.traverse(member);
+					if (valueSet.size()==1) {
+						transform.put(valueSet.iterator().next(), id);
+					}
+					
+				}
+				
+				return;
+			}
+			
+			StringBuilder msg = new StringBuilder();
+			
+			msg.append("For shape ");
+			msg.append(TurtleElements.resource(tp.getParent().getShape().getId()));
+			msg.append(", failed to produce ValueTransform for property ");
+			msg.append(TurtleElements.resource(tp.getPredicate()));
+			throw new TransformBuildException(msg.toString());
+			
 		}
 
 		private String unmappedPropertyMessage(TargetShape target) {

@@ -5,11 +5,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.Context;
+import io.konig.core.OwlReasoner;
+import io.konig.core.Path;
+import io.konig.core.impl.MemoryGraph;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.TurtleElements;
 import io.konig.core.util.ValueFormat.Element;
@@ -25,8 +31,12 @@ import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
+import io.konig.sql.query.Result;
 import io.konig.sql.query.SearchCondition;
 import io.konig.sql.query.SelectExpression;
+import io.konig.sql.query.SignedNumericLiteral;
+import io.konig.sql.query.SimpleCase;
+import io.konig.sql.query.SimpleWhenClause;
 import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableAliasExpression;
@@ -44,10 +54,12 @@ import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.IdRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinStatement;
+import io.konig.transform.rule.MapValueTransform;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.rule.TransformBinaryOperator;
+import io.konig.transform.rule.ValueTransform;
 
 public class SqlFactory {
 	
@@ -58,6 +70,7 @@ public class SqlFactory {
 	
 	class Worker {
 		
+		private OwlReasoner reasoner = new OwlReasoner(new MemoryGraph());
 		private Map<String, TableItemExpression> tableItemMap = new HashMap<>();
 		private boolean useAlias;
 		
@@ -157,9 +170,19 @@ public class SqlFactory {
 			
 			if (p instanceof RenamePropertyRule) {
 				RenamePropertyRule renameRule = (RenamePropertyRule) p;
+				ValueTransform vt = renameRule.getValueTransform();
+				if (vt instanceof MapValueTransform) {
+					ValueExpression caseStatement = mapValues(renameRule, (MapValueTransform) vt);
+					return new AliasExpression(caseStatement, predicate.getLocalName());
+				}
 				URI sourcePredicate = renameRule.getSourceProperty().getPredicate();
-				ValueExpression column = columnExpression(tableItem, sourcePredicate);
-				return new AliasExpression(column, predicate.getLocalName());
+				int pathIndex = renameRule.getPathIndex();
+				Path path = renameRule.getSourceProperty().getEquivalentPath();
+				if (pathIndex == path.asList().size()-1) {
+					ValueExpression column = columnExpression(tableItem, sourcePredicate);
+					return new AliasExpression(column, predicate.getLocalName());
+				}
+				throw new TransformBuildException("Unable to map Path");
 			}
 			if (p instanceof ContainerPropertyRule) {
 				ContainerPropertyRule containerRule = (ContainerPropertyRule) p;
@@ -174,6 +197,62 @@ public class SqlFactory {
 		}
 
 		
+
+		private ValueExpression mapValues(RenamePropertyRule p, MapValueTransform vt) throws TransformBuildException {
+		
+			DataChannel channel = p.getDataChannel();
+			URI predicate = p.getSourceProperty().getPredicate();
+			TableItemExpression tableItem = simpleTableItem(channel);
+			
+			ValueExpression caseOperand = columnExpression(tableItem, predicate);
+			List<SimpleWhenClause> whenClauseList = new ArrayList<>();
+			
+			// For now, we assume that URI values map to localName strings.
+			
+			for (Entry<Value,Value> e : vt.getValueMap().entrySet()) {
+				Value key = e.getKey();
+				Value value = e.getValue();
+				
+				ValueExpression whenOperand = valueExpression(key);
+				Result result = mappedValue(value);
+				
+				SimpleWhenClause when = new SimpleWhenClause(whenOperand, result);
+				whenClauseList.add(when);
+			}
+			
+			Result elseClause = null;
+			
+			return new SimpleCase(caseOperand, whenClauseList, elseClause);
+		}
+
+		private Result mappedValue(Value value) throws TransformBuildException {
+			if (value instanceof URI) {
+				URI iri = (URI) value;
+				return new StringLiteralExpression(iri.getLocalName());
+			}
+			if (value instanceof Literal) {
+				return valueExpression(value);
+			}
+			throw new TransformBuildException("Cannot map value " + value.stringValue());
+		}
+
+		private ValueExpression valueExpression(Value value) throws TransformBuildException {
+			if (value instanceof Literal) {
+				Literal literal = (Literal) value;
+				URI type = literal.getDatatype();
+				if (type != null) {
+					if (reasoner.isRealNumber(type)) {
+						return new SignedNumericLiteral(new Double(literal.doubleValue()));
+					}
+					if (reasoner.isIntegerDatatype(type)) {
+						return new SignedNumericLiteral(new Long(literal.longValue()));
+					}
+					return new StringLiteralExpression(literal.stringValue());
+				}
+				
+			}
+			throw new TransformBuildException("Cannot convert to ValueExpression: " + value.stringValue());
+		}
 
 		private void addDataChannels(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
 			List<DataChannel> channelList = shapeRule.getAllChannels();

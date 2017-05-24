@@ -20,8 +20,11 @@ import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
+import io.konig.sql.query.Result;
 import io.konig.sql.query.SearchCondition;
 import io.konig.sql.query.SelectExpression;
+import io.konig.sql.query.SimpleCase;
+import io.konig.sql.query.SimpleWhenClause;
 import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableAliasExpression;
@@ -39,6 +42,51 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	@Before
 	public void setUp() throws Exception {
 		useBigQueryTransformStrategy();
+	}
+	
+	@Test
+	public void testEnumField() throws Exception {
+		
+		load("src/test/resources/konig-transform/enum-field");
+
+		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(1, valueList.size());
+		
+		ValueExpression ve = valueList.iterator().next();
+		AliasExpression alias = (AliasExpression) ve;
+		assertTrue(alias.getExpression() instanceof SimpleCase);
+		SimpleCase sc = (SimpleCase) alias.getExpression();
+		assertWhen(sc, "M", "Male");
+		
+	}
+
+	private void assertWhen(SimpleCase sc, String key, String value) {
+		
+		List<SimpleWhenClause> list = sc.getWhenClauseList();
+		for (SimpleWhenClause clause : list) {
+			ValueExpression whenOperand = clause.getWhenOperand();
+			if (whenOperand instanceof StringLiteralExpression) {
+				StringLiteralExpression sle = (StringLiteralExpression) whenOperand;
+				if (key.equals(sle.getValue())) {
+					Result result = clause.getResult();
+					if (result instanceof StringLiteralExpression) {
+						sle = (StringLiteralExpression) result;
+						if (value.equals(sle.getValue())) {
+							return;
+						}
+					}
+				}
+			}
+		}
+		
+		fail("CASE not found: " + key + " => " + value);
+		
 	}
 
 	@Test
@@ -76,7 +124,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("b.org_id", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinNestedEntity() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -146,7 +194,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		return (StructExpression) qe;
 	}
 
-	@Ignore
+	@Test
 	public void testJoinById() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-by-id");
@@ -243,7 +291,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testFlattenedField() throws Exception {
 		
 		load("src/test/resources/konig-transform/flattened-field");
@@ -296,7 +344,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -334,7 +382,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Ignore
+	@Test
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");

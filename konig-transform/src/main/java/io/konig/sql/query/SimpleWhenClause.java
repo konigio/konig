@@ -23,4 +23,13 @@ public class SimpleWhenClause extends AbstractExpression {
 		result.print(out);
 	}
 
+	public ValueExpression getWhenOperand() {
+		return whenOperand;
+	}
+
+	public Result getResult() {
+		return result;
+	}
+
+	
 }

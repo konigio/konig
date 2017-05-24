@@ -1,0 +1,25 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" . 
+
+schema:GenderType a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration . 
+
+schema:Person a owl:Class . 
+
+schema:gender a owl:ObjectProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes schema:GenderType . 
+
+schema:Female a schema:GenderType ; 
+	schema:name "Female" ; 
+	ex:genderCode "F" . 
+
+schema:Male a schema:GenderType ; 
+	schema:name "Male" ; 
+	ex:genderCode "M" . 

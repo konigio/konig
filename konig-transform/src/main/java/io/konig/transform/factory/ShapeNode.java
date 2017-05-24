@@ -55,9 +55,11 @@ abstract public class ShapeNode<P extends PropertyNode> extends AbstractPrettyPr
 	public void print(PrettyPrintWriter out) {
 		out.beginObject(this);
 		
-		out.beginObjectField("shape", shape);
-		out.field("id", shape.getId());
-		out.endObjectField(shape);
+		if (shape != null) {
+			out.beginObjectField("shape", shape);
+			out.field("id", shape.getId());
+			out.endObjectField(shape);
+		}
 		
 		if (!properties.isEmpty()) {
 			out.beginArray("properties");
