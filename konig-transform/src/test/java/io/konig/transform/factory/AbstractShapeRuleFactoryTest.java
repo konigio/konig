@@ -4,12 +4,14 @@ import static org.junit.Assert.assertTrue;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.OwlReasoner;
 import io.konig.shacl.Shape;
 import io.konig.transform.rule.ShapeRule;
 
 public class AbstractShapeRuleFactoryTest extends TransformTest {
 
-	protected ShapeRuleFactory shapeRuleFactory = new ShapeRuleFactory(shapeManager);
+	protected OwlReasoner owlReasoner = new OwlReasoner(graph);
+	protected ShapeRuleFactory shapeRuleFactory = new ShapeRuleFactory(shapeManager, owlReasoner);
 
 
 	

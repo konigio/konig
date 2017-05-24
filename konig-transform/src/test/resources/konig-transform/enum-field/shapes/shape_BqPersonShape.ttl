@@ -1,0 +1,28 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:BqPersonShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/JDIYeB58eD4AAAFcOo7yFQ> ; 
+	sh:targetClass schema:Person ; 
+	sh:property  [ 
+		sh:predicate schema:gender ; 
+		sh:class schema:GenderType ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/Person> . 
+
+<http://www.konig.io/activity/JDIYeB58eD4AAAFcOo7yFQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-05-24T09:04:26.243-04:00"^^xsd:dateTime . 
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/Person> a konig:GoogleBigQueryTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "Person" ]  . 

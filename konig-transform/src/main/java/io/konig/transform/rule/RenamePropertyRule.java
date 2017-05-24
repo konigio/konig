@@ -11,6 +11,7 @@ public class RenamePropertyRule extends AbstractPropertyRule {
 	private URI focusPredicate;
 	private PropertyConstraint sourceProperty;
 	private int pathIndex;
+	private ValueTransform valueTransform;
 
 	public RenamePropertyRule(
 		URI focusPredicate, 
@@ -55,5 +56,21 @@ public class RenamePropertyRule extends AbstractPropertyRule {
 		out.endObjectField(sourceProperty);
 		
 	}
+
+	/**
+	 * Get a rule that specifies how to transform values from the source channel to the target property.
+	 */
+	public ValueTransform getValueTransform() {
+		return valueTransform;
+	}
+
+	/**
+	 * Set a rule that specifies how to transform values from the source channel to the target property.
+	 */
+	public void setValueTransform(ValueTransform valueTransform) {
+		this.valueTransform = valueTransform;
+	}
+	
+	
 
 }

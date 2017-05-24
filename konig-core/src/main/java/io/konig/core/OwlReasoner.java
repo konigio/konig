@@ -593,6 +593,10 @@ public class OwlReasoner {
 				Schema.Text.equals(owlClass);
 	}
 	
+	public boolean isNumericDatatype(URI owlClass) {
+		return isIntegerDatatype(owlClass) || isRealNumber(owlClass);
+	}
+	
 	public boolean isIntegerDatatype(URI owlClass) {
 		return
 				XMLSchema.BYTE.equals(owlClass) ||
