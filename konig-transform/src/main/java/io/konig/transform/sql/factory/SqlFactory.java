@@ -11,6 +11,7 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.util.LiteralUtilException;
 
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
@@ -54,6 +55,7 @@ import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.IdRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinStatement;
+import io.konig.transform.rule.LiteralPropertyRule;
 import io.konig.transform.rule.MapValueTransform;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
@@ -191,6 +193,13 @@ public class SqlFactory {
 				addColumns(struct, nested);
 				
 				return new AliasExpression(struct, predicate.getLocalName());
+			}
+			
+			if (p instanceof LiteralPropertyRule) {
+				LiteralPropertyRule lpr = (LiteralPropertyRule) p;
+				ValueExpression value = valueExpression(lpr.getValue());
+				
+				return new AliasExpression(value, predicate.getLocalName());
 			}
 			
 			throw new TransformBuildException("Unsupported PropertyRule: " + p.getClass().getName());

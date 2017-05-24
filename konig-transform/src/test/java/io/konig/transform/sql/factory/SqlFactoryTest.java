@@ -45,6 +45,35 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	}
 	
 	@Test
+	public void testHasValueConstraint() throws Exception {
+		
+		load("src/test/resources/konig-transform/has-value-constraint");
+
+		URI shapeId = iri("http://example.com/shapes/BqProductShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(1, valueList.size());
+		ValueExpression ve = valueList.get(0);
+		assertTrue(ve instanceof AliasExpression);
+		AliasExpression ae = (AliasExpression)ve;
+		QueryExpression qe = ae.getExpression();
+		assertTrue(qe instanceof StructExpression);
+		StructExpression se = (StructExpression) qe;
+		ae = (AliasExpression) assertAlias(se, "priceCurrency");
+		
+		qe = ae.getExpression();
+		assertTrue(qe instanceof StringLiteralExpression);
+		StringLiteralExpression sle = (StringLiteralExpression) qe;
+		assertEquals("USD", sle.getValue());
+		
+		
+	}
+	
+	@Test
 	public void testEnumField() throws Exception {
 		
 		load("src/test/resources/konig-transform/enum-field");

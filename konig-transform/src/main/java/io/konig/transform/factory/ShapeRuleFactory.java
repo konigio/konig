@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
@@ -27,6 +28,7 @@ import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.IriTemplateIdRule;
+import io.konig.transform.rule.LiteralPropertyRule;
 import io.konig.transform.rule.MapValueTransform;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
@@ -99,6 +101,10 @@ public class ShapeRuleFactory {
 			int currentPropertyCount = 0;
 			int priorPropertyCount = -1;
 
+			// First pass.  Use the candidate source shapes provided by the transform strategy.
+			// While the current number of properties mapped is less than the total expected property count,
+			// try mapping another shape.
+			//
 			while (currentPropertyCount < expectedPropertyCount && currentPropertyCount != priorPropertyCount
 					&& !sourceList.isEmpty()) {
 				priorPropertyCount = currentPropertyCount;
@@ -286,6 +292,10 @@ public class ShapeRuleFactory {
 			}
 
 			URI predicate = tp.getPredicate();
+			
+			if (sp.getValue() instanceof Literal) {
+				return new LiteralPropertyRule(channel, predicate, (Literal) sp.getValue());
+			}
 
 			int pathIndex = sp.getPathIndex();
 			if (pathIndex < 0) {
@@ -305,7 +315,7 @@ public class ShapeRuleFactory {
 		private void addValueTransform(RenamePropertyRule rename, TargetProperty tp, int pathIndex) throws TransformBuildException {
 			PropertyConstraint tpc = tp.getPropertyConstraint();
 			Resource owlClass = tpc.getValueClass();
-			if (owlReasoner.isEnumerationClass(owlClass)) {
+			if (owlClass!=null && owlReasoner.isEnumerationClass(owlClass)) {
 				
 
 				PropertyConstraint spc = rename.getSourceProperty();
