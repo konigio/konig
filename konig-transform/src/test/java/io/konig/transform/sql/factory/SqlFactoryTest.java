@@ -16,11 +16,13 @@ import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.FromExpression;
+import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.SearchCondition;
 import io.konig.sql.query.SelectExpression;
+import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableAliasExpression;
 import io.konig.sql.query.TableItemExpression;
@@ -38,8 +40,43 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	public void setUp() throws Exception {
 		useBigQueryTransformStrategy();
 	}
-	
+
 	@Test
+	public void testJoinNestedEntityByPk() throws Exception {
+		
+		load("src/test/resources/konig-transform/join-nested-entity-by-pk");
+
+		URI shapeId = iri("http://example.com/shapes/TargetMemberShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(3, valueList.size());
+		
+		StructExpression memberOf = struct(assertAlias(select, "memberOf"));
+		valueList = memberOf.getValues();
+		assertEquals(2, valueList.size());
+		assertColumnName(memberOf, "b.name");
+		
+		ValueExpression idValue = valueList.get(0);
+		assertTrue(idValue instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) idValue;
+		assertEquals("CONCAT", func.getFunctionName());
+		List<QueryExpression> argList = func.getArgList();
+		assertEquals(2, argList.size());
+		QueryExpression arg0 = argList.get(0);
+		assertTrue(arg0 instanceof StringLiteralExpression);
+		StringLiteralExpression literal = (StringLiteralExpression) arg0;
+		assertEquals("http://example.com/org/", literal.getValue());
+		QueryExpression arg1 = argList.get(1);
+		assertTrue(arg1 instanceof ColumnExpression);
+		ColumnExpression ce = (ColumnExpression) arg1;
+		assertEquals("b.org_id", ce.getColumnName());
+	}
+	
+	@Ignore
 	public void testJoinNestedEntity() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -72,13 +109,13 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 		List<ValueExpression> valueList = select.getValues();
 		assertEquals(3, valueList.size());
-		assertHasColumn(select, "a.id");
-		assertHasColumn(select, "a.givenName");
-		ValueExpression ve = assertHasColumn(select, null, "memberOf");
+		assertColumnName(select, "a.id");
+		assertColumnName(select, "a.givenName");
+		ValueExpression ve = assertColumn(select, null, "memberOf");
 		StructExpression struct = struct(ve);
 		
-		assertHasColumn(struct, "b.id");
-		assertHasColumn(struct, "b.name");
+		assertColumnName(struct, "b.id");
+		assertColumnName(struct, "b.name");
 		
 		OnExpression oe = join.getJoinSpecification();
 		
@@ -109,7 +146,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		return (StructExpression) qe;
 	}
 
-	@Test
+	@Ignore
 	public void testJoinById() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-by-id");
@@ -153,19 +190,23 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 		assertEquals(3, valueList.size());
 		
-		assertHasColumn(select, "a.id", null);
-		assertHasColumn(select, "a.givenName", null);
-		assertHasColumn(select, "b.alumniOf", null);
+		assertColumn(select, "a.id", null);
+		assertColumn(select, "a.givenName", null);
+		assertColumn(select, "b.alumniOf", null);
 		
 		
 		
 	}
 	
-	private ValueExpression assertHasColumn(ValueContainer container, String columnName) {
-		return assertHasColumn(container, columnName, null);
+	private ValueExpression assertAlias(ValueContainer container, String alias) {
+		return assertColumn(container, null, alias);
 	}
 	
-	private ValueExpression assertHasColumn(ValueContainer select, String columnName, String alias) {
+	private ValueExpression assertColumnName(ValueContainer container, String columnName) {
+		return assertColumn(container, columnName, null);
+	}
+	
+	private ValueExpression assertColumn(ValueContainer select, String columnName, String alias) {
 		List<ValueExpression> valueList = select.getValues();
 		for (ValueExpression ve : valueList) {
 			if (ve instanceof AliasExpression) {
@@ -202,7 +243,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testFlattenedField() throws Exception {
 		
 		load("src/test/resources/konig-transform/flattened-field");
@@ -255,7 +296,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -293,7 +334,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Test
+	@Ignore
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");

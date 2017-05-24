@@ -7,20 +7,27 @@ import java.util.List;
 import java.util.Map;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
+import io.konig.core.Context;
+import io.konig.core.util.IriTemplate;
 import io.konig.core.util.TurtleElements;
+import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.FromExpression;
+import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.SearchCondition;
 import io.konig.sql.query.SelectExpression;
+import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableAliasExpression;
 import io.konig.sql.query.TableItemExpression;
@@ -35,6 +42,7 @@ import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.IdRule;
+import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinStatement;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
@@ -86,11 +94,55 @@ public class SqlFactory {
 					ColumnExpression column = new ColumnExpression(columnName);
 					select.add(column);
 					
+				} else if (idRule instanceof IriTemplateIdRule) {
+					ValueExpression idValue = createIriTemplateValue(shapeRule, (IriTemplateIdRule) idRule);
+					select.add(idValue);
+					
 				} else {
 					throw new TransformBuildException("Unsupported IdRule " + idRule.getClass().getName());
 				}
 			}
 			
+		}
+
+		private ValueExpression createIriTemplateValue(ShapeRule shapeRule, IriTemplateIdRule idRule) throws TransformBuildException {
+			FunctionExpression func = new FunctionExpression("CONCAT");
+			Shape shape = idRule.getDataChannel().getShape();
+			IriTemplate template = shape.getIriTemplate();
+			Context context = template.getContext();
+			TableItemExpression tableItem = simpleTableItem(idRule.getDataChannel());
+			
+			for (Element e : template.toList()) {
+				String text = e.getText();
+				switch (e.getType()) {
+				case TEXT :
+					func.addArg(new StringLiteralExpression(text));
+					break;
+					
+					
+				case VARIABLE :
+					URI iri = new URIImpl(context.expandIRI(text));
+					String localName = iri.getLocalName();
+					if (localName.length()==0) {
+						func.addArg(new StringLiteralExpression(iri.stringValue()));
+					} else {
+						if (shape.getPropertyConstraint(iri)==null) {
+							StringBuilder msg = new StringBuilder();
+							msg.append("Shape ");
+							msg.append(TurtleElements.resource(shape.getId()));
+							msg.append(" has invalid IRI template <");
+							msg.append(template.getText());
+							msg.append(">. Property not found: ");
+							msg.append(text);
+							throw new TransformBuildException(msg.toString());
+						}
+						func.addArg(columnExpression(tableItem, iri));
+					}
+					break;
+				}
+			}
+			
+			return func;
 		}
 
 		private ValueExpression column(PropertyRule p) throws TransformBuildException {
