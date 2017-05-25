@@ -73,6 +73,10 @@ abstract public class PropertyNode<T extends ShapeNode> extends AbstractPrettyPr
 		printLocalFields(out);
 		out.endObject();
 	}
+	
+	public void setDerived(boolean isDerived) {
+		// Do nothing by default
+	}
 
 	abstract protected void printLocalFields(PrettyPrintWriter out);
 }

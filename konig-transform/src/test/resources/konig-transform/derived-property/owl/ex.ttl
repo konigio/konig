@@ -1,0 +1,22 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "ex" . 
+
+ex:Account a owl:Class . 
+
+ex:loss a owl:DatatypeProperty ; 
+	schema:domainIncludes ex:Account ; 
+	schema:rangeIncludes xsd:float . 
+
+ex:netIncome a owl:DatatypeProperty ; 
+	schema:domainIncludes ex:Account ; 
+	schema:rangeIncludes xsd:float . 
+
+ex:profit a owl:DatatypeProperty ; 
+	schema:domainIncludes ex:Account ; 
+	schema:rangeIncludes xsd:float . 

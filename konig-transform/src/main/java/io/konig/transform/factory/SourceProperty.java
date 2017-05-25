@@ -10,6 +10,7 @@ public class SourceProperty extends PropertyNode<SourceShape> {
 	
 	private TargetProperty match;
 	private int pathIndex;
+	private boolean isDerived;
 	
 	// (predicate, value) pair is used only for has constraint from an equivalent Path.
 	private URI predicate;
@@ -49,6 +50,7 @@ public class SourceProperty extends PropertyNode<SourceShape> {
 		out.field("pathIndex", pathIndex);
 		out.field("predicate", predicate);
 		out.field("value", value);
+		out.field("isDerived", isDerived);
 		
 	}
 	
@@ -59,6 +61,15 @@ public class SourceProperty extends PropertyNode<SourceShape> {
 
 	public Value getValue() {
 		return value;
+	}
+
+	public boolean isDerived() {
+		return isDerived;
+	}
+
+	@Override
+	public void setDerived(boolean isDerived) {
+		this.isDerived = isDerived;
 	}
 	
 

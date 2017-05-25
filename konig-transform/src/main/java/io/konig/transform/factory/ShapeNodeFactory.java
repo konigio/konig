@@ -1,5 +1,6 @@
 package io.konig.transform.factory;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.openrdf.model.URI;
@@ -20,14 +21,20 @@ abstract public class ShapeNodeFactory<S extends ShapeNode<P>, P extends Propert
 
 	public S createShapeNode(Shape shape) {
 		S shapeNode = shape(shape);
-		for (PropertyConstraint p : shape.getProperty()) {
+		addProperties(shapeNode, shape.getProperty(), false);
+		return shapeNode;
+	}
+	
+	protected void addProperties(S shapeNode, Collection<PropertyConstraint> propertyList, boolean isDerived) {
+
+		for (PropertyConstraint p : propertyList) {
 			SharedSourceProperty preferredMatch = sharedSourceProperty(p);
 			P propertyNode = property(p, -1, preferredMatch);
+			propertyNode.setDerived(isDerived);
 			shapeNode.add(propertyNode);
 			handlePath(propertyNode, preferredMatch);
 			handleValueShape(propertyNode);
 		}
-		return shapeNode;
 	}
 
 	private void handleValueShape(P propertyNode) {

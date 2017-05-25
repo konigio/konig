@@ -11,7 +11,6 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.util.LiteralUtilException;
 
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
@@ -52,6 +51,7 @@ import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
+import io.konig.transform.rule.FormulaPropertyRule;
 import io.konig.transform.rule.IdRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinStatement;
@@ -71,7 +71,7 @@ public class SqlFactory {
 	}
 	
 	class Worker {
-		
+		private SqlFormulaFactory formulaFactory = new SqlFormulaFactory();
 		private OwlReasoner reasoner = new OwlReasoner(new MemoryGraph());
 		private Map<String, TableItemExpression> tableItemMap = new HashMap<>();
 		private boolean useAlias;
@@ -104,7 +104,7 @@ public class SqlFactory {
 					CopyIdRule copyRule = (CopyIdRule) idRule;
 					DataChannel channel = copyRule.getDataChannel();
 					TableItemExpression tableItem = simpleTableItem(channel);
-					String columnName = columnName(tableItem, Konig.id);
+					String columnName = SqlUtil.columnName(tableItem, Konig.id);
 					
 					ColumnExpression column = new ColumnExpression(columnName);
 					select.add(column);
@@ -151,7 +151,7 @@ public class SqlFactory {
 							msg.append(text);
 							throw new TransformBuildException(msg.toString());
 						}
-						func.addArg(columnExpression(tableItem, iri));
+						func.addArg(SqlUtil.columnExpression(tableItem, iri));
 					}
 					break;
 				}
@@ -167,7 +167,7 @@ public class SqlFactory {
 			URI predicate = p.getPredicate();
 			if (p instanceof ExactMatchPropertyRule) {
 
-				return columnExpression(tableItem, predicate);
+				return SqlUtil.columnExpression(tableItem, predicate);
 			}
 			
 			if (p instanceof RenamePropertyRule) {
@@ -181,7 +181,7 @@ public class SqlFactory {
 				int pathIndex = renameRule.getPathIndex();
 				Path path = renameRule.getSourceProperty().getEquivalentPath();
 				if (pathIndex == path.asList().size()-1) {
-					ValueExpression column = columnExpression(tableItem, sourcePredicate);
+					ValueExpression column = SqlUtil.columnExpression(tableItem, sourcePredicate);
 					return new AliasExpression(column, predicate.getLocalName());
 				}
 				throw new TransformBuildException("Unable to map Path");
@@ -202,6 +202,12 @@ public class SqlFactory {
 				return new AliasExpression(value, predicate.getLocalName());
 			}
 			
+			if (p instanceof FormulaPropertyRule) {
+				FormulaPropertyRule fr = (FormulaPropertyRule) p;
+				ValueExpression ve = formulaFactory.formula(tableItem, fr.getSourceProperty());
+				return new AliasExpression(ve, predicate.getLocalName());
+			}
+			
 			throw new TransformBuildException("Unsupported PropertyRule: " + p.getClass().getName());
 		}
 
@@ -213,7 +219,7 @@ public class SqlFactory {
 			URI predicate = p.getSourceProperty().getPredicate();
 			TableItemExpression tableItem = simpleTableItem(channel);
 			
-			ValueExpression caseOperand = columnExpression(tableItem, predicate);
+			ValueExpression caseOperand = SqlUtil.columnExpression(tableItem, predicate);
 			List<SimpleWhenClause> whenClauseList = new ArrayList<>();
 			
 			// For now, we assume that URI values map to localName strings.
@@ -346,8 +352,8 @@ public class SqlFactory {
 				URI leftPredicate = binary.getLeftPredicate();
 				URI rightPredicate = binary.getRightPredicate();
 				
-				ValueExpression leftValue = columnExpression(left, leftPredicate);
-				ValueExpression rightValue = columnExpression(right, rightPredicate);
+				ValueExpression leftValue = SqlUtil.columnExpression(left, leftPredicate);
+				ValueExpression rightValue = SqlUtil.columnExpression(right, rightPredicate);
 				ComparisonOperator comparisonOperator = comparisonOperator(binary.getOperator());
 				
 				
@@ -362,23 +368,6 @@ public class SqlFactory {
 			return new OnExpression(searchCondition);
 		}
 
-		private ValueExpression columnExpression(TableItemExpression table, URI predicate) {
-			String columnName = columnName(table, predicate);
-			return new ColumnExpression(columnName);
-		}
-
-		private String columnName(TableItemExpression table, URI predicate) {
-			String name = predicate.getLocalName();
-			if (table instanceof TableAliasExpression) {
-				TableAliasExpression tableName = (TableAliasExpression) table;
-				StringBuilder builder = new StringBuilder();
-				builder.append(tableName.getAlias());
-				builder.append('.');
-				builder.append(name);
-				name = builder.toString();
-			}
-			return name;
-		}
 		
 
 		private ComparisonOperator comparisonOperator(TransformBinaryOperator operator) throws TransformBuildException {

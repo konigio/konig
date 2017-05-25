@@ -22,6 +22,7 @@ package io.konig.formula;
 
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,6 +91,15 @@ public class Expression extends AbstractFormula {
 			
 		}
 		printOrList(out);
+	}
+	
+
+	public String getText() {
+		StringWriter buffer = new StringWriter();
+		PrettyPrintWriter out = new PrettyPrintWriter(buffer);
+		printOrList(out);
+		out.close();
+		return buffer.toString();
 	}
 	
 	protected void printOrList(PrettyPrintWriter out) {
