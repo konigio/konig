@@ -27,6 +27,7 @@ import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
+import io.konig.transform.rule.FormulaPropertyRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.LiteralPropertyRule;
 import io.konig.transform.rule.MapValueTransform;
@@ -299,6 +300,12 @@ public class ShapeRuleFactory {
 
 			int pathIndex = sp.getPathIndex();
 			if (pathIndex < 0) {
+				
+				if (sp.isDerived()) {
+					return new FormulaPropertyRule(channel, predicate, sp.getPropertyConstraint());
+				}
+				
+				
 				return new ExactMatchPropertyRule(channel, predicate);
 			}
 

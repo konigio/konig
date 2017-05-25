@@ -1,5 +1,7 @@
 package io.konig.transform.factory;
 
+import java.util.List;
+
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
@@ -23,6 +25,14 @@ public class SourceShapeFactory extends ShapeNodeFactory<SourceShape, SourceProp
 	@Override
 	protected SourceProperty property(PropertyConstraint p, int pathIndex, URI predicate, Value value) {
 		return new SourceProperty(p, pathIndex, predicate, value);
+	}
+	public SourceShape createShapeNode(Shape shape) {
+		SourceShape result = super.createShapeNode(shape);
+		List<PropertyConstraint> list = shape.getDerivedProperty();
+		if (list != null) {
+			this.addProperties(result, list, true);
+		}
+		return result;
 	}
 
 }

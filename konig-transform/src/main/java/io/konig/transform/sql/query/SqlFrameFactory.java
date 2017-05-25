@@ -31,6 +31,7 @@ import io.konig.transform.ShapePath;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.TransformAttribute;
 import io.konig.transform.TransformFrame;
+import io.konig.transform.sql.factory.SqlUtil;
 
 public class SqlFrameFactory {
 	

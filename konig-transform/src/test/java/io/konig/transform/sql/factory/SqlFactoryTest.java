@@ -7,10 +7,11 @@ import static org.junit.Assert.fail;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 
+import io.konig.formula.AdditiveOperator;
+import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.AliasExpression;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
@@ -42,6 +43,35 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	@Before
 	public void setUp() throws Exception {
 		useBigQueryTransformStrategy();
+	}
+	
+	@Test
+	public void testDerivedProperty() throws Exception {
+		
+		load("src/test/resources/konig-transform/derived-property");
+
+		URI shapeId = iri("http://example.com/shapes/TargetAccountShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		AliasExpression ae = assertAlias(select, "netIncome");
+		QueryExpression qe = ae.getExpression();
+		assertTrue(qe instanceof AdditiveValueExpression);
+		AdditiveValueExpression ave = (AdditiveValueExpression) qe;
+		AdditiveOperator operator = ave.getOperator();
+		assertEquals(AdditiveOperator.MINUS, operator);
+		ValueExpression ve = ave.getLeft();
+		assertTrue(ve instanceof ColumnExpression);
+		ColumnExpression ce = (ColumnExpression) ve;
+		assertEquals("profit", ce.getColumnName());
+		ve = ave.getRight();
+		assertTrue(ve instanceof ColumnExpression);
+		ce = (ColumnExpression) ve;
+		assertEquals("loss", ce.getColumnName());
+		
+		
 	}
 	
 	@Test
@@ -275,8 +305,8 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 	
-	private ValueExpression assertAlias(ValueContainer container, String alias) {
-		return assertColumn(container, null, alias);
+	private AliasExpression assertAlias(ValueContainer container, String alias) {
+		return (AliasExpression) assertColumn(container, null, alias);
 	}
 	
 	private ValueExpression assertColumnName(ValueContainer container, String columnName) {
