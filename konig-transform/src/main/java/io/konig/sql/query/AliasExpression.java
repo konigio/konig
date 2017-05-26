@@ -3,7 +3,7 @@ package io.konig.sql.query;
 import io.konig.core.io.PrettyPrintWriter;
 
 public class AliasExpression extends AbstractExpression 
-implements ValueExpression {
+implements ValueExpression, GroupingElement {
 	private QueryExpression expression;
 	private String alias;
 

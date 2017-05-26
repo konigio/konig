@@ -20,6 +20,7 @@ import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
+import io.konig.transform.factory.TargetShape.State;
 import io.konig.transform.rule.AlphabeticVariableNamer;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
@@ -83,11 +84,11 @@ public class ShapeRuleFactory {
 		private AlphabeticVariableNamer namer = new AlphabeticVariableNamer();
 		public ShapeRule build(Shape targetShape) throws TransformBuildException {
 
-			URI targetClass = targetShape.getTargetClass();
-			if (targetClass == null) {
-				throw new TransformBuildException(
-						"Target class must be defined for shape " + TurtleElements.resource(targetShape.getId()));
-			}
+//			URI targetClass = targetShape.getTargetClass();
+//			if (targetClass == null) {
+//				throw new TransformBuildException(
+//						"Target class must be defined for shape " + TurtleElements.resource(targetShape.getId()));
+//			}
 
 			TargetShape target = TargetShape.create(targetShape);
 
@@ -101,6 +102,8 @@ public class ShapeRuleFactory {
 			int expectedPropertyCount = target.totalPropertyCount();
 			int currentPropertyCount = 0;
 			int priorPropertyCount = -1;
+
+			buildAggregations(target);
 
 			// First pass.  Use the candidate source shapes provided by the transform strategy.
 			// While the current number of properties mapped is less than the total expected property count,
@@ -121,10 +124,11 @@ public class ShapeRuleFactory {
 					: TargetShape.State.FIRST_PASS;
 
 			target.setState(state);
+			
 
 			if (state != TargetShape.State.OK) {
-
-				secondPass(target);
+				
+				buildNestedProperties(target);
 
 				if (target.getState() != TargetShape.State.OK) {
 					throw new TransformBuildException(unmappedPropertyMessage(target));
@@ -135,6 +139,39 @@ public class ShapeRuleFactory {
 			createIdRule(target);
 			return assemble(target);
 
+		}
+
+		private void buildAggregations(TargetShape target) throws TransformBuildException {
+			List<VariableTargetProperty> varList = target.getVariableList();
+			if (varList != null) {
+				selectPreferredSourceForVariables(target);
+				
+			}
+		}
+
+		private void selectPreferredSourceForVariables(TargetShape target) throws TransformBuildException {
+
+			List<VariableTargetProperty> varList = target.getVariableList();
+			for (VariableTargetProperty vtp : varList) {
+				// For now, just select the first candidate as the preferred SourceShape.
+				// TODO: Select a shape that contains all of the properties that are referenced.
+				//       Or even construct a shape if necessary.
+				
+				if (vtp.getPreferredMatch() == null) {
+					Set<SourceShape> set = vtp.getCandidateSourceShape();
+					if (set.isEmpty()) {
+						StringBuilder msg = new StringBuilder();
+						msg.append("Failed to build transform for ");
+						msg.append(TurtleElements.resource(target.getShape().getId()));
+						msg.append(".  No source found for variable ");
+						msg.append(vtp.getPropertyConstraint().getPredicate().getLocalName());
+						throw new TransformBuildException(msg.toString());
+					}
+					SourceShape source = set.iterator().next();
+					vtp.setPreferredSourceShape(source);
+				}
+			}
+			
 		}
 
 		private void createIdRule(TargetShape target) throws TransformBuildException {
@@ -166,7 +203,7 @@ public class ShapeRuleFactory {
 			
 		}
 
-		private void secondPass(TargetShape target) throws TransformBuildException {
+		private void buildNestedProperties(TargetShape target) throws TransformBuildException {
 
 			for (TargetProperty tp = target.getUnmappedProperty(); tp != null; tp = target.getUnmappedProperty()) {
 				TargetShape parent = tp.getParent();
@@ -261,11 +298,27 @@ public class ShapeRuleFactory {
 			return shapeRule;
 		}
 
-		private void addChannels(TargetShape target, ShapeRule shapeRule) {
+		private void addChannels(TargetShape target, ShapeRule shapeRule) throws TransformBuildException {
 
 			List<SourceShape> sourceList = target.getSourceList();
 			for (SourceShape source : sourceList) {
 				shapeRule.addChannel(source.produceDataChannel(namer));
+			}
+			
+			List<VariableTargetProperty> varList = target.getVariableList();
+			if (varList != null) {
+				for (VariableTargetProperty vtp : varList) {
+					SourceShape source = vtp.getPreferredSourceShape();
+					if (source == null) {
+						throw new TransformBuildException(
+							"Preferred SourceShape is not defined for property " +
+							TurtleElements.resource(vtp.getPredicate())
+						);
+					}
+					DataChannel channel = source.produceDataChannel(namer);
+					channel.setVariableName(vtp.getPredicate().getLocalName());
+					shapeRule.addChannel(channel);
+				}
 			}
 
 		}
@@ -280,6 +333,10 @@ public class ShapeRuleFactory {
 		}
 
 		private PropertyRule createPropertyRule(TargetProperty tp) throws TransformBuildException {
+			if (tp instanceof DerivedDirectTargetProperty) {
+				
+				return new FormulaPropertyRule(null, tp.getPropertyConstraint(), tp.getPropertyConstraint());
+			}
 			SourceProperty sp = tp.getPreferredMatch();
 			DataChannel channel = sp.getParent().produceDataChannel(namer);
 
@@ -302,7 +359,7 @@ public class ShapeRuleFactory {
 			if (pathIndex < 0) {
 				
 				if (sp.isDerived()) {
-					return new FormulaPropertyRule(channel, predicate, sp.getPropertyConstraint());
+					return new FormulaPropertyRule(channel, tp.getPropertyConstraint(), sp.getPropertyConstraint());
 				}
 				
 				

@@ -9,6 +9,7 @@ public class SelectExpression extends BaseValueContainer implements ValueContain
 	
 	private FromExpression from = new FromExpression();
 	private WhereClause where;
+	private GroupByClause groupBy;
 	
 	public FromExpression getFrom() {
 		return from;
@@ -20,6 +21,14 @@ public class SelectExpression extends BaseValueContainer implements ValueContain
 
 	public void setWhere(WhereClause where) {
 		this.where = where;
+	}
+
+	public GroupByClause getGroupBy() {
+		return groupBy;
+	}
+
+	public void setGroupBy(GroupByClause groupBy) {
+		this.groupBy = groupBy;
 	}
 
 	@Override
@@ -52,6 +61,11 @@ public class SelectExpression extends BaseValueContainer implements ValueContain
 			out.println();
 			out.indent();
 			out.print(where);
+		}
+		if (groupBy != null) {
+			out.println();
+			out.indent();
+			out.print(groupBy);
 		}
 		
 	}

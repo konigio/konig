@@ -22,6 +22,7 @@ import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
 import io.konig.sql.query.ColumnExpression;
@@ -29,8 +30,11 @@ import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
+import io.konig.sql.query.GroupByClause;
+import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
+import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.Result;
 import io.konig.sql.query.SearchCondition;
 import io.konig.sql.query.SelectExpression;
@@ -70,7 +74,7 @@ public class SqlFactory {
 		return worker.selectExpression(shapeRule);
 	}
 	
-	class Worker {
+	class Worker implements VariableTableMap {
 		private SqlFormulaFactory formulaFactory = new SqlFormulaFactory();
 		private OwlReasoner reasoner = new OwlReasoner(new MemoryGraph());
 		private Map<String, TableItemExpression> tableItemMap = new HashMap<>();
@@ -81,8 +85,38 @@ public class SqlFactory {
 			SelectExpression select = new SelectExpression();
 			addDataChannels(select, shapeRule);
 			addColumns(select, shapeRule);
+			addGroupBy(select, shapeRule);
 			
 			return select;
+		}
+
+		private void addGroupBy(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
+			
+			GroupByClause clause = null;
+			for (PropertyRule p : shapeRule.getPropertyRules()) {
+				if (p instanceof FormulaPropertyRule) {
+					FormulaPropertyRule fpr = (FormulaPropertyRule) p;
+					PropertyConstraint pc = fpr.getTargetProperty();
+					if (Konig.dimension.equals(pc.getStereotype())) {
+						if (clause == null) {
+							clause = new GroupByClause(null);
+						}
+						QueryExpression qe = column(p);
+						if (qe instanceof AliasExpression) {
+							AliasExpression ae = (AliasExpression) qe;
+							qe = ae.getExpression();
+						}
+						if (qe instanceof GroupingElement) {
+							clause.add((GroupingElement)qe);
+						} else {
+							throw new TransformBuildException("Expected column to be a GroupingElement");
+						}
+					}
+				}
+			}
+			select.setGroupBy(clause);
+			
+			
 		}
 
 		private void addColumns(ValueContainer select, ShapeRule shapeRule) throws TransformBuildException {
@@ -204,7 +238,7 @@ public class SqlFactory {
 			
 			if (p instanceof FormulaPropertyRule) {
 				FormulaPropertyRule fr = (FormulaPropertyRule) p;
-				ValueExpression ve = formulaFactory.formula(tableItem, fr.getSourceProperty());
+				ValueExpression ve = formulaFactory.formula(this, tableItem, fr.getSourceProperty());
 				return new AliasExpression(ve, predicate.getLocalName());
 			}
 			
@@ -283,7 +317,6 @@ public class SqlFactory {
 			from.add(item);
 			
 			
-			
 		}
 		
 		/**
@@ -300,11 +333,12 @@ public class SqlFactory {
 		}
 
 		private TableItemExpression toTableItemExpression(DataChannel channel) throws TransformBuildException {
-			
+			if (channel==null) {
+				return null;
+			}
 			TableItemExpression tableItem = tableItemMap.get(channel.getName());
 			
 			if (tableItem == null) {
-				ShapeRule shapeRule = channel.getParent();
 				DataSource datasource = channel.getDatasource();
 				if (datasource == null) {
 					StringBuilder msg = new StringBuilder();
@@ -337,6 +371,10 @@ public class SqlFactory {
 				}
 
 				tableItemMap.put(channel.getName(), tableItem);
+				String varName = channel.getVariableName();
+				if (varName != null) {
+					tableItemMap.put(varName, tableItem);
+				}
 			}
 			
 			
@@ -380,6 +418,11 @@ public class SqlFactory {
 			}
 			
 			throw new TransformBuildException("Unsupported binary operator: " + operator);
+		}
+
+		@Override
+		public TableItemExpression tableForVariable(String varName) {
+			return tableItemMap.get(varName);
 		}
 
 	}

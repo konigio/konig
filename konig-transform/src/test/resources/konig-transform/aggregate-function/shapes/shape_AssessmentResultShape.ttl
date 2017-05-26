@@ -1,0 +1,45 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix ex: <http://example.com/ns/core/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:AssessmentResultShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/37ZO88_E1lQAAAFcQNWt9g> ; 
+	sh:targetClass ex:AssessmentResult ; 
+	sh:property  [ 
+		sh:predicate ex:resultOf ; 
+		sh:class ex:Assessment ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate ex:score ; 
+		sh:datatype xsd:float ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/ex/tables/AssessmentResultShape> , <gs://assessmentresultshape.{gcpBucketSuffix}> . 
+
+<http://www.konig.io/activity/37ZO88_E1lQAAAFcQNWt9g> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-05-25T14:19:24.732-04:00"^^xsd:dateTime . 
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/ex/tables/AssessmentResultShape> a konig:GoogleBigQueryTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:datasetId "ex" ; 
+		gcp:tableId "AssessmentResultShape"
+	 ]  ; 
+	gcp:externalDataConfiguration  [ 
+		gcp:sourceUris <gs://assessmentresultshape.{gcpBucketSuffix}> ; 
+		gcp:sourceFormat "CSV" ; 
+		gcp:csvOptions  [ 
+			gcp:skipLeadingRows 1 ]  ]  . 
+
+<gs://assessmentresultshape.{gcpBucketSuffix}> a konig:GoogleCloudStorageBucket , konig:DataSource ; 
+	gcp:name "assessmentresultshape.{gcpBucketSuffix}" ; 
+	gcp:projectId "{gcpProjectId}" ; 
+	gcp:storageClass "multi_regional" ; 
+	gcp:location "us" . 

@@ -56,6 +56,7 @@ public class Shape {
 	private URI targetClass;
 	private List<PropertyConstraint> property;
 	private List<PropertyConstraint> derivedProperty;
+	private List<PropertyConstraint> variable;
 	private Context jsonldContext;
 	private URI equivalentRelationalShape;
 	private NodeKind nodeKind;
@@ -483,6 +484,34 @@ public class Shape {
 			derivedProperty = new ArrayList<>();
 		}
 		derivedProperty.add(p);
+	}
+
+	public void addVariable(PropertyConstraint p) {
+		if (variable == null) {
+			variable = new ArrayList<>();
+		}
+		variable.add(p);
+	}
+	
+	public PropertyConstraint getVariableByName(String name) {
+		if (variable != null) {
+			for (PropertyConstraint p : variable) {
+				URI predicate = p.getPredicate();
+				if (predicate!=null && name.equals(predicate.getLocalName())) {
+					return p;
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	public List<PropertyConstraint> getVariable() {
+		return variable;
+	}
+
+	public void setVariable(List<PropertyConstraint> variable) {
+		this.variable = variable;
 	}
 
 	/**

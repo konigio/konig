@@ -104,6 +104,7 @@ public class Konig {
 	public static final URI measure = new URIImpl("http://www.konig.io/ns/core/measure");
 	public static final URI dimension = new URIImpl("http://www.konig.io/ns/core/dimension");
 	public static final URI attribute = new URIImpl("http://www.konig.io/ns/core/attribute");
+	public static final URI variable = new URIImpl("http://www.konig.io/ns/core/variable");
 	public static final URI stereotype = new URIImpl("http://www.konig.io/ns/core/stereotype");
 	public static final URI totalCount = new URIImpl("http://www.konig.io/ns/core/totalCount");
 	public static final URI durationUnit = new URIImpl("http://www.konig.io/ns/core/durationUnit");

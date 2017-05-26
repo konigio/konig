@@ -1,5 +1,7 @@
 package io.konig.transform.factory;
 
+import java.util.List;
+
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
@@ -14,6 +16,23 @@ public class TargetShapeFactory extends ShapeNodeFactory<TargetShape, TargetProp
 	
 	public TargetShapeFactory() {
 	}
+	
+	public TargetShape createShapeNode(Shape shape) {
+		TargetShape target = super.createShapeNode(shape);
+		addVariables(target);
+		return target;
+	}
+
+	private void addVariables(TargetShape target) {
+		Shape shape = target.getShape();
+		List<PropertyConstraint> varList = shape.getVariable();
+		if (varList != null) {
+			for (PropertyConstraint p : varList) {
+				target.addVariable(new VariableTargetProperty(p));
+			}
+		}
+		
+	}
 
 	@Override
 	protected TargetShape shape(Shape shape) {
@@ -24,7 +43,10 @@ public class TargetShapeFactory extends ShapeNodeFactory<TargetShape, TargetProp
 	protected TargetProperty property(PropertyConstraint p, int pathIndex, SharedSourceProperty preferredMatch) {
 		if (pathIndex < 0) {
 			if (p.getEquivalentPath()==null) {
-				return new BasicDirectTargetProperty(p);
+				if (p.getFormula()==null) {
+					return new BasicDirectTargetProperty(p);
+				}
+				return new DerivedDirectTargetProperty(p);
 			} else {
 				return new AliasDirectTargetProperty(p, preferredMatch);
 			}

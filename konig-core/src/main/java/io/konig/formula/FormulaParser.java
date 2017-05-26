@@ -626,6 +626,7 @@ public class FormulaParser {
 		private VariableTerm variable() throws RDFParseException, IOException {
 			assertNext('?');
 			buffer = buffer();
+			buffer.append('?');
 			int c = read();
 			do {
 				buffer.appendCodePoint(c);

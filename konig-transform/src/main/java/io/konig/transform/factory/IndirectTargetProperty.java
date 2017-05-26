@@ -21,4 +21,15 @@ abstract public class IndirectTargetProperty extends TargetProperty {
 	public int getPathIndex() {
 		return pathIndex;
 	}
+
+
+	@Override
+	public int totalPropertyCount() {
+		return 0;
+	}
+
+	@Override
+	public int mappedPropertyCount() {
+		return 0;
+	}
 }

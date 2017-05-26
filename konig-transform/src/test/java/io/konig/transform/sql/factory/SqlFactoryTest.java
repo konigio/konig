@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 
@@ -18,6 +19,8 @@ import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
+import io.konig.sql.query.GroupByClause;
+import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
@@ -46,6 +49,40 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	}
 	
 	@Test
+	public void testAggregateFunction() throws Exception {
+		
+		load("src/test/resources/konig-transform/aggregate-function");
+
+		URI shapeId = iri("http://example.com/shapes/AssessmentMetricsShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		assertColumn(select, "resultOf", "assessment");
+		QueryExpression qe = assertAlias(select, "avgScore").getExpression();
+		assertTrue(qe instanceof FunctionExpression);
+		FunctionExpression fe = (FunctionExpression) qe;
+		assertEquals("AVG", fe.getFunctionName());
+		
+		List<QueryExpression> argList = fe.getArgList();
+		assertEquals(1, argList.size());
+		qe = argList.get(0);
+		assertTrue(qe instanceof ColumnExpression);
+		ColumnExpression ce = (ColumnExpression) qe;
+		assertEquals("score", ce.getColumnName());
+		
+		GroupByClause groupBy = select.getGroupBy();
+		assertTrue(groupBy != null);
+		List<GroupingElement> groupingList = groupBy.getElementList();
+		assertEquals(1, groupingList.size());
+		GroupingElement ge = groupingList.get(0);
+		assertTrue(ge instanceof ColumnExpression);
+		ce = (ColumnExpression) ge;
+		assertEquals("resultOf", ce.getColumnName());
+	}
+	
+	@Test
 	public void testDerivedProperty() throws Exception {
 		
 		load("src/test/resources/konig-transform/derived-property");
@@ -70,8 +107,6 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertTrue(ve instanceof ColumnExpression);
 		ce = (ColumnExpression) ve;
 		assertEquals("loss", ce.getColumnName());
-		
-		
 	}
 	
 	@Test

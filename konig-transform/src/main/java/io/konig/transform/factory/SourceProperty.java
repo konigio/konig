@@ -12,7 +12,7 @@ public class SourceProperty extends PropertyNode<SourceShape> {
 	private int pathIndex;
 	private boolean isDerived;
 	
-	// (predicate, value) pair is used only for has constraint from an equivalent Path.
+	// (predicate, value) pair is used only for a "has constraint" from an equivalent Path.
 	private URI predicate;
 	private Value value;
 
