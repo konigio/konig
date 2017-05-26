@@ -31,6 +31,10 @@ abstract public class TargetProperty extends PropertyNode<TargetShape> {
 	abstract public SourceProperty getPreferredMatch();
 
 	abstract public void setPreferredMatch(SourceProperty preferredMatch);
+	
+	abstract public int totalPropertyCount();
+	
+	abstract public int mappedPropertyCount();
 
 
 	@Override

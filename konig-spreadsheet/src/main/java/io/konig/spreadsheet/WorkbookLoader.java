@@ -75,6 +75,7 @@ import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
+import io.konig.core.vocab.VAR;
 import io.konig.shacl.CompositeShapeVisitor;
 import io.konig.shacl.FormulaContextBuilder;
 import io.konig.shacl.PropertyConstraint;
@@ -992,14 +993,22 @@ public class WorkbookLoader {
 		private void loadPropertyConstraintRow(Row row) throws SpreadsheetException {
 			URI shapeId = uriValue(row, pcShapeIdCol);
 			if (shapeId==null) return;
-			URI propertyId = uriValue(row, pcPropertyIdCol);
+
+			URI stereotype = uriValue(row, pcStereotypeCol);
+			String propertyIdValue = stringValue(row, pcPropertyIdCol);
+			URI propertyId = null;
+			if (propertyIdValue.charAt(0)=='?') {
+				propertyId = new URIImpl(VAR.NAMESPACE + propertyIdValue);
+				stereotype = Konig.variable;
+			} else {
+				propertyId = expandCurie(propertyIdValue);
+			}
 			if (propertyId==null) return;
 			Literal comment = stringLiteral(row, pcCommentCol);
 			Resource valueType = valueType(row, pcValueTypeCol);
 			Literal minCount = intLiteral(row, pcMinCountCol);
 			Literal maxCount = intLiteral(row, pcMaxCountCol);
 			URI valueClass = uriValue(row, pcValueClassCol);
-			URI stereotype = uriValue(row, pcStereotypeCol);
 			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
 			String equivalentPath = stringValue(row, pcEquivalentPathCol);
@@ -1071,7 +1080,10 @@ public class WorkbookLoader {
 				}
 			}
 			
-			URI property = Konig.derivedProperty.equals(stereotype) ? Konig.derivedProperty : SH.property;
+			URI property = 
+				Konig.derivedProperty.equals(stereotype) ? Konig.derivedProperty : 
+				Konig.variable.equals(stereotype) ? Konig.variable : 
+				SH.property;
 			
 			edge(shapeId, RDF.TYPE, SH.Shape);
 			edge(shapeId, property, constraint);

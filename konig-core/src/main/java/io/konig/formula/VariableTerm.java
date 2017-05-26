@@ -39,9 +39,12 @@ public class VariableTerm extends AbstractFormula implements PathTerm {
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		out.print('?');
 		out.print(varName);
 
+	}
+
+	public String getVarName() {
+		return varName;
 	}
 
 	@Override

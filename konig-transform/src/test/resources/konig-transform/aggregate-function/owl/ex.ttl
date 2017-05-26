@@ -1,0 +1,20 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "ex" . 
+
+ex:Assessment a owl:Class . 
+
+ex:AssessmentResult a owl:Class . 
+
+ex:resultOf a owl:ObjectProperty ; 
+	schema:domainIncludes ex:AssessmentResult ; 
+	schema:rangeIncludes ex:Assessment . 
+
+ex:score a owl:DatatypeProperty ; 
+	schema:domainIncludes ex:AssessmentResult ; 
+	schema:rangeIncludes xsd:float . 

@@ -6,23 +6,27 @@ import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.PropertyConstraint;
 
 public class FormulaPropertyRule extends AbstractPropertyRule {
-	
-	private URI targetPredicate;
+
+	private PropertyConstraint targetProperty;
 	private PropertyConstraint sourceProperty;
 
-	public FormulaPropertyRule(DataChannel channel, URI targetPredicate, PropertyConstraint sourceProperty) {
+	public FormulaPropertyRule(DataChannel channel, PropertyConstraint targetProperty, PropertyConstraint sourceProperty) {
 		super(channel);
-		this.targetPredicate = targetPredicate;
+		this.targetProperty = targetProperty;
 		this.sourceProperty = sourceProperty;
 	}
 
 	@Override
 	public URI getPredicate() {
-		return targetPredicate;
+		return targetProperty.getPredicate();
 	}
 
 	public PropertyConstraint getSourceProperty() {
 		return sourceProperty;
+	}
+
+	public PropertyConstraint getTargetProperty() {
+		return targetProperty;
 	}
 
 	@Override
@@ -31,7 +35,7 @@ public class FormulaPropertyRule extends AbstractPropertyRule {
 		out.field("predicate", sourceProperty.getPredicate());
 		out.field("formula", sourceProperty.getFormula().getText());
 		out.endObject();
-		
+
 	}
 
 }

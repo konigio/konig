@@ -23,6 +23,8 @@ public class TargetShape extends ShapeNode<TargetProperty> {
 	private List<SourceShape> sourceList = new ArrayList<>();
 	private State state = State.INITIALIZED;
 	private IdRule idRule;
+	
+	private List<VariableTargetProperty> variableList = null;
 
 	public TargetShape(Shape shape) {
 		super(shape);
@@ -60,14 +62,7 @@ public class TargetShape extends ShapeNode<TargetProperty> {
 		int count = 0;
 		
 		for (TargetProperty p : getProperties()) {
-			if (p.isDirectProperty()) {
-				TargetShape nested = p.getNestedShape();
-				if (nested != null) {
-					count += nested.totalPropertyCount();
-				} else {
-					count++;
-				}
-			}
+			count += p.totalPropertyCount();
 		}
 		
 		return count;
@@ -82,14 +77,7 @@ public class TargetShape extends ShapeNode<TargetProperty> {
 		int count = 0;
 
 		for (TargetProperty p : getProperties()) {
-			if (p.isDirectProperty()) {
-				TargetShape nested = p.getNestedShape();
-				if (nested != null) {
-					count += nested.mappedPropertyCount();
-				} else if (p.getPreferredMatch()!=null){
-					count++;
-				}
-			}
+			count += p.mappedPropertyCount();
 		}
 		return count;
 	}
@@ -184,11 +172,39 @@ public class TargetShape extends ShapeNode<TargetProperty> {
 	public void setIdRule(IdRule idRule) {
 		this.idRule = idRule;
 	}
+	
+	public VariableTargetProperty getVariableByName(String name) {
+		if (variableList != null) {
+			for (VariableTargetProperty vtp : variableList) {
+				if (vtp.getPropertyConstraint().getPredicate().getLocalName().equals(name)) {
+					return vtp;
+				}
+			}
+		}
+		return null;
+	}
+
+	public void addVariable(VariableTargetProperty tp) {
+		if (variableList == null) {
+			variableList = new ArrayList<>();
+		}
+		variableList.add(tp);
+	}
+	
+	public List<VariableTargetProperty> getVariableList() {
+		return variableList;
+	}
 
 
 	@Override
 	protected void printLocalFields(PrettyPrintWriter out) {
-		// TODO Auto-generated method stub
+		if (variableList != null) {
+			out.beginArray("variableList");
+			for (TargetProperty tp : variableList) {
+				out.print(tp);
+			}
+			out.endArray("variableList");
+		}
 		
 	}
 

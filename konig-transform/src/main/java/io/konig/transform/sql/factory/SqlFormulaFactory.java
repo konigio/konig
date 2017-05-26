@@ -14,6 +14,7 @@ import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.ConditionalAndExpression;
 import io.konig.formula.Direction;
 import io.konig.formula.Expression;
+import io.konig.formula.FunctionExpression;
 import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.IfFunction;
 import io.konig.formula.LiteralFormula;
@@ -25,6 +26,7 @@ import io.konig.formula.PathTerm;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.UnaryExpression;
 import io.konig.formula.ValueLogical;
+import io.konig.formula.VariableTerm;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.BooleanTerm;
@@ -43,17 +45,19 @@ import io.konig.transform.factory.TransformBuildException;
 public class SqlFormulaFactory {
 	
 
-	public ValueExpression formula(TableItemExpression sourceTable, PropertyConstraint p) throws TransformBuildException {
-		Worker worker = new Worker(sourceTable);
+	public ValueExpression formula(VariableTableMap tableMap, TableItemExpression sourceTable, PropertyConstraint p) throws TransformBuildException {
+		Worker worker = new Worker(tableMap, sourceTable);
 		
 		return worker.formula(p);
 	}
 	
 	private static class Worker {
 
+		private VariableTableMap tableMap;
 		private TableItemExpression sourceTable;
 		
-		public Worker(TableItemExpression sourceTable) {
+		public Worker(VariableTableMap tableMap, TableItemExpression sourceTable) {
+			this.tableMap = tableMap;
 			this.sourceTable = sourceTable;
 		}
 
@@ -187,24 +191,65 @@ public class SqlFormulaFactory {
 				throw new KonigException("Expected a NumericValueExpression but found " + e.getClass().getSimpleName());
 			}
 			
+			if (primary instanceof FunctionExpression) {
+				FunctionExpression func = (FunctionExpression) primary;
+				String funcName = func.getFunctionName();
+				io.konig.sql.query.FunctionExpression sqlFunc = new io.konig.sql.query.FunctionExpression(funcName);
+				addArguments(sqlFunc, func);
+				return sqlFunc;
+			}
+			
 			throw new KonigException("Expression type not supported: " + primary.getClass().getSimpleName());
+		}
+
+		private void addArguments(io.konig.sql.query.FunctionExpression sqlFunc, FunctionExpression sparqlFunc) throws ShapeTransformException {
+			
+			for (Expression e : sparqlFunc.getArgList()) {
+				ValueExpression ve = valueExpression(e);
+				sqlFunc.addArg(ve);
+			}
+			
 		}
 
 		private QueryExpression pathExpression(PathExpression primary) {
 			
 			List<PathStep> stepList = primary.getStepList();
-			if (stepList!=null && stepList.size()==1) {
-				PathStep step = stepList.get(0);
-				
-				if (step.getDirection() == Direction.OUT) {
-					PathTerm term = step.getTerm();
-					URI predicate = term.getIri();
+			if (stepList!=null) {
+				// For now, we only support two very limited patterns.
+				// (1)  Path consisting of a single OUT Step.
+				// (2)  Path consisting of a variable followed by a single OUT step.
+				if (stepList.size()==1) {
+					PathStep step = stepList.get(0);
 					
-					return SqlUtil.columnExpression(sourceTable, predicate);
+					if (step.getDirection() == Direction.OUT) {
+						PathTerm term = step.getTerm();
+						URI predicate = term.getIri();
+						
+						return SqlUtil.columnExpression(sourceTable, predicate);
+					}
+				} else if (stepList.size()==2) {
+					PathStep step = stepList.get(0);
+					if (step.getDirection() == Direction.OUT) {
+						PathTerm term = step.getTerm();
+						if (term instanceof VariableTerm) {
+							VariableTerm varTerm = (VariableTerm) term;
+							String varName = varTerm.getVarName();
+							TableItemExpression tableItem = tableMap.tableForVariable(varName);
+							if (tableItem == null) {
+								throw new KonigException("Table not found for variable in expression: " + primary.toString());
+							}
+							step = stepList.get(1);
+							if (step.getDirection() == Direction.OUT) {
+								term = step.getTerm();
+								URI predicate = term.getIri();
+								return SqlUtil.columnExpression(tableItem, predicate);
+							}
+						}
+					}
 				}
 			}
 			
-			throw new KonigException("Unsupported expression");
+			throw new KonigException("Unsupported expression: " + primary.toString());
 		}
 
 		private NumericValueExpression ifFunction(IfFunction primary) throws ShapeTransformException {
