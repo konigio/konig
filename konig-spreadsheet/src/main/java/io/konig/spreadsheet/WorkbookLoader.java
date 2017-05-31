@@ -1171,15 +1171,15 @@ public class WorkbookLoader {
 			}
 
 			if (equivalentPath != null) {
-				pathHandlers.add(new PathHandler(shapeId, propertyId, Konig.equivalentPath, equivalentPath));
+				pathHandlers.add(new PathHandler(shapeId, property, propertyId, Konig.equivalentPath, equivalentPath));
 			}
 
 			if (sourcePath != null) {
-				pathHandlers.add(new PathHandler(shapeId, propertyId, Konig.sourcePath, sourcePath));
+				pathHandlers.add(new PathHandler(shapeId, property, propertyId, Konig.sourcePath, sourcePath));
 			}
 
 			if (partitionOf != null) {
-				pathHandlers.add(new PathHandler(shapeId, propertyId, Konig.partitionOf, partitionOf));
+				pathHandlers.add(new PathHandler(shapeId, property, propertyId, Konig.partitionOf, partitionOf));
 			}
 
 			edge(constraint, SH.minCount, minCount);
@@ -2395,10 +2395,12 @@ public class WorkbookLoader {
 		private URI shapeId;
 		private URI predicate;
 		private URI pathField;
+		private URI property;
 		private String pathText;
 
-		public PathHandler(URI shapeId, URI predicate, URI pathField, String pathText) {
+		public PathHandler(URI shapeId, URI property, URI predicate, URI pathField, String pathText) {
 			this.shapeId = shapeId;
+			this.property = property;
 			this.predicate = predicate;
 			this.pathField = pathField;
 			this.pathText = pathText;
@@ -2409,7 +2411,7 @@ public class WorkbookLoader {
 			if (shape == null) {
 				throw new SpreadsheetException("Shape not found: " + shapeId);
 			}
-			Vertex property = shape.asTraversal().out(SH.property).hasValue(SH.predicate, predicate).firstVertex();
+			Vertex property = shape.asTraversal().out(this.property).hasValue(SH.predicate, predicate).firstVertex();
 			if (property == null) {
 				throw new SpreadsheetException("On shape <" + shapeId + "> property not found: " + predicate);
 			}
