@@ -32,8 +32,22 @@ public class FormulaParserTest {
 	
 	private FormulaParser parser = new FormulaParser();
 	
-
 	
+
+	@Test
+	public void testBound() throws Exception {
+		String text = 
+			"@context {\n" + 
+			"   \"price\" : \"http://schema.org/price\"\n" + 
+			"}\n" + 
+			"BOUND(price)" ;
+		
+		Expression e = parser.quantifiedExpression(text);
+		String actual = e.toString();
+		String expected = text;
+		assertEquals(expected, actual);
+		
+	}
 	
 	@Test
 	public void testSum() throws Exception {

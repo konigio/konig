@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openrdf.model.Literal;
-import org.openrdf.model.Statement;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -466,12 +465,35 @@ public class FormulaParser {
 			(call=tryIfFunction()) !=null ? call :
 			(call=tryGenericFunction("SUM")) != null ? call :
 			(call=tryGenericFunction("AVG")) != null ? call :
+			(call=tryBoundFunction()) != null ? call :
 			null;
 			
 			return call;
 		}
 		
 		
+
+		private BoundFunction tryBoundFunction() throws IOException, RDFParseException {
+			
+			if (tryWord("BOUND")) {
+				int c = next();
+				if (c != '(') {
+					unread(c);
+					unread("BOUND");
+				} else {
+					PathExpression arg = tryPath();
+					
+					if (arg == null) {
+						fail("Expected variable or path as argument to BOUND function");
+					}
+					assertNext(')');
+					
+					return new BoundFunction(arg);
+						
+				}
+			}
+			return null;
+		}
 
 		private BuiltInCall tryGenericFunction(String functionName) throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
@@ -621,6 +643,14 @@ public class FormulaParser {
 
 			
 			return predicate == null ? null : new LocalNameTerm(getContext(), predicate);
+		}
+		
+		private VariableTerm tryVariable() throws RDFParseException, IOException {
+			skipSpace();
+			if (peek() == '?') {
+				return variable();
+			}
+			return null;
 		}
 
 		private VariableTerm variable() throws RDFParseException, IOException {

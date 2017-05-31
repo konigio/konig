@@ -87,5 +87,6 @@ InStep ::= '^' PathTerm
 
 BuiltInCall ::= 
 		'IF' '(' Expression ',' Expression ',' Expression ',' ')'
-	| 'SUM' '(' Expression ')' |
-	| 'AVG' '(' Expression ')'
+	| 'SUM' '(' Expression ')' 
+	| 'AVG' '(' Expression ')' 
+	| 'BOUND' '(' Variable | Path ')'
