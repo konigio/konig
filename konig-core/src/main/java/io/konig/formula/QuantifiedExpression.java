@@ -34,7 +34,7 @@ public class QuantifiedExpression extends Expression {
 			FormulaParser parser = new FormulaParser();
 			return parser.quantifiedExpression(text);
 		} catch (Throwable oops) {
-			throw new KonigException(oops);
+			throw new KonigException("Failed to parse expression: " + text, oops);
 		}
 	}
 	
