@@ -76,6 +76,7 @@ public class SampleGenerator {
 	private int maxDouble = 10000;
 	private int maxInt = 100;
 	private boolean failWhenEnumHasNoMembers = false;
+	private String undefinedFieldType = "?";
 	
 	
 
@@ -83,6 +84,14 @@ public class SampleGenerator {
 	
 	public SampleGenerator(OwlReasoner reasoner) {
 		this.reasoner = reasoner;
+	}
+
+	public String getUndefinedFieldType() {
+		return undefinedFieldType;
+	}
+
+	public void setUndefinedFieldType(String undefinedFieldType) {
+		this.undefinedFieldType = undefinedFieldType;
 	}
 
 	public boolean isFailWhenEnumHasNoMembers() {
@@ -225,6 +234,10 @@ public class SampleGenerator {
 			
 			if (RDF.TYPE.equals(p.getPredicate()) && shape.getTargetClass()!=null) {
 				return iriReference(shape.getTargetClass());
+			}
+			
+			if (undefinedFieldType != null) {
+				return new LiteralImpl(undefinedFieldType);
 			}
 			
 			String msg = MessageFormat.format("On shape <{0}>, unsupported property: <{1}>", 

@@ -71,6 +71,7 @@ public class DataCatalogBuilder {
 		File exampleDir = buildRequest.getExampleDir();
 		
 		graph.getNamespaceManager().add(new NamespaceImpl("_dcat_", CATALOG_BASE_URI));
+		graph.getNamespaceManager().add("rdf", RDF.NAMESPACE);
 			
 		this.outDir = buildRequest.getOutDir();
 		classIndexWriterFactory = new ClassIndexWriterFactory(outDir);
