@@ -65,24 +65,19 @@ public class CompactTurtleWriter extends TurtleWriter {
 			throws IOException
 		{
 			String uriString = uri.toString();
+			String namespaceName = uri.getNamespace();
+			String localName = uri.getLocalName();
 
 			// Try to find a prefix for the URI's namespace
-			String prefix = null;
 
-			int splitIdx = TurtleUtil.findURISplitIndex(uriString);
-			String localName = null;
-			if (splitIdx > 0) {
-				String namespace = uriString.substring(0, splitIdx);
-				
-				prefix = namespaceTable.get(namespace);
-				localName = uriString.substring(splitIdx);
-			}
+			String prefix = namespaceTable.get(namespaceName);
 			if (prefix == null) {
 				prefix = namespaceTable.get(uriString);
 				if (prefix != null) {
 					localName = "";
 				}
 			}
+			
 
 			if (prefix != null) {
 				// Namespace is mapped to a prefix; write abbreviated URI

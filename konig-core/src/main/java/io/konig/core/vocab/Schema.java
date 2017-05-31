@@ -55,6 +55,7 @@ public class Schema {
 	public static final URI Time = new URIImpl("http://schema.org/Time");
 	public static final URI VideoObject = new URIImpl("http://schema.org/VideoObject");
 	public static final URI WebPage = new URIImpl("http://schema.org/WebPage");
+	public static final URI about = new URIImpl("http://schema.org/about");
 	public static final URI address = new URIImpl("http://schema.org/address");
 	public static final URI addressLocality = new URIImpl("http://schema.org/addressLocality");
 	public static final URI addressRegion = new URIImpl("http://schema.org/addressRegion");
