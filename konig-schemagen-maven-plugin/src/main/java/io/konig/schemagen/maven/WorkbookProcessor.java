@@ -8,6 +8,7 @@ public class WorkbookProcessor {
 	private File shapesDir;
 	private boolean inferRdfPropertyDefinitions=true;
 	private boolean failOnWarnings = false;
+	private boolean failOnErrors = false;
 	
 	public File getWorkbookFile() {
 		return workbookFile;
@@ -44,6 +45,12 @@ public class WorkbookProcessor {
 	}
 	public void setFailOnWarnings(boolean failOnWarnings) {
 		this.failOnWarnings = failOnWarnings;
+	}
+	public boolean isFailOnErrors() {
+		return failOnErrors;
+	}
+	public void setFailOnErrors(boolean failOnErrors) {
+		this.failOnErrors = failOnErrors;
 	}
 
 }
