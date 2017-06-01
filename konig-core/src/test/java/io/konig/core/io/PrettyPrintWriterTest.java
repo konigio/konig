@@ -28,6 +28,23 @@ import java.io.StringWriter;
 import org.junit.Test;
 
 public class PrettyPrintWriterTest {
+	
+	@Test 
+	public void testEscapeSingleQuoteInString() {
+		
+		StringWriter buffer = new StringWriter();
+		PrettyPrintWriter out = new PrettyPrintWriter(buffer);
+		out.setEscapeSingleQuote(true);
+		
+		out.print("Hello 'Jane', my friend");
+		out.close();
+		
+		String actual = buffer.toString();
+		String expected = "Hello \\'Jane\\', my friend";
+		assertEquals(expected, actual);
+		
+		
+	}
 
 	@Test
 	public void test() {
