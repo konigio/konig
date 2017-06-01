@@ -22,6 +22,8 @@ package io.konig.core.util;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -58,6 +60,27 @@ public class ClassHierarchyPaths extends ArrayList<List<URI>> {
 			
 			addSuperClasses(list, targetClass);
 		}
+		Collections.sort(this, new Comparator<List<URI>>() {
+
+			@Override
+			public int compare(List<URI> aList, List<URI> bList) {
+				if (aList == bList) {
+					return 0;
+				}
+				int min = Math.min(aList.size(), bList.size());
+				for (int i=0; i<min; i++) {
+					URI a = aList.get(i);
+					URI b = bList.get(i);
+					
+					int delta = a.stringValue().compareTo(b.stringValue());
+					if (delta != 0) {
+						return delta;
+					}
+				}
+				
+				return aList.size() - bList.size();
+			}
+		});
 	}
 
 	private void addSuperClasses(List<URI> list, Vertex targetClass) {
