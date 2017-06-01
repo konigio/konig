@@ -48,10 +48,11 @@ public class ClassHierarchyPathsTest {
 		
 		ClassHierarchyPaths paths = new ClassHierarchyPaths(targetClass);
 		String expected = 
-				  "[[http://example.com/target, urn:A/2/b, urn:A/2, urn:A], "
-				+ "[http://example.com/target, urn:B/1/a, urn:B/1, urn:B], "
-				+ "[http://example.com/target, urn:B/1/b, urn:B/1, urn:B], "
-				+ "[http://example.com/target, urn:A/1/a, urn:A/1, urn:A]]";
+			 "[[http://example.com/target, urn:A/1/a, urn:A/1, urn:A], "
+			+ "[http://example.com/target, urn:A/2/b, urn:A/2, urn:A], "
+			+ "[http://example.com/target, urn:B/1/a, urn:B/1, urn:B], "
+			+ "[http://example.com/target, urn:B/1/b, urn:B/1, urn:B]]";
+		
 		assertEquals(expected, paths.toString());
 	}
 
