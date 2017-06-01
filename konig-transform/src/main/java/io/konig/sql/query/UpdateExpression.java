@@ -9,7 +9,7 @@ public class UpdateExpression extends AbstractExpression implements DmlExpressio
 	
 	private TableItemExpression table;
 	private List<UpdateItem> itemList = new ArrayList<>();
-	private FromExpression from;
+	private FromExpression from = new FromExpression();
 	private SearchCondition where;
 	
 	public TableItemExpression getTable() {

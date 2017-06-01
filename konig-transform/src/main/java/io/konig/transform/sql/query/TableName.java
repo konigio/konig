@@ -1,5 +1,7 @@
 package io.konig.transform.sql.query;
 
+import org.openrdf.model.URI;
+
 import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.PropertyConstraint;
@@ -32,6 +34,9 @@ public class TableName extends AbstractPrettyPrintable {
 
 	public ColumnExpression column(PropertyConstraint sourceProperty) {
 		return column(sourceProperty.getPredicate().getLocalName());
+	}
+	public ColumnExpression column(URI predicate) {
+		return column(predicate.getLocalName());
 	}
 	
 	public ColumnExpression column(String name) {

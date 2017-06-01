@@ -22,6 +22,9 @@ import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.gcp.datasource.BigQueryTableReference;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
@@ -32,6 +35,7 @@ import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
+import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
@@ -46,8 +50,13 @@ import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableAliasExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.TableNameExpression;
+import io.konig.sql.query.UpdateExpression;
+import io.konig.sql.query.UpdateItem;
 import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
+import io.konig.transform.IriTemplateInfo;
+import io.konig.transform.MappedId;
+import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
@@ -66,15 +75,26 @@ import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.rule.TransformBinaryOperator;
 import io.konig.transform.rule.ValueTransform;
+import io.konig.transform.sql.query.TableName;
 
 public class SqlFactory {
+	private String idColumnName = "id";
+	public InsertStatement insertStatement(ShapeRule shapeRule) throws TransformBuildException {
+		Worker worker = new Worker();
+		return worker.insertStatement(shapeRule);
+	}
+	
+	public UpdateExpression updateExpression(ShapeRule shapeRule) throws TransformBuildException {
+		Worker worker = new Worker();
+		return worker.updateExpression(shapeRule);
+	}
 	
 	public SelectExpression selectExpression(ShapeRule shapeRule) throws TransformBuildException {
 		Worker worker = new Worker();
 		return worker.selectExpression(shapeRule);
 	}
 	
-	class Worker implements VariableTableMap {
+	private class Worker implements VariableTableMap {
 		private SqlFormulaFactory formulaFactory = new SqlFormulaFactory();
 		private OwlReasoner reasoner = new OwlReasoner(new MemoryGraph());
 		private Map<String, TableItemExpression> tableItemMap = new HashMap<>();
@@ -83,11 +103,38 @@ public class SqlFactory {
 
 		private SelectExpression selectExpression(ShapeRule shapeRule) throws TransformBuildException {
 			SelectExpression select = new SelectExpression();
-			addDataChannels(select, shapeRule);
+			addDataChannels(select.getFrom(), shapeRule);
 			addColumns(select, shapeRule);
 			addGroupBy(select, shapeRule);
 			
 			return select;
+		}
+
+		public InsertStatement insertStatement(ShapeRule shapeRule) throws TransformBuildException {
+			InsertStatement insert = null;
+			BigQueryTableReference tableRef = bigQueryTableRef(shapeRule);
+			if (tableRef != null) {
+				TableName tableName = tableName(tableRef, null);
+				List<ColumnExpression> columnList = columnList(shapeRule);
+				SelectExpression select = selectExpression(shapeRule);
+				insert = new InsertStatement(tableName.getExpression(), columnList, select);
+			}
+			return insert;
+		}
+		
+		private List<ColumnExpression> columnList(ShapeRule shapeRule) {
+			List<ColumnExpression> list = new ArrayList<>();
+			IdRule idRule = shapeRule.getIdRule();
+			
+			if (idRule != null) {
+				list.add(new ColumnExpression(idColumnName));
+			}
+			
+			for (PropertyRule p : shapeRule.getPropertyRules()) {
+				String columnName = p.getPredicate().getLocalName();
+				list.add(new ColumnExpression(columnName));
+			}
+			return list;
 		}
 
 		private void addGroupBy(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
@@ -118,6 +165,52 @@ public class SqlFactory {
 			
 			
 		}
+		
+		private UpdateExpression updateExpression(ShapeRule shapeRule) throws TransformBuildException {
+			
+			UpdateExpression update = null;
+			BigQueryTableReference tableRef = bigQueryTableRef(shapeRule);
+			if (tableRef != null) {
+				useAlias = true;
+				update = new UpdateExpression();
+				TableName tableName = tableName(tableRef, null);
+				update.setTable(tableName.getItem());
+				
+				for (PropertyRule p : shapeRule.getPropertyRules()) {
+					ColumnExpression left = tableName.column(p.getPredicate());
+					ValueExpression right = column(p);
+					UpdateItem item = new UpdateItem(left, right);
+					update.add(item);
+				}
+				
+				addDataChannels(update.getFrom(), shapeRule);
+			}
+			
+			
+			
+			return update;
+		}
+
+		private BigQueryTableReference bigQueryTableRef(ShapeRule shapeRule) {
+			Shape shape = shapeRule.getTargetShape();
+			for (DataSource ds : shape.getShapeDataSource()) {
+				if (ds.isA(Konig.GoogleBigQueryTable)) {
+					GoogleBigQueryTable bigQuery = (GoogleBigQueryTable) ds;
+					return bigQuery.getTableReference();
+				}
+			}
+			return null;
+		}
+		
+		private TableName tableName(BigQueryTableReference tableRef, String alias) {
+
+			StringBuilder builder = new StringBuilder();
+			builder.append(tableRef.getDatasetId());
+			builder.append('.');
+			builder.append(tableRef.getTableId());
+			String tableName = builder.toString();
+			return new TableName(tableName, alias);
+		}
 
 		private void addColumns(ValueContainer select, ShapeRule shapeRule) throws TransformBuildException {
 			
@@ -132,6 +225,14 @@ public class SqlFactory {
 		}
 
 		private void addIdColumn(ValueContainer select, ShapeRule shapeRule) throws TransformBuildException {
+			ValueExpression e = createIdRule(shapeRule);
+			if (e != null) {
+				select.add(e);
+			}
+		}
+		
+		private ValueExpression createIdRule(ShapeRule shapeRule) throws TransformBuildException {
+			ValueExpression result = null;
 			IdRule idRule = shapeRule.getIdRule();
 			if (idRule != null) {
 				if (idRule instanceof CopyIdRule) {
@@ -140,18 +241,16 @@ public class SqlFactory {
 					TableItemExpression tableItem = simpleTableItem(channel);
 					String columnName = SqlUtil.columnName(tableItem, Konig.id);
 					
-					ColumnExpression column = new ColumnExpression(columnName);
-					select.add(column);
+					result = new ColumnExpression(columnName);
 					
 				} else if (idRule instanceof IriTemplateIdRule) {
-					ValueExpression idValue = createIriTemplateValue(shapeRule, (IriTemplateIdRule) idRule);
-					select.add(idValue);
+					result = createIriTemplateValue(shapeRule, (IriTemplateIdRule) idRule);
 					
 				} else {
 					throw new TransformBuildException("Unsupported IdRule " + idRule.getClass().getName());
 				}
 			}
-			
+			return result;
 		}
 
 		private ValueExpression createIriTemplateValue(ShapeRule shapeRule, IriTemplateIdRule idRule) throws TransformBuildException {
@@ -303,10 +402,9 @@ public class SqlFactory {
 			throw new TransformBuildException("Cannot convert to ValueExpression: " + value.stringValue());
 		}
 
-		private void addDataChannels(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
+		private void addDataChannels(FromExpression from, ShapeRule shapeRule) throws TransformBuildException {
 			List<DataChannel> channelList = shapeRule.getAllChannels();
 			useAlias = channelList.size()>1;
-			FromExpression from = select.getFrom();
 			TableItemExpression item = null;
 			for (DataChannel channel : channelList) {
 				item = toTableItemExpression(channel);

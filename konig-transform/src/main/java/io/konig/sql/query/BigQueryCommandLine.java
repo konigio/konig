@@ -82,9 +82,13 @@ public class BigQueryCommandLine extends AbstractExpression {
 		}
 		out.print(" --use_legacy_sql=");
 		out.print(useLegacySql);
-		out.print('"');
+		out.print(' ');
+		out.print("$'");
+		boolean escape = out.isEscapeSingleQuote();
+		out.setEscapeSingleQuote(true);
 		dml.print(out);
-		out.print('"');
+		out.setEscapeSingleQuote(escape);
+		out.print("'");
 		out.println();
 		
 		out.setPrettyPrint(pretty);

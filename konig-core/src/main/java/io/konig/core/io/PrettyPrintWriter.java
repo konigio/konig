@@ -45,6 +45,7 @@ import org.openrdf.rio.turtle.TurtleUtil;
 import io.konig.core.NamespaceManager;
 
 public class PrettyPrintWriter extends PrintWriter {
+	private static final int MAX_BUFFER_SIZE = 2014;
 	private static enum AutoMode {
 		NONE,
 		INDENT,
@@ -54,9 +55,11 @@ public class PrettyPrintWriter extends PrintWriter {
 	private boolean prettyPrint = true;
 	private int indentLevel;
 	private String indentText = "   ";
+	private boolean escapeSingleQuote;
 	
 	private NamespaceManager nsManager;
 	private List<AutoMode> autoMode = new ArrayList<>();
+	private char[] charBuffer = null;
 
 	public PrettyPrintWriter(Writer arg0) {
 		super(arg0);
@@ -137,6 +140,24 @@ public class PrettyPrintWriter extends PrintWriter {
 
 	public void setPrettyPrint(boolean prettyPrint) {
 		this.prettyPrint = prettyPrint;
+	}
+	
+	public void print(char c) {
+		if (escapeSingleQuote && c=='\'') {
+			super.print('\\');
+		}
+		super.print(c);
+	}
+	
+	public void print(String text) {
+		if (escapeSingleQuote) {
+			for (int i=0; i<text.length(); i++) {
+				char c = text.charAt(i);
+				print(c);
+			}
+		} else {
+			super.print(text);
+		}
 	}
 	
 	@Override
@@ -391,6 +412,48 @@ public class PrettyPrintWriter extends PrintWriter {
 	private void popMode() {
 		autoMode.remove(autoMode.size()-1);
 		
+	}
+
+	public boolean isEscapeSingleQuote() {
+		return escapeSingleQuote;
+	}
+
+	public void setEscapeSingleQuote(boolean escapeSingleQuote) {
+		this.escapeSingleQuote = escapeSingleQuote;
+	}
+	
+	public void write(char[] buf, int off, int len) {
+		if (escapeSingleQuote) {
+			int count = 0;
+			for (int i=off; i<off+len; i++) {
+				if (buf[i]=='\'') {
+					count++;
+				}
+			}
+			if (count > 0) {
+				char[] array = null;
+				int totalLen = len+count;
+				if (totalLen < MAX_BUFFER_SIZE) {
+					if (charBuffer==null) {
+						charBuffer = new char[MAX_BUFFER_SIZE];
+						array = charBuffer;
+					}
+				} else {
+					array = new char[totalLen];
+				}
+				for (int i=0; i<len; i++) {
+					char c = buf[off+i];
+					if (c == '\'') {
+						array[i++] = '\\';
+					} 
+					array[i] = c;
+				}
+				buf = array;
+				off = 0;
+				len = totalLen;
+			}
+		}
+		super.write(buf, off, len);
 	}
 	
 }
