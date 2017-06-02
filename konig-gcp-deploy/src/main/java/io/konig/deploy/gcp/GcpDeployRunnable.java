@@ -2,15 +2,21 @@ package io.konig.deploy.gcp;
 
 import io.konig.deploy.DeployAction;
 
-public class DatasetDeployRunnable implements Runnable {
+public class GcpDeployRunnable implements Runnable {
+	
 	private DeployAction action;
 	private GoogleCloudPlatformInfo googleCloudPlatform;
 
 	@Override
 	public void run() {
 		
-		System.out.println("action: " + action);
+		// TODO: Remove the following print statements
+		//       and replace them with the required functionality.
 		
+		System.out.println("action: " + action);
+		if (googleCloudPlatform != null) {
+			System.out.println(googleCloudPlatform);
+		}
 		
 	}
 

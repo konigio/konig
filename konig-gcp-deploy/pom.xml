@@ -7,8 +7,8 @@
     <relativePath>../konig-parent/pom.xml</relativePath>
   </parent>
   <groupId>io.konig</groupId>
-  <artifactId>konig-gcp-deploy</artifactId>
-  <packaging>jar</packaging>
+  <artifactId>konig-gcp-deploy-maven-plugin</artifactId>
+  <packaging>maven-plugin</packaging>
   <name>Konig GCP Deployment Library</name>
   <description>
   	A library used to deploy resources to the Google Cloud Platform
@@ -21,7 +21,25 @@
       <artifactId>google-api-services-bigquery</artifactId>
       <version>${google-api-services-bigquery.version}</version>
     </dependency>
-    
+
+  
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <version>2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-annotations</artifactId>
+      <version>3.2</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+      <version>3.0.8</version>
+    </dependency>
+        
   	
     <dependency>
       <groupId>junit</groupId>

@@ -2,10 +2,17 @@ package io.konig.deploy.gcp;
 
 import java.io.File;
 
-public class GoogleCloudPlatformInfo {
+import org.apache.maven.plugins.annotations.Parameter;
+
+public class GoogleCloudPlatformInfo  {
 	
+	@Parameter(property="konig.deploy.gcpProjectId")
 	private String projectId;
+	
+	@Parameter(property="konig.deploy.gcpDir")
 	private File gcpDir;
+	
+	@Parameter(property="konig.deploy.gcpDatasetsDir")
 	private File datasetsDir;
 	
 	/**
@@ -58,6 +65,26 @@ public class GoogleCloudPlatformInfo {
 	 */
 	public void setDatasetsDir(File datasetsDir) {
 		this.datasetsDir = datasetsDir;
+	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		if (projectId != null) {
+			builder.append("googleCloudPlatform/projectId: ");
+			builder.append(projectId);
+			builder.append('\n');
+		}
+		if (gcpDir != null) {
+			builder.append("googleCloudPlatform/gcpDir: ");
+			builder.append(gcpDir.getAbsolutePath());
+			builder.append('\n');
+		}
+		if (datasetsDir != null) {
+			builder.append("googleCloudPlatform/datsetsDir: ");
+			builder.append(datasetsDir.getAbsolutePath());
+			builder.append('\n');
+		}
+		return builder.toString();
 	}
 	
 }
