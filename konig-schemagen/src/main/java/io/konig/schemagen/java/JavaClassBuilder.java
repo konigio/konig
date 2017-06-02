@@ -51,6 +51,7 @@ import io.konig.shacl.AndConstraint;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeManager;
 
 public class JavaClassBuilder {
@@ -61,7 +62,6 @@ public class JavaClassBuilder {
 	private OwlReasoner reasoner;
 	private Graph graph;
 	private TypeInfo owlThing;
-	private ShapeHandler shapeHandler;
 	
 	public JavaClassBuilder(ShapeManager shapeManager, JavaNamer namer, OwlReasoner reasoner) {
 //		classAnalyzer = new ClassAnalyzer(shapeManager, reasoner);
@@ -93,21 +93,6 @@ public class JavaClassBuilder {
 	public void setMapper(JavaDatatypeMapper mapper) {
 		this.mapper = mapper;
 	}
-
-
-
-
-
-	public ShapeHandler getShapeHandler() {
-		return shapeHandler;
-	}
-
-
-
-	public void setShapeHandler(ShapeHandler shapeHandler) {
-		this.shapeHandler = shapeHandler;
-	}
-
 
 
 	public void buildAll(Collection<Shape> collection, JCodeModel model) throws SchemaGeneratorException {
@@ -311,10 +296,6 @@ public class JavaClassBuilder {
 			createConstructors(model, typeInfo);
 			
 			createFields(model, shape, typeInfo);
-			
-			if (shapeHandler != null) {
-				shapeHandler.handle(shape);
-			}
 			return typeInfo;
 		} catch (JClassAlreadyExistsException e) {
 			throw new SchemaGeneratorException(e);
