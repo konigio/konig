@@ -23,6 +23,7 @@ import io.konig.sql.query.DmlExpression;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.BigQueryTransformStrategy;
 import io.konig.transform.factory.ShapeRuleFactory;
+import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.sql.factory.SqlFactory;
 
@@ -131,15 +132,62 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	@Override
 	public void visit(Shape shape) {
 		
+		ShapeRule shapeRule = null;
 		if (isLoadTransform(shape)) {
 			try {
-				loadTransform(shape);
+				shapeRule = loadTransform(shape);
+			} catch (Throwable e) {
+				addError(e);
+			}
+		}
+		
+		if (isCurrentStateTransform(shape)) {
+			try {
+				currentStateTransform(shape, shapeRule);
 			} catch (Throwable e) {
 				addError(e);
 			}
 		}
 		
 	}
+	private void currentStateTransform(Shape shape, ShapeRule shapeRule) throws ShapeTransformException, IOException {
+		if (shapeRule == null) {
+			shapeRule = shapeRuleFactory.createShapeRule(shape);
+		}
+		if (shapeRule != null) {
+			BigQueryCommandLine cmdline = bqCmdLineFactory.updateCommand(shapeRule);
+			if (cmdline != null) {
+				GoogleBigQueryTable table = currentStateTable(shape);
+				File sqlFile = writeDml(table, cmdline.getDml(), "Load");
+				commandLineInfo.add(new CommandLineInfo(sqlFile, cmdline));
+			}
+		}
+		
+	}
+	
+
+	private GoogleBigQueryTable currentStateTable(Shape shape) {
+		for (DataSource ds : shape.getShapeDataSource()) {
+			if (ds instanceof GoogleBigQueryTable && ds.isA(Konig.CurrentState)) {
+				return (GoogleBigQueryTable) ds;
+			}
+		}
+		return null;
+	}
+	
+	private boolean isCurrentStateTransform(Shape shape) {
+
+		if (shape.getShapeDataSource() != null) {
+			for (DataSource ds : shape.getShapeDataSource()) {
+				if (ds.isA(Konig.GoogleBigQueryTable) && ds.isA(Konig.CurrentState)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+
 	private void addError(Throwable e) {
 	
 		if (errorList == null) {
@@ -206,6 +254,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		return
 				shape.hasDataSourceType(Konig.GoogleBigQueryTable) && 
 				!shape.hasDataSourceType(Konig.GoogleCloudStorageBucket) &&
+				!shape.hasDataSourceType(Konig.CurrentState) &&
 				bucketShapeExists(shape);
 	}
 	private boolean bucketShapeExists(Shape shape) {

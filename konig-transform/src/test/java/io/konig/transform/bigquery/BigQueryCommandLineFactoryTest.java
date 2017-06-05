@@ -3,6 +3,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 
@@ -20,7 +21,7 @@ public class BigQueryCommandLineFactoryTest extends AbstractShapeRuleFactoryTest
 	
 	@Test
 	public void testUpdateCommand() throws Exception {
-		load("src/test/resources/konig-transform/join-by-id");
+		load("src/test/resources/konig-transform/transform-update");
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
 		ShapeRule shapeRule = createShapeRule(shapeId);
 		
@@ -28,12 +29,11 @@ public class BigQueryCommandLineFactoryTest extends AbstractShapeRuleFactoryTest
 		assertTrue(cmd != null);
 		
 		String expected =
-			"bq query --project_id={gcpProjectId} "
-			+ "--use_legacy_sql=false $'UPDATE schema.Person  "
-			+ "SET  alumniOf = b.alumniOf,  givenName = a.givenName  "
-			+ "FROM   schema.PersonNameShape AS a   "
-			+ "JOIN  schema.PersonAlumniOfShape AS b  "
-			+ "ON  a.id=b.id'";
+			"bq query --project_id={gcpProjectId} --use_legacy_sql=false "
+			+ "$'UPDATE schema.PersonCurrent AS b  "
+			+ "SET givenName = a.first_name  "
+			+ "FROM schema.OriginPersonShape AS a  "
+			+ "WHERE b.id=CONCAT(\"http://example.com/person/\", a.person_id)'";
 		
 		String actual = cmd.toString().trim();
 		assertEquals(expected, actual);
