@@ -1,0 +1,144 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>io.konig</groupId>
+    <artifactId>konig-parent</artifactId>
+    <relativePath>../konig-parent/pom.xml</relativePath>
+    <version>2.0.0-8</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  
+  <artifactId>konig-dao-sql-runtime</artifactId>
+  <packaging>jar</packaging>
+
+  <name>Konig DAO SQL Runtime</name>
+  <url>http://www.konig.io</url>
+
+  <description>
+  	A runtime library for DAOs that use SQL to access data.
+  </description>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+  
+	
+	
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>slf4j-log4j12</artifactId>
+		<version>${slf4j.version}</version>
+	</dependency>
+	
+  
+	
+	<dependency>
+		<groupId>io.konig</groupId>
+		<artifactId>konig-dao-core</artifactId>
+		<version>${konig.version}</version>
+	</dependency>
+	
+	
+	<dependency>
+		<groupId>com.fasterxml.jackson.core</groupId>
+		<artifactId>jackson-core</artifactId>
+		<version>${jackson.version}</version>
+	</dependency>
+	
+	<dependency>
+    <groupId>com.google.cloud</groupId>
+    <artifactId>google-cloud-bigquery</artifactId>
+    <version>${google.cloud}</version>
+	</dependency>
+
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>${jodatime.version}</version>
+		</dependency>
+		
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+  </dependencies>
+  
+    
+  <build>
+	  <plugins>
+	      <plugin>
+	        <groupId>org.codehaus.mojo</groupId>
+	        <artifactId>license-maven-plugin</artifactId>
+	        <version>1.8</version>
+	        <configuration>
+	          <verbose>false</verbose>
+	        </configuration>
+	        <executions>
+	          <execution>
+	            <id>first</id>
+	            <goals>
+	              <goal>update-file-header</goal>
+	            </goals>
+	            <phase>process-sources</phase>
+	            <configuration>
+	              <licenseName>apache_v2</licenseName>
+	              <roots>
+	                <root>src/main/java</root>
+	                <root>src/test</root>
+	              </roots>
+	            </configuration>
+	          </execution>
+	        </executions>
+	      </plugin>
+	  </plugins>
+	  <pluginManagement>
+	  	<plugins>
+	  		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+	  		<plugin>
+	  			<groupId>org.eclipse.m2e</groupId>
+	  			<artifactId>lifecycle-mapping</artifactId>
+	  			<version>1.0.0</version>
+	  			<configuration>
+	  				<lifecycleMappingMetadata>
+	  					<pluginExecutions>
+	  						<pluginExecution>
+	  							<pluginExecutionFilter>
+	  								<groupId>
+	  									org.codehaus.mojo
+	  								</groupId>
+	  								<artifactId>
+	  									license-maven-plugin
+	  								</artifactId>
+	  								<versionRange>
+	  									[1.8,)
+	  								</versionRange>
+	  								<goals>
+	  									<goal>
+	  										update-file-header
+	  									</goal>
+	  								</goals>
+	  							</pluginExecutionFilter>
+	  							<action>
+	  								<ignore />
+	  							</action>
+	  						</pluginExecution>
+	  					</pluginExecutions>
+	  				</lifecycleMappingMetadata>
+	  			</configuration>
+	  		</plugin>
+	  	</plugins>
+	  </pluginManagement>
+  </build>
+  
+</project>
