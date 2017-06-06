@@ -173,22 +173,49 @@ public class SqlFactory {
 			if (tableRef != null) {
 				useAlias = true;
 				update = new UpdateExpression();
-				TableName tableName = tableName(tableRef, null);
-				update.setTable(tableName.getItem());
+				String fullName = fullTableName(tableRef);
+				String targetTableAlias = shapeRule.getVariableNamer().next();
+				TableNameExpression tableNameExpression = new TableNameExpression(fullName);
+				TableItemExpression tableItem = new TableAliasExpression(tableNameExpression, targetTableAlias);
+				
+				update.setTable(tableItem);
 				
 				for (PropertyRule p : shapeRule.getPropertyRules()) {
-					ColumnExpression left = tableName.column(p.getPredicate());
-					ValueExpression right = column(p);
+					ColumnExpression left = new ColumnExpression(p.getPredicate().getLocalName());
+					ValueExpression right = column(p, true);
 					UpdateItem item = new UpdateItem(left, right);
 					update.add(item);
 				}
 				
 				addDataChannels(update.getFrom(), shapeRule);
+
+				ValueExpression idRule = createIdRule(shapeRule);
+				ValueExpression idColumn = column(targetTableAlias, idColumnName);
+				
+				SearchCondition search = new ComparisonPredicate(ComparisonOperator.EQUALS, idColumn, idRule);
+				update.setWhere(search);
 			}
 			
 			
 			
 			return update;
+		}
+
+		private ValueExpression column(String tableName, String columnName) {
+			StringBuilder builder = new StringBuilder();
+			builder.append(tableName);
+			builder.append('.');
+			builder.append(columnName);
+			
+			return new ColumnExpression(builder.toString());
+		}
+
+		private String fullTableName(BigQueryTableReference tableRef) {
+			StringBuilder builder = new StringBuilder();
+			builder.append(tableRef.getDatasetId());
+			builder.append('.');
+			builder.append(tableRef.getTableId());
+			return builder.toString();
 		}
 
 		private BigQueryTableReference bigQueryTableRef(ShapeRule shapeRule) {
@@ -293,7 +320,12 @@ public class SqlFactory {
 			return func;
 		}
 
+
 		private ValueExpression column(PropertyRule p) throws TransformBuildException {
+			return column(p, false);
+		}
+
+		private ValueExpression column(PropertyRule p, boolean suppressRename) throws TransformBuildException {
 
 			DataChannel channel = p.getDataChannel();
 			TableItemExpression tableItem = simpleTableItem(channel);
@@ -308,6 +340,9 @@ public class SqlFactory {
 				ValueTransform vt = renameRule.getValueTransform();
 				if (vt instanceof MapValueTransform) {
 					ValueExpression caseStatement = mapValues(renameRule, (MapValueTransform) vt);
+					if (suppressRename) {
+						return caseStatement;
+					}
 					return new AliasExpression(caseStatement, predicate.getLocalName());
 				}
 				URI sourcePredicate = renameRule.getSourceProperty().getPredicate();
@@ -315,6 +350,9 @@ public class SqlFactory {
 				Path path = renameRule.getSourceProperty().getEquivalentPath();
 				if (pathIndex == path.asList().size()-1) {
 					ValueExpression column = SqlUtil.columnExpression(tableItem, sourcePredicate);
+					if (suppressRename) {
+						return column;
+					}
 					return new AliasExpression(column, predicate.getLocalName());
 				}
 				throw new TransformBuildException("Unable to map Path");

@@ -28,6 +28,7 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	private Map<URI,PropertyRule> properties = new HashMap<>();
 
 	private PropertyRule accessor;
+	private VariableNamer variableNamer;
 	
 	public ShapeRule(Shape targetShape) {
 		this.targetShape = targetShape;
@@ -129,6 +130,15 @@ public class ShapeRule extends AbstractPrettyPrintable {
 		}
 		
 	}
+
+	public VariableNamer getVariableNamer() {
+		return variableNamer;
+	}
+
+	public void setVariableNamer(VariableNamer variableNamer) {
+		this.variableNamer = variableNamer;
+	}
+	
 	
 	
 }

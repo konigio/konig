@@ -92,7 +92,9 @@ public class ShapeRuleFactory {
 
 			TargetShape target = TargetShape.create(targetShape);
 
-			return build(target);
+			ShapeRule shapeRule = build(target);
+			shapeRule.setVariableNamer(namer);
+			return shapeRule;
 		}
 
 		public ShapeRule build(TargetShape target) throws TransformBuildException {
