@@ -63,9 +63,11 @@
   	<module>../konig-schemagen-maven-plugin</module>
   	<module>../konig-ldp</module>
   	<module>../konig-ldp-maven-plugin</module>
+  	<!-- 
   	<module>../konig-sql-core</module>
   	<module>../konig-sql</module>
   	<module>../konig-sql-maven-plugin</module>
+  	 -->
   	<module>../konig-model-merge-maven-plugin</module>
   	<module>../konig-content-system-common</module>
   	<module>../konig-content-system-gae</module>
