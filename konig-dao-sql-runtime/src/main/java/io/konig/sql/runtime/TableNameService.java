@@ -1,7 +1,5 @@
 package io.konig.sql.runtime;
 
-import java.net.URI;
-
 public interface TableNameService {
 
 	/**

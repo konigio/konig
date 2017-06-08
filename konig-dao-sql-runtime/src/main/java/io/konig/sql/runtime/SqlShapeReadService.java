@@ -1,5 +1,26 @@
 package io.konig.sql.runtime;
 
+/*
+ * #%L
+ * Konig DAO SQL Runtime
+ * %%
+ * Copyright (C) 2015 - 2017 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import java.io.Writer;
 import java.net.URI;
 
@@ -13,29 +34,28 @@ import io.konig.dao.core.ShapeReadService;
 
 abstract public class SqlShapeReadService implements ShapeReadService {
 	
-	private TableNameService tableNameService;
+	private TableStructureService structureService;
 
-
-	public SqlShapeReadService(TableNameService tableNameService) {
-		this.tableNameService = tableNameService;
+	public SqlShapeReadService(TableStructureService structureService) {
+		this.structureService = structureService;
 	}
 
 	@Override
 	public void execute(ShapeQuery query, Writer output, Format format) throws DaoException {
-		
-		String sql = toSql(query);
-		executeSql(sql, output, format);
+
+		TableStructure struct = structureService.tableStructureForShape(query.getShapeId());
+		String sql = toSql(struct, query);
+		executeSql(struct, sql, output, format);
 	}
 
-	abstract protected void executeSql(String sql, Writer output, Format format) throws DaoException;
+	abstract protected void executeSql(TableStructure struct, String sql, Writer output, Format format) throws DaoException;
 
-	private String toSql(ShapeQuery query) {
+	private String toSql(TableStructure struct, ShapeQuery query) throws DaoException {
 		
-		String tableName = tableNameService.tableName(query.getShapeId());
 		
 		StringBuilder builder = new StringBuilder();
 		builder.append("SELECT * FROM ");
-		builder.append(tableName);
+		builder.append(struct.getName());
 		
 		ShapeFilter filter = query.getFilter();
 		appendFilter(builder, filter);
