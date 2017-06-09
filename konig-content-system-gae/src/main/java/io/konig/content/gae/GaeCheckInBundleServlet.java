@@ -45,7 +45,6 @@ public class GaeCheckInBundleServlet extends HttpServlet {
 			CheckInBundleResponse response = contentSystem.checkInBundle(bundle);
 			resp.setContentType("text/plain");
 			PrintWriter writer = resp.getWriter();
-			writer.println(storageBucketName);
 			for (String path : response.getMissingAssets()) {
 				writer.println(path);
 			}

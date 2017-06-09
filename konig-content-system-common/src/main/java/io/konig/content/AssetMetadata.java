@@ -33,6 +33,19 @@ public class AssetMetadata {
 		this.etag = etag;
 	}
 	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("{bundleKey: ");
+		builder.append(bundleKey);
+		builder.append(", contentType: ");
+		builder.append(contentType);
+		builder.append(", etag: ");
+		builder.append(etag);
+		builder.append(", path: ");
+		builder.append(path);
+		builder.append('}');
+		return builder.toString();
+	}
 	
 	
 }
