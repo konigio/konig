@@ -9,18 +9,19 @@
 			<servlet-class>io.konig.content.gae.GaeContentSystemServlet</servlet-class>
 			<init-param>
 				<param-name>storageBucketName</param-name>
-				<param-name>pearson-docs-catalog-bundle</param-name>
+				<param-name>pearson-docs-content-bundle</param-name>
 			</init-param>
 		</servlet>
 		
 		
   	<servlet>
+			<servlet-name>BundleNotificationServlet</servlet-name>
+			<servlet-class>io.konig.content.gae.BundleNotificationServlet</servlet-class>
+		</servlet>
+		
+  	<servlet>
 			<servlet-name>GaeZipBundleTaskHandlerServlet</servlet-name>
 			<servlet-class>io.konig.content.gae.GaeZipBundleTaskHandlerServlet</servlet-class>
-			<init-param>
-				<param-name>subscriptionId</param-name>
-				<param-name>fa4b49d677df45d7a7658e541004e19b</param-name>
-			</init-param>
 		</servlet>
 		
 		<servlet-mapping>
@@ -29,8 +30,13 @@
 		</servlet-mapping>
 		
 		<servlet-mapping>
-			<servlet-name>GaeContentSystemServlet</servlet-name>
+			<servlet-name>BundleNotificationServlet</servlet-name>
 			<url-pattern>/pubsub/content-bundle-notification</url-pattern>
+		</servlet-mapping>
+		
+		<servlet-mapping>
+			<servlet-name>GaeZipBundleTaskHandlerServlet</servlet-name>
+			<url-pattern>/tasks/content-bundle-unzip</url-pattern>
 		</servlet-mapping>
 		
   <welcome-file-list>

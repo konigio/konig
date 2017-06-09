@@ -17,6 +17,7 @@ import com.google.appengine.api.taskqueue.TaskOptions;
 public class BundleNotificationServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static final String CONTENT_BUNDLE_QUEUE_NAME = "content-bundle-unzip";
+	private static final String TASK_HANDLER_URL = "/tasks/content-bundle-unzip";
 
 	public final void doPost(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
 		
@@ -34,7 +35,8 @@ public class BundleNotificationServlet extends HttpServlet {
 		
 		Queue queue = QueueFactory.getQueue(CONTENT_BUNDLE_QUEUE_NAME);
 		
-		TaskOptions task = TaskOptions.Builder.withPayload(data, StandardCharsets.UTF_8.name());
+		TaskOptions task = TaskOptions.Builder.withPayload(data, StandardCharsets.UTF_8.name()).url(TASK_HANDLER_URL);
+		
 		queue.add(task);
 		
 		resp.setContentType("text/plain");
