@@ -33,7 +33,8 @@ public class BundleNotificationServlet extends HttpServlet {
 		buffer.flush();
 		data = buffer.toByteArray();
 		
-		Queue queue = QueueFactory.getQueue(CONTENT_BUNDLE_QUEUE_NAME);
+//		Queue queue = QueueFactory.getQueue(CONTENT_BUNDLE_QUEUE_NAME);
+		Queue queue = QueueFactory.getDefaultQueue();
 		
 		TaskOptions task = TaskOptions.Builder.withPayload(data, StandardCharsets.UTF_8.name()).url(TASK_HANDLER_URL);
 		
