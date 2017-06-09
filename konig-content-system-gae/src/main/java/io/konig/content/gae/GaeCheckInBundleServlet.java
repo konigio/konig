@@ -25,7 +25,7 @@ public class GaeCheckInBundleServlet extends HttpServlet {
 	
 	private String editLink() throws ServletException {
 		if (editLink == null) {
-			String bucketName = System.getenv(STORAGE_BUCKET_NAME);
+			String bucketName = System.getProperty(STORAGE_BUCKET_NAME);
 			if (bucketName == null) {
 				throw new ServletException("System property not defined: " + STORAGE_BUCKET_NAME);
 			}
