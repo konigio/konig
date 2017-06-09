@@ -16,13 +16,6 @@ public class GaeContentSystemServlet extends HttpServlet {
 	private GaeAssetServlet asset = new GaeAssetServlet();
 	private GaeZipBundleServlet zipBundle = new GaeZipBundleServlet();
 
-	
-	@Override
-	public void init(ServletConfig config) throws ServletException {
-		checkInBundle.init(config);
-	}
-	
-
 	protected void doPost(HttpServletRequest req,  HttpServletResponse resp)
 	throws ServletException, IOException {
 		

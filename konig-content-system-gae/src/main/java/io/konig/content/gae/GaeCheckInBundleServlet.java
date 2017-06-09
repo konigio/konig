@@ -18,26 +18,31 @@ import io.konig.content.ContentAccessException;
 public class GaeCheckInBundleServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-	private static final String STORAGE_BUCKET_NAME = "storageBucketName";
+	private static final String STORAGE_BUCKET_NAME = "konig.GaeCheckInBundleServlet.storageBucketName";
 	
-	private String storageBucketName;
 	private String editLink;
 
-	@Override
-	public void init(ServletConfig config) throws ServletException {
-		storageBucketName = config.getInitParameter(STORAGE_BUCKET_NAME);
-		StringBuilder builder = new StringBuilder();
-		builder.append("<gs://");
-		builder.append(storageBucketName);
-		builder.append(">; rel=edit");
-		editLink = builder.toString();
+	
+	private String editLink() throws ServletException {
+		if (editLink == null) {
+			String bucketName = System.getenv(STORAGE_BUCKET_NAME);
+			if (bucketName == null) {
+				throw new ServletException("System property not defined: " + STORAGE_BUCKET_NAME);
+			}
+			StringBuilder builder = new StringBuilder();
+			builder.append("<gs://");
+			builder.append(bucketName);
+			builder.append(">; rel=edit");
+			editLink = builder.toString();
+		}
+		return editLink;
 	}
 	
 	protected void doPost(HttpServletRequest req,  HttpServletResponse resp)
 	throws ServletException, IOException {
 		
 		AssetBundleReader bundleReader = new AssetBundleReader();
-		resp.setHeader("Link", editLink);
+		resp.setHeader("Link", editLink());
 		Reader reader = req.getReader();
 		try {
 			AssetBundle bundle = bundleReader.readBundle(reader);

@@ -7,10 +7,6 @@
   	<servlet>
 			<servlet-name>GaeContentSystemServlet</servlet-name>
 			<servlet-class>io.konig.content.gae.GaeContentSystemServlet</servlet-class>
-			<init-param>
-				<param-name>storageBucketName</param-name>
-				<param-name>pearson-docs-content-bundle</param-name>
-			</init-param>
 		</servlet>
 		
 		
