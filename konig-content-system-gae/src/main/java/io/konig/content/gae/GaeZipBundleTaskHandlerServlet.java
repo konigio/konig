@@ -48,6 +48,7 @@ public class GaeZipBundleTaskHandlerServlet extends HttpServlet {
 			int slash = objectId.indexOf('/');
 			if (slash <=0 ) {
 				logger.severe("In bucket '" + bucketId + "', object has invalid id: " + objectId);
+				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				return;
 			}
 			bundleName = objectId.substring(0, slash);
@@ -57,6 +58,11 @@ public class GaeZipBundleTaskHandlerServlet extends HttpServlet {
 			Bucket bucket = storage.get(bucketId);
 			
 			Blob blob = bucket.get(objectId);
+			if (blob == null) {
+				logger.severe("In bucket '" + bucketId + "', object not found: "  + objectId);
+				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				return;
+			}
 			
 			try (
 				InputStream archiveInput = Channels.newInputStream(blob.reader());
