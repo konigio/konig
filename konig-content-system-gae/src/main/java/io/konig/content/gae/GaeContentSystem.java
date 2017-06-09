@@ -45,7 +45,8 @@ public class GaeContentSystem implements ContentSystem {
 	private static final String ETAG = "etag";
 	
 	private static final int BATCH_SIZE = 100;
-
+	
+	
 	@Override
 	public CheckInBundleResponse checkInBundle(AssetBundle bundle) throws ContentAccessException {
 		

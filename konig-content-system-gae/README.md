@@ -22,23 +22,19 @@ This skeleton is ready to run.
 
     mvn appengine:deploy
 
+This solution is based on [cloud-pubsub-samples-java](https://github.com/GoogleCloudPlatform/cloud-pubsub-samples-java/tree/master/appengine-push)
 
-    mvn test
+# Google Cloud Resources
 
+Storage Bucket: pearson-docs-content-bundle
 
+Pub/Sub Topics: content-bundle-notification
 
-    gradle appengineRun
+Task Queue: content-bundle-unzip
 
+## Commands to create resources
+gsutil mb gs://pearson-docs-content-bundle
+gsutil notification create -t content-bundle-notification -f json gs://pearson-docs-content-bundle 
 
-    gradle appengineDeploy
+gcloud beta pubsub subscriptions create GaeZipBundleTaskHandler --topic content-bundle-notification --push-endpoint https://pearson-docs.appspot.com/pubsub/content-bundle-notification  --ack-deadline 10
 
-
-    gradle test
-
-
-As you add / modify the source code (`src/main/java/...`) it's very useful to add [unit testing](https://cloud.google.com/appengine/docs/java/tools/localunittesting)
-to (`src/main/test/...`).  The following resources are quite useful:
-
-* [Junit4](http://junit.org/junit4/)
-* [Mockito](http://mockito.org/)
-* [Truth](http://google.github.io/truth/)

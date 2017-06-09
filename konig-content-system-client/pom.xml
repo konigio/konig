@@ -29,6 +29,13 @@
 	    <version>${httpclient.version}</version>
 	</dependency>
 
+    
+		<dependency>
+		    <groupId>com.google.cloud</groupId>
+		    <artifactId>google-cloud-storage</artifactId>
+		    <version>${google-cloud-storage.version}</version>
+		</dependency>
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

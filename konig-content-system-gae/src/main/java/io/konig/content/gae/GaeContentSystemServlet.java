@@ -2,6 +2,7 @@ package io.konig.content.gae;
 
 import java.io.IOException;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -14,6 +15,13 @@ public class GaeContentSystemServlet extends HttpServlet {
 	private GaeCheckInBundleServlet checkInBundle = new GaeCheckInBundleServlet();
 	private GaeAssetServlet asset = new GaeAssetServlet();
 	private GaeZipBundleServlet zipBundle = new GaeZipBundleServlet();
+
+	
+	@Override
+	public void init(ServletConfig config) throws ServletException {
+		checkInBundle.init(config);
+	}
+	
 
 	protected void doPost(HttpServletRequest req,  HttpServletResponse resp)
 	throws ServletException, IOException {
