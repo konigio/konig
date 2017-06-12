@@ -54,5 +54,12 @@ public class AssetBundleKey {
 		return path.substring(versionEnd+1);
 	}
 	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(name);
+		builder.append(':');
+		builder.append(version);
+		return builder.toString();
+	}
 	
 }

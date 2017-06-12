@@ -45,7 +45,8 @@ public class GaeContentSystem implements ContentSystem {
 	private static final String ETAG = "etag";
 	
 	private static final int BATCH_SIZE = 100;
-
+	
+	
 	@Override
 	public CheckInBundleResponse checkInBundle(AssetBundle bundle) throws ContentAccessException {
 		
@@ -77,11 +78,7 @@ public class GaeContentSystem implements ContentSystem {
 		CheckInBundleResponse response = new CheckInBundleResponse();
 		List<String> missingAssets = new ArrayList<>(etagMap.values());
 		response.setMissingAssets(missingAssets);
-		
-		for (AssetMetadata meta : metadataList) {
-			saveMetadata(meta);
-		}
-		
+
 		return response;
 	}
 	private Map<String, String> etagMap(List<AssetMetadata> metadataList) {

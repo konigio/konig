@@ -21,6 +21,13 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.api.Distribution.BucketOptions;
+import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.cloud.storage.Bucket;
+import com.google.cloud.storage.Bucket.BlobTargetOption;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
+
 import io.konig.content.Asset;
 import io.konig.content.AssetBundle;
 import io.konig.content.AssetBundleKey;
@@ -34,6 +41,7 @@ public class ContentPublisher {
 	private static final Logger logger = LoggerFactory.getLogger(ContentPublisher.class);
 	
 	private boolean compress = true;
+	private File credentialsFile;
 
 	public void publish(File baseDir, String baseURL, String bundleName, String bundleVersion) throws IOException, ContentAccessException {
 		
@@ -53,32 +61,40 @@ public class ContentPublisher {
 		List<String> requiredAssets = response.getMissingAssets();
 		if (!requiredAssets.isEmpty()) {
 			
+			String editAddress = response.getEditServiceAddress();
+			if (editAddress == null) {
+				throw new ContentAccessException("Link header with 'rel=edit' not found in response from Content System client");
+			}
+			
 			if (compress) {
 				File zipFile = zipFile(baseDir, bundleKey);
-				FileOutputStream fos = new FileOutputStream(zipFile);
-				ZipOutputStream zos = new ZipOutputStream(fos);
 				
-				try {
+				try (
+						FileOutputStream fos = new FileOutputStream(zipFile);
+						ZipOutputStream zos = new ZipOutputStream(fos)
+				) {
 					for (String path : requiredAssets) {
 						
 						String filePath = ContentSystemUtil.trimSlashes(path);
 						addZipEntry(zos, baseDir, filePath);
 					}
-					
-				} finally {
-					close(zos, zipFile.getName());
-					close(fos, zipFile.getName());
 				}
 				
+				Bucket bucket = getBucket(editAddress);
+				String objectId = bundleKey.getName() + "/" + bundleKey.getVersion();
+				
+				try (FileInputStream contentStream = new FileInputStream(zipFile)) {
+					bucket.create(objectId, contentStream, "application/zip");
+				}
 
-				String bundleURL = bundle.getKey().url(baseURL);
-				HttpPost post = new HttpPost(bundleURL);
-				FileEntity entity = new FileEntity(zipFile);
-				entity.setContentType("application/zip");
-				post.setEntity(entity);
-				CloseableHttpClient httpClient = HttpClients.createDefault();
-				CloseableHttpResponse httpResponse = httpClient.execute(post);
-				logger.info(httpResponse.getStatusLine().toString());
+//				String bundleURL = bundle.getKey().url(baseURL);
+//				HttpPost post = new HttpPost(bundleURL);
+//				FileEntity entity = new FileEntity(zipFile);
+//				entity.setContentType("application/zip");
+//				post.setEntity(entity);
+//				CloseableHttpClient httpClient = HttpClients.createDefault();
+//				CloseableHttpResponse httpResponse = httpClient.execute(post);
+//				logger.info(httpResponse.getStatusLine().toString());
 				
 				
 			} else {
@@ -97,6 +113,43 @@ public class ContentPublisher {
 		} else {
 			logger.info("All assets are up-to-date");
 		}
+	}
+
+	private Bucket getBucket(String editAddress) throws ContentAccessException {
+		File credentialsFile = getCredentialsFile();
+		if (credentialsFile == null) {
+			throw new ContentAccessException("Google service account credentials not found.  "
+					+ "Please set the credentialsFile property or the GOOGLE_APPLICATION_CREDENTIALS environment variable");
+		}
+		if (!credentialsFile.exists()) {
+			throw new ContentAccessException("Credentials file does not exist: " + credentialsFile.getAbsolutePath());
+		}
+		
+		try (FileInputStream credentialsStream = new FileInputStream(credentialsFile)) {
+
+			Storage storage = StorageOptions.newBuilder()
+				.setCredentials(ServiceAccountCredentials.fromStream(credentialsStream))
+				.build().getService();
+			
+			int slash = editAddress.lastIndexOf('/');
+			String bucketName = editAddress.substring(slash+1);
+			return storage.get(bucketName);
+			
+		} catch (IOException e) {
+			throw new ContentAccessException(e);
+		}
+	}
+
+	private File getCredentialsFile() {
+		
+		File result = credentialsFile;
+		if (result == null) {
+			String value = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+			if (value != null) {
+				result = new File(value);
+			}
+		}
+		return result;
 	}
 
 	private void addZipEntry(ZipOutputStream zos, File baseDir, String filePath) throws IOException {

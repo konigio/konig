@@ -13,11 +13,12 @@ import java.io.StringWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class GaeCheckBundleServletTest extends DatastoreTest {
 	
-	@Test
+	@Ignore
 	public void testCheckBundle() throws Exception {
 
 		doPost("quotes/1.0/shakespeare/hamlet.txt", "To thine own self be true");

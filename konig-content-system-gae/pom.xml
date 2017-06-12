@@ -76,13 +76,22 @@ limitations under the License.
       <version>1.2</version>
     </dependency>
   
-
-  <dependency>
-    <groupId>com.google.appengine</groupId>
-    <artifactId>appengine-api-1.0-sdk</artifactId>
-    <version>${appengine.version}</version>
-  </dependency>
-
+    <dependency>
+      <groupId>com.google.api-client</groupId>
+      <artifactId>google-api-client-appengine</artifactId>
+      <version>${google-api-client.version}</version>
+    </dependency>
+    <dependency>
+       <groupId>com.google.apis</groupId>
+       <artifactId>google-api-services-pubsub</artifactId>
+       <version>${google-api-pubsub.version}</version>
+    </dependency>
+    
+		<dependency>
+		    <groupId>com.google.cloud</groupId>
+		    <artifactId>google-cloud-storage</artifactId>
+		    <version>${google-cloud-storage.version}</version>
+		</dependency>
  
     <!-- Test Dependencies -->
     <dependency>
