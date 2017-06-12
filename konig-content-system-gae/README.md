@@ -24,14 +24,25 @@ This skeleton is ready to run.
 
 This solution is based on [cloud-pubsub-samples-java](https://github.com/GoogleCloudPlatform/cloud-pubsub-samples-java/tree/master/appengine-push)
 
-Here's an overview of the usage pattern...
+# Content System Overview
+This project implements a very simple content management system.
 
-*STEP 1:* Get listof modified files.
+Here's how it works in a nutshell.
+
+1. *Get a list of files that are new or modified*  A client has a collection of files on the local disk that it wishes to upload.  The client creates a CSV file where each line contains two values: (i) the path to some file (relative to some root directory), and (ii) a Base64 encoding of the SHA-1 hash of the file contents.  The client posts this CSV file to `https://pearson-docs.appspot.com/content/{bundleName}/{bundleVersion}`.  The server responds with a list of files on the local files system that are new or modified relative to files available from the server.
+
+2. *Submit content bundle.* The client creates a zip archive of the files that are new or modified.  The client pushes this archive to the Cloud Storage bucket named `pearson-docs-content-bundle`.  This bucket is configured to publish notifications to Pub/Sub.
+
+3. *Process the content bundle.* The `pearson-docs-content-bundle` publishes an `OBJECT_FINALIZE` event.  A servlet at `https://pearson-docs.appspot.com/pubsub/content-bundle-notification` subscribes to the event.  It repackages the event as a Task and pushes the task into the default Task Queue.  A second servlet at `https://pearson-docs.appspot.com/tasks/content-bundle-unzip` receives the task.  This servlet gets the zip archive from the `pearson-docs-content-bundle` bucket and for each file from the archive stores two entities in Datastore: (i) a metadata record about the file, (ii) a Blob that holds the contents of the file.
+
+# Sample Interactions
+
+*STEP 1:* Get list of modified files.
 
 Client posts the list of files with Base64 encoded, SHA-1 hash codes
 
 ```
-POST https://pearson-docs.appspot.com/content/{bundleName}/{bundleVersion}
+POST https://pearson-docs.appspot.com/content/content-test/latest
 CONTENT-TYPE: text/csv
 
 allclasses-index.html,Ck1VqNd45QIvq3AZd8XYQLvEhtA
@@ -56,11 +67,11 @@ schema/classes/Organization.html
 ```
 
 Notice that the response includes a Link header with relationship type "edit".
-This is the URL to which the content bundle zip archive must be pushed.
+This is the URL to which the zip archive should be pushed.
 
 *STEP 2:* Submit content bundle archive
 
-The client creates a Zip archive containing all the files listed in the response
+The client creates a zip archive containing all the new and modified files listed in the response
 from the content server.
 
 Clients pushes the zip archive to the specified Cloud Storage bucket with the
