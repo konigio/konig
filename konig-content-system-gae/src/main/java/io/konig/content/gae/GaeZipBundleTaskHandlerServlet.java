@@ -41,7 +41,15 @@ public class GaeZipBundleTaskHandlerServlet extends HttpServlet {
 			parser.skipToKey("message");
 			PubsubMessage message = parser.parseAndClose(PubsubMessage.class);
 			
+			
 			Map<String,String> attributes = message.getAttributes();
+			String eventType = attributes.get("eventType");
+			
+			if (!"OBJECT_FINALIZE".equals(eventType)) {
+				resp.setStatus(HttpServletResponse.SC_OK);
+				return;
+			}
+			
 			String objectId = attributes.get("objectId");
 			String bucketId = attributes.get("bucketId");
 			
