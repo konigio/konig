@@ -24,10 +24,15 @@ public class YamlWriterTest {
 		Person cathy = new Person();
 		cathy.setGivenName("Cathy");
 		
+		Person david = new Person();
+		david.setGivenName("David");
+		
 		alice.addLikes(bob);
 		alice.addLikes(cathy);
+		alice.addLikes(david);
 		
 		bob.addLikes(cathy);
+		bob.addLikes(david);
 		
 		String actual = Yaml.toString(alice);
 		String expected =
@@ -45,7 +50,11 @@ public class YamlWriterTest {
 			"            - !io.konig.yaml.Person &x4\n" + 
 			"               age: 0\n" + 
 			"               givenName: Cathy\n" + 
-			"      - *x4";
+			"            - !io.konig.yaml.Person &x5\n" + 
+			"               age: 0\n" + 
+			"               givenName: David\n" + 
+			"      - *x4\n" +
+			"      - *x5\n";
 		
 		assertEquals(expected, actual);
 	}

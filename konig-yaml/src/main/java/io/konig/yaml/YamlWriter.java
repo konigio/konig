@@ -77,7 +77,7 @@ public class YamlWriter {
 		} else {
 			out.print('*');
 			out.print('x');
-			out.print(objectId);
+			println(objectId.toString());
 		}
 	}
 	
