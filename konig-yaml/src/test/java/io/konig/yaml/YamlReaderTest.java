@@ -8,6 +8,16 @@ import java.util.List;
 import org.junit.Test;
 
 public class YamlReaderTest {
+	
+	@Test
+	public void testQuotedString() throws Exception {
+		Message msg = new Message();
+		msg.setText(", my friend");
+		
+		String yamlText = Yaml.toString(msg);
+		Message result = Yaml.read(Message.class, yamlText);
+		assertEquals(msg.getText(), result.getText());
+	}
 
 	@Test
 	public void test() throws Exception {

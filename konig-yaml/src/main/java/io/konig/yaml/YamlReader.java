@@ -106,7 +106,11 @@ public class YamlReader {
 		int c = read();
 		unread(c);
 		if (c == '"') {
-			return quotedString();
+			return doubleQuotedString();
+		}
+		
+		if (c == '\'') {
+			return singleQuotedString();
 		}
 		
 		return unquotedString();
@@ -124,11 +128,24 @@ public class YamlReader {
 		return buffer.toString();
 	}
 
-	private String quotedString() throws YamlParseException, IOException {
+	private String doubleQuotedString() throws YamlParseException, IOException {
 		assertNext('"');
 		StringBuilder buffer = buffer();
 		int c = read();
 		while (c != '"') {
+			// TODO: handle escaped quote
+			buffer.appendCodePoint(c);
+			c = read();
+		}
+		
+		return buffer.toString();
+	}
+
+	private String singleQuotedString() throws YamlParseException, IOException {
+		assertNext('\'');
+		StringBuilder buffer = buffer();
+		int c = read();
+		while (c != '\'') {
 			// TODO: handle escaped quote
 			buffer.appendCodePoint(c);
 			c = read();
