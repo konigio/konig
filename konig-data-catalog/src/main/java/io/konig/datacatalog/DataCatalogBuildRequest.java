@@ -154,7 +154,7 @@ public class DataCatalogBuildRequest {
 		if (pathFactory == null) {
 			OwlReasoner reasoner = classStructure.getReasoner();
 			NamespaceManager nsManager = graph.getNamespaceManager();
-			pathFactory = new PathFactory(reasoner, nsManager);
+			pathFactory = new DataCatalogPathFactory(reasoner, nsManager, DataCatalogBuilder.DCAT_PREFIX);
 		}
 		return pathFactory;
 	}

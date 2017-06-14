@@ -31,7 +31,7 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class DataCatalogBuilder {
-	
+	public static final String DCAT_PREFIX = "_dcat_";
 	public static final String OVERVIEW = "Overview";
 	public static final String CLASSES = "Classes";
 	
@@ -70,7 +70,7 @@ public class DataCatalogBuilder {
 		ShapeManager shapeManager = buildRequest.getShapeManager();
 		File exampleDir = buildRequest.getExampleDir();
 		
-		graph.getNamespaceManager().add(new NamespaceImpl("_dcat_", CATALOG_BASE_URI));
+		graph.getNamespaceManager().add(new NamespaceImpl(DCAT_PREFIX, CATALOG_BASE_URI));
 		graph.getNamespaceManager().add("rdf", RDF.NAMESPACE);
 			
 		this.outDir = buildRequest.getOutDir();
