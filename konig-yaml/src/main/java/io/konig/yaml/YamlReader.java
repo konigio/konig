@@ -6,7 +6,10 @@ import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class YamlReader {
@@ -16,6 +19,7 @@ public class YamlReader {
 	private Map<String,Object> objectMap = new HashMap<>();
 	private StringBuilder buffer = new StringBuilder();
 	private Map<Class<?>, ClassInfo> classInfo = new HashMap<>();
+	private Method addMethod;
 	
 	private int nextIndentWidth;
 	
@@ -88,6 +92,7 @@ public class YamlReader {
 	
 
 
+	@SuppressWarnings("unchecked")
 	private Object scalarValue(Class<?> javaType) throws YamlParseException, IOException {
 		String stringValue = stringValue();
 		Object result = null;
@@ -95,6 +100,10 @@ public class YamlReader {
 			result = stringValue;
 		} else if (javaType == int.class || javaType == Integer.class) {
 			result = new Integer(stringValue);
+			
+		} else if (javaType.isEnum()) {
+			
+			result = Enum.valueOf((Class<Enum>)javaType, stringValue);
 		} else {
 			
 			fail("Unsupported scalar type: " +javaType.getName());
@@ -177,7 +186,7 @@ public class YamlReader {
 		int c = reader.read();
 		if (c == -1) {
 			reader = null;
-		}
+		} 
 		return c;
 	}
 
@@ -238,7 +247,15 @@ public class YamlReader {
 		Method[] methodList = type.getMethods();
 		for (Method m : methodList) {
 			String name = m.getName();
-			if (m.getParameterTypes().length==1 && name.length()>3) {
+			YamlProperty note = m.getAnnotation(YamlProperty.class);
+			if (note != null) {
+				String fieldName = note.value();
+				if (fieldName.startsWith("add")) {
+					info.adderMethod.put(fieldName, m);
+				} else {
+					info.setterMethod.put(fieldName, m);
+				}
+			} else if (m.getParameterTypes().length==1 && name.length()>3) {
 				if (name.startsWith("set")) {
 					String fieldName = fieldName(name);
 					info.setterMethod.put(fieldName, m);
@@ -335,7 +352,6 @@ public class YamlReader {
 				throw new YamlParseException("Failed to invoke adder: " + adder.getName());
 			}
 			
-			assertLineEnd();
 			
 			return findNext();
 		}
@@ -428,7 +444,7 @@ public class YamlReader {
 				m = classInfo.setterMethod.get(fieldName);
 			}
 			if (m == null) {
-				fail("No setter or adder found for field: " + fieldName);
+				fail("Class " + pojo.getClass().getSimpleName() + " has no setter or adder for field: " + fieldName);
 			}
 			return m;
 		}
@@ -489,8 +505,13 @@ public class YamlReader {
 			if (setter.getName().startsWith("add")) {
 				value = new CollectionYamlParser(parser, pojo, setter);
 			} else {
-				// TODO: support collection setters.
-				throw new YamlParseException("Collection setter not supported.");
+				List<?> list = new ArrayList<>();
+				value = new CollectionYamlParser(parser, list, collectionAddMethod());
+				try {
+					setter.invoke(pojo, list);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					throw new YamlParseException(e);
+				}
 			}
 			break;
 			
@@ -503,5 +524,18 @@ public class YamlReader {
 		}
 		
 		return value;
+	}
+
+	private Method collectionAddMethod() {
+		if (addMethod == null) {
+			Method[] methodList = Collection.class.getMethods();
+			for (Method m : methodList) {
+				if (m.getName().equals("add")) {
+					addMethod = m;
+					break;
+				}
+			}
+		}
+		return addMethod;
 	}
 }
