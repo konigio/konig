@@ -61,7 +61,9 @@ public class CompactTurtleWriter extends TurtleWriter {
 	public CompactTurtleWriter(Writer writer) {
 		super(writer);
 		stack.add(new Context());
-	}protected void writeURI(URI uri)
+	}
+	
+	protected void writeURI(URI uri)
 			throws IOException
 		{
 			String uriString = uri.toString();
@@ -79,7 +81,7 @@ public class CompactTurtleWriter extends TurtleWriter {
 			}
 			
 
-			if (prefix != null) {
+			if (useCurie(prefix, localName)) {
 				// Namespace is mapped to a prefix; write abbreviated URI
 				writer.write(prefix);
 				writer.write(":");
@@ -93,6 +95,30 @@ public class CompactTurtleWriter extends TurtleWriter {
 			}
 		}
 	
+	private boolean useCurie(String prefix, String localName) {
+		if (prefix != null && localName !=null) {
+			if (localName.length()==0) {
+				return true;
+			}
+			char c = localName.charAt(0);
+			if (('a'<=c && c<='z') || ('A'<=c && c<='Z')) {
+				for (int i=1; i<localName.length(); i++) {
+					if (
+						!('a'<=c && c<='z') && 
+						!('A'<=c && c<='Z') &&
+						!('0'<=c && c<='9') &&
+						(c!='-') &&
+						(c!='_')
+					) {
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
     public void handleStatement(Statement st) throws RDFHandlerException {
 		
