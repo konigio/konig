@@ -80,6 +80,7 @@ public class Shape {
 	private int ordinal;
 	private URI preferredJsonldContext;
 	private URI preferredJsonSchema;
+	private List<URI> defaultShapeFor;
 	private List<Expression> constraint;
 	
 	
@@ -559,5 +560,19 @@ public class Shape {
 		this.constraint = constraint;
 	}
 	
+	public void addDefaultShapeFor(URI app) {
+		if (defaultShapeFor == null) {
+			defaultShapeFor = new ArrayList<>();
+		}
+		defaultShapeFor.add(app);
+	}
+
+	public List<URI> getDefaultShapeFor() {
+		return defaultShapeFor;
+	}
+
+	public void setDefaultShapeFor(List<URI> defaultShapeFor) {
+		this.defaultShapeFor = defaultShapeFor;
+	}
 	
 }
