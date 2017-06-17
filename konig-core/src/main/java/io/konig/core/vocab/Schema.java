@@ -1,5 +1,7 @@
 package io.konig.core.vocab;
 
+import java.util.List;
+
 import org.openrdf.model.Resource;
 
 /*
@@ -24,6 +26,7 @@ import org.openrdf.model.Resource;
 
 
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 
 public class Schema {
@@ -117,6 +120,7 @@ public class Schema {
 	public static final URI ImageObject = new URIImpl("http://schema.org/ImageObject");
 	public static final URI Barcode = new URIImpl("http://schema.org/Barcode");
 	public static final URI category = new URIImpl("http://schema.org/category");
+	public static final URI SoftwareApplication =  new URIImpl("http://schema.org/SoftwareApplication");
 	
 	
 
