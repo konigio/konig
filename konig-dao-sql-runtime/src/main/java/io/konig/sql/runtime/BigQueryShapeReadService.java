@@ -40,13 +40,15 @@ import io.konig.dao.core.Format;
 
 public class BigQueryShapeReadService extends SqlShapeReadService {
 
-
-	public BigQueryShapeReadService(TableStructureService structureService) {
+	private BigQuery bigQuery;
+	
+	public BigQueryShapeReadService(EntityStructureService structureService, BigQuery bigQuery) {
 		super(structureService);
+		this.bigQuery = bigQuery;
 	}
 
 	@Override
-	protected void executeSql(TableStructure struct, String sql, Writer output, Format format) throws DaoException {
+	protected void executeSql(EntityStructure struct, String sql, Writer output, Format format) throws DaoException {
 		BigQuery bigQuery = getBigQuery();
 		QueryRequest request = QueryRequest.newBuilder(sql).build();
 		QueryResponse response = bigQuery.query(request);
@@ -71,7 +73,7 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		
 	}
 	
-	private void writeJsonld(TableStructure struct, QueryResult result, Writer output) throws IOException, DaoException {
+	private void writeJsonld(EntityStructure struct, QueryResult result, Writer output) throws IOException, DaoException {
 		
 		JsonFactory factory = new JsonFactory();
 		JsonGenerator json = factory.createGenerator(output);
@@ -93,7 +95,7 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		
 	}
 
-	private void writeRow(TableStructure struct, List<FieldValue> row, JsonGenerator json) throws IOException, DaoException {
+	private void writeRow(EntityStructure struct, List<FieldValue> row, JsonGenerator json) throws IOException, DaoException {
 		json.writeStartObject();
 		Iterator<FieldInfo> fieldSequence = struct.getFields().iterator();
 		for (FieldValue field : row) {
@@ -118,7 +120,7 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 	}
 
 	protected BigQuery getBigQuery() {
-		return BigQueryOptions.getDefaultInstance().getService();
+		return bigQuery;
 	}
 
 }

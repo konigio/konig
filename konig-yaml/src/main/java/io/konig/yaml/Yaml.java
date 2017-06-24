@@ -29,8 +29,9 @@ public class Yaml {
 	
 	@SuppressWarnings("unchecked")
 	public static <T> T read(Class<T> type, Reader reader) throws YamlParseException, IOException {
+		@SuppressWarnings("resource")
 		YamlReader yaml = new YamlReader(reader);
-		return (T) yaml.readObject();
+		return (T) yaml.readObject(type);
 	}
 	
 	public static <T> T read(Class<T> type, String yamlText) throws YamlParseException, IOException {

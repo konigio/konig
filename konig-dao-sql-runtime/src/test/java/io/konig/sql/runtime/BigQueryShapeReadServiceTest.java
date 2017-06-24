@@ -1,5 +1,26 @@
 package io.konig.sql.runtime;
 
+/*
+ * #%L
+ * Konig DAO SQL Runtime
+ * %%
+ * Copyright (C) 2015 - 2017 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -26,10 +47,10 @@ public class BigQueryShapeReadServiceTest  {
 		
 		String shapeId = "http://example.com/shape/PersonShape";
 		
-		TableStructure struct = new TableStructure("schema.Person");
+		EntityStructure struct = new EntityStructure("schema.Person");
 		struct.addField("givenName");
-		TableStructureService structService = mock(TableStructureService.class);
-		when(structService.tableStructureForShape(anyString())).thenReturn(struct);
+		EntityStructureService structService = mock(EntityStructureService.class);
+		when(structService.structureOfShape(anyString())).thenReturn(struct);
 		
 		BigQuery bigQuery = new MockBigQueryBuilder().beginBigQuery()
 			.beginResponse()
@@ -46,7 +67,7 @@ public class BigQueryShapeReadServiceTest  {
 		when(result.iterateAll()).thenReturn(sequence);
 		
 		
-		MockBigQueryShapeReadService service = new MockBigQueryShapeReadService(bigQuery, structService);
+		BigQueryShapeReadService service = new BigQueryShapeReadService(structService, bigQuery);
 		
 		ShapeQuery query = new ShapeQuery.Builder()
 				.setShapeId(shapeId)

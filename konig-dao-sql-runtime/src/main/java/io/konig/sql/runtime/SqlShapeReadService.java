@@ -34,23 +34,23 @@ import io.konig.dao.core.ShapeReadService;
 
 abstract public class SqlShapeReadService implements ShapeReadService {
 	
-	private TableStructureService structureService;
+	private EntityStructureService structureService;
 
-	public SqlShapeReadService(TableStructureService structureService) {
+	public SqlShapeReadService(EntityStructureService structureService) {
 		this.structureService = structureService;
 	}
 
 	@Override
 	public void execute(ShapeQuery query, Writer output, Format format) throws DaoException {
 
-		TableStructure struct = structureService.tableStructureForShape(query.getShapeId());
+		EntityStructure struct = structureService.structureOfShape(query.getShapeId());
 		String sql = toSql(struct, query);
 		executeSql(struct, sql, output, format);
 	}
 
-	abstract protected void executeSql(TableStructure struct, String sql, Writer output, Format format) throws DaoException;
+	abstract protected void executeSql(EntityStructure struct, String sql, Writer output, Format format) throws DaoException;
 
-	private String toSql(TableStructure struct, ShapeQuery query) throws DaoException {
+	private String toSql(EntityStructure struct, ShapeQuery query) throws DaoException {
 		
 		
 		StringBuilder builder = new StringBuilder();

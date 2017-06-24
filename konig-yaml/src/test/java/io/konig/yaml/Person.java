@@ -11,6 +11,15 @@ public class Person {
 	private List<Person> likes;
 	private PostalAddress address;
 	
+	public Person() {
+		
+	}
+	
+	
+	public Person(String givenName) {
+		this.givenName = givenName;
+	}
+	
 	public PostalAddress getAddress() {
 		return address;
 	}
