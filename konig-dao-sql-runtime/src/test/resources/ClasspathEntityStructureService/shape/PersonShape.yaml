@@ -1,0 +1,11 @@
+name: schema.Person
+fields:
+  - givenName
+  - familyName
+  - 
+    name: address
+    struct:
+      fields:
+        - postalAddress
+      
+    

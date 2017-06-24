@@ -39,9 +39,9 @@ public class SqlShapeReadServiceTest {
 	public void test() throws Exception {
 		String shapeId = "http://example.com/shape/PersonShape";
 		
-		TableStructureService structService = mock(TableStructureService.class);
+		EntityStructureService structService = mock(EntityStructureService.class);
 		
-		when(structService.tableStructureForShape(shapeId)).thenReturn(new TableStructure("schema.Person"));
+		when(structService.structureOfShape(shapeId)).thenReturn(new EntityStructure("schema.Person"));
 
 		String expected = 
 				"SELECT * FROM schema.Person\n" + 
@@ -66,13 +66,13 @@ public class SqlShapeReadServiceTest {
 	private static class MockSqlShapeReadService extends SqlShapeReadService {
 		private String expectedSQL;
 
-		public MockSqlShapeReadService(TableStructureService service, String expectedSQL) {
+		public MockSqlShapeReadService(EntityStructureService service, String expectedSQL) {
 			super(service);
 			this.expectedSQL = expectedSQL;
 		}
 
 		@Override
-		protected void executeSql(TableStructure struct, String sql, Writer output, Format format) throws DaoException {
+		protected void executeSql(EntityStructure struct, String sql, Writer output, Format format) throws DaoException {
 			
 			assertEquals(expectedSQL, sql);
 			

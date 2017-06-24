@@ -1,8 +1,11 @@
 package io.konig.yaml;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PushbackReader;
 import java.io.Reader;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
@@ -12,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class YamlReader {
+public class YamlReader implements AutoCloseable {
 	
 
 	private PushbackReader reader;
@@ -22,13 +25,27 @@ public class YamlReader {
 	private Method addMethod;
 	
 	private int nextIndentWidth;
+	private int lineNo = 1;
 	
+	public YamlReader(InputStream input) {
+		this(new InputStreamReader(input));
+	}
 	public YamlReader(Reader reader) {
 		this.reader = new PushbackReader(reader, 2);
 	}
+	
+	public void addDeserializer(Class<?> type, YamlDeserializer deserializer) {
+		ClassInfo classInfo = classInfo(type);
+		classInfo.deserializer = deserializer;
+	}
 
 	private void fail(String msg) throws YamlParseException {
-		throw new YamlParseException(msg);
+		StringBuilder builder = new StringBuilder();
+		builder.append("Line ");
+		builder.append(lineNo);
+		builder.append(". ");
+		builder.append(msg);
+		throw new YamlParseException(builder.toString());
 		
 	}
 
@@ -45,15 +62,15 @@ public class YamlReader {
 
 	private Object typedObject(YamlParser parent, Object pojo, Method setter) throws YamlParseException, IOException {
 		
-		ObjectYamlParser next = new ObjectYamlParser(parent);
+		ObjectYamlParser next = new ObjectYamlParser(parent, null);
 		if (next.indentWidth == Integer.MAX_VALUE) {
 			return next.pojo;
 		}
-		try {
-			setter.invoke(pojo, next.pojo);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			throw new YamlParseException("Failed to invoke setter: " + setter.getName(), e);
-		}
+
+		// Delay setting the typed object on the owner pojo until the typed object is fully defined.
+		
+		next.setOwner(pojo);
+		next.setSetter(setter);
 		
 		return next;
 	}
@@ -70,8 +87,12 @@ public class YamlReader {
 	private int indentWidth() throws IOException {
 		int width = 0;
 		int c = read();
-		while (c == ' ') {
-			width++;
+		while (c==' ' || c=='\n') {
+			if (c == '\n') {
+				width = 0;
+			} else {
+				width++;
+			}
 			c = read();
 		}
 		unread(c);
@@ -79,9 +100,14 @@ public class YamlReader {
 		return nextIndentWidth;
 	}
 
+	private boolean isSpace(int c) {
+		
+		return c==' ' || c=='\t' || c=='\r';
+	}
+
 	private int valueStart() throws IOException {
 		int c = read();
-		while (c!=-1 && (c==' ' || c=='\t')) {
+		while (c!=-1 && isSpace(c)) {
 			c = read();
 		}
 		unread(c);
@@ -92,7 +118,7 @@ public class YamlReader {
 	
 
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Object scalarValue(Class<?> javaType) throws YamlParseException, IOException {
 		String stringValue = stringValue();
 		Object result = null;
@@ -105,12 +131,37 @@ public class YamlReader {
 			
 			result = Enum.valueOf((Class<Enum>)javaType, stringValue);
 		} else {
+			ClassInfo info = classInfo.get(javaType);
+			if (info != null  && info.deserializer!=null) {
+				return info.deserializer.fromString(stringValue);
+			}
+			
+			Constructor<?>[] ctorList = javaType.getConstructors();
+			for (Constructor<?> ctor : ctorList) {
+				Class<?>[] paramList = ctor.getParameterTypes();
+				if (paramList.length==1 && paramList[0] == String.class) {
+					try {
+						return ctor.newInstance(stringValue);
+					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+							| InvocationTargetException e) {
+						fail(e);
+					}
+				}
+			}
 			
 			fail("Unsupported scalar type: " +javaType.getName());
 		}
 		return result;
 	}
 
+	private void fail(Exception e) throws YamlParseException {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Line ");
+		builder.append(lineNo);
+		builder.append(". ");
+		throw new YamlParseException(builder.toString(), e);
+		
+	}
 	private String stringValue() throws IOException, YamlParseException {
 		int c = read();
 		unread(c);
@@ -134,7 +185,7 @@ public class YamlReader {
 			c = read();
 		}
 		unread(c);
-		return buffer.toString();
+		return buffer.toString().trim();
 	}
 
 	private String doubleQuotedString() throws YamlParseException, IOException {
@@ -175,6 +226,9 @@ public class YamlReader {
 
 	private void unread(int c) throws IOException {
 		if (c!=-1 && reader!=null) {
+			if (c=='\n') {
+				lineNo--;
+			}
 			reader.unread(c);
 		}
 	}
@@ -184,6 +238,9 @@ public class YamlReader {
 			return -1;
 		}
 		int c = reader.read();
+		if (c=='\n') {
+			lineNo++;
+		}
 		if (c == -1) {
 			reader = null;
 		} 
@@ -218,8 +275,8 @@ public class YamlReader {
 	private void assertNext(int expected) throws YamlParseException, IOException {
 		int actual = next();
 		if (expected != actual) {
-			String msg = MessageFormat.format("Expected '{0}' but found '{1}'", expected, actual);
-			throw new YamlParseException(msg);
+			String msg = MessageFormat.format("Expected ''{0}'' but found ''{1}''", (char)expected, (char)actual);
+			fail(msg);
 		}
 	}
 	
@@ -238,7 +295,7 @@ public class YamlReader {
 	private static class ClassInfo {
 		private Map<String, Method> setterMethod = new HashMap<>();
 		private Map<String, Method> adderMethod = new HashMap<>();
-		
+		private YamlDeserializer deserializer = null;
 
 	}
 	
@@ -278,15 +335,20 @@ public class YamlReader {
 		return buffer.toString();
 	}
 
-	
 	public Object readObject() throws YamlParseException, IOException {
-		ObjectYamlParser objectParser = new ObjectYamlParser(null);
+		return  readObject(null);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T readObject(Class<T> type) throws YamlParseException, IOException {
+		indentWidth();
+		ObjectYamlParser objectParser = new ObjectYamlParser(null, type);
 		YamlParser parser = objectParser;
 		while (parser != null) {
 			parser = parser.nextParser();
 		}
 		
-		return objectParser.pojo;
+		return (T) objectParser.pojo;
 
 	}
 	private abstract class YamlParser {
@@ -299,16 +361,29 @@ public class YamlReader {
 
 		abstract YamlParser nextParser() throws YamlParseException, IOException;
 		
-		protected YamlParser findNext() throws IOException {
+		public int getIndentWidth() {
+			return indentWidth;
+		}
+
+		protected void exit() throws YamlParseException {
+			
+		}
+		
+		protected YamlParser findNext() throws YamlParseException, IOException {
 			if (nextIndentWidth < 0) {
 				nextIndentWidth = indentWidth();
 			}
+			YamlParser parser = this;
 			if (nextIndentWidth < 0) {
+				while (parser != null) {
+					parser.exit();
+					parser = parser.parent;
+				}
 				return null;
 			}
 			
-			YamlParser parser = this;
 			while (parser != null && parser.indentWidth!=nextIndentWidth) {
+				parser.exit();
 				parser = parser.parent;
 			}
 			return parser;
@@ -323,11 +398,7 @@ public class YamlReader {
 			super(parent);
 			this.pojo = pojo;
 			this.adder = adder;
-			int c = read();
-			if (c != '\n') {
-				throw new YamlParseException("Expected new line character");
-			}
-			indentWidth = indentWidth();
+			indentWidth = nextIndentWidth;
 		}
 
 		
@@ -363,17 +434,43 @@ public class YamlReader {
 		private Object pojo = null;
 		private ClassInfo classInfo;
 		
-		public ObjectYamlParser(YamlParser parent) throws YamlParseException, IOException {
+		private Object owner = null;
+		private Method setter = null;
+		
+		public ObjectYamlParser(YamlParser parent, Object pojo, Object owner, Method setter, int indentWidth) {
 			super(parent);
-			assertNext('!');
-			String javaType = readWord();
+			this.pojo = pojo;
+			this.owner = owner;
+			this.setter = setter;
+			this.indentWidth = indentWidth;
+			classInfo = classInfo(pojo.getClass());
+		}
+		
+		public ObjectYamlParser(YamlParser parent, Class<?> type) throws YamlParseException, IOException {
+			super(parent);
+			int c = next();
+			if (c == '!') {
+
+				String javaType = readWord();
+				try {
+					type = Class.forName(javaType);
+				} catch (ClassNotFoundException e) {
+					fail("Class not found: " + javaType);
+				}
+				
+			} else {
+				unread(c);
+			}
+			
+			if (type == null) {
+				fail("Java type not defined for object");
+			}
 			
 			try {
-				Class<?> type = Class.forName(javaType);
-				try {
-					classInfo = classInfo(type);
-					pojo = type.newInstance();
-					assertNext('&');
+				classInfo = classInfo(type);
+				pojo = type.newInstance();
+				c = next();
+				if (c == '&') {
 					String objectId = readWord();
 					objectMap.put(objectId, pojo);
 					assertLineEnd();
@@ -383,17 +480,28 @@ public class YamlReader {
 					} else {
 						this.indentWidth = Integer.MAX_VALUE;
 					}
-					
-					
-					
-				} catch (InstantiationException | IllegalAccessException e) {
-					fail("Failed to instantiate class " + javaType);
+				} else {
+					unread(c);
+					this.indentWidth = nextIndentWidth;
 				}
 				
-			} catch (ClassNotFoundException e) {
-				fail("Class not found: " + javaType);
+				
+				
+			} catch (InstantiationException | IllegalAccessException e) {
+				fail("Failed to instantiate class " + type.getName());
 			}
+				
 			
+		}
+
+
+		public void setOwner(Object owner) {
+			this.owner = owner;
+		}
+
+
+		public void setSetter(Method setter) {
+			this.setter = setter;
 		}
 
 
@@ -414,7 +522,21 @@ public class YamlReader {
 			
 			String fieldName = fieldName();
 			skipSpace();
-			assertNext(':');
+			int c = next();
+			if (c == -1) {
+				
+				YamlParser parser = this;
+				while (parser != null) {
+					parser.exit();
+					parser = parser.parent;
+				}
+				
+				return null;
+			}
+			if (c != ':') {
+				String msg = MessageFormat.format("Expected ':' but found ''{0}''", (char)c);
+				fail(msg);
+			}
 			
 			Method method = adderOrSetter(fieldName);
 			Object value = readValue(this, pojo, method);
@@ -435,7 +557,15 @@ public class YamlReader {
 			return findNext();
 		}
 
-
+		protected void exit() throws YamlParseException {
+			if (owner!=null && setter!=null) {
+				try {
+					setter.invoke(owner, pojo);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					throw new YamlParseException(e);
+				}
+			}
+		}
 
 
 		private Method adderOrSetter(String fieldName) throws YamlParseException {
@@ -496,22 +626,43 @@ public class YamlReader {
 			value = typedObject(parser, pojo, setter);
 			break;
 			
+		case '&' : {
+			Class<?> javaType = setter.getParameterTypes()[0];
+			ObjectYamlParser objectParser = new ObjectYamlParser(parser, javaType);
+			objectParser.setOwner(pojo);
+			objectParser.setSetter(setter);
+			value = objectParser;
+			break;
+		}
+			
+			
 		case '*' :
 			value = objectRef();
 			assertLineEnd();
 			break;
 			
 		case '\n' :
-			if (setter.getName().startsWith("add")) {
-				value = new CollectionYamlParser(parser, pojo, setter);
-			} else {
-				List<?> list = new ArrayList<>();
-				value = new CollectionYamlParser(parser, list, collectionAddMethod());
-				try {
-					setter.invoke(pojo, list);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					throw new YamlParseException(e);
+			read();
+			indentWidth();
+			c = peek();
+			if (c == '-') {
+				if (setter.getName().startsWith("add")) {
+					value = new CollectionYamlParser(parser, pojo, setter);
+				} else {
+					List<?> list = new ArrayList<>();
+					value = new CollectionYamlParser(parser, list, collectionAddMethod());
+					try {
+						setter.invoke(pojo, list);
+					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+						throw new YamlParseException(e);
+					}
 				}
+			} else {
+				Class<?> javaType = setter.getParameterTypes()[0];
+				ObjectYamlParser objectParser  = new ObjectYamlParser(parser, javaType);
+				objectParser.setOwner(pojo);
+				objectParser.setSetter(setter);
+				value = objectParser;
 			}
 			break;
 			
@@ -519,6 +670,10 @@ public class YamlReader {
 			Class<?> javaType = setter.getParameterTypes()[0];
 			value = scalarValue(javaType);
 			assertLineEnd();
+			indentWidth();
+			if (nextIndentWidth>parser.getIndentWidth() && !(value instanceof ObjectYamlParser)) {
+				return new ObjectYamlParser(parser, value, pojo, setter, nextIndentWidth);
+			}
 			break;
 			
 		}
@@ -526,6 +681,12 @@ public class YamlReader {
 		return value;
 	}
 
+	private int peek() throws IOException {
+		int c = read();
+		unread(c);
+		return c;
+	}
+	
 	private Method collectionAddMethod() {
 		if (addMethod == null) {
 			Method[] methodList = Collection.class.getMethods();
@@ -537,5 +698,12 @@ public class YamlReader {
 			}
 		}
 		return addMethod;
+	}
+
+	@Override
+	public void close() throws IOException {
+		if (reader != null) {
+			reader.close();
+		}
 	}
 }

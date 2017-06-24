@@ -1,0 +1,2 @@
+{ "floatValue" : 1.23, "intValue": 102, "stringValue" : "Hello World!", "recordValue" : { "mood" : "happy", "repeatedValue" : [{"msg":"foo"}, {"msg":"bar"}]}}
+{ "floatValue" : 32.1, "intValue": 301, "stringValue" : "Goodbye", "recordValue" : { "mood" : "sad", "repeatedValue" : [{"msg":"alpha"}, {"msg":"beta"}]}}
