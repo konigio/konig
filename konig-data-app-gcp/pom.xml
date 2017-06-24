@@ -180,31 +180,6 @@ limitations under the License.
           </execution>
         </executions>
       </plugin>
-      
-      
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>generate-resources</phase>
-            <configuration>
-              <tasks>
-
-								<copy file="${env.GOOGLE_APPLICATION_CREDENTIALS}" toFile="src/main/webapp/WEB-INF/classes/konig/gcp/credentials.json"/>
-
-              </tasks>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      
-      
-      
-      
-      
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -264,4 +239,42 @@ limitations under the License.
     	</plugins>
     </pluginManagement>
   </build>
+  
+  
+   <profiles>
+  	<profile>
+  		<id>copy-credentials</id>
+  		<activation>
+  			<property>
+  				<name>env.GOOGLE_APPLICATION_CREDENTIALS</name>
+  			</property>
+  		</activation>
+			<build>
+				<plugins>
+			
+					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<executions>
+							<execution>
+								<phase>generate-resources</phase>
+								<configuration>
+									<tasks>
+			
+										<copy file="${env.GOOGLE_APPLICATION_CREDENTIALS}"
+											toFile="src/main/webapp/WEB-INF/classes/konig/gcp/credentials.json" />
+			
+									</tasks>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+ 		</profile>
+ 	</profiles>
+ 	
+ 	
 </project>
