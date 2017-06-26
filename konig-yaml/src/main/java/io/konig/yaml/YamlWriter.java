@@ -1,5 +1,6 @@
 package io.konig.yaml;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Array;
@@ -60,6 +61,11 @@ public class YamlWriter {
 	private void printObject(Object object) {
 		if (object == null) {
 			out.print("null");
+			return;
+		}
+		if (object instanceof File) {
+			File file = (File) object;
+			printValue(file.getAbsolutePath());
 			return;
 		}
 		Integer objectId = objectMap.get(object);
