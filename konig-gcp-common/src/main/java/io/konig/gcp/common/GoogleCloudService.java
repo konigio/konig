@@ -23,6 +23,7 @@ package io.konig.gcp.common;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -80,17 +81,33 @@ public class GoogleCloudService {
 	public GoogleCloudService() {
 	}
 	
+	
+	public List<TableInfo> createAllTables(BigQuery bigQuery, File schemaDir) throws IOException {
+		List<TableInfo> list = new ArrayList<>();
+		File[] array = schemaDir.listFiles();
+		for (File file : array) {
+			try (FileReader reader = new FileReader(file)) {
+				TableInfo info = readTableInfo(reader);
+				list.add(info);
+				bigQuery.create(info);
+			}
+		}
+		return list;
+	}
+	
 	public List<DatasetInfo> createAllDatasets(BigQuery bigQuery, File datasetDir) throws IOException {
 		List<DatasetInfo> list = new ArrayList<>();
 		if (bigQuery == null) {
 			bigQuery = bigQuery();
 		}
 		File[] array = datasetDir.listFiles();
-		for (File file : array) {
-			try (FileReader reader = new FileReader(file)) {
-				DatasetInfo info = readDatasetInfo(reader);
-				list.add(info);
-				bigQuery.create(info);
+		if (array != null) {
+			for (File file : array) {
+				try (FileReader reader = new FileReader(file)) {
+					DatasetInfo info = readDatasetInfo(reader);
+					list.add(info);
+					bigQuery.create(info);
+				}
 			}
 		}
 		
@@ -106,14 +123,39 @@ public class GoogleCloudService {
 			deleteDataset(bigQuery, file);
 		}
 	}
+
 	
+	public void deleteAllTables(BigQuery bigQuery, File schemaDir) throws IOException {
+		if (bigQuery == null) {
+			bigQuery = bigQuery();
+		}
+		File[] array = schemaDir.listFiles();
+		for (File file : array) {
+			deleteTable(bigQuery, file);
+		}
+	}
+	
+	public void deleteTable(BigQuery bigQuery, File tableSchemaFile) throws FileNotFoundException, IOException {
+		try (FileReader reader = new FileReader(tableSchemaFile)) {
+			TableInfo info = readTableInfo(reader);
+			if (bigQuery == null) {
+				bigQuery = bigQuery();
+			}
+			
+			bigQuery.delete(info.getTableId());
+		}
+		
+	}
+
+
 	public void deleteDataset(BigQuery bigQuery, File datasetInfo) throws IOException {
 		try (FileReader reader = new FileReader(datasetInfo)) {
 			DatasetInfo info = readDatasetInfo(reader);
 			if (bigQuery == null) {
 				bigQuery = bigQuery();
 			}
-			bigQuery.delete(info.getDatasetId());
+			Dataset dataset = bigQuery.getDataset(info.getDatasetId());
+			forceDelete(dataset);
 		}
 	}
 	
@@ -161,11 +203,14 @@ public class GoogleCloudService {
 	 * Delete all the tables in the dataset and then delete the dataset
 	 */
 	public void forceDelete(Dataset dataset) {
-		List<Table> list = toList(dataset.list().iterateAll());
-		for (Table t : list) {
-			t.delete();
+		if (dataset != null) {
+
+			List<Table> list = toList(dataset.list().iterateAll());
+			for (Table t : list) {
+				t.delete();
+			}
+			dataset.delete();
 		}
-		dataset.delete();
 	}
 	
 	
