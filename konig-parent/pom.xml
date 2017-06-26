@@ -27,13 +27,14 @@
 		<antlr.version>4.6</antlr.version>
 		<commons-codec.version>1.10</commons-codec.version>
 		<commons-compress.version>1.13</commons-compress.version>
+		<google-api-services-storage.version>v1-rev108-1.22.0</google-api-services-storage.version>
 		<google-api-services-bigquery.version>v2-rev346-1.22.0</google-api-services-bigquery.version>
 		<google-http-client.version>1.22.0</google-http-client.version>
 		<mockito.version>1.10.19</mockito.version>
 		<google.cloud>0.17.2-beta</google.cloud>
+		<google-cloud-storage.version>1.2.0</google-cloud-storage.version>
     <google-api-client.version>1.21.0</google-api-client.version>
     <google-api-pubsub.version>v1-rev8-1.21.0</google-api-pubsub.version>
-    <google-cloud-storage.version>1.1.0</google-cloud-storage.version>
     <servlet-api.version>2.5</servlet-api.version>
   </properties>
   

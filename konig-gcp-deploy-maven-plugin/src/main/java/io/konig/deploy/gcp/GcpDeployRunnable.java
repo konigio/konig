@@ -7,6 +7,7 @@ import com.google.cloud.bigquery.BigQuery;
 
 import io.konig.deploy.DeployAction;
 import io.konig.gcp.common.GoogleCloudService;
+import io.konig.gcp.common.GoogleCloudServiceException;
 import io.konig.gcp.common.GoogleCredentialsNotFoundException;
 import io.konig.gcp.common.InvalidGoogleCredentialsException;
 
@@ -46,12 +47,28 @@ public class GcpDeployRunnable  {
 
 	private void doDelete() throws DeploymentException {
 		deleteBigQuery(gcp.getBigQuery());
+		deleteCloudStorage(gcp.getCloudstorage());
+	}
+
+	private void deleteCloudStorage(CloudStorageInfo info) throws DeploymentException {
+		if (info != null) {
+			File cloudstorage = info.getDirectory();
+			if (cloudstorage != null) {
+				try {
+					gcpService.setGcpBucketSuffix(info.getBucketSuffix());
+					gcpService.deleteAllBuckets(cloudstorage);
+				} catch (IOException | GoogleCloudServiceException e) {
+					throw new DeploymentException(e);
+				}
+			}
+		}
+		
 	}
 
 	private void deleteBigQuery(BigQueryInfo bigQuery) throws DeploymentException {
 		if (bigQuery != null) {
 			deleteSchemas(bigQuery.getSchema());
-			deleteDatasets(bigQuery.getDatasets());
+			deleteDatasets(bigQuery.getDataset());
 		}
 		
 	}
@@ -79,15 +96,31 @@ public class GcpDeployRunnable  {
 	}
 
 	private void doCreate() throws DeploymentException {
-	
+
+		createCloudStorage(gcp.getCloudstorage());
 		createBigQuery(gcp.getBigQuery());
+		
+	}
+
+	private void createCloudStorage(CloudStorageInfo info) throws DeploymentException {
+		if (info!=null) {
+			File cloudstorage = info.getDirectory();
+			if (cloudstorage != null) {
+				try {
+					gcpService.setGcpBucketSuffix(info.getBucketSuffix());
+					gcpService.createAllBuckets(cloudstorage);
+				} catch (GoogleCloudServiceException | IOException e) {
+					throw new DeploymentException(e);
+				}
+			}
+		}
 		
 	}
 
 	private void createBigQuery(BigQueryInfo bigQuery) throws DeploymentException {
 		
 		if (bigQuery != null) {
-			createDatasets(bigQuery.getDatasets());
+			createDatasets(bigQuery.getDataset());
 			createTables(bigQuery.getSchema());
 		}
 		

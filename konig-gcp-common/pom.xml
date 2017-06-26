@@ -41,7 +41,12 @@
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-bigquery</artifactId>
     <version>${google.cloud}</version>
-    <scope>provided</scope>
+	</dependency>
+	
+	<dependency>
+    <groupId>com.google.cloud</groupId>
+    <artifactId>google-cloud-storage</artifactId>
+    <version>${google-cloud-storage.version}</version>
 	</dependency>
 	
 	<dependency>

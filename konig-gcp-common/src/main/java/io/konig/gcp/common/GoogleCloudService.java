@@ -45,6 +45,11 @@ import com.google.cloud.bigquery.InsertAllResponse;
 import com.google.cloud.bigquery.KonigBigQueryUtil;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableInfo;
+import com.google.cloud.storage.BucketInfo;
+import com.google.cloud.storage.CloudStorageUtil;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageFactory;
+import com.google.cloud.storage.StorageOptions;
 
 /**
  * A utility class for manipulating Google Cloud Platform resources.
@@ -73,15 +78,45 @@ import com.google.cloud.bigquery.TableInfo;
  */
 public class GoogleCloudService {
 
+	private String gcpBucketSuffix;
+	private String gcpBucketSuffixToken = "{gcpBucketSuffix}";
 	private String projectToken = "{gcpProjectId}";
 	private GoogleCredentials credentials;
 	private String projectId;
+	private Storage storage;
+	
 
 	
 	public GoogleCloudService() {
 	}
 	
 	
+	public String getGcpBucketSuffix() {
+		return gcpBucketSuffix;
+	}
+
+
+	public void setGcpBucketSuffix(String gcpBucketSuffix) {
+		this.gcpBucketSuffix = gcpBucketSuffix;
+	}
+	
+	public List<BucketInfo> createAllBuckets(File storageDir) throws IOException, GoogleCloudServiceException {
+		List<BucketInfo> list = new ArrayList<>();
+	
+		File[] array = storageDir.listFiles();
+		if (array != null) {
+			Storage storage = storage();
+			for (File file : array) {
+				BucketInfo info = readBucketInfo(file);
+				list.add(info);
+				storage.create(info);
+			}
+		}
+		return list;
+	}
+	
+
+
 	public List<TableInfo> createAllTables(BigQuery bigQuery, File schemaDir) throws IOException {
 		List<TableInfo> list = new ArrayList<>();
 		File[] array = schemaDir.listFiles();
@@ -93,6 +128,13 @@ public class GoogleCloudService {
 			}
 		}
 		return list;
+	}
+	
+	public Storage storage() {
+		if (storage == null) {
+			storage = StorageOptions.newBuilder().setCredentials(credentials).setProjectId(projectId).build().getService();
+		}
+		return storage;
 	}
 	
 	public List<DatasetInfo> createAllDatasets(BigQuery bigQuery, File datasetDir) throws IOException {
@@ -118,20 +160,41 @@ public class GoogleCloudService {
 		if (bigQuery == null) {
 			bigQuery = bigQuery();
 		}
-		File[] array = datasetDir.listFiles();
-		for (File file : array) {
-			deleteDataset(bigQuery, file);
+		if (datasetDir != null) {
+
+			File[] array = datasetDir.listFiles();
+			if (array != null) {
+				for (File file : array) {
+					deleteDataset(bigQuery, file);
+				}
+			}
 		}
 	}
 
+	public void deleteAllBuckets(File storageDir) throws IOException, GoogleCloudServiceException {
+		
+		File[] array = storageDir.listFiles();
+		if (array != null) {
+			Storage storage = storage();
+			for (File file : array) {
+				BucketInfo info = readBucketInfo(file);
+				storage.delete(info.getName());
+			}
+		}
+	}
 	
 	public void deleteAllTables(BigQuery bigQuery, File schemaDir) throws IOException {
 		if (bigQuery == null) {
 			bigQuery = bigQuery();
 		}
-		File[] array = schemaDir.listFiles();
-		for (File file : array) {
-			deleteTable(bigQuery, file);
+		if (schemaDir != null) {
+
+			File[] array = schemaDir.listFiles();
+			if (array!=null) {
+				for (File file : array) {
+					deleteTable(bigQuery, file);
+				}
+			}
 		}
 	}
 	
@@ -226,6 +289,27 @@ public class GoogleCloudService {
 		try (FileReader reader = new FileReader(file)) {
 			return readTableInfo(reader);
 		}
+	}
+
+	public BucketInfo readBucketInfo(File file) throws IOException, GoogleCloudServiceException {
+		try (
+			FileReader reader = new FileReader(file);
+		) {
+			return readBucketInfo(reader);
+		}
+	}
+	
+	public BucketInfo readBucketInfo(Reader reader) throws GoogleCloudServiceException, IOException {
+		if (gcpBucketSuffix == null) {
+			throw new GoogleCloudServiceException("gcpBucketSuffix must be defined");
+		}
+		JsonFactory factory = JacksonFactory.getDefaultInstance();
+		JsonObjectParser parser = factory.createJsonObjectParser();
+		ReplaceStringReader input = new ReplaceStringReader(reader, gcpBucketSuffixToken, gcpBucketSuffix);
+		com.google.api.services.storage.model.Bucket bucket = 
+			parser.parseAndClose(input, com.google.api.services.storage.model.Bucket.class); 
+		
+		return CloudStorageUtil.createBucketInfo(bucket);
 	}
 	
 	public TableInfo readTableInfo(Reader reader) throws IOException {
