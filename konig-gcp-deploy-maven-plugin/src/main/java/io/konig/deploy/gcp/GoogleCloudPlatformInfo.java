@@ -2,7 +2,6 @@ package io.konig.deploy.gcp;
 
 import java.io.File;
 
-import org.apache.maven.plugins.annotations.Parameter;
 
 import io.konig.yaml.Yaml;
 
@@ -18,7 +17,10 @@ public class GoogleCloudPlatformInfo  {
 	private File directory;
 	
 	@Parameter(property="konig.deploy.gcp.bigquery")
-	private BigQueryInfo bigquery;
+	private BigQueryInfo bigquery = new BigQueryInfo();
+	
+	@Parameter(property="konig.deploy.gcp.cloudstorage")
+	private CloudStorageInfo cloudstorage = new CloudStorageInfo();
 	
 	/**
 	 * Get the identifier for the Google Cloud Project.
@@ -59,27 +61,27 @@ public class GoogleCloudPlatformInfo  {
 		this.bigquery = bigQuery;
 	}
 	
-	public void init() {
-		if (credentials != null) {
-			System.setProperty("google.credentials", credentials);
-		}
-		if (bigquery == null) {
-			bigquery = new BigQueryInfo();
-		}
-		bigquery.init(directory);
-	}
+	
 
 	/**
 	 * Specify the location of the top-level directory in the local file system where
 	 * Google Cloud Platform resources are stored.
 	 * @param gcpDir
 	 */
-	public void setGcpDir(File gcpDir) {
+	public void setDirectory(File gcpDir) {
 		this.directory = gcpDir;
 	}
 
 	public String toString() {
 		return Yaml.toString(this);
+	}
+
+	public CloudStorageInfo getCloudstorage() {
+		return cloudstorage;
+	}
+
+	public void setCloudstorage(CloudStorageInfo cloudstorage) {
+		this.cloudstorage = cloudstorage;
 	}
 	
 }

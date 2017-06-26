@@ -1,6 +1,4 @@
-package com.google.cloud.bigquery;
-
-import com.google.cloud.storage.BucketInfo;
+package com.google.cloud.storage;
 
 /*
  * #%L
@@ -23,19 +21,11 @@ import com.google.cloud.storage.BucketInfo;
  */
 
 
-public class KonigBigQueryUtil {
+import com.google.api.services.storage.model.Bucket;
 
-	
-	public static DatasetInfo createDatasetInfo(com.google.api.services.bigquery.model.Dataset model) {
-		return new DatasetInfo.BuilderImpl(model).build();
-	}
-	
-	public static TableInfo createTableInfo(com.google.api.services.bigquery.model.Table model) {
-		String type = model.getType();
-		if (type == null) {
-			model.setType(TableDefinition.Type.TABLE.name());
-		}
-		return new TableInfo.BuilderImpl(model).build();
-	}
+public class CloudStorageUtil {
 
+	public static BucketInfo createBucketInfo(Bucket bucket) {
+		return BucketInfo.fromPb(bucket);
+	}
 }
