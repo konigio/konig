@@ -5,5 +5,6 @@ public enum DeployAction {
 	UPDATE,
 	UPSERT,
 	DELETE,
-	DIFF
+	DIFF,
+	LOAD
 }

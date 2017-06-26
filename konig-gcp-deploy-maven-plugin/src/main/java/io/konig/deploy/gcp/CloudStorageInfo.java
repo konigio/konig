@@ -8,6 +8,9 @@ public class CloudStorageInfo {
 	
 	@Parameter(property="konig.deploy.gcp.cloudstorage.directory", defaultValue="${konig.deploy.gcp.directory}/cloudstorage")
 	private File directory;
+	
+	@Parameter(property="konig.deploy.gcp.cloudstorage.data", defaultValue="${konig.deploy.gcp.cloudstorage.directory}/data")
+	private File data;
 
 	@Parameter(property="konig.deploy.gcp.cloudstorage.bucketSuffix")
 	private String bucketSuffix;
@@ -33,5 +36,14 @@ public class CloudStorageInfo {
 	public String toString() {
 		return Yaml.toString(this);
 	}
+
+	public File getData() {
+		return data;
+	}
+
+	public void setData(File data) {
+		this.data = data;
+	}
+	
 
 }
