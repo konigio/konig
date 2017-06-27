@@ -5,9 +5,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.google.cloud.WriteChannel;
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.QueryRequest;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
@@ -59,6 +64,39 @@ public class GcpDeployRunnable  {
 	private void doLoad() throws DeploymentException {
 		
 		loadCloudStorage(gcp.getCloudstorage());
+		loadBigQuery(gcp.getBigQuery());
+		
+	}
+
+	private void loadBigQuery(BigQueryInfo bigQuery) throws DeploymentException {
+		if (bigQuery != null) {
+			File scripts = bigQuery.getScripts();
+			if (scripts != null && scripts.exists() && scripts.isDirectory()) {
+				File[] array = scripts.listFiles();
+				for (File file : array) {
+					String fileName = file.getName();
+					if (!file.isDirectory() && fileName.endsWith(".sql")) {
+						executeBigQueryScript(file);
+					}
+				}
+			}
+		}
+		
+	}
+
+	private void executeBigQueryScript(File file) throws DeploymentException {
+		try {
+			BigQuery bigQuery = gcpService.bigQuery();
+			
+			String sqlText = FileUtils.readFileToString(file, StandardCharsets.UTF_8.name());
+			QueryRequest request = QueryRequest.newBuilder(sqlText).setUseLegacySql(false).build();
+
+			// TODO: capture the Job ID.
+			bigQuery.query(request);
+			
+		} catch (Throwable e) {
+			throw new DeploymentException(e);
+		}
 		
 	}
 

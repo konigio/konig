@@ -140,6 +140,9 @@ public class YamlWriter {
 
 		push();
 		for (Method m : list) {
+			if (Modifier.isStatic(m.getModifiers())) {
+				continue;
+			}
 			String name = getterFieldName(m);
 
 			try {

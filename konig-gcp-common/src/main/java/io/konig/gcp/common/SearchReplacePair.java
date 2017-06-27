@@ -1,6 +1,4 @@
-package com.google.cloud.bigquery;
-
-import com.google.cloud.storage.BucketInfo;
+package io.konig.gcp.common;
 
 /*
  * #%L
@@ -23,18 +21,23 @@ import com.google.cloud.storage.BucketInfo;
  */
 
 
-public class KonigBigQueryUtil {
+public class SearchReplacePair {
 
-	public static DatasetInfo createDatasetInfo(com.google.api.services.bigquery.model.Dataset model) {
-		return new DatasetInfo.BuilderImpl(model).build();
+	private char[] search;
+	private char[] replace;
+	
+	public SearchReplacePair(String search, String replace) {
+		this.search = search.toCharArray();
+		this.replace = replace.toCharArray();
+	}
+
+	public char[] getSearch() {
+		return search;
+	}
+
+	public char[] getReplace() {
+		return replace;
 	}
 	
-	public static TableInfo createTableInfo(com.google.api.services.bigquery.model.Table model) {
-		String type = model.getType();
-		if (type == null) {
-			model.setType(TableDefinition.Type.TABLE.name());
-		}
-		return new TableInfo.BuilderImpl(model).build();
-	}
-
+	
 }

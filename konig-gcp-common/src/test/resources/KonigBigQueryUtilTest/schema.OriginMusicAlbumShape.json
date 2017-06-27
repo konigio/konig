@@ -1,0 +1,30 @@
+{
+	"type" : "EXTERNAL",
+  "externalDataConfiguration" : {
+    "csvOptions" : {
+      "skipLeadingRows" : "1"
+    },
+    "sourceFormat" : "CSV",
+    "sourceUris" : [ "gs://originmusicalbumshape-{gcpBucketSuffix}/*" ]
+  },
+  "schema" : {
+    "fields" : [ {
+      "mode" : "REQUIRED",
+      "name" : "album_id",
+      "type" : "INTEGER"
+    }, {
+      "mode" : "REQUIRED",
+      "name" : "album_name",
+      "type" : "STRING"
+    }, {
+      "mode" : "REQUIRED",
+      "name" : "artist_id",
+      "type" : "INTEGER"
+    } ]
+  },
+  "tableReference" : {
+    "datasetId" : "schema",
+    "projectId" : "{gcpProjectId}",
+    "tableId" : "OriginMusicAlbumShape"
+  }
+}

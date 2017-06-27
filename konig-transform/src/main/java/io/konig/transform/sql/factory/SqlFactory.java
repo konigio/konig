@@ -11,6 +11,7 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
@@ -28,6 +29,7 @@ import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
+import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
@@ -301,7 +303,8 @@ public class SqlFactory {
 					if (localName.length()==0) {
 						func.addArg(new StringLiteralExpression(iri.stringValue()));
 					} else {
-						if (shape.getPropertyConstraint(iri)==null) {
+						PropertyConstraint p = shape.getPropertyConstraint(iri);
+						if (p==null) {
 							StringBuilder msg = new StringBuilder();
 							msg.append("Shape ");
 							msg.append(TurtleElements.resource(shape.getId()));
@@ -311,7 +314,13 @@ public class SqlFactory {
 							msg.append(text);
 							throw new TransformBuildException(msg.toString());
 						}
-						func.addArg(SqlUtil.columnExpression(tableItem, iri));
+						URI datatype = p.getDatatype();
+						if (XMLSchema.STRING.equals(datatype)) {
+							func.addArg(SqlUtil.columnExpression(tableItem, iri));
+						} else {
+							CastSpecification cast = new CastSpecification(SqlUtil.columnExpression(tableItem, iri), "STRING");
+							func.addArg(cast);
+						}
 					}
 					break;
 				}

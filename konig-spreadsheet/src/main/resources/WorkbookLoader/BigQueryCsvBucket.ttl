@@ -10,7 +10,7 @@
 		gcp:tableId   "{shapeLocalName}" 
 	] ;
 	gcp:externalDataConfiguration [
-		gcp:sourceUris <gs://{gcpBucketName}> ;
+		gcp:sourceUris <gs://{gcpBucketName}/*> ;
 		gcp:sourceFormat "CSV" ;
 		gcp:csvOptions [
 			gcp:skipLeadingRows 1
