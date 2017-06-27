@@ -1,9 +1,16 @@
 package io.konig.deploy.gcp;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
+import com.google.cloud.WriteChannel;
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
 
 import io.konig.deploy.DeployAction;
 import io.konig.gcp.common.GoogleCloudService;
@@ -35,6 +42,10 @@ public class GcpDeployRunnable  {
 			doDelete();
 			break;
 			
+		case LOAD:
+			doLoad();
+			break;
+			
 		case DIFF:
 		case UPDATE:
 		case UPSERT:
@@ -42,6 +53,67 @@ public class GcpDeployRunnable  {
 		}
 		
 		
+		
+	}
+
+	private void doLoad() throws DeploymentException {
+		
+		loadCloudStorage(gcp.getCloudstorage());
+		
+	}
+
+	private void loadCloudStorage(CloudStorageInfo cloudstorage) throws DeploymentException {
+		if (cloudstorage != null) {
+			File data = cloudstorage.getData();
+			if (data!=null && data.exists() && data.isDirectory()) {
+				File[] array = data.listFiles();
+				for (File file : array) {
+					if (file.isDirectory()) {
+						uploadToBucket(file);
+					}
+				}
+			}
+		}
+		
+	}
+
+	private void uploadToBucket(File bucketDir) throws DeploymentException {
+		Storage storage = gcpService.storage();
+		String bucketName = bucketDir.getName();
+		
+		File[] array = bucketDir.listFiles();
+		for (File objectFile : array) {
+			String objectName = objectFile.getName();
+			BlobId blobId = BlobId.of(bucketName, objectName);
+			BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
+			try (
+				WriteChannel channel = storage.writer(blobInfo)
+			) {
+				try (
+					FileInputStream fileInput = new FileInputStream(objectFile);
+					FileChannel fileChannel = fileInput.getChannel();
+				) {
+					ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+					int nRead;
+					while ((nRead=fileChannel.read(byteBuffer)) != -1) {
+						if (nRead == 0) {
+							byteBuffer.clear();
+							continue;
+						}
+						byteBuffer.position(0);
+						byteBuffer.limit( nRead );
+						
+						channel.write(byteBuffer);
+						byteBuffer.clear();
+					}
+					
+				}
+				
+			} catch (Throwable e) {
+				throw new DeploymentException(e);
+			}
+			
+		}
 		
 	}
 
