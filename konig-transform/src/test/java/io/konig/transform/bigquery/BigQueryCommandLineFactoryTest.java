@@ -33,7 +33,7 @@ public class BigQueryCommandLineFactoryTest extends AbstractShapeRuleFactoryTest
 			+ "$'UPDATE schema.PersonCurrent AS b  "
 			+ "SET givenName = a.first_name  "
 			+ "FROM schema.OriginPersonShape AS a  "
-			+ "WHERE b.id=CONCAT(\"http://example.com/person/\", a.person_id)'";
+			+ "WHERE b.id=CONCAT(\"http://example.com/person/\", CAST(a.person_id AS STRING))'";
 		
 		String actual = cmd.toString().trim();
 		assertEquals(expected, actual);

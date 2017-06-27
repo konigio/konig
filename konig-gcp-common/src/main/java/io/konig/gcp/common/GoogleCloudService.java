@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -45,10 +46,11 @@ import com.google.cloud.bigquery.InsertAllResponse;
 import com.google.cloud.bigquery.KonigBigQueryUtil;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableInfo;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.CloudStorageUtil;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageFactory;
 import com.google.cloud.storage.StorageOptions;
 
 /**
@@ -83,6 +85,7 @@ public class GoogleCloudService {
 	private String projectToken = "{gcpProjectId}";
 	private GoogleCredentials credentials;
 	private String projectId;
+	private BigQuery bigQuery;
 	private Storage storage;
 	
 
@@ -178,11 +181,27 @@ public class GoogleCloudService {
 			Storage storage = storage();
 			for (File file : array) {
 				BucketInfo info = readBucketInfo(file);
-				storage.delete(info.getName());
+				Bucket bucket = storage.get(info.getName());
+				deleteBucket(bucket);
 			}
 		}
 	}
 	
+	private void deleteBucket(Bucket bucket) {
+		if (bucket != null) {
+		
+			Page<Blob> page = bucket.list();
+			
+			for (Blob blob : page.iterateAll()) {
+				blob.delete();
+			}
+
+			bucket.delete();
+		}
+		
+	}
+
+
 	public void deleteAllTables(BigQuery bigQuery, File schemaDir) throws IOException {
 		if (bigQuery == null) {
 			bigQuery = bigQuery();
@@ -315,7 +334,8 @@ public class GoogleCloudService {
 	public TableInfo readTableInfo(Reader reader) throws IOException {
 		JsonFactory factory = JacksonFactory.getDefaultInstance();
 		JsonObjectParser parser = factory.createJsonObjectParser();
-		ReplaceStringReader input = new ReplaceStringReader(reader, projectToken, projectId);
+		ReplaceStringsReader input = new ReplaceStringsReader(
+			reader, projectToken, projectId, gcpBucketSuffixToken, gcpBucketSuffix);
 
 		com.google.api.services.bigquery.model.Table model = 
 			parser.parseAndClose(input, com.google.api.services.bigquery.model.Table.class);
@@ -355,7 +375,10 @@ public class GoogleCloudService {
 	
 	
 	public BigQuery bigQuery() {
-		return BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
+		if (bigQuery == null) {
+			bigQuery = BigQueryOptions.newBuilder().setCredentials(credentials).setProjectId(projectId).build().getService();
+		}
+		return bigQuery;
 	}
 
 	public String getProjectToken() {

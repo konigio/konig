@@ -8,19 +8,22 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 
+import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
 import io.konig.core.Vertex;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.TurtleElements;
+import io.konig.core.util.ValueFormat;
+import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
-import io.konig.transform.factory.TargetShape.State;
 import io.konig.transform.rule.AlphabeticVariableNamer;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
@@ -239,7 +242,8 @@ public class ShapeRuleFactory {
 						if (leftProperty != null) {
 							PropertyConstraint lpc = leftProperty.getPropertyConstraint();
 							if (lpc != null && lpc.getShape()==null) {
-								BooleanExpression condition = new BinaryBooleanExpression(TransformBinaryOperator.EQUAL, predicate, Konig.id);
+								URI rightPredicate = iriTemplateParameter(rightIriTemplate);
+								BooleanExpression condition = new BinaryBooleanExpression(TransformBinaryOperator.EQUAL, lpc.getPredicate(), rightPredicate);
 								ProtoJoinStatement proto = new ProtoJoinStatement(left, right, condition);
 								right.setProtoJoinStatement(proto);
 								return;
@@ -281,6 +285,25 @@ public class ShapeRuleFactory {
 			}
 			
 
+		}
+
+		private URI iriTemplateParameter(IriTemplate template) throws TransformBuildException {
+			if (template == null) {
+				return Konig.id;
+			}
+			List<? extends Element> list = template.toList();
+			URI result = null;
+			Context context = template.getContext();
+			for (Element e : list) {
+				if (e.getType() == ValueFormat.ElementType.VARIABLE) {
+					if (result != null) {
+						throw new TransformBuildException("IRI Templates with multiple variables not supported: " + template.toString());
+					}
+					String iriValue = context.expandIRI(e.getText());
+					result = new URIImpl(iriValue);
+				}
+			}
+			return result;
 		}
 
 		private ShapeRule assemble(TargetShape target) throws TransformBuildException {

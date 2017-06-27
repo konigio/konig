@@ -58,7 +58,11 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 		
 		TableSchema tableSchema = tableGenerator.toTableSchema(shape);
 		table.setSchema(tableSchema);
-		table.setExternalDataConfiguration(dataSource.getExternalDataConfiguration());
+		ExternalDataConfiguration external = dataSource.getExternalDataConfiguration();
+		if (external != null) {
+			table.setExternalDataConfiguration(external);
+			table.setType("EXTERNAL");
+		}
 		
 		return table;
 		

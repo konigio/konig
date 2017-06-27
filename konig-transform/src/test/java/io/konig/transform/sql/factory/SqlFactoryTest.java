@@ -14,6 +14,7 @@ import org.openrdf.model.URI;
 import io.konig.formula.AdditiveOperator;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.AliasExpression;
+import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
@@ -46,6 +47,50 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	@Before
 	public void setUp() throws Exception {
 		useBigQueryTransformStrategy();
+	}
+
+	@Test
+	public void testGcpDeploy() throws Exception {
+		
+		load("src/test/resources/konig-transform/gcp-deploy");
+
+		URI shapeId = iri("http://example.com/shapes/MusicAlbumShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(3, valueList.size());
+		
+		ValueExpression albumId = valueList.get(0);
+		assertTrue(albumId instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) albumId;
+		assertEquals("CONCAT", func.getFunctionName());
+		List<QueryExpression> argList = func.getArgList();
+		assertEquals(2, argList.size());
+		
+		QueryExpression arg = argList.get(1);
+		assertTrue(arg instanceof CastSpecification);
+		CastSpecification cast = (CastSpecification) arg;
+		assertEquals("STRING", cast.getDatatype());
+		
+		FromExpression from = select.getFrom();
+		List<TableItemExpression> tableItems = from.getTableItems();
+		assertEquals(1, tableItems.size());
+		TableItemExpression tableItem = tableItems.get(0);
+		assertTrue(tableItem instanceof JoinExpression);
+		
+		JoinExpression join = (JoinExpression) tableItem;
+		OnExpression on = join.getJoinSpecification();
+		SearchCondition search = on.getSearchCondition();
+		assertTrue(search instanceof ComparisonPredicate);
+		ComparisonPredicate compare = (ComparisonPredicate) search;
+		ValueExpression left = compare.getLeft();
+		ValueExpression right = compare.getRight();
+		assertEquals("a.artist_id", left.toString());
+		assertEquals("b.group_id", right.toString());
+		
+		
 	}
 	
 	@Test
