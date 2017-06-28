@@ -77,6 +77,7 @@ public class Konig {
 	public static final URI LocalName = new URIImpl("http://www.konig.io/ns/core/LocalName");
 	public static final URI FullyQualifiedIri = new URIImpl("http://www.konig.io/ns/core/FullyQualifiedIri");
 	public static final URI modified = new URIImpl("http://www.konig.io/ns/core/modified");
+	public static final URI deleted = new URIImpl("http://www.konig.io/ns/core/deleted");
 	public static final URI derivedProperty = new URIImpl("http://www.konig.io/ns/core/derivedProperty");
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	
