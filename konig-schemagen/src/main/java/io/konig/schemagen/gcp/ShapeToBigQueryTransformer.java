@@ -1,6 +1,5 @@
 package io.konig.schemagen.gcp;
 
-import java.net.URI;
 import java.util.List;
 
 import com.google.api.services.bigquery.model.ExternalDataConfiguration;
@@ -23,10 +22,12 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 	
 	private BigQueryTableGenerator tableGenerator;
 	private BigQueryTableVisitor tableVisitor;
+	private CurrentStateViewGenerator currentStateViewGenerator;
 	
 	public ShapeToBigQueryTransformer(BigQueryTableGenerator tableGenerator, BigQueryTableVisitor tableVisitor) {
 		this.tableGenerator = tableGenerator;
 		this.tableVisitor = tableVisitor;
+		this.currentStateViewGenerator = new CurrentStateViewGenerator();
 	}
 
 	@Override
@@ -37,6 +38,14 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 			for (DataSource dataSource : list) {
 				if (dataSource instanceof GoogleBigQueryTable) {
 					Table table = toTable(shape, (GoogleBigQueryTable) dataSource);
+					table.setView(currentStateViewGenerator.createViewDefinition(shape, dataSource));
+					if (table.getExternalDataConfiguration() != null) {
+						table.setType("EXTERNAL");
+					} else if (table.getView() != null) {
+						table.setType("VIEW");
+					} else {
+						table.setType("TABLE");
+					}
 					tableVisitor.visit(table);
 				}
 			}
