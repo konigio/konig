@@ -8,6 +8,7 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 
@@ -32,6 +33,7 @@ import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.FormulaPropertyRule;
+import io.konig.transform.rule.InjectLiteralPropertyRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.LiteralPropertyRule;
 import io.konig.transform.rule.MapValueTransform;
@@ -136,7 +138,16 @@ public class ShapeRuleFactory {
 				buildNestedProperties(target);
 
 				if (target.getState() != TargetShape.State.OK) {
-					throw new TransformBuildException(unmappedPropertyMessage(target));
+					List<TargetProperty> unmapped = target.getUnmappedProperties();
+					if (unmapped.size()==1) {
+						TargetProperty tp = unmapped.get(0);
+						if (tp.getPredicate().equals(Konig.modified)) {
+							unmapped = null;
+						}
+					}
+					if (unmapped != null) {
+						throw new TransformBuildException(unmappedPropertyMessage(target, unmapped));
+					}
 				}
 			}
 
@@ -363,6 +374,12 @@ public class ShapeRuleFactory {
 				return new FormulaPropertyRule(null, tp.getPropertyConstraint(), tp.getPropertyConstraint());
 			}
 			SourceProperty sp = tp.getPreferredMatch();
+			URI predicate = tp.getPredicate();
+			if (sp == null) {
+				if (Konig.modified.equals(predicate)) {
+					return new InjectLiteralPropertyRule(null, Konig.modified, new LiteralImpl("{modified}"));
+				}
+			}
 			DataChannel channel = sp.getParent().produceDataChannel(namer);
 
 			if (tp.getNestedShape() != null) {
@@ -374,7 +391,6 @@ public class ShapeRuleFactory {
 
 			}
 
-			URI predicate = tp.getPredicate();
 			
 			if (sp.getValue() instanceof Literal) {
 				return new LiteralPropertyRule(channel, predicate, (Literal) sp.getValue());
@@ -442,8 +458,7 @@ public class ShapeRuleFactory {
 			
 		}
 
-		private String unmappedPropertyMessage(TargetShape target) {
-			List<TargetProperty> unmapped = target.getUnmappedProperties();
+		private String unmappedPropertyMessage(TargetShape target, List<TargetProperty> unmapped) {
 			StringBuilder builder = new StringBuilder();
 
 			builder.append("Failed to produce transform for Shape ");
