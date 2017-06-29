@@ -28,6 +28,7 @@ public class GcpDeployRunnable  {
 	private DeployAction action;
 	private GoogleCloudPlatformInfo gcp;
 	private GoogleCloudService gcpService;
+	private String modifiedTimestamp;
 	
 	public void run() throws DeploymentException {
 		
@@ -89,6 +90,10 @@ public class GcpDeployRunnable  {
 			BigQuery bigQuery = gcpService.bigQuery();
 			
 			String sqlText = FileUtils.readFileToString(file, StandardCharsets.UTF_8.name());
+			if (modifiedTimestamp != null) {
+				sqlText = sqlText.replace("{modified}", modifiedTimestamp);
+			}
+			
 			QueryRequest request = QueryRequest.newBuilder(sqlText).setUseLegacySql(false).build();
 
 			// TODO: capture the Job ID.
@@ -277,6 +282,14 @@ public class GcpDeployRunnable  {
 
 	public void setGoogleCloudPlatform(GoogleCloudPlatformInfo googleCloudPlatform) {
 		this.gcp = googleCloudPlatform;
+	}
+
+	public String getModifiedTimestamp() {
+		return modifiedTimestamp;
+	}
+
+	public void setModifiedTimestamp(String modifiedTimestamp) {
+		this.modifiedTimestamp = modifiedTimestamp;
 	}
 
 }

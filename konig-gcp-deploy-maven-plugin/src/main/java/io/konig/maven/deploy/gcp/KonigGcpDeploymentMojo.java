@@ -19,6 +19,9 @@ public class KonigGcpDeploymentMojo extends AbstractMojo {
 	@Parameter(property="konig.deploy.action", defaultValue="upsert")
 	private String action;
 	
+	@Parameter(property="konig.deploy.timestamp")
+	private String timestamp;
+	
 	@Parameter
 	private GoogleCloudPlatformInfo gcp;
 
@@ -34,6 +37,7 @@ public class KonigGcpDeploymentMojo extends AbstractMojo {
 			DeployAction deployAction = Enum.valueOf(DeployAction.class, action.toUpperCase());
 			GcpDeployRunnable runnable = new GcpDeployRunnable();
 			runnable.setAction(deployAction);
+			runnable.setModifiedTimestamp(timestamp);
 			runnable.setGoogleCloudPlatform(gcp);
 		
 			runnable.run();

@@ -124,8 +124,8 @@ public class CurrentStateViewGenerator {
 							Step step = stepList.get(0);
 							if (step instanceof OutStep) {
 								OutStep out = (OutStep) step;
-								if (Konig.modified.equals(out.getPredicate())) {
-									return Konig.modified;
+								if (predicate.equals(out.getPredicate())) {
+									return predicate;
 								}
 							}
 						}
