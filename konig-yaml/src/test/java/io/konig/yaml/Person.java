@@ -1,7 +1,9 @@
 package io.konig.yaml;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Person {
 
@@ -10,11 +12,26 @@ public class Person {
 	private int age;
 	private List<Person> likes;
 	private PostalAddress address;
+	private Map<String, ContactPoint> contactPointMap; 
 	
 	public Person() {
 		
 	}
 	
+	@YamlMap("contactPoint")
+	public void add(ContactPoint contactPoint) {
+		if (contactPointMap == null) {
+			contactPointMap = new HashMap<>();
+		}
+		contactPointMap.put(contactPoint.getContactType(), contactPoint);
+	}
+	
+	public ContactPoint getContactPoint(String contactType) {
+		if (contactPointMap == null) {
+			return null;
+		}
+		return contactPointMap.get(contactType);
+	}
 	
 	public Person(String givenName) {
 		this.givenName = givenName;

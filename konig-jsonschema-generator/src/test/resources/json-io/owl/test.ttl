@@ -1,0 +1,95 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix test: <http://example.com/ns/test/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+test: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "test" ; 
+	rdfs:label "Test" ; 
+	rdfs:comment "An ontology that is used purely for testing purposes" . 
+
+test:KitchenSink a owl:Class ; 
+	rdfs:label "Kitchen Sink" ; 
+	rdfs:comment "A class that contains all the various kinds of properties.  This is used purely for demonstrating the JSON IO capabilities." . 
+
+test:booleanProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:boolean . 
+
+test:byteProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:byte . 
+
+test:dateProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:date . 
+
+test:dateTimeProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:dateTime . 
+
+test:dayTimeDurationProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:dayTimeDuration . 
+
+test:decimalProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:decimal . 
+
+test:doubleProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:double . 
+
+test:floatProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:float . 
+
+test:intProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:int . 
+
+test:integerProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:integer . 
+
+test:negativeIntegerProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:negativeInteger . 
+
+test:nonNegativeIntegerProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:nonNegativeInteger . 
+
+test:nonPositiveIntegerProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:nonPositiveInteger . 
+
+test:normalizedString a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:normalizedString . 
+
+test:positiveIntegerProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:positiveInteger . 
+
+test:shortProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:short . 
+
+test:stringProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:string . 
+
+test:timeProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:time . 
+
+test:tokenProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:token . 
+
+test:uriProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes test:KitchenSink ; 
+	schema:rangeIncludes xsd:anyURI . 

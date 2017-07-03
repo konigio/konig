@@ -40,7 +40,7 @@ import org.openrdf.model.impl.URIImpl;
 import io.konig.dao.core.ConstraintOperator;
 import io.konig.dao.core.Format;
 import io.konig.dao.core.PredicateConstraint;
-import io.konig.dao.core.ShapeFilter;
+import io.konig.dao.core.DataFilter;
 import io.konig.dao.core.ShapeQuery;
 import io.konig.dao.core.ShapeReadService;
 import io.konig.yaml.Yaml;
@@ -76,7 +76,7 @@ public class ExtentTest {
 		
 		assertEquals(defaultShapeId.stringValue(), query.getShapeId());
 		
-		ShapeFilter filter = query.getFilter();
+		DataFilter filter = query.getFilter();
 		assertEquals(PredicateConstraint.class, filter.getClass());
 		
 		PredicateConstraint p = (PredicateConstraint) filter;

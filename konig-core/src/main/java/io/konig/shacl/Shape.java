@@ -60,9 +60,8 @@ public class Shape {
 	private Context jsonldContext;
 	private URI equivalentRelationalShape;
 	private NodeKind nodeKind;
-	private URI aggregationOf;
-	private URI rollUpBy;
 	private String comment;
+	
 	
 	private AndConstraint and;
 	private OrConstraint or;
@@ -82,7 +81,10 @@ public class Shape {
 	private URI preferredJsonSchema;
 	private List<URI> defaultShapeFor;
 	private List<Expression> constraint;
-	
+
+	private URI aggregationOf;
+	private URI rollUpBy;
+	private String mediaTypeBaseName;
 	
 	public Shape() {
 		String bnodeId = UidGenerator.INSTANCE.next();
@@ -573,6 +575,14 @@ public class Shape {
 
 	public void setDefaultShapeFor(List<URI> defaultShapeFor) {
 		this.defaultShapeFor = defaultShapeFor;
+	}
+
+	public String getMediaTypeBaseName() {
+		return mediaTypeBaseName;
+	}
+
+	public void setMediaTypeBaseName(String mediaTypeBaseName) {
+		this.mediaTypeBaseName = mediaTypeBaseName;
 	}
 	
 }

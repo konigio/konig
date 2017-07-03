@@ -1,8 +1,8 @@
-package io.konig.dao.core;
+package io.konig.shacl;
 
 /*
  * #%L
- * Konig DAO Core
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,20 +21,7 @@ package io.konig.dao.core;
  */
 
 
-import java.util.ArrayList;
-import java.util.Collection;
+public interface ShapeFilter {
 
-public class CompositeShapeFilter extends ArrayList<ShapeFilter> implements ShapeFilter {
-	private static final long serialVersionUID = 1L;
-	
-	private CompositeOperator operator;
-
-	public CompositeShapeFilter(CompositeOperator operator) {
-		this.operator = operator;
-	}
-
-	public CompositeOperator getOperator() {
-		return operator;
-	}
-
+	boolean accept(Shape shape);
 }

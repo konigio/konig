@@ -6,10 +6,57 @@ import static org.junit.Assert.assertTrue;
 import java.io.StringReader;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class YamlReaderTest {
+	
+	@Test
+	public void testMap() throws Exception {
+		String text =
+			"contactPoint:\n" + 
+			"  sales:\n" + 
+			"    email: sales@acme.com\n" + 
+			"  support:\n" + 
+			"    email: support@acme.com";
+		
+		Organization org = Yaml.read(Organization.class, text);
+		
+		Map<String, ContactPoint> map = org.getContactPoint();
+		assertTrue(map != null);
+		ContactPoint sales = map.get("sales");
+		assertTrue(sales != null);
+		assertEquals("sales@acme.com", sales.getEmail());
+		
+		ContactPoint support = map.get("support");
+		assertTrue(support != null);
+		assertEquals("support@acme.com", support.getEmail());
+		
+	}
+	
+	@Test
+	public void testMapAdapter() throws Exception {
+		String text =
+			"givenName: Alice\n" + 
+			"familyName: Jones\n" + 
+			"contactPoint:\n" + 
+			"  work:\n" + 
+			"    email: alice@work.com\n" + 
+			"  home:\n" + 
+			"    email: alice@home.com";
+		
+		Person alice = Yaml.read(Person.class, text);
+		
+		ContactPoint work = alice.getContactPoint("work");
+		assertTrue(work!=null);
+		assertEquals("alice@work.com", work.getEmail());
+		
+		ContactPoint home = alice.getContactPoint("home");
+		assertTrue(home!=null);
+		assertEquals("alice@home.com", home.getEmail());
+	}
 	
 	@Test
 	public void testStringArgConstructor() throws Exception {

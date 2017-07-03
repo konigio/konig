@@ -21,7 +21,7 @@ package io.konig.dao.core;
  */
 
 
-public class PredicateConstraint implements ShapeFilter {
+public class PredicateConstraint implements DataFilter {
 
 	private String propertyName;
 	private ConstraintOperator operator;

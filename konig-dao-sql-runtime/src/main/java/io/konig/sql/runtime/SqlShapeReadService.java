@@ -24,11 +24,11 @@ package io.konig.sql.runtime;
 import java.io.Writer;
 import java.net.URI;
 
-import io.konig.dao.core.CompositeShapeFilter;
+import io.konig.dao.core.CompositeDataFilter;
 import io.konig.dao.core.DaoException;
 import io.konig.dao.core.Format;
 import io.konig.dao.core.PredicateConstraint;
-import io.konig.dao.core.ShapeFilter;
+import io.konig.dao.core.DataFilter;
 import io.konig.dao.core.ShapeQuery;
 import io.konig.dao.core.ShapeReadService;
 
@@ -57,13 +57,13 @@ abstract public class SqlShapeReadService implements ShapeReadService {
 		builder.append("SELECT * FROM ");
 		builder.append(struct.getName());
 		
-		ShapeFilter filter = query.getFilter();
+		DataFilter filter = query.getFilter();
 		appendFilter(builder, filter);
 		
 		return builder.toString();
 	}
 
-	private void appendFilter(StringBuilder builder, ShapeFilter filter) {
+	private void appendFilter(StringBuilder builder, DataFilter filter) {
 		if (filter != null) {
 			builder.append("\nWHERE");
 		
@@ -72,9 +72,9 @@ abstract public class SqlShapeReadService implements ShapeReadService {
 		
 	}
 
-	private void doAppendFilter(StringBuilder builder, ShapeFilter filter) {
-		if (filter instanceof CompositeShapeFilter) {
-			appendCompositeShapeFilter(builder, (CompositeShapeFilter)filter);
+	private void doAppendFilter(StringBuilder builder, DataFilter filter) {
+		if (filter instanceof CompositeDataFilter) {
+			appendCompositeShapeFilter(builder, (CompositeDataFilter)filter);
 		} else if (filter instanceof PredicateConstraint) {
 			builder.append(' ');
 			appendPredicateConstraint(builder, (PredicateConstraint)filter);
@@ -138,9 +138,9 @@ abstract public class SqlShapeReadService implements ShapeReadService {
 		
 	}
 
-	private void appendCompositeShapeFilter(StringBuilder builder, CompositeShapeFilter composite) {
+	private void appendCompositeShapeFilter(StringBuilder builder, CompositeDataFilter composite) {
 		String operator = null;
-		for (ShapeFilter filter : composite) {
+		for (DataFilter filter : composite) {
 			if (operator != null) {
 				builder.append(operator);
 			} else {

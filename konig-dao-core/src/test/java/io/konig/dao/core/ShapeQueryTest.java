@@ -43,7 +43,7 @@ public class ShapeQueryTest {
 		
 		assertEquals(query.getShapeId(), shapeId);
 		
-		ShapeFilter filter = query.getFilter();
+		DataFilter filter = query.getFilter();
 		assertTrue(filter instanceof  PredicateConstraint);
 		PredicateConstraint constraint = (PredicateConstraint) filter;
 		assertEquals("givenName", constraint.getPropertyName());

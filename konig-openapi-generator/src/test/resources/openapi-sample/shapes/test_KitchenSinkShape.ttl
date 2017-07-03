@@ -1,0 +1,123 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix test: <http://example.com/ns/test/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+test:KitchenSinkShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/a3qQsspvSEMAAAFdA2Di2w> ; 
+	sh:targetClass test:KitchenSink ; 
+	konig:mediaTypeBaseName "application/vnd.example.kitchensink" ; 
+	sh:nodeKind sh:IRI ; 
+	sh:property  [ 
+		sh:predicate test:stringProperty ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:uriProperty ; 
+		sh:datatype xsd:anyURI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:booleanProperty ; 
+		sh:datatype xsd:boolean ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:byteProperty ; 
+		sh:datatype xsd:byte ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:dateProperty ; 
+		sh:datatype xsd:date ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:dateTimeProperty ; 
+		sh:datatype xsd:dateTime ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:dayTimeDurationProperty ; 
+		sh:datatype xsd:dayTimeDuration ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:doubleProperty ; 
+		sh:datatype xsd:double ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:decimalProperty ; 
+		sh:datatype xsd:decimal ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:floatProperty ; 
+		sh:datatype xsd:float ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:intProperty ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:integerProperty ; 
+		sh:datatype xsd:integer ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:negativeIntegerProperty ; 
+		sh:datatype xsd:negativeInteger ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:nonNegativeIntegerProperty ; 
+		sh:datatype xsd:nonNegativeInteger ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:nonPositiveIntegerProperty ; 
+		sh:datatype xsd:nonPositiveInteger ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:normalizedString ; 
+		sh:datatype xsd:normalizedString ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:positiveIntegerProperty ; 
+		sh:datatype xsd:positiveInteger ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:shortProperty ; 
+		sh:datatype xsd:short ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:timeProperty ; 
+		sh:datatype xsd:time ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate test:tokenProperty ; 
+		sh:datatype xsd:token ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/test/tables/KitchenSink> . 
+
+<http://www.konig.io/activity/a3qQsspvSEMAAAFdA2Di2w> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-07-02T08:57:47.628-04:00"^^xsd:dateTime . 
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/test/tables/KitchenSink> a konig:GoogleBigQueryTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:datasetId "test" ; 
+		gcp:tableId "KitchenSink" ]  . 
