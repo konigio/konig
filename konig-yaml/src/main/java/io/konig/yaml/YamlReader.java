@@ -586,7 +586,7 @@ public class YamlReader implements AutoCloseable {
 
 		private Object parseValue() throws IOException, YamlParseException {
 
-			int c = skip(" \t");
+			int c = skip(" \t\r");
 			switch (c) {
 			case '!' :
 			case '&' :
