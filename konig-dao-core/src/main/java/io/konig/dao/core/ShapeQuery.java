@@ -25,9 +25,9 @@ package io.konig.dao.core;
 public class ShapeQuery {
 
 	private String shapeId;
-	private ShapeFilter filter;
+	private DataFilter filter;
 	
-	public ShapeQuery(String shapeId, ShapeFilter filter) {
+	public ShapeQuery(String shapeId, DataFilter filter) {
 		this.shapeId = shapeId;
 		this.filter = filter;
 	}
@@ -36,7 +36,7 @@ public class ShapeQuery {
 		return shapeId;
 	}
 
-	public ShapeFilter getFilter() {
+	public DataFilter getFilter() {
 		return filter;
 	}
 	
@@ -46,13 +46,13 @@ public class ShapeQuery {
 	
 	public static class Builder {
 		private String shapeId;
-		private ShapeFilter shapeFilter;
+		private DataFilter shapeFilter;
 		
 		public Builder setShapeId(String shapeId) {
 			this.shapeId = shapeId;
 			return this;
 		}
-		public ShapeFilter getShapeFilter() {
+		public DataFilter getShapeFilter() {
 			return shapeFilter;
 		}
 		
@@ -64,14 +64,14 @@ public class ShapeQuery {
 			return new PredicateConstraint.Builder(this);
 		}
 		
-		public void addFilter(ShapeFilter filter) {
+		public void addFilter(DataFilter filter) {
 			if (shapeFilter == null) {
 				shapeFilter = filter;
-			} else if (shapeFilter instanceof CompositeShapeFilter) {
-				CompositeShapeFilter composite = (CompositeShapeFilter) shapeFilter;
+			} else if (shapeFilter instanceof CompositeDataFilter) {
+				CompositeDataFilter composite = (CompositeDataFilter) shapeFilter;
 				composite.add(filter);
 			} else {
-				CompositeShapeFilter composite = new CompositeShapeFilter(CompositeOperator.AND);
+				CompositeDataFilter composite = new CompositeDataFilter(CompositeOperator.AND);
 				composite.add(shapeFilter);
 				composite.add(filter);
 				shapeFilter = composite;

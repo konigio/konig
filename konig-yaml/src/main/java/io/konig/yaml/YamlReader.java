@@ -8,6 +8,7 @@ import java.io.Reader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,8 +35,13 @@ public class YamlReader implements AutoCloseable {
 		this.reader = new PushbackReader(reader, 2);
 	}
 	
-	public void addDeserializer(Class<?> type, YamlDeserializer deserializer) {
-		ClassInfo classInfo = classInfo(type);
+	public void addDeserializer(Class<?> type, YamlDeserializer deserializer)  {
+		ClassInfo classInfo;
+		try {
+			classInfo = classInfo(type);
+		} catch (YamlParseException e) {
+			throw new RuntimeException(e);
+		}
 		classInfo.deserializer = deserializer;
 	}
 
@@ -60,7 +66,7 @@ public class YamlReader implements AutoCloseable {
 		return pojo;
 	}
 
-	private Object typedObject(YamlParser parent, Object pojo, Method setter) throws YamlParseException, IOException {
+	private Object typedObject(YamlParser parent, ValueConsumer consumer) throws YamlParseException, IOException {
 		
 		ObjectYamlParser next = new ObjectYamlParser(parent, null);
 		if (next.indentWidth == Integer.MAX_VALUE) {
@@ -68,14 +74,12 @@ public class YamlReader implements AutoCloseable {
 		}
 
 		// Delay setting the typed object on the owner pojo until the typed object is fully defined.
-		
-		next.setOwner(pojo);
-		next.setSetter(setter);
+		next.setConsumer(consumer);
 		
 		return next;
 	}
 
-	private ClassInfo classInfo(Class<?> type) {
+	private ClassInfo classInfo(Class<?> type) throws YamlParseException {
 		ClassInfo info = classInfo.get(type);
 		if (info == null) {
 			info = createClassInfo(type);
@@ -155,6 +159,9 @@ public class YamlReader implements AutoCloseable {
 	}
 
 	private void fail(Exception e) throws YamlParseException {
+		if (e instanceof YamlParseException) {
+			throw (YamlParseException) e;
+		}
 		StringBuilder builder = new StringBuilder();
 		builder.append("Line ");
 		builder.append(lineNo);
@@ -296,15 +303,28 @@ public class YamlReader implements AutoCloseable {
 		private Map<String, Method> setterMethod = new HashMap<>();
 		private Map<String, Method> adderMethod = new HashMap<>();
 		private YamlDeserializer deserializer = null;
+		private Map<String, MapAdapter> mapAdapter = null;
+		
+		public void registerMap(String fieldName, MapAdapter adapter) {
+			if (mapAdapter == null) {
+				mapAdapter = new HashMap<>();
+			}
+			mapAdapter.put(fieldName, adapter);
+		}
+		
+		public MapAdapter getMapAdapter(String fieldName) {
+			return mapAdapter == null ? null : mapAdapter.get(fieldName);
+		}
 
 	}
 	
-	private ClassInfo createClassInfo(Class<?> type) {
+	private ClassInfo createClassInfo(Class<?> type) throws YamlParseException {
 		ClassInfo info = new ClassInfo();
 		Method[] methodList = type.getMethods();
 		for (Method m : methodList) {
 			String name = m.getName();
 			YamlProperty note = m.getAnnotation(YamlProperty.class);
+			YamlMap mapNote = null;
 			if (note != null) {
 				String fieldName = note.value();
 				if (fieldName.startsWith("add")) {
@@ -312,6 +332,18 @@ public class YamlReader implements AutoCloseable {
 				} else {
 					info.setterMethod.put(fieldName, m);
 				}
+			} else if ((mapNote = m.getAnnotation(YamlMap.class)) != null) {
+				try {
+					String fieldName = mapNote.value();
+					Class<?> valueType = m.getParameterTypes()[0];
+					Constructor<?> valueConstructor = valueType.getConstructor(String.class);
+					MapAdapter adapter = new MapAdapter(m, valueType, valueConstructor);
+					info.registerMap(fieldName, adapter);
+				} catch (NoSuchMethodException | SecurityException e) {
+					throw new YamlParseException(e);
+				}
+				
+				
 			} else if (m.getParameterTypes().length==1 && name.length()>3) {
 				if (name.startsWith("set")) {
 					String fieldName = fieldName(name);
@@ -340,9 +372,14 @@ public class YamlReader implements AutoCloseable {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T> T readObject(Class<T> type) throws YamlParseException, IOException {
+	public <T> T readObject(Class<?> type) throws YamlParseException, IOException {
 		indentWidth();
-		ObjectYamlParser objectParser = new ObjectYamlParser(null, type);
+		ObjectYamlParser objectParser = null;
+		try {
+			objectParser = new ObjectYamlParser(type);
+		} catch (Exception e) {
+			fail(e);
+		}
 		YamlParser parser = objectParser;
 		while (parser != null) {
 			parser = parser.nextParser();
@@ -368,6 +405,19 @@ public class YamlReader implements AutoCloseable {
 		protected void exit() throws YamlParseException {
 			
 		}
+
+
+
+		protected String fieldName() throws IOException {
+			StringBuilder buffer = buffer();
+			int c = read();
+			while (c!=':' && !Character.isWhitespace(c)) {
+				buffer.appendCodePoint(c);
+				c = read();
+			}
+			unread(c);
+			return buffer.toString();
+		}
 		
 		protected YamlParser findNext() throws YamlParseException, IOException {
 			if (nextIndentWidth < 0) {
@@ -391,13 +441,11 @@ public class YamlReader implements AutoCloseable {
 	}
 	
 	private class CollectionYamlParser extends YamlParser {
-		private Object pojo;
-		private Method adder;
+		private ValueConsumer consumer;
 
-		public CollectionYamlParser(YamlParser parent, Object pojo, Method adder) throws IOException, YamlParseException {
+		public CollectionYamlParser(YamlParser parent, ValueConsumer consumer) throws IOException, YamlParseException {
 			super(parent);
-			this.pojo = pojo;
-			this.adder = adder;
+			this.consumer = consumer;
 			indentWidth = nextIndentWidth;
 		}
 
@@ -408,7 +456,7 @@ public class YamlReader implements AutoCloseable {
 
 			nextIndentWidth=-1;
 			assertNext('-');
-			Object value = readValue(this, pojo, adder);
+			Object value = readValue(this, consumer);
 			if (value instanceof CollectionYamlParser) {
 				// TODO: support collections of collections
 				throw new YamlParseException("Collections of collections not supported");
@@ -417,58 +465,225 @@ public class YamlReader implements AutoCloseable {
 				return (YamlParser) value;
 			}
 			
-			try {
-				adder.invoke(pojo, value);
-			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				throw new YamlParseException("Failed to invoke adder: " + adder.getName());
-			}
-			
 			
 			return findNext();
 		}
 		
 	}
 	
+	static interface ObjectFactory {
+
+		Class<?> getValueType();
+		Object createObject() throws Exception;
+	}
+	
+	static class BasicObjectFactory implements ObjectFactory {
+		private Class<?> valueType;
+		
+
+		public BasicObjectFactory(Class<?> valueType) {
+			this.valueType = valueType;
+		}
+
+		@Override
+		public Class<?> getValueType() {
+			return valueType;
+		}
+
+		@Override
+		public Object createObject() throws Exception {
+			return valueType.newInstance();
+		}
+		
+	}
+	
+	static interface ValueConsumer extends ObjectFactory {
+		void consume(Object value) throws Exception;
+		boolean isAdder();
+	}
+	
+	private static class PojoValueConsumer implements ValueConsumer {
+		private Object pojo;
+		private Method method;
+		private boolean isAdder;
+		private Class<?> valueType;
+		
+		public PojoValueConsumer(Object pojo, Method method) {
+			this.pojo = pojo;
+			this.method = method;
+			isAdder = this.method.getName().startsWith("add");
+			valueType = method.getParameterTypes()[0];
+		}
+		@Override
+		public void consume(Object value) throws Exception {
+			method.invoke(pojo, value);
+		}
+		
+		public String toString() {
+			return method.getName();
+		}
+		
+		@Override
+		public Class<?> getValueType() {
+			return valueType;
+		}
+		
+		@Override
+		public boolean isAdder() {
+			return isAdder;
+		}
+		@Override
+		public Object createObject() throws Exception {
+			return valueType.newInstance();
+		}
+		
+	}
+	
+	private static class MapValueConsumer implements ValueConsumer {
+		private Map<String,Object> map = new HashMap<>();
+		private String fieldName;
+		private Class<?> valueType;
+		
+		public MapValueConsumer(Map<String, Object> map, String fieldName, Class<?> valueType) {
+			this.map = map;
+			this.fieldName = fieldName;
+			this.valueType = valueType;
+		}
+		
+		@Override
+		public Class<?> getValueType() {
+			return valueType;
+		}
+		
+		@Override
+		public void consume(Object value) throws Exception {
+			map.put(fieldName, value);
+		}
+		
+		public MapValueConsumer forField(String fieldName) {
+			return new MapValueConsumer(map, fieldName, valueType);
+		}
+		
+		@Override
+		public boolean isAdder() {
+			return false;
+		}
+
+		@Override
+		public Object createObject() throws Exception {
+			Constructor<?> ctor = valueType.getConstructor(String.class);
+			return ctor.newInstance(fieldName);
+		}
+		
+	}
+	private class MapYamlParser extends YamlParser {
+		
+		private MapValueConsumer consumer;
+
+		public MapYamlParser(YamlParser parent, MapValueConsumer consumer) throws IOException, YamlParseException {
+			super(parent);
+			this.consumer = consumer;
+			assertLineEnd();
+			indentWidth = indentWidth();
+		}
+
+		@Override
+		YamlParser nextParser() throws YamlParseException, IOException {
+			String fieldName = fieldName();
+			assertNext(':');
+			
+			MapValueConsumer fieldConsumer = consumer.forField(fieldName);
+			Object value = readValue(this, fieldConsumer);
+			if (value instanceof YamlParser) {
+				return (YamlParser) value;
+			}
+			
+			return findNext();
+		}
+		
+	}
+	
+	private class MapAdapterYamlParser extends YamlParser {
+		private MapAdapter adapter;
+		private Object pojo;
+		
+		public MapAdapterYamlParser(YamlParser parent, Object pojo, MapAdapter adapter) throws IOException, YamlParseException {
+			super(parent);
+			this.pojo = pojo;
+			this.adapter = adapter;
+			assertLineEnd();
+			indentWidth = indentWidth();
+		}
+
+
+		@Override
+		YamlParser nextParser() throws YamlParseException, IOException {
+			YamlParser next = null;
+			String fieldName = fieldName();
+			assertNext(':');
+			try {
+				Object value = adapter.getValueConstructor().newInstance(fieldName);
+				// For now, we only support the case where object type and object reference is undefined.
+				// TODO: support object type and object reference declarations
+				assertLineEnd();
+				
+				int width = indentWidth();
+				PojoValueConsumer consumer = new PojoValueConsumer(pojo, adapter.getAddMethod());
+				
+				next = new ObjectYamlParser(this, value, consumer, width);
+			} catch (Exception e) {
+				fail(e);
+			}
+			
+			return next;
+			
+		}
+		
+	}
+	
+	
 	private class ObjectYamlParser extends YamlParser {
 
 		private Object pojo = null;
 		private ClassInfo classInfo;
+		private ValueConsumer consumer;
 		
-		private Object owner = null;
-		private Method setter = null;
+		public ObjectYamlParser(Class<?> type) throws Exception {
+			this(null, new BasicObjectFactory(type));
+		}
 		
-		public ObjectYamlParser(YamlParser parent, Object pojo, Object owner, Method setter, int indentWidth) {
+		public ObjectYamlParser(YamlParser parent, Object pojo, ValueConsumer consumer, int indentWidth) throws YamlParseException {
 			super(parent);
 			this.pojo = pojo;
-			this.owner = owner;
-			this.setter = setter;
+			this.consumer = consumer;
 			this.indentWidth = indentWidth;
 			classInfo = classInfo(pojo.getClass());
 		}
 		
-		public ObjectYamlParser(YamlParser parent, Class<?> type) throws YamlParseException, IOException {
+		public ObjectYamlParser(YamlParser parent, ObjectFactory factory) throws YamlParseException, IOException {
 			super(parent);
 			int c = next();
+			
+			Class<?> type = null;
 			if (c == '!') {
 
 				String javaType = readWord();
 				try {
 					type = Class.forName(javaType);
+					factory = null;
 				} catch (ClassNotFoundException e) {
 					fail("Class not found: " + javaType);
 				}
 				
 			} else {
+				type = factory.getValueType();
 				unread(c);
 			}
 			
-			if (type == null) {
-				fail("Java type not defined for object");
-			}
 			
 			try {
 				classInfo = classInfo(type);
-				pojo = type.newInstance();
+				pojo = factory==null ? type.newInstance() : factory.createObject();
 				c = next();
 				if (c == '&') {
 					String objectId = readWord();
@@ -487,7 +702,8 @@ public class YamlReader implements AutoCloseable {
 				
 				
 				
-			} catch (InstantiationException | IllegalAccessException e) {
+			} catch (Exception e) {
+				e.printStackTrace();
 				fail("Failed to instantiate class " + type.getName());
 			}
 				
@@ -495,27 +711,11 @@ public class YamlReader implements AutoCloseable {
 		}
 
 
-		public void setOwner(Object owner) {
-			this.owner = owner;
+
+		public void setConsumer(ValueConsumer consumer) {
+			this.consumer = consumer;
 		}
 
-
-		public void setSetter(Method setter) {
-			this.setter = setter;
-		}
-
-
-		private String fieldName() throws IOException {
-			StringBuilder buffer = buffer();
-			int c = read();
-			while (c!=':' && !Character.isWhitespace(c)) {
-				buffer.appendCodePoint(c);
-				c = read();
-			}
-			unread(c);
-			return buffer.toString();
-		}
-		
 		@Override
 		YamlParser nextParser() throws YamlParseException, IOException {
 			nextIndentWidth = -1;
@@ -537,46 +737,75 @@ public class YamlReader implements AutoCloseable {
 				String msg = MessageFormat.format("Expected ':' but found ''{0}''", (char)c);
 				fail(msg);
 			}
+			MapAdapterYamlParser mapParser = mapParser(fieldName);
+			if (mapParser != null) {
+				return mapParser;
+			}
 			
-			Method method = adderOrSetter(fieldName);
-			Object value = readValue(this, pojo, method);
+			ValueConsumer consumer = createValueConsumer(fieldName);
+			if (consumer instanceof MapValueConsumer) {
+				return new MapYamlParser(this, (MapValueConsumer) consumer);
+			}
+			Object value = readValue(this, consumer);
 			if (value instanceof YamlParser) {
 				YamlParser next = (YamlParser) value;
 				next.parent = this;
 				
 				return next;
-			} else {
-				try {
-					method.invoke(pojo, value);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					throw new YamlParseException("Failed to set field: " + fieldName, e);
-				}
 			}
 			
 			
 			return findNext();
 		}
 
+		private MapAdapterYamlParser mapParser(String fieldName) throws IOException, YamlParseException {
+			MapAdapter mapAdapter = classInfo.getMapAdapter(fieldName);
+			if (mapAdapter != null) {
+				return new MapAdapterYamlParser(this, pojo, mapAdapter);
+			}
+			return null;
+		}
+
 		protected void exit() throws YamlParseException {
-			if (owner!=null && setter!=null) {
+			if (consumer != null) {
 				try {
-					setter.invoke(owner, pojo);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					throw new YamlParseException(e);
+					consumer.consume(pojo);
+				} catch (Exception e) {
+					fail(e);
 				}
 			}
 		}
 
 
-		private Method adderOrSetter(String fieldName) throws YamlParseException {
+		private ValueConsumer createValueConsumer(String fieldName) throws YamlParseException {
 			Method m = classInfo.adderMethod.get(fieldName);
-			if (m == null) {
-				m = classInfo.setterMethod.get(fieldName);
+			if (m != null) {
+				return new PojoValueConsumer(pojo, m);
 			}
-			if (m == null) {
-				fail("Class " + pojo.getClass().getSimpleName() + " has no setter or adder for field: " + fieldName);
+			m = classInfo.setterMethod.get(fieldName);
+			
+			if (m != null) {
+				
+				Class<?> valueType = m.getParameterTypes()[0];
+				if (Map.class.isAssignableFrom(valueType)) {
+					ParameterizedType mapType = (ParameterizedType) valueType.getGenericSuperclass();
+					Class<?> objectType = (Class<?>)mapType.getActualTypeArguments()[1];
+					try {
+						@SuppressWarnings({ "unchecked", "rawtypes" })
+						Map<String,Object> map = (Map) valueType.newInstance();
+						m.invoke(pojo, map);
+						return new MapValueConsumer(map, fieldName, objectType);
+					} catch (Exception e) {
+						throw new YamlParseException(e);
+					}
+					
+				}
+				
+				return new PojoValueConsumer(pojo, m);
 			}
-			return m;
+
+			fail("Class " + pojo.getClass().getSimpleName() + " has no setter or adder for field: " + fieldName);
+			return null;
 		}
 
 		
@@ -616,21 +845,19 @@ public class YamlReader implements AutoCloseable {
 //		
 //	}
 
-	private Object readValue(YamlParser parser, Object pojo, Method setter) throws IOException, YamlParseException {
+	private Object readValue(YamlParser parser, ValueConsumer consumer) throws IOException, YamlParseException {
 		
 		int c = valueStart();
 		Object value = null;
 		
 		switch (c) {
 		case '!' :
-			value = typedObject(parser, pojo, setter);
+			value = typedObject(parser, consumer);
 			break;
 			
 		case '&' : {
-			Class<?> javaType = setter.getParameterTypes()[0];
-			ObjectYamlParser objectParser = new ObjectYamlParser(parser, javaType);
-			objectParser.setOwner(pojo);
-			objectParser.setSetter(setter);
+			ObjectYamlParser objectParser = new ObjectYamlParser(parser, consumer);
+			objectParser.setConsumer(consumer);
 			value = objectParser;
 			break;
 		}
@@ -646,38 +873,44 @@ public class YamlReader implements AutoCloseable {
 			indentWidth();
 			c = peek();
 			if (c == '-') {
-				if (setter.getName().startsWith("add")) {
-					value = new CollectionYamlParser(parser, pojo, setter);
+				if (consumer.isAdder()) {
+					value = new CollectionYamlParser(parser, consumer);
 				} else {
 					List<?> list = new ArrayList<>();
-					value = new CollectionYamlParser(parser, list, collectionAddMethod());
+					PojoValueConsumer listConsumer = new PojoValueConsumer(list, collectionAddMethod());
+					value = new CollectionYamlParser(parser, listConsumer);
 					try {
-						setter.invoke(pojo, list);
-					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+						consumer.consume(list);
+					} catch (Exception e) {
 						throw new YamlParseException(e);
 					}
 				}
 			} else {
-				Class<?> javaType = setter.getParameterTypes()[0];
-				ObjectYamlParser objectParser  = new ObjectYamlParser(parser, javaType);
-				objectParser.setOwner(pojo);
-				objectParser.setSetter(setter);
+				ObjectYamlParser objectParser  = new ObjectYamlParser(parser, consumer);
+				objectParser.setConsumer(consumer);
 				value = objectParser;
 			}
 			break;
 			
 		default :
-			Class<?> javaType = setter.getParameterTypes()[0];
+			Class<?> javaType = consumer.getValueType();
 			value = scalarValue(javaType);
 			assertLineEnd();
 			indentWidth();
 			if (nextIndentWidth>parser.getIndentWidth() && !(value instanceof ObjectYamlParser)) {
-				return new ObjectYamlParser(parser, value, pojo, setter, nextIndentWidth);
+				return new ObjectYamlParser(parser, value, consumer, nextIndentWidth);
 			}
 			break;
 			
 		}
-		
+
+		if (!(value instanceof YamlParser)) {
+			try {
+				consumer.consume(value);
+			} catch (Exception e) {
+				fail("Failed to consume field: " + consumer.toString());
+			}
+		}
 		return value;
 	}
 
@@ -705,5 +938,27 @@ public class YamlReader implements AutoCloseable {
 		if (reader != null) {
 			reader.close();
 		}
+	}
+	
+	static class MapAdapter {
+		private Method addMethod;
+		private Class<?> valueType;
+		private Constructor<?> valueConstructor;
+		
+		public MapAdapter(Method addMethod, Class<?> valueType, Constructor<?> valueConstructor) {
+			this.addMethod = addMethod;
+			this.valueType = valueType;
+			this.valueConstructor = valueConstructor;
+		}
+		public Method getAddMethod() {
+			return addMethod;
+		}
+		public Class<?> getValueType() {
+			return valueType;
+		}
+		public Constructor<?> getValueConstructor() {
+			return valueConstructor;
+		}
+		
 	}
 }

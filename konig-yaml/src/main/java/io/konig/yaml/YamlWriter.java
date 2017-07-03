@@ -8,12 +8,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
@@ -26,38 +28,109 @@ import org.openrdf.rio.turtle.TurtleUtil;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-public class YamlWriter {
+public class YamlWriter extends YamlWriterConfig  implements AutoCloseable {
 	private int indent;
-	private int indentSpaces = 3;
 	private static final String RESERVED = ":{}[],&*#?|-<>=!%@`";
+	private static final Integer MINUS_ONE = new Integer(-1);
 
 	private Map<Object, Integer> objectMap = new HashMap<Object, Integer>();
 	private int count = 0;
-	private boolean showClassTag = true;
 
 	private PrintWriter out;
+	
+	
 	
 	public YamlWriter(Writer writer) {
 		out = (writer instanceof PrintWriter) ? (PrintWriter) writer : new PrintWriter(writer);
 	}
 	
-	public boolean isShowClassTag() {
-		return showClassTag;
-	}
-
-
-
-	public void setShowClassTag(boolean showClassTag) {
-		this.showClassTag = showClassTag;
-	}
-
-
 
 	public void write(Object obj) {
+		if (anchorFeature == AnchorFeature.SOME) {
+			computeObjectCount(obj);
+		}
 		printObject(obj);
 		out.flush();
 	}
 	
+	
+
+
+
+
+	private void countProperties(Object obj) {
+		Class<?> type = obj.getClass();
+		Method[] methodList = type.getMethods();
+		List<Method> list = new ArrayList<Method>();
+		JsonIgnoreProperties note = type.getAnnotation(JsonIgnoreProperties.class);
+		HiddenProperties hiddenNote = type.getAnnotation(HiddenProperties.class);
+
+		String[] ignore = note == null ? null : note.value();
+		String[] hidden = hiddenNote == null ? null : hiddenNote.value();
+
+		for (Method m : methodList) {
+			String name = m.getName();
+			if (name.length() > 3 && name.startsWith("get") && Modifier.isPublic(m.getModifiers())
+					&& m.getParameterTypes().length == 0 && !name.equals("getClass")
+					&& (ignore == null || wanted(m, ignore)) && (hidden == null || wanted(m, hidden))) {
+				list.add(m);
+			}
+		}
+
+		
+		for (Method m : list) {
+			if (Modifier.isStatic(m.getModifiers())) {
+				continue;
+			}
+
+			try {
+				Object value = m.invoke(obj);
+				computeObjectCount(value);
+
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+	}
+
+
+	private void computeObjectCount(Object object) {
+		if (
+			object == null ||
+			(object instanceof Collection<?> && ((Collection<?>) object).isEmpty()) ||
+			(object.getClass().isArray() && Array.getLength(object) == 0) ||
+			isSimpleValue(object)
+		) {
+			return;
+		}
+		if (object instanceof Iterable<?>) {
+			computeObjectCountsInCollection((Iterable<?>)object);
+		} if (object.getClass().isArray()) {
+			computeObjectCountsInCollection(Arrays.asList(object));
+		} else {
+
+			Integer count = objectMap.get(object);
+			if (count == null) {
+				objectMap.put(object, MINUS_ONE);
+				countProperties(object);
+			} else {
+				count = count - 1;
+				objectMap.put(object, count);
+			}
+		}
+		
+	}
+
+
+	private void computeObjectCountsInCollection(Iterable<?> sequence) {
+		for (Object value : sequence) {
+			computeObjectCount(value);
+		}
+		
+	}
+
+
 	private void printObject(Object object) {
 		if (object == null) {
 			out.print("null");
@@ -69,18 +142,60 @@ public class YamlWriter {
 			return;
 		}
 		Integer objectId = objectMap.get(object);
-		if (objectId == null) {
-			objectMap.put(object, objectId = new Integer(++count));
-			if (showClassTag) {
+		boolean newAnchor = false;
+		
+		switch (anchorFeature) {
+		case ALL :
+			
+			if (objectId == null) {
+				newAnchor = true;
+				objectId = new Integer(++count);
+				objectMap.put(object, objectId);
+			}
+			break;
+			
+		case SOME:
+			if (objectId == null) {
+				throw new RuntimeException("Object count is missing");
+			}
+			if (objectId == -1) {
+				objectId = null;
+			} else if (objectId < -1) {
+				newAnchor = true;
+				objectId = new Integer(++count);
+				objectMap.put(object, objectId);
+			}
+			break;
+			
+		case NONE:
+//			if (objectId != null) {
+//				
+//				YamlWriterConfig config = new YamlWriterConfig().setIncludeClassTag(false);
+//				String text = Yaml.toString(config, object);
+//				
+//				throw new RuntimeException("Repeated object not permitted with anchorFeature=NONE.\n" + text);
+//			}
+//			objectMap.put(object, MINUS_ONE);
+			objectId = null;
+			newAnchor = true;
+			break;
+		}
+		
+		if (newAnchor) {
+			if (includeClassTag) {
 				out.print('!');
 				out.print(object.getClass().getName());
 				out.print(' ');
 			}
-			out.print('&');
-			out.print('x');
-			println(objectId.toString());
+			if (objectId != null) {
+				out.print('&');
+				out.print('x');
+				println(objectId.toString());
+			} else {
+				println();
+			}
 			printProperties(object);
-		} else {
+		} else if (objectId != null) {
 			out.print('*');
 			out.print('x');
 			println(objectId.toString());
@@ -137,8 +252,18 @@ public class YamlWriter {
 				return a.getName().compareTo(b.getName());
 			}
 		});
+		
+		boolean doPush = true;
+		if (anchorFeature==AnchorFeature.NONE) {
+			if (count==0) {
+				count=1;
+				doPush = false;
+			}
+		}
 
-		push();
+		if (doPush) {
+			push();
+		}
 		for (Method m : list) {
 			if (Modifier.isStatic(m.getModifiers())) {
 				continue;
@@ -153,12 +278,15 @@ public class YamlWriter {
 				throw new RuntimeException(e);
 			}
 		}
-		pop();
+		if (doPush) {
+			pop();
+		}
 		
 	}
 	public void field(String fieldName, Object value) {
 		if (value == null 
 				|| (value instanceof Collection<?> && ((Collection<?>) value).isEmpty())
+				|| (value instanceof Map<?,?> && ((Map<?,?>)value).isEmpty())
 				|| (value.getClass().isArray() && Array.getLength(value) == 0)) {
 			return;
 		}
@@ -213,6 +341,7 @@ public class YamlWriter {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void printValue(Object value) {
 		if (value == null) {
 			println("null");
@@ -230,10 +359,50 @@ public class YamlWriter {
 			yamlPrintln(value.toString());
 		} else if (value instanceof Iterable) {
 			printIterable((Iterable<?>) value);
+		} else if (value instanceof Map) {
+			printMap((Map<Object,Object>) value);
 		} else {
 			printObject(value);
 		}
 
+	}
+
+
+	private void printMap(Map<Object,Object> map) {
+		if (map.isEmpty()) {
+			return;
+		}
+		
+		println();
+		push();
+		List<Entry<Object,Object>> list = new ArrayList<>(map.entrySet());
+		
+		Collections.sort(list, new Comparator<Entry<Object,Object>>(){
+
+			@Override
+			public int compare(Entry<Object, Object> a, Entry<Object, Object> b) {
+				String x = a.getKey().toString();
+				String y = b.getKey().toString();
+				return x.compareTo(y);
+			}});
+		
+		for (Entry<Object,Object>  e : list) {
+			String key = e.getKey().toString();
+			Object value = e.getValue();
+			indent();
+			if (key.indexOf(':') >= 0) {
+				out.print('"');
+				out.print(key);
+				out.print('"');
+			} else {
+				out.print(key);
+			}
+			out.print(": ");
+			printValue(value);
+		}
+		
+		pop();
+		
 	}
 
 
@@ -341,5 +510,10 @@ public class YamlWriter {
 			println('>');
 		}
 
+	}
+
+	@Override
+	public void close() throws Exception {
+		out.close();
 	}
 }

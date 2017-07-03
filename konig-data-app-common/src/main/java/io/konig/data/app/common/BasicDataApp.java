@@ -34,6 +34,10 @@ public class BasicDataApp implements DataApp {
 	
 	private Map<String,ExtentContainer> containers = new HashMap<>();
 	
+	public BasicDataApp() {
+		
+	}
+	
 	public void addContainer(ExtentContainer container) {
 		String slug = container.getSlug();
 		if (slug == null) {

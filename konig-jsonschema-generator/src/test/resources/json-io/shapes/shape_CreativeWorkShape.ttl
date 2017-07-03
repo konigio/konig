@@ -1,0 +1,44 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:CreativeWorkShape sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:CreativeWork ; 
+	a sh:Shape ; 
+	sh:property  [ 
+		sh:nodeKind sh:IRI ; 
+		sh:predicate <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ; 
+		rdfs:comment "The type of CreativeWork" ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate schema:name ; 
+		rdfs:comment "The name of the CreativeWork" ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate schema:creator ; 
+		rdfs:comment "A Person who created the work" ; 
+		sh:class schema:Person ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		sh:predicate schema:commentCount ; 
+		rdfs:comment "The number of comments the CreativeWork has received." ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate schema:dateCreated ; 
+		rdfs:comment "The date/time when the CreativeWork was created" ; 
+		sh:datatype xsd:dateTime ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate schema:hasPart ; 
+		sh:class schema:CreativeWork ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 0 ]  . 

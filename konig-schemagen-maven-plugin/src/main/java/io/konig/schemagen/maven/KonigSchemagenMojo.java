@@ -2,6 +2,7 @@ package io.konig.schemagen.maven;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
@@ -48,6 +49,12 @@ import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
 import io.konig.gae.datastore.impl.SimpleEntityNamer;
 import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
+import io.konig.openapi.generator.OpenApiGenerateRequest;
+import io.konig.openapi.generator.OpenApiGenerator;
+import io.konig.openapi.generator.OpenApiGeneratorException;
+import io.konig.openapi.generator.RootClassShapeFilter;
+import io.konig.openapi.generator.ShapeLocalNameJsonSchemaNamer;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
@@ -83,6 +90,7 @@ import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeFilter;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
 import io.konig.shacl.ShapeNamer;
@@ -144,6 +152,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private GoogleCloudPlatformConfig googleCloudPlatform;
     
+    @Parameter DataServicesConfig dataServices;
     
     @Parameter
     private HashSet<String> excludeNamespace;
@@ -197,17 +206,55 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			generatePlantUMLDomainModel();
 			generateJava();
+			generateDataServices();
 			
 			updateRdf();
 			
 			
-		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | PlantumlGeneratorException | CodeGeneratorException e) {
+		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
+				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
 		}
       
     }
     
-    private void updateRdf() throws RDFHandlerException, IOException {
+    private void generateDataServices() throws IOException, OpenApiGeneratorException {
+		if (dataServices != null) {
+		
+			File openapiFile = dataServices.getOpenApiFile();
+			File infoFile = dataServices.getInfoFile();
+			
+			openapiFile.getParentFile().mkdirs();
+			
+			try (
+				FileReader infoReader = new FileReader(infoFile);
+			) {
+			
+				try (FileWriter openapiWriter = new FileWriter(openapiFile)) {
+				
+					OpenApiGenerateRequest request = new OpenApiGenerateRequest()
+						.setOpenApiInfo(infoReader)
+						.setShapeManager(shapeManager)
+						.setWriter(openapiWriter);
+					
+
+					io.konig.jsonschema.generator.JsonSchemaNamer namer = new ShapeLocalNameJsonSchemaNamer();
+					io.konig.jsonschema.generator.JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
+					ShapeFilter shapeFilter = new RootClassShapeFilter(owlGraph);
+					io.konig.jsonschema.generator.JsonSchemaGenerator schemaGenerator = 
+							new io.konig.jsonschema.generator.JsonSchemaGenerator(nsManager, null, typeMapper);
+					
+					OpenApiGenerator generator = new OpenApiGenerator(namer, schemaGenerator, shapeFilter);
+					
+					generator.generate(request);
+					
+				}	
+			}
+		}
+		
+	}
+
+	private void updateRdf() throws RDFHandlerException, IOException {
 		if (rdfOutput != null) {
 			File shapesDir = rdfOutput.shapesDir(defaults);
 			if (shapesDir != null) {

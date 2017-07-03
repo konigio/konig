@@ -1,0 +1,21 @@
+paths:
+#foreach( $entity in $entityList)
+  /${entity.owlClass.localName.toLowerCase()}/{objectId}:
+    parameters:
+      - name: objectId
+        description: The URL encoded canonical IRI for the $entity.owlClass.localName instance.
+        in: path
+        required: true      
+    get:
+      description: Get the $entity.owlClass.localName with the specified objectId.
+      operationId: ${entity.owlClass.localName.toLowerCase()}_instance_get
+      responses:
+        '200':
+          description: A representation of the $entity.owlClass.localName instance
+          content:
+#foreach( $mediaType in $entity.mediaTypeList )      
+            $mediaType.type:
+              schema:
+                  $ref: '#/components/schemas/${mediaType.refValue}'
+#end    
+#end            
