@@ -14,6 +14,64 @@ import org.junit.Test;
 public class YamlReaderTest {
 	
 	@Test
+	public void testQuotedFieldInlineList() throws Exception {
+		String text =
+			"likes:\n" + 
+			"  - 'givenName': Alice\n" + 
+			"    'familyName': Jones\n" + 
+			"  - 'givenName': Bob\n" + 
+			"    'familyName': Smith\n" + 
+			"  - 'givenName': Cathy\n" + 
+			"    'familyName': Johnson";
+		
+		Person person = Yaml.read(Person.class, text);
+		
+		List<Person> likes = person.getLikes();
+		assertTrue(likes != null);
+		assertEquals(3, likes.size());
+		
+		Person friend = likes.get(0);
+		assertEquals("Alice", friend.getGivenName());
+		assertEquals("Jones", friend.getFamilyName());
+		
+		friend = likes.get(2);
+		assertEquals("Cathy", friend.getGivenName());
+		assertEquals("Johnson", friend.getFamilyName());
+		
+		
+	}
+	
+	@Test
+	public void testBareInlineList() throws Exception {
+		String text =
+			"likes:\n" + 
+			"  - givenName: Alice\n" + 
+			"    familyName: Jones\n" + 
+			"  - givenName: Bob\n" + 
+			"    familyName: Smith\n" + 
+			"  - givenName: Cathy\n" + 
+			"    familyName: Johnson";
+		
+		Person person = Yaml.read(Person.class, text);
+		
+		List<Person> likes = person.getLikes();
+		assertTrue(likes != null);
+		assertEquals(3, likes.size());
+		
+		Person friend = likes.get(0);
+		assertEquals("Alice", friend.getGivenName());
+		assertEquals("Jones", friend.getFamilyName());
+		
+		friend = likes.get(2);
+		assertEquals("Cathy", friend.getGivenName());
+		assertEquals("Johnson", friend.getFamilyName());
+		
+		
+	}
+	
+	
+	
+	@Test
 	public void testMap() throws Exception {
 		String text =
 			"contactPoint:\n" + 

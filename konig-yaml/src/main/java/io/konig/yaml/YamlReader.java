@@ -26,6 +26,7 @@ public class YamlReader implements AutoCloseable {
 	private Method addMethod;
 	
 	private int nextIndentWidth;
+	private boolean isObjectItem = false;
 	private int lineNo = 1;
 	
 	public YamlReader(InputStream input) {
@@ -122,9 +123,13 @@ public class YamlReader implements AutoCloseable {
 	
 
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Object scalarValue(Class<?> javaType) throws YamlParseException, IOException {
 		String stringValue = stringValue();
+		return scalarValue(stringValue, javaType);
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private Object scalarValue(String stringValue, Class<?> javaType) throws YamlParseException {
 		Object result = null;
 		if (javaType == String.class) {
 			result = stringValue;
@@ -251,6 +256,15 @@ public class YamlReader implements AutoCloseable {
 		if (c == -1) {
 			reader = null;
 		} 
+		return c;
+	}
+	
+	private int skip(String tokens) throws IOException {
+		int c = read();
+		while (tokens.indexOf(c)>=0) {
+			c = read();
+		}
+		unread(c);
 		return c;
 	}
 
@@ -408,9 +422,17 @@ public class YamlReader implements AutoCloseable {
 
 
 
-		protected String fieldName() throws IOException {
+		public void setIndentWidth(int indentWidth) {
+			this.indentWidth = indentWidth;
+		}
+
+		protected String fieldName() throws IOException, YamlParseException {
 			StringBuilder buffer = buffer();
 			int c = read();
+			if (c=='"' || c=='\'') {
+				unread(c);
+				return quotedString(c);
+			}
 			while (c!=':' && !Character.isWhitespace(c)) {
 				buffer.appendCodePoint(c);
 				c = read();
@@ -419,6 +441,22 @@ public class YamlReader implements AutoCloseable {
 			return buffer.toString();
 		}
 		
+		private String quotedString(int c) throws YamlParseException, IOException {
+			String fieldName = null;
+			switch (c) {
+			case '"' :
+				fieldName = doubleQuotedString();
+				break;
+				
+			case '\'' :
+				fieldName = singleQuotedString();
+				break;
+				
+			}
+			
+			return fieldName;
+		}
+
 		protected YamlParser findNext() throws YamlParseException, IOException {
 			if (nextIndentWidth < 0) {
 				nextIndentWidth = indentWidth();
@@ -447,16 +485,88 @@ public class YamlReader implements AutoCloseable {
 			super(parent);
 			this.consumer = consumer;
 			indentWidth = nextIndentWidth;
+			
 		}
 
 		
+
+
+
+
+		private Object parsePropertyOrScalar(int k) throws IOException, YamlParseException {
+			String stringValue = null;
+
+			int prev = -1;
+			switch (k) {
+			case '"' :
+				stringValue = doubleQuotedString();
+				prev=k;
+				break;
+				
+			case '\'' :
+				stringValue = singleQuotedString();
+				prev=k;
+				break;
+			}
+
+			
+			StringBuilder buffer = buffer();
+			k = read();
+			while (k != -1) {
+				if (k == '\n') {
+					unread(k);
+					break;
+				}
+				if (Character.isWhitespace(k)) {
+					if (prev == ':') {
+						// We have detected a property.
+						// Therefore the list item is an object.
+						
+						unread(k);
+						unread(':');
+						
+						ObjectYamlParser objectParser = new ObjectYamlParser(this, consumer);
+						objectParser.setConsumer(consumer);
+						if (stringValue == null) {
+							buffer.setLength(buffer.length()-1);
+							stringValue = buffer.toString();
+						}
+						objectParser.setFieldName(stringValue);
+						isObjectItem = true;
+						return objectParser;
+					}
+				}
+				buffer.appendCodePoint(k);
+				prev = k;
+				k = read();
+			}
+			if (stringValue == null) {
+				stringValue = buffer.toString().trim();
+			}
+			
+			Object result = scalarValue(stringValue, consumer.getValueType());
+			if (!(result instanceof YamlParser)) {
+				try {
+					consumer.consume(result);
+				} catch (Exception e) {
+					fail(e);
+				}
+			}
+			return result;
+			
+		}
+
+
+
+
+
 
 		@Override
 		YamlParser nextParser() throws YamlParseException, IOException {
 
 			nextIndentWidth=-1;
 			assertNext('-');
-			Object value = readValue(this, consumer);
+			Object value = parseValue();
 			if (value instanceof CollectionYamlParser) {
 				// TODO: support collections of collections
 				throw new YamlParseException("Collections of collections not supported");
@@ -468,6 +578,28 @@ public class YamlReader implements AutoCloseable {
 			
 			return findNext();
 		}
+
+
+
+
+
+
+		private Object parseValue() throws IOException, YamlParseException {
+
+			int c = skip(" \t");
+			switch (c) {
+			case '!' :
+			case '&' :
+			case '*' :
+			case '\n' :
+				return readValue(this, consumer);
+				
+				
+			default:
+				return parsePropertyOrScalar(c);
+			}
+		}
+
 		
 	}
 	
@@ -647,6 +779,7 @@ public class YamlReader implements AutoCloseable {
 		private Object pojo = null;
 		private ClassInfo classInfo;
 		private ValueConsumer consumer;
+		private String fieldName;
 		
 		public ObjectYamlParser(Class<?> type) throws Exception {
 			this(null, new BasicObjectFactory(type));
@@ -660,6 +793,10 @@ public class YamlReader implements AutoCloseable {
 			classInfo = classInfo(pojo.getClass());
 		}
 		
+		public void setFieldName(String fieldName) {
+			this.fieldName = fieldName;
+		}
+
 		public ObjectYamlParser(YamlParser parent, ObjectFactory factory) throws YamlParseException, IOException {
 			super(parent);
 			int c = next();
@@ -756,6 +893,15 @@ public class YamlReader implements AutoCloseable {
 			
 			
 			return findNext();
+		}
+		
+		protected String fieldName() throws IOException, YamlParseException {
+			if (fieldName != null) {
+				String result = fieldName;
+				fieldName = null;
+				return result;
+			}
+			return super.fieldName();
 		}
 
 		private MapAdapterYamlParser mapParser(String fieldName) throws IOException, YamlParseException {
@@ -897,9 +1043,12 @@ public class YamlReader implements AutoCloseable {
 			value = scalarValue(javaType);
 			assertLineEnd();
 			indentWidth();
-			if (nextIndentWidth>parser.getIndentWidth() && !(value instanceof ObjectYamlParser)) {
+			if (!isObjectItem && nextIndentWidth>parser.getIndentWidth() && !(value instanceof ObjectYamlParser)) {
 				return new ObjectYamlParser(parser, value, consumer, nextIndentWidth);
+			} else if (isObjectItem) {
+				parser.setIndentWidth(nextIndentWidth);
 			}
+			isObjectItem = false;
 			break;
 			
 		}
