@@ -2,6 +2,8 @@ package io.konig.schemagen.maven;
 
 import java.io.File;
 
+import org.apache.maven.project.MavenProject;
+
 public class DataServicesConfig {
 	
 	private File basedir;
@@ -9,17 +11,21 @@ public class DataServicesConfig {
 	private File openApiFile;
 	private File configFile;
 	private File webappDir;
+	private String artifactId;
 	
 	public DataServicesConfig() {
 		
 	}
 	
-	
+	public void init(MavenProject project) {
+		artifactId = project.getArtifactId() + "-appengine";
+	}
 
 	public File getBasedir() {
-		return basedir==null ?
-			new File("target/generated/dataservices") :
-			basedir;
+		if (basedir == null) {
+			basedir = new File("../" + artifactId);
+		}
+		return basedir;
 	}
 
 	public void setBasedir(File basedir) {

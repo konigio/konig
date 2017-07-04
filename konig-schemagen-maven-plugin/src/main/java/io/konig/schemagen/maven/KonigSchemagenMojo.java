@@ -252,6 +252,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		DataServicesConfig dataServices = googleCloudPlatform==null ? null : googleCloudPlatform.getDataServices();
     	if (dataServices != null) {
 		
+    		dataServices.init(mavenProject);
 			File openapiFile = dataServices.getOpenApiFile();
 			File infoFile = dataServices.getInfoFile();
 			File configFile = dataServices.getConfigFile();
