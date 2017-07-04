@@ -66,7 +66,11 @@
 	    <artifactId>plantuml</artifactId>
 	    <version>8050</version>
 		</dependency>
-    
+     <dependency>
+        <groupId>org.twdata.maven</groupId>
+        <artifactId>mojo-executor</artifactId>
+        <version>2.2.0</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

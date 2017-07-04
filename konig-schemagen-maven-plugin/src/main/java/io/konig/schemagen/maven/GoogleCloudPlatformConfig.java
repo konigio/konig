@@ -10,6 +10,8 @@ public class GoogleCloudPlatformConfig {
 	private String bigQueryDatasetId;
 	private File enumShapeDir;
 	private String enumShapeNameTemplate;
+    private File credentials;
+	private DataServicesConfig dataServices;
 	
 	public GoogleCloudPlatformConfig() {
 		
@@ -66,5 +68,23 @@ public class GoogleCloudPlatformConfig {
 		}
 		return enumShapeDir;
 	}
+
+	public DataServicesConfig getDataServices() {
+		return dataServices;
+	}
+
+	public void setDataServices(DataServicesConfig dataServices) {
+		this.dataServices = dataServices;
+	}
+
+	public File getCredentials() {
+		return credentials;
+	}
+
+	public void setCredentials(File credentials) {
+		this.credentials = credentials;
+	}
+	
+	
 	
 }
