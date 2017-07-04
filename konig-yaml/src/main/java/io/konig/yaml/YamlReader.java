@@ -346,7 +346,7 @@ public class YamlReader implements AutoCloseable {
 			String name = m.getName();
 			YamlProperty note = m.getAnnotation(YamlProperty.class);
 			YamlMap mapNote = null;
-			if (note != null) {
+			if (note != null && m.getParameterTypes().length==1) {
 				String fieldName = note.value();
 				if (fieldName.startsWith("add")) {
 					info.adderMethod.put(fieldName, m);
