@@ -347,9 +347,7 @@ public class YamlWriter extends YamlWriterConfig  implements AutoCloseable {
 			println("null");
 		}
 		if (value instanceof URI) {
-			out.print('<');
-			out.print(((URI) value).stringValue());
-			println('>');
+			out.println(((URI) value).stringValue());
 		} else if (value instanceof BNode) {
 			out.print("_:");
 			println(((BNode) value).getID());

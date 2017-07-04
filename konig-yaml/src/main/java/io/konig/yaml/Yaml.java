@@ -2,6 +2,7 @@ package io.konig.yaml;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -12,6 +13,13 @@ import java.io.Writer;
 
 public class Yaml {
 
+	
+	public static void write(File outFile, Object object) throws IOException {
+		try (FileWriter writer = new FileWriter(outFile)) {
+			write(writer, object);
+		}
+	}
+	
 	public static void write(Writer out, Object object) {
 		@SuppressWarnings("resource")
 		YamlWriter yaml = new YamlWriter(out);

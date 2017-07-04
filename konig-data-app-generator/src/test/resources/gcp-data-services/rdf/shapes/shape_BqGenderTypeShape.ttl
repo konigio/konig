@@ -1,0 +1,25 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:BqGenderTypeShape sh:property  [ 
+		sh:maxCount 1 ; 
+		sh:predicate schema:name ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		sh:maxCount 1 ; 
+		sh:predicate rdfs:comment ; 
+		sh:datatype xsd:string ]  ; 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:GenderType ; 
+	konig:shapeDataSource  [ 
+		gcp:tableReference  [ 
+			gcp:projectId "{gcpProjectId}" ; 
+			gcp:datasetId "schema" ; 
+			gcp:tableId "GenderType" ]  ; 
+		a konig:GoogleBigQueryTable ]  . 

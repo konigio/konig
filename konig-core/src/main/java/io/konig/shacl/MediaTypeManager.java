@@ -1,8 +1,8 @@
-package io.konig.data.app.common;
+package io.konig.shacl;
 
 /*
  * #%L
- * Konig DAO Core
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,10 +21,7 @@ package io.konig.data.app.common;
  */
 
 
-import java.util.Collection;
+public interface MediaTypeManager {
 
-public interface DataApp {
-	
-	GetJob createGetJob(JobRequest request) throws DataAppException;
-	Collection<ExtentContainer> getContainers();
+	Shape shapeOfMediaType(String mediaType);
 }

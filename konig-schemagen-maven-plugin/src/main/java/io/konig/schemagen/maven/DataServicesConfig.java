@@ -6,6 +6,7 @@ public class DataServicesConfig {
 	
 	private File infoFile;
 	private File openApiFile;
+	private File configFile;
 	
 	public DataServicesConfig() {
 		
@@ -29,6 +30,16 @@ public class DataServicesConfig {
 
 	public void setOpenApiFile(File openApiFile) {
 		this.openApiFile = openApiFile;
+	}
+
+	public File getConfigFile() {
+		return configFile == null ?
+			new File("target/generated/dataservices/app.yaml") :
+			configFile;
+	}
+
+	public void setConfigFile(File configFile) {
+		this.configFile = configFile;
 	}
 	
 	

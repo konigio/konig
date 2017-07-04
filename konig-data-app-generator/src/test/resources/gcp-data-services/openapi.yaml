@@ -1,0 +1,116 @@
+openapi: 3.0.0
+info:
+  title: Sample API
+  description: A sample API used for testing purposes
+  termsOfService: http://example.com/terms
+  contact:
+    name: API Support
+    url: http://www.example.com/support
+    email: support@example.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.1
+paths:
+  /creativework/{objectId}:
+    parameters:
+      - name: objectId
+        description: The URL encoded canonical IRI for the CreativeWork instance.
+        in: path
+        required: true      
+    get:
+      description: Get the CreativeWork with the specified objectId.
+      operationId: creativework_instance_get
+      responses:
+        '200':
+          description: A representation of the CreativeWork instance
+          content:
+            application/vnd.example.work+json:
+              schema:
+                  $ref: '#/components/schemas/CreativeWorkShape'
+  /person/{objectId}:
+    parameters:
+      - name: objectId
+        description: The URL encoded canonical IRI for the Person instance.
+        in: path
+        required: true      
+    get:
+      description: Get the Person with the specified objectId.
+      operationId: person_instance_get
+      responses:
+        '200':
+          description: A representation of the Person instance
+          content:
+            application/vnd.example.person+json:
+              schema:
+                  $ref: '#/components/schemas/PersonShape'
+            
+components: 
+   schemas: 
+      CreativeWorkShape: 
+         type: object
+         properties: 
+            commentCount: 
+               description: The number of comments the CreativeWork has received.
+               type: integer
+            creator: 
+               description: A Person who created the work
+               type: array
+               items: 
+                  description: Gender of the person.
+                  format: uri
+                  type: string
+            dateCreated: 
+               description: The date/time when the CreativeWork was created
+               format: date-time
+               type: string
+            hasPart: 
+               type: array
+               items: 
+                  description: Gender of the person.
+                  format: uri
+                  type: string
+            name: 
+               description: The name of the CreativeWork
+               type: string
+            type: 
+               description: Gender of the person.
+               format: uri
+               type: string
+      PersonShape: 
+         type: object
+         properties: 
+            address: 
+               description: The person's postal address.
+               type: object
+               properties: 
+                  addressLocality: 
+                     description: The locality. For example, Mountain View.
+                     type: string
+                  addressRegion: 
+                     description: The region. For example, CA.
+                     type: string
+                  postalCode: 
+                     description: The postal code. For example, 94043.
+                     type: string
+                  streetAddress: 
+                     description: The street address. For example, 1600 Ampitheatre Pkwy.
+                     type: string
+            email: 
+               description: The person's email address.
+               type: array
+               items: 
+                  type: string
+            familyName: 
+               description: Family name. In the U.S., the last name of an Person.
+               type: string
+            gender: 
+               description: Gender of the person.
+               format: uri
+               type: string
+            givenName: 
+               description: Given name. In the U.S., the first name of a Person.
+               type: string
+            name: 
+               description: The full name of the person.
+               type: string

@@ -13,6 +13,7 @@ public class Operation {
 	private ExternalDocumentation externalDocs;
 	private List<String> tags = new ArrayList<>();
 	private List<Parameter> parameterList = new ArrayList<>();
+	private ResponseMap responses;
 	
 	@YamlProperty("tags")
 	public void addTag(String tag) {
@@ -64,5 +65,15 @@ public class Operation {
 	public List<Parameter> getParameterList() {
 		return parameterList;
 	}
+
+	public ResponseMap getResponses() {
+		return responses;
+	}
+
+	public void setResponses(ResponseMap responses) {
+		this.responses = responses;
+	}
+	
+	
 
 }
