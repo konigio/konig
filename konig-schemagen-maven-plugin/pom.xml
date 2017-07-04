@@ -37,6 +37,12 @@
   		<artifactId>konig-openapi-generator</artifactId>
   		<version>${konig.version}</version>
   	</dependency>
+		
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-data-app-generator</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
   
     <dependency>
       <groupId>org.apache.maven</groupId>

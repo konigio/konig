@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 
+import io.konig.yaml.YamlProperty;
+
 public class JsonSchema {
 	
 	private String id;
@@ -38,8 +40,13 @@ public class JsonSchema {
 	private JsonSchema not;
 	private JsonSchema items;
 	private PropertyMap properties;
+	private String ref;
 	
 	public JsonSchema() {
+	}
+	
+	public JsonSchema(String ref) {
+		this.ref = ref;
 	}
 	
 	public String getId() {
@@ -276,6 +283,16 @@ public class JsonSchema {
 		
 	}
 	
+	@YamlProperty("$ref")
+	public String getRef() {
+		return ref;
+	}
+
+	@YamlProperty("$ref")
+	public void setRef(String ref) {
+		this.ref = ref;
+	}
+
 	public String toString() {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.enable(SerializationFeature.INDENT_OUTPUT);

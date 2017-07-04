@@ -1,7 +1,5 @@
 package io.konig.openapi.model;
 
-import javax.xml.validation.Schema;
-
 import io.konig.jsonschema.model.JsonSchema;
 
 public class Parameter {

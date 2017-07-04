@@ -44,6 +44,9 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
+import io.konig.data.app.common.DataApp;
+import io.konig.data.app.generator.DataAppGenerator;
+import io.konig.data.app.generator.DataAppGeneratorException;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
@@ -55,6 +58,7 @@ import io.konig.openapi.generator.OpenApiGenerator;
 import io.konig.openapi.generator.OpenApiGeneratorException;
 import io.konig.openapi.generator.RootClassShapeFilter;
 import io.konig.openapi.generator.ShapeLocalNameJsonSchemaNamer;
+import io.konig.openapi.model.OpenAPI;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
@@ -95,6 +99,7 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
 import io.konig.shacl.ShapeNamer;
 import io.konig.shacl.ShapeVisitor;
+import io.konig.shacl.SimpleMediaTypeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.impl.TemplateShapeNamer;
@@ -102,6 +107,8 @@ import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.showl.WorkbookToTurtleTransformer;
+import io.konig.yaml.Yaml;
+import io.konig.yaml.YamlParseException;
 import net.sourceforge.plantuml.SourceFileReader;
 
 /**
@@ -116,6 +123,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private static final String SCHEMA = "schema";
 	private static final String DATA = "data";
 	private static final String DATASET = "dataset";
+	private static final String DEV_NULL = "/dev/null";
 	
 	@Parameter
 	private RdfConfig defaults;
@@ -212,44 +220,64 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
-				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException e) {
+				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
+				YamlParseException | DataAppGeneratorException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
 		}
       
     }
     
-    private void generateDataServices() throws IOException, OpenApiGeneratorException {
+    private void generateDataServices() throws IOException, OpenApiGeneratorException, YamlParseException, DataAppGeneratorException {
 		if (dataServices != null) {
 		
 			File openapiFile = dataServices.getOpenApiFile();
 			File infoFile = dataServices.getInfoFile();
+			File configFile = dataServices.getConfigFile();
 			
-			openapiFile.getParentFile().mkdirs();
+			generateOpenApiSpecification(openapiFile, infoFile);
+			generateAppConfigFile(openapiFile, configFile);
 			
-			try (
-				FileReader infoReader = new FileReader(infoFile);
-			) {
-			
-				try (FileWriter openapiWriter = new FileWriter(openapiFile)) {
-				
-					OpenApiGenerateRequest request = new OpenApiGenerateRequest()
-						.setOpenApiInfo(infoReader)
-						.setShapeManager(shapeManager)
-						.setWriter(openapiWriter);
-					
+		}
+		
+	}
 
-					io.konig.jsonschema.generator.JsonSchemaNamer namer = new ShapeLocalNameJsonSchemaNamer();
-					io.konig.jsonschema.generator.JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
-					ShapeFilter shapeFilter = new RootClassShapeFilter(owlGraph);
-					io.konig.jsonschema.generator.JsonSchemaGenerator schemaGenerator = 
-							new io.konig.jsonschema.generator.JsonSchemaGenerator(nsManager, null, typeMapper);
-					
-					OpenApiGenerator generator = new OpenApiGenerator(namer, schemaGenerator, shapeFilter);
-					
-					generator.generate(request);
-					
-				}	
-			}
+	private void generateAppConfigFile(File openapiFile, File configFile) throws YamlParseException, IOException, DataAppGeneratorException {
+		
+		if (!DEV_NULL.equals(configFile) && openapiFile.exists()) {
+			OpenAPI api = Yaml.read(OpenAPI.class, openapiFile);
+			SimpleMediaTypeManager mediaTypeManager = new SimpleMediaTypeManager(shapeManager);
+			DataAppGenerator generator = new DataAppGenerator(mediaTypeManager);
+			
+			DataApp app = generator.toDataApp(api);
+			Yaml.write(configFile, app);
+			
+		}
+	}
+
+	private void generateOpenApiSpecification(File openapiFile, File infoFile) throws IOException, OpenApiGeneratorException {
+
+		openapiFile.getParentFile().mkdirs();
+		try (FileReader infoReader = new FileReader(infoFile)) {
+		
+			try (FileWriter openapiWriter = new FileWriter(openapiFile)) {
+			
+				OpenApiGenerateRequest request = new OpenApiGenerateRequest()
+					.setOpenApiInfo(infoReader)
+					.setShapeManager(shapeManager)
+					.setWriter(openapiWriter);
+				
+
+				io.konig.jsonschema.generator.JsonSchemaNamer namer = new ShapeLocalNameJsonSchemaNamer();
+				io.konig.jsonschema.generator.JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
+				ShapeFilter shapeFilter = new RootClassShapeFilter(owlGraph);
+				io.konig.jsonschema.generator.JsonSchemaGenerator schemaGenerator = 
+						new io.konig.jsonschema.generator.JsonSchemaGenerator(nsManager, null, typeMapper);
+				
+				OpenApiGenerator generator = new OpenApiGenerator(namer, schemaGenerator, shapeFilter);
+				
+				generator.generate(request);
+				
+			}	
 		}
 		
 	}

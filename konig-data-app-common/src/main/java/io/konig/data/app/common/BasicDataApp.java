@@ -49,12 +49,12 @@ public class BasicDataApp implements DataApp {
 	/**
 	 * Get the container for a given slug.  Used for testing only.
 	 */
-	ExtentContainer getContainerForSlug(String slug) {
+	public ExtentContainer getContainerForSlug(String slug) {
 		return containers.get(slug);
 	}
 	
 	@Override
-	public Collection<ExtentContainer> listContainers() {
+	public Collection<ExtentContainer> getContainers() {
 		return containers.values();
 	}
 

@@ -1,9 +1,29 @@
 package io.konig.openapi.model;
 
-public class MediaType {
+import io.konig.jsonschema.model.JsonSchema;
 
-	public MediaType() {
-		// TODO Auto-generated constructor stub
+public class MediaType {
+	
+	private String stringValue;
+	private JsonSchema schema;
+	
+
+	public MediaType(String value) {
+		this.stringValue = value;
+	}
+
+
+	public JsonSchema getSchema() {
+		return schema;
+	}
+
+
+	public void setSchema(JsonSchema schema) {
+		this.schema = schema;
+	}
+	
+	public String stringValue() {
+		return stringValue;
 	}
 
 }

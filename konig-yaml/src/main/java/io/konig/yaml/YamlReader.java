@@ -9,11 +9,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class YamlReader implements AutoCloseable {
@@ -46,6 +45,14 @@ public class YamlReader implements AutoCloseable {
 		classInfo.deserializer = deserializer;
 	}
 
+	private void fail(String msg, Throwable e) throws YamlParseException {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Line ");
+		builder.append(lineNo);
+		builder.append(". ");
+		builder.append(msg);
+		throw new YamlParseException(builder.toString(), e);
+	}
 	private void fail(String msg) throws YamlParseException {
 		StringBuilder builder = new StringBuilder();
 		builder.append("Line ");
@@ -339,7 +346,7 @@ public class YamlReader implements AutoCloseable {
 			String name = m.getName();
 			YamlProperty note = m.getAnnotation(YamlProperty.class);
 			YamlMap mapNote = null;
-			if (note != null) {
+			if (note != null && m.getParameterTypes().length==1) {
 				String fieldName = note.value();
 				if (fieldName.startsWith("add")) {
 					info.adderMethod.put(fieldName, m);
@@ -438,7 +445,8 @@ public class YamlReader implements AutoCloseable {
 				c = read();
 			}
 			unread(c);
-			return buffer.toString();
+			String result = buffer.toString();
+			return result;
 		}
 		
 		private String quotedString(int c) throws YamlParseException, IOException {
@@ -524,13 +532,13 @@ public class YamlReader implements AutoCloseable {
 						
 						unread(k);
 						unread(':');
-						
-						ObjectYamlParser objectParser = new ObjectYamlParser(this, consumer);
-						objectParser.setConsumer(consumer);
+
 						if (stringValue == null) {
 							buffer.setLength(buffer.length()-1);
 							stringValue = buffer.toString();
 						}
+						ObjectYamlParser objectParser = new ObjectYamlParser(this, consumer);
+						objectParser.setConsumer(consumer);
 						objectParser.setFieldName(stringValue);
 						isObjectItem = true;
 						return objectParser;
@@ -646,13 +654,22 @@ public class YamlReader implements AutoCloseable {
 			isAdder = this.method.getName().startsWith("add");
 			valueType = method.getParameterTypes()[0];
 		}
+		
+		public PojoValueConsumer(Object pojo, Method method, Class<?> valueType) {
+
+			this.pojo = pojo;
+			this.method = method;
+			isAdder = this.method.getName().startsWith("add");
+			this.valueType = valueType;
+		}
+		
 		@Override
 		public void consume(Object value) throws Exception {
 			method.invoke(pojo, value);
 		}
-		
+
 		public String toString() {
-			return method.getName();
+			return "PojoValueConsumer(method=" + method.getName() + ", valueType=" + valueType.getName() + ")"; 
 		}
 		
 		@Override
@@ -705,6 +722,11 @@ public class YamlReader implements AutoCloseable {
 		public Object createObject() throws Exception {
 			Constructor<?> ctor = valueType.getConstructor(String.class);
 			return ctor.newInstance(fieldName);
+		}
+		
+		public String toString() {
+			return 
+				"MapValueConsumer(fieldName=" + fieldName + ", valueType=" + valueType.getName() + ")";
 		}
 		
 	}
@@ -1022,13 +1044,14 @@ public class YamlReader implements AutoCloseable {
 				if (consumer.isAdder()) {
 					value = new CollectionYamlParser(parser, consumer);
 				} else {
-					List<?> list = new ArrayList<>();
-					PojoValueConsumer listConsumer = new PojoValueConsumer(list, collectionAddMethod());
-					value = new CollectionYamlParser(parser, listConsumer);
 					try {
+						Class<?> valueType = consumer.getValueType();
+						Object list = valueType.newInstance();
+						PojoValueConsumer listConsumer = new PojoValueConsumer(list, collectionAddMethod(), collectionElementType(valueType));
+						value = new CollectionYamlParser(parser, listConsumer);
 						consumer.consume(list);
-					} catch (Exception e) {
-						throw new YamlParseException(e);
+					} catch (Throwable e) {
+						fail("Failed to consume with " + consumer, e);
 					}
 				}
 			} else {
@@ -1067,6 +1090,12 @@ public class YamlReader implements AutoCloseable {
 		int c = read();
 		unread(c);
 		return c;
+	}
+	
+	
+	private Class<?> collectionElementType(Class<?> collectionType) {
+		ParameterizedType type = (ParameterizedType) collectionType.getGenericSuperclass();
+		return(Class<?>) type.getActualTypeArguments()[0];
 	}
 	
 	private Method collectionAddMethod() {
