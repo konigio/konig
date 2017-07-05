@@ -68,6 +68,9 @@ import io.konig.gae.datastore.SimpleDaoNamer;
 import io.konig.gae.datastore.impl.SimpleEntityNamer;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
+import io.konig.maven.project.generator.MavenProjectGeneratorException;
+import io.konig.maven.project.generator.MultiProject;
+import io.konig.maven.project.generator.ParentProjectGenerator;
 import io.konig.openapi.generator.OpenApiGenerateRequest;
 import io.konig.openapi.generator.OpenApiGenerator;
 import io.konig.openapi.generator.OpenApiGeneratorException;
@@ -188,6 +191,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 @Parameter
 	 private File projectJsonldFile;
 	 
+	 @Parameter
+	 private MultiProject multiProject;
+	 
 
     
     private NamespaceManager nsManager;
@@ -236,19 +242,27 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generatePlantUMLDomainModel();
 			generateJava();
 			generateDataServices();
+			generateMultiProject();
 			
 			updateRdf();
 			
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
-				YamlParseException | DataAppGeneratorException e) {
+				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
 		}
       
     }
     
-    private void generateDataServices() throws IOException, OpenApiGeneratorException, YamlParseException, DataAppGeneratorException, MojoExecutionException {
+    private void generateMultiProject() throws MavenProjectGeneratorException, IOException {
+		if (multiProject != null) {
+			multiProject.run();
+		}
+		
+	}
+
+	private void generateDataServices() throws IOException, OpenApiGeneratorException, YamlParseException, DataAppGeneratorException, MojoExecutionException {
 		DataServicesConfig dataServices = googleCloudPlatform==null ? null : googleCloudPlatform.getDataServices();
     	if (dataServices != null) {
 		

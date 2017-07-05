@@ -43,6 +43,12 @@
   		<artifactId>konig-data-app-generator</artifactId>
   		<version>${konig.version}</version>
   	</dependency>
+		
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-maven-project-generator</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
   
     <dependency>
       <groupId>org.apache.maven</groupId>

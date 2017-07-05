@@ -73,6 +73,7 @@
   	<module>../konig-spreadsheet</module>
   	<module>../konig-schemagen</module>
   	<module>../konig-gae-generator</module>
+  	<module>../konig-maven-project-generator</module>
   	<module>../konig-schemagen-maven-plugin</module>
   	<module>../konig-ldp</module>
   	<module>../konig-ldp-maven-plugin</module>
