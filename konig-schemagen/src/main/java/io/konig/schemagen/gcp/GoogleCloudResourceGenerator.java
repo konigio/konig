@@ -27,6 +27,16 @@ public class GoogleCloudResourceGenerator {
 		
 	}
 	
+	public void addSpannerGenerator(File spannerSchemaDir) {
+
+		SpannerTableWriter tableWriter = new SpannerTableWriter(spannerSchemaDir);
+		SpannerTableGenerator tableGenerator = new SpannerTableGenerator();
+		
+		ShapeToSpannerTransformer transformer = new ShapeToSpannerTransformer(tableGenerator, tableWriter);
+		add(transformer);
+		
+	}
+	
 	public void addCloudStorageBucketWriter(File bucketDir) {
 		add(new GoogleCloudStorageBucketWriter(bucketDir));
 	}

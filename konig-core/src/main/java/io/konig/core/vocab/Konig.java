@@ -33,9 +33,11 @@ public class Konig {
 	
 	public static final String DATA_SOURCE = "http://www.konig.io/ns/core/DataSource"; 
 	public static final String GOOGLE_BIG_QUERY_TABLE = "http://www.konig.io/ns/core/GoogleBigQueryTable";
+	public static final String GOOGLE_SPANNER_TABLE = "http://www.konig.io/ns/core/GoogleSpannerTable";
 	public static final String SHAPE_DATA_SOURCE = "http://www.konig.io/ns/core/shapeDataSource";
 	public static final String IRI_TEMPLATE = "http://www.konig.io/ns/core/iriTemplate";
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
+	public static final String SPANNER_SOURCE = "http://www.konig.io/ns/core/spannerSource";
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
 	
@@ -138,6 +140,7 @@ public class Konig {
 
 	public static final URI GoogleCloudProject = new URIImpl("http://www.konig.io/ns/core/GoogleCloudProject");
 	public static final URI GoogleBigQueryTable = new URIImpl(GOOGLE_BIG_QUERY_TABLE);
+	public static final URI GoogleSpannerTable = new URIImpl(GOOGLE_SPANNER_TABLE);
 	public static final URI tableShape = new URIImpl("http://www.konig.io/ns/core/tableShape");
 	public static final URI projectDataset = new URIImpl("http://www.konig.io/ns/core/projectDataset");
 	public static final URI datasetTable = new URIImpl("http://www.konig.io/ns/core/datasetTable");

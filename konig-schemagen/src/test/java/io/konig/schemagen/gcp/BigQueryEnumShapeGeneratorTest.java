@@ -41,7 +41,7 @@ public class BigQueryEnumShapeGeneratorTest {
 	private OwlReasoner reasoner = new OwlReasoner(graph);
 	private NamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
 	private DatasetMapper datasetMapper = new SimpleDatasetMapper("example");
-	private BigQueryTableMapper tableMapper = new LocalNameTableMapper();
+	private TableMapper tableMapper = new LocalNameTableMapper();
 	private ShapeNamer shapeNamer = new SimpleShapeNamer(nsManager, "http://example.com/shapes/", "BigQuery", "Shape");
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeVisitor shapeVisitor = new ShapeManagerShapeVistor(shapeManager);

@@ -1,0 +1,48 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org" ; 
+	rdfs:comment "An ontology developed by Google, Yahoo!, Microsoft and others to describe people, places, and things commonly found on the web." . 
+
+shape: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "shape" ; 
+	rdfs:label "Data Shape Instances" ; 
+	rdfs:comment "A namespace that holds individual data shapes" . 
+
+shape:PersonLiteShape a sh:Shape ; 
+	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/Pp_Q_Y4TyQUAAAFaAAVoAA> ; 
+	rdfs:comment "A light-weight data shape for a person that just contains the person's given and family names." ; 
+	sh:targetClass schema:Person ; 
+	konig:shapeDataSource <https://spanner.googleapis.com/v1/{gcpProjectId}/datasets/schema/tables/Person> ; 
+	sh:nodeKind sh:IRI ; 
+	sh:property  [ 
+		sh:predicate schema:givenName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate schema:familyName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  . 
+
+<http://www.konig.io/activity/Pp_Q_Y4TyQUAAAFaAAVoAA> a konig:LoadModelFromSpreadsheet ; 
+	<http://www.w3.org/ns/activitystreams#endTime> "2017-02-02T13:10:38.900-05:00"^^xsd:dateTime . 
+
+schema:Person a owl:Class . 
+
+<https://spanner.googleapis.com/v1/{gcpProjectId}/datasets/schema/tables/Person> a konig:GoogleSpannerTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:databaseName "schema" ; 
+		gcp:tableName "Person" ]  . 

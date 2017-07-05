@@ -44,6 +44,12 @@
 		    <artifactId>google-api-services-bigquery</artifactId>
 		    <version>v2-rev306-1.22.0</version>
 		</dependency>
+		
+		<dependency>
+		    <groupId>com.google.cloud</groupId>
+		    <artifactId>google-cloud-spanner</artifactId>
+		    <version>0.17.2-beta</version>
+		</dependency>
   	
     <dependency>
       <groupId>junit</groupId>

@@ -5,7 +5,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.Vertex;
 
-public class LocalNameTableMapper implements BigQueryTableMapper {
+public class LocalNameTableMapper implements TableMapper {
 
 	
 	@Override

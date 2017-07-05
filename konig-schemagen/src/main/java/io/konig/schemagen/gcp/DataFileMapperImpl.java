@@ -8,11 +8,11 @@ public class DataFileMapperImpl implements DataFileMapper {
 	
 	private File outDir;
 	private DatasetMapper datasetMapper;
-	private BigQueryTableMapper tableMapper;
+	private TableMapper tableMapper;
 	
 	
 	
-	public DataFileMapperImpl(File outDir, DatasetMapper datasetMapper, BigQueryTableMapper tableMapper) {
+	public DataFileMapperImpl(File outDir, DatasetMapper datasetMapper, TableMapper tableMapper) {
 		this.outDir = outDir;
 		this.datasetMapper = datasetMapper;
 		this.tableMapper = tableMapper;

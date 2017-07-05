@@ -1,9 +1,7 @@
 package io.konig.schemagen.gcp;
 
-import java.net.URI;
 import java.util.List;
 
-import com.google.api.services.bigquery.model.ExternalDataConfiguration;
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableSchema;
