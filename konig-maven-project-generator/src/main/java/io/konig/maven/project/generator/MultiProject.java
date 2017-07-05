@@ -25,10 +25,14 @@ import java.io.File;
 
 import java.io.IOException;
 
+import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
+import io.konig.schemagen.maven.RdfConfig;
+
 public class MultiProject extends MavenProjectConfig {
 	
 	private RdfModelGenerator rdfModel;
 	private JavaModelGenerator javaModel;
+	private GoogleCloudPlatformConfig googleCloudPlatform;
 
 	public RdfModelGenerator getRdfModel() {
 		return rdfModel;
@@ -46,6 +50,15 @@ public class MultiProject extends MavenProjectConfig {
 		this.javaModel = javaModel;
 	}
 
+	
+	public GoogleCloudPlatformConfig getGoogleCloudPlatform() {
+		return googleCloudPlatform;
+	}
+
+	public void setGoogleCloudPlatform(GoogleCloudPlatformConfig googleCloudPlatform) {
+		this.googleCloudPlatform = googleCloudPlatform;
+	}
+
 	public void run() throws MavenProjectGeneratorException, IOException {
 		ParentProjectGenerator parent = prepare();
 		parent.run();
@@ -58,6 +71,12 @@ public class MultiProject extends MavenProjectConfig {
 			setRdfSourceDir(new File(rdfModel.baseDir(), "target/generated/rdf"));
 		}
 		parent.add(rdfModel);
+		if (googleCloudPlatform != null) {
+			GoogleCloudPlatformModelGenerator gcp = 
+				new GoogleCloudPlatformModelGenerator(googleCloudPlatform);
+			
+			parent.add(gcp);
+		}
 		parent.add(javaModel);
 		parent.init(this);
 		return parent;

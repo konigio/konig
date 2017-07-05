@@ -28,6 +28,12 @@
 		
   	<dependency>
   		<groupId>io.konig</groupId>
+  		<artifactId>konig-maven-common</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
+		
+  	<dependency>
+  		<groupId>io.konig</groupId>
   		<artifactId>konig-gae-generator</artifactId>
   		<version>${konig.version}</version>
   	</dependency>
