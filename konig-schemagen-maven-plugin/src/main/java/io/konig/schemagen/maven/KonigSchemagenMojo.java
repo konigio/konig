@@ -462,7 +462,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if (java.isGenerateCanonicalJsonReaders()) {
 				generateCanonicalJsonReaders();
 			}
-			generateJavaCode(structure);
+			generateJavaCode();
 		}
 		
 	}
@@ -635,14 +635,15 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		return datasetMapper;
 	}
 
-	private void generateJavaCode(ClassStructure structure) throws IOException, CodeGeneratorException {
+	private void generateJavaCode() throws IOException, CodeGeneratorException {
 		
 		final JCodeModel model = new JCodeModel();
 		if (java.getPackageRoot()==null) {
 			throw new CodeGeneratorException("javaCodeGenerator.packageRoot must be defined");
 		}
+		
 		JavaNamer javaNamer = new BasicJavaNamer(java.getPackageRoot(), nsManager);
-		JavaClassBuilder classBuilder = new JavaClassBuilder(structure, javaNamer, owlReasoner);
+		JavaClassBuilder classBuilder = new JavaClassBuilder(classStructure(), javaNamer, owlReasoner);
 		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(owlReasoner, shapeManager, javaNamer);
 		
 		classBuilder.buildAllClasses(model);

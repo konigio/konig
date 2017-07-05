@@ -27,7 +27,7 @@ public class JavaConfig {
 
 	private File javaDir;
 	private String packageRoot;
-	private boolean generateCanonicalJsonReaders=true;
+	private boolean generateCanonicalJsonReaders=false;
 	
 	public File getJavaDir() {
 		return javaDir;
