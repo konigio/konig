@@ -1,11 +1,22 @@
 package io.konig.schemagen.maven;
 
+import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
+
+import org.apache.maven.execution.MavenSession;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -24,9 +35,13 @@ import java.util.HashSet;
  */
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.FileUtils;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.rio.RDFHandlerException;
@@ -53,6 +68,9 @@ import io.konig.gae.datastore.SimpleDaoNamer;
 import io.konig.gae.datastore.impl.SimpleEntityNamer;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
+import io.konig.maven.project.generator.MavenProjectGeneratorException;
+import io.konig.maven.project.generator.MultiProject;
+import io.konig.maven.project.generator.ParentProjectGenerator;
 import io.konig.openapi.generator.OpenApiGenerateRequest;
 import io.konig.openapi.generator.OpenApiGenerator;
 import io.konig.openapi.generator.OpenApiGeneratorException;
@@ -160,11 +178,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private GoogleCloudPlatformConfig googleCloudPlatform;
     
-    @Parameter DataServicesConfig dataServices;
-    
     @Parameter
     private HashSet<String> excludeNamespace;
-    
 	
 
     @Parameter
@@ -176,6 +191,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 @Parameter
 	 private File projectJsonldFile;
 	 
+	 @Parameter
+	 private MultiProject multiProject;
+	 
 
     
     private NamespaceManager nsManager;
@@ -186,6 +204,15 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private Graph owlGraph;
     private ContextManager contextManager;
     private ClassStructure structure;
+
+	@Component
+	private MavenProject mavenProject;
+
+	@Component
+	private MavenSession mavenSession;
+
+	@Component
+	private BuildPluginManager pluginManager;
 
     public void execute() throws MojoExecutionException   {
     	
@@ -215,29 +242,100 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generatePlantUMLDomainModel();
 			generateJava();
 			generateDataServices();
+			generateMultiProject();
 			
 			updateRdf();
 			
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
-				YamlParseException | DataAppGeneratorException e) {
+				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
 		}
       
     }
     
-    private void generateDataServices() throws IOException, OpenApiGeneratorException, YamlParseException, DataAppGeneratorException {
-		if (dataServices != null) {
+    private void generateMultiProject() throws MavenProjectGeneratorException, IOException {
+		if (multiProject != null) {
+			multiProject.run();
+		}
 		
+	}
+
+	private void generateDataServices() throws IOException, OpenApiGeneratorException, YamlParseException, DataAppGeneratorException, MojoExecutionException {
+		DataServicesConfig dataServices = googleCloudPlatform==null ? null : googleCloudPlatform.getDataServices();
+    	if (dataServices != null) {
+		
+    		dataServices.init(mavenProject);
 			File openapiFile = dataServices.getOpenApiFile();
 			File infoFile = dataServices.getInfoFile();
 			File configFile = dataServices.getConfigFile();
 			
 			generateOpenApiSpecification(openapiFile, infoFile);
 			generateAppConfigFile(openapiFile, configFile);
+			copyDataAppWar(dataServices.getWebappDir());
+			copyCredentials(dataServices.getWebappDir());
 			
 		}
+		
+	}
+
+	private void copyCredentials(File webappDir) throws MojoExecutionException, IOException {
+		
+		File credentials = googleCloudPlatform.getCredentials();
+		if (credentials == null) {
+			String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+			if (credentialsPath == null) {
+				String msg =
+					"The location of the Google Cloud credentials is not defined. " + 
+					"Please define the GOOGLE_APPLICATION_CREDENTIALS " +
+					"environment variable, or set the property 'konig.gcp.credentials'.";
+				
+				throw new MojoExecutionException(msg);
+			}
+			credentials = new File(credentialsPath);
+		}
+		
+		File target = new File(webappDir, "WEB-INF/classes/konig/gcp/credentials.json");
+		
+		FileUtils.copyFile(credentials, target);
+		
+		
+	}
+
+	private void copyDataAppWar(File basedir) throws MojoExecutionException {
+		
+		String konigVersion = mavenProject.getPluginArtifactMap()
+				.get("io.konig:konig-schemagen-maven-plugin").getVersion();
+		
+		
+		
+		executeMojo(
+			plugin(
+				groupId("org.apache.maven.plugins"),
+				artifactId("maven-dependency-plugin"),
+				version("3.0.1")
+			),
+			goal("unpack"),
+			configuration(
+				element(
+					name("artifactItems"), 
+						element(name("artifactItem"),
+							element(name("groupId"), "io.konig"),
+							element(name("artifactId"), "konig-data-app-gcp"),
+							element(name("version"), konigVersion),
+							element(name("type"), "war"),
+							element(name("overWrite"), "true"),
+							element(name("outputDirectory"), basedir.getAbsolutePath())
+						)
+				)	
+			),
+			executionEnvironment(
+				mavenProject,
+				mavenSession,
+				pluginManager
+			)
+		);
 		
 	}
 

@@ -43,6 +43,12 @@
   		<artifactId>konig-data-app-generator</artifactId>
   		<version>${konig.version}</version>
   	</dependency>
+		
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-maven-project-generator</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
   
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -66,7 +72,11 @@
 	    <artifactId>plantuml</artifactId>
 	    <version>8050</version>
 		</dependency>
-    
+     <dependency>
+        <groupId>org.twdata.maven</groupId>
+        <artifactId>mojo-executor</artifactId>
+        <version>2.2.0</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

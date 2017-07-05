@@ -15,6 +15,7 @@ public class Yaml {
 
 	
 	public static void write(File outFile, Object object) throws IOException {
+		outFile.getParentFile().mkdirs();
 		try (FileWriter writer = new FileWriter(outFile)) {
 			write(writer, object);
 		}
