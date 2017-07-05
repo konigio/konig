@@ -1,0 +1,153 @@
+package io.konig.maven.project.generator;
+
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
+public class XmlSerializer {
+	
+	private int indentWidth = 3;
+
+	private PrintWriter out;
+	private int indent;
+	
+	public XmlSerializer(Writer out) {
+		this.out = out instanceof PrintWriter ? (PrintWriter) out : new PrintWriter(out);
+		indent = 0;
+	}
+	
+	public void flush() {
+		out.flush();
+	}
+	
+	public int getIndentWidth() {
+		return indentWidth;
+	}
+
+
+	public void setIndentWidth(int indentWidth) {
+		this.indentWidth = indentWidth;
+	}
+
+
+	public int getIndent() {
+		return indent;
+	}
+
+
+
+	public void setIndent(int indent) {
+		this.indent = indent;
+	}
+
+
+
+	public void write(Object pojo, String tag) {
+		beginTag(tag);
+		out.println();
+		printProperties(pojo);
+		indent();
+		endTag(tag);
+		
+	}
+
+
+	private void printProperties(Object pojo) {
+		
+		push();
+		List<Field> fieldList = new ArrayList<>();
+		addFields(pojo.getClass(), fieldList);
+		for (Field field : fieldList) {
+			field.setAccessible(true);
+			try {
+				Object value = field.get(pojo);
+				if (value != null) {
+					indent();
+					String fieldName = field.getName();
+					if (isSimpleValue(value)) {
+						printSimpleValue(value, fieldName);
+					} else {
+						write(value, fieldName);
+					}
+					
+				}
+			} catch (Throwable e) {
+				throw new RuntimeException(e);
+			}
+		}
+		pop();
+		
+	}
+
+	private void printSimpleValue(Object value, String fieldName) {
+
+		beginTag(fieldName);
+		String text = value.toString();
+		if (value instanceof File) {
+			text = text.replace('\\', '/');
+		}
+		out.print(text);
+		endTag(fieldName);
+		
+	}
+
+	private boolean isSimpleValue(Object value) {
+		
+		return 
+			(value instanceof String) ||
+			(value instanceof File);
+	}
+
+
+
+	private void beginTag(String tag) {
+		out.print('<');
+		out.print(tag);
+		out.print('>');
+		
+	}
+	
+	private void endTag(String tag) {
+		out.print("</");
+		out.print(tag);
+		out.println('>');
+		
+	}
+
+
+	public void indent() {
+		for (int i=0; i<indent*indentWidth; i++) {
+			out.print(' ');
+		}
+		
+	}
+
+	private void addFields(Class<?> type, List<Field> fieldList) {
+		
+		Field[] array = type.getDeclaredFields();
+		for (Field field : array) {
+			fieldList.add(field);
+		}
+		
+		Class<?> superClass = type.getSuperclass();
+		if (superClass != Object.class && superClass!=null) {
+			addFields(superClass, fieldList);
+		}
+		
+	}
+
+	private void push() {
+		indent++;
+	}
+	
+	private void pop() {
+		indent--;
+	}
+	
+	
+	
+
+}

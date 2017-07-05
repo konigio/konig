@@ -21,6 +21,12 @@
 
   <dependencies>
   
+		
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-maven-common</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
   	
 		<dependency>
 		    <groupId>org.apache.velocity</groupId>

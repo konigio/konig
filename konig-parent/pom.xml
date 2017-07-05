@@ -57,6 +57,7 @@
   <modules>
   	<module>../konig-yaml</module>
   	<module>../konig-java</module>
+  	<module>../konig-maven-common</module>
   	<module>../konig-core</module>
   	<module>../konig-openapi-model</module>
   	<module>../konig-jsonschema-model</module>
