@@ -33,8 +33,6 @@ import io.konig.core.vocab.Schema;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.ShapeNamer;
-import io.konig.shacl.SimpleShapeNamer;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
@@ -63,6 +61,24 @@ public class JsonReaderBuilderTest {
 	}
 	
 	@Test
+	public void testMultiProject() throws Exception {
+		loadFolder("src/test/resources/JsonReaderBuilderTest/multi-project");
+		JCodeModel model = new JCodeModel();
+		JDefinedClass jclass = builder.produceJsonReader(Schema.CreativeWork, model);
+		
+		Map<String, JFieldVar> fieldMap = jclass.fields();
+		
+		JFieldVar instance = fieldMap.get("INSTANCE");
+		assertTrue(instance != null);
+		
+
+		File file = new File("target/test/JsonReaderBuilderTest/multi-project");
+		IOUtil.recursiveDelete(file);
+		file.mkdirs();
+		model.build(file);
+	}
+
+	@Ignore
 	public void testSubclasses() throws Exception {
 
 		load("JsonReaderBuilderTest/model.ttl");
@@ -118,6 +134,17 @@ public class JsonReaderBuilderTest {
 		shapeLoader.load(graph);
 		hierarchy.init(shapeManager, owlReasoner);
 
+		builder = new JsonReaderBuilder(hierarchy, javaNamer, datatypeMapper, owlReasoner);
+		
+	}
+
+	
+	private void loadFolder(String path) throws RDFParseException, RDFHandlerException, IOException {
+		
+		File sourceDir = new File(path);
+		
+		RdfUtil.loadTurtle(sourceDir, graph, shapeManager);
+		hierarchy.init(shapeManager, owlReasoner);
 		builder = new JsonReaderBuilder(hierarchy, javaNamer, datatypeMapper, owlReasoner);
 		
 	}
