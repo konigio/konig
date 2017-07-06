@@ -10,7 +10,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import io.konig.core.KonigException;
 import io.konig.core.util.IOUtil;
 import io.konig.gcp.datasource.SpannerTableReference;
-import io.konig.shacl.Shape;
 
 public class SpannerTableWriter implements SpannerTableVisitor {
 	
@@ -32,10 +31,8 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 			writer = new FileWriter(tableFile);
 
 			JsonGenerator generator = factory.createJsonGenerator(writer);
-			generator.enablePrettyPrint();
-			generator.writeStartArray();
 			generator.writeString(writeTableDefinition(table));
-			generator.writeEndArray();
+			//generator.writeEndArray();
 			generator.flush();
 		
 		} catch (IOException e) {
@@ -52,19 +49,19 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 		if (tableRef == null) {
 			throw new KonigException("Table reference");
 		}
-		String tableId = tableRef.getTableName();
-		if (tableId == null) {
-			throw new KonigException("tableId is not defined");
+		String tableName = tableRef.getTableName();
+		if (tableName == null) {
+			throw new KonigException("tableName is not defined");
 		}
-		String datasetId = tableRef.getDatabaseName();
-		if (datasetId == null) {
-			throw new KonigException("Database Id is not defined for table: " + tableId);
+		String databaseName = tableRef.getDatabaseName();
+		if (databaseName == null) {
+			throw new KonigException("Database Id is not defined for table: " + tableName);
 		}
 		
 		StringBuilder builder = new StringBuilder();
-		builder.append(datasetId);
+		builder.append(databaseName);
 		builder.append('.');
-		builder.append(tableId);
+		builder.append(tableName);
 		builder.append(".json");
 		
 		return new File(baseDir, builder.toString());
@@ -75,11 +72,11 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 		StringBuilder builder = new StringBuilder();
 		builder.append("CREATE TABLE ");
 		builder.append(table.getTableReference().getTableName());
-		builder.append("(");
+		builder.append(" (").append(System.getProperty("line.separator"));
 		
 		builder.append(writeFieldDefinition(table));
 		
-		builder.append(")");
+		builder.append(");");
 		return builder.toString();
 	}
 	
@@ -88,15 +85,28 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 		StringBuilder builder = new StringBuilder();
 		int i = 0;
 		for (SpannerTable.Field field : table.getFields()) {
-			if (i > 0) builder.append(", ");
-			builder.append(field.getFieldName());
-			builder.append(" ");
-			builder.append(field.getFieldType() + "(1024)");
+			if (i > 0) builder.append(",\n");
+			
+			builder.append("\t").append(field.getFieldName()).append(" ");
+			
+			if (field.getFieldType() == SpannerDatatype.ARRAY) {
+				builder.append(SpannerDatatype.ARRAY.toString()).append("<");
+			}
+			
+			builder.append(field.getFieldType());
+			
+			if (field.getFieldType() == SpannerDatatype.STRING) {
+				builder.append("(MAX)");
+			}
+				
+				
+			if (field.getFieldType() == SpannerDatatype.ARRAY) {
+				builder.append(">");
+			}
+			
 			FieldMode mode = field.getFieldMode();
 			if (mode == FieldMode.REQUIRED) {
-				
-				builder.append(" ");
-				builder.append("NOT NULL");
+				builder.append(" NOT NULL");
 			}
 			++i;
 		}
