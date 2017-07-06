@@ -12,6 +12,7 @@ public class GoogleCloudPlatformConfig {
 	private String enumShapeNameTemplate;
     private File credentials;
 	private DataServicesConfig dataServices;
+	private boolean enableBigQueryTransform=true;
 	
 	public GoogleCloudPlatformConfig() {
 		
@@ -84,7 +85,13 @@ public class GoogleCloudPlatformConfig {
 	public void setCredentials(File credentials) {
 		this.credentials = credentials;
 	}
-	
-	
+
+	public boolean isEnableBigQueryTransform() {
+		return enableBigQueryTransform;
+	}
+
+	public void setEnableBigQueryTransform(boolean enableBigQueryTransform) {
+		this.enableBigQueryTransform = enableBigQueryTransform;
+	}
 	
 }
