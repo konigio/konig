@@ -26,15 +26,44 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.StringWriter;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import io.konig.schemagen.maven.DataServicesConfig;
 import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
+import io.konig.schemagen.maven.WorkbookProcessor;
 
 public class XmlSerializerTest {
-
+	
 	@Test
-	public void test() {
+	public void testWorkbook() {
+		WorkbookProcessor workbook = new WorkbookProcessor();
+		workbook.setWorkbookFile(new File("foo/bar.xlsx"));
+		
+		StringWriter buffer = new StringWriter();
+		buffer.write("\n");
+		XmlSerializer serializer = new XmlSerializer(buffer);
+		serializer.setIndent(1);
+		serializer.indent();
+		
+		
+		serializer.write(workbook, "googleCloudPlatform");
+		serializer.flush();
+		
+		String expected = "\n" + 
+				"   <googleCloudPlatform>\n" + 
+				"      <workbookFile>foo/bar.xlsx</workbookFile>\n" + 
+				"      <inferRdfPropertyDefinitions>true</inferRdfPropertyDefinitions>\n" + 
+				"      <failOnWarnings>false</failOnWarnings>\n" + 
+				"      <failOnErrors>false</failOnErrors>\n" + 
+				"   </googleCloudPlatform>\n" + 
+				"";
+		String actual = buffer.toString().replace("\r", "");
+		assertEquals(expected, actual);
+	}
+
+	@Ignore
+	public void testGoogleCloudPlatform() {
 		
 		DataServicesConfig dataServices = new DataServicesConfig();
 		dataServices.setBasedir(new File("base/foo"));

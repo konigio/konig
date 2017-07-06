@@ -30,7 +30,7 @@
             <rootDir>${basedir}/target/generated</rootDir>
           </defaults>
           <rdfSourceDir>${project.rdfSourceDir}</rdfSourceDir>
-$gcpConfig
+$googleCloudPlatform
         </configuration>
         <executions>
           <execution>

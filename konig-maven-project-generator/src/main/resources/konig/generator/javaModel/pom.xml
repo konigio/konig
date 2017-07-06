@@ -30,13 +30,7 @@
 	  				<rootDir>${basedir}/target/generated</rootDir>
 	  			</defaults>
 	  			<rdfSourceDir>${project.rdfSourceDir}</rdfSourceDir>
-	  	
-	  			<java>
-	  				<generateCanonicalJsonReaders>${java.generateCanonicalJsonReaders}</generateCanonicalJsonReaders>
-	  				<packageRoot>${java.packageRoot}</packageRoot>
-	  				<javaDir>${basedir}/src/main/java</javaDir>
-	  			</java>
-	  			
+$java
 	  		</configuration>
 	  		<executions>
 	  			<execution>

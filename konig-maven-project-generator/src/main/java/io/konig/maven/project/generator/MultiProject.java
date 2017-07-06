@@ -26,31 +26,31 @@ import java.io.File;
 import java.io.IOException;
 
 import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
-import io.konig.schemagen.maven.RdfConfig;
+import io.konig.schemagen.maven.JavaCodeGeneratorConfig;
+import io.konig.schemagen.maven.WorkbookProcessor;
 
 public class MultiProject extends MavenProjectConfig {
 	
-	private RdfModelGenerator rdfModel;
-	private JavaModelGenerator javaModel;
+	private WorkbookProcessor workbook;
+	private JavaCodeGeneratorConfig java;
 	private GoogleCloudPlatformConfig googleCloudPlatform;
-
-	public RdfModelGenerator getRdfModel() {
-		return rdfModel;
-	}
-
-	public void setRdfModel(RdfModelGenerator rdfModel) {
-		this.rdfModel = rdfModel;
-	}
 	
-	public JavaModelGenerator getJavaModel() {
-		return javaModel;
+	public WorkbookProcessor getWorkbook() {
+		return workbook;
 	}
 
-	public void setJavaModel(JavaModelGenerator javaModel) {
-		this.javaModel = javaModel;
+	public void setWorkbook(WorkbookProcessor workbook) {
+		this.workbook = workbook;
 	}
 
-	
+	public JavaCodeGeneratorConfig getJava() {
+		return java;
+	}
+
+	public void setJava(JavaCodeGeneratorConfig java) {
+		this.java = java;
+	}
+
 	public GoogleCloudPlatformConfig getGoogleCloudPlatform() {
 		return googleCloudPlatform;
 	}
@@ -65,20 +65,21 @@ public class MultiProject extends MavenProjectConfig {
 	}
 	
 	public ParentProjectGenerator prepare() throws MavenProjectGeneratorException {
-		ParentProjectGenerator parent = new ParentProjectGenerator();
-		if (rdfModel != null) {
-			rdfModel.init(this);
-			setRdfSourceDir(new File(rdfModel.baseDir(), "target/generated/rdf"));
+		ParentProjectGenerator parent = new ParentProjectGenerator(this);
+		if (workbook != null) {
+			RdfModelGenerator rdf = new RdfModelGenerator(this, workbook);
+			setRdfSourceDir(new File(rdf.baseDir(), "target/generated/rdf"));
+			parent.add(rdf);
 		}
-		parent.add(rdfModel);
 		if (googleCloudPlatform != null) {
 			GoogleCloudPlatformModelGenerator gcp = 
-				new GoogleCloudPlatformModelGenerator(googleCloudPlatform);
+				new GoogleCloudPlatformModelGenerator(this, googleCloudPlatform);
 			
 			parent.add(gcp);
 		}
-		parent.add(javaModel);
-		parent.init(this);
+		if (java != null) {
+			parent.add(new JavaModelGenerator(this, java));
+		}
 		return parent;
 	}
 }

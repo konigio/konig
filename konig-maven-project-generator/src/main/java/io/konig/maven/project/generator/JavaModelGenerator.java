@@ -22,45 +22,25 @@ package io.konig.maven.project.generator;
 
 import java.io.File;
 
-import org.apache.velocity.VelocityContext;
+import io.konig.schemagen.maven.JavaCodeGeneratorConfig;
 
-public class JavaModelGenerator extends MavenProjectGenerator {
+public class JavaModelGenerator extends ConfigurableProjectGenerator<JavaCodeGeneratorConfig> {
 	
-	private JavaConfig javaConfig;
 	
-	public JavaModelGenerator() {
+	public JavaModelGenerator(MavenProjectConfig mavenProject, JavaCodeGeneratorConfig javaConfig) {
+		super(javaConfig, "java");
 		setTemplatePath("konig/generator/javaModel/pom.xml");
 		setArtifactSuffix("-java-model");
 		setNameSuffix("Java Model");
-	}
-	
-	@Override
-	public void init(MavenProjectConfig base) throws MavenProjectGeneratorException {
-		super.init(base);
-		if (javaConfig == null) {
-			javaConfig = new JavaConfig();
-		}
-		if (javaConfig.getJavaDir() == null) {
-			javaConfig.setJavaDir(new File(baseDir(), "src/main/java"));
-		}
-		if (javaConfig.getPackageRoot() == null) {
-			javaConfig.setPackageRoot(base.getGroupId());
-		}
-	}
+		
+		init(mavenProject);
 
-	@Override
-	public VelocityContext createVelocityContext() {
-		VelocityContext context = super.createVelocityContext();
-		context.put("java", javaConfig);
-		return context;
-	}
-
-	public JavaConfig getJava() {
-		return javaConfig;
-	}
-
-	public void setJava(JavaConfig javaConfig) {
-		this.javaConfig = javaConfig;
+		if (config.getJavaDir() == null) {
+			config.setJavaDir(new File(baseDir(), "src/main/java"));
+		}
+		if (config.getPackageRoot() == null) {
+			config.setPackageRoot(mavenProject.getGroupId());
+		}
 	}
 
 	

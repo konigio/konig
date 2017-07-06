@@ -20,8 +20,6 @@ package io.konig.maven.project.generator;
  * #L%
  */
 
-
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,27 +30,22 @@ public class ParentProjectGenerator extends MavenProjectGenerator {
 
 	private List<MavenProjectGenerator> children = new ArrayList<>();
 	
-	public ParentProjectGenerator() {
+	public ParentProjectGenerator(MavenProjectConfig mavenProject) {
+		super();
 		setTemplatePath("konig/generator/parent/pom.xml");
 		setArtifactSuffix("-parent");
 		setNameSuffix("Parent");
+		init(mavenProject);
 	}
 
 	public void add(MavenProjectGenerator child) {
 		if (child != null) {
+			String parentId = getMavenProject().getArtifactId();
+			child.getMavenProject().setParentId(parentId);
 			children.add(child);
 		}
 	}
 
-	@Override
-	public void init(MavenProjectConfig base) throws MavenProjectGeneratorException  {
-		super.init(base);
-		String parentId = getMavenProject().getArtifactId();
-		for (MavenProjectGenerator child : children) {
-			child.init(base);
-			child.getMavenProject().setParentId(parentId);
-		}
-	}
 
 	@Override
 	public void run() throws MavenProjectGeneratorException, IOException {

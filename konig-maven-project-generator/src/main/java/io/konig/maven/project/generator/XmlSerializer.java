@@ -119,7 +119,8 @@ public class XmlSerializer {
 		
 		return 
 			(value instanceof String) ||
-			(value instanceof File);
+			(value instanceof File) ||
+			(value.getClass() == Boolean.class);
 	}
 
 

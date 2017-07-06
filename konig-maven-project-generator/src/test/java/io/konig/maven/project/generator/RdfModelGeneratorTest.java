@@ -27,6 +27,8 @@ import java.io.File;
 
 import org.junit.Test;
 
+import io.konig.schemagen.maven.WorkbookProcessor;
+
 public class RdfModelGeneratorTest {
 
 	@Test
@@ -44,9 +46,10 @@ public class RdfModelGeneratorTest {
 		project.setName("Demo");
 		project.setKonigVersion("2.0.0-8");
 		
-		RdfModelGenerator generator = new RdfModelGenerator();
-		generator.setWorkbook(workbookFile);
-		generator.init(project);
+		WorkbookProcessor workbook = new WorkbookProcessor();
+		workbook.setWorkbookFile(workbookFile);
+		
+		RdfModelGenerator generator = new RdfModelGenerator(project, workbook);
 		
 		generator.run();
 		
