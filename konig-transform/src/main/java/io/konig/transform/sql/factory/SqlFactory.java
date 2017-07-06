@@ -39,6 +39,7 @@ import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.NullValueExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.Result;
@@ -72,6 +73,7 @@ import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinStatement;
 import io.konig.transform.rule.LiteralPropertyRule;
 import io.konig.transform.rule.MapValueTransform;
+import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
@@ -380,6 +382,10 @@ public class SqlFactory {
 				ValueExpression value = valueExpression(lpr.getValue());
 				
 				return new AliasExpression(value, predicate.getLocalName());
+			}
+			
+			if (p instanceof NullPropertyRule) {
+				return new AliasExpression(new NullValueExpression(), predicate.getLocalName());
 			}
 			
 			if (p instanceof FormulaPropertyRule) {

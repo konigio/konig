@@ -37,6 +37,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	private ShapeRuleFactory shapeRuleFactory;
 	private BigQueryCommandLineFactory bqCmdLineFactory;
 	private List<Throwable> errorList;
+	private int transformCount = 0;
 	
 	
 
@@ -136,6 +137,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		if (isLoadTransform(shape)) {
 			try {
 				shapeRule = loadTransform(shape);
+				transformCount++;
 			} catch (Throwable e) {
 				addError(e);
 			}
@@ -144,6 +146,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		if (isCurrentStateTransform(shape)) {
 			try {
 				currentStateTransform(shape, shapeRule);
+				transformCount++;
 			} catch (Throwable e) {
 				addError(e);
 			}
@@ -259,9 +262,11 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	}
 	private boolean bucketShapeExists(Shape shape) {
 		URI targetClass = shape.getTargetClass();
-		for (Shape s : shapeManager.getShapesByTargetClass(targetClass)) {
-			if (s.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
-				return true;
+		if (targetClass != null) {
+			for (Shape s : shapeManager.getShapesByTargetClass(targetClass)) {
+				if (s.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -288,23 +293,28 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	public void beginShapeTraversal() {
 		errorList = new ArrayList<>();
 		commandLineInfo = new ArrayList<>();
+		transformCount = 0;
 	}
 
 	@Override
 	public void endShapeTraversal() {
 
 
-		File scriptFile = scriptFile();
-		
-		try (
-			FileWriter scriptFileWriter = new FileWriter(scriptFile);
-			PrettyPrintWriter scriptQueryWriter = new PrettyPrintWriter(scriptFileWriter)
-		) {
-			writeBufferedCommands(scriptQueryWriter);
-		} catch (IOException e) {
-			errorList.add(e);
-		} finally {
-			commandLineInfo = null;
+		if (transformCount > 0) {
+			File scriptFile = scriptFile();
+			File parentDir = scriptFile.getParentFile();
+			if (parentDir.exists()) {
+				try (
+					FileWriter scriptFileWriter = new FileWriter(scriptFile);
+					PrettyPrintWriter scriptQueryWriter = new PrettyPrintWriter(scriptFileWriter)
+				) {
+					writeBufferedCommands(scriptQueryWriter);
+				} catch (IOException e) {
+					errorList.add(e);
+				} finally {
+					commandLineInfo = null;
+				}
+			}
 		}
 		
 	}

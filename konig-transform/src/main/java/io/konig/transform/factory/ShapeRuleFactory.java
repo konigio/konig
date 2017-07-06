@@ -37,6 +37,7 @@ import io.konig.transform.rule.InjectLiteralPropertyRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.LiteralPropertyRule;
 import io.konig.transform.rule.MapValueTransform;
+import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
@@ -139,7 +140,10 @@ public class ShapeRuleFactory {
 
 				if (target.getState() != TargetShape.State.OK) {
 					List<TargetProperty> unmapped = target.getUnmappedProperties();
-					if (unmapped.size()==1) {
+					setNullProperties(target, unmapped);
+					if (unmapped.isEmpty()) {
+						unmapped = null;
+					} else if (unmapped.size()==1) {
 						TargetProperty tp = unmapped.get(0);
 						if (tp.getPredicate().equals(Konig.modified)) {
 							unmapped = null;
@@ -155,6 +159,25 @@ public class ShapeRuleFactory {
 			createIdRule(target);
 			return assemble(target);
 
+		}
+
+		private void setNullProperties(TargetShape target, List<TargetProperty> unmapped) {
+
+			Iterator<TargetProperty> sequence = unmapped.iterator();
+			while (sequence.hasNext()) {
+				TargetProperty tp = sequence.next();
+				if (tp.getPredicate().equals(Konig.modified)) {
+					continue;
+				}
+				
+				PropertyConstraint p = tp.getPropertyConstraint();
+				Integer minCount = p.getMinCount();
+				if (minCount==null || minCount.equals(0)) {
+					tp.setNull(true);
+					sequence.remove();
+				}
+			}
+			
 		}
 
 		private void buildAggregations(TargetShape target) throws TransformBuildException {
@@ -369,6 +392,9 @@ public class ShapeRuleFactory {
 		}
 
 		private PropertyRule createPropertyRule(TargetProperty tp) throws TransformBuildException {
+			if (tp.isNull()) {
+				return new NullPropertyRule(null, tp.getPredicate());
+			}
 			if (tp instanceof DerivedDirectTargetProperty) {
 				
 				return new FormulaPropertyRule(null, tp.getPropertyConstraint(), tp.getPropertyConstraint());
