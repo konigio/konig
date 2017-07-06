@@ -46,9 +46,7 @@ public class GoogleCloudPlatformModelGeneratorTest {
 		
 		GoogleCloudPlatformConfig gcpConfig = new GoogleCloudPlatformConfig();
 		gcpConfig.setEnumShapeDir(new File("src/main/rdf/enumShapes"));
-		GoogleCloudPlatformModelGenerator generator = new GoogleCloudPlatformModelGenerator(gcpConfig);
-		
-		generator.init(project);
+		GoogleCloudPlatformModelGenerator generator = new GoogleCloudPlatformModelGenerator(project, gcpConfig);
 		
 		generator.run();
 		

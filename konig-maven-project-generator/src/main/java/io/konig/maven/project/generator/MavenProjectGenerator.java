@@ -25,11 +25,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.apache.velocity.Template;
@@ -48,8 +43,11 @@ public class MavenProjectGenerator {
 	private String artifactSuffix;
 	private String nameSuffix;
 	
+	public MavenProjectGenerator() {
+	}
 	
-	public void init(MavenProjectConfig base) throws MavenProjectGeneratorException  {
+	
+	protected void init(MavenProjectConfig base)  {
 		
 		if (mavenProject == null) {
 			mavenProject = new MavenProjectConfig();
@@ -73,10 +71,6 @@ public class MavenProjectGenerator {
 		}
 		if (mavenProject.getRdfSourceDir() == null) {
 			mavenProject.setRdfSourceDir(base.getRdfSourceDir());
-		}
-		
-		if (mavenProject.getKonigVersion()==null) {
-			throw new MavenProjectGeneratorException("konigVersion must be defined");
 		}
 
 		mavenProject.setBaseDir(new File(base.getBaseDir(), mavenProject.getArtifactId()));
@@ -157,7 +151,10 @@ public class MavenProjectGenerator {
 		}
 		
 	}
-
+	
+	protected VelocityContext getContext() {
+		return context;
+	}
 
 	protected VelocityContext createVelocityContext() {
 		context = new VelocityContext();

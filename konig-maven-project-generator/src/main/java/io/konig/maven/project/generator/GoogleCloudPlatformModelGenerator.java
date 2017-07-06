@@ -22,44 +22,23 @@ package io.konig.maven.project.generator;
 
 
 import java.io.IOException;
-import java.io.StringWriter;
-
-import org.apache.velocity.VelocityContext;
 
 import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
-import io.konig.schemagen.maven.RdfConfig;
 
-public class GoogleCloudPlatformModelGenerator extends MavenProjectGenerator {
+public class GoogleCloudPlatformModelGenerator extends ConfigurableProjectGenerator<GoogleCloudPlatformConfig> {
 	
-	private GoogleCloudPlatformConfig gcp;
 
 	public GoogleCloudPlatformModelGenerator(
+		MavenProjectConfig mavenProject,
 		GoogleCloudPlatformConfig config
 	) {
-		this.gcp = config;
+		super(config, "googleCloudPlatform");
 
 		setTemplatePath("konig/generator/gcpModel/pom.xml");
 		setArtifactSuffix("-gcp-model");
 		setNameSuffix("Google Cloud Platform Model");
+		init(mavenProject);
 	}
-	
-
-	@Override
-	public VelocityContext createVelocityContext() {
-		VelocityContext context = super.createVelocityContext();
-		StringWriter buffer = new StringWriter();
-		XmlSerializer xml = new XmlSerializer(buffer);
-		xml.setIndent(5);
-		xml.setIndentWidth(2);
-		
-		xml.indent();
-		xml.write(gcp, "googleCloudPlatform");
-		xml.flush();
-		context.put("gcpConfig", buffer.toString());
-		
-		return context;
-	}
-	
 
 
 	@Override

@@ -23,39 +23,23 @@ package io.konig.maven.project.generator;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
-import org.apache.velocity.VelocityContext;
+import io.konig.schemagen.maven.WorkbookProcessor;
 
-public class RdfModelGenerator extends MavenProjectGenerator {
-	private File workbook;
+public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProcessor> {
 	
-	public RdfModelGenerator() {
+	public RdfModelGenerator(MavenProjectConfig mavenProject, WorkbookProcessor workbook) {
+		super(workbook, "workbook");
 		setTemplatePath("konig/generator/rdf-model/pom.xml");
 		setArtifactSuffix("-rdf-model");
 		setNameSuffix("RDF Model");
-	}
-	
-	public File getWorkbook() {
-		return workbook;
+		init(mavenProject);
 	}
 
-	public void setWorkbook(File workbook) {
-		this.workbook = workbook;
-	}
-
-
-	@Override
-	protected VelocityContext createVelocityContext() {
-		VelocityContext context = super.createVelocityContext();
-		context.put("workbookFileName", workbook.getName());
-		return context;
-	}
 
 	@Override
 	public void run() throws MavenProjectGeneratorException, IOException {
-		if (workbook == null) {
+		if (config == null) {
 			throw new MavenProjectGeneratorException("workbook file must be defined");
 		}
 		super.run();
@@ -64,12 +48,10 @@ public class RdfModelGenerator extends MavenProjectGenerator {
 	}
 
 	private void copyWorkbook() throws MavenProjectGeneratorException, IOException {
-		File targetFile = new File(baseDir(), "src/" + workbook.getName());
+		File targetFile = new File(baseDir(), "src/" + config.getWorkbookFile().getName());
 		targetFile.getParentFile().mkdirs();
 		
-		Path source = workbook.toPath();
-		Path target = targetFile.toPath();
-		Files.copy(source, target);
+		FileUtil.copy(config.getWorkbookFile(), targetFile);
 	}
 
 	

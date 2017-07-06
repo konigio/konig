@@ -35,9 +35,7 @@
 	  			<defaults>
 	  				<rootDir>${basedir}/target/generated</rootDir>
 	  			</defaults>
-	  			<workbook>
-		  			<workbookFile>${basedir}/src/${workbookFileName}</workbookFile>
-	  			</workbook>
+$workbook
 	  		</configuration>
 	  		<executions>
 	  			<execution>

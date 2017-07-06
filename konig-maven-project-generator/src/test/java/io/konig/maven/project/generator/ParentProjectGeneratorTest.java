@@ -27,6 +27,8 @@ import java.io.File;
 
 import org.junit.Test;
 
+import io.konig.schemagen.maven.WorkbookProcessor;
+
 public class ParentProjectGeneratorTest {
 
 	@Test
@@ -45,12 +47,12 @@ public class ParentProjectGeneratorTest {
 		project.setName("Demo");
 		project.setKonigVersion("2.0.0-8");
 		
-		ParentProjectGenerator parent = new ParentProjectGenerator();
-		RdfModelGenerator rdfModel = new RdfModelGenerator();
-		rdfModel.setWorkbook(workbookFile);
+		WorkbookProcessor workbook = new WorkbookProcessor();
+		workbook.setWorkbookFile(workbookFile);
+		ParentProjectGenerator parent = new ParentProjectGenerator(project);
+		RdfModelGenerator rdfModel = new RdfModelGenerator(project, workbook);
 		
 		parent.add(rdfModel);
-		parent.init(project);
 		
 		parent.run();
 		
