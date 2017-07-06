@@ -2,12 +2,14 @@ package io.konig.schemagen.maven;
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 
 import java.io.Closeable;
 import java.io.File;
@@ -15,6 +17,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.maven.execution.MavenSession;
 
@@ -37,6 +40,7 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -70,7 +74,6 @@ import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
 import io.konig.maven.project.generator.MavenProjectGeneratorException;
 import io.konig.maven.project.generator.MultiProject;
-import io.konig.maven.project.generator.ParentProjectGenerator;
 import io.konig.openapi.generator.OpenApiGenerateRequest;
 import io.konig.openapi.generator.OpenApiGenerator;
 import io.konig.openapi.generator.OpenApiGeneratorException;
@@ -125,6 +128,7 @@ import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.showl.WorkbookToTurtleTransformer;
+import io.konig.transform.bigquery.BigQueryTransformGenerator;
 import io.konig.yaml.Yaml;
 import io.konig.yaml.YamlParseException;
 import net.sourceforge.plantuml.SourceFileReader;
@@ -142,6 +146,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private static final String DATA = "data";
 	private static final String DATASET = "dataset";
 	private static final String DEV_NULL = "/dev/null";
+	private static final String SCRIPTS = "scripts";
 	
 	@Parameter
 	private RdfConfig defaults;
@@ -228,7 +233,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			loadResources();
 
-			generateBigQueryTables();
+			generateGoogleCloudPlatform();
 			
 			generateJsonld();
 			generateAvro();
@@ -582,7 +587,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 	
-	private void generateBigQueryTables() throws IOException, MojoExecutionException {
+	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException {
 		if (googleCloudPlatform != null) {
 			
 			File gcpDir = googleCloudPlatform.gcpDir(defaults);
@@ -612,10 +617,33 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			BigQueryDatasetGenerator datasetGenerator = new BigQueryDatasetGenerator(bqSchemaDir, bqDatasetDir);
 			datasetGenerator.run();
+			
+			generateTransformScripts(bqOutDir);
 		}
 	}
 
 	
+	private void generateTransformScripts(File bigQueryDir) throws MojoExecutionException {
+		
+		
+		if (googleCloudPlatform.isEnableBigQueryTransform()) {
+			
+			File outDir = new File(bigQueryDir, SCRIPTS);
+		
+			BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner);
+			generator.generateAll();
+			List<Throwable> errorList = generator.getErrorList();
+			if (errorList != null && !errorList.isEmpty()) {
+				Log logger = getLog();
+				for (Throwable e : errorList) {
+					logger.error(e.getMessage());
+				}
+				throw new MojoExecutionException("Failed to generate BigQuery Transform", errorList.get(0));
+			}
+		}
+		
+	}
+
 	private BigQueryTableMapper createTableMapper() {
 		return new LocalNameTableMapper();
 	}
