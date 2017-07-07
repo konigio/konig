@@ -102,7 +102,7 @@ public class SpannerTableGenerator {
 		Integer maxCount = p.getMaxCount();
 		
 		if (maxCount==null || maxCount>1) {
-			return FieldMode.REPEATED;
+			throw new SchemaGeneratorException("Unsupported construct");
 		}
 		if (minCount!=null && maxCount!=null && minCount==1 && maxCount==1) {
 			return FieldMode.REQUIRED;

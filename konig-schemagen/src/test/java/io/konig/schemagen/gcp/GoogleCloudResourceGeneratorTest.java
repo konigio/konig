@@ -29,7 +29,6 @@ public class GoogleCloudResourceGeneratorTest {
 	}
 
 	@Ignore
-	//@Test
 	public void testBigQueryTable() throws Exception {
 		
 		ShapeManager shapeManager = loadShapes("GoogleCloudResourceGeneratorTest/testBigQueryTable.ttl");
@@ -46,7 +45,6 @@ public class GoogleCloudResourceGeneratorTest {
 	}
 	
 	@Test
-	//@Ignore
 	public void testSpannerTable() throws Exception {
 		
 		ShapeManager shapeManager = loadShapes("GoogleCloudResourceGeneratorTest/testSpannerTable.ttl");

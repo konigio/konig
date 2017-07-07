@@ -37,7 +37,6 @@ public class Konig {
 	public static final String SHAPE_DATA_SOURCE = "http://www.konig.io/ns/core/shapeDataSource";
 	public static final String IRI_TEMPLATE = "http://www.konig.io/ns/core/iriTemplate";
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
-	public static final String SPANNER_SOURCE = "http://www.konig.io/ns/core/spannerSource";
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
 	
