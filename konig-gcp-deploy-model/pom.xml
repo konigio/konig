@@ -1,0 +1,35 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.konig</groupId>
+    <artifactId>konig-parent</artifactId>
+    <version>2.0.0-8</version>
+    <relativePath>../konig-parent/pom.xml</relativePath>
+  </parent>
+  <artifactId>konig-gcp-deploy-model</artifactId>
+  <name>Konig Google Cloud Platform Deployment Model</name>
+  <description>A library that supports deployments to Google Cloud Platform</description>
+  <dependencies>
+		
+  	
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-yaml</artifactId>
+			<version>${konig.version}</version>
+  	</dependency>
+  	
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-core</artifactId>
+      <version>3.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    	
+  </dependencies>
+</project>

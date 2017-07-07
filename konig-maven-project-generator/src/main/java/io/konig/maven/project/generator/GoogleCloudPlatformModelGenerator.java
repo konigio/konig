@@ -26,7 +26,8 @@ import java.io.IOException;
 import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
 
 public class GoogleCloudPlatformModelGenerator extends ConfigurableProjectGenerator<GoogleCloudPlatformConfig> {
-	
+
+	public static final String ARTIFACT_SUFFIX = "-gcp-model";
 
 	public GoogleCloudPlatformModelGenerator(
 		MavenProjectConfig mavenProject,
@@ -35,7 +36,7 @@ public class GoogleCloudPlatformModelGenerator extends ConfigurableProjectGenera
 		super(config, "googleCloudPlatform");
 
 		setTemplatePath("konig/generator/gcpModel/pom.xml");
-		setArtifactSuffix("-gcp-model");
+		setArtifactSuffix(ARTIFACT_SUFFIX);
 		setNameSuffix("Google Cloud Platform Model");
 		init(mavenProject);
 	}
