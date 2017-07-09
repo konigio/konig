@@ -47,21 +47,28 @@ public class JsonWriterBuilder {
 	private JavaDatatypeMapper datatypeMapper;
 	private OwlReasoner owlReasoner;
 	private ClassAnalyzer classAnalyzer;
+	private Filter filter;
 	
 	
 	
 	public JsonWriterBuilder(OwlReasoner owlReasoner, ShapeManager shapeManager, JavaNamer javaNamer) {
+		this(owlReasoner, shapeManager, javaNamer, new Filter(null));
+	}
+
+	public JsonWriterBuilder(OwlReasoner owlReasoner, ShapeManager shapeManager, JavaNamer javaNamer, Filter filter) {
 		this.owlReasoner = owlReasoner==null ? new OwlReasoner(new MemoryGraph()) : owlReasoner;
 		this.shapeManager = shapeManager;
 		this.javaNamer = javaNamer;
 		datatypeMapper = new BasicJavaDatatypeMapper();
 		classAnalyzer = new ClassAnalyzer(shapeManager, owlReasoner);
+		this.filter = filter;
 	}
 
 
 	public void buildAll(Collection<Shape> list, JCodeModel model) throws SchemaGeneratorException {
 		for (Shape shape : list) {
-			if (shape.getId() instanceof URI && shape.getTargetClass() instanceof URI) {
+			
+			if (shape.getId() instanceof URI && shape.getTargetClass() instanceof URI && filter.acceptShape(shape)) {
 				buildJsonWriter(shape, model);
 			}
 		}
@@ -158,6 +165,9 @@ public class JsonWriterBuilder {
 		for (PropertyConstraint p : propertyList) {
 			
 			URI predicate = p.getPredicate();
+			if (!filter.acceptIndividual(predicate.stringValue())) {
+				continue;
+			}
 			String fieldName = predicate.getLocalName();
 			String getterName = BeanUtil.getterName(predicate);
 			URI datatype = p.getDatatype();

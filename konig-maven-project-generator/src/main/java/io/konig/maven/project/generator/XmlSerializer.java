@@ -26,6 +26,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class XmlSerializer {
@@ -69,12 +70,41 @@ public class XmlSerializer {
 	public void write(Object pojo, String tag) {
 		beginTag(tag);
 		out.println();
-		printProperties(pojo);
+		if (pojo instanceof Collection<?>) {
+			printCollection((Collection<?>) pojo);
+		} else {
+			printProperties(pojo);
+		}
 		indent();
 		endTag(tag);
 		
 	}
 
+
+	private void printCollection(Collection<?> container) {
+		push();
+		for (Object e : container) {
+			Class<?> type = e.getClass();
+			indent();
+			if (type == String.class) {
+				printSimpleValue(e, "param");
+			} else {
+				String tag = tagName(type.getSimpleName());
+				write(e, tag);
+			}
+		}
+		pop();
+		
+	}
+
+	private String tagName(String simpleName) {
+		StringBuilder builder = new StringBuilder();
+		builder.append(Character.toLowerCase(simpleName.charAt(0)));
+		for (int i=1; i<simpleName.length(); i++) {
+			builder.append(simpleName.charAt(i));
+		}
+		return builder.toString();
+	}
 
 	private void printProperties(Object pojo) {
 		

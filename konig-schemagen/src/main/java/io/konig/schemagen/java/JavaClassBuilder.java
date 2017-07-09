@@ -62,6 +62,7 @@ public class JavaClassBuilder {
 	private OwlReasoner reasoner;
 	private Graph graph;
 	private TypeInfo owlThing;
+	private Filter filter;
 	
 	public JavaClassBuilder(ShapeManager shapeManager, JavaNamer namer, OwlReasoner reasoner) {
 //		classAnalyzer = new ClassAnalyzer(shapeManager, reasoner);
@@ -72,14 +73,17 @@ public class JavaClassBuilder {
 		this.reasoner = reasoner;
 		this.graph = reasoner.getGraph();
 		mapper = new SmartJavaDatatypeMapper(reasoner);
+		filter = new Filter(null);
 	}
+	
 
-	public JavaClassBuilder(ClassStructure structure, JavaNamer namer, OwlReasoner reasoner) {
+	public JavaClassBuilder(ClassStructure structure, JavaNamer namer, OwlReasoner reasoner, Filter filter) {
 		hierarchy = structure;
 		this.namer = namer;
 		this.reasoner = reasoner;
 		this.graph = reasoner.getGraph();
 		mapper = new SmartJavaDatatypeMapper(reasoner);
+		this.filter = filter;
 	}
 	
 	public JavaDatatypeMapper getMapper() {
@@ -263,6 +267,11 @@ public class JavaClassBuilder {
 		
 		URI targetClass = shape.getTargetClass();
 		
+		if (targetClass == null || !filter.acceptIndividual(targetClass.stringValue())) {
+			return null;
+		}
+		
+		
 		try {
 			Vertex preferred = reasoner.preferredClass(targetClass);
 			targetClass = (URI) preferred.getId();
@@ -442,9 +451,12 @@ public class JavaClassBuilder {
 		
 		List<PropertyConstraint> list = shape.getProperty();
 		for (PropertyConstraint p : list) {
+			URI predicate = p.getPredicate();
 			if (
-				RDF.TYPE.equals(p.getPredicate()) ||
-				Konig.id.equals(p.getPredicate())
+				predicate==null ||
+				RDF.TYPE.equals(predicate) ||
+				Konig.id.equals(predicate) ||
+				!filter.acceptIndividual(predicate.stringValue())
 			) {
 				continue;
 			}

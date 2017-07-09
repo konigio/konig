@@ -100,6 +100,7 @@ import io.konig.schemagen.gcp.LocalNameTableMapper;
 import io.konig.schemagen.gcp.NamespaceDatasetMapper;
 import io.konig.schemagen.gcp.SimpleDatasetMapper;
 import io.konig.schemagen.java.BasicJavaNamer;
+import io.konig.schemagen.java.Filter;
 import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
 import io.konig.schemagen.java.JsonReaderBuilder;
@@ -671,8 +672,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 		JavaNamer javaNamer = new BasicJavaNamer(java.getPackageRoot(), nsManager);
-		JavaClassBuilder classBuilder = new JavaClassBuilder(classStructure(), javaNamer, owlReasoner);
-		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(owlReasoner, shapeManager, javaNamer);
+		Filter filter = new Filter(java.getFilter());
+		JavaClassBuilder classBuilder = new JavaClassBuilder(classStructure(), javaNamer, owlReasoner, filter);
+		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(owlReasoner, shapeManager, javaNamer, filter);
 		
 		classBuilder.buildAllClasses(model);
 		writerBuilder.buildAll(shapeManager.listShapes(), model);

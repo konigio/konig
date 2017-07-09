@@ -1,6 +1,7 @@
 package io.konig.schemagen.maven;
 
 import java.io.File;
+import java.util.List;
 
 public class JavaCodeGeneratorConfig {
 
@@ -8,6 +9,8 @@ public class JavaCodeGeneratorConfig {
 	private String packageRoot;
 	private String googleDatastoreDaoPackage;
 	private boolean generateCanonicalJsonReaders;
+	private List<FilterPart> filter;
+	
 	public File getJavaDir() {
 		return javaDir;
 	}
@@ -33,7 +36,12 @@ public class JavaCodeGeneratorConfig {
 	public void setGenerateCanonicalJsonReaders(boolean generateCanonicalJsonReaders) {
 		this.generateCanonicalJsonReaders = generateCanonicalJsonReaders;
 	}
-	
+	public List<FilterPart> getFilter() {
+		return filter;
+	}
+	public void setFilter(List<FilterPart> filter) {
+		this.filter = filter;
+	}
 	
 	
 }
