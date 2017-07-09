@@ -19,21 +19,61 @@ package io.konig.maven.project.generator;
  * limitations under the License.
  * #L%
  */
-
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import io.konig.schemagen.maven.DataServicesConfig;
+import io.konig.schemagen.maven.Exclude;
+import io.konig.schemagen.maven.FilterPart;
 import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
+import io.konig.schemagen.maven.JavaCodeGeneratorConfig;
 import io.konig.schemagen.maven.WorkbookProcessor;
 
 public class XmlSerializerTest {
+	
+	@Test
+	public void testJava() {
+		JavaCodeGeneratorConfig java = new JavaCodeGeneratorConfig();
+		List<FilterPart> filter = new ArrayList<>();
+		java.setFilter(filter);
+		Exclude exclude = new Exclude();
+		filter.add(exclude);
+		Set<String> namespaces = new HashSet<>();
+		exclude.setNamespaces(namespaces);
+		namespaces.add("http://schema.org/");
+		StringWriter buffer = new StringWriter();
+		buffer.write("\n");
+		XmlSerializer serializer = new XmlSerializer(buffer);
+		serializer.setIndent(1);
+		serializer.indent();
+		
+		
+		serializer.write(java, "java");
+		serializer.flush();
+		String expected = "\n" + 
+				"   <java>\n" + 
+				"      <generateCanonicalJsonReaders>false</generateCanonicalJsonReaders>\n" + 
+				"      <filter>\n" + 
+				"         <exclude>\n" + 
+				"            <namespaces>\n" + 
+				"               <param>http://schema.org/</param>\n" + 
+				"            </namespaces>\n" + 
+				"         </exclude>\n" + 
+				"      </filter>\n" + 
+				"   </java>\n" + 
+				"";
+		String actual = buffer.toString().replace("\r", "");
+		assertEquals(expected, actual);
+	}
 	
 	@Test
 	public void testWorkbook() {
@@ -62,7 +102,7 @@ public class XmlSerializerTest {
 		assertEquals(expected, actual);
 	}
 
-	@Ignore
+	@Test
 	public void testGoogleCloudPlatform() {
 		
 		DataServicesConfig dataServices = new DataServicesConfig();
@@ -95,6 +135,7 @@ public class XmlSerializerTest {
 			"         <basedir>base/foo</basedir>\n" + 
 			"         <infoFile>config/info.yaml</infoFile>\n" + 
 			"      </dataServices>\n" + 
+			"      <enableBigQueryTransform>true</enableBigQueryTransform>\n" + 
 			"   </googleCloudPlatform>\n" + 
 			"";
 		String actual = buffer.toString().replace("\r", "");

@@ -28,6 +28,12 @@
   		<version>${konig.version}</version>
   	</dependency>
   	
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-gcp-deploy-model</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
+  	
 		<dependency>
 		    <groupId>org.apache.velocity</groupId>
 		    <artifactId>velocity</artifactId>

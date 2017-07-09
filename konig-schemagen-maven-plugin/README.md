@@ -202,6 +202,7 @@ This plugin can be used to generate a suite of Maven projects:
 * {baseName}-rdf-model
 * {baseName}-java-model
 * {baseName}-gcp-model
+* {baseName}-gcp-deploy
 * {baseName}-data-catalog
 * {baseName}-appengine
 

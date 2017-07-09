@@ -25,6 +25,7 @@ import java.io.File;
 
 import java.io.IOException;
 
+import io.konig.deploy.gcp.GoogleCloudPlatformInfo;
 import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
 import io.konig.schemagen.maven.JavaCodeGeneratorConfig;
 import io.konig.schemagen.maven.WorkbookProcessor;
@@ -34,6 +35,7 @@ public class MultiProject extends MavenProjectConfig {
 	private WorkbookProcessor workbook;
 	private JavaCodeGeneratorConfig java;
 	private GoogleCloudPlatformConfig googleCloudPlatform;
+	private GoogleCloudPlatformInfo googleCloudPlatformDeployment;
 	
 	public WorkbookProcessor getWorkbook() {
 		return workbook;
@@ -53,6 +55,14 @@ public class MultiProject extends MavenProjectConfig {
 
 	public GoogleCloudPlatformConfig getGoogleCloudPlatform() {
 		return googleCloudPlatform;
+	}
+
+	public GoogleCloudPlatformInfo getGoogleCloudPlatformDeployment() {
+		return googleCloudPlatformDeployment;
+	}
+
+	public void setGoogleCloudPlatformDeployment(GoogleCloudPlatformInfo googleCloudPlatformDeployment) {
+		this.googleCloudPlatformDeployment = googleCloudPlatformDeployment;
 	}
 
 	public void setGoogleCloudPlatform(GoogleCloudPlatformConfig googleCloudPlatform) {
@@ -79,6 +89,10 @@ public class MultiProject extends MavenProjectConfig {
 		}
 		if (java != null) {
 			parent.add(new JavaModelGenerator(this, java));
+		}
+		if (googleCloudPlatformDeployment != null) {
+			GcpDeployProjectGenerator deploy = new GcpDeployProjectGenerator(this, googleCloudPlatformDeployment);
+			parent.add(deploy);
 		}
 		return parent;
 	}
