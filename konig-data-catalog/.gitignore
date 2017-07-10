@@ -1,3 +1,8 @@
 /bin/
 /target/
 /velocity.log
+
+.settings
+.classpath
+.project
+

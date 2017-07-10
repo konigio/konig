@@ -1,2 +1,6 @@
 /target/
 /pom.xml.versionsBackup
+.settings
+.classpath
+.project
+
