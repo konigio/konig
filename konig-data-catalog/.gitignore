@@ -1,6 +1,3 @@
 /bin/
 /target/
-/.project
 /velocity.log
-/.classpath
-/.settings/
