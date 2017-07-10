@@ -1,3 +1,8 @@
 /target/
 /.recommenders
 /pom.xml.versionsBackup
+
+.settings
+.classpath
+.project
+
