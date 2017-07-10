@@ -51,6 +51,24 @@ public class ShapeLoaderTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeLoader loader = new ShapeLoader(shapeManager);
 	
+	
+
+	@Test
+	public void testDefaultShapeFor() throws Exception {
+		Graph graph = loadGraph("ShapeLoaderTest/testDefaultShapeFor.ttl");
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		loader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		List<URI> appList = shape.getDefaultShapeFor();
+		assertTrue(appList != null);
+
+		assertTrue(appList.contains(uri("http://example.com/app/MyCatalog")));
+		assertTrue(appList.contains(uri("http://example.com/app/MyShoppingCart")));
+	}
+	
 	@Test
 	public void testConstraint() throws Exception {
 		Graph graph = loadGraph("ShapeLoaderTest/testConstraint.ttl");
@@ -76,7 +94,7 @@ public class ShapeLoaderTest {
 		assertEquals(expected, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testDerivedProperty() throws Exception {
 
 		Graph graph = loadGraph("ShapeLoaderTest/testDerivedProperty.ttl");
@@ -93,7 +111,7 @@ public class ShapeLoaderTest {
 		assertEquals("1 + 2 + 3", p.getFormula().toString());
 	}
 	
-	@Ignore 
+	@Test 
 	public void testIdFormat() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		Graph graph = new MemoryGraph();
@@ -108,7 +126,7 @@ public class ShapeLoaderTest {
 		
 	}
 	
-	@Ignore 
+	@Test 
 	public void testFormula() throws Exception {
 		Graph graph = loadGraph("ShapeLoaderTest/testFormula.ttl");
 
@@ -140,7 +158,7 @@ public class ShapeLoaderTest {
 
 	
 	
-	@Ignore
+	@Test
 	public void testType() {
 		
 		URI shapeId = uri("http://example.com/PersonShape");
@@ -168,7 +186,7 @@ public class ShapeLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testShape() {
 		URI shapeId = uri("http://example.com/shape/PersonShape");
 		URI addressShapeId = uri("http://example.com/shape/PostalAddress");

@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -37,7 +38,6 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
-import io.konig.datasource.DataSource;
 import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -46,6 +46,40 @@ import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
+	
+	@Test
+	public void testDefaultShape() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("default-shape.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+		input.close();
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape != null);
+		
+		Set<URI> set = graph.v(shapeId).out(Konig.defaultShapeFor).toUriSet();
+		assertEquals(2, set.size());
+		assertTrue(set.contains(uri("http://example.com/applications/MyCatalog")));
+		assertTrue(set.contains(uri("http://example.com/applications/MyShoppingCart")));
+		
+		List<URI> appList = shape.getDefaultShapeFor();
+		assertTrue(appList != null);
+		assertEquals(2, appList.size());
+		assertTrue(appList.contains(uri("http://example.com/applications/MyCatalog")));
+		assertTrue(appList.contains(uri("http://example.com/applications/MyShoppingCart")));
+	}
 	
 	@Test
 	public void testAggregateFunction() throws Exception {
@@ -76,7 +110,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDatasourceParams() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("test-datasource-params.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -98,7 +132,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIriTemplate() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("test-iri-template.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -130,7 +164,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDataSource() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("issue-161.xlsx");
@@ -200,7 +234,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testPlaceData() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("place-data.xlsx");
 		
@@ -228,7 +262,7 @@ public class WorkbookLoaderTest {
 		assertValue(address, Schema.addressRegion, "NJ");
 	}
 	
-	@Ignore
+	@Test
 	public void testEquivalentPath() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -263,7 +297,7 @@ public class WorkbookLoaderTest {
 	}
 
 	
-	@Ignore
+	@Test
 	public void testPartitionOf() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -293,7 +327,7 @@ public class WorkbookLoaderTest {
 		assertEquals(expected, partitionOf.toString());
 	}
 	
-	@Ignore
+	@Test
 	public void testSourcePath() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -326,7 +360,7 @@ public class WorkbookLoaderTest {
 		assertEquals(expected, sourcePath.toString());
 	}
 	
-	@Ignore
+	@Test
 	public void testRollUpBy() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -376,7 +410,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAggregationOf() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
 		
@@ -401,7 +435,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIn() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -433,7 +467,7 @@ public class WorkbookLoaderTest {
 //		assertEquals(TIME.unitYear, list.get(2));
 	}
 	
-	@Ignore
+	@Test
 	public void testStereotype() throws Exception {
 
 		
@@ -467,7 +501,7 @@ public class WorkbookLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
 		InputStream input = getClass().getClassLoader().getResourceAsStream("person-model.xlsx");

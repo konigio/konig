@@ -22,11 +22,29 @@ import io.konig.transform.rule.TransformBinaryOperator;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.JoinStatement;
+import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
 
 public class ShapeRuleFactoryTest extends AbstractShapeRuleFactoryTest {
+	
+
+	@Test
+	public void testNullValue() throws Exception {
+		
+		useBigQueryTransformStrategy();
+
+		load("src/test/resources/konig-transform/bigquery-transform-null");
+		URI shapeId = iri("http://example.com/shapes/PersonShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		assertTrue(shapeRule != null);
+		
+		PropertyRule propertyRule = shapeRule.getProperty(Schema.name);
+		assertTrue(propertyRule instanceof NullPropertyRule);
+		
+	}
 	
 	
 	@Test

@@ -195,6 +195,16 @@ For our example, you would have the following Avro Schema name:
    com.example.shapes.v1.schema.Person
 ```
 
+## Multi-Project Generation
+This plugin can be used to generate a suite of Maven projects:
+
+* {baseName}-parent
+* {baseName}-rdf-model
+* {baseName}-java-model
+* {baseName}-gcp-model
+* {baseName}-gcp-deploy
+* {baseName}-data-catalog
+* {baseName}-appengine
 
 ## Limitations
 

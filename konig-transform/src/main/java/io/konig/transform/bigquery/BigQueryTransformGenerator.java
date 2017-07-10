@@ -23,6 +23,7 @@ import io.konig.sql.query.DmlExpression;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.BigQueryTransformStrategy;
 import io.konig.transform.factory.ShapeRuleFactory;
+import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.sql.factory.SqlFactory;
 
@@ -36,6 +37,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	private ShapeRuleFactory shapeRuleFactory;
 	private BigQueryCommandLineFactory bqCmdLineFactory;
 	private List<Throwable> errorList;
+	private int transformCount = 0;
 	
 	
 
@@ -131,15 +133,64 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	@Override
 	public void visit(Shape shape) {
 		
+		ShapeRule shapeRule = null;
 		if (isLoadTransform(shape)) {
 			try {
-				loadTransform(shape);
+				shapeRule = loadTransform(shape);
+				transformCount++;
+			} catch (Throwable e) {
+				addError(e);
+			}
+		}
+		
+		if (isCurrentStateTransform(shape)) {
+			try {
+				currentStateTransform(shape, shapeRule);
+				transformCount++;
 			} catch (Throwable e) {
 				addError(e);
 			}
 		}
 		
 	}
+	private void currentStateTransform(Shape shape, ShapeRule shapeRule) throws ShapeTransformException, IOException {
+		if (shapeRule == null) {
+			shapeRule = shapeRuleFactory.createShapeRule(shape);
+		}
+		if (shapeRule != null) {
+			BigQueryCommandLine cmdline = bqCmdLineFactory.updateCommand(shapeRule);
+			if (cmdline != null) {
+				GoogleBigQueryTable table = currentStateTable(shape);
+				File sqlFile = writeDml(table, cmdline.getDml(), "Load");
+				commandLineInfo.add(new CommandLineInfo(sqlFile, cmdline));
+			}
+		}
+		
+	}
+	
+
+	private GoogleBigQueryTable currentStateTable(Shape shape) {
+		for (DataSource ds : shape.getShapeDataSource()) {
+			if (ds instanceof GoogleBigQueryTable && ds.isA(Konig.CurrentState)) {
+				return (GoogleBigQueryTable) ds;
+			}
+		}
+		return null;
+	}
+	
+	private boolean isCurrentStateTransform(Shape shape) {
+
+		if (shape.getShapeDataSource() != null) {
+			for (DataSource ds : shape.getShapeDataSource()) {
+				if (ds.isA(Konig.GoogleBigQueryTable) && ds.isA(Konig.CurrentState)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+
 	private void addError(Throwable e) {
 	
 		if (errorList == null) {
@@ -206,13 +257,16 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		return
 				shape.hasDataSourceType(Konig.GoogleBigQueryTable) && 
 				!shape.hasDataSourceType(Konig.GoogleCloudStorageBucket) &&
+				!shape.hasDataSourceType(Konig.CurrentState) &&
 				bucketShapeExists(shape);
 	}
 	private boolean bucketShapeExists(Shape shape) {
 		URI targetClass = shape.getTargetClass();
-		for (Shape s : shapeManager.getShapesByTargetClass(targetClass)) {
-			if (s.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
-				return true;
+		if (targetClass != null) {
+			for (Shape s : shapeManager.getShapesByTargetClass(targetClass)) {
+				if (s.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -239,23 +293,28 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	public void beginShapeTraversal() {
 		errorList = new ArrayList<>();
 		commandLineInfo = new ArrayList<>();
+		transformCount = 0;
 	}
 
 	@Override
 	public void endShapeTraversal() {
 
 
-		File scriptFile = scriptFile();
-		
-		try (
-			FileWriter scriptFileWriter = new FileWriter(scriptFile);
-			PrettyPrintWriter scriptQueryWriter = new PrettyPrintWriter(scriptFileWriter)
-		) {
-			writeBufferedCommands(scriptQueryWriter);
-		} catch (IOException e) {
-			errorList.add(e);
-		} finally {
-			commandLineInfo = null;
+		if (transformCount > 0) {
+			File scriptFile = scriptFile();
+			File parentDir = scriptFile.getParentFile();
+			if (parentDir.exists()) {
+				try (
+					FileWriter scriptFileWriter = new FileWriter(scriptFile);
+					PrettyPrintWriter scriptQueryWriter = new PrettyPrintWriter(scriptFileWriter)
+				) {
+					writeBufferedCommands(scriptQueryWriter);
+				} catch (IOException e) {
+					errorList.add(e);
+				} finally {
+					commandLineInfo = null;
+				}
+			}
 		}
 		
 	}

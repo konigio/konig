@@ -8,19 +8,23 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 
+import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
 import io.konig.core.Vertex;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.TurtleElements;
+import io.konig.core.util.ValueFormat;
+import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
-import io.konig.transform.factory.TargetShape.State;
 import io.konig.transform.rule.AlphabeticVariableNamer;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
@@ -29,9 +33,11 @@ import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.FormulaPropertyRule;
+import io.konig.transform.rule.InjectLiteralPropertyRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.LiteralPropertyRule;
 import io.konig.transform.rule.MapValueTransform;
+import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
@@ -92,7 +98,9 @@ public class ShapeRuleFactory {
 
 			TargetShape target = TargetShape.create(targetShape);
 
-			return build(target);
+			ShapeRule shapeRule = build(target);
+			shapeRule.setVariableNamer(namer);
+			return shapeRule;
 		}
 
 		public ShapeRule build(TargetShape target) throws TransformBuildException {
@@ -131,7 +139,19 @@ public class ShapeRuleFactory {
 				buildNestedProperties(target);
 
 				if (target.getState() != TargetShape.State.OK) {
-					throw new TransformBuildException(unmappedPropertyMessage(target));
+					List<TargetProperty> unmapped = target.getUnmappedProperties();
+					setNullProperties(target, unmapped);
+					if (unmapped.isEmpty()) {
+						unmapped = null;
+					} else if (unmapped.size()==1) {
+						TargetProperty tp = unmapped.get(0);
+						if (tp.getPredicate().equals(Konig.modified)) {
+							unmapped = null;
+						}
+					}
+					if (unmapped != null) {
+						throw new TransformBuildException(unmappedPropertyMessage(target, unmapped));
+					}
 				}
 			}
 
@@ -139,6 +159,25 @@ public class ShapeRuleFactory {
 			createIdRule(target);
 			return assemble(target);
 
+		}
+
+		private void setNullProperties(TargetShape target, List<TargetProperty> unmapped) {
+
+			Iterator<TargetProperty> sequence = unmapped.iterator();
+			while (sequence.hasNext()) {
+				TargetProperty tp = sequence.next();
+				if (tp.getPredicate().equals(Konig.modified)) {
+					continue;
+				}
+				
+				PropertyConstraint p = tp.getPropertyConstraint();
+				Integer minCount = p.getMinCount();
+				if (minCount==null || minCount.equals(0)) {
+					tp.setNull(true);
+					sequence.remove();
+				}
+			}
+			
 		}
 
 		private void buildAggregations(TargetShape target) throws TransformBuildException {
@@ -237,7 +276,8 @@ public class ShapeRuleFactory {
 						if (leftProperty != null) {
 							PropertyConstraint lpc = leftProperty.getPropertyConstraint();
 							if (lpc != null && lpc.getShape()==null) {
-								BooleanExpression condition = new BinaryBooleanExpression(TransformBinaryOperator.EQUAL, predicate, Konig.id);
+								URI rightPredicate = iriTemplateParameter(rightIriTemplate);
+								BooleanExpression condition = new BinaryBooleanExpression(TransformBinaryOperator.EQUAL, lpc.getPredicate(), rightPredicate);
 								ProtoJoinStatement proto = new ProtoJoinStatement(left, right, condition);
 								right.setProtoJoinStatement(proto);
 								return;
@@ -279,6 +319,25 @@ public class ShapeRuleFactory {
 			}
 			
 
+		}
+
+		private URI iriTemplateParameter(IriTemplate template) throws TransformBuildException {
+			if (template == null) {
+				return Konig.id;
+			}
+			List<? extends Element> list = template.toList();
+			URI result = null;
+			Context context = template.getContext();
+			for (Element e : list) {
+				if (e.getType() == ValueFormat.ElementType.VARIABLE) {
+					if (result != null) {
+						throw new TransformBuildException("IRI Templates with multiple variables not supported: " + template.toString());
+					}
+					String iriValue = context.expandIRI(e.getText());
+					result = new URIImpl(iriValue);
+				}
+			}
+			return result;
 		}
 
 		private ShapeRule assemble(TargetShape target) throws TransformBuildException {
@@ -333,11 +392,20 @@ public class ShapeRuleFactory {
 		}
 
 		private PropertyRule createPropertyRule(TargetProperty tp) throws TransformBuildException {
+			if (tp.isNull()) {
+				return new NullPropertyRule(null, tp.getPredicate());
+			}
 			if (tp instanceof DerivedDirectTargetProperty) {
 				
 				return new FormulaPropertyRule(null, tp.getPropertyConstraint(), tp.getPropertyConstraint());
 			}
 			SourceProperty sp = tp.getPreferredMatch();
+			URI predicate = tp.getPredicate();
+			if (sp == null) {
+				if (Konig.modified.equals(predicate)) {
+					return new InjectLiteralPropertyRule(null, Konig.modified, new LiteralImpl("{modified}"));
+				}
+			}
 			DataChannel channel = sp.getParent().produceDataChannel(namer);
 
 			if (tp.getNestedShape() != null) {
@@ -349,7 +417,6 @@ public class ShapeRuleFactory {
 
 			}
 
-			URI predicate = tp.getPredicate();
 			
 			if (sp.getValue() instanceof Literal) {
 				return new LiteralPropertyRule(channel, predicate, (Literal) sp.getValue());
@@ -417,8 +484,7 @@ public class ShapeRuleFactory {
 			
 		}
 
-		private String unmappedPropertyMessage(TargetShape target) {
-			List<TargetProperty> unmapped = target.getUnmappedProperties();
+		private String unmappedPropertyMessage(TargetShape target, List<TargetProperty> unmapped) {
 			StringBuilder builder = new StringBuilder();
 
 			builder.append("Failed to produce transform for Shape ");

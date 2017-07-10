@@ -128,6 +128,7 @@ public class WorkbookLoader {
 	private static final String BIGQUERY_TABLE = "BigQuery Table";
 	private static final String DATASOURCE = "Datasource";
 	private static final String IRI_TEMPLATE = "IRI Template";
+	private static final String DEFAULT_FOR = "Default For";
 
 	private static final String SETTING_NAME = "Setting Name";
 	private static final String SETTING_VALUE = "Setting Value";
@@ -335,6 +336,7 @@ public class WorkbookLoader {
 		private int shapeBigQueryTableCol = UNDEFINED;
 		private int shapeDatasourceCol = UNDEFINED;
 		private int shapeIriTemplateCol = UNDEFINED;
+		private int defaultShapeForCol = UNDEFINED;
 
 		private int pcShapeIdCol = UNDEFINED;
 		private int pcPropertyIdCol = UNDEFINED;
@@ -1416,6 +1418,7 @@ public class WorkbookLoader {
 			String iriTemplate = stringValue(row, shapeIriTemplateCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			Literal bigqueryTable = bigQueryTableId(row, targetClass);
+			List<URI> applicationList = uriList(row, defaultShapeForCol);
 
 			List<Function> dataSourceList = dataSourceList(row);
 
@@ -1435,6 +1438,13 @@ public class WorkbookLoader {
 
 			if (iriTemplate != null) {
 				shapeTemplateList.add(new ShapeTemplate(shapeId, iriTemplate));
+			}
+			
+			if (applicationList != null && !applicationList.isEmpty()) {
+				for (URI uri : applicationList) {
+					edge(shapeId, Konig.defaultShapeFor, uri);
+					edge(uri, RDF.TYPE, Schema.SoftwareApplication);
+				}
 			}
 
 			if (dataSourceList != null) {
@@ -1493,7 +1503,9 @@ public class WorkbookLoader {
 		}
 
 		private void readShapeHeader(Sheet sheet) {
-			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = shapeIriTemplateCol = UNDEFINED;
+			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = 
+					shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = 
+					defaultShapeForCol = shapeIriTemplateCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -1537,6 +1549,9 @@ public class WorkbookLoader {
 						break;
 					case IRI_TEMPLATE:
 						shapeIriTemplateCol = i;
+						break;
+					case DEFAULT_FOR:
+						defaultShapeForCol = i;
 						break;
 
 					}

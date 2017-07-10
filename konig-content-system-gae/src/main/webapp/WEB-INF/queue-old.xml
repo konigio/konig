@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<queue-entries>
+  <queue>
+    <name>content-bundle-unzip</name>
+    <rate>1/s</rate>
+    <retry-parameters>
+      <task-retry-limit>0</task-retry-limit>
+      <task-age-limit>2d</task-age-limit>
+    </retry-parameters>
+  </queue>
+</queue-entries>

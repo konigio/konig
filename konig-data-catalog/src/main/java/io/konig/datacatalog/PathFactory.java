@@ -62,6 +62,10 @@ public class PathFactory {
 		
 	}
 	
+	protected int adjustTarget(String bPage, int bStart) {
+		return bStart;
+	}
+
 	public String pagePath(URI target) throws DataCatalogException {
 		String uri = target.stringValue();
 		int slash = uri.lastIndexOf('/');
@@ -79,10 +83,13 @@ public class PathFactory {
 			if (ns != null) {
 				String localName = uri.substring(mark+1);
 				String prefix = ns.getPrefix();
+				
 
 				StringBuilder builder = new StringBuilder();
-				builder.append(prefix);
-				builder.append('/');
+				if (!excludePrefix(prefix)) {
+					builder.append(prefix);
+					builder.append('/');
+				}
 				addFolder(builder, target);
 				builder.append(localName);
 				builder.append(".html");
@@ -94,6 +101,10 @@ public class PathFactory {
 		throw new DataCatalogException("Namespace not found for resource: <" + uri + ">");
 	}
 	
+	protected boolean excludePrefix(String prefix) {
+		return false;
+	}
+
 	private String folderName(URI target) {
 		if (reasoner.isTypeOf(target, OWL.CLASS)) {
 			return "classes";

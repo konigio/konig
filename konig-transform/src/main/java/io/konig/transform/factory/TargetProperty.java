@@ -9,6 +9,7 @@ import io.konig.shacl.PropertyConstraint;
 abstract public class TargetProperty extends PropertyNode<TargetShape> {
 
 	private Set<SourceProperty> matchSet = new HashSet<>();
+	private boolean isNull;
 	
 	public TargetProperty(PropertyConstraint propertyConstraint) {
 		super(propertyConstraint);
@@ -40,6 +41,16 @@ abstract public class TargetProperty extends PropertyNode<TargetShape> {
 	@Override
 	protected void printLocalFields(PrettyPrintWriter out) {
 		out.field("hasPreferredMatch", getPreferredMatch()!=null);
+		out.field("isNull", isNull);
 	}
 
+	public boolean isNull() {
+		return isNull;
+	}
+
+	public void setNull(boolean isNull) {
+		this.isNull = isNull;
+	}
+
+	
 }

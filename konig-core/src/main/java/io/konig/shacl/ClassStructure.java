@@ -54,6 +54,13 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.Schema;
 
+/**
+ * An entity that manages a collection of "logical" shapes for each known OWL class.
+ * The logical shape contains the union of all property constraints from across the various
+ * shapes of a given OWL class.
+ * @author Greg McFall
+ *
+ */
 public class ClassStructure {
 	private static final Logger logger = LoggerFactory.getLogger(ClassStructure.class);
 	private Map<Resource, Shape> shapeMap = new HashMap<>();
@@ -152,28 +159,52 @@ public class ClassStructure {
 		return or!=null && !or.getShapes().isEmpty();
 	}
 	
+	
+	public Map<URI,PropertyConstraint> getPropertyMap(Shape shape) {
+		Map<URI,PropertyConstraint> map = new HashMap<>();
+		addProperties(map, shape);
+		
+		return map;
+	}
+	
+	private void addProperties(Map<URI, PropertyConstraint> map, Shape shape) {
+		for (PropertyConstraint p : shape.getProperty()) {
+			URI predicate = p.getPredicate();
+			if (predicate != null && !map.containsKey(predicate)) {
+				map.put(predicate, p);
+			}
+		}
+		List<Shape> superList = superClasses(shape);
+		for (Shape s : superList) {
+			addProperties(map, s);
+		}
+		
+	}
+
 	/**
 	 * Get the properties declared by a given shape or any of its ancestors.
 	 * @param shape The shape whose properties are to be returned.
 	 */
 	public List<PropertyConstraint> getProperties(Shape shape) {
-		if (!hasSuperClass(shape)) {
-			return shape.getProperty();
-		}
-		List<PropertyConstraint> list = new ArrayList<>();
-		LinkedList<Shape> stack = new LinkedList<>();
-		stack.add(shape);
-		while (!stack.isEmpty()) {
-			Shape s = stack.removeFirst();
-			for (PropertyConstraint p : s.getProperty()) {
-				if (!contains(list, p)) {
-					list.add(p);
-				}
-			}
-			stack.addAll(superClasses(s));
-		}
-		
-		return list;
+//		if (!hasSuperClass(shape)) {
+//			return shape.getProperty();
+//		}
+//		List<PropertyConstraint> list = new ArrayList<>();
+//		LinkedList<Shape> stack = new LinkedList<>();
+//		stack.add(shape);
+//		while (!stack.isEmpty()) {
+//			Shape s = stack.removeFirst();
+//			for (PropertyConstraint p : s.getProperty()) {
+//				if (!contains(list, p)) {
+//					list.add(p);
+//				}
+//			}
+//			stack.addAll(superClasses(s));
+//		}
+//		
+//		return list;
+		Map<URI,PropertyConstraint> map = getPropertyMap(shape);
+		return new ArrayList<>(map.values());
 	}
 	
 	private boolean contains(List<PropertyConstraint> list, PropertyConstraint p) {

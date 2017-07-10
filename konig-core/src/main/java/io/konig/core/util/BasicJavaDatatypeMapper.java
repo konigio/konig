@@ -78,6 +78,10 @@ public class BasicJavaDatatypeMapper implements JavaDatatypeMapper {
 			return Integer.class;
 		}
 		
+		if (XMLSchema.LONG.equals(rdfDatatype)) {
+			return Long.class;
+		}
+		
 		if (XMLSchema.INTEGER.equals(rdfDatatype)) {
 			return Long.class;
 		}

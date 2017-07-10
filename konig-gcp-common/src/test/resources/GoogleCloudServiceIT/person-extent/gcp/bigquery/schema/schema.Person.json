@@ -1,0 +1,18 @@
+{
+  "schema" : {
+    "fields" : [ {
+      "mode" : "NULLABLE",
+      "name" : "givenName",
+      "type" : "STRING"
+    }, {
+      "mode" : "NULLABLE",
+      "name" : "familyName",
+      "type" : "STRING"
+    } ]
+  },
+  "tableReference" : {
+    "datasetId" : "schema",
+    "projectId" : "{gcpProjectId}",
+    "tableId" : "Person"
+  }
+}

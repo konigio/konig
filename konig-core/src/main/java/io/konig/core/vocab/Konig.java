@@ -68,6 +68,7 @@ public class Konig {
 	public static final URI formula = new URIImpl("http://www.konig.io/ns/core/formula");
 	public static final URI preferredJsonldContext = new URIImpl("http://www.konig.io/ns/core/preferredJsonldContext");
 	public static final URI hasShape = new URIImpl("http://www.konig.io/ns/core/hasShape");
+	public static final URI defaultShapeFor = new URIImpl("http://www.konig.io/ns/core/defaultShapeFor");
 
 	public static final URI equivalentPath = new URIImpl(EQUIVALENT_PATH);
 	public static final URI LoadModelFromSpreadsheet = new URIImpl("http://www.konig.io/ns/core/LoadModelFromSpreadsheet");
@@ -77,6 +78,7 @@ public class Konig {
 	public static final URI LocalName = new URIImpl("http://www.konig.io/ns/core/LocalName");
 	public static final URI FullyQualifiedIri = new URIImpl("http://www.konig.io/ns/core/FullyQualifiedIri");
 	public static final URI modified = new URIImpl("http://www.konig.io/ns/core/modified");
+	public static final URI deleted = new URIImpl("http://www.konig.io/ns/core/deleted");
 	public static final URI derivedProperty = new URIImpl("http://www.konig.io/ns/core/derivedProperty");
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	

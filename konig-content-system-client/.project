@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>konig-content-system-client</name>
-	<comment></comment>
+	<comment>A library that provides the a client-side implementation of the Konig Content System. NO_M2ECLIPSE_SUPPORT: Project files created with the maven-eclipse-plugin are not supported in M2Eclipse.</comment>
 	<projects>
+		<project>konig-content-system-common</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

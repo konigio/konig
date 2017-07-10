@@ -3,14 +3,15 @@ package io.konig.content.gae;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.activation.MimetypesFileTypeMap;
+
 
 import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreService;
@@ -45,7 +46,8 @@ public class GaeContentSystem implements ContentSystem {
 	private static final String ETAG = "etag";
 	
 	private static final int BATCH_SIZE = 100;
-
+	
+	
 	@Override
 	public CheckInBundleResponse checkInBundle(AssetBundle bundle) throws ContentAccessException {
 		
@@ -55,6 +57,8 @@ public class GaeContentSystem implements ContentSystem {
 		
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 				
+		Set<String> availableAssets = new HashSet<>();
+		
 		for (int i=0; i<metadataList.size(); ) {
 
 			Query query = new Query(ASSET).setKeysOnly();
@@ -70,19 +74,33 @@ public class GaeContentSystem implements ContentSystem {
 			for (Entity entity : sequence) {
 				Key key = entity.getKey();
 				String etag = key.getName();
-				etagMap.remove(etag);
+				String path = etagMap.remove(etag);
+				availableAssets.add(path);
 			}
+		}
+		
+		List<Entity> entityList = availableEntities(availableAssets, metadataList);
+
+		if (!entityList.isEmpty()) {
+			DatastoreService service = DatastoreServiceFactory.getDatastoreService();
+			service.put(entityList);
 		}
 
 		CheckInBundleResponse response = new CheckInBundleResponse();
 		List<String> missingAssets = new ArrayList<>(etagMap.values());
 		response.setMissingAssets(missingAssets);
-		
-		for (AssetMetadata meta : metadataList) {
-			saveMetadata(meta);
-		}
-		
+
 		return response;
+	}
+	private List<Entity> availableEntities(Set<String> available, List<AssetMetadata> metadataList) {
+		List<Entity> list = new ArrayList<>();
+		for (AssetMetadata metadata : metadataList) {
+			if (available.contains(metadata.getPath())) {
+				Key key = createMetadataKey(metadata);
+				list.add(toMetadataEntity(key, metadata));
+			}
+		}
+		return list;
 	}
 	private Map<String, String> etagMap(List<AssetMetadata> metadataList) {
 		Map<String,String> map = new HashMap<>();
@@ -219,7 +237,7 @@ public class GaeContentSystem implements ContentSystem {
 		return KeyFactory.createKey(ASSET, etag);
 	}
 	
-	private Entity toMetadataEntity(Key key, AssetMetadata metadata) throws IOException {
+	private Entity toMetadataEntity(Key key, AssetMetadata metadata)  {
 		Entity e = new Entity(key);
 		e.setProperty(BUNDLE_NAME, metadata.getBundleKey().getName());
 		e.setProperty(BUNDLE_VERSION, metadata.getBundleKey().getVersion());

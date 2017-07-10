@@ -11,6 +11,7 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
@@ -28,6 +29,7 @@ import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
+import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
@@ -37,6 +39,7 @@ import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.NullValueExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.Result;
@@ -70,6 +73,7 @@ import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinStatement;
 import io.konig.transform.rule.LiteralPropertyRule;
 import io.konig.transform.rule.MapValueTransform;
+import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
@@ -173,22 +177,49 @@ public class SqlFactory {
 			if (tableRef != null) {
 				useAlias = true;
 				update = new UpdateExpression();
-				TableName tableName = tableName(tableRef, null);
-				update.setTable(tableName.getItem());
+				String fullName = fullTableName(tableRef);
+				String targetTableAlias = shapeRule.getVariableNamer().next();
+				TableNameExpression tableNameExpression = new TableNameExpression(fullName);
+				TableItemExpression tableItem = new TableAliasExpression(tableNameExpression, targetTableAlias);
+				
+				update.setTable(tableItem);
 				
 				for (PropertyRule p : shapeRule.getPropertyRules()) {
-					ColumnExpression left = tableName.column(p.getPredicate());
-					ValueExpression right = column(p);
+					ColumnExpression left = new ColumnExpression(p.getPredicate().getLocalName());
+					ValueExpression right = column(p, true);
 					UpdateItem item = new UpdateItem(left, right);
 					update.add(item);
 				}
 				
 				addDataChannels(update.getFrom(), shapeRule);
+
+				ValueExpression idRule = createIdRule(shapeRule);
+				ValueExpression idColumn = column(targetTableAlias, idColumnName);
+				
+				SearchCondition search = new ComparisonPredicate(ComparisonOperator.EQUALS, idColumn, idRule);
+				update.setWhere(search);
 			}
 			
 			
 			
 			return update;
+		}
+
+		private ValueExpression column(String tableName, String columnName) {
+			StringBuilder builder = new StringBuilder();
+			builder.append(tableName);
+			builder.append('.');
+			builder.append(columnName);
+			
+			return new ColumnExpression(builder.toString());
+		}
+
+		private String fullTableName(BigQueryTableReference tableRef) {
+			StringBuilder builder = new StringBuilder();
+			builder.append(tableRef.getDatasetId());
+			builder.append('.');
+			builder.append(tableRef.getTableId());
+			return builder.toString();
 		}
 
 		private BigQueryTableReference bigQueryTableRef(ShapeRule shapeRule) {
@@ -274,7 +305,8 @@ public class SqlFactory {
 					if (localName.length()==0) {
 						func.addArg(new StringLiteralExpression(iri.stringValue()));
 					} else {
-						if (shape.getPropertyConstraint(iri)==null) {
+						PropertyConstraint p = shape.getPropertyConstraint(iri);
+						if (p==null) {
 							StringBuilder msg = new StringBuilder();
 							msg.append("Shape ");
 							msg.append(TurtleElements.resource(shape.getId()));
@@ -284,7 +316,13 @@ public class SqlFactory {
 							msg.append(text);
 							throw new TransformBuildException(msg.toString());
 						}
-						func.addArg(SqlUtil.columnExpression(tableItem, iri));
+						URI datatype = p.getDatatype();
+						if (XMLSchema.STRING.equals(datatype)) {
+							func.addArg(SqlUtil.columnExpression(tableItem, iri));
+						} else {
+							CastSpecification cast = new CastSpecification(SqlUtil.columnExpression(tableItem, iri), "STRING");
+							func.addArg(cast);
+						}
 					}
 					break;
 				}
@@ -293,7 +331,12 @@ public class SqlFactory {
 			return func;
 		}
 
+
 		private ValueExpression column(PropertyRule p) throws TransformBuildException {
+			return column(p, false);
+		}
+
+		private ValueExpression column(PropertyRule p, boolean suppressRename) throws TransformBuildException {
 
 			DataChannel channel = p.getDataChannel();
 			TableItemExpression tableItem = simpleTableItem(channel);
@@ -308,6 +351,9 @@ public class SqlFactory {
 				ValueTransform vt = renameRule.getValueTransform();
 				if (vt instanceof MapValueTransform) {
 					ValueExpression caseStatement = mapValues(renameRule, (MapValueTransform) vt);
+					if (suppressRename) {
+						return caseStatement;
+					}
 					return new AliasExpression(caseStatement, predicate.getLocalName());
 				}
 				URI sourcePredicate = renameRule.getSourceProperty().getPredicate();
@@ -315,6 +361,9 @@ public class SqlFactory {
 				Path path = renameRule.getSourceProperty().getEquivalentPath();
 				if (pathIndex == path.asList().size()-1) {
 					ValueExpression column = SqlUtil.columnExpression(tableItem, sourcePredicate);
+					if (suppressRename) {
+						return column;
+					}
 					return new AliasExpression(column, predicate.getLocalName());
 				}
 				throw new TransformBuildException("Unable to map Path");
@@ -333,6 +382,10 @@ public class SqlFactory {
 				ValueExpression value = valueExpression(lpr.getValue());
 				
 				return new AliasExpression(value, predicate.getLocalName());
+			}
+			
+			if (p instanceof NullPropertyRule) {
+				return new AliasExpression(new NullValueExpression(), predicate.getLocalName());
 			}
 			
 			if (p instanceof FormulaPropertyRule) {

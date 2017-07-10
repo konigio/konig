@@ -1,0 +1,10 @@
+!io.konig.data.app.common.BasicDataApp &x1
+  container:
+    - !io.konig.data.app.common.ExtentContainer &x2
+      slug: person
+      extentClass: http://schema.org/Person
+      defaultShape: http://example.com/shapes/PersonShape
+    - !io.konig.data.app.common.ExtentContainer &x3
+      slug: product
+      extentClass: http://schema.org/Product
+      defaultShape: http://example.com/shapes/ProductShape

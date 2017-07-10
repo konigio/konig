@@ -1,10 +1,25 @@
 package io.konig.schemagen.maven;
 
+import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
+
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
+
+import org.apache.maven.execution.MavenSession;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -23,9 +38,14 @@ import java.util.HashSet;
  */
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.FileUtils;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.rio.RDFHandlerException;
@@ -43,11 +63,23 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
+import io.konig.data.app.common.DataApp;
+import io.konig.data.app.generator.DataAppGenerator;
+import io.konig.data.app.generator.DataAppGeneratorException;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
 import io.konig.gae.datastore.impl.SimpleEntityNamer;
 import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
+import io.konig.maven.project.generator.MavenProjectGeneratorException;
+import io.konig.maven.project.generator.MultiProject;
+import io.konig.openapi.generator.OpenApiGenerateRequest;
+import io.konig.openapi.generator.OpenApiGenerator;
+import io.konig.openapi.generator.OpenApiGeneratorException;
+import io.konig.openapi.generator.RootClassShapeFilter;
+import io.konig.openapi.generator.ShapeLocalNameJsonSchemaNamer;
+import io.konig.openapi.model.OpenAPI;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
@@ -68,6 +100,7 @@ import io.konig.schemagen.gcp.LocalNameTableMapper;
 import io.konig.schemagen.gcp.NamespaceDatasetMapper;
 import io.konig.schemagen.gcp.SimpleDatasetMapper;
 import io.konig.schemagen.java.BasicJavaNamer;
+import io.konig.schemagen.java.Filter;
 import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
 import io.konig.schemagen.java.JsonReaderBuilder;
@@ -83,10 +116,12 @@ import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeFilter;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
 import io.konig.shacl.ShapeNamer;
 import io.konig.shacl.ShapeVisitor;
+import io.konig.shacl.SimpleMediaTypeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.impl.TemplateShapeNamer;
@@ -94,6 +129,9 @@ import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.showl.WorkbookToTurtleTransformer;
+import io.konig.transform.bigquery.BigQueryTransformGenerator;
+import io.konig.yaml.Yaml;
+import io.konig.yaml.YamlParseException;
 import net.sourceforge.plantuml.SourceFileReader;
 
 /**
@@ -108,6 +146,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private static final String SCHEMA = "schema";
 	private static final String DATA = "data";
 	private static final String DATASET = "dataset";
+	private static final String DEV_NULL = "/dev/null";
+	private static final String SCRIPTS = "scripts";
 	
 	@Parameter
 	private RdfConfig defaults;
@@ -144,10 +184,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private GoogleCloudPlatformConfig googleCloudPlatform;
     
-    
     @Parameter
     private HashSet<String> excludeNamespace;
-    
 	
 
     @Parameter
@@ -159,6 +197,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 @Parameter
 	 private File projectJsonldFile;
 	 
+	 @Parameter
+	 private MultiProject multiProject;
+	 
 
     
     private NamespaceManager nsManager;
@@ -169,6 +210,15 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private Graph owlGraph;
     private ContextManager contextManager;
     private ClassStructure structure;
+
+	@Component
+	private MavenProject mavenProject;
+
+	@Component
+	private MavenSession mavenSession;
+
+	@Component
+	private BuildPluginManager pluginManager;
 
     public void execute() throws MojoExecutionException   {
     	
@@ -184,7 +234,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			loadResources();
 
-			generateBigQueryTables();
+			generateGoogleCloudPlatform();
 			
 			generateJsonld();
 			generateAvro();
@@ -197,17 +247,146 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			generatePlantUMLDomainModel();
 			generateJava();
+			generateDataServices();
+			generateMultiProject();
 			
 			updateRdf();
 			
 			
-		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | PlantumlGeneratorException | CodeGeneratorException e) {
+		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
+				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
+				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException e) {
 			throw new MojoExecutionException("Failed to convert shapes to Avro", e);
 		}
       
     }
     
-    private void updateRdf() throws RDFHandlerException, IOException {
+    private void generateMultiProject() throws MavenProjectGeneratorException, IOException {
+		if (multiProject != null) {
+			multiProject.run();
+		}
+		
+	}
+
+	private void generateDataServices() throws IOException, OpenApiGeneratorException, YamlParseException, DataAppGeneratorException, MojoExecutionException {
+		DataServicesConfig dataServices = googleCloudPlatform==null ? null : googleCloudPlatform.getDataServices();
+    	if (dataServices != null) {
+		
+    		dataServices.init(mavenProject);
+			File openapiFile = dataServices.getOpenApiFile();
+			File infoFile = dataServices.getInfoFile();
+			File configFile = dataServices.getConfigFile();
+			
+			generateOpenApiSpecification(openapiFile, infoFile);
+			generateAppConfigFile(openapiFile, configFile);
+			copyDataAppWar(dataServices.getWebappDir());
+			copyCredentials(dataServices.getWebappDir());
+			
+		}
+		
+	}
+
+	private void copyCredentials(File webappDir) throws MojoExecutionException, IOException {
+		
+		File credentials = googleCloudPlatform.getCredentials();
+		if (credentials == null) {
+			String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+			if (credentialsPath == null) {
+				String msg =
+					"The location of the Google Cloud credentials is not defined. " + 
+					"Please define the GOOGLE_APPLICATION_CREDENTIALS " +
+					"environment variable, or set the property 'konig.gcp.credentials'.";
+				
+				throw new MojoExecutionException(msg);
+			}
+			credentials = new File(credentialsPath);
+		}
+		
+		File target = new File(webappDir, "WEB-INF/classes/konig/gcp/credentials.json");
+		
+		FileUtils.copyFile(credentials, target);
+		
+		
+	}
+
+	private void copyDataAppWar(File basedir) throws MojoExecutionException {
+		
+		String konigVersion = mavenProject.getPluginArtifactMap()
+				.get("io.konig:konig-schemagen-maven-plugin").getVersion();
+		
+		
+		
+		executeMojo(
+			plugin(
+				groupId("org.apache.maven.plugins"),
+				artifactId("maven-dependency-plugin"),
+				version("3.0.1")
+			),
+			goal("unpack"),
+			configuration(
+				element(
+					name("artifactItems"), 
+						element(name("artifactItem"),
+							element(name("groupId"), "io.konig"),
+							element(name("artifactId"), "konig-data-app-gcp"),
+							element(name("version"), konigVersion),
+							element(name("type"), "war"),
+							element(name("overWrite"), "true"),
+							element(name("outputDirectory"), basedir.getAbsolutePath())
+						)
+				)	
+			),
+			executionEnvironment(
+				mavenProject,
+				mavenSession,
+				pluginManager
+			)
+		);
+		
+	}
+
+	private void generateAppConfigFile(File openapiFile, File configFile) throws YamlParseException, IOException, DataAppGeneratorException {
+		
+		if (!DEV_NULL.equals(configFile) && openapiFile.exists()) {
+			OpenAPI api = Yaml.read(OpenAPI.class, openapiFile);
+			SimpleMediaTypeManager mediaTypeManager = new SimpleMediaTypeManager(shapeManager);
+			DataAppGenerator generator = new DataAppGenerator(mediaTypeManager);
+			
+			DataApp app = generator.toDataApp(api);
+			Yaml.write(configFile, app);
+			
+		}
+	}
+
+	private void generateOpenApiSpecification(File openapiFile, File infoFile) throws IOException, OpenApiGeneratorException {
+
+		openapiFile.getParentFile().mkdirs();
+		try (FileReader infoReader = new FileReader(infoFile)) {
+		
+			try (FileWriter openapiWriter = new FileWriter(openapiFile)) {
+			
+				OpenApiGenerateRequest request = new OpenApiGenerateRequest()
+					.setOpenApiInfo(infoReader)
+					.setShapeManager(shapeManager)
+					.setWriter(openapiWriter);
+				
+
+				io.konig.jsonschema.generator.JsonSchemaNamer namer = new ShapeLocalNameJsonSchemaNamer();
+				io.konig.jsonschema.generator.JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
+				ShapeFilter shapeFilter = new RootClassShapeFilter(owlGraph);
+				io.konig.jsonschema.generator.JsonSchemaGenerator schemaGenerator = 
+						new io.konig.jsonschema.generator.JsonSchemaGenerator(nsManager, null, typeMapper);
+				
+				OpenApiGenerator generator = new OpenApiGenerator(namer, schemaGenerator, shapeFilter);
+				
+				generator.generate(request);
+				
+			}	
+		}
+		
+	}
+
+	private void updateRdf() throws RDFHandlerException, IOException {
 		if (rdfOutput != null) {
 			File shapesDir = rdfOutput.shapesDir(defaults);
 			if (shapesDir != null) {
@@ -289,7 +468,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if (java.isGenerateCanonicalJsonReaders()) {
 				generateCanonicalJsonReaders();
 			}
-			generateJavaCode(structure);
+			generateJavaCode();
 		}
 		
 	}
@@ -408,7 +587,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 	
-	private void generateBigQueryTables() throws IOException, MojoExecutionException {
+	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException {
 		if (googleCloudPlatform != null) {
 			
 			File gcpDir = googleCloudPlatform.gcpDir(defaults);
@@ -438,10 +617,33 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			BigQueryDatasetGenerator datasetGenerator = new BigQueryDatasetGenerator(bqSchemaDir, bqDatasetDir);
 			datasetGenerator.run();
+			
+			generateTransformScripts(bqOutDir);
 		}
 	}
 
 	
+	private void generateTransformScripts(File bigQueryDir) throws MojoExecutionException {
+		
+		
+		if (googleCloudPlatform.isEnableBigQueryTransform()) {
+			
+			File outDir = new File(bigQueryDir, SCRIPTS);
+		
+			BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner);
+			generator.generateAll();
+			List<Throwable> errorList = generator.getErrorList();
+			if (errorList != null && !errorList.isEmpty()) {
+				Log logger = getLog();
+				for (Throwable e : errorList) {
+					logger.error(e.getMessage());
+				}
+				throw new MojoExecutionException("Failed to generate BigQuery Transform", errorList.get(0));
+			}
+		}
+		
+	}
+
 	private TableMapper createTableMapper() {
 		return new LocalNameTableMapper();
 	}
@@ -461,15 +663,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		return datasetMapper;
 	}
 
-	private void generateJavaCode(ClassStructure structure) throws IOException, CodeGeneratorException {
+	private void generateJavaCode() throws IOException, CodeGeneratorException {
 		
 		final JCodeModel model = new JCodeModel();
 		if (java.getPackageRoot()==null) {
 			throw new CodeGeneratorException("javaCodeGenerator.packageRoot must be defined");
 		}
+		
 		JavaNamer javaNamer = new BasicJavaNamer(java.getPackageRoot(), nsManager);
-		JavaClassBuilder classBuilder = new JavaClassBuilder(structure, javaNamer, owlReasoner);
-		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(owlReasoner, shapeManager, javaNamer);
+		Filter filter = new Filter(java.getFilter());
+		JavaClassBuilder classBuilder = new JavaClassBuilder(classStructure(), javaNamer, owlReasoner, filter);
+		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(owlReasoner, shapeManager, javaNamer, filter);
 		
 		classBuilder.buildAllClasses(model);
 		writerBuilder.buildAll(shapeManager.listShapes(), model);

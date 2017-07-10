@@ -1,7 +1,5 @@
 package io.konig.gcp.datasource;
 
-import java.util.Set;
-
 /*
  * #%L
  * Konig Core
@@ -32,20 +30,10 @@ import io.konig.datasource.TableDataSource;
 
 public class GoogleSpannerTable extends DataSource implements TableDataSource {
 	
-	private Set<DataSource> spannerSource;
 	private SpannerTableReference tableReference;
 
 	public GoogleSpannerTable() {
 		addType(Konig.GoogleSpannerTable);
-	}
-	
-	@RdfProperty(Konig.SPANNER_SOURCE)
-	public Set<DataSource> getSpannerSource() {
-		return spannerSource;
-	}
-
-	public void setSpannerSource(Set<DataSource> spannerSource) {
-		this.spannerSource = spannerSource;
 	}
 
 	@RdfProperty(GCP.TABLE_REFERENCE)

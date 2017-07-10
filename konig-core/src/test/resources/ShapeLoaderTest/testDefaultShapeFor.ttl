@@ -1,0 +1,7 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix app: <http://example.com/app/> .
+
+shape:PersonShape a sh:Shape ; 
+	konig:defaultShapeFor app:MyCatalog, app:MyShoppingCart . 

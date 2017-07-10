@@ -1,0 +1,1 @@
+@prefix shape: <http://example.com/shapes/> .

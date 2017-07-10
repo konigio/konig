@@ -68,6 +68,9 @@ public class ContentSystemClient implements ContentSystem {
 							bundleURL, statusLine.getStatusCode(), statusLine.getReasonPhrase());
 					throw new ContentAccessException(msg);
 				}
+				
+				result.setEditServiceAddress(editServiceAddress(response));
+				
 				InputStream input = response.getEntity().getContent();
 				InputStreamReader reader = new InputStreamReader(input);
 				BufferedReader lineReader = new BufferedReader(reader);
@@ -94,6 +97,10 @@ public class ContentSystemClient implements ContentSystem {
 		}
 		
 		return result;
+	}
+
+	private String editServiceAddress(CloseableHttpResponse response) {
+		return LinkUtil.getLink(response.getHeaders("Link"), "edit");
 	}
 
 	@Override
