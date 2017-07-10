@@ -63,60 +63,59 @@ public class JsonSchemaGeneratorTest {
 		
 		JsonSchema schema = generator.asJsonSchema(shape);
 		
-		String expected =
-			"{\n" + 
-			"  \"id\" : \"http://example.com/shapes/PersonShape.jsonschema\",\n" + 
-			"  \"type\" : \"object\",\n" + 
-			"  \"properties\" : {\n" + 
-			"    \"address\" : {\n" + 
-			"      \"id\" : \"http://example.com/shapes/PostalAddressShape.jsonschema\",\n" + 
-			"      \"type\" : \"object\",\n" + 
-			"      \"description\" : \"The person's postal address.\",\n" + 
-			"      \"properties\" : {\n" + 
-			"        \"streetAddress\" : {\n" + 
-			"          \"type\" : \"string\",\n" + 
-			"          \"description\" : \"The street address. For example, 1600 Ampitheatre Pkwy.\"\n" + 
-			"        },\n" + 
-			"        \"addressLocality\" : {\n" + 
-			"          \"type\" : \"string\",\n" + 
-			"          \"description\" : \"The locality. For example, Mountain View.\"\n" + 
-			"        },\n" + 
-			"        \"postalCode\" : {\n" + 
-			"          \"type\" : \"string\",\n" + 
-			"          \"description\" : \"The postal code. For example, 94043.\"\n" + 
-			"        },\n" + 
-			"        \"addressRegion\" : {\n" + 
-			"          \"type\" : \"string\",\n" + 
-			"          \"description\" : \"The region. For example, CA.\"\n" + 
-			"        }\n" + 
-			"      }\n" + 
-			"    },\n" + 
-			"    \"email\" : {\n" + 
-			"      \"type\" : \"array\",\n" + 
-			"      \"description\" : \"The person's email address.\",\n" + 
-			"      \"items\" : {\n" + 
-			"        \"type\" : \"string\"\n" + 
-			"      }\n" + 
-			"    },\n" + 
-			"    \"name\" : {\n" + 
-			"      \"type\" : \"string\",\n" + 
-			"      \"description\" : \"The full name of the person.\"\n" + 
-			"    },\n" + 
-			"    \"familyName\" : {\n" + 
-			"      \"type\" : \"string\",\n" + 
-			"      \"description\" : \"Family name. In the U.S., the last name of an Person.\"\n" + 
-			"    },\n" + 
-			"    \"gender\" : {\n" + 
-			"      \"type\" : \"string\",\n" + 
-			"      \"format\" : \"uri\",\n" + 
-			"      \"description\" : \"Gender of the person.\"\n" + 
-			"    },\n" + 
-			"    \"givenName\" : {\n" + 
-			"      \"type\" : \"string\",\n" + 
-			"      \"description\" : \"Given name. In the U.S., the first name of a Person.\"\n" + 
-			"    }\n" + 
-			"  }\n" + 
-			"}";
+		String expected = "{\n" + 
+				"  \"id\" : \"http://example.com/shapes/PersonShape.jsonschema\",\n" + 
+				"  \"type\" : \"object\",\n" + 
+				"  \"properties\" : {\n" + 
+				"    \"address\" : {\n" + 
+				"      \"id\" : \"http://example.com/shapes/PostalAddressShape.jsonschema\",\n" + 
+				"      \"type\" : \"object\",\n" + 
+				"      \"description\" : \"The person's postal address.\",\n" + 
+				"      \"properties\" : {\n" + 
+				"        \"addressLocality\" : {\n" + 
+				"          \"type\" : \"string\",\n" + 
+				"          \"description\" : \"The locality. For example, Mountain View.\"\n" + 
+				"        },\n" + 
+				"        \"addressRegion\" : {\n" + 
+				"          \"type\" : \"string\",\n" + 
+				"          \"description\" : \"The region. For example, CA.\"\n" + 
+				"        },\n" + 
+				"        \"postalCode\" : {\n" + 
+				"          \"type\" : \"string\",\n" + 
+				"          \"description\" : \"The postal code. For example, 94043.\"\n" + 
+				"        },\n" + 
+				"        \"streetAddress\" : {\n" + 
+				"          \"type\" : \"string\",\n" + 
+				"          \"description\" : \"The street address. For example, 1600 Ampitheatre Pkwy.\"\n" + 
+				"        }\n" + 
+				"      }\n" + 
+				"    },\n" + 
+				"    \"email\" : {\n" + 
+				"      \"type\" : \"array\",\n" + 
+				"      \"description\" : \"The person's email address.\",\n" + 
+				"      \"items\" : {\n" + 
+				"        \"type\" : \"string\"\n" + 
+				"      }\n" + 
+				"    },\n" + 
+				"    \"familyName\" : {\n" + 
+				"      \"type\" : \"string\",\n" + 
+				"      \"description\" : \"Family name. In the U.S., the last name of an Person.\"\n" + 
+				"    },\n" + 
+				"    \"gender\" : {\n" + 
+				"      \"type\" : \"string\",\n" + 
+				"      \"format\" : \"uri\",\n" + 
+				"      \"description\" : \"Gender of the person.\"\n" + 
+				"    },\n" + 
+				"    \"givenName\" : {\n" + 
+				"      \"type\" : \"string\",\n" + 
+				"      \"description\" : \"Given name. In the U.S., the first name of a Person.\"\n" + 
+				"    },\n" + 
+				"    \"name\" : {\n" + 
+				"      \"type\" : \"string\",\n" + 
+				"      \"description\" : \"The full name of the person.\"\n" + 
+				"    }\n" + 
+				"  }\n" + 
+				"}";
 		
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.enable(SerializationFeature.INDENT_OUTPUT);

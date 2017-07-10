@@ -22,6 +22,8 @@ package io.konig.jsonschema.generator;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +124,14 @@ public class JsonSchemaGenerator extends Generator {
 			if (list != null && !list.isEmpty()) {
 				PropertyMap properties = new PropertyMap();
 				schema.setProperties(properties);
-				
+				Collections.sort(list, new Comparator<PropertyConstraint>() {
+
+					@Override
+					public int compare(PropertyConstraint a, PropertyConstraint b) {
+						return a.getPredicate().getLocalName().compareTo(b.getPredicate().getLocalName());
+					}
+					
+				});
 				for (PropertyConstraint p : list) {
 					putProperty(properties, p);
 				}
