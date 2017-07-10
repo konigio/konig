@@ -16,7 +16,6 @@
   
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <license.roots>src/main/java,src/test/java</license.roots>
   </properties>
 
   <dependencies>
@@ -96,26 +95,6 @@
 					</execution>
 				</executions>
 			</plugin>
-	      <plugin>
-	        <groupId>org.codehaus.mojo</groupId>
-	        <artifactId>license-maven-plugin</artifactId>
-	        <version>1.8</version>
-	        <configuration>
-	          <verbose>false</verbose>
-	        </configuration>
-	        <executions>
-	          <execution>
-	            <id>first</id>
-	            <goals>
-	              <goal>update-file-header</goal>
-	            </goals>
-	            <phase>process-sources</phase>
-	            <configuration>
-	              <licenseName>apache_v2</licenseName>
-	            </configuration>
-	          </execution>
-	        </executions>
-	      </plugin>
 	  </plugins>
 	  <pluginManagement>
 	  	<plugins>
