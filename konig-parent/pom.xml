@@ -1,28 +1,29 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>io.konig</groupId>
-  <artifactId>konig-parent</artifactId>
-  <version>2.0.0-8</version>
-  <name>Konig Parent</name>
-  <description>The parent project from which all the konig modules are built</description>
-  <url>http://developers.konig.io/</url>
-  <packaging>pom</packaging>
-  <properties>
-  	<konig.version>${project.version}</konig.version>
-  	<license.licenseName>apache_v2</license.licenseName>
-  	<license.inceptionYear>2015</license.inceptionYear>
-  	<license.organizationName>Gregory McFall</license.organizationName>
-    <license.excludes>src/test/resources/jsonld/owlshapes.json</license.excludes>
-  	<sesame.version>2.8.7</sesame.version>
-  	<junit.version>4.12</junit.version>
-  	<slf4j.version>1.7.10</slf4j.version>
-  	<javax.inject.version>1</javax.inject.version>
-  	<jackson.version>2.6.3</jackson.version>
-  	<jsonld-java.version>0.7.0</jsonld-java.version>
-  	<httpclient.version>4.5.2</httpclient.version>
-  	<poi.version>3.15</poi.version>
-    <appengine.version>1.9.51</appengine.version>
-    <appengine.maven.plugin.version>1.0.0</appengine.maven.plugin.version>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>io.konig</groupId>
+	<artifactId>konig-parent</artifactId>
+	<version>2.0.0-8</version>
+	<name>Konig Parent</name>
+	<description>The parent project from which all the konig modules are built</description>
+	<url>http://developers.konig.io/</url>
+	<packaging>pom</packaging>
+	<properties>
+		<konig.version>${project.version}</konig.version>
+		<license.licenseName>apache_v2</license.licenseName>
+		<license.inceptionYear>2015</license.inceptionYear>
+		<license.organizationName>Gregory McFall</license.organizationName>
+		<license.roots>src/main/java,src/test/java</license.roots>
+		<sesame.version>2.8.7</sesame.version>
+		<junit.version>4.12</junit.version>
+		<slf4j.version>1.7.10</slf4j.version>
+		<javax.inject.version>1</javax.inject.version>
+		<jackson.version>2.6.3</jackson.version>
+		<jsonld-java.version>0.7.0</jsonld-java.version>
+		<httpclient.version>4.5.2</httpclient.version>
+		<poi.version>3.15</poi.version>
+		<appengine.version>1.9.51</appengine.version>
+		<appengine.maven.plugin.version>1.0.0</appengine.maven.plugin.version>
 		<jodatime.version>2.9.3</jodatime.version>
 		<antlr.version>4.6</antlr.version>
 		<commons-codec.version>1.10</commons-codec.version>
@@ -33,124 +34,179 @@
 		<mockito.version>1.10.19</mockito.version>
 		<google.cloud>0.17.2-beta</google.cloud>
 		<google-cloud-storage.version>1.2.0</google-cloud-storage.version>
-    <google-api-client.version>1.21.0</google-api-client.version>
-    <google-api-pubsub.version>v1-rev8-1.21.0</google-api-pubsub.version>
-    <servlet-api.version>2.5</servlet-api.version>
-    <velocity.version>1.7</velocity.version>
-  </properties>
-  
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  
-  <scm>
-    <url>scm:git:ssh://git@github.com/konigio/konig.git</url>
-    <connection>scm:git:ssh://git@github.com/konigio/konig.git</connection>  	
-    <developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
-    <tag>HEAD</tag>
-  </scm>
-  
-  <modules>
-  	<module>../konig-yaml</module>
-  	<module>../konig-java</module>
-  	<module>../konig-maven-common</module>
-  	<module>../konig-gcp-deploy-model</module>
-  	<module>../konig-core</module>
-  	<module>../konig-openapi-model</module>
-  	<module>../konig-jsonschema-model</module>
-  	<module>../konig-generator-common</module>
-  	<module>../konig-jsonschema-generator</module>
-  	<module>../konig-openapi-generator</module>
-  	<module>../konig-gcp-model</module>
-  	<module>../konig-transform</module>
-  	<module>../konig-data-catalog</module>
-  	<module>../konig-data-catalog-maven-plugin</module>
-  	<module>../konig-maven-diff</module>
-  	<module>../konig-gae-datastore</module>
-  	<module>../konig-spreadsheet</module>
-  	<module>../konig-schemagen</module>
-  	<module>../konig-gae-generator</module>
-  	<module>../konig-maven-project-generator</module>
-  	<module>../konig-schemagen-maven-plugin</module>
-  	<module>../konig-ldp</module>
-  	<module>../konig-ldp-maven-plugin</module>
-  	<!-- 
-  	<module>../konig-sql-core</module>
-  	<module>../konig-sql</module>
-  	<module>../konig-sql-maven-plugin</module>
-  	 -->
-  	<module>../konig-model-merge-maven-plugin</module>
-  	<module>../konig-content-system-common</module>
-  	<module>../konig-content-system-gae</module>
-  	<module>../konig-content-system-client</module>
-  	<module>../konig-content-system-maven-plugin</module>
-  	<module>../konig-google-download-maven-plugin</module>
-  	<module>../konig-gcp-deploy-maven-plugin</module>
-  	<module>../konig-dao-core</module>
-  	<module>../konig-dao-sql</module>
-  	<module>../konig-dao-sql-runtime</module>
-  	<module>../konig-data-app-common</module>
-  	<module>../konig-gcp-common</module>
-  	<module>../konig-data-app-gcp</module>
-  	<module>../konig-data-app-generator</module>
-  </modules>
- 
-  <developers>
-    <developer>
-      <id>gmcfall</id>
-      <name>Greg McFall</name>
-      <email>gregory.mcfall@gmail.com</email>
-    </developer>
-  </developers>
-  
-  <distributionManagement>
-	  <snapshotRepository>
-	    <id>ossrh</id>
-	    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-	  </snapshotRepository>
-  </distributionManagement>
-  
-  <build>
-      
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.3</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-        </configuration>
-      </plugin>
-      
-    </plugins>
-  </build>
-   <profiles>
-  	<profile>
-  		<id>release-profile</id>
-  		<activation>
-  			<property>
-  				<name>performRelease</name>
-  				<value>true</value>
-  			</property>
-  		</activation>
+		<google-api-client.version>1.21.0</google-api-client.version>
+		<google-api-pubsub.version>v1-rev8-1.21.0</google-api-pubsub.version>
+		<servlet-api.version>2.5</servlet-api.version>
+		<velocity.version>1.7</velocity.version>
+	</properties>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<url>scm:git:ssh://git@github.com/konigio/konig.git</url>
+		<connection>scm:git:ssh://git@github.com/konigio/konig.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/konigio/konig.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+
+	<modules>
+		<module>../konig-yaml</module>
+		<module>../konig-java</module>
+		<module>../konig-maven-common</module>
+		<module>../konig-gcp-deploy-model</module>
+		<module>../konig-core</module>
+		<module>../konig-openapi-model</module>
+		<module>../konig-jsonschema-model</module>
+		<module>../konig-generator-common</module>
+		<module>../konig-jsonschema-generator</module>
+		<module>../konig-openapi-generator</module>
+		<module>../konig-gcp-model</module>
+		<module>../konig-transform</module>
+		<module>../konig-data-catalog</module>
+		<module>../konig-data-catalog-maven-plugin</module>
+		<module>../konig-maven-diff</module>
+		<module>../konig-gae-datastore</module>
+		<module>../konig-spreadsheet</module>
+		<module>../konig-schemagen</module>
+		<module>../konig-gae-generator</module>
+		<module>../konig-maven-project-generator</module>
+		<module>../konig-schemagen-maven-plugin</module>
+		<module>../konig-ldp</module>
+		<module>../konig-ldp-maven-plugin</module>
+		<!-- <module>../konig-sql-core</module> <module>../konig-sql</module> <module>../konig-sql-maven-plugin</module> -->
+		<module>../konig-model-merge-maven-plugin</module>
+		<module>../konig-content-system-common</module>
+		<module>../konig-content-system-gae</module>
+		<module>../konig-content-system-client</module>
+		<module>../konig-content-system-maven-plugin</module>
+		<module>../konig-google-download-maven-plugin</module>
+		<module>../konig-gcp-deploy-maven-plugin</module>
+		<module>../konig-dao-core</module>
+		<module>../konig-dao-sql</module>
+		<module>../konig-dao-sql-runtime</module>
+		<module>../konig-data-app-common</module>
+		<module>../konig-gcp-common</module>
+		<module>../konig-data-app-gcp</module>
+		<module>../konig-data-app-generator</module>
+	</modules>
+
+	<developers>
+		<developer>
+			<id>gmcfall</id>
+			<name>Greg McFall</name>
+			<email>gregory.mcfall@gmail.com</email>
+		</developer>
+	</developers>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<build>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.3</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<version>1.8</version>
+				<configuration>
+					<verbose>false</verbose>
+				</configuration>
+				<executions>
+					<execution>
+						<id>first</id>
+						<goals>
+							<goal>update-file-header</goal>
+						</goals>
+						<phase>process-sources</phase>
+						<configuration>
+							<licenseName>apache_v2</licenseName>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.codehaus.mojo
+										</groupId>
+										<artifactId>
+											license-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.8,)
+										</versionRange>
+										<goals>
+											<goal>
+												update-file-header
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>release-profile</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
 			<build>
 				<plugins>
-			    <plugin>
-			      <groupId>org.sonatype.plugins</groupId>
-			      <artifactId>nexus-staging-maven-plugin</artifactId>
-			      <version>1.6.3</version>
-			      <extensions>true</extensions>
-			      <configuration>
-			        <serverId>ossrh</serverId>
-			        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-			        <autoReleaseAfterClose>true</autoReleaseAfterClose>
-			      </configuration>
-			    </plugin>
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>1.6.3</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>ossrh</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
@@ -190,7 +246,7 @@
 					</plugin>
 				</plugins>
 			</build>
-  	</profile>
-  	
-  </profiles>
+		</profile>
+
+	</profiles>
 </project>
