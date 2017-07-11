@@ -55,5 +55,26 @@ public abstract class ConfigurableProjectGenerator<T> extends MavenProjectGenera
 		xml.flush();
 		getContext().put(tag, buffer.toString());
 	}
+	
+	protected void putProperties(int indent, String key, Object object) {
+		StringWriter buffer = new StringWriter();
+		XmlSerializer xml = new XmlSerializer(buffer);
+		xml.setIndent(indent);
+		xml.setIndentWidth(2);
+		xml.printProperties(object);
+		xml.flush();
+		
+		getContext().put(key, buffer.toString());
+	}
+
+
+	public String getTagName() {
+		return tagName;
+	}
+
+
+	public void setTagName(String tagName) {
+		this.tagName = tagName;
+	}
 
 }
