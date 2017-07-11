@@ -95,35 +95,44 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 		builder.append(table.getTableReference().getTableName());
 		builder.append(" (").append(System.getProperty("line.separator"));
 		
-		builder.append(writeFieldDefinition(table));
+		writeFieldDefinition(table, builder);
 		
-		builder.append(");");
+		builder.append(") ");
+		
+		writePrimaryKey(table, builder);
+		
+		builder.append("; ");
+		
 		return builder.toString();
 	}
 	
-	private String writeFieldDefinition(SpannerTable table) {
+	private void writePrimaryKey(SpannerTable table, StringBuilder builder) {
+		int i = 0;
+		
+		builder.append("PRIMARY KEY (");
+		
+		for (SpannerTable.Field field : table.getFields()) {
+			
+			if (field.getIsPrimaryKey() == true) {
+				
+				if (i > 0) builder.append(", ");
+				builder.append(field.getFieldName());
+				
+				++i;
+			}
+		}
+		builder.append(")");
+	}
 
-		StringBuilder builder = new StringBuilder();
+	private void writeFieldDefinition(SpannerTable table, StringBuilder builder) {
+
 		int i = 0;
 		for (SpannerTable.Field field : table.getFields()) {
 			if (i > 0) builder.append(",\n");
 			
 			builder.append("\t").append(field.getFieldName()).append(" ");
 			
-			if (field.getFieldType() == SpannerDatatype.ARRAY) {
-				builder.append(SpannerDatatype.ARRAY.toString()).append("<");
-			}
-			
-			builder.append(field.getFieldType());
-			
-			if (field.getFieldType() == SpannerDatatype.STRING) {
-				builder.append("(MAX)");
-			}
-				
-				
-			if (field.getFieldType() == SpannerDatatype.ARRAY) {
-				builder.append(">");
-			}
+			writeFieldType(field, builder);
 			
 			FieldMode mode = field.getFieldMode();
 			if (mode == FieldMode.REQUIRED) {
@@ -131,8 +140,29 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 			}
 			++i;
 		}
+	}
+	
+	private void writeFieldType(SpannerTable.Field field, StringBuilder builder) {
+		if (field.getFieldType() == SpannerDatatype.ARRAY) {
+			builder.append(SpannerDatatype.ARRAY.toString()).append("<");
+		}
 		
-		return builder.toString();
+		builder.append(field.getFieldType());
+		
+		if ( (field.getFieldType() == SpannerDatatype.STRING) || 
+				(field.getFieldType() == SpannerDatatype.BYTES) ) {
+			
+			Integer fieldLength = field.getFieldLength();
+			if (fieldLength != null) {
+				builder.append("(").append(fieldLength.toString()).append(")");
+			} else {
+				builder.append("(MAX)");
+			}
+		}			
+			
+		if (field.getFieldType() == SpannerDatatype.ARRAY) {
+			builder.append(">");
+		}
 	}
 
 }

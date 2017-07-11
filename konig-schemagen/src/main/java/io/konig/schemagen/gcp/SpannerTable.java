@@ -21,7 +21,6 @@ package io.konig.schemagen.gcp;
  */
 
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,20 +36,25 @@ public class SpannerTable {
 	private Shape tableShape;
 	private URI tableClass;
 	
-	private transient Activity wasGeneratedBy;
-	private transient List<Field> fields = new ArrayList<>();
+	private Activity wasGeneratedBy;
+	private List<Field> fields = new ArrayList<>();
 	private SpannerTableReference reference; 
+	private Integer primaryKeyCount = 0;
 	
 	class Field {
 
 		private String fieldName;
 		private FieldMode fieldMode;
 		private SpannerDatatype fieldType;
+		private Integer fieldLength;
+		private Boolean isPrimaryKey = false;
 		
-		public Field(String fieldName, FieldMode fieldMode, SpannerDatatype fieldType) {
+		public Field(String fieldName, FieldMode fieldMode, SpannerDatatype fieldType, 
+				Integer fieldLength) {
 			this.setFieldName(fieldName);
 			this.setFieldMode(fieldMode);
 			this.setFieldType(fieldType);
+			this.setFieldLength(fieldLength);
 		}
 
 		public String getFieldName() {
@@ -75,6 +79,25 @@ public class SpannerTable {
 
 		public void setFieldType(SpannerDatatype fieldType) {
 			this.fieldType = fieldType;
+		}
+
+		public Integer getFieldLength() {
+			return fieldLength;
+		}
+
+		public void setFieldLength(Integer fieldLength) {
+			this.fieldLength = fieldLength;
+		}
+
+		public Boolean getIsPrimaryKey() {
+			return isPrimaryKey;
+		}
+
+		public void setIsPrimaryKey(Boolean isPrimaryKey) {
+			this.isPrimaryKey = isPrimaryKey;
+			if (isPrimaryKey == true) {
+				SpannerTable.this.addToPrimaryKeyCount();
+			}
 		}
 	}
 	
@@ -137,5 +160,12 @@ public class SpannerTable {
 	public void setWasGeneratedBy(Activity wasGeneratedBy) {
 		this.wasGeneratedBy = wasGeneratedBy;
 	}
-	
+
+	public Integer getPrimaryKeyCount() {
+		return primaryKeyCount;
+	}
+
+	public void addToPrimaryKeyCount() {
+		this.primaryKeyCount++;
+	}
 }

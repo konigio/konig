@@ -59,7 +59,7 @@
 		<dependency>
 		    <groupId>com.google.cloud</groupId>
 		    <artifactId>google-cloud-spanner</artifactId>
-		    <version>0.17.2-beta</version>
+		    <version>${google-cloud-spanner.version}</version>
 		</dependency>
   	
     <dependency>

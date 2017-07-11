@@ -21,20 +21,10 @@ package io.konig.schemagen.gcp;
  */
 
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-
 import io.konig.core.OwlReasoner;
-import io.konig.gcp.datasource.SpannerTableReference;
 import io.konig.schemagen.SchemaGeneratorException;
-import io.konig.schemagen.merge.ShapeAggregator;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -98,10 +88,15 @@ public class SpannerTableGenerator {
 		
 		List<PropertyConstraint> plist = shape.getProperty();
 		
+		
 		for (PropertyConstraint p : plist) {
 			toField(p, table);
 		}
 		
+		Integer primaryKeyCount = table.getPrimaryKeyCount();
+		if (primaryKeyCount == 0) {
+			throw new SchemaGeneratorException("Primary Key is a must for Spanner Tables");
+		}
 	}
 	
 
@@ -110,11 +105,14 @@ public class SpannerTableGenerator {
 		String fieldName = p.getPredicate().getLocalName();
 		FieldMode fieldMode = fieldMode(p);
 		SpannerDatatype fieldType = datatypeMap.type(p);
+		Integer fieldLength = p.getMaxLength();
 		
-		SpannerTable.Field field = table.new Field(fieldName, fieldMode, fieldType);
+		SpannerTable.Field field = table.new Field(fieldName, fieldMode, fieldType, fieldLength);
+		if (p.getNodeKind() == NodeKind.IRI) {
+			field.setIsPrimaryKey(true);
+		}
 		table.addField(field);
 		
-		// TBD: To check and add additional info for array type nodes
 	}
 
 	

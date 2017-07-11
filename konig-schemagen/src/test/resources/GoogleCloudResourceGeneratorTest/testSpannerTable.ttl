@@ -23,16 +23,24 @@ shape:PersonLiteShape a sh:Shape ;
 	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/Pp_Q_Y4TyQUAAAFaAAVoAA> ; 
 	rdfs:comment "A light-weight data shape for a person that just contains the person's given and family names." ; 
 	sh:targetClass schema:Person ; 
-	konig:shapeDataSource <https://spanner.googleapis.com/v1/{gcpProjectId}/datasets/schema/tables/Person> ; 
-	sh:nodeKind sh:IRI ; 
-	sh:property  [ 
+	konig:shapeDataSource <https://spanner.googleapis.com/v1/{gcpProjectId}/databases/schema/tables/Person> ; 
+	sh:nodeKind sh:IRI ;
+	sh:targetNode schema:Party ; 
+	sh:property [ 
+		sh:predicate schema:personId ; 
+		sh:datatype xsd:integer ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ;
+		sh:nodeKind sh:IRI 
+	] , [ 
 		sh:predicate schema:givenName ; 
 		sh:datatype xsd:string ; 
+		sh:maxLength 25 ;
 		sh:minCount 0 ; 
-		sh:maxCount 1
-	 ]  ,  [ 
+		sh:maxCount 1 
+	 ] , [ 
 		sh:predicate schema:familyName ; 
-		sh:datatype xsd:string ; 
+		sh:datatype xsd:string ;
 		sh:minCount 1 ; 
 		sh:maxCount 1 ]  . 
 
@@ -41,7 +49,7 @@ shape:PersonLiteShape a sh:Shape ;
 
 schema:Person a owl:Class . 
 
-<https://spanner.googleapis.com/v1/{gcpProjectId}/datasets/schema/tables/Person> a konig:GoogleSpannerTable , konig:DataSource ; 
+<https://spanner.googleapis.com/v1/{gcpProjectId}/databases/schema/tables/Person> a konig:GoogleSpannerTable , konig:DataSource ; 
 	gcp:tableReference  [ 
 		gcp:projectId "{gcpProjectId}" ; 
 		gcp:databaseName "schema" ; 
