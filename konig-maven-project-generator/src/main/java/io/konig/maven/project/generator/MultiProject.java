@@ -84,10 +84,22 @@ public class MultiProject extends MavenProjectConfig {
 			parent.add(rdf);
 		}
 		if (googleCloudPlatform != null) {
+			
+			GoogleCloudPlatformConfig appEngine = null;
+			if (googleCloudPlatform.getDataServices() != null) {
+				appEngine = new GoogleCloudPlatformConfig();
+				appEngine.setDataServices(googleCloudPlatform.getDataServices());
+				appEngine.setEnableBigQueryTransform(false);
+				googleCloudPlatform.setDataServices(null);
+			}
+			
 			GoogleCloudPlatformModelGenerator gcp = 
 				new GoogleCloudPlatformModelGenerator(this, googleCloudPlatform);
 			
 			parent.add(gcp);
+			if (appEngine != null) {
+				parent.add(new AppEngineGenerator(this, appEngine));
+			}
 		}
 		if (java != null) {
 			parent.add(new JavaModelGenerator(this, java));

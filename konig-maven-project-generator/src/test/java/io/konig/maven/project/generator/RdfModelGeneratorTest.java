@@ -45,6 +45,8 @@ public class RdfModelGeneratorTest {
 		project.setVersion("1.0.0");
 		project.setName("Demo");
 		project.setKonigVersion("2.0.0-8");
+		project.setRdfSourceDir(new File("target/generated/rdf-model"));
+		project.setRdfSourcePath("target/generated/rdf-model");
 		
 		WorkbookProcessor workbook = new WorkbookProcessor();
 		workbook.setWorkbookFile(workbookFile);

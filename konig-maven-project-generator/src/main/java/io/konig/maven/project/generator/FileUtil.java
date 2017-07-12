@@ -37,13 +37,17 @@ public class FileUtil {
 		if (src.isDirectory()) {
 			src = new File(src, "foo");
 		}
-		String srcPath = src.toPath().normalize().toAbsolutePath().toString();
-		String targetPath = target.toPath().normalize().toAbsolutePath().toString();
-		if (srcPath.indexOf('\\') >= 0) {
-			srcPath = srcPath.replace('\\', '/');
-			targetPath = targetPath.replace('\\', '/');
+		try {
+			String srcPath = src.getCanonicalPath();
+			String targetPath = target.getCanonicalPath();
+			if (srcPath.indexOf('\\') >= 0) {
+				srcPath = srcPath.replace('\\', '/');
+				targetPath = targetPath.replace('\\', '/');
+			}
+			return relativePath(srcPath, targetPath);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
-		return relativePath(srcPath, targetPath);
 	}
 	public static String relativePath(String src, String target) {
 		
