@@ -53,6 +53,10 @@ public class MavenProjectGenerator {
 			mavenProject = new MavenProjectConfig();
 		}
 		
+		File masterBase = base.getBaseDir();
+		if (masterBase == null) {
+			masterBase = new File(".");
+		}
 		
 		if (mavenProject.getGroupId() == null) {
 			mavenProject.setGroupId(base.getGroupId());
@@ -69,11 +73,16 @@ public class MavenProjectGenerator {
 		if (mavenProject.getKonigVersion() == null) {
 			mavenProject.setKonigVersion(base.getKonigVersion());
 		}
-		if (mavenProject.getRdfSourceDir() == null) {
-			mavenProject.setRdfSourceDir(base.getRdfSourceDir());
+		File basedir = new File(base.getBaseDir(), mavenProject.getArtifactId());
+		
+		if (mavenProject.getRdfSourceDir() == null && base.getRdfSourceDir()!=null) {
+			basedir.mkdirs();
+			String path = FileUtil.relativePath(basedir, base.getRdfSourceDir());
+			mavenProject.setRdfSourceDir(new File(path));
+			mavenProject.setRdfSourcePath("${basedir}/" + path);
 		}
 
-		mavenProject.setBaseDir(new File(base.getBaseDir(), mavenProject.getArtifactId()));
+		mavenProject.setBaseDir(basedir);
 		
 	}
 

@@ -43,6 +43,8 @@ public class GoogleCloudPlatformModelGeneratorTest {
 		project.setVersion("1.0.0");
 		project.setName("Demo");
 		project.setKonigVersion("2.0.0-8");
+		project.setRdfSourceDir(new File("target/generated/rdf"));
+		project.setRdfSourcePath("target/generated/rdf");
 		
 		GoogleCloudPlatformConfig gcpConfig = new GoogleCloudPlatformConfig();
 		gcpConfig.setEnumShapeDir(new File("src/main/rdf/enumShapes"));

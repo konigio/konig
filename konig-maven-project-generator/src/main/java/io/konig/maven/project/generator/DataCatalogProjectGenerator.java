@@ -41,17 +41,14 @@ public class DataCatalogProjectGenerator extends ConfigurableProjectGenerator<Da
 		init(mavenProject);
 		
 		mavenProject = getMavenProject();
-		File baseDir = mavenProject.getBaseDir();
-		File rdfSrcDir = mavenProject.getRdfSourceDir();
-		
-		String rdfPath = FileUtil.relativePath(baseDir, rdfSrcDir);
+		String rdfPath = mavenProject.getRdfSourcePath();
 		
 		config.setRdfDir(rdfPath);
-		config.setSiteDir("target/generated/data-catalog");
+		config.setSiteDir("${basedir}/target/generated/data-catalog");
 		contentSystem = config.getContentSystem();
 		config.setContentSystem(null);
 		if (contentSystem != null) {
-			contentSystem.setBaseDir("target/generated/data-catalog");
+			contentSystem.setBaseDir("${basedir}/target/generated/data-catalog");
 		}
 		
 	}
