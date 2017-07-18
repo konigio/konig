@@ -1,5 +1,7 @@
 package io.konig.schemagen.gcp;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Schema Generator
@@ -23,9 +25,11 @@ package io.konig.schemagen.gcp;
 
 import java.util.List;
 
+import org.openrdf.model.URI;
+
 import io.konig.core.OwlReasoner;
+import io.konig.core.vocab.Konig;
 import io.konig.schemagen.SchemaGeneratorException;
-import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -34,9 +38,8 @@ import io.konig.shacl.ShapeNamer;
 public class SpannerTableGenerator {
 	private ShapeManager shapeManager;
 	private SpannerDatatypeMapper datatypeMap = new SpannerDatatypeMapper();
-	private OwlReasoner owl;
 	private ShapeNamer shapeNamer;
-	private TableMapper tableMapper;
+	private List<SpannerTable> spannerTables = new ArrayList<SpannerTable>();
 	
 	
 	public SpannerTableGenerator(ShapeManager shapeManager) {
@@ -49,7 +52,6 @@ public class SpannerTableGenerator {
 	public SpannerTableGenerator(ShapeManager shapeManager, ShapeNamer shapeNamer, OwlReasoner reasoner) {
 		this.shapeManager = shapeManager;
 		this.shapeNamer = shapeNamer;
-		owl = reasoner;
 	}
 	
 	public ShapeManager getShapeManager() {
@@ -70,27 +72,19 @@ public class SpannerTableGenerator {
 		return this;
 	}
 
-	public TableMapper getTableMapper() {
-		return tableMapper;
-	}
-
-
-	public SpannerTableGenerator setTableMapper(TableMapper tableMapper) {
-		this.tableMapper = tableMapper;
-		return this;
-	}
-
 	public void toTableSchema(SpannerTable table) {
 		Shape shape = table.getTableShape();
 		if (shape == null) {
 			throw new SchemaGeneratorException("Shape is not defined");
 		}
 		
+		spannerTables.add(table);
+		
 		List<PropertyConstraint> plist = shape.getProperty();
 		
 		
-		for (PropertyConstraint p : plist) {
-			toField(p, table);
+		for (PropertyConstraint propertyConstraint : plist) {
+			toField(propertyConstraint, table);
 		}
 		
 		Integer primaryKeyCount = table.getPrimaryKeyCount();
@@ -100,29 +94,84 @@ public class SpannerTableGenerator {
 	}
 	
 
-	private void toField(PropertyConstraint p, SpannerTable table) {
+	private void toField(PropertyConstraint propertyConstraint, SpannerTable table) {
 		
-		String fieldName = p.getPredicate().getLocalName();
-		FieldMode fieldMode = fieldMode(p);
-		SpannerDatatype fieldType = datatypeMap.type(p);
-		Integer fieldLength = p.getMaxLength();
+		SpannerTable.Field field = null;
 		
-		SpannerTable.Field field = table.new Field(fieldName, fieldMode, fieldType, fieldLength);
-		if (p.getNodeKind() == NodeKind.IRI) {
-			field.setIsPrimaryKey(true);
+		if ( (propertyConstraint.getPredicate() == null) && (propertyConstraint.getShape() != null) ) {
+			
+			SpannerTable.Field parentPrimaryKey = toInterleaveParent(propertyConstraint, table);
+			field = table.new Field(parentPrimaryKey);
+			
+		} else {
+		
+			String fieldName = propertyConstraint.getPredicate().getLocalName();
+			FieldMode fieldMode = fieldMode(propertyConstraint);
+			SpannerDatatype fieldType = datatypeMap.type(propertyConstraint);
+			Integer fieldLength = propertyConstraint.getMaxLength();
+			
+			field = table.new Field(fieldName, fieldMode, fieldType, fieldLength);
+			if (isStereoTypePrimary(propertyConstraint) == true) field.setIsPrimaryKey(true);
 		}
+		
 		table.addField(field);
 		
 	}
 
+	private Boolean isStereoTypePrimary(PropertyConstraint propertyConstraint) {
+		Boolean ret = false;
+		if ( (propertyConstraint.getStereotype() != null) 
+				&& (propertyConstraint.getStereotype().getLocalName().compareTo(Konig.primaryKey.getLocalName()) == 0) ) {
+			
+			ret = true;
+		}
+		return ret;
+	}
+
 	
+	private SpannerTable.Field toInterleaveParent(PropertyConstraint propertyConstraint, SpannerTable table) {
+		SpannerTable.Field parentPrimaryField = null;
+			
+		SpannerTable parentTable = findParentTable(propertyConstraint);
+		
+		for (SpannerTable.Field parentField : parentTable.getFields()) {
+			if (parentField.getIsPrimaryKey() == true) {
+				parentPrimaryField = parentField;
+				
+				table.setInterleaveParentTable(parentTable.getTableName());
+				break;
+			}
+		}
+		
+		return parentPrimaryField;
+	}
+
+	private SpannerTable findParentTable(PropertyConstraint propertyConstraint) {
+		
+		String interleaveParentName = propertyConstraint.getShape().getTargetClass().getLocalName();
+		
+		SpannerTable parentSpannerTable = null;
+		
+		for (SpannerTable spannerTable : spannerTables) {
+			if (spannerTable.getTableName().compareTo(interleaveParentName) == 0) {
+				parentSpannerTable = spannerTable;
+				break;	
+			}
+		}
+		
+		if (parentSpannerTable == null) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Improper interleaving parent shape ").append(interleaveParentName);
+			throw new SchemaGeneratorException(sb.toString());
+		}
+		
+		return parentSpannerTable;
+	}
+
 	private FieldMode fieldMode(PropertyConstraint p) {
 		Integer minCount = p.getMinCount();
 		Integer maxCount = p.getMaxCount();
 		
-		if (maxCount==null || maxCount>1) {
-			throw new SchemaGeneratorException("Unsupported construct");
-		}
 		if (minCount!=null && maxCount!=null && minCount==1 && maxCount==1) {
 			return FieldMode.REQUIRED;
 		}

@@ -80,10 +80,7 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 		}
 		
 		StringBuilder builder = new StringBuilder();
-		builder.append(databaseName);
-		builder.append('.');
-		builder.append(tableName);
-		builder.append(".json");
+		builder.append(databaseName).append('.').append(tableName).append(".json");
 		
 		return new File(baseDir, builder.toString());
 	}
@@ -101,11 +98,22 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 		
 		writePrimaryKey(table, builder);
 		
+		writeInterleaveParent(table, builder);
+		
 		builder.append("; ");
 		
 		return builder.toString();
 	}
 	
+	private void writeInterleaveParent(SpannerTable table, StringBuilder builder) {
+		if (table.getInterleaveParentTable().length() > 0) {
+			builder.append(", ").append(System.getProperty("line.separator"));
+			
+			builder.append("INTERLEAVE IN PARENT ").append(table.getInterleaveParentTable());
+			builder.append(" ON DELETE CASCADE");
+		}
+	}
+
 	private void writePrimaryKey(SpannerTable table, StringBuilder builder) {
 		int i = 0;
 		

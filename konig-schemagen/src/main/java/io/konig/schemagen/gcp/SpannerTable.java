@@ -40,6 +40,7 @@ public class SpannerTable {
 	private List<Field> fields = new ArrayList<>();
 	private SpannerTableReference reference; 
 	private Integer primaryKeyCount = 0;
+	private String interleaveParentTable = "";
 	
 	class Field {
 
@@ -55,6 +56,13 @@ public class SpannerTable {
 			this.setFieldMode(fieldMode);
 			this.setFieldType(fieldType);
 			this.setFieldLength(fieldLength);
+		}
+		
+		public Field(Field copyField) {
+			this.setFieldName(copyField.getFieldName());
+			this.setFieldMode(copyField.getFieldMode());
+			this.setFieldType(copyField.getFieldType());
+			this.setFieldLength(copyField.getFieldLength());
 		}
 
 		public String getFieldName() {
@@ -101,6 +109,15 @@ public class SpannerTable {
 		}
 	}
 	
+	public String getInterleaveParentTable() {
+		return interleaveParentTable;
+	}
+
+	public void setInterleaveParentTable(String interleaveParentTable) {
+		this.interleaveParentTable = interleaveParentTable;
+	}
+
+	
 	public void addField(Field field) {
 		fields.add(field);
 	}
@@ -115,6 +132,7 @@ public class SpannerTable {
 	
 	public void setTableReference(SpannerTableReference reference) {
 		this.reference = reference;
+		setTableName(reference.getTableName());
 	}
 
 	/**

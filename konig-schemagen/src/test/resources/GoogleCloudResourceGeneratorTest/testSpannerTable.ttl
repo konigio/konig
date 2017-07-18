@@ -19,19 +19,47 @@ shape: a owl:Ontology ;
 	rdfs:label "Data Shape Instances" ; 
 	rdfs:comment "A namespace that holds individual data shapes" . 
 
+shape:AddressShape a sh:Shape ;
+	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/Pp_Q_Y4TyQUAAAFaAAVoAA> ; 
+	rdfs:comment "A light-weight data shape for storing postal address." ; 
+	sh:targetClass schema:PostalAddress ; 
+	konig:shapeDataSource <https://spanner.googleapis.com/v1/{gcpProjectId}/databases/schema/tables/PostalAddress> ; 
+	sh:nodeKind sh:IRI ;
+	sh:property [ 
+		sh:predicate schema:addressId ; 
+		sh:datatype xsd:integer ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ;
+		konig:stereotype konig:primaryKey ; 
+	] , [ 
+		sh:predicate schema:addressStreet ; 
+		sh:datatype xsd:string ; 
+		sh:maxLength 255 ;
+		sh:minCount 0 ; 
+		sh:maxCount 1 
+	 ] , [ 
+		sh:predicate schema:addressLocality ; 
+		sh:datatype xsd:string ;
+		sh:maxLength 255 ;
+		sh:minCounnt 1 ; 
+		sh:maxCount 1 ]  .
+
 shape:PersonLiteShape a sh:Shape ; 
 	<http://www.w3.org/ns/prov#wasGeneratedBy> <http://www.konig.io/activity/Pp_Q_Y4TyQUAAAFaAAVoAA> ; 
 	rdfs:comment "A light-weight data shape for a person that just contains the person's given and family names." ; 
 	sh:targetClass schema:Person ; 
 	konig:shapeDataSource <https://spanner.googleapis.com/v1/{gcpProjectId}/databases/schema/tables/Person> ; 
 	sh:nodeKind sh:IRI ;
-	sh:targetNode schema:Party ; 
 	sh:property [ 
 		sh:predicate schema:personId ; 
 		sh:datatype xsd:integer ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ;
-		sh:nodeKind sh:IRI 
+		konig:stereotype konig:primaryKey ; 
+	] , [ 
+		rdfs:comment "This shape interleaves into the parent - AddressShape. The primary key in that Shape will be automatically added here" ;
+		sh:shape shape:AddressShape ; 
+		sh:minCount 1   
 	] , [ 
 		sh:predicate schema:givenName ; 
 		sh:datatype xsd:string ; 
@@ -41,7 +69,7 @@ shape:PersonLiteShape a sh:Shape ;
 	 ] , [ 
 		sh:predicate schema:familyName ; 
 		sh:datatype xsd:string ;
-		sh:minCount 1 ; 
+		sh:minCounnt 1 ; 
 		sh:maxCount 1 ]  . 
 
 <http://www.konig.io/activity/Pp_Q_Y4TyQUAAAFaAAVoAA> a konig:LoadModelFromSpreadsheet ; 
@@ -54,3 +82,9 @@ schema:Person a owl:Class .
 		gcp:projectId "{gcpProjectId}" ; 
 		gcp:databaseName "schema" ; 
 		gcp:tableName "Person" ]  . 
+		
+<https://spanner.googleapis.com/v1/{gcpProjectId}/databases/schema/tables/PostalAddress> a konig:GoogleSpannerTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:databaseName "schema" ; 
+		gcp:tableName "PostalAddress" ]  . 

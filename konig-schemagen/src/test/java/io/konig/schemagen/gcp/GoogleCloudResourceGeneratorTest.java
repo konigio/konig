@@ -75,7 +75,7 @@ public class GoogleCloudResourceGeneratorTest {
 		expectedFile.delete();
 		
 		GoogleCloudResourceGenerator generator = new GoogleCloudResourceGenerator();
-		generator.addSpannerGenerator(outDir);
+		generator.addSpannerGenerator(outDir, shapeManager);
 		generator.dispatch(shapeManager.listShapes());
 		
 		assertTrue(expectedFile.exists());
