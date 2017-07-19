@@ -63,6 +63,7 @@ public class SpannerTable {
 			this.setFieldMode(copyField.getFieldMode());
 			this.setFieldType(copyField.getFieldType());
 			this.setFieldLength(copyField.getFieldLength());
+			this.setIsPrimaryKey(copyField.getIsPrimaryKey());
 		}
 
 		public String getFieldName() {
