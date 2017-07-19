@@ -32,6 +32,7 @@ public class MavenProjectConfig  {
 	private String name;
 	private String konigVersion;
 	private File rdfSourceDir;
+	private String rdfSourcePath;
 	
 	public String getGroupId() {
 		return groupId;
@@ -84,7 +85,11 @@ public class MavenProjectConfig  {
 	public void setRdfSourceDir(File rdfSourceDir) {
 		this.rdfSourceDir = rdfSourceDir;
 	}
-
-	
+	public String getRdfSourcePath() {
+		return rdfSourcePath;
+	}
+	public void setRdfSourcePath(String rdfSourcePath) {
+		this.rdfSourcePath = rdfSourcePath;
+	}
 
 }

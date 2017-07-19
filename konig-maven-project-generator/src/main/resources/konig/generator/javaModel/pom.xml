@@ -29,7 +29,7 @@
 	  			<defaults>
 	  				<rootDir>${basedir}/target/generated</rootDir>
 	  			</defaults>
-	  			<rdfSourceDir>${project.rdfSourceDir}</rdfSourceDir>
+	  			<rdfSourceDir>${project.rdfSourcePath}</rdfSourceDir>
 $java
 	  		</configuration>
 	  		<executions>

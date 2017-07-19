@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 
 import io.konig.deploy.gcp.GoogleCloudPlatformInfo;
+import io.konig.maven.datacatalog.DataCatalogConfig;
 import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
 import io.konig.schemagen.maven.JavaCodeGeneratorConfig;
 import io.konig.schemagen.maven.WorkbookProcessor;
@@ -36,6 +37,7 @@ public class MultiProject extends MavenProjectConfig {
 	private JavaCodeGeneratorConfig java;
 	private GoogleCloudPlatformConfig googleCloudPlatform;
 	private GoogleCloudPlatformInfo googleCloudPlatformDeployment;
+	private DataCatalogConfig dataCatalog;
 	
 	public WorkbookProcessor getWorkbook() {
 		return workbook;
@@ -82,10 +84,22 @@ public class MultiProject extends MavenProjectConfig {
 			parent.add(rdf);
 		}
 		if (googleCloudPlatform != null) {
+			
+			GoogleCloudPlatformConfig appEngine = null;
+			if (googleCloudPlatform.getDataServices() != null) {
+				appEngine = new GoogleCloudPlatformConfig();
+				appEngine.setDataServices(googleCloudPlatform.getDataServices());
+				appEngine.setEnableBigQueryTransform(false);
+				googleCloudPlatform.setDataServices(null);
+			}
+			
 			GoogleCloudPlatformModelGenerator gcp = 
 				new GoogleCloudPlatformModelGenerator(this, googleCloudPlatform);
 			
 			parent.add(gcp);
+			if (appEngine != null) {
+				parent.add(new AppEngineGenerator(this, appEngine));
+			}
 		}
 		if (java != null) {
 			parent.add(new JavaModelGenerator(this, java));
@@ -93,6 +107,9 @@ public class MultiProject extends MavenProjectConfig {
 		if (googleCloudPlatformDeployment != null) {
 			GcpDeployProjectGenerator deploy = new GcpDeployProjectGenerator(this, googleCloudPlatformDeployment);
 			parent.add(deploy);
+		}
+		if (dataCatalog != null) {
+			parent.add(new DataCatalogProjectGenerator(this, dataCatalog));
 		}
 		return parent;
 	}

@@ -106,7 +106,7 @@ public class XmlSerializer {
 		return builder.toString();
 	}
 
-	private void printProperties(Object pojo) {
+	public void printProperties(Object pojo) {
 		
 		push();
 		List<Field> fieldList = new ArrayList<>();

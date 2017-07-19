@@ -33,6 +33,60 @@ public class FileUtil {
 		FileInputStream input = new FileInputStream(source);
 		copyAndCloseSource(input, target);
 	}
+	public static String relativePath(File src, File target) {
+		if (src.isDirectory()) {
+			src = new File(src, "foo");
+		}
+		try {
+			String srcPath = src.getCanonicalPath();
+			String targetPath = target.getCanonicalPath();
+			if (srcPath.indexOf('\\') >= 0) {
+				srcPath = srcPath.replace('\\', '/');
+				targetPath = targetPath.replace('\\', '/');
+			}
+			return relativePath(srcPath, targetPath);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	public static String relativePath(String src, String target) {
+		
+		int aStart = 0;
+		int bStart = 0;
+		
+		
+		StringBuilder builder = new StringBuilder();
+		while (aStart >= 0 && bStart>=0) {
+			int aEnd = src.indexOf('/', aStart);
+			int bEnd = target.indexOf('/', bStart);
+			if (aEnd == bEnd && aEnd!=-1) {
+				String aPart = src.substring(aStart, aEnd);
+				String bPart = target.substring(bStart, bEnd);
+				
+				if (!aPart.equals(bPart)) {
+					break;
+				} 
+				
+				aStart = aEnd + 1;
+				bStart = bEnd + 1;
+			
+			} else {
+				break;
+			}
+		}
+		if (aStart>=0) {
+			aStart = src.indexOf('/', aStart+1);
+			while (aStart>0) {
+				builder.append("../");
+				aStart = src.indexOf('/', aStart+1);
+			}
+			if (bStart>=0 && bStart < target.length()) {
+				builder.append(target.substring(bStart));
+			}
+		}
+		
+		return builder.toString();
+	}
 	
 	public static void copyAndCloseSource(InputStream source, File target) throws IOException {
 		
