@@ -89,10 +89,21 @@ public class SpannerTableGenerator {
 		
 		Integer primaryKeyCount = table.getPrimaryKeyCount();
 		if (primaryKeyCount == 0) {
-			throw new SchemaGeneratorException("Primary Key is a must for Spanner Tables");
+			createPrimaryKeyField(table);
 		}
 	}
 	
+
+	private void createPrimaryKeyField(SpannerTable table) {
+		String fieldName = Konig.UUID.getLocalName();
+		FieldMode fieldMode = FieldMode.REQUIRED;
+		SpannerDatatype fieldType = SpannerDatatype.STRING;
+		Integer fieldLength = 36;
+		
+		SpannerTable.Field field = table.new Field(fieldName, fieldMode, fieldType, fieldLength);
+		field.setIsPrimaryKey(true);
+		table.addField(field);
+	}
 
 	private void toField(PropertyConstraint propertyConstraint, SpannerTable table) {
 		

@@ -106,6 +106,7 @@ public class Konig {
 
 	public static final URI measure = new URIImpl("http://www.konig.io/ns/core/measure");
 	public static final URI primaryKey = new URIImpl("http://www.konig.io/ns/core/primaryKey");
+	public static final URI UUID = new URIImpl("http://www.konig.io/ns/core/uuid");
 	public static final URI dimension = new URIImpl("http://www.konig.io/ns/core/dimension");
 	public static final URI attribute = new URIImpl("http://www.konig.io/ns/core/attribute");
 	public static final URI variable = new URIImpl("http://www.konig.io/ns/core/variable");

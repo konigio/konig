@@ -50,11 +50,10 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 		FileWriter writer = null;
 		try {
 			writer = new FileWriter(tableFile);
+			
+			writer.write(writeTableDefinition(table));
 
-			JsonGenerator generator = factory.createJsonGenerator(writer);
-			generator.writeString(writeTableDefinition(table));
-			//generator.writeEndArray();
-			generator.flush();
+			writer.flush();
 		
 		} catch (IOException e) {
 			throw new KonigException(e);
@@ -90,11 +89,11 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 		StringBuilder builder = new StringBuilder();
 		builder.append("CREATE TABLE ");
 		builder.append(table.getTableReference().getTableName());
-		builder.append(" (").append(System.getProperty("line.separator"));
+		builder.append(" (").append("\n");
 		
 		writeFieldDefinition(table, builder);
 		
-		builder.append(") ");
+		builder.append("\n)");
 		
 		writePrimaryKey(table, builder);
 		
@@ -107,9 +106,9 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 	
 	private void writeInterleaveParent(SpannerTable table, StringBuilder builder) {
 		if (table.getInterleaveParentTable().length() > 0) {
-			builder.append(", ").append(System.getProperty("line.separator"));
+			builder.append(", ").append("\n");
 			
-			builder.append("INTERLEAVE IN PARENT ").append(table.getInterleaveParentTable());
+			builder.append("\tINTERLEAVE IN PARENT ").append(table.getInterleaveParentTable());
 			builder.append(" ON DELETE CASCADE");
 		}
 	}
@@ -117,7 +116,7 @@ public class SpannerTableWriter implements SpannerTableVisitor {
 	private void writePrimaryKey(SpannerTable table, StringBuilder builder) {
 		int i = 0;
 		
-		builder.append("PRIMARY KEY (");
+		builder.append("\tPRIMARY KEY (");
 		
 		for (SpannerTable.Field field : table.getFields()) {
 			
