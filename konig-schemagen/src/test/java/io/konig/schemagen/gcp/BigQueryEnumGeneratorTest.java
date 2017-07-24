@@ -50,7 +50,7 @@ public class BigQueryEnumGeneratorTest {
 		ShapeManager shapeManager = new MemoryShapeManager();
 		File outDir = new File("target/test/BigQueryEnumGeneratorTest");
 		DatasetMapper datasetMapper = new SimpleDatasetMapper("example");
-		BigQueryTableMapper tableMapper = new LocalNameTableMapper();
+		TableMapper tableMapper = new LocalNameTableMapper();
 		DataFileMapper dataFileMapper = new DataFileMapperImpl(outDir, datasetMapper, tableMapper);
 		BigQueryEnumGenerator generator = new BigQueryEnumGenerator(shapeManager);
 		

@@ -21,24 +21,14 @@ package io.konig.schemagen.gcp;
  */
 
 
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-
-import io.konig.core.Vertex;
-
-public class LocalNameTableMapper implements TableMapper {
-
+public enum SpannerDatatype {
 	
-	@Override
-	public String tableForClass(Vertex owlClass) {
-		
-		Resource id = owlClass.getId();
-		if (id instanceof URI) {
-			URI uri = (URI) id;
-			return uri.getLocalName();
-		}
-		
-		return null;
-	}
-
+	STRING,
+	BYTES,
+	INT64,
+	FLOAT64,
+	BOOL,
+	TIMESTAMP,
+	DATE,
+	ARRAY
 }

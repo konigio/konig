@@ -32,6 +32,7 @@ public class GcpShapeConfig {
 		PojoContext context = ShapeLoader.CONTEXT;
 		
 		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
+		context.mapClass(Konig.GoogleSpannerTable, GoogleSpannerTable.class);
 		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
 	}
 

@@ -33,6 +33,7 @@ public class Konig {
 	
 	public static final String DATA_SOURCE = "http://www.konig.io/ns/core/DataSource"; 
 	public static final String GOOGLE_BIG_QUERY_TABLE = "http://www.konig.io/ns/core/GoogleBigQueryTable";
+	public static final String GOOGLE_SPANNER_TABLE = "http://www.konig.io/ns/core/GoogleSpannerTable";
 	public static final String SHAPE_DATA_SOURCE = "http://www.konig.io/ns/core/shapeDataSource";
 	public static final String IRI_TEMPLATE = "http://www.konig.io/ns/core/iriTemplate";
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
@@ -104,6 +105,8 @@ public class Konig {
 	// Fact Modeling
 
 	public static final URI measure = new URIImpl("http://www.konig.io/ns/core/measure");
+	public static final URI primaryKey = new URIImpl("http://www.konig.io/ns/core/primaryKey");
+	public static final URI UUID = new URIImpl("http://www.konig.io/ns/core/uuid");
 	public static final URI dimension = new URIImpl("http://www.konig.io/ns/core/dimension");
 	public static final URI attribute = new URIImpl("http://www.konig.io/ns/core/attribute");
 	public static final URI variable = new URIImpl("http://www.konig.io/ns/core/variable");
@@ -140,6 +143,7 @@ public class Konig {
 
 	public static final URI GoogleCloudProject = new URIImpl("http://www.konig.io/ns/core/GoogleCloudProject");
 	public static final URI GoogleBigQueryTable = new URIImpl(GOOGLE_BIG_QUERY_TABLE);
+	public static final URI GoogleSpannerTable = new URIImpl(GOOGLE_SPANNER_TABLE);
 	public static final URI tableShape = new URIImpl("http://www.konig.io/ns/core/tableShape");
 	public static final URI projectDataset = new URIImpl("http://www.konig.io/ns/core/projectDataset");
 	public static final URI datasetTable = new URIImpl("http://www.konig.io/ns/core/datasetTable");

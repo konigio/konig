@@ -27,6 +27,7 @@ import java.util.List;
 
 import io.konig.core.KonigException;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeVisitor;
 
 public class GoogleCloudResourceGenerator {
@@ -44,6 +45,16 @@ public class GoogleCloudResourceGenerator {
 		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
 		
 		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, tableWriter);
+		add(transformer);
+		
+	}
+	
+	public void addSpannerGenerator(File spannerSchemaDir, ShapeManager shapeManager) {
+
+		SpannerTableWriter tableWriter = new SpannerTableWriter(spannerSchemaDir);
+		SpannerTableGenerator tableGenerator = new SpannerTableGenerator(shapeManager);
+		
+		ShapeToSpannerTransformer transformer = new ShapeToSpannerTransformer(tableGenerator, tableWriter);
 		add(transformer);
 		
 	}

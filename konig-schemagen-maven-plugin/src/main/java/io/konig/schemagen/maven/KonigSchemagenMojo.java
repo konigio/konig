@@ -112,7 +112,7 @@ import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
-import io.konig.schemagen.gcp.BigQueryTableMapper;
+import io.konig.schemagen.gcp.TableMapper;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
 import io.konig.schemagen.gcp.EnumShapeVisitor;
@@ -666,7 +666,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 
-	private BigQueryTableMapper createTableMapper() {
+	private TableMapper createTableMapper() {
 		return new LocalNameTableMapper();
 	}
 

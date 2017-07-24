@@ -44,12 +44,12 @@ import io.konig.shacl.ShapeVisitor;
 public class BigQueryEnumShapeGenerator {
 	
 	private DatasetMapper datasetMapper;
-	private BigQueryTableMapper tableMapper;
+	private TableMapper tableMapper;
 	private ShapeNamer shapeNamer;
 	private ShapeManager shapeManager;
 	private ShapeVisitor shapeVisitor;
 	
-	public BigQueryEnumShapeGenerator(DatasetMapper datasetMapper, BigQueryTableMapper tableMapper,
+	public BigQueryEnumShapeGenerator(DatasetMapper datasetMapper, TableMapper tableMapper,
 			ShapeNamer shapeNamer, ShapeManager shapeManager, ShapeVisitor shapeVisitor) {
 		this.datasetMapper = datasetMapper;
 		this.tableMapper = tableMapper;

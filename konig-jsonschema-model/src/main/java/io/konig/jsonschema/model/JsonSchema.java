@@ -23,6 +23,7 @@ package io.konig.jsonschema.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -299,7 +300,7 @@ public class JsonSchema {
 		this.properties = properties;
 	}
 
-	public static class PropertyMap extends HashMap<String,JsonSchema> {
+	public static class PropertyMap extends LinkedHashMap<String,JsonSchema> {
 		private static final long serialVersionUID = 1L;
 		
 	}

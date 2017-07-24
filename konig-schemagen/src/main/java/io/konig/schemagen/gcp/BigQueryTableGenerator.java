@@ -71,7 +71,7 @@ public class BigQueryTableGenerator {
 	private BigQueryDatatypeMapper datatypeMap = new BigQueryDatatypeMapper();
 	private OwlReasoner owl;
 	private ShapeNamer shapeNamer;
-	private BigQueryTableMapper tableMapper;
+	private TableMapper tableMapper;
 	
 	
 	public BigQueryTableGenerator(ShapeManager shapeManager) {
@@ -105,12 +105,12 @@ public class BigQueryTableGenerator {
 		return this;
 	}
 
-	public BigQueryTableMapper getTableMapper() {
+	public TableMapper getTableMapper() {
 		return tableMapper;
 	}
 
 
-	public BigQueryTableGenerator setTableMapper(BigQueryTableMapper tableMapper) {
+	public BigQueryTableGenerator setTableMapper(TableMapper tableMapper) {
 		this.tableMapper = tableMapper;
 		return this;
 	}

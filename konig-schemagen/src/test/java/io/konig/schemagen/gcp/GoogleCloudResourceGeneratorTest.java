@@ -27,6 +27,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -35,24 +37,45 @@ import io.konig.core.Graph;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IOUtil;
+import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
 public class GoogleCloudResourceGeneratorTest {
 	
+	@Before
+	public void setup() {
+		GcpShapeConfig.init();
+	}
 
-	@Test
+	@Ignore
 	public void testBigQueryTable() throws Exception {
 		
 		ShapeManager shapeManager = loadShapes("GoogleCloudResourceGeneratorTest/testBigQueryTable.ttl");
-		File outDir = new File("target/test/GoogleCloudResourceGeneratorTest");
+		File outDir = new File("target/GoogleCloudResourceGeneratorTest");
 
 		File expectedFile = new File(outDir, "schema.Person.json" );
 		expectedFile.delete();
 		
 		GoogleCloudResourceGenerator generator = new GoogleCloudResourceGenerator();
 		generator.addBigQueryGenerator(outDir);
+		generator.dispatch(shapeManager.listShapes());
+		
+		assertTrue(expectedFile.exists());
+	}
+	
+	@Test
+	public void testSpannerTable() throws Exception {
+		
+		ShapeManager shapeManager = loadShapes("GoogleCloudResourceGeneratorTest/testSpannerTable.ttl");
+		File outDir = new File("target/GoogleCloudResourceGeneratorTest");
+
+		File expectedFile = new File(outDir, "schema.Person.json" );
+		expectedFile.delete();
+		
+		GoogleCloudResourceGenerator generator = new GoogleCloudResourceGenerator();
+		generator.addSpannerGenerator(outDir, shapeManager);
 		generator.dispatch(shapeManager.listShapes());
 		
 		assertTrue(expectedFile.exists());
