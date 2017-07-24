@@ -30,7 +30,7 @@ shape:AddressShape a sh:Shape ;
 		sh:datatype xsd:integer ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ;
-		rdfs:comment "konig:stereotype konig:primaryKey" ; 
+		konig:stereotype konig:primaryKey ; 
 	] , [ 
 		sh:predicate schema:addressStreet ; 
 		sh:datatype xsd:string ; 
