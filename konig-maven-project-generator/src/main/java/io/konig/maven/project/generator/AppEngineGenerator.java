@@ -22,8 +22,9 @@ package io.konig.maven.project.generator;
 
 import java.io.File;
 
-import io.konig.schemagen.maven.DataServicesConfig;
-import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
+import io.konig.maven.DataServicesConfig;
+import io.konig.maven.FileUtil;
+import io.konig.maven.GoogleCloudPlatformConfig;
 
 public class AppEngineGenerator extends ConfigurableProjectGenerator<GoogleCloudPlatformConfig> {
 
@@ -45,12 +46,20 @@ public class AppEngineGenerator extends ConfigurableProjectGenerator<GoogleCloud
 		mavenProject = getMavenProject();
 		File basedir = mavenProject.getBaseDir();
 		File infoFile = services.getInfoFile();
+		if (infoFile == null) {
+			File file = new File(DataServicesConfig.INFO_FILE_PATH);
+			if (file.exists()) {
+				infoFile = file;
+			}
+		}
 		if (infoFile != null) {
 			basedir.mkdirs();
 			String path = FileUtil.relativePath(basedir, infoFile);
-			services.setInfoFile(new File("${basedir}/" + path));
+			services.setInfoFile(new File("${project.basedir}/" + path));
 		}
-		services.setOpenApiFile(new File("${basedir}/src/main/webapp/openapi.yaml"));
+		services.setOpenApiFile(new File("${project.basedir}/src/main/webapp/openapi.yaml"));
+		services.setBasedir(new File("${project.basedir}"));
+		services.setWebappDir(new File("${project.basedir}/src/main/webapp"));
 	}
 
 }

@@ -31,12 +31,12 @@ import java.util.Set;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import io.konig.schemagen.maven.DataServicesConfig;
-import io.konig.schemagen.maven.Exclude;
-import io.konig.schemagen.maven.FilterPart;
-import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
-import io.konig.schemagen.maven.JavaCodeGeneratorConfig;
-import io.konig.schemagen.maven.WorkbookProcessor;
+import io.konig.maven.DataServicesConfig;
+import io.konig.maven.Exclude;
+import io.konig.maven.FilterPart;
+import io.konig.maven.GoogleCloudPlatformConfig;
+import io.konig.maven.JavaCodeGeneratorConfig;
+import io.konig.maven.WorkbookProcessor;
 
 public class XmlSerializerTest {
 	

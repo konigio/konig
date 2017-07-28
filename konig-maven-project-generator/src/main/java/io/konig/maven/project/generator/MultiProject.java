@@ -25,11 +25,11 @@ import java.io.File;
 
 import java.io.IOException;
 
-import io.konig.deploy.gcp.GoogleCloudPlatformInfo;
-import io.konig.maven.datacatalog.DataCatalogConfig;
-import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
-import io.konig.schemagen.maven.JavaCodeGeneratorConfig;
-import io.konig.schemagen.maven.WorkbookProcessor;
+import io.konig.maven.DataCatalogConfig;
+import io.konig.maven.GoogleCloudPlatformConfig;
+import io.konig.maven.GoogleCloudPlatformInfo;
+import io.konig.maven.JavaCodeGeneratorConfig;
+import io.konig.maven.WorkbookProcessor;
 
 public class MultiProject extends MavenProjectConfig {
 	

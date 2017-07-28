@@ -26,8 +26,8 @@ import java.io.IOException;
 
 import org.apache.velocity.VelocityContext;
 
-import io.konig.maven.datacatalog.ContentSystemConfig;
-import io.konig.maven.datacatalog.DataCatalogConfig;
+import io.konig.maven.ContentSystemConfig;
+import io.konig.maven.DataCatalogConfig;
 
 public class DataCatalogProjectGenerator extends ConfigurableProjectGenerator<DataCatalogConfig> {
 
@@ -44,11 +44,11 @@ public class DataCatalogProjectGenerator extends ConfigurableProjectGenerator<Da
 		String rdfPath = mavenProject.getRdfSourcePath();
 		
 		config.setRdfDir(rdfPath);
-		config.setSiteDir("${basedir}/target/generated/data-catalog");
+		config.setSiteDir("${project.basedir}/target/generated/data-catalog");
 		contentSystem = config.getContentSystem();
 		config.setContentSystem(null);
 		if (contentSystem != null) {
-			contentSystem.setBaseDir("${basedir}/target/generated/data-catalog");
+			contentSystem.setBaseDir("${project.basedir}/target/generated/data-catalog");
 		}
 		
 	}

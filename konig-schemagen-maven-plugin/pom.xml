@@ -61,9 +61,16 @@
   		<artifactId>konig-gcp-model</artifactId>
 			<version>${konig.version}</version>
   	</dependency>
+  	
   	<dependency>
   		<groupId>io.konig</groupId>
   		<artifactId>konig-transform</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
+  	
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-gcp-common</artifactId>
   		<version>${konig.version}</version>
   	</dependency>
   
@@ -109,7 +116,7 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <version>3.2</version>
         <configuration>
-          <goalPrefix>konig-schemagen-maven-plugin</goalPrefix>
+          <goalPrefix>konig-schemagen</goalPrefix>
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
         </configuration>
         <executions>
@@ -118,13 +125,13 @@
             <goals>
               <goal>descriptor</goal>
             </goals>
-          </execution>
+          </execution>       
           <execution>
             <id>help-goal</id>
             <goals>
               <goal>helpmojo</goal>
             </goals>
-          </execution>
+          </execution>     
         </executions>
       </plugin>
     </plugins>

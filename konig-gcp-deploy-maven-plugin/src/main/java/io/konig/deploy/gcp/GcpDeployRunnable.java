@@ -29,7 +29,6 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 import com.google.cloud.WriteChannel;
 import com.google.cloud.bigquery.BigQuery;
@@ -38,11 +37,14 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 
-import io.konig.deploy.DeployAction;
 import io.konig.gcp.common.GoogleCloudService;
 import io.konig.gcp.common.GoogleCloudServiceException;
 import io.konig.gcp.common.GoogleCredentialsNotFoundException;
 import io.konig.gcp.common.InvalidGoogleCredentialsException;
+import io.konig.maven.BigQueryInfo;
+import io.konig.maven.CloudStorageInfo;
+import io.konig.maven.DeployAction;
+import io.konig.maven.GoogleCloudPlatformInfo;
 
 public class GcpDeployRunnable  {
 	
@@ -51,14 +53,21 @@ public class GcpDeployRunnable  {
 	private GoogleCloudService gcpService;
 	private String modifiedTimestamp;
 	
-	public void run() throws DeploymentException {
-		
+
+	
+	private GoogleCloudService service() throws DeploymentException {
 		gcpService = new GoogleCloudService();
 		try {
 			gcpService.useDefaultCredentials();
 		} catch (GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | IOException e) {
 			throw new DeploymentException(e);
 		}
+		return gcpService;
+	}
+
+	public void run() throws DeploymentException {
+		
+		service();
 		
 		switch (action) {
 		case CREATE:
@@ -73,15 +82,25 @@ public class GcpDeployRunnable  {
 			doLoad();
 			break;
 			
+		case PREVIEW:
+			doPreview();
+			break;
+			
 		case DIFF:
 		case UPDATE:
 		case UPSERT:
 			
 		}
 		
-		
+	}
+
+	private void doPreview() throws DeploymentException {
+		// TODO: Implement
 		
 	}
+
+	
+
 
 	private void doLoad() throws DeploymentException {
 		

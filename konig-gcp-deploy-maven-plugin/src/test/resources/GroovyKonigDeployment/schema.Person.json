@@ -1,0 +1,56 @@
+{
+  "schema" : {
+    "fields" : [ {
+      "mode" : "REQUIRED",
+      "name" : "id",
+      "type" : "STRING"
+    }, {
+      "mode" : "NULLABLE",
+      "name" : "name",
+      "type" : "STRING"
+    }, {
+      "mode" : "NULLABLE",
+      "name" : "givenName",
+      "type" : "STRING"
+    }, {
+      "mode" : "NULLABLE",
+      "name" : "familyName",
+      "type" : "STRING"
+    }, {
+      "mode" : "REPEATED",
+      "name" : "email",
+      "type" : "STRING"
+    }, {
+      "fields" : [ {
+        "mode" : "NULLABLE",
+        "name" : "streetAddress",
+        "type" : "STRING"
+      }, {
+        "mode" : "NULLABLE",
+        "name" : "addressLocality",
+        "type" : "STRING"
+      }, {
+        "mode" : "NULLABLE",
+        "name" : "addressRegion",
+        "type" : "STRING"
+      }, {
+        "mode" : "REQUIRED",
+        "name" : "postalCode",
+        "type" : "STRING"
+      } ],
+      "mode" : "NULLABLE",
+      "name" : "address",
+      "type" : "RECORD"
+    }, {
+      "mode" : "NULLABLE",
+      "name" : "gender",
+      "type" : "STRING"
+    } ]
+  },
+  "tableReference" : {
+    "datasetId" : "schema",
+    "projectId" : "{gcpProjectId}",
+    "tableId" : "Person"
+  },
+  "type" : "TABLE"
+}

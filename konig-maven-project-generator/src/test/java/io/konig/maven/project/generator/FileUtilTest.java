@@ -25,6 +25,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import io.konig.maven.FileUtil;
+
 public class FileUtilTest {
 
 	@Test

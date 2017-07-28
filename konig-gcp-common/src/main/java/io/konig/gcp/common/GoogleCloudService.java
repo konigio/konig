@@ -39,8 +39,10 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQuery.DatasetOption;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
+import com.google.cloud.bigquery.DatasetId;
 import com.google.cloud.bigquery.DatasetInfo;
 import com.google.cloud.bigquery.InsertAllResponse;
 import com.google.cloud.bigquery.KonigBigQueryUtil;
@@ -80,6 +82,7 @@ import com.google.cloud.storage.StorageOptions;
  */
 public class GoogleCloudService {
 
+	private File credentialsFile;
 	private String gcpBucketSuffix;
 	private String gcpBucketSuffixToken = "{gcpBucketSuffix}";
 	private String projectToken = "{gcpProjectId}";
@@ -124,13 +127,17 @@ public class GoogleCloudService {
 		List<TableInfo> list = new ArrayList<>();
 		File[] array = schemaDir.listFiles();
 		for (File file : array) {
-			try (FileReader reader = new FileReader(file)) {
-				TableInfo info = readTableInfo(reader);
-				list.add(info);
-				bigQuery.create(info);
-			}
+			list.add(createBigQueryTable(file));
 		}
 		return list;
+	}
+	
+	public TableInfo createBigQueryTable(File file) throws IOException {
+		try (FileReader reader = new FileReader(file)) {
+			TableInfo info = readTableInfo(reader);
+			bigQuery.create(info);
+			return info;
+		}
 	}
 	
 	public Storage storage() {
@@ -148,17 +155,25 @@ public class GoogleCloudService {
 		File[] array = datasetDir.listFiles();
 		if (array != null) {
 			for (File file : array) {
-				try (FileReader reader = new FileReader(file)) {
-					DatasetInfo info = readDatasetInfo(reader);
-					list.add(info);
-					bigQuery.create(info);
-				}
+				list.add(createDataset(file));
 			}
 		}
 		
 		return list;
 	}
 	
+	
+
+	public DatasetInfo createDataset(File file) throws IOException {
+		try (FileReader reader = new FileReader(file)) {
+			DatasetInfo info = readDatasetInfo(reader);
+			bigQuery.create(info);
+			return info;
+		}
+		
+	}
+
+
 	public void deleteAllDatasets(BigQuery bigQuery, File datasetDir) throws IOException {
 		if (bigQuery == null) {
 			bigQuery = bigQuery();
@@ -254,6 +269,7 @@ public class GoogleCloudService {
 	}
 	
 	public void openCredentials(File jsonKey) throws InvalidGoogleCredentialsException, IOException {
+		credentialsFile = jsonKey;
 		projectId = readProjectId(jsonKey);
 		try (
 			FileInputStream input = new FileInputStream(jsonKey);
@@ -261,6 +277,13 @@ public class GoogleCloudService {
 			credentials = GoogleCredentials.fromStream(input);
 		}
 	}
+	
+	
+
+	public File getCredentialsFile() {
+		return credentialsFile;
+	}
+
 
 	private String readProjectId(File jsonKey) throws IOException, InvalidGoogleCredentialsException {
 		try (

@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -181,7 +182,9 @@ public class XmlSerializer {
 		
 		Field[] array = type.getDeclaredFields();
 		for (Field field : array) {
-			fieldList.add(field);
+			if (!Modifier.isStatic(field.getModifiers())) {
+				fieldList.add(field);
+			}
 		}
 		
 		Class<?> superClass = type.getSuperclass();

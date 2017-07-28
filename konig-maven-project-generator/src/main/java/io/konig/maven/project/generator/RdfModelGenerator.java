@@ -24,7 +24,8 @@ package io.konig.maven.project.generator;
 import java.io.File;
 import java.io.IOException;
 
-import io.konig.schemagen.maven.WorkbookProcessor;
+import io.konig.maven.FileUtil;
+import io.konig.maven.WorkbookProcessor;
 
 public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProcessor> {
 	

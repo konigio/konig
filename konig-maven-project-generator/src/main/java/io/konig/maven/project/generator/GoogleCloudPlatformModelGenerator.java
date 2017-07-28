@@ -23,7 +23,7 @@ package io.konig.maven.project.generator;
 
 import java.io.IOException;
 
-import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
+import io.konig.maven.GoogleCloudPlatformConfig;
 
 public class GoogleCloudPlatformModelGenerator extends ConfigurableProjectGenerator<GoogleCloudPlatformConfig> {
 
