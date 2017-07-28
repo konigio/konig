@@ -19,9 +19,7 @@ package io.konig.jsonschema.generator;
  * limitations under the License.
  * #L%
  */
-
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +31,7 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -41,7 +40,6 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.io.impl.JsonUtil;
 import io.konig.jsonschema.model.JsonSchema;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -63,7 +61,7 @@ public class JsonSchemaGeneratorTest {
 		
 		JsonSchema schema = generator.asJsonSchema(shape);
 		
-		String expected =
+		String expectedJson =
 			"{\n" + 
 			"  \"id\" : \"http://example.com/shapes/PersonShape.jsonschema\",\n" + 
 			"  \"type\" : \"object\",\n" + 
@@ -73,10 +71,6 @@ public class JsonSchemaGeneratorTest {
 			"      \"type\" : \"object\",\n" + 
 			"      \"description\" : \"The person's postal address.\",\n" + 
 			"      \"properties\" : {\n" + 
-			"        \"streetAddress\" : {\n" + 
-			"          \"type\" : \"string\",\n" + 
-			"          \"description\" : \"The street address. For example, 1600 Ampitheatre Pkwy.\"\n" + 
-			"        },\n" + 
 			"        \"addressLocality\" : {\n" + 
 			"          \"type\" : \"string\",\n" + 
 			"          \"description\" : \"The locality. For example, Mountain View.\"\n" + 
@@ -84,6 +78,10 @@ public class JsonSchemaGeneratorTest {
 			"        \"postalCode\" : {\n" + 
 			"          \"type\" : \"string\",\n" + 
 			"          \"description\" : \"The postal code. For example, 94043.\"\n" + 
+			"        },\n" + 
+			"        \"streetAddress\" : {\n" + 
+			"          \"type\" : \"string\",\n" + 
+			"          \"description\" : \"The street address. For example, 1600 Ampitheatre Pkwy.\"\n" + 
 			"        },\n" + 
 			"        \"addressRegion\" : {\n" + 
 			"          \"type\" : \"string\",\n" + 
@@ -119,9 +117,15 @@ public class JsonSchemaGeneratorTest {
 			"}";
 		
 		ObjectMapper mapper = new ObjectMapper();
+		
+		JsonNode expected = mapper.readTree(expectedJson);
+		
 		mapper.enable(SerializationFeature.INDENT_OUTPUT);
 		mapper.setSerializationInclusion(Include.NON_NULL);
-		String actual = mapper.writeValueAsString(schema).replace("\r", "");
+		String actualJson = mapper.writeValueAsString(schema);
+		
+		JsonNode actual = mapper.readTree(actualJson);
+		
 		
 		assertEquals(expected, actual);
 	}

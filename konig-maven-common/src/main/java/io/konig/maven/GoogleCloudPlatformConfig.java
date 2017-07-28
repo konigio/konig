@@ -50,7 +50,7 @@ public class GoogleCloudPlatformConfig {
 	@Parameter(property="konig.gcp.cloudstorage", required=true)
 	private CloudStorageInfo cloudstorage;
 	
-	@Parameter(property="konig.gcp.deployment", required=true)
+	@Parameter(property="konig.gcp.deployment")
 	private GroovyDeploymentScript deployment;
 	
 	public GoogleCloudPlatformConfig() {

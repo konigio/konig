@@ -96,7 +96,7 @@ public class GroovyDeploymentScriptWriter {
 			for (File file : schemaDir.listFiles()) {
 				TableInfo info = googleCloudService.readTableInfo(file);
 				Table table = bigquery.getTable(info.getTableId());
-				if (table != null) {
+				if (table == null) {
 					String path = FileUtil.relativePath(scriptFile, file);
 					print(indent);
 					print("create BigQueryTable from \"");

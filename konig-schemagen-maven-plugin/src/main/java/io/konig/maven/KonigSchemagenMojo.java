@@ -292,21 +292,23 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException {
 		
 		GroovyDeploymentScript deploy = googleCloudPlatform.getDeployment();
+		if (deploy != null) {
 			
-		GoogleCloudService googleCloudService = new GoogleCloudService();
-		File credentials = googleCloudPlatform.getCredentials();
-		if (credentials == null) {
-			googleCloudService.useDefaultCredentials();
-		} else {
-			googleCloudService.openCredentials(credentials);
+			GoogleCloudService googleCloudService = new GoogleCloudService();
+			File credentials = googleCloudPlatform.getCredentials();
+			if (credentials == null) {
+				googleCloudService.useDefaultCredentials();
+			} else {
+				googleCloudService.openCredentials(credentials);
+			}
+			String konigVersion = deploy.getKonigVersion();
+			File scriptFile = deploy.getScriptFile();
+			
+			GroovyDeploymentScriptWriter scriptWriter = new GroovyDeploymentScriptWriter(
+					konigVersion, googleCloudPlatform, googleCloudService, scriptFile);
+			
+			scriptWriter.run();
 		}
-		String konigVersion = deploy.getKonigVersion();
-		File scriptFile = deploy.getScriptFile();
-		
-		GroovyDeploymentScriptWriter scriptWriter = new GroovyDeploymentScriptWriter(
-				konigVersion, googleCloudPlatform, googleCloudService, scriptFile);
-		
-		scriptWriter.run();
 			
 		
 	}
