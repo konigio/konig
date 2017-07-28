@@ -27,7 +27,8 @@ import java.io.InputStream;
 
 import org.apache.velocity.VelocityContext;
 
-import io.konig.deploy.gcp.GoogleCloudPlatformInfo;
+import io.konig.maven.FileUtil;
+import io.konig.maven.GoogleCloudPlatformInfo;
 
 public class GcpDeployProjectGenerator extends ConfigurableProjectGenerator<GoogleCloudPlatformInfo> {
 

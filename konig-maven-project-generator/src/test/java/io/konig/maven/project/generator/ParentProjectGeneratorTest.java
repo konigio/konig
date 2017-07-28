@@ -27,7 +27,8 @@ import java.io.File;
 
 import org.junit.Test;
 
-import io.konig.schemagen.maven.WorkbookProcessor;
+import io.konig.maven.FileUtil;
+import io.konig.maven.WorkbookProcessor;
 
 public class ParentProjectGeneratorTest {
 

@@ -6,6 +6,7 @@
   <name>${project.name}</name>
   <packaging>pom</packaging>
   <properties>
+		<appengine.maven.plugin.version>1.0.0</appengine.maven.plugin.version>
   	<konig.version>${project.konigVersion}</konig.version>
   </properties>
   

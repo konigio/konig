@@ -25,6 +25,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
@@ -72,6 +74,12 @@ public class Yaml {
 		StringWriter buffer = new StringWriter();
 		write(buffer, config, object);
 		return buffer.toString();
+	}
+
+	
+	public static <T> T read(Class<T> type, InputStream input) throws YamlParseException, IOException {
+		InputStreamReader reader = new InputStreamReader(input);
+		return read(type, reader);
 	}
 	
 	@SuppressWarnings("unchecked")

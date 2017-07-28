@@ -27,7 +27,8 @@ import java.io.File;
 
 import org.junit.Test;
 
-import io.konig.schemagen.maven.GoogleCloudPlatformConfig;
+import io.konig.maven.FileUtil;
+import io.konig.maven.GoogleCloudPlatformConfig;
 
 public class GoogleCloudPlatformModelGeneratorTest {
 

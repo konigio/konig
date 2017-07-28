@@ -22,7 +22,7 @@ package io.konig.maven.project.generator;
 
 import java.io.File;
 
-import io.konig.schemagen.maven.JavaCodeGeneratorConfig;
+import io.konig.maven.JavaCodeGeneratorConfig;
 
 public class JavaModelGenerator extends ConfigurableProjectGenerator<JavaCodeGeneratorConfig> {
 	

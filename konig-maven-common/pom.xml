@@ -12,6 +12,11 @@
   <dependencies>
 	
 		       
+    <dependency>
+      <groupId>io.konig</groupId>
+      <artifactId>konig-yaml</artifactId>
+      <version>${konig.version}</version>
+    </dependency>
 		
     <dependency>
       <groupId>org.apache.maven</groupId>

@@ -53,16 +53,16 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	@Parameter
 	private File rdfDir;
 	
-	@Parameter(defaultValue="${basedir}/target/generated/datacatalog")
+	@Parameter(defaultValue="${project.basedir}/target/generated/datacatalog")
 	private File siteDir;
 	
-	@Parameter(defaultValue="${basedir}/src/examples")
+	@Parameter(defaultValue="${project.basedir}/src/examples")
 	private File examplesDir;
 	
 	@Parameter
 	private String ontology;
 	
-	@Parameter(defaultValue="${basedir}/target/velocity.log")
+	@Parameter(defaultValue="${project.basedir}/target/velocity.log")
 	private File logFile;
 
 	@Override

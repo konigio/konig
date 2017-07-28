@@ -32,6 +32,8 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
+import io.konig.maven.FileUtil;
+
 public class MavenProjectGenerator {
 
 	private MavenProjectConfig mavenProject;
@@ -79,7 +81,7 @@ public class MavenProjectGenerator {
 			basedir.mkdirs();
 			String path = FileUtil.relativePath(basedir, base.getRdfSourceDir());
 			mavenProject.setRdfSourceDir(new File(path));
-			mavenProject.setRdfSourcePath("${basedir}/" + path);
+			mavenProject.setRdfSourcePath("${project.basedir}/" + path);
 		}
 
 		mavenProject.setBaseDir(basedir);

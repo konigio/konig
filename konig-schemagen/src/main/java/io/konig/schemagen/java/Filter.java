@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 
-import io.konig.schemagen.maven.FilterPart;
+import io.konig.maven.FilterPart;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 

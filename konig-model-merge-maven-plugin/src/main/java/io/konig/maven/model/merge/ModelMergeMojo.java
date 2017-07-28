@@ -68,10 +68,10 @@ public class ModelMergeMojo extends AbstractMojo {
 	@Parameter(required=true)
 	private List<ArtifactItem> artifactItems;
 	
-	@Parameter(defaultValue="${basedir}/target/model/merged")
+	@Parameter(defaultValue="${project.basedir}/target/model/merged")
 	private File outDir;
 
-	@Parameter(defaultValue="${basedir}/target/unpack")
+	@Parameter(defaultValue="${project.basedir}/target/unpack")
 	private File unpackDir;
 	
 	@Component
