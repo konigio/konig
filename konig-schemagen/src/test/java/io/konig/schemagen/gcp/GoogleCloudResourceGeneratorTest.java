@@ -35,6 +35,7 @@ import io.konig.core.Graph;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IOUtil;
+import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
@@ -44,7 +45,7 @@ public class GoogleCloudResourceGeneratorTest {
 
 	@Test
 	public void testBigQueryTable() throws Exception {
-		
+		GcpShapeConfig.init();
 		ShapeManager shapeManager = loadShapes("GoogleCloudResourceGeneratorTest/testBigQueryTable.ttl");
 		File outDir = new File("target/test/GoogleCloudResourceGeneratorTest");
 
