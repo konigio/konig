@@ -28,13 +28,13 @@ import java.io.InputStream;
 import org.apache.velocity.VelocityContext;
 
 import io.konig.maven.FileUtil;
-import io.konig.maven.GoogleCloudPlatformInfo;
+import io.konig.maven.GoogleCloudPlatformConfig;
 
-public class GcpDeployProjectGenerator extends ConfigurableProjectGenerator<GoogleCloudPlatformInfo> {
+public class GcpDeployProjectGenerator extends ConfigurableProjectGenerator<GoogleCloudPlatformConfig> {
 
 	private String artifactPrefix;
 	
-	public GcpDeployProjectGenerator(MavenProjectConfig mavenProject, GoogleCloudPlatformInfo config) {
+	public GcpDeployProjectGenerator(MavenProjectConfig mavenProject, GoogleCloudPlatformConfig config) {
 		super(config, "gcp");
 
 		artifactPrefix = mavenProject.getArtifactId();
