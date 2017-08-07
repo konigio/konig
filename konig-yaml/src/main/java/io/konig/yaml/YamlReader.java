@@ -30,11 +30,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
 public class YamlReader implements AutoCloseable {
 	
@@ -167,6 +169,10 @@ public class YamlReader implements AutoCloseable {
 		} else if (javaType.isEnum()) {
 			
 			result = Enum.valueOf((Class<Enum>)javaType, stringValue);
+			
+		} else if (URI.class.isAssignableFrom(javaType)) {
+			result = new URIImpl(stringValue);
+			
 		} else {
 			ClassInfo info = classInfo.get(javaType);
 			if (info != null  && info.deserializer!=null) {

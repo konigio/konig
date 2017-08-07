@@ -1,5 +1,7 @@
 package io.konig.sql.runtime;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * Konig DAO SQL Runtime
@@ -26,6 +28,7 @@ import io.konig.yaml.Yaml;
 public class FieldInfo {
 
 	private String name;
+	private URI fieldType;
 	private EntityStructure struct;
 	
 	public FieldInfo() {
@@ -51,6 +54,13 @@ public class FieldInfo {
 		this.struct = struct;
 	}
 	
+	
+	public URI getFieldType() {
+		return fieldType;
+	}
+	public void setFieldType(URI fieldType) {
+		this.fieldType = fieldType;
+	}
 	public String toString() {
 		return Yaml.toString(this);
 	}

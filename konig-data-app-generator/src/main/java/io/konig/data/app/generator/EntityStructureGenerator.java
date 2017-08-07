@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 import io.konig.datasource.DataSource;
@@ -66,6 +67,22 @@ public class EntityStructureGenerator {
 		if (predicate != null) {
 			String fieldName = predicate.getLocalName();
 			FieldInfo field = new FieldInfo(fieldName);
+			URI fieldType = p.getDatatype();
+			if (fieldType != null) {
+				field.setFieldType(fieldType);
+			} else {
+				Resource valueClass = p.getValueClass();
+				if (valueClass instanceof URI) {
+					field.setFieldType((URI) valueClass);
+				} else {
+					Shape shape = p.getShape();
+					if (shape != null) {
+						fieldType = shape.getTargetClass();
+						field.setFieldType(fieldType);
+					}
+				}
+				
+			}
 			e.addField(field);
 			
 			Shape shape = p.getShape();
