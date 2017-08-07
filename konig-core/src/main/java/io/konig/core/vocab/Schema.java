@@ -121,6 +121,8 @@ public class Schema {
 	public static final URI Barcode = new URIImpl("http://schema.org/Barcode");
 	public static final URI category = new URIImpl("http://schema.org/category");
 	public static final URI SoftwareApplication =  new URIImpl("http://schema.org/SoftwareApplication");
+	public static final URI identifier = new URIImpl("http://schema.org/identifier");
+	public static final URI taxID = new URIImpl("http://schema.org/taxID");
 	
 	
 

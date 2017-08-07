@@ -34,13 +34,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Hyperlink;
@@ -134,6 +133,7 @@ public class WorkbookLoader {
 	private static final String RANGE = "Range";
 	private static final String INVERSE_OF = "Inverse Of";
 	private static final String PROPERTY_TYPE = "Property Type";
+	private static final String SUBPROPERTY_OF = "Subproperty Of";
 
 	private static final String INDIVIDUAL_NAME = "Individual Name";
 	private static final String INDIVIDUAL_ID = "Individual Id";
@@ -340,6 +340,7 @@ public class WorkbookLoader {
 		private int rangeCol = UNDEFINED;
 		private int inverseOfCol = UNDEFINED;
 		private int propertyTypeCol = UNDEFINED;
+		private int subpropertyOfCol = UNDEFINED;
 		private int propertyCommentCol = UNDEFINED;
 
 		private int individualNameCol = UNDEFINED;
@@ -1700,6 +1701,7 @@ public class WorkbookLoader {
 			List<URI> range = uriList(row, rangeCol);
 			URI inverseOf = uriValue(row, inverseOfCol);
 			List<URI> propertyType = uriList(row, propertyTypeCol);
+			URI subpropertyOf = uriValue(row, subpropertyOfCol);
 
 			if (propertyId == null) {
 				return;
@@ -1713,6 +1715,10 @@ public class WorkbookLoader {
 				if (!RDF.PROPERTY.equals(value)) {
 					graph.edge(propertyId, RDF.TYPE, value);
 				}
+			}
+			
+			if (subpropertyOf != null) {
+				graph.edge(propertyId, RDFS.SUBPROPERTYOF, subpropertyOf);
 			}
 
 			if (propertyName != null) {
@@ -1829,6 +1835,7 @@ public class WorkbookLoader {
 			rangeCol = UNDEFINED;
 			inverseOfCol = UNDEFINED;
 			propertyTypeCol = UNDEFINED;
+			subpropertyOfCol = UNDEFINED;
 			propertyCommentCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
@@ -1867,6 +1874,9 @@ public class WorkbookLoader {
 						propertyCommentCol = i;
 						break;
 
+					case SUBPROPERTY_OF :
+						subpropertyOfCol = i;
+						break;
 					}
 				}
 			}
