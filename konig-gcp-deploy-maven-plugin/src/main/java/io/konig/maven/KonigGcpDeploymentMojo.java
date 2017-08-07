@@ -46,7 +46,7 @@ public class KonigGcpDeploymentMojo extends AbstractMojo {
 	private String timestamp;
 	
 	@Parameter
-	private GoogleCloudPlatformInfo gcp;
+	private GoogleCloudPlatformConfig gcp;
 
 	@Parameter(defaultValue="${project}", readonly=true, required=true)
 	private MavenProject project;
@@ -72,7 +72,7 @@ public class KonigGcpDeploymentMojo extends AbstractMojo {
 
 	private void configure() throws ConfigurationException {
 		if (gcp == null) {
-			gcp = new GoogleCloudPlatformInfo();
+			gcp = new GoogleCloudPlatformConfig();
 		}
 		Properties properties = new Properties(System.getProperties());
 		

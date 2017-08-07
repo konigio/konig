@@ -44,12 +44,12 @@ import io.konig.gcp.common.InvalidGoogleCredentialsException;
 import io.konig.maven.BigQueryInfo;
 import io.konig.maven.CloudStorageInfo;
 import io.konig.maven.DeployAction;
-import io.konig.maven.GoogleCloudPlatformInfo;
+import io.konig.maven.GoogleCloudPlatformConfig;
 
 public class GcpDeployRunnable  {
 	
 	private DeployAction action;
-	private GoogleCloudPlatformInfo gcp;
+	private GoogleCloudPlatformConfig gcp;
 	private GoogleCloudService gcpService;
 	private String modifiedTimestamp;
 	
@@ -105,7 +105,7 @@ public class GcpDeployRunnable  {
 	private void doLoad() throws DeploymentException {
 		
 		loadCloudStorage(gcp.getCloudstorage());
-		loadBigQuery(gcp.getBigQuery());
+		loadBigQuery(gcp.getBigquery());
 		
 	}
 
@@ -201,7 +201,7 @@ public class GcpDeployRunnable  {
 	}
 
 	private void doDelete() throws DeploymentException {
-		deleteBigQuery(gcp.getBigQuery());
+		deleteBigQuery(gcp.getBigquery());
 		deleteCloudStorage(gcp.getCloudstorage());
 	}
 
@@ -253,7 +253,7 @@ public class GcpDeployRunnable  {
 	private void doCreate() throws DeploymentException {
 
 		createCloudStorage(gcp.getCloudstorage());
-		createBigQuery(gcp.getBigQuery());
+		createBigQuery(gcp.getBigquery());
 		
 	}
 
@@ -316,11 +316,11 @@ public class GcpDeployRunnable  {
 		this.action = action;
 	}
 
-	public GoogleCloudPlatformInfo getGoogleCloudPlatform() {
+	public GoogleCloudPlatformConfig getGoogleCloudPlatform() {
 		return gcp;
 	}
 
-	public void setGoogleCloudPlatform(GoogleCloudPlatformInfo googleCloudPlatform) {
+	public void setGoogleCloudPlatform(GoogleCloudPlatformConfig googleCloudPlatform) {
 		this.gcp = googleCloudPlatform;
 	}
 
