@@ -344,7 +344,7 @@ public class YamlWriter extends YamlWriterConfig  implements AutoCloseable {
 	private boolean isSimpleType(Class<?> type) {
 		return type.isEnum() || type.isPrimitive() || type == String.class || type == Boolean.class
 				|| type == Byte.class || type == Character.class || type == Short.class || type == Integer.class
-				|| type == Long.class || type == Double.class || type == Float.class
+				|| type == Long.class || type == Double.class || type == Float.class 				
 				|| Value.class.isAssignableFrom(type);
 	}
 
