@@ -86,6 +86,7 @@ public class WorkbookLoaderTest {
 		input.close();
 		
 		assertTrue(graph.contains(Schema.taxID, RDFS.SUBPROPERTYOF, Schema.identifier));
+		assertTrue(graph.contains(Schema.identifier, RDF.TYPE, OWL.DATATYPEPROPERTY));
 		
 	}
 	
