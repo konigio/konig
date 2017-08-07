@@ -1,5 +1,6 @@
 package io.konig.sql.runtime;
 
+
 /*
  * #%L
  * Konig DAO SQL Runtime
@@ -26,10 +27,12 @@ import io.konig.yaml.Yaml;
 public class FieldInfo {
 
 	private String name;
+	private String dataType;
 	private EntityStructure struct;
 	
 	public FieldInfo() {
 	}
+	
 	public FieldInfo(String fieldName) {
 		this.name = fieldName;
 	}
@@ -38,15 +41,27 @@ public class FieldInfo {
 		this.name = name;
 		this.struct = struct;
 	}
+	
 	public String getName() {
 		return name;
 	}
+	
 	public void setName(String fieldName) {
 		this.name = fieldName;
 	}
+	
+	public String getDataType() {
+		return dataType;
+	}
+	
+	public void setDataType(String dataType) {
+		this.dataType = dataType;
+	}
+	
 	public EntityStructure getStruct() {
 		return struct;
 	}
+	
 	public void setStruct(EntityStructure struct) {
 		this.struct = struct;
 	}

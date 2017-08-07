@@ -41,6 +41,7 @@ public class EntityStructureGenerator {
 	
 	public EntityStructure toEntityStructure(Shape shape) {
 		TableDataSource datasource = getTableDataSource(shape);
+		
 		if (datasource != null) {
 			String tableName = datasource.getTableIdentifier();
 			EntityStructure e = new EntityStructure(tableName);
@@ -66,17 +67,20 @@ public class EntityStructureGenerator {
 		if (predicate != null) {
 			String fieldName = predicate.getLocalName();
 			FieldInfo field = new FieldInfo(fieldName);
+			if (p.getDatatype() != null) {
+				field.setDataType(p.getDatatype().getLocalName());
+			}
 			e.addField(field);
 			
 			Shape shape = p.getShape();
 			if (shape != null) {
 				EntityStructure nested = map.get(shape);
 				if (nested == null) {
-					nested = new EntityStructure();
+					nested = new EntityStructure();		
 					map.put(shape, nested);
 					TableDataSource ds = getTableDataSource(shape);
 					if (ds != null) {
-						nested.setName(ds.getTableIdentifier());
+						nested.setName(ds.getTableIdentifier());						
 					}
 					addFields(nested, shape, map);
 				}

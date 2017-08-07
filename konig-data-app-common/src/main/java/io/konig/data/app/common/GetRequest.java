@@ -1,5 +1,7 @@
 package io.konig.data.app.common;
 
+import java.util.HashMap;
+
 /*
  * #%L
  * Konig DAO Core
@@ -30,6 +32,7 @@ public class GetRequest {
 	private URI individualId;
 	private Format format;
 	private URI shapeId;
+	private HashMap<String,String> queryParams;
 
 	public URI getIndividualId() {
 		return individualId;
@@ -55,4 +58,11 @@ public class GetRequest {
 		this.shapeId = shapeId;
 	}
 	
+	public HashMap<String,String> getQueryParams() {
+		return queryParams;
+	}
+	
+	public void setQueryParams(HashMap<String,String> queryParams) {
+		this.queryParams = queryParams; 
+	}
 }

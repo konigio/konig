@@ -23,13 +23,17 @@ package io.konig.sql.runtime;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TimeZone;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.QueryRequest;
 import com.google.cloud.bigquery.QueryResponse;
@@ -39,7 +43,7 @@ import io.konig.dao.core.DaoException;
 import io.konig.dao.core.Format;
 
 public class BigQueryShapeReadService extends SqlShapeReadService {
-
+	private static final SimpleDateFormat dateFormatUTC = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 	private BigQuery bigQuery;
 	
 	public BigQueryShapeReadService(EntityStructureService structureService, BigQuery bigQuery) {
@@ -50,7 +54,7 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 	@Override
 	protected void executeSql(EntityStructure struct, String sql, Writer output, Format format) throws DaoException {
 		BigQuery bigQuery = getBigQuery();
-		QueryRequest request = QueryRequest.newBuilder(sql).build();
+		QueryRequest request = QueryRequest.newBuilder(sql).setUseLegacySql(false).build();
 		QueryResponse response = bigQuery.query(request);
 		while (!response.jobCompleted()) {
 			try {
@@ -77,12 +81,10 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		
 		JsonFactory factory = new JsonFactory();
 		JsonGenerator json = factory.createGenerator(output);
-		json.useDefaultPrettyPrinter();
-		
+		json.useDefaultPrettyPrinter();		
 		
 		// TODO: Use Linked Data Platform conventions, not a top-level array.
 		json.writeStartArray();
-		
 		Iterator<List<FieldValue>> sequence = result.iterateAll().iterator();
 		
 		while (sequence.hasNext()) {
@@ -107,18 +109,48 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 	}
 
 	private void writeField(JsonGenerator json, FieldInfo fieldInfo, FieldValue field) throws IOException, DaoException {
-		
 		String fieldName = fieldInfo.getName();
-		Object value = field.getValue();
-		
+		String dataType = fieldInfo.getDataType() == null ? "" : fieldInfo.getDataType();
+		Object value = field.getValue() == null ? "" :  field.getValue();		
 		if (value instanceof String) {
-			json.writeStringField(fieldName, value.toString());
+			json.writeStringField(fieldName, String.valueOf(formatField(dataType,value.toString())));					
+		} else if (value instanceof ArrayList) {
+			List<FieldInfo> fields = fieldInfo.getStruct().getFields();
+			json.writeObjectFieldStart(fieldName);
+			writeArrayField(json, fields, field);
+			json.writeEndObject();
 		} else {
 			throw new DaoException("Field type not supported: " + value.getClass().getName());
 		}
 		
 	}
-
+	
+	private Object formatField(String dataType, String value){
+		dateFormatUTC.setTimeZone(TimeZone.getTimeZone("UTC"));
+		String[] array = {"string","dateTime","int"};		
+		int index = Arrays.asList(array).indexOf(dataType);
+		switch (index) {
+		case 0:				
+			return value.toString();
+		case 1:
+			return
+			 dateFormatUTC.format(new Date(Double.valueOf(value.toString()).longValue() * 1000));
+		case 2:
+			return Integer.parseInt(value.toString());
+		default:
+			break;
+		}
+		return null;
+	}
+	
+	private void writeArrayField(JsonGenerator json, List<FieldInfo> fieldInfo, FieldValue field) throws IOException, DaoException {
+		ArrayList listOfValues = (ArrayList) field.getValue();
+		for (int i = 0; i < listOfValues.size(); i++) {
+			FieldValue _value = (FieldValue)listOfValues.get(i);
+			writeField(json,fieldInfo.get(i),_value);			
+		}
+	}
+	
 	protected BigQuery getBigQuery() {
 		return bigQuery;
 	}
