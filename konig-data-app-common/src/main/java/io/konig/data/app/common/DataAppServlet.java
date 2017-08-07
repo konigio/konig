@@ -43,7 +43,6 @@ abstract public class DataAppServlet extends HttpServlet {
 	@Override
 	public void init() throws ServletException {
 		String configFile = getServletConfig().getInitParameter("configFile");
-		
 		if (configFile == null) {
 			throw new ServletException("configFile init parameter is not defined");
 		}
@@ -86,8 +85,8 @@ abstract public class DataAppServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
 		JobRequest request = new JobRequest();
 		request.setPath(req.getPathInfo());
+		request.setQueryString(req.getQueryString());
 		request.setWriter(resp.getWriter());
-		
 		try {
 			GetJob job = dataApp.createGetJob(request);
 			job.execute();

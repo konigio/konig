@@ -26,6 +26,7 @@ import java.io.Writer;
 public class JobRequest {
 
 	private String path;
+	private String queryString;
 	private Writer writer;
 
 	public String getPath() {
@@ -35,7 +36,15 @@ public class JobRequest {
 	public void setPath(String path) {
 		this.path = path;
 	}
-
+	
+	public String getQueryString(){
+		return queryString;
+	}
+	
+	public void setQueryString(String queryString) {
+		this.queryString = queryString;
+	}
+	
 	public Writer getWriter() {
 		return writer;
 	}

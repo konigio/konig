@@ -1,5 +1,9 @@
 package io.konig.data.app.common;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+
 /*
  * #%L
  * Konig DAO Core
@@ -63,22 +67,37 @@ public class BasicDataApp implements DataApp {
 		
 		MarkedPath path = new MarkedPath(jobRequest.getPath());
 		String slug = path.currentElement();
-		
 		ExtentContainer container = containers.get(slug);
+		
 		if (container == null) {
 			throw new DataAppException("Not Found", 404);
 		}
-		
-		if (!path.hasNext()) {
-			throw new DataAppException("Bad Request: expected a URI at the end of the path", 400);
-		}
-		String uriValue = path.next();
-		
-		
+				
 		GetRequest request = new GetRequest();
-		request.setFormat(Format.JSONLD);
-		request.setIndividualId(new URIImpl(uriValue));
+		request.setFormat(Format.JSONLD);		
+		request.setShapeId(container.getDefaultShape());
 		
+		if (jobRequest.getQueryString() != null) {
+			HashMap<String, String> queryParams = new HashMap<String, String>();
+			String[] queries = jobRequest.getQueryString().split("&");
+			for (String query : queries) {
+				String[] queryValue = query.split("=");
+				if(queryValue.length >= 2) {
+					try {
+						queryParams.put(queryValue[0], URLDecoder.decode(queryValue[1], StandardCharsets.UTF_8.name()));
+					} catch (UnsupportedEncodingException e) {
+						throw new RuntimeException(e);
+					}
+				}
+			}
+			request.setQueryParams(queryParams);
+		} else if (path.hasNext()) {
+			String uriValue = path.next();
+			request.setIndividualId(new URIImpl(uriValue));
+		} else {
+			throw new DataAppException("Bad Request: expected a URI at the end of the path or a query string", 400);
+		}
+				
 		DataResponse response = new DataResponse(jobRequest.getWriter());
 		
 		return new GetJob(request, response, container);
