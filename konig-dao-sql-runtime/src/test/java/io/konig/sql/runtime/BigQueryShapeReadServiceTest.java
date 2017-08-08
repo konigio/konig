@@ -29,7 +29,9 @@ import static org.mockito.Mockito.when;
 import java.io.StringWriter;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.openrdf.model.impl.URIImpl;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.FieldValue;
@@ -48,7 +50,10 @@ public class BigQueryShapeReadServiceTest  {
 		String shapeId = "http://example.com/shape/PersonShape";
 		
 		EntityStructure struct = new EntityStructure("schema.Person");
-		struct.addField("givenName");
+		FieldInfo fieldInfo = new FieldInfo();
+		fieldInfo.setName("givenName");
+		fieldInfo.setFieldType(new URIImpl("http://www.w3.org/2001/XMLSchema#string"));
+		struct.addField(fieldInfo);
 		EntityStructureService structService = mock(EntityStructureService.class);
 		when(structService.structureOfShape(anyString())).thenReturn(struct);
 		

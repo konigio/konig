@@ -54,10 +54,10 @@ public class BasicDataAppTest {
 			assertEquals(Schema.Person, container.getExtentClass());
 			assertEquals(uri("http://example.com/shapes/PersonShape"), container.getDefaultShape());
 			
-			container = app.getContainerForSlug("product");
+			container = app.getContainerForSlug("creativework");
 			assertTrue(container!=null);
-			assertEquals(Schema.Product, container.getExtentClass());
-			assertEquals(uri("http://example.com/shapes/ProductShape"), container.getDefaultShape());
+			assertEquals(Schema.CreativeWork, container.getExtentClass());
+			assertEquals(uri("http://example.com/shapes/CreativeWorkShape"), container.getDefaultShape());
 		}
 	}
 	
