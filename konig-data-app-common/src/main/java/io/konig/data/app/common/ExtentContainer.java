@@ -22,6 +22,7 @@ package io.konig.data.app.common;
 
 
 import java.io.Writer;
+import java.util.HashMap;
 
 import org.openrdf.model.URI;
 
@@ -30,6 +31,7 @@ import io.konig.dao.core.DaoException;
 import io.konig.dao.core.Format;
 import io.konig.dao.core.ShapeQuery;
 import io.konig.dao.core.ShapeReadService;
+import io.konig.dao.core.ShapeQuery.Builder;
 
 /**
  * A container that holds all instances of a given type.
@@ -64,15 +66,26 @@ public class ExtentContainer extends AbstractContainer {
 		URI individualId = request.getIndividualId();
 		Writer out = response.getWriter();
 		Format format = request.getFormat();
-		
-		ShapeQuery query = ShapeQuery.newBuilder()
-				.setShapeId(shapeId.toString())
-				.beginPredicateConstraint()
+		HashMap<String, String> queryParams = request.getQueryParams();
+		Builder builder = ShapeQuery.newBuilder()
+				.setShapeId(shapeId.toString());
+
+		if (individualId != null) {
+			builder.beginPredicateConstraint()
 					.setPropertyName(DataAppConstants.ID)
 					.setOperator(ConstraintOperator.EQUAL)
 					.setValue(individualId.stringValue())
-				.endPredicateConstraint()
-				.build();
+					.endPredicateConstraint();
+		} else if (queryParams != null) {
+			for (String key : queryParams.keySet()) {
+				builder.beginPredicateConstraint()
+					.setPropertyName(key)
+					.setOperator(ConstraintOperator.EQUAL)
+					.setValue(queryParams.get(key))
+					.endPredicateConstraint();
+			}
+		}
+		ShapeQuery query = builder.build();
 			
 			try {
 				shapeReadService.execute(query, out, format);

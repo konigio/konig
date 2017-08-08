@@ -52,7 +52,7 @@ public class EntityStructureWriter {
 		String localName = shapeId.getLocalName();
 		File nsDir = new File(baseDir, prefix);
 		nsDir.mkdirs();
-		File outFile = new File(nsDir, localName);
+		File outFile = new File(nsDir, localName +".yaml");
 		Yaml.write(outFile, e);
 	}
 

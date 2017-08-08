@@ -86,6 +86,7 @@ abstract public class DataAppServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
 		JobRequest request = new JobRequest();
 		request.setPath(req.getPathInfo());
+		request.setQueryString(req.getQueryString());
 		request.setWriter(resp.getWriter());
 		
 		try {

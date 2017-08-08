@@ -33,7 +33,7 @@ public class MarkedPath {
 	
 	public MarkedPath(String path) {
 		this.path = path;
-		elements = path.split("/");
+		elements = path.substring(1).split("/");
 		for (int i=0; i<elements.length; i++) {
 			try {
 				elements[i] = URLDecoder.decode(elements[i], StandardCharsets.UTF_8.name());

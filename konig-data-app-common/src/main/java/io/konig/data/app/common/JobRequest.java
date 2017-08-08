@@ -27,6 +27,7 @@ public class JobRequest {
 
 	private String path;
 	private Writer writer;
+	private String queryString;
 
 	public String getPath() {
 		return path;
@@ -44,6 +45,13 @@ public class JobRequest {
 		this.writer = writer;
 	}
 	
+	public String getQueryString(){
+		return queryString;
+	}
+
+	public void setQueryString(String queryString) {
+		this.queryString = queryString;
+	}
 	
 	
 }
