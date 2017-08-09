@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +44,6 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
-import io.konig.core.PathFactory;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.SimpleValueMap;
@@ -63,6 +61,7 @@ import io.konig.core.vocab.Schema;
  */
 public class ClassStructure {
 	private static final Logger logger = LoggerFactory.getLogger(ClassStructure.class);
+	private static final Integer ZERO = new Integer(0);
 	private Map<Resource, Shape> shapeMap = new HashMap<>();
 	private Map<URI,PropertyStructure> propertyMap = new HashMap<>();
 	private Shape nullShape = new Shape(Konig.NullShape);
@@ -206,15 +205,6 @@ public class ClassStructure {
 		Map<URI,PropertyConstraint> map = getPropertyMap(shape);
 		return new ArrayList<>(map.values());
 	}
-	
-	private boolean contains(List<PropertyConstraint> list, PropertyConstraint p) {
-		for (PropertyConstraint q : list) {
-			if (q.getPredicate().equals(p.getPredicate())) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	public List<Shape> superClasses(Shape shape) {
 		List<Shape> list = new ArrayList<>();
@@ -346,18 +336,166 @@ public class ClassStructure {
 		public Builder(ShapeManager shapeManager, OwlReasoner reasoner) {
 			this.shapeManager = shapeManager;
 			ClassStructure.this.reasoner = reasoner;
-			Graph graph = reasoner.getGraph();
 		}
 		
 		private void build() {
-			scanProperties();
 			scanShapes();
+			scanProperties();
 			scanClasses();
 			buildShapes();
 			buildHierarchy();
 			injectThingAndNullShape();
 		}
 		
+		
+
+		private void scanShapes() {
+			Graph graph = reasoner.getGraph();
+			for (Shape shape : shapeManager.listShapes()) {
+				URI targetClass = shape.getTargetClass();
+				if (targetClass != null) {
+					graph.edge(targetClass, RDF.TYPE, OWL.CLASS);
+					Shape classShape = produceShape(targetClass);
+					addProperties(shape, classShape);
+				}
+			}
+			
+		}
+
+		private void addProperties(Shape shape, Shape classShape) {
+			for (PropertyConstraint source : shape.getProperty()) {
+				applyGlobalProperty(shape, source);
+				URI predicate = source.getPredicate();
+				PropertyConstraint target = classShape.getPropertyConstraint(predicate);
+				if (target == null) {
+					classShape.add(source.clone());
+				} else {
+					merge(source, target);
+				}
+			}
+			
+		}
+
+		private void applyGlobalProperty(Shape shape, PropertyConstraint p) {
+			URI targetClass = shape.getTargetClass();
+			URI predicate = p.getPredicate();
+			if (predicate != null) {
+				PropertyStructure info = produceProperty(predicate);
+				info.addShape(shape);
+				setDomain(info, targetClass);
+				setDatatype(info, p.getDatatype());
+				setMaxCount(info, p.getMaxCount());
+				setMinCount(info, p.getMinCount());
+				setEquivalentPath(info, p.getEquivalentPath());
+				setValueClass(info, p.getValueClass());
+				if (p.getShape() != null) {
+					setValueClass(info, p.getShape().getTargetClass());
+				}
+			}
+			if (p.getValueClass() instanceof URI) {
+				reasoner.getGraph().edge(p.getValueClass(), RDF.TYPE, OWL.CLASS);
+			}
+			
+		}
+
+		private void merge(PropertyConstraint source, PropertyConstraint target) {
+			setDatatype(source, target);
+			setEquivalentPath(source, target);
+			setMaxCount(source, target);
+			setMinCount(source, target);
+			setValueClass(source, target);
+		}
+
+		private void setValueClass(PropertyConstraint source, PropertyConstraint p) {
+			Resource value = source.getValueClass();
+			if (value == null) {
+				Shape shape = source.getShape();
+				if (shape != null) {
+					value = shape.getTargetClass();
+				}
+			}
+			
+			if (value != null) {
+				if (p.getDatatype() != null) {
+					p.setDatatype(null);
+					p.setValueClass(OWL.THING);
+					return;
+				}
+				Resource valueClass = p.getValueClass();
+				if (valueClass == null) {
+					p.setValueClass(value);
+				} else {
+					Resource result = reasoner.leastCommonSuperClass(valueClass, value);
+					p.setValueClass(result);
+				}
+			}
+			
+		}
+
+		private void setMinCount(PropertyConstraint source, PropertyConstraint target) {
+			Integer a = minCount(source);
+			Integer b = minCount(target);
+			
+			target.setMinCount(a<b ? a : b);
+			
+		}
+
+		private Integer minCount(PropertyConstraint source) {
+			Integer result = source.getMinCount();
+			if (result == null) {
+				result = ZERO;
+			}
+			return result;
+		}
+
+		private void setMaxCount(PropertyConstraint source, PropertyConstraint target) {
+			Integer a = source.getMaxCount();
+			Integer b = target.getMaxCount();
+			if (a == null || b==null) {
+				target.setMaxCount(null);
+			} else if (a != null && (b==null || a>b)) {
+				target.setMaxCount(a);
+			}
+			
+		}
+
+		private void setEquivalentPath(PropertyConstraint source, PropertyConstraint target) {
+		
+			if (source.getEquivalentPath() != null) {
+				target.setEquivalentPath(source.getEquivalentPath());
+			}
+			
+		}
+
+		private void setDatatype(PropertyConstraint source, PropertyConstraint p) {
+			URI value = source.getDatatype();
+			if (value != null) {
+				
+				if (p.getPredicate().equals(RDF.TYPE)) {
+					p.setDatatype(null);
+					p.setValueClass(OWL.CLASS);
+					return;
+				}
+				if (p.getValueClass()!=null) {
+					p.setDatatype(null);
+					p.setValueClass(OWL.THING);
+				}
+				Resource prior = p.getDatatype();
+				if (prior!=null && !prior.equals(value)) {
+					if (failOnDatatypeConflict) {
+						throw new KonigException("Conflicting datatype on property <" + p.getPredicate() + ">: Found <" +
+							prior + "> and <" + value + ">"
+						);
+					} else {
+						
+						logger.warn("Conflicting datatype on property <{}>: Found <{}> and <{}>. Using rdfs:Literal", p.getPredicate().stringValue(), prior.stringValue(), value.stringValue());
+						value = RDFS.LITERAL;
+					}
+				}
+				
+				p.setDatatype(value);
+			}
+		}
 		
 
 		private void subClassOf(Shape subtype, Shape supertype) {
@@ -434,50 +572,22 @@ public class ClassStructure {
 		private void buildShapes() {
 			for (PropertyStructure info : propertyMap.values()) {
 				Resource domain = info.getDomain();
+				URI predicate = info.getPredicate();
 				if (domain != null) {
 					Shape shape = produceShape(domain);
-					shape.add(info.asPropertyConstraint());
+					if (shape.getPropertyConstraint(predicate) == null) {
+						shape.add(info.asPropertyConstraint());
+					}
 				}
 				Set<Resource> domainIncludes = info.getDomainIncludes();
 				if (domainIncludes != null) {
 					for (Resource owlClass : domainIncludes) {
 						Shape shape = produceShape(owlClass);
-						shape.add(info.asPropertyConstraint());
-					}
-				}
-			}
-			
-		}
-
-		private void scanShapes() {
-			Graph graph = reasoner.getGraph();
-			for (Shape shape : shapeManager.listShapes()) {
-				URI targetClass = shape.getTargetClass();
-				if (targetClass != null) {
-					if (targetClass instanceof URI) {
-						graph.edge(targetClass, RDF.TYPE, OWL.CLASS);
-					}
-					for (PropertyConstraint p : shape.getProperty()) {
-						URI predicate = p.getPredicate();
-						if (predicate != null) {
-							PropertyStructure info = produceProperty(predicate);
-							info.addShape(shape);
-							setDomain(info, targetClass);
-							setDatatype(info, p.getDatatype());
-							setMaxCount(info, p.getMaxCount());
-							setMinCount(info, p.getMinCount());
-							setEquivalentPath(info, p.getEquivalentPath());
-							setValueClass(info, p.getValueClass());
-							if (p.getShape() != null) {
-								setValueClass(info, p.getShape().getTargetClass());
-							}
-						}
-						if (p.getValueClass() instanceof URI) {
-							graph.edge(p.getValueClass(), RDF.TYPE, OWL.CLASS);
+						if (shape.getPropertyConstraint(predicate) == null) {
+							shape.add(info.asPropertyConstraint());
 						}
 					}
 				}
-				
 			}
 			
 		}
