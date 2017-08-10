@@ -23,18 +23,17 @@ package io.konig.sql.runtime;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TimeZone;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.QueryRequest;
 import com.google.cloud.bigquery.QueryResponse;
@@ -44,13 +43,14 @@ import io.konig.dao.core.DaoException;
 import io.konig.dao.core.Format;
 
 public class BigQueryShapeReadService extends SqlShapeReadService {
-	private static final SimpleDateFormat dateFormatUTC = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-
 	private BigQuery bigQuery;
+	private DateTimeZone timeZone;
 	
 	public BigQueryShapeReadService(EntityStructureService structureService, BigQuery bigQuery) {
 		super(structureService);
 		this.bigQuery = bigQuery;
+		this.timeZone = DateTimeZone.UTC;
+		
 	}
 
 	@Override
@@ -115,11 +115,13 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 	private void writeField(JsonGenerator json, FieldInfo fieldInfo, FieldValue field) throws IOException, DaoException {
 		
 		String fieldName = fieldInfo.getName();
-		String fieldType = fieldInfo.getFieldType() == null ? "" : fieldInfo.getFieldType().getLocalName();
-		Object value = field.getValue();
-		
-		if (value instanceof String) {
-			json.writeStringField(fieldName, String.valueOf(formatField(fieldType,value.toString())));
+		String fieldType = fieldInfo.getFieldType() == null ? "" : fieldInfo.getFieldType().toString();
+		Object value = formatField(fieldType,field);	
+
+		if (value instanceof String || value instanceof DateTime) {
+			json.writeStringField(fieldName, value.toString());
+		} else if (value instanceof Integer || value instanceof Long) {
+			json.writeNumberField(fieldName, Integer.parseInt(value.toString()));
 		} else if (value instanceof ArrayList) {
 			List<FieldInfo> fields = fieldInfo.getStruct().getFields();
 			json.writeObjectFieldStart(fieldName);
@@ -130,22 +132,19 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		}
 		
 	}
-	private Object formatField(String dataType, String value){
-		dateFormatUTC.setTimeZone(TimeZone.getTimeZone("UTC"));
-		String[] array = {"string","dateTime","int"};		
-		int index = Arrays.asList(array).indexOf(dataType);
-		switch (index) {
-		case 0:				
-			return value.toString();
-		case 1:
-			return
-			 dateFormatUTC.format(new Date(Double.valueOf(value.toString()).longValue() * 1000));
-		case 2:
-			return Integer.parseInt(value.toString());
+	private Object formatField(String fieldType, FieldValue value){
+		switch (fieldType) {
+		case "http://www.w3.org/2001/XMLSchema#string":
+			return value.getStringValue();
+		case "http://www.w3.org/2001/XMLSchema#dateTime":
+			return new DateTime(value.getTimestampValue() / 1000).toDateTime(timeZone);
+		case "http://www.w3.org/2001/XMLSchema#int":
+			return Integer.parseInt(value.getStringValue());
+		case "http://www.w3.org/2001/XMLSchema#long":
+			return Long.parseLong(value.getStringValue());
 		default:
-			break;
+			return value.getValue();
 		}
-		return null;
 	}
 	
 	private void writeArrayField(JsonGenerator json, List<FieldInfo> fieldInfo, FieldValue field) throws IOException, DaoException {

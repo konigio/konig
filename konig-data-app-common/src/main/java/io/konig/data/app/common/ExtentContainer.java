@@ -71,18 +71,32 @@ public class ExtentContainer extends AbstractContainer {
 				.setShapeId(shapeId.toString());
 
 		if (individualId != null) {
-			builder.beginPredicateConstraint()
-					.setPropertyName(DataAppConstants.ID)
-					.setOperator(ConstraintOperator.EQUAL)
-					.setValue(individualId.stringValue())
+			builder.beginPredicateConstraint().setPropertyName(DataAppConstants.ID)
+					.setOperator(ConstraintOperator.EQUAL).setValue(individualId.stringValue())
 					.endPredicateConstraint();
 		} else if (queryParams != null) {
 			for (String key : queryParams.keySet()) {
-				builder.beginPredicateConstraint()
-					.setPropertyName(key)
-					.setOperator(ConstraintOperator.EQUAL)
-					.setValue(queryParams.get(key))
-					.endPredicateConstraint();
+				if(key.endsWith(".minInclusive")){					
+					builder.beginPredicateConstraint().setPropertyName(key.replace(".minInclusive", ""))
+						.setOperator(ConstraintOperator.GREATER_THAN_OR_EQUAL).setValue(queryParams.get(key))
+						.endPredicateConstraint();
+				} else if(key.endsWith(".minExclusive")){
+					builder.beginPredicateConstraint().setPropertyName(key.replace(".minExclusive", ""))
+						.setOperator(ConstraintOperator.GREATER_THAN).setValue(queryParams.get(key))
+						.endPredicateConstraint();
+				} else if(key.endsWith(".maxInclusive")){
+					builder.beginPredicateConstraint().setPropertyName(key.replace(".maxInclusive", ""))
+						.setOperator(ConstraintOperator.LESS_THAN_OR_EQUAL).setValue(queryParams.get(key))
+						.endPredicateConstraint();					
+				} else if(key.endsWith(".maxExclusive")){
+					builder.beginPredicateConstraint().setPropertyName(key.replace(".maxExclusive", ""))
+						.setOperator(ConstraintOperator.LESS_THAN).setValue(queryParams.get(key))
+						.endPredicateConstraint();					
+				} else {
+					builder.beginPredicateConstraint().setPropertyName(key)
+						.setOperator(ConstraintOperator.EQUAL).setValue(queryParams.get(key))
+						.endPredicateConstraint();
+				}				
 			}
 		}
 		ShapeQuery query = builder.build();

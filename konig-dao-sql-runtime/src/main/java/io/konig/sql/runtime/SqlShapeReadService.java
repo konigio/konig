@@ -22,7 +22,7 @@ package io.konig.sql.runtime;
 
 
 import java.io.Writer;
-import java.net.URI;
+import java.util.List;
 
 import io.konig.dao.core.CompositeDataFilter;
 import io.konig.dao.core.DaoException;
@@ -58,36 +58,54 @@ abstract public class SqlShapeReadService implements ShapeReadService {
 		builder.append(struct.getName());
 		
 		DataFilter filter = query.getFilter();
-		appendFilter(builder, filter);
+		appendFilter(struct,builder, filter);
 		
 		return builder.toString();
 	}
 
-	private void appendFilter(StringBuilder builder, DataFilter filter) {
+	private void appendFilter(EntityStructure struct,StringBuilder builder, DataFilter filter) {
 		if (filter != null) {
 			builder.append("\nWHERE");
 		
-			doAppendFilter(builder, filter);
+			doAppendFilter(struct,builder, filter);
 		}
 		
 	}
 
-	private void doAppendFilter(StringBuilder builder, DataFilter filter) {
+	private void doAppendFilter(EntityStructure struct,StringBuilder builder, DataFilter filter) {
 		if (filter instanceof CompositeDataFilter) {
-			appendCompositeShapeFilter(builder, (CompositeDataFilter)filter);
+			appendCompositeShapeFilter(struct, builder, (CompositeDataFilter)filter);
 		} else if (filter instanceof PredicateConstraint) {
 			builder.append(' ');
-			appendPredicateConstraint(builder, (PredicateConstraint)filter);
+			appendPredicateConstraint(struct, builder, (PredicateConstraint)filter);
 		}
 		
 	}
-
-	private void appendPredicateConstraint(StringBuilder builder, PredicateConstraint filter) {
+		
+	private String getFieldType(String propertyName, List<FieldInfo> fieldsInfo) {
+		String propertyType = null;
+		for(FieldInfo fieldInfo : fieldsInfo) {	
+			if(fieldInfo.getStruct() != null) {				
+				propertyType = getFieldType(propertyName, fieldInfo.getStruct().getFields());				
+				if(propertyType != null){
+					return propertyType;
+				}
+			}
+			if(propertyName.equals(fieldInfo.getName()) || 
+					propertyName.endsWith("."+fieldInfo.getName())) {
+				propertyType = fieldInfo.getFieldType().toString();				
+				return propertyType;
+			}
+		}
+		return propertyType;
+	}
+	
+	private void appendPredicateConstraint(EntityStructure struct,StringBuilder builder, PredicateConstraint filter) {
 		
 		String propertyName = filter.getPropertyName();
 		Object value = filter.getValue();
-		
 		builder.append(propertyName);
+		String propertyType = getFieldType(propertyName,struct.getFields());
 		
 		switch(filter.getOperator()) {
 		case EQUAL:
@@ -115,15 +133,28 @@ abstract public class SqlShapeReadService implements ShapeReadService {
 			break;
 		}
 		
-		appendValue(builder, value);
+		appendValue(builder, value, propertyType);
 		
 	}
 
-	private void appendValue(StringBuilder builder, Object value) {
-		if (value instanceof String) {
+	private void appendValue(StringBuilder builder, Object value, String propertyType) {			
+		switch (propertyType) {
+		case "http://www.w3.org/2001/XMLSchema#string":						
 			appendString(builder, (String)value);
+			break;
+		case "http://www.w3.org/2001/XMLSchema#dateTime":
+			appendString(builder, (String)value);
+			break;
+		case "http://www.w3.org/2001/XMLSchema#int":
+			builder.append(Integer.valueOf(value==null?"":value.toString()));
+			break;
+		case "http://www.w3.org/2001/XMLSchema#long":
+			builder.append(Long.valueOf(value==null?"":value.toString()));
+			break;
+		default:
+			appendString(builder, (String)value);
+			break;
 		}
-		
 	}
 
 	private void appendString(StringBuilder builder, String value) {
@@ -138,16 +169,17 @@ abstract public class SqlShapeReadService implements ShapeReadService {
 		
 	}
 
-	private void appendCompositeShapeFilter(StringBuilder builder, CompositeDataFilter composite) {
+	private void appendCompositeShapeFilter(EntityStructure struct,StringBuilder builder, CompositeDataFilter composite) {
 		String operator = null;
 		for (DataFilter filter : composite) {
 			if (operator != null) {
+				builder.append(" ");
 				builder.append(operator);
 			} else {
 				operator = composite.getOperator().name();
 			}
 			builder.append("\n   ");
-			doAppendFilter(builder, filter);
+			doAppendFilter(struct,builder, filter);
 		}
 		
 	}
