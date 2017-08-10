@@ -108,6 +108,7 @@ public class JsonWriterBuilderTest {
 
 		String basePackage = "com.example";
 		MemoryNamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
+		graph.setNamespaceManager(nsManager);
 		nsManager.add("schema1", "http://example.com/shapes/v1/schema/" );
 		nsManager.add("schema2", "http://example.com/shapes/v2/schema/" );
 		JavaNamer javaNamer = new BasicJavaNamer(basePackage, nsManager);

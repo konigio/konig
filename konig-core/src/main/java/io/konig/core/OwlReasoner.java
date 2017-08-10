@@ -2,6 +2,7 @@ package io.konig.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 /*
  * #%L
@@ -719,7 +720,7 @@ public class OwlReasoner {
 	public Set<URI> superClasses(URI targetClass) {
 		Vertex v = graph.getVertex(targetClass);
 		if (v == null) {
-			return new HashSet<>();
+			return Collections.emptySet();
 		}
 		return v.asTraversal().out(RDFS.SUBCLASSOF).toUriSet();
 	}

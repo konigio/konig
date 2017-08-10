@@ -23,12 +23,9 @@ package io.konig.schemagen.java;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.openrdf.model.Namespace;
@@ -38,8 +35,6 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sun.codemodel.ClassType;
 import com.sun.codemodel.JBlock;
@@ -68,15 +63,12 @@ import io.konig.core.util.SmartJavaDatatypeMapper;
 import io.konig.core.vocab.Konig;
 import io.konig.runtime.io.TypeSet;
 import io.konig.schemagen.SchemaGeneratorException;
-import io.konig.shacl.AndConstraint;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
-import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeManager;
 
 public class JavaClassBuilder {
-	private static final Logger logger = LoggerFactory.getLogger(JavaClassBuilder.class);
 	private JavaNamer namer;
 	private JavaDatatypeMapper mapper;
 	private ClassStructure hierarchy;
@@ -157,7 +149,7 @@ public class JavaClassBuilder {
 			createTypesField(model, typeInfo, null);
 			createTypeGetter(model, typeInfo);
 			createGetter(typeInfo, "id", "id", uriClass);
-			createSetter(typeInfo, "id", "id", uriClass);
+			createSetter(typeInfo, "id", "id", uriClass, uriClass);
 			
 			declareTypeGetterInterface(model, typeInfo);
 			declareHashCodeMethod(model, typeInfo);
@@ -499,19 +491,68 @@ public class JavaClassBuilder {
 //			}
 //		}
 		
+		FieldDisposition fd = fieldDisposition(p, pair);
+		if (fd == FieldDisposition.INHERITED_FIELD) {
+			return;
+		}
 		
 		if (RDF.LANGSTRING.equals(datatype)) {
 			// TODO: implement rdf:langString value
 		} else if (datatype != null) {
-			createDatatypeField(model, p, pair);
+			createDatatypeField(model, p, pair, fd);
 		} else if (owlClass instanceof URI) {
-			createObjectField(model, p, pair);
+			createObjectField(model, p, pair, fd);
 		}
 		
 		
 	}
 
-	private void createObjectField(JCodeModel model, PropertyConstraint p, TypeInfo pair) {
+	private FieldDisposition fieldDisposition(PropertyConstraint p, TypeInfo pair) {
+		FieldDisposition fd = FieldDisposition.NEW_FIELD;
+		List<URI> stack = new ArrayList<>(reasoner.superClasses(pair.owlClass));
+		if (!stack.contains(OWL.THING)) {
+			stack.add(OWL.THING);
+		}
+		URI predicate = p.getPredicate();
+		URI pDatatype = p.getDatatype();
+		Resource pValueClass = p.getValueClass();
+		
+		for (int i=0; i<stack.size(); i++) {
+			URI superType = stack.get(i);
+			Shape superShape = hierarchy.getShapeForClass(superType);
+			if (superShape != null) {
+				PropertyConstraint q = superShape.getPropertyConstraint(predicate);
+				if (q != null) {
+					URI qDatatype = q.getDatatype();
+					Resource qValueClass = q.getValueClass();
+					if (qDatatype != null) {
+						if (qDatatype.equals(pDatatype)) {
+							fd = FieldDisposition.INHERITED_FIELD;
+						} else {
+							return FieldDisposition.RESTRICTED_FIELD;
+						}
+					} else if (qValueClass != null) {
+						if (qValueClass.equals(pValueClass)) {
+							fd = FieldDisposition.INHERITED_FIELD;
+						} else {
+							return FieldDisposition.RESTRICTED_FIELD;
+						}
+					}
+				}
+			}
+			Set<URI> set = reasoner.superClasses(superType);
+			for (URI type : set) {
+				if (!stack.contains(type)) {
+					stack.add(type);
+				}
+			}
+		}
+		
+		return fd;
+	}
+
+
+	private void createObjectField(JCodeModel model, PropertyConstraint p, TypeInfo pair, FieldDisposition fd) {
 		
 		URI predicate = p.getPredicate();
 		
@@ -537,21 +578,25 @@ public class JavaClassBuilder {
 		
 		String fieldName = predicate.getLocalName();
 		String methodBaseName = fieldName;
+		JClass fieldType = jClass;
 		
 		if (maxCount==null || maxCount>1) {
 			
 			createAddMethod(model, pair, fieldName, jClass);
 			methodBaseName = fieldName;
 			JClass listClass = model.ref(Set.class);
-			jClass = listClass.narrow(jClass);
+			fieldType = listClass.narrow(jClass);
+			jClass = listClass.narrow(jClass.wildcard());
 			
 			
 		}
 
-		dc.field(JMod.PRIVATE, jClass, predicate.getLocalName());
+		dc.field(JMod.PRIVATE, fieldType, predicate.getLocalName());
 		
 		createGetter(pair, methodBaseName, fieldName, jClass);
-		createSetter(pair, methodBaseName, fieldName, jClass);
+		if (fd != FieldDisposition.RESTRICTED_FIELD) {
+			createSetter(pair, methodBaseName, fieldName, jClass, fieldType);
+		}
 	}
 
 	private void createAddMethod(JCodeModel model, TypeInfo declaringClass, String fieldName, JClass jClass) {
@@ -595,7 +640,7 @@ public class JavaClassBuilder {
 		return result;
 	}
 
-	private void createDatatypeField(JCodeModel model, PropertyConstraint p, TypeInfo pair) {
+	private void createDatatypeField(JCodeModel model, PropertyConstraint p, TypeInfo pair, FieldDisposition fd) {
 		
 		URI predicate = p.getPredicate();
 		
@@ -605,14 +650,13 @@ public class JavaClassBuilder {
 		String methodBaseName = fieldName;
 		
 		JDefinedClass dc = pair.implClass;
-		JDefinedClass dci = pair.interfaceClass;
 		
 		Class<?> javaType = mapper.javaDatatype(datatype);
 		if (javaType == null) {
 			throw new RuntimeException("Java datatype not defined: " + datatype.stringValue() + " for property " + p.getPredicate().getLocalName() + " on " + dc.fullName());
 		}
 		JClass jClass = model.ref(javaType);
-		
+		JClass fieldType = jClass;
 		Integer maxCount = p.getMaxCount();
 		
 		if (maxCount==null || maxCount>1) {
@@ -622,25 +666,31 @@ public class JavaClassBuilder {
 			methodBaseName = fieldName;
 			
 			JClass listClass = model.ref(Set.class);
-			jClass = listClass.narrow(jClass);
+			fieldType = listClass.narrow(jClass);
+			jClass = listClass.narrow(jClass.wildcard());
 		}
 
-		dc.field(JMod.PRIVATE, jClass, predicate.getLocalName());
+		dc.field(JMod.PRIVATE, fieldType, predicate.getLocalName());
 		
 		createGetter(pair, methodBaseName, fieldName, jClass);
-		createSetter(pair, methodBaseName, fieldName, jClass);
+		if (fd != FieldDisposition.RESTRICTED_FIELD) {
+			createSetter(pair, methodBaseName, fieldName, jClass, fieldType);
+		}
 
 	}
 
 	
-	private void createSetter(TypeInfo declaringClass, String methodBaseName, String fieldName, JClass javaType) {
+	private void createSetter(TypeInfo declaringClass, String methodBaseName, String fieldName, JClass javaType, JClass fieldType) {
 		
 		String methodName = setterName(methodBaseName);
 		JMethod imethod = declaringClass.interfaceClass.method(JMod.NONE, void.class, methodName);
 		imethod.param(javaType, fieldName);
 		
 		JMethod method = declaringClass.implClass.method(JMod.PUBLIC, void.class, methodName);
-		JVar param = method.param(javaType, fieldName);
+		JExpression param = method.param(javaType, fieldName);
+		if (fieldType != javaType) {
+			param = JExpr.cast(fieldType, param);
+		}
 		method.body().assign(JExpr._this().ref(fieldName), param);
 	}
 
@@ -716,9 +766,10 @@ public class JavaClassBuilder {
 		}
 	}
 	
-	private static class ClassInfo {
-		Set<String> generatedField = new HashSet<>();
-		List<Vertex> superClassStack = new ArrayList<>();
+	private static enum FieldDisposition {
+		NEW_FIELD,
+		RESTRICTED_FIELD,
+		INHERITED_FIELD
 	}
 
 }
