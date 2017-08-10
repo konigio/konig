@@ -774,8 +774,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 		JavaNamer javaNamer = new BasicJavaNamer(java.getPackageRoot(), nsManager);
 		Filter filter = new Filter(java.getFilter());
-		JavaClassBuilder classBuilder = new JavaClassBuilder(classStructure(), javaNamer, owlReasoner, filter);
-		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(owlReasoner, shapeManager, javaNamer, filter);
+		ClassStructure structure = classStructure();
+		JavaClassBuilder classBuilder = new JavaClassBuilder(structure, javaNamer, owlReasoner, filter);
+		final JsonWriterBuilder writerBuilder = new JsonWriterBuilder(structure, owlReasoner, shapeManager, javaNamer, filter);
 		
 		classBuilder.buildAllClasses(model);
 		writerBuilder.buildAll(shapeManager.listShapes(), model);

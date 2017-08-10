@@ -232,6 +232,7 @@ public class ClassStructure {
 		list.add(s);
 		return list;
 	}
+	
 
 	public List<Shape> subClasses(Shape shape) {
 		List<Shape> list = new ArrayList<>();
@@ -345,9 +346,77 @@ public class ClassStructure {
 			buildShapes();
 			buildHierarchy();
 			injectThingAndNullShape();
+			bubbleUp();
+			bubbleDown();
 		}
 		
 		
+
+		private void bubbleDown() {
+			
+			for (Shape shape : listClassShapes()) {
+				bubbleDown(shape);
+			}
+			
+		}
+
+		private void bubbleDown(Shape shape) {
+			
+			for (PropertyConstraint p : shape.getProperty()) {
+				bubbleDown(shape, p);
+			}
+			
+		}
+
+		private void bubbleUp() {
+			
+			for (Shape shape : listClassShapes()) {
+				bubbleUp(shape);
+			}
+			
+		}
+
+		private void bubbleUp(Shape shape) {
+			
+			for (PropertyConstraint p : shape.getProperty()) {
+				bubbleUp(shape, p);
+			}
+			
+		}
+
+		private void bubbleDown(Shape shape, PropertyConstraint p) {
+			URI predicate = p.getPredicate();
+			Integer maxCount = p.getMaxCount();
+			if (maxCount != null) {
+				List<Shape> list = superClasses(shape);
+				for (Shape superclass : list) {
+					PropertyConstraint q = superclass.getPropertyConstraint(predicate);
+					
+					if (q!=null && q.getMaxCount() == null) {
+						p.setMaxCount(null);
+						break;
+					}
+				}
+			}
+			
+		}
+
+		private void bubbleUp(Shape shape, PropertyConstraint p) {
+
+			URI predicate = p.getPredicate();
+			Integer maxCount = p.getMaxCount();
+			if (maxCount != null) {
+				List<Shape> list = subClasses(shape);
+				for (Shape subClass : list) {
+					PropertyConstraint q = subClass.getPropertyConstraint(predicate);
+					
+					if (q!=null && q.getMaxCount() == null) {
+						p.setMaxCount(null);
+						break;
+					}
+				}
+			}
+		}
 
 		private void scanShapes() {
 			Graph graph = reasoner.getGraph();
@@ -368,7 +437,17 @@ public class ClassStructure {
 				URI predicate = source.getPredicate();
 				PropertyConstraint target = classShape.getPropertyConstraint(predicate);
 				if (target == null) {
-					classShape.add(source.clone());
+					PropertyConstraint p = source.clone();
+					Shape valueShape = p.getShape();
+					if (valueShape != null) {
+						Resource valueClass = p.getValueClass();
+						if (valueClass == null) {
+							p.setValueClass(valueShape.getTargetClass());
+						}
+						p.setShape(null);
+					}
+		
+					classShape.add(p);
 				} else {
 					merge(source, target);
 				}

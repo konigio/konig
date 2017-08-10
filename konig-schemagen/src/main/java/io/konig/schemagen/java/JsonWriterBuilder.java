@@ -22,7 +22,9 @@ package io.konig.schemagen.java;
 
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -43,6 +45,7 @@ import com.sun.codemodel.JForEach;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JOp;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
@@ -51,9 +54,11 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.pojo.BeanUtil;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.JavaDatatypeMapper;
+import io.konig.core.util.SimpleValueFormat;
 import io.konig.runtime.io.BaseJsonWriter;
 import io.konig.runtime.io.ValidationException;
 import io.konig.schemagen.SchemaGeneratorException;
+import io.konig.shacl.ClassStructure;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
@@ -67,22 +72,28 @@ public class JsonWriterBuilder {
 	private JavaNamer javaNamer;
 	private JavaDatatypeMapper datatypeMapper;
 	private OwlReasoner owlReasoner;
+	private ClassStructure classStructure;
 	private ClassAnalyzer classAnalyzer;
 	private Filter filter;
 	
 	
 	
 	public JsonWriterBuilder(OwlReasoner owlReasoner, ShapeManager shapeManager, JavaNamer javaNamer) {
-		this(owlReasoner, shapeManager, javaNamer, new Filter(null));
+		this(null, owlReasoner, shapeManager, javaNamer, new Filter(null));
 	}
 
-	public JsonWriterBuilder(OwlReasoner owlReasoner, ShapeManager shapeManager, JavaNamer javaNamer, Filter filter) {
+	public JsonWriterBuilder(ClassStructure classStructure, OwlReasoner owlReasoner, ShapeManager shapeManager, JavaNamer javaNamer, Filter filter) {
+		if (classStructure == null) {
+			SimpleValueFormat iriTemplate = new SimpleValueFormat("http://example.com/shapes/canonical/{targetClassNamespacePrefix}/{targetClassLocalName}");
+			classStructure = new ClassStructure(iriTemplate, shapeManager, owlReasoner);
+		}
 		this.owlReasoner = owlReasoner==null ? new OwlReasoner(new MemoryGraph()) : owlReasoner;
 		this.shapeManager = shapeManager;
 		this.javaNamer = javaNamer;
 		datatypeMapper = new BasicJavaDatatypeMapper();
 		classAnalyzer = new ClassAnalyzer(shapeManager, owlReasoner);
 		this.filter = filter;
+		this.classStructure = classStructure;
 	}
 
 
@@ -153,6 +164,8 @@ public class JsonWriterBuilder {
 
 	private void createWriteMethod(JCodeModel model, JDefinedClass dc, Shape shape, JType targetClass) throws ValidationException {
 		
+		URI owlClass = shape.getTargetClass();
+		Shape canonicalShape = classStructure.getShapeForClass(owlClass);
 
 		JMethod method = dc.method(JMod.PUBLIC, void.class, "write");
 		method._throws(ValidationException.class);
@@ -189,11 +202,15 @@ public class JsonWriterBuilder {
 			if (!filter.acceptIndividual(predicate.stringValue())) {
 				continue;
 			}
+			
+			PropertyConstraint q = canonicalShape.getPropertyConstraint(predicate);
+			
 			String fieldName = predicate.getLocalName();
 			String getterName = BeanUtil.getterName(predicate);
 			URI datatype = p.getDatatype();
 			Shape valueShape = p.getShape(shapeManager);
-			Integer maxCount = p.getMaxCount();
+			int pMax = p.getMaxCount()==null ? Integer.MAX_VALUE : p.getMaxCount();
+			int qMax = q.getMaxCount()==null ? Integer.MAX_VALUE : q.getMaxCount();
 			NodeKind nodeKind = p.getNodeKind();
 			
 			if (XMLSchema.ANYURI.equals(datatype)) {
@@ -211,7 +228,7 @@ public class JsonWriterBuilder {
 				
 				JacksonType jacksonType = JacksonType.type(datatype);
 				
-				if (maxCount != null && maxCount==1) {
+				if (pMax==1 && qMax==1) {
 
 					JVar fieldValue = body.decl(propertyType, fieldName).init(
 						JExpr._this().invoke("value").arg(sourceVar.invoke(getterName)).arg(propertyType.staticRef("class"))
@@ -220,10 +237,10 @@ public class JsonWriterBuilder {
 					body._if(fieldValue.ne(JExpr._null()))._then()
 						.add(jacksonType.writeTypeField(model, jsonVar, fieldName, fieldValue));
 					
-				} else {
+				} else if (pMax>1 && qMax>1) {
 					
 					JClass collectionClass = model.ref(Collection.class);
-					JClass narrowCollection = collectionClass.narrow(propertyType);
+					JClass narrowCollection = collectionClass.narrow(propertyType.wildcard());
 					
 					String setName = fieldName + "Set";
 					
@@ -241,11 +258,33 @@ public class JsonWriterBuilder {
 						.add(jacksonType.writeType(model, jsonVar, fieldValue));
 					
 					thenBlock.add(jsonVar.invoke("writeEndArray"));
+				} else if (pMax==1 && qMax>1) {
+					
+					JClass collectionClass = model.ref(Collection.class);
+					JClass narrowCollection = collectionClass.narrow(propertyType.wildcard());
+					JClass iteratorType = model.ref(Iterator.class).narrow(propertyType.wildcard());
+					
+					String setName = fieldName + "Set";
+					String iteratorName = fieldName + "Iterator";
+					
+					JVar property = body.decl(narrowCollection, setName).init(sourceVar.invoke(getterName));
+
+					JBlock then = body._if(property.ne(JExpr._null()))._then();
+
+					JVar iterator = then.decl(iteratorType, iteratorName).init(property.invoke("iterator"));
+					JVar fieldValue = then.decl(propertyType, fieldName + "Value").init(JOp.cond(iterator.invoke("hasNext"), iterator.invoke("next"), JExpr._null()));
+					then.add(jacksonType.writeTypeField(model, jsonVar, fieldName, fieldValue));
+					
+				} else {
+					String msg = MessageFormat.format("For predicate {0}, canonical shape has maxCount=1 but shape {1} has maxCount>1", 
+						predicate.stringValue(), shape.getId().stringValue());
+					throw new ValidationException(msg);
 				}
 			} else if (valueShape != null) {
 				OrConstraint or = valueShape.getOr();
 				if (or != null) {
-					handleOrContraint(model, body, sourceVar, jsonVar, p, or, fieldName, getterName, maxCount);
+					// TODO: what if pMax and qMax are different?
+					handleOrContraint(model, body, sourceVar, jsonVar, p, or, fieldName, getterName, pMax);
 					continue;
 				}
 				if (or==null && !(valueShape.getId() instanceof URI)) {
@@ -265,18 +304,18 @@ public class JsonWriterBuilder {
 				String valueClassName = javaNamer.javaInterfaceName(valueClass);
 				JClass propertyType = model.ref(valueClassName);
 				
-				if (maxCount != null && maxCount==1) {
+				if (pMax==1 && qMax==1) {
 
 					JVar fieldValue = body.decl(propertyType, fieldName).init(sourceVar.invoke(getterName));	
 
 					body._if(fieldValue.ne(JExpr._null()))._then()
 						.add(jsonVar.invoke("writeFieldName").arg(JExpr.lit(fieldName)))
 						.add(writerClass.staticInvoke("instance").invoke("write").arg(fieldValue).arg(jsonVar));
-				} else {
+				} else if (pMax>1 && qMax>1) {
 					
 
 					JClass collectionClass = model.ref(Collection.class);
-					JClass narrowCollection = collectionClass.narrow(propertyType);
+					JClass narrowCollection = collectionClass.narrow(propertyType.wildcard());
 					
 
 					String setName = fieldName + "Set";
@@ -296,6 +335,26 @@ public class JsonWriterBuilder {
 					
 					thenBlock.add(jsonVar.invoke("writeEndArray"));
 					
+				} else if (pMax==1 && qMax>1) {
+					JClass collectionClass = model.ref(Collection.class);
+					JClass narrowCollection = collectionClass.narrow(propertyType.wildcard());
+					JClass iteratorType = model.ref(Iterator.class).narrow(propertyType.wildcard());
+					
+					String setName = fieldName + "Set";
+					String iteratorName = fieldName + "Iterator";
+					
+					JVar property = body.decl(narrowCollection, setName).init(sourceVar.invoke(getterName));
+
+					JBlock then = body._if(property.ne(JExpr._null()))._then();
+
+					JVar iterator = then.decl(iteratorType, iteratorName).init(property.invoke("iterator"));
+					JVar fieldValue = then.decl(propertyType, fieldName + "Value").init(JOp.cond(iterator.invoke("hasNext"), iterator.invoke("next"), JExpr._null()));
+					then.add(writerClass.staticInvoke("instance").invoke("write").arg(fieldValue).arg(jsonVar));
+				} else {
+
+					String msg = MessageFormat.format("For predicate {0}, canonical shape has maxCount=1 but shape {1} has maxCount>1", 
+						predicate.stringValue(), shape.getId().stringValue());
+					throw new ValidationException(msg);
 				}
 				
 			} else if (nodeKind == NodeKind.IRI) {
@@ -335,7 +394,7 @@ public class JsonWriterBuilder {
 		} else {
 			
 			JClass collectionClass = model.ref(Collection.class);
-			JClass narrowCollection = collectionClass.narrow(propertyType);
+			JClass narrowCollection = collectionClass.narrow(propertyType.wildcard());
 			
 			String setName = fieldName + "Set";
 			
@@ -414,7 +473,7 @@ public class JsonWriterBuilder {
 			}
 		} else {
 
-			JClass setType = model.ref(Set.class).narrow(propertyType);
+			JClass setType = model.ref(Set.class).narrow(propertyType.wildcard());
 			
 			JVar setVar = body.decl(setType, fieldName + "Set").init(sourceVar.invoke(getterName));	
 			
@@ -512,7 +571,7 @@ public class JsonWriterBuilder {
 			} else {
 				
 				JClass setClass = model.ref(Set.class);
-				JClass narrowSetClass = setClass.narrow(fieldType);
+				JClass narrowSetClass = setClass.narrow(fieldType.wildcard());
 				
 				JVar setVar = body.decl(narrowSetClass, fieldName + "Set").init(sourceVar.invoke(getterName));
 				body.add(jsonVar.invoke("writeArrayFieldStart").arg(JExpr.lit(fieldName)));
