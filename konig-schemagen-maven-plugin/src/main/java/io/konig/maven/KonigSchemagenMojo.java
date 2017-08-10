@@ -109,6 +109,7 @@ import io.konig.openapi.generator.OpenApiGenerator;
 import io.konig.openapi.generator.OpenApiGeneratorException;
 import io.konig.openapi.generator.RootClassShapeFilter;
 import io.konig.openapi.generator.ShapeLocalNameJsonSchemaNamer;
+import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
@@ -433,7 +434,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 				io.konig.jsonschema.generator.JsonSchemaNamer namer = new ShapeLocalNameJsonSchemaNamer();
 				io.konig.jsonschema.generator.JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
-				ShapeFilter shapeFilter = new RootClassShapeFilter(owlGraph);
+				ShapeFilter shapeFilter = new TableDatasourceFilter();
 				io.konig.jsonschema.generator.JsonSchemaGenerator schemaGenerator = 
 						new io.konig.jsonschema.generator.JsonSchemaGenerator(nsManager, null, typeMapper);
 				

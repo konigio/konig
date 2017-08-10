@@ -24,6 +24,7 @@ package io.konig.openapi.generator;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -177,10 +178,13 @@ public class OpenApiGenerator {
 			
 		}
 
-		private void createContext() {
+		private void createContext() throws OpenApiGeneratorException {
 			context = new VelocityContext();
 			buildEntityMap();
 			List<Entity> entityList = new ArrayList<>(entityMap.values());
+			if (entityList.isEmpty()) {
+				throw new OpenApiGeneratorException("Entity list is empty");
+			}
 			Collections.sort(entityList);
 			context.put(ENTITY_LIST, entityList);
 		}

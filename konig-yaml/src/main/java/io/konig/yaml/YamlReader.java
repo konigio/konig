@@ -463,6 +463,9 @@ public class YamlReader implements AutoCloseable {
 		protected String fieldName() throws IOException, YamlParseException {
 			StringBuilder buffer = buffer();
 			int c = read();
+			if (c == -1) {
+				throw new YamlParseException("Unexpected end-of-file encountered");
+			}
 			if (c=='"' || c=='\'') {
 				unread(c);
 				return quotedString(c);

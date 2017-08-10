@@ -33,6 +33,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.text.MessageFormat;
 
 public class Yaml {
 
@@ -89,9 +90,12 @@ public class Yaml {
 		return (T) yaml.readObject(type);
 	}
 	
-	public static <T> T read(Class<T> type, File file) throws YamlParseException, IOException {
+	public static <T> T read(Class<T> type, File file) throws YamlParseException {
 		try (FileReader reader = new FileReader(file)) {
 			return read(type, reader);
+		} catch (Throwable e) {
+			String msg = MessageFormat.format("Failed to read file: {0}", file.toString());
+			throw new YamlParseException(msg, e);
 		}
 	}
 	
