@@ -24,7 +24,7 @@ package io.konig.sql.runtime;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -44,13 +44,10 @@ import io.konig.dao.core.Format;
 
 public class BigQueryShapeReadService extends SqlShapeReadService {
 	private BigQuery bigQuery;
-	private DateTimeZone timeZone;
 	
 	public BigQueryShapeReadService(EntityStructureService structureService, BigQuery bigQuery) {
 		super(structureService);
-		this.bigQuery = bigQuery;
-		this.timeZone = DateTimeZone.UTC;
-		
+		this.bigQuery = bigQuery;		
 	}
 
 	@Override
@@ -118,10 +115,24 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		String fieldType = fieldInfo.getFieldType() == null ? "" : fieldInfo.getFieldType().toString();
 		Object value = formatField(fieldType,field);	
 
-		if (value instanceof String || value instanceof DateTime) {
+		if (value instanceof String || value instanceof DateTime || value instanceof Date) {
 			json.writeStringField(fieldName, value.toString());
-		} else if (value instanceof Integer || value instanceof Long) {
-			json.writeNumberField(fieldName, Integer.parseInt(value.toString()));
+
+		} else if (value instanceof Integer) {
+			json.writeNumberField(fieldName, (Integer) value);
+
+		} else if (value instanceof Long) {
+			json.writeNumberField(fieldName, (Long) value);
+
+		} else if (value instanceof Double) {
+			json.writeNumberField(fieldName, (Double) value);
+
+		} else if (value instanceof Float) {
+			json.writeNumberField(fieldName, (Float) value);
+
+		} else if (value instanceof Boolean) {
+			json.writeBooleanField(fieldName, (Boolean) value);
+
 		} else if (value instanceof ArrayList) {
 			List<FieldInfo> fields = fieldInfo.getStruct().getFields();
 			json.writeObjectFieldStart(fieldName);
@@ -137,11 +148,21 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		case "http://www.w3.org/2001/XMLSchema#string":
 			return value.getStringValue();
 		case "http://www.w3.org/2001/XMLSchema#dateTime":
-			return new DateTime(value.getTimestampValue() / 1000).toDateTime(timeZone);
+			return new DateTime(value.getTimestampValue() / 1000).toDateTime(DateTimeZone.UTC);
+		case "http://www.w3.org/2001/XMLSchema#date":
+			return new DateTime(value.getStringValue()).toDate();
+		case "http://www.w3.org/2001/XMLSchema#time":
+			return new DateTime(value.getStringValue());
 		case "http://www.w3.org/2001/XMLSchema#int":
 			return Integer.parseInt(value.getStringValue());
 		case "http://www.w3.org/2001/XMLSchema#long":
-			return Long.parseLong(value.getStringValue());
+			return value.getLongValue();
+		case "http://www.w3.org/2001/XMLSchema#float":
+			return value.getDoubleValue();
+		case "http://www.w3.org/2001/XMLSchema#double":
+			return value.getDoubleValue();
+		case "http://www.w3.org/2001/XMLSchema#boolean":
+			return value.getBooleanValue();
 		default:
 			return value.getValue();
 		}

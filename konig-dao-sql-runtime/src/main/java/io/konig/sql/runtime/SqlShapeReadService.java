@@ -145,11 +145,23 @@ abstract public class SqlShapeReadService implements ShapeReadService {
 		case "http://www.w3.org/2001/XMLSchema#dateTime":
 			appendString(builder, (String)value);
 			break;
+		case "http://www.w3.org/2001/XMLSchema#date":
+			appendString(builder, (String)value);
+			break;
 		case "http://www.w3.org/2001/XMLSchema#int":
 			builder.append(Integer.valueOf(value==null?"":value.toString()));
 			break;
 		case "http://www.w3.org/2001/XMLSchema#long":
 			builder.append(Long.valueOf(value==null?"":value.toString()));
+			break;
+		case "http://www.w3.org/2001/XMLSchema#float":
+			builder.append(Float.valueOf(value==null?"":value.toString()));
+			break;
+		case "http://www.w3.org/2001/XMLSchema#double":
+			builder.append(Double.valueOf(value==null?"":value.toString()));
+			break;
+		case "http://www.w3.org/2001/XMLSchema#boolean":
+			builder.append(Boolean.valueOf(value==null?"":value.toString()));
 			break;
 		default:
 			appendString(builder, (String)value);
