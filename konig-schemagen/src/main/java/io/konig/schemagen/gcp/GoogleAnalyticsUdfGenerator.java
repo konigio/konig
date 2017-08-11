@@ -15,7 +15,10 @@ public class GoogleAnalyticsUdfGenerator implements ShapeVisitor {
 
 	private ShapeFileFactory fileFactory;
 	
-	
+	public GoogleAnalyticsUdfGenerator(ShapeFileFactory fileFactory) {
+		this.fileFactory = fileFactory;
+	}
+
 	@Override
 	public void visit(Shape shape) {
 		// Get a description of the target BigQuery table (i.e. the destination table)
