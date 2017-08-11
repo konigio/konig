@@ -22,6 +22,7 @@ package io.konig.data.app.common;
 
 
 import java.io.Writer;
+import java.util.HashMap;
 
 import org.openrdf.model.URI;
 
@@ -30,6 +31,7 @@ import io.konig.dao.core.DaoException;
 import io.konig.dao.core.Format;
 import io.konig.dao.core.ShapeQuery;
 import io.konig.dao.core.ShapeReadService;
+import io.konig.dao.core.ShapeQuery.Builder;
 
 /**
  * A container that holds all instances of a given type.
@@ -64,15 +66,40 @@ public class ExtentContainer extends AbstractContainer {
 		URI individualId = request.getIndividualId();
 		Writer out = response.getWriter();
 		Format format = request.getFormat();
-		
-		ShapeQuery query = ShapeQuery.newBuilder()
-				.setShapeId(shapeId.toString())
-				.beginPredicateConstraint()
-					.setPropertyName(DataAppConstants.ID)
-					.setOperator(ConstraintOperator.EQUAL)
-					.setValue(individualId.stringValue())
-				.endPredicateConstraint()
-				.build();
+		HashMap<String, String> queryParams = request.getQueryParams();
+		Builder builder = ShapeQuery.newBuilder()
+				.setShapeId(shapeId.toString());
+
+		if (individualId != null) {
+			builder.beginPredicateConstraint().setPropertyName(DataAppConstants.ID)
+					.setOperator(ConstraintOperator.EQUAL).setValue(individualId.stringValue())
+					.endPredicateConstraint();
+		} else if (queryParams != null) {
+			for (String key : queryParams.keySet()) {
+				if(key.endsWith(".minInclusive")){					
+					builder.beginPredicateConstraint().setPropertyName(key.replace(".minInclusive", ""))
+						.setOperator(ConstraintOperator.GREATER_THAN_OR_EQUAL).setValue(queryParams.get(key))
+						.endPredicateConstraint();
+				} else if(key.endsWith(".minExclusive")){
+					builder.beginPredicateConstraint().setPropertyName(key.replace(".minExclusive", ""))
+						.setOperator(ConstraintOperator.GREATER_THAN).setValue(queryParams.get(key))
+						.endPredicateConstraint();
+				} else if(key.endsWith(".maxInclusive")){
+					builder.beginPredicateConstraint().setPropertyName(key.replace(".maxInclusive", ""))
+						.setOperator(ConstraintOperator.LESS_THAN_OR_EQUAL).setValue(queryParams.get(key))
+						.endPredicateConstraint();					
+				} else if(key.endsWith(".maxExclusive")){
+					builder.beginPredicateConstraint().setPropertyName(key.replace(".maxExclusive", ""))
+						.setOperator(ConstraintOperator.LESS_THAN).setValue(queryParams.get(key))
+						.endPredicateConstraint();					
+				} else {
+					builder.beginPredicateConstraint().setPropertyName(key)
+						.setOperator(ConstraintOperator.EQUAL).setValue(queryParams.get(key))
+						.endPredicateConstraint();
+				}				
+			}
+		}
+		ShapeQuery query = builder.build();
 			
 			try {
 				shapeReadService.execute(query, out, format);

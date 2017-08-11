@@ -23,13 +23,17 @@ package io.konig.sql.runtime;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.QueryRequest;
 import com.google.cloud.bigquery.QueryResponse;
@@ -39,18 +43,17 @@ import io.konig.dao.core.DaoException;
 import io.konig.dao.core.Format;
 
 public class BigQueryShapeReadService extends SqlShapeReadService {
-
 	private BigQuery bigQuery;
 	
 	public BigQueryShapeReadService(EntityStructureService structureService, BigQuery bigQuery) {
 		super(structureService);
-		this.bigQuery = bigQuery;
+		this.bigQuery = bigQuery;		
 	}
 
 	@Override
 	protected void executeSql(EntityStructure struct, String sql, Writer output, Format format) throws DaoException {
 		BigQuery bigQuery = getBigQuery();
-		QueryRequest request = QueryRequest.newBuilder(sql).build();
+		QueryRequest request = QueryRequest.newBuilder(sql).setUseLegacySql(false).build();
 		QueryResponse response = bigQuery.query(request);
 		while (!response.jobCompleted()) {
 			try {
@@ -109,16 +112,69 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 	private void writeField(JsonGenerator json, FieldInfo fieldInfo, FieldValue field) throws IOException, DaoException {
 		
 		String fieldName = fieldInfo.getName();
-		Object value = field.getValue();
-		
-		if (value instanceof String) {
+		String fieldType = fieldInfo.getFieldType() == null ? "" : fieldInfo.getFieldType().toString();
+		Object value = formatField(fieldType,field);	
+
+		if (value instanceof String || value instanceof DateTime || value instanceof Date) {
 			json.writeStringField(fieldName, value.toString());
+
+		} else if (value instanceof Integer) {
+			json.writeNumberField(fieldName, (Integer) value);
+
+		} else if (value instanceof Long) {
+			json.writeNumberField(fieldName, (Long) value);
+
+		} else if (value instanceof Double) {
+			json.writeNumberField(fieldName, (Double) value);
+
+		} else if (value instanceof Float) {
+			json.writeNumberField(fieldName, (Float) value);
+
+		} else if (value instanceof Boolean) {
+			json.writeBooleanField(fieldName, (Boolean) value);
+
+		} else if (value instanceof ArrayList) {
+			List<FieldInfo> fields = fieldInfo.getStruct().getFields();
+			json.writeObjectFieldStart(fieldName);
+			writeArrayField(json, fields, field);
+			json.writeEndObject();
 		} else {
 			throw new DaoException("Field type not supported: " + value.getClass().getName());
 		}
 		
 	}
-
+	private Object formatField(String fieldType, FieldValue value){
+		switch (fieldType) {
+		case "http://www.w3.org/2001/XMLSchema#string":
+			return value.getStringValue();
+		case "http://www.w3.org/2001/XMLSchema#dateTime":
+			return new DateTime(value.getTimestampValue() / 1000).toDateTime(DateTimeZone.UTC);
+		case "http://www.w3.org/2001/XMLSchema#date":
+			return new DateTime(value.getStringValue()).toDate();
+		case "http://www.w3.org/2001/XMLSchema#time":
+			return new DateTime(value.getStringValue());
+		case "http://www.w3.org/2001/XMLSchema#int":
+			return Integer.parseInt(value.getStringValue());
+		case "http://www.w3.org/2001/XMLSchema#long":
+			return value.getLongValue();
+		case "http://www.w3.org/2001/XMLSchema#float":
+			return value.getDoubleValue();
+		case "http://www.w3.org/2001/XMLSchema#double":
+			return value.getDoubleValue();
+		case "http://www.w3.org/2001/XMLSchema#boolean":
+			return value.getBooleanValue();
+		default:
+			return value.getValue();
+		}
+	}
+	
+	private void writeArrayField(JsonGenerator json, List<FieldInfo> fieldInfo, FieldValue field) throws IOException, DaoException {
+		ArrayList listOfValues = (ArrayList) field.getValue();
+		for (int i = 0; i < listOfValues.size(); i++) {
+			FieldValue _value = (FieldValue)listOfValues.get(i);
+			writeField(json,fieldInfo.get(i),_value);			
+		}
+	}
 	protected BigQuery getBigQuery() {
 		return bigQuery;
 	}
