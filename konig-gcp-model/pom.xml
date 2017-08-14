@@ -28,7 +28,7 @@
 		<dependency>
 		    <groupId>com.google.apis</groupId>
 		    <artifactId>google-api-services-bigquery</artifactId>
-		    <version>v2-rev306-1.22.0</version>
+		    <version>${google-api-services-bigquery.version}</version>
 		</dependency>
     
   </dependencies>
