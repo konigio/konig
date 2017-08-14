@@ -1,5 +1,7 @@
 package io.konig.gcp.common;
 
+import java.io.BufferedReader;
+
 /*
  * #%L
  * Konig GCP Deployment Maven Plugin
@@ -22,6 +24,7 @@ package io.konig.gcp.common;
 
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -80,9 +83,34 @@ public class GroovyDeploymentScriptWriter {
 			println("def deploymentPlan = {");
 			printDatasetCommands();
 			printTableCommands();
+			printGooglePubSubCommands();
 			println("}");
 			println(delegate);
 			println("deploymentPlan()");
+		}
+		
+	}
+
+
+	private void printGooglePubSubCommands() throws IOException {
+		
+		File topicsFile = googleCloudInfo.getTopicsFile();
+		if (topicsFile != null && topicsFile.exists()) {
+			try (
+				FileReader fileReader = new FileReader(topicsFile);
+				BufferedReader reader = new BufferedReader(fileReader);
+			) {
+				String line;
+				while ((line=reader.readLine()) != null) {
+					String topicName = line.trim();
+					if (topicName.length()>0) {
+						print(indent);
+						print("create GooglePubSubTopic named ");
+						println(topicName);
+					}
+				}
+				
+			}
 		}
 		
 	}

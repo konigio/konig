@@ -129,6 +129,14 @@ public class DataSourceGenerator {
 		if (shape.getId() instanceof URI) {
 			putURI(map, "shape", (URI)shape.getId());
 		}
+		String mediaType = shape.getMediaTypeBaseName();
+		if (mediaType != null) {
+			int slash = mediaType.lastIndexOf('/');
+			if (slash > 0) {
+				String mediaSubtype = mediaType.substring(slash+1);
+				map.put("mediaSubtype", mediaSubtype);
+			}
+		}
 		putURI(map, "class", shape.getTargetClass());
 		return map;
 	}

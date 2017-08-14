@@ -72,6 +72,33 @@ import io.konig.shacl.io.ShapeLoader;
 public class WorkbookLoaderTest {
 	
 	@Test
+	public void testPubSub() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("pubsub.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+		input.close();
+		
+		StringWriter out = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, out);
+		System.out.println(out.toString());
+		
+		URI topic = uri("https://pubsub.googleapis.com/v1/projects/{gcpProjectId}/topics/vnd.example.person");
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		assertTrue(graph.contains(topic, RDF.TYPE, Konig.GooglePubSubTopic));
+		Vertex shapeVertex = graph.vertex(shapeId);
+		Vertex topicVertex = shapeVertex.getVertex(Konig.shapeDataSource);
+		assertTrue(topicVertex != null);
+	}
+	
+	@Test
 	public void testSubproperty() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("subproperty.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -403,7 +430,7 @@ public class WorkbookLoaderTest {
 		assertEquals(expected, sourcePath.toString());
 	}
 	
-	@Test
+	@Ignore
 	public void testRollUpBy() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");

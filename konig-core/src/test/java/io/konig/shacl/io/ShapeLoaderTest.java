@@ -51,7 +51,18 @@ public class ShapeLoaderTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeLoader loader = new ShapeLoader(shapeManager);
 	
-	
+
+	@Test
+	public void testMediaType() throws Exception {
+		Graph graph = loadGraph("ShapeLoaderTest/testMediaType.ttl");
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		loader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		assertEquals("application/vnd.example.person", shape.getMediaTypeBaseName());
+	}
 
 	@Test
 	public void testDefaultShapeFor() throws Exception {

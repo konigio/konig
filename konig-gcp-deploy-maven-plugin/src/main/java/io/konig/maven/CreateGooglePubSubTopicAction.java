@@ -1,8 +1,12 @@
 package io.konig.maven;
 
+import com.google.pubsub.v1.TopicName;
+
+import io.konig.gcp.common.GoogleCloudService;
+
 /*
  * #%L
- * Konig Google Cloud Platform Deployment Model
+ * Konig GCP Deployment Maven Plugin
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,10 +25,21 @@ package io.konig.maven;
  */
 
 
-public enum ResourceType {
-	
-	BigQueryDataset,
-	BigQueryTable,
-	GooglePubSubTopic
+public class CreateGooglePubSubTopicAction {
 
+	private KonigDeployment deployment;
+	
+	public CreateGooglePubSubTopicAction(KonigDeployment deployment) {
+		this.deployment = deployment;
+	}
+
+	public KonigDeployment named(String topicName) {
+		GoogleCloudService service = deployment.getService();
+		String projectId = service.getProjectId();
+		
+		TopicName topic = TopicName.create(projectId, topicName);
+		service.topicAdmin().createTopic(topic);
+		
+		return deployment;
+	}
 }

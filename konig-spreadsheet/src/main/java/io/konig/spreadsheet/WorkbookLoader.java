@@ -418,7 +418,7 @@ public class WorkbookLoader {
 					loadSheet(info);
 				}
 				handlePaths();
-				buildRollUpShapes();
+//				buildRollUpShapes();
 				loadIndividualProperties();
 				emitProvenance();
 				inferPropertyDefinitions();
@@ -470,11 +470,10 @@ public class WorkbookLoader {
 				try {
 					DataSourceGenerator generator = getDataSourceGenerator();
 
-					Vertex v = graph.getVertex(shapeId);
-
-					URI targetClass = v == null ? null : v.getURI(SH.targetClass);
-					Shape shape = new Shape(shapeId);
-					shape.setTargetClass(targetClass);
+					Shape shape = shapeManager.getShapeById(shapeId);
+					if (shape == null) {
+						throw new SpreadsheetException("Shape not found: " + shapeId);
+					}
 					for (Function func : dataSourceList) {
 						generator.generate(shape, func, graph);
 					}

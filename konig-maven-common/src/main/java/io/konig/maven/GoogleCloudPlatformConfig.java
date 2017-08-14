@@ -39,6 +39,9 @@ public class GoogleCloudPlatformConfig {
 	private String enumShapeNameTemplate;
     private File credentials;
     
+    @Parameter(property="konig.gcp.topicsFile", defaultValue="${konig.gcp.directory}/topics.txt")
+    private File topicsFile;
+    
     @Parameter(property="konig.gcp.dataServices")
 	private DataServicesConfig dataServices;
     
@@ -156,6 +159,14 @@ public class GoogleCloudPlatformConfig {
 
 	public void setDeployment(GroovyDeploymentScript deployment) {
 		this.deployment = deployment;
+	}
+
+	public File getTopicsFile() {
+		return topicsFile;
+	}
+
+	public void setTopicsFile(File topicsFile) {
+		this.topicsFile = topicsFile;
 	}
 	
 	
