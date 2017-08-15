@@ -30,6 +30,7 @@ public class FieldInfo {
 	private String name;
 	private URI fieldType;
 	private EntityStructure struct;
+	private Stereotype stereotype;
 	
 	public FieldInfo() {
 	}
@@ -54,14 +55,24 @@ public class FieldInfo {
 		this.struct = struct;
 	}
 	
-	
 	public URI getFieldType() {
 		return fieldType;
 	}
+	
 	public void setFieldType(URI fieldType) {
 		this.fieldType = fieldType;
 	}
+	
 	public String toString() {
 		return Yaml.toString(this);
 	}
+	
+	public Stereotype getStereotype() {
+		return stereotype;
+	}
+	
+	public void setStereotype(Stereotype stereotype) {
+		this.stereotype = stereotype;
+	}
+	
 }

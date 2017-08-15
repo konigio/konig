@@ -38,6 +38,10 @@ public class Konig {
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
+
+	public static final String MEASURE = "http://www.konig.io/ns/core/measure";
+	public static final String ATTRIBUTE = "http://www.konig.io/ns/core/attribute";
+	public static final String DIMENSION = "http://www.konig.io/ns/core/dimension";
 	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
@@ -103,9 +107,9 @@ public class Konig {
 	
 	// Fact Modeling
 
-	public static final URI measure = new URIImpl("http://www.konig.io/ns/core/measure");
-	public static final URI dimension = new URIImpl("http://www.konig.io/ns/core/dimension");
-	public static final URI attribute = new URIImpl("http://www.konig.io/ns/core/attribute");
+	public static final URI measure = new URIImpl(MEASURE);
+	public static final URI dimension = new URIImpl(DIMENSION);
+	public static final URI attribute = new URIImpl(ATTRIBUTE);
 	public static final URI variable = new URIImpl("http://www.konig.io/ns/core/variable");
 	public static final URI stereotype = new URIImpl("http://www.konig.io/ns/core/stereotype");
 	public static final URI totalCount = new URIImpl("http://www.konig.io/ns/core/totalCount");
