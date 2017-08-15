@@ -37,6 +37,7 @@ import io.konig.yaml.YamlProperty;
 public class EntityStructure {
 
 	private String name;
+	private String comment;
 	private List<FieldInfo> fields = new ArrayList<>();
 	
 	public EntityStructure() {
@@ -75,4 +76,14 @@ public class EntityStructure {
 	public String toString() {
 		return Yaml.toString(this);
 	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+	
+	
 }
