@@ -33,6 +33,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.impl.URIImpl;
 
+import io.konig.dao.core.ChartSeriesFactory;
 import io.konig.dao.core.ConstraintOperator;
 import io.konig.dao.core.DaoException;
 import io.konig.dao.core.Format;
@@ -177,6 +178,12 @@ public class SqlShapeReadServiceTest {
 			
 			assertEquals(expectedSQL, sql);
 			
+		}
+
+		@Override
+		ChartSeriesFactory getChartSeriesFactory() {
+			// TODO Auto-generated method stub
+			return null;
 		}
 		
 	}

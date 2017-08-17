@@ -68,6 +68,17 @@ public class EntityStructure {
 	public String getName() {
 		return name;
 	}
+	
+	public FieldInfo findFieldByName(String name) {
+		if (fields != null) {
+			for (FieldInfo field : fields) {
+				if (name.equals(field.getName())) {
+					return field;
+				}
+			}
+		}
+		return null;
+	}
 
 	public void setName(String name) {
 		this.name = name;

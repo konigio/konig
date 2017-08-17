@@ -1,4 +1,4 @@
-package io.konig.sql.runtime;
+package io.konig.dao.core;
 
 /*
  * #%L
@@ -21,20 +21,22 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
+public abstract class AbstractChartSeries implements ChartSeries {
+	private String title;
+	
 
-import org.junit.Test;
+	public AbstractChartSeries(String title) {
+		this.title = title;
+	}
 
-public class ChartUtilTest {
+	@Override
+	public String getTitle() {
+		return title;
+	}
 
-	@Test
-	public void test() {
-		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
+	@Override
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
 }

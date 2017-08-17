@@ -29,7 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -39,6 +38,7 @@ import com.google.cloud.bigquery.QueryRequest;
 import com.google.cloud.bigquery.QueryResponse;
 import com.google.cloud.bigquery.QueryResult;
 
+import io.konig.dao.core.ChartSeriesFactory;
 import io.konig.dao.core.DaoException;
 import io.konig.dao.core.Format;
 
@@ -64,6 +64,11 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		}
 		// TODO: look for execution errors
 		QueryResult result = response.getResult();
+		handleResult(struct, result, output, format);
+		
+	}
+
+	private void handleResult(EntityStructure struct, QueryResult result, Writer output, Format format) throws DaoException {
 		try {
 			switch(format) {
 			case JSONLD:
@@ -75,7 +80,7 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		}
 		
 	}
-	
+
 	private void writeJsonld(EntityStructure struct, QueryResult result, Writer output) throws IOException, DaoException {
 		
 		JsonFactory factory = new JsonFactory();
@@ -113,7 +118,7 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		
 		String fieldName = fieldInfo.getName();
 		String fieldType = fieldInfo.getFieldType() == null ? "" : fieldInfo.getFieldType().toString();
-		Object value = formatField(fieldType,field);	
+		Object value = BigQueryUtil.dataValue(field, fieldType);	
 
 		if (value instanceof String || value instanceof DateTime || value instanceof Date) {
 			json.writeStringField(fieldName, value.toString());
@@ -143,40 +148,22 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		}
 		
 	}
-	private Object formatField(String fieldType, FieldValue value){
-		switch (fieldType) {
-		case "http://www.w3.org/2001/XMLSchema#string":
-			return value.getStringValue();
-		case "http://www.w3.org/2001/XMLSchema#dateTime":
-			return new DateTime(value.getTimestampValue() / 1000).toDateTime(DateTimeZone.UTC);
-		case "http://www.w3.org/2001/XMLSchema#date":
-			return new DateTime(value.getStringValue()).toDate();
-		case "http://www.w3.org/2001/XMLSchema#time":
-			return new DateTime(value.getStringValue());
-		case "http://www.w3.org/2001/XMLSchema#int":
-			return Integer.parseInt(value.getStringValue());
-		case "http://www.w3.org/2001/XMLSchema#long":
-			return value.getLongValue();
-		case "http://www.w3.org/2001/XMLSchema#float":
-			return value.getDoubleValue();
-		case "http://www.w3.org/2001/XMLSchema#double":
-			return value.getDoubleValue();
-		case "http://www.w3.org/2001/XMLSchema#boolean":
-			return value.getBooleanValue();
-		default:
-			return value.getValue();
-		}
-	}
 	
 	private void writeArrayField(JsonGenerator json, List<FieldInfo> fieldInfo, FieldValue field) throws IOException, DaoException {
-		ArrayList listOfValues = (ArrayList) field.getValue();
+		@SuppressWarnings("unchecked")
+		ArrayList<FieldValue> listOfValues = (ArrayList<FieldValue>) field.getValue();
 		for (int i = 0; i < listOfValues.size(); i++) {
-			FieldValue _value = (FieldValue)listOfValues.get(i);
+			FieldValue _value = listOfValues.get(i);
 			writeField(json,fieldInfo.get(i),_value);			
 		}
 	}
 	protected BigQuery getBigQuery() {
 		return bigQuery;
+	}
+
+	@Override
+	ChartSeriesFactory getChartSeriesFactory() {
+		return new BigQueryChartSeriesFactory(bigQuery);
 	}
 
 }

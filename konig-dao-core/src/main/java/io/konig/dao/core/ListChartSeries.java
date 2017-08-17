@@ -1,4 +1,4 @@
-package io.konig.sql.runtime;
+package io.konig.dao.core;
 
 /*
  * #%L
@@ -21,20 +21,21 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
+import java.util.Iterator;
+import java.util.List;
 
-import org.junit.Test;
+public class ListChartSeries extends AbstractChartSeries {
 
-public class ChartUtilTest {
+	private List<OrderedPair> list;
+	
+	public ListChartSeries(String title, List<OrderedPair> list) {
+		super(title);
+		this.list = list;
+	}
 
-	@Test
-	public void test() {
-		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
+	@Override
+	public Iterator<OrderedPair> iterator() {
+		return list.iterator();
 	}
 
 }

@@ -1,4 +1,4 @@
-package io.konig.sql.runtime;
+package io.konig.dao.core;
 
 /*
  * #%L
@@ -21,20 +21,11 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
+public class SimpleFormatter implements Formatter {
 
-import org.junit.Test;
-
-public class ChartUtilTest {
-
-	@Test
-	public void test() {
-		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
+	@Override
+	public String format(Object value) {
+		return value.toString();
 	}
 
 }

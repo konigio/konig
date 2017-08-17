@@ -1,4 +1,4 @@
-package io.konig.sql.runtime;
+package io.konig.dao.core;
 
 /*
  * #%L
@@ -21,20 +21,9 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-
-public class ChartUtilTest {
-
-	@Test
-	public void test() {
-		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
-	}
+public class FusionCharts {
+	
+	public static final String LIBRARY_NAME = "fusioncharts";
+	public static final String MSLINE_KEY = "fusioncharts.msline";
 
 }

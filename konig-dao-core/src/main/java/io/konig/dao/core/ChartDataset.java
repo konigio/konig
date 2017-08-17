@@ -1,4 +1,4 @@
-package io.konig.sql.runtime;
+package io.konig.dao.core;
 
 /*
  * #%L
@@ -21,20 +21,29 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.junit.Test;
+public class ChartDataset {
 
-public class ChartUtilTest {
-
-	@Test
-	public void test() {
+	private List<ChartSeries> series;
+	
+	public ChartDataset(List<ChartSeries> series) {
+		this.series = series;
+	}
+	
+	public ChartDataset() {
 		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
+	}
+	
+	public void add(ChartSeries chartSeries) {
+		if (series == null) {
+			series = new ArrayList<>();
+		}
+		series.add(chartSeries);
 	}
 
+	public List<ChartSeries> getSeries() {
+		return series;
+	}
 }
