@@ -53,11 +53,13 @@ public class GoogleAnalyticsUdfGenerator implements ShapeVisitor {
 	@Override
 	public void visit(Shape shape) {
 		// Get a description of the target BigQuery table (i.e. the destination table)
-		GoogleBigQueryTable targetTable = getTargetTable(shape);
-		if (targetTable != null) {			
+		GoogleBigQueryTable targetTable = getTargetTable(shape);		
+		if (targetTable != null) {	
 			BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator(shapeManager);
 			TableSchema schema = tableGenerator.toTableSchema(shape);
-			String function = createQuery(schema);
+			String function = createQuery(schema)
+					.replace("@destinationTable", targetTable.getTableIdentifier())
+					.replace("@gaDataset", "131116259");
 			File file = fileFactory.createFile(shape);
 			writeResources(file, function);			
 		}

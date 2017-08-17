@@ -34,6 +34,7 @@ import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.datasource.DataSource;
+import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -58,6 +59,10 @@ public class GoogleAnalyticsUdfGeneratorTest {
 		URI tableId = new URIImpl("https://example.com/bigquery/PersonTable");
 		GoogleBigQueryTable table = new GoogleBigQueryTable();
 		table.setId(tableId);
+		BigQueryTableReference tableReference = new BigQueryTableReference();
+		tableReference.setDatasetId("mypedia-dev-55669");
+		tableReference.setTableId("StartAssessment");
+		table.setTableReference(tableReference);
 		shapeDataSource.add(table);
 		shapeDataSource.add(ds);
 		shape.setShapeDataSource(shapeDataSource);
