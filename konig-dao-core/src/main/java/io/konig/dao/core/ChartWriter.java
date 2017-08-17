@@ -1,4 +1,4 @@
-package io.konig.sql.runtime;
+package io.konig.dao.core;
 
 /*
  * #%L
@@ -21,20 +21,10 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
+import java.io.IOException;
 
-import org.junit.Test;
+public interface ChartWriter {
 
-public class ChartUtilTest {
-
-	@Test
-	public void test() {
-		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
-	}
-
+	void writeChart(Chart chart) throws IOException;
+	
 }

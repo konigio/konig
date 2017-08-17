@@ -40,6 +40,7 @@ import io.konig.dao.core.ShapeQuery.Builder;
  */
 public class ExtentContainer extends AbstractContainer {
 
+	private static final String VIEW = ".view";
 
 	private ShapeReadService shapeReadService;
 	private URI extentClass;
@@ -68,6 +69,8 @@ public class ExtentContainer extends AbstractContainer {
 		Format format = request.getFormat();
 		HashMap<String, String> queryParams = request.getQueryParams();
 		Builder builder = ShapeQuery.newBuilder()
+				.setView(request.getQueryParams().get(VIEW))
+				.setParameters(request.getQueryParams())
 				.setShapeId(shapeId.toString());
 
 		if (individualId != null) {

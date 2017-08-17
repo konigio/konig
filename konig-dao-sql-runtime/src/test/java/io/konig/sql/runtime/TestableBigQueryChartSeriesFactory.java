@@ -2,7 +2,7 @@ package io.konig.sql.runtime;
 
 /*
  * #%L
- * Konig DAO Core
+ * Konig DAO SQL Runtime
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,20 +21,16 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
+import io.konig.dao.core.FieldPath;
+import io.konig.dao.core.ShapeQuery;
 
-import org.junit.Test;
+public class TestableBigQueryChartSeriesFactory extends BigQueryChartSeriesFactory {
 
-public class ChartUtilTest {
-
-	@Test
-	public void test() {
-		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
+	public TestableBigQueryChartSeriesFactory() {
+		super(null);
 	}
 
+	public String sql(ShapeQuery query, EntityStructure struct, FieldPath dimension, FieldPath measure) {
+		return super.sql(query, struct, dimension, measure);
+	}
 }

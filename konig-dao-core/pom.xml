@@ -22,6 +22,12 @@
   </properties>
 
   <dependencies>
+	
+	<dependency>
+		<groupId>joda-time</groupId>
+		<artifactId>joda-time</artifactId>
+		<version>${jodatime.version}</version>
+	</dependency>
          
 	<dependency>
 		<groupId>org.openrdf.sesame</groupId>

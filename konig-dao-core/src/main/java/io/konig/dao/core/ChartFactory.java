@@ -1,4 +1,4 @@
-package io.konig.sql.runtime;
+package io.konig.dao.core;
 
 /*
  * #%L
@@ -21,20 +21,9 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
+import io.konig.sql.runtime.EntityStructure;
 
-import org.junit.Test;
+public interface ChartFactory {
 
-public class ChartUtilTest {
-
-	@Test
-	public void test() {
-		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
-	}
-
+	Chart createChart(ShapeQuery query, EntityStructure struct) throws DaoException;
 }

@@ -1,4 +1,4 @@
-package io.konig.sql.runtime;
+package io.konig.dao.core;
 
 /*
  * #%L
@@ -21,20 +21,31 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
+import java.util.Date;
 
-import org.junit.Test;
+import org.joda.time.DateTime;
+import org.joda.time.ReadableInstant;
+import org.joda.time.format.DateTimeFormatter;
 
-public class ChartUtilTest {
+public class TemporalFormatter implements Formatter {
 
-	@Test
-	public void test() {
-		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
+	private DateTimeFormatter formatter;
+	
+
+	public TemporalFormatter(DateTimeFormatter formatter) {
+		this.formatter = formatter;
+	}
+
+
+	@Override
+	public String format(Object value) {
+		if (value instanceof Date) {
+			value = new DateTime((Date)value);
+		}
+		if (value instanceof ReadableInstant) {
+			return formatter.print((ReadableInstant) value);
+		}
+		throw new IllegalArgumentException();
 	}
 
 }

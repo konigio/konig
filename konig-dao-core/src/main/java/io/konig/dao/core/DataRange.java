@@ -1,4 +1,4 @@
-package io.konig.sql.runtime;
+package io.konig.dao.core;
 
 /*
  * #%L
@@ -21,20 +21,34 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-
-public class ChartUtilTest {
-
-	@Test
-	public void test() {
+/**
+ * @author Greg McFall
+ *
+ */
+public class DataRange {
+	
+	private FieldPath path;
+	private BoundaryPoint startPoint;
+	private BoundaryPoint endPoint;
+	
+	public DataRange(FieldPath path, BoundaryPoint startPoint, BoundaryPoint endPoint) {
+		this.path = path;
+		this.startPoint = startPoint;
+		this.endPoint = endPoint;
 		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
+		startPoint.setRange(this);
+		endPoint.setRange(this);
 	}
+	public FieldPath getPath() {
+		return path;
+	}
+	public BoundaryPoint getStartPoint() {
+		return startPoint;
+	}
+	public BoundaryPoint getEndPoint() {
+		return endPoint;
+	}
+	
+	
 
 }

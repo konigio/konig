@@ -1,4 +1,4 @@
-package io.konig.sql.runtime;
+package io.konig.dao.core;
 
 /*
  * #%L
@@ -21,20 +21,21 @@ package io.konig.sql.runtime;
  */
 
 
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-
-public class ChartUtilTest {
-
-	@Test
-	public void test() {
-		
-		FieldInfo field = new FieldInfo();
-		field.setName("pointsPossible");
-		
-		String label = ChartUtil.label(field);
-		assertEquals("Points Possible", label);
+public class OrderedPair {
+	private Object x;
+	private Object y;
+	
+	public OrderedPair(Object x, Object y) {
+		this.x = x;
+		this.y = y;
 	}
+	public Object getX() {
+		return x;
+	}
+	public Object getY() {
+		return y;
+	}
+	
+	
 
 }
