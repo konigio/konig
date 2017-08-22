@@ -21,7 +21,6 @@ package io.konig.data.app.gae;
  */
 
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
@@ -31,21 +30,21 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 
+import io.konig.data.app.common.AppEngineUtil;
 import io.konig.data.app.common.DataTransformServlet;
 import io.konig.sql.runtime.BigQueryDataTransformService;
 
 public class GaDataTransformServlet extends DataTransformServlet {
 	private static final long serialVersionUID = 1L;
-	private static final String CREDENTIALS_FILE = "konig/gcp/credentials.json";
 	
 	@Override
 	protected void createDataTransformService(String queryString , HashMap<String,String> queryParams) throws ServletException {
-		try (InputStream input = getClass().getClassLoader().getResourceAsStream(CREDENTIALS_FILE)) {
+		try (InputStream input = getClass().getClassLoader().getResourceAsStream(AppEngineUtil.CREDENTIALS_FILE)) {
 			GoogleCredentials credentials = GoogleCredentials.fromStream(input);
 			BigQuery bigQuery = BigQueryOptions.newBuilder()
-					.setProjectId("mypedia-dev-55669").setCredentials(credentials).build().getService();			
+					.setCredentials(credentials).build().getService();			
 			new BigQueryDataTransformService(bigQuery).executeSql(queryString, queryParams);;
-		} catch (IOException e) {
+		} catch (Exception e) {
 			throw new ServletException(e);
 		}
 		

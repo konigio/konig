@@ -59,7 +59,7 @@ abstract public class DataTransformServlet extends HttpServlet {
 	private String readFile(String fileName) throws ServletException {
 		try {
 			return IOUtils.toString(getClass().getClassLoader()
-					.getResourceAsStream("Fucntions/"+fileName));
+					.getResourceAsStream("GoogleAnalyticsExport/"+fileName));
 		} catch (IOException e) {
 			throw new ServletException(e);
 		}

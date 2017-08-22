@@ -28,6 +28,9 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.QueryRequest;
 import com.google.cloud.bigquery.QueryRequest.Builder;
+
+import io.konig.dao.core.DaoException;
+
 import com.google.cloud.bigquery.QueryResponse;
 
 public class BigQueryDataTransformService {
@@ -38,7 +41,7 @@ public class BigQueryDataTransformService {
 		this.bigQuery = bigQuery;
 	}
 
-	public void executeSql(String queryString, HashMap<String, String> queryParams) {
+	public void executeSql(String queryString, HashMap<String, String> queryParams) throws DaoException {
 		Builder builder = QueryRequest.newBuilder(queryString);
 		for (Map.Entry<String, String> entry : queryParams.entrySet()) {
 			builder.addNamedParameter(entry.getKey(), QueryParameterValue.string(entry.getValue()));
@@ -52,6 +55,12 @@ public class BigQueryDataTransformService {
 			}
 			response = bigQuery.getQueryResults(response.getJobId());
 		}
-		 
+		if (response.hasErrors()) {
+			String firstError = "";
+			if (response.getExecutionErrors().size() != 0) {
+				firstError = response.getExecutionErrors().get(0).getMessage();
+			}
+			throw new DaoException(firstError);
+		}		 
 	}
 }
