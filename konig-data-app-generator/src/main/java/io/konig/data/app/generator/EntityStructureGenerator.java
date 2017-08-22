@@ -28,6 +28,7 @@ import java.util.Map;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
@@ -36,15 +37,17 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.runtime.EntityStructure;
 import io.konig.sql.runtime.FieldInfo;
+import io.konig.sql.runtime.Stereotype;
 
 public class EntityStructureGenerator {
-	
+
 	
 	public EntityStructure toEntityStructure(Shape shape) {
 		TableDataSource datasource = getTableDataSource(shape);
 		if (datasource != null) {
 			String tableName = datasource.getTableIdentifier();
 			EntityStructure e = new EntityStructure(tableName);
+			e.setComment(shape.getComment());
 			Map<Shape, EntityStructure> map = new HashMap<>();
 			map.put(shape, e);
 			addFields(e, shape, map);
@@ -68,6 +71,7 @@ public class EntityStructureGenerator {
 			String fieldName = predicate.getLocalName();
 			FieldInfo field = new FieldInfo(fieldName);
 			URI fieldType = p.getDatatype();
+			field.setStereotype(stereotype(p));
 			if (fieldType != null) {
 				field.setFieldType(fieldType);
 			} else {
@@ -103,6 +107,20 @@ public class EntityStructureGenerator {
 		}
 		
 	}
+
+	private Stereotype stereotype(PropertyConstraint p) {
+		URI stereotype = p.getStereotype();
+		if (stereotype != null) {
+			switch (stereotype.stringValue()) {
+		
+			case Konig.MEASURE : return Stereotype.MEASURE;
+			case Konig.DIMENSION: return Stereotype.DIMENSION;
+			case Konig.ATTRIBUTE: return Stereotype.ATTRIBUTE;
+			}
+		}
+		return null;
+	}
+
 
 	private TableDataSource getTableDataSource(Shape shape) {
 		GoogleBigQueryTable bigquery = null;

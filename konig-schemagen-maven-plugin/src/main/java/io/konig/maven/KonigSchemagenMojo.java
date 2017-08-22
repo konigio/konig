@@ -128,6 +128,7 @@ import io.konig.schemagen.gcp.EnumShapeVisitor;
 import io.konig.schemagen.gcp.GoogleAnalyticsShapeFileCreator;
 import io.konig.schemagen.gcp.GoogleAnalyticsUdfGenerator;
 import io.konig.schemagen.gcp.GoogleCloudResourceGenerator;
+import io.konig.schemagen.gcp.GooglePubSubTopicListGenerator;
 import io.konig.schemagen.gcp.LocalNameTableMapper;
 import io.konig.schemagen.gcp.NamespaceDatasetMapper;
 import io.konig.schemagen.gcp.SimpleDatasetMapper;
@@ -688,6 +689,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if (cloudStorage != null) {
 				resourceGenerator.addCloudStorageBucketWriter(cloudStorage.getDirectory());
 			}
+			resourceGenerator.add(new GooglePubSubTopicListGenerator(googleCloudPlatform.getTopicsFile()));
 			resourceGenerator.dispatch(shapeManager.listShapes());
 						
 

@@ -49,6 +49,9 @@ public class KonigDeployment {
 		case BigQueryTable:
 			return new CreateBigqueryTableAction(this);
 			
+		case GooglePubSubTopic :
+			return new CreateGooglePubSubTopicAction(this);
+			
 		default:
 			break;
 			

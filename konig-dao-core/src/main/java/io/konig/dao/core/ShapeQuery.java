@@ -1,5 +1,7 @@
 package io.konig.dao.core;
 
+import java.util.Map;
+
 /*
  * #%L
  * Konig DAO Core
@@ -26,10 +28,11 @@ public class ShapeQuery {
 
 	private String shapeId;
 	private DataFilter filter;
+	private String view;
+	private Map<String,String> parameters;
 	
-	public ShapeQuery(String shapeId, DataFilter filter) {
-		this.shapeId = shapeId;
-		this.filter = filter;
+	public ShapeQuery() {
+		
 	}
 
 	public String getShapeId() {
@@ -40,24 +43,54 @@ public class ShapeQuery {
 		return filter;
 	}
 	
+	
+	public String getView() {
+		return view;
+	}
+	
+
+	public Map<String, String> getParameters() {
+		return parameters;
+	}
+
+	private void setParameters(Map<String, String> parameters) {
+		this.parameters = parameters;
+	}
+
+	private void setShapeId(String shapeId) {
+		this.shapeId = shapeId;
+	}
+
+	private void setFilter(DataFilter filter) {
+		this.filter = filter;
+	}
+
+	private void setView(String view) {
+		this.view = view;
+	}
+
 	public static Builder newBuilder() {
 		return new Builder();
 	}
 	
 	public static class Builder {
-		private String shapeId;
-		private DataFilter shapeFilter;
+		ShapeQuery query = new ShapeQuery();
 		
 		public Builder setShapeId(String shapeId) {
-			this.shapeId = shapeId;
+			query.setShapeId(shapeId);
 			return this;
 		}
-		public DataFilter getShapeFilter() {
-			return shapeFilter;
-		}
 		
+		public Builder setView(String view) {
+			query.setView(view);
+			return this;
+		}
+		public Builder setParameters(Map<String,String> parameters) {
+			query.setParameters(parameters);
+			return this;
+		}
 		public ShapeQuery build() {
-			return new ShapeQuery(shapeId, shapeFilter);
+			return query;
 		}
 		
 		public PredicateConstraint.Builder beginPredicateConstraint() {
@@ -65,6 +98,7 @@ public class ShapeQuery {
 		}
 		
 		public void addFilter(DataFilter filter) {
+			DataFilter shapeFilter = query.getFilter();
 			if (shapeFilter == null) {
 				shapeFilter = filter;
 			} else if (shapeFilter instanceof CompositeDataFilter) {
@@ -76,6 +110,7 @@ public class ShapeQuery {
 				composite.add(filter);
 				shapeFilter = composite;
 			}
+			query.setFilter(shapeFilter);
 		}
 	}
 }

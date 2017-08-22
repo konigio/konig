@@ -39,13 +39,19 @@
 	<dependency>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-bigquery</artifactId>
-    <version>${google.cloud}</version>
+    <version>${google-cloud.version}</version>
 	</dependency>
 	
 	<dependency>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-storage</artifactId>
     <version>${google-cloud-storage.version}</version>
+	</dependency>
+	
+	<dependency>
+    <groupId>com.google.cloud</groupId>
+    <artifactId>google-cloud-pubsub</artifactId>
+    <version>${google-cloud.version}</version>
 	</dependency>
 	
 	<dependency>

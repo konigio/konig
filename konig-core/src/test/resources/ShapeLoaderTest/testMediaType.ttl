@@ -1,0 +1,33 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" . 
+
+shape: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "shape" . 
+
+shape:PersonShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/t18FCfinzQsAAAFd0o-ryg> ; 
+	sh:targetClass schema:Person ; 
+	konig:mediaTypeBaseName "application/vnd.example.person" ; 
+	sh:property  [ 
+		sh:predicate schema:givenName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <https://pubsub.googleapis.com/v1/projects/{gcpProjectId}/topics/{mediaSubtype}> . 
+
+<http://www.konig.io/activity/t18FCfinzQsAAAFd0o-ryg> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-08-11T14:30:17.417-04:00"^^xsd:dateTime . 
+
+schema:Person a owl:Class . 
+
+<https://pubsub.googleapis.com/v1/projects/{gcpProjectId}/topics/{mediaSubtype}> a konig:GooglePubSubTopic , konig:DataSource . 

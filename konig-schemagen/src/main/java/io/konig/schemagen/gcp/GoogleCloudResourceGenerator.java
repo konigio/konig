@@ -27,6 +27,7 @@ import java.util.List;
 
 import io.konig.core.KonigException;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeVisitor;
 
 public class GoogleCloudResourceGenerator {
@@ -53,12 +54,36 @@ public class GoogleCloudResourceGenerator {
 	}
 
 	public void dispatch(List<Shape> shapeList) throws KonigException {
+		beginTraversal();
 		
 		for (Shape shape : shapeList) {
 			for (ShapeVisitor visitor : visitors) {
 				visitor.visit(shape);
 			}
 		}
+		
+		endTraversal();
+	}
+
+	private void endTraversal() {
+
+		for (ShapeVisitor visitor : visitors) {
+			if (visitor instanceof ShapeHandler) {
+				ShapeHandler handler = (ShapeHandler) visitor;
+				handler.endShapeTraversal();
+			}
+		}
+		
+	}
+
+	private void beginTraversal() {
+		for (ShapeVisitor visitor : visitors) {
+			if (visitor instanceof ShapeHandler) {
+				ShapeHandler handler = (ShapeHandler) visitor;
+				handler.beginShapeTraversal();
+			}
+		}
+		
 	}
 
 }

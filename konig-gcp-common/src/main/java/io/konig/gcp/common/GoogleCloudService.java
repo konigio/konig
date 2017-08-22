@@ -36,18 +36,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQuery.DatasetOption;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
-import com.google.cloud.bigquery.DatasetId;
 import com.google.cloud.bigquery.DatasetInfo;
 import com.google.cloud.bigquery.InsertAllResponse;
 import com.google.cloud.bigquery.KonigBigQueryUtil;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableInfo;
+import com.google.cloud.pubsub.v1.TopicAdminClient;
+import com.google.cloud.pubsub.v1.TopicAdminSettings;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
@@ -80,7 +81,7 @@ import com.google.cloud.storage.StorageOptions;
  * @author Greg McFall
  *
  */
-public class GoogleCloudService {
+public class GoogleCloudService implements CredentialsProvider {
 
 	private File credentialsFile;
 	private String gcpBucketSuffix;
@@ -90,6 +91,7 @@ public class GoogleCloudService {
 	private String projectId;
 	private BigQuery bigQuery;
 	private Storage storage;
+	private TopicAdminClient topicAdmin;
 	
 
 	
@@ -396,6 +398,21 @@ public class GoogleCloudService {
 		return KonigBigQueryUtil.createDatasetInfo(model);
 	}
 	
+	public TopicAdminClient topicAdmin() {
+		if (topicAdmin == null) {
+			try {
+				TopicAdminSettings settings = TopicAdminSettings.defaultBuilder()
+						.setCredentialsProvider(this).build();
+				
+				topicAdmin = TopicAdminClient.create(settings);
+				
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+			
+		}
+		return topicAdmin;
+	}
 	
 	public BigQuery bigQuery() {
 		if (bigQuery == null) {
@@ -415,7 +432,6 @@ public class GoogleCloudService {
 	public String getProjectId() {
 		return projectId;
 	}
-	
 	
 
 }

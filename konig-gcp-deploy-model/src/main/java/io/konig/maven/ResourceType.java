@@ -24,6 +24,7 @@ package io.konig.maven;
 public enum ResourceType {
 	
 	BigQueryDataset,
-	BigQueryTable
+	BigQueryTable,
+	GooglePubSubTopic
 
 }

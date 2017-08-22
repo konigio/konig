@@ -1,0 +1,5 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+
+<{shapeId}> konig:shapeDataSource <https://pubsub.googleapis.com/v1/projects/{gcpProjectId}/topics/{mediaSubtype}> .
+
+<https://pubsub.googleapis.com/v1/projects/{gcpProjectId}/topics/{mediaSubtype}> a konig:GooglePubSubTopic, konig:DataSource .
