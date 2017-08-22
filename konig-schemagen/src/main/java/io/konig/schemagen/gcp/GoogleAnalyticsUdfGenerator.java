@@ -22,7 +22,11 @@ package io.konig.schemagen.gcp;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.StringWriter;
 import java.util.List;
+
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
 
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableSchema;
@@ -41,7 +45,7 @@ public class GoogleAnalyticsUdfGenerator implements ShapeVisitor {
 
 	private ShapeFileFactory fileFactory;
 	private ShapeManager shapeManager;
-	
+	private VelocityContext context; 
 	public GoogleAnalyticsUdfGenerator(ShapeFileFactory fileFactory,ShapeManager shapeManager) {
 		this.fileFactory = fileFactory;
 		this.shapeManager = shapeManager;
@@ -57,13 +61,15 @@ public class GoogleAnalyticsUdfGenerator implements ShapeVisitor {
 		if (targetTable != null) {	
 			BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator(shapeManager);
 			TableSchema schema = tableGenerator.toTableSchema(shape);
-			String function = createQuery(schema)
-					.replace("@destinationTable", targetTable.getTableIdentifier())
-					.replace("@gaDataset", "131116259");
+			String dataExportTemplate = createQuery(schema);
+			context = new VelocityContext();
+			context.put("destinationTable", targetTable.getTableIdentifier());
+		    context.put("sourceTable", "131116259.ga_sessions_");
+		    StringWriter dataExportOut = new StringWriter();		   
 			File file = fileFactory.createFile(shape);
-			writeResources(file, function);			
-		}
-		
+			Velocity.evaluate( context, dataExportOut, file.getName() , dataExportTemplate);
+			writeResources(file, dataExportOut.toString());			
+		}		
 	}
 	
 	private void createTempFunction(StringBuilder builder, List<TableFieldSchema> fieldsSchema) {
@@ -80,7 +86,7 @@ public class GoogleAnalyticsUdfGenerator implements ShapeVisitor {
 	
 	private void doParsing(StringBuilder builder) {		
 		builder.append("Select parseJson(h.eventInfo.eventLabel) as output \n");
-		builder.append("from `@gaDataset.ga_sessions_*`,UNNEST(hits) as h \n");
+		builder.append("from `${sourceTable}*`,UNNEST(hits) as h \n");
 		builder.append("where (_TABLE_SUFFIX > @fromDate "
 				+ "AND _TABLE_SUFFIX < @toDate) "
 				+ "AND h.eventInfo.eventCategory = @eventCategory \n");
@@ -107,7 +113,7 @@ public class GoogleAnalyticsUdfGenerator implements ShapeVisitor {
 	}
 	
 	private void appendInsert(StringBuilder builder, List<TableFieldSchema> fieldsSchema) {
-		builder.append("insert into @destinationTable(");
+		builder.append("insert into ${destinationTable}(");
 		for(int i = 0; i< fieldsSchema.size(); i++) { 
 			builder.append(fieldsSchema.get(i).getName());
 			if(i!=(fieldsSchema.size()-1)) {

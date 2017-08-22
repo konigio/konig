@@ -40,9 +40,8 @@ public class GoogleAnalyticsShapeFileCreator implements ShapeFileFactory {
 		URI shapeURI = (URI) shape.getId();
 		String localName = shapeURI.getLocalName();
 		StringBuilder builder = new StringBuilder();
-		builder.append("Function_");
 		builder.append(localName);
-		builder.append(".txt");			
+		builder.append(".sql");			
 		return new File(baseDir, builder.toString());
 	}
 }

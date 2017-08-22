@@ -107,7 +107,6 @@ import io.konig.maven.project.generator.MultiProject;
 import io.konig.openapi.generator.OpenApiGenerateRequest;
 import io.konig.openapi.generator.OpenApiGenerator;
 import io.konig.openapi.generator.OpenApiGeneratorException;
-import io.konig.openapi.generator.RootClassShapeFilter;
 import io.konig.openapi.generator.ShapeLocalNameJsonSchemaNamer;
 import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
@@ -339,7 +338,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			copyCredentials(dataServices.getWebappDir());
 			
 			generateEntityStructure(dataServices.getWebappDir());
-			generateBigQueryFunction(dataServices.getWebappDir());
+			generateGoogleAnalyticsExport(dataServices.getWebappDir());
 			
 		}
 		
@@ -351,8 +350,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		worker.run();
 	}
 	
-	private void generateBigQueryFunction(File webappDir) throws KonigException, IOException {
-		File baseDir = new File(webappDir, "WEB-INF/classes/Fucntions");
+	private void generateGoogleAnalyticsExport(File webappDir) throws KonigException, IOException {
+		File baseDir = new File(webappDir, "WEB-INF/classes/GoogleAnalyticsExport");
 		GoogleAnalyticsShapeFileCreator fileCreator = new GoogleAnalyticsShapeFileCreator(baseDir);
 		GoogleAnalyticsUdfGenerator udfGenerator = new GoogleAnalyticsUdfGenerator(fileCreator,shapeManager);		
 		udfGenerator.generate(shapeManager.listShapes());
