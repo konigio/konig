@@ -23,4 +23,5 @@ package io.konig.dao.core;
 
 public class DaoConstants {
 	public static final String MEDIA_TYPE_MAP_FILE_NAME = "mediaTypeMap.csv";
+	public static final String OWL_CLASS_MAP_FILE_NAME = "owlClassMap.csv";
 }

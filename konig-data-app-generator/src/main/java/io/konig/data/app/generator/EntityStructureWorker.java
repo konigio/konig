@@ -24,9 +24,13 @@ package io.konig.data.app.generator;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
@@ -35,8 +39,8 @@ import org.openrdf.model.URI;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.util.IOUtil;
 import io.konig.dao.core.DaoConstants;
+import io.konig.dao.core.DaoException;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.sql.runtime.EntityStructure;
@@ -59,11 +63,14 @@ public class EntityStructureWorker {
 
 		baseDir.mkdirs();
 		
+		Map<URI,List<Shape>> classMap = new HashMap<>();
+		
 	
 		File mediaTypeMapFile = new File(baseDir, DaoConstants.MEDIA_TYPE_MAP_FILE_NAME);
 
-		FileWriter mediaTypeMapWriter = new FileWriter(mediaTypeMapFile);
-		try  {
+		try (
+			FileWriter mediaTypeMapWriter = new FileWriter(mediaTypeMapFile);
+		) {
 		
 			MemoryNamespaceManager namespaceManager = new MemoryNamespaceManager();
 			for (Shape shape : shapeManager.listShapes()) {
@@ -85,13 +92,57 @@ public class EntityStructureWorker {
 							mediaTypeMapWriter.write(shapeId.stringValue());
 							mediaTypeMapWriter.write("\n");
 						}
+						
+						URI targetClass = shape.getTargetClass();
+						if (targetClass != null) {
+							List<Shape> list = classMap.get(targetClass);
+							if (list == null) {
+								list = new ArrayList<>();
+								classMap.put(targetClass, list);
+							}
+							list.add(shape);
+						}
+						
 					}
 				}
+				writeClassMap(classMap);
 				writeNamespaces(namespaceManager);
 				
 			}
-		} finally {
-			IOUtil.close(mediaTypeMapWriter, mediaTypeMapFile.getAbsolutePath());
+		} 
+		
+	}
+
+	
+
+	private void writeClassMap(Map<URI, List<Shape>> classMap) throws KonigException {
+		if (!classMap.isEmpty()) {
+
+			File mediaTypeMapFile = new File(baseDir, DaoConstants.OWL_CLASS_MAP_FILE_NAME);
+			
+			try (
+				FileWriter fileWriter = new FileWriter(mediaTypeMapFile);
+				PrintWriter writer = new PrintWriter(fileWriter);
+			) {
+			
+				for (Entry<URI, List<Shape>> entry : classMap.entrySet()) {
+					URI owlClass = entry.getKey();
+					List<Shape> list = entry.getValue();
+					Shape defaultShape = null;
+					if (list.size() == 1) {
+						defaultShape = list.get(0);
+					} else {
+						// TODO: Handle case where there is more than one shape for the given OWL class.
+					}
+					if (defaultShape != null) {
+						writer.print(owlClass.getLocalName().toLowerCase());
+						writer.print(',');
+						writer.println(defaultShape.getId().stringValue());
+					}
+				}
+			} catch (IOException e) {
+				throw new KonigException(e);
+			}
 		}
 		
 	}

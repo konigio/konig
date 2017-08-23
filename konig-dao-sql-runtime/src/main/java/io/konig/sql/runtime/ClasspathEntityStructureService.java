@@ -65,10 +65,12 @@ import io.konig.yaml.YamlReader;
 public class ClasspathEntityStructureService implements EntityStructureService {
 	
 	private static final String MEDIA_TYPE_MAP_RESOURCE = "ClasspathEntityStructureService/" + DaoConstants.MEDIA_TYPE_MAP_FILE_NAME;
+	private static final String OWL_CLASS_MAP_RESOURCE = "ClasspathEntityStructureService/" + DaoConstants.OWL_CLASS_MAP_FILE_NAME;
 	
 	private String namespacesResource = "ClasspathEntityStructureService/namespaces.ttl";
 	private String basePath;
 	private Map<String,String> namespaceMap;
+	private Map<String,String> owlClassMap;
 	private Map<String,EntityStructure> tableStructureByShapeId;
 	
 	/**
@@ -154,31 +156,36 @@ public class ClasspathEntityStructureService implements EntityStructureService {
 		if (namespaceMap == null) {
 			loadNamespaceMap();
 			loadMediaTypeMap();
+			loadOwlClassMap();
 		}
 		
 	}
 	
 
 
-	private void loadMediaTypeMap() throws DaoException {
-		InputStream input = getClass().getClassLoader().getResourceAsStream(MEDIA_TYPE_MAP_RESOURCE);
+	private void loadOwlClassMap() throws DaoException {
+		loadMap(owlClassMap = new HashMap<>(), OWL_CLASS_MAP_RESOURCE);
+		
+	}
+	
+	private void loadMap(Map<String,String> map, String resourcePath) throws DaoException {
+		InputStream input = getClass().getClassLoader().getResourceAsStream(resourcePath);
 		
 		if (input == null) {
-			throw new DaoException("Resource not found: " + MEDIA_TYPE_MAP_RESOURCE);
+			throw new DaoException("Resource not found: " + resourcePath);
 		}
 		
 		try (
 			InputStreamReader rawReader = new InputStreamReader(input);
 			BufferedReader reader = new BufferedReader(rawReader);
 		) {
-			mediaTypeMap = new HashMap<>();
 			String line = new String();
 			while ( (line = reader.readLine()) != null) {
 				int comma = line.indexOf(',');
 				if (comma > 0) {
 					String mediaTypeName = line.substring(0, comma).trim();
 					String shapeId = line.substring(comma+1).trim();
-					mediaTypeMap.put(mediaTypeName, shapeId);
+					map.put(mediaTypeName, shapeId);
 				}
 			}
 			
@@ -187,6 +194,10 @@ public class ClasspathEntityStructureService implements EntityStructureService {
 		}
 		
 		
+	}
+
+	private void loadMediaTypeMap() throws DaoException {
+		loadMap(mediaTypeMap = new HashMap<>(), MEDIA_TYPE_MAP_RESOURCE);
 	}
 
 
@@ -224,6 +235,15 @@ public class ClasspathEntityStructureService implements EntityStructureService {
 		String shapeId = mediaTypeMap.get(mediaTypeBaseName);
 		if (shapeId == null) {
 			throw new DaoException("EntityStructure not found for media type: " + mediaTypeBaseName);
+		}
+		return structureOfShape(shapeId);
+	}
+
+	@Override
+	public EntityStructure defaultForOwlClass(String localName) throws DaoException {
+		String shapeId = owlClassMap.get(localName.toLowerCase());
+		if (shapeId == null) {
+			throw new DaoException("EntityStructure not found for OWL class: " + localName);
 		}
 		return structureOfShape(shapeId);
 	}
