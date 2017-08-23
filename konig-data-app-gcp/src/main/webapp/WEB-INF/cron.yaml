@@ -1,0 +1,4 @@
+cron:
+- description: "Start Assessment Job"
+  url: /cron/DataTransform?eventCategory=Start%20Assessment&resource=Function_StartAssessmentShape.txt
+  schedule: every 24 hours
