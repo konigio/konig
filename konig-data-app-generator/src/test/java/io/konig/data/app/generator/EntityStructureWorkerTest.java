@@ -32,6 +32,7 @@ import org.openrdf.model.impl.URIImpl;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.util.IOUtil;
+import io.konig.core.vocab.Schema;
 import io.konig.dao.core.DaoConstants;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
@@ -53,6 +54,7 @@ public class EntityStructureWorkerTest {
 		table.setTableReference(new BigQueryTableReference("{gcpProjectId}", "schema", "Person"));
 		
 		Shape shape = new Shape(uri("http://example.com/shapes/PersonShape"));
+		shape.setTargetClass(Schema.Person);
 		shape.setMediaTypeBaseName("application/vnd.example.person");
 		shape.addShapeDataSource(table);
 		shapeManager.addShape(shape);
@@ -70,6 +72,12 @@ public class EntityStructureWorkerTest {
 		
 		String text = IOUtil.stringContent(mediaTypeMapFile);
 		assertTrue(text.contains("application/vnd.example.person,http://example.com/shapes/PersonShape"));
+		
+		File owlClassMapFile = new File(baseDir, DaoConstants.OWL_CLASS_MAP_FILE_NAME);
+		assertTrue(owlClassMapFile != null);
+		
+		text = IOUtil.stringContent(owlClassMapFile);
+		assertTrue(text.contains("person,http://example.com/shapes/PersonShape"));
 	}
 
 	private URI uri(String value) {
