@@ -42,8 +42,21 @@
 			<artifactId>joda-time</artifactId>
 			<version>${jodatime.version}</version>
 		</dependency>
-		
-  
+		<dependency>
+		    <groupId>com.google.apis</groupId>
+		    <artifactId>google-api-services-bigquery</artifactId>
+		    <version>${google-api-services-bigquery.version}</version>
+		</dependency>  	
+		<dependency>
+		    <groupId>com.google.apis</groupId>
+		    <artifactId>google-api-services-storage</artifactId>
+		    <version>${google-api-services-storage.version}</version>
+		</dependency>
+  		<dependency>
+		    <groupId>org.apache.velocity</groupId>
+		    <artifactId>velocity</artifactId>
+		    <version>${velocity.version}</version>
+		</dependency> 
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

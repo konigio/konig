@@ -107,7 +107,6 @@ import io.konig.maven.project.generator.MultiProject;
 import io.konig.openapi.generator.OpenApiGenerateRequest;
 import io.konig.openapi.generator.OpenApiGenerator;
 import io.konig.openapi.generator.OpenApiGeneratorException;
-import io.konig.openapi.generator.RootClassShapeFilter;
 import io.konig.openapi.generator.ShapeLocalNameJsonSchemaNamer;
 import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
@@ -126,6 +125,8 @@ import io.konig.schemagen.gcp.BigQueryTableMapper;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
 import io.konig.schemagen.gcp.EnumShapeVisitor;
+import io.konig.schemagen.gcp.GoogleAnalyticsShapeFileCreator;
+import io.konig.schemagen.gcp.GoogleAnalyticsUdfGenerator;
 import io.konig.schemagen.gcp.GoogleCloudResourceGenerator;
 import io.konig.schemagen.gcp.GooglePubSubTopicListGenerator;
 import io.konig.schemagen.gcp.LocalNameTableMapper;
@@ -336,7 +337,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generateAppConfigFile(openapiFile, configFile);
 			copyDataAppWar(dataServices.getWebappDir());
 			copyCredentials(dataServices.getWebappDir());
+			
 			generateEntityStructure(dataServices.getWebappDir());
+			generateGoogleAnalyticsExport(dataServices.getWebappDir());
 			
 		}
 		
@@ -346,6 +349,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		File baseDir = new File(webappDir, "WEB-INF/classes/ClasspathEntityStructureService");
 		EntityStructureWorker worker = new EntityStructureWorker(nsManager, shapeManager, baseDir);
 		worker.run();
+	}
+	
+	private void generateGoogleAnalyticsExport(File webappDir) throws KonigException, IOException {
+		File baseDir = new File(webappDir, "WEB-INF/classes/GoogleAnalyticsExport");
+		GoogleAnalyticsShapeFileCreator fileCreator = new GoogleAnalyticsShapeFileCreator(baseDir);
+		GoogleAnalyticsUdfGenerator udfGenerator = new GoogleAnalyticsUdfGenerator(fileCreator,shapeManager);		
+		udfGenerator.generate(shapeManager.listShapes());
 	}
 
 	private void copyCredentials(File webappDir) throws MojoExecutionException, IOException {
