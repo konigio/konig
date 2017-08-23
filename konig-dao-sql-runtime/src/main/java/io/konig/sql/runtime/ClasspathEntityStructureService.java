@@ -1,5 +1,7 @@
 package io.konig.sql.runtime;
 
+import java.io.BufferedReader;
+
 /*
  * #%L
  * Konig DAO SQL Runtime
@@ -27,6 +29,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.konig.dao.core.DaoConstants;
 import io.konig.dao.core.DaoException;
 import io.konig.yaml.YamlParseException;
 import io.konig.yaml.YamlReader;
@@ -61,10 +64,17 @@ import io.konig.yaml.YamlReader;
  */
 public class ClasspathEntityStructureService implements EntityStructureService {
 	
+	private static final String MEDIA_TYPE_MAP_RESOURCE = "ClasspathEntityStructureService/" + DaoConstants.MEDIA_TYPE_MAP_FILE_NAME;
+	
 	private String namespacesResource = "ClasspathEntityStructureService/namespaces.ttl";
 	private String basePath;
 	private Map<String,String> namespaceMap;
 	private Map<String,EntityStructure> tableStructureByShapeId;
+	
+	/**
+	 * Map where the key is a media type base name, and the value is the corresponding IRI for the associated Shape.
+	 */
+	private Map<String,String> mediaTypeMap;
 	
 	private static ClasspathEntityStructureService INSTANCE;
 	
@@ -73,6 +83,10 @@ public class ClasspathEntityStructureService implements EntityStructureService {
 			INSTANCE = new ClasspathEntityStructureService();
 		}
 		return INSTANCE;
+	}
+	
+	private ClasspathEntityStructureService() {
+		
 	}
 	
 	
@@ -138,35 +152,80 @@ public class ClasspathEntityStructureService implements EntityStructureService {
 
 	public void init() throws DaoException {
 		if (namespaceMap == null) {
-			namespaceMap = new HashMap<>();
-			tableStructureByShapeId = new HashMap<>();
-			int slash = namespacesResource.lastIndexOf('/');
-			if (slash < 0) {
-				basePath = "";
-			} else {
-				basePath = namespacesResource.substring(0, slash+1);
-			}
-		
-			InputStream input = getClass().getClassLoader().getResourceAsStream(namespacesResource);
-		
-			if (input == null) {
-				throw new DaoException("Resource not found: " + namespacesResource);
-			}
-			
-			try (
-				InputStreamReader reader = new InputStreamReader(input);
-				NamespaceReader nsReader = new NamespaceReader(reader);
-			) {
-				namespaceMap = nsReader.readNamespaces();
-				
-			} catch (IOException e) {
-				throw new DaoException(e);
-			}
+			loadNamespaceMap();
+			loadMediaTypeMap();
 		}
+		
+	}
+	
+
+
+	private void loadMediaTypeMap() throws DaoException {
+		InputStream input = getClass().getClassLoader().getResourceAsStream(MEDIA_TYPE_MAP_RESOURCE);
+		
+		if (input == null) {
+			throw new DaoException("Resource not found: " + MEDIA_TYPE_MAP_RESOURCE);
+		}
+		
+		try (
+			InputStreamReader rawReader = new InputStreamReader(input);
+			BufferedReader reader = new BufferedReader(rawReader);
+		) {
+			mediaTypeMap = new HashMap<>();
+			String line = new String();
+			while ( (line = reader.readLine()) != null) {
+				int comma = line.indexOf(',');
+				if (comma > 0) {
+					String mediaTypeName = line.substring(0, comma).trim();
+					String shapeId = line.substring(comma+1).trim();
+					mediaTypeMap.put(mediaTypeName, shapeId);
+				}
+			}
 			
+		} catch (IOException e) {
+			throw new DaoException(e);
+		}
 		
 		
+	}
+
+
+	private void loadNamespaceMap() throws DaoException {
+		namespaceMap = new HashMap<>();
+		tableStructureByShapeId = new HashMap<>();
+		int slash = namespacesResource.lastIndexOf('/');
+		if (slash < 0) {
+			basePath = "";
+		} else {
+			basePath = namespacesResource.substring(0, slash+1);
+		}
+	
+		InputStream input = getClass().getClassLoader().getResourceAsStream(namespacesResource);
+	
+		if (input == null) {
+			throw new DaoException("Resource not found: " + namespacesResource);
+		}
 		
+		try (
+			InputStreamReader reader = new InputStreamReader(input);
+			NamespaceReader nsReader = new NamespaceReader(reader);
+		) {
+			namespaceMap = nsReader.readNamespaces();
+			
+		} catch (IOException e) {
+			throw new DaoException(e);
+		}
+		
+	}
+
+
+	@Override
+	public EntityStructure forMediaType(String mediaTypeBaseName) throws DaoException {
+		String shapeId = mediaTypeMap.get(mediaTypeBaseName);
+		if (shapeId == null) {
+			throw new DaoException("EntityStructure not found for media type: " + mediaTypeBaseName);
+		}
+		return structureOfShape(shapeId);
 	}
 
 }

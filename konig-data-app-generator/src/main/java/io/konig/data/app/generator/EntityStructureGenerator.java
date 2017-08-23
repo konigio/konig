@@ -48,6 +48,7 @@ public class EntityStructureGenerator {
 			String tableName = datasource.getTableIdentifier();
 			EntityStructure e = new EntityStructure(tableName);
 			e.setComment(shape.getComment());
+			e.setMediaTypeBaseName(shape.getMediaTypeBaseName());
 			Map<Shape, EntityStructure> map = new HashMap<>();
 			map.put(shape, e);
 			addFields(e, shape, map);

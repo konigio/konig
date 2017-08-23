@@ -31,7 +31,7 @@ import org.junit.Test;
 
 public class ClasspathEntityStructureServiceTest {
 
-	private ClasspathEntityStructureService service = new ClasspathEntityStructureService();
+	private ClasspathEntityStructureService service = ClasspathEntityStructureService.defaultInstance();
 	
 	@Test
 	public void test() throws Exception {
@@ -55,6 +55,9 @@ public class ClasspathEntityStructureServiceTest {
 		assertTrue(fieldList != null);
 		assertEquals(1, fieldList.size());
 		assertEquals("postalAddress", fieldList.get(0).getName());
+		
+		struct = service.forMediaType("application/vnd.example.person");
+		assertEquals("schema.Person", struct.getName());
 		
 	}
 

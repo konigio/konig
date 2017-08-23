@@ -35,6 +35,8 @@ import org.openrdf.model.URI;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.util.IOUtil;
+import io.konig.dao.core.DaoConstants;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.sql.runtime.EntityStructure;
@@ -56,21 +58,40 @@ public class EntityStructureWorker {
 		EntityStructureWriter writer = new EntityStructureWriter(nsManager, baseDir);
 
 		baseDir.mkdirs();
-		MemoryNamespaceManager namespaceManager = new MemoryNamespaceManager();
-		for (Shape shape : shapeManager.listShapes()) {
-			Resource resource = shape.getId();
-			if (resource instanceof URI) {
-				URI shapeId = (URI) resource;
-				
-				EntityStructure e = generator.toEntityStructure(shape);
-				if (e != null) {
-					writer.write(e, shapeId);
+		
+	
+		File mediaTypeMapFile = new File(baseDir, DaoConstants.MEDIA_TYPE_MAP_FILE_NAME);
 
-					Namespace ns = nsManager.findByName(shapeId.getNamespace());
-					namespaceManager.add(ns);
+		FileWriter mediaTypeMapWriter = new FileWriter(mediaTypeMapFile);
+		try  {
+		
+			MemoryNamespaceManager namespaceManager = new MemoryNamespaceManager();
+			for (Shape shape : shapeManager.listShapes()) {
+				Resource resource = shape.getId();
+				if (resource instanceof URI) {
+					URI shapeId = (URI) resource;
+					
+					EntityStructure e = generator.toEntityStructure(shape);
+					if (e != null) {
+						writer.write(e, shapeId);
+	
+						Namespace ns = nsManager.findByName(shapeId.getNamespace());
+						namespaceManager.add(ns);
+						
+						String mediaType = shape.getMediaTypeBaseName();
+						if (mediaType != null) {
+							mediaTypeMapWriter.write(mediaType);
+							mediaTypeMapWriter.write(",");
+							mediaTypeMapWriter.write(shapeId.stringValue());
+							mediaTypeMapWriter.write("\n");
+						}
+					}
 				}
+				writeNamespaces(namespaceManager);
+				
 			}
-			writeNamespaces(namespaceManager);
+		} finally {
+			IOUtil.close(mediaTypeMapWriter, mediaTypeMapFile.getAbsolutePath());
 		}
 		
 	}

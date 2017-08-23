@@ -1,8 +1,8 @@
-package io.konig.core.io;
+package io.konig.dao.core;
 
 /*
  * #%L
- * Konig Core
+ * Konig DAO Core
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,11 +21,6 @@ package io.konig.core.io;
  */
 
 
-import java.io.File;
-
-import io.konig.shacl.Shape;
-
-public interface ShapeFileFactory {
-
-	File createFile(Shape shape);
+public class DaoConstants {
+	public static final String MEDIA_TYPE_MAP_FILE_NAME = "mediaTypeMap.csv";
 }

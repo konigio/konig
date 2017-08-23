@@ -38,6 +38,7 @@ public class EntityStructure {
 
 	private String name;
 	private String comment;
+	private String mediaTypeBaseName;
 	private List<FieldInfo> fields = new ArrayList<>();
 	
 	public EntityStructure() {
@@ -94,6 +95,14 @@ public class EntityStructure {
 
 	public void setComment(String comment) {
 		this.comment = comment;
+	}
+
+	public String getMediaTypeBaseName() {
+		return mediaTypeBaseName;
+	}
+
+	public void setMediaTypeBaseName(String mediaTypeBaseName) {
+		this.mediaTypeBaseName = mediaTypeBaseName;
 	}
 	
 	

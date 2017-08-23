@@ -26,4 +26,5 @@ import io.konig.dao.core.DaoException;
 public interface EntityStructureService {
 
 	EntityStructure structureOfShape(String shapeId) throws DaoException;
+	EntityStructure forMediaType(String mediaTypeBaseName) throws DaoException;
 }

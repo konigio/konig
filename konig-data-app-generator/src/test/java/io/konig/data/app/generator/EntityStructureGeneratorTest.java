@@ -49,6 +49,7 @@ public class EntityStructureGeneratorTest {
 		Shape shape = new Shape(uri("http://example.com/shape/WorkShape"));
 		shape.setComment("Creative Work");
 		PropertyConstraint p = new PropertyConstraint(Schema.dateCreated);
+		shape.setMediaTypeBaseName("application/vnd.example.work");
 		p.setDatatype(XMLSchema.DATETIME);
 		p.setStereotype(Konig.dimension);
 		shape.add(p);
@@ -66,6 +67,7 @@ public class EntityStructureGeneratorTest {
 		EntityStructure e2 = Yaml.read(EntityStructure.class, yaml);
 		
 		assertEquals("Creative Work", e2.getComment());
+		assertEquals("application/vnd.example.work", e2.getMediaTypeBaseName());
 		List<FieldInfo> fieldList = e2.getFields();
 		assertEquals(1, fieldList.size());
 		FieldInfo field = fieldList.get(0);
