@@ -1,4 +1,48 @@
 cron:
-- description: "Start Assessment Job"
-  url: /cron/DataTransform?eventCategory=Start%20Assessment&resource=Function_StartAssessmentShape.txt
+- description: "Google Analytics Export - Start Assessment Job"
+  url: /Mypedia/Cron/DataTransform?eventCategory=Start%20Assessment&resource=StartAssessmentShape.sql
+  schedule: every 24 hours
+  
+- description: "Google Analytics Export - Complete Assessment Job"
+  url: /Mypedia/Cron/DataTransform?eventCategory=Complete%20Assessment&resource=CompleteAssessmentSansScoreShape.sql
+  schedule: every 24 hours
+
+- description: "Metrics Export - StartAssessmentUniqueCountByCountry"
+  url: /Mypedia/Cron/MetricComputation/startassessmentuniquecountbycountry?resource=StartAssessmentUniqueCountByCountry.sql
+  schedule: every 24 hours
+
+- description: "Metrics Export - StartAssessmentUniqueCountByState"
+  url: /Mypedia/Cron/MetricComputation/startassessmentuniquecountbystate?resource=StartAssessmentUniqueCountByState.sql
+  schedule: every 24 hours
+
+- description: "Metrics Export - StartAssessmentUniqueCountByCity"
+  url: /Mypedia/Cron/MetricComputation/startassessmentuniquecountbycity?resource=StartAssessmentUniqueCountByCity.sql
+  schedule: every 24 hours
+  
+- description: "Metrics Export - StartAssessmentUniqueCountBySchool"
+  url: /Mypedia/Cron/MetricComputation/startassessmentuniquecountbyschool?resource=StartAssessmentUniqueCountBySchool.sql
+  schedule: every 24 hours
+    
+- description: "Metrics Export - StartAssessmentUniqueCountByGrade"
+  url: /Mypedia/Cron/MetricComputation/startassessmentuniquecountbygrade?resource=StartAssessmentUniqueCountByGrade.sql
+  schedule: every 24 hours
+
+- description: "Metrics Export - CompleteAssessmentUniqueCountByCountry"
+  url: /Mypedia/Cron/MetricComputation/completeassessmentuniquecountbycountry?resource=CompleteAssessmentUniqueCountByCountry.sql
+  schedule: every 24 hours
+
+- description: "Metrics Export - CompleteAssessmentUniqueCountByState"
+  url: /Mypedia/Cron/MetricComputation/completeassessmentuniquecountbystate?resource=CompleteAssessmentUniqueCountByState.sql
+  schedule: every 24 hours
+
+- description: "Metrics Export - CompleteAssessmentUniqueCountByCity"
+  url: /Mypedia/Cron/MetricComputation/completeassessmentuniquecountbycity?resource=CompleteAssessmentUniqueCountByCity.sql
+  schedule: every 24 hours
+  
+- description: "Metrics Export - CompleteAssessmentUniqueCountBySchool"
+  url: /Mypedia/Cron/MetricComputation/completeassessmentuniquecountbyschool?resource=CompleteAssessmentUniqueCountBySchool.sql
+  schedule: every 24 hours
+    
+- description: "Metrics Export - CompleteAssessmentUniqueCountByGrade"
+  url: /Mypedia/Cron/MetricComputation/completeassessmentuniquecountbygrade?resource=CompleteAssessmentUniqueCountByGrade.sql
   schedule: every 24 hours

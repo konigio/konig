@@ -51,9 +51,9 @@ public class BigQueryDatatypeMapperTest {
 		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.UNSIGNED_LONG));
 		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.UNSIGNED_SHORT));
 		
-		assertEquals(BigQueryDatatype.FLOAT, type(XMLSchema.FLOAT));
-		assertEquals(BigQueryDatatype.FLOAT, type(XMLSchema.DECIMAL));
-		assertEquals(BigQueryDatatype.FLOAT, type(XMLSchema.DOUBLE));
+		assertEquals(BigQueryDatatype.FLOAT64, type(XMLSchema.FLOAT));
+		assertEquals(BigQueryDatatype.FLOAT64, type(XMLSchema.DECIMAL));
+		assertEquals(BigQueryDatatype.FLOAT64, type(XMLSchema.DOUBLE));
 		
 	}
 
