@@ -79,7 +79,7 @@ public class WorkbookLoaderTest {
 		String arabicValue = "\u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0645\u0639\u0637\u0649";
 		
 		assertLabel(graph, Schema.givenName, "Given Name", "en");
-		assertLabel(graph, Schema.givenName, "Prénom", "fr");
+		assertLabel(graph, Schema.givenName, "Pr\u00E9nom", "fr");
 		assertLabel(graph, Schema.givenName, arabicValue, "ar");
 		
 	}
