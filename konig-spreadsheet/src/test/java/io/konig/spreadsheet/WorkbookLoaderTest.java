@@ -25,16 +25,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -54,7 +51,6 @@ import io.konig.core.Path;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.GCP;
@@ -62,15 +58,37 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
-import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
 	
+	@Test
+	public void testLabels() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("labels.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);
+		input.close();
+		String arabicValue = "\u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0645\u0639\u0637\u0649";
+		
+		assertLabel(graph, Schema.givenName, "Given Name", "en");
+		assertLabel(graph, Schema.givenName, "Prénom", "fr");
+		assertLabel(graph, Schema.givenName, arabicValue, "ar");
+		
+	}
+	
+	private void assertLabel(Graph graph, URI subject, String label, String language) {
+		Literal literal = new LiteralImpl(label, language);
+		assertTrue(graph.contains(subject, RDFS.LABEL, literal));
+	}
+
 	@Test
 	public void testPubSub() throws Exception {
 
@@ -86,9 +104,6 @@ public class WorkbookLoaderTest {
 		loader.load(book, graph);
 		input.close();
 		
-		StringWriter out = new StringWriter();
-		RdfUtil.prettyPrintTurtle(graph, out);
-		System.out.println(out.toString());
 		
 		URI topic = uri("https://pubsub.googleapis.com/v1/projects/{gcpProjectId}/topics/vnd.example.person");
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
@@ -268,41 +283,41 @@ public class WorkbookLoaderTest {
 		assertValue(tableRef, GCP.tableId, "Person");
 	}
 	
-	@Ignore
-	public void testOrConstraint() throws Exception {
-		InputStream input = getClass().getClassLoader().getResourceAsStream("or-constraint.xlsx");
-		Workbook book = WorkbookFactory.create(input);
 
-		Graph graph = new MemoryGraph();
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		
-		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		
-		loader.load(book, graph);
-		
-		ShapeManager shapeManager = new MemoryShapeManager();
-		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager);
-		shapeLoader.load(graph);
-		
-		URI shapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
-		
-		Shape shape = shapeManager.getShapeById(shapeId);
-		assertTrue(shape != null);
-		
-		PropertyConstraint sponsor = shape.getPropertyConstraint(Schema.sponsor);
-		assertTrue(sponsor != null);
-		
-		Shape sponsorShape = sponsor.getShape();
-		assertTrue(sponsorShape != null);
-		
-		OrConstraint constraint = sponsorShape.getOr();
-		
-		assertTrue(constraint != null);
-		List<Shape> list = constraint.getShapes();
-		assertEquals(2, list.size());
-		
-	}
+//	public void testOrConstraint() throws Exception {
+//		InputStream input = getClass().getClassLoader().getResourceAsStream("or-constraint.xlsx");
+//		Workbook book = WorkbookFactory.create(input);
+//
+//		Graph graph = new MemoryGraph();
+//		NamespaceManager nsManager = new MemoryNamespaceManager();
+//		
+//		WorkbookLoader loader = new WorkbookLoader(nsManager);
+//		
+//		
+//		loader.load(book, graph);
+//		
+//		ShapeManager shapeManager = new MemoryShapeManager();
+//		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager);
+//		shapeLoader.load(graph);
+//		
+//		URI shapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
+//		
+//		Shape shape = shapeManager.getShapeById(shapeId);
+//		assertTrue(shape != null);
+//		
+//		PropertyConstraint sponsor = shape.getPropertyConstraint(Schema.sponsor);
+//		assertTrue(sponsor != null);
+//		
+//		Shape sponsorShape = sponsor.getShape();
+//		assertTrue(sponsorShape != null);
+//		
+//		OrConstraint constraint = sponsorShape.getOr();
+//		
+//		assertTrue(constraint != null);
+//		List<Shape> list = constraint.getShapes();
+//		assertEquals(2, list.size());
+//		
+//	}
 	
 	@Test
 	public void testPlaceData() throws Exception {
@@ -430,55 +445,55 @@ public class WorkbookLoaderTest {
 		assertEquals(expected, sourcePath.toString());
 	}
 	
-	@Ignore
-	public void testRollUpBy() throws Exception {
-
-		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
-		
-		Workbook book = WorkbookFactory.create(input);
-		Graph graph = new MemoryGraph();
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		
-		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
-		
-		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCountryShape");
-		Shape shape = loader.getShapeManager().getShapeById(shapeId);
-		assertTrue(shape != null);
-		
-		List<PropertyConstraint> list = shape.getProperty();
-		
-		assertEquals(4, list.size());
-		
-		PropertyConstraint totalCount = shape.getPropertyConstraint(Konig.totalCount);
-		assertTrue(totalCount != null);
-		assertEquals(Konig.measure, totalCount.getStereotype());
-		
-		PropertyConstraint country = shape.getPropertyConstraint(uri("http://example.com/ns/alias/country"));
-		assertTrue(country != null);
-		assertEquals(Konig.dimension, country.getStereotype());
-		assertTrue(country.getEquivalentPath() == null);
-		assertEquals("/alias:country", country.getFromAggregationSource());
-		
-		PropertyConstraint continent = shape.getPropertyConstraint(uri("http://example.com/ns/alias/continent"));
-		assertTrue(continent != null);
-		String expected = 
-			"@context {\n" + 
-			"  \"alias\" : \"http://example.com/ns/alias/\",\n" + 
-			"  \"country\" : \"alias:country\",\n" + 
-			"  \"schema\" : \"http://schema.org/\",\n" + 
-			"  \"containedInPlace\" : \"schema:containedInPlace\"\n" + 
-			"}\n" + 
-			"/country/containedInPlace";
-		assertEquals(expected, continent.getEquivalentPath().toString());
-		assertEquals("/alias:continent", continent.getFromAggregationSource());
-		
-		PropertyConstraint timeInterval = shape.getPropertyConstraint(Konig.timeInterval);
-		assertTrue(timeInterval != null);
-		assertEquals(uri("http://example.com/shapes/v1/konig/WeekMonthYearShape"), timeInterval.getShapeId());
-		
-	}
+	
+//	public void testRollUpBy() throws Exception {
+//
+//		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
+//		
+//		Workbook book = WorkbookFactory.create(input);
+//		Graph graph = new MemoryGraph();
+//		NamespaceManager nsManager = new MemoryNamespaceManager();
+//		
+//		WorkbookLoader loader = new WorkbookLoader(nsManager);
+//		
+//		loader.load(book, graph);
+//		
+//		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCountryShape");
+//		Shape shape = loader.getShapeManager().getShapeById(shapeId);
+//		assertTrue(shape != null);
+//		
+//		List<PropertyConstraint> list = shape.getProperty();
+//		
+//		assertEquals(4, list.size());
+//		
+//		PropertyConstraint totalCount = shape.getPropertyConstraint(Konig.totalCount);
+//		assertTrue(totalCount != null);
+//		assertEquals(Konig.measure, totalCount.getStereotype());
+//		
+//		PropertyConstraint country = shape.getPropertyConstraint(uri("http://example.com/ns/alias/country"));
+//		assertTrue(country != null);
+//		assertEquals(Konig.dimension, country.getStereotype());
+//		assertTrue(country.getEquivalentPath() == null);
+//		assertEquals("/alias:country", country.getFromAggregationSource());
+//		
+//		PropertyConstraint continent = shape.getPropertyConstraint(uri("http://example.com/ns/alias/continent"));
+//		assertTrue(continent != null);
+//		String expected = 
+//			"@context {\n" + 
+//			"  \"alias\" : \"http://example.com/ns/alias/\",\n" + 
+//			"  \"country\" : \"alias:country\",\n" + 
+//			"  \"schema\" : \"http://schema.org/\",\n" + 
+//			"  \"containedInPlace\" : \"schema:containedInPlace\"\n" + 
+//			"}\n" + 
+//			"/country/containedInPlace";
+//		assertEquals(expected, continent.getEquivalentPath().toString());
+//		assertEquals("/alias:continent", continent.getFromAggregationSource());
+//		
+//		PropertyConstraint timeInterval = shape.getPropertyConstraint(Konig.timeInterval);
+//		assertTrue(timeInterval != null);
+//		assertEquals(uri("http://example.com/shapes/v1/konig/WeekMonthYearShape"), timeInterval.getShapeId());
+//		
+//	}
 	
 	@Test
 	public void testAggregationOf() throws Exception {

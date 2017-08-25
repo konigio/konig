@@ -19,26 +19,80 @@ package io.konig.core.io;
  * limitations under the License.
  * #L%
  */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-
-import static org.junit.Assert.*;
-
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.Set;
 
 import org.junit.Test;
+import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.DepthFirstEdgeIterable;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
+import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Schema;
 
 public class CompactTurtleWriterTest {
+	
+	
+	@Test
+	public void testEscapeUnicode() throws Exception {
+		Graph graph = new MemoryGraph();
+		String arabicValue = "\u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0645\u0639\u0637\u0649";
+		Literal arabicLiteral = literal(arabicValue, "ar");
+
+		String chineeseValue = "\uD852\uDF62";
+		Literal chineeseLiteral = literal(chineeseValue, "zh");
+		
+		graph.edge(Schema.givenName, RDFS.LABEL, arabicLiteral);
+		graph.edge(Schema.givenName, RDFS.LABEL, chineeseLiteral);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		String text = writer.toString();
+		
+		assertTrue(text.contains("\"\\u0627\\u0644\\u0627\\u0633\\u0645 \\u0627\\u0644\\u0645\\u0639\\u0637\\u0649\"@ar"));
+		assertTrue(text.contains("\"\\U00024b62\"@zh"));
+		
+		InputStream input = new ByteArrayInputStream(text.getBytes());
+		Graph g = new MemoryGraph();
+		RdfUtil.loadTurtle(g, input, "");
+		
+		Vertex v = g.getVertex(Schema.givenName);
+		
+		boolean foundChineese = false;
+		Set<Value> set = v.getValueSet(RDFS.LABEL);
+		for (Value value : set) {
+			Literal literal = (Literal) value;
+			String label = literal.getLabel();
+			String language = literal.getLanguage();
+			if ("zh".equals(language)) {
+				assertEquals(chineeseValue, label);
+				foundChineese = true;
+			}
+		}
+		assertTrue(foundChineese);
+		
+	}
+
+	private Literal literal(String label, String language) {
+		return new LiteralImpl(label, language);
+	}
 
 	@Test
-	public void test() throws Exception {
+	public void testPunctuation() throws Exception {
 		
 		URI alice = uri("http://example.com/alice");
 		URI bob = uri("http://example.com/bob");
