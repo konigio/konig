@@ -224,7 +224,7 @@ public class CompactTurtleWriter extends TurtleWriter {
 			else {
 				// Write label as normal string
 				writer.write("\"");
-				writer.write(TurtleUtil.encodeString(label));
+				encodeString(label);
 				writer.write("\"");
 			}
 
@@ -242,26 +242,116 @@ public class CompactTurtleWriter extends TurtleWriter {
 		}
 	}
 	
-private void writeLongString(IndentingWriter writer, String s) throws IOException {
-		
-	boolean singleQuote = s.indexOf('\'')==-1;
+	private void encodeString(String label) throws IOException {
 
-	s = StringUtil.gsub("\\", "\\\\", s);
-	
-	if (singleQuote) {
-		writer.write("'''");
-		writer.write(s);
-		writer.write("'''");
+		for (int i=0; i<label.length();) {
+			int c = label.codePointAt(i);
+			switch (c) {
+			case '\\' :
+				writer.write("\\\\");
+				break;
+				
+			case '\t' :
+				writer.write("\\t");
+				break;
+				
+			case '\n' :
+				writer.write("\\n");
+				break;
+				
+			case '\r' :
+				writer.write("\\r");
+				break;
+				
+			case '\"' :
+				writer.write("\\\"");
+				break;
+				
+			default :
+				if ((c < 32 || c>255) && c<0xffff) {
+					
+					String hexValue = Integer.toHexString(c);
+					
+					writer.write("\\u");
+					for (int k=hexValue.length(); k<4; k++) {
+						writer.write('0');
+					}
+					writer.write(hexValue);
+				} else if (c>=0xffff) {
+
+					String hexValue = Integer.toHexString(c);
+					
+					writer.write("\\U");
+					for (int k=hexValue.length(); k<8; k++) {
+						writer.write('0');
+					}
+					writer.write(hexValue);
+				} else {
+					writer.write((char)c);
+				}
+				break;
+					
+			}
+			
+			
+			i += Character.charCount(c);
+		}
 		
-	} else {
-		s = StringUtil.gsub("\"", "\\\"", s);
-		writer.write("\"\"\"");
-		writer.write(s);
-		writer.write("\"\"\"");
 	}
-	
+
+	private void writeLongString(IndentingWriter writer, String s) throws IOException {
 		
-}
+		boolean singleQuote = s.indexOf('\'')==-1;
+		
+		if (singleQuote) {
+			writer.write("'''");
+			encodeLongString(s, '\'', "\\'");
+			writer.write("'''");
+			
+		} else {
+			writer.write("\"\"\"");
+			encodeLongString(s, '"', "\\\"");
+			writer.write("\"\"\"");
+		}
+		
+			
+	}
+
+	private void encodeLongString(String label, char quoteChar, String quoteString) throws IOException {
+		
+		for (int i=0; i<label.length();) {
+			int c = label.codePointAt(i);
+			
+			if (c == quoteChar) {
+				writer.write(quoteString);
+				
+			} else if ((c < 32 || c>255) && c<0xffff) {
+				
+				String hexValue = Integer.toHexString(c);
+				
+				writer.write("\\u");
+				for (int k=hexValue.length(); k<4; k++) {
+					writer.write('0');
+				}
+				writer.write(hexValue);
+			} else if (c>=0xffff) {
+	
+				String hexValue = Integer.toHexString(c);
+				
+				writer.write("\\U");
+				for (int k=hexValue.length(); k<8; k++) {
+					writer.write('0');
+				}
+				writer.write(hexValue);
+			} else {
+				writer.write((char)c);
+			}
+			
+			
+			i += Character.charCount(c);
+		}
+		
+	}
 
 /*	
 	protected void writeLiteral(Literal lit)

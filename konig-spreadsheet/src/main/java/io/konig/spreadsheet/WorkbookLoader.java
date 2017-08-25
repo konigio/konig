@@ -115,7 +115,6 @@ import io.konig.shacl.services.ShapeProducer;
  */
 public class WorkbookLoader {
 	private static final Logger logger = LoggerFactory.getLogger(WorkbookLoader.class);
-	private static final URI LABEL = RDFS.LABEL;
 	private static final int UNDEFINED = -1;
 	private static final String ONTOLOGY_NAME = "Ontology Name";
 	private static final String COMMENT = "Comment";
@@ -168,6 +167,10 @@ public class WorkbookLoader {
 
 	private static final String ENUMERATION_DATASOURCE_TEMPLATE = "enumerationDatasourceTemplate";
 	private static final String ENUMERATION_SHAPE_ID = "enumerationShapeId";
+	
+	private static final String SUBJECT = "Subject";
+	private static final String LABEL = "Label";
+	private static final String LANGUAGE = "Language";
 
 	private static final String UNBOUNDED = "unbounded";
 
@@ -178,6 +181,7 @@ public class WorkbookLoader {
 	private static final int INDIVIDUAL_FLAG = 0x80;
 	private static final int SHAPE_FLAG = 0x100;
 	private static final int CONSTRAINT_FLAG = 0x140;
+	private static final int LABEL_FLAG = 0x180;
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
 
@@ -377,6 +381,10 @@ public class WorkbookLoader {
 
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
+		
+		private int subjectCol = UNDEFINED;
+		private int labelCol = UNDEFINED;
+		private int languageCol = UNDEFINED;
 
 		private URI activityId;
 
@@ -955,6 +963,9 @@ public class WorkbookLoader {
 			case SETTINGS_FLAG:
 				loadSettings(sheet);
 				break;
+			case LABEL_FLAG:
+				loadLabels(sheet);
+				break;
 
 			}
 
@@ -997,6 +1008,9 @@ public class WorkbookLoader {
 				case SETTING_NAME:
 					bits = bits | SETTINGS_FLAG;
 					break;
+				case LABEL :
+					bits = bits | LABEL_FLAG;
+					break;
 				}
 			}
 
@@ -1024,6 +1038,78 @@ public class WorkbookLoader {
 				settings.setProperty(name, value);
 			}
 
+		}
+
+
+		private void loadLabels(Sheet sheet) throws SpreadsheetException {
+			if (readLabelHeader(sheet)) {
+				int rowSize = sheet.getLastRowNum()+1;
+				for (int i=sheet.getFirstRowNum()+1; i<rowSize; i++) {
+					Row row = sheet.getRow(i);
+					try {
+						loadLabelRow(row);
+					} catch (Throwable e) {
+						error(e);
+					}
+				}
+			}
+		}
+
+		private boolean readLabelHeader(Sheet sheet) {
+			subjectCol = labelCol = languageCol = UNDEFINED;
+			
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
+			
+			int colSize = row.getLastCellNum()+1;
+			for (int i=row.getFirstCellNum(); i<colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+					switch (text) {
+					case SUBJECT :
+						subjectCol = i;
+						break;
+						
+					case LABEL :
+						labelCol = i;
+						break;
+						
+					case LANGUAGE :
+						languageCol = i;
+						break;
+						
+					}
+				}
+			}
+			
+			return 
+				(subjectCol != UNDEFINED) && 
+				(labelCol!=UNDEFINED) &&
+				(languageCol!=UNDEFINED);
+			
+		}
+
+
+		private void loadLabelRow(Row row) throws SpreadsheetException {
+			
+			URI subjectId = uriValue(row, subjectCol);
+			String label = stringValue(row, labelCol);
+			String language = stringValue(row, languageCol);
+			
+			if (subjectId==null || label==null || language==null) {
+				return;
+			}
+			
+			Literal labelValue = new LiteralImpl(label, language);
+			
+			edge(subjectId, RDFS.LABEL, labelValue);
+			
+			
 		}
 
 		private void loadPropertyConstraints(Sheet sheet) throws SpreadsheetException {
@@ -1721,7 +1807,7 @@ public class WorkbookLoader {
 			}
 
 			if (propertyName != null) {
-				graph.edge(propertyId, LABEL, propertyName);
+				graph.edge(propertyId, RDFS.LABEL, propertyName);
 			}
 
 			if (comment != null) {
@@ -1923,7 +2009,7 @@ public class WorkbookLoader {
 			if (classId != null) {
 				graph.edge(classId, RDF.TYPE, OWL.CLASS);
 				if (className != null) {
-					graph.edge(classId, LABEL, className);
+					graph.edge(classId, RDFS.LABEL, className);
 				}
 				if (comment != null) {
 					graph.edge(classId, RDFS.COMMENT, comment);
@@ -2119,7 +2205,7 @@ public class WorkbookLoader {
 			graph.edge(subject, VANN.preferredNamespacePrefix, literal(prefix));
 
 			if (ontologyName != null) {
-				graph.edge(subject, LABEL, literal(ontologyName));
+				graph.edge(subject, RDFS.LABEL, literal(ontologyName));
 			}
 			if (comment != null) {
 				graph.edge(subject, RDFS.COMMENT, literal(comment));
