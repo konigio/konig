@@ -1,0 +1,26 @@
+{
+  "schema" : {
+    "fields" : [ {
+      "mode" : "REQUIRED",
+      "name" : "tableName",
+      "type" : "STRING"
+    }, {
+      "mode" : "REQUIRED",
+      "name" : "fieldName",
+      "type" : "STRING"
+    }, {
+      "mode" : "REQUIRED",
+      "name" : "label",
+      "type" : "STRING"
+    }, {
+      "mode" : "REQUIRED",
+      "name" : "language",
+      "type" : "STRING"
+    } ]
+  },
+  "tableReference" : {
+    "projectId" : "{gcpProjectId}",
+    "datasetId" : "metadata",
+    "tableId" : "FieldLabel"
+  }
+}

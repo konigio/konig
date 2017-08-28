@@ -83,6 +83,7 @@ public class GroovyDeploymentScriptWriter {
 			println("def deploymentPlan = {");
 			printDatasetCommands();
 			printTableCommands();
+			printTableDataCommands();
 			printGooglePubSubCommands();
 			println("}");
 			println(delegate);
@@ -90,6 +91,25 @@ public class GroovyDeploymentScriptWriter {
 		}
 		
 	}
+
+
+	private void printTableDataCommands() throws IOException {
+		
+		File dataDir = googleCloudInfo.getBigquery().getData();
+		if (dataDir!=null && dataDir.exists()) {
+			File[] fileList = dataDir.listFiles();
+			for (File file : fileList) {
+				String path = FileUtil.relativePath(scriptFile, file);
+				print(indent);
+				print("insert BigQueryData from \"");
+				print(path);
+				println("\"");
+			}
+		}
+		
+	}
+
+
 
 
 	private void printGooglePubSubCommands() throws IOException {

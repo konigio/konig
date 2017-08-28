@@ -45,13 +45,11 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import io.konig.annotation.RdfProperty;
 import io.konig.core.Graph;
 import io.konig.core.Path;
-import io.konig.core.PathFactory;
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.KonigLiteral;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
-import io.konig.formula.Expression;
 import io.konig.formula.QuantifiedExpression;
 
 public class PropertyConstraint {

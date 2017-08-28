@@ -1,12 +1,14 @@
 package io.konig.core.impl;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -558,7 +560,8 @@ public class RdfUtil {
 		);
 		RDFParser parser = new TurtleParserFactory().getParser();
 		parser.setRDFHandler(handler);
-		parser.parse(input, baseURL);
+		Reader reader = new InputStreamReader(input);
+		parser.parse(reader, baseURL);
 	}
 	
 	public static void loadTurtle(File sourceDir, Graph graph, ShapeManager shapeManager) 
@@ -603,7 +606,7 @@ public class RdfUtil {
 					
 
 						try {
-							FileInputStream input = new FileInputStream(file);
+							FileReader input = new FileReader(file);
 							parser.parse(input, "");
 						} catch (RDFParseException e) {
 							throw new RDFParseException("Failed to parse file: " + file.getAbsolutePath(), e);
@@ -618,14 +621,19 @@ public class RdfUtil {
 		}
 		
 	}
-
-	public static void loadTurtle(Graph graph, InputStream input, String baseURL) 
-		throws IOException, RDFParseException, RDFHandlerException {
-		
+	
+	public static void loadTurtle(Graph graph, Reader input, String baseURL) throws RDFParseException, RDFHandlerException, IOException {
 		GraphLoadHandler handler = new GraphLoadHandler(graph);
 		RDFParser parser = new TurtleParserFactory().getParser();
 		parser.setRDFHandler(handler);
 		parser.parse(input, baseURL);
+	}
+
+	public static void loadTurtle(Graph graph, InputStream input, String baseURL) 
+		throws IOException, RDFParseException, RDFHandlerException {
+		
+		InputStreamReader reader = new InputStreamReader(input);
+		loadTurtle(graph, reader, baseURL);
 	}
 	
 	/**
