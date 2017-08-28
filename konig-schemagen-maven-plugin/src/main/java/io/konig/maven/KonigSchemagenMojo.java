@@ -121,6 +121,7 @@ import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
+import io.konig.schemagen.gcp.BigQueryLabelGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
@@ -689,6 +690,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if (cloudStorage != null) {
 				resourceGenerator.addCloudStorageBucketWriter(cloudStorage.getDirectory());
 			}
+			resourceGenerator.add(labelGenerator());
 			resourceGenerator.add(new GooglePubSubTopicListGenerator(googleCloudPlatform.getTopicsFile()));
 			resourceGenerator.dispatch(shapeManager.listShapes());
 						
@@ -720,6 +722,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 
 	
+	private BigQueryLabelGenerator labelGenerator() {
+		File schemaDir = googleCloudPlatform.getBigquery().getSchema();
+		File dataDir = googleCloudPlatform.getBigquery().getData();
+		File schemaFile = new File(schemaDir, "metadata.FieldLabel.json");
+		File dataFile = new File(dataDir, "metadata.FieldLabel");
+		
+		return new BigQueryLabelGenerator(owlGraph, schemaFile, dataFile);
+	}
+
+
+
 	private void generateTransformScripts(File outDir) throws MojoExecutionException {
 		
 		
