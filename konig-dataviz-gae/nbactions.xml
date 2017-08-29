@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+    <action>
+       <actionName>CUSTOM-appengine:devappserver</actionName>
+        <displayName>appengine:devappserver</displayName>
+        <goals>
+            <goal>appengine:devappserver</goal>
+        </goals>
+    </action>
+    <action>
+        <actionName>CUSTOM-appengine:update</actionName>
+        <displayName>appengine:update</displayName>
+        <goals>
+            <goal>appengine:update</goal>
+        </goals>
+    </action>
+</actions>
