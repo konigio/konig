@@ -26,8 +26,7 @@ public enum BigQueryDatatype {
 	STRING,
 	BYTES,
 	INTEGER,
-	//FLOAT,
-	FLOAT64,
+	FLOAT,
 	BOOLEAN,
 	TIMESTAMP,
 	RECORD

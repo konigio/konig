@@ -39,7 +39,7 @@ public class BigQueryDatatypeMapper {
 		if (datatype != null) {
 
 			if (owlReasoner.isRealNumber(datatype)) {
-				return BigQueryDatatype.FLOAT64;
+				return BigQueryDatatype.FLOAT;
 			}
 			
 			if (owlReasoner.isIntegerDatatype(datatype)) {

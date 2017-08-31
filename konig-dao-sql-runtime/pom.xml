@@ -38,11 +38,7 @@
 		<artifactId>konig-dao-core</artifactId>
 		<version>${konig.version}</version>
 	</dependency>
-	<dependency>
-		<groupId>io.konig</groupId>
-		<artifactId>konig-dao-sql</artifactId>
-		<version>${konig.version}</version>
-	</dependency>
+	
 	<dependency>
 		<groupId>io.konig</groupId>
 		<artifactId>konig-yaml</artifactId>

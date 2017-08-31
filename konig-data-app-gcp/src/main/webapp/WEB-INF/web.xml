@@ -3,12 +3,6 @@
 	xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
 	version="2.5">
-	
-	<context-param>
-        <param-name>configFile</param-name>
-        <param-value>app.yaml</param-value>
-    </context-param>
-    
 	<servlet>
 		<servlet-name>GaeDataAppServlet</servlet-name>
 		<servlet-class>io.konig.data.app.gae.GaeDataAppServlet</servlet-class>
@@ -17,7 +11,8 @@
 			<param-value>app.yaml</param-value>
 		</init-param>
 	</servlet>
-	
+
+
 	<servlet-mapping>
 		<servlet-name>GaeDataAppServlet</servlet-name>
 		<url-pattern>/Mypedia/*</url-pattern>
@@ -29,16 +24,7 @@
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>GaDataTransformServlet</servlet-name>
-		<url-pattern>/Mypedia/Cron/DataTransform</url-pattern>
-	</servlet-mapping>
-	
-	<servlet>
-		<servlet-name>GaeDataMetricComputationServlet</servlet-name>
-		<servlet-class>io.konig.data.app.gae.GaeDataMetricComputationServlet</servlet-class>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>GaeDataMetricComputationServlet</servlet-name>
-		<url-pattern>/Mypedia/Cron/MetricComputation/*</url-pattern>
+		<url-pattern>/cron/DataTransform</url-pattern>
 	</servlet-mapping>
 	
 	<welcome-file-list>
