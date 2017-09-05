@@ -24,8 +24,8 @@ package io.konig.dao.core;
 import java.util.Map.Entry;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
-import org.joda.time.format.ISODateTimeFormat;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
@@ -37,6 +37,7 @@ public class SimpleChartFactory implements ChartFactory {
 	private static final String MIN_EXCLUSIVE = ".minExclusive";
 	private static final String MAX_INCLUSIVE = ".maxInclusive";
 	private static final String MAX_EXCLUSIVE = ".maxExclusive";
+	private static final String VIEW = ".view";
 	private static final int OFFSET = MIN_INCLUSIVE.length();
 
 	private ChartSeriesFactory seriesFactory;
@@ -48,15 +49,41 @@ public class SimpleChartFactory implements ChartFactory {
 
 	@Override
 	public Chart createChart(ShapeQuery query, EntityStructure struct) throws DaoException {
+		String value = query.getParameters().get(VIEW);
+		switch(value) {
+			case FusionCharts.MSLINE_MEDIA_TYPE :
+				return createLineChart(query,struct);
+			case FusionCharts.MAP_MEDIA_TYPE :
+				return createMapChart(query,struct);
+			default :
+				throw new DaoException("Invalid media type for charts: " + value);	
+		}
 		
+	}
+	
+	public Chart createLineChart(ShapeQuery query, EntityStructure struct)throws DaoException {
 		Chart chart = new Chart();
 		chart.setCaption(struct.getComment());
 		chart.setCategories(createCategories(query, struct));
 		chart.setDataset(createChartDataset(query, struct, chart.getCategories()));
-		
+		chart.setKey(createChartKey(query));
 		return chart;
 	}
+	
+	public Chart createMapChart(ShapeQuery query, EntityStructure struct)throws DaoException {
+		Chart chart = new Chart();
+		chart.setCaption(struct.getComment());
+		chart.setDataset(createChartDataset(query, struct, null));
+		chart.setKey(createChartKey(query));
+		return chart;
+	}
+	
 
+	public ChartKey createChartKey(ShapeQuery query) throws DaoException {
+		String value = query.getParameters().get(VIEW);
+		return ChartKey.fromMediaType(value);
+	}
+	
 	private ChartDataset createChartDataset(ShapeQuery query, EntityStructure struct, ChartCategories chartCategories) 
 	throws DaoException {
 		
@@ -66,7 +93,19 @@ public class SimpleChartFactory implements ChartFactory {
 		if (measure == null) {
 			throw new DaoException("measure path not found in Shape: " + query.getShapeId());
 		}
-		FieldPath dimension = chartCategories.getRange().getPath();
+		String value = query.getParameters().get(VIEW);
+		FieldPath dimension = null;
+		switch(value) {
+			case FusionCharts.MSLINE_MEDIA_TYPE :
+				dimension = chartCategories.getRange().getPath();
+				break;
+			case FusionCharts.MAP_MEDIA_TYPE :
+				dimension = FieldPath.dimensionPath(struct);
+				 break;
+			default :
+				throw new DaoException("Invalid media type for charts: " + value);	
+		}
+			
 		ChartSeriesRequest request = ChartSeriesRequest.builder()
 				.setDimension(dimension)
 				.setMeasure(measure)
@@ -94,7 +133,7 @@ public class SimpleChartFactory implements ChartFactory {
 
 
 	private Period toPeriod(ShapeQuery query) throws DaoException {
-		String value = query.getParameters().get("durationUnit");
+		String value = query.getParameters().get("timeInterval.durationUnit");
 		if (value == null) {
 			throw new DaoException("durationUnit is not defined");
 		}
@@ -130,7 +169,7 @@ public class SimpleChartFactory implements ChartFactory {
 		String value = point.getValue();
 		URI fieldType = range.getPath().lastField().getFieldType();
 		if (fieldType.equals(XMLSchema.DATE) || fieldType.equals(XMLSchema.DATETIME)) {
-			return ISODateTimeFormat.dateTime().parseDateTime(value);
+			return new DateTime(value).toLocalDateTime().toDateTime(DateTimeZone.UTC);
 		}
 		
 		throw new DaoException("Unsupported data type: " + fieldType.stringValue());

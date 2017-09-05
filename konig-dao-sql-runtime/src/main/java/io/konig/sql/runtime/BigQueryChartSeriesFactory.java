@@ -48,7 +48,7 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 	public ChartSeries createChartSeries(ChartSeriesRequest seriesRequest) throws DaoException {
 		EntityStructure struct=seriesRequest.getStruct();
 		FieldPath dimension = seriesRequest.getDimension();
-		FieldPath measure = seriesRequest.getDimension();
+		FieldPath measure = seriesRequest.getMeasure();
 		ShapeQuery query = seriesRequest.getQuery();
 		
 		String sql = sql(query, struct, dimension, measure);
@@ -61,9 +61,16 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 			}
 			response = bigQuery.getQueryResults(response.getJobId());
 		}
+		
+		if (response.hasErrors()) {
+			String firstError = "";
+			if (response.getExecutionErrors().size() != 0) {
+				firstError = response.getExecutionErrors().get(0).getMessage();
+			}
+			throw new DaoException(firstError);
+		}
 		// TODO: look for execution errors
 		QueryResult result = response.getResult();
-		
 		String title = struct.getComment();
 		return new BigQueryChartSeries(title, result, dimension.lastField(), measure.lastField());
 	}

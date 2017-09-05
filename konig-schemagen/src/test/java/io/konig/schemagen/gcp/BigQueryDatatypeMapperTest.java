@@ -38,22 +38,22 @@ public class BigQueryDatatypeMapperTest {
 	@Test
 	public void test() {
 
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.BYTE));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.INT));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.INTEGER));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.LONG));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.NEGATIVE_INTEGER));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.NON_NEGATIVE_INTEGER));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.NON_POSITIVE_INTEGER));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.SHORT));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.UNSIGNED_BYTE));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.UNSIGNED_INT));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.UNSIGNED_LONG));
-		assertEquals(BigQueryDatatype.INTEGER, type(XMLSchema.UNSIGNED_SHORT));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.BYTE));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.INT));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.INTEGER));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.LONG));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.NEGATIVE_INTEGER));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.NON_NEGATIVE_INTEGER));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.NON_POSITIVE_INTEGER));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.SHORT));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.UNSIGNED_BYTE));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.UNSIGNED_INT));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.UNSIGNED_LONG));
+		assertEquals(BigQueryDatatype.INT64, type(XMLSchema.UNSIGNED_SHORT));
 		
-		assertEquals(BigQueryDatatype.FLOAT, type(XMLSchema.FLOAT));
-		assertEquals(BigQueryDatatype.FLOAT, type(XMLSchema.DECIMAL));
-		assertEquals(BigQueryDatatype.FLOAT, type(XMLSchema.DOUBLE));
+		assertEquals(BigQueryDatatype.FLOAT64, type(XMLSchema.FLOAT));
+		assertEquals(BigQueryDatatype.FLOAT64, type(XMLSchema.DECIMAL));
+		assertEquals(BigQueryDatatype.FLOAT64, type(XMLSchema.DOUBLE));
 		
 	}
 

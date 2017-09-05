@@ -34,12 +34,21 @@
 		<artifactId>sesame-model</artifactId>
 		<version>${sesame.version}</version>
 	</dependency>
-	
+	<dependency>
+    <groupId>com.google.cloud</groupId>
+    <artifactId>google-cloud-bigquery</artifactId>
+    <version>${google-cloud.version}</version>
+	</dependency>
 	<dependency>
 		<groupId>io.konig</groupId>
 		<artifactId>konig-yaml</artifactId>
 		<version>${konig.version}</version>
 	</dependency>
+ 	<dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-api-1.0-sdk</artifactId>
+      <version>${appengine.version}</version>
+    </dependency>
 	
 	
 	<dependency>

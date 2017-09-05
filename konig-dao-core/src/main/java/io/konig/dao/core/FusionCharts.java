@@ -25,5 +25,9 @@ public class FusionCharts {
 	
 	public static final String LIBRARY_NAME = "fusioncharts";
 	public static final String MSLINE_KEY = "fusioncharts.msline";
+	public static final String MSLINE_MEDIA_TYPE = "vnd.pearson.chart.fusioncharts.msline";
+	
+	public static final String MAP_KEY = "fusioncharts.map";
+	public static final String MAP_MEDIA_TYPE = "vnd.pearson.chart.fusioncharts.map";
 
 }

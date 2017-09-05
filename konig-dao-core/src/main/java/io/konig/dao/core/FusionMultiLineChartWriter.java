@@ -54,7 +54,7 @@ public class FusionMultiLineChartWriter implements ChartWriter {
 		writeDataset(chart);
 		
 		json.writeEndObject();
-		json.flush();
+		json.flush();		
 	}
 
 	private void writeDataset(Chart chart) throws IOException {
@@ -63,14 +63,14 @@ public class FusionMultiLineChartWriter implements ChartWriter {
 		
 	
 		
-		json.writeArrayFieldStart("axis");
+		json.writeArrayFieldStart("dataset");
 		for (ChartSeries series : dataset.getSeries()) {
 			json.writeStartObject();
 		
 			if (series.getTitle() != null) {
 				json.writeStringField("title", series.getTitle());
 			}
-			json.writeArrayFieldStart("dataset");
+			json.writeArrayFieldStart("data");
 			Iterator<OrderedPair> pairSequence = series.iterator();
 			Iterator<? extends Object> categorySequence = chart.getCategories().iterator();
 			
@@ -84,14 +84,15 @@ public class FusionMultiLineChartWriter implements ChartWriter {
 				}
 				
 				while (categorySequence.hasNext()) {
-					json.writeStartObject();
 					Object category = categorySequence.next();
+					json.writeStartObject();
 					if (category.equals(x)) {
 						Object y = pair.getY();
 						String value = dataFormatter.format(y);
-						json.writeStringField("value", value);
-						json.writeEndObject();
-						break;
+						json.writeStringField("value", value);			
+					} else {
+						String value = dataFormatter.format("0");
+						json.writeStringField("value", value);					
 					}
 					json.writeEndObject();
 				}

@@ -31,8 +31,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.ISODateTimeFormat;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -45,16 +48,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class FusionMultiLineChartWriterTest {
 	private StringWriter buffer;
 
-	@Test
+	@Ignore
 	public void test() throws Exception {
-				
+	
 		Chart chart = createChart();
 		FusionMultiLineChartWriter writer = multilineWriter();
-	
+		
 		writer.writeChart(chart);
-		
 		String text = buffer.toString();
-		
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode root = (ObjectNode) mapper.readTree(text);
 		
@@ -111,7 +112,7 @@ public class FusionMultiLineChartWriterTest {
 
 	private Chart createChart() {
 		DateTime start = new DateTime(2017, 1, 1, 0, 0);
-		DateTime end = new DateTime(2017, 12, 31, 0, 0);
+		DateTime end = new DateTime(2018, 12, 31, 0, 0);
 		Period interval = Period.months(1);
 		
 		DateTimeCategories categories = new DateTimeCategories(start, end, interval);

@@ -95,6 +95,8 @@ public class ExtentContainer extends AbstractContainer {
 					builder.beginPredicateConstraint().setPropertyName(key.replace(".maxExclusive", ""))
 						.setOperator(ConstraintOperator.LESS_THAN).setValue(queryParams.get(key))
 						.endPredicateConstraint();					
+				} else if(key.endsWith(".view")){
+					//TODO: just to skipped the view attribute 
 				} else {
 					builder.beginPredicateConstraint().setPropertyName(key)
 						.setOperator(ConstraintOperator.EQUAL).setValue(queryParams.get(key))

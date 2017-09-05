@@ -24,6 +24,8 @@ package io.konig.dao.core;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import com.google.appengine.api.search.Schema;
+
 import io.konig.sql.runtime.EntityStructure;
 import io.konig.sql.runtime.FieldInfo;
 import io.konig.sql.runtime.Stereotype;
@@ -89,7 +91,23 @@ public class FieldPath extends ArrayList<FieldInfo> {
 		FieldPath result = new FieldPath(null);
 		return measurePath(result, struct) ? result : null;
 	}
-
+	
+	public static FieldPath dimensionPath(EntityStructure struct) {
+		FieldPath result = new FieldPath(null);
+		return dimensionPath(result, struct) ? result : null;
+	}
+	
+	private static boolean dimensionPath(FieldPath result, EntityStructure struct) {		
+		for (FieldInfo field : struct.getFields()) {	
+			if (Stereotype.DIMENSION.equals(field.getStereotype()) 
+					&& field.getFieldType().getNamespace().equals("http://schema.org/")) {
+				result.add(field);
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private static boolean measurePath(FieldPath result, EntityStructure struct) {
 		
 		for (FieldInfo field : struct.getFields()) {

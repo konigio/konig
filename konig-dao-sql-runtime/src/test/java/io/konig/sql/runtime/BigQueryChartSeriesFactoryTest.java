@@ -23,6 +23,8 @@ package io.konig.sql.runtime;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+
 import org.junit.Test;
 
 import io.konig.dao.core.FieldPath;
@@ -45,10 +47,14 @@ public class BigQueryChartSeriesFactoryTest {
 		FieldInfo count = new FieldInfo("count");
 		count.setStereotype(Stereotype.MEASURE);
 		
-		FieldPath dimension = new FieldPath("timeInterval.intervalStart");
+		FieldInfo info = new FieldInfo("timeInterval.intervalStart");
+		
+		FieldPath dimension = new FieldPath(null);
+		dimension.add(info);
 		FieldPath measure = new FieldPath("count");
 		
 		String actual = factory.sql(query, struct, dimension, measure);
+		System.out.println(actual);
 		String expected = "SELECT timeInterval.intervalStart, count FROM LoginActivity";
 		assertEquals(expected, actual);
 	}
