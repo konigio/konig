@@ -44,24 +44,21 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 	private ChartGeoLocationMapping mapping = null;
 
 	public BigQueryChartSeriesFactory(BigQuery bigQuery) {
-		this.bigQuery = bigQuery;
-		mapping = (ChartGeoLocationMapping)MemcacheServiceFactory
-				.getMemcacheService()
-				.get("FusionIdMapping");
-		if(mapping == null){
-			try {
-				ChartGeoLocationMapping mapping = new BigQueryFusionChartService(bigQuery)
-						.getFusionIdMapping();
-				MemcacheServiceFactory.getMemcacheService().put("FusionIdMapping", mapping);
-			} catch (Exception e) {
-				throw new DaoException(e);
-			}
-		}
+		this.bigQuery = bigQuery;		
 	}
 
 
 	@Override
 	public ChartSeries createChartSeries(ChartSeriesRequest seriesRequest) throws DaoException {
+		 mapping = (ChartGeoLocationMapping)MemcacheServiceFactory
+				.getMemcacheService()
+				.get("FusionIdMapping");
+		if(mapping == null){			
+			ChartGeoLocationMapping mapping = new BigQueryFusionChartService(bigQuery)
+					.getFusionIdMapping();
+			MemcacheServiceFactory.getMemcacheService().put("FusionIdMapping", mapping);
+			
+		}
 		EntityStructure struct=seriesRequest.getStruct();
 		FieldPath dimension = seriesRequest.getDimension();
 		FieldPath measure = seriesRequest.getMeasure();
