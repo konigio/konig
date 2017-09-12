@@ -1,7 +1,5 @@
 package io.konig.sql.runtime;
 
-import javax.servlet.ServletException;
-
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 
