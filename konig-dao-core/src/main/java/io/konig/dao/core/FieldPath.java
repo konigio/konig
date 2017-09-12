@@ -87,31 +87,20 @@ public class FieldPath extends ArrayList<FieldInfo> {
 	/**
 	 * Build a path to the first field in the given structure that has the MEASURE stereotype.
 	 */
-	public static FieldPath measurePath(EntityStructure struct) {
+	public static FieldPath measurePath(EntityStructure struct, String yAxis) {
 		FieldPath result = new FieldPath(null);
-		return measurePath(result, struct) ? result : null;
+		return measurePath(result, struct, yAxis) ? result : null;
 	}
 	
-	public static FieldPath dimensionPath(EntityStructure struct) {
+	public static FieldPath dimensionPath(EntityStructure struct, String xAxis) {
 		FieldPath result = new FieldPath(null);
-		return dimensionPath(result, struct) ? result : null;
+		return dimensionPath(result, struct, xAxis) ? result : null;
 	}
 	
-	private static boolean dimensionPath(FieldPath result, EntityStructure struct) {		
+	private static boolean dimensionPath(FieldPath result, EntityStructure struct, String xAxis) {		
 		for (FieldInfo field : struct.getFields()) {	
 			if (Stereotype.DIMENSION.equals(field.getStereotype()) 
-					&& field.getFieldType().getNamespace().equals("http://schema.org/")) {
-				result.add(field);
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private static boolean measurePath(FieldPath result, EntityStructure struct) {
-		
-		for (FieldInfo field : struct.getFields()) {
-			if (Stereotype.MEASURE.equals(field.getStereotype())) {
+					&& xAxis.endsWith(field.getName())) {
 				result.add(field);
 				return true;
 			}
@@ -120,7 +109,29 @@ public class FieldPath extends ArrayList<FieldInfo> {
 			EntityStructure child = field.getStruct();
 			if (child != null) {
 				result.add(field);
-				if (measurePath(result, child)) {
+				if (dimensionPath(result, child, xAxis)) {
+					return true;
+				}
+				result.pop();
+			}
+		}
+		return false;
+	}
+	
+	private static boolean measurePath(FieldPath result, EntityStructure struct, String yAxis) {
+		
+		for (FieldInfo field : struct.getFields()) {
+			if (Stereotype.MEASURE.equals(field.getStereotype())
+					&& yAxis.endsWith(field.getName())) {
+				result.add(field);
+				return true;
+			}
+		}
+		for (FieldInfo field : struct.getFields()) {
+			EntityStructure child = field.getStruct();
+			if (child != null) {
+				result.add(field);
+				if (measurePath(result, child, yAxis)) {
 					return true;
 				}
 				result.pop();

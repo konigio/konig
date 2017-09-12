@@ -22,8 +22,19 @@ package io.konig.dao.core;
 
 
 import java.util.Iterator;
+import java.util.List;
 
-public interface ChartCategories {
+public class LabelCategories implements ChartCategories{
+	
+	private List<String> labels = null;
+	
+	public void setLabels(List<String> labels) {
+		this.labels = labels;
+	}
+	
+	@Override
+	public Iterator<? extends Object> iterator() {
+		return labels == null ? null : labels.iterator();
+	}
 
-	public Iterator<? extends Object> iterator();
 }

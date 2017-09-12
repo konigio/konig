@@ -37,6 +37,9 @@ public class SimpleChartFactory implements ChartFactory {
 	private static final String MIN_EXCLUSIVE = ".minExclusive";
 	private static final String MAX_INCLUSIVE = ".maxInclusive";
 	private static final String MAX_EXCLUSIVE = ".maxExclusive";
+	private static final String INTERVALSTART = ".intervalStart";
+	private static final String X_AXIS = "xAxis";
+	private static final String Y_AXIS = "yAxis";
 	private static final String VIEW = ".view";
 	private static final int OFFSET = MIN_INCLUSIVE.length();
 
@@ -52,7 +55,7 @@ public class SimpleChartFactory implements ChartFactory {
 		String value = query.getParameters().get(VIEW);
 		switch(value) {
 			case FusionCharts.MSLINE_MEDIA_TYPE :
-				return createLineChart(query,struct);
+				return createMultiSeriesLineChart(query,struct);
 			case FusionCharts.MAP_MEDIA_TYPE :
 				return createMapChart(query,struct);
 			default :
@@ -61,12 +64,24 @@ public class SimpleChartFactory implements ChartFactory {
 		
 	}
 	
-	public Chart createLineChart(ShapeQuery query, EntityStructure struct)throws DaoException {
+	/*
+	 * The method createMultiSeriesLineChart used to create the line chart 
+	 * and to create the categories based on the dimension requested 
+	 * for example if the requested dimension is based on the time interval, 
+	 * it should create the time interval as the xAxis and measure as yAxis
+	 * or else if the requested for other dimension like grade or subject,
+	 * it should create the grades as the xAxis
+	 */
+	public Chart createMultiSeriesLineChart(ShapeQuery query, EntityStructure struct)throws DaoException {
+		String xAxis = query.getParameters().get(X_AXIS);
 		Chart chart = new Chart();
 		chart.setCaption(struct.getComment());
-		chart.setCategories(createCategories(query, struct));
+		if(xAxis.endsWith(INTERVALSTART)) {
+			chart.setCategories(createCategories(query, struct));
+		} else {
+			chart.setCategories(new LabelCategories());
+		}
 		chart.setDataset(createChartDataset(query, struct, chart.getCategories()));
-		chart.setKey(createChartKey(query));
 		return chart;
 	}
 	
@@ -74,38 +89,25 @@ public class SimpleChartFactory implements ChartFactory {
 		Chart chart = new Chart();
 		chart.setCaption(struct.getComment());
 		chart.setDataset(createChartDataset(query, struct, null));
-		chart.setKey(createChartKey(query));
 		return chart;
 	}
-	
-
-	public ChartKey createChartKey(ShapeQuery query) throws DaoException {
-		String value = query.getParameters().get(VIEW);
-		return ChartKey.fromMediaType(value);
-	}
-	
-	private ChartDataset createChartDataset(ShapeQuery query, EntityStructure struct, ChartCategories chartCategories) 
-	throws DaoException {
 		
+	private ChartDataset createChartDataset(ShapeQuery query, EntityStructure struct, ChartCategories chartCategories) 
+	throws DaoException {		
+		String xAxis = query.getParameters().get(X_AXIS);
+		String yAxis = query.getParameters().get(Y_AXIS);
 		// For now, we only support a single series
 		ChartDataset dataset = new ChartDataset();
-		FieldPath measure = FieldPath.measurePath(struct);
+		FieldPath measure = FieldPath.measurePath(struct, yAxis);
 		if (measure == null) {
 			throw new DaoException("measure path not found in Shape: " + query.getShapeId());
 		}
-		String value = query.getParameters().get(VIEW);
-		FieldPath dimension = null;
-		switch(value) {
-			case FusionCharts.MSLINE_MEDIA_TYPE :
-				dimension = chartCategories.getRange().getPath();
-				break;
-			case FusionCharts.MAP_MEDIA_TYPE :
-				dimension = FieldPath.dimensionPath(struct);
-				 break;
-			default :
-				throw new DaoException("Invalid media type for charts: " + value);	
+	
+		FieldPath dimension = FieldPath.dimensionPath(struct, xAxis);	
+		if (dimension == null) {
+			throw new DaoException("dimension path not found in Shape:  " + query.getShapeId());
 		}
-			
+					
 		ChartSeriesRequest request = ChartSeriesRequest.builder()
 				.setDimension(dimension)
 				.setMeasure(measure)

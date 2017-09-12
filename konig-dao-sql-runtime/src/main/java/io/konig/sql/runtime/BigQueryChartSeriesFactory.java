@@ -1,5 +1,10 @@
 package io.konig.sql.runtime;
 
+import javax.servlet.ServletException;
+
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
+
 /*
  * #%L
  * Konig DAO SQL Runtime
@@ -26,6 +31,7 @@ import com.google.cloud.bigquery.QueryRequest;
 import com.google.cloud.bigquery.QueryResponse;
 import com.google.cloud.bigquery.QueryResult;
 
+import io.konig.dao.core.ChartGeoLocationMapping;
 import io.konig.dao.core.ChartSeries;
 import io.konig.dao.core.ChartSeriesFactory;
 import io.konig.dao.core.ChartSeriesRequest;
@@ -37,10 +43,22 @@ import io.konig.dao.core.ShapeQuery;
 public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSeriesFactory {
 	
 	private BigQuery bigQuery;
-	
+	private ChartGeoLocationMapping mapping = null;
 
 	public BigQueryChartSeriesFactory(BigQuery bigQuery) {
 		this.bigQuery = bigQuery;
+		mapping = (ChartGeoLocationMapping)MemcacheServiceFactory
+				.getMemcacheService()
+				.get("FusionIdMapping");
+		if(mapping == null){
+			try {
+				ChartGeoLocationMapping mapping = new BigQueryFusionChartService(bigQuery)
+						.getFusionIdMapping();
+				MemcacheServiceFactory.getMemcacheService().put("FusionIdMapping", mapping);
+			} catch (Exception e) {
+				throw new DaoException(e);
+			}
+		}
 	}
 
 

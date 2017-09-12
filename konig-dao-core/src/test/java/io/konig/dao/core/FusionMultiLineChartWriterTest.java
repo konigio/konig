@@ -31,11 +31,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.ISODateTimeFormat;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -48,7 +45,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class FusionMultiLineChartWriterTest {
 	private StringWriter buffer;
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 	
 		Chart chart = createChart();
@@ -58,10 +55,8 @@ public class FusionMultiLineChartWriterTest {
 		String text = buffer.toString();
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode root = (ObjectNode) mapper.readTree(text);
-		
 		assertField(root, "caption", "Number of Logins");
 		assertField(root, "xAxisName", "Time");
-
 		ArrayNode categories = (ArrayNode) root.findValue("categories");
 		assertTrue(categories != null);
 		ObjectNode categoriesValue = (ObjectNode) categories.get(0);
@@ -75,12 +70,11 @@ public class FusionMultiLineChartWriterTest {
 		for (int i=0; i<months.length; i++) {
 			ObjectNode object = (ObjectNode) categoryArray.get(i);
 			assertField(object, "label", months[i]);
-		}
-		
-		ArrayNode axisArray = (ArrayNode) root.findValue("axis");
+		}		
+		ArrayNode axisArray = (ArrayNode) root.findValue("dataset");
 		ObjectNode axis = (ObjectNode) axisArray.get(0);
 		assertField(axis, "title", "Count");
-		ArrayNode dataset = (ArrayNode) axis.findValue("dataset");
+		ArrayNode dataset = (ArrayNode) axis.findValue("data");
 		assertEquals(12, dataset.size());
 		for (int i=1; i<=12; i++) {
 			ObjectNode object = (ObjectNode) dataset.get(i-1);
@@ -91,7 +85,7 @@ public class FusionMultiLineChartWriterTest {
 		
 	}
 
-	private void assertField(ObjectNode node, String fieldName, String fieldValue) {
+	private void assertField(ObjectNode node, String fieldName, String fieldValue) {		
 		JsonNode value = node.findValue(fieldName);
 		assertTrue(value != null);
 		assertEquals(fieldValue, value.asText());
@@ -112,7 +106,7 @@ public class FusionMultiLineChartWriterTest {
 
 	private Chart createChart() {
 		DateTime start = new DateTime(2017, 1, 1, 0, 0);
-		DateTime end = new DateTime(2018, 12, 31, 0, 0);
+		DateTime end = new DateTime(2017, 12, 31, 0, 0);
 		Period interval = Period.months(1);
 		
 		DateTimeCategories categories = new DateTimeCategories(start, end, interval);
@@ -126,7 +120,6 @@ public class FusionMultiLineChartWriterTest {
 		List<ChartSeries> seriesList = new ArrayList<>();
 		seriesList.add(series);
 		ChartDataset dataset = new ChartDataset(seriesList);
-		
 		Chart chart = new Chart();
 		chart.setxAxisLabel("Time");
 		chart.setCategories(categories);

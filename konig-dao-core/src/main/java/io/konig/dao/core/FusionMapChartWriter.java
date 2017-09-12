@@ -62,9 +62,9 @@ public class FusionMapChartWriter implements ChartWriter {
 	}
 
 	private void writeDataset(Chart chart) throws IOException {
-		ChartDataset dataset = chart.getDataset();
+		ChartDataset dataset = chart.getDataset();		
 		json.writeArrayFieldStart("data");
-		
+		String containedInPlace = "";
 		for (ChartSeries series : dataset.getSeries()) {
 			Iterator<OrderedPair> pairSequence = series.iterator();
 			while (pairSequence.hasNext()) {
@@ -73,27 +73,27 @@ public class FusionMapChartWriter implements ChartWriter {
 				Object y = pair.getY();
 				
 				String value = dataFormatter.format(y);
-				
+				String mapId = "";
+				if (x instanceof String) {
+					mapId = x.toString();
+				} else if (x instanceof ArrayList) {
+					List<FieldValue> fieldValue = ((ArrayList<FieldValue>) x);
+					mapId = fieldValue.get(0).getStringValue();			 
+				}
+				containedInPlace = mapping.getContainedInPlace(mapId);
 				json.writeStartObject();
-				json.writeStringField("id", getFusionId(x));
+				json.writeStringField("id", mapping.getFusionId(mapId));
 				json.writeStringField("value", value);
 				json.writeStringField("showLabel", "1");
 				json.writeStringField("fontBold", "1");
-				json.writeStringField("FontColor", "#FF0000");
+				json.writeStringField("useHoverColor", "1");
+				json.writeStringField("showToolTip", "1");
+				json.writeStringField("FontColor", "#000000");
+				json.writeStringField("link", "j-drilldown-"+mapId+"|"+mapping.getName(mapId)+"|"+mapping.getType(mapId));
 				json.writeEndObject();
 			}
 		}
 		json.writeEndArray();
-	}
-	
-	private String getFusionId(Object x) {
-		if (x instanceof String) {
-			return mapping.getFusionId(x.toString());
-		} else if (x instanceof ArrayList) {
-			List<FieldValue> fieldValue = ((ArrayList<FieldValue>) x);
-			String id = fieldValue.get(0).getStringValue();
-			return mapping.getFusionId(id);
-		}
-		return null;
+		json.writeStringField("type", mapping.getName(containedInPlace));
 	}
 }

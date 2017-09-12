@@ -84,6 +84,14 @@ public class ChartWriterFactory {
 			}
 			return new TemporalFormatter(DateTimeFormat.forPattern(pattern));
 		} 
+		if (categories instanceof LabelCategories) {
+			return new Formatter() {				
+				@Override
+				public String format(Object value) {
+					return (String) value;
+				}
+			};
+		}
 		// TODO: support other categories
 		throw new RuntimeException("Category type not supported");
 		

@@ -54,6 +54,7 @@ abstract public class SqlShapeReadService extends SqlGenerator implements ShapeR
 			if (chartKey != null) {
 				SimpleChartFactory factory = new SimpleChartFactory(getChartSeriesFactory());
 				Chart chart = factory.createChart(query, struct);
+				chart.setKey(chartKey);
 				ChartWriterFactory writerFactory = new ChartWriterFactory();
 				
 				ChartWriter writer = writerFactory.createChartWriter(chart, output);

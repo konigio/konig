@@ -54,7 +54,7 @@ public class DateTimeCategories implements ChartCategories {
 		return new DateTimeIterator(start, end, interval);
 	}
 
-	@Override
+
 	public DataRange getRange() {
 		return range;
 	}
