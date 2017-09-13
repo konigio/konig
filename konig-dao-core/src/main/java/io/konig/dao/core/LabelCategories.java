@@ -21,13 +21,20 @@ package io.konig.dao.core;
  */
 
 
-public class FusionCharts {
+import java.util.Iterator;
+import java.util.List;
+
+public class LabelCategories implements ChartCategories{
 	
-	public static final String LIBRARY_NAME = "fusioncharts";
-	public static final String MSLINE_KEY = "fusioncharts.msline";
-	public static final String MSLINE_MEDIA_TYPE = "vnd.pearson.chart.fusioncharts.msline";
+	private List<String> labels = null;
 	
-	public static final String MAP_KEY = "fusioncharts.map";
-	public static final String MAP_MEDIA_TYPE = "vnd.pearson.chart.fusioncharts.map";
+	public void setLabels(List<String> labels) {
+		this.labels = labels;
+	}
+	
+	@Override
+	public Iterator<? extends Object> iterator() {
+		return labels == null ? null : labels.iterator();
+	}
 
 }

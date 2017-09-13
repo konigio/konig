@@ -24,8 +24,8 @@ package io.konig.dao.core;
 import java.util.Map.Entry;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
-import org.joda.time.format.ISODateTimeFormat;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
@@ -37,6 +37,10 @@ public class SimpleChartFactory implements ChartFactory {
 	private static final String MIN_EXCLUSIVE = ".minExclusive";
 	private static final String MAX_INCLUSIVE = ".maxInclusive";
 	private static final String MAX_EXCLUSIVE = ".maxExclusive";
+	private static final String INTERVALSTART = ".intervalStart";
+	private static final String X_AXIS = "xAxis";
+	private static final String Y_AXIS = "yAxis";
+	private static final String VIEW = ".view";
 	private static final int OFFSET = MIN_INCLUSIVE.length();
 
 	private ChartSeriesFactory seriesFactory;
@@ -48,25 +52,62 @@ public class SimpleChartFactory implements ChartFactory {
 
 	@Override
 	public Chart createChart(ShapeQuery query, EntityStructure struct) throws DaoException {
+		String value = query.getParameters().get(VIEW);
+		switch(value) {
+			case FusionCharts.MSLINE_MEDIA_TYPE :
+				return createMultiSeriesLineChart(query,struct);
+			case FusionCharts.MAP_MEDIA_TYPE :
+				return createMapChart(query,struct);
+			default :
+				throw new DaoException("Invalid media type for charts: " + value);	
+		}
 		
+	}
+	
+	/*
+	 * The method createMultiSeriesLineChart used to create the line chart 
+	 * and to create the categories based on the dimension requested 
+	 * for example if the requested dimension is based on the time interval, 
+	 * it should create the time interval as the xAxis and measure as yAxis
+	 * or else if the requested for other dimension like grade or subject,
+	 * it should create the grades as the xAxis
+	 */
+	public Chart createMultiSeriesLineChart(ShapeQuery query, EntityStructure struct)throws DaoException {
+		String xAxis = query.getParameters().get(X_AXIS);
 		Chart chart = new Chart();
 		chart.setCaption(struct.getComment());
-		chart.setCategories(createCategories(query, struct));
+		if(xAxis.endsWith(INTERVALSTART)) {
+			chart.setCategories(createCategories(query, struct));
+		} else {
+			chart.setCategories(new LabelCategories());
+		}
 		chart.setDataset(createChartDataset(query, struct, chart.getCategories()));
-		
 		return chart;
 	}
-
-	private ChartDataset createChartDataset(ShapeQuery query, EntityStructure struct, ChartCategories chartCategories) 
-	throws DaoException {
+	
+	public Chart createMapChart(ShapeQuery query, EntityStructure struct)throws DaoException {
+		Chart chart = new Chart();
+		chart.setCaption(struct.getComment());
+		chart.setDataset(createChartDataset(query, struct, null));
+		return chart;
+	}
 		
+	private ChartDataset createChartDataset(ShapeQuery query, EntityStructure struct, ChartCategories chartCategories) 
+	throws DaoException {		
+		String xAxis = query.getParameters().get(X_AXIS);
+		String yAxis = query.getParameters().get(Y_AXIS);
 		// For now, we only support a single series
 		ChartDataset dataset = new ChartDataset();
-		FieldPath measure = FieldPath.measurePath(struct);
+		FieldPath measure = FieldPath.createFieldPath(yAxis, struct);
 		if (measure == null) {
 			throw new DaoException("measure path not found in Shape: " + query.getShapeId());
 		}
-		FieldPath dimension = chartCategories.getRange().getPath();
+	
+		FieldPath dimension = FieldPath.createFieldPath(xAxis, struct);	
+		if (dimension == null) {
+			throw new DaoException("dimension path not found in Shape:  " + query.getShapeId());
+		}
+					
 		ChartSeriesRequest request = ChartSeriesRequest.builder()
 				.setDimension(dimension)
 				.setMeasure(measure)
@@ -94,7 +135,7 @@ public class SimpleChartFactory implements ChartFactory {
 
 
 	private Period toPeriod(ShapeQuery query) throws DaoException {
-		String value = query.getParameters().get("durationUnit");
+		String value = query.getParameters().get("timeInterval.durationUnit");
 		if (value == null) {
 			throw new DaoException("durationUnit is not defined");
 		}
@@ -130,7 +171,7 @@ public class SimpleChartFactory implements ChartFactory {
 		String value = point.getValue();
 		URI fieldType = range.getPath().lastField().getFieldType();
 		if (fieldType.equals(XMLSchema.DATE) || fieldType.equals(XMLSchema.DATETIME)) {
-			return ISODateTimeFormat.dateTime().parseDateTime(value);
+			return new DateTime(value).toLocalDateTime().toDateTime(DateTimeZone.UTC);
 		}
 		
 		throw new DaoException("Unsupported data type: " + fieldType.stringValue());

@@ -1,5 +1,8 @@
 package io.konig.sql.runtime;
 
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
+
 /*
  * #%L
  * Konig DAO SQL Runtime
@@ -26,6 +29,7 @@ import com.google.cloud.bigquery.QueryRequest;
 import com.google.cloud.bigquery.QueryResponse;
 import com.google.cloud.bigquery.QueryResult;
 
+import io.konig.dao.core.ChartGeoLocationMapping;
 import io.konig.dao.core.ChartSeries;
 import io.konig.dao.core.ChartSeriesFactory;
 import io.konig.dao.core.ChartSeriesRequest;
@@ -37,18 +41,27 @@ import io.konig.dao.core.ShapeQuery;
 public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSeriesFactory {
 	
 	private BigQuery bigQuery;
-	
+	private ChartGeoLocationMapping mapping = null;
 
 	public BigQueryChartSeriesFactory(BigQuery bigQuery) {
-		this.bigQuery = bigQuery;
+		this.bigQuery = bigQuery;		
 	}
 
 
 	@Override
 	public ChartSeries createChartSeries(ChartSeriesRequest seriesRequest) throws DaoException {
+		 mapping = (ChartGeoLocationMapping)MemcacheServiceFactory
+				.getMemcacheService()
+				.get("FusionIdMapping");
+		if(mapping == null){			
+			ChartGeoLocationMapping mapping = new BigQueryFusionChartService(bigQuery)
+					.getFusionIdMapping();
+			MemcacheServiceFactory.getMemcacheService().put("FusionIdMapping", mapping);
+			
+		}
 		EntityStructure struct=seriesRequest.getStruct();
 		FieldPath dimension = seriesRequest.getDimension();
-		FieldPath measure = seriesRequest.getDimension();
+		FieldPath measure = seriesRequest.getMeasure();
 		ShapeQuery query = seriesRequest.getQuery();
 		
 		String sql = sql(query, struct, dimension, measure);
@@ -61,9 +74,16 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 			}
 			response = bigQuery.getQueryResults(response.getJobId());
 		}
+		
+		if (response.hasErrors()) {
+			String firstError = "";
+			if (response.getExecutionErrors().size() != 0) {
+				firstError = response.getExecutionErrors().get(0).getMessage();
+			}
+			throw new DaoException(firstError);
+		}
 		// TODO: look for execution errors
 		QueryResult result = response.getResult();
-		
 		String title = struct.getComment();
 		return new BigQueryChartSeries(title, result, dimension.lastField(), measure.lastField());
 	}

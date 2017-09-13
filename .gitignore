@@ -289,3 +289,4 @@ Servers
 .classpath
 .project
 
+*.log

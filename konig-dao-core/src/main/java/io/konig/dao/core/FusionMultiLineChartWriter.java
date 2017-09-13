@@ -22,9 +22,12 @@ package io.konig.dao.core;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.cloud.bigquery.FieldValue;
 
 public class FusionMultiLineChartWriter implements ChartWriter {
 	
@@ -49,53 +52,83 @@ public class FusionMultiLineChartWriter implements ChartWriter {
 		}
 		if (chart.getxAxisLabel() != null) {
 			json.writeStringField("xAxisName", chart.getxAxisLabel());
+		}		
+		if (chart.getCategories().iterator()== null){
+			chart.setCategories(createCategories(chart));
 		}
 		writeCategories(chart);
 		writeDataset(chart);
 		
 		json.writeEndObject();
-		json.flush();
+		json.flush();		
 	}
-
+	
+	private ChartCategories createCategories(Chart chart) throws IOException {
+		ChartDataset dataset = chart.getDataset();			
+		List<String> labels = new ArrayList<String>();
+		LabelCategories categories = (LabelCategories) chart.getCategories();
+		for (ChartSeries series : dataset.getSeries()) {
+			Iterator<OrderedPair> pairSequence = series.iterator();
+			while (pairSequence.hasNext()) {
+				OrderedPair pair = pairSequence.next();
+				Object x = pair.getX();
+				if (x instanceof String) {
+					labels.add(x.toString());
+				} else if (x instanceof ArrayList) {
+					List<FieldValue> fieldValue = (ArrayList<FieldValue>) x;
+					labels.add(fieldValue.get(1).getStringValue());
+				}
+			}	
+			break;
+		}
+		categories.setLabels(labels);
+		return categories;
+	}
+	
 	private void writeDataset(Chart chart) throws IOException {
 		
 		ChartDataset dataset = chart.getDataset();
 		
-	
-		
-		json.writeArrayFieldStart("axis");
+		json.writeArrayFieldStart("dataset");
 		for (ChartSeries series : dataset.getSeries()) {
 			json.writeStartObject();
 		
 			if (series.getTitle() != null) {
 				json.writeStringField("title", series.getTitle());
 			}
-			json.writeArrayFieldStart("dataset");
-			Iterator<OrderedPair> pairSequence = series.iterator();
+			json.writeArrayFieldStart("data");
+			Iterator<OrderedPair> pairSequence = series.iterator();			
 			Iterator<? extends Object> categorySequence = chart.getCategories().iterator();
 			
-			
-			while (pairSequence.hasNext()) {
-				OrderedPair pair = pairSequence.next();
-				Object x = pair.getX();
-
-				if (!categorySequence.hasNext()) {
-					break;
-				}
+			while (categorySequence.hasNext()) {
+				Object category = categorySequence.next();	
+				pairSequence = series.iterator();
+				json.writeStartObject();
+				json.writeStringField("value", dataFormatter.format("0"));
 				
-				while (categorySequence.hasNext()) {
-					json.writeStartObject();
-					Object category = categorySequence.next();
-					if (category.equals(x)) {
-						Object y = pair.getY();
+				while (pairSequence.hasNext()) {
+					OrderedPair pair = pairSequence.next();	
+					Object x = pair.getX();
+					Object dimension = null;
+					if (x instanceof String) {
+						dimension = x.toString();
+					} else if (x instanceof ArrayList) {
+						List<FieldValue> fieldValue = (ArrayList<FieldValue>) x;
+						dimension = fieldValue.get(1).getStringValue();
+					}else {
+						dimension = x;
+					}
+					
+					if (category.equals(dimension)) {
+						Object y = pair.getY();		
 						String value = dataFormatter.format(y);
 						json.writeStringField("value", value);
-						json.writeEndObject();
 						break;
-					}
-					json.writeEndObject();
-				}
+					}	
+				}	
+				json.writeEndObject();
 			}
+			
 			json.writeEndArray();
 			json.writeEndObject();
 		}
@@ -104,6 +137,7 @@ public class FusionMultiLineChartWriter implements ChartWriter {
 	}
 
 	private void writeCategories(Chart chart) throws IOException {
+		
 		Iterator<? extends Object> sequence = chart.getCategories().iterator();
 		
 		json.writeArrayFieldStart("categories");
@@ -119,6 +153,7 @@ public class FusionMultiLineChartWriter implements ChartWriter {
 		json.writeEndArray();
 		json.writeEndObject();
 		json.writeEndArray();
+		
 		
 	}
 

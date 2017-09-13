@@ -85,11 +85,12 @@ public class FieldPath extends ArrayList<FieldInfo> {
 	/**
 	 * Build a path to the first field in the given structure that has the MEASURE stereotype.
 	 */
-	public static FieldPath measurePath(EntityStructure struct) {
+	public static FieldPath measurePath(EntityStructure struct ) {
 		FieldPath result = new FieldPath(null);
 		return measurePath(result, struct) ? result : null;
 	}
-
+		
+	
 	private static boolean measurePath(FieldPath result, EntityStructure struct) {
 		
 		for (FieldInfo field : struct.getFields()) {

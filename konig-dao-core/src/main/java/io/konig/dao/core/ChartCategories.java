@@ -25,7 +25,5 @@ import java.util.Iterator;
 
 public interface ChartCategories {
 
-	public Object getInterval();
-	public DataRange getRange();
 	public Iterator<? extends Object> iterator();
 }

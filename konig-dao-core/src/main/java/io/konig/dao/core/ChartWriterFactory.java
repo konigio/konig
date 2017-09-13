@@ -22,7 +22,6 @@ package io.konig.dao.core;
 
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Writer;
 
 import org.joda.time.Period;
@@ -44,6 +43,8 @@ public class ChartWriterFactory {
 		switch (chart.getKey().toString()) {
 		case FusionCharts.MSLINE_KEY :
 			return new FusionMultiLineChartWriter(jsonGenerator(out), categoryFormatter(chart), dataFormatter(chart));
+		case FusionCharts.MAP_KEY :
+			return new FusionMapChartWriter(jsonGenerator(out), dataFormatter(chart));
 		}
 		
 		throw new DaoException("Unsupported ChartWriter: " + chart.getKey().toString());
@@ -83,6 +84,14 @@ public class ChartWriterFactory {
 			}
 			return new TemporalFormatter(DateTimeFormat.forPattern(pattern));
 		} 
+		if (categories instanceof LabelCategories) {
+			return new Formatter() {				
+				@Override
+				public String format(Object value) {
+					return (String) value;
+				}
+			};
+		}
 		// TODO: support other categories
 		throw new RuntimeException("Category type not supported");
 		
