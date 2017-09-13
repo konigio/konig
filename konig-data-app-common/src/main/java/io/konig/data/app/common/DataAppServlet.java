@@ -84,6 +84,9 @@ abstract public class DataAppServlet extends HttpServlet {
 	abstract protected ShapeReadService createShapeReadService() throws ServletException;
 
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
+		resp.addHeader("Access-Control-Allow-Origin","*");
+	    resp.addHeader("Access-Control-Allow-Methods","GET,POST");
+	    resp.addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept");
 		JobRequest request = new JobRequest();
 		request.setPath(req.getPathInfo());
 		request.setQueryString(req.getQueryString());
