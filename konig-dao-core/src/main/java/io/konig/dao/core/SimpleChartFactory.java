@@ -98,12 +98,12 @@ public class SimpleChartFactory implements ChartFactory {
 		String yAxis = query.getParameters().get(Y_AXIS);
 		// For now, we only support a single series
 		ChartDataset dataset = new ChartDataset();
-		FieldPath measure = FieldPath.measurePath(struct, yAxis);
+		FieldPath measure = FieldPath.createFieldPath(yAxis, struct);
 		if (measure == null) {
 			throw new DaoException("measure path not found in Shape: " + query.getShapeId());
 		}
 	
-		FieldPath dimension = FieldPath.dimensionPath(struct, xAxis);	
+		FieldPath dimension = FieldPath.createFieldPath(xAxis, struct);	
 		if (dimension == null) {
 			throw new DaoException("dimension path not found in Shape:  " + query.getShapeId());
 		}

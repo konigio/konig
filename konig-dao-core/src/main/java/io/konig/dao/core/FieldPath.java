@@ -24,8 +24,6 @@ package io.konig.dao.core;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import com.google.appengine.api.search.Schema;
-
 import io.konig.sql.runtime.EntityStructure;
 import io.konig.sql.runtime.FieldInfo;
 import io.konig.sql.runtime.Stereotype;
@@ -87,42 +85,16 @@ public class FieldPath extends ArrayList<FieldInfo> {
 	/**
 	 * Build a path to the first field in the given structure that has the MEASURE stereotype.
 	 */
-	public static FieldPath measurePath(EntityStructure struct, String yAxis) {
+	public static FieldPath measurePath(EntityStructure struct ) {
 		FieldPath result = new FieldPath(null);
-		return measurePath(result, struct, yAxis) ? result : null;
+		return measurePath(result, struct) ? result : null;
 	}
+		
 	
-	public static FieldPath dimensionPath(EntityStructure struct, String xAxis) {
-		FieldPath result = new FieldPath(null);
-		return dimensionPath(result, struct, xAxis) ? result : null;
-	}
-	
-	private static boolean dimensionPath(FieldPath result, EntityStructure struct, String xAxis) {		
-		for (FieldInfo field : struct.getFields()) {	
-			if (Stereotype.DIMENSION.equals(field.getStereotype()) 
-					&& xAxis.endsWith(field.getName())) {
-				result.add(field);
-				return true;
-			}
-		}
-		for (FieldInfo field : struct.getFields()) {
-			EntityStructure child = field.getStruct();
-			if (child != null) {
-				result.add(field);
-				if (dimensionPath(result, child, xAxis)) {
-					return true;
-				}
-				result.pop();
-			}
-		}
-		return false;
-	}
-	
-	private static boolean measurePath(FieldPath result, EntityStructure struct, String yAxis) {
+	private static boolean measurePath(FieldPath result, EntityStructure struct) {
 		
 		for (FieldInfo field : struct.getFields()) {
-			if (Stereotype.MEASURE.equals(field.getStereotype())
-					&& yAxis.endsWith(field.getName())) {
+			if (Stereotype.MEASURE.equals(field.getStereotype())) {
 				result.add(field);
 				return true;
 			}
@@ -131,7 +103,7 @@ public class FieldPath extends ArrayList<FieldInfo> {
 			EntityStructure child = field.getStruct();
 			if (child != null) {
 				result.add(field);
-				if (measurePath(result, child, yAxis)) {
+				if (measurePath(result, child)) {
 					return true;
 				}
 				result.pop();
