@@ -58,6 +58,8 @@ public class SimpleChartFactory implements ChartFactory {
 				return createMultiSeriesLineChart(query,struct);
 			case FusionCharts.MAP_MEDIA_TYPE :
 				return createMapChart(query,struct);
+			case FusionCharts.PIE_MEDIA_TYPE :
+				return createPieChart(query,struct);
 			default :
 				throw new DaoException("Invalid media type for charts: " + value);	
 		}
@@ -91,7 +93,14 @@ public class SimpleChartFactory implements ChartFactory {
 		chart.setDataset(createChartDataset(query, struct, null));
 		return chart;
 	}
-		
+	
+	public Chart createPieChart(ShapeQuery query, EntityStructure struct)throws DaoException {
+		String xAxis = query.getParameters().get(X_AXIS);
+		Chart chart = new Chart();
+		chart.setCaption(struct.getComment());
+		chart.setDataset(createChartDataset(query, struct, null));
+		return chart;
+	}
 	private ChartDataset createChartDataset(ShapeQuery query, EntityStructure struct, ChartCategories chartCategories) 
 	throws DaoException {		
 		String xAxis = query.getParameters().get(X_AXIS);

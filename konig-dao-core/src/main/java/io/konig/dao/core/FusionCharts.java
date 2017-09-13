@@ -29,5 +29,7 @@ public class FusionCharts {
 	
 	public static final String MAP_KEY = "fusioncharts.map";
 	public static final String MAP_MEDIA_TYPE = "vnd.pearson.chart.fusioncharts.map";
-
+	
+	public static final String PIE_KEY = "fusioncharts.pie";
+	public static final String PIE_MEDIA_TYPE = "vnd.pearson.chart.fusioncharts.pie";
 }
