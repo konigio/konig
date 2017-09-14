@@ -38,6 +38,7 @@
 		<artifactId>konig-dao-core</artifactId>
 		<version>${konig.version}</version>
 	</dependency>
+<<<<<<< HEAD
 	<dependency>
 		<groupId>io.konig</groupId>
 		<artifactId>konig-gcp-common</artifactId>
@@ -48,6 +49,9 @@
 		<artifactId>konig-dao-sql</artifactId>
 		<version>${konig.version}</version>
 	</dependency>
+=======
+	
+>>>>>>> parent of 07372bad... Fixes #527
 	<dependency>
 		<groupId>io.konig</groupId>
 		<artifactId>konig-yaml</artifactId>
