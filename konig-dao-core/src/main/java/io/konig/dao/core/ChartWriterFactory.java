@@ -47,6 +47,8 @@ public class ChartWriterFactory {
 			return new FusionMapChartWriter(jsonGenerator(out), dataFormatter(chart));
 		case FusionCharts.PIE_KEY :
 			return new FusionPieChartWriter(jsonGenerator(out), dataFormatter(chart));
+		case FusionCharts.BAR_KEY :
+			return new FusionBarChartWriter(jsonGenerator(out), categoryFormatter(chart), dataFormatter(chart));
 		}
 		
 		throw new DaoException("Unsupported ChartWriter: " + chart.getKey().toString());
