@@ -58,6 +58,8 @@ public class SimpleChartFactory implements ChartFactory {
 				return createMultiSeriesLineChart(query,struct);
 			case FusionCharts.MAP_MEDIA_TYPE :
 				return createMapChart(query,struct);
+			case FusionCharts.BAR_MEDIA_TYPE :
+				return createBarChart(query,struct);
 			case FusionCharts.PIE_MEDIA_TYPE :
 				return createPieChart(query,struct);
 			default :
@@ -93,7 +95,19 @@ public class SimpleChartFactory implements ChartFactory {
 		chart.setDataset(createChartDataset(query, struct, null));
 		return chart;
 	}
+	public Chart createBarChart(ShapeQuery query, EntityStructure struct)throws DaoException {
+		String xAxis = query.getParameters().get(X_AXIS);
+		Chart chart = new Chart();
+		chart.setCaption(struct.getComment());
+		if(xAxis.endsWith(INTERVALSTART)) {
+			chart.setCategories(createCategories(query, struct));
+		} else {
+			chart.setCategories(new LabelCategories());
+		}
+		chart.setDataset(createChartDataset(query, struct, chart.getCategories()));
 	
+		return chart;
+	}
 	public Chart createPieChart(ShapeQuery query, EntityStructure struct)throws DaoException {
 		String xAxis = query.getParameters().get(X_AXIS);
 		Chart chart = new Chart();
