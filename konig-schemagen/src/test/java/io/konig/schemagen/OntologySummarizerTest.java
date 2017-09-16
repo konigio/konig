@@ -108,7 +108,7 @@ public class OntologySummarizerTest {
 				.addProperty(RDF.TYPE, SH.Shape)
 				.addProperty(SH.targetClass, Schema.Person)
 				.beginBNode(SH.property)
-					.addProperty(SH.predicate, Schema.parent)
+					.addProperty(SH.path, Schema.parent)
 					.addProperty(SH.valueClass, Schema.Person)
 				.endSubject()
 			.endSubject()

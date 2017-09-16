@@ -1,5 +1,7 @@
 package io.konig.core.pojo;
 
+import java.util.HashMap;
+
 /*
  * #%L
  * Konig Core
@@ -32,6 +34,7 @@ public class PojoContext {
 	
 	private Map<Resource, Class<?>> classMap;
 	private Map<Resource, Object> individualMap;
+	private Map<Class<?>, PojoDeserializer> deserializerMap;
 	private Graph ontology;
 	private PojoListener listener;
 
@@ -42,11 +45,23 @@ public class PojoContext {
 	
 	public PojoContext(PojoContext copy) {
 		classMap = copy.classMap;
+		deserializerMap = copy.deserializerMap;
 		individualMap = new LinkedHashMap<>();
 	}
 
 	public PojoContext(Graph ontology) {
 		this.ontology = ontology;
+	}
+	
+	public void putDeserializer(Class<?> type, PojoDeserializer deserializer) {
+		if (deserializerMap == null) {
+			deserializerMap = new HashMap<>();
+		}
+		deserializerMap.put(type, deserializer);
+	}
+	
+	public PojoDeserializer getDeserializer(Class<?> type) {
+		return deserializerMap==null ? null : deserializerMap.get(type);
 	}
 
 	public Graph getOntology() {
@@ -67,6 +82,10 @@ public class PojoContext {
 	
 	public void mapObject(Resource resource, Object pojo) {
 		individualMap.put(resource, pojo);
+	}
+	
+	public void commitObject(Resource resource, Object pojo) {
+
 		if (listener != null) {
 			listener.map(resource, pojo);
 		}

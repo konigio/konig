@@ -154,4 +154,18 @@ public class StringUtil {
 		}
 		return fullyQualifiedClassName;
 	}
+	
+	
+	public static final String rdfLocalName(String fullyQualifiedIRI) {
+		int hash = fullyQualifiedIRI.lastIndexOf('#');
+		if (hash >= 0) {
+			return fullyQualifiedIRI.substring(hash+1);
+		}
+		int slash = fullyQualifiedIRI.lastIndexOf('/');
+		if (slash >=0) {
+			return fullyQualifiedIRI.substring(slash+1);
+		}
+		
+		return null;
+	}
 }

@@ -93,7 +93,7 @@ public class FormulaContextBuilder implements ShapeVisitor {
 					if (graph != null) {
 						Vertex shapeVertex = graph.getVertex(shape.getId());
 						if (shapeVertex!=null) {
-							Vertex constraintVertex = shapeVertex.asTraversal().out(predicate).hasValue(SH.predicate, p.getPredicate()).firstVertex();
+							Vertex constraintVertex = shapeVertex.asTraversal().out(predicate).hasValue(SH.path, p.getPredicate()).firstVertex();
 							if (constraintVertex != null) {
 								Set<Edge> doomed = constraintVertex.outProperty(Konig.formula);
 								doomed.clear();

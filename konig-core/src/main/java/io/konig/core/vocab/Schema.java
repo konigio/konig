@@ -81,6 +81,7 @@ public class Schema {
 	public static final URI hasPart = new URIImpl("http://schema.org/hasPart");
 	public static final URI knows = new URIImpl("http://schema.org/knows");
 	public static final URI lastReviewed = new URIImpl("http://schema.org/lastReviewed");
+	public static final URI manufacturer = new URIImpl("http://schema.org/manufacturer");
 	public static final URI memberOf = new URIImpl("http://schema.org/memberOf");
 	public static final URI name = new URIImpl("http://schema.org/name");
 	public static final URI object = new URIImpl("http://schema.org/object");

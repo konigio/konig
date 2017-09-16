@@ -1264,7 +1264,7 @@ public class WorkbookLoader {
 
 			edge(shapeId, RDF.TYPE, SH.Shape);
 			edge(shapeId, property, constraint);
-			edge(constraint, SH.predicate, propertyId);
+			edge(constraint, SH.path, propertyId);
 			edge(constraint, RDFS.COMMENT, comment);
 
 			if (valueClass != null && (valueType == null || XMLSchema.ANYURI.equals(valueType))) {
@@ -1306,7 +1306,7 @@ public class WorkbookLoader {
 		}
 
 		private Vertex getPropertyConstraint(URI shapeId, URI predicate) {
-			return graph.v(shapeId).out(SH.property).hasValue(SH.predicate, predicate).firstVertex();
+			return graph.v(shapeId).out(SH.property).hasValue(SH.path, predicate).firstVertex();
 		}
 
 		private void edge(Resource subject, URI predicate, List<Value> object) {
@@ -2542,7 +2542,7 @@ public class WorkbookLoader {
 			if (shape == null) {
 				throw new SpreadsheetException("Shape not found: " + shapeId);
 			}
-			Vertex property = shape.asTraversal().out(this.property).hasValue(SH.predicate, predicate).firstVertex();
+			Vertex property = shape.asTraversal().out(this.property).hasValue(SH.path, predicate).firstVertex();
 			if (property == null) {
 				throw new SpreadsheetException("On shape <" + shapeId + "> property not found: " + predicate);
 			}

@@ -129,7 +129,7 @@ public class KonigSchemaDiffMojo extends AbstractMojo {
 			Graph original = new MemoryGraph();
 			Graph revised = new MemoryGraph();
 			CompositeBNodeKeyFactory keyFactory = new CompositeBNodeKeyFactory();
-			keyFactory.register(SH.property, new SimpleKeyFactory(SH.property, SH.predicate));
+			keyFactory.register(SH.property, new SimpleKeyFactory(SH.property, SH.path));
 			keyFactory.register(RDFS.SUBCLASSOF, new OwlRestrictionKeyFactory());
 			
 			BNodeKeyFactoryList keyFactoryList = new BNodeKeyFactoryList();

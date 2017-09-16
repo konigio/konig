@@ -44,6 +44,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.Path;
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;
@@ -55,7 +56,7 @@ import io.konig.formula.QuantifiedExpression;
 public class PropertyConstraint {
 
 	private Resource id;
-	private URI predicate;
+	private PropertyPath path;
 	private List<Value> in;
 	private Integer minCount;
 	private Integer maxCount;
@@ -89,12 +90,23 @@ public class PropertyConstraint {
 	
 	public PropertyConstraint(URI predicate) {
 		this.id = new BNodeImpl(UidGenerator.INSTANCE.next());
-		this.predicate = predicate;
+		this.path = new PredicatePath(predicate);
+	}
+	
+	public PropertyConstraint(PropertyPath path) {
+		this.id = new BNodeImpl(UidGenerator.INSTANCE.next());
+		this.path = path;
+	}
+
+	
+	public PropertyConstraint(Resource id, PropertyPath path) {
+		this.id = id;
+		this.path = path;
 	}
 	
 	public PropertyConstraint(Resource id, URI predicate) {
 		this.id = id;
-		this.predicate = predicate;
+		this.path = new PredicatePath(predicate);
 	}
 	
 	public PropertyConstraint() {
@@ -105,7 +117,15 @@ public class PropertyConstraint {
 		if (id == null) {
 			id = graph.vertex().getId();
 		}
-		edge(graph, SH.predicate, predicate);
+		
+		if (path instanceof PredicatePath) {
+			edge(graph, SH.path, getPredicate());
+		} else {
+			if (path == null) {
+				throw new KonigException("Path must not be null");
+			}
+			throw new KonigException("Path type not supported: " + path.getClass().getSimpleName());
+		}
 		
 		if (in != null) {
 			graph.edge(id, SH.in, in);
@@ -146,7 +166,7 @@ public class PropertyConstraint {
 		return value==null ? null : new LiteralImpl(value.toString());
 	}
 	
-	private void edge(Graph graph, URI predicte, Double value) {
+	private void edge(Graph graph, URI predicate, Double value) {
 		if (value != null) {
 			Value object = ValueFactoryImpl.getInstance().createLiteral(value);
 			graph.edge(id, predicate, object);
@@ -172,7 +192,7 @@ public class PropertyConstraint {
 	}
 
 	public PropertyConstraint clone() {
-		PropertyConstraint other = new PropertyConstraint(id, predicate);
+		PropertyConstraint other = new PropertyConstraint(id, path);
 		other.in = in;
 		other.datatype = datatype;
 		other.directType = directType;
@@ -264,11 +284,19 @@ public class PropertyConstraint {
 	
 	@RdfProperty("http://www.w3.org/ns/shacl#predicate")
 	public URI getPredicate() {
-		return predicate;
+		return path instanceof PredicatePath ? ((PredicatePath)path).getPredicate() : null;
 	}
 	
 	public void setPredicate(URI predicate) {
-		this.predicate = predicate;
+		path = new PredicatePath(predicate);
+	}
+	
+//	public void setPath(PropertyPath path) {
+//		this.path = path;
+//	}
+	
+	public void setPath(URI predicate) {
+		path = new PredicatePath(predicate);
 	}
 
 	public NodeKind getNodeKind() {
@@ -405,8 +433,10 @@ public class PropertyConstraint {
 	
 	public void toJson(Set<Shape> memory, JsonGenerator json) throws IOException {
 		json.writeStartObject();
-		if (predicate != null) {
-			json.writeStringField("predicate", predicate.toString());
+		if (path instanceof PredicatePath) {
+			json.writeStringField("predicate", getPredicate().toString());
+		} else {
+			throw new KonigException("Unsupported path type: " + path==null ? "null" : path.getClass().getSimpleName());
 		}
 		if (minCount!=null) {
 			json.writeNumberField("minCount", minCount);
@@ -493,17 +523,17 @@ public class PropertyConstraint {
 	}
 
 	public void setMeasure(URI measure) {
-		predicate = measure;
+		path = new PredicatePath(measure);
 		stereotype = Konig.measure;
 	}
 	
 	public void setDimension(URI dimension) {
-		predicate = dimension;
+		path = new PredicatePath(dimension);
 		stereotype = Konig.dimension;
 	}
 	
 	public void setAttribute(URI attribute) {
-		predicate = attribute;
+		path = new PredicatePath(attribute);
 		stereotype = Konig.attribute;
 	}
 

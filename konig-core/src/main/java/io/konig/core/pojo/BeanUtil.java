@@ -1,7 +1,9 @@
 package io.konig.core.pojo;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Calendar;
 
 import org.joda.time.format.DateTimeFormatter;
@@ -54,6 +56,54 @@ public class BeanUtil {
 		return builder.toString();
 	}
 	
+	public static Class<?> factoryClass(Class<?> type) {
+		String packageName = type.getPackage().getName();
+		String simpleName = type.getSimpleName();
+		StringBuilder builder = new StringBuilder();
+		builder.append(packageName);
+		builder.append('.');
+		builder.append(simpleName);
+		builder.append("Factory");
+		
+		String factoryName = builder.toString();
+		
+		Class<?> factoryClass = null;
+		
+		try {
+			factoryClass = Class.forName(factoryName);
+		} catch (Throwable ignore) {
+			
+		}
+		
+		return factoryClass;
+	}
+	
+	public static String setterKey(Method method) {
+		Class<?>[] paramTypes = method.getParameterTypes();
+		
+		if (paramTypes.length == 1) {
+
+			String name = method.getName();
+			if ("add".equals(name)) {
+				return "";
+			}
+			if ((name.startsWith("set") || name.startsWith("add")) && 
+				name.length()>3 && 
+				Character.isUpperCase(name.codePointAt(3))
+			) {
+				String localName = name.substring(3);
+				return localName.toLowerCase();
+			}
+			if (name.startsWith("appendTo") && name.length()>8 && Character.isUpperCase(name.codePointAt(8))) {
+				String localName = name.substring(8);
+				return localName.toLowerCase();
+				
+			}
+		}
+		
+		return null;
+	}
+	
 	
 	
 	public static String adderName(URI predicate) {
@@ -90,6 +140,7 @@ public class BeanUtil {
 		
 		throw new KonigException("Unsupported datatype: " + datatype);
 	}
+	
 	
 	public static Value toValue(Object object)  {
 		if (object == null) {

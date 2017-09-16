@@ -638,7 +638,7 @@ public class WorkbookLoaderTest {
 	
 	
 	private Vertex propertyConstraint(Vertex shape, URI predicate) {
-		return shape.asTraversal().out(SH.property).hasValue(SH.predicate, predicate).firstVertex();
+		return shape.asTraversal().out(SH.property).hasValue(SH.path, predicate).firstVertex();
 	}
 	
 	private void assertInt(Vertex v, URI predicate, int value) {

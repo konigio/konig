@@ -148,8 +148,8 @@ public class OwlReasoner {
 			List<Vertex> constraintList = shape.asTraversal().out(SH.property).toVertexList();
 		
 			for (Vertex p : constraintList) {
-				Vertex property = p.getVertex(SH.predicate);
-				URI predicate = p.getURI(SH.predicate);
+				Vertex property = p.getVertex(SH.path);
+				URI predicate = p.getURI(SH.path);
 				if (predicate != null) {
 					
 					URI propertyType = property.getURI(RDF.TYPE);
@@ -332,9 +332,9 @@ public class OwlReasoner {
 		
 		Set<URI> set = new HashSet<>();
 		set.addAll(predicate.asTraversal().out(RDFS.RANGE).toUriSet());
-		set.addAll(predicate.asTraversal().in(SH.predicate).out(SH.datatype).toUriSet());
-		set.addAll(predicate.asTraversal().in(SH.predicate).out(SH.valueClass).toUriSet());
-		set.addAll(predicate.asTraversal().in(SH.predicate).out(SH.shape).out(SH.targetClass).toUriSet());
+		set.addAll(predicate.asTraversal().in(SH.path).out(SH.datatype).toUriSet());
+		set.addAll(predicate.asTraversal().in(SH.path).out(SH.valueClass).toUriSet());
+		set.addAll(predicate.asTraversal().in(SH.path).out(SH.shape).out(SH.targetClass).toUriSet());
 		
 		
 		return set;
