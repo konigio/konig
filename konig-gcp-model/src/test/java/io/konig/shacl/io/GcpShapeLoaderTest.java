@@ -61,7 +61,7 @@ public class GcpShapeLoaderTest {
 	public void setUp() {
 		GcpShapeConfig.init();
 	}
-	
+
 	@Test
 	public void testBigQueryCsvBucket() throws Exception {
 		Graph graph = loadGraph("ShapeLoaderTest/testBigQueryCsvBucket.ttl");
@@ -92,6 +92,51 @@ public class GcpShapeLoaderTest {
 		assertEquals(new Long(1), options.getSkipLeadingRows());
 		assertEquals("CSV", config.getSourceFormat());
 	}
+	
+	@Test
+	public void testShapeDataSource() {
+		URI shapeId = uri("http://example.com/PersonShape");
+		URI bucketId = uri("gs://com.example.person");
+		String iriTemplateValue = "http://example.com/users/{user_id}";
+		
+		Graph graph = new MemoryGraph();
+		graph.builder()
+			.beginSubject(shapeId)
+				.addProperty(RDF.TYPE, SH.Shape)
+				.addLiteral(Konig.iriTemplate, iriTemplateValue)
+				.beginBNode(Konig.shapeDataSource)
+					.addProperty(RDF.TYPE, Konig.GoogleBigQueryTable)
+					.addLiteral(DCTERMS.IDENTIFIER, "acme.Person")
+					.addProperty(Konig.bigQuerySource, bucketId)
+				.endSubject()
+			.endSubject();
+		
+		ShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader loader = new ShapeLoader(shapeManager);
+		loader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		assertTrue(shape.getIriTemplate()!=null);
+		assertEquals("<http://example.com/users/{user_id}>", shape.getIriTemplate().toString());
+		
+		List<DataSource> dataSourceList = shape.getShapeDataSource();
+		assertTrue(dataSourceList != null);
+		assertEquals(1, dataSourceList.size());
+		DataSource dataSource = dataSourceList.get(0);
+		DataSource source = dataSourceList.get(0);
+		assertTrue(dataSource instanceof GoogleBigQueryTable);
+		assertEquals("acme.Person", dataSource.getIdentifier());
+		GoogleBigQueryTable table = (GoogleBigQueryTable) source;
+		
+		Set<DataSource> set = table.getBigQuerySource();
+		assertTrue(set != null && set.size()==1);
+		
+		DataSource bucket = set.iterator().next();
+		assertEquals(bucketId, bucket.getId());
+	
+	}
+	
 
 	@Test
 	public void testCloudStorageBucket() throws Exception {
@@ -159,49 +204,7 @@ public class GcpShapeLoaderTest {
 		return graph;
 	}
 
-	@Test
-	public void testShapeDataSource() {
-		URI shapeId = uri("http://example.com/PersonShape");
-		URI bucketId = uri("gs://com.example.person");
-		String iriTemplateValue = "http://example.com/users/{user_id}";
-		
-		Graph graph = new MemoryGraph();
-		graph.builder()
-			.beginSubject(shapeId)
-				.addProperty(RDF.TYPE, SH.Shape)
-				.addLiteral(Konig.iriTemplate, iriTemplateValue)
-				.beginBNode(Konig.shapeDataSource)
-					.addProperty(RDF.TYPE, Konig.GoogleBigQueryTable)
-					.addLiteral(DCTERMS.IDENTIFIER, "acme.Person")
-					.addProperty(Konig.bigQuerySource, bucketId)
-				.endSubject()
-			.endSubject();
-		
-		ShapeManager shapeManager = new MemoryShapeManager();
-		ShapeLoader loader = new ShapeLoader(shapeManager);
-		loader.load(graph);
-		
-		Shape shape = shapeManager.getShapeById(shapeId);
-		assertTrue(shape!=null);
-		assertTrue(shape.getIriTemplate()!=null);
-		assertEquals("<http://example.com/users/{user_id}>", shape.getIriTemplate().toString());
-		
-		List<DataSource> dataSourceList = shape.getShapeDataSource();
-		assertTrue(dataSourceList != null);
-		assertEquals(1, dataSourceList.size());
-		DataSource dataSource = dataSourceList.get(0);
-		DataSource source = dataSourceList.get(0);
-		assertTrue(dataSource instanceof GoogleBigQueryTable);
-		assertEquals("acme.Person", dataSource.getIdentifier());
-		GoogleBigQueryTable table = (GoogleBigQueryTable) source;
-		
-		Set<DataSource> set = table.getBigQuerySource();
-		assertTrue(set != null && set.size()==1);
-		
-		DataSource bucket = set.iterator().next();
-		assertEquals(bucketId, bucket.getId());
 	
-	}
 	
 	
 	private URI uri(String value) {

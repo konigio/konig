@@ -39,7 +39,7 @@ public class SH {
 	public static final URI BlankNodeOrLiteral = new URIImpl("http://www.w3.org/ns/shacl#BlankNodeOrLiteral");
 	public static final URI IRIOrLiteral = new URIImpl("http://www.w3.org/ns/shacl#IRIOrLiteral");
 
-	public static final URI predicate = new URIImpl("http://www.w3.org/ns/shacl#predicate");
+	public static final URI path = new URIImpl("http://www.w3.org/ns/shacl#path");
 	public static final URI in = new URIImpl("http://www.w3.org/ns/shacl#in");
 	public static final URI and = new URIImpl("http://www.w3.org/ns/shacl#and");
 	public static final URI constraint = new URIImpl("http://www.w3.org/ns/shacl#constraint");

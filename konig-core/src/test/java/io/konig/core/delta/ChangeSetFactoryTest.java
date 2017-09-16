@@ -113,7 +113,7 @@ public class ChangeSetFactoryTest {
 				.addLiteral(PROV.endedAtTime, "2016-12-22T09:00", XMLSchema.DATETIME)
 			.endSubject();
 		
-		SimpleKeyFactory keyFactory = new SimpleKeyFactory(SH.property, SH.predicate);
+		SimpleKeyFactory keyFactory = new SimpleKeyFactory(SH.property, SH.path);
 
 		Set<String> ignoreNamespace = new HashSet<>();
 		ignoreNamespace.add("http://example.com/activity/");
@@ -168,7 +168,7 @@ public class ChangeSetFactoryTest {
 		source.builder()
 			.beginSubject(shapeId)
 				.beginBNode(SH.property)
-					.addProperty(SH.predicate, Schema.email)
+					.addProperty(SH.path, Schema.email)
 					.addInt(SH.minCount, 0)
 					.addInt(SH.maxCount, 1)
 				.endSubject()
@@ -178,14 +178,14 @@ public class ChangeSetFactoryTest {
 		target.builder()
 			.beginSubject(shapeId)
 				.beginBNode(SH.property)
-					.addProperty(SH.predicate, Schema.email)
+					.addProperty(SH.path, Schema.email)
 					.addInt(SH.minCount, 0)
 					.addInt(SH.maxCount, 1)
 				.endSubject()
 			.endSubject();
 
 		
-		SimpleKeyFactory keyFactory = new SimpleKeyFactory(SH.property, SH.predicate);
+		SimpleKeyFactory keyFactory = new SimpleKeyFactory(SH.property, SH.path);
 		
 		ChangeSetFactory maker = new ChangeSetFactory();
 		Graph delta = maker.createChangeSet(source, target, keyFactory);
@@ -204,7 +204,7 @@ public class ChangeSetFactoryTest {
 		source.builder()
 			.beginSubject(shapeId)
 				.beginBNode(SH.property)
-					.addProperty(SH.predicate, Schema.email)
+					.addProperty(SH.path, Schema.email)
 					.addInt(SH.minCount, 0)
 					.addInt(SH.maxCount, 1)
 				.endSubject()
@@ -214,13 +214,13 @@ public class ChangeSetFactoryTest {
 		target.builder()
 			.beginSubject(shapeId)
 				.beginBNode(SH.property)
-					.addProperty(SH.predicate, Schema.email)
+					.addProperty(SH.path, Schema.email)
 					.addInt(SH.minCount, 0)
 				.endSubject()
 			.endSubject();
 
 		
-		SimpleKeyFactory keyFactory = new SimpleKeyFactory(SH.property, SH.predicate);
+		SimpleKeyFactory keyFactory = new SimpleKeyFactory(SH.property, SH.path);
 		
 		ChangeSetFactory maker = new ChangeSetFactory();
 		Graph delta = maker.createChangeSet(source, target, keyFactory);

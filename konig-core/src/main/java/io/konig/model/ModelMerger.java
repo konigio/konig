@@ -155,7 +155,7 @@ public class ModelMerger {
 			appendKeyTerm(builder, bnode, OWL.CARDINALITY);
 			
 		} else if (predicate.equals(SH.property)) {
-			appendKey(builder, bnode, SH.predicate);
+			appendKey(builder, bnode, SH.path);
 		}
 		return builder.length()==0 ? null : builder.toString();
 	}

@@ -1,12 +1,10 @@
 package io.konig.core.pojo;
 
-import org.openrdf.model.Resource;
-
 /*
  * #%L
  * Konig Core
  * %%
- * Copyright (C) 2015 - 2016 Gregory McFall
+ * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,46 +21,34 @@ import org.openrdf.model.Resource;
  */
 
 
-public class TestPerson {
-	
-	private Resource id;
-	private String name;
-	private TestAddress address;
-	private TestGender gender;
-	
-	
+import org.openrdf.model.Literal;
+import org.openrdf.model.URI;
 
-	public Resource getId() {
-		return id;
+public class TestProduct {
+	
+	private Literal name;
+	private URI manufacturer;
+
+	public TestProduct() {
+		// TODO Auto-generated constructor stub
 	}
 
-	public void setId(Resource id) {
-		this.id = id;
-	}
-
-	public String getName() {
+	public Literal getName() {
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName(Literal name) {
 		this.name = name;
 	}
 
-	public TestAddress getAddress() {
-		return address;
+	public URI getManufacturer() {
+		return manufacturer;
 	}
 
-	public void setAddress(TestAddress address) {
-		this.address = address;
+	public void setManufacturer(URI manufacturer) {
+		this.manufacturer = manufacturer;
 	}
-
-	public TestGender getGender() {
-		return gender;
-	}
-
-	public void setGender(TestGender gender) {
-		this.gender = gender;
-	}
-
 	
+	
+
 }

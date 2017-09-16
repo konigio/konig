@@ -25,6 +25,87 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.Vertex;
 
+/**
+ * A factory that creates Plain-Old Java Objects from RDF Graphs.
+ * Properties from an RDF Graph get mapped to properties on a Java Object in accordance with 
+ * the conventions described below.
+ * <h3> Simple Properties</h3>
+ * For each single-valued property, the POJO should declare a setter method such as:
+ * <pre>
+ *  	void setEmail(String email) {...}
+ * </pre>
+ * <p>
+ * The name of the property (in this case "email") must match the local name of the 
+ * RDF Property.
+ * </p>
+ * <p>
+ * Alternatively, you can use a different name for the setter method and declare the RDF
+ * Property explicitly, like this:
+ * <pre>
+ * 		@RdfProperty("http://schema.org/email")
+ * 		void setEmailAddress(String emailAddress);
+ * </pre>
+ * <p>
+ * If the property can have multiple values, then the POJO <em>may</em> declare a setter 
+ * method as described above (with or without the annotation.
+ * </p>
+ * <p> However, that is considered bad practice. In the case of a multi-valued property,
+ * it is better to define a collection setter and/or an adder method like this:
+ * <pre>
+ *  	void setEmail(Collection<String> email);
+ * 		void addEmail(String email);
+ * </pre>
+ * 
+ * The Collection argument in the setter may have any type that is assignable to
+ *  java.util.Collection (java.util.List, java.util.Set, java.util.LinkedList, etc.).
+ *  
+ * <h3> RDF List Properties </h3>
+ * 
+ * Currently, we only support RDF Lists as properties of other entities (not as stand-alone entities).
+ * 
+ * There are three design patterns for working with RDF Lists in Java:
+ * <ol>
+ *   <li> Declare a method to append an element to the list.  The method should have a name of 
+ *        the form <code>appendToX</code> where <code>X</code> is the capitalized local
+ *        name of the property through which the RDF List is accessed.  Consider, for instance,
+ *        a property whose local name is <code>path</code>.  Your POJO could declare a method
+ *        like this:
+ *        <pre>
+ *     		void appendToPath(URI pathElement);
+ *     	  </pre>
+ *        Your POJO is responsible for creating the collection that holds elements that are appended
+ *        via this method.  In this example, the argument is a URI.  But it could be a JavaObject
+ *        representing the element to be appended, or a literal value if the List contains literals.
+ *   </li>
+ *   <li> Declare a setter that takes a Java Collection as an argument
+ *        <pre>
+ *   		void setPath(List<URI> path);
+ *        </pre>
+ *   </li>
+ *   <li> Declare a setter that takes a custom Java class (or interface) as the RDF List.  This option
+ *        is similar to the second option (setter that takes a Java Collection), but in this case 
+ *        the argument is not a Java Collection.  It is a custom Java class.  The custom Java class 
+ *        must have a default (no-arg) constructor, it must contain the @RdfList annotation, 
+ *        and it must have an <code>add</code> method for adding elements to the List.  For example, 
+ *        you might define the following Java interface to represent an RDF List:
+ *        <pre>
+ *          @RdfList
+ *        	public interface Path {
+ *            void add(URI pathElement);
+ *            ...
+ *          }
+ *        </pre>
+ *        In this case, your POJO would declare the following setter:
+ *        <pre>
+ *        	void setPath(Path path);
+ *        </pre>
+ *	</li>
+ * </ol>
+ * 
+ * 
+ * @author Greg McFall
+ *
+ */
 public interface PojoFactory {
 
 	/**

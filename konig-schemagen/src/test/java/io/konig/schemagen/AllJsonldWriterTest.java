@@ -76,10 +76,10 @@ public class AllJsonldWriterTest {
 		builder.beginSubject(uri("http://example.com/shapes/v1/schema/Person"))
 			.addProperty(RDF.TYPE, SH.Shape)
 			.beginBNode(SH.property)
-				.addProperty(SH.predicate, Schema.givenName)
+				.addProperty(SH.path, Schema.givenName)
 			.endSubject()
 			.beginBNode(SH.property)
-				.addProperty(SH.predicate, Schema.familyName)
+				.addProperty(SH.path, Schema.familyName)
 			.endSubject()
 		;
 		
