@@ -26,7 +26,7 @@ import java.util.List;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class FunctionExpression extends AbstractExpression implements ValueExpression {
+public class FunctionExpression extends AbstractExpression implements NumericValueExpression {
 	
 	private String functionName;
 	private List<QueryExpression> argList = new ArrayList<>();

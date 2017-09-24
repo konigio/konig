@@ -36,6 +36,7 @@ import org.openrdf.model.URI;
 import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.Shape;
+import io.konig.sql.query.GroupingElement;
 
 /**
  * A structure that describes the rules for transformation some shape (or set of shapes) to a given target shape.
@@ -50,11 +51,27 @@ public class ShapeRule extends AbstractPrettyPrintable {
 
 	private PropertyRule accessor;
 	private VariableNamer variableNamer;
+	private GroupingElement groupingElement;
+	
 	
 	public ShapeRule(Shape targetShape) {
 		this.targetShape = targetShape;
 	}
 	
+	
+	
+	public GroupingElement getGroupingElement() {
+		return groupingElement;
+	}
+
+
+
+	public void setGroupingElement(GroupingElement groupingElement) {
+		this.groupingElement = groupingElement;
+	}
+
+
+
 	public List<DataChannel> getChannels() {
 		return channels;
 	}

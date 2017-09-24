@@ -35,6 +35,8 @@ public class Konig {
 	public static final String GOOGLE_BIG_QUERY_TABLE = "http://www.konig.io/ns/core/GoogleBigQueryTable";
 	public static final String SHAPE_DATA_SOURCE = "http://www.konig.io/ns/core/shapeDataSource";
 	public static final String IRI_TEMPLATE = "http://www.konig.io/ns/core/iriTemplate";
+	public static final String IRI_FORMULA = "http://www.konig.io/ns/core/iriFormula";
+	
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
@@ -76,6 +78,7 @@ public class Konig {
 	public static final URI equivalentPath = new URIImpl(EQUIVALENT_PATH);
 	public static final URI LoadModelFromSpreadsheet = new URIImpl("http://www.konig.io/ns/core/LoadModelFromSpreadsheet");
 	public static final URI iriTemplate = new URIImpl(IRI_TEMPLATE);
+	public static final URI iriFormula = new URIImpl(IRI_FORMULA);
 	public static final URI idFormat = new URIImpl("http://www.konig.io/ns/core/idFormat");
 	public static final URI Curie = new URIImpl("http://www.konig.io/ns/core/Curie");
 	public static final URI LocalName = new URIImpl("http://www.konig.io/ns/core/LocalName");

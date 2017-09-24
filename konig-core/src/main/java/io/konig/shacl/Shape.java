@@ -47,6 +47,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.datasource.DataSource;
 import io.konig.formula.Expression;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.impl.EmptyList;
 
 public class Shape {
@@ -72,6 +73,7 @@ public class Shape {
 
 	
 	private IriTemplate iriTemplate;
+	private QuantifiedExpression iriFormula;
 	private URI idFormat;
 	
 	private List<DataSource> shapeDataSource;
@@ -584,5 +586,16 @@ public class Shape {
 	public void setMediaTypeBaseName(String mediaTypeBaseName) {
 		this.mediaTypeBaseName = mediaTypeBaseName;
 	}
+
+
+	@RdfProperty(Konig.IRI_FORMULA)
+	public QuantifiedExpression getIriFormula() {
+		return iriFormula;
+	}
+
+	public void setIriFormula(QuantifiedExpression iriFormula) {
+		this.iriFormula = iriFormula;
+	}
+	
 	
 }

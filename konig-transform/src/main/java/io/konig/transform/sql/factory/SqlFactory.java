@@ -46,7 +46,6 @@ import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
-import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
@@ -78,9 +77,6 @@ import io.konig.sql.query.UpdateExpression;
 import io.konig.sql.query.UpdateItem;
 import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
-import io.konig.transform.IriTemplateInfo;
-import io.konig.transform.MappedId;
-import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
@@ -89,6 +85,7 @@ import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.FormulaPropertyRule;
+import io.konig.transform.rule.FormulaIdRule;
 import io.konig.transform.rule.IdRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinStatement;
@@ -165,23 +162,30 @@ public class SqlFactory {
 		private void addGroupBy(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
 			
 			GroupByClause clause = null;
-			for (PropertyRule p : shapeRule.getPropertyRules()) {
-				if (p instanceof FormulaPropertyRule) {
-					FormulaPropertyRule fpr = (FormulaPropertyRule) p;
-					PropertyConstraint pc = fpr.getTargetProperty();
-					if (Konig.dimension.equals(pc.getStereotype())) {
-						if (clause == null) {
-							clause = new GroupByClause(null);
-						}
-						QueryExpression qe = column(p);
-						if (qe instanceof AliasExpression) {
-							AliasExpression ae = (AliasExpression) qe;
-							qe = ae.getExpression();
-						}
-						if (qe instanceof GroupingElement) {
-							clause.add((GroupingElement)qe);
-						} else {
-							throw new TransformBuildException("Expected column to be a GroupingElement");
+			
+			GroupingElement ge = shapeRule.getGroupingElement();
+			if (ge != null) {
+				clause = new GroupByClause(null);
+				clause.add(ge);
+			} else {
+				for (PropertyRule p : shapeRule.getPropertyRules()) {
+					if (p instanceof FormulaPropertyRule) {
+						FormulaPropertyRule fpr = (FormulaPropertyRule) p;
+						PropertyConstraint pc = fpr.getTargetProperty();
+						if (Konig.dimension.equals(pc.getStereotype())) {
+							if (clause == null) {
+								clause = new GroupByClause(null);
+							}
+							QueryExpression qe = column(p);
+							if (qe instanceof AliasExpression) {
+								AliasExpression ae = (AliasExpression) qe;
+								qe = ae.getExpression();
+							}
+							if (qe instanceof GroupingElement) {
+								clause.add((GroupingElement)qe);
+							} else {
+								throw new TransformBuildException("Expected column to be a GroupingElement");
+							}
 						}
 					}
 				}
@@ -298,11 +302,34 @@ public class SqlFactory {
 				} else if (idRule instanceof IriTemplateIdRule) {
 					result = createIriTemplateValue(shapeRule, (IriTemplateIdRule) idRule);
 					
+				} else if (idRule instanceof FormulaIdRule) {
+					result = createFormulaIdValue(shapeRule, (FormulaIdRule)idRule);
+					
 				} else {
 					throw new TransformBuildException("Unsupported IdRule " + idRule.getClass().getName());
 				}
 			}
 			return result;
+		}
+
+		private ValueExpression createFormulaIdValue(ShapeRule shapeRule, FormulaIdRule idRule) throws TransformBuildException {
+			PropertyConstraint p = new PropertyConstraint(Konig.id);
+			p.setFormula(shapeRule.getTargetShape().getIriFormula());
+			p.setMaxCount(1);
+			p.setValueClass(shapeRule.getTargetShape().getTargetClass());
+			SqlFormulaExchange exchange = SqlFormulaExchange.builder()
+					.withShape(shapeRule.getTargetShape())
+					.withProperty(p)
+					.withTableMap(this)
+					.build();
+			ValueExpression ve = formulaFactory.formula(exchange);
+			
+			GroupingElement ge = exchange.getGroupingElement();
+			if (ge != null) {
+				shapeRule.setGroupingElement(ge);
+			}
+
+			return new AliasExpression(ve, idColumnName);
 		}
 
 		private ValueExpression createIriTemplateValue(ShapeRule shapeRule, IriTemplateIdRule idRule) throws TransformBuildException {
@@ -411,8 +438,21 @@ public class SqlFactory {
 			
 			if (p instanceof FormulaPropertyRule) {
 				FormulaPropertyRule fr = (FormulaPropertyRule) p;
-				ValueExpression ve = formulaFactory.formula(this, tableItem, fr.getSourceProperty());
-				return new AliasExpression(ve, predicate.getLocalName());
+				
+				SqlFormulaExchange exchange = SqlFormulaExchange.builder()
+						.withProperty(fr.getSourceProperty())
+						.withSourceTable(tableItem)
+						.withTableMap(this)
+						.build();
+				
+				ValueExpression ve = formulaFactory.formula(exchange);
+				if (exchange.getGroupingElement() != null) {
+					p.getContainer().setGroupingElement(exchange.getGroupingElement());
+				}
+				
+				AliasExpression ae = new AliasExpression(ve, predicate.getLocalName());
+				
+				return ae;
 			}
 			
 			throw new TransformBuildException("Unsupported PropertyRule: " + p.getClass().getName());

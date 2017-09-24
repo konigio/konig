@@ -1242,6 +1242,10 @@ public class WorkbookLoader {
 					edge(shapeId, SH.targetClass, valueClass);
 					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
+				
+				if (formula != null) {
+					edge(shapeId, Konig.iriFormula, formula);
+				}
 
 				return;
 			}

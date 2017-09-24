@@ -69,7 +69,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		this.shapeRuleFactory = shapeRuleFactory;
 		this.bqCmdLineFactory = bqCmdLineFactory;
 		if (shapeRuleFactory.getStrategy()==null) {
-			shapeRuleFactory.setStrategy(new BigQueryTransformStrategy());
+			shapeRuleFactory.setStrategy(new BigQueryTransformStrategy(shapeManager));
 		}
 	}
 	
@@ -77,7 +77,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		this(
 			shapeManager, 
 			outDir, 
-			new ShapeRuleFactory(shapeManager, owlReasoner, new BigQueryTransformStrategy()), 
+			new ShapeRuleFactory(shapeManager, owlReasoner, new BigQueryTransformStrategy(shapeManager)), 
 			new BigQueryCommandLineFactory(new SqlFactory())
 		);
 	}

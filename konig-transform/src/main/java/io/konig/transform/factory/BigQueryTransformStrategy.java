@@ -32,8 +32,14 @@ import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
 
 public class BigQueryTransformStrategy extends AbstractTransformStrategy {
+	
+	private ShapeManager shapeManager;
+	public BigQueryTransformStrategy(ShapeManager shapeManager) {
+		this.shapeManager = shapeManager;
+	}
 
 	@Override
 	public List<SourceShape> findCandidateSourceShapes(TargetShape target) throws TransformBuildException {
@@ -62,6 +68,7 @@ public class BigQueryTransformStrategy extends AbstractTransformStrategy {
 		List<VariableTargetProperty> variableList = target.getVariableList();
 		if (variableList != null) {
 			for (VariableTargetProperty vtp : variableList) {
+				
 				PropertyConstraint p = vtp.getPropertyConstraint();
 				Shape sourceShape = p.getShape();
 				if (sourceShape != null) {
@@ -77,7 +84,10 @@ public class BigQueryTransformStrategy extends AbstractTransformStrategy {
 						URI sourceClass = (URI) valueClass;
 						List<Shape> shapeList = factory.getShapeManager().getShapesByTargetClass(sourceClass);
 						for (Shape shape : shapeList) {
-							DataSource ds = findDatasource(shape);
+							DataSource ds = targetDatasource(shape);
+							if (ds == null) {
+								ds = findDatasource(shape);
+							}
 							if (ds != null) {
 								SourceShape source = SourceShape.create(shape);
 								source.setDataSource(ds);
@@ -91,6 +101,28 @@ public class BigQueryTransformStrategy extends AbstractTransformStrategy {
 		
 	}
 
+
+	private DataSource targetDatasource(Shape shape) {
+		List<DataSource> list = shape.getShapeDataSource();
+		if (list != null) {
+			GoogleBigQueryTable bigQueryTable = null;
+			GoogleCloudStorageBucket bucket = null;
+			for (DataSource source : list) {
+				if (source instanceof GoogleBigQueryTable) {
+					bigQueryTable = (GoogleBigQueryTable) source;
+				} else if (source instanceof GoogleCloudStorageBucket) {
+					bucket = (GoogleCloudStorageBucket) source;
+				}
+			}
+			
+			if ((bucket== null && bigQueryTable != null)) {
+				return bigQueryTable;
+			}
+			
+		}
+		return null;
+	}
+	
 	private DataSource findDatasource(Shape shape) {
 		List<DataSource> list = shape.getShapeDataSource();
 		if (list != null) {
@@ -104,10 +136,32 @@ public class BigQueryTransformStrategy extends AbstractTransformStrategy {
 				}
 			}
 			
-			if (bucket !=null && bigQueryTable != null) {
+			if ((bucket !=null && bigQueryTable != null)) {
 				return bigQueryTable;
 			}
 			
+		}
+		return null;
+	}
+
+	
+
+	private DataSource datasourceFromVariables(Shape shape) {
+		
+		List<PropertyConstraint> variableList = shape.getVariable();
+		if (variableList != null) {
+			for (PropertyConstraint p : variableList) {
+				Resource valueClass = p.getValueClass();
+				if (valueClass instanceof URI) {
+					List<Shape> shapeList = shapeManager.getShapesByTargetClass((URI)valueClass);
+					for (Shape s : shapeList) {
+						DataSource ds = targetDatasource(s);
+						if (ds != null) {
+							return ds;
+						}
+					}
+				}
+			}
 		}
 		return null;
 	}

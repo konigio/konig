@@ -37,7 +37,7 @@ public class AbstractShapeRuleFactoryTest extends TransformTest {
 
 	
 	protected void useBigQueryTransformStrategy() {
-		shapeRuleFactory.setStrategy(new BigQueryTransformStrategy());
+		shapeRuleFactory.setStrategy(new BigQueryTransformStrategy(shapeRuleFactory.getShapeManager()));
 		
 	}
 	

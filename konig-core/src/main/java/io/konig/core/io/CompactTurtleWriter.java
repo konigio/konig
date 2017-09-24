@@ -322,8 +322,8 @@ public class CompactTurtleWriter extends TurtleWriter {
 		for (int i=0; i<label.length();) {
 			int c = label.codePointAt(i);
 			
-			if (c == quoteChar) {
-				writer.write(quoteString);
+			if (c == quoteChar || c=='\n' || c=='\r') {
+				writer.write(c);
 				
 			} else if ((c < 32 || c>255) && c<0xffff) {
 				

@@ -44,7 +44,7 @@ public class SqlUtil {
 		return null;
 	}
 
-	public static ValueExpression columnExpression(TableItemExpression table, URI predicate) {
+	public static ColumnExpression columnExpression(TableItemExpression table, URI predicate) {
 		String columnName = columnName(table, predicate);
 		return new ColumnExpression(columnName);
 	}

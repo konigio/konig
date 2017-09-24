@@ -51,8 +51,10 @@ import io.konig.formula.VariableTerm;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.BooleanTerm;
+import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
+import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.IfExpression;
 import io.konig.sql.query.NumericValueExpression;
 import io.konig.sql.query.QueryExpression;
@@ -66,20 +68,24 @@ import io.konig.transform.factory.TransformBuildException;
 public class SqlFormulaFactory {
 	
 
-	public ValueExpression formula(VariableTableMap tableMap, TableItemExpression sourceTable, PropertyConstraint p) throws TransformBuildException {
-		Worker worker = new Worker(tableMap, sourceTable);
+	public ValueExpression formula(SqlFormulaExchange request) throws TransformBuildException {
+		Worker worker = new Worker(request);
 		
-		return worker.formula(p);
+		return worker.formula(request.getProperty());
 	}
 	
 	private static class Worker {
 
 		private VariableTableMap tableMap;
 		private TableItemExpression sourceTable;
+		private PropertyConstraint propertyConstraint;
+		private SqlFormulaExchange exchange;
 		
-		public Worker(VariableTableMap tableMap, TableItemExpression sourceTable) {
-			this.tableMap = tableMap;
-			this.sourceTable = sourceTable;
+		public Worker(SqlFormulaExchange request) {
+			this.exchange = request;
+			this.tableMap = request.getTableMap();
+			this.sourceTable = request.getSourceTable();
+			this.propertyConstraint = request.getProperty();
 		}
 
 		public ValueExpression formula(PropertyConstraint p) throws TransformBuildException {
@@ -263,7 +269,16 @@ public class SqlFormulaFactory {
 							if (step.getDirection() == Direction.OUT) {
 								term = step.getTerm();
 								URI predicate = term.getIri();
-								return SqlUtil.columnExpression(tableItem, predicate);
+								ColumnExpression ge = SqlUtil.columnExpression(tableItem, predicate);
+								ValueExpression ve = ge;
+								Integer maxCount = propertyConstraint.getMaxCount();
+								if (maxCount == null) {
+									exchange.setGroupingElement(ge);
+									io.konig.sql.query.FunctionExpression func = new io.konig.sql.query.FunctionExpression("ARRAY_AGG");
+									func.addArg(ve);
+									ve = func;
+								}
+								return ve;
 							}
 						}
 					}

@@ -78,11 +78,29 @@ public class FormulaContextBuilder implements ShapeVisitor {
 	public void visit(Shape shape) {
 		worker.setShape(shape);
 		
+		handleIriFormula(shape);
 		visit(shape, SH.property, shape.getProperty());
 		visit(shape, Konig.derivedProperty, shape.getDerivedProperty());
 
 	}
 	
+	private void handleIriFormula(Shape shape) {
+		
+		Expression formula = shape.getIriFormula();
+		if (formula != null) {
+			worker.setProperty(null);
+			formula.dispatch(worker);
+			if (graph != null) {
+				Vertex shapeVertex = graph.getVertex(shape.getId());
+				if (shapeVertex != null) {
+					Set<Edge> doomed = shapeVertex.outProperty(Konig.iriFormula);
+					doomed.clear();
+					shapeVertex.addProperty(Konig.iriFormula, new LiteralImpl(formula.toString()));
+				}
+			}
+		}
+	}
+
 	private void visit(Shape shape, URI predicate, List<PropertyConstraint> list) {
 		if (list != null) {
 			for (PropertyConstraint p : list) {
