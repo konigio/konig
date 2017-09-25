@@ -79,6 +79,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		ShapeRule shapeRule = createShapeRule(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
 		List<ValueExpression> valueList = select.getValues();
 		assertEquals(2, valueList.size());
 		
@@ -114,7 +115,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertTrue(ge instanceof ColumnExpression);
 		
 		ColumnExpression ce = (ColumnExpression) ge;
-		assertEquals("member", ce.getColumnName());
+		assertEquals("organization", ce.getColumnName());
 	}
 	
 	@Test

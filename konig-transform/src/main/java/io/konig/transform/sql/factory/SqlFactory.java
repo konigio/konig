@@ -446,9 +446,6 @@ public class SqlFactory {
 						.build();
 				
 				ValueExpression ve = formulaFactory.formula(exchange);
-				if (exchange.getGroupingElement() != null) {
-					p.getContainer().setGroupingElement(exchange.getGroupingElement());
-				}
 				
 				AliasExpression ae = new AliasExpression(ve, predicate.getLocalName());
 				

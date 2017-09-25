@@ -272,8 +272,9 @@ public class SqlFormulaFactory {
 								ColumnExpression ge = SqlUtil.columnExpression(tableItem, predicate);
 								ValueExpression ve = ge;
 								Integer maxCount = propertyConstraint.getMaxCount();
+
+								exchange.setGroupingElement(ge);
 								if (maxCount == null) {
-									exchange.setGroupingElement(ge);
 									io.konig.sql.query.FunctionExpression func = new io.konig.sql.query.FunctionExpression("ARRAY_AGG");
 									func.addArg(ve);
 									ve = func;
