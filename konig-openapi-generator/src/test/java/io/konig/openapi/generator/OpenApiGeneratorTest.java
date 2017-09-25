@@ -75,7 +75,7 @@ public class OpenApiGeneratorTest {
 			generator.generate(request);
 	
 			String text = output.toString();
-			System.out.println(text);
+//			System.out.println(text);
 		}
 		
 	}
