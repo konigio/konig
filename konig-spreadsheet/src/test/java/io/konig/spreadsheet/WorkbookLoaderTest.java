@@ -32,6 +32,7 @@ import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -63,6 +64,30 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class WorkbookLoaderTest {
+	
+
+	@Test
+	public void testIriReference() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("iri-reference.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shape/PersonShape");
+		
+		Vertex v = graph.getVertex(shapeId);
+		
+		assertValue(v, SH.nodeKind, SH.IRI);
+		Vertex p = v.getVertex(SH.property);
+		
+		assertValue(p, SH.nodeKind, SH.IRI);
+	}
+	
 	
 	@Test
 	public void testLabels() throws Exception {

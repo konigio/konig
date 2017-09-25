@@ -1253,7 +1253,7 @@ public class WorkbookLoader {
 			Resource constraint = graph.vertex().getId();
 
 			if (RDF.TYPE.equals(propertyId)) {
-				if (valueType.equals(XMLSchema.ANYURI)) {
+				if (valueType.equals(XMLSchema.ANYURI) || valueType.equals(SH.IRI)) {
 					edge(constraint, SH.nodeKind, SH.IRI);
 					valueType = null;
 				} else {
@@ -1271,7 +1271,7 @@ public class WorkbookLoader {
 			edge(constraint, SH.path, propertyId);
 			edge(constraint, RDFS.COMMENT, comment);
 
-			if (valueClass != null && (valueType == null || XMLSchema.ANYURI.equals(valueType))) {
+			if (valueClass != null && (valueType == null || XMLSchema.ANYURI.equals(valueType) || SH.IRI.equals(valueType))) {
 				edge(constraint, SH.valueClass, valueClass);
 				edge(constraint, SH.nodeKind, SH.IRI);
 				if (!RDF.TYPE.equals(propertyId)) {
