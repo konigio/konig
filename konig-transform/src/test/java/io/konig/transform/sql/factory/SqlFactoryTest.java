@@ -70,7 +70,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		useBigQueryTransformStrategy();
 	}
 	
-	@Ignore
+	@Test
 	public void testArrayAgg() throws Exception {
 		load("src/test/resources/konig-transform/array-agg");
 
@@ -117,7 +117,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("member", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testInjectModifiedTimestamp() throws Exception {
 		
 		load("src/test/resources/konig-transform/inject-modified-timestamp");
@@ -142,7 +142,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	}
 	
 
-	@Ignore
+	@Test
 	public void testGcpDeploy() throws Exception {
 		
 		load("src/test/resources/konig-transform/gcp-deploy");
@@ -186,7 +186,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAggregateFunction() throws Exception {
 		
 		load("src/test/resources/konig-transform/aggregate-function");
@@ -220,7 +220,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("resultOf", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testDerivedProperty() throws Exception {
 		
 		load("src/test/resources/konig-transform/derived-property");
@@ -247,7 +247,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("loss", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testHasValueConstraint() throws Exception {
 		
 		load("src/test/resources/konig-transform/has-value-constraint");
@@ -276,7 +276,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testEnumField() throws Exception {
 		
 		load("src/test/resources/konig-transform/enum-field");
@@ -321,7 +321,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testJoinNestedEntityByPk() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity-by-pk");
@@ -356,7 +356,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("b.org_id", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinNestedEntity() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -437,7 +437,6 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
-		System.out.println(select);
 		FromExpression from = select.getFrom();
 		List<TableItemExpression> tableItems = from.getTableItems();
 		assertEquals(1, tableItems.size());
@@ -456,25 +455,50 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertTrue(leftTableAlias.getTableName() instanceof TableNameExpression);
 		TableNameExpression tne = (TableNameExpression) leftTableAlias.getTableName();
 		
-		assertEquals("schema.PersonNameShape", tne.getTableName());
 		
-		TableItemExpression rightTable = join.getRightTable();
-		assertTrue(rightTable instanceof TableAliasExpression);
 		
-		TableAliasExpression rightTableAlias = (TableAliasExpression) rightTable;
+		if ("schema.PersonNameShape".equals(tne.getTableName())) {
 		
-		assertTrue(rightTableAlias.getTableName() instanceof TableNameExpression);
-		tne = (TableNameExpression) rightTableAlias.getTableName();
 		
-		assertEquals("schema.PersonAlumniOfShape", tne.getTableName());
 		
-		List<ValueExpression> valueList = select.getValues();
-		
-		assertEquals(3, valueList.size());
-		
-		assertColumn(select, "a.id", null);
-		assertColumn(select, "a.givenName", null);
-		assertColumn(select, "b.alumniOf", null);
+			TableItemExpression rightTable = join.getRightTable();
+			assertTrue(rightTable instanceof TableAliasExpression);
+			
+			TableAliasExpression rightTableAlias = (TableAliasExpression) rightTable;
+			
+			assertTrue(rightTableAlias.getTableName() instanceof TableNameExpression);
+			tne = (TableNameExpression) rightTableAlias.getTableName();
+			
+			assertEquals("schema.PersonAlumniOfShape", tne.getTableName());
+			
+			List<ValueExpression> valueList = select.getValues();
+			
+			assertEquals(3, valueList.size());
+			
+			assertColumn(select, "a.id", null);
+			assertColumn(select, "a.givenName", null);
+			assertColumn(select, "b.alumniOf", null);
+		} else {
+			assertEquals("schema.PersonAlumniOfShape", tne.getTableName());
+
+			TableItemExpression rightTable = join.getRightTable();
+			assertTrue(rightTable instanceof TableAliasExpression);
+			
+			TableAliasExpression rightTableAlias = (TableAliasExpression) rightTable;
+			
+			assertTrue(rightTableAlias.getTableName() instanceof TableNameExpression);
+			tne = (TableNameExpression) rightTableAlias.getTableName();
+			
+			assertEquals("schema.PersonNameShape", tne.getTableName());
+			
+			List<ValueExpression> valueList = select.getValues();
+			
+			assertEquals(3, valueList.size());
+			
+			assertColumn(select, "a.id", null);
+			assertColumn(select, "b.givenName", null);
+			assertColumn(select, "a.alumniOf", null);
+		}
 		
 		
 		
@@ -525,7 +549,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testFlattenedField() throws Exception {
 		
 		load("src/test/resources/konig-transform/flattened-field");
@@ -578,7 +602,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -616,7 +640,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Ignore
+	@Test
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");
