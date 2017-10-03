@@ -66,7 +66,7 @@ public class GoogleAnalyticsUdfGeneratorTest {
 		shapeDataSource.add(table);
 		shapeDataSource.add(ds);
 		shape.setShapeDataSource(shapeDataSource);
-		GoogleAnalyticsUdfGenerator generator = new GoogleAnalyticsUdfGenerator(new GoogleAnalyticsShapeFileCreator(new File("src/test/resources/GoogleAnalyticsExport")),shapeManager);
+		GoogleAnalyticsUdfGenerator generator = new GoogleAnalyticsUdfGenerator(new GoogleAnalyticsShapeFileCreator(new File("target/test/resources/GoogleAnalyticsExport")),shapeManager);
 		generator.visit(shape);
 		
 	}
