@@ -158,6 +158,7 @@ public class GoogleAnalyticsUdfGenerator implements ShapeVisitor {
 	
 	
 	private void writeResources(File file, String content) {
+		file.getParentFile().mkdirs();
 		try (FileWriter out = new FileWriter(file)) {
 			out.write(content);
 		} catch (Throwable e) {
