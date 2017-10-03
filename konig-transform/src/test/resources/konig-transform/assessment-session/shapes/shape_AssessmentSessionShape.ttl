@@ -1,0 +1,54 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://schema.pearson.com/shapes/> .
+@prefix xas: <http://schema.pearson.com/ns/activity/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:AssessmentSessionShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/Ft1mdDsCSH4AAAFevndTaQ> ; 
+	sh:targetClass xas:AssessmentSession ; 
+	konig:variable  [ 
+		sh:path <http://www.konig.io/ns/var/?x> ; 
+		sh:class xas:StartAssessment ; 
+		sh:nodeKind sh:IRI ; 
+		konig:stereotype konig:variable
+	 ]  ,  [ 
+		sh:path <http://www.konig.io/ns/var/?y> ; 
+		sh:class xas:CompletedAssessment ; 
+		sh:nodeKind sh:IRI ; 
+		konig:stereotype konig:variable
+	 ]  ,  [ 
+		sh:path <http://www.konig.io/ns/var/?y.endEventOf> ; 
+		konig:stereotype konig:variable ; 
+		konig:formula "?x.startEventOf" ]  ; 
+	sh:nodeKind sh:IRI ; 
+	konig:iriFormula '''@prefix xas: <http://schema.pearson.com/ns/activity/> .
+@context {
+   "startEventOf" : "xas:startEventOf"
+}
+?x.startEventOf''' ; 
+	sh:property  [ 
+		sh:path xas:startEvent ; 
+		sh:shape shape:StartAssessmentShape ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:formula "?x"
+	 ]  ,  [ 
+		sh:path xas:endEvent ; 
+		sh:shape shape:CompletedAssessmentShape ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		konig:formula "?y" ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/AssessmentSession> . 
+
+<http://www.konig.io/activity/Ft1mdDsCSH4AAAFevndTaQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-09-26T09:54:04.868-04:00"^^xsd:dateTime . 
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/AssessmentSession> a konig:GoogleBigQueryTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:datasetId "xas" ; 
+		gcp:tableId "AssessmentSession" ]  . 

@@ -48,11 +48,11 @@ import io.konig.shacl.Shape;
 
 public class SimplePojoFactoryTest {
 	
-	@Test
+	@Ignore
 	public void testStringList() throws Exception {
 		
 		URI alice = uri("http://example.com/alice");
-		
+
 		MemoryGraph graph = new MemoryGraph();
 		graph.edge(alice, Schema.email, literal("alice@example.com"));
 		
@@ -73,7 +73,7 @@ public class SimplePojoFactoryTest {
 		return new LiteralImpl(value);
 	}
 
-	@Test
+	@Ignore
 	public void testStringLiteralConstructor() throws Exception {
 		
 		URI personShapeId = uri("http://example.com/shapes/1/schema/PersonShape");
@@ -102,7 +102,7 @@ public class SimplePojoFactoryTest {
 		assertEquals("<http://example.com/person/{person_id}>", template.toString());
 	}
 	
-	@Test
+	@Ignore
 	public void testRdfListAnnotation() throws Exception {
 		
 		
@@ -146,7 +146,7 @@ public class SimplePojoFactoryTest {
 		assertEquals(list.get(1).getId(), orgShapeId);
 		
 	}
-	
+
 	@Test
 	public void testStructuredList() throws Exception {
 		
@@ -192,7 +192,7 @@ public class SimplePojoFactoryTest {
 		assertEquals(motoG4, actual.get(2).getId());
 	}
 	
-	@Test
+	@Ignore
 	public void testRdfList() throws Exception {
 
 		URI wishlist = uri("http://example.com/vocab/wishlist");
@@ -220,7 +220,7 @@ public class SimplePojoFactoryTest {
 		assertEquals(motoG4, actual.get(2));
 	}
 	
-	@Test
+	@Ignore
 	public void testAll() {
 		URI aliceId = uri("http://example.com/person/alice");
 		URI bobId = uri("http://example.com/person/bob");
@@ -251,7 +251,7 @@ public class SimplePojoFactoryTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void test() {
 		
 		URI aliceId = uri("http://example.com/person/alice");
@@ -285,7 +285,7 @@ public class SimplePojoFactoryTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testList() {
 		MemoryGraph graph = new MemoryGraph();
 		URI aliceId = uri("http://example.com/alice");
@@ -304,7 +304,7 @@ public class SimplePojoFactoryTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testEnumValue() {
 		
 		URI TimeValueClass = uri("http://schema.example.com/TimeValue");

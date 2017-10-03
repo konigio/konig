@@ -27,8 +27,10 @@ import java.io.File;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -41,11 +43,15 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.FileGetter;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
+import io.konig.core.vocab.Schema;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 
@@ -53,6 +59,36 @@ public class ShapeWriterTest {
 	
 	private ShapeWriter shapeWriter = new ShapeWriter();
 	private Graph graph = new MemoryGraph();
+	
+	@Test
+	public void testSequencePath() throws Exception {
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		Shape shape = new Shape(shapeId);
+		
+		SequencePath path = new SequencePath();
+		path.add(new PredicatePath(Schema.address));
+		path.add(new PredicatePath(Schema.addressCountry));
+		
+		PropertyConstraint p = new PropertyConstraint();
+		p.setPath(path);
+		
+		shape.add(p);
+		
+		graph.setNamespaceManager(MemoryNamespaceManager.getDefaultInstance());
+		shapeWriter.emitShape(shape, graph);
+		
+		Vertex v = graph.getVertex(shapeId);
+		
+		Vertex property = v.getVertex(SH.property);
+		Vertex list = property.getVertex(SH.path);
+		
+		List<Value> javaList = list.asList();
+		assertEquals(2, javaList.size());
+		assertEquals(Schema.address, javaList.get(0));
+		assertEquals(Schema.addressCountry, javaList.get(1));
+		
+		RdfUtil.prettyPrintTurtle(graph, System.out);
+	}
 	
 	@Test
 	public void testIdFormat() throws Exception {

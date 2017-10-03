@@ -22,6 +22,7 @@ package io.konig.shacl;
 
 
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 
 public class PredicatePath implements PropertyPath {
 
@@ -32,6 +33,10 @@ public class PredicatePath implements PropertyPath {
 	}
 
 	public URI getPredicate() {
+		return predicate;
+	}
+	
+	public Value toValue() {
 		return predicate;
 	}
 

@@ -48,7 +48,47 @@ import io.konig.shacl.OrConstraint;
 import io.konig.shacl.Shape;
 
 public class PojoFactoryImplTest {
-	
+
+	@Test
+	public void testDeserializer() throws Exception {
+		
+		URI objectId = uri("http://example.com/object");
+		URI predicate = uri("http://example.com/thing");
+		MemoryGraph graph = new MemoryGraph();
+		graph.builder()
+			.beginSubject(objectId)
+				.addLiteral(predicate, "foo")
+			.endSubject();
+
+		Vertex v = graph.getVertex(objectId);
+		
+		SimplePojoFactory factory = new SimplePojoFactory();
+		
+		SerializableObjectContainer pojo = factory.create(v, SerializableObjectContainer.class);
+		SerializableObject thing = pojo.getThing();
+		assertTrue(thing != null);
+		assertEquals("foo", thing.getName());
+	}
+
+	@Test
+	public void testPropertyPath() throws Exception {
+		
+		URI rootId = uri("http://example.com/root");
+		
+		MemoryGraph graph = new MemoryGraph();
+		graph.builder()
+			.beginSubject(rootId)
+				.addList(SH.path, Schema.address, Schema.addressCountry)
+			.endSubject();
+
+		Vertex v = graph.getVertex(rootId);
+		
+		SimplePojoFactory factory = new SimplePojoFactory();
+		TestPropertyShape pojo = factory.create(v, TestPropertyShape.class);
+		
+		TestPropertyPath path = pojo.getPath();
+		assertTrue(path instanceof TestSequencePath);
+	}
 
 	@Test
 	public void testDeepNesting() throws Exception {
@@ -642,7 +682,7 @@ public class PojoFactoryImplTest {
 //		}
 	}
 	
-	static class PathListOwner {
+	public static class PathListOwner {
 		private PathList pathList;
 
 		public PathList getPath() {
@@ -656,7 +696,7 @@ public class PojoFactoryImplTest {
 	}
 	
 	@RdfList
-	static class PathList {
+	public static class PathList {
 		private List<URI> list = new ArrayList<>();
 		
 		public void add(URI uri) {
@@ -669,7 +709,7 @@ public class PojoFactoryImplTest {
 	}
 	
 	@RdfList
-	static class StructuredList {
+	public static class StructuredList {
 		private List<NamedPerson> list = new ArrayList<>();
 		
 		public void add(NamedPerson person) {
@@ -682,7 +722,7 @@ public class PojoFactoryImplTest {
 		
 	}
 	
-	static class AppenderObject {
+	public static class AppenderObject {
 
 		private List<URI> productList = new ArrayList<>();
 		
@@ -695,7 +735,7 @@ public class PojoFactoryImplTest {
 		}
 	}
 	
-	static class AppendToObject {
+	public static class AppendToObject {
 		private List<URI> productList = new ArrayList<>();
 		
 		public void appendToProductList(URI email) {
@@ -708,7 +748,7 @@ public class PojoFactoryImplTest {
 		
 	}
 	
-	static class StructuredListOwner {
+	public static class StructuredListOwner {
 		private StructuredList list;
 
 		public StructuredList getList() {
@@ -720,7 +760,7 @@ public class PojoFactoryImplTest {
 		}
 	}
 	
-	static class Thing {
+	public static class Thing {
 		private String name;
 
 		public String getName() {
@@ -733,7 +773,7 @@ public class PojoFactoryImplTest {
 		
 	}
 	
-	static class Level1 extends Thing {
+	public static class Level1 extends Thing {
 		private Level2 alpha;
 
 		public Level2 getAlpha() {
@@ -747,7 +787,7 @@ public class PojoFactoryImplTest {
 		
 	}
 	
-	static class Level2 extends Thing {
+	public static class Level2 extends Thing {
 		private List<Level3> beta;
 
 		public List<Level3> getBeta() {
@@ -762,7 +802,7 @@ public class PojoFactoryImplTest {
 		
 	}
 	
-	static class Level3 extends Thing {
+	public static class Level3 extends Thing {
 		private Level4 gamma;
 
 		public Level4 getGamma() {
@@ -775,7 +815,7 @@ public class PojoFactoryImplTest {
 		
 	}
 	
-	static class Level4 extends Thing {
+	public static class Level4 extends Thing {
 		
 	}
 	

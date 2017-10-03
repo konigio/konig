@@ -55,9 +55,60 @@ public class BeanUtil {
 		
 		return builder.toString();
 	}
+
+	
+	public static Class<?> creatorClass(Class<?> type) {
+		String packageName = type.getPackage().getName();
+		String simpleName = type.getSimpleName();
+		StringBuilder builder = new StringBuilder();
+		builder.append(packageName);
+		builder.append('.');
+		builder.append(simpleName);
+		builder.append("Creator");
+		
+		String factoryName = builder.toString();
+		
+		Class<?> factoryClass = null;
+		
+		try {
+			factoryClass = Class.forName(factoryName);
+		} catch (Throwable ignore) {
+			
+		}
+		
+		return factoryClass;
+	}
+	
+	public static Method createMethod(Class<?> type, Class<?> factoryClass) {
+		if (type != null && factoryClass != null) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("create");
+			builder.append(type.getSimpleName());
+			String name = builder.toString();
+			
+			Method[] list = factoryClass.getMethods();
+			for (Method m : list) {
+				if (m.getName().equals(name)) {
+					Class<?>[] paramList = m.getParameterTypes();
+					if (paramList.length==1 && paramList[0]==String.class) {
+						return m;
+					}
+				}
+			}
+		}
+		
+		return null;
+	}
 	
 	public static Class<?> factoryClass(Class<?> type) {
-		String packageName = type.getPackage().getName();
+		if (type == null) {
+			return null;
+		}
+		Package pkg = type.getPackage();
+		if (pkg == null) {
+			return null;
+		}
+		String packageName = pkg.getName();
 		String simpleName = type.getSimpleName();
 		StringBuilder builder = new StringBuilder();
 		builder.append(packageName);

@@ -1,0 +1,11 @@
+@prefix asmt: <http://schema.pearson.com/ns/assessment/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+asmt: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "asmt" ; 
+	rdfs:label "Pearson Assessment Ontology" ; 
+	rdfs:comment "An ontology for describing assessment instruments (quiz, test, homework assignment, etc.) and the items within those instruments." . 
+
+asmt:AssessmentInstrument a owl:Class . 

@@ -1215,7 +1215,9 @@ public class WorkbookLoader {
 			}
 
 			if (valueClass != null && (valueType instanceof URI)
-					&& !XMLSchema.NAMESPACE.equals(((URI) valueType).getNamespace())) {
+				&& !XMLSchema.NAMESPACE.equals(((URI) valueType).getNamespace())
+				&& !SH.NAMESPACE.equals(((URI)valueType).getNamespace())
+			) {
 				prior = getTargetClass(valueType);
 				if (prior == null) {
 					edge(valueType, RDF.TYPE, SH.Shape);
@@ -2554,5 +2556,10 @@ public class WorkbookLoader {
 			Literal pathValue = new LiteralImpl(path.toString());
 			property.addProperty(pathField, pathValue);
 		}
+	}
+	
+	private static class PropertyPathHandler {
+		private URI shapeId;
+		private String pathText;
 	}
 }

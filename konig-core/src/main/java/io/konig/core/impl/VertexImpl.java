@@ -219,6 +219,8 @@ public class VertexImpl implements Vertex {
 	public Set<Edge> inEdgeSet() {
 		return new InEdgeSet(this, this.in.entries());
 	}
+	
+	
 
 	@Override
 	public List<Value> asList() {
@@ -376,6 +378,12 @@ public class VertexImpl implements Vertex {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public boolean isList() {
+		
+		return !outProperty(RDF.FIRST).isEmpty();
 	}
 
 }

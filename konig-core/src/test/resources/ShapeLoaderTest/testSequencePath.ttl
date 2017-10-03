@@ -1,0 +1,6 @@
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+<http://example.com/shapes/PersonShape> sh:property  [ 
+		sh:path (schema:address schema:addressCountry) ]  ; 
+	a sh:Shape . 

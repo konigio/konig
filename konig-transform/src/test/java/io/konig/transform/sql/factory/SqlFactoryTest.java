@@ -69,6 +69,19 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	public void setUp() throws Exception {
 		useBigQueryTransformStrategy();
 	}
+
+	@Ignore
+	public void testAssessmentSession() throws Exception {
+		load("src/test/resources/konig-transform/assessment-session");
+
+		URI shapeId = iri("http://schema.pearson.com/shapes/AssessmentSessionShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		System.out.println(select);
+	}
 	
 	@Test
 	public void testArrayAgg() throws Exception {
