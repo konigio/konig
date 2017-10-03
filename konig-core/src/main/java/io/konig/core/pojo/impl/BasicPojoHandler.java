@@ -145,10 +145,16 @@ public class BasicPojoHandler implements PojoHandler {
 		} else if (type.isEnum()) {
 			result = enumValueHandler(type, m);
 		} else {
-			result = new ResourceHandler(type, m);
+			result = resourceHandler(type, m);
 		}
 		return result;
 	}
+
+	private ValueHandler resourceHandler(Class<?> type, Method m) {
+		
+		return new ResourceHandler(type, m);
+	}
+
 
 	private EnumValueHandler enumValueHandler(Class<?> type, Method m) {
 		

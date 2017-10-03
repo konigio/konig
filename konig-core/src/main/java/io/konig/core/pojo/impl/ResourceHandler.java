@@ -33,6 +33,7 @@ import org.openrdf.model.Value;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.Vertex;
+import io.konig.core.pojo.BeanUtil;
 import io.konig.core.pojo.PojoContext;
 
 public class ResourceHandler implements ValueHandler {
@@ -41,6 +42,7 @@ public class ResourceHandler implements ValueHandler {
 	private Method setter;
 	
 	private Constructor<?> stringConstructor;
+	private Deserializer deserializer;
 	
 
 	public ResourceHandler(Class<?> javaClass, Method setter) {
@@ -85,8 +87,33 @@ public class ResourceHandler implements ValueHandler {
 					throw new KonigException(e);
 				}
 			}
+			if (javaObject == null) {
+				Deserializer factory = deserializer();
+				javaObject = factory.create(object.stringValue());
+			}
 		}
 		return javaObject;
+	}
+
+	private Deserializer deserializer() throws KonigException {
+		if (deserializer == null) {
+			Class<?> factoryClass = BeanUtil.factoryClass(javaClass);
+			Method createMethod = BeanUtil.createMethod(javaClass, factoryClass);
+			Object factory = newInstance(factoryClass);
+			deserializer = new Deserializer(factory, createMethod);
+		}
+		return deserializer;
+	}
+
+	private Object newInstance(Class<?> type) {
+		if (type != null) {
+			try {
+				return type.newInstance();
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new KonigException(e);
+			}
+		}
+		return null;
 	}
 
 	private Constructor<?> stringConstructor() {
@@ -141,6 +168,25 @@ public class ResourceHandler implements ValueHandler {
 			}
 		}
 		return result;
+	}
+	
+	private static class Deserializer {
+		private Object factory;
+		private Method createMethod;
+		
+		public Deserializer(Object factory, Method createMethod) {
+			this.factory = factory;
+			this.createMethod = createMethod;
+		}
+		
+		public Object create(String value) throws KonigException {
+			try {
+				return createMethod==null ? null : createMethod.invoke(factory, value);
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				throw new KonigException(e);
+			}
+		}
+		
 	}
 
 }

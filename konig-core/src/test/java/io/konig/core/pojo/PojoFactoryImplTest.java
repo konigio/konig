@@ -49,6 +49,26 @@ import io.konig.shacl.Shape;
 
 public class PojoFactoryImplTest {
 
+	@Test
+	public void testDeserializer() throws Exception {
+		
+		URI objectId = uri("http://example.com/object");
+		URI predicate = uri("http://example.com/thing");
+		MemoryGraph graph = new MemoryGraph();
+		graph.builder()
+			.beginSubject(objectId)
+				.addLiteral(predicate, "foo")
+			.endSubject();
+
+		Vertex v = graph.getVertex(objectId);
+		
+		SimplePojoFactory factory = new SimplePojoFactory();
+		
+		SerializableObjectContainer pojo = factory.create(v, SerializableObjectContainer.class);
+		SerializableObject thing = pojo.getThing();
+		assertTrue(thing != null);
+		assertEquals("foo", thing.getName());
+	}
 
 	@Test
 	public void testPropertyPath() throws Exception {
@@ -68,9 +88,6 @@ public class PojoFactoryImplTest {
 		
 		TestPropertyPath path = pojo.getPath();
 		assertTrue(path instanceof TestSequencePath);
-		
-	
-		
 	}
 
 	@Test

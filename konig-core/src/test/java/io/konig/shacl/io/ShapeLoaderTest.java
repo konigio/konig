@@ -35,8 +35,11 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.Graph;
+import io.konig.core.Path;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.path.OutStep;
+import io.konig.core.path.Step;
 import io.konig.core.util.IOUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
@@ -53,6 +56,32 @@ import io.konig.shacl.impl.MemoryShapeManager;
 public class ShapeLoaderTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeLoader loader = new ShapeLoader(shapeManager);
+	
+	@Test
+	public void testEquivalentPath() throws Exception {
+		Graph graph = loadGraph("ShapeLoaderTest/testEquivalentPath.ttl");
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		loader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		PropertyConstraint p = shape.getProperty().get(0);
+		
+		Path path = p.getEquivalentPath();
+		assertTrue(path != null);
+		
+		List<Step> pathList = path.asList();
+		assertEquals(1, pathList.size());
+		
+		Step step = pathList.get(0);
+		assertTrue(step instanceof OutStep);
+		
+		OutStep out = (OutStep) step;
+		
+		assertEquals(Schema.givenName, out.getPredicate());
+		
+	}
 	
 	@Test
 	public void testSequencePath() throws Exception {

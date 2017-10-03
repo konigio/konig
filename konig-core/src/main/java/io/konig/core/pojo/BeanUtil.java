@@ -79,6 +79,27 @@ public class BeanUtil {
 		return factoryClass;
 	}
 	
+	public static Method createMethod(Class<?> type, Class<?> factoryClass) {
+		if (type != null && factoryClass != null) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("create");
+			builder.append(type.getSimpleName());
+			String name = builder.toString();
+			
+			Method[] list = factoryClass.getMethods();
+			for (Method m : list) {
+				if (m.getName().equals(name)) {
+					Class<?>[] paramList = m.getParameterTypes();
+					if (paramList.length==1 && paramList[0]==String.class) {
+						return m;
+					}
+				}
+			}
+		}
+		
+		return null;
+	}
+	
 	public static Class<?> factoryClass(Class<?> type) {
 		String packageName = type.getPackage().getName();
 		String simpleName = type.getSimpleName();

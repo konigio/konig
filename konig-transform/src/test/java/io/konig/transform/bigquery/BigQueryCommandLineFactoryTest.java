@@ -61,7 +61,7 @@ public class BigQueryCommandLineFactoryTest extends AbstractShapeRuleFactoryTest
 	}
 	
 
-	@Ignore
+	@Test
 	public void testInsertCommand() throws Exception {
 
 		load("src/test/resources/konig-transform/flattened-field");
