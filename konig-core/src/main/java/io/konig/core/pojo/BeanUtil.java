@@ -101,6 +101,9 @@ public class BeanUtil {
 	}
 	
 	public static Class<?> factoryClass(Class<?> type) {
+		if (type == null) {
+			return null;
+		}
 		String packageName = type.getPackage().getName();
 		String simpleName = type.getSimpleName();
 		StringBuilder builder = new StringBuilder();
