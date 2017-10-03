@@ -104,7 +104,11 @@ public class BeanUtil {
 		if (type == null) {
 			return null;
 		}
-		String packageName = type.getPackage().getName();
+		Package pkg = type.getPackage();
+		if (pkg == null) {
+			return null;
+		}
+		String packageName = pkg.getName();
 		String simpleName = type.getSimpleName();
 		StringBuilder builder = new StringBuilder();
 		builder.append(packageName);
