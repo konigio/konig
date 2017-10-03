@@ -35,6 +35,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.datatypes.XMLDatatypeUtil;
 import org.openrdf.model.util.Literals;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.helpers.BasicWriterSettings;
@@ -130,6 +131,53 @@ public class CompactTurtleWriter extends TurtleWriter {
 		
 		try {
 			
+			
+			if (RDF.FIRST.equals(predicate) || RDF.REST.equals(predicate)) {
+				ListInfo listInfo = context.listInfo;
+				boolean startList = false;
+				if (listInfo == null) {
+					writer.write("(");
+					context.listInfo = listInfo = new ListInfo();
+					startList = true;
+				}  
+				if (RDF.FIRST.equals(predicate)) {
+					listInfo.first = object;
+					if (!startList) {
+						writer.write(" ");
+					}
+					if (object instanceof BNode) {
+						writer.write(" [ ");
+						writer.increaseIndentation();
+						writer.writeEOL();
+						
+						Context next = new Context();
+						next.lastSubject = lastWrittenSubject = (BNode) object;
+						
+						stack.add(next);
+					} else {
+						writeValue(object);
+					}
+				} else if (RDF.REST.equals(predicate)) {
+					
+					listInfo.rest = (Resource) object;
+				}
+				
+				if (listInfo.first!=null && listInfo.rest!=null && RDF.NIL.equals(listInfo.rest)) {
+					writer.write(")");
+					context.listInfo = null;
+					stack.remove(stack.size()-1);
+				}
+				return;
+			}
+			
+			if (context.bracket != null) {
+
+				writer.write(context.bracket);
+				writer.increaseIndentation();
+				writer.writeEOL();
+				context.bracket = null;
+			}
+			
 			if (context.lastSubject instanceof BNode  && !subject.equals(context.lastSubject)) {
 				context = closeBNode(st);
 			}
@@ -168,11 +216,9 @@ public class CompactTurtleWriter extends TurtleWriter {
 			}
 			
 			if (object instanceof BNode) {
-				writer.write(" [ ");
-				writer.increaseIndentation();
-				writer.writeEOL();
 				
 				Context next = new Context();
+				next.bracket = " [ ";
 				next.lastSubject = lastWrittenSubject = (BNode) object;
 				
 				stack.add(next);
@@ -449,10 +495,16 @@ public class CompactTurtleWriter extends TurtleWriter {
 	}
 
 
+	private static class ListInfo {
+		Value first;
+		Resource rest;
+	}
 
 	private static class Context {
+		String bracket;
 		Resource lastSubject;
 		URI lastPredicate;
+		ListInfo listInfo;
 	}
 
 }

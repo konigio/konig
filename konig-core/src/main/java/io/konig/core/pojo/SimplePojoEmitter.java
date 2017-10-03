@@ -36,11 +36,14 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.vocabulary.RDF;
 
+import io.konig.annotation.RdfList;
 import io.konig.annotation.RdfProperty;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.Vertex;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -242,21 +245,56 @@ public class SimplePojoEmitter implements PojoEmitter {
 		}
 		
 		private void emitCollection(Resource subject, URI predicate, Collection<?> javaObject) {
-			boolean registered = false;
 			
-			for (Object value : javaObject) {
-				Value object = toValue(value);
-				if (object != null) {
-					if (!registered) {
-						registerNamespace(predicate);
-						registered = true;
-					}
-					sink.edge(subject, predicate, object);
-					
-					if (object instanceof Resource) {
-						doEmit((Resource)object, value);
+			Class<?> javaClass = javaObject.getClass();
+			RdfList listNote = javaClass.getAnnotation(RdfList.class);
+			
+			if (listNote != null) {
+				emitRdfList(subject,  predicate, javaObject);
+			} else {
+
+				boolean registered = false;
+				for (Object value : javaObject) {
+					Value object = toValue(value);
+					if (object != null) {
+						if (!registered) {
+							registerNamespace(predicate);
+							registered = true;
+						}
+						sink.edge(subject, predicate, object);
+						
+						if (object instanceof Resource) {
+							doEmit((Resource)object, value);
+						}
 					}
 				}
+			}
+			
+		}
+
+		private void emitRdfList(Resource subject, URI predicate, Collection<?> javaCollection) {
+		
+			if (!javaCollection.isEmpty()) {
+			
+				Vertex priorList = null;
+				
+				for (Object value : javaCollection) {
+					
+					Vertex list = sink.vertex();
+					Value object = toValue(value);
+					sink.edge(list.getId(), RDF.FIRST, object);
+					
+					if (priorList == null) {
+						registerNamespace(predicate);
+						sink.edge(subject, predicate, list.getId());
+					} else {
+						sink.edge(priorList.getId(), RDF.REST, list.getId());
+					}
+					
+					priorList = list;
+				}
+				
+				sink.edge(priorList.getId(), RDF.REST, RDF.NIL); 
 			}
 			
 		}

@@ -29,6 +29,7 @@ public class SH {
 	public static final String NAMESPACE = "http://www.w3.org/ns/shacl#";
 	
 	public static final String PROPERTY = "http://www.w3.org/ns/shacl#property";
+	public static final String PATH = "http://www.w3.org/ns/shacl#path";
 
 	public static final URI NAMESPACE_URI = new URIImpl("http://www.w3.org/ns/shacl#");
 	public static final URI IRI = new URIImpl("http://www.w3.org/ns/shacl#IRI");
@@ -39,7 +40,7 @@ public class SH {
 	public static final URI BlankNodeOrLiteral = new URIImpl("http://www.w3.org/ns/shacl#BlankNodeOrLiteral");
 	public static final URI IRIOrLiteral = new URIImpl("http://www.w3.org/ns/shacl#IRIOrLiteral");
 
-	public static final URI path = new URIImpl("http://www.w3.org/ns/shacl#path");
+	public static final URI path = new URIImpl(PATH);
 	public static final URI in = new URIImpl("http://www.w3.org/ns/shacl#in");
 	public static final URI and = new URIImpl("http://www.w3.org/ns/shacl#and");
 	public static final URI constraint = new URIImpl("http://www.w3.org/ns/shacl#constraint");

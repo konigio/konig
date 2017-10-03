@@ -290,10 +290,10 @@ public class PropertyConstraint {
 	public void setPredicate(URI predicate) {
 		path = new PredicatePath(predicate);
 	}
-	
-//	public void setPath(PropertyPath path) {
-//		this.path = path;
-//	}
+
+	public void setPath(PropertyPath path) {
+		this.path = path;
+	}
 	
 	public void setPath(URI predicate) {
 		path = new PredicatePath(predicate);
@@ -562,6 +562,10 @@ public class PropertyConstraint {
 
 	public void setFromAggregationSource(String fromAggregationSource) {
 		this.fromAggregationSource = fromAggregationSource;
+	}
+	
+	public PropertyPath getPath() {
+		return path;
 	}
 
 	public Path getPartitionOf() {

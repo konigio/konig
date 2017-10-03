@@ -29,6 +29,21 @@ import io.konig.core.Vertex;
  * A factory that creates Plain-Old Java Objects from RDF Graphs.
  * Properties from an RDF Graph get mapped to properties on a Java Object in accordance with 
  * the conventions described below.
+ * <h3> POJO Creation</h3>
+ * Each POJO class must support one of the following creation methods:
+ * <ol>
+ *   <li> An implementation of {@link PojoCreator} with the following characteristics:
+ *   	<ul>
+ *   		<li> Must be contained in the same package as the POJO class. 
+ *          <li> Must have a name of the form <code>{PojoClassSimpleName}Creator</code>.  For
+ *               example, if the POJO class name is <code>PropertyPath</code> then the creator
+ *               class would be named <code>PropertyPathCreator</code>.
+ *          <li> Must implement the <code>create</code> method that takes a <code>Vertex</code> as an argument.
+ *      </ul>
+ *   <li> Default (no-arg) constructor.
+ *   <li> Constructor which takes a string as an argument.  This constructor is used when the class 
+ *        is represented as a string literal.
+ * </ol>
  * <h3> Simple Properties</h3>
  * For each single-valued property, the POJO should declare a setter method such as:
  * <pre>

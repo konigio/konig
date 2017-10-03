@@ -60,10 +60,10 @@ public class SampleJsonGeneratorTest {
 		generator.generate(shape, out);
 		out.close();
 		
-		System.out.println(out.toString());
+//		System.out.println(out.toString());
 	}
 
-	@Ignore
+	@Test
 	public void testKitchenSink() throws Exception {
 		load("SampleJsonGeneratorTest/rdf");
 		

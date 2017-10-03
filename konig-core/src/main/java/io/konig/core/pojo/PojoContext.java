@@ -1,12 +1,10 @@
 package io.konig.core.pojo;
 
-import java.util.HashMap;
-
 /*
  * #%L
  * Konig Core
  * %%
- * Copyright (C) 2015 - 2016 Gregory McFall
+ * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,57 +21,71 @@ import java.util.HashMap;
  */
 
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.openrdf.model.Resource;
 
-import io.konig.core.Graph;
+import io.konig.core.pojo.impl.MasterPojoHandler;
+import io.konig.core.pojo.impl.PojoHandler;
 
 public class PojoContext {
-	
+
 	private Map<Resource, Class<?>> classMap;
-	private Map<Resource, Object> individualMap;
-	private Map<Class<?>, PojoDeserializer> deserializerMap;
-	private Graph ontology;
-	private PojoListener listener;
-
+	private Map<Class<?>, PojoHandler> pojoHandlerMap = new HashMap<>();
+	private Map<Resource,Object> individualMap = new HashMap<>();
+	private PojoHandler pojoHandler;
+	private PojoListener pojoListener;
+	
 	public PojoContext() {
-		classMap = new LinkedHashMap<>();
-		individualMap = new LinkedHashMap<>();
+		classMap = new HashMap<>();
+		pojoHandler = new MasterPojoHandler();
 	}
 	
-	public PojoContext(PojoContext copy) {
-		classMap = copy.classMap;
-		deserializerMap = copy.deserializerMap;
-		individualMap = new LinkedHashMap<>();
+	public PojoContext(PojoContext source) {
+		this.classMap = source.classMap;
+		this.pojoHandlerMap = source.pojoHandlerMap;
+		this.pojoHandler = source.pojoHandler;
 	}
 
-	public PojoContext(Graph ontology) {
-		this.ontology = ontology;
-	}
 	
-	public void putDeserializer(Class<?> type, PojoDeserializer deserializer) {
-		if (deserializerMap == null) {
-			deserializerMap = new HashMap<>();
-		}
-		deserializerMap.put(type, deserializer);
-	}
-	
-	public PojoDeserializer getDeserializer(Class<?> type) {
-		return deserializerMap==null ? null : deserializerMap.get(type);
-	}
-
-	public Graph getOntology() {
-		return ontology;
-	}
-
-	public void setOntology(Graph ontology) {
-		this.ontology = ontology;
+	public void mapClass(Resource owlClass, Class<?> javaClass) {
+		classMap.put(owlClass, javaClass);
 	}
 	
 	public Map<Resource, Class<?>> getClassMap() {
 		return classMap;
+	}
+
+	public Class<?> getJavaClass(Resource resource) {
+		return classMap.get(resource);
+	}
+	
+	public PojoHandler getPojoHandler(Class<?> javaClass) {
+		return pojoHandlerMap.get(javaClass);
+	}
+	
+	public PojoHandler putPojoHandler(Class<?> javaClass, PojoHandler pojoHandler) {
+		return pojoHandlerMap.put(javaClass, pojoHandler);
+	}
+
+	public PojoHandler getPojoHandler() {
+		return pojoHandler;
+	}
+
+	public void setPojoHandler(PojoHandler pojoHandler) {
+		this.pojoHandler = pojoHandler;
+	}
+
+	
+	@SuppressWarnings("unchecked")
+	public <T> T getIndividual(Resource resource, Class<T> javaClass) {
+		return (T) getIndividual(resource);
+	}
+	
+	public Object getIndividual(Resource resource) {
+		return individualMap.get(resource);
 	}
 
 	public Map<Resource, Object> getIndividualMap() {
@@ -83,39 +95,19 @@ public class PojoContext {
 	public void mapObject(Resource resource, Object pojo) {
 		individualMap.put(resource, pojo);
 	}
-	
-	public void commitObject(Resource resource, Object pojo) {
-
-		if (listener != null) {
-			listener.map(resource, pojo);
-		}
-	}
-
-	public Class<?> getJavaClass(Resource resource) {
-		return classMap.get(resource);
-	}
-	
-	public Object getIndividual(Resource resource) {
-		return individualMap.get(resource);
-	}
-	
-	@SuppressWarnings("unchecked")
-	public <T> T getIndividual(Resource resource, Class<T> javaClass) {
-		return (T) getIndividual(resource);
-	}
-	
-	public void mapClass(Resource owlClass, Class<?> javaClass) {
-		classMap.put(owlClass, javaClass);
-	}
 
 	public PojoListener getListener() {
-		return listener;
+		return pojoListener;
 	}
 
-	public void setListener(PojoListener listener) {
-		this.listener = listener;
+	public void setListener(PojoListener pojoListener) {
+		this.pojoListener = pojoListener;
 	}
 	
-	
+	public void notify(Resource resource, Object pojo) {
+		if (pojoListener != null) {
+			pojoListener.map(resource, pojo);
+		}
+	}
 
 }

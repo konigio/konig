@@ -55,6 +55,29 @@ public class BeanUtil {
 		
 		return builder.toString();
 	}
+
+	
+	public static Class<?> creatorClass(Class<?> type) {
+		String packageName = type.getPackage().getName();
+		String simpleName = type.getSimpleName();
+		StringBuilder builder = new StringBuilder();
+		builder.append(packageName);
+		builder.append('.');
+		builder.append(simpleName);
+		builder.append("Creator");
+		
+		String factoryName = builder.toString();
+		
+		Class<?> factoryClass = null;
+		
+		try {
+			factoryClass = Class.forName(factoryName);
+		} catch (Throwable ignore) {
+			
+		}
+		
+		return factoryClass;
+	}
 	
 	public static Class<?> factoryClass(Class<?> type) {
 		String packageName = type.getPackage().getName();

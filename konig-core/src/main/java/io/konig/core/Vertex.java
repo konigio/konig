@@ -150,6 +150,8 @@ public interface Vertex {
 	
 	void remove(Edge edge);
 	
+	boolean isList();
+	
 	List<Value> asList();
 	
 	/**

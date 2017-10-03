@@ -106,7 +106,7 @@ public class PojoExchange {
 		this.propertyBuilder = propertyBuilder;
 	}
 
-	public Literal getValue() {
+	public Literal getLiteral() {
 		return value;
 	}
 

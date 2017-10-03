@@ -42,7 +42,10 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.formula.Expression;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.PropertyPath;
+import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -51,6 +54,31 @@ public class ShapeLoaderTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeLoader loader = new ShapeLoader(shapeManager);
 	
+	@Test
+	public void testSequencePath() throws Exception {
+		Graph graph = loadGraph("ShapeLoaderTest/testSequencePath.ttl");
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		loader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		List<PropertyConstraint> list = shape.getProperty();
+		assertEquals(1, list.size());
+		
+		PropertyConstraint p = list.get(0);
+		PropertyPath path = p.getPath();
+		assertTrue(path instanceof SequencePath);
+		SequencePath sequence = (SequencePath) path;
+		assertEquals(2, sequence.size());
+		PropertyPath element = sequence.get(0);
+		assertTrue(element instanceof PredicatePath);
+		assertEquals(Schema.address, ((PredicatePath)element).getPredicate());
+		element = sequence.get(1);
+		assertTrue(element instanceof PredicatePath);
+		assertEquals(Schema.addressCountry, ((PredicatePath)element).getPredicate());
+		
+	}
 	
 	@Test
 	public void testPredicatePath() throws Exception {
@@ -64,7 +92,7 @@ public class ShapeLoaderTest {
 		assertTrue(shape.getPropertyConstraint(Schema.givenName) != null);
 	}
 
-	@Ignore
+	@Test
 	public void testMediaType() throws Exception {
 		Graph graph = loadGraph("ShapeLoaderTest/testMediaType.ttl");
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
@@ -76,7 +104,7 @@ public class ShapeLoaderTest {
 		assertEquals("application/vnd.example.person", shape.getMediaTypeBaseName());
 	}
 
-	@Ignore
+	@Test
 	public void testDefaultShapeFor() throws Exception {
 		Graph graph = loadGraph("ShapeLoaderTest/testDefaultShapeFor.ttl");
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
@@ -92,7 +120,7 @@ public class ShapeLoaderTest {
 		assertTrue(appList.contains(uri("http://example.com/app/MyShoppingCart")));
 	}
 	
-	@Ignore
+	@Test
 	public void testConstraint() throws Exception {
 		Graph graph = loadGraph("ShapeLoaderTest/testConstraint.ttl");
 		URI shapeId = uri("http://example.com/shapes/ShapeWithConstraint");
@@ -117,7 +145,7 @@ public class ShapeLoaderTest {
 		assertEquals(expected, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testDerivedProperty() throws Exception {
 
 		Graph graph = loadGraph("ShapeLoaderTest/testDerivedProperty.ttl");
@@ -134,7 +162,7 @@ public class ShapeLoaderTest {
 		assertEquals("1 + 2 + 3", p.getFormula().toString());
 	}
 	
-	@Ignore 
+	@Test 
 	public void testIdFormat() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		Graph graph = new MemoryGraph();
@@ -149,7 +177,7 @@ public class ShapeLoaderTest {
 		
 	}
 	
-	@Ignore 
+	@Test 
 	public void testFormula() throws Exception {
 		Graph graph = loadGraph("ShapeLoaderTest/testFormula.ttl");
 
@@ -181,7 +209,7 @@ public class ShapeLoaderTest {
 
 	
 	
-	@Ignore
+	@Test
 	public void testType() {
 		
 		URI shapeId = uri("http://example.com/PersonShape");
@@ -209,7 +237,7 @@ public class ShapeLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testShape() {
 		URI shapeId = uri("http://example.com/shape/PersonShape");
 		URI addressShapeId = uri("http://example.com/shape/PostalAddress");

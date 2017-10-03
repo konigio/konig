@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -45,6 +46,26 @@ import io.konig.core.vocab.Schema;
 
 public class CompactTurtleWriterTest {
 	
+	@Test
+	public void testList() throws Exception {
+		Graph graph = new MemoryGraph();
+		
+		URI alice = uri("http://example.com/alice");
+		URI bob = uri("http://example.com/bob");
+		URI cathy = uri("http://example.com/cathy");
+		
+		graph.builder().beginSubject(alice)
+			.addList(Schema.parent, bob, cathy)
+		.endSubject();
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		String expected = 
+			"<http://example.com/alice> <http://schema.org/parent> (<http://example.com/bob> <http://example.com/cathy>) .";
+		String actual = writer.toString();
+		assertTrue(actual.contains(expected));
+	}
 	
 	@Test
 	public void testEscapeUnicode() throws Exception {

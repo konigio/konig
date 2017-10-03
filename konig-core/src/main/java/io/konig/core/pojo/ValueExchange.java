@@ -22,6 +22,7 @@ package io.konig.core.pojo;
 
 
 import java.text.MessageFormat;
+import java.util.List;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -35,6 +36,7 @@ public class ValueExchange {
 	private Vertex subject;
 	private URI predicate;
 	private Value object;
+	private List<Value> objectList;
 	private PojoExchange pojoExchange;
 	private PojoContext context;
 
@@ -70,6 +72,16 @@ public class ValueExchange {
 
 	public void setPredicate(URI predicate) {
 		this.predicate = predicate;
+	}
+
+
+	public List<Value> getObjectList() {
+		return objectList;
+	}
+
+
+	public void setObjectList(List<Value> objectList) {
+		this.objectList = objectList;
 	}
 
 
@@ -266,5 +278,6 @@ public class ValueExchange {
 		}
 		return builder.toString();
 	}
+	
 
 }
