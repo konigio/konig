@@ -144,6 +144,8 @@ public class BasicPojoHandler implements PojoHandler {
 			result = new UriValueHandler(m);
 		} else if (type.isEnum()) {
 			result = enumValueHandler(type, m);
+		} else if (type == Value.class) {
+			result = new RdfValueHandler(m);
 		} else {
 			result = resourceHandler(type, m);
 		}
