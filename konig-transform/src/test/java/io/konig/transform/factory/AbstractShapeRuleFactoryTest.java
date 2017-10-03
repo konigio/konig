@@ -23,10 +23,17 @@ package io.konig.transform.factory;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.StringWriter;
+
 import org.openrdf.model.URI;
 
+import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
+import io.konig.core.impl.MemoryGraph;
+import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.RdfUtil;
 import io.konig.shacl.Shape;
+import io.konig.shacl.io.ShapeWriter;
 import io.konig.transform.rule.ShapeRule;
 
 public class AbstractShapeRuleFactoryTest extends TransformTest {
@@ -43,6 +50,7 @@ public class AbstractShapeRuleFactoryTest extends TransformTest {
 	
 	protected ShapeRule createShapeRule(URI shapeId) throws Exception {
 		Shape shape = shapeManager.getShapeById(shapeId);
+		
 		assertTrue(shape != null);
 		return shapeRuleFactory.createShapeRule(shape);
 	}

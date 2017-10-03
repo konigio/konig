@@ -1,0 +1,37 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xas: <http://schema.pearson.com/ns/activity/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+xas: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "xas" ; 
+	rdfs:label "Pearson Activity Streams" ; 
+	rdfs:comment "Pearson's extension of the Activity Streams ontology." . 
+
+xas:AssessmentSession a owl:Class . 
+
+xas:CompletedAssessment a owl:Class . 
+
+xas:StartAssessment a owl:Class . 
+
+xas:endEvent a owl:ObjectProperty ; 
+	schema:domainIncludes xas:AssessmentSession ; 
+	schema:rangeIncludes xas:CompletedAssessment . 
+
+xas:endEventOf a owl:ObjectProperty ; 
+	schema:domainIncludes xas:CompletedAssessment ; 
+	schema:rangeIncludes xas:AssessmentSession . 
+
+xas:eventTime a owl:DatatypeProperty ; 
+	schema:domainIncludes xas:CompletedAssessment , xas:StartAssessment ; 
+	schema:rangeIncludes xsd:dateTime . 
+
+xas:startEvent a owl:ObjectProperty ; 
+	schema:domainIncludes xas:AssessmentSession ; 
+	schema:rangeIncludes xas:StartAssessment . 
+
+xas:startEventOf a owl:ObjectProperty ; 
+	schema:domainIncludes xas:StartAssessment ; 
+	schema:rangeIncludes xas:AssessmentSession . 

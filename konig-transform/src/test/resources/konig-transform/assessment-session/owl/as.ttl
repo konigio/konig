@@ -1,0 +1,20 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix asmt: <http://schema.pearson.com/ns/assessment/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xas: <http://schema.pearson.com/ns/activity/> .
+
+as: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "as" ; 
+	rdfs:label "W3C Activity Streams" ; 
+	rdfs:comment "The W3C ontology for Activity Streams" . 
+
+as:actor a owl:ObjectProperty ; 
+	schema:domainIncludes xas:CompletedAssessment , xas:StartAssessment ; 
+	schema:rangeIncludes schema:Person . 
+
+as:object a owl:ObjectProperty ; 
+	schema:domainIncludes xas:CompletedAssessment , xas:StartAssessment ; 
+	schema:rangeIncludes asmt:AssessmentInstrument . 
