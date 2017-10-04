@@ -39,5 +39,13 @@ public class PredicatePath implements PropertyPath {
 	public Value toValue() {
 		return predicate;
 	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append('<');
+		builder.append(predicate.stringValue());
+		builder.append('>');
+		return builder.toString();
+	}
 
 }

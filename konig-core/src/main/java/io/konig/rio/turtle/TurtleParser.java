@@ -214,7 +214,7 @@ public class TurtleParser extends RDFParserBase {
 	/**
 	 * PN_CHARS	::=	PN_CHARS_U | '-' | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040]
 	 */
-	private boolean pn_chars(int c) {
+	protected boolean pn_chars(int c) {
 		return 
 			pn_chars_u(c) ||
 			(c == '-') ||
@@ -227,7 +227,7 @@ public class TurtleParser extends RDFParserBase {
 	/**
 	 * PN_CHARS_U	::=	PN_CHARS_BASE | '_'
 	 */
-	private boolean pn_chars_u(int c) {
+	protected boolean pn_chars_u(int c) {
 		return 
 			pn_chars_base(c) ||
 			(c == '_') ;
@@ -1364,7 +1364,7 @@ public class TurtleParser extends RDFParserBase {
 	 * @throws IOException 
 	 * @throws RDFParseException 
 	 */
-	private boolean plx(int c) throws IOException, RDFParseException {
+	protected boolean plx(int c) throws IOException, RDFParseException {
 		return percent(c) || pn_local_esc(c);
 	}
 

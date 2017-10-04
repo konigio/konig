@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
@@ -85,7 +86,7 @@ public class VertexCopier {
 					w.addProperty(predicate, object);
 					if (object instanceof Resource) {
 						Resource objectId = (Resource) object;
-						if (!memory.contains(objectId) && !excludeProperty.contains(predicate)) {
+						if (!memory.contains(objectId) && ((objectId instanceof BNode) || !excludeProperty.contains(predicate))) {
 							memory.add(objectId);
 							Vertex x = v.getGraph().vertex(objectId);
 							Vertex y = w.getGraph().vertex(objectId);

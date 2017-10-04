@@ -20,7 +20,6 @@ package io.konig.spreadsheet;
  * #L%
  */
 
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,6 +84,8 @@ import io.konig.core.path.DataInjector;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.pojo.BeanUtil;
+import io.konig.core.pojo.EmitContext;
+import io.konig.core.pojo.SimplePojoEmitter;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat.Element;
@@ -98,7 +99,11 @@ import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.VAR;
 import io.konig.shacl.CompositeShapeVisitor;
 import io.konig.shacl.FormulaContextBuilder;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.PropertyPath;
+import io.konig.shacl.PropertyPathUtil;
+import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeVisitor;
@@ -167,7 +172,7 @@ public class WorkbookLoader {
 
 	private static final String ENUMERATION_DATASOURCE_TEMPLATE = "enumerationDatasourceTemplate";
 	private static final String ENUMERATION_SHAPE_ID = "enumerationShapeId";
-	
+
 	private static final String SUBJECT = "Subject";
 	private static final String LABEL = "Label";
 	private static final String LANGUAGE = "Language";
@@ -381,7 +386,7 @@ public class WorkbookLoader {
 
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
-		
+
 		private int subjectCol = UNDEFINED;
 		private int labelCol = UNDEFINED;
 		private int languageCol = UNDEFINED;
@@ -421,12 +426,12 @@ public class WorkbookLoader {
 			try {
 				List<SheetInfo> list = collectSheetInfo();
 				Collections.sort(list);
-	
+
 				for (SheetInfo info : list) {
 					loadSheet(info);
 				}
 				handlePaths();
-//				buildRollUpShapes();
+				// buildRollUpShapes();
 				loadIndividualProperties();
 				emitProvenance();
 				inferPropertyDefinitions();
@@ -1008,7 +1013,7 @@ public class WorkbookLoader {
 				case SETTING_NAME:
 					bits = bits | SETTINGS_FLAG;
 					break;
-				case LABEL :
+				case LABEL:
 					bits = bits | LABEL_FLAG;
 					break;
 				}
@@ -1040,11 +1045,10 @@ public class WorkbookLoader {
 
 		}
 
-
 		private void loadLabels(Sheet sheet) throws SpreadsheetException {
 			if (readLabelHeader(sheet)) {
-				int rowSize = sheet.getLastRowNum()+1;
-				for (int i=sheet.getFirstRowNum()+1; i<rowSize; i++) {
+				int rowSize = sheet.getLastRowNum() + 1;
+				for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
 					Row row = sheet.getRow(i);
 					try {
 						loadLabelRow(row);
@@ -1057,12 +1061,12 @@ public class WorkbookLoader {
 
 		private boolean readLabelHeader(Sheet sheet) {
 			subjectCol = labelCol = languageCol = UNDEFINED;
-			
+
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
-			
-			int colSize = row.getLastCellNum()+1;
-			for (int i=row.getFirstCellNum(); i<colSize; i++) {
+
+			int colSize = row.getLastCellNum() + 1;
+			for (int i = row.getFirstCellNum(); i < colSize; i++) {
 				Cell cell = row.getCell(i);
 				if (cell == null) {
 					continue;
@@ -1071,45 +1075,40 @@ public class WorkbookLoader {
 				if (text != null) {
 					text = text.trim();
 					switch (text) {
-					case SUBJECT :
+					case SUBJECT:
 						subjectCol = i;
 						break;
-						
-					case LABEL :
+
+					case LABEL:
 						labelCol = i;
 						break;
-						
-					case LANGUAGE :
+
+					case LANGUAGE:
 						languageCol = i;
 						break;
-						
+
 					}
 				}
 			}
-			
-			return 
-				(subjectCol != UNDEFINED) && 
-				(labelCol!=UNDEFINED) &&
-				(languageCol!=UNDEFINED);
-			
+
+			return (subjectCol != UNDEFINED) && (labelCol != UNDEFINED) && (languageCol != UNDEFINED);
+
 		}
 
-
 		private void loadLabelRow(Row row) throws SpreadsheetException {
-			
+
 			URI subjectId = uriValue(row, subjectCol);
 			String label = stringValue(row, labelCol);
 			String language = stringValue(row, languageCol);
-			
-			if (subjectId==null || label==null || language==null) {
+
+			if (subjectId == null || label == null || language == null) {
 				return;
 			}
-			
+
 			Literal labelValue = new LiteralImpl(label, language);
-			
+
 			edge(subjectId, RDFS.LABEL, labelValue);
-			
-			
+
 		}
 
 		private void loadPropertyConstraints(Sheet sheet) throws SpreadsheetException {
@@ -1175,13 +1174,11 @@ public class WorkbookLoader {
 			String propertyIdValue = stringValue(row, pcPropertyIdCol);
 			URI propertyId = null;
 			if (propertyIdValue.charAt(0) == '?') {
-				propertyId = new URIImpl(VAR.NAMESPACE + propertyIdValue);
 				stereotype = Konig.variable;
 			} else {
-				propertyId = expandCurie(propertyIdValue);
+				propertyId = expandPropertyId(propertyIdValue);
 			}
-			if (propertyId == null)
-				return;
+
 			Literal comment = stringLiteral(row, pcCommentCol);
 			Resource valueType = valueType(row, pcValueTypeCol);
 			Literal minCount = intLiteral(row, pcMinCountCol);
@@ -1215,9 +1212,8 @@ public class WorkbookLoader {
 			}
 
 			if (valueClass != null && (valueType instanceof URI)
-				&& !XMLSchema.NAMESPACE.equals(((URI) valueType).getNamespace())
-				&& !SH.NAMESPACE.equals(((URI)valueType).getNamespace())
-			) {
+					&& !XMLSchema.NAMESPACE.equals(((URI) valueType).getNamespace())
+					&& !SH.NAMESPACE.equals(((URI) valueType).getNamespace())) {
 				prior = getTargetClass(valueType);
 				if (prior == null) {
 					edge(valueType, RDF.TYPE, SH.Shape);
@@ -1244,7 +1240,7 @@ public class WorkbookLoader {
 					edge(shapeId, SH.targetClass, valueClass);
 					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
-				
+
 				if (formula != null) {
 					edge(shapeId, Konig.iriFormula, formula);
 				}
@@ -1270,10 +1266,13 @@ public class WorkbookLoader {
 
 			edge(shapeId, RDF.TYPE, SH.Shape);
 			edge(shapeId, property, constraint);
+			
 			edge(constraint, SH.path, propertyId);
+			
 			edge(constraint, RDFS.COMMENT, comment);
 
-			if (valueClass != null && (valueType == null || XMLSchema.ANYURI.equals(valueType) || SH.IRI.equals(valueType))) {
+			if (valueClass != null
+					&& (valueType == null || XMLSchema.ANYURI.equals(valueType) || SH.IRI.equals(valueType))) {
 				edge(constraint, SH.valueClass, valueClass);
 				edge(constraint, SH.nodeKind, SH.IRI);
 				if (!RDF.TYPE.equals(propertyId)) {
@@ -1285,16 +1284,20 @@ public class WorkbookLoader {
 				edge(constraint, SH.shape, valueType);
 			}
 
+			if (propertyId == null) {
+				pathHandlers.add(new PropertyPathHandler(constraint, SH.path, propertyIdValue));
+			}
+
 			if (equivalentPath != null) {
-				pathHandlers.add(new PathHandler(shapeId, property, propertyId, Konig.equivalentPath, equivalentPath));
+				pathHandlers.add(new PathHandler(constraint, Konig.equivalentPath, equivalentPath));
 			}
 
 			if (sourcePath != null) {
-				pathHandlers.add(new PathHandler(shapeId, property, propertyId, Konig.sourcePath, sourcePath));
+				pathHandlers.add(new PathHandler(constraint, Konig.sourcePath, sourcePath));
 			}
 
 			if (partitionOf != null) {
-				pathHandlers.add(new PathHandler(shapeId, property, propertyId, Konig.partitionOf, partitionOf));
+				pathHandlers.add(new PathHandler(constraint, Konig.partitionOf, partitionOf));
 			}
 
 			edge(constraint, SH.minCount, minCount);
@@ -1312,6 +1315,9 @@ public class WorkbookLoader {
 		}
 
 		private Vertex getPropertyConstraint(URI shapeId, URI predicate) {
+			if (predicate == null) {
+				return null;
+			}
 			return graph.v(shapeId).out(SH.property).hasValue(SH.path, predicate).firstVertex();
 		}
 
@@ -1552,7 +1558,7 @@ public class WorkbookLoader {
 			if (iriTemplate != null) {
 				shapeTemplateList.add(new ShapeTemplate(shapeId, iriTemplate));
 			}
-			
+
 			if (applicationList != null && !applicationList.isEmpty()) {
 				for (URI uri : applicationList) {
 					edge(shapeId, Konig.defaultShapeFor, uri);
@@ -1616,9 +1622,7 @@ public class WorkbookLoader {
 		}
 
 		private void readShapeHeader(Sheet sheet) {
-			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = 
-					shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = 
-					defaultShapeForCol = shapeIriTemplateCol = UNDEFINED;
+			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -1807,7 +1811,7 @@ public class WorkbookLoader {
 					graph.edge(propertyId, RDF.TYPE, value);
 				}
 			}
-			
+
 			if (subpropertyOf != null) {
 				graph.edge(propertyId, RDFS.SUBPROPERTYOF, subpropertyOf);
 			}
@@ -1965,7 +1969,7 @@ public class WorkbookLoader {
 						propertyCommentCol = i;
 						break;
 
-					case SUBPROPERTY_OF :
+					case SUBPROPERTY_OF:
 						subpropertyOfCol = i;
 						break;
 					}
@@ -2071,6 +2075,22 @@ public class WorkbookLoader {
 			builder.append(uri.getLocalName());
 
 			return builder.toString();
+		}
+
+		private URI expandPropertyId(String text) throws SpreadsheetException {
+
+			if (text == null) {
+				throw new SpreadsheetException("SHACL path must be defined");
+			}
+			if (text.startsWith("http://") || text.startsWith("https://") || text.startsWith("urn:")) {
+				return vf.createURI(text);
+			}
+			int c = text.charAt(0);
+			if (c == '/' || c == '^' || text.indexOf('.') >= 0) {
+				return null;
+			}
+
+			return expandCurie(text);
 		}
 
 		private URI expandCurie(String text) throws SpreadsheetException {
@@ -2529,37 +2549,78 @@ public class WorkbookLoader {
 
 	private static class PathHandler {
 
-		private URI shapeId;
-		private URI predicate;
-		private URI pathField;
-		private URI property;
-		private String pathText;
+		protected Resource constraint;
+		protected URI pathField;
+		protected String pathText;
 
-		public PathHandler(URI shapeId, URI property, URI predicate, URI pathField, String pathText) {
-			this.shapeId = shapeId;
-			this.property = property;
-			this.predicate = predicate;
+		public PathHandler(Resource propertyConstraint, URI pathField, String pathText) {
+			this.constraint = propertyConstraint;
 			this.pathField = pathField;
 			this.pathText = pathText;
 		}
 
-		void execute(Graph graph, PathFactory pathFactory) throws SpreadsheetException {
-			Vertex shape = graph.getVertex(shapeId);
-			if (shape == null) {
-				throw new SpreadsheetException("Shape not found: " + shapeId);
-			}
-			Vertex property = shape.asTraversal().out(this.property).hasValue(SH.path, predicate).firstVertex();
+		public void execute(Graph graph, PathFactory pathFactory) throws SpreadsheetException {
+			Vertex property = graph.getVertex(constraint);
 			if (property == null) {
-				throw new SpreadsheetException("On shape <" + shapeId + "> property not found: " + predicate);
+				throw new SpreadsheetException("PropertyConstraint not found");
 			}
 			Path path = pathFactory.createPath(pathText);
 			Literal pathValue = new LiteralImpl(path.toString());
 			property.addProperty(pathField, pathValue);
 		}
 	}
-	
-	private static class PropertyPathHandler {
-		private URI shapeId;
-		private String pathText;
+
+	private static class PropertyPathHandler extends PathHandler {
+
+		public PropertyPathHandler(Resource propertyConstraint, URI pathField, String pathText) {
+			super(propertyConstraint, pathField, pathText);
+		}
+
+		public void execute(Graph graph, PathFactory pathFactory) throws SpreadsheetException {
+			Vertex property = graph.getVertex(constraint);
+			if (property == null) {
+				throw new SpreadsheetException("PropertyConstraint not found");
+			}
+			String text = pathText;
+			int c = pathText.charAt(0);
+			if (c != '?' && c!='/' && c!='^') {
+				text = "/" + text;
+			}
+			Path path = pathFactory.createPath(text);
+			PropertyPath propertyPath = PropertyPathUtil.create(path);
+
+			edge(property, pathField, propertyPath);
+
+		}
+
+		private void edge(Vertex subject, URI predicate, PropertyPath object) throws SpreadsheetException {
+
+			if (object instanceof PredicatePath) {
+				PredicatePath pp = (PredicatePath) object;
+				URI value = pp.getPredicate();
+				subject.addProperty(predicate, value);
+			} else if (object instanceof SequencePath) {
+				SequencePath sequence = (SequencePath) object;
+				Vertex priorList = null;
+				Graph graph = subject.getGraph();
+				for (PropertyPath p : sequence) {
+					Vertex list = graph.vertex();
+					edge(list, RDF.FIRST, p);
+					if (priorList == null) {
+						subject.addProperty(predicate, list.getId());
+					} else {
+						priorList.addProperty(RDF.REST, list.getId());
+					}
+					priorList = list;
+				}
+				if (priorList != null) {
+					priorList.addProperty(RDF.REST, RDF.NIL);
+				}
+			} else {
+				throw new SpreadsheetException("Unspported PropertyPath type: " + object.getClass().getName());
+			}
+
+		}
 	}
+
 }

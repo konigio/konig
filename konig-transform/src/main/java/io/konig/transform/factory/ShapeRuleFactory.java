@@ -43,7 +43,9 @@ import io.konig.core.util.ValueFormat;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.NodeKind;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.PropertyPath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.transform.rule.AlphabeticVariableNamer;
@@ -53,8 +55,8 @@ import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
-import io.konig.transform.rule.FormulaPropertyRule;
 import io.konig.transform.rule.FormulaIdRule;
+import io.konig.transform.rule.FormulaPropertyRule;
 import io.konig.transform.rule.InjectLiteralPropertyRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.LiteralPropertyRule;
@@ -214,6 +216,12 @@ public class ShapeRuleFactory {
 
 			List<VariableTargetProperty> varList = target.getVariableList();
 			for (VariableTargetProperty vtp : varList) {
+				
+				PropertyPath path = vtp.getPropertyConstraint().getPath();
+				if (!(path instanceof PredicatePath)) {
+					continue;
+				}
+				
 				// For now, just select the first candidate as the preferred SourceShape.
 				// TODO: Select a shape that contains all of the properties that are referenced.
 				//       Or even construct a shape if necessary.
@@ -395,6 +403,12 @@ public class ShapeRuleFactory {
 			List<VariableTargetProperty> varList = target.getVariableList();
 			if (varList != null) {
 				for (VariableTargetProperty vtp : varList) {
+					
+					
+					if (!(vtp.getPropertyConstraint().getPath() instanceof PredicatePath)) {
+						continue;
+					}
+					
 					SourceShape source = vtp.getPreferredSourceShape();
 					if (source == null) {
 						throw new TransformBuildException(
