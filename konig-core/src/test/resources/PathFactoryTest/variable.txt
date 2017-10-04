@@ -1,0 +1,4 @@
+@context {
+  "name" : "http://schema.org/name"  
+} 
+?x.name

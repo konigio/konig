@@ -28,5 +28,18 @@ import io.konig.annotation.RdfList;
 @RdfList
 public class SequencePath extends ArrayList<PropertyPath> implements PropertyPath {
 	private static final long serialVersionUID = 1L;
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append('(');
+		String space = "";
+		for (PropertyPath path : this) {
+			builder.append(space);
+			builder.append(path.toString());
+			space = " ";
+		}
+		builder.append(')');
+		return builder.toString();
+	}
 
 }

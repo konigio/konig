@@ -32,17 +32,16 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
-import org.openrdf.model.impl.NumericLiteralImpl;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import io.konig.core.Context;
-import io.konig.core.KonigException;
-import io.konig.core.LocalNameService;
 import io.konig.core.NameMap;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
+import io.konig.core.vocab.VAR;
 import io.konig.rio.turtle.NamespaceMap;
 import io.konig.rio.turtle.SeaTurtleParser;
 
@@ -173,6 +172,7 @@ public class PathParser extends SeaTurtleParser {
 				unread(c);
 				Step step=null;
 				switch (c) {
+				case '.' :
 				case '/' :
 					step = out();
 					break;
@@ -183,6 +183,10 @@ public class PathParser extends SeaTurtleParser {
 					
 				case '[' :
 					step = filter();
+					break;
+					
+				case '?' :
+					step = variable();
 					break;
 					
 				default :
@@ -205,9 +209,56 @@ public class PathParser extends SeaTurtleParser {
 
 
 
+	private Step variable() throws RDFParseException, RDFHandlerException, IOException {
+		read();
+		String name = pn_local();
+		URI predicate = new URIImpl(VAR.NAMESPACE + "?" + name);
+		return new OutStep(predicate);
+	}
 
 	protected boolean done(int c) throws IOException {
 		return c==-1;
+	}
+	
+	/**
+	 * Don't allow dots ('.') in the middle of a local name
+	 */
+	public String pn_local() throws IOException, RDFParseException {
+		StringBuilder builder = buffer();
+		
+		int c = read();
+		
+		if (
+			!pn_chars_u(c) &&
+			(c != ':') &&
+			!inRange(c, '0', '9') &&
+			!plx(c)
+		) {
+			unread(c);
+		} else {
+			builder.appendCodePoint(c);
+			int last = -1;
+			for (;;) {
+				c = read();
+				if (
+					!pn_chars(c) &&
+					(c != ':') &&
+					!plx(c)
+				) {
+					break;
+				}
+				
+				builder.appendCodePoint(c);
+				last = c;
+				
+			}
+			unread(c);
+			if (last == '.') {
+				unread(c);
+			}
+		}
+		
+		return builder.toString();
 	}
 
 	/**
@@ -263,7 +314,10 @@ public class PathParser extends SeaTurtleParser {
 	 * @throws RDFHandlerException 
 	 */
 	private Step out() throws RDFParseException, IOException, RDFHandlerException {
-		read('/');
+		int delim = read();
+		if (delim!='/' && delim!='.') {
+			throw new RDFParseException("Expected '.' or '/'");
+		}
 		URI predicate = iri();
 		return new OutStep(predicate);
 	}

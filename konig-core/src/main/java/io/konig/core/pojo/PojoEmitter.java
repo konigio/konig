@@ -1,5 +1,7 @@
 package io.konig.core.pojo;
 
+import org.openrdf.model.Resource;
+
 /*
  * #%L
  * Konig Core

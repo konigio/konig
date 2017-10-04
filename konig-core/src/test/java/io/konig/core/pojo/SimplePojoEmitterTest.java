@@ -48,6 +48,7 @@ import io.konig.shacl.Shape;
 
 public class SimplePojoEmitterTest {
 	
+	
 	@Test
 	public void testLong() throws Exception {
 		URI id = uri("http://example.com/question");

@@ -12,7 +12,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:CompletedAssessmentShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/Ft1mdDsCSH4AAAFevndTaQ> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/zTPP4yq-0bQAAAFe5-z--w> ; 
 	sh:targetClass xas:CompletedAssessment ; 
 	sh:nodeKind sh:IRI ; 
 	sh:property  [ 
@@ -50,8 +50,8 @@ shape:CompletedAssessmentShape a sh:Shape ;
 		sh:maxCount 1 ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/CompletedAssessment> . 
 
-<http://www.konig.io/activity/Ft1mdDsCSH4AAAFevndTaQ> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-09-26T09:54:04.868-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/zTPP4yq-0bQAAAFe5-z--w> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-10-04T11:07:02.396-04:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/CompletedAssessment> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 
