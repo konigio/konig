@@ -163,9 +163,6 @@ public class ResourceHandler implements ValueHandler {
 			pojoHandler.buildPojo(pojoInfo);
 			
 			result = pojoInfo.getJavaObject();
-			if (result != null) {
-				context.mapObject(objectId, result);
-			}
 		}
 		return result;
 	}
