@@ -61,7 +61,6 @@ public class SimplePojoFactory implements PojoFactory {
 			pojoHandler.buildPojo(info);
 			result = info.getJavaObject();
 			
-			context.mapObject(v.getId(), result);
 			
 		}
 		

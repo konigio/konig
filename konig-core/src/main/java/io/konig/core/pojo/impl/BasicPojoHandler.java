@@ -250,6 +250,8 @@ public class BasicPojoHandler implements PojoHandler {
 	public void buildPojo(PojoInfo pojoInfo) throws KonigException {
 		
 		Object pojo = newInstance(pojoInfo);
+		pojoInfo.getContext().mapObject(pojoInfo.getVertex().getId(), pojo);
+		
 		pojoInfo.setJavaObject(pojo);
 		setProperties(pojoInfo);
 	}
