@@ -165,6 +165,7 @@ public class WorkbookLoader {
 	private static final String VALUE_CLASS = "Value Class";
 	private static final String STEREOTYPE = "Stereotype";
 	private static final String VALUE_IN = "Value In";
+	private static final String EQUALS = "Equals";
 	private static final String EQUIVALENT_PATH = "Equivalent Path";
 	private static final String SOURCE_PATH = "Source Path";
 	private static final String PARTITION_OF = "Partition Of";
@@ -380,6 +381,7 @@ public class WorkbookLoader {
 		private int pcCommentCol = UNDEFINED;
 		private int pcStereotypeCol = UNDEFINED;
 		private int pcEquivalentPathCol = UNDEFINED;
+		private int pcEqualsCol = UNDEFINED;
 		private int pcSourcePathCol = UNDEFINED;
 		private int pcPartitionOfCol = UNDEFINED;
 		private int pcFormulaCol = UNDEFINED;
@@ -1444,7 +1446,10 @@ public class WorkbookLoader {
 		}
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
-			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = pcEquivalentPathCol = UNDEFINED;
+			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = 
+					pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = 
+					pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = 
+					pcEquivalentPathCol = pcEqualsCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1493,6 +1498,11 @@ public class WorkbookLoader {
 					case EQUIVALENT_PATH:
 						pcEquivalentPathCol = i;
 						break;
+						
+					case EQUALS:
+						pcEqualsCol = i;
+						break;
+						
 					case SOURCE_PATH:
 						pcSourcePathCol = i;
 						break;

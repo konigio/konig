@@ -36,7 +36,7 @@ public class SqlFormulaFactoryTest {
 	private SqlFormulaFactory sqlFactory = new SqlFormulaFactory();
 	
 
-	@Ignore
+	@Test
 	public void testAddition() throws Exception {
 		
 		PropertyConstraint p = new PropertyConstraint(Schema.answerCount);
