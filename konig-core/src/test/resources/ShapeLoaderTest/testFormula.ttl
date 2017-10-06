@@ -10,6 +10,6 @@ shape:IssueShape a sh:Shape ;
 		sh:datatype xsd:int ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ;
-		konig:formula "(status = ex:Complete) ? estimatedPoints : 0" 
+		konig:formula "(.status = ex:Complete) ? .estimatedPoints : 0" 
 	 ] 
 . 

@@ -80,9 +80,10 @@ public class Expression extends AbstractFormula {
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		
-		if (context != null) {
-
+		Context lastWrittenContext = out.getLastWrittenContext();
+		if (context != null && context!=lastWrittenContext) {
+			out.setLastWrittenContext(context);
+			
 			List<Term> termList = context.asList();
 			int remainder = printNamespaces(out, termList);
 			if (remainder>0) {
@@ -91,6 +92,8 @@ public class Expression extends AbstractFormula {
 			
 		}
 		printOrList(out);
+		out.setLastWrittenContext(lastWrittenContext);
+		
 	}
 	
 
@@ -175,5 +178,40 @@ public class Expression extends AbstractFormula {
 
 	protected void doDispatch(FormulaVisitor visitor) {
 		// Derived classes should override.
+	}
+	
+	/**
+	 * Get the PrimaryExpression wrapped by this Expression.
+	 * @return The PrimaryExpression wrapped by this Expression, or null if there is no single, unadorned 
+	 * PrimaryExpression wrapped by this Expression.
+	 */
+	public PrimaryExpression asPrimaryExpression() {
+		List<ConditionalAndExpression> orList = getOrList();
+		if (orList.size()==1) {
+			ConditionalAndExpression and = orList.get(0);
+			List<ValueLogical> andList = and.getAndList();
+			if (andList.size()==1) {
+				ValueLogical value = andList.get(0);
+				if (value instanceof BinaryRelationalExpression) {
+					BinaryRelationalExpression binary = (BinaryRelationalExpression) value;
+					if (binary.getRight() == null) {
+						NumericExpression left = binary.getLeft();
+						if (left instanceof GeneralAdditiveExpression) {
+							GeneralAdditiveExpression additive = (GeneralAdditiveExpression) left;
+							if (additive.getAddendList()==null || additive.getAddendList().isEmpty()) {
+								MultiplicativeExpression mult = additive.getLeft();
+								if (mult.getMultiplierList()==null || mult.getMultiplierList().isEmpty()) {
+									UnaryExpression unary = mult.getLeft();
+									if (unary.getOperator()==null) {
+										return unary.getPrimary();
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
 	}
 }

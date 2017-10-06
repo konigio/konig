@@ -20,40 +20,7 @@ package io.konig.formula;
  * #L%
  */
 
-
-import io.konig.core.io.PrettyPrintWriter;
-
-public class PathStep extends AbstractFormula {
-	private Direction direction;
-	private PathTerm term;
-
-	public PathStep(Direction direction, PathTerm term) {
-		this.direction = direction;
-		this.term = term;
-	}
-
-	public Direction getDirection() {
-		return direction;
-	}
-
-	public PathTerm getTerm() {
-		return term;
-	}
-
-	@Override
-	public void print(PrettyPrintWriter out) {
-		
-		direction.print(out);
-		term.print(out);
-	}
-
-	@Override
-	public void dispatch(FormulaVisitor visitor) {
-
-		visitor.enter(this);
-		direction.dispatch(visitor);
-		term.dispatch(visitor);
-		visitor.exit(this);
-	}
+abstract public class PathStep extends AbstractFormula {
+	
 
 }

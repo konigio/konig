@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import io.konig.core.KonigException;
 import io.konig.core.io.PrettyPrintWriter;
 
 public class PathExpression extends AbstractFormula implements PrimaryExpression {
@@ -44,12 +45,7 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 		
 		if (!stepList.isEmpty()) {
 			Iterator<PathStep> sequence = stepList.iterator();
-			PathStep first = sequence.next();
-			Direction dir = first.getDirection();
-			if (dir == Direction.IN) {
-				dir.print(out);
-			}
-			out.print(first.getTerm());
+			
 			while (sequence.hasNext()) {
 				PathStep step = sequence.next();
 				step.print(out);

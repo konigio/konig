@@ -25,7 +25,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class IriTerm extends AbstractFormula implements IriValue {
+public class IriTerm extends AbstractFormula implements IriValue, PathTerm, PrimaryExpression {
 	private URI uri;
 	
 	public IriTerm(URI uri) {

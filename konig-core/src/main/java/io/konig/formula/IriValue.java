@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * Konig Core

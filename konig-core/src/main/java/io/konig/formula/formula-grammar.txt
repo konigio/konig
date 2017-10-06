@@ -71,13 +71,23 @@ UnaryExpression	  ::=
 	|	'-' PrimaryExpression 
 	|	PrimaryExpression
 	
-PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | Path | Literal
+PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | Path | Literal | IRI | CURIE
 
 BrackettedExpression	  ::=  	'(' Expression ')'
 
-Path	::= (InStep | PathTerm) ( OutStep | InStep)*
+Path	::= (InStep | PathTerm) ( OutStep | InStep | HasStep)*
 
 PathTerm ::= IRI | CURIE | LocalName | Variable
+
+HasStep ::= '[' PredicateObjectList ']'
+
+PredicateObjectList ::= Verb ObjectList ( ';' (Verb ObjectList)?)*
+
+Verb ::= IRI | CURIE | LocalName
+
+ObjectList ::= Object (',' Object)*
+
+Object ::= Expression 
 
 Variable ::= '?' [a-zA-Z][a-zA-Z0-9]*
 

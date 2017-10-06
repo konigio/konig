@@ -30,7 +30,7 @@ import io.konig.core.Term;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class CurieTerm extends AbstractFormula implements IriValue {
+public class CurieTerm extends AbstractFormula implements IriValue, PrimaryExpression {
 	
 	private String namespacePrefix;
 	private String localName;
