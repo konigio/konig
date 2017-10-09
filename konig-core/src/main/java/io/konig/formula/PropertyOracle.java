@@ -21,13 +21,14 @@ package io.konig.formula;
  */
 
 
+import org.openrdf.model.URI;
+
 /**
- * An expression that represents an IRI value such as a fully-qualified IRI, a CURIE, or local name (together with a context).
- * This expression can be used as a PathTerm in a DirectionStep.  It can be used as the starting point of a Path. And it can
- * be used as 
+ * An interface that tests whether a given IRI identifies a property.
  * @author Greg McFall
  *
  */
-public interface IriValue extends PathTerm, PathStep, PrimaryExpression {
+public interface PropertyOracle {
 
+	boolean isProperty(URI iri);
 }

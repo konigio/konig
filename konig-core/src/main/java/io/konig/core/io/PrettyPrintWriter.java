@@ -42,6 +42,7 @@ import org.openrdf.model.util.Literals;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.turtle.TurtleUtil;
 
+import io.konig.core.Context;
 import io.konig.core.NamespaceManager;
 
 public class PrettyPrintWriter extends PrintWriter {
@@ -60,6 +61,7 @@ public class PrettyPrintWriter extends PrintWriter {
 	private NamespaceManager nsManager;
 	private List<AutoMode> autoMode = new ArrayList<>();
 	private char[] charBuffer = null;
+	private Context lastWrittenContext;
 
 	public PrettyPrintWriter(Writer arg0) {
 		super(arg0);
@@ -454,6 +456,14 @@ public class PrettyPrintWriter extends PrintWriter {
 			}
 		}
 		super.write(buf, off, len);
+	}
+
+	public Context getLastWrittenContext() {
+		return lastWrittenContext;
+	}
+
+	public void setLastWrittenContext(Context lastWrittenContext) {
+		this.lastWrittenContext = lastWrittenContext;
 	}
 	
 }

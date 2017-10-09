@@ -21,13 +21,24 @@ package io.konig.formula;
  */
 
 
-/**
- * An expression that represents an IRI value such as a fully-qualified IRI, a CURIE, or local name (together with a context).
- * This expression can be used as a PathTerm in a DirectionStep.  It can be used as the starting point of a Path. And it can
- * be used as 
- * @author Greg McFall
- *
- */
-public interface IriValue extends PathTerm, PathStep, PrimaryExpression {
+import org.openrdf.model.URI;
+
+import io.konig.shacl.Shape;
+
+public class ShapePropertyOracle implements PropertyOracle {
+	private Shape shape;
+
+	public Shape getShape() {
+		return shape;
+	}
+
+	public void setShape(Shape shape) {
+		this.shape = shape;
+	}
+
+	@Override
+	public boolean isProperty(URI iri) {
+		return shape.getPropertyConstraint(iri) != null;
+	}
 
 }

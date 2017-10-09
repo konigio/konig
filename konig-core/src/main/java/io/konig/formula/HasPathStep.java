@@ -20,36 +20,44 @@ package io.konig.formula;
  * #L%
  */
 
-
-import org.openrdf.model.URI;
+import java.util.List;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class IriTerm extends AbstractFormula implements IriValue {
-	private URI uri;
+public class HasPathStep extends AbstractFormula implements PathStep {
 	
-	public IriTerm(URI uri) {
-		this.uri = uri;
+	private List<PredicateObjectList> constraints;
+
+	public HasPathStep(List<PredicateObjectList> constraints) {
+		this.constraints = constraints;
 	}
 
-	@Override
-	public URI getIri() {
-		return uri;
+	public List<PredicateObjectList> getConstraints() {
+		return constraints;
 	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {
 		
-		out.print('<');
-		out.print(uri.stringValue());
-		out.print('>');
-
+		out.print('[');
+		String delim = "";
+		for (PredicateObjectList po : constraints) {
+			out.print(delim);
+			po.print(out);
+			delim = "; ";
+		}
+		out.print(']');
+		
 	}
 
 	@Override
 	public void dispatch(FormulaVisitor visitor) {
 		visitor.enter(this);
+		for (PredicateObjectList po : constraints) {
+			po.dispatch(visitor);
+		}
 		visitor.exit(this);
+		
 	}
 
 }

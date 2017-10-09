@@ -35,6 +35,47 @@ public class FormulaParserTest {
 	
 
 	@Test
+	public void testOutPathStartingWithE() throws Exception {
+		
+		String text = ".estimatedPoints";
+		
+		Expression e = parser.quantifiedExpression(text);
+		
+		PrimaryExpression primary = e.asPrimaryExpression();
+		assertTrue(primary instanceof PathExpression);
+		
+		assertEquals(text, primary.toString());
+		
+	}
+	
+	
+	@Test
+	public void testPathValue() throws Exception {
+		
+		String text = "<http://example.com/foo>";
+		
+		Expression e = parser.quantifiedExpression(text);
+		PrimaryExpression p = e.asPrimaryExpression();
+		assertTrue(p instanceof IriValue);
+		
+	}
+	
+	@Test
+	public void testHasStep() throws Exception {
+		String text = 
+			"@context {\n" + 
+			"   \"address\" : \"http://schema.org/address\",\n" + 
+			"   \"addressCountry\" : \"http://schema.org/addressCountry\",\n" + 
+			"   \"addressRegion\" : \"http://schema.org/addressRegion\"\n" + 
+			"}\n" + 
+			"address[addressCountry \"US\"; addressRegion \"VA\"]";
+		
+		Expression e = parser.quantifiedExpression(text);
+		String actual = e.toString();
+		assertEquals(text, actual);
+	}
+
+	@Test
 	public void testBound() throws Exception {
 		String text = 
 			"@context {\n" + 
@@ -125,7 +166,7 @@ public class FormulaParserTest {
 			+ "      \"@type\" : \"@vocab\"\n"
 			+ "   }\n"
 			+ "}\n"
-			+ "knows.knows = Alice";
+			+ ".knows.knows = Alice";
 
 		Expression e = parser.expression(text);
 		
@@ -140,7 +181,8 @@ public class FormulaParserTest {
 		GeneralAdditiveExpression left = (GeneralAdditiveExpression) binary.getLeft();
 		
 		PathExpression path = (PathExpression) left.getLeft().getLeft().getPrimary();
-		PathTerm term = path.getStepList().get(0).getTerm();
+		DirectionStep step = (DirectionStep) path.getStepList().get(0);
+		PathTerm term = step.getTerm();
 		
 		assertEquals(Schema.knows, term.getIri());
 	}

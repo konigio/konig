@@ -29,11 +29,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
+import io.konig.core.Graph;
 import io.konig.core.LocalNameService;
+import io.konig.core.Vertex;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
@@ -65,6 +68,16 @@ public class SimpleLocalNameService implements LocalNameService {
 	private Map<String, Set<URI>> map = new HashMap<>();
 
 	public SimpleLocalNameService() {
+	}
+	
+	public void addAll(Graph graph) {
+		for (Vertex v : graph.vertices()) {
+			Resource id = v.getId();
+			if (id instanceof URI) {
+				URI uri = (URI) id;
+				add(uri);
+			}
+		}
 	}
 	
 	

@@ -26,23 +26,39 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Literal;
+import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
+import io.konig.core.Context;
 import io.konig.core.KonigException;
+import io.konig.core.LocalNameService;
+import io.konig.core.NamespaceManager;
+import io.konig.core.Term;
+import io.konig.core.Term.Kind;
 import io.konig.rio.turtle.SeaTurtleParser;
 
 
 public class FormulaParser {
 	
-	
+	private PropertyOracle propertyOracle;
+	private LocalNameService localNameService;
 	
 	public FormulaParser() {
 	}
 	
+	public FormulaParser(PropertyOracle propertyOracle) {
+		this.propertyOracle = propertyOracle;
+	}
+
+	public FormulaParser(PropertyOracle propertyOracle, LocalNameService localNameService) {
+		this.propertyOracle = propertyOracle;
+		this.localNameService = localNameService;
+	}
 
 	public QuantifiedExpression quantifiedExpression(String text)  throws RDFParseException, IOException {
 		StringReader reader = new StringReader(text);
@@ -431,6 +447,16 @@ public class FormulaParser {
 				(primary=tryPath()) != null ? primary :
 				null;
 			
+			if (primary instanceof PathExpression) {
+				PathExpression path = (PathExpression) primary;
+				if (path.getStepList().size()==1) {
+					PathStep step = path.getStepList().get(0);
+					if (step instanceof IriValue) {
+						primary = (IriValue) step;
+					}
+				}
+			}
+			
 			return primary;
 		}
 		
@@ -473,7 +499,7 @@ public class FormulaParser {
 		
 		
 
-		private BoundFunction tryBoundFunction() throws IOException, RDFParseException {
+		private BoundFunction tryBoundFunction() throws IOException, RDFParseException, RDFHandlerException {
 			
 			if (tryWord("BOUND")) {
 				int c = next();
@@ -514,15 +540,25 @@ public class FormulaParser {
 			return null;
 		}
 
-		private PathExpression tryPath() throws RDFParseException, IOException {
+		private PathExpression tryPath() throws RDFParseException, IOException, RDFHandlerException {
 			PathExpression path = null;
 			
 			PathStep step = tryInStep();
 			if (step == null) {
 
-				PathTerm predicate = tryPathTerm();
-				if (predicate != null) {
-					step = new PathStep(Direction.OUT, predicate);
+				step = tryOutStep();
+				if (step == null) {
+				
+					PathTerm term = tryPathTerm();
+					if (term != null) {
+						if (
+							useDirectionStep(term)
+						) {
+							step = new DirectionStep(Direction.OUT, term);
+						} else if (term instanceof PathStep){
+							step = (PathStep) term;
+						}
+					}
 				}
 			}
 			
@@ -537,6 +573,10 @@ public class FormulaParser {
 					}
 					
 					if (step == null) {
+						step = tryHasStep();
+					}
+					
+					if (step == null) {
 						break;
 					} 
 					path.add(step);
@@ -546,10 +586,86 @@ public class FormulaParser {
 			return path;
 		}
 
+		private boolean useDirectionStep(PathTerm term) {
+			
+			if (term instanceof VariableTerm) {
+				return true;
+			}
+			
+			if (
+				propertyOracle != null &&
+				term instanceof IriValue
+			) {
+				IriValue value = (IriValue) term;
+				URI iri = value.getIri();
+				
+				return propertyOracle.isProperty(iri);
+			}
+			return false;
+		}
+
+		private PathStep tryHasStep() throws IOException, RDFParseException, RDFHandlerException {
+			HasPathStep step = null;
+			if (tryWord("[")) {
+				List<PredicateObjectList> constraints = predicateObjectList();
+				step = new HasPathStep(constraints);
+			}
+			return step;
+		}
+
+		private List<PredicateObjectList> predicateObjectList() throws IOException, RDFParseException, RDFHandlerException {
+			List<PredicateObjectList> list = new ArrayList<>();
+			for (;;) {
+				IriValue predicate = iriValue();
+				ObjectList objectList = objectList();
+				list.add(new PredicateObjectList(predicate, objectList));
+				int next = next();
+				if (next == ';') {
+					skipSpace();
+					next = peek();
+					if (next == ']') {
+						break;
+					}
+				} else {
+					unread(next);
+					break;
+				}
+			}
+			return list;
+		}
+
+		private ObjectList objectList() throws RDFParseException, RDFHandlerException, IOException {
+			List<Expression> list = new ArrayList<>();
+			
+			for (;;) {
+				Expression e = expression();
+				list.add(e);
+				
+				int next = next();
+				if (next != ',') {
+					unread(next);
+					break;
+				}
+			}
+			
+			return new ObjectList(list);
+		}
+
+		private IriValue iriValue() throws RDFParseException, IOException {
+			IriValue result = null;
+			PathTerm term = tryPathTerm();
+			if (term instanceof IriValue) {
+				result = (IriValue) term;
+			} else {
+				fail("Expected IRI value");
+			}
+			return result;
+		}
+
 		private PathStep tryInStep() throws IOException, RDFParseException {
 			PathStep step = null;
 			if (tryWord("^")) {
-				step = new PathStep(Direction.IN, pathTerm());
+				step = new DirectionStep(Direction.IN, pathTerm());
 			}
 			return step;
 		}
@@ -566,23 +682,16 @@ public class FormulaParser {
 		private PathStep tryOutStep() throws IOException, RDFParseException {
 			PathStep step = null;
 			if (tryWord(".")) {
-				step = new PathStep(Direction.OUT, pathTerm());
+				PathTerm term = tryPathTerm();
+				if (term == null) {
+					unread('.');
+				} else {
+					step = new DirectionStep(Direction.OUT, term);
+				}
 			}
 			return step;
 		}
 		
-		private IriTerm tryIriTerm() throws RDFParseException, IOException {
-
-			int c = read();
-			
-			if (c == '<') {
-				String value = iriRef(c);
-				return new IriTerm(new URIImpl(value));
-			}
-			unread(c);
-			return null;
-		}
-
 		private PathTerm tryPathTerm() throws RDFParseException, IOException {
 			String predicate = null;
 			skipSpace();
@@ -590,7 +699,7 @@ public class FormulaParser {
 			
 			if (c == '<') {
 				String value = iriRef(c);
-				return new IriTerm(new URIImpl(value));
+				return new FullyQualifiedIri(new URIImpl(value));
 			}
 			
 			if (c == '?') {
@@ -623,7 +732,7 @@ public class FormulaParser {
 						} while (Character.isLetter(c) || Character.isDigit(c) || c=='_');
 						String localName = buffer.toString();
 						unread(c);
-						return new CurieTerm(getContext(), predicate, localName);
+						return new CurieValue(getContext(), predicate, localName);
 					} else {
 						fail("Expected a letter");
 					}
@@ -641,17 +750,31 @@ public class FormulaParser {
 				predicate = null;
 			}
 
+			if (predicate == null) {
+				return null;
+			}
+
+			String localName = predicate;
+			Context context = getContext();
 			
-			return predicate == null ? null : new LocalNameTerm(getContext(), predicate);
+			Term term = context.getTerm(localName);
+			
+			if (term == null) {
+				if (localNameService != null) {
+					Set<URI> iriOptions = localNameService.lookupLocalName(localName);
+					
+					if (iriOptions.size()==1) {
+						URI id = iriOptions.iterator().next();
+						term = new Term(localName, id.stringValue(), Kind.ANY);
+						context.add(term);
+					}
+				}
+			}
+			
+			
+			return new LocalNameTerm(context, predicate);
 		}
 		
-		private VariableTerm tryVariable() throws RDFParseException, IOException {
-			skipSpace();
-			if (peek() == '?') {
-				return variable();
-			}
-			return null;
-		}
 
 		private VariableTerm variable() throws RDFParseException, IOException {
 			assertNext('?');

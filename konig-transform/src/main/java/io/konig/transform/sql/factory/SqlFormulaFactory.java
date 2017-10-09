@@ -34,6 +34,7 @@ import io.konig.formula.BinaryOperator;
 import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.ConditionalAndExpression;
 import io.konig.formula.Direction;
+import io.konig.formula.DirectionStep;
 import io.konig.formula.Expression;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.GeneralAdditiveExpression;
@@ -54,7 +55,6 @@ import io.konig.sql.query.BooleanTerm;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
-import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.IfExpression;
 import io.konig.sql.query.NumericValueExpression;
 import io.konig.sql.query.QueryExpression;
@@ -248,40 +248,57 @@ public class SqlFormulaFactory {
 				if (stepList.size()==1) {
 					PathStep step = stepList.get(0);
 					
-					if (step.getDirection() == Direction.OUT) {
-						PathTerm term = step.getTerm();
-						URI predicate = term.getIri();
-						
-						return SqlUtil.columnExpression(sourceTable, predicate);
+					if (step instanceof DirectionStep) {
+					
+						DirectionStep dirStep = (DirectionStep) step;
+						if (dirStep.getDirection() == Direction.OUT) {
+							PathTerm term = dirStep.getTerm();
+							URI predicate = term.getIri();
+							
+							return SqlUtil.columnExpression(sourceTable, predicate);
+						}
+					} else {
+						throw new KonigException("PathStep not yet supported: " + step.getClass().getName());
 					}
 				} else if (stepList.size()==2) {
 					PathStep step = stepList.get(0);
-					if (step.getDirection() == Direction.OUT) {
-						PathTerm term = step.getTerm();
-						if (term instanceof VariableTerm) {
-							VariableTerm varTerm = (VariableTerm) term;
-							String varName = varTerm.getVarName();
-							TableItemExpression tableItem = tableMap.tableForVariable(varName);
-							if (tableItem == null) {
-								throw new KonigException("Table not found for variable in expression: " + primary.toString());
-							}
-							step = stepList.get(1);
-							if (step.getDirection() == Direction.OUT) {
-								term = step.getTerm();
-								URI predicate = term.getIri();
-								ColumnExpression ge = SqlUtil.columnExpression(tableItem, predicate);
-								ValueExpression ve = ge;
-								Integer maxCount = propertyConstraint.getMaxCount();
-
-								exchange.setGroupingElement(ge);
-								if (maxCount == null) {
-									io.konig.sql.query.FunctionExpression func = new io.konig.sql.query.FunctionExpression("ARRAY_AGG");
-									func.addArg(ve);
-									ve = func;
+					
+					if (step instanceof DirectionStep) {
+						DirectionStep dirStep = (DirectionStep) step;
+						if (dirStep.getDirection() == Direction.OUT) {
+							PathTerm term = dirStep.getTerm();
+							if (term instanceof VariableTerm) {
+								VariableTerm varTerm = (VariableTerm) term;
+								String varName = varTerm.getVarName();
+								TableItemExpression tableItem = tableMap.tableForVariable(varName);
+								if (tableItem == null) {
+									throw new KonigException("Table not found for variable in expression: " + primary.toString());
 								}
-								return ve;
+								step = stepList.get(1);
+								if (step instanceof DirectionStep) {
+									dirStep = (DirectionStep) step;
+									if (dirStep.getDirection() == Direction.OUT) {
+										term = dirStep.getTerm();
+										URI predicate = term.getIri();
+										ColumnExpression ge = SqlUtil.columnExpression(tableItem, predicate);
+										ValueExpression ve = ge;
+										Integer maxCount = propertyConstraint.getMaxCount();
+		
+										exchange.setGroupingElement(ge);
+										if (maxCount == null) {
+											io.konig.sql.query.FunctionExpression func = new io.konig.sql.query.FunctionExpression("ARRAY_AGG");
+											func.addArg(ve);
+											ve = func;
+										}
+										return ve;
+									}
+								}
+							} else {
+								throw new KonigException("TODO: support " + step.getClass().getName());	
 							}
 						}
+					} else {
+						throw new KonigException("TODO: support " + step.getClass().getName());
 					}
 				}
 			}

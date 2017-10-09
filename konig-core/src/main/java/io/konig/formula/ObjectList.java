@@ -21,26 +21,42 @@ package io.konig.formula;
  */
 
 
+import java.util.ArrayList;
+import java.util.List;
 
-import org.openrdf.model.URI;
-
-import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.PrettyPrintWriter;
 
-public class IriFormula extends AbstractFormula implements PrimaryExpression {
+public class ObjectList extends AbstractFormula {
 	
-	private URI uri;
+	private List<Expression> list;
+	
+	public ObjectList(List<Expression> list) {
+		this.list = list;
+	}
+	
+	public List<Expression> getExpressions() {
+		return list;
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		RdfUtil.writeURI(out, uri);
+		String comma = "";
+		for (Expression e : list) {
+			out.print(comma);
+			e.print(out);
+			comma = ",";
+		}
+
 	}
 
 	@Override
 	public void dispatch(FormulaVisitor visitor) {
-
 		visitor.enter(this);
+		for (Expression e : list) {
+			e.dispatch(visitor);
+		}
 		visitor.exit(this);
+
 	}
 
 }

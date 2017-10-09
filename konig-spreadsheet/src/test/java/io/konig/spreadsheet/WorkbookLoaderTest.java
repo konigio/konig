@@ -461,14 +461,11 @@ public class WorkbookLoaderTest {
 		URI state = uri("http://example.com/ns/alias/state");
 		PropertyConstraint p = shape.getPropertyConstraint(state);
 		String expected =
-			"@context {\n" + 
-			"  \"alias\" : \"http://example.com/ns/alias/\",\n" + 
-			"  \"city\" : \"alias:city\",\n" + 
-			"  \"schema\" : \"http://schema.org/\",\n" + 
-			"  \"containedInPlace\" : \"schema:containedInPlace\"\n" + 
-			"}\n" + 
 			"/city/containedInPlace";
-		assertEquals(expected, p.getEquivalentPath().toString());
+		
+		Path path = p.getEquivalentPath();
+		
+		assertEquals(expected, path.toSimpleString());
 
 	}
 

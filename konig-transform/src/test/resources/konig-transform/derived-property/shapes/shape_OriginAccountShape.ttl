@@ -32,7 +32,7 @@ shape:OriginAccountShape a sh:Shape ;
    "profit" : "ex:profit",
    "loss" : "ex:loss"
 }
-profit - loss''' ]  ; 
+.profit - .loss''' ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/ex/tables/OriginAccountShape> , <gs://originaccountshape.{gcpBucketSuffix}> . 
 
 <http://www.konig.io/activity/kYmW6FelyPQAAAFcP4Xj_w> a konig:LoadModelFromSpreadsheet ; 

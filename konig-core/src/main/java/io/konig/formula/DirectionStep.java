@@ -21,48 +21,40 @@ package io.konig.formula;
  */
 
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import io.konig.core.KonigException;
 import io.konig.core.io.PrettyPrintWriter;
 
-public class PathExpression extends AbstractFormula implements PrimaryExpression {
-	
-	private List<PathStep> stepList = new ArrayList<>();
-	
-	public void add(PathStep step) {
-		stepList.add(step);
+public class DirectionStep extends AbstractFormula implements PathStep {
+	private Direction direction;
+	private PathTerm term;
+
+	public DirectionStep(Direction direction, PathTerm term) {
+		this.direction = direction;
+		this.term = term;
 	}
-	
-	public List<PathStep> getStepList() {
-		return stepList;
+
+	public Direction getDirection() {
+		return direction;
+	}
+
+	public PathTerm getTerm() {
+		return term;
 	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		
-		if (!stepList.isEmpty()) {
-			Iterator<PathStep> sequence = stepList.iterator();
-			
-			while (sequence.hasNext()) {
-				PathStep step = sequence.next();
-				step.print(out);
-			}
+		if (!(term instanceof VariableTerm)) {
+			direction.print(out);
 		}
-
+		term.print(out);
 	}
 
 	@Override
 	public void dispatch(FormulaVisitor visitor) {
 
 		visitor.enter(this);
-		for (PathStep s : stepList) {
-			s.dispatch(visitor);
-		}
+		direction.dispatch(visitor);
+		term.dispatch(visitor);
 		visitor.exit(this);
-		
 	}
 
 }

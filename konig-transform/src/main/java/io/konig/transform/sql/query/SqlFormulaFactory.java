@@ -34,6 +34,7 @@ import io.konig.formula.BinaryOperator;
 import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.ConditionalAndExpression;
 import io.konig.formula.Direction;
+import io.konig.formula.DirectionStep;
 import io.konig.formula.Expression;
 import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.IfFunction;
@@ -49,7 +50,6 @@ import io.konig.formula.ValueLogical;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.BooleanTerm;
-import io.konig.sql.query.BooleanTest;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.IfExpression;
@@ -215,13 +215,18 @@ public class SqlFormulaFactory {
 			List<PathStep> stepList = primary.getStepList();
 			if (stepList!=null && stepList.size()==1) {
 				PathStep step = stepList.get(0);
+				if (step instanceof DirectionStep) {
 				
-				if (step.getDirection() == Direction.OUT) {
-					PathTerm term = step.getTerm();
-					URI predicate = term.getIri();
-					
-					return sourceTable.column(predicate.getLocalName());
-					
+					DirectionStep dirStep = (DirectionStep) step;
+					if (dirStep.getDirection() == Direction.OUT) {
+						PathTerm term = dirStep.getTerm();
+						URI predicate = term.getIri();
+						
+						return sourceTable.column(predicate.getLocalName());
+						
+					}
+				} else {
+					throw new KonigException("Unsupported step type: " + step.getClass().getName());
 				}
 			}
 			
