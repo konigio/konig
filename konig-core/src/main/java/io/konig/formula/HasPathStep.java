@@ -20,13 +20,11 @@ package io.konig.formula;
  * #L%
  */
 
-
-import java.util.ArrayList;
 import java.util.List;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class HasPathStep extends PathStep {
+public class HasPathStep extends AbstractFormula implements PathStep {
 	
 	private List<PredicateObjectList> constraints;
 

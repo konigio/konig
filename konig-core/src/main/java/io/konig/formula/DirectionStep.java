@@ -23,7 +23,7 @@ package io.konig.formula;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class DirectionStep extends PathStep {
+public class DirectionStep extends AbstractFormula implements PathStep {
 	private Direction direction;
 	private PathTerm term;
 
@@ -42,8 +42,9 @@ public class DirectionStep extends PathStep {
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		
-		direction.print(out);
+		if (!(term instanceof VariableTerm)) {
+			direction.print(out);
+		}
 		term.print(out);
 	}
 

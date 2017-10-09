@@ -23,33 +23,22 @@ package io.konig.formula;
 
 import org.openrdf.model.URI;
 
-import io.konig.core.io.PrettyPrintWriter;
+import io.konig.shacl.Shape;
 
-public class IriTerm extends AbstractFormula implements IriValue, PathTerm, PrimaryExpression {
-	private URI uri;
-	
-	public IriTerm(URI uri) {
-		this.uri = uri;
+public class ShapePropertyOracle implements PropertyOracle {
+	private Shape shape;
+
+	public Shape getShape() {
+		return shape;
+	}
+
+	public void setShape(Shape shape) {
+		this.shape = shape;
 	}
 
 	@Override
-	public URI getIri() {
-		return uri;
-	}
-
-	@Override
-	public void print(PrettyPrintWriter out) {
-		
-		out.print('<');
-		out.print(uri.stringValue());
-		out.print('>');
-
-	}
-
-	@Override
-	public void dispatch(FormulaVisitor visitor) {
-		visitor.enter(this);
-		visitor.exit(this);
+	public boolean isProperty(URI iri) {
+		return shape.getPropertyConstraint(iri) != null;
 	}
 
 }

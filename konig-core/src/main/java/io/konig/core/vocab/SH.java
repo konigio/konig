@@ -42,6 +42,7 @@ public class SH {
 
 	public static final URI path = new URIImpl(PATH);
 	public static final URI in = new URIImpl("http://www.w3.org/ns/shacl#in");
+	public static final URI equals = new URIImpl("http://www.w3.org/ns/shacl#equals");
 	public static final URI and = new URIImpl("http://www.w3.org/ns/shacl#and");
 	public static final URI constraint = new URIImpl("http://www.w3.org/ns/shacl#constraint");
 	public static final URI datatype = new URIImpl("http://www.w3.org/ns/shacl#datatype");

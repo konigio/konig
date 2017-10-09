@@ -561,13 +561,7 @@ public class TurtleParser extends RDFParserBase {
 			result = numberWithIntegerPart(c);
 		} else if (c=='.') {
 			result = tryDecimalPart(c);
-			if (result == null) {
-				builder = err();
-				builder.append("Invalid numeric literal. Expected '[0-9]' but found '");
-				builder.appendCodePoint(read());
-				builder.append("'");
-				fail(builder);
-			}
+			
 		} else {
 			builder = err();
 			builder.append("Invalid numeric literal. Expected [0-9] or '.' but found '");
@@ -594,7 +588,7 @@ public class TurtleParser extends RDFParserBase {
 				buffer.append('.');
 				result = tryExponent(c);
 			} else if (!isDigit(c)) {
-				unread(c);
+				// Do nothing
 			} else {
 				buffer.append('.');
 				while (isDigit(c)) {
@@ -607,6 +601,9 @@ public class TurtleParser extends RDFParserBase {
 					unread(c);
 					result = valueFactory.createLiteral(buffer.toString(), XMLSchema.DECIMAL);
 				}
+			}
+			if (result == null) {
+				unread(c);
 			}
 		}
 		return result;
@@ -658,12 +655,8 @@ public class TurtleParser extends RDFParserBase {
 				c = read();
 			}
 			if (!isDigit(c)) {
-				err();
-				buffer.append("Invalid numeric literal. Expected [0-9] but found '");
-				buffer.appendCodePoint(c);
-				buffer.append("'");
-				fail(buffer);
-				
+				unread(c);
+				return null;
 			} 
 			while (isDigit(c)) {
 				buffer.appendCodePoint(c);

@@ -38,6 +38,10 @@ public class QuantifiedExpression extends Expression {
 		}
 	}
 	
+	public QuantifiedExpression() {
+		
+	}
+	
 	public QuantifiedExpression(Expression formula, List<Triple> statementList) {
 		super(formula);
 		this.statementList = statementList;

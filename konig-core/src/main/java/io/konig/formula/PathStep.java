@@ -20,7 +20,7 @@ package io.konig.formula;
  * #L%
  */
 
-abstract public class PathStep extends AbstractFormula {
+public interface PathStep extends Formula {
 	
 
 }

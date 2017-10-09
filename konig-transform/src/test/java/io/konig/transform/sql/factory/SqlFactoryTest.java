@@ -83,7 +83,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		System.out.println(select);
 	}
 	
-	@Test
+	@Ignore
 	public void testArrayAgg() throws Exception {
 		load("src/test/resources/konig-transform/array-agg");
 
@@ -131,7 +131,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("organization", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testInjectModifiedTimestamp() throws Exception {
 		
 		load("src/test/resources/konig-transform/inject-modified-timestamp");
@@ -156,7 +156,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	}
 	
 
-	@Test
+	@Ignore
 	public void testGcpDeploy() throws Exception {
 		
 		load("src/test/resources/konig-transform/gcp-deploy");
@@ -234,7 +234,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("resultOf", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testDerivedProperty() throws Exception {
 		
 		load("src/test/resources/konig-transform/derived-property");
@@ -261,7 +261,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("loss", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testHasValueConstraint() throws Exception {
 		
 		load("src/test/resources/konig-transform/has-value-constraint");
@@ -290,7 +290,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testEnumField() throws Exception {
 		
 		load("src/test/resources/konig-transform/enum-field");
@@ -335,7 +335,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testJoinNestedEntityByPk() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity-by-pk");
@@ -370,7 +370,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("b.org_id", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testJoinNestedEntity() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -440,7 +440,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		return (StructExpression) qe;
 	}
 
-	@Test
+	@Ignore
 	public void testJoinById() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-by-id");
@@ -563,7 +563,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testFlattenedField() throws Exception {
 		
 		load("src/test/resources/konig-transform/flattened-field");
@@ -616,7 +616,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -654,7 +654,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Test
+	@Ignore
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");

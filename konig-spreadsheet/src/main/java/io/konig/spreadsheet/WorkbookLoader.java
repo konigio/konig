@@ -84,8 +84,6 @@ import io.konig.core.path.DataInjector;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.pojo.BeanUtil;
-import io.konig.core.pojo.EmitContext;
-import io.konig.core.pojo.SimplePojoEmitter;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat.Element;
@@ -96,7 +94,14 @@ import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
-import io.konig.core.vocab.VAR;
+import io.konig.formula.Direction;
+import io.konig.formula.DirectionStep;
+import io.konig.formula.FormulaParser;
+import io.konig.formula.PathExpression;
+import io.konig.formula.PathStep;
+import io.konig.formula.PrimaryExpression;
+import io.konig.formula.QuantifiedExpression;
+import io.konig.formula.ShapePropertyOracle;
 import io.konig.shacl.CompositeShapeVisitor;
 import io.konig.shacl.FormulaContextBuilder;
 import io.konig.shacl.PredicatePath;
@@ -190,13 +195,7 @@ public class WorkbookLoader {
 	private static final int LABEL_FLAG = 0x180;
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
-
-	private static final String GCP_DATASET_FORMAT = "https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{datasetId}";
-
-	private static final String GCP_BIGQUERY_TABLE_FORMAT = "https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{datasetId}/tables/{tableId}";
-
-	private static final String GCP_BIGQUERY_TABLE_ID_FORMAT = "{shapeLocalName}";
-
+	
 	private static final String[] CELL_TYPE = new String[6];
 	static {
 		CELL_TYPE[Cell.CELL_TYPE_BLANK] = "Blank";
@@ -211,11 +210,11 @@ public class WorkbookLoader {
 	private ShapeManager shapeManager;
 	private Graph graph;
 	private ValueFactory vf = new ValueFactoryImpl();
-	private DataFormatter formatter = new DataFormatter(true);
 	private IdMapper datasetMapper;
 	private Set<String> defaultNamespace = new HashSet<>();
 
 	private DataSourceGenerator dataSourceGenerator;
+	private ShapePropertyOracle propertyOracle = new ShapePropertyOracle();
 
 	private boolean inferRdfPropertyDefinitions;
 	private boolean failOnWarnings = true;
@@ -331,6 +330,7 @@ public class WorkbookLoader {
 		private Map<URI, List<Function>> dataSourceMap = new HashMap<>();
 		private List<String> warningList = new ArrayList<>();
 		private List<PathHandler> pathHandlers = new ArrayList<>();
+		private List<FormulaHandler> formulaHandlers = new ArrayList<>();
 
 		private Set<String> errorMessages = new HashSet<>();
 		private int ontologyNameCol = UNDEFINED;
@@ -438,6 +438,7 @@ public class WorkbookLoader {
 				emitProvenance();
 				inferPropertyDefinitions();
 				loadShapes();
+				handleFormulas();
 				produceEnumShapes();
 				processShapeTemplates();
 				processDataSources();
@@ -448,6 +449,18 @@ public class WorkbookLoader {
 			} catch (Throwable e) {
 				error(e);
 			}
+		}
+
+		private void handleFormulas() throws SpreadsheetException {
+			
+			try {
+				for (FormulaHandler handler : formulaHandlers) {
+					handler.execute();
+				}
+			} catch (Throwable oops) {
+				throw new SpreadsheetException(oops);
+			}
+			
 		}
 
 		private void handlePaths() throws SpreadsheetException {
@@ -825,124 +838,6 @@ public class WorkbookLoader {
 
 		}
 
-		private void buildRollUpShapes() throws SpreadsheetException {
-			ShapeLoader loader = new ShapeLoader(null, shapeManager);
-			try {
-				loader.load(graph);
-			} catch (Throwable e) {
-				error(e);
-				return;
-			}
-
-			Set<String> memory = new HashSet<>();
-
-			List<Shape> shapeList = shapeManager.listShapes();
-			for (Shape shape : shapeList) {
-				URI rollUpBy = shape.getRollUpBy();
-				if (rollUpBy != null) {
-					try {
-						buildRollUpShape(shape, memory);
-					} catch (Throwable e) {
-						error(e);
-					}
-				}
-			}
-
-		}
-
-		private void buildRollUpShape(Shape shape, Set<String> memory) throws SpreadsheetException {
-			if (memory.contains(shape.getId().stringValue())) {
-				return;
-			}
-			memory.add(shape.getId().stringValue());
-			URI aggregationOf = shape.getAggregationOf();
-			if (aggregationOf == null) {
-				String message = "Cannot roll-up Fact " + shape.getId().stringValue()
-						+ ": aggregationOf property is not defined";
-				throw new SpreadsheetException(message);
-			}
-
-			Shape sourceFact = shapeManager.getShapeById(aggregationOf);
-			if (sourceFact == null) {
-				String message = "Cannot roll-up Fact " + shape.getId().stringValue() + "... source fact not found: "
-						+ aggregationOf.stringValue();
-				throw new SpreadsheetException(message);
-			}
-
-			URI sourceRollUpBy = sourceFact.getRollUpBy();
-			if (sourceRollUpBy != null) {
-				buildRollUpShape(sourceFact, memory);
-			}
-
-			URI rollUpBy = shape.getRollUpBy();
-
-			PropertyConstraint p = sourceFact.getPropertyConstraint(rollUpBy);
-			if (p == null) {
-				String message = "Cannot roll-up Fact " + shape.getId().stringValue()
-						+ "... rollUpBy property not found in source fact.";
-				throw new SpreadsheetException(message);
-			}
-
-			Set<URI> dependsOn = new HashSet<>();
-			buildDependsOnSet(sourceFact, p, dependsOn);
-
-			List<PropertyConstraint> pList = sourceFact.getProperty();
-			for (PropertyConstraint property : pList) {
-
-				URI predicate = property.getPredicate();
-				if (!dependsOn.contains(predicate)) {
-					PropertyConstraint clone = property.clone();
-					clone.setId(null);
-
-					if (predicate.equals(rollUpBy)) {
-						clone.setStereotype(Konig.dimension);
-						clone.setEquivalentPath(null);
-					}
-
-					if (!clone.getStereotype().equals(Konig.measure)) {
-
-						String curie = curie(predicate);
-						String fromPath = "/" + curie;
-						clone.setFromAggregationSource(fromPath);
-					} else {
-						clone.setComment(null);
-					}
-
-					shape.add(clone);
-				}
-			}
-			shape.save(graph);
-		}
-
-		private void buildDependsOnSet(Shape sourceFact, PropertyConstraint p, Set<URI> dependsOn) {
-			Path pathText = p.getEquivalentPath();
-			if (pathText != null) {
-				Path path = p.getEquivalentPath();
-				List<Step> stepList = path.asList();
-				if (!stepList.isEmpty()) {
-					Step first = stepList.get(0);
-					if (first instanceof OutStep) {
-						OutStep out = (OutStep) first;
-						URI predicate = out.getPredicate();
-						dependsOn.add(predicate);
-					}
-				}
-			}
-
-			if (dependsOn.isEmpty()) {
-				URI aggregationOf = sourceFact.getAggregationOf();
-				if (aggregationOf != null) {
-					Shape shape = shapeManager.getShapeById(aggregationOf);
-					if (shape != null) {
-						p = shape.getPropertyConstraint(p.getPredicate());
-						if (p != null) {
-							buildDependsOnSet(shape, p, dependsOn);
-						}
-					}
-				}
-			}
-
-		}
 
 		private void loadSheet(SheetInfo info) throws SpreadsheetException {
 
@@ -1188,20 +1083,26 @@ public class WorkbookLoader {
 			URI valueClass = uriValue(row, pcValueClassCol);
 			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
-			String equivalentPath = stringValue(row, pcEquivalentPathCol);
+			String formula = stringValue(row, pcEqualsCol);
 			String sourcePath = stringValue(row, pcSourcePathCol);
 			String partitionOf = stringValue(row, pcPartitionOfCol);
-			Literal formula = stringLiteral(row, pcFormulaCol);
+			
+			if (formula == null) {
+				// Support legacy column name "Equivalent Path"
+				formula = stringValue(row, pcEquivalentPathCol);
+			}
+			if (formula == null) {
+				// Support legacy column name "Formula"
+				formula = stringValue(row, pcFormulaCol);
+			}
 
 			if (formula != null) {
 				// Check that the user terminates the where clause with a dot.
-				String text = formula.stringValue().trim();
 
 				Pattern pattern = Pattern.compile("\\sWHERE\\s");
-				Matcher matcher = pattern.matcher(text);
-				if (matcher.find() && !text.endsWith(".")) {
-					text = text + " .";
-					formula = new LiteralImpl(text);
+				Matcher matcher = pattern.matcher(formula);
+				if (matcher.find() && !formula.endsWith(".")) {
+					formula = formula + " .";
 				}
 
 			}
@@ -1243,14 +1144,12 @@ public class WorkbookLoader {
 					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
 
-				if (formula != null) {
-					edge(shapeId, Konig.iriFormula, formula);
-				}
 
 				return;
 			}
 
-			Resource constraint = graph.vertex().getId();
+			Vertex constraintVertex = graph.vertex();
+			Resource constraint = constraintVertex.getId();
 
 			if (RDF.TYPE.equals(propertyId)) {
 				if (valueType.equals(XMLSchema.ANYURI) || valueType.equals(SH.IRI)) {
@@ -1290,10 +1189,6 @@ public class WorkbookLoader {
 				pathHandlers.add(new PropertyPathHandler(constraint, SH.path, propertyIdValue));
 			}
 
-			if (equivalentPath != null) {
-				pathHandlers.add(new PathHandler(constraint, Konig.equivalentPath, equivalentPath));
-			}
-
 			if (sourcePath != null) {
 				pathHandlers.add(new PathHandler(constraint, Konig.sourcePath, sourcePath));
 			}
@@ -1307,7 +1202,9 @@ public class WorkbookLoader {
 			edge(constraint, SH.uniqueLang, uniqueLang);
 			edge(constraint, SH.in, valueIn);
 			edge(constraint, Konig.stereotype, stereotype);
-			edge(constraint, Konig.formula, formula);
+			if (formula != null) {
+				formulaHandlers.add(new PropertyFormulaHandler(shapeId, constraintVertex, formula));
+			}
 
 		}
 
@@ -2631,6 +2528,98 @@ public class WorkbookLoader {
 			}
 
 		}
+	}
+	
+	private interface FormulaHandler {
+		public void execute() throws RDFParseException, IOException, KonigException;
+	}
+	
+	private class ShapeFormulaHandler implements FormulaHandler {
+
+		private URI shapeId;
+		private String formula;
+		
+		
+		public ShapeFormulaHandler(URI shapeId, String formula) {
+			this.shapeId = shapeId;
+			this.formula = formula;
+		}
+
+
+		@Override
+		public void execute() throws RDFParseException, IOException, KonigException {
+
+			ShapeManager shapeManager = getShapeManager();
+			Shape shape = shapeManager.getShapeById(shapeId);
+			if (shape == null) {
+				throw new KonigException("Shape not found: " + shapeId);
+			}
+			propertyOracle.setShape(shape);
+			
+			FormulaParser parser = new FormulaParser(propertyOracle);
+			QuantifiedExpression expression = parser.quantifiedExpression(formula);
+			String text = expression.toString();
+			Literal literal = vf.createLiteral(text);
+			
+			Graph graph = getGraph();
+			graph.edge(shapeId, Konig.iriFormula, literal);
+			
+		}
+		
+	}
+	
+	private class PropertyFormulaHandler implements FormulaHandler {
+		private URI shapeId;
+		private Vertex propertyConstraint;
+		private String formula;
+		
+		
+		
+		public PropertyFormulaHandler(URI shapeId, Vertex propertyConstraint,  String formula) {
+			this.shapeId = shapeId;
+			this.propertyConstraint = propertyConstraint;
+			this.formula = formula;
+		}
+
+
+
+		public void execute() throws RDFParseException, IOException, KonigException {
+			ShapeManager shapeManager = getShapeManager();
+			Shape shape = shapeManager.getShapeById(shapeId);
+			if (shape == null) {
+				throw new KonigException("Shape not found: " + shapeId);
+			}
+			propertyOracle.setShape(shape);
+			
+			FormulaParser parser = new FormulaParser(propertyOracle);
+			QuantifiedExpression expression = parser.quantifiedExpression(formula);
+			
+			String text = expression.toString();
+			Literal literal = vf.createLiteral(text);
+			
+			Graph graph = propertyConstraint.getGraph();
+			
+			PrimaryExpression primary = expression.asPrimaryExpression();
+			if (primary instanceof PathExpression) {
+				PathExpression path = (PathExpression) primary;
+				List<PathStep> stepList = path.getStepList();
+				if (stepList.size()==1) {
+					PathStep step = stepList.get(0);
+					if (step instanceof DirectionStep) {
+						DirectionStep dirStep = (DirectionStep) step;
+						if (dirStep.getDirection() == Direction.OUT) {
+							URI predicate = dirStep.getTerm().getIri();
+							graph.edge(propertyConstraint.getId(), SH.equals, predicate);
+							return;
+						}
+					}
+				}
+			}
+			
+			graph.edge(propertyConstraint.getId(), Konig.formula, literal);
+			
+		}
+		
 	}
 
 }

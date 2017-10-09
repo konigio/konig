@@ -32,6 +32,23 @@ public class FormulaParserTest {
 	
 	private FormulaParser parser = new FormulaParser();
 	
+	
+
+	@Test
+	public void testOutPathStartingWithE() throws Exception {
+		
+		String text = ".estimatedPoints";
+		
+		Expression e = parser.quantifiedExpression(text);
+		
+		PrimaryExpression primary = e.asPrimaryExpression();
+		assertTrue(primary instanceof PathExpression);
+		
+		assertEquals(text, primary.toString());
+		
+	}
+	
+	
 	@Test
 	public void testPathValue() throws Exception {
 		
@@ -39,12 +56,11 @@ public class FormulaParserTest {
 		
 		Expression e = parser.quantifiedExpression(text);
 		PrimaryExpression p = e.asPrimaryExpression();
-		assertTrue(p instanceof PathExpression);
+		assertTrue(p instanceof IriValue);
 		
-		System.out.println(e.toString());
 	}
 	
-	@Ignore
+	@Test
 	public void testHasStep() throws Exception {
 		String text = 
 			"@context {\n" + 
@@ -59,7 +75,7 @@ public class FormulaParserTest {
 		assertEquals(text, actual);
 	}
 
-	@Ignore
+	@Test
 	public void testBound() throws Exception {
 		String text = 
 			"@context {\n" + 
@@ -74,7 +90,7 @@ public class FormulaParserTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testSum() throws Exception {
 		String text = 
 			"@context {\n" + 
@@ -94,7 +110,7 @@ public class FormulaParserTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIfPlus() throws Exception {
 		String text = 
 			"IF(reviewer0Approved, 1, 0)\n" + 
@@ -109,7 +125,7 @@ public class FormulaParserTest {
 		assertEquals(expected, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testIfFunction() throws Exception {
 		
 		String text = "@context {\n" + 
@@ -122,7 +138,7 @@ public class FormulaParserTest {
 		assertEquals(text, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testNotEquals() throws Exception {
 		String text = 
 			"@context {\n" + 
@@ -138,7 +154,7 @@ public class FormulaParserTest {
 		assertEquals(text, actual);
 	}
 
-	@Ignore
+	@Test
 	public void testContext() throws Exception {
 		
 		String text =
@@ -150,7 +166,7 @@ public class FormulaParserTest {
 			+ "      \"@type\" : \"@vocab\"\n"
 			+ "   }\n"
 			+ "}\n"
-			+ "knows.knows = Alice";
+			+ ".knows.knows = Alice";
 
 		Expression e = parser.expression(text);
 		
@@ -171,7 +187,7 @@ public class FormulaParserTest {
 		assertEquals(Schema.knows, term.getIri());
 	}
 
-	@Ignore
+	@Test
 	public void testConditional() throws Exception {
 
 		String text = "(sprintIssue.status = pmd:Complete) ? sprintIssue.timeEstimate : 0";
@@ -183,7 +199,7 @@ public class FormulaParserTest {
 		assertEquals(text, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testCurieTerm() throws Exception {
 
 		String text = "ex:alpha.ex:beta NOT IN (ex:foo , ex:bar)";
@@ -196,7 +212,7 @@ public class FormulaParserTest {
 	}
 	
 	
-	@Ignore
+	@Test
 	public void testIriTerm() throws Exception {
 
 		String text = "<http://example.com/alpha>.beta NOT IN (foo , bar)";
@@ -208,7 +224,7 @@ public class FormulaParserTest {
 		assertEquals(text, actual);
 	}
 
-	@Ignore
+	@Test
 	public void testNotIn() throws Exception {
 
 		String text = "alpha.beta NOT IN (foo , bar)";
@@ -220,7 +236,7 @@ public class FormulaParserTest {
 		assertEquals(text, actual);
 	}
 
-	@Ignore
+	@Test
 	public void testIn() throws Exception {
 
 		String text = "alpha.beta IN (foo , bar)";
@@ -232,7 +248,7 @@ public class FormulaParserTest {
 		assertEquals(text, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testEquals() throws Exception {
 
 		String text = "alpha.beta = one.two";
@@ -244,7 +260,7 @@ public class FormulaParserTest {
 		assertEquals(text, actual);
 	}
 
-	@Ignore
+	@Test
 	public void testNumberPlusNumber() throws Exception {
 		
 		String text = "2.5 + 3";
@@ -257,7 +273,7 @@ public class FormulaParserTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testPathPlusNumber() throws Exception {
 
 		String text = "address.streetAddress + 3";
@@ -269,7 +285,7 @@ public class FormulaParserTest {
 		assertEquals(text, actual);
 	}
 	
-	@Ignore
+	@Test
 	public void testBracket() throws Exception {
 
 		String text = "(owner.age + 3*7)/(owner.weight*4)";

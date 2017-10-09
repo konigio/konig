@@ -99,34 +99,7 @@ public class Shape {
 		addType(SH.Shape);
 	}
 	
-	/**
-	 * Save this shape in a given Graph
-	 * @param graph The graph into which this shape will be saved.
-	 */
-	public void save(Graph graph) {
-		if (id == null) {
-			id = graph.vertex().getId();
-		}
-		edge(graph, SH.targetClass, targetClass);
-		edge(graph, SH.nodeKind, nodeKind==null ? null : nodeKind.getURI());
-		edge(graph, Konig.aggregationOf, aggregationOf);
-		edge(graph, Konig.rollUpBy, rollUpBy);
-		
-		if (property!=null) {
-			for (PropertyConstraint p : property) {
-				
-				Resource pId = p.getId();
-				if (pId == null) {
-					pId = graph.vertex().getId();
-					p.setId(pId);
-					
-				}
-				edge(graph, SH.property, p.getId());
-				p.save(graph);
-			}
-		}
-		
-	}
+	
 	
 	private void edge(Graph graph, URI predicate, Value value) {
 		if (value != null) {

@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import java.util.List;
+
 /*
  * #%L
  * Konig Core
@@ -31,7 +33,13 @@ import io.konig.core.path.OutStep;
 import io.konig.core.path.PathImpl;
 import io.konig.core.path.Step;
 
-public class Formul2PathTranslator {
+public class Formula2PathTranslator {
+	
+	private static final Formula2PathTranslator INSTANCE = new Formula2PathTranslator();
+	
+	public static Formula2PathTranslator getInstance() {
+		return INSTANCE;
+	}
 	
 	public Path toPath(Formula formula) {
 		
@@ -53,7 +61,12 @@ public class Formul2PathTranslator {
 				if (step == null) {
 					return null;
 				}
-				result.add(step(s));
+				step = step(s);
+				if (step == null) {
+					return null;
+				} else {
+					result.add(step(s));
+				}
 			}
 			
 		}
@@ -85,9 +98,29 @@ public class Formul2PathTranslator {
 					value = literal.getLiteral();
 				} else if (primary instanceof PathExpression) {
 					PathExpression path = (PathExpression) primary;
-					
+					List<PathStep> stepList = path.getStepList();
+					if (stepList.size()==1) {
+						PathStep pathStep = stepList.get(0);
+						if (pathStep instanceof DirectionStep) {
+							DirectionStep dirStep = (DirectionStep) pathStep;
+							if (dirStep.getDirection() == Direction.OUT) {
+								PathTerm term = dirStep.getTerm();
+								if (term instanceof IriValue) {
+									value = term.getIri();
+								}
+							}
+						}
+					}
+				} else if (primary instanceof IriValue) {
+					IriValue iriValue = (IriValue) primary;
+					value = iriValue.getIri();
 				}
 				
+				if (value != null) {
+					has.add(predicate, value);
+				} else {
+					return null;
+				}
 			}
 			
 		}

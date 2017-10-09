@@ -436,16 +436,12 @@ public class FormulaParser {
 				(primary=tryPath()) != null ? primary :
 				null;
 			
-			if (propertyOracle != null && primary instanceof PathExpression) {
+			if (primary instanceof PathExpression) {
 				PathExpression path = (PathExpression) primary;
 				if (path.getStepList().size()==1) {
 					PathStep step = path.getStepList().get(0);
-					if (step instanceof DirectionStep) {
-						DirectionStep dstep = (DirectionStep) step;
-						PathTerm term = dstep.getTerm();
-						if (term instanceof PrimaryExpression) {
-							primary = (PrimaryExpression) term;
-						}
+					if (step instanceof IriValue) {
+						primary = (IriValue) step;
 					}
 				}
 			}
@@ -542,9 +538,15 @@ public class FormulaParser {
 				step = tryOutStep();
 				if (step == null) {
 				
-					PathTerm predicate = tryPathTerm();
-					if (predicate != null) {
-						step = new DirectionStep(Direction.OUT, predicate);
+					PathTerm term = tryPathTerm();
+					if (term != null) {
+						if (
+							useDirectionStep(term)
+						) {
+							step = new DirectionStep(Direction.OUT, term);
+						} else if (term instanceof PathStep){
+							step = (PathStep) term;
+						}
 					}
 				}
 			}
@@ -571,6 +573,24 @@ public class FormulaParser {
 			}
 			
 			return path;
+		}
+
+		private boolean useDirectionStep(PathTerm term) {
+			
+			if (term instanceof VariableTerm) {
+				return true;
+			}
+			
+			if (
+				propertyOracle != null &&
+				term instanceof IriValue
+			) {
+				IriValue value = (IriValue) term;
+				URI iri = value.getIri();
+				
+				return propertyOracle.isProperty(iri);
+			}
+			return false;
 		}
 
 		private PathStep tryHasStep() throws IOException, RDFParseException, RDFHandlerException {
@@ -651,7 +671,12 @@ public class FormulaParser {
 		private PathStep tryOutStep() throws IOException, RDFParseException {
 			PathStep step = null;
 			if (tryWord(".")) {
-				step = new DirectionStep(Direction.OUT, pathTerm());
+				PathTerm term = tryPathTerm();
+				if (term == null) {
+					unread('.');
+				} else {
+					step = new DirectionStep(Direction.OUT, term);
+				}
 			}
 			return step;
 		}
@@ -663,7 +688,7 @@ public class FormulaParser {
 			
 			if (c == '<') {
 				String value = iriRef(c);
-				return new IriTerm(new URIImpl(value));
+				return new FullyQualifiedIri(new URIImpl(value));
 			}
 			
 			if (c == '?') {
@@ -696,7 +721,7 @@ public class FormulaParser {
 						} while (Character.isLetter(c) || Character.isDigit(c) || c=='_');
 						String localName = buffer.toString();
 						unread(c);
-						return new CurieTerm(getContext(), predicate, localName);
+						return new CurieValue(getContext(), predicate, localName);
 					} else {
 						fail("Expected a letter");
 					}

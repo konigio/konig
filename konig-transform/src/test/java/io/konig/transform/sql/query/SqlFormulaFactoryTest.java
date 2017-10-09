@@ -55,7 +55,7 @@ public class SqlFormulaFactoryTest {
 			"@context {\n" + 
 			"  \"email\" : \"http://schema.org/email\"\n" + 
 			"}\n" + 
-			"IF(email=\"alice@example.com\" , 1 , 0)";
+			"IF(.email=\"alice@example.com\" , 1 , 0)";
 		
 		QuantifiedExpression formula = new QuantifiedExpression(text);
 		PropertyConstraint p = new PropertyConstraint(Schema.answerCount);

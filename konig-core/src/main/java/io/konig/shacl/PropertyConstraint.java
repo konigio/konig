@@ -34,23 +34,20 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
-import org.openrdf.model.impl.LiteralImpl;
-import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.annotation.RdfProperty;
-import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.Path;
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.KonigLiteral;
 import io.konig.core.vocab.Konig;
-import io.konig.core.vocab.SH;
+import io.konig.formula.Formula2PathTranslator;
+import io.konig.formula.Path2FormulaTranslator;
 import io.konig.formula.QuantifiedExpression;
 
 public class PropertyConstraint {
@@ -79,11 +76,11 @@ public class PropertyConstraint {
 	private URI dimensionTerm;
 	private boolean timeParam;
 	private URI stereotype;
-	private Path equivalentPath;
 	private String fromAggregationSource;
 	private Path sourcePath;
 	private Path partitionOf;
 	private QuantifiedExpression formula;
+	private Value equals;
 	private URI idFormat;
 	
 	private Term term;
@@ -113,79 +110,6 @@ public class PropertyConstraint {
 		
 	}
 	
-	public void save(Graph graph) {
-		if (id == null) {
-			id = graph.vertex().getId();
-		}
-		
-		if (path instanceof PredicatePath) {
-			edge(graph, SH.path, getPredicate());
-		} else {
-			if (path == null) {
-				throw new KonigException("Path must not be null");
-			}
-			throw new KonigException("Path type not supported: " + path.getClass().getSimpleName());
-		}
-		
-		if (in != null) {
-			graph.edge(id, SH.in, in);
-		}
-		edge(graph, SH.minCount, minCount);
-		edge(graph, SH.maxCount, maxCount);
-		edge(graph, SH.minLength, minLength);
-		edge(graph, SH.minExclusive, minExclusive);
-		edge(graph, SH.maxExclusive, maxExclusive);
-		edge(graph, SH.minInclusive, minInclusive);
-		edge(graph, SH.maxInclusive, maxInclusive);
-		edge(graph, SH.datatype, datatype);
-		edge(graph, SH.shape, getShapeId());
-		edge(graph, SH.nodeKind, nodeKind==null ? null : nodeKind.getURI());
-		
-		if (hasValue != null) {
-			for (Value value : hasValue) {
-				graph.edge(id, SH.hasValue, value);
-			}
-		}
-		
-		edge(graph, SH.nodeKind, literal(pattern));
-		edge(graph, SH.valueClass, valueClass);
-		edge(graph, RDFS.COMMENT, literal(documentation));
-		edge(graph, Konig.stereotype, stereotype);
-		edge(graph, Konig.equivalentPath, literal(equivalentPath));
-		edge(graph, Konig.fromAggregationSource, literal(fromAggregationSource));
-		edge(graph, Konig.sourcePath, literal(sourcePath));
-		edge(graph, Konig.partitionOf, literal(partitionOf));
-		
-	}
-	
-	private Literal literal(String value) {
-		return value == null ? null : new LiteralImpl(value);
-	}
-	
-	private Literal literal(Object value) {
-		return value==null ? null : new LiteralImpl(value.toString());
-	}
-	
-	private void edge(Graph graph, URI predicate, Double value) {
-		if (value != null) {
-			Value object = ValueFactoryImpl.getInstance().createLiteral(value);
-			graph.edge(id, predicate, object);
-		}
-	}
-
-	private void edge(Graph graph, URI predicate, Integer value) {
-		if (value != null) {
-			Value object = ValueFactoryImpl.getInstance().createLiteral(value);
-			graph.edge(id, predicate, object);
-		}
-		
-	}
-
-	private void edge(Graph graph, URI predicate, Value value) {
-		if (value != null) {
-			graph.edge(id, predicate, value);
-		}
-	}
 
 	public void setId(Resource id) {
 		this.id = id;
@@ -212,7 +136,8 @@ public class PropertyConstraint {
 		other.term = term;
 		other.valueClass = valueClass;
 		other.shape = shape;
-		other.equivalentPath = equivalentPath;
+		other.formula = formula;
+		other.equals = equals;
 		other.stereotype = stereotype;
 		
 		return other;
@@ -537,15 +462,23 @@ public class PropertyConstraint {
 		stereotype = Konig.attribute;
 	}
 
+	/**
+	 * @deprecated Use {@link #getFormula()}
+	 * @return
+	 */
 	@RdfProperty(Konig.EQUIVALENT_PATH)
 	public Path getEquivalentPath() {
-		return equivalentPath;
-	}
-
-	public void setEquivalentPath(Path equivalentPath) {
-		this.equivalentPath = equivalentPath;
+		return Formula2PathTranslator.getInstance().toPath(formula);
 	}
 	
+	/**
+	 * @deprecated
+	 * @param path  Use {@link #setFormula(QuantifiedExpression)}
+	 */
+	public void setEquivalentPath(Path path) {
+		formula = Path2FormulaTranslator.getInstance().toQuantifiedExpression(path);
+	}
+
 
 	@RdfProperty(Konig.SOURCE_PATH)
 	public Path getSourcePath() {

@@ -41,7 +41,7 @@ import io.konig.core.Term.Kind;
 import io.konig.core.Vertex;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
-import io.konig.formula.CurieTerm;
+import io.konig.formula.CurieValue;
 import io.konig.formula.Expression;
 import io.konig.formula.Formula;
 import io.konig.formula.FormulaVisitor;
@@ -198,13 +198,13 @@ public class FormulaContextBuilder implements ShapeVisitor {
 		public void exit(Formula formula) {
 			if (formula instanceof LocalNameTerm) {
 				visitLocalNameTerm((LocalNameTerm) formula);
-			} else if (formula instanceof CurieTerm) {
-				visitCurieTerm((CurieTerm) formula);
+			} else if (formula instanceof CurieValue) {
+				visitCurieTerm((CurieValue) formula);
 			}
 			
 		}
 
-		private void visitCurieTerm(CurieTerm curie) {
+		private void visitCurieTerm(CurieValue curie) {
 
 			Context context = curie.getContext();
 			String prefix = curie.getNamespacePrefix();
