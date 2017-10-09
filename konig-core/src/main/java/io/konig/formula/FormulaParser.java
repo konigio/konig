@@ -26,6 +26,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -33,13 +34,19 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
+import io.konig.core.Context;
 import io.konig.core.KonigException;
+import io.konig.core.LocalNameService;
+import io.konig.core.NamespaceManager;
+import io.konig.core.Term;
+import io.konig.core.Term.Kind;
 import io.konig.rio.turtle.SeaTurtleParser;
 
 
 public class FormulaParser {
 	
 	private PropertyOracle propertyOracle;
+	private LocalNameService localNameService;
 	
 	public FormulaParser() {
 	}
@@ -47,7 +54,11 @@ public class FormulaParser {
 	public FormulaParser(PropertyOracle propertyOracle) {
 		this.propertyOracle = propertyOracle;
 	}
-	
+
+	public FormulaParser(PropertyOracle propertyOracle, LocalNameService localNameService) {
+		this.propertyOracle = propertyOracle;
+		this.localNameService = localNameService;
+	}
 
 	public QuantifiedExpression quantifiedExpression(String text)  throws RDFParseException, IOException {
 		StringReader reader = new StringReader(text);
@@ -739,8 +750,29 @@ public class FormulaParser {
 				predicate = null;
 			}
 
+			if (predicate == null) {
+				return null;
+			}
+
+			String localName = predicate;
+			Context context = getContext();
 			
-			return predicate == null ? null : new LocalNameTerm(getContext(), predicate);
+			Term term = context.getTerm(localName);
+			
+			if (term == null) {
+				if (localNameService != null) {
+					Set<URI> iriOptions = localNameService.lookupLocalName(localName);
+					
+					if (iriOptions.size()==1) {
+						URI id = iriOptions.iterator().next();
+						term = new Term(localName, id.stringValue(), Kind.ANY);
+						context.add(term);
+					}
+				}
+			}
+			
+			
+			return new LocalNameTerm(context, predicate);
 		}
 		
 

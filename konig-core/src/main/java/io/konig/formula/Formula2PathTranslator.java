@@ -52,10 +52,12 @@ public class Formula2PathTranslator {
 
 	private Path fromExpression(Expression e) {
 		PathImpl result = null;
+		
 		PrimaryExpression pe = e.asPrimaryExpression();
 		if (pe instanceof PathExpression) {
 			PathExpression p = (PathExpression) pe;
 			result = new PathImpl();
+			result.setContext(e.getContext());
 			for (PathStep s : p.getStepList()) {
 				Step step = step(s);
 				if (step == null) {
@@ -128,6 +130,10 @@ public class Formula2PathTranslator {
 	}
 
 	private Step directionStep(DirectionStep s) {
+		PathTerm term = s.getTerm();
+		if (term instanceof VariableTerm) {
+			return null;
+		}
 		switch (s.getDirection()) {
 		case IN : return inStep(s);
 		case OUT: return outStep(s);

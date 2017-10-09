@@ -68,6 +68,7 @@ import io.konig.activity.Activity;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
+import io.konig.core.LocalNameService;
 import io.konig.core.NameMap;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
@@ -80,6 +81,7 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.BasicContext;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.path.DataInjector;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
@@ -215,6 +217,7 @@ public class WorkbookLoader {
 
 	private DataSourceGenerator dataSourceGenerator;
 	private ShapePropertyOracle propertyOracle = new ShapePropertyOracle();
+	private SimpleLocalNameService localNameService;
 
 	private boolean inferRdfPropertyDefinitions;
 	private boolean failOnWarnings = true;
@@ -452,6 +455,9 @@ public class WorkbookLoader {
 		}
 
 		private void handleFormulas() throws SpreadsheetException {
+			
+			localNameService = new SimpleLocalNameService();
+			localNameService.addAll(getGraph());
 			
 			try {
 				for (FormulaHandler handler : formulaHandlers) {
@@ -2591,7 +2597,7 @@ public class WorkbookLoader {
 			}
 			propertyOracle.setShape(shape);
 			
-			FormulaParser parser = new FormulaParser(propertyOracle);
+			FormulaParser parser = new FormulaParser(propertyOracle, localNameService);
 			QuantifiedExpression expression = parser.quantifiedExpression(formula);
 			
 			String text = expression.toString();
