@@ -1,6 +1,6 @@
 paths:
 #foreach( $entity in $entityList)
-  /${entity.owlClass.localName.toLowerCase()}/iri/{objectId}:
+  /${entity.owlClass.localName.toLowerCase()}/{objectId}:
     parameters:
       - name: objectId
         description: The URL encoded canonical IRI for the $entity.owlClass.localName instance.

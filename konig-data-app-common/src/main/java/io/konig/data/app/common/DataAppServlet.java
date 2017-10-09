@@ -65,7 +65,7 @@ abstract public class DataAppServlet extends HttpServlet {
 
 	private void configure() throws ServletException {
 		ShapeReadService shapeReadService = createShapeReadService();
-		for (ExtentContainer extent : dataApp.getContainers()) {
+		for (ExtentContainer extent : dataApp.getContainer()) {
 			extent.setShapeReadService(shapeReadService);
 		}
 	}

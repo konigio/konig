@@ -58,7 +58,7 @@ public class BasicDataApp implements DataApp {
 	}
 	
 	@Override
-	public Collection<ExtentContainer> getContainers() {
+	public Collection<ExtentContainer> getContainer() {
 		return containers.values();
 	}
 

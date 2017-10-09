@@ -26,5 +26,5 @@ import java.util.Collection;
 public interface DataApp {
 	
 	GetJob createGetJob(JobRequest request) throws DataAppException;
-	Collection<ExtentContainer> getContainers();
+	Collection<ExtentContainer> getContainer();
 }
