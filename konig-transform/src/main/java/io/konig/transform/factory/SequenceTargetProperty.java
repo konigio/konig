@@ -23,24 +23,44 @@ package io.konig.transform.factory;
 
 import io.konig.shacl.PropertyConstraint;
 
-public class AliasDirectTargetProperty extends DirectTargetProperty {
+public class SequenceTargetProperty extends TargetProperty {
 
-	private SharedSourceProperty preferredMatch;
+	private SourceProperty preferredMatch;
 	
-	public AliasDirectTargetProperty(PropertyConstraint propertyConstraint, SharedSourceProperty preferredMatch) {
+	public SequenceTargetProperty(PropertyConstraint propertyConstraint) {
 		super(propertyConstraint);
-		this.preferredMatch = preferredMatch;
 	}
 
 	@Override
 	public SourceProperty getPreferredMatch() {
-		return preferredMatch.get();
+		
+		return preferredMatch;
 	}
 
 	@Override
-	public void setPreferredMatch(SourceProperty value) {
-		preferredMatch.set(value);
-		value.setMatch(this);
+	public void setPreferredMatch(SourceProperty preferredMatch) {
+		this.preferredMatch = preferredMatch;
+
+	}
+
+	@Override
+	public int totalPropertyCount() {
+		TargetShape nested = getNestedShape();
+		return nested == null ? 1 : nested.totalPropertyCount();
+	}
+
+	@Override
+	public int mappedPropertyCount() {
+		TargetShape nested = getNestedShape();
+		return nested != null ? 
+			nested.mappedPropertyCount() :
+			getPreferredMatch()!=null ? 1 :
+			0;
+	}
+
+	@Override
+	public int getPathIndex() {
+		return 0;
 	}
 
 }

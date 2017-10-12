@@ -42,10 +42,19 @@ import io.konig.core.util.TurtleElements;
 import io.konig.core.util.ValueFormat;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.Konig;
+import io.konig.formula.Direction;
+import io.konig.formula.DirectionStep;
+import io.konig.formula.IriValue;
+import io.konig.formula.PathExpression;
+import io.konig.formula.PathStep;
+import io.konig.formula.PathTerm;
+import io.konig.formula.PrimaryExpression;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.PropertyPath;
+import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.transform.rule.AlphabeticVariableNamer;
@@ -59,6 +68,7 @@ import io.konig.transform.rule.FormulaIdRule;
 import io.konig.transform.rule.FormulaPropertyRule;
 import io.konig.transform.rule.InjectLiteralPropertyRule;
 import io.konig.transform.rule.IriTemplateIdRule;
+import io.konig.transform.rule.JoinStatement;
 import io.konig.transform.rule.LiteralPropertyRule;
 import io.konig.transform.rule.MapValueTransform;
 import io.konig.transform.rule.NullPropertyRule;
@@ -181,8 +191,163 @@ public class ShapeRuleFactory {
 
 			createDataChannels(target);
 			createIdRule(target);
+			handleSequencePaths(target);
 			return assemble(target);
 
+		}
+
+		
+
+		private void handleSequencePaths(TargetShape target) throws TransformBuildException {
+			Shape shape = target.getShape();
+			for (PropertyConstraint p : shape.getProperty()) {
+				PropertyPath path = p.getPath();
+				if (path instanceof SequencePath) {
+					SequencePath sequence = (SequencePath) path;
+					handleSequencePath(target, sequence, p.getFormula());
+				}
+			}
+			
+		}
+
+		private void handleSequencePath(TargetShape target, SequencePath sequence, QuantifiedExpression formula) throws TransformBuildException {
+			
+			if (formula == null) {
+				return;
+			}
+			
+			
+			TargetProperty left = traverseSequence(target, sequence);
+			TargetProperty right = traverseFormula(target, formula);
+			
+		
+			SourceProperty leftMatch = left.getPreferredMatch();
+			SourceProperty rightMatch = right.getPreferredMatch();
+			
+			if (leftMatch == null) {
+				throw new TransformBuildException("No match found: " + left.getPredicate());
+			}
+			
+			if (rightMatch == null) {
+				throw new TransformBuildException("No match found: " + right.getPredicate());
+			}
+			
+			SourceShape leftSource = leftMatch.getParent();
+			SourceShape rightSource = rightMatch.getParent();
+			
+			DataChannel leftChannel = leftSource.getDataChannel();
+			DataChannel rightChannel = rightSource.getDataChannel();
+			
+			if (leftChannel == null) {
+				throw new TransformBuildException("DataChannel not found for property: " + left.getPredicate());
+			}
+			
+			if (rightChannel == null) {
+				throw new TransformBuildException("DataChannel not found for property: " + right.getPredicate());
+			}
+			
+			if (rightChannel.getName().compareTo(leftChannel.getName())<0) {
+				TargetProperty tmpProperty = left;
+				left = right;
+				right = tmpProperty;
+				
+				SourceShape tmpSource = leftSource;
+				leftSource = rightSource;
+				rightSource = tmpSource;
+				
+				DataChannel tmpChannel = leftChannel;
+				leftChannel = rightChannel;
+				rightChannel = tmpChannel;
+				
+			}
+			
+			BooleanExpression condition = new BinaryBooleanExpression(TransformBinaryOperator.EQUAL, left.getPredicate(), right.getPredicate());
+			ProtoJoinStatement proto = new ProtoJoinStatement(leftSource, rightSource, condition);
+			rightSource.setProtoJoinStatement(proto);
+
+			rightChannel.setJoinStatement(new JoinStatement(leftChannel, rightChannel, proto.getCondition()));
+
+		}
+
+		private TargetProperty traverseFormula(TargetShape target, QuantifiedExpression formula) throws TransformBuildException {
+			
+			// For now, we only handle the case where the primary expression is a PathExpression consisting
+			// of OUT steps. Moreover, we require that each element in the path be available from the target shape.
+			
+			// We'll handle other cases as needed in the future.
+			
+			TargetProperty result = null;
+			
+			PrimaryExpression primary = formula.asPrimaryExpression();
+			if (primary instanceof PathExpression) {
+				PathExpression path = (PathExpression) primary;
+				for (PathStep step : path.getStepList()) {
+					if (step instanceof DirectionStep) {
+						DirectionStep dirStep = (DirectionStep) step;
+						if (dirStep.getDirection() == Direction.OUT) {
+							PathTerm term = dirStep.getTerm();
+							if (term instanceof IriValue) {
+								IriValue iriValue = (IriValue) term;
+								URI predicate = iriValue.getIri();
+								
+								if (target == null) {
+									throw new TransformBuildException("Target shape must not be null");
+								}
+								
+								result = target.getProperty(predicate);
+								if (result == null) {
+									throw new TransformBuildException("Property not found: " + predicate);
+								}
+								
+								target = result.getNestedShape();
+								
+							} else {
+								throw new TransformBuildException("Unsupported path term: " + term.getClass().getName());
+							}
+						} else {
+							throw new TransformBuildException("Unsupported step type: " + step.getClass().getName());
+						}
+					}
+				}
+			} else {
+				throw new TransformBuildException("Cannot traverse formula: " + formula);
+			}
+			
+			if (result == null) {
+				throw new TransformBuildException("Failed to traverse formula: " + formula);
+			}
+			
+			return result;
+		}
+
+		private TargetProperty traverseSequence(TargetShape target, SequencePath sequence) throws TransformBuildException {
+
+			// For now, we only handle the case where all the elements of the sequence
+			// are instances of PredicatePath whose direction is OUT.
+			
+			// We'll add other cases as needed in the future.
+			
+			TargetProperty result = null;
+			for (PropertyPath step : sequence) {
+				if (step instanceof PredicatePath) {
+					PredicatePath predicatePath = (PredicatePath) step;
+					URI predicate = predicatePath.getPredicate();
+					if (target == null) {
+						throw new TransformBuildException("Target shape must be defined for predicate: " + predicate);
+					}
+					result = target.getProperty(predicate);
+					if (result == null) {
+						throw new TransformBuildException("Property not found: " + predicate);
+					}
+					target = result.getNestedShape();
+				}
+			}
+			
+			if (result == null) {
+				throw new TransformBuildException("Failed to traverse sequence: " + sequence);
+			}
+			
+			return result;
 		}
 
 		private void setNullProperties(TargetShape target, List<TargetProperty> unmapped) {
@@ -281,16 +446,57 @@ public class ShapeRuleFactory {
 		private void buildNestedProperties(TargetShape target) throws TransformBuildException {
 
 			for (TargetProperty tp = target.getUnmappedProperty(); tp != null; tp = target.getUnmappedProperty()) {
-				TargetShape parent = tp.getParent();
-				TargetShape.State state = parent.getState();
-				if (state.ordinal() > TargetShape.State.INITIALIZED.ordinal()) {
-					// No more options for resolving this property.
-					target.setState(TargetShape.State.FAILED);
-					return;
+				
+				if (Konig.modified.equals(tp.getPredicate())) {
+					tp.setPreferredMatch(new ModifiedSourceProperty(tp.getPropertyConstraint()));
+					continue;
 				}
-
-				build(parent);
-
+				
+				TargetShape parent = tp.getParent();
+				
+				if (parent == target) {
+					
+					TargetShape nested = tp.getNestedShape();
+					if (nested != null) {
+						
+						build(nested);
+						if (nested.getState()==TargetShape.State.OK) {
+							
+							// For now we only have a solution if there is a single SourceShape for the nested property.
+							
+							List<SourceShape> sourceList = nested.getSourceList();
+							if (sourceList != null && sourceList.size()==1) {
+								SourceShape source = sourceList.get(0);
+								
+								SourceProperty sp = new SourceProperty(tp.getPropertyConstraint());
+								sp.setParent(source);
+								sp.setMatch(tp);
+								sp.setNestedShape(source);
+								
+								
+								
+								target.match(source);
+								tp.setPreferredMatch(sp);
+								
+								continue;
+							}
+						}
+					}
+					
+					target.setState(TargetShape.State.FAILED);
+					break;
+					
+				} else {
+				
+					TargetShape.State state = parent.getState();
+					if (state.ordinal() > TargetShape.State.INITIALIZED.ordinal()) {
+						// No more options for resolving this property.
+						target.setState(TargetShape.State.FAILED);
+						break;
+					}
+	
+					build(parent);
+				}
 			}
 
 		}
@@ -428,9 +634,7 @@ public class ShapeRuleFactory {
 
 			for (SourceShape ss : target.getSourceList()) {
 				ss.produceDataChannel(namer);
-
 			}
-
 		}
 
 		private PropertyRule createPropertyRule(TargetProperty tp) throws TransformBuildException {
@@ -443,10 +647,10 @@ public class ShapeRuleFactory {
 			}
 			SourceProperty sp = tp.getPreferredMatch();
 			URI predicate = tp.getPredicate();
-			if (sp == null) {
-				if (Konig.modified.equals(predicate)) {
+			if ((sp == null && Konig.modified.equals(predicate)) ||
+					(sp instanceof ModifiedSourceProperty)
+			) {
 					return new InjectLiteralPropertyRule(null, Konig.modified, new LiteralImpl("{modified}"));
-				}
 			}
 			DataChannel channel = sp.getParent().produceDataChannel(namer);
 

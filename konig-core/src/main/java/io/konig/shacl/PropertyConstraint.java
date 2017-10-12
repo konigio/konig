@@ -360,8 +360,8 @@ public class PropertyConstraint {
 		json.writeStartObject();
 		if (path instanceof PredicatePath) {
 			json.writeStringField("predicate", getPredicate().toString());
-		} else {
-			throw new KonigException("Unsupported path type: " + path==null ? "null" : path.getClass().getSimpleName());
+		} else if (path != null) {
+			json.writeStringField("path", path.toString());
 		}
 		if (minCount!=null) {
 			json.writeNumberField("minCount", minCount);

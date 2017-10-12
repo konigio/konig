@@ -27,7 +27,10 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
 import io.konig.core.KonigException;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.PropertyPath;
+import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 
 public class TargetShapeFactory extends ShapeNodeFactory<TargetShape, TargetProperty>  {
@@ -61,16 +64,25 @@ public class TargetShapeFactory extends ShapeNodeFactory<TargetShape, TargetProp
 	}
 
 	@Override
-	protected TargetProperty property(PropertyConstraint p, int pathIndex, SharedSourceProperty preferredMatch) {
+	protected TargetProperty property(PropertyConstraint p, int pathIndex, SharedSourceProperty preferredMatch) throws KonigException {
 		if (pathIndex < 0) {
-			if (p.getEquivalentPath()==null) {
+			
+
+			PropertyPath path = p.getPath();
+			if (path instanceof PredicatePath) {
+			
 				if (p.getFormula()==null) {
 					return new BasicDirectTargetProperty(p);
 				}
 				return new DerivedDirectTargetProperty(p);
-			} else {
-				return new AliasDirectTargetProperty(p, preferredMatch);
 			}
+			
+			if (path instanceof SequencePath) {
+				return new SequenceTargetProperty(p);
+			} else {
+				throw new KonigException("Unsupported property path type: " + (path == null ? null : path.getClass().getName()));
+			}
+			
 		} else {
 			if (preferredMatch==null) {
 				return new ContainerIndirectTargetProperty(p, pathIndex);

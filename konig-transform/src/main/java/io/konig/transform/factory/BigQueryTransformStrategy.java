@@ -50,7 +50,7 @@ public class BigQueryTransformStrategy extends AbstractTransformStrategy {
 		if (targetClass != null) {
 			List<Shape> list = factory.getShapeManager().getShapesByTargetClass(targetClass);
 			for (Shape shape : list) {
-				DataSource datasource = findDatasource(shape);
+				DataSource datasource = findDatasource(shape, target);
 				if (datasource != null) {
 					SourceShape source = SourceShape.create(shape);
 					source.setDataSource(datasource);
@@ -72,7 +72,7 @@ public class BigQueryTransformStrategy extends AbstractTransformStrategy {
 				PropertyConstraint p = vtp.getPropertyConstraint();
 				Shape sourceShape = p.getShape();
 				if (sourceShape != null) {
-					DataSource datasource = findDatasource(sourceShape);
+					DataSource datasource = findDatasource(sourceShape, target);
 					if (datasource != null) {
 						SourceShape source = SourceShape.create(sourceShape);
 						source.setDataSource(datasource);
@@ -86,7 +86,7 @@ public class BigQueryTransformStrategy extends AbstractTransformStrategy {
 						for (Shape shape : shapeList) {
 							DataSource ds = targetDatasource(shape);
 							if (ds == null) {
-								ds = findDatasource(shape);
+								ds = findDatasource(shape, target);
 							}
 							if (ds != null) {
 								SourceShape source = SourceShape.create(shape);
@@ -123,7 +123,7 @@ public class BigQueryTransformStrategy extends AbstractTransformStrategy {
 		return null;
 	}
 	
-	private DataSource findDatasource(Shape shape) {
+	private DataSource findDatasource(Shape shape, TargetShape target) {
 		List<DataSource> list = shape.getShapeDataSource();
 		if (list != null) {
 			GoogleBigQueryTable bigQueryTable = null;
@@ -140,30 +140,13 @@ public class BigQueryTransformStrategy extends AbstractTransformStrategy {
 				return bigQueryTable;
 			}
 			
+			if (bigQueryTable != null && target.getAccessor()!=null) {
+				return bigQueryTable;
+			}
+			
 		}
 		return null;
 	}
 
 	
-
-	private DataSource datasourceFromVariables(Shape shape) {
-		
-		List<PropertyConstraint> variableList = shape.getVariable();
-		if (variableList != null) {
-			for (PropertyConstraint p : variableList) {
-				Resource valueClass = p.getValueClass();
-				if (valueClass instanceof URI) {
-					List<Shape> shapeList = shapeManager.getShapesByTargetClass((URI)valueClass);
-					for (Shape s : shapeList) {
-						DataSource ds = targetDatasource(s);
-						if (ds != null) {
-							return ds;
-						}
-					}
-				}
-			}
-		}
-		return null;
-	}
-
 }

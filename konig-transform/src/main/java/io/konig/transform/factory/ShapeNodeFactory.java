@@ -34,7 +34,9 @@ import io.konig.core.path.HasStep.PredicateValuePair;
 import io.konig.core.path.InStep;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.PropertyPath;
 import io.konig.shacl.Shape;
 
 abstract public class ShapeNodeFactory<S extends ShapeNode<P>, P extends PropertyNode<S>> {
@@ -49,12 +51,15 @@ abstract public class ShapeNodeFactory<S extends ShapeNode<P>, P extends Propert
 	protected void addProperties(S shapeNode, Collection<PropertyConstraint> propertyList, boolean isDerived) {
 
 		for (PropertyConstraint p : propertyList) {
-			SharedSourceProperty preferredMatch = sharedSourceProperty(p);
-			P propertyNode = property(p, -1, preferredMatch);
-			propertyNode.setDerived(isDerived);
-			shapeNode.add(propertyNode);
-			handlePath(propertyNode, preferredMatch);
-			handleValueShape(propertyNode);
+			PropertyPath path = p.getPath();
+			if (path instanceof PredicatePath) {
+				SharedSourceProperty preferredMatch = sharedSourceProperty(p);
+				P propertyNode = property(p, -1, preferredMatch);
+				propertyNode.setDerived(isDerived);
+				shapeNode.add(propertyNode);
+				handlePath(propertyNode, preferredMatch);
+				handleValueShape(propertyNode);
+			}
 		}
 	}
 
