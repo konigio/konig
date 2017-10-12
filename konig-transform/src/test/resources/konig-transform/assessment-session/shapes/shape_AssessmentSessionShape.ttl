@@ -8,45 +8,36 @@
 @prefix xas: <http://schema.pearson.com/ns/activity/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-shape:AssessmentSessionShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/zTPP4yq-0bQAAAFe5-z--w> ; 
+shape:AssessmentSessionShape a sh:Shape , konig:DerivedShape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/CvrBtWrm2UkAAAFfBzXJSw> ; 
 	sh:targetClass xas:AssessmentSession ; 
-	konig:variable  [ 
-		sh:class xas:StartAssessment ; 
-		sh:nodeKind sh:IRI ; 
-		konig:stereotype konig:variable ; 
-		sh:path <http://www.konig.io/ns/var/?x>
-	 ]  ,  [ 
-		sh:class xas:CompletedAssessment ; 
-		sh:nodeKind sh:IRI ; 
-		konig:stereotype konig:variable ; 
-		sh:path <http://www.konig.io/ns/var/?y>
-	 ]  ,  [ 
-		konig:stereotype konig:variable ; 
-		konig:formula "?x.startEventOf" ; 
-		sh:path (<http://www.konig.io/ns/var/?y> xas:endEventOf) ]  ; 
 	sh:nodeKind sh:IRI ; 
-	konig:iriFormula '''@prefix xas: <http://schema.pearson.com/ns/activity/> .
-@context {
-   "startEventOf" : "xas:startEventOf"
-}
-?x.startEventOf''' ; 
 	sh:property  [ 
 		sh:path xas:startEvent ; 
 		sh:shape shape:StartAssessmentShape ; 
 		sh:minCount 1 ; 
-		sh:maxCount 1 ; 
-		konig:formula "?x"
+		sh:maxCount 1
 	 ]  ,  [ 
 		sh:path xas:endEvent ; 
 		sh:shape shape:CompletedAssessmentShape ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1 ; 
-		konig:formula "?y" ]  ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path (xas:startEvent xas:startEventOf) ; 
+		konig:formula '''@context {
+   "endEvent" : "http://schema.pearson.com/ns/activity/endEvent",
+   "endEventOf" : "http://schema.pearson.com/ns/activity/endEventOf"
+}
+.endEvent.endEventOf''' ]  ; 
+	konig:iriFormula '''@context {
+   "endEvent" : "http://schema.pearson.com/ns/activity/endEvent",
+   "endEventOf" : "http://schema.pearson.com/ns/activity/endEventOf"
+}
+.endEvent.endEventOf''' ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/AssessmentSession> . 
 
-<http://www.konig.io/activity/zTPP4yq-0bQAAAFe5-z--w> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-10-04T11:07:02.396-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/CvrBtWrm2UkAAAFfBzXJSw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-10-10T12:54:46.495-04:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/AssessmentSession> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

@@ -1,0 +1,5 @@
+
+@prefix konig: <http://www.konig.io/ns/core/> .
+
+<{shapeId}> a konig:DerivedShape .
+	

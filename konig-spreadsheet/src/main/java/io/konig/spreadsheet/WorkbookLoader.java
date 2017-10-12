@@ -1150,6 +1150,9 @@ public class WorkbookLoader {
 					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
 
+				if (formula!=null) {
+					formulaHandlers.add(new ShapeFormulaHandler(shapeId, formula));
+				}
 
 				return;
 			}
@@ -2496,8 +2499,8 @@ public class WorkbookLoader {
 			}
 			String text = pathText;
 			int c = pathText.charAt(0);
-			if (c != '?' && c!='/' && c!='^') {
-				text = "/" + text;
+			if (c != '?' && c!='.' && c!='^') {
+				text = "." + text;
 			}
 			Path path = pathFactory.createPath(text);
 			PropertyPath propertyPath = PropertyPathUtil.create(path);
@@ -2562,7 +2565,7 @@ public class WorkbookLoader {
 			}
 			propertyOracle.setShape(shape);
 			
-			FormulaParser parser = new FormulaParser(propertyOracle);
+			FormulaParser parser = new FormulaParser(propertyOracle, localNameService);
 			QuantifiedExpression expression = parser.quantifiedExpression(formula);
 			String text = expression.toString();
 			Literal literal = vf.createLiteral(text);

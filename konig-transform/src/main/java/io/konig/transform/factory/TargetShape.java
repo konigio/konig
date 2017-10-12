@@ -132,6 +132,11 @@ public class TargetShape extends ShapeNode<TargetProperty> {
 				if (tp.isLeaf() && tp.getPreferredMatch()==null) {
 					return tp;
 				} else {
+					
+					if (tp.getPreferredMatch()==null) {
+						return tp;
+					}
+					
 					TargetShape nested = tp.getNestedShape();
 					if (nested != null) {
 						

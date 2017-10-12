@@ -70,7 +70,7 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		useBigQueryTransformStrategy();
 	}
 
-	@Ignore
+	@Test
 	public void testAssessmentSession() throws Exception {
 		load("src/test/resources/konig-transform/assessment-session");
 
@@ -80,7 +80,63 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
-		System.out.println(select);
+		
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(3, valueList.size());
+		ValueExpression id = valueList.get(0);
+		assertTrue(id instanceof AliasExpression);
+		AliasExpression idAlias = (AliasExpression) id;
+		assertEquals("id", idAlias.getAlias());
+		
+		assertTrue(idAlias.getExpression() instanceof ColumnExpression);
+		ColumnExpression idValue = (ColumnExpression) idAlias.getExpression();
+		assertEquals("a.endEventOf", idValue.getColumnName());
+		
+		assertTrue(valueList.get(1) instanceof AliasExpression);
+		AliasExpression endEvent = (AliasExpression) valueList.get(1);
+		assertEquals("endEvent", endEvent.getAlias());
+		assertTrue(endEvent.getExpression() instanceof StructExpression);
+		
+		assertTrue(valueList.get(2) instanceof AliasExpression);
+		AliasExpression startEvent = (AliasExpression) valueList.get(2);
+		assertEquals("startEvent", startEvent.getAlias());
+		assertTrue(startEvent.getExpression() instanceof StructExpression);
+		
+		FromExpression from = select.getFrom();
+		
+		assertEquals(1, from.getTableItems().size());
+		TableItemExpression tableItem = from.getTableItems().get(0);
+		
+		assertTrue(tableItem instanceof JoinExpression);
+		
+		JoinExpression join = (JoinExpression) tableItem;
+		
+		assertTrue(join.getLeftTable() instanceof TableAliasExpression);
+		TableAliasExpression left = (TableAliasExpression)join.getLeftTable();
+		
+		assertTrue(left.getTableName() instanceof TableNameExpression);
+		TableNameExpression leftName = (TableNameExpression) left.getTableName();
+		assertEquals("xas.CompletedAssessment", leftName.getTableName());
+		
+		assertTrue(join.getRightTable() instanceof TableAliasExpression);
+		TableAliasExpression right = (TableAliasExpression) join.getRightTable();
+		
+		assertTrue(right.getTableName() instanceof TableNameExpression);
+		TableNameExpression rightName = (TableNameExpression) right.getTableName();
+		assertEquals("xas.StartAssessment", rightName.getTableName());
+		
+		SearchCondition condition =  join.getJoinSpecification().getSearchCondition();
+		
+		assertTrue(condition instanceof ComparisonPredicate);
+		ComparisonPredicate compare = (ComparisonPredicate) condition;
+		assertTrue(compare.getLeft() instanceof ColumnExpression);
+		
+		ColumnExpression compareLeft = (ColumnExpression) compare.getLeft();
+		assertEquals("a.endEventOf", compareLeft.getColumnName());
+
+		assertTrue(compare.getRight() instanceof ColumnExpression);
+		ColumnExpression compareRight = (ColumnExpression) compare.getRight();
+		assertEquals("b.startEventOf", compareRight.getColumnName());
 	}
 	
 	@Test

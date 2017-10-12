@@ -27,6 +27,7 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.TableItemExpression;
+import io.konig.transform.rule.ShapeRule;
 
 /**
  * An exchange used to request a SqlFormula from SqlFormulaFactory and capture side-effects.
@@ -37,6 +38,8 @@ public class SqlFormulaExchange {
 	private VariableTableMap tableMap;
 	private TableItemExpression sourceTable;
 	private Shape shape;
+	private ShapeRule shapeRule;
+	private SqlFactory.Worker sqlFactoryWorker;
 	private PropertyConstraint property;
 	private GroupingElement groupingElement;
 
@@ -46,6 +49,8 @@ public class SqlFormulaExchange {
 		this.sourceTable = builder.sourceTable;
 		this.shape = builder.shape;
 		this.property = builder.property;
+		this.shapeRule = builder.shapeRule;
+		this.sqlFactoryWorker = builder.sqlFactoryWorker;
 	}
 	
 
@@ -53,9 +58,18 @@ public class SqlFormulaExchange {
 		return groupingElement;
 	}
 
+	public SqlFactory.Worker getSqlFactoryWorker() {
+		return sqlFactoryWorker;
+	}
+
 
 	public void setGroupingElement(GroupingElement groupingElement) {
 		this.groupingElement = groupingElement;
+	}
+
+
+	public ShapeRule getShapeRule() {
+		return shapeRule;
 	}
 
 
@@ -88,6 +102,8 @@ public class SqlFormulaExchange {
 		private TableItemExpression sourceTable;
 		private Shape shape;
 		private PropertyConstraint property;
+		private ShapeRule shapeRule;
+		private SqlFactory.Worker sqlFactoryWorker;
 
 		private Builder() {
 		}
@@ -109,6 +125,16 @@ public class SqlFormulaExchange {
 
 		public Builder withProperty(PropertyConstraint p) {
 			this.property = p;
+			return this;
+		}
+		
+		public Builder withShapeRule(ShapeRule shapeRule) {
+			this.shapeRule = shapeRule;
+			return this;
+		}
+		
+		public Builder withSqlFactoryWorker(SqlFactory.Worker worker) {
+			sqlFactoryWorker = worker;
 			return this;
 		}
 

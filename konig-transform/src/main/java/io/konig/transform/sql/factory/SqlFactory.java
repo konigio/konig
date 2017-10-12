@@ -116,7 +116,7 @@ public class SqlFactory {
 		return worker.selectExpression(shapeRule);
 	}
 	
-	private class Worker implements VariableTableMap {
+	public class Worker implements VariableTableMap {
 		private SqlFormulaFactory formulaFactory = new SqlFormulaFactory();
 		private OwlReasoner reasoner = new OwlReasoner(new MemoryGraph());
 		private Map<String, TableItemExpression> tableItemMap = new HashMap<>();
@@ -319,8 +319,10 @@ public class SqlFactory {
 			p.setValueClass(shapeRule.getTargetShape().getTargetClass());
 			SqlFormulaExchange exchange = SqlFormulaExchange.builder()
 					.withShape(shapeRule.getTargetShape())
+					.withShapeRule(shapeRule)
 					.withProperty(p)
 					.withTableMap(this)
+					.withSqlFactoryWorker(this)
 					.build();
 			ValueExpression ve = formulaFactory.formula(exchange);
 			
@@ -380,7 +382,7 @@ public class SqlFactory {
 		}
 
 
-		private ValueExpression column(PropertyRule p) throws TransformBuildException {
+		public ValueExpression column(PropertyRule p) throws TransformBuildException {
 			return column(p, false);
 		}
 
@@ -517,6 +519,7 @@ public class SqlFactory {
 			List<DataChannel> channelList = shapeRule.getAllChannels();
 			useAlias = channelList.size()>1;
 			TableItemExpression item = null;
+						
 			for (DataChannel channel : channelList) {
 				item = toTableItemExpression(channel);
 			}
@@ -527,7 +530,7 @@ public class SqlFactory {
 			
 			
 		}
-		
+
 		/**
 		 * Get the "simple" TableItem associated with a channel.  
 		 * A simple TableItem is either a TableNameExpression or a TableAliasExpression.

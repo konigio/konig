@@ -87,6 +87,8 @@ public class PathParser extends SeaTurtleParser {
 	 * </pre>
 	 * Notice that this customization requires that a bareLocalName is allowed only if it matches
 	 * the syntax of a namespace prefix.
+	 * 
+	 * We also modify the production rules for PN_LOCAL and PN_PREFIX to exclude '.' characters.
 	 */
 //	protected URI prefixedName(int c) throws IOException, RDFParseException {
 //		unread(c);
@@ -253,9 +255,6 @@ public class PathParser extends SeaTurtleParser {
 				
 			}
 			unread(c);
-			if (last == '.') {
-				unread(c);
-			}
 		}
 		
 		return builder.toString();
@@ -321,7 +320,28 @@ public class PathParser extends SeaTurtleParser {
 		URI predicate = iri();
 		return new OutStep(predicate);
 	}
-
+	
+	/**
+	 * PN_PREFIX	::=	PN_CHARS_BASE PN_CHARS*
+	 */
+	protected void pn_prefix(int c) throws IOException, RDFParseException {
+		if (pn_chars_base(c)) {
+			buffer.appendCodePoint(c);
+			
+			for (;;) {
+				c = read();
+				if (pn_chars(c)) {
+					buffer.appendCodePoint(c);
+				} else {
+					break;
+				}
+			}
+			
+		} 
+		unread(c);
+		
+	}
+	
 
 	private static class Handler extends RDFHandlerBase {
 		

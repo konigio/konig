@@ -276,11 +276,17 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	
 	private boolean isLoadTransform(Shape shape) {
 		return
+				isDerivedShape(shape) || (
 				shape.hasDataSourceType(Konig.GoogleBigQueryTable) && 
 				!shape.hasDataSourceType(Konig.GoogleCloudStorageBucket) &&
 				!shape.hasDataSourceType(Konig.CurrentState) &&
-				bucketShapeExists(shape);
+				bucketShapeExists(shape));
 	}
+	private boolean isDerivedShape(Shape shape) {
+		List<URI> type = shape.getType();
+		return type!=null && type.contains(Konig.DerivedShape);
+	}
+
 	private boolean bucketShapeExists(Shape shape) {
 		URI targetClass = shape.getTargetClass();
 		if (targetClass != null) {

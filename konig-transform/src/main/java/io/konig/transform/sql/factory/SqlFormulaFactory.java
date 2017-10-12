@@ -39,6 +39,7 @@ import io.konig.formula.Expression;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.IfFunction;
+import io.konig.formula.IriValue;
 import io.konig.formula.LiteralFormula;
 import io.konig.formula.MultiplicativeExpression;
 import io.konig.formula.NumericExpression;
@@ -56,6 +57,7 @@ import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.IfExpression;
+import io.konig.sql.query.LinkedPathExpression;
 import io.konig.sql.query.NumericValueExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.SignedNumericLiteral;
@@ -64,6 +66,8 @@ import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.ValueExpression;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.TransformBuildException;
+import io.konig.transform.rule.PropertyRule;
+import io.konig.transform.rule.ShapeRule;
 
 public class SqlFormulaFactory {
 	
@@ -237,6 +241,73 @@ public class SqlFormulaFactory {
 			}
 			
 		}
+		
+		private QueryExpression deepPath(PathExpression primary) {
+			try {
+				List<PathStep> stepList = primary.getStepList();
+				ShapeRule rule = exchange.getShapeRule();
+				
+				PathStep first = stepList.get(0);
+				if (first instanceof DirectionStep && stepList.size()==2) {
+					// For now, we only support paths of length 2
+					DirectionStep dirStep = (DirectionStep) first;
+					if (dirStep.getDirection() == Direction.OUT) {
+						PathTerm term = dirStep.getTerm();
+						if (term instanceof IriValue) {
+							IriValue iriValue = (IriValue) term;
+							URI predicate = iriValue.getIri();
+							
+							PropertyRule propertyRule = rule.getProperty(predicate);
+							ShapeRule nested = propertyRule.getNestedRule();
+							
+							if (nested != null) {
+								
+								PathStep nextStep = stepList.get(1);
+								if (nextStep instanceof DirectionStep) {
+									dirStep = (DirectionStep) nextStep;
+									if (dirStep.getDirection() == Direction.OUT) {
+										term = dirStep.getTerm();
+										if (term instanceof IriValue) {
+											iriValue = (IriValue) term;
+											predicate = iriValue.getIri();
+
+											String tableName = propertyRule.getDataChannel().getName();
+											String localName = predicate.getLocalName();
+											
+											// TODO: Handle the case where we need an alias instead of 
+											// just using the localName!!!!
+											
+											StringBuilder builder = new StringBuilder();
+											builder.append(tableName);
+											builder.append('.');
+											builder.append(localName);
+											
+											String columnName = builder.toString();
+											
+											return new ColumnExpression(columnName);
+											
+										}
+										
+									}
+								}
+								
+								
+							}
+							
+							
+							
+							
+						}
+					}
+				}
+			} catch (Throwable e) {
+				throw new KonigException(e);
+			}
+			
+			
+			
+			throw new KonigException("deep path not supported");
+		}
 
 		private QueryExpression pathExpression(PathExpression primary) {
 			
@@ -258,7 +329,7 @@ public class SqlFormulaFactory {
 							return SqlUtil.columnExpression(sourceTable, predicate);
 						}
 					} else {
-						throw new KonigException("PathStep not yet supported: " + step.getClass().getName());
+						return deepPath(primary);
 					}
 				} else if (stepList.size()==2) {
 					PathStep step = stepList.get(0);
@@ -294,11 +365,11 @@ public class SqlFormulaFactory {
 									}
 								}
 							} else {
-								throw new KonigException("TODO: support " + step.getClass().getName());	
+								return deepPath(primary);
 							}
 						}
 					} else {
-						throw new KonigException("TODO: support " + step.getClass().getName());
+						return deepPath(primary);
 					}
 				}
 			}

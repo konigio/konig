@@ -233,7 +233,7 @@ public class TurtleParser extends RDFParserBase {
 			(c == '_') ;
 	}
 
-	private boolean pn_chars_base(int c)  {
+	protected boolean pn_chars_base(int c)  {
 		
 		
 		return 

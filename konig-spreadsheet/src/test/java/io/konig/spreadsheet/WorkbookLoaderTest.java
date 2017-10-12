@@ -78,7 +78,50 @@ import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
 	
-	
+	@Test
+	public void testAddressCountry() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("address-country.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		List<PropertyConstraint> propertyList = shape.getProperty();
+		SequencePath sequence = null;
+		for (PropertyConstraint p : propertyList) {
+			PropertyPath path = p.getPath();
+			if (path instanceof SequencePath) {
+				sequence = (SequencePath) path;
+			}
+		}
+		
+		assertTrue(sequence != null);
+		
+		assertEquals(2, sequence.size());
+		PropertyPath address = sequence.get(0);
+		assertTrue(address instanceof PredicatePath);
+		PredicatePath predicatePath = (PredicatePath) address;
+		assertEquals(Schema.address, predicatePath.getPredicate());
+		
+		PropertyPath country = sequence.get(1);
+		assertTrue(country instanceof PredicatePath);
+		predicatePath = (PredicatePath)country;
+		assertEquals(Schema.addressCountry, predicatePath.getPredicate());
+	}
+
 	
 	@Test
 	public void testSequencePath() throws Exception {
