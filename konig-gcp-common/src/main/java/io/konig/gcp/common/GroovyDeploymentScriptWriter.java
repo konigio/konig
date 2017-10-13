@@ -69,21 +69,23 @@ public class GroovyDeploymentScriptWriter {
 			
 			String baseDir = FileUtil.relativePath(scriptFile, googleCloudInfo.getDirectory());
 
-			String credentialsPath = googleCloudService.getCredentialsFile().getCanonicalPath();
-			String grab = MessageFormat.format("@Grab('io.konig:konig-gcp-deploy-maven-plugin:{0}')", konigVersion);
+			String credentialsPath = googleCloudService.getCredentialsFile().getCanonicalPath().replace("\\", "/");
+			String grab = MessageFormat.format("@Grab(\"io.konig:konig-gcp-deploy-maven-plugin:{0}\")", konigVersion);
 			
 			String delegate = MessageFormat.format("deploymentPlan.delegate = new KonigDeployment(\"{0}\", \"{1}\")", 
 					credentialsPath, baseDir);
 			
 			println(grab);
 			println();
-			println("import static io.konig.deploy.ResourceType.*;");
-			println("import io.konig.maven.deploy.KonigDeployment;");
+			println("import static io.konig.maven.ResourceType.*;");
+			println("import static io.konig.maven.InsertResourceType.*;");
+			println("import io.konig.maven.KonigDeployment;");
 			println();
 			println("def deploymentPlan = {");
 			printDatasetCommands();
 			printTableCommands();
 			printTableDataCommands();
+			printTableViewCommands();
 			printGooglePubSubCommands();
 			println("}");
 			println(delegate);
@@ -156,7 +158,26 @@ public class GroovyDeploymentScriptWriter {
 		
 	}
 
+	private void printTableViewCommands() throws IOException {
 
+		File viewDir = googleCloudInfo.getBigquery().getView();
+		
+		if (viewDir != null) {
+			BigQuery bigquery = googleCloudService.bigQuery();
+			for (File file : viewDir.listFiles()) {
+				TableInfo info = googleCloudService.readTableInfo(file);
+				Table table = bigquery.getTable(info.getTableId()); 
+				if (table == null) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("create BigQueryView from \"");
+					print(path);
+					println("\"");
+				}
+			}
+		}
+		
+	}
 	private void printDatasetCommands() throws IOException {
 		
 		File datasetDir = googleCloudInfo.getBigquery().getDataset();

@@ -40,7 +40,7 @@ public class KonigDeployment {
 		this.baseDir = new File(baseDir);
 	}
 	
-	public Object insert(InsertResourceType type) {
+	public Object insert(InsertResourceType type) { 
 		switch (type) {
 		case BigQueryData:
 			return new InsertBigQueryDataAction(this);
@@ -48,14 +48,16 @@ public class KonigDeployment {
 		return null;
 	}
 	
-	public Object create(ResourceType type) {
-		
+	public Object create(ResourceType type) { 
 		switch (type) {
 		case BigQueryDataset :
 			return new CreateDatasetAction(this);
 			
 		case BigQueryTable:
 			return new CreateBigqueryTableAction(this);
+		
+		case BigQueryView:
+			return new CreateBigqueryViewAction(this);
 			
 		case GooglePubSubTopic :
 			return new CreateGooglePubSubTopicAction(this);

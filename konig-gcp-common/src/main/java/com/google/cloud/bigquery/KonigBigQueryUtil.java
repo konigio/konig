@@ -1,7 +1,5 @@
 package com.google.cloud.bigquery;
-
-import com.google.cloud.storage.BucketInfo;
-
+ 
 /*
  * #%L
  * Konig GCP Common
@@ -37,4 +35,12 @@ public class KonigBigQueryUtil {
 		return new TableInfo.BuilderImpl(model).build();
 	}
 
+	public static TableInfo createViewInfo(com.google.api.services.bigquery.model.Table model) { 
+		String type = model.getType();
+		if (type == null) {
+			model.setType(TableDefinition.Type.VIEW.name()); 
+		}
+		model.getView().setUseLegacySql(false);
+		return new TableInfo.BuilderImpl(model).build();
+	}
 }
