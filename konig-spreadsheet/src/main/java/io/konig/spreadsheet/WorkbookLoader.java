@@ -1161,6 +1161,11 @@ public class WorkbookLoader {
 			Resource constraint = constraintVertex.getId();
 
 			if (RDF.TYPE.equals(propertyId)) {
+				
+				if (valueClass == null) {
+					valueClass = OWL.CLASS;
+				}
+				
 				if (valueType.equals(XMLSchema.ANYURI) || valueType.equals(SH.IRI)) {
 					edge(constraint, SH.nodeKind, SH.IRI);
 					valueType = null;
