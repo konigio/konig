@@ -68,6 +68,20 @@ public class GaeContentSystem implements ContentSystem {
 	
 	private static final int BATCH_SIZE = 100;
 	
+	private static final MimetypesFileTypeMap mimeTypes = new MimetypesFileTypeMap();
+	static {
+		mimeTypes.addMimeTypes(
+			"text/html html\n" + 
+			"image/png png\n" + 
+			"image/bmp bmp\n" + 
+			"image/gif gif\n" + 
+			"image/jpeg jpeg jpg\n" + 
+			"image/svg+xml svg\n" + 
+			"image/tiff tiff\n" + 
+			"text/css css"
+		);
+	}
+	
 	
 	@Override
 	public CheckInBundleResponse checkInBundle(AssetBundle bundle) throws ContentAccessException {
@@ -305,14 +319,15 @@ public class GaeContentSystem implements ContentSystem {
 		return new Asset(metadata, body.getBytes());
 	}
 	
+	
+	
 	@Override
 	public int saveBundle(AssetBundleKey bundleKey, ZipArchive archive) throws ContentAccessException {
 
-		MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
 		ZipItem item = null;
 		List<Entity> list = new ArrayList<>();
 		while ( (item = archive.nextItem()) != null) {
-			Asset asset = toAsset(mimeMap, bundleKey, item);
+			Asset asset = toAsset(mimeTypes, bundleKey, item);
 			list.add(toMetadataEntity(asset));
 			try {
 				list.add(toBodyEntity(asset));

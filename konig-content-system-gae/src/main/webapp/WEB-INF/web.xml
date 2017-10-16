@@ -20,6 +20,26 @@
 			<servlet-class>io.konig.content.gae.GaeZipBundleTaskHandlerServlet</servlet-class>
 		</servlet>
 		
+  	<servlet>
+			<servlet-name>BundleEnqueueServlet</servlet-name>
+			<servlet-class>io.konig.content.gae.BundleEnqueueServlet</servlet-class>
+		</servlet>
+		
+  	<servlet>
+			<servlet-name>BundleDequeueServlet</servlet-name>
+			<servlet-class>io.konig.content.gae.BundleDequeueServlet</servlet-class>
+		</servlet>
+		
+		<servlet-mapping>
+			<servlet-name>BundleEnqueueServlet</servlet-name>
+			<url-pattern>/tasks/content-bundle-enqueue</url-pattern>
+		</servlet-mapping>
+		
+		<servlet-mapping>
+			<servlet-name>BundleDequeueServlet</servlet-name>
+			<url-pattern>/tasks/content-bundle-dequeue</url-pattern>
+		</servlet-mapping>
+		
 		<servlet-mapping>
 			<servlet-name>GaeContentSystemServlet</servlet-name>
 			<url-pattern>/content/*</url-pattern>

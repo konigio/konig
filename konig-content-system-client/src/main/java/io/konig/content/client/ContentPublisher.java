@@ -1,5 +1,7 @@
 package io.konig.content.client;
 
+import java.io.ByteArrayOutputStream;
+
 /*
  * #%L
  * Konig Content System, Client Library
@@ -36,16 +38,17 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.FileEntity;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.api.Distribution.BucketOptions;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.storage.Bucket;
-import com.google.cloud.storage.Bucket.BlobTargetOption;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 
@@ -64,7 +67,7 @@ public class ContentPublisher {
 	private boolean compress = true;
 	private File credentialsFile;
 
-	public void publish(File baseDir, String baseURL, String bundleName, String bundleVersion) throws IOException, ContentAccessException {
+	public void publish(File baseDir, String contentURL, String bundleName, String bundleVersion) throws IOException, ContentAccessException {
 		
 		List<AssetMetadata> metaList = new ArrayList<>();
 		AssetBundle bundle = new AssetBundle(bundleName, bundleVersion);
@@ -73,8 +76,8 @@ public class ContentPublisher {
 		
 		addAssets(bundle, baseDir, "/");
 
-		logger.info("Publishing to: {}", bundleKey.url(baseURL));
-		ContentSystemClient client = new ContentSystemClient(baseURL);
+		logger.info("Publishing to: {}", bundleKey.url(contentURL));
+		ContentSystemClient client = new ContentSystemClient(contentURL);
 		CheckInBundleResponse response = client.checkInBundle(bundle);
 		
 		Collections.sort(response.getMissingAssets());
@@ -107,15 +110,21 @@ public class ContentPublisher {
 				try (FileInputStream contentStream = new FileInputStream(zipFile)) {
 					bucket.create(objectId, contentStream, "application/zip");
 				}
+				
+			
+				String baseUrl = baseUrl(contentURL);
+				String enqueueURL = baseUrl + "/tasks/content-bundle-enqueue";
+				
+				byte[] payload = bundleEnqueueRequest(bucket.getName(), objectId);
 
-//				String bundleURL = bundle.getKey().url(baseURL);
-//				HttpPost post = new HttpPost(bundleURL);
-//				FileEntity entity = new FileEntity(zipFile);
-//				entity.setContentType("application/zip");
-//				post.setEntity(entity);
-//				CloseableHttpClient httpClient = HttpClients.createDefault();
-//				CloseableHttpResponse httpResponse = httpClient.execute(post);
-//				logger.info(httpResponse.getStatusLine().toString());
+				ByteArrayEntity entity = new ByteArrayEntity(payload);
+				HttpPost post = new HttpPost(enqueueURL);
+				
+				entity.setContentType("application/json");
+				post.setEntity(entity);
+				CloseableHttpClient httpClient = HttpClients.createDefault();
+				CloseableHttpResponse httpResponse = httpClient.execute(post);
+				logger.info(httpResponse.getStatusLine().toString());
 				
 				
 			} else {
@@ -134,6 +143,24 @@ public class ContentPublisher {
 		} else {
 			logger.info("All assets are up-to-date");
 		}
+	}
+
+	private byte[] bundleEnqueueRequest(String bucketId, String objectId) throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		JsonFactory factory = new JsonFactory();
+		JsonGenerator json = factory.createGenerator(out, JsonEncoding.UTF8);
+		json.writeStartObject();
+		json.writeStringField("bucketId", bucketId);
+		json.writeStringField("objectId", objectId);
+		json.writeEndObject();
+		json.close();
+		
+		return out.toByteArray();
+	}
+
+	private String baseUrl(String contentURL) {
+		int slash = contentURL.lastIndexOf('/', contentURL.length()-2);
+		return contentURL.substring(0, slash);
 	}
 
 	private Bucket getBucket(String editAddress) throws ContentAccessException {
