@@ -10,6 +10,12 @@ shape:IssueShape a sh:Shape ;
 		sh:datatype xsd:int ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ;
-		konig:formula "(.status = ex:Complete) ? .estimatedPoints : 0" 
+		konig:formula '''
+		@context {
+			"ex" : "http://example.com/ns/",
+			"status" : "http://example.com/ns/status",
+			"estimatedPoints" : "http://example.com/ns/estimatedPoints"
+		}
+		(.status = ex:Complete) ? .estimatedPoints : 0'''
 	 ] 
 . 

@@ -13,6 +13,10 @@ shape:RootedPersonShape a sh:Shape ;
 		sh:predicate schema:birthPlace ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ;
-		konig:formula "schema:parent.schema:birthPlace"
+		konig:formula '''
+			@context {
+				"schema" : "http://schema.org/"
+			}
+			schema:parent.schema:birthPlace'''
 	 ]   
 . 

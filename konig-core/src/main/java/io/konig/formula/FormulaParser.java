@@ -37,9 +37,9 @@ import org.openrdf.rio.RDFParseException;
 import io.konig.core.Context;
 import io.konig.core.KonigException;
 import io.konig.core.LocalNameService;
-import io.konig.core.NamespaceManager;
 import io.konig.core.Term;
 import io.konig.core.Term.Kind;
+import io.konig.rio.turtle.NamespaceMap;
 import io.konig.rio.turtle.SeaTurtleParser;
 
 
@@ -47,6 +47,7 @@ public class FormulaParser {
 	
 	private PropertyOracle propertyOracle;
 	private LocalNameService localNameService;
+	private NamespaceMap namespaceMap;
 	
 	public FormulaParser() {
 	}
@@ -59,6 +60,11 @@ public class FormulaParser {
 		this.propertyOracle = propertyOracle;
 		this.localNameService = localNameService;
 	}
+	public FormulaParser(PropertyOracle propertyOracle, LocalNameService localNameService, NamespaceMap nsMap) {
+		this.propertyOracle = propertyOracle;
+		this.localNameService = localNameService;
+		this.namespaceMap = nsMap;
+	}
 
 	public QuantifiedExpression quantifiedExpression(String text)  throws RDFParseException, IOException {
 		StringReader reader = new StringReader(text);
@@ -67,6 +73,7 @@ public class FormulaParser {
 
 	public QuantifiedExpression quantifiedExpression(Reader reader) throws RDFParseException, IOException {
 		Worker worker = new Worker(reader);
+		worker.setDefaultNamespaceMap(namespaceMap);
 		
 		try {
 			return worker.quantifiedExpression();
@@ -730,9 +737,24 @@ public class FormulaParser {
 							buffer.appendCodePoint(c);
 							c = read();
 						} while (Character.isLetter(c) || Character.isDigit(c) || c=='_');
+						String prefix = predicate;
 						String localName = buffer.toString();
 						unread(c);
-						return new CurieValue(getContext(), predicate, localName);
+						Context context = getContext();
+						boolean ok = context.getTerm(prefix)!= null;
+						if (!ok && namespaceMap!=null) {
+							String namespace = namespaceMap.get(prefix);
+							if (namespace != null) {
+								Term term = context.addTerm(prefix, namespace);
+								term.setKind(Kind.NAMESPACE);
+								ok = true;
+							}
+						}
+						if (!ok) {
+							throw new RDFParseException("Namespace not defined for prefix: " + prefix);
+						}
+						
+						return new CurieValue(getContext(), prefix, localName);
 					} else {
 						fail("Expected a letter");
 					}

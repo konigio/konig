@@ -65,7 +65,17 @@ public class SeaTurtleParser extends TurtleParser {
 		namespaceMap = new ContextNamespaceMap();
 		setValueFactory(new CoercingValueFactory());
 	}
+	
+	
 
+
+	public NamespaceMap getDefaultNamespaceMap() {
+		return defaultNamespaceMap;
+	}
+
+	public void setDefaultNamespaceMap(NamespaceMap defaultNamespaceMap) {
+		this.defaultNamespaceMap = defaultNamespaceMap;
+	}
 
 	public NameMap getNameMap() {
 		return nameMap;
