@@ -220,7 +220,16 @@ public class ShapeLoaderTest {
 		PropertyConstraint p = shape.getPropertyConstraint(completedPoints);
 		Expression formula = p.getFormula();
 		assertTrue(formula != null);
-		assertEquals("(.status = ex:Complete) ? .estimatedPoints : 0", formula.toString());
+		
+		String expected = 
+			"@context {\n" + 
+			"   \"ex\" : \"http://example.com/ns/\",\n" + 
+			"   \"status\" : \"http://example.com/ns/status\",\n" + 
+			"   \"estimatedPoints\" : \"http://example.com/ns/estimatedPoints\"\n" + 
+			"}\n" + 
+			"(.status = ex:Complete) ? .estimatedPoints : 0";
+		
+		assertEquals(expected, formula.toString());
 	}
 
 

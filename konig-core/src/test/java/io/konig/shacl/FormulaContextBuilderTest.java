@@ -101,7 +101,6 @@ public class FormulaContextBuilderTest {
 		Term term = context.getTerm("schema");
 		assertTrue(term != null);
 		assertEquals("http://schema.org/", term.getId());
-		assertEquals(Kind.NAMESPACE, term.getKind());
 		
 		
 	}

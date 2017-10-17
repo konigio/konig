@@ -190,7 +190,11 @@ public class FormulaParserTest {
 	@Test
 	public void testConditional() throws Exception {
 
-		String text = "(sprintIssue.status = pmd:Complete) ? sprintIssue.timeEstimate : 0";
+		String text = 
+				"@context {\n" + 
+				"   \"pmd\" : \"http://example.com/pmd\"\n" + 
+				"}\n" + 
+				"(sprintIssue.status = pmd:Complete) ? sprintIssue.timeEstimate : 0";
 		
 		Expression e = parser.expression(text);
 		
@@ -202,7 +206,11 @@ public class FormulaParserTest {
 	@Test
 	public void testCurieTerm() throws Exception {
 
-		String text = "ex:alpha.ex:beta NOT IN (ex:foo , ex:bar)";
+		String text = 
+				"@context {\n" + 
+				"   \"ex\" : \"http://example.com/core\"\n" + 
+				"}\n" + 
+				"ex:alpha.ex:beta NOT IN (ex:foo , ex:bar)";
 		
 		Expression e = parser.expression(text);
 		

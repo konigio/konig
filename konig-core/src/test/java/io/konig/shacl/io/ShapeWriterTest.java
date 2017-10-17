@@ -107,12 +107,20 @@ public class ShapeWriterTest {
 	@Test
 	public void testFormula() throws Exception {
 
+		String text = 
+			"@context {\n" + 
+			"   \"ex\" : \"http://example.com/ns/\",\n" + 
+			"   \"status\" : \"http://example.com/ns/status\",\n" + 
+			"   \"estimatedPoints\" : \"http://example.com/ns/estimatedPoints\"\n" + 
+			"}\n" + 
+			"(status = ex:Complete) ? estimatedPoints : 0";
+		
 		URI shapeId = uri("http://example.com/IssueShape");
 		URI completedPoints = uri("http://example.com/ns/completedPoints");
 		Shape shape = new Shape(shapeId);
 		PropertyConstraint p = new PropertyConstraint(completedPoints);
 		shape.add(p);
-		p.setFormula(new QuantifiedExpression("(status = ex:Complete) ? estimatedPoints : 0"));
+		p.setFormula(new QuantifiedExpression(text));
 		
 		shapeWriter.emitShape(shape, graph);
 
@@ -122,7 +130,7 @@ public class ShapeWriterTest {
 		Vertex w = v.getVertex(SH.property);
 		assertTrue(w != null);
 		
-		assertLiteral(w, Konig.formula, "(status = ex:Complete) ? estimatedPoints : 0");
+		assertLiteral(w, Konig.formula, text);
 		
 	}
 

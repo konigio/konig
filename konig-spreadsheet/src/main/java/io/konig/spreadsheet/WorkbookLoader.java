@@ -83,6 +83,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.path.DataInjector;
+import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.pojo.BeanUtil;
@@ -104,6 +105,7 @@ import io.konig.formula.PathStep;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.ShapePropertyOracle;
+import io.konig.rio.turtle.NamespaceMap;
 import io.konig.shacl.CompositeShapeVisitor;
 import io.konig.shacl.FormulaContextBuilder;
 import io.konig.shacl.PredicatePath;
@@ -2597,16 +2599,26 @@ public class WorkbookLoader {
 
 
 
-		public void execute() throws RDFParseException, IOException, KonigException {
+		public void execute() throws  KonigException {
 			ShapeManager shapeManager = getShapeManager();
 			Shape shape = shapeManager.getShapeById(shapeId);
 			if (shape == null) {
 				throw new KonigException("Shape not found: " + shapeId);
 			}
 			propertyOracle.setShape(shape);
+			NamespaceMap nsMap = new NamespaceMapAdapter(getNamespaceManager());
+			FormulaParser parser = new FormulaParser(propertyOracle, localNameService, nsMap);
 			
-			FormulaParser parser = new FormulaParser(propertyOracle, localNameService);
-			QuantifiedExpression expression = parser.quantifiedExpression(formula);
+			QuantifiedExpression expression = null;
+			try {
+				expression = parser.quantifiedExpression(formula);
+			} catch (Throwable oops) {
+				String message = "Failed to parse formula...\n" +
+						"   Shape: <" + shapeId + ">\n" +
+						"   Property: " + propertyConstraint.getValue(SH.path).stringValue() + "\n" +
+						"   Formula: " + formula;
+				throw new KonigException(message, oops);
+			}
 			
 			String text = expression.toString();
 			Literal literal = vf.createLiteral(text);
