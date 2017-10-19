@@ -26,11 +26,21 @@ import org.openrdf.model.URI;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.ShapeIdGenerator;
+import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat;
+import io.konig.maven.JsonSchemaConfig;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class TemplateJsonSchemaNamer extends ShapeIdGenerator implements JsonSchemaNamer {
+	
+	
+	public static TemplateJsonSchemaNamer namer(NamespaceManager nsManager, ShapeManager shapeManager, JsonSchemaConfig config) {
+		String uriTemplate = config.getUriTemplate();
+		String templateText = (uriTemplate==null) ? "{shapeId}/jsonSchema" : uriTemplate;
+		ValueFormat format = new SimpleValueFormat(templateText);
+		return new TemplateJsonSchemaNamer(nsManager, shapeManager, format);
+	}
 	
 	public TemplateJsonSchemaNamer(NamespaceManager nsManager, ShapeManager shapeManager, ValueFormat template) {
 		super(nsManager, shapeManager, template);
@@ -50,6 +60,8 @@ public class TemplateJsonSchemaNamer extends ShapeIdGenerator implements JsonSch
 		StringBuilder builder = new StringBuilder();
 		builder.append(namespace(shapeId).getPrefix());
 		builder.append('.');
+		builder.append(shapeId.getLocalName());
+		builder.append(".json");
 		
 		return builder.toString();
 	}

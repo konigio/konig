@@ -23,13 +23,6 @@ package io.konig.maven;
 
 import java.io.File;
 
-import io.konig.core.NamespaceManager;
-import io.konig.core.util.SimpleValueFormat;
-import io.konig.core.util.ValueFormat;
-import io.konig.schemagen.jsonschema.JsonSchemaNamer;
-import io.konig.schemagen.jsonschema.TemplateJsonSchemaNamer;
-import io.konig.shacl.ShapeManager;
-
 public class JsonSchemaConfig {
 
 	private String uriTemplate;
@@ -49,9 +42,9 @@ public class JsonSchemaConfig {
 	}
 	
 	
-	public JsonSchemaNamer namer(NamespaceManager nsManager, ShapeManager shapeManager) {
-		String templateText = (uriTemplate==null) ? "{shapeId}/jsonSchema" : uriTemplate;
-		ValueFormat format = new SimpleValueFormat(templateText);
-		return new TemplateJsonSchemaNamer(nsManager, shapeManager, format);
-	}
+//	public JsonSchemaNamer namer(NamespaceManager nsManager, ShapeManager shapeManager) {
+//		String templateText = (uriTemplate==null) ? "{shapeId}/jsonSchema" : uriTemplate;
+//		ValueFormat format = new SimpleValueFormat(templateText);
+//		return new TemplateJsonSchemaNamer(nsManager, shapeManager, format);
+//	}
 }

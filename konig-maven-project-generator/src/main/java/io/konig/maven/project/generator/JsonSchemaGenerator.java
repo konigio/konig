@@ -21,27 +21,32 @@ package io.konig.maven.project.generator;
  */
 
 import java.io.File;
+import java.io.IOException;
 
-import io.konig.maven.JavaCodeGeneratorConfig;
+import io.konig.maven.FileUtil;
+import io.konig.maven.JsonSchemaConfig;
 
-public class JavaModelGenerator extends ConfigurableProjectGenerator<JavaCodeGeneratorConfig> {
+public class JsonSchemaGenerator extends ConfigurableProjectGenerator<JsonSchemaConfig> {
 	
 	
-	public JavaModelGenerator(MavenProjectConfig mavenProject, JavaCodeGeneratorConfig javaConfig) {
-		super(javaConfig, "java");
-		setTemplatePath("konig/generator/javaModel/pom.xml");
-		setArtifactSuffix("-java-model");
-		setNameSuffix("Java Model");
+	public JsonSchemaGenerator(MavenProjectConfig mavenProject, JsonSchemaConfig jsonSchemaConfig) {
+		super(jsonSchemaConfig, "jsonSchema");
+		setTemplatePath("konig/generator/jsonSchema/pom.xml");
+		setArtifactSuffix("-json-schema");
+		setNameSuffix("JSON Schema");
 		
 		init(mavenProject);
 
-		if (config.getJavaDir() == null) {
-			config.setJavaDir(new File("src/main/java"));
-		}
-		if (config.getPackageRoot() == null) {
-			config.setPackageRoot(mavenProject.getGroupId());
+		if (config.getJsonSchemaDir() == null) {
+			
+			config.setJsonSchemaDir(new File("target/generated/json-schema"));
 		}
 	}
 
-	
+
+	@Override
+	public void run() throws MavenProjectGeneratorException, IOException {
+		super.run();
+		copyAssembly();
+	}
 }

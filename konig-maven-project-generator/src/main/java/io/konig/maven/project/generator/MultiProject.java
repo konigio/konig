@@ -28,6 +28,7 @@ import java.io.IOException;
 import io.konig.maven.DataCatalogConfig;
 import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
+import io.konig.maven.JsonSchemaConfig;
 import io.konig.maven.WorkbookProcessor;
 
 public class MultiProject extends MavenProjectConfig {
@@ -37,10 +38,23 @@ public class MultiProject extends MavenProjectConfig {
 	private GoogleCloudPlatformConfig googleCloudPlatform;
 	private GoogleCloudPlatformConfig googleCloudPlatformDeployment;
 	private DataCatalogConfig dataCatalog;
+	private JsonSchemaConfig jsonSchema;
 	
 	public WorkbookProcessor getWorkbook() {
 		return workbook;
 	}
+	
+	
+
+	public JsonSchemaConfig getJsonSchemaConfig() {
+		return jsonSchema;
+	}
+	
+	public void setJsonSchemaConfig(JsonSchemaConfig jsonSchemaConfig) {
+		this.jsonSchema = jsonSchemaConfig;
+	}
+
+
 
 	public void setWorkbook(WorkbookProcessor workbook) {
 		this.workbook = workbook;
@@ -102,6 +116,9 @@ public class MultiProject extends MavenProjectConfig {
 		}
 		if (java != null) {
 			parent.add(new JavaModelGenerator(this, java));
+		}
+		if (jsonSchema != null) {
+			parent.add(new JsonSchemaGenerator(this, jsonSchema));
 		}
 		if (googleCloudPlatformDeployment != null) {
 			GcpDeployProjectGenerator deploy = new GcpDeployProjectGenerator(this, googleCloudPlatformDeployment);

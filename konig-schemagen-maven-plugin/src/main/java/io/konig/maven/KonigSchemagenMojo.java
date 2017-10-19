@@ -145,6 +145,7 @@ import io.konig.schemagen.jsonschema.JsonSchemaNamer;
 import io.konig.schemagen.jsonschema.JsonSchemaTypeMapper;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
+import io.konig.schemagen.jsonschema.TemplateJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
@@ -572,7 +573,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if (jsonSchema != null) {
 
 			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SmartJsonSchemaTypeMapper(owlReasoner);
-			JsonSchemaNamer jsonSchemaNamer = jsonSchema.namer(nsManager, shapeManager);
+			JsonSchemaNamer jsonSchemaNamer = TemplateJsonSchemaNamer.namer(nsManager, shapeManager, jsonSchema);
 			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
 			ShapeToJsonSchema generator = new ShapeToJsonSchema(jsonSchemaGenerator);
 			generator.setListener(new ShapeToJsonSchemaLinker(owlGraph));
