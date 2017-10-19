@@ -20,7 +20,6 @@ package io.konig.schemagen.jsonschema.impl;
  * #L%
  */
 
-
 import io.konig.schemagen.jsonschema.JsonSchemaNamer;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeMediaTypeNamer;

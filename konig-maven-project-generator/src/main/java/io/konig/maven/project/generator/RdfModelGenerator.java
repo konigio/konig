@@ -43,10 +43,21 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 		if (config == null) {
 			throw new MavenProjectGeneratorException("workbook file must be defined");
 		}
+		
+		File workbookFile = config.getWorkbookFile();
+		config.setWorkbookFile(localWorkbookFile());
 		super.run();
+		config.setWorkbookFile(workbookFile);
 		copyAssembly();
 		copyWorkbook();
+		
+		
 	}
+
+	private File localWorkbookFile() {
+		return new File("src/" + config.getWorkbookFile().getName());
+	}
+
 
 	private void copyWorkbook() throws MavenProjectGeneratorException, IOException {
 		File targetFile = new File(baseDir(), "src/" + config.getWorkbookFile().getName());
