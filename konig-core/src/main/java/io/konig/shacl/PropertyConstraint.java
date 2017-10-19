@@ -462,10 +462,7 @@ public class PropertyConstraint {
 		stereotype = Konig.attribute;
 	}
 
-	/**
-	 * @deprecated Use {@link #getFormula()}
-	 * @return
-	 */
+	
 	@RdfProperty(Konig.EQUIVALENT_PATH)
 	public Path getEquivalentPath() {
 		return Formula2PathTranslator.getInstance().toPath(formula);

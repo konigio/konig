@@ -69,6 +69,22 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 	public void setUp() throws Exception {
 		useBigQueryTransformStrategy();
 	}
+	
+
+	@Ignore
+	public void testAssessmentEndeavor() throws Exception {
+		load("src/test/resources/konig-transform/assessment-endeavor");
+
+		URI shapeId = iri("http://schema.pearson.com/shapes/AssessmentEndeavorShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+//		System.out.println(shapeRule);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+//		System.out.println(select.toString());
+	}
 
 	@Test
 	public void testAssessmentSession() throws Exception {
@@ -266,6 +282,8 @@ public class SqlFactoryTest extends AbstractShapeRuleFactoryTest {
 		ShapeRule shapeRule = createShapeRule(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		System.out.println(select);
 		
 		assertColumn(select, "resultOf", "assessment");
 		QueryExpression qe = assertAlias(select, "avgScore").getExpression();

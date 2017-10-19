@@ -26,7 +26,7 @@ import io.konig.core.io.PrettyPrintWriter;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 
-public class DataChannel extends AbstractPrettyPrintable implements Comparable<DataChannel> {
+public class DataChannel extends AbstractPrettyPrintable implements Comparable<DataChannel>, FromItem {
 
 	private String name;
 	private Shape shape;

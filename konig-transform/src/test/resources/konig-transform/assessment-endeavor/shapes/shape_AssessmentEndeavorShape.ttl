@@ -1,0 +1,46 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://schema.pearson.com/shapes/> .
+@prefix xas: <http://schema.pearson.com/ns/activity/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:AssessmentEndeavorShape a sh:Shape , konig:DerivedShape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/woaUP_nuR4sAAAFfK1Cd5g> ; 
+	sh:targetClass xas:AssessmentEndeavor ; 
+	sh:property  [ 
+		sh:path xas:subActivity ; 
+		sh:shape shape:AssessmentSessionShape ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		sh:path as:actor ; 
+		sh:shape sh:IRI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:formula '''@context {
+   "subActivity" : "http://schema.pearson.com/ns/activity/subActivity",
+   "actor" : "http://www.w3.org/ns/activitystreams#actor"
+}
+.subActivity.actor'''
+	 ]  ,  [ 
+		sh:path as:object ; 
+		sh:shape sh:IRI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:formula '''@context {
+   "subActivity" : "http://schema.pearson.com/ns/activity/subActivity",
+   "object" : "http://www.w3.org/ns/activitystreams#object"
+}
+.subActivity.object''' ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/AssessmentEndeavor> . 
+
+<http://www.konig.io/activity/woaUP_nuR4sAAAFfK1Cd5g> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-10-17T13:10:24.666-04:00"^^xsd:dateTime . 
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/AssessmentEndeavor> a konig:GoogleBigQueryTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:datasetId "xas" ; 
+		gcp:tableId "AssessmentEndeavor" ]  . 

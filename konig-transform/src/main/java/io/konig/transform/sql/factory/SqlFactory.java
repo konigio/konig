@@ -524,7 +524,7 @@ public class SqlFactory {
 				item = toTableItemExpression(channel);
 			}
 			if (item == null) {
-				throw new TransformBuildException("No source tables found");
+				throw new TransformBuildException("No source tables found for Shape <" + shapeRule.getTargetShape().getId() + ">");
 			}
 			from.add(item);
 			
