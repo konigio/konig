@@ -25,8 +25,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.List;
@@ -38,7 +36,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
@@ -48,7 +45,6 @@ import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
-import org.openrdf.rio.RDFHandlerException;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -56,8 +52,6 @@ import io.konig.core.Path;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.RdfUtil;
-import io.konig.core.io.VertexCopier;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.GCP;
@@ -66,6 +60,7 @@ import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.VAR;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.PropertyPath;
@@ -73,10 +68,11 @@ import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
+	
+	
 	
 	@Test
 	public void testAddressCountry() throws Exception {
