@@ -789,6 +789,16 @@ public class FormulaParser {
 						URI id = iriOptions.iterator().next();
 						term = new Term(localName, id.stringValue(), Kind.ANY);
 						context.add(term);
+					} else {
+						StringBuilder builder = new StringBuilder();
+						builder.append("Local name \"");
+						builder.append(localName);
+						builder.append("\" is ambiguous.  Could be one of");
+						for (URI iri : iriOptions) {
+							builder.append("\n   ");
+							builder.append(iri.stringValue());
+						}
+						throw new RDFParseException(builder.toString());
 					}
 				}
 			}
