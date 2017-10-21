@@ -36,7 +36,9 @@ public class GoogleCloudResourceGenerator {
 	private List<ShapeVisitor> visitors = new ArrayList<>();
 	
 	public void add(ShapeVisitor visitor) {
-		visitors.add(visitor);
+		if (visitor != null) {
+			visitors.add(visitor);
+		}
 	}
 	
 	public void addBigQueryGenerator(File bigQuerySchemaDir) {

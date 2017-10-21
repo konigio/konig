@@ -687,11 +687,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 			if (bigQuery != null) {
 				resourceGenerator.addBigQueryGenerator(bigQuery.getSchema());
+				resourceGenerator.add(labelGenerator());
 			}
 			if (cloudStorage != null) {
 				resourceGenerator.addCloudStorageBucketWriter(cloudStorage.getDirectory());
 			}
-			resourceGenerator.add(labelGenerator());
 			resourceGenerator.add(new GooglePubSubTopicListGenerator(googleCloudPlatform.getTopicsFile()));
 			resourceGenerator.dispatch(shapeManager.listShapes());
 						
@@ -726,10 +726,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private BigQueryLabelGenerator labelGenerator() {
 		File schemaDir = googleCloudPlatform.getBigquery().getSchema();
 		File dataDir = googleCloudPlatform.getBigquery().getData();
-		File schemaFile = new File(schemaDir, "metadata.FieldLabel.json");
-		File dataFile = new File(dataDir, "metadata.FieldLabel");
+		MetadataInfo metadata = googleCloudPlatform.getBigquery().getMetadata();
+		if (metadata.isSkip()) {
+			return null;
+		}
 		
-		return new BigQueryLabelGenerator(owlGraph, schemaFile, dataFile);
+		String metaDatasetId = metadata.getDataset();
+		
+		File schemaFile = new File(schemaDir, metaDatasetId + ".FieldLabel.json");
+		File dataFile = new File(dataDir, metaDatasetId + ".FieldLabel");
+		
+		return new BigQueryLabelGenerator(owlGraph, schemaFile, dataFile, metaDatasetId);
 	}
 
 
