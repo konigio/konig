@@ -91,7 +91,7 @@
 			<id>default-cli</id>
 	        <phase>package</phase>
 	        <goals>
-	          <goal>execute</goal>
+	          <goal>compile</goal>
 	        </goals>
 	        <configuration>
 	          <source>target/generated/gcp/scripts/deploy.groovy</source>

@@ -1,5 +1,17 @@
 package io.konig.gcp.datasource;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import com.google.api.services.bigquery.model.ExternalDataConfiguration;
+
+import io.konig.annotation.RdfProperty;
+import io.konig.core.KonigException;
+import io.konig.core.vocab.GCP;
+import io.konig.core.vocab.Konig;
+import io.konig.datasource.DataSource;
+import io.konig.datasource.TableDataSource;
+
 /*
  * #%L
  * Konig Google Cloud Platform Model
@@ -21,19 +33,9 @@ package io.konig.gcp.datasource;
  */
 
 
-import io.konig.core.pojo.PojoContext;
-import io.konig.core.vocab.Konig;
-import io.konig.shacl.io.ShapeLoader;
-
-public class GcpShapeConfig {
+public class GoogleBigQueryView extends GoogleBigQueryTable {
 	
-	public static void init() {
-
-		PojoContext context = ShapeLoader.CONTEXT;
-		
-		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
-		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
-		context.mapClass(Konig.GoogleBigQueryView, GoogleBigQueryTable.class);
+	public GoogleBigQueryView() {
+		addType(Konig.GoogleBigQueryView);
 	}
-
 }

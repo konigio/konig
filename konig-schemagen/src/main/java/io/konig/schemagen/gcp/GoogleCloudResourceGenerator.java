@@ -48,7 +48,24 @@ public class GoogleCloudResourceGenerator {
 		add(transformer);
 		
 	}
-	
+	public void addBigQueryTableGenerator(File bigQuerySchemaDir) {
+
+		BigQueryTableWriter tableWriter = new BigQueryTableWriter(bigQuerySchemaDir);
+		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
+		
+		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, tableWriter);
+		add(transformer);
+		
+	}
+	public void addBigQueryViewGenerator(File bigQueryViewDir) {
+
+		BigQueryViewWriter viewWriter = new BigQueryViewWriter(bigQueryViewDir);
+		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
+		
+		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, viewWriter);
+		add(transformer);
+		
+	}
 	public void addCloudStorageBucketWriter(File bucketDir) {
 		add(new GoogleCloudStorageBucketWriter(bucketDir));
 	}

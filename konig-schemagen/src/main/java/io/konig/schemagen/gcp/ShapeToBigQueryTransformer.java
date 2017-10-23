@@ -31,6 +31,7 @@ import com.google.api.services.bigquery.model.TableSchema;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleBigQueryView;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
 
@@ -57,13 +58,18 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 		List<DataSource> list = shape.getShapeDataSource();
 		if (list != null) {
 			for (DataSource dataSource : list) {
-				if (dataSource instanceof GoogleBigQueryTable) {
-					Table table = toTable(shape, (GoogleBigQueryTable) dataSource);
+				if(dataSource instanceof GoogleBigQueryView 
+						&& tableVisitor instanceof BigQueryViewWriter) {
+					Table table = toTable(shape, (GoogleBigQueryView) dataSource);
 					table.setView(currentStateViewGenerator.createViewDefinition(shape, dataSource));
+					table.setType("VIEW");
+					tableVisitor.visit(table);
+				}
+				else if (dataSource instanceof GoogleBigQueryTable) {
+					Table table = toTable(shape, (GoogleBigQueryTable) dataSource);
+					//table.setView(currentStateViewGenerator.createViewDefinition(shape, dataSource));
 					if (table.getExternalDataConfiguration() != null) {
 						table.setType("EXTERNAL");
-					} else if (table.getView() != null) {
-						table.setType("VIEW");
 					} else {
 						table.setType("TABLE");
 					}

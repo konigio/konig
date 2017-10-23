@@ -685,7 +685,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			GoogleCloudResourceGenerator resourceGenerator = new GoogleCloudResourceGenerator();
 	
 			if (bigQuery != null) {
-				resourceGenerator.addBigQueryGenerator(bigQuery.getSchema());
+				resourceGenerator.addBigQueryTableGenerator(bigQuery.getSchema());
+				resourceGenerator.addBigQueryViewGenerator(bigQuery.getView());
 			}
 			if (cloudStorage != null) {
 				resourceGenerator.addCloudStorageBucketWriter(cloudStorage.getDirectory());
