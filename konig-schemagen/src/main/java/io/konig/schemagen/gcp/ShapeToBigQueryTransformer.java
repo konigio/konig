@@ -57,6 +57,7 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 		
 		List<DataSource> list = shape.getShapeDataSource();
 		if (list != null) {
+			
 			for (DataSource dataSource : list) {
 				if(dataSource instanceof GoogleBigQueryView 
 						&& tableVisitor instanceof BigQueryViewWriter) {
@@ -65,9 +66,9 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 					table.setType("VIEW");
 					tableVisitor.visit(table);
 				}
-				else if (dataSource instanceof GoogleBigQueryTable) {
+				else if (dataSource instanceof GoogleBigQueryTable 
+						&& tableVisitor instanceof BigQueryTableWriter) {
 					Table table = toTable(shape, (GoogleBigQueryTable) dataSource);
-					//table.setView(currentStateViewGenerator.createViewDefinition(shape, dataSource));
 					if (table.getExternalDataConfiguration() != null) {
 						table.setType("EXTERNAL");
 					} else {
