@@ -100,7 +100,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 //				}
 			}
 			
-			if (!unmatchedProperties.isEmpty()) {
+			if (shapeModelFactory.isFailIfPropertyNotMapped() && !unmatchedProperties.isEmpty()) {
 				throw new ShapeTransformException(unmatchedMessage());
 				
 			}

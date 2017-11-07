@@ -46,6 +46,7 @@ public class ShapeModelFactory {
 	private DataChannelFactory dataChannelFactory;
 	private PropertyMapper propertyMapper;
 	private VariableShapeFactory variableShapeFactory;
+	private boolean failIfPropertyNotMapped=true;
 	
 	public ShapeModelFactory(ShapeManager shapeManager, DataChannelFactory dataChannelFactory, OwlReasoner reasoner) {
 		if (dataChannelFactory == null) {
@@ -67,6 +68,17 @@ public class ShapeModelFactory {
 
 	public DataChannelFactory getDataChannelFactory() {
 		return dataChannelFactory;
+	}
+
+	public boolean isFailIfPropertyNotMapped() {
+		return failIfPropertyNotMapped;
+	}
+
+
+
+
+	public void setFailIfPropertyNotMapped(boolean failIfPropertyNotMapped) {
+		this.failIfPropertyNotMapped = failIfPropertyNotMapped;
 	}
 
 

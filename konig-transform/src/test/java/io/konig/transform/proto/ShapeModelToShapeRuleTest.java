@@ -241,6 +241,7 @@ public class ShapeModelToShapeRuleTest extends TransformTest {
 		assertTrue(shape != null);
 		
 		ShapeModelFactory shapeModelFactory = new ShapeModelFactory(shapeManager, null, new OwlReasoner(graph));
+		shapeModelFactory.setFailIfPropertyNotMapped(factory.isFailIfPropertyNotMapped());
 		ShapeModel shapeModel = shapeModelFactory.createShapeModel(shape);
 		
 		return factory.toShapeRule(shapeModel);
