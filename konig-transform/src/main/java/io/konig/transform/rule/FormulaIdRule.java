@@ -1,5 +1,8 @@
 package io.konig.transform.rule;
 
+import io.konig.core.io.AbstractPrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
+
 /*
  * #%L
  * Konig Transform
@@ -21,7 +24,14 @@ package io.konig.transform.rule;
  */
 
 
-public class FormulaIdRule implements IdRule {
+public class FormulaIdRule extends AbstractPrettyPrintable implements IdRule {
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.beginObject(this);
+		out.endObject();
+		
+	}
 
 
 	

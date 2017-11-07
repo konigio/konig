@@ -8,18 +8,18 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:BqPersonShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/JDIYeB58eD4AAAFcOo7yFQ> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/FxCaPCGz07MAAAFfbW6uaw> ; 
 	sh:targetClass schema:Person ; 
 	sh:property  [ 
-		sh:predicate schema:gender ; 
+		sh:path schema:gender ; 
 		sh:class schema:GenderType ; 
 		sh:nodeKind sh:IRI ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/Person> . 
 
-<http://www.konig.io/activity/JDIYeB58eD4AAAFcOo7yFQ> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-05-24T09:04:26.243-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/FxCaPCGz07MAAAFfbW6uaw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-10-30T09:18:11.163-04:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/Person> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

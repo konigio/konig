@@ -33,6 +33,10 @@ import io.konig.core.io.PrettyPrintWriter;
 public class ContainerPropertyRule extends AbstractPropertyRule {
 	private URI predicate;
 
+	public ContainerPropertyRule(URI predicate) {
+		super(null);
+		this.predicate = predicate;
+	}
 	// TODO: eliminate the DataChannel property.  DataChannels should be defined only on the nested shape.
 	public ContainerPropertyRule(URI predicate, DataChannel channel) {
 		super(channel);

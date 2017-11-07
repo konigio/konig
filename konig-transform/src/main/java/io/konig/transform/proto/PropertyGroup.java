@@ -1,5 +1,7 @@
 package io.konig.transform.proto;
 
+import java.io.StringWriter;
+
 /*
  * #%L
  * Konig Transform
@@ -22,16 +24,21 @@ package io.konig.transform.proto;
 
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.openrdf.model.URI;
 
-public class PropertyGroup extends ArrayList<PropertyModel> {
+import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.io.PrettyPrintable;
+
+public class PropertyGroup extends ArrayList<PropertyModel> implements PrettyPrintable {
 	private static final long serialVersionUID = 1L;
 	
 	private static int counter=0;
 	private PropertyModel targetProperty;
 	private PropertyModel sourceProperty;
 	
+	private ClassModel parentClassModel;
 	private ClassModel valueClassModel;
 	private int id = counter++;
 	
@@ -77,6 +84,47 @@ public class PropertyGroup extends ArrayList<PropertyModel> {
 	public void setSourceProperty(PropertyModel sourceProperty) {
 		this.sourceProperty = sourceProperty;
 	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.beginObject(this);
+		out.field("targetProperty", targetProperty);
+		out.field("sourceProperty", sourceProperty);
+		
+		int count = 
+			(targetProperty==null ? 0 : 1) + 
+			(sourceProperty==null ? 0 : 1);
+		
+		if (size()>count) {
+			out.beginArray("contains");
+			for (PropertyModel p : this) {
+				if (p!=targetProperty && p!=sourceProperty) {
+					out.print(p);
+				}
+			}
+			out.endArray("contains");
+		}
+		out.endObject();
+		
+	}
+	
+
+	public ClassModel getParentClassModel() {
+		return parentClassModel;
+	}
+
+	public void setParentClassModel(ClassModel parentClassModel) {
+		this.parentClassModel = parentClassModel;
+	}
+
+	public String toString() {
+		StringWriter buffer = new StringWriter();
+		PrettyPrintWriter out = new PrettyPrintWriter(buffer);
+		print(out);
+		out.close();
+		return buffer.toString();
+	}
+
 	
 
 }

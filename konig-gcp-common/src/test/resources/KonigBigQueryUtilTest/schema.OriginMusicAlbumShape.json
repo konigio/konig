@@ -1,5 +1,4 @@
 {
-	"type" : "EXTERNAL",
   "externalDataConfiguration" : {
     "csvOptions" : {
       "skipLeadingRows" : "1"
@@ -11,7 +10,7 @@
     "fields" : [ {
       "mode" : "REQUIRED",
       "name" : "album_id",
-      "type" : "INTEGER"
+      "type" : "INT64"
     }, {
       "mode" : "REQUIRED",
       "name" : "album_name",
@@ -19,12 +18,13 @@
     }, {
       "mode" : "REQUIRED",
       "name" : "artist_id",
-      "type" : "INTEGER"
+      "type" : "INT64"
     } ]
   },
   "tableReference" : {
     "datasetId" : "schema",
     "projectId" : "{gcpProjectId}",
     "tableId" : "OriginMusicAlbumShape"
-  }
+  },
+  "type" : "EXTERNAL"
 }

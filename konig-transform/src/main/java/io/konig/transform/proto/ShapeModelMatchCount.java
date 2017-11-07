@@ -47,13 +47,29 @@ public class ShapeModelMatchCount implements Comparable<ShapeModelMatchCount>{
 		int propertyMatchCount = 0;
 		for (PropertyModel p : model.getProperties()) {
 			PropertyGroup group = p.getGroup();
+			
 			if (group.getTargetProperty() != null && group.getSourceProperty()==null) {
 				
-				ShapeModel valueModel = p.getValueModel();
-				propertyMatchCount += valueModel==null ? 1 : matchCount(valueModel);
+				ShapeModel valueModel = valueModel(p);
+				if (valueModel == null) {
+					propertyMatchCount++;
+				} else {
+					propertyMatchCount = valueModel(group.getTargetProperty()) == null ? 1 : matchCount(valueModel);
+				}
+				
 			}
 		}
 		return propertyMatchCount;
+	}
+
+	private ShapeModel valueModel(PropertyModel p) {
+		ShapeModel valueModel = null;
+		if (p instanceof BasicPropertyModel) {
+			BasicPropertyModel b = (BasicPropertyModel) p;
+			valueModel = b.getValueModel();
+		}
+		
+		return valueModel;
 	}
 
 	@Override

@@ -19,19 +19,24 @@ package io.konig.transform.proto;
  * limitations under the License.
  * #L%
  */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-
-import static org.junit.Assert.*;
+import java.util.Collection;
 
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 
+import io.konig.core.OwlReasoner;
 import io.konig.core.vocab.Schema;
+import io.konig.core.vocab.VAR;
 import io.konig.shacl.Shape;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.TransformTest;
+import io.konig.transform.rule.ShapeRule;
 
 public class ShapeModelFactoryTest extends TransformTest {
 	
@@ -39,7 +44,33 @@ public class ShapeModelFactoryTest extends TransformTest {
 	
 	@Before
 	public void setUp() {
-		factory = new ShapeModelFactory(shapeManager, null);
+		factory = new ShapeModelFactory(shapeManager, null, new OwlReasoner(graph));
+	}
+	
+	
+
+	@Test
+	public void testAggregateFunction() throws Exception {
+
+		load("src/test/resources/konig-transform/aggregate-function");
+		
+		URI shapeId = iri("http://example.com/shapes/AssessmentMetricsShape");
+		ShapeModel shapeModel = createShapeModel(shapeId);
+		
+		URI varId = VAR.variableId("?x");
+		PropertyModel p = shapeModel.getPropertyByPredicate(varId);
+		
+		assertTrue(p instanceof VariablePropertyModel);
+		
+		VariablePropertyModel var = (VariablePropertyModel) p;
+		URI sourceShapeId = iri("http://example.com/shapes/AssessmentResultShape");
+		
+		ShapeModel sourceShape = var.getSourceShape();
+		assertTrue(sourceShape != null);
+		assertEquals(sourceShapeId, sourceShape.getShape().getId());
+		
+		
+	
 	}
 
 	@Test
@@ -48,6 +79,9 @@ public class ShapeModelFactoryTest extends TransformTest {
 		
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
 		ShapeModel shapeModel = createShapeModel(shapeId);
+		
+		Collection<PropertyModel> propertyList = shapeModel.getProperties();
+		assertEquals(1, propertyList.size());
 		
 		ClassModel classModel = shapeModel.getClassModel();
 		
@@ -85,7 +119,7 @@ public class ShapeModelFactoryTest extends TransformTest {
 		PropertyGroup postalCodeGroup = addressModel.getPropertyGroupByPredicate(Schema.postalCode);
 		assertTrue(postalCodeGroup != null);
 		
-		assertEquals(3, postalCodeGroup.size());
+		assertEquals(2, postalCodeGroup.size());
 		URI postalAddressShapeId = iri("http://example.com/shapes/PostalAddressShape");
 		
 		assertEquals(postalAddressShapeId, postalCodeGroup.getTargetProperty().getDeclaringShape().getShape().getId());

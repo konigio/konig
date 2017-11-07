@@ -1,5 +1,7 @@
 package io.konig.core.pojo.impl;
 
+import java.lang.reflect.InvocationTargetException;
+
 /*
  * #%L
  * Konig Core
@@ -24,6 +26,10 @@ package io.konig.core.pojo.impl;
 import java.lang.reflect.Method;
 
 import org.openrdf.model.Literal;
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+
+import io.konig.core.KonigException;
 
 public class StringValueHandler extends LiteralPropertyHandler {
 
@@ -34,6 +40,26 @@ public class StringValueHandler extends LiteralPropertyHandler {
 	@Override
 	protected Object javaValue(Literal literal) {
 		return literal.stringValue();
+	}
+	
+	@Override
+	public void handleValue(PropertyInfo propertyInfo) throws KonigException{
+		Value value = propertyInfo.getObject();
+		if (value instanceof URI) {
+			Object javaValue = value.stringValue();
+
+			Object container = propertyInfo.getContainer();
+			
+			try {
+				setter.invoke(container, javaValue);
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				throw new KonigException("Failed to set value", e);
+			}
+			
+		} else {
+			super.handleValue(propertyInfo);
+		}
+		
 	}
 
 }

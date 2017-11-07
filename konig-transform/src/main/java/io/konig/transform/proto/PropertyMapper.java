@@ -1,5 +1,7 @@
 package io.konig.transform.proto;
 
+import io.konig.transform.ShapeTransformException;
+
 /*
  * #%L
  * Konig Transform
@@ -29,5 +31,5 @@ package io.konig.transform.proto;
  */
 public interface PropertyMapper {
 
-	void mapProperties(ShapeModel targetShape);
+	void mapProperties(ShapeModel targetShape) throws ShapeTransformException;
 }

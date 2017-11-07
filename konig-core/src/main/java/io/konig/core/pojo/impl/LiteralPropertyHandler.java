@@ -31,7 +31,7 @@ import io.konig.core.KonigException;
 
 abstract public class LiteralPropertyHandler implements ValueHandler {
 	
-	private Method setter;
+	protected Method setter;
 
 	public LiteralPropertyHandler(Method setter) {
 		this.setter = setter;
@@ -51,8 +51,6 @@ abstract public class LiteralPropertyHandler implements ValueHandler {
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 				throw new KonigException("Failed to set value", e);
 			}
-			
-			
 		}
 		
 	}

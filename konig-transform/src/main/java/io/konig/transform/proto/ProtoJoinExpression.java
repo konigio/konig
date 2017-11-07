@@ -21,21 +21,61 @@ package io.konig.transform.proto;
  */
 
 
-import io.konig.transform.rule.BooleanExpression;
+/**
+ * An entity that expresses a constraint for joining two shapes.  It consists of left and right FromItem instances,
+ * and a boolean expression for the join condition.
+ * 
+ * <h3>Example</h3>
+ * Suppose you want to lookup the birth place of the founder of the 
+ * company that manufactures a given product.  You might formulate a SQL query
+ * like this...
+ * <pre>
+ *   SELECT Place.name
+ *   FROM
+ *   	Product
+ *   JOIN
+ *   	Organization ON Organization.id = Product.manufacturer
+ *   JOIN
+ *   	Person ON Person.id = Organization.founder
+ *   JOIN
+ *   	Place ON Place.id = Person.birthPlace
+ *   WHERE
+ *   	Product.id={productIdValue}
+ * </pre>
+ * Schematically, the FromItem within this query would like something like this...
+ * <pre>
+ *   ProtoJoinExpression(
+ *   	Product, 
+ *   	ProtoJoinExpression(
+ *   		Organization,
+ *   		ProtoJoinExpression(
+ *   			Person,
+ *   			Place,
+ *   			ProtoJoinExpression(EQUALS, birthPlace, id)
+ *   		)
+ *   		ProtoBooleanExpression(EQUALS, founder, id)
+ *   	),
+ *   	ProtoBooleanExpression(EQUALS, manufacturer, id)
+ *   )
+ * </pre>
+ * 
+ *
+ * @author Greg McFall
+ *
+ */
+public class ProtoJoinExpression implements ProtoFromItem {
 
-public class ProtoJoinExpression {
-
-	private ProtoFromItem left;
+	private ShapeModel left;
 	private ProtoFromItem right;
-	private BooleanExpression condition;
+	private ProtoBooleanExpression condition;
 	
-	public ProtoJoinExpression(ProtoFromItem left, ProtoFromItem right, BooleanExpression condition) {
+	public ProtoJoinExpression(ShapeModel left, ProtoFromItem right, ProtoBooleanExpression condition) {
 		this.left = left;
 		this.right = right;
 		this.condition = condition;
 	}
 	
-	public ProtoFromItem getLeft() {
+	public ShapeModel getLeft() {
 		return left;
 	}
 	
@@ -43,8 +83,34 @@ public class ProtoJoinExpression {
 		return right;
 	}
 	
-	public BooleanExpression getCondition() {
+	public ProtoBooleanExpression getCondition() {
 		return condition;
+	}
+
+	public void setLeft(ShapeModel left) {
+		this.left = left;
+	}
+
+	public void setRight(ProtoFromItem right) {
+		this.right = right;
+	}
+	
+	public ShapeModel getRightShapeModel() {
+		return right instanceof ShapeModel ? (ShapeModel) right : null;
+	}
+
+	public void setCondition(ProtoBooleanExpression condition) {
+		this.condition = condition;
+	}
+
+	@Override
+	public ShapeModel first() {
+		return left;
+	}
+
+	@Override
+	public ProtoFromItem rest() {
+		return right;
 	}
 	
 	

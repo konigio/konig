@@ -10,7 +10,7 @@ ex: a owl:Ontology ;
 	rdfs:label "Example Ontology" ; 
 	rdfs:comment "An ontology for custom entities used in this example" . 
 
-ex:originId a rdf:Property , owl:DatatypeProperty ; 
+ex:originId a rdf:Property , owl:InverseFunctionalProperty ; 
 	rdfs:label "Origin ID" ; 
 	rdfs:comment "The identifier for an entity from the system of origin." ; 
 	rdfs:range xsd:long . 

@@ -1,5 +1,7 @@
 package io.konig.transform.proto;
 
+import java.util.List;
+
 /*
  * #%L
  * Konig Transform
@@ -23,6 +25,8 @@ package io.konig.transform.proto;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.path.HasStep.PredicateValuePair;
 import io.konig.shacl.PropertyConstraint;
 
 /**
@@ -30,12 +34,16 @@ import io.konig.shacl.PropertyConstraint;
  * @author Greg McFall
  *
  */
-public class StepPropertyModel extends PropertyModel {
+public class StepPropertyModel extends BasicPropertyModel {
 
 	private int stepIndex;
+	private DirectPropertyModel declaringProperty;
+	private StepPropertyModel nextStep;
+	private List<PredicateValuePair> filter;
 	
-	public StepPropertyModel(URI predicate, PropertyConstraint propertyConstraint, PropertyGroup group, int stepIndex) {
-		super(predicate, propertyConstraint, group);
+	public StepPropertyModel(URI predicate, PropertyGroup group, DirectPropertyModel declaringProperty, int stepIndex) {
+		super(predicate, group, declaringProperty.getPropertyConstraint());
+		this.declaringProperty = declaringProperty;
 		this.stepIndex = stepIndex;
 	}
 
@@ -48,9 +56,37 @@ public class StepPropertyModel extends PropertyModel {
 	}
 
 
-	protected void appendProperties(StringBuilder builder) {
-		super.appendProperties(builder);
-		builder.append(", stepIndex=");
-		builder.append(stepIndex);
+	public StepPropertyModel getNextStep() {
+		return nextStep;
+	}
+
+	public void setNextStep(StepPropertyModel nextStep) {
+		this.nextStep = nextStep;
+	}
+
+	public List<PredicateValuePair> getFilter() {
+		return filter;
+	}
+
+	public void setFilter(List<PredicateValuePair> filter) {
+		this.filter = filter;
+	}
+	
+
+	public DirectPropertyModel getDeclaringProperty() {
+		return declaringProperty;
+	}
+
+	@Override
+	protected void printProperties(PrettyPrintWriter out) {
+
+		super.printProperties(out);
+		out.field("stepIndex", stepIndex);
+		out.field("nextStep", nextStep);
+		out.beginObjectField("declaringProperty", declaringProperty);
+		out.field("propertyConstraint.predicate", declaringProperty.getPropertyConstraint().getPredicate());
+		out.field("declaringShape.shape.id", declaringProperty.getDeclaringShape().getShape().getId());
+		out.endObjectField(declaringProperty);
+		
 	}
 }

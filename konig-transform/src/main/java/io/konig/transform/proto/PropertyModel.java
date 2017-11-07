@@ -1,5 +1,8 @@
 package io.konig.transform.proto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /*
  * #%L
  * Konig Transform
@@ -23,20 +26,18 @@ package io.konig.transform.proto;
 
 import org.openrdf.model.URI;
 
-import io.konig.shacl.PropertyConstraint;
+import io.konig.core.io.BasePrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
 
-abstract public class PropertyModel {
+abstract public class PropertyModel extends BasePrettyPrintable {
 
 	private URI predicate;
-	private PropertyConstraint propertyConstraint;
-	private ShapeModel valueModel;
 	private PropertyGroup group;
 	
 	private ShapeModel declaringShape;
 
-	public PropertyModel(URI predicate, PropertyConstraint propertyConstraint, PropertyGroup group) {
+	public PropertyModel(URI predicate, PropertyGroup group) {
 		this.predicate = predicate;
-		this.propertyConstraint = propertyConstraint;
 		this.group = group;
 	}
 	
@@ -60,18 +61,6 @@ abstract public class PropertyModel {
 		this.group = group;
 	}
 
-	public PropertyConstraint getPropertyConstraint() {
-		return propertyConstraint;
-	}
-
-	public ShapeModel getValueModel() {
-		return valueModel;
-	}
-
-	public void setValueModel(ShapeModel valueModel) {
-		this.valueModel = valueModel;
-	}
-
 	public ShapeModel getDeclaringShape() {
 		return declaringShape;
 	}
@@ -79,32 +68,39 @@ abstract public class PropertyModel {
 	public void setDeclaringShape(ShapeModel declaringShape) {
 		this.declaringShape = declaringShape;
 	}
+
+	public abstract ShapeModel getValueModel();
+
 	
-	public String toString() {
+	
+	public String simplePath() {
+		List<String> list = new ArrayList<>();
+		PropertyModel p = this;
+		while (p != null) {
+			URI predicate = p.getPredicate();
+			list.add(predicate.getLocalName());
+			ShapeModel shapeModel = p.getDeclaringShape();
+			p = shapeModel.getAccessor();
+		}
+		
 		StringBuilder builder = new StringBuilder();
-		builder.append(getClass().getSimpleName());
-		builder.append('[');
-		appendProperties(builder);
-		builder.append(']');
+		String dot = "";
+		for (int i=list.size()-1; i>=0; i--) {
+			builder.append(dot);
+			builder.append(list.get(i));
+			dot = ".";
+		}
 		return builder.toString();
 	}
 
-	protected void appendProperties(StringBuilder builder) {
 
-		builder.append("predicate=<");
-		builder.append(predicate.stringValue());
-		builder.append(">");
-		if (declaringShape != null) {
-			builder.append(", declaringShape.shape.id=<");
-			builder.append(declaringShape.getShape().getId());
-			builder.append(">");
+	@Override
+	protected void printProperties(PrettyPrintWriter out) {
+
+		if (declaringShape!=null) {
+			out.field("declaringShape.shape.id", declaringShape.getShape().getId());
 		}
-		if (valueModel != null) {
-			builder.append(", valueModel.shape.id=");
-			builder.append("<");
-			builder.append(valueModel.getShape().getId().stringValue());
-			builder.append(">");
-		}
+		out.field("predicate", predicate);
 		
 	}
 	

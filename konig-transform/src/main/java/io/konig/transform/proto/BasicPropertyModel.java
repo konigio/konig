@@ -23,12 +23,35 @@ package io.konig.transform.proto;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.PropertyConstraint;
 
 public class BasicPropertyModel extends PropertyModel {
+	private PropertyConstraint propertyConstraint;
+	private ShapeModel valueModel;
 
-	public BasicPropertyModel(URI predicate, PropertyConstraint propertyConstraint, PropertyGroup group) {
-		super(predicate, propertyConstraint, group);
+	public BasicPropertyModel(URI predicate, PropertyGroup group, PropertyConstraint propertyConstraint) {
+		super(predicate, group);
+		this.propertyConstraint = propertyConstraint;
 	}
 
+	public PropertyConstraint getPropertyConstraint() {
+		return propertyConstraint;
+	}
+
+
+	public ShapeModel getValueModel() {
+		return valueModel;
+	}
+
+	public void setValueModel(ShapeModel valueModel) {
+		this.valueModel = valueModel;
+	}
+
+
+	@Override
+	protected void printProperties(PrettyPrintWriter out) {
+		super.printProperties(out);
+		out.field("valueModel", valueModel);
+	}
 }

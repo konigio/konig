@@ -276,6 +276,7 @@ public class PrettyPrintWriter extends PrintWriter {
 		indent();
 		print(fieldName);
 		print(' ');
+		
 		if (object instanceof Value) {
 			value((Value)object);
 			println();
@@ -285,6 +286,12 @@ public class PrettyPrintWriter extends PrintWriter {
 		} else if (object instanceof String) {
 			literalString((String)object);
 			println();
+		} else if (object!=null && object.getClass().isEnum()) {
+			
+			Enum<?> enumValue = (Enum<?>) object;
+			print(enumValue.name());
+			println();
+	
 		} else {
 			objectRef(object);
 		}

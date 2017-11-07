@@ -20,16 +20,16 @@ package io.konig.transform.proto;
  * #L%
  */
 
-
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+
+import io.konig.core.io.BasePrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
 
 /**
  * A model for the properties of a given OWL Class.
@@ -38,19 +38,34 @@ import org.openrdf.model.URI;
  * @author Greg McFall
  *
  */
-public class ClassModel {
+public class ClassModel extends BasePrettyPrintable {
+	private static int counter = 0;
 
 	private URI owlClass;
 	private Map<URI, PropertyGroup> propertyMap = new HashMap<>();
 	private ShapeModel targetShapeModel;
-	private Set<ShapeModel> candidateSourceShapeModel = new HashSet<>();
+	private Set<ShapeModel> candidateSourceShapeModel;
 	private ProtoFromItem fromItem;
+	private int id=counter++;
 	
 	public ClassModel(URI owlClass) {
 		this.owlClass = owlClass;
 	}
 	
+	public ClassModel getParent() {
+		PropertyModel accessor = targetShapeModel.getAccessor();
+		if (accessor!=null) {
+			return accessor.getDeclaringShape().getClassModel();
+		}
+		return null;
+	}
+	
+	public int hashCode() {
+		return id;
+	}
+	
 	public void put(URI predicate, PropertyGroup group) {
+		group.setParentClassModel(this);
 		propertyMap.put(predicate, group);
 	}
 	
@@ -92,9 +107,20 @@ public class ClassModel {
 		this.targetShapeModel = targetShapeModel;
 	}
 	
+	public void addCandidateSourceShapeModel(ShapeModel candidate) {
+		if (candidateSourceShapeModel == null) {
+			candidateSourceShapeModel = new HashSet<>();
+		}
+		candidateSourceShapeModel.add(candidate);
+	}
 
 	public Set<ShapeModel> getCandidateSourceShapeModel() {
 		return candidateSourceShapeModel;
+	}
+	
+
+	public void setCandidateSourceShapeModel(Set<ShapeModel> candidateSourceShapeModel) {
+		this.candidateSourceShapeModel = candidateSourceShapeModel;
 	}
 
 	public ProtoFromItem getFromItem() {
@@ -105,5 +131,33 @@ public class ClassModel {
 		this.fromItem = fromItem;
 	}
 	
-	
+	public boolean hasUnmatchedProperty() {
+		for (PropertyGroup group : propertyMap.values()) {
+			ClassModel nested = group.getValueClassModel();
+			
+			if (
+				(nested==null && group.getSourceProperty()==null) ||
+				(nested!=null && nested.hasUnmatchedProperty())
+			) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	@Override
+	protected void printProperties(PrettyPrintWriter out) {
+		out.field("owlClass", owlClass);
+		out.field("fromItem", fromItem);
+		if (!propertyMap.isEmpty()) {
+			out.beginArray("propertyGroup");
+			for (PropertyGroup p : getPropertyGroups()) {
+				out.print(p);
+			}
+			out.endArray("propertyGroup");
+		}
+		
+		
+	}
 }

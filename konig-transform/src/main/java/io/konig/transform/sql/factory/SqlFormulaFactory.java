@@ -57,7 +57,6 @@ import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.IfExpression;
-import io.konig.sql.query.LinkedPathExpression;
 import io.konig.sql.query.NumericValueExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.SignedNumericLiteral;
@@ -270,8 +269,12 @@ public class SqlFormulaFactory {
 										if (term instanceof IriValue) {
 											iriValue = (IriValue) term;
 											predicate = iriValue.getIri();
+											
+											PropertyRule nestedProperty = nested.getProperty(predicate);
+											
+											
 
-											String tableName = propertyRule.getDataChannel().getName();
+											String tableName = nestedProperty.getDataChannel().getName();
 											String localName = predicate.getLocalName();
 											
 											// TODO: Handle the case where we need an alias instead of 

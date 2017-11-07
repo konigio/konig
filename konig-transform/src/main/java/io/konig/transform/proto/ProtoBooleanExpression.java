@@ -1,4 +1,4 @@
-package io.konig.transform.rule;
+package io.konig.transform.proto;
 
 /*
  * #%L
@@ -21,14 +21,6 @@ package io.konig.transform.rule;
  */
 
 
-public class JoinExpression implements FromItem {
-	private FromItem left;
-	private FromItem right;
-	private BooleanExpression condition;
-	
-	public JoinExpression(FromItem left, FromItem right, BooleanExpression condition) {
-		this.left = left;
-		this.right = right;
-		this.condition = condition;
-	}
+public interface ProtoBooleanExpression {
+
 }

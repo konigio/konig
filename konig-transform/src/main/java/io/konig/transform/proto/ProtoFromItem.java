@@ -28,4 +28,6 @@ package io.konig.transform.proto;
  */
 public interface ProtoFromItem {
 
+	ShapeModel first();
+	ProtoFromItem rest();
 }

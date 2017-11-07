@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,11 @@ import io.konig.sql.query.GroupingElement;
  */
 public class ShapeRule extends AbstractPrettyPrintable {
 	
+	/**
+	 * @deprecated Use fromItem instead
+	 */
 	private LinkedList<DataChannel> channels = new LinkedList<>();
+	private FromItem fromItem;
 	private Shape targetShape;
 	private IdRule idRule;
 	private Map<URI,PropertyRule> properties = new HashMap<>();
@@ -113,9 +118,8 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	@Override
 	public void print(PrettyPrintWriter out) {
 		out.beginObject(this);
-		out.beginObjectField("targetShape", targetShape);
-		out.field("id", targetShape.getId());
-		out.endObjectField(targetShape);
+		out.field("targetShape.id", targetShape.getId());
+		out.field("idRule", idRule);
 		if (!channels.isEmpty()) {
 			out.beginArray("channels");
 			for (DataChannel dc : channels) {
@@ -133,6 +137,7 @@ public class ShapeRule extends AbstractPrettyPrintable {
 			}
 			out.endArray("propertyRules");
 		}
+		
 		
 	}
 
@@ -175,6 +180,16 @@ public class ShapeRule extends AbstractPrettyPrintable {
 
 	public void setVariableNamer(VariableNamer variableNamer) {
 		this.variableNamer = variableNamer;
+	}
+
+
+
+	public FromItem getFromItem() {
+		return fromItem;
+	}
+
+	public void setFromItem(FromItem fromItem) {
+		this.fromItem = fromItem;
 	}
 	
 	

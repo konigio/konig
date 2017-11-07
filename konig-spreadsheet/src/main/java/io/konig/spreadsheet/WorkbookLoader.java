@@ -2625,22 +2625,22 @@ public class WorkbookLoader {
 			
 			Graph graph = propertyConstraint.getGraph();
 			
-			PrimaryExpression primary = expression.asPrimaryExpression();
-			if (primary instanceof PathExpression) {
-				PathExpression path = (PathExpression) primary;
-				List<PathStep> stepList = path.getStepList();
-				if (stepList.size()==1) {
-					PathStep step = stepList.get(0);
-					if (step instanceof DirectionStep) {
-						DirectionStep dirStep = (DirectionStep) step;
-						if (dirStep.getDirection() == Direction.OUT) {
-							URI predicate = dirStep.getTerm().getIri();
-							graph.edge(propertyConstraint.getId(), SH.equals, predicate);
-							return;
-						}
-					}
-				}
-			}
+//			PrimaryExpression primary = expression.asPrimaryExpression();
+//			if (primary instanceof PathExpression) {
+//				PathExpression path = (PathExpression) primary;
+//				List<PathStep> stepList = path.getStepList();
+//				if (stepList.size()==1) {
+//					PathStep step = stepList.get(0);
+//					if (step instanceof DirectionStep) {
+//						DirectionStep dirStep = (DirectionStep) step;
+//						if (dirStep.getDirection() == Direction.OUT) {
+//							URI predicate = dirStep.getTerm().getIri();
+//							graph.edge(propertyConstraint.getId(), SH.equals, predicate);
+//							return;
+//						}
+//					}
+//				}
+//			}
 			
 			graph.edge(propertyConstraint.getId(), Konig.formula, literal);
 			
