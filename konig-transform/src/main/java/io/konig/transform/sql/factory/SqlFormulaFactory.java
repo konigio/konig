@@ -1,5 +1,7 @@
 package io.konig.transform.sql.factory;
 
+import java.text.MessageFormat;
+
 /*
  * #%L
  * Konig Transform
@@ -272,7 +274,17 @@ public class SqlFormulaFactory {
 											
 											PropertyRule nestedProperty = nested.getProperty(predicate);
 											
+											if (nestedProperty == null) {
+												String msg = MessageFormat.format(
+													"Property ''{0}'' not found in path ''{1}''", predicate.getLocalName(), primary.toString());
+												throw new ShapeTransformException(msg);
+											}
 											
+											if (nestedProperty.getDataChannel()==null) {
+												String msg = MessageFormat.format(
+													"DataChannel not defined for property ''{0}'' in path: {1}", predicate.getLocalName(), primary.toString());
+												throw new ShapeTransformException(msg);
+											}
 
 											String tableName = nestedProperty.getDataChannel().getName();
 											String localName = predicate.getLocalName();

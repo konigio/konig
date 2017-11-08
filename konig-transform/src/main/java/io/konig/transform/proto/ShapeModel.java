@@ -1,5 +1,7 @@
 package io.konig.transform.proto;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Transform
@@ -22,7 +24,9 @@ package io.konig.transform.proto;
 
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -40,6 +44,8 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	private Shape shape;
 	private Map<URI,PropertyModel> propertyMap = new HashMap<>();
 	private Map<URI,VariablePropertyModel> variableMap = new HashMap<>();
+	
+	private List<GroupByItem> groupBy;
 	
 	private PropertyModel accessor;
 	
@@ -174,5 +180,21 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	public ProtoFromItem rest() {
 		return null;
 	}
+
+	public void add(GroupByItem item) {
+		if (groupBy == null) {
+			groupBy = new ArrayList<>();
+		}
+		groupBy.add(item);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<GroupByItem> getGroupBy() {
+		return groupBy==null ? Collections.EMPTY_LIST : groupBy;
+	}
+
+
+	
+	
 	
 }

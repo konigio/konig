@@ -280,7 +280,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 							StepPropertyModel nextStep = step.getNextStep();
 							
 						
-							if (nextStep.getNextStep()==null) {
+							if (nextStep!=null && nextStep.getNextStep()==null) {
 								URI inverseFunctionalPredicate = nextStep.getPredicate();
 								if (reasoner.isInverseFunctionalProperty(inverseFunctionalPredicate)) {
 									List<Shape> shapeList = shapeModelFactory.getShapeManager().getShapesByTargetClass(valueClass);

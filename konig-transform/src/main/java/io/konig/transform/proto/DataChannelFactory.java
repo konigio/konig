@@ -1,5 +1,7 @@
 package io.konig.transform.proto;
 
+import io.konig.datasource.DataSource;
+
 /*
  * #%L
  * Konig Transform
@@ -27,5 +29,6 @@ import io.konig.transform.rule.DataChannel;
 
 public interface DataChannelFactory {
 
+	DataSource selectDataSource(Shape shape) throws ShapeTransformException;
 	DataChannel createDataChannel(Shape shape) throws ShapeTransformException;
 }

@@ -439,6 +439,7 @@ public class SqlFactory {
 				FormulaPropertyRule fr = (FormulaPropertyRule) p;
 
 				SqlFormulaExchange exchange = SqlFormulaExchange.builder().withProperty(fr.getSourceProperty())
+						.withShapeRule(fr.getContainer())
 						.withSourceTable(tableItem).withTableMap(this).build();
 
 				ValueExpression ve = formulaFactory.formula(exchange);

@@ -37,6 +37,12 @@ public class BigQueryChannelFactory implements DataChannelFactory {
 	@Override
 	public DataChannel createDataChannel(Shape shape) throws ShapeTransformException {
 		
+		DataSource table = selectDataSource(shape);
+		return (table != null) ? new DataChannel(shape, table) : null;
+	}
+
+	@Override
+	public DataSource selectDataSource(Shape shape) throws ShapeTransformException {
 		if (shape.getShapeDataSource()==null) {
 			return null;
 		}
@@ -70,8 +76,7 @@ public class BigQueryChannelFactory implements DataChannelFactory {
 			}
 		}
 		
-		GoogleBigQueryTable table = bigqueryBucket!=null ? bigqueryBucket : bigquery;
-		return (table != null) ? new DataChannel(shape, table) : null;
+		return bigqueryBucket!=null ? bigqueryBucket : bigquery;
 	}
 
 }

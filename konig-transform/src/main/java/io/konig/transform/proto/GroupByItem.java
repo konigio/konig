@@ -1,7 +1,5 @@
 package io.konig.transform.proto;
 
-import io.konig.datasource.DataSource;
-
 /*
  * #%L
  * Konig Transform
@@ -23,21 +21,6 @@ import io.konig.datasource.DataSource;
  */
 
 
-import io.konig.shacl.Shape;
-import io.konig.transform.ShapeTransformException;
-import io.konig.transform.rule.DataChannel;
+public interface GroupByItem {
 
-public class DefaultDataChannelFactory implements DataChannelFactory {
-
-	@Override
-	public DataChannel createDataChannel(Shape shape) throws ShapeTransformException {
-		return new DataChannel(shape, null);
-	}
-
-	@Override
-	public DataSource selectDataSource(Shape shape) throws ShapeTransformException {
-		return null;
-	}
-
-	
 }

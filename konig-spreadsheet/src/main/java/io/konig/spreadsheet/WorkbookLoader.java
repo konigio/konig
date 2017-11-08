@@ -1197,6 +1197,11 @@ public class WorkbookLoader {
 				}
 			} else if (isDatatype(valueType)) {
 				edge(constraint, SH.datatype, valueType);
+			} else if (SH.IRI.equals(valueType)) {
+				edge(constraint, SH.nodeKind, SH.IRI);
+				if (valueClass != null) {
+					edge(constraint, SH.valueClass, valueClass);
+				}
 			} else if (valueType != null) {
 				edge(constraint, SH.shape, valueType);
 			}

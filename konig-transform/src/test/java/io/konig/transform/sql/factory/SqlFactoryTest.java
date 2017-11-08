@@ -150,17 +150,17 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 	
-//	@Test
-//	public void testAssessmentEndeavor() throws Exception {
-//		load("src/test/resources/konig-transform/assessment-endeavor");
-//
-//		URI shapeId = iri("http://schema.pearson.com/shapes/AssessmentEndeavorShape");
-//
-//		ShapeRule shapeRule = createShapeRule(shapeId);
-//		
-//		SelectExpression select = sqlFactory.selectExpression(shapeRule);
-//		System.out.println(select);	
-//	}
+	@Ignore
+	public void testAssessmentEndeavor() throws Exception {
+		load("src/test/resources/konig-transform/assessment-endeavor");
+
+		URI shapeId = iri("http://schema.pearson.com/shapes/AssessmentEndeavorShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		System.out.println(select);	
+	}
 
 	@Test
 	public void testAssessmentSession() throws Exception {

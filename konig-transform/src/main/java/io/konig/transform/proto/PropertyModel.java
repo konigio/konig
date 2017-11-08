@@ -29,7 +29,7 @@ import org.openrdf.model.URI;
 import io.konig.core.io.BasePrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
 
-abstract public class PropertyModel extends BasePrettyPrintable {
+abstract public class PropertyModel extends BasePrettyPrintable implements GroupByItem {
 
 	private URI predicate;
 	private PropertyGroup group;

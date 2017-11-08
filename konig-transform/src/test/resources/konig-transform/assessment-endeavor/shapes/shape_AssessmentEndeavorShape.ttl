@@ -8,7 +8,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:AssessmentEndeavorShape a sh:Shape , konig:DerivedShape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/woaUP_nuR4sAAAFfK1Cd5g> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ptvuTUEhw3YAAAFfm3XAcw> ; 
 	sh:targetClass xas:AssessmentEndeavor ; 
 	sh:property  [ 
 		sh:path xas:subActivity ; 
@@ -16,7 +16,7 @@ shape:AssessmentEndeavorShape a sh:Shape , konig:DerivedShape ;
 		sh:minCount 0
 	 ]  ,  [ 
 		sh:path as:actor ; 
-		sh:shape sh:IRI ; 
+		sh:nodeKind sh:IRI ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@context {
@@ -26,7 +26,7 @@ shape:AssessmentEndeavorShape a sh:Shape , konig:DerivedShape ;
 .subActivity.actor'''
 	 ]  ,  [ 
 		sh:path as:object ; 
-		sh:shape sh:IRI ; 
+		sh:nodeKind sh:IRI ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@context {
@@ -36,8 +36,8 @@ shape:AssessmentEndeavorShape a sh:Shape , konig:DerivedShape ;
 .subActivity.object''' ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/AssessmentEndeavor> . 
 
-<http://www.konig.io/activity/woaUP_nuR4sAAAFfK1Cd5g> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-10-17T13:10:24.666-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/ptvuTUEhw3YAAAFfm3XAcw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-08T06:48:26.528-05:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/AssessmentEndeavor> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 
