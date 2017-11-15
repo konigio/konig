@@ -1,5 +1,7 @@
 package io.konig.data.app.common;
 
+import java.io.IOException;
+
 /*
  * #%L
  * Konig DAO Core
@@ -24,13 +26,25 @@ package io.konig.data.app.common;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.util.StringTokenizer;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.codec.binary.Base64;
 import org.openrdf.model.URI;
+
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
+import com.google.cloud.datastore.Datastore;
+import com.google.cloud.datastore.DatastoreOptions;
+import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.Query;
+import com.google.cloud.datastore.QueryResults;
 
 import io.konig.dao.core.ShapeReadService;
 import io.konig.yaml.YamlReader;
@@ -56,6 +70,7 @@ abstract public class DataAppServlet extends HttpServlet {
 				yaml.addDeserializer(URI.class, new UriDeserializer());
 				dataApp = yaml.readObject(DataApp.class);
 				configure();
+				configAuthenticationDetails(null);
 			}
 		} catch (Throwable e) {
 			throw new ServletException(e);
@@ -63,6 +78,40 @@ abstract public class DataAppServlet extends HttpServlet {
 		
 	}
 
+	private static String convertToSHA1String(String value) throws ServletException {
+		try {
+			
+			MessageDigest  md = MessageDigest.getInstance("SHA-1");
+			byte[] bytes = md.digest(value.getBytes());
+			StringBuffer stringBuffer = new StringBuffer();
+	        for (int i = 0; i < bytes.length; i++) {
+	            stringBuffer.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16)
+	                    .substring(1));
+	        }
+	        return stringBuffer.toString();
+		}catch(Throwable e) {
+			throw new ServletException(e);
+		}
+	}
+	
+	private void configAuthenticationDetails(String username) throws ServletException {
+		MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
+		DatastoreOptions options = DatastoreOptions.newBuilder().build();
+		Query<?> query = Query.newGqlQueryBuilder("Select * from UserAuthentication").build();
+		Datastore datastore = options.getService();
+		QueryResults<?> results = datastore.run(query);
+		while (results.hasNext()) {
+			Entity currentEntity = (Entity) results.next();
+			cache.put(currentEntity.getString("username"), currentEntity.getString("password"));
+		}
+		if(username != null) {
+			String cachePassword = (String)MemcacheServiceFactory.getMemcacheService().get(username);
+			if(cachePassword == null) {
+				throw new ServletException("Invalid User");
+			}
+		}
+	}
+	
 	private void configure() throws ServletException {
 		ShapeReadService shapeReadService = createShapeReadService();
 		for (ExtentContainer extent : dataApp.getContainer()) {
@@ -82,21 +131,73 @@ abstract public class DataAppServlet extends HttpServlet {
 
 	
 	abstract protected ShapeReadService createShapeReadService() throws ServletException;
+	
+	private boolean validate(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+		String authHeader = req.getHeader("Authorization");
+		if (authHeader != null) {
+			StringTokenizer st = new StringTokenizer(authHeader);
+			if (st.hasMoreTokens()) {
+				String basic = st.nextToken();
+				if (basic.equalsIgnoreCase("Basic")) {
+					try {
+						String credentials = new String(Base64.decodeBase64(st.nextToken()), "UTF-8");
+						int p = credentials.indexOf(":");
+						if (p != -1) {
+							String _username = credentials.substring(0, p).trim();
+							String _password = convertToSHA1String(credentials.substring(p + 1).trim());
+							String cachePassword = (String)MemcacheServiceFactory.getMemcacheService().get(_username);
+							if(cachePassword == null) {
+								configAuthenticationDetails(_username);
+								validate(req, resp);
+							}
+							if (!cachePassword.equals(_password)) {
+								unauthorized(resp, "Bad credentials");
+							} else {
+								return true;
+							}
+							
+						} else {
+							unauthorized(resp, "Invalid authentication token");
+						}
+					} catch (UnsupportedEncodingException e) {
+						throw new Error("Couldn't retrieve authentication", e);
+					}
+				}
+			}
+		}
+		return false;
+	}
 
+	private void unauthorized(HttpServletResponse response, String message) throws IOException {
+		response.sendError(HttpServletResponse.SC_UNAUTHORIZED, message);
+	}
+	
+	@Override
+	protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException { 
+	    resp.setHeader("Access-Control-Allow-Origin", "*");
+	    resp.addHeader("Access-Control-Allow-Methods","GET,POST");  
+	    resp.addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept, authorization");
+	}
+	
+	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
 		resp.addHeader("Access-Control-Allow-Origin","*");
 	    resp.addHeader("Access-Control-Allow-Methods","GET,POST");
-	    resp.addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept");
-		JobRequest request = new JobRequest();
-		request.setPath(req.getPathInfo());
-		request.setQueryString(req.getQueryString());
-		request.setWriter(resp.getWriter());
-		
-		try {
-			GetJob job = dataApp.createGetJob(request);
-			job.execute();
-		} catch (DataAppException e) {
-			resp.sendError(e.getStatusCode(), e.getMessage());
+	    resp.addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept, authorization");
+	    if(validate(req,resp)) {
+			JobRequest request = new JobRequest();
+			request.setPath(req.getPathInfo());
+			request.setQueryString(req.getQueryString());
+			request.setWriter(resp.getWriter());
+			
+			try {
+				GetJob job = dataApp.createGetJob(request);
+				job.execute();
+			} catch (DataAppException e) {
+				resp.sendError(e.getStatusCode(), e.getMessage());
+			}
+	    }else {
+			unauthorized(resp, "Invalid authentication token");
 		}
 	}
 
