@@ -79,8 +79,7 @@ abstract public class DataAppServlet extends HttpServlet {
 	}
 
 	private static String convertToSHA1String(String value) throws ServletException {
-		try {
-			
+		try {			
 			MessageDigest  md = MessageDigest.getInstance("SHA-1");
 			byte[] bytes = md.digest(value.getBytes());
 			StringBuffer stringBuffer = new StringBuffer();
