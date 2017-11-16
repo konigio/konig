@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
@@ -120,7 +121,9 @@ public class SimplePropertyMapper implements PropertyMapper {
 		}
 
 		private void handleClass(ClassModel targetClassModel) throws ShapeTransformException {
-			
+			if (targetClassModel.getTargetShapeModel()==null) {
+				return;
+			}
 			handleVariables(targetClassModel);
 			
 			LinkedList<ShapeModelMatchCount> queue = collectShapeModelMatchCount(targetClassModel);
@@ -152,13 +155,14 @@ public class SimplePropertyMapper implements PropertyMapper {
 
 		private void handleVariables(ClassModel targetClassModel) throws ShapeTransformException {
 			ShapeModel targetShapeModel = targetClassModel.getTargetShapeModel();
-			
-			Collection<VariablePropertyModel> varList = targetShapeModel.getVariables();
-			if (varList != null) {
-				for (VariablePropertyModel var : varList) {
-					ShapeModel varShape = var.getValueModel();
-					handleClass(varShape.getClassModel());
-					bindVariable(var);
+			if (targetShapeModel != null) {
+				Collection<VariablePropertyModel> varList = targetShapeModel.getVariables();
+				if (varList != null) {
+					for (VariablePropertyModel var : varList) {
+						ShapeModel varShape = var.getValueModel();
+						handleClass(varShape.getClassModel());
+						bindVariable(var);
+					}
 				}
 			}
 			
@@ -519,7 +523,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 			return property;
 		}
 
-		private void buildNestedProperties(ShapeModel s) {
+		private void buildNestedProperties(ShapeModel s) throws ShapeTransformException {
 
 			for (PropertyModel p : s.getProperties()) {
 				PropertyGroup group = p.getGroup();
@@ -631,18 +635,103 @@ public class SimplePropertyMapper implements PropertyMapper {
 		}
 
 
-		private void matchProperties(ShapeModel sourceShapeModel) {
+		private void matchProperties(ShapeModel sourceShapeModel) throws ShapeTransformException {
 			
 			
-			matchProperties(sourceShapeModel.getProperties());
-			
-			// TODO: Don't match against step properties.
-			// Instead, check each direct property and see if it matches the step property from elsewhere!
-			
-			matchProperties(sourceShapeModel.getStepProperties());
+			matchDirectProperties(sourceShapeModel);
+			matchStepProperties(sourceShapeModel);
 		}
 
-		private void matchProperties(Collection<? extends PropertyModel> list) {
+
+		private void matchStepProperties(ShapeModel sourceShapeModel) throws ShapeTransformException {
+			List<StepPropertyModel> stepProperties = sourceShapeModel.getStepProperties();
+			for (StepPropertyModel step : stepProperties) {
+				if (step.getNextStep()==null) {
+					PropertyModel declaringProperty = step.getDeclaringProperty();
+					PropertyGroup group = declaringProperty.getGroup();
+					if (group.getTargetProperty()!=null && group.getSourceProperty()==null) {
+						group.setSourceProperty(step);
+					}
+				} else if (step.getNextStep().getNextStep()==null) {
+					PropertyGroup group = step.getGroup();
+					if (group.getTargetProperty()!=null && group.getSourceProperty()==null) {
+						URI inverseFunctionalPredicate = step.getNextStep().getPredicate();
+						if (reasoner.isInverseFunctionalProperty(inverseFunctionalPredicate)) {
+							StepPropertyModel nextStep = step.getNextStep();
+							
+							PropertyModel targetProperty = group.getTargetProperty();
+							
+							
+							if (targetProperty instanceof BasicPropertyModel) {
+								BasicPropertyModel basic = (BasicPropertyModel) targetProperty;
+								PropertyConstraint pc = basic.getPropertyConstraint();
+								
+								
+								URI valueClass = null;
+								if (pc.getValueClass() instanceof URI) {
+									valueClass = (URI) pc.getValueClass();
+								} else if (pc.getShape() != null) {
+									Shape nestedShape = pc.getShape();
+									valueClass = nestedShape.getTargetClass();
+								}
+								
+								if (valueClass == null) {
+									continue;
+								}
+								
+								List<Shape> shapeList = shapeModelFactory.getShapeManager().getShapesByTargetClass((URI)valueClass);
+								
+								for (Shape shape : shapeList) {
+									if (shape.getPropertyConstraint(inverseFunctionalPredicate) != null) {
+										
+										DataChannel channel = shapeModelFactory.getDataChannelFactory().createDataChannel(shape);
+										if (channel != null) {
+											ShapeModel rightShape = shapeModelFactory.createShapeModel(shape, false);
+											rightShape.setDataChannel(channel);
+											
+											PropertyModel idProperty = rightShape.getPropertyByPredicate(Konig.id);
+											if (idProperty != null) {
+												PropertyModel rightProperty = 
+														rightShape.getPropertyByPredicate(inverseFunctionalPredicate);
+
+												ShapeModel leftShape = nextStep.getDeclaringShape();
+												URI leftPredicate = nextStep.getPropertyConstraint().getPredicate();
+												if (leftPredicate != null) {
+													PropertyModel leftProperty = leftShape.getPropertyByPredicate(leftPredicate);
+													
+													ProtoBinaryBooleanExpression condition = new ProtoBinaryBooleanExpression(
+															TransformBinaryOperator.EQUAL, leftProperty, rightProperty);
+
+													group.setSourceProperty(idProperty);
+													declareMatch(group);
+													if (
+														(fromItemEnds.first==null) ||
+														(fromItemEnds.first==fromItemEnds.last && fromItemEnds.first==leftShape)
+													) {
+														fromItemEnds.first = fromItemEnds.last = new ProtoJoinExpression(leftShape, rightShape, condition);
+													} else if (fromItemEnds.first==fromItemEnds.last && fromItemEnds.first==rightShape) {
+														fromItemEnds.first = fromItemEnds.last = new ProtoJoinExpression(rightShape, leftShape, condition);
+													} else {
+														
+														throw new ShapeTransformException("Don't know how to build join. TODO: fix me!");
+													} 
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						
+					}
+				}
+			}
+			
+		}
+
+
+		private void matchDirectProperties(ShapeModel sourceShapeModel) {
+			Collection<PropertyModel> list = sourceShapeModel.getProperties();
 			for (PropertyModel p : list) {
 				PropertyGroup group = p.getGroup();
 				
@@ -660,63 +749,68 @@ public class SimplePropertyMapper implements PropertyMapper {
 			
 			
 			
-			if (p instanceof StepPropertyModel) {
-				
-				StepPropertyModel s = (StepPropertyModel) p;
-				
-				if (s.getNextStep()==null) {
-					PropertyModel match = s.getDeclaringProperty();
-					
-					if (match.isTargetProperty()) {
-						System.out.println("Yikes! Trying to set target property as source property" + match.simplePath());
-					}
-					
-					PropertyGroup group = p.getGroup();
-					group.setSourceProperty(match);
-					declareMatch(group);
-					return;
-				}
-				
-				while (s != null) {
-					PropertyGroup group = s.getGroup();
-					
-					List<PredicateValuePair> filter = s.getFilter();
-					if (filter != null) {
-						PropertyModel targetProperty = group.getTargetProperty();
-						if (targetProperty != null) {
-							ShapeModel targetShape = targetProperty.getValueModel();
-							if (targetShape != null) {
-								
-								for (PredicateValuePair pair : filter) {
-									URI predicate = pair.getPredicate();
-									Value value = pair.getValue();
-									targetProperty = targetShape.getPropertyByPredicate(predicate);
-									if (targetProperty != null) {
-										group = targetProperty.getGroup();
-										if (group.getSourceProperty()==null) {
-											FixedPropertyModel fixed = new FixedPropertyModel(predicate, group, value);
-											group.setSourceProperty(fixed);
-											declareMatch(group);
-										}
-									}
-									
-								}
-							}
-						}
-					}
-					s = s.getNextStep();
-				}
-			} else if (p instanceof DirectPropertyModel) {
+//			if (p instanceof StepPropertyModel) {
+//				
+//				StepPropertyModel s = (StepPropertyModel) p;
+//				
+//				if (s.getNextStep()==null) {
+//					PropertyModel match = s.getDeclaringProperty();
+//					
+//					if (match.isTargetProperty()) {
+//						System.out.println("Yikes! Trying to set target property as source property" + match.simplePath());
+//					}
+//					
+//					PropertyGroup group = p.getGroup();
+//					group.setSourceProperty(match);
+//					declareMatch(group);
+//					return;
+//				}
+//				
+//				while (s != null) {
+//					PropertyGroup group = s.getGroup();
+//					
+//					List<PredicateValuePair> filter = s.getFilter();
+//					if (filter != null) {
+//						PropertyModel targetProperty = group.getTargetProperty();
+//						if (targetProperty != null) {
+//							ShapeModel targetShape = targetProperty.getValueModel();
+//							if (targetShape != null) {
+//								
+//								for (PredicateValuePair pair : filter) {
+//									URI predicate = pair.getPredicate();
+//									Value value = pair.getValue();
+//									targetProperty = targetShape.getPropertyByPredicate(predicate);
+//									if (targetProperty != null) {
+//										group = targetProperty.getGroup();
+//										if (group.getSourceProperty()==null) {
+//											FixedPropertyModel fixed = new FixedPropertyModel(predicate, group, value);
+//											group.setSourceProperty(fixed);
+//											declareMatch(group);
+//										}
+//									}
+//									
+//								}
+//							}
+//						}
+//					}
+//					s = s.getNextStep();
+//				}
+//			} else 
+			if (p instanceof DirectPropertyModel) {
 				
 				DirectPropertyModel direct = (DirectPropertyModel) p;
+				
 				StepPropertyModel step = direct.getStepPropertyModel();
 				if (step != null && isTopShape(direct.getDeclaringShape())) {
 					p = step;
 				}
 				
 				PropertyGroup group = p.getGroup();
-				group.setSourceProperty(p);
-				declareMatch(group);
+				
+				if (group.getTargetProperty()!=null && group.getSourceProperty()==null) {
+					group.setSourceProperty(p);
+					declareMatch(group);
+				}
 				
 			} else if (p instanceof IdPropertyModel) {
 
@@ -726,6 +820,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 				
 			} 
 		}
+		
 		private boolean isTopShape(ShapeModel declaringShape) {
 			while (declaringShape.getAccessor()!=null) {
 				declaringShape = declaringShape.getAccessor().getDeclaringShape();
