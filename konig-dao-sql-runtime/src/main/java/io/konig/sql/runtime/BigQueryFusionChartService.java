@@ -42,7 +42,7 @@ public class BigQueryFusionChartService {
 	}
 	
 	public ChartGeoLocationMapping getFusionIdMapping() throws DaoException {
-		String sql = "SELECT * FROM util.FusionMapping";
+		String sql = "SELECT * FROM pearsonmypedia.FusionMapping";
 		QueryRequest request = QueryRequest.newBuilder(sql).setUseLegacySql(false).build();
 		QueryResponse response = bigQuery.query(request);
 		while (!response.jobCompleted()) {
