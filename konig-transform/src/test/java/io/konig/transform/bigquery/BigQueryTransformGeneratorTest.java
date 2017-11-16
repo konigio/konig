@@ -28,9 +28,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import io.konig.transform.factory.AbstractShapeRuleFactoryTest;
+import io.konig.transform.proto.AbstractShapeModelToShapeRuleTest;
 
-public class BigQueryTransformGeneratorTest extends AbstractShapeRuleFactoryTest  {
+public class BigQueryTransformGeneratorTest extends AbstractShapeModelToShapeRuleTest  {
 	File outDir = new File("target/test/bigquery-transform");
 	BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner);
 

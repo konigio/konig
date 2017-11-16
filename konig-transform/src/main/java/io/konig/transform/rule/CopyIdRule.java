@@ -1,5 +1,8 @@
 package io.konig.transform.rule;
 
+import io.konig.core.io.AbstractPrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
+
 /*
  * #%L
  * Konig Transform
@@ -26,7 +29,7 @@ package io.konig.transform.rule;
  * @author Greg McFall
  *
  */
-public class CopyIdRule implements IdRule {
+public class CopyIdRule extends AbstractIdRule {
 
 	private DataChannel dataChannel;
 
@@ -36,5 +39,13 @@ public class CopyIdRule implements IdRule {
 
 	public DataChannel getDataChannel() {
 		return dataChannel;
+	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.beginObject(this);
+		out.field("dataChannel.shape.id", dataChannel.getShape().getId());
+		out.endObject();
+		
 	}
 }

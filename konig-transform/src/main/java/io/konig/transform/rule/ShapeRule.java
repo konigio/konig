@@ -37,6 +37,7 @@ import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.GroupingElement;
+import io.konig.transform.proto.ShapeModel;
 
 /**
  * A structure that describes the rules for transformation some shape (or set of shapes) to a given target shape.
@@ -44,30 +45,41 @@ import io.konig.sql.query.GroupingElement;
  */
 public class ShapeRule extends AbstractPrettyPrintable {
 	
+	/**
+	 * @deprecated Use fromItem instead
+	 */
 	private LinkedList<DataChannel> channels = new LinkedList<>();
+	private FromItem fromItem;
 	private Shape targetShape;
 	private IdRule idRule;
 	private Map<URI,PropertyRule> properties = new HashMap<>();
 
 	private PropertyRule accessor;
 	private VariableNamer variableNamer;
-	private GroupingElement groupingElement;
+	private List<GroupingElement> groupingElement;
+	
+	private ShapeModel targetShapeModel;
 	
 	
-	public ShapeRule(Shape targetShape) {
-		this.targetShape = targetShape;
+	public ShapeRule(ShapeModel targetShapeModel) {
+		this.targetShapeModel = targetShapeModel;
+		this.targetShape = targetShapeModel.getShape();
 	}
 	
 	
 	
-	public GroupingElement getGroupingElement() {
-		return groupingElement;
+	@SuppressWarnings("unchecked")
+	public List<GroupingElement> getGroupingElement() {
+		return groupingElement==null ? Collections.EMPTY_LIST : groupingElement;
 	}
 
 
 
-	public void setGroupingElement(GroupingElement groupingElement) {
-		this.groupingElement = groupingElement;
+	public void addGroupingElement(GroupingElement groupingElement) {
+		if (this.groupingElement == null) {
+			this.groupingElement = new ArrayList<>();
+		}
+		this.groupingElement.add(groupingElement);
 	}
 
 
@@ -113,9 +125,8 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	@Override
 	public void print(PrettyPrintWriter out) {
 		out.beginObject(this);
-		out.beginObjectField("targetShape", targetShape);
-		out.field("id", targetShape.getId());
-		out.endObjectField(targetShape);
+		out.field("targetShape.id", targetShape.getId());
+		out.field("idRule", idRule);
 		if (!channels.isEmpty()) {
 			out.beginArray("channels");
 			for (DataChannel dc : channels) {
@@ -133,6 +144,7 @@ public class ShapeRule extends AbstractPrettyPrintable {
 			}
 			out.endArray("propertyRules");
 		}
+		
 		
 	}
 
@@ -176,7 +188,22 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	public void setVariableNamer(VariableNamer variableNamer) {
 		this.variableNamer = variableNamer;
 	}
-	
+
+
+
+	public FromItem getFromItem() {
+		return fromItem;
+	}
+
+	public void setFromItem(FromItem fromItem) {
+		this.fromItem = fromItem;
+	}
+
+
+
+	public ShapeModel getTargetShapeModel() {
+		return targetShapeModel;
+	}
 	
 	
 }

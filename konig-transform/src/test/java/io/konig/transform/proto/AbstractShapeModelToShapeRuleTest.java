@@ -1,4 +1,4 @@
-package io.konig.transform.factory;
+package io.konig.transform.proto;
 
 /*
  * #%L
@@ -23,28 +23,22 @@ package io.konig.transform.factory;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.StringWriter;
-
 import org.openrdf.model.URI;
 
-import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
-import io.konig.core.impl.MemoryGraph;
-import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.RdfUtil;
 import io.konig.shacl.Shape;
-import io.konig.shacl.io.ShapeWriter;
+import io.konig.transform.factory.TransformTest;
 import io.konig.transform.rule.ShapeRule;
 
-public class AbstractShapeRuleFactoryTest extends TransformTest {
+public class AbstractShapeModelToShapeRuleTest extends TransformTest {
 
 	protected OwlReasoner owlReasoner = new OwlReasoner(graph);
-	protected ShapeRuleFactory shapeRuleFactory = new ShapeRuleFactory(shapeManager, owlReasoner);
+	protected ShapeModelFactory shapeModelFactory = new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner);
+	protected ShapeModelToShapeRule shapeRuleFactory = new ShapeModelToShapeRule();
 
 
 	
 	protected void useBigQueryTransformStrategy() {
-		shapeRuleFactory.setStrategy(new BigQueryTransformStrategy(shapeRuleFactory.getShapeManager()));
 		
 	}
 	
@@ -52,6 +46,9 @@ public class AbstractShapeRuleFactoryTest extends TransformTest {
 		Shape shape = shapeManager.getShapeById(shapeId);
 		
 		assertTrue(shape != null);
-		return shapeRuleFactory.createShapeRule(shape);
+		ShapeModel shapeModel = shapeModelFactory.createShapeModel(shape);
+		
+		return shapeRuleFactory.toShapeRule(shapeModel);
 	}
+
 }

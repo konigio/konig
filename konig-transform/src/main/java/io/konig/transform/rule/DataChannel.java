@@ -26,15 +26,23 @@ import io.konig.core.io.PrettyPrintWriter;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 
-public class DataChannel extends AbstractPrettyPrintable implements Comparable<DataChannel> {
+public class DataChannel extends AbstractPrettyPrintable implements Comparable<DataChannel>, FromItem {
 
 	private String name;
 	private Shape shape;
+	@Deprecated
 	private JoinStatement joinStatement;
 	private DataSource datasource;
 	private ShapeRule parent;
 	private String variableName;
 	
+	
+	
+	public DataChannel(Shape shape, DataSource datasource) {
+		this.shape = shape;
+		this.datasource = datasource;
+	}
+
 	public DataChannel(String name, Shape value) {
 		this.name = name;
 		this.shape = value;
@@ -42,6 +50,10 @@ public class DataChannel extends AbstractPrettyPrintable implements Comparable<D
 
 	public DataSource getDatasource() {
 		return datasource;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public void setDatasource(DataSource datasource) {
@@ -62,10 +74,12 @@ public class DataChannel extends AbstractPrettyPrintable implements Comparable<D
 		return shape;
 	}
 
+	@Deprecated
 	public JoinStatement getJoinStatement() {
 		return joinStatement;
 	}
 
+	@Deprecated
 	public void setJoinStatement(JoinStatement joinStatement) {
 		this.joinStatement = joinStatement;
 	}
@@ -75,9 +89,7 @@ public class DataChannel extends AbstractPrettyPrintable implements Comparable<D
 	public void print(PrettyPrintWriter out) {
 		out.beginObject(this);
 		out.field("name", name);
-		out.beginObjectField("shape", shape);
-		out.field("id", shape.getId());
-		out.endObjectField(shape);
+		out.field("shape.id", shape.getId());
 		out.field("joinStatement", joinStatement);
 		out.endObject();		
 	}
@@ -106,6 +118,11 @@ public class DataChannel extends AbstractPrettyPrintable implements Comparable<D
 	 */
 	public void setVariableName(String variableName) {
 		this.variableName = variableName;
+	}
+
+	@Override
+	public DataChannel primaryChannel() {
+		return this;
 	}
 	
 	

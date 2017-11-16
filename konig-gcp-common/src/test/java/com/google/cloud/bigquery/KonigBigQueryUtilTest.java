@@ -27,8 +27,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -36,7 +39,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import io.konig.gcp.common.ReplaceStringsReader;
 
 public class KonigBigQueryUtilTest {
-
+	
+	
 	@Test
 	public void testCreateTableInfo() throws Exception {
 		JsonFactory factory = JacksonFactory.getDefaultInstance();
@@ -61,8 +65,15 @@ public class KonigBigQueryUtilTest {
 		List<String> list = external.getSourceUris();
 		assertEquals(1, list.size());
 		
+		
 		String uri = list.get(0);
 		assertEquals("gs://originmusicalbumshape-dev/*", uri);
+
+		List<Field> fieldList = definition.getSchema().getFields();
+		assertEquals(3, fieldList.size());
+		
+		Field artistId = fieldList.get(2);
+		assertEquals("INTEGER", artistId.getType().getValue().name());
 	}
 
 }

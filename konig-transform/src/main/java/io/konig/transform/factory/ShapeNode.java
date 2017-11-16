@@ -45,6 +45,7 @@ abstract public class ShapeNode<P extends PropertyNode> extends AbstractPrettyPr
 	
 	@SuppressWarnings("unchecked")
 	public void add(P node) {
+//		System.out.println("ShapeNode.add " + this.hashCode() + " " + node.getPredicate());
 		properties.put(node.getPredicate(), node);
 		node.setParent(this);
 	}

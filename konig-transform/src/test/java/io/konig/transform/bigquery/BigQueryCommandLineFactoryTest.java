@@ -24,15 +24,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 
 import io.konig.sql.query.BigQueryCommandLine;
-import io.konig.transform.factory.AbstractShapeRuleFactoryTest;
+import io.konig.transform.proto.AbstractShapeModelToShapeRuleTest;
 import io.konig.transform.rule.ShapeRule;
 
-public class BigQueryCommandLineFactoryTest extends AbstractShapeRuleFactoryTest {
+public class BigQueryCommandLineFactoryTest extends AbstractShapeModelToShapeRuleTest {
 	private BigQueryCommandLineFactory factory = new BigQueryCommandLineFactory();
 	
 	@Before

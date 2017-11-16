@@ -9,33 +9,30 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:OriginPersonShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/hhwRfly6HcgAAAFceHivjw> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/vBeBMRjCaD4AAAFfgV7-Hw> ; 
 	sh:targetClass schema:Person ; 
 	sh:property  [ 
-		sh:predicate alias:person_id ; 
+		sh:path alias:person_id ; 
 		sh:datatype xsd:long ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
-		sh:predicate alias:first_name ; 
+		sh:path alias:first_name ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ; 
-		konig:equivalentPath '''@context {
-  "schema" : "http://schema.org/",
-  "givenName" : "schema:givenName"
-}
-/givenName''' ]  ; 
+		konig:formula '''@prefix schema: <http://schema.org/> .
+.schema:givenName''' ]  ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
    "person_id" : "alias:person_id"
 }
 
 <http://example.com/person/{person_id}>''' ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginPersonShape> , <gs://originpersonshape.{gcpBucketSuffix}> . 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginPersonShape> , <gs://originpersonshape-{gcpBucketSuffix}> . 
 
-<http://www.konig.io/activity/hhwRfly6HcgAAAFceHivjw> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-06-05T09:36:34.657-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/vBeBMRjCaD4AAAFfgV7-Hw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-03T06:13:27.336-04:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginPersonShape> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 
@@ -44,13 +41,13 @@ shape:OriginPersonShape a sh:Shape ;
 		gcp:tableId "OriginPersonShape"
 	 ]  ; 
 	gcp:externalDataConfiguration  [ 
-		gcp:sourceUris <gs://originpersonshape.{gcpBucketSuffix}> ; 
+		gcp:sourceUris <gs://originpersonshape-{gcpBucketSuffix}/*> ; 
 		gcp:sourceFormat "CSV" ; 
 		gcp:csvOptions  [ 
 			gcp:skipLeadingRows 1 ]  ]  . 
 
-<gs://originpersonshape.{gcpBucketSuffix}> a konig:GoogleCloudStorageBucket , konig:DataSource ; 
-	gcp:name "originpersonshape.{gcpBucketSuffix}" ; 
+<gs://originpersonshape-{gcpBucketSuffix}> a konig:GoogleCloudStorageBucket , konig:DataSource ; 
+	gcp:name "originpersonshape-{gcpBucketSuffix}" ; 
 	gcp:projectId "{gcpProjectId}" ; 
 	gcp:storageClass "multi_regional" ; 
 	gcp:location "us" . 

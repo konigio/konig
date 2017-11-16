@@ -9,40 +9,30 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:OriginMusicAlbumShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/ZLfe4Wv8q6wAAAFc6f0KDA> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/v5cVPyl7NlkAAAFffKqSWw> ; 
 	sh:targetClass schema:MusicAlbum ; 
 	sh:property  [ 
-		sh:predicate alias:album_id ; 
+		sh:path alias:album_id ; 
 		sh:datatype xsd:long ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:equivalentPath '''@context {
-  "ex" : "http://example.com/ns/core/",
-  "originId" : "ex:originId"
-}
-/originId'''
+		konig:formula '''@prefix ex: <http://example.com/ns/core/> .
+.ex:originId'''
 	 ]  ,  [ 
-		sh:predicate alias:album_name ; 
+		sh:path alias:album_name ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:equivalentPath '''@context {
-  "schema" : "http://schema.org/",
-  "name" : "schema:name"
-}
-/name'''
+		konig:formula '''@prefix schema: <http://schema.org/> .
+.schema:name'''
 	 ]  ,  [ 
-		sh:predicate alias:artist_id ; 
+		sh:path alias:artist_id ; 
 		sh:datatype xsd:long ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:equivalentPath '''@context {
-  "schema" : "http://schema.org/",
-  "byArtist" : "schema:byArtist",
-  "ex" : "http://example.com/ns/core/",
-  "originId" : "ex:originId"
-}
-/byArtist/originId''' ]  ; 
+		konig:formula '''@prefix schema: <http://schema.org/> .
+@prefix ex: <http://example.com/ns/core/> .
+.schema:byArtist.ex:originId''' ]  ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
    "album_id" : "alias:album_id"
@@ -51,8 +41,8 @@ shape:OriginMusicAlbumShape a sh:Shape ;
 <http://example.com/album/{album_id}>''' ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginMusicAlbumShape> , <gs://originmusicalbumshape-{gcpBucketSuffix}> . 
 
-<http://www.konig.io/activity/ZLfe4Wv8q6wAAAFc6f0KDA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-06-27T10:38:13.695-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/v5cVPyl7NlkAAAFffKqSWw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-02T08:17:54.402-04:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginMusicAlbumShape> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

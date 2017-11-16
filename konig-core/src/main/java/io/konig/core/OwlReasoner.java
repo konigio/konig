@@ -594,6 +594,10 @@ public class OwlReasoner {
 				Schema.Text.equals(owlClass);
 	}
 	
+	public boolean isInverseFunctionalProperty(URI property) {
+		return instanceOf(property, OWL.INVERSEFUNCTIONALPROPERTY);
+	}
+	
 	public boolean isNumericDatatype(URI owlClass) {
 		return isIntegerDatatype(owlClass) || isRealNumber(owlClass);
 	}

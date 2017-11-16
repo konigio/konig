@@ -26,6 +26,11 @@ import org.openrdf.model.URI;
 import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
 
+/**
+ * @deprecated Use {@link PropertyComparison} instead.
+ * @author Greg McFall
+ *
+ */
 public class BinaryBooleanExpression extends AbstractPrettyPrintable implements BooleanExpression {
 
 	private TransformBinaryOperator operator;

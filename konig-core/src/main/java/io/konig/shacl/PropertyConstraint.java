@@ -80,7 +80,6 @@ public class PropertyConstraint {
 	private Path sourcePath;
 	private Path partitionOf;
 	private QuantifiedExpression formula;
-	private Value equals;
 	private URI idFormat;
 	
 	private Term term;
@@ -137,7 +136,6 @@ public class PropertyConstraint {
 		other.valueClass = valueClass;
 		other.shape = shape;
 		other.formula = formula;
-		other.equals = equals;
 		other.stereotype = stereotype;
 		
 		return other;
@@ -462,10 +460,7 @@ public class PropertyConstraint {
 		stereotype = Konig.attribute;
 	}
 
-	/**
-	 * @deprecated Use {@link #getFormula()}
-	 * @return
-	 */
+	
 	@RdfProperty(Konig.EQUIVALENT_PATH)
 	public Path getEquivalentPath() {
 		return Formula2PathTranslator.getInstance().toPath(formula);
@@ -478,6 +473,8 @@ public class PropertyConstraint {
 	public void setEquivalentPath(Path path) {
 		formula = Path2FormulaTranslator.getInstance().toQuantifiedExpression(path);
 	}
+	
+	
 
 
 	@RdfProperty(Konig.SOURCE_PATH)

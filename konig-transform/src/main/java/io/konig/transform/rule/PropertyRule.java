@@ -25,6 +25,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.io.PrettyPrintable;
 import io.konig.shacl.Shape;
+import io.konig.transform.proto.PropertyModel;
 
 /**
  * A rule for generating a property for some resource.
@@ -38,6 +39,12 @@ public interface PropertyRule extends PrettyPrintable, Comparable<PropertyRule> 
 	 * @return
 	 */
 	ShapeRule getContainer();
+	
+	String simplePath();
+
+	PropertyModel getSourcePropertyModel();
+
+	void setSourcePropertyModel(PropertyModel sourcePropertyModel);
 	
 	void setContainer(ShapeRule container);
 	

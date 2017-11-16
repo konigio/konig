@@ -9,6 +9,6 @@
 ex: a owl:Ontology ; 
 	vann:preferredNamespacePrefix "ex" . 
 
-ex:genderCode a rdf:Property , owl:DatatypeProperty ; 
-	rdfs:domain schema:Person ; 
+ex:genderCode a rdf:Property , owl:InverseFunctionalProperty ; 
+	rdfs:domain schema:Gender ; 
 	rdfs:range xsd:string . 

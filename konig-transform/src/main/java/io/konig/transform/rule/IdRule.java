@@ -1,5 +1,8 @@
 package io.konig.transform.rule;
 
+import io.konig.core.io.PrettyPrintable;
+import io.konig.transform.proto.PropertyModel;
+
 /*
  * #%L
  * Konig Transform
@@ -25,6 +28,7 @@ package io.konig.transform.rule;
  * An entity that prescribes a rule for generator IRI identifiers for resources.
  * @author Greg McFall
  */
-public interface IdRule {
+public interface IdRule extends PrettyPrintable {
 
+	PropertyModel getSourcePropertyModel();
 }

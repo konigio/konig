@@ -448,6 +448,17 @@ public class Shape {
 	public void setUpdateWhen(Expression updateWhen) {
 		this.updateWhen = updateWhen;
 	}
+	
+	public PropertyConstraint getDerivedPropertyByPredicate(URI predicate) {
+		if (derivedProperty!=null) {
+			for (PropertyConstraint p : derivedProperty) {
+				if (predicate.equals(p.getPredicate())) {
+					return p;
+				}
+			}
+		}
+		return null;
+	}
 
 	public List<PropertyConstraint> getDerivedProperty() {
 		return derivedProperty;

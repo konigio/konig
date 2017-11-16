@@ -1,5 +1,8 @@
 package io.konig.transform.sql.factory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /*
  * #%L
  * Konig Transform
@@ -29,6 +32,9 @@ import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.TableAliasExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.ValueExpression;
+import io.konig.transform.proto.PropertyModel;
+import io.konig.transform.proto.ShapeModel;
+import io.konig.transform.rule.DataChannel;
 
 public class SqlUtil {
 
@@ -46,6 +52,45 @@ public class SqlUtil {
 
 	public static ColumnExpression columnExpression(TableItemExpression table, URI predicate) {
 		String columnName = columnName(table, predicate);
+		return new ColumnExpression(columnName);
+	}
+	
+	public static ColumnExpression columnExpression(PropertyModel pm, TableItemExpression table) {
+
+		if (pm.isTargetProperty()) {
+			pm = pm.getGroup().getSourceProperty();
+		}
+		URI predicate = pm.getPredicate();
+		StringBuilder builder = new StringBuilder();
+		if (table instanceof TableAliasExpression) {
+			TableAliasExpression tableName = (TableAliasExpression) table;
+			builder.append(tableName.getAlias());
+			builder.append('.');
+		}
+		
+		if (pm!=null && pm.getDeclaringShape().getAccessor()!=null) {
+			List<PropertyModel> list = new ArrayList<>();
+			
+			while (pm != null) {
+				list.add(pm);
+				ShapeModel sm = pm.getDeclaringShape();
+				pm = sm==null ? null : sm.getAccessor();
+				
+			}
+			int last = list.size()-1;
+			for (int i=last; i>=0; i--) {
+				if (i!=last) {
+					builder.append('.');
+				}
+				pm = list.get(i);
+				predicate = pm.getPredicate();
+				builder.append(predicate.getLocalName());
+			}
+		} else {
+			String name = predicate.getLocalName();
+			builder.append(name);
+		}
+		String columnName = builder.toString();
 		return new ColumnExpression(columnName);
 	}
 

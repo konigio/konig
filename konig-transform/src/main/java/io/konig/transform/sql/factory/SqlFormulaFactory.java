@@ -1,5 +1,7 @@
 package io.konig.transform.sql.factory;
 
+import java.text.MessageFormat;
+
 /*
  * #%L
  * Konig Transform
@@ -57,7 +59,6 @@ import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.IfExpression;
-import io.konig.sql.query.LinkedPathExpression;
 import io.konig.sql.query.NumericValueExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.SignedNumericLiteral;
@@ -66,11 +67,15 @@ import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.ValueExpression;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.TransformBuildException;
+import io.konig.transform.proto.PropertyModel;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.ShapeRule;
 
 public class SqlFormulaFactory {
 	
+	public SqlFormulaFactory() {
+		
+	}
 
 	public ValueExpression formula(SqlFormulaExchange request) throws TransformBuildException {
 		Worker worker = new Worker(request);
@@ -270,8 +275,32 @@ public class SqlFormulaFactory {
 										if (term instanceof IriValue) {
 											iriValue = (IriValue) term;
 											predicate = iriValue.getIri();
+											
+											PropertyRule nestedProperty = nested.getProperty(predicate);
+											
+											if (nestedProperty == null) {
+												String msg = MessageFormat.format(
+													"Property ''{0}'' not found in path ''{1}''", predicate.getLocalName(), primary.toString());
+												throw new ShapeTransformException(msg);
+											}
+											
+											if (nestedProperty.getDataChannel()==null) {
+												
+												String msg = MessageFormat.format(
+													"DataChannel not defined for property ''{0}'' in path: {1}", predicate.getLocalName(), primary.toString());
+												throw new ShapeTransformException(msg);
+											}
+											
+											PropertyModel spm = exchange.getSourcePropertyModel();
+											if (spm != null) {
+												TableItemExpression table = exchange.getSourceTable();
+												if (table != null) {
+													return SqlUtil.columnExpression(spm, table);
+												}
+											}
+											
 
-											String tableName = propertyRule.getDataChannel().getName();
+											String tableName = nestedProperty.getDataChannel().getName();
 											String localName = predicate.getLocalName();
 											
 											// TODO: Handle the case where we need an alias instead of 

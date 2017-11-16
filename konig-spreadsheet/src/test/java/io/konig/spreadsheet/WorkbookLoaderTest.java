@@ -32,7 +32,6 @@ import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -54,25 +53,51 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IriTemplate;
+import io.konig.core.vocab.AS;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.VAR;
-import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.PropertyPath;
 import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
 	
 	
+	
+	@Test
+	public void testAssessmentEndeavor() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("assessment-endeavor.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://schema.pearson.com/shapes/AssessmentEndeavorShape");
+		
+		
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		PropertyConstraint p = shape.getPropertyConstraint(AS.actor);
+		assertTrue(p != null);
+		assertTrue(p.getShape()==null);
+		assertEquals(NodeKind.IRI, p.getNodeKind());
+	}
 	
 	@Test
 	public void testAddressCountry() throws Exception {

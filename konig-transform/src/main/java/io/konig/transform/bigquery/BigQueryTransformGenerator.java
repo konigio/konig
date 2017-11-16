@@ -45,6 +45,9 @@ import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.BigQueryTransformStrategy;
 import io.konig.transform.factory.ShapeRuleFactory;
 import io.konig.transform.factory.TransformBuildException;
+import io.konig.transform.proto.BigQueryChannelFactory;
+import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelToShapeRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.sql.factory.SqlFactory;
 
@@ -68,16 +71,14 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		this.outDir = outDir;
 		this.shapeRuleFactory = shapeRuleFactory;
 		this.bqCmdLineFactory = bqCmdLineFactory;
-		if (shapeRuleFactory.getStrategy()==null) {
-			shapeRuleFactory.setStrategy(new BigQueryTransformStrategy(shapeManager));
-		}
+		
 	}
 	
 	public BigQueryTransformGenerator(ShapeManager shapeManager, File outDir, OwlReasoner owlReasoner) {
 		this(
 			shapeManager, 
 			outDir, 
-			new ShapeRuleFactory(shapeManager, owlReasoner, new BigQueryTransformStrategy(shapeManager)), 
+			new ShapeRuleFactory(shapeManager, new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner), new ShapeModelToShapeRule()),
 			new BigQueryCommandLineFactory(new SqlFactory())
 		);
 	}

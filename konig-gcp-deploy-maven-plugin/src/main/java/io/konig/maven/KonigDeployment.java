@@ -37,7 +37,7 @@ public class KonigDeployment {
 		File credentialsFile = new File(credentials);
 		service = new GoogleCloudService();
 		service.openCredentials(credentialsFile);
-		this.baseDir = new File(baseDir);
+		this.baseDir = new File(baseDir).getAbsoluteFile();
 	}
 	
 	public Object insert(InsertResourceType type) {

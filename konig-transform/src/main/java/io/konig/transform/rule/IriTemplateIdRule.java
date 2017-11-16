@@ -1,5 +1,10 @@
 package io.konig.transform.rule;
 
+import io.konig.core.io.AbstractPrettyPrintable;
+import io.konig.core.io.PrettyPrintWriter;
+import io.konig.shacl.Shape;
+import io.konig.transform.proto.PropertyModel;
+
 /*
  * #%L
  * Konig Transform
@@ -27,15 +32,32 @@ package io.konig.transform.rule;
  * @author Greg McFall
  *
  */
-public class IriTemplateIdRule implements IdRule {
+public class IriTemplateIdRule extends AbstractIdRule {
 
 	private DataChannel dataChannel;
+	private Shape declaringShape;
 
-	public IriTemplateIdRule(DataChannel dataChannel) {
+	public IriTemplateIdRule(Shape declaringShape, DataChannel dataChannel) {
+		this.declaringShape = declaringShape;
 		this.dataChannel = dataChannel;
 	}
 
 	public DataChannel getDataChannel() {
 		return dataChannel;
 	}
+	
+
+	public Shape getDeclaringShape() {
+		return declaringShape;
+	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.beginObject(this);
+		out.field("declaringShape.id", declaringShape.getId());
+		out.field("dataChannel.shape.id", dataChannel.getShape().getId());
+		out.endObject();
+		
+	}
+	
 }

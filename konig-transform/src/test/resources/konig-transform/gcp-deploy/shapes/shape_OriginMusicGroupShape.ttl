@@ -9,28 +9,22 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:OriginMusicGroupShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/ZLfe4Wv8q6wAAAFc6f0KDA> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/v5cVPyl7NlkAAAFffKqSWw> ; 
 	sh:targetClass schema:MusicGroup ; 
 	sh:property  [ 
-		sh:predicate alias:group_id ; 
+		sh:path alias:group_id ; 
 		sh:datatype xsd:long ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:equivalentPath '''@context {
-  "ex" : "http://example.com/ns/core/",
-  "originId" : "ex:originId"
-}
-/originId'''
+		konig:formula '''@prefix ex: <http://example.com/ns/core/> .
+.ex:originId'''
 	 ]  ,  [ 
-		sh:predicate alias:group_name ; 
+		sh:path alias:group_name ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:equivalentPath '''@context {
-  "schema" : "http://schema.org/",
-  "name" : "schema:name"
-}
-/name''' ]  ; 
+		konig:formula '''@prefix schema: <http://schema.org/> .
+.schema:name''' ]  ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
    "group_id" : "alias:group_id"
@@ -39,8 +33,8 @@ shape:OriginMusicGroupShape a sh:Shape ;
 <http://example.com/artist/{group_id}>''' ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginMusicGroupShape> , <gs://originmusicgroupshape-{gcpBucketSuffix}> . 
 
-<http://www.konig.io/activity/ZLfe4Wv8q6wAAAFc6f0KDA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-06-27T10:38:13.695-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/v5cVPyl7NlkAAAFffKqSWw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-02T08:17:54.402-04:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginMusicGroupShape> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

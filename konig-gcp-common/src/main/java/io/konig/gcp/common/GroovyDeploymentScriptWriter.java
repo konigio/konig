@@ -67,10 +67,11 @@ public class GroovyDeploymentScriptWriter {
 		try (FileWriter writer = new FileWriter(scriptFile)) {
 			out = writer;
 			
-			String baseDir = FileUtil.relativePath(scriptFile, googleCloudInfo.getDirectory());
+//			String baseDir = FileUtil.relativePath(scriptFile, googleCloudInfo.getDirectory());
+			String baseDir = ".";
 
-			String credentialsPath = googleCloudService.getCredentialsFile().getCanonicalPath();
-			String grab = MessageFormat.format("@Grab('io.konig:konig-gcp-deploy-maven-plugin:{0}')", konigVersion);
+			String credentialsPath = googleCloudService.getCredentialsFile().getCanonicalPath().replace('\\', '/');
+			String grab = MessageFormat.format("@Grab(''io.konig:konig-gcp-deploy-maven-plugin:{0}'')", konigVersion);
 			
 			String delegate = MessageFormat.format("deploymentPlan.delegate = new KonigDeployment(\"{0}\", \"{1}\")", 
 					credentialsPath, baseDir);

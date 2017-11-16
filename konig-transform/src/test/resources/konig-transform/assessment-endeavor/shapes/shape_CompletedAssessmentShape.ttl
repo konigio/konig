@@ -1,0 +1,60 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix asmt: <http://schema.pearson.com/ns/assessment/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://schema.pearson.com/shapes/> .
+@prefix xas: <http://schema.pearson.com/ns/activity/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:CompletedAssessmentShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ptvuTUEhw3YAAAFfm3XAcw> ; 
+	sh:targetClass xas:CompletedAssessment ; 
+	sh:nodeKind sh:IRI ; 
+	sh:property  [ 
+		sh:nodeKind sh:IRI ; 
+		sh:path <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ; 
+		rdfs:comment "The type of activity that occurred. Multiple values are allowed so that we can support other vocabularies. The set of values MUST include 'xas:StartAssessment'." ; 
+		sh:class owl:Class ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path as:actor ; 
+		sh:class schema:Person ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path as:object ; 
+		rdfs:comment "The assessment instrument that is being worked by the actor." ; 
+		sh:class asmt:AssessmentInstrument ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path xas:eventTime ; 
+		rdfs:comment "The time at which the assessment started" ; 
+		sh:datatype xsd:dateTime ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path xas:endEventOf ; 
+		rdfs:comment "A broader activity within which this event is scoped.  The broader activity allows us to correlate this event with other events that occur within the broader activity.  For instance, we can correlate with the CompletedAssessment event in order to compute the total time on task." ; 
+		sh:class xas:AssessmentSession ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/CompletedAssessment> . 
+
+<http://www.konig.io/activity/ptvuTUEhw3YAAAFfm3XAcw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-08T06:48:26.528-05:00"^^xsd:dateTime . 
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/CompletedAssessment> a konig:GoogleBigQueryTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:datasetId "xas" ; 
+		gcp:tableId "CompletedAssessment" ]  . 
