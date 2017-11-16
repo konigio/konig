@@ -1,5 +1,7 @@
 package io.konig.transform.proto;
 
+import java.text.MessageFormat;
+
 /*
  * #%L
  * Konig Transform
@@ -32,6 +34,14 @@ import io.konig.core.path.HasStep;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.vocab.Konig;
+import io.konig.formula.Direction;
+import io.konig.formula.DirectionStep;
+import io.konig.formula.IriValue;
+import io.konig.formula.PathExpression;
+import io.konig.formula.PathStep;
+import io.konig.formula.PathTerm;
+import io.konig.formula.PrimaryExpression;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
@@ -103,21 +113,112 @@ public class ShapeModelFactory {
 		
 		URI targetClass = targetShape.getTargetClass();
 	
-		ShapeModel shapeModel = new ShapeModel();
+		ShapeModel shapeModel = new ShapeModel(targetShape);
 		shapeModel.setAccessor(accessor);
 		ClassModel classModel = new ClassModel(targetClass);
 		classModel.setTargetShapeModel(shapeModel);
 		
-		shapeModel.setShape(targetShape);
 		shapeModel.setClassModel(classModel);
 		
 		addProperties(shapeModel);
-		
-		
-		
+		addGroupBy(shapeModel);
 		
 		return shapeModel;
 	}
+
+	private void addGroupBy(ShapeModel shapeModel) throws ShapeTransformException {
+		
+		Shape targetShape = shapeModel.getShape();
+		for (PropertyConstraint p : targetShape.getProperty()) {
+			
+			if (requiredProperty(p)) {
+				QuantifiedExpression formula = p.getFormula();
+				
+				GroupByItem item =  groupByItem(shapeModel, formula);
+				if (item != null) {
+					shapeModel.add(item);
+				}
+				
+			}
+		}
+		
+		
+	}
+
+
+
+
+	private GroupByItem groupByItem(ShapeModel shapeModel, QuantifiedExpression formula) throws ShapeTransformException {
+		if (formula==null) {
+			return null;
+		}
+		PrimaryExpression primary = formula.asPrimaryExpression();
+		if (primary instanceof PathExpression) {
+			PathExpression path = (PathExpression) primary;
+			
+			PropertyModel result = null;
+			
+			boolean firstStep=true;
+			for (PathStep step : path.getStepList()) {
+				if (step instanceof DirectionStep) {
+					DirectionStep dirStep = (DirectionStep) step;
+					if (dirStep.getDirection() == Direction.OUT) {
+						PathTerm term = dirStep.getTerm();
+						if (term instanceof IriValue) {
+							IriValue iriValue = (IriValue) term;
+							URI predicate = iriValue.getIri();
+							
+							result = shapeModel.getPropertyByPredicate(predicate);
+							if (result != null) {
+								
+								PropertyGroup group = result.getGroup();
+								result = group.getTargetProperty();
+								
+								if (firstStep) {
+									if (result instanceof BasicPropertyModel) {
+										BasicPropertyModel basic = (BasicPropertyModel) result;
+										PropertyConstraint pc = basic.getPropertyConstraint();
+										if (pc.getMaxCount()!=null) {
+											return null;
+										}
+									}
+									firstStep = false;
+								}
+								shapeModel = result.getValueModel();
+								
+							} else {
+								String msg = MessageFormat.format("Property <{0}> not found in path: {1}", 
+										term.toString(), path.toString());
+								throw new ShapeTransformException(msg);
+							}
+						} else {
+							return null;
+						}
+					}
+				} 
+				
+			}
+			return result;
+			
+		}
+		return null;
+	}
+
+
+
+
+	private boolean requiredProperty(PropertyConstraint p) {
+
+		Integer maxCount = p.getMaxCount();
+		if (maxCount != null && maxCount==1) {
+			Integer minCount = p.getMinCount();
+			return minCount!=null && minCount==1;
+		}
+		return false;
+	}
+
+
+
 
 	private void addProperties(ShapeModel targetShapeModel) throws ShapeTransformException {
 				
@@ -186,7 +287,14 @@ public class ShapeModelFactory {
 			
 			
 			if (path != null) {
+				
+				// TODO: abort if the property is a source property and the declaring shape is not the top shape.
+				
+				
 				ShapeModel declaringShape = propertyModel.getDeclaringShape();
+
+				
+				
 				ClassModel classModel = declaringShape.getClassModel();
 				List<Step> stepList = path.asList();
 				int last = stepList.size()-1;
@@ -206,7 +314,9 @@ public class ShapeModelFactory {
 						}
 						stepModel = new StepPropertyModel(predicate, group, directPropertyModel, index);
 						stepModel.setDeclaringShape(declaringShape);
-						declaringShape.add(stepModel);
+						
+						
+						declaringShape.addStepProperty(stepModel);
 						group.add(stepModel);
 						
 						if (priorStep != null) {
@@ -225,6 +335,18 @@ public class ShapeModelFactory {
 		}
 		return stepModel;
 	}
+
+
+	private boolean isTopShape(ShapeModel declaringShape) {
+		while (declaringShape.getAccessor()!=null) {
+			declaringShape = declaringShape.getAccessor().getDeclaringShape();
+		}
+		ClassModel classModel = declaringShape.getClassModel();
+		
+		return classModel.getParent()==null;
+	}
+
+
 
 
 	private PropertyGroup merge(PropertyGroup a, PropertyGroup b) throws ShapeTransformException {
@@ -314,10 +436,9 @@ public class ShapeModelFactory {
 
 	private ShapeModel addSourceShape(ClassModel classModel, Shape sourceShape, DataChannel channel) throws ShapeTransformException {
 		
-		ShapeModel sourceShapeModel = new ShapeModel();
+		ShapeModel sourceShapeModel = new ShapeModel(sourceShape);
 		sourceShapeModel.setDataChannel(channel);
 		classModel.addCandidateSourceShapeModel(sourceShapeModel);
-		sourceShapeModel.setShape(sourceShape);
 		sourceShapeModel.setClassModel(classModel);
 		
 		addSourceId(sourceShapeModel);
@@ -344,6 +465,7 @@ public class ShapeModelFactory {
 					ClassModel valueClassModel = group.produceValueClassModel(valueClass);
 					ShapeModel valueShapeModel = addSourceShape(valueClassModel, valueShape, channel);
 					propertyModel.setValueModel(valueShapeModel);
+					valueShapeModel.setAccessor(propertyModel);
 				}
 			}
 		}

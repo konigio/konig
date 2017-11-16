@@ -98,7 +98,15 @@ abstract public class PropertyModel extends BasePrettyPrintable implements Group
 	protected void printProperties(PrettyPrintWriter out) {
 
 		if (declaringShape!=null) {
-			out.field("declaringShape.shape.id", declaringShape.getShape().getId());
+			out.beginObjectField("declaringShape", declaringShape);
+			out.field("shape.id", declaringShape.getShape().getId());
+			if (declaringShape.getDataChannel()!=null) {
+				out.beginObjectField("dataChannel", declaringShape.getDataChannel());
+				out.field("name", declaringShape.getDataChannel().getName());
+				out.endObjectField(declaringShape.getDataChannel());
+			}
+			out.endObjectField(declaringShape);
+			
 		}
 		out.field("predicate", predicate);
 		

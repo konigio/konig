@@ -77,6 +77,8 @@ import io.konig.sql.query.UpdateItem;
 import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
 import io.konig.transform.factory.TransformBuildException;
+import io.konig.transform.proto.PropertyModel;
+import io.konig.transform.proto.ShapeModel;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
 import io.konig.transform.rule.ChannelProperty;
@@ -167,10 +169,12 @@ public class SqlFactory {
 
 			GroupByClause clause = null;
 
-			GroupingElement ge = shapeRule.getGroupingElement();
-			if (ge != null) {
+			List<GroupingElement> ge = shapeRule.getGroupingElement();
+			if (!ge.isEmpty()) {
 				clause = new GroupByClause(null);
-				clause.add(ge);
+				for (GroupingElement element : ge) {
+					clause.add(element);
+				}
 			} else {
 				for (PropertyRule p : shapeRule.getPropertyRules()) {
 					if (p instanceof FormulaPropertyRule) {
@@ -296,6 +300,12 @@ public class SqlFactory {
 					CopyIdRule copyRule = (CopyIdRule) idRule;
 					DataChannel channel = copyRule.getDataChannel();
 					TableItemExpression tableItem = simpleTableItem(channel);
+					
+					PropertyModel p = shapeRule.getTargetShapeModel().getPropertyByPredicate(Konig.id);
+					if (p != null) {
+						return SqlUtil.columnExpression(p.getGroup().getSourceProperty(), tableItem);
+					}
+					
 					String columnName = SqlUtil.columnName(tableItem, Konig.id);
 
 					result = new ColumnExpression(columnName);
@@ -319,22 +329,45 @@ public class SqlFactory {
 			p.setFormula(shapeRule.getTargetShape().getIriFormula());
 			p.setMaxCount(1);
 			p.setValueClass(shapeRule.getTargetShape().getTargetClass());
+			TableItemExpression sourceTable=tableItem(idRule);
 			SqlFormulaExchange exchange = SqlFormulaExchange.builder().withShape(shapeRule.getTargetShape())
+					.withSourcePropertyModel(idRule.getSourcePropertyModel())
+					.withSourceTable(sourceTable)
 					.withShapeRule(shapeRule).withProperty(p).withTableMap(this).withSqlFactoryWorker(this).build();
 			ValueExpression ve = formulaFactory.formula(exchange);
 
 			GroupingElement ge = exchange.getGroupingElement();
 			if (ge != null) {
-				shapeRule.setGroupingElement(ge);
+				shapeRule.addGroupingElement(ge);
 			}
 
 			return new AliasExpression(ve, idColumnName);
 		}
 
+		private TableItemExpression tableItem(FormulaIdRule idRule) {
+			PropertyModel p = idRule.getSourcePropertyModel();
+			if (p != null) {
+				if (p.isTargetProperty()) {
+					p = p.getGroup().getSourceProperty();
+					if (p == null) {
+						return null;
+					}
+				}
+				ShapeModel s = p.getDeclaringShape();
+				if (s != null) {
+					DataChannel channel = s.getDataChannel();
+					if (channel!=null) {
+						return tableItemMap.get(channel.getName());
+					}
+				}
+			}
+			return null;
+		}
+
 		private ValueExpression createIriTemplateValue(ShapeRule shapeRule, IriTemplateIdRule idRule)
 				throws TransformBuildException {
 			FunctionExpression func = new FunctionExpression("CONCAT");
-			Shape shape = idRule.getDataChannel().getShape();
+			Shape shape = idRule.getDeclaringShape();
 			IriTemplate template = shape.getIriTemplate();
 			Context context = template.getContext();
 			TableItemExpression tableItem = simpleTableItem(idRule.getDataChannel());
@@ -389,8 +422,8 @@ public class SqlFactory {
 			TableItemExpression tableItem = simpleTableItem(channel);
 			URI predicate = p.getPredicate();
 			if (p instanceof ExactMatchPropertyRule) {
-
-				return SqlUtil.columnExpression(tableItem, predicate);
+				
+				return SqlUtil.columnExpression(p.getSourcePropertyModel(), tableItem);
 			}
 
 			if (p instanceof RenamePropertyRule) {
@@ -417,11 +450,22 @@ public class SqlFactory {
 			}
 			if (p instanceof ContainerPropertyRule) {
 				ContainerPropertyRule containerRule = (ContainerPropertyRule) p;
+				
+				
+				
 				StructExpression struct = new StructExpression();
 				ShapeRule nested = containerRule.getNestedRule();
 				addColumns(struct, nested);
 
-				return new AliasExpression(struct, predicate.getLocalName());
+				AliasExpression alias = new AliasExpression(struct, predicate.getLocalName());
+				
+				if (containerRule.isRepeated()) {
+					FunctionExpression func = new FunctionExpression("ARRAY_AGG");
+					func.addArg(alias);
+					return func;
+				}
+				
+				return alias;
 			}
 
 			if (p instanceof LiteralPropertyRule) {
@@ -457,6 +501,10 @@ public class SqlFactory {
 
 			throw new TransformBuildException("Unsupported PropertyRule: " + p.getClass().getName());
 		}
+
+		
+
+		
 
 		private ValueExpression mapValues(RenamePropertyRule p, MapValueTransform vt) throws TransformBuildException {
 

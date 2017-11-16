@@ -67,11 +67,15 @@ import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.ValueExpression;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.TransformBuildException;
+import io.konig.transform.proto.PropertyModel;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.ShapeRule;
 
 public class SqlFormulaFactory {
 	
+	public SqlFormulaFactory() {
+		
+	}
 
 	public ValueExpression formula(SqlFormulaExchange request) throws TransformBuildException {
 		Worker worker = new Worker(request);
@@ -281,10 +285,20 @@ public class SqlFormulaFactory {
 											}
 											
 											if (nestedProperty.getDataChannel()==null) {
+												
 												String msg = MessageFormat.format(
 													"DataChannel not defined for property ''{0}'' in path: {1}", predicate.getLocalName(), primary.toString());
 												throw new ShapeTransformException(msg);
 											}
+											
+											PropertyModel spm = exchange.getSourcePropertyModel();
+											if (spm != null) {
+												TableItemExpression table = exchange.getSourceTable();
+												if (table != null) {
+													return SqlUtil.columnExpression(spm, table);
+												}
+											}
+											
 
 											String tableName = nestedProperty.getDataChannel().getName();
 											String localName = predicate.getLocalName();

@@ -106,6 +106,8 @@ public class PropertyGroup extends ArrayList<PropertyModel> implements PrettyPri
 		}
 		out.endObject();
 		
+		out.field("valueClassModel", valueClassModel);
+		
 	}
 	
 

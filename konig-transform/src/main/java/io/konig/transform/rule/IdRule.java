@@ -1,6 +1,7 @@
 package io.konig.transform.rule;
 
 import io.konig.core.io.PrettyPrintable;
+import io.konig.transform.proto.PropertyModel;
 
 /*
  * #%L
@@ -29,4 +30,5 @@ import io.konig.core.io.PrettyPrintable;
  */
 public interface IdRule extends PrettyPrintable {
 
+	PropertyModel getSourcePropertyModel();
 }

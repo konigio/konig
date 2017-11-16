@@ -29,7 +29,7 @@ import io.konig.core.io.PrettyPrintWriter;
  * @author Greg McFall
  *
  */
-public class CopyIdRule extends AbstractPrettyPrintable implements IdRule {
+public class CopyIdRule extends AbstractIdRule {
 
 	private DataChannel dataChannel;
 

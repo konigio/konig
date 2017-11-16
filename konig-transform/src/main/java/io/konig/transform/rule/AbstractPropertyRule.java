@@ -1,5 +1,8 @@
 package io.konig.transform.rule;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /*
  * #%L
  * Konig Transform
@@ -23,12 +26,14 @@ package io.konig.transform.rule;
 
 import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.transform.proto.PropertyModel;
 
 public abstract class AbstractPropertyRule extends AbstractPrettyPrintable implements PropertyRule {
 	
 	protected ShapeRule container;
 	protected DataChannel channel;
 	protected ShapeRule nestedRule;
+	protected PropertyModel sourcePropertyModel;
 
 	public AbstractPropertyRule(DataChannel channel) {
 		this.channel = channel;
@@ -98,5 +103,33 @@ public abstract class AbstractPropertyRule extends AbstractPrettyPrintable imple
 
 	abstract protected void printLocalFields(PrettyPrintWriter out);
 
+	public PropertyModel getSourcePropertyModel() {
+		return sourcePropertyModel;
+	}
 
+	public void setSourcePropertyModel(PropertyModel sourcePropertyModel) {
+		this.sourcePropertyModel = sourcePropertyModel;
+	}
+
+	@Override
+	public String simplePath() {
+		List<String> list = new ArrayList<>();
+		PropertyRule p = this;
+		while (p != null) {
+			list.add(p.getPredicate().getLocalName());
+			ShapeRule container = p.getContainer();
+			p = container==null ? null : container.getAccessor();
+		}
+		
+		StringBuilder builder = new StringBuilder();
+		int last = list.size()-1;
+		for (int i=last; i>=0; i--) {
+			if (i!=last) {
+				builder.append('.');
+			}
+			builder.append(list.get(i));
+		}
+		
+		return builder.toString();
+	}
 }

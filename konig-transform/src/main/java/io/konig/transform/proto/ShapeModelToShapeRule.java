@@ -27,8 +27,17 @@ import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 
 import io.konig.core.vocab.Konig;
+import io.konig.formula.Direction;
+import io.konig.formula.DirectionStep;
+import io.konig.formula.PathExpression;
+import io.konig.formula.PathStep;
+import io.konig.formula.PathTerm;
+import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.formula.VariableTerm;
 import io.konig.shacl.Shape;
+import io.konig.sql.query.ColumnExpression;
+import io.konig.sql.query.GroupingElement;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.rule.AlphabeticVariableNamer;
 import io.konig.transform.rule.BooleanExpression;
@@ -81,6 +90,7 @@ public class ShapeModelToShapeRule {
 	
 	private class Worker {
 		private VariableNamer variableNamer;
+		private boolean useAlias = false;
 		
 		
 		private Worker() throws ShapeTransformException {
@@ -113,6 +123,7 @@ public class ShapeModelToShapeRule {
 						continue;
 					}
 					PropertyRule propertyRule = propertyRule(group);
+					propertyRule.setSourcePropertyModel(group.getSourceProperty());
 					shapeRule.addPropertyRule(propertyRule);
 				}
 				
@@ -146,6 +157,21 @@ public class ShapeModelToShapeRule {
 			}
 			
 			if (sourceProperty instanceof DerivedPropertyModel) {
+
+				if (targetProperty != sourceProperty) {
+					if (targetPredicate.equals(sourceProperty.getPredicate())) {
+						DataChannel channel = sourceProperty.getDeclaringShape().getDataChannel();
+						DerivedPropertyModel derived = (DerivedPropertyModel) sourceProperty;
+						
+						if (channel == null  && outPathFormula(derived)) {
+							return new ExactMatchPropertyRule(sourceProperty.getDeclaringShape().getDataChannel(), targetPredicate);
+						}
+					}
+				}
+
+				
+
+				
 				return derivedProperty((DerivedPropertyModel)sourceProperty);
 			}
 			
@@ -191,6 +217,27 @@ public class ShapeModelToShapeRule {
 
 		
 
+		private boolean outPathFormula(DerivedPropertyModel sourceProperty) {
+			QuantifiedExpression formula = sourceProperty.getPropertyConstraint().getFormula();
+			PrimaryExpression primary = formula.asPrimaryExpression();
+			if (primary instanceof PathExpression) {
+				PathExpression path = (PathExpression) primary;
+				PathStep step = path.getStepList().get(0);
+				if (step instanceof DirectionStep) {
+					DirectionStep dirStep = (DirectionStep) step;
+					if (dirStep.getDirection() == Direction.OUT) {
+						PathTerm term = dirStep.getTerm();
+						if (!(term instanceof VariableTerm)) {
+							return true;
+						}
+						
+					}
+				}
+				
+			}
+			return false;
+		}
+
 		private FormulaPropertyRule derivedProperty(DerivedPropertyModel sourceProperty) throws ShapeTransformException {
 			ShapeModel shape = sourceProperty.getDeclaringShape();
 		
@@ -209,6 +256,7 @@ public class ShapeModelToShapeRule {
 		private DataChannel channel(PropertyModel sourceProperty) {
 			DataChannel result = null;
 			if (sourceProperty != null) {
+				
 				ShapeModel shapeModel = sourceProperty.getDeclaringShape();
 				if (shapeModel != null) {
 					result = shapeModel.getDataChannel();
@@ -262,6 +310,8 @@ public class ShapeModelToShapeRule {
 			}
 			setDataChannelName(protoFromItem);
 			
+			useAlias = protoFromItem instanceof ProtoJoinExpression;
+			
 		}
 
 		
@@ -279,15 +329,55 @@ public class ShapeModelToShapeRule {
 		}
 
 		public ShapeRule toShapeRule(ShapeModel shapeModel) throws ShapeTransformException {
-			ShapeRule shapeRule = new ShapeRule(shapeModel.getShape());
+			ShapeRule shapeRule = new ShapeRule(shapeModel);
 			shapeRule.setVariableNamer(variableNamer);
 			
 			addIdRule(shapeModel, shapeRule);
 
 			addPropertyRules(shapeModel, shapeRule);
+			addGroupBy(shapeModel, shapeRule);
 			
 			return shapeRule;
 		}
+		private void addGroupBy(ShapeModel shapeModel, ShapeRule shapeRule) {
+			for (GroupByItem item : shapeModel.getGroupBy()) {
+				GroupingElement element = groupingElement(shapeModel, shapeRule, item);
+				shapeRule.addGroupingElement(element);
+			}
+			
+		}
+
+		private GroupingElement groupingElement(ShapeModel shapeModel, ShapeRule shapeRule, GroupByItem item) {
+			if (item instanceof PropertyModel) {
+				return column(shapeModel, shapeRule, (PropertyModel)item);
+			}
+			return null;
+		}
+
+
+		private GroupingElement column(ShapeModel shapeModel, ShapeRule shapeRule, PropertyModel p) {
+			
+			p = p.getGroup().getSourceProperty();
+			if (p instanceof BasicPropertyModel) {
+				
+				BasicPropertyModel basic = (BasicPropertyModel) p;
+				URI predicate = basic.getPredicate();
+				
+				DataChannel channel = basic.getDeclaringShape().getDataChannel();
+				
+				StringBuilder builder = new StringBuilder();
+				if (useAlias) {
+					builder.append(channel.getName());
+					builder.append('.');
+				}
+				builder.append(predicate.getLocalName());
+				return new ColumnExpression(builder.toString());
+				
+				
+			}
+			return null;
+		}
+
 		private void addIdRule(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
 			
 			PropertyModel p = shapeModel.getPropertyByPredicate(Konig.id);
@@ -302,9 +392,9 @@ public class ShapeModelToShapeRule {
 					Shape sourceShape = sourceShapeModel.getShape();
 					
 					if (sourceShape.getIriFormula() != null) {
-						idRule = new FormulaIdRule();
+						idRule = formulaIdRule(p);
 					} else if (sourceShape.getIriTemplate() != null) {
-						idRule = new IriTemplateIdRule(channel);
+						idRule = new IriTemplateIdRule(sourceShape, channel);
 					} else {
 						idRule = new CopyIdRule(channel);
 					}
@@ -315,7 +405,7 @@ public class ShapeModelToShapeRule {
 					Shape targetShape = shapeModel.getShape();
 					QuantifiedExpression formula = targetShape.getIriFormula();
 					if (formula != null) {
-						idRule = new FormulaIdRule();
+						idRule = formulaIdRule(p);
 					}
 				}
 				
@@ -332,6 +422,13 @@ public class ShapeModelToShapeRule {
 			}
 			
 			
+		}
+
+		private FormulaIdRule formulaIdRule(PropertyModel p) {
+			if (p.isTargetProperty()) {
+				p = p.getGroup().getSourceProperty();
+			}
+			return new FormulaIdRule(p);
 		}
 
 	}

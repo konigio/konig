@@ -39,21 +39,20 @@ import io.konig.shacl.Shape;
 import io.konig.transform.rule.DataChannel;
 
 public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem {
+	
 
 	private ClassModel classModel;
 	private Shape shape;
+	
 	private Map<URI,PropertyModel> propertyMap = new HashMap<>();
 	private Map<URI,VariablePropertyModel> variableMap = new HashMap<>();
-	
+	private List<StepPropertyModel> stepProperties = null;
 	private List<GroupByItem> groupBy;
 	
 	private PropertyModel accessor;
 	
 	private DataChannel dataChannel;
 	
-	public ShapeModel() {
-		
-	}
 	
 	
 	public ShapeModel(Shape shape) {
@@ -74,7 +73,31 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 		this.shape = shape;
 	}
 	
+	public void addStepProperty(StepPropertyModel step) {
+		if (stepProperties == null) {
+			stepProperties = new ArrayList<>();
+		}
+		stepProperties.add(step);
+	}
 	
+	
+	
+	@SuppressWarnings("unchecked")
+	public List<StepPropertyModel> getStepProperties() {
+		return stepProperties==null ? Collections.EMPTY_LIST : stepProperties;
+	}
+	
+	
+	public Collection<PropertyModel> allProperties() {
+		List<PropertyModel> list = new ArrayList<>();
+		list.addAll(propertyMap.values());
+		if (stepProperties != null) {
+			list.addAll(stepProperties);
+		}
+		
+		return list;
+	}
+
 	public void add(PropertyModel p) {
 		propertyMap.put(p.getPredicate(), p);
 		if (p instanceof VariablePropertyModel) {

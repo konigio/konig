@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +37,7 @@ import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.GroupingElement;
+import io.konig.transform.proto.ShapeModel;
 
 /**
  * A structure that describes the rules for transformation some shape (or set of shapes) to a given target shape.
@@ -56,23 +56,30 @@ public class ShapeRule extends AbstractPrettyPrintable {
 
 	private PropertyRule accessor;
 	private VariableNamer variableNamer;
-	private GroupingElement groupingElement;
+	private List<GroupingElement> groupingElement;
+	
+	private ShapeModel targetShapeModel;
 	
 	
-	public ShapeRule(Shape targetShape) {
-		this.targetShape = targetShape;
+	public ShapeRule(ShapeModel targetShapeModel) {
+		this.targetShapeModel = targetShapeModel;
+		this.targetShape = targetShapeModel.getShape();
 	}
 	
 	
 	
-	public GroupingElement getGroupingElement() {
-		return groupingElement;
+	@SuppressWarnings("unchecked")
+	public List<GroupingElement> getGroupingElement() {
+		return groupingElement==null ? Collections.EMPTY_LIST : groupingElement;
 	}
 
 
 
-	public void setGroupingElement(GroupingElement groupingElement) {
-		this.groupingElement = groupingElement;
+	public void addGroupingElement(GroupingElement groupingElement) {
+		if (this.groupingElement == null) {
+			this.groupingElement = new ArrayList<>();
+		}
+		this.groupingElement.add(groupingElement);
 	}
 
 
@@ -191,7 +198,12 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	public void setFromItem(FromItem fromItem) {
 		this.fromItem = fromItem;
 	}
-	
+
+
+
+	public ShapeModel getTargetShapeModel() {
+		return targetShapeModel;
+	}
 	
 	
 }

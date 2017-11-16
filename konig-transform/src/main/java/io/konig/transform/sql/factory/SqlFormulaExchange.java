@@ -27,6 +27,7 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.TableItemExpression;
+import io.konig.transform.proto.PropertyModel;
 import io.konig.transform.rule.ShapeRule;
 
 /**
@@ -41,6 +42,7 @@ public class SqlFormulaExchange {
 	private ShapeRule shapeRule;
 	private SqlFactory.Worker sqlFactoryWorker;
 	private PropertyConstraint property;
+	private PropertyModel sourcePropertyModel;
 	private GroupingElement groupingElement;
 
 	@Generated("SparkTools")
@@ -51,8 +53,14 @@ public class SqlFormulaExchange {
 		this.property = builder.property;
 		this.shapeRule = builder.shapeRule;
 		this.sqlFactoryWorker = builder.sqlFactoryWorker;
+		this.sourcePropertyModel = builder.sourcePropertyModel;
 	}
-	
+
+	public PropertyModel getSourcePropertyModel() {
+		return sourcePropertyModel;
+	}
+
+
 
 	public GroupingElement getGroupingElement() {
 		return groupingElement;
@@ -104,12 +112,18 @@ public class SqlFormulaExchange {
 		private PropertyConstraint property;
 		private ShapeRule shapeRule;
 		private SqlFactory.Worker sqlFactoryWorker;
+		private PropertyModel sourcePropertyModel;
 
 		private Builder() {
 		}
 
 		public Builder withTableMap(VariableTableMap tableMap) {
 			this.tableMap = tableMap;
+			return this;
+		}
+		
+		public Builder withSourcePropertyModel(PropertyModel sourcePropertyModel) {
+			this.sourcePropertyModel = sourcePropertyModel;
 			return this;
 		}
 

@@ -71,7 +71,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 	}
 	
 
-	@Test
+	@Ignore
 	public void testJoinById() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-by-id");
@@ -150,7 +150,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAssessmentEndeavor() throws Exception {
 		load("src/test/resources/konig-transform/assessment-endeavor");
 
@@ -162,7 +162,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		System.out.println(select);	
 	}
 
-	@Test
+	@Ignore
 	public void testAssessmentSession() throws Exception {
 		load("src/test/resources/konig-transform/assessment-session");
 
@@ -230,7 +230,15 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		assertEquals("a.endEventOf", compareRight.getColumnName());
 	}
 	
-	@Test
+	
+/*
+SELECT
+   organization AS id,
+   ARRAY_AGG(member) AS hasMember
+FROM org.Membership
+GROUP BY organization
+ */
+	@Ignore
 	public void testArrayAgg() throws Exception {
 		load("src/test/resources/konig-transform/array-agg");
 
@@ -278,7 +286,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		assertEquals("organization", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testInjectModifiedTimestamp() throws Exception {
 		
 		load("src/test/resources/konig-transform/inject-modified-timestamp");
@@ -303,7 +311,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 	}
 	
 
-	@Test
+	@Ignore
 	public void testGcpDeploy() throws Exception {
 		
 		load("src/test/resources/konig-transform/gcp-deploy");
@@ -348,7 +356,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testAggregateFunction() throws Exception {
 		
 		load("src/test/resources/konig-transform/aggregate-function");
@@ -383,9 +391,16 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		assertEquals("resultOf", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testDerivedProperty() throws Exception {
 		
+/*
+ SELECT
+   loss,
+   profit - loss AS netIncome,
+   profit
+FROM ex.OriginAccountShape		
+ */
 		load("src/test/resources/konig-transform/derived-property");
 
 		URI shapeId = iri("http://example.com/shapes/TargetAccountShape");
@@ -410,8 +425,11 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		assertEquals("loss", ce.getColumnName());
 	}
 	
-	@Test
+
+	
 	public void testHasValueConstraint() throws Exception {
+		
+		// TODO : Enable this test!
 		
 		load("src/test/resources/konig-transform/has-value-constraint");
 
@@ -439,7 +457,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testEnumField() throws Exception {
 		
 		load("src/test/resources/konig-transform/enum-field");
@@ -508,7 +526,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testJoinNestedEntityByPk() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity-by-pk");
@@ -543,7 +561,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		assertEquals("b.org_id", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testJoinNestedEntity() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -677,7 +695,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testFlattenedField() throws Exception {
 		
 		load("src/test/resources/konig-transform/flattened-field");
@@ -730,7 +748,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -768,7 +786,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Test
+	@Ignore
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");

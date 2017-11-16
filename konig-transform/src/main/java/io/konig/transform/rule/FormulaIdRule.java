@@ -1,7 +1,7 @@
 package io.konig.transform.rule;
 
-import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.transform.proto.PropertyModel;
 
 /*
  * #%L
@@ -24,7 +24,13 @@ import io.konig.core.io.PrettyPrintWriter;
  */
 
 
-public class FormulaIdRule extends AbstractPrettyPrintable implements IdRule {
+public class FormulaIdRule extends AbstractIdRule {
+	
+	
+	public FormulaIdRule(PropertyModel sourcePropertyModel) {
+		setSourcePropertyModel(sourcePropertyModel);
+	}
+	
 
 	@Override
 	public void print(PrettyPrintWriter out) {

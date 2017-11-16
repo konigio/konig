@@ -24,6 +24,7 @@ package io.konig.transform.rule;
 import org.openrdf.model.URI;
 
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.shacl.PropertyConstraint;
 
 /**
  * The rule used for a property that has a nested shape.
@@ -47,10 +48,15 @@ public class ContainerPropertyRule extends AbstractPropertyRule {
 	public URI getPredicate() {
 		return predicate;
 	}
+	
+	public boolean isRepeated() {
+		PropertyConstraint p = getContainer().getTargetShape().getPropertyConstraint(predicate);
+		return p.getMaxCount()==null;
+	}
 
 	@Override
 	protected void printLocalFields(PrettyPrintWriter out) {
-
+		
 	}
 
 }
