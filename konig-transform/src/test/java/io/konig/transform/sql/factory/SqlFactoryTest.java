@@ -150,6 +150,34 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 	
+/*
+SELECT
+   actor,
+   object,
+   ARRAY_AGG(STRUCT(
+      id AS id,
+      STRUCT(
+         endEvent.id,
+         endEvent.actor,
+         endEvent.endEventOf,
+         endEvent.eventTime,
+         endEvent.object,
+         endEvent.type
+      ) AS endEvent,
+      STRUCT(
+         startEvent.id,
+         startEvent.actor,
+         startEvent.eventTime,
+         startEvent.object,
+         startEvent.startEventOf,
+         startEvent.type
+      ) AS startEvent,
+      actor,
+      object
+   ) AS subActivity)
+FROM xas.AssessmentSession
+GROUP BY actor, object
+ */
 	@Test
 	public void testAssessmentEndeavor() throws Exception {
 		load("src/test/resources/konig-transform/assessment-endeavor");
@@ -159,7 +187,9 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		ShapeRule shapeRule = createShapeRule(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
-		System.out.println(select);	
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(3, valueList.size());
+		// TODO : Add more validation steps.
 	}
 
 	@Test
@@ -307,10 +337,23 @@ GROUP BY organization
 		assertEquals("{modified}", sle.getValue());
 		assertEquals("modified", alias.getAlias());
 		
-		
 	}
 	
-
+/*
+SELECT
+   CONCAT("http://example.com/album/", CAST(a.album_id AS STRING)),
+   STRUCT(
+      CONCAT("http://example.com/artist/", CAST(b.group_id AS STRING)),
+      b.group_name AS name
+   ) AS byArtist,
+   a.album_name AS name
+FROM 
+   schema.OriginMusicAlbumShape AS a
+ JOIN
+   schema.OriginMusicGroupShape AS b
+ ON
+   a.artist_id=b.group_id
+ */
 	@Test
 	public void testGcpDeploy() throws Exception {
 		

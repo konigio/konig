@@ -651,6 +651,15 @@ public class SimplePropertyMapper implements PropertyMapper {
 					PropertyGroup group = declaringProperty.getGroup();
 					if (group.getTargetProperty()!=null && group.getSourceProperty()==null) {
 						group.setSourceProperty(step);
+					} else {
+						ClassModel classModel = group.getParentClassModel();
+						URI predicate = step.getPredicate();
+						PropertyGroup peer = classModel.getPropertyGroupByPredicate(predicate);
+						
+						if (peer != null && peer.getTargetProperty()!=null && peer.getSourceProperty()==null) {
+							peer.setSourceProperty(step);
+							declareMatch(peer);
+						}
 					}
 				} else if (step.getNextStep().getNextStep()==null) {
 					PropertyGroup group = step.getGroup();
