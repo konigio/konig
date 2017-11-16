@@ -20,7 +20,7 @@
   },
   "tableReference" : {
     "projectId" : "{gcpProjectId}",
-    "datasetId" : "metadata",
+    "datasetId" : "{datasetId}",
     "tableId" : "FieldLabel"
   }
 }

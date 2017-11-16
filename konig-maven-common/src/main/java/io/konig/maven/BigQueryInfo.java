@@ -43,6 +43,10 @@ public class BigQueryInfo {
 	@Parameter(property="konig.gcp.bigquery.data", defaultValue="${konig.gcp.bigquery.directory}/data")
 	private File data;
 	
+	@Parameter(property="konig.gcp.bigquery.metadata", required=true)
+	private MetadataInfo metadata;
+	
+	
 	public File getDirectory() {
 		return directory;
 	}
@@ -79,6 +83,13 @@ public class BigQueryInfo {
 	public String toString() {
 		return Yaml.toString(this);
 	}
+	public MetadataInfo getMetadata() {
+		return metadata;
+	}
+	public void setMetadata(MetadataInfo metadata) {
+		this.metadata = metadata;
+	}
+	
 	
 	
 

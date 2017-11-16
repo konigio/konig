@@ -32,7 +32,6 @@ import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -70,6 +69,8 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class WorkbookLoaderTest {
+	
+	
 	
 	@Test
 	public void testAssessmentEndeavor() throws Exception {

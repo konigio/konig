@@ -30,7 +30,7 @@
             <rootDir>${basedir}/target/generated</rootDir>
           </defaults>
           <rdfSourceDir>${project.rdfSourcePath}</rdfSourceDir>
-$googleCloudPlatform
+$jsonSchema
         </configuration>
         <executions>
           <execution>
@@ -58,7 +58,7 @@ $googleCloudPlatform
             </goals>
           </execution>
         </executions>
-      </plugin>    
+      </plugin>
       
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
@@ -72,7 +72,7 @@ $googleCloudPlatform
             </configuration>
           </execution>
         </executions>
-      </plugin>
+      </plugin> 
       
     </plugins>
   </build>

@@ -80,20 +80,26 @@ public class FusionMapChartWriter implements ChartWriter {
 					List<FieldValue> fieldValue = ((ArrayList<FieldValue>) x);
 					mapId = fieldValue.get(0).getStringValue();			 
 				}
-				containedInPlace = mapping.getContainedInPlace(mapId);
-				json.writeStartObject();
-				json.writeStringField("id", mapping.getFusionId(mapId));
-				json.writeStringField("value", value);
-				json.writeStringField("showLabel", "1");
-				json.writeStringField("fontBold", "1");
-				json.writeStringField("useHoverColor", "1");
-				json.writeStringField("showToolTip", "1");
-				json.writeStringField("FontColor", "#000000");
-				json.writeStringField("link", "j-drilldown-"+mapId+"|"+mapping.getName(mapId)+"|"+mapping.getType(mapId));
-				json.writeEndObject();
+				try {
+					containedInPlace = mapping.getContainedInPlace(mapId);
+					json.writeStartObject();
+					json.writeStringField("id", mapping.getFusionId(mapId));
+					json.writeStringField("value", value);
+					json.writeStringField("showLabel", "1");
+					json.writeStringField("fontBold", "1");
+					json.writeStringField("useHoverColor", "1");
+					json.writeStringField("showToolTip", "1");
+					json.writeStringField("FontColor", "#000000");
+					json.writeStringField("link", "j-drilldown-"+mapId+"|"+mapping.getName(mapId)+"|"+mapping.getType(mapId));
+					json.writeEndObject();
+				}catch(Exception ex){
+					//TODO: exception to be logged
+				}
 			}
 		}
 		json.writeEndArray();
-		json.writeStringField("type", mapping.getName(containedInPlace));
+		if(containedInPlace != null &&!containedInPlace.equals("")) {
+			json.writeStringField("type", mapping.getName(containedInPlace).replaceAll(" ", "").toLowerCase());
+		}
 	}
 }

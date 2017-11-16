@@ -79,7 +79,7 @@ public class BigQueryLabelGeneratorTest {
 		table.setTableReference(new BigQueryTableReference("{gcpProjectId}", "schema", "Person"));
 		shape.addShapeDataSource(table);
 		
-		BigQueryLabelGenerator generator = new BigQueryLabelGenerator(graph, schemaFile, dataFile);
+		BigQueryLabelGenerator generator = new BigQueryLabelGenerator(graph, schemaFile, dataFile, "metadata");
 		generator.beginShapeTraversal();
 		generator.visit(shape);
 		generator.endShapeTraversal();

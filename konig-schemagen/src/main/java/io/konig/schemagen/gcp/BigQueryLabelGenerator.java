@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.List;
@@ -47,6 +48,7 @@ import io.konig.core.KonigException;
 import io.konig.core.Vertex;
 import io.konig.core.util.IOUtil;
 import io.konig.datasource.DataSource;
+import io.konig.gcp.common.ReplaceStringReader;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -64,12 +66,14 @@ public class BigQueryLabelGenerator implements ShapeHandler {
 	private int fieldCount;
 	private JsonGenerator json;
 	private Set<String> memory;
+	private String datasetId;
 	
 
-	public BigQueryLabelGenerator(Graph graph, File schemaFile, File dataFile) {
+	public BigQueryLabelGenerator(Graph graph, File schemaFile, File dataFile, String datasetName) {
 		this.graph = graph;
 		this.schemaFile = schemaFile;
 		this.dataFile = dataFile;
+		this.datasetId = datasetName;
 	}
 
 	@Override
@@ -200,9 +204,13 @@ public class BigQueryLabelGenerator implements ShapeHandler {
 	private void copySchema() {
 		
 		schemaFile.getParentFile().mkdirs();
-		try (InputStream input = getClass().getClassLoader().getResourceAsStream(SCHEMA_FILE)) {
-			try (OutputStream out = new FileOutputStream(schemaFile)) {
-				byte[] data = new byte[1024];
+		try (
+			InputStream rawInput = getClass().getClassLoader().getResourceAsStream(SCHEMA_FILE);
+			InputStreamReader rawReader = new InputStreamReader(rawInput);
+			ReplaceStringReader input = new ReplaceStringReader(rawReader, "{datasetId}", datasetId);
+		) {
+			try (FileWriter out = new FileWriter(schemaFile)) {
+				char[] data = new char[1024];
 				int len;
 				while ((len=input.read(data)) != -1) {
 					out.write(data, 0, len);

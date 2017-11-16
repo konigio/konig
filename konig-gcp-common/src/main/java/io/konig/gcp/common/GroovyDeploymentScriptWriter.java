@@ -161,7 +161,7 @@ public class GroovyDeploymentScriptWriter {
 	private void printDatasetCommands() throws IOException {
 		
 		File datasetDir = googleCloudInfo.getBigquery().getDataset();
-		if (datasetDir != null) {
+		if (datasetDir != null && datasetDir.isDirectory()) {
 			BigQuery bigquery = googleCloudService.bigQuery();
 			for (File file : datasetDir.listFiles()) {
 				DatasetInfo info = googleCloudService.readDatasetInfo(file);

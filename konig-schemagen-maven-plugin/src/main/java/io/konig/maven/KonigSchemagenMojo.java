@@ -145,6 +145,7 @@ import io.konig.schemagen.jsonschema.JsonSchemaNamer;
 import io.konig.schemagen.jsonschema.JsonSchemaTypeMapper;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
+import io.konig.schemagen.jsonschema.TemplateJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
@@ -572,7 +573,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if (jsonSchema != null) {
 
 			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SmartJsonSchemaTypeMapper(owlReasoner);
-			JsonSchemaNamer jsonSchemaNamer = jsonSchema.namer(nsManager, shapeManager);
+			JsonSchemaNamer jsonSchemaNamer = TemplateJsonSchemaNamer.namer(nsManager, shapeManager, jsonSchema);
 			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
 			ShapeToJsonSchema generator = new ShapeToJsonSchema(jsonSchemaGenerator);
 			generator.setListener(new ShapeToJsonSchemaLinker(owlGraph));
@@ -686,11 +687,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 			if (bigQuery != null) {
 				resourceGenerator.addBigQueryGenerator(bigQuery.getSchema());
+				resourceGenerator.add(labelGenerator());
 			}
 			if (cloudStorage != null) {
 				resourceGenerator.addCloudStorageBucketWriter(cloudStorage.getDirectory());
 			}
-			resourceGenerator.add(labelGenerator());
 			resourceGenerator.add(new GooglePubSubTopicListGenerator(googleCloudPlatform.getTopicsFile()));
 			resourceGenerator.dispatch(shapeManager.listShapes());
 						
@@ -725,10 +726,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private BigQueryLabelGenerator labelGenerator() {
 		File schemaDir = googleCloudPlatform.getBigquery().getSchema();
 		File dataDir = googleCloudPlatform.getBigquery().getData();
-		File schemaFile = new File(schemaDir, "metadata.FieldLabel.json");
-		File dataFile = new File(dataDir, "metadata.FieldLabel");
+		MetadataInfo metadata = googleCloudPlatform.getBigquery().getMetadata();
+		if (metadata.isSkip()) {
+			return null;
+		}
 		
-		return new BigQueryLabelGenerator(owlGraph, schemaFile, dataFile);
+		String metaDatasetId = metadata.getDataset();
+		
+		File schemaFile = new File(schemaDir, metaDatasetId + ".FieldLabel.json");
+		File dataFile = new File(dataDir, metaDatasetId + ".FieldLabel");
+		
+		return new BigQueryLabelGenerator(owlGraph, schemaFile, dataFile, metaDatasetId);
 	}
 
 
