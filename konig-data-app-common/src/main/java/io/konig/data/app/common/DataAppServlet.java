@@ -70,7 +70,6 @@ abstract public class DataAppServlet extends HttpServlet {
 				yaml.addDeserializer(URI.class, new UriDeserializer());
 				dataApp = yaml.readObject(DataApp.class);
 				configure();
-				configAuthenticationDetails(null);
 			}
 		} catch (Throwable e) {
 			throw new ServletException(e);
@@ -96,12 +95,15 @@ abstract public class DataAppServlet extends HttpServlet {
 	private void configAuthenticationDetails(String username) throws ServletException {
 		MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 		DatastoreOptions options = DatastoreOptions.newBuilder().build();
-		Query<?> query = Query.newGqlQueryBuilder("Select * from UserAuthentication").build();
+		Query<?> query = Query.newGqlQueryBuilder("Select passwordSha1 from UserAuthentication "
+				+ "where username = @username")
+				.setBinding("username", username)
+				.build();
 		Datastore datastore = options.getService();
 		QueryResults<?> results = datastore.run(query);
 		while (results.hasNext()) {
 			Entity currentEntity = (Entity) results.next();
-			cache.put(currentEntity.getString("username"), currentEntity.getString("password"));
+			cache.put(username, currentEntity.getString("passwordSha1"));
 		}
 		if(username != null) {
 			String cachePassword = (String)MemcacheServiceFactory.getMemcacheService().get(username);
