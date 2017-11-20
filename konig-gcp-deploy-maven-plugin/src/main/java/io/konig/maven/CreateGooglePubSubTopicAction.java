@@ -36,10 +36,12 @@ public class CreateGooglePubSubTopicAction {
 	public KonigDeployment named(String topicName) {
 		GoogleCloudService service = deployment.getService();
 		String projectId = service.getProjectId();
-		
-		TopicName topic = TopicName.create(projectId, topicName);
-		service.topicAdmin().createTopic(topic);
-		
+		try {
+			TopicName topic = TopicName.create(projectId, topicName);
+			service.topicAdmin().createTopic(topic);
+		} catch (Exception ex) {
+			throw ex;
+		}
 		return deployment;
 	}
 }

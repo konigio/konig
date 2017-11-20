@@ -39,8 +39,12 @@ public class CreateBigqueryTableAction {
 	public KonigDeployment from(String path) throws IOException {
 		GoogleCloudService service = deployment.getService();
 		File file = deployment.file(path);
-		TableInfo info = service.readTableInfo(file);
-		service.bigQuery().create(info);
+		try {
+			TableInfo info = service.readTableInfo(file);
+			service.bigQuery().create(info);
+		} catch (Exception ex) {
+			throw ex;
+		}
 		return deployment;
 	}
 

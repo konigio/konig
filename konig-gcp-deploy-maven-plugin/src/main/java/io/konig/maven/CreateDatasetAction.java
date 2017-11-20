@@ -39,8 +39,12 @@ public class CreateDatasetAction {
 	public KonigDeployment from(String datasetFile) throws IOException {
 		GoogleCloudService service = deployment.getService();
 		File file = deployment.file(datasetFile);
-		DatasetInfo dataset = service.readDatasetInfo(file);
-		service.bigQuery().create(dataset);
+		try {
+			DatasetInfo dataset = service.readDatasetInfo(file);
+			service.bigQuery().create(dataset);
+		} catch (Exception ex) {
+			throw ex;
+		}
 		return deployment;
 	}
 
