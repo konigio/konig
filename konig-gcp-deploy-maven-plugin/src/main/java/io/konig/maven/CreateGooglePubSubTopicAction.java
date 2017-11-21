@@ -1,5 +1,6 @@
 package io.konig.maven;
 
+import com.google.pubsub.v1.Topic;
 import com.google.pubsub.v1.TopicName;
 
 import io.konig.gcp.common.GoogleCloudService;
@@ -38,7 +39,8 @@ public class CreateGooglePubSubTopicAction {
 		String projectId = service.getProjectId();
 		try {
 			TopicName topic = TopicName.create(projectId, topicName);
-			service.topicAdmin().createTopic(topic);
+			Topic topicResponse = service.topicAdmin().createTopic(topic);
+			deployment.setResponse("Created  Topic " + topicResponse.getName());
 		} catch (Exception ex) {
 			throw ex;
 		}

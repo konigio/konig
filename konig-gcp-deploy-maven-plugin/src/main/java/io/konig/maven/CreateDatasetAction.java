@@ -24,6 +24,7 @@ package io.konig.maven;
 import java.io.File;
 import java.io.IOException;
 
+import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetInfo;
 
 import io.konig.gcp.common.GoogleCloudService;
@@ -41,7 +42,8 @@ public class CreateDatasetAction {
 		File file = deployment.file(datasetFile);
 		try {
 			DatasetInfo dataset = service.readDatasetInfo(file);
-			service.bigQuery().create(dataset);
+			Dataset datasetResponse = service.bigQuery().create(dataset);
+			deployment.setResponse("Created  Dataset " + datasetResponse.getDatasetId());
 		} catch (Exception ex) {
 			throw ex;
 		}

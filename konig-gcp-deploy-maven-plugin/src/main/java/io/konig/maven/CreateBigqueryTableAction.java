@@ -24,6 +24,7 @@ package io.konig.maven;
 import java.io.File;
 import java.io.IOException;
 
+import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableInfo;
 
 import io.konig.gcp.common.GoogleCloudService;
@@ -41,7 +42,8 @@ public class CreateBigqueryTableAction {
 		File file = deployment.file(path);
 		try {
 			TableInfo info = service.readTableInfo(file);
-			service.bigQuery().create(info);
+			Table table = service.bigQuery().create(info);
+			deployment.setResponse("Created  Table " + table.getTableId());
 		} catch (Exception ex) {
 			throw ex;
 		}

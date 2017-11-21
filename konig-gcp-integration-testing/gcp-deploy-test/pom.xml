@@ -4,21 +4,21 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>io.konig.test</groupId>
+		<groupId>io.konig</groupId>
 		<artifactId>konig-gcp-integration-testing</artifactId>
-		<version>1.0.0</version>
+		<version>2.0.0-8</version>
+    	<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>gcp-deploy-test</artifactId>
-	<version>1.0.0</version>
 	<name>gcp-deploy-test</name>
-	<url>http://maven.apache.org</url>
+	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		 <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<skip.unit.tests>false</skip.unit.tests>
 		<skip.integration.tests>true</skip.integration.tests>
 	</properties>
-	
+
 	<profiles>
 		<!-- The Configuration of the development profile -->
 		<profile>
@@ -26,14 +26,14 @@
 			<activation>
 				<activeByDefault>true</activeByDefault>
 			</activation>
-			
+
 		</profile>
 		<!-- The Configuration of the integration-test profile -->
 		<profile>
 			<id>integration-test</id>
 			<properties>
-				 <skip.integration.tests>false</skip.integration.tests>
-                <skip.unit.tests>true</skip.unit.tests>
+				<skip.integration.tests>false</skip.integration.tests>
+				<skip.unit.tests>true</skip.unit.tests>
 			</properties>
 		</profile>
 	</profiles>
@@ -41,10 +41,34 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
-    </dependencies>
+
+		<dependency>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy-all</artifactId>
+			<version>${groovy-all.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.ivy</groupId>
+			<artifactId>ivy</artifactId>
+			<version>${ivy.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.ant</groupId>
+			<artifactId>ant</artifactId>
+			<version>${ant.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>${guava.version}</version>
+		</dependency>
+
+
+	</dependencies>
+
 	<build>
 
 		<plugins>
@@ -74,7 +98,7 @@
 						<configuration>
 							<resources>
 								<resource>
-									
+
 									<directory>src/integration-test/resources</directory>
 								</resource>
 							</resources>
@@ -95,17 +119,18 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.19.1</version>
+
 				<executions>
 					<execution>
-						 <id>integration-tests</id>
+						<id>integration-tests</id>
 						<goals>
 							<goal>integration-test</goal>
 							<goal>verify</goal>
 						</goals>
 						<configuration>
-						 <includes>
-                                <include>**/*.java</include>
-                            </includes>
+							<includes>
+								<include>**/*.java</include>
+							</includes>
 							<skipTests>${skip.integration.tests}</skipTests>
 							<groups>io.konig.test.IntegrationTest</groups>
 						</configuration>
