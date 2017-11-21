@@ -21,31 +21,27 @@ package io.konig.maven;
  */
 
 
-import java.io.File;
-import java.io.IOException;
-
-import com.google.cloud.bigquery.DatasetInfo;
+import com.google.pubsub.v1.TopicName;
 
 import io.konig.gcp.common.GoogleCloudService;
 
-public class CreateDatasetAction {
-
+public class DeleteGooglePubSubTopicAction {
 	private KonigDeployment deployment;
 	
-	public CreateDatasetAction(KonigDeployment deployment) {
+	public DeleteGooglePubSubTopicAction(KonigDeployment deployment) {
 		this.deployment = deployment;
 	}
-	
-	public KonigDeployment from(String datasetFile) throws IOException {
+
+	public KonigDeployment named(String topicName) {
 		GoogleCloudService service = deployment.getService();
-		File file = deployment.file(datasetFile);
+		String projectId = service.getProjectId();
 		try {
-			DatasetInfo dataset = service.readDatasetInfo(file);
-			service.bigQuery().create(dataset);
+			TopicName topic = TopicName.create(projectId, topicName);
+			service.topicAdmin().deleteTopic(topic);
+			deployment.setResponse("Topic " + topicName + " was deleted");
 		} catch (Exception ex) {
 			throw ex;
 		}
 		return deployment;
 	}
-
 }

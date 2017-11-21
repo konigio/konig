@@ -28,11 +28,10 @@ import com.google.cloud.bigquery.TableInfo;
 
 import io.konig.gcp.common.GoogleCloudService;
 
-public class CreateBigqueryTableAction {
-
+public class DeleteBigqueryTableAction {
 	private KonigDeployment deployment;
 
-	public CreateBigqueryTableAction(KonigDeployment deployment) {
+	public DeleteBigqueryTableAction(KonigDeployment deployment) {
 		this.deployment = deployment;
 	}
 	
@@ -41,11 +40,14 @@ public class CreateBigqueryTableAction {
 		File file = deployment.file(path);
 		try {
 			TableInfo info = service.readTableInfo(file);
-			service.bigQuery().create(info);
+			if (service.bigQuery().delete(info.getTableId())){
+				deployment.setResponse("Table "+ info.getTableId() +" was deleted");
+			}else {
+				deployment.setResponse("Table "+ info.getTableId() +" not found");
+			}
 		} catch (Exception ex) {
 			throw ex;
 		}
 		return deployment;
 	}
-
 }

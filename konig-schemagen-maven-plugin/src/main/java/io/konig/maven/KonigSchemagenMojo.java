@@ -99,6 +99,7 @@ import io.konig.gae.datastore.impl.SimpleEntityNamer;
 import io.konig.gcp.common.GoogleCloudService;
 import io.konig.gcp.common.GoogleCredentialsNotFoundException;
 import io.konig.gcp.common.GroovyDeploymentScriptWriter;
+import io.konig.gcp.common.GroovyTearDownScriptWriter;
 import io.konig.gcp.common.InvalidGoogleCredentialsException;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
@@ -313,11 +314,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 					konigVersion, googleCloudPlatform, googleCloudService, scriptFile);
 			
 			scriptWriter.run();
+
+			GroovyTearDownScriptWriter teardownScriptWriter = new GroovyTearDownScriptWriter(
+					konigVersion, googleCloudPlatform, googleCloudService, deploy.getTearDownScriptFile());
+			
+			teardownScriptWriter.run();
+			
 		}
 			
 		
 	}
-
 
 
 	private void generateMultiProject() throws MavenProjectGeneratorException, IOException {
