@@ -38,6 +38,10 @@
 		<google-api-pubsub.version>v1-rev8-1.21.0</google-api-pubsub.version>
 		<servlet-api.version>2.5</servlet-api.version>
 		<velocity.version>1.7</velocity.version>
+		<groovy-all.version>2.4.12</groovy-all.version>
+		<ivy.version>2.4.0</ivy.version>
+		<ant.version>1.8.2</ant.version>
+		<guava.version>20.0</guava.version>
 	</properties>
 
 	<licenses>
