@@ -7,7 +7,11 @@
   <packaging>pom</packaging>
   <properties>
 		<appengine.maven.plugin.version>1.0.0</appengine.maven.plugin.version>
-  	<konig.version>${project.konigVersion}</konig.version>
+  		<konig.version>${project.konigVersion}</konig.version>
+  		<groovy-all.version>2.4.12</groovy-all.version>
+		<ivy.version>2.4.0</ivy.version>
+		<ant.version>1.8.2</ant.version>
+		<guava.version>20.0</guava.version>
   </properties>
   
   
