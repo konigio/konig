@@ -128,8 +128,10 @@ public class GroovyDeploymentScriptWriter {
 					String topicName = line.trim();
 					if (topicName.length()>0) {
 						print(indent);
-						print("create GooglePubSubTopic named ");
-						println(topicName);
+						print("create GooglePubSubTopic named \"");
+						print(topicName);
+						print("\"");
+						println(" println response ");
 					}
 				}
 				
@@ -152,7 +154,9 @@ public class GroovyDeploymentScriptWriter {
 					print(indent);
 					print("create BigQueryTable from \"");
 					print(path);
-					println("\"");
+					print("\"");
+					println(" println response ");
+					
 				}
 			}
 		}
@@ -173,7 +177,8 @@ public class GroovyDeploymentScriptWriter {
 					print(indent);
 					print("create BigQueryDataset from \"");
 					print(path);
-					println("\"");
+					print("\"");
+					println(" println response ");
 				}
 			}
 		}
