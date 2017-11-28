@@ -25,6 +25,7 @@ import java.io.StringWriter;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,6 +43,7 @@ import io.konig.annotation.RdfProperty;
 import io.konig.core.Context;
 import io.konig.core.Graph;
 import io.konig.core.UidGenerator;
+import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
@@ -495,8 +497,9 @@ public class Shape {
 		return null;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public List<PropertyConstraint> getVariable() {
-		return variable;
+		return variable==null ? Collections.EMPTY_LIST : variable;
 	}
 
 	public void setVariable(List<PropertyConstraint> variable) {
@@ -581,5 +584,36 @@ public class Shape {
 		this.iriFormula = iriFormula;
 	}
 	
+	public String summaryText() {
+		StringWriter buffer = new StringWriter();
+		PrettyPrintWriter out = new PrettyPrintWriter(buffer);
+		out.print("SHAPE: <");
+		if (id != null) {
+			out.print(id.stringValue());
+		}
+		out.println(">");
+		printSummaryProperties(this, out);
+		return buffer.toString();
+	}
+
+	private void printSummaryProperties(Shape shape, PrettyPrintWriter out) {
+		out.pushIndent();
+		for (PropertyConstraint p : shape.getProperty()) {
+			PropertyPath path = p.getPath();
+			if (path instanceof PredicatePath) {
+				PredicatePath pp = (PredicatePath) path;
+				URI predicate = pp.getPredicate();
+				out.indent();
+				out.println(predicate.getLocalName());
+				Shape nested = p.getShape();
+				if (nested != null) {
+					printSummaryProperties(nested, out);
+				}
+			}
+		}
+		
+		out.popIndent();
+		
+	}
 	
 }

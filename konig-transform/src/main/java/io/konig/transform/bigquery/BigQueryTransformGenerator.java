@@ -281,7 +281,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 				shape.hasDataSourceType(Konig.GoogleBigQueryTable) && 
 				!shape.hasDataSourceType(Konig.GoogleCloudStorageBucket) &&
 				!shape.hasDataSourceType(Konig.CurrentState) &&
-				bucketShapeExists(shape));
+				(bucketShapeExists(shape)) || !shape.getVariable().isEmpty());
 	}
 	private boolean isDerivedShape(Shape shape) {
 		List<URI> type = shape.getType();

@@ -1,0 +1,14 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:ProductShape sh:nodeKind sh:IRI ; 
+	a sh:Shape ; 
+	sh:property  [ 
+		sh:path schema:name ; 
+		rdfs:comment "The name of the product, suitable for display in a user interface." ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  . 

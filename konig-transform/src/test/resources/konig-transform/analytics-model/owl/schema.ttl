@@ -1,0 +1,110 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org" ; 
+	rdfs:comment "An ontology developed by Google, Yahoo!, Microsoft and others to describe people, places, and things commonly found on the web." . 
+
+schema:Action a owl:Class ; 
+	rdfs:label "Action" ; 
+	rdfs:comment "The base class for all kinds of actions that have either already occurred, are in the process of occurring, or may occur in the future." . 
+
+schema:AdministrativeArea a owl:Class ; 
+	rdfs:label "Administrative Area" ; 
+	rdfs:comment "A generic administrative area.  This is the base class for more specific types like City, State, Country, etc." ; 
+	rdfs:subClassOf schema:Place . 
+
+schema:Place a owl:Class ; 
+	rdfs:label "Place" ; 
+	rdfs:comment "The class of all places that have a somewhat fixed, physical extension." ; 
+	rdfs:subClassOf owl:NamedIndividual . 
+
+schema:BuyAction a owl:Class . 
+
+schema:City a owl:Class ; 
+	rdfs:label "City" ; 
+	rdfs:comment "A city or town." ; 
+	rdfs:subClassOf schema:AdministrativeArea . 
+
+schema:Continent a owl:Class ; 
+	rdfs:label "Continent" ; 
+	rdfs:comment "The class of all continents (Africa, Antartica, Asia, Europe, North America, Oceania, or South America)" ; 
+	rdfs:subClassOf schema:Landform . 
+
+schema:Landform a owl:Class ; 
+	rdfs:label "Landform" ; 
+	rdfs:comment "A landform or physical feature. Landform elements include mountains, plains, lakes, rivers, seascape and oceanic waterbody interface features such as bays, peninsulas, seas and so forth, including sub-aqueous terrain features such as submersed mountain ranges, volcanoes, and the great ocean basins." ; 
+	rdfs:subClassOf schema:Place . 
+
+schema:Country a owl:Class ; 
+	rdfs:label "Country" ; 
+	rdfs:comment "A country" ; 
+	rdfs:subClassOf schema:AdministrativeArea . 
+
+schema:CreativeWork a owl:Class ; 
+	rdfs:label "Creative Work" ; 
+	rdfs:comment "The most generic kind of creative work, including books, movies, photographs, software programs, etc." . 
+
+schema:Person a owl:Class ; 
+	rdfs:label "Person" ; 
+	rdfs:comment "The class of all individual people." . 
+
+schema:SellAction a owl:Class ; 
+	rdfs:label "BuyAction" ; 
+	rdfs:comment "The act of giving money to a seller in exchange for goods or services rendered. An agent buys an object, product, or service from a seller for a price. Reciprocal of SellAction." ; 
+	rdfs:subClassOf schema:TradeAction . 
+
+schema:TradeAction a owl:Class ; 
+	rdfs:label "TradeAction" ; 
+	rdfs:comment "The act of participating in an exchange of goods and services for monetary compensation. An agent trades an object, product or service with a participant in exchange for a one time or periodic payment." ; 
+	rdfs:subClassOf schema:Action . 
+
+schema:SoftwareApplication a owl:Class ; 
+	rdfs:label "Software Application" ; 
+	rdfs:comment "The most generic kind of software application incuding mobile apps, web apps, video games etc." ; 
+	rdfs:subClassOf schema:CreativeWork . 
+
+schema:State a owl:Class ; 
+	rdfs:label "State" ; 
+	rdfs:comment "A state or province within a country" ; 
+	rdfs:subClassOf schema:AdministrativeArea . 
+
+schema:WebApplication a owl:Class ; 
+	rdfs:label "Web Application" ; 
+	rdfs:comment "The class of all web applications." ; 
+	rdfs:subClassOf schema:WebApplication , schema:Enumeration . 
+
+schema:agent a owl:ObjectProperty ; 
+	schema:domainIncludes schema:BuyAction ; 
+	schema:rangeIncludes schema:Person . 
+
+schema:containedInPlace a owl:ObjectProperty ; 
+	schema:domainIncludes schema:Place ; 
+	schema:rangeIncludes schema:Place . 
+
+schema:endTime a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:BuyAction ; 
+	schema:rangeIncludes xsd:dateTime . 
+
+schema:instrument a owl:ObjectProperty ; 
+	schema:domainIncludes schema:BuyAction ; 
+	schema:rangeIncludes schema:WebApplication . 
+
+schema:location a owl:ObjectProperty ; 
+	schema:domainIncludes schema:BuyAction ; 
+	schema:rangeIncludes schema:Place . 
+
+schema:name a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Place ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:object a owl:ObjectProperty ; 
+	schema:domainIncludes schema:BuyAction . 
+
+schema:price a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:BuyAction ; 
+	schema:rangeIncludes xsd:float . 

@@ -1,0 +1,9 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix place: <http://sws.geonames.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+place: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "place" ; 
+	rdfs:label "Geonames Data" ; 
+	rdfs:comment "The namespace for places in the world as defined by GeoNames." . 

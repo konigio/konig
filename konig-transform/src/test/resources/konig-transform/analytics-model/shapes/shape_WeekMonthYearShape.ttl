@@ -1,0 +1,39 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:WeekMonthYearShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/uuqchXqu2VUAAAFfygAFow> ; 
+	sh:targetClass konig:TimeInterval ; 
+	sh:property  [ 
+		sh:path konig:intervalStart ; 
+		rdfs:comment "The starting point of the time interval" ; 
+		sh:datatype xsd:date ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:attribute
+	 ]  ,  [ 
+		sh:path konig:durationUnit ; 
+		rdfs:comment "The duration of the time interval" ; 
+		sh:class konig:TimeUnit ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:in (konig:Week konig:Month konig:Year) ]  . 
+
+<http://www.konig.io/activity/uuqchXqu2VUAAAFfygAFow> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-17T07:42:00.223-05:00"^^xsd:dateTime . 
+
+konig:Month a konig:TimeUnit ; 
+	schema:name "Month" ; 
+	rdfs:comment "The unit of time measured in months" . 
+
+konig:Year a konig:TimeUnit ; 
+	schema:name "Year" ; 
+	rdfs:comment "The unit of time measured in years" . 

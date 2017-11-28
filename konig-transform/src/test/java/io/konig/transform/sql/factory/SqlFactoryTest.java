@@ -70,6 +70,23 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		useBigQueryTransformStrategy();
 	}
 	
+	@Ignore
+	public void testAnalyticsModel() throws Exception {
+		
+		load("src/test/resources/konig-transform/analytics-model");
+
+		URI shapeId = iri("http://example.com/shapes/SalesByCityShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		System.out.println(select);
+		
+		
+		
+	}
 
 	@Test
 	public void testJoinById() throws Exception {

@@ -28,7 +28,19 @@
       <param name="ConversionPattern" value="%-5p %c{1} - %m%n"/> 
     </layout> 
   </appender> 
-
+  
+<!--   
+  <logger name="io.konig.transform.proto.VariableShapeFactory" additivity="false">
+      <level value="debug"/>
+      <appender-ref ref="console"/>
+  </logger>
+  
+  <logger name="io.konig.transform.proto.SimplePropertyMapper" additivity="false">
+      <level value="debug"/>
+      <appender-ref ref="console"/>
+  </logger>
+  
+ -->
   <root> 
     <priority value ="warn" /> 
     <appender-ref ref="console" /> 

@@ -88,6 +88,20 @@ import io.konig.shacl.io.ShapeLoader;
 
 public class RdfUtil {
 	
+	
+	public static String localName(Resource id) {
+		if (id == null) {
+			return "null";
+		}
+		if (id instanceof BNode) {
+			return ((BNode)id).getID();
+		}
+		if (id instanceof URI) {
+			return ((URI)id).getLocalName();
+		}
+		throw new IllegalArgumentException("Unsuppported Resource type: " + id.getClass().getName());
+	}
+	
 	/**
 	 * Count the number of distinct PropertyConstraints within a given Shape
 	 */

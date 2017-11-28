@@ -1,0 +1,11 @@
+@prefix fact: <http://example.com/ns/fact/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+fact: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "fact" ; 
+	rdfs:label "Fact Ontology" ; 
+	rdfs:comment "An ontology that describes the various kinds of facts that can be produced by an OLAP engine." . 
+
+fact:SalesByCity a owl:Class . 
