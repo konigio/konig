@@ -1,0 +1,97 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix fact: <http://example.com/ns/fact/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:SalesByCityShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/uuqchXqu2VUAAAFfygAFow> ; 
+	sh:targetClass fact:SalesByCity ; 
+	konig:variable  [ 
+		sh:class schema:BuyAction ; 
+		sh:nodeKind sh:IRI ; 
+		konig:stereotype konig:variable ; 
+		sh:path <http://www.konig.io/ns/var/?x>
+	 ]  ; 
+	sh:property  [ 
+		sh:path konig:totalCount ; 
+		rdfs:comment "The total number of sales by users from a given city." ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:measure
+	 ]  ,  [ 
+		sh:path alias:city ; 
+		rdfs:comment "The city dimension" ; 
+		sh:shape shape:PlaceShape ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:dimension ; 
+		konig:formula '''@context {
+   "location" : "http://schema.org/location",
+   "type" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+   "City" : "http://schema.org/City"
+}
+?x.location[type City]'''
+	 ]  ,  [ 
+		sh:path alias:state ; 
+		rdfs:comment "The state attribute" ; 
+		sh:shape shape:PlaceShape ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:attribute ; 
+		konig:formula '''@context {
+   "location" : "http://schema.org/location",
+   "type" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+   "State" : "http://schema.org/State"
+}
+?x.location[type State]'''
+	 ]  ,  [ 
+		sh:path alias:country ; 
+		rdfs:comment "The country attribute" ; 
+		sh:shape shape:PlaceShape ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:attribute ; 
+		konig:formula '''@context {
+   "location" : "http://schema.org/location",
+   "type" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+   "Country" : "http://schema.org/Country"
+}
+?x.location[type Country]'''
+	 ]  ,  [ 
+		sh:path alias:continent ; 
+		rdfs:comment "The continent attribute" ; 
+		sh:shape shape:PlaceShape ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:attribute ; 
+		konig:formula '''@context {
+   "location" : "http://schema.org/location",
+   "type" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+   "Continent" : "http://schema.org/Continent"
+}
+?x.location[type Continent]'''
+	 ]  ,  [ 
+		sh:path konig:timeInterval ; 
+		rdfs:comment "The time interval covered by the fact" ; 
+		sh:shape shape:WeekMonthYearShape ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:dimension ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/fact/tables/SalesByCity> . 
+
+<http://www.konig.io/activity/uuqchXqu2VUAAAFfygAFow> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-17T07:42:00.223-05:00"^^xsd:dateTime . 
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/fact/tables/SalesByCity> a konig:GoogleBigQueryTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:datasetId "fact" ; 
+		gcp:tableId "SalesByCity" ]  . 

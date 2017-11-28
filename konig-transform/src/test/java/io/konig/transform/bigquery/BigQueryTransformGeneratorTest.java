@@ -34,7 +34,7 @@ public class BigQueryTransformGeneratorTest extends AbstractShapeModelToShapeRul
 	File outDir = new File("target/test/bigquery-transform");
 	BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner);
 
-	@Test
+	@Ignore
 	public void testUpdate() throws Throwable {
 		FileUtils.deleteDirectory(outDir);
 		load("src/test/resources/konig-transform/transform-update");
@@ -45,6 +45,21 @@ public class BigQueryTransformGeneratorTest extends AbstractShapeModelToShapeRul
 			throw errorList.get(0);
 		}
 	}
+	
+	@Ignore
+	public void testFact() throws Throwable {
+
+		FileUtils.deleteDirectory(outDir);
+		load("src/test/resources/konig-transform/analytics-model");
+		generator.generateAll();
+
+		List<Throwable> errorList = generator.getErrorList();
+		if (errorList != null && !errorList.isEmpty()) {
+			throw errorList.get(0);
+		}
+	}
+	
+	
 	
 	
 	@Ignore

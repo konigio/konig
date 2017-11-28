@@ -1,0 +1,14 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+rdf: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "rdf" ; 
+	rdfs:label "RDF Syntax" ; 
+	rdfs:comment "The core RDF vocabulary" . 
+
+rdf:type a owl:ObjectProperty ; 
+	schema:domainIncludes schema:Place ; 
+	schema:rangeIncludes owl:Class . 

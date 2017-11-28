@@ -337,43 +337,7 @@ public class ShapeModelFactory {
 	}
 
 
-	private boolean isTopShape(ShapeModel declaringShape) {
-		while (declaringShape.getAccessor()!=null) {
-			declaringShape = declaringShape.getAccessor().getDeclaringShape();
-		}
-		ClassModel classModel = declaringShape.getClassModel();
-		
-		return classModel.getParent()==null;
-	}
 
-
-
-
-	private PropertyGroup merge(PropertyGroup a, PropertyGroup b) throws ShapeTransformException {
-		
-		// We are going to keep the PropertyGroup that has a well-defined target property.
-		// Assuming that 'b' is the one to keep, we'll copy PropertyModel instances from 'a' to 'b'.
-		
-		// If it turns out that 'a' has a well-defined target property, then we need to swap 'a' and 'b'.
-		
-		if (a.getTargetProperty()!=null && b.getTargetProperty()==null) {
-			PropertyGroup c = a;
-			a = b;
-			b = c;
-		} else if (a.getTargetProperty()!=null && b.getTargetProperty()!=null) {
-			throw new ShapeTransformException("Cannot merge PropertyGroups with conflicting target property");
-		}
-		
-		for (PropertyModel p : a) {
-			p.setGroup(b);
-			b.add(p);
-			URI predicate = p.getPredicate();
-			ClassModel classModel = p.getDeclaringShape().getClassModel();
-			classModel.put(predicate, b);
-		}
-		
-		return b;
-	}
 
 	public void addSourceShapes(ShapeModel targetShapeModel) throws ShapeTransformException {
 		
@@ -414,6 +378,8 @@ public class ShapeModelFactory {
 					URI predicate = var.getPredicate();
 					PropertyGroup group = targetShapeModel.getClassModel().producePropertyGroup(predicate);
 					VariablePropertyModel varModel = new VariablePropertyModel(predicate, group, var);
+					varShapeModel.setAccessor(varModel);
+					varModel.setDeclaringShape(targetShapeModel);
 					group.add(varModel);
 					varModel.setValueModel(varShapeModel);
 					targetShapeModel.add(varModel);

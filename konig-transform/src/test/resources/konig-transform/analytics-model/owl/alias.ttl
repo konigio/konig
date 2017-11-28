@@ -1,0 +1,27 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix fact: <http://example.com/ns/fact/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+alias: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "alias" ; 
+	rdfs:label "Alias Namespace" ; 
+	rdfs:comment "A namespace that contains alternative names for properties." . 
+
+alias:city a owl:ObjectProperty ; 
+	schema:domainIncludes fact:SalesByCity ; 
+	schema:rangeIncludes schema:Place . 
+
+alias:continent a owl:ObjectProperty ; 
+	schema:domainIncludes fact:SalesByCity ; 
+	schema:rangeIncludes schema:Place . 
+
+alias:country a owl:ObjectProperty ; 
+	schema:domainIncludes fact:SalesByCity ; 
+	schema:rangeIncludes schema:Place . 
+
+alias:state a owl:ObjectProperty ; 
+	schema:domainIncludes fact:SalesByCity ; 
+	schema:rangeIncludes schema:Place . 
