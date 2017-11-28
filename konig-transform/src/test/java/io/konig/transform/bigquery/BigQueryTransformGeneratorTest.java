@@ -46,7 +46,7 @@ public class BigQueryTransformGeneratorTest extends AbstractShapeModelToShapeRul
 		}
 	}
 	
-	@Test
+	@Ignore
 	public void testFact() throws Throwable {
 
 		FileUtils.deleteDirectory(outDir);
