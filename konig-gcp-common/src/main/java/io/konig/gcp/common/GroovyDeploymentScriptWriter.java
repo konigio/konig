@@ -67,19 +67,20 @@ public class GroovyDeploymentScriptWriter {
 		try (FileWriter writer = new FileWriter(scriptFile)) {
 			out = writer;
 			
-//			String baseDir = FileUtil.relativePath(scriptFile, googleCloudInfo.getDirectory());
-			String baseDir = ".";
+			String baseDir = FileUtil.relativePath(scriptFile, googleCloudInfo.getDirectory());
+			//String baseDir = ".";
 
 			String credentialsPath = googleCloudService.getCredentialsFile().getCanonicalPath().replace('\\', '/');
-			String grab = MessageFormat.format("@Grab(''io.konig:konig-gcp-deploy-maven-plugin:{0}'')", konigVersion);
+			String grab = MessageFormat.format("@Grab(\"io.konig:konig-gcp-deploy-maven-plugin:{0}\")", konigVersion);
 			
-			String delegate = MessageFormat.format("deploymentPlan.delegate = new KonigDeployment(\"{0}\", \"{1}\")", 
-					credentialsPath, baseDir);
+			String delegate = MessageFormat.format("deploymentPlan.delegate = new KonigDeployment(\"{0}\",  scriptDir)", 
+					credentialsPath);
 			
 			println(grab);
-			println();
-			println("import static io.konig.deploy.ResourceType.*;");
-			println("import io.konig.maven.deploy.KonigDeployment;");
+			println();			
+			println("import static io.konig.maven.InsertResourceType.*;");
+			println("import static io.konig.maven.ResourceType.*;");
+			println("import io.konig.maven.KonigDeployment;");
 			println();
 			println("def deploymentPlan = {");
 			printDatasetCommands();
@@ -87,6 +88,7 @@ public class GroovyDeploymentScriptWriter {
 			printTableDataCommands();
 			printGooglePubSubCommands();
 			println("}");
+			println("def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent");
 			println(delegate);
 			println("deploymentPlan()");
 		}
@@ -126,8 +128,10 @@ public class GroovyDeploymentScriptWriter {
 					String topicName = line.trim();
 					if (topicName.length()>0) {
 						print(indent);
-						print("create GooglePubSubTopic named ");
-						println(topicName);
+						print("create GooglePubSubTopic named \"");
+						print(topicName);
+						print("\"");
+						println(" println response ");
 					}
 				}
 				
@@ -150,7 +154,9 @@ public class GroovyDeploymentScriptWriter {
 					print(indent);
 					print("create BigQueryTable from \"");
 					print(path);
-					println("\"");
+					print("\"");
+					println(" println response ");
+					
 				}
 			}
 		}
@@ -171,7 +177,8 @@ public class GroovyDeploymentScriptWriter {
 					print(indent);
 					print("create BigQueryDataset from \"");
 					print(path);
-					println("\"");
+					print("\"");
+					println(" println response ");
 				}
 			}
 		}

@@ -28,11 +28,22 @@ public class GroovyDeploymentScript {
 	@Parameter(property="konig.gcp.deployment.script.file", defaultValue="${konig.gcp.directory}/scripts/deploy.groovy")
 	private File scriptFile;
 	
+	@Parameter(property="konig.gcp.teardown.script.file", defaultValue="${konig.gcp.directory}/scripts/tear-down.groovy")
+	private File tearDownScriptFile;
+	
 	@Parameter(property="konig.gcp.deployment.version", defaultValue="${konig.version}")
 	private String konigVersion;
 
 	public File getScriptFile() {
 		return scriptFile;
+	}
+
+	public File getTearDownScriptFile() {
+		return tearDownScriptFile;
+	}
+	
+	public void setTearDownScriptFile(File tearDownScriptFile) {
+		this.tearDownScriptFile = tearDownScriptFile;
 	}
 
 	public void setScriptFile(File scriptFile) {

@@ -24,16 +24,14 @@ package io.konig.maven;
 import java.io.File;
 import java.io.IOException;
 
-import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableInfo;
 
 import io.konig.gcp.common.GoogleCloudService;
 
-public class CreateBigqueryTableAction {
-
+public class DeleteBigqueryTableAction {
 	private KonigDeployment deployment;
 
-	public CreateBigqueryTableAction(KonigDeployment deployment) {
+	public DeleteBigqueryTableAction(KonigDeployment deployment) {
 		this.deployment = deployment;
 	}
 	
@@ -42,12 +40,14 @@ public class CreateBigqueryTableAction {
 		File file = deployment.file(path);
 		try {
 			TableInfo info = service.readTableInfo(file);
-			Table table = service.bigQuery().create(info);
-			deployment.setResponse("Created  Table " + table.getTableId());
+			if (service.bigQuery().delete(info.getTableId())){
+				deployment.setResponse("Table "+ info.getTableId() +" was deleted");
+			}else {
+				deployment.setResponse("Table "+ info.getTableId() +" not found");
+			}
 		} catch (Exception ex) {
 			throw ex;
 		}
 		return deployment;
 	}
-
 }

@@ -24,16 +24,14 @@ package io.konig.maven;
 import java.io.File;
 import java.io.IOException;
 
-import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetInfo;
 
 import io.konig.gcp.common.GoogleCloudService;
 
-public class CreateDatasetAction {
-
+public class DeleteDatasetAction {
 	private KonigDeployment deployment;
 	
-	public CreateDatasetAction(KonigDeployment deployment) {
+	public DeleteDatasetAction(KonigDeployment deployment) {
 		this.deployment = deployment;
 	}
 	
@@ -42,12 +40,14 @@ public class CreateDatasetAction {
 		File file = deployment.file(datasetFile);
 		try {
 			DatasetInfo dataset = service.readDatasetInfo(file);
-			Dataset datasetResponse = service.bigQuery().create(dataset);
-			deployment.setResponse("Created  Dataset " + datasetResponse.getDatasetId());
+			if (service.bigQuery().delete(dataset.getDatasetId())){
+				deployment.setResponse("Dataset "+ dataset.getDatasetId() +" was deleted");
+			}else {
+				deployment.setResponse("Dataset "+ dataset.getDatasetId() +" not found");
+			}
 		} catch (Exception ex) {
 			throw ex;
 		}
 		return deployment;
 	}
-
 }

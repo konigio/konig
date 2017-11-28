@@ -1,10 +1,5 @@
 package io.konig.maven;
 
-import com.google.pubsub.v1.Topic;
-import com.google.pubsub.v1.TopicName;
-
-import io.konig.gcp.common.GoogleCloudService;
-
 /*
  * #%L
  * Konig GCP Deployment Maven Plugin
@@ -26,11 +21,14 @@ import io.konig.gcp.common.GoogleCloudService;
  */
 
 
-public class CreateGooglePubSubTopicAction {
+import com.google.pubsub.v1.TopicName;
 
+import io.konig.gcp.common.GoogleCloudService;
+
+public class DeleteGooglePubSubTopicAction {
 	private KonigDeployment deployment;
 	
-	public CreateGooglePubSubTopicAction(KonigDeployment deployment) {
+	public DeleteGooglePubSubTopicAction(KonigDeployment deployment) {
 		this.deployment = deployment;
 	}
 
@@ -39,8 +37,8 @@ public class CreateGooglePubSubTopicAction {
 		String projectId = service.getProjectId();
 		try {
 			TopicName topic = TopicName.create(projectId, topicName);
-			Topic topicResponse = service.topicAdmin().createTopic(topic);
-			deployment.setResponse("Created  Topic " + topicResponse.getName());
+			service.topicAdmin().deleteTopic(topic);
+			deployment.setResponse("Topic " + topicName + " was deleted");
 		} catch (Exception ex) {
 			throw ex;
 		}
