@@ -408,8 +408,10 @@ public class SqlFactory {
 					break;
 				}
 			}
+			
+			AliasExpression alias = new AliasExpression(func, "id");
 
-			return func;
+			return alias;
 		}
 
 		public ValueExpression column(PropertyRule p) throws TransformBuildException {
