@@ -57,6 +57,9 @@ public class KonigDeployment {
 			
 		case BigQueryTable:
 			return new CreateBigqueryTableAction(this);
+		
+		case BigQueryView:
+			return new CreateBigqueryViewAction(this);
 			
 		case GooglePubSubTopic :
 			return new CreateGooglePubSubTopicAction(this);
@@ -75,6 +78,9 @@ public class KonigDeployment {
 			
 		case BigQueryTable:
 			return new DeleteBigqueryTableAction(this);
+			
+		case BigQueryView:
+			return new DeleteBigqueryViewAction(this);
 			
 		case GooglePubSubTopic :
 			return new DeleteGooglePubSubTopicAction(this);

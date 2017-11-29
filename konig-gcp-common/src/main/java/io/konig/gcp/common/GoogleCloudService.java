@@ -334,7 +334,13 @@ public class GoogleCloudService implements CredentialsProvider {
 			return readTableInfo(reader);
 		}
 	}
-
+	
+	public TableInfo readViewInfo(File file) throws IOException {
+		try (FileReader reader = new FileReader(file)) {
+			return readViewInfo(reader);
+		}
+	}
+	
 	public BucketInfo readBucketInfo(File file) throws IOException, GoogleCloudServiceException {
 		try (
 			FileReader reader = new FileReader(file);
@@ -366,6 +372,17 @@ public class GoogleCloudService implements CredentialsProvider {
 			parser.parseAndClose(input, com.google.api.services.bigquery.model.Table.class);
 		
 		return KonigBigQueryUtil.createTableInfo(model);
+	}
+	
+	public TableInfo readViewInfo(Reader reader) throws IOException { 		
+		JsonFactory factory = JacksonFactory.getDefaultInstance();
+		JsonObjectParser parser = factory.createJsonObjectParser();
+		ReplaceStringsReader input = new ReplaceStringsReader(
+			reader, projectToken, projectId, gcpBucketSuffixToken, gcpBucketSuffix);
+
+		com.google.api.services.bigquery.model.Table model = 
+			parser.parseAndClose(input, com.google.api.services.bigquery.model.Table.class);
+		return KonigBigQueryUtil.createViewInfo(model);
 	}
 	
 	public DatasetInfo readDatasetInfo(File file) throws IOException {

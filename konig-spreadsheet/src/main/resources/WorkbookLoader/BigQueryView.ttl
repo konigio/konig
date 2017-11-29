@@ -1,0 +1,16 @@
+
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix gcp:   <http://www.konig.io/ns/gcp/> .
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{gcpDatasetId}/tables/{bigQueryTableId}>
+	a konig:GoogleBigQueryView, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "{gcpProjectId}" ;
+		gcp:datasetId "{gcpDatasetId}" ;
+		gcp:tableId   "{bigQueryTableId}" 
+	]
+.
+
+<{shapeId}> konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{gcpDatasetId}/tables/{bigQueryTableId}>
+.
+	

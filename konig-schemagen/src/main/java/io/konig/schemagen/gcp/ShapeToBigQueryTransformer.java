@@ -27,12 +27,16 @@ import com.google.api.services.bigquery.model.ExternalDataConfiguration;
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableSchema;
+import com.google.api.services.bigquery.model.ViewDefinition;
 
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleBigQueryView;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
+import io.konig.transform.proto.ShapeModelFactory;
 
 /**
  * A utility that transforms a Shape into a BigQuery Table.
@@ -44,56 +48,86 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 	private BigQueryTableGenerator tableGenerator;
 	private BigQueryTableVisitor tableVisitor;
 	private CurrentStateViewGenerator currentStateViewGenerator;
+	private ShapeModelFactory shapeModelFactory;
 	
 	public ShapeToBigQueryTransformer(BigQueryTableGenerator tableGenerator, BigQueryTableVisitor tableVisitor) {
 		this.tableGenerator = tableGenerator;
 		this.tableVisitor = tableVisitor;
-		this.currentStateViewGenerator = new CurrentStateViewGenerator();
+		this.currentStateViewGenerator = new CurrentStateViewGenerator(shapeModelFactory);
 	}
 
+	public ShapeToBigQueryTransformer(BigQueryTableGenerator tableGenerator, BigQueryTableVisitor tableVisitor, ShapeModelFactory shapeModelFactory) {
+		this.tableGenerator = tableGenerator;
+		this.tableVisitor = tableVisitor;
+		this.shapeModelFactory = shapeModelFactory;
+		this.currentStateViewGenerator = new CurrentStateViewGenerator(shapeModelFactory);
+	}
+	
 	@Override
 	public void visit(Shape shape) {
 		
 		List<DataSource> list = shape.getShapeDataSource();
 		if (list != null) {
 			for (DataSource dataSource : list) {
+				try {
 				if (dataSource instanceof GoogleBigQueryTable) {
-					Table table = toTable(shape, (GoogleBigQueryTable) dataSource);
-					table.setView(currentStateViewGenerator.createViewDefinition(shape, dataSource));
-					if (table.getExternalDataConfiguration() != null) {
-						table.setType("EXTERNAL");
-					} else if (table.getView() != null) {
-						table.setType("VIEW");
-					} else {
-						table.setType("TABLE");
+					if (dataSource instanceof GoogleBigQueryView && tableVisitor instanceof BigQueryViewWriter) {
+						Table table = toTable(shape, (GoogleBigQueryView) dataSource);
+						table.setView(currentStateViewGenerator.createViewDefinition(shape, dataSource));
+						if (table.getView() != null) {
+							table.setType("VIEW");
+							tableVisitor.visit(table);
+						}
+					} else if (!(dataSource instanceof GoogleBigQueryView) && tableVisitor instanceof BigQueryTableWriter) {
+						Table table = toTable(shape, (GoogleBigQueryTable) dataSource);
+						try {
+						if (dataSource.isA(Konig.CurrentState)) {
+							table.setView(currentStateViewGenerator.createViewDefinition(shape, dataSource));
+						}
+						if (table.getExternalDataConfiguration() != null) {
+							table.setType("EXTERNAL");
+							tableVisitor.visit(table);
+						} else {
+							table.setType("TABLE");
+							tableVisitor.visit(table);
+						}
+						}catch(Exception ex){
+							ex.printStackTrace();
+						}
 					}
-					tableVisitor.visit(table);
+				}
+				}catch(Exception ex){
+					ex.printStackTrace();
 				}
 			}
+				
 		}
-
 	}
 
 	private Table toTable(Shape shape, GoogleBigQueryTable dataSource) {
-
+		
 		Table table = new Table();
-		BigQueryTableReference ref = dataSource.getTableReference();
-		
-		TableReference reference = new TableReference();
-		reference.setProjectId(ref.getProjectId());
-		reference.setDatasetId(ref.getDatasetId());
-		reference.setTableId(ref.getTableId());
-		
-		table.setTableReference(reference);
-		
-		TableSchema tableSchema = tableGenerator.toTableSchema(shape);
-		table.setSchema(tableSchema);
-		ExternalDataConfiguration external = dataSource.getExternalDataConfiguration();
-		if (external != null) {
-			table.setExternalDataConfiguration(external);
-			table.setType("EXTERNAL");
+		try {
+			BigQueryTableReference ref = dataSource.getTableReference();
+			
+			TableReference reference = new TableReference();
+			reference.setProjectId(ref.getProjectId());
+			reference.setDatasetId(ref.getDatasetId());
+			reference.setTableId(ref.getTableId());
+			
+			table.setTableReference(reference);
+			if (!(dataSource instanceof GoogleBigQueryView)){
+				TableSchema tableSchema = tableGenerator.toTableSchema(shape);
+				table.setSchema(tableSchema);
+			}
+			ExternalDataConfiguration external = dataSource.getExternalDataConfiguration();
+			if (external != null) {
+				table.setExternalDataConfiguration(external);
+				table.setType("EXTERNAL");
+			}
+		}catch(Exception ex) {
+			ex.printStackTrace();
 		}
-		
 		return table;
 		
 	}

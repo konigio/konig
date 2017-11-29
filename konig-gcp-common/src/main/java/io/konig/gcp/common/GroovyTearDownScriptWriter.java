@@ -83,6 +83,7 @@ public class GroovyTearDownScriptWriter {
 			println("import io.konig.maven.KonigDeployment;");
 			println();
 			println("def deploymentPlan = {");
+			printTableViewCommands();
 			printTableCommands();
 			printDatasetCommands();
 			printGooglePubSubCommands();
@@ -120,6 +121,27 @@ public class GroovyTearDownScriptWriter {
 	}
 
 
+	private void printTableViewCommands() throws IOException {
+
+		File viewDir = googleCloudInfo.getBigquery().getView();
+		
+		if (viewDir != null) {
+			BigQuery bigquery = googleCloudService.bigQuery();
+			for (File file : viewDir.listFiles()) {
+				TableInfo info = googleCloudService.readViewInfo(file);
+				Table table = bigquery.getTable(info.getTableId()); 
+				if (table == null) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("delete BigQueryView from \"");
+					print(path);
+					println("\"");
+					println(" println response ");
+				}
+			}
+		}
+		
+	}
 	private void printTableCommands() throws IOException {
 
 		File schemaDir = googleCloudInfo.getBigquery().getSchema();
