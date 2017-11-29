@@ -25,6 +25,7 @@ public enum ResourceType {
 	
 	BigQueryDataset,
 	BigQueryTable,
+	BigQueryView,
 	GooglePubSubTopic
 
 }

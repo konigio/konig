@@ -148,6 +148,7 @@ public class Konig {
 
 	public static final URI GoogleCloudProject = new URIImpl("http://www.konig.io/ns/core/GoogleCloudProject");
 	public static final URI GoogleBigQueryTable = new URIImpl(GOOGLE_BIG_QUERY_TABLE);
+	public static final URI GoogleBigQueryView = new URIImpl( "http://www.konig.io/ns/core/GoogleBigQueryView");
 	public static final URI GoogleAnalytics = new URIImpl("http://www.konig.io/ns/core/GoogleAnalytics");
 	public static final URI tableShape = new URIImpl("http://www.konig.io/ns/core/tableShape");
 	public static final URI projectDataset = new URIImpl("http://www.konig.io/ns/core/projectDataset");
