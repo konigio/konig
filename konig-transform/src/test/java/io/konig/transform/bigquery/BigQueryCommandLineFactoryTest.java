@@ -53,7 +53,7 @@ public class BigQueryCommandLineFactoryTest extends AbstractShapeModelToShapeRul
 			+ "$'UPDATE schema.PersonCurrent AS b  "
 			+ "SET givenName = a.first_name  "
 			+ "FROM schema.OriginPersonShape AS a  "
-			+ "WHERE b.id=CONCAT(\"http://example.com/person/\", CAST(a.person_id AS STRING))'";
+			+ "WHERE b.id=CONCAT(\"http://example.com/person/\", CAST(a.person_id AS STRING)) AS id'";
 		
 		String actual = cmd.toString().trim();
 		assertEquals(expected, actual);
