@@ -52,7 +52,7 @@ public class GoogleCloudResourceGeneratorTest {
 		File expectedFile = new File(outDir, "schema.Person.json" );
 		expectedFile.delete();
 		
-		GoogleCloudResourceGenerator generator = new GoogleCloudResourceGenerator();
+		GoogleCloudResourceGenerator generator = new GoogleCloudResourceGenerator(null,null);
 		generator.addBigQueryGenerator(outDir);
 		generator.dispatch(shapeManager.listShapes());
 		

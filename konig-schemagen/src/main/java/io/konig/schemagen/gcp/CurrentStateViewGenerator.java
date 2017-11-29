@@ -34,61 +34,38 @@ import io.konig.core.path.Step;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
-import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
+import io.konig.sql.query.SelectExpression;
+import io.konig.transform.proto.ShapeModel;
+import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelToShapeRule;
+import io.konig.transform.rule.ShapeRule;
+import io.konig.transform.sql.factory.SqlFactory;
 
 public class CurrentStateViewGenerator {
-
+	
+	private ShapeModelFactory shapeModelFactory;
+	private ShapeModelToShapeRule shapeRuleFactory;
+	private SqlFactory sqlFactory = new SqlFactory();
+	
+	public CurrentStateViewGenerator(ShapeModelFactory shapeModelFactory){
+		this.shapeModelFactory = shapeModelFactory;
+		this.shapeRuleFactory = new ShapeModelToShapeRule();
+	}
+	
 	public ViewDefinition createViewDefinition(Shape shape, DataSource source) {
-		
-		if (!source.isA(Konig.CurrentState)) {
-			return null;
-		}
-		
-		GoogleBigQueryTable bigQuery = sourceTable(shape);
-		
-		if (bigQuery == null) {
-			return null;
-		}
-		
-		
-		if (shape.getNodeKind() != NodeKind.IRI) {
-			throw new KonigException("Cannot generate current state view.  Shape <" + shape.getId() + 
-					"> does not have sh:nodeKind equal to sh:IRI.");
-		}
-		
-		URI modifiedPredicate = predicate(shape, Konig.modified);
-		URI deletedPredicate = predicate(shape, Konig.deleted);
-		
-		if (modifiedPredicate == null) {
-			throw new KonigException("Last modified timestamp must be defined on Shape: " + shape.getId());
-		}
-		
-
+		SelectExpression select = null;
 		ViewDefinition result = new ViewDefinition();
-		StringBuilder builder = new StringBuilder(); 
-		
-		builder.append("SELECT a.id");
-		appendProperties(builder, shape);
-		builder.append(" FROM ");
-		builder.append(bigQuery.getTableIdentifier());
-		builder.append(" AS a ");
-		builder.append("JOIN (");
-		builder.append("SELECT id as identifier, MAX(modified) AS maxModified ");
-		builder.append("FROM ");
-		builder.append(bigQuery.getTableIdentifier());
-		builder.append(" GROUP BY identifier");
-		builder.append(") AS b");
-		builder.append(" ON a.id = b.identifier ");
-		builder.append("WHERE ");
-		builder.append("a.modified = b.maxModified");
-		if (deletedPredicate != null) {
-			builder.append(" AND deleted IS NULL");
+		try {
+			ShapeModel shapeModel = shapeModelFactory.createShapeModel(shape);
+			ShapeRule shapeRule = shapeRuleFactory.toShapeRule(shapeModel);
+			select = sqlFactory.selectExpression(shapeRule);
+			result.setQuery("#standardSQL\n" + select.toString());
+			result.setUseLegacySql(false);
+		} catch(Exception ex) {
+			throw new KonigException("Unable to create the view for the shape " + shape);
 		}
-		
-		result.setQuery(builder.toString());
-		result.setUseLegacySql(false);
 		return result;
 	}
 

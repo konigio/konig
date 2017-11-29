@@ -47,7 +47,16 @@ public class KonigBigQueryUtil {
 		return TableInfo.newBuilder(tableId, definition).build();
 
 	}
-
+	
+	public static TableInfo createViewInfo(com.google.api.services.bigquery.model.Table model) { 
+		String type = model.getType();
+		if (type == null) {
+			model.setType(TableDefinition.Type.VIEW.name()); 
+		}
+		TableId tableId = TableId.fromPb(model.getTableReference());
+		return TableInfo.of(tableId, ViewDefinition.of(new String(model.getView().getQuery().getBytes())));
+	}
+	
 	private static TableDefinition tableDefinition(Table model) {
 		ExternalDataConfiguration external = model.getExternalDataConfiguration();
 
