@@ -23,6 +23,7 @@ package io.konig.transform.rule;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 
 import io.konig.core.io.PrettyPrintWriter;
 
@@ -31,12 +32,12 @@ import io.konig.core.io.PrettyPrintWriter;
  * @author Greg McFall
  *
  */
-public class LiteralPropertyRule extends AbstractPropertyRule {
+public class FixedValuePropertyRule extends AbstractPropertyRule {
 	
 	private URI predicate;
-	private Literal value;
+	private Value value;
 
-	public LiteralPropertyRule(DataChannel channel, URI predicate, Literal value) {
+	public FixedValuePropertyRule(DataChannel channel, URI predicate, Value value) {
 		super(channel);
 		this.predicate = predicate;
 		this.value = value;
@@ -52,7 +53,7 @@ public class LiteralPropertyRule extends AbstractPropertyRule {
 		out.field("value", value);
 	}
 
-	public Literal getValue() {
+	public Value getValue() {
 		return value;
 	}
 

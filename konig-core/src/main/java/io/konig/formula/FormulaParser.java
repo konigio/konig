@@ -498,6 +498,8 @@ public class FormulaParser {
 			(call=tryIfFunction()) !=null ? call :
 			(call=tryGenericFunction("SUM")) != null ? call :
 			(call=tryGenericFunction("AVG")) != null ? call :
+			(call=tryGenericFunction("COUNT")) != null ? call :
+				(call=tryGenericFunction("TIME_INTERVAL")) != null ? call :
 			(call=tryBoundFunction()) != null ? call :
 			null;
 			
@@ -537,14 +539,26 @@ public class FormulaParser {
 					unread(functionName);
 				} else {
 					skipSpace();
-					Expression arg = expr();
+					List<Expression> argList = argList();
 					assertNext(')');
-					return new FunctionExpression(functionName, arg);
+					return new FunctionExpression(functionName, argList);
 				}
 				
 			}
 			
 			return null;
+		}
+
+		private List<Expression> argList() throws IOException, RDFParseException, RDFHandlerException {
+			List<Expression> result = new ArrayList<>();
+			int c=0;
+			do {
+				Expression arg = expr();
+				result.add(arg);
+				c = next();
+			} while (c==',');
+			unread(c);
+			return result;
 		}
 
 		private PathExpression tryPath() throws RDFParseException, IOException, RDFHandlerException {

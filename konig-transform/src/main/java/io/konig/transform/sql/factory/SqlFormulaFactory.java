@@ -38,6 +38,7 @@ import io.konig.formula.ConditionalAndExpression;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.Expression;
+import io.konig.formula.FullyQualifiedIri;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.IfFunction;
@@ -52,6 +53,7 @@ import io.konig.formula.PrimaryExpression;
 import io.konig.formula.UnaryExpression;
 import io.konig.formula.ValueLogical;
 import io.konig.formula.VariableTerm;
+import io.konig.rio.turtle.IriTemplateParseException;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.BooleanTerm;
@@ -233,6 +235,11 @@ public class SqlFormulaFactory {
 				io.konig.sql.query.FunctionExpression sqlFunc = new io.konig.sql.query.FunctionExpression(funcName);
 				addArguments(sqlFunc, func);
 				return sqlFunc;
+			}
+			if (primary instanceof FullyQualifiedIri) {
+				FullyQualifiedIri full = (FullyQualifiedIri) primary;
+				URI iri = full.getIri();
+				return new StringLiteralExpression(iri.getLocalName());
 			}
 			
 			throw new KonigException("Expression type not supported: " + primary.getClass().getSimpleName());

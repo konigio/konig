@@ -118,9 +118,6 @@ public class Konig {
 	public static final URI stereotype = new URIImpl("http://www.konig.io/ns/core/stereotype");
 	public static final URI totalCount = new URIImpl("http://www.konig.io/ns/core/totalCount");
 	public static final URI durationUnit = new URIImpl("http://www.konig.io/ns/core/durationUnit");
-	public static final URI week = new URIImpl("http://www.konig.io/ns/core/week");
-	public static final URI month = new URIImpl("http://www.konig.io/ns/core/month");
-	public static final URI Year = new URIImpl("http://www.konig.io/ns/core/Year");
 	public static final URI aggregationOf = new URIImpl("http://www.konig.io/ns/core/aggregationOf");
 	public static final URI rollUpBy = new URIImpl("http://www.konig.io/ns/core/rollUpBy");
 	public static final URI fromAggregationSource = new URIImpl("http://www.konig.io/ns/core/fromAggregationSource");
@@ -130,6 +127,13 @@ public class Konig {
 	public static final URI TimeUnit = new URIImpl("http://www.konig.io/ns/core/TimeUnit");
 	public static final URI TimeInterval = new URIImpl("http://www.konig.io/ns/core/TimeInterval");
 	public static final URI intervalStart = new URIImpl("http://www.konig.io/ns/core/intervalStart");
+	
+	// Time Units
+	
+	public static final URI Day = new URIImpl("http://www.konig.io/ns/core/Day");
+	public static final URI Week = new URIImpl("http://www.konig.io/ns/core/Week");
+	public static final URI Month = new URIImpl("http://www.konig.io/ns/core/Month");
+	public static final URI Year = new URIImpl("http://www.konig.io/ns/core/Year");
 	
 
 	// Project Management terms

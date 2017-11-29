@@ -11,7 +11,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:SalesByCityShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/uuqchXqu2VUAAAFfygAFow> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/qSuoqL4V0UUAAAFgA1VLDQ> ; 
 	sh:targetClass fact:SalesByCity ; 
 	konig:variable  [ 
 		sh:class schema:BuyAction ; 
@@ -25,7 +25,11 @@ shape:SalesByCityShape a sh:Shape ;
 		sh:datatype xsd:int ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:stereotype konig:measure
+		konig:stereotype konig:measure ; 
+		konig:formula '''@context {
+   "agent" : "http://schema.org/agent"
+}
+COUNT(?x.agent)'''
 	 ]  ,  [ 
 		sh:path alias:city ; 
 		rdfs:comment "The city dimension" ; 
@@ -81,14 +85,21 @@ shape:SalesByCityShape a sh:Shape ;
 	 ]  ,  [ 
 		sh:path konig:timeInterval ; 
 		rdfs:comment "The time interval covered by the fact" ; 
-		sh:shape shape:WeekMonthYearShape ; 
+		sh:shape shape:TimeIntervalShape ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:stereotype konig:dimension ]  ; 
+		konig:stereotype konig:dimension ; 
+		konig:formula '''@context {
+   "endTime" : "http://schema.org/endTime",
+   "Week" : "http://www.konig.io/ns/core/Week",
+   "Month" : "http://www.konig.io/ns/core/Month",
+   "Year" : "http://www.konig.io/ns/core/Year"
+}
+TIME_INTERVAL(?x.endTime, Week, Month, Year)''' ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/fact/tables/SalesByCity> . 
 
-<http://www.konig.io/activity/uuqchXqu2VUAAAFfygAFow> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-11-17T07:42:00.223-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/qSuoqL4V0UUAAAFgA1VLDQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-28T10:53:29.791-05:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/fact/tables/SalesByCity> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

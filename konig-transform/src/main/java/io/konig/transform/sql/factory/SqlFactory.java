@@ -94,7 +94,7 @@ import io.konig.transform.rule.IdRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinRule;
 import io.konig.transform.rule.JoinStatement;
-import io.konig.transform.rule.LiteralPropertyRule;
+import io.konig.transform.rule.FixedValuePropertyRule;
 import io.konig.transform.rule.MapValueTransform;
 import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyComparison;
@@ -468,8 +468,8 @@ public class SqlFactory {
 				return alias;
 			}
 
-			if (p instanceof LiteralPropertyRule) {
-				LiteralPropertyRule lpr = (LiteralPropertyRule) p;
+			if (p instanceof FixedValuePropertyRule) {
+				FixedValuePropertyRule lpr = (FixedValuePropertyRule) p;
 				ValueExpression value = valueExpression(lpr.getValue());
 
 				return new AliasExpression(value, predicate.getLocalName());
@@ -558,6 +558,11 @@ public class SqlFactory {
 					return new StringLiteralExpression(literal.stringValue());
 				}
 
+			}
+			
+			if (value instanceof URI) {
+				URI uri = (URI) value;
+				return new StringLiteralExpression(uri.getLocalName());
 			}
 			throw new TransformBuildException("Cannot convert to ValueExpression: " + value.stringValue());
 		}

@@ -1,40 +1,31 @@
 package io.konig.transform.proto;
 
-/*
- * #%L
- * Konig Transform
- * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
- */
+import java.util.List;
 
-
-import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.vocab.Konig;
+import io.konig.formula.BareExpression;
+import io.konig.formula.BinaryRelationalExpression;
+import io.konig.formula.ConditionalAndExpression;
+import io.konig.formula.ConditionalOrExpression;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
+import io.konig.formula.Formula;
+import io.konig.formula.GeneralAdditiveExpression;
+import io.konig.formula.MultiplicativeExpression;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
 import io.konig.formula.PathTerm;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.formula.UnaryExpression;
 import io.konig.formula.VariableTerm;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.GroupingElement;
@@ -46,6 +37,7 @@ import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
+import io.konig.transform.rule.FixedValuePropertyRule;
 import io.konig.transform.rule.FormulaIdRule;
 import io.konig.transform.rule.FormulaPropertyRule;
 import io.konig.transform.rule.FromItem;
@@ -54,7 +46,6 @@ import io.konig.transform.rule.IdRule;
 import io.konig.transform.rule.InjectLiteralPropertyRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinRule;
-import io.konig.transform.rule.LiteralPropertyRule;
 import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyComparison;
 import io.konig.transform.rule.PropertyRule;
@@ -64,6 +55,8 @@ import io.konig.transform.rule.TransformBinaryOperator;
 import io.konig.transform.rule.VariableNamer;
 
 public class ShapeModelToShapeRule {
+	
+	private static final Logger logger = LoggerFactory.getLogger(ShapeModelToShapeRule.class);
 	
 	private boolean failIfPropertyNotMapped=true;
 	
@@ -148,12 +141,7 @@ public class ShapeModelToShapeRule {
 				FixedPropertyModel fixed = (FixedPropertyModel) sourceProperty;
 				Value value = fixed.getValue();
 				
-				if (value instanceof Literal) {
-					Literal literal = (Literal) value;
-					return new LiteralPropertyRule(null, fixed.getPredicate(), literal);
-				}
-				
-				
+				return new FixedValuePropertyRule(null, fixed.getPredicate(), value);
 			}
 			
 			if (sourceProperty instanceof DerivedPropertyModel) {
@@ -173,6 +161,18 @@ public class ShapeModelToShapeRule {
 
 				
 				return derivedProperty((DerivedPropertyModel)sourceProperty);
+			}
+			
+			if (sourceProperty instanceof FormulaPropertyModel) {
+				FormulaPropertyModel formulaModel = (FormulaPropertyModel) sourceProperty;
+				DirectPropertyModel direct = (DirectPropertyModel) group.getTargetProperty();
+				PropertyConstraint targetConstraint = direct.getPropertyConstraint();
+				PropertyConstraint sourceConstraint = new PropertyConstraint(direct.getPredicate());
+				sourceConstraint.setMinCount(targetConstraint.getMinCount());
+				sourceConstraint.setMaxCount(targetConstraint.getMaxCount());
+				sourceConstraint.setFormula(quantifiedExpression(formulaModel.getFormula()));
+				
+				return new FormulaPropertyRule(null, targetConstraint, sourceConstraint);
 			}
 			
 			if (Konig.modified.equals(targetPredicate)) {
@@ -216,6 +216,27 @@ public class ShapeModelToShapeRule {
 		}
 
 		
+
+		private QuantifiedExpression quantifiedExpression(Formula formula) throws ShapeTransformException {
+			
+			if (!(formula instanceof PrimaryExpression)) {
+				// TODO: handle this case!
+				throw new ShapeTransformException("Expected formula to be of type PrimaryExpression");
+			}
+
+			UnaryExpression unary = new UnaryExpression((PrimaryExpression) formula);
+			MultiplicativeExpression mult = new MultiplicativeExpression(unary);
+			GeneralAdditiveExpression add = new GeneralAdditiveExpression(mult);
+			BinaryRelationalExpression binary = new BinaryRelationalExpression(null, add, null);
+			ConditionalAndExpression and = new ConditionalAndExpression();
+			and.add(binary);
+			ConditionalOrExpression or = new ConditionalOrExpression();
+			or.add(and);
+			BareExpression bare = new BareExpression(or);
+			QuantifiedExpression q = new QuantifiedExpression(bare, null);
+			
+			return q;
+		}
 
 		private boolean outPathFormula(DerivedPropertyModel sourceProperty) {
 			QuantifiedExpression formula = sourceProperty.getPropertyConstraint().getFormula();
@@ -339,7 +360,7 @@ public class ShapeModelToShapeRule {
 			
 			return shapeRule;
 		}
-		private void addGroupBy(ShapeModel shapeModel, ShapeRule shapeRule) {
+		private void addGroupBy(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
 			for (GroupByItem item : shapeModel.getGroupBy()) {
 				GroupingElement element = groupingElement(shapeModel, shapeRule, item);
 				shapeRule.addGroupingElement(element);
@@ -347,35 +368,37 @@ public class ShapeModelToShapeRule {
 			
 		}
 
-		private GroupingElement groupingElement(ShapeModel shapeModel, ShapeRule shapeRule, GroupByItem item) {
+		private GroupingElement groupingElement(ShapeModel shapeModel, ShapeRule shapeRule, GroupByItem item) throws ShapeTransformException {
 			if (item instanceof PropertyModel) {
-				return column(shapeModel, shapeRule, (PropertyModel)item);
+				return column((PropertyModel)item);
 			}
-			return null;
+			throw new ShapeTransformException("GroupByItem type not supported: " + item.getClass().getSimpleName());
 		}
 
 
-		private GroupingElement column(ShapeModel shapeModel, ShapeRule shapeRule, PropertyModel p) {
-			
+		private GroupingElement column(PropertyModel p) throws ShapeTransformException {
+
 			p = p.getGroup().getSourceProperty();
-			if (p instanceof BasicPropertyModel) {
-				
-				BasicPropertyModel basic = (BasicPropertyModel) p;
-				URI predicate = basic.getPredicate();
-				
-				DataChannel channel = basic.getDeclaringShape().getDataChannel();
-				
-				StringBuilder builder = new StringBuilder();
-				if (useAlias) {
-					builder.append(channel.getName());
-					builder.append('.');
-				}
-				builder.append(predicate.getLocalName());
-				return new ColumnExpression(builder.toString());
-				
-				
+			
+			List<PropertyModel> path = p.path();
+
+			DataChannel channel = p.getDeclaringShape().getDataChannel();
+			StringBuilder builder = new StringBuilder();
+			if (useAlias) {
+				builder.append(channel.getName());
+				builder.append('.');
 			}
-			return null;
+			
+			String dot = "";
+			for (PropertyModel property : path) {
+				builder.append(dot);
+				dot = ".";
+				URI predicate = property.getPredicate();
+				builder.append(predicate.getLocalName());
+			}
+			return new ColumnExpression(builder.toString());
+				
+			
 		}
 
 		private void addIdRule(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {

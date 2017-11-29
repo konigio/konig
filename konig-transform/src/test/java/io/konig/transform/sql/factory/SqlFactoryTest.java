@@ -70,7 +70,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		useBigQueryTransformStrategy();
 	}
 	
-	@Ignore
+	@Test
 	public void testAnalyticsModel() throws Exception {
 		
 		load("src/test/resources/konig-transform/analytics-model");
@@ -88,7 +88,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testJoinById() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-by-id");
@@ -195,7 +195,7 @@ SELECT
 FROM xas.AssessmentSession
 GROUP BY actor, object
  */
-	@Test
+	@Ignore
 	public void testAssessmentEndeavor() throws Exception {
 		load("src/test/resources/konig-transform/assessment-endeavor");
 
@@ -209,7 +209,7 @@ GROUP BY actor, object
 		// TODO : Add more validation steps.
 	}
 
-	@Test
+	@Ignore
 	public void testAssessmentSession() throws Exception {
 		load("src/test/resources/konig-transform/assessment-session");
 
@@ -285,7 +285,7 @@ SELECT
 FROM org.Membership
 GROUP BY organization
  */
-	@Test
+	@Ignore
 	public void testArrayAgg() throws Exception {
 		load("src/test/resources/konig-transform/array-agg");
 
@@ -333,7 +333,7 @@ GROUP BY organization
 		assertEquals("organization", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testInjectModifiedTimestamp() throws Exception {
 		
 		load("src/test/resources/konig-transform/inject-modified-timestamp");
@@ -371,7 +371,7 @@ FROM
  ON
    a.artist_id=b.group_id
  */
-	@Test
+	@Ignore
 	public void testGcpDeploy() throws Exception {
 		
 		load("src/test/resources/konig-transform/gcp-deploy");
@@ -416,7 +416,7 @@ FROM
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testAggregateFunction() throws Exception {
 		
 		load("src/test/resources/konig-transform/aggregate-function");
@@ -451,7 +451,7 @@ FROM
 		assertEquals("resultOf", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testDerivedProperty() throws Exception {
 		
 /*
@@ -527,7 +527,7 @@ FROM
  ON
    a.gender=b.genderCode	
  */
-	@Test
+	@Ignore
 	public void testEnumField() throws Exception {
 		
 		load("src/test/resources/konig-transform/enum-field");
@@ -596,7 +596,7 @@ FROM
 		
 	}
 
-	@Test
+	@Ignore
 	public void testJoinNestedEntityByPk() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity-by-pk");
@@ -631,7 +631,7 @@ FROM
 		assertEquals("b.org_id", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testJoinNestedEntity() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -765,7 +765,7 @@ FROM
 		
 	}
 
-	@Test
+	@Ignore
 	public void testFlattenedField() throws Exception {
 		
 		load("src/test/resources/konig-transform/flattened-field");
@@ -818,7 +818,7 @@ FROM
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -856,7 +856,7 @@ FROM
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Test
+	@Ignore
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");

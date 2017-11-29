@@ -28,6 +28,7 @@ import io.konig.core.io.PrettyPrintWriter;
 
 public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 	public static final String SUM = "Sum";
+	public static final String DATE_TRUNC = "DATE_TRUNC";
 	
 	private String functionName;
 	private List<Expression> argList = new ArrayList<>();
@@ -36,11 +37,18 @@ public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 		this.functionName = functionName;
 	}
 	
-	public FunctionExpression(String functionName, Expression...arg) {
+
+	public FunctionExpression(String functionName, Expression... arg) {
 		this.functionName = functionName;
+		this.argList = new ArrayList<>();
 		for (Expression e : arg) {
-			addArg(e);
+			argList.add(e);
 		}
+	}
+	
+	public FunctionExpression(String functionName, List<Expression> argList) {
+		this.functionName = functionName;
+		this.argList = argList;
 	}
 	
 
