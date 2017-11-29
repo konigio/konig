@@ -26,16 +26,52 @@ import io.konig.core.io.PrettyPrintWriter;
 public class TableNameExpression extends AbstractExpression implements TableItemExpression {
 	
 	private String tableName;
+	private boolean withQuotes;
 	public TableNameExpression(String tableName) {
 		this.tableName = tableName;
+		withQuotes = needsQuotes();
 	}
+	
+
+	private boolean needsQuotes() {
+		for (int i=0; i<tableName.length(); i++) {
+			char c = tableName.charAt(i);
+			if (!permittedChar(c)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	private boolean permittedChar(char c) {
+		
+		return 
+			('0'<=c && c<='9') ||
+			('a'<=c && c<='z') ||
+			('A'<=c && c<='Z') ||
+			c=='.' ||
+			c=='$' ||
+			c=='_';
+	}
+
+
 	@Override
 	public void print(PrettyPrintWriter out) {
+		if (withQuotes) {
+			out.print('`');
+		}
 		out.print(tableName);
+		if (withQuotes) {
+			out.print('`');
+		}
 		
 	}
 	public String getTableName() {
 		return tableName;
+	}
+	public boolean isWithQuotes() {
+		return withQuotes;
 	}
 	
 	

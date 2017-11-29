@@ -1,0 +1,44 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:OrganizationShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/CwN4AaQ2PuYAAAFerUaKVA> ; 
+	sh:targetClass org:Organization ; 
+	konig:variable  [ 
+		sh:path <http://www.konig.io/ns/var/?x> ; 
+		sh:class org:Membership ; 
+		sh:nodeKind sh:IRI ; 
+		konig:stereotype konig:variable ]  ; 
+	sh:nodeKind sh:IRI ; 
+	konig:iriFormula '''@prefix org: <http://www.w3.org/ns/org#> .
+@context {
+   "organization" : "org:organization"
+}
+?x.organization''' ; 
+	sh:property  [ 
+		sh:path org:hasMember ; 
+		sh:class schema:Person ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 0 ; 
+		konig:formula '''@prefix org: <http://www.w3.org/ns/org#> .
+@context {
+   "member" : "org:member"
+}
+?x.member''' ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/org/tables/Organization> . 
+
+<http://www.konig.io/activity/CwN4AaQ2PuYAAAFerUaKVA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-09-23T01:47:14.982-04:00"^^xsd:dateTime . 
+
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/org/tables/Organization> a konig:GoogleBigQueryTable , konig:DataSource ; 
+	gcp:tableReference  [ 
+		gcp:projectId "{gcpProjectId}" ; 
+		gcp:datasetId "org" ; 
+		gcp:tableId "Organization" ]  . 

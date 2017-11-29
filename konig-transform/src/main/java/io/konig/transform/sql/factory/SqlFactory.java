@@ -45,6 +45,7 @@ import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleBigQueryView;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
@@ -627,7 +628,16 @@ public class SqlFactory {
 			}
 			TableDataSource tableSource = (TableDataSource) datasource;
 			String tableName = tableSource.getTableIdentifier();
+			if (datasource instanceof GoogleBigQueryView) {
+				StringBuilder tableNameBuilder = new StringBuilder();
+				tableNameBuilder.append("{gcpProjectId}.");
+				tableNameBuilder.append(tableName);
+				tableName = tableNameBuilder.toString();
+			}
+			
+			
 			TableItemExpression tableItem = new TableNameExpression(tableName);
+			
 			if (useAlias) {
 				tableItem = new TableAliasExpression(tableItem, channel.getName());
 			}

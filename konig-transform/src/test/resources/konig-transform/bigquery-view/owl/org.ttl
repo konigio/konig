@@ -1,0 +1,23 @@
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+org: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "org" . 
+
+org:Membership a owl:Class . 
+
+org:Organization a owl:Class . 
+
+org:hasMember a owl:ObjectProperty ; 
+	schema:domainIncludes org:Organization ; 
+	schema:rangeIncludes schema:Person . 
+
+org:member a owl:ObjectProperty ; 
+	schema:domainIncludes org:Membership ; 
+	schema:rangeIncludes schema:Person . 
+
+org:organization a owl:ObjectProperty ; 
+	schema:domainIncludes org:Membership ; 
+	schema:rangeIncludes schema:Organization . 
