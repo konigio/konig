@@ -29,12 +29,32 @@ public class TableNameExpression extends AbstractExpression implements TableItem
 	private boolean withQuotes;
 	public TableNameExpression(String tableName) {
 		this.tableName = tableName;
+		withQuotes = needsQuotes();
 	}
 	
-	public TableNameExpression(String tableName, boolean withQuotes) {
-		this.tableName = tableName;
-		this.withQuotes = withQuotes;
+
+	private boolean needsQuotes() {
+		for (int i=0; i<tableName.length(); i++) {
+			char c = tableName.charAt(i);
+			if (!permittedChar(c)) {
+				return true;
+			}
+		}
+		return false;
 	}
+
+
+	private boolean permittedChar(char c) {
+		
+		return 
+			('0'<=c && c<='9') ||
+			('a'<=c && c<='z') ||
+			('A'<=c && c<='Z') ||
+			c=='.' ||
+			c=='$' ||
+			c=='_';
+	}
+
 
 	@Override
 	public void print(PrettyPrintWriter out) {
@@ -52,9 +72,6 @@ public class TableNameExpression extends AbstractExpression implements TableItem
 	}
 	public boolean isWithQuotes() {
 		return withQuotes;
-	}
-	public void setWithQuotes(boolean withQuotes) {
-		this.withQuotes = withQuotes;
 	}
 	
 	
