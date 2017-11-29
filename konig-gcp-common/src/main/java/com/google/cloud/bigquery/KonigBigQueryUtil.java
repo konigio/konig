@@ -40,6 +40,7 @@ public class KonigBigQueryUtil {
 		if (type == null) {
 			model.setType(TableDefinition.Type.VIEW.name()); 
 		}
+		model.getView().setUseLegacySql(false);
 		return new TableInfo.BuilderImpl(model).build();
 	}
 }
