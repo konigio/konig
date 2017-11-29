@@ -626,8 +626,14 @@ public class SqlFactory {
 				throw new TransformBuildException(msg.toString());
 			}
 			TableDataSource tableSource = (TableDataSource) datasource;
-			String tableName = tableSource.getTableIdentifier();
-			TableItemExpression tableItem = new TableNameExpression(tableName);
+			
+			StringBuilder tableNameBuilder = new StringBuilder();
+			tableNameBuilder.append("{gcpProjectId}.");
+			tableNameBuilder.append(tableSource.getTableIdentifier());
+			String tableName = tableNameBuilder.toString();
+			
+			
+			TableItemExpression tableItem = new TableNameExpression(tableName, true);
 			if (useAlias) {
 				tableItem = new TableAliasExpression(tableItem, channel.getName());
 			}

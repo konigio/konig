@@ -26,16 +26,35 @@ import io.konig.core.io.PrettyPrintWriter;
 public class TableNameExpression extends AbstractExpression implements TableItemExpression {
 	
 	private String tableName;
+	private boolean withQuotes;
 	public TableNameExpression(String tableName) {
 		this.tableName = tableName;
 	}
+	
+	public TableNameExpression(String tableName, boolean withQuotes) {
+		this.tableName = tableName;
+		this.withQuotes = withQuotes;
+	}
+
 	@Override
 	public void print(PrettyPrintWriter out) {
+		if (withQuotes) {
+			out.print('`');
+		}
 		out.print(tableName);
+		if (withQuotes) {
+			out.print('`');
+		}
 		
 	}
 	public String getTableName() {
 		return tableName;
+	}
+	public boolean isWithQuotes() {
+		return withQuotes;
+	}
+	public void setWithQuotes(boolean withQuotes) {
+		this.withQuotes = withQuotes;
 	}
 	
 	

@@ -70,7 +70,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		useBigQueryTransformStrategy();
 	}
 	
-	@Ignore
+	@Test
 	public void testAnalyticsModel() throws Exception {
 		
 		load("src/test/resources/konig-transform/analytics-model");
@@ -142,7 +142,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 			assertColumn(select, "a.givenName", null);
 			assertColumn(select, "b.alumniOf", null);
 		} else {
-			assertEquals("schema.PersonAlumniOfShape", tne.getTableName());
+			assertEquals("{gcpProjectId}.schema.PersonAlumniOfShape", tne.getTableName());
 
 			TableItemExpression rightTable = join.getRightTable();
 			assertTrue(rightTable instanceof TableAliasExpression);
