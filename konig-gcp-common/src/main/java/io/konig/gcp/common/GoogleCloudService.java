@@ -398,24 +398,6 @@ public class GoogleCloudService implements CredentialsProvider {
 		return KonigBigQueryUtil.createDatasetInfo(model);
 	}
 	
-	public TableInfo readViewInfo(File file) throws IOException {
-		try (FileReader reader = new FileReader(file)) {
-			return readViewInfo(reader,file);
-		}
-	}
-	
-	public TableInfo readViewInfo(Reader reader,File file) throws IOException { 		
-		JsonFactory factory = JacksonFactory.getDefaultInstance();
-		JsonObjectParser parser = factory.createJsonObjectParser();
-		ReplaceStringsReader input = new ReplaceStringsReader(
-			reader, projectToken, projectId, gcpBucketSuffixToken, gcpBucketSuffix);
-
-		com.google.api.services.bigquery.model.Table model = 
-			parser.parseAndClose(input, com.google.api.services.bigquery.model.Table.class);
-		model.getView().setUseLegacySql(false); 
-		return KonigBigQueryUtil.createViewInfo(model);
-	}
-	
 	public TopicAdminClient topicAdmin() {
 		if (topicAdmin == null) {
 			try {

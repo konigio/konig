@@ -1,4 +1,0 @@
-
-@prefix konig: <http://www.konig.io/ns/core/> .
-
-<{shapeId}> konig:shapeDataSource konig:BigQueryView .
