@@ -36,6 +36,9 @@ public class BigQueryInfo {
 
 	@Parameter(property="konig.gcp.bigquery.schema", defaultValue="${konig.gcp.bigquery.directory}/schema")
 	private File schema;
+	
+	@Parameter(property="konig.gcp.bigquery.view", defaultValue="${konig.gcp.bigquery.directory}/view")
+	private File view;
 
 	@Parameter(property="konig.gcp.bigquery.scripts", defaultValue="${konig.gcp.bigquery.directory}/scripts")
 	private File scripts;
@@ -65,9 +68,12 @@ public class BigQueryInfo {
 	public void setSchema(File schema) {
 		this.schema = schema;
 	}
-
-	
-
+	public File getView() {
+		return view;
+	}
+	public void setView(File view) {
+		this.view = view;
+	}
 	public File getScripts() {
 		return scripts;
 	}

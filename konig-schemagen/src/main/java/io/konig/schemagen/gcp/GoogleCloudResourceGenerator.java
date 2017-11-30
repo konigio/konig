@@ -26,14 +26,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.konig.core.KonigException;
+import io.konig.core.OwlReasoner;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeHandler;
+import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeVisitor;
+import io.konig.transform.proto.BigQueryChannelFactory;
+import io.konig.transform.proto.ShapeModel;
+import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelToShapeRule;
 
 public class GoogleCloudResourceGenerator {
 	
-	
+	private ShapeManager shapeManager;
+	private OwlReasoner owlReasoner;
 	private List<ShapeVisitor> visitors = new ArrayList<>();
+	
+	public GoogleCloudResourceGenerator(ShapeManager shapeManager,OwlReasoner owlReasoner ) {
+		this.shapeManager = shapeManager;
+		this.owlReasoner = owlReasoner;
+	}
 	
 	public void add(ShapeVisitor visitor) {
 		if (visitor != null) {
@@ -51,6 +63,16 @@ public class GoogleCloudResourceGenerator {
 		
 	}
 	
+	public void addBigQueryViewGenerator(File bigQueryViewDir) {
+		ShapeModelFactory shapeModelFactory = new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner);
+		
+		BigQueryViewWriter viewWriter = new BigQueryViewWriter(bigQueryViewDir);
+		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
+		
+		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, viewWriter ,shapeModelFactory);
+		add(transformer);
+		
+	}
 	public void addCloudStorageBucketWriter(File bucketDir) {
 		add(new GoogleCloudStorageBucketWriter(bucketDir));
 	}

@@ -85,12 +85,14 @@ public class GroovyDeploymentScriptWriter {
 			println("def deploymentPlan = {");
 			printDatasetCommands();
 			printTableCommands();
+			printTableViewCommands();
 			printTableDataCommands();
 			printGooglePubSubCommands();
 			println("}");
 			println("def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent");
 			println(delegate);
 			println("deploymentPlan()");
+			
 		}
 		
 	}
@@ -111,9 +113,6 @@ public class GroovyDeploymentScriptWriter {
 		}
 		
 	}
-
-
-
 
 	private void printGooglePubSubCommands() throws IOException {
 		
@@ -184,6 +183,29 @@ public class GroovyDeploymentScriptWriter {
 		}
 		
 	}
+	
+	private void printTableViewCommands() throws IOException {
+
+		File viewDir = googleCloudInfo.getBigquery().getView();
+		
+		if (viewDir != null) {
+			BigQuery bigquery = googleCloudService.bigQuery();
+			for (File file : viewDir.listFiles()) {
+				TableInfo info = googleCloudService.readViewInfo(file);
+				Table table = bigquery.getTable(info.getTableId()); 
+				if (table == null) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("create BigQueryView from \"");
+					print(path);
+					println("\"");
+					println(" println response ");
+				}
+			}
+		}
+		
+	}
+
 
 	private void print(String text) throws IOException {
 		out.write(text);

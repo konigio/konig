@@ -1,6 +1,5 @@
 package io.konig.sql.runtime;
 
-import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 
 /*
@@ -54,7 +53,7 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 				.getMemcacheService()
 				.get("FusionIdMapping");
 		if(mapping == null){			
-			ChartGeoLocationMapping mapping = new BigQueryFusionChartService(bigQuery)
+			ChartGeoLocationMapping mapping = new BigQueryFusionChartService(bigQuery , seriesRequest.getStruct().getMediaTypeBaseName())
 					.getFusionIdMapping();
 			MemcacheServiceFactory.getMemcacheService().put("FusionIdMapping", mapping);
 			

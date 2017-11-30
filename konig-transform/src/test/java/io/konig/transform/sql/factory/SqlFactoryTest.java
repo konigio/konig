@@ -276,7 +276,39 @@ GROUP BY actor, object
 		ColumnExpression compareRight = (ColumnExpression) compare.getRight();
 		assertEquals("a.endEventOf", compareRight.getColumnName());
 	}
+/*
+SELECT
+   organization AS id,
+   ARRAY_AGG(member) AS hasMember
+FROM `{gcpProjectId}.org.Membership`
+GROUP BY organization
+ */
+	@Test
+	public void testBigQueryView() throws Exception {
+		load("src/test/resources/konig-transform/bigquery-view");
+
+		URI shapeId = iri("http://example.com/ns/shape/OrganizationShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		FromExpression from = select.getFrom();
+		
+		List<TableItemExpression> tableItemList = from.getTableItems();
+		assertEquals(1, tableItemList.size());
+		
+		TableItemExpression item = tableItemList.get(0);
+		
+		assertTrue(item instanceof TableNameExpression);
+		
+		TableNameExpression tableName = (TableNameExpression) item;
+		
+		assertEquals(true, tableName.isWithQuotes());
+		assertEquals("{gcpProjectId}.org.Membership", tableName.getTableName());
+		
 	
+	}
 	
 /*
 SELECT
@@ -386,8 +418,11 @@ FROM
 		assertEquals(3, valueList.size());
 		
 		ValueExpression albumId = valueList.get(0);
-		assertTrue(albumId instanceof FunctionExpression);
-		FunctionExpression func = (FunctionExpression) albumId;
+		
+		assertTrue(albumId instanceof AliasExpression);
+		AliasExpression idAlias = (AliasExpression) albumId;
+		assertTrue(idAlias.getExpression() instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) idAlias.getExpression();
 		assertEquals("CONCAT", func.getFunctionName());
 		List<QueryExpression> argList = func.getArgList();
 		assertEquals(2, argList.size());
@@ -616,8 +651,11 @@ FROM
 		assertColumnName(memberOf, "b.name");
 		
 		ValueExpression idValue = valueList.get(0);
-		assertTrue(idValue instanceof FunctionExpression);
-		FunctionExpression func = (FunctionExpression) idValue;
+		assertTrue(idValue instanceof AliasExpression);
+		AliasExpression idAlias = (AliasExpression) idValue;
+		
+		assertTrue(idAlias.getExpression() instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) idAlias.getExpression();
 		assertEquals("CONCAT", func.getFunctionName());
 		List<QueryExpression> argList = func.getArgList();
 		assertEquals(2, argList.size());

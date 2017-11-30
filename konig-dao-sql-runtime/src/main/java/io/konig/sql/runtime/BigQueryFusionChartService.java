@@ -36,13 +36,18 @@ import io.konig.dao.core.DaoException;
 
 public class BigQueryFusionChartService {
 	private BigQuery bigQuery;
-	
-	public BigQueryFusionChartService(BigQuery bigQuery){
-		this.bigQuery = bigQuery;	
+	private String mediaTypeBaseName;
+	public BigQueryFusionChartService(BigQuery bigQuery , String mediaTypeBaseName){
+		this.bigQuery = bigQuery;
+		this.mediaTypeBaseName = mediaTypeBaseName;
 	}
 	
 	public ChartGeoLocationMapping getFusionIdMapping() throws DaoException {
-		String sql = "SELECT * FROM pearsonmypedia.FusionMapping";
+		
+		ClasspathEntityStructureService structureService = ClasspathEntityStructureService.defaultInstance();
+		EntityStructure struct = structureService.forMediaType(mediaTypeBaseName);
+		String datasetId = struct.getName().split("\\.")[0];
+		String sql = "SELECT * FROM "+datasetId+".FusionMapping";
 		QueryRequest request = QueryRequest.newBuilder(sql).setUseLegacySql(false).build();
 		QueryResponse response = bigQuery.query(request);
 		while (!response.jobCompleted()) {
