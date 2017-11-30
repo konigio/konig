@@ -232,6 +232,9 @@ public class ClasspathEntityStructureService implements EntityStructureService {
 
 	@Override
 	public EntityStructure forMediaType(String mediaTypeBaseName) throws DaoException {
+		if(mediaTypeMap == null) {
+			init();
+		}
 		String shapeId = mediaTypeMap.get(mediaTypeBaseName);
 		if (shapeId == null) {
 			throw new DaoException("EntityStructure not found for media type: " + mediaTypeBaseName);
