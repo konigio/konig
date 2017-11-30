@@ -8,12 +8,12 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:AdministrativeAreaShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/uuqchXqu2VUAAAFfygAFow> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/hWKx3dyMJkUAAAFgDSP-mQ> ; 
 	sh:targetClass schema:AdministrativeArea ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/AdministrativeArea> . 
 
-<http://www.konig.io/activity/uuqchXqu2VUAAAFfygAFow> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-11-17T07:42:00.223-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/hWKx3dyMJkUAAAFgDSP-mQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-30T08:35:51.112-05:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/AdministrativeArea> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

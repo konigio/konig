@@ -78,11 +78,11 @@ public class SimplePropertyMapper implements PropertyMapper {
 		ProtoFromItem last;
 	}
 
-	class Worker {
+	class Worker implements PropertyGroupHandler {
 		private Set<PropertyGroup> unmatchedProperties = new HashSet<>();
 
 		private FromItemEnds fromItemEnds;
-		
+		private FormulaHandler propertyHandler = new TimeIntervalFormulaHandler();
 
 
 		public Worker(FromItemEnds fromItemEnds) {
@@ -129,6 +129,10 @@ public class SimplePropertyMapper implements PropertyMapper {
 			LinkedList<ShapeModelMatchCount> queue = collectShapeModelMatchCount(targetClassModel);
 			Collections.sort(queue);
 			
+			boolean matched = false;
+			
+			ShapeModel variableModel=null;
+			
 			while (!queue.isEmpty() && !unmatchedProperties.isEmpty()) {
 				ShapeModelMatchCount sc = queue.pop();
 				if (sc.getMatchCount()>0) {
@@ -138,6 +142,18 @@ public class SimplePropertyMapper implements PropertyMapper {
 					// so that we pick the next "best" shape to join
 					updateMatchCounts(queue);
 					Collections.sort(queue);
+					matched = true;
+				} else if (isVariable(targetClassModel)){
+					variableModel = sc.getShapeModel();
+				}
+			}
+			
+			if (!matched && variableModel!=null) {
+				if (fromItemEnds.first==null) {
+					fromItemEnds.first = variableModel;
+				} else {
+					// TODO: fix me
+					throw new ShapeTransformException("Yikes! Don't know how to handle this case.");
 				}
 			}
 			
@@ -152,6 +168,14 @@ public class SimplePropertyMapper implements PropertyMapper {
 		}
 
 		
+		
+		private boolean isVariable(ClassModel targetClassModel) {
+		
+			return targetClassModel.getTargetShapeModel().getAccessor() instanceof VariablePropertyModel;
+		}
+
+
+
 
 		private void handleVariables(ClassModel targetClassModel) throws ShapeTransformException {
 			ShapeModel targetShapeModel = targetClassModel.getTargetShapeModel();
@@ -203,6 +227,9 @@ public class SimplePropertyMapper implements PropertyMapper {
 		}
 
 		private void applyFormulas(ClassModel targetClassModel) throws ShapeTransformException {
+			URI owlClass = targetClassModel.getOwlClass();
+			
+			logger.debug("BEGIN applyFormulas({})", owlClass==null?null:owlClass.getLocalName());
 			for (PropertyGroup group : targetClassModel.getPropertyGroups()) {
 				if (group.getSourceProperty()==null) {
 					PropertyModel targetProperty = group.getTargetProperty();
@@ -211,6 +238,11 @@ public class SimplePropertyMapper implements PropertyMapper {
 						PropertyConstraint constraint = direct.getPropertyConstraint();
 						QuantifiedExpression formula = constraint.getFormula();
 						if (formula != null) {
+
+							if (propertyHandler.handleFormula(this, targetProperty)) {
+								declareMatch(group);
+								continue;
+							}
 							
 							DerivedPropertyModel derived = new DerivedPropertyModel(targetProperty.getPredicate(), group, constraint);
 							derived.setDeclaringShape(targetClassModel.getTargetShapeModel());
@@ -802,7 +834,9 @@ public class SimplePropertyMapper implements PropertyMapper {
 		private void matchDirectProperties(ShapeModel sourceShapeModel) throws ShapeTransformException {
 			String path = null;
 			if (logger.isDebugEnabled()) {
-				path = sourceShapeModel.getClassModel().getTargetShapeModel().accessorPath();
+				ShapeModel targetShapeModel = sourceShapeModel.getClassModel().getTargetShapeModel();
+				
+				path = targetShapeModel==null ? null : targetShapeModel.accessorPath();
 				logger.debug("BEGIN matchDirectProperties({} : {})", RdfUtil.localName(sourceShapeModel.getShape().getId()), path);
 			}
 			Collection<PropertyModel> list = sourceShapeModel.getProperties();
@@ -872,7 +906,8 @@ public class SimplePropertyMapper implements PropertyMapper {
 			return classModel.getParent()==null;
 		}
 		
-		private void declareMatch(PropertyGroup group) {
+		public void declareMatch(PropertyGroup group) {
+			
 			if (logger.isDebugEnabled()) {
 				if (group.getTargetProperty()==null) {
 					logger.debug("declareMatch(group.targetProperty: null)");

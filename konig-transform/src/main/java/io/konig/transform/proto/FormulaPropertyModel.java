@@ -1,4 +1,4 @@
-package io.konig.transform.rule;
+package io.konig.transform.proto;
 
 /*
  * #%L
@@ -21,21 +21,26 @@ package io.konig.transform.rule;
  */
 
 
-import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 
-import io.konig.core.io.PrettyPrintWriter;
+import io.konig.formula.Formula;
 
-/**
- * A rule which asserts that a given property has a fixed, literal value that 
- * must be injected at runtime.
- * @author Greg McFall
- *
- */
-public class InjectLiteralPropertyRule extends FixedValuePropertyRule {
+public class FormulaPropertyModel extends PropertyModel {
+	
+	private Formula formula;
 
-	public InjectLiteralPropertyRule(DataChannel channel, URI predicate, Literal value) {
-		super(channel, predicate, value);
+	public FormulaPropertyModel(URI predicate, PropertyGroup group, Formula formula) {
+		super(predicate, group);
+		this.formula = formula;
+	}
+
+	@Override
+	public ShapeModel getValueModel() {
+		return null;
+	}
+
+	public Formula getFormula() {
+		return formula;
 	}
 	
 	

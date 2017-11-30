@@ -38,6 +38,7 @@ import io.konig.formula.ConditionalAndExpression;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.Expression;
+import io.konig.formula.FullyQualifiedIri;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.IfFunction;
@@ -52,12 +53,14 @@ import io.konig.formula.PrimaryExpression;
 import io.konig.formula.UnaryExpression;
 import io.konig.formula.ValueLogical;
 import io.konig.formula.VariableTerm;
+import io.konig.rio.turtle.IriTemplateParseException;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.BooleanTerm;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
+import io.konig.sql.query.CountStar;
 import io.konig.sql.query.IfExpression;
 import io.konig.sql.query.NumericValueExpression;
 import io.konig.sql.query.QueryExpression;
@@ -229,13 +232,51 @@ public class SqlFormulaFactory {
 			
 			if (primary instanceof FunctionExpression) {
 				FunctionExpression func = (FunctionExpression) primary;
+				
+				if (isCountStar(func)) {
+					return new CountStar();
+				}
 				String funcName = func.getFunctionName();
+				
 				io.konig.sql.query.FunctionExpression sqlFunc = new io.konig.sql.query.FunctionExpression(funcName);
 				addArguments(sqlFunc, func);
 				return sqlFunc;
 			}
+			if (primary instanceof FullyQualifiedIri) {
+				FullyQualifiedIri full = (FullyQualifiedIri) primary;
+				URI iri = full.getIri();
+				return new StringLiteralExpression(iri.getLocalName());
+			}
 			
 			throw new KonigException("Expression type not supported: " + primary.getClass().getSimpleName());
+		}
+
+		private boolean isCountStar(FunctionExpression func) {
+			if (FunctionExpression.COUNT.equalsIgnoreCase(func.getFunctionName())) {
+				
+				Expression arg = func.getArgList().get(0);
+				
+				PrimaryExpression primary = arg.asPrimaryExpression();
+				if (primary instanceof PathExpression) {
+					
+					PathExpression path = (PathExpression) primary;
+					List<PathStep> stepList = path.getStepList();
+					if (stepList.size()==1) {
+						PathStep step = stepList.get(0);
+						if (step instanceof DirectionStep) {
+							DirectionStep dir = (DirectionStep) step;
+							if (dir.getDirection() == Direction.OUT) {
+								PathTerm term = dir.getTerm();
+								if (term instanceof VariableTerm) {
+									return true;
+								}
+							}
+						}
+					}
+				}
+				
+			}
+			return false;
 		}
 
 		private void addArguments(io.konig.sql.query.FunctionExpression sqlFunc, FunctionExpression sparqlFunc) throws ShapeTransformException {
@@ -342,7 +383,7 @@ public class SqlFormulaFactory {
 			
 			List<PathStep> stepList = primary.getStepList();
 			if (stepList!=null) {
-				// For now, we only support two very limited patterns.
+				// For now, we only support three very limited patterns.
 				// (1)  Path consisting of a single OUT Step.
 				// (2)  Path consisting of a variable followed by a single OUT step.
 				if (stepList.size()==1) {

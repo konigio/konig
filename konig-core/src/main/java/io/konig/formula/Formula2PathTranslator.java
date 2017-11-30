@@ -80,7 +80,7 @@ public class Formula2PathTranslator {
 			return directionStep((DirectionStep)s);
 		} else if (s instanceof HasPathStep) {
 			return hasStep((HasPathStep)s);
-		}
+		} 
 		return null;
 	}
 
@@ -132,7 +132,7 @@ public class Formula2PathTranslator {
 	private Step directionStep(DirectionStep s) {
 		PathTerm term = s.getTerm();
 		if (term instanceof VariableTerm) {
-			return null;
+			return new OutStep(term.getIri());
 		}
 		switch (s.getDirection()) {
 		case IN : return inStep(s);

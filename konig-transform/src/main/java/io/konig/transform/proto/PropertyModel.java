@@ -1,6 +1,7 @@
 package io.konig.transform.proto;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /*
@@ -110,6 +111,18 @@ abstract public class PropertyModel extends BasePrettyPrintable implements Group
 		}
 		out.field("predicate", predicate);
 		
+	}
+	
+	public List<PropertyModel> path() {
+		LinkedList<PropertyModel> list = new LinkedList<>();
+		PropertyModel p = this;
+		do {
+			list.addFirst(p);
+			ShapeModel shapeModel = p.getDeclaringShape();
+			p = shapeModel.getAccessor();
+		} while (p != null);
+		
+		return list;
 	}
 	
 }

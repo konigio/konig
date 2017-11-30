@@ -39,6 +39,7 @@ import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
+import io.konig.sql.query.CountStar;
 import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.GroupByClause;
@@ -162,6 +163,27 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 			assertColumn(select, "b.givenName", null);
 			assertColumn(select, "a.alumniOf", null);
 		}
+		
+		
+		
+	}
+
+	@Test
+	public void testCountStar() throws Exception {
+		
+		load("src/test/resources/konig-transform/count-star");
+
+		URI shapeId = iri("http://example.com/shapes/SalesCountShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		ValueExpression value = select.getValues().get(0);
+		assertTrue(value instanceof AliasExpression);
+		AliasExpression alias = (AliasExpression) value;
+		QueryExpression query = alias.getExpression();
+		assertTrue(query instanceof CountStar);
 		
 		
 		

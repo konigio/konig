@@ -32,6 +32,7 @@ import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -515,7 +516,7 @@ public class WorkbookLoaderTest {
 		
 		loader.load(book, graph);
 
-		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
+		URI shapeId = uri("http://example.com/shapes/SalesByCityShape");
 		Vertex shapeVertex = graph.getVertex(shapeId);
 		assertTrue(shapeVertex != null);
 		
@@ -525,7 +526,7 @@ public class WorkbookLoaderTest {
 		URI state = uri("http://example.com/ns/alias/state");
 		PropertyConstraint p = shape.getPropertyConstraint(state);
 		String expected =
-			"/city/containedInPlace";
+			"/<http://www.konig.io/ns/var/?x>/location[type State]";
 		
 		Path path = p.getEquivalentPath();
 		
@@ -534,68 +535,9 @@ public class WorkbookLoaderTest {
 	}
 
 	
-	@Test
-	public void testPartitionOf() throws Exception {
-		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
-		
-		Workbook book = WorkbookFactory.create(input);
-		Graph graph = new MemoryGraph();
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		
-		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
-		
-		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
-		Shape shape = loader.getShapeManager().getShapeById(shapeId);
-		assertTrue(shape != null);
-		
-		PropertyConstraint p = shape.getPropertyConstraint(Konig.timeInterval);
-		assertTrue(p != null);
-		
-		Path partitionOf = p.getPartitionOf();
-		String expected = 
-			"@context {\n" + 
-			"  \"schema\" : \"http://schema.org/\",\n" + 
-			"  \"endTime\" : \"schema:endTime\"\n" + 
-			"}\n" + 
-			"/endTime";
-		
-		assertEquals(expected, partitionOf.toString());
-	}
 	
-	@Test
-	public void testSourcePath() throws Exception {
-		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
-		
-		Workbook book = WorkbookFactory.create(input);
-		Graph graph = new MemoryGraph();
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		
-		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
-		
-		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
-		Shape shape = loader.getShapeManager().getShapeById(shapeId);
-		assertTrue(shape != null);
-		
-		URI propertyId = uri("http://example.com/ns/alias/city");
-		PropertyConstraint p = shape.getPropertyConstraint(propertyId);
-		assertTrue(p != null);
-		
-		Path sourcePath = p.getSourcePath();
-		String expected = 
-			"@context {\n" + 
-			"  \"schema\" : \"http://schema.org/\",\n" + 
-			"  \"location\" : \"schema:location\",\n" + 
-			"  \"rdf\" : \"http://www.w3.org/1999/02/22-rdf-syntax-ns#\",\n" + 
-			"  \"type\" : \"rdf:type\",\n" + 
-			"  \"City\" : \"schema:City\"\n" + 
-			"}\n" + 
-			"/location[type City]";
-		assertEquals(expected, sourcePath.toString());
-	}
+	
+	
 	
 	
 //	public void testRollUpBy() throws Exception {
@@ -647,62 +589,9 @@ public class WorkbookLoaderTest {
 //		
 //	}
 	
-	@Test
-	public void testAggregationOf() throws Exception {
-		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
-		
-		Workbook book = WorkbookFactory.create(input);
-		Graph graph = new MemoryGraph();
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		
-		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
-
-		
-		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
-		Vertex shapeVertex = graph.getVertex(shapeId);
-		assertTrue(shapeVertex != null);
-		
-		SimplePojoFactory pojoFactory = new SimplePojoFactory();
-		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
-		
-		URI actual = shape.getAggregationOf();
-		assertEquals(Schema.BuyAction, actual);
-		
-	}
 	
-	@Test
-	public void testIn() throws Exception {
-
-		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
-		
-		Workbook book = WorkbookFactory.create(input);
-		Graph graph = new MemoryGraph();
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		
-		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
-
-		
-		URI shapeId = uri("http://example.com/shapes/v1/konig/WeekMonthYearShape");
-		Vertex shapeVertex = graph.getVertex(shapeId);
-		assertTrue(shapeVertex != null);
-		
-		SimplePojoFactory pojoFactory = new SimplePojoFactory();
-		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
-		
-		PropertyConstraint p = shape.getPropertyConstraint(Konig.durationUnit);
-		assertTrue(p!=null);
-		
-		List<Value> list = p.getIn();
-		assertTrue(list != null);
-		// TODO: fixme
-//		assertEquals(TIME.unitWeek, list.get(0));
-//		assertEquals(TIME.unitMonth, list.get(1));
-//		assertEquals(TIME.unitYear, list.get(2));
-	}
+	
+	
 	
 	@Test
 	public void testStereotype() throws Exception {
@@ -718,7 +607,7 @@ public class WorkbookLoaderTest {
 		
 		loader.load(book, graph);
 		
-		URI shapeId = uri("http://example.com/shapes/v1/fact/SalesByCityShape");
+		URI shapeId = uri("http://example.com/shapes/SalesByCityShape");
 		Vertex shapeVertex = graph.getVertex(shapeId);
 		assertTrue(shapeVertex != null);
 		
