@@ -11,7 +11,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:SalesByCityShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/qSuoqL4V0UUAAAFgA1VLDQ> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/hWKx3dyMJkUAAAFgDSP-mQ> ; 
 	sh:targetClass fact:SalesByCity ; 
 	konig:variable  [ 
 		sh:class schema:BuyAction ; 
@@ -27,9 +27,10 @@ shape:SalesByCityShape a sh:Shape ;
 		sh:maxCount 1 ; 
 		konig:stereotype konig:measure ; 
 		konig:formula '''@context {
-   "agent" : "http://schema.org/agent"
+   "agent" : "http://schema.org/agent",
+   "anonymousId" : "http://www.konig.io/ns/core/anonymousId"
 }
-COUNT(?x.agent)'''
+COUNT(?x.agent.anonymousId)'''
 	 ]  ,  [ 
 		sh:path alias:city ; 
 		rdfs:comment "The city dimension" ; 
@@ -98,8 +99,8 @@ COUNT(?x.agent)'''
 TIME_INTERVAL(?x.endTime, Week, Month, Year)''' ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/fact/tables/SalesByCity> . 
 
-<http://www.konig.io/activity/qSuoqL4V0UUAAAFgA1VLDQ> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-11-28T10:53:29.791-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/hWKx3dyMJkUAAAFgDSP-mQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-30T08:35:51.112-05:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/fact/tables/SalesByCity> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 
