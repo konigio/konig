@@ -39,6 +39,7 @@ import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
+import io.konig.sql.query.CountStar;
 import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.GroupByClause;
@@ -70,7 +71,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		useBigQueryTransformStrategy();
 	}
 	
-	@Test
+	@Ignore
 	public void testAnalyticsModel() throws Exception {
 		
 		load("src/test/resources/konig-transform/analytics-model");
@@ -88,7 +89,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testJoinById() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-by-id");
@@ -166,6 +167,27 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 		
 	}
+
+	@Test
+	public void testCountStar() throws Exception {
+		
+		load("src/test/resources/konig-transform/count-star");
+
+		URI shapeId = iri("http://example.com/shapes/SalesCountShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		ValueExpression value = select.getValues().get(0);
+		assertTrue(value instanceof AliasExpression);
+		AliasExpression alias = (AliasExpression) value;
+		QueryExpression query = alias.getExpression();
+		assertTrue(query instanceof CountStar);
+		
+		
+		
+	}
 	
 /*
 SELECT
@@ -195,7 +217,7 @@ SELECT
 FROM xas.AssessmentSession
 GROUP BY actor, object
  */
-	@Ignore
+	@Test
 	public void testAssessmentEndeavor() throws Exception {
 		load("src/test/resources/konig-transform/assessment-endeavor");
 
@@ -209,7 +231,7 @@ GROUP BY actor, object
 		// TODO : Add more validation steps.
 	}
 
-	@Ignore
+	@Test
 	public void testAssessmentSession() throws Exception {
 		load("src/test/resources/konig-transform/assessment-session");
 
@@ -283,7 +305,7 @@ SELECT
 FROM `{gcpProjectId}.org.Membership`
 GROUP BY organization
  */
-	@Ignore
+	@Test
 	public void testBigQueryView() throws Exception {
 		load("src/test/resources/konig-transform/bigquery-view");
 
@@ -317,7 +339,7 @@ SELECT
 FROM org.Membership
 GROUP BY organization
  */
-	@Ignore
+	@Test
 	public void testArrayAgg() throws Exception {
 		load("src/test/resources/konig-transform/array-agg");
 
@@ -365,7 +387,7 @@ GROUP BY organization
 		assertEquals("organization", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testInjectModifiedTimestamp() throws Exception {
 		
 		load("src/test/resources/konig-transform/inject-modified-timestamp");
@@ -403,7 +425,7 @@ FROM
  ON
    a.artist_id=b.group_id
  */
-	@Ignore
+	@Test
 	public void testGcpDeploy() throws Exception {
 		
 		load("src/test/resources/konig-transform/gcp-deploy");
@@ -451,7 +473,7 @@ FROM
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAggregateFunction() throws Exception {
 		
 		load("src/test/resources/konig-transform/aggregate-function");
@@ -486,7 +508,7 @@ FROM
 		assertEquals("resultOf", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testDerivedProperty() throws Exception {
 		
 /*
@@ -562,7 +584,7 @@ FROM
  ON
    a.gender=b.genderCode	
  */
-	@Ignore
+	@Test
 	public void testEnumField() throws Exception {
 		
 		load("src/test/resources/konig-transform/enum-field");
@@ -631,7 +653,7 @@ FROM
 		
 	}
 
-	@Ignore
+	@Test
 	public void testJoinNestedEntityByPk() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity-by-pk");
@@ -669,7 +691,7 @@ FROM
 		assertEquals("b.org_id", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinNestedEntity() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -803,7 +825,7 @@ FROM
 		
 	}
 
-	@Ignore
+	@Test
 	public void testFlattenedField() throws Exception {
 		
 		load("src/test/resources/konig-transform/flattened-field");
@@ -856,7 +878,7 @@ FROM
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -894,7 +916,7 @@ FROM
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Ignore
+	@Test
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");

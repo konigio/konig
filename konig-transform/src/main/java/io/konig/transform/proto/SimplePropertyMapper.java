@@ -129,6 +129,10 @@ public class SimplePropertyMapper implements PropertyMapper {
 			LinkedList<ShapeModelMatchCount> queue = collectShapeModelMatchCount(targetClassModel);
 			Collections.sort(queue);
 			
+			boolean matched = false;
+			
+			ShapeModel variableModel=null;
+			
 			while (!queue.isEmpty() && !unmatchedProperties.isEmpty()) {
 				ShapeModelMatchCount sc = queue.pop();
 				if (sc.getMatchCount()>0) {
@@ -138,6 +142,18 @@ public class SimplePropertyMapper implements PropertyMapper {
 					// so that we pick the next "best" shape to join
 					updateMatchCounts(queue);
 					Collections.sort(queue);
+					matched = true;
+				} else if (isVariable(targetClassModel)){
+					variableModel = sc.getShapeModel();
+				}
+			}
+			
+			if (!matched && variableModel!=null) {
+				if (fromItemEnds.first==null) {
+					fromItemEnds.first = variableModel;
+				} else {
+					// TODO: fix me
+					throw new ShapeTransformException("Yikes! Don't know how to handle this case.");
 				}
 			}
 			
@@ -152,6 +168,14 @@ public class SimplePropertyMapper implements PropertyMapper {
 		}
 
 		
+		
+		private boolean isVariable(ClassModel targetClassModel) {
+		
+			return targetClassModel.getTargetShapeModel().getAccessor() instanceof VariablePropertyModel;
+		}
+
+
+
 
 		private void handleVariables(ClassModel targetClassModel) throws ShapeTransformException {
 			ShapeModel targetShapeModel = targetClassModel.getTargetShapeModel();

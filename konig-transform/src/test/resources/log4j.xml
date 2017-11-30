@@ -29,7 +29,7 @@
     </layout> 
   </appender> 
   
-<!--   
+<!-- 
   <logger name="io.konig.transform.proto.VariableShapeFactory" additivity="false">
       <level value="debug"/>
       <appender-ref ref="console"/>
@@ -40,12 +40,7 @@
       <appender-ref ref="console"/>
   </logger>
   
- --> 
-  
-  <logger name="io.konig.transform.proto.ShapeModelToShapeRule" additivity="false">
-      <level value="debug"/>
-      <appender-ref ref="console"/>
-  </logger>
+-->
   
   <root> 
     <priority value ="warn" /> 

@@ -28,6 +28,7 @@ import io.konig.core.io.PrettyPrintWriter;
 
 public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 	public static final String SUM = "Sum";
+	public static final String COUNT = "COUNT";
 	public static final String DATE_TRUNC = "DATE_TRUNC";
 	
 	private String functionName;
