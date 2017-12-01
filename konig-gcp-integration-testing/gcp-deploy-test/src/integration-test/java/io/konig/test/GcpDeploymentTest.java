@@ -26,7 +26,7 @@ public class GcpDeploymentTest {
 	
 	private static File mavenHome = null;
 
-	@Ignore
+	@Test
 	public void test1GcpMultiProject() throws Exception {
 		InvocationRequest request = new DefaultInvocationRequest();
 		request.setPomFile(new File("src/integration-test/resources/gcp-multi-project/pom.xml"));
@@ -37,7 +37,7 @@ public class GcpDeploymentTest {
 				result.getExitCode() == 0);
 	}
 
-	@Ignore
+	@Test
 	public void test2DemoProject() throws MavenInvocationException {
 		InvocationRequest request = new DefaultInvocationRequest();
 		request.setPomFile(new File("src/integration-test/resources/demo/demo-parent/pom.xml"));
@@ -61,7 +61,7 @@ public class GcpDeploymentTest {
 		new GroovyShell().evaluate(deploymentScript);
 	}
 
-	@Ignore
+	@Test
 	public void test4Script() throws CompilationFailedException, IOException {
 		File file = new File(
 				"src/integration-test/resources/demo/demo-gcp-model/target/generated/gcp/scripts/tear-down.groovy");
