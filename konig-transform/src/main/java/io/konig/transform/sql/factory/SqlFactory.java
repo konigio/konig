@@ -579,7 +579,7 @@ public class SqlFactory {
 
 			useAlias = fromItem instanceof JoinRule;
 
-			TableItemExpression item = tableItemExpression(fromItem);
+			TableItemExpression item = tableItemExpression(fromItem,shapeRule);
 			from.add(item);
 
 		}
@@ -592,7 +592,7 @@ public class SqlFactory {
 
 			useAlias = true;
 
-			TableItemExpression item = tableItemExpression(fromItem);
+			TableItemExpression item = tableItemExpression(fromItem,shapeRule);
 			from.add(item);
 
 		}
@@ -610,7 +610,7 @@ public class SqlFactory {
 			return e;
 		}
 
-		private TableItemExpression tableItemExpression(FromItem fromItem) throws TransformBuildException {
+		private TableItemExpression tableItemExpression(FromItem fromItem, ShapeRule shapeRule) throws TransformBuildException {
 			if (fromItem == null) {
 				return null;
 			}
@@ -633,13 +633,17 @@ public class SqlFactory {
 			}
 			TableDataSource tableSource = (TableDataSource) datasource;
 			String tableName = tableSource.getTableIdentifier();
-			if (datasource instanceof GoogleBigQueryView) {
-				StringBuilder tableNameBuilder = new StringBuilder();
-				tableNameBuilder.append("{gcpProjectId}.");
-				tableNameBuilder.append(tableName);
-				tableName = tableNameBuilder.toString();
+			List<DataSource> targetDatasourceList = shapeRule.getTargetShape().getShapeDataSource();
+			if(targetDatasourceList != null) {
+				for(DataSource targetDatasource : targetDatasourceList) {
+					if (targetDatasource instanceof GoogleBigQueryView) {
+						StringBuilder tableNameBuilder = new StringBuilder();
+						tableNameBuilder.append("{gcpProjectId}.");
+						tableNameBuilder.append(tableName);
+						tableName = tableNameBuilder.toString();
+					}
+				}
 			}
-			
 			
 			TableItemExpression tableItem = new TableNameExpression(tableName);
 			
@@ -654,7 +658,7 @@ public class SqlFactory {
 			if (fromItem instanceof JoinRule) {
 				JoinRule joinRule = (JoinRule) fromItem;
 				TableItemExpression left = tableItem;
-				TableItemExpression right = tableItemExpression(joinRule.getRight());
+				TableItemExpression right = tableItemExpression(joinRule.getRight(),shapeRule);
 				OnExpression condition = onExpression(joinRule.getCondition());
 				tableItem = new JoinExpression(left, right, condition);
 			}

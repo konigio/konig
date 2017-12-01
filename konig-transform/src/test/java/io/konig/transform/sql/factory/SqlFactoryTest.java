@@ -276,14 +276,14 @@ GROUP BY actor, object
 		
 		assertTrue(left.getTableName() instanceof TableNameExpression);
 		TableNameExpression leftName = (TableNameExpression) left.getTableName();
-		assertEquals("xas.CompletedAssessment", leftName.getTableName());
+		assertEquals("{gcpProjectId}.xas.CompletedAssessment", leftName.getTableName());
 		
 		assertTrue(join.getRightTable() instanceof TableAliasExpression);
 		TableAliasExpression right = (TableAliasExpression) join.getRightTable();
 		
 		assertTrue(right.getTableName() instanceof TableNameExpression);
 		TableNameExpression rightName = (TableNameExpression) right.getTableName();
-		assertEquals("xas.StartAssessment", rightName.getTableName());
+		assertEquals("{gcpProjectId}.xas.StartAssessment", rightName.getTableName());
 		
 		SearchCondition condition =  join.getJoinSpecification().getSearchCondition();
 		
