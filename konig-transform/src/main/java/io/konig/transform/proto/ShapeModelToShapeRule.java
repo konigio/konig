@@ -358,13 +358,13 @@ public class ShapeModelToShapeRule {
 		
 
 		private void setDataChannelName(ProtoFromItem item) throws ShapeTransformException {
-			
-			ShapeModel shapeModel = item.first();
-			shapeModel.getDataChannel().setName(variableNamer.next());
-			
-			ProtoFromItem rest = item.rest();
-			if (rest != null) {
-				setDataChannelName(rest);
+			if (item instanceof ShapeModel) {
+				ShapeModel shapeModel = (ShapeModel) item;
+				shapeModel.getDataChannel().setName(variableNamer.next());
+			} else if (item instanceof ProtoJoinExpression) {
+				ProtoJoinExpression join = (ProtoJoinExpression) item;
+				setDataChannelName(join.getLeft());
+				setDataChannelName(join.getRight());
 			}
 			
 		}

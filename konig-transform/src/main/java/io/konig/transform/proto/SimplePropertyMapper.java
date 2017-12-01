@@ -38,6 +38,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
+import io.konig.formula.HasPathStep;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
 import io.konig.formula.PrimaryExpression;
@@ -100,6 +101,8 @@ public class SimplePropertyMapper implements PropertyMapper {
 				
 			}
 		}
+		
+		
 
 		private String unmatchedMessage() {
 			StringBuilder msg = new StringBuilder();
@@ -125,6 +128,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 				return;
 			}
 			handleVariables(targetClassModel);
+			createPathFromItems(targetClassModel);
 			
 			LinkedList<ShapeModelMatchCount> queue = collectShapeModelMatchCount(targetClassModel);
 			Collections.sort(queue);
@@ -169,6 +173,46 @@ public class SimplePropertyMapper implements PropertyMapper {
 
 		
 		
+		private void createPathFromItems(ClassModel targetClassModel) {
+//			ShapeModel shapeModel = targetClassModel.getTargetShapeModel();
+//			
+//			outer: for (PropertyModel p : shapeModel.getProperties()) {
+//				if (p instanceof DirectPropertyModel) {
+//					DirectPropertyModel direct = (DirectPropertyModel) p;
+//					PropertyConstraint pc = direct.getPropertyConstraint();
+//					QuantifiedExpression formula = pc.getFormula();
+//					if (formula != null) {
+//						PrimaryExpression primary = formula.asPrimaryExpression();
+//						if (primary instanceof PathExpression) {
+//							PathExpression path = (PathExpression) primary;
+//							for (PathStep step : path.getStepList()) {
+//								if (step instanceof HasPathStep) {
+//									
+//									ProtoPathFromItem item = new ProtoPathFromItem(shapeModel, path);
+//									
+//
+//									if (fromItemEnds.first == null) {
+//										fromItemEnds.first = item;
+//									} else {
+//										item.setRest(fromItemEnds.last);
+//										fromItemEnds.last = item;
+//									}
+//									
+//									
+//									if (logger.isDebugEnabled()) {
+//										logger.debug("createPathFromItems  path: {}", path.simpleText());
+//									}
+//									continue outer;
+//								}
+//							}
+//						}
+//					}
+//				}
+//			}
+			
+		}
+
+
 		private boolean isVariable(ClassModel targetClassModel) {
 		
 			return targetClassModel.getTargetShapeModel().getAccessor() instanceof VariablePropertyModel;
