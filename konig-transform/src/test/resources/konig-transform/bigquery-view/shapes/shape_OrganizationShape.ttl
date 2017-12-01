@@ -37,7 +37,7 @@ shape:OrganizationShape a sh:Shape ;
 <http://www.konig.io/activity/CwN4AaQ2PuYAAAFerUaKVA> a konig:LoadModelFromSpreadsheet ; 
 	as:endTime "2017-09-23T01:47:14.982-04:00"^^xsd:dateTime . 
 
-<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/org/tables/Organization> a konig:GoogleBigQueryTable , konig:DataSource ; 
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/org/tables/Organization> a konig:GoogleBigQueryView , konig:DataSource ; 
 	gcp:tableReference  [ 
 		gcp:projectId "{gcpProjectId}" ; 
 		gcp:datasetId "org" ; 
