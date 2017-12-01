@@ -16,6 +16,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 
+import com.google.common.io.Files;
+
 import groovy.lang.GroovyShell;
 
 import static org.junit.Assert.assertTrue;
@@ -85,11 +87,39 @@ public class GcpDeploymentTest {
 			for (String dirname : System.getenv("PATH").split(File.pathSeparator)) {
 				File file = new File(dirname, "mvn");
 				if (file.isFile()) {
-					return mavenHome = file.getParentFile().getParentFile();
+					mavenHome = file.getParentFile().getParentFile();
+					createBatchFile();
+					return mavenHome;
 				}
 			}
 			throw new RuntimeException("Maven executable not found.");
 		}
 		return mavenHome;
+	}
+
+	/**
+	 * On a Windows OS, copy the mvn.cmd file to mvn.bat.
+	 * This is necessary because the Maven invoker relies on mvn.bat but newer versions
+	 * of Maven have the mvn.cmd file instead.
+	 */
+	private void createBatchFile() {
+		
+		String os = System.getProperty("os.name").toLowerCase();
+		if (os.contains("win")) {
+			// We are running on a Windows machine.  Copy the file.
+			File batFile = new File(mavenHome, "bin/mvn.bat");
+			if (!batFile.exists()) {
+				File cmdFile = new File(mavenHome, "bin/mvn.cmd");
+				if (cmdFile.exists()) {
+					try {
+						Files.copy(cmdFile, batFile);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}
+				
+			}
+		}
+		
 	}
 }
