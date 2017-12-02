@@ -53,7 +53,10 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	
 	private DataChannel dataChannel;
 	
-	
+	public ShapeModel rootTargetShapeModel() {
+		ClassModel rootClassModel = classModel.rootClassModel();
+		return rootClassModel.getTargetShapeModel();
+	}
 	
 	public ShapeModel(Shape shape) {
 		this.shape = shape;
@@ -193,18 +196,7 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	}
 
 
-	@Override
-	public ShapeModel first() {
-		return this;
-	}
-
-
-	@Override
-	public ProtoFromItem rest() {
-		return null;
-	}
-
-	public void add(GroupByItem item) {
+	public void addGroupBy(GroupByItem item) {
 		if (groupBy == null) {
 			groupBy = new ArrayList<>();
 		}
@@ -214,6 +206,18 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	@SuppressWarnings("unchecked")
 	public List<GroupByItem> getGroupBy() {
 		return groupBy==null ? Collections.EMPTY_LIST : groupBy;
+	}
+
+
+	@Override
+	public ProtoFromItem first() {
+		return this;
+	}
+
+
+	@Override
+	public ProtoFromItem rest() {
+		return null;
 	}
 
 

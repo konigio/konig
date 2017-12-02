@@ -85,6 +85,8 @@ public class TimeIntervalFormulaHandler implements FormulaHandler {
 							throw new ShapeTransformException("ShapeModel is not defined for timeInterval");
 						}
 						
+						
+						
 						PropertyModel intervalStart = timeIntervalModel.getPropertyByPredicate(Konig.intervalStart);
 						if (intervalStart == null) {
 							throw new ShapeTransformException("intervalStart property is not defined");
@@ -93,6 +95,10 @@ public class TimeIntervalFormulaHandler implements FormulaHandler {
 						FormulaPropertyModel value = new FormulaPropertyModel(Konig.intervalStart, group, intervalStartValue);
 						group.setSourceProperty(value);
 						groupHandler.declareMatch(group);
+						value.setDeclaringShape(timeIntervalModel);
+
+						ShapeModel root = timeIntervalModel.rootTargetShapeModel();
+						root.addGroupBy(value);
 						
 						
 						PropertyModel durationUnit = timeIntervalModel.getPropertyByPredicate(Konig.durationUnit);

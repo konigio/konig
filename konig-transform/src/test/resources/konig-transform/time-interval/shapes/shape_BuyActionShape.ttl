@@ -9,18 +9,13 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:BuyActionShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/ZOasopIEGkIAAAFgDp28GA> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/bp7n2fTbVHAAAAFgEe6rTw> ; 
 	sh:targetClass schema:BuyAction ; 
 	sh:property  [ 
-		sh:path schema:agent ; 
-		rdfs:comment "The person who made the purchase." ; 
-		sh:shape shape:PersonShape ; 
-		sh:minCount 1 ; 
-		sh:maxCount 1
-	 ]  ,  [ 
 		sh:path schema:object ; 
 		rdfs:comment "The product that was purchased." ; 
-		sh:shape shape:ProductShape ; 
+		sh:class schema:Product ; 
+		sh:nodeKind sh:IRI ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
@@ -34,23 +29,11 @@ shape:BuyActionShape a sh:Shape ;
 		rdfs:comment "The date/time when the buy action ended." ; 
 		sh:datatype xsd:dateTime ; 
 		sh:minCount 1 ; 
-		sh:maxCount 1
-	 ]  ,  [ 
-		sh:path schema:location ; 
-		rdfs:comment "The geographic location where the purchase occurred." ; 
-		sh:shape shape:PlaceShape ; 
-		sh:minCount 1
-	 ]  ,  [ 
-		sh:path schema:instrument ; 
-		rdfs:comment "The web store that the agent used to make the purchase." ; 
-		sh:class schema:WebApplication ; 
-		sh:nodeKind sh:IRI ; 
-		sh:minCount 1 ; 
 		sh:maxCount 1 ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/BuyAction> . 
 
-<http://www.konig.io/activity/ZOasopIEGkIAAAFgDp28GA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-11-30T15:28:26.668-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/bp7n2fTbVHAAAAFgEe6rTw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-12-01T06:55:42.498-05:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/BuyAction> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

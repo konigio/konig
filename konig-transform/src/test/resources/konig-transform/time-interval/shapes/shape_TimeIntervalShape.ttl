@@ -7,7 +7,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:TimeIntervalShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/ZOasopIEGkIAAAFgDp28GA> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/bp7n2fTbVHAAAAFgEe6rTw> ; 
 	sh:targetClass konig:TimeInterval ; 
 	sh:property  [ 
 		sh:path konig:intervalStart ; 
@@ -24,5 +24,5 @@ shape:TimeIntervalShape a sh:Shape ;
 		sh:minCount 1 ; 
 		sh:maxCount 1 ]  . 
 
-<http://www.konig.io/activity/ZOasopIEGkIAAAFgDp28GA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-11-30T15:28:26.668-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/bp7n2fTbVHAAAAFgEe6rTw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-12-01T06:55:42.498-05:00"^^xsd:dateTime . 

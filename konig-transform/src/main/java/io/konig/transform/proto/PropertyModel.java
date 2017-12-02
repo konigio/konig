@@ -119,6 +119,9 @@ abstract public class PropertyModel extends BasePrettyPrintable implements Group
 		do {
 			list.addFirst(p);
 			ShapeModel shapeModel = p.getDeclaringShape();
+			if (shapeModel==null) {
+				throw new RuntimeException("ShapeModel is null on property: " + p.getPredicate().getLocalName());
+			}
 			p = shapeModel.getAccessor();
 		} while (p != null);
 		

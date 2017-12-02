@@ -70,6 +70,99 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 	public void setUp() throws Exception {
 		useBigQueryTransformStrategy();
 	}
+
+/*
+SELECT
+   STRUCT(
+      "Week" AS durationUnit,
+      DATE_TRUNC(endTime, "Week") AS intervalStart
+   ) AS timeInterval,
+   COUNT(*) AS totalCount
+FROM schema.BuyAction;
+ */
+	@Test
+	public void testTimeInterval() throws Exception {
+		
+		load("src/test/resources/konig-transform/time-interval");
+
+		URI shapeId = iri("http://example.com/shapes/SalesByCityShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(2, valueList.size());
+		
+		ValueExpression value = valueList.get(0);
+		assertTrue(value instanceof AliasExpression);
+		AliasExpression alias = (AliasExpression) value;
+		assertEquals("timeInterval", alias.getAlias());
+		
+		QueryExpression query = alias.getExpression();
+		assertTrue(query instanceof StructExpression);
+		StructExpression struct = (StructExpression) query;
+		
+		List<ValueExpression> timeValueList = struct.getValues();
+		assertEquals(2, timeValueList.size());
+		
+		value = timeValueList.get(0);
+		assertTrue(value instanceof AliasExpression);
+		alias = (AliasExpression)value;
+		assertEquals("durationUnit", alias.getAlias());
+		
+		value = timeValueList.get(1);
+		assertTrue(value instanceof AliasExpression);
+		alias = (AliasExpression) value;
+		assertEquals("intervalStart", alias.getAlias());
+		
+		query = alias.getExpression();
+		assertTrue(query instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) query;
+		assertEquals("DATE_TRUNC", func.getFunctionName());
+		List<QueryExpression> argList = func.getArgList();
+		assertEquals(2, argList.size());
+		
+		query = argList.get(0);
+		assertTrue(query instanceof ColumnExpression);
+		ColumnExpression col = (ColumnExpression) query;
+		assertEquals("endTime", col.getColumnName());
+		
+		query = argList.get(1);
+		assertTrue(query instanceof StringLiteralExpression);
+		StringLiteralExpression literal = (StringLiteralExpression) query;
+		assertEquals("Week", literal.getValue());
+
+		value = valueList.get(1);
+		assertTrue(value instanceof AliasExpression);
+		alias = (AliasExpression) value;
+		assertEquals("totalCount", alias.getAlias());
+		
+		query = alias.getExpression();
+		assertTrue(query instanceof CountStar);
+		
+		FromExpression from = select.getFrom();
+		List<TableItemExpression> itemList = from.getTableItems();
+		assertEquals(1, itemList.size());
+		TableItemExpression item = itemList.get(0);
+		assertTrue(item instanceof TableNameExpression);
+		TableNameExpression tableName = (TableNameExpression) item;
+		assertEquals("schema.BuyAction", tableName.getTableName());
+		
+		GroupByClause groupBy = select.getGroupBy();
+		assertTrue(groupBy != null);
+		
+		List<GroupingElement> groupingList = groupBy.getElementList();
+		assertEquals(1, groupingList.size());
+		
+		GroupingElement element = groupingList.get(0);
+		assertTrue(element instanceof ColumnExpression);
+		
+		col = (ColumnExpression) element;
+		assertEquals("timeInterval.intervalStart", col.getColumnName());
+		
+	}
 	
 	@Ignore
 	public void testAnalyticsModel() throws Exception {

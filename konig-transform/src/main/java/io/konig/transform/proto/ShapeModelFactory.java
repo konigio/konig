@@ -140,7 +140,7 @@ public class ShapeModelFactory {
 					if (valueModel != null) {
 						PropertyModel id = valueModel.getPropertyByPredicate(Konig.id);
 						if (id != null) {
-							shapeModel.add((GroupByItem)id);
+							shapeModel.addGroupBy((GroupByItem)id);
 						}
 					}
 				}
@@ -149,7 +149,7 @@ public class ShapeModelFactory {
 				
 				GroupByItem item =  groupByItem(shapeModel, formula);
 				if (item != null) {
-					shapeModel.add(item);
+					shapeModel.addGroupBy(item);
 				}
 				
 			}

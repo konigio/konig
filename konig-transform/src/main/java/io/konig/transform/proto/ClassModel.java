@@ -52,6 +52,11 @@ public class ClassModel extends BasePrettyPrintable {
 		this.owlClass = owlClass;
 	}
 	
+	public ClassModel rootClassModel() {
+		ClassModel parent = getParent();
+		return parent==null ? this : parent.rootClassModel();
+	}
+	
 	public ClassModel getParent() {
 		PropertyModel accessor = targetShapeModel.getAccessor();
 		if (accessor!=null) {

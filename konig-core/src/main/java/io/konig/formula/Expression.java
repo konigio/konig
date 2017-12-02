@@ -81,7 +81,7 @@ public class Expression extends AbstractFormula {
 	@Override
 	public void print(PrettyPrintWriter out) {
 		Context lastWrittenContext = out.getLastWrittenContext();
-		if (context != null && context!=lastWrittenContext) {
+		if (context != null && !out.isSuppressContext() && context!=lastWrittenContext) {
 			out.setLastWrittenContext(context);
 			
 			List<Term> termList = context.asList();

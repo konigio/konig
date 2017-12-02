@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import java.io.StringWriter;
+
 /*
  * #%L
  * Konig Core
@@ -25,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import io.konig.core.KonigException;
 import io.konig.core.io.PrettyPrintWriter;
 
 public class PathExpression extends AbstractFormula implements PrimaryExpression {
@@ -52,6 +53,15 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 			}
 		}
 
+	}
+	
+	public String simpleText() {
+		StringWriter writer = new StringWriter();
+		PrettyPrintWriter pretty = new PrettyPrintWriter(writer);
+		pretty.setSuppressContext(true);
+		print(pretty);
+		pretty.close();
+		return writer.toString();
 	}
 
 	@Override
