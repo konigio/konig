@@ -53,7 +53,10 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	
 	private DataChannel dataChannel;
 	
-	
+	public ShapeModel rootTargetShapeModel() {
+		ClassModel rootClassModel = classModel.rootClassModel();
+		return rootClassModel.getTargetShapeModel();
+	}
 	
 	public ShapeModel(Shape shape) {
 		this.shape = shape;
@@ -193,7 +196,7 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	}
 
 
-	public void add(GroupByItem item) {
+	public void addGroupBy(GroupByItem item) {
 		if (groupBy == null) {
 			groupBy = new ArrayList<>();
 		}

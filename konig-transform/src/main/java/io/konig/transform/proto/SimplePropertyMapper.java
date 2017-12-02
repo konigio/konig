@@ -293,6 +293,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 							group.add(derived);
 							group.setSourceProperty(derived);
 							declareMatch(group);
+							
 							continue;
 						}
 						
