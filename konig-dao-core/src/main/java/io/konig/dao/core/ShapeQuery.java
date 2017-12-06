@@ -29,6 +29,7 @@ public class ShapeQuery {
 	private String shapeId;
 	private DataFilter filter;
 	private String view;
+	private String aggregate;
 	private Map<String,String> parameters;
 	
 	public ShapeQuery() {
@@ -48,6 +49,9 @@ public class ShapeQuery {
 		return view;
 	}
 	
+	public String getAggregate() {
+		return aggregate;
+	}
 
 	public Map<String, String> getParameters() {
 		return parameters;
@@ -68,6 +72,10 @@ public class ShapeQuery {
 	private void setView(String view) {
 		this.view = view;
 	}
+	
+	private void setAggregate(String aggregate) {
+		this.aggregate = aggregate;
+	}
 
 	public static Builder newBuilder() {
 		return new Builder();
@@ -85,6 +93,12 @@ public class ShapeQuery {
 			query.setView(view);
 			return this;
 		}
+		
+		public Builder setAggregate(String aggregate) {
+			query.setAggregate(aggregate);
+			return this;
+		}
+		
 		public Builder setParameters(Map<String,String> parameters) {
 			query.setParameters(parameters);
 			return this;

@@ -90,17 +90,28 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 
 	protected String sql(ShapeQuery query, EntityStructure struct, FieldPath dimension, FieldPath measure) {
 		StringBuilder builder = new StringBuilder();
-
-		builder.append("SELECT ");
-		builder.append(dimension.stringValue());
-		builder.append(", ");
-		builder.append(measure.stringValue());
-		builder.append(" FROM ");
-		builder.append(struct.getName());
-		
 		DataFilter filter = query.getFilter();
-		appendFilter(struct,builder, filter);
+		if(query.getAggregate()!= null && !query.getAggregate().equals("")) {
+			builder.append("SELECT ");
+			appendColumns(struct,builder,dimension);
+			builder.append(", ");
+			builder.append(query.getAggregate());
+			builder.append("("+measure.stringValue()+")");
+			builder.append(" FROM ");
+			builder.append(struct.getName());
+			appendFilter(struct,builder, filter);
+			appendGroupBy(struct,builder,dimension);
+			return builder.toString();
+		} else {
+			builder.append("SELECT ");
+			builder.append(dimension.stringValue());
+			builder.append(", ");
+			builder.append(measure.stringValue());
+			builder.append(" FROM ");
+			builder.append(struct.getName());
+			appendFilter(struct,builder, filter);
+		}
+
 		return builder.toString();
 	}
-
 }
