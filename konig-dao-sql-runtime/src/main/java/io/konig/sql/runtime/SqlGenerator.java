@@ -25,6 +25,7 @@ import java.util.List;
 import io.konig.dao.core.CompositeDataFilter;
 import io.konig.dao.core.DaoException;
 import io.konig.dao.core.DataFilter;
+import io.konig.dao.core.FieldPath;
 import io.konig.dao.core.PredicateConstraint;
 import io.konig.dao.core.ShapeQuery;
 
@@ -174,6 +175,57 @@ abstract public class SqlGenerator  {
 			}
 			builder.append("\n   ");
 			doAppendFilter(struct,builder, filter);
+		}
+		
+	}
+	
+	protected void appendColumns(EntityStructure struct, StringBuilder builder, FieldPath dimension) {
+		String dimensionName = dimension.stringValue();
+		String field = getField(struct,dimensionName);
+		if(field != null) {
+			builder.append("STRUCT(");
+			builder.append(field);
+			builder.append(')');
+		} else {
+			builder.append(dimensionName);
+		}
+	}
+	
+	protected void appendGroupBy(EntityStructure struct, StringBuilder builder, FieldPath dimension) {
+		builder.append(" \n ");
+		builder.append("GROUP BY ");
+		String dimensionName = dimension.stringValue();
+		String field = getField(struct,dimensionName);
+		if(field != null) {
+			builder.append(field);
+		} else {
+			builder.append(dimensionName);
+		}
+	}
+	
+	private String getField(EntityStructure struct, String dimensionName) {
+		StringBuilder builder = new StringBuilder();
+		for(FieldInfo fieldInfo : struct.getFields()){
+			if (dimensionName.equals(fieldInfo.getName())) {
+				appendStructField(fieldInfo, builder,dimensionName);
+				return builder.toString();
+			}
+		}
+		return null;
+	}
+	
+	private void appendStructField(FieldInfo fieldInfo, StringBuilder builder, String dimensionName) {
+		String comma = "";
+		if (fieldInfo.getStruct() != null) {
+			for(FieldInfo innerFieldInfo : fieldInfo.getStruct().getFields()){
+				builder.append(comma);
+				builder.append(dimensionName);
+				builder.append(".");
+				builder.append(innerFieldInfo.getName());
+				comma = ",";
+			}
+		}else {
+			builder.append(fieldInfo.getName());
 		}
 		
 	}

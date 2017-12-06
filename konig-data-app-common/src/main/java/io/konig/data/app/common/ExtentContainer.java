@@ -97,6 +97,8 @@ public class ExtentContainer extends AbstractContainer {
 						.endPredicateConstraint();					
 				} else if(key.endsWith(".view") || key.equals("xAxis")  || key.equals("yAxis")){
 					//TODO: just to skipped the view attribute 
+				} else if(key.endsWith(".aggregate")){
+					builder.setAggregate(queryParams.get(".aggregate"));
 				} else {
 					builder.beginPredicateConstraint().setPropertyName(key)
 						.setOperator(ConstraintOperator.EQUAL).setValue(queryParams.get(key))
