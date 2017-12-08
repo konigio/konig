@@ -33,14 +33,23 @@
   <logger name="io.konig.transform.proto.VariableShapeFactory" additivity="false">
       <level value="debug"/>
       <appender-ref ref="console"/>
-  </logger>
-  
+  </logger>  
   
   <logger name="io.konig.transform.proto.SimplePropertyMapper" additivity="false">
       <level value="debug"/>
       <appender-ref ref="console"/>
   </logger>
 -->
+  
+  <logger name="io.konig.transform.proto.TimeIntervalRollupProcessor" additivity="false">
+      <level value="debug"/>
+      <appender-ref ref="console"/>
+  </logger>
+  
+  <logger name="io.konig.transform.sql.factory.SqlFactory" additivity="false">
+      <level value="debug"/>
+      <appender-ref ref="console"/>
+  </logger>
   
   <root> 
     <priority value ="warn" /> 

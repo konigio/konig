@@ -32,6 +32,8 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
@@ -107,6 +109,7 @@ import io.konig.transform.rule.ValueTransform;
 import io.konig.transform.sql.query.TableName;
 
 public class SqlFactory {
+	private static final Logger logger = LoggerFactory.getLogger(SqlFactory.class);
 	private String idColumnName = "id";
 
 	public InsertStatement insertStatement(ShapeRule shapeRule) throws TransformBuildException {
@@ -295,6 +298,9 @@ public class SqlFactory {
 
 		private ValueExpression createIdRule(ShapeRule shapeRule) throws TransformBuildException {
 			ValueExpression result = null;
+			if (shapeRule == null) {
+				throw new TransformBuildException("shapeRule is null");
+			}
 			IdRule idRule = shapeRule.getIdRule();
 			if (idRule != null) {
 				if (idRule instanceof CopyIdRule) {
@@ -424,9 +430,12 @@ public class SqlFactory {
 			DataChannel channel = p.getDataChannel();
 			TableItemExpression tableItem = simpleTableItem(channel);
 			URI predicate = p.getPredicate();
+			if (logger.isDebugEnabled()) {
+				logger.debug("column predicate: {}", predicate.getLocalName());
+			}
 			if (p instanceof ExactMatchPropertyRule) {
 				
-				return SqlUtil.columnExpression(p.getSourcePropertyModel(), tableItem);
+				return SqlUtil.columnExpression(p, tableItem);
 			}
 
 			if (p instanceof RenamePropertyRule) {

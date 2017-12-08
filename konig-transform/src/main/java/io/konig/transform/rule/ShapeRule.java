@@ -57,8 +57,10 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	private PropertyRule accessor;
 	private VariableNamer variableNamer;
 	private List<GroupingElement> groupingElement;
+	private ShapeRule rollUp;
 	
 	private ShapeModel targetShapeModel;
+	
 	
 	
 	public ShapeRule(ShapeModel targetShapeModel) {
@@ -203,6 +205,15 @@ public class ShapeRule extends AbstractPrettyPrintable {
 
 	public ShapeModel getTargetShapeModel() {
 		return targetShapeModel;
+	}
+
+	public ShapeRule getRollUp() {
+		return rollUp;
+	}
+
+
+	public void setRollUp(ShapeRule rollUp) {
+		this.rollUp = rollUp;
 	}
 	
 	

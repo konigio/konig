@@ -37,9 +37,24 @@ public class QuantifiedExpression extends Expression {
 			throw new KonigException("Failed to parse expression: " + text, oops);
 		}
 	}
-	
+
 	public QuantifiedExpression() {
 		
+	}
+	
+	public static QuantifiedExpression wrap(PrimaryExpression primary) {
+		UnaryExpression unary = new UnaryExpression(primary);
+		MultiplicativeExpression mult = new MultiplicativeExpression(unary);
+		NumericExpression numeric = new GeneralAdditiveExpression(mult);
+		ValueLogical valueLogical = new BinaryRelationalExpression(null, numeric, null);
+		
+		ConditionalAndExpression and = new ConditionalAndExpression();
+		and.add(valueLogical);
+		
+		ConditionalOrExpression or = new ConditionalOrExpression();
+		or.add(and);
+		
+		return new QuantifiedExpression(or, null);
 	}
 	
 	public QuantifiedExpression(Expression formula, List<Triple> statementList) {
