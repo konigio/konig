@@ -35,6 +35,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.formula.BinaryRelationalExpression;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.GroupingElement;
 import io.konig.transform.proto.ShapeModel;
@@ -57,6 +58,8 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	private PropertyRule accessor;
 	private VariableNamer variableNamer;
 	private List<GroupingElement> groupingElement;
+	private List<BinaryRelationalExpression> whereList;
+	
 	private ShapeRule rollUp;
 	
 	private ShapeModel targetShapeModel;
@@ -68,7 +71,17 @@ public class ShapeRule extends AbstractPrettyPrintable {
 		this.targetShape = targetShapeModel.getShape();
 	}
 	
+	public void addWhereExpression(BinaryRelationalExpression where) {
+		if (whereList == null) {
+			whereList = new ArrayList<>();
+		}
+		whereList.add(where);
+	}
 	
+	@SuppressWarnings("unchecked")
+	public List<BinaryRelationalExpression> getWhereExpressions() {
+		return whereList==null ? Collections.EMPTY_LIST : whereList;
+	}
 	
 	@SuppressWarnings("unchecked")
 	public List<GroupingElement> getGroupingElement() {

@@ -26,12 +26,22 @@ import java.util.List;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class FunctionExpression extends AbstractExpression implements NumericValueExpression {
+public class FunctionExpression extends AbstractExpression implements NumericValueExpression, GroupingElement {
+	
+	public static final String ANY_VALUE = "ANY_VALUE";
 	
 	private String functionName;
 	private List<QueryExpression> argList = new ArrayList<>();
+	
 	public FunctionExpression(String functionName) {
 		this.functionName = functionName;
+	}
+	
+	public FunctionExpression(String functionName, QueryExpression...arg) {
+		this.functionName = functionName;
+		for (QueryExpression e : arg) {
+			addArg(e);
+		}
 	}
 	
 	public void addArg(QueryExpression arg) {

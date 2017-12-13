@@ -35,15 +35,18 @@ import org.openrdf.model.URI;
 import io.konig.formula.AdditiveOperator;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.AliasExpression;
+import io.konig.sql.query.BooleanTerm;
 import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.CountStar;
+import io.konig.sql.query.DateTimeUnitExpression;
 import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
+import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
@@ -59,6 +62,7 @@ import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.TableNameExpression;
 import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
+import io.konig.sql.query.WhereClause;
 import io.konig.transform.proto.AbstractShapeModelToShapeRuleTest;
 import io.konig.transform.rule.ShapeRule;
 
@@ -80,7 +84,7 @@ SELECT
    COUNT(*) AS totalCount
 FROM schema.BuyAction;
  */
-	@Ignore
+	@Test
 	public void testTimeInterval() throws Exception {
 		
 		load("src/test/resources/konig-transform/time-interval");
@@ -164,6 +168,36 @@ FROM schema.BuyAction;
 		
 	}
 	
+	@Ignore
+	public void testAnalyticsModelInsert() throws Exception {
+		
+		load("src/test/resources/konig-transform/analytics-model");
+
+		URI shapeId = iri("http://example.com/shapes/SalesByCityShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		System.out.println(select);
+		System.out.println();
+
+		
+	}
+	
+/*
+SELECT
+   ANY_VALUE(city),
+   ANY_VALUE(continent),
+   ANY_VALUE(country),
+   ANY_VALUE(state),
+   ANY_VALUE(STRUCT(
+      DATE_TRUNC(timeInterval.intervalStart, Month) AS intervalStart
+   )) AS timeInterval,
+   COUNT(*) AS totalCount
+FROM fact.SalesByCity
+WHERE timeInterval.durationUnit="Week"
+GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
+ */
 	@Test
 	public void testAnalyticsModel() throws Exception {
 		
@@ -172,23 +206,135 @@ FROM schema.BuyAction;
 		URI shapeId = iri("http://example.com/shapes/SalesByCityShape");
 
 		ShapeRule shapeRule = createShapeRule(shapeId);
-		
-		
-		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+	
 		
 		ShapeRule monthRollUp = shapeRule.getRollUp();
 		assertTrue(monthRollUp != null);
 		
 		SelectExpression monthSelect = sqlFactory.selectExpression(monthRollUp);
 		
+		List<ValueExpression> valueList = monthSelect.getValues();
+		assertEquals(6, valueList.size());
 		
-		System.out.println(monthSelect);
+		assertColumn(valueList, 0, "city");
+		assertColumn(valueList, 1, "continent");
+		assertColumn(valueList, 2, "country");
+		assertColumn(valueList, 3, "state");
 		
+		ValueExpression v = valueList.get(4);
+		assertTrue(v instanceof AliasExpression);
+		AliasExpression alias = (AliasExpression) v;
+		assertEquals("timeInterval", alias.getAlias());
 		
+		QueryExpression q = alias.getExpression();
+		assertTrue(q instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) q;
+		assertEquals("ANY_VALUE", func.getFunctionName());
+		assertEquals(1, func.getArgList().size());
+		QueryExpression query = func.getArgList().get(0);
+		assertTrue(query instanceof StructExpression);
+		StructExpression struct = (StructExpression) query;
+		assertEquals(2, struct.getValues().size());
+		
+		v = struct.getValues().get(0);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression) v;
+		assertEquals("durationUnit", alias.getAlias());
+		
+		q = alias.getExpression();
+		assertTrue(q instanceof StringLiteralExpression);
+		StringLiteralExpression s = (StringLiteralExpression)q;
+		assertEquals("Month", s.getValue());
+		
+		v = struct.getValues().get(1);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression)v;
+		assertEquals("intervalStart", alias.getAlias());
+		q = alias.getExpression();
+		assertTrue(q instanceof FunctionExpression);
+		func = (FunctionExpression) q;
+		assertDateTrunc(func);
+		
+		v = valueList.get(5);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression) v;
+		assertEquals("totalCount", alias.getAlias());
+		q = alias.getExpression();
+		assertTrue(q instanceof CountStar);
+		
+		FromExpression f = monthSelect.getFrom();
+		assertEquals(1,  f.getTableItems().size());
+		
+		TableItemExpression tableItem = f.getTableItems().get(0);
+		assertTrue(tableItem instanceof TableNameExpression);
+		TableNameExpression t = (TableNameExpression) tableItem;
+		assertEquals("fact.SalesByCity", t.getTableName());
+		
+		WhereClause where = monthSelect.getWhere();
+		BooleanTerm b = where.getCondition();
+		assertTrue(b instanceof ComparisonPredicate);
+		ComparisonPredicate cp = (ComparisonPredicate)b;
+		assertEquals(ComparisonOperator.EQUALS, cp.getOperator());
+		v = cp.getLeft();
+		assertTrue(v instanceof ColumnExpression);
+		ColumnExpression c = (ColumnExpression) v;
+		assertEquals("timeInterval.durationUnit", c.getColumnName());
+		
+		v = cp.getRight();
+		assertTrue(v instanceof StringLiteralExpression);
+		s = (StringLiteralExpression) v;
+		assertEquals("Week", s.getValue());
+		
+		GroupByClause g = monthSelect.getGroupBy();
+		assertEquals(2, g.getElementList().size());
+		
+		GroupingElement ge = g.getElementList().get(0);
+		assertTrue(ge instanceof ColumnExpression);
+		c = (ColumnExpression) ge;
+		assertEquals("city.id", c.getColumnName());
+		
+		ge = g.getElementList().get(1);
+		assertTrue(ge instanceof FunctionExpression);
+		func = (FunctionExpression) ge;
+		assertDateTrunc(func);
+		
+		ShapeRule yearRollUp = monthRollUp.getRollUp();
+		assertTrue(yearRollUp != null);
+		
+		SelectExpression yearSelect = sqlFactory.selectExpression(yearRollUp);
+		assertTrue(yearSelect != null);
 		
 	}
 
-	@Ignore
+	private void assertDateTrunc(FunctionExpression func) {
+
+		assertEquals("DATE_TRUNC", func.getFunctionName());
+		assertEquals(2, func.getArgList().size());
+		QueryExpression q = func.getArgList().get(0);
+		assertTrue(q instanceof ColumnExpression);
+		ColumnExpression c = (ColumnExpression) q;
+		assertEquals("timeInterval.intervalStart", c.getColumnName());
+		q = func.getArgList().get(1);
+		assertTrue(q instanceof DateTimeUnitExpression);
+		DateTimeUnitExpression d = (DateTimeUnitExpression) q;
+		assertEquals("Month", d.getValue());
+	
+	}
+
+	private void assertColumn(List<ValueExpression> valueList, int i, String colName) {
+
+		ValueExpression v1 = valueList.get(i);
+		assertTrue(v1 instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) v1;
+		assertEquals("ANY_VALUE", func.getFunctionName());
+		assertEquals(1, func.getArgList().size());
+		QueryExpression funcArg = func.getArgList().get(0);
+		assertTrue(funcArg instanceof ColumnExpression);
+		ColumnExpression column = (ColumnExpression) funcArg;
+		assertEquals(colName, column.getColumnName());
+	}
+
+	@Test
 	public void testJoinById() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-by-id");
@@ -267,7 +413,7 @@ FROM schema.BuyAction;
 		
 	}
 
-	@Ignore
+	@Test
 	public void testCountStar() throws Exception {
 		
 		load("src/test/resources/konig-transform/count-star");
@@ -316,7 +462,7 @@ SELECT
 FROM xas.AssessmentSession
 GROUP BY actor, object
  */
-	@Ignore
+	@Test
 	public void testAssessmentEndeavor() throws Exception {
 		load("src/test/resources/konig-transform/assessment-endeavor");
 
@@ -330,7 +476,7 @@ GROUP BY actor, object
 		// TODO : Add more validation steps.
 	}
 
-	@Ignore
+	@Test
 	public void testAssessmentSession() throws Exception {
 		load("src/test/resources/konig-transform/assessment-session");
 
@@ -404,7 +550,7 @@ SELECT
 FROM `{gcpProjectId}.org.Membership`
 GROUP BY organization
  */
-	@Ignore
+	@Test
 	public void testBigQueryView() throws Exception {
 		load("src/test/resources/konig-transform/bigquery-view");
 
@@ -438,7 +584,7 @@ SELECT
 FROM org.Membership
 GROUP BY organization
  */
-	@Ignore
+	@Test
 	public void testArrayAgg() throws Exception {
 		load("src/test/resources/konig-transform/array-agg");
 
@@ -486,7 +632,7 @@ GROUP BY organization
 		assertEquals("organization", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testInjectModifiedTimestamp() throws Exception {
 		
 		load("src/test/resources/konig-transform/inject-modified-timestamp");
@@ -524,7 +670,7 @@ FROM
  ON
    a.artist_id=b.group_id
  */
-	@Ignore
+	@Test
 	public void testGcpDeploy() throws Exception {
 		
 		load("src/test/resources/konig-transform/gcp-deploy");
@@ -572,7 +718,7 @@ FROM
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAggregateFunction() throws Exception {
 		
 		load("src/test/resources/konig-transform/aggregate-function");
@@ -607,7 +753,7 @@ FROM
 		assertEquals("resultOf", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testDerivedProperty() throws Exception {
 		
 /*
@@ -683,7 +829,7 @@ FROM
  ON
    a.gender=b.genderCode	
  */
-	@Ignore
+	@Test
 	public void testEnumField() throws Exception {
 		
 		load("src/test/resources/konig-transform/enum-field");
@@ -752,7 +898,7 @@ FROM
 		
 	}
 
-	@Ignore
+	@Test
 	public void testJoinNestedEntityByPk() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity-by-pk");
@@ -790,7 +936,7 @@ FROM
 		assertEquals("b.org_id", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinNestedEntity() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -924,7 +1070,7 @@ FROM
 		
 	}
 
-	@Ignore
+	@Test
 	public void testFlattenedField() throws Exception {
 		
 		load("src/test/resources/konig-transform/flattened-field");
@@ -977,7 +1123,7 @@ FROM
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -1015,7 +1161,7 @@ FROM
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Ignore
+	@Test
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");

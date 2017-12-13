@@ -21,9 +21,28 @@ package io.konig.transform.rule;
  */
 
 
-import io.konig.transform.ShapeTransformException;
+import io.konig.core.io.PrettyPrintWriter;
+import io.konig.formula.FunctionExpression;
+import io.konig.sql.query.GroupingElement;
 
-public interface TransformPostProcessor {
+public class FunctionGroupingElement implements GroupingElement {
+	
+	private FunctionExpression function;
+	
 
-	public void process(ShapeRule shapeRule) throws ShapeTransformException;
+	public FunctionGroupingElement(FunctionExpression function) {
+		this.function = function;
+	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		function.print(out);
+	}
+
+	public FunctionExpression getFunction() {
+		return function;
+	}
+	
+	
+
 }

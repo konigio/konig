@@ -1,7 +1,5 @@
 package io.konig.transform.sql.factory;
 
-import java.text.MessageFormat;
-
 /*
  * #%L
  * Konig Transform
@@ -27,6 +25,8 @@ import java.util.List;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.KonigException;
 import io.konig.core.pojo.BeanUtil;
@@ -34,6 +34,7 @@ import io.konig.formula.Addend;
 import io.konig.formula.AdditiveOperator;
 import io.konig.formula.BinaryOperator;
 import io.konig.formula.BinaryRelationalExpression;
+import io.konig.formula.BuiltInName;
 import io.konig.formula.ConditionalAndExpression;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
@@ -53,7 +54,6 @@ import io.konig.formula.PrimaryExpression;
 import io.konig.formula.UnaryExpression;
 import io.konig.formula.ValueLogical;
 import io.konig.formula.VariableTerm;
-import io.konig.rio.turtle.IriTemplateParseException;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.BooleanTerm;
@@ -61,20 +61,23 @@ import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.CountStar;
+import io.konig.sql.query.DateTimeUnitExpression;
 import io.konig.sql.query.IfExpression;
 import io.konig.sql.query.NumericValueExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.SignedNumericLiteral;
 import io.konig.sql.query.StringLiteralExpression;
+import io.konig.sql.query.TableAliasExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.ValueExpression;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.TransformBuildException;
-import io.konig.transform.proto.PropertyModel;
+import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.ShapeRule;
 
 public class SqlFormulaFactory {
+	private static final Logger logger = LoggerFactory.getLogger(SqlFormulaFactory.class);
 	
 	public SqlFormulaFactory() {
 		
@@ -89,14 +92,12 @@ public class SqlFormulaFactory {
 	private static class Worker {
 
 		private VariableTableMap tableMap;
-		private TableItemExpression sourceTable;
 		private PropertyConstraint propertyConstraint;
 		private SqlFormulaExchange exchange;
 		
 		public Worker(SqlFormulaExchange request) {
 			this.exchange = request;
 			this.tableMap = request.getTableMap();
-			this.sourceTable = request.getSourceTable();
 			this.propertyConstraint = request.getProperty();
 		}
 
@@ -112,8 +113,9 @@ public class SqlFormulaFactory {
 			try {
 				return valueExpression(source);
 			} catch (Throwable e) {
+				String predicate = p.getPredicate()==null ? "undefined" : p.getPredicate().stringValue();
 				throw new TransformBuildException("Failed to generate formula for property " +
-						p.getPredicate().stringValue(), e
+						predicate, e
 				);
 			}
 		}
@@ -178,7 +180,7 @@ public class SqlFormulaFactory {
 			}
 		}
 
-		private ComparisonOperator comparisonOperator(BinaryOperator operator) {
+		static private ComparisonOperator comparisonOperator(BinaryOperator operator) {
 			switch (operator) {
 			case EQUALS: return ComparisonOperator.EQUALS;
 			case GREATER_THAN: return ComparisonOperator.GREATER_THAN;
@@ -223,7 +225,7 @@ public class SqlFormulaFactory {
 			}
 			
 			if (primary instanceof PathExpression) {
-				QueryExpression e = pathExpression((PathExpression) primary);
+				QueryExpression e = path((PathExpression) primary);
 				if (e instanceof NumericValueExpression) {
 					return (NumericValueExpression) e;
 				}
@@ -246,6 +248,11 @@ public class SqlFormulaFactory {
 				FullyQualifiedIri full = (FullyQualifiedIri) primary;
 				URI iri = full.getIri();
 				return new StringLiteralExpression(iri.getLocalName());
+			}
+			if (primary instanceof BuiltInName) {
+				BuiltInName builtIn = (BuiltInName) primary;
+				// TODO: confirm that the built-in name is a date-time unit.
+				return new DateTimeUnitExpression(builtIn.getIri().getLocalName());
 			}
 			
 			throw new KonigException("Expression type not supported: " + primary.getClass().getSimpleName());
@@ -288,164 +295,185 @@ public class SqlFormulaFactory {
 			
 		}
 		
-		private QueryExpression deepPath(PathExpression primary) {
-			try {
-				List<PathStep> stepList = primary.getStepList();
-				ShapeRule rule = exchange.getShapeRule();
-				
-				PathStep first = stepList.get(0);
-				if (first instanceof DirectionStep && stepList.size()==2) {
-					// For now, we only support paths of length 2
-					DirectionStep dirStep = (DirectionStep) first;
-					if (dirStep.getDirection() == Direction.OUT) {
-						PathTerm term = dirStep.getTerm();
-						if (term instanceof IriValue) {
-							IriValue iriValue = (IriValue) term;
-							URI predicate = iriValue.getIri();
-							
-							PropertyRule propertyRule = rule.getProperty(predicate);
-							ShapeRule nested = propertyRule.getNestedRule();
-							
-							if (nested != null) {
-								
-								PathStep nextStep = stepList.get(1);
-								if (nextStep instanceof DirectionStep) {
-									dirStep = (DirectionStep) nextStep;
-									if (dirStep.getDirection() == Direction.OUT) {
-										term = dirStep.getTerm();
-										if (term instanceof IriValue) {
-											iriValue = (IriValue) term;
-											predicate = iriValue.getIri();
-											
-											PropertyRule nestedProperty = nested.getProperty(predicate);
-											
-											if (nestedProperty == null) {
-												String msg = MessageFormat.format(
-													"Property ''{0}'' not found in path ''{1}''", predicate.getLocalName(), primary.toString());
-												throw new ShapeTransformException(msg);
-											}
-											
-											if (nestedProperty.getDataChannel()==null) {
-												
-												String msg = MessageFormat.format(
-													"DataChannel not defined for property ''{0}'' in path: {1}", predicate.getLocalName(), primary.toString());
-												throw new ShapeTransformException(msg);
-											}
-											
-											PropertyModel spm = exchange.getSourcePropertyModel();
-											if (spm != null) {
-												TableItemExpression table = exchange.getSourceTable();
-												if (table != null) {
-													return SqlUtil.columnExpression(spm, table);
-												}
-											}
-											
-
-											String tableName = nestedProperty.getDataChannel().getName();
-											String localName = predicate.getLocalName();
-											
-											// TODO: Handle the case where we need an alias instead of 
-											// just using the localName!!!!
-											
-											StringBuilder builder = new StringBuilder();
-											builder.append(tableName);
-											builder.append('.');
-											builder.append(localName);
-											
-											String columnName = builder.toString();
-											
-											return new ColumnExpression(columnName);
-											
-										}
-										
-									}
-								}
-								
-								
-							}
-							
-							
-							
-							
-						}
-					}
-				}
-			} catch (Throwable e) {
-				throw new KonigException(e);
+		
+		private QueryExpression path(PathExpression primary) {
+			
+			if (logger.isDebugEnabled()) {
+				logger.debug("path({})", primary.simpleText());
 			}
-			
-			
-			
-			throw new KonigException("deep path not supported");
-		}
-
-		private QueryExpression pathExpression(PathExpression primary) {
 			
 			List<PathStep> stepList = primary.getStepList();
-			if (stepList!=null) {
-				// For now, we only support three very limited patterns.
-				// (1)  Path consisting of a single OUT Step.
-				// (2)  Path consisting of a variable followed by a single OUT step.
-				if (stepList.size()==1) {
-					PathStep step = stepList.get(0);
-					
-					if (step instanceof DirectionStep) {
-					
-						DirectionStep dirStep = (DirectionStep) step;
-						if (dirStep.getDirection() == Direction.OUT) {
-							PathTerm term = dirStep.getTerm();
-							URI predicate = term.getIri();
+			if (stepList != null && !stepList.isEmpty()) {
+				PathStep first = stepList.get(0);
+				
+				if (first instanceof DirectionStep) {
+					DirectionStep firstDir = (DirectionStep) first;
+					if (firstDir.getDirection() == Direction.OUT) {
+						
+						StringBuilder builder = new StringBuilder();
+						int startIndex = 0;
+						PathTerm firstTerm = firstDir.getTerm();
+
+						boolean pathStartsWithVariable = false;
+						DataChannel channel = null;
+						ShapeRule shapeRule = null;
+						if (firstTerm instanceof VariableTerm) {
+							startIndex = 1;
+							pathStartsWithVariable = true;
+							VariableTerm var = (VariableTerm) firstTerm;
+							String varName = var.getVarName();
+							TableItemExpression tableItem = tableMap.tableForVariable(varName);
+							if (tableItem == null) {
+								throw new KonigException("Table not found for variable in expression: " + primary.toString());
+							}
+							if (tableItem instanceof TableAliasExpression) {
+								TableAliasExpression tableAlias = (TableAliasExpression) tableItem;
+								builder.append(tableAlias.getAlias());
+							}
+						} else {
+							// Not a VariableTerm. 
 							
-							return SqlUtil.columnExpression(sourceTable, predicate);
-						}
-					} else {
-						return deepPath(primary);
-					}
-				} else if (stepList.size()==2) {
-					PathStep step = stepList.get(0);
-					
-					if (step instanceof DirectionStep) {
-						DirectionStep dirStep = (DirectionStep) step;
-						if (dirStep.getDirection() == Direction.OUT) {
-							PathTerm term = dirStep.getTerm();
-							if (term instanceof VariableTerm) {
-								VariableTerm varTerm = (VariableTerm) term;
-								String varName = varTerm.getVarName();
-								TableItemExpression tableItem = tableMap.tableForVariable(varName);
-								if (tableItem == null) {
-									throw new KonigException("Table not found for variable in expression: " + primary.toString());
-								}
-								step = stepList.get(1);
-								if (step instanceof DirectionStep) {
-									dirStep = (DirectionStep) step;
-									if (dirStep.getDirection() == Direction.OUT) {
-										term = dirStep.getTerm();
-										URI predicate = term.getIri();
-										ColumnExpression ge = SqlUtil.columnExpression(tableItem, predicate);
-										ValueExpression ve = ge;
-										Integer maxCount = propertyConstraint.getMaxCount();
-		
-										exchange.setGroupingElement(ge);
-										if (maxCount == null) {
-											io.konig.sql.query.FunctionExpression func = new io.konig.sql.query.FunctionExpression("ARRAY_AGG");
-											func.addArg(ve);
-											ve = func;
-										}
-										return ve;
-									}
-								}
-							} else {
-								return deepPath(primary);
+							shapeRule = exchange.getShapeRule();
+							channel = appendChannel(builder, shapeRule, stepList, firstTerm);
+							if (channel != null) {
+								startIndex = 1;
 							}
 						}
-					} else {
-						return deepPath(primary);
+						
+						
+						boolean ok = true;
+						for (int i=startIndex; i<stepList.size() && ok; i++) {
+							ok = false;
+							PathStep step = stepList.get(i);
+							if (step instanceof DirectionStep) {
+								DirectionStep dir = (DirectionStep) step;
+								if (dir.getDirection()==Direction.OUT) {
+									PathTerm term = dir.getTerm();
+									if (term instanceof IriValue) {
+										IriValue value = (IriValue) term;
+										URI predicate = value.getIri();
+										
+										PropertyRule propertyRule = propertyRule(shapeRule, predicate);
+										
+										channel = channel(channel, propertyRule);
+										
+										shapeRule = nestedShapeRule(propertyRule);
+										
+										if (builder.length()>0) {
+											builder.append('.');
+										} else {
+											appendTable(builder, channel);
+										}
+										builder.append(predicate.getLocalName());
+										ok = true;
+									}
+								}
+							} 
+						}
+						if (ok) {
+							ColumnExpression column = new ColumnExpression(builder.toString());
+							ValueExpression result = column;
+							if (pathStartsWithVariable) {
+								exchange.setGroupingElement(column);
+								
+								Integer maxCount = propertyConstraint.getMaxCount();
+								if (maxCount==null) {
+									// The value is an array, so we need to use the
+									// ARRAY_AGG function.
+									
+									// But why is this logic specific to the case where the
+									// path starts with a variable.  Shouldn't this logic apply
+									// in all cases?
+									
+									io.konig.sql.query.FunctionExpression func = new io.konig.sql.query.FunctionExpression("ARRAY_AGG");
+									func.addArg(column);
+									result = func;
+								}
+							}
+							return result;
+						}
 					}
+				}
+				
+			}
+			
+
+			throw new KonigException("Unsupported expression: " + primary.toString());
+		}
+
+		
+
+
+		private DataChannel appendChannel(StringBuilder builder, ShapeRule shapeRule, List<PathStep> stepList,
+				PathTerm firstTerm) {
+			DataChannel channel = null;
+			if (firstTerm instanceof IriValue && stepList.size()>1 && shapeRule!=null) {
+				IriValue value = (IriValue) firstTerm;
+				URI predicate = value.getIri();
+				PropertyRule p = shapeRule.getProperty(predicate);
+				if (p != null) {
+					ShapeRule nextShapeRule = p.getNestedRule();
+					if (nextShapeRule != null) {
+						PathStep nextStep = stepList.get(1);
+						if (nextStep instanceof DirectionStep) {
+							DirectionStep dirStep = (DirectionStep) nextStep;
+							if (dirStep.getDirection().equals(Direction.OUT)) {
+								PathTerm term = dirStep.getTerm();
+								if (term instanceof IriValue) {
+									value = (IriValue) term;
+									predicate = value.getIri();
+									p = nextShapeRule.getProperty(predicate);
+									if (p != null) {
+										channel = p.getDataChannel();
+										if (channel != null) {
+											TableItemExpression tableItem = tableMap.tableForVariable(channel.getName());
+											if (tableItem instanceof TableAliasExpression) {
+												TableAliasExpression tableAlias = (TableAliasExpression) tableItem;
+												builder.append(tableAlias.getAlias());
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					
+				}
+			}
+			return channel;
+		}
+
+		private void appendTable(StringBuilder builder, DataChannel channel) {
+			if (channel != null) {
+				TableItemExpression tableItem = tableMap.tableForVariable(channel.getName());
+				if (tableItem instanceof TableAliasExpression) {
+					TableAliasExpression alias = (TableAliasExpression) tableItem;
+					builder.append(alias.getAlias());
+					builder.append('.');
 				}
 			}
 			
-			throw new KonigException("Unsupported expression: " + primary.toString());
 		}
+
+		private DataChannel channel(DataChannel channel, PropertyRule propertyRule) {
+			if (propertyRule != null) {
+				DataChannel newChannel = propertyRule.getDataChannel();
+				if (newChannel != null && channel!=null && newChannel != channel) {
+					throw new KonigException("Switching channels not supported");
+				}
+				channel = newChannel;
+			}
+			return channel;
+		}
+
+		private ShapeRule nestedShapeRule(PropertyRule propertyRule) {
+			return propertyRule==null ? null : propertyRule.getNestedRule();
+		}
+
+		private PropertyRule propertyRule(ShapeRule shapeRule, URI predicate) {
+			return shapeRule == null ? null : shapeRule.getProperty(predicate);
+		}
+
 
 		private NumericValueExpression ifFunction(IfFunction primary) throws ShapeTransformException {
 			

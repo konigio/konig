@@ -1,4 +1,4 @@
-package io.konig.transform.rule;
+package io.konig.sql.query;
 
 /*
  * #%L
@@ -21,9 +21,27 @@ package io.konig.transform.rule;
  */
 
 
-import io.konig.transform.ShapeTransformException;
+import io.konig.core.io.PrettyPrintWriter;
 
-public interface TransformPostProcessor {
+public class DateTimeUnitExpression extends AbstractExpression implements ValueExpression {
 
-	public void process(ShapeRule shapeRule) throws ShapeTransformException;
+	private String value;
+
+	public DateTimeUnitExpression(String value) {
+		this.value = value;
+	}
+
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.print(value);
+	}
+
+
+	public String getValue() {
+		return value;
+	}
+	
+	
+
 }

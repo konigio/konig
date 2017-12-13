@@ -1,8 +1,8 @@
-package io.konig.transform.rule;
+package io.konig.formula;
 
 /*
  * #%L
- * Konig Transform
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,9 +21,35 @@ package io.konig.transform.rule;
  */
 
 
-import io.konig.transform.ShapeTransformException;
+import org.openrdf.model.URI;
 
-public interface TransformPostProcessor {
+import io.konig.core.io.PrettyPrintWriter;
 
-	public void process(ShapeRule shapeRule) throws ShapeTransformException;
+public class BuiltInName extends AbstractFormula implements IriValue {
+	private URI uri;
+	
+	public BuiltInName(URI uri) {
+		this.uri = uri;
+	}
+
+	@Override
+	public URI getIri() {
+		return uri;
+	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		
+		out.print('<');
+		out.print(uri.stringValue());
+		out.print('>');
+
+	}
+
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		visitor.exit(this);
+	}
+
 }
