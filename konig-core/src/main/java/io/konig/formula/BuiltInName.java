@@ -21,32 +21,35 @@ package io.konig.formula;
  */
 
 
+import org.openrdf.model.URI;
+
 import io.konig.core.io.PrettyPrintWriter;
 
-public class BareExpression extends ConditionalOrExpression {
-
-	public BareExpression(ConditionalOrExpression e) {
-		super(e);
-	}
+public class BuiltInName extends AbstractFormula implements IriValue {
+	private URI uri;
 	
+	public BuiltInName(URI uri) {
+		this.uri = uri;
+	}
+
+	@Override
+	public URI getIri() {
+		return uri;
+	}
+
 	@Override
 	public void print(PrettyPrintWriter out) {
-		printOrList(out);
-	}
-	
-	public static BareExpression wrap(PrimaryExpression primary) {
+		
+		out.print('<');
+		out.print(uri.stringValue());
+		out.print('>');
 
-		UnaryExpression unary = new UnaryExpression(primary);
-		MultiplicativeExpression mult = new MultiplicativeExpression(unary);
-		NumericExpression numeric = new GeneralAdditiveExpression(mult);
-		ValueLogical valueLogical = new BinaryRelationalExpression(null, numeric, null);
-		
-		ConditionalAndExpression and = new ConditionalAndExpression();
-		and.add(valueLogical);
-		
-		ConditionalOrExpression or = new ConditionalOrExpression();
-		or.add(and);
-		
-		return new BareExpression(or);
 	}
+
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		visitor.exit(this);
+	}
+
 }

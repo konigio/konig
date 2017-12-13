@@ -48,11 +48,21 @@ import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.UnaryExpression;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.transform.ShapeTransformException;
+import io.konig.transform.rule.DataChannel;
 
 public class TimeIntervalFormulaHandler implements FormulaHandler {
 
 	private static Logger logger = LoggerFactory.getLogger(TimeIntervalFormulaHandler.class);
 	private static final String TIME_INTERVAL = "TIME_INTERVAL";
+
+	private DataChannelFactory dataChannelFactory;
+	
+	
+
+	public TimeIntervalFormulaHandler(DataChannelFactory dataChannelFactory) {
+		this.dataChannelFactory = dataChannelFactory;
+	}
+
 
 
 	@Override
@@ -114,6 +124,11 @@ public class TimeIntervalFormulaHandler implements FormulaHandler {
 							logger.debug("handled {}", targetProperty.simplePath());
 						}
 						
+						if (durationUnitList.size()>1) {
+							DataChannel channel = dataChannelFactory.createDataChannel(root.getShape());
+							root.addPostProcessor(new TimeIntervalRollupProcessor(channel, durationUnitList));
+						}
+						
 						return true;
 					}
 				}
@@ -123,6 +138,7 @@ public class TimeIntervalFormulaHandler implements FormulaHandler {
 	}
 
 
+	
 	private Expression asExpression(KonigTime minTime) {
 		
 		IriValue iriValue = new FullyQualifiedIri(minTime.getIri());
@@ -176,5 +192,6 @@ public class TimeIntervalFormulaHandler implements FormulaHandler {
 		
 		
 	}
+	
 
 }

@@ -72,6 +72,7 @@ import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.rule.TransformBinaryOperator;
+import io.konig.transform.rule.TransformPostProcessor;
 import io.konig.transform.rule.VariableNamer;
 
 public class ShapeModelToShapeRule {
@@ -116,11 +117,17 @@ public class ShapeModelToShapeRule {
 			
 			ShapeRule shapeRule = toShapeRule(shapeModel);
 			shapeRule.setFromItem(fromItem(shapeModel.getClassModel().getFromItem()));
-			
-			
+			invokePostProcessors(shapeModel, shapeRule);
 			return shapeRule;
 		}
 		
+		private void invokePostProcessors(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
+
+			for (TransformPostProcessor processor : shapeModel.getPostProcessorList()) {
+				processor.process(shapeRule);
+			}
+		}
+
 		private void addPropertyRules(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
 			ClassModel classModel = shapeModel.getClassModel();
 			for (PropertyGroup group : classModel.getPropertyGroups()) {

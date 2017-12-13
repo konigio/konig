@@ -35,15 +35,18 @@ import org.openrdf.model.URI;
 import io.konig.formula.AdditiveOperator;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.AliasExpression;
+import io.konig.sql.query.BooleanTerm;
 import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.CountStar;
+import io.konig.sql.query.DateTimeUnitExpression;
 import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
+import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
@@ -59,6 +62,7 @@ import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.TableNameExpression;
 import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
+import io.konig.sql.query.WhereClause;
 import io.konig.transform.proto.AbstractShapeModelToShapeRuleTest;
 import io.konig.transform.rule.ShapeRule;
 
@@ -165,7 +169,7 @@ FROM schema.BuyAction;
 	}
 	
 	@Ignore
-	public void testAnalyticsModel() throws Exception {
+	public void testAnalyticsModelInsert() throws Exception {
 		
 		load("src/test/resources/konig-transform/analytics-model");
 
@@ -173,13 +177,161 @@ FROM schema.BuyAction;
 
 		ShapeRule shapeRule = createShapeRule(shapeId);
 		
-		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
-		
 		System.out.println(select);
+		System.out.println();
+
 		
+	}
+	
+/*
+SELECT
+   ANY_VALUE(city),
+   ANY_VALUE(continent),
+   ANY_VALUE(country),
+   ANY_VALUE(state),
+   ANY_VALUE(STRUCT(
+      DATE_TRUNC(timeInterval.intervalStart, Month) AS intervalStart
+   )) AS timeInterval,
+   COUNT(*) AS totalCount
+FROM fact.SalesByCity
+WHERE timeInterval.durationUnit="Week"
+GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
+ */
+	@Test
+	public void testAnalyticsModel() throws Exception {
 		
+		load("src/test/resources/konig-transform/analytics-model");
+
+		URI shapeId = iri("http://example.com/shapes/SalesByCityShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+	
 		
+		ShapeRule monthRollUp = shapeRule.getRollUp();
+		assertTrue(monthRollUp != null);
+		
+		SelectExpression monthSelect = sqlFactory.selectExpression(monthRollUp);
+		
+		List<ValueExpression> valueList = monthSelect.getValues();
+		assertEquals(6, valueList.size());
+		
+		assertColumn(valueList, 0, "city");
+		assertColumn(valueList, 1, "continent");
+		assertColumn(valueList, 2, "country");
+		assertColumn(valueList, 3, "state");
+		
+		ValueExpression v = valueList.get(4);
+		assertTrue(v instanceof AliasExpression);
+		AliasExpression alias = (AliasExpression) v;
+		assertEquals("timeInterval", alias.getAlias());
+		
+		QueryExpression q = alias.getExpression();
+		assertTrue(q instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) q;
+		assertEquals("ANY_VALUE", func.getFunctionName());
+		assertEquals(1, func.getArgList().size());
+		QueryExpression query = func.getArgList().get(0);
+		assertTrue(query instanceof StructExpression);
+		StructExpression struct = (StructExpression) query;
+		assertEquals(2, struct.getValues().size());
+		
+		v = struct.getValues().get(0);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression) v;
+		assertEquals("durationUnit", alias.getAlias());
+		
+		q = alias.getExpression();
+		assertTrue(q instanceof StringLiteralExpression);
+		StringLiteralExpression s = (StringLiteralExpression)q;
+		assertEquals("Month", s.getValue());
+		
+		v = struct.getValues().get(1);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression)v;
+		assertEquals("intervalStart", alias.getAlias());
+		q = alias.getExpression();
+		assertTrue(q instanceof FunctionExpression);
+		func = (FunctionExpression) q;
+		assertDateTrunc(func);
+		
+		v = valueList.get(5);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression) v;
+		assertEquals("totalCount", alias.getAlias());
+		q = alias.getExpression();
+		assertTrue(q instanceof CountStar);
+		
+		FromExpression f = monthSelect.getFrom();
+		assertEquals(1,  f.getTableItems().size());
+		
+		TableItemExpression tableItem = f.getTableItems().get(0);
+		assertTrue(tableItem instanceof TableNameExpression);
+		TableNameExpression t = (TableNameExpression) tableItem;
+		assertEquals("fact.SalesByCity", t.getTableName());
+		
+		WhereClause where = monthSelect.getWhere();
+		BooleanTerm b = where.getCondition();
+		assertTrue(b instanceof ComparisonPredicate);
+		ComparisonPredicate cp = (ComparisonPredicate)b;
+		assertEquals(ComparisonOperator.EQUALS, cp.getOperator());
+		v = cp.getLeft();
+		assertTrue(v instanceof ColumnExpression);
+		ColumnExpression c = (ColumnExpression) v;
+		assertEquals("timeInterval.durationUnit", c.getColumnName());
+		
+		v = cp.getRight();
+		assertTrue(v instanceof StringLiteralExpression);
+		s = (StringLiteralExpression) v;
+		assertEquals("Week", s.getValue());
+		
+		GroupByClause g = monthSelect.getGroupBy();
+		assertEquals(2, g.getElementList().size());
+		
+		GroupingElement ge = g.getElementList().get(0);
+		assertTrue(ge instanceof ColumnExpression);
+		c = (ColumnExpression) ge;
+		assertEquals("city.id", c.getColumnName());
+		
+		ge = g.getElementList().get(1);
+		assertTrue(ge instanceof FunctionExpression);
+		func = (FunctionExpression) ge;
+		assertDateTrunc(func);
+		
+		ShapeRule yearRollUp = monthRollUp.getRollUp();
+		assertTrue(yearRollUp != null);
+		
+		SelectExpression yearSelect = sqlFactory.selectExpression(yearRollUp);
+		assertTrue(yearSelect != null);
+		
+	}
+
+	private void assertDateTrunc(FunctionExpression func) {
+
+		assertEquals("DATE_TRUNC", func.getFunctionName());
+		assertEquals(2, func.getArgList().size());
+		QueryExpression q = func.getArgList().get(0);
+		assertTrue(q instanceof ColumnExpression);
+		ColumnExpression c = (ColumnExpression) q;
+		assertEquals("timeInterval.intervalStart", c.getColumnName());
+		q = func.getArgList().get(1);
+		assertTrue(q instanceof DateTimeUnitExpression);
+		DateTimeUnitExpression d = (DateTimeUnitExpression) q;
+		assertEquals("Month", d.getValue());
+	
+	}
+
+	private void assertColumn(List<ValueExpression> valueList, int i, String colName) {
+
+		ValueExpression v1 = valueList.get(i);
+		assertTrue(v1 instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) v1;
+		assertEquals("ANY_VALUE", func.getFunctionName());
+		assertEquals(1, func.getArgList().size());
+		QueryExpression funcArg = func.getArgList().get(0);
+		assertTrue(funcArg instanceof ColumnExpression);
+		ColumnExpression column = (ColumnExpression) funcArg;
+		assertEquals(colName, column.getColumnName());
 	}
 
 	@Test

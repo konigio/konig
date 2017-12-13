@@ -1,8 +1,8 @@
-package io.konig.formula;
+package io.konig.transform.rule;
 
 /*
  * #%L
- * Konig Core
+ * Konig Transform
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -22,31 +22,27 @@ package io.konig.formula;
 
 
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.formula.FunctionExpression;
+import io.konig.sql.query.GroupingElement;
 
-public class BareExpression extends ConditionalOrExpression {
-
-	public BareExpression(ConditionalOrExpression e) {
-		super(e);
-	}
+public class FunctionGroupingElement implements GroupingElement {
 	
+	private FunctionExpression function;
+	
+
+	public FunctionGroupingElement(FunctionExpression function) {
+		this.function = function;
+	}
+
 	@Override
 	public void print(PrettyPrintWriter out) {
-		printOrList(out);
+		function.print(out);
+	}
+
+	public FunctionExpression getFunction() {
+		return function;
 	}
 	
-	public static BareExpression wrap(PrimaryExpression primary) {
+	
 
-		UnaryExpression unary = new UnaryExpression(primary);
-		MultiplicativeExpression mult = new MultiplicativeExpression(unary);
-		NumericExpression numeric = new GeneralAdditiveExpression(mult);
-		ValueLogical valueLogical = new BinaryRelationalExpression(null, numeric, null);
-		
-		ConditionalAndExpression and = new ConditionalAndExpression();
-		and.add(valueLogical);
-		
-		ConditionalOrExpression or = new ConditionalOrExpression();
-		or.add(and);
-		
-		return new BareExpression(or);
-	}
 }

@@ -1,8 +1,8 @@
-package io.konig.formula;
+package io.konig.sql.query;
 
 /*
  * #%L
- * Konig Core
+ * Konig Transform
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -23,30 +23,25 @@ package io.konig.formula;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class BareExpression extends ConditionalOrExpression {
+public class DateTimeUnitExpression extends AbstractExpression implements ValueExpression {
 
-	public BareExpression(ConditionalOrExpression e) {
-		super(e);
+	private String value;
+
+	public DateTimeUnitExpression(String value) {
+		this.value = value;
 	}
-	
+
+
 	@Override
 	public void print(PrettyPrintWriter out) {
-		printOrList(out);
+		out.print(value);
+	}
+
+
+	public String getValue() {
+		return value;
 	}
 	
-	public static BareExpression wrap(PrimaryExpression primary) {
+	
 
-		UnaryExpression unary = new UnaryExpression(primary);
-		MultiplicativeExpression mult = new MultiplicativeExpression(unary);
-		NumericExpression numeric = new GeneralAdditiveExpression(mult);
-		ValueLogical valueLogical = new BinaryRelationalExpression(null, numeric, null);
-		
-		ConditionalAndExpression and = new ConditionalAndExpression();
-		and.add(valueLogical);
-		
-		ConditionalOrExpression or = new ConditionalOrExpression();
-		or.add(and);
-		
-		return new BareExpression(or);
-	}
 }

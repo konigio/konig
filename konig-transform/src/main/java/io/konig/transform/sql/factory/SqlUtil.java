@@ -32,9 +32,11 @@ import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.TableAliasExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.ValueExpression;
+import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.proto.PropertyModel;
 import io.konig.transform.proto.ShapeModel;
-import io.konig.transform.rule.DataChannel;
+import io.konig.transform.rule.ExactMatchPropertyRule;
+import io.konig.transform.rule.PropertyRule;
 
 public class SqlUtil {
 
@@ -55,8 +57,26 @@ public class SqlUtil {
 		return new ColumnExpression(columnName);
 	}
 	
+	public static ColumnExpression columnExpression(PropertyRule pr, TableItemExpression table) throws TransformBuildException {
+		if (pr.getSourcePropertyModel() != null) {
+			return columnExpression(pr.getSourcePropertyModel(), table);
+		}
+		
+		if (pr instanceof ExactMatchPropertyRule) {
+			return columnExpression(table, pr.getPredicate());
+		}
+		
+		throw new TransformBuildException("Unsupported PropertyRule");
+		
+		
+	}
+	
+	
 	public static ColumnExpression columnExpression(PropertyModel pm, TableItemExpression table) {
 
+		if (pm == null) {
+			throw new RuntimeException("PropertModel must not be null");
+		}
 		if (pm.isTargetProperty()) {
 			pm = pm.getGroup().getSourceProperty();
 		}

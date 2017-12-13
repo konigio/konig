@@ -83,7 +83,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 		private Set<PropertyGroup> unmatchedProperties = new HashSet<>();
 
 		private FromItemEnds fromItemEnds;
-		private FormulaHandler propertyHandler = new TimeIntervalFormulaHandler();
+		private FormulaHandler propertyHandler = new TimeIntervalFormulaHandler(shapeModelFactory.getDataChannelFactory());
 
 
 		public Worker(FromItemEnds fromItemEnds) {

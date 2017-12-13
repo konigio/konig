@@ -27,11 +27,17 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.openrdf.model.URI;
+
 import io.konig.core.io.PrettyPrintWriter;
 
 public class PathExpression extends AbstractFormula implements PrimaryExpression {
 	
 	private List<PathStep> stepList = new ArrayList<>();
+	
+	public static PathExpressionBuilder builder() {
+		return new PathExpressionBuilder();
+	}
 	
 	public void add(PathStep step) {
 		stepList.add(step);
@@ -73,6 +79,24 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 		}
 		visitor.exit(this);
 		
+	}
+	
+	public static class PathExpressionBuilder {
+		private PathExpression path;
+		
+		private PathExpressionBuilder() {
+			path = new PathExpression();
+		}
+		
+		public PathExpressionBuilder out(URI predicate) {
+			PathStep step = new DirectionStep(Direction.OUT, new FullyQualifiedIri(predicate));
+			path.add(step);
+			return this;
+		}
+		
+		public PathExpression build() {
+			return path;
+		}
 	}
 
 }

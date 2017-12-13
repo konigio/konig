@@ -33,8 +33,7 @@
   <logger name="io.konig.transform.proto.VariableShapeFactory" additivity="false">
       <level value="debug"/>
       <appender-ref ref="console"/>
-  </logger>
-  
+  </logger>  
   
   <logger name="io.konig.transform.proto.SimplePropertyMapper" additivity="false">
       <level value="debug"/>

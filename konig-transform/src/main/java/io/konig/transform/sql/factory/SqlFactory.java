@@ -32,6 +32,8 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
@@ -43,6 +45,12 @@ import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.formula.BinaryOperator;
+import io.konig.formula.BinaryRelationalExpression;
+import io.konig.formula.GeneralAdditiveExpression;
+import io.konig.formula.NumericExpression;
+import io.konig.formula.PrimaryExpression;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleBigQueryView;
@@ -77,9 +85,11 @@ import io.konig.sql.query.UpdateExpression;
 import io.konig.sql.query.UpdateItem;
 import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
+import io.konig.sql.query.WhereClause;
 import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.proto.PropertyModel;
 import io.konig.transform.proto.ShapeModel;
+import io.konig.transform.rule.AnyValuePropertyRule;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
 import io.konig.transform.rule.ChannelProperty;
@@ -87,15 +97,16 @@ import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
+import io.konig.transform.rule.FixedValuePropertyRule;
 import io.konig.transform.rule.FormulaIdRule;
 import io.konig.transform.rule.FormulaPropertyRule;
 import io.konig.transform.rule.FromItem;
+import io.konig.transform.rule.FunctionGroupingElement;
 import io.konig.transform.rule.IdPropertyRule;
 import io.konig.transform.rule.IdRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinRule;
 import io.konig.transform.rule.JoinStatement;
-import io.konig.transform.rule.FixedValuePropertyRule;
 import io.konig.transform.rule.MapValueTransform;
 import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyComparison;
@@ -107,6 +118,7 @@ import io.konig.transform.rule.ValueTransform;
 import io.konig.transform.sql.query.TableName;
 
 public class SqlFactory {
+	private static final Logger logger = LoggerFactory.getLogger(SqlFactory.class);
 	private String idColumnName = "id";
 
 	public InsertStatement insertStatement(ShapeRule shapeRule) throws TransformBuildException {
@@ -134,9 +146,62 @@ public class SqlFactory {
 			SelectExpression select = new SelectExpression();
 			addDataChannels(select.getFrom(), shapeRule);
 			addColumns(select, shapeRule);
+			addWhereClause(select, shapeRule);
 			addGroupBy(select, shapeRule);
 
 			return select;
+		}
+
+		private void addWhereClause(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
+		
+			List<BinaryRelationalExpression> whereList = shapeRule.getWhereExpressions();
+			if (!whereList.isEmpty()) {
+				if (whereList.size()==1) {
+					ComparisonPredicate comparison = comparisonPredicate(whereList.get(0));
+					select.setWhere(new WhereClause(comparison));
+					
+				} else {
+					throw new TransformBuildException("Multiple where expressions not supported yet");
+				}
+			}
+			
+		}
+
+		private ComparisonPredicate comparisonPredicate(BinaryRelationalExpression binary) throws TransformBuildException {
+			
+			ComparisonOperator operator = operator(binary.getOperator());
+			ValueExpression left = valueExpression(binary.getLeft());
+			ValueExpression right = valueExpression(binary.getRight());
+			return new ComparisonPredicate(operator, left, right);
+		}
+
+		private ValueExpression valueExpression(NumericExpression e) throws TransformBuildException {
+			
+			PropertyConstraint constraint = new PropertyConstraint();
+			constraint.setMaxCount(1);
+			constraint.setMinCount(1);
+			QuantifiedExpression formula = QuantifiedExpression.wrap(e);
+			constraint.setFormula(formula);
+			
+			SqlFormulaExchange request = SqlFormulaExchange.builder()
+				.withProperty(constraint)
+				.withTableMap(this)
+				.build();
+			
+			return formulaFactory.formula(request);
+		}
+
+		private ComparisonOperator operator(BinaryOperator operator) {
+			switch (operator) {
+			case EQUALS: 	return ComparisonOperator.EQUALS;
+			case GREATER_THAN :	return ComparisonOperator.GREATER_THAN;
+			case GREATER_THAN_OR_EQUAL : return ComparisonOperator.GREATER_THAN_OR_EQUALS;
+			case LESS_THAN : return ComparisonOperator.LESS_THAN;
+			case LESS_THAN_OR_EQUAL : return ComparisonOperator.LESS_THAN_OR_EQUALS;
+			case NOT_EQUAL : return ComparisonOperator.NOT_EQUALS;
+				
+			}
+			return null;
 		}
 
 		public InsertStatement insertStatement(ShapeRule shapeRule) throws TransformBuildException {
@@ -174,7 +239,7 @@ public class SqlFactory {
 			if (!ge.isEmpty()) {
 				clause = new GroupByClause(null);
 				for (GroupingElement element : ge) {
-					clause.add(element);
+					add(clause, element);
 				}
 			} else {
 				for (PropertyRule p : shapeRule.getPropertyRules()) {
@@ -201,6 +266,30 @@ public class SqlFactory {
 			}
 			select.setGroupBy(clause);
 
+		}
+
+		private void add(GroupByClause clause, GroupingElement element) throws TransformBuildException {
+
+			if (element instanceof FunctionGroupingElement) {
+				FunctionGroupingElement fge = (FunctionGroupingElement) element;
+				element = sqlFunction(fge);
+			}
+			clause.add(element);
+			
+		}
+
+		private FunctionExpression sqlFunction(FunctionGroupingElement fge) throws TransformBuildException {
+			PropertyConstraint constraint = new PropertyConstraint();
+			constraint.setMaxCount(1);
+			constraint.setMinCount(1);
+			QuantifiedExpression formula = QuantifiedExpression.wrap(fge.getFunction());
+			constraint.setFormula(formula);
+			
+			SqlFormulaExchange request = SqlFormulaExchange.builder()
+				.withProperty(constraint)
+				.withTableMap(this)
+				.build();
+			return (FunctionExpression) formulaFactory.formula(request);
 		}
 
 		private UpdateExpression updateExpression(ShapeRule shapeRule) throws TransformBuildException {
@@ -295,6 +384,9 @@ public class SqlFactory {
 
 		private ValueExpression createIdRule(ShapeRule shapeRule) throws TransformBuildException {
 			ValueExpression result = null;
+			if (shapeRule == null) {
+				throw new TransformBuildException("shapeRule is null");
+			}
 			IdRule idRule = shapeRule.getIdRule();
 			if (idRule != null) {
 				if (idRule instanceof CopyIdRule) {
@@ -424,9 +516,12 @@ public class SqlFactory {
 			DataChannel channel = p.getDataChannel();
 			TableItemExpression tableItem = simpleTableItem(channel);
 			URI predicate = p.getPredicate();
+			if (logger.isDebugEnabled()) {
+				logger.debug("column predicate: {}", predicate.getLocalName());
+			}
 			if (p instanceof ExactMatchPropertyRule) {
 				
-				return SqlUtil.columnExpression(p.getSourcePropertyModel(), tableItem);
+				return SqlUtil.columnExpression(p, tableItem);
 			}
 
 			if (p instanceof RenamePropertyRule) {
@@ -500,6 +595,17 @@ public class SqlFactory {
 
 				ColumnExpression idExpression = SqlUtil.columnExpression(tableItem, Konig.id);
 				return new AliasExpression(idExpression, predicate.getLocalName());
+			}
+			
+			if (p instanceof AnyValuePropertyRule) {
+				AnyValuePropertyRule anyValue = (AnyValuePropertyRule) p;
+				
+				ValueExpression ve = column(anyValue.getCollection(), suppressRename);
+				if (ve instanceof AliasExpression) {
+					AliasExpression alias = (AliasExpression) ve;
+					return new AliasExpression(new FunctionExpression(FunctionExpression.ANY_VALUE, alias.getExpression()), alias.getAlias());
+				}
+				return new FunctionExpression(FunctionExpression.ANY_VALUE, ve);
 			}
 
 			throw new TransformBuildException("Unsupported PropertyRule: " + p.getClass().getName());
