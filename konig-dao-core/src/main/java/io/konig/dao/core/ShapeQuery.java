@@ -30,6 +30,10 @@ public class ShapeQuery {
 	private DataFilter filter;
 	private String view;
 	private String aggregate;
+	private Long limit;
+	private String xSort;
+	private String ySort;
+	private Long offset;
 	private Map<String,String> parameters;
 	
 	public ShapeQuery() {
@@ -52,7 +56,23 @@ public class ShapeQuery {
 	public String getAggregate() {
 		return aggregate;
 	}
-
+	
+	public Long getLimit() {
+		return limit;
+	}
+	
+	public Long getOffset() {
+		return offset;
+	}
+	
+	public String getXSort() {
+		return xSort;
+	}
+	
+	public String getYSort() {
+		return ySort;
+	}
+	
 	public Map<String, String> getParameters() {
 		return parameters;
 	}
@@ -77,6 +97,22 @@ public class ShapeQuery {
 		this.aggregate = aggregate;
 	}
 
+	public void setLimit(Long limit) {
+		this.limit = limit;
+	}
+	
+	public void setOffset(Long offset) {
+		this.offset = offset;
+	}
+
+	private void setXSort(String xSort) {
+		this.xSort = xSort;
+	}
+	
+	private void setYSort(String ySort) {
+		this.ySort = ySort;
+	}
+	
 	public static Builder newBuilder() {
 		return new Builder();
 	}
@@ -96,6 +132,26 @@ public class ShapeQuery {
 		
 		public Builder setAggregate(String aggregate) {
 			query.setAggregate(aggregate);
+			return this;
+		}
+		
+		public Builder setXSort(String xSort) {
+			query.setXSort(xSort);
+			return this;
+		}
+		
+		public Builder setYSort(String ySort) {
+			query.setYSort(ySort);
+			return this;
+		}
+		
+		public Builder setLimit(Long limit) {
+			query.setLimit(limit);
+			return this;
+		}
+		
+		public Builder setOffset(Long offset) {
+			query.setOffset(offset);
 			return this;
 		}
 		

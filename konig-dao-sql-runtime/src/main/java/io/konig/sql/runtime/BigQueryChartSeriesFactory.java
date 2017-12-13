@@ -101,7 +101,6 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 			builder.append(struct.getName());
 			appendFilter(struct,builder, filter);
 			appendGroupBy(struct,builder,dimension);
-			return builder.toString();
 		} else {
 			builder.append("SELECT ");
 			builder.append(dimension.stringValue());
@@ -111,7 +110,37 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 			builder.append(struct.getName());
 			appendFilter(struct,builder, filter);
 		}
-
+		if(query.getXSort() != null || query.getYSort() != null) {
+			builder.append(" ORDER BY ");
+			if(query.getXSort() != null && !query.getXSort().equals("")) {
+				builder.append(dimension.stringValue());
+				builder.append(" ");
+				builder.append(query.getXSort());
+				if(checkNullAndEmpty(query.getYSort())) {
+					builder.append(",");
+				}
+			}
+			if(checkNullAndEmpty(query.getYSort())) {
+				builder.append(measure.stringValue());
+				builder.append(" ");
+				builder.append(query.getYSort());
+			}
+		}
+		
+		
+		if(checkNullAndEmpty(query.getLimit())) {
+			builder.append(" LIMIT " + query.getLimit());
+			if(query.getOffset() != null && !query.getOffset().equals("")) {
+				builder.append(" OFFSET " + query.getOffset());
+			}
+			
+		}
 		return builder.toString();
+	}
+	private boolean checkNullAndEmpty(Object value) {
+		if(value != null && value.equals("")) {
+			return true;
+		}
+		return false;
 	}
 }

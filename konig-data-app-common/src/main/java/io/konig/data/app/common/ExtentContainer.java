@@ -97,8 +97,16 @@ public class ExtentContainer extends AbstractContainer {
 						.endPredicateConstraint();					
 				} else if(key.endsWith(".view") || key.equals("xAxis")  || key.equals("yAxis")){
 					//TODO: just to skipped the view attribute 
-				} else if(key.endsWith(".aggregate")){
+				} else if(key.equals(".aggregate")){
 					builder.setAggregate(queryParams.get(".aggregate"));
+				} else if (key.equals(".limit")) {
+					builder.setLimit(Long.parseLong(queryParams.get(".limit")));
+				} else if (key.equals(".ySort")) {
+					builder.setYSort(queryParams.get(".ySort"));
+				} else if (key.equals(".xSort")) {
+					builder.setXSort(queryParams.get(".xSort"));
+				} else if (key.equals(".offset")) {
+					builder.setOffset(Long.parseLong(queryParams.get(".offset")));
 				} else {
 					builder.beginPredicateConstraint().setPropertyName(key)
 						.setOperator(ConstraintOperator.EQUAL).setValue(queryParams.get(key))
