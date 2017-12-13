@@ -15,7 +15,3 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
-  - provider: script
-    script: "deploy.sh"
-    on:
-      tags: true
