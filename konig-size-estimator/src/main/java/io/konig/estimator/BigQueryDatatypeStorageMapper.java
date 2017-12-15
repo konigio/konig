@@ -7,7 +7,7 @@ import io.konig.shacl.PropertyConstraint;
 public class BigQueryDatatypeStorageMapper {
 	private BigQueryDatatypeMapper mapper = new BigQueryDatatypeMapper();
 
-	public int getDataSize(PropertyConstraint propertyConstraint, String data) {
+	public int getDataSize(PropertyConstraint propertyConstraint, Object data) {
 		int value = 0;
 
 		BigQueryDatatype type = mapper.type(propertyConstraint);
@@ -17,7 +17,8 @@ public class BigQueryDatatypeStorageMapper {
 		} else if (type == BigQueryDatatype.BOOLEAN) {
 			value = 4;
 		} else if (type == BigQueryDatatype.STRING) {
-			value = 2 * data.length();
+			String stringData = (String) data;
+			value = 2 * stringData.length();
 		}
 		return value;
 	}

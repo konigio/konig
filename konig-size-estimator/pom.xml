@@ -37,10 +37,15 @@
 			<version>1.5</version>
 		</dependency>
 		<dependency>
-  		<groupId>io.konig</groupId>
-  		<artifactId>konig-schemagen</artifactId>
-  		<version>${konig.version}</version>
-  	</dependency>
+			<groupId>io.konig</groupId>
+			<artifactId>konig-schemagen</artifactId>
+			<version>${konig.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.googlecode.json-simple</groupId>
+			<artifactId>json-simple</artifactId>
+			<version>1.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

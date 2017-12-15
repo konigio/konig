@@ -1,7 +1,7 @@
 package io.konig.estimator;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.List;
@@ -25,6 +25,6 @@ public class SizeEstimatorTest extends TransformTest {
 		SizeEstimator estimator = new SizeEstimator(shapeManager);
 		List<DataSourceSizeEstimate> list = estimator.averageSize(new SizeEstimateRequest(shapeId, new File("src/test/resources/Product-Shapes/input")));
 		
-		assertNotEquals(0, list.get(0).averageSize());	
+		assertNotEquals(0, list.get(0).averageSize());
 	}
 }

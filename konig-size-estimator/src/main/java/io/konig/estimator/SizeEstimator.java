@@ -9,11 +9,13 @@ import java.util.List;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
-import io.konig.schemagen.gcp.BigQueryDatatype;
-import io.konig.schemagen.gcp.BigQueryDatatypeMapper;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -60,6 +62,8 @@ public class SizeEstimator {
 			} else if (fileName.endsWith(CSV)) {
 				handleCsv(dataFile, response);
 			}
+		} catch (ParseException e) {
+			throw new SizeEstimateException("Improper data file: " + fileName);
 		} catch (IOException e) {
 			throw new SizeEstimateException("Improper data file: " + fileName);
 		}
@@ -96,7 +100,7 @@ public class SizeEstimator {
 		}
 	}
 
-	private int handleDataTypeMapping(DataSource dataSource, PropertyConstraint propertyConstraint, String data) {
+	private int handleDataTypeMapping(DataSource dataSource, PropertyConstraint propertyConstraint, Object data) {
 		int value = 0;
 		if (dataSource.isA(Konig.GoogleBigQueryTable)) {
 			BigQueryDatatypeStorageMapper mapper = new BigQueryDatatypeStorageMapper();
@@ -105,9 +109,25 @@ public class SizeEstimator {
 		return value;
 	}
 
-	private void handleJson(File dataFile, List<DataSourceSizeEstimate> response) {
+	private void handleJson(File dataFile, List<DataSourceSizeEstimate> response) throws IOException, ParseException {
 		// Similar to handleCsv, except we parse a JSON file instead of CsvFile.
-
+		for (DataSourceSizeEstimate sourceEstimate : response) {
+			
+			List<PropertyConstraint> properties = sourceEstimate.getShape().getProperty();
+			
+			JSONParser parser = new JSONParser();
+			JSONArray records = (JSONArray) parser.parse(new FileReader(dataFile));
+			for(Object obj : records) {
+				JSONObject record = (JSONObject)obj;
+				for(PropertyConstraint pc : properties) {
+					String key = pc.getPredicate().getLocalName();
+					
+					int value = handleDataTypeMapping(sourceEstimate.getDataSource(), pc, record.get(key));
+					sourceEstimate.incrementSize(value);
+				}
+				sourceEstimate.incrementRecord();
+			}			
+		}
 	}
 
 	private List<DataSourceSizeEstimate> prepareResponse(Shape shape) throws SizeEstimateException {
