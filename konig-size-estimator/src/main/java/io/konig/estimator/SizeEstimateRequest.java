@@ -22,8 +22,4 @@ public class SizeEstimateRequest {
 		return sampleDataDir;
 	}
 	
-	
-	
-	
-
 }
