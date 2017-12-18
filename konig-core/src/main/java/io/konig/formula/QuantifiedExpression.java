@@ -42,7 +42,10 @@ public class QuantifiedExpression extends Expression {
 		
 	}
 
-	
+	public String toSimpleString() {
+		String[] text = toString().split("\\n");
+		return text[text.length-1];
+	}
 	
 	public static QuantifiedExpression wrap(NumericExpression numeric) {
 		ValueLogical valueLogical = new BinaryRelationalExpression(null, numeric, null);

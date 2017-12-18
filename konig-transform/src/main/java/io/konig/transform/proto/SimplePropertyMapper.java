@@ -38,6 +38,8 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
+import io.konig.formula.Formula;
+import io.konig.formula.FormulaVisitor;
 import io.konig.formula.HasPathStep;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
@@ -50,6 +52,7 @@ import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.rule.DataChannel;
+import io.konig.transform.rule.FilteredDataChannel;
 import io.konig.transform.rule.TransformBinaryOperator;
 
 public class SimplePropertyMapper implements PropertyMapper {
@@ -85,6 +88,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 		private FromItemEnds fromItemEnds;
 		private FormulaHandler propertyHandler = new TimeIntervalFormulaHandler(shapeModelFactory.getDataChannelFactory());
 
+		private HasStepVisitor hasStepVisitor;
 
 		public Worker(FromItemEnds fromItemEnds) {
 			this.fromItemEnds = fromItemEnds;
@@ -774,7 +778,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 
 		private void matchProperties(ShapeModel sourceShapeModel) throws ShapeTransformException {
 			
-			
+			addFilteredChannel(sourceShapeModel);
 			matchDirectProperties(sourceShapeModel);
 			matchStepProperties(sourceShapeModel);
 		}
@@ -876,14 +880,58 @@ public class SimplePropertyMapper implements PropertyMapper {
 		}
 
 
+
+		private void addFilteredChannel(ShapeModel sourceShapeModel) {
+			ShapeModel targetShapeModel = sourceShapeModel.getClassModel().getTargetShapeModel();
+			PropertyModel accessor = targetShapeModel.getAccessor();
+			if (accessor instanceof BasicPropertyModel) {
+				BasicPropertyModel basic = (BasicPropertyModel) accessor;
+				PropertyConstraint p = basic.getPropertyConstraint();
+				QuantifiedExpression q = p.getFormula();
+				
+				if (q !=null && containsHasStep(q)) {
+
+					if (logger.isDebugEnabled()) {
+						String formula = q.toSimpleString();
+						String path = targetShapeModel==null ? null : targetShapeModel.accessorPath();
+						String localName = RdfUtil.localName(sourceShapeModel.getShape().getId());
+						logger.debug("addFilteredChannel({} : {}, formula: {}", localName, path, formula);
+						
+					}
+					
+					DataChannel rawChannel = sourceShapeModel.getDataChannel();
+//					FilteredDataChannel filtered = new FilteredDataChannel(sourceShapeModel, rawDataChannel)
+				}
+				
+			}
+			
+			
+			
+			
+		}
+
+		private boolean containsHasStep(QuantifiedExpression q) {
+		
+			HasStepVisitor visitor = hasStepVisitor();
+			q.dispatch(visitor);
+			
+			return visitor.foundHasStep();
+		}
+
+
+		private HasStepVisitor hasStepVisitor() {
+			if (hasStepVisitor == null) {
+				hasStepVisitor = new HasStepVisitor();
+			} else {
+				hasStepVisitor.reset();
+			}
+			return hasStepVisitor;
+		}
+
+
 		private void matchDirectProperties(ShapeModel sourceShapeModel) throws ShapeTransformException {
 			String path = null;
-			if (logger.isDebugEnabled()) {
-				ShapeModel targetShapeModel = sourceShapeModel.getClassModel().getTargetShapeModel();
-				
-				path = targetShapeModel==null ? null : targetShapeModel.accessorPath();
-				logger.debug("BEGIN matchDirectProperties({} : {})", RdfUtil.localName(sourceShapeModel.getShape().getId()), path);
-			}
+			
 			Collection<PropertyModel> list = sourceShapeModel.getProperties();
 			for (PropertyModel p : list) {
 				PropertyGroup group = p.getGroup();
@@ -1010,4 +1058,29 @@ public class SimplePropertyMapper implements PropertyMapper {
 	
 	
 
+	private static class HasStepVisitor implements FormulaVisitor {
+		private boolean foundHasStep = false;
+		
+		public void reset() {
+			foundHasStep = false;
+		}
+
+		@Override
+		public void enter(Formula formula) {
+			
+			if (formula instanceof HasPathStep) {
+				foundHasStep = true;
+			}
+			
+		}
+		
+		public boolean foundHasStep() {
+			return foundHasStep;
+		}
+
+		@Override
+		public void exit(Formula formula) {
+		}
+		
+	}
 }
