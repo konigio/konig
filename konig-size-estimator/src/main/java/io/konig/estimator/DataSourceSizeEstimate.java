@@ -38,6 +38,9 @@ public class DataSourceSizeEstimate {
 	
 	public void incrementSize(int increment) {
 		sizeSum += increment;
+	}
+	
+	public void incrementRecord() {
 		recordCount++;
 	}
 

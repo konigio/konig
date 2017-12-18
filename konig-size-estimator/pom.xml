@@ -1,25 +1,26 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <parent>
-    <groupId>io.konig</groupId>
-    <artifactId>konig-parent</artifactId>
-    <version>2.0.0-8</version>
-    <relativePath>../konig-parent/pom.xml</relativePath>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
-  
-  <artifactId>konig-size-estimator</artifactId>
-  <packaging>jar</packaging>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<groupId>io.konig</groupId>
+		<artifactId>konig-parent</artifactId>
+		<version>2.0.0-8</version>
+		<relativePath>../konig-parent/pom.xml</relativePath>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
 
-  <name>Konig Size Estimator</name>
-  <url>http://maven.apache.org</url>
-  <description>A utility for estimating the volume of data for a given data shape</description>
-  
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+	<artifactId>konig-size-estimator</artifactId>
+	<packaging>jar</packaging>
 
-  <dependencies>
-  
+	<name>Konig Size Estimator</name>
+	<url>http://maven.apache.org</url>
+	<description>A utility for estimating the volume of data for a given data shape</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+
 		<dependency>
 			<groupId>io.konig</groupId>
 			<artifactId>konig-core</artifactId>
@@ -31,17 +32,45 @@
 			<artifactId>konig-maven-common</artifactId>
 			<version>${konig.version}</version>
 		</dependency> 
-	
-  </dependencies>
-  
-  <build>
-	  <plugins>
 	  
+		<dependency>
+			<groupId>io.konig</groupId>
+			<artifactId>konig-gcp-model</artifactId>
+			<version>${konig.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.konig</groupId>
+			<artifactId>konig-schemagen</artifactId>
+			<version>${konig.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.googlecode.json-simple</groupId>
+			<artifactId>json-simple</artifactId>
+			<version>1.1</version>
+		</dependency>
+		
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+	</dependencies>
+
+	<build>
+		<plugins>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>2.2</version>
-		
+
 				<executions>
 					<execution>
 						<goals>
@@ -50,44 +79,45 @@
 					</execution>
 				</executions>
 			</plugin>
-	  </plugins>
-	  <pluginManagement>
-	  	<plugins>
-	  		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-	  		<plugin>
-	  			<groupId>org.eclipse.m2e</groupId>
-	  			<artifactId>lifecycle-mapping</artifactId>
-	  			<version>1.0.0</version>
-	  			<configuration>
-	  				<lifecycleMappingMetadata>
-	  					<pluginExecutions>
-	  						<pluginExecution>
-	  							<pluginExecutionFilter>
-	  								<groupId>
-	  									org.codehaus.mojo
-	  								</groupId>
-	  								<artifactId>
-	  									license-maven-plugin
-	  								</artifactId>
-	  								<versionRange>
-	  									[1.8,)
-	  								</versionRange>
-	  								<goals>
-	  									<goal>
-	  										update-file-header
-	  									</goal>
-	  								</goals>
-	  							</pluginExecutionFilter>
-	  							<action>
-	  								<ignore />
-	  							</action>
-	  						</pluginExecution>
-	  					</pluginExecutions>
-	  				</lifecycleMappingMetadata>
-	  			</configuration>
-	  		</plugin>
-	  	</plugins>
-	  </pluginManagement>
-  </build>
- 
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.codehaus.mojo
+										</groupId>
+										<artifactId>
+											license-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.8,)
+										</versionRange>
+										<goals>
+											<goal>
+												update-file-header
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
 </project>
