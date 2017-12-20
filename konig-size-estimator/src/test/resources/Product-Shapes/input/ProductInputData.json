@@ -1,0 +1,11 @@
+[
+  {
+    "name": "Vivo V7+ (Matte Black, Fullview Display)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 21900, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 22900, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 23900, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  }
+]

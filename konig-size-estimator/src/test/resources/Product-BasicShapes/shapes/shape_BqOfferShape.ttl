@@ -14,10 +14,4 @@ shape:BqOfferShape a sh:Shape ;
 		sh:predicate schema:priceCurrency ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 1 ; 
-		sh:maxCount 1 
-	] , [ 
-		sh:predicate schema:validTill ; 
-		sh:datatype xsd:dateTime ; 
-		sh:minCount 1 ; 
-		sh:maxCount 1 
-	 ] . 
+		sh:maxCount 1 ]  . 

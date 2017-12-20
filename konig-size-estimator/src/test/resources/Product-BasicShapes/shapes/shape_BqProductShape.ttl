@@ -17,15 +17,30 @@ shape:BqProductShape a sh:Shape ;
 		sh:datatype xsd:string ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1
-	  ]  ,  [ 
-		sh:predicate schema:category ; 
-		sh:class ex:ProductCategory ; 
-		sh:nodeKind sh:IRI ; 
-		sh:minCount 0
 	 ]  ,  [ 
-		sh:predicate schema:offers ; 
-		sh:shape shape:BqOfferShape ; 
-		sh:minCount 0 ] ; 
+		sh:predicate schema:categoryName ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate ex:originId ; 
+		sh:datatype xsd:long ; 
+		sh:maxCount 1 
+	 ] , [ 
+		sh:predicate schema:price ; 
+		sh:datatype xsd:float ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:predicate schema:priceCurrency ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 
+	 ] , [ 
+		sh:predicate schema:offerTill ; 
+		sh:datatype xsd:dateTime ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 
+	 ] ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/Product> . 
 
 <http://www.konig.io/activity/uCpln2Xow54AAAFcaMuvGg> a konig:LoadModelFromSpreadsheet ; 
