@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Samsung Galaxy J7 Pro (Gold, 64GB)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 36776, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 37776, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 38776, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "Honor 7X (Blue, 4GB RAM + 32GB memory)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 23053, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 31889, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 33053, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "Redmi Y1 (Gold, 64GB)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 20681, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 21681, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 22681, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "Redmi 4 (Black, 16 GB)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 31737, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 32737, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 33737, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "OnePlus 5T (Midnight Black 6GB RAM + 64GB memory)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 24895, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 25895, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 26895, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "Redmi Y1 Lite (Gold,16GB)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 22842, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 22942, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 22742, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "Redmi 4 (Black, 16 GB)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 31737, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 32737, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 33737, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "Moto G5s Plus (Lunar Grey, 64GB)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 39346, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 38346, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 37346, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  }
+]

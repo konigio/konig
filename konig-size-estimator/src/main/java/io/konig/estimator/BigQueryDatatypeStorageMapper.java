@@ -1,5 +1,10 @@
 package io.konig.estimator;
 
+import java.io.FileReader;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import io.konig.schemagen.gcp.BigQueryDatatype;
 import io.konig.schemagen.gcp.BigQueryDatatypeMapper;
 import io.konig.shacl.PropertyConstraint;
@@ -19,6 +24,8 @@ public class BigQueryDatatypeStorageMapper {
 		} else if (type == BigQueryDatatype.STRING) {
 			String stringData = (String) data;
 			value = 2 * stringData.length();
+		} else if (type == BigQueryDatatype.RECORD) {
+			value = -1;		
 		}
 		return value;
 	}

@@ -6,7 +6,10 @@
 @prefix shape: <http://example.com/shapes/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-shape:BqProductCategoryShape sh:property  [ 
+shape:BqProductCategoryShape a sh:Shape ;
+	sh:nodeKind sh:IRI ;
+	sh:targetClass ex:ProductCategory ; 
+ 	sh:property  [ 
 		sh:predicate schema:name ; 
 		sh:datatype xsd:string ; 
 		sh:maxCount 1
@@ -14,12 +17,12 @@ shape:BqProductCategoryShape sh:property  [
 		sh:predicate ex:originId ; 
 		sh:datatype xsd:long ; 
 		sh:maxCount 1 ]  ; 
-	a sh:Shape ; 
-	sh:nodeKind sh:IRI ; 
-	sh:targetClass ex:ProductCategory ; 
+	
 	konig:shapeDataSource  [ 
 		gcp:tableReference  [ 
 			gcp:projectId "{gcpProjectId}" ; 
 			gcp:datasetId "ex" ; 
 			gcp:tableId "ProductCategory" ]  ; 
 		a konig:GoogleBigQueryTable ]  . 
+		
+				

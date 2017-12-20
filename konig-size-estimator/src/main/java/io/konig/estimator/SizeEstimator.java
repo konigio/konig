@@ -45,6 +45,7 @@ public class SizeEstimator {
 	private static final String JSON = ".json";
 	private static final String CSV = ".csv";
 	private ShapeManager shapeManager;
+	BigQueryDatatypeStorageMapper mapper = new BigQueryDatatypeStorageMapper();
 
 	public SizeEstimator(ShapeManager shapeManager) {
 		this.shapeManager = shapeManager;
@@ -101,8 +102,7 @@ public class SizeEstimator {
 		// Lookup the expected size of the physical datatype; in the case of strings,
 		// compute the size from the actual data.
 		// Invoke incrementSize on the DataSourceSizeEstimate
-		for (DataSourceSizeEstimate sourceEstimate : response) {
-			
+		for (DataSourceSizeEstimate sourceEstimate : response) {			
 			List<PropertyConstraint> properties = sourceEstimate.getShape().getProperty();
 			
 			CSVParser parser = null;
@@ -110,7 +110,7 @@ public class SizeEstimator {
 				parser = new CSVParser(new FileReader(dataFile), CSVFormat.DEFAULT.withAllowMissingColumnNames());
 				for (CSVRecord record : parser) {
 					for (int i = 0; i < record.size(); ++i) {
-						int value = handleDataTypeMapping(sourceEstimate.getDataSource(), properties.get(i), record.get(i));
+						int value = mapper.getDataSize(properties.get(i), record.get(i));
 						sourceEstimate.incrementSize(value);
 					}
 					sourceEstimate.incrementRecord();
@@ -121,15 +121,6 @@ public class SizeEstimator {
 		}
 	}
 
-	private int handleDataTypeMapping(DataSource dataSource, PropertyConstraint propertyConstraint, Object data) {
-		int value = 0;
-		if (dataSource.isA(Konig.GoogleBigQueryTable)) {
-			BigQueryDatatypeStorageMapper mapper = new BigQueryDatatypeStorageMapper();
-			value = mapper.getDataSize(propertyConstraint, data);
-		}
-		return value;
-	}
-
 	private void handleJson(File dataFile, List<DataSourceSizeEstimate> response) throws IOException, ParseException {
 		// Similar to handleCsv, except we parse a JSON file instead of CsvFile.
 		for (DataSourceSizeEstimate sourceEstimate : response) {
@@ -138,16 +129,23 @@ public class SizeEstimator {
 			
 			JSONParser parser = new JSONParser();
 			JSONArray records = (JSONArray) parser.parse(new FileReader(dataFile));
-			for(Object obj : records) {
-				JSONObject record = (JSONObject)obj;
-				for(PropertyConstraint pc : properties) {
-					String key = pc.getPredicate().getLocalName();
-					
-					int value = handleDataTypeMapping(sourceEstimate.getDataSource(), pc, record.get(key));
-					sourceEstimate.incrementSize(value);
+			processJsonRecords(sourceEstimate, properties, records);			
+		}
+	}
+
+	private void processJsonRecords(DataSourceSizeEstimate sourceEstimate, List<PropertyConstraint> properties, JSONArray records) {
+		for(Object obj : records) {
+			JSONObject record = (JSONObject)obj;
+			for(PropertyConstraint pc : properties) {
+				String key = pc.getPredicate().getLocalName();
+				
+				int value = mapper.getDataSize(pc, record.get(key));
+				if (value == -1) {
+					processJsonRecords(sourceEstimate, pc.getShape().getProperty(), (JSONArray)record.get(key));
 				}
-				sourceEstimate.incrementRecord();
-			}			
+				sourceEstimate.incrementSize(value);
+			}
+			sourceEstimate.incrementRecord();
 		}
 	}
 
