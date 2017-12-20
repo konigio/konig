@@ -881,7 +881,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 
 
 
-		private void addFilteredChannel(ShapeModel sourceShapeModel) {
+		private void addFilteredChannel(ShapeModel sourceShapeModel) throws ShapeTransformException {
 			ShapeModel targetShapeModel = sourceShapeModel.getClassModel().getTargetShapeModel();
 			PropertyModel accessor = targetShapeModel.getAccessor();
 			if (accessor instanceof BasicPropertyModel) {
@@ -900,7 +900,11 @@ public class SimplePropertyMapper implements PropertyMapper {
 					}
 					
 					DataChannel rawChannel = sourceShapeModel.getDataChannel();
-//					FilteredDataChannel filtered = new FilteredDataChannel(sourceShapeModel, rawDataChannel)
+					FilteredDataChannel filtered = new FilteredDataChannel(sourceShapeModel.getShape(), rawChannel, q);
+					sourceShapeModel.setDataChannel(filtered);
+					
+					
+					appendDataChannel(sourceShapeModel);
 				}
 				
 			}
@@ -909,6 +913,30 @@ public class SimplePropertyMapper implements PropertyMapper {
 			
 			
 		}
+
+
+		private void appendDataChannel(ShapeModel shapeModel) {
+		
+			if (logger.isDebugEnabled()) {
+				logger.debug("appendDataChannel(shape.localName: {})", shapeModel.simpleName());
+			}
+			
+			if (fromItemEnds.first == null) {
+				fromItemEnds.first = fromItemEnds.last = shapeModel;
+			} else if (fromItemEnds.last instanceof ProtoJoinExpression){
+
+				ProtoJoinExpression join = (ProtoJoinExpression) fromItemEnds.last;
+				ShapeModel priorShapeModel = join.getRightShapeModel();
+				fromItemEnds.last = new ProtoJoinExpression(priorShapeModel, shapeModel, null);
+				join.setRight(fromItemEnds.last);
+			} else if (fromItemEnds.first==fromItemEnds.last && fromItemEnds.last instanceof ShapeModel) {
+				ShapeModel first = (ShapeModel) fromItemEnds.first;
+				ProtoJoinExpression join = new ProtoJoinExpression(first, shapeModel, null);
+				fromItemEnds.first = fromItemEnds.last = join;
+			}
+			
+		}
+
 
 		private boolean containsHasStep(QuantifiedExpression q) {
 		

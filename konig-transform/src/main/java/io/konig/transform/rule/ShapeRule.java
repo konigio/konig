@@ -103,6 +103,14 @@ public class ShapeRule extends AbstractPrettyPrintable {
 		return channels;
 	}
 	
+	public ShapeRule getRoot() {
+		if (accessor == null) {
+			return this;
+		}
+		
+		return accessor.getContainer().getRoot();
+	}
+	
 	public void addChannel(DataChannel channel) {
 		channels.addFirst(channel);
 		channel.setParent(this);

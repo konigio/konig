@@ -345,9 +345,6 @@ public class ShapeModelToShapeRule {
 				
 				result = new PropertyComparison(operator, left, right);
 			}
-			if (result == null) {
-				throw new ShapeTransformException("Failed to create boolean expression");
-			}
 			return result;
 		}
 
@@ -405,13 +402,17 @@ public class ShapeModelToShapeRule {
 
 		private GroupingElement column(PropertyModel p) throws ShapeTransformException {
 
+			if (logger.isDebugEnabled()) {
+				logger.debug("column({})", p.simplePath());
+			}
 			p = p.getGroup().getSourceProperty();
 			
 			List<PropertyModel> path = p.path();
 
 			DataChannel channel = p.getDeclaringShape().getDataChannel();
 			StringBuilder builder = new StringBuilder();
-			if (useAlias) {
+			if (useAlias && channel!=null) {
+				
 				builder.append(channel.getName());
 				builder.append('.');
 			}
