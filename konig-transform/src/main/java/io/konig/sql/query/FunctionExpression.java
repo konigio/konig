@@ -26,9 +26,10 @@ import java.util.List;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class FunctionExpression extends AbstractExpression implements NumericValueExpression, GroupingElement {
+public class FunctionExpression extends AbstractExpression implements NumericValueExpression, GroupingElement, TableItemExpression {
 	
 	public static final String ANY_VALUE = "ANY_VALUE";
+	public static final String UNNEST = "UNNEST";
 	
 	private String functionName;
 	private List<QueryExpression> argList = new ArrayList<>();

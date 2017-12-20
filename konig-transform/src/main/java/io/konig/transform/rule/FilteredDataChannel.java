@@ -1,4 +1,4 @@
-package io.konig.sql.query;
+package io.konig.transform.rule;
 
 /*
  * #%L
@@ -21,27 +21,31 @@ package io.konig.sql.query;
  */
 
 
-import io.konig.core.io.PrettyPrintWriter;
+import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.Shape;
 
-public class WhereClause extends AbstractExpression {
-	private BooleanTerm condition;
+public class FilteredDataChannel extends DataChannel {
 
-	public WhereClause(BooleanTerm term) {
-		this.condition = term;
-	}
-
-	public BooleanTerm getCondition() {
-		return condition;
-	}
+	private QuantifiedExpression formula;
+	private DataChannel rawDataChannel;
 	
-	public void setCondition(BooleanTerm term) {
-		condition = term;
+	public FilteredDataChannel(Shape shape, DataChannel rawDataChannel, QuantifiedExpression formula) {
+		super(shape, rawDataChannel.getDatasource());
+		this.formula = formula;
 	}
 
-	@Override
-	public void print(PrettyPrintWriter out) {
-		out.print("WHERE ");
-		out.print(condition);
+	public QuantifiedExpression getFormula() {
+		return formula;
 	}
+
+	public DataChannel getRawDataChannel() {
+		return rawDataChannel;
+	}
+
+	public void setRawDataChannel(DataChannel rawDataChannel) {
+		this.rawDataChannel = rawDataChannel;
+	}
+
+	
 
 }

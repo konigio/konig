@@ -39,6 +39,23 @@ public class SelectExpression extends BaseValueContainer implements ValueContain
 	public WhereClause getWhere() {
 		return where;
 	}
+	
+	public void addWhereCondition(BooleanTerm term) {
+		if (where == null) {
+			where = new WhereClause(term);
+		} else {
+			BooleanTerm priorTerm = where.getCondition();
+			if (priorTerm instanceof AndExpression) {
+				AndExpression and = (AndExpression) priorTerm;
+				and.add(term);
+			} else {
+				AndExpression and = new AndExpression();
+				and.add(priorTerm);
+				and.add(term);
+				where.setCondition(and);
+			}
+		}
+	}
 
 	public void setWhere(WhereClause where) {
 		this.where = where;

@@ -45,6 +45,7 @@ import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.IfFunction;
 import io.konig.formula.IriValue;
 import io.konig.formula.LiteralFormula;
+import io.konig.formula.LocalNameTerm;
 import io.konig.formula.MultiplicativeExpression;
 import io.konig.formula.NumericExpression;
 import io.konig.formula.PathExpression;
@@ -248,6 +249,10 @@ public class SqlFormulaFactory {
 				FullyQualifiedIri full = (FullyQualifiedIri) primary;
 				URI iri = full.getIri();
 				return new StringLiteralExpression(iri.getLocalName());
+			}
+			if (primary instanceof LocalNameTerm) {
+				LocalNameTerm local = (LocalNameTerm) primary;
+				return new StringLiteralExpression(local.getLocalName());
 			}
 			if (primary instanceof BuiltInName) {
 				BuiltInName builtIn = (BuiltInName) primary;

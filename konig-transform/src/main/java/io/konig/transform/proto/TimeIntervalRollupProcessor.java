@@ -141,8 +141,6 @@ public class TimeIntervalRollupProcessor  implements TransformPostProcessor {
 						timeIntervalRule.addPropertyRule(new FixedValuePropertyRule(null, Konig.durationUnit, literal));
 						timeIntervalRule.addPropertyRule(newFormulaRule);
 						
-						
-						
 						q = new AnyValuePropertyRule(containerRule);
 					} else {
 						throw new ShapeTransformException("Expected intervalStart to be of type FormulaPropertyRule in Shape: " + shapeRule.getTargetShape().getId());
@@ -163,14 +161,15 @@ public class TimeIntervalRollupProcessor  implements TransformPostProcessor {
 
 			nextRule.setFromItem(targetChannel);
 			targetChannel.setVariableName(VARIABLE_NAME);
-			addGroupingElement(nextRule, function);
-			addWhereExpression(nextRule, timeUnits.get(i-1));
+			ShapeRule root = nextRule.getRoot();
+			addGroupingElement(root, function);
+			addWhereExpression(root, timeUnits.get(i-1));
 
 		}
 	
 	}
 
-	private void addWhereExpression(ShapeRule nextRule, KonigTime timeUnit) {
+	private void addWhereExpression(ShapeRule shapeRule, KonigTime timeUnit) {
 		LiteralFormula literal = new LiteralFormula(new LiteralImpl(timeUnit.getIri().getLocalName()));
 		NumericExpression right = GeneralAdditiveExpression.wrap(literal);
 		
@@ -178,13 +177,12 @@ public class TimeIntervalRollupProcessor  implements TransformPostProcessor {
 		NumericExpression left = GeneralAdditiveExpression.wrap(primary);
 		
 		BinaryRelationalExpression binary = new BinaryRelationalExpression(BinaryOperator.EQUALS, left, right);
-		
-		nextRule.addWhereExpression(binary);
+		shapeRule.addWhereExpression(binary);
 		
 	}
 
-	private void addGroupingElement(ShapeRule nextRule, FunctionExpression dateTrunc) {
-		nextRule.addGroupingElement(new FunctionGroupingElement(dateTrunc));
+	private void addGroupingElement(ShapeRule shapeRule, FunctionExpression dateTrunc) {
+		shapeRule.addGroupingElement(new FunctionGroupingElement(dateTrunc));
 		
 	}
 

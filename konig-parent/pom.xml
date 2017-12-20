@@ -98,7 +98,9 @@
 		<module>../konig-gcp-common</module>
 		<module>../konig-data-app-gcp</module>
 		<module>../konig-data-app-generator</module>
+		<!-- 
 		<module>../konig-gcp-integration-testing</module>
+		 -->
 	</modules>
 
 	<developers>

@@ -25,7 +25,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -35,6 +39,7 @@ import org.openrdf.model.URI;
 import io.konig.formula.AdditiveOperator;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.AliasExpression;
+import io.konig.sql.query.AndExpression;
 import io.konig.sql.query.BooleanTerm;
 import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
@@ -84,7 +89,7 @@ SELECT
    COUNT(*) AS totalCount
 FROM schema.BuyAction;
  */
-	@Test
+	@Ignore
 	public void testTimeInterval() throws Exception {
 		
 		load("src/test/resources/konig-transform/time-interval");
@@ -167,23 +172,282 @@ FROM schema.BuyAction;
 		assertEquals("timeInterval.intervalStart", col.getColumnName());
 		
 	}
-	
-	@Ignore
+/*
+INSERT fact.SalesByCity (city, continent, country, state, timeInterval, totalCount)
+SELECT
+   STRUCT(
+      e.id,
+      e.containedInPlace,
+      e.name,
+      e.type
+   ) AS city,
+   STRUCT(
+      c.id,
+      c.containedInPlace,
+      c.name,
+      c.type
+   ) AS continent,
+   STRUCT(
+      b.id,
+      b.containedInPlace,
+      b.name,
+      b.type
+   ) AS country,
+   STRUCT(
+      d.id,
+      d.containedInPlace,
+      d.name,
+      d.type
+   ) AS state,
+   STRUCT(
+      "Week" AS durationUnit,
+      DATE_TRUNC(a.endTime, "Week") AS intervalStart
+   ) AS timeInterval,
+   COUNT(*) AS totalCount
+FROM 
+   schema.BuyAction AS a,
+   UNNEST(a.location) AS b,
+   UNNEST(a.location) AS c,
+   UNNEST(a.location) AS d,
+   UNNEST(a.location) AS e
+WHERE b.type="Country"
+   AND c.type="Continent"
+   AND d.type="State"
+   AND e.type="City"
+GROUP BY e.id, timeInterval.intervalStart
+ */
+	@Test
 	public void testAnalyticsModelInsert() throws Exception {
 		
 		load("src/test/resources/konig-transform/analytics-model");
 
+		
 		URI shapeId = iri("http://example.com/shapes/SalesByCityShape");
 
 		ShapeRule shapeRule = createShapeRule(shapeId);
+	
 		
-		SelectExpression select = sqlFactory.selectExpression(shapeRule);
-		System.out.println(select);
-		System.out.println();
-
+		InsertStatement insert = sqlFactory.insertStatement(shapeRule);
+		
+		Map<String,String> whereMap = whereMap(insert);
+		assertEquals(4, whereMap.size());
+		assertTrue(whereMap.containsKey("city"));
+		assertTrue(whereMap.containsKey("continent"));
+		assertTrue(whereMap.containsKey("country"));
+		assertTrue(whereMap.containsKey("state"));
+		
+		
+		TableNameExpression tableName = insert.getTargetTable();
+		assertEquals("fact.SalesByCity", tableName.getTableName());
+		
+		List<ColumnExpression> columnList = insert.getColumns();
+		assertEquals(6, columnList.size());
+		
+		assertEquals("city", columnList.get(0).getColumnName());
+		assertEquals("continent", columnList.get(1).getColumnName());
+		assertEquals("country", columnList.get(2).getColumnName());
+		assertEquals("state", columnList.get(3).getColumnName());
+		assertEquals("timeInterval", columnList.get(4).getColumnName());
+		assertEquals("totalCount", columnList.get(5).getColumnName());
+		
+		
+		SelectExpression select = insert.getSelectQuery();
+		List<ValueExpression> valueList = select.getValues();
+		
+		assertEquals(6, valueList.size());
+		
+		assertLocationStruct(valueList.get(0), "city", whereMap);
+		assertLocationStruct(valueList.get(1), "continent", whereMap);
+		assertLocationStruct(valueList.get(2), "country", whereMap);
+		assertLocationStruct(valueList.get(3), "state", whereMap);
+		
+		ValueExpression v = valueList.get(4);
+		assertTrue(v instanceof AliasExpression);
+		AliasExpression a = (AliasExpression) v;
+		assertEquals("timeInterval", a.getAlias());
+		
+		QueryExpression q = a.getExpression();
+		assertTrue(q instanceof StructExpression);
+		StructExpression s = (StructExpression) q;
+		
+		List<ValueExpression> sList = s.getValues();
+		assertEquals(2, sList.size());
+		v = sList.get(0);
+		assertTrue(v instanceof AliasExpression);
+		a = (AliasExpression) v;
+		assertEquals("durationUnit", a.getAlias());
+		q = a.getExpression();
+		assertTrue(q instanceof StringLiteralExpression);
+		StringLiteralExpression literal = (StringLiteralExpression) q;
+		assertEquals("Week", literal.getValue());
+		
+		v = sList.get(1);
+		assertTrue(v instanceof AliasExpression);
+		a = (AliasExpression) v;
+		assertEquals("intervalStart", a.getAlias());
+		q = a.getExpression();
+	
+		assertTrue(q instanceof FunctionExpression);
+		FunctionExpression f = (FunctionExpression) q;
+		assertEquals("DATE_TRUNC", f.getFunctionName());
+		List<QueryExpression> qList = f.getArgList();
+		assertEquals(2, qList.size());
+		
+		q = qList.get(0);
+		assertTrue(q instanceof ColumnExpression);
+		ColumnExpression c = (ColumnExpression) q;
+		assertEquals("a.endTime", c.getColumnName());
+		
+		q = qList.get(1);
+		assertTrue(q instanceof StringLiteralExpression);
+		literal = (StringLiteralExpression) q;
+		assertEquals("Week", literal.getValue());
+		
+		v = valueList.get(5);
+		assertTrue(v instanceof AliasExpression);
+		a = (AliasExpression) v;
+		
+		assertEquals("totalCount", a.getAlias());
+		q = a.getExpression();
+		assertTrue(q instanceof CountStar);
+		
+		FromExpression from = select.getFrom();
+		List<TableItemExpression> fList = from.getTableItems();
+		assertEquals(1, fList.size());
+		
+		TableItemExpression t = fList.get(0);
+		assertTrue(t instanceof JoinExpression);
+		JoinExpression j = (JoinExpression) t;
+		
+		t = j.getLeftTable();
+		assertTrue(t instanceof TableAliasExpression);
+		TableAliasExpression ta = (TableAliasExpression) t;
+		Set<String> fromSet = new HashSet<>();
+		fromSet.add(ta.getAlias());
+		
+		t= assertUnnest(fromSet, j.getRightTable());
+		t= assertUnnest(fromSet, t);
+		t= assertUnnest(fromSet, t);
+		t= assertUnnest(fromSet, t);
+		
+		assertTrue(fromSet.contains("a"));
+		assertTrue(fromSet.contains("b"));
+		assertTrue(fromSet.contains("c"));
+		assertTrue(fromSet.contains("d"));
+		assertTrue(fromSet.contains("e"));
+		assertTrue(t == null);
+		
+		
+		
+		GroupByClause groupBy = select.getGroupBy();
+		List<GroupingElement> gList = groupBy.getElementList();
+		assertEquals(2, gList.size());
+		
+		GroupingElement g = gList.get(0);
+		assertTrue(g instanceof ColumnExpression);
+		c = (ColumnExpression) g;
+		String cityTableAlias = whereMap.get("city");
+		String cityId = cityTableAlias + ".id";
+		assertEquals(cityId, c.getColumnName());
+		
+		g = gList.get(1);
+		assertTrue(g instanceof ColumnExpression);
+		c = (ColumnExpression) g;
+		assertEquals("timeInterval.intervalStart", c.getColumnName());
 		
 	}
 	
+	private Map<String, String> whereMap(InsertStatement insert) {
+		Map<String,String> map = new HashMap<>();
+		
+		WhereClause where = insert.getSelectQuery().getWhere();
+
+		BooleanTerm condition = where.getCondition();
+		assertTrue(condition instanceof AndExpression);
+		AndExpression and = (AndExpression) condition;
+		
+		List<BooleanTerm> andList = and.getTermList();
+		assertEquals(4, andList.size());
+		
+		
+		for (BooleanTerm term : andList) {
+
+			assertTrue(term instanceof ComparisonPredicate);
+			ComparisonPredicate c = (ComparisonPredicate) term;
+			ValueExpression v = c.getLeft();
+			assertTrue(v instanceof ColumnExpression);
+			ColumnExpression cn = (ColumnExpression) v;
+			String value = cn.getColumnName();
+			v = c.getRight();
+			assertTrue(v instanceof StringLiteralExpression);
+			StringLiteralExpression s = (StringLiteralExpression) v;
+			
+			String key = s.getValue().toLowerCase();
+			int dot = value.indexOf('.');
+			String type = value.substring(dot+1);
+			assertEquals("type", type);
+			value = value.substring(0, dot);
+			map.put(key, value);
+		}
+		
+		return map;
+	}
+
+	private TableItemExpression assertUnnest(Set<String> aliasSet, TableItemExpression e) {
+	
+		TableItemExpression right = null;
+		if (e instanceof JoinExpression) {
+			JoinExpression j = (JoinExpression) e;
+			e = j.getLeftTable();
+			right = j.getRightTable();
+			
+		}
+		assertTrue(e instanceof TableAliasExpression);
+		TableAliasExpression a = (TableAliasExpression) e;
+		aliasSet.add(a.getAlias());
+		
+		e = a.getTableName();
+		assertTrue(e instanceof FunctionExpression);
+		FunctionExpression f = (FunctionExpression) e;
+		assertEquals("UNNEST", f.getFunctionName());
+		List<QueryExpression> argList = f.getArgList();
+		assertEquals(1, argList.size());
+		QueryExpression q = argList.get(0);
+		assertTrue(q instanceof ColumnExpression);
+		ColumnExpression c = (ColumnExpression) q;
+		assertEquals("a.location", c.getColumnName());
+
+		
+		return right;
+	
+	}
+
+	private void assertLocationStruct(ValueExpression v, String fieldName, Map<String,String> whereMap) {
+		assertTrue(v instanceof AliasExpression);
+		AliasExpression a = (AliasExpression) v;
+		assertEquals(fieldName, a.getAlias());
+		
+		QueryExpression q = a.getExpression();
+		assertTrue(q instanceof StructExpression);
+		
+		String alias = whereMap.get(fieldName);
+		StructExpression s = (StructExpression) q;
+		List<ValueExpression> list = s.getValues();
+		assertColumn(list.get(0), alias, "id");
+		assertColumn(list.get(1), alias, "containedInPlace");
+		assertColumn(list.get(2), alias, "name");
+		assertColumn(list.get(3), alias, "type");
+		
+		
+	}
+
+	private void assertColumn(ValueExpression v, String tableAlias, String fieldName) {
+		assertTrue(v instanceof ColumnExpression);
+		ColumnExpression c = (ColumnExpression) v;
+		assertEquals(tableAlias + "." + fieldName, c.getColumnName());
+		
+	}
+
 /*
 SELECT
    ANY_VALUE(city),
@@ -198,7 +462,7 @@ FROM fact.SalesByCity
 WHERE timeInterval.durationUnit="Week"
 GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
  */
-	@Test
+	@Ignore
 	public void testAnalyticsModel() throws Exception {
 		
 		load("src/test/resources/konig-transform/analytics-model");
@@ -334,7 +598,7 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		assertEquals(colName, column.getColumnName());
 	}
 
-	@Test
+	@Ignore
 	public void testJoinById() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-by-id");
@@ -413,7 +677,7 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		
 	}
 
-	@Test
+	@Ignore
 	public void testCountStar() throws Exception {
 		
 		load("src/test/resources/konig-transform/count-star");
@@ -462,7 +726,7 @@ SELECT
 FROM xas.AssessmentSession
 GROUP BY actor, object
  */
-	@Test
+	@Ignore
 	public void testAssessmentEndeavor() throws Exception {
 		load("src/test/resources/konig-transform/assessment-endeavor");
 
@@ -476,7 +740,7 @@ GROUP BY actor, object
 		// TODO : Add more validation steps.
 	}
 
-	@Test
+	@Ignore
 	public void testAssessmentSession() throws Exception {
 		load("src/test/resources/konig-transform/assessment-session");
 
@@ -550,7 +814,7 @@ SELECT
 FROM `{gcpProjectId}.org.Membership`
 GROUP BY organization
  */
-	@Test
+	@Ignore
 	public void testBigQueryView() throws Exception {
 		load("src/test/resources/konig-transform/bigquery-view");
 
@@ -584,7 +848,7 @@ SELECT
 FROM org.Membership
 GROUP BY organization
  */
-	@Test
+	@Ignore
 	public void testArrayAgg() throws Exception {
 		load("src/test/resources/konig-transform/array-agg");
 
@@ -632,7 +896,7 @@ GROUP BY organization
 		assertEquals("organization", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testInjectModifiedTimestamp() throws Exception {
 		
 		load("src/test/resources/konig-transform/inject-modified-timestamp");
@@ -670,7 +934,7 @@ FROM
  ON
    a.artist_id=b.group_id
  */
-	@Test
+	@Ignore
 	public void testGcpDeploy() throws Exception {
 		
 		load("src/test/resources/konig-transform/gcp-deploy");
@@ -718,7 +982,7 @@ FROM
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testAggregateFunction() throws Exception {
 		
 		load("src/test/resources/konig-transform/aggregate-function");
@@ -753,7 +1017,7 @@ FROM
 		assertEquals("resultOf", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testDerivedProperty() throws Exception {
 		
 /*
@@ -829,7 +1093,7 @@ FROM
  ON
    a.gender=b.genderCode	
  */
-	@Test
+	@Ignore
 	public void testEnumField() throws Exception {
 		
 		load("src/test/resources/konig-transform/enum-field");
@@ -898,7 +1162,7 @@ FROM
 		
 	}
 
-	@Test
+	@Ignore
 	public void testJoinNestedEntityByPk() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity-by-pk");
@@ -936,7 +1200,7 @@ FROM
 		assertEquals("b.org_id", ce.getColumnName());
 	}
 	
-	@Test
+	@Ignore
 	public void testJoinNestedEntity() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -1070,7 +1334,7 @@ FROM
 		
 	}
 
-	@Test
+	@Ignore
 	public void testFlattenedField() throws Exception {
 		
 		load("src/test/resources/konig-transform/flattened-field");
@@ -1123,7 +1387,7 @@ FROM
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -1161,7 +1425,7 @@ FROM
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Test
+	@Ignore
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");
