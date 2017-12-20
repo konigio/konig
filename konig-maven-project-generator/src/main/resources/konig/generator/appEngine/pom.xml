@@ -23,7 +23,18 @@
       <groupId>io.konig</groupId>
       <artifactId>konig-java</artifactId>
       <version>${konig.version}</version>
-    </dependency>  
+  	  <exclusions>
+        <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </exclusion>
+    	</exclusions>
+	</dependency> 
+	<dependency>
+	    <groupId>com.google.guava</groupId>
+	    <artifactId>guava</artifactId>
+	    <version>${guava.version}</version>
+	</dependency>  
     
     
   </dependencies>

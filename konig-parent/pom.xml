@@ -98,7 +98,9 @@
 		<module>../konig-gcp-common</module>
 		<module>../konig-data-app-gcp</module>
 		<module>../konig-data-app-generator</module>
+		<!-- 
 		<module>../konig-gcp-integration-testing</module>
+		 -->
 	</modules>
 
 	<developers>
@@ -285,6 +287,28 @@
 							</execution>
 						</executions>
 					</plugin>
+					 <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>1.3.1</version>
+            <executions>
+                <execution>
+                    <id>enforce-version</id>
+                    <goals>
+                        <goal>enforce</goal>
+                    </goals>
+                    <configuration>
+                        <rules>
+                            <bannedDependencies>
+                                <excludes>                             
+                                    <exclude>com.google.guava:guava:[0.0,20.0)</exclude>
+                                </excludes>
+                            </bannedDependencies>
+                        </rules>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
 				</plugins>
 			</build>
 		</profile>

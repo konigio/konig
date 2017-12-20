@@ -104,7 +104,7 @@ public class ProtoJoinExpression implements ProtoFromItem {
 	}
 
 	@Override
-	public ShapeModel first() {
+	public ProtoFromItem first() {
 		return left;
 	}
 
@@ -112,6 +112,5 @@ public class ProtoJoinExpression implements ProtoFromItem {
 	public ProtoFromItem rest() {
 		return right;
 	}
-	
 	
 }

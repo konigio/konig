@@ -132,11 +132,24 @@ public class ShapeModelFactory {
 		for (PropertyConstraint p : targetShape.getProperty()) {
 			
 			if (requiredProperty(p)) {
+				
+				if (Konig.dimension.equals(p.getStereotype())) {
+					
+					PropertyModel item = shapeModel.getPropertyByPredicate(p.getPredicate());
+					ShapeModel valueModel = item.getValueModel();
+					if (valueModel != null) {
+						PropertyModel id = valueModel.getPropertyByPredicate(Konig.id);
+						if (id != null) {
+							shapeModel.addGroupBy((GroupByItem)id);
+						}
+					}
+				}
+				
 				QuantifiedExpression formula = p.getFormula();
 				
 				GroupByItem item =  groupByItem(shapeModel, formula);
 				if (item != null) {
-					shapeModel.add(item);
+					shapeModel.addGroupBy(item);
 				}
 				
 			}

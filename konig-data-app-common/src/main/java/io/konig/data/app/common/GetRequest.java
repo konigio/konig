@@ -1,6 +1,7 @@
 package io.konig.data.app.common;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /*
  * #%L
@@ -32,7 +33,7 @@ public class GetRequest {
 	private URI individualId;
 	private Format format;
 	private URI shapeId;
-	private HashMap<String,String> queryParams;
+	private Map<String,String> queryParams;
 
 	public URI getIndividualId() {
 		return individualId;
@@ -57,11 +58,11 @@ public class GetRequest {
 	public void setShapeId(URI shapeId) {
 		this.shapeId = shapeId;
 	}
-	public HashMap<String,String> getQueryParams() {
+	public Map<String,String> getQueryParams() {
 		return queryParams;
 	}
 
-	public void setQueryParams(HashMap<String,String> queryParams) {
+	public void setQueryParams(Map<String,String> queryParams) {
 		this.queryParams = queryParams; 
 	}
 }

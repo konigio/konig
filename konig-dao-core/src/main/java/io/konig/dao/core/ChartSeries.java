@@ -28,4 +28,5 @@ public interface ChartSeries {
 	void setTitle(String title);
 	String getTitle();
 	Iterator<OrderedPair> iterator();
+	String getNextPageToken();
 }

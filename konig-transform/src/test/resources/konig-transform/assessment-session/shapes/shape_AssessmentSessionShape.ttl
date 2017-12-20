@@ -39,7 +39,7 @@ shape:AssessmentSessionShape a sh:Shape , konig:DerivedShape ;
 <http://www.konig.io/activity/CvrBtWrm2UkAAAFfBzXJSw> a konig:LoadModelFromSpreadsheet ; 
 	as:endTime "2017-10-10T12:54:46.495-04:00"^^xsd:dateTime . 
 
-<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/AssessmentSession> a konig:GoogleBigQueryTable , konig:DataSource ; 
+<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/xas/tables/AssessmentSession> a konig:GoogleBigQueryView , konig:DataSource ; 
 	gcp:tableReference  [ 
 		gcp:projectId "{gcpProjectId}" ; 
 		gcp:datasetId "xas" ; 

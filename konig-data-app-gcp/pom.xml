@@ -40,7 +40,7 @@ limitations under the License.
     <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
     <archiveClasses>true</archiveClasses>
     <objectify.version>5.1.13</objectify.version>
-    <guava.version>18.0</guava.version>
+    <guava.version>20.0</guava.version>
     <endpoints.framework.version>2.0.0-beta.7</endpoints.framework.version>
     <endpoints.management.version>1.0.0-beta.7</endpoints.management.version>
   </properties>
@@ -137,7 +137,18 @@ limitations under the License.
       <artifactId>truth</artifactId>
       <version>0.30</version>
       <scope>test</scope>
-    </dependency>
+	<exclusions>
+        <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </exclusion>
+    	</exclusions>
+	</dependency> 
+	<dependency>
+	    <groupId>com.google.guava</groupId>
+	    <artifactId>guava</artifactId>
+	    <version>${guava.version}</version>
+	</dependency>   
 
     <dependency>
       <groupId>junit</groupId>

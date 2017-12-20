@@ -21,7 +21,18 @@
 		<groupId>org.openrdf.sesame</groupId>
 		<artifactId>sesame-model</artifactId>
 		<version>${sesame.version}</version>
-	</dependency>
+	<exclusions>
+        <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </exclusion>
+    	</exclusions>
+	</dependency> 
+	<dependency>
+	    <groupId>com.google.guava</groupId>
+	    <artifactId>guava</artifactId>
+	    <version>${guava.version}</version>
+	</dependency>  
 	
 	<dependency>
 		<groupId>joda-time</groupId>

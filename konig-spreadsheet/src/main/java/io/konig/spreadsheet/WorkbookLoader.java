@@ -460,6 +460,10 @@ public class WorkbookLoader {
 			
 			localNameService = new SimpleLocalNameService();
 			localNameService.addAll(getGraph());
+			localNameService.add(Konig.Day);
+			localNameService.add(Konig.Week);
+			localNameService.add(Konig.Month);
+			localNameService.add(Konig.Year);
 			
 			try {
 				for (FormulaHandler handler : formulaHandlers) {
@@ -1077,6 +1081,10 @@ public class WorkbookLoader {
 
 			URI stereotype = uriValue(row, pcStereotypeCol);
 			String propertyIdValue = stringValue(row, pcPropertyIdCol);
+			if (propertyIdValue==null) {
+				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
+				return;
+			}
 			URI propertyId = null;
 			if (propertyIdValue.charAt(0) == '?') {
 				stereotype = Konig.variable;

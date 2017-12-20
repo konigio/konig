@@ -37,6 +37,7 @@ import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.Shape;
 import io.konig.transform.rule.DataChannel;
+import io.konig.transform.rule.TransformPostProcessor;
 
 public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem {
 	
@@ -53,10 +54,28 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	
 	private DataChannel dataChannel;
 	
+	private List<TransformPostProcessor> postProcessorList = null;
 	
+	
+	public ShapeModel rootTargetShapeModel() {
+		ClassModel rootClassModel = classModel.rootClassModel();
+		return rootClassModel.getTargetShapeModel();
+	}
 	
 	public ShapeModel(Shape shape) {
 		this.shape = shape;
+	}
+	
+	public void addPostProcessor(TransformPostProcessor processor) {
+		if (postProcessorList == null) {
+			postProcessorList = new ArrayList<>();
+		}
+		postProcessorList.add(processor);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<TransformPostProcessor> getPostProcessorList() {
+		return postProcessorList == null ? Collections.EMPTY_LIST : postProcessorList;
 	}
 
 
@@ -193,18 +212,7 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	}
 
 
-	@Override
-	public ShapeModel first() {
-		return this;
-	}
-
-
-	@Override
-	public ProtoFromItem rest() {
-		return null;
-	}
-
-	public void add(GroupByItem item) {
+	public void addGroupBy(GroupByItem item) {
 		if (groupBy == null) {
 			groupBy = new ArrayList<>();
 		}
@@ -214,6 +222,18 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	@SuppressWarnings("unchecked")
 	public List<GroupByItem> getGroupBy() {
 		return groupBy==null ? Collections.EMPTY_LIST : groupBy;
+	}
+
+
+	@Override
+	public ProtoFromItem first() {
+		return this;
+	}
+
+
+	@Override
+	public ProtoFromItem rest() {
+		return null;
 	}
 
 

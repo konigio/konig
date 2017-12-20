@@ -34,6 +34,7 @@ public class BigQueryChartSeries extends AbstractChartSeries {
 	private QueryResult result;
 	private FieldInfo measure;
 	private FieldInfo dimension;
+	private String nextPageToken;
 	
 	/**
 	 * Create a BigQueryChartSeries
@@ -52,10 +53,18 @@ public class BigQueryChartSeries extends AbstractChartSeries {
 		this.result = result;
 		this.measure = measure;
 		this.dimension = dimension;
+		this.nextPageToken = result.getNextPageToken();
 	}
-
+	
+	public String getNextPageToken() {
+		return this.nextPageToken == null ? "" : this.nextPageToken;
+	}
+	
 	@Override
 	public Iterator<OrderedPair> iterator() {
+		if(result.hasNextPage()) {
+			return new QueryResultIterator(result.getValues().iterator());
+		} 
 		return new QueryResultIterator(result.iterateAll().iterator());
 	}
 	

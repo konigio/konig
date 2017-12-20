@@ -9,7 +9,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:BuyActionShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/uuqchXqu2VUAAAFfygAFow> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ZOasopIEGkIAAAFgDp28GA> ; 
 	sh:targetClass schema:BuyAction ; 
 	sh:property  [ 
 		sh:path schema:agent ; 
@@ -49,8 +49,8 @@ shape:BuyActionShape a sh:Shape ;
 		sh:maxCount 1 ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/BuyAction> . 
 
-<http://www.konig.io/activity/uuqchXqu2VUAAAFfygAFow> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-11-17T07:42:00.223-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/ZOasopIEGkIAAAFgDp28GA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-11-30T15:28:26.668-05:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/BuyAction> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

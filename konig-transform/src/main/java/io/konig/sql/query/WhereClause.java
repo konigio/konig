@@ -33,6 +33,10 @@ public class WhereClause extends AbstractExpression {
 	public BooleanTerm getCondition() {
 		return condition;
 	}
+	
+	public void setCondition(BooleanTerm term) {
+		condition = term;
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {
