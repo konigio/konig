@@ -23,6 +23,7 @@ package io.konig.data.app.common;
 
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.openrdf.model.URI;
 
@@ -67,7 +68,7 @@ public class ExtentContainer extends AbstractContainer {
 		URI individualId = request.getIndividualId();
 		Writer out = response.getWriter();
 		Format format = request.getFormat();
-		HashMap<String, String> queryParams = request.getQueryParams();
+		Map<String, String> queryParams = request.getQueryParams();
 		Builder builder = ShapeQuery.newBuilder()
 				.setView(request.getQueryParams().get(VIEW))
 				.setParameters(request.getQueryParams())
@@ -107,6 +108,8 @@ public class ExtentContainer extends AbstractContainer {
 					builder.setXSort(queryParams.get(".xSort"));
 				} else if (key.equals(".offset")) {
 					builder.setOffset(Long.parseLong(queryParams.get(".offset")));
+				}  else if (key.equals(".cursor")) {
+					builder.setCursor(queryParams.get(".cursor")==null?"":queryParams.get(".cursor"));
 				} else {
 					builder.beginPredicateConstraint().setPropertyName(key)
 						.setOperator(ConstraintOperator.EQUAL).setValue(queryParams.get(key))
