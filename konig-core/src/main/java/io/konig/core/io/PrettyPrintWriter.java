@@ -62,6 +62,7 @@ public class PrettyPrintWriter extends PrintWriter {
 	private List<AutoMode> autoMode = new ArrayList<>();
 	private char[] charBuffer = null;
 	private Context lastWrittenContext;
+	private boolean suppressContext = false;
 
 	public PrettyPrintWriter(Writer arg0) {
 		super(arg0);
@@ -98,6 +99,14 @@ public class PrettyPrintWriter extends PrintWriter {
 	
 	
 	
+	public boolean isSuppressContext() {
+		return suppressContext;
+	}
+
+	public void setSuppressContext(boolean suppressContext) {
+		this.suppressContext = suppressContext;
+	}
+
 	public NamespaceManager getNamespaceManager() {
 		return nsManager;
 	}

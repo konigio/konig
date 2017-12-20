@@ -90,6 +90,12 @@ public abstract class AbstractPropertyRule extends AbstractPrettyPrintable imple
 		String channelName = channel==null ? "" : channel.getName();
 		DataChannel otherChannel = other.getDataChannel();
 		String otherChannelName = otherChannel == null ? "" : otherChannel.getName();
+		if (channelName ==null) {
+			channelName = "";
+		}
+		if (otherChannelName==null) {
+			otherChannelName = "";
+		}
 		
 		int result = channelName.compareTo(otherChannelName);
 		if (result == 0) {

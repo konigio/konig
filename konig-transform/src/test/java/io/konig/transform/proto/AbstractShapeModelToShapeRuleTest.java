@@ -36,8 +36,6 @@ public class AbstractShapeModelToShapeRuleTest extends TransformTest {
 	protected ShapeModelFactory shapeModelFactory = new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner);
 	protected ShapeModelToShapeRule shapeRuleFactory = new ShapeModelToShapeRule();
 
-
-	
 	protected void useBigQueryTransformStrategy() {
 		
 	}

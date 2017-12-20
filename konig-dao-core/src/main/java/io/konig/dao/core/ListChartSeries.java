@@ -38,4 +38,9 @@ public class ListChartSeries extends AbstractChartSeries {
 		return list.iterator();
 	}
 
+	@Override
+	public String getNextPageToken() {
+		return null;
+	}
+
 }

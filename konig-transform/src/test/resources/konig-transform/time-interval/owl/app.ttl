@@ -1,0 +1,9 @@
+@prefix app: <http://example.com/ns/app/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+app: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "app" ; 
+	rdfs:label "Software Applications" ; 
+	rdfs:comment "A controlled vocabulary for software applications, including web properties like the Amazon Online Store or Google Online Store." . 

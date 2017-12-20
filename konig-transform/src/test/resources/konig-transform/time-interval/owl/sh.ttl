@@ -1,0 +1,9 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+sh: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "sh" ; 
+	rdfs:label "W3C Data Shapes" ; 
+	rdfs:comment "The W3C vocabulary for describing data shapes" . 

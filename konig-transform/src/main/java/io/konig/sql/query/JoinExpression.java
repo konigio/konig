@@ -54,23 +54,34 @@ public class JoinExpression extends AbstractExpression implements TableItemExpre
 		out.pushIndent();
 		out.indent();
 		leftTable.print(out);
-		out.println();
-		out.popIndent();
-		out.indent();
-		out.println(" JOIN");
-
-		if (rightTable instanceof JoinExpression) {
-			rightTable.print(out);
-		} else {
-			out.pushIndent();
-			out.indent();
-			rightTable.print(out);
+		
+		if (joinSpecification!=null) {
 			out.println();
 			out.popIndent();
-		}
-		if (joinSpecification!= null) {
+			out.indent();
+
+			out.println(" JOIN");
+
+			if (rightTable instanceof JoinExpression) {
+				rightTable.print(out);
+			} else {
+				out.pushIndent();
+				out.indent();
+				rightTable.print(out);
+				out.println();
+				out.popIndent();
+			}
 			joinSpecification.print(out);
+		} else {
+			out.print(',');
+			if (!(rightTable instanceof JoinExpression)) {
+				out.println();
+				out.indent();
+			}
+			out.popIndent();
+			rightTable.print(out);
 		}
+		
 		
 	}
 

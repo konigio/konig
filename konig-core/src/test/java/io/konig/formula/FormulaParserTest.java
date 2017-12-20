@@ -32,6 +32,40 @@ public class FormulaParserTest {
 	
 	private FormulaParser parser = new FormulaParser();
 	
+	@Test
+	public void testTimeInterval() throws Exception {
+
+		String text = 
+			"@context {\n" + 
+			"   \"endTime\" : \"http://schema.org/endTime\",\n" + 
+			"   \"Day\" : \"http://www.konig.io/ns/core/Day\",\n" + 
+			"   \"Day\" : \"http://www.konig.io/ns/core/Week\",\n" + 
+			"   \"Day\" : \"http://www.konig.io/ns/core/Month\"\n" + 
+			"}\n" + 
+			"TIME_INTERVAL(?x.endTime, Day, Week, Month)";
+
+		Expression e = parser.quantifiedExpression(text);
+		String actual = e.toString();
+		String expected = text;
+		assertEquals(expected, actual);
+		
+	}
+	
+	@Test
+	public void testCountFormula() throws Exception {
+
+		String text = 
+			"@context {\n" + 
+			"   \"price\" : \"http://schema.org/price\"\n" + 
+			"}\n" + 
+			"COUNT(?x.price)";
+
+		Expression e = parser.quantifiedExpression(text);
+		String actual = e.toString();
+		String expected = text;
+		assertEquals(expected, actual);
+		
+	}
 	
 
 	@Test

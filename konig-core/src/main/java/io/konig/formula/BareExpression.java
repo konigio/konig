@@ -33,4 +33,20 @@ public class BareExpression extends ConditionalOrExpression {
 	public void print(PrettyPrintWriter out) {
 		printOrList(out);
 	}
+	
+	public static BareExpression wrap(PrimaryExpression primary) {
+
+		UnaryExpression unary = new UnaryExpression(primary);
+		MultiplicativeExpression mult = new MultiplicativeExpression(unary);
+		NumericExpression numeric = new GeneralAdditiveExpression(mult);
+		ValueLogical valueLogical = new BinaryRelationalExpression(null, numeric, null);
+		
+		ConditionalAndExpression and = new ConditionalAndExpression();
+		and.add(valueLogical);
+		
+		ConditionalOrExpression or = new ConditionalOrExpression();
+		or.add(and);
+		
+		return new BareExpression(or);
+	}
 }

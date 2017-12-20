@@ -1,0 +1,49 @@
+@prefix fact: <http://example.com/ns/fact/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+konig: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "konig" ; 
+	rdfs:label "Konig Core Ontology" ; 
+	rdfs:comment "A vocabulary for enriched semantic models that enable ontology-based engineering solutions." . 
+
+konig:TimeInterval a owl:Class ; 
+	rdfs:label "Time Interval" ; 
+	rdfs:comment "An interval of time" . 
+
+konig:TimeUnit a owl:Class ; 
+	rdfs:label "Time Unit" ; 
+	rdfs:comment "The class of all time units." ; 
+	rdfs:subClassOf owl:NamedIndividual , schema:Enumeration . 
+
+konig:durationUnit a owl:ObjectProperty ; 
+	schema:domainIncludes konig:TimeInterval ; 
+	schema:rangeIncludes konig:TimeUnit . 
+
+konig:intervalStart a owl:DatatypeProperty ; 
+	schema:domainIncludes konig:TimeInterval ; 
+	schema:rangeIncludes xsd:date . 
+
+konig:timeInterval a owl:ObjectProperty ; 
+	schema:domainIncludes fact:SalesByCity ; 
+	schema:rangeIncludes konig:TimeInterval . 
+
+konig:totalCount a owl:DatatypeProperty ; 
+	schema:domainIncludes fact:SalesByCity ; 
+	schema:rangeIncludes xsd:int . 
+
+konig:Month a konig:TimeUnit ; 
+	schema:name "Month" ; 
+	rdfs:comment "The unit of time measured in months" . 
+
+konig:Week a konig:TimeUnit ; 
+	schema:name "Week" ; 
+	rdfs:comment "The unit of time measured in weeks" . 
+
+konig:Year a konig:TimeUnit ; 
+	schema:name "Year" ; 
+	rdfs:comment "The unit of time measured in years" . 

@@ -1,4 +1,4 @@
-package io.konig.transform.rule;
+package io.konig.sql.query;
 
 /*
  * #%L
@@ -21,39 +21,27 @@ package io.konig.transform.rule;
  */
 
 
-import org.openrdf.model.Literal;
-import org.openrdf.model.URI;
-
 import io.konig.core.io.PrettyPrintWriter;
 
-/**
- * A rule which asserts that a given property has a fixed, literal value.
- * @author Greg McFall
- *
- */
-public class LiteralPropertyRule extends AbstractPropertyRule {
-	
-	private URI predicate;
-	private Literal value;
+public class DateTimeUnitExpression extends AbstractExpression implements ValueExpression {
 
-	public LiteralPropertyRule(DataChannel channel, URI predicate, Literal value) {
-		super(channel);
-		this.predicate = predicate;
+	private String value;
+
+	public DateTimeUnitExpression(String value) {
 		this.value = value;
 	}
 
-	@Override
-	public URI getPredicate() {
-		return predicate;
-	}
 
 	@Override
-	protected void printLocalFields(PrettyPrintWriter out) {
-		out.field("value", value);
+	public void print(PrettyPrintWriter out) {
+		out.print(value);
 	}
 
-	public Literal getValue() {
+
+	public String getValue() {
 		return value;
 	}
+	
+	
 
 }

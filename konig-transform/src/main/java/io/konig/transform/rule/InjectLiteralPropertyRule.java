@@ -32,7 +32,7 @@ import io.konig.core.io.PrettyPrintWriter;
  * @author Greg McFall
  *
  */
-public class InjectLiteralPropertyRule extends LiteralPropertyRule {
+public class InjectLiteralPropertyRule extends FixedValuePropertyRule {
 
 	public InjectLiteralPropertyRule(DataChannel channel, URI predicate, Literal value) {
 		super(channel, predicate, value);
