@@ -73,6 +73,13 @@
   		<version>${konig.version}</version>
   	</dependency>
   	
+  	
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-size-estimator</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
+  	
   	<dependency>
   		<groupId>io.konig</groupId>
   		<artifactId>konig-gcp-common</artifactId>

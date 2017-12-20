@@ -1,16 +1,12 @@
 package io.konig.estimator;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 
 import java.io.File;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 
-import io.konig.shacl.Shape;
 import io.konig.transform.factory.TransformTest;
 
 public class SizeEstimatorTest extends TransformTest {

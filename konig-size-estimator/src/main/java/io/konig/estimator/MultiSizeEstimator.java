@@ -21,14 +21,18 @@ package io.konig.estimator;
  */
 
 
-public class SizeEstimateException extends Exception {
-	private static final long serialVersionUID = 1L;
+public class MultiSizeEstimator {
+
 	
-	public SizeEstimateException(String msg) {
-		super(msg);
+	/**
+	 * Load the specified manifest file, compute size estimates for each shape referenced in the manifest,
+	 * and write the results to the <code>reportFile</code> given in the request.
+	 * @param request  A request object that gives the location of the manifest file and the output 
+	 * file to which the report will be written
+	 * @throws SizeEstimateException
+	 */
+	public void run(MultiSizeEstimateRequest request) throws SizeEstimateException {
+		// TODO: implement this method
 	}
 
-	public SizeEstimateException(Throwable cause) {
-		super(cause);
-	}
 }
