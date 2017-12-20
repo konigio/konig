@@ -92,7 +92,9 @@ private void writeDataset(Chart chart) throws IOException {
 		json.writeArrayFieldStart("dataset");
 		for (ChartSeries series : dataset.getSeries()) {
 			json.writeStartObject();
-		
+			if (series.getNextPageToken() != null) {
+				json.writeStringField("cursor", series.getNextPageToken());
+			}
 			if (series.getTitle() != null) {
 				json.writeStringField("title", series.getTitle());
 			}

@@ -1,5 +1,8 @@
 package io.konig.sql.runtime;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 
 /*
@@ -24,10 +27,12 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 
 
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
+import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.QueryRequest;
 import com.google.cloud.bigquery.QueryResponse;
 import com.google.cloud.bigquery.QueryResult;
-
+import com.google.cloud.bigquery.QueryRequest.Builder;
 import io.konig.dao.core.ChartGeoLocationMapping;
 import io.konig.dao.core.ChartSeries;
 import io.konig.dao.core.ChartSeriesFactory;
@@ -62,9 +67,21 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 		FieldPath dimension = seriesRequest.getDimension();
 		FieldPath measure = seriesRequest.getMeasure();
 		ShapeQuery query = seriesRequest.getQuery();
-		
 		String sql = sql(query, struct, dimension, measure);
-		QueryRequest request = QueryRequest.newBuilder(sql).setUseLegacySql(false).build();
+
+
+		Builder querybuilder =  QueryRequest.newBuilder(sql).setUseLegacySql(false);
+		if(query.getCursor() != null) {
+			if(query.getLimit()!= null) {
+				querybuilder.setPageSize(query.getLimit());
+			}else {
+				querybuilder.setPageSize(1000L);
+			}
+		}	
+		
+		QueryRequest request = querybuilder.build();
+	
+		
 		QueryResponse response = bigQuery.query(request);
 		while (!response.jobCompleted()) {
 			try {
@@ -74,6 +91,10 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 			response = bigQuery.getQueryResults(response.getJobId());
 		}
 		
+		
+		if(response.jobCompleted() && query.getCursor() != null && !query.getCursor().equals("")) {
+			response = bigQuery.getQueryResults(response.getJobId(), QueryResultsOption.pageToken(query.getCursor()));
+		}
 		if (response.hasErrors()) {
 			String firstError = "";
 			if (response.getExecutionErrors().size() != 0) {
@@ -127,16 +148,18 @@ public class BigQueryChartSeriesFactory extends SqlGenerator implements ChartSer
 			}
 		}
 		
-		
-		if(checkNullAndEmpty(query.getLimit())) {
-			builder.append(" LIMIT " + query.getLimit());
-			if(query.getOffset() != null && !query.getOffset().equals("")) {
-				builder.append(" OFFSET " + query.getOffset());
+		if(query.getCursor() == null) {
+			if(checkNullAndEmpty(query.getLimit())) {
+				builder.append(" LIMIT " + query.getLimit());
+				if(query.getOffset() != null && !query.getOffset().equals("")) {
+					builder.append(" OFFSET " + query.getOffset());
+				}
+				
 			}
-			
 		}
 		return builder.toString();
 	}
+	
 	private boolean checkNullAndEmpty(Object value) {
 		if(value != null && value.equals("")) {
 			return true;

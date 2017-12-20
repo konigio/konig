@@ -34,6 +34,7 @@ public class ShapeQuery {
 	private String xSort;
 	private String ySort;
 	private Long offset;
+	private String cursor;
 	private Map<String,String> parameters;
 	
 	public ShapeQuery() {
@@ -71,6 +72,10 @@ public class ShapeQuery {
 	
 	public String getYSort() {
 		return ySort;
+	}
+	
+	public String getCursor() {
+		return cursor;
 	}
 	
 	public Map<String, String> getParameters() {
@@ -113,6 +118,10 @@ public class ShapeQuery {
 		this.ySort = ySort;
 	}
 	
+	private void setCursor(String cursor) {
+		this.cursor = cursor;
+	}
+	
 	public static Builder newBuilder() {
 		return new Builder();
 	}
@@ -152,6 +161,11 @@ public class ShapeQuery {
 		
 		public Builder setOffset(Long offset) {
 			query.setOffset(offset);
+			return this;
+		}
+		
+		public Builder setCursor(String cursor) {
+			query.setCursor(cursor);
 			return this;
 		}
 		

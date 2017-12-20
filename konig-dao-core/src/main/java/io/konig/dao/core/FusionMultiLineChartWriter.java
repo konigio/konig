@@ -92,7 +92,9 @@ public class FusionMultiLineChartWriter implements ChartWriter {
 		json.writeArrayFieldStart("dataset");
 		for (ChartSeries series : dataset.getSeries()) {
 			json.writeStartObject();
-		
+			if (series.getNextPageToken() != null) {
+				json.writeStringField("cursor", series.getNextPageToken());
+			}
 			if (series.getTitle() != null) {
 				json.writeStringField("title", series.getTitle());
 			}
