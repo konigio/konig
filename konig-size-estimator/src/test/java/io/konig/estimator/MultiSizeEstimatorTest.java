@@ -1,6 +1,7 @@
 package io.konig.estimator;
 
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.List;
@@ -26,6 +27,6 @@ public class MultiSizeEstimatorTest extends TransformTest {
 		MultiSizeEstimator estimator = new MultiSizeEstimator(shapeManager);
 		estimator.run(request);
 
-		assertNotEquals(0, 1);
+		assertTrue(request.getReportFile().exists());
 	}
 }
