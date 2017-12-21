@@ -38,8 +38,24 @@ public class MultiSizeEstimateRequest {
 	@Parameter(property="konig.estimator.reportFile", required=true)
 	private File reportFile;
 	
+	@Parameter(property="konig.estimator.shapesLocation", required=true)
+	private File shapesLocation;
 	
 	
+	/**
+	 * Get the location where the shapes are placed.
+	 */
+	public File getShapesLocation() {
+		return shapesLocation;
+	}
+
+	/**
+	 * Set the location where the shapes are placed.
+	 */
+	public void setShapesLocation(File shapesLocation) {
+		this.shapesLocation = shapesLocation;
+	}
+
 	/**
 	 * Get the location of the manifest file that specifies the location of the data directory for
 	 * each shape to be estimated.

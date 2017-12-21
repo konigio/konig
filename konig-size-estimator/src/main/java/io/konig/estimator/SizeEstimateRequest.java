@@ -30,6 +30,10 @@ public class SizeEstimateRequest {
 	private URI shapeId;	
 	private File sampleDataDir;
 	
+
+	public SizeEstimateRequest() {
+	}
+	
 	public SizeEstimateRequest(URI shapeId, File sampleDataDir) {
 		this.shapeId = shapeId;
 		this.sampleDataDir = sampleDataDir;
@@ -38,9 +42,17 @@ public class SizeEstimateRequest {
 	public URI getShapeId() {
 		return shapeId;
 	}
+	
+	public void setShapeId(URI shapeId) {
+		this.shapeId = shapeId;
+	}
 
 	public File getSampleDataDir() {
 		return sampleDataDir;
+	}
+	
+	public void setSampleDataDir(File sampleDataDir) {
+		this.sampleDataDir = sampleDataDir;
 	}
 	
 }

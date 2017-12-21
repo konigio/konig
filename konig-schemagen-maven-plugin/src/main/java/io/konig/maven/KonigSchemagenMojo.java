@@ -687,11 +687,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 
 
-	private void computeSizeEstimates() throws ConfigurationException, SizeEstimateException {
+	private void computeSizeEstimates() throws ConfigurationException, SizeEstimateException, RDFParseException, RDFHandlerException, IOException {
 		if (sizeEstimate != null) {
 			Configurator configurator = configurator();
 			configurator.configure(sizeEstimate);
-			MultiSizeEstimator estimator = new MultiSizeEstimator();
+			MultiSizeEstimator estimator = new MultiSizeEstimator(shapeManager);
 			estimator.run(sizeEstimate);
 		}
 		
