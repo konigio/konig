@@ -69,7 +69,7 @@ public class MultiSizeEstimator {
 	 * @throws SizeEstimateException
 	 * @throws IOException
 	 */
-	public void run(MultiSizeEstimateRequest request) throws SizeEstimateException, RDFParseException, RDFHandlerException, IOException {
+	public void run(MultiSizeEstimateRequest request) throws SizeEstimateException, IOException {
 
 		List<SizeEstimateRequest> estimates = getSizeEstimates(request);
 

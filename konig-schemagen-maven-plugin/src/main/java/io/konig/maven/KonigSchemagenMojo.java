@@ -687,7 +687,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 
 
-	private void computeSizeEstimates() throws ConfigurationException, SizeEstimateException, RDFParseException, RDFHandlerException, IOException {
+	private void computeSizeEstimates() throws ConfigurationException, SizeEstimateException, IOException {
 		if (sizeEstimate != null) {
 			Configurator configurator = configurator();
 			configurator.configure(sizeEstimate);
