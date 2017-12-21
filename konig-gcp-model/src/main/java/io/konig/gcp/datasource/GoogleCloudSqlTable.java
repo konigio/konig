@@ -21,19 +21,38 @@ package io.konig.gcp.datasource;
  */
 
 
-import io.konig.core.pojo.PojoContext;
-import io.konig.core.vocab.Konig;
-import io.konig.shacl.io.ShapeLoader;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 
-public class GcpShapeConfig {
-	
-	public static void init() {
+import io.konig.datasource.DataSource;
+import io.konig.datasource.TableDataSource;
 
-		PojoContext context = ShapeLoader.CONTEXT;
-		context.mapClass(Konig.GoogleBigQueryView, GoogleBigQueryView.class);
-		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
-		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
-		context.mapClass(Konig.GoogleCloudSqlTable, GoogleCloudSqlTable.class);
+public class GoogleCloudSqlTable  extends DataSource implements TableDataSource {
+	private String tableName;
+
+	public GoogleCloudSqlTable() {
 	}
 
+	@Override
+	public String getTableIdentifier() {
+		return tableName;
+	}
+
+	public String getTableName() {
+		return tableName;
+	}
+
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
+
+
+	@Override
+	public void setId(Resource id) {
+		super.setId(id);
+		if (tableName == null && id instanceof URI) {
+			URI uri = (URI) id;
+			tableName = uri.getLocalName();
+		}
+	}
 }
