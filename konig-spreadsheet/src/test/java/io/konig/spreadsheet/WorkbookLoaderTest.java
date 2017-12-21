@@ -25,7 +25,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Set;
@@ -52,6 +55,7 @@ import io.konig.core.Path;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.AS;
@@ -61,6 +65,7 @@ import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.VAR;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
@@ -68,10 +73,44 @@ import io.konig.shacl.PropertyPath;
 import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
 	
-	
+
+	@Test
+	public void testGoogleCloudSqlTable() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("google-cloud-sql-table.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		
+		Shape shape = s.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		List<DataSource> list = shape.getShapeDataSource();
+		assertEquals(1, list.size());
+		
+		DataSource ds = list.get(0);
+		assertEquals("https://www.googleapis.com/sql/v1beta4/projects/{gcpProjectId}/instances/schema/databases/schema/tables/PersonShape", 
+				ds.getId().stringValue());
+		
+		assertTrue(ds.isA(Konig.GoogleCloudSqlTable));
+	}
 	
 	@Test
 	public void testAssessmentEndeavor() throws Exception {
