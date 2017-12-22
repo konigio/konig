@@ -2,20 +2,17 @@
   <parent>
     <groupId>io.konig</groupId>
     <artifactId>konig-parent</artifactId>
-    <relativePath>../konig-parent/pom.xml</relativePath>
     <version>2.0.0-8</version>
+    <relativePath>../konig-parent/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   
-  <artifactId>konig-ldp</artifactId>
+  <artifactId>konig-parser</artifactId>
   <packaging>jar</packaging>
 
-  <name>Konig Linked Data Platform</name>
-  <url>http://www.konig.io</url>
-
-  <description>
-  	An implementation of the W3C Linked Data Platform
-  </description>
+  <name>Konig Parser</name>
+  <url>http://http://developers.konig.io/</url>
+  <description>A library useful for implementing parsers for a domain specific language</description>
   
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,63 +20,7 @@
 
   <dependencies>
   
-	<dependency>
-		<groupId>io.konig</groupId>
-		<artifactId>konig-core</artifactId>
-		<version>${konig.version}</version>
-	</dependency>
-	
-	<dependency>
-		<groupId>io.konig</groupId>
-		<artifactId>konig-core</artifactId>
-		<version>${konig.version}</version>
-    <type>test-jar</type>
-    <scope>test</scope>
- </dependency>
-  
-	<dependency>
-		<groupId>org.openrdf.sesame</groupId>
-		<artifactId>sesame-model</artifactId>
-		<version>${sesame.version}</version>
-	<exclusions>
-        <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </exclusion>
-    	</exclusions>
-	</dependency> 
-	<dependency>
-	    <groupId>com.google.guava</groupId>
-	    <artifactId>guava</artifactId>
-	    <version>${guava.version}</version>
-	</dependency>  
-	
-	<dependency>
-		<groupId>org.openrdf.sesame</groupId>
-		<artifactId>sesame-rio-api</artifactId>
-		<version>${sesame.version}</version>
-	</dependency>
-	
-	
-	<dependency>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-log4j12</artifactId>
-		<version>${slf4j.version}</version>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.fasterxml.jackson.core</groupId>
-		<artifactId>jackson-core</artifactId>
-		<version>${jackson.version}</version>
-	</dependency>
-	
-	
-	<dependency>
-	    <groupId>org.apache.httpcomponents</groupId>
-	    <artifactId>httpclient</artifactId>
-	    <version>${httpclient.version}</version>
-	</dependency>
-	
+		
   
     <dependency>
       <groupId>junit</groupId>
@@ -91,6 +32,20 @@
   
   <build>
 	  <plugins>
+	  
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.2</version>
+		
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 	  </plugins>
 	  <pluginManagement>
 	  	<plugins>
@@ -130,5 +85,5 @@
 	  	</plugins>
 	  </pluginManagement>
   </build>
-  
+ 
 </project>

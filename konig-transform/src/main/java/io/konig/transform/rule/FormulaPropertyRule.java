@@ -58,5 +58,10 @@ public class FormulaPropertyRule extends AbstractPropertyRule {
 		out.endObject();
 
 	}
+	
+	public FormulaPropertyRule clone() {
+		FormulaPropertyRule clone = new FormulaPropertyRule(getDataChannel(), targetProperty, sourceProperty);
+		return clone;
+	}
 
 }

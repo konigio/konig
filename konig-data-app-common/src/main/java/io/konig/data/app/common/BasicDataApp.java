@@ -31,6 +31,8 @@ import java.util.Map;
 
 import org.openrdf.model.impl.URIImpl;
 
+import com.google.common.base.Splitter;
+
 import io.konig.core.KonigException;
 import io.konig.dao.core.Format;
 
@@ -77,19 +79,17 @@ public class BasicDataApp implements DataApp {
 		request.setFormat(Format.JSONLD);
 		request.setShapeId(container.getDefaultShape());
 		if (jobRequest.getQueryString() != null) {
-			HashMap<String, String> queryParams = new HashMap<String, String>();
-			String[] queries = jobRequest.getQueryString().split("&");
-			for (String query : queries) {
-				String[] queryValue = query.split("=");
-				if(queryValue.length >= 2) {
-					try {
-						queryParams.put(queryValue[0], URLDecoder.decode(queryValue[1], StandardCharsets.UTF_8.name()));
-					} catch (UnsupportedEncodingException e) {
-						throw new RuntimeException(e);
-					}
-				}
+			try {
+				Map<String, String> queryParams = Splitter
+					    .on("&")
+					    .withKeyValueSeparator(Splitter.on('=')
+					            .limit(2)
+					            .trimResults())
+					    .split(URLDecoder.decode(jobRequest.getQueryString(), StandardCharsets.UTF_8.name()));
+				request.setQueryParams(queryParams);
+			} catch (UnsupportedEncodingException e) {
+				throw new RuntimeException(e);
 			}
-			request.setQueryParams(queryParams);
 		} else if (path.hasNext()) {
 			String uriValue = path.next();
 			request.setIndividualId(new URIImpl(uriValue));

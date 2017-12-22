@@ -1,8 +1,8 @@
-package io.konig.gcp.datasource;
+package io.konig.transform.rule;
 
 /*
  * #%L
- * Konig Google Cloud Platform Model
+ * Konig Transform
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,19 +21,28 @@ package io.konig.gcp.datasource;
  */
 
 
-import io.konig.core.pojo.PojoContext;
-import io.konig.core.vocab.Konig;
-import io.konig.shacl.io.ShapeLoader;
+import io.konig.core.io.PrettyPrintWriter;
+import io.konig.formula.FunctionExpression;
+import io.konig.sql.query.GroupingElement;
 
-public class GcpShapeConfig {
+public class FunctionGroupingElement implements GroupingElement {
 	
-	public static void init() {
+	private FunctionExpression function;
+	
 
-		PojoContext context = ShapeLoader.CONTEXT;
-		context.mapClass(Konig.GoogleBigQueryView, GoogleBigQueryView.class);
-		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
-		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
-		context.mapClass(Konig.GoogleCloudSqlTable, GoogleCloudSqlTable.class);
+	public FunctionGroupingElement(FunctionExpression function) {
+		this.function = function;
 	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		function.print(out);
+	}
+
+	public FunctionExpression getFunction() {
+		return function;
+	}
+	
+	
 
 }

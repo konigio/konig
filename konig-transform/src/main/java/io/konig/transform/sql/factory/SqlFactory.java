@@ -22,6 +22,7 @@ package io.konig.transform.sql.factory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,8 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
@@ -43,6 +46,22 @@ import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.formula.BinaryOperator;
+import io.konig.formula.BinaryRelationalExpression;
+import io.konig.formula.Direction;
+import io.konig.formula.DirectionStep;
+import io.konig.formula.Expression;
+import io.konig.formula.HasPathStep;
+import io.konig.formula.IriValue;
+import io.konig.formula.NumericExpression;
+import io.konig.formula.ObjectList;
+import io.konig.formula.PathExpression;
+import io.konig.formula.PathStep;
+import io.konig.formula.PathTerm;
+import io.konig.formula.PredicateObjectList;
+import io.konig.formula.PrimaryExpression;
+import io.konig.formula.QuantifiedExpression;
+import io.konig.formula.VariableTerm;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleBigQueryView;
@@ -80,6 +99,7 @@ import io.konig.sql.query.ValueExpression;
 import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.proto.PropertyModel;
 import io.konig.transform.proto.ShapeModel;
+import io.konig.transform.rule.AnyValuePropertyRule;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
 import io.konig.transform.rule.ChannelProperty;
@@ -87,15 +107,17 @@ import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.ExactMatchPropertyRule;
+import io.konig.transform.rule.FilteredDataChannel;
+import io.konig.transform.rule.FixedValuePropertyRule;
 import io.konig.transform.rule.FormulaIdRule;
 import io.konig.transform.rule.FormulaPropertyRule;
 import io.konig.transform.rule.FromItem;
+import io.konig.transform.rule.FunctionGroupingElement;
 import io.konig.transform.rule.IdPropertyRule;
 import io.konig.transform.rule.IdRule;
 import io.konig.transform.rule.IriTemplateIdRule;
 import io.konig.transform.rule.JoinRule;
 import io.konig.transform.rule.JoinStatement;
-import io.konig.transform.rule.FixedValuePropertyRule;
 import io.konig.transform.rule.MapValueTransform;
 import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyComparison;
@@ -107,6 +129,7 @@ import io.konig.transform.rule.ValueTransform;
 import io.konig.transform.sql.query.TableName;
 
 public class SqlFactory {
+	private static final Logger logger = LoggerFactory.getLogger(SqlFactory.class);
 	private String idColumnName = "id";
 
 	public InsertStatement insertStatement(ShapeRule shapeRule) throws TransformBuildException {
@@ -132,11 +155,58 @@ public class SqlFactory {
 
 		private SelectExpression selectExpression(ShapeRule shapeRule) throws TransformBuildException {
 			SelectExpression select = new SelectExpression();
-			addDataChannels(select.getFrom(), shapeRule);
+			addDataChannels(select, select.getFrom(), shapeRule);
 			addColumns(select, shapeRule);
+			addWhereClause(select, shapeRule);
 			addGroupBy(select, shapeRule);
 
 			return select;
+		}
+
+		private void addWhereClause(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
+			
+			for (BinaryRelationalExpression binary : shapeRule.getWhereExpressions()) {
+				ComparisonPredicate comparison = comparisonPredicate(binary);
+				select.addWhereCondition(comparison);
+			}
+			
+		}
+
+		private ComparisonPredicate comparisonPredicate(BinaryRelationalExpression binary) throws TransformBuildException {
+			
+			ComparisonOperator operator = operator(binary.getOperator());
+			ValueExpression left = valueExpression(binary.getLeft());
+			ValueExpression right = valueExpression(binary.getRight());
+			return new ComparisonPredicate(operator, left, right);
+		}
+
+		private ValueExpression valueExpression(NumericExpression e) throws TransformBuildException {
+			
+			PropertyConstraint constraint = new PropertyConstraint();
+			constraint.setMaxCount(1);
+			constraint.setMinCount(1);
+			QuantifiedExpression formula = QuantifiedExpression.wrap(e);
+			constraint.setFormula(formula);
+			
+			SqlFormulaExchange request = SqlFormulaExchange.builder()
+				.withProperty(constraint)
+				.withTableMap(this)
+				.build();
+			
+			return formulaFactory.formula(request);
+		}
+
+		private ComparisonOperator operator(BinaryOperator operator) {
+			switch (operator) {
+			case EQUALS: 	return ComparisonOperator.EQUALS;
+			case GREATER_THAN :	return ComparisonOperator.GREATER_THAN;
+			case GREATER_THAN_OR_EQUAL : return ComparisonOperator.GREATER_THAN_OR_EQUALS;
+			case LESS_THAN : return ComparisonOperator.LESS_THAN;
+			case LESS_THAN_OR_EQUAL : return ComparisonOperator.LESS_THAN_OR_EQUALS;
+			case NOT_EQUAL : return ComparisonOperator.NOT_EQUALS;
+				
+			}
+			return null;
 		}
 
 		public InsertStatement insertStatement(ShapeRule shapeRule) throws TransformBuildException {
@@ -145,10 +215,23 @@ public class SqlFactory {
 			if (tableRef != null) {
 				TableName tableName = tableName(tableRef, null);
 				List<ColumnExpression> columnList = columnList(shapeRule);
+				sort(columnList);
 				SelectExpression select = selectExpression(shapeRule);
 				insert = new InsertStatement(tableName.getExpression(), columnList, select);
 			}
 			return insert;
+		}
+
+		private void sort(List<ColumnExpression> columnList) {
+			Collections.sort(columnList, new Comparator<ColumnExpression>() {
+
+				@Override
+				public int compare(ColumnExpression a, ColumnExpression b) {
+					
+					return a.toString().compareTo(b.toString());
+				}
+			});
+			
 		}
 
 		private List<ColumnExpression> columnList(ShapeRule shapeRule) {
@@ -174,7 +257,7 @@ public class SqlFactory {
 			if (!ge.isEmpty()) {
 				clause = new GroupByClause(null);
 				for (GroupingElement element : ge) {
-					clause.add(element);
+					add(clause, element);
 				}
 			} else {
 				for (PropertyRule p : shapeRule.getPropertyRules()) {
@@ -201,6 +284,30 @@ public class SqlFactory {
 			}
 			select.setGroupBy(clause);
 
+		}
+
+		private void add(GroupByClause clause, GroupingElement element) throws TransformBuildException {
+
+			if (element instanceof FunctionGroupingElement) {
+				FunctionGroupingElement fge = (FunctionGroupingElement) element;
+				element = sqlFunction(fge);
+			}
+			clause.add(element);
+			
+		}
+
+		private FunctionExpression sqlFunction(FunctionGroupingElement fge) throws TransformBuildException {
+			PropertyConstraint constraint = new PropertyConstraint();
+			constraint.setMaxCount(1);
+			constraint.setMinCount(1);
+			QuantifiedExpression formula = QuantifiedExpression.wrap(fge.getFunction());
+			constraint.setFormula(formula);
+			
+			SqlFormulaExchange request = SqlFormulaExchange.builder()
+				.withProperty(constraint)
+				.withTableMap(this)
+				.build();
+			return (FunctionExpression) formulaFactory.formula(request);
 		}
 
 		private UpdateExpression updateExpression(ShapeRule shapeRule) throws TransformBuildException {
@@ -295,6 +402,9 @@ public class SqlFactory {
 
 		private ValueExpression createIdRule(ShapeRule shapeRule) throws TransformBuildException {
 			ValueExpression result = null;
+			if (shapeRule == null) {
+				throw new TransformBuildException("shapeRule is null");
+			}
 			IdRule idRule = shapeRule.getIdRule();
 			if (idRule != null) {
 				if (idRule instanceof CopyIdRule) {
@@ -424,9 +534,12 @@ public class SqlFactory {
 			DataChannel channel = p.getDataChannel();
 			TableItemExpression tableItem = simpleTableItem(channel);
 			URI predicate = p.getPredicate();
+			if (logger.isDebugEnabled()) {
+				logger.debug("column predicate: {}", predicate.getLocalName());
+			}
 			if (p instanceof ExactMatchPropertyRule) {
 				
-				return SqlUtil.columnExpression(p.getSourcePropertyModel(), tableItem);
+				return SqlUtil.columnExpression(p, tableItem);
 			}
 
 			if (p instanceof RenamePropertyRule) {
@@ -501,6 +614,17 @@ public class SqlFactory {
 				ColumnExpression idExpression = SqlUtil.columnExpression(tableItem, Konig.id);
 				return new AliasExpression(idExpression, predicate.getLocalName());
 			}
+			
+			if (p instanceof AnyValuePropertyRule) {
+				AnyValuePropertyRule anyValue = (AnyValuePropertyRule) p;
+				
+				ValueExpression ve = column(anyValue.getCollection(), suppressRename);
+				if (ve instanceof AliasExpression) {
+					AliasExpression alias = (AliasExpression) ve;
+					return new AliasExpression(new FunctionExpression(FunctionExpression.ANY_VALUE, alias.getExpression()), alias.getAlias());
+				}
+				return new FunctionExpression(FunctionExpression.ANY_VALUE, ve);
+			}
 
 			throw new TransformBuildException("Unsupported PropertyRule: " + p.getClass().getName());
 		}
@@ -570,7 +694,7 @@ public class SqlFactory {
 			throw new TransformBuildException("Cannot convert to ValueExpression: " + value.stringValue());
 		}
 
-		private void addDataChannels(FromExpression from, ShapeRule shapeRule) throws TransformBuildException {
+		private void addDataChannels(SelectExpression select, FromExpression from, ShapeRule shapeRule) throws TransformBuildException {
 
 			FromItem fromItem = shapeRule.getFromItem();
 			if (fromItem == null) {
@@ -579,7 +703,7 @@ public class SqlFactory {
 
 			useAlias = fromItem instanceof JoinRule;
 
-			TableItemExpression item = tableItemExpression(fromItem,shapeRule);
+			TableItemExpression item = tableItemExpression(select, fromItem,shapeRule);
 			from.add(item);
 
 		}
@@ -592,7 +716,7 @@ public class SqlFactory {
 
 			useAlias = true;
 
-			TableItemExpression item = tableItemExpression(fromItem,shapeRule);
+			TableItemExpression item = tableItemExpression(null, fromItem,shapeRule);
 			from.add(item);
 
 		}
@@ -610,11 +734,49 @@ public class SqlFactory {
 			return e;
 		}
 
-		private TableItemExpression tableItemExpression(FromItem fromItem, ShapeRule shapeRule) throws TransformBuildException {
+		private TableItemExpression tableItemExpression(SelectExpression select, FromItem fromItem, ShapeRule shapeRule) throws TransformBuildException {
 			if (fromItem == null) {
 				return null;
 			}
+			
+			
+			
 			DataChannel channel = fromItem.primaryChannel();
+			
+
+			if (logger.isDebugEnabled()) {
+				logger.debug("tableItemExpression(fromItem.primaryChannel.class: {})", channel.getClass().getSimpleName());
+			}
+
+			TableItemExpression tableItem = null;
+			if (channel instanceof FilteredDataChannel) {
+				tableItem = filteredTableItemExpression(select, fromItem, shapeRule, (FilteredDataChannel) channel);
+			} else {
+				tableItem = standardTableItemExpression(channel, shapeRule);
+			}
+			
+			
+			if (useAlias) {
+				tableItem = new TableAliasExpression(tableItem, channel.getName());
+			}
+			tableItemMap.put(channel.getName(), tableItem);
+			if (channel.getVariableName()!=null) {
+				tableItemMap.put(channel.getVariableName(), tableItem);
+			}
+
+			if (fromItem instanceof JoinRule) {
+				JoinRule joinRule = (JoinRule) fromItem;
+				TableItemExpression left = tableItem;
+				TableItemExpression right = tableItemExpression(select, joinRule.getRight(),shapeRule);
+				OnExpression condition = onExpression(joinRule.getCondition());
+				tableItem = new JoinExpression(left, right, condition);
+			}
+
+			return tableItem;
+		}
+
+		private TableItemExpression standardTableItemExpression(DataChannel channel, ShapeRule shapeRule) throws TransformBuildException {
+
 			DataSource datasource = channel.getDatasource();
 			if (datasource == null) {
 				StringBuilder msg = new StringBuilder();
@@ -632,7 +794,131 @@ public class SqlFactory {
 				throw new TransformBuildException(msg.toString());
 			}
 			TableDataSource tableSource = (TableDataSource) datasource;
+			
+			String tableName = tableName(tableSource, shapeRule);
+			
+			return new TableNameExpression(tableName);
+		}
+
+		private TableItemExpression filteredTableItemExpression(SelectExpression select, FromItem fromItem, ShapeRule shapeRule,
+				FilteredDataChannel channel) throws TransformBuildException {
+			
+			QuantifiedExpression formula = channel.getFormula();
+			PrimaryExpression primary = formula.asPrimaryExpression();
+			if (primary instanceof PathExpression) {
+				PathExpression path = (PathExpression) primary;
+				List<PathStep> stepList = path.getStepList();
+				
+				PathStep first = stepList.get(0);
+				if (first instanceof DirectionStep) {
+					DirectionStep dir = (DirectionStep) first;
+					if (dir.getDirection() == Direction.OUT) {
+						PathTerm term = dir.getTerm();
+						if (term instanceof VariableTerm) {
+							VariableTerm var = (VariableTerm) term;
+							
+							String varName = var.getVarName();
+							TableItemExpression varTableItem = tableForVariable(varName);
+							
+							String varTableName = null;
+							if (varTableItem instanceof TableAliasExpression) {
+								TableAliasExpression aliasExpression = (TableAliasExpression) varTableItem;
+								varTableName = aliasExpression.getAlias();
+							} else {
+								throw new TransformBuildException("Unsupported TableItemExpression type: " + varTableItem.getClass().getName());
+							}
+							
+							StringBuilder builder = new StringBuilder();
+							builder.append(varTableName);
+							boolean ok = true;
+							for (int i=1; ok && i<stepList.size(); i++) {
+								PathStep step = stepList.get(i);
+								if (step instanceof DirectionStep) {
+									dir = (DirectionStep) step;
+									if (dir.getDirection() == Direction.OUT) {
+										term = dir.getTerm();
+										if (term instanceof IriValue) {
+											IriValue iriValue = (IriValue) term;
+											URI iri = iriValue.getIri();
+											builder.append('.');
+											builder.append(iri.getLocalName());
+											
+										} else {
+											ok = false;
+										}
+									} else {
+										ok = false;
+									}
+								} else if (step instanceof HasPathStep) {
+									if (i < stepList.size()-1) {
+										ok = false;
+									}
+
+									addFilteredChannelWhereRule(select, shapeRule, channel, (HasPathStep)step);
+								}
+							}
+							if (ok) {
+								String columnName = builder.toString();
+								ColumnExpression column = new ColumnExpression(columnName);
+								return new FunctionExpression(FunctionExpression.UNNEST, column);
+							}
+							
+						}
+					}
+				}
+			}
+			throw new TransformBuildException("Unsupported formula for FilteredDataChannel: " + formula.toSimpleString());
+		}
+
+		private void addFilteredChannelWhereRule(SelectExpression select, ShapeRule shapeRule, FilteredDataChannel channel, HasPathStep step) throws TransformBuildException {
+			List<PredicateObjectList> pairList = step.getConstraints();
+			for (PredicateObjectList poList : pairList) {
+			
+				URI predicate = poList.getVerb().getIri();
+				
+				ObjectList objectList = poList.getObjectList();
+				List<Expression> expressionList = objectList.getExpressions();
+				for (Expression e : expressionList) {
+					StringBuilder builder = new StringBuilder();
+					builder.append(channel.getName());
+					builder.append('.');
+					builder.append(predicate.getLocalName());
+					
+					ValueExpression left = new ColumnExpression(builder.toString());
+					ValueExpression right = valueExpression(e);
+					ComparisonPredicate compare = new ComparisonPredicate(ComparisonOperator.EQUALS, left, right);
+					select.addWhereCondition(compare);
+				}
+				
+			}
+			
+		}
+
+		private ValueExpression valueExpression(Expression e) throws TransformBuildException {
+
+			PrimaryExpression primary = e.asPrimaryExpression();
+			if (primary == null) {
+				throw new TransformBuildException("Unsupported expression: " + e.getText());
+			}
+			
+			PropertyConstraint constraint = new PropertyConstraint();
+			constraint.setMaxCount(1);
+			constraint.setMinCount(1);
+			QuantifiedExpression formula = QuantifiedExpression.wrap(primary);
+			constraint.setFormula(formula);
+			
+			SqlFormulaExchange request = SqlFormulaExchange.builder()
+				.withProperty(constraint)
+				.withTableMap(this)
+				.build();
+			
+			return formulaFactory.formula(request);
+		}
+
+		private String tableName(TableDataSource tableSource, ShapeRule shapeRule) {
+
 			String tableName = tableSource.getTableIdentifier();
+			tableSource.getTableIdentifier();
 			List<DataSource> targetDatasourceList = shapeRule.getTargetShape().getShapeDataSource();
 			if(targetDatasourceList != null) {
 				for(DataSource targetDatasource : targetDatasourceList) {
@@ -644,29 +930,11 @@ public class SqlFactory {
 					}
 				}
 			}
-			
-			TableItemExpression tableItem = new TableNameExpression(tableName);
-			
-			if (useAlias) {
-				tableItem = new TableAliasExpression(tableItem, channel.getName());
-			}
-			tableItemMap.put(channel.getName(), tableItem);
-			if (channel.getVariableName()!=null) {
-				tableItemMap.put(channel.getVariableName(), tableItem);
-			}
-
-			if (fromItem instanceof JoinRule) {
-				JoinRule joinRule = (JoinRule) fromItem;
-				TableItemExpression left = tableItem;
-				TableItemExpression right = tableItemExpression(joinRule.getRight(),shapeRule);
-				OnExpression condition = onExpression(joinRule.getCondition());
-				tableItem = new JoinExpression(left, right, condition);
-			}
-
-			return tableItem;
+			return tableName;
 		}
 
 		private OnExpression onExpression(BooleanExpression condition) throws TransformBuildException {
+			OnExpression result = null;
 			if (condition instanceof PropertyComparison) {
 				PropertyComparison comparison = (PropertyComparison) condition;
 				ValueExpression left = valueExpression(comparison.getLeft());
@@ -674,9 +942,9 @@ public class SqlFactory {
 
 				ComparisonOperator operator = comparisonOperator(comparison.getOperator());
 
-				return new OnExpression(new ComparisonPredicate(operator, left, right));
+				result = new OnExpression(new ComparisonPredicate(operator, left, right));
 			}
-			throw new TransformBuildException("Unsupported BooleanExpression: " + condition);
+			return result;
 		}
 
 		private ValueExpression valueExpression(ChannelProperty p) throws TransformBuildException {
@@ -695,6 +963,7 @@ public class SqlFactory {
 			TableItemExpression tableItem = tableItemMap.get(channel.getName());
 
 			if (tableItem == null) {
+				
 				DataSource datasource = channel.getDatasource();
 				if (datasource == null) {
 					StringBuilder msg = new StringBuilder();

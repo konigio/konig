@@ -1,8 +1,8 @@
-package io.konig.gcp.datasource;
+package io.konig.parser;
 
 /*
  * #%L
- * Konig Google Cloud Platform Model
+ * Konig Parser
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,19 +21,15 @@ package io.konig.gcp.datasource;
  */
 
 
-import io.konig.core.pojo.PojoContext;
-import io.konig.core.vocab.Konig;
-import io.konig.shacl.io.ShapeLoader;
+public class ParseException extends Exception {
+	private static final long serialVersionUID = 1L;
 
-public class GcpShapeConfig {
+	public ParseException(String message) {
+		super(message);
+	}
 	
-	public static void init() {
-
-		PojoContext context = ShapeLoader.CONTEXT;
-		context.mapClass(Konig.GoogleBigQueryView, GoogleBigQueryView.class);
-		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
-		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
-		context.mapClass(Konig.GoogleCloudSqlTable, GoogleCloudSqlTable.class);
+	public ParseException(String message, Throwable cause) {
+		super(message, cause);
 	}
 
 }

@@ -37,6 +37,7 @@ import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.shacl.Shape;
 import io.konig.transform.rule.DataChannel;
+import io.konig.transform.rule.TransformPostProcessor;
 
 public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem {
 	
@@ -53,6 +54,9 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	
 	private DataChannel dataChannel;
 	
+	private List<TransformPostProcessor> postProcessorList = null;
+	
+	
 	public ShapeModel rootTargetShapeModel() {
 		ClassModel rootClassModel = classModel.rootClassModel();
 		return rootClassModel.getTargetShapeModel();
@@ -60,6 +64,18 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	
 	public ShapeModel(Shape shape) {
 		this.shape = shape;
+	}
+	
+	public void addPostProcessor(TransformPostProcessor processor) {
+		if (postProcessorList == null) {
+			postProcessorList = new ArrayList<>();
+		}
+		postProcessorList.add(processor);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<TransformPostProcessor> getPostProcessorList() {
+		return postProcessorList == null ? Collections.EMPTY_LIST : postProcessorList;
 	}
 
 

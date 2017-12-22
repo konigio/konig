@@ -1,8 +1,8 @@
-package io.konig.gcp.datasource;
+package io.konig.formula;
 
 /*
  * #%L
- * Konig Google Cloud Platform Model
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,19 +21,35 @@ package io.konig.gcp.datasource;
  */
 
 
-import io.konig.core.pojo.PojoContext;
-import io.konig.core.vocab.Konig;
-import io.konig.shacl.io.ShapeLoader;
+import org.openrdf.model.URI;
 
-public class GcpShapeConfig {
+import io.konig.core.io.PrettyPrintWriter;
+
+public class BuiltInName extends AbstractFormula implements IriValue {
+	private URI uri;
 	
-	public static void init() {
+	public BuiltInName(URI uri) {
+		this.uri = uri;
+	}
 
-		PojoContext context = ShapeLoader.CONTEXT;
-		context.mapClass(Konig.GoogleBigQueryView, GoogleBigQueryView.class);
-		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
-		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
-		context.mapClass(Konig.GoogleCloudSqlTable, GoogleCloudSqlTable.class);
+	@Override
+	public URI getIri() {
+		return uri;
+	}
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		
+		out.print('<');
+		out.print(uri.stringValue());
+		out.print('>');
+
+	}
+
+	@Override
+	public void dispatch(FormulaVisitor visitor) {
+		visitor.enter(this);
+		visitor.exit(this);
 	}
 
 }

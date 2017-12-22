@@ -34,6 +34,13 @@ public class GeneralAdditiveExpression extends AbstractFormula implements Additi
 	public GeneralAdditiveExpression(MultiplicativeExpression left) {
 		this.left = left;
 	}
+	
+	static public GeneralAdditiveExpression wrap(PrimaryExpression primary) {
+
+		UnaryExpression unary = new UnaryExpression(primary);
+		MultiplicativeExpression mult = new MultiplicativeExpression(unary);
+		return new GeneralAdditiveExpression(mult);
+	}
 
 	public MultiplicativeExpression getLeft() {
 		return left;

@@ -183,7 +183,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 			BigQueryCommandLine cmdline = bqCmdLineFactory.updateCommand(shapeRule);
 			if (cmdline != null) {
 				GoogleBigQueryTable table = currentStateTable(shape);
-				File sqlFile = writeDml(table, cmdline.getDml(), "Load");
+				File sqlFile = writeDml(table, cmdline.getDml(), "Load", 0);
 				commandLineInfo.add(new CommandLineInfo(sqlFile, cmdline));
 			}
 		}
@@ -229,16 +229,31 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 			BigQueryCommandLine cmdline = bqCmdLineFactory.insertCommand(shapeRule);
 			if (cmdline != null) {
 				GoogleBigQueryTable table = loadTable(shape);
-				File sqlFile = writeDml(table, cmdline.getDml(), "Load");
+				File sqlFile = writeDml(table, cmdline.getDml(), "Load", 0);
+				handleRollup(shapeRule, table);
 				commandLineInfo.add(new CommandLineInfo(sqlFile, cmdline));
 			}
 		}
 		return shapeRule;
 	}
 
-	private File writeDml(GoogleBigQueryTable table, DmlExpression dml, String action) throws IOException {
+	private void handleRollup(ShapeRule shapeRule, GoogleBigQueryTable table) throws ShapeTransformException, IOException {
+		
+		ShapeRule rollup = shapeRule.getRollUp();
+		int count = 0;
+		while (rollup != null) {
+			count++;
+			BigQueryCommandLine cmdline = bqCmdLineFactory.insertCommand(rollup);
+			File sqlFile = writeDml(table, cmdline.getDml(), "Load", count);
+			commandLineInfo.add(new CommandLineInfo(sqlFile, cmdline));
+			rollup = rollup.getRollUp();
+		}
+		
+	}
 
-		File sqlFile = sqlLoadFile(table.getTableReference(), action);
+	private File writeDml(GoogleBigQueryTable table, DmlExpression dml, String action, int count) throws IOException {
+
+		File sqlFile = sqlLoadFile(table.getTableReference(), action, count);
 		sqlFile.getParentFile().mkdirs();
 		try (
 			FileWriter fileWriter = new FileWriter(sqlFile);
@@ -251,7 +266,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		return sqlFile;
 	}
 	
-	private File sqlLoadFile(BigQueryTableReference tableRef, String action) {
+	private File sqlLoadFile(BigQueryTableReference tableRef, String action, int count) {
 		
 		StringBuilder builder = new StringBuilder();
 		builder.append(tableRef.getDatasetId());
@@ -259,6 +274,10 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		builder.append(tableRef.getTableId());
 		builder.append('_');
 		builder.append(action);
+		if (count>0) {
+			builder.append('_');
+			builder.append(count);
+		}
 		builder.append(".sql");
 		
 		String fileName = builder.toString();

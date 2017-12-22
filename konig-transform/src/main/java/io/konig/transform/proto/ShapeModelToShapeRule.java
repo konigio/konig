@@ -72,6 +72,7 @@ import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.rule.TransformBinaryOperator;
+import io.konig.transform.rule.TransformPostProcessor;
 import io.konig.transform.rule.VariableNamer;
 
 public class ShapeModelToShapeRule {
@@ -116,11 +117,17 @@ public class ShapeModelToShapeRule {
 			
 			ShapeRule shapeRule = toShapeRule(shapeModel);
 			shapeRule.setFromItem(fromItem(shapeModel.getClassModel().getFromItem()));
-			
-			
+			invokePostProcessors(shapeModel, shapeRule);
 			return shapeRule;
 		}
 		
+		private void invokePostProcessors(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
+
+			for (TransformPostProcessor processor : shapeModel.getPostProcessorList()) {
+				processor.process(shapeRule);
+			}
+		}
+
 		private void addPropertyRules(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
 			ClassModel classModel = shapeModel.getClassModel();
 			for (PropertyGroup group : classModel.getPropertyGroups()) {
@@ -338,9 +345,6 @@ public class ShapeModelToShapeRule {
 				
 				result = new PropertyComparison(operator, left, right);
 			}
-			if (result == null) {
-				throw new ShapeTransformException("Failed to create boolean expression");
-			}
 			return result;
 		}
 
@@ -398,13 +402,17 @@ public class ShapeModelToShapeRule {
 
 		private GroupingElement column(PropertyModel p) throws ShapeTransformException {
 
+			if (logger.isDebugEnabled()) {
+				logger.debug("column({})", p.simplePath());
+			}
 			p = p.getGroup().getSourceProperty();
 			
 			List<PropertyModel> path = p.path();
 
 			DataChannel channel = p.getDeclaringShape().getDataChannel();
 			StringBuilder builder = new StringBuilder();
-			if (useAlias) {
+			if (useAlias && channel!=null) {
+				
 				builder.append(channel.getName());
 				builder.append('.');
 			}

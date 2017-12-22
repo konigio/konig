@@ -1,8 +1,8 @@
-package io.konig.gcp.datasource;
+package io.konig.sql.query;
 
 /*
  * #%L
- * Konig Google Cloud Platform Model
+ * Konig Transform
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,19 +21,27 @@ package io.konig.gcp.datasource;
  */
 
 
-import io.konig.core.pojo.PojoContext;
-import io.konig.core.vocab.Konig;
-import io.konig.shacl.io.ShapeLoader;
+import io.konig.core.io.PrettyPrintWriter;
 
-public class GcpShapeConfig {
-	
-	public static void init() {
+public class DateTimeUnitExpression extends AbstractExpression implements ValueExpression {
 
-		PojoContext context = ShapeLoader.CONTEXT;
-		context.mapClass(Konig.GoogleBigQueryView, GoogleBigQueryView.class);
-		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
-		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
-		context.mapClass(Konig.GoogleCloudSqlTable, GoogleCloudSqlTable.class);
+	private String value;
+
+	public DateTimeUnitExpression(String value) {
+		this.value = value;
 	}
+
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.print(value);
+	}
+
+
+	public String getValue() {
+		return value;
+	}
+	
+	
 
 }

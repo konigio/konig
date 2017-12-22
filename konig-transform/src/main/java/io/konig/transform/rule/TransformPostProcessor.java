@@ -1,8 +1,8 @@
-package io.konig.gcp.datasource;
+package io.konig.transform.rule;
 
 /*
  * #%L
- * Konig Google Cloud Platform Model
+ * Konig Transform
  * %%
  * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
@@ -21,19 +21,9 @@ package io.konig.gcp.datasource;
  */
 
 
-import io.konig.core.pojo.PojoContext;
-import io.konig.core.vocab.Konig;
-import io.konig.shacl.io.ShapeLoader;
+import io.konig.transform.ShapeTransformException;
 
-public class GcpShapeConfig {
-	
-	public static void init() {
+public interface TransformPostProcessor {
 
-		PojoContext context = ShapeLoader.CONTEXT;
-		context.mapClass(Konig.GoogleBigQueryView, GoogleBigQueryView.class);
-		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
-		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
-		context.mapClass(Konig.GoogleCloudSqlTable, GoogleCloudSqlTable.class);
-	}
-
+	public void process(ShapeRule shapeRule) throws ShapeTransformException;
 }
