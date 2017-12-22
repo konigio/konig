@@ -92,6 +92,9 @@ import io.konig.data.app.common.DataApp;
 import io.konig.data.app.generator.DataAppGenerator;
 import io.konig.data.app.generator.DataAppGeneratorException;
 import io.konig.data.app.generator.EntityStructureWorker;
+import io.konig.estimator.MultiSizeEstimateRequest;
+import io.konig.estimator.MultiSizeEstimator;
+import io.konig.estimator.SizeEstimateException;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
@@ -201,6 +204,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private File rdfSourceDir;
     
+    @Parameter
+    private MultiSizeEstimateRequest sizeEstimate;
+    
 
     @Parameter
     private File domainModelPngFile;
@@ -283,16 +289,21 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			updateRdf();
 			
+			computeSizeEstimates();
+			
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
-				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException e) {
+				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
+				SizeEstimateException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
     }
     
+
+
 
 
 	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException {
@@ -673,6 +684,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			configurator = new Configurator(createProperties());
 		}
 		return configurator;
+	}
+
+
+	private void computeSizeEstimates() throws ConfigurationException, SizeEstimateException, IOException {
+		if (sizeEstimate != null) {
+			Configurator configurator = configurator();
+			configurator.configure(sizeEstimate);
+			MultiSizeEstimator estimator = new MultiSizeEstimator(shapeManager);
+			estimator.run(sizeEstimate);
+		}
+		
 	}
 	
 	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException {

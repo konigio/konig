@@ -1,0 +1,32 @@
+@prefix category: <http://example.com/ns/categories/> .
+@prefix ex: <http://example.com/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+category: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "category" ; 
+	rdfs:label "Product Categories" ; 
+	rdfs:comment "A taxonomy of product categories" . 
+
+category:Book a ex:ProductCategory ; 
+	schema:name "Book" ; 
+	ex:originId "1"^^xsd:long . 
+
+category:Clothing a ex:ProductCategory ; 
+	schema:name "Clothing" ; 
+	ex:originId "2"^^xsd:long . 
+
+category:Electronics a ex:ProductCategory ; 
+	schema:name "Electronics" ; 
+	ex:originId "3"^^xsd:long . 
+
+category:HomeGarden a ex:ProductCategory ; 
+	schema:name "Home & Garden" ; 
+	ex:originId "4"^^xsd:long . 
+
+category:Music a ex:ProductCategory ; 
+	schema:name "Music" ; 
+	ex:originId "5"^^xsd:long . 

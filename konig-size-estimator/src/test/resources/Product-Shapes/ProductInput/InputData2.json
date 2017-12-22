@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Philips GoPure Compact 110 Air Purifier for Car (Grey)",
+    "category": "http://example.com/categories/CarAccessories",
+    "offers": [ 
+    		{"price": 5800, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 5900, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 5950, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "Motoway Wireless Bluetooth Music Receiver With Inbuild Mic",
+    "category": "http://example.com/categories/CarAccessories",
+    "offers": [ 
+    		{"price": 499, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 599, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 699, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  }
+]
