@@ -3,3 +3,15 @@ language: java
 before_install: 
   - cd konig-parent
   - mvn install -N
+
+# skip cleanup is true so the working directory is not reset
+
+# on a commit to the master branch run 'mvn deploy'
+# on a tag run deploy.sh, which runs `mvn deploy -Drelease=True`
+
+deploy:
+  - provider: script
+    script: "mvn deploy --settings ../travis-settings.xml -DskipTests=true"
+    skip_cleanup: true
+    on:
+      branch: master
