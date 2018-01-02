@@ -60,6 +60,7 @@
 	</scm>
 
 	<modules>
+		<module>../konig-parser</module>
 		<module>../konig-yaml</module>
 		<module>../konig-java</module>
 		<module>../konig-maven-common</module>
@@ -98,6 +99,7 @@
 		<module>../konig-gcp-common</module>
 		<module>../konig-data-app-gcp</module>
 		<module>../konig-data-app-generator</module>
+		<module>../konig-size-estimator</module>
 		<!-- 
 		<module>../konig-gcp-integration-testing</module>
 		 -->

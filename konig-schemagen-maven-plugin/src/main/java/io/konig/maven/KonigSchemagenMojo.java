@@ -92,6 +92,9 @@ import io.konig.data.app.common.DataApp;
 import io.konig.data.app.generator.DataAppGenerator;
 import io.konig.data.app.generator.DataAppGeneratorException;
 import io.konig.data.app.generator.EntityStructureWorker;
+import io.konig.estimator.MultiSizeEstimateRequest;
+import io.konig.estimator.MultiSizeEstimator;
+import io.konig.estimator.SizeEstimateException;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
@@ -124,6 +127,7 @@ import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
 import io.konig.schemagen.gcp.BigQueryLabelGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
+import io.konig.schemagen.gcp.CloudSqlTableWriter;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
 import io.konig.schemagen.gcp.EnumShapeVisitor;
@@ -150,6 +154,7 @@ import io.konig.schemagen.jsonschema.TemplateJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
+import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeFilter;
@@ -200,6 +205,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     @Parameter
     private File rdfSourceDir;
+    
+    @Parameter
+    private MultiSizeEstimateRequest sizeEstimate;
     
 
     @Parameter
@@ -283,16 +291,21 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			updateRdf();
 			
+			computeSizeEstimates();
+			
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
-				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException e) {
+				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
+				SizeEstimateException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
     }
     
+
+
 
 
 	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException {
@@ -674,6 +687,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		return configurator;
 	}
+
+
+	private void computeSizeEstimates() throws ConfigurationException, SizeEstimateException, IOException {
+		if (sizeEstimate != null) {
+			Configurator configurator = configurator();
+			configurator.configure(sizeEstimate);
+			MultiSizeEstimator estimator = new MultiSizeEstimator(shapeManager);
+			estimator.run(sizeEstimate);
+		}
+		
+	}
 	
 	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException {
 		if (googleCloudPlatform != null) {
@@ -700,8 +724,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if (cloudStorage != null) {
 				resourceGenerator.addCloudStorageBucketWriter(cloudStorage.getDirectory());
 			}
+			if (googleCloudPlatform.getCloudsql() != null) {
+				resourceGenerator.add(cloudSqlTableWriter());
+			}
 			resourceGenerator.add(new GooglePubSubTopicListGenerator(googleCloudPlatform.getTopicsFile()));
 			resourceGenerator.dispatch(shapeManager.listShapes());
+			
 						
 
 			if (bigQuery != null) {
@@ -731,6 +759,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 
 	
+	private CloudSqlTableWriter cloudSqlTableWriter() {
+		CloudSqlInfo info = googleCloudPlatform.getCloudsql();
+		SqlTableGenerator generator = new SqlTableGenerator();
+		return new CloudSqlTableWriter(info.getSchema(), generator);
+	}
+
+
+
+
+
 	private BigQueryLabelGenerator labelGenerator() {
 		File schemaDir = googleCloudPlatform.getBigquery().getSchema();
 		File dataDir = googleCloudPlatform.getBigquery().getData();

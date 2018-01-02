@@ -52,6 +52,9 @@ public class GoogleCloudPlatformConfig {
 	
 	@Parameter(property="konig.gcp.cloudstorage", required=true)
 	private CloudStorageInfo cloudstorage;
+
+	@Parameter(property="konig.gcp.cloudsql", required=true)
+	private CloudSqlInfo cloudsql;
 	
 	@Parameter(property="konig.gcp.deployment")
 	private GroovyDeploymentScript deployment;
@@ -167,6 +170,14 @@ public class GoogleCloudPlatformConfig {
 
 	public void setTopicsFile(File topicsFile) {
 		this.topicsFile = topicsFile;
+	}
+
+	public CloudSqlInfo getCloudsql() {
+		return cloudsql;
+	}
+
+	public void setCloudsql(CloudSqlInfo cloudsql) {
+		this.cloudsql = cloudsql;
 	}
 	
 	

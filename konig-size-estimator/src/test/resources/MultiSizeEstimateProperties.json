@@ -1,0 +1,10 @@
+[
+	{
+		"shapeId": "http://example.com/shapes/BqProductShape", 
+		"sampleDataDir": "src/test/resources/Product-Shapes/ProductInput"
+	},
+	{
+		"shapeId": "http://example.com/shapes/BqProductCategoryShape", 
+		"sampleDataDir": "src/test/resources/Product-Shapes/ProductCategoryInput"
+	}
+]

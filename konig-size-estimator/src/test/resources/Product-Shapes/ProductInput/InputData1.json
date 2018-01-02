@@ -1,0 +1,39 @@
+[
+  {
+    "name": "Vivo V7+ (Matte Black, Fullview Display)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 21900, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 22900, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 23900, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "Karbonn Aura Note 4G (Black, 16GB)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 30889, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 31889, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 32889, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "Samsung Galaxy C9 Pro (Black, 6GB RAM)",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 23536, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 24536, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 25536, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  },
+  {
+    "name": "Vivo V5Plus (Gold) with offerTills",
+    "category": "http://example.com/categories/Mobiles",
+    "offers": [ 
+    		{"price": 27325, "priceCurrency": "Rupees", "validTill": "12/30/2017"}, 
+    		{"price": 28325, "priceCurrency": "Rupees", "validTill": "11/30/2017"},
+    		{"price": 29325, "priceCurrency": "Rupees", "validTill": "10/30/2017"}
+	 ]
+  }
+]
+
