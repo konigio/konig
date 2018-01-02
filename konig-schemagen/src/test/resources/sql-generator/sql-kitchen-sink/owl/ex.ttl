@@ -1,0 +1,76 @@
+@prefix ex: <http://example.com/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "ex" . 
+
+ex:bitProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:int . 
+
+ex:booleanProperty a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:boolean . 
+
+ex:char a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:string . 
+
+ex:date a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:date . 
+
+ex:dateTime a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:dateTime . 
+
+ex:double a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:double . 
+
+ex:float a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:float . 
+
+ex:signedInt a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:int . 
+
+ex:signedMediumInt a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:int . 
+
+ex:signedSmallInt a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:int . 
+
+ex:signedTinyInt a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:int . 
+
+ex:text a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:string . 
+
+ex:unsignedInt a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:int . 
+
+ex:unsignedMediumInt a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:int . 
+
+ex:unsignedSmallInt a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:int . 
+
+ex:unsignedTinyInt a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:int . 
+
+ex:varchar a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:string . 

@@ -1,0 +1,125 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix ex: <http://example.com/core/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:ThingShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/VCEf9Vgr86IAAAFggA7apA> ; 
+	sh:targetClass schema:Thing ; 
+	sh:property  [ 
+		sh:path ex:booleanProperty ; 
+		sh:datatype xsd:boolean ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ex:bitProperty ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:minInclusive 0 ; 
+		sh:maxInclusive 8
+	 ]  ,  [ 
+		sh:path ex:unsignedTinyInt ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:minInclusive 0 ; 
+		sh:maxInclusive 255
+	 ]  ,  [ 
+		sh:path ex:signedTinyInt ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:minInclusive -128 ; 
+		sh:maxInclusive 127
+	 ]  ,  [ 
+		sh:path ex:unsignedSmallInt ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:minInclusive 0 ; 
+		sh:maxInclusive 65535
+	 ]  ,  [ 
+		sh:path ex:signedSmallInt ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:minInclusive -32768 ; 
+		sh:maxInclusive 32767
+	 ]  ,  [ 
+		sh:path ex:unsignedMediumInt ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:minInclusive 0 ; 
+		sh:maxInclusive 16777215
+	 ]  ,  [ 
+		sh:path ex:signedMediumInt ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:minInclusive -8388608 ; 
+		sh:maxInclusive 8388607
+	 ]  ,  [ 
+		sh:path ex:unsignedInt ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:minInclusive 0 ; 
+		sh:maxInclusive "4294967295"^^xsd:long
+	 ]  ,  [ 
+		sh:path ex:signedInt ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:minInclusive "-2147483648"^^xsd:long ; 
+		sh:maxInclusive "2147483647"^^xsd:long
+	 ]  ,  [ 
+		sh:path ex:date ; 
+		sh:datatype xsd:date ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ex:dateTime ; 
+		sh:datatype xsd:dateTime ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ex:text ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:maxLength 100000
+	 ]  ,  [ 
+		sh:path ex:char ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:minLength 32 ; 
+		sh:maxLength 32
+	 ]  ,  [ 
+		sh:path ex:varchar ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:maxLength 200
+	 ]  ,  [ 
+		sh:path ex:float ; 
+		sh:datatype xsd:float ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ex:double ; 
+		sh:datatype xsd:double ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/sql/v1beta4/projects/{gcpProjectId}/instances/schema/databases/schema/tables/ThingShape> . 
+
+<http://www.konig.io/activity/VCEf9Vgr86IAAAFggA7apA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2017-12-22T16:09:05.459-05:00"^^xsd:dateTime . 
+
+<https://www.googleapis.com/sql/v1beta4/projects/{gcpProjectId}/instances/schema/databases/schema/tables/ThingShape> a konig:GoogleCloudSqlTable , konig:DataSource . 

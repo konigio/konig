@@ -616,4 +616,16 @@ public class Shape {
 		
 	}
 	
+	@SuppressWarnings("unchecked")
+	public <T> T findDataSource(Class<T> type) {
+		if (shapeDataSource != null) {
+			for (DataSource ds : shapeDataSource) {
+				if (type.isAssignableFrom(ds.getClass())) {
+					return (T) ds;
+				}
+			}
+		}
+		return null;
+	}
+	
 }

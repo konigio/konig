@@ -179,6 +179,12 @@ public class WorkbookLoader {
 	private static final String SOURCE_PATH = "Source Path";
 	private static final String PARTITION_OF = "Partition Of";
 	private static final String FORMULA = "Formula";
+	private static final String MIN_INCLUSIVE = "Min Inclusive";
+	private static final String MAX_INCLUSIVE = "Max Inclusive";
+	private static final String MIN_EXCLUSIVE = "Min Exclusive";
+	private static final String MAX_EXCLUSIVE = "Max Exclusive";
+	private static final String MIN_LENGTH = "Min Length";
+	private static final String MAX_LENGTH = "Max Length";
 
 	private static final String ENUMERATION_DATASOURCE_TEMPLATE = "enumerationDatasourceTemplate";
 	private static final String ENUMERATION_SHAPE_ID = "enumerationShapeId";
@@ -390,6 +396,12 @@ public class WorkbookLoader {
 		private int pcSourcePathCol = UNDEFINED;
 		private int pcPartitionOfCol = UNDEFINED;
 		private int pcFormulaCol = UNDEFINED;
+		private int pcMinInclusive = UNDEFINED;
+		private int pcMaxInclusive = UNDEFINED;
+		private int pcMinExclusive = UNDEFINED;
+		private int pcMaxExclusive = UNDEFINED;
+		private int pcMinLength = UNDEFINED;
+		private int pcMaxLength = UNDEFINED;
 
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
@@ -1096,6 +1108,12 @@ public class WorkbookLoader {
 			Resource valueType = valueType(row, pcValueTypeCol);
 			Literal minCount = intLiteral(row, pcMinCountCol);
 			Literal maxCount = intLiteral(row, pcMaxCountCol);
+			Literal minInclusive = numericLiteral(row, pcMinInclusive);
+			Literal maxInclusive = numericLiteral(row, pcMaxInclusive);
+			Literal minExclusive = numericLiteral(row, pcMinExclusive);
+			Literal maxExclusive = numericLiteral(row, pcMaxExclusive);
+			Literal minLength = numericLiteral(row, pcMinLength);
+			Literal maxLength = numericLiteral(row, pcMaxLength);
 			URI valueClass = uriValue(row, pcValueClassCol);
 			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
@@ -1228,6 +1246,12 @@ public class WorkbookLoader {
 
 			edge(constraint, SH.minCount, minCount);
 			edge(constraint, SH.maxCount, maxCount);
+			edge(constraint, SH.minInclusive, minInclusive);
+			edge(constraint, SH.maxInclusive, maxInclusive);
+			edge(constraint, SH.minExclusive, minExclusive);
+			edge(constraint, SH.maxExclusive, maxExclusive);
+			edge(constraint, SH.minLength, minLength);
+			edge(constraint, SH.maxLength, maxLength);
 			edge(constraint, SH.uniqueLang, uniqueLang);
 			edge(constraint, SH.in, valueIn);
 			edge(constraint, Konig.stereotype, stereotype);
@@ -1309,13 +1333,38 @@ public class WorkbookLoader {
 			return null;
 		}
 
+
+		private Literal numericLiteral(Row row, int column) {
+			if (column>=0) {
+				Cell cell = row.getCell(column);
+				if (cell != null) {
+					int cellType = cell.getCellType();
+					if (cellType == Cell.CELL_TYPE_NUMERIC) {
+						double doubleValue = cell.getNumericCellValue();
+						if (doubleValue % 1 == 0) {
+							long longValue = (long) doubleValue;
+							if (longValue>Integer.MIN_VALUE && longValue<Integer.MAX_VALUE) {
+								return vf.createLiteral((int)longValue);
+							}
+							return vf.createLiteral(longValue);
+						}
+						if (doubleValue>Float.MIN_VALUE && doubleValue<Float.MAX_VALUE) {
+							return vf.createLiteral((float)doubleValue);
+						}
+						return vf.createLiteral(doubleValue);
+					}
+				}
+			}
+			return null;
+		}
+
 		private Literal intLiteral(Row row, int column) throws SpreadsheetException {
 
 			Literal literal = null;
 			if (column >= 0) {
 				Cell cell = row.getCell(column);
 				if (cell != null) {
-
+					
 					int cellType = cell.getCellType();
 					if (cellType == Cell.CELL_TYPE_STRING) {
 						String value = cell.getStringCellValue();
@@ -1375,7 +1424,8 @@ public class WorkbookLoader {
 			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = 
 					pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = 
 					pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = 
-					pcEquivalentPathCol = pcEqualsCol = UNDEFINED;
+					pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = 
+					pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1408,6 +1458,24 @@ public class WorkbookLoader {
 						break;
 					case MAX_COUNT:
 						pcMaxCountCol = i;
+						break;
+					case MIN_INCLUSIVE:
+						pcMinInclusive = i;
+						break;
+					case MAX_INCLUSIVE:
+						pcMaxInclusive = i;
+						break;
+					case MIN_EXCLUSIVE:
+						pcMinExclusive = i;
+						break;
+					case MAX_EXCLUSIVE:
+						pcMaxExclusive=i;
+						break;
+					case MIN_LENGTH:
+						pcMinLength=i;
+						break;
+					case MAX_LENGTH:
+						pcMaxLength=i;
 						break;
 					case UNIQUE_LANG:
 						pcUniqueLangCol = i;
