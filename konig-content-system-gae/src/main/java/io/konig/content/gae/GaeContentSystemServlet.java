@@ -1,5 +1,7 @@
 package io.konig.content.gae;
 
+import java.io.BufferedReader;
+
 /*
  * #%L
  * Konig Content System, Google App Engine implementation
@@ -22,21 +24,60 @@ package io.konig.content.gae;
 
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
+import com.google.appengine.api.users.User;
+import com.google.appengine.api.users.UserService;
+import com.google.appengine.api.users.UserServiceFactory;
+
+
 public class GaeContentSystemServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static final String ZIP_CONTENT_TYPE = "application/zip";
+	public static final String ALLOWED_DOMAINS = "allowed-domains";
 	
 	private GaeCheckInBundleServlet checkInBundle = new GaeCheckInBundleServlet();
 	private GaeAssetServlet asset = new GaeAssetServlet();
 	private GaeZipBundleServlet zipBundle = new GaeZipBundleServlet();
-
+	
+	@Override
+	public void init() throws ServletException {
+		String configFile = getServletConfig().getInitParameter("configFile");
+		MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
+		if (configFile == null) {
+			throw new ServletException("configFile init parameter is not defined");
+		}
+		try {
+			InputStream input = getClass().getClassLoader().getResourceAsStream(configFile);
+			Reader reader = new InputStreamReader(input);
+			List<String> allowedDomains = null;
+			try (BufferedReader bufferreader = new BufferedReader(reader)) {
+				allowedDomains = new ArrayList<>();
+	            for (;;) {
+	                String line = bufferreader.readLine();
+	                if (line == null)
+	                    break;
+	                allowedDomains.add(line);
+	            }
+	        }
+			cache.put(ALLOWED_DOMAINS, allowedDomains);
+		} catch (Throwable e) {
+			throw new ServletException(e);
+		}
+	}
+	
 	protected void doPost(HttpServletRequest req,  HttpServletResponse resp)
 	throws ServletException, IOException {
 		
@@ -51,10 +92,40 @@ public class GaeContentSystemServlet extends HttpServlet {
 		}
 	}
 	
+	
 	@Override
-	protected void doGet(HttpServletRequest req,   HttpServletResponse resp)
-    throws ServletException, IOException {
-		asset.doGet(req, resp);
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		UserService userService = UserServiceFactory.getUserService();
+		String thisUrl = req.getRequestURI();
+		User user = userService.getCurrentUser();
+		if(user == null) {
+			resp.sendRedirect(userService.createLoginURL(thisUrl));
+		}
+		
+		if(!isValidDomain(user.getEmail())) {
+			resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, 
+						"<p>Invalid User Credential. Please <a href=\"" + userService.createLogoutURL(thisUrl) + "\">sign in</a> with valid domain</p>");
+		}
+		
+		if (user != null && isValidDomain(user.getEmail())) {
+			asset.doGet(req, resp);
+		} 
+		
+	}
+	
+	@SuppressWarnings("unchecked")
+	private boolean isValidDomain(String email) throws ServletException {
+		List<String> allowedDomains = (List<String>)MemcacheServiceFactory.getMemcacheService().get(ALLOWED_DOMAINS);
+		if(allowedDomains == null) {
+			init();
+		}
+		
+		for(String validdomain : allowedDomains) {
+			if(email.endsWith(validdomain)){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private boolean isBundleRequest(HttpServletRequest req) {
