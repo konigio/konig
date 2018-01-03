@@ -109,8 +109,23 @@ public class Shape {
 		}
 	}
 
+	private List<PropertyConstraint> uniquePropertyConstraints(List<PropertyConstraint> constraints) {
+
+		Set<String> keys = new HashSet<>();
+		List<PropertyConstraint> uniqueList = new ArrayList<>();
+
+		for (PropertyConstraint p: constraints) {
+			if (!keys.contains(p.getPath().toString())) {
+				keys.add(p.getPath().toString());
+				uniqueList.add(p);
+			}
+		}
+
+		return uniqueList;
+	}
+
 	public List<PropertyConstraint> getProperty() {
-		return property==null ? EMPTY_PROPERTY_LIST : property;
+		return property==null ? EMPTY_PROPERTY_LIST : uniquePropertyConstraints(property);
 	}
 	
 	
