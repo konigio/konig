@@ -1,0 +1,84 @@
+@prefix asmt: <https://schema.pearson.com/ns/assessment/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix reg: <https://schema.pearson.com/ns/registrar/> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org" ; 
+	rdfs:comment "An ontology developed by Google, Yahoo!, Microsoft and others to describe people, places, and things commonly found on the web." . 
+
+schema:City a owl:Class ; 
+	rdfs:label "City" ; 
+	rdfs:subClassOf schema:Place . 
+
+schema:Place a owl:Class . 
+
+schema:Country a owl:Class ; 
+	rdfs:label "Country" ; 
+	rdfs:subClassOf schema:Place . 
+
+schema:CreativeWork a owl:Class . 
+
+schema:EducationalOrganization a owl:Class ; 
+	rdfs:label "Educational Organization" ; 
+	rdfs:comment "An educational institution such as a school, college, or university." ; 
+	rdfs:subClassOf schema:Organization . 
+
+schema:Organization a owl:Class ; 
+	rdfs:label "Organization" ; 
+	rdfs:comment "The class of all organizational units.  Includes large administrative areas like a country, and small groups of people like a course section or study group." ; 
+	rdfs:subClassOf reg:Party . 
+
+schema:MobileApplication a owl:Class . 
+
+schema:Person a owl:Class ; 
+	rdfs:label "Person" ; 
+	rdfs:comment "The class of all individual people." ; 
+	rdfs:subClassOf reg:Party . 
+
+schema:School a owl:Class ; 
+	rdfs:label "School" ; 
+	rdfs:subClassOf schema:EducationalOrganization . 
+
+schema:SoftwareApplication a owl:Class . 
+
+schema:State a owl:Class ; 
+	rdfs:label "State" ; 
+	rdfs:subClassOf schema:Place . 
+
+schema:WebPage a owl:Class . 
+
+schema:containedInPlace a rdf:Property , owl:ObjectProperty ; 
+	rdfs:label "Contained In Place" ; 
+	rdfs:comment "A broader place within which the subject Place is contained" ; 
+	rdfs:domain schema:Place ; 
+	rdfs:range schema:Place . 
+
+schema:dateCreated a rdf:Property , owl:DatatypeProperty ; 
+	rdfs:label "Date Created" ; 
+	rdfs:comment "The date/time when this resource was created." ; 
+	rdfs:range xsd:dateTime . 
+
+schema:lastModified a rdf:Property , owl:DatatypeProperty ; 
+	rdfs:label "Date Modified" ; 
+	rdfs:comment "The date/time when this resource was last modified." ; 
+	rdfs:range xsd:dateTime . 
+
+schema:location a rdf:Property ; 
+	rdfs:label "Location" ; 
+	rdfs:comment "The location of the subject entity" . 
+
+schema:name a owl:DatatypeProperty ; 
+	schema:domainIncludes asmt:AssessmentInstrument , asmt:AssessmentItem , owl:Thing ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:parentOrganization a rdf:Property , owl:ObjectProperty ; 
+	rdfs:label "Parent Organization" ; 
+	rdfs:comment "A broader organizational unit within which the subject organizational unit is contained." ; 
+	rdfs:domain schema:Organization ; 
+	rdfs:range schema:Organization . 

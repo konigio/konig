@@ -1,0 +1,42 @@
+@prefix fact: <http://schema.pearson.com/ns/fact/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix time: <http://www.w3.org/2006/time#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+konig: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "konig" ; 
+	rdfs:label "Konig Core Ontology" ; 
+	rdfs:comment "A vocabulary for enriched semantic models that enable ontology-based engineering solutions." . 
+
+konig:DayWeekMonthYear a owl:Class ; 
+	rdfs:subClassOf time:TemporalUnit , schema:Enumeration . 
+
+konig:TimeInterval a owl:Class ; 
+	rdfs:label "TimeInterval" . 
+
+konig:averageScore a owl:DatatypeProperty ; 
+	schema:domainIncludes fact:ScoreAssessmentAverageScore , fact:ScoreAssessmentAverageScoreBySection , fact:ScoreAssessmentAverageScoreByGrade , fact:ScoreAssessmentAverageScoreBySchool , fact:ScoreAssessmentAverageScoreByCity , fact:ScoreAssessmentAverageScoreByState , fact:ScoreAssessmentAverageScoreByCountry ; 
+	schema:rangeIncludes xsd:int . 
+
+konig:durationUnit a owl:ObjectProperty ; 
+	schema:domainIncludes konig:TimeInterval ; 
+	schema:rangeIncludes konig:DayWeekMonthYear . 
+
+konig:incompleteCount a owl:ObjectProperty ; 
+	schema:domainIncludes fact:AssessmentEndeavorNotComplete , fact:AssessmentEndeavorNotCompleteBySection , fact:AssessmentEndeavorNotCompleteByGrade , fact:AssessmentEndeavorNotCompleteBySchool , fact:AssessmentEndeavorNotCompleteByCity , fact:AssessmentEndeavorNotCompleteByState , fact:AssessmentEndeavorNotCompleteByCountry . 
+
+konig:intervalStart a owl:DatatypeProperty ; 
+	schema:domainIncludes konig:TimeInterval ; 
+	schema:rangeIncludes xsd:date . 
+
+konig:timeInterval a owl:ObjectProperty ; 
+	schema:domainIncludes fact:LoginUniqueCountByGrade , fact:StartAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCount , fact:CompleteAssessmentUniqueCountBySection , fact:CompleteAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySchool , fact:CompleteAssessmentUniqueCountByCity , fact:CompleteAssessmentUniqueCountByState , fact:CompleteAssessmentUniqueCountByCountry , fact:ScoreAssessmentUniqueCountBySection , fact:ScoreAssessmentUniqueCountByGrade , fact:ScoreAssessmentUniqueCountBySchool , fact:ScoreAssessmentUniqueCountByCity , fact:ScoreAssessmentUniqueCountByState , fact:ScoreAssessmentUniqueCountByCountry , fact:ScoreAssessmentAverageScore , fact:ScoreAssessmentAverageScoreBySection , fact:ScoreAssessmentAverageScoreByGrade , fact:ScoreAssessmentAverageScoreBySchool , fact:ScoreAssessmentAverageScoreByCity , fact:ScoreAssessmentAverageScoreByState , fact:ScoreAssessmentAverageScoreByCountry , fact:AssessmentEndeavorNotComplete , fact:AssessmentEndeavorNotCompleteBySection , fact:AssessmentEndeavorNotCompleteByGrade , fact:AssessmentEndeavorNotCompleteBySchool , fact:AssessmentEndeavorNotCompleteByCity , fact:AssessmentEndeavorNotCompleteByState , fact:AssessmentEndeavorNotCompleteByCountry ; 
+	schema:rangeIncludes konig:TimeInterval . 
+
+konig:uniqueCount a owl:DatatypeProperty ; 
+	schema:domainIncludes fact:LoginUniqueCountByGrade , fact:StartAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCount , fact:CompleteAssessmentUniqueCountBySection , fact:CompleteAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySchool , fact:CompleteAssessmentUniqueCountByCity , fact:CompleteAssessmentUniqueCountByState , fact:CompleteAssessmentUniqueCountByCountry , fact:ScoreAssessmentUniqueCountBySection , fact:ScoreAssessmentUniqueCountByGrade , fact:ScoreAssessmentUniqueCountBySchool , fact:ScoreAssessmentUniqueCountByCity , fact:ScoreAssessmentUniqueCountByState , fact:ScoreAssessmentUniqueCountByCountry ; 
+	schema:rangeIncludes xsd:int . 

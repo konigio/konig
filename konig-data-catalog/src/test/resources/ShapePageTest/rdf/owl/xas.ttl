@@ -1,0 +1,133 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sys: <http://schema.pearson.com/ns/system/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xas: <http://schema.pearson.com/ns/activity/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+xas: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "xas" ; 
+	rdfs:label "Pearson Activity Streams" ; 
+	rdfs:comment "Pearson's extension of the Activity Streams ontology." . 
+
+xas:Activate a owl:Class ; 
+	rdfs:label "Activate" ; 
+	rdfs:comment "The process of activating a mobile app." ; 
+	rdfs:subClassOf as:Activity . 
+
+xas:AssessmentActivity a owl:Class ; 
+	rdfs:label "Assessment Activity" ; 
+	rdfs:subClassOf as:Activity . 
+
+xas:AssessmentEndeavor a owl:Class ; 
+	rdfs:label "Assessment Endeavor" ; 
+	rdfs:comment "The set of all assessment sessions by a given student on a given assessment instrument" ; 
+	rdfs:subClassOf xas:AssessmentActivity . 
+
+xas:AssessmentMode a owl:Class ; 
+	rdfs:label "Assessment Mode" ; 
+	rdfs:subClassOf skos:Concept . 
+
+xas:AssessmentResult a owl:Class . 
+
+xas:AssessmentSession a owl:Class ; 
+	rdfs:label "Assessment Session" ; 
+	rdfs:comment "A period of time when a given student is working on a given assessment instrument.  Each session begins with a StartAssessment event. The student may work on the same assessment instrument across multiple sessions" ; 
+	rdfs:subClassOf xas:AssessmentActivity . 
+
+xas:CaptureScore a owl:Class ; 
+	rdfs:label "Capture Score" ; 
+	rdfs:comment "The activity of capturing a learner's score on an assessment." ; 
+	rdfs:subClassOf as:Activity . 
+
+xas:ChangePassword a owl:Class ; 
+	rdfs:label "Change Password" ; 
+	rdfs:comment "An event published when a user changes his or her password." ; 
+	rdfs:subClassOf as:Activity . 
+
+xas:CompleteAssessment a owl:Class ; 
+	rdfs:label "Complete Assessment" ; 
+	rdfs:comment "An event which signals that a learner as completed an assessment instrument such as a quiz, test, or homework assignment" ; 
+	rdfs:subClassOf xas:AssessmentActivity . 
+
+xas:CompleteAssessmentItem a owl:Class ; 
+	rdfs:label "Complete Assessment Item" ; 
+	rdfs:comment "An event which signals that a learner has complete work on an individual assessment item." ; 
+	rdfs:subClassOf as:Activity . 
+
+xas:CreateLicenseKey a owl:Class ; 
+	rdfs:label "Create License Key" ; 
+	rdfs:comment "The action of creating a license key." ; 
+	rdfs:subClassOf as:Activity . 
+
+xas:CreateProfile a owl:Class ; 
+	rdfs:label "Create Profile" ; 
+	rdfs:comment "The activity of creating a user profile." ; 
+	rdfs:subClassOf as:Activity . 
+
+xas:ForgotPassword a owl:Class . 
+
+xas:InstrumentType a owl:Class ; 
+	rdfs:label "Instrument Type" ; 
+	rdfs:comment "A class whose members are different types of \"instruments\" that can be used to perform some activity.  Examples include types of software applications (MathXL, Revel, MyPedia, etc.) and types of devices (iPhone, Chrome Web Browswer, etc.)." ; 
+	rdfs:subClassOf schema:Enumeration . 
+
+xas:ScoreAssessment a owl:Class ; 
+	rdfs:label "Score Assessment" ; 
+	rdfs:comment "An event when the teacher scores a pen and paper assessment completed by the learner" ; 
+	rdfs:subClassOf as:Activity . 
+
+xas:StartAssessment a owl:Class ; 
+	rdfs:label "Start Assessment" ; 
+	rdfs:comment "An event which signals that a learner has started working on an assessment." ; 
+	rdfs:subClassOf xas:AssessmentActivity . 
+
+xas:StartAssessmentItem a owl:Class ; 
+	rdfs:label "Start Assessment Item" ; 
+	rdfs:comment "An event which signals that a learner has started work on an individual assessment item." ; 
+	rdfs:subClassOf as:Activity . 
+
+xas:StartReviewAssessment a owl:Class ; 
+	rdfs:label "Start Review Assessment" ; 
+	rdfs:comment "An event published when a user starts to review a completed assessment." ; 
+	rdfs:subClassOf as:Activity . 
+
+xas:UpdateProfile a owl:Class . 
+
+xas:WorkProduct a owl:Class ; 
+	rdfs:label "Work Product" ; 
+	rdfs:comment "A class that represents the learner's work as in assignments or homework or assessments" . 
+
+xas:assessmentMode a rdf:Property , owl:ObjectProperty , owl:Class ; 
+	rdfs:label "Assessment Mode" ; 
+	rdfs:comment "A property that describes the mode the assessment was started or completed in" ; 
+	rdfs:domain xas:AssessmentActivity ; 
+	rdfs:range xas:AssessmentMode . 
+
+xas:attributedTo a owl:ObjectProperty ; 
+	schema:domainIncludes xas:WorkProduct . 
+
+xas:candidate a owl:ObjectProperty ; 
+	schema:domainIncludes xas:AssessmentResult . 
+
+xas:eventTime a rdf:Property , owl:DatatypeProperty ; 
+	rdfs:label "Event Time" ; 
+	rdfs:comment "The time at which an event occurred.  An event is something that occurs at a particular point in time.  It does not have an extended duration." ; 
+	rdfs:domain as:Activity ; 
+	rdfs:range xsd:dateTime ; 
+	schema:rangeIncludes xsd:dateTime . 
+
+xas:generatedMediaType a owl:DatatypeProperty ; 
+	schema:domainIncludes prov:Activity ; 
+	schema:rangeIncludes xsd:string . 
+
+xas:instrumentType a owl:ObjectProperty ; 
+	schema:rangeIncludes xas:InstrumentType , sys:ApplicationType . 
+
+xas:subActivityOf a owl:ObjectProperty ; 
+	schema:rangeIncludes as:Activity . 

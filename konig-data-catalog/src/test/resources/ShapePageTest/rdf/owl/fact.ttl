@@ -1,0 +1,83 @@
+@prefix fact: <http://schema.pearson.com/ns/fact/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+fact: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "fact" ; 
+	rdfs:label "Pearson Fact Ontology" ; 
+	rdfs:comment "Pearson's ontology for Facts" . 
+
+fact:AssessmentEndeavorNotComplete a owl:Class . 
+
+fact:AssessmentEndeavorNotCompleteByCity a owl:Class . 
+
+fact:AssessmentEndeavorNotCompleteByCountry a owl:Class . 
+
+fact:AssessmentEndeavorNotCompleteByGrade a owl:Class . 
+
+fact:AssessmentEndeavorNotCompleteBySchool a owl:Class . 
+
+fact:AssessmentEndeavorNotCompleteBySection a owl:Class . 
+
+fact:AssessmentEndeavorNotCompleteByState a owl:Class . 
+
+fact:CompleteAssessmentUniqueCount a owl:Class . 
+
+fact:CompleteAssessmentUniqueCountByCity a owl:Class . 
+
+fact:CompleteAssessmentUniqueCountByCountry a owl:Class . 
+
+fact:CompleteAssessmentUniqueCountByGrade a owl:Class . 
+
+fact:CompleteAssessmentUniqueCountBySchool a owl:Class . 
+
+fact:CompleteAssessmentUniqueCountBySection a owl:Class . 
+
+fact:CompleteAssessmentUniqueCountByState a owl:Class . 
+
+fact:LoginUniqueCountByCity a owl:Class . 
+
+fact:LoginUniqueCountByCountry a owl:Class . 
+
+fact:LoginUniqueCountByGrade a owl:Class . 
+
+fact:LoginUniqueCountBySchool a owl:Class . 
+
+fact:ScoreAssessmentAverageScore a owl:Class . 
+
+fact:ScoreAssessmentAverageScoreByCity a owl:Class . 
+
+fact:ScoreAssessmentAverageScoreByCountry a owl:Class . 
+
+fact:ScoreAssessmentAverageScoreByGrade a owl:Class . 
+
+fact:ScoreAssessmentAverageScoreBySchool a owl:Class . 
+
+fact:ScoreAssessmentAverageScoreBySection a owl:Class . 
+
+fact:ScoreAssessmentAverageScoreByState a owl:Class . 
+
+fact:ScoreAssessmentUniqueCount a owl:Class . 
+
+fact:ScoreAssessmentUniqueCountByCity a owl:Class . 
+
+fact:ScoreAssessmentUniqueCountByCountry a owl:Class . 
+
+fact:ScoreAssessmentUniqueCountByGrade a owl:Class . 
+
+fact:ScoreAssessmentUniqueCountBySchool a owl:Class . 
+
+fact:ScoreAssessmentUniqueCountBySection a owl:Class . 
+
+fact:ScoreAssessmentUniqueCountByState a owl:Class . 
+
+fact:StartAssessmentUniqueCountByCity a owl:Class . 
+
+fact:StartAssessmentUniqueCountByCountry a owl:Class . 
+
+fact:StartAssessmentUniqueCountByGrade a owl:Class . 
+
+fact:StartAssessmentUniqueCountBySchool a owl:Class . 
+
+fact:StartAssessmentUniqueCountByState a owl:Class . 
