@@ -1,0 +1,67 @@
+@prefix alias: <http://schema.pearson.com/ns/alias/> .
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix fact: <http://schema.pearson.com/ns/fact/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix reg: <https://schema.pearson.com/ns/registrar/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://schema.pearson.com/shapes/> .
+@prefix xas: <http://schema.pearson.com/ns/activity/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:LoginUniqueCountBySchoolShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ZiYcTI0q5KYAAAFguQz8hA> ; 
+	sh:targetClass fact:LoginUniqueCountBySchool ; 
+	konig:aggregationOf shape:LoginUniqueCountByGradeShape ; 
+	konig:rollUpBy alias:school ; 
+	konig:mediaTypeBaseName "application/vnd.pearson.loginuniquecountbyschool" . 
+
+<http://www.konig.io/activity/ZiYcTI0q5KYAAAFguQz8hA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-01-02T15:45:24.407-07:00"^^xsd:dateTime . 
+
+shape:LoginUniqueCountByGradeShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ZiYcTI0q5KYAAAFguQz8hA> ; 
+	sh:targetClass fact:LoginUniqueCountByGrade ; 
+	konig:aggregationOf xas:CreateLicenseKey ; 
+	konig:mediaTypeBaseName "application/vnd.pearson.loginuniquecountbygrade" ; 
+	sh:property  [ 
+		sh:path konig:uniqueCount ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:measure
+	 ]  ,  [ 
+		sh:path alias:grade ; 
+		sh:class reg:SchoolGrade ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:dimension
+	 ]  ,  [ 
+		sh:path alias:school ; 
+		sh:class schema:School ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:attribute
+	 ]  ,  [ 
+		sh:path alias:city ; 
+		sh:class schema:City ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:attribute
+	 ]  ,  [ 
+		sh:path alias:country ; 
+		sh:class schema:Country ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:attribute
+	 ]  ,  [ 
+		sh:path konig:timeInterval ; 
+		sh:shape shape:DayWeekMonthYearTimeIntervalShape ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:dimension ]  . 

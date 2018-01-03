@@ -1,0 +1,17 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xas: <http://schema.pearson.com/ns/activity/> .
+
+prov: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "prov" ; 
+	rdfs:label "W3C Provenance Ontology" ; 
+	rdfs:comment "An ontology used to describe entities, activities and people involved in producing a piece of data or some thing." . 
+
+prov:Activity a owl:Class . 
+
+prov:wasGeneratedBy a owl:ObjectProperty ; 
+	schema:domainIncludes xas:Activate , xas:CompleteAssessment , xas:CreateLicenseKey , xas:CreateProfile , xas:StartReviewAssessment , xas:StartAssessment , xas:StartAssessmentItem , xas:ChangePassword , xas:ForgotPassword , xas:UpdateProfile ; 
+	schema:rangeIncludes prov:Activity . 

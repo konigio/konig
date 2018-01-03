@@ -1,0 +1,58 @@
+@prefix alias: <http://schema.pearson.com/ns/alias/> .
+@prefix fact: <http://schema.pearson.com/ns/fact/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix reg: <https://schema.pearson.com/ns/registrar/> .
+@prefix schema: <http://schema.org/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xas: <http://schema.pearson.com/ns/activity/> .
+
+alias: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "alias" ; 
+	rdfs:label "Alias Namespace" ; 
+	rdfs:comment "A namespace for properties that derived from other properties." . 
+
+alias:assessmentId a owl:ObjectProperty . 
+
+alias:assessmentMode a owl:ObjectProperty ; 
+	schema:domainIncludes fact:StartAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCount , fact:CompleteAssessmentUniqueCountBySection , fact:CompleteAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySchool , fact:CompleteAssessmentUniqueCountByCity , fact:CompleteAssessmentUniqueCountByState , fact:CompleteAssessmentUniqueCountByCountry , fact:ScoreAssessmentUniqueCountBySection , fact:ScoreAssessmentUniqueCountByGrade , fact:ScoreAssessmentUniqueCountBySchool , fact:ScoreAssessmentUniqueCountByCity , fact:ScoreAssessmentUniqueCountByState , fact:ScoreAssessmentUniqueCountByCountry , fact:ScoreAssessmentAverageScore , fact:ScoreAssessmentAverageScoreBySection , fact:ScoreAssessmentAverageScoreByGrade , fact:ScoreAssessmentAverageScoreBySchool , fact:ScoreAssessmentAverageScoreByCity , fact:ScoreAssessmentAverageScoreByState , fact:ScoreAssessmentAverageScoreByCountry , fact:AssessmentEndeavorNotComplete , fact:AssessmentEndeavorNotCompleteBySection , fact:AssessmentEndeavorNotCompleteByGrade , fact:AssessmentEndeavorNotCompleteBySchool , fact:AssessmentEndeavorNotCompleteByCity , fact:AssessmentEndeavorNotCompleteByState , fact:AssessmentEndeavorNotCompleteByCountry ; 
+	schema:rangeIncludes xas:assessmentMode , xas:AssessmentMode . 
+
+alias:assessmentName a owl:ObjectProperty . 
+
+alias:assessmentType a owl:ObjectProperty . 
+
+alias:city a owl:ObjectProperty ; 
+	schema:domainIncludes fact:LoginUniqueCountByGrade , fact:StartAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySection , fact:CompleteAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySchool , fact:CompleteAssessmentUniqueCountByCity , fact:ScoreAssessmentUniqueCountBySection , fact:ScoreAssessmentUniqueCountByGrade , fact:ScoreAssessmentUniqueCountBySchool , fact:ScoreAssessmentUniqueCountByCity , fact:ScoreAssessmentAverageScoreBySection , fact:ScoreAssessmentAverageScoreByGrade , fact:ScoreAssessmentAverageScoreBySchool , fact:ScoreAssessmentAverageScoreByCity , fact:AssessmentEndeavorNotCompleteBySection , fact:AssessmentEndeavorNotCompleteByGrade , fact:AssessmentEndeavorNotCompleteBySchool , fact:AssessmentEndeavorNotCompleteByCity ; 
+	schema:rangeIncludes schema:City . 
+
+alias:country a owl:ObjectProperty ; 
+	schema:domainIncludes fact:LoginUniqueCountByGrade , fact:StartAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySection , fact:CompleteAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySchool , fact:CompleteAssessmentUniqueCountByCity , fact:CompleteAssessmentUniqueCountByState , fact:CompleteAssessmentUniqueCountByCountry , fact:ScoreAssessmentUniqueCountBySection , fact:ScoreAssessmentUniqueCountByGrade , fact:ScoreAssessmentUniqueCountBySchool , fact:ScoreAssessmentUniqueCountByCity , fact:ScoreAssessmentUniqueCountByState , fact:ScoreAssessmentUniqueCountByCountry , fact:ScoreAssessmentAverageScoreBySection , fact:ScoreAssessmentAverageScoreByGrade , fact:ScoreAssessmentAverageScoreBySchool , fact:ScoreAssessmentAverageScoreByCity , fact:ScoreAssessmentAverageScoreByState , fact:ScoreAssessmentAverageScoreByCountry , fact:AssessmentEndeavorNotCompleteBySection , fact:AssessmentEndeavorNotCompleteByGrade , fact:AssessmentEndeavorNotCompleteBySchool , fact:AssessmentEndeavorNotCompleteByCity , fact:AssessmentEndeavorNotCompleteByState , fact:AssessmentEndeavorNotCompleteByCountry ; 
+	schema:rangeIncludes schema:Country . 
+
+alias:grade a owl:ObjectProperty ; 
+	schema:domainIncludes fact:LoginUniqueCountByGrade , fact:StartAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySection , fact:CompleteAssessmentUniqueCountByGrade , fact:ScoreAssessmentUniqueCountBySection , fact:ScoreAssessmentUniqueCountByGrade , fact:ScoreAssessmentAverageScoreBySection , fact:ScoreAssessmentAverageScoreByGrade , fact:AssessmentEndeavorNotCompleteBySection , fact:AssessmentEndeavorNotCompleteByGrade ; 
+	schema:rangeIncludes reg:SchoolGrade . 
+
+alias:school a owl:ObjectProperty ; 
+	schema:domainIncludes fact:LoginUniqueCountByGrade , fact:StartAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySection , fact:CompleteAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySchool , fact:ScoreAssessmentUniqueCountBySection , fact:ScoreAssessmentUniqueCountByGrade , fact:ScoreAssessmentUniqueCountBySchool , fact:ScoreAssessmentAverageScoreBySection , fact:ScoreAssessmentAverageScoreByGrade , fact:ScoreAssessmentAverageScoreBySchool , fact:AssessmentEndeavorNotCompleteBySection , fact:AssessmentEndeavorNotCompleteByGrade , fact:AssessmentEndeavorNotCompleteBySchool ; 
+	schema:rangeIncludes schema:School . 
+
+alias:schoolURI a owl:ObjectProperty . 
+
+alias:section a owl:ObjectProperty ; 
+	schema:domainIncludes fact:CompleteAssessmentUniqueCountBySection , fact:ScoreAssessmentUniqueCountBySection , fact:ScoreAssessmentAverageScoreBySection , fact:AssessmentEndeavorNotCompleteBySection ; 
+	schema:rangeIncludes reg:GradeSection . 
+
+alias:startDateTime a owl:ObjectProperty . 
+
+alias:state a owl:ObjectProperty ; 
+	schema:domainIncludes fact:StartAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySection , fact:CompleteAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySchool , fact:CompleteAssessmentUniqueCountByCity , fact:CompleteAssessmentUniqueCountByState , fact:ScoreAssessmentUniqueCountBySection , fact:ScoreAssessmentUniqueCountByGrade , fact:ScoreAssessmentUniqueCountBySchool , fact:ScoreAssessmentUniqueCountByCity , fact:ScoreAssessmentUniqueCountByState , fact:ScoreAssessmentAverageScoreBySection , fact:ScoreAssessmentAverageScoreByGrade , fact:ScoreAssessmentAverageScoreBySchool , fact:ScoreAssessmentAverageScoreByCity , fact:ScoreAssessmentAverageScoreByState , fact:AssessmentEndeavorNotCompleteBySection , fact:AssessmentEndeavorNotCompleteByGrade , fact:AssessmentEndeavorNotCompleteBySchool , fact:AssessmentEndeavorNotCompleteByCity , fact:AssessmentEndeavorNotCompleteByState ; 
+	schema:rangeIncludes schema:State . 
+
+alias:studentAnonymousId a owl:ObjectProperty . 
+
+alias:subject a owl:ObjectProperty ; 
+	schema:domainIncludes fact:StartAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCount , fact:CompleteAssessmentUniqueCountBySection , fact:CompleteAssessmentUniqueCountByGrade , fact:CompleteAssessmentUniqueCountBySchool , fact:CompleteAssessmentUniqueCountByCity , fact:CompleteAssessmentUniqueCountByState , fact:CompleteAssessmentUniqueCountByCountry , fact:ScoreAssessmentUniqueCountBySection , fact:ScoreAssessmentUniqueCountByGrade , fact:ScoreAssessmentUniqueCountBySchool , fact:ScoreAssessmentUniqueCountByCity , fact:ScoreAssessmentUniqueCountByState , fact:ScoreAssessmentUniqueCountByCountry , fact:ScoreAssessmentAverageScore , fact:ScoreAssessmentAverageScoreBySection , fact:ScoreAssessmentAverageScoreByGrade , fact:ScoreAssessmentAverageScoreBySchool , fact:ScoreAssessmentAverageScoreByCity , fact:ScoreAssessmentAverageScoreByState , fact:ScoreAssessmentAverageScoreByCountry , fact:AssessmentEndeavorNotComplete , fact:AssessmentEndeavorNotCompleteBySection , fact:AssessmentEndeavorNotCompleteByGrade , fact:AssessmentEndeavorNotCompleteBySchool , fact:AssessmentEndeavorNotCompleteByCity , fact:AssessmentEndeavorNotCompleteByState , fact:AssessmentEndeavorNotCompleteByCountry ; 
+	schema:rangeIncludes skos:Concept . 

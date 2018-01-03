@@ -1,0 +1,64 @@
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix reg: <https://schema.pearson.com/ns/registrar/> .
+@prefix schema: <http://schema.org/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+reg: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "reg" ; 
+	rdfs:label "Pearson Registrar Ontology" ; 
+	rdfs:comment "An ontology used to describe entities managed by a registrar" . 
+
+reg:GradeLevel a owl:Class ; 
+	rdfs:label "Grade Level" ; 
+	rdfs:subClassOf skos:Concept . 
+
+reg:GradeSection a owl:Class ; 
+	rdfs:label "Grade Section" . 
+
+reg:Party a owl:Class ; 
+	rdfs:label "Party" ; 
+	rdfs:comment "The class of all individuals that can have a role in an organization or enter into a contractual agreement.  This class includes people and organizations." . 
+
+reg:SchoolGrade a owl:Class ; 
+	rdfs:label "School Grade" ; 
+	rdfs:comment "A particular Grade Level at a particular school" . 
+
+reg:anonymousId a rdf:Property , owl:DatatypeProperty ; 
+	rdfs:label "Anonymous Id" ; 
+	rdfs:comment "An anonymous identifier for a Person." ; 
+	rdfs:domain schema:Person ; 
+	rdfs:range xsd:string ; 
+	schema:rangeIncludes xsd:string . 
+
+reg:grade a rdf:Property , owl:ObjectProperty ; 
+	rdfs:label "grade" ; 
+	rdfs:domain reg:GradeSection ; 
+	rdfs:range reg:SchoolGrade . 
+
+reg:gradeLevel a rdf:Property , owl:ObjectProperty ; 
+	rdfs:label "gradeLevel" ; 
+	rdfs:comment "The grade level associated with this school grade (e.g. \"K\", \"1\", \"2\", etc.)" ; 
+	rdfs:domain reg:SchoolGrade ; 
+	rdfs:range reg:GradeLevel . 
+
+reg:school a rdf:Property , owl:ObjectProperty ; 
+	rdfs:label "school" ; 
+	rdfs:domain reg:SchoolGrade ; 
+	rdfs:range schema:School . 
+
+reg:Administrator a org:Role ; 
+	schema:name "Administrator" ; 
+	rdfs:comment "The role which signifies that the individual is an administrator within some organizational unit." . 
+
+reg:Instructor a org:Role ; 
+	schema:name "Instructor" ; 
+	rdfs:comment "The role which signifies that the individual is an instructor within some organization unit, typically a course section." . 
+
+reg:Learner a org:Role ; 
+	schema:name "Learner" ; 
+	rdfs:comment "The role which signifies that the individual is a learner within some organizational unit, typically a course section." . 
