@@ -69,6 +69,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.FileUtils;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -108,6 +109,7 @@ import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
 import io.konig.maven.project.generator.MavenProjectGeneratorException;
 import io.konig.maven.project.generator.MultiProject;
+import io.konig.maven.project.generator.ParentProjectGenerator;
 import io.konig.openapi.generator.OpenApiGenerateRequest;
 import io.konig.openapi.generator.OpenApiGenerator;
 import io.konig.openapi.generator.OpenApiGeneratorException;
@@ -341,7 +343,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 	private void generateMultiProject() throws MavenProjectGeneratorException, IOException {
 		if (multiProject != null) {
-			multiProject.run();
+			ParentProjectGenerator generator = multiProject.run();
+			if (multiProject.isAutoBuild()) {
+				List<String> goalList = mavenSession.getGoals();
+				
+				try {
+					generator.buildChildren(goalList);
+				} catch (MavenInvocationException e) {
+					throw new MavenProjectGeneratorException(e);
+				}
+			}
+			
 		}
 		
 	}

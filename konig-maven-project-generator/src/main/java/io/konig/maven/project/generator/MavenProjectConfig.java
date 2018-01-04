@@ -33,6 +33,7 @@ public class MavenProjectConfig  {
 	private String konigVersion;
 	private File rdfSourceDir;
 	private String rdfSourcePath;
+	private boolean autoBuild;
 	
 	public String getGroupId() {
 		return groupId;
@@ -90,6 +91,12 @@ public class MavenProjectConfig  {
 	}
 	public void setRdfSourcePath(String rdfSourcePath) {
 		this.rdfSourcePath = rdfSourcePath;
+	}
+	public boolean isAutoBuild() {
+		return autoBuild;
+	}
+	public void setAutoBuild(boolean autoBuild) {
+		this.autoBuild = autoBuild;
 	}
 
 }

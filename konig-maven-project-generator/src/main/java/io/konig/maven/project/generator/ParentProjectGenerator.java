@@ -1,4 +1,5 @@
 package io.konig.maven.project.generator;
+import java.io.File;
 
 /*
  * #%L
@@ -24,11 +25,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.maven.shared.invoker.DefaultInvocationRequest;
+import org.apache.maven.shared.invoker.DefaultInvoker;
+import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.Invoker;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.apache.velocity.VelocityContext;
 
 public class ParentProjectGenerator extends MavenProjectGenerator {
 
 	private List<MavenProjectGenerator> children = new ArrayList<>();
+	private File mavenHome;
 	
 	public ParentProjectGenerator(MavenProjectConfig mavenProject) {
 		super();
@@ -53,6 +60,36 @@ public class ParentProjectGenerator extends MavenProjectGenerator {
 		for (MavenProjectGenerator child : children) {
 			child.run();
 		}
+	}
+
+	public void buildChildren(List<String> goalList) throws MavenInvocationException {
+		for (MavenProjectGenerator child : children) {
+			File mavenHome = mavenHome();
+			File childPom = child.getTargetPom();
+			InvocationRequest request = new DefaultInvocationRequest();
+			request.setPomFile(childPom);
+			request.setGoals(goalList);
+			
+			Invoker invoker = new DefaultInvoker();
+			invoker.setMavenHome(mavenHome);
+			invoker.execute(request);
+		}
+		
+	}
+	
+	private File mavenHome() {
+		if (mavenHome == null) {
+
+			for (String dirname : System.getenv("PATH").split(File.pathSeparator)) {
+				File file = new File(dirname, "mvn");
+				if (file.isFile()) {
+					mavenHome = file.getParentFile().getParentFile();
+					return mavenHome;
+				}
+			}
+			throw new RuntimeException("Maven executable not found.");
+		}
+		return mavenHome;
 	}
 
 	@Override
