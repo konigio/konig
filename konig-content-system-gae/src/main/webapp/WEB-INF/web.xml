@@ -7,7 +7,11 @@
   	<servlet>
 			<servlet-name>GaeContentSystemServlet</servlet-name>
 			<servlet-class>io.konig.content.gae.GaeContentSystemServlet</servlet-class>
-		</servlet>
+			<init-param>
+			<param-name>configFile</param-name>
+			<param-value>allowed-domains.config</param-value>
+		</init-param>
+	</servlet>
 		
 		
   	<servlet>
@@ -54,6 +58,11 @@
 			<servlet-name>GaeZipBundleTaskHandlerServlet</servlet-name>
 			<url-pattern>/tasks/content-bundle-unzip</url-pattern>
 		</servlet-mapping>
+		
+		<error-page>
+        	<error-code>401</error-code>
+        	<location>/errors/servererror.jsp</location>
+    	</error-page>
 		
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
