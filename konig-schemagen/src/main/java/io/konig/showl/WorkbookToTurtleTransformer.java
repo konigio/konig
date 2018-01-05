@@ -39,6 +39,7 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.VertexCopier;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -113,7 +114,7 @@ public class WorkbookToTurtleTransformer {
 		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesOutDir, nsManager);
 		ShapeManager shapeManager = workbookLoader.getShapeManager();
 		VertexCopier copier = new VertexCopier();
-		copier.excludeProperty(SH.shape, SH.path, SH.targetClass, SH.valueClass);
+		copier.excludeProperty(SH.shape, SH.path, SH.targetClass, SH.valueClass, Konig.aggregationOf, Konig.rollUpBy, Konig.defaultShapeFor);
 		copier.excludeClass(OWL.CLASS, OWL.DATATYPEPROPERTY, OWL.OBJECTPROPERTY, OWL.FUNCTIONALPROPERTY, RDF.PROPERTY);
 		for (Shape shape : shapeManager.listShapes()) {
 			Resource shapeId = shape.getId();
