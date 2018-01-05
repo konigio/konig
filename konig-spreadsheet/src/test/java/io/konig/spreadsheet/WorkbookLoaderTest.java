@@ -80,6 +80,26 @@ public class WorkbookLoaderTest {
 	
 
 	@Test
+	public void testInvalidOntologyNamespace() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("invalid-ontology-namespace.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		Throwable error = null;
+		try {
+			loader.load(book, graph);
+		} catch (Throwable e) {
+			error = e;
+		}
+		assertTrue(error != null);
+		assertEquals("Namespace must end with '/' or '#' but found: http://schema.org", error.getMessage());
+	}
+	
+	@Test
 	public void testGoogleCloudSqlTable() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("google-cloud-sql-table.xlsx");
