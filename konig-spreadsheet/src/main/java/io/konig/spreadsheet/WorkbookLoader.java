@@ -2191,6 +2191,13 @@ public class WorkbookLoader {
 			}
 
 		}
+		
+		private void fail(String message) throws SpreadsheetException {
+			if (failOnErrors) {
+				throw new SpreadsheetException(message);
+			}
+			logError(message);
+		}
 
 		private void error(Throwable e) throws SpreadsheetException {
 			if (failOnErrors) {
@@ -2214,13 +2221,19 @@ public class WorkbookLoader {
 			if (ontologyName == null && comment == null && namespaceURI == null && prefix == null) {
 				return;
 			}
-
+			
 			String sheetName = row.getSheet().getSheetName();
 
 			if (namespaceURI == null) {
 				throw new SpreadsheetException(format("''{0}'' is missing on row {1} of the ''{2}'' sheet.",
 						NAMESPACE_URI, row.getRowNum(), sheetName));
 			}
+
+			if (!namespaceURI.endsWith("/") && !namespaceURI.endsWith("#")) {
+				String msg = format("Namespace must end with ''/'' or ''#'' but found: {0}", namespaceURI);
+				fail(msg);
+			}
+
 
 			if (prefix == null) {
 				throw new SpreadsheetException(format("''{0}'' is missing on row {1} of the ''{2}'' sheet.", PREFIX,
