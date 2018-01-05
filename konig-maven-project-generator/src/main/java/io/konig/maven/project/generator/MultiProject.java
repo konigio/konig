@@ -84,9 +84,10 @@ public class MultiProject extends MavenProjectConfig {
 		this.googleCloudPlatform = googleCloudPlatform;
 	}
 
-	public void run() throws MavenProjectGeneratorException, IOException {
+	public ParentProjectGenerator run() throws MavenProjectGeneratorException, IOException {
 		ParentProjectGenerator parent = prepare();
 		parent.run();
+		return parent;
 	}
 	
 	public ParentProjectGenerator prepare() throws MavenProjectGeneratorException {
