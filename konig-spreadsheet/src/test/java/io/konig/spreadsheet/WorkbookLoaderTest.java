@@ -142,7 +142,6 @@ public class WorkbookLoaderTest {
 	
 	@Test
 	public void testAddressCountry() throws Exception {
-
 		InputStream input = getClass().getClassLoader().getResourceAsStream("address-country.xlsx");
 		Workbook book = WorkbookFactory.create(input);
 		Graph graph = new MemoryGraph();
