@@ -704,7 +704,7 @@ public class WorkbookLoaderTest {
 		assertValue(givenName, SH.datatype, XMLSchema.STRING);
 		assertInt(givenName, SH.minCount, 0);
 		assertInt(givenName, SH.maxCount, 1);
-		assertValue(givenName, XOWL.TERMSTATUS, XOWL.Experimental);
+		assertValue(givenName, XOWL.termStatus, XOWL.Experimental);
 		Vertex familyName = propertyConstraint(shape, Schema.familyName);
 		assertInt(familyName, SH.minCount, 1);
 		
@@ -768,7 +768,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDFS.LABEL, "Given Name");
 		assertValue(v, RDFS.COMMENT, "The person's given name. In the U.S., the first name of a Person. "
 				+ "This can be used along with familyName instead of the name property.");
-		assertValue(v, XOWL.TERMSTATUS, XOWL.Stable);
+		assertValue(v, XOWL.termStatus, XOWL.Stable);
 		assertValue(v, RDF.TYPE, RDF.PROPERTY);
 		assertValue(v, RDF.TYPE, OWL.DATATYPEPROPERTY);
 		assertValue(v, RDFS.DOMAIN, Schema.Person);
@@ -790,7 +790,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDFS.LABEL, "Person");
 		assertValue(v, RDFS.COMMENT, "Any person (alive, dead, undead or fictional).");
 		assertValue(v, RDFS.SUBCLASSOF, Schema.Thing);
-		assertValue(v, XOWL.TERMSTATUS, XOWL.Stable);
+		assertValue(v, XOWL.termStatus, XOWL.Stable);
 		
 	}
 

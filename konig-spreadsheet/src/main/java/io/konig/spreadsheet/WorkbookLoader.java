@@ -1249,9 +1249,8 @@ public class WorkbookLoader {
 			if (partitionOf != null) {
 				pathHandlers.add(new PathHandler(constraint, Konig.partitionOf, partitionOf));
 			}
-			if(termStatus != null) {
-				edge(constraint, XOWL.TERMSTATUS, termStatus);
-			}
+			
+			edge(constraint, XOWL.termStatus, termStatus);
 			edge(constraint, SH.minCount, minCount);
 			edge(constraint, SH.maxCount, maxCount);
 			edge(constraint, SH.minInclusive, minInclusive);
@@ -1862,7 +1861,7 @@ public class WorkbookLoader {
 				graph.edge(propertyId, OWL.INVERSEOF, inverseOf);
 			}
 			if(termStatus != null) {
-				graph.edge(propertyId, XOWL.TERMSTATUS, termStatus);
+				graph.edge(propertyId, XOWL.termStatus, termStatus);
 			}
 
 		}
@@ -2048,15 +2047,12 @@ public class WorkbookLoader {
 					for (URI subclassId : subclassOf) {
 						graph.edge(classId, RDFS.SUBCLASSOF, subclassId);
 						graph.edge(subclassId, RDF.TYPE, OWL.CLASS);
-						if(termStatus != null) {
-							graph.edge(classId, XOWL.TERMSTATUS, termStatus);
-						}
 					}
 
 				}
 				
 				if(termStatus != null) {
-					graph.edge(classId, XOWL.TERMSTATUS, termStatus);
+					graph.edge(classId, XOWL.termStatus, termStatus);
 				}
 			}
 
