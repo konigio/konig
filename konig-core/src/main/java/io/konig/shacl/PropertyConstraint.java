@@ -83,6 +83,7 @@ public class PropertyConstraint {
 	private URI idFormat;
 	
 	private Term term;
+	private URI termStatus;
 	
 	public PropertyConstraint(URI predicate) {
 		this.id = new BNodeImpl(UidGenerator.INSTANCE.next());
@@ -522,4 +523,11 @@ public class PropertyConstraint {
 		this.idFormat = idFormat;
 	}
 	
+	public URI getTermStatus() {
+		return termStatus;
+	}
+
+	public void setTermStatus(URI termStatus) {
+		this.termStatus  = termStatus ;
+	}
 }
