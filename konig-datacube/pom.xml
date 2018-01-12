@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>konig-parent</artifactId>
+        <groupId>io.konig</groupId>
+        <version>2.0.0-8-SNAPSHOT</version>
+        <relativePath>../konig-parent/pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>konig-datacube</artifactId>
+
+    <properties>
+        <antlr4.visitor>true</antlr4.visitor>
+        <antlr4.listener>true</antlr4.listener>
+    </properties>
+
+    <dependencies>
+    <dependency>
+        <groupId>io.konig</groupId>
+        <artifactId>konig-core</artifactId>
+        <version>${konig.version}</version>
+    </dependency>
+        <dependency>
+            <groupId>io.konig</groupId>
+            <artifactId>konig-parser</artifactId>
+            <version>${konig.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>4.7</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

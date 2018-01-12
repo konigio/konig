@@ -1,0 +1,35 @@
+CUBE AirQuality {
+
+  DIMENSION Time
+    LEVEL Day ATTRIBUTES {day (date) UNIQUE, season (string)}
+    LEVEL Month ATTRIBUTES {month (string) UNIQUE}
+    LEVEL Quarter ATTRIBUTES {quarter (string) UNIQUE}
+    LEVEL Semester ATTRIBUTES {semester (string) UNIQUE}
+    LEVEL Year ATTRIBUTES {year (string) UNIQUE}
+    Day ROLL-UP to Month
+    Month ROLL-UP to Quarter
+    Quarter ROLL-UP to Semester
+    Semester ROLL-UP to Year
+
+  DIMENSION Station
+    LEVEL Station ATTRIBUTES {name (string) UNIQUE}
+
+  DIMENSION Road
+    LEVEL Road ATTRIBUTES {name (string) UNIQUE, length (real)}
+
+  DIMENSION Pollution
+    LEVEL Pollutant ATTRIBUTES {name (string) UNIQUE,loadLimit (real)}
+    LEVEL Category ATTRIBUTES {name (string) UNIQUE}
+    LEVEL Type ATTRIBUTES {name (string) UNIQUE}
+    LEVEL Group ATTRIBUTES {name (string) UNIQUE}
+    Pollutant ROLL-UP to Category
+    Pollutant ROLL-UP to Type
+    Type ROLL-UP to Group
+
+  DIMENSION Geography
+    LEVEL District ATTRIBUTES {name (string) UNIQUE, area (real)}
+    LEVEL Province ATTRIBUTES {name (string) UNIQUE}
+    District ROLL-UP to Province
+
+  MEASURE concentration (real)
+}

@@ -1,0 +1,46 @@
+CUBE OppportunityExpectedRevenue {
+
+	DIMENSION Date
+	  LEVEL Day {date (date) UNIQUE}
+	  LEVEL WeekOfYear {weekOfYear (integer), year (integer)}
+	  LEVEL Month {month (integer), year (integer)}
+	  LEVEL Quarter {quarter (integer), year (integer)}
+	  LEVEL Year {year (integer) UNIQUE}
+	  Day ROLL-UP to WeekOfYear
+	  Day ROLL-UP to Month
+	  WeekOfYear ROLL-UP to Year
+	  Month ROLL-UP to Quarter
+	  Quarter ROLL-UP to Year
+
+	DIMENSION SalesTarget
+	  LEVEL RevenueTarget ATTRIBUTES {name (string), startDate (date), endDate (date), targetRevenue (decimal), assignee (string)}
+
+	DIMENSION Status
+	  LEVEL Status ATTRIBUTES {name (string) UNIQUE}
+
+	DIMENSION OpportunityType
+	  LEVEL OpportunityType ATTRIBUTES {name (string)}
+
+	DIMENSION Account
+	  LEVEL Industry ATTRIBUTES {name (string)}
+	  LEVEL AccountType ATTRIBUTES {name (string)}
+	  LEVEL Account ATTRIBUTES {name (string), accountType (string), industry (string)}
+	  Account ROLL-UP to AccountType
+	  Account ROLL-UP to Industry
+
+	DIMENSION Product
+	  LEVEL Product ATTRIBUTES {name (string), isbn13 (string) UNIQUE}
+
+	DIMENSION Sales
+	  LEVEL Country {name(string)}
+	  LEVEL SalesTerritory {name (string)}
+	  LEVEL SalesPerson {id (string) UNIQUE, name (string), country (string)}
+	  SalesPerson ROLL-UP to SalesTerritory
+	  SalesPerson ROLL-UP to Country
+
+	DIMENSION Currency REQUIRED
+	  LEVEL Currency ATTRIBUTES {name (string) UNIQUE}
+
+	MEASURE expectedRevenue (decimal)
+	MEASURE opportunityCount (integer)
+}

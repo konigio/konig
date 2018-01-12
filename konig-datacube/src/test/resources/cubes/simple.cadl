@@ -1,0 +1,11 @@
+# I am a comment
+CUBE foo {
+
+	# I am also a comment
+	DIMENSION a # can I put a comment here?
+		LEVEL a1 ATTRIBUTES {name (string) UNIQUE}
+		LEVEL a2 ATTRIBUTES {name (string) UNIQUE, category (string)}
+		a2 ROLL-UP to a1
+
+	MEASURE b (real)
+}
