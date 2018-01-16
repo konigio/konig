@@ -101,6 +101,7 @@
 		<module>../konig-data-app-gcp</module>
 		<module>../konig-data-app-generator</module>
 		<module>../konig-size-estimator</module>
+		<module>../konig-omcs-model</module>
 		<!-- 
 		<module>../konig-gcp-integration-testing</module>
 		 -->

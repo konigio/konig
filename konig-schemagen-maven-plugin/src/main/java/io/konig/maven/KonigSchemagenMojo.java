@@ -154,6 +154,8 @@ import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
 import io.konig.schemagen.jsonschema.TemplateJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
+import io.konig.schemagen.ocms.OracleCloudResourceGenerator;
+import io.konig.schemagen.ocms.OracleTableWriter;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.schemagen.sql.SqlTableGenerator;
@@ -225,6 +227,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private GoogleCloudPlatformConfig googleCloudPlatform;
     
     @Parameter
+    private OracleManagedCloudConfig oracleManagedCloud;
+    
+    @Parameter
     private HashSet<String> excludeNamespace;
 	
 
@@ -276,7 +281,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			loadResources();
 
 			generateGoogleCloudPlatform();
-			
+			generateOracleManagedCloudServices();
 			generateJsonld();
 			generateAvro();
 			generateJsonSchema();
@@ -710,7 +715,22 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
-	
+
+private void generateOracleManagedCloudServices() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException, ConfigurationException {
+	if(oracleManagedCloud != null) {
+			Configurator config = configurator();
+			config.configure(oracleManagedCloud);
+			File directory = Configurator.checkNull(oracleManagedCloud.getDirectory());
+			File tablesDir = Configurator.checkNull(oracleManagedCloud.getTables());
+			if(directory != null && tablesDir != null) {
+				OracleCloudResourceGenerator resourceGenerator = new OracleCloudResourceGenerator(shapeManager, owlReasoner);
+				SqlTableGenerator sqlgenerator = new SqlTableGenerator();
+				OracleTableWriter oracle = new OracleTableWriter(tablesDir, sqlgenerator);
+				resourceGenerator.add(oracle);
+				resourceGenerator.dispatch(shapeManager.listShapes());
+			}
+		}
+	}
 	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException {
 		if (googleCloudPlatform != null) {
 			

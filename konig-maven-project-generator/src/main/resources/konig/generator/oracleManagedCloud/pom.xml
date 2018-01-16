@@ -26,6 +26,10 @@
 	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
 	  		<version>${konig.version}</version>
 	  		<configuration>
+	  			<defaults>
+	  				<rootDir>${basedir}/target/generated</rootDir>
+	  			</defaults>
+	  			<rdfSourceDir>${project.rdfSourcePath}</rdfSourceDir>
 $oracleManagedCloud
 	  		</configuration>
 	  		<executions>

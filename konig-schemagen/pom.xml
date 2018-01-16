@@ -67,6 +67,11 @@
 		    <artifactId>velocity</artifactId>
 		    <version>${velocity.version}</version>
 		</dependency> 
+		<dependency>
+  			<groupId>io.konig</groupId>
+  			<artifactId>konig-omcs-model</artifactId>
+			<version>${konig.version}</version>
+  		</dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
