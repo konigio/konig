@@ -9,9 +9,9 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:CreativeWorkShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/Pd2dykLnyHUAAAFg6a3fjA> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ujO0FUSyQFYAAAFhAjx-Pg> ; 
 	sh:targetClass schema:CreativeWork ; 
-	konig:mediaTypeBaseName "application/vnd.example.work" ; 
+	konig:mediaTypeBaseName "application/vnd.example.creativework" ; 
 	sh:nodeKind sh:IRI ; 
 	sh:property  [ 
 		sh:nodeKind sh:IRI ; 
@@ -49,9 +49,9 @@ shape:CreativeWorkShape a sh:Shape ;
 		sh:class schema:CreativeWork ; 
 		sh:nodeKind sh:IRI ; 
 		sh:minCount 0 ]  ; 
-	konig:shapeDataSource <https://www.googleapis.com/sql/v1beta4/projects/{gcpProjectId}/instances/schema/databases/schema/tables/CreativeWorkShape> . 
+	konig:shapeDataSource <http://www.konig.io/ns/omcs/instances/pearsonmypedia/databases/test/tables/CreativeWorkShape> . 
 
-<http://www.konig.io/activity/Pd2dykLnyHUAAAFg6a3fjA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-01-12T14:52:54.581+05:30"^^xsd:dateTime . 
+<http://www.konig.io/activity/ujO0FUSyQFYAAAFhAjx-Pg> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-01-17T09:19:34.448+05:30"^^xsd:dateTime . 
 
-<https://www.googleapis.com/sql/v1beta4/projects/{gcpProjectId}/instances/schema/databases/schema/tables/CreativeWorkShape> a konig:OracleTable , konig:DataSource . 
+<http://www.konig.io/ns/omcs/instances/pearsonmypedia/databases/test/tables/CreativeWorkShape> a konig:OracleTable , konig:DataSource . 

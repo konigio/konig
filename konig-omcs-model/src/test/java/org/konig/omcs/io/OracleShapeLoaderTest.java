@@ -52,7 +52,7 @@ public class OracleShapeLoaderTest {
 	}
 
 	@Test
-	public void testBigQueryCsvBucket() throws Exception {
+	public void testOmcsDatasources() throws Exception {
 		Graph graph = loadGraph("ShapeLoaderTest/shape_CreativeWorkShape.ttl");
 
 		ShapeManager shapeManager = new MemoryShapeManager();
