@@ -28,6 +28,7 @@ import java.io.IOException;
 import org.konig.omcs.datasource.OracleTable;
 
 import io.konig.core.KonigException;
+import io.konig.schemagen.sql.CreateTableStatement;
 import io.konig.schemagen.sql.SqlTable;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.Shape;
@@ -48,23 +49,21 @@ public class OracleTableWriter implements ShapeVisitor {
 
 		OracleTable table = shape.findDataSource(OracleTable.class);
 		if (table != null) {
+			
 			SqlTable sqlTable = generator.generateTable(shape);
 			File file = sqlFile(table);
-			
-			writeTable(file, sqlTable);
+			writeTable(file, new CreateTableStatement(sqlTable));
 		}
 	}
 	
 
-	private void writeTable(File file, SqlTable sqlTable) {
+	private void writeTable(File file, CreateTableStatement statement) {
 
 		if (!baseDir.exists()) {
 			baseDir.mkdirs();
 		}
 		try (FileWriter out = new FileWriter(file)) {
-			
-			
-			String text = sqlTable.toString();
+			String text = statement.toString();
 			out.write(text);
 			
 		} catch (IOException e) {
@@ -75,7 +74,6 @@ public class OracleTableWriter implements ShapeVisitor {
 
 	private File sqlFile(OracleTable table) {
 		String fileName = table.getTableIdentifier() + ".sql";
-		
 		return new File(baseDir, fileName);
 	}
 }

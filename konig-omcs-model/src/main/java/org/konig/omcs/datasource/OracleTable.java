@@ -3,6 +3,7 @@ package org.konig.omcs.datasource;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
+
 /*
  * #%L
  * Konig Oracle Managed Cloud Model
@@ -29,12 +30,9 @@ import io.konig.datasource.TableDataSource;
 
 public class OracleTable extends DataSource implements TableDataSource {
 	private String tableName;
-	private String instanceId;
-	private String databaseId;
-	private String omcstablesId;
 	
 	public String getTableName() {
-		return omcstablesId;
+		return tableName;
 	}
 
 	public void setTableName(String tableName) {
@@ -43,22 +41,6 @@ public class OracleTable extends DataSource implements TableDataSource {
 
 	public String getTableIdentifier() {
 		return tableName;
-	}
-	
-	public OracleTableReference getTableReference() throws Exception {
-		
-		if (instanceId == null) {
-			throw new Exception("instanceId is not defined");
-		}
-		if (databaseId == null) {
-			throw new Exception("databaseId is not defined for instance " + instanceId);
-		}
-		if (omcstablesId == null) {
-			throw new Exception("omcstablesId is not defined for database " + databaseId);
-		}
-		
-		
-		return new OracleTableReference(instanceId, databaseId, omcstablesId);
 	}
 
 	@Override
@@ -69,4 +51,5 @@ public class OracleTable extends DataSource implements TableDataSource {
 			tableName = uri.getLocalName();
 		}
 	}
+
 }

@@ -2,13 +2,10 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix omcs:   <http://www.konig.io/ns/omcs/> .
 
-
-	a konig:OracleTable, konig:DataSource 
-	omcs:tableReference [
-		omcs:instanceId "{gcpOmcsInstanceId}" ;
-		omcs:databaseId "{gcpOmcsDatabaseId}" ;
-		omcs:omcstablesId   "{gcpOmcsTableId}" 
-	]
+<http://www.konig.io/ns/omcs/instances/{omcsInstanceId}/databases/{omcsDatabaseId}/tables/{omcsTableId}>
+	a konig:OracleTable, konig:DataSource;
 .
 
-<{shapeId}> konig:shapeDataSource konig:OracleTable . 
+<{shapeId}> konig:shapeDataSource 
+	<http://www.konig.io/ns/omcs/instances/{omcsInstanceId}/databases/{omcsDatabaseId}/tables/{omcsTableId}>
+.

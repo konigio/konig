@@ -21,15 +21,7 @@ package io.konig.core.vocab;
  */
 
 
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
-
 public class OMCS {
 	public static final String NAMESPACE = "http://www.konig.io/ns/omcs/";
-	public static final String OMCS_TABLE_REFERENCE = "http://www.konig.io/ns/omcs/omcstableReference";
-	
-	public static final URI omcsTableReference = new URIImpl(OMCS_TABLE_REFERENCE);
-	public static final URI omcsinstanceId = new URIImpl("http://www.konig.io/ns/omcs/instanceId");
-	public static final URI omcsdatabaseId = new URIImpl("http://www.konig.io/ns/omcs/databaseId");
-	public static final URI omcstableId = new URIImpl("http://www.konig.io/ns/omcs/tablesId");
+
 }

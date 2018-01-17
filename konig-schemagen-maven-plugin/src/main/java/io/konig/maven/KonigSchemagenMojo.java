@@ -71,6 +71,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.FileUtils;
+import org.konig.omcs.datasource.OracleShapeConfig;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.rio.RDFHandlerException;
@@ -525,7 +526,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		defaults = new RdfConfig();
     	}
     	GcpShapeConfig.init();
-    	
+    	OracleShapeConfig.init();
 		loadSpreadsheet();
 		
 		if (rdfSourceDir == null && 
@@ -716,14 +717,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 
-private void generateOracleManagedCloudServices() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException, ConfigurationException {
+	private void generateOracleManagedCloudServices() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException, ConfigurationException {
 	if(oracleManagedCloud != null) {
 			Configurator config = configurator();
 			config.configure(oracleManagedCloud);
 			File directory = Configurator.checkNull(oracleManagedCloud.getDirectory());
 			File tablesDir = Configurator.checkNull(oracleManagedCloud.getTables());
 			if(directory != null && tablesDir != null) {
-				OracleCloudResourceGenerator resourceGenerator = new OracleCloudResourceGenerator(shapeManager, owlReasoner);
+				OracleCloudResourceGenerator resourceGenerator = new OracleCloudResourceGenerator();
 				SqlTableGenerator sqlgenerator = new SqlTableGenerator();
 				OracleTableWriter oracle = new OracleTableWriter(tablesDir, sqlgenerator);
 				resourceGenerator.add(oracle);

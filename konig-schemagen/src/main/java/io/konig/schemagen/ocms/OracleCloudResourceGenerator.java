@@ -20,33 +20,17 @@ package io.konig.schemagen.ocms;
  * #L%
  */
 
-
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import io.konig.core.KonigException;
-import io.konig.core.OwlReasoner;
-import io.konig.schemagen.gcp.BigQueryTableGenerator;
-import io.konig.schemagen.gcp.BigQueryViewWriter;
-import io.konig.schemagen.gcp.ShapeToBigQueryTransformer;
-import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeHandler;
-import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeVisitor;
-import io.konig.transform.proto.BigQueryChannelFactory;
-import io.konig.transform.proto.ShapeModelFactory;
 
 public class OracleCloudResourceGenerator {
-	private ShapeManager shapeManager;
-	private OwlReasoner owlReasoner;
-	private List<ShapeVisitor> visitors = new ArrayList<>();
 	
-	public OracleCloudResourceGenerator(ShapeManager shapeManager,OwlReasoner owlReasoner ) {
-		this.shapeManager = shapeManager;
-		this.owlReasoner = owlReasoner;
-	}
+	private List<ShapeVisitor> visitors = new ArrayList<>();
 	
 	public void add(ShapeVisitor visitor) {
 		if (visitor != null) {
@@ -54,16 +38,13 @@ public class OracleCloudResourceGenerator {
 		}
 	}
 	
-	
 	public void dispatch(List<Shape> shapeList) throws KonigException {
 		beginTraversal();
-		
 		for (Shape shape : shapeList) {
 			for (ShapeVisitor visitor : visitors) {
 				visitor.visit(shape);
 			}
 		}
-		
 		endTraversal();
 	}
 
