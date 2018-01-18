@@ -71,7 +71,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.FileUtils;
-import org.konig.omcs.datasource.OracleShapeConfig;
+import io.konig.omcs.datasource.OracleShapeConfig;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.rio.RDFHandlerException;
@@ -279,6 +279,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			owlReasoner = new OwlReasoner(owlGraph);
 			owlGraph.setNamespaceManager(nsManager);
 
+			init();
 			loadResources();
 
 			generateGoogleCloudPlatform();
@@ -312,9 +313,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
-
-
-
+    private void init() {
+    	GcpShapeConfig.init();
+    	OracleShapeConfig.init();
+    }
 
 	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException {
 		
@@ -525,8 +527,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	if (defaults == null) {
     		defaults = new RdfConfig();
     	}
-    	GcpShapeConfig.init();
-    	OracleShapeConfig.init();
 		loadSpreadsheet();
 		
 		if (rdfSourceDir == null && 

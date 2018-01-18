@@ -23,10 +23,9 @@ package io.konig.schemagen.sql;
 
 import java.util.List;
 
-import org.konig.omcs.datasource.OracleTable;
-
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
+import io.konig.omcs.datasource.OracleTable;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.Shape;
 

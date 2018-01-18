@@ -1,4 +1,4 @@
-package org.konig.omcs.datasource;
+package io.konig.omcs.datasource;
 
 /*
  * #%L

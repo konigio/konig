@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.konig.omcs.datasource.OracleShapeConfig;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
@@ -39,6 +38,8 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IOUtil;
 import io.konig.datasource.DataSource;
+import io.konig.omcs.datasource.OracleShapeConfig;
+import io.konig.omcs.datasource.OracleTable;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;

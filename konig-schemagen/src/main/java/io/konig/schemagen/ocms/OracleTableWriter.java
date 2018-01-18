@@ -25,9 +25,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.konig.omcs.datasource.OracleTable;
-
 import io.konig.core.KonigException;
+import io.konig.omcs.datasource.OracleTable;
 import io.konig.schemagen.sql.CreateTableStatement;
 import io.konig.schemagen.sql.SqlTable;
 import io.konig.schemagen.sql.SqlTableGenerator;

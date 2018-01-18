@@ -1,8 +1,11 @@
-package org.konig.omcs.datasource;
+package io.konig.omcs.datasource;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
+import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.OMCS;
 
 /*
  * #%L
@@ -30,6 +33,29 @@ import io.konig.datasource.TableDataSource;
 
 public class OracleTable extends DataSource implements TableDataSource {
 	private String tableName;
+	private OracleTableReference tableReference;
+	private String tableId;
+	
+	public OracleTable() {
+		addType(Konig.OracleTable);
+	}
+	
+	public void setTableId(String tableId){
+		this.tableId = tableId;
+	}
+	
+	public String getTableId(){
+		return tableId;
+	}
+	
+	@RdfProperty(OMCS.TABLE_REFERENCE)
+	public OracleTableReference getTableReference() {
+		return tableReference;
+	}
+	
+	public void setTableReference(OracleTableReference tableReference) {
+		this.tableReference = tableReference;
+	}
 	
 	public String getTableName() {
 		return tableName;
