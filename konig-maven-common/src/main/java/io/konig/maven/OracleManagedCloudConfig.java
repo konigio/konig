@@ -29,8 +29,15 @@ public class OracleManagedCloudConfig {
 	@Parameter(property="konig.omcs.directory", defaultValue="${project.basedir}/target/generated/omcs")
 	private File directory;
 	
+	@Parameter(property="konig.omcs.databases", defaultValue="${konig.omcs.directory}/databases")
+	private File databases;
+	
 	@Parameter(property="konig.omcs.tables", defaultValue="${konig.omcs.directory}/tables")
 	private File tables;
+
+	public OracleManagedCloudConfig() {
+			
+	}
 
 	public File getDirectory() {
 		return directory;
@@ -39,7 +46,15 @@ public class OracleManagedCloudConfig {
 	public void setDirectory(File directory) {
 		this.directory = directory;
 	}
+	
+	public File getDatabases() {
+		return databases;
+	}
 
+	public void setDatabases(File databases) {
+		this.databases = databases;
+	}
+	
 	public File getTables() {
 		return tables;
 	}
