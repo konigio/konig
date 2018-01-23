@@ -21,7 +21,6 @@ package io.konig.maven.project.generator;
  */
 
 
-import java.io.File;
 import java.io.IOException;
 
 import io.konig.maven.OracleManagedCloudConfig;
@@ -34,11 +33,8 @@ public class OracleManagedCloudProjectGenerator  extends ConfigurableProjectGene
 		setArtifactSuffix("-omcs-model");
 		setNameSuffix("Oracle Managed Cloud");
 		init(mavenProject);
-		
-		config.setDirectory(new File("${project.basedir}/target/generated/omcs"));
-		config.setTables(new File("${project.basedir}/target/generated/omcs/tables"));
-		
 	}
+	
 	@Override
 	public void run() throws MavenProjectGeneratorException, IOException {
 		super.run();

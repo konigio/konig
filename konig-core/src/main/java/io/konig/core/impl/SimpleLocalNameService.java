@@ -40,6 +40,7 @@ import io.konig.core.Vertex;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.OMCS;
 import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
@@ -57,6 +58,7 @@ public class SimpleLocalNameService implements LocalNameService {
 		DEFAULT.addStaticFields(RDF.class);
 		DEFAULT.addStaticFields(RDFS.class);
 		DEFAULT.addStaticFields(GCP.class);
+		DEFAULT.addStaticFields(OMCS.class);
 	}
 	
 	public static SimpleLocalNameService getDefaultInstance() {
