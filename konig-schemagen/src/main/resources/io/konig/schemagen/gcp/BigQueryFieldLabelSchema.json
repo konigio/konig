@@ -19,8 +19,8 @@
     } ]
   },
   "tableReference" : {
-    "projectId" : "{gcpProjectId}",
-    "datasetId" : "{datasetId}",
+    "projectId" : "${gcpProjectId}",
+    "datasetId" : "${datasetId}",
     "tableId" : "FieldLabel"
   }
 }

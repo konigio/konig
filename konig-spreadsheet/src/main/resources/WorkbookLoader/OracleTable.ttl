@@ -2,15 +2,15 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix omcs:   <http://www.konig.io/ns/omcs/> .
 
-<http://www.konig.io/ns/omcs/instances/{omcsInstanceId}/databases/{omcsDatabaseId}/tables/{omcsTableId}>
+<http://www.konig.io/ns/omcs/instances/${omcsInstanceId}/databases/${omcsDatabaseId}/tables/${omcsTableId}>
 	a konig:OracleTable, konig:DataSource;
 	omcs:tableReference [
-		omcs:omcsInstanceId "{omcsInstanceId}" ;
-		omcs:omcsDatabaseId "{omcsDatabaseId}" ;
-		omcs:omcsTableId   "{omcsTableId}" 
+		omcs:omcsInstanceId "${omcsInstanceId}" ;
+		omcs:omcsDatabaseId "${omcsDatabaseId}" ;
+		omcs:omcsTableId   "${omcsTableId}" 
 	]
 .
 
-<{shapeId}> konig:shapeDataSource 
-	<http://www.konig.io/ns/omcs/instances/{omcsInstanceId}/databases/{omcsDatabaseId}/tables/{omcsTableId}>
+<${shapeId}> konig:shapeDataSource 
+	<http://www.konig.io/ns/omcs/instances/${omcsInstanceId}/databases/${omcsDatabaseId}/tables/${omcsTableId}>
 .

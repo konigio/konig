@@ -2,14 +2,14 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
 
-<gs://{gcpBucketName}>
+<gs://${gcpBucketName}>
 	a konig:GoogleCloudStorageBucket, konig:DataSource;
-	gcp:name "{gcpBucketName}" ;
-	gcp:projectId "{gcpProjectId}" ;
-	gcp:storageClass "{gcpBucketStorageClass}" ;
-	gcp:location   "{gcpBucketLocation}" 
+	gcp:name "${gcpBucketName}" ;
+	gcp:projectId "${gcpProjectId}" ;
+	gcp:storageClass "${gcpBucketStorageClass}" ;
+	gcp:location   "${gcpBucketLocation}" 
 .
 
-<{shapeId}> konig:shapeDataSource <gs://{gcpBucketName}>
+<${shapeId}> konig:shapeDataSource <gs://${gcpBucketName}>
 .
 	
