@@ -105,6 +105,8 @@
 		<!-- 
 		<module>../konig-gcp-integration-testing</module>
 		 -->
+		<module>../konig-omcs-deploy-maven-plugin</module>
+    	<module>../konig-omcs-common</module>
 	</modules>
 
 	<developers>

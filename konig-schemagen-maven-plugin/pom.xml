@@ -73,6 +73,11 @@
   		<version>${konig.version}</version>
   	</dependency>
   	
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-omcs-common</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
   	
   	<dependency>
   		<groupId>io.konig</groupId>

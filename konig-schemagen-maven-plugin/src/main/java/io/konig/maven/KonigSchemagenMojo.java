@@ -71,6 +71,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.FileUtils;
+import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
+
 import io.konig.omcs.datasource.OracleShapeConfig;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -536,7 +538,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				java != null ||
 				plantUML != null ||
 				googleCloudPlatform!=null ||
-				jsonSchema!=null
+				jsonSchema!=null ||
+				oracleManagedCloud != null
 			)
 		) {
 			rdfSourceDir = defaults.getRdfDir();
@@ -733,6 +736,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				OracleTableWriter oracle = new OracleTableWriter(tablesDir, sqlgenerator);
 				resourceGenerator.add(oracle);
 				resourceGenerator.dispatch(shapeManager.listShapes());
+				
+				GroovyOmcsDeploymentScriptWriter scriptWriter = new GroovyOmcsDeploymentScriptWriter(oracleManagedCloud);
+				scriptWriter.run();
 			}
 		}
 	}
