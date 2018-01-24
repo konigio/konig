@@ -40,7 +40,8 @@
 			<groupId>com.oracle</groupId>
 			<artifactId>ojdbc7</artifactId>
 			<version>12.1.0.2</version>
-			<scope>runtime</scope>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/src/lib/ojdbc7-12.1.0.2.jar</systemPath>
 		</dependency>
 	
 		<dependency>
@@ -78,7 +79,7 @@
 			            <goals>
 			                <goal>install-file</goal>
 			            </goals>
-			            <phase>clean</phase>
+			            <phase>validate</phase>
 			            <configuration>
 			                <groupId>com.oracle</groupId>
 			                <artifactId>ojdbc7</artifactId>
@@ -92,6 +93,41 @@
 			    </executions>
 			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-install-plugin
+										</artifactId>
+										<versionRange>
+											[2.3.1,)
+										</versionRange>
+										<goals>
+											<goal>install-file</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 </project>
