@@ -25,8 +25,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.konig.core.KonigException;
 import io.konig.omcs.datasource.OracleTable;
+import io.konig.omcs.datasource.OracleTableDefinition;
 import io.konig.schemagen.sql.CreateTableStatement;
 import io.konig.schemagen.sql.SqlTable;
 import io.konig.schemagen.sql.SqlTableGenerator;
@@ -45,34 +48,34 @@ public class OracleTableWriter implements ShapeVisitor {
 	
 	@Override
 	public void visit(Shape shape) {
-
 		OracleTable table = shape.findDataSource(OracleTable.class);
 		if (table != null) {
-			
+			OracleTableDefinition tableDefinition = new OracleTableDefinition();
 			SqlTable sqlTable = generator.generateTable(shape);
 			File file = sqlFile(table);
-			writeTable(file, new CreateTableStatement(sqlTable));
+			tableDefinition.setQuery(new CreateTableStatement(sqlTable).toString());
+			tableDefinition.setTableReference(table.getTableReference());
+			writeTable(file, tableDefinition);
 		}
 	}
 	
 
-	private void writeTable(File file, CreateTableStatement statement) {
-
-		if (!baseDir.exists()) {
-			baseDir.mkdirs();
-		}
-		try (FileWriter out = new FileWriter(file)) {
-			String text = statement.toString();
-			out.write(text);
+	private void writeTable(File file, OracleTableDefinition table) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
 			
+			if (!baseDir.exists()) {
+				baseDir.mkdirs();
+			}
+			mapper.writeValue(file, table);
 		} catch (IOException e) {
 			throw new KonigException(e);
 		}
-		
 	}
 
 	private File sqlFile(OracleTable table) {
-		String fileName = table.getTableIdentifier() + ".sql";
-		return new File(baseDir, fileName);
+		String fileName = table.getTableName() + ".json";
+		File file = new File(baseDir, fileName);
+		return file;
 	}
 }

@@ -13,12 +13,23 @@
   
    <dependencies>
   
+		    <dependency>
+      <groupId>io.konig</groupId>
+      <artifactId>konig-java</artifactId>
+      <version>${konig.version}</version>
+	    <exclusions>
+	        <exclusion>
+	            <groupId>com.google.guava</groupId>
+	            <artifactId>guava</artifactId>
+	        </exclusion>
+	    	</exclusions>
+		</dependency> 
 		<dependency>
-			<groupId>io.konig</groupId>
-			<artifactId>konig-java</artifactId>
-			<version>${konig.version}</version>
+		    <groupId>com.google.guava</groupId>
+		    <artifactId>guava</artifactId>
+		    <version>${guava.version}</version>
 		</dependency>  
-	</dependencies>
+	  </dependencies>
   <build>
   	<plugins>
   		<plugin>
@@ -41,7 +52,76 @@ $oracleManagedCloud
 	  			</execution>
 	  		</executions>
   		</plugin>
-  		
+  		  <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.5.3</version>
+        <configuration>
+          <descriptor>src/assembly/dep.xml</descriptor>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-archive</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>    
+      
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-jar</id>
+            <phase>never</phase>
+            <configuration>
+              <finalName>unwanted</finalName>
+              <classifier>unwanted</classifier>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      
+       <plugin>
+		<groupId>org.codehaus.gmaven</groupId>
+		<artifactId>gmaven-plugin</artifactId>
+		<version>1.4</version>
+	    <dependencies>
+			<dependency>
+				<groupId>org.codehaus.groovy</groupId>
+				<artifactId>groovy-all</artifactId>
+				<version>${groovy-all.version}</version>
+			</dependency> 
+			<dependency>
+				<groupId>org.apache.ivy</groupId>
+				<artifactId>ivy</artifactId>
+				<version>${ivy.version}</version>
+			</dependency>
+			<dependency>
+			    <groupId>org.apache.ant</groupId>
+			    <artifactId>ant</artifactId>
+			    <version>${ant.version}</version>
+			</dependency>
+			<dependency>
+			    <groupId>com.google.guava</groupId>
+			    <artifactId>guava</artifactId>
+			    <version>${guava.version}</version>
+			</dependency>
+	   </dependencies>
+	    <executions>
+	      <execution>
+			<id>default-cli</id>
+	        <phase>package</phase>
+	        <goals>
+	          <goal>compile</goal>
+	        </goals>
+	        <configuration>
+	          <source>target/generated/omcs/scripts/deploy.groovy</source>
+	        </configuration>
+	      </execution>
+	  </executions>
+	</plugin>
   	</plugins>
   </build>
 </project>

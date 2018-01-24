@@ -34,7 +34,14 @@ public class OracleManagedCloudConfig {
 	
 	@Parameter(property="konig.omcs.tables", defaultValue="${konig.omcs.directory}/tables")
 	private File tables;
+	
+	@Parameter(property="konig.omcs.deployment.script.file", defaultValue="${konig.omcs.directory}/scripts/deploy.groovy")
+	private File omcsScriptFile;
 
+	@Parameter(property="konig.omcs.deployment.version", defaultValue="${konig.version}")
+	private String konigVersion;
+
+	
 	public OracleManagedCloudConfig() {
 			
 	}
@@ -63,4 +70,19 @@ public class OracleManagedCloudConfig {
 		this.tables = tables;
 	}
 	
+	public String getKonigVersion() {
+		return konigVersion;
+	}
+
+	public void setKonigVersion(String konigVersion) {
+		this.konigVersion = konigVersion;
+	}
+
+	public File getOmcsScriptFile() {
+		return omcsScriptFile;
+	}
+
+	public void setOmcsScriptFile(File omcsScriptFile) {
+		this.omcsScriptFile = omcsScriptFile;
+	}
 }

@@ -22,11 +22,14 @@ package io.konig.schemagen.ocms;
 
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.konig.core.KonigException;
+import io.konig.omcs.datasource.OracleDatabaseRefence;
 import io.konig.omcs.datasource.OracleTable;
+import io.konig.omcs.datasource.OracleTableDefinition;
 import io.konig.schemagen.sql.CreateDatabaseStatement;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
@@ -43,20 +46,27 @@ public class OracleDatabaseWriter implements ShapeVisitor {
 	public void visit(Shape shape) {
 		OracleTable table = shape.findDataSource(OracleTable.class);
 		if (table != null) {
+			String instanceId = table.getTableReference().getOmcsInstanceId();
+			String databaseId = table.getTableReference().getOmcsDatabaseId();
+			OracleTableDefinition tableDefinition = new OracleTableDefinition();
+			OracleDatabaseRefence databaseReference = new OracleDatabaseRefence(instanceId, databaseId);
 			File file = sqlFile(table);
-			writeDatabase(file, new CreateDatabaseStatement(table.getTableReference().getOmcsDatabaseId()));
+			CreateDatabaseStatement statement = new CreateDatabaseStatement(instanceId);
+			tableDefinition.setQuery(statement.toString());
+			tableDefinition.setDatabaseReference(databaseReference);
+			writeDatabase(file, tableDefinition);
 		}
 	}
 
-	private void writeDatabase(File file, CreateDatabaseStatement statement) {
-
-		if (!baseDir.exists()) {
-			baseDir.mkdirs();
-		}
-		try (FileWriter out = new FileWriter(file)) {
-			String text = statement.toString();
-			out.write(text);
-			
+	private void writeDatabase(File file, OracleTableDefinition table) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			if (!baseDir.exists()) {
+				baseDir.mkdirs();
+			}
+			if(!file.exists()) {
+				mapper.writeValue(file, table);
+			}
 		} catch (IOException e) {
 			throw new KonigException(e);
 		}
@@ -64,8 +74,7 @@ public class OracleDatabaseWriter implements ShapeVisitor {
 	}
 
 	private File sqlFile(OracleTable table) {
-		String fileName = table.getTableReference().getOmcsInstanceId()
-				+ "." +table.getTableReference().getOmcsDatabaseId() + ".sql";
+		String fileName = table.getTableReference().getOmcsDatabaseId() + ".json";
 		return new File(baseDir, fileName);
 	}
 
