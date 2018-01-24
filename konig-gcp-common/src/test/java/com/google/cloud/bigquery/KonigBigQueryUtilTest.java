@@ -49,7 +49,7 @@ public class KonigBigQueryUtilTest {
 		
 		FileReader reader = new FileReader(file);
 		ReplaceStringsReader input = new ReplaceStringsReader(
-			reader, "{gcpProjectId}", "my-project", "{gcpBucketSuffix}", "dev");
+			reader, "${gcpProjectId}", "my-project", "${gcpBucketSuffix}", "dev");
 		com.google.api.services.bigquery.model.Table model = 
 			parser.parseAndClose(input, com.google.api.services.bigquery.model.Table.class);
 		
