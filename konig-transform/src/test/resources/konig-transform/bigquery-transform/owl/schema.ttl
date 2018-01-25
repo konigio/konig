@@ -12,18 +12,21 @@ schema: a owl:Ontology ;
 
 schema:Offer a owl:Class . 
 
+schema:Person a owl:Class . 
+
 schema:Product a owl:Class . 
 
 schema:category a owl:ObjectProperty ; 
-	schema:domainIncludes schema:Product ; 
 	schema:rangeIncludes ex:ProductCategory . 
 
+schema:givenName a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:string . 
+
 schema:name a owl:DatatypeProperty ; 
-	schema:domainIncludes schema:Product ; 
 	schema:rangeIncludes xsd:string . 
 
 schema:offers a owl:ObjectProperty ; 
-	schema:domainIncludes schema:Product ; 
 	schema:rangeIncludes schema:Offer . 
 
 schema:price a owl:DatatypeProperty ; 

@@ -32,15 +32,14 @@ import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeVisitor;
 import io.konig.transform.proto.BigQueryChannelFactory;
-import io.konig.transform.proto.ShapeModel;
 import io.konig.transform.proto.ShapeModelFactory;
-import io.konig.transform.proto.ShapeModelToShapeRule;
 
 public class GoogleCloudResourceGenerator {
 	
 	private ShapeManager shapeManager;
 	private OwlReasoner owlReasoner;
 	private List<ShapeVisitor> visitors = new ArrayList<>();
+	private ShapeModelFactory shapeModelFactory;
 	
 	public GoogleCloudResourceGenerator(ShapeManager shapeManager,OwlReasoner owlReasoner ) {
 		this.shapeManager = shapeManager;
@@ -58,18 +57,24 @@ public class GoogleCloudResourceGenerator {
 		BigQueryTableWriter tableWriter = new BigQueryTableWriter(bigQuerySchemaDir);
 		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
 		
-		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, tableWriter);
+		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, tableWriter, shapeModelFactory());
 		add(transformer);
 		
 	}
 	
+	private ShapeModelFactory shapeModelFactory() {
+		if (shapeModelFactory == null) {
+			shapeModelFactory = new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner);
+		}
+		return shapeModelFactory;
+	}
+	
 	public void addBigQueryViewGenerator(File bigQueryViewDir) {
-		ShapeModelFactory shapeModelFactory = new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner);
 		
 		BigQueryViewWriter viewWriter = new BigQueryViewWriter(bigQueryViewDir);
 		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
 		
-		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, viewWriter ,shapeModelFactory);
+		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, viewWriter ,shapeModelFactory());
 		add(transformer);
 		
 	}

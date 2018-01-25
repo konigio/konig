@@ -25,12 +25,18 @@ import java.text.MessageFormat;
 
 import java.util.List;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.path.HasStep;
+import io.konig.core.path.HasStep.PredicateValuePair;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.vocab.Konig;
@@ -52,6 +58,7 @@ import io.konig.transform.rule.DataChannel;
 
 public class ShapeModelFactory {
 
+	private static Logger logger = LoggerFactory.getLogger(ShapeModelFactory.class);
 	private ShapeManager shapeManager;
 	private DataChannelFactory dataChannelFactory;
 	private PropertyMapper propertyMapper;
@@ -301,6 +308,8 @@ public class ShapeModelFactory {
 			
 			if (path != null) {
 				
+				logger.debug("handleEquivalentPath({})", propertyModel.simplePath());
+				
 				// TODO: abort if the property is a source property and the declaring shape is not the top shape.
 				
 				
@@ -340,6 +349,25 @@ public class ShapeModelFactory {
 					} else if (step instanceof HasStep) {
 						HasStep hasStep = (HasStep) step;
 						priorStep.setFilter(hasStep.getPairList());
+						List<PredicateValuePair> pairList = hasStep.getPairList();
+						classModel = group.getValueClassModel();
+						if (classModel != null) {
+							for (PredicateValuePair pair : pairList) {
+								URI predicate = pair.getPredicate();
+								Value value = pair.getValue();
+								if (value instanceof Literal) {
+									PropertyGroup childGroup = classModel.producePropertyGroup(predicate);
+									if ( childGroup.getTargetProperty()!=null ) {
+										logger.debug("handleEquivalentPath: Adding fixed property {}={} in group #{}", 
+												childGroup.getTargetProperty().simplePath(), value.stringValue(), childGroup.hashCode());
+										
+										FixedPropertyModel fixed = new FixedPropertyModel(predicate, childGroup, value);
+										childGroup.add(fixed);
+									}
+								}
+							}
+						}
+						
 					} else {
 						throw new ShapeTransformException("Step type not supported: " + step.getClass().getSimpleName());
 					}
@@ -354,6 +382,9 @@ public class ShapeModelFactory {
 
 	public void addSourceShapes(ShapeModel targetShapeModel) throws ShapeTransformException {
 		
+		if (logger.isDebugEnabled()) {
+			logger.debug("addSourceShapes(targetShapeModel: {})", RdfUtil.localName(targetShapeModel.getShape().getId()));
+		}
 		ClassModel classModel = targetShapeModel.getClassModel();
 
 		URI targetClass = targetShapeModel.getShape().getTargetClass();
@@ -414,7 +445,11 @@ public class ShapeModelFactory {
 	}
 
 	private ShapeModel addSourceShape(ClassModel classModel, Shape sourceShape, DataChannel channel) throws ShapeTransformException {
-		
+		if (logger.isDebugEnabled()) {
+			String owlClass = RdfUtil.localName(classModel.getOwlClass());
+			String sourceShapeName = RdfUtil.localName(sourceShape.getId());
+			logger.debug("addSourceShape(classModel.owlClass: {}, sourceShape: {})", owlClass, sourceShapeName);
+		}
 		ShapeModel sourceShapeModel = new ShapeModel(sourceShape);
 		sourceShapeModel.setDataChannel(channel);
 		classModel.addCandidateSourceShapeModel(sourceShapeModel);

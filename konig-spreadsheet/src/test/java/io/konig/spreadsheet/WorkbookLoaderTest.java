@@ -78,7 +78,31 @@ import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
-	
+
+
+	@Test
+	public void testBigQueryTransform() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("bigquery-transform.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		
+		ShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
+		shapeLoader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(uri("http://example.com/shapes/OriginProductShape"));
+		URI predicate = uri("http://example.com/ns/alias/PRD_PRICE");
+		PropertyConstraint p = shape.getPropertyConstraint(predicate);
+		assertTrue(p!=null);
+		Path path = p.getEquivalentPath();
+		assertEquals("/schema:offers[schema:priceCurrency \"USD\"]/schema:price", path.toSimpleString());
+	}
 
 	@Test
 	public void testInvalidOntologyNamespace() throws Exception {

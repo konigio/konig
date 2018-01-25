@@ -62,7 +62,7 @@ public class BigQueryTransformGeneratorTest extends AbstractShapeModelToShapeRul
 	
 	
 	
-	@Ignore
+	@Test
 	public void testLoad() throws Throwable {
 		FileUtils.deleteDirectory(outDir);
 		load("src/test/resources/konig-transform/bigquery-transform");

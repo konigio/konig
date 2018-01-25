@@ -25,3 +25,11 @@ alias:PRD_NAME a owl:DatatypeProperty ;
 alias:PRD_PRICE a owl:DatatypeProperty ; 
 	schema:domainIncludes schema:Product ; 
 	schema:rangeIncludes xsd:float . 
+
+alias:first_name a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:string . 
+
+alias:person_id a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:long . 
