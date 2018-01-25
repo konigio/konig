@@ -28,7 +28,11 @@
 	gcp:name "${gcpBucketName}" ;
 	gcp:projectId "${gcpProjectId}" ;
 	gcp:storageClass "${gcpBucketStorageClass}" ;
-	gcp:location   "${gcpBucketLocation}" 
+	gcp:location   "${gcpBucketLocation}" ;	
+	gcp:notificationInfo [
+		gcp:topic "${topicName}" ;
+		gcp:eventTypes "${eventType}";
+	] 
 .
 
 <${shapeId}> konig:shapeDataSource <gs://${gcpBucketName}>
