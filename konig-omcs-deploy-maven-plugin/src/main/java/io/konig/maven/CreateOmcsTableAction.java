@@ -24,6 +24,8 @@ import java.io.File;
 
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -46,11 +48,14 @@ public class CreateOmcsTableAction {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			File file = ocmsDeployment.file(tableFile);
+			
 			OracleTableDefinition table = mapper.readValue(file, OracleTableDefinition.class);
 			String instance = table.getTableReference().getOmcsInstanceId();
 			String database = table.getTableReference().getOmcsDatabaseId();
 			String tableId = table.getTableReference().getOmcsTableId();
-			String createQuery = table.getQuery();
+			File ddlFile = new File(file.getParentFile(), table.getQuery());
+			
+			String createQuery = fileToString(ddlFile);
 			connection = OmcsConnection.getConnection(instance, database);			
 			statement = connection.createStatement();
 			statement.execute(createQuery);
@@ -66,5 +71,9 @@ public class CreateOmcsTableAction {
 			}
 		}
 		return ocmsDeployment;
+	}
+
+	private String fileToString(File ddlFile) throws IOException {
+		return new String(Files.readAllBytes(ddlFile.toPath()));
 	}
 }
