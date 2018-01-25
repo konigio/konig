@@ -1,4 +1,4 @@
-package io.konig.cadl.model;
+package io.konig.cadl;
 
 /*
  * #%L
@@ -20,18 +20,22 @@ package io.konig.cadl.model;
  * #L%
  */
 
+import io.konig.cadl.model.*;
+import io.konig.shacl.Shape;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class DataCubeTest {
+public class DataCubeShapeGeneratorTest {
 
-    @Test
-    public void testDataCube() {
+    private static DataCube getSimpleDataCube() {
         DataCube cube = new DataCube("testCube");
+        Measure b = new Measure("b", Datatype.real);
+        cube.addMeasure(b);
 
         Dimension a = new Dimension("a");
 
@@ -41,21 +45,26 @@ public class DataCubeTest {
 
         DimensionLevel a2 = new DimensionLevel("a2");
         a2.addAttribute(new Attribute("name", Datatype.string, true));
+        a2.addAttribute(new Attribute("category", Datatype.string, false));
         a.addLevel(a2);
 
         a2.addRollUp(a1);
 
-        Dimension b = new Dimension("b");
+        cube.addDimension(a);
 
-        cube.setDimensions(Arrays.asList(a, b));
-
-        Measure m = new Measure("m", Datatype.real);
-
-        cube.addMeasure(m);
-
-        assertNotNull(cube);
-        assertEquals("testCube", cube.getName());
-        assertEquals(2, cube.getDimensions().size());
+        return cube;
     }
 
+    @Test
+    public void testSimpleCube() {
+        DataCube cube = getSimpleDataCube();
+        DataCubeShapeGenerator generator = new DataCubeShapeGenerator();
+        List<Shape> shapes = generator.generateShapes(cube);
+
+        assertNotNull(shapes);
+        assertEquals(1, shapes.size());
+        assertEquals("http://example.com/shape/TestCubeShape", shapes.get(0).getId().toString());
+
+        System.out.println(shapes.get(0).toString());
+    }
 }

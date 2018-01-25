@@ -1,0 +1,48 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix schema: <http://schema.org/> .
+
+@prefix v1: <http://example.com/shape/> .
+@prefix ex: <http://example.com/schema/> .
+
+v1:FooShape
+	sh:scopeClass ex:Foo ;
+	sh:property [
+		sh:predicate ex:b ;
+		sh:datatype xsd:decimal ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate ex:a1 ;
+		sh:valueShape v1:A2Shape ;
+		sh:minCount 1 ;
+		sh:maxCount 1
+	], [
+		sh:predicate ex:a2 ;
+		sh:valueShape v1:A2Shape ;
+		sh:minCount 0 ;
+		sh:maxCount 1
+	] .
+
+v1:A1Shape
+  sh:scopeClass ex:A1 ;
+  sh:property [
+    sh:predicate ex:name ;
+    sh:datatype xsd:string ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+  ] .
+
+v1:A2Shape
+  sh:scopeClass ex:A2 ;
+  sh:property [
+    sh:predicate ex:name ;
+    sh:datatype xsd:string ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+  ] , [
+    sh:predicate ex:category ;
+    sh:datatype xsd:string ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+  ] .

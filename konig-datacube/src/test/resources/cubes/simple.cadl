@@ -1,3 +1,6 @@
+PREFIX ex: http://example.org/
+PREFIX schema: http://schema.org/
+
 # I am a comment
 CUBE foo {
 

@@ -22,17 +22,24 @@ package io.konig.cadl.parser;
 
 import io.konig.cadl.model.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class DataCubeListener extends CADLBaseListener {
 
     private DataCube dataCube;
     private Dimension dimension;
     private Measure measure;
     private DimensionLevel dimensionLevel;
+    private Map<String,String> namespaces = new HashMap<>();
 
     @Override
     public void enterCube(CADLParser.CubeContext ctx) {
         super.enterCube(ctx);
         dataCube = new DataCube(ctx.NAME().getText());
+        if(!namespaces.isEmpty()) {
+            dataCube.setNamespaces(namespaces);
+        }
     }
 
     @Override
@@ -91,6 +98,14 @@ public class DataCubeListener extends CADLBaseListener {
     public void exitMeasure(CADLParser.MeasureContext ctx) {
         super.exitMeasure(ctx);
         dataCube.addMeasure(measure);
+    }
+
+    @Override
+    public void enterNamespace(CADLParser.NamespaceContext ctx) {
+        super.enterNamespace(ctx);
+        String prefix = ctx.NAME().getText();
+        String namespace = ctx.IRI().getText();
+        namespaces.put(prefix, namespace);
     }
 
     public DataCube getDataCube() {

@@ -53,15 +53,16 @@ public class CADLParserTest {
     }
 
     @Test
-    public void testParser() {
-        String expected = "(cube CUBE foo { (dimension DIMENSION a (level LEVEL a1 ATTRIBUTES { (attribute name ( (datatype string) ) UNIQUE) }) (level LEVEL a2 ATTRIBUTES { (attribute name ( (datatype string) ) UNIQUE ,) (attribute category ( (datatype string) )) }) (rollup a2 ROLL-UP to a1)) (measure MEASURE b ( (datatype real) )) })";
-        ParseTree tree = parser.cube();
+    public void testParser() throws Exception {
+        String expected = "(base (namespace PREFIX ex : http://example.org/) (namespace PREFIX schema : http://schema.org/) (cube CUBE foo { (dimension DIMENSION a (level LEVEL a1 ATTRIBUTES { (attribute name ( (datatype string) ) UNIQUE) }) (level LEVEL a2 ATTRIBUTES { (attribute name ( (datatype string) ) UNIQUE ,) (attribute category ( (datatype string) )) }) (rollup a2 ROLL-UP to a1)) (measure MEASURE b ( (datatype real) )) }))";
+//        parser.setErrorHandler();
+        ParseTree tree = parser.base();
         assertEquals(expected, tree.toStringTree(parser));
     }
 
     @Test
     public void testListener() {
-        ParseTree tree = parser.cube();
+        ParseTree tree = parser.base();
         ParseTreeWalker walker = new ParseTreeWalker();
         DataCubeListener listener = new DataCubeListener();
         walker.walk(listener, tree);

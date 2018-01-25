@@ -21,7 +21,9 @@ package io.konig.cadl.model;
  */
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DataCube {
 
@@ -32,6 +34,7 @@ public class DataCube {
     private String name;
     private List<Measure> measures = new ArrayList<>();
     private List<Dimension> dimensions = new ArrayList<>();
+    private Map<String,String> namespaces = new HashMap<>();
 
     public String getName() {
         return name;
@@ -63,5 +66,17 @@ public class DataCube {
 
     public void addDimension(Dimension dimension) {
         this.dimensions.add(dimension);
+    }
+
+    public void setNamespaces(Map<String, String> namespaces) {
+        this.namespaces = namespaces;
+    }
+
+    public void addNamespace(String prefix, String namespace) {
+        this.namespaces.put(prefix, namespace);
+    }
+
+    public Map<String, String> getNamespaces() {
+        return namespaces;
     }
 }

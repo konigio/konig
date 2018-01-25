@@ -57,7 +57,7 @@ public class DataCubeParser extends BaseParser {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CADLParser parser = new CADLParser(tokens);
 
-        ParseTree tree = parser.cube();
+        ParseTree tree = parser.base();
         ParseTreeWalker walker = new ParseTreeWalker();
         DataCubeListener listener = new DataCubeListener();
         walker.walk(listener, tree);
