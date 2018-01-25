@@ -6,12 +6,12 @@
 shape:BqOfferShape a sh:Shape ; 
 	sh:targetClass schema:Offer ; 
 	sh:property  [ 
-		sh:predicate schema:price ; 
+		sh:path schema:price ; 
 		sh:datatype xsd:float ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
-		sh:predicate schema:priceCurrency ; 
+		sh:path schema:priceCurrency ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ]  . 

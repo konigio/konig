@@ -14,7 +14,8 @@ ex: a owl:Ontology ;
 ex:ProductCategory a owl:Class ; 
 	rdfs:subClassOf schema:Enumeration . 
 
-ex:originId a rdf:Property , owl:DatatypeProperty ; 
+ex:originId a rdf:Property , owl:InverseFunctionalProperty ; 
 	rdfs:label "Origin ID" ; 
 	rdfs:comment "The identifier for an entity from the system of origin." ; 
-	rdfs:range xsd:long . 
+	rdfs:range xsd:long ; 
+	schema:rangeIncludes xsd:long . 

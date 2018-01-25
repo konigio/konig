@@ -167,6 +167,7 @@ public class WorkbookLoader {
 	private static final String SETTING_NAME = "Setting Name";
 	private static final String SETTING_VALUE = "Setting Value";
 
+	private static final String PROPERTY_PATH = "Property Path";
 	private static final String VALUE_TYPE = "Value Type";
 	private static final String MIN_COUNT = "Min Count";
 	private static final String MAX_COUNT = "Max Count";
@@ -922,6 +923,8 @@ public class WorkbookLoader {
 				case CLASS_ID:
 					bits = bits | CLASS_FLAG;
 					break;
+					
+				case PROPERTY_PATH:
 				case PROPERTY_ID:
 					bits = bits | PROPERTY_FLAG;
 					break;
@@ -1103,6 +1106,8 @@ public class WorkbookLoader {
 			} else {
 				propertyId = expandPropertyId(propertyIdValue);
 			}
+			
+			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
 
 			Literal comment = stringLiteral(row, pcCommentCol);
 			Resource valueType = valueType(row, pcValueTypeCol);
@@ -1447,6 +1452,8 @@ public class WorkbookLoader {
 					case COMMENT:
 						pcCommentCol = i;
 						break;
+					
+					case PROPERTY_PATH:
 					case PROPERTY_ID:
 						pcPropertyIdCol = i;
 						break;
@@ -1954,6 +1961,7 @@ public class WorkbookLoader {
 					case PROPERTY_NAME:
 						propertyNameCol = i;
 						break;
+						
 					case PROPERTY_ID:
 						propertyIdCol = i;
 						break;

@@ -173,6 +173,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 				applyFormulas(targetClassModel);
 			}
 			
+			
 		}
 
 		
@@ -301,6 +302,8 @@ public class SimplePropertyMapper implements PropertyMapper {
 							continue;
 						}
 						
+						
+						
 						// Formula is not defined on the target property.  See if it is defined on any 
 						// of the source shapes.
 						URI predicate = targetProperty.getPredicate();
@@ -330,6 +333,15 @@ public class SimplePropertyMapper implements PropertyMapper {
 							
 						}
 					}
+					// Check for an available fixed value
+					if (group.getSourceProperty()==null && targetProperty!=null) {
+						for (PropertyModel pm : group) {
+							if (pm.isSourceProperty() && pm instanceof FixedPropertyModel) {
+								group.setSourceProperty(pm);
+								declareMatch(group);
+							}
+						}
+					}
 				}
 				
 			}
@@ -353,6 +365,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 		private void handleNestedResources(ClassModel targetClassModel) throws ShapeTransformException {
 			for (PropertyGroup group : targetClassModel.getPropertyGroups()) {
 				ClassModel nested = group.getValueClassModel();
+				
 				if (nested != null && nested.hasUnmatchedProperty()) {
 					handleClass(nested);
 				} else {
@@ -1009,6 +1022,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 					}
 				}
 				
+				
 			} else if (p instanceof IdPropertyModel) {
 
 				PropertyGroup group = p.getGroup();
@@ -1070,6 +1084,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 		 * Add properties from a given ClassModel to the set of unmatched properties, recursively.
 		 */
 		private void collectUnmatchedProperties(ClassModel classModel) {
+			logger.debug("collectUnmatchedProperties({})", RdfUtil.localName(classModel.getOwlClass()));
 			for (PropertyGroup p : classModel.getPropertyGroups()) {
 				
 				if (p.getTargetProperty()!=null && Konig.modified.equals(p.getTargetProperty().getPredicate())) {

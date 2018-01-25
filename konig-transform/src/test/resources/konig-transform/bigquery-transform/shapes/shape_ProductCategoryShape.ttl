@@ -1,25 +1,32 @@
 @prefix ex: <http://example.com/ns/core/> .
 @prefix gcp: <http://www.konig.io/ns/gcp/> .
 @prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix schema: <http://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/shapes/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-shape:BqProductCategoryShape sh:property  [ 
-		sh:predicate schema:name ; 
+shape:ProductCategoryShape sh:property  [ 
+		sh:path schema:name ; 
 		sh:datatype xsd:string ; 
+		sh:predicate schema:name ; 
 		sh:maxCount 1
 	 ]  ,  [ 
-		sh:predicate ex:originId ; 
+		sh:path ex:originId ; 
 		sh:datatype xsd:long ; 
+		sh:predicate ex:originId ; 
 		sh:maxCount 1 ]  ; 
 	a sh:Shape ; 
-	sh:nodeKind sh:IRI ; 
 	sh:targetClass ex:ProductCategory ; 
 	konig:shapeDataSource  [ 
 		gcp:tableReference  [ 
 			gcp:projectId "{gcpProjectId}" ; 
 			gcp:datasetId "ex" ; 
 			gcp:tableId "ProductCategory" ]  ; 
-		a konig:GoogleBigQueryTable ]  . 
+		a konig:GoogleBigQueryTable ]  ; 
+	sh:nodeKind sh:IRI . 
+
+schema:name rdf:predicate schema:name . 
+
+ex:originId rdf:predicate ex:originId . 
