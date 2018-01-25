@@ -47,7 +47,7 @@ public class OmcsConnection {
 						+ "environment variable, or set the property 'omcs.username' and 'omcs.password'.";
 				throw new Exception(error);
 			}
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName("oracle.jdbc.driver.OracleDriver");
 		} catch (Exception e) {
 			throw e;
 		}
