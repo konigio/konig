@@ -25,6 +25,7 @@ import java.util.List;
 
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
+import io.konig.omcs.datasource.OracleTable;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.Shape;
 
@@ -38,6 +39,10 @@ public class SqlTableNameFactory {
 			for (DataSource ds : list) {
 				if (ds instanceof GoogleCloudSqlTable) {
 					GoogleCloudSqlTable table = (GoogleCloudSqlTable) ds;
+					return table.getTableName();
+				}
+				if (ds instanceof OracleTable) {
+					OracleTable table = (OracleTable) ds;
 					return table.getTableName();
 				}
 			}

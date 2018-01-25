@@ -29,6 +29,7 @@ import io.konig.maven.DataCatalogConfig;
 import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
 import io.konig.maven.JsonSchemaConfig;
+import io.konig.maven.OracleManagedCloudConfig;
 import io.konig.maven.WorkbookProcessor;
 
 public class MultiProject extends MavenProjectConfig {
@@ -39,11 +40,20 @@ public class MultiProject extends MavenProjectConfig {
 	private GoogleCloudPlatformConfig googleCloudPlatformDeployment;
 	private DataCatalogConfig dataCatalog;
 	private JsonSchemaConfig jsonSchema;
+	private OracleManagedCloudConfig oracleManagedCloud;
 	
 	public WorkbookProcessor getWorkbook() {
 		return workbook;
 	}
 	
+	public OracleManagedCloudConfig getOracleManagedCloudConfig() {
+		return oracleManagedCloud;
+	}
+	
+	public void setOracleManagedCloudConfig(OracleManagedCloudConfig oracleManagedCloud) {
+		this.oracleManagedCloud = oracleManagedCloud;
+	}
+
 	
 
 	public JsonSchemaConfig getJsonSchemaConfig() {
@@ -127,6 +137,9 @@ public class MultiProject extends MavenProjectConfig {
 		}
 		if (dataCatalog != null) {
 			parent.add(new DataCatalogProjectGenerator(this, dataCatalog));
+		}
+		if(oracleManagedCloud != null) {
+			parent.add(new OracleManagedCloudProjectGenerator(this, oracleManagedCloud));
 		}
 		return parent;
 	}

@@ -1,6 +1,6 @@
 {
   "datasetReference" : {
-    "projectId" : "{gcpProjectId}",
+    "projectId" : "${gcpProjectId}",
     "datasetId" : "schema"
   }
 }

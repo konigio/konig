@@ -71,6 +71,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.FileUtils;
+import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
+
+import io.konig.omcs.datasource.OracleShapeConfig;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.rio.RDFHandlerException;
@@ -154,6 +157,9 @@ import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
 import io.konig.schemagen.jsonschema.TemplateJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
+import io.konig.schemagen.ocms.OracleCloudResourceGenerator;
+import io.konig.schemagen.ocms.OracleDatabaseWriter;
+import io.konig.schemagen.ocms.OracleTableWriter;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.schemagen.sql.SqlTableGenerator;
@@ -225,6 +231,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private GoogleCloudPlatformConfig googleCloudPlatform;
     
     @Parameter
+    private OracleManagedCloudConfig oracleManagedCloud;
+    
+    @Parameter
     private HashSet<String> excludeNamespace;
 	
 
@@ -273,10 +282,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			owlReasoner = new OwlReasoner(owlGraph);
 			owlGraph.setNamespaceManager(nsManager);
 
+			init();
 			loadResources();
 
 			generateGoogleCloudPlatform();
-			
+			generateOracleManagedCloudServices();
 			generateJsonld();
 			generateAvro();
 			generateJsonSchema();
@@ -306,9 +316,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
-
-
-
+    private void init() {
+    	GcpShapeConfig.init();
+    	OracleShapeConfig.init();
+    }
 
 	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException {
 		
@@ -519,8 +530,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	if (defaults == null) {
     		defaults = new RdfConfig();
     	}
-    	GcpShapeConfig.init();
-    	
 		loadSpreadsheet();
 		
 		if (rdfSourceDir == null && 
@@ -529,7 +538,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				java != null ||
 				plantUML != null ||
 				googleCloudPlatform!=null ||
-				jsonSchema!=null
+				jsonSchema!=null ||
+				oracleManagedCloud != null
 			)
 		) {
 			rdfSourceDir = defaults.getRdfDir();
@@ -710,7 +720,28 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
-	
+
+	private void generateOracleManagedCloudServices() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException, ConfigurationException {
+	if(oracleManagedCloud != null) {
+			Configurator config = configurator();
+			config.configure(oracleManagedCloud);
+			File directory = Configurator.checkNull(oracleManagedCloud.getDirectory());
+			File databaseDir = Configurator.checkNull(oracleManagedCloud.getDatabases());
+			File tablesDir = Configurator.checkNull(oracleManagedCloud.getTables());
+			if(directory != null && tablesDir != null) {
+				OracleCloudResourceGenerator resourceGenerator = new OracleCloudResourceGenerator();
+				SqlTableGenerator sqlgenerator = new SqlTableGenerator();
+				OracleDatabaseWriter oracleDatbase = new OracleDatabaseWriter(databaseDir);
+				resourceGenerator.add(oracleDatbase);
+				OracleTableWriter oracle = new OracleTableWriter(tablesDir, sqlgenerator);
+				resourceGenerator.add(oracle);
+				resourceGenerator.dispatch(shapeManager.listShapes());
+				
+				GroovyOmcsDeploymentScriptWriter scriptWriter = new GroovyOmcsDeploymentScriptWriter(oracleManagedCloud);
+				scriptWriter.run();
+			}
+		}
+	}
 	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException {
 		if (googleCloudPlatform != null) {
 			

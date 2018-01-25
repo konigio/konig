@@ -215,7 +215,7 @@ public class BigQueryLabelGenerator implements ShapeHandler {
 		try (
 			InputStream rawInput = getClass().getClassLoader().getResourceAsStream(SCHEMA_FILE);
 			InputStreamReader rawReader = new InputStreamReader(rawInput);
-			ReplaceStringReader input = new ReplaceStringReader(rawReader, "{datasetId}", datasetId);
+			ReplaceStringReader input = new ReplaceStringReader(rawReader, "${datasetId}", datasetId);
 		) {
 			try (FileWriter out = new FileWriter(schemaFile)) {
 				char[] data = new char[1024];

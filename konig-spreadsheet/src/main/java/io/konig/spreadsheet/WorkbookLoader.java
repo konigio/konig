@@ -97,6 +97,7 @@ import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
+import io.konig.core.vocab.XOWL;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.FormulaParser;
@@ -163,6 +164,7 @@ public class WorkbookLoader {
 	private static final String DATASOURCE = "Datasource";
 	private static final String IRI_TEMPLATE = "IRI Template";
 	private static final String DEFAULT_FOR = "Default For";
+	private static final String TERM_STATUS  = "Term Status";
 
 	private static final String SETTING_NAME = "Setting Name";
 	private static final String SETTING_VALUE = "Setting Value";
@@ -412,7 +414,10 @@ public class WorkbookLoader {
 		private int languageCol = UNDEFINED;
 
 		private URI activityId;
-
+		private int pcTermStatusCol = UNDEFINED;
+		private int classTermStatusCol = UNDEFINED;
+		private int propertyTermStatusCol = UNDEFINED;
+		
 		public Worker(Workbook book) {
 			this.book = book;
 			if (shapeManager == null) {
@@ -1109,6 +1114,7 @@ public class WorkbookLoader {
 			
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
 
+			URI termStatus = uriValue(row, pcTermStatusCol);
 			Literal comment = stringLiteral(row, pcCommentCol);
 			Resource valueType = valueType(row, pcValueTypeCol);
 			Literal minCount = intLiteral(row, pcMinCountCol);
@@ -1248,7 +1254,8 @@ public class WorkbookLoader {
 			if (partitionOf != null) {
 				pathHandlers.add(new PathHandler(constraint, Konig.partitionOf, partitionOf));
 			}
-
+			
+			edge(constraint, XOWL.termStatus, termStatus);
 			edge(constraint, SH.minCount, minCount);
 			edge(constraint, SH.maxCount, maxCount);
 			edge(constraint, SH.minInclusive, minInclusive);
@@ -1513,7 +1520,9 @@ public class WorkbookLoader {
 					case FORMULA:
 						pcFormulaCol = i;
 						break;
-
+					case TERM_STATUS :
+						pcTermStatusCol = i;
+						break;
 					}
 				}
 			}
@@ -1808,7 +1817,7 @@ public class WorkbookLoader {
 			URI inverseOf = uriValue(row, inverseOfCol);
 			List<URI> propertyType = uriList(row, propertyTypeCol);
 			URI subpropertyOf = uriValue(row, subpropertyOfCol);
-
+			URI termStatus = uriValue(row, propertyTermStatusCol);
 			if (propertyId == null) {
 				return;
 			}
@@ -1857,6 +1866,9 @@ public class WorkbookLoader {
 
 			if (inverseOf != null) {
 				graph.edge(propertyId, OWL.INVERSEOF, inverseOf);
+			}
+			if(termStatus != null) {
+				graph.edge(propertyId, XOWL.termStatus, termStatus);
 			}
 
 		}
@@ -1984,10 +1996,13 @@ public class WorkbookLoader {
 					case SUBPROPERTY_OF:
 						subpropertyOfCol = i;
 						break;
+					case TERM_STATUS:
+						propertyTermStatusCol = i;
+						break;
 					}
 				}
 			}
-
+			
 			String sheetName = sheet.getSheetName();
 
 			if (propertyIdCol == UNDEFINED) {
@@ -2027,7 +2042,7 @@ public class WorkbookLoader {
 			Literal comment = stringLiteral(row, classCommentCol);
 			URI classId = uriValue(row, classIdCol);
 			List<URI> subclassOf = uriList(row, classSubclassOfCol);
-
+			URI termStatus = uriValue(row, classTermStatusCol);
 			if (classId != null) {
 				graph.edge(classId, RDF.TYPE, OWL.CLASS);
 				if (className != null) {
@@ -2042,6 +2057,10 @@ public class WorkbookLoader {
 						graph.edge(subclassId, RDF.TYPE, OWL.CLASS);
 					}
 
+				}
+				
+				if(termStatus != null) {
+					graph.edge(classId, XOWL.termStatus, termStatus);
 				}
 			}
 
@@ -2145,7 +2164,8 @@ public class WorkbookLoader {
 			classCommentCol = UNDEFINED;
 			classIdCol = UNDEFINED;
 			classSubclassOfCol = UNDEFINED;
-
+			classTermStatusCol = UNDEFINED;
+			
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2172,7 +2192,9 @@ public class WorkbookLoader {
 					case CLASS_SUBCLASS_OF:
 						classSubclassOfCol = i;
 						break;
-
+					case TERM_STATUS :
+						classTermStatusCol = i;
+						break;
 					}
 				}
 			}

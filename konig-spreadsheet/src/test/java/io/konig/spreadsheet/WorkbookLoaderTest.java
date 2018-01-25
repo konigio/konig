@@ -65,6 +65,7 @@ import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.VAR;
+import io.konig.core.vocab.XOWL;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PredicatePath;
@@ -150,10 +151,43 @@ public class WorkbookLoaderTest {
 		assertEquals(1, list.size());
 		
 		DataSource ds = list.get(0);
-		assertEquals("https://www.googleapis.com/sql/v1beta4/projects/{gcpProjectId}/instances/schema/databases/schema/tables/PersonShape", 
+		assertEquals("https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/schema/databases/schema/tables/PersonShape", 
 				ds.getId().stringValue());
 		
 		assertTrue(ds.isA(Konig.GoogleCloudSqlTable));
+	}
+	
+	@Test
+	public void testGoogleOracleTable() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("omcs-oracle-table.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		
+		Shape shape = s.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		List<DataSource> list = shape.getShapeDataSource();
+		assertEquals(1, list.size());
+		
+		DataSource ds = list.get(0);
+		assertEquals("http://www.konig.io/ns/omcs/instances/testOracleInstance/databases/schema/tables/Person", 
+				ds.getId().stringValue());
+		
+		assertTrue(ds.isA(Konig.OracleTable));
 	}
 	
 	@Test
@@ -185,7 +219,6 @@ public class WorkbookLoaderTest {
 	
 	@Test
 	public void testAddressCountry() throws Exception {
-
 		InputStream input = getClass().getClassLoader().getResourceAsStream("address-country.xlsx");
 		Workbook book = WorkbookFactory.create(input);
 		Graph graph = new MemoryGraph();
@@ -344,7 +377,7 @@ public class WorkbookLoaderTest {
 		input.close();
 		
 		
-		URI topic = uri("https://pubsub.googleapis.com/v1/projects/{gcpProjectId}/topics/vnd.example.person");
+		URI topic = uri("https://pubsub.googleapis.com/v1/projects/${gcpProjectId}/topics/vnd.example.person");
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		assertTrue(graph.contains(topic, RDF.TYPE, Konig.GooglePubSubTopic));
 		Vertex shapeVertex = graph.vertex(shapeId);
@@ -434,6 +467,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
+	
 	@Test
 	public void testDatasourceParams() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("test-datasource-params.xlsx");
@@ -449,7 +483,6 @@ public class WorkbookLoaderTest {
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/ProductShape");
-		
 		List<Value> list = graph.v(shapeId).out(Konig.shapeDataSource).out(GCP.tableReference).out(GCP.tableId).toValueList();
 		assertEquals(1, list.size());
 		assertEquals("CustomProduct", list.get(0).stringValue());
@@ -506,7 +539,7 @@ public class WorkbookLoaderTest {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/PersonLiteShape"));
 		assertTrue(shape != null);
-		URI datasourceId = uri("https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/Person");
+		URI datasourceId = uri("https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person");
 		
 		Vertex datasource = shape.getVertex(Konig.shapeDataSource);
 		assertTrue(datasource != null);
@@ -517,7 +550,7 @@ public class WorkbookLoaderTest {
 		Vertex tableRef = datasource.getVertex(GCP.tableReference);
 		assertTrue(tableRef != null);
 		
-		assertValue(tableRef, GCP.projectId, "{gcpProjectId}");
+		assertValue(tableRef, GCP.projectId, "${gcpProjectId}");
 		assertValue(tableRef, GCP.datasetId, "schema");
 		assertValue(tableRef, GCP.tableId, "Person");
 	}
@@ -748,7 +781,7 @@ public class WorkbookLoaderTest {
 		assertValue(givenName, SH.datatype, XMLSchema.STRING);
 		assertInt(givenName, SH.minCount, 0);
 		assertInt(givenName, SH.maxCount, 1);
-		
+		assertValue(givenName, XOWL.termStatus, XOWL.Experimental);
 		Vertex familyName = propertyConstraint(shape, Schema.familyName);
 		assertInt(familyName, SH.minCount, 1);
 		
@@ -812,7 +845,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDFS.LABEL, "Given Name");
 		assertValue(v, RDFS.COMMENT, "The person's given name. In the U.S., the first name of a Person. "
 				+ "This can be used along with familyName instead of the name property.");
-		
+		assertValue(v, XOWL.termStatus, XOWL.Stable);
 		assertValue(v, RDF.TYPE, RDF.PROPERTY);
 		assertValue(v, RDF.TYPE, OWL.DATATYPEPROPERTY);
 		assertValue(v, RDFS.DOMAIN, Schema.Person);
@@ -834,7 +867,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDFS.LABEL, "Person");
 		assertValue(v, RDFS.COMMENT, "Any person (alive, dead, undead or fictional).");
 		assertValue(v, RDFS.SUBCLASSOF, Schema.Thing);
-		
+		assertValue(v, XOWL.termStatus, XOWL.Stable);
 		
 	}
 

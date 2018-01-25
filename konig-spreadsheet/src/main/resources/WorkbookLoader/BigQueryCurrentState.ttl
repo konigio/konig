@@ -2,15 +2,15 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
 
-<https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{gcpDatasetId}/tables/{bigQueryTableId}Current>
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}Current>
 	a konig:GoogleBigQueryTable, konig:CurrentState;
 	gcp:tableReference [
-		gcp:projectId "{gcpProjectId}" ;
-		gcp:datasetId "{gcpDatasetId}" ;
-		gcp:tableId   "{bigQueryTableId}Current" 
+		gcp:projectId "${gcpProjectId}" ;
+		gcp:datasetId "${gcpDatasetId}" ;
+		gcp:tableId   "${bigQueryTableId}Current" 
 	]
 .
 
-<{shapeId}> konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/{gcpDatasetId}/tables/{bigQueryTableId}Current>
+<${shapeId}> konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}Current>
 .
 	

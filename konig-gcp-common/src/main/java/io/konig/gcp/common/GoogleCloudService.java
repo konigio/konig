@@ -85,8 +85,8 @@ public class GoogleCloudService implements CredentialsProvider {
 
 	private File credentialsFile;
 	private String gcpBucketSuffix;
-	private String gcpBucketSuffixToken = "{gcpBucketSuffix}";
-	private String projectToken = "{gcpProjectId}";
+	private String gcpBucketSuffixToken = "${gcpBucketSuffix}";
+	private String projectToken = "${gcpProjectId}";
 	private GoogleCredentials credentials;
 	private String projectId;
 	private BigQuery bigQuery;
