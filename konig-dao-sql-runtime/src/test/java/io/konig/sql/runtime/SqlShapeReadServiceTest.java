@@ -174,8 +174,8 @@ public class SqlShapeReadServiceTest {
 		}
 
 		@Override
-		protected void executeSql(EntityStructure struct, String sql, Writer output, Format format) throws DaoException {
-			
+		protected void executeSql(EntityStructure struct, ShapeQuery query, Writer output, Format format) throws DaoException {
+			String sql = toSql(struct, query);
 			assertEquals(expectedSQL, sql);
 			
 		}
