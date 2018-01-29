@@ -647,9 +647,10 @@ public class FormulaParser {
 					if (next == ']') {
 						break;
 					}
-				} else {
-					unread(next);
+				} else if (next==']') {
 					break;
+				} else {
+					throw new RDFParseException("Invalid predicateObjectList");
 				}
 			}
 			return list;

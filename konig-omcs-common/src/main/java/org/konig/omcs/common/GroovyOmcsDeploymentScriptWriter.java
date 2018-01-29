@@ -71,12 +71,14 @@ public class GroovyOmcsDeploymentScriptWriter {
 		File schemaDir = oracleManagedCloud.getTables();
 		if (schemaDir != null) {
 			for (File file : schemaDir.listFiles()) {
-				String path = FileUtil.relativePath(scriptFile, file);
-				print(indent);
-				print("create OracleTable from \"");
-				print(path);
-				print("\"");
-				println(" println response ");
+				if (file.getName().endsWith(".json")) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("create OracleTable from \"");
+					print(path);
+					print("\"");
+					println(" println response ");
+				}
 			}
 		}
 	}
@@ -87,12 +89,14 @@ public class GroovyOmcsDeploymentScriptWriter {
 		File databaseDir = oracleManagedCloud.getDatabases();
 		if (databaseDir != null && databaseDir.isDirectory()) {
 			for (File file : databaseDir.listFiles()) {
-				String path = FileUtil.relativePath(scriptFile, file);
-				print(indent);
-				print("create OracleDatabase from \"");
-				print(path);
-				print("\"");
-				println(" println response ");
+				if (file.getName().endsWith(".json")) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("create OracleDatabase from \"");
+					print(path);
+					print("\"");
+					println(" println response ");
+				}
 			}
 		}
 		
