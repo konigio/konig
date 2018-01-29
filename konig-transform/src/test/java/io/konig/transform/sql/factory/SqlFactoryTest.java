@@ -82,6 +82,145 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 
 /*
 SELECT
+   CONCAT("http://example.com/product/", CAST(a.PRD_ID AS STRING)) AS id,
+   ARRAY_AGG(STRUCT(
+      "USD" AS priceCurrency,
+      a.PRD_PRICE AS price
+   ) AS offers),
+   a.PRD_NAME AS name,
+   a.PRD_ID AS originId,
+   b.id AS category
+FROM 
+   schema.OriginProductShape AS a
+ JOIN
+   ex.ProductCategory AS b
+ ON
+   a.PRD_CAT=b.originId
+ */
+	@Test
+	public void testBigQueryTransform() throws Exception {
+		
+		load("src/test/resources/konig-transform/bigquery-transform");
+
+		URI shapeId = iri("http://example.com/shapes/BqProductShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(5, valueList.size());
+		
+		ValueExpression v = valueList.get(0);
+		
+		assertTrue(v instanceof AliasExpression);
+		AliasExpression alias = (AliasExpression)v;
+		
+		assertEquals("id", alias.getAlias());
+		
+		QueryExpression q = alias.getExpression();
+		assertTrue(q instanceof FunctionExpression);
+		FunctionExpression f = (FunctionExpression) q;
+		
+		assertEquals("CONCAT", f.getFunctionName());
+		List<QueryExpression> argList = f.getArgList();
+		assertEquals(2, argList.size());
+		
+		q = argList.get(0);
+		assertTrue(q instanceof StringLiteralExpression);
+		StringLiteralExpression s = (StringLiteralExpression) q;
+		assertEquals("http://example.com/product/", s.getValue());
+		
+		q = argList.get(1);
+		assertTrue(q instanceof CastSpecification);
+		CastSpecification c = (CastSpecification) q;
+		
+		v = c.getValue();
+		assertTrue(v instanceof ColumnExpression);
+		ColumnExpression column = (ColumnExpression) v;
+		
+		assertEquals("a.PRD_ID", column.getColumnName());
+		String datatype = c.getDatatype();
+		assertEquals("STRING", datatype);
+		
+		v = valueList.get(1);
+		
+		assertTrue(v instanceof FunctionExpression);
+		f = (FunctionExpression) v;
+		assertEquals("ARRAY_AGG", f.getFunctionName());
+		
+		assertEquals(1, f.getArgList().size());
+		
+		q = f.getArgList().get(0);
+		assertTrue(q instanceof AliasExpression);
+		alias = (AliasExpression) q;
+		assertEquals("offers", alias.getAlias());
+		
+		q = alias.getExpression();
+		assertTrue(q instanceof StructExpression);
+		StructExpression struct = (StructExpression) q;
+		List<ValueExpression> structValues = struct.getValues();
+		assertEquals(2, structValues.size());
+		
+		v = structValues.get(0);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression) v;
+		assertEquals("priceCurrency", alias.getAlias());
+		
+		q = alias.getExpression();
+		assertTrue(q instanceof StringLiteralExpression);
+		s = (StringLiteralExpression) q;
+		
+		assertEquals("USD", s.getValue());
+		
+		v = structValues.get(1);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression)v;
+		assertEquals("price", alias.getAlias());
+		q = alias.getExpression();
+		assertTrue(q instanceof ColumnExpression);
+		column = (ColumnExpression) q;
+		assertEquals("a.PRD_PRICE", column.getColumnName());
+		
+		v = valueList.get(2);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression) v;
+		assertEquals("name", alias.getAlias());
+		
+		q = alias.getExpression();
+		assertTrue(q instanceof ColumnExpression);
+		column = (ColumnExpression) q;
+		assertEquals("a.PRD_NAME", column.getColumnName());
+		
+		
+		v = valueList.get(3);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression) v;
+		assertEquals("originId", alias.getAlias());
+		
+		q = alias.getExpression();
+		assertTrue(q instanceof ColumnExpression);
+		column = (ColumnExpression) q;
+		assertEquals("a.PRD_ID", column.getColumnName());
+		
+
+		v = valueList.get(4);
+		assertTrue(v instanceof AliasExpression);
+		alias = (AliasExpression) v;
+		assertEquals("category", alias.getAlias());
+		
+		q = alias.getExpression();
+		assertTrue(q instanceof ColumnExpression);
+		column = (ColumnExpression) q;
+		assertEquals("b.id", column.getColumnName());
+		
+		
+		
+	}
+	
+/*
+SELECT
    STRUCT(
       "Week" AS durationUnit,
       DATE_TRUNC(endTime, "Week") AS intervalStart
@@ -89,7 +228,7 @@ SELECT
    COUNT(*) AS totalCount
 FROM schema.BuyAction;
  */
-	@Ignore
+	@Test
 	public void testTimeInterval() throws Exception {
 		
 		load("src/test/resources/konig-transform/time-interval");
@@ -462,7 +601,7 @@ FROM fact.SalesByCity
 WHERE timeInterval.durationUnit="Week"
 GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
  */
-	@Ignore
+	@Test
 	public void testAnalyticsModel() throws Exception {
 		
 		load("src/test/resources/konig-transform/analytics-model");
@@ -598,7 +737,7 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		assertEquals(colName, column.getColumnName());
 	}
 
-	@Ignore
+	@Test
 	public void testJoinById() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-by-id");
@@ -677,7 +816,7 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		
 	}
 
-	@Ignore
+	@Test
 	public void testCountStar() throws Exception {
 		
 		load("src/test/resources/konig-transform/count-star");
@@ -726,7 +865,7 @@ SELECT
 FROM xas.AssessmentSession
 GROUP BY actor, object
  */
-	@Ignore
+	@Test
 	public void testAssessmentEndeavor() throws Exception {
 		load("src/test/resources/konig-transform/assessment-endeavor");
 
@@ -740,7 +879,7 @@ GROUP BY actor, object
 		// TODO : Add more validation steps.
 	}
 
-	@Ignore
+	@Test
 	public void testAssessmentSession() throws Exception {
 		load("src/test/resources/konig-transform/assessment-session");
 
@@ -814,7 +953,7 @@ SELECT
 FROM `{gcpProjectId}.org.Membership`
 GROUP BY organization
  */
-	@Ignore
+	@Test
 	public void testBigQueryView() throws Exception {
 		load("src/test/resources/konig-transform/bigquery-view");
 
@@ -848,7 +987,7 @@ SELECT
 FROM org.Membership
 GROUP BY organization
  */
-	@Ignore
+	@Test
 	public void testArrayAgg() throws Exception {
 		load("src/test/resources/konig-transform/array-agg");
 
@@ -896,7 +1035,7 @@ GROUP BY organization
 		assertEquals("organization", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testInjectModifiedTimestamp() throws Exception {
 		
 		load("src/test/resources/konig-transform/inject-modified-timestamp");
@@ -934,7 +1073,7 @@ FROM
  ON
    a.artist_id=b.group_id
  */
-	@Ignore
+	@Test
 	public void testGcpDeploy() throws Exception {
 		
 		load("src/test/resources/konig-transform/gcp-deploy");
@@ -982,7 +1121,7 @@ FROM
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAggregateFunction() throws Exception {
 		
 		load("src/test/resources/konig-transform/aggregate-function");
@@ -1017,7 +1156,7 @@ FROM
 		assertEquals("resultOf", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testDerivedProperty() throws Exception {
 		
 /*
@@ -1093,7 +1232,7 @@ FROM
  ON
    a.gender=b.genderCode	
  */
-	@Ignore
+	@Test
 	public void testEnumField() throws Exception {
 		
 		load("src/test/resources/konig-transform/enum-field");
@@ -1162,7 +1301,7 @@ FROM
 		
 	}
 
-	@Ignore
+	@Test
 	public void testJoinNestedEntityByPk() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity-by-pk");
@@ -1200,7 +1339,7 @@ FROM
 		assertEquals("b.org_id", ce.getColumnName());
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinNestedEntity() throws Exception {
 		
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -1334,7 +1473,7 @@ FROM
 		
 	}
 
-	@Ignore
+	@Test
 	public void testFlattenedField() throws Exception {
 		
 		load("src/test/resources/konig-transform/flattened-field");
@@ -1387,7 +1526,7 @@ FROM
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -1425,7 +1564,7 @@ FROM
 		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
-	@Ignore
+	@Test
 	public void testFieldExactMatch() throws Exception {
 		
 		load("src/test/resources/konig-transform/field-exact-match");

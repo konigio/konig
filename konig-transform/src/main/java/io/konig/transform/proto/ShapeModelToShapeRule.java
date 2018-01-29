@@ -113,6 +113,9 @@ public class ShapeModelToShapeRule {
 
 		private ShapeRule buildShapeRule(ShapeModel shapeModel) throws ShapeTransformException {
 
+			if (logger.isDebugEnabled()) {
+				logger.debug("BEGIN buildShapeRule(shape.id=<{}>", shapeModel.getShape().getId());
+			}
 			buildDataChannels(shapeModel);
 			
 			ShapeRule shapeRule = toShapeRule(shapeModel);

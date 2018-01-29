@@ -64,7 +64,7 @@ public class CurrentStateViewGenerator {
 			result.setQuery("#standardSQL\n" + select.toString());
 			result.setUseLegacySql(false);
 		} catch(Exception ex) {
-			throw new KonigException("Unable to create the view for the shape " + shape);
+			throw new KonigException("Unable to create the view for the shape " + shape, ex);
 		}
 		return result;
 	}

@@ -24,6 +24,7 @@ package io.konig.schemagen.ocms;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.MessageFormat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -52,30 +53,57 @@ public class OracleTableWriter implements ShapeVisitor {
 		if (table != null) {
 			OracleTableDefinition tableDefinition = new OracleTableDefinition();
 			SqlTable sqlTable = generator.generateTable(shape);
-			File file = sqlFile(table);
+			File sqlFile = sqlFile(table);
+			File jsonFile = jsonFile(table);
 			tableDefinition.setQuery(new CreateTableStatement(sqlTable).toString());
 			tableDefinition.setTableReference(table.getTableReference());
-			writeTable(file, tableDefinition);
+			writeTable(sqlFile, jsonFile, tableDefinition);
 		}
 	}
 	
 
-	private void writeTable(File file, OracleTableDefinition table) {
+	private void writeTable(File sqlFile, File jsonFile, OracleTableDefinition table) {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
+			
+			String ddl = table.getQuery();
+			table.setQuery(sqlFile.getName());
+			
 			
 			if (!baseDir.exists()) {
 				baseDir.mkdirs();
 			}
-			mapper.writeValue(file, table);
+			writeDDL(sqlFile, ddl);
+			mapper.writeValue(jsonFile, table);
 		} catch (IOException e) {
 			throw new KonigException(e);
 		}
 	}
+	
+	private void writeDDL(File sqlFile, String query) throws IOException {
+		
+		try (FileWriter fileWriter = new FileWriter(sqlFile)) {
+			fileWriter.write(query);
+		}
+		
+	}
 
-	private File sqlFile(OracleTable table) {
-		String fileName = table.getTableName() + ".json";
+	private File file(OracleTable table, String suffix) {
+
+		String instanceId = table.getTableReference().getOmcsInstanceId();
+		String databaseId = table.getTableReference().getOmcsDatabaseId();
+		String tableName = table.getTableName();
+		
+		String fileName = MessageFormat.format("{0}_{1}_{2}.{3}", instanceId, databaseId, tableName, suffix);
+		
 		File file = new File(baseDir, fileName);
 		return file;
+	}
+	private File jsonFile(OracleTable table) {
+		return file(table, "json");
+	}
+
+	private File sqlFile(OracleTable table) {
+		return file(table, "sql");
 	}
 }

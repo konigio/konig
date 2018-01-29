@@ -4,7 +4,7 @@
       "skipLeadingRows" : "1"
     },
     "sourceFormat" : "CSV",
-    "sourceUris" : [ "gs://originmusicalbumshape-{gcpBucketSuffix}/*" ]
+    "sourceUris" : [ "gs://originmusicalbumshape-${gcpBucketSuffix}/*" ]
   },
   "schema" : {
     "fields" : [ {
@@ -23,7 +23,7 @@
   },
   "tableReference" : {
     "datasetId" : "schema",
-    "projectId" : "{gcpProjectId}",
+    "projectId" : "${gcpProjectId}",
     "tableId" : "OriginMusicAlbumShape"
   },
   "type" : "EXTERNAL"

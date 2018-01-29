@@ -78,7 +78,31 @@ import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
-	
+
+
+	@Test
+	public void testBigQueryTransform() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("bigquery-transform.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		
+		ShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
+		shapeLoader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(uri("http://example.com/shapes/OriginProductShape"));
+		URI predicate = uri("http://example.com/ns/alias/PRD_PRICE");
+		PropertyConstraint p = shape.getPropertyConstraint(predicate);
+		assertTrue(p!=null);
+		Path path = p.getEquivalentPath();
+		assertEquals("/schema:offers[schema:priceCurrency \"USD\"]/schema:price", path.toSimpleString());
+	}
 
 	@Test
 	public void testInvalidOntologyNamespace() throws Exception {
@@ -127,10 +151,43 @@ public class WorkbookLoaderTest {
 		assertEquals(1, list.size());
 		
 		DataSource ds = list.get(0);
-		assertEquals("https://www.googleapis.com/sql/v1beta4/projects/{gcpProjectId}/instances/schema/databases/schema/tables/PersonShape", 
+		assertEquals("https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/schema/databases/schema/tables/PersonShape", 
 				ds.getId().stringValue());
 		
 		assertTrue(ds.isA(Konig.GoogleCloudSqlTable));
+	}
+	
+	@Test
+	public void testGoogleOracleTable() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("omcs-oracle-table.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		
+		Shape shape = s.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		List<DataSource> list = shape.getShapeDataSource();
+		assertEquals(1, list.size());
+		
+		DataSource ds = list.get(0);
+		assertEquals("http://www.konig.io/ns/omcs/instances/testOracleInstance/databases/schema/tables/Person", 
+				ds.getId().stringValue());
+		
+		assertTrue(ds.isA(Konig.OracleTable));
 	}
 	
 	@Test
@@ -320,7 +377,7 @@ public class WorkbookLoaderTest {
 		input.close();
 		
 		
-		URI topic = uri("https://pubsub.googleapis.com/v1/projects/{gcpProjectId}/topics/vnd.example.person");
+		URI topic = uri("https://pubsub.googleapis.com/v1/projects/${gcpProjectId}/topics/vnd.example.person");
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		assertTrue(graph.contains(topic, RDF.TYPE, Konig.GooglePubSubTopic));
 		Vertex shapeVertex = graph.vertex(shapeId);
@@ -410,6 +467,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
+	
 	@Test
 	public void testDatasourceParams() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("test-datasource-params.xlsx");
@@ -425,7 +483,6 @@ public class WorkbookLoaderTest {
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/ProductShape");
-		
 		List<Value> list = graph.v(shapeId).out(Konig.shapeDataSource).out(GCP.tableReference).out(GCP.tableId).toValueList();
 		assertEquals(1, list.size());
 		assertEquals("CustomProduct", list.get(0).stringValue());
@@ -482,7 +539,7 @@ public class WorkbookLoaderTest {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/PersonLiteShape"));
 		assertTrue(shape != null);
-		URI datasourceId = uri("https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/Person");
+		URI datasourceId = uri("https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person");
 		
 		Vertex datasource = shape.getVertex(Konig.shapeDataSource);
 		assertTrue(datasource != null);
@@ -493,7 +550,7 @@ public class WorkbookLoaderTest {
 		Vertex tableRef = datasource.getVertex(GCP.tableReference);
 		assertTrue(tableRef != null);
 		
-		assertValue(tableRef, GCP.projectId, "{gcpProjectId}");
+		assertValue(tableRef, GCP.projectId, "${gcpProjectId}");
 		assertValue(tableRef, GCP.datasetId, "schema");
 		assertValue(tableRef, GCP.tableId, "Person");
 	}

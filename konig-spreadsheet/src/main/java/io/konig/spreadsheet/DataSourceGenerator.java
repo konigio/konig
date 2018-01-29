@@ -20,20 +20,25 @@ package io.konig.spreadsheet;
  * #L%
  */
 
-
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeServices;
+import org.apache.velocity.runtime.RuntimeSingleton;
+import org.apache.velocity.runtime.parser.ParseException;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.rio.RDFHandlerException;
@@ -43,199 +48,152 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.util.CompositeValueMap;
-import io.konig.core.util.SimpleValueFormat;
-import io.konig.core.util.SimpleValueMap;
-import io.konig.core.util.ValueMap;
 import io.konig.shacl.Shape;
 
 /**
- * A utility that generates DataSource definitions associated with Shapes based on a template.
+ * A utility that generates DataSource definitions associated with Shapes based
+ * on a template.
+ * 
  * @author Greg McFall
  *
  */
 public class DataSourceGenerator {
-	
+
 	private NamespaceManager nsManager;
-	private SimpleValueMap settings = new SimpleValueMap();
-	private Map<String, SimpleValueFormat> templateMap = new HashMap<>();
 	private File templateDir;
-	
+	private VelocityEngine engine;
+	private File velocityLog;
+	private VelocityContext context;
+
 	public DataSourceGenerator(NamespaceManager nsManager, File templateDir, Properties properties) {
 		this.nsManager = nsManager;
 		this.templateDir = templateDir;
+		this.context = new VelocityContext();
 		put(properties);
-		
-		this.templateDir = templateDir;
+		createVelocityEngine();
 	}
-	
-	public void put(Properties properties) {
 
-		Set<Entry<Object,Object>> entries = properties.entrySet();
-		for (Entry<Object,Object> e : entries) {
+	public File getVelocityLog() {
+		return velocityLog;
+	}
+
+	public void setVelocityLog(File velocityLog) {
+		this.velocityLog = velocityLog;
+	}
+
+	private void createVelocityEngine() {
+
+		Properties properties = new Properties();
+		properties.put("resource.loader", "class");
+		properties.setProperty("file.resource.loader.path", "WorkbookLoader");
+		properties.put("class.resource.loader.class", ClasspathResourceLoader.class.getName());
+		if (velocityLog != null) {
+			properties.put("runtime.log", velocityLog.getAbsolutePath());
+		}
+
+		engine = new VelocityEngine(properties);
+	}
+
+	private String merge(String templateName){
+		StringWriter result = new StringWriter();
+		try {
+			templateName = "WorkbookLoader/" + templateName + ".ttl";
+			StringWriter tempresult = new StringWriter();
+			Template template = engine.getTemplate(templateName, "UTF-8");
+			template.merge(context, tempresult);
+	
+			RuntimeServices runtimeServices = RuntimeSingleton.getRuntimeServices();
+			StringReader reader = new StringReader(tempresult.toString());
+			template.setRuntimeServices(runtimeServices);
+			template.setData(runtimeServices.parse(reader, templateName));
+			template.initDocument();
+			template.merge(context, result);
+		} catch (ParseException e) {
+			throw new KonigException("Failed to parse template", e);
+		}
+		return result.toString();
+	}
+
+	public void put(Properties properties) {
+		Set<Entry<Object, Object>> entries = properties.entrySet();
+		for (Entry<Object, Object> e : entries) {
 			String key = e.getKey().toString();
 			String value = e.getValue().toString();
-			settings.put(key, value);
+			context.put(key, value);
 		}
 	}
-	
+
 	public File getTemplateDir() {
 		return templateDir;
 	}
-
-
 
 	public void setTemplateDir(File templateDir) {
 		this.templateDir = templateDir;
 	}
 
-
+	@SuppressWarnings("rawtypes")
 	public void generate(Shape shape, Function func, Graph graph) {
+
 		String templateName = func.getName();
-		ValueMap params = func.getParameters();
-
-		SimpleValueFormat template = null;
-
-		try {
-			template = getTemplate(templateName);
-		} catch (IOException e) {
-			throw new KonigException(e);
+		HashMap params = (HashMap) func.getParameters();
+		Iterator it = params.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry pair = (Map.Entry) it.next();
+			context.put(pair.getKey().toString(), pair.getValue().toString());
 		}
-		
-		if (template == null) {
-			throw new KonigException("Template not found: " + templateName);
-		}
-		
-		SimpleValueMap defaultMap = defaultMap(shape);
-	
-		CompositeValueMap map = new CompositeValueMap(params, defaultMap, settings);
-		
 
-		String result = template.format(map);
+		defaultMap(shape);
+		String result = merge(templateName);
 		ByteArrayInputStream input = new ByteArrayInputStream(result.getBytes());
-		
+
 		try {
 			RdfUtil.loadTurtle(graph, input, "");
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
 			throw new KonigException("Failed to render template", e);
 		}
+
 	}
 
-	private SimpleValueMap defaultMap(Shape shape) {
-
-		SimpleValueMap map = new SimpleValueMap();
-		
-		
+	private void defaultMap(Shape shape) {
 		if (shape.getId() instanceof URI) {
-			putURI(map, "shape", (URI)shape.getId());
+			putURI("shape", (URI) shape.getId());
 		}
 		String mediaType = shape.getMediaTypeBaseName();
 		if (mediaType != null) {
 			int slash = mediaType.lastIndexOf('/');
 			if (slash > 0) {
-				String mediaSubtype = mediaType.substring(slash+1);
-				map.put("mediaSubtype", mediaSubtype);
+				String mediaSubtype = mediaType.substring(slash + 1);
+				context.put("mediaSubtype", mediaSubtype);
 			}
 		}
-		putURI(map, "class", shape.getTargetClass());
-		return map;
+		putURI("class", shape.getTargetClass());
 	}
 
 	public void generate(Shape shape, String templateName, Graph graph) {
-		
-		
-		SimpleValueFormat template = null;
-		
-		try {
-			template = getTemplate(templateName);
-		} catch (IOException e) {
-			throw new KonigException(e);
-		}
-		
-		if (template == null) {
-			throw new KonigException("Template not found: " + templateName);
-		}
-		
-		SimpleValueMap map = defaultMap(shape);
-		CompositeValueMap composite = new CompositeValueMap(map, settings);
-
-		String result = template.format(composite);
+		defaultMap(shape);
+		String result = merge(templateName);
 		ByteArrayInputStream input = new ByteArrayInputStream(result.getBytes());
-		
+
 		try {
 			RdfUtil.loadTurtle(graph, input, "");
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
 			throw new KonigException("Failed to render template", e);
 		}
-		
-		
+
 	}
 
-	private SimpleValueFormat getTemplate(String templateName) throws IOException {
-		SimpleValueFormat template = templateMap.get(templateName);
-		if (template == null) {
-			
-			InputStream stream = openTemplate(templateName);
-			if (stream == null) {
-				return null;
-			}
-			
-			try {
+	private void putURI(String name, URI value) {
 
-				byte[] buffer = new byte[1024];
-				int len = -1;
-				
-				ByteArrayOutputStream out = new ByteArrayOutputStream();
-				while ((len=stream.read(buffer)) != -1) {
-					out.write(buffer, 0, len);
-				}
-				
-				String text = out.toString("UTF-8");
-				template = new SimpleValueFormat(text);
-				templateMap.put(templateName, template);
-				
-			} finally {
-				stream.close();
-			}
-		}
-		return template;
-	}
-	
-
-	
-	private InputStream openTemplate(String templateName) throws FileNotFoundException {
-		String fileName = templateName + ".ttl";
-
-		InputStream stream = null;
-		
-		if (templateDir != null) {
-			File file = new File(templateDir, fileName);
-			if (file.exists()) {
-				stream = new FileInputStream(file);
-			}
-		}
-		
-		if (stream == null) {
-			stream = getClass().getClassLoader().getResourceAsStream("WorkbookLoader/" + fileName);
-		}
-		return stream;
-	}
-
-	private void putURI(SimpleValueMap map, String name, URI value) {
-		
 		if (value != null) {
 			Namespace ns = nsManager.findByName(value.getNamespace());
-			
-			map.put(name+"Id", value.stringValue());
-			map.put(name+"LocalName", value.getLocalName());
-			map.put(name+"LocalNameLowercase", value.getLocalName().toLowerCase());
-			
+			context.put(name + "Id", value.stringValue());
+			context.put(name + "LocalName", value.getLocalName());
+			context.put(name + "LocalNameLowercase", value.getLocalName().toLowerCase());
 			if (ns != null) {
-				map.put(name+"NamespacePrefix", ns.getPrefix());
+				context.put(name + "NamespacePrefix", ns.getPrefix());
 			}
 		}
-		
-	}
 
+	}
 
 }

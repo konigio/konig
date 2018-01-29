@@ -9,62 +9,47 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:OriginProductShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/uCpln2Xow54AAAFcaMuvGg> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/Z9K5w3Rt36IAAAFhLXIcOQ> ; 
 	sh:targetClass schema:Product ; 
 	sh:property  [ 
-		sh:predicate alias:PRD_ID ; 
+		sh:path alias:PRD_ID ; 
 		sh:datatype xsd:long ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:equivalentPath '''@context {
-  "ex" : "http://example.com/ns/core/",
-  "originId" : "ex:originId"
-}
-/originId'''
+		konig:formula '''@prefix ex: <http://example.com/ns/core/> .
+.ex:originId'''
 	 ]  ,  [ 
-		sh:predicate alias:PRD_NAME ; 
+		sh:path alias:PRD_NAME ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:equivalentPath '''@context {
-  "schema" : "http://schema.org/",
-  "name" : "schema:name"
-}
-/name'''
+		konig:formula '''@prefix schema: <http://schema.org/> .
+.schema:name'''
 	 ]  ,  [ 
-		sh:predicate alias:PRD_CAT ; 
+		sh:path alias:PRD_CAT ; 
 		sh:datatype xsd:int ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:equivalentPath '''@context {
-  "schema" : "http://schema.org/",
-  "category" : "schema:category",
-  "ex" : "http://example.com/ns/core/",
-  "originId" : "ex:originId"
-}
-/category/originId'''
+		konig:formula '''@prefix schema: <http://schema.org/> .
+@prefix ex: <http://example.com/ns/core/> .
+.schema:category.ex:originId'''
 	 ]  ,  [ 
-		sh:predicate alias:PRD_PRICE ; 
+		sh:path alias:PRD_PRICE ; 
 		sh:datatype xsd:float ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		konig:equivalentPath '''@context {
-  "schema" : "http://schema.org/",
-  "offers" : "schema:offers",
-  "priceCurrency" : "schema:priceCurrency",
-  "price" : "schema:price"
-}
-/offers[priceCurrency "USD"]/price''' ]  ; 
+		konig:formula '''@prefix schema: <http://schema.org/> .
+.schema:offers[schema:priceCurrency "USD"].schema:price''' ]  ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
    "PRD_ID" : "alias:PRD_ID"
 }
 
 <http://example.com/product/{PRD_ID}>''' ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginProductShape> , <gs://originproductshape.{gcpBucketSuffix}> . 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginProductShape> , <gs://originproductshape-{gcpBucketSuffix}> . 
 
-<http://www.konig.io/activity/uCpln2Xow54AAAFcaMuvGg> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2017-06-02T08:33:18.332-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/Z9K5w3Rt36IAAAFhLXIcOQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-01-25T08:11:48.656-05:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginProductShape> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 
@@ -73,13 +58,13 @@ shape:OriginProductShape a sh:Shape ;
 		gcp:tableId "OriginProductShape"
 	 ]  ; 
 	gcp:externalDataConfiguration  [ 
-		gcp:sourceUris <gs://originproductshape.{gcpBucketSuffix}> ; 
+		gcp:sourceUris <gs://originproductshape-{gcpBucketSuffix}/*> ; 
 		gcp:sourceFormat "CSV" ; 
 		gcp:csvOptions  [ 
 			gcp:skipLeadingRows 1 ]  ]  . 
 
-<gs://originproductshape.{gcpBucketSuffix}> a konig:GoogleCloudStorageBucket , konig:DataSource ; 
-	gcp:name "originproductshape.{gcpBucketSuffix}" ; 
+<gs://originproductshape-{gcpBucketSuffix}> a konig:GoogleCloudStorageBucket , konig:DataSource ; 
+	gcp:name "originproductshape-{gcpBucketSuffix}" ; 
 	gcp:projectId "{gcpProjectId}" ; 
 	gcp:storageClass "multi_regional" ; 
 	gcp:location "us" . 

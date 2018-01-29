@@ -27,7 +27,6 @@ import com.google.api.services.bigquery.model.ExternalDataConfiguration;
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableSchema;
-import com.google.api.services.bigquery.model.ViewDefinition;
 
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
@@ -48,18 +47,10 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 	private BigQueryTableGenerator tableGenerator;
 	private BigQueryTableVisitor tableVisitor;
 	private CurrentStateViewGenerator currentStateViewGenerator;
-	private ShapeModelFactory shapeModelFactory;
 	
-	public ShapeToBigQueryTransformer(BigQueryTableGenerator tableGenerator, BigQueryTableVisitor tableVisitor) {
-		this.tableGenerator = tableGenerator;
-		this.tableVisitor = tableVisitor;
-		this.currentStateViewGenerator = new CurrentStateViewGenerator(shapeModelFactory);
-	}
-
 	public ShapeToBigQueryTransformer(BigQueryTableGenerator tableGenerator, BigQueryTableVisitor tableVisitor, ShapeModelFactory shapeModelFactory) {
 		this.tableGenerator = tableGenerator;
 		this.tableVisitor = tableVisitor;
-		this.shapeModelFactory = shapeModelFactory;
 		this.currentStateViewGenerator = new CurrentStateViewGenerator(shapeModelFactory);
 	}
 	

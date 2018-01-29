@@ -138,6 +138,10 @@ public class ClassModel extends BasePrettyPrintable {
 	
 	public boolean hasUnmatchedProperty() {
 		for (PropertyGroup group : propertyMap.values()) {
+			PropertyModel targetProperty = group.getTargetProperty();
+			if (targetProperty == null) {
+				continue;
+			}
 			ClassModel nested = group.getValueClassModel();
 			
 			if (

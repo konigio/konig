@@ -36,6 +36,11 @@
   </logger>  
   
   
+  <logger name="io.konig.transform.proto.ShapeModelFactory" additivity="false">
+      <level value="debug"/>
+      <appender-ref ref="console"/>
+  </logger>
+  
   <logger name="io.konig.transform.proto.SimplePropertyMapper" additivity="false">
       <level value="debug"/>
       <appender-ref ref="console"/>
@@ -50,9 +55,9 @@
       <level value="debug"/>
       <appender-ref ref="console"/>
   </logger>
+  
+  
 -->
-  
-  
   <root> 
     <priority value ="warn" /> 
     <appender-ref ref="console" /> 
