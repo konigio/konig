@@ -67,13 +67,12 @@ abstract public class SqlShapeReadService extends SqlGenerator implements ShapeR
 			}
 		}
 
-		String sql = toSql(struct, query);
-		executeSql(struct, sql, output, format);
+		executeSql(struct, query, output, format);
 	}
 	
 	abstract ChartSeriesFactory getChartSeriesFactory();
 
-	abstract protected void executeSql(EntityStructure struct, String sql, Writer output, Format format) throws DaoException;
+	abstract protected void executeSql(EntityStructure struct, ShapeQuery query, Writer output, Format format) throws DaoException;
 
 	
 }
