@@ -44,12 +44,6 @@
 			<systemPath>${project.basedir}/src/lib/ojdbc7-12.1.0.2.jar</systemPath>
 		</dependency>
 		<dependency>
-			<groupId>com.oracle</groupId>
-			<artifactId>ojdbc7</artifactId>
-			<version>12.1.0.2</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 	  		<groupId>io.konig</groupId>
 	  		<artifactId>konig-maven-common</artifactId>
 			<version>${konig.version}</version>
@@ -84,7 +78,7 @@
 			            <goals>
 			                <goal>install-file</goal>
 			            </goals>
-			            <phase>clean</phase>
+			            <phase>initialize</phase>
 			            <configuration>
 			                <groupId>com.oracle</groupId>
 			                <artifactId>ojdbc7</artifactId>
