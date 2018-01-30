@@ -24,7 +24,7 @@
       <version>4.8.2</version>
       <scope>test</scope>
     </dependency>
-    
+  
 		<dependency>
 		    <groupId>com.google.apis</groupId>
 		    <artifactId>google-api-services-bigquery</artifactId>

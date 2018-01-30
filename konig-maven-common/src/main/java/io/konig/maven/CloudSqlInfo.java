@@ -28,9 +28,16 @@ public class CloudSqlInfo {
 	@Parameter(property="konig.gcp.cloudsql.directory", defaultValue="${konig.gcp.directory}/cloudsql")
 	private File directory;
 
+	@Parameter(property="konig.gcp.cloudsql.instances", defaultValue="${konig.gcp.cloudsql.directory}/instances")
+	private File instances;
+	
 
-	@Parameter(property="konig.gcp.cloudsql.schema", defaultValue="${konig.gcp.cloudsql.directory}/schema")
-	private File schema;
+
+	@Parameter(property="konig.gcp.cloudsql.databases", defaultValue="${konig.gcp.cloudsql.directory}/databases")
+	private File databases;
+
+	@Parameter(property="konig.gcp.cloudsql.tables", defaultValue="${konig.gcp.cloudsql.directory}/tables")
+	private File tables;
 
 	public CloudSqlInfo() {
 	}
@@ -43,13 +50,30 @@ public class CloudSqlInfo {
 		this.directory = directory;
 	}
 
-	public File getSchema() {
-		return schema;
+	public File getTables() {
+		return tables;
 	}
 
-	public void setSchema(File schema) {
-		this.schema = schema;
+	public void setTables(File schema) {
+		this.tables = schema;
 	}
+
+	public File getInstances() {
+		return instances;
+	}
+
+	public void setInstances(File instances) {
+		this.instances = instances;
+	}
+
+	public File getDatabases() {
+		return databases;
+	}
+
+	public void setDatabases(File databases) {
+		this.databases = databases;
+	}
+	
 	
 	
 

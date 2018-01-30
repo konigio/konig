@@ -158,7 +158,7 @@ public class BasicPojoHandler implements PojoHandler {
 	}
 
 
-	private EnumValueHandler enumValueHandler(Class<?> type, Method m) {
+	private ValueHandler enumValueHandler(Class<?> type, Method m) {
 		
 		try {
 			Method valueToEnum = type.getMethod("fromURI", URI.class);
