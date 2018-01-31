@@ -25,7 +25,6 @@ import java.io.File;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -48,15 +47,14 @@ public class CreateOmcsTableAction {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			File file = ocmsDeployment.file(tableFile);
-			
 			OracleTableDefinition table = mapper.readValue(file, OracleTableDefinition.class);
-			String instance = table.getTableReference().getOmcsInstanceId();
-			String database = table.getTableReference().getOmcsDatabaseId();
+			String instance = table.getTableReference().getOracleHost() +":" +table.getTableReference().getOmcsInstanceId();
+			String schema = table.getTableReference().getOracleSchema();
 			String tableId = table.getTableReference().getOmcsTableId();
 			File ddlFile = new File(file.getParentFile(), table.getQuery());
-			
 			String createQuery = fileToString(ddlFile);
-			connection = OmcsConnection.getConnection(instance, database);			
+			
+			connection = OmcsConnection.getConnection(instance, schema);			
 			statement = connection.createStatement();
 			statement.execute(createQuery);
 			ocmsDeployment.setResponse("Created Table " + tableId);

@@ -24,18 +24,38 @@ package io.konig.schemagen.sql;
 import io.konig.core.io.AbstractPrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
 
-public class CreateDatabaseStatement extends AbstractPrettyPrintable {
-	
-	private String database;
-	
-	public CreateDatabaseStatement(String database) {
-		this.database = database;
+public class CreateOracleTableStatement extends AbstractPrettyPrintable {
+
+	private SqlTable table;
+
+	public CreateOracleTableStatement(SqlTable table) {
+		this.table = table;
 	}
 	
-	@Override
-	public void print(PrettyPrintWriter out) {
-		out.print("CREATE DATABASE IF NOT EXISTS ");
-		out.print(database);
+
+	public SqlTable getTable() {
+		return table;
 	}
 
+
+	@Override
+	public void print(PrettyPrintWriter out) {
+		out.print("DECLARE");
+		out.println(" v_count INTEGER;");
+		out.println(" BEGIN");
+		out.println(" SELECT count(1) INTO v_count FROM USER_TABLES WHERE table_name='"+table.getTableName().toUpperCase()+"';");
+		out.println(" IF v_count = 0 THEN");
+		out.println(" EXECUTE IMMEDIATE '");
+		out.print("CREATE TABLE ");
+		out.print(" ");
+		table.print(out);
+		out.print(" ';");
+		out.println(" END IF;");
+		out.println(" END;");
+		
+		
+	}
+	
+
 }
+

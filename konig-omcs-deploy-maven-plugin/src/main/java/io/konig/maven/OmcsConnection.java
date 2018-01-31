@@ -31,12 +31,10 @@ public class OmcsConnection {
 	private String username;
 	private String password;
 
-	private OmcsConnection(String instance, String database) throws Exception {
+	private OmcsConnection(String instance, String schema) throws Exception {
 		try {
 			url = "jdbc:oracle:thin:@" + instance;
-			if (database != null) {
-				url = "jdbc:oracle:thin:@" + instance + ":" + database;
-			}
+			
 			username = System.getenv("OMCS_USERNAME") == null ? System.getProperty("omcs.username")
 					: System.getenv("OMCS_USERNAME");
 			password = System.getenv("OMCS_PASSWORD") == null ? System.getProperty("omcs.password")
@@ -53,12 +51,17 @@ public class OmcsConnection {
 		}
 	}
 
-	public static Connection getConnection(String instance, String database) throws Exception {
+	public static Connection getConnection(String instance, String schema) throws Exception {
 		if (connection == null) {
-			connection = new OmcsConnection(instance, database);
+			connection = new OmcsConnection(instance, schema);
 		}
 		try {
-			return DriverManager.getConnection(connection.url, connection.username, connection.password);
+			
+			Connection con = DriverManager.getConnection(connection.url, connection.username, connection.password);
+			if(schema != null && !schema.equals("")) {
+				con.createStatement().execute("ALTER SESSION SET CURRENT_SCHEMA ="+schema);
+			}
+			return con;
 		} catch (SQLException e) {
 			throw e;
 		}

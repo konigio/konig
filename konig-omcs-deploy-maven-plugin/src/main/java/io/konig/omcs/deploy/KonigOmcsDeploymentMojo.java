@@ -1,6 +1,5 @@
 package io.konig.omcs.deploy;
 
-import java.io.BufferedReader;
 
 /*
  * #%L
@@ -23,8 +22,6 @@ import java.io.BufferedReader;
  */
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -50,8 +47,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.konig.maven.OmcsConnection;
@@ -62,10 +57,7 @@ public class KonigOmcsDeploymentMojo extends AbstractMojo {
 
 	@Parameter(required=true)
 	private File directory;
-	
-	@Parameter(required=true)
-	private File databases;
-	
+
 	@Parameter(required=true)
 	private File tables;
 	
@@ -74,10 +66,6 @@ public class KonigOmcsDeploymentMojo extends AbstractMojo {
 	
 	public void execute() throws MojoExecutionException {
 		try {
-			File[] databaseFiles = databases.listFiles();
-			for (File file : databaseFiles) {
-				createDatabases(file);
-			}
 			
 			File[] tableFiles = tables.listFiles();
 			for (File file : tableFiles) {
@@ -89,25 +77,15 @@ public class KonigOmcsDeploymentMojo extends AbstractMojo {
 			close();
 		}
 	}
-	
-	private void createDatabases(File file) throws Exception {
-		ObjectMapper mapper = new ObjectMapper();
-		OracleTableDefinition table = mapper.readValue(file, OracleTableDefinition.class);
-		String instance = table.getDatabaseReference().getOmcsInstanceId();
-		String createQuery = table.getQuery();
-		connection = OmcsConnection.getConnection(instance, null);
-		statement = connection.createStatement();
-		statement.execute(createQuery);
-		close();
-	}
+
 	
 	private void createTables(File file) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 		OracleTableDefinition table = mapper.readValue(file, OracleTableDefinition.class);
 		String instance = table.getTableReference().getOmcsInstanceId();
-		String database = table.getTableReference().getOmcsDatabaseId();
+		String schema = table.getTableReference().getOracleSchema();
 		String createQuery = table.getQuery();
-		connection = OmcsConnection.getConnection(instance, database);			
+		connection = OmcsConnection.getConnection(instance, schema);			
 		statement = connection.createStatement();
 		statement.execute(createQuery);
 		close();

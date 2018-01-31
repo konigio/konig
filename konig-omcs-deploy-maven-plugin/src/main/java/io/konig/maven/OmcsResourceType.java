@@ -22,6 +22,5 @@ package io.konig.maven;
 
 
 public enum OmcsResourceType {
-	OracleDatabase,
 	OracleTable
 }
