@@ -22,6 +22,7 @@ package io.konig.gcp.datasource;
 
 
 import io.konig.core.pojo.PojoContext;
+import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.io.ShapeLoader;
 
@@ -34,6 +35,8 @@ public class GcpShapeConfig {
 		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
 		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
 		context.mapClass(Konig.GoogleCloudSqlTable, GoogleCloudSqlTable.class);
+		context.mapClass(GCP.GoogleCloudSqlInstance, GoogleCloudSqlInstance.class);
+	
 	}
 
 }

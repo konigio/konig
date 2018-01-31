@@ -28,6 +28,8 @@ import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 
 public class GoogleCloudSqlTable  extends DataSource implements TableDataSource {
+	private String instance;
+	private String database;
 	private String tableName;
 
 	public GoogleCloudSqlTable() {
@@ -46,6 +48,25 @@ public class GoogleCloudSqlTable  extends DataSource implements TableDataSource 
 		this.tableName = tableName;
 	}
 
+	public String getInstance() {
+		return instance;
+	}
+
+	public void setInstance(String instance) {
+		this.instance = instance;
+	}
+
+	public String getDatabase() {
+		return database;
+	}
+
+	public void setDatabase(String database) {
+		this.database = database;
+	}
+	
+	public void setName(String name) {
+		tableName = name;
+	}
 
 	@Override
 	public void setId(Resource id) {

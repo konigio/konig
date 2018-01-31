@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import io.konig.dao.core.ShapeQuery;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -51,9 +52,20 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 	}
 
 	@Override
-	protected void executeSql(EntityStructure struct, String sql, Writer output, Format format) throws DaoException {
+	protected void executeSql(EntityStructure struct, ShapeQuery query, Writer output, Format format) throws DaoException {
 		BigQuery bigQuery = getBigQuery();
-		QueryRequest request = QueryRequest.newBuilder(sql).setUseLegacySql(false).build();
+
+		String sql = toSql(struct, query);
+
+		QueryRequest.Builder querybuilder  = QueryRequest.newBuilder(sql).setUseLegacySql(false);
+
+		if(query.getCursor() != null) {
+			long pageSize = (query.getLimit()!= null) ? query.getLimit() : 1000L ;
+			querybuilder.setPageSize(pageSize);
+		}
+
+		QueryRequest request = querybuilder.build();
+
 		QueryResponse response = bigQuery.query(request);
 		while (!response.jobCompleted()) {
 			try {
@@ -62,7 +74,15 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 			}
 			response = bigQuery.getQueryResults(response.getJobId());
 		}
-		// TODO: look for execution errors
+
+		if(response.jobCompleted() && query.getCursor() != null && !query.getCursor().equals("")) {
+			response = bigQuery.getQueryResults(response.getJobId(), BigQuery.QueryResultsOption.pageToken(query.getCursor()));
+		}
+
+		if (response.hasErrors() && response.getExecutionErrors().size() != 0) {
+			throw new DaoException(response.getExecutionErrors().get(0).getMessage());
+		}
+
 		QueryResult result = response.getResult();
 		handleResult(struct, result, output, format);
 		
@@ -86,19 +106,25 @@ public class BigQueryShapeReadService extends SqlShapeReadService {
 		JsonFactory factory = new JsonFactory();
 		JsonGenerator json = factory.createGenerator(output);
 		json.useDefaultPrettyPrinter();
-		
-		
-		// TODO: Use Linked Data Platform conventions, not a top-level array.
+
+		json.writeStartObject();
+
+		json.writeStringField("type", "BasicContainer");
+
+		if(result.hasNextPage()) {
+			String nextPageToken = result.getNextPageToken();
+			json.writeStringField("nextPageToken", nextPageToken);
+		}
+
+		json.writeFieldName("contains");
 		json.writeStartArray();
-		
-		Iterator<List<FieldValue>> sequence = result.iterateAll().iterator();
-		
-		while (sequence.hasNext()) {
-			List<FieldValue> row = sequence.next();
+
+		for (List<FieldValue> row : result.iterateAll()) {
 			writeRow(struct, row, json);
 		}
 		
 		json.writeEndArray();
+		json.writeEndObject();
 		json.flush();
 		
 	}

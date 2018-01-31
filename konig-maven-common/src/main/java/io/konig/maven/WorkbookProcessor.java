@@ -37,6 +37,11 @@ public class WorkbookProcessor {
 	public File getOwlDir() {
 		return owlDir;
 	}
+	
+	
+	public File gcpDir(RdfConfig defaults) {
+		return new File(defaults.getRdfDir(), "gcp");
+	}
 	public File owlDir(RdfConfig defaults) {
 		return owlDir == null ? defaults.getOwlDir() : owlDir;
 	}
