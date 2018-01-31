@@ -41,6 +41,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.VertexCopier;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
+import io.konig.schemagen.gcp.CloudSqlRdfGenerator;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -71,7 +72,11 @@ public class WorkbookToTurtleTransformer {
 		return workbookLoader;
 	}
 
-	public void transform(File workbookFile, File owlOutDir, File shapesOutDir) throws IOException, SpreadsheetException, RDFHandlerException {
+	public void transform(
+		File workbookFile, 
+		File owlOutDir, 
+		File shapesOutDir,
+		File gcpOutDir) throws IOException, SpreadsheetException, RDFHandlerException {
 		
 		if (workbookFile == null) {
 			throw new SpreadsheetException("workbookFile must be defined");
@@ -103,6 +108,9 @@ public class WorkbookToTurtleTransformer {
 			if (shapesOutDir != null) {
 				writeShapes(shapesOutDir);
 			}
+			
+			CloudSqlRdfGenerator cloudSql = new CloudSqlRdfGenerator();
+			cloudSql.generateAll(gcpOutDir, graph);
 			
 			
 		} finally {

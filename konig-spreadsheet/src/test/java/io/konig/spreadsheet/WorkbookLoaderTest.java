@@ -79,6 +79,25 @@ import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
 
+	@Test
+	public void testGoogleCloudSql() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("google-cloud-sql.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		// TODO: Add assertions
+	}
 
 	@Test
 	public void testBigQueryTransform() throws Exception {
@@ -104,7 +123,7 @@ public class WorkbookLoaderTest {
 		assertEquals("/schema:offers[schema:priceCurrency \"USD\"]/schema:price", path.toSimpleString());
 	}
 
-	@Test
+	@Ignore
 	public void testInvalidOntologyNamespace() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("invalid-ontology-namespace.xlsx");

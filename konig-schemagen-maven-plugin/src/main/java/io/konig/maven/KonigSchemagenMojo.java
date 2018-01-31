@@ -132,6 +132,8 @@ import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
 import io.konig.schemagen.gcp.BigQueryLabelGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
+import io.konig.schemagen.gcp.CloudSqlJsonGenerator;
+import io.konig.schemagen.gcp.CloudSqlRdfGenerator;
 import io.konig.schemagen.gcp.CloudSqlTableWriter;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
@@ -655,7 +657,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				 transformer.getWorkbookLoader().setFailOnWarnings(workbook.isFailOnWarnings());
 				 transformer.getWorkbookLoader().setFailOnErrors(workbook.isFailOnErrors());
 				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
-				 transformer.transform(workbook.getWorkbookFile(), workbook.owlDir(defaults), workbook.shapesDir(defaults));
+				 transformer.transform(
+						workbook.getWorkbookFile(), workbook.owlDir(defaults), workbook.shapesDir(defaults), workbook.gcpDir(defaults));
 			 }
 		 } catch (Throwable oops) {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
@@ -770,10 +773,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if (googleCloudPlatform.getCloudsql() != null) {
 				resourceGenerator.add(cloudSqlTableWriter());
 			}
+			if (googleCloudPlatform.getCloudsql().getInstances()!=null) {
+				CloudSqlJsonGenerator instanceWriter = new CloudSqlJsonGenerator();
+				instanceWriter.writeAll(googleCloudPlatform.getCloudsql(), owlGraph);
+			}
 			resourceGenerator.add(new GooglePubSubTopicListGenerator(googleCloudPlatform.getTopicsFile()));
 			resourceGenerator.dispatch(shapeManager.listShapes());
-			
-						
 
 			if (bigQuery != null) {
 
@@ -805,7 +810,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private CloudSqlTableWriter cloudSqlTableWriter() {
 		CloudSqlInfo info = googleCloudPlatform.getCloudsql();
 		SqlTableGenerator generator = new SqlTableGenerator();
-		return new CloudSqlTableWriter(info.getSchema(), generator);
+		return new CloudSqlTableWriter(info.getTables(), generator);
 	}
 
 
