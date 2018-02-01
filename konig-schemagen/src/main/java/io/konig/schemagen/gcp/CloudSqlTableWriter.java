@@ -66,6 +66,7 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 			
 			
 			String text = sqlTable.toString();
+			out.write("CREATE TABLE IF NOT EXISTS ");
 			out.write(text);
 			
 		} catch (IOException e) {
