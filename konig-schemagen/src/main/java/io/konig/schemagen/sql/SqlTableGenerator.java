@@ -20,11 +20,14 @@ package io.konig.schemagen.sql;
  * #L%
  */
 
-
 import java.text.MessageFormat;
+import java.util.List;
 
 import org.openrdf.model.URI;
 
+import io.konig.datasource.DataSource;
+import io.konig.gcp.datasource.GoogleCloudSqlTable;
+import io.konig.omcs.datasource.OracleTable;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -38,10 +41,9 @@ public class SqlTableGenerator {
 		nameFactory = new SqlTableNameFactory();
 		datatypeMapper = new SqlDatatypeMapper();
 	}
-	
-	
+
 	public SqlTable generateTable(Shape shape) throws SchemaGeneratorException {
-		
+
 		String tableName = nameFactory.getTableName(shape);
 		SqlTable table = new SqlTable(tableName);
 		for (PropertyConstraint p : shape.getProperty()) {
@@ -53,23 +55,42 @@ public class SqlTableGenerator {
 		return table;
 	}
 
-
 	private SqlColumn column(Shape shape, PropertyConstraint p) {
-		
+
 		URI predicate = p.getPredicate();
 		if (predicate != null) {
 			if (p.getShape() != null) {
-				String message = MessageFormat.format("Nested shape is not allowed in property ''{0}'' in {1}", 
+				String message = MessageFormat.format("Nested shape is not allowed in property ''{0}'' in {1}",
 						predicate.getLocalName(), shape.getId().stringValue());
 				throw new SchemaGeneratorException(message);
 			}
 			FacetedSqlDatatype datatype = datatypeMapper.type(p);
 			Integer minCount = p.getMinCount();
-			boolean nullable = (minCount!=null && minCount>0) ? false : true;
-			// TODO: specify the key type
-			return new SqlColumn(predicate.getLocalName(), datatype, null, nullable);
+			boolean nullable = (minCount != null && minCount > 0) ? false : true;
+
+			return new SqlColumn(predicate.getLocalName(), datatype, getKeyType(p), nullable);
 		}
 		return null;
+	}
+
+	private SqlKeyType getKeyType(PropertyConstraint p) throws SchemaGeneratorException {
+		SqlKeyType keyType = null;
+
+		if (p.getStereotype() != null) {
+
+			switch (p.getStereotype().getLocalName()) {
+			case "primaryKey":
+				keyType = SqlKeyType.PRIMARY_KEY;
+				break;
+			case "uniqueKey":
+				keyType = SqlKeyType.UNIQUE_KEY;
+				break;
+			default:
+				throw new SchemaGeneratorException("Invalid Key Type: " + p.getStereotype().getLocalName());
+			}
+		}
+
+		return keyType;
 	}
 
 }
