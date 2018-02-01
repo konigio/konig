@@ -26,8 +26,6 @@ public class OracleTableDefinition {
 
 	@JsonInclude(Include.NON_NULL)
 	private OracleTableReference tableReference;
-	@JsonInclude(Include.NON_NULL)
-	private OracleDatabaseRefence databaseReference;
 
 	private String query;
 
@@ -47,11 +45,4 @@ public class OracleTableDefinition {
 		this.tableReference = tableReference;
 	}
 
-	public OracleDatabaseRefence getDatabaseReference() {
-		return databaseReference;
-	}
-
-	public void setDatabaseReference(OracleDatabaseRefence databaseReference) {
-		this.databaseReference = databaseReference;
-	}
 }

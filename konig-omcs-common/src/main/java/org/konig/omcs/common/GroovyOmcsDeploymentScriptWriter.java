@@ -49,14 +49,17 @@ public class GroovyOmcsDeploymentScriptWriter {
 		
 		try (FileWriter writer = new FileWriter(scriptFile)) {
 			out = writer;
-			String grab = MessageFormat.format("@Grab(\"io.konig:konig-omcs-deploy-maven-plugin:{0}\")", konigVersion);
+			String grabes = "@Grapes([ \n"+
+								"@Grab(\"com.oracle:ojdbc7:12.1.0.2\"), \n "+
+								"@Grab(\"io.konig:konig-omcs-deploy-maven-plugin:{0}\")] \n"+
+							")";
+			String grab = MessageFormat.format(grabes, konigVersion);
 			println(grab);
 			println();			
 			println("import static io.konig.maven.OmcsResourceType.*;");
 			println("import io.konig.maven.OmcsDeployment;");
 			println();
 			println("def deploymentPlan = {");
-			printDatabaseCommands();
 			printTableCommands();
 			println("}");
 			println("def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent");
@@ -83,25 +86,6 @@ public class GroovyOmcsDeploymentScriptWriter {
 		}
 	}
 
-	
-	private void printDatabaseCommands() throws IOException {
-		
-		File databaseDir = oracleManagedCloud.getDatabases();
-		if (databaseDir != null && databaseDir.isDirectory()) {
-			for (File file : databaseDir.listFiles()) {
-				if (file.getName().endsWith(".json")) {
-					String path = FileUtil.relativePath(scriptFile, file);
-					print(indent);
-					print("create OracleDatabase from \"");
-					print(path);
-					print("\"");
-					println(" println response ");
-				}
-			}
-		}
-		
-	}
-	
 	private void print(String text) throws IOException {
 		out.write(text);
 	}

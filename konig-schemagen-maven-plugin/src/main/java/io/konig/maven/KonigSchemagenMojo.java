@@ -160,7 +160,6 @@ import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
 import io.konig.schemagen.jsonschema.TemplateJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.ocms.OracleCloudResourceGenerator;
-import io.konig.schemagen.ocms.OracleDatabaseWriter;
 import io.konig.schemagen.ocms.OracleTableWriter;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
@@ -729,17 +728,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			Configurator config = configurator();
 			config.configure(oracleManagedCloud);
 			File directory = Configurator.checkNull(oracleManagedCloud.getDirectory());
-			File databaseDir = Configurator.checkNull(oracleManagedCloud.getDatabases());
 			File tablesDir = Configurator.checkNull(oracleManagedCloud.getTables());
 			if(directory != null && tablesDir != null) {
 				OracleCloudResourceGenerator resourceGenerator = new OracleCloudResourceGenerator();
 				SqlTableGenerator sqlgenerator = new SqlTableGenerator();
-				OracleDatabaseWriter oracleDatbase = new OracleDatabaseWriter(databaseDir);
-				resourceGenerator.add(oracleDatbase);
 				OracleTableWriter oracle = new OracleTableWriter(tablesDir, sqlgenerator);
 				resourceGenerator.add(oracle);
 				resourceGenerator.dispatch(shapeManager.listShapes());
-				
 				GroovyOmcsDeploymentScriptWriter scriptWriter = new GroovyOmcsDeploymentScriptWriter(oracleManagedCloud);
 				scriptWriter.run();
 			}

@@ -39,12 +39,8 @@ public class OmcsDeployment {
 
 	public Object create(OmcsResourceType type) throws SQLException {
 			switch (type) {
-			case OracleDatabase:
-				return new CreateOmcsDatabaseAction(this);
-	
 			case OracleTable:
 				return new CreateOmcsTableAction(this);
-	
 			default:
 				break;
 	
