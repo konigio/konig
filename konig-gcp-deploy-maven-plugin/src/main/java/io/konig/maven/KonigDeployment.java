@@ -35,6 +35,7 @@ public class KonigDeployment {
 	private String response;
 	
 	public KonigDeployment(String credentials, String baseDir) throws InvalidGoogleCredentialsException, IOException {
+		
 		File credentialsFile = new File(credentials);
 		service = new GoogleCloudService();
 		service.openCredentials(credentialsFile);
@@ -63,6 +64,15 @@ public class KonigDeployment {
 			
 		case GooglePubSubTopic :
 			return new CreateGooglePubSubTopicAction(this);
+		
+		case GoogleCloudSqlInstance :
+			return new CreateGoogleCloudSqlInstanceAction(this);
+			
+		case GoogleCloudSqlDatabase :
+			return new CreateGoogleCloudSqlDatabaseAction(this);
+			
+		case GoogleCloudSqlTable :
+			return new CreateGoogleCloudSqlTableAction(this);
 			
 		default:
 			break;
@@ -83,8 +93,8 @@ public class KonigDeployment {
 			return new DeleteBigqueryViewAction(this);
 			
 		case GooglePubSubTopic :
-			return new DeleteGooglePubSubTopicAction(this);
-			
+			return new DeleteGooglePubSubTopicAction(this);		
+
 		default:
 			break;
 			

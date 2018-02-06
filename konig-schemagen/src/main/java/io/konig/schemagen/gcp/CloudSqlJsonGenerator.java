@@ -42,6 +42,7 @@ import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.gcp.datasource.GoogleCloudSqlDatabase;
 import io.konig.gcp.datasource.GoogleCloudSqlInstance;
+import io.konig.gcp.datasource.GoogleCloudSqlSettings;
 import io.konig.gcp.datasource.GoogleCloudSqlTableInfo;
 import io.konig.gcp.io.GoogleCloudSqlJsonUtil;
 import io.konig.maven.CloudSqlInfo;
@@ -109,8 +110,11 @@ public class CloudSqlJsonGenerator {
 
 				String sqlFileName = MessageFormat.format("{0}_{1}_{2}.sql", instance, database, tableName);
 				
+				String instanceFileName= MessageFormat.format("{0}.json", instance);
+				
 				File file = new File(baseDir, fileName);
 				table.setDdlFile(new File(baseDir, sqlFileName));
+				table.setInstanceFile(new File(baseDir,instanceFileName));
 				
 				try (FileWriter writer = new FileWriter(file)) {
 					GoogleCloudSqlJsonUtil.writeJson(table, writer);
@@ -141,7 +145,6 @@ public class CloudSqlJsonGenerator {
 				baseDir.mkdirs();
 			}
 			for (Vertex v : list) {
-	
 				SimplePojoFactory pojoFactory = new SimplePojoFactory();
 				GoogleCloudSqlInstance instance = pojoFactory.create(v, GoogleCloudSqlInstance.class);
 				File jsonFile = new File(baseDir, instance.getName() + ".json");

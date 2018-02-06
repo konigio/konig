@@ -105,7 +105,7 @@ public class GoogleCloudSqlJsonUtil {
 		if (table.getDdlFile()!=null) {
 			writeString(json, "ddlFile", table.getDdlFile().getName());
 		}
-		
+		writeString(json,"instanceFile", table.getInstanceFile().getName());
 		json.writeEndObject();
 		json.flush();
 	}
@@ -125,7 +125,10 @@ public class GoogleCloudSqlJsonUtil {
 		writeLocalName(json, "databaseVersion", instance.getDatabaseVersion());
 		writeLocalName(json, "instanceType", instance.getInstanceType());
 		writeLocalName(json, "region", instance.getRegion());
-		
+		json.writeFieldName("settings");
+		json.writeStartObject();
+		writeLocalName(json,"tier",instance.getSettings().getTier());
+		json.writeEndObject();
 		json.writeEndObject();
 		
 		json.flush();

@@ -1,10 +1,10 @@
-package io.konig.maven;
+package io.konig.gcp.datasource;
 
 /*
  * #%L
- * Konig Google Cloud Platform Deployment Model
+ * Konig Google Cloud Platform Model
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,22 @@ package io.konig.maven;
  */
 
 
-public enum ResourceType {
-	
-	BigQueryDataset,
-	BigQueryTable,
-	BigQueryView,
-	GooglePubSubTopic, 
-	GoogleCloudSqlInstance, 
-	GoogleCloudSqlDatabase, 
-	GoogleCloudSqlTable
+import org.openrdf.model.URI;
 
+import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.GCP;
+
+public class GoogleCloudSqlSettings {
+	private GoogleCloudSqlTier tier;
+
+	@RdfProperty(GCP.TIER)
+	public GoogleCloudSqlTier getTier() {
+		return tier;
+	}
+
+	public void setTier(GoogleCloudSqlTier tier) {
+		this.tier = tier;
+	}
+	
+	
 }

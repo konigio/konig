@@ -34,6 +34,8 @@ public class GoogleCloudSqlInstance {
 	private String name;
 	private GoogleCloudSqlRegion region;
 	private GoogleCloudSqlVersion databaseVersion=GoogleCloudSqlVersion.MYSQL_5_7;
+	private GoogleCloudSqlSettings settings;
+	
 	
 	
 	
@@ -77,13 +79,24 @@ public class GoogleCloudSqlInstance {
 	public void setRegion(GoogleCloudSqlRegion region) {
 		this.region = region;
 	}
-
+	
+	
+	
 	@RdfProperty(GCP.DATABASE_VERSION)
 	public GoogleCloudSqlVersion getDatabaseVersion() {
 		return databaseVersion;
 	}
 	public void setDatabaseVersion(GoogleCloudSqlVersion databaseVersion) {
 		this.databaseVersion = databaseVersion;
+	}
+	
+	@RdfProperty(GCP.SETTINGS)
+	public GoogleCloudSqlSettings getSettings() {
+		return settings;
+	}
+
+	public void setSettings(GoogleCloudSqlSettings settings) {
+		this.settings = settings;
 	}
 	
 	

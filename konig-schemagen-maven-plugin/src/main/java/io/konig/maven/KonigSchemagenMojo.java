@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -311,7 +312,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
-				SizeEstimateException e) {
+				SizeEstimateException | SQLException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
@@ -322,7 +323,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	OracleShapeConfig.init();
     }
 
-	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException {
+	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException, SQLException {
 		
 		GroovyDeploymentScript deploy = googleCloudPlatform.getDeployment();
 		if (deploy != null) {
@@ -740,7 +741,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			}
 		}
 	}
-	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException {
+	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, SQLException {
 		if (googleCloudPlatform != null) {
 			
 			Configurator config = configurator();
