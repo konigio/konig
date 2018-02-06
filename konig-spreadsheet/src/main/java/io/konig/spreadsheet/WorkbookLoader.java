@@ -2351,10 +2351,10 @@ public class WorkbookLoader {
 
 		private void loadOntologyRow(Row row) throws SpreadsheetException {
 
-			String ontologyName = stringValue(row, ontologyNameCol);
-			String comment = stringValue(row, ontologyCommentCol);
+			Literal ontologyName = stringLiteral(row, ontologyNameCol);
+			Literal comment = stringLiteral(row, ontologyCommentCol);
 			String namespaceURI = stringValue(row, namespaceUriCol);
-			String prefix = stringValue(row, prefixCol);
+			Literal prefix = stringLiteral(row, prefixCol);
 			List<String> importList = imports(row, importsCol);
 
 			if (ontologyName == null && comment == null && namespaceURI == null && prefix == null) {
@@ -2378,20 +2378,15 @@ public class WorkbookLoader {
 						row.getRowNum(), sheetName));
 			}
 
-			nsManager.add(prefix, namespaceURI);
+			nsManager.add(prefix.stringValue(), namespaceURI);
 
 			URI subject = uri(namespaceURI);
 
-			graph.edge(subject, RDF.TYPE, OWL.ONTOLOGY);
-			graph.edge(subject, VANN.preferredNamespacePrefix, literal(prefix));
-
-			if (ontologyName != null) {
-				graph.edge(subject, RDFS.LABEL, literal(ontologyName));
-			}
-			if (comment != null) {
-				graph.edge(subject, RDFS.COMMENT, literal(comment));
-			}
-
+			edge(subject, RDF.TYPE, OWL.ONTOLOGY);
+			edge(subject, VANN.preferredNamespacePrefix, prefix);
+			edge(subject, RDFS.LABEL, ontologyName);
+			edge(subject, RDFS.COMMENT, comment);
+			
 			if (importList != null) {
 				this.importList.add(new ImportInfo(subject, importList));
 			}
