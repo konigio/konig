@@ -26,6 +26,7 @@ shape:ThingShape a sh:Shape ;
 	 ]  ,  [ 
 		sh:path ex:unsignedTinyInt ; 
 		sh:datatype xsd:int ; 
+		konig:stereotype konig:primaryKey ;
 		sh:minCount 0 ; 
 		sh:maxCount 1 ; 
 		sh:minInclusive 0 ; 
