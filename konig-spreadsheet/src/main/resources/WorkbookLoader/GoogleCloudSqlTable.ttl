@@ -6,7 +6,7 @@
 	a konig:GoogleCloudSqlTable, konig:DataSource ;
 	gcp:instance "${gcpSqlInstanceId}" ;
 	gcp:database "${gcpSqlDatabaseId}" ;
-	gcp:name "${gcpSqlTableName}"
+	gcp:name "${gcpSqlTableName}" ;
 .
 
 <${shapeId}> konig:shapeDataSource 

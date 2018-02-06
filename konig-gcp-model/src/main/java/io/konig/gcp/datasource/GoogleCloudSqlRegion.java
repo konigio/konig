@@ -30,6 +30,7 @@ import io.konig.core.vocab.GCP;
 public enum GoogleCloudSqlRegion implements HasURI {
 	northamerica_northeast1(GCP.northamerica_northeast1),
 	us_central(GCP.us_central),
+	us_central1(GCP.us_central1),
 	us_east1(GCP.us_east1),
 	us_east4(GCP.us_east4),
 	us_west1(GCP.us_west1),

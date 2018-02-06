@@ -53,13 +53,16 @@ public class GCP {
 	public static final String INSTANCE_TYPE = "http://www.konig.io/ns/gcp/instanceType";
 	public static final String DATABASE_VERSION = "http://www.konig.io/ns/gcp/databaseVersion";
 	public static final String REGION = "http://www.konig.io/ns/gcp/region";
+	public static final String SETTINGS = "http://www.konig.io/ns/gcp/settings";
+	public static final String TIER = "http://www.konig.io/ns/gcp/tier";
 
 	public static final URI GoogleCloudSqlInstance = new URIImpl("http://www.konig.io/ns/gcp/GoogleCloudSqlInstance");
 	public static final URI backendType = new URIImpl(BACKEND_TYPE);
 	public static final URI instanceType = new URIImpl(INSTANCE_TYPE);
 	public static final URI databaseVersion = new URIImpl(DATABASE_VERSION);
 	public static final URI region = new URIImpl(REGION);
-	
+	public static final URI tier = new URIImpl(TIER);
+	public static final URI settings = new URIImpl(SETTINGS);
 	// Regions
 	public static final String NORTHAMERICA_NORTHEAST1 = "http://www.konig.io/ns/gcp/northamerica-northeast1";
 	public static final String US_CENTRAL = "http://www.konig.io/ns/gcp/us-central";
@@ -90,6 +93,23 @@ public class GCP {
 	public static final URI asia_northeast1 = new URIImpl(ASIA_NORTHEAST1);
 	public static final URI asia_south1 = new URIImpl(ASIA_SOUTH1);
 	public static final URI australia_southeast1 = new URIImpl(AUSTRALIA_SOUTHEAST1);
+	
+	public static final URI db_f1_micro = new URIImpl("http://www.konig.io/ns/gcp/db-f1-micro");
+	public static final URI db_g1_small = new URIImpl("http://www.konig.io/ns/gcp/db-g1-small");
+	public static final URI db_n1_standard_1 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-standard-1");
+	public static final URI db_n1_standard_2 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-standard-2");
+	public static final URI db_n1_standard_4 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-standard-4");
+	public static final URI db_n1_standard_8 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-standard-8");
+	public static final URI db_n1_standard_16 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-standard-16");
+	public static final URI db_n1_standard_32 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-standard-32");
+	public static final URI db_n1_standard_64 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-standard-64");
+	public static final URI db_n1_highmem_2 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-highmem-2");
+	public static final URI db_n1_highmem_4 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-highmem-4");
+	public static final URI db_n1_highmem_8 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-highmem-8");
+	public static final URI db_n1_highmem_16 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-highmem-16");
+	public static final URI db_n1_highmem_32 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-highmem-32");
+	public static final URI db_n1_highmem_64 = new URIImpl("http://www.konig.io/ns/gcp/db-n1-highmem-64");
+	
 
 	public static final URI FIRST_GEN = new URIImpl("http://www.konig.io/ns/gcp/FIRST_GEN");
 	public static final URI SECOND_GEN = new URIImpl("http://www.konig.io/ns/gcp/SECOND_GEN");
@@ -97,10 +117,15 @@ public class GCP {
 	public static final URI MYSQL_5_7 = new URIImpl("http://www.konig.io/ns/gcp/MYSQL_5_7");
 	public static final URI MYSQL_5_6 = new URIImpl("http://www.konig.io/ns/gcp/MYSQL_5_6");
 	public static final URI POSTGRES_9_6 = new URIImpl("http://www.konig.io/ns/gcp/POSTGRES_9_6");
-
+	
+	
+	
+	
 	public static final URI CLOUD_SQL_INSTANCE = new URIImpl("http://www.konig.io/ns/gcp/CLOUD_SQL_INSTANCE");
 	public static final URI READ_REPLICA_INSTANCE = new URIImpl("http://www.konig.io/ns/gcp/READ_REPLICA_INSTANCE");
 	public static final URI ON_PREMISES_INSTANCE = new URIImpl("http://www.konig.io/ns/gcp/ON_PREMISES_INSTANCE");
+	
+	
 	
 	
 	

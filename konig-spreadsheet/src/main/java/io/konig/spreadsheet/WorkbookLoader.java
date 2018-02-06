@@ -196,7 +196,8 @@ public class WorkbookLoader {
 	private static final String BACKEND_TYPE = "Backend Type";
 	private static final String REGION = "Region";
 	private static final String VERSION = "Database Version";
-
+	private static final String TIER = "Tier";
+	
 	private static final String ENUMERATION_DATASOURCE_TEMPLATE = "enumerationDatasourceTemplate";
 	private static final String ENUMERATION_SHAPE_ID = "enumerationShapeId";
 
@@ -432,7 +433,8 @@ public class WorkbookLoader {
 		private int gcpBackendTypeCol = UNDEFINED;
 		private int gcpRegionCol = UNDEFINED;
 		private int gcpVersionCol = UNDEFINED;
-
+		private int gcpTierCol = UNDEFINED;
+		
 		public Worker(Workbook book) {
 			this.book = book;
 			if (shapeManager == null) {
@@ -1446,7 +1448,7 @@ public class WorkbookLoader {
 		}
 
 		private void readGoogleCloudSqlInstanceHeader(Sheet sheet) {
-			gcpInstanceNameCol = gcpBackendTypeCol = gcpInstanceTypeCol = gcpRegionCol = gcpVersionCol = UNDEFINED;
+			gcpInstanceNameCol = gcpBackendTypeCol = gcpInstanceTypeCol = gcpRegionCol = gcpVersionCol = gcpTierCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1482,7 +1484,11 @@ public class WorkbookLoader {
 					case VERSION:
 						gcpVersionCol = i;
 						break;
-
+						
+					case TIER:
+						gcpTierCol = i;
+						break;
+					
 					}
 				}
 			}
@@ -1680,6 +1686,7 @@ public class WorkbookLoader {
 			URI instanceType = gcpValue(row, gcpInstanceTypeCol);
 			URI region = gcpValue(row, gcpRegionCol);
 			URI databaseVersion = gcpValue(row, gcpVersionCol);
+			URI tier = gcpValue(row,gcpTierCol);
 
 			if (instanceName != null) {
 				String idValue = "https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/"
@@ -1691,7 +1698,15 @@ public class WorkbookLoader {
 				edge(id, GCP.instanceType, instanceType);
 				edge(id, GCP.databaseVersion, databaseVersion);
 				edge(id, GCP.region, region);
+				Vertex tierVertex = graph.vertex();
+				Resource tierResource = tierVertex.getId();
+				edge(id, GCP.settings, tierResource);
+				edge(tierResource,GCP.tier,tier);
+				
+				
+				
 			}
+			
 
 		}
 

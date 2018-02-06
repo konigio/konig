@@ -42,16 +42,20 @@ import io.konig.gcp.datasource.GoogleCloudSqlBackendType;
 import io.konig.gcp.datasource.GoogleCloudSqlInstance;
 import io.konig.gcp.datasource.GoogleCloudSqlInstanceType;
 import io.konig.gcp.datasource.GoogleCloudSqlRegion;
+import io.konig.gcp.datasource.GoogleCloudSqlSettings;
+import io.konig.gcp.datasource.GoogleCloudSqlTier;
 import io.konig.gcp.datasource.GoogleCloudSqlVersion;
 import io.konig.gcp.io.GoogleCloudSqlJsonUtil;
 
 public class GoogleCloudSqlInstanceTest {
 	
 	private GoogleCloudSqlInstance instance;
+	private GoogleCloudSqlSettings settings;
 	
 	@Before
 	public void setUp() {
 		instance = new GoogleCloudSqlInstance();
+		settings = new GoogleCloudSqlSettings();
 		
 		instance.setId(uri("https://www.googleapis.com/sql/v1beta4/projects/exampleProject/instances/exampleInstance"));
 		instance.setBackendType(GoogleCloudSqlBackendType.SECOND_GEN);
@@ -59,6 +63,8 @@ public class GoogleCloudSqlInstanceTest {
 		instance.setInstanceType(GoogleCloudSqlInstanceType.CLOUD_SQL_INSTANCE);
 		instance.setName("exampleInstance");
 		instance.setRegion(GoogleCloudSqlRegion.us_central);
+		settings.setTier(GoogleCloudSqlTier.db_f1_micro);
+		instance.setSettings(settings);
 	}
 
 	@Test

@@ -27,17 +27,34 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.paging.Page;
+import com.google.api.services.sqladmin.SQLAdmin;
+import com.google.api.services.sqladmin.model.Database;
+import com.google.api.services.sqladmin.model.DatabaseInstance;
+import com.google.api.services.sqladmin.model.DatabasesListResponse;
+import com.google.api.services.sqladmin.model.InstancesListResponse;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -92,6 +109,12 @@ public class GoogleCloudService implements CredentialsProvider {
 	private BigQuery bigQuery;
 	private Storage storage;
 	private TopicAdminClient topicAdmin;
+	private SQLAdmin sqlAdmin;
+	private Connection conn;
+	private final String  mySqlJdbcConnUrl="jdbc:mysql://google/%s?cloudSqlInstance=%s&"
+			            + "socketFactory=com.google.cloud.sql.mysql.SocketFactory";
+	private final String mySqlDriverClass="com.mysql.jdbc.Driver";
+
 	
 
 	
@@ -449,6 +472,149 @@ public class GoogleCloudService implements CredentialsProvider {
 	public String getProjectId() {
 		return projectId;
 	}
+	public DatabaseInstance readDatabaseInstanceInfo(File file) throws FileNotFoundException, IOException {
+		try (FileReader reader = new FileReader(file)) {
+			return readDatabaseInstanceInfo(reader);
+		}
+	}
+
+
+	public Database readDatabaseInfo(File file) throws FileNotFoundException, IOException {
+		try (FileReader reader = new FileReader(file)) {
+			return readDatabaseInfo(reader);
+		}
+	}
+
+
+	public Database readDatabaseInfo(FileReader reader) throws IOException {
+		JsonFactory factory = JacksonFactory.getDefaultInstance();
+		JsonObjectParser parser = factory.createJsonObjectParser();
+		ReplaceStringReader input = new ReplaceStringReader(reader, projectToken, projectId);
+
+		Database model = 
+			parser.parseAndClose(input, Database.class);
+		
+		return model;
+	}
+
+
+	public Database getDatabase(String name, String instance) throws IOException {
+		DatabasesListResponse resp = sqlAdmin.databases().list(projectId, instance).execute();
+		List<Database> list = resp.getItems();
+		for (Database d : list) {
+			if(d.getName().equals(name) && d.getInstance().equals(instance))
+				return d;
+		}
+		return null;
+	}
+	public SQLAdmin sqlAdmin() {
+		if (sqlAdmin == null) {
+			try {
+				
+				HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+			    JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+
+			    GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(credentialsFile));
+			    if (credential.createScopedRequired()) {
+			      credential =
+			          credential.createScoped(Arrays.asList("https://www.googleapis.com/auth/cloud-platform"));
+			    }
+			    SQLAdmin.Builder builder=new SQLAdmin.Builder(httpTransport, jsonFactory, credential);
+			    builder=builder.setApplicationName(projectId);
+			    sqlAdmin=builder.build();
+				
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			} catch (GeneralSecurityException e) {
+				throw new RuntimeException(e);
+			} catch (Exception e){
+				throw new RuntimeException(e);
+			}
+			
+		}
+		return sqlAdmin;
+	}
 	
+	public DatabaseInstance readDatabaseInstanceInfo(Reader reader) throws IOException {
+		
+		JsonFactory factory = JacksonFactory.getDefaultInstance();
+		JsonObjectParser parser = factory.createJsonObjectParser();
+		ReplaceStringReader input = new ReplaceStringReader(reader, projectToken, projectId);
+
+		DatabaseInstance model = 
+			parser.parseAndClose(input, DatabaseInstance.class);
+		
+		return model;
+	}
+	public DatabaseInstance getDatabaseInstance(String instanceName) throws IOException{
+		InstancesListResponse resp = sqlAdmin.instances().list(projectId).execute();
+		List<DatabaseInstance> list = resp.getItems();
+		if(list!=null){
+			for (DatabaseInstance d : list) {
+				if(d.getName().equals(instanceName))
+					return d;
+			}
+		}
+		return null;
+}
+
+
+	public CloudSqlTable readCloudSqlTableInfo(File file) throws FileNotFoundException, IOException {
+		try (FileReader reader = new FileReader(file)) {
+			JsonFactory factory = JacksonFactory.getDefaultInstance();
+			JsonObjectParser parser = factory.createJsonObjectParser();
+			ReplaceStringReader input = new ReplaceStringReader(reader, projectToken, projectId);
+
+			CloudSqlTable model = 
+				parser.parseAndClose(input, CloudSqlTable.class);
+			return model;
+		}
+	}
+
+
+	public boolean isTablePresent(CloudSqlTable tableInfo) throws SQLException {	 
+		boolean isTablePresent=false;
+	    try (Statement statement = conn.createStatement()) {
+	      ResultSet resultSet = statement.executeQuery("SHOW TABLES");
+	      while (resultSet.next()) {
+	        String tableName=resultSet.getString(1);
+	        if(tableName.equals(tableInfo.getName())){
+	        	isTablePresent=true;
+	        	break;
+	        }
+	      }
+	    
+	    }
+	    return isTablePresent;
+	}
+	public void createTable(String sqlFileContent) throws Exception {		
+		    try (Statement statement = conn.createStatement()) {		        
+		        String sql = "CREATE TABLE "+sqlFileContent; 
+		        statement.executeUpdate(sql);
+		    }
+	}
+	
+	public void getMySQLConnection(String username,String password,CloudSqlTable tableInfo,DatabaseInstance instanceInfo) throws ClassNotFoundException, SQLException{
+		
+		 String jdbcUrl = String.format(
+			        mySqlJdbcConnUrl,
+			            tableInfo.getDatabase(),
+			            projectId+":"+instanceInfo.getRegion()+":"+tableInfo.getInstance());
+			    Class.forName(mySqlDriverClass);
+			    conn=DriverManager.getConnection(jdbcUrl, username, password);
+	}
+
+
+	public Connection getConn() {
+		return conn;
+	}
+
+
+	public void setConn(Connection conn) {
+		this.conn = conn;
+	}
+
+
+
 
 }

@@ -28,8 +28,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.sql.SQLException;
 import java.text.MessageFormat;
 
+import com.google.api.services.sqladmin.SQLAdmin;
+import com.google.api.services.sqladmin.model.Database;
+import com.google.api.services.sqladmin.model.DatabaseInstance;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetInfo;
@@ -60,7 +64,7 @@ public class GroovyDeploymentScriptWriter {
 	}
 
 
-	public void run() throws IOException {
+	public void run() throws IOException, SQLException {
 		
 		scriptFile.getParentFile().mkdirs();
 		
@@ -88,6 +92,9 @@ public class GroovyDeploymentScriptWriter {
 			printTableViewCommands();
 			printTableDataCommands();
 			printGooglePubSubCommands();
+			printGoogleCloudSqlInstanceCommand();
+			printGoogleCloudSqlDatabaseCommand();
+			printGoogleCloudSqlTableCommand();
 			println("}");
 			println("def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent");
 			println(delegate);
@@ -219,7 +226,67 @@ public class GroovyDeploymentScriptWriter {
 		out.write('\n');
 		
 	}
-	
+	private void printGoogleCloudSqlInstanceCommand() throws IOException, SQLException {
+		
+		File instancesDir = googleCloudInfo.getCloudsql().getInstances();
+		if (instancesDir != null && instancesDir.isDirectory()) {
+			SQLAdmin sqlAdmin = googleCloudService.sqlAdmin();
+			for (File file : instancesDir.listFiles()) {
+				DatabaseInstance info = googleCloudService.readDatabaseInstanceInfo(file);
+				DatabaseInstance instance = googleCloudService.getDatabaseInstance(info.getName());
+				if (instance == null) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("create GoogleCloudSqlInstance from \"");
+					print(path);
+					print("\"");
+					println(" println response ");
+				}
+			}
+		}
+		
+	}
+	private void printGoogleCloudSqlTableCommand() throws IOException, SQLException{
+		File schemaDir = googleCloudInfo.getCloudsql().getTables();
+		if (schemaDir != null && schemaDir.isDirectory()) {			
+			for (File file : schemaDir.listFiles()) {
+				if(file.getName().endsWith(".json")){
+					CloudSqlTable tableInfo=googleCloudService.readCloudSqlTableInfo(file);
+								
+						String path = FileUtil.relativePath(scriptFile, file);
+						print(indent);
+						print("create GoogleCloudSqlTable from \"");
+						print(path);
+						print("\"");
+						println(" println response ");
+					
+				}
+			}
+		}
+		
+	}
+
+
+	private void printGoogleCloudSqlDatabaseCommand() throws IOException{
+		File databasesDir = googleCloudInfo.getCloudsql().getDatabases();
+		if (databasesDir != null && databasesDir.isDirectory()) {
+			
+			for (File file : databasesDir.listFiles()) {
+				
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("create GoogleCloudSqlDatabase from \"");
+					print(path);
+					print("\"");
+					println(" println response ");
+				
+			}
+		}
+		
+	}
+
+
+
 	
 	
 
