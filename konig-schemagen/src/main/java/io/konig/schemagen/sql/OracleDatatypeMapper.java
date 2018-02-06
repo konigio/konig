@@ -38,18 +38,24 @@ public class OracleDatatypeMapper extends SqlDatatypeMapper {
 		if (datatype != null) {
 			
 			if (owlReasoner.isIntegerDatatype(datatype)) {
-				if((inRange(-128, 255, c)) || datatype.equals(XMLSchema.BYTE) || datatype.equals(XMLSchema.UNSIGNED_BYTE)) {
+				
+				int precision = precision(c);
+				if (precision>0) {
+					// (min, max) range is declared so use the corresponding precision.
+					return new NumericSqlDatatype(SqlDatatype.NUMBER, precision, 0);
+				}
+				
+				if( datatype.equals(XMLSchema.BYTE) || datatype.equals(XMLSchema.UNSIGNED_BYTE)) {
 					return new NumericSqlDatatype(SqlDatatype.NUMBER, 3, 0);
-				} else if(inRange(-32768, 65535, c) || datatype.equals(XMLSchema.SHORT) || datatype.equals(XMLSchema.UNSIGNED_SHORT)) {
+				} else if(datatype.equals(XMLSchema.SHORT) || datatype.equals(XMLSchema.UNSIGNED_SHORT)) {
 					return new NumericSqlDatatype(SqlDatatype.NUMBER, 5, 0);
-				}  else if(inRange(-2147483648, 4294967295L, c)  || datatype.equals(XMLSchema.INT) || datatype.equals(XMLSchema.UNSIGNED_INT) ) {
+				}  else if(datatype.equals(XMLSchema.INT) || datatype.equals(XMLSchema.UNSIGNED_INT) ) {
 					return new NumericSqlDatatype(SqlDatatype.NUMBER, 10, 0);
-				} else if ( datatype.equals(XMLSchema.LONG)) {
-					return new NumericSqlDatatype(SqlDatatype.LONG, false);
 				} else {
 					return new NumericSqlDatatype(SqlDatatype.NUMBER, 19, 0);
 				}
 			}
+			
 			if (datatype.equals(XMLSchema.FLOAT)) {
 				return new NumericSqlDatatype(SqlDatatype.FLOAT, 126);
 			} 
@@ -89,6 +95,34 @@ public class OracleDatatypeMapper extends SqlDatatypeMapper {
 		}
 		
 		throw new SchemaGeneratorException("Unsupported datatype for predicate: " + c.getPredicate());
+	}
+
+	private int precision(PropertyConstraint c) {
+		Double min = c.getMinInclusive();
+		if (min==null) {
+			min = c.getMinExclusive();
+		}
+		
+		Double max = c.getMaxInclusive();
+		if (max == null) {
+			max = c.getMaxExclusive();
+		}
+		
+		return Math.max(precision(min), precision(max));
+	}
+
+	private int precision(Double value) {
+		if (value ==null) {
+			return 0;
+		}
+		long v = value.longValue();
+		if (v<0) {
+			v = -1*v;
+		}
+		
+		String text = Long.toString(v);
+		
+		return text.length();
 	}
 
 }
