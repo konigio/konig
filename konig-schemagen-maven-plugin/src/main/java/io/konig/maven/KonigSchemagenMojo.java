@@ -163,6 +163,7 @@ import io.konig.schemagen.ocms.OracleCloudResourceGenerator;
 import io.konig.schemagen.ocms.OracleTableWriter;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
+import io.konig.schemagen.sql.OracleDatatypeMapper;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
@@ -731,7 +732,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			File tablesDir = Configurator.checkNull(oracleManagedCloud.getTables());
 			if(directory != null && tablesDir != null) {
 				OracleCloudResourceGenerator resourceGenerator = new OracleCloudResourceGenerator();
-				SqlTableGenerator sqlgenerator = new SqlTableGenerator();
+				SqlTableGenerator sqlgenerator = new SqlTableGenerator(new OracleDatatypeMapper());
 				OracleTableWriter oracle = new OracleTableWriter(tablesDir, sqlgenerator);
 				resourceGenerator.add(oracle);
 				resourceGenerator.dispatch(shapeManager.listShapes());
