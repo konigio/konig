@@ -26,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -175,6 +177,25 @@ public class WorkbookLoaderTest {
 		
 		assertTrue(ds.isA(Konig.GoogleCloudSqlTable));
 	}
+	
+	@Test
+	public void testDatasourceParamsGoogleBucket() throws Exception {
+        InputStream input = new FileInputStream(new File("src/test/resources/test-datasource-params-bucket.xlsx"));
+        Workbook book = WorkbookFactory.create(input);
+
+        Graph graph = new MemoryGraph();
+        NamespaceManager nsManager = new MemoryNamespaceManager();
+        graph.setNamespaceManager(nsManager);
+        
+        WorkbookLoader loader = new WorkbookLoader(nsManager);
+        loader.load(book, graph);
+        input.close();
+        System.out.println(graph);
+        URI shapeId = uri("http://example.com/shapes/ProductShape");
+        List<Value> list = graph.v(shapeId).out(Konig.shapeDataSource).out(GCP.notificationInfo).out(GCP.notificationEventTypes).toValueList();
+        assertEquals(1, list.size());
+        assertEquals("OBJECT_METADATA_UPDATE", list.get(0).stringValue());
+    }
 	
 	@Test
 	public void testGoogleOracleTable() throws Exception {

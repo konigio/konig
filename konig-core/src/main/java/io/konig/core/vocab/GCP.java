@@ -32,11 +32,18 @@ public class GCP {
 	public static final String NAME = "http://www.konig.io/ns/gcp/name";
 	public static final String LOCATION = "http://www.konig.io/ns/gcp/location";
 	public static final String PROJECT_ID = "http://www.konig.io/ns/gcp/projectId";
+	public static final String NOTIFICATION_INFO = "http://www.konig.io/ns/gcp/notificationInfo";
+	public static final String NOTIFICATION_TOPIC = "http://www.konig.io/ns/gcp/topic";
+	public static final String NOTIFICATION_EVENT_TYPES = "http://www.konig.io/ns/gcp/eventTypes";
 	
 	public static final URI tableReference = new URIImpl(TABLE_REFERENCE);
 	public static final URI projectId = new URIImpl(PROJECT_ID);
 	public static final URI datasetId = new URIImpl("http://www.konig.io/ns/gcp/datasetId");
 	public static final URI tableId = new URIImpl("http://www.konig.io/ns/gcp/tableId");
+	public static final URI notificationInfo = new URIImpl(NOTIFICATION_INFO);
+	public static final URI notificationTopic = new URIImpl(NOTIFICATION_TOPIC);
+	public static final URI notificationEventTypes = new URIImpl(NOTIFICATION_EVENT_TYPES);
+	
 	public static final URI description = new URIImpl("http://www.konig.io/ns/gcp/description");
 	public static final URI name = new URIImpl(NAME);
 	public static final URI location = new URIImpl(LOCATION);
