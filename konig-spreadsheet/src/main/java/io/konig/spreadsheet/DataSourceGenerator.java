@@ -69,6 +69,7 @@ public class DataSourceGenerator {
 		this.nsManager = nsManager;
 		this.templateDir = templateDir;
 		this.context = new VelocityContext();
+		context.put("templateException", new TemplateException());
 		put(properties);
 		createVelocityEngine();
 	}
