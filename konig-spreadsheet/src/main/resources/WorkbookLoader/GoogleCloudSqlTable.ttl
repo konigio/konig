@@ -2,11 +2,14 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
 
-<https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/${gcpSqlInstanceId}/databases/${gcpSqlDatabaseId}/tables/${gcpSqlTableId}>
-	a konig:GoogleCloudSqlTable, konig:DataSource 
+<https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/${gcpSqlInstanceId}/databases/${gcpSqlDatabaseId}/tables/${gcpSqlTableName}>
+	a konig:GoogleCloudSqlTable, konig:DataSource ;
+	gcp:instance "${gcpSqlInstanceId}" ;
+	gcp:database "${gcpSqlDatabaseId}" ;
+	gcp:name "${gcpSqlTableName}" ;
 .
 
 <${shapeId}> konig:shapeDataSource 
-	<https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/${gcpSqlInstanceId}/databases/${gcpSqlDatabaseId}/tables/${gcpSqlTableId}>
+	<https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/${gcpSqlInstanceId}/databases/${gcpSqlDatabaseId}/tables/${gcpSqlTableName}>
 .
 	

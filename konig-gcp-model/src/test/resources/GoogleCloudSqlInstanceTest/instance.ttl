@@ -1,0 +1,9 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/>.
+
+<https://www.googleapis.com/sql/v1beta4/projects/exampleProject/instances/exampleInstance>
+	a gcp:GoogleCloudSqlInstance ;
+	gcp:name "exampleInstance" ;
+	gcp:instanceType gcp:CLOUD_SQL_INSTANCE ;
+	gcp:backendType gcp:SECOND_GEN;
+	gcp:region gcp:us-east-1
+.	

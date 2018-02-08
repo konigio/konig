@@ -24,6 +24,7 @@ package io.konig.schemagen.gcp;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.MessageFormat;
 
 import io.konig.core.KonigException;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
@@ -65,6 +66,7 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 			
 			
 			String text = sqlTable.toString();
+			out.write("CREATE TABLE IF NOT EXISTS ");
 			out.write(text);
 			
 		} catch (IOException e) {
@@ -74,7 +76,11 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 	}
 
 	private File sqlFile(GoogleCloudSqlTable table) {
-		String fileName = table.getTableIdentifier() + ".sql";
+		String instance = table.getInstance();
+		String database = table.getDatabase();
+		String tableName = table.getTableName();
+		
+		String fileName = MessageFormat.format("{0}_{1}_{2}.sql", instance, database, tableName);
 		
 		return new File(baseDir, fileName);
 	}

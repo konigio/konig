@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.konig.core.KonigException;
 import io.konig.omcs.datasource.OracleTable;
 import io.konig.omcs.datasource.OracleTableDefinition;
-import io.konig.schemagen.sql.CreateTableStatement;
+import io.konig.schemagen.sql.CreateOracleTableStatement;
 import io.konig.schemagen.sql.SqlTable;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.Shape;
@@ -55,7 +55,7 @@ public class OracleTableWriter implements ShapeVisitor {
 			SqlTable sqlTable = generator.generateTable(shape);
 			File sqlFile = sqlFile(table);
 			File jsonFile = jsonFile(table);
-			tableDefinition.setQuery(new CreateTableStatement(sqlTable).toString());
+			tableDefinition.setQuery(new CreateOracleTableStatement(sqlTable).toString());
 			tableDefinition.setTableReference(table.getTableReference());
 			writeTable(sqlFile, jsonFile, tableDefinition);
 		}
@@ -91,10 +91,10 @@ public class OracleTableWriter implements ShapeVisitor {
 	private File file(OracleTable table, String suffix) {
 
 		String instanceId = table.getTableReference().getOmcsInstanceId();
-		String databaseId = table.getTableReference().getOmcsDatabaseId();
+		String schema = table.getTableReference().getOracleSchema();
 		String tableName = table.getTableName();
 		
-		String fileName = MessageFormat.format("{0}_{1}_{2}.{3}", instanceId, databaseId, tableName, suffix);
+		String fileName = MessageFormat.format("{0}_{1}_{2}.{3}", instanceId, schema, tableName, suffix);
 		
 		File file = new File(baseDir, fileName);
 		return file;

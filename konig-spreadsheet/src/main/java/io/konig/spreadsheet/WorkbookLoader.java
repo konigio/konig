@@ -92,6 +92,7 @@ import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.DC;
+import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
@@ -164,7 +165,7 @@ public class WorkbookLoader {
 	private static final String DATASOURCE = "Datasource";
 	private static final String IRI_TEMPLATE = "IRI Template";
 	private static final String DEFAULT_FOR = "Default For";
-	private static final String TERM_STATUS  = "Term Status";
+	private static final String TERM_STATUS = "Term Status";
 
 	private static final String SETTING_NAME = "Setting Name";
 	private static final String SETTING_VALUE = "Setting Value";
@@ -189,6 +190,14 @@ public class WorkbookLoader {
 	private static final String MIN_LENGTH = "Min Length";
 	private static final String MAX_LENGTH = "Max Length";
 
+	// Cloud SQL Instance
+	private static final String INSTANCE_NAME = "Instance Name";
+	private static final String INSTANCE_TYPE = "Instance Type";
+	private static final String BACKEND_TYPE = "Backend Type";
+	private static final String REGION = "Region";
+	private static final String VERSION = "Database Version";
+	private static final String TIER = "Tier";
+	
 	private static final String ENUMERATION_DATASOURCE_TEMPLATE = "enumerationDatasourceTemplate";
 	private static final String ENUMERATION_SHAPE_ID = "enumerationShapeId";
 
@@ -206,9 +215,10 @@ public class WorkbookLoader {
 	private static final int SHAPE_FLAG = 0x100;
 	private static final int CONSTRAINT_FLAG = 0x140;
 	private static final int LABEL_FLAG = 0x180;
+	private static final int INSTANCE_NAME_FLAG = 0x200;
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
-	
+
 	private static final String[] CELL_TYPE = new String[6];
 	static {
 		CELL_TYPE[Cell.CELL_TYPE_BLANK] = "Blank";
@@ -250,7 +260,7 @@ public class WorkbookLoader {
 		nsManager.add("dc", DC.NAMESPACE);
 		nsManager.add("prov", PROV.NAMESPACE);
 		nsManager.add("as", AS.NAMESPACE);
-
+		nsManager.add("gcp", GCP.NAMESPACE);
 		this.nsManager = nsManager;
 
 		try {
@@ -417,6 +427,13 @@ public class WorkbookLoader {
 		private int pcTermStatusCol = UNDEFINED;
 		private int classTermStatusCol = UNDEFINED;
 		private int propertyTermStatusCol = UNDEFINED;
+
+		private int gcpInstanceNameCol = UNDEFINED;
+		private int gcpInstanceTypeCol = UNDEFINED;
+		private int gcpBackendTypeCol = UNDEFINED;
+		private int gcpRegionCol = UNDEFINED;
+		private int gcpVersionCol = UNDEFINED;
+		private int gcpTierCol = UNDEFINED;
 		
 		public Worker(Workbook book) {
 			this.book = book;
@@ -470,19 +487,20 @@ public class WorkbookLoader {
 				declareDefaultOntologies();
 				handleWarnings();
 			} catch (Throwable e) {
-				error(e);
+				logError("Failed to process workbook", e);
+				
 			}
 		}
 
 		private void handleFormulas() throws SpreadsheetException {
-			
+
 			localNameService = new SimpleLocalNameService();
 			localNameService.addAll(getGraph());
 			localNameService.add(Konig.Day);
 			localNameService.add(Konig.Week);
 			localNameService.add(Konig.Month);
 			localNameService.add(Konig.Year);
-			
+
 			try {
 				for (FormulaHandler handler : formulaHandlers) {
 					handler.execute();
@@ -490,7 +508,7 @@ public class WorkbookLoader {
 			} catch (Throwable oops) {
 				throw new SpreadsheetException(oops);
 			}
-			
+
 		}
 
 		private void handlePaths() throws SpreadsheetException {
@@ -540,8 +558,7 @@ public class WorkbookLoader {
 					if (failOnErrors) {
 						throw new SpreadsheetException("Failed to create DataSourceGenerator", e);
 					}
-					logError("Failed to create DataSourceGenerator...");
-					logError(e.getMessage());
+					logError("Failed to create DataSourceGenerator...", e);
 				}
 			}
 
@@ -596,6 +613,16 @@ public class WorkbookLoader {
 				}
 			}
 			return defaultOntologies;
+		}
+
+		private void logError(String message, Throwable e) {
+			logger.error(message, e);
+			String msg = (e.getMessage());
+			if (!errorMessages.contains(msg)) {
+				errorMessages.add(msg);
+				errorCount++;
+			}
+
 		}
 
 		private void logError(String msg) {
@@ -868,7 +895,6 @@ public class WorkbookLoader {
 
 		}
 
-
 		private void loadSheet(SheetInfo info) throws SpreadsheetException {
 
 			Sheet sheet = book.getSheetAt(info.sheetIndex);
@@ -895,6 +921,11 @@ public class WorkbookLoader {
 			case SETTINGS_FLAG:
 				loadSettings(sheet);
 				break;
+
+			case INSTANCE_NAME_FLAG:
+				loadGoogleCloudSqlInstance(sheet);
+				break;
+
 			case LABEL_FLAG:
 				loadLabels(sheet);
 				break;
@@ -928,7 +959,7 @@ public class WorkbookLoader {
 				case CLASS_ID:
 					bits = bits | CLASS_FLAG;
 					break;
-					
+
 				case PROPERTY_PATH:
 				case PROPERTY_ID:
 					bits = bits | PROPERTY_FLAG;
@@ -942,6 +973,10 @@ public class WorkbookLoader {
 				case SETTING_NAME:
 					bits = bits | SETTINGS_FLAG;
 					break;
+				case INSTANCE_NAME:
+					bits = bits | INSTANCE_NAME_FLAG;
+					break;
+
 				case LABEL:
 					bits = bits | LABEL_FLAG;
 					break;
@@ -949,6 +984,16 @@ public class WorkbookLoader {
 			}
 
 			return bits;
+		}
+
+		private void loadGoogleCloudSqlInstance(Sheet sheet) {
+			readGoogleCloudSqlInstanceHeader(sheet);
+
+			int rowSize = sheet.getLastRowNum() + 1;
+			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
+				Row row = sheet.getRow(i);
+				loadGoogleCloudSqlInstanceRow(row);
+			}
 		}
 
 		private void loadSettings(Sheet sheet) throws SpreadsheetException {
@@ -1101,7 +1146,7 @@ public class WorkbookLoader {
 
 			URI stereotype = uriValue(row, pcStereotypeCol);
 			String propertyIdValue = stringValue(row, pcPropertyIdCol);
-			if (propertyIdValue==null) {
+			if (propertyIdValue == null) {
 				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
 				return;
 			}
@@ -1111,7 +1156,7 @@ public class WorkbookLoader {
 			} else {
 				propertyId = expandPropertyId(propertyIdValue);
 			}
-			
+
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
 
 			URI termStatus = uriValue(row, pcTermStatusCol);
@@ -1131,7 +1176,7 @@ public class WorkbookLoader {
 			String formula = stringValue(row, pcEqualsCol);
 			String sourcePath = stringValue(row, pcSourcePathCol);
 			String partitionOf = stringValue(row, pcPartitionOfCol);
-			
+
 			if (formula == null) {
 				// Support legacy column name "Equivalent Path"
 				formula = stringValue(row, pcEquivalentPathCol);
@@ -1189,7 +1234,7 @@ public class WorkbookLoader {
 					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
 
-				if (formula!=null) {
+				if (formula != null) {
 					formulaHandlers.add(new ShapeFormulaHandler(shapeId, formula));
 				}
 
@@ -1200,11 +1245,11 @@ public class WorkbookLoader {
 			Resource constraint = constraintVertex.getId();
 
 			if (RDF.TYPE.equals(propertyId)) {
-				
+
 				if (valueClass == null) {
 					valueClass = OWL.CLASS;
 				}
-				
+
 				if (valueType.equals(XMLSchema.ANYURI) || valueType.equals(SH.IRI)) {
 					edge(constraint, SH.nodeKind, SH.IRI);
 					valueType = null;
@@ -1220,9 +1265,9 @@ public class WorkbookLoader {
 
 			edge(shapeId, RDF.TYPE, SH.Shape);
 			edge(shapeId, property, constraint);
-			
+
 			edge(constraint, SH.path, propertyId);
-			
+
 			edge(constraint, RDFS.COMMENT, comment);
 
 			if (valueClass != null
@@ -1254,7 +1299,7 @@ public class WorkbookLoader {
 			if (partitionOf != null) {
 				pathHandlers.add(new PathHandler(constraint, Konig.partitionOf, partitionOf));
 			}
-			
+
 			edge(constraint, XOWL.termStatus, termStatus);
 			edge(constraint, SH.minCount, minCount);
 			edge(constraint, SH.maxCount, maxCount);
@@ -1345,9 +1390,8 @@ public class WorkbookLoader {
 			return null;
 		}
 
-
 		private Literal numericLiteral(Row row, int column) {
-			if (column>=0) {
+			if (column >= 0) {
 				Cell cell = row.getCell(column);
 				if (cell != null) {
 					int cellType = cell.getCellType();
@@ -1355,13 +1399,13 @@ public class WorkbookLoader {
 						double doubleValue = cell.getNumericCellValue();
 						if (doubleValue % 1 == 0) {
 							long longValue = (long) doubleValue;
-							if (longValue>Integer.MIN_VALUE && longValue<Integer.MAX_VALUE) {
-								return vf.createLiteral((int)longValue);
+							if (longValue > Integer.MIN_VALUE && longValue < Integer.MAX_VALUE) {
+								return vf.createLiteral((int) longValue);
 							}
 							return vf.createLiteral(longValue);
 						}
-						if (doubleValue>Float.MIN_VALUE && doubleValue<Float.MAX_VALUE) {
-							return vf.createLiteral((float)doubleValue);
+						if (doubleValue > Float.MIN_VALUE && doubleValue < Float.MAX_VALUE) {
+							return vf.createLiteral((float) doubleValue);
 						}
 						return vf.createLiteral(doubleValue);
 					}
@@ -1376,7 +1420,7 @@ public class WorkbookLoader {
 			if (column >= 0) {
 				Cell cell = row.getCell(column);
 				if (cell != null) {
-					
+
 					int cellType = cell.getCellType();
 					if (cellType == Cell.CELL_TYPE_STRING) {
 						String value = cell.getStringCellValue();
@@ -1401,6 +1445,54 @@ public class WorkbookLoader {
 				}
 			}
 			return literal;
+		}
+
+		private void readGoogleCloudSqlInstanceHeader(Sheet sheet) {
+			gcpInstanceNameCol = gcpBackendTypeCol = gcpInstanceTypeCol = gcpRegionCol = gcpVersionCol = gcpTierCol = UNDEFINED;
+
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
+
+			int colSize = row.getLastCellNum() + 1;
+			for (int i = row.getFirstCellNum(); i < colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+
+					switch (text) {
+
+					case INSTANCE_NAME:
+						gcpInstanceNameCol = i;
+						break;
+
+					case BACKEND_TYPE:
+						gcpBackendTypeCol = i;
+						break;
+
+					case INSTANCE_TYPE:
+						gcpInstanceTypeCol = i;
+						break;
+
+					case REGION:
+						gcpRegionCol = i;
+						break;
+
+					case VERSION:
+						gcpVersionCol = i;
+						break;
+						
+					case TIER:
+						gcpTierCol = i;
+						break;
+					
+					}
+				}
+			}
+
 		}
 
 		private void readSettingHeader(Sheet sheet) {
@@ -1433,11 +1525,7 @@ public class WorkbookLoader {
 		}
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
-			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = 
-					pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = 
-					pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = 
-					pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = 
-					pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = UNDEFINED;
+			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1459,7 +1547,7 @@ public class WorkbookLoader {
 					case COMMENT:
 						pcCommentCol = i;
 						break;
-					
+
 					case PROPERTY_PATH:
 					case PROPERTY_ID:
 						pcPropertyIdCol = i;
@@ -1483,13 +1571,13 @@ public class WorkbookLoader {
 						pcMinExclusive = i;
 						break;
 					case MAX_EXCLUSIVE:
-						pcMaxExclusive=i;
+						pcMaxExclusive = i;
 						break;
 					case MIN_LENGTH:
-						pcMinLength=i;
+						pcMinLength = i;
 						break;
 					case MAX_LENGTH:
-						pcMaxLength=i;
+						pcMaxLength = i;
 						break;
 					case UNIQUE_LANG:
 						pcUniqueLangCol = i;
@@ -1506,11 +1594,11 @@ public class WorkbookLoader {
 					case EQUIVALENT_PATH:
 						pcEquivalentPathCol = i;
 						break;
-						
+
 					case EQUALS:
 						pcEqualsCol = i;
 						break;
-						
+
 					case SOURCE_PATH:
 						pcSourcePathCol = i;
 						break;
@@ -1520,7 +1608,7 @@ public class WorkbookLoader {
 					case FORMULA:
 						pcFormulaCol = i;
 						break;
-					case TERM_STATUS :
+					case TERM_STATUS:
 						pcTermStatusCol = i;
 						break;
 					}
@@ -1590,6 +1678,42 @@ public class WorkbookLoader {
 				dataSourceMap.put(shapeId, dataSourceList);
 			}
 
+		}
+
+		private void loadGoogleCloudSqlInstanceRow(Row row) {
+			String instanceName = stringValue(row, gcpInstanceNameCol);
+			URI backendType = gcpValue(row, gcpBackendTypeCol);
+			URI instanceType = gcpValue(row, gcpInstanceTypeCol);
+			URI region = gcpValue(row, gcpRegionCol);
+			URI databaseVersion = gcpValue(row, gcpVersionCol);
+			URI tier = gcpValue(row,gcpTierCol);
+
+			if (instanceName != null) {
+				String idValue = "https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/"
+						+ instanceName;
+				URI id = new URIImpl(idValue);
+				edge(id, RDF.TYPE, GCP.GoogleCloudSqlInstance);
+				edge(id, GCP.name, literal(instanceName));
+				edge(id, GCP.backendType, backendType);
+				edge(id, GCP.instanceType, instanceType);
+				edge(id, GCP.databaseVersion, databaseVersion);
+				edge(id, GCP.region, region);
+				Vertex tierVertex = graph.vertex();
+				Resource tierResource = tierVertex.getId();
+				edge(id, GCP.settings, tierResource);
+				edge(tierResource,GCP.tier,tier);
+				
+				
+				
+			}
+			
+
+		}
+
+		private URI gcpValue(Row row, int col) {
+			String value = stringValue(row, col);
+
+			return value == null ? null : new URIImpl(GCP.NAMESPACE + value);
 		}
 
 		private List<Function> dataSourceList(Row row) throws SpreadsheetException {
@@ -1867,7 +1991,7 @@ public class WorkbookLoader {
 			if (inverseOf != null) {
 				graph.edge(propertyId, OWL.INVERSEOF, inverseOf);
 			}
-			if(termStatus != null) {
+			if (termStatus != null) {
 				graph.edge(propertyId, XOWL.termStatus, termStatus);
 			}
 
@@ -1973,7 +2097,7 @@ public class WorkbookLoader {
 					case PROPERTY_NAME:
 						propertyNameCol = i;
 						break;
-						
+
 					case PROPERTY_ID:
 						propertyIdCol = i;
 						break;
@@ -2002,7 +2126,7 @@ public class WorkbookLoader {
 					}
 				}
 			}
-			
+
 			String sheetName = sheet.getSheetName();
 
 			if (propertyIdCol == UNDEFINED) {
@@ -2058,8 +2182,8 @@ public class WorkbookLoader {
 					}
 
 				}
-				
-				if(termStatus != null) {
+
+				if (termStatus != null) {
 					graph.edge(classId, XOWL.termStatus, termStatus);
 				}
 			}
@@ -2165,7 +2289,7 @@ public class WorkbookLoader {
 			classIdCol = UNDEFINED;
 			classSubclassOfCol = UNDEFINED;
 			classTermStatusCol = UNDEFINED;
-			
+
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2192,7 +2316,7 @@ public class WorkbookLoader {
 					case CLASS_SUBCLASS_OF:
 						classSubclassOfCol = i;
 						break;
-					case TERM_STATUS :
+					case TERM_STATUS:
 						classTermStatusCol = i;
 						break;
 					}
@@ -2221,7 +2345,7 @@ public class WorkbookLoader {
 			}
 
 		}
-		
+
 		private void fail(String message) throws SpreadsheetException {
 			if (failOnErrors) {
 				throw new SpreadsheetException(message);
@@ -2242,16 +2366,16 @@ public class WorkbookLoader {
 
 		private void loadOntologyRow(Row row) throws SpreadsheetException {
 
-			String ontologyName = stringValue(row, ontologyNameCol);
-			String comment = stringValue(row, ontologyCommentCol);
+			Literal ontologyName = stringLiteral(row, ontologyNameCol);
+			Literal comment = stringLiteral(row, ontologyCommentCol);
 			String namespaceURI = stringValue(row, namespaceUriCol);
-			String prefix = stringValue(row, prefixCol);
+			Literal prefix = stringLiteral(row, prefixCol);
 			List<String> importList = imports(row, importsCol);
 
 			if (ontologyName == null && comment == null && namespaceURI == null && prefix == null) {
 				return;
 			}
-			
+
 			String sheetName = row.getSheet().getSheetName();
 
 			if (namespaceURI == null) {
@@ -2264,26 +2388,20 @@ public class WorkbookLoader {
 				fail(msg);
 			}
 
-
 			if (prefix == null) {
 				throw new SpreadsheetException(format("''{0}'' is missing on row {1} of the ''{2}'' sheet.", PREFIX,
 						row.getRowNum(), sheetName));
 			}
 
-			nsManager.add(prefix, namespaceURI);
+			nsManager.add(prefix.stringValue(), namespaceURI);
 
 			URI subject = uri(namespaceURI);
 
-			graph.edge(subject, RDF.TYPE, OWL.ONTOLOGY);
-			graph.edge(subject, VANN.preferredNamespacePrefix, literal(prefix));
-
-			if (ontologyName != null) {
-				graph.edge(subject, RDFS.LABEL, literal(ontologyName));
-			}
-			if (comment != null) {
-				graph.edge(subject, RDFS.COMMENT, literal(comment));
-			}
-
+			edge(subject, RDF.TYPE, OWL.ONTOLOGY);
+			edge(subject, VANN.preferredNamespacePrefix, prefix);
+			edge(subject, RDFS.LABEL, ontologyName);
+			edge(subject, RDFS.COMMENT, comment);
+			
 			if (importList != null) {
 				this.importList.add(new ImportInfo(subject, importList));
 			}
@@ -2630,7 +2748,7 @@ public class WorkbookLoader {
 			}
 			String text = pathText;
 			int c = pathText.charAt(0);
-			if (c != '?' && c!='.' && c!='^') {
+			if (c != '?' && c != '.' && c != '^') {
 				text = "." + text;
 			}
 			Path path = pathFactory.createPath(text);
@@ -2669,22 +2787,20 @@ public class WorkbookLoader {
 
 		}
 	}
-	
+
 	private interface FormulaHandler {
 		public void execute() throws RDFParseException, IOException, KonigException;
 	}
-	
+
 	private class ShapeFormulaHandler implements FormulaHandler {
 
 		private URI shapeId;
 		private String formula;
-		
-		
+
 		public ShapeFormulaHandler(URI shapeId, String formula) {
 			this.shapeId = shapeId;
 			this.formula = formula;
 		}
-
 
 		@Override
 		public void execute() throws RDFParseException, IOException, KonigException {
@@ -2695,35 +2811,31 @@ public class WorkbookLoader {
 				throw new KonigException("Shape not found: " + shapeId);
 			}
 			propertyOracle.setShape(shape);
-			
+
 			FormulaParser parser = new FormulaParser(propertyOracle, localNameService);
 			QuantifiedExpression expression = parser.quantifiedExpression(formula);
 			String text = expression.toString();
 			Literal literal = vf.createLiteral(text);
-			
+
 			Graph graph = getGraph();
 			graph.edge(shapeId, Konig.iriFormula, literal);
-			
+
 		}
-		
+
 	}
-	
+
 	private class PropertyFormulaHandler implements FormulaHandler {
 		private URI shapeId;
 		private Vertex propertyConstraint;
 		private String formula;
-		
-		
-		
-		public PropertyFormulaHandler(URI shapeId, Vertex propertyConstraint,  String formula) {
+
+		public PropertyFormulaHandler(URI shapeId, Vertex propertyConstraint, String formula) {
 			this.shapeId = shapeId;
 			this.propertyConstraint = propertyConstraint;
 			this.formula = formula;
 		}
 
-
-
-		public void execute() throws  KonigException {
+		public void execute() throws KonigException {
 			ShapeManager shapeManager = getShapeManager();
 			Shape shape = shapeManager.getShapeById(shapeId);
 			if (shape == null) {
@@ -2732,44 +2844,42 @@ public class WorkbookLoader {
 			propertyOracle.setShape(shape);
 			NamespaceMap nsMap = new NamespaceMapAdapter(getNamespaceManager());
 			FormulaParser parser = new FormulaParser(propertyOracle, localNameService, nsMap);
-			
+
 			QuantifiedExpression expression = null;
 			try {
 				expression = parser.quantifiedExpression(formula);
 			} catch (Throwable oops) {
-				String message = "Failed to parse formula...\n" +
-						"   Shape: <" + shapeId + ">\n" +
-						"   Property: " + propertyConstraint.getValue(SH.path).stringValue() + "\n" +
-						"   Formula: " + formula;
+				String message = "Failed to parse formula...\n" + "   Shape: <" + shapeId + ">\n" + "   Property: "
+						+ propertyConstraint.getValue(SH.path).stringValue() + "\n" + "   Formula: " + formula;
 				throw new KonigException(message, oops);
 			}
-			
+
 			String text = expression.toString();
 			Literal literal = vf.createLiteral(text);
-			
+
 			Graph graph = propertyConstraint.getGraph();
-			
-//			PrimaryExpression primary = expression.asPrimaryExpression();
-//			if (primary instanceof PathExpression) {
-//				PathExpression path = (PathExpression) primary;
-//				List<PathStep> stepList = path.getStepList();
-//				if (stepList.size()==1) {
-//					PathStep step = stepList.get(0);
-//					if (step instanceof DirectionStep) {
-//						DirectionStep dirStep = (DirectionStep) step;
-//						if (dirStep.getDirection() == Direction.OUT) {
-//							URI predicate = dirStep.getTerm().getIri();
-//							graph.edge(propertyConstraint.getId(), SH.equals, predicate);
-//							return;
-//						}
-//					}
-//				}
-//			}
-			
+
+			// PrimaryExpression primary = expression.asPrimaryExpression();
+			// if (primary instanceof PathExpression) {
+			// PathExpression path = (PathExpression) primary;
+			// List<PathStep> stepList = path.getStepList();
+			// if (stepList.size()==1) {
+			// PathStep step = stepList.get(0);
+			// if (step instanceof DirectionStep) {
+			// DirectionStep dirStep = (DirectionStep) step;
+			// if (dirStep.getDirection() == Direction.OUT) {
+			// URI predicate = dirStep.getTerm().getIri();
+			// graph.edge(propertyConstraint.getId(), SH.equals, predicate);
+			// return;
+			// }
+			// }
+			// }
+			// }
+
 			graph.edge(propertyConstraint.getId(), Konig.formula, literal);
-			
+
 		}
-		
+
 	}
 
 }

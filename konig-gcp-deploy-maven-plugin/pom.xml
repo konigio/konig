@@ -78,7 +78,7 @@
       <artifactId>plexus-utils</artifactId>
       <version>3.0.8</version>
     </dependency>
-        
+    
   	
     <dependency>
       <groupId>junit</groupId>
@@ -93,7 +93,17 @@
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
-    
+    	<dependency> 
+	  <groupId>mysql</groupId>
+	  <artifactId>mysql-connector-java</artifactId>
+	  <version>5.1.9</version>  
+	</dependency>
+	
+	<dependency>
+	  <groupId>com.google.cloud.sql</groupId>
+	  <artifactId>mysql-socket-factory</artifactId>
+	  <version>1.0.5</version>
+	</dependency>
   </dependencies>
   <build>
 	  <plugins>

@@ -23,6 +23,12 @@
   		<version>${konig.version}</version>
   	</dependency>
   	
+		<dependency>
+		    <groupId>com.google.apis</groupId>
+		    <artifactId>google-api-services-bigquery</artifactId>
+		    <version>${google-api-services-bigquery.version}</version>
+		</dependency>
+		
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

@@ -63,15 +63,9 @@ public class BigQueryShapeReadServiceTest  {
 					.addValue("Alice")
 				.endRow()
 			.endResponse()
+				.setNextPageToken("Zm9vPTIwMTctMTItMDU")
 		.build();
-		
-		QueryResponse response = mock(QueryResponse.class);
-		QueryResult result = mock(QueryResult.class);
-		when(response.getResult()).thenReturn(result);
-		Iterable<List<FieldValue>> sequence = null;
-		when(result.iterateAll()).thenReturn(sequence);
-		
-		
+
 		BigQueryShapeReadService service = new BigQueryShapeReadService(structService, bigQuery);
 		
 		ShapeQuery query = new ShapeQuery.Builder()
@@ -84,13 +78,16 @@ public class BigQueryShapeReadServiceTest  {
 				.build();
 			
 		StringWriter buffer = new StringWriter();
-		
 		service.execute(query, buffer, Format.JSONLD);
-		String expected = "[ {\n" + 
-				"  \"givenName\" : \"Alice\"\n" + 
-				"} ]";
+		String expected = "{\n" +
+				"  \"type\" : \"BasicContainer\",\n" +
+				"  \"nextPageToken\" : \"Zm9vPTIwMTctMTItMDU\",\n" +
+				"  \"contains\" : [ {\n" +
+				"    \"givenName\" : \"Alice\"\n" +
+				"  } ]\n" +
+				"}";
 		String actual = buffer.toString().replace("\r", "");
-		
+
 		assertEquals(expected, actual);
 	}
 

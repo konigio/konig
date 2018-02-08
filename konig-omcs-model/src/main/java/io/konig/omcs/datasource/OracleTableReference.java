@@ -23,19 +23,28 @@ package io.konig.omcs.datasource;
 
 public class OracleTableReference {
 	
+	private String oracleHost;
 	private String omcsInstanceId;
-	private String omcsDatabaseId;
+	private String oracleSchema;
 	private String omcsTableId;
 	
 	public OracleTableReference() {
 		
 	}
 	
+	public String getOracleHost() {
+		return oracleHost;
+	}
+
+	public void setOracleHost(String oracleHost) {
+		this.oracleHost = oracleHost;
+	}
+
 	public String getOmcsInstanceId() {
 		return omcsInstanceId;
 	}
-	public String getOmcsDatabaseId() {
-		return omcsDatabaseId;
+	public String getOracleSchema() {
+		return oracleSchema;
 	}
 	public String getOmcsTableId() {
 		return omcsTableId;
@@ -43,16 +52,16 @@ public class OracleTableReference {
 	public void setOmcsInstanceId(String omcsInstanceId) {
 		this.omcsInstanceId = omcsInstanceId;
 	}
-	public void setOmcsDatabaseId(String omcsDatabaseId) {
-		this.omcsDatabaseId = omcsDatabaseId;
+	public void setOracleSchema(String oracleSchema) {
+		this.oracleSchema = oracleSchema;
 	}
 	public void setOmcsTableId(String omcsTableId) {
 		this.omcsTableId = omcsTableId;
 	}
 	
-	public OracleTableReference(String omcsInstanceId, String omcsDatabaseId, String omcsTableId) {
+	public OracleTableReference(String omcsInstanceId, String oracleSchema, String omcsTableId) {
 		this.omcsInstanceId = omcsInstanceId;
-		this.omcsDatabaseId = omcsDatabaseId;
+		this.oracleSchema = oracleSchema;
 		this.omcsTableId = omcsTableId;
 	}
 }

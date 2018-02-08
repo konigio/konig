@@ -49,8 +49,14 @@ public class MockBigQueryBuilder {
 		bigQuery = mock(BigQuery.class);
 		return this;
 	}
-	
-	
+
+	public MockBigQueryBuilder setNextPageToken(String nextPageToken) {
+		if(result != null) {
+			when(result.hasNextPage()).thenReturn(true);
+			when(result.getNextPageToken()).thenReturn(nextPageToken);
+		}
+		return this;
+	}
 	
 	public MockBigQueryBuilder beginResponse() {
 

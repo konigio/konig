@@ -1,8 +1,8 @@
-package io.konig.schemagen.sql;
+package io.konig.core;
 
 /*
  * #%L
- * Konig Schema Generator
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,21 +21,8 @@ package io.konig.schemagen.sql;
  */
 
 
-import io.konig.core.io.AbstractPrettyPrintable;
-import io.konig.core.io.PrettyPrintWriter;
+import org.openrdf.model.URI;
 
-public class CreateDatabaseStatement extends AbstractPrettyPrintable {
-	
-	private String database;
-	
-	public CreateDatabaseStatement(String database) {
-		this.database = database;
-	}
-	
-	@Override
-	public void print(PrettyPrintWriter out) {
-		out.print("CREATE DATABASE IF NOT EXISTS ");
-		out.print(database);
-	}
-
+public interface HasURI {
+	public URI getURI();
 }
