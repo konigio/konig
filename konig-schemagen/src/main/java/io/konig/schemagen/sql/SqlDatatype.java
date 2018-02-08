@@ -36,6 +36,10 @@ public enum SqlDatatype {
 	DATETIME,
 	TEXT,
 	CHAR,
-	VARCHAR
-	
+	VARCHAR,
+	VARCHAR2,
+	NUMBER,
+	TIMESTAMP,
+	CLOB,
+	LONG
 }

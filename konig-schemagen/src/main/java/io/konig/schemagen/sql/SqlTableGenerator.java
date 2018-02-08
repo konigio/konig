@@ -39,6 +39,10 @@ public class SqlTableGenerator {
 		datatypeMapper = new SqlDatatypeMapper();
 	}
 	
+	public SqlTableGenerator(SqlDatatypeMapper datatypeMapper) {
+		nameFactory = new SqlTableNameFactory();
+		this.datatypeMapper = datatypeMapper;
+	}
 	
 	public SqlTable generateTable(Shape shape) throws SchemaGeneratorException {
 		
