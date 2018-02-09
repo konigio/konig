@@ -49,7 +49,7 @@ public class CreateOracleTableStatement extends AbstractPrettyPrintable {
 		out.print("CREATE TABLE ");
 		out.print(" ");
 		table.print(out);
-		out.print(" '");
+		out.print(" ';");
 		out.println(" END IF;");
 		out.println(" END;");
 		
