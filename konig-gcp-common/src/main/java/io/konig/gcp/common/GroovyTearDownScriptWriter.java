@@ -24,12 +24,17 @@ import java.io.BufferedReader;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.MessageFormat;
 
+import com.google.api.services.sqladmin.SQLAdmin;
+import com.google.api.services.sqladmin.model.Database;
+import com.google.api.services.sqladmin.model.DatabaseInstance;
+import com.google.api.services.sqladmin.model.Operation;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetInfo;
@@ -87,6 +92,9 @@ public class GroovyTearDownScriptWriter {
 			printTableCommands();
 			printDatasetCommands();
 			printGooglePubSubCommands();
+			printGoogleCloudSqlTableCommand();
+			printGoogleCloudSqlDatabaseCommand();
+			printGoogleCloudSqlInstanceCommand();			
 			println("}");
 			println("def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent");
 			println(delegate);
@@ -94,6 +102,62 @@ public class GroovyTearDownScriptWriter {
 		}
 		
 	}
+	private void printGoogleCloudSqlTableCommand() throws IOException {
+		File tablesDir = googleCloudInfo.getCloudsql().getTables();
+		if (tablesDir != null && tablesDir.isDirectory()) {	
+			for (File file : tablesDir.listFiles()) {
+				if(file.getName().endsWith(".json")){
+						String path = FileUtil.relativePath(scriptFile, file);
+						print(indent);
+						print("delete GoogleCloudSqlTable from \"");
+						print(path);
+						print("\"");
+						println(" println response ");
+				}				
+			}
+		}
+		
+	}
+
+
+	private void printGoogleCloudSqlDatabaseCommand() throws IOException {
+			File databasesDir = googleCloudInfo.getCloudsql().getDatabases();
+			if (databasesDir != null && databasesDir.isDirectory()) {	
+				for (File file : databasesDir.listFiles()) {
+						
+							String path = FileUtil.relativePath(scriptFile, file);
+							print(indent);
+							print("delete GoogleCloudSqlDatabase from \"");
+							print(path);
+							print("\"");
+							println(" println response ");
+										
+				}
+			}
+		
+	}
+
+
+	private void printGoogleCloudSqlInstanceCommand() throws FileNotFoundException, IOException {
+		File instancesDir = googleCloudInfo.getCloudsql().getInstances();
+		if (instancesDir != null && instancesDir.isDirectory()) {
+			SQLAdmin sqlAdmin = googleCloudService.sqlAdmin();
+			for (File file : instancesDir.listFiles()) {
+				DatabaseInstance info = googleCloudService.readDatabaseInstanceInfo(file);
+				DatabaseInstance instance = googleCloudService.getDatabaseInstance(info.getName());
+				if (instance == null) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("delete GoogleCloudSqlInstance from \"");
+					print(path);
+					print("\"");
+					println(" println response ");
+				}
+			}
+		}
+		
+	}
+
 
 	private void printGooglePubSubCommands() throws IOException {
 		
