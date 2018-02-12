@@ -373,6 +373,8 @@ public class GoogleCloudService implements CredentialsProvider {
 	}
 	
 	public BucketInfo readBucketInfo(Reader reader) throws GoogleCloudServiceException, IOException {
+		gcpBucketSuffix = System.getProperty("gcpBucketSuffix");
+		
 		if (gcpBucketSuffix == null) {
 			throw new GoogleCloudServiceException("gcpBucketSuffix must be defined");
 		}
