@@ -33,7 +33,7 @@ import io.konig.shacl.PropertyConstraint;
 public class SqlDatatypeMapper
 {
 	
-	private OwlReasoner owlReasoner = new OwlReasoner(null);
+	public OwlReasoner owlReasoner = new OwlReasoner(null);
 
 	public FacetedSqlDatatype type(PropertyConstraint c) {
 		
@@ -106,7 +106,7 @@ public class SqlDatatypeMapper
 		throw new SchemaGeneratorException("Unsupported datatype for predicate: " + c.getPredicate());
 	}
 
-	private boolean inRange(long min, long max, PropertyConstraint c) {
+	public boolean inRange(long min, long max, PropertyConstraint c) {
 		Double minInclusive = c.getMinInclusive();
 		Double maxInclusive = c.getMaxInclusive();
 		Double minExclusive = c.getMinExclusive();
@@ -123,22 +123,22 @@ public class SqlDatatypeMapper
 		
 	}
 
-	private Long integerMin(PropertyConstraint c) {
+	public Long integerMin(PropertyConstraint c) {
 		Double doubleMin = minValue(c);
 		return doubleMin==null ? null : new Long(doubleMin.longValue());
 	}
 	
-	private Long integerMax(PropertyConstraint c) {
+	public Long integerMax(PropertyConstraint c) {
 		Double doubleMax = maxValue(c);
 		return doubleMax == null ? null : new Long(doubleMax.longValue());
 	}
 
-	private boolean isSigned(PropertyConstraint c) {
+	public boolean isSigned(PropertyConstraint c) {
 		Double minValue = minValue(c);
 		return minValue==null || minValue<0;
 	}
 
-	private Double maxValue(PropertyConstraint c) {
+	public Double maxValue(PropertyConstraint c) {
 		Double result = c.getMaxInclusive();
 		if (result == null) {
 			result = c.getMaxExclusive();
@@ -146,7 +146,7 @@ public class SqlDatatypeMapper
 		return result;
 	}
 
-	private Double minValue(PropertyConstraint c) {
+	public Double minValue(PropertyConstraint c) {
 		Double result = c.getMinInclusive();
 		if (result == null) {
 			result = c.getMinExclusive();
