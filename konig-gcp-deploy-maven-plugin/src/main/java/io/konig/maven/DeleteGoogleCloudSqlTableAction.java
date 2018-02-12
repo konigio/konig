@@ -46,11 +46,11 @@ import io.konig.gcp.common.GoogleCloudService;
 import io.konig.gcp.common.GoogleCredentialsNotFoundException;
 import io.konig.gcp.common.ReplaceStringReader;
 
-public class CreateGoogleCloudSqlTableAction {
+public class DeleteGoogleCloudSqlTableAction {
 
 	private KonigDeployment deployment;
 
-	public CreateGoogleCloudSqlTableAction(KonigDeployment deployment) {
+	public DeleteGoogleCloudSqlTableAction(KonigDeployment deployment) {
 		this.deployment = deployment;
 	}
 	
@@ -61,60 +61,42 @@ public class CreateGoogleCloudSqlTableAction {
 		File file = deployment.file(path);		
 		CloudSqlTable tableInfo=service.readCloudSqlTableInfo(file);
 		
-		//Check whether instance and database are created.
+		//Check whether instance and database are available.
 		SQLAdmin sqlAdmin = service.sqlAdmin();
 		DatabaseInstance instance = service.getDatabaseInstance(tableInfo.getInstance());
 		if(instance==null){
-			deployment.setResponse("CreateTable :: Instance "+tableInfo.getInstance()+" not available");
+			deployment.setResponse("DeleteTable :: Instance "+tableInfo.getInstance()+" not available");
 			return deployment;
 		}
 		Database db = service.getDatabase(tableInfo.getDatabase(),tableInfo.getInstance());				
 		if (db == null ){
-			deployment.setResponse("CreateTable :: Database "+tableInfo.getDatabase()+" not available");
+			deployment.setResponse("DeleteTable :: Database "+tableInfo.getDatabase()+" not available");
 			return deployment;
 		}
-
-		
 		//1. Get user info from system properties /environment variables
 		String userName = System.getProperty("konig.gcp.cloudsql."+tableInfo.getInstance()+".username");
 		String password = System.getProperty("konig.gcp.cloudsql."+tableInfo.getInstance()+".password");
 		if (userName == null || password == null) {
 			userName = System.getenv("KONIG_GCP_CLOUDSQL_"+tableInfo.getInstance()+"_USERNAME");
 			password = System.getenv("KONIG_GCP_CLOUDSQL_"+tableInfo.getInstance()+"_PASSWORD");
-			
 		}
 		if (userName == null || password == null) {
 			throw new GoogleCloudSQLCredentialsNotFoundException();
 		}
-		//2.Create User for the instance
-		User user=new User();
-		user.setPassword(password);
-		Operation operation=null;
-		if("root".equals(userName)){
-			user.setHost("%");
-			operation=service.sqlAdmin().users().update(service.getProjectId(), tableInfo.getInstance(), user.getHost(), userName, user).execute();
-		}
-		else{
-			user.setName(userName);
-			operation= service.sqlAdmin().users().insert(service.getProjectId(), tableInfo.getInstance(), user).execute();			
-		}
-		
 		//2. Get the SQL content from .sql file
-		String sqlFilePath=file.getParent()+"/"+tableInfo.getDdlFile();
 		String instanceFilePath=file.getParentFile().getParent()+"\\instances\\"+tableInfo.getInstanceFile();
-		DatabaseInstance instanceInfo =service.readDatabaseInstanceInfo(new File(instanceFilePath));		
-		String sqlFileContent = new String(Files.readAllBytes(Paths.get(sqlFilePath))); 
+		DatabaseInstance instanceInfo =service.readDatabaseInstanceInfo(new File(instanceFilePath));
 		
 		//3. Get MYSQL connection
 		service.getMySQLConnection(userName, password, tableInfo,instanceInfo);
 		
 		//4. Create the table
-		if(!service.isTablePresent(tableInfo)){
-			service.createTable(sqlFileContent);
-		deployment.setResponse("Created  Table " + tableInfo.getName());
+		if(service.isTablePresent(tableInfo)){
+			service.deleteTable(tableInfo.getName());
+			deployment.setResponse("Deleted  Table " + tableInfo.getName());
 		}
 		else{
-			deployment.setResponse("CreateTable :: Table " + tableInfo.getName()+" is already available");
+			deployment.setResponse("DeleteTable :: Table " + tableInfo.getName()+" is not already available");
 		}
 		
 		return deployment;

@@ -94,6 +94,15 @@ public class KonigDeployment {
 			
 		case GooglePubSubTopic :
 			return new DeleteGooglePubSubTopicAction(this);		
+		
+		case GoogleCloudSqlInstance :
+			return new DeleteGoogleCloudSqlInstanceAction(this);
+			
+		case GoogleCloudSqlDatabase :
+			return new DeleteGoogleCloudSqlDatabaseAction(this);
+			
+		case GoogleCloudSqlTable :
+			return new DeleteGoogleCloudSqlTableAction(this);
 
 		default:
 			break;

@@ -4,7 +4,7 @@ package io.konig.maven;
  * #%L
  * Konig GCP Deployment Maven Plugin
  * %%
- * Copyright (C) 2015 - 2018 Gregory McFall
+ * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,51 +21,40 @@ package io.konig.maven;
  */
 
 
-
-
 import java.io.File;
 import java.io.IOException;
 
-import com.google.api.services.sqladmin.SQLAdmin;
-import com.google.api.services.sqladmin.SQLAdmin.Databases.Insert;
-import com.google.api.services.sqladmin.model.Database;
 import com.google.api.services.sqladmin.model.DatabaseInstance;
 import com.google.api.services.sqladmin.model.Operation;
+import com.google.cloud.bigquery.TableInfo;
 
 import io.konig.gcp.common.GoogleCloudService;
 
-public class CreateGoogleCloudSqlDatabaseAction {
-
+public class DeleteGoogleCloudSqlInstanceAction {
 	private KonigDeployment deployment;
 
-	public CreateGoogleCloudSqlDatabaseAction(KonigDeployment deployment) {
+	public DeleteGoogleCloudSqlInstanceAction(KonigDeployment deployment) {
 		this.deployment = deployment;
 	}
 	
 	public KonigDeployment from(String path) throws IOException {
 		GoogleCloudService service = deployment.getService();
 		File file = deployment.file(path);
+		String status=null;
 		try {
-			SQLAdmin sqlAdmin = service.sqlAdmin();
-			Database info = service.readDatabaseInfo(file);
-				DatabaseInstance instance = service.getDatabaseInstance(info.getInstance());
-				if(instance==null){
-					deployment.setResponse("CreateDatabase :: Instance "+info.getInstance()+" not available");
-					return deployment;
-				}
-				Database db = service.getDatabase(info.getName(),info.getInstance());				
-				if (db == null ){
-					Operation operation=service.sqlAdmin().databases().insert(service.getProjectId(), info.getInstance(), info).execute();
-					deployment.setResponse("Created  Database " + info.getName());
-				}
-				else{
-					deployment.setResponse("CreatDatabase :: Database "+info.getName()+" is already available");
-				}
 			
+			DatabaseInstance info = service.readDatabaseInstanceInfo(file);		
+			DatabaseInstance instance = service.getDatabaseInstance(info.getName());
+			if (instance != null) {
+				Operation operation=service.sqlAdmin().instances().delete(service.getProjectId(), info.getName()).execute();
+				deployment.setResponse("Deleted  Instance " + info.getName());
+			}
+			else{
+				deployment.setResponse("DeleteInstance :: Instance " + info.getName() +" is not available");
+			}
 		} catch (Exception ex) {
 			throw ex;
 		}
 		return deployment;
 	}
-
 }

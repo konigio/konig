@@ -52,6 +52,8 @@ public class GcpDeploymentTest {
 	
 	@Test
 	public void test3Script() throws CompilationFailedException, IOException {
+		System.setProperty("konig.gcp.cloudsql.testin8.username", "root");
+		System.setProperty("konig.gcp.cloudsql.testin8.password", "root");
 		File tearDownScript = new File(
 				"src/integration-test/resources/demo/demo-gcp-model/target/generated/gcp/scripts/tear-down.groovy");
 		assertTrue(tearDownScript.exists());
