@@ -73,6 +73,9 @@ public class KonigDeployment {
 			
 		case GoogleCloudSqlTable :
 			return new CreateGoogleCloudSqlTableAction(this);
+		
+		case GoogleCloudStorageBucket :
+			return new CreateGoogleCloudStorageBucketAction(this);
 			
 		default:
 			break;
@@ -103,7 +106,10 @@ public class KonigDeployment {
 			
 		case GoogleCloudSqlTable :
 			return new DeleteGoogleCloudSqlTableAction(this);
-
+		
+		case GoogleCloudStorageBucket :
+			return new DeleteGoogleCloudStorageBucketAction(this);
+			
 		default:
 			break;
 			
