@@ -590,20 +590,26 @@ public class GoogleCloudService implements CredentialsProvider {
 	    return isTablePresent;
 	}
 	public void createTable(String sqlFileContent) throws Exception {		
-		    try (Statement statement = conn.createStatement()) {		        
-		        String sql = "CREATE TABLE "+sqlFileContent; 
-		        statement.executeUpdate(sql);
+		    try (Statement statement = conn.createStatement()) {
+		        statement.executeUpdate(sqlFileContent);
 		    }
 	}
-	
+	public void deleteTable(String tableName) throws Exception {		
+	    try (Statement statement = conn.createStatement()) {		        
+	        String sql = "DROP TABLE "+tableName; 
+	        statement.executeUpdate(sql);
+	    }
+	}
+
 	public void getMySQLConnection(String username,String password,CloudSqlTable tableInfo,DatabaseInstance instanceInfo) throws ClassNotFoundException, SQLException{
-		
+		if(conn==null){
 		 String jdbcUrl = String.format(
 			        mySqlJdbcConnUrl,
 			            tableInfo.getDatabase(),
 			            projectId+":"+instanceInfo.getRegion()+":"+tableInfo.getInstance());
 			    Class.forName(mySqlDriverClass);
 			    conn=DriverManager.getConnection(jdbcUrl, username, password);
+		}
 	}
 
 

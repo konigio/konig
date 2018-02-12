@@ -34,11 +34,11 @@ import com.google.api.services.sqladmin.model.Operation;
 
 import io.konig.gcp.common.GoogleCloudService;
 
-public class CreateGoogleCloudSqlDatabaseAction {
+public class DeleteGoogleCloudSqlDatabaseAction {
 
 	private KonigDeployment deployment;
 
-	public CreateGoogleCloudSqlDatabaseAction(KonigDeployment deployment) {
+	public DeleteGoogleCloudSqlDatabaseAction(KonigDeployment deployment) {
 		this.deployment = deployment;
 	}
 	
@@ -50,16 +50,16 @@ public class CreateGoogleCloudSqlDatabaseAction {
 			Database info = service.readDatabaseInfo(file);
 				DatabaseInstance instance = service.getDatabaseInstance(info.getInstance());
 				if(instance==null){
-					deployment.setResponse("CreateDatabase :: Instance "+info.getInstance()+" not available");
+					deployment.setResponse("DeleteDatabase :: Instance "+info.getInstance()+" not available");
 					return deployment;
 				}
 				Database db = service.getDatabase(info.getName(),info.getInstance());				
-				if (db == null ){
-					Operation operation=service.sqlAdmin().databases().insert(service.getProjectId(), info.getInstance(), info).execute();
-					deployment.setResponse("Created  Database " + info.getName());
+				if (db != null ){
+					Operation operation=service.sqlAdmin().databases().delete(service.getProjectId(), info.getInstance(), info.getName()).execute();
+					deployment.setResponse("Deleted  Database " + info.getName());
 				}
 				else{
-					deployment.setResponse("CreatDatabase :: Database "+info.getName()+" is already available");
+					deployment.setResponse("DeleteDatabase :: Database "+info.getName()+" is not available");
 				}
 			
 		} catch (Exception ex) {
