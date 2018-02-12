@@ -37,6 +37,7 @@ import io.konig.core.Path;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.path.HasStep;
 import io.konig.core.path.HasStep.PredicateValuePair;
+import io.konig.core.path.InStep;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.vocab.Konig;
@@ -324,7 +325,9 @@ public class ShapeModelFactory {
 				StepPropertyModel priorStep = null;
 				for (int index=0; index<=last; index++) {
 					Step step = stepList.get(index);
-					if (step instanceof OutStep) {
+					if (step instanceof InStep) {
+						
+					} else if (step instanceof OutStep) {
 						if (group != null) {
 							classModel = group.produceValueClassModel(null);
 						}
