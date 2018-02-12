@@ -123,10 +123,17 @@ public class FunctionParser {
 		buffer = new StringBuilder();
 		for (;;) {
 			c = read();
+			if (c == ',') {
+				buffer.append("\"");
+				buffer.appendCodePoint(c);
+				buffer.append("\"");
+			}
 			if (c == '"') {
 				break;
 			}
-			buffer.appendCodePoint(c);
+			if (c != ',') {
+				buffer.appendCodePoint(c);
+			}
 		}
 		return text();
 	}

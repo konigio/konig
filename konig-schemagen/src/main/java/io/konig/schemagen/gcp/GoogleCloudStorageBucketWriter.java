@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import io.konig.core.KonigException;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleCloudStorageBucket;
+import io.konig.gcp.datasource.NotificationConfig;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
 
@@ -48,6 +49,22 @@ public class GoogleCloudStorageBucketWriter implements ShapeVisitor {
 		json.writeStringField("name", bucket.getName());
 		json.writeStringField("location", bucket.getLocation());
 		json.writeStringField("storageClass", bucket.getStorageClass());
+		if(bucket.getNotificationInfo() != null) {
+			json.writeArrayFieldStart("notificationInfo");
+			for(NotificationConfig config : bucket.getNotificationInfo()) {
+				json.writeStartObject();
+				json.writeStringField("topic", config.getTopic());
+				if(config.getEventTypes() != null) {
+					json.writeArrayFieldStart("eventTypes");
+					for(String eventType : config.getEventTypes()) {
+						json.writeString(eventType);
+					}
+					json.writeEndArray();
+				}
+				json.writeEndObject();
+			}
+			json.writeEndArray();
+		}
 		json.writeEndObject();
 	}
 

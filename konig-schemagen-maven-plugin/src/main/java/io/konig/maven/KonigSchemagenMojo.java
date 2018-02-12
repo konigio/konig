@@ -152,6 +152,7 @@ import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
 import io.konig.schemagen.java.JsonReaderBuilder;
 import io.konig.schemagen.java.JsonWriterBuilder;
+import io.konig.schemagen.java.SystemConfig;
 import io.konig.schemagen.jsonld.ShapeToJsonldContext;
 import io.konig.schemagen.jsonschema.JsonSchemaGenerator;
 import io.konig.schemagen.jsonschema.JsonSchemaNamer;
@@ -276,7 +277,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     public void execute() throws MojoExecutionException   {
     	
     	try {
-    		
+    		init();
 			shapeManager = new MemoryShapeManager();
 			nsManager = new MemoryNamespaceManager();
 			mediaTypeNamer = new SimpleShapeMediaTypeNamer();
@@ -285,7 +286,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			owlReasoner = new OwlReasoner(owlGraph);
 			owlGraph.setNamespaceManager(nsManager);
 
-			init();
+			
 			loadResources();
 
 			generateGoogleCloudPlatform();
@@ -319,7 +320,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
-    private void init() {
+    private void init() throws MojoExecutionException, IOException {
+    	SystemConfig.init();
     	GcpShapeConfig.init();
     	OracleShapeConfig.init();
     }

@@ -32,7 +32,6 @@ import java.sql.SQLException;
 import java.text.MessageFormat;
 
 import com.google.api.services.sqladmin.SQLAdmin;
-import com.google.api.services.sqladmin.model.Database;
 import com.google.api.services.sqladmin.model.DatabaseInstance;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Dataset;
@@ -95,6 +94,7 @@ public class GroovyDeploymentScriptWriter {
 			printGoogleCloudSqlInstanceCommand();
 			printGoogleCloudSqlDatabaseCommand();
 			printGoogleCloudSqlTableCommand();
+			printGoogleCloudStorageCommands();
 			println("}");
 			println("def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent");
 			println(delegate);
@@ -103,8 +103,6 @@ public class GroovyDeploymentScriptWriter {
 		}
 		
 	}
-
-
 	private void printTableDataCommands() throws IOException {
 		
 		File dataDir = googleCloudInfo.getBigquery().getData();
@@ -120,7 +118,23 @@ public class GroovyDeploymentScriptWriter {
 		}
 		
 	}
-
+	
+	private void printGoogleCloudStorageCommands() throws IOException {
+		File storageDir = googleCloudInfo.getCloudstorage().getDirectory();
+		if (storageDir!=null && storageDir.exists()) {
+			File[] fileList = storageDir.listFiles();
+			for (File file : fileList) {
+				String path = FileUtil.relativePath(scriptFile, file);
+				print(indent);
+				print("create GoogleCloudStorageBucket from \"");
+				print(path);
+				print("\"");
+				println(" println response ");
+				
+			}
+		}
+	}
+	
 	private void printGooglePubSubCommands() throws IOException {
 		
 		File topicsFile = googleCloudInfo.getTopicsFile();

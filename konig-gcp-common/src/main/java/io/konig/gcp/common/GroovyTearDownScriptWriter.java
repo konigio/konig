@@ -92,9 +92,10 @@ public class GroovyTearDownScriptWriter {
 			printTableCommands();
 			printDatasetCommands();
 			printGooglePubSubCommands();
+			printGoogleCloudStorageCommands();
 			printGoogleCloudSqlTableCommand();
 			printGoogleCloudSqlDatabaseCommand();
-			printGoogleCloudSqlInstanceCommand();			
+			printGoogleCloudSqlInstanceCommand();
 			println("}");
 			println("def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent");
 			println(delegate);
@@ -102,6 +103,24 @@ public class GroovyTearDownScriptWriter {
 		}
 		
 	}
+
+	
+	private void printGoogleCloudStorageCommands() throws IOException {
+		File storageDir = googleCloudInfo.getCloudstorage().getDirectory();
+		if (storageDir!=null && storageDir.exists()) {
+			File[] fileList = storageDir.listFiles();
+			for (File file : fileList) {
+				String path = FileUtil.relativePath(scriptFile, file);
+				print(indent);
+				print("delete GoogleCloudStorageBucket from \"");
+				print(path);
+				print("\"");
+				println(" println response ");
+				
+			}
+		}
+	}
+
 	private void printGoogleCloudSqlTableCommand() throws IOException {
 		File tablesDir = googleCloudInfo.getCloudsql().getTables();
 		if (tablesDir != null && tablesDir.isDirectory()) {	
@@ -157,6 +176,7 @@ public class GroovyTearDownScriptWriter {
 		}
 		
 	}
+
 
 
 	private void printGooglePubSubCommands() throws IOException {

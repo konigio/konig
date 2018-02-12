@@ -29,6 +29,7 @@ public enum ResourceType {
 	GooglePubSubTopic, 
 	GoogleCloudSqlInstance, 
 	GoogleCloudSqlDatabase, 
-	GoogleCloudSqlTable
+	GoogleCloudSqlTable,
+	GoogleCloudStorageBucket
 
 }
