@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import io.konig.gcp.common.GoogleCloudService;
 import io.konig.gcp.common.InvalidGoogleCredentialsException;
+import io.konig.schemagen.java.SystemConfig;
 
 public class KonigDeployment {
 	
@@ -40,6 +41,7 @@ public class KonigDeployment {
 		service = new GoogleCloudService();
 		service.openCredentials(credentialsFile);
 		this.baseDir = new File(baseDir).getAbsoluteFile();
+		SystemConfig.init();
 	}
 	
 	public Object insert(InsertResourceType type) {
