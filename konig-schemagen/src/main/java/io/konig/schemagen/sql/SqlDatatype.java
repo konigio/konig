@@ -41,5 +41,7 @@ public enum SqlDatatype {
 	NUMBER,
 	TIMESTAMP,
 	CLOB,
-	LONG
+	LONG,
+	BINARY_FLOAT,
+	BINARY_DOUBLE
 }

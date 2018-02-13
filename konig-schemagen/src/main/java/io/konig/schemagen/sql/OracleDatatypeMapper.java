@@ -57,14 +57,15 @@ public class OracleDatatypeMapper extends SqlDatatypeMapper {
 			}
 			
 			if (datatype.equals(XMLSchema.FLOAT)) {
-				return new NumericSqlDatatype(SqlDatatype.FLOAT, 126);
+				return new NumericSqlDatatype(SqlDatatype.BINARY_FLOAT, false);
 			} 
-			if (datatype.equals(XMLSchema.DOUBLE)) {
-				return new NumericSqlDatatype(SqlDatatype.FLOAT, 126);
-			} 
-			if (owlReasoner.isRealNumber(datatype)) {
-				return new NumericSqlDatatype(SqlDatatype.FLOAT, 63);
+			if (datatype.equals(XMLSchema.DOUBLE) || datatype.equals(XMLSchema.DECIMAL)) {
+				return new NumericSqlDatatype(SqlDatatype.BINARY_DOUBLE, false);
 			}
+			if (datatype.equals(XMLSchema.BOOLEAN)) {
+				return new NumericSqlDatatype(SqlDatatype.NUMBER, 1 , 0);
+			}
+			
 			if (XMLSchema.STRING.equals(datatype)) {
 				Integer maxLength = c.getMaxLength();
 				Integer minLength = c.getMinLength();
