@@ -21,6 +21,8 @@ public class OracleDatatypeMapperTest {
 	@Test
 	public void test() {
 		
+		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.NUMBER, 1,0), type(XMLSchema.BOOLEAN));
+		
 		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.NUMBER, 3, 0) , type(XMLSchema.BYTE));
 		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.NUMBER, 3, 0) , type(XMLSchema.UNSIGNED_BYTE));
 		
@@ -36,9 +38,9 @@ public class OracleDatatypeMapperTest {
 		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.NUMBER, 19, 0), type(XMLSchema.LONG));
 		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.NUMBER, 19, 0), type(XMLSchema.UNSIGNED_LONG));
 	
-		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.FLOAT, 126), type(XMLSchema.FLOAT));
-		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.FLOAT, 126), type(XMLSchema.DOUBLE));
-		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.FLOAT, 63), type(XMLSchema.DECIMAL));
+		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.BINARY_FLOAT, false), type(XMLSchema.FLOAT));
+		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.BINARY_DOUBLE, false), type(XMLSchema.DOUBLE));
+		assertEqualsTest(new NumericSqlDatatype(SqlDatatype.BINARY_DOUBLE, false), type(XMLSchema.DECIMAL));
 		
 		assertEqualsTest(new StringSqlDatatype(SqlDatatype.VARCHAR2, 4000), type(XMLSchema.STRING));
 		assertEqualsTest(SqlDatatype.DATE, type(XMLSchema.DATE));
