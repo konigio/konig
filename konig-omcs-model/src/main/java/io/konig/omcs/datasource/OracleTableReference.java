@@ -33,6 +33,9 @@ public class OracleTableReference {
 	}
 	
 	public String getOracleHost() {
+		if(System.getProperty(oracleHost) != null) {
+			oracleHost = System.getProperty(oracleHost);
+		}
 		return oracleHost;
 	}
 

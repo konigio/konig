@@ -23,7 +23,6 @@ package io.konig.spreadsheet;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -73,6 +72,8 @@ public class DataSourceGenerator {
 		this.templateDir = templateDir;
 		this.context = new VelocityContext();
 		context.put("templateException", new TemplateException());
+		context.put("beginVar", "${");
+		context.put("endVar", "}");
 		put(properties);
 		loadSystemProperties();
 		createVelocityEngine();
