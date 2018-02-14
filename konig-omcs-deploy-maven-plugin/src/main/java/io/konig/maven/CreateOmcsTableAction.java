@@ -48,7 +48,11 @@ public class CreateOmcsTableAction {
 		try {
 			File file = ocmsDeployment.file(tableFile);
 			OracleTableDefinition table = mapper.readValue(file, OracleTableDefinition.class);
-			String instance = table.getTableReference().getOracleHost() +":" +table.getTableReference().getOmcsInstanceId();
+			String oracleHost = table.getTableReference().getOracleHost();
+			if(System.getProperty(oracleHost) != null) {
+				oracleHost = System.getProperty(oracleHost);
+			}
+			String instance = oracleHost +":" +table.getTableReference().getOmcsInstanceId();
 			String schema = table.getTableReference().getOracleSchema();
 			String tableId = table.getTableReference().getOmcsTableId();
 			File ddlFile = new File(file.getParentFile(), table.getQuery());
