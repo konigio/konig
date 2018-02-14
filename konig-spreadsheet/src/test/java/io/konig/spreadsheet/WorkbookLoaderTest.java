@@ -224,7 +224,7 @@ public class WorkbookLoaderTest {
 		assertEquals(1, list.size());
 		
 		DataSource ds = list.get(0);
-		assertEquals("http://www.konig.io/ns/omcs/instances/${omcsInstanceId}/databases/${oracleSchema}/tables/Person", 
+		assertEquals("http://www.konig.io/ns/omcs/instances/test/databases/schema/tables/Person", 
 				ds.getId().stringValue());
 		
 		assertTrue(ds.isA(Konig.OracleTable));
