@@ -5,7 +5,7 @@
 <http://www.konig.io/ns/omcs/instances/${omcsInstanceId}/databases/${oracleSchema}/tables/${omcsTableId}>
 	a konig:OracleTable, konig:DataSource;
 	omcs:tableReference [
-		omcs:oracleHost "${oracleHost}" ;
+		omcs:oracleHost "${beginVar}oracleHost${endVar}" ;
 		omcs:omcsInstanceId "${omcsInstanceId}" ;
 		omcs:oracleSchema "${oracleSchema}" ;
 		omcs:omcsTableId   "${omcsTableId}" 
