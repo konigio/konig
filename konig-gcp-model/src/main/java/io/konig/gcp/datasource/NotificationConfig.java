@@ -21,28 +21,34 @@ package io.konig.gcp.datasource;
  */
 
 
-import java.io.File;
+import java.util.List;
 
-public class GoogleCloudSqlTableInfo extends GoogleCloudSqlTable {
+import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.GCP;
 
-	private File ddlFile;
+public class NotificationConfig {
 	
-	private File instanceFile;
-
-	public File getDdlFile() {
-		return ddlFile;
+	private String topic;
+	private List<String> eventTypes;
+	
+	public NotificationConfig(){
+		
 	}
-
-	public void setDdlFile(File ddlFile) {
-		this.ddlFile = ddlFile;
+	
+	@RdfProperty(GCP.NOTIFICATION_TOPIC)
+	public String getTopic() {
+		return topic;
 	}
-
-	public File getInstanceFile() {
-		return instanceFile;
+	public void setTopic(String topic) {
+		this.topic = topic;
 	}
-
-	public void setInstanceFile(File instanceFile) {
-		this.instanceFile = instanceFile;
+	
+	@RdfProperty(GCP.NOTIFICATION_EVENT_TYPES)
+	public List<String> getEventTypes() {
+		return eventTypes;
 	}
-
+	public void setEventTypes(List<String> eventTypes) {
+		this.eventTypes = eventTypes;
+	}
+	
 }

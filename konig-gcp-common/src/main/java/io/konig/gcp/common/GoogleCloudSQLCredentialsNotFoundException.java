@@ -1,8 +1,8 @@
-package io.konig.gcp.datasource;
+package io.konig.gcp.common;
 
 /*
  * #%L
- * Konig Google Cloud Platform Model
+ * Konig GCP Common
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,28 +21,14 @@ package io.konig.gcp.datasource;
  */
 
 
-import java.io.File;
 
-public class GoogleCloudSqlTableInfo extends GoogleCloudSqlTable {
 
-	private File ddlFile;
-	
-	private File instanceFile;
+public class GoogleCloudSQLCredentialsNotFoundException extends Exception {
+	private static final long serialVersionUID = 1L;
 
-	public File getDdlFile() {
-		return ddlFile;
+	public GoogleCloudSQLCredentialsNotFoundException() {
+		super("Google Cloud SQL Credentials not found.  Please define either the "
+				+ "'konig.gcp.cloudsql.{instanceName}.username' and konig.gcp.cloudsql.{instanceName}.password system properties, or "
+				+ "'KONIG_GCP_CLOUDSQL_{instanceName}_USERNAME' and 'KONIG_GCP_CLOUDSQL_{instanceName}_PASSWORD' environment variables");
 	}
-
-	public void setDdlFile(File ddlFile) {
-		this.ddlFile = ddlFile;
-	}
-
-	public File getInstanceFile() {
-		return instanceFile;
-	}
-
-	public void setInstanceFile(File instanceFile) {
-		this.instanceFile = instanceFile;
-	}
-
 }

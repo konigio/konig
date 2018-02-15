@@ -1,10 +1,10 @@
-package io.konig.schemagen.sql;
+package io.konig.spreadsheet;
 
 /*
  * #%L
- * Konig Schema Generator
+ * Konig Spreadsheet
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,27 +21,8 @@ package io.konig.schemagen.sql;
  */
 
 
-public enum SqlDatatype {
-
-	BOOLEAN,
-	BIT,
-	TINYINT,
-	SMALLINT,
-	MEDIUMINT,
-	INT,
-	BIGINT,
-	FLOAT,
-	DOUBLE,
-	DATE,
-	DATETIME,
-	TEXT,
-	CHAR,
-	VARCHAR,
-	VARCHAR2,
-	NUMBER,
-	TIMESTAMP,
-	CLOB,
-	LONG,
-	BINARY_FLOAT,
-	BINARY_DOUBLE
+public class TemplateException {
+	public void topicNameNotDefined() throws SpreadsheetException {
+        throw new SpreadsheetException("Topic name not defined");
+    }
 }

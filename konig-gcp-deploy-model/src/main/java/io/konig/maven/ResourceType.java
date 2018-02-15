@@ -26,6 +26,10 @@ public enum ResourceType {
 	BigQueryDataset,
 	BigQueryTable,
 	BigQueryView,
-	GooglePubSubTopic
+	GooglePubSubTopic, 
+	GoogleCloudSqlInstance, 
+	GoogleCloudSqlDatabase, 
+	GoogleCloudSqlTable,
+	GoogleCloudStorageBucket
 
 }

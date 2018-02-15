@@ -88,25 +88,33 @@ public class FunctionParser {
 		if (c == '(') {
 			
 			for (;;) {
-				
-				String name = name();
-				next(':');
-				String value = string();
-				map.put(name, value);
+				addKeyValuePair(map);
 				c = next();
+				if (c == ',') {
+					addKeyValuePair(map);
+					c = next();
+				}
 				if (c == ')') {
 					break;
 				} 
 				if (c != ',') {
 					throw new FunctionParseException();
 				}
+				
 			}
 		} else {
 			unread(c);
 		}
 		return map;
 	}
-
+    
+	private void addKeyValuePair(SimpleValueMap map) throws FunctionParseException, IOException {
+		String name = name();
+		next(':');
+		String value = string();
+		map.put(name, value);
+	}
+	
 	private String string() throws IOException, FunctionParseException {
 		int c = next();
 		if (c != '"') {
@@ -115,10 +123,17 @@ public class FunctionParser {
 		buffer = new StringBuilder();
 		for (;;) {
 			c = read();
+			if (c == ',') {
+				buffer.append("\"");
+				buffer.appendCodePoint(c);
+				buffer.append("\"");
+			}
 			if (c == '"') {
 				break;
 			}
-			buffer.appendCodePoint(c);
+			if (c != ',') {
+				buffer.appendCodePoint(c);
+			}
 		}
 		return text();
 	}

@@ -1,5 +1,7 @@
 package io.konig.gcp.datasource;
 
+import java.util.List;
+
 /*
  * #%L
  * Konig Core
@@ -32,6 +34,7 @@ public class GoogleCloudStorageBucket extends DataSource {
 	private String name;
 	private String location;
 	private String storageClass;
+	private List<NotificationConfig> notificationInfo;
 
 	public GoogleCloudStorageBucket() {
 		addType(Konig.GoogleCloudStorageBucket);
@@ -73,7 +76,13 @@ public class GoogleCloudStorageBucket extends DataSource {
 		this.storageClass = storageClass;
 	}
 
-	
+	@RdfProperty(GCP.NOTIFICATION_INFO)
+	public List<NotificationConfig> getNotificationInfo() {
+		return notificationInfo;
+	}
 
-	
+	public void setNotificationInfo(List<NotificationConfig> notificationInfo) {
+		this.notificationInfo = notificationInfo;
+	}
+
 }

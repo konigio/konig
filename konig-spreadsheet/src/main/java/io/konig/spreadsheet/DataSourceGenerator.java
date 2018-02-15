@@ -22,7 +22,9 @@ package io.konig.spreadsheet;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -69,7 +71,11 @@ public class DataSourceGenerator {
 		this.nsManager = nsManager;
 		this.templateDir = templateDir;
 		this.context = new VelocityContext();
+		context.put("templateException", new TemplateException());
+		context.put("beginVar", "${");
+		context.put("endVar", "}");
 		put(properties);
+		loadSystemProperties();
 		createVelocityEngine();
 	}
 
@@ -122,7 +128,31 @@ public class DataSourceGenerator {
 			context.put(key, value);
 		}
 	}
+	
+	public void loadSystemProperties() {
 
+		String fileName = System.getenv("KONIG_DEPLOY_CONFIG ");
+		if (fileName == null) {
+			fileName = System.getProperty("konig.deploy.config");
+		}
+		if(fileName != null) {
+			InputStream in = null;
+			try {
+				Properties p = new Properties();
+				in = new FileInputStream(new File(fileName));
+				p.load(in);
+	
+				for (String name : p.stringPropertyNames()) {
+					String value = p.getProperty(name);
+					context.put(name, value);
+				}
+				in.close();
+			} catch (IOException e) {
+				throw new KonigException("Unable to load system properties " + fileName, e);
+			}
+		}
+	}
+	
 	public File getTemplateDir() {
 		return templateDir;
 	}

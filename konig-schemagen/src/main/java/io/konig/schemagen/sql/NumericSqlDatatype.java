@@ -26,23 +26,52 @@ import io.konig.core.io.PrettyPrintWriter;
 public class NumericSqlDatatype extends FacetedSqlDatatype {
 
 	private boolean unsigned;
+	private Integer precision;
+	private Integer scale;
 
 	public NumericSqlDatatype(SqlDatatype datatype, boolean unsigned) {
 		super(datatype);
 		this.unsigned = unsigned;
 	}
-
+	
+	public NumericSqlDatatype(SqlDatatype datatype, Integer precision) {
+		super(datatype);
+		this.precision = precision;
+	}
+	
+	public NumericSqlDatatype(SqlDatatype datatype, Integer precision, Integer scale) {
+		super(datatype);
+		this.precision = precision;
+		this.scale = scale;
+	}
+	
 	public boolean isUnsigned() {
 		return unsigned;
 	}
-	
 
 	@Override
 	public void print(PrettyPrintWriter out) {
 		super.print(out);
-		if (unsigned) {
+		if (unsigned && isNull(precision) && isNull(scale)) {
 			out.print(" UNSIGNED");
 		}
-		
+		if(!isNull(precision)) {
+			if(precision > 0  && isNull(scale)) {
+				out.print("(");
+				out.print(precision);
+				out.print(")");
+			}
+			if(precision > 0 && !isNull(scale) && scale >= 0) {
+				out.print("(");
+				out.print(precision);
+				out.print(",");
+				out.print(scale);
+				out.print(")");
+			}
+		}
+	}
+	
+	private boolean isNull(Integer value) {
+		return value==null?true:false;
 	}
 }

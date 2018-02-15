@@ -27,7 +27,10 @@ public class StringSqlDatatype extends FacetedSqlDatatype {
 	
 	private int maxLength;
 
-
+	public StringSqlDatatype(SqlDatatype datatype) {
+		super(datatype);
+	}
+	
 	public StringSqlDatatype(SqlDatatype datatype, Integer maxLength) {
 		super(datatype);
 		this.maxLength = maxLength;
@@ -44,9 +47,11 @@ public class StringSqlDatatype extends FacetedSqlDatatype {
 	@Override
 	public void print(PrettyPrintWriter out) {
 		super.print(out);
-		out.print('(');
-		out.print(maxLength);
-		out.print(')');
+			if(maxLength != 0) {
+			out.print('(');
+			out.print(maxLength);
+			out.print(')');
+		}
 
 	}
 

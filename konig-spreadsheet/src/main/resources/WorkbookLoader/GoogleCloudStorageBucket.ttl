@@ -7,7 +7,21 @@
 	gcp:name "${gcpBucketName}" ;
 	gcp:projectId "${gcpProjectId}" ;
 	gcp:storageClass "${gcpBucketStorageClass}" ;
-	gcp:location   "${gcpBucketLocation}" 
+	gcp:location   "${gcpBucketLocation}";
+	#if($!{topicName} || $!{eventType})
+		gcp:notificationInfo [
+			#if($!{topicName})
+				gcp:topic "${topicName}";
+				#if($!{eventType})
+					gcp:eventTypes "${eventType}";
+				#else
+					gcp:eventTypes "OBJECT_FINALIZE";
+				#end
+			#else
+				gcp:topic $templateException.topicNameNotDefined();
+			#end
+		] 
+	#end 
 .
 
 <${shapeId}> konig:shapeDataSource <gs://${gcpBucketName}>

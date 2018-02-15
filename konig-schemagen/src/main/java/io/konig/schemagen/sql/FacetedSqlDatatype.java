@@ -45,6 +45,11 @@ public class FacetedSqlDatatype extends AbstractPrettyPrintable {
 	public static final FacetedSqlDatatype DATE = new FacetedSqlDatatype(SqlDatatype.DATE);
 	public static final FacetedSqlDatatype DATETIME = new FacetedSqlDatatype(SqlDatatype.DATETIME);
 	public static final StringSqlDatatype  IRI = new StringSqlDatatype(SqlDatatype.VARCHAR, 2000);
+
+	public static final NumericSqlDatatype SIGNED_NUMBER =  new NumericSqlDatatype(SqlDatatype.NUMBER, true);
+	public static final NumericSqlDatatype UNSIGNED_NUMBER =  new NumericSqlDatatype(SqlDatatype.NUMBER, false);
+	public static final FacetedSqlDatatype TIMESTAMP = new FacetedSqlDatatype(SqlDatatype.TIMESTAMP);
+	
 	
 	private SqlDatatype datatype;
 

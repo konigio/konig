@@ -26,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -158,6 +160,25 @@ public class WorkbookLoaderTest {
 	}
 	
 	@Test
+	public void testDatasourceParamsGoogleBucket() throws Exception {
+        InputStream input = new FileInputStream(new File("src/test/resources/test-datasource-params-bucket.xlsx"));
+        Workbook book = WorkbookFactory.create(input);
+
+        Graph graph = new MemoryGraph();
+        NamespaceManager nsManager = new MemoryNamespaceManager();
+        graph.setNamespaceManager(nsManager);
+        
+        WorkbookLoader loader = new WorkbookLoader(nsManager);
+        loader.load(book, graph);
+        input.close();
+        System.out.println(graph);
+        URI shapeId = uri("http://example.com/shapes/ProductShape");
+        List<Value> list = graph.v(shapeId).out(Konig.shapeDataSource).out(GCP.notificationInfo).out(GCP.notificationEventTypes).toValueList();
+        assertEquals(1, list.size());
+        assertEquals("OBJECT_METADATA_UPDATE", list.get(0).stringValue());
+    }
+	
+	@Test
 	public void testGoogleOracleTable() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("omcs-oracle-table.xlsx");
@@ -184,7 +205,7 @@ public class WorkbookLoaderTest {
 		assertEquals(1, list.size());
 		
 		DataSource ds = list.get(0);
-		assertEquals("http://www.konig.io/ns/omcs/instances/testOracleInstance/databases/schema/tables/Person", 
+		assertEquals("http://www.konig.io/ns/omcs/instances/test/databases/schema/tables/Person", 
 				ds.getId().stringValue());
 		
 		assertTrue(ds.isA(Konig.OracleTable));

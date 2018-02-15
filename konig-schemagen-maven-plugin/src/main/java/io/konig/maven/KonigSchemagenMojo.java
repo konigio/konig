@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -132,6 +133,8 @@ import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
 import io.konig.schemagen.gcp.BigQueryLabelGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
+import io.konig.schemagen.gcp.CloudSqlJsonGenerator;
+import io.konig.schemagen.gcp.CloudSqlRdfGenerator;
 import io.konig.schemagen.gcp.CloudSqlTableWriter;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
@@ -149,6 +152,7 @@ import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
 import io.konig.schemagen.java.JsonReaderBuilder;
 import io.konig.schemagen.java.JsonWriterBuilder;
+import io.konig.schemagen.java.SystemConfig;
 import io.konig.schemagen.jsonld.ShapeToJsonldContext;
 import io.konig.schemagen.jsonschema.JsonSchemaGenerator;
 import io.konig.schemagen.jsonschema.JsonSchemaNamer;
@@ -158,10 +162,10 @@ import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
 import io.konig.schemagen.jsonschema.TemplateJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.ocms.OracleCloudResourceGenerator;
-import io.konig.schemagen.ocms.OracleDatabaseWriter;
 import io.konig.schemagen.ocms.OracleTableWriter;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
+import io.konig.schemagen.sql.OracleDatatypeMapper;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
@@ -273,7 +277,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     public void execute() throws MojoExecutionException   {
     	
     	try {
-    		
+    		init();
 			shapeManager = new MemoryShapeManager();
 			nsManager = new MemoryNamespaceManager();
 			mediaTypeNamer = new SimpleShapeMediaTypeNamer();
@@ -282,7 +286,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			owlReasoner = new OwlReasoner(owlGraph);
 			owlGraph.setNamespaceManager(nsManager);
 
-			init();
+			
 			loadResources();
 
 			generateGoogleCloudPlatform();
@@ -310,18 +314,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
-				SizeEstimateException e) {
+				SizeEstimateException | SQLException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
     }
     
-    private void init() {
+    private void init() throws MojoExecutionException, IOException {
+    	SystemConfig.init();
     	GcpShapeConfig.init();
     	OracleShapeConfig.init();
     }
 
-	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException {
+	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException, SQLException {
 		
 		GroovyDeploymentScript deploy = googleCloudPlatform.getDeployment();
 		if (deploy != null) {
@@ -655,7 +660,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				 transformer.getWorkbookLoader().setFailOnWarnings(workbook.isFailOnWarnings());
 				 transformer.getWorkbookLoader().setFailOnErrors(workbook.isFailOnErrors());
 				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
-				 transformer.transform(workbook.getWorkbookFile(), workbook.owlDir(defaults), workbook.shapesDir(defaults));
+				 transformer.transform(
+						workbook.getWorkbookFile(), workbook.owlDir(defaults), workbook.shapesDir(defaults), workbook.gcpDir(defaults));
 			 }
 		 } catch (Throwable oops) {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
@@ -726,23 +732,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			Configurator config = configurator();
 			config.configure(oracleManagedCloud);
 			File directory = Configurator.checkNull(oracleManagedCloud.getDirectory());
-			File databaseDir = Configurator.checkNull(oracleManagedCloud.getDatabases());
 			File tablesDir = Configurator.checkNull(oracleManagedCloud.getTables());
 			if(directory != null && tablesDir != null) {
 				OracleCloudResourceGenerator resourceGenerator = new OracleCloudResourceGenerator();
-				SqlTableGenerator sqlgenerator = new SqlTableGenerator();
-				OracleDatabaseWriter oracleDatbase = new OracleDatabaseWriter(databaseDir);
-				resourceGenerator.add(oracleDatbase);
+				SqlTableGenerator sqlgenerator = new SqlTableGenerator(new OracleDatatypeMapper());
 				OracleTableWriter oracle = new OracleTableWriter(tablesDir, sqlgenerator);
 				resourceGenerator.add(oracle);
 				resourceGenerator.dispatch(shapeManager.listShapes());
-				
 				GroovyOmcsDeploymentScriptWriter scriptWriter = new GroovyOmcsDeploymentScriptWriter(oracleManagedCloud);
 				scriptWriter.run();
 			}
 		}
 	}
-	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException {
+	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, SQLException {
 		if (googleCloudPlatform != null) {
 			
 			Configurator config = configurator();
@@ -770,10 +772,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if (googleCloudPlatform.getCloudsql() != null) {
 				resourceGenerator.add(cloudSqlTableWriter());
 			}
+			if (googleCloudPlatform.getCloudsql().getInstances()!=null) {
+				CloudSqlJsonGenerator instanceWriter = new CloudSqlJsonGenerator();
+				instanceWriter.writeAll(googleCloudPlatform.getCloudsql(), owlGraph);
+			}
 			resourceGenerator.add(new GooglePubSubTopicListGenerator(googleCloudPlatform.getTopicsFile()));
 			resourceGenerator.dispatch(shapeManager.listShapes());
-			
-						
 
 			if (bigQuery != null) {
 
@@ -805,7 +809,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private CloudSqlTableWriter cloudSqlTableWriter() {
 		CloudSqlInfo info = googleCloudPlatform.getCloudsql();
 		SqlTableGenerator generator = new SqlTableGenerator();
-		return new CloudSqlTableWriter(info.getSchema(), generator);
+		return new CloudSqlTableWriter(info.getTables(), generator);
 	}
 
 
