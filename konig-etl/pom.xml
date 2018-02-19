@@ -1,26 +1,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	 <parent>
-    <groupId>io.konig</groupId>
-    <artifactId>konig-parent</artifactId>
-    <relativePath>../konig-parent/pom.xml</relativePath>
-    <version>2.0.0-8-SNAPSHOT</version>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
-  
-  <artifactId>konig-etl</artifactId>
-  <packaging>jar</packaging>
+	<parent>
+		<groupId>io.konig</groupId>
+		<artifactId>konig-parent</artifactId>
+		<relativePath>../konig-parent/pom.xml</relativePath>
+		<version>2.0.0-8-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
 
-  <name>Konig ETL</name>
-  <url>http://www.konig.io</url>
+	<artifactId>konig-etl</artifactId>
+	<packaging>jar</packaging>
 
-  <description>
+	<name>Konig ETL</name>
+	<url>http://www.konig.io</url>
+
+	<description>
   	A library of helper classes for ETL
   </description>
-  
+
 	<properties>
 		<java.version>1.8</java.version>
-		<docker.image.prefix>konigetl</docker.image.prefix>
+		<docker.image.prefix>etlkonig</docker.image.prefix>
 		<project.artifactId>konig-etl</project.artifactId>
 		<project.build.finalName>konig-etl</project.build.finalName>
 	</properties>
@@ -96,6 +96,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.3</version>
 				<configuration>
+
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>
@@ -104,6 +105,17 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>1.5.4.RELEASE</version>
+				<configuration>
+					<mainClass>io.konig.etl.ETLControllerEndPoint</mainClass>
+					<layout>JAR</layout>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>com.spotify</groupId>
@@ -114,7 +126,23 @@
 					<buildArgs>
 						<JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
 					</buildArgs>
-					
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>io.konig.etl.ETLControllerEndPoint</mainClass>
+						</manifest>
+					</archive>
+					<executions>
+						<execution>
+							
+							<id>default</id>
+							<phase>install</phase>
+							<goals>
+								<goal>build</goal>
+								<goal>push</goal>
+							</goals>
+						</execution>
+					</executions>
 				</configuration>
 			</plugin>
 		</plugins>

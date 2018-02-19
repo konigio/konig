@@ -1,0 +1,12 @@
+{
+  "transformSql" : "transform.sql",
+  "createSql" : "create.sql",
+  "tableName" : "STUDENTS_TMP",
+  "bucketName" : "inputBucket",
+  "exportRequest" : {
+    "sql" : "export.sql",
+    "fileFormat" : "CSV",
+    "tableId" : "STUDENTS",
+    "bucketName" : "resultBucket"
+  }
+}
