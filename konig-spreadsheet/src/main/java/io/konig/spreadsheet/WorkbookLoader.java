@@ -207,15 +207,29 @@ public class WorkbookLoader {
 
 	private static final String UNBOUNDED = "unbounded";
 
-	private static final int SETTINGS_FLAG = 0x1;
-	private static final int ONTOLOGY_FLAG = 0x10;
-	private static final int CLASS_FLAG = 0x20;
-	private static final int PROPERTY_FLAG = 0x40;
-	private static final int INDIVIDUAL_FLAG = 0x80;
-	private static final int SHAPE_FLAG = 0x100;
-	private static final int CONSTRAINT_FLAG = 0x140;
-	private static final int LABEL_FLAG = 0x180;
-	private static final int INSTANCE_NAME_FLAG = 0x200;
+	
+	private static final int COL_NAMESPACE_URI = 0x1;
+	private static final int COL_CLASS_ID = 0x2;
+	private static final int COL_PROPERTY_PATH = 0x4;
+	private static final int COL_PROPERTY_ID = 0x4;
+	private static final int COL_INDIVIDUAL_ID = 0x8;
+	private static final int COL_SHAPE_ID = 0x10;
+	private static final int COL_SETTING_NAME = 0x20;
+	private static final int COL_INSTANCE_NAME = 0x40;
+	private static final int COL_LABEL = 0x80;
+
+	
+	private static final int SHEET_ONTOLOGY = COL_NAMESPACE_URI;
+	private static final int SHEET_CLASS = COL_CLASS_ID;
+	private static final int SHEET_PROPERTY = COL_PROPERTY_ID;
+	private static final int SHEET_INDIVIDUAL = COL_INDIVIDUAL_ID;
+	private static final int SHEET_SHAPE = COL_SHAPE_ID;
+	private static final int SHEET_PROPERTY_CONSTRAINT = COL_SHAPE_ID | COL_PROPERTY_PATH;
+	private static final int SHEET_SETTING = COL_SETTING_NAME;
+	private static final int SHEET_DB_INSTANCE = COL_INSTANCE_NAME;
+	private static final int SHEET_LABEL = COL_LABEL;
+	
+	
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
 
@@ -793,7 +807,7 @@ public class WorkbookLoader {
 			for (int i = 0; i < book.getNumberOfSheets(); i++) {
 				Sheet sheet = book.getSheetAt(i);
 				int sheetType = sheetType(sheet);
-				if (sheetType == INDIVIDUAL_FLAG) {
+				if (sheetType == COL_INDIVIDUAL_ID) {
 					try {
 						loadIndividualProperties(sheet);
 					} catch (Throwable e) {
@@ -901,32 +915,32 @@ public class WorkbookLoader {
 			int bits = info.sheetType;
 
 			switch (bits) {
-			case ONTOLOGY_FLAG:
+			case SHEET_ONTOLOGY:
 				loadOntologies(sheet);
 				break;
-			case CLASS_FLAG:
+			case SHEET_CLASS:
 				loadClasses(sheet);
 				break;
-			case PROPERTY_FLAG:
+			case SHEET_PROPERTY:
 				loadProperties(sheet);
 				break;
-			case INDIVIDUAL_FLAG:
+			case SHEET_INDIVIDUAL:
 				loadIndividuals(sheet);
 				break;
-			case SHAPE_FLAG:
+			case SHEET_SHAPE:
 				loadShapes(sheet);
 				break;
-			case CONSTRAINT_FLAG:
+			case SHEET_PROPERTY_CONSTRAINT:
 				loadPropertyConstraints(sheet);
-			case SETTINGS_FLAG:
+			case SHEET_SETTING:
 				loadSettings(sheet);
 				break;
 
-			case INSTANCE_NAME_FLAG:
+			case SHEET_DB_INSTANCE:
 				loadGoogleCloudSqlInstance(sheet);
 				break;
 
-			case LABEL_FLAG:
+			case SHEET_LABEL:
 				loadLabels(sheet);
 				break;
 
@@ -954,31 +968,31 @@ public class WorkbookLoader {
 
 				switch (name) {
 				case NAMESPACE_URI:
-					bits = bits | ONTOLOGY_FLAG;
+					bits = bits | COL_NAMESPACE_URI;
 					break;
 				case CLASS_ID:
-					bits = bits | CLASS_FLAG;
+					bits = bits | COL_CLASS_ID;
 					break;
 
 				case PROPERTY_PATH:
 				case PROPERTY_ID:
-					bits = bits | PROPERTY_FLAG;
+					bits = bits | COL_PROPERTY_PATH;
 					break;
 				case INDIVIDUAL_ID:
-					bits = bits | INDIVIDUAL_FLAG;
+					bits = bits | COL_INDIVIDUAL_ID;
 					break;
 				case SHAPE_ID:
-					bits = bits | SHAPE_FLAG;
+					bits = bits | COL_SHAPE_ID;
 					break;
 				case SETTING_NAME:
-					bits = bits | SETTINGS_FLAG;
+					bits = bits | COL_SETTING_NAME;
 					break;
 				case INSTANCE_NAME:
-					bits = bits | INSTANCE_NAME_FLAG;
+					bits = bits | COL_INSTANCE_NAME;
 					break;
 
 				case LABEL:
-					bits = bits | LABEL_FLAG;
+					bits = bits | COL_LABEL;
 					break;
 				}
 			}
