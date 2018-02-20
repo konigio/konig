@@ -91,6 +91,7 @@ import io.konig.core.util.IriTemplate;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.AS;
+import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.DC;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
@@ -275,6 +276,7 @@ public class WorkbookLoader {
 		nsManager.add("prov", PROV.NAMESPACE);
 		nsManager.add("as", AS.NAMESPACE);
 		nsManager.add("gcp", GCP.NAMESPACE);
+		nsManager.add("aws",AWS.NAMESPACE);
 		this.nsManager = nsManager;
 
 		try {
