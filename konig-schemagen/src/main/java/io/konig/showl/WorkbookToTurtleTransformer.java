@@ -72,11 +72,11 @@ public class WorkbookToTurtleTransformer {
 		return workbookLoader;
 	}
 
-	public void transform(
-		File workbookFile, 
-		File owlOutDir, 
-		File shapesOutDir,
-		File gcpOutDir) throws IOException, SpreadsheetException, RDFHandlerException {
+	public void transform(WorkbookToTurtleRequest request) throws IOException, SpreadsheetException, RDFHandlerException {
+		File workbookFile = request.getWorkbookFile();
+		File owlOutDir = request.getOwlOutDir();
+		File shapesOutDir = request.getShapesOutDir();
+		File gcpOutDir = request.getGcpOutDir();
 		
 		if (workbookFile == null) {
 			throw new SpreadsheetException("workbookFile must be defined");
@@ -109,8 +109,10 @@ public class WorkbookToTurtleTransformer {
 				writeShapes(shapesOutDir);
 			}
 			
-			CloudSqlRdfGenerator cloudSql = new CloudSqlRdfGenerator();
-			cloudSql.generateAll(gcpOutDir, graph);
+			if (gcpOutDir != null) {
+				CloudSqlRdfGenerator cloudSql = new CloudSqlRdfGenerator();
+				cloudSql.generateAll(gcpOutDir, graph);
+			}
 			
 			
 		} finally {

@@ -181,6 +181,7 @@ import io.konig.shacl.impl.TemplateShapeNamer;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
+import io.konig.showl.WorkbookToTurtleRequest;
 import io.konig.showl.WorkbookToTurtleTransformer;
 import io.konig.transform.bigquery.BigQueryTransformGenerator;
 import io.konig.yaml.Yaml;
@@ -660,14 +661,22 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				 transformer.getWorkbookLoader().setFailOnWarnings(workbook.isFailOnWarnings());
 				 transformer.getWorkbookLoader().setFailOnErrors(workbook.isFailOnErrors());
 				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
-				 transformer.transform(
-						workbook.getWorkbookFile(), workbook.owlDir(defaults), workbook.shapesDir(defaults), workbook.gcpDir(defaults));
+				 transformer.transform(workbookToTurleRequest());
 			 }
 		 } catch (Throwable oops) {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
 		 }
 	 }
 
+
+	private WorkbookToTurtleRequest workbookToTurleRequest() {
+		WorkbookToTurtleRequest request = new WorkbookToTurtleRequest();
+		request.setWorkbookFile(workbook.getWorkbookFile());
+		request.setOwlOutDir(workbook.owlDir(defaults));
+		request.setShapesOutDir(workbook.shapesDir(defaults));
+		request.setGcpOutDir(workbook.gcpDir(defaults));
+		return request;
+	}
 
 	private void generatePlantUMLDomainModel() throws IOException, PlantumlGeneratorException, MojoExecutionException {
 		if (plantUML != null) {
