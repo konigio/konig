@@ -109,10 +109,10 @@ public class WorkbookToTurtleTransformer {
 			if (shapesOutDir != null) {
 				writeShapes(shapesOutDir);
 			}
-			
+
+			TurtleGenerator turtleGenerator = new TurtleGenerator();
 			if (gcpOutDir != null) {
-				TurtleGenerator cloudSql = new TurtleGenerator();
-				cloudSql.generateAll(GCP.GoogleCloudSqlInstance, gcpOutDir, graph);
+				turtleGenerator.generateAll(GCP.GoogleCloudSqlInstance, gcpOutDir, graph);
 			}
 			
 			
