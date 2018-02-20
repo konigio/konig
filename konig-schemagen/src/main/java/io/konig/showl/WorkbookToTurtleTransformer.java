@@ -39,9 +39,10 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.VertexCopier;
+import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
-import io.konig.schemagen.gcp.CloudSqlRdfGenerator;
+import io.konig.schemagen.gcp.TurtleGenerator;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -110,8 +111,8 @@ public class WorkbookToTurtleTransformer {
 			}
 			
 			if (gcpOutDir != null) {
-				CloudSqlRdfGenerator cloudSql = new CloudSqlRdfGenerator();
-				cloudSql.generateAll(gcpOutDir, graph);
+				TurtleGenerator cloudSql = new TurtleGenerator();
+				cloudSql.generateAll(GCP.GoogleCloudSqlInstance, gcpOutDir, graph);
 			}
 			
 			
