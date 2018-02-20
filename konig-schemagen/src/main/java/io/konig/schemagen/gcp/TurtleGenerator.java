@@ -49,17 +49,17 @@ import io.konig.gcp.datasource.GoogleCloudSqlDatabase;
 import io.konig.gcp.datasource.GoogleCloudSqlTableInfo;
 import io.konig.gcp.io.GoogleCloudSqlJsonUtil;
 
-public class CloudSqlRdfGenerator {
+public class TurtleGenerator {
 
-	public void generateAll(File baseDir, Graph graph) throws KonigException, IOException, RDFHandlerException {
+	public void generateAll(URI resourceType, File baseDir, Graph graph) throws KonigException, IOException, RDFHandlerException {
 	
-		generateInstances(baseDir, graph);
+		generateInstances(resourceType, baseDir, graph);
 	}
 	
 
-	private void generateInstances(File baseDir, Graph graph) throws KonigException, IOException, RDFHandlerException {
+	private void generateInstances(URI resourceType, File baseDir, Graph graph) throws KonigException, IOException, RDFHandlerException {
 	
-		List<Vertex> list = graph.v(GCP.GoogleCloudSqlInstance).in(RDF.TYPE).toVertexList();
+		List<Vertex> list = graph.v(resourceType).in(RDF.TYPE).toVertexList();
 		if (!list.isEmpty()) {
 
 			if (!baseDir.exists()) {
@@ -82,7 +82,8 @@ public class CloudSqlRdfGenerator {
 					}
 					
 				} else {
-					throw new KonigException("GoogleCloudSqlInstance must have a URI: " + v);
+					
+					throw new KonigException(resourceType.getLocalName() + " must have a URI: " + v);
 				}
 			}
 		}
