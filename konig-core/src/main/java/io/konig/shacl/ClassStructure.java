@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.konig.core.*;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -40,11 +41,6 @@ import org.openrdf.model.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.core.Graph;
-import io.konig.core.KonigException;
-import io.konig.core.OwlReasoner;
-import io.konig.core.Path;
-import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.SimpleValueMap;
 import io.konig.core.util.ValueFormat;
@@ -117,7 +113,9 @@ public class ClassStructure {
 	}
 	
 	public void init(ShapeManager shapeManager, OwlReasoner reasoner) {
-
+		if(reasoner != null && reasoner.getGraph() != null && reasoner.getGraph().getNamespaceManager() != null) {
+			reasoner.getGraph().getNamespaceManager().add("owl", "http://www.w3.org/2002/07/owl#");
+		}
 		Builder builder = new Builder(shapeManager, reasoner);
 		builder.build();
 	}
@@ -894,6 +892,7 @@ public class ClassStructure {
 		private URI shapeName(URI targetClassURI) {
 			SimpleValueMap map = new SimpleValueMap();
 			map.put("targetClassLocalName", targetClassURI.getLocalName());
+//			reasoner.getGraph().getNamespaceManager().add("owl", "http://www.w3.org/2002/07/owl#");
 			Namespace ns = reasoner.getGraph().getNamespaceManager().findByName(targetClassURI.getNamespace());
 			if (ns == null) {
 				throw new KonigException("Prefix not found for namespace " + targetClassURI.getNamespace());
