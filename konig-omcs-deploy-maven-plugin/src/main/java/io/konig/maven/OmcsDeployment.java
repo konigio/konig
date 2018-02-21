@@ -28,6 +28,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import io.konig.schemagen.java.SystemConfig;
+
 public class OmcsDeployment {
 	
 	private File baseDir;
@@ -35,6 +37,7 @@ public class OmcsDeployment {
 	
 	public OmcsDeployment(String baseDir) throws Exception {
 		this.baseDir =  new File(baseDir).getAbsoluteFile();
+		SystemConfig.init();
 	}
 
 	public Object create(OmcsResourceType type) throws SQLException {

@@ -320,7 +320,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     }
     
     private void init() throws MojoExecutionException, IOException {
-    	SystemConfig.init();
     	GcpShapeConfig.init();
     	OracleShapeConfig.init();
     }
