@@ -64,16 +64,38 @@ public class SqlTable extends AbstractPrettyPrintable {
 		out.print(" (");
 		out.pushIndent();
 		String comma = "";
+		StringBuilder pks = new StringBuilder();
+		StringBuilder uks = new StringBuilder();
 		for (SqlColumn column : columnList) {
 			out.println(comma);
-			comma = ",";
+			comma = ", ";
 			out.indent();
 			column.print(out);
+			if (column.getKeytype() == SqlKeyType.PRIMARY_KEY) {
+				if (pks.length() > 0) pks.append(comma);
+				pks.append(column.getColumnName());
+			}
+			if (column.getKeytype() == SqlKeyType.UNIQUE_KEY) {
+				if (uks.length() > 0) uks.append(comma);
+				uks.append(column.getColumnName());
+			}
 		}
+		if (pks.length() > 0) {
+			out.println(comma);
+			out.indent();
+			out.print("PRIMARY KEY (" + pks.toString() + ")");
+		}
+		
+		if (uks.length() > 0) {
+			out.println(comma);
+			out.indent();
+			out.print("UNIOUE KEY (" + uks.toString() + ")");
+		}	
+		
 		out.println();
 		out.popIndent();
 		out.indent();
-		out.print(')');
+		out.print(");");
 	}
 	
 	

@@ -182,6 +182,7 @@ import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.showl.WorkbookToTurtleRequest;
 import io.konig.showl.WorkbookToTurtleTransformer;
 import io.konig.transform.bigquery.BigQueryTransformGenerator;
+import io.konig.transform.mysql.MySqlTransformGenerator;
 import io.konig.yaml.Yaml;
 import io.konig.yaml.YamlParseException;
 import net.sourceforge.plantuml.SourceFileReader;
@@ -778,6 +779,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			}
 			if (googleCloudPlatform.getCloudsql() != null) {
 				resourceGenerator.add(cloudSqlTableWriter());
+				File mysqlScriptsDir = googleCloudPlatform.getCloudsql().getScripts();
+				if(mysqlScriptsDir != null) {
+					generateMySqlTransformScripts(mysqlScriptsDir);
+				}
 			}
 			if (googleCloudPlatform.getCloudsql().getInstances()!=null) {
 				CloudSqlJsonGenerator instanceWriter = new CloudSqlJsonGenerator();
@@ -819,9 +824,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		return new CloudSqlTableWriter(info.getTables(), generator);
 	}
 
-
-
-
+	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {
+		if (googleCloudPlatform.isEnableMySqlTransform()) {
+			MySqlTransformGenerator generator = new MySqlTransformGenerator(shapeManager, outDir, owlReasoner);
+			generator.generateAll();
+			List<Throwable> errorList = generator.getErrorList();
+			if (errorList != null && !errorList.isEmpty()) {
+				Log logger = getLog();
+				for (Throwable e : errorList) {
+					logger.error(e.getMessage());
+				}
+				throw new MojoExecutionException("Failed to generate MySql Transform", errorList.get(0));
+			}
+		}
+	}
 
 	private BigQueryLabelGenerator labelGenerator() {
 		File schemaDir = googleCloudPlatform.getBigquery().getSchema();
