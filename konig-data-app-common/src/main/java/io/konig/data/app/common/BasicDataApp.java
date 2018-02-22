@@ -44,10 +44,10 @@ public class BasicDataApp implements DataApp {
 		
 	}
 	
-	public void addContainer(ExtentContainer container) {
+	public void addContainer(ExtentContainer container) throws DataAppException {
 		String slug = container.getSlug();
 		if (slug == null) {
-			throw new KonigException("slug must be defined for container");
+			throw new DataAppException("slug must be defined for container");
 		}
 		containers.put(slug, container);
 	}

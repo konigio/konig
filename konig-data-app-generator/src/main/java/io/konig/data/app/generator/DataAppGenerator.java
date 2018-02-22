@@ -29,6 +29,7 @@ import org.openrdf.model.URI;
 
 import io.konig.data.app.common.BasicDataApp;
 import io.konig.data.app.common.DataApp;
+import io.konig.data.app.common.DataAppException;
 import io.konig.data.app.common.ExtentContainer;
 import io.konig.openapi.model.MediaType;
 import io.konig.openapi.model.MediaTypeMap;
@@ -75,7 +76,12 @@ public class DataAppGenerator {
 				container.setDefaultShape((URI)defaultShape.getId());
 				container.setExtentClass(extentClass);
 				container.setSlug(slug);
-				app.addContainer(container);
+				try {
+					app.addContainer(container);
+				} catch (DataAppException e) {
+					// TODO Auto-generated catch block
+					throw new DataAppGeneratorException(e.getMessage());
+				}
 			} else {
 				throw new DataAppGeneratorException("Default Shape not found for container: " + pathValue);
 			}
