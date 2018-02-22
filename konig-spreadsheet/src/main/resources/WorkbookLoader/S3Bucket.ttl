@@ -1,0 +1,14 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix aws:   <http://www.konig.io/ns/aws/> .
+
+<https://amazonaws.konig.io/s3/bucket/${beginVar}environmentName${endVar}-${bucketKey}>
+	a aws:S3Bucket, konig:DataSource;
+	aws:bucketKey "${bucketKey}";
+  aws:bucketName "${beginVar}environmentName${endVar}-${bucketKey}";
+  aws:region "${awsRegion}";
+  aws:bucketMediaType "${bucketMediaType}";
+.
+
+<${shapeId}> konig:shapeDataSource 
+	<https://amazonaws.konig.io/s3/bucket/${beginVar}environmentName${endVar}-${bucketKey}>
+.
