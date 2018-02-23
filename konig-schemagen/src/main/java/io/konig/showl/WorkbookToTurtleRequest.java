@@ -28,7 +28,14 @@ public class WorkbookToTurtleRequest {
 	private File owlOutDir;
 	private File shapesOutDir;
 	private File gcpOutDir;
+	private File awsOutDir;
 	
+	public File getAwsOutDir() {
+		return awsOutDir;
+	}
+	public void setAwsOutDir(File awsOutDir) {
+		this.awsOutDir = awsOutDir;
+	}
 	public File getWorkbookFile() {
 		return workbookFile;
 	}
