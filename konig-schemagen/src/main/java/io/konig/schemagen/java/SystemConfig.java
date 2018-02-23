@@ -31,7 +31,7 @@ import java.util.Properties;
 public class SystemConfig {
 	public static void init() throws IOException {
 
-		String fileName = System.getenv("KONIG_DEPLOY_CONFIG ");
+		String fileName = System.getenv("KONIG_DEPLOY_CONFIG");
 		if (fileName == null) {
 			fileName = System.getProperty("konig.deploy.config");
 		}

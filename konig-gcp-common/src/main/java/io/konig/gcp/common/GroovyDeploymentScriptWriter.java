@@ -72,12 +72,11 @@ public class GroovyDeploymentScriptWriter {
 			
 			String baseDir = FileUtil.relativePath(scriptFile, googleCloudInfo.getDirectory());
 			//String baseDir = ".";
-
-			String credentialsPath = googleCloudService.getCredentialsFile().getCanonicalPath().replace('\\', '/');
+			
+			
 			String grab = MessageFormat.format("@Grab(\"io.konig:konig-gcp-deploy-maven-plugin:{0}\")", konigVersion);
 			
-			String delegate = MessageFormat.format("deploymentPlan.delegate = new KonigDeployment(\"{0}\",  scriptDir)", 
-					credentialsPath);
+			String delegate = "deploymentPlan.delegate = new KonigDeployment(scriptDir)";
 			
 			println(grab);
 			println();			
@@ -165,19 +164,13 @@ public class GroovyDeploymentScriptWriter {
 
 		File schemaDir = googleCloudInfo.getBigquery().getSchema();
 		if (schemaDir != null) {
-			BigQuery bigquery = googleCloudService.bigQuery();
 			for (File file : schemaDir.listFiles()) {
-				TableInfo info = googleCloudService.readTableInfo(file);
-				Table table = bigquery.getTable(info.getTableId());
-				if (table == null) {
 					String path = FileUtil.relativePath(scriptFile, file);
 					print(indent);
 					print("create BigQueryTable from \"");
 					print(path);
 					print("\"");
 					println(" println response ");
-					
-				}
 			}
 		}
 		
@@ -188,18 +181,14 @@ public class GroovyDeploymentScriptWriter {
 		
 		File datasetDir = googleCloudInfo.getBigquery().getDataset();
 		if (datasetDir != null && datasetDir.isDirectory()) {
-			BigQuery bigquery = googleCloudService.bigQuery();
+		
 			for (File file : datasetDir.listFiles()) {
-				DatasetInfo info = googleCloudService.readDatasetInfo(file);
-				Dataset dataset = bigquery.getDataset(info.getDatasetId());
-				if (dataset == null) {
 					String path = FileUtil.relativePath(scriptFile, file);
 					print(indent);
 					print("create BigQueryDataset from \"");
 					print(path);
 					print("\"");
 					println(" println response ");
-				}
 			}
 		}
 		
@@ -210,18 +199,16 @@ public class GroovyDeploymentScriptWriter {
 		File viewDir = googleCloudInfo.getBigquery().getView();
 		
 		if (viewDir != null) {
-			BigQuery bigquery = googleCloudService.bigQuery();
+		
 			for (File file : viewDir.listFiles()) {
-				TableInfo info = googleCloudService.readViewInfo(file);
-				Table table = bigquery.getTable(info.getTableId()); 
-				if (table == null) {
+				
 					String path = FileUtil.relativePath(scriptFile, file);
 					print(indent);
 					print("create BigQueryView from \"");
 					print(path);
 					println("\"");
 					println(" println response ");
-				}
+				
 			}
 		}
 		
@@ -244,18 +231,15 @@ public class GroovyDeploymentScriptWriter {
 		
 		File instancesDir = googleCloudInfo.getCloudsql().getInstances();
 		if (instancesDir != null && instancesDir.isDirectory()) {
-			SQLAdmin sqlAdmin = googleCloudService.sqlAdmin();
 			for (File file : instancesDir.listFiles()) {
-				DatabaseInstance info = googleCloudService.readDatabaseInstanceInfo(file);
-				DatabaseInstance instance = googleCloudService.getDatabaseInstance(info.getName());
-				if (instance == null) {
+				
 					String path = FileUtil.relativePath(scriptFile, file);
 					print(indent);
 					print("create GoogleCloudSqlInstance from \"");
 					print(path);
 					print("\"");
 					println(" println response ");
-				}
+				
 			}
 		}
 		
@@ -265,7 +249,6 @@ public class GroovyDeploymentScriptWriter {
 		if (schemaDir != null && schemaDir.isDirectory()) {			
 			for (File file : schemaDir.listFiles()) {
 				if(file.getName().endsWith(".json")){
-					CloudSqlTable tableInfo=googleCloudService.readCloudSqlTableInfo(file);
 								
 						String path = FileUtil.relativePath(scriptFile, file);
 						print(indent);
