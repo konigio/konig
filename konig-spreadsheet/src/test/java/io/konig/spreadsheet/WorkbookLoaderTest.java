@@ -839,7 +839,37 @@ public class WorkbookLoaderTest {
 		assertEquals(3, list.size());
 	}
 
+	@Test
+	public void testAwsTable() throws Exception {
 
+		InputStream input = getClass().getClassLoader().getResourceAsStream("awsAurora-transform.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/AuroraProductShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		
+		Shape shape = s.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		List<DataSource> list = shape.getShapeDataSource();
+		assertEquals(1, list.size());
+		DataSource ds = list.get(0);
+		assertEquals("http://www.konig.io/ns/aws/host/host/databases/schema/tables/AuroraProductShape", 
+				ds.getId().stringValue());
+		assertTrue(ds.isA(Konig.AwsAuroraTable));
+	}
+	
 	private void checkPropertyConstraints(Graph graph) {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));
