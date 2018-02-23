@@ -79,7 +79,6 @@ public class DataAppGenerator {
 				try {
 					app.addContainer(container);
 				} catch (DataAppException e) {
-					// TODO Auto-generated catch block
 					throw new DataAppGeneratorException(e.getMessage());
 				}
 			} else {
