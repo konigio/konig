@@ -22,17 +22,26 @@ package io.konig.data.app.common;
 
 
 import java.io.Writer;
-import java.util.HashMap;
+import java.text.MessageFormat;
 import java.util.Map;
 
+import org.apache.commons.lang.StringEscapeUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.ISODateTimeFormat;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.dao.core.ConstraintOperator;
 import io.konig.dao.core.DaoException;
+import io.konig.dao.core.FieldPath;
 import io.konig.dao.core.Format;
+import io.konig.dao.core.FusionCharts;
 import io.konig.dao.core.ShapeQuery;
-import io.konig.dao.core.ShapeReadService;
 import io.konig.dao.core.ShapeQuery.Builder;
+import io.konig.sql.runtime.ClasspathEntityStructureService;
+import io.konig.sql.runtime.EntityStructure;
+import io.konig.dao.core.ShapeReadService;
 
 /**
  * A container that holds all instances of a given type.
@@ -42,7 +51,21 @@ import io.konig.dao.core.ShapeQuery.Builder;
 public class ExtentContainer extends AbstractContainer {
 
 	private static final String VIEW = ".view";
-
+	
+	private static final String AGGREGATE = ".aggregate";
+	
+	private static final String XSORT = ".xSort";
+	
+	private static final String YSORT = ".ySort";
+	
+	private static final String OFFSET = ".offset";
+	
+	private static final String LIMIT = ".limit";
+	
+	public enum AggregateAs { avg, sum, min, max, count };
+	
+	public enum SortAs { desc, asc };
+	
 	private ShapeReadService shapeReadService;
 	private URI extentClass;
 	
@@ -73,46 +96,68 @@ public class ExtentContainer extends AbstractContainer {
 				.setView(request.getQueryParams().get(VIEW))
 				.setParameters(request.getQueryParams())
 				.setShapeId(shapeId.toString());
-
+		ClasspathEntityStructureService structureService = ClasspathEntityStructureService.defaultInstance();
 		if (individualId != null) {
 			builder.beginPredicateConstraint().setPropertyName(DataAppConstants.ID)
 					.setOperator(ConstraintOperator.EQUAL).setValue(individualId.stringValue())
 					.endPredicateConstraint();
 		} else if (queryParams != null) {
-			for (String key : queryParams.keySet()) {
-				if(key.endsWith(".minInclusive")){					
+			for (String keyParam : queryParams.keySet()) {
+				String key = escapeUtils(keyParam);
+				String value = escapeUtils(queryParams.get(keyParam));
+				if(key.endsWith(".minInclusive")){	
+					validateQueryParam(key, queryParams.get(key), XMLSchema.DATE);
 					builder.beginPredicateConstraint().setPropertyName(key.replace(".minInclusive", ""))
-						.setOperator(ConstraintOperator.GREATER_THAN_OR_EQUAL).setValue(queryParams.get(key))
+						.setOperator(ConstraintOperator.GREATER_THAN_OR_EQUAL).setValue(value)
 						.endPredicateConstraint();
 				} else if(key.endsWith(".minExclusive")){
+					validateQueryParam(key, queryParams.get(key), XMLSchema.DATE);
 					builder.beginPredicateConstraint().setPropertyName(key.replace(".minExclusive", ""))
-						.setOperator(ConstraintOperator.GREATER_THAN).setValue(queryParams.get(key))
+						.setOperator(ConstraintOperator.GREATER_THAN).setValue(value)
 						.endPredicateConstraint();
 				} else if(key.endsWith(".maxInclusive")){
+					validateQueryParam(key, queryParams.get(key), XMLSchema.DATE);
 					builder.beginPredicateConstraint().setPropertyName(key.replace(".maxInclusive", ""))
-						.setOperator(ConstraintOperator.LESS_THAN_OR_EQUAL).setValue(queryParams.get(key))
+						.setOperator(ConstraintOperator.LESS_THAN_OR_EQUAL).setValue(value)
 						.endPredicateConstraint();					
 				} else if(key.endsWith(".maxExclusive")){
+					validateQueryParam(key, queryParams.get(key), XMLSchema.DATE);
 					builder.beginPredicateConstraint().setPropertyName(key.replace(".maxExclusive", ""))
-						.setOperator(ConstraintOperator.LESS_THAN).setValue(queryParams.get(key))
+						.setOperator(ConstraintOperator.LESS_THAN).setValue(value)
 						.endPredicateConstraint();					
-				} else if(key.endsWith(".view") || key.equals("xAxis")  || key.equals("yAxis")){
-					//TODO: just to skipped the view attribute 
-				} else if(key.equals(".aggregate")){
-					builder.setAggregate(queryParams.get(".aggregate"));
-				} else if (key.equals(".limit")) {
-					builder.setLimit(Long.parseLong(queryParams.get(".limit")));
-				} else if (key.equals(".ySort")) {
-					builder.setYSort(queryParams.get(".ySort"));
-				} else if (key.equals(".xSort")) {
-					builder.setXSort(queryParams.get(".xSort"));
-				} else if (key.equals(".offset")) {
-					builder.setOffset(Long.parseLong(queryParams.get(".offset")));
+				} else if(key.endsWith(VIEW)) {
+					validateQueryParam(key, queryParams.get(key), XMLSchema.STRING);
+				} else if (key.equals("xAxis")  || key.equals("yAxis")){
+					
+				} else if(key.equals(AGGREGATE)){
+					validateQueryParam(key, queryParams.get(key), XMLSchema.STRING);
+					builder.setAggregate(value);
+				} else if (key.equals(LIMIT)) {
+					validateQueryParam(key, queryParams.get(key), XMLSchema.LONG);
+					builder.setLimit(Long.parseLong(value));
+				} else if (key.equals(YSORT)) {
+					validateQueryParam(key, queryParams.get(key), XMLSchema.STRING);
+					builder.setYSort(value);
+				} else if (key.equals(XSORT)) {
+					validateQueryParam(key, queryParams.get(key), XMLSchema.STRING);
+					builder.setXSort(value);
+				} else if (key.equals(OFFSET)) {
+					validateQueryParam(key, queryParams.get(key), XMLSchema.LONG);
+					builder.setOffset(Long.parseLong(value));
 				}  else if (key.equals(".cursor")) {
-					builder.setCursor(queryParams.get(".cursor")==null?"":queryParams.get(".cursor"));
+					builder.setCursor(value==null?"":value);
 				} else {
+					try {
+						EntityStructure struct = structureService.structureOfShape(shapeId.toString());
+						FieldPath measure = FieldPath.createFieldPath(key, struct);
+						if (measure == null) {
+							throw new DaoException("Field not found in Shape: " + shapeId.toString());
+						}
+					} catch (DaoException ex) {
+						throw new DataAppException(ex.getMessage());
+					}
 					builder.beginPredicateConstraint().setPropertyName(key)
-						.setOperator(ConstraintOperator.EQUAL).setValue(queryParams.get(key))
+						.setOperator(ConstraintOperator.EQUAL).setValue(value)
 						.endPredicateConstraint();
 				}				
 			}
@@ -125,6 +170,45 @@ public class ExtentContainer extends AbstractContainer {
 				throw new DataAppException(e);
 			}
 		
+	}
+	
+	public boolean validateQueryParam(String key, String value, URI datatype ) throws DataAppException {
+		String errorMsg = MessageFormat.format("IllegalArgumentException : Invalid format key : {0}  /  value : {1}",
+				key, value);
+		try {
+			if (XMLSchema.DATE.equals(datatype)) {			
+				DateTime localTime = new DateTime(value).toDateTime(DateTimeZone.UTC);
+				localTime.toString(ISODateTimeFormat.date());			
+				return true;
+			} else if (XMLSchema.STRING.equals(datatype)) {
+				if (VIEW.equals(key) && FusionCharts.MAP_MEDIA_TYPE.equals(value)) {
+					return true;
+				} else if (VIEW.equals(key) && FusionCharts.MSLINE_MEDIA_TYPE.equals(value)) {
+					return true;
+				} else if (VIEW.equals(key) && FusionCharts.BAR_MEDIA_TYPE.equals(value)) {
+					return true;
+				} else if (VIEW.equals(key) && FusionCharts.PIE_MEDIA_TYPE.equals(value)) {
+					return true;
+				} else if (AGGREGATE.equals(key)) {
+					AggregateAs.valueOf(value);
+					return true;
+				} else if (XSORT.equals(key) || YSORT.equals(key)) {
+					SortAs.valueOf(value);
+					return true;
+				}
+	
+			} else if (XMLSchema.LONG.equals(datatype)) {
+				Long.parseLong(value);
+				return true;
+			}
+			throw new DataAppException(errorMsg);
+		} catch (Exception ex) {
+			throw new DataAppException(errorMsg);
+		}
+	}
+	
+	public String escapeUtils(String value) {
+		return StringEscapeUtils.escapeHtml(StringEscapeUtils.escapeSql(StringEscapeUtils.escapeJavaScript(value)));
 	}
 
 }
