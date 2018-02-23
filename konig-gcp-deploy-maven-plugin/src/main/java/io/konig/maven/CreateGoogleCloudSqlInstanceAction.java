@@ -26,6 +26,7 @@ package io.konig.maven;
 import java.io.File;
 import java.io.IOException;
 
+import com.google.api.services.sqladmin.SQLAdmin;
 import com.google.api.services.sqladmin.model.DatabaseInstance;
 import com.google.api.services.sqladmin.model.Operation;
 import com.google.api.services.sqladmin.model.Settings;
@@ -45,8 +46,10 @@ public class CreateGoogleCloudSqlInstanceAction {
 		File file = deployment.file(path);
 		String status=null;
 		try {
-			
-			DatabaseInstance info = service.readDatabaseInstanceInfo(file);			
+			DatabaseInstance info = service.readDatabaseInstanceInfo(file);
+			SQLAdmin sqlAdmin=service.sqlAdmin();
+			DatabaseInstance instance = service.getDatabaseInstance(info.getName());
+			if (instance == null) {	
 			Operation operation=service.sqlAdmin().instances().insert(service.getProjectId(), info).execute();
 			System.out.println("Waiting for instance to be created :: " + info.getName()+"\n");
 			//TODO: Tune the below code
@@ -63,6 +66,7 @@ public class CreateGoogleCloudSqlInstanceAction {
 				}
 			}
 			deployment.setResponse("Created  Instance " + info.getName());
+			}
 		} catch (Exception ex) {
 			throw ex;
 		}

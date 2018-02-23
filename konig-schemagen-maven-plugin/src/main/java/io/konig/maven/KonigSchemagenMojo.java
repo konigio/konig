@@ -150,7 +150,6 @@ import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
 import io.konig.schemagen.java.JsonReaderBuilder;
 import io.konig.schemagen.java.JsonWriterBuilder;
-import io.konig.schemagen.java.SystemConfig;
 import io.konig.schemagen.jsonld.ShapeToJsonldContext;
 import io.konig.schemagen.jsonschema.JsonSchemaGenerator;
 import io.konig.schemagen.jsonschema.JsonSchemaNamer;
@@ -330,12 +329,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if (deploy != null) {
 			
 			GoogleCloudService googleCloudService = new GoogleCloudService();
-			File credentials = googleCloudPlatform.getCredentials();
-			if (credentials == null) {
-				googleCloudService.useDefaultCredentials();
-			} else {
-				googleCloudService.openCredentials(credentials);
-			}
 			String konigVersion = deploy.getKonigVersion();
 			File scriptFile = deploy.getScriptFile();
 			
