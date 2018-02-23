@@ -672,6 +672,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		request.setOwlOutDir(workbook.owlDir(defaults));
 		request.setShapesOutDir(workbook.shapesDir(defaults));
 		request.setGcpOutDir(workbook.gcpDir(defaults));
+		request.setAwsOutDir(workbook.awsDir(defaults));
 		return request;
 	}
 

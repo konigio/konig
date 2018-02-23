@@ -27,5 +27,19 @@ import org.openrdf.model.impl.URIImpl;
 public class AWS {
 
 	public static final String NAMESPACE = "http://www.konig.io/ns/aws/";
-	
+	public static final URI DbCluster = new URIImpl("http://www.konig.io/ns/aws/DbCluster");
+	public static final URI dbClusterId = new URIImpl("http://www.konig.io/ns/aws/dbClusterId");
+	public static final URI dbClusterName = new URIImpl("http://www.konig.io/ns/aws/dbClusterName");
+	public static final URI engine = new URIImpl("http://www.konig.io/ns/aws/engine");
+	public static final URI engineVersion = new URIImpl("http://www.konig.io/ns/aws/engineVersion");
+	public static final URI instanceClass = new URIImpl("http://www.konig.io/ns/aws/instanceClass");
+	public static final URI availabilityZone = new URIImpl("http://www.konig.io/ns/aws/availabilityZone");
+	public static final URI zone = new URIImpl("http://www.konig.io/ns/aws/zone");
+	public static final URI backupRetentionPeriod = new URIImpl("http://www.konig.io/ns/aws/backupRetentionPeriod");
+	public static final URI databaseName = new URIImpl("http://www.konig.io/ns/aws/databaseName");
+	public static final URI dbSubnetGroupName = new URIImpl("http://www.konig.io/ns/aws/dbSubnetGroupName");
+	public static final URI preferredBackupWindow = new URIImpl("http://www.konig.io/ns/aws/preferredBackupWindow");
+	public static final URI preferredMaintenanceWindow = new URIImpl("http://www.konig.io/ns/aws/preferredMaintenanceWindow");
+	public static final URI replicationSourceIdentifier = new URIImpl("http://www.konig.io/ns/aws/replicationSourceIdentifier");
+	public static final URI storageEncrypted = new URIImpl("http://www.konig.io/ns/aws/storageEncrypted");
 }

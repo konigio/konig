@@ -207,7 +207,19 @@ public class WorkbookLoader {
 	private static final String LANGUAGE = "Language";
 
 	private static final String UNBOUNDED = "unbounded";
-
+	
+	private static final String AWS_DB_CLUSTER_NAME = "DB Cluster Name";
+	private static final String AWS_DB_CLUSTER_ENGINE = "Engine";
+	private static final String AWS_DB_CLUSTER_ENGINE_VERSION = "Engine Version";
+	private static final String AWS_DB_CLUSTER_INSTANCE_CLASS = "Instance Class";
+	private static final String AWS_DB_CLUSTER_AVAILABILITY_ZONE = "Availability Zone";
+	private static final String AWS_DB_CLUSTER_BACKUP_PERIOD = "Backup Retention Period (days)";
+	private static final String AWS_DB_CLUSTER_DATABASE_NAME = "Database Name";
+	private static final String AWS_DB_CLUSTER_DB_SUBNET = "DB Subnet Group Name";
+	private static final String AWS_DB_CLUSTER_BACKUP_WINDOW = "Preferred Backup Window";
+	private static final String AWS_DB_CLUSTER_MAINTENANCE_WINDOW = "Preferred Maintenance Window";
+	private static final String AWS_DB_CLUSTER_REPLICATION_SOURCE = "Replication Source Identifier";
+	private static final String AWS_DB_CLUSTER_STORAGE_ENCRYPTED = "Storage Encrypted";
 	
 	private static final int COL_NAMESPACE_URI = 0x1;
 	private static final int COL_CLASS_ID = 0x2;
@@ -218,7 +230,7 @@ public class WorkbookLoader {
 	private static final int COL_SETTING_NAME = 0x20;
 	private static final int COL_INSTANCE_NAME = 0x40;
 	private static final int COL_LABEL = 0x80;
-
+	private static final int COL_AMAZON_DB_CLUSTER = 0x100;
 	
 	private static final int SHEET_ONTOLOGY = COL_NAMESPACE_URI;
 	private static final int SHEET_CLASS = COL_CLASS_ID;
@@ -229,7 +241,7 @@ public class WorkbookLoader {
 	private static final int SHEET_SETTING = COL_SETTING_NAME;
 	private static final int SHEET_DB_INSTANCE = COL_INSTANCE_NAME;
 	private static final int SHEET_LABEL = COL_LABEL;
-	
+	private static final int SHEET_AMAZON_RDS_CLUSTER = COL_AMAZON_DB_CLUSTER;
 	
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
@@ -450,6 +462,19 @@ public class WorkbookLoader {
 		private int gcpRegionCol = UNDEFINED;
 		private int gcpVersionCol = UNDEFINED;
 		private int gcpTierCol = UNDEFINED;
+		
+		private int awsDbClusterName = UNDEFINED;
+		private int awsEngine = UNDEFINED;
+		private int awsEngineVersion = UNDEFINED;
+		private int awsInstanceClass = UNDEFINED;
+		private int awsAvailabilityZone = UNDEFINED;
+		private int awsBackupRetentionPeriod = UNDEFINED;
+		private int awsDatabaseName = UNDEFINED;
+		private int awsDbSubnetGroupName = UNDEFINED;
+		private int awsPreferredBackupWindow = UNDEFINED;
+		private int awsPreferredMaintenanceWindow = UNDEFINED;
+		private int awsReplicationSourceIdentifier = UNDEFINED;
+		private int awsStorageEncrypted	 = UNDEFINED;
 		
 		public Worker(Workbook book) {
 			this.book = book;
@@ -945,7 +970,10 @@ public class WorkbookLoader {
 			case SHEET_LABEL:
 				loadLabels(sheet);
 				break;
-
+			case SHEET_AMAZON_RDS_CLUSTER:
+				loadAmazonRDSCluster(sheet);
+				break;
+				
 			}
 
 		}
@@ -996,6 +1024,9 @@ public class WorkbookLoader {
 				case LABEL:
 					bits = bits | COL_LABEL;
 					break;
+				case AWS_DB_CLUSTER_NAME:
+					bits = bits | COL_AMAZON_DB_CLUSTER;
+					break;
 				}
 			}
 
@@ -1011,7 +1042,18 @@ public class WorkbookLoader {
 				loadGoogleCloudSqlInstanceRow(row);
 			}
 		}
-
+		
+		
+		private void loadAmazonRDSCluster(Sheet sheet) {
+			readAmazonRDSClusterHeader(sheet);
+			
+			int rowSize = sheet.getLastRowNum() + 1;
+			for(int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
+				Row row = sheet.getRow(i);
+				loadAmazonRDSClusterRow(row);
+			}
+		}
+		
 		private void loadSettings(Sheet sheet) throws SpreadsheetException {
 			readSettingHeader(sheet);
 			int rowSize = sheet.getLastRowNum() + 1;
@@ -1510,7 +1552,78 @@ public class WorkbookLoader {
 			}
 
 		}
+		
+		private void readAmazonRDSClusterHeader(Sheet sheet) {
+			awsDbClusterName = awsEngine = awsEngineVersion = awsInstanceClass = awsAvailabilityZone = awsBackupRetentionPeriod = awsDatabaseName = awsDbSubnetGroupName = awsPreferredBackupWindow = awsPreferredMaintenanceWindow = awsReplicationSourceIdentifier = awsStorageEncrypted	= UNDEFINED;
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
 
+			int colSize = row.getLastCellNum() + 1;
+			for (int i = row.getFirstCellNum(); i < colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+
+					switch (text) {
+
+					case AWS_DB_CLUSTER_NAME:
+						awsDbClusterName = i;
+						break;
+
+					case AWS_DB_CLUSTER_ENGINE:
+						awsEngine = i;
+						break;
+
+					case AWS_DB_CLUSTER_ENGINE_VERSION:
+						awsEngineVersion = i;
+						break;
+
+					case AWS_DB_CLUSTER_INSTANCE_CLASS:
+						awsInstanceClass = i;
+						break;
+
+					case AWS_DB_CLUSTER_AVAILABILITY_ZONE:
+						awsAvailabilityZone = i;
+						break;
+						
+					case AWS_DB_CLUSTER_BACKUP_PERIOD:
+						awsBackupRetentionPeriod = i;
+						break;
+					
+					case AWS_DB_CLUSTER_DATABASE_NAME:
+						awsDatabaseName = i;
+						break;
+					
+					case AWS_DB_CLUSTER_DB_SUBNET:
+						awsDbSubnetGroupName = i;
+						break;
+					
+					case AWS_DB_CLUSTER_BACKUP_WINDOW:
+						awsPreferredBackupWindow = i;
+						break;
+					
+					case AWS_DB_CLUSTER_MAINTENANCE_WINDOW:
+						awsPreferredMaintenanceWindow = i;
+						break;
+					
+					case AWS_DB_CLUSTER_REPLICATION_SOURCE:
+						awsReplicationSourceIdentifier = i;
+						break;
+					
+					case AWS_DB_CLUSTER_STORAGE_ENCRYPTED:
+						awsStorageEncrypted = i;
+						break;
+					
+					}
+				}
+			}
+		
+		}
+		
 		private void readSettingHeader(Sheet sheet) {
 			settingNameCol = settingValueCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
@@ -1694,6 +1807,45 @@ public class WorkbookLoader {
 				dataSourceMap.put(shapeId, dataSourceList);
 			}
 
+		}
+		
+		private void loadAmazonRDSClusterRow(Row row) {
+			
+			Literal dbClusterName = stringLiteral(row, awsDbClusterName);			
+			Literal engine = stringLiteral(row, awsEngine);
+			Literal engineVersion = stringLiteral(row, awsEngineVersion);
+			Literal instanceClass = stringLiteral(row, awsInstanceClass);
+			String availabilityZone = stringValue(row, awsAvailabilityZone);
+			Literal backupRetentionPeriod = stringLiteral(row,awsBackupRetentionPeriod);			
+			Literal databaseName = stringLiteral(row, awsDatabaseName);
+			Literal dbSubnetGroupName = stringLiteral(row, awsDbSubnetGroupName);
+			Literal preferredBackupWindow = stringLiteral(row, awsPreferredBackupWindow);
+			Literal preferredMaintenanceWindow = stringLiteral(row, awsPreferredMaintenanceWindow);
+			Literal replicationSourceIdentifier = stringLiteral(row,awsReplicationSourceIdentifier);
+			Literal storageEncrypted = stringLiteral(row,awsStorageEncrypted);
+			String dbClusterId = "${environmentName}-"+ stringValue(row, awsDbClusterName);
+			
+			URI id = new URIImpl("https://amazonaws.konig.io/rds/cluster/"+ dbClusterId);
+			edge(id, RDF.TYPE, AWS.DbCluster);
+			edge(id, AWS.dbClusterId, literal(dbClusterId));
+			edge(id, AWS.dbClusterName, dbClusterName);
+			edge(id, AWS.engine, engine);
+			edge(id, AWS.engineVersion, engineVersion);
+			edge(id, AWS.instanceClass, instanceClass);
+			edge(id, AWS.backupRetentionPeriod, backupRetentionPeriod);
+			edge(id, AWS.databaseName, databaseName);
+			edge(id, AWS.dbSubnetGroupName, dbSubnetGroupName);
+			edge(id, AWS.preferredBackupWindow, preferredBackupWindow);
+			edge(id, AWS.preferredMaintenanceWindow, preferredMaintenanceWindow);
+			edge(id, AWS.replicationSourceIdentifier, replicationSourceIdentifier);
+			edge(id, AWS.storageEncrypted, storageEncrypted);
+			
+			if (availabilityZone != null && !availabilityZone.equals("")) {
+				StringTokenizer st = new StringTokenizer(availabilityZone, " ");
+				while (st.hasMoreTokens()) {
+					edge(id, AWS.availabilityZone, literal(st.nextElement().toString().trim()));					
+				}
+			}
 		}
 
 		private void loadGoogleCloudSqlInstanceRow(Row row) {
