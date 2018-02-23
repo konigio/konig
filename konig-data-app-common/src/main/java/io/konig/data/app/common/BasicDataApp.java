@@ -33,7 +33,6 @@ import org.openrdf.model.impl.URIImpl;
 
 import com.google.common.base.Splitter;
 
-import io.konig.core.KonigException;
 import io.konig.dao.core.Format;
 
 public class BasicDataApp implements DataApp {
@@ -44,10 +43,10 @@ public class BasicDataApp implements DataApp {
 		
 	}
 	
-	public void addContainer(ExtentContainer container) {
+	public void addContainer(ExtentContainer container) throws DataAppException {
 		String slug = container.getSlug();
 		if (slug == null) {
-			throw new KonigException("slug must be defined for container");
+			throw new DataAppException("slug must be defined for container");
 		}
 		containers.put(slug, container);
 	}
