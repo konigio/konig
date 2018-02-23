@@ -33,7 +33,6 @@ import org.openrdf.model.impl.URIImpl;
 
 import com.google.common.base.Splitter;
 
-import io.konig.core.KonigException;
 import io.konig.dao.core.Format;
 
 public class BasicDataApp implements DataApp {
