@@ -1,0 +1,16 @@
+
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix aws:   <http://www.konig.io/ns/aws/> .
+
+<http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/${awsTableName}>
+	a konig:AwsAurora, konig:DataSource;
+	aws:tableReference [
+		aws:awsAuroraHost "${awsAuroraHost}" ;
+		aws:awsSchema "${awsAuroraSchema}" ;
+		aws:awsTableName   "${awsTableName}"
+	]
+.
+
+<${shapeId}> konig:shapeDataSource 
+	<http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/${awsTableName}>
+.
