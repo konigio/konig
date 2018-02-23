@@ -102,6 +102,7 @@ public class Konig {
 	public static final URI GoogleCloudStorageBucket = new URIImpl("http://www.konig.io/ns/core/GoogleCloudStorageBucket");
 	public static final URI GoogleCloudSqlTable = new URIImpl("http://www.konig.io/ns/core/GoogleCloudSqlTable");
 	public static final URI OracleTable = new URIImpl("http://www.konig.io/ns/core/OracleTable");
+	public static final URI AwsAuroraTable = new URIImpl("http://www.konig.io/ns/core/AwsAurora");
 	public static final URI shapeDataSource = new URIImpl(SHAPE_DATA_SOURCE);
 	public static final URI bigQuerySource = new URIImpl(BIG_QUERY_SOURCE);
 	
