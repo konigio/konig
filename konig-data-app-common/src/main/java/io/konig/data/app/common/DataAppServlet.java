@@ -76,10 +76,10 @@ abstract public class DataAppServlet extends HttpServlet {
 		}
 		
 	}
-
-	private static String convertToSHA1String(String value) throws ServletException {
+	
+	private static String convertToSHA256String(String value) throws ServletException {
 		try {			
-			MessageDigest  md = MessageDigest.getInstance("SHA-1");
+			MessageDigest  md = MessageDigest.getInstance("SHA-256");
 			byte[] bytes = md.digest(value.getBytes());
 			StringBuffer stringBuffer = new StringBuffer();
 	        for (int i = 0; i < bytes.length; i++) {
@@ -92,10 +92,10 @@ abstract public class DataAppServlet extends HttpServlet {
 		}
 	}
 	
-	private void configAuthenticationDetails(String username) throws ServletException {
-		MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
+	private String getAuthenticationDetails(String username) throws ServletException {
+																	  
 		DatastoreOptions options = DatastoreOptions.newBuilder().build();
-		Query<?> query = Query.newGqlQueryBuilder("Select passwordSha1 from UserAuthentication "
+		Query<?> query = Query.newGqlQueryBuilder("Select * from UserAuthentication "
 				+ "where username = @username")
 				.setBinding("username", username)
 				.build();
@@ -103,14 +103,9 @@ abstract public class DataAppServlet extends HttpServlet {
 		QueryResults<?> results = datastore.run(query);
 		while (results.hasNext()) {
 			Entity currentEntity = (Entity) results.next();
-			cache.put(username, currentEntity.getString("passwordSha1"));
+			return currentEntity.getString("passwordSha256");
 		}
-		if(username != null) {
-			String cachePassword = (String)MemcacheServiceFactory.getMemcacheService().get(username);
-			if(cachePassword == null) {
-				throw new ServletException("Invalid User");
-			}
-		}
+		return null;
 	}
 	
 	private void configure() throws ServletException {
@@ -145,13 +140,13 @@ abstract public class DataAppServlet extends HttpServlet {
 						int p = credentials.indexOf(":");
 						if (p != -1) {
 							String _username = credentials.substring(0, p).trim();
-							String _password = convertToSHA1String(credentials.substring(p + 1).trim());
-							String cachePassword = (String)MemcacheServiceFactory.getMemcacheService().get(_username);
-							if(cachePassword == null) {
-								configAuthenticationDetails(_username);
-								validate(req, resp);
+							String _password = convertToSHA256String(credentials.substring(p + 1).trim());
+							String configPassword = getAuthenticationDetails(_username);
+							if(configPassword == null) {
+								unauthorized(resp, "Invalid authentication token");
+							
 							}
-							if (!cachePassword.equals(_password)) {
+							if (!configPassword.equals(_password)) {
 								unauthorized(resp, "Bad credentials");
 							} else {
 								return true;
