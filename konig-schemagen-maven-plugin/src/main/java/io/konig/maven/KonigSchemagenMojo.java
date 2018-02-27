@@ -80,6 +80,7 @@ import org.openrdf.rio.RDFParseException;
 
 import com.sun.codemodel.JCodeModel;
 
+import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
@@ -127,6 +128,8 @@ import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
+import io.konig.schemagen.aws.AwsAuroraTableWriter;
+import io.konig.schemagen.aws.AwsResourceGenerator;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
@@ -236,6 +239,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private OracleManagedCloudConfig oracleManagedCloud;
     
     @Parameter
+    private AmazonWebServicesConfig amazonWebServices;
+    
+    @Parameter
     private HashSet<String> excludeNamespace;
 	
 
@@ -289,6 +295,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			generateGoogleCloudPlatform();
 			generateOracleManagedCloudServices();
+			generateAmazonWebServices();
 			generateJsonld();
 			generateAvro();
 			generateJsonSchema();
@@ -321,6 +328,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private void init() throws MojoExecutionException, IOException {
     	GcpShapeConfig.init();
     	OracleShapeConfig.init();
+    	AwsShapeConfig.init();
     }
 
 	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException, SQLException {
@@ -726,7 +734,22 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
-
+	
+	private void generateAmazonWebServices() {
+		if(amazonWebServices != null) {
+			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
+			
+			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
+			if(tablesDir != null) {
+				SqlTableGenerator generator = new SqlTableGenerator();
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator);
+			
+				resourceGenerator.add(awsAuror);
+				resourceGenerator.dispatch(shapeManager.listShapes());
+			}
+		}
+	}
+	
 	private void generateOracleManagedCloudServices() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException, ConfigurationException {
 	if(oracleManagedCloud != null) {
 			Configurator config = configurator();

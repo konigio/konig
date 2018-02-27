@@ -108,6 +108,7 @@
 		<module>../konig-omcs-deploy-maven-plugin</module>
     	<module>../konig-omcs-common</module>
     	<module>../konig-etl</module>
+    	<module>../konig-aws-model</module>
 	</modules>
 
 	<developers>
