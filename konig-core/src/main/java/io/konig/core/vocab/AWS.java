@@ -42,7 +42,8 @@ public class AWS {
 	public static final URI preferredMaintenanceWindow = new URIImpl("http://www.konig.io/ns/aws/preferredMaintenanceWindow");
 	public static final URI replicationSourceIdentifier = new URIImpl("http://www.konig.io/ns/aws/replicationSourceIdentifier");
 	public static final URI storageEncrypted = new URIImpl("http://www.konig.io/ns/aws/storageEncrypted");
-	
+	public static final String TABLE_REFERENCE = "http://www.konig.io/ns/aws/tableReference";
+	public static final URI tableReference = new URIImpl(TABLE_REFERENCE);
 	public static final URI awsAuroraHost = new URIImpl("http://www.konig.io/ns/aws/awsAuroraHost");
 	public static final URI awsSchema = new URIImpl("http://www.konig.io/ns/aws/awsSchema");
 	public static final URI awsTableName = new URIImpl("http://www.konig.io/ns/aws/awsTableName");

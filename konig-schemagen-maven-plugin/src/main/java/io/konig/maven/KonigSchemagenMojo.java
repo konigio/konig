@@ -80,6 +80,7 @@ import org.openrdf.rio.RDFParseException;
 
 import com.sun.codemodel.JCodeModel;
 
+import io.konig.aws.common.GroovyAwsDeploymentScriptWriter;
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
@@ -735,8 +736,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 	
-	private void generateAmazonWebServices() {
+	private void generateAmazonWebServices() throws IOException, ConfigurationException {
 		if(amazonWebServices != null) {
+			Configurator config = configurator();
+			config.configure(amazonWebServices);
 			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
 			
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
@@ -746,6 +749,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 				resourceGenerator.add(awsAuror);
 				resourceGenerator.dispatch(shapeManager.listShapes());
+				GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
+				scriptWriter.run(); 
 			}
 		}
 	}

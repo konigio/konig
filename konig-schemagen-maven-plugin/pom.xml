@@ -90,7 +90,11 @@
   		<artifactId>konig-gcp-common</artifactId>
   		<version>${konig.version}</version>
   	</dependency>
-  
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-aws-common</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
