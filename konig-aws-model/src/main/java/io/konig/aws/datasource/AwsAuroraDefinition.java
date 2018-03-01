@@ -2,7 +2,7 @@ package io.konig.aws.datasource;
 
 /*
  * #%L
- * Konig AWS
+ * Konig AWS Model
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,51 +21,29 @@ package io.konig.aws.datasource;
  */
 
 
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import io.konig.annotation.RdfProperty;
-import io.konig.core.vocab.AWS;
-import io.konig.datasource.DataSource;
-import io.konig.datasource.TableDataSource;
-
-public class AwsAurora extends DataSource implements TableDataSource {
+public class AwsAuroraDefinition {
 	
+	@JsonInclude(Include.NON_NULL)
 	private AwsAuroraTableReference tableReference;
-	private String awsTableName;
 	
-	public AwsAurora() {
+	private String query;
+
+	public void setQuery(String query) {
+		this.query = query;
 	}
 
-	public String getAwsTableName() {
-		return awsTableName;
+	public String getQuery() {
+		return query;
 	}
 
-	public void setAwsTableName(String awsTableName) {
-		this.awsTableName = awsTableName;
-	}
-
-	@RdfProperty(AWS.TABLE_REFERENCE)
 	public AwsAuroraTableReference getTableReference() {
 		return tableReference;
 	}
-	
+
 	public void setTableReference(AwsAuroraTableReference tableReference) {
 		this.tableReference = tableReference;
-	}
-
-	@Override
-	public void setId(Resource id) {
-		super.setId(id);
-		if (awsTableName == null && id instanceof URI) {
-			URI uri = (URI) id;
-			awsTableName = uri.getLocalName();
-		}
-	}
-
-
-	@Override
-	public String getTableIdentifier() {
-		return awsTableName;
 	}
 }

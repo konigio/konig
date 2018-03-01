@@ -36,6 +36,7 @@ public class AwsModelGenerator  extends ConfigurableProjectGenerator<AmazonWebSe
 		setNameSuffix("Aws Model");
 		config.setDirectory(new File("${project.basedir}/target/generated/aws"));
 		config.setTables(new File("${project.basedir}/target/generated/aws/tables"));
+		config.setAwsScriptFile(new File("${project.basedir}/target/generated/aws/scripts/deploy.groovy"));
 		init(mavenProject);
 	}
 	

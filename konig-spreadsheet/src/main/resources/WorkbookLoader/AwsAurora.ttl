@@ -4,9 +4,11 @@
 
 <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/${awsTableName}>
 	a konig:AwsAurora, konig:DataSource;
-	aws:awsAuroraHost "${awsAuroraHost}" ;
-	aws:awsSchema "${awsAuroraSchema}" ;
-	aws:awsTableName   "${awsTableName}"
+	aws:tableReference [
+		aws:awsAuroraHost "${awsAuroraHost}" ;
+		aws:awsSchema "${awsAuroraSchema}" ;
+		aws:awsTableName   "${awsTableName}"
+	]
 .
 
 <${shapeId}> konig:shapeDataSource 

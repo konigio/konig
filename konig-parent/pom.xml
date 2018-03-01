@@ -109,6 +109,8 @@
     	<module>../konig-omcs-common</module>
     	<module>../konig-etl</module>
     	<module>../konig-aws-model</module>
+    	<module>../konig-aws-common</module>
+   	    <module>../konig-aws-deploy-maven-plugin</module>
 	</modules>
 
 	<developers>
