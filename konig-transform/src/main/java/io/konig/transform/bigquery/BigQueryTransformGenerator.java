@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 
-import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.vocab.Konig;
@@ -42,9 +41,8 @@ import io.konig.shacl.ShapeManager;
 import io.konig.sql.query.BigQueryCommandLine;
 import io.konig.sql.query.DmlExpression;
 import io.konig.transform.ShapeTransformException;
-import io.konig.transform.factory.BigQueryTransformStrategy;
+import io.konig.transform.TransformProcessor;
 import io.konig.transform.factory.ShapeRuleFactory;
-import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.proto.BigQueryChannelFactory;
 import io.konig.transform.proto.ShapeModelFactory;
 import io.konig.transform.proto.ShapeModelToShapeRule;
@@ -224,8 +222,11 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 
 	private ShapeRule loadTransform(Shape shape) throws ShapeTransformException, IOException {
 		ShapeRule shapeRule = shapeRuleFactory.createShapeRule(shape);
-		
+		ShapeModelToShapeRule shapeModelToRule=shapeRuleFactory.getShapeModelToShapeRule();
 		if (shapeRule != null) {
+			TransformProcessor processor=new TransformProcessor(outDir);
+			shapeModelToRule.getListTransformprocess().add(processor);
+			processor.process(shapeRule);
 			BigQueryCommandLine cmdline = bqCmdLineFactory.insertCommand(shapeRule);
 			if (cmdline != null) {
 				GoogleBigQueryTable table = loadTable(shape);
@@ -294,7 +295,8 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		return null;
 	}
 	
-	private boolean isLoadTransform(Shape shape) {
+	private boolean isLoadTransform(Shape shape) {	
+		
 		return
 				isDerivedShape(shape) || (
 				shape.hasDataSourceType(Konig.GoogleBigQueryTable) && 

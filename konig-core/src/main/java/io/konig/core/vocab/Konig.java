@@ -27,6 +27,7 @@ import org.openrdf.model.impl.URIImpl;
 public class Konig {
 	
 	public static final String NAMESPACE = "http://www.konig.io/ns/core/";
+	public static final String SHAPE = "http://schema.pearson.com/shapes/";
 	
 	public static final String JAVA_NAMESPACE = "http://www.konig.io/ns/java/";
 	public static final String ACTIVIY_BASE_URL = "http://www.konig.io/activity/";
@@ -44,6 +45,7 @@ public class Konig {
 	public static final String MEASURE = "http://www.konig.io/ns/core/measure";
 	public static final String ATTRIBUTE = "http://www.konig.io/ns/core/attribute";
 	public static final String DIMENSION = "http://www.konig.io/ns/core/dimension";
+	public static final URI DERIVEDFROM = new URIImpl("http://www.konig.io/ns/core/derivedfrom");
 	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");

@@ -34,6 +34,8 @@ public class SH {
 	public static final URI NAMESPACE_URI = new URIImpl("http://www.w3.org/ns/shacl#");
 	public static final URI IRI = new URIImpl("http://www.w3.org/ns/shacl#IRI");
 	public static final URI Shape = new URIImpl("http://www.w3.org/ns/shacl#Shape");
+	public static final String exampleShape = "http://example.com/shapes";
+
 	public static final URI BlankNode = new URIImpl("http://www.w3.org/ns/shacl#BlankNode");
 	public static final URI Literal = new URIImpl("http://www.w3.org/ns/shacl#Literal");
 	public static final URI BlankNodeOrIRI = new URIImpl("http://www.w3.org/ns/shacl#BlankNodeOrIRI");
