@@ -46,4 +46,10 @@ public class ExistsExpression extends AbstractExpression implements BooleanTest 
 
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "selectQuery", selectQuery);
+		
+	}
+
 }

@@ -207,7 +207,10 @@ public class ShapeModelFactory {
 								shapeModel = result.getValueModel();
 								
 							} else {
-								String msg = MessageFormat.format("Property <{0}> not found in path: {1}", 
+								PropertyGroup expectedGroup = shapeModel.getClassModel().getPropertyGroupByPredicate(predicate);
+								System.out.println(expectedGroup);
+								String msg = MessageFormat.format("In shape<{0}>, property <{1}> not found in path: {2}", 
+										RdfUtil.localName(shapeModel.getShape().getId()),
 										term.toString(), path.toString());
 								throw new ShapeTransformException(msg);
 							}
@@ -261,6 +264,13 @@ public class ShapeModelFactory {
 				group.add(propertyModel);
 				
 				targetShapeModel.add(propertyModel);
+				
+				if (logger.isDebugEnabled()) {
+					logger.debug("addProperties: In shape <{}> add <{}>",
+						RdfUtil.localName(targetShape.getId()),
+						predicate.getLocalName()
+					);
+				}
 				
 				Shape valueShape = p.getShape();
 				if (valueShape != null) {

@@ -57,4 +57,11 @@ public class AdditiveValueExpression extends AbstractExpression implements Numer
 		out.print(right);
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "left", left);
+		visit(visitor, "right", right);
+		
+	}
+
 }

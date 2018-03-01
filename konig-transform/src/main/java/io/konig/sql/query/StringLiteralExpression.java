@@ -41,5 +41,11 @@ public class StringLiteralExpression extends AbstractExpression implements Value
 	public String getValue() {
 		return value;
 	}
+
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		// Do nothing
+		
+	}
 	
 }

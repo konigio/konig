@@ -85,5 +85,13 @@ public class JoinExpression extends AbstractExpression implements TableItemExpre
 		
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "joinSpecification", joinSpecification);
+		visit(visitor, "leftTable", leftTable);
+		visit(visitor, "rightTable", rightTable);
+		
+	}
+
 
 }

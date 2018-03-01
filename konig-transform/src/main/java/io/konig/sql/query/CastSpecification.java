@@ -50,4 +50,10 @@ public class CastSpecification extends AbstractExpression implements ValueExpres
 		out.print(')');
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "value", value);
+		
+	}
+
 }

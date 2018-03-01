@@ -51,4 +51,11 @@ public class LinkedPathExpression extends AbstractExpression implements PathExpr
 
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "first", first);
+		visit(visitor, "rest", rest);
+		
+	}
+
 }

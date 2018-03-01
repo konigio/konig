@@ -35,5 +35,21 @@ public abstract class AbstractExpression implements QueryExpression {
 		out.close();
 		return buffer.toString();
 	}
+	
+	@Override
+	public void dispatch(QueryExpressionVisitor visitor) {
+		visitor.enter(this);
+		dispatchProperties(visitor);
+		visitor.leave(this);
+	}
 
+	abstract protected void dispatchProperties(QueryExpressionVisitor visitor);
+
+	protected void visit(QueryExpressionVisitor visitor, String predicate, QueryExpression object) {
+		if (object != null) {
+			visitor.visit(this, predicate, object);
+			object.dispatch(visitor);
+		}
+	
+	}
 }

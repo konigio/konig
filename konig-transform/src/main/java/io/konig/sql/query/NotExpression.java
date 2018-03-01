@@ -42,4 +42,10 @@ public class NotExpression extends AbstractExpression implements BooleanTest {
 
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "term", term);
+		
+	}
+
 }

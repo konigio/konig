@@ -33,4 +33,10 @@ public class NullValueExpression extends AbstractExpression implements ValueExpr
 		out.print("NULL");
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		// Do nothing
+		
+	}
+
 }

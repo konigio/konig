@@ -52,4 +52,10 @@ public class NullPredicate extends AbstractExpression implements BooleanPrimary 
 
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "value", value);
+		
+	}
+
 }
