@@ -130,6 +130,7 @@ abstract public class DataAppServlet extends HttpServlet {
 	
 	private boolean validate(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
 		String authHeader = req.getHeader("Authorization");
+		String configPassword = null;
 		if (authHeader != null) {
 			StringTokenizer st = new StringTokenizer(authHeader);
 			if (st.hasMoreTokens()) {
@@ -157,6 +158,8 @@ abstract public class DataAppServlet extends HttpServlet {
 						}
 					} catch (UnsupportedEncodingException e) {
 						throw new Error("Couldn't retrieve authentication", e);
+					}finally{
+						configPassword = null;
 					}
 				}
 			}
