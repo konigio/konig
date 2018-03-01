@@ -24,6 +24,8 @@ package io.konig.data.app.common;
 import java.io.Writer;
 import java.text.MessageFormat;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.joda.time.DateTime;
@@ -128,7 +130,9 @@ public class ExtentContainer extends AbstractContainer {
 				} else if(key.endsWith(VIEW)) {
 					validateQueryParam(key, queryParams.get(key), XMLSchema.STRING);
 				} else if (key.equals("xAxis")  || key.equals("yAxis")){
-					
+					if(!(validateValue(queryParams.get(keyParam)))){
+						throw new DataAppException("IllegalArgumentException : Invalid  value : "+queryParams.get(keyParam));
+					}
 				} else if(key.equals(AGGREGATE)){
 					validateQueryParam(key, queryParams.get(key), XMLSchema.STRING);
 					builder.setAggregate(value);
@@ -156,9 +160,13 @@ public class ExtentContainer extends AbstractContainer {
 					} catch (DaoException ex) {
 						throw new DataAppException(ex.getMessage());
 					}
+					if(validateValue(queryParams.get(keyParam))){
 					builder.beginPredicateConstraint().setPropertyName(key)
-						.setOperator(ConstraintOperator.EQUAL).setValue(value)
+						.setOperator(ConstraintOperator.EQUAL).setValue(queryParams.get(keyParam))
 						.endPredicateConstraint();
+					}else{
+						throw new DataAppException("IllegalArgumentException : Invalid  value : "+queryParams.get(keyParam));
+					}
 				}				
 			}
 		}
@@ -210,5 +218,42 @@ public class ExtentContainer extends AbstractContainer {
 	public String escapeUtils(String value) {
 		return StringEscapeUtils.escapeHtml(StringEscapeUtils.escapeSql(StringEscapeUtils.escapeJavaScript(value)));
 	}
+	
+	 boolean validateValue (String value )throws DataAppException{
+		 String  errorMsg = MessageFormat.format("IllegalArgumentException : Invalid  value : {0}",
+				 value);
+		  Pattern special = Pattern.compile ("[!@#$%&*()+=|<>?{}\\[\\]~]");
+		  Matcher hasSpecial = special.matcher(value);		
+				try{
+					if(hasSpecial.find()){
+						return false;
+					}else if ((value.contains("select")||value.contains("SELECT")) && (value.contains("from")||value.contains("FROM"))){
+						return false;
+					}else if ((value.contains("insert")||value.contains("INSERT")) && (value.contains("into")||value.contains("INTO"))){
+						return false;
+					}else if (value.contains("update")||value.contains("UPDATE")){
+						return false;
+					}else if ((value.contains("delete")||value.contains("DELETE")) && (value.contains("from")||value.contains("FROM"))){
+						return false;
+					}else if ((value.contains("script")||value.contains("SCRIPT")) && (value.contains("html")||value.contains("HTML"))){
+						return false;
+					}else if ((value.contains("script")||value.contains("SCRIPT")) && (value.contains("alert")||value.contains("ALERT"))){
+						return false;
+					}else if ((value.contains("html")||value.contains("HTML")) && (value.contains("alert")||value.contains("ALERT"))){
+						return false;
+					}else if (value.contains("html")||value.contains("HTML")){
+						return false;
+					}else if (value.contains("alert")||value.contains("ALERT")){
+						return false;
+					}else if (value.contains("script")||value.contains("SCRIPT")){
+						return false;
+					}else{
+						return true;
+					}
+				}catch(Exception ex){
+					throw new DataAppException(errorMsg);
+				}
+				
+	 }
 
 }
