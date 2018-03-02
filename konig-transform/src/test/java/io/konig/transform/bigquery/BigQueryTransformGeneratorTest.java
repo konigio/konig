@@ -28,14 +28,19 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import io.konig.maven.RdfConfig;
 import io.konig.transform.proto.AbstractShapeModelToShapeRuleTest;
 
 public class BigQueryTransformGeneratorTest extends AbstractShapeModelToShapeRuleTest  {
 	File outDir = new File("target/test/bigquery-transform");
-	BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner);
+	RdfConfig config=new RdfConfig();
+	
+	BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner,config);
 
 	@Ignore
 	public void testUpdate() throws Throwable {
+		config.setDerivedDir(outDir);
+		generator.setConfig(config);
 		FileUtils.deleteDirectory(outDir);
 		load("src/test/resources/konig-transform/transform-update");
 		generator.generateAll();
@@ -48,7 +53,8 @@ public class BigQueryTransformGeneratorTest extends AbstractShapeModelToShapeRul
 	
 	@Ignore
 	public void testFact() throws Throwable {
-
+		config.setDerivedDir(outDir);
+		generator.setConfig(config);
 		FileUtils.deleteDirectory(outDir);
 		load("src/test/resources/konig-transform/analytics-model");
 		generator.generateAll();
@@ -64,6 +70,8 @@ public class BigQueryTransformGeneratorTest extends AbstractShapeModelToShapeRul
 	
 	@Test
 	public void testLoad() throws Throwable {
+		config.setDerivedDir(outDir);
+		generator.setConfig(config);
 		FileUtils.deleteDirectory(outDir);
 		load("src/test/resources/konig-transform/bigquery-transform");
 		generator.generateAll();

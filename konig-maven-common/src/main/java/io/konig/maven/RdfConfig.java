@@ -51,7 +51,7 @@ public class RdfConfig {
 	}
 	public File getDerivedDir() {
 		if (derivedDir == null && getRdfDir()!=null) {
-			derivedDir = new File(getRdfDir(), "derivedDir");
+			derivedDir = new File(getRdfDir(), "shape-dependencies");
 		}
 		return derivedDir;
 	}

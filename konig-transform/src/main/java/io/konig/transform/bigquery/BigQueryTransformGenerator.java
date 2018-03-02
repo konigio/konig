@@ -35,6 +35,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.maven.RdfConfig;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeManager;
@@ -43,6 +44,7 @@ import io.konig.sql.query.DmlExpression;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.TransformProcessor;
 import io.konig.transform.factory.ShapeRuleFactory;
+import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.proto.BigQueryChannelFactory;
 import io.konig.transform.proto.ShapeModelFactory;
 import io.konig.transform.proto.ShapeModelToShapeRule;
@@ -60,7 +62,10 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	private BigQueryCommandLineFactory bqCmdLineFactory;
 	private List<Throwable> errorList;
 	private int transformCount = 0;
+	private RdfConfig config;
 	
+	
+
 	
 
 	public BigQueryTransformGenerator(ShapeManager shapeManager, File outDir, ShapeRuleFactory shapeRuleFactory,
@@ -81,6 +86,16 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		);
 	}
 	
+	public BigQueryTransformGenerator(ShapeManager shapeManager, File outDir, OwlReasoner owlReasoner,RdfConfig config) {
+		this(
+			shapeManager, 
+			outDir, 
+			new ShapeRuleFactory(shapeManager, new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner), new ShapeModelToShapeRule()),
+			new BigQueryCommandLineFactory(new SqlFactory())			
+		);
+		this.config=config;
+	}
+	
 	
 	public void generateAll() {
 		beginShapeTraversal();
@@ -99,7 +114,13 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		this.shapeManager = shapeManager;
 	}
 
+	public RdfConfig getConfig() {
+		return config;
+	}
 
+	public void setConfig(RdfConfig config) {
+		this.config = config;
+	}
 	public File getOutDir() {
 		return outDir;
 	}
@@ -154,8 +175,14 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	public void visit(Shape shape) {
 		
 		ShapeRule shapeRule = null;
+		try {
+			transferDerivedForm(shape, shapeRule);
+		} catch (ShapeTransformException e1) {
+			e1.printStackTrace();
+		}
 		if (isLoadTransform(shape)) {
 			try {
+				
 				shapeRule = loadTransform(shape);
 				transformCount++;
 			} catch (Throwable e) {
@@ -165,12 +192,14 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		
 		if (isCurrentStateTransform(shape)) {
 			try {
+				//transferDerivedForm(shape, shapeRule);
 				currentStateTransform(shape, shapeRule);
 				transformCount++;
 			} catch (Throwable e) {
 				addError(e);
 			}
 		}
+		
 		
 	}
 	private void currentStateTransform(Shape shape, ShapeRule shapeRule) throws ShapeTransformException, IOException {
@@ -222,11 +251,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 
 	private ShapeRule loadTransform(Shape shape) throws ShapeTransformException, IOException {
 		ShapeRule shapeRule = shapeRuleFactory.createShapeRule(shape);
-		ShapeModelToShapeRule shapeModelToRule=shapeRuleFactory.getShapeModelToShapeRule();
 		if (shapeRule != null) {
-			TransformProcessor processor=new TransformProcessor(outDir);
-			shapeModelToRule.getListTransformprocess().add(processor);
-			processor.process(shapeRule);
 			BigQueryCommandLine cmdline = bqCmdLineFactory.insertCommand(shapeRule);
 			if (cmdline != null) {
 				GoogleBigQueryTable table = loadTable(shape);
@@ -236,6 +261,24 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 			}
 		}
 		return shapeRule;
+	}
+	
+	private void transferDerivedForm(Shape shape, ShapeRule shapeRule) throws ShapeTransformException
+	{
+		if(config == null)
+		{
+			config=new RdfConfig();
+		}
+		ShapeModelToShapeRule shapeModelToRule=shapeRuleFactory.getShapeModelToShapeRule();
+		if (shapeRule == null) {
+			shapeRule = shapeRuleFactory.createShapeRule(shape);
+		}
+		
+		if (shapeRule != null) {
+			TransformProcessor processor=new TransformProcessor(config.getDerivedDir());
+			shapeModelToRule.getListTransformprocess().add(processor);
+			processor.process(shapeRule);
+		}
 	}
 
 	private void handleRollup(ShapeRule shapeRule, GoogleBigQueryTable table) throws ShapeTransformException, IOException {

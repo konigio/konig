@@ -864,7 +864,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if (googleCloudPlatform.isEnableBigQueryTransform()) {
 			
 		
-			BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner);
+			BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner,defaults);
 			generator.generateAll();
 			List<Throwable> errorList = generator.getErrorList();
 			if (errorList != null && !errorList.isEmpty()) {

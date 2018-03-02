@@ -24,6 +24,7 @@ package io.konig.transform;
 import java.io.File;
 import java.io.IOException;
 
+import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.rio.RDFHandlerException;
@@ -41,7 +42,7 @@ import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.rule.TransformPostProcessor;
 
 public class TransformProcessor implements TransformPostProcessor  {
-
+	
 	File outDir;
 public TransformProcessor(File outDir) {
 	this.outDir=outDir;
@@ -51,27 +52,22 @@ public TransformProcessor(File outDir) {
 		Shape targetShape = shapeRule.getTargetShape();
 	
 		  Graph graph = new MemoryGraph();
-		  
 		  URI targetShapeId = (URI)targetShape.getId();
 		  NamespaceManager nsManager=new MemoryNamespaceManager();
 		  nsManager.add("owl", OWL.NAMESPACE);
 		  nsManager.add("sh", SH.NAMESPACE);
+		  nsManager.add("shape", SH.EXAMPLESHAPE);
 		  nsManager.add("konig", Konig.NAMESPACE);
-		  
 		  graph.setNamespaceManager(nsManager);
 		  if (targetShapeId != null) {
-
-		    FromItemIterator sequence = new FromItemIterator(shapeRule.getFromItem());
+			FromItemIterator sequence = new FromItemIterator(shapeRule.getFromItem());
 		    while (sequence.hasNext()) {
 		      Shape sourceShape = sequence.next();
 		      URI sourceShapeId = (URI)sourceShape.getId();
 		      graph.edge(targetShapeId, Konig.DERIVEDFROM, sourceShapeId);
 		    }
-		    //Namespace n = nsManager.findByName(targetShapeId.getNamespace());
-		    /* File turtleFile = new File(n.getPrefix()+"_"+targetShapeId.getLocalName());*/
-		  //  System.out.println("outDir:::::::::::::::::********************"+nsManager.findByName(targetShapeId.getNamespace()).getPrefix());
-		   
-		    File turtleFile = new File(outDir,"namespace"+"_"+targetShapeId.getLocalName());
+		    Namespace n = nsManager.findByName(targetShapeId.getNamespace());
+		    File turtleFile = new File(outDir,n.getPrefix()+"_"+targetShapeId.getLocalName());
 		    
 		    try {
 				RdfUtil.prettyPrintTurtle(graph.getNamespaceManager(), graph, turtleFile);
