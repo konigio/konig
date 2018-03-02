@@ -29,5 +29,6 @@ public class AwsShapeConfig {
 	public static void init() {
 		PojoContext context = ShapeLoader.CONTEXT;
 		context.mapClass(Konig.AwsAuroraTable, AwsAurora.class);
+		context.mapClass(Konig.S3Bucket, S3Bucket.class);
 	}
 }

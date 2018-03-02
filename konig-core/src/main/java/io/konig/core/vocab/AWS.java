@@ -47,4 +47,9 @@ public class AWS {
 	public static final URI awsAuroraHost = new URIImpl("http://www.konig.io/ns/aws/awsAuroraHost");
 	public static final URI awsSchema = new URIImpl("http://www.konig.io/ns/aws/awsSchema");
 	public static final URI awsTableName = new URIImpl("http://www.konig.io/ns/aws/awsTableName");
+	public static final String BUCKET_KEY = "http://www.konig.io/ns/gcp/bucketKey";
+	public static final String BUCKET_NAME = "http://www.konig.io/ns/gcp/bucketName";
+	public static final String REGION = "http://www.konig.io/ns/gcp/bucketRegion";
+	public static final String BUCKET_MEDIA_TYPE = "http://www.konig.io/ns/gcp/bucketMediaType";
+
 }
