@@ -1,10 +1,10 @@
-package io.konig.maven;
+package io.konig.aws.common;
 
 /*
  * #%L
- * Konig AWS Deployment Maven Plugin
+ * Konig GCP Common
  * %%
- * Copyright (C) 2015 - 2018 Gregory McFall
+ * Copyright (C) 2015 - 2017 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,10 @@ package io.konig.maven;
  */
 
 
-public enum AwsResourceType {
-	AwsAurora,
-	AwsS3Bucket
+public class InvalidAWSCredentialsException extends Exception {
+	private static final long serialVersionUID = 1L;
+
+	public InvalidAWSCredentialsException() {
+		super("Please set aws.accessKeyId and aws.secretKey in deployment properties file");
+	}
 }

@@ -40,6 +40,9 @@ public class AwsDeployment {
 		switch (type) {
 		case AwsAurora :
 			return new CreateAuroraTableAction(this);
+		case AwsS3Bucket :
+			return new CreateAwsS3BucketAction(this);
+
 		default:
 			break;
 		}

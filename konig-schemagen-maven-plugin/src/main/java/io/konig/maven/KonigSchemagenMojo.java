@@ -130,6 +130,7 @@ import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
+import io.konig.schemagen.aws.AWSS3BucketWriter;
 import io.konig.schemagen.aws.AwsAuroraTableWriter;
 import io.konig.schemagen.aws.AwsResourceGenerator;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
@@ -743,17 +744,23 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			Configurator config = configurator();
 			config.configure(amazonWebServices);
 			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
-			
+			File bucketsDir = Configurator.checkNull(amazonWebServices.getS3buckets());
+
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
 				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator);
 			
-				resourceGenerator.add(awsAuror);
-				resourceGenerator.dispatch(shapeManager.listShapes());
-				GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
-				scriptWriter.run(); 
+				resourceGenerator.add(awsAuror);				
 			}
+			if(bucketsDir != null){
+				AWSS3BucketWriter awsS3=new AWSS3BucketWriter(bucketsDir);
+				resourceGenerator.add(awsS3);
+			}
+			resourceGenerator.dispatch(shapeManager.listShapes());
+			GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
+			scriptWriter.run(); 
+
 		}
 	}
 	

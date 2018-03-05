@@ -59,6 +59,7 @@ public class GroovyAwsDeploymentScriptWriter {
 			println();
 			println("def deploymentPlan = {");
 			printTableCommands();
+			printS3BucketCommands();
 			println("}");
 			println("def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent");
 			println("deploymentPlan.delegate = new AwsDeployment(scriptDir)");
@@ -70,7 +71,7 @@ public class GroovyAwsDeploymentScriptWriter {
 
 	private void printTableCommands() throws IOException {
 		File schemaDir = amazonWebService.getTables();
-		if (schemaDir != null) {
+		if (schemaDir != null && schemaDir.exists()) {
 			for (File file : schemaDir.listFiles()) {
 				if (file.getName().endsWith(".json")) {
 					String path = FileUtil.relativePath(scriptFile, file);
@@ -80,6 +81,21 @@ public class GroovyAwsDeploymentScriptWriter {
 					print("\"");
 					println(" println response ");
 				}
+			}
+		}
+	}
+	private void printS3BucketCommands() throws IOException{
+		File bucketsDir = amazonWebService.getS3buckets();
+		if (bucketsDir!=null && bucketsDir.exists()) {
+			File[] fileList = bucketsDir.listFiles();
+			for (File file : fileList) {
+				String path = FileUtil.relativePath(scriptFile, file);
+				print(indent);
+				print("create AwsS3Bucket from \"");
+				print(path);
+				print("\"");
+				println(" println response ");
+				
 			}
 		}
 	}

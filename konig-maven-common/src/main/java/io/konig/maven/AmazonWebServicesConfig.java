@@ -31,6 +31,9 @@ public class AmazonWebServicesConfig {
 	@Parameter(property="konig.aws.tables", defaultValue="${konig.aws.directory}/tables")
 	private File tables;
 	
+	@Parameter(property="konig.aws.s3bucket", defaultValue="${konig.aws.directory}/s3buckets")
+	private File s3buckets;
+
 	@Parameter(property="konig.aws.deployment.script.file", defaultValue="${konig.aws.directory}/scripts/deploy.groovy")
 	private File awsScriptFile;
 	
@@ -75,6 +78,15 @@ public class AmazonWebServicesConfig {
 
 	public void setAwsScriptFile(File awsScriptFile) {
 		this.awsScriptFile = awsScriptFile;
+	}
+
+	
+	public File getS3buckets() {
+		return s3buckets;
+	}
+
+	public void setS3buckets(File s3buckets) {
+		this.s3buckets = s3buckets;
 	}
 
 	public File getTearDownScriptFile() {
