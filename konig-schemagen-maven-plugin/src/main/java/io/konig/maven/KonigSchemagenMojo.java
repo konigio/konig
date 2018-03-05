@@ -81,6 +81,7 @@ import org.openrdf.rio.RDFParseException;
 import com.sun.codemodel.JCodeModel;
 
 import io.konig.aws.common.GroovyAwsDeploymentScriptWriter;
+import io.konig.aws.common.GroovyAwsTearDownScriptWriter;
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
@@ -297,6 +298,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generateGoogleCloudPlatform();
 			generateOracleManagedCloudServices();
 			generateAmazonWebServices();
+			deleteAmazonWebServices();
 			generateJsonld();
 			generateAvro();
 			generateJsonSchema();
@@ -750,6 +752,25 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				resourceGenerator.add(awsAuror);
 				resourceGenerator.dispatch(shapeManager.listShapes());
 				GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
+				scriptWriter.run(); 
+			}
+		}
+	}
+	
+	private void deleteAmazonWebServices() throws IOException, ConfigurationException {
+		if(amazonWebServices != null) {
+			Configurator config = configurator();
+			config.configure(amazonWebServices);
+			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
+			
+			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
+			if(tablesDir != null) {
+				SqlTableGenerator generator = new SqlTableGenerator();
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator);
+			
+				resourceGenerator.add(awsAuror);
+				resourceGenerator.dispatch(shapeManager.listShapes());
+				GroovyAwsTearDownScriptWriter scriptWriter = new GroovyAwsTearDownScriptWriter(amazonWebServices);
 				scriptWriter.run(); 
 			}
 		}
