@@ -71,7 +71,7 @@ public class GroovyAwsDeploymentScriptWriter {
 
 	private void printTableCommands() throws IOException {
 		File schemaDir = amazonWebService.getTables();
-		if (schemaDir != null) {
+		if (schemaDir != null && schemaDir.exists()) {
 			for (File file : schemaDir.listFiles()) {
 				if (file.getName().endsWith(".json")) {
 					String path = FileUtil.relativePath(scriptFile, file);
