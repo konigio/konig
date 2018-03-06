@@ -131,7 +131,7 @@ public class ExtentContainer extends AbstractContainer {
 					validateQueryParam(key, queryParams.get(key), XMLSchema.STRING);
 				} else if (key.equals("xAxis")  || key.equals("yAxis")){
 					if(!(validateValue(queryParams.get(keyParam)))){
-						throw new DataAppException("IllegalArgumentException : Invalid  value : "+queryParams.get(keyParam));
+						throw new DataAppException("Invalid Input",400);
 					}
 				} else if(key.equals(AGGREGATE)){
 					validateQueryParam(key, queryParams.get(key), XMLSchema.STRING);
@@ -155,17 +155,17 @@ public class ExtentContainer extends AbstractContainer {
 						EntityStructure struct = structureService.structureOfShape(shapeId.toString());
 						FieldPath measure = FieldPath.createFieldPath(key, struct);
 						if (measure == null) {
-							throw new DaoException("Field not found in Shape: " + shapeId.toString());
+							throw new DataAppException("Invalid Input",400);
 						}
 					} catch (DaoException ex) {
-						throw new DataAppException(ex.getMessage());
+						throw new DataAppException("Invalid Input",400);
 					}
 					if(validateValue(queryParams.get(keyParam))){
 					builder.beginPredicateConstraint().setPropertyName(key)
 						.setOperator(ConstraintOperator.EQUAL).setValue(queryParams.get(keyParam))
 						.endPredicateConstraint();
 					}else{
-						throw new DataAppException("IllegalArgumentException : Invalid  value : "+queryParams.get(keyParam));
+						throw new DataAppException("Invalid Input",400);
 					}
 				}				
 			}
@@ -209,9 +209,9 @@ public class ExtentContainer extends AbstractContainer {
 				Long.parseLong(value);
 				return true;
 			}
-			throw new DataAppException(errorMsg);
+			throw new DataAppException("Invalid Input",400);
 		} catch (Exception ex) {
-			throw new DataAppException(errorMsg);
+			throw new DataAppException("Invalid Input",400);
 		}
 	}
 	
@@ -225,33 +225,35 @@ public class ExtentContainer extends AbstractContainer {
 		  Pattern special = Pattern.compile ("[!@#$%&*()+=|<>?{}\\[\\]~]");
 		  Matcher hasSpecial = special.matcher(value);		
 				try{
+					value = value.toUpperCase();
+					
 					if(hasSpecial.find()){
 						return false;
-					}else if ((value.contains("select")||value.contains("SELECT")) && (value.contains("from")||value.contains("FROM"))){
+					}else if ( (value.contains("SELECT")) && (value.contains("FROM")) ){
 						return false;
-					}else if ((value.contains("insert")||value.contains("INSERT")) && (value.contains("into")||value.contains("INTO"))){
+					}else if ( (value.contains("INSERT")) && (value.contains("INTO")) ){
 						return false;
-					}else if (value.contains("update")||value.contains("UPDATE")){
+					}else if ( (value.contains("DELETE")) && (value.contains("FROM")) ){
 						return false;
-					}else if ((value.contains("delete")||value.contains("DELETE")) && (value.contains("from")||value.contains("FROM"))){
+					}else if ( (value.contains("SCRIPT")) && (value.contains("HTML")) ){
 						return false;
-					}else if ((value.contains("script")||value.contains("SCRIPT")) && (value.contains("html")||value.contains("HTML"))){
+					}else if ( (value.contains("SCRIPT")) && (value.contains("ALERT")) ){
 						return false;
-					}else if ((value.contains("script")||value.contains("SCRIPT")) && (value.contains("alert")||value.contains("ALERT"))){
+					}else if ( (value.contains("HTML")) && (value.contains("ALERT")) ){
 						return false;
-					}else if ((value.contains("html")||value.contains("HTML")) && (value.contains("alert")||value.contains("ALERT"))){
+					}else if (value.contains("HTML")){
 						return false;
-					}else if (value.contains("html")||value.contains("HTML")){
+					}else if (value.contains("ALERT")){
 						return false;
-					}else if (value.contains("alert")||value.contains("ALERT")){
+					}else if (value.contains("SCRIPT")){
 						return false;
-					}else if (value.contains("script")||value.contains("SCRIPT")){
+					}else if (value.contains("UPDATE")){
 						return false;
 					}else{
 						return true;
 					}
 				}catch(Exception ex){
-					throw new DataAppException(errorMsg);
+					throw new DataAppException("Invalid Input",400);
 				}
 				
 	 }
