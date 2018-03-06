@@ -42,7 +42,8 @@ public class AwsDeployment {
 			return new CreateAuroraTableAction(this);
 		case AwsS3Bucket :
 			return new CreateAwsS3BucketAction(this);
-
+		case AwsSNSTopic:
+			return new CreateAwsSNSTopicAction(this);
 		default:
 			break;
 		}

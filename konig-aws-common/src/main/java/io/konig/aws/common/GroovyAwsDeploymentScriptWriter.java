@@ -91,6 +91,12 @@ public class GroovyAwsDeploymentScriptWriter {
 			for (File file : fileList) {
 				String path = FileUtil.relativePath(scriptFile, file);
 				print(indent);
+				print("create AwsSNSTopic from \"");
+				print(path);
+				print("\"");
+				println(" println response ");
+				
+				print(indent);
 				print("create AwsS3Bucket from \"");
 				print(path);
 				print("\"");

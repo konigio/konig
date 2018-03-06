@@ -30,6 +30,8 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.aws.datasource.S3Bucket;
+import io.konig.aws.datasource.Topic;
+import io.konig.aws.datasource.TopicConfiguration;
 import io.konig.core.KonigException;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
@@ -52,7 +54,22 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		json.writeStringField("bucketName", bucket.getBucketName());
 		json.writeStringField("region", bucket.getRegion());
 		json.writeStringField("bucketMediaType", bucket.getBucketMediaType());
-		json.writeEndObject();
+		if(bucket.getNotificationConfiguration()!=null){
+			json.writeObjectFieldStart("notificationConfiguration");
+			TopicConfiguration topicConfig=bucket.getNotificationConfiguration();
+			Topic topic=topicConfig.getTopic();
+			if(topic!=null){			
+					json.writeObjectFieldStart("topic");
+					json.writeStringField("resourceName", topic.getResourceName());
+					json.writeStringField("region", topic.getRegion());
+					json.writeStringField("accountId", topic.getAccountId());
+					json.writeEndObject();
+					json.writeStringField("eventType", topicConfig.getEventType());
+			}
+			
+			json.writeEndObject();
+		}
+		json.writeEndObject();				
 	}
 
 	@Override

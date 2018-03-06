@@ -1,8 +1,11 @@
-package io.konig.maven;
+package io.konig.aws.datasource;
+
+import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.AWS;
 
 /*
  * #%L
- * Konig AWS Deployment Maven Plugin
+ * Konig AWS Model
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,8 +24,22 @@ package io.konig.maven;
  */
 
 
-public enum AwsResourceType {
-	AwsAurora,
-	AwsS3Bucket,
-	AwsSNSTopic
+public class TopicConfiguration{
+	private Topic topic;
+	private String eventType;
+	@RdfProperty(AWS.TOPIC)
+	public Topic getTopic() {
+		return topic;
+	}
+	public void setTopic(Topic topic) {
+		this.topic = topic;
+	}
+	@RdfProperty(AWS.EVENT_TYPE)
+	public String getEventType() {
+		return eventType;
+	}
+	public void setEventType(String eventType) {
+		this.eventType = eventType;
+	}
+	
 }

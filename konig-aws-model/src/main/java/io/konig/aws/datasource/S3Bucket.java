@@ -1,5 +1,7 @@
 package io.konig.aws.datasource;
 
+import java.util.List;
+
 /*
  * #%L
  * Konig AWS Model
@@ -33,6 +35,7 @@ public class S3Bucket extends DataSource{
 	private String bucketName;
 	private String region;
 	private String bucketMediaType;
+	private TopicConfiguration notificationConfiguration;
 	
 	public S3Bucket() {
 		addType(Konig.S3Bucket);
@@ -76,6 +79,15 @@ public class S3Bucket extends DataSource{
 
 	public void setBucketMediaType(String bucketMediaType) {
 		this.bucketMediaType = bucketMediaType;
+	}
+	
+	@RdfProperty(AWS.NOTIFICATION_CONFIGURATION)
+	public TopicConfiguration getNotificationConfiguration() {
+		return notificationConfiguration;
+	}
+
+	public void setNotificationConfiguration(TopicConfiguration notificationConfiguration) {
+		this.notificationConfiguration = notificationConfiguration;
 	}
 	
 }
