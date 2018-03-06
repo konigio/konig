@@ -27,17 +27,10 @@ public class WorkbookProcessor {
 	private File workbookFile;
 	private File owlDir;
 	private File shapesDir;
-	private File derivedDir;
 	private boolean inferRdfPropertyDefinitions=true;
 	private boolean failOnWarnings = false;
 	private boolean failOnErrors = false;
 	
-	public File getDerivedDir() {
-		return derivedDir;
-	}
-	public void setDerivedDir(File derivedDir) {
-		this.derivedDir = derivedDir;
-	}
 	public File getWorkbookFile() {
 		return workbookFile;
 	}
@@ -47,10 +40,7 @@ public class WorkbookProcessor {
 	public File awsDir(RdfConfig defaults) {
 		return new File(defaults.getRdfDir(), "aws");
 	}	
-	public File derivedDir(RdfConfig defaults) {
-		return new File(defaults.getDerivedDir(), "der");
-	}
-	
+		
 	public File gcpDir(RdfConfig defaults) {
 		return new File(defaults.getRdfDir(), "gcp");
 	}

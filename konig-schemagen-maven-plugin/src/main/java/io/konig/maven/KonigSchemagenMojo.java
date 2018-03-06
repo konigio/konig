@@ -674,7 +674,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		request.setShapesOutDir(workbook.shapesDir(defaults));
 		request.setGcpOutDir(workbook.gcpDir(defaults));
 		request.setAwsOutDir(workbook.awsDir(defaults));
-		request.setDerivedFormOutDir(workbook.derivedDir(defaults));
 		return request;
 	}
 
@@ -864,7 +863,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if (googleCloudPlatform.isEnableBigQueryTransform()) {
 			
 		
-			BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner,defaults);
+			BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner,rdfSourceDir);
 			generator.generateAll();
 			List<Throwable> errorList = generator.getErrorList();
 			if (errorList != null && !errorList.isEmpty()) {

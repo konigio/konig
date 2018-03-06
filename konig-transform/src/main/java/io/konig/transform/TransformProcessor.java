@@ -56,7 +56,6 @@ public TransformProcessor(File outDir) {
 		  NamespaceManager nsManager=new MemoryNamespaceManager();
 		  nsManager.add("owl", OWL.NAMESPACE);
 		  nsManager.add("sh", SH.NAMESPACE);
-		  nsManager.add("shape", SH.EXAMPLESHAPE);
 		  nsManager.add("konig", Konig.NAMESPACE);
 		  graph.setNamespaceManager(nsManager);
 		  if (targetShapeId != null) {
@@ -67,10 +66,13 @@ public TransformProcessor(File outDir) {
 		      graph.edge(targetShapeId, Konig.DERIVEDFROM, sourceShapeId);
 		    }
 		    Namespace n = nsManager.findByName(targetShapeId.getNamespace());
-		    File turtleFile = new File(outDir,n.getPrefix()+"_"+targetShapeId.getLocalName());
+		    if(outDir!=null)
+		    	outDir=new File(outDir,"shape-dependencies");
+		    File turtleFile = new File(outDir,n!=null?n.getPrefix():"localNamespace"+"_"+targetShapeId.getLocalName());
 		    
 		    try {
-				RdfUtil.prettyPrintTurtle(graph.getNamespaceManager(), graph, turtleFile);
+		    	if(outDir!=null)
+					RdfUtil.prettyPrintTurtle(graph.getNamespaceManager(), graph, turtleFile);
 			} catch (RDFHandlerException e) {
 				e.printStackTrace();
 			} catch (IOException e) {

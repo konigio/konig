@@ -35,7 +35,6 @@ import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
-import io.konig.maven.RdfConfig;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeManager;
@@ -62,8 +61,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	private BigQueryCommandLineFactory bqCmdLineFactory;
 	private List<Throwable> errorList;
 	private int transformCount = 0;
-	private RdfConfig config;
-	
+	private File rdfSourceDir;
 	
 
 	
@@ -86,14 +84,14 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		);
 	}
 	
-	public BigQueryTransformGenerator(ShapeManager shapeManager, File outDir, OwlReasoner owlReasoner,RdfConfig config) {
+	public BigQueryTransformGenerator(ShapeManager shapeManager, File outDir, OwlReasoner owlReasoner,File rdfSourceDir) {
 		this(
 			shapeManager, 
 			outDir, 
 			new ShapeRuleFactory(shapeManager, new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner), new ShapeModelToShapeRule()),
 			new BigQueryCommandLineFactory(new SqlFactory())			
 		);
-		this.config=config;
+		this.rdfSourceDir=rdfSourceDir;
 	}
 	
 	
@@ -114,13 +112,6 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		this.shapeManager = shapeManager;
 	}
 
-	public RdfConfig getConfig() {
-		return config;
-	}
-
-	public void setConfig(RdfConfig config) {
-		this.config = config;
-	}
 	public File getOutDir() {
 		return outDir;
 	}
@@ -265,17 +256,13 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	
 	private void transferDerivedForm(Shape shape, ShapeRule shapeRule) throws ShapeTransformException
 	{
-		if(config == null)
-		{
-			config=new RdfConfig();
-		}
 		ShapeModelToShapeRule shapeModelToRule=shapeRuleFactory.getShapeModelToShapeRule();
 		if (shapeRule == null) {
 			shapeRule = shapeRuleFactory.createShapeRule(shape);
 		}
 		
 		if (shapeRule != null) {
-			TransformProcessor processor=new TransformProcessor(config.getDerivedDir());
+			TransformProcessor processor=new TransformProcessor(rdfSourceDir);
 			shapeModelToRule.getListTransformprocess().add(processor);
 			processor.process(shapeRule);
 		}

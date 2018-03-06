@@ -27,7 +27,6 @@ import org.openrdf.model.impl.URIImpl;
 public class Konig {
 	
 	public static final String NAMESPACE = "http://www.konig.io/ns/core/";
-	public static final String SHAPE = "http://schema.pearson.com/shapes/";
 	
 	public static final String JAVA_NAMESPACE = "http://www.konig.io/ns/java/";
 	public static final String ACTIVIY_BASE_URL = "http://www.konig.io/activity/";
