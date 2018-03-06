@@ -40,6 +40,7 @@ public class WorkbookProcessor {
 	public File awsDir(RdfConfig defaults) {
 		return new File(defaults.getRdfDir(), "aws");
 	}	
+		
 	public File gcpDir(RdfConfig defaults) {
 		return new File(defaults.getRdfDir(), "gcp");
 	}

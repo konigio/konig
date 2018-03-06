@@ -28,10 +28,13 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import io.konig.maven.RdfConfig;
 import io.konig.transform.proto.AbstractShapeModelToShapeRuleTest;
 
 public class BigQueryTransformGeneratorTest extends AbstractShapeModelToShapeRuleTest  {
 	File outDir = new File("target/test/bigquery-transform");
+
+	
 	BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner);
 
 	@Ignore
@@ -48,7 +51,6 @@ public class BigQueryTransformGeneratorTest extends AbstractShapeModelToShapeRul
 	
 	@Ignore
 	public void testFact() throws Throwable {
-
 		FileUtils.deleteDirectory(outDir);
 		load("src/test/resources/konig-transform/analytics-model");
 		generator.generateAll();

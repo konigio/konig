@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 
-import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.vocab.Konig;
@@ -42,7 +41,7 @@ import io.konig.shacl.ShapeManager;
 import io.konig.sql.query.BigQueryCommandLine;
 import io.konig.sql.query.DmlExpression;
 import io.konig.transform.ShapeTransformException;
-import io.konig.transform.factory.BigQueryTransformStrategy;
+import io.konig.transform.TransformProcessor;
 import io.konig.transform.factory.ShapeRuleFactory;
 import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.proto.BigQueryChannelFactory;
@@ -62,7 +61,9 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	private BigQueryCommandLineFactory bqCmdLineFactory;
 	private List<Throwable> errorList;
 	private int transformCount = 0;
+	private File rdfSourceDir;
 	
+
 	
 
 	public BigQueryTransformGenerator(ShapeManager shapeManager, File outDir, ShapeRuleFactory shapeRuleFactory,
@@ -83,6 +84,16 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		);
 	}
 	
+	public BigQueryTransformGenerator(ShapeManager shapeManager, File outDir, OwlReasoner owlReasoner,File rdfSourceDir) {
+		this(
+			shapeManager, 
+			outDir, 
+			new ShapeRuleFactory(shapeManager, new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner), new ShapeModelToShapeRule()),
+			new BigQueryCommandLineFactory(new SqlFactory())			
+		);
+		this.rdfSourceDir=rdfSourceDir;
+	}
+	
 	
 	public void generateAll() {
 		beginShapeTraversal();
@@ -100,7 +111,6 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	public void setShapeManager(ShapeManager shapeManager) {
 		this.shapeManager = shapeManager;
 	}
-
 
 	public File getOutDir() {
 		return outDir;
@@ -156,8 +166,14 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	public void visit(Shape shape) {
 		
 		ShapeRule shapeRule = null;
+		try {
+			transferDerivedForm(shape, shapeRule);
+		} catch (ShapeTransformException e1) {
+			e1.printStackTrace();
+		}
 		if (isLoadTransform(shape)) {
 			try {
+				
 				shapeRule = loadTransform(shape);
 				transformCount++;
 			} catch (Throwable e) {
@@ -167,12 +183,14 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		
 		if (isCurrentStateTransform(shape)) {
 			try {
+				//transferDerivedForm(shape, shapeRule);
 				currentStateTransform(shape, shapeRule);
 				transformCount++;
 			} catch (Throwable e) {
 				addError(e);
 			}
 		}
+		
 		
 	}
 	private void currentStateTransform(Shape shape, ShapeRule shapeRule) throws ShapeTransformException, IOException {
@@ -224,7 +242,6 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 
 	private ShapeRule loadTransform(Shape shape) throws ShapeTransformException, IOException {
 		ShapeRule shapeRule = shapeRuleFactory.createShapeRule(shape);
-		
 		if (shapeRule != null) {
 			BigQueryCommandLine cmdline = bqCmdLineFactory.insertCommand(shapeRule);
 			if (cmdline != null) {
@@ -235,6 +252,20 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 			}
 		}
 		return shapeRule;
+	}
+	
+	private void transferDerivedForm(Shape shape, ShapeRule shapeRule) throws ShapeTransformException
+	{
+		ShapeModelToShapeRule shapeModelToRule=shapeRuleFactory.getShapeModelToShapeRule();
+		if (shapeRule == null) {
+			shapeRule = shapeRuleFactory.createShapeRule(shape);
+		}
+		
+		if (shapeRule != null) {
+			TransformProcessor processor=new TransformProcessor(rdfSourceDir);
+			shapeModelToRule.getListTransformprocess().add(processor);
+			processor.process(shapeRule);
+		}
 	}
 
 	private void handleRollup(ShapeRule shapeRule, GoogleBigQueryTable table) throws ShapeTransformException, IOException {
@@ -294,7 +325,8 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		return null;
 	}
 	
-	private boolean isLoadTransform(Shape shape) {
+	private boolean isLoadTransform(Shape shape) {	
+		
 		return
 				isDerivedShape(shape) || (
 				shape.hasDataSourceType(Konig.GoogleBigQueryTable) && 
