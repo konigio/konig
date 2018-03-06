@@ -36,6 +36,9 @@ public class AmazonWebServicesConfig {
 
 	@Parameter(property="konig.aws.deployment.script.file", defaultValue="${konig.aws.directory}/scripts/deploy.groovy")
 	private File awsScriptFile;
+	
+	@Parameter(property="konig.aws.teardown.script.file", defaultValue="${konig.aws.directory}/scripts/tear-down.groovy")
+	private File tearDownScriptFile;
 
 	@Parameter(property="konig.aws.deployment.version", defaultValue="${konig.version}")
 	private String konigVersion;
@@ -85,4 +88,13 @@ public class AmazonWebServicesConfig {
 	public void setS3buckets(File s3buckets) {
 		this.s3buckets = s3buckets;
 	}
+
+	public File getTearDownScriptFile() {
+		return tearDownScriptFile;
+	}
+
+	public void setTearDownScriptFile(File tearDownScriptFile) {
+		this.tearDownScriptFile = tearDownScriptFile;
+	}
+	
 }

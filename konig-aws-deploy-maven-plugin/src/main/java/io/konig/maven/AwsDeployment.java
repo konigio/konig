@@ -49,6 +49,18 @@ public class AwsDeployment {
 		}
 		return null;
 	}
+	
+	public Object delete(AwsResourceType type) {
+		switch (type) {
+		case AwsAurora:
+			return new DeleteAwsTable(this);
+		default:
+			break;
+
+		}
+		return null;
+	}
+	
 	public File file(String path) {
 		return new File(baseDir, path);
 	}
