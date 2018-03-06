@@ -80,6 +80,7 @@ public class WorkbookToTurtleTransformer {
 		File shapesOutDir = request.getShapesOutDir();
 		File gcpOutDir = request.getGcpOutDir();
 		File awsOutDir = request.getAwsOutDir();
+		File derivedDir = request.getDerivedFormOutDir();
 		
 		if (workbookFile == null) {
 			throw new SpreadsheetException("workbookFile must be defined");

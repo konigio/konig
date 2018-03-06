@@ -44,6 +44,7 @@ public class Konig {
 	public static final String MEASURE = "http://www.konig.io/ns/core/measure";
 	public static final String ATTRIBUTE = "http://www.konig.io/ns/core/attribute";
 	public static final String DIMENSION = "http://www.konig.io/ns/core/dimension";
+	public static final URI DERIVEDFROM = new URIImpl("http://www.konig.io/ns/core/derivedfrom");
 	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
