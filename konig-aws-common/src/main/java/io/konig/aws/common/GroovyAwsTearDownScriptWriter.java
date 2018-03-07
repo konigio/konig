@@ -56,6 +56,7 @@ public class GroovyAwsTearDownScriptWriter {
 			println();
 			println("def deploymentPlan = {");
 			printTableCommands();
+			printAmazonBucketCommands();
 			println("}");
 			println("def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent");
 			println("deploymentPlan.delegate = new AwsDeployment(scriptDir)");
@@ -67,7 +68,7 @@ public class GroovyAwsTearDownScriptWriter {
 
 	private void printTableCommands() throws IOException {
 		File schemaDir = amazonWebService.getTables();
-		if (schemaDir != null) {
+		if (schemaDir != null && schemaDir.exists()) {
 			for (File file : schemaDir.listFiles()) {
 				if (file.getName().endsWith(".json")) {
 					String path = FileUtil.relativePath(scriptFile, file);
@@ -81,6 +82,26 @@ public class GroovyAwsTearDownScriptWriter {
 		}
 	}
 
+	private void printAmazonBucketCommands() throws IOException {
+		File schemaDir = amazonWebService.getS3buckets();
+		if (schemaDir!=null && schemaDir.exists()) {
+			File[] fileList = schemaDir.listFiles();
+			for (File file : fileList) {
+				 String path = FileUtil.relativePath(scriptFile, file);
+				   print(indent);
+				   print("delete AwsSnsTopic from \"");
+				   print(path);
+				   print("\"");
+				   println(" println response ");
+
+					print(indent);
+					print("delete AwsS3Bucket from \"");
+					print(path);
+					print("\"");
+					println(" println response ");
+				}
+			}
+	}
 	private void print(String text) throws IOException {
 		out.write(text);
 	}

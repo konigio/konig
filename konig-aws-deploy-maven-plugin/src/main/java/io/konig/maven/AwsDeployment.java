@@ -54,6 +54,8 @@ public class AwsDeployment {
 		switch (type) {
 		case AwsAurora:
 			return new DeleteAwsTable(this);
+		case AwsSnsTopic:
+			return new DeleteAwsSNS(this);
 		default:
 			break;
 
