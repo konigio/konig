@@ -366,11 +366,11 @@ public class SqlFactory {
 		private Object tableRef(ShapeRule shapeRule) {
 			Shape shape = shapeRule.getTargetShape();
 			for (DataSource ds : shape.getShapeDataSource()) {
+				
 				if (ds.isA(Konig.GoogleBigQueryTable)) {
 					GoogleBigQueryTable bigQuery = (GoogleBigQueryTable) ds;
 					return bigQuery.getTableReference();
-				}
-				else if(ds.isA(Konig.AwsAuroraTable) && shape.getShapeType().equals(Konig.TargetShape)){
+				} else if(ds instanceof AwsAurora){
 					AwsAurora awsAurora = (AwsAurora) ds;
 					return awsAurora.getTableReference();
 				}

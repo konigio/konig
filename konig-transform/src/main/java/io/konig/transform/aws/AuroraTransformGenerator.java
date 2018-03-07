@@ -40,7 +40,7 @@ public class AuroraTransformGenerator implements ShapeHandler {
 	private ShapeRuleFactory shapeRuleFactory;
 	private SqlFactory sqlFactory;
 	private ShapeFileFactory shapeFileFactory;
-	
+	 
 	public AuroraTransformGenerator(ShapeRuleFactory shapeRuleFactory, SqlFactory sqlFactory,ShapeFileFactory shapeFileFactory) {
 	    this.shapeRuleFactory = shapeRuleFactory;
 	    this.sqlFactory = sqlFactory;
@@ -62,6 +62,10 @@ public class AuroraTransformGenerator implements ShapeHandler {
 				if(statement!=null){
 			        String dmlText = statement.toString();
 			        File dmlFile = shapeFileFactory.createFile(shape);
+			        File dir = dmlFile.getParentFile();
+			        if (!dir.exists()) {
+			        	dir.mkdirs();
+			        }
 			        try(PrintStream out = new PrintStream(new FileOutputStream(dmlFile))) {
 			        	out.print(dmlText);
 			        } catch (FileNotFoundException e) {
@@ -110,10 +114,14 @@ public class AuroraTransformGenerator implements ShapeHandler {
 		this.shapeFileFactory = shapeFileFactory;
 	}
 	private boolean isAuroraTransform(Shape shape) {
-	      return 
-	        shape.getShapeType()!=null && 
-	        shape.getShapeType().equals(Konig.TargetShape) &&
-	        shape.hasDataSourceType(Konig.AwsAuroraTable);
+		
+		return true;
+		// TODO: This method needs to be re-implemented to use rdf:type for the Shape type.
+		
+//	      return 
+//	        shape.getShapeType()!=null && 
+//	        shape.getShapeType().equals(Konig.TargetShape) &&
+//	        shape.hasDataSourceType(Konig.AwsAuroraTable);
 	 }
 	
 }
