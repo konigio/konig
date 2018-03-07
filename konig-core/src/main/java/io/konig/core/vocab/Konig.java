@@ -68,6 +68,7 @@ public class Konig {
 
 	public static final URI id = new URIImpl("http://www.konig.io/ns/core/id");
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/core/mediaTypeBaseName");
+	public static final URI shapeType = new URIImpl("http://www.konig.io/ns/core/shapeType");
 	public static final URI preferredJsonSchema = new URIImpl("http://www.konig.io/ns/core/preferredJsonSchema");
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/core/avroSchemaRendition");
 	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/core/PreferredClass");
@@ -89,9 +90,8 @@ public class Konig {
 	public static final URI derivedProperty = new URIImpl("http://www.konig.io/ns/core/derivedProperty");
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI DerivedShape = new URIImpl("http://www.konig.io/shapes/DerivedShape");
-	
-
-	
+	public static final URI SourceShape=new URIImpl("http://www.konig.io/ns/core/SourceShape");
+	public static final URI TargetShape=new URIImpl("http://www.konig.io/ns/core/TargetShape");
 	
 	// Data Sources
 
