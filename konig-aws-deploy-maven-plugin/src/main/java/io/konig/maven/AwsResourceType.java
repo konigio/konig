@@ -23,6 +23,5 @@ package io.konig.maven;
 
 public enum AwsResourceType {
 	AwsAurora,
-	AwsS3Bucket,
-	AwsDeleteS3Bucket
+	AwsS3Bucket
 }

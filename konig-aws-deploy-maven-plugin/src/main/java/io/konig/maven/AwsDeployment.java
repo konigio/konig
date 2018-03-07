@@ -53,7 +53,7 @@ public class AwsDeployment {
 		switch (type) {
 		case AwsAurora:
 			return new DeleteAwsTable(this);
-		case AwsDeleteS3Bucket:
+		case AwsS3Bucket:
 			return new DeleteAwsS3BucketAction(this);
 		default:
 			break;

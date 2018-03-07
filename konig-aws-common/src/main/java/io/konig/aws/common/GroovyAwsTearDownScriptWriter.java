@@ -89,7 +89,7 @@ public class GroovyAwsTearDownScriptWriter {
 			for (File file : fileList) {
 					String path = FileUtil.relativePath(scriptFile, file);
 					print(indent);
-					print("delete AwsDeleteS3Bucket from \"");
+					print("delete AwsS3Bucket from \"");
 					print(path);
 					print("\"");
 					println(" println response ");
