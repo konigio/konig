@@ -36,6 +36,8 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTableReference;
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
@@ -211,14 +213,15 @@ public class SqlFactory {
 
 		public InsertStatement insertStatement(ShapeRule shapeRule) throws TransformBuildException {
 			InsertStatement insert = null;
-			BigQueryTableReference tableRef = bigQueryTableRef(shapeRule);
+			Object tableRef = tableRef(shapeRule);					
 			if (tableRef != null) {
-				TableName tableName = tableName(tableRef, null);
-				List<ColumnExpression> columnList = columnList(shapeRule);
-				sort(columnList);
-				SelectExpression select = selectExpression(shapeRule);
-				insert = new InsertStatement(tableName.getExpression(), columnList, select);
+						TableName tableName = tableName(tableRef, null);
+						List<ColumnExpression> columnList = columnList(shapeRule);
+						sort(columnList);
+						SelectExpression select = selectExpression(shapeRule);
+						insert = new InsertStatement(tableName.getExpression(), columnList, select);
 			}
+					
 			return insert;
 		}
 
@@ -313,11 +316,11 @@ public class SqlFactory {
 		private UpdateExpression updateExpression(ShapeRule shapeRule) throws TransformBuildException {
 
 			UpdateExpression update = null;
-			BigQueryTableReference tableRef = bigQueryTableRef(shapeRule);
+			Object tableRef = tableRef(shapeRule);
 			if (tableRef != null) {
 				useAlias = true;
 				update = new UpdateExpression();
-				String fullName = fullTableName(tableRef);
+				String fullName = fullTableName((BigQueryTableReference)tableRef);
 				String targetTableAlias = shapeRule.getVariableNamer().next();
 				TableNameExpression tableNameExpression = new TableNameExpression(fullName);
 				TableItemExpression tableItem = new TableAliasExpression(tableNameExpression, targetTableAlias);
@@ -360,25 +363,35 @@ public class SqlFactory {
 			return builder.toString();
 		}
 
-		private BigQueryTableReference bigQueryTableRef(ShapeRule shapeRule) {
+		private Object tableRef(ShapeRule shapeRule) {
 			Shape shape = shapeRule.getTargetShape();
 			for (DataSource ds : shape.getShapeDataSource()) {
 				if (ds.isA(Konig.GoogleBigQueryTable)) {
 					GoogleBigQueryTable bigQuery = (GoogleBigQueryTable) ds;
 					return bigQuery.getTableReference();
 				}
+				else if(ds.isA(Konig.AwsAuroraTable) && shape.getShapeType().equals(Konig.TargetShape)){
+					AwsAurora awsAurora = (AwsAurora) ds;
+					return awsAurora.getTableReference();
+				}
 			}
 			return null;
 		}
 
-		private TableName tableName(BigQueryTableReference tableRef, String alias) {
-
-			StringBuilder builder = new StringBuilder();
-			builder.append(tableRef.getDatasetId());
-			builder.append('.');
-			builder.append(tableRef.getTableId());
-			String tableName = builder.toString();
-			return new TableName(tableName, alias);
+		private TableName tableName(Object tableRef, String alias) {
+			if(tableRef instanceof BigQueryTableReference){
+				BigQueryTableReference ref=(BigQueryTableReference) tableRef;
+				StringBuilder builder = new StringBuilder();
+				builder.append(ref.getDatasetId());
+				builder.append('.');
+				builder.append(ref.getTableId());
+				String tableName = builder.toString();
+				return new TableName(tableName, alias);
+			}
+			else if(tableRef instanceof AwsAuroraTableReference){
+				return new TableName(((AwsAuroraTableReference)tableRef).getAwsTableName(), alias);
+			}
+			return null;
 		}
 
 		private void addColumns(ValueContainer select, ShapeRule shapeRule) throws TransformBuildException {
