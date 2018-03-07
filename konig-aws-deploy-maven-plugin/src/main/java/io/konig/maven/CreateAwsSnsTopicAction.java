@@ -46,10 +46,10 @@ import io.konig.aws.datasource.S3Bucket;
 import io.konig.aws.datasource.Topic;
 import io.konig.aws.datasource.TopicConfiguration;
 
-public class CreateAwsSNSTopicAction {
+public class CreateAwsSnsTopicAction {
 	private AwsDeployment deployment;
 
-	public CreateAwsSNSTopicAction(AwsDeployment deployment){
+	public CreateAwsSnsTopicAction(AwsDeployment deployment){
 		this.deployment=deployment;
 	}
 	

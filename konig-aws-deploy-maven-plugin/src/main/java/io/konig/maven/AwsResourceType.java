@@ -24,5 +24,5 @@ package io.konig.maven;
 public enum AwsResourceType {
 	AwsAurora,
 	AwsS3Bucket,
-	AwsSNSTopic
+	AwsSnsTopic
 }
