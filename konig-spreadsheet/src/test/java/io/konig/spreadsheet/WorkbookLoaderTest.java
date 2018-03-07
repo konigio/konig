@@ -865,7 +865,7 @@ public class WorkbookLoaderTest {
 		List<DataSource> list = shape.getShapeDataSource();
 		assertEquals(1, list.size());
 		DataSource ds = list.get(0);
-		assertEquals("http://www.konig.io/ns/aws/host/host/databases/schema/tables/AuroraProductShape", 
+		assertEquals("http://www.konig.io/ns/aws/host/devHost/databases/edwcore/tables/AuroraProductShape", 
 				ds.getId().stringValue());
 		assertTrue(ds.isA(Konig.AwsAuroraTable));
 	}
