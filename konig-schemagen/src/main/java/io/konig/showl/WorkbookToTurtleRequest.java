@@ -29,7 +29,14 @@ public class WorkbookToTurtleRequest {
 	private File shapesOutDir;
 	private File gcpOutDir;
 	private File awsOutDir;
+	private File derivedFormOutDir;
 	
+	public File getDerivedFormOutDir() {
+		return derivedFormOutDir;
+	}
+	public void setDerivedFormOutDir(File derivedFormOutDir) {
+		this.derivedFormOutDir = derivedFormOutDir;
+	}
 	public File getAwsOutDir() {
 		return awsOutDir;
 	}
