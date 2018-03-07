@@ -181,9 +181,8 @@ public class ExtentContainer extends AbstractContainer {
 	}
 	
 	public boolean validateQueryParam(String key, String value, URI datatype ) throws DataAppException {
-		String errorMsg = MessageFormat.format("IllegalArgumentException : Invalid format key : {0}  /  value : {1}",
-				key, value);
-		try {
+
+	try {
 			if (XMLSchema.DATE.equals(datatype)) {			
 				DateTime localTime = new DateTime(value).toDateTime(DateTimeZone.UTC);
 				localTime.toString(ISODateTimeFormat.date());			
@@ -220,8 +219,7 @@ public class ExtentContainer extends AbstractContainer {
 	}
 	
 	 boolean validateValue (String value )throws DataAppException{
-		 String  errorMsg = MessageFormat.format("IllegalArgumentException : Invalid  value : {0}",
-				 value);
+
 		  Pattern special = Pattern.compile ("[!@#$%&*()+=|<>?{}\\[\\]~]");
 		  Matcher hasSpecial = special.matcher(value);		
 				try{
