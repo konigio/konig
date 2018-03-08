@@ -89,8 +89,6 @@ public class Konig {
 	public static final URI derivedProperty = new URIImpl("http://www.konig.io/ns/core/derivedProperty");
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI DerivedShape = new URIImpl("http://www.konig.io/shapes/DerivedShape");
-	public static final URI SourceShape=new URIImpl("http://www.konig.io/ns/core/SourceShape");
-	public static final URI TargetShape=new URIImpl("http://www.konig.io/ns/core/TargetShape");
 	
 	// Data Sources
 
