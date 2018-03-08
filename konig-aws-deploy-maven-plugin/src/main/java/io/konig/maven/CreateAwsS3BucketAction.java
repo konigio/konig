@@ -29,10 +29,14 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.BucketNotificationConfiguration;
+import com.amazonaws.services.s3.model.CreateBucketRequest;
+import com.amazonaws.services.s3.model.TopicConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.konig.aws.common.InvalidAWSCredentialsException;
 import io.konig.aws.datasource.S3Bucket;
+import io.konig.aws.datasource.Topic;
 
 public class CreateAwsS3BucketAction {
 	
@@ -55,7 +59,24 @@ public class CreateAwsS3BucketAction {
 				envtName = System.getProperty("environmentName");
 			}
 			String bucketName=StringUtils.replaceOnce(bucket.getBucketName(), "${environmentName}", envtName);
-			Bucket b=s3client.createBucket(bucketName);		
+			Bucket b=s3client.createBucket(bucketName);	
+		
+			
+			if(bucket.getNotificationConfiguration()!=null){
+				  io.konig.aws.datasource.TopicConfiguration topicConfiguration=bucket.getNotificationConfiguration();
+				  Topic topic=topicConfiguration.getTopic();
+				  BucketNotificationConfiguration notificationConfiguration = new BucketNotificationConfiguration();
+				  String accountId="";
+					if(System.getProperty("aws-account-id") != null) {
+						accountId = System.getProperty("aws-account-id");
+					}
+				  TopicConfiguration topicConfig=new TopicConfiguration
+						  ("arn:aws:sns:"+topic.getRegion()+":"+accountId+":"+topic.getResourceName(), 
+								  topicConfiguration.getEventType());
+		            notificationConfiguration.addConfiguration("snsTopicConfig", topicConfig);
+		            
+				s3client.setBucketNotificationConfiguration(bucketName, notificationConfiguration);
+			}
 			if(b!=null)
 				deployment.setResponse("AWS S3 Bucket is created ::"+b.getName());
 		}

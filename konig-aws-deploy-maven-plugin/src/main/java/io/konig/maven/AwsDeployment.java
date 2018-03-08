@@ -42,7 +42,8 @@ public class AwsDeployment {
 			return new CreateAuroraTableAction(this);
 		case AwsS3Bucket :
 			return new CreateAwsS3BucketAction(this);
-
+		case AwsSnsTopic:
+			return new CreateAwsSnsTopicAction(this);
 		default:
 			break;
 		}
@@ -53,8 +54,13 @@ public class AwsDeployment {
 		switch (type) {
 		case AwsAurora:
 			return new DeleteAwsTable(this);
+
+		case AwsSnsTopic:
+			return new DeleteAwsSNS(this);
+
 		case AwsS3Bucket:
 			return new DeleteAwsS3BucketAction(this);
+
 		default:
 			break;
 

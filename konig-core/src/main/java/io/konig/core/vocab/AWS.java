@@ -47,9 +47,22 @@ public class AWS {
 	public static final URI awsAuroraHost = new URIImpl("http://www.konig.io/ns/aws/awsAuroraHost");
 	public static final URI awsSchema = new URIImpl("http://www.konig.io/ns/aws/awsSchema");
 	public static final URI awsTableName = new URIImpl("http://www.konig.io/ns/aws/awsTableName");
-	public static final String BUCKET_KEY = "http://www.konig.io/ns/gcp/bucketKey";
-	public static final String BUCKET_NAME = "http://www.konig.io/ns/gcp/bucketName";
-	public static final String REGION = "http://www.konig.io/ns/gcp/bucketRegion";
-	public static final String BUCKET_MEDIA_TYPE = "http://www.konig.io/ns/gcp/bucketMediaType";
+	public static final String BUCKET_KEY = "http://www.konig.io/ns/aws/bucketKey";
+	public static final String BUCKET_NAME = "http://www.konig.io/ns/aws/bucketName";
+	public static final String REGION = "http://www.konig.io/ns/aws/bucketRegion";
+	public static final String BUCKET_MEDIA_TYPE = "http://www.konig.io/ns/aws/bucketMediaType";
+	public static final String NOTIFICATION_CONFIGURATION = "http://www.konig.io/ns/aws/notificationConfiguration";
+	public static final String TOPIC = "http://www.konig.io/ns/aws/topic";
+	public static final String EVENT_TYPE = "http://www.konig.io/ns/aws/eventType";
+	public static final String ACCOUNT_ID = "http://www.konig.io/ns/aws/accountId";
+	public static final String RESOURCE_NAME = "http://www.konig.io/ns/aws/resourceName";
+	public static final String TOPIC_REGION = "http://www.konig.io/ns/aws/region";
+	public static final URI notificationConfiguration= new URIImpl(NOTIFICATION_CONFIGURATION);
+	public static final URI topic= new URIImpl(TOPIC);
+	public static final URI eventType= new URIImpl(EVENT_TYPE);
+	public static final URI accountId= new URIImpl(EVENT_TYPE);
+	public static final URI resourceName= new URIImpl(EVENT_TYPE);
+	public static final URI region= new URIImpl(EVENT_TYPE);
+
 
 }
