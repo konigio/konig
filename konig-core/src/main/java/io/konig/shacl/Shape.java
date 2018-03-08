@@ -89,7 +89,6 @@ public class Shape {
 	private URI aggregationOf;
 	private URI rollUpBy;
 	private String mediaTypeBaseName;
-	private URI shapeType;
 	
 	public Shape() {
 		String bnodeId = UidGenerator.INSTANCE.next();
@@ -575,14 +574,6 @@ public class Shape {
 		this.mediaTypeBaseName = mediaTypeBaseName;
 	}
 	
-
-	public URI getShapeType() {
-		return shapeType;
-	}
-
-	public void setShapeType(URI shapeType) {
-		this.shapeType = shapeType;
-	}
 
 	@RdfProperty(Konig.IRI_FORMULA)
 	public QuantifiedExpression getIriFormula() {

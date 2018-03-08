@@ -114,14 +114,10 @@ public class AuroraTransformGenerator implements ShapeHandler {
 		this.shapeFileFactory = shapeFileFactory;
 	}
 	private boolean isAuroraTransform(Shape shape) {
-		
-		return true;
-		// TODO: This method needs to be re-implemented to use rdf:type for the Shape type.
-		
-//	      return 
-//	        shape.getShapeType()!=null && 
-//	        shape.getShapeType().equals(Konig.TargetShape) &&
-//	        shape.hasDataSourceType(Konig.AwsAuroraTable);
+	      return 
+	        shape.getType()!=null && 
+	        shape.getType().contains(Konig.TargetShape) &&
+	        shape.hasDataSourceType(Konig.AwsAuroraTable);
 	 }
 	
 }

@@ -1786,6 +1786,7 @@ public class WorkbookLoader {
 			}
 
 			edge(shapeId, RDF.TYPE, SH.Shape);
+			edge(shapeId, RDF.TYPE, shapeType);
 			edge(shapeId, PROV.wasGeneratedBy, activityId);
 			edge(shapeId, RDFS.COMMENT, shapeComment);
 			edge(shapeId, SH.targetClass, targetClass);
@@ -1794,7 +1795,6 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
-			edge(shapeId, Konig.shapeType, shapeType);
 
 			if (iriTemplate != null) {
 				shapeTemplateList.add(new ShapeTemplate(shapeId, iriTemplate));
