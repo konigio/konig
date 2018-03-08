@@ -150,6 +150,7 @@ public class WorkbookLoader {
 	private static final String INVERSE_OF = "Inverse Of";
 	private static final String PROPERTY_TYPE = "Property Type";
 	private static final String SUBPROPERTY_OF = "Subproperty Of";
+	
 
 	private static final String INDIVIDUAL_NAME = "Individual Name";
 	private static final String INDIVIDUAL_ID = "Individual Id";
@@ -158,9 +159,9 @@ public class WorkbookLoader {
 
 	private static final String SHAPE_ID = "Shape Id";
 	private static final String TARGET_CLASS = "Target Class";
-	private static final String SHAPE_TYPE = "Shape Type";
 	private static final String SCOPE_CLASS = "Scope Class";
 	private static final String MEDIA_TYPE = "Media Type";
+    private static final String SHAPE_TYPE = "Shape Type";
 	private static final String AGGREGATION_OF = "Aggregation Of";
 	private static final String ROLL_UP_BY = "Roll-up By";
 	private static final String BIGQUERY_TABLE = "BigQuery Table";
@@ -417,8 +418,8 @@ public class WorkbookLoader {
 		private int shapeTargetClassCol = UNDEFINED;
 		private int shapeAggregationOfCol = UNDEFINED;
 		private int shapeRollUpByCol = UNDEFINED;
-		private int shapeTypeCol = UNDEFINED;
 		private int shapeMediaTypeCol = UNDEFINED;
+        private int shapeTypeCol = UNDEFINED;
 		private int shapeBigQueryTableCol = UNDEFINED;
 		private int shapeDatasourceCol = UNDEFINED;
 		private int shapeIriTemplateCol = UNDEFINED;
@@ -1772,8 +1773,8 @@ public class WorkbookLoader {
 			URI targetClass = uriValue(row, shapeTargetClassCol);
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
-			URI shapeType=uriValue(row, shapeTypeCol);
-			
+            URI shapeType=uriValue(row, shapeTypeCol);
+
 			String iriTemplate = stringValue(row, shapeIriTemplateCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			Literal bigqueryTable = bigQueryTableId(row, targetClass);
@@ -1786,7 +1787,7 @@ public class WorkbookLoader {
 			}
 
 			edge(shapeId, RDF.TYPE, SH.Shape);
-			edge(shapeId, RDF.TYPE, shapeType);
+            edge(shapeId, RDF.TYPE, shapeType);
 			edge(shapeId, PROV.wasGeneratedBy, activityId);
 			edge(shapeId, RDFS.COMMENT, shapeComment);
 			edge(shapeId, SH.targetClass, targetClass);
@@ -1938,7 +1939,7 @@ public class WorkbookLoader {
 		}
 
 		private void readShapeHeader(Sheet sheet) {
-			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeTypeCol=shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = UNDEFINED;
+			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -1962,9 +1963,6 @@ public class WorkbookLoader {
 					case SCOPE_CLASS:
 						shapeTargetClassCol = i;
 						break;
-					case SHAPE_TYPE:
-						shapeTypeCol = i;
-						break;
 					case TARGET_CLASS:
 						shapeTargetClassCol = i;
 						break;
@@ -1974,6 +1972,9 @@ public class WorkbookLoader {
 					case ROLL_UP_BY:
 						shapeRollUpByCol = i;
 						break;
+                    case SHAPE_TYPE:
+                        shapeTypeCol = i;
+                        break;
 					case MEDIA_TYPE:
 						shapeMediaTypeCol = i;
 						break;

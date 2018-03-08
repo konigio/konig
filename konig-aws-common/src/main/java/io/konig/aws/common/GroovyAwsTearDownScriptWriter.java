@@ -82,12 +82,19 @@ public class GroovyAwsTearDownScriptWriter {
 		}
 	}
 	
+
 	private void printAmazonBucketCommands() throws IOException {
 		File schemaDir = amazonWebService.getS3buckets();
 		if (schemaDir!=null && schemaDir.exists()) {
 			File[] fileList = schemaDir.listFiles();
 			for (File file : fileList) {
-					String path = FileUtil.relativePath(scriptFile, file);
+				 String path = FileUtil.relativePath(scriptFile, file);
+				   print(indent);
+				   print("delete AwsSnsTopic from \"");
+				   print(path);
+				   print("\"");
+				   println(" println response ");
+
 					print(indent);
 					print("delete AwsS3Bucket from \"");
 					print(path);
@@ -96,10 +103,6 @@ public class GroovyAwsTearDownScriptWriter {
 				}
 			}
 	}
-	
-	
-	
-
 	private void print(String text) throws IOException {
 		out.write(text);
 	}

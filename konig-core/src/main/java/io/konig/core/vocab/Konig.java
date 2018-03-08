@@ -165,7 +165,9 @@ public class Konig {
 //	public static final URI tableId = new URIImpl("http://www.konig.io/ns/core/tableId");
 	public static final URI GenerateEnumTables = new URIImpl("http://www.konig.io/ns/core/GenerateEnumTables");
 	public static final URI bigQueryTableId = new URIImpl("http://www.konig.io/ns/core/bigQueryTableId");
-	
+    public static final URI SourceShape=new URIImpl("http://www.konig.io/ns/core/SourceShape");
+    public static final URI TargetShape=new URIImpl("http://www.konig.io/ns/core/TargetShape");
+
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(Konig.JAVA_NAMESPACE);
