@@ -102,31 +102,31 @@ public class ExtentTest {
 		try {
 			cont.validateQueryParam("timeInterval.minInclusive", "2015-06-01SDS" , XMLSchema.DATE);
 		}catch(Exception ex) {
-			assertEquals("IllegalArgumentException : Invalid format key : timeInterval.minInclusive  /  value : 2015-06-01SDS", ex.getMessage());
+			assertEquals("Invalid Input", ex.getMessage());
 		}
 		
 		try {
 			cont.validateQueryParam(".aggregate", "avgs" , XMLSchema.STRING);
 		}catch(Exception ex) {
-			assertEquals("IllegalArgumentException : Invalid format key : .aggregate  /  value : avgs", ex.getMessage());
+			assertEquals("Invalid Input", ex.getMessage());
 		}
 		
 		try {
 			cont.validateQueryParam(".xSort", "desc@@@" , XMLSchema.STRING);
 		}catch(Exception ex) {
-			assertEquals("IllegalArgumentException : Invalid format key : .xSort  /  value : desc@@@", ex.getMessage());
+			assertEquals("Invalid Input", ex.getMessage());
 		}
 		
 		try {
 			cont.validateQueryParam(".limit", "1000s" , XMLSchema.STRING);
 		}catch(Exception ex) {
-			assertEquals("IllegalArgumentException : Invalid format key : .limit  /  value : 1000s", ex.getMessage());
+			assertEquals("Invalid Input", ex.getMessage());
 		}
 		
 		try {
 			cont.validateQueryParam(".view", "vnd.pearson.chart.fusioncharts.bar<script>" , XMLSchema.STRING);
 		}catch(Exception ex) {
-			assertEquals("IllegalArgumentException : Invalid format key : .view  /  value : vnd.pearson.chart.fusioncharts.bar<script>", ex.getMessage());
+			assertEquals("Invalid Input", ex.getMessage());
 		}
 		
 		assertEquals("Select * from table where name = \\''", cont.escapeUtils("Select * from table where name = '"));
