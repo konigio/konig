@@ -24,6 +24,8 @@ package io.konig.data.app.common;
 import java.io.Writer;
 import java.text.MessageFormat;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.joda.time.DateTime;
@@ -128,7 +130,9 @@ public class ExtentContainer extends AbstractContainer {
 				} else if(key.endsWith(VIEW)) {
 					validateQueryParam(key, queryParams.get(key), XMLSchema.STRING);
 				} else if (key.equals("xAxis")  || key.equals("yAxis")){
-					
+					if(!(validateValue(queryParams.get(keyParam)))){
+						throw new DataAppException("Invalid Input",400);
+					}
 				} else if(key.equals(AGGREGATE)){
 					validateQueryParam(key, queryParams.get(key), XMLSchema.STRING);
 					builder.setAggregate(value);
@@ -151,14 +155,18 @@ public class ExtentContainer extends AbstractContainer {
 						EntityStructure struct = structureService.structureOfShape(shapeId.toString());
 						FieldPath measure = FieldPath.createFieldPath(key, struct);
 						if (measure == null) {
-							throw new DaoException("Field not found in Shape: " + shapeId.toString());
+							throw new DataAppException("Invalid Input",400);
 						}
 					} catch (DaoException ex) {
-						throw new DataAppException(ex.getMessage());
+						throw new DataAppException("Invalid Input",400);
 					}
+					if(validateValue(queryParams.get(keyParam))){
 					builder.beginPredicateConstraint().setPropertyName(key)
-						.setOperator(ConstraintOperator.EQUAL).setValue(value)
+						.setOperator(ConstraintOperator.EQUAL).setValue(queryParams.get(keyParam))
 						.endPredicateConstraint();
+					}else{
+						throw new DataAppException("Invalid Input",400);
+					}
 				}				
 			}
 		}
@@ -173,9 +181,8 @@ public class ExtentContainer extends AbstractContainer {
 	}
 	
 	public boolean validateQueryParam(String key, String value, URI datatype ) throws DataAppException {
-		String errorMsg = MessageFormat.format("IllegalArgumentException : Invalid format key : {0}  /  value : {1}",
-				key, value);
-		try {
+
+	try {
 			if (XMLSchema.DATE.equals(datatype)) {			
 				DateTime localTime = new DateTime(value).toDateTime(DateTimeZone.UTC);
 				localTime.toString(ISODateTimeFormat.date());			
@@ -201,14 +208,52 @@ public class ExtentContainer extends AbstractContainer {
 				Long.parseLong(value);
 				return true;
 			}
-			throw new DataAppException(errorMsg);
+			throw new DataAppException("Invalid Input",400);
 		} catch (Exception ex) {
-			throw new DataAppException(errorMsg);
+			throw new DataAppException("Invalid Input",400);
 		}
 	}
 	
 	public String escapeUtils(String value) {
 		return StringEscapeUtils.escapeHtml(StringEscapeUtils.escapeSql(StringEscapeUtils.escapeJavaScript(value)));
 	}
+	
+	 boolean validateValue (String value )throws DataAppException{
+
+		  Pattern special = Pattern.compile ("[!@#$%&*()+=|<>?{}\\[\\]~]");
+		  Matcher hasSpecial = special.matcher(value);		
+				try{
+					value = value.toUpperCase();
+					
+					if(hasSpecial.find()){
+						return false;
+					}else if ( (value.contains("SELECT")) && (value.contains("FROM")) ){
+						return false;
+					}else if ( (value.contains("INSERT")) && (value.contains("INTO")) ){
+						return false;
+					}else if ( (value.contains("DELETE")) && (value.contains("FROM")) ){
+						return false;
+					}else if ( (value.contains("SCRIPT")) && (value.contains("HTML")) ){
+						return false;
+					}else if ( (value.contains("SCRIPT")) && (value.contains("ALERT")) ){
+						return false;
+					}else if ( (value.contains("HTML")) && (value.contains("ALERT")) ){
+						return false;
+					}else if (value.contains("HTML")){
+						return false;
+					}else if (value.contains("ALERT")){
+						return false;
+					}else if (value.contains("SCRIPT")){
+						return false;
+					}else if (value.contains("UPDATE")){
+						return false;
+					}else{
+						return true;
+					}
+				}catch(Exception ex){
+					throw new DataAppException("Invalid Input",400);
+				}
+				
+	 }
 
 }
