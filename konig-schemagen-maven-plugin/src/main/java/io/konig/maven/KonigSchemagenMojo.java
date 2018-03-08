@@ -92,6 +92,7 @@ import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.io.ShapeFileFactory;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.data.app.common.DataApp;
@@ -130,6 +131,7 @@ import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
+import io.konig.schemagen.aws.AWSAuroraShapeFileCreator;
 import io.konig.schemagen.aws.AWSS3BucketWriter;
 import io.konig.schemagen.aws.AwsAuroraTableWriter;
 import io.konig.schemagen.aws.AwsResourceGenerator;
@@ -186,7 +188,14 @@ import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.showl.WorkbookToTurtleRequest;
 import io.konig.showl.WorkbookToTurtleTransformer;
+import io.konig.transform.aws.AuroraTransformGenerator;
 import io.konig.transform.bigquery.BigQueryTransformGenerator;
+import io.konig.transform.factory.ShapeRuleFactory;
+import io.konig.transform.proto.AwsAuroraChannelFactory;
+import io.konig.transform.proto.BigQueryChannelFactory;
+import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelToShapeRule;
+import io.konig.transform.sql.factory.SqlFactory;
 import io.konig.yaml.Yaml;
 import io.konig.yaml.YamlParseException;
 import net.sourceforge.plantuml.SourceFileReader;
@@ -745,6 +754,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			config.configure(amazonWebServices);
 			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
 			File bucketsDir = Configurator.checkNull(amazonWebServices.getS3buckets());
+			File transformsDir = Configurator.checkNull(amazonWebServices.getTransforms());
 
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			if(tablesDir != null) {
@@ -756,6 +766,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if(bucketsDir != null){
 				AWSS3BucketWriter awsS3=new AWSS3BucketWriter(bucketsDir);
 				resourceGenerator.add(awsS3);
+			}
+			
+			if(transformsDir != null){
+				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
+				ShapeRuleFactory shapeRuleFactory=new ShapeRuleFactory(shapeManager, shapeModelFactory, new ShapeModelToShapeRule());
+				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir));
+				resourceGenerator.add(generator);
 			}
 			resourceGenerator.dispatch(shapeManager.listShapes());
 			GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);

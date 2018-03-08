@@ -158,6 +158,7 @@ public class WorkbookLoader {
 
 	private static final String SHAPE_ID = "Shape Id";
 	private static final String TARGET_CLASS = "Target Class";
+	private static final String SHAPE_TYPE = "Shape Type";
 	private static final String SCOPE_CLASS = "Scope Class";
 	private static final String MEDIA_TYPE = "Media Type";
 	private static final String AGGREGATION_OF = "Aggregation Of";
@@ -416,6 +417,7 @@ public class WorkbookLoader {
 		private int shapeTargetClassCol = UNDEFINED;
 		private int shapeAggregationOfCol = UNDEFINED;
 		private int shapeRollUpByCol = UNDEFINED;
+		private int shapeTypeCol = UNDEFINED;
 		private int shapeMediaTypeCol = UNDEFINED;
 		private int shapeBigQueryTableCol = UNDEFINED;
 		private int shapeDatasourceCol = UNDEFINED;
@@ -1770,7 +1772,8 @@ public class WorkbookLoader {
 			URI targetClass = uriValue(row, shapeTargetClassCol);
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
-
+			URI shapeType=uriValue(row, shapeTypeCol);
+			
 			String iriTemplate = stringValue(row, shapeIriTemplateCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			Literal bigqueryTable = bigQueryTableId(row, targetClass);
@@ -1791,6 +1794,7 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
+			edge(shapeId, Konig.shapeType, shapeType);
 
 			if (iriTemplate != null) {
 				shapeTemplateList.add(new ShapeTemplate(shapeId, iriTemplate));
@@ -1934,7 +1938,7 @@ public class WorkbookLoader {
 		}
 
 		private void readShapeHeader(Sheet sheet) {
-			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = UNDEFINED;
+			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeTypeCol=shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -1957,6 +1961,9 @@ public class WorkbookLoader {
 						break;
 					case SCOPE_CLASS:
 						shapeTargetClassCol = i;
+						break;
+					case SHAPE_TYPE:
+						shapeTypeCol = i;
 						break;
 					case TARGET_CLASS:
 						shapeTargetClassCol = i;
