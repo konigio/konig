@@ -1,0 +1,44 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix aws: <http://www.konig.io/ns/aws/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:SourcePersonShape a sh:Shape , konig:SourceShape; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/hSbp2OqGW5gAAAFiAfnJCw> ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI ; 
+	sh:property  [ 
+		sh:path alias:first_name ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		konig:formula '''@prefix schema: <http://schema.org/> .
+.schema:givenName'''
+	 ]  ,  [ 
+		sh:path alias:last_name ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		konig:formula '''@prefix schema: <http://schema.org/> .
+.schema:familyName''' ]  ; 
+	konig:shapeDataSource <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/SourcePersonShape> , <https://amazonaws.konig.io/s3/bucket/${environmentName}-edw-core-s3bucket3> . 
+
+<http://www.konig.io/activity/hSbp2OqGW5gAAAFiAfnJCw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-03-07T14:39:30.044-05:00"^^xsd:dateTime . 
+
+<http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/SourcePersonShape> a konig:AwsAurora , konig:DataSource ; 
+	aws:tableReference  [ 
+		aws:awsAuroraHost "${awsAuroraHost}" ; 
+		aws:awsSchema "${awsAuroraSchema}" ; 
+		aws:awsTableName "SourcePersonShape" ]  . 
+
+<https://amazonaws.konig.io/s3/bucket/${environmentName}-edw-core-s3bucket3> a konig:S3Bucket , konig:DataSource ; 
+	aws:bucketKey "edw-core-s3bucket3" ; 
+	aws:bucketName "${environmentName}-edw-core-s3bucket3" ; 
+	aws:region "us-east-1" ; 
+	aws:bucketMediaType "application/doc" . 
