@@ -7,7 +7,7 @@
 @prefix shape: <http://example.com/shapes/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-shape:TargetPersonShape a sh:Shape ; 
+shape:TargetPersonShape a sh:Shape , konig:TargetShape; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/hSbp2OqGW5gAAAFiAfnJCw> ; 
 	sh:targetClass schema:Person ; 
 	sh:nodeKind sh:IRI ; 
