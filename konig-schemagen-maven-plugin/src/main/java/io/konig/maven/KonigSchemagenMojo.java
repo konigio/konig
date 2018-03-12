@@ -88,6 +88,7 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
@@ -95,6 +96,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.ShapeFileFactory;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
+import io.konig.core.vocab.Konig;
 import io.konig.data.app.common.DataApp;
 import io.konig.data.app.generator.DataAppGenerator;
 import io.konig.data.app.generator.DataAppGeneratorException;
@@ -102,6 +104,7 @@ import io.konig.data.app.generator.EntityStructureWorker;
 import io.konig.estimator.MultiSizeEstimateRequest;
 import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
+import io.konig.etl.aws.EtlRouteBuilder;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
@@ -326,7 +329,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			updateRdf();
 			
 			computeSizeEstimates();
-			
+			generateCamelEtl();
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
@@ -1014,6 +1017,46 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			projectJsonldFile.getParentFile().mkdirs();
 			AllJsonldWriter all = new AllJsonldWriter();
 			all.writeJSON(nsManager, owlGraph, excludeNamespace, projectJsonldFile);
+		}
+		
+	}
+	private void generateCamelEtl() throws MojoExecutionException {
+		File outDir = null;
+		try {
+			File derivedDir = new File(rdfSourceDir, "shape-dependencies");
+		
+			if (derivedDir.exists()) {
+				Graph graph = new MemoryGraph();
+				NamespaceManager nsManager = new MemoryNamespaceManager();
+				RdfUtil.loadTurtle(derivedDir, graph, nsManager);
+				
+				for (Vertex targetShapeVertex : graph.vertices()) {					
+					Shape targetShape = shapeManager.getShapeById(targetShapeVertex.getId());
+					
+					if (targetShape.hasDataSourceType(Konig.AwsAuroraTable)) {
+						if(amazonWebServices != null) {
+							outDir = amazonWebServices.getCamelEtl();
+						}						
+						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.DERIVEDFROM).toVertexList();
+						
+						if (!sourceList.isEmpty()) {
+							Vertex sourceShapeVertex = sourceList.get(0);
+							Resource sourceShapeId = sourceShapeVertex.getId();
+							Shape sourceShape = shapeManager.getShapeById(sourceShapeId);
+
+							if (sourceShape.hasDataSourceType(Konig.AwsAuroraTable)
+									&& sourceShape.hasDataSourceType(Konig.S3Bucket)) {
+								EtlRouteBuilder builder = new EtlRouteBuilder(sourceShape, targetShape, outDir);
+								builder.generate();
+
+							}
+						}
+					}
+				}
+			}
+			
+		} catch (Exception ex) {
+			throw new MojoExecutionException("Failed to generate camel etl routes", ex);
 		}
 		
 	}
