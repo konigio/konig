@@ -46,6 +46,8 @@ public class AmazonWebServicesConfig {
 	@Parameter(property="konig.aws.aurora.transform", defaultValue="${konig.aws.directory}/aurora/transform")
 	private File transforms;
 
+	@Parameter(property="konig.aws.etl", defaultValue="${konig.aws.directory}/camel-etl")
+	private File camelEtl;
 	
 	public AmazonWebServicesConfig() {
 			
@@ -108,5 +110,11 @@ public class AmazonWebServicesConfig {
 		this.transforms = transforms;
 	}
 	
-	
+	public File getCamelEtl() {
+		return camelEtl;
+	}
+
+	public void setCamelEtl(File camelEtl) {
+		this.camelEtl = camelEtl;
+	}
 }

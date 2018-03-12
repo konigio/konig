@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camel="http://camel.apache.org/schema/spring"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd  http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<bean id="prepareToDeleteFromBucket" class="io.konig.etl.aws.PrepareToDeleteFromBucket" />
+	<bean id="prepareToDeleteFromStagingTable" class="io.konig.etl.aws.PrepareToDeleteFromStagingTable" />
+	<bean id="prepareToExport" class="io.konig.etl.aws.PrepareToExport" />
+	<bean id="prepareToLoadStagingTable" class="io.konig.etl.aws.PrepareToLoadStagingTable" />
+	<bean id="prepareToLoadTargetTable" class="io.konig.etl.aws.PrepareToLoadTargetTable" />
+
+	<bean id="mySqlDataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="${aws.rds.dbUrl}" />
+		<property name="username" value="${aws.rds.username}" />
+		<property name="password" value="${aws.rds.password}" />
+	</bean>
+	
+</beans>
