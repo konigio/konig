@@ -217,7 +217,6 @@ public class SqlFactory {
 			if (tableRef != null) {
 						TableName tableName = tableName(tableRef, null);
 						List<ColumnExpression> columnList = columnList(shapeRule);
-						sort(columnList);
 						SelectExpression select = selectExpression(shapeRule);
 						insert = new InsertStatement(tableName.getExpression(), columnList, select);
 			}
@@ -238,6 +237,9 @@ public class SqlFactory {
 		}
 
 		private List<ColumnExpression> columnList(ShapeRule shapeRule) {
+			List<PropertyRule> propRulelist = new ArrayList<>(shapeRule.getPropertyRules());
+			Collections.sort(propRulelist);
+			
 			List<ColumnExpression> list = new ArrayList<>();
 			IdRule idRule = shapeRule.getIdRule();
 
@@ -245,7 +247,7 @@ public class SqlFactory {
 				list.add(new ColumnExpression(idColumnName));
 			}
 
-			for (PropertyRule p : shapeRule.getPropertyRules()) {
+			for (PropertyRule p : propRulelist) {
 				String columnName = p.getPredicate().getLocalName();
 				list.add(new ColumnExpression(columnName));
 			}

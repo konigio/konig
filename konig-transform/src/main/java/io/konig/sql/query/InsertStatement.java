@@ -54,7 +54,7 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 	@Override
 	public void print(PrettyPrintWriter out) {
 		
-		out.print("INSERT ");
+		out.print("INSERT INTO ");
 		out.print(targetTable);
 		out.print(" (");
 		out.pushIndent();
