@@ -3,6 +3,8 @@ package io.konig.etl.aws;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 /*
  * #%L
@@ -31,14 +33,24 @@ import org.apache.commons.io.IOUtils;
 public class PrepareToLoadTargetTable implements Processor {
 
 	public void process(Exchange exchange) throws Exception {
-		String dmlScript = exchange.getIn().getHeader("dmlScript", String.class);
-		exchange.getOut().setBody(fileToString(new File("konig/aws/camel-etl/" + dmlScript + ".sql")));
+		String dmlScript = exchange.getIn().getHeader("dmlScript", String.class);	
+		String currDate=currDate();
+		String dml=fileToString(new File("konig/aws/camel-etl/" + dmlScript + ".sql")).replace("{modified}", currDate);
+		exchange.getOut().setBody(dml);
+		exchange.getIn().setHeader("modified", currDate);
 		exchange.getOut().setHeaders(exchange.getIn().getHeaders());
 	}
 
+	private String currDate() {
+	Calendar cal = Calendar.getInstance();
+	String DATE_FORMAT_NOW = "yyyy-MM-dd HH:mm:ss";
+	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
+	return sdf.format(cal.getTime());
+	}
 	private String fileToString(File dmlFile) throws IOException {
 		try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(dmlFile.getPath())) {
 			return IOUtils.toString(inputStream);
 		}
 	}
+	
 }
