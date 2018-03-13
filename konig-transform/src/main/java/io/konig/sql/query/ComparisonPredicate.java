@@ -60,4 +60,12 @@ public class ComparisonPredicate extends AbstractExpression implements BooleanTe
 		right.print(out);
 	}
 
+
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "left", left);
+		visit(visitor, "right", right);
+		
+	}
+
 }

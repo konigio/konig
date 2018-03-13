@@ -56,4 +56,12 @@ public class GroupByClause extends AbstractExpression {
 		}
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		for (GroupingElement e : elementList) {
+			visit(visitor, "element", e);
+		}
+		
+	}
+
 }

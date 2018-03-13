@@ -78,4 +78,13 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 		out.print(selectQuery);
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		for (ColumnExpression column : columns) {
+			visit(visitor, "column", column);
+		}
+		visit(visitor, "selectQuery", selectQuery);
+		visit(visitor, "targetTable", targetTable);
+	}
+
 }

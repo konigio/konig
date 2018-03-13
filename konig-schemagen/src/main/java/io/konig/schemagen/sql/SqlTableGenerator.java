@@ -71,9 +71,28 @@ public class SqlTableGenerator {
 			Integer minCount = p.getMinCount();
 			boolean nullable = (minCount!=null && minCount>0) ? false : true;
 			// TODO: specify the key type
-			return new SqlColumn(predicate.getLocalName(), datatype, null, nullable);
+			return new SqlColumn(predicate.getLocalName(), datatype, getKeyType(p), nullable);
 		}
 		return null;
 	}
+	
+	private SqlKeyType getKeyType(PropertyConstraint p) throws SchemaGeneratorException {
+		SqlKeyType keyType = null;
 
+		if (p.getStereotype() != null) {
+
+			switch (p.getStereotype().getLocalName()) {
+			case "primaryKey":
+				keyType = SqlKeyType.PRIMARY_KEY;
+				break;
+			case "uniqueKey":
+				keyType = SqlKeyType.UNIQUE_KEY;
+				break;
+			default:
+				throw new SchemaGeneratorException("Invalid Key Type: " + p.getStereotype().getLocalName());
+			}
+		}
+
+		return keyType;
+	}
 }

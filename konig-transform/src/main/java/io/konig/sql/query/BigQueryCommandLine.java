@@ -114,6 +114,12 @@ public class BigQueryCommandLine extends AbstractExpression {
 		
 		out.setPrettyPrint(pretty);
 	}
+
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "dml", dml);
+		
+	}
 	
 	
 

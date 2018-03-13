@@ -41,6 +41,12 @@ public class DateTimeUnitExpression extends AbstractExpression implements ValueE
 	public String getValue() {
 		return value;
 	}
+
+
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		
+	}
 	
 	
 

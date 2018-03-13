@@ -24,6 +24,7 @@ package io.konig.transform.rule;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.formula.FunctionExpression;
 import io.konig.sql.query.GroupingElement;
+import io.konig.sql.query.QueryExpressionVisitor;
 
 public class FunctionGroupingElement implements GroupingElement {
 	
@@ -41,6 +42,12 @@ public class FunctionGroupingElement implements GroupingElement {
 
 	public FunctionExpression getFunction() {
 		return function;
+	}
+
+	@Override
+	public void dispatch(QueryExpressionVisitor visitor) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	

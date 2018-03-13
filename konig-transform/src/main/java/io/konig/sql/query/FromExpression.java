@@ -62,5 +62,13 @@ public class FromExpression extends AbstractExpression implements QueryExpressio
 		
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		for (TableItemExpression item : tableItems) {
+			visit(visitor, "tableItem", item);
+		}
+		
+	}
+
 	
 }
