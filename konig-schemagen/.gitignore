@@ -1,5 +1,6 @@
 /target/
 /pom.xml.versionsBackup
+/velocity.*
 
 .settings
 .classpath

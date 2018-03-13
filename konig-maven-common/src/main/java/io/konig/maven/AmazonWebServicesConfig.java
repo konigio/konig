@@ -39,10 +39,15 @@ public class AmazonWebServicesConfig {
 	
 	@Parameter(property="konig.aws.teardown.script.file", defaultValue="${konig.aws.directory}/scripts/tear-down.groovy")
 	private File tearDownScriptFile;
-
+	
 	@Parameter(property="konig.aws.deployment.version", defaultValue="${konig.version}")
 	private String konigVersion;
+	
+	@Parameter(property="konig.aws.aurora.transform", defaultValue="${konig.aws.directory}/aurora/transform")
+	private File transforms;
 
+	@Parameter(property="konig.aws.etl", defaultValue="${konig.aws.directory}/camel-etl")
+	private File camelEtl;
 	
 	public AmazonWebServicesConfig() {
 			
@@ -96,5 +101,20 @@ public class AmazonWebServicesConfig {
 	public void setTearDownScriptFile(File tearDownScriptFile) {
 		this.tearDownScriptFile = tearDownScriptFile;
 	}
+
+	public File getTransforms() {
+		return transforms;
+	}
+
+	public void setTransforms(File transforms) {
+		this.transforms = transforms;
+	}
 	
+	public File getCamelEtl() {
+		return camelEtl;
+	}
+
+	public void setCamelEtl(File camelEtl) {
+		this.camelEtl = camelEtl;
+	}
 }

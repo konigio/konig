@@ -90,9 +90,6 @@ public class Konig {
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI DerivedShape = new URIImpl("http://www.konig.io/shapes/DerivedShape");
 	
-
-	
-	
 	// Data Sources
 
 	public static final URI DataSource = new URIImpl(DATA_SOURCE);

@@ -111,6 +111,7 @@
     	<module>../konig-aws-model</module>
     	<module>../konig-aws-common</module>
    	    <module>../konig-aws-deploy-maven-plugin</module>
+   	    <module>../konig-etl-generator</module>
 	</modules>
 
 	<developers>
