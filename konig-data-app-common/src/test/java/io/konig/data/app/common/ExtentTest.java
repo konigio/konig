@@ -36,14 +36,15 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.dao.core.ConstraintOperator;
 import io.konig.dao.core.Format;
+import io.konig.dao.core.FusionCharts;
 import io.konig.dao.core.PredicateConstraint;
 import io.konig.dao.core.DataFilter;
 import io.konig.dao.core.ShapeQuery;
 import io.konig.dao.core.ShapeReadService;
-import io.konig.yaml.Yaml;
 
 public class ExtentTest {
 	
@@ -83,6 +84,55 @@ public class ExtentTest {
 		assertEquals(ConstraintOperator.EQUAL,  p.getOperator());
 		assertEquals("id", p.getPropertyName());
 		assertEquals(individualId.stringValue(), p.getValue());
+	}
+	
+	@Test
+	public void testQueryParam() throws DataAppException {
+		ExtentContainer cont = new ExtentContainer();
+		assertTrue(cont.validateQueryParam("timeInterval.minInclusive", "2015-06-01", XMLSchema.DATE));
+		assertTrue(cont.validateQueryParam(".view", FusionCharts.BAR_MEDIA_TYPE, XMLSchema.STRING));
+		assertTrue(cont.validateQueryParam(".aggregate", "avg" , XMLSchema.STRING));
+		assertTrue(cont.validateQueryParam(".xSort", "desc" , XMLSchema.STRING));
+		assertTrue(cont.validateQueryParam(".ySort", "asc" , XMLSchema.STRING));
+		assertTrue(cont.validateQueryParam(".limit", "100" , XMLSchema.LONG));
+		assertTrue(cont.validateQueryParam(".offset", "100" , XMLSchema.LONG));		
+		
+		//Negative Test Cases
+			
+		try {
+			cont.validateQueryParam("timeInterval.minInclusive", "2015-06-01SDS" , XMLSchema.DATE);
+		}catch(Exception ex) {
+			assertEquals("Invalid Input", ex.getMessage());
+		}
+		
+		try {
+			cont.validateQueryParam(".aggregate", "avgs" , XMLSchema.STRING);
+		}catch(Exception ex) {
+			assertEquals("Invalid Input", ex.getMessage());
+		}
+		
+		try {
+			cont.validateQueryParam(".xSort", "desc@@@" , XMLSchema.STRING);
+		}catch(Exception ex) {
+			assertEquals("Invalid Input", ex.getMessage());
+		}
+		
+		try {
+			cont.validateQueryParam(".limit", "1000s" , XMLSchema.STRING);
+		}catch(Exception ex) {
+			assertEquals("Invalid Input", ex.getMessage());
+		}
+		
+		try {
+			cont.validateQueryParam(".view", "vnd.pearson.chart.fusioncharts.bar<script>" , XMLSchema.STRING);
+		}catch(Exception ex) {
+			assertEquals("Invalid Input", ex.getMessage());
+		}
+		
+		assertEquals("Select * from table where name = \\''", cont.escapeUtils("Select * from table where name = '"));
+		assertEquals("ASAS&lt;script&gt;alert()&lt;\\/script&gt;", cont.escapeUtils("ASAS<script>alert()</script>"));
+		assertEquals("grade.name" , cont.escapeUtils("grade.name"));
+		assertEquals("uniqueCount", cont.escapeUtils("uniqueCount"));
 	}
 	
 	private URI uri(String value) {

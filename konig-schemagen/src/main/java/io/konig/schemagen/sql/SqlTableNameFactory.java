@@ -23,6 +23,7 @@ package io.konig.schemagen.sql;
 
 import java.util.List;
 
+import io.konig.aws.datasource.AwsAurora;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.omcs.datasource.OracleTable;
@@ -44,6 +45,10 @@ public class SqlTableNameFactory {
 				if (ds instanceof OracleTable) {
 					OracleTable table = (OracleTable) ds;
 					return table.getTableName();
+				}
+				if (ds instanceof AwsAurora) {
+					AwsAurora table = (AwsAurora) ds;
+					return table.getAwsTableName();
 				}
 			}
 		}

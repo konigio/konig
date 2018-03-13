@@ -1,0 +1,27 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<parent>
+		<groupId>io.konig</groupId>
+		<artifactId>konig-parent</artifactId>
+		<relativePath>../konig-parent/pom.xml</relativePath>
+		<version>2.0.0-8-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>konig-aws-common</artifactId>
+	<packaging>jar</packaging>
+	<name>Konig AWS Common</name>
+	<dependencies>
+		<dependency>
+			<groupId>io.konig</groupId>
+			<artifactId>konig-maven-common</artifactId>
+			<version>${konig.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>

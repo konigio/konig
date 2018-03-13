@@ -1,0 +1,4 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix shape: <http://example.com/shapes/> .
+
+shape:AuroraPersonShape konig:derivedfrom shape:PersonShape, shape:OriginPersonShape .  

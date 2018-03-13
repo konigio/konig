@@ -39,6 +39,7 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.VertexCopier;
+import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
@@ -78,6 +79,8 @@ public class WorkbookToTurtleTransformer {
 		File owlOutDir = request.getOwlOutDir();
 		File shapesOutDir = request.getShapesOutDir();
 		File gcpOutDir = request.getGcpOutDir();
+		File awsOutDir = request.getAwsOutDir();
+		File derivedDir = request.getDerivedFormOutDir();
 		
 		if (workbookFile == null) {
 			throw new SpreadsheetException("workbookFile must be defined");
@@ -113,6 +116,9 @@ public class WorkbookToTurtleTransformer {
 			TurtleGenerator turtleGenerator = new TurtleGenerator();
 			if (gcpOutDir != null) {
 				turtleGenerator.generateAll(GCP.GoogleCloudSqlInstance, gcpOutDir, graph);
+			}
+			if(awsOutDir != null) {
+				turtleGenerator.generateAll(AWS.DbCluster, awsOutDir, graph);
 			}
 			
 			

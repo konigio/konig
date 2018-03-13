@@ -44,6 +44,7 @@ public class Konig {
 	public static final String MEASURE = "http://www.konig.io/ns/core/measure";
 	public static final String ATTRIBUTE = "http://www.konig.io/ns/core/attribute";
 	public static final String DIMENSION = "http://www.konig.io/ns/core/dimension";
+	public static final URI DERIVEDFROM = new URIImpl("http://www.konig.io/ns/core/derivedfrom");
 	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
@@ -89,9 +90,6 @@ public class Konig {
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI DerivedShape = new URIImpl("http://www.konig.io/shapes/DerivedShape");
 	
-
-	
-	
 	// Data Sources
 
 	public static final URI DataSource = new URIImpl(DATA_SOURCE);
@@ -102,6 +100,8 @@ public class Konig {
 	public static final URI GoogleCloudStorageBucket = new URIImpl("http://www.konig.io/ns/core/GoogleCloudStorageBucket");
 	public static final URI GoogleCloudSqlTable = new URIImpl("http://www.konig.io/ns/core/GoogleCloudSqlTable");
 	public static final URI OracleTable = new URIImpl("http://www.konig.io/ns/core/OracleTable");
+	public static final URI AwsAuroraTable = new URIImpl("http://www.konig.io/ns/core/AwsAurora");
+	public static final URI S3Bucket = new URIImpl("http://www.konig.io/ns/core/S3Bucket");
 	public static final URI shapeDataSource = new URIImpl(SHAPE_DATA_SOURCE);
 	public static final URI bigQuerySource = new URIImpl(BIG_QUERY_SOURCE);
 	
@@ -163,7 +163,9 @@ public class Konig {
 //	public static final URI tableId = new URIImpl("http://www.konig.io/ns/core/tableId");
 	public static final URI GenerateEnumTables = new URIImpl("http://www.konig.io/ns/core/GenerateEnumTables");
 	public static final URI bigQueryTableId = new URIImpl("http://www.konig.io/ns/core/bigQueryTableId");
-	
+    public static final URI SourceShape=new URIImpl("http://www.konig.io/ns/core/SourceShape");
+    public static final URI TargetShape=new URIImpl("http://www.konig.io/ns/core/TargetShape");
+
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(Konig.JAVA_NAMESPACE);

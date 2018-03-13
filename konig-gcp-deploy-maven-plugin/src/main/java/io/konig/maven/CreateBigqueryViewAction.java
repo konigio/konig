@@ -24,6 +24,7 @@ package io.konig.maven;
 import java.io.File;
 import java.io.IOException;
 
+import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableInfo;
 
@@ -40,10 +41,17 @@ public class CreateBigqueryViewAction {
 	public KonigDeployment from(String path) throws IOException {
 		GoogleCloudService service = deployment.getService();
 		File file = deployment.file(path);
+		BigQuery bigquery = service.bigQuery();
 		try {
 			TableInfo info = service.readViewInfo(file);
-			Table table = service.bigQuery().create(info);
-			deployment.setResponse("Created  View " + table.getTableId());
+			Table table = bigquery.getTable(info.getTableId()); 
+			if (table == null) {
+				Table table1 = service.bigQuery().create(info);
+				deployment.setResponse("Created  View " + table1.getTableId());
+			}
+			else{
+				deployment.setResponse("View already available");
+			}
 		} catch (Exception ex) {
 			throw ex;
 		}

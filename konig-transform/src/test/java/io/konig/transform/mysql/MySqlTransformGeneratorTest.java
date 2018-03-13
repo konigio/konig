@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import io.konig.transform.proto.AbstractShapeModelToShapeRuleTest;

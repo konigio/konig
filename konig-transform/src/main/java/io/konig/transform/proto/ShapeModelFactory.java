@@ -42,6 +42,7 @@ import io.konig.core.path.Step;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
+import io.konig.formula.HasAggregationVisitor;
 import io.konig.formula.IriValue;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
@@ -64,6 +65,7 @@ public class ShapeModelFactory {
 	private PropertyMapper propertyMapper;
 	private VariableShapeFactory variableShapeFactory;
 	private boolean failIfPropertyNotMapped=true;
+	private HasAggregationVisitor aggregationVisitor;
 	
 	public ShapeModelFactory(ShapeManager shapeManager, DataChannelFactory dataChannelFactory, OwlReasoner reasoner) {
 		if (dataChannelFactory == null) {
@@ -169,9 +171,12 @@ public class ShapeModelFactory {
 
 
 	private GroupByItem groupByItem(ShapeModel shapeModel, QuantifiedExpression formula) throws ShapeTransformException {
-		if (formula==null) {
+		
+		
+		if (!hasAggregation(formula)) {
 			return null;
 		}
+		
 		PrimaryExpression primary = formula.asPrimaryExpression();
 		if (primary instanceof PathExpression) {
 			PathExpression path = (PathExpression) primary;
@@ -207,8 +212,7 @@ public class ShapeModelFactory {
 								shapeModel = result.getValueModel();
 								
 							} else {
-								PropertyGroup expectedGroup = shapeModel.getClassModel().getPropertyGroupByPredicate(predicate);
-								System.out.println(expectedGroup);
+								
 								String msg = MessageFormat.format("In shape<{0}>, property <{1}> not found in path: {2}", 
 										RdfUtil.localName(shapeModel.getShape().getId()),
 										term.toString(), path.toString());
@@ -225,6 +229,23 @@ public class ShapeModelFactory {
 			
 		}
 		return null;
+	}
+
+
+
+
+	private boolean hasAggregation(QuantifiedExpression formula) {
+		if (formula != null) {
+			if (aggregationVisitor == null) {
+				aggregationVisitor = new HasAggregationVisitor();
+			}
+			aggregationVisitor.reset();
+			
+			formula.dispatch(aggregationVisitor);
+			
+			return aggregationVisitor.visitedAggregation();
+		}
+		return false;
 	}
 
 

@@ -1,0 +1,27 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix aws:   <http://www.konig.io/ns/aws/> .
+
+<https://amazonaws.konig.io/s3/bucket/${beginVar}environmentName${endVar}-${bucketKey}>
+	a konig:S3Bucket, konig:DataSource;
+	aws:bucketKey "${bucketKey}";
+  aws:bucketName "${beginVar}environmentName${endVar}-${bucketKey}";
+  aws:region "${awsRegion}";
+  aws:bucketMediaType "${bucketMediaType}";
+  aws:notificationConfiguration [
+  	rdf:type aws:TopicConfiguration;
+    aws:topic <arn:aws:sns:${awsRegion}:${aws-account-id}:${shapeLocalName}_CreateEvent> ;
+    aws:eventType "s3:ObjectCreated:*"
+  ] 
+.
+<arn:aws:sns:${awsRegion}:${aws-account-id}:${shapeLocalName}_CreateEvent> 
+  rdf:type aws:Topic ;
+  aws:resourceName "${shapeLocalName}_CreateEvent" ;
+  aws:region "${awsRegion}" ;
+  aws:accountId "${aws-account-id}" .
+
+<${shapeId}> konig:shapeDataSource
+	<https://amazonaws.konig.io/s3/bucket/${beginVar}environmentName${endVar}-${bucketKey}>,
+	
+.
+
+

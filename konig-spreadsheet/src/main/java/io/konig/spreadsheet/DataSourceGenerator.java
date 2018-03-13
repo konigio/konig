@@ -74,8 +74,7 @@ public class DataSourceGenerator {
 		context.put("templateException", new TemplateException());
 		context.put("beginVar", "${");
 		context.put("endVar", "}");
-		put(properties);
-		loadSystemProperties();
+		put(properties);		
 		createVelocityEngine();
 	}
 
@@ -99,7 +98,7 @@ public class DataSourceGenerator {
 
 		engine = new VelocityEngine(properties);
 	}
-
+	
 	private String merge(String templateName){
 		StringWriter result = new StringWriter();
 		try {
@@ -126,30 +125,6 @@ public class DataSourceGenerator {
 			String key = e.getKey().toString();
 			String value = e.getValue().toString();
 			context.put(key, value);
-		}
-	}
-	
-	public void loadSystemProperties() {
-
-		String fileName = System.getenv("KONIG_DEPLOY_CONFIG ");
-		if (fileName == null) {
-			fileName = System.getProperty("konig.deploy.config");
-		}
-		if(fileName != null) {
-			InputStream in = null;
-			try {
-				Properties p = new Properties();
-				in = new FileInputStream(new File(fileName));
-				p.load(in);
-	
-				for (String name : p.stringPropertyNames()) {
-					String value = p.getProperty(name);
-					context.put(name, value);
-				}
-				in.close();
-			} catch (IOException e) {
-				throw new KonigException("Unable to load system properties " + fileName, e);
-			}
 		}
 	}
 	

@@ -80,17 +80,22 @@ import org.openrdf.rio.RDFParseException;
 
 import com.sun.codemodel.JCodeModel;
 
+import io.konig.aws.common.GroovyAwsDeploymentScriptWriter;
+import io.konig.aws.common.GroovyAwsTearDownScriptWriter;
+import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
+import io.konig.core.vocab.Konig;
 import io.konig.data.app.common.DataApp;
 import io.konig.data.app.generator.DataAppGenerator;
 import io.konig.data.app.generator.DataAppGeneratorException;
@@ -98,6 +103,7 @@ import io.konig.data.app.generator.EntityStructureWorker;
 import io.konig.estimator.MultiSizeEstimateRequest;
 import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
+import io.konig.etl.aws.EtlRouteBuilder;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
@@ -127,6 +133,10 @@ import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
+import io.konig.schemagen.aws.AWSAuroraShapeFileCreator;
+import io.konig.schemagen.aws.AWSS3BucketWriter;
+import io.konig.schemagen.aws.AwsAuroraTableWriter;
+import io.konig.schemagen.aws.AwsResourceGenerator;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
@@ -150,7 +160,6 @@ import io.konig.schemagen.java.JavaClassBuilder;
 import io.konig.schemagen.java.JavaNamer;
 import io.konig.schemagen.java.JsonReaderBuilder;
 import io.konig.schemagen.java.JsonWriterBuilder;
-import io.konig.schemagen.java.SystemConfig;
 import io.konig.schemagen.jsonld.ShapeToJsonldContext;
 import io.konig.schemagen.jsonschema.JsonSchemaGenerator;
 import io.konig.schemagen.jsonschema.JsonSchemaNamer;
@@ -181,8 +190,14 @@ import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.showl.WorkbookToTurtleRequest;
 import io.konig.showl.WorkbookToTurtleTransformer;
+import io.konig.transform.aws.AuroraTransformGenerator;
 import io.konig.transform.bigquery.BigQueryTransformGenerator;
+import io.konig.transform.factory.ShapeRuleFactory;
 import io.konig.transform.mysql.MySqlTransformGenerator;
+import io.konig.transform.proto.AwsAuroraChannelFactory;
+import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelToShapeRule;
+import io.konig.transform.sql.factory.SqlFactory;
 import io.konig.yaml.Yaml;
 import io.konig.yaml.YamlParseException;
 import net.sourceforge.plantuml.SourceFileReader;
@@ -238,6 +253,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private OracleManagedCloudConfig oracleManagedCloud;
     
     @Parameter
+    private AmazonWebServicesConfig amazonWebServices;
+    
+    @Parameter
     private HashSet<String> excludeNamespace;
 	
 
@@ -291,6 +309,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			generateGoogleCloudPlatform();
 			generateOracleManagedCloudServices();
+			generateAmazonWebServices();
+			deleteAmazonWebServices();
 			generateJsonld();
 			generateAvro();
 			generateJsonSchema();
@@ -308,7 +328,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			updateRdf();
 			
 			computeSizeEstimates();
-			
+			generateCamelEtl();
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
@@ -321,9 +341,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     }
     
     private void init() throws MojoExecutionException, IOException {
-    	SystemConfig.init();
     	GcpShapeConfig.init();
     	OracleShapeConfig.init();
+    	AwsShapeConfig.init();
     }
 
 	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException, SQLException {
@@ -332,12 +352,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if (deploy != null) {
 			
 			GoogleCloudService googleCloudService = new GoogleCloudService();
-			File credentials = googleCloudPlatform.getCredentials();
-			if (credentials == null) {
-				googleCloudService.useDefaultCredentials();
-			} else {
-				googleCloudService.openCredentials(credentials);
-			}
 			String konigVersion = deploy.getKonigVersion();
 			File scriptFile = deploy.getScriptFile();
 			
@@ -674,6 +688,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		request.setOwlOutDir(workbook.owlDir(defaults));
 		request.setShapesOutDir(workbook.shapesDir(defaults));
 		request.setGcpOutDir(workbook.gcpDir(defaults));
+		request.setAwsOutDir(workbook.awsDir(defaults));
 		return request;
 	}
 
@@ -734,7 +749,59 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
+	
+	private void generateAmazonWebServices() throws IOException, ConfigurationException {
+		if(amazonWebServices != null) {
+			Configurator config = configurator();
+			config.configure(amazonWebServices);
+			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
+			File bucketsDir = Configurator.checkNull(amazonWebServices.getS3buckets());
+			File transformsDir = Configurator.checkNull(amazonWebServices.getTransforms());
 
+			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
+			if(tablesDir != null) {
+				SqlTableGenerator generator = new SqlTableGenerator();
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator);
+			
+				resourceGenerator.add(awsAuror);				
+			}
+			if(bucketsDir != null){
+				AWSS3BucketWriter awsS3=new AWSS3BucketWriter(bucketsDir);
+				resourceGenerator.add(awsS3);
+			}
+			
+			if(transformsDir != null){
+				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
+				ShapeRuleFactory shapeRuleFactory=new ShapeRuleFactory(shapeManager, shapeModelFactory, new ShapeModelToShapeRule());
+				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir));
+				resourceGenerator.add(generator);
+			}
+			resourceGenerator.dispatch(shapeManager.listShapes());
+			GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
+			scriptWriter.run(); 
+
+		}
+	}
+	
+	private void deleteAmazonWebServices() throws IOException, ConfigurationException {
+		if(amazonWebServices != null) {
+			Configurator config = configurator();
+			config.configure(amazonWebServices);
+			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
+			
+			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
+			if(tablesDir != null) {
+				SqlTableGenerator generator = new SqlTableGenerator();
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator);
+			
+				resourceGenerator.add(awsAuror);
+				resourceGenerator.dispatch(shapeManager.listShapes());
+				GroovyAwsTearDownScriptWriter scriptWriter = new GroovyAwsTearDownScriptWriter(amazonWebServices);
+				scriptWriter.run(); 
+			}
+		}
+	}
+	
 	private void generateOracleManagedCloudServices() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException, ConfigurationException {
 	if(oracleManagedCloud != null) {
 			Configurator config = configurator();
@@ -863,7 +930,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if (googleCloudPlatform.isEnableBigQueryTransform()) {
 			
 		
-			BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner);
+			BigQueryTransformGenerator generator = new BigQueryTransformGenerator(shapeManager, outDir, owlReasoner,rdfSourceDir);
 			generator.generateAll();
 			List<Throwable> errorList = generator.getErrorList();
 			if (errorList != null && !errorList.isEmpty()) {
@@ -964,6 +1031,46 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			projectJsonldFile.getParentFile().mkdirs();
 			AllJsonldWriter all = new AllJsonldWriter();
 			all.writeJSON(nsManager, owlGraph, excludeNamespace, projectJsonldFile);
+		}
+		
+	}
+	private void generateCamelEtl() throws MojoExecutionException {
+		File outDir = null;
+		try {
+			File derivedDir = new File(rdfSourceDir, "shape-dependencies");
+		
+			if (derivedDir.exists()) {
+				Graph graph = new MemoryGraph();
+				NamespaceManager nsManager = new MemoryNamespaceManager();
+				RdfUtil.loadTurtle(derivedDir, graph, nsManager);
+				
+				for (Vertex targetShapeVertex : graph.vertices()) {					
+					Shape targetShape = shapeManager.getShapeById(targetShapeVertex.getId());
+					
+					if (targetShape.hasDataSourceType(Konig.AwsAuroraTable)) {
+						if(amazonWebServices != null) {
+							outDir = amazonWebServices.getCamelEtl();
+						}						
+						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.DERIVEDFROM).toVertexList();
+						
+						if (!sourceList.isEmpty()) {
+							Vertex sourceShapeVertex = sourceList.get(0);
+							Resource sourceShapeId = sourceShapeVertex.getId();
+							Shape sourceShape = shapeManager.getShapeById(sourceShapeId);
+
+							if (sourceShape.hasDataSourceType(Konig.AwsAuroraTable)
+									&& sourceShape.hasDataSourceType(Konig.S3Bucket)) {
+								EtlRouteBuilder builder = new EtlRouteBuilder(sourceShape, targetShape, outDir);
+								builder.generate();
+
+							}
+						}
+					}
+				}
+			}
+			
+		} catch (Exception ex) {
+			throw new MojoExecutionException("Failed to generate camel etl routes", ex);
 		}
 		
 	}

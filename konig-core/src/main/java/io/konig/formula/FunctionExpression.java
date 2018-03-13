@@ -38,6 +38,10 @@ public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 		this.functionName = functionName;
 	}
 	
+	
+	public boolean isAggregation() {
+		return functionName.equalsIgnoreCase(SUM) || functionName.equalsIgnoreCase(COUNT);
+	}
 
 	public FunctionExpression(String functionName, Expression... arg) {
 		this.functionName = functionName;

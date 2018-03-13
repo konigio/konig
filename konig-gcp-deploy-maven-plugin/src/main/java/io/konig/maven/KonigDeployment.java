@@ -35,13 +35,17 @@ public class KonigDeployment {
 	private File baseDir;
 	private String response;
 	
-	public KonigDeployment(String credentials, String baseDir) throws InvalidGoogleCredentialsException, IOException {
-		
+	public KonigDeployment(String baseDir) throws InvalidGoogleCredentialsException, IOException {
+		SystemConfig.init();
+		String credentials=System.getProperty("google.credentials");
+		if(credentials==null){
+			throw new InvalidGoogleCredentialsException("Please set the deployment property \"google.credentials\"");
+		}
+		credentials=credentials.replace("\\", "/");
 		File credentialsFile = new File(credentials);
 		service = new GoogleCloudService();
 		service.openCredentials(credentialsFile);
-		this.baseDir = new File(baseDir).getAbsoluteFile();
-		SystemConfig.init();
+		this.baseDir = new File(baseDir).getAbsoluteFile();		
 	}
 	
 	public Object insert(InsertResourceType type) {
