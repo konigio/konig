@@ -244,6 +244,7 @@ public class ClasspathEntityStructureService implements EntityStructureService {
 
 	@Override
 	public EntityStructure defaultForOwlClass(String localName) throws DaoException {
+		loadOwlClassMap();		
 		String shapeId = owlClassMap.get(localName.toLowerCase());
 		if (shapeId == null) {
 			throw new DaoException("EntityStructure not found for OWL class: " + localName);

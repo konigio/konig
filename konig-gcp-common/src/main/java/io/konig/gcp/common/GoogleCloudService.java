@@ -310,7 +310,7 @@ public class GoogleCloudService implements CredentialsProvider {
 	}
 
 
-	private String readProjectId(File jsonKey) throws IOException, InvalidGoogleCredentialsException {
+	public String readProjectId(File jsonKey) throws IOException, InvalidGoogleCredentialsException {
 		try (
 			FileInputStream input = new FileInputStream(jsonKey)
 		) {
