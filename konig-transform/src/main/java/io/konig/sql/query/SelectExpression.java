@@ -122,4 +122,11 @@ public class SelectExpression extends BaseValueContainer implements ValueContain
 	}
 	
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		super.dispatchProperties(visitor);
+		visit(visitor, "from", from);
+		visit(visitor, "groupBy", groupBy);
+		visit(visitor, "where", where);
+	}
 }

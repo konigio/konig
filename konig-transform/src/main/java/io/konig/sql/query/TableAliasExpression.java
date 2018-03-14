@@ -53,4 +53,12 @@ public class TableAliasExpression extends AbstractExpression implements TableIte
 	public TableItemExpression getTableName() {
 		return tableName;
 	}
+
+
+
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "tableName", tableName);
+		
+	}
 }

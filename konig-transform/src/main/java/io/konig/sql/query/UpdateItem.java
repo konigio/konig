@@ -50,4 +50,11 @@ public class UpdateItem extends AbstractExpression {
 
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "left", left);
+		visit(visitor, "right", right);
+		
+	}
+
 }
