@@ -68,7 +68,8 @@ public TransformProcessor(File outDir) {
 		    Namespace n = nsManager.findByName(targetShapeId.getNamespace());
 		    if(outDir!=null)
 		    	outDir=new File(outDir,"shape-dependencies");
-		    File turtleFile = new File(outDir,n!=null?n.getPrefix():"localNamespace"+"_"+targetShapeId.getLocalName());
+		    String fileName = (n!=null?n.getPrefix()+"_"+targetShapeId.getLocalName():"localNamespace"+"_"+targetShapeId.getLocalName());
+		    File turtleFile = new File(outDir,fileName+".ttl");
 		    
 		    try {
 		    	if(outDir!=null)
