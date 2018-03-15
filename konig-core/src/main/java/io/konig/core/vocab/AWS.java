@@ -70,5 +70,6 @@ public class AWS {
 	public static final URI region= new URIImpl(EVENT_TYPE);
 	public static final URI awsRegion= new URIImpl(AWS_REGION);
 
+	public static final URI topicConfiguration= new URIImpl(TOPIC_CONFIGURATION);
 
 }

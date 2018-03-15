@@ -38,11 +38,11 @@ shape:SourcePersonShape a sh:Shape , konig:SourceShape ;
 	aws:bucketMediaType "application/doc" ; 
 	aws:notificationConfiguration  [ 
 		aws:topicConfiguration  [ 
-			aws:topicArn <arn:aws:sns:us-east-1:${aws-account-id}:SourcePersonShape_CreateEvent> ; 
+			aws:topic <arn:aws:sns:us-east-1:${aws-account-id}:SourcePersonShape_CreateEvent> ; 
 			aws:eventType "s3:ObjectCreated:*"
 		 ]  ; 
 		aws:queueConfiguration  [ 
-			aws:queueArn <arn:aws:sqs:us-east-1:${aws-account-id}:SourcePersonShape_CreateEvent> ; 
+			aws:queue <arn:aws:sqs:us-east-1:${aws-account-id}:SourcePersonShape_CreateEvent> ; 
 			aws:eventType "s3:ObjectCreated:*" ]  ]  . 
 
 <arn:aws:sns:us-east-1:${aws-account-id}:SourcePersonShape_CreateEvent> a aws:topic ; 

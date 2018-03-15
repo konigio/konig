@@ -69,15 +69,48 @@ public class ShapeLoaderTest {
 		RdfUtil.loadTurtle(new File("src/test/resources"), graph, nsManager);
 		
 		shapeLoader.load(graph);
-		Vertex v = graph.v(Konig.S3Bucket).in(RDF.TYPE).firstVertex();
-		Vertex v1 = v.asTraversal().out(AWS.notificationConfiguration).out(uri(AWS.TOPIC_CONFIGURATION)).firstVertex();
-		System.out.println(v1.getValue(AWS.eventType));
 		
-		Vertex v2 = graph.v(uri(AWS.TOPIC)).in(RDF.TYPE).firstVertex();
-		//Vertex v1 = v2.asTraversal().out(AWS.notificationConfiguration).out(uri(AWS.TOPIC_CONFIGURATION)).firstVertex();
-		System.out.println(v2);
+		
+		URI shapeId = uri("http://example.com/shapes/SourcePersonShape");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		S3Bucket bucket = getBucket(shape);
+		
+		assertTrue(bucket != null);
+		NotificationConfiguration config = bucket.getNotificationConfiguration();
+		assertTrue(config != null);
+		
+		TopicConfiguration topicConfig = config.getTopicConfiguration();
+		assertTrue(topicConfig!=null);
+		
+		Topic topic = topicConfig.getTopic();
+		assertTrue(topic!=null);
+		assertEquals("arn:aws:sns:us-east-1:${aws-account-id}:SourcePersonShape_CreateEvent", topic.getId().stringValue());
+		assertEquals("SourcePersonShape_CreateEvent", topic.getResourceName());
+		assertEquals("us-east-1", topic.getRegion());
+		assertEquals("${aws-account-id}", topic.getAccountId());
+		
+		QueueConfiguration queueConfig = config.getQueueConfiguration();
+		assertTrue(queueConfig != null);
+		
+		Queue queue = queueConfig.getQueue();
+		assertTrue(queue!=null);
+		assertEquals("arn:aws:sqs:us-east-1:${aws-account-id}:SourcePersonShape_CreateEvent", queue.getId().stringValue());
+		assertEquals("SourcePersonShape_CreateEvent", queue.getResourceName());
+		assertEquals("${aws-account-id}", queue.getAccountId());
+		
 		
 	}
+	private S3Bucket getBucket(Shape shape) {
+		List<DataSource> list = shape.getShapeDataSource();
+		assertTrue(list != null);
+		for (DataSource ds : list) {
+			if (ds instanceof S3Bucket) {
+				return (S3Bucket) ds;
+			}
+		}
+		return null;
+	}
+
 	private URI uri(String value) {
 		return new URIImpl(value);
 	}

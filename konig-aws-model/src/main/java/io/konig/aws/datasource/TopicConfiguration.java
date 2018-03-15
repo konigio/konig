@@ -29,7 +29,6 @@ import io.konig.core.vocab.AWS;
 public class TopicConfiguration{
 	
 	private Topic topic;
-	private String topicArn;
 	private String eventType;
 	
 	public Topic getTopic() {
@@ -39,12 +38,8 @@ public class TopicConfiguration{
 		this.topic = topic;
 	}
 	
-	@RdfProperty(AWS.TOPIC)
 	public String getTopicArn() {
-		return topicArn;
-	}
-	public void setTopicArn(String topicArn) {
-		this.topicArn = topicArn;
+		return topic==null||topic.getId()==null ? null : topic.getId().stringValue();
 	}
 	
 	@RdfProperty(AWS.EVENT_TYPE)
