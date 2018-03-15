@@ -35,7 +35,7 @@ public class PrepareToLoadTargetTable implements Processor {
 	public void process(Exchange exchange) throws Exception {
 		String dmlScript = exchange.getIn().getHeader("dmlScript", String.class);	
 		String currDate=currDate();
-		String dml=fileToString(new File("konig/aws/camel-etl/" + dmlScript + ".sql")).replace("{modified}", currDate);
+		String dml=fileToString(new File("konig/aws/camel-etl/" + dmlScript + ".sql")).replace("\"{modified}\"", "TIMESTAMP('"+currDate+"')");
 		exchange.getOut().setBody(dml);
 		exchange.getIn().setHeader("modified", currDate);
 		exchange.getOut().setHeaders(exchange.getIn().getHeaders());

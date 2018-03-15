@@ -31,7 +31,7 @@ public class PrepareToExport implements Processor {
     	String bucketName = exchange.getIn().getHeader("bucketName", String.class);
     	String fileName = exchange.getIn().getHeader("fileName", String.class); 
     	String modified = exchange.getIn().getHeader("modified", String.class); 
-        exchange.getOut().setBody("SELECT * FROM "+targetTable +" WHERE modified='"+modified+"' INTO OUTFILE S3 's3://"+bucketName+"/"+fileName+"' "
+        exchange.getOut().setBody("SELECT * FROM "+targetTable +" WHERE modified=TIMESTAMP('"+modified+"') INTO OUTFILE S3 's3://"+bucketName+"/"+fileName+"' "
         		+ " FIELDS TERMINATED BY ','"
         		+ "   LINES TERMINATED BY '\n' OVERWRITE ON;");  
         
