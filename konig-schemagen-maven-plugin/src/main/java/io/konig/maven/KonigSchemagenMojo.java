@@ -773,8 +773,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if(transformsDir != null){
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
 				ShapeRuleFactory shapeRuleFactory=new ShapeRuleFactory(shapeManager, shapeModelFactory, new ShapeModelToShapeRule());
-				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir));
-				resourceGenerator.add(generator);
+				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir), rdfSourceDir);resourceGenerator.add(generator);
 			}
 			resourceGenerator.dispatch(shapeManager.listShapes());
 			GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
