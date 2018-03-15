@@ -44,4 +44,10 @@ public class OnExpression extends AbstractExpression implements SearchCondition 
 		out.popIndent();
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "searchCondition", searchCondition);
+		
+	}
+
 }

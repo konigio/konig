@@ -1,0 +1,21 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org" ; 
+	rdfs:comment "An ontology developed by Google, Yahoo, Microsoft and others to describe all kinds of things on the web." . 
+
+schema:Person a owl:Class . 
+
+schema:Product a owl:Class . 
+
+schema:givenName a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:name a owl:DatatypeProperty ; 
+	schema:rangeIncludes xsd:string . 

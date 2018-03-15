@@ -101,4 +101,17 @@ public class UpdateExpression extends AbstractExpression implements DmlExpressio
 
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "from", from);
+		if (itemList != null) {
+			for (UpdateItem item : itemList) {
+				visit(visitor, "item", item);
+			}
+		}
+		visit(visitor, "table", table);
+		visit(visitor, "where", where);
+		
+	}
+
 }

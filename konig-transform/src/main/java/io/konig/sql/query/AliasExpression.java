@@ -52,5 +52,10 @@ implements ValueExpression, GroupingElement {
 		out.append(alias);
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "expression", expression);
+	}
+
 
 }

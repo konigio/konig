@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 
@@ -63,7 +64,7 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 		DataChannelFactory dataChannelFactory = new AwsAuroraChannelFactory();
 		shapeModelFactory = new ShapeModelFactory(shapeManager, dataChannelFactory, reasoner);
 		shapeRuleFactory = new ShapeRuleFactory(shapeManager, shapeModelFactory, shapeModelToShapeRule);
-		generator = new AuroraTransformGenerator(shapeRuleFactory, sqlFactory, fileFactory);
+		generator = new AuroraTransformGenerator(shapeRuleFactory, sqlFactory, fileFactory,new File("target/test/AuroraTransformGeneratorTest"));
 	}
 
 	@Test

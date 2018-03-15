@@ -73,6 +73,13 @@ public class TableNameExpression extends AbstractExpression implements TableItem
 	public boolean isWithQuotes() {
 		return withQuotes;
 	}
+
+
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		// Do nothing
+		
+	}
 	
 	
 

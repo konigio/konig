@@ -93,7 +93,6 @@ import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.io.ShapeFileFactory;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.Konig;
@@ -194,8 +193,8 @@ import io.konig.showl.WorkbookToTurtleTransformer;
 import io.konig.transform.aws.AuroraTransformGenerator;
 import io.konig.transform.bigquery.BigQueryTransformGenerator;
 import io.konig.transform.factory.ShapeRuleFactory;
+import io.konig.transform.mysql.MySqlTransformGenerator;
 import io.konig.transform.proto.AwsAuroraChannelFactory;
-import io.konig.transform.proto.BigQueryChannelFactory;
 import io.konig.transform.proto.ShapeModelFactory;
 import io.konig.transform.proto.ShapeModelToShapeRule;
 import io.konig.transform.sql.factory.SqlFactory;
@@ -774,8 +773,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if(transformsDir != null){
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
 				ShapeRuleFactory shapeRuleFactory=new ShapeRuleFactory(shapeManager, shapeModelFactory, new ShapeModelToShapeRule());
-				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir));
-				resourceGenerator.add(generator);
+				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir), rdfSourceDir);resourceGenerator.add(generator);
 			}
 			resourceGenerator.dispatch(shapeManager.listShapes());
 			GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
@@ -847,6 +845,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			}
 			if (googleCloudPlatform.getCloudsql() != null) {
 				resourceGenerator.add(cloudSqlTableWriter());
+				File mysqlScriptsDir = googleCloudPlatform.getCloudsql().getScripts();
+				if(mysqlScriptsDir != null) {
+					generateMySqlTransformScripts(mysqlScriptsDir);
+				}
 			}
 			if (googleCloudPlatform.getCloudsql().getInstances()!=null) {
 				CloudSqlJsonGenerator instanceWriter = new CloudSqlJsonGenerator();
@@ -888,9 +890,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		return new CloudSqlTableWriter(info.getTables(), generator);
 	}
 
-
-
-
+	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {
+		if (googleCloudPlatform.isEnableMySqlTransform()) {
+			MySqlTransformGenerator generator = new MySqlTransformGenerator(shapeManager, outDir, owlReasoner);
+			generator.generateAll();
+			List<Throwable> errorList = generator.getErrorList();
+			if (errorList != null && !errorList.isEmpty()) {
+				Log logger = getLog();
+				for (Throwable e : errorList) {
+					logger.error(e.getMessage());
+				}
+				throw new MojoExecutionException("Failed to generate MySql Transform", errorList.get(0));
+			}
+		}
+	}
 
 	private BigQueryLabelGenerator labelGenerator() {
 		File schemaDir = googleCloudPlatform.getBigquery().getSchema();

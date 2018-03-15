@@ -52,5 +52,12 @@ public class SimpleWhenClause extends AbstractExpression {
 		return result;
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "whenOperand", whenOperand);
+		visit(visitor, "result", result);
+		
+	}
+
 	
 }

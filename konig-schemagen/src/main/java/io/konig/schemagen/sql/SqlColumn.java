@@ -61,24 +61,5 @@ public class SqlColumn extends AbstractPrettyPrintable {
 		if (!nullable) {
 			out.print(" NOT NULL");
 		}
-		String keytypeName = keytypeName();
-		if (keytypeName != null) {
-			out.print(' ');
-			out.print(keytypeName);
-		}
 	}
-
-	private String keytypeName() {
-		if (keytype != null) {
-			switch (keytype) {
-			case PRIMARY_KEY : return "PRIMARY KEY";
-			case UNIQUE_KEY : return "UNIQUE KEY";
-			}
-		}
-		return null;
-	}
-	
-	
-
-
 }

@@ -44,4 +44,10 @@ public class SignedNumericLiteral extends AbstractExpression implements Factor {
 		out.print(number);
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		// Do nothing
+		
+	}
+
 }
