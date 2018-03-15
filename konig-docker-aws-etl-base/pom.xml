@@ -1,0 +1,182 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>io.konig</groupId>
+	<artifactId>konig-docker-aws-etl-base</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<properties>
+		<awsAccountId>220459826988</awsAccountId>
+		<docker.image.name>my-dockers</docker.image.name>
+		<docker.image.version>latest</docker.image.version>
+		<docker.registry.host>https://220459826988.dkr.ecr.us-east-1.amazonaws.com</docker.registry.host>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>io.konig</groupId>
+			<artifactId>konig-core</artifactId>
+			<version>2.0.0-8-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>io.konig</groupId>
+			<artifactId>konig-etl</artifactId>
+			<version>2.0.0-8-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-spring-boot-starter</artifactId>
+			<version>2.17.0</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-pool</groupId>
+			<artifactId>commons-pool</artifactId>
+			<version>1.5.4</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-dbcp</groupId>
+			<artifactId>commons-dbcp</artifactId>
+			<version>1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.45</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-jetty</artifactId>
+			<version>2.17.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-aws</artifactId>
+			<version>2.17.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-jdbc</artifactId>
+			<version>2.17.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud</artifactId>
+			<version>0.18.0-alpha</version>
+		</dependency>
+		<dependency>
+			<groupId>io.konig</groupId>
+			<artifactId>konig-gcp-common</artifactId>
+			<version>2.0.0-8-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>slf4j-log4j12</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.9</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.cloud.sql</groupId>
+			<artifactId>mysql-socket-factory</artifactId>
+			<version>1.0.5</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.10.19</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.5.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>2.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.5.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<version>1.5.4.RELEASE</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<version>1.5.4.RELEASE</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+
+			<plugin>
+				<groupId>io.fabric8</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.24.0</version>
+
+				<configuration>
+
+					<!-- <autoPull>true</autoPull> -->					 <!-- <dockerHost>https://index.docker.io/v1/</dockerHost> -->
+					<!-- <registry>220459826988.dkr.ecr.us-east-1.amazonaws.com</registry> -->
+					<!-- <dockerHost>https://220459826988.dkr.ecr.us-east-1.amazonaws.com</dockerHost> -->
+					<!-- <registry>registry.hub.docker.com/dams6</registry> -->
+					<!-- <registry>220459826988.dkr.ecr.us-east-1.amazonaws.com</registry> -->
+					<!-- <authConfig> <username>dams6</username> <password>Mar@2018</password> 
+						</authConfig> -->
+					<registry>${docker.registry}/${docker.userName}</registry>
+					<authConfig>
+						<username>${docker.userName}</username>
+						<password>${docker.password}</password>
+					</authConfig>
+					<images>
+						<image>
+
+							<alias>service</alias>
+							<name>fabric8/${project.artifactId}</name>
+
+							<build>
+								<assembly>
+									<descriptor>../../../docker-assembly.xml</descriptor>
+								</assembly>
+							</build>
+
+
+						</image>
+
+					</images>
+				</configuration>
+				<executions>
+					<execution>
+						<id>docker-build</id>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+				</executions>
+
+
+			</plugin>
+		</plugins>
+	</build>
+
+
+
+</project>
