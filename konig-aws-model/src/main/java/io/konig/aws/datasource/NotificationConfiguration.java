@@ -1,10 +1,5 @@
 package io.konig.aws.datasource;
 
-import org.openrdf.model.URI;
-
-import io.konig.annotation.RdfProperty;
-import io.konig.core.vocab.AWS;
-
 /*
  * #%L
  * Konig AWS Model
@@ -26,33 +21,29 @@ import io.konig.core.vocab.AWS;
  */
 
 
-public class TopicConfiguration{
+import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.AWS;
+
+public class NotificationConfiguration {
 	
-	private Topic topic;
-	private String topicArn;
-	private String eventType;
+	private TopicConfiguration topicConfiguration;
+	private QueueConfiguration queueConfiguration;
 	
-	public Topic getTopic() {
-		return topic;
+	@RdfProperty(AWS.TOPIC_CONFIGURATION)
+	public TopicConfiguration getTopicConfiguration() {
+		return topicConfiguration;
 	}
-	public void setTopic(Topic topic) {
-		this.topic = topic;
-	}
-	
-	@RdfProperty(AWS.TOPIC)
-	public String getTopicArn() {
-		return topicArn;
-	}
-	public void setTopicArn(String topicArn) {
-		this.topicArn = topicArn;
+
+	public void setTopicConfiguration(TopicConfiguration topicConfiguration) {
+		this.topicConfiguration = topicConfiguration;
 	}
 	
-	@RdfProperty(AWS.EVENT_TYPE)
-	public String getEventType() {
-		return eventType;
+	@RdfProperty(AWS.QUEUE_CONFIGURATION)
+	public QueueConfiguration getQueueConfiguration() {
+		return queueConfiguration;
 	}
-	public void setEventType(String eventType) {
-		this.eventType = eventType;
+
+	public void setQueueConfiguration(QueueConfiguration queueConfiguration) {
+		this.queueConfiguration = queueConfiguration;
 	}
-	
 }

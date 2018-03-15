@@ -1,7 +1,5 @@
 package io.konig.aws.datasource;
 
-import org.openrdf.model.URI;
-
 import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.AWS;
 
@@ -26,33 +24,33 @@ import io.konig.core.vocab.AWS;
  */
 
 
-public class TopicConfiguration{
+public class Queue {
+	private String resourceName;
+	private String region;
+	private String accountId;
 	
-	private Topic topic;
-	private String topicArn;
-	private String eventType;
-	
-	public Topic getTopic() {
-		return topic;
+	@RdfProperty(AWS.RESOURCE_NAME)
+	public String getResourceName() {
+		return resourceName;
 	}
-	public void setTopic(Topic topic) {
-		this.topic = topic;
-	}
-	
-	@RdfProperty(AWS.TOPIC)
-	public String getTopicArn() {
-		return topicArn;
-	}
-	public void setTopicArn(String topicArn) {
-		this.topicArn = topicArn;
+	public void setResourceName(String resourceName) {
+		this.resourceName = resourceName;
 	}
 	
-	@RdfProperty(AWS.EVENT_TYPE)
-	public String getEventType() {
-		return eventType;
+	@RdfProperty(AWS.AWS_REGION)
+	public String getRegion() {
+		return region;
 	}
-	public void setEventType(String eventType) {
-		this.eventType = eventType;
+	public void setRegion(String region) {
+		this.region = region;
+	}
+	
+	@RdfProperty(AWS.ACCOUNT_ID)
+	public String getAccountId() {
+		return accountId;
+	}
+	public void setAccountId(String accountId) {
+		this.accountId = accountId;
 	}
 	
 }

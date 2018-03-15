@@ -22,6 +22,8 @@ package io.konig.maven;
 
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.codehaus.plexus.util.StringUtils;
 
@@ -31,6 +33,7 @@ import com.amazonaws.auth.policy.Resource;
 import com.amazonaws.auth.policy.Statement;
 import com.amazonaws.auth.policy.Statement.Effect;
 import com.amazonaws.auth.policy.actions.SNSActions;
+import com.amazonaws.auth.policy.actions.SQSActions;
 import com.amazonaws.auth.policy.conditions.ArnCondition;
 import com.amazonaws.auth.policy.conditions.ConditionFactory;
 import com.amazonaws.auth.policy.conditions.ArnCondition.ArnComparisonType;
@@ -39,17 +42,21 @@ import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sns.model.CreateTopicResult;
 import com.amazonaws.services.sns.model.SetTopicAttributesRequest;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.CreateQueueResult;
+import com.amazonaws.services.sqs.model.QueueAttributeName;
+import com.amazonaws.services.sqs.model.SetQueueAttributesRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.konig.aws.common.InvalidAWSCredentialsException;
+import io.konig.aws.datasource.Queue;
+import io.konig.aws.datasource.QueueConfiguration;
 import io.konig.aws.datasource.S3Bucket;
-import io.konig.aws.datasource.Topic;
-import io.konig.aws.datasource.TopicConfiguration;
 
-public class CreateAwsSnsTopicAction {
+public class CreateAwsSqsQueueAction {
 	private AwsDeployment deployment;
 
-	public CreateAwsSnsTopicAction(AwsDeployment deployment){
+	public CreateAwsSqsQueueAction(AwsDeployment deployment){
 		this.deployment=deployment;
 	}
 	
@@ -58,47 +65,47 @@ public class CreateAwsSnsTopicAction {
 			File file = deployment.file(path);
 			ObjectMapper mapper=new ObjectMapper();
 			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
-			verifyAWSCredentials();
+			deployment.verifyAWSCredentials();
 			String envtName="";
 			if(System.getProperty("environmentName") != null) {
 				envtName = System.getProperty("environmentName");
 			}
 			String bucketName=StringUtils.replaceOnce(bucket.getBucketName(), "${environmentName}", envtName);
-			TopicConfiguration notificationConfig = bucket.getNotificationConfiguration().getTopicConfiguration();
-			if(notificationConfig!=null && notificationConfig.getTopic()!=null){
-				Topic topic=notificationConfig.getTopic();				
-				Regions regions=Regions.fromName(topic.getRegion());
-				AmazonSNS sns = AmazonSNSClientBuilder.standard().withRegion(regions).build();  
-				CreateTopicResult result=sns.createTopic(topic.getResourceName());
-				deployment.setResponse("Topic with ARN : "+result.getTopicArn()+" is created");
+			QueueConfiguration queueConfig = bucket.getNotificationConfiguration().getQueueConfiguration();
+			if(queueConfig != null && queueConfig.getQueue() != null){
+				Queue queue = queueConfig.getQueue();				
+				Regions regions=Regions.fromName(queue.getRegion());
+				AmazonSQS sqs = AmazonSQSClientBuilder.standard()
+						.withCredentials(deployment.getCredential())
+						.withRegion(regions).build();  
 				
+				CreateQueueResult result=sqs.createQueue(queue.getResourceName());
+				deployment.setResponse("Queue Url "+result.getQueueUrl()+" is created");
 				Policy policy = new Policy().withStatements(
 					    new Statement(Effect.Allow)
-					        .withPrincipals(Principal.AllUsers)
-					        .withActions(SNSActions.Publish)
-					        .withResources(new Resource(result.getTopicArn()))
-					        .withConditions(new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY, "arn:aws:s3:*:*:"+bucketName)));
+							.withPrincipals(Principal.AllUsers)
+					        .withActions(SQSActions.SendMessage));
+					        //.withResources(new Resource(queueARN))
+					       // .withConditions(ConditionFactory.newSourceArnCondition(topicARN)));
 				
-				sns.setTopicAttributes(
-				    new SetTopicAttributesRequest(result.getTopicArn(), "Policy", policy.toJson()));
+				Map<String, String> queueAttributes = new HashMap<String, String>();
+				queueAttributes.put(QueueAttributeName.Policy.toString(), policy.toJson());
+				 
+				sqs.setQueueAttributes(
+				    new SetQueueAttributesRequest(result.getQueueUrl(), queueAttributes));
+				
+				//deployment.setResponse("Queue with ARN : "+queueARN+" is Created");
+				
 			}
 			else{
-				deployment.setResponse("No topic is configured to the S3 Bucket");
+				deployment.setResponse("Queue Configuration Failed");
 			}
 			
 		}
 		catch(Exception e){
-			e.printStackTrace();
 			throw e;
 		}
 	    return deployment;
-	}
-
-	private void verifyAWSCredentials() throws InvalidAWSCredentialsException {
-		String accessKeyId=System.getProperty("aws.accessKeyId");
-		String secretKey=System.getProperty("aws.secretKey");
-		if(accessKeyId == null || secretKey==null)
-			throw new InvalidAWSCredentialsException();		
 	}
 
 }

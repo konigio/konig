@@ -29,13 +29,13 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
+import io.konig.aws.datasource.Queue;
+import io.konig.aws.datasource.QueueConfiguration;
 import io.konig.aws.datasource.S3Bucket;
 import io.konig.aws.datasource.Topic;
 import io.konig.aws.datasource.TopicConfiguration;
 import io.konig.core.KonigException;
 import io.konig.datasource.DataSource;
-import io.konig.gcp.datasource.GoogleBigQueryTable;
-import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
 
@@ -54,17 +54,39 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		json.writeStringField("bucketName", bucket.getBucketName());
 		json.writeStringField("region", bucket.getRegion());
 		json.writeStringField("bucketMediaType", bucket.getBucketMediaType());
-		if(bucket.getNotificationConfiguration()!=null){
+		if(bucket.getNotificationConfiguration() != null){
 			json.writeObjectFieldStart("notificationConfiguration");
-			TopicConfiguration topicConfig=bucket.getNotificationConfiguration();
-			Topic topic=topicConfig.getTopic();
-			if(topic!=null){			
-					json.writeObjectFieldStart("topic");
-					json.writeStringField("resourceName", topic.getResourceName());
-					json.writeStringField("region", topic.getRegion());
-					json.writeStringField("accountId", topic.getAccountId());
+			
+			if(bucket.getNotificationConfiguration().getTopicConfiguration() != null) {
+				json.writeObjectFieldStart("topicConfiguration");
+				TopicConfiguration topicConfig = bucket.getNotificationConfiguration().getTopicConfiguration();
+				Topic topic = topicConfig.getTopic();
+				if(topic!=null){			
+						json.writeObjectFieldStart("topic");
+						json.writeStringField("resourceName", topic.getResourceName());
+						json.writeStringField("region", topic.getRegion());
+						json.writeStringField("accountId", topic.getAccountId());
+						json.writeEndObject();
+				}
+				json.writeStringField("topicArn", topicConfig.getTopicArn());
+				json.writeStringField("eventType", topicConfig.getEventType());
+				json.writeEndObject();
+			}
+			
+			if(bucket.getNotificationConfiguration().getQueueConfiguration() != null){
+				json.writeObjectFieldStart("queueConfiguration");
+				QueueConfiguration queueConfig = bucket.getNotificationConfiguration().getQueueConfiguration();
+				Queue queue = queueConfig.getQueue();
+				if(queue != null){	
+					json.writeObjectFieldStart("queue");
+					json.writeStringField("resourceName", queue.getResourceName());
+					json.writeStringField("region", queue.getRegion());
+					json.writeStringField("accountId", queue.getAccountId());
 					json.writeEndObject();
-					json.writeStringField("eventType", topicConfig.getEventType());
+				}
+				json.writeStringField("queueArn", queueConfig.getQueueArn());
+				json.writeStringField("eventType", queueConfig.getEventType());
+				json.writeEndObject();
 			}
 			
 			json.writeEndObject();
@@ -78,7 +100,6 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 			List<DataSource> list = shape.getShapeDataSource();
 			if (list != null) {
 				for (DataSource source : list) {
-					System.out.println(source.getClass());
 					if (source instanceof S3Bucket) {
 						S3Bucket bucket = (S3Bucket) source;
 						String fileName = bucket.getBucketKey() + ".json";
@@ -90,7 +111,10 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 						json.useDefaultPrettyPrinter();
 						try {
 							write(bucket, json);
-						} finally {
+						} catch(Exception ex){
+							ex.printStackTrace();
+							
+						}finally {
 							json.close();
 						}
 					}

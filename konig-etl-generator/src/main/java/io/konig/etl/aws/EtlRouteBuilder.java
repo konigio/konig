@@ -85,7 +85,7 @@ public class EtlRouteBuilder {
 
 		S3Bucket bucket = sourceShape.findDataSource(S3Bucket.class);
 		Element fromsqs = doc.createElement("from");
-		fromsqs.setAttribute("uri", "aws-sqs://" + bucket.getNotificationConfiguration().getTopic().getResourceName()
+		fromsqs.setAttribute("uri", "aws-sqs://" + bucket.getNotificationConfiguration().getQueueConfiguration().getQueue().getResourceName()
 				+ "?amazonSQSClient=#sqsClient&region="+bucket.getRegion()+"&defaultVisibilityTimeout=5000&deleteIfFiltered=false");
 		
 		AwsAurora targetTable = targetShape.findDataSource(AwsAurora.class);

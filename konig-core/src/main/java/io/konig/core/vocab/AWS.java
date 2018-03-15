@@ -52,17 +52,23 @@ public class AWS {
 	public static final String REGION = "http://www.konig.io/ns/aws/bucketRegion";
 	public static final String BUCKET_MEDIA_TYPE = "http://www.konig.io/ns/aws/bucketMediaType";
 	public static final String NOTIFICATION_CONFIGURATION = "http://www.konig.io/ns/aws/notificationConfiguration";
+	public static final String TOPIC_CONFIGURATION = "http://www.konig.io/ns/aws/topicConfiguration";
+	public static final String QUEUE_CONFIGURATION = "http://www.konig.io/ns/aws/queueConfiguration";
 	public static final String TOPIC = "http://www.konig.io/ns/aws/topic";
+	public static final String QUEUE = "http://www.konig.io/ns/aws/queue";
 	public static final String EVENT_TYPE = "http://www.konig.io/ns/aws/eventType";
 	public static final String ACCOUNT_ID = "http://www.konig.io/ns/aws/accountId";
 	public static final String RESOURCE_NAME = "http://www.konig.io/ns/aws/resourceName";
 	public static final String TOPIC_REGION = "http://www.konig.io/ns/aws/region";
+	public static final String AWS_REGION = "http://www.konig.io/ns/aws/region";
 	public static final URI notificationConfiguration= new URIImpl(NOTIFICATION_CONFIGURATION);
+	public static final URI queueConfiguration= new URIImpl(QUEUE_CONFIGURATION);
 	public static final URI topic= new URIImpl(TOPIC);
 	public static final URI eventType= new URIImpl(EVENT_TYPE);
 	public static final URI accountId= new URIImpl(EVENT_TYPE);
 	public static final URI resourceName= new URIImpl(EVENT_TYPE);
 	public static final URI region= new URIImpl(EVENT_TYPE);
+	public static final URI awsRegion= new URIImpl(AWS_REGION);
 
 
 }

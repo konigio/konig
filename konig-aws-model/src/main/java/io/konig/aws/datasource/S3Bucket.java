@@ -1,6 +1,5 @@
 package io.konig.aws.datasource;
 
-import java.util.List;
 
 /*
  * #%L
@@ -30,12 +29,13 @@ import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 
-public class S3Bucket extends DataSource{
+public class S3Bucket extends DataSource {
+	
 	private String bucketKey;
 	private String bucketName;
 	private String region;
 	private String bucketMediaType;
-	private TopicConfiguration notificationConfiguration;
+	private NotificationConfiguration notificationConfiguration;
 	
 	public S3Bucket() {
 		addType(Konig.S3Bucket);
@@ -82,12 +82,11 @@ public class S3Bucket extends DataSource{
 	}
 	
 	@RdfProperty(AWS.NOTIFICATION_CONFIGURATION)
-	public TopicConfiguration getNotificationConfiguration() {
+	public NotificationConfiguration getNotificationConfiguration() {
 		return notificationConfiguration;
 	}
 
-	public void setNotificationConfiguration(TopicConfiguration notificationConfiguration) {
+	public void setNotificationConfiguration(NotificationConfiguration notificationConfiguration) {
 		this.notificationConfiguration = notificationConfiguration;
 	}
-	
 }

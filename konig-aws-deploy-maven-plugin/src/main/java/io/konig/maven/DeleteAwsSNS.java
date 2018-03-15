@@ -64,7 +64,7 @@ public class DeleteAwsSNS {
 			ObjectMapper mapper=new ObjectMapper();
 			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
 			verifyAWSCredentials();
-			TopicConfiguration notificationConfig=bucket.getNotificationConfiguration();
+			TopicConfiguration notificationConfig = bucket.getNotificationConfiguration().getTopicConfiguration();
 			if(notificationConfig!=null && notificationConfig.getTopic()!=null){
 				Topic topic=notificationConfig.getTopic();				
 				Regions regions=Regions.fromName(topic.getRegion());
