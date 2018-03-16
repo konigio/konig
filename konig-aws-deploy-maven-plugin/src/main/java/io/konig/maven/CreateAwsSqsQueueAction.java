@@ -42,6 +42,7 @@ import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sns.model.CreateTopicResult;
 import com.amazonaws.services.sns.model.SetTopicAttributesRequest;
+import com.amazonaws.services.sns.util.Topics;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.CreateQueueResult;
@@ -80,6 +81,9 @@ public class CreateAwsSqsQueueAction {
 				AmazonSQS sqs = AmazonSQSClientBuilder.standard()
 						.withCredentials(deployment.getCredential())
 						.withRegion(regions).build();  
+				AmazonSNS sns = AmazonSNSClientBuilder.standard()
+						.withCredentials(deployment.getCredential())
+						.withRegion(regions).build();  
 				
 				CreateQueueResult result = sqs.createQueue(queue.getResourceName());
 				
@@ -100,9 +104,14 @@ public class CreateAwsSqsQueueAction {
 				Map<String, String> queueAttributes = new HashMap<String, String>();
 				queueAttributes.put(QueueAttributeName.Policy.toString(), policy.toJson());
 				 
+				deployment.setResponse("Queue Policy Configured : "+policy.toJson());
+				
 				sqs.setQueueAttributes(
 				    new SetQueueAttributesRequest(result.getQueueUrl(), queueAttributes));
 				
+				Topics.subscribeQueue(sns, sqs, topicArn, result.getQueueUrl());
+				
+				deployment.setResponse("Subscription is created : Topic ["+topicArn+"], Queue ["+queueArn+"]");
 			}
 			else{
 				deployment.setResponse("Queue Configuration Failed");
