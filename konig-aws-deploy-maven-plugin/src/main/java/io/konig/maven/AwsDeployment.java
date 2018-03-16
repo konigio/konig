@@ -24,6 +24,10 @@ package io.konig.maven;
 import java.io.File;
 import java.io.IOException;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+
+import io.konig.aws.common.InvalidAWSCredentialsException;
 import io.konig.schemagen.java.SystemConfig;
 
 public class AwsDeployment {
@@ -44,6 +48,8 @@ public class AwsDeployment {
 			return new CreateAwsS3BucketAction(this);
 		case AwsSnsTopic:
 			return new CreateAwsSnsTopicAction(this);
+		case AwsSqsQueue:
+			return new CreateAwsSqsQueueAction(this);
 		default:
 			break;
 		}
@@ -60,7 +66,10 @@ public class AwsDeployment {
 
 		case AwsS3Bucket:
 			return new DeleteAwsS3BucketAction(this);
-
+			
+		case AwsSqsQueue:
+			return new DeleteAwsSQS(this);
+			
 		default:
 			break;
 
@@ -78,5 +87,19 @@ public class AwsDeployment {
 
 	public String getResponse() {
 		return this.response;
+	}
+	
+	public void verifyAWSCredentials() throws InvalidAWSCredentialsException {
+		String accessKeyId = System.getProperty("aws.accessKeyId");
+		String secretKey = System.getProperty("aws.secretKey");
+		if (accessKeyId == null || secretKey == null)
+			throw new InvalidAWSCredentialsException();
+	}
+	
+	AWSStaticCredentialsProvider getCredential() throws InvalidAWSCredentialsException {
+		verifyAWSCredentials();
+		return new AWSStaticCredentialsProvider(
+				new BasicAWSCredentials(System.getProperty("aws.accessKeyId"), System.getProperty("aws.secretKey")));
+
 	}
 }

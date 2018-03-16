@@ -12,6 +12,7 @@
 		<ivy.version>2.4.0</ivy.version>
 		<ant.version>1.8.2</ant.version>
 		<guava.version>20.0</guava.version>
+		<log4j.version>1.2.17</log4j.version>
   </properties>
   
   

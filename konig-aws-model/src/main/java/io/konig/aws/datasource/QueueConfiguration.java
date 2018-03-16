@@ -1,7 +1,5 @@
 package io.konig.aws.datasource;
 
-import org.openrdf.model.URI;
-
 import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.AWS;
 
@@ -26,27 +24,20 @@ import io.konig.core.vocab.AWS;
  */
 
 
-public class TopicConfiguration{
-	
-	private Topic topic;
-	private String topicArn;
+public class QueueConfiguration{
+	private Queue queue;
+	private String queueArn;
 	private String eventType;
 	
-	@RdfProperty(AWS.TOPIC)
-	public Topic getTopic() {
-		return topic;
+
+	@RdfProperty(AWS.QUEUE)
+	public Queue getQueue() {
+		return queue;
 	}
-	public void setTopic(Topic topic) {
-		this.topic = topic;
-	}
-	
-	public void setTopicArn(String topicArn) {
-		this.topicArn = topicArn;
+	public void setQueue(Queue queue) {
+		this.queue = queue;
 	}
 	
-	public String getTopicArn() {
-		return topicArn==null?(topic==null||topic.getId()==null ? null : topic.getId().stringValue()):topicArn;
-	}
 	
 	@RdfProperty(AWS.EVENT_TYPE)
 	public String getEventType() {
@@ -54,6 +45,13 @@ public class TopicConfiguration{
 	}
 	public void setEventType(String eventType) {
 		this.eventType = eventType;
+	}
+	
+	public void setQueueArn(String queueArn) {
+		this.queueArn = queueArn;
+	}
+	public String getQueueArn() {
+		return queueArn==null?(queue==null || queue.getId()==null ? null : queue.getId().stringValue()):queueArn;
 	}
 	
 }

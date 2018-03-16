@@ -22,9 +22,11 @@ package io.konig.maven;
 
 
 import java.io.File;
+import java.io.IOException;
 
 import org.codehaus.plexus.util.StringUtils;
 
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.auth.policy.Principal;
 import com.amazonaws.auth.policy.Resource;
@@ -38,19 +40,25 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sns.model.CreateTopicResult;
+import com.amazonaws.services.sns.model.DeleteTopicRequest;
 import com.amazonaws.services.sns.model.SetTopicAttributesRequest;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.DeleteQueueResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.konig.aws.common.InvalidAWSCredentialsException;
+import io.konig.aws.datasource.Queue;
+import io.konig.aws.datasource.QueueConfiguration;
 import io.konig.aws.datasource.S3Bucket;
 import io.konig.aws.datasource.Topic;
 import io.konig.aws.datasource.TopicConfiguration;
 
-public class CreateAwsSnsTopicAction {
+public class DeleteAwsSQS {
 	private AwsDeployment deployment;
 
-	public CreateAwsSnsTopicAction(AwsDeployment deployment){
-		this.deployment=deployment;
+	public DeleteAwsSQS(AwsDeployment deployment) {
+		this.deployment = deployment;
 	}
 	
 	public AwsDeployment from(String path) throws Exception {
@@ -59,33 +67,24 @@ public class CreateAwsSnsTopicAction {
 			ObjectMapper mapper=new ObjectMapper();
 			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
 			deployment.verifyAWSCredentials();
-			String envtName="";
-			if(System.getProperty("environmentName") != null) {
-				envtName = System.getProperty("environmentName");
-			}
-			String bucketName=StringUtils.replaceOnce(bucket.getBucketName(), "${environmentName}", envtName);
-			TopicConfiguration notificationConfig = bucket.getNotificationConfiguration().getTopicConfiguration();
-			if(notificationConfig!=null && notificationConfig.getTopic()!=null){
-				Topic topic=notificationConfig.getTopic();				
-				Regions regions=Regions.fromName(topic.getRegion());
-				AmazonSNS sns = AmazonSNSClientBuilder.standard()
+			QueueConfiguration queueConfig = bucket.getNotificationConfiguration().getQueueConfiguration();
+			if(queueConfig != null && queueConfig.getQueue() != null){
+				Queue queue = queueConfig.getQueue();				
+				Regions regions = Regions.fromName(queue.getRegion());
+				AmazonSQS sqs = AmazonSQSClientBuilder.standard()
 						.withCredentials(deployment.getCredential())
-						.withRegion(regions).build();  
-				CreateTopicResult result = sns.createTopic(topic.getResourceName());
-				deployment.setResponse("Topic with ARN : "+result.getTopicArn()+" is created");
+						.withRegion(regions).build();
+				String accountId = "";
+				if (System.getProperty("aws-account-id") != null) {
+					accountId = System.getProperty("aws-account-id");
+				}
+				String queueUrl = sqs.getQueueUrl(queueConfig.getQueue().getResourceName()).getQueueUrl();
+						
+				String queueArn = StringUtils.replaceOnce(queueConfig.getQueueArn(), "${aws-account-id}",
+						accountId);
 				
-				Policy policy = new Policy().withStatements(
-					    new Statement(Effect.Allow)
-					        .withPrincipals(Principal.AllUsers)
-					        .withActions(SNSActions.Publish)
-					        .withResources(new Resource(result.getTopicArn()))
-					        .withConditions(new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY, "arn:aws:s3:*:*:"+bucketName)));
-				
-				sns.setTopicAttributes(
-				    new SetTopicAttributesRequest(result.getTopicArn(), "Policy", policy.toJson()));
-			}
-			else{
-				deployment.setResponse("No topic is configured to the S3 Bucket");
+				sqs.deleteQueue(queueUrl);
+				deployment.setResponse("Queue "+queueArn+" is deleted");
 			}
 			
 		}
@@ -94,5 +93,4 @@ public class CreateAwsSnsTopicAction {
 		}
 	    return deployment;
 	}
-
 }
