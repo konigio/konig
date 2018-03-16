@@ -25,12 +25,18 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.component.aws.s3.S3Constants;
 
+import io.konig.camel.aws.s3.S3Operations;
+
+
 public class PrepareToDeleteFromBucket implements Processor {
 	
     public void process(Exchange exchange) throws Exception {
     	exchange.getOut().setBody("delete");
     	String fileName = exchange.getIn().getHeader("fileName", String.class);
-    	exchange.getOut().setHeaders(exchange.getIn().getHeaders());
-        exchange.getOut().setHeader(S3Constants.KEY, fileName);
+    	String bucketName = exchange.getIn().getHeader("bucketName", String.class);
+        exchange.getIn().setHeader(S3Constants.KEY, fileName); 
+        exchange.getIn().setHeader(S3Constants.BUCKET_NAME, bucketName);
+        exchange.getIn().setHeader(S3Constants.S3_OPERATION, S3Operations.deleteBucket);
+        exchange.getOut().setHeaders(exchange.getIn().getHeaders());
     }
 }
