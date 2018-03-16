@@ -127,8 +127,8 @@ public class EtlRouteBuilder {
 		route.appendChild(addProcess("ref", "prepareToDeleteFromBucket"));
 
 		Element toG = doc.createElement("from");
-		toG.setAttribute("uri", "aws-s3://" + bucket.getBucketName()
-				+ "?prefix=${header.fileName}&amazonS3Client=#s3Client&deleteAfterRead=true");
+		toG.setAttribute("uri", "konig-aws-s3://" + bucket.getBucketName()
+				+ "?amazonS3Client=#s3Client");
 		route.appendChild(toG);
 
 		route.appendChild(addProcess("ref", "prepareToExport"));

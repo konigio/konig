@@ -23,20 +23,18 @@ package org.apache.camel;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Test;
 
-public class DeleteObjectComponentTest extends CamelTestSupport {
+public class DeleteObjectComponentTest {
 
-    @Test
+	/* @Test
     public void testDeleteObject() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMinimumMessageCount(1);       
         
         assertMockEndpointsSatisfied();
-    }
+    }*/
 
-    @Override
+    /*@Override
     protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() {
@@ -45,5 +43,5 @@ public class DeleteObjectComponentTest extends CamelTestSupport {
                   .to("mock:result");
             }
         };
-    }
+    }*/
 }
