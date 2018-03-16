@@ -44,4 +44,10 @@ public class WhereClause extends AbstractExpression {
 		out.print(condition);
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "condition", condition);
+		
+	}
+
 }

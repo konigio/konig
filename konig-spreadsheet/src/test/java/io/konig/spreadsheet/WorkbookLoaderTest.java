@@ -61,6 +61,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.AS;
+import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
@@ -224,7 +225,7 @@ public class WorkbookLoaderTest {
 		assertEquals(1, list.size());
 		
 		DataSource ds = list.get(0);
-		assertEquals("http://www.konig.io/ns/omcs/instances/testOracleInstance/databases/schema/tables/Person", 
+		assertEquals("http://www.konig.io/ns/omcs/instances/test/databases/schema/tables/Person", 
 				ds.getId().stringValue());
 		
 		assertTrue(ds.isA(Konig.OracleTable));
@@ -807,8 +808,68 @@ public class WorkbookLoaderTest {
 		
 		
 	}
+	
+	@Test
+	public void testAmazonRDSCluster() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("person-model-amazon-rds.xlsx");
+		
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		
+		loader.load(book, graph);		
+		
+		Vertex shape = graph.getVertex(uri("https://amazonaws.konig.io/rds/cluster/${environmentName}-test"));		
+		
+		assertValue(shape, AWS.dbClusterId, "${environmentName}-test");
+		assertValue(shape, AWS.dbClusterName, "test");
+		assertValue(shape, AWS.engine, "aurora");
+		assertValue(shape, AWS.engineVersion, "5.6.10a");
+		assertValue(shape, AWS.instanceClass, "db.r4.large");
+		assertValue(shape, AWS.backupRetentionPeriod, "1");
+		assertValue(shape, AWS.databaseName, "pearson-edw");
+		assertValue(shape, AWS.dbSubnetGroupName, "default");
+		assertValue(shape, AWS.preferredBackupWindow, "04:22-04:52");
+		assertValue(shape, AWS.preferredMaintenanceWindow, "fri:06:44-fri:07:14");
+		assertValue(shape, AWS.replicationSourceIdentifier, "arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster1");
+		assertValue(shape, AWS.storageEncrypted, "0");
+		List<Value> list = graph.v(uri("https://amazonaws.konig.io/rds/cluster/${environmentName}-test")).out(AWS.availabilityZone).toValueList();
+		assertEquals(3, list.size());
+	}
 
+	@Test
+	public void testAwsTable() throws Exception {
 
+		InputStream input = getClass().getClassLoader().getResourceAsStream("awsAurora-transform.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/AuroraProductShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		
+		Shape shape = s.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		List<DataSource> list = shape.getShapeDataSource();
+		assertEquals(1, list.size());
+		DataSource ds = list.get(0);
+		assertEquals("http://www.konig.io/ns/aws/host/devHost/databases/edwcore/tables/AuroraProductShape", 
+				ds.getId().stringValue());
+		assertTrue(ds.isA(Konig.AwsAuroraTable));
+	}
+	
 	private void checkPropertyConstraints(Graph graph) {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));

@@ -136,6 +136,9 @@ public class SimplePropertyMapper implements PropertyMapper {
 			
 			LinkedList<ShapeModelMatchCount> queue = collectShapeModelMatchCount(targetClassModel);
 			Collections.sort(queue);
+			if (logger.isDebugEnabled()) {
+				logQueue(targetClassModel, queue);
+			}
 			
 			boolean matched = false;
 			
@@ -178,6 +181,25 @@ public class SimplePropertyMapper implements PropertyMapper {
 
 		
 		
+		private void logQueue(ClassModel targetClassModel, LinkedList<ShapeModelMatchCount> queue) {
+		
+			logger.debug("handleClass({})", RdfUtil.localName(targetClassModel.getOwlClass()));
+		
+			StringBuilder builder = new StringBuilder();
+			if (queue.isEmpty()) {
+				logger.debug("No candidate source shapes found.");
+			} else {
+				builder.append("handleClass: candidate source shapes...");
+				for (ShapeModelMatchCount e : queue) {
+					builder.append("\n   ");
+					builder.append(RdfUtil.localName(e.getShapeModel().getShape().getId()));
+				}
+				logger.debug(builder.toString());
+			}
+			
+		}
+
+
 		private void createPathFromItems(ClassModel targetClassModel) {
 //			ShapeModel shapeModel = targetClassModel.getTargetShapeModel();
 //			
@@ -1007,6 +1029,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 				
 				StepPropertyModel step = direct.getStepPropertyModel();
 				if (step != null && isTopShape(direct.getDeclaringShape())) {
+					logger.debug("replacing property with step: {}", step.getPredicate().getLocalName());
 					p = step;
 				}
 				
@@ -1047,7 +1070,17 @@ public class SimplePropertyMapper implements PropertyMapper {
 				if (group.getTargetProperty()==null) {
 					logger.debug("declareMatch(group.targetProperty: null)");
 				} else {
-					logger.debug("declareMatch({})", group.getTargetProperty().simplePath());
+					String sourceProperty = "null";
+					PropertyModel sp = group.getSourceProperty();
+					if (sp!=null) {
+						if (sp instanceof StepPropertyModel) {
+							StepPropertyModel step = (StepPropertyModel) sp;
+							sourceProperty = step.getDeclaringProperty().getPredicate().getLocalName();
+						} else {
+							sourceProperty = sp.getPredicate().getLocalName();
+						}
+					}
+					logger.debug("declareMatch({} => {})", sourceProperty, group.getTargetProperty().simplePath());
 				}
 			}
 			unmatchedProperties.remove(group);

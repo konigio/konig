@@ -82,7 +82,11 @@ public class KonigOmcsDeploymentMojo extends AbstractMojo {
 	private void createTables(File file) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 		OracleTableDefinition table = mapper.readValue(file, OracleTableDefinition.class);
-		String instance = table.getTableReference().getOmcsInstanceId();
+		String oracleHost = table.getTableReference().getOracleHost();
+		if(System.getProperty(oracleHost) != null) {
+			oracleHost = System.getProperty(oracleHost);
+		}
+		String instance = oracleHost +":" +table.getTableReference().getOmcsInstanceId();
 		String schema = table.getTableReference().getOracleSchema();
 		String createQuery = table.getQuery();
 		connection = OmcsConnection.getConnection(instance, schema);			

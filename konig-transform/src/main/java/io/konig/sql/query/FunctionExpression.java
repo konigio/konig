@@ -22,7 +22,9 @@ package io.konig.sql.query;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.konig.core.io.PrettyPrintWriter;
 
@@ -30,6 +32,16 @@ public class FunctionExpression extends AbstractExpression implements NumericVal
 	
 	public static final String ANY_VALUE = "ANY_VALUE";
 	public static final String UNNEST = "UNNEST";
+	public static final String SUM = "SUM";
+	public static final String COUNT = "COUNT";
+	public static final String ARRAY_AGG = "ARRAY_AGG";
+	
+	private static final Set<String> AGGREGATE_FUNCTION = new HashSet<>();
+	static {
+		AGGREGATE_FUNCTION.add(SUM);
+		AGGREGATE_FUNCTION.add(COUNT);
+		AGGREGATE_FUNCTION.add(ARRAY_AGG);
+	}
 	
 	private String functionName;
 	private List<QueryExpression> argList = new ArrayList<>();
@@ -43,6 +55,10 @@ public class FunctionExpression extends AbstractExpression implements NumericVal
 		for (QueryExpression e : arg) {
 			addArg(e);
 		}
+	}
+	
+	public boolean isAggregateFunction() {
+		return AGGREGATE_FUNCTION.contains(functionName.toUpperCase());
 	}
 	
 	public void addArg(QueryExpression arg) {
@@ -71,6 +87,14 @@ public class FunctionExpression extends AbstractExpression implements NumericVal
 
 	public List<QueryExpression> getArgList() {
 		return argList;
+	}
+
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		for (QueryExpression arg : argList) {
+			visit(visitor, "arg", arg);
+		}
+		
 	}
 
 }

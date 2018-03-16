@@ -33,6 +33,8 @@ import java.sql.SQLException;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.sqladmin.SQLAdmin;
+import com.google.api.services.sqladmin.model.Database;
 import com.google.api.services.sqladmin.model.DatabaseInstance;
 import com.google.api.services.sqladmin.model.Operation;
 import com.google.api.services.sqladmin.model.User;
@@ -59,17 +61,31 @@ public class CreateGoogleCloudSqlTableAction {
 		File file = deployment.file(path);		
 		CloudSqlTable tableInfo=service.readCloudSqlTableInfo(file);
 		
+		//Check whether instance and database are created.
+		SQLAdmin sqlAdmin = service.sqlAdmin();
+		DatabaseInstance instance = service.getDatabaseInstance(tableInfo.getInstance());
+		if(instance==null){
+			deployment.setResponse("CreateTable :: Instance "+tableInfo.getInstance()+" not available");
+			return deployment;
+		}
+		Database db = service.getDatabase(tableInfo.getDatabase(),tableInfo.getInstance());				
+		if (db == null ){
+			deployment.setResponse("CreateTable :: Database "+tableInfo.getDatabase()+" not available");
+			return deployment;
+		}
+
+		
 		//1. Get user info from system properties /environment variables
 		String userName = System.getProperty("konig.gcp.cloudsql."+tableInfo.getInstance()+".username");
 		String password = System.getProperty("konig.gcp.cloudsql."+tableInfo.getInstance()+".password");
 		if (userName == null || password == null) {
 			userName = System.getenv("KONIG_GCP_CLOUDSQL_"+tableInfo.getInstance()+"_USERNAME");
 			password = System.getenv("KONIG_GCP_CLOUDSQL_"+tableInfo.getInstance()+"_PASSWORD");
+			
 		}
 		if (userName == null || password == null) {
 			throw new GoogleCloudSQLCredentialsNotFoundException();
 		}
-		
 		//2.Create User for the instance
 		User user=new User();
 		user.setPassword(password);
@@ -98,7 +114,7 @@ public class CreateGoogleCloudSqlTableAction {
 		deployment.setResponse("Created  Table " + tableInfo.getName());
 		}
 		else{
-			deployment.setResponse(" Table " + tableInfo.getName()+" is already available");
+			deployment.setResponse("CreateTable :: Table " + tableInfo.getName()+" is already available");
 		}
 		
 		return deployment;

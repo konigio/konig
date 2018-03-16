@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import io.konig.gcp.common.GoogleCloudService;
 import io.konig.gcp.common.InvalidGoogleCredentialsException;
+import io.konig.schemagen.java.SystemConfig;
 
 public class KonigDeployment {
 	
@@ -34,12 +35,17 @@ public class KonigDeployment {
 	private File baseDir;
 	private String response;
 	
-	public KonigDeployment(String credentials, String baseDir) throws InvalidGoogleCredentialsException, IOException {
-		
+	public KonigDeployment(String baseDir) throws InvalidGoogleCredentialsException, IOException {
+		SystemConfig.init();
+		String credentials=System.getProperty("google.credentials");
+		if(credentials==null){
+			throw new InvalidGoogleCredentialsException("Please set the deployment property \"google.credentials\"");
+		}
+		credentials=credentials.replace("\\", "/");
 		File credentialsFile = new File(credentials);
 		service = new GoogleCloudService();
 		service.openCredentials(credentialsFile);
-		this.baseDir = new File(baseDir).getAbsoluteFile();
+		this.baseDir = new File(baseDir).getAbsoluteFile();		
 	}
 	
 	public Object insert(InsertResourceType type) {
@@ -73,6 +79,9 @@ public class KonigDeployment {
 			
 		case GoogleCloudSqlTable :
 			return new CreateGoogleCloudSqlTableAction(this);
+		
+		case GoogleCloudStorageBucket :
+			return new CreateGoogleCloudStorageBucketAction(this);
 			
 		default:
 			break;
@@ -94,7 +103,19 @@ public class KonigDeployment {
 			
 		case GooglePubSubTopic :
 			return new DeleteGooglePubSubTopicAction(this);		
-
+		
+		case GoogleCloudSqlInstance :
+			return new DeleteGoogleCloudSqlInstanceAction(this);
+			
+		case GoogleCloudSqlDatabase :
+			return new DeleteGoogleCloudSqlDatabaseAction(this);
+			
+		case GoogleCloudSqlTable :
+			return new DeleteGoogleCloudSqlTableAction(this);
+		
+		case GoogleCloudStorageBucket :
+			return new DeleteGoogleCloudStorageBucketAction(this);
+			
 		default:
 			break;
 			

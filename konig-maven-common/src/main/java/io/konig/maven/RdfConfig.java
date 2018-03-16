@@ -29,6 +29,7 @@ public class RdfConfig {
 	private File rdfDir;
 	private File owlDir;
 	private File shapesDir;
+	private File derivedDir;
 	
 	public File getRdfDir() {
 		if (rdfDir==null && rootDir != null) {
@@ -47,6 +48,15 @@ public class RdfConfig {
 	}
 	public void setOwlDir(File owlDir) {
 		this.owlDir = owlDir;
+	}
+	public File getDerivedDir() {
+		if (derivedDir == null && getRdfDir()!=null) {
+			derivedDir = new File(getRdfDir(), "shape-dependencies");
+		}
+		return derivedDir;
+	}
+	public void setDerivedDir(File derivedDir) {
+		this.derivedDir = derivedDir;
 	}
 	public File getShapesDir() {
 		if (shapesDir == null && getRdfDir() != null) {

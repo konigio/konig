@@ -47,6 +47,8 @@ public class GoogleCloudPlatformConfig {
     
 	private boolean enableBigQueryTransform=true;
 	
+	private boolean enableMySqlTransform=true;
+	
 	@Parameter(property="konig.gcp.bigquery", required=true)
 	private BigQueryInfo bigquery;
 	
@@ -139,6 +141,13 @@ public class GoogleCloudPlatformConfig {
 		this.enableBigQueryTransform = enableBigQueryTransform;
 	}
 	
+	public boolean isEnableMySqlTransform() {
+		return enableMySqlTransform;
+	}
+
+	public void setEnableMySqlTransform(boolean enableMySqlTransform) {
+		this.enableMySqlTransform = enableMySqlTransform;
+	}
 
 	public BigQueryInfo getBigquery() {
 		return bigquery;

@@ -21,7 +21,11 @@
   		<artifactId>konig-gcp-common</artifactId>
 			<version>${konig.version}</version>
   	</dependency>
-  	
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-gcp-model</artifactId>
+			<version>${konig.version}</version>
+  	</dependency>
   	
   	<dependency>
   		<groupId>io.konig</groupId>
@@ -93,7 +97,8 @@
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
-    	<dependency> 
+    
+    <dependency> 
 	  <groupId>mysql</groupId>
 	  <artifactId>mysql-connector-java</artifactId>
 	  <version>5.1.9</version>  
@@ -104,6 +109,46 @@
 	  <artifactId>mysql-socket-factory</artifactId>
 	  <version>1.0.5</version>
 	</dependency>
+		<dependency>
+	    <groupId>com.google.cloud</groupId>
+	    <artifactId>google-cloud-storage</artifactId>
+	    <version>1.14.0</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.google.cloud</groupId>
+	    <artifactId>google-cloud-core-http</artifactId>
+	    <version>1.14.0</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.google.cloud</groupId>
+	    <artifactId>google-cloud-notification</artifactId>
+	    <version>0.32.0-beta</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.google.api.grpc</groupId>
+	    <artifactId>proto-google-cloud-pubsub-v1</artifactId>
+	    <version>0.1.26</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.google.cloud</groupId>
+	    <artifactId>google-cloud-core</artifactId>
+	    <version>1.14.0</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.google.api</groupId>
+	    <artifactId>gax</artifactId>
+	    <version>1.15.0</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.google.cloud</groupId>
+	    <artifactId>google-cloud-pubsub</artifactId>
+	    <version>0.32.0-beta</version>
+	</dependency>
+		<dependency>
+			<groupId>io.konig</groupId>
+			<artifactId>konig-schemagen</artifactId>
+			<version>${konig.version}</version>
+		</dependency>
   </dependencies>
   <build>
 	  <plugins>

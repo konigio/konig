@@ -50,7 +50,7 @@ public class CreateGoogleCloudSqlDatabaseAction {
 			Database info = service.readDatabaseInfo(file);
 				DatabaseInstance instance = service.getDatabaseInstance(info.getInstance());
 				if(instance==null){
-					deployment.setResponse("Instance "+info.getName()+" not available");
+					deployment.setResponse("CreateDatabase :: Instance "+info.getInstance()+" not available");
 					return deployment;
 				}
 				Database db = service.getDatabase(info.getName(),info.getInstance());				
@@ -59,7 +59,7 @@ public class CreateGoogleCloudSqlDatabaseAction {
 					deployment.setResponse("Created  Database " + info.getName());
 				}
 				else{
-					deployment.setResponse("Database "+info.getName()+" is already available");
+					deployment.setResponse("CreatDatabase :: Database "+info.getName()+" is already available");
 				}
 			
 		} catch (Exception ex) {

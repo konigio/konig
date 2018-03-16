@@ -1,5 +1,7 @@
 package io.konig.transform.proto;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Transform
@@ -50,6 +52,7 @@ import io.konig.shacl.Shape;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.GroupingElement;
 import io.konig.transform.ShapeTransformException;
+import io.konig.transform.TransformProcessor;
 import io.konig.transform.rule.AlphabeticVariableNamer;
 import io.konig.transform.rule.BooleanExpression;
 import io.konig.transform.rule.ChannelProperty;
@@ -80,7 +83,26 @@ public class ShapeModelToShapeRule {
 	private static final Logger logger = LoggerFactory.getLogger(ShapeModelToShapeRule.class);
 	
 	private boolean failIfPropertyNotMapped=true;
-	
+	private List<TransformPostProcessor> listTransformprocess;
+	public List<TransformPostProcessor> getListTransformprocess() {
+		if(listTransformprocess==null)
+		{
+			listTransformprocess=new ArrayList<>();	
+		}
+		return listTransformprocess;
+	}
+
+
+	public void addListTransformprocess(TransformPostProcessor transformprocess) {
+		this.listTransformprocess.add(transformprocess);
+	}
+
+
+	public void setListTransformprocess(List<TransformPostProcessor> listTransformprocess) {
+		this.listTransformprocess = listTransformprocess;
+	}
+
+
 	public ShapeModelToShapeRule() {
 		
 	}
@@ -121,6 +143,7 @@ public class ShapeModelToShapeRule {
 			ShapeRule shapeRule = toShapeRule(shapeModel);
 			shapeRule.setFromItem(fromItem(shapeModel.getClassModel().getFromItem()));
 			invokePostProcessors(shapeModel, shapeRule);
+			
 			return shapeRule;
 		}
 		

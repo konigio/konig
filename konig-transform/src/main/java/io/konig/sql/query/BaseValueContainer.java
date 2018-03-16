@@ -41,4 +41,10 @@ public abstract class BaseValueContainer extends AbstractExpression implements V
 	}
 
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		for (ValueExpression value : values) {
+			visit(visitor, "value", value);
+		}
+	}
 }

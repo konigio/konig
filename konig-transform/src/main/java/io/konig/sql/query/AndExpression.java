@@ -58,4 +58,12 @@ public class AndExpression extends AbstractExpression implements BooleanTerm {
 		
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		for (BooleanTerm term : termList) {
+			visit(visitor, "term", term);
+		}
+		
+	}
+
 }

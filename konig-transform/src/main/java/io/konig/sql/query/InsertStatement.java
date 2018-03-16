@@ -54,7 +54,7 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 	@Override
 	public void print(PrettyPrintWriter out) {
 		
-		out.print("INSERT ");
+		out.print("INSERT INTO ");
 		out.print(targetTable);
 		out.print(" (");
 		out.pushIndent();
@@ -76,6 +76,15 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 		out.popIndent();
 		out.indent();
 		out.print(selectQuery);
+	}
+
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		for (ColumnExpression column : columns) {
+			visit(visitor, "column", column);
+		}
+		visit(visitor, "selectQuery", selectQuery);
+		visit(visitor, "targetTable", targetTable);
 	}
 
 }

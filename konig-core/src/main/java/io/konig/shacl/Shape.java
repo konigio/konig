@@ -573,7 +573,7 @@ public class Shape {
 	public void setMediaTypeBaseName(String mediaTypeBaseName) {
 		this.mediaTypeBaseName = mediaTypeBaseName;
 	}
-
+	
 
 	@RdfProperty(Konig.IRI_FORMULA)
 	public QuantifiedExpression getIriFormula() {

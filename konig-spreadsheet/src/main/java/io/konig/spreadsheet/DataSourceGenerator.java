@@ -22,7 +22,9 @@ package io.konig.spreadsheet;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -70,7 +72,9 @@ public class DataSourceGenerator {
 		this.templateDir = templateDir;
 		this.context = new VelocityContext();
 		context.put("templateException", new TemplateException());
-		put(properties);
+		context.put("beginVar", "${");
+		context.put("endVar", "}");
+		put(properties);		
 		createVelocityEngine();
 	}
 
@@ -94,7 +98,7 @@ public class DataSourceGenerator {
 
 		engine = new VelocityEngine(properties);
 	}
-
+	
 	private String merge(String templateName){
 		StringWriter result = new StringWriter();
 		try {
@@ -123,7 +127,7 @@ public class DataSourceGenerator {
 			context.put(key, value);
 		}
 	}
-
+	
 	public File getTemplateDir() {
 		return templateDir;
 	}

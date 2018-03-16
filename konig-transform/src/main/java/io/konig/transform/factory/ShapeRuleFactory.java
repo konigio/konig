@@ -47,6 +47,10 @@ public class ShapeRuleFactory {
 	public ShapeManager getShapeManager() {
 		return shapeManager;
 	}
+	
+	public ShapeModelToShapeRule getShapeModelToShapeRule() {
+		return shapeModelToShapeRule;
+	}
 
 	public ShapeRule createShapeRule(Shape targetShape) throws TransformBuildException {
 

@@ -25,6 +25,7 @@ import java.io.File;
 
 import java.io.IOException;
 
+import io.konig.maven.AmazonWebServicesConfig;
 import io.konig.maven.DataCatalogConfig;
 import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
@@ -41,6 +42,7 @@ public class MultiProject extends MavenProjectConfig {
 	private DataCatalogConfig dataCatalog;
 	private JsonSchemaConfig jsonSchema;
 	private OracleManagedCloudConfig oracleManagedCloud;
+	private AmazonWebServicesConfig amazonWebServices;	
 	
 	public WorkbookProcessor getWorkbook() {
 		return workbook;
@@ -54,7 +56,13 @@ public class MultiProject extends MavenProjectConfig {
 		this.oracleManagedCloud = oracleManagedCloud;
 	}
 
+	public AmazonWebServicesConfig getAmazonWebServicesConfig() {
+		return amazonWebServices;
+	}
 	
+	public void setAmazonWebServicesConfig(AmazonWebServicesConfig amazonWebServices) {
+		this.amazonWebServices = amazonWebServices;
+	}
 
 	public JsonSchemaConfig getJsonSchemaConfig() {
 		return jsonSchema;
@@ -140,6 +148,9 @@ public class MultiProject extends MavenProjectConfig {
 		}
 		if(oracleManagedCloud != null) {
 			parent.add(new OracleManagedCloudProjectGenerator(this, oracleManagedCloud));
+		}
+		if(amazonWebServices != null) {
+			parent.add(new AwsModelGenerator(this, amazonWebServices));
 		}
 		return parent;
 	}

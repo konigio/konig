@@ -71,4 +71,16 @@ public class SimpleCase extends AbstractExpression implements CaseSpecification 
 
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "caseOperand", caseOperand);
+		visit(visitor, "elseClause", elseClause);
+		if (whenClauseList != null) {
+			for (SimpleWhenClause clause : whenClauseList) {
+				visit(visitor, "whenClause", clause);
+			}
+		}
+		
+	}
+
 }

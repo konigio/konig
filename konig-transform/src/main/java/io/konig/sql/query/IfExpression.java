@@ -59,4 +59,12 @@ public class IfExpression extends AbstractExpression implements NumericValueExpr
 		out.print(')');
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		visit(visitor, "condition", condition);
+		visit(visitor, "whenFalse", whenFalse);
+		visit(visitor, "whenTrue", whenTrue);
+		
+	}
+
 }

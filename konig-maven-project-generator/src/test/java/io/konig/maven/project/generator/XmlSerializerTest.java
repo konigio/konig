@@ -136,6 +136,7 @@ public class XmlSerializerTest {
 			"         <infoFile>config/info.yaml</infoFile>\n" + 
 			"      </dataServices>\n" + 
 			"      <enableBigQueryTransform>true</enableBigQueryTransform>\n" + 
+			"      <enableMySqlTransform>true</enableMySqlTransform>\n" + 
 			"   </googleCloudPlatform>\n" + 
 			"";
 		String actual = buffer.toString().replace("\r", "");

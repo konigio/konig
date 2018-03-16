@@ -30,14 +30,15 @@ public class CloudSqlInfo {
 
 	@Parameter(property="konig.gcp.cloudsql.instances", defaultValue="${konig.gcp.cloudsql.directory}/instances")
 	private File instances;
-	
-
 
 	@Parameter(property="konig.gcp.cloudsql.databases", defaultValue="${konig.gcp.cloudsql.directory}/databases")
 	private File databases;
 
 	@Parameter(property="konig.gcp.cloudsql.tables", defaultValue="${konig.gcp.cloudsql.directory}/tables")
 	private File tables;
+	
+	@Parameter(property="konig.gcp.cloudsql.scripts", defaultValue="${konig.gcp.cloudsql.directory}/scripts")
+	private File scripts;
 
 	public CloudSqlInfo() {
 	}
@@ -74,7 +75,12 @@ public class CloudSqlInfo {
 		this.databases = databases;
 	}
 	
+	public void setScripts(File scripts) {
+		this.scripts = scripts;
+	}
 	
-	
+	public File getScripts() {
+		return scripts;
+	}
 
 }

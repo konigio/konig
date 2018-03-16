@@ -33,4 +33,9 @@ public class CountStar extends AbstractExpression implements SetFunctionSpecific
 		out.print("COUNT(*)");
 	}
 
+	@Override
+	protected void dispatchProperties(QueryExpressionVisitor visitor) {
+		
+	}
+
 }

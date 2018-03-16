@@ -73,7 +73,7 @@ public class BigQueryCommandLineFactoryTest extends AbstractShapeModelToShapeRul
 		
 		String expected = 
 			"bq query --project_id={gcpProjectId} --use_legacy_sql=false "
-			+ "$'INSERT schema.Person (address)  "
+			+ "$'INSERT INTO schema.Person (address)  "
 			+ "SELECT  STRUCT( zipCode AS postalCode ) AS address  "
 			+ "FROM schema.OriginPersonShape'" 
 			;
