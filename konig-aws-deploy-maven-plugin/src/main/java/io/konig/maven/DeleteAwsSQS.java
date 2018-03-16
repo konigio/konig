@@ -66,7 +66,7 @@ public class DeleteAwsSQS {
 			File file = deployment.file(path);
 			ObjectMapper mapper=new ObjectMapper();
 			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
-			verifyAWSCredentials();
+			deployment.verifyAWSCredentials();
 			QueueConfiguration queueConfig = bucket.getNotificationConfiguration().getQueueConfiguration();
 			if(queueConfig != null && queueConfig.getQueue() != null){
 				Queue queue = queueConfig.getQueue();				
@@ -74,27 +74,23 @@ public class DeleteAwsSQS {
 				AmazonSQS sqs = AmazonSQSClientBuilder.standard()
 						.withCredentials(deployment.getCredential())
 						.withRegion(regions).build();
-				DeleteQueueResult result = sqs.deleteQueue(queueConfig.getQueueArn());
-				deployment.setResponse("Queue with ARN : "+queueConfig.getQueueArn()+" is deleted");
-			}
-			else{
-				deployment.setResponse("No topic is configured to the S3 Bucket");
+				String accountId = "";
+				if (System.getProperty("aws-account-id") != null) {
+					accountId = System.getProperty("aws-account-id");
+				}
+				String queueUrl = sqs.getQueueUrl(queueConfig.getQueue().getResourceName()).getQueueUrl();
+						
+				String queueArn = StringUtils.replaceOnce(queueConfig.getQueueArn(), "${aws-account-id}",
+						accountId);
+				
+				sqs.deleteQueue(queueUrl);
+				deployment.setResponse("Queue "+queueArn+" is deleted");
 			}
 			
 		}
 		catch(Exception e){
-			e.printStackTrace();
 			throw e;
 		}
 	    return deployment;
 	}
-
-	private void verifyAWSCredentials() throws InvalidAWSCredentialsException {
-		String accessKeyId=System.getProperty("aws.accessKeyId");
-		String secretKey=System.getProperty("aws.secretKey");
-		if(accessKeyId == null || secretKey==null)
-			throw new InvalidAWSCredentialsException();		
-	}
-
-
 }

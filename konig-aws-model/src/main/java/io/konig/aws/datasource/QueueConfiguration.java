@@ -26,6 +26,7 @@ import io.konig.core.vocab.AWS;
 
 public class QueueConfiguration{
 	private Queue queue;
+	private String queueArn;
 	private String eventType;
 	
 
@@ -45,8 +46,12 @@ public class QueueConfiguration{
 	public void setEventType(String eventType) {
 		this.eventType = eventType;
 	}
+	
+	public void setQueueArn(String queueArn) {
+		this.queueArn = queueArn;
+	}
 	public String getQueueArn() {
-		return queue==null || queue.getId()==null ? null : queue.getId().stringValue();
+		return queueArn==null?(queue==null || queue.getId()==null ? null : queue.getId().stringValue()):queueArn;
 	}
 	
 }

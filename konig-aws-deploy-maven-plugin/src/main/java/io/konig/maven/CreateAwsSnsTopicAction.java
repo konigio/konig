@@ -58,7 +58,7 @@ public class CreateAwsSnsTopicAction {
 			File file = deployment.file(path);
 			ObjectMapper mapper=new ObjectMapper();
 			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
-			verifyAWSCredentials();
+			deployment.verifyAWSCredentials();
 			String envtName="";
 			if(System.getProperty("environmentName") != null) {
 				envtName = System.getProperty("environmentName");
@@ -68,8 +68,10 @@ public class CreateAwsSnsTopicAction {
 			if(notificationConfig!=null && notificationConfig.getTopic()!=null){
 				Topic topic=notificationConfig.getTopic();				
 				Regions regions=Regions.fromName(topic.getRegion());
-				AmazonSNS sns = AmazonSNSClientBuilder.standard().withRegion(regions).build();  
-				CreateTopicResult result=sns.createTopic(topic.getResourceName());
+				AmazonSNS sns = AmazonSNSClientBuilder.standard()
+						.withCredentials(deployment.getCredential())
+						.withRegion(regions).build();  
+				CreateTopicResult result = sns.createTopic(topic.getResourceName());
 				deployment.setResponse("Topic with ARN : "+result.getTopicArn()+" is created");
 				
 				Policy policy = new Policy().withStatements(
@@ -88,17 +90,9 @@ public class CreateAwsSnsTopicAction {
 			
 		}
 		catch(Exception e){
-			e.printStackTrace();
 			throw e;
 		}
 	    return deployment;
-	}
-
-	private void verifyAWSCredentials() throws InvalidAWSCredentialsException {
-		String accessKeyId=System.getProperty("aws.accessKeyId");
-		String secretKey=System.getProperty("aws.secretKey");
-		if(accessKeyId == null || secretKey==null)
-			throw new InvalidAWSCredentialsException();		
 	}
 
 }

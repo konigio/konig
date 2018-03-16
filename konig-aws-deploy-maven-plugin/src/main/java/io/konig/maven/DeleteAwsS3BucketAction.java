@@ -55,9 +55,11 @@ public class DeleteAwsS3BucketAction {
 			File file = deployment.file(path);
 			ObjectMapper mapper=new ObjectMapper();
 			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
-			verifyAWSCredentials();
+			deployment.verifyAWSCredentials();
 			Regions regions=Regions.fromName(bucket.getRegion());
-			AmazonS3 s3client = AmazonS3ClientBuilder.standard().withRegion(regions).build();
+			AmazonS3 s3client = AmazonS3ClientBuilder.standard()
+					.withCredentials(deployment.getCredential())
+					.withRegion(regions).build();
 			String envtName="";
 			if(System.getProperty("environmentName") != null) {
 				envtName = System.getProperty("environmentName");
@@ -70,15 +72,8 @@ public class DeleteAwsS3BucketAction {
 				
 		}	
 		catch(Exception e){
-			e.printStackTrace();
 			throw e;
 		}
 	    return deployment;
-	}
-	private void verifyAWSCredentials() throws InvalidAWSCredentialsException {
-		String accessKeyId=System.getProperty("aws.accessKeyId");
-		String secretKey=System.getProperty("aws.secretKey");
-		if(accessKeyId == null || secretKey==null)
-			throw new InvalidAWSCredentialsException();		
 	}
 }

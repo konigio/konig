@@ -9,23 +9,23 @@
 	aws:bucketMediaType "${bucketMediaType}";
 	aws:notificationConfiguration [
 	  aws:topicConfiguration [
-	    aws:topicArn <arn:aws:sns:${aws-region}:${aws-account-id}:${shapeLocalName}_CreateEvent> ;
+	    aws:topic <arn:aws:sns:${aws-region}:${aws-account-id}:${shapeLocalName}_CreateEvent> ;
 	    aws:eventType "s3:ObjectCreated:*";
 	  ];
 	   aws:queueConfiguration [
-	    aws:queueArn <arn:aws:sqs:${aws-region}:${aws-account-id}:${shapeLocalName}_CreateEvent> ;
+	    aws:queue <arn:aws:sqs:${aws-region}:${aws-account-id}:${shapeLocalName}_CreateEvent> ;
 	    aws:eventType "s3:ObjectCreated:*";
 	  ]
   	]  .
   	
 <arn:aws:sns:${aws-region}:${aws-account-id}:${shapeLocalName}_CreateEvent> 
-  rdf:type aws:topic ;
+  rdf:type aws:Topic ;
   aws:resourceName "${shapeLocalName}_CreateEvent" ;
   aws:region "${aws-region}" ;
   aws:accountId "${aws-account-id}" .
 
 <arn:aws:sqs:${aws-region}:${aws-account-id}:${shapeLocalName}_CreateEvent>
-  rdf:type aws:queue ;
+  rdf:type aws:Queue ;
   aws:resourceName "${shapeLocalName}_CreateEvent" ;
   aws:region "${aws-region}" ;
   aws:accountId "${aws-account-id}" .

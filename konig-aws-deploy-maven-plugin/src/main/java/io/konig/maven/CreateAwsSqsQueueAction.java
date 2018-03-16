@@ -66,35 +66,42 @@ public class CreateAwsSqsQueueAction {
 			ObjectMapper mapper=new ObjectMapper();
 			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
 			deployment.verifyAWSCredentials();
-			String envtName="";
-			if(System.getProperty("environmentName") != null) {
-				envtName = System.getProperty("environmentName");
-			}
-			String bucketName=StringUtils.replaceOnce(bucket.getBucketName(), "${environmentName}", envtName);
+			
 			QueueConfiguration queueConfig = bucket.getNotificationConfiguration().getQueueConfiguration();
+			
 			if(queueConfig != null && queueConfig.getQueue() != null){
+				String accountId = "";
+				if (System.getProperty("aws-account-id") != null) {
+					accountId = System.getProperty("aws-account-id");
+				}
+				
 				Queue queue = queueConfig.getQueue();				
 				Regions regions=Regions.fromName(queue.getRegion());
 				AmazonSQS sqs = AmazonSQSClientBuilder.standard()
 						.withCredentials(deployment.getCredential())
 						.withRegion(regions).build();  
 				
-				CreateQueueResult result=sqs.createQueue(queue.getResourceName());
-				deployment.setResponse("Queue Url "+result.getQueueUrl()+" is created");
+				CreateQueueResult result = sqs.createQueue(queue.getResourceName());
+				
+				String topicArn = StringUtils.replaceOnce(bucket.getNotificationConfiguration().getTopicConfiguration().getTopicArn(), "${aws-account-id}",
+						accountId);
+				String queueArn = StringUtils.replaceOnce(bucket.getNotificationConfiguration().getQueueConfiguration().getQueueArn(), "${aws-account-id}",
+						accountId);
+				
+				deployment.setResponse("Queue  "+queueArn+" is created");
+				
 				Policy policy = new Policy().withStatements(
 					    new Statement(Effect.Allow)
 							.withPrincipals(Principal.AllUsers)
-					        .withActions(SQSActions.SendMessage));
-					        //.withResources(new Resource(queueARN))
-					       // .withConditions(ConditionFactory.newSourceArnCondition(topicARN)));
+					        .withActions(SQSActions.SendMessage)
+					        .withResources(new Resource(queueArn))
+					        .withConditions(ConditionFactory.newSourceArnCondition(topicArn)));
 				
 				Map<String, String> queueAttributes = new HashMap<String, String>();
 				queueAttributes.put(QueueAttributeName.Policy.toString(), policy.toJson());
 				 
 				sqs.setQueueAttributes(
 				    new SetQueueAttributesRequest(result.getQueueUrl(), queueAttributes));
-				
-				//deployment.setResponse("Queue with ARN : "+queueARN+" is Created");
 				
 			}
 			else{

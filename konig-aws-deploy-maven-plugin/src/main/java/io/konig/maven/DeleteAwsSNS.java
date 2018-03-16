@@ -63,15 +63,22 @@ public class DeleteAwsSNS {
 			File file = deployment.file(path);
 			ObjectMapper mapper=new ObjectMapper();
 			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
-			verifyAWSCredentials();
+			deployment.verifyAWSCredentials();
 			TopicConfiguration notificationConfig = bucket.getNotificationConfiguration().getTopicConfiguration();
 			if(notificationConfig!=null && notificationConfig.getTopic()!=null){
 				Topic topic=notificationConfig.getTopic();				
 				Regions regions=Regions.fromName(topic.getRegion());
-				AmazonSNS sns = AmazonSNSClientBuilder.standard().withRegion(regions).build();
-				CreateTopicResult result=sns.createTopic(topic.getResourceName());
-				sns.deleteTopic(result.getTopicArn());
-				deployment.setResponse("Topic with ARN : "+result.getTopicArn()+" is deleted");
+				AmazonSNS sns = AmazonSNSClientBuilder.standard()
+						.withCredentials(deployment.getCredential())
+						.withRegion(regions).build();
+				String accountId = "";
+				if (System.getProperty("aws-account-id") != null) {
+					accountId = System.getProperty("aws-account-id");
+				}
+				String topicArn = StringUtils.replaceOnce(notificationConfig.getTopicArn(), "${aws-account-id}",
+						accountId);
+				sns.deleteTopic(topicArn);
+				deployment.setResponse("Topic with ARN : "+topicArn+" is deleted");
 			}
 			else{
 				deployment.setResponse("No topic is configured to the S3 Bucket");
@@ -79,16 +86,8 @@ public class DeleteAwsSNS {
 			
 		}
 		catch(Exception e){
-			e.printStackTrace();
 			throw e;
 		}
 	    return deployment;
-	}
-
-	private void verifyAWSCredentials() throws InvalidAWSCredentialsException {
-		String accessKeyId=System.getProperty("aws.accessKeyId");
-		String secretKey=System.getProperty("aws.secretKey");
-		if(accessKeyId == null || secretKey==null)
-			throw new InvalidAWSCredentialsException();		
 	}
 }
