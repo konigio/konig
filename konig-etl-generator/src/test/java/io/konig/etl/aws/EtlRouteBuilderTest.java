@@ -58,7 +58,7 @@ public class EtlRouteBuilderTest {
 		
 		for (Vertex targetShapeVertex : graph.vertices()) {
 			Shape targetShape = shapeManager.getShapeById(new URIImpl("http://example.com/shapes/AuroraPersonShape"));
-			if (targetShape.equals(targetShapeVertex.getId()) && targetShape.hasDataSourceType(Konig.AwsAuroraTable)) {
+			if (targetShape.getId().equals(targetShapeVertex.getId()) && targetShape.hasDataSourceType(Konig.AwsAuroraTable)) {
 				assertEquals("http://example.com/shapes/AuroraPersonShape", targetShapeVertex.getId().toString());
 				List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.DERIVEDFROM).toVertexList();
 				assertEquals(2, sourceList.size());

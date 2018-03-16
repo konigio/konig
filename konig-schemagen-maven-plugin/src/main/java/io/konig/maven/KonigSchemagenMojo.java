@@ -38,8 +38,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -75,6 +77,7 @@ import org.codehaus.plexus.util.FileUtils;
 import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
@@ -773,8 +776,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if(transformsDir != null){
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
 				ShapeRuleFactory shapeRuleFactory=new ShapeRuleFactory(shapeManager, shapeModelFactory, new ShapeModelToShapeRule());
-				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir));
-				resourceGenerator.add(generator);
+				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir), rdfSourceDir);resourceGenerator.add(generator);
 			}
 			resourceGenerator.dispatch(shapeManager.listShapes());
 			GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
@@ -1036,6 +1038,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 	private void generateCamelEtl() throws MojoExecutionException {
 		File outDir = null;
+		Map<String, Object> services=new HashMap<>();
+		Shape dockerComposer = null;
 		try {
 			File derivedDir = new File(rdfSourceDir, "shape-dependencies");
 		
@@ -1046,7 +1050,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				
 				for (Vertex targetShapeVertex : graph.vertices()) {					
 					Shape targetShape = shapeManager.getShapeById(targetShapeVertex.getId());
-					
+					dockerComposer=targetShape;
 					if (targetShape.hasDataSourceType(Konig.AwsAuroraTable)) {
 						if(amazonWebServices != null) {
 							outDir = amazonWebServices.getCamelEtl();
@@ -1062,11 +1066,18 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 									&& sourceShape.hasDataSourceType(Konig.S3Bucket)) {
 								EtlRouteBuilder builder = new EtlRouteBuilder(sourceShape, targetShape, outDir);
 								builder.generate();
-
+								String serviceName=new URIImpl(targetShape.getId().stringValue()).getLocalName();
+								Map<String, Object> service=new HashMap<>();
+								service.put("image", "ectest/"+serviceName+":latest");
+								services.put(serviceName, service);
 							}
 						}
 					}
+					
 				}
+				EtlRouteBuilder builder = new EtlRouteBuilder(null, dockerComposer, outDir);
+				
+				builder.createDockerComposeFile(services);
 			}
 			
 		} catch (Exception ex) {
@@ -1074,4 +1085,5 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
+	
 }
