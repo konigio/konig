@@ -158,6 +158,11 @@
 							<entryPoint>
 							<exec>
 						<arg>java</arg>
+						<arg>-DdevHost=${devHost}</arg>
+						<arg>-Daws.rds.username=${aws.rds.username}</arg>
+						<arg>-Daws.rds.password=${aws.rds.password}</arg>
+						<arg>-Daws.accessKey=${aws.accessKey}</arg>
+						<arg>-Daws.secretKey=${aws.secretKey}</arg>
 						<arg>-jar</arg>
 						<arg>maven/konig-etl-2.0.0-8-SNAPSHOT.jar</arg>
 							</exec>
