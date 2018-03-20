@@ -23,15 +23,22 @@ package io.konig.etl.aws;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
+import org.codehaus.plexus.util.StringUtils;
 
 public class PrepareToExport implements Processor {
 	
     public void process(Exchange exchange) throws Exception {
     	String targetTable = exchange.getIn().getHeader("targetTable", String.class);
-    	String bucketName = exchange.getIn().getHeader("bucketName", String.class);
+    	String bucketName = exchange.getIn().getHeader("targetBucketName", String.class);
+    	String bucketRegion = exchange.getIn().getHeader("targetBucketRegion", String.class);
     	String fileName = exchange.getIn().getHeader("fileName", String.class); 
     	String modified = exchange.getIn().getHeader("modified", String.class); 
-        exchange.getOut().setBody("SELECT * FROM "+targetTable +" WHERE modified=TIMESTAMP('"+modified+"') INTO OUTFILE S3 's3://"+bucketName+"/"+fileName+"' "
+    	String envName = "";
+    	if(System.getProperty("environmentName") != null) {
+    		envName = System.getProperty("environmentName");
+		}
+    	bucketName = StringUtils.replaceOnce(bucketName,"${environmentName}",envName);
+        exchange.getOut().setBody("SELECT * FROM "+targetTable +" WHERE modified=TIMESTAMP('"+modified+"') INTO OUTFILE S3 's3-"+bucketRegion+"://"+bucketName+"/"+fileName+"' "
         		+ " FIELDS TERMINATED BY ','"
         		+ "   LINES TERMINATED BY '\n' OVERWRITE ON;");  
         
