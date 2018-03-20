@@ -97,6 +97,12 @@ public class GroovyAwsDeploymentScriptWriter {
 				println(" println response ");
 				
 				print(indent);
+				print("create AwsSqsQueue from \"");
+				print(path);
+				print("\"");
+				println(" println response ");
+				
+				print(indent);
 				print("create AwsS3Bucket from \"");
 				print(path);
 				print("\"");

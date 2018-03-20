@@ -1,5 +1,7 @@
 package io.konig.aws.datasource;
 
+import org.openrdf.model.URI;
+
 import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.AWS;
 
@@ -25,6 +27,8 @@ import io.konig.core.vocab.AWS;
 
 
 public class Topic {
+	private URI id;
+	
 	private String resourceName;
 	private String region;
 	private String accountId;
@@ -48,6 +52,12 @@ public class Topic {
 	}
 	public void setAccountId(String accountId) {
 		this.accountId = accountId;
+	}
+	public URI getId() {
+		return id;
+	}
+	public void setId(URI id) {
+		this.id = id;
 	}
 	
 }

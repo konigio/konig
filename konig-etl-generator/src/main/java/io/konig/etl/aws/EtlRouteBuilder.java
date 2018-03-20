@@ -97,7 +97,7 @@ public class EtlRouteBuilder {
 		S3Bucket bucket = sourceShape.findDataSource(S3Bucket.class);
 		Element fromsqs = doc.createElement("from");
 		fromsqs.setAttribute("uri",
-				"aws-sqs://" + bucket.getNotificationConfiguration().getTopic().getResourceName()
+				"aws-sqs://" + bucket.getNotificationConfiguration().getQueueConfiguration().getQueue().getResourceName()
 						+ "?amazonSQSClient=#sqsClient&region=" + bucket.getRegion()
 						+ "&defaultVisibilityTimeout=5000&deleteIfFiltered=false");
 
@@ -127,8 +127,8 @@ public class EtlRouteBuilder {
 		route.appendChild(addProcess("ref", "prepareToDeleteFromBucket"));
 
 		Element toG = doc.createElement("from");
-		toG.setAttribute("uri", "aws-s3://" + bucket.getBucketName()
-				+ "?prefix=${header.fileName}&amazonS3Client=#s3Client&deleteAfterRead=true");
+		toG.setAttribute("uri", "konig-aws-s3://" + bucket.getBucketName()
+				+ "?amazonS3Client=#s3Client");
 		route.appendChild(toG);
 
 		route.appendChild(addProcess("ref", "prepareToExport"));

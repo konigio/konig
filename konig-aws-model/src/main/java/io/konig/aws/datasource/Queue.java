@@ -26,34 +26,42 @@ import io.konig.core.vocab.AWS;
  */
 
 
-public class TopicConfiguration{
+public class Queue {
+	private URI id;
+	private String resourceName;
+	private String region;
+	private String accountId;
 	
-	private Topic topic;
-	private String topicArn;
-	private String eventType;
-	
-	@RdfProperty(AWS.TOPIC)
-	public Topic getTopic() {
-		return topic;
+	@RdfProperty(AWS.RESOURCE_NAME)
+	public String getResourceName() {
+		return resourceName;
 	}
-	public void setTopic(Topic topic) {
-		this.topic = topic;
-	}
-	
-	public void setTopicArn(String topicArn) {
-		this.topicArn = topicArn;
+	public void setResourceName(String resourceName) {
+		this.resourceName = resourceName;
 	}
 	
-	public String getTopicArn() {
-		return topicArn==null?(topic==null||topic.getId()==null ? null : topic.getId().stringValue()):topicArn;
+	@RdfProperty(AWS.AWS_REGION)
+	public String getRegion() {
+		return region;
+	}
+	public void setRegion(String region) {
+		this.region = region;
 	}
 	
-	@RdfProperty(AWS.EVENT_TYPE)
-	public String getEventType() {
-		return eventType;
+	@RdfProperty(AWS.ACCOUNT_ID)
+	public String getAccountId() {
+		return accountId;
 	}
-	public void setEventType(String eventType) {
-		this.eventType = eventType;
+	public void setAccountId(String accountId) {
+		this.accountId = accountId;
 	}
+	public URI getId() {
+		return id;
+	}
+	public void setId(URI id) {
+		this.id = id;
+	}
+	
+	
 	
 }

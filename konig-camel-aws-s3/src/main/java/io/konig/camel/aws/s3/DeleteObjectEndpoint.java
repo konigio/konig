@@ -156,7 +156,7 @@ public class DeleteObjectEndpoint extends ScheduledPollEndpoint {
 	        return createExchange(getExchangePattern(), s3Object);
 	    }
 
-	    public Exchange createExchange(ExchangePattern pattern, S3Object s3Object) {
+	    public Exchange createExchange(ExchangePattern pattern, final S3Object s3Object) {
 	        LOG.trace("Getting object with key [{}] from bucket [{}]...", s3Object.getKey(), s3Object.getBucketName());
 
 	        ObjectMetadata objectMetadata = s3Object.getObjectMetadata();
