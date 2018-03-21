@@ -193,10 +193,9 @@ public class EtlRouteBuilder {
 		File dockerFile = new File(new File(outDir.getParent(), "Docker"), targetLocalName);
 		PrintWriter writer = new PrintWriter(dockerFile);
 		writer.println("FROM konig-docker-aws-etl-base:latest");
-		writer.println("COPY ../camel-etl/camel-routes-config.properties camel-etl/camel-routes-config.properties");
-		writer.println("COPY ../camel-etl/Route" + targetLocalName + ".xml camel-etl/Route" + targetLocalName + ".xml");
-		writer.println("COPY ../aurora/transform/" + schemaName + "_" + targetLocalName + ".sql " + schemaName + "_"
-				+ targetLocalName + ".sql");
+		writer.println("ADD /camel-routes-config.properties ./camel-routes-config.properties");
+		writer.println("ADD /"+targetLocalName+".xml ./Route"+targetLocalName+".xml");
+		writer.println("ADD /"+schemaName+"_"+targetLocalName+".sql ./"+schemaName + "_"+ targetLocalName +".sql");
 		writer.close();
 	}
 
