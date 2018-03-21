@@ -44,12 +44,12 @@ public class PrepareToLoadStagingTable implements Processor {
 			S3EventNotification notification = objectMapper.readValue(messageNode.asText(), S3EventNotification.class);
 			String bucketName = "";
 			String fileName = "";
-			
 			for(S3EventNotificationRecord record : notification.getRecords()) {
 				bucketName = record.getS3().getBucket().getName();
 				fileName = record.getS3().getObject().getKey();
+				
 				exchange.getOut().setBody(
-						"LOAD DATA FROM S3 'S3://"+bucketName+"/"+fileName+"'"
+						"LOAD DATA FROM S3 's3-"+record.getAwsRegion()+"://"+bucketName+"/"+fileName+"'"
 								+ " INTO TABLE "+sourceTable+" FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'; ");
 				exchange.getOut().setHeaders(exchange.getIn().getHeaders());
 				exchange.getOut().setHeader("fileName", fileName);
