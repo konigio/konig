@@ -37,7 +37,7 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 
 @SpringBootApplication
 @ImportResource({ "classpath:app-config.xml" })
-@PropertySource({ "classpath:camel-etl/camel-routes-config.properties" })
+@PropertySource("file:camel-routes-config.properties")
 @EnableAutoConfiguration(exclude = { CamelAutoConfiguration.class })
 public class CamelEtlRouteController {
 
