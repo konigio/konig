@@ -140,6 +140,7 @@ import io.konig.schemagen.aws.AWSAuroraShapeFileCreator;
 import io.konig.schemagen.aws.AWSS3BucketWriter;
 import io.konig.schemagen.aws.AwsAuroraTableWriter;
 import io.konig.schemagen.aws.AwsResourceGenerator;
+import io.konig.schemagen.aws.CloudFormationTemplateWriter;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
@@ -760,8 +761,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
 			File bucketsDir = Configurator.checkNull(amazonWebServices.getS3buckets());
 			File transformsDir = Configurator.checkNull(amazonWebServices.getTransforms());
+			File cloudFormationDir = Configurator.checkNull(amazonWebServices.getCloudFormationTemplates());
 
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
+			if(cloudFormationDir != null){
+				CloudFormationTemplateWriter templateWriter = new CloudFormationTemplateWriter();
+				templateWriter.writeTemplates(cloudFormationDir, owlGraph);
+			}
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
 				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator);

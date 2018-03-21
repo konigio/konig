@@ -24,15 +24,16 @@ package io.konig.schemagen.gcp;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.rio.RDFHandlerException;
 
@@ -42,22 +43,16 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.VertexCopier;
-import io.konig.core.pojo.SimplePojoFactory;
-import io.konig.core.vocab.GCP;
-import io.konig.core.vocab.Konig;
-import io.konig.gcp.datasource.GoogleCloudSqlDatabase;
-import io.konig.gcp.datasource.GoogleCloudSqlTableInfo;
-import io.konig.gcp.io.GoogleCloudSqlJsonUtil;
 
 public class TurtleGenerator {
 
-	public void generateAll(URI resourceType, File baseDir, Graph graph) throws KonigException, IOException, RDFHandlerException {
+	public void generateAll(URI resourceType, File baseDir, Graph graph, VelocityContext context) throws KonigException, IOException, RDFHandlerException {
 	
-		generateInstances(resourceType, baseDir, graph);
+		generateInstances(resourceType, baseDir, graph, context);
 	}
 	
 
-	private void generateInstances(URI resourceType, File baseDir, Graph graph) throws KonigException, IOException, RDFHandlerException {
+	private void generateInstances(URI resourceType, File baseDir, Graph graph,VelocityContext context) throws KonigException, IOException, RDFHandlerException {
 	
 		List<Vertex> list = graph.v(resourceType).in(RDF.TYPE).toVertexList();
 		if (!list.isEmpty()) {
@@ -81,6 +76,19 @@ public class TurtleGenerator {
 						RdfUtil.prettyPrintTurtle(buffer, writer);
 					}
 					
+					
+					StringWriter result = new StringWriter();
+						
+					Properties properties = new Properties();
+					properties.setProperty("file.resource.loader.path", baseDir.getPath());
+					VelocityEngine engine = new VelocityEngine(properties);
+					Template template = engine.getTemplate(fileName, "UTF-8");
+					template.merge(context, result );
+					
+					try (PrintWriter out = new PrintWriter(turtleFile)) {
+					    out.println(result.toString());
+					}
+									
 				} else {
 					
 					throw new KonigException(resourceType.getLocalName() + " must have a URI: " + v);

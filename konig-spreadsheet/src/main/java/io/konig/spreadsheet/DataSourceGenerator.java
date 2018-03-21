@@ -200,5 +200,7 @@ public class DataSourceGenerator {
 		}
 
 	}
-
+	public VelocityContext getContext(){
+		return context;
+	}
 }
