@@ -42,6 +42,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
@@ -97,18 +99,25 @@ public class DeleteObjectEndpoint extends ScheduledPollEndpoint {
 	    @Override
 	    public void doStart() throws Exception {
 	        super.doStart();
-
+	        String envName = "";
+	    	if(System.getProperty("environmentName") != null) {
+	    		envName = System.getProperty("environmentName");
+			}
+			String bucketName = getConfiguration().getBucketName();
+			bucketName = bucketName.replace("${environmentName}",envName);
+			configuration.setBucketName(bucketName);
+			configuration.getAmazonS3Client().setRegion(Region.getRegion(Regions.fromName(configuration.getRegion())));
 	        s3Client = configuration.getAmazonS3Client() != null ? configuration.getAmazonS3Client()
 	                : S3ClientFactory.getAWSS3Client(configuration, getMaxConnections()).getS3Client();
 
 	        String fileName = getConfiguration().getFileName();
-
+	        
 	        if (fileName != null) {
 	            LOG.trace("File name [{}] requested, so skipping bucket check...", fileName);
 	            return;
 	        }
 
-	        String bucketName = getConfiguration().getBucketName();
+	        
 	        LOG.trace("Querying whether bucket [{}] already exists...", bucketName);
 
 	        String prefix = getConfiguration().getPrefix();

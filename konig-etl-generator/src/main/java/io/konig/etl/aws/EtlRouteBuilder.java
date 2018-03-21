@@ -21,16 +21,12 @@ package io.konig.etl.aws;
  */
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -94,23 +90,26 @@ public class EtlRouteBuilder {
 		from.setAttribute("uri", "jetty://http://localhost:8888/myapp/etl/" + targetLocalName + "/fromS3");
 		route.appendChild(from);
 
-		S3Bucket bucket = sourceShape.findDataSource(S3Bucket.class);
+		S3Bucket sourceBucket = sourceShape.findDataSource(S3Bucket.class);
 		Element fromsqs = doc.createElement("from");
 		fromsqs.setAttribute("uri",
-				"aws-sqs://" + bucket.getNotificationConfiguration().getQueueConfiguration().getQueue().getResourceName()
-						+ "?amazonSQSClient=#sqsClient&region=" + bucket.getRegion()
+				"aws-sqs://" + sourceBucket.getNotificationConfiguration().getQueueConfiguration().getQueue().getResourceName()
+						+ "?amazonSQSClient=#sqsClient&region=" + sourceBucket.getRegion()
 						+ "&defaultVisibilityTimeout=5000&deleteIfFiltered=false");
 
 		AwsAurora targetTable = targetShape.findDataSource(AwsAurora.class);
 		AwsAurora sourceTable = sourceShape.findDataSource(AwsAurora.class);
-
+		S3Bucket targetBucket = targetShape.findDataSource(S3Bucket.class);
+		
 		route.appendChild(fromsqs);
 		route.appendChild(addHeader("sourceTable", sourceTable.getTableReference().getAwsSchema() + "."
 				+ sourceTable.getTableReference().getAwsTableName()));
 		route.appendChild(addHeader("targetTable", targetTable.getTableReference().getAwsSchema() + "."
 				+ targetTable.getTableReference().getAwsTableName()));
-		route.appendChild(addHeader("bucketName", bucket.getBucketName()));
-		route.appendChild(addHeader("dmlScript", targetLocalName));
+		route.appendChild(addHeader("sourceBucketName", sourceBucket.getBucketName()));
+		route.appendChild(addHeader("targetBucketName", targetBucket.getBucketName()));
+		route.appendChild(addHeader("targetBucketRegion", targetBucket.getRegion()));
+		route.appendChild(addHeader("dmlScript", targetTable.getTableReference().getAwsSchema() + "_"+targetLocalName));
 
 		route.appendChild(addProcess("ref", "prepareToLoadStagingTable"));
 
@@ -126,9 +125,8 @@ public class EtlRouteBuilder {
 
 		route.appendChild(addProcess("ref", "prepareToDeleteFromBucket"));
 
-		Element toG = doc.createElement("from");
-		toG.setAttribute("uri", "konig-aws-s3://" + bucket.getBucketName()
-				+ "?amazonS3Client=#s3Client");
+		Element toG = doc.createElement("to");
+		toG.setAttribute("uri", "konig-aws-s3://"+sourceBucket.getBucketName()+"?amazonS3Client=#s3Client&region=" + sourceBucket.getRegion());
 		route.appendChild(toG);
 
 		route.appendChild(addProcess("ref", "prepareToExport"));
@@ -193,10 +191,9 @@ public class EtlRouteBuilder {
 		File dockerFile = new File(new File(outDir.getParent(), "Docker"), targetLocalName);
 		PrintWriter writer = new PrintWriter(dockerFile);
 		writer.println("FROM konig-docker-aws-etl-base:latest");
-		writer.println("COPY ../camel-etl/camel-routes-config.properties camel-etl/camel-routes-config.properties");
-		writer.println("COPY ../camel-etl/Route" + targetLocalName + ".xml camel-etl/Route" + targetLocalName + ".xml");
-		writer.println("COPY ../aurora/transform/" + schemaName + "_" + targetLocalName + ".sql " + schemaName + "_"
-				+ targetLocalName + ".sql");
+		writer.println("ADD /camel-routes-config.properties ./camel-routes-config.properties");
+		writer.println("ADD /"+targetLocalName+".xml ./Route"+targetLocalName+".xml");
+		writer.println("ADD /"+schemaName+"_"+targetLocalName+".sql ./"+schemaName + "_"+ targetLocalName +".sql");
 		writer.close();
 	}
 
