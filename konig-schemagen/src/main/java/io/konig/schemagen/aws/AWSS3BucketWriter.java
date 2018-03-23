@@ -161,7 +161,6 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		}
 		
 	}
-
 	private String getS3BucketTemplate(S3Bucket bucket) throws JsonProcessingException {
 		Resource resource=new Resource();
 		resource.setType("AWS::S3::Bucket");
