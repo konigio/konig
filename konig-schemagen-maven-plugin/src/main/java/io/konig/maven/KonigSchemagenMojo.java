@@ -775,7 +775,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				resourceGenerator.add(awsAuror);				
 			}
 			if(bucketsDir != null){
-				AWSS3BucketWriter awsS3=new AWSS3BucketWriter(bucketsDir);
+				AWSS3BucketWriter awsS3=new AWSS3BucketWriter(bucketsDir,cloudFormationDir);
 				resourceGenerator.add(awsS3);
 			}
 			
