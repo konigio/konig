@@ -21,6 +21,7 @@ package io.konig.etl.aws;
  */
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -106,9 +107,9 @@ public class EtlRouteBuilder {
 		S3Bucket sourceBucket = sourceShape.findDataSource(S3Bucket.class);
 		Element fromsqs = doc.createElement("from");
 		fromsqs.setAttribute("uri",
-						+ "?amazonSQSClient=#sqsClient&region=" + bucket.getRegion()
 				"aws-sqs://" + sourceBucket.getNotificationConfiguration().getQueueConfiguration().getQueue().getResourceName()
 						+ "?amazonSQSClient=#sqsClient&region=" + sourceBucket.getRegion()
+						+ "&defaultVisibilityTimeout=5000&deleteIfFiltered=false");
 
 		AwsAurora targetTable = targetShape.findDataSource(AwsAurora.class);
 		AwsAurora sourceTable = sourceShape.findDataSource(AwsAurora.class);
@@ -138,9 +139,9 @@ public class EtlRouteBuilder {
 
 		route.appendChild(addProcess("ref", "prepareToDeleteFromBucket"));
 
-		toG.setAttribute("uri", "konig-aws-s3://" + bucket.getBucketName()
-				+ "?amazonS3Client=#s3Client");
+		Element toG = doc.createElement("to");
 		toG.setAttribute("uri", "konig-aws-s3://"+sourceBucket.getBucketName()+"?amazonS3Client=#s3Client&region=" + sourceBucket.getRegion());
+		route.appendChild(toG);
 
 		route.appendChild(addProcess("ref", "prepareToExport"));
 
@@ -153,7 +154,7 @@ public class EtlRouteBuilder {
 		transformer.transform(source, result);
 
 		addConfig(targetTable);
-		createDockerFile(targetLocalName,targetTable.getTableReference().getAwsSchema());
+		createDockerFile(targetLocalName, targetTable.getTableReference().getAwsSchema());
 	}
 
 	private void addConfig(AwsAurora targetTable) throws IOException {

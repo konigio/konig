@@ -33,9 +33,6 @@ public class PrepareToExport implements Processor {
     	String bucketRegion = exchange.getIn().getHeader("targetBucketRegion", String.class);
     	String fileName = exchange.getIn().getHeader("fileName", String.class); 
     	String modified = exchange.getIn().getHeader("modified", String.class); 
-                              
-        exchange.getOut().setBody("SELECT * FROM "+targetTable +" WHERE modified=TIMESTAMP('"+modified+"') INTO OUTFILE S3 's3://"+bucketName+"/"+fileName+"' "
-         
     	String envName = "";
     	if(System.getProperty("environmentName") != null) {
     		envName = System.getProperty("environmentName");
