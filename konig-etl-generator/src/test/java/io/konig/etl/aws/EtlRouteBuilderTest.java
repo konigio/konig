@@ -25,7 +25,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 import org.openrdf.model.Resource;
@@ -66,5 +68,18 @@ public class EtlRouteBuilderTest {
 				assertEquals("http://example.com/shapes/OriginPersonShape", sourceList.get(1).getId().toString());
 			}
 		}
+	}
+	
+	@Test
+	public void testEtlMs()
+	{
+		EtlRouteBuilder builder=new EtlRouteBuilder(/*new File("C:/Users/604601/test/target/aws/camel-etlRoutr")*/);
+		try {
+			builder.createDockerFile("localName","schemaName");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		builder.baseDir();
 	}
 }
