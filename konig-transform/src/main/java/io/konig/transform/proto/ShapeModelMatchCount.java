@@ -1,5 +1,11 @@
 package io.konig.transform.proto;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.konig.core.impl.RdfUtil;
+
 /*
  * #%L
  * Konig Transform
@@ -22,7 +28,7 @@ package io.konig.transform.proto;
 
 
 public class ShapeModelMatchCount implements Comparable<ShapeModelMatchCount>{
-	
+	private static Logger logger = LoggerFactory.getLogger(ShapeModelMatchCount.class);
 	private ShapeModel shapeModel;
 	private int matchCount;
 	
@@ -49,7 +55,11 @@ public class ShapeModelMatchCount implements Comparable<ShapeModelMatchCount>{
 			PropertyGroup group = p.getGroup();
 			
 			if (group.getTargetProperty() != null && group.getSourceProperty()==null) {
-				
+				if (logger.isDebugEnabled()) {
+					logger.debug("matchCount: For {}, matched property {}", 
+							RdfUtil.localName(model.getShape().getId()),
+							RdfUtil.localName(p.getPredicate()));
+				}
 				ShapeModel valueModel = valueModel(p);
 				if (valueModel == null) {
 					propertyMatchCount++;
@@ -57,9 +67,39 @@ public class ShapeModelMatchCount implements Comparable<ShapeModelMatchCount>{
 					propertyMatchCount = valueModel(group.getTargetProperty()) == null ? 1 : matchCount(valueModel);
 				}
 				
+			} else if (p instanceof DirectPropertyModel){
+
+					
+				logGroupMembers(model, group, p);
+				
+				
 			}
 		}
 		return propertyMatchCount;
+	}
+
+	private void logGroupMembers(ShapeModel model, PropertyGroup group, PropertyModel p) {
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("matchCount: For {}, unmatched property {}",
+					RdfUtil.localName(model.getShape().getId()),
+					RdfUtil.localName(p.getPredicate()));
+			if (group.size()==1) {
+				logger.debug("matchCount: No other group members found in ClassModel[{}]", group.getParentClassModel().hashCode());
+			} else {
+			
+				for (PropertyModel other : group) {
+					if (other == p) {
+						continue;
+					}
+					
+					logger.debug("matchCount:  other {} in {}", 
+							other.getClass().getSimpleName(),
+							RdfUtil.localName(other.getDeclaringShape().getShape().getId()));
+				}
+			}
+		}
+		
 	}
 
 	private ShapeModel valueModel(PropertyModel p) {

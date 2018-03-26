@@ -83,9 +83,9 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 	@Test
 	public void testTransformInversePath() throws Exception {
 		
-		load("src/test/resources/konig-transform/transform-inverse-path");
+		load("src/test/resources/konig-transform/inverse-property");
 
-		URI shapeId = iri("http://example.com/shapes/OrganizationShape");
+		URI shapeId = iri("http://example.com/shapes/ProductShape");
 
 		ShapeRule shapeRule = createShapeRule(shapeId);
 		
@@ -95,10 +95,44 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 	
 		System.out.println(select.toString());
 		
+	}
+	
+	@Ignore
+	public void testRenameFields() throws Exception {
+		
+		load("src/test/resources/konig-transform/rename-fields");
 
+		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+		FromExpression from = select.getFrom();
+		List<TableItemExpression> tableItems = from.getTableItems();
+		assertEquals(1, tableItems.size());
+		
+		TableItemExpression tableItem = tableItems.get(0);
+		assertTrue(tableItem instanceof TableNameExpression);
+		
+		TableNameExpression tableName = (TableNameExpression) tableItem;
+		assertEquals("schema.OriginPersonShape", tableName.getTableName());
+		
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(1, valueList.size());
+		
+		ValueExpression value = valueList.get(0);
+		assertTrue(value instanceof AliasExpression);
+		
+		AliasExpression aliasExpression = (AliasExpression) value;
+		QueryExpression q = aliasExpression.getExpression();
+		assertTrue(q instanceof ColumnExpression);
 		
 		
 		
+		ColumnExpression column = (ColumnExpression) q;
+		assertEquals("first_name", column.getColumnName());
+		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
 /*
@@ -1545,44 +1579,6 @@ FROM
 		
 		
 		
-	}
-	
-	@Ignore
-	public void testRenameFields() throws Exception {
-		
-		load("src/test/resources/konig-transform/rename-fields");
-
-		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
-
-		ShapeRule shapeRule = createShapeRule(shapeId);
-		
-		SelectExpression select = sqlFactory.selectExpression(shapeRule);
-		
-		FromExpression from = select.getFrom();
-		List<TableItemExpression> tableItems = from.getTableItems();
-		assertEquals(1, tableItems.size());
-		
-		TableItemExpression tableItem = tableItems.get(0);
-		assertTrue(tableItem instanceof TableNameExpression);
-		
-		TableNameExpression tableName = (TableNameExpression) tableItem;
-		assertEquals("schema.OriginPersonShape", tableName.getTableName());
-		
-		List<ValueExpression> valueList = select.getValues();
-		assertEquals(1, valueList.size());
-		
-		ValueExpression value = valueList.get(0);
-		assertTrue(value instanceof AliasExpression);
-		
-		AliasExpression aliasExpression = (AliasExpression) value;
-		QueryExpression q = aliasExpression.getExpression();
-		assertTrue(q instanceof ColumnExpression);
-		
-		
-		
-		ColumnExpression column = (ColumnExpression) q;
-		assertEquals("first_name", column.getColumnName());
-		assertEquals("givenName", aliasExpression.getAlias());
 	}
 
 	@Ignore

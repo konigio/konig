@@ -1,5 +1,6 @@
 package io.konig.transform.proto;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 
 /*
@@ -30,13 +31,14 @@ import org.openrdf.model.impl.LiteralImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.BareExpression;
 import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.ConditionalAndExpression;
 import io.konig.formula.ConditionalOrExpression;
 import io.konig.formula.Direction;
-import io.konig.formula.DirectionStep;
+import io.konig.formula.DirectedStep;
 import io.konig.formula.Formula;
 import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.MultiplicativeExpression;
@@ -156,7 +158,7 @@ public class ShapeModelToShapeRule {
 
 		private void addPropertyRules(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
 			ClassModel classModel = shapeModel.getClassModel();
-			for (PropertyGroup group : classModel.getPropertyGroups()) {
+			for (PropertyGroup group : classModel.getOutGroups()) {
 				
 				
 				PropertyModel targetProperty = group.getTargetProperty();
@@ -297,8 +299,8 @@ public class ShapeModelToShapeRule {
 			if (primary instanceof PathExpression) {
 				PathExpression path = (PathExpression) primary;
 				PathStep step = path.getStepList().get(0);
-				if (step instanceof DirectionStep) {
-					DirectionStep dirStep = (DirectionStep) step;
+				if (step instanceof DirectedStep) {
+					DirectedStep dirStep = (DirectedStep) step;
 					if (dirStep.getDirection() == Direction.OUT) {
 						PathTerm term = dirStep.getTerm();
 						if (!(term instanceof VariableTerm)) {
@@ -377,7 +379,10 @@ public class ShapeModelToShapeRule {
 		void buildDataChannels(ShapeModel root) throws ShapeTransformException {
 			ProtoFromItem protoFromItem = root.getClassModel().getFromItem();
 			if (protoFromItem == null) {
-				throw new ShapeTransformException("FromItem not defined for shape: " + root.getShape().getId().stringValue());
+				String shapeLocalName = RdfUtil.localName(root.getShape().getId());
+				String msg = MessageFormat.format("ProtoFromItem not defined for {0} in ClassModel[{1}]", 
+						shapeLocalName, root.getClassModel().hashCode());
+				throw new ShapeTransformException(msg);
 			}
 			setDataChannelName(protoFromItem);
 			

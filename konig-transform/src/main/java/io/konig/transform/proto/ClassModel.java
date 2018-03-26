@@ -1,5 +1,7 @@
 package io.konig.transform.proto;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Transform
@@ -23,6 +25,7 @@ package io.konig.transform.proto;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,6 +33,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.io.BasePrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.formula.Direction;
 
 /**
  * A model for the properties of a given OWL Class.
@@ -42,9 +46,10 @@ public class ClassModel extends BasePrettyPrintable {
 	private static int counter = 0;
 
 	private URI owlClass;
-	private Map<URI, PropertyGroup> propertyMap = new HashMap<>();
+	private Map<URI, PropertyGroup> outPropertyMap = new HashMap<>();
+	private Map<URI, PropertyGroup> inPropertyMap = null;
 	private ShapeModel targetShapeModel;
-	private Set<ShapeModel> candidateSourceShapeModel;
+	private List<SourceShapeInfo> candidateSourceShapeModel;
 	private ProtoFromItem fromItem;
 	private int id=counter++;
 	
@@ -69,10 +74,6 @@ public class ClassModel extends BasePrettyPrintable {
 		return id;
 	}
 	
-	public void put(URI predicate, PropertyGroup group) {
-		group.setParentClassModel(this);
-		propertyMap.put(predicate, group);
-	}
 	
 
 	public void setOwlClass(URI owlClass) {
@@ -83,25 +84,57 @@ public class ClassModel extends BasePrettyPrintable {
 		return owlClass;
 	}
 	
-	public void putPropertGroup(URI predicate, PropertyGroup group) {
-		propertyMap.put(predicate, group);
+	public PropertyGroup produceGroup(Direction direction, URI predicate) {
+		
+		if (direction == Direction.IN) {
+			return produceInGroup(predicate);
+		} else {
+			return produceOutGroup(predicate);
+		}
+			
 	}
 	
-	public PropertyGroup producePropertyGroup(URI predicate) {
-		PropertyGroup group = propertyMap.get(predicate);
+	public PropertyGroup getInGroupByPredicate(URI predicate) {
+		return inPropertyMap==null ? null : inPropertyMap.get(predicate);
+	}
+	
+	public PropertyGroup produceInGroup(URI predicate) {
+		if (inPropertyMap==null) {
+			inPropertyMap = new HashMap<>();
+		}
+		PropertyGroup group = inPropertyMap.get(predicate);
 		if (group == null) {
 			group = new PropertyGroup();
-			put(predicate, group);
+			group.setParentClassModel(this);
+			inPropertyMap.put(predicate, group);
 		}
 		return group;
 	}
-
-	public PropertyGroup getPropertyGroupByPredicate(URI predicate) {
-		return propertyMap.get(predicate);
+	
+	public PropertyGroup produceOutGroup(URI predicate) {
+		PropertyGroup group = outPropertyMap.get(predicate);
+		if (group == null) {
+			group = new PropertyGroup();
+			group.setParentClassModel(this);
+			outPropertyMap.put(predicate, group);
+		}
+		return group;
 	}
 	
-	public Collection<PropertyGroup> getPropertyGroups() {
-		return propertyMap.values();
+	public PropertyGroup getGroupByPredicate(Direction direction, URI predicate) {
+		if (direction == Direction.IN) {
+			return getInGroupByPredicate(predicate);
+		} else {
+			return getOutGroupByPredicate(predicate);
+		}
+	}
+
+	public PropertyGroup getOutGroupByPredicate(URI predicate) {
+		return outPropertyMap.get(predicate);
+	}
+	
+	public Collection<PropertyGroup> getOutGroups() {
+		return outPropertyMap.values();
 	}
 
 	public ShapeModel getTargetShapeModel() {
@@ -112,19 +145,48 @@ public class ClassModel extends BasePrettyPrintable {
 		this.targetShapeModel = targetShapeModel;
 	}
 	
+	public boolean containsCandidateSourceShapeModel(ShapeModel candidate) {
+		if (candidateSourceShapeModel != null) {
+			for (SourceShapeInfo info : candidateSourceShapeModel) {
+				if (info.getSourceShape()==candidate) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public void addCandidateSourceShapeModel(SourceShapeInfo info) {
+
+		if (candidateSourceShapeModel == null) {
+			candidateSourceShapeModel = new ArrayList<>();
+		}
+		for (SourceShapeInfo s : candidateSourceShapeModel) {
+			if (s.getSourceShape() == info.getSourceShape()) {
+				return;
+			}
+		}
+		candidateSourceShapeModel.add(info);
+	}
+	
 	public void addCandidateSourceShapeModel(ShapeModel candidate) {
 		if (candidateSourceShapeModel == null) {
-			candidateSourceShapeModel = new HashSet<>();
+			candidateSourceShapeModel = new ArrayList<>();
 		}
-		candidateSourceShapeModel.add(candidate);
+		for (SourceShapeInfo s : candidateSourceShapeModel) {
+			if (s.getSourceShape() == candidate) {
+				return;
+			}
+		}
+		candidateSourceShapeModel.add(new SourceShapeInfo(candidate));
 	}
 
-	public Set<ShapeModel> getCandidateSourceShapeModel() {
+	public List<SourceShapeInfo> getCandidateSourceShapeModel() {
 		return candidateSourceShapeModel;
 	}
 	
 
-	public void setCandidateSourceShapeModel(Set<ShapeModel> candidateSourceShapeModel) {
+	public void setCandidateSourceShapeModel(List<SourceShapeInfo> candidateSourceShapeModel) {
 		this.candidateSourceShapeModel = candidateSourceShapeModel;
 	}
 
@@ -137,7 +199,7 @@ public class ClassModel extends BasePrettyPrintable {
 	}
 	
 	public boolean hasUnmatchedProperty() {
-		for (PropertyGroup group : propertyMap.values()) {
+		for (PropertyGroup group : outPropertyMap.values()) {
 			PropertyModel targetProperty = group.getTargetProperty();
 			if (targetProperty == null) {
 				continue;
@@ -159,9 +221,9 @@ public class ClassModel extends BasePrettyPrintable {
 	protected void printProperties(PrettyPrintWriter out) {
 		out.field("owlClass", owlClass);
 		out.field("fromItem", fromItem);
-		if (!propertyMap.isEmpty()) {
+		if (!outPropertyMap.isEmpty()) {
 			out.beginArray("propertyGroup");
-			for (PropertyGroup p : getPropertyGroups()) {
+			for (PropertyGroup p : getOutGroups()) {
 				out.print(p);
 			}
 			out.endArray("propertyGroup");

@@ -49,6 +49,7 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	private Map<URI,VariablePropertyModel> variableMap = new HashMap<>();
 	private List<StepPropertyModel> stepProperties = null;
 	private List<GroupByItem> groupBy;
+	private List<InversePropertyLink> inversePropertyLinks = null;
 	
 	private PropertyModel accessor;
 	
@@ -236,8 +237,17 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 		return null;
 	}
 
+	public List<InversePropertyLink> getInversePropertyLinks() {
+		return inversePropertyLinks;
+	}
 
-	
+
+	public void add(InversePropertyLink link) {
+		if (inversePropertyLinks == null) {
+			inversePropertyLinks = new ArrayList<>();
+		}
+		inversePropertyLinks.add(link);
+	}
 	
 	
 }

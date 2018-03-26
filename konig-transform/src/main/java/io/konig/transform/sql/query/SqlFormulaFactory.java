@@ -34,7 +34,7 @@ import io.konig.formula.BinaryOperator;
 import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.ConditionalAndExpression;
 import io.konig.formula.Direction;
-import io.konig.formula.DirectionStep;
+import io.konig.formula.DirectedStep;
 import io.konig.formula.Expression;
 import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.IfFunction;
@@ -215,9 +215,9 @@ public class SqlFormulaFactory {
 			List<PathStep> stepList = primary.getStepList();
 			if (stepList!=null && stepList.size()==1) {
 				PathStep step = stepList.get(0);
-				if (step instanceof DirectionStep) {
+				if (step instanceof DirectedStep) {
 				
-					DirectionStep dirStep = (DirectionStep) step;
+					DirectedStep dirStep = (DirectedStep) step;
 					if (dirStep.getDirection() == Direction.OUT) {
 						PathTerm term = dirStep.getTerm();
 						URI predicate = term.getIri();

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.RdfUtil;
-import io.konig.formula.DirectionStep;
+import io.konig.formula.DirectedStep;
 import io.konig.formula.Formula;
 import io.konig.formula.FormulaVisitor;
 import io.konig.formula.HasPathStep;
@@ -149,8 +149,8 @@ public class VariableShapeFactory {
 				String varName = variable.getPredicate().getLocalName();
 				StringBuilder pathText = new StringBuilder(variableShape.getId().stringValue());
 				for (PathStep step : path.getStepList()) {
-					if (step instanceof DirectionStep) {
-						DirectionStep dirStep = (DirectionStep) step;
+					if (step instanceof DirectedStep) {
+						DirectedStep dirStep = (DirectedStep) step;
 						PathTerm term = dirStep.getTerm();
 						if (term instanceof VariableTerm) {
 							VariableTerm varTerm = (VariableTerm) term;

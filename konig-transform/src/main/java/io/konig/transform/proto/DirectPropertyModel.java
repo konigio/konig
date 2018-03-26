@@ -28,29 +28,46 @@ import io.konig.shacl.PropertyConstraint;
 
 public class DirectPropertyModel extends BasicPropertyModel {
 	
-	private StepPropertyModel stepPropertyModel;
+	private StepPropertyModel pathTail;
 
 	public DirectPropertyModel(URI predicate, PropertyGroup group, PropertyConstraint propertyConstraint) {
 		super(predicate, group, propertyConstraint);
 	}
 
-	public StepPropertyModel getStepPropertyModel() {
-		return stepPropertyModel;
+	/**
+	 * Get the StepPropertyModel that represents the last step in the
+	 * PathExpression associated with this direct property.
+	 * 
+	 * @return A model for the last step in the PathExpression, or null if this
+	 * direct property is not associated with a PathExpression.
+	 */
+	public StepPropertyModel getPathTail() {
+		return pathTail;
+	}
+	
+	public StepPropertyModel getPathHead() {
+		return pathTail == null ? null : pathTail.getPathHead();
 	}
 
-	public void setStepPropertyModel(StepPropertyModel stepPropertyModel) {
-		this.stepPropertyModel = stepPropertyModel;
+	/**
+	 * Set the StepPropertyModel that represents the last step in the PathExpression 
+	 * associated with this direct property.
+	 * 
+	 * @param stepPropertyModel
+	 */
+	public void setPathTail(StepPropertyModel stepPropertyModel) {
+		this.pathTail = stepPropertyModel;
 	}
 
 	@Override
 	protected void printProperties(PrettyPrintWriter out) {
 		super.printProperties(out);
-		if (stepPropertyModel != null) {
-			out.beginObjectField("stepPropertyModel", stepPropertyModel);
-			out.field("declaringShape.shape.id", stepPropertyModel.getDeclaringShape().getShape().getId());
-			out.field("predicate", stepPropertyModel.getPredicate());
-			out.field("stepIndex", stepPropertyModel.getStepIndex());
-			out.endObjectField(stepPropertyModel);
+		if (pathTail != null) {
+			out.beginObjectField("stepPropertyModel", pathTail);
+			out.field("declaringShape.shape.id", pathTail.getDeclaringShape().getShape().getId());
+			out.field("predicate", pathTail.getPredicate());
+			out.field("stepIndex", pathTail.getStepIndex());
+			out.endObjectField(pathTail);
 		}
 		
 	}

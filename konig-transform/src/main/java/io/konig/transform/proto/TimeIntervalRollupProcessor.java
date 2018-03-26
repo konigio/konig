@@ -36,7 +36,7 @@ import io.konig.formula.BinaryOperator;
 import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.BuiltInName;
 import io.konig.formula.Direction;
-import io.konig.formula.DirectionStep;
+import io.konig.formula.DirectedStep;
 import io.konig.formula.FullyQualifiedIri;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.GeneralAdditiveExpression;
@@ -188,9 +188,9 @@ public class TimeIntervalRollupProcessor  implements TransformPostProcessor {
 
 	private BareExpression intervalStartArg() {
 		PathExpression path = new PathExpression();
-		path.add(new DirectionStep(Direction.OUT, new VariableTerm(VARIABLE_NAME)));
-		path.add(new DirectionStep(Direction.OUT, new FullyQualifiedIri(Konig.timeInterval)));
-		path.add(new DirectionStep(Direction.OUT, new FullyQualifiedIri(Konig.intervalStart)));
+		path.add(new DirectedStep(Direction.OUT, new VariableTerm(VARIABLE_NAME)));
+		path.add(new DirectedStep(Direction.OUT, new FullyQualifiedIri(Konig.timeInterval)));
+		path.add(new DirectedStep(Direction.OUT, new FullyQualifiedIri(Konig.intervalStart)));
 		
 		return BareExpression.wrap(path);
 	}

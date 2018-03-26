@@ -1,6 +1,7 @@
 package io.konig.transform.proto;
 
 import java.text.MessageFormat;
+import java.util.HashMap;
 
 /*
  * #%L
@@ -24,6 +25,7 @@ import java.text.MessageFormat;
 
 
 import java.util.List;
+import java.util.Map;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
@@ -34,17 +36,19 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
+import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.path.DirectionStep;
 import io.konig.core.path.HasStep;
 import io.konig.core.path.HasStep.PredicateValuePair;
 import io.konig.core.path.InStep;
-import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.SH;
 import io.konig.formula.Direction;
-import io.konig.formula.DirectionStep;
 import io.konig.formula.HasAggregationVisitor;
 import io.konig.formula.IriValue;
+import io.konig.formula.DirectedStep;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
 import io.konig.formula.PathTerm;
@@ -67,11 +71,13 @@ public class ShapeModelFactory {
 	private VariableShapeFactory variableShapeFactory;
 	private boolean failIfPropertyNotMapped=true;
 	private HasAggregationVisitor aggregationVisitor;
+	private OwlReasoner reasoner;
 	
 	public ShapeModelFactory(ShapeManager shapeManager, DataChannelFactory dataChannelFactory, OwlReasoner reasoner) {
 		if (dataChannelFactory == null) {
 			dataChannelFactory = new DefaultDataChannelFactory();
 		}
+		this.reasoner = reasoner;
 		this.shapeManager = shapeManager;
 		this.dataChannelFactory = dataChannelFactory;
 		propertyMapper = new SimplePropertyMapper(reasoner, this);
@@ -186,8 +192,8 @@ public class ShapeModelFactory {
 			
 			boolean firstStep=true;
 			for (PathStep step : path.getStepList()) {
-				if (step instanceof DirectionStep) {
-					DirectionStep dirStep = (DirectionStep) step;
+				if (step instanceof DirectedStep) {
+					DirectedStep dirStep = (DirectedStep) step;
 					if (dirStep.getDirection() == Direction.OUT) {
 						PathTerm term = dirStep.getTerm();
 						if (term instanceof IriValue) {
@@ -278,7 +284,7 @@ public class ShapeModelFactory {
 			if (p.getPath() instanceof PredicatePath) {
 				PredicatePath path = (PredicatePath) p.getPath();
 				URI predicate = path.getPredicate();
-				PropertyGroup group = classModel.producePropertyGroup(predicate);
+				PropertyGroup group = classModel.produceOutGroup(predicate);
 				
 				DirectPropertyModel propertyModel = new DirectPropertyModel(predicate, group, p);
 				propertyModel.setDeclaringShape(targetShapeModel);
@@ -288,9 +294,11 @@ public class ShapeModelFactory {
 				targetShapeModel.add(propertyModel);
 				
 				if (logger.isDebugEnabled()) {
-					logger.debug("addProperties: In shape <{}> add <{}>",
+					logger.debug("addProperties: Adding {} from {} to group[{}] in ClassModel[{}] ",
+						predicate.getLocalName(),
 						RdfUtil.localName(targetShape.getId()),
-						predicate.getLocalName()
+						group.hashCode(),
+						classModel.hashCode()
 					);
 				}
 				
@@ -317,7 +325,7 @@ public class ShapeModelFactory {
 		
 		if (targetShape.getNodeKind()==NodeKind.IRI || targetShape.getIriTemplate()!=null || targetShape.getIriFormula()!=null) {
 			ClassModel classModel = targetShapeModel.getClassModel();
-			PropertyGroup group = classModel.producePropertyGroup(Konig.id);
+			PropertyGroup group = classModel.produceOutGroup(Konig.id);
 			IdPropertyModel propertyModel = new IdPropertyModel(group);
 			propertyModel.setDeclaringShape(targetShapeModel);
 			targetShapeModel.add(propertyModel);
@@ -329,7 +337,7 @@ public class ShapeModelFactory {
 
 	}
 
-	private StepPropertyModel handleEquivalentPath(PropertyModel propertyModel) throws ShapeTransformException {
+	private void handleEquivalentPath(DirectPropertyModel propertyModel) throws ShapeTransformException {
 
 		StepPropertyModel stepModel = null;
 		if (propertyModel instanceof DirectPropertyModel) {
@@ -356,22 +364,24 @@ public class ShapeModelFactory {
 				StepPropertyModel priorStep = null;
 				for (int index=0; index<=last; index++) {
 					Step step = stepList.get(index);
-					if (step instanceof InStep) {
-						
-					} else if (step instanceof OutStep) {
+					if (step instanceof DirectionStep) {
 						if (group != null) {
 							classModel = group.produceValueClassModel(null);
 						}
-						OutStep out = (OutStep) step;
-						URI predicate = out.getPredicate();
-						group = classModel.getPropertyGroupByPredicate(predicate);
-						if (group == null) {
-							group = classModel.producePropertyGroup(predicate);
-						}
-						stepModel = new StepPropertyModel(predicate, group, directPropertyModel, index);
+						DirectionStep dirStep = (DirectionStep) step;
+						Direction direction = dirStep.getDirection();
+						URI predicate = dirStep.getPredicate();
+						group = classModel.produceGroup(direction, predicate);
+						logger.debug("handleEquivalentPath: adding {}{} to group[{}] in ClassModel[{}]", 
+								direction.getSymbol(), 
+								predicate.getLocalName(),
+								group.hashCode(),
+								classModel.hashCode());
+					
+						stepModel = new StepPropertyModel(predicate, direction, group, directPropertyModel, index);
 						stepModel.setDeclaringShape(declaringShape);
 						
-						
+						// TODO: eliminate list of step properties
 						declaringShape.addStepProperty(stepModel);
 						group.add(stepModel);
 						
@@ -390,13 +400,21 @@ public class ShapeModelFactory {
 								URI predicate = pair.getPredicate();
 								Value value = pair.getValue();
 								if (value instanceof Literal) {
-									PropertyGroup childGroup = classModel.producePropertyGroup(predicate);
+									PropertyGroup childGroup = classModel.produceOutGroup(predicate);
 									if ( childGroup.getTargetProperty()!=null ) {
 										logger.debug("handleEquivalentPath: Adding fixed property {}={} in group #{}", 
 												childGroup.getTargetProperty().simplePath(), value.stringValue(), childGroup.hashCode());
 										
 										FixedPropertyModel fixed = new FixedPropertyModel(predicate, childGroup, value);
 										childGroup.add(fixed);
+										
+										if (logger.isDebugEnabled()) {
+
+											logger.debug("handleEquivalentPath: adding {} to group[{}] in ClassModel[{}]", 
+													predicate.getLocalName(),
+													childGroup.hashCode(),
+													classModel.hashCode());
+										}
 									}
 								}
 							}
@@ -408,7 +426,8 @@ public class ShapeModelFactory {
 				}
 			} 
 		}
-		return stepModel;
+		
+		propertyModel.setPathTail(stepModel);
 	}
 
 
@@ -429,14 +448,109 @@ public class ShapeModelFactory {
 				if (!topTarget(shape, classModel)) {
 					DataChannel channel = dataChannelFactory.createDataChannel(shape);
 					if (channel != null) {
-						addSourceShape(classModel, shape, channel);
+						addSourceShape(classModel, classModel, shape, channel);
 					}
 				}
 				
 			}
 		}
 		
+		addShapesForInverseProperties(targetShapeModel);
 		
+		
+	}
+
+
+
+
+	private void addShapesForInverseProperties(ShapeModel targetShapeModel) throws ShapeTransformException {
+			
+		for (PropertyModel p : targetShapeModel.getProperties()) {
+			if (p instanceof DirectPropertyModel) {
+				DirectPropertyModel direct = (DirectPropertyModel) p;
+				StepPropertyModel pathHead = direct.getPathHead();
+				if (pathHead != null && pathHead.getDirection()==Direction.IN) {
+					PropertyGroup headGroup = pathHead.getGroup();
+					ClassModel classModel = headGroup.getParentClassModel();
+					
+
+					StepPropertyModel next = pathHead.getNextStep();
+					
+					ClassModel sourceClassModel = null;
+					if (next == null) {
+					 // Do nothing.
+					} else if (next.getDirection() == Direction.OUT) {
+						sourceClassModel = next.getGroup().getParentClassModel();
+					} else {
+						throw new ShapeTransformException("Two consecutive inverse attributes not supported");
+					}
+					
+					
+					URI inverseProperty = pathHead.getPredicate();
+
+					// Find property constraints that have the inverse property, and get the shapes
+					// containing those property constraints.
+					
+					List<Vertex> sourceShapeVertices = reasoner.getGraph()
+							.v(inverseProperty).in(SH.path).in(SH.property).toVertexList();
+					
+					for (Vertex v : sourceShapeVertices) {
+						if (v.getId() instanceof URI) {
+							URI sourceShapeId = (URI) v.getId();
+							Shape sourceShape = shapeManager.getShapeById(sourceShapeId);
+							if (sourceShape == null) {
+								logger.warn("Shape not found: {}", sourceShapeId.getLocalName());
+							} else if (isInverseCandidate(pathHead, sourceShape)) {
+							
+								DataChannel channel = dataChannelFactory.createDataChannel(sourceShape);
+								if (channel != null) {
+									
+									if (logger.isDebugEnabled()) {
+										logger.debug("addShapesForInverseProperties: For ^{} on {}, add source {}", 
+												inverseProperty.getLocalName(), 
+												RdfUtil.localName(targetShapeModel.getShape().getId()),
+												RdfUtil.localName(sourceShape.getId()));
+									}
+									addSourceShape(classModel, sourceClassModel, sourceShape, channel);
+								}
+							}
+						}
+					}
+					if (logger.isDebugEnabled()) {
+						// Confirm that the next property is in the ClassModel
+						
+						if (next != null && next.getDirection()==Direction.OUT) {
+							String shapeName = RdfUtil.localName(pathHead.getDeclaringShape().getShape().getId());
+							PropertyGroup g = classModel.getOutGroupByPredicate(next.getPredicate());
+							if (g == null) {
+								logger.debug("addShapesForInverseProperty: GROUP NOT FOUND for {}! in Shape {}", 
+										next.getPredicate().getLocalName(),
+										shapeName);
+							} else {
+								logger.debug("addShapesForInverseProperties: group[{}] in ClassModel[{}] contains '{}'", 
+										g.hashCode(),
+										classModel.hashCode(),
+										next.getPredicate().getLocalName(), 
+										shapeName);
+							}
+						}
+					}
+					
+				}
+			}
+		}
+		
+	}
+
+
+	private boolean isInverseCandidate(StepPropertyModel pathHead, Shape sourceShape) {
+		StepPropertyModel next = pathHead.getNextStep();
+		if (next == null || next.getDirection()==Direction.IN) {
+			return true;
+		}
+		PropertyConstraint p = sourceShape.getPropertyConstraint(next.getPredicate());
+		
+		return p != null;
 	}
 
 
@@ -454,16 +568,23 @@ public class ShapeModelFactory {
 					ShapeModel varShapeModel = doCreateShapeModel(varShape, null);
 
 					URI predicate = var.getPredicate();
-					PropertyGroup group = targetShapeModel.getClassModel().producePropertyGroup(predicate);
+					PropertyGroup group = targetShapeModel.getClassModel().produceOutGroup(predicate);
 					VariablePropertyModel varModel = new VariablePropertyModel(predicate, group, var);
 					varShapeModel.setAccessor(varModel);
 					varModel.setDeclaringShape(targetShapeModel);
 					group.add(varModel);
+					if (logger.isDebugEnabled()) {
+						logger.debug("addVariables: Adding variable {} from {} to group[{}] in ClassModel[{}]",
+								predicate.getLocalName(),
+								RdfUtil.localName(targetShape.getId()),
+								group.hashCode(),
+								group.getParentClassModel().hashCode());
+					}
 					varModel.setValueModel(varShapeModel);
 					targetShapeModel.add(varModel);
 					
 				} else {
-					throw new ShapeTransformException("Variable type is not defined: " + var.getPredicate());
+					throw new ShapeTransformException("addVariables: Variable type is not defined: " + var.getPredicate());
 				}
 			}
 		}
@@ -478,16 +599,15 @@ public class ShapeModelFactory {
 		return (shape == targetShapeModel.getShape()) && targetShapeModel.getAccessor()==null;
 	}
 
-	private ShapeModel addSourceShape(ClassModel classModel, Shape sourceShape, DataChannel channel) throws ShapeTransformException {
+	private ShapeModel addSourceShape(ClassModel targetClassModel, ClassModel sourceClassModel, Shape sourceShape, DataChannel channel) throws ShapeTransformException {
 		if (logger.isDebugEnabled()) {
-			String owlClass = RdfUtil.localName(classModel.getOwlClass());
 			String sourceShapeName = RdfUtil.localName(sourceShape.getId());
-			logger.debug("addSourceShape(classModel.owlClass: {}, sourceShape: {})", owlClass, sourceShapeName);
+			logger.debug("addSourceShape: Adding {} as candidate source for ClassModel[{}]", sourceShapeName, targetClassModel.hashCode());
 		}
 		ShapeModel sourceShapeModel = new ShapeModel(sourceShape);
 		sourceShapeModel.setDataChannel(channel);
-		classModel.addCandidateSourceShapeModel(sourceShapeModel);
-		sourceShapeModel.setClassModel(classModel);
+		targetClassModel.addCandidateSourceShapeModel(sourceShapeModel);
+		sourceShapeModel.setClassModel(targetClassModel);
 		
 		addSourceId(sourceShapeModel);
 		
@@ -496,7 +616,7 @@ public class ShapeModelFactory {
 			if (propertyConstraint.getPath() instanceof PredicatePath) {
 				PredicatePath path = (PredicatePath) propertyConstraint.getPath();
 				URI predicate = path.getPredicate();
-				PropertyGroup group = classModel.producePropertyGroup(predicate);
+				PropertyGroup group = sourceClassModel.produceOutGroup(predicate);
 				
 				DirectPropertyModel propertyModel = new DirectPropertyModel(predicate, group, propertyConstraint);
 				propertyModel.setDeclaringShape(sourceShapeModel);
@@ -504,14 +624,23 @@ public class ShapeModelFactory {
 				propertyModel.setGroup(group);
 				group.add(propertyModel);
 				
+				if (logger.isDebugEnabled()) {
+					logger.debug("addSourceShape: Adding {} from {} to group[{}] in ClassModel[{}]",
+							predicate.getLocalName(),
+							RdfUtil.localName(sourceShape.getId()),
+							group.hashCode(),
+							sourceClassModel.hashCode()
+							);
+				}
 				
-				propertyModel.setStepPropertyModel(handleEquivalentPath(propertyModel));
+				
+				handleEquivalentPath(propertyModel);
 				
 				Shape valueShape = propertyConstraint.getShape();
 				if (valueShape != null) {
 					URI valueClass = propertyConstraint.getValueClass() instanceof URI ? (URI) propertyConstraint.getValueClass() : null;
 					ClassModel valueClassModel = group.produceValueClassModel(valueClass);
-					ShapeModel valueShapeModel = addSourceShape(valueClassModel, valueShape, channel);
+					ShapeModel valueShapeModel = addSourceShape(valueClassModel, valueClassModel, valueShape, channel);
 					propertyModel.setValueModel(valueShapeModel);
 					valueShapeModel.setAccessor(propertyModel);
 				}
@@ -536,7 +665,7 @@ public class ShapeModelFactory {
 		
 		if (sourceShape.getNodeKind()==NodeKind.IRI || sourceShape.getIriTemplate()!=null || sourceShape.getIriFormula()!=null) {
 			ClassModel classModel = sourceShapeModel.getClassModel();
-			PropertyGroup group = classModel.producePropertyGroup(Konig.id);
+			PropertyGroup group = classModel.produceOutGroup(Konig.id);
 			IdPropertyModel propertyModel = new IdPropertyModel(group);
 			propertyModel.setDeclaringShape(sourceShapeModel);
 			group.add(propertyModel);

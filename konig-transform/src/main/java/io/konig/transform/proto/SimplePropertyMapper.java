@@ -37,7 +37,7 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.Direction;
-import io.konig.formula.DirectionStep;
+import io.konig.formula.DirectedStep;
 import io.konig.formula.Formula;
 import io.konig.formula.FormulaVisitor;
 import io.konig.formula.HasPathStep;
@@ -71,15 +71,45 @@ public class SimplePropertyMapper implements PropertyMapper {
 	public void mapProperties(ShapeModel targetShape) throws ShapeTransformException {
 		FromItemEnds fromItems = new FromItemEnds();
 		ClassModel classModel = targetShape.getClassModel();
+		if (logger.isDebugEnabled()) {
+			String shapeLocalName = RdfUtil.localName(targetShape.getShape().getId());
+			logger.debug("mapProperties: Mapping {} in ClassModel[{}])", shapeLocalName, classModel.hashCode());
+		}
 		Worker worker = new Worker(fromItems);
 		worker.run(classModel);	
-		classModel.setFromItem(fromItems.first);
+		classModel.setFromItem(fromItems.getFirst());
 	}
 	
 	static class FromItemEnds {
 
-		ProtoFromItem first;
-		ProtoFromItem last;
+		private ProtoFromItem first;
+		private ProtoFromItem last;
+		
+		public ProtoFromItem getFirst() {
+			return first;
+		}
+		
+		public boolean hasSingleItem() {
+			return first == last;
+		}
+		public FromItemEnds setFirst(ProtoFromItem item) {
+			first = item;
+			return this;
+		}
+		
+		public FromItemEnds setSingleItem(ProtoFromItem item) {
+			first = last = item;
+			return this;
+		}
+		
+		public ProtoFromItem getLast() {
+			return last;
+		}
+		public FromItemEnds setLast(ProtoFromItem last) {
+			this.last = last;
+			return this;
+		}
+		
 	}
 
 	class Worker implements PropertyGroupHandler {
@@ -160,8 +190,8 @@ public class SimplePropertyMapper implements PropertyMapper {
 			}
 			
 			if (!matched && variableModel!=null) {
-				if (fromItemEnds.first==null) {
-					fromItemEnds.first = variableModel;
+				if (fromItemEnds.getFirst()==null) {
+					fromItemEnds.setFirst(variableModel);
 				} else {
 					// TODO: fix me
 					throw new ShapeTransformException("Yikes! Don't know how to handle this case.");
@@ -283,11 +313,10 @@ public class SimplePropertyMapper implements PropertyMapper {
 		private void bindVariable(VariablePropertyModel targetVariable) {
 			
 			ClassModel classModel = targetVariable.getValueModel().getClassModel();
-			Set<ShapeModel> candidateList = classModel.getCandidateSourceShapeModel();
-			ProtoFromItemIterator sequence = new ProtoFromItemIterator(fromItemEnds.first);
+			ProtoFromItemIterator sequence = new ProtoFromItemIterator(fromItemEnds.getFirst());
 			while (sequence.hasNext()) {
 				ShapeModel shapeModel = sequence.next();
-				if (candidateList.contains(shapeModel)) {
+				if (classModel.containsCandidateSourceShapeModel(shapeModel)) {
 					targetVariable.setSourceShape(shapeModel);
 					shapeModel.getDataChannel().setVariableName(targetVariable.getPredicate().getLocalName());
 					return;
@@ -301,7 +330,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 			URI owlClass = targetClassModel.getOwlClass();
 			
 			logger.debug("BEGIN applyFormulas({})", owlClass==null?null:owlClass.getLocalName());
-			for (PropertyGroup group : targetClassModel.getPropertyGroups()) {
+			for (PropertyGroup group : targetClassModel.getOutGroups()) {
 				if (group.getSourceProperty()==null) {
 					PropertyModel targetProperty = group.getTargetProperty();
 					if (targetProperty instanceof DirectPropertyModel) {
@@ -318,9 +347,17 @@ public class SimplePropertyMapper implements PropertyMapper {
 							DerivedPropertyModel derived = new DerivedPropertyModel(targetProperty.getPredicate(), group, constraint);
 							derived.setDeclaringShape(targetClassModel.getTargetShapeModel());
 							group.add(derived);
+							if (logger.isDebugEnabled()) {
+								logger.debug("applyFormulas: Adding {} from {} to group[{}] in ClassModel[{}]",
+										targetProperty.getPredicate().getLocalName(),
+										RdfUtil.localName(targetProperty.getDeclaringShape().getShape().getId()),
+										group.hashCode(),
+										group.getParentClassModel().hashCode());
+							}
 							group.setSourceProperty(derived);
 							declareMatch(group);
 							
+							// TODO: Add special logic to handle inverse property
 							continue;
 						}
 						
@@ -330,7 +367,8 @@ public class SimplePropertyMapper implements PropertyMapper {
 						// of the source shapes.
 						URI predicate = targetProperty.getPredicate();
 						
-						for (ShapeModel sourceShapeModel : targetClassModel.getCandidateSourceShapeModel()) {
+						for (SourceShapeInfo info : targetClassModel.getCandidateSourceShapeModel()) {
+							ShapeModel sourceShapeModel = info.getSourceShape();
 							Shape sourceShape = sourceShapeModel.getShape();
 							PropertyConstraint p = sourceShape.getDerivedPropertyByPredicate(predicate);
 							if (p != null) {
@@ -344,6 +382,13 @@ public class SimplePropertyMapper implements PropertyMapper {
 										derived.setDeclaringShape(sourceShapeModel);
 										sourceShapeModel.add(derived);
 										group.add(derived);
+										if (logger.isDebugEnabled()) {
+											logger.debug("applyFormulas: Adding {} from {} to group[{}] in ClassModel[{}]",
+													predicate.getLocalName(),
+													RdfUtil.localName(sourceShape.getId()),
+													group.hashCode(),
+													group.getParentClassModel().hashCode());
+										}
 										group.setSourceProperty(derived);
 										declareMatch(group);
 										continue;
@@ -372,8 +417,8 @@ public class SimplePropertyMapper implements PropertyMapper {
 
 
 		private boolean isFromItem(ShapeModel sourceShapeModel) {
-			if (fromItemEnds.first != null) {
-				ProtoFromItemIterator sequence = new ProtoFromItemIterator(fromItemEnds.first);
+			if (fromItemEnds.getFirst() != null) {
+				ProtoFromItemIterator sequence = new ProtoFromItemIterator(fromItemEnds.getFirst());
 				while (sequence.hasNext()) {
 					ShapeModel shapeModel = sequence.next();
 					if (shapeModel == sourceShapeModel) {
@@ -385,7 +430,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 		}
 
 		private void handleNestedResources(ClassModel targetClassModel) throws ShapeTransformException {
-			for (PropertyGroup group : targetClassModel.getPropertyGroups()) {
+			for (PropertyGroup group : targetClassModel.getOutGroups()) {
 				ClassModel nested = group.getValueClassModel();
 				
 				if (nested != null && nested.hasUnmatchedProperty()) {
@@ -439,12 +484,12 @@ public class SimplePropertyMapper implements PropertyMapper {
 														group.setSourceProperty(idProperty);
 														declareMatch(group);
 														if (
-															(fromItemEnds.first==null) ||
-															(fromItemEnds.first==fromItemEnds.last && fromItemEnds.first==leftShape)
+															(fromItemEnds.getFirst()==null) ||
+															(fromItemEnds.hasSingleItem() && fromItemEnds.getFirst()==leftShape)
 														) {
-															fromItemEnds.first = fromItemEnds.last = new ProtoJoinExpression(leftShape, rightShape, condition);
-														} else if (fromItemEnds.first==fromItemEnds.last && fromItemEnds.first==rightShape) {
-															fromItemEnds.first = fromItemEnds.last = new ProtoJoinExpression(rightShape, leftShape, condition);
+															fromItemEnds.setSingleItem(new ProtoJoinExpression(leftShape, rightShape, condition));
+														} else if (fromItemEnds.hasSingleItem() && fromItemEnds.getFirst()==rightShape) {
+															fromItemEnds.setSingleItem( new ProtoJoinExpression(rightShape, leftShape, condition) );
 														} else {
 															
 															throw new ShapeTransformException("Don't know how to build join. TODO: fix me!");
@@ -490,15 +535,21 @@ public class SimplePropertyMapper implements PropertyMapper {
 		
 
 		private void buildFromExpression(ShapeModel newShapeModel) throws ShapeTransformException {
-			
+			if (logger.isDebugEnabled()) {
+				logger.debug("buildFromExpression({})",RdfUtil.localName(newShapeModel.getShape().getId()));
+			}
 			beginBuildFromExpression(newShapeModel);
 			
 			if (abortFromExpression(newShapeModel)) {
 				return;
 			}
 			
-			if (fromItemEnds.first == null) {
-				fromItemEnds.first = fromItemEnds.last = newShapeModel;
+			if (fromItemEnds.getFirst() == null) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("buildFromExpression: first source is {}", 
+							RdfUtil.localName(newShapeModel.getShape().getId()));
+				}
+				fromItemEnds.setSingleItem( newShapeModel );
 			} else {
 
 				ProtoBooleanExpression condition = null;
@@ -507,7 +558,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 				
 				DataChannel newChannel = newShapeModel.getDataChannel();
 				
-				ProtoFromItemIterator sequence = new ProtoFromItemIterator(fromItemEnds.first);
+				ProtoFromItemIterator sequence = new ProtoFromItemIterator(fromItemEnds.getFirst());
 				while (sequence.hasNext() && condition==null) {
 					ShapeModel priorShapeModel = sequence.next();
 					
@@ -628,8 +679,8 @@ public class SimplePropertyMapper implements PropertyMapper {
 										PathExpression otherPath = (PathExpression) primary;
 										List<PathStep> stepList = otherPath.getStepList();
 										PathStep otherFirst = stepList.get(0);
-										if (otherFirst instanceof DirectionStep) {
-											DirectionStep dir = (DirectionStep) otherFirst;
+										if (otherFirst instanceof DirectedStep) {
+											DirectedStep dir = (DirectedStep) otherFirst;
 											if (dir.getDirection() == Direction.OUT) {
 												URI otherPredicate = dir.getTerm().getIri();
 												if (otherPredicate.equals(priorAccessor.getPredicate())) {
@@ -660,8 +711,8 @@ public class SimplePropertyMapper implements PropertyMapper {
 			PropertyModel property = null;
 			for (int i=1; i<stepList.size(); i++) {
 				PathStep step = stepList.get(i);
-				if (step instanceof DirectionStep) {
-					DirectionStep dir = (DirectionStep) step;
+				if (step instanceof DirectedStep) {
+					DirectedStep dir = (DirectedStep) step;
 					if (dir.getDirection() == Direction.OUT) {
 						URI predicate = dir.getTerm().getIri();
 						property = shapeModel.getPropertyByPredicate(predicate);
@@ -715,13 +766,13 @@ public class SimplePropertyMapper implements PropertyMapper {
 
 		private void createFromItem(ShapeModel newShapeModel, ProtoBooleanExpression condition) {
 			
-			if (fromItemEnds.first instanceof ShapeModel) {
-				fromItemEnds.first = fromItemEnds.last = new ProtoJoinExpression((ShapeModel)fromItemEnds.first, newShapeModel, condition);
+			if (fromItemEnds.getFirst() instanceof ShapeModel) {
+				fromItemEnds.setSingleItem( new ProtoJoinExpression((ShapeModel)fromItemEnds.getFirst(), newShapeModel, condition) );
 			} else {
-				ProtoJoinExpression join = (ProtoJoinExpression) fromItemEnds.last;
+				ProtoJoinExpression join = (ProtoJoinExpression) fromItemEnds.getLast();
 				ShapeModel priorShapeModel = join.getRightShapeModel();
-				fromItemEnds.last = new ProtoJoinExpression(priorShapeModel, newShapeModel, condition);
-				join.setRight(fromItemEnds.last);
+				fromItemEnds.setLast( new ProtoJoinExpression(priorShapeModel, newShapeModel, condition));
+				join.setRight(fromItemEnds.getLast());
 			}
 			
 		}
@@ -820,6 +871,9 @@ public class SimplePropertyMapper implements PropertyMapper {
 
 
 		private void matchStepProperties(ShapeModel sourceShapeModel) throws ShapeTransformException {
+			if (logger.isDebugEnabled()) {
+				logger.debug("matchStepProperties({})", RdfUtil.localName(sourceShapeModel.getShape().getId()));
+			}
 			List<StepPropertyModel> stepProperties = sourceShapeModel.getStepProperties();
 			for (StepPropertyModel step : stepProperties) {
 				if (step.getNextStep()==null) {
@@ -830,7 +884,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 					} else {
 						ClassModel classModel = group.getParentClassModel();
 						URI predicate = step.getPredicate();
-						PropertyGroup peer = classModel.getPropertyGroupByPredicate(predicate);
+						PropertyGroup peer = classModel.getOutGroupByPredicate(predicate);
 						
 						if (peer != null && peer.getTargetProperty()!=null && peer.getSourceProperty()==null) {
 							peer.setSourceProperty(step);
@@ -890,12 +944,12 @@ public class SimplePropertyMapper implements PropertyMapper {
 													group.setSourceProperty(idProperty);
 													declareMatch(group);
 													if (
-														(fromItemEnds.first==null) ||
-														(fromItemEnds.first==fromItemEnds.last && fromItemEnds.first==leftShape)
+														(fromItemEnds.getFirst()==null) ||
+														(fromItemEnds.hasSingleItem() && fromItemEnds.getFirst()==leftShape)
 													) {
-														fromItemEnds.first = fromItemEnds.last = new ProtoJoinExpression(leftShape, rightShape, condition);
-													} else if (fromItemEnds.first==fromItemEnds.last && fromItemEnds.first==rightShape) {
-														fromItemEnds.first = fromItemEnds.last = new ProtoJoinExpression(rightShape, leftShape, condition);
+														fromItemEnds.setSingleItem( new ProtoJoinExpression(leftShape, rightShape, condition) );
+													} else if (fromItemEnds.hasSingleItem() && fromItemEnds.getFirst()==rightShape) {
+														fromItemEnds.setSingleItem( new ProtoJoinExpression(rightShape, leftShape, condition) );
 													} else {
 														
 														throw new ShapeTransformException("Don't know how to build join. TODO: fix me!");
@@ -956,18 +1010,18 @@ public class SimplePropertyMapper implements PropertyMapper {
 				logger.debug("appendDataChannel(shape.localName: {})", shapeModel.simpleName());
 			}
 			
-			if (fromItemEnds.first == null) {
-				fromItemEnds.first = fromItemEnds.last = shapeModel;
-			} else if (fromItemEnds.last instanceof ProtoJoinExpression){
+			if (fromItemEnds.getFirst() == null) {
+				fromItemEnds.setSingleItem(shapeModel);
+			} else if (fromItemEnds.getLast() instanceof ProtoJoinExpression){
 
-				ProtoJoinExpression join = (ProtoJoinExpression) fromItemEnds.last;
+				ProtoJoinExpression join = (ProtoJoinExpression) fromItemEnds.getLast();
 				ShapeModel priorShapeModel = join.getRightShapeModel();
-				fromItemEnds.last = new ProtoJoinExpression(priorShapeModel, shapeModel, null);
-				join.setRight(fromItemEnds.last);
-			} else if (fromItemEnds.first==fromItemEnds.last && fromItemEnds.last instanceof ShapeModel) {
-				ShapeModel first = (ShapeModel) fromItemEnds.first;
+				fromItemEnds.setLast( new ProtoJoinExpression(priorShapeModel, shapeModel, null) );
+				join.setRight(fromItemEnds.getLast());
+			} else if (fromItemEnds.hasSingleItem() && fromItemEnds.getLast() instanceof ShapeModel) {
+				ShapeModel first = (ShapeModel) fromItemEnds.getFirst();
 				ProtoJoinExpression join = new ProtoJoinExpression(first, shapeModel, null);
-				fromItemEnds.first = fromItemEnds.last = join;
+				fromItemEnds.setSingleItem( join );
 			}
 			
 		}
@@ -1027,9 +1081,9 @@ public class SimplePropertyMapper implements PropertyMapper {
 				
 				DirectPropertyModel direct = (DirectPropertyModel) p;
 				
-				StepPropertyModel step = direct.getStepPropertyModel();
+				StepPropertyModel step = direct.getPathTail();
 				if (step != null && isTopShape(direct.getDeclaringShape())) {
-					logger.debug("replacing property with step: {}", step.getPredicate().getLocalName());
+					logger.debug("matchProperty: replacing property with step: {}", step.getPredicate().getLocalName());
 					p = step;
 				}
 				
@@ -1075,12 +1129,20 @@ public class SimplePropertyMapper implements PropertyMapper {
 					if (sp!=null) {
 						if (sp instanceof StepPropertyModel) {
 							StepPropertyModel step = (StepPropertyModel) sp;
+							DirectPropertyModel direct = step.getDeclaringProperty();
+							PropertyConstraint pc = direct.getPropertyConstraint();
+							QuantifiedExpression formula = pc.getFormula();
+							
+							logger.debug("declareMatch: formula={}", formula.toSimpleString());
+							
 							sourceProperty = step.getDeclaringProperty().getPredicate().getLocalName();
+							
 						} else {
 							sourceProperty = sp.getPredicate().getLocalName();
+
+							logger.debug("declareMatch({} => {})", sourceProperty, group.getTargetProperty().simplePath());
 						}
 					}
-					logger.debug("declareMatch({} => {})", sourceProperty, group.getTargetProperty().simplePath());
 				}
 			}
 			unmatchedProperties.remove(group);
@@ -1090,12 +1152,13 @@ public class SimplePropertyMapper implements PropertyMapper {
 		private LinkedList<ShapeModelMatchCount> collectShapeModelMatchCount(ClassModel classModel) throws ShapeTransformException {
 
 			LinkedList<ShapeModelMatchCount> list = new LinkedList<>();
-			Set<ShapeModel> set = classModel.getCandidateSourceShapeModel();
+			List<SourceShapeInfo> set = classModel.getCandidateSourceShapeModel();
 			if (set == null) {
 				set = buildCandidateSources(classModel);
 			}
 			
-			for (ShapeModel s : set) {
+			for (SourceShapeInfo info : set) {
+				ShapeModel s = info.getSourceShape();
 				ShapeModelMatchCount sc = new ShapeModelMatchCount(s);
 				list.add(sc);
 			}
@@ -1103,8 +1166,8 @@ public class SimplePropertyMapper implements PropertyMapper {
 			return list;
 		}
 
-		private Set<ShapeModel> buildCandidateSources(ClassModel classModel) throws ShapeTransformException {
-			Set<ShapeModel> set = new HashSet<>();
+		private List<SourceShapeInfo> buildCandidateSources(ClassModel classModel) throws ShapeTransformException {
+			List<SourceShapeInfo> set = new ArrayList<>();
 			classModel.setCandidateSourceShapeModel(set);
 			
 			shapeModelFactory.addSourceShapes(classModel.getTargetShapeModel());
@@ -1118,7 +1181,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 		 */
 		private void collectUnmatchedProperties(ClassModel classModel) {
 			logger.debug("collectUnmatchedProperties({})", RdfUtil.localName(classModel.getOwlClass()));
-			for (PropertyGroup p : classModel.getPropertyGroups()) {
+			for (PropertyGroup p : classModel.getOutGroups()) {
 				
 				if (p.getTargetProperty()!=null && Konig.modified.equals(p.getTargetProperty().getPredicate())) {
 					p.setSourceProperty(new FixedPropertyModel(Konig.modified, p, new LiteralImpl("{modified}")));

@@ -33,12 +33,7 @@
   <logger name="io.konig.transform.proto.VariableShapeFactory" additivity="false">
       <level value="debug"/>
       <appender-ref ref="console"/>
-  </logger>  
-  
-  <logger name="io.konig.transform.proto.ShapeModelToShapeRule" additivity="false">
-      <level value="debug"/>
-      <appender-ref ref="console"/>
-  </logger>
+  </logger> 
   
   <logger name="io.konig.transform.sql.factory.SqlFactory" additivity="false">
       <level value="debug"/>
@@ -48,7 +43,17 @@
   
 -->
 
+  <logger name="io.konig.transform.proto.ShapeModelMatchCount" additivity="false">
+      <level value="debug"/>
+      <appender-ref ref="console"/>
+  </logger>
   
+   
+  
+  <logger name="io.konig.transform.proto.ShapeModelToShapeRule" additivity="false">
+      <level value="debug"/>
+      <appender-ref ref="console"/>
+  </logger>
   
   <logger name="io.konig.transform.proto.ShapeModelFactory" additivity="false">
       <level value="debug"/>

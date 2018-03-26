@@ -49,7 +49,7 @@ public class SimplePropertyMapperTest extends TransformTest {
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
 		ShapeModel shapeModel = createShapeModel(shapeId);
 		
-		PropertyGroup group = shapeModel.getClassModel().getPropertyGroupByPredicate(Schema.givenName);
+		PropertyGroup group = shapeModel.getClassModel().getOutGroupByPredicate(Schema.givenName);
 		PropertyModel sourceProperty = group.getSourceProperty();
 		assertTrue(sourceProperty != null);
 		assertEquals(Schema.givenName, sourceProperty.getPredicate());

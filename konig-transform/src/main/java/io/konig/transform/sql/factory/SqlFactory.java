@@ -51,7 +51,7 @@ import io.konig.datasource.TableDataSource;
 import io.konig.formula.BinaryOperator;
 import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.Direction;
-import io.konig.formula.DirectionStep;
+import io.konig.formula.DirectedStep;
 import io.konig.formula.Expression;
 import io.konig.formula.HasPathStep;
 import io.konig.formula.IriValue;
@@ -825,8 +825,8 @@ public class SqlFactory {
 				List<PathStep> stepList = path.getStepList();
 				
 				PathStep first = stepList.get(0);
-				if (first instanceof DirectionStep) {
-					DirectionStep dir = (DirectionStep) first;
+				if (first instanceof DirectedStep) {
+					DirectedStep dir = (DirectedStep) first;
 					if (dir.getDirection() == Direction.OUT) {
 						PathTerm term = dir.getTerm();
 						if (term instanceof VariableTerm) {
@@ -848,8 +848,8 @@ public class SqlFactory {
 							boolean ok = true;
 							for (int i=1; ok && i<stepList.size(); i++) {
 								PathStep step = stepList.get(i);
-								if (step instanceof DirectionStep) {
-									dir = (DirectionStep) step;
+								if (step instanceof DirectedStep) {
+									dir = (DirectedStep) step;
 									if (dir.getDirection() == Direction.OUT) {
 										term = dir.getTerm();
 										if (term instanceof IriValue) {

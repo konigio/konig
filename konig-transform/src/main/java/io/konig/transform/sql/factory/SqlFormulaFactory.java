@@ -37,7 +37,7 @@ import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.BuiltInName;
 import io.konig.formula.ConditionalAndExpression;
 import io.konig.formula.Direction;
-import io.konig.formula.DirectionStep;
+import io.konig.formula.DirectedStep;
 import io.konig.formula.Expression;
 import io.konig.formula.FullyQualifiedIri;
 import io.konig.formula.FunctionExpression;
@@ -275,8 +275,8 @@ public class SqlFormulaFactory {
 					List<PathStep> stepList = path.getStepList();
 					if (stepList.size()==1) {
 						PathStep step = stepList.get(0);
-						if (step instanceof DirectionStep) {
-							DirectionStep dir = (DirectionStep) step;
+						if (step instanceof DirectedStep) {
+							DirectedStep dir = (DirectedStep) step;
 							if (dir.getDirection() == Direction.OUT) {
 								PathTerm term = dir.getTerm();
 								if (term instanceof VariableTerm) {
@@ -311,8 +311,8 @@ public class SqlFormulaFactory {
 			if (stepList != null && !stepList.isEmpty()) {
 				PathStep first = stepList.get(0);
 				
-				if (first instanceof DirectionStep) {
-					DirectionStep firstDir = (DirectionStep) first;
+				if (first instanceof DirectedStep) {
+					DirectedStep firstDir = (DirectedStep) first;
 					if (firstDir.getDirection() == Direction.OUT) {
 						
 						StringBuilder builder = new StringBuilder();
@@ -350,8 +350,8 @@ public class SqlFormulaFactory {
 						for (int i=startIndex; i<stepList.size() && ok; i++) {
 							ok = false;
 							PathStep step = stepList.get(i);
-							if (step instanceof DirectionStep) {
-								DirectionStep dir = (DirectionStep) step;
+							if (step instanceof DirectedStep) {
+								DirectedStep dir = (DirectedStep) step;
 								if (dir.getDirection()==Direction.OUT) {
 									PathTerm term = dir.getTerm();
 									if (term instanceof IriValue) {
@@ -420,8 +420,8 @@ public class SqlFormulaFactory {
 					ShapeRule nextShapeRule = p.getNestedRule();
 					if (nextShapeRule != null) {
 						PathStep nextStep = stepList.get(1);
-						if (nextStep instanceof DirectionStep) {
-							DirectionStep dirStep = (DirectionStep) nextStep;
+						if (nextStep instanceof DirectedStep) {
+							DirectedStep dirStep = (DirectedStep) nextStep;
 							if (dirStep.getDirection().equals(Direction.OUT)) {
 								PathTerm term = dirStep.getTerm();
 								if (term instanceof IriValue) {

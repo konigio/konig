@@ -27,6 +27,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.path.HasStep.PredicateValuePair;
+import io.konig.formula.Direction;
 import io.konig.shacl.PropertyConstraint;
 
 /**
@@ -37,18 +38,35 @@ import io.konig.shacl.PropertyConstraint;
 public class StepPropertyModel extends BasicPropertyModel {
 
 	private int stepIndex;
+	private Direction direction;
 	private DirectPropertyModel declaringProperty;
 	private StepPropertyModel nextStep;
+	private StepPropertyModel previousStep;
 	private List<PredicateValuePair> filter;
 	
-	public StepPropertyModel(URI predicate, PropertyGroup group, DirectPropertyModel declaringProperty, int stepIndex) {
+	public StepPropertyModel(URI predicate, Direction direction, PropertyGroup group, DirectPropertyModel declaringProperty, int stepIndex) {
 		super(predicate, group, declaringProperty.getPropertyConstraint());
+		this.direction = direction;
 		this.declaringProperty = declaringProperty;
 		this.stepIndex = stepIndex;
+	}
+	
+	public Direction getDirection() {
+		return direction;
 	}
 
 	public int getStepIndex() {
 		return stepIndex;
+	}
+	
+	public StepPropertyModel getPathHead() {
+		return previousStep == null ? this : previousStep.getPathHead();
+	}
+	
+	
+
+	public StepPropertyModel getPreviousStep() {
+		return previousStep;
 	}
 
 	public void setStepIndex(int stepIndex) {
@@ -62,6 +80,7 @@ public class StepPropertyModel extends BasicPropertyModel {
 
 	public void setNextStep(StepPropertyModel nextStep) {
 		this.nextStep = nextStep;
+		nextStep.previousStep = this;
 	}
 
 	public List<PredicateValuePair> getFilter() {

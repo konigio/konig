@@ -85,7 +85,7 @@ public class ShapeModelFactoryTest extends TransformTest {
 		
 		ClassModel classModel = shapeModel.getClassModel();
 		
-		PropertyGroup group = classModel.getPropertyGroupByPredicate(Schema.givenName);
+		PropertyGroup group = classModel.getOutGroupByPredicate(Schema.givenName);
 		assertTrue(group!=null);
 		
 		assertEquals(2, group.size());
@@ -107,7 +107,7 @@ public class ShapeModelFactoryTest extends TransformTest {
 		
 		ClassModel classModel = shapeModel.getClassModel();
 		
-		PropertyGroup group = classModel.getPropertyGroupByPredicate(Schema.address);
+		PropertyGroup group = classModel.getOutGroupByPredicate(Schema.address);
 		assertTrue(group!=null);
 		
 		assertEquals(2, group.size());
@@ -116,7 +116,7 @@ public class ShapeModelFactoryTest extends TransformTest {
 		ClassModel addressModel = group.getValueClassModel();
 		assertTrue(addressModel != null);
 		
-		PropertyGroup postalCodeGroup = addressModel.getPropertyGroupByPredicate(Schema.postalCode);
+		PropertyGroup postalCodeGroup = addressModel.getOutGroupByPredicate(Schema.postalCode);
 		assertTrue(postalCodeGroup != null);
 		
 		assertEquals(2, postalCodeGroup.size());
