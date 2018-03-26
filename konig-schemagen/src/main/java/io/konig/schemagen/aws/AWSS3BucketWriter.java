@@ -32,12 +32,15 @@ import java.util.Map;
 
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.ValidateTemplateRequest;
+import com.amazonaws.services.cloudformation.model.ValidateTemplateResult;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import io.konig.aws.cloudformation.Resource;
 import io.konig.aws.datasource.Queue;
@@ -143,16 +146,23 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 
 	private void writeCloudFormationTemplate(S3Bucket bucket) throws Exception {
 		for(File file:cfDir.listFiles()){
-				String contents = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));				
-				String outputs=contents.substring(contents.lastIndexOf("Outputs:"));
-				String resources=contents.substring(0,contents.lastIndexOf("Outputs:"));
-				resources=resources+getS3BucketTemplate(bucket);
-				contents=resources+outputs;
+				String contents = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));	
+				YAMLFactory yamlFactory=new YAMLFactory();
+				YAMLMapper mapper = new YAMLMapper(new YAMLFactory());
+				JsonNode node = mapper.readTree(contents);
+				JsonNode outputNode=node.get("Outputs");
+			
+				if(outputNode!=null){			
+					String outputs=contents.substring(contents.lastIndexOf("Outputs:"));
+					String resources=contents.substring(0,contents.lastIndexOf("Outputs:"));
+					resources=resources+getS3BucketTemplate(bucket);
+					contents=resources+outputs;
+				}
 				
 				AmazonCloudFormationClient client = new AmazonCloudFormationClient();
 				ValidateTemplateRequest request = new ValidateTemplateRequest();
 				request.setTemplateBody(contents);				
-				client.validateTemplate(request);
+				ValidateTemplateResult result=client.validateTemplate(request);
 				
 				try(FileWriter fileWriter= new FileWriter(file)){
 					fileWriter.write(contents);
