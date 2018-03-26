@@ -24,6 +24,10 @@ package io.konig.etl.aws;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.component.aws.s3.S3Constants;
+import org.codehaus.plexus.util.StringUtils;
+
+import io.konig.camel.aws.s3.S3Operations;
+
 
 import io.konig.camel.aws.s3.S3Operations;
 
@@ -35,6 +39,8 @@ public class PrepareToDeleteFromBucket implements Processor {
     	String fileName = exchange.getIn().getHeader("fileName", String.class);
     	String bucketName = exchange.getIn().getHeader("bucketName", String.class);
         exchange.getIn().setHeader(S3Constants.KEY, fileName); 
+    	String bucketName = exchange.getIn().getHeader("sourceBucketName", String.class);
+        exchange.getIn().setHeader(S3Constants.KEY, fileName);
         exchange.getIn().setHeader(S3Constants.BUCKET_NAME, bucketName);
         exchange.getIn().setHeader(S3Constants.S3_OPERATION, S3Operations.deleteObject);
         exchange.getOut().setHeaders(exchange.getIn().getHeaders());
