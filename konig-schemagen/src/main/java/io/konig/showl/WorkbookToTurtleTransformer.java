@@ -27,6 +27,7 @@ import java.io.IOException;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.velocity.VelocityContext;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.OWL;
@@ -114,11 +115,13 @@ public class WorkbookToTurtleTransformer {
 			}
 
 			TurtleGenerator turtleGenerator = new TurtleGenerator();
+			VelocityContext context=workbookLoader.getDataSourceGenerator().getContext();
 			if (gcpOutDir != null) {
-				turtleGenerator.generateAll(GCP.GoogleCloudSqlInstance, gcpOutDir, graph);
+				turtleGenerator.generateAll(GCP.GoogleCloudSqlInstance, gcpOutDir, graph,context);
 			}
 			if(awsOutDir != null) {
-				turtleGenerator.generateAll(AWS.DbCluster, awsOutDir, graph);
+				turtleGenerator.generateAll(AWS.DbCluster, awsOutDir, graph,context);
+				turtleGenerator.generateAll(AWS.CloudFormationTemplate, awsOutDir, graph,context);
 			}
 			
 			
