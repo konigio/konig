@@ -73,13 +73,12 @@ public class EtlRouteBuilderTest {
 	@Test
 	public void testEtlMs()
 	{
-		EtlRouteBuilder builder=new EtlRouteBuilder(/*new File("C:/Users/604601/test/target/aws/camel-etlRoutr")*/);
+		EtlRouteBuilder builder=new EtlRouteBuilder();
 		try {
 			builder.createDockerFile("localName","schemaName");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		builder.baseDir();
+		
 	}
 }

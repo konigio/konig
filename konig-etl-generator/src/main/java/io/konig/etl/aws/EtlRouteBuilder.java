@@ -204,7 +204,8 @@ public class EtlRouteBuilder {
 			config=new MavenProjectConfig();	
 		}
 		//outDir=new File("C:/Users/604601/Documents/konig-examples/gcp/demo/demo-aws-model/target/aws/camel-etlRoute");
-		
+		if(outDir!=null)
+		{
 		config.setArtifactId("etl-"+targetLocalName.toLowerCase());
 		config.setBaseDir(new File(outDir,"../../../../../ETLmS/ETL-"+targetLocalName));
 		config.setGroupId("io.konig");
@@ -241,7 +242,7 @@ public class EtlRouteBuilder {
 		}
 		
 		writer.close();
-		
+		}
 	}
 
 	public void createDockerComposeFile(Map<String, Object> services)
