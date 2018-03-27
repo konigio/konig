@@ -26,7 +26,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +44,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+import io.konig.aws.cloudformation.NotifConfig;
+import io.konig.aws.cloudformation.PolicyDocument;
+import io.konig.aws.cloudformation.Principal;
 import io.konig.aws.cloudformation.Resource;
+import io.konig.aws.cloudformation.Statement;
+import io.konig.aws.cloudformation.TopicConfig;
+import io.konig.aws.datasource.NotificationConfiguration;
 import io.konig.aws.datasource.Queue;
 import io.konig.aws.datasource.QueueConfiguration;
 import io.konig.aws.datasource.S3Bucket;
@@ -172,16 +180,64 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		
 	}
 	private String getS3BucketTemplate(S3Bucket bucket) throws JsonProcessingException {
-		Resource resource=new Resource();
-		resource.setType("AWS::S3::Bucket");
-		resource.addProperties("BucketName", bucket.getBucketName());
-		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-		Map<String,Object> resources=new HashMap<String,Object>();
-		resources.put(bucket.getBucketKey()+"S3Bucket", resource);
-		String s3BucketResource=mapper.writeValueAsString(resources);
-		String[] s3BucketResourceLines=s3BucketResource.split("\n");
+		Resource s3BucketResource=new Resource();
+		s3BucketResource.setType("AWS::S3::Bucket");
+		s3BucketResource.addProperties("BucketName", bucket.getBucketName().toLowerCase());
+		NotificationConfiguration config=bucket.getNotificationConfiguration();
+		Map<String,Object> resources=new LinkedHashMap<String,Object>();
+		resources.put(bucket.getBucketKey()+"S3Bucket", s3BucketResource);
+		if(config!=null && config.getTopicConfiguration()!=null){
+			TopicConfiguration topicConfig=config.getTopicConfiguration();
+			Topic topic=topicConfig.getTopic();
+			NotifConfig notConfig=new NotifConfig();
+			List<TopicConfig> topConfigs=new ArrayList<TopicConfig>();
+			TopicConfig topConfig=new TopicConfig();
+			topConfig.setEvent(topicConfig.getEventType());
+			topConfig.setTopic("!Ref "+bucket.getBucketKey()+"SNSTopic");
+			topConfigs.add(topConfig);
+			notConfig.setTopConfigs(topConfigs);
+			s3BucketResource.addProperties("NotificationConfiguration", notConfig);
+		
+			Resource snsTopicResource = new Resource();
+			snsTopicResource.setType("AWS::SNS::Topic");
+			snsTopicResource.addProperties("TopicName", topic.getResourceName());
+			resources.put(bucket.getBucketKey()+"SNSTopic", snsTopicResource);
+			
+			Resource snsTopicPolicyResource = new Resource();
+			snsTopicPolicyResource.setType("AWS::SNS::TopicPolicy");
+			List<String> topicArns=new ArrayList<String>();
+			topicArns.add("!Ref "+bucket.getBucketKey()+"SNSTopic");
+			PolicyDocument policyDoc=new PolicyDocument();
+			policyDoc.setId(bucket.getBucketKey()+"SNSTopicPolicyDoc");
+			policyDoc.setVersion("2012-10-17");
+			
+			List<Statement> statements=new ArrayList<Statement>();
+			Statement statement=new Statement();
+			statement.setSid(bucket.getBucketKey()+"StatementId");
+			statement.setEffect("Allow");
+			Principal principal=new Principal();
+			principal.setAws("*");
+			statement.setPrincipal(principal);
+			statement.setAction("sns:Publish");
+			statement.setResource("*");		
+			statements.add(statement);
+			policyDoc.setStatements(statements);
+			snsTopicPolicyResource.addProperties("PolicyDocument", policyDoc);
+			snsTopicPolicyResource.addProperties("Topics", topicArns);	
+			
+			resources.put(bucket.getBucketKey()+"SNSTopicPolicy", snsTopicPolicyResource);
+			
+		}
+		return getResourcesAsString(resources);
+		
+	}
+
+	private String getResourcesAsString(Map<String, Object> resources) throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());	
+		String resource=mapper.writeValueAsString(resources);
+		String[] resourceLines=resource.split("\n");
 		StringBuffer template=new StringBuffer();
-		for(String line:s3BucketResourceLines){
+		for(String line:resourceLines){
 			if(!line.contains("---")){
 				template.append("  "+line+"\n");
 			}
