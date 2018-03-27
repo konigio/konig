@@ -191,6 +191,27 @@
 
 
 			</plugin>
+			<plugin>
+    <groupId>io.konig</groupId>
+  <artifactId>konig-aws-ecs-image-push-plugin</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <configuration>
+  <awsEcsRepositoryUrn>220459826988.dkr.ecr.us-east-1.amazonaws.com/</awsEcsRepositoryUrn>
+  <imageName>fabric8/${project.artifactId}</imageName>
+  <repositoryName>${project.artifactId}</repositoryName>
+  </configuration>
+  <executions>
+  <execution>
+            <id></id>
+            <phase>push</phase>
+            <goals>
+              <goal>push</goal>
+            </goals>
+            <configuration>
+            </configuration>
+          </execution>
+  </executions>
+    </plugin>
 		</plugins>
 	</build>
 

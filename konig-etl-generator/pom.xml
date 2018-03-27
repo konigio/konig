@@ -24,7 +24,11 @@
 			<artifactId>konig-aws-model</artifactId>
 			<version>${konig.version}</version>
 		</dependency>
-		
+		  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-maven-project-generator</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

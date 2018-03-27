@@ -21,7 +21,6 @@ package io.konig.etl.aws;
  */
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -39,14 +38,23 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.openrdf.model.impl.URIImpl;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
+import com.google.common.io.Files;
+
 import io.konig.aws.datasource.AwsAurora;
 import io.konig.aws.datasource.S3Bucket;
+import io.konig.maven.FileUtil;
+import io.konig.maven.project.generator.MavenProjectConfig;
+import io.konig.maven.project.generator.MavenProjectGeneratorException;
 import io.konig.shacl.Shape;
 
 public class EtlRouteBuilder {
@@ -55,7 +63,10 @@ public class EtlRouteBuilder {
 	private Shape targetShape;
 	private File outDir;
 	private Document doc;
+	private VelocityContext context;
+	private VelocityEngine engine;
 
+	private MavenProjectConfig config;
 	public EtlRouteBuilder(File outDir) {
 		this.outDir = outDir;
 	}
@@ -64,6 +75,9 @@ public class EtlRouteBuilder {
 		this.sourceShape = sourceShape;
 		this.targetShape = targetShape;
 		this.outDir = outDir;
+	}
+
+	public EtlRouteBuilder() {
 	}
 
 	public void generate() throws ParserConfigurationException, TransformerException, IOException {
@@ -183,18 +197,52 @@ public class EtlRouteBuilder {
 		return to;
 	}
 
-	private void createDockerFile(String targetLocalName, String schemaName) throws FileNotFoundException {
-		File dockerDir = new File(outDir.getParent(), "Docker");
+	public void createDockerFile(String targetLocalName, String schemaName) throws IOException {
+	System.out.println("inside creae docker file");
+		if(config==null)
+		{
+			config=new MavenProjectConfig();	
+		}
+		//outDir=new File("C:/Users/604601/Documents/konig-examples/gcp/demo/demo-aws-model/target/aws/camel-etlRoute");
+		if(outDir!=null)
+		{
+		config.setArtifactId("etl-"+targetLocalName.toLowerCase());
+		config.setBaseDir(new File(outDir,"../../../../../ETLmS/ETL-"+targetLocalName));
+		config.setGroupId("io.konig");
+		config.setName("etl-"+targetLocalName.toLowerCase());
+		config.setVersion("1.0.0");
+		try {
+			run();
+		} catch (MavenProjectGeneratorException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		File dockerDir = new File(new File(outDir,"../../../../../ETLmS/ETL-"+targetLocalName)+"/", "Docker");
 		if (!dockerDir.exists()) {
 			dockerDir.mkdirs();
 		}
-		File dockerFile = new File(new File(outDir.getParent(), "Docker"), targetLocalName);
+		File dockerFile = new File(dockerDir, "Dockerfile");
 		PrintWriter writer = new PrintWriter(dockerFile);
-		writer.println("FROM konig-docker-aws-etl-base:latest");
-		writer.println("ADD /camel-routes-config.properties ./camel-routes-config.properties");
-		writer.println("ADD /"+targetLocalName+".xml ./Route"+targetLocalName+".xml");
-		writer.println("ADD /"+schemaName+"_"+targetLocalName+".sql ./"+schemaName + "_"+ targetLocalName +".sql");
+		writer.println("FROM 220459826988.dkr.ecr.us-east-1.amazonaws.com/konig-docker-aws-etl-base:latest");
+		if(new File(outDir,"camel-routes-config.properties").exists())
+		{
+			writer.println("ADD /camel-routes-config.properties ./camel-routes-config.properties");
+			Files.copy(new File(outDir, "camel-routes-config.properties"), new File(dockerDir, "camel-routes-config.properties"));
+
+		}
+		if(new File(outDir,"Route"+targetLocalName+".xml").exists())
+		{
+			writer.println("ADD /Route"+targetLocalName+".xml ./Route"+targetLocalName+".xml");
+			Files.copy(new File(outDir, "Route" + targetLocalName + ".xml"), new File(dockerDir, "Route" + targetLocalName + ".xml"));
+		}
+		if(new File(outDir,"../transform/"+schemaName+"_"+targetLocalName+".sql").exists())
+		{
+			writer.println("ADD /"+schemaName+"_"+targetLocalName+".sql ./"+schemaName + "_"+ targetLocalName +".sql");	
+		}
+		
 		writer.close();
+		}
 	}
 
 	public void createDockerComposeFile(Map<String, Object> services)
@@ -217,4 +265,56 @@ public class EtlRouteBuilder {
 		writer.close();
 
 	}
+	
+	public void run() throws MavenProjectGeneratorException, IOException {
+		clean();
+		createVelocityEngine();
+		createVelocityContext();
+		merge();
+	}
+	
+
+	private void clean() {
+		FileUtil.delete(baseDir());
+	}
+
+	private void merge() throws IOException {
+
+		baseDir().mkdirs();
+		try (FileWriter out = new FileWriter(getTargetPom())) {
+			Template template = engine.getTemplate("pom.xml");
+			template.merge(context, out);
+		}
+		
+	}
+	private void createVelocityEngine() {
+
+		File velocityLog = new File("target/logs/" + config.getArtifactId() + "-velocity.log");
+		velocityLog.getParentFile().mkdirs();
+
+		Properties properties = new Properties();
+		properties.put("resource.loader", "class");
+		properties.put("class.resource.loader.class", ClasspathResourceLoader.class.getName());
+		properties.put("runtime.log", velocityLog.getAbsolutePath());
+
+		engine = new VelocityEngine(properties);
+
+	}
+	protected VelocityContext getContext() {
+		return context;
+	}
+
+	protected VelocityContext createVelocityContext() {
+		context = new VelocityContext();
+		context.put("project", config);
+		return context;
+	}
+	
+	protected File baseDir() {
+		return config.getBaseDir();
+	}
+	public File getTargetPom() {
+		return new File(config.getBaseDir(), "pom.xml");
+	}
+	
 }
