@@ -22,13 +22,27 @@ package io.konig.schemagen.aws;
 
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
+import com.amazonaws.services.cloudformation.model.ValidateTemplateRequest;
+import com.amazonaws.services.cloudformation.model.ValidateTemplateResult;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+import io.konig.aws.cloudformation.Resource;
 import io.konig.aws.datasource.Queue;
 import io.konig.aws.datasource.QueueConfiguration;
 import io.konig.aws.datasource.S3Bucket;
@@ -42,9 +56,11 @@ import io.konig.shacl.ShapeVisitor;
 public class AWSS3BucketWriter implements ShapeVisitor {
 	
 	private File outDir;
+	private File cfDir;
 
-	public AWSS3BucketWriter(File outDir) {
+	public AWSS3BucketWriter(File outDir,File cfDir) {
 		this.outDir = outDir;
+		this.cfDir = cfDir;
 	}
 
 	public void write(S3Bucket bucket, JsonGenerator json) throws IOException {
@@ -111,12 +127,14 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 						json.useDefaultPrettyPrinter();
 						try {
 							write(bucket, json);
+							
 						} catch(Exception ex){
 							ex.printStackTrace();
 							
 						}finally {
 							json.close();
 						}
+						writeCloudFormationTemplate(bucket);
 					}
 				}
 			}
@@ -124,6 +142,51 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 			throw new KonigException(oops);
 		}
 		
+	}
+
+	private void writeCloudFormationTemplate(S3Bucket bucket) throws Exception {
+		for(File file:cfDir.listFiles()){
+				String contents = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));	
+				YAMLFactory yamlFactory=new YAMLFactory();
+				YAMLMapper mapper = new YAMLMapper(new YAMLFactory());
+				JsonNode node = mapper.readTree(contents);
+				JsonNode outputNode=node.get("Outputs");
+			
+				if(outputNode!=null){			
+					String outputs=contents.substring(contents.lastIndexOf("Outputs:"));
+					String resources=contents.substring(0,contents.lastIndexOf("Outputs:"));
+					resources=resources+getS3BucketTemplate(bucket);
+					contents=resources+outputs;
+				}
+				
+				AmazonCloudFormationClient client = new AmazonCloudFormationClient();
+				ValidateTemplateRequest request = new ValidateTemplateRequest();
+				request.setTemplateBody(contents);				
+				ValidateTemplateResult result=client.validateTemplate(request);
+				
+				try(FileWriter fileWriter= new FileWriter(file)){
+					fileWriter.write(contents);
+				}
+				
+		}
+		
+	}
+	private String getS3BucketTemplate(S3Bucket bucket) throws JsonProcessingException {
+		Resource resource=new Resource();
+		resource.setType("AWS::S3::Bucket");
+		resource.addProperties("BucketName", bucket.getBucketName());
+		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+		Map<String,Object> resources=new HashMap<String,Object>();
+		resources.put(bucket.getBucketKey()+"S3Bucket", resource);
+		String s3BucketResource=mapper.writeValueAsString(resources);
+		String[] s3BucketResourceLines=s3BucketResource.split("\n");
+		StringBuffer template=new StringBuffer();
+		for(String line:s3BucketResourceLines){
+			if(!line.contains("---")){
+				template.append("  "+line+"\n");
+			}
+		}
+		return template.toString();
 	}
 
 }
