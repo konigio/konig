@@ -252,24 +252,7 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		return sqsQueuePolicyResource;
 	}
 
-	private List<Statement> getQueuePolicyStatement(S3Bucket bucket) {
-		List<Statement> statements=new ArrayList<Statement>();
-		Statement statement=new Statement();
-		statement.setSid(bucket.getBucketKey()+"QueuePolicyStatementId");
-		statement.setEffect("Allow");
-		Principal principal=new Principal();
-		principal.setAws("*");
-		statement.setPrincipal(principal);
-		statement.setAction("sqs:SendMessage");
-		statement.setResource("!Ref "+bucket.getBucketKey()+"SNSTopic");
-		Condition condition=new Condition();
-		Map<String,Object> arnCondition=new HashMap<String,Object>();
-		arnCondition.put("aws:SourceArn", "!Ref "+bucket.getBucketKey()+"SNSTopic");
-		condition.setArnEquals(arnCondition);
-		statement.setCondition(condition);
-		statements.add(statement);
-		return statements;	
-	}
+	
 
 	private Resource getSNSTopicPolicy(S3Bucket bucket) {
 		Resource snsTopicPolicyResource = new Resource();
@@ -300,6 +283,27 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		Condition condition=new Condition();
 		Map<String,Object> arnCondition=new HashMap<String,Object>();
 		arnCondition.put("aws:SourceArn","arn:aws:s3:*:*:"+bucket.getBucketName().toLowerCase());
+		condition.setArnEquals(arnCondition);
+		statement.setCondition(condition);
+		statements.add(statement);
+		return statements;	
+	}
+	private List<Statement> getQueuePolicyStatement(S3Bucket bucket) {
+		List<Statement> statements=new ArrayList<Statement>();
+		Statement statement=new Statement();
+		statement.setSid(bucket.getBucketKey()+"QueuePolicyStatementId");
+		statement.setEffect("Allow");
+		Principal principal=new Principal();
+		principal.setAws("*");
+		statement.setPrincipal(principal);
+		statement.setAction("sqs:SendMessage");
+		Map<String,String[]> function = new HashMap<String,String[]>();
+		String[] getAttParams={bucket.getBucketKey()+"SQSQueue","Arn"};
+		function.put("Fn::GetAtt", getAttParams);
+		statement.setResource(function);
+		Condition condition=new Condition();
+		Map<String,Object> arnCondition=new HashMap<String,Object>();
+		arnCondition.put("aws:SourceArn", "!Ref "+bucket.getBucketKey()+"SNSTopic");
 		condition.setArnEquals(arnCondition);
 		statement.setCondition(condition);
 		statements.add(statement);

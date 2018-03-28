@@ -31,7 +31,7 @@ public class Statement {
 	@JsonProperty("Action")
 	private String action;
 	@JsonProperty("Resource")
-	private String resource;
+	private Object resource;
 	@JsonProperty("Principal")
 	private Principal principal;
 	@JsonProperty("Condition")
@@ -61,10 +61,10 @@ public class Statement {
 	public void setAction(String action) {
 		this.action = action;
 	}
-	public String getResource() {
+	public Object getResource() {
 		return resource;
 	}
-	public void setResource(String resource) {
+	public void setResource(Object resource) {
 		this.resource = resource;
 	}
 	public Principal getPrincipal() {
