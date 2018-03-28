@@ -206,7 +206,7 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 			snsTopicResource.addProperties("TopicName", topic.getResourceName());
 			resources.put(bucket.getBucketKey()+"SNSTopic", snsTopicResource);
 			
-			Resource snsTopicPolicyResource=getSNSTopicPolicy(bucket);			
+			Resource snsTopicPolicyResource=getPolicy(bucket,"SNSTopic");			
 			resources.put(bucket.getBucketKey()+"SNSTopicPolicy", snsTopicPolicyResource);			
 			
 			if(config.getQueueConfiguration()!=null){				
@@ -228,7 +228,7 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 				snsSubscriptionResource.addProperties("Endpoint", function);
 				resources.put(bucket.getBucketKey()+"SNSSubscription", snsSubscriptionResource);
 				
-				Resource sqsQueuePolicyResource=getSQSQueuePolicy(bucket);			
+				Resource sqsQueuePolicyResource=getPolicy(bucket,"SQSQueue");			
 				resources.put(bucket.getBucketKey()+"SQSQueuePolicy", sqsQueuePolicyResource);
 			}
 		}
@@ -237,38 +237,30 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		
 	}
 
-	private Resource getSQSQueuePolicy(S3Bucket bucket) {
-		Resource sqsQueuePolicyResource =new Resource();
-		sqsQueuePolicyResource.setType("AWS::SQS::QueuePolicy");
-		PolicyDocument policyDoc=new PolicyDocument();
-		policyDoc.setId(bucket.getBucketKey()+"SQSQueuePolicyDoc");
-		policyDoc.setVersion("2012-10-17");
-		List<Statement> statements=getQueuePolicyStatement(bucket);
-		policyDoc.setStatements(statements);
-		List<String> queueUrls=new ArrayList<String>();
-		queueUrls.add("!Ref "+bucket.getBucketKey()+"SQSQueue");
-		sqsQueuePolicyResource.addProperties("PolicyDocument", policyDoc);
-		sqsQueuePolicyResource.addProperties("Queues", queueUrls);
-		return sqsQueuePolicyResource;
-	}
-
-	
-
-	private Resource getSNSTopicPolicy(S3Bucket bucket) {
-		Resource snsTopicPolicyResource = new Resource();
-		snsTopicPolicyResource.setType("AWS::SNS::TopicPolicy");
-		List<String> topicArns=new ArrayList<String>();
-		topicArns.add("!Ref "+bucket.getBucketKey()+"SNSTopic");
-		PolicyDocument policyDoc=new PolicyDocument();
-		policyDoc.setId(bucket.getBucketKey()+"SNSTopicPolicyDoc");
-		policyDoc.setVersion("2012-10-17");
+	private Resource getPolicy(S3Bucket bucket,String resourceType) {
+		Resource policyResource =new Resource();
+		List<Statement> statements=null;
+		List<String> urls=new ArrayList<String>();
+		urls.add("!Ref "+bucket.getBucketKey()+resourceType);
+		if(resourceType.equals("SQSQueue")){
+			policyResource.setType("AWS::SQS::QueuePolicy");
+			statements=getQueuePolicyStatement(bucket);
+			policyResource.addProperties("Queues", urls);
+		}
+		else{
+			policyResource.setType("AWS::SNS::TopicPolicy");
+			statements=getTopicPolicyStatement(bucket);
+			policyResource.addProperties("Topics", urls);	
+		}
 		
-		List<Statement> statements=getTopicPolicyStatement(bucket);
-		policyDoc.setStatements(statements);
-		snsTopicPolicyResource.addProperties("PolicyDocument", policyDoc);
-		snsTopicPolicyResource.addProperties("Topics", topicArns);	
-		return snsTopicPolicyResource;
+		PolicyDocument policyDoc=new PolicyDocument();
+		policyDoc.setId(bucket.getBucketKey()+resourceType+"PolicyDoc");
+		policyDoc.setVersion("2012-10-17");
+		policyDoc.setStatements(statements);	
+		policyResource.addProperties("PolicyDocument", policyDoc);		
+		return policyResource;
 	}
+
 
 	private List<Statement> getTopicPolicyStatement(S3Bucket bucket) {
 		List<Statement> statements=new ArrayList<Statement>();
