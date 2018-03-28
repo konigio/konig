@@ -34,6 +34,15 @@ public class Statement {
 	private String resource;
 	@JsonProperty("Principal")
 	private Principal principal;
+	@JsonProperty("Condition")
+	private Condition condition;
+	
+	public Condition getCondition() {
+		return condition;
+	}
+	public void setCondition(Condition condition) {
+		this.condition = condition;
+	}
 	public String getSid() {
 		return sid;
 	}
