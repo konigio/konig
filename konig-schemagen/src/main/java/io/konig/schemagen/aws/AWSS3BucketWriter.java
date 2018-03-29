@@ -143,7 +143,8 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 						}finally {
 							json.close();
 						}
-						writeCloudFormationTemplate(bucket);
+						String s3BucketTemplate=getS3BucketTemplate(bucket);
+						AWSCloudFormationUtil.writeCloudFormationTemplate(cfDir,s3BucketTemplate);
 					}
 				}
 			}
@@ -152,34 +153,7 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		}
 		
 	}
-
-	private void writeCloudFormationTemplate(S3Bucket bucket) throws Exception {
-		for(File file:cfDir.listFiles()){
-				String contents = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));	
-				YAMLFactory yamlFactory=new YAMLFactory();
-				YAMLMapper mapper = new YAMLMapper(new YAMLFactory());
-				JsonNode node = mapper.readTree(contents);
-				JsonNode outputNode=node.get("Outputs");
-			
-				if(outputNode!=null){			
-					String outputs=contents.substring(contents.lastIndexOf("Outputs:"));
-					String resources=contents.substring(0,contents.lastIndexOf("Outputs:"));
-					resources=resources+getS3BucketTemplate(bucket);
-					contents=resources+outputs;
-				}
-				
-				AmazonCloudFormationClient client = new AmazonCloudFormationClient();
-				ValidateTemplateRequest request = new ValidateTemplateRequest();
-				request.setTemplateBody(contents);				
-				ValidateTemplateResult result=client.validateTemplate(request);
-				
-				try(FileWriter fileWriter= new FileWriter(file)){
-					fileWriter.write(contents);
-				}
-				
-		}
-		
-	}
+	
 	private String getS3BucketTemplate(S3Bucket bucket) throws JsonProcessingException {
 		
 		Resource s3BucketResource=new Resource();
@@ -233,7 +207,7 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 			}
 		}
 		
-		return getResourcesAsString(resources);
+		return AWSCloudFormationUtil.getResourcesAsString(resources);
 		
 	}
 
@@ -302,23 +276,6 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		return statements;	
 	}
 
-	private String getResourcesAsString(Map<String, Object> resources) throws JsonProcessingException {
-		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());	
-		String resource=mapper.writeValueAsString(resources);
-		for(String key:resources.keySet()){
-			if(key.endsWith("SNSTopic") || key.endsWith("SQSQueue")){
-				resource=resource.replace("\"!Ref "+key+"\"", "!Ref "+key);
-			}
-		}
-
-		String[] resourceLines=resource.split("\n");
-		StringBuffer template=new StringBuffer();
-		for(String line:resourceLines){
-			if(!line.contains("---")){
-				template.append("  "+line+"\n");
-			}
-		}
-		return template.toString();
-	}
+	
 
 }
