@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+import io.konig.aws.cloudformation.Condition;
 import io.konig.aws.cloudformation.NotifConfig;
 import io.konig.aws.cloudformation.PolicyDocument;
 import io.konig.aws.cloudformation.Principal;
@@ -180,6 +181,7 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		
 	}
 	private String getS3BucketTemplate(S3Bucket bucket) throws JsonProcessingException {
+		
 		Resource s3BucketResource=new Resource();
 		s3BucketResource.setType("AWS::S3::Bucket");
 		s3BucketResource.addProperties("BucketName", bucket.getBucketName().toLowerCase());
@@ -187,6 +189,7 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		Map<String,Object> resources=new LinkedHashMap<String,Object>();
 		resources.put(bucket.getBucketKey()+"S3Bucket", s3BucketResource);
 		if(config!=null && config.getTopicConfiguration()!=null){
+			
 			TopicConfiguration topicConfig=config.getTopicConfiguration();
 			Topic topic=topicConfig.getTopic();
 			NotifConfig notConfig=new NotifConfig();
@@ -196,45 +199,118 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 			topConfig.setTopic("!Ref "+bucket.getBucketKey()+"SNSTopic");
 			topConfigs.add(topConfig);
 			notConfig.setTopConfigs(topConfigs);
-			s3BucketResource.addProperties("NotificationConfiguration", notConfig);
-		
+			s3BucketResource.addProperties("NotificationConfiguration", notConfig);			
+			
 			Resource snsTopicResource = new Resource();
 			snsTopicResource.setType("AWS::SNS::Topic");
 			snsTopicResource.addProperties("TopicName", topic.getResourceName());
 			resources.put(bucket.getBucketKey()+"SNSTopic", snsTopicResource);
 			
-			Resource snsTopicPolicyResource = new Resource();
-			snsTopicPolicyResource.setType("AWS::SNS::TopicPolicy");
-			List<String> topicArns=new ArrayList<String>();
-			topicArns.add("!Ref "+bucket.getBucketKey()+"SNSTopic");
-			PolicyDocument policyDoc=new PolicyDocument();
-			policyDoc.setId(bucket.getBucketKey()+"SNSTopicPolicyDoc");
-			policyDoc.setVersion("2012-10-17");
+			Resource snsTopicPolicyResource=getPolicy(bucket,"SNSTopic");			
+			resources.put(bucket.getBucketKey()+"SNSTopicPolicy", snsTopicPolicyResource);			
 			
-			List<Statement> statements=new ArrayList<Statement>();
-			Statement statement=new Statement();
-			statement.setSid(bucket.getBucketKey()+"StatementId");
-			statement.setEffect("Allow");
-			Principal principal=new Principal();
-			principal.setAws("*");
-			statement.setPrincipal(principal);
-			statement.setAction("sns:Publish");
-			statement.setResource("*");		
-			statements.add(statement);
-			policyDoc.setStatements(statements);
-			snsTopicPolicyResource.addProperties("PolicyDocument", policyDoc);
-			snsTopicPolicyResource.addProperties("Topics", topicArns);	
-			
-			resources.put(bucket.getBucketKey()+"SNSTopicPolicy", snsTopicPolicyResource);
-			
+			if(config.getQueueConfiguration()!=null){				
+				QueueConfiguration queueConfig=config.getQueueConfiguration();
+				Queue queue=queueConfig.getQueue();
+				
+				Resource sqsQueueResource = new Resource();
+				sqsQueueResource.setType("AWS::SQS::Queue");
+				sqsQueueResource.addProperties("QueueName",queue.getResourceName());
+				resources.put(bucket.getBucketKey()+"SQSQueue", sqsQueueResource);
+				
+				Resource snsSubscriptionResource = new Resource();
+				snsSubscriptionResource.setType("AWS::SNS::Subscription");
+				snsSubscriptionResource.addProperties("Protocol", "sqs");
+				snsSubscriptionResource.addProperties("TopicArn", "!Ref "+bucket.getBucketKey()+"SNSTopic");
+				Map<String,String[]> function = new HashMap<String,String[]>();
+				String[] getAttParams={bucket.getBucketKey()+"SQSQueue","Arn"};
+				function.put("Fn::GetAtt", getAttParams);
+				snsSubscriptionResource.addProperties("Endpoint", function);
+				resources.put(bucket.getBucketKey()+"SNSSubscription", snsSubscriptionResource);
+				
+				Resource sqsQueuePolicyResource=getPolicy(bucket,"SQSQueue");			
+				resources.put(bucket.getBucketKey()+"SQSQueuePolicy", sqsQueuePolicyResource);
+			}
 		}
+		
 		return getResourcesAsString(resources);
 		
+	}
+
+	private Resource getPolicy(S3Bucket bucket,String resourceType) {
+		Resource policyResource =new Resource();
+		List<Statement> statements=null;
+		List<String> urls=new ArrayList<String>();
+		urls.add("!Ref "+bucket.getBucketKey()+resourceType);
+		if(resourceType.equals("SQSQueue")){
+			policyResource.setType("AWS::SQS::QueuePolicy");
+			statements=getQueuePolicyStatement(bucket);
+			policyResource.addProperties("Queues", urls);
+		}
+		else{
+			policyResource.setType("AWS::SNS::TopicPolicy");
+			statements=getTopicPolicyStatement(bucket);
+			policyResource.addProperties("Topics", urls);	
+		}
+		
+		PolicyDocument policyDoc=new PolicyDocument();
+		policyDoc.setId(bucket.getBucketKey()+resourceType+"PolicyDoc");
+		policyDoc.setVersion("2012-10-17");
+		policyDoc.setStatements(statements);	
+		policyResource.addProperties("PolicyDocument", policyDoc);		
+		return policyResource;
+	}
+
+
+	private List<Statement> getTopicPolicyStatement(S3Bucket bucket) {
+		List<Statement> statements=new ArrayList<Statement>();
+		Statement statement=new Statement();
+		statement.setSid(bucket.getBucketKey()+"TopicPolicyStatementId");
+		statement.setEffect("Allow");
+		Principal principal=new Principal();
+		principal.setAws("*");
+		statement.setPrincipal(principal);
+		statement.setAction("sns:Publish");
+		statement.setResource("!Ref "+bucket.getBucketKey()+"SNSTopic");
+		Condition condition=new Condition();
+		Map<String,Object> arnCondition=new HashMap<String,Object>();
+		arnCondition.put("aws:SourceArn","arn:aws:s3:*:*:"+bucket.getBucketName().toLowerCase());
+		condition.setArnEquals(arnCondition);
+		statement.setCondition(condition);
+		statements.add(statement);
+		return statements;	
+	}
+	private List<Statement> getQueuePolicyStatement(S3Bucket bucket) {
+		List<Statement> statements=new ArrayList<Statement>();
+		Statement statement=new Statement();
+		statement.setSid(bucket.getBucketKey()+"QueuePolicyStatementId");
+		statement.setEffect("Allow");
+		Principal principal=new Principal();
+		principal.setAws("*");
+		statement.setPrincipal(principal);
+		statement.setAction("sqs:SendMessage");
+		Map<String,String[]> function = new HashMap<String,String[]>();
+		String[] getAttParams={bucket.getBucketKey()+"SQSQueue","Arn"};
+		function.put("Fn::GetAtt", getAttParams);
+		statement.setResource(function);
+		Condition condition=new Condition();
+		Map<String,Object> arnCondition=new HashMap<String,Object>();
+		arnCondition.put("aws:SourceArn", "!Ref "+bucket.getBucketKey()+"SNSTopic");
+		condition.setArnEquals(arnCondition);
+		statement.setCondition(condition);
+		statements.add(statement);
+		return statements;	
 	}
 
 	private String getResourcesAsString(Map<String, Object> resources) throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());	
 		String resource=mapper.writeValueAsString(resources);
+		for(String key:resources.keySet()){
+			if(key.endsWith("SNSTopic") || key.endsWith("SQSQueue")){
+				resource=resource.replace("\"!Ref "+key+"\"", "!Ref "+key);
+			}
+		}
+
 		String[] resourceLines=resource.split("\n");
 		StringBuffer template=new StringBuffer();
 		for(String line:resourceLines){
