@@ -20,7 +20,6 @@ package io.konig.transform.aws;
  * #L%
  */
 
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -28,11 +27,17 @@ import java.io.PrintStream;
 import java.util.List;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
+import io.konig.core.Graph;
+import io.konig.core.impl.MemoryGraph;
 import io.konig.core.io.ShapeFileFactory;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeHandler;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 import io.konig.sql.query.InsertStatement;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.TransformProcessor;
@@ -47,67 +52,69 @@ public class AuroraTransformGenerator implements ShapeHandler {
 	private SqlFactory sqlFactory;
 	private ShapeFileFactory shapeFileFactory;
 	private File rdfSourceDir;
-	
-	public AuroraTransformGenerator(ShapeRuleFactory shapeRuleFactory, SqlFactory sqlFactory,ShapeFileFactory shapeFileFactory, File rdfSourceDir) {
-	    this.shapeRuleFactory = shapeRuleFactory;
-	    this.sqlFactory = sqlFactory;
-	    this.shapeFileFactory = shapeFileFactory;
-	    this.rdfSourceDir = rdfSourceDir;
-}
-		    
+
+	public AuroraTransformGenerator(ShapeRuleFactory shapeRuleFactory, SqlFactory sqlFactory,
+			ShapeFileFactory shapeFileFactory, File rdfSourceDir) {
+		this.shapeRuleFactory = shapeRuleFactory;
+		this.sqlFactory = sqlFactory;
+		this.shapeFileFactory = shapeFileFactory;
+		this.rdfSourceDir = rdfSourceDir;
+	}
+
 	@Override
 	public void visit(Shape shape) {
 		ShapeRule shapeRule = null;
-		InsertStatement statement =null;
-		if(isTargetShape(shape)) {
-			try {				
+		InsertStatement statement = null;
+		if (isTargetShape(shape)) {
+			try {
 				transferDerivedForm(shape, shapeRule);
-			}catch (ShapeTransformException e) {
+			} catch (ShapeTransformException e) {
 				e.printStackTrace();
 			}
 		}
 		if (isAuroraTransform(shape)) {
-				try{
-					shapeRule = shapeRuleFactory.createShapeRule(shape);
-					statement = sqlFactory.insertStatement(shapeRule);
+			try {
+				shapeRule = shapeRuleFactory.createShapeRule(shape);
+				statement = sqlFactory.insertStatement(shapeRule);
+			} catch (TransformBuildException e) {
+				e.printStackTrace();
+			}
+			if (statement != null) {
+				String dmlText = statement.toString();
+				File dmlFile = shapeFileFactory.createFile(shape);
+				File dir = dmlFile.getParentFile();
+				if (!dir.exists()) {
+					dir.mkdirs();
 				}
-				catch (TransformBuildException e) {
+				try (PrintStream out = new PrintStream(new FileOutputStream(dmlFile))) {
+					out.print(dmlText);
+				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
-				if(statement!=null){
-			        String dmlText = statement.toString();
-			        File dmlFile = shapeFileFactory.createFile(shape);
-			        File dir = dmlFile.getParentFile();
-			        if (!dir.exists()) {
-			        	dir.mkdirs();
-			        }
-			        try(PrintStream out = new PrintStream(new FileOutputStream(dmlFile))) {
-			        	out.print(dmlText);
-			        } catch (FileNotFoundException e) {
-						e.printStackTrace();
-					}
-				}
-		      
+			}
+
 		}
-		
-		
+
 	}
-	
+
 	private boolean isTargetShape(Shape shape) {
-		List<URI> type = shape.getType();
-		return type!=null && type.contains(Konig.TargetShape);
+/*		List<URI> type = shape.getType();
+		return type != null && type.contains(Konig.TargetShape);*/
+	List<URI> inputShapeOf=shape.getInputShapeOf();
+		return inputShapeOf!=null && !inputShapeOf.isEmpty();
 	}
-	
+
+
 	@Override
 	public void beginShapeTraversal() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void endShapeTraversal() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public ShapeRuleFactory getShapeRuleFactory() {
@@ -133,16 +140,16 @@ public class AuroraTransformGenerator implements ShapeHandler {
 	public void setShapeFileFactory(ShapeFileFactory shapeFileFactory) {
 		this.shapeFileFactory = shapeFileFactory;
 	}
+
 	private boolean isAuroraTransform(Shape shape) {
-	      return 
-	        shape.getType()!=null && 
-	        shape.getType().contains(Konig.TargetShape) &&
-	        shape.hasDataSourceType(Konig.AwsAuroraTable);
-	 }
-	
-	private void transferDerivedForm(Shape shape, ShapeRule shapeRule) throws ShapeTransformException
-	{
-		ShapeModelToShapeRule shapeModelToRule=shapeRuleFactory.getShapeModelToShapeRule();
+		List<URI> inputShapeOf=shape.getInputShapeOf();
+		return inputShapeOf!=null && !inputShapeOf.isEmpty() && shape.hasDataSourceType(Konig.AwsAuroraTable) ;
+/*		return shape.getType() != null && shape.getType().contains(Konig.TargetShape)
+				&& shape.hasDataSourceType(Konig.AwsAuroraTable);*/
+	}
+
+	private void transferDerivedForm(Shape shape, ShapeRule shapeRule) throws ShapeTransformException {
+		ShapeModelToShapeRule shapeModelToRule = shapeRuleFactory.getShapeModelToShapeRule();
 		if (shapeRule == null) {
 			shapeRule = shapeRuleFactory.createShapeRule(shape);
 		}
