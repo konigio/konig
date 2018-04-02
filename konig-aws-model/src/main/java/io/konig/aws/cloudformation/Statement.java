@@ -29,7 +29,7 @@ public class Statement {
 	@JsonProperty("Effect")
 	private String effect;
 	@JsonProperty("Action")
-	private String action;
+	private Object action;
 	@JsonProperty("Resource")
 	private Object resource;
 	@JsonProperty("Principal")
@@ -55,10 +55,10 @@ public class Statement {
 	public void setEffect(String effect) {
 		this.effect = effect;
 	}
-	public String getAction() {
+	public Object getAction() {
 		return action;
 	}
-	public void setAction(String action) {
+	public void setAction(Object action) {
 		this.action = action;
 	}
 	public Object getResource() {

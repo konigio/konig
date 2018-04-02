@@ -143,8 +143,10 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 						}finally {
 							json.close();
 						}
-						String s3BucketTemplate=getS3BucketTemplate(bucket);
-						AWSCloudFormationUtil.writeCloudFormationTemplate(cfDir,s3BucketTemplate);
+						if(cfDir!=null && cfDir.exists()){
+							String s3BucketTemplate=getS3BucketTemplate(bucket);
+							AWSCloudFormationUtil.writeCloudFormationTemplate(cfDir,s3BucketTemplate);
+						}
 					}
 				}
 			}

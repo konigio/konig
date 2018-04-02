@@ -31,6 +31,7 @@ import java.util.Map;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.ValidateTemplateRequest;
 import com.amazonaws.services.cloudformation.model.ValidateTemplateResult;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,6 +69,7 @@ public class AWSCloudFormationUtil {
 	}
 	public static String getResourcesAsString(Map<String, Object> resources) throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());	
+		mapper.setSerializationInclusion(Include.NON_NULL);
 		String resource=mapper.writeValueAsString(resources);
 		for(String key:resources.keySet()){
 			if(key.endsWith("SNSTopic") || key.endsWith("SQSQueue") || key.endsWith("DBCluster")){
