@@ -765,9 +765,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			if(cloudFormationDir != null){
-				CloudFormationTemplateWriter templateWriter = new CloudFormationTemplateWriter();
-				templateWriter.writeTemplates(cloudFormationDir, owlGraph);
+				CloudFormationTemplateWriter templateWriter = new CloudFormationTemplateWriter(cloudFormationDir,owlGraph);
+				templateWriter.write();
 			}
+			
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
 				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator);
