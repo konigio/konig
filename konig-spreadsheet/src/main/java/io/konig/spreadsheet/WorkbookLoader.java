@@ -200,7 +200,7 @@ public class WorkbookLoader {
 	private static final String REGION = "Region";
 	private static final String VERSION = "Database Version";
 	private static final String TIER = "Tier";
-    private static final String SHAPE_OF = "Shape Of";
+    private static final String SHAPE_OF = "Input Of";
 
 	//Cloud Formation Templates
 	private static final String STACK_NAME="Stack name";
@@ -488,7 +488,7 @@ public class WorkbookLoader {
 		private int awsPreferredMaintenanceWindow = UNDEFINED;
 		private int awsReplicationSourceIdentifier = UNDEFINED;
 		private int awsStorageEncrypted	 = UNDEFINED;
-		private int shapeOfCol = UNDEFINED;
+		private int inputShapeOfCol = UNDEFINED;
 		
 		public Worker(Workbook book) {
 			this.book = book;
@@ -1837,7 +1837,7 @@ public class WorkbookLoader {
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			Literal bigqueryTable = bigQueryTableId(row, targetClass);
 			List<URI> applicationList = uriList(row, defaultShapeForCol);
-			List<URI> shapeOfList = uriList(row, shapeOfCol);
+			List<URI> shapeOfList = uriList(row, inputShapeOfCol);
 			List<Function> dataSourceList = dataSourceList(row);
 
 			if (shapeId == null) {
@@ -2062,7 +2062,7 @@ public class WorkbookLoader {
 						shapeIriTemplateCol = i;
 						break;
 					case SHAPE_OF:
-						shapeOfCol = i;
+						inputShapeOfCol = i;
 						break;
 					case DEFAULT_FOR:
 						defaultShapeForCol = i;

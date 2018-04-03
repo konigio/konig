@@ -6,11 +6,12 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/shapes/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <http://example.com/systems/#> .
 
 shape:TargetPersonShape a sh:Shape , konig:TargetShape ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/wCgoIXFswSIAAAFidlxSfQ> ; 
 	sh:targetClass schema:Person ; 
-	konig:inputShapeOf konig:TargetShape ; 
+	konig:inputShapeOf ex:MasterDataEtl ; 
 	sh:nodeKind sh:IRI ; 
 	sh:property  [ 
 		sh:path schema:givenName ; 
