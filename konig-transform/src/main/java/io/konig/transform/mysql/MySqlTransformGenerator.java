@@ -210,10 +210,11 @@ public class MySqlTransformGenerator implements ShapeHandler {
 	}
 	
 	private boolean isDerivedShape(Shape shape) {
-		List<URI> type = shape.getType();
-		return type!=null && type.contains(Konig.DerivedShape);
+		/*List<URI> type = shape.getType();
+		return type!=null && type.contains(Konig.DerivedShape);*/
+		List<URI> inputShapeOf=shape.getInputShapeOf();
+		return inputShapeOf!=null && !inputShapeOf.isEmpty();
 	}
-
 	
 	private void addError(Throwable e) {
 
