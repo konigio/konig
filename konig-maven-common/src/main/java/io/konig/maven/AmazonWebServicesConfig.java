@@ -52,6 +52,9 @@ public class AmazonWebServicesConfig {
 	@Parameter(property="konig.aws.cloudformation.template", defaultValue="${konig.aws.directory}/cloudformationtemplate")
 	private File cloudFormationTemplates;
 	
+	@Parameter(property="konig.project.directory", defaultValue="${project.basedir}")
+	private File baseDirectory;
+	
 	public AmazonWebServicesConfig() {
 			
 	}
@@ -128,5 +131,14 @@ public class AmazonWebServicesConfig {
 	public void setCloudFormationTemplates(File cloudFormationTemplates) {
 		this.cloudFormationTemplates = cloudFormationTemplates;
 	}
+
+	public File getBaseDirectory() {
+		return baseDirectory;
+	}
+
+	public void setBaseDirectory(File baseDirectory) {
+		this.baseDirectory = baseDirectory;
+	}
+	
 	
 }

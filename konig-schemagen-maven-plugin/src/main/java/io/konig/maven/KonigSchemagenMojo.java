@@ -118,6 +118,8 @@ import io.konig.gcp.common.GroovyTearDownScriptWriter;
 import io.konig.gcp.common.InvalidGoogleCredentialsException;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
+import io.konig.maven.project.generator.EtlModelGenerator;
+import io.konig.maven.project.generator.MavenProjectConfig;
 import io.konig.maven.project.generator.MavenProjectGeneratorException;
 import io.konig.maven.project.generator.MultiProject;
 import io.konig.maven.project.generator.ParentProjectGenerator;
@@ -1071,7 +1073,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 							if (sourceShape.hasDataSourceType(Konig.AwsAuroraTable)
 									&& sourceShape.hasDataSourceType(Konig.S3Bucket)) {
+								EtlModelGenerator etlModelGenerator=new EtlModelGenerator(new MavenProjectConfig(),new File(amazonWebServices.getBaseDirectory(),"../"),new URIImpl(targetShape.getId().stringValue()).getLocalName());
+								etlModelGenerator.run();
 								EtlRouteBuilder builder = new EtlRouteBuilder(sourceShape, targetShape, outDir);
+								builder.setEtlBaseDir(amazonWebServices.getBaseDirectory());
 								builder.generate();
 								String serviceName=new URIImpl(targetShape.getId().stringValue()).getLocalName();
 								Map<String, Object> service=new HashMap<>();
