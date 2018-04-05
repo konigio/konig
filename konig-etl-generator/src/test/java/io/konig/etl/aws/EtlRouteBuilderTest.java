@@ -70,13 +70,5 @@ public class EtlRouteBuilderTest {
 		}
 	}
 	
-	@Test
-	public void testEtlMs() throws IOException 
-	{
-		EtlRouteBuilder builder=new EtlRouteBuilder();
-		
-			builder.createDockerFile("localName","schemaName");
-		
-		
-	}
+	
 }
