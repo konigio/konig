@@ -23,11 +23,11 @@ package io.konig.formula;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class DirectionStep extends AbstractFormula implements PathStep {
+public class DirectedStep extends AbstractFormula implements PathStep {
 	private Direction direction;
 	private PathTerm term;
 
-	public DirectionStep(Direction direction, PathTerm term) {
+	public DirectedStep(Direction direction, PathTerm term) {
 		this.direction = direction;
 		this.term = term;
 	}

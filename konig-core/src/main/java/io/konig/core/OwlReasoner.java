@@ -136,6 +136,66 @@ public class OwlReasoner {
 		}
 	}
 	
+	public Set<URI> domainIncludes(URI property) {
+		Set<URI> set =	graph.v(property).out(RDFS.DOMAIN).toUriSet();
+		
+		// Get the set of Shapes that have the given property
+		List<Vertex> constraints = graph.v(property).in(SH.path).in(SH.property).toVertexList();
+		for (Vertex shape : constraints) {
+			
+			URI targetClass = shape.asTraversal().out(SH.targetClass).firstIRI();
+			
+			if (targetClass != null) {
+				addLeastSpecificType(targetClass, set);
+			} else {
+				Set<URI> valueClasses = shape.asTraversal().in(SH.shape).out(SH.valueClass).toUriSet();
+				for (URI type : valueClasses) {
+					addLeastSpecificType(type, set);
+				}
+			}
+		}
+		
+		return set;
+	}
+	
+	public Set<URI> rangeIncludes(URI property) {
+		Set<URI> set =	graph.v(property).out(RDFS.RANGE).toUriSet();
+		
+		// Get the set of property constraints having the given property as its sh:path value
+		List<Vertex> constraints = graph.v(property).in(SH.path).toVertexList();
+		for (Vertex pc : constraints) {
+			URI datatype = pc.getURI(SH.datatype);
+			if (datatype != null) {
+				set.add((URI)datatype);
+			} 
+			URI valueClass = pc.getURI(SH.valueClass);
+			addLeastSpecificType(valueClass, set);
+			
+			URI valueShapeTargetClass = pc.asTraversal().out(SH.shape).out(SH.targetClass).firstIRI();
+			addLeastSpecificType(valueShapeTargetClass, set);
+		}
+		
+		return set;
+	}
+	
+	private void addLeastSpecificType(URI type, Set<URI> set) {
+		if (type != null) {
+			Iterator<URI> sequence = set.iterator();
+			while (sequence.hasNext()) {
+				URI otherType = sequence.next();
+				if (isSubClassOf(type, otherType)) {
+					return;
+				}
+				if (isSubClassOf(otherType, type)) {
+					sequence.remove();
+					break;
+				}
+			}
+			set.add(type);
+		}
+		
+	}
+
 	public void inferRdfPropertiesFromPropertyConstraints(Graph sink) {
 		if (sink == null) {
 			sink = graph;

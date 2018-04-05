@@ -35,11 +35,11 @@ import io.konig.transform.factory.TransformTest;
 
 public class SimplePropertyMapperTest extends TransformTest {
 
-	protected ShapeModelFactory factory;
+	protected ShapeModelFactory1 factory;
 	
 	@Before
 	public void setUp() {
-		factory = new ShapeModelFactory(shapeManager, null, new OwlReasoner(graph));
+		factory = new ShapeModelFactory1(shapeManager, null, new OwlReasoner(graph));
 	}
 	
 	@Test

@@ -33,7 +33,7 @@ import io.konig.transform.rule.ShapeRule;
 public class AbstractShapeModelToShapeRuleTest extends TransformTest {
 
 	protected OwlReasoner owlReasoner = new OwlReasoner(graph);
-	protected ShapeModelFactory shapeModelFactory = new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner);
+	protected ShapeModelFactory1 shapeModelFactory = new ShapeModelFactory1(shapeManager, new BigQueryChannelFactory(), owlReasoner);
 	protected ShapeModelToShapeRule shapeRuleFactory = new ShapeModelToShapeRule();
 
 	protected void useBigQueryTransformStrategy() {

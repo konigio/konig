@@ -198,7 +198,7 @@ import io.konig.transform.bigquery.BigQueryTransformGenerator;
 import io.konig.transform.factory.ShapeRuleFactory;
 import io.konig.transform.mysql.MySqlTransformGenerator;
 import io.konig.transform.proto.AwsAuroraChannelFactory;
-import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelFactory1;
 import io.konig.transform.proto.ShapeModelToShapeRule;
 import io.konig.transform.sql.factory.SqlFactory;
 import io.konig.yaml.Yaml;
@@ -774,7 +774,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			}
 			
 			if(transformsDir != null){
-				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
+				ShapeModelFactory1 shapeModelFactory=new ShapeModelFactory1(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
 				ShapeRuleFactory shapeRuleFactory=new ShapeRuleFactory(shapeManager, shapeModelFactory, new ShapeModelToShapeRule());
 				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir), rdfSourceDir);resourceGenerator.add(generator);
 			}

@@ -36,6 +36,7 @@ abstract public class PropertyModel extends BasePrettyPrintable implements Group
 	private PropertyGroup group;
 	
 	private ShapeModel declaringShape;
+	
 
 	public PropertyModel(URI predicate, PropertyGroup group) {
 		this.predicate = predicate;

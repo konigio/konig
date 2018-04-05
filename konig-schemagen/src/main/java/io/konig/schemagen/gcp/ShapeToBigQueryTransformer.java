@@ -35,7 +35,7 @@ import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleBigQueryView;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
-import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelFactory1;
 
 /**
  * A utility that transforms a Shape into a BigQuery Table.
@@ -48,7 +48,7 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 	private BigQueryTableVisitor tableVisitor;
 	private CurrentStateViewGenerator currentStateViewGenerator;
 	
-	public ShapeToBigQueryTransformer(BigQueryTableGenerator tableGenerator, BigQueryTableVisitor tableVisitor, ShapeModelFactory shapeModelFactory) {
+	public ShapeToBigQueryTransformer(BigQueryTableGenerator tableGenerator, BigQueryTableVisitor tableVisitor, ShapeModelFactory1 shapeModelFactory) {
 		this.tableGenerator = tableGenerator;
 		this.tableVisitor = tableVisitor;
 		this.currentStateViewGenerator = new CurrentStateViewGenerator(shapeModelFactory);

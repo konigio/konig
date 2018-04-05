@@ -24,10 +24,8 @@ import java.util.ArrayList;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.openrdf.model.URI;
 
@@ -85,7 +83,6 @@ public class ClassModel extends BasePrettyPrintable {
 	}
 	
 	public PropertyGroup produceGroup(Direction direction, URI predicate) {
-		
 		if (direction == Direction.IN) {
 			return produceInGroup(predicate);
 		} else {
@@ -169,6 +166,10 @@ public class ClassModel extends BasePrettyPrintable {
 		candidateSourceShapeModel.add(info);
 	}
 	
+	/**
+	 * @deprecated
+	 * @param candidate
+	 */
 	public void addCandidateSourceShapeModel(ShapeModel candidate) {
 		if (candidateSourceShapeModel == null) {
 			candidateSourceShapeModel = new ArrayList<>();
@@ -178,10 +179,26 @@ public class ClassModel extends BasePrettyPrintable {
 				return;
 			}
 		}
-		candidateSourceShapeModel.add(new SourceShapeInfo(candidate));
+		SourceShapeInfo info = new SourceShapeInfo(candidate);
+		candidateSourceShapeModel.add(info);
+	}
+	
+	public void add(SourceShapeInfo info) {
+
+		if (candidateSourceShapeModel == null) {
+			candidateSourceShapeModel = new ArrayList<>();
+		}
+		ShapeModel candidate = info.getSourceShape();
+		for (SourceShapeInfo s : candidateSourceShapeModel) {
+			if (s.getSourceShape() == candidate) {
+				return;
+			}
+		}
+		candidateSourceShapeModel.add(info);
 	}
 
-	public List<SourceShapeInfo> getCandidateSourceShapeModel() {
+
+	public List<SourceShapeInfo> getSourceShapeInfo() {
 		return candidateSourceShapeModel;
 	}
 	

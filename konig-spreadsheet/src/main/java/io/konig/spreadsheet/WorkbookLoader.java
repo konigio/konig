@@ -101,7 +101,7 @@ import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.XOWL;
 import io.konig.formula.Direction;
-import io.konig.formula.DirectionStep;
+import io.konig.formula.DirectedStep;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;

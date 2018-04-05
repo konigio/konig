@@ -148,7 +148,7 @@ public interface Traversal {
 	 */
 	Vertex firstVertex(URI predicate);
 	
-	URI firstIRI(URI predicate);
+	URI firstIRI();
 	
 	/**
 	 * Move from the current set of vertices in this traversal to a new set of vertices by following outgoing edges

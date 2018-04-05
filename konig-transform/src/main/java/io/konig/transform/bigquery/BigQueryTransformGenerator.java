@@ -45,7 +45,7 @@ import io.konig.transform.TransformProcessor;
 import io.konig.transform.factory.ShapeRuleFactory;
 import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.proto.BigQueryChannelFactory;
-import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelFactory1;
 import io.konig.transform.proto.ShapeModelToShapeRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.sql.factory.SqlFactory;
@@ -79,7 +79,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		this(
 			shapeManager, 
 			outDir, 
-			new ShapeRuleFactory(shapeManager, new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner), new ShapeModelToShapeRule()),
+			new ShapeRuleFactory(shapeManager, new ShapeModelFactory1(shapeManager, new BigQueryChannelFactory(), owlReasoner), new ShapeModelToShapeRule()),
 			new BigQueryCommandLineFactory(new SqlFactory())
 		);
 	}
@@ -88,7 +88,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		this(
 			shapeManager, 
 			outDir, 
-			new ShapeRuleFactory(shapeManager, new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner), new ShapeModelToShapeRule()),
+			new ShapeRuleFactory(shapeManager, new ShapeModelFactory1(shapeManager, new BigQueryChannelFactory(), owlReasoner), new ShapeModelToShapeRule()),
 			new BigQueryCommandLineFactory(new SqlFactory())			
 		);
 		this.rdfSourceDir=rdfSourceDir;

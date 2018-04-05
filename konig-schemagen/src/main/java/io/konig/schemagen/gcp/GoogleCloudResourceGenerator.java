@@ -32,14 +32,14 @@ import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeVisitor;
 import io.konig.transform.proto.BigQueryChannelFactory;
-import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelFactory1;
 
 public class GoogleCloudResourceGenerator {
 	
 	private ShapeManager shapeManager;
 	private OwlReasoner owlReasoner;
 	private List<ShapeVisitor> visitors = new ArrayList<>();
-	private ShapeModelFactory shapeModelFactory;
+	private ShapeModelFactory1 shapeModelFactory;
 	
 	public GoogleCloudResourceGenerator(ShapeManager shapeManager,OwlReasoner owlReasoner ) {
 		this.shapeManager = shapeManager;
@@ -62,9 +62,9 @@ public class GoogleCloudResourceGenerator {
 		
 	}
 	
-	private ShapeModelFactory shapeModelFactory() {
+	private ShapeModelFactory1 shapeModelFactory() {
 		if (shapeModelFactory == null) {
-			shapeModelFactory = new ShapeModelFactory(shapeManager, new BigQueryChannelFactory(), owlReasoner);
+			shapeModelFactory = new ShapeModelFactory1(shapeManager, new BigQueryChannelFactory(), owlReasoner);
 		}
 		return shapeModelFactory;
 	}

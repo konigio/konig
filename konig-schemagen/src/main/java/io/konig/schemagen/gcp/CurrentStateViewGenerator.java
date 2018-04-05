@@ -38,18 +38,18 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.SelectExpression;
 import io.konig.transform.proto.ShapeModel;
-import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelFactory1;
 import io.konig.transform.proto.ShapeModelToShapeRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.sql.factory.SqlFactory;
 
 public class CurrentStateViewGenerator {
 	
-	private ShapeModelFactory shapeModelFactory;
+	private ShapeModelFactory1 shapeModelFactory;
 	private ShapeModelToShapeRule shapeRuleFactory;
 	private SqlFactory sqlFactory = new SqlFactory();
 	
-	public CurrentStateViewGenerator(ShapeModelFactory shapeModelFactory){
+	public CurrentStateViewGenerator(ShapeModelFactory1 shapeModelFactory){
 		this.shapeModelFactory = shapeModelFactory;
 		this.shapeRuleFactory = new ShapeModelToShapeRule();
 	}

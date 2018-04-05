@@ -1,5 +1,6 @@
 package io.konig.transform.proto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -28,7 +29,6 @@ import org.openrdf.model.URI;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.path.HasStep.PredicateValuePair;
 import io.konig.formula.Direction;
-import io.konig.shacl.PropertyConstraint;
 
 /**
  * A PropertyModel that represents one step in an equivalent path.
@@ -43,6 +43,9 @@ public class StepPropertyModel extends BasicPropertyModel {
 	private StepPropertyModel nextStep;
 	private StepPropertyModel previousStep;
 	private List<PredicateValuePair> filter;
+	
+	private List<SourceShapeInfo> valueShapeInfo;
+	private ClassModel valueClassModel;
 	
 	public StepPropertyModel(URI predicate, Direction direction, PropertyGroup group, DirectPropertyModel declaringProperty, int stepIndex) {
 		super(predicate, group, declaringProperty.getPropertyConstraint());
@@ -63,7 +66,33 @@ public class StepPropertyModel extends BasicPropertyModel {
 		return previousStep == null ? this : previousStep.getPathHead();
 	}
 	
-	
+	public ClassModel getValueClassModel() {
+		return valueClassModel;
+	}
+
+	public void setValueClassModel(ClassModel valueClassModel) {
+		this.valueClassModel = valueClassModel;
+	}
+
+	public void addValueShapeInfo(SourceShapeInfo info) {
+		if (valueShapeInfo==null) {
+			valueShapeInfo = new ArrayList<>();
+		}
+		for (SourceShapeInfo n : valueShapeInfo) {
+			if (n.getSourceShape() == info.getSourceShape()) {
+				return;
+			}
+		}
+		valueShapeInfo.add(info);
+	}
+
+	public List<SourceShapeInfo> getValueShapeInfo() {
+		return valueShapeInfo;
+	}
+
+	public void setValueShapeInfo(List<SourceShapeInfo> valueShapeInfo) {
+		this.valueShapeInfo = valueShapeInfo;
+	}
 
 	public StepPropertyModel getPreviousStep() {
 		return previousStep;
@@ -80,7 +109,9 @@ public class StepPropertyModel extends BasicPropertyModel {
 
 	public void setNextStep(StepPropertyModel nextStep) {
 		this.nextStep = nextStep;
-		nextStep.previousStep = this;
+		if (nextStep != null) {
+			nextStep.previousStep = this;
+		}
 	}
 
 	public List<PredicateValuePair> getFilter() {

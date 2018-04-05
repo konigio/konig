@@ -36,18 +36,15 @@ import io.konig.core.TraversalException;
 import io.konig.core.Traverser;
 import io.konig.core.Vertex;
 import io.konig.core.util.TurtleElements;
+import io.konig.formula.Direction;
 
-public class InStep implements Step {
+public class InStep extends DirectionStep {
 	
-	private URI predicate;
 
 	public InStep(URI predicate) {
-		this.predicate = predicate;
+		super(predicate);
 	}
 	
-	public URI getPredicate() {
-		return predicate;
-	}
 
 	@Override
 	public boolean equals(Object other) {
@@ -103,6 +100,12 @@ public class InStep implements Step {
 		builder.append('^');
 		builder.append(TurtleElements.iri(context, predicate));
 		return builder.toString();
+	}
+
+
+	@Override
+	public Direction getDirection() {
+		return Direction.IN;
 	}
 
 }

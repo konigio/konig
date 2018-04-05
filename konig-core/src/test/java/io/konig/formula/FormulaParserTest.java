@@ -215,7 +215,7 @@ public class FormulaParserTest {
 		GeneralAdditiveExpression left = (GeneralAdditiveExpression) binary.getLeft();
 		
 		PathExpression path = (PathExpression) left.getLeft().getLeft().getPrimary();
-		DirectionStep step = (DirectionStep) path.getStepList().get(0);
+		DirectedStep step = (DirectedStep) path.getStepList().get(0);
 		PathTerm term = step.getTerm();
 		
 		assertEquals(Schema.knows, term.getIri());

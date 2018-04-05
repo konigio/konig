@@ -57,7 +57,18 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	
 	private List<TransformPostProcessor> postProcessorList = null;
 	
+	private SourceShapeInfo sourceShapeInfo;
 	
+	
+	
+	public SourceShapeInfo getSourceShapeInfo() {
+		return sourceShapeInfo;
+	}
+
+	public void setSourceShapeInfo(SourceShapeInfo sourceShapeInfo) {
+		this.sourceShapeInfo = sourceShapeInfo;
+	}
+
 	public ShapeModel rootTargetShapeModel() {
 		ClassModel rootClassModel = classModel.rootClassModel();
 		return rootClassModel.getTargetShapeModel();

@@ -59,10 +59,10 @@ public class SimplePropertyMapper implements PropertyMapper {
 	
 	private static  Logger logger = LoggerFactory.getLogger(SimplePropertyMapper.class);
 
-	private ShapeModelFactory shapeModelFactory;
+	private ShapeModelFactory1 shapeModelFactory;
 	private OwlReasoner reasoner;
 
-	public SimplePropertyMapper(OwlReasoner reasoner, ShapeModelFactory shapeModelFactory) {
+	public SimplePropertyMapper(OwlReasoner reasoner, ShapeModelFactory1 shapeModelFactory) {
 		this.reasoner = reasoner;
 		this.shapeModelFactory = shapeModelFactory;
 	}
@@ -367,7 +367,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 						// of the source shapes.
 						URI predicate = targetProperty.getPredicate();
 						
-						for (SourceShapeInfo info : targetClassModel.getCandidateSourceShapeModel()) {
+						for (SourceShapeInfo info : targetClassModel.getSourceShapeInfo()) {
 							ShapeModel sourceShapeModel = info.getSourceShape();
 							Shape sourceShape = sourceShapeModel.getShape();
 							PropertyConstraint p = sourceShape.getDerivedPropertyByPredicate(predicate);
@@ -1152,7 +1152,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 		private LinkedList<ShapeModelMatchCount> collectShapeModelMatchCount(ClassModel classModel) throws ShapeTransformException {
 
 			LinkedList<ShapeModelMatchCount> list = new LinkedList<>();
-			List<SourceShapeInfo> set = classModel.getCandidateSourceShapeModel();
+			List<SourceShapeInfo> set = classModel.getSourceShapeInfo();
 			if (set == null) {
 				set = buildCandidateSources(classModel);
 			}

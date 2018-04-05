@@ -37,9 +37,58 @@ import org.openrdf.model.vocabulary.RDFS;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.ORG;
+import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 
 public class OwlReasonerTest {
+	
+	@Test
+	public void testRangeIncludes() {
+		Graph graph = new MemoryGraph();
+		
+		graph.builder()
+		.beginSubject(Schema.AudioObject)
+			.addProperty(RDFS.SUBCLASSOF, Schema.MediaObject)
+		.endSubject()
+		
+		.beginSubject(Schema.MediaObject)
+			.addProperty(RDFS.SUBCLASSOF, Schema.CreativeWork)
+		.endSubject()
+		
+		.beginSubject()
+			.beginBNode(SH.property)
+				.addProperty(SH.path, Schema.exampleOfWork)
+				.addProperty(SH.valueClass, Schema.AudioObject)
+			.endSubject()
+		.endSubject()
+		
+		.beginSubject()
+			.beginBNode(SH.property)
+				.addProperty(SH.path, Schema.exampleOfWork)
+				.addProperty(SH.valueClass, Schema.CreativeWork)
+			.endSubject()
+		.endSubject()
+
+		.beginSubject()
+			.beginBNode(SH.property)
+				.addProperty(SH.path, Schema.exampleOfWork)
+				.beginBNode(SH.shape)
+					.addProperty(SH.targetClass, Schema.Product)
+				.endSubject()
+			.endSubject()
+		.endSubject()
+		
+		;
+		
+		OwlReasoner owl = new OwlReasoner(graph);
+		
+		Set<URI> set = owl.rangeIncludes(Schema.exampleOfWork);
+		
+		assertTrue(set.contains(Schema.CreativeWork));
+		assertTrue(!set.contains(Schema.AudioObject));
+		assertTrue(set.contains(Schema.Product));
+		
+	}
 	
 	@Test
 	public void testLeastCommonSubclass() {

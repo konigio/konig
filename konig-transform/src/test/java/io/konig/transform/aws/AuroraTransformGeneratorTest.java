@@ -42,7 +42,7 @@ import io.konig.transform.factory.ShapeRuleFactory;
 import io.konig.transform.factory.TransformTest;
 import io.konig.transform.proto.AwsAuroraChannelFactory;
 import io.konig.transform.proto.DataChannelFactory;
-import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelFactory1;
 import io.konig.transform.proto.ShapeModelToShapeRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.sql.factory.SqlFactory;
@@ -58,11 +58,11 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 		AwsShapeConfig.init();
 		ShapeFileFactory fileFactory = new MockFileFactory();
 		sqlFactory = new SqlFactory();
-		ShapeModelFactory shapeModelFactory;
+		ShapeModelFactory1 shapeModelFactory;
 		OwlReasoner reasoner = new OwlReasoner(graph);
 		ShapeModelToShapeRule shapeModelToShapeRule = new ShapeModelToShapeRule();
 		DataChannelFactory dataChannelFactory = new AwsAuroraChannelFactory();
-		shapeModelFactory = new ShapeModelFactory(shapeManager, dataChannelFactory, reasoner);
+		shapeModelFactory = new ShapeModelFactory1(shapeManager, dataChannelFactory, reasoner);
 		shapeRuleFactory = new ShapeRuleFactory(shapeManager, shapeModelFactory, shapeModelToShapeRule);
 		generator = new AuroraTransformGenerator(shapeRuleFactory, sqlFactory, fileFactory,new File("target/test/AuroraTransformGeneratorTest"));
 	}

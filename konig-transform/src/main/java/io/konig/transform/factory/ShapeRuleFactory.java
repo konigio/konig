@@ -23,18 +23,18 @@ package io.konig.transform.factory;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.transform.proto.ShapeModel;
-import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelFactory1;
 import io.konig.transform.proto.ShapeModelToShapeRule;
 import io.konig.transform.rule.ShapeRule;
 
 public class ShapeRuleFactory {
 
 	private ShapeManager shapeManager;
-	private ShapeModelFactory shapeModelFactory;
+	private ShapeModelFactory1 shapeModelFactory;
 	private ShapeModelToShapeRule shapeModelToShapeRule;
 
 
-	public ShapeRuleFactory(ShapeManager shapeManager, ShapeModelFactory shapeModelFactory,
+	public ShapeRuleFactory(ShapeManager shapeManager, ShapeModelFactory1 shapeModelFactory,
 			ShapeModelToShapeRule shapeModelToShapeRule) {
 		this.shapeManager = shapeManager;
 		this.shapeModelFactory = shapeModelFactory;

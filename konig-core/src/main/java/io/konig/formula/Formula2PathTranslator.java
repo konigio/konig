@@ -76,8 +76,8 @@ public class Formula2PathTranslator {
 	}
 
 	private Step step(PathStep s) {
-		if (s instanceof DirectionStep) {
-			return directionStep((DirectionStep)s);
+		if (s instanceof DirectedStep) {
+			return directionStep((DirectedStep)s);
 		} else if (s instanceof HasPathStep) {
 			return hasStep((HasPathStep)s);
 		} 
@@ -103,8 +103,8 @@ public class Formula2PathTranslator {
 					List<PathStep> stepList = path.getStepList();
 					if (stepList.size()==1) {
 						PathStep pathStep = stepList.get(0);
-						if (pathStep instanceof DirectionStep) {
-							DirectionStep dirStep = (DirectionStep) pathStep;
+						if (pathStep instanceof DirectedStep) {
+							DirectedStep dirStep = (DirectedStep) pathStep;
 							if (dirStep.getDirection() == Direction.OUT) {
 								PathTerm term = dirStep.getTerm();
 								if (term instanceof IriValue) {
@@ -129,7 +129,7 @@ public class Formula2PathTranslator {
 		return has;
 	}
 
-	private Step directionStep(DirectionStep s) {
+	private Step directionStep(DirectedStep s) {
 		PathTerm term = s.getTerm();
 		if (term instanceof VariableTerm) {
 			return new OutStep(term.getIri());
@@ -141,7 +141,7 @@ public class Formula2PathTranslator {
 		return null;
 	}
 
-	private Step outStep(DirectionStep s) {
+	private Step outStep(DirectedStep s) {
 		
 		URI predicate = predicate(s);
 		if (predicate == null) {
@@ -150,7 +150,7 @@ public class Formula2PathTranslator {
 		return new OutStep(predicate);
 	}
 
-	private Step inStep(DirectionStep s) {
+	private Step inStep(DirectedStep s) {
 		URI predicate = predicate(s);
 		if (predicate == null) {
 			return null;
@@ -158,7 +158,7 @@ public class Formula2PathTranslator {
 		return new InStep(predicate);
 	}
 
-	private URI predicate(DirectionStep s) {
+	private URI predicate(DirectedStep s) {
 		return s.getTerm().getIri();
 	}
 

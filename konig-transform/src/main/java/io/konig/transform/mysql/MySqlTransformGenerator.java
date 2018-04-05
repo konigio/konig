@@ -26,7 +26,7 @@ import io.konig.sql.query.UpdateExpression;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.ShapeRuleFactory;
 import io.konig.transform.proto.MySqlChannelFactory;
-import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelFactory1;
 import io.konig.transform.proto.ShapeModelToShapeRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.sql.factory.SqlFactory;
@@ -61,7 +61,7 @@ public class MySqlTransformGenerator implements ShapeHandler {
 	public MySqlTransformGenerator(ShapeManager shapeManager, File outDir, OwlReasoner owlReasoner) {
 		this(shapeManager, outDir,
 				new ShapeRuleFactory(shapeManager,
-						new ShapeModelFactory(shapeManager, new MySqlChannelFactory(), owlReasoner),
+						new ShapeModelFactory1(shapeManager, new MySqlChannelFactory(), owlReasoner),
 						new ShapeModelToShapeRule()));
 	}
 

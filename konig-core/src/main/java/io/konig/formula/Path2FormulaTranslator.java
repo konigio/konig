@@ -181,7 +181,7 @@ public class Path2FormulaTranslator {
 	private PathStep directionStep(Direction direction, URI predicate, Context context) {
 		
 		IriValue pathTerm = iriValue(predicate, context);
-		return new DirectionStep(direction, pathTerm);
+		return new DirectedStep(direction, pathTerm);
 	}
 
 }

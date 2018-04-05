@@ -64,6 +64,11 @@
       <level value="debug"/>
       <appender-ref ref="console"/>
   </logger>
+  
+  <logger name="io.konig.transform.proto.SourceShapeInfo" additivity="false">
+      <level value="debug"/>
+      <appender-ref ref="console"/>
+  </logger>
   <root> 
     <priority value ="warn" /> 
     <appender-ref ref="console" /> 

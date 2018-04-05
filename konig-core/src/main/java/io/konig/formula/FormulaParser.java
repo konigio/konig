@@ -575,7 +575,7 @@ public class FormulaParser {
 						if (
 							useDirectionStep(term)
 						) {
-							step = new DirectionStep(Direction.OUT, term);
+							step = new DirectedStep(Direction.OUT, term);
 						} else if (term instanceof PathStep){
 							step = (PathStep) term;
 						}
@@ -687,7 +687,7 @@ public class FormulaParser {
 		private PathStep tryInStep() throws IOException, RDFParseException {
 			PathStep step = null;
 			if (tryWord("^")) {
-				step = new DirectionStep(Direction.IN, pathTerm());
+				step = new DirectedStep(Direction.IN, pathTerm());
 			}
 			return step;
 		}
@@ -708,7 +708,7 @@ public class FormulaParser {
 				if (term == null) {
 					unread('.');
 				} else {
-					step = new DirectionStep(Direction.OUT, term);
+					step = new DirectedStep(Direction.OUT, term);
 				}
 			}
 			return step;

@@ -141,7 +141,7 @@ public class TraversalImpl implements Traversal {
 	}
 
 	@Override
-	public URI firstIRI(URI predicate) {
+	public URI firstIRI() {
 		for (Object e : list) {
 			if (e instanceof Vertex) {
 				Vertex v = (Vertex)e;

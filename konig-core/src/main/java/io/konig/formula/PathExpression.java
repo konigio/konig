@@ -89,7 +89,7 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 		}
 		
 		public PathExpressionBuilder out(URI predicate) {
-			PathStep step = new DirectionStep(Direction.OUT, new FullyQualifiedIri(predicate));
+			PathStep step = new DirectedStep(Direction.OUT, new FullyQualifiedIri(predicate));
 			path.add(step);
 			return this;
 		}

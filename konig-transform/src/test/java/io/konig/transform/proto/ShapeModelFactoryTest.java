@@ -4,7 +4,7 @@ package io.konig.transform.proto;
  * #%L
  * Konig Transform
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,119 +19,81 @@ package io.konig.transform.proto;
  * limitations under the License.
  * #L%
  */
+
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import java.util.Collection;
+import java.io.IOException;
+import java.util.List;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.OwlReasoner;
-import io.konig.core.vocab.Schema;
-import io.konig.core.vocab.VAR;
+import io.konig.shacl.MemoryPropertyManager;
 import io.konig.shacl.Shape;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.factory.TransformTest;
-import io.konig.transform.rule.ShapeRule;
 
 public class ShapeModelFactoryTest extends TransformTest {
 	
-	protected ShapeModelFactory factory;
-	
+	private ShapeModelFactory factory;
+	private MemoryPropertyManager propertyManager = new MemoryPropertyManager();
+
 	@Before
 	public void setUp() {
-		factory = new ShapeModelFactory(shapeManager, null, new OwlReasoner(graph));
+		DataChannelFactory dataChannelFactory = new DefaultDataChannelFactory();
+		OwlReasoner reasoner = new OwlReasoner(graph);
+		factory = new ShapeModelFactory(shapeManager, propertyManager, dataChannelFactory, reasoner);
 	}
-	
-	
 
-	@Test
-	public void testAggregateFunction() throws Exception {
+	protected void load(String path) throws RDFParseException, RDFHandlerException, IOException {
 
-		load("src/test/resources/konig-transform/aggregate-function");
+		super.load(path);
+		propertyManager.scan(shapeManager);
 		
-		URI shapeId = iri("http://example.com/shapes/AssessmentMetricsShape");
-		ShapeModel shapeModel = createShapeModel(shapeId);
-		
-		URI varId = VAR.variableId("?x");
-		PropertyModel p = shapeModel.getPropertyByPredicate(varId);
-		
-		assertTrue(p instanceof VariablePropertyModel);
-		
-		VariablePropertyModel var = (VariablePropertyModel) p;
-		URI sourceShapeId = iri("http://example.com/shapes/AssessmentResultShape");
-		
-		ShapeModel sourceShape = var.getSourceShape();
-		assertTrue(sourceShape != null);
-		assertEquals(sourceShapeId, sourceShape.getShape().getId());
-		
-		
-	
 	}
 
 	@Test
-	public void testFieldExactMatch() throws Exception {
-		load("src/test/resources/konig-transform/field-exact-match");
+	public void testInverseProperty() throws Exception {
 		
-		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
+
+		load("src/test/resources/konig-transform/inverse-property");
+		URI ownerName = iri("http://example.com/ns/ex/ownerName");
+
+		
+		URI shapeId = iri("http://example.com/shapes/ProductShape");
 		ShapeModel shapeModel = createShapeModel(shapeId);
 		
-		Collection<PropertyModel> propertyList = shapeModel.getProperties();
-		assertEquals(1, propertyList.size());
+		PropertyModel ownerNameModel = shapeModel.getPropertyByPredicate(ownerName);
+		assertTrue(ownerNameModel != null);
+		
+		assertTrue(ownerNameModel instanceof DirectPropertyModel);
+		DirectPropertyModel ownerNameDirect = (DirectPropertyModel) ownerNameModel;
+		StepPropertyModel ownerNameTail = ownerNameDirect.getPathTail();
+		
+		assertTrue(ownerNameTail != null);
+		
+		PropertyGroup ownerNameTailGroup = ownerNameTail.getGroup();
+		assertEquals(2, ownerNameTailGroup.size());
 		
 		ClassModel classModel = shapeModel.getClassModel();
+		assertTrue(classModel != null);
 		
-		PropertyGroup group = classModel.getOutGroupByPredicate(Schema.givenName);
-		assertTrue(group!=null);
+		List<SourceShapeInfo> candidateList = classModel.getSourceShapeInfo();
 		
-		assertEquals(2, group.size());
-		assertTrue(group.getTargetProperty()!=null);
-		assertEquals(shapeId, group.getTargetProperty().getDeclaringShape().getShape().getId());
-
-		URI sourceShapeId = iri("http://example.com/shapes/OriginPersonShape");
-		
-		assertEquals(sourceShapeId, group.get(1).getDeclaringShape().getShape().getId());
-		
+		assertTrue(candidateList!=null);
+		assertEquals(1, candidateList.size());
 	}
-	
-	@Test
-	public void testFlattenedField() throws Exception {
-		load("src/test/resources/konig-transform/flattened-field");
-		
-		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
-		ShapeModel shapeModel = createShapeModel(shapeId);
-		
-		ClassModel classModel = shapeModel.getClassModel();
-		
-		PropertyGroup group = classModel.getOutGroupByPredicate(Schema.address);
-		assertTrue(group!=null);
-		
-		assertEquals(2, group.size());
-		assertTrue(group.getTargetProperty()!=null);
-		
-		ClassModel addressModel = group.getValueClassModel();
-		assertTrue(addressModel != null);
-		
-		PropertyGroup postalCodeGroup = addressModel.getOutGroupByPredicate(Schema.postalCode);
-		assertTrue(postalCodeGroup != null);
-		
-		assertEquals(2, postalCodeGroup.size());
-		URI postalAddressShapeId = iri("http://example.com/shapes/PostalAddressShape");
-		
-		assertEquals(postalAddressShapeId, postalCodeGroup.getTargetProperty().getDeclaringShape().getShape().getId());
 
-		
-	}
 
 	private ShapeModel createShapeModel(URI shapeId) throws ShapeTransformException {
 		Shape shape = shapeManager.getShapeById(shapeId);
-		if (shape == null) {
-			fail("Shape not found: " + shapeId);
-		}
+		assertTrue(shape != null);
 		
 		return factory.createShapeModel(shape);
 	}
