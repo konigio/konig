@@ -24,15 +24,20 @@ package io.konig.schemagen.aws;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.velocity.VelocityContext;
 import org.openrdf.model.vocabulary.RDF;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import io.konig.aws.cloudformation.PolicyDocument;
+import io.konig.aws.cloudformation.Principal;
 import io.konig.aws.cloudformation.Resource;
+import io.konig.aws.cloudformation.Statement;
 import io.konig.aws.datasource.CloudFormationTemplate;
 import io.konig.aws.datasource.DbCluster;
 import io.konig.core.Graph;
@@ -50,12 +55,46 @@ public class CloudFormationTemplateWriter {
 	}
 	public void write() throws IOException {
 		writeTemplates();
-		writeDbClusters();
+		if(cloudFormationDir!=null && cloudFormationDir.exists()){
+			writeDbClusters();
+			writeECR();		
+		}
+	}
+	private void writeECR() throws IOException {
+		String repositoryName=System.getProperty("ECRRepositoryName");
+		if(repositoryName!=null){
+			String ecrTemplate=getECRTemplate(repositoryName);		
+			AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,ecrTemplate);		
+		}		
+	}
+	private String getECRTemplate(String repositoryName) throws JsonProcessingException {		
+		Map<String,Object> resources=new LinkedHashMap<String,Object>();
+		Resource resource=new Resource();
+		resource.setType("AWS::ECR::Repository");
+		resource.addProperties("RepositoryName", repositoryName);
+		PolicyDocument repPolicy = new PolicyDocument();
+		repPolicy.setVersion("2008-10-17");
+		List<Statement> statements = new ArrayList<Statement>();
+		Statement statement = new Statement();
+		statement.setSid(repositoryName+"Statement");
+		statement.setEffect("Allow");
+		Principal principal=new Principal();
+		principal.setAws("*");
+		statement.setPrincipal(principal);
+		String[] actions={"ecr:GetDownloadUrlForLayer","ecr:BatchGetImage","ecr:BatchCheckLayerAvailability",
+				"ecr:PutImage","ecr:InitiateLayerUpload","ecr:UploadLayerPart","ecr:CompleteLayerUpload"};
+		statement.setAction(actions);
+		statements.add(statement);
+		repPolicy.setStatements(statements);
+		resource.addProperties("RepositoryPolicyText", repPolicy);
 		
+		resources.put(repositoryName+"Template", resource);
+		return AWSCloudFormationUtil.getResourcesAsString(resources);
+
 	}
 	private void writeDbClusters() throws IOException {
 		List<Vertex> list = graph.v(AWS.DbCluster).in(RDF.TYPE).toVertexList();
-		if (!list.isEmpty()) {			
+		if (!list.isEmpty() && cloudFormationDir!=null && cloudFormationDir.exists()) {			
 			for (Vertex v : list) {
 				SimplePojoFactory pojoFactory = new SimplePojoFactory();
 				DbCluster instance = pojoFactory.create(v, DbCluster.class);

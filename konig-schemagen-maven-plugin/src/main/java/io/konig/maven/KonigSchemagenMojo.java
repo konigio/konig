@@ -73,6 +73,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.apache.velocity.VelocityContext;
 import org.codehaus.plexus.util.FileUtils;
 import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
 import org.openrdf.model.Resource;
@@ -286,6 +287,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private Graph owlGraph;
     private ContextManager contextManager;
     private ClassStructure structure;
+    private VelocityContext context;
 
 	@Component
 	private MavenProject mavenProject;
@@ -672,16 +674,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 	private void loadSpreadsheet() throws MojoExecutionException   {
-		 try {
-
-			 if (workbook != null) {
-				 
+		 try {			
+			 if (workbook != null) {				 
 				 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer(datasetMapper(), nsManager);
 				 transformer.getWorkbookLoader().setFailOnWarnings(workbook.isFailOnWarnings());
 				 transformer.getWorkbookLoader().setFailOnErrors(workbook.isFailOnErrors());
 				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
-				 transformer.transform(workbookToTurleRequest());
+				 transformer.transform(workbookToTurleRequest());	
+				 if(transformer.getWorkbookLoader().getDataSourceGenerator()!=null ){
+					 context=transformer.getWorkbookLoader().getDataSourceGenerator().getContext();
+					 if(context.get("ECRRepositoryName")!=null)
+						 System.setProperty("ECRRepositoryName", (String)context.get("ECRRepositoryName"));
+				 }
 			 }
+			
 		 } catch (Throwable oops) {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
 		 }
