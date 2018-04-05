@@ -566,7 +566,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				plantUML != null ||
 				googleCloudPlatform!=null ||
 				jsonSchema!=null ||
-				oracleManagedCloud != null
+				oracleManagedCloud != null ||
+				amazonWebServices != null
 			)
 		) {
 			rdfSourceDir = defaults.getRdfDir();

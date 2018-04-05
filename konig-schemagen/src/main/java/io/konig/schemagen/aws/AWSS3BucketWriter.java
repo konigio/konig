@@ -145,7 +145,7 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 						}
 						if(cfDir!=null && cfDir.exists()){
 							String s3BucketTemplate=getS3BucketTemplate(bucket);
-							AWSCloudFormationUtil.writeCloudFormationTemplate(cfDir,s3BucketTemplate);
+							AWSCloudFormationUtil.writeCloudFormationTemplate(cfDir,s3BucketTemplate, false);
 						}
 					}
 				}

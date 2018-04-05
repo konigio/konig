@@ -41,7 +41,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 public class AWSCloudFormationUtil {
 	
-	public static void writeCloudFormationTemplate(File cfDir,String template) throws IOException {
+	public static void writeCloudFormationTemplate(File cfDir,String template, boolean validate) throws IOException {
 		for(File file:cfDir.listFiles()){
 			String contents = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
 			YAMLMapper mapper = new YAMLMapper(new YAMLFactory());
@@ -57,8 +57,10 @@ public class AWSCloudFormationUtil {
 			
 			AmazonCloudFormationClient client = new AmazonCloudFormationClient();
 			ValidateTemplateRequest request = new ValidateTemplateRequest();
-			request.setTemplateBody(contents);				
-			ValidateTemplateResult result=client.validateTemplate(request);
+			request.setTemplateBody(contents);	
+			if (validate) {
+				ValidateTemplateResult result=client.validateTemplate(request);
+			}
 			
 			try(FileWriter fileWriter= new FileWriter(file)){
 				fileWriter.write(contents);

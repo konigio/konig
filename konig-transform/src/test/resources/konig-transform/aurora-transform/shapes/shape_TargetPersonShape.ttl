@@ -11,7 +11,6 @@
 shape:TargetPersonShape a sh:Shape , konig:TargetShape ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/wCgoIXFswSIAAAFidlxSfQ> ; 
 	sh:targetClass schema:Person ; 
-	konig:inputShapeOf ex:MasterDataEtl ; 
 	sh:nodeKind sh:IRI ; 
 	sh:property  [ 
 		sh:path schema:givenName ; 

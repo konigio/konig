@@ -101,7 +101,7 @@ public class AuroraTransformGenerator implements ShapeHandler {
 /*		List<URI> type = shape.getType();
 		return type != null && type.contains(Konig.TargetShape);*/
 	List<URI> inputShapeOf=shape.getInputShapeOf();
-		return inputShapeOf!=null && !inputShapeOf.isEmpty();
+		return inputShapeOf==null || inputShapeOf.isEmpty();
 	}
 
 
@@ -143,7 +143,7 @@ public class AuroraTransformGenerator implements ShapeHandler {
 
 	private boolean isAuroraTransform(Shape shape) {
 		List<URI> inputShapeOf=shape.getInputShapeOf();
-		return inputShapeOf!=null && !inputShapeOf.isEmpty() && shape.hasDataSourceType(Konig.AwsAuroraTable) ;
+		return (inputShapeOf==null || inputShapeOf.isEmpty()) && shape.hasDataSourceType(Konig.AwsAuroraTable) ;
 /*		return shape.getType() != null && shape.getType().contains(Konig.TargetShape)
 				&& shape.hasDataSourceType(Konig.AwsAuroraTable);*/
 	}

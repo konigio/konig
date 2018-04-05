@@ -64,7 +64,7 @@ public class CloudFormationTemplateWriter {
 		String repositoryName=System.getProperty("ECRRepositoryName");
 		if(repositoryName!=null){
 			String ecrTemplate=getECRTemplate(repositoryName);		
-			AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,ecrTemplate);		
+			AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,ecrTemplate, false);		
 		}		
 	}
 	private String getECRTemplate(String repositoryName) throws JsonProcessingException {		
@@ -99,7 +99,7 @@ public class CloudFormationTemplateWriter {
 				SimplePojoFactory pojoFactory = new SimplePojoFactory();
 				DbCluster instance = pojoFactory.create(v, DbCluster.class);
 				String dbClusterTemplate=getDbClusterTemplate(instance);
-				AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,dbClusterTemplate);
+				AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,dbClusterTemplate, false);
 			}
 		}
 	}
