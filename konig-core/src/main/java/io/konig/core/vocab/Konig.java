@@ -166,7 +166,7 @@ public class Konig {
    // public static final URI SourceShape=new URIImpl("http://www.konig.io/ns/core/SourceShape");
  //   public static final URI TargetShape=new URIImpl("http://www.konig.io/ns/core/TargetShape");
 	public static final URI inputShapeOf = new URIImpl("http://www.konig.io/ns/core/inputShapeOf");
-
+	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(Konig.JAVA_NAMESPACE);

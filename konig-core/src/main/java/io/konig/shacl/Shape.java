@@ -91,8 +91,7 @@ public class Shape {
 	private String mediaTypeBaseName;
 	private List<URI> inputShapeOf;
 	  
-	  
-	  
+	 
 	 public List<URI> getInputShapeOf() {
 	 	return inputShapeOf;
 	 }

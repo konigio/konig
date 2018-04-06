@@ -201,6 +201,7 @@ public class WorkbookLoader {
 	private static final String VERSION = "Database Version";
 	private static final String TIER = "Tier";
     private static final String SHAPE_OF = "Input Of";
+    private static final String ONE_OF = "One Of";
 
 	//Cloud Formation Templates
 	private static final String STACK_NAME="Stack name";
@@ -489,6 +490,7 @@ public class WorkbookLoader {
 		private int awsReplicationSourceIdentifier = UNDEFINED;
 		private int awsStorageEncrypted	 = UNDEFINED;
 		private int inputShapeOfCol = UNDEFINED;
+		private int oneOfCol = UNDEFINED;
 		
 		public Worker(Workbook book) {
 			this.book = book;
@@ -1838,6 +1840,7 @@ public class WorkbookLoader {
 			Literal bigqueryTable = bigQueryTableId(row, targetClass);
 			List<URI> applicationList = uriList(row, defaultShapeForCol);
 			List<URI> shapeOfList = uriList(row, inputShapeOfCol);
+			List<Value> orList = valueList(row, oneOfCol);
 			List<Function> dataSourceList = dataSourceList(row);
 
 			if (shapeId == null) {
@@ -1854,6 +1857,9 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
+			edge(shapeId, SH.or, orList);
+			
+
 
 			if (iriTemplate != null) {
 				shapeTemplateList.add(new ShapeTemplate(shapeId, iriTemplate));
@@ -1874,7 +1880,7 @@ public class WorkbookLoader {
 				for (URI uri : shapeOfList) {
 					edge(shapeId, Konig.inputShapeOf, uri);					
 				}
-			}
+			}		
 
 		}
 		
@@ -2063,6 +2069,9 @@ public class WorkbookLoader {
 						break;
 					case SHAPE_OF:
 						inputShapeOfCol = i;
+						break;
+					case ONE_OF:
+						oneOfCol = i;
 						break;
 					case DEFAULT_FOR:
 						defaultShapeForCol = i;
