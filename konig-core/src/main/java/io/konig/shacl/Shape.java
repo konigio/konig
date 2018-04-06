@@ -90,18 +90,8 @@ public class Shape {
 	private URI rollUpBy;
 	private String mediaTypeBaseName;
 	private List<URI> inputShapeOf;
-	private List<Value> oneOf;
 	  
-	  
-	 public List<Value> getOneOf() {
-		 	return oneOf;
-		 }
-
-	@RdfProperty(Konig.ONE_OF)
-	public void setOneOf(List<Value> oneOf) {
-	this.oneOf = oneOf;
-	 }
-		 
+	 
 	 public List<URI> getInputShapeOf() {
 	 	return inputShapeOf;
 	 }

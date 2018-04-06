@@ -37,7 +37,6 @@ public class Konig {
 	public static final String INPUT_SHAPE_OF = "http://www.konig.io/ns/core/inputShapeOf";
 	public static final String IRI_TEMPLATE = "http://www.konig.io/ns/core/iriTemplate";
 	public static final String IRI_FORMULA = "http://www.konig.io/ns/core/iriFormula";
-	public static final String ONE_OF = "http://www.konig.io/ns/core/OneOf";
 	
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
@@ -167,7 +166,6 @@ public class Konig {
    // public static final URI SourceShape=new URIImpl("http://www.konig.io/ns/core/SourceShape");
  //   public static final URI TargetShape=new URIImpl("http://www.konig.io/ns/core/TargetShape");
 	public static final URI inputShapeOf = new URIImpl("http://www.konig.io/ns/core/inputShapeOf");
-	public static final URI oneOf = new URIImpl("http://www.konig.io/ns/core/OneOf");
 	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();
