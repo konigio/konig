@@ -74,6 +74,8 @@
 		<module>../konig-jsonschema-generator</module>
 		<module>../konig-openapi-generator</module>
 		<module>../konig-gcp-model</module>
+   	<module>../konig-aws-model</module>
+   	<module>../konig-multi-cloud</module>
 		<module>../konig-transform</module>
 		<module>../konig-data-catalog</module>
 		<module>../konig-data-catalog-maven-plugin</module>
@@ -111,7 +113,6 @@
     	
    	     <module>../konig-camel-aws-s3</module>
     	<module>../konig-etl</module>
-    	<module>../konig-aws-model</module>
     	<module>../konig-aws-common</module>
    	    <module>../konig-aws-deploy-maven-plugin</module>
    	    <module>../konig-etl-generator</module>
