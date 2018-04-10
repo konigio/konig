@@ -104,7 +104,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -159,7 +159,7 @@ FROM
 
 		URI shapeId = iri("http://example.com/shapes/BqProductShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
@@ -290,7 +290,7 @@ FROM schema.BuyAction;
 
 		URI shapeId = iri("http://example.com/shapes/SalesByCityShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
@@ -418,7 +418,7 @@ GROUP BY e.id, timeInterval.intervalStart
 		
 		URI shapeId = iri("http://example.com/shapes/SalesByCityShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 	
 		
 		InsertStatement insert = sqlFactory.insertStatement(shapeRule);
@@ -663,7 +663,7 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 
 		URI shapeId = iri("http://example.com/shapes/SalesByCityShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 	
 		
 		ShapeRule monthRollUp = shapeRule.getRollUp();
@@ -799,7 +799,7 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
@@ -878,7 +878,7 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 
 		URI shapeId = iri("http://example.com/shapes/SalesCountShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
@@ -926,7 +926,7 @@ GROUP BY actor, object
 
 		URI shapeId = iri("http://schema.pearson.com/shapes/AssessmentEndeavorShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		List<ValueExpression> valueList = select.getValues();
@@ -940,7 +940,7 @@ GROUP BY actor, object
 
 		URI shapeId = iri("http://schema.pearson.com/shapes/AssessmentSessionShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1014,7 +1014,7 @@ GROUP BY organization
 
 		URI shapeId = iri("http://example.com/ns/shape/OrganizationShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1048,7 +1048,7 @@ GROUP BY organization
 
 		URI shapeId = iri("http://example.com/ns/shape/OrganizationShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1097,7 +1097,7 @@ GROUP BY organization
 
 		URI shapeId = iri("http://example.com/shapes/PersonShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		List<ValueExpression> valueList = select.getValues();
@@ -1135,7 +1135,7 @@ FROM
 
 		URI shapeId = iri("http://example.com/shapes/MusicAlbumShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1183,7 +1183,7 @@ FROM
 
 		URI shapeId = iri("http://example.com/shapes/AssessmentMetricsShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1225,7 +1225,7 @@ FROM ex.OriginAccountShape
 
 		URI shapeId = iri("http://example.com/shapes/TargetAccountShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1255,7 +1255,7 @@ FROM ex.OriginAccountShape
 
 		URI shapeId = iri("http://example.com/shapes/BqProductShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1294,7 +1294,7 @@ FROM
 
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1363,7 +1363,7 @@ FROM
 
 		URI shapeId = iri("http://example.com/shapes/TargetMemberShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1401,7 +1401,7 @@ FROM
 
 		URI shapeId = iri("http://example.com/shapes/MemberShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1535,7 +1535,7 @@ FROM
 
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
@@ -1588,7 +1588,7 @@ FROM
 
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
 
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		FromExpression from = select.getFrom();

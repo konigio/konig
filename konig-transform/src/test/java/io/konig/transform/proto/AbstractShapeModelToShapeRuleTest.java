@@ -23,9 +23,17 @@ package io.konig.transform.proto;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.openrdf.model.URI;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.OwlReasoner;
+import io.konig.core.impl.RdfUtil;
+import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.shacl.MemoryPropertyManager;
 import io.konig.shacl.Shape;
 import io.konig.transform.factory.TransformTest;
 import io.konig.transform.rule.ShapeRule;
@@ -33,18 +41,37 @@ import io.konig.transform.rule.ShapeRule;
 public class AbstractShapeModelToShapeRuleTest extends TransformTest {
 
 	protected OwlReasoner owlReasoner = new OwlReasoner(graph);
-	protected ShapeModelFactory1 shapeModelFactory = new ShapeModelFactory1(shapeManager, new BigQueryChannelFactory(), owlReasoner);
+	protected MemoryPropertyManager propertyManager = new MemoryPropertyManager();
+	protected ShapeModelFactory shapeModelFactory = new ShapeModelFactory(shapeManager, propertyManager, new BigQueryChannelFactory(), owlReasoner);
+	protected ShapeModelFactory1 shapeModelFactory1 = new ShapeModelFactory1(shapeManager, new BigQueryChannelFactory(), owlReasoner);
 	protected ShapeModelToShapeRule shapeRuleFactory = new ShapeModelToShapeRule();
 
 	protected void useBigQueryTransformStrategy() {
 		
 	}
-	
+
 	protected ShapeRule createShapeRule(URI shapeId) throws Exception {
 		Shape shape = shapeManager.getShapeById(shapeId);
 		
 		assertTrue(shape != null);
 		ShapeModel shapeModel = shapeModelFactory.createShapeModel(shape);
+		
+		return shapeRuleFactory.toShapeRule(shapeModel);
+	}
+
+	protected void load(String path) throws RDFParseException, RDFHandlerException, IOException {
+
+		super.load(path);
+		propertyManager.scan(shapeManager);
+		
+	}
+	
+	@Deprecated
+	protected ShapeRule createShapeRule1(URI shapeId) throws Exception {
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		assertTrue(shape != null);
+		ShapeModel shapeModel = shapeModelFactory1.createShapeModel(shape);
 		
 		return shapeRuleFactory.toShapeRule(shapeModel);
 	}

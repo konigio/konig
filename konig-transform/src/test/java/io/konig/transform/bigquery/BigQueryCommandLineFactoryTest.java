@@ -43,7 +43,7 @@ public class BigQueryCommandLineFactoryTest extends AbstractShapeModelToShapeRul
 	public void testUpdateCommand() throws Exception {
 		load("src/test/resources/konig-transform/transform-update");
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		BigQueryCommandLine cmd = factory.updateCommand(shapeRule);
 		assertTrue(cmd != null);
@@ -65,7 +65,7 @@ public class BigQueryCommandLineFactoryTest extends AbstractShapeModelToShapeRul
 
 		load("src/test/resources/konig-transform/flattened-field");
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
-		ShapeRule shapeRule = createShapeRule(shapeId);
+		ShapeRule shapeRule = createShapeRule1(shapeId);
 		
 		BigQueryCommandLine cmd = factory.insertCommand(shapeRule);
 		assertTrue(cmd != null);

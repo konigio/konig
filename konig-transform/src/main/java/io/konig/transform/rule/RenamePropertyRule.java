@@ -45,6 +45,14 @@ public class RenamePropertyRule extends AbstractPropertyRule {
 		this.sourceProperty = sourceProperty;
 		this.pathIndex = pathIndex;
 	}
+	
+	public RenamePropertyRule(
+			URI focusPredicate, 
+			DataChannel channel, 
+			PropertyConstraint sourceProperty
+	) {
+		this(focusPredicate, channel, sourceProperty, -1);
+	}
 
 	public int getPathIndex() {
 		return pathIndex;

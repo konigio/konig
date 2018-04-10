@@ -37,8 +37,8 @@ import io.konig.formula.BareExpression;
 import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.ConditionalAndExpression;
 import io.konig.formula.ConditionalOrExpression;
-import io.konig.formula.Direction;
 import io.konig.formula.DirectedStep;
+import io.konig.formula.Direction;
 import io.konig.formula.Formula;
 import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.MultiplicativeExpression;
@@ -54,7 +54,6 @@ import io.konig.shacl.Shape;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.GroupingElement;
 import io.konig.transform.ShapeTransformException;
-import io.konig.transform.TransformProcessor;
 import io.konig.transform.rule.AlphabeticVariableNamer;
 import io.konig.transform.rule.BooleanExpression;
 import io.konig.transform.rule.ChannelProperty;
@@ -260,6 +259,8 @@ public class ShapeModelToShapeRule {
 			} else if (sourceStep!=null) {
 				return new RenamePropertyRule(
 					targetPredicate, channel, sourceStep.getPropertyConstraint(), sourceStep.getStepIndex());
+			} else if (targetDirect!=null && sourceDirect != null) {
+				return new RenamePropertyRule(targetPredicate, channel, sourceDirect.getPropertyConstraint());
 			} else if (Konig.id.equals(sourcePredicate)) {
 				return new IdPropertyRule(targetPredicate, channel);
 			}

@@ -2,6 +2,7 @@ package io.konig.transform.proto;
 
 import static io.konig.core.impl.RdfUtil.localName;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -29,7 +30,7 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapePropertyPair;
 import io.konig.transform.ShapeTransformException;
-import io.konig.transform.proto.SimplePropertyMapper.FromItemEnds;
+import io.konig.transform.rule.DataChannel;
 
 public class ShapeModelFactory {
 	private static Logger logger = LoggerFactory.getLogger(ShapeModelFactory.class);
@@ -130,24 +131,60 @@ public class ShapeModelFactory {
 				if (sourceProperty.getValueModel()!=null) {
 					throw new ShapeTransformException("nested property not supported yet: " + sourceProperty.getPredicate().getLocalName());
 				} else if (group.getTargetProperty() != null){
+					
+					PropertyModel targetProperty = group.getTargetProperty();
+					if (targetProperty instanceof StepPropertyModel) {
+						StepPropertyModel targetStep = (StepPropertyModel) targetProperty;
+						targetProperty = targetStep.getDeclaringProperty();
+						group = targetProperty.getGroup();
+					}
+					
 					if (logger.isDebugEnabled()) {
 						logger.debug("doMapProperties: Mapped {}{} from {} to {}{} in {}",
 								directionSymbol(sourceProperty),
 								sourceProperty.getPredicate().getLocalName(),
 								RdfUtil.localName(sourceShapeModel.getShape().getId()),
-								directionSymbol(group.getTargetProperty()),
-								group.getTargetProperty().getPredicate().getLocalName(),
-								RdfUtil.localName(sourceProperty.getGroup().getTargetProperty().getDeclaringShape().getShape().getId())
+								directionSymbol(targetProperty),
+								targetProperty.getPredicate().getLocalName(),
+								RdfUtil.localName(targetProperty.getDeclaringShape().getShape().getId())
 								);
 					}
 					group.setSourceProperty(sourceProperty);
 					
 					if (requiresFromClause) {
-						// TODO: finish implementation
+						
+						requiresFromClause = false;
+						
+						if (sourceShapeModel.getDataChannel() == null) {							
+							DataChannel channel = dataChannelFactory.createDataChannel(sourceShapeModel.getShape());
+							channel = filteredChannel(channel, sourceProperty, targetProperty);
+							sourceShapeModel.setDataChannel(channel);
+						}
+						
+						if (fromItemEnds.getFirst()==null) {
+							fromItemEnds.setSingleItem(sourceShapeModel);
+						} else {
+							// TODO: Build join statement
+						}
 					}
 				} 
 			}
 			
+		}
+
+		private DataChannel filteredChannel(DataChannel channel, PropertyModel sourceProperty,
+				PropertyModel targetProperty) {
+			if (sourceProperty instanceof StepPropertyModel) {
+				StepPropertyModel sourceStep = (StepPropertyModel) sourceProperty;
+				StepPropertyModel previous = sourceStep.getPreviousStep();
+				if (previous != null) {
+					if (previous.getDirection() == Direction.IN) {
+						URI predicate = previous.getPredicate();
+						// TODO: Finish this implementation
+					}
+				}
+			}
+			return channel;
 		}
 
 		private String directionSymbol(PropertyModel property) {
@@ -265,7 +302,14 @@ public class ShapeModelFactory {
 
 		private List<SourceShapeInfo> shapeModelsForOutStep(StepPropertyModel step) throws ShapeTransformException {
 			if (step.getPreviousStep() != null) {
-				return step.getPreviousStep().getValueShapeInfo();
+				List<SourceShapeInfo> result = step.getPreviousStep().getValueShapeInfo();
+				if (result == null) {
+					String message = MessageFormat.format(
+							"ShapeModels not found for {0}{1}", 
+							directionSymbol(step), step.getPredicate().getLocalName());
+					throw new ShapeTransformException(message);
+				}
+				return result;
 			} else {
 				throw new ShapeTransformException("TODO: handle initial step");
 			}
@@ -277,6 +321,7 @@ public class ShapeModelFactory {
 				// TODO: Handle steps after the first step.
 				throw new ShapeTransformException("Inverse path elements are currently supported only at the beginning of a path");
 			}
+			
 			ShapeModel targetShapeModel = step.getDeclaringShape();
 			DirectPropertyModel direct = step.getDeclaringProperty();
 			
@@ -406,6 +451,7 @@ public class ShapeModelFactory {
 					PrimaryExpression primary = formula.asPrimaryExpression();
 					if (primary instanceof PathExpression) {
 						DirectPropertyModel direct = directPropertyModel(shapeModel, predicate, group, p);
+						group.setTargetProperty(direct);
 						attachTargetSteps(direct, (PathExpression) primary);
 					} else {
 						throw new ShapeTransformException("TODO: support generic formula in target property");

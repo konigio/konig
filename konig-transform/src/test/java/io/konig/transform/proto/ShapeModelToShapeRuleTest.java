@@ -63,8 +63,9 @@ public class ShapeModelToShapeRuleTest extends TransformTest {
 		ShapeRule shapeRule = shapeRule(shapeId);
 		assertTrue(shapeRule != null);
 		
-		PropertyRule propertyRule = shapeRule.getProperty(Schema.name);
-		assertTrue(propertyRule instanceof NullPropertyRule);
+		URI ownerName = iri("http://example.com/ns/ex/ownerName");
+		PropertyRule propertyRule = shapeRule.getProperty(ownerName);
+		assertTrue(propertyRule != null);
 		
 	}
 	
@@ -82,7 +83,7 @@ public class ShapeModelToShapeRuleTest extends TransformTest {
 		return factory.toShapeRule(shapeModel);
 	}
 
-	@Ignore
+	@Test
 	public void testNullValue() throws Exception {
 		
 
@@ -98,7 +99,7 @@ public class ShapeModelToShapeRuleTest extends TransformTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinNestedEntity() throws Exception {
 
 		load("src/test/resources/konig-transform/join-nested-entity");
@@ -138,7 +139,7 @@ public class ShapeModelToShapeRuleTest extends TransformTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinNestedEntityByPk() throws Exception {
 		
 
@@ -154,7 +155,7 @@ public class ShapeModelToShapeRuleTest extends TransformTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinById() throws Exception {
 
 		load("src/test/resources/konig-transform/join-by-id");
@@ -195,7 +196,7 @@ public class ShapeModelToShapeRuleTest extends TransformTest {
 	
 	}
 	
-	@Ignore
+	@Test
 	public void testFlattenedField() throws Exception {
 
 		load("src/test/resources/konig-transform/flattened-field");
@@ -224,7 +225,7 @@ public class ShapeModelToShapeRuleTest extends TransformTest {
 	
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameProperty() throws Exception {
 		load("src/test/resources/konig-transform/rename-fields");
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
@@ -244,7 +245,7 @@ public class ShapeModelToShapeRuleTest extends TransformTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testExactMatchProperty() throws Exception {
 
 		load("src/test/resources/konig-transform/field-exact-match");

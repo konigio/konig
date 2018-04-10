@@ -57,6 +57,11 @@ public class ShapeModelFactoryTest extends TransformTest {
 		propertyManager.scan(shapeManager);
 		
 	}
+	
+	@Test
+	public void testIriTemplate() throws Exception {
+		load("src/test/resources/konig-transform/");
+	}
 
 	@Test
 	public void testInverseProperty() throws Exception {

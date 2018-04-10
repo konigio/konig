@@ -559,6 +559,7 @@ public class SqlFactory {
 
 			if (p instanceof RenamePropertyRule) {
 				RenamePropertyRule renameRule = (RenamePropertyRule) p;
+				
 				ValueTransform vt = renameRule.getValueTransform();
 				if (vt instanceof MapValueTransform) {
 					ValueExpression caseStatement = mapValues(renameRule, (MapValueTransform) vt);
@@ -569,6 +570,13 @@ public class SqlFactory {
 				}
 				URI sourcePredicate = renameRule.getSourceProperty().getPredicate();
 				int pathIndex = renameRule.getPathIndex();
+				
+				if (pathIndex < 0) {
+					ValueExpression column = SqlUtil.columnExpression(tableItem, sourcePredicate);
+					return new AliasExpression(column, predicate.getLocalName());
+				}
+				
+				
 				Path path = renameRule.getSourceProperty().getEquivalentPath();
 				if (pathIndex == path.asList().size() - 1) {
 					ValueExpression column = SqlUtil.columnExpression(tableItem, sourcePredicate);

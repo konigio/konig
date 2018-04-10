@@ -29,6 +29,7 @@ import org.openrdf.model.URI;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.path.HasStep.PredicateValuePair;
 import io.konig.formula.Direction;
+import io.konig.formula.QuantifiedExpression;
 
 /**
  * A PropertyModel that represents one step in an equivalent path.
@@ -46,6 +47,7 @@ public class StepPropertyModel extends BasicPropertyModel {
 	
 	private List<SourceShapeInfo> valueShapeInfo;
 	private ClassModel valueClassModel;
+	private QuantifiedExpression whereClause;
 	
 	public StepPropertyModel(URI predicate, Direction direction, PropertyGroup group, DirectPropertyModel declaringProperty, int stepIndex) {
 		super(predicate, group, declaringProperty.getPropertyConstraint());
@@ -139,4 +141,14 @@ public class StepPropertyModel extends BasicPropertyModel {
 		out.endObjectField(declaringProperty);
 		
 	}
+
+	public QuantifiedExpression getWhereClause() {
+		return whereClause;
+	}
+
+	public void setWhereClause(QuantifiedExpression whereClause) {
+		this.whereClause = whereClause;
+	}
+	
+	
 }
