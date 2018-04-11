@@ -20,7 +20,7 @@ shape:OriginPersonShape a sh:Shape ;
   "schema" : "http://schema.org/",
   "givenName" : "schema:givenName"
 }
-/givenName''' ]  ; 
+.givenName''' ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/{gcpProjectId}/datasets/schema/tables/OriginPersonShape> , <gs://originpersonshape.{gcpBucketSuffix}> . 
 
 <http://www.konig.io/activity/zfkmMHqtl8AAAAFcEQkJ2g> a konig:LoadModelFromSpreadsheet ; 

@@ -80,7 +80,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		useBigQueryTransformStrategy();
 	}
 	
-	@Test
+	@Ignore
 	public void testTransformInversePath() throws Exception {
 		
 		load("src/test/resources/konig-transform/inverse-property");
@@ -97,14 +97,14 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
 
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
 
-		ShapeRule shapeRule = createShapeRule1(shapeId);
+		ShapeRule shapeRule = createShapeRule(shapeId);
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		

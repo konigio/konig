@@ -24,8 +24,10 @@ import java.util.ArrayList;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.openrdf.model.URI;
 
@@ -248,4 +250,17 @@ public class ClassModel extends BasePrettyPrintable {
 		
 		
 	}
+
+	public void removeGroup(Direction direction, URI predicate) {
+		
+		Map<URI,PropertyGroup> map = direction==Direction.OUT ? outPropertyMap : inPropertyMap;
+		if (map != null) {
+			map.remove(predicate);
+		}
+		
+	}
+
+	
+
+	
 }
