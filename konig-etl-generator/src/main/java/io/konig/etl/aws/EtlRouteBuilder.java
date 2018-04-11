@@ -21,22 +21,18 @@ package io.konig.etl.aws;
  */
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -49,6 +45,8 @@ import org.w3c.dom.Element;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
+import com.google.common.io.Files;
+
 import io.konig.aws.datasource.AwsAurora;
 import io.konig.aws.datasource.S3Bucket;
 import io.konig.shacl.Shape;
@@ -59,6 +57,15 @@ public class EtlRouteBuilder {
 	private Shape targetShape;
 	private File outDir;
 	private Document doc;
+	private File etlBaseDir;
+	
+	public File getEtlBaseDir() {
+		return etlBaseDir;
+	}
+
+	public void setEtlBaseDir(File etlBaseDir) {
+		this.etlBaseDir = etlBaseDir;
+	}
 
 	public EtlRouteBuilder(File outDir) {
 		this.outDir = outDir;
@@ -68,6 +75,9 @@ public class EtlRouteBuilder {
 		this.sourceShape = sourceShape;
 		this.targetShape = targetShape;
 		this.outDir = outDir;
+	}
+
+	public EtlRouteBuilder() {
 	}
 
 	public void generate() throws ParserConfigurationException, TransformerException, IOException {
@@ -94,23 +104,26 @@ public class EtlRouteBuilder {
 		from.setAttribute("uri", "jetty://http://localhost:8888/myapp/etl/" + targetLocalName + "/fromS3");
 		route.appendChild(from);
 
-		S3Bucket bucket = sourceShape.findDataSource(S3Bucket.class);
+		S3Bucket sourceBucket = sourceShape.findDataSource(S3Bucket.class);
 		Element fromsqs = doc.createElement("from");
 		fromsqs.setAttribute("uri",
-				"aws-sqs://" + bucket.getNotificationConfiguration().getQueueConfiguration().getQueue().getResourceName()
-						+ "?amazonSQSClient=#sqsClient&region=" + bucket.getRegion()
+				"aws-sqs://" + sourceBucket.getNotificationConfiguration().getQueueConfiguration().getQueue().getResourceName()
+						+ "?amazonSQSClient=#sqsClient&region=" + sourceBucket.getRegion()
 						+ "&defaultVisibilityTimeout=5000&deleteIfFiltered=false");
 
 		AwsAurora targetTable = targetShape.findDataSource(AwsAurora.class);
 		AwsAurora sourceTable = sourceShape.findDataSource(AwsAurora.class);
-
+		S3Bucket targetBucket = targetShape.findDataSource(S3Bucket.class);
+		
 		route.appendChild(fromsqs);
 		route.appendChild(addHeader("sourceTable", sourceTable.getTableReference().getAwsSchema() + "."
 				+ sourceTable.getTableReference().getAwsTableName()));
 		route.appendChild(addHeader("targetTable", targetTable.getTableReference().getAwsSchema() + "."
 				+ targetTable.getTableReference().getAwsTableName()));
-		route.appendChild(addHeader("bucketName", bucket.getBucketName()));
-		route.appendChild(addHeader("dmlScript", targetLocalName));
+		route.appendChild(addHeader("sourceBucketName", sourceBucket.getBucketName()));
+		route.appendChild(addHeader("targetBucketName", targetBucket.getBucketName()));
+		route.appendChild(addHeader("targetBucketRegion", targetBucket.getRegion()));
+		route.appendChild(addHeader("dmlScript", targetTable.getTableReference().getAwsSchema() + "_"+targetLocalName));
 
 		route.appendChild(addProcess("ref", "prepareToLoadStagingTable"));
 
@@ -126,9 +139,8 @@ public class EtlRouteBuilder {
 
 		route.appendChild(addProcess("ref", "prepareToDeleteFromBucket"));
 
-		Element toG = doc.createElement("from");
-		toG.setAttribute("uri", "konig-aws-s3://" + bucket.getBucketName()
-				+ "?amazonS3Client=#s3Client");
+		Element toG = doc.createElement("to");
+		toG.setAttribute("uri", "konig-aws-s3://"+sourceBucket.getBucketName()+"?amazonS3Client=#s3Client&region=" + sourceBucket.getRegion());
 		route.appendChild(toG);
 
 		route.appendChild(addProcess("ref", "prepareToExport"));
@@ -137,6 +149,8 @@ public class EtlRouteBuilder {
 
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();
 		Transformer transformer = transformerFactory.newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 		DOMSource source = new DOMSource(doc);
 		StreamResult result = new StreamResult(new File(outDir, "Route" + targetLocalName + ".xml"));
 		transformer.transform(source, result);
@@ -185,20 +199,33 @@ public class EtlRouteBuilder {
 		return to;
 	}
 
-	private void createDockerFile(String targetLocalName, String schemaName) throws FileNotFoundException {
-		File dockerDir = new File(outDir.getParent(), "Docker");
+	public void createDockerFile(String targetLocalName, String schemaName) throws IOException {
+		File dockerDir = new File(new File(etlBaseDir,"../etl-"+targetLocalName)+"/", "Docker");
 		if (!dockerDir.exists()) {
 			dockerDir.mkdirs();
 		}
-		File dockerFile = new File(new File(outDir.getParent(), "Docker"), targetLocalName);
+		File dockerFile = new File(dockerDir, "Dockerfile");
 		PrintWriter writer = new PrintWriter(dockerFile);
-		writer.println("FROM konig-docker-aws-etl-base:latest");
-		writer.println("COPY ../camel-etl/camel-routes-config.properties camel-etl/camel-routes-config.properties");
-		writer.println("COPY ../camel-etl/Route" + targetLocalName + ".xml camel-etl/Route" + targetLocalName + ".xml");
-		writer.println("COPY ../aurora/transform/" + schemaName + "_" + targetLocalName + ".sql " + schemaName + "_"
-				+ targetLocalName + ".sql");
+		writer.println("FROM 220459826988.dkr.ecr.us-east-1.amazonaws.com/konig-docker-aws-etl-base:latest");
+		if(new File(outDir,"camel-routes-config.properties").exists())
+		{
+			writer.println("ADD /camel-routes-config.properties ./camel-routes-config.properties");
+			Files.copy(new File(outDir, "camel-routes-config.properties"), new File(dockerDir, "camel-routes-config.properties"));
+
+		}
+		if(new File(outDir,"Route"+targetLocalName+".xml").exists())
+		{
+			writer.println("ADD /Route"+targetLocalName+".xml ./Route"+targetLocalName+".xml");
+			Files.copy(new File(outDir, "Route" + targetLocalName + ".xml"), new File(dockerDir, "Route" + targetLocalName + ".xml"));
+		}
+		if(new File(outDir,"../transform/"+schemaName+"_"+targetLocalName+".sql").exists())
+		{
+			writer.println("ADD /"+schemaName+"_"+targetLocalName+".sql ./"+schemaName + "_"+ targetLocalName +".sql");	
+		}
+		
 		writer.close();
-	}
+		}
+//	}
 
 	public void createDockerComposeFile(Map<String, Object> services)
 			throws IOException {
@@ -220,4 +247,7 @@ public class EtlRouteBuilder {
 		writer.close();
 
 	}
+	
+	
+	
 }

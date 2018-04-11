@@ -870,6 +870,35 @@ public class WorkbookLoaderTest {
 		assertTrue(ds.isA(Konig.AwsAuroraTable));
 	}
 	
+	@Test
+	public void testOneOfCol() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("awsAuroraTransformOneOF.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/PartyShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		
+		Shape shape = s.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		
+		List<Shape> list = shape.getOr().getShapes();
+		assertEquals(2, list.size());
+		assertEquals("http://example.com/shapes/PersonShape", list.get(0).getId().stringValue());
+
+	}
 	private void checkPropertyConstraints(Graph graph) {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));

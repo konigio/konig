@@ -34,6 +34,7 @@ public class Konig {
 	public static final String DATA_SOURCE = "http://www.konig.io/ns/core/DataSource"; 
 	public static final String GOOGLE_BIG_QUERY_TABLE = "http://www.konig.io/ns/core/GoogleBigQueryTable";
 	public static final String SHAPE_DATA_SOURCE = "http://www.konig.io/ns/core/shapeDataSource";
+	public static final String INPUT_SHAPE_OF = "http://www.konig.io/ns/core/inputShapeOf";
 	public static final String IRI_TEMPLATE = "http://www.konig.io/ns/core/iriTemplate";
 	public static final String IRI_FORMULA = "http://www.konig.io/ns/core/iriFormula";
 	
@@ -75,7 +76,6 @@ public class Konig {
 	public static final URI preferredJsonldContext = new URIImpl("http://www.konig.io/ns/core/preferredJsonldContext");
 	public static final URI hasShape = new URIImpl("http://www.konig.io/ns/core/hasShape");
 	public static final URI defaultShapeFor = new URIImpl("http://www.konig.io/ns/core/defaultShapeFor");
-
 	public static final URI equivalentPath = new URIImpl(EQUIVALENT_PATH);
 	public static final URI LoadModelFromSpreadsheet = new URIImpl("http://www.konig.io/ns/core/LoadModelFromSpreadsheet");
 	public static final URI iriTemplate = new URIImpl(IRI_TEMPLATE);
@@ -88,7 +88,7 @@ public class Konig {
 	public static final URI deleted = new URIImpl("http://www.konig.io/ns/core/deleted");
 	public static final URI derivedProperty = new URIImpl("http://www.konig.io/ns/core/derivedProperty");
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
-	public static final URI DerivedShape = new URIImpl("http://www.konig.io/shapes/DerivedShape");
+	//public static final URI DerivedShape = new URIImpl("http://www.konig.io/shapes/DerivedShape");
 	
 	// Data Sources
 
@@ -163,9 +163,10 @@ public class Konig {
 //	public static final URI tableId = new URIImpl("http://www.konig.io/ns/core/tableId");
 	public static final URI GenerateEnumTables = new URIImpl("http://www.konig.io/ns/core/GenerateEnumTables");
 	public static final URI bigQueryTableId = new URIImpl("http://www.konig.io/ns/core/bigQueryTableId");
-    public static final URI SourceShape=new URIImpl("http://www.konig.io/ns/core/SourceShape");
-    public static final URI TargetShape=new URIImpl("http://www.konig.io/ns/core/TargetShape");
-
+   // public static final URI SourceShape=new URIImpl("http://www.konig.io/ns/core/SourceShape");
+ //   public static final URI TargetShape=new URIImpl("http://www.konig.io/ns/core/TargetShape");
+	public static final URI inputShapeOf = new URIImpl("http://www.konig.io/ns/core/inputShapeOf");
+	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(Konig.JAVA_NAMESPACE);

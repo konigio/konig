@@ -153,9 +153,26 @@
 							<name>fabric8/${project.artifactId}</name>
 
 							<build>
+							
+							<from>openjdk:8-jdk-alpine</from>
+							<entryPoint>
+							<exec>
+						<arg>java</arg>
+						<arg>-DdevHost=${devHost}</arg>
+						<arg>-Daws.rds.username=${aws.rds.username}</arg>
+						<arg>-Daws.rds.password=${aws.rds.password}</arg>
+						<arg>-Daws.accessKey=${aws.accessKey}</arg>
+						<arg>-Daws.secretKey=${aws.secretKey}</arg>
+						<arg>-jar</arg>
+						<arg>maven/konig-etl-2.0.0-8-SNAPSHOT.jar</arg>
+							</exec>
+							
+							</entryPoint>
 								<assembly>
-									<descriptor>../../../docker-assembly.xml</descriptor>
-								</assembly>
+								
+								<descriptorRef>artifact-with-dependencies</descriptorRef>
+<!-- 								<descriptor>../../../docker-assembly.xml</descriptor>
+ -->								</assembly>
 							</build>
 
 
@@ -174,6 +191,27 @@
 
 
 			</plugin>
+			<plugin>
+    <groupId>io.konig</groupId>
+  <artifactId>konig-aws-ecs-image-push-plugin</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <configuration>
+  <awsEcsRepositoryUrn>220459826988.dkr.ecr.us-east-1.amazonaws.com/</awsEcsRepositoryUrn>
+  <imageName>fabric8/${project.artifactId}</imageName>
+  <repositoryName>${project.artifactId}</repositoryName>
+  </configuration>
+  <executions>
+  <execution>
+            <id></id>
+            <phase>push</phase>
+            <goals>
+              <goal>push</goal>
+            </goals>
+            <configuration>
+            </configuration>
+          </execution>
+  </executions>
+    </plugin>
 		</plugins>
 	</build>
 

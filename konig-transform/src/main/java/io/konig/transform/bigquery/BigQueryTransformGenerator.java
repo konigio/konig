@@ -335,8 +335,10 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 				(bucketShapeExists(shape)) || !shape.getVariable().isEmpty());
 	}
 	private boolean isDerivedShape(Shape shape) {
-		List<URI> type = shape.getType();
-		return type!=null && type.contains(Konig.DerivedShape);
+		/*List<URI> type = shape.getType();
+		return type!=null && type.contains(Konig.DerivedShape);*/
+		List<URI> inputShapeOf=shape.getInputShapeOf();
+		return inputShapeOf!=null && !inputShapeOf.isEmpty();
 	}
 
 	private boolean bucketShapeExists(Shape shape) {

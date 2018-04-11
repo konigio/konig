@@ -89,7 +89,23 @@ public class Shape {
 	private URI aggregationOf;
 	private URI rollUpBy;
 	private String mediaTypeBaseName;
-	
+	private List<URI> inputShapeOf;
+	  
+	 
+	 public List<URI> getInputShapeOf() {
+	 	return inputShapeOf;
+	 }
+
+	 @RdfProperty(Konig.INPUT_SHAPE_OF)
+	 public void setInputShapeOf(List<URI> inputShapeOf) {
+	 	this.inputShapeOf = inputShapeOf;
+	 }
+	 public void addInputShapeOf(URI uri) {
+			if (inputShapeOf == null) {
+				inputShapeOf = new ArrayList<>();
+			}
+			inputShapeOf.add(uri);
+		}
 	public Shape() {
 		String bnodeId = UidGenerator.INSTANCE.next();
 		id = new BNodeImpl(bnodeId);

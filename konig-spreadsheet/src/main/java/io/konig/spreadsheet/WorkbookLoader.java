@@ -200,6 +200,12 @@ public class WorkbookLoader {
 	private static final String REGION = "Region";
 	private static final String VERSION = "Database Version";
 	private static final String TIER = "Tier";
+    private static final String SHAPE_OF = "Input Of";
+    private static final String ONE_OF = "One Of";
+
+	//Cloud Formation Templates
+	private static final String STACK_NAME="Stack name";
+	private static final String CLOUD_FORMATION_TEMPLATES="Cloud Formation Templates";
 	
 	private static final String ENUMERATION_DATASOURCE_TEMPLATE = "enumerationDatasourceTemplate";
 	private static final String ENUMERATION_SHAPE_ID = "enumerationShapeId";
@@ -233,6 +239,7 @@ public class WorkbookLoader {
 	private static final int COL_INSTANCE_NAME = 0x40;
 	private static final int COL_LABEL = 0x80;
 	private static final int COL_AMAZON_DB_CLUSTER = 0x100;
+	private static final int COL_CLOUD_FORMATION_TEMPLATE = 0x200;
 	
 	private static final int SHEET_ONTOLOGY = COL_NAMESPACE_URI;
 	private static final int SHEET_CLASS = COL_CLASS_ID;
@@ -244,6 +251,7 @@ public class WorkbookLoader {
 	private static final int SHEET_DB_INSTANCE = COL_INSTANCE_NAME;
 	private static final int SHEET_LABEL = COL_LABEL;
 	private static final int SHEET_AMAZON_RDS_CLUSTER = COL_AMAZON_DB_CLUSTER;
+	private static final int SHEET_CLOUD_FORMATION_TEMPLATE = COL_CLOUD_FORMATION_TEMPLATE;
 	
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
@@ -466,6 +474,9 @@ public class WorkbookLoader {
 		private int gcpVersionCol = UNDEFINED;
 		private int gcpTierCol = UNDEFINED;
 		
+		private int stackNameCol = UNDEFINED;
+		private int cloudFormationTemplateCol = UNDEFINED;
+		
 		private int awsDbClusterName = UNDEFINED;
 		private int awsEngine = UNDEFINED;
 		private int awsEngineVersion = UNDEFINED;
@@ -478,6 +489,8 @@ public class WorkbookLoader {
 		private int awsPreferredMaintenanceWindow = UNDEFINED;
 		private int awsReplicationSourceIdentifier = UNDEFINED;
 		private int awsStorageEncrypted	 = UNDEFINED;
+		private int inputShapeOfCol = UNDEFINED;
+		private int oneOfCol = UNDEFINED;
 		
 		public Worker(Workbook book) {
 			this.book = book;
@@ -976,6 +989,9 @@ public class WorkbookLoader {
 			case SHEET_AMAZON_RDS_CLUSTER:
 				loadAmazonRDSCluster(sheet);
 				break;
+			case SHEET_CLOUD_FORMATION_TEMPLATE:
+				loadCloudFormationTemplate(sheet);
+				break;
 				
 			}
 
@@ -1030,6 +1046,8 @@ public class WorkbookLoader {
 				case AWS_DB_CLUSTER_NAME:
 					bits = bits | COL_AMAZON_DB_CLUSTER;
 					break;
+				case STACK_NAME:
+					bits = bits | COL_CLOUD_FORMATION_TEMPLATE;
 				}
 			}
 
@@ -1054,6 +1072,15 @@ public class WorkbookLoader {
 			for(int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
 				Row row = sheet.getRow(i);
 				loadAmazonRDSClusterRow(row);
+			}
+		}
+		private void loadCloudFormationTemplate(Sheet sheet){
+			readCloudFormationTemplateHeader(sheet);
+
+			int rowSize = sheet.getLastRowNum() + 1;
+			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
+				Row row = sheet.getRow(i);
+				loadCloudFormationTemplateRow(row);
 			}
 		}
 		
@@ -1626,6 +1653,39 @@ public class WorkbookLoader {
 			}
 		
 		}
+		private void readCloudFormationTemplateHeader(Sheet sheet){
+
+			stackNameCol = cloudFormationTemplateCol = UNDEFINED;
+
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
+
+			int colSize = row.getLastCellNum() + 1;
+			for (int i = row.getFirstCellNum(); i < colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+
+					switch (text) {
+
+					case STACK_NAME:
+						stackNameCol = i;
+						break;
+
+					case CLOUD_FORMATION_TEMPLATES:
+						cloudFormationTemplateCol = i;
+						break;
+					
+					}
+				}
+			}
+
+		
+		}
 		
 		private void readSettingHeader(Sheet sheet) {
 			settingNameCol = settingValueCol = UNDEFINED;
@@ -1779,7 +1839,8 @@ public class WorkbookLoader {
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
 			Literal bigqueryTable = bigQueryTableId(row, targetClass);
 			List<URI> applicationList = uriList(row, defaultShapeForCol);
-
+			List<URI> shapeOfList = uriList(row, inputShapeOfCol);
+			List<Value> orList = valueList(row, oneOfCol);
 			List<Function> dataSourceList = dataSourceList(row);
 
 			if (shapeId == null) {
@@ -1796,6 +1857,9 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
+			edge(shapeId, SH.or, orList);
+			
+
 
 			if (iriTemplate != null) {
 				shapeTemplateList.add(new ShapeTemplate(shapeId, iriTemplate));
@@ -1811,6 +1875,12 @@ public class WorkbookLoader {
 			if (dataSourceList != null) {
 				dataSourceMap.put(shapeId, dataSourceList);
 			}
+			if(shapeOfList!= null && !shapeOfList.isEmpty())
+			{
+				for (URI uri : shapeOfList) {
+					edge(shapeId, Konig.inputShapeOf, uri);					
+				}
+			}		
 
 		}
 		
@@ -1852,7 +1922,17 @@ public class WorkbookLoader {
 				}
 			}
 		}
-
+		private void loadCloudFormationTemplateRow(Row row){
+			
+			Literal stackName = stringLiteral(row, stackNameCol);			
+			Literal cloudFormationTemplate = stringLiteral(row, cloudFormationTemplateCol);
+			
+			URI id = new URIImpl("https://amazonaws.konig.io/cloudformation/template/"+ stringValue(row,stackNameCol)+"_template");
+			edge(id, RDF.TYPE, AWS.CloudFormationTemplate);
+			edge(id, AWS.stackName, stackName);
+			edge(id, AWS.template, cloudFormationTemplate);
+			
+		}
 		private void loadGoogleCloudSqlInstanceRow(Row row) {
 			String instanceName = stringValue(row, gcpInstanceNameCol);
 			URI backendType = gcpValue(row, gcpBackendTypeCol);
@@ -1986,6 +2066,12 @@ public class WorkbookLoader {
 						break;
 					case IRI_TEMPLATE:
 						shapeIriTemplateCol = i;
+						break;
+					case SHAPE_OF:
+						inputShapeOfCol = i;
+						break;
+					case ONE_OF:
+						oneOfCol = i;
 						break;
 					case DEFAULT_FOR:
 						defaultShapeForCol = i;
@@ -2457,7 +2543,6 @@ public class WorkbookLoader {
 
 			return vf.createURI(builder.toString());
 		}
-
 		private void readClassHeader(Sheet sheet) {
 
 			classNameCol = UNDEFINED;
@@ -3055,7 +3140,10 @@ public class WorkbookLoader {
 			graph.edge(propertyConstraint.getId(), Konig.formula, literal);
 
 		}
+		
 
 	}
+
+	
 
 }

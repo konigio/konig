@@ -73,6 +73,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.apache.velocity.VelocityContext;
 import org.codehaus.plexus.util.FileUtils;
 import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
 import org.openrdf.model.Resource;
@@ -118,6 +119,8 @@ import io.konig.gcp.common.GroovyTearDownScriptWriter;
 import io.konig.gcp.common.InvalidGoogleCredentialsException;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
+import io.konig.maven.project.generator.EtlModelGenerator;
+import io.konig.maven.project.generator.MavenProjectConfig;
 import io.konig.maven.project.generator.MavenProjectGeneratorException;
 import io.konig.maven.project.generator.MultiProject;
 import io.konig.maven.project.generator.ParentProjectGenerator;
@@ -140,6 +143,7 @@ import io.konig.schemagen.aws.AWSAuroraShapeFileCreator;
 import io.konig.schemagen.aws.AWSS3BucketWriter;
 import io.konig.schemagen.aws.AwsAuroraTableWriter;
 import io.konig.schemagen.aws.AwsResourceGenerator;
+import io.konig.schemagen.aws.CloudFormationTemplateWriter;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
@@ -283,6 +287,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private Graph owlGraph;
     private ContextManager contextManager;
     private ClassStructure structure;
+    private VelocityContext context;
 
 	@Component
 	private MavenProject mavenProject;
@@ -561,7 +566,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				plantUML != null ||
 				googleCloudPlatform!=null ||
 				jsonSchema!=null ||
-				oracleManagedCloud != null
+				oracleManagedCloud != null ||
+				amazonWebServices != null
 			)
 		) {
 			rdfSourceDir = defaults.getRdfDir();
@@ -669,16 +675,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 	private void loadSpreadsheet() throws MojoExecutionException   {
-		 try {
-
-			 if (workbook != null) {
-				 
+		 try {			
+			 if (workbook != null) {				 
 				 WorkbookToTurtleTransformer transformer = new WorkbookToTurtleTransformer(datasetMapper(), nsManager);
 				 transformer.getWorkbookLoader().setFailOnWarnings(workbook.isFailOnWarnings());
 				 transformer.getWorkbookLoader().setFailOnErrors(workbook.isFailOnErrors());
 				 transformer.getWorkbookLoader().setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
-				 transformer.transform(workbookToTurleRequest());
+				 transformer.transform(workbookToTurleRequest());	
+				 if(transformer.getWorkbookLoader().getDataSourceGenerator()!=null ){
+					 context=transformer.getWorkbookLoader().getDataSourceGenerator().getContext();
+					 if(context.get("ECRRepositoryName")!=null)
+						 System.setProperty("ECRRepositoryName", (String)context.get("ECRRepositoryName"));
+				 }
 			 }
+			
 		 } catch (Throwable oops) {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
 		 }
@@ -760,8 +770,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
 			File bucketsDir = Configurator.checkNull(amazonWebServices.getS3buckets());
 			File transformsDir = Configurator.checkNull(amazonWebServices.getTransforms());
+			File cloudFormationDir = Configurator.checkNull(amazonWebServices.getCloudFormationTemplates());
 
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
+			if(cloudFormationDir != null){
+				CloudFormationTemplateWriter templateWriter = new CloudFormationTemplateWriter(cloudFormationDir,owlGraph);
+				templateWriter.write();
+			}
+			
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
 				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator);
@@ -769,8 +785,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				resourceGenerator.add(awsAuror);				
 			}
 			if(bucketsDir != null){
-				AWSS3BucketWriter awsS3=new AWSS3BucketWriter(bucketsDir);
-				resourceGenerator.add(awsS3);
+				 AWSS3BucketWriter awsS3=new AWSS3BucketWriter(bucketsDir,cloudFormationDir);
+				 resourceGenerator.add(awsS3);
 			}
 			
 			if(transformsDir != null){
@@ -1064,7 +1080,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 							if (sourceShape.hasDataSourceType(Konig.AwsAuroraTable)
 									&& sourceShape.hasDataSourceType(Konig.S3Bucket)) {
+								EtlModelGenerator etlModelGenerator=new EtlModelGenerator(new MavenProjectConfig(),new File(amazonWebServices.getBaseDirectory(),"../"),new URIImpl(targetShape.getId().stringValue()).getLocalName());
+								etlModelGenerator.run();
 								EtlRouteBuilder builder = new EtlRouteBuilder(sourceShape, targetShape, outDir);
+								builder.setEtlBaseDir(amazonWebServices.getBaseDirectory());
 								builder.generate();
 								String serviceName=new URIImpl(targetShape.getId().stringValue()).getLocalName();
 								Map<String, Object> service=new HashMap<>();
