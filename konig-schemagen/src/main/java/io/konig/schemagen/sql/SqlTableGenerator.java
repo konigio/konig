@@ -22,8 +22,11 @@ package io.konig.schemagen.sql;
 
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.openrdf.model.URI;
+
 
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.PropertyConstraint;
@@ -46,10 +49,40 @@ public class SqlTableGenerator {
 	
 	public SqlTable generateTable(Shape shape) throws SchemaGeneratorException {
 		
+		Shape shapeObj = new Shape();
 		String tableName = nameFactory.getTableName(shape);
 		SqlTable table = new SqlTable(tableName);
-		for (PropertyConstraint p : shape.getProperty()) {
-			SqlColumn column = column(shape, p);
+		if(shape.getOr()!=null){
+			List<Shape> shapeList = shape.getOr().getShapes();
+			List<PropertyConstraint> propertyConstraintList = new ArrayList<PropertyConstraint>();
+			for(int i =0; i<shapeList.size(); i++){
+				for (PropertyConstraint p : shapeList.get(i).getProperty()) {
+					if(propertyConstraintList.size()>0)
+					{
+						int count =0;
+						for(int j = 0; j<propertyConstraintList.size(); j++){
+							
+							if((propertyConstraintList.get(j).getPredicate().toString().equals(p.getPredicate().toString()))){
+								 count++;
+							}
+						}
+						if(count==0){
+							propertyConstraintList.add(p);
+						}
+						
+					}else{
+					
+					propertyConstraintList .add(p);
+					}
+				}
+					}
+			shapeObj.setProperty(propertyConstraintList);
+
+		}else{
+			shapeObj = shape;
+		}
+		for (PropertyConstraint p : shapeObj.getProperty()) {
+			SqlColumn column = column(shapeObj, p);
 			if (column != null) {
 				table.addColumn(column);
 			}
