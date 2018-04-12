@@ -68,7 +68,7 @@ public class SqlTableGeneratorTest {
 	}
 
 
-	@Test
+	//@Test
 	public void testKitchenSink() throws Exception {
 		load("src/test/resources/sql-generator/sql-kitchen-sink");
 		
@@ -128,7 +128,7 @@ public class SqlTableGeneratorTest {
 		
 		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
 		shapeLoader.loadTurtle(resource("aws/shape_PartyShape.ttl"), null);
-		File baseDir =  new File("D:/Pearson_KONIG_CORE/konig/konig-schemagen/src/test/resources/aws/sql");
+		File baseDir =  new File("src/test/resources/aws/sql");
 		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator());
 		awsTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
@@ -145,7 +145,7 @@ public class SqlTableGeneratorTest {
 		
 		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
 		shapeLoader.loadTurtle(resource("gcp/shape_PartyShape.ttl"), null);
-		File baseDir =  new File("D:/Pearson_KONIG_CORE/konig/konig-schemagen/src/test/resources/gcp/sql");
+		File baseDir =  new File("src/test/resources/gcp/sql");
 		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter(baseDir, new SqlTableGenerator());
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));

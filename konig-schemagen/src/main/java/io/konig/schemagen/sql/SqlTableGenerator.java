@@ -52,7 +52,9 @@ public class SqlTableGenerator {
 		Shape shapeObj = new Shape();
 		String tableName = nameFactory.getTableName(shape);
 		SqlTable table = new SqlTable(tableName);
+		boolean reqflag = false;
 		if(shape.getOr()!=null){
+			reqflag = true;
 			List<Shape> shapeList = shape.getOr().getShapes();
 			List<PropertyConstraint> propertyConstraintList = new ArrayList<PropertyConstraint>();
 			for(int i =0; i<shapeList.size(); i++){
@@ -67,11 +69,11 @@ public class SqlTableGenerator {
 							}
 						}
 						if(count==0){
+							 p.setRequired(false);
 							propertyConstraintList.add(p);
 						}
 						
 					}else{
-					
 					propertyConstraintList .add(p);
 					}
 				}
@@ -82,7 +84,7 @@ public class SqlTableGenerator {
 			shapeObj = shape;
 		}
 		for (PropertyConstraint p : shapeObj.getProperty()) {
-			SqlColumn column = column(shapeObj, p);
+			SqlColumn column = column(shapeObj, p, reqflag);
 			if (column != null) {
 				table.addColumn(column);
 			}
@@ -91,7 +93,7 @@ public class SqlTableGenerator {
 	}
 
 
-	private SqlColumn column(Shape shape, PropertyConstraint p) {
+	private SqlColumn column(Shape shape, PropertyConstraint p, boolean reqflag) {
 		
 		URI predicate = p.getPredicate();
 		if (predicate != null) {
@@ -102,7 +104,13 @@ public class SqlTableGenerator {
 			}
 			FacetedSqlDatatype datatype = datatypeMapper.type(p);
 			Integer minCount = p.getMinCount();
-			boolean nullable = (minCount!=null && minCount>0) ? false : true;
+			boolean nullable = ( minCount!=null && minCount>0) ? false : true;
+				if(p.isRequired() && reqflag){
+					nullable = false;
+				}else if(!p.isRequired() && reqflag) {
+					nullable = true;
+				}
+				
 			// TODO: specify the key type
 			return new SqlColumn(predicate.getLocalName(), datatype, getKeyType(p), nullable);
 		}

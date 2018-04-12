@@ -84,6 +84,7 @@ public class PropertyConstraint {
 	
 	private Term term;
 	private URI termStatus;
+	private boolean required = true;
 	
 	public PropertyConstraint(URI predicate) {
 		this.id = new BNodeImpl(UidGenerator.INSTANCE.next());
@@ -529,5 +530,12 @@ public class PropertyConstraint {
 
 	public void setTermStatus(URI termStatus) {
 		this.termStatus  = termStatus ;
+	}
+	public boolean isRequired() {
+		return required;
+	}
+
+	public void setRequired(boolean required) {
+		this.required = required;
 	}
 }
