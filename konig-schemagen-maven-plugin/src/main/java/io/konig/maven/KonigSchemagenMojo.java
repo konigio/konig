@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -336,7 +337,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			updateRdf();
 			
 			computeSizeEstimates();
-			generateCamelEtl();
+			
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
@@ -763,7 +764,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 	
-	private void generateAmazonWebServices() throws IOException, ConfigurationException {
+	private void generateAmazonWebServices() throws IOException, ConfigurationException, MojoExecutionException {
 		if(amazonWebServices != null) {
 			Configurator config = configurator();
 			config.configure(amazonWebServices);
@@ -773,10 +774,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			File cloudFormationDir = Configurator.checkNull(amazonWebServices.getCloudFormationTemplates());
 
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
-			if(cloudFormationDir != null){
-				CloudFormationTemplateWriter templateWriter = new CloudFormationTemplateWriter(cloudFormationDir,owlGraph);
-				templateWriter.write();
-			}
+			
 			
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
@@ -797,7 +795,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			resourceGenerator.dispatch(shapeManager.listShapes());
 			GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
 			scriptWriter.run(); 
-
+			generateCamelEtl();
+			if(cloudFormationDir != null){
+				CloudFormationTemplateWriter templateWriter = new CloudFormationTemplateWriter(cloudFormationDir,owlGraph);
+				templateWriter.write();
+			}
 		}
 	}
 	
@@ -1085,9 +1087,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 								EtlRouteBuilder builder = new EtlRouteBuilder(sourceShape, targetShape, outDir);
 								builder.setEtlBaseDir(amazonWebServices.getBaseDirectory());
 								builder.generate();
-								String serviceName=new URIImpl(targetShape.getId().stringValue()).getLocalName();
+								String serviceName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
 								Map<String, Object> service=new HashMap<>();
-								service.put("image", "ectest/"+serviceName+":latest");
+								service.put("image", "${ECRRepositoryName}/"+serviceName+":latest");
 								services.put(serviceName, service);
 							}
 						}
@@ -1097,6 +1099,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				EtlRouteBuilder builder = new EtlRouteBuilder(null, dockerComposer, outDir);
 				
 				builder.createDockerComposeFile(services);
+				createImageList(services, outDir);
 			}
 			
 		} catch (Exception ex) {
@@ -1104,5 +1107,26 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
-	
+	private void createImageList(Map services, File outDir ) throws IOException {
+		File cloudformationtemplateDir = new File(outDir.getParent(), "cloudformationtemplate");
+
+		if (!cloudformationtemplateDir.exists())
+			cloudformationtemplateDir.mkdirs();
+		
+		FileWriter writer = null;
+		try {
+			File imageListFile = new File(cloudformationtemplateDir, "ImageList.txt");
+			writer = new FileWriter(imageListFile, true);
+			Iterator iterator = services.entrySet().iterator();
+			while(iterator.hasNext()) {
+		         Map.Entry service = (Map.Entry)iterator.next();	
+		         Map images = (HashMap)service.getValue();
+		         writer.append(images.get("image").toString());
+		         writer.append("\n");
+			}
+		} finally {
+			writer.flush();
+			writer.close();
+		}
+	}
 }

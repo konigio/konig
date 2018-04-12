@@ -29,12 +29,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.velocity.VelocityContext;
+import org.apache.commons.io.FileUtils;
 import org.openrdf.model.vocabulary.RDF;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import io.konig.aws.cloudformation.ContainerDefinition;
 import io.konig.aws.cloudformation.PolicyDocument;
+import io.konig.aws.cloudformation.PortMapping;
 import io.konig.aws.cloudformation.Principal;
 import io.konig.aws.cloudformation.Resource;
 import io.konig.aws.cloudformation.Statement;
@@ -57,9 +59,46 @@ public class CloudFormationTemplateWriter {
 		writeTemplates();
 		if(cloudFormationDir!=null && cloudFormationDir.exists()){
 			writeDbClusters();
-			writeECR();		
+			writeECR();	
+			writeTaskDefinition();
 		}
 	}
+	
+	private void writeTaskDefinition() throws IOException {
+		Resource resource = new Resource();
+		resource.setType("AWS::ECS::TaskDefinition");
+		resource.addProperties("Cpu", "256");
+		resource.addProperties("Memory", "512");
+		resource.addProperties("NetworkMode", "awsvpc");
+		String[] compatibilities = {"FARGATE"};
+		resource.addProperties("RequiresCompatibilities", compatibilities);
+		resource.addProperties("ExecutionRoleArn", "!GetAtt [EC2Role, Arn]");
+		resource.addProperties("TaskRoleArn", "!GetAtt [EC2Role, Arn]");
+		List<ContainerDefinition> containerDefinitions = new ArrayList<ContainerDefinition>();
+		List<String> images = FileUtils.readLines(new File(cloudFormationDir, "ImageList.txt"), "utf-8");
+		for (String image : images) {
+			ContainerDefinition containerDefinition = new ContainerDefinition();
+			String repositoryName = System.getProperty("ECRRepositoryName");
+			if(repositoryName != null) {
+				image = image.replace("${ECRRepositoryName}", repositoryName);
+			}
+			containerDefinition.setName(image.replaceAll("[^a-zA-Z0-9]", "-"));
+			containerDefinition.setImage("${aws-account-id}.dkr.ecr.${aws-region}.amazonaws.com/"+ image);
+			containerDefinition.setMemoryReservation("512");
+			List<PortMapping> portMappings = new ArrayList<>();
+			PortMapping portMapping = new PortMapping();
+			portMapping.setContainerPort("80");
+			portMappings.add(portMapping);
+			containerDefinition.setPortMappings(portMappings);
+			containerDefinitions.add(containerDefinition);
+		}
+		resource.addProperties("ContainerDefinitions", containerDefinitions);
+		Map<String,Object> resources = new LinkedHashMap<String,Object>();
+		resources.put("taskdefinition", resource);
+		String taskDefinition = AWSCloudFormationUtil.getResourcesAsString(resources);
+		AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,taskDefinition, false);	
+	}
+	
 	private void writeECR() throws IOException {
 		String repositoryName=System.getProperty("ECRRepositoryName");
 		if(repositoryName!=null){

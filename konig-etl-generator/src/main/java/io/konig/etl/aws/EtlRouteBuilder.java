@@ -204,7 +204,7 @@ public class EtlRouteBuilder {
 		if (!dockerDir.exists()) {
 			dockerDir.mkdirs();
 		}
-		File dockerFile = new File(dockerDir, "Dockerfile");
+		File dockerFile = new File(dockerDir, targetLocalName);
 		PrintWriter writer = new PrintWriter(dockerFile);
 		writer.println("FROM 220459826988.dkr.ecr.us-east-1.amazonaws.com/konig-docker-aws-etl-base:latest");
 		if(new File(outDir,"camel-routes-config.properties").exists())
