@@ -55,6 +55,7 @@ public class GroovyAwsTearDownScriptWriter {
 			println("import io.konig.maven.AwsDeployment;");
 			println();
 			println("def deploymentPlan = {");
+			printCloudFormationStackCommands();
 			printTableCommands();
 			printAmazonBucketCommands();
 			println("}");
@@ -62,6 +63,23 @@ public class GroovyAwsTearDownScriptWriter {
 			println("deploymentPlan.delegate = new AwsDeployment(scriptDir)");
 			println("deploymentPlan()");
 			
+		}
+		
+	}
+
+	private void printCloudFormationStackCommands() throws IOException {
+		File schemaDir = amazonWebService.getCloudFormationTemplates();
+		if (schemaDir != null && schemaDir.exists()) {
+			for (File file : schemaDir.listFiles()) {
+				if (file.getName().endsWith(".json")) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("delete CloudFormationStack from \"");
+					print(path);
+					print("\"");
+					println(" println response ");
+				}
+			}
 		}
 		
 	}

@@ -51,28 +51,34 @@ public class DeleteAwsS3BucketAction {
 	}
 	
 	public AwsDeployment from(String path) throws Exception {
-		try{
-			File file = deployment.file(path);
-			ObjectMapper mapper=new ObjectMapper();
-			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
-			deployment.verifyAWSCredentials();
-			Regions regions=Regions.fromName(bucket.getRegion());
-			AmazonS3 s3client = AmazonS3ClientBuilder.standard()
-					.withCredentials(deployment.getCredential())
-					.withRegion(regions).build();
-			String envtName="";
-			if(System.getProperty("environmentName") != null) {
-				envtName = System.getProperty("environmentName");
+		String cfTemplatePresent=System.getProperty("cfTemplatePresent");
+		if(cfTemplatePresent==null || cfTemplatePresent.equals("N")){
+			try{
+				File file = deployment.file(path);
+				ObjectMapper mapper=new ObjectMapper();
+				S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
+				deployment.verifyAWSCredentials();
+				Regions regions=Regions.fromName(bucket.getRegion());
+				AmazonS3 s3client = AmazonS3ClientBuilder.standard()
+						.withCredentials(deployment.getCredential())
+						.withRegion(regions).build();
+				String envtName="";
+				if(System.getProperty("environmentName") != null) {
+					envtName = System.getProperty("environmentName");
+				}
+				String bucketName=StringUtils.replaceOnce(bucket.getBucketName(), "${environmentName}", envtName);
+				s3client.deleteBucket(bucketName);	
+			boolean status=s3client.doesBucketExistV2(bucketName);
+			if(!status)
+				deployment.setResponse("AWS S3 Bucket is deleted ::"+bucketName);
+					
+			}	
+			catch(Exception e){
+				throw e;
 			}
-			String bucketName=StringUtils.replaceOnce(bucket.getBucketName(), "${environmentName}", envtName);
-			s3client.deleteBucket(bucketName);	
-		boolean status=s3client.doesBucketExistV2(bucketName);
-		if(!status)
-			deployment.setResponse("AWS S3 Bucket is deleted ::"+bucketName);
-				
-		}	
-		catch(Exception e){
-			throw e;
+		}
+		else{
+			deployment.setResponse("S3 Bucket will be deleted through cloud formation stack");
 		}
 	    return deployment;
 	}

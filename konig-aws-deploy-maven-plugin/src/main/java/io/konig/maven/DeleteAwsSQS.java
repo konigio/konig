@@ -62,34 +62,40 @@ public class DeleteAwsSQS {
 	}
 	
 	public AwsDeployment from(String path) throws Exception {
-		try{
-			File file = deployment.file(path);
-			ObjectMapper mapper=new ObjectMapper();
-			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
-			deployment.verifyAWSCredentials();
-			QueueConfiguration queueConfig = bucket.getNotificationConfiguration().getQueueConfiguration();
-			if(queueConfig != null && queueConfig.getQueue() != null){
-				Queue queue = queueConfig.getQueue();				
-				Regions regions = Regions.fromName(queue.getRegion());
-				AmazonSQS sqs = AmazonSQSClientBuilder.standard()
-						.withCredentials(deployment.getCredential())
-						.withRegion(regions).build();
-				String accountId = "";
-				if (System.getProperty("aws-account-id") != null) {
-					accountId = System.getProperty("aws-account-id");
+		String cfTemplatePresent=System.getProperty("cfTemplatePresent");
+		if(cfTemplatePresent==null || cfTemplatePresent.equals("N")){
+			try{
+				File file = deployment.file(path);
+				ObjectMapper mapper=new ObjectMapper();
+				S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
+				deployment.verifyAWSCredentials();
+				QueueConfiguration queueConfig = bucket.getNotificationConfiguration().getQueueConfiguration();
+				if(queueConfig != null && queueConfig.getQueue() != null){
+					Queue queue = queueConfig.getQueue();				
+					Regions regions = Regions.fromName(queue.getRegion());
+					AmazonSQS sqs = AmazonSQSClientBuilder.standard()
+							.withCredentials(deployment.getCredential())
+							.withRegion(regions).build();
+					String accountId = "";
+					if (System.getProperty("aws-account-id") != null) {
+						accountId = System.getProperty("aws-account-id");
+					}
+					String queueUrl = sqs.getQueueUrl(queueConfig.getQueue().getResourceName()).getQueueUrl();
+							
+					String queueArn = StringUtils.replaceOnce(queueConfig.getQueueArn(), "${aws-account-id}",
+							accountId);
+					
+					sqs.deleteQueue(queueUrl);
+					deployment.setResponse("Queue "+queueArn+" is deleted");
 				}
-				String queueUrl = sqs.getQueueUrl(queueConfig.getQueue().getResourceName()).getQueueUrl();
-						
-				String queueArn = StringUtils.replaceOnce(queueConfig.getQueueArn(), "${aws-account-id}",
-						accountId);
 				
-				sqs.deleteQueue(queueUrl);
-				deployment.setResponse("Queue "+queueArn+" is deleted");
 			}
-			
+			catch(Exception e){
+				throw e;
+			}
 		}
-		catch(Exception e){
-			throw e;
+		else{
+			deployment.setResponse("Queue will be deleted through cloud formation stack");
 		}
 	    return deployment;
 	}

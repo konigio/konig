@@ -58,6 +58,7 @@ public class GroovyAwsDeploymentScriptWriter {
 			println("import io.konig.maven.AwsDeployment;");
 			println();
 			println("def deploymentPlan = {");
+			printCloudFormationTemplateCommands();
 			printTableCommands();
 			printS3BucketCommands();
 			println("}");
@@ -67,6 +68,23 @@ public class GroovyAwsDeploymentScriptWriter {
 			
 		}
 		
+	}
+
+	private void printCloudFormationTemplateCommands() throws IOException {
+		File schemaDir = amazonWebService.getCloudFormationTemplates();
+		if (schemaDir != null && schemaDir.exists()) {
+			for (File file : schemaDir.listFiles()) {
+				if (file.getName().endsWith(".json")) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("create CloudFormationStack from \"");
+					print(path);
+					print("\"");
+					println(" println response ");
+				}
+				
+			}
+		}
 	}
 
 	private void printTableCommands() throws IOException {
