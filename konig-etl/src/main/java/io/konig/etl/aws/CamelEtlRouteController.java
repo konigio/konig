@@ -36,13 +36,14 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 
 @SpringBootApplication
-@ImportResource({ "classpath:app-config.xml" })
+@ImportResource({"classpath:app-config.xml"})
 @PropertySource("file:camel-routes-config.properties")
 @EnableAutoConfiguration(exclude = { CamelAutoConfiguration.class })
 public class CamelEtlRouteController {
 
 	@Value("${aws.accessKey}")
 	private String ACCESS_KEY;
+	
 	@Value("${aws.secretKey}")
 	private String SECRET_KEY;
 

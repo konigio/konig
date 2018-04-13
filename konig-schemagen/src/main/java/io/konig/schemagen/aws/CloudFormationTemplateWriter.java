@@ -70,7 +70,7 @@ public class CloudFormationTemplateWriter {
 		writeTemplates();
 		if(cloudFormationDir!=null && cloudFormationDir.exists()){
 			writeDbClusters();
-			writeECR();
+			//writeECR();
 		}
 	}
 	
@@ -126,10 +126,6 @@ public class CloudFormationTemplateWriter {
 		List<String> images = FileUtils.readLines(new File(cloudFormationDir, "ImageList.txt"), "utf-8");
 		for (String image : images) {
 			ContainerDefinition containerDefinition = new ContainerDefinition();
-			String repositoryName = System.getProperty("ECRRepositoryName");
-			if(repositoryName != null) {
-				image = image.replace("${ECRRepositoryName}", repositoryName);
-			}
 			containerDefinition.setName(image.replaceAll("[^a-zA-Z0-9]", "-"));
 			containerDefinition.setImage("${aws-account-id}.dkr.ecr.${aws-region}.amazonaws.com/"+ image);
 			containerDefinition.setMemoryReservation("512");
