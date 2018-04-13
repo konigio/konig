@@ -50,7 +50,7 @@ import io.konig.formula.Formula2PathTranslator;
 import io.konig.formula.Path2FormulaTranslator;
 import io.konig.formula.QuantifiedExpression;
 
-public class PropertyConstraint {
+public class PropertyConstraint implements Cloneable {
 
 	private Resource id;
 	private PropertyPath path;
@@ -116,30 +116,19 @@ public class PropertyConstraint {
 	}
 
 	public PropertyConstraint clone() {
-		PropertyConstraint other = new PropertyConstraint(id, path);
-		other.in = in;
-		other.datatype = datatype;
-		other.directType = directType;
-		other.documentation = documentation;
-		other.hasValue = hasValue;
-		other.knownValue = knownValue;
-		other.maxCount = maxCount;
-		other.maxExclusive = maxExclusive;
-		other.maxInclusive = maxInclusive;
-		other.maxLength = maxLength;
-		other.minCount = minCount;
-		other.minExclusive = minExclusive;
-		other.minInclusive = minInclusive;
-		other.minLength = minLength;
-		other.nodeKind = nodeKind;
-		other.pattern = pattern;
-		other.term = term;
-		other.valueClass = valueClass;
-		other.shape = shape;
-		other.formula = formula;
-		other.stereotype = stereotype;
-		
-		return other;
+		try {
+			return (PropertyConstraint) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public PropertyConstraint deepClone() {
+		PropertyConstraint clone = clone();
+		if (shape != null) {
+			clone.setShape(shape.deepClone());
+		}
+		return clone;
 	}
 	
 	
@@ -529,5 +518,9 @@ public class PropertyConstraint {
 
 	public void setTermStatus(URI termStatus) {
 		this.termStatus  = termStatus ;
+	}
+
+	public boolean isRequiredSingleValue() {
+		return minCount!=null && minCount==1 && maxCount!=0 && maxCount==1;
 	}
 }

@@ -1,0 +1,69 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix aws: <http://www.konig.io/ns/aws/> .
+@prefix ex: <http://example.com/ns/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PartyShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ONmQIPomNq8AAAFis3qgIw> ; 
+	sh:targetClass ex:Party ; 
+	sh:or (shape:PersonShape shape:OrganizationShape) ; 
+	konig:shapeDataSource <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/PartyShape> . 
+
+<http://www.konig.io/activity/ONmQIPomNq8AAAFis3qgIw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-04-11T12:23:01.027+05:30"^^xsd:dateTime . 
+
+shape:PersonShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ONmQIPomNq8AAAFis3qgIw> ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI ; 
+	sh:property  [ 
+		sh:path schema:email ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:birthDate ; 
+		sh:datatype xsd:date ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/PersonShape> . 
+
+<http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/PersonShape> a konig:AwsAurora , konig:DataSource ; 
+	aws:tableReference  [ 
+		aws:awsAuroraHost "${awsAuroraHost}" ; 
+		aws:awsSchema "${awsAuroraSchema}" ; 
+		aws:awsTableName "PersonShape" ]  . 
+
+shape:OrganizationShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ONmQIPomNq8AAAFis3qgIw> ; 
+	sh:targetClass schema:Organziation ; 
+	sh:nodeKind sh:IRI ; 
+	sh:property  [ 
+		sh:path schema:email ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:foundingDate ; 
+		sh:datatype xsd:date ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/OrganizationShape> . 
+
+<http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/OrganizationShape> a konig:AwsAurora , konig:DataSource ; 
+	aws:tableReference  [ 
+		aws:awsAuroraHost "${awsAuroraHost}" ; 
+		aws:awsSchema "${awsAuroraSchema}" ; 
+		aws:awsTableName "OrganizationShape" ]  . 
+
+<http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/PartyShape> a konig:AwsAurora , konig:DataSource ; 
+	aws:tableReference  [ 
+		aws:awsAuroraHost "${awsAuroraHost}" ; 
+		aws:awsSchema "${awsAuroraSchema}" ; 
+		aws:awsTableName "PartyShape" ]  . 

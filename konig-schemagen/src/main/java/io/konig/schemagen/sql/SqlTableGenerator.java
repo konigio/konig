@@ -48,6 +48,16 @@ public class SqlTableGenerator {
 		
 		String tableName = nameFactory.getTableName(shape);
 		SqlTable table = new SqlTable(tableName);
+		if(shape.getOr()!=null){
+			
+			ShapeMerger merger = new ShapeMerger();
+			try {
+				shape = merger.merge(shape);
+			} catch (ShapeMergeException e) {
+				throw new SchemaGeneratorException(e);
+			}
+			
+		}
 		for (PropertyConstraint p : shape.getProperty()) {
 			SqlColumn column = column(shape, p);
 			if (column != null) {
@@ -68,9 +78,8 @@ public class SqlTableGenerator {
 				throw new SchemaGeneratorException(message);
 			}
 			FacetedSqlDatatype datatype = datatypeMapper.type(p);
-			Integer minCount = p.getMinCount();
-			boolean nullable = (minCount!=null && minCount>0) ? false : true;
-			// TODO: specify the key type
+			boolean nullable = !p.isRequiredSingleValue();
+				
 			return new SqlColumn(predicate.getLocalName(), datatype, getKeyType(p), nullable);
 		}
 		return null;
