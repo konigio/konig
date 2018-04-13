@@ -1,5 +1,7 @@
 package io.konig.aws.cloudformation;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /*
  * #%L
  * Konig AWS Model
@@ -22,6 +24,8 @@ package io.konig.aws.cloudformation;
 
 
 public class NetworkConfiguration {
+	
+	@JsonProperty("AwsvpcConfiguration")
 	private AwsvpcConfiguration awsvpcConfiguration;
 
 	public AwsvpcConfiguration getAwsvpcConfiguration() {
