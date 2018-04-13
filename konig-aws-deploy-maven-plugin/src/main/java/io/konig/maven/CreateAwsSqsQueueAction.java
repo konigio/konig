@@ -62,64 +62,70 @@ public class CreateAwsSqsQueueAction {
 	}
 	
 	public AwsDeployment from(String path) throws Exception {
-		try{
-			File file = deployment.file(path);
-			ObjectMapper mapper=new ObjectMapper();
-			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
-			deployment.verifyAWSCredentials();
-			
-			QueueConfiguration queueConfig = bucket.getNotificationConfiguration().getQueueConfiguration();
-			
-			if(queueConfig != null && queueConfig.getQueue() != null){
-				String accountId = "";
-				if (System.getProperty("aws-account-id") != null) {
-					accountId = System.getProperty("aws-account-id");
+		String cfTemplatePresent=System.getProperty("cfTemplatePresent");
+		if(cfTemplatePresent==null || cfTemplatePresent.equals("N")){
+			try{
+				File file = deployment.file(path);
+				ObjectMapper mapper=new ObjectMapper();
+				S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
+				deployment.verifyAWSCredentials();
+				
+				QueueConfiguration queueConfig = bucket.getNotificationConfiguration().getQueueConfiguration();
+				
+				if(queueConfig != null && queueConfig.getQueue() != null){
+					String accountId = "";
+					if (System.getProperty("aws-account-id") != null) {
+						accountId = System.getProperty("aws-account-id");
+					}
+					
+					Queue queue = queueConfig.getQueue();				
+					Regions regions=Regions.fromName(queue.getRegion());
+					AmazonSQS sqs = AmazonSQSClientBuilder.standard()
+							.withCredentials(deployment.getCredential())
+							.withRegion(regions).build();  
+					AmazonSNS sns = AmazonSNSClientBuilder.standard()
+							.withCredentials(deployment.getCredential())
+							.withRegion(regions).build();  
+					
+					CreateQueueResult result = sqs.createQueue(queue.getResourceName());
+					
+					String topicArn = StringUtils.replaceOnce(bucket.getNotificationConfiguration().getTopicConfiguration().getTopicArn(), "${aws-account-id}",
+							accountId);
+					String queueArn = StringUtils.replaceOnce(bucket.getNotificationConfiguration().getQueueConfiguration().getQueueArn(), "${aws-account-id}",
+							accountId);
+					
+					deployment.setResponse("Queue  "+queueArn+" is created");
+					
+					Policy policy = new Policy().withStatements(
+						    new Statement(Effect.Allow)
+								.withPrincipals(Principal.AllUsers)
+						        .withActions(SQSActions.SendMessage)
+						        .withResources(new Resource(queueArn))
+						        .withConditions(ConditionFactory.newSourceArnCondition(topicArn)));
+					
+					Map<String, String> queueAttributes = new HashMap<String, String>();
+					queueAttributes.put(QueueAttributeName.Policy.toString(), policy.toJson());
+					 
+					deployment.setResponse("Queue Policy Configured : "+policy.toJson());
+					
+					sqs.setQueueAttributes(
+					    new SetQueueAttributesRequest(result.getQueueUrl(), queueAttributes));
+					
+					Topics.subscribeQueue(sns, sqs, topicArn, result.getQueueUrl());
+					
+					deployment.setResponse("Subscription is created : Topic ["+topicArn+"], Queue ["+queueArn+"]");
+				}
+				else{
+					deployment.setResponse("Queue Configuration Failed");
 				}
 				
-				Queue queue = queueConfig.getQueue();				
-				Regions regions=Regions.fromName(queue.getRegion());
-				AmazonSQS sqs = AmazonSQSClientBuilder.standard()
-						.withCredentials(deployment.getCredential())
-						.withRegion(regions).build();  
-				AmazonSNS sns = AmazonSNSClientBuilder.standard()
-						.withCredentials(deployment.getCredential())
-						.withRegion(regions).build();  
-				
-				CreateQueueResult result = sqs.createQueue(queue.getResourceName());
-				
-				String topicArn = StringUtils.replaceOnce(bucket.getNotificationConfiguration().getTopicConfiguration().getTopicArn(), "${aws-account-id}",
-						accountId);
-				String queueArn = StringUtils.replaceOnce(bucket.getNotificationConfiguration().getQueueConfiguration().getQueueArn(), "${aws-account-id}",
-						accountId);
-				
-				deployment.setResponse("Queue  "+queueArn+" is created");
-				
-				Policy policy = new Policy().withStatements(
-					    new Statement(Effect.Allow)
-							.withPrincipals(Principal.AllUsers)
-					        .withActions(SQSActions.SendMessage)
-					        .withResources(new Resource(queueArn))
-					        .withConditions(ConditionFactory.newSourceArnCondition(topicArn)));
-				
-				Map<String, String> queueAttributes = new HashMap<String, String>();
-				queueAttributes.put(QueueAttributeName.Policy.toString(), policy.toJson());
-				 
-				deployment.setResponse("Queue Policy Configured : "+policy.toJson());
-				
-				sqs.setQueueAttributes(
-				    new SetQueueAttributesRequest(result.getQueueUrl(), queueAttributes));
-				
-				Topics.subscribeQueue(sns, sqs, topicArn, result.getQueueUrl());
-				
-				deployment.setResponse("Subscription is created : Topic ["+topicArn+"], Queue ["+queueArn+"]");
 			}
-			else{
-				deployment.setResponse("Queue Configuration Failed");
+			catch(Exception e){
+				throw e;
 			}
-			
 		}
-		catch(Exception e){
-			throw e;
+		else{
+			deployment.setResponse("Queue will be created through cloud formation template");
 		}
 	    return deployment;
 	}

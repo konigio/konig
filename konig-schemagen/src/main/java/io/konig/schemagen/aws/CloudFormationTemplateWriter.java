@@ -22,8 +22,10 @@ package io.konig.schemagen.aws;
 
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,6 +34,8 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.openrdf.model.vocabulary.RDF;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.konig.aws.cloudformation.ContainerDefinition;
@@ -46,6 +50,7 @@ import io.konig.core.Graph;
 import io.konig.core.Vertex;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.AWS;
+import io.konig.gcp.io.GoogleCloudSqlJsonUtil;
 
 public class CloudFormationTemplateWriter {
 	private File cloudFormationDir;
@@ -152,15 +157,47 @@ public class CloudFormationTemplateWriter {
 			for (Vertex v : list) {
 				SimplePojoFactory pojoFactory = new SimplePojoFactory();
 				CloudFormationTemplate cloudFormation = pojoFactory.create(v, CloudFormationTemplate.class);
+				
 				File yamlFile = new File(cloudFormationDir, cloudFormation.getStackName() + "_template.yml");
 				try (PrintWriter out = new PrintWriter(yamlFile)) {
 				    out.println(cloudFormation.getTemplate());
 				}
+				
+				String fileName = MessageFormat.format("{0}.json", cloudFormation.getStackName());
+				File file = new File(cloudFormationDir, fileName);
+				try (FileWriter writer = new FileWriter(file)) {
+					writeCloudFormationJson(writer,cloudFormation);
+				}
+
+				
+				
 			}
 		}
 		
 	}
 	
+	private void writeCloudFormationJson(FileWriter writer, CloudFormationTemplate cloudFormation) throws IOException {
+		JsonFactory factory = new JsonFactory();
+		JsonGenerator json = factory.createGenerator(writer);
+		json.useDefaultPrettyPrinter();
+		
+		json.writeStartObject();
+		writeString(json,"stackName", cloudFormation.getStackName());		
+		writeString(json, "region", cloudFormation.getRegion());
+		writeString(json, "template", cloudFormation.getStackName() + "_template.yml");
+		
+		json.writeEndObject();
+		
+		json.flush();
+		
+		
+	}
+	private void writeString(JsonGenerator json, String fieldName, String value) throws IOException {
+		
+		if (value != null) {
+			json.writeStringField(fieldName, value);
+		}
+	}
 	private String getDbClusterTemplate(DbCluster instance) throws JsonProcessingException {		
 		Map<String,Object> resources=new LinkedHashMap<String,Object>();
 		resources.put(instance.getDbClusterName()+"DBCluster", getDbClusterResource(instance));

@@ -26,6 +26,7 @@ import io.konig.core.vocab.AWS;
 
 public class CloudFormationTemplate {
 	private String stackName;
+	private String region;
 	private String template;
 	
 	@RdfProperty(AWS.STACK_NAME)
@@ -34,6 +35,15 @@ public class CloudFormationTemplate {
 	}
 	public void setStackName(String stackName) {
 		this.stackName = stackName;
+	}
+	
+	@RdfProperty(AWS.AWS_REGION)
+	public String getRegion(){
+		return region;
+	}
+	
+	public void setRegion(String region){
+		this.region=region;
 	}
 	@RdfProperty(AWS.TEMPLATE)
 	public String getTemplate() {
