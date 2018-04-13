@@ -32,7 +32,6 @@ import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
-import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -41,7 +40,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import io.konig.activity.Activity;
 import io.konig.annotation.RdfProperty;
 import io.konig.core.Context;
-import io.konig.core.Graph;
 import io.konig.core.UidGenerator;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.util.IriTemplate;
@@ -52,7 +50,7 @@ import io.konig.formula.Expression;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.impl.EmptyList;
 
-public class Shape {
+public class Shape implements Cloneable {
 	private static final List<PropertyConstraint> EMPTY_PROPERTY_LIST = new EmptyList<PropertyConstraint>();
 	
 	private Resource id;
@@ -106,6 +104,7 @@ public class Shape {
 			}
 			inputShapeOf.add(uri);
 		}
+	 
 	public Shape() {
 		String bnodeId = UidGenerator.INSTANCE.next();
 		id = new BNodeImpl(bnodeId);
@@ -117,12 +116,46 @@ public class Shape {
 		addType(SH.Shape);
 	}
 	
-	
-	
-	private void edge(Graph graph, URI predicate, Value value) {
-		if (value != null) {
-			graph.edge(id, predicate, value);
+	/**
+	 * Create a shallow clone of this Shape.
+	 */
+	@Override
+	public Shape clone() {
+		try {
+			return (Shape) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
 		}
+	}
+	
+
+	/**
+	 * Recursively clone this shape, all of its properties, and the shapes referenced by
+	 * SHACL logical constraints (sh:and, sh:or).
+	 */
+	public Shape deepClone() {
+		Shape clone = clone();
+
+		List<PropertyConstraint> propertyList = new ArrayList<>();
+		clone.setProperty(propertyList);
+		for (PropertyConstraint p : getProperty()) {
+			propertyList.add(p.deepClone());
+		}
+		if (and != null) {
+			AndConstraint cloneAnd = new AndConstraint();
+			clone.setAnd(cloneAnd);
+			for (Shape shape : and.getShapes()) {
+				cloneAnd.add(shape.deepClone());
+			}
+		}
+		if (or != null) {
+			OrConstraint cloneOr = new OrConstraint();
+			clone.setOr(cloneOr);
+			for (Shape shape : or.getShapes()) {
+				cloneOr.add(shape.deepClone());
+			}
+		}
+		return clone;
 	}
 
 	public List<PropertyConstraint> getProperty() {

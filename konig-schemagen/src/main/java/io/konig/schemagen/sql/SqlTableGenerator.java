@@ -22,11 +22,8 @@ package io.konig.schemagen.sql;
 
 
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.openrdf.model.URI;
-
 
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.PropertyConstraint;
@@ -49,42 +46,20 @@ public class SqlTableGenerator {
 	
 	public SqlTable generateTable(Shape shape) throws SchemaGeneratorException {
 		
-		Shape shapeObj = new Shape();
 		String tableName = nameFactory.getTableName(shape);
 		SqlTable table = new SqlTable(tableName);
-		boolean reqflag = false;
 		if(shape.getOr()!=null){
-			reqflag = true;
-			List<Shape> shapeList = shape.getOr().getShapes();
-			List<PropertyConstraint> propertyConstraintList = new ArrayList<PropertyConstraint>();
-			for(int i =0; i<shapeList.size(); i++){
-				for (PropertyConstraint p : shapeList.get(i).getProperty()) {
-					if(propertyConstraintList.size()>0)
-					{
-						int count =0;
-						for(int j = 0; j<propertyConstraintList.size(); j++){
-							
-							if((propertyConstraintList.get(j).getPredicate().toString().equals(p.getPredicate().toString()))){
-								 count++;
-							}
-						}
-						if(count==0){
-							 p.setRequired(false);
-							propertyConstraintList.add(p);
-						}
-						
-					}else{
-					propertyConstraintList .add(p);
-					}
-				}
-					}
-			shapeObj.setProperty(propertyConstraintList);
-
-		}else{
-			shapeObj = shape;
+			
+			ShapeMerger merger = new ShapeMerger();
+			try {
+				shape = merger.merge(shape);
+			} catch (ShapeMergeException e) {
+				throw new SchemaGeneratorException(e);
+			}
+			
 		}
-		for (PropertyConstraint p : shapeObj.getProperty()) {
-			SqlColumn column = column(shapeObj, p, reqflag);
+		for (PropertyConstraint p : shape.getProperty()) {
+			SqlColumn column = column(shape, p);
 			if (column != null) {
 				table.addColumn(column);
 			}
@@ -93,7 +68,7 @@ public class SqlTableGenerator {
 	}
 
 
-	private SqlColumn column(Shape shape, PropertyConstraint p, boolean reqflag) {
+	private SqlColumn column(Shape shape, PropertyConstraint p) {
 		
 		URI predicate = p.getPredicate();
 		if (predicate != null) {
@@ -103,15 +78,8 @@ public class SqlTableGenerator {
 				throw new SchemaGeneratorException(message);
 			}
 			FacetedSqlDatatype datatype = datatypeMapper.type(p);
-			Integer minCount = p.getMinCount();
-			boolean nullable = ( minCount!=null && minCount>0) ? false : true;
-				if(p.isRequired() && reqflag){
-					nullable = false;
-				}else if(!p.isRequired() && reqflag) {
-					nullable = true;
-				}
+			boolean nullable = !p.isRequiredSingleValue();
 				
-			// TODO: specify the key type
 			return new SqlColumn(predicate.getLocalName(), datatype, getKeyType(p), nullable);
 		}
 		return null;

@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.openrdf.model.URI;
@@ -68,7 +69,7 @@ public class SqlTableGeneratorTest {
 	}
 
 
-	//@Test
+	@Test
 	public void testKitchenSink() throws Exception {
 		load("src/test/resources/sql-generator/sql-kitchen-sink");
 		
@@ -98,9 +99,7 @@ public class SqlTableGeneratorTest {
 		assertField(table, "float", FacetedSqlDatatype.SIGNED_FLOAT);
 		assertField(table, "double", FacetedSqlDatatype.SIGNED_DOUBLE);
 		
-		System.out.println(table.toString());
-		
-//		fail("Not yet implemented");
+//		System.out.println(table.toString());
 	}
 
 	private void assertStringField(SqlTable table, String columnName, int length) {
@@ -128,13 +127,17 @@ public class SqlTableGeneratorTest {
 		
 		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
 		shapeLoader.loadTurtle(resource("aws/shape_PartyShape.ttl"), null);
-		File baseDir =  new File("src/test/resources/aws/sql");
+		
+
+		File baseDir = new File("target/test/resources/aws/sql");
+		baseDir.mkdirs();
+		
 		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator());
 		awsTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
 		
 		assertTrue(table!=null);
-		}
+	}
 	
 	@Test
 	public void testGCP() throws Exception {
@@ -145,7 +148,9 @@ public class SqlTableGeneratorTest {
 		
 		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
 		shapeLoader.loadTurtle(resource("gcp/shape_PartyShape.ttl"), null);
-		File baseDir =  new File("src/test/resources/gcp/sql");
+		File baseDir = new File("target/test/resources/gcp/sql");
+		baseDir.mkdirs();
+		
 		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter(baseDir, new SqlTableGenerator());
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
