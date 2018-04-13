@@ -782,24 +782,29 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 				resourceGenerator.add(awsAuror);				
 			}
-			if(bucketsDir != null){
-				 AWSS3BucketWriter awsS3=new AWSS3BucketWriter(bucketsDir,cloudFormationDir);
-				 resourceGenerator.add(awsS3);
-			}
-			
 			if(transformsDir != null){
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
 				ShapeRuleFactory shapeRuleFactory=new ShapeRuleFactory(shapeManager, shapeModelFactory, new ShapeModelToShapeRule());
 				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir), rdfSourceDir);resourceGenerator.add(generator);
 			}
-			resourceGenerator.dispatch(shapeManager.listShapes());
-			GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
-			scriptWriter.run(); 
-			generateCamelEtl();
+			
+			CloudFormationTemplateWriter templateWriter = null;
 			if(cloudFormationDir != null){
-				CloudFormationTemplateWriter templateWriter = new CloudFormationTemplateWriter(cloudFormationDir,owlGraph);
+				templateWriter = new CloudFormationTemplateWriter(cloudFormationDir,owlGraph);
 				templateWriter.write();
 			}
+			if(bucketsDir != null){
+				 AWSS3BucketWriter awsS3=new AWSS3BucketWriter(bucketsDir,cloudFormationDir);
+				 resourceGenerator.add(awsS3);
+			}
+			resourceGenerator.dispatch(shapeManager.listShapes());
+			generateCamelEtl();
+			if(templateWriter != null) {
+				templateWriter.updateTemplate();
+			}
+			GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
+			scriptWriter.run(); 
+			
 		}
 	}
 	

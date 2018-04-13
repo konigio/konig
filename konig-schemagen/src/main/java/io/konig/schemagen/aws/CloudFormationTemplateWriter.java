@@ -33,12 +33,17 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.openrdf.model.vocabulary.RDF;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import io.konig.aws.cloudformation.AwsvpcConfiguration;
 import io.konig.aws.cloudformation.ContainerDefinition;
+import io.konig.aws.cloudformation.LoadBalancer;
+import io.konig.aws.cloudformation.NetworkConfiguration;
 import io.konig.aws.cloudformation.PolicyDocument;
 import io.konig.aws.cloudformation.PortMapping;
 import io.konig.aws.cloudformation.Principal;
@@ -55,7 +60,8 @@ import io.konig.gcp.io.GoogleCloudSqlJsonUtil;
 public class CloudFormationTemplateWriter {
 	private File cloudFormationDir;
 	private Graph graph;
-
+	private List<ContainerDefinition> containerDefinitions = null;
+	
 	public CloudFormationTemplateWriter(File cloudFormationDir, Graph graph) {
 		this.cloudFormationDir=cloudFormationDir;
 		this.graph=graph;
@@ -64,9 +70,46 @@ public class CloudFormationTemplateWriter {
 		writeTemplates();
 		if(cloudFormationDir!=null && cloudFormationDir.exists()){
 			writeDbClusters();
-			writeECR();	
-			writeTaskDefinition();
+			writeECR();
 		}
+	}
+	
+	public void updateTemplate() throws IOException {
+		if(cloudFormationDir!=null && cloudFormationDir.exists()){
+			writeTaskDefinition();
+			writeService();
+		}
+	}
+	
+	private void writeService() throws IOException {
+		Resource resource = new Resource();
+		resource.setType("AWS::ECS::Service");
+		resource.addProperties("Cluster", "!Ref ECSCluster");
+		resource.addProperties("DesiredCount", "2");
+		resource.addProperties("LaunchType", "FARGATE");
+		List<LoadBalancer> loadBalancers = new ArrayList<>();
+		for(ContainerDefinition containerDefinition : containerDefinitions) {
+			LoadBalancer loadBalancer = new LoadBalancer();
+			loadBalancer.setContainerName(containerDefinition.getName());
+			loadBalancer.setContainerPort(containerDefinition.getPortMappings().get(0).getContainerPort());
+			loadBalancer.setTargetGroupArn("!Ref ECSTG");
+			loadBalancers.add(loadBalancer);
+		}
+		resource.addProperties("LoadBalancers", loadBalancers);
+		NetworkConfiguration networkConfig = new NetworkConfiguration();
+		AwsvpcConfiguration configuration = new AwsvpcConfiguration();
+		configuration.setAssignPublicIp("ENABLED");
+		String[] subnets = {"!Ref PublicSubnetOne","!Ref PublicSubnetTwo"};
+		configuration.setSubnets(subnets);		
+		networkConfig.setAwsvpcConfiguration(configuration);
+		resource.addProperties("NetworkConfiguration", networkConfig);
+		
+		resource.addProperties("TaskDefinition", "!Ref taskdefinition");
+		Map<String,Object> resources = new LinkedHashMap<String,Object>();
+		resources.put("ecsService", resource);
+
+		String ecsService = AWSCloudFormationUtil.getResourcesAsString(resources);
+		AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,ecsService, false);	
 	}
 	
 	private void writeTaskDefinition() throws IOException {
@@ -77,9 +120,9 @@ public class CloudFormationTemplateWriter {
 		resource.addProperties("NetworkMode", "awsvpc");
 		String[] compatibilities = {"FARGATE"};
 		resource.addProperties("RequiresCompatibilities", compatibilities);
-		resource.addProperties("ExecutionRoleArn", "!GetAtt [EC2Role, Arn]");
-		resource.addProperties("TaskRoleArn", "!GetAtt [EC2Role, Arn]");
-		List<ContainerDefinition> containerDefinitions = new ArrayList<ContainerDefinition>();
+		resource.addProperties("ExecutionRoleArn", "!Ref ECSTaskExecutionRole");
+		resource.addProperties("TaskRoleArn", "!Ref ECSTaskExecutionRole");
+		containerDefinitions = new ArrayList<ContainerDefinition>();
 		List<String> images = FileUtils.readLines(new File(cloudFormationDir, "ImageList.txt"), "utf-8");
 		for (String image : images) {
 			ContainerDefinition containerDefinition = new ContainerDefinition();
