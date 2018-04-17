@@ -42,7 +42,7 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 	private File baseDir;
 	private SqlTableGenerator generator;
 
-
+	// TODO: Add a DatasourceFileLocator as a private field and pass it to the constructor. 
 	
 	public AwsAuroraTableWriter(File baseDir, SqlTableGenerator generator) {
 		this.baseDir = baseDir;
@@ -104,6 +104,7 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 	}
 
 	private File sqlFile(AwsAuroraTableReference table) {
+		// TODO: use the DatasourceFileLocator to produce the file
 		return fileName(table, "sql");
 	}
 }

@@ -37,7 +37,8 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 	private File baseDir;
 	private SqlTableGenerator generator;
 
-
+	// TODO: Add a DatasourceFileLocator as a private field, and pass an instance to the constructor.
+	// TODO: Remove the baseDir field.
 	
 	public CloudSqlTableWriter(File baseDir, SqlTableGenerator generator) {
 		this.baseDir = baseDir;
@@ -76,6 +77,7 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 	}
 
 	private File sqlFile(GoogleCloudSqlTable table) {
+		// TODO: Refactor this method to use the DatasourceFileLocator passed to the constructor.
 		String instance = table.getInstance();
 		String database = table.getDatabase();
 		String tableName = table.getTableName();

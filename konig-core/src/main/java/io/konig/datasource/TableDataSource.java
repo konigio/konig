@@ -27,5 +27,17 @@ public interface TableDataSource {
 	 * Get a String reference to the Table suitable for use in a SELECT statement.
 	 */
 	String getTableIdentifier();
+	
+	/**
+	 * Get the name of the SQL dialect used by this TableDataSource.
+	 */
+	String getSqlDialect();
+	
+	/**
+	 * An identifier for this TableDataSource that is unique across the set of all individuals
+	 * of type TableDataSource.  This identifier may be composed of several parts each of which
+	 * is separated by a colon (':').
+	 */
+	String getUniqueIdentifier();
 
 }

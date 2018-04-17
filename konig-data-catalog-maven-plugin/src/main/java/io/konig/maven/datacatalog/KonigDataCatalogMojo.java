@@ -86,6 +86,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			
 
 			DataCatalogBuildRequest request = new DataCatalogBuildRequest();
+			// TODO: set the sqlDdlFileLocator field.
 			request.setExampleDir(examplesDir);
 			request.setGraph(graph);
 			request.setOntologyId(ontologyId);

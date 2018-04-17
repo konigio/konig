@@ -9,6 +9,15 @@
 	<h1 property="rdfs:label" class="page-title">$ShapeName</h1>
 	<div><span class="canonicalUrl">Canonical URL: <a href="$ShapeId">$ShapeId</a></span></div>
 	<div><span class="canonicalUrl">Target Class: <a href="$TargetClass.Href">$TargetClass.Name</a></span></div>
+#if( $RelatedArtifacts ) 
+  <div><span class="canonicalUrl">Related Artifacts:</span>
+    <ul>
+#foreach( $artifact in $RelatedArtifacts )   
+    	<li><a href="$artifact.href" target="_blank">$artifact.name</a>
+#end    	
+    </ul>
+  </div>
+#end	
 	<table class="definition-table">
 		<thead>
 			<tr>
