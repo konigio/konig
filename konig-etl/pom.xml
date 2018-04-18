@@ -118,7 +118,17 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 			<version>1.5.4.RELEASE</version>
 		</dependency>
-
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-autoconfigure</artifactId>
+		    	<version>1.5.4.RELEASE</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jersey</artifactId>
+			<version>1.5.4.RELEASE</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -138,7 +148,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>1.5.4.RELEASE</version>
 				<configuration>
-					<mainClass>io.konig.etl.ETLControllerEndPoint</mainClass>
+					<mainClass>io.konig.etl.aws.CamelEtlRouteController</mainClass>
 					<layout>JAR</layout>
 				</configuration>
 				<executions>
@@ -146,6 +156,9 @@
 						<goals>
 							<goal>repackage</goal>
 						</goals>
+						<configuration>
+                       <!--  <classifier>exec</classifier> -->
+                    </configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -162,7 +175,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>io.konig.etl.ETLControllerEndPoint</mainClass>
+							<mainClass>io.konig.etl.aws.CamelEtlRouteController</mainClass>
 						</manifest>
 					</archive>
 					<executions>
