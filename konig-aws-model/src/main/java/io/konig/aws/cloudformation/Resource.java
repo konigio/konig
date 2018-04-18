@@ -50,10 +50,12 @@ public class Resource {
 		this.properties = properties;
 	}
 	public void addProperties(String key,Object value){
-		 if(properties==null){
-			 properties=new HashMap<String,Object>();
-		 }
-		 this.properties.put(key, value);
+		if (key!=null && value!=null) {
+			 if(properties==null){
+				 properties=new HashMap<String,Object>();
+			 }
+			 this.properties.put(key, value);
+		}
 	}
 	
 	public void setDependsOn(Object dependsOn) {
