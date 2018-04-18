@@ -1094,7 +1094,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 								builder.generate();
 								String serviceName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
 								Map<String, Object> service=new HashMap<>();
-								service.put("image", serviceName+":latest");
+								service.put("image", "etl-"+serviceName+":latest");
 								services.put(serviceName, service);
 							}
 						}
