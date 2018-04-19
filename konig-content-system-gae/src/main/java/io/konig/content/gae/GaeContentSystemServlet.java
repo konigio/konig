@@ -42,6 +42,7 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
+import io.konig.content.ContentAccessException;
 
 
 public class GaeContentSystemServlet extends HttpServlet {
@@ -66,6 +67,8 @@ public class GaeContentSystemServlet extends HttpServlet {
 			try (BufferedReader bufferreader = new BufferedReader(reader)) {
 	            for (;;) {
 	                String line = bufferreader.readLine();
+	                if(line==null)
+	                	break;
 	                if (line.trim().length() > 0) {
 	                	domains.add(line);
 	                }
