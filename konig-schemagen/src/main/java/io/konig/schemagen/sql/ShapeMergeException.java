@@ -1,8 +1,8 @@
-package io.konig.maven;
+package io.konig.schemagen.sql;
 
 /*
  * #%L
- * Konig AWS Deployment Maven Plugin
+ * Konig Schema Generator
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,10 +21,10 @@ package io.konig.maven;
  */
 
 
-public enum AwsResourceType {
-	AwsAurora,
-	AwsS3Bucket,
-	AwsSnsTopic,
-	AwsSqsQueue,
-	CloudFormationStack
+public class ShapeMergeException extends Exception {
+	private static final long serialVersionUID = 1L;
+
+	public ShapeMergeException(String msg) {
+		super(msg);
+	}
 }

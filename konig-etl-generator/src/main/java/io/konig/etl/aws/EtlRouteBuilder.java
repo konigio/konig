@@ -168,7 +168,7 @@ public class EtlRouteBuilder {
 					+ "?verifyServerCertificate=false&amp;useSSL=false";
 			Properties properties = new Properties();
 			properties.setProperty("camel.springboot.xmlRoutes", "true");
-			properties.setProperty("camel.springboot.xmlRoutes", "classpath:camel-etl/*.xml");
+			properties.setProperty("camel.springboot.xmlRoutes", "classpath:*.xml");
 			properties.setProperty("aws.rds.dbUrl", jdbcUrl);
 			FileOutputStream fileOut = new FileOutputStream(file);
 			properties.store(fileOut, "camel-routes-config");

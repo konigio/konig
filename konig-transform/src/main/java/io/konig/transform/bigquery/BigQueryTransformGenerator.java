@@ -166,15 +166,12 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	public void visit(Shape shape) {
 		
 		ShapeRule shapeRule = null;
-		try {
-			transferDerivedForm(shape, shapeRule);
-		} catch (ShapeTransformException e1) {
-			e1.printStackTrace();
-		}
+		
 		if (isLoadTransform(shape)) {
 			try {
 				
 				shapeRule = loadTransform(shape);
+				transferDerivedForm(shape, shapeRule);
 				transformCount++;
 			} catch (Throwable e) {
 				addError(e);
@@ -183,8 +180,8 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		
 		if (isCurrentStateTransform(shape)) {
 			try {
-				//transferDerivedForm(shape, shapeRule);
-				currentStateTransform(shape, shapeRule);
+				shapeRule = currentStateTransform(shape, shapeRule);
+				transferDerivedForm(shape, shapeRule);
 				transformCount++;
 			} catch (Throwable e) {
 				addError(e);
@@ -193,7 +190,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 		
 		
 	}
-	private void currentStateTransform(Shape shape, ShapeRule shapeRule) throws ShapeTransformException, IOException {
+	private ShapeRule currentStateTransform(Shape shape, ShapeRule shapeRule) throws ShapeTransformException, IOException {
 		if (shapeRule == null) {
 			shapeRule = shapeRuleFactory.createShapeRule(shape);
 		}
@@ -205,6 +202,7 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 				commandLineInfo.add(new CommandLineInfo(sqlFile, cmdline));
 			}
 		}
+		return shapeRule;
 		
 	}
 	
@@ -328,17 +326,21 @@ public class BigQueryTransformGenerator implements ShapeHandler {
 	private boolean isLoadTransform(Shape shape) {	
 		
 		return
-				isDerivedShape(shape) || (
+				isDerivedShape(shape) &&
 				shape.hasDataSourceType(Konig.GoogleBigQueryTable) && 
 				!shape.hasDataSourceType(Konig.GoogleCloudStorageBucket) &&
 				!shape.hasDataSourceType(Konig.CurrentState) &&
-				(bucketShapeExists(shape)) || !shape.getVariable().isEmpty());
+				(bucketShapeExists(shape)) || !shape.getVariable().isEmpty();
 	}
+	/**
+	 * Test whether a given shape is derived from some input shapes.
+	 * @return true if the given Shape is NOT the input to any system component.  If it is not an input, then it must be derived.
+	 */
 	private boolean isDerivedShape(Shape shape) {
-		/*List<URI> type = shape.getType();
-		return type!=null && type.contains(Konig.DerivedShape);*/
+		// TODO: refactor the logic so that we are testing whether it is a derived shape
+		// relative to some given system component -- not for any system component.
 		List<URI> inputShapeOf=shape.getInputShapeOf();
-		return inputShapeOf!=null && !inputShapeOf.isEmpty();
+		return inputShapeOf==null || inputShapeOf.isEmpty();
 	}
 
 	private boolean bucketShapeExists(Shape shape) {

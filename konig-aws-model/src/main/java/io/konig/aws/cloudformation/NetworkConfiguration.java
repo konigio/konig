@@ -1,8 +1,10 @@
-package io.konig.maven;
+package io.konig.aws.cloudformation;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /*
  * #%L
- * Konig AWS Deployment Maven Plugin
+ * Konig AWS Model
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,10 +23,17 @@ package io.konig.maven;
  */
 
 
-public enum AwsResourceType {
-	AwsAurora,
-	AwsS3Bucket,
-	AwsSnsTopic,
-	AwsSqsQueue,
-	CloudFormationStack
+public class NetworkConfiguration {
+	
+	@JsonProperty("AwsvpcConfiguration")
+	private AwsvpcConfiguration awsvpcConfiguration;
+
+	public AwsvpcConfiguration getAwsvpcConfiguration() {
+		return awsvpcConfiguration;
+	}
+
+	public void setAwsvpcConfiguration(AwsvpcConfiguration awsvpcConfiguration) {
+		this.awsvpcConfiguration = awsvpcConfiguration;
+	}
+	
 }

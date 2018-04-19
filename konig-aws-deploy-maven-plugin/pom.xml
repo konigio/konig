@@ -73,7 +73,11 @@
 			<artifactId>aws-java-sdk-core</artifactId>
 			<version>1.11.287</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>io.konig</groupId>
+			<artifactId>konig-aws-common</artifactId>
+			<version>${konig.version}</version>
+		</dependency>
 	</dependencies>
 
 

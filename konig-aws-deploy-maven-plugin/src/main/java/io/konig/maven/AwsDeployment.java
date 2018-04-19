@@ -50,6 +50,8 @@ public class AwsDeployment {
 			return new CreateAwsSnsTopicAction(this);
 		case AwsSqsQueue:
 			return new CreateAwsSqsQueueAction(this);
+		case CloudFormationStack:
+			return new CreateCloudFormationStackAction(this);
 		default:
 			break;
 		}
@@ -69,6 +71,9 @@ public class AwsDeployment {
 			
 		case AwsSqsQueue:
 			return new DeleteAwsSQS(this);
+		
+		case CloudFormationStack:
+			return new DeleteCloudFormationStackAction(this);
 			
 		default:
 			break;

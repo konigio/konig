@@ -1,8 +1,8 @@
-package io.konig.maven;
+package io.konig.aws.cloudformation;
 
 /*
  * #%L
- * Konig AWS Deployment Maven Plugin
+ * Konig AWS Model
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,10 +21,20 @@ package io.konig.maven;
  */
 
 
-public enum AwsResourceType {
-	AwsAurora,
-	AwsS3Bucket,
-	AwsSnsTopic,
-	AwsSqsQueue,
-	CloudFormationStack
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class PortMapping {
+	
+	@JsonProperty("ContainerPort")
+	private String containerPort;
+
+	public String getContainerPort() {
+		return containerPort;
+	}
+
+	public void setContainerPort(String containerPort) {
+		this.containerPort = containerPort;
+	}
+	
+	
 }

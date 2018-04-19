@@ -1,0 +1,66 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix ex: <http://example.com/ns/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PartyShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/bjnCoA3DdFgAAAFitJHkwQ> ; 
+	sh:targetClass ex:Party ; 
+	sh:or (shape:PersonShape shape:OrganizationShape) ; 
+	konig:shapeDataSource <https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/ex/databases/ex/tables/PartyShape> . 
+
+<http://www.konig.io/activity/bjnCoA3DdFgAAAFitJHkwQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-04-11T17:28:03.085+05:30"^^xsd:dateTime . 
+
+shape:PersonShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/bjnCoA3DdFgAAAFitJHkwQ> ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI ; 
+	sh:property  [ 
+		sh:path schema:email ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:birthDate ; 
+		sh:datatype xsd:date ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/schema/databases/schema/tables/PersonShape> . 
+
+<https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/schema/databases/schema/tables/PersonShape> a konig:GoogleCloudSqlTable , konig:DataSource ; 
+	gcp:instance "schema" ; 
+	gcp:database "schema" ; 
+	gcp:name "PersonShape" . 
+
+shape:OrganizationShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/bjnCoA3DdFgAAAFitJHkwQ> ; 
+	sh:targetClass schema:Organziation ; 
+	sh:nodeKind sh:IRI ; 
+	sh:property  [ 
+		sh:path schema:email ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:foundingDate ; 
+		sh:datatype xsd:date ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/schema/databases/schema/tables/OrganizationShape> . 
+
+<https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/schema/databases/schema/tables/OrganizationShape> a konig:GoogleCloudSqlTable , konig:DataSource ; 
+	gcp:instance "schema" ; 
+	gcp:database "schema" ; 
+	gcp:name "OrganizationShape" . 
+
+<https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/ex/databases/ex/tables/PartyShape> a konig:GoogleCloudSqlTable , konig:DataSource ; 
+	gcp:instance "ex" ; 
+	gcp:database "ex" ; 
+	gcp:name "PartyShape" . 

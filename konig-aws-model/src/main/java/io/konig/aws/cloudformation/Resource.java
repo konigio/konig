@@ -30,8 +30,13 @@ public class Resource {
 	
 	@JsonProperty("Type")
 	private String type;
+	
 	@JsonProperty("Properties")
 	private Map<String,Object> properties;
+	
+	@JsonProperty("DependsOn")
+	private Object dependsOn;
+	
 	public String getType() {
 		return type;
 	}
@@ -45,10 +50,19 @@ public class Resource {
 		this.properties = properties;
 	}
 	public void addProperties(String key,Object value){
-		 if(properties==null){
-			 properties=new HashMap<String,Object>();
-		 }
-		 this.properties.put(key, value);
+		if (key!=null && value!=null) {
+			 if(properties==null){
+				 properties=new HashMap<String,Object>();
+			 }
+			 this.properties.put(key, value);
+		}
+	}
+	
+	public void setDependsOn(Object dependsOn) {
+		this.dependsOn = dependsOn;
+	}
+	public Object getDependsOn() {
+		return dependsOn;
 	}
 	
 }

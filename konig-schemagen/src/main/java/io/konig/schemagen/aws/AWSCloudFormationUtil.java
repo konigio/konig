@@ -26,9 +26,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.cloudformation.AmazonCloudFormation;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
+import com.amazonaws.services.cloudformation.model.DescribeStackEventsRequest;
+import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
+import com.amazonaws.services.cloudformation.model.Output;
+import com.amazonaws.services.cloudformation.model.Stack;
+import com.amazonaws.services.cloudformation.model.StackEvent;
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.cloudformation.model.ValidateTemplateRequest;
 import com.amazonaws.services.cloudformation.model.ValidateTemplateResult;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -38,6 +49,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+import io.konig.aws.common.InvalidAWSCredentialsException;
+import io.konig.aws.common.StackCreationException;
 
 public class AWSCloudFormationUtil {
 	
@@ -73,11 +86,7 @@ public class AWSCloudFormationUtil {
 		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());	
 		mapper.setSerializationInclusion(Include.NON_NULL);
 		String resource=mapper.writeValueAsString(resources);
-		for(String key:resources.keySet()){
-			if(key.endsWith("SNSTopic") || key.endsWith("SQSQueue") || key.endsWith("DBCluster")){
-				resource=resource.replace("\"!Ref "+key+"\"", "!Ref "+key);
-			}
-		}
+		resource = resource.replaceAll("\"!Ref ([^\\s]+)\"", "!Ref $1"); 
 
 		String[] resourceLines=resource.split("\n");
 		StringBuffer template=new StringBuffer();
@@ -87,5 +96,18 @@ public class AWSCloudFormationUtil {
 			}
 		}
 		return template.toString();
+	}
+	
+	public static void verifyAWSCredentials() throws InvalidAWSCredentialsException {
+		String accessKeyId = System.getProperty("aws.accessKeyId");
+		String secretKey = System.getProperty("aws.secretKey");
+		if (accessKeyId == null || secretKey == null)
+			throw new InvalidAWSCredentialsException();
+	}
+	public static AWSStaticCredentialsProvider getCredential() throws InvalidAWSCredentialsException {
+		verifyAWSCredentials();
+		return new AWSStaticCredentialsProvider(
+				new BasicAWSCredentials(System.getProperty("aws.accessKeyId"), System.getProperty("aws.secretKey")));
+
 	}
 }

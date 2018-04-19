@@ -205,6 +205,7 @@ public class WorkbookLoader {
 
 	//Cloud Formation Templates
 	private static final String STACK_NAME="Stack name";
+	private static final String AWS_REGION="AWS Region";
 	private static final String CLOUD_FORMATION_TEMPLATES="Cloud Formation Templates";
 	
 	private static final String ENUMERATION_DATASOURCE_TEMPLATE = "enumerationDatasourceTemplate";
@@ -475,6 +476,7 @@ public class WorkbookLoader {
 		private int gcpTierCol = UNDEFINED;
 		
 		private int stackNameCol = UNDEFINED;
+		private int awsRegionCol = UNDEFINED;
 		private int cloudFormationTemplateCol = UNDEFINED;
 		
 		private int awsDbClusterName = UNDEFINED;
@@ -1074,7 +1076,7 @@ public class WorkbookLoader {
 				loadAmazonRDSClusterRow(row);
 			}
 		}
-		private void loadCloudFormationTemplate(Sheet sheet){
+		private void loadCloudFormationTemplate(Sheet sheet) throws SpreadsheetException{
 			readCloudFormationTemplateHeader(sheet);
 
 			int rowSize = sheet.getLastRowNum() + 1;
@@ -1655,7 +1657,7 @@ public class WorkbookLoader {
 		}
 		private void readCloudFormationTemplateHeader(Sheet sheet){
 
-			stackNameCol = cloudFormationTemplateCol = UNDEFINED;
+			stackNameCol = awsRegionCol = cloudFormationTemplateCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1675,7 +1677,11 @@ public class WorkbookLoader {
 					case STACK_NAME:
 						stackNameCol = i;
 						break;
-
+					
+					case AWS_REGION:
+						awsRegionCol = i;
+						break;
+						
 					case CLOUD_FORMATION_TEMPLATES:
 						cloudFormationTemplateCol = i;
 						break;
@@ -1922,14 +1928,31 @@ public class WorkbookLoader {
 				}
 			}
 		}
-		private void loadCloudFormationTemplateRow(Row row){
+		private void loadCloudFormationTemplateRow(Row row) throws SpreadsheetException{
 			
-			Literal stackName = stringLiteral(row, stackNameCol);			
+			Literal stackName = stringLiteral(row, stackNameCol);	
+			Literal awsRegion = stringLiteral(row,awsRegionCol);
 			Literal cloudFormationTemplate = stringLiteral(row, cloudFormationTemplateCol);
+			
+			if (stackName==null && awsRegion==null && cloudFormationTemplate==null) {
+				return;
+			}
+			
+			
+			if (cloudFormationTemplate==null) {
+				String msg = MessageFormat.format(
+						"cloudFormationTemplate not defined for stackName: {0}, awsRegion: {1}", 
+						stackName, awsRegion);
+				throw new SpreadsheetException(msg);
+			}
+			if (stackName==null) {
+				throw new SpreadsheetException("Stack Name must be defined for CloudFormation Template");
+			}
 			
 			URI id = new URIImpl("https://amazonaws.konig.io/cloudformation/template/"+ stringValue(row,stackNameCol)+"_template");
 			edge(id, RDF.TYPE, AWS.CloudFormationTemplate);
 			edge(id, AWS.stackName, stackName);
+			edge(id, AWS.awsRegion, awsRegion);
 			edge(id, AWS.template, cloudFormationTemplate);
 			
 		}

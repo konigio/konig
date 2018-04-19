@@ -54,43 +54,49 @@ public class CreateAwsSnsTopicAction {
 	}
 	
 	public AwsDeployment from(String path) throws Exception {
-		try{
-			File file = deployment.file(path);
-			ObjectMapper mapper=new ObjectMapper();
-			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
-			deployment.verifyAWSCredentials();
-			String envtName="";
-			if(System.getProperty("environmentName") != null) {
-				envtName = System.getProperty("environmentName");
-			}
-			String bucketName=StringUtils.replaceOnce(bucket.getBucketName(), "${environmentName}", envtName);
-			TopicConfiguration notificationConfig = bucket.getNotificationConfiguration().getTopicConfiguration();
-			if(notificationConfig!=null && notificationConfig.getTopic()!=null){
-				Topic topic=notificationConfig.getTopic();				
-				Regions regions=Regions.fromName(topic.getRegion());
-				AmazonSNS sns = AmazonSNSClientBuilder.standard()
-						.withCredentials(deployment.getCredential())
-						.withRegion(regions).build();  
-				CreateTopicResult result = sns.createTopic(topic.getResourceName());
-				deployment.setResponse("Topic with ARN : "+result.getTopicArn()+" is created");
+		String cfTemplatePresent=System.getProperty("cfTemplatePresent");
+		if(cfTemplatePresent==null || cfTemplatePresent.equals("N")){
+			try{
+				File file = deployment.file(path);
+				ObjectMapper mapper=new ObjectMapper();
+				S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
+				deployment.verifyAWSCredentials();
+				String envtName="";
+				if(System.getProperty("environmentName") != null) {
+					envtName = System.getProperty("environmentName");
+				}
+				String bucketName=StringUtils.replaceOnce(bucket.getBucketName(), "${environmentName}", envtName);
+				TopicConfiguration notificationConfig = bucket.getNotificationConfiguration().getTopicConfiguration();
+				if(notificationConfig!=null && notificationConfig.getTopic()!=null){
+					Topic topic=notificationConfig.getTopic();				
+					Regions regions=Regions.fromName(topic.getRegion());
+					AmazonSNS sns = AmazonSNSClientBuilder.standard()
+							.withCredentials(deployment.getCredential())
+							.withRegion(regions).build();  
+					CreateTopicResult result = sns.createTopic(topic.getResourceName());
+					deployment.setResponse("Topic with ARN : "+result.getTopicArn()+" is created");
+					
+					Policy policy = new Policy().withStatements(
+						    new Statement(Effect.Allow)
+						        .withPrincipals(Principal.AllUsers)
+						        .withActions(SNSActions.Publish)
+						        .withResources(new Resource(result.getTopicArn()))
+						        .withConditions(new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY, "arn:aws:s3:*:*:"+bucketName)));
+					
+					sns.setTopicAttributes(
+					    new SetTopicAttributesRequest(result.getTopicArn(), "Policy", policy.toJson()));
+				}
+				else{
+					deployment.setResponse("No topic is configured to the S3 Bucket");
+				}
 				
-				Policy policy = new Policy().withStatements(
-					    new Statement(Effect.Allow)
-					        .withPrincipals(Principal.AllUsers)
-					        .withActions(SNSActions.Publish)
-					        .withResources(new Resource(result.getTopicArn()))
-					        .withConditions(new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY, "arn:aws:s3:*:*:"+bucketName)));
-				
-				sns.setTopicAttributes(
-				    new SetTopicAttributesRequest(result.getTopicArn(), "Policy", policy.toJson()));
 			}
-			else{
-				deployment.setResponse("No topic is configured to the S3 Bucket");
+			catch(Exception e){
+				throw e;
 			}
-			
 		}
-		catch(Exception e){
-			throw e;
+		else{
+			deployment.setResponse("Topic will be created through cloud formation template");
 		}
 	    return deployment;
 	}

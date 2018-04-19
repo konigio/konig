@@ -1,4 +1,4 @@
-package io.konig.aws.datasource;
+package io.konig.aws.cloudformation;
 
 /*
  * #%L
@@ -21,36 +21,33 @@ package io.konig.aws.datasource;
  */
 
 
-import io.konig.annotation.RdfProperty;
-import io.konig.core.vocab.AWS;
+import java.util.List;
 
-public class CloudFormationTemplate {
-	private String stackName;
-	private String region;
-	private String template;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class AwsvpcConfiguration {
+
+	@JsonProperty("AssignPublicIp")
+	private String assignPublicIp;
 	
-	@RdfProperty(AWS.STACK_NAME)
-	public String getStackName() {
-		return stackName;
+	@JsonProperty("Subnets")
+	private Object subnets;
+
+	public String getAssignPublicIp() {
+		return assignPublicIp;
 	}
-	public void setStackName(String stackName) {
-		this.stackName = stackName;
+
+	public Object getSubnets() {
+		return subnets;
+	}
+
+	public void setAssignPublicIp(String assignPublicIp) {
+		this.assignPublicIp = assignPublicIp;
+	}
+
+	public void setSubnets(Object subnets) {
+		this.subnets = subnets;
 	}
 	
-	@RdfProperty(AWS.AWS_REGION)
-	public String getRegion(){
-		return region;
-	}
-	
-	public void setRegion(String region){
-		this.region=region;
-	}
-	@RdfProperty(AWS.TEMPLATE)
-	public String getTemplate() {
-		return template;
-	}
-	public void setTemplate(String template) {
-		this.template = template;
-	}
 	
 }

@@ -59,34 +59,40 @@ public class DeleteAwsSNS {
 	}
 	
 	public AwsDeployment from(String path) throws Exception {
-		try{
-			File file = deployment.file(path);
-			ObjectMapper mapper=new ObjectMapper();
-			S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
-			deployment.verifyAWSCredentials();
-			TopicConfiguration notificationConfig = bucket.getNotificationConfiguration().getTopicConfiguration();
-			if(notificationConfig!=null && notificationConfig.getTopic()!=null){
-				Topic topic=notificationConfig.getTopic();				
-				Regions regions=Regions.fromName(topic.getRegion());
-				AmazonSNS sns = AmazonSNSClientBuilder.standard()
-						.withCredentials(deployment.getCredential())
-						.withRegion(regions).build();
-				String accountId = "";
-				if (System.getProperty("aws-account-id") != null) {
-					accountId = System.getProperty("aws-account-id");
+		String cfTemplatePresent=System.getProperty("cfTemplatePresent");
+		if(cfTemplatePresent==null || cfTemplatePresent.equals("N")){
+			try{
+				File file = deployment.file(path);
+				ObjectMapper mapper=new ObjectMapper();
+				S3Bucket bucket = mapper.readValue(file, S3Bucket.class);
+				deployment.verifyAWSCredentials();
+				TopicConfiguration notificationConfig = bucket.getNotificationConfiguration().getTopicConfiguration();
+				if(notificationConfig!=null && notificationConfig.getTopic()!=null){
+					Topic topic=notificationConfig.getTopic();				
+					Regions regions=Regions.fromName(topic.getRegion());
+					AmazonSNS sns = AmazonSNSClientBuilder.standard()
+							.withCredentials(deployment.getCredential())
+							.withRegion(regions).build();
+					String accountId = "";
+					if (System.getProperty("aws-account-id") != null) {
+						accountId = System.getProperty("aws-account-id");
+					}
+					String topicArn = StringUtils.replaceOnce(notificationConfig.getTopicArn(), "${aws-account-id}",
+							accountId);
+					sns.deleteTopic(topicArn);
+					deployment.setResponse("Topic with ARN : "+topicArn+" is deleted");
 				}
-				String topicArn = StringUtils.replaceOnce(notificationConfig.getTopicArn(), "${aws-account-id}",
-						accountId);
-				sns.deleteTopic(topicArn);
-				deployment.setResponse("Topic with ARN : "+topicArn+" is deleted");
+				else{
+					deployment.setResponse("No topic is configured to the S3 Bucket");
+				}
+				
 			}
-			else{
-				deployment.setResponse("No topic is configured to the S3 Bucket");
+			catch(Exception e){
+				throw e;
 			}
-			
 		}
-		catch(Exception e){
-			throw e;
+		else{
+			deployment.setResponse("Topic will be deleted through cloud formation stack");
 		}
 	    return deployment;
 	}
