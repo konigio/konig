@@ -80,6 +80,23 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		useBigQueryTransformStrategy();
 	}
 	
+	@Test
+	public void testIriTemplate() throws Exception {
+		
+		load("src/test/resources/konig-transform/iri-template");
+
+		URI shapeId = iri("http://example.com/shapes/ProductShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		
+	
+		System.out.println(select.toString());
+		
+	}
+	
 	@Ignore
 	public void testTransformInversePath() throws Exception {
 		
@@ -97,7 +114,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");

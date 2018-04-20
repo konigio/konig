@@ -1,0 +1,16 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+alias: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "alias" . 
+
+alias:PRODUCT_ID a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Product ; 
+	schema:rangeIncludes xsd:int . 
+
+alias:PRODUCT_NAME a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Product ; 
+	schema:rangeIncludes xsd:string . 

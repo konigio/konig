@@ -61,6 +61,12 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	
 	
 	
+	public ShapeModel(Shape shape) {
+		this.shape = shape;
+	}
+	
+
+	
 	public SourceShapeInfo getSourceShapeInfo() {
 		return sourceShapeInfo;
 	}
@@ -72,10 +78,6 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	public ShapeModel rootTargetShapeModel() {
 		ClassModel rootClassModel = classModel.rootClassModel();
 		return rootClassModel.getTargetShapeModel();
-	}
-	
-	public ShapeModel(Shape shape) {
-		this.shape = shape;
 	}
 	
 	public void addPostProcessor(TransformPostProcessor processor) {

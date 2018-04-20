@@ -25,12 +25,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.impl.RdfUtil;
+import io.konig.transform.ShapeTransformException;
 
 public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 	private static final Logger logger = LoggerFactory.getLogger(SourceShapeInfo.class);
 	
 	private ShapeModel sourceShape;
 	private int matchCount;
+	
+	private boolean excluded;
 	
 	private MatchCounter counter = new MatchCounter();
 	
@@ -53,7 +56,7 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 		return matchCount;
 	}
 
-	public int computeMatchCount() {
+	public int computeMatchCount() throws ShapeTransformException {
 		matchCount = 0;
 		dispatch(counter);
 		return matchCount;
@@ -73,9 +76,12 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 		return result;
 	}
 	
-	public void dispatch(MatchVisitor visitor) {
-		
+	public void dispatch(MatchVisitor visitor) throws ShapeTransformException {
+		IdPropertyModel sourceId = null;
 		for (PropertyModel sourceProperty : sourceShape.getProperties()) {
+			if (sourceProperty instanceof IdPropertyModel) {
+				sourceId = (IdPropertyModel) sourceProperty;
+			}
 			if (sourceProperty instanceof DirectPropertyModel) {
 				DirectPropertyModel sourceDirect = (DirectPropertyModel) sourceProperty;
 				
@@ -120,6 +126,12 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 				}
 			}
 		}
+		if (sourceId != null) {
+			PropertyModel targetProperty = sourceId.getGroup().getTargetProperty();
+			if (targetProperty instanceof IdPropertyModel) {
+				visitor.matchId(sourceId, (IdPropertyModel) targetProperty);
+			}
+		}
 	}
 	
 	private class MatchCounter implements MatchVisitor {
@@ -131,7 +143,7 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 		}
 		
 		@Override
-		public void handleValueModel(ShapeModel sourceShapeModel) {
+		public void handleValueModel(ShapeModel sourceShapeModel) throws ShapeTransformException {
 			matchCount += sourceShapeModel.getSourceShapeInfo().computeMatchCount();
 		}
 
@@ -148,7 +160,30 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 			
 		}
 
+		@Override
+		public void matchId(IdPropertyModel sourceProperty, IdPropertyModel targetProperty)
+				throws ShapeTransformException {
+			// Do nothing
+			
+		}
+
 		
+	}
+
+	/**
+	 * Check whether the Shape has been excluded from consideration as a source.
+	 * @return
+	 */
+	public boolean isExcluded() {
+		return excluded;
+	}
+
+	/**
+	 * Specify whether the Shape has been excluded from consideration as a source.
+	 * @param excluded
+	 */
+	public void setExcluded(boolean excluded) {
+		this.excluded = excluded;
 	}
 	
 

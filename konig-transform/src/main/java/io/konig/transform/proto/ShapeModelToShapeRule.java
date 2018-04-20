@@ -401,6 +401,9 @@ public class ShapeModelToShapeRule {
 		private void setDataChannelName(ProtoFromItem item) throws ShapeTransformException {
 			if (item instanceof ShapeModel) {
 				ShapeModel shapeModel = (ShapeModel) item;
+				if (shapeModel.getDataChannel()==null) {
+					throw new ShapeTransformException("DataChannel not defined for " + RdfUtil.localName(shapeModel.getShape().getId()));
+				}
 				shapeModel.getDataChannel().setName(variableNamer.next());
 			} else if (item instanceof ProtoJoinExpression) {
 				ProtoJoinExpression join = (ProtoJoinExpression) item;
