@@ -699,6 +699,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private WorkbookToTurtleRequest workbookToTurleRequest() {
 		WorkbookToTurtleRequest request = new WorkbookToTurtleRequest();
 		request.setWorkbookFile(workbook.getWorkbookFile());
+		request.setWorkbookDir(workbook.getWorkbookDir());
 		request.setOwlOutDir(workbook.owlDir(defaults));
 		request.setShapesOutDir(workbook.shapesDir(defaults));
 		request.setGcpOutDir(workbook.gcpDir(defaults));

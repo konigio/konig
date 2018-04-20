@@ -24,6 +24,9 @@ package io.konig.showl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -77,6 +80,7 @@ public class WorkbookToTurtleTransformer {
 
 	public void transform(WorkbookToTurtleRequest request) throws IOException, SpreadsheetException, RDFHandlerException {
 		File workbookFile = request.getWorkbookFile();
+		File workbookDir = request.getWorkbookDir();
 		File owlOutDir = request.getOwlOutDir();
 		File shapesOutDir = request.getShapesOutDir();
 		File gcpOutDir = request.getGcpOutDir();
@@ -89,7 +93,19 @@ public class WorkbookToTurtleTransformer {
 		if (!workbookFile.exists()) {
 			throw new SpreadsheetException("File not found: " + workbookFile);
 		}
-		FileInputStream input = new FileInputStream(workbookFile);
+		
+		List<File> files=new ArrayList<File>();
+		files.add(workbookFile);
+		if(workbookDir!=null && workbookDir.exists() && workbookDir.isDirectory()){
+			File[] filesArr=workbookDir.listFiles();
+			if(filesArr!=null && filesArr.length>0){
+				List<File> filesTmp=Arrays.asList(filesArr);
+				files.addAll(filesTmp);
+			}
+		}
+		Graph graph = new MemoryGraph();
+		for(File file:files){
+		FileInputStream input = new FileInputStream(file);
 		try {
 
 			owlOutDir.mkdirs();
@@ -98,12 +114,15 @@ public class WorkbookToTurtleTransformer {
 			}
 			Workbook workbook = new XSSFWorkbook(input);
 			
-			Graph graph = new MemoryGraph();
+			
 			graph.setNamespaceManager(nsManager);
 			
 			workbookLoader.setDatasetMapper(datasetMapper);
 			workbookLoader.load(workbook, graph);
-			
+			} finally {
+				input.close();
+			}
+		}
 			nsManager = workbookLoader.getNamespaceManager();
 			graph.setNamespaceManager(nsManager);
 			
@@ -125,9 +144,7 @@ public class WorkbookToTurtleTransformer {
 			}
 			
 			
-		} finally {
-			input.close();
-		}
+		
 	}
 
 	private void writeShapes(File shapesOutDir) throws RDFHandlerException, IOException {
