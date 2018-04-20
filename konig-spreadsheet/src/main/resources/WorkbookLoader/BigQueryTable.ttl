@@ -1,6 +1,8 @@
 
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
+@prefix schema:  <http://schema.org/> .
+@prefix sys: <http://schema.pearson.com/ns/system/> .
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}>
 	a konig:GoogleBigQueryTable, konig:DataSource;
@@ -8,7 +10,10 @@
 		gcp:projectId "${gcpProjectId}" ;
 		gcp:datasetId "${gcpDatasetId}" ;
 		gcp:tableId   "${bigQueryTableId}" 
-	]
+	];
+	#if($!{parentComponent}) 
+	schema:isPartOf ${parentComponent};
+	#end
 .
 
 <${shapeId}> konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}>

@@ -183,7 +183,7 @@ public class WorkbookLoaderTest {
 	public void testDatasourceParamsGoogleBucket() throws Exception {
         InputStream input = new FileInputStream(new File("src/test/resources/test-datasource-params-bucket.xlsx"));
         Workbook book = WorkbookFactory.create(input);
-
+        
         Graph graph = new MemoryGraph();
         NamespaceManager nsManager = new MemoryNamespaceManager();
         graph.setNamespaceManager(nsManager);
@@ -197,6 +197,33 @@ public class WorkbookLoaderTest {
         assertEquals(1, list.size());
         assertEquals("OBJECT_METADATA_UPDATE", list.get(0).stringValue());
     }
+	
+	@Test
+	public void testDatasourceParentComponent() throws Exception {
+        InputStream input = getClass().getClassLoader().getResourceAsStream("test-datasource-params-parentComponent.xlsx");
+        Workbook book = WorkbookFactory.create(input);
+        Graph graph = new MemoryGraph();
+        NamespaceManager nsManager = new MemoryNamespaceManager();
+        graph.setNamespaceManager(nsManager);
+        
+        WorkbookLoader loader = new WorkbookLoader(nsManager);
+        loader.load(book, graph);
+        
+        input.close();
+        URI shapeId = uri("https://schema.pearson.com/shapes/AccountShape");
+        ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+        Shape shape = s.getShapeById(shapeId);
+		List<DataSource> list = shape.getShapeDataSource();
+		assertEquals(2, list.size());
+		DataSource ds = list.get(1);
+		assertEquals("http://schema.pearson.com/ns/system/mdm",ds.getIsPartof().get(0).toString());
+		assertEquals("http://schema.pearson.com/ns/system/edw",ds.getIsPartof().get(1).toString());
+    }
+	
 	
 	@Test
 	public void testGoogleOracleTable() throws Exception {

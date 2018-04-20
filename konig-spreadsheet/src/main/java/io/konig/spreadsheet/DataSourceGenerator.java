@@ -124,6 +124,9 @@ public class DataSourceGenerator {
 		for (Entry<Object, Object> e : entries) {
 			String key = e.getKey().toString();
 			String value = e.getValue().toString();
+			if(key.equals("parentComponent")) {
+				value = e.getValue().toString().replace(" ", ",");
+			}
 			context.put(key, value);
 		}
 	}
@@ -154,6 +157,7 @@ public class DataSourceGenerator {
 		try {
 			RdfUtil.loadTurtle(graph, input, "");
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
+			e.printStackTrace();
 			throw new KonigException("Failed to render template", e);
 		}
 
