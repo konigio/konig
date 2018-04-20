@@ -194,7 +194,7 @@ public class WorkbookLoaderTest {
         System.out.println(graph);
         URI shapeId = uri("http://example.com/shapes/ProductShape");
         List<Value> list = graph.v(shapeId).out(Konig.shapeDataSource).out(GCP.notificationInfo).out(GCP.notificationEventTypes).toValueList();
-        assertEquals(1, list.size());
+        assertEquals(3, list.size());
         assertEquals("OBJECT_METADATA_UPDATE", list.get(0).stringValue());
     }
 	
