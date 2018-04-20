@@ -143,15 +143,16 @@ public class MultiProject extends MavenProjectConfig {
 			GcpDeployProjectGenerator deploy = new GcpDeployProjectGenerator(this, googleCloudPlatformDeployment);
 			parent.add(deploy);
 		}
+		if(amazonWebServices != null) {
+			parent.add(new AwsModelGenerator(this, amazonWebServices));
+		}
 		if (dataCatalog != null) {
 			parent.add(new DataCatalogProjectGenerator(this, dataCatalog));
 		}
 		if(oracleManagedCloud != null) {
 			parent.add(new OracleManagedCloudProjectGenerator(this, oracleManagedCloud));
 		}
-		if(amazonWebServices != null) {
-			parent.add(new AwsModelGenerator(this, amazonWebServices));
-		}
+		
 		return parent;
 	}
 }

@@ -105,6 +105,8 @@ import io.konig.data.app.common.DataApp;
 import io.konig.data.app.generator.DataAppGenerator;
 import io.konig.data.app.generator.DataAppGeneratorException;
 import io.konig.data.app.generator.EntityStructureWorker;
+import io.konig.datasource.DatasourceFileLocator;
+import io.konig.datasource.DdlFileLocator;
 import io.konig.estimator.MultiSizeEstimateRequest;
 import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
@@ -778,7 +780,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
-				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator);
+				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(tablesDir);
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator);
 			
 				resourceGenerator.add(awsAuror);				
 			}
@@ -817,7 +820,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
-				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator);
+				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(tablesDir);
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator);
 			
 				resourceGenerator.add(awsAuror);
 				resourceGenerator.dispatch(shapeManager.listShapes());
@@ -913,7 +917,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private CloudSqlTableWriter cloudSqlTableWriter() {
 		CloudSqlInfo info = googleCloudPlatform.getCloudsql();
 		SqlTableGenerator generator = new SqlTableGenerator();
-		return new CloudSqlTableWriter(info.getTables(), generator);
+		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(info.getTables());
+		return new CloudSqlTableWriter(generator, sqlFileLocator);
 	}
 
 	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {
