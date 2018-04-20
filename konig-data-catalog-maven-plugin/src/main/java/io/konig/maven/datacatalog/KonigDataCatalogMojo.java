@@ -23,18 +23,8 @@ package io.konig.maven.datacatalog;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
-import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
@@ -44,12 +34,13 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.model.fileset.FileSet;
+import org.apache.maven.shared.model.fileset.util.FileSetManager;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
-import info.aduna.io.FileUtil;
 import io.konig.core.NamespaceManager;
 import io.konig.core.PathFactory;
 import io.konig.core.impl.MemoryGraph;
@@ -83,8 +74,8 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	@Parameter(defaultValue="${project.basedir}/target/velocity.log")
 	private File logFile;
 
-	//@Parameter(defaultValue="${project.basedir}/target/generated/datacatalog/resources")
-	private File sqlFileDir; 
+	@Parameter
+	private FileSet[] sqlFiles;
 	
 	@Component
 	private MavenProject mavenProject;
@@ -139,16 +130,15 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			shapeLoader.load(graph);
 			URI ontologyId = ontology==null ? null : new URIImpl(ontology);
 			
-			DatasourceFileLocator sqlDdlLocator= new DdlFileLocator(sqlFileDir);
 			DataCatalogBuildRequest request = new DataCatalogBuildRequest();
-			unpack();
+		
 			// TODO: set the sqlDdlFileLocator field.
 			request.setExampleDir(examplesDir);
 			request.setGraph(graph);
 			request.setOntologyId(ontologyId);
 			request.setOutDir(siteDir);
 			request.setShapeManager(shapeManager);
-			request.setSqlDdlLocator(sqlDdlLocator);
+			request.setSqlDdlLocator(ddlLocator());
 			
 			if (ontologyId==null) {
 				request.useDefaultOntologyList();
@@ -163,69 +153,34 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 		}
 
 	}
-	private void unpack() throws MojoExecutionException {
-		
-		if (originalVersion != null) {
-			originalModelDir = unpack(originalVersion, originalModelPath, "originalModelPath");
-		}
-		
-		if (revisedVersion != null) {
-			revisedModelDir = unpack(revisedVersion, revisedModelPath, "revisedModelPath");
-		}
-		
-	}
-	private File unpack(String version, String path, String paramName) throws MojoExecutionException {
-		
-		  if (path == null) {
-		    throw new MojoExecutionException("The '" + paramName + "' configuration parameter must be defined.");
-		  }
-		  
-		  String groupId = mavenProject.getGroupId();
-		  String artifactId = mavenProject.getArtifactId();
-		  
-		  File basedir = mavenProject.getBasedir();
-		  File archiveDir = new File(basedir, ARCHIVE_DIR + version);
-		  
-		  deleteDir(archiveDir);
-		  archiveDir.mkdirs();
-		  
-		  executeMojo(
-		    plugin(
-		      groupId("org.apache.maven.plugins"),
-		      artifactId("maven-dependency-plugin"),
-		      version("2.10")
-		    ),
-		    goal("unpack"),
-		    configuration(
-		      element(name("outputDirectory"), archiveDir.getAbsolutePath()),
-		      element(name("artifactItems"),
-		        element(name("artifactItem"), 
-		          element(name("groupId"), groupId),
-		          element(name("artifactId"), artifactId),
-		          element(name("version"), version),
-		          element(name("classifier"), "bin"),
-		          element(name("overWrite"), "true"),
-		          element(name("type"), "zip")
-		        )
-		      )
-		    ),
-		    executionEnvironment(
-		      mavenProject,
-		      mavenSession,
-		      pluginManager
-		    )
-		  );
-		  return new File(archiveDir, path);
-		}
-	private void deleteDir(File doomed) throws MojoExecutionException {
-		
-		if (doomed.exists()) {
-			try {
-				FileUtil.deleteDir(doomed);
-			} catch (IOException e) {
-				throw new MojoExecutionException("Failed to delete directory: " + doomed.getAbsolutePath(), e);
+	
+	private DatasourceFileLocator ddlLocator() throws MojoExecutionException {
+		DatasourceFileLocator locator = null;
+		if (sqlFiles != null) {
+			File baseDir = mavenProject.getBasedir();
+			File sqlDir = new File(baseDir, "target/tmp/sql");
+			FileSetManager manager = new FileSetManager();
+			int count = 0;
+			for (FileSet fileset : sqlFiles) {
+				String[] fileList = manager.getIncludedFiles(fileset);
+				count += fileList.length;
+				for (String filePath : fileList) {
+					File sourceFile = new File(filePath);
+					File targetFile = new File(sqlDir, sourceFile.getName());
+					
+					try {
+						FileUtils.copyFile(sourceFile, targetFile);
+					} catch (IOException e) {
+						throw new MojoExecutionException("Failed to copy file", e);
+					}
+				}
+			}
+			if (count > 0) {
+				locator = new DdlFileLocator(sqlDir);
 			}
 		}
-		
+		return locator;
 	}
+
+	
 }

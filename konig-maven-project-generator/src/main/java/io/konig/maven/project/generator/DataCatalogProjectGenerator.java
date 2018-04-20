@@ -50,7 +50,7 @@ public class DataCatalogProjectGenerator extends ConfigurableProjectGenerator<Da
 		if (contentSystem != null) {
 			contentSystem.setBaseDir("${project.basedir}/target/generated/data-catalog");
 		}
-		
+		// TODO: Set the "sqlFiles" parameter
 	}
 
 	@Override
