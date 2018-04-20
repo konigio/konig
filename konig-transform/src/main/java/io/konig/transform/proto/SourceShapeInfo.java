@@ -32,6 +32,8 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 	private ShapeModel sourceShape;
 	private int matchCount;
 	
+	private MatchCounter counter = new MatchCounter();
+	
 
 	public SourceShapeInfo(ShapeModel sourceShape) {
 		this.sourceShape = sourceShape;
@@ -53,29 +55,10 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 
 	public int computeMatchCount() {
 		matchCount = 0;
-		for (PropertyModel sourceProperty : sourceShape.getProperties()) {
-			PropertyGroup group = sourceProperty.getGroup();
-			
-			if (group.getTargetProperty() != null && group.getSourceProperty()==null) {
-				ShapeModel valueModel = sourceProperty.getValueModel();
-				if (valueModel != null) {
-					matchCount += valueModel.getSourceShapeInfo().computeMatchCount();
-				} else {
-					matchCount++;
-				}
-				
-			} else if (logger.isDebugEnabled()) {
-				if (group.getTargetProperty() == null) {
-					logger.debug("computeMatchCount: {}#{} in group[{}] does not match any target property",
-
-							RdfUtil.localName(sourceProperty.getDeclaringShape().getShape().getId()), 
-							sourceProperty.getPredicate().getLocalName(),
-							group.hashCode());
-				} 
-			}
-		}
+		dispatch(counter);
 		return matchCount;
 	}
+
 
 	@Override
 	public int compareTo(SourceShapeInfo other) {
@@ -88,6 +71,84 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 			}
 		}
 		return result;
+	}
+	
+	public void dispatch(MatchVisitor visitor) {
+		
+		for (PropertyModel sourceProperty : sourceShape.getProperties()) {
+			if (sourceProperty instanceof DirectPropertyModel) {
+				DirectPropertyModel sourceDirect = (DirectPropertyModel) sourceProperty;
+				
+				if (sourceDirect.getValueModel() != null) {
+					visitor.handleValueModel(sourceDirect.getValueModel());
+				} else {
+				
+					PropertyGroup group = sourceProperty.getGroup();
+					PropertyModel targetProperty = group.getTargetProperty();
+					DirectPropertyModel targetDirect = null;
+					if (targetProperty != null) {
+						if (targetProperty instanceof DirectPropertyModel && targetProperty.getGroup().getSourceProperty()==null) {
+							targetDirect = (DirectPropertyModel) targetProperty;
+						} else if (targetProperty instanceof StepPropertyModel) {
+							StepPropertyModel targetStep = (StepPropertyModel) targetProperty;
+							if (targetStep.getDeclaringProperty().getGroup().getSourceProperty()==null) {
+								targetDirect = targetStep.getDeclaringProperty();
+							}
+						}
+					}
+					
+					StepPropertyModel sourceStep = sourceDirect.getPathTail();
+					if (sourceStep != null) {
+						group = sourceStep.getGroup();
+						targetProperty = group.getTargetProperty();
+						if (targetProperty != null) {
+							if (targetProperty instanceof DirectPropertyModel && targetProperty.getGroup().getSourceProperty()==null) {
+								targetDirect = (DirectPropertyModel) targetProperty;
+							} else if (targetProperty instanceof StepPropertyModel) {
+								StepPropertyModel targetStep = (StepPropertyModel) targetProperty;
+								if (targetStep.getDeclaringProperty().getGroup().getSourceProperty()==null) {
+									targetDirect = targetStep.getDeclaringProperty();
+								}
+							}
+						}
+					}
+					if (targetDirect == null) {
+						visitor.noMatch(sourceDirect);
+					} else {
+						visitor.match(sourceProperty, targetDirect);
+					}
+				}
+			}
+		}
+	}
+	
+	private class MatchCounter implements MatchVisitor {
+
+		@Override
+		public void match(PropertyModel sourceProperty, DirectPropertyModel targetProperty) {
+			matchCount++;
+			
+		}
+		
+		@Override
+		public void handleValueModel(ShapeModel sourceShapeModel) {
+			matchCount += sourceShapeModel.getSourceShapeInfo().computeMatchCount();
+		}
+
+		@Override
+		public void noMatch(DirectPropertyModel sourceProperty) {
+
+			if (logger.isDebugEnabled()) {
+				logger.debug("computeMatchCount: {}#{} in group[{}] does not match any target property",
+	
+						RdfUtil.localName(sourceProperty.getDeclaringShape().getShape().getId()), 
+						sourceProperty.getPredicate().getLocalName(),
+						sourceProperty.getGroup().hashCode());
+			}
+			
+		}
+
+		
 	}
 	
 

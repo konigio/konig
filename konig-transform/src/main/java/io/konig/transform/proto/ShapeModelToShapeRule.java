@@ -137,7 +137,7 @@ public class ShapeModelToShapeRule {
 		private ShapeRule buildShapeRule(ShapeModel shapeModel) throws ShapeTransformException {
 
 			if (logger.isDebugEnabled()) {
-				logger.debug("BEGIN buildShapeRule(shape.id=<{}>", shapeModel.getShape().getId());
+				logger.debug("buildShapeRule: Building rule for {}", RdfUtil.localName(shapeModel.getShape().getId()));
 			}
 			buildDataChannels(shapeModel);
 			
@@ -344,9 +344,14 @@ public class ShapeModelToShapeRule {
 		}
 
 		private FromItem fromItem(ProtoFromItem fromItem) throws ShapeTransformException {
+			
 			FromItem result = null;
 			if (fromItem instanceof ShapeModel) {
-				result = ((ShapeModel)fromItem).getDataChannel();
+				ShapeModel shapeModel = (ShapeModel) fromItem;
+				result = shapeModel.getDataChannel();
+				if (logger.isDebugEnabled()) {
+				logger.debug("fromItem: return DataChannel for Shape {}", RdfUtil.localName(shapeModel.getShape().getId()));	
+				}
 			} else if (fromItem instanceof ProtoJoinExpression) {
 				ProtoJoinExpression proto = (ProtoJoinExpression) fromItem;
 				FromItem left = fromItem(proto.getLeft());

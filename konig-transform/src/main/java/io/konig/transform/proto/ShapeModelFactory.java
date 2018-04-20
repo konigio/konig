@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.path.DirectionStep;
 import io.konig.core.path.HasStep;
 import io.konig.formula.DirectedStep;
 import io.konig.formula.Direction;
@@ -41,6 +40,8 @@ public class ShapeModelFactory {
 	private PropertyManager propertyManager;
 	private DataChannelFactory dataChannelFactory;
 	private OwlReasoner reasoner;
+	
+	
 	
 	public ShapeModelFactory(
 			ShapeManager shapeManager, 
@@ -240,15 +241,17 @@ public class ShapeModelFactory {
 			
 			List<Shape> candidateList = shapeManager.getShapesByTargetClass(targetClass);
 			
+			Resource targetShapeId = targetShapeModel.getShape().getId();
 			ClassModel classModel = targetShapeModel.getClassModel();
 			for (Shape sourceShape : candidateList) {
+				if (targetShapeId.equals(sourceShape.getId())) {
+					continue;
+				}
 				SourceShapeInfo info = produceSourceShapeInfo(targetShapeModel, sourceShape);
 				if (info != null) {
 					classModel.add(info);
 				}
 			}
-			
-			
 		}
 
 		private SourceShapeInfo produceSourceShapeInfo(ShapeModel targetShapeModel, Shape sourceShape) throws ShapeTransformException {
@@ -756,5 +759,7 @@ public class ShapeModelFactory {
 		}
 		
 	}
+	
+	
 
 }
