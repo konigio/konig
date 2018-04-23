@@ -88,9 +88,6 @@ public class WorkbookToTurtleTransformer {
 		File awsOutDir = request.getAwsOutDir();
 		File derivedDir = request.getDerivedFormOutDir();
 
-		if (workbookFile == null) {
-			throw new SpreadsheetException("workbookFile must be defined");
-		}
 		if (workbookFile != null && !workbookFile.exists()) {
 			throw new SpreadsheetException("File not found: " + workbookFile);
 		}
@@ -105,6 +102,9 @@ public class WorkbookToTurtleTransformer {
 				List<File> filesTmp = Arrays.asList(filesArr);
 				files.addAll(filesTmp);
 			}
+		}
+		if(files!=null && files.isEmpty()){
+			throw new SpreadsheetException("No files available in workbookDir and workbookFile.");
 		}
 		Graph graph = new MemoryGraph();
 		for (File file : files) {
