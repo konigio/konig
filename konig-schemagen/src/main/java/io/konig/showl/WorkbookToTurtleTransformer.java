@@ -20,7 +20,6 @@ package io.konig.showl;
  * #L%
  */
 
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -56,8 +55,9 @@ import io.konig.spreadsheet.SpreadsheetException;
 import io.konig.spreadsheet.WorkbookLoader;
 
 /**
- * A utility which loads OWL + SHACL statements from a workbook and publishes the
- * workbook contents as a collection of Turtle files.
+ * A utility which loads OWL + SHACL statements from a workbook and publishes
+ * the workbook contents as a collection of Turtle files.
+ * 
  * @author Greg McFall
  *
  */
@@ -66,19 +66,20 @@ public class WorkbookToTurtleTransformer {
 	private IdMapper datasetMapper;
 	private WorkbookLoader workbookLoader;
 	private NamespaceManager nsManager;
-	
+
 	public WorkbookToTurtleTransformer(IdMapper datasetMapper, NamespaceManager nsManager) {
 		this.datasetMapper = datasetMapper;
 
 		this.nsManager = nsManager;
 		workbookLoader = new WorkbookLoader(nsManager);
 	}
-	
+
 	public WorkbookLoader getWorkbookLoader() {
 		return workbookLoader;
 	}
 
-	public void transform(WorkbookToTurtleRequest request) throws IOException, SpreadsheetException, RDFHandlerException {
+	public void transform(WorkbookToTurtleRequest request)
+			throws IOException, SpreadsheetException, RDFHandlerException {
 		File workbookFile = request.getWorkbookFile();
 		File workbookDir = request.getWorkbookDir();
 		File owlOutDir = request.getOwlOutDir();
@@ -86,72 +87,72 @@ public class WorkbookToTurtleTransformer {
 		File gcpOutDir = request.getGcpOutDir();
 		File awsOutDir = request.getAwsOutDir();
 		File derivedDir = request.getDerivedFormOutDir();
-		
+
 		if (workbookFile == null) {
 			throw new SpreadsheetException("workbookFile must be defined");
 		}
-		if (!workbookFile.exists()) {
+		if (workbookFile != null && !workbookFile.exists()) {
 			throw new SpreadsheetException("File not found: " + workbookFile);
 		}
-		
-		List<File> files=new ArrayList<File>();
-		files.add(workbookFile);
-		if(workbookDir!=null && workbookDir.exists() && workbookDir.isDirectory()){
-			File[] filesArr=workbookDir.listFiles();
-			if(filesArr!=null && filesArr.length>0){
-				List<File> filesTmp=Arrays.asList(filesArr);
+
+		List<File> files = new ArrayList<File>();
+		if (workbookFile != null) {
+			files.add(workbookFile);
+		}
+		if (workbookDir != null && workbookDir.exists() && workbookDir.isDirectory()) {
+			File[] filesArr = workbookDir.listFiles();
+			if (filesArr != null && filesArr.length > 0) {
+				List<File> filesTmp = Arrays.asList(filesArr);
 				files.addAll(filesTmp);
 			}
 		}
 		Graph graph = new MemoryGraph();
-		for(File file:files){
-		FileInputStream input = new FileInputStream(file);
-		try {
+		for (File file : files) {
+			FileInputStream input = new FileInputStream(file);
+			try {
 
-			owlOutDir.mkdirs();
-			if (shapesOutDir != null) {
-				shapesOutDir.mkdirs();
-			}
-			Workbook workbook = new XSSFWorkbook(input);
-			
-			
-			graph.setNamespaceManager(nsManager);
-			
-			workbookLoader.setDatasetMapper(datasetMapper);
-			workbookLoader.load(workbook, graph);
+				owlOutDir.mkdirs();
+				if (shapesOutDir != null) {
+					shapesOutDir.mkdirs();
+				}
+				Workbook workbook = new XSSFWorkbook(input);
+
+				graph.setNamespaceManager(nsManager);
+
+				workbookLoader.setDatasetMapper(datasetMapper);
+				workbookLoader.load(workbook, graph);
 			} finally {
 				input.close();
 			}
 		}
-			nsManager = workbookLoader.getNamespaceManager();
-			graph.setNamespaceManager(nsManager);
-			
-			OntologyWriter ontologyWriter = new OntologyWriter(new OntologyFileGetter(owlOutDir, nsManager));
-			ontologyWriter.writeOntologies(graph);
-			
-			if (shapesOutDir != null) {
-				writeShapes(shapesOutDir);
-			}
+		nsManager = workbookLoader.getNamespaceManager();
+		graph.setNamespaceManager(nsManager);
 
-			TurtleGenerator turtleGenerator = new TurtleGenerator();
-			VelocityContext context=workbookLoader.getDataSourceGenerator().getContext();
-			if (gcpOutDir != null) {
-				turtleGenerator.generateAll(GCP.GoogleCloudSqlInstance, gcpOutDir, graph,context);
-			}
-			if(awsOutDir != null) {
-				turtleGenerator.generateAll(AWS.DbCluster, awsOutDir, graph,context);
-				turtleGenerator.generateAll(AWS.CloudFormationTemplate, awsOutDir, graph,context);
-			}
-			
-			
-		
+		OntologyWriter ontologyWriter = new OntologyWriter(new OntologyFileGetter(owlOutDir, nsManager));
+		ontologyWriter.writeOntologies(graph);
+
+		if (shapesOutDir != null) {
+			writeShapes(shapesOutDir);
+		}
+
+		TurtleGenerator turtleGenerator = new TurtleGenerator();
+		VelocityContext context = workbookLoader.getDataSourceGenerator().getContext();
+		if (gcpOutDir != null) {
+			turtleGenerator.generateAll(GCP.GoogleCloudSqlInstance, gcpOutDir, graph, context);
+		}
+		if (awsOutDir != null) {
+			turtleGenerator.generateAll(AWS.DbCluster, awsOutDir, graph, context);
+			turtleGenerator.generateAll(AWS.CloudFormationTemplate, awsOutDir, graph, context);
+		}
+
 	}
 
 	private void writeShapes(File shapesOutDir) throws RDFHandlerException, IOException {
 		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesOutDir, nsManager);
 		ShapeManager shapeManager = workbookLoader.getShapeManager();
 		VertexCopier copier = new VertexCopier();
-		copier.excludeProperty(SH.shape, SH.path, SH.targetClass, SH.valueClass, Konig.aggregationOf, Konig.rollUpBy, Konig.defaultShapeFor);
+		copier.excludeProperty(SH.shape, SH.path, SH.targetClass, SH.valueClass, Konig.aggregationOf, Konig.rollUpBy,
+				Konig.defaultShapeFor);
 		copier.excludeClass(OWL.CLASS, OWL.DATATYPEPROPERTY, OWL.OBJECTPROPERTY, OWL.FUNCTIONALPROPERTY, RDF.PROPERTY);
 		for (Shape shape : shapeManager.listShapes()) {
 			Resource shapeId = shape.getId();
@@ -164,9 +165,9 @@ public class WorkbookToTurtleTransformer {
 				File shapeFile = fileGetter.getFile(shapeURI);
 				RdfUtil.prettyPrintTurtle(nsManager, graph, shapeFile);
 			}
-			
+
 		}
-		
+
 	}
-	
+
 }
