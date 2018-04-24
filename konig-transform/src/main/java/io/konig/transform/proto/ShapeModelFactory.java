@@ -1,5 +1,26 @@
 package io.konig.transform.proto;
 
+/*
+ * #%L
+ * Konig Transform
+ * %%
+ * Copyright (C) 2015 - 2018 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import static io.konig.core.impl.RdfUtil.localName;
 
 import java.text.MessageFormat;
@@ -33,6 +54,7 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapePropertyPair;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.rule.DataChannel;
+import io.konig.transform.rule.FromItem;
 
 public class ShapeModelFactory {
 	private static Logger logger = LoggerFactory.getLogger(ShapeModelFactory.class);
@@ -68,15 +90,44 @@ public class ShapeModelFactory {
 		
 		private ShapeModel root;
 
-		private FromItemEnds fromItemEnds;
 		private MatchMaker matchMaker = new MatchMaker();
 		
 		public ShapeModel execute(Shape shape) throws ShapeTransformException {
-			fromItemEnds = new FromItemEnds();
 			ShapeModel result = createShapeModel(shape);
 			mapProperties(result);
-			result.getClassModel().setFromItem(fromItemEnds.getFirst());
+			buildJoinConditions(result);
 			return result;
+		}
+
+		private void buildJoinConditions(ShapeModel result) throws ShapeTransformException {
+			
+			List<SourceShapeInfo> list = result.getClassModel().getCommittedSources();
+			Collections.sort(list);
+			
+			for (int i=1; i<list.size(); i++) {
+				
+				SourceShapeInfo info = list.get(i);
+				join(result, info, i);
+			}
+			
+		}
+
+		private void join(ShapeModel targetShapeModel, SourceShapeInfo info, int index) throws ShapeTransformException {
+
+			List<SourceShapeInfo> list = targetShapeModel.getClassModel().getCommittedSources();
+			for (int i=0; i<index; i++) {
+				SourceShapeInfo prior = list.get(i);
+				if (join(prior, info)) {
+					return;
+				}
+			}
+			String shapeId = RdfUtil.localName(info.getSourceShape().getShape().getId());
+			throw new ShapeTransformException("Failed to find join condition for " + shapeId);
+		}
+
+		private boolean join(SourceShapeInfo prior, SourceShapeInfo info) {
+			// TODO Auto-generated method stub
+			return false;
 		}
 
 		public ShapeModel createShapeModel(Shape shape) throws ShapeTransformException {
@@ -96,13 +147,13 @@ public class ShapeModelFactory {
 		private void mapProperties(ShapeModel targetShapeModel) throws ShapeTransformException {
 			
 			ClassModel classModel = targetShapeModel.getClassModel();
-			if (classModel.getSourceShapeInfo()==null) {
+			if (classModel.getCandidateSources()==null) {
 				String msg = MessageFormat.format("SourceShapeInfo not defined for {0} in ClassModel[{1}]", 
 						RdfUtil.localName(targetShapeModel.getShape().getId()), classModel.hashCode());
 				
 				throw new ShapeTransformException(msg);
 			}
-			List<SourceShapeInfo> infoList = new ArrayList<>(classModel.getSourceShapeInfo());
+			List<SourceShapeInfo> infoList = new ArrayList<>(classModel.getCandidateSources());
 			
 			while (!infoList.isEmpty()) {
 				sortSourceShapeInfo(infoList);
@@ -119,7 +170,6 @@ public class ShapeModelFactory {
 				}
 			}
 			
-			classModel.setFromItem(fromItemEnds.getFirst());
 			
 		}
 
@@ -314,6 +364,9 @@ public class ShapeModelFactory {
 
 		private void scanPathExpressions(ShapeModel targetShapeModel) throws ShapeTransformException {
 
+			if (logger.isDebugEnabled()) {
+				logger.debug("scanPathExpressions: Scanning {}", RdfUtil.localName(targetShapeModel.getShape().getId()));
+			}
 			URI targetClass = targetShapeModel.getShape().getTargetClass();
 			if (targetClass == null) {
 				throw new ShapeTransformException("targetClass must be defined for " + 
@@ -323,7 +376,7 @@ public class ShapeModelFactory {
 			for (PropertyModel p : targetShapeModel.getProperties()) {
 				if (p instanceof DirectPropertyModel) {
 					DirectPropertyModel direct = (DirectPropertyModel) p;
-					if (direct.getPathHead() !=null) {
+					if (direct.getPathTail() !=null) {
 						scanPath(direct);
 					}
 				}
@@ -333,6 +386,11 @@ public class ShapeModelFactory {
 
 
 		private void scanPath(DirectPropertyModel direct) throws ShapeTransformException {
+			if (logger.isDebugEnabled()) {
+				logger.debug("scanPath: Scanning {} in {}", 
+						direct.getPredicate().getLocalName(), 
+						RdfUtil.localName(direct.getDeclaringShape().getShape().getId()));
+			}
 			StepPropertyModel step = direct.getPathHead();
 			
 			while (step != null) {
@@ -680,7 +738,7 @@ public class ShapeModelFactory {
 				if (sourceShapeModel.getDataChannel() == null) {
 					DataChannel channel = dataChannelFactory.createDataChannel(sourceShapeModel.getShape());
 					if (channel == null) {
-						sourceShapeModel.getSourceShapeInfo().setExcluded(true);
+						sourceShapeModel.getSourceShapeInfo().setStatus(SourceShapeStatus.EXCLUDED);
 						logger.debug("MatchMaker.match: {} has been excluded as a candidate Shape because no DataChannel exists", RdfUtil.localName(sourceShapeModel.getShape().getId()));
 						return;
 					}
@@ -688,12 +746,16 @@ public class ShapeModelFactory {
 					sourceShapeModel.setDataChannel(channel);
 					logger.debug("MatchMaker.match: Set DataChannel for {}", RdfUtil.localName(sourceShapeModel.getShape().getId()));
 				}
-				
-				if (fromItemEnds.getFirst()==null) {
-					fromItemEnds.setSingleItem(sourceShapeModel);
-				} else {
-					// TODO: Build join statement
+				SourceShapeInfo info = sourceShapeModel.getSourceShapeInfo();
+				if (info.getStatus() == SourceShapeStatus.CANDIDATE) {
+					ClassModel targetClassModel = targetProperty.getDeclaringShape().getClassModel();
+					targetClassModel.addCommittedSource(info);
+					info.setStatus(SourceShapeStatus.COMMITTED);
+					
 				}
+				
+				// Store the property match.  This will be used later when building join conditions.
+				info.addMatchedTargetProperty(targetProperty);
 				
 				if (logger.isDebugEnabled()) {
 					logMatch(sourceProperty, targetProperty);
@@ -701,6 +763,14 @@ public class ShapeModelFactory {
 				}
 				
 			}
+
+
+			
+
+
+
+
+
 
 			private void logMatch(PropertyModel sourceProperty, PropertyModel targetProperty) {
 
@@ -739,38 +809,7 @@ public class ShapeModelFactory {
 		
 	}
 	
-	static class FromItemEnds {
-
-		private ProtoFromItem first;
-		private ProtoFromItem last;
-		
-		public ProtoFromItem getFirst() {
-			return first;
-		}
-		
-		public boolean hasSingleItem() {
-			return first == last;
-		}
-		
-		public FromItemEnds setFirst(ProtoFromItem item) {
-			first = item;
-			return this;
-		}
-		
-		public FromItemEnds setSingleItem(ProtoFromItem item) {
-			first = last = item;
-			return this;
-		}
-		
-		public ProtoFromItem getLast() {
-			return last;
-		}
-		public FromItemEnds setLast(ProtoFromItem last) {
-			this.last = last;
-			return this;
-		}
-		
-	}
+	
 	
 	
 	

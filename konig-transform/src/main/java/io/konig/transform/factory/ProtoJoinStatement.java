@@ -22,7 +22,7 @@ package io.konig.transform.factory;
 
 
 import io.konig.transform.rule.BooleanExpression;
-import io.konig.transform.rule.JoinStatement;
+import io.konig.transform.rule.JoinStatement0;
 import io.konig.transform.rule.VariableNamer;
 
 public class ProtoJoinStatement {

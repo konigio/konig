@@ -26,7 +26,7 @@ import io.konig.core.io.PrettyPrintWriter;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 import io.konig.transform.rule.DataChannel;
-import io.konig.transform.rule.JoinStatement;
+import io.konig.transform.rule.JoinStatement0;
 import io.konig.transform.rule.VariableNamer;
 
 public class SourceShape extends ShapeNode<SourceProperty> {
@@ -74,7 +74,7 @@ public class SourceShape extends ShapeNode<SourceProperty> {
 			if (joinStatement != null && dataChannel.getJoinStatement()==null) {
 				SourceShape left = joinStatement.getLeft();
 				DataChannel leftChannel = left.produceDataChannel(namer);
-				dataChannel.setJoinStatement(new JoinStatement(leftChannel, dataChannel, joinStatement.getCondition()));
+				dataChannel.setJoinStatement(new JoinStatement0(leftChannel, dataChannel, joinStatement.getCondition()));
 			}
 			if (dataSource!=null && dataChannel.getDatasource()==null) {
 				dataChannel.setDatasource(dataSource);

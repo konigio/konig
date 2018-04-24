@@ -37,6 +37,8 @@ import org.junit.Test;
 import org.openrdf.model.URI;
 
 import io.konig.formula.AdditiveOperator;
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
 import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.AliasExpression;
 import io.konig.sql.query.AndExpression;
@@ -52,7 +54,7 @@ import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.InsertStatement;
-import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.JoinExpression0;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.Result;
@@ -80,12 +82,17 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		useBigQueryTransformStrategy();
 	}
 	
+	
 	@Test
-	public void testIriTemplate() throws Exception {
+	public void testTransformInversePath() throws Exception {
 		
-		load("src/test/resources/konig-transform/iri-template");
+		load("src/test/resources/konig-transform/inverse-property");
 
 		URI shapeId = iri("http://example.com/shapes/ProductShape");
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		List<PropertyConstraint> list = shape.getProperty();
+		assertEquals(2, list.size());
 
 		ShapeRule shapeRule = createShapeRule(shapeId);
 		
@@ -98,9 +105,9 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 	}
 	
 	@Ignore
-	public void testTransformInversePath() throws Exception {
+	public void testIriTemplate() throws Exception {
 		
-		load("src/test/resources/konig-transform/inverse-property");
+		load("src/test/resources/konig-transform/iri-template");
 
 		URI shapeId = iri("http://example.com/shapes/ProductShape");
 
@@ -527,8 +534,8 @@ GROUP BY e.id, timeInterval.intervalStart
 		assertEquals(1, fList.size());
 		
 		TableItemExpression t = fList.get(0);
-		assertTrue(t instanceof JoinExpression);
-		JoinExpression j = (JoinExpression) t;
+		assertTrue(t instanceof JoinExpression0);
+		JoinExpression0 j = (JoinExpression0) t;
 		
 		t = j.getLeftTable();
 		assertTrue(t instanceof TableAliasExpression);
@@ -607,8 +614,8 @@ GROUP BY e.id, timeInterval.intervalStart
 	private TableItemExpression assertUnnest(Set<String> aliasSet, TableItemExpression e) {
 	
 		TableItemExpression right = null;
-		if (e instanceof JoinExpression) {
-			JoinExpression j = (JoinExpression) e;
+		if (e instanceof JoinExpression0) {
+			JoinExpression0 j = (JoinExpression0) e;
 			e = j.getLeftTable();
 			right = j.getRightTable();
 			
@@ -826,9 +833,9 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		assertEquals(1, tableItems.size());
 		
 		TableItemExpression tableItem = tableItems.get(0);
-		assertTrue(tableItem instanceof JoinExpression);
+		assertTrue(tableItem instanceof JoinExpression0);
 		
-		JoinExpression join = (JoinExpression) tableItem;
+		JoinExpression0 join = (JoinExpression0) tableItem;
 		
 		TableItemExpression leftTable = join.getLeftTable();
 		
@@ -987,9 +994,9 @@ GROUP BY actor, object
 		assertEquals(1, from.getTableItems().size());
 		TableItemExpression tableItem = from.getTableItems().get(0);
 		
-		assertTrue(tableItem instanceof JoinExpression);
+		assertTrue(tableItem instanceof JoinExpression0);
 		
-		JoinExpression join = (JoinExpression) tableItem;
+		JoinExpression0 join = (JoinExpression0) tableItem;
 		
 		assertTrue(join.getLeftTable() instanceof TableAliasExpression);
 		TableAliasExpression left = (TableAliasExpression)join.getLeftTable();
@@ -1178,9 +1185,9 @@ FROM
 		List<TableItemExpression> tableItems = from.getTableItems();
 		assertEquals(1, tableItems.size());
 		TableItemExpression tableItem = tableItems.get(0);
-		assertTrue(tableItem instanceof JoinExpression);
+		assertTrue(tableItem instanceof JoinExpression0);
 		
-		JoinExpression join = (JoinExpression) tableItem;
+		JoinExpression0 join = (JoinExpression0) tableItem;
 		OnExpression on = join.getJoinSpecification();
 		SearchCondition search = on.getSearchCondition();
 		assertTrue(search instanceof ComparisonPredicate);
@@ -1330,9 +1337,9 @@ FROM
 		
 		TableItemExpression item = itemList.get(0);
 		
-		assertTrue(item instanceof JoinExpression);
+		assertTrue(item instanceof JoinExpression0);
 		
-		JoinExpression join = (JoinExpression) item;
+		JoinExpression0 join = (JoinExpression0) item;
 		assertTrue(join.getLeftTable() instanceof TableAliasExpression);
 		TableAliasExpression leftAlias = (TableAliasExpression) join.getLeftTable();
 		assertEquals("schema.OriginPersonShape", leftAlias.getTableName().toString());
@@ -1445,9 +1452,9 @@ FROM
 		assertEquals(1, tableItems.size());
 		
 		TableItemExpression tableItem = tableItems.get(0);
-		assertTrue(tableItem instanceof JoinExpression);
+		assertTrue(tableItem instanceof JoinExpression0);
 		
-		JoinExpression join = (JoinExpression) tableItem;
+		JoinExpression0 join = (JoinExpression0) tableItem;
 		
 		TableItemExpression leftTable = join.getLeftTable();
 		

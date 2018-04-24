@@ -23,7 +23,7 @@ package io.konig.sql.query;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class TableAliasExpression extends AbstractExpression implements TableItemExpression {
+public class TableAliasExpression extends AbstractExpression implements TableReference {
 	
 	private TableItemExpression tableName;
 	private String alias;

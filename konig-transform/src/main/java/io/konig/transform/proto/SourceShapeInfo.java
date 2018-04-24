@@ -1,5 +1,9 @@
 package io.konig.transform.proto;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /*
  * #%L
  * Konig Transform
@@ -25,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.impl.RdfUtil;
+import io.konig.formula.Direction;
 import io.konig.transform.ShapeTransformException;
 
 public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
@@ -33,9 +38,11 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 	private ShapeModel sourceShape;
 	private int matchCount;
 	
-	private boolean excluded;
+	private SourceShapeStatus status = SourceShapeStatus.CANDIDATE;
+	private ProtoBooleanExpression joinCondition;
 	
 	private MatchCounter counter = new MatchCounter();
+	private List<DirectPropertyModel> matchedTargetProperties;
 	
 
 	public SourceShapeInfo(ShapeModel sourceShape) {
@@ -43,9 +50,19 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 		sourceShape.setSourceShapeInfo(this);
 	}
 
-	public PropertyModel getTargetProperty() {
-		return null;
+
+	public void addMatchedTargetProperty(DirectPropertyModel targetProperty) {
+		if (matchedTargetProperties == null) {
+			matchedTargetProperties = new ArrayList<>();
+		}
+		matchedTargetProperties.add(targetProperty);
 	}
+	
+	
+	public List<DirectPropertyModel> getMatchedTargetProperties() {
+		return matchedTargetProperties==null ? Collections.emptyList() : matchedTargetProperties;
+	}
+
 
 	public ShapeModel getSourceShape() {
 		return sourceShape;
@@ -66,16 +83,37 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 	@Override
 	public int compareTo(SourceShapeInfo other) {
 		int result = 0;
-		if (other != this) {
-			result = other.matchCount - this.matchCount;
-			if (result == 0) {
-				result = other.getSourceShape().getShape().getId().stringValue().compareTo(
-						sourceShape.getShape().getId().stringValue());
+		
+		int thisDepth = depth(this);
+		int otherDepth = depth(other);
+		
+		result = thisDepth - otherDepth;
+		if (result == 0) {
+			
+			if (other != this) {
+				result = other.matchCount - this.matchCount;
+				if (result == 0) {
+					result = other.getSourceShape().getShape().getId().stringValue().compareTo(
+							sourceShape.getShape().getId().stringValue());
+				}
 			}
 		}
 		return result;
 	}
 	
+	private int depth(SourceShapeInfo sourceShapeInfo) {
+		if (sourceShapeInfo.matchedTargetProperties != null) {
+			for (DirectPropertyModel targetProperty : sourceShapeInfo.matchedTargetProperties) {
+				StepPropertyModel head = targetProperty.getPathHead();
+				if (head != null && head.getDirection()==Direction.IN) {
+					return 1;
+				}
+			}
+		}
+		return 0;
+	}
+
+
 	public void dispatch(MatchVisitor visitor) throws ShapeTransformException {
 		IdPropertyModel sourceId = null;
 		for (PropertyModel sourceProperty : sourceShape.getProperties()) {
@@ -175,16 +213,36 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 	 * @return
 	 */
 	public boolean isExcluded() {
-		return excluded;
+		return status==SourceShapeStatus.EXCLUDED;
 	}
 
-	/**
-	 * Specify whether the Shape has been excluded from consideration as a source.
-	 * @param excluded
-	 */
-	public void setExcluded(boolean excluded) {
-		this.excluded = excluded;
+	public SourceShapeStatus getStatus() {
+		return status;
+	}
+
+
+
+
+	public void setStatus(SourceShapeStatus status) {
+		this.status = status;
+	}
+
+
+
+
+	public ProtoBooleanExpression getJoinCondition() {
+		return joinCondition;
+	}
+
+	public void setJoinCondition(ProtoBooleanExpression joinCondition) {
+		this.joinCondition = joinCondition;
 	}
 	
 
+	public String toString() {
+		StringBuilder builder = new StringBuilder("SourceShapeInfo(shape: ");
+		builder.append(RdfUtil.localName(sourceShape.getShape().getId()));
+		builder.append(')');
+		return builder.toString();
+	}
 }

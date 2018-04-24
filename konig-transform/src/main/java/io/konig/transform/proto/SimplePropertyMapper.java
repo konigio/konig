@@ -367,7 +367,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 						// of the source shapes.
 						URI predicate = targetProperty.getPredicate();
 						
-						for (SourceShapeInfo info : targetClassModel.getSourceShapeInfo()) {
+						for (SourceShapeInfo info : targetClassModel.getCandidateSources()) {
 							ShapeModel sourceShapeModel = info.getSourceShape();
 							Shape sourceShape = sourceShapeModel.getShape();
 							PropertyConstraint p = sourceShape.getDerivedPropertyByPredicate(predicate);
@@ -1152,7 +1152,7 @@ public class SimplePropertyMapper implements PropertyMapper {
 		private LinkedList<ShapeModelMatchCount> collectShapeModelMatchCount(ClassModel classModel) throws ShapeTransformException {
 
 			LinkedList<ShapeModelMatchCount> list = new LinkedList<>();
-			List<SourceShapeInfo> set = classModel.getSourceShapeInfo();
+			List<SourceShapeInfo> set = classModel.getCandidateSources();
 			if (set == null) {
 				set = buildCandidateSources(classModel);
 			}

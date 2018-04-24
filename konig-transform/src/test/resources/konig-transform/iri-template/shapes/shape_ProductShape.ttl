@@ -8,7 +8,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:ProductShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/wLdfRFNkN9wAAAFi5HDPVQ> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/hwn2Jik3focAAAFi8mvbLw> ; 
 	sh:targetClass schema:Product ; 
 	sh:nodeKind sh:IRI ; 
 	sh:property  [ 
@@ -18,8 +18,8 @@ shape:ProductShape a sh:Shape ;
 		sh:maxCount 1 ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Product> . 
 
-<http://www.konig.io/activity/wLdfRFNkN9wAAAFi5HDPVQ> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-04-20T15:03:41.315-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/hwn2Jik3focAAAFi8mvbLw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-04-23T08:12:57.638-04:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Product> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

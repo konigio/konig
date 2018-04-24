@@ -1,6 +1,5 @@
 package io.konig.transform.proto;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 
 /*
@@ -60,6 +59,7 @@ import io.konig.transform.rule.ChannelProperty;
 import io.konig.transform.rule.ContainerPropertyRule;
 import io.konig.transform.rule.CopyIdRule;
 import io.konig.transform.rule.DataChannel;
+import io.konig.transform.rule.DataChannelRule;
 import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.FixedValuePropertyRule;
 import io.konig.transform.rule.FormulaIdRule;
@@ -142,12 +142,23 @@ public class ShapeModelToShapeRule {
 			buildDataChannels(shapeModel);
 			
 			ShapeRule shapeRule = toShapeRule(shapeModel);
-			shapeRule.setFromItem(fromItem(shapeModel.getClassModel().getFromItem()));
+			addChannelRules(shapeModel, shapeRule);
 			invokePostProcessors(shapeModel, shapeRule);
 			
 			return shapeRule;
 		}
 		
+		private void addChannelRules(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
+			for (SourceShapeInfo info : shapeModel.getClassModel().getCommittedSources()) {
+				DataChannel channel = info.getSourceShape().getDataChannel();
+				channel.setName(variableNamer.next());
+				BooleanExpression condition = booleanExpression(info.getJoinCondition());
+				DataChannelRule rule = new DataChannelRule(channel, condition);
+				shapeRule.add(rule);
+			}
+			
+		}
+
 		private void invokePostProcessors(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
 
 			for (TransformPostProcessor processor : shapeModel.getPostProcessorList()) {
@@ -343,27 +354,7 @@ public class ShapeModelToShapeRule {
 			return result;
 		}
 
-		private FromItem fromItem(ProtoFromItem fromItem) throws ShapeTransformException {
-			
-			FromItem result = null;
-			if (fromItem instanceof ShapeModel) {
-				ShapeModel shapeModel = (ShapeModel) fromItem;
-				result = shapeModel.getDataChannel();
-				if (logger.isDebugEnabled()) {
-				logger.debug("fromItem: return DataChannel for Shape {}", RdfUtil.localName(shapeModel.getShape().getId()));	
-				}
-			} else if (fromItem instanceof ProtoJoinExpression) {
-				ProtoJoinExpression proto = (ProtoJoinExpression) fromItem;
-				FromItem left = fromItem(proto.getLeft());
-				FromItem right = fromItem(proto.getRight());
-				BooleanExpression condition = booleanExpression(proto.getCondition());
-				result = new JoinRule(left, right, condition);
-			}
-			if (result == null) {
-				throw new ShapeTransformException("Failed to create fromItem");
-			}
-			return result;
-		}
+		
 
 		private BooleanExpression booleanExpression(ProtoBooleanExpression condition) throws ShapeTransformException {
 			BooleanExpression result = null;
@@ -383,35 +374,19 @@ public class ShapeModelToShapeRule {
 		}
 
 		void buildDataChannels(ShapeModel root) throws ShapeTransformException {
-			ProtoFromItem protoFromItem = root.getClassModel().getFromItem();
-			if (protoFromItem == null) {
-				String shapeLocalName = RdfUtil.localName(root.getShape().getId());
-				String msg = MessageFormat.format("ProtoFromItem not defined for {0} in ClassModel[{1}]", 
-						shapeLocalName, root.getClassModel().hashCode());
-				throw new ShapeTransformException(msg);
+			List<SourceShapeInfo> list = root.getClassModel().getCommittedSources();
+			if (list.isEmpty()) {
+				throw new ShapeTransformException("No committed sources found for " + RdfUtil.localName(root.getShape().getId()));
 			}
-			setDataChannelName(protoFromItem);
+			useAlias = list.size()>1;
 			
-			useAlias = protoFromItem instanceof ProtoJoinExpression;
+			for (SourceShapeInfo info : list) {
+				info.getSourceShape().getDataChannel().setName(variableNamer.next());
+			}
+			
 			
 		}
 
-		
-
-		private void setDataChannelName(ProtoFromItem item) throws ShapeTransformException {
-			if (item instanceof ShapeModel) {
-				ShapeModel shapeModel = (ShapeModel) item;
-				if (shapeModel.getDataChannel()==null) {
-					throw new ShapeTransformException("DataChannel not defined for " + RdfUtil.localName(shapeModel.getShape().getId()));
-				}
-				shapeModel.getDataChannel().setName(variableNamer.next());
-			} else if (item instanceof ProtoJoinExpression) {
-				ProtoJoinExpression join = (ProtoJoinExpression) item;
-				setDataChannelName(join.getLeft());
-				setDataChannelName(join.getRight());
-			}
-			
-		}
 
 		public ShapeRule toShapeRule(ShapeModel shapeModel) throws ShapeTransformException {
 			ShapeRule shapeRule = new ShapeRule(shapeModel);

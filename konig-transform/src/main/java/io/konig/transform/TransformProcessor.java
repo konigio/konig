@@ -37,6 +37,8 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
+import io.konig.transform.rule.DataChannel;
+import io.konig.transform.rule.DataChannelRule;
 import io.konig.transform.rule.FromItemIterator;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.rule.TransformPostProcessor;
@@ -58,7 +60,16 @@ public TransformProcessor(File outDir) {
 		  nsManager.add("sh", SH.NAMESPACE);
 		  nsManager.add("konig", Konig.NAMESPACE);
 		  graph.setNamespaceManager(nsManager);
-		  if (targetShapeId != null) {
+		  
+		  
+		  if (!shapeRule.getChannelRules().isEmpty()) {
+			  for (DataChannelRule rule : shapeRule.getChannelRules()) {
+				  Shape sourceShape = rule.getChannel().getShape();
+				  if (sourceShape.getId() instanceof URI) {
+					  graph.edge(targetShapeId, Konig.DERIVEDFROM, sourceShape.getId());
+				  }
+			  }
+		  } else if (targetShapeId != null) {
 			FromItemIterator sequence = new FromItemIterator(shapeRule.getFromItem());
 		    while (sequence.hasNext()) {
 		      Shape sourceShape = sequence.next();

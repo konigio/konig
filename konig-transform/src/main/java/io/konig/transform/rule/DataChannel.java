@@ -31,7 +31,7 @@ public class DataChannel extends AbstractPrettyPrintable implements Comparable<D
 	private String name;
 	private Shape shape;
 	@Deprecated
-	private JoinStatement joinStatement;
+	private JoinStatement0 joinStatement;
 	private DataSource datasource;
 	private ShapeRule parent;
 	private String variableName;
@@ -75,12 +75,12 @@ public class DataChannel extends AbstractPrettyPrintable implements Comparable<D
 	}
 
 	@Deprecated
-	public JoinStatement getJoinStatement() {
+	public JoinStatement0 getJoinStatement() {
 		return joinStatement;
 	}
 
 	@Deprecated
-	public void setJoinStatement(JoinStatement joinStatement) {
+	public void setJoinStatement(JoinStatement0 joinStatement) {
 		this.joinStatement = joinStatement;
 	}
 

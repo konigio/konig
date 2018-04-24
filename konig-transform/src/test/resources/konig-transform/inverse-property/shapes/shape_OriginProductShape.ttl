@@ -9,7 +9,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:OriginProductShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/hwn2Jik3focAAAFi8mvbLw> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/IRBf0TNPbwMAAAFi8mkohA> ; 
 	sh:targetClass schema:Product ; 
 	sh:property  [ 
 		sh:path alias:PRODUCT_ID ; 
@@ -33,8 +33,8 @@ shape:OriginProductShape a sh:Shape ;
 <http://example.com/product/{PRODUCT_ID}>''' ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/OriginProductShape> , <gs://originproductshape-${gcpBucketSuffix}> . 
 
-<http://www.konig.io/activity/hwn2Jik3focAAAFi8mvbLw> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-04-23T08:12:57.638-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/IRBf0TNPbwMAAAFi8mkohA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-04-23T08:10:00.794-04:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/OriginProductShape> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

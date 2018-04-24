@@ -103,14 +103,4 @@ public class ProtoJoinExpression implements ProtoFromItem {
 		this.condition = condition;
 	}
 
-	@Override
-	public ProtoFromItem first() {
-		return left;
-	}
-
-	@Override
-	public ProtoFromItem rest() {
-		return right;
-	}
-	
 }

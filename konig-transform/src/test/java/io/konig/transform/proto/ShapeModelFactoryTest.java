@@ -89,10 +89,10 @@ public class ShapeModelFactoryTest extends TransformTest {
 		ClassModel classModel = shapeModel.getClassModel();
 		assertTrue(classModel != null);
 		
-		List<SourceShapeInfo> candidateList = classModel.getSourceShapeInfo();
+		List<SourceShapeInfo> candidateList = classModel.getCandidateSources();
 		
 		assertTrue(candidateList!=null);
-		assertEquals(1, candidateList.size());
+		assertEquals(2, candidateList.size());
 	}
 
 

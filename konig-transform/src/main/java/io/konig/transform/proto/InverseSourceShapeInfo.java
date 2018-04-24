@@ -37,13 +37,6 @@ public class InverseSourceShapeInfo extends SourceShapeInfo {
 		this.targetProperty = targetProperty;
 	}
 
-	/**
-	 * @return The target property to which the source shape is connected.
-	 */
-	@Override
-	public PropertyModel getTargetProperty() {
-		return targetProperty;
-	}
 
 	
 }

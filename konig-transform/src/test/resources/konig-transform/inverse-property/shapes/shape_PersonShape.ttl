@@ -8,7 +8,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:PersonShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/uSjRZn2vxEkAAAFiL7B0HA> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/IRBf0TNPbwMAAAFi8mkohA> ; 
 	sh:targetClass schema:Person ; 
 	sh:nodeKind sh:IRI ; 
 	sh:property  [ 
@@ -24,8 +24,8 @@ shape:PersonShape a sh:Shape ;
 		sh:maxCount 1 ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> . 
 
-<http://www.konig.io/activity/uSjRZn2vxEkAAAFiL7B0HA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-03-16T12:41:56.279-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/IRBf0TNPbwMAAAFi8mkohA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-04-23T08:10:00.794-04:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

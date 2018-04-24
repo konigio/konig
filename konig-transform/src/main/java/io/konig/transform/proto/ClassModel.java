@@ -23,6 +23,7 @@ import java.util.ArrayList;
  */
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,12 +50,31 @@ public class ClassModel extends BasePrettyPrintable {
 	private Map<URI, PropertyGroup> outPropertyMap = new HashMap<>();
 	private Map<URI, PropertyGroup> inPropertyMap = null;
 	private ShapeModel targetShapeModel;
-	private List<SourceShapeInfo> candidateSourceShapeModel;
+	private List<SourceShapeInfo> candidateSources;
+	private List<SourceShapeInfo> committedSources;
 	private ProtoFromItem fromItem;
 	private int id=counter++;
+
 	
 	public ClassModel(URI owlClass) {
 		this.owlClass = owlClass;
+	}
+	
+	public ProtoFromItem findFromItem(ShapeModel shapeModel) {
+		ProtoFromItemIterator sequence = new ProtoFromItemIterator(fromItem);
+		while (sequence.hasNext()) {
+			ProtoFromItem item = sequence.next();
+			if (item == shapeModel) {
+				return shapeModel;
+			}
+			if (item instanceof ProtoJoinExpression) {
+				ProtoJoinExpression join = (ProtoJoinExpression) item;
+				if (join.getLeft() == shapeModel || join.getRight()==shapeModel) {
+					return join;
+				}
+			}
+		}
+		return null;
 	}
 	
 	public ClassModel rootClassModel() {
@@ -145,8 +165,8 @@ public class ClassModel extends BasePrettyPrintable {
 	}
 	
 	public boolean containsCandidateSourceShapeModel(ShapeModel candidate) {
-		if (candidateSourceShapeModel != null) {
-			for (SourceShapeInfo info : candidateSourceShapeModel) {
+		if (candidateSources != null) {
+			for (SourceShapeInfo info : candidateSources) {
 				if (info.getSourceShape()==candidate) {
 					return true;
 				}
@@ -157,15 +177,15 @@ public class ClassModel extends BasePrettyPrintable {
 	
 	public void addCandidateSourceShapeModel(SourceShapeInfo info) {
 
-		if (candidateSourceShapeModel == null) {
-			candidateSourceShapeModel = new ArrayList<>();
+		if (candidateSources == null) {
+			candidateSources = new ArrayList<>();
 		}
-		for (SourceShapeInfo s : candidateSourceShapeModel) {
+		for (SourceShapeInfo s : candidateSources) {
 			if (s.getSourceShape() == info.getSourceShape()) {
 				return;
 			}
 		}
-		candidateSourceShapeModel.add(info);
+		candidateSources.add(info);
 	}
 	
 	/**
@@ -173,40 +193,50 @@ public class ClassModel extends BasePrettyPrintable {
 	 * @param candidate
 	 */
 	public void addCandidateSourceShapeModel(ShapeModel candidate) {
-		if (candidateSourceShapeModel == null) {
-			candidateSourceShapeModel = new ArrayList<>();
+		if (candidateSources == null) {
+			candidateSources = new ArrayList<>();
 		}
-		for (SourceShapeInfo s : candidateSourceShapeModel) {
+		for (SourceShapeInfo s : candidateSources) {
 			if (s.getSourceShape() == candidate) {
 				return;
 			}
 		}
 		SourceShapeInfo info = new SourceShapeInfo(candidate);
-		candidateSourceShapeModel.add(info);
+		candidateSources.add(info);
 	}
 	
 	public void add(SourceShapeInfo info) {
 
-		if (candidateSourceShapeModel == null) {
-			candidateSourceShapeModel = new ArrayList<>();
+		if (candidateSources == null) {
+			candidateSources = new ArrayList<>();
 		}
 		ShapeModel candidate = info.getSourceShape();
-		for (SourceShapeInfo s : candidateSourceShapeModel) {
+		for (SourceShapeInfo s : candidateSources) {
 			if (s.getSourceShape() == candidate) {
 				return;
 			}
 		}
-		candidateSourceShapeModel.add(info);
+		candidateSources.add(info);
 	}
 
+	public void addCommittedSource(SourceShapeInfo info) {
+		if (committedSources == null) {
+			committedSources = new ArrayList<>();
+		}
+		committedSources.add(info);
+	}
+	
+	public List<SourceShapeInfo> getCommittedSources() {
+		return committedSources == null ? Collections.emptyList() : committedSources;
+	}
 
-	public List<SourceShapeInfo> getSourceShapeInfo() {
-		return candidateSourceShapeModel;
+	public List<SourceShapeInfo> getCandidateSources() {
+		return candidateSources;
 	}
 	
 
 	public void setCandidateSourceShapeModel(List<SourceShapeInfo> candidateSourceShapeModel) {
-		this.candidateSourceShapeModel = candidateSourceShapeModel;
+		this.candidateSources = candidateSourceShapeModel;
 	}
 
 	public ProtoFromItem getFromItem() {

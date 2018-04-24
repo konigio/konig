@@ -9,9 +9,15 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:ProductShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/uSjRZn2vxEkAAAFiL7B0HA> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/IRBf0TNPbwMAAAFi8mkohA> ; 
 	sh:targetClass schema:Product ; 
+	sh:nodeKind sh:BlankNodeOrIRI ; 
 	sh:property  [ 
+		sh:path schema:name ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
 		sh:path x:ownerName ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 1 ; 
@@ -23,8 +29,8 @@ shape:ProductShape a sh:Shape ;
 ^owns.name''' ]  ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Product> . 
 
-<http://www.konig.io/activity/uSjRZn2vxEkAAAFiL7B0HA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-03-16T12:41:56.279-04:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/IRBf0TNPbwMAAAFi8mkohA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-04-23T08:10:00.794-04:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Product> a konig:GoogleBigQueryTable , konig:DataSource ; 
 	gcp:tableReference  [ 

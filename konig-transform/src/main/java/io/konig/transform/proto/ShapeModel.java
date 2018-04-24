@@ -239,16 +239,6 @@ public class ShapeModel extends AbstractPrettyPrintable implements ProtoFromItem
 	}
 
 
-	@Override
-	public ProtoFromItem first() {
-		return this;
-	}
-
-
-	@Override
-	public ProtoFromItem rest() {
-		return null;
-	}
 
 	public List<InversePropertyLink> getInversePropertyLinks() {
 		return inversePropertyLinks;

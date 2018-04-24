@@ -46,11 +46,19 @@ import io.konig.transform.proto.ShapeModel;
  */
 public class ShapeRule extends AbstractPrettyPrintable {
 	
-	/**
-	 * @deprecated Use fromItem instead
+	/*
+	 * @deprecated Use channelRules
 	 */
+	@Deprecated
 	private LinkedList<DataChannel> channels = new LinkedList<>();
+	
+	/**
+	 * @deprecated Use channelRules
+	 */
+	@Deprecated 
 	private FromItem fromItem;
+	
+	private List<DataChannelRule> channelRules = new ArrayList<>();
 	private Shape targetShape;
 	private IdRule idRule;
 	private Map<URI,PropertyRule> properties = new HashMap<>();
@@ -71,6 +79,14 @@ public class ShapeRule extends AbstractPrettyPrintable {
 		this.targetShape = targetShapeModel.getShape();
 	}
 	
+	public void add(DataChannelRule rule) {
+		channelRules.add(rule);
+	}
+	
+	public List<DataChannelRule> getChannelRules() {
+		return channelRules;
+	}
+
 	public void addWhereExpression(BinaryRelationalExpression where) {
 		if (whereList == null) {
 			whereList = new ArrayList<>();
@@ -111,6 +127,7 @@ public class ShapeRule extends AbstractPrettyPrintable {
 		return accessor.getContainer().getRoot();
 	}
 	
+	@Deprecated
 	public void addChannel(DataChannel channel) {
 		channels.addFirst(channel);
 		channel.setParent(this);
@@ -214,6 +231,10 @@ public class ShapeRule extends AbstractPrettyPrintable {
 
 
 
+	/**
+	 * @deprecated use getDataChannelRules()
+	 */
+	@Deprecated
 	public FromItem getFromItem() {
 		return fromItem;
 	}

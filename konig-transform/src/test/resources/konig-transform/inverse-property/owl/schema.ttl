@@ -11,7 +11,7 @@ schema:Person a owl:Class .
 schema:Product a owl:Class . 
 
 schema:name a owl:DatatypeProperty ; 
-	schema:domainIncludes schema:Person ; 
+	schema:domainIncludes schema:Product , schema:Person ; 
 	schema:rangeIncludes xsd:string . 
 
 schema:owns a owl:ObjectProperty ; 
