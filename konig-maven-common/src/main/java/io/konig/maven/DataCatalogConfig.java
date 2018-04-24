@@ -1,6 +1,6 @@
 package io.konig.maven;
 
-import org.apache.maven.model.FileSet;
+import org.apache.maven.shared.model.fileset.FileSet;
 
 /*
  * #%L

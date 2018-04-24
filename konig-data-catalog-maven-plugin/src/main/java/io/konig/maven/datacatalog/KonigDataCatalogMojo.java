@@ -124,13 +124,10 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	private DatasourceFileLocator ddlLocator() throws MojoExecutionException {
 		DatasourceFileLocator locator = null;
 		if (sqlFiles != null) {
-			File baseDir = mavenProject.getBasedir();
-			File sqlDir = new File(baseDir, "target/tmp/sql");
+			File sqlDir = createTempSqlFolder();
 			FileSetManager manager = new FileSetManager();
 			int count = 0;
-			if(!sqlDir.exists()){
-				sqlDir.mkdirs();
-			}
+			
 			for (FileSet fileset : sqlFiles) {
 				String[] fileList = manager.getIncludedFiles(fileset);
 				count += fileList.length;
@@ -150,6 +147,20 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			}
 		}
 		return locator;
+	}
+
+	private File createTempSqlFolder() throws MojoExecutionException {
+		File baseDir = mavenProject.getBasedir();
+		File sqlDir = new File(baseDir, "target/tmp/sql");
+		if (sqlDir.exists()) {
+			try {
+				FileUtils.deleteDirectory(sqlDir);
+			} catch (IOException e) {
+				throw new MojoExecutionException("Failed to delete old SQL files", e);
+			}
+		}
+		sqlDir.mkdirs();
+		return sqlDir;
 	}
 
 	

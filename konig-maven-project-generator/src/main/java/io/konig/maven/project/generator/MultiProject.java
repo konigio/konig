@@ -24,6 +24,10 @@ import java.io.File;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.maven.shared.model.fileset.FileSet;
 
 import io.konig.maven.AmazonWebServicesConfig;
 import io.konig.maven.DataCatalogConfig;
@@ -147,6 +151,7 @@ public class MultiProject extends MavenProjectConfig {
 			parent.add(new AwsModelGenerator(this, amazonWebServices));
 		}
 		if (dataCatalog != null) {
+			dataCatalog.setSqlFiles(sqlFileSet());
 			parent.add(new DataCatalogProjectGenerator(this, dataCatalog));
 		}
 		if(oracleManagedCloud != null) {
@@ -155,4 +160,44 @@ public class MultiProject extends MavenProjectConfig {
 		
 		return parent;
 	}
+
+	private FileSet[] sqlFileSet() {
+		
+		List<FileSet> list = new ArrayList<>();
+		
+		addGoogleFileSet(list);
+		addAwsFileSet(list);
+		
+		FileSet[] array = null;
+		
+		if (!list.isEmpty()) {
+			array = new FileSet[list.size()];
+			list.toArray(array);
+		}
+		
+		return array;
+	}
+
+	private void addAwsFileSet(List<FileSet> list) {
+		if (amazonWebServices != null) {
+			FileSet fileSet = new FileSet();
+			fileSet.setDirectory("../" + getArtifactId() + AwsModelGenerator.ARTIFACT_SUFFIX + AwsModelGenerator.TABLES_PATH);
+			fileSet.addInclude("*.sql");
+			list.add(fileSet);
+		}
+		
+	}
+
+	private void addGoogleFileSet(List<FileSet> list) {
+		if (googleCloudPlatform != null) {
+			FileSet fileSet = new FileSet();
+			fileSet.setDirectory("../" + getArtifactId() + GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX 
+					+ GoogleCloudPlatformModelGenerator.CLOUD_SQL_PATH);
+			fileSet.addInclude("*.sql");
+		}
+		
+	}
+
+
+	
 }
