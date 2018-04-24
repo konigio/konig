@@ -168,7 +168,7 @@ public class EtlRouteBuilder {
 					+ "?verifyServerCertificate=false&amp;useSSL=false";
 			Properties properties = new Properties();
 			properties.setProperty("camel.springboot.xmlRoutes", "true");
-			properties.setProperty("camel.springboot.xmlRoutes", "classpath:camel-etl/*.xml");
+			properties.setProperty("camel.springboot.xmlRoutes", "classpath:*.xml");
 			properties.setProperty("aws.rds.dbUrl", jdbcUrl);
 			FileOutputStream fileOut = new FileOutputStream(file);
 			properties.store(fileOut, "camel-routes-config");
@@ -204,7 +204,7 @@ public class EtlRouteBuilder {
 		if (!dockerDir.exists()) {
 			dockerDir.mkdirs();
 		}
-		File dockerFile = new File(dockerDir, targetLocalName);
+		File dockerFile = new File(dockerDir, "Dockerfile");
 		PrintWriter writer = new PrintWriter(dockerFile);
 		writer.println("FROM 220459826988.dkr.ecr.us-east-1.amazonaws.com/konig-docker-aws-etl-base:latest");
 		if(new File(outDir,"camel-routes-config.properties").exists())

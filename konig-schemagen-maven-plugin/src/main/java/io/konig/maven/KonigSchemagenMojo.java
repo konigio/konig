@@ -701,6 +701,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private WorkbookToTurtleRequest workbookToTurleRequest() {
 		WorkbookToTurtleRequest request = new WorkbookToTurtleRequest();
 		request.setWorkbookFile(workbook.getWorkbookFile());
+		request.setWorkbookDir(workbook.getWorkbookDir());
 		request.setOwlOutDir(workbook.owlDir(defaults));
 		request.setShapesOutDir(workbook.shapesDir(defaults));
 		request.setGcpOutDir(workbook.gcpDir(defaults));
@@ -1099,7 +1100,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 								builder.generate();
 								String serviceName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
 								Map<String, Object> service=new HashMap<>();
-								service.put("image", "${ECRRepositoryName}/"+serviceName+":latest");
+								service.put("image", "etl-"+serviceName+":latest");
 								services.put(serviceName, service);
 							}
 						}
@@ -1131,7 +1132,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			while(iterator.hasNext()) {
 		         Map.Entry service = (Map.Entry)iterator.next();	
 		         Map images = (HashMap)service.getValue();
-		         writer.append(images.get("image").toString());
+		         writer.append(images.get("image").toString().toLowerCase());
 		         writer.append("\n");
 			}
 		} finally {

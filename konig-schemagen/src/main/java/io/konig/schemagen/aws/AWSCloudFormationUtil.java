@@ -86,11 +86,7 @@ public class AWSCloudFormationUtil {
 		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());	
 		mapper.setSerializationInclusion(Include.NON_NULL);
 		String resource=mapper.writeValueAsString(resources);
-		for(String key:resources.keySet()){
-			if(key.endsWith("SNSTopic") || key.endsWith("SQSQueue") || key.endsWith("DBCluster")){
-				resource=resource.replace("\"!Ref "+key+"\"", "!Ref "+key);
-			}
-		}
+		resource = resource.replaceAll("\"!Ref ([^\\s]+)\"", "!Ref $1"); 
 
 		String[] resourceLines=resource.split("\n");
 		StringBuffer template=new StringBuffer();

@@ -70,7 +70,7 @@ public class CloudFormationTemplateWriter {
 		writeTemplates();
 		if(cloudFormationDir!=null && cloudFormationDir.exists()){
 			writeDbClusters();
-			writeECR();
+			//writeECR();
 		}
 	}
 	
@@ -126,10 +126,6 @@ public class CloudFormationTemplateWriter {
 		List<String> images = FileUtils.readLines(new File(cloudFormationDir, "ImageList.txt"), "utf-8");
 		for (String image : images) {
 			ContainerDefinition containerDefinition = new ContainerDefinition();
-			String repositoryName = System.getProperty("ECRRepositoryName");
-			if(repositoryName != null) {
-				image = image.replace("${ECRRepositoryName}", repositoryName);
-			}
 			containerDefinition.setName(image.replaceAll("[^a-zA-Z0-9]", "-"));
 			containerDefinition.setImage("${aws-account-id}.dkr.ecr.${aws-region}.amazonaws.com/"+ image);
 			containerDefinition.setMemoryReservation("512");
@@ -261,10 +257,10 @@ public class CloudFormationTemplateWriter {
 		resource.addProperties("Engine", instance.getEngine());
 		resource.addProperties("MasterUsername", "${AuroraMasterUsername}");
 		resource.addProperties("MasterUserPassword", "${AuroraMasterUserPassword}");
-		resource.addProperties("StorageEncrypted", new Boolean(instance.getStorageEncrypted()));
+		resource.addProperties("StorageEncrypted", parseBoolean(instance.getStorageEncrypted()));
 		resource.addProperties("AvailabilityZones", instance.getAvailabilityZones());
-		resource.addProperties("BackupRetentionPeriod", Integer.parseInt(instance.getBackupRetentionPeriod()));
-		resource.addProperties("DatabaseName", instance.getDatabaseName().replace("-", ""));
+		resource.addProperties("BackupRetentionPeriod", parseInteger(instance.getBackupRetentionPeriod()));
+		resource.addProperties("DatabaseName", databaseName(instance));
 		resource.addProperties("DBClusterIdentifier", instance.getDbClusterId());
 		resource.addProperties("DBSubnetGroupName", instance.getDbSubnetGroupName());
 		resource.addProperties("EngineVersion", instance.getEngineVersion());
@@ -273,5 +269,17 @@ public class CloudFormationTemplateWriter {
 		if(instance.getReplicationSourceIdentifier()!=null)
 			resource.addProperties("ReplicationSourceIdentifier", instance.getReplicationSourceIdentifier());
 		return resource;
+	}
+	
+	private Object databaseName(DbCluster instance) {
+		String name = instance.getDatabaseName();
+		return name==null ? null : name.replace("-", "");
+	}
+	private Object parseBoolean(String value) {
+		return value==null? null : new Boolean(value);
+	}
+	
+	private Integer parseInteger(String value) {
+		return value==null ? null : new Integer(value);
 	}
 }
