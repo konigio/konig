@@ -80,38 +80,6 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	@Component
 	private MavenProject mavenProject;
 	
-	@Component
-	private MavenSession mavenSession;
-	
-	@Component
-	private BuildPluginManager pluginManager;
-	
-	@Parameter(property="konig.originalModelDir")
-	private File originalModelDir;
-	
-	
-	@Parameter(property="konig.revisedModelDir")
-	private File revisedModelDir;
-	
-	@Parameter(property="konig.diffReportFile")
-	private File diffReportFile;
-	
-	@Parameter(property="konig.originalVersion")
-	private String originalVersion;
-
-	@Parameter(property="konig.originalModelPath")
-	private String originalModelPath;
-	
-	@Parameter(property="konig.revisedVersion")
-	private String revisedVersion;
-
-	@Parameter(property="konig.revisedModelPath")
-	private String revisedModelPath;
-	
-
-	
-	private static final String ARCHIVE_DIR = "target/archive/";
-	//private List<String> abc;
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		
@@ -132,7 +100,6 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			
 			DataCatalogBuildRequest request = new DataCatalogBuildRequest();
 		
-			// TODO: set the sqlDdlFileLocator field.
 			request.setExampleDir(examplesDir);
 			request.setGraph(graph);
 			request.setOntologyId(ontologyId);
@@ -161,6 +128,9 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			File sqlDir = new File(baseDir, "target/tmp/sql");
 			FileSetManager manager = new FileSetManager();
 			int count = 0;
+			if(!sqlDir.exists()){
+				sqlDir.mkdirs();
+			}
 			for (FileSet fileset : sqlFiles) {
 				String[] fileList = manager.getIncludedFiles(fileset);
 				count += fileList.length;

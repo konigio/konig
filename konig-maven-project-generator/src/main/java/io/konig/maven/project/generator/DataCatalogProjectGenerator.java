@@ -23,16 +23,21 @@ import java.io.File;
  */
 
 import java.io.IOException;
+import java.util.ArrayList;
 
+import org.apache.maven.model.FileSet;
 import org.apache.velocity.VelocityContext;
 
+import io.konig.datasource.DatasourceFileLocator;
+import io.konig.datasource.DdlFileLocator;
+import io.konig.maven.AmazonWebServicesConfig;
 import io.konig.maven.ContentSystemConfig;
 import io.konig.maven.DataCatalogConfig;
 
 public class DataCatalogProjectGenerator extends ConfigurableProjectGenerator<DataCatalogConfig> {
 
 	private ContentSystemConfig contentSystem;
-	
+	private FileSet[] sqlFiles;
 	public DataCatalogProjectGenerator(MavenProjectConfig mavenProject, DataCatalogConfig config) {
 		super(config, "dataCatalog");
 		setTemplatePath("konig/generator/dataCatalog/pom.xml");
@@ -41,12 +46,21 @@ public class DataCatalogProjectGenerator extends ConfigurableProjectGenerator<Da
 		init(mavenProject);
 		
 		mavenProject = getMavenProject();
-		String rdfPath = mavenProject.getRdfSourcePath();
-		
+		String rdfPath = mavenProject.getRdfSourcePath(); 
 		config.setRdfDir(rdfPath);
 		config.setSiteDir("${project.basedir}/target/generated/data-catalog");
 		contentSystem = config.getContentSystem();
 		config.setContentSystem(null);
+		 ArrayList<FileSet> result = new ArrayList<FileSet>();
+			FileSet amazonSqlFile = new FileSet();
+			amazonSqlFile.setDirectory("${project.basedir}/../demo-aws-model/target/generated/aws/tables");
+			amazonSqlFile.addInclude("**/*.sql");
+			FileSet gcpSqlFile = new FileSet();
+			gcpSqlFile.setDirectory("${project.basedir}/../demo-gcp-model/target/generated/gcp/cloudsql/tables");
+			gcpSqlFile.addInclude("**/*.sql");
+			result.add(amazonSqlFile);
+			result.add(gcpSqlFile);
+			config.setSqlFiles( result.toArray( new FileSet[result.size()] ));
 		if (contentSystem != null) {
 			contentSystem.setBaseDir("${project.basedir}/target/generated/data-catalog");
 		}
