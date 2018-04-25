@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -70,12 +71,29 @@ public class DataSourceGenerator {
 	public DataSourceGenerator() {
 		
 	}
+	
+	public static class VelocityFunctions {
+		public String spaceToComma(String text) {
+			
+			StringBuilder builder = new StringBuilder();
+			StringTokenizer tokens = new StringTokenizer(text, " \t\n\r");
+			while (tokens.hasMoreTokens()) {
+				String token = tokens.nextToken();
+				if (builder.length()>0) {
+					builder.append(", ");
+				}
+				builder.append(token);
+			}
+			
+			return builder.toString();
+		}
+	}
 	public DataSourceGenerator(NamespaceManager nsManager, File templateDir, Properties properties) {
 		this.nsManager = nsManager;
 		this.templateDir = templateDir;
 		this.context = new VelocityContext();
 		context.put("templateException", new TemplateException());
-		context.put("generator", new DataSourceGenerator());
+		context.put("functions", new VelocityFunctions());
 		context.put("beginVar", "${");
 		context.put("endVar", "}");
 		put(properties);		
@@ -128,9 +146,6 @@ public class DataSourceGenerator {
 		for (Entry<Object, Object> e : entries) {
 			String key = e.getKey().toString();
 			String value = e.getValue().toString();
-			if(key.equals("parentComponent")) {
-				value = doParsing(e.getValue().toString());
-			}
 			context.put(key, value);
 		}
 	}
@@ -207,9 +222,6 @@ public class DataSourceGenerator {
 			}
 		}
 
-	}
-	public String doParsing(String parentComponent) {
-		return parentComponent.replaceAll(" ", ",");
 	}
 	
 	public VelocityContext getContext(){

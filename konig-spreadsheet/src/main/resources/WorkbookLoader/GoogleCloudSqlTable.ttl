@@ -10,7 +10,7 @@
 	gcp:database "${gcpSqlDatabaseId}" ;
 	gcp:name "${gcpSqlTableName}" ;
 	#if($!{parentComponent}) 
-	schema:isPartOf $generator.doParsing(${parentComponent});
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
 	#end
 .
 
