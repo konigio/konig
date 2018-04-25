@@ -35,7 +35,6 @@ public class Konig {
 	public static final String GOOGLE_BIG_QUERY_TABLE = "http://www.konig.io/ns/core/GoogleBigQueryTable";
 	public static final String SHAPE_DATA_SOURCE = "http://www.konig.io/ns/core/shapeDataSource";
 	public static final String INPUT_SHAPE_OF = "http://www.konig.io/ns/core/inputShapeOf";
-	public static final String IS_PART_OF = "http://www.konig.io/ns/core/isPartOf";
 	public static final String IRI_TEMPLATE = "http://www.konig.io/ns/core/iriTemplate";
 	public static final String IRI_FORMULA = "http://www.konig.io/ns/core/iriFormula";
 	
@@ -104,7 +103,6 @@ public class Konig {
 	public static final URI AwsAuroraTable = new URIImpl("http://www.konig.io/ns/core/AwsAurora");
 	public static final URI S3Bucket = new URIImpl("http://www.konig.io/ns/core/S3Bucket");
 	public static final URI shapeDataSource = new URIImpl(SHAPE_DATA_SOURCE);
-	public static final URI isPartOf = new URIImpl(IS_PART_OF);
 	public static final URI bigQuerySource = new URIImpl(BIG_QUERY_SOURCE);
 	
 	// Shape Transform Vocabulary

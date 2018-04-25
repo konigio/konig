@@ -19,7 +19,7 @@
 		]
 	] ;
 	#if($!{parentComponent}) 
-	schema:isPartOf ${parentComponent};
+	schema:isPartOf $generator.doParsing(${parentComponent});
 	#end
 .
 

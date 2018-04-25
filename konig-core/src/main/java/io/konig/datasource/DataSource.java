@@ -32,6 +32,7 @@ import io.konig.annotation.RdfProperty;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.DC;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.Schema;
 
 public class DataSource {
 	
@@ -86,7 +87,7 @@ public class DataSource {
 		this.iriTemplate = iriTemplate;
 	}
 	
-	@RdfProperty(Konig.IS_PART_OF)
+	@RdfProperty(Schema.IS_PART_OF)
 	public List<URI> getIsPartof() {
 		return isPartOf;
 	}

@@ -66,12 +66,16 @@ public class DataSourceGenerator {
 	private VelocityEngine engine;
 	private File velocityLog;
 	private VelocityContext context;
-
+	
+	public DataSourceGenerator() {
+		
+	}
 	public DataSourceGenerator(NamespaceManager nsManager, File templateDir, Properties properties) {
 		this.nsManager = nsManager;
 		this.templateDir = templateDir;
 		this.context = new VelocityContext();
 		context.put("templateException", new TemplateException());
+		context.put("generator", new DataSourceGenerator());
 		context.put("beginVar", "${");
 		context.put("endVar", "}");
 		put(properties);		
@@ -125,7 +129,7 @@ public class DataSourceGenerator {
 			String key = e.getKey().toString();
 			String value = e.getValue().toString();
 			if(key.equals("parentComponent")) {
-				value = e.getValue().toString().replace(" ", ",");
+				value = doParsing(e.getValue().toString());
 			}
 			context.put(key, value);
 		}
@@ -204,6 +208,10 @@ public class DataSourceGenerator {
 		}
 
 	}
+	public String doParsing(String parentComponent) {
+		return parentComponent.replaceAll(" ", ",");
+	}
+	
 	public VelocityContext getContext(){
 		return context;
 	}

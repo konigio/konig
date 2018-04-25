@@ -132,12 +132,8 @@ public class FunctionParser {
 			if (c == '"') {
 				break;
 			}
-			if (c != ',') {
-				if(isWhitespace(c)) {
-					buffer.append(",");
-				} else {
-					buffer.appendCodePoint(c);
-				}
+			if (c != ',') {				
+				buffer.appendCodePoint(c);				
 			}
 			
 		};
