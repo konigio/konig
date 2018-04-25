@@ -117,12 +117,13 @@ public class FunctionParser {
 	
 	private String string() throws IOException, FunctionParseException {
 		int c = next();
+		buffer = new StringBuilder();
 		if (c != '"') {
 			throw new FunctionParseException();
 		}
-		buffer = new StringBuilder();
+		
 		for (;;) {
-			c = read();
+			c = read(); 
 			if (c == ',') {
 				buffer.append("\"");
 				buffer.appendCodePoint(c);
@@ -131,10 +132,12 @@ public class FunctionParser {
 			if (c == '"') {
 				break;
 			}
-			if (c != ',') {
-				buffer.appendCodePoint(c);
+			if (c != ',') {				
+				buffer.appendCodePoint(c);				
 			}
-		}
+			
+		};
+		
 		return text();
 	}
 

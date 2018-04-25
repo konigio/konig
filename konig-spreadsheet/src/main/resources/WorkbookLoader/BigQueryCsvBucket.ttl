@@ -1,6 +1,8 @@
 
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
+@prefix schema:  <http://schema.org/> .
+@prefix sys: <http://schema.pearson.com/ns/system/> .
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${shapeLocalName}>
 	a konig:GoogleBigQueryTable, konig:DataSource;
@@ -16,6 +18,9 @@
 			gcp:skipLeadingRows 1
 		]
 	] ;
+	#if($!{parentComponent}) 
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
+	#end
 .
 
 <${shapeId}> konig:shapeDataSource 
