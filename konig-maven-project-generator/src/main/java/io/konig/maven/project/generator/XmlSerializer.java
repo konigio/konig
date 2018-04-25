@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.maven.shared.model.fileset.FileSet;
+
 public class XmlSerializer {
 	
 	private int indentWidth = 3;
@@ -71,7 +73,10 @@ public class XmlSerializer {
 	public void write(Object pojo, String tag) {
 		beginTag(tag);
 		out.println();
-		if (pojo instanceof Collection<?>) {
+		
+		if (pojo.getClass().isArray() && pojo.getClass().getComponentType()==FileSet.class) {
+			// TODO: Special handling to serialize array of FileSet instances.
+		} else if (pojo instanceof Collection<?>) {
 			printCollection((Collection<?>) pojo);
 		} else {
 			printProperties(pojo);
@@ -81,6 +86,8 @@ public class XmlSerializer {
 		
 	}
 
+
+	
 
 	private void printCollection(Collection<?> container) {
 		push();
