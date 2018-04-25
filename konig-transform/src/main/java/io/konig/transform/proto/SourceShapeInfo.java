@@ -36,6 +36,8 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 	private static final Logger logger = LoggerFactory.getLogger(SourceShapeInfo.class);
 	
 	private ShapeModel sourceShape;
+	private PropertyModel targetAccessor;
+	
 	private int matchCount;
 	
 	private SourceShapeStatus status = SourceShapeStatus.CANDIDATE;
@@ -49,6 +51,19 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 		this.sourceShape = sourceShape;
 		sourceShape.setSourceShapeInfo(this);
 	}
+
+	
+
+	public PropertyModel getTargetAccessor() {
+		return targetAccessor;
+	}
+
+
+
+	public void setTargetAccessor(PropertyModel targetAccessor) {
+		this.targetAccessor = targetAccessor;
+	}
+
 
 
 	public void addMatchedTargetProperty(DirectPropertyModel targetProperty) {

@@ -68,6 +68,7 @@ import io.konig.formula.VariableTerm;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleBigQueryView;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
@@ -453,6 +454,23 @@ public class SqlFactory {
 			}
 			return result;
 		}
+		
+//		private ValueExpression iriFormulaIdValue(Shape shape, TableItemExpression sourceTable, PropertyModel sourcePropertyModel) {
+//			PropertyConstraint p = new PropertyConstraint(Konig.id);
+//			p.setFormula(shape.getIriFormula());
+//			p.setMaxCount(1);
+//			p.setValueClass(shape.getTargetClass());
+//			SqlFormulaExchange exchange = SqlFormulaExchange.builder()
+//					.withShape(shape)
+//					.withSourcePropertyModel(sourcePropertyModel)
+//					.withSourceTable(sourceTable)
+//					.withShapeRule(shapeRule)
+//					.withProperty(p)
+//					.withTableMap(this)
+//					.withSqlFactoryWorker(this)
+//					.build();
+//			return  formulaFactory.formula(exchange);
+//		}
 
 		private ValueExpression createFormulaIdValue(ShapeRule shapeRule, FormulaIdRule idRule)
 				throws TransformBuildException {
@@ -465,6 +483,8 @@ public class SqlFactory {
 					.withSourcePropertyModel(idRule.getSourcePropertyModel()).withSourceTable(sourceTable)
 					.withShapeRule(shapeRule).withProperty(p).withTableMap(this).withSqlFactoryWorker(this).build();
 			ValueExpression ve = formulaFactory.formula(exchange);
+			
+			
 
 			GroupingElement ge = exchange.getGroupingElement();
 			if (ge != null) {
@@ -493,14 +513,13 @@ public class SqlFactory {
 			}
 			return null;
 		}
+		
+		private FunctionExpression iriTemplateValue(DataChannel channel, IriTemplate template) throws TransformBuildException {
 
-		private ValueExpression createIriTemplateValue(ShapeRule shapeRule, IriTemplateIdRule idRule)
-				throws TransformBuildException {
+			Shape shape = channel.getShape();
 			FunctionExpression func = new FunctionExpression("CONCAT");
-			Shape shape = idRule.getDeclaringShape();
-			IriTemplate template = shape.getIriTemplate();
 			Context context = template.getContext();
-			TableItemExpression tableItem = simpleTableItem(idRule.getDataChannel());
+			TableItemExpression tableItem = simpleTableItem(channel);
 
 			for (Element e : template.toList()) {
 				String text = e.getText();
@@ -538,7 +557,15 @@ public class SqlFactory {
 					break;
 				}
 			}
+			return func;
+		}
 
+		private ValueExpression createIriTemplateValue(ShapeRule shapeRule, IriTemplateIdRule idRule)
+				throws TransformBuildException {
+			Shape shape = idRule.getDeclaringShape();
+			IriTemplate template = shape.getIriTemplate();
+
+			FunctionExpression func = iriTemplateValue(idRule.getDataChannel(), template);
 			AliasExpression alias = new AliasExpression(func, "id");
 
 			return alias;
@@ -1017,7 +1044,31 @@ public class SqlFactory {
 				throw new TransformBuildException("TableItemExpression not found for Channel: " + p.getChannel());
 			}
 			URI predicate = p.getPredicate();
+			if (predicate.equals(Konig.id)) {
+				return idValueExpression(tableItem, p);
+			}
 			return SqlUtil.columnExpression(tableItem, predicate);
+		}
+
+		private ValueExpression idValueExpression(TableItemExpression tableItem, ChannelProperty p) throws TransformBuildException {
+			
+			Shape shape = p.getChannel().getShape();
+			if (shape.getNodeKind() == NodeKind.IRI) {
+				SqlUtil.columnExpression(tableItem, p.getPredicate());
+			}
+			
+			IriTemplate template = shape.getIriTemplate();
+			if (template != null) {
+				return iriTemplateValue(p.getChannel(), template);
+			}
+			
+			QuantifiedExpression formula = shape.getIriFormula();
+			if (formula != null) {
+				throw new TransformBuildException("IRI Formula not supported yet");
+				// TODO: Add support for IRI Formula.
+			}
+			
+			throw new TransformBuildException("IRI value not defined for " + RdfUtil.localName(shape.getId()));
 		}
 
 		private TableItemExpression toTableItemExpression(DataChannel channel) throws TransformBuildException {

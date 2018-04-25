@@ -55,6 +55,7 @@ import io.konig.shacl.ShapePropertyPair;
 import io.konig.transform.ShapeTransformException;
 import io.konig.transform.rule.DataChannel;
 import io.konig.transform.rule.FromItem;
+import io.konig.transform.rule.TransformBinaryOperator;
 
 public class ShapeModelFactory {
 	private static Logger logger = LoggerFactory.getLogger(ShapeModelFactory.class);
@@ -117,7 +118,7 @@ public class ShapeModelFactory {
 			List<SourceShapeInfo> list = targetShapeModel.getClassModel().getCommittedSources();
 			for (int i=0; i<index; i++) {
 				SourceShapeInfo prior = list.get(i);
-				if (join(prior, info)) {
+				if (joinPrior(prior, info)) {
 					return;
 				}
 			}
@@ -125,9 +126,72 @@ public class ShapeModelFactory {
 			throw new ShapeTransformException("Failed to find join condition for " + shapeId);
 		}
 
-		private boolean join(SourceShapeInfo prior, SourceShapeInfo info) {
-			// TODO Auto-generated method stub
+		private boolean joinPrior(SourceShapeInfo prior, SourceShapeInfo info) {
+			
+			ClassModel priorClassModel = prior.getSourceShape().getClassModel();
+			ClassModel infoClassModel = info.getSourceShape().getClassModel();
+			
+			if (priorClassModel == infoClassModel) {
+				// TODO: Join shapes that describe the same entity.
+			} else {
+				// Join shapes that describe different entities.
+				PropertyModel targetAccessor = info.getTargetAccessor();
+				if (targetAccessor instanceof StepPropertyModel) {
+					StepPropertyModel targetStep = (StepPropertyModel) targetAccessor;
+					
+					if (targetStep.getStepIndex()==0 && targetStep.getDirection()==Direction.IN) {
+						// For now we only handle the special case where targetAccessor is the first element 
+						// within a path, and has an inward direction.
+						
+						// TODO: generalize this to handle the other possibilities.
+						
+						ClassModel targetClassModel = targetStep.getDeclaringShape().getClassModel();
+						if (priorClassModel == targetClassModel) {
+							
+							URI predicate = targetStep.getPredicate();
+							ShapeModel priorShape = prior.getSourceShape();
+							ShapeModel infoShape = info.getSourceShape();
+							
+							PropertyConstraint p = infoShape.getShape().getPropertyConstraint(predicate);
+							
+							if (p != null) {
+								
+								PropertyModel right = priorShape.getPropertyByPredicate(Konig.id);
+								PropertyModel left = producePropertyModel(infoShape, p);
+								ProtoBinaryBooleanExpression condition = new ProtoBinaryBooleanExpression(
+										TransformBinaryOperator.EQUAL, left, right);
+								
+								info.setJoinCondition(condition);
+								
+								if (logger.isDebugEnabled()) {
+									logger.debug("joinPrior: Join {} with {} ON {}={}",
+											RdfUtil.localName(infoShape.getShape().getId()),
+											RdfUtil.localName(priorShape.getShape().getId()),
+											left.getPredicate().getLocalName(),
+											right.getPredicate().getLocalName());
+								}
+								
+								return true;
+							}
+							
+						}
+					}
+				}
+			}
+			
 			return false;
+		}
+
+		private PropertyModel producePropertyModel(ShapeModel shapeModel, PropertyConstraint p) {
+			URI predicate = p.getPredicate();
+			PropertyModel result = shapeModel.getPropertyByPredicate(predicate);
+			if (result == null) {
+				ClassModel classModel = shapeModel.getClassModel();
+				PropertyGroup group = classModel.produceGroup(Direction.OUT, predicate);
+				result = new DirectPropertyModel(predicate, group, p);
+				fullAttachProperty(result, shapeModel, group);
+			}
+			return result;
 		}
 
 		public ShapeModel createShapeModel(Shape shape) throws ShapeTransformException {
@@ -528,7 +592,8 @@ public class ShapeModelFactory {
 						sourceClassModel.hashCode());
 			}
 			
-			InverseSourceShapeInfo info = new InverseSourceShapeInfo(sourceShapeModel, targetProperty);
+			SourceShapeInfo info = new SourceShapeInfo(sourceShapeModel);
+			info.setTargetAccessor(head);
 			targetClassModel.addCandidateSourceShapeModel(info);
 
 			head.addValueShapeInfo(info);
@@ -579,7 +644,6 @@ public class ShapeModelFactory {
 					logger.debug("addIdProperty: Added 'id' property to {}", RdfUtil.localName(targetShape.getId()));
 				}
 			}
-			
 		}
 
 		private void addTargetDirectProperties(ShapeModel shapeModel) throws ShapeTransformException {
@@ -626,7 +690,7 @@ public class ShapeModelFactory {
 			
 			ShapeModel shapeModel = direct.getDeclaringShape();
 			StepPropertyModel priorStep = null;
-			int index = 0;
+			int index = -1;
 			ClassModel classModel = direct.getDeclaringShape().getClassModel();
 			List<PathStep> stepList = path.getStepList();
 			for (PathStep step : stepList) {

@@ -33,8 +33,8 @@ public class DataChannel extends AbstractPrettyPrintable implements Comparable<D
 	@Deprecated
 	private JoinStatement0 joinStatement;
 	private DataSource datasource;
-	private ShapeRule parent;
 	private String variableName;
+	
 	
 	
 	
@@ -94,15 +94,6 @@ public class DataChannel extends AbstractPrettyPrintable implements Comparable<D
 		out.endObject();		
 	}
 
-
-	public ShapeRule getParent() {
-		return parent;
-	}
-
-
-	public void setParent(ShapeRule parent) {
-		this.parent = parent;
-	}
 
 	/**
 	 * Get the name of the variable bound to this DataChannel.

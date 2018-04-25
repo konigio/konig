@@ -151,7 +151,6 @@ public class ShapeModelToShapeRule {
 		private void addChannelRules(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
 			for (SourceShapeInfo info : shapeModel.getClassModel().getCommittedSources()) {
 				DataChannel channel = info.getSourceShape().getDataChannel();
-				channel.setName(variableNamer.next());
 				BooleanExpression condition = booleanExpression(info.getJoinCondition());
 				DataChannelRule rule = new DataChannelRule(channel, condition);
 				shapeRule.add(rule);
@@ -389,7 +388,11 @@ public class ShapeModelToShapeRule {
 
 
 		public ShapeRule toShapeRule(ShapeModel shapeModel) throws ShapeTransformException {
+			if (logger.isDebugEnabled()) {
+				logger.debug("toShapeRule: Creating ShapeRule for {}", RdfUtil.localName(shapeModel.getShape().getId()));
+			}
 			ShapeRule shapeRule = new ShapeRule(shapeModel);
+			
 			shapeRule.setVariableNamer(variableNamer);
 			
 			addIdRule(shapeModel, shapeRule);

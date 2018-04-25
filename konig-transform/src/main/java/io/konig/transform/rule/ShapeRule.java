@@ -127,11 +127,6 @@ public class ShapeRule extends AbstractPrettyPrintable {
 		return accessor.getContainer().getRoot();
 	}
 	
-	@Deprecated
-	public void addChannel(DataChannel channel) {
-		channels.addFirst(channel);
-		channel.setParent(this);
-	}
 	
 	public Shape getTargetShape() {
 		return targetShape;

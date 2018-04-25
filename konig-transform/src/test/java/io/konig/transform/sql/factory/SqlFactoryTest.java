@@ -54,6 +54,7 @@ import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.InsertStatement;
+import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.JoinExpression0;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
@@ -82,29 +83,108 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		useBigQueryTransformStrategy();
 	}
 	
+	/*
+	SELECT
+	   CONCAT("http://example.com/product/", CAST(a.PRODUCT_ID AS STRING)) AS id,
+	   a.PRODUCT_NAME AS name,
+	   b.name AS ownerName
+	FROM schema.OriginProductShape AS a, 
+	JOIN schema.Person AS b ON
+	   b.owns=CONCAT("http://example.com/product/", CAST(a.PRODUCT_ID AS STRING))
+	 */
 	
 	@Test
-	public void testTransformInversePath() throws Exception {
+	public void testInverseProperty() throws Exception {
 		
 		load("src/test/resources/konig-transform/inverse-property");
 
 		URI shapeId = iri("http://example.com/shapes/ProductShape");
+	
 		
 		Shape shape = shapeManager.getShapeById(shapeId);
 		List<PropertyConstraint> list = shape.getProperty();
 		assertEquals(2, list.size());
 
 		ShapeRule shapeRule = createShapeRule(shapeId);
-		
+
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+
+		FromExpression from = select.getFrom();
+		TableItemExpression productTable = assertFrom(from, "schema.OriginProductShape");
+		TableItemExpression personTable = assertFrom(from, "schema.Person");
 		
-	
-		System.out.println(select.toString());
+		String productAlias = alias(productTable);
+		String personAlias = alias(personTable);
+		
+		assertColumn(select, null, "id");
+		assertColumn(select, productAlias + ".PRODUCT_NAME", "name");
+		assertColumn(select, personAlias + ".name", "ownerName");
+		
+		assertTrue(personTable instanceof JoinExpression);
+		JoinExpression join = (JoinExpression) personTable;
+		SearchCondition condition = join.getJoinSpecification().getSearchCondition();
+		assertTrue(condition instanceof ComparisonPredicate);
+		ComparisonPredicate comparison = (ComparisonPredicate) condition;
+		
+		ValueExpression left = comparison.getLeft();
+		assertTrue(left instanceof ColumnExpression);
+		ColumnExpression leftColumn = (ColumnExpression) left;
+		assertEquals(personAlias + ".owns", leftColumn.getColumnName());
+		
+		ValueExpression right = comparison.getRight();
+		assertTrue(right instanceof FunctionExpression);
 		
 	}
 	
-	@Ignore
+	private String alias(TableItemExpression table) {
+		if (table instanceof TableAliasExpression) {
+			TableAliasExpression alias = (TableAliasExpression) table;
+			return alias.getAlias();
+		}
+		if (table instanceof JoinExpression) {
+			return alias(((JoinExpression) table).getTable());
+		}
+		fail("No alias found for table: " + table.toString());
+		return null;
+	}
+	
+	private TableNameExpression baseTable(TableItemExpression item) {
+		if (item instanceof TableAliasExpression) {
+			return baseTable(((TableAliasExpression) item).getTableName());
+		}
+		if (item instanceof JoinExpression) {
+			return baseTable(((JoinExpression) item).getTable());
+		}
+		
+		if (item instanceof TableNameExpression) {
+			return (TableNameExpression) item;
+		}
+		
+		fail("TableNameExpression not found");
+		return null;
+	}
+
+	private TableItemExpression assertFrom(FromExpression from, String tableName) {
+		for (TableItemExpression item : from.getTableItems()) {
+			
+			TableNameExpression base = baseTable(item);
+			if (base.getTableName().equals(tableName)) {
+				return item;
+			}
+		}
+
+		fail(tableName + " not found in FROM clause");
+		return null;
+	}
+
+	/*
+	SELECT
+	   CONCAT("http://example.com/product/", CAST(PRODUCT_ID AS STRING)) AS id,
+	   PRODUCT_NAME AS name
+	FROM schema.OriginProductShape
+	 */
+	@Test
 	public void testIriTemplate() throws Exception {
 		
 		load("src/test/resources/konig-transform/iri-template");
@@ -112,16 +192,20 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		URI shapeId = iri("http://example.com/shapes/ProductShape");
 
 		ShapeRule shapeRule = createShapeRule(shapeId);
-		
-		
+
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
 		
-	
-		System.out.println(select.toString());
+		ValueExpression idColumn = assertColumn(select, null, "id");
+		AliasExpression idAlias = (AliasExpression) idColumn;
+		
+		QueryExpression query = idAlias.getExpression();
+		assertTrue(query instanceof FunctionExpression);
+		
+		assertColumn(select, "PRODUCT_NAME", "name");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -183,7 +267,7 @@ FROM
 
 		URI shapeId = iri("http://example.com/shapes/BqProductShape");
 
-		ShapeRule shapeRule = createShapeRule1(shapeId);
+		ShapeRule shapeRule = createShapeRule(shapeId);
 		
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
