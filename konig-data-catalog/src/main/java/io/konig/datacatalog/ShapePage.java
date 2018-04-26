@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.velocity.Template;
@@ -42,12 +43,14 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.json.SampleJsonGenerator;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.StringUtil;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class ShapePage {
 	private static final Logger logger = LoggerFactory.getLogger(ShapePage.class);
 	private static final String SHAPE_TEMPLATE = "data-catalog/velocity/shape.vm";
+	private static final String[] DATASOURCE_LIST={"GoogleBigQueryTable","GoogleBigQueryView","GoogleCloudSqlTable","AwsAurora"};
 
 	public void render(ShapeRequest request, PageResponse response) throws DataCatalogException {
 
@@ -70,6 +73,20 @@ public class ShapePage {
 			return;
 		}
 		context.put("TargetClass", new Link(targetClass.getLocalName(), targetClass.stringValue()));
+		if(shape.getShapeDataSource()!=null){
+			DataSource ds=getValidDataSource(shape.getShapeDataSource(),context);
+			String providedBy=null;
+			if(ds!=null && ds.getIsPartof()!=null){
+				for(URI uri:ds.getIsPartof()){
+					if(providedBy==null)
+						providedBy=uri.getLocalName();
+					else
+						providedBy=providedBy+","+uri.getLocalName();
+				}
+				context.put("ProvidedBy", providedBy);
+			}
+			
+		}
 		request.setPageId(shapeURI);
 		request.setActiveLink(null);
 		
@@ -86,6 +103,20 @@ public class ShapePage {
 		PrintWriter out = response.getWriter();
 		template.merge(context, out);
 		out.flush();
+	}
+	
+	private DataSource getValidDataSource(List<DataSource> shapeDataSourceList,VelocityContext context) {
+		for(DataSource ds:shapeDataSourceList){			
+			for(URI uri:ds.getType()){
+				String localName=uri.getLocalName();
+				if(Arrays.asList(DATASOURCE_LIST).contains(localName)){
+					context.put("DataSource",localName);
+					return ds;
+				}
+			}			
+		}
+		return null;
+
 	}
 
 	private void addJsonSamples(ShapeRequest request) throws DataCatalogException {
