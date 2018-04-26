@@ -1,6 +1,8 @@
 
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
+@prefix schema:  <http://schema.org/> .
+@prefix sys: <http://schema.pearson.com/ns/system/> .
 
 <gs://${gcpBucketName}>
 	a konig:GoogleCloudStorageBucket, konig:DataSource;
@@ -21,6 +23,9 @@
 				gcp:topic $templateException.topicNameNotDefined();
 			#end
 		] 
+	#end
+	#if($!{parentComponent}) 
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
 	#end 
 .
 

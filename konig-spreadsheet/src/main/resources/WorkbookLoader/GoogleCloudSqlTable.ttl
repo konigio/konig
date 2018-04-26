@@ -1,12 +1,17 @@
 
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
+@prefix schema:  <http://schema.org/> .
+@prefix sys: <http://schema.pearson.com/ns/system/> .
 
 <https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/${gcpSqlInstanceId}/databases/${gcpSqlDatabaseId}/tables/${gcpSqlTableName}>
 	a konig:GoogleCloudSqlTable, konig:DataSource ;
 	gcp:instance "${gcpSqlInstanceId}" ;
 	gcp:database "${gcpSqlDatabaseId}" ;
 	gcp:name "${gcpSqlTableName}" ;
+	#if($!{parentComponent}) 
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
+	#end
 .
 
 <${shapeId}> konig:shapeDataSource 

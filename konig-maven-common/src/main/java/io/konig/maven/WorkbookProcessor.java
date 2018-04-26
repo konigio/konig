@@ -25,6 +25,7 @@ import java.io.File;
 
 public class WorkbookProcessor {
 	private File workbookFile;
+	private File workbookDir;
 	private File owlDir;
 	private File shapesDir;
 	private boolean inferRdfPropertyDefinitions=true;
@@ -79,6 +80,12 @@ public class WorkbookProcessor {
 	}
 	public void setFailOnErrors(boolean failOnErrors) {
 		this.failOnErrors = failOnErrors;
+	}
+	public File getWorkbookDir() {
+		return workbookDir;
+	}
+	public void setWorkbookDir(File workbookDir) {
+		this.workbookDir = workbookDir;
 	}
 
 }

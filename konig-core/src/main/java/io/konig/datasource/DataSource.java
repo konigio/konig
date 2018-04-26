@@ -1,6 +1,7 @@
 package io.konig.datasource;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /*
@@ -31,6 +32,7 @@ import io.konig.annotation.RdfProperty;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.DC;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.Schema;
 
 public class DataSource {
 	
@@ -38,7 +40,8 @@ public class DataSource {
 	private String identifier;
 	private Set<URI> type = new LinkedHashSet<>();
 	private IriTemplate iriTemplate;
-	
+	private List<URI> isPartOf;
+ 	
 	public DataSource() {
 		
 	}
@@ -82,6 +85,15 @@ public class DataSource {
 	@RdfProperty(Konig.IRI_TEMPLATE)
 	public void setIriTemplate(IriTemplate iriTemplate) {
 		this.iriTemplate = iriTemplate;
+	}
+	
+	@RdfProperty(Schema.IS_PART_OF)
+	public List<URI> getIsPartof() {
+		return isPartOf;
+	}
+
+	public void setIsPartof(List<URI> isPartOf) {
+		this.isPartOf = isPartOf;
 	}
 	
 	@Override

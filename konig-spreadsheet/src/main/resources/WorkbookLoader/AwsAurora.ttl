@@ -1,6 +1,8 @@
 
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix aws:   <http://www.konig.io/ns/aws/> .
+@prefix schema:  <http://schema.org/> .
+@prefix sys: <http://schema.pearson.com/ns/system/> .
 
 <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/${awsTableName}>
 	a konig:AwsAurora, konig:DataSource;
@@ -8,7 +10,10 @@
 		aws:awsAuroraHost "${awsAuroraHost}" ;
 		aws:awsSchema "${awsAuroraSchema}" ;
 		aws:awsTableName   "${awsTableName}"
-	]
+	];
+	#if($!{parentComponent}) 
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
+	#end
 .
 
 <${shapeId}> konig:shapeDataSource 

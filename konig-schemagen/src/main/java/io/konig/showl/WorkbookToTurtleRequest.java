@@ -25,6 +25,7 @@ import java.io.File;
 
 public class WorkbookToTurtleRequest {
 	private File workbookFile;
+	private File workbookDir;
 	private File owlOutDir;
 	private File shapesOutDir;
 	private File gcpOutDir;
@@ -66,6 +67,12 @@ public class WorkbookToTurtleRequest {
 	}
 	public void setGcpOutDir(File gcpOutDir) {
 		this.gcpOutDir = gcpOutDir;
+	}
+	public File getWorkbookDir() {
+		return workbookDir;
+	}
+	public void setWorkbookDir(File workbookDir) {
+		this.workbookDir = workbookDir;
 	}
 
 }

@@ -1,6 +1,8 @@
 
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix omcs:   <http://www.konig.io/ns/omcs/> .
+@prefix schema:  <http://schema.org/> .
+@prefix sys: <http://schema.pearson.com/ns/system/> .
 
 <http://www.konig.io/ns/omcs/instances/${omcsInstanceId}/databases/${oracleSchema}/tables/${omcsTableId}>
 	a konig:OracleTable, konig:DataSource;
@@ -9,7 +11,10 @@
 		omcs:omcsInstanceId "${omcsInstanceId}" ;
 		omcs:oracleSchema "${oracleSchema}" ;
 		omcs:omcsTableId   "${omcsTableId}" 
-	]
+	];
+	#if($!{parentComponent}) 
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
+	#end
 .
 
 <${shapeId}> konig:shapeDataSource 
