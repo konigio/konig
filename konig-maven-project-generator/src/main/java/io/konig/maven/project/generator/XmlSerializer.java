@@ -22,6 +22,7 @@ package io.konig.maven.project.generator;
 
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
@@ -30,7 +31,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.model.fileset.FileSet;
+import org.apache.maven.shared.model.fileset.util.FileSetManager;
+
+import io.konig.datasource.DdlFileLocator;
 
 public class XmlSerializer {
 	
@@ -76,6 +82,7 @@ public class XmlSerializer {
 		
 		if (pojo.getClass().isArray() && pojo.getClass().getComponentType()==FileSet.class) {
 			// TODO: Special handling to serialize array of FileSet instances.
+			printArray((FileSet[]) pojo);
 		} else if (pojo instanceof Collection<?>) {
 			printCollection((Collection<?>) pojo);
 		} else {
@@ -210,6 +217,16 @@ public class XmlSerializer {
 	}
 	
 	
-	
+	private void printArray(FileSet[] pojo){
+
+		if (pojo != null) {
+			
+			for (FileSet fileset : pojo) {
+				printProperties(fileset);
+			}
+
+		}
+
+	}
 
 }
