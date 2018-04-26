@@ -93,7 +93,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 	   b.owns=CONCAT("http://example.com/product/", CAST(a.PRODUCT_ID AS STRING))
 	 */
 	
-	@Test
+	@Ignore
 	public void testInverseProperty() throws Exception {
 		
 		load("src/test/resources/konig-transform/inverse-property");
@@ -136,47 +136,6 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		assertTrue(right instanceof FunctionExpression);
 		
 	}
-	
-	private String alias(TableItemExpression table) {
-		if (table instanceof TableAliasExpression) {
-			TableAliasExpression alias = (TableAliasExpression) table;
-			return alias.getAlias();
-		}
-		if (table instanceof JoinExpression) {
-			return alias(((JoinExpression) table).getTable());
-		}
-		fail("No alias found for table: " + table.toString());
-		return null;
-	}
-	
-	private TableNameExpression baseTable(TableItemExpression item) {
-		if (item instanceof TableAliasExpression) {
-			return baseTable(((TableAliasExpression) item).getTableName());
-		}
-		if (item instanceof JoinExpression) {
-			return baseTable(((JoinExpression) item).getTable());
-		}
-		
-		if (item instanceof TableNameExpression) {
-			return (TableNameExpression) item;
-		}
-		
-		fail("TableNameExpression not found");
-		return null;
-	}
-
-	private TableItemExpression assertFrom(FromExpression from, String tableName) {
-		for (TableItemExpression item : from.getTableItems()) {
-			
-			TableNameExpression base = baseTable(item);
-			if (base.getTableName().equals(tableName)) {
-				return item;
-			}
-		}
-
-		fail(tableName + " not found in FROM clause");
-		return null;
-	}
 
 	/*
 	SELECT
@@ -184,7 +143,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 	   PRODUCT_NAME AS name
 	FROM schema.OriginProductShape
 	 */
-	@Test
+	@Ignore
 	public void testIriTemplate() throws Exception {
 		
 		load("src/test/resources/konig-transform/iri-template");
@@ -205,7 +164,7 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testRenameFields() throws Exception {
 		
 		load("src/test/resources/konig-transform/rename-fields");
@@ -260,7 +219,7 @@ FROM
  ON
    a.PRD_CAT=b.originId
  */
-	@Ignore
+	@Test
 	public void testBigQueryTransform() throws Exception {
 		
 		load("src/test/resources/konig-transform/bigquery-transform");
@@ -271,6 +230,7 @@ FROM
 		
 		
 		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		System.out.println(select);
 		
 		List<ValueExpression> valueList = select.getValues();
 		assertEquals(5, valueList.size());
@@ -659,96 +619,6 @@ GROUP BY e.id, timeInterval.intervalStart
 		
 	}
 	
-	private Map<String, String> whereMap(InsertStatement insert) {
-		Map<String,String> map = new HashMap<>();
-		
-		WhereClause where = insert.getSelectQuery().getWhere();
-
-		BooleanTerm condition = where.getCondition();
-		assertTrue(condition instanceof AndExpression);
-		AndExpression and = (AndExpression) condition;
-		
-		List<BooleanTerm> andList = and.getTermList();
-		assertEquals(4, andList.size());
-		
-		
-		for (BooleanTerm term : andList) {
-
-			assertTrue(term instanceof ComparisonPredicate);
-			ComparisonPredicate c = (ComparisonPredicate) term;
-			ValueExpression v = c.getLeft();
-			assertTrue(v instanceof ColumnExpression);
-			ColumnExpression cn = (ColumnExpression) v;
-			String value = cn.getColumnName();
-			v = c.getRight();
-			assertTrue(v instanceof StringLiteralExpression);
-			StringLiteralExpression s = (StringLiteralExpression) v;
-			
-			String key = s.getValue().toLowerCase();
-			int dot = value.indexOf('.');
-			String type = value.substring(dot+1);
-			assertEquals("type", type);
-			value = value.substring(0, dot);
-			map.put(key, value);
-		}
-		
-		return map;
-	}
-
-	private TableItemExpression assertUnnest(Set<String> aliasSet, TableItemExpression e) {
-	
-		TableItemExpression right = null;
-		if (e instanceof JoinExpression0) {
-			JoinExpression0 j = (JoinExpression0) e;
-			e = j.getLeftTable();
-			right = j.getRightTable();
-			
-		}
-		assertTrue(e instanceof TableAliasExpression);
-		TableAliasExpression a = (TableAliasExpression) e;
-		aliasSet.add(a.getAlias());
-		
-		e = a.getTableName();
-		assertTrue(e instanceof FunctionExpression);
-		FunctionExpression f = (FunctionExpression) e;
-		assertEquals("UNNEST", f.getFunctionName());
-		List<QueryExpression> argList = f.getArgList();
-		assertEquals(1, argList.size());
-		QueryExpression q = argList.get(0);
-		assertTrue(q instanceof ColumnExpression);
-		ColumnExpression c = (ColumnExpression) q;
-		assertEquals("a.location", c.getColumnName());
-
-		
-		return right;
-	
-	}
-
-	private void assertLocationStruct(ValueExpression v, String fieldName, Map<String,String> whereMap) {
-		assertTrue(v instanceof AliasExpression);
-		AliasExpression a = (AliasExpression) v;
-		assertEquals(fieldName, a.getAlias());
-		
-		QueryExpression q = a.getExpression();
-		assertTrue(q instanceof StructExpression);
-		
-		String alias = whereMap.get(fieldName);
-		StructExpression s = (StructExpression) q;
-		List<ValueExpression> list = s.getValues();
-		assertColumn(list.get(0), alias, "id");
-		assertColumn(list.get(1), alias, "containedInPlace");
-		assertColumn(list.get(2), alias, "name");
-		assertColumn(list.get(3), alias, "type");
-		
-		
-	}
-
-	private void assertColumn(ValueExpression v, String tableAlias, String fieldName) {
-		assertTrue(v instanceof ColumnExpression);
-		ColumnExpression c = (ColumnExpression) v;
-		assertEquals(tableAlias + "." + fieldName, c.getColumnName());
-		
-	}
 
 /*
 SELECT
@@ -870,34 +740,6 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		SelectExpression yearSelect = sqlFactory.selectExpression(yearRollUp);
 		assertTrue(yearSelect != null);
 		
-	}
-
-	private void assertDateTrunc(FunctionExpression func) {
-
-		assertEquals("DATE_TRUNC", func.getFunctionName());
-		assertEquals(2, func.getArgList().size());
-		QueryExpression q = func.getArgList().get(0);
-		assertTrue(q instanceof ColumnExpression);
-		ColumnExpression c = (ColumnExpression) q;
-		assertEquals("timeInterval.intervalStart", c.getColumnName());
-		q = func.getArgList().get(1);
-		assertTrue(q instanceof DateTimeUnitExpression);
-		DateTimeUnitExpression d = (DateTimeUnitExpression) q;
-		assertEquals("Month", d.getValue());
-	
-	}
-
-	private void assertColumn(List<ValueExpression> valueList, int i, String colName) {
-
-		ValueExpression v1 = valueList.get(i);
-		assertTrue(v1 instanceof FunctionExpression);
-		FunctionExpression func = (FunctionExpression) v1;
-		assertEquals("ANY_VALUE", func.getFunctionName());
-		assertEquals(1, func.getArgList().size());
-		QueryExpression funcArg = func.getArgList().get(0);
-		assertTrue(funcArg instanceof ColumnExpression);
-		ColumnExpression column = (ColumnExpression) funcArg;
-		assertEquals(colName, column.getColumnName());
 	}
 
 	@Ignore
@@ -1720,4 +1562,165 @@ FROM
 	}
 
 
+	
+	private String alias(TableItemExpression table) {
+		if (table instanceof TableAliasExpression) {
+			TableAliasExpression alias = (TableAliasExpression) table;
+			return alias.getAlias();
+		}
+		if (table instanceof JoinExpression) {
+			return alias(((JoinExpression) table).getTable());
+		}
+		fail("No alias found for table: " + table.toString());
+		return null;
+	}
+	
+	private TableNameExpression baseTable(TableItemExpression item) {
+		if (item instanceof TableAliasExpression) {
+			return baseTable(((TableAliasExpression) item).getTableName());
+		}
+		if (item instanceof JoinExpression) {
+			return baseTable(((JoinExpression) item).getTable());
+		}
+		
+		if (item instanceof TableNameExpression) {
+			return (TableNameExpression) item;
+		}
+		
+		fail("TableNameExpression not found");
+		return null;
+	}
+
+	private TableItemExpression assertFrom(FromExpression from, String tableName) {
+		for (TableItemExpression item : from.getTableItems()) {
+			
+			TableNameExpression base = baseTable(item);
+			if (base.getTableName().equals(tableName)) {
+				return item;
+			}
+		}
+
+		fail(tableName + " not found in FROM clause");
+		return null;
+	}
+
+	private Map<String, String> whereMap(InsertStatement insert) {
+		Map<String,String> map = new HashMap<>();
+		
+		WhereClause where = insert.getSelectQuery().getWhere();
+
+		BooleanTerm condition = where.getCondition();
+		assertTrue(condition instanceof AndExpression);
+		AndExpression and = (AndExpression) condition;
+		
+		List<BooleanTerm> andList = and.getTermList();
+		assertEquals(4, andList.size());
+		
+		
+		for (BooleanTerm term : andList) {
+
+			assertTrue(term instanceof ComparisonPredicate);
+			ComparisonPredicate c = (ComparisonPredicate) term;
+			ValueExpression v = c.getLeft();
+			assertTrue(v instanceof ColumnExpression);
+			ColumnExpression cn = (ColumnExpression) v;
+			String value = cn.getColumnName();
+			v = c.getRight();
+			assertTrue(v instanceof StringLiteralExpression);
+			StringLiteralExpression s = (StringLiteralExpression) v;
+			
+			String key = s.getValue().toLowerCase();
+			int dot = value.indexOf('.');
+			String type = value.substring(dot+1);
+			assertEquals("type", type);
+			value = value.substring(0, dot);
+			map.put(key, value);
+		}
+		
+		return map;
+	}
+
+	private TableItemExpression assertUnnest(Set<String> aliasSet, TableItemExpression e) {
+	
+		TableItemExpression right = null;
+		if (e instanceof JoinExpression0) {
+			JoinExpression0 j = (JoinExpression0) e;
+			e = j.getLeftTable();
+			right = j.getRightTable();
+			
+		}
+		assertTrue(e instanceof TableAliasExpression);
+		TableAliasExpression a = (TableAliasExpression) e;
+		aliasSet.add(a.getAlias());
+		
+		e = a.getTableName();
+		assertTrue(e instanceof FunctionExpression);
+		FunctionExpression f = (FunctionExpression) e;
+		assertEquals("UNNEST", f.getFunctionName());
+		List<QueryExpression> argList = f.getArgList();
+		assertEquals(1, argList.size());
+		QueryExpression q = argList.get(0);
+		assertTrue(q instanceof ColumnExpression);
+		ColumnExpression c = (ColumnExpression) q;
+		assertEquals("a.location", c.getColumnName());
+
+		
+		return right;
+	
+	}
+
+	private void assertLocationStruct(ValueExpression v, String fieldName, Map<String,String> whereMap) {
+		assertTrue(v instanceof AliasExpression);
+		AliasExpression a = (AliasExpression) v;
+		assertEquals(fieldName, a.getAlias());
+		
+		QueryExpression q = a.getExpression();
+		assertTrue(q instanceof StructExpression);
+		
+		String alias = whereMap.get(fieldName);
+		StructExpression s = (StructExpression) q;
+		List<ValueExpression> list = s.getValues();
+		assertColumn(list.get(0), alias, "id");
+		assertColumn(list.get(1), alias, "containedInPlace");
+		assertColumn(list.get(2), alias, "name");
+		assertColumn(list.get(3), alias, "type");
+		
+		
+	}
+
+	private void assertColumn(ValueExpression v, String tableAlias, String fieldName) {
+		assertTrue(v instanceof ColumnExpression);
+		ColumnExpression c = (ColumnExpression) v;
+		assertEquals(tableAlias + "." + fieldName, c.getColumnName());
+		
+	}
+
+
+	private void assertDateTrunc(FunctionExpression func) {
+
+		assertEquals("DATE_TRUNC", func.getFunctionName());
+		assertEquals(2, func.getArgList().size());
+		QueryExpression q = func.getArgList().get(0);
+		assertTrue(q instanceof ColumnExpression);
+		ColumnExpression c = (ColumnExpression) q;
+		assertEquals("timeInterval.intervalStart", c.getColumnName());
+		q = func.getArgList().get(1);
+		assertTrue(q instanceof DateTimeUnitExpression);
+		DateTimeUnitExpression d = (DateTimeUnitExpression) q;
+		assertEquals("Month", d.getValue());
+	
+	}
+
+	private void assertColumn(List<ValueExpression> valueList, int i, String colName) {
+
+		ValueExpression v1 = valueList.get(i);
+		assertTrue(v1 instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) v1;
+		assertEquals("ANY_VALUE", func.getFunctionName());
+		assertEquals(1, func.getArgList().size());
+		QueryExpression funcArg = func.getArgList().get(0);
+		assertTrue(funcArg instanceof ColumnExpression);
+		ColumnExpression column = (ColumnExpression) funcArg;
+		assertEquals(colName, column.getColumnName());
+	}
 }
