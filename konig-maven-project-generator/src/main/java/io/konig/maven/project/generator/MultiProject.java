@@ -181,7 +181,7 @@ public class MultiProject extends MavenProjectConfig {
 	private void addAwsFileSet(List<FileSet> list) {
 		if (amazonWebServices != null) {
 			FileSet fileSet = new FileSet();
-			fileSet.setDirectory("../" + getArtifactId() + AwsModelGenerator.ARTIFACT_SUFFIX + AwsModelGenerator.TABLES_PATH);
+			fileSet.setDirectory("../" + getArtifactId() + AwsModelGenerator.ARTIFACT_SUFFIX + AwsModelGenerator.TABLES_PATH+"/");
 			fileSet.addInclude("*.sql");
 			list.add(fileSet);
 		}
@@ -192,8 +192,9 @@ public class MultiProject extends MavenProjectConfig {
 		if (googleCloudPlatform != null) {
 			FileSet fileSet = new FileSet();
 			fileSet.setDirectory("../" + getArtifactId() + GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX 
-					+ GoogleCloudPlatformModelGenerator.CLOUD_SQL_PATH);
+					+ GoogleCloudPlatformModelGenerator.CLOUD_SQL_PATH+"/");
 			fileSet.addInclude("*.sql");
+			list.add(fileSet);
 		}
 		
 	}

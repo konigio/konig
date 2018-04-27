@@ -41,6 +41,7 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
+import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.NamespaceManager;
 import io.konig.core.PathFactory;
 import io.konig.core.impl.MemoryGraph;
@@ -92,6 +93,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 
 		PathFactory.RETURN_NULL_ON_FAILURE = true;
 		try {
+			AwsShapeConfig.init();
 			GcpShapeConfig.init();
 			RdfUtil.loadTurtle(rdfDir, graph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
@@ -132,6 +134,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 				String[] fileList = manager.getIncludedFiles(fileset);
 				count += fileList.length;
 				for (String filePath : fileList) {
+					filePath = 	fileset.getDirectory()+filePath;
 					File sourceFile = new File(filePath);
 					File targetFile = new File(sqlDir, sourceFile.getName());
 					
