@@ -21,42 +21,40 @@ package io.konig.aws.cloudformation;
  */
 
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class AwsvpcConfiguration {
-
-	@JsonProperty("AssignPublicIp")
-	private String assignPublicIp;
+public class Options {
 	
-	@JsonProperty("SecurityGroups")
-	private Object securityGroups;
+	@JsonProperty("awslogs-group")
+	private String awslogsGroup;
 	
-	@JsonProperty("Subnets")
-	private Object subnets;
-
-	public String getAssignPublicIp() {
-		return assignPublicIp;
-	}
-
-	public Object getSubnets() {
-		return subnets;
-	}
-
-	public void setAssignPublicIp(String assignPublicIp) {
-		this.assignPublicIp = assignPublicIp;
-	}
-
-	public void setSubnets(Object subnets) {
-		this.subnets = subnets;
-	}
+	@JsonProperty("awslogs-region")
+	private String awslogRegion;
 	
-	public void getSecurityGroups() {
-		this.securityGroups = securityGroups;
+	@JsonProperty("awslogs-stream-prefix")
+	private String awslogsStreamPrefix;
+
+	public String getAwslogsGroup() {
+		return awslogsGroup;
 	}
 
-	public void setSecurityGroups(Object securityGroups) {
-		this.securityGroups = securityGroups;
+	public String getAwslogRegion() {
+		return awslogRegion;
+	}
+
+	public String getAwslogsStreamPrefix() {
+		return awslogsStreamPrefix;
+	}
+
+	public void setAwslogsGroup(String awslogsGroup) {
+		this.awslogsGroup = awslogsGroup;
+	}
+
+	public void setAwslogRegion(String awslogRegion) {
+		this.awslogRegion = awslogRegion;
+	}
+
+	public void setAwslogsStreamPrefix(String awslogsStreamPrefix) {
+		this.awslogsStreamPrefix = awslogsStreamPrefix;
 	}
 }

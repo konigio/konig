@@ -33,8 +33,14 @@ public class ContainerDefinition {
 	@JsonProperty("Image")
 	private String image;
 	
-	@JsonProperty("MemoryReservation")
+	@JsonProperty("Cpu")
+	private String cpu;
+	
+	@JsonProperty("Memory")
 	private String memoryReservation;
+	
+	@JsonProperty("LogConfiguration")
+	private LogConfiguration logConfiguration;
 	
 	@JsonProperty("PortMappings")
 	private List<PortMapping> portMappings;
@@ -69,6 +75,22 @@ public class ContainerDefinition {
 
 	public void setPortMappings(List<PortMapping> portMappings) {
 		this.portMappings = portMappings;
+	}
+
+	public String getCpu() {
+		return cpu;
+	}
+
+	public void setCpu(String cpu) {
+		this.cpu = cpu;
+	}
+
+	public LogConfiguration getLogConfiguration() {
+		return logConfiguration;
+	}
+
+	public void setLogConfiguration(LogConfiguration logConfiguration) {
+		this.logConfiguration = logConfiguration;
 	}
 	
 }
