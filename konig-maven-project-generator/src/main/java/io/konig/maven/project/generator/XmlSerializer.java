@@ -71,7 +71,10 @@ public class XmlSerializer {
 	public void write(Object pojo, String tag) {
 		beginTag(tag);
 		out.println();
-		if (pojo instanceof Collection<?>) {
+		
+		if (pojo.getClass().isArray()) {
+			printArray((Object[]) pojo);
+		} else if (pojo instanceof Collection<?>) {
 			printCollection((Collection<?>) pojo);
 		} else {
 			printProperties(pojo);
@@ -81,6 +84,8 @@ public class XmlSerializer {
 		
 	}
 
+
+	
 
 	private void printCollection(Collection<?> container) {
 		push();
@@ -203,6 +208,16 @@ public class XmlSerializer {
 	}
 	
 	
-	
+	private void printArray(Object[] array){
+
+		String tagName = tagName(array.getClass().getComponentType().getSimpleName());
+		push();
+		for (Object pojo : array) {
+			indent();
+			write(pojo, tagName);
+		}
+		pop();
+
+	}
 
 }
