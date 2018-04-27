@@ -49,8 +49,10 @@ public class SqlDatatypeMapper
 				
 				return isSigned(c) ? FacetedSqlDatatype.SIGNED_FLOAT : FacetedSqlDatatype.UNSIGNED_FLOAT;
 			}
-			
-			if (owlReasoner.isRealNumber(datatype)) {
+			if(XMLSchema.DECIMAL.equals(datatype) && c.getDecimalPrecision()!=null && c.getDecimalScale()!=null){
+				return new NumericSqlDatatype(SqlDatatype.DOUBLE, c.getDecimalPrecision(), c.getDecimalScale());
+			}
+			else if (owlReasoner.isRealNumber(datatype)) {
 				return isSigned(c) ? FacetedSqlDatatype.SIGNED_DOUBLE : FacetedSqlDatatype.UNSIGNED_DOUBLE;
 			}
 			

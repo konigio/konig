@@ -59,6 +59,8 @@ public class PropertyConstraint implements Cloneable {
 	private Integer maxCount;
 	private Integer minLength;
 	private Integer maxLength;
+	private Integer decimalPrecision;
+	private Integer decimalScale;
 	private Double minExclusive;
 	private Double maxExclusive;
 	private Double minInclusive;
@@ -522,5 +524,21 @@ public class PropertyConstraint implements Cloneable {
 
 	public boolean isRequiredSingleValue() {
 		return minCount!=null && minCount==1 && maxCount!=0 && maxCount==1;
+	}
+
+	public Integer getDecimalPrecision() {
+		return decimalPrecision;
+	}
+
+	public void setDecimalPrecision(Integer decimalPrecision) {
+		this.decimalPrecision = decimalPrecision;
+	}
+
+	public Integer getDecimalScale() {
+		return decimalScale;
+	}
+
+	public void setDecimalScale(Integer decimalScale) {
+		this.decimalScale = decimalScale;
 	}
 }
