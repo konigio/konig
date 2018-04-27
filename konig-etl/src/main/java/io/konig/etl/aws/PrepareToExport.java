@@ -37,7 +37,7 @@ public class PrepareToExport implements Processor {
     	if(System.getProperty("environmentName") != null) {
     		envName = System.getProperty("environmentName");
 		}
-    	bucketName = StringUtils.replaceOnce(bucketName,"${environmentName}",envName);
+    	bucketName = StringUtils.replaceOnce(bucketName,"${environmentName}",envName).toLowerCase();
         exchange.getOut().setBody("SELECT * FROM "+targetTable +" WHERE modified=TIMESTAMP('"+modified+"') INTO OUTFILE S3 's3-"+bucketRegion+"://"+bucketName+"/"+fileName+"' "
          		+ " FIELDS TERMINATED BY ','"
         		+ "   LINES TERMINATED BY '\n' OVERWRITE ON;");  

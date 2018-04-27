@@ -21,42 +21,30 @@ package io.konig.aws.cloudformation;
  */
 
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class AwsvpcConfiguration {
-
-	@JsonProperty("AssignPublicIp")
-	private String assignPublicIp;
+public class LogConfiguration {
 	
-	@JsonProperty("SecurityGroups")
-	private Object securityGroups;
+	@JsonProperty("LogDriver")
+	private String logDriver;
 	
-	@JsonProperty("Subnets")
-	private Object subnets;
+	@JsonProperty("Options")
+	private Options options;
 
-	public String getAssignPublicIp() {
-		return assignPublicIp;
+	public String getLogDriver() {
+		return logDriver;
 	}
 
-	public Object getSubnets() {
-		return subnets;
+	public Options getOptions() {
+		return options;
 	}
 
-	public void setAssignPublicIp(String assignPublicIp) {
-		this.assignPublicIp = assignPublicIp;
+	public void setLogDriver(String logDriver) {
+		this.logDriver = logDriver;
 	}
 
-	public void setSubnets(Object subnets) {
-		this.subnets = subnets;
+	public void setOptions(Options options) {
+		this.options = options;
 	}
 	
-	public void getSecurityGroups() {
-		this.securityGroups = securityGroups;
-	}
-
-	public void setSecurityGroups(Object securityGroups) {
-		this.securityGroups = securityGroups;
-	}
 }

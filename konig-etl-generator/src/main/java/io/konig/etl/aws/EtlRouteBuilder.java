@@ -168,7 +168,7 @@ public class EtlRouteBuilder {
 					+ "?verifyServerCertificate=false&amp;useSSL=false";
 			Properties properties = new Properties();
 			properties.setProperty("camel.springboot.xmlRoutes", "true");
-			properties.setProperty("camel.springboot.xmlRoutes", "classpath:*.xml");
+			properties.setProperty("camel.springboot.xmlRoutes", "file:camel-route.xml");
 			properties.setProperty("aws.rds.dbUrl", jdbcUrl);
 			FileOutputStream fileOut = new FileOutputStream(file);
 			properties.store(fileOut, "camel-routes-config");
@@ -216,11 +216,12 @@ public class EtlRouteBuilder {
 		if(new File(outDir,"Route"+targetLocalName+".xml").exists())
 		{
 			writer.println("ADD /Route"+targetLocalName+".xml ./Route"+targetLocalName+".xml");
-			Files.copy(new File(outDir, "Route" + targetLocalName + ".xml"), new File(dockerDir, "Route" + targetLocalName + ".xml"));
+			Files.copy(new File(outDir, "Route" + targetLocalName + ".xml"), new File(dockerDir, "camel-route.xml"));
 		}
-		if(new File(outDir,"../transform/"+schemaName+"_"+targetLocalName+".sql").exists())
+		if(new File(outDir,"../aurora/transform/"+schemaName+"_"+targetLocalName+".sql").exists())
 		{
 			writer.println("ADD /"+schemaName+"_"+targetLocalName+".sql ./"+schemaName + "_"+ targetLocalName +".sql");	
+			Files.copy(new File(outDir, "../aurora/transform/"+schemaName+"_"+targetLocalName+".sql"), new File(dockerDir, schemaName+"_"+targetLocalName+".sql"));
 		}
 		
 		writer.close();
