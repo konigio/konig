@@ -206,7 +206,7 @@ public class EtlRouteBuilder {
 		}
 		File dockerFile = new File(dockerDir, "Dockerfile");
 		PrintWriter writer = new PrintWriter(dockerFile);
-		writer.println("FROM 220459826988.dkr.ecr.us-east-1.amazonaws.com/konig-docker-aws-etl-base:latest");
+		writer.println("FROM ${aws-account-id}.dkr.ecr.${aws-region}.amazonaws.com/konig-docker-aws-etl-base:latest");
 		if(new File(outDir,"camel-routes-config.properties").exists())
 		{
 			writer.println("ADD /camel-routes-config.properties ./camel-routes-config.properties");
@@ -215,7 +215,7 @@ public class EtlRouteBuilder {
 		}
 		if(new File(outDir,"Route"+targetLocalName+".xml").exists())
 		{
-			writer.println("ADD /Route"+targetLocalName+".xml ./Route"+targetLocalName+".xml");
+			writer.println("ADD /camel-route.xml ./camel-route.xml");
 			Files.copy(new File(outDir, "Route" + targetLocalName + ".xml"), new File(dockerDir, "camel-route.xml"));
 		}
 		if(new File(outDir,"../aurora/transform/"+schemaName+"_"+targetLocalName+".sql").exists())
