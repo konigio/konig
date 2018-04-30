@@ -7,10 +7,10 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<awsAccountId>220459826988</awsAccountId>
+		<awsAccountId>${aws-account-id}</awsAccountId>
 		<docker.image.name>my-dockers</docker.image.name>
 		<docker.image.version>latest</docker.image.version>
-		<docker.registry.host>https://220459826988.dkr.ecr.us-east-1.amazonaws.com</docker.registry.host>
+		<docker.registry.host>https://${aws-account-id}.dkr.ecr.${aws-region}.amazonaws.com</docker.registry.host>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -197,7 +197,7 @@
   <artifactId>konig-aws-ecs-image-push-plugin</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <configuration>
-  <awsEcsRepositoryUrn>220459826988.dkr.ecr.us-east-1.amazonaws.com/</awsEcsRepositoryUrn>
+  <awsEcsRepositoryUrn>${aws-account-id}.dkr.ecr.${aws-region}.amazonaws.com/</awsEcsRepositoryUrn>
   <imageName>${project.artifactId}</imageName>
   <repositoryName>${project.artifactId}</repositoryName>
   </configuration>
