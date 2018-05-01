@@ -46,6 +46,12 @@ public class CurieValue extends AbstractFormula implements IriValue {
 		return context;
 	}
 
+
+	@Override
+	public CurieValue deepClone() {
+		return new CurieValue(context.deepClone(), namespacePrefix, localName);
+	}
+
 	public String getNamespacePrefix() {
 		return namespacePrefix;
 	}

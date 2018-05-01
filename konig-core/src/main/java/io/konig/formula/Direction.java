@@ -45,5 +45,9 @@ public enum Direction implements Formula {
 		visitor.exit(this);
 		
 	}
+	@Override
+	public Direction deepClone() {
+		return this;
+	}
 
 }

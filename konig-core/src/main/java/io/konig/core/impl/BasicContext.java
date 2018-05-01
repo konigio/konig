@@ -44,6 +44,7 @@ import io.konig.core.Term;
 public class BasicContext implements Context {
 	private static final long serialVersionUID = 1L;
 	private static final Logger logger = LoggerFactory.getLogger(BasicContext.class);
+	
 	private Map<String, Term> map = new HashMap<String, Term>();
 	private List<Term> list = new ArrayList<Term>();
 	private BasicContext inverse;
@@ -54,6 +55,22 @@ public class BasicContext implements Context {
 	
 	public BasicContext(String iri) {
 		this.iri = iri;
+	}
+	
+
+
+	@Override
+	public Context deepClone() {
+		BasicContext clone = new BasicContext(iri);
+		for (Term value : map.values()) {
+			clone.add(value.clone());
+		}
+		clone.versionNumber = versionNumber;
+		clone.vendorType = vendorType;
+		if (compiled) {
+			clone.compile();
+		}
+		return clone;
 	}
 	
 	public String getLanguage() {

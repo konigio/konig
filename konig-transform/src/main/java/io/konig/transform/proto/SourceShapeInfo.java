@@ -157,21 +157,36 @@ public class SourceShapeInfo implements Comparable<SourceShapeInfo> {
 					}
 					
 					StepPropertyModel sourceStep = sourceDirect.getPathTail();
+					
 					if (sourceStep != null) {
-						group = sourceStep.getGroup();
-						targetProperty = group.getTargetProperty();
-						if (targetProperty != null) {
-							if (targetProperty instanceof DirectPropertyModel && targetProperty.getGroup().getSourceProperty()==null) {
-								targetDirect = (DirectPropertyModel) targetProperty;
-							} else if (targetProperty instanceof StepPropertyModel) {
-								StepPropertyModel targetStep = (StepPropertyModel) targetProperty;
-								if (targetStep.getDeclaringProperty().getGroup().getSourceProperty()==null) {
-									targetDirect = targetStep.getDeclaringProperty();
+						while (sourceStep != null) {
+							group = sourceStep.getGroup();
+							targetProperty = group.getTargetProperty();
+							if (targetProperty != null) {
+								DirectPropertyModel stepTargetDirect = null;
+								if (targetProperty instanceof DirectPropertyModel && targetProperty.getGroup().getSourceProperty()==null) {
+									stepTargetDirect = (DirectPropertyModel) targetProperty;
+								} else if (targetProperty instanceof StepPropertyModel) {
+									StepPropertyModel targetStep = (StepPropertyModel) targetProperty;
+									if (targetStep.getDeclaringProperty().getGroup().getSourceProperty()==null) {
+										stepTargetDirect = targetStep.getDeclaringProperty();
+									}
+								}
+								if (stepTargetDirect != null) {
+									visitor.match(sourceStep, stepTargetDirect);
 								}
 							}
+							
+							for (PropertyModel filterProperty : sourceStep.getFilterProperties()) {
+								PropertyGroup filterGroup = filterProperty.getGroup();
+								if (filterGroup.getTargetProperty() instanceof DirectPropertyModel) {
+									visitor.match(filterProperty, (DirectPropertyModel) filterGroup.getTargetProperty());
+								}
+							}
+							
+							sourceStep = sourceStep.getPreviousStep();
 						}
-					}
-					if (targetDirect == null) {
+					} else if (targetDirect == null) {
 						visitor.noMatch(sourceDirect);
 					} else {
 						visitor.match(sourceProperty, targetDirect);

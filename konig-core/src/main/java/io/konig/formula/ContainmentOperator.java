@@ -50,6 +50,11 @@ public enum ContainmentOperator implements Formula {
 		visitor.enter(this);
 		visitor.exit(this);
 	}
+
+	@Override
+	public ContainmentOperator deepClone() {
+		return this;
+	}
 	
 	
 }

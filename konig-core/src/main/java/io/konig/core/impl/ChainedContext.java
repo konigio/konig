@@ -51,6 +51,17 @@ public class ChainedContext implements Context {
 		this.self = self;
 	}
 
+
+	@Override
+	public ChainedContext deepClone() {
+		ChainedContext clone = new ChainedContext(parent.deepClone(), self.deepClone());
+		clone.versionNumber = versionNumber;
+		if (compiled) {
+			clone.compile();
+		}
+		return clone;
+	}
+
 	public Context getParent() {
 		return parent;
 	}

@@ -66,4 +66,10 @@ public class UnaryExpression extends AbstractFormula {
 		visitor.exit(this);
 	}
 
+	@Override
+	public UnaryExpression deepClone() {
+		
+		return new UnaryExpression(operator, (PrimaryExpression) primary.deepClone());
+	}
+
 }

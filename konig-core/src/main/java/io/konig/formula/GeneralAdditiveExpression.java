@@ -74,4 +74,14 @@ public class GeneralAdditiveExpression extends AbstractFormula implements Additi
 		
 	}
 
+	@Override
+	public Formula deepClone() {
+		MultiplicativeExpression cloneLeft = left==null ? null : left.deepClone();
+		GeneralAdditiveExpression clone = new GeneralAdditiveExpression(cloneLeft);
+		for (Addend addend : addendList) {
+			clone.add(addend.deepClone());
+		}
+		return clone;
+	}
+
 }

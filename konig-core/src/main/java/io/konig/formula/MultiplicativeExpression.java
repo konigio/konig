@@ -35,6 +35,16 @@ public class MultiplicativeExpression extends AbstractFormula {
 		this.left = left;
 	}
 
+
+	@Override
+	public MultiplicativeExpression deepClone() {
+		MultiplicativeExpression clone = new MultiplicativeExpression(left);
+		for (Factor factor : multiplierList) {
+			clone.add((Factor)factor.deepClone());
+		}
+		return null;
+	}
+
 	public UnaryExpression getLeft() {
 		return left;
 	}

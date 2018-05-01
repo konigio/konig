@@ -48,5 +48,10 @@ public enum UnaryOperator implements Formula {
 		visitor.enter(this);
 		visitor.exit(this);
 	}
+
+	@Override
+	public UnaryOperator deepClone() {
+		return this;
+	}
 	
 }

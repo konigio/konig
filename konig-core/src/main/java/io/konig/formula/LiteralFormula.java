@@ -50,4 +50,9 @@ public class LiteralFormula extends AbstractFormula implements PrimaryExpression
 		visitor.exit(this);
 	}
 
+	@Override
+	public LiteralFormula deepClone() {
+		return new LiteralFormula(literal);
+	}
+
 }

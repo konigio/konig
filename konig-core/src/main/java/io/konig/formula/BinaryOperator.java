@@ -55,4 +55,9 @@ public enum BinaryOperator implements Formula {
 		visitor.enter(this);
 		visitor.exit(this);
 	}
+
+	@Override
+	public Formula deepClone() {
+		return this;
+	}
 }

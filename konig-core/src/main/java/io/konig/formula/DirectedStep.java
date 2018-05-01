@@ -57,4 +57,9 @@ public class DirectedStep extends AbstractFormula implements PathStep {
 		visitor.exit(this);
 	}
 
+	@Override
+	public DirectedStep deepClone() {
+		return new DirectedStep(direction, (PathTerm) term.deepClone());
+	}
+
 }

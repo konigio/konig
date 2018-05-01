@@ -27,5 +27,7 @@ public interface Formula {
 
 	void print(PrettyPrintWriter out);
 	void dispatch(FormulaVisitor visitor);
+	
+	Formula deepClone();
 
 }

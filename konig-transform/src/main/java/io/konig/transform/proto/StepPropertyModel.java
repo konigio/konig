@@ -1,6 +1,7 @@
 package io.konig.transform.proto;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /*
@@ -49,11 +50,33 @@ public class StepPropertyModel extends BasicPropertyModel {
 	private ClassModel valueClassModel;
 	private QuantifiedExpression whereClause;
 	
+	private List<PropertyModel> filterProperties = null;
+	private IriResolutionStrategy iriResolutionStrategy = null;
+	
 	public StepPropertyModel(URI predicate, Direction direction, PropertyGroup group, DirectPropertyModel declaringProperty, int stepIndex) {
 		super(predicate, group, declaringProperty.getPropertyConstraint());
 		this.direction = direction;
 		this.declaringProperty = declaringProperty;
 		this.stepIndex = stepIndex;
+	}
+	
+	public IriResolutionStrategy getIriResolutionStrategy() {
+		return iriResolutionStrategy;
+	}
+
+	public void setIriResolutionStrategy(IriResolutionStrategy iriResolutionStrategy) {
+		this.iriResolutionStrategy = iriResolutionStrategy;
+	}
+
+	public void addFilterProperty(PropertyModel property) {
+		if (filterProperties == null) {
+			filterProperties = new ArrayList<>();
+		}
+		filterProperties.add(property);
+	}
+	
+	public List<PropertyModel> getFilterProperties() {
+		return filterProperties==null ? Collections.emptyList() : filterProperties;
 	}
 	
 	public Direction getDirection() {

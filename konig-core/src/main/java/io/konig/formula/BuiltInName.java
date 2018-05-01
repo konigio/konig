@@ -52,4 +52,9 @@ public class BuiltInName extends AbstractFormula implements IriValue {
 		visitor.exit(this);
 	}
 
+	@Override
+	public Formula deepClone() {
+		return new BuiltInName(uri);
+	}
+
 }

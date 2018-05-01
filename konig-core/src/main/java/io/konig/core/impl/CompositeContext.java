@@ -47,6 +47,21 @@ public class CompositeContext implements Context {
 
 	public CompositeContext() {
 	}
+
+
+	@Override
+	public CompositeContext deepClone() {
+		CompositeContext clone = new CompositeContext();
+		for (ChainedContext chain : list) {
+			ChainedContext chainClone = chain.deepClone();
+			last = chainClone;
+			list.add(chainClone);
+		}
+		clone.vendorType = vendorType;
+		clone.versionNumber = versionNumber;
+		
+		return clone;
+	}
 	
 	public void append(Context context) {
 		last = new ChainedContext(last, context);

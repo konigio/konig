@@ -85,6 +85,63 @@ public class SqlFactoryTest extends AbstractShapeModelToShapeRuleTest {
 	
 	/*
 	SELECT
+	   b.id AS gender
+	FROM 
+	   schema.OriginPersonShape AS a
+	 JOIN
+	   schema.GenderType AS b
+	 ON
+	   a.gender=b.genderCode	
+	 */
+	@Test
+	public void testEnumField() throws Exception {
+		
+		load("src/test/resources/konig-transform/enum-field");
+
+		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
+
+		ShapeRule shapeRule = createShapeRule(shapeId);
+		
+		SelectExpression select = sqlFactory.selectExpression(shapeRule);
+		System.out.println(select);
+		
+		List<ValueExpression> valueList = select.getValues();
+		assertEquals(1, valueList.size());
+		
+		ValueExpression ve = valueList.iterator().next();
+		AliasExpression alias = (AliasExpression) ve;
+		assertTrue(alias.getExpression() instanceof ColumnExpression);
+		ColumnExpression sc = (ColumnExpression) alias.getExpression();
+		assertEquals("b.id", sc.getColumnName());
+		
+		FromExpression from = select.getFrom();
+		List<TableItemExpression> itemList = from.getTableItems();
+		assertEquals(1, itemList.size());
+		
+		TableItemExpression item = itemList.get(0);
+		
+		assertTrue(item instanceof JoinExpression0);
+		
+		JoinExpression0 join = (JoinExpression0) item;
+		assertTrue(join.getLeftTable() instanceof TableAliasExpression);
+		TableAliasExpression leftAlias = (TableAliasExpression) join.getLeftTable();
+		assertEquals("schema.OriginPersonShape", leftAlias.getTableName().toString());
+		assertEquals("a", leftAlias.getAlias());
+		
+		assertTrue(join.getRightTable() instanceof TableAliasExpression);
+		TableAliasExpression rightAlias = (TableAliasExpression) join.getRightTable();
+		assertEquals("schema.GenderType", rightAlias.getTableName().toString());
+		assertEquals("b", rightAlias.getAlias());
+		
+		SearchCondition condition = join.getJoinSpecification().getSearchCondition();
+		assertTrue(condition instanceof ComparisonPredicate);
+		assertEquals("a.gender=b.genderCode", condition.toString());
+		
+		
+	}
+	
+	/*
+	SELECT
 	   CONCAT("http://example.com/product/", CAST(a.PRODUCT_ID AS STRING)) AS id,
 	   a.PRODUCT_NAME AS name,
 	   b.name AS ownerName
@@ -219,7 +276,7 @@ FROM
  ON
    a.PRD_CAT=b.originId
  */
-	@Test
+	@Ignore
 	public void testBigQueryTransform() throws Exception {
 		
 		load("src/test/resources/konig-transform/bigquery-transform");
@@ -1227,61 +1284,7 @@ FROM ex.OriginAccountShape
 		
 	}
 	
-/*
-SELECT
-   b.id AS gender
-FROM 
-   schema.OriginPersonShape AS a
- JOIN
-   schema.GenderType AS b
- ON
-   a.gender=b.genderCode	
- */
-	@Ignore
-	public void testEnumField() throws Exception {
-		
-		load("src/test/resources/konig-transform/enum-field");
 
-		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
-
-		ShapeRule shapeRule = createShapeRule1(shapeId);
-		
-		SelectExpression select = sqlFactory.selectExpression(shapeRule);
-		
-		List<ValueExpression> valueList = select.getValues();
-		assertEquals(1, valueList.size());
-		
-		ValueExpression ve = valueList.iterator().next();
-		AliasExpression alias = (AliasExpression) ve;
-		assertTrue(alias.getExpression() instanceof ColumnExpression);
-		ColumnExpression sc = (ColumnExpression) alias.getExpression();
-		assertEquals("b.id", sc.getColumnName());
-		
-		FromExpression from = select.getFrom();
-		List<TableItemExpression> itemList = from.getTableItems();
-		assertEquals(1, itemList.size());
-		
-		TableItemExpression item = itemList.get(0);
-		
-		assertTrue(item instanceof JoinExpression0);
-		
-		JoinExpression0 join = (JoinExpression0) item;
-		assertTrue(join.getLeftTable() instanceof TableAliasExpression);
-		TableAliasExpression leftAlias = (TableAliasExpression) join.getLeftTable();
-		assertEquals("schema.OriginPersonShape", leftAlias.getTableName().toString());
-		assertEquals("a", leftAlias.getAlias());
-		
-		assertTrue(join.getRightTable() instanceof TableAliasExpression);
-		TableAliasExpression rightAlias = (TableAliasExpression) join.getRightTable();
-		assertEquals("schema.GenderType", rightAlias.getTableName().toString());
-		assertEquals("b", rightAlias.getAlias());
-		
-		SearchCondition condition = join.getJoinSpecification().getSearchCondition();
-		assertTrue(condition instanceof ComparisonPredicate);
-		assertEquals("a.gender=b.genderCode", condition.toString());
-		
-		
-	}
 
 	private void assertWhen(SimpleCase sc, String key, String value) {
 		

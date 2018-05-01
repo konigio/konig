@@ -59,4 +59,9 @@ public class PredicateObjectList extends AbstractFormula {
 
 	}
 
+	@Override
+	public PredicateObjectList deepClone() {
+		return new PredicateObjectList((IriValue)verb.deepClone(), (ObjectList)objectList.deepClone());
+	}
+
 }

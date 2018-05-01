@@ -52,4 +52,9 @@ public class FullyQualifiedIri extends AbstractFormula implements IriValue {
 		visitor.exit(this);
 	}
 
+	@Override
+	public Formula deepClone() {
+		return new FullyQualifiedIri(uri);
+	}
+
 }

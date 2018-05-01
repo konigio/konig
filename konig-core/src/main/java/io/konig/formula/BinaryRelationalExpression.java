@@ -68,6 +68,12 @@ public class BinaryRelationalExpression extends AbstractFormula implements Relat
 		visitor.exit(this);
 		
 	}
+
+	@Override
+	public Formula deepClone() {
+		
+		return new BinaryRelationalExpression(operator, (NumericExpression)left.deepClone(), (NumericExpression)right.deepClone());
+	}
 	
 
 }

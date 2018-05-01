@@ -30,4 +30,12 @@ public class ConditionalOrExpression extends Expression {
 		super(e);
 	}
 
+	@Override
+	public ConditionalOrExpression deepClone() {
+		ConditionalOrExpression clone = new ConditionalOrExpression();
+		clone.doClone(context, orList);
+		
+		return clone;
+	}
+
 }

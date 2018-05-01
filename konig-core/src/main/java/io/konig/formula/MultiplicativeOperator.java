@@ -45,6 +45,10 @@ public enum MultiplicativeOperator implements Formula {
 		visitor.enter(this);
 		visitor.exit(this);
 	}
+	@Override
+	public MultiplicativeOperator deepClone() {
+		return this;
+	}
 	
 	
 

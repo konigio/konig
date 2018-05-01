@@ -59,4 +59,13 @@ public class ObjectList extends AbstractFormula {
 
 	}
 
+	@Override
+	public ObjectList deepClone() {
+		List<Expression> cloneList = new ArrayList<>();
+		for (Expression e : list) {
+			cloneList.add((Expression)e.deepClone());
+		}
+		return new ObjectList(cloneList);
+	}
+
 }

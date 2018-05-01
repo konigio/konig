@@ -29,7 +29,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class Term implements Comparable<Term>{
+public class Term implements Comparable<Term>, Cloneable {
 	public static enum Kind {
 		NAMESPACE,
 		CLASS,
@@ -69,6 +69,14 @@ public class Term implements Comparable<Term>{
 		this.language = language;
 		this.type = type;
 		this.container = container;
+	}
+	
+	public Term clone() {
+		try {
+			return (Term) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public String getKey() {

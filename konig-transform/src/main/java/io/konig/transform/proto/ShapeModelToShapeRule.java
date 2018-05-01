@@ -166,6 +166,11 @@ public class ShapeModelToShapeRule {
 		}
 
 		private void addPropertyRules(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
+			
+			if (logger.isDebugEnabled()) {
+				logger.debug("addPropertyRules: for {}", RdfUtil.localName(shapeModel.getShape().getId()));
+			}
+			
 			ClassModel classModel = shapeModel.getClassModel();
 			for (PropertyGroup group : classModel.getOutGroups()) {
 				
@@ -174,12 +179,16 @@ public class ShapeModelToShapeRule {
 				if (targetProperty==null) {
 					continue;
 				}
+				
+				
+				
+				
 				if (targetProperty.getDeclaringShape() == shapeModel) {
 					if (Konig.id.equals(targetProperty.getPredicate())) {
 						// TODO: add IdRule
 						continue;
 					}
-					PropertyRule propertyRule = propertyRule(group);
+					PropertyRule propertyRule = propertyRuleForGroup(group);
 					propertyRule.setSourcePropertyModel(group.getSourceProperty());
 					shapeRule.addPropertyRule(propertyRule);
 				}
@@ -187,14 +196,28 @@ public class ShapeModelToShapeRule {
 			}
 		}
 
-		private PropertyRule propertyRule(PropertyGroup group) throws ShapeTransformException {
+		private PropertyRule propertyRuleForGroup(PropertyGroup group) throws ShapeTransformException {
+
+			
 			PropertyModel targetProperty = group.getTargetProperty();
 			URI targetPredicate = targetProperty.getPredicate();
+			
+			if (logger.isDebugEnabled()) {
+				logger.debug("propertyRuleForGroup: handling '{}' in group({}), ClassModel({})",
+						targetPredicate.getLocalName(),
+						group.hashCode(),
+						group.getParentClassModel().hashCode());
+			}
+			
 			ShapeModel valueModel = targetProperty.getValueModel();
 			if (valueModel != null) {
 				ShapeRule valueRule = toShapeRule(valueModel);
 				
 				ContainerPropertyRule result = new ContainerPropertyRule(targetPredicate);
+				if (logger.isDebugEnabled()) {
+					logger.debug("propertyRuleForGroup: Added ContainerPropertyRule for '{}'",
+							targetPredicate.getLocalName());
+				}
 				result.setNestedRule(valueRule);
 				return result;
 			}
@@ -270,6 +293,13 @@ public class ShapeModelToShapeRule {
 				return new RenamePropertyRule(
 					targetPredicate, channel, sourceStep.getPropertyConstraint(), sourceStep.getStepIndex());
 			} else if (targetDirect!=null && sourceDirect != null) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("propertyRuleForGroup: Rename {}.{} as {}.{} ",
+						RdfUtil.localName(sourceDirect.getDeclaringShape().getShape().getId()),
+						sourceDirect.getPredicate().getLocalName(),
+						RdfUtil.localName(targetDirect.getDeclaringShape().getShape().getId()),
+						targetDirect.getPredicate().getLocalName());
+				}
 				return new RenamePropertyRule(targetPredicate, channel, sourceDirect.getPropertyConstraint());
 			} else if (Konig.id.equals(sourcePredicate)) {
 				return new IdPropertyRule(targetPredicate, channel);

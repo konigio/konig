@@ -69,4 +69,11 @@ public class ListRelationalExpression extends AbstractFormula implements Relatio
 		
 	}
 
+	@Override
+	public ListRelationalExpression deepClone() {
+		NumericExpression cloneLeft = (NumericExpression) left==null ? null : (NumericExpression) left.deepClone();
+		ExpressionList cloneRight = right.deepClone();
+		return new ListRelationalExpression(operator.deepClone(), cloneLeft, cloneRight);
+	}
+
 }

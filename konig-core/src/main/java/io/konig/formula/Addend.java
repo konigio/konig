@@ -33,6 +33,11 @@ public class Addend extends AbstractFormula {
 		this.right = right;
 	}
 
+	@Override
+	public Addend deepClone() {
+		return new Addend(operator, right.deepClone());
+	}
+
 	public AdditiveOperator getOperator() {
 		return operator;
 	}
@@ -58,6 +63,7 @@ public class Addend extends AbstractFormula {
 		visitor.exit(this);
 		
 	}
+
 
 	
 	

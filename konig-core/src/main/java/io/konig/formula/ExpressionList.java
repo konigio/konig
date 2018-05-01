@@ -63,4 +63,13 @@ public class ExpressionList extends ArrayList<Expression> implements Formula {
 		visitor.exit(this);
 	}
 
+	@Override
+	public ExpressionList deepClone() {
+		ExpressionList clone = new ExpressionList();
+		for (Expression e : this) {
+			clone.add((Expression) e.deepClone());
+		}
+		return clone;
+	}
+
 }

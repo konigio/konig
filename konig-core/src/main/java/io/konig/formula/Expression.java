@@ -41,7 +41,7 @@ public class Expression extends AbstractFormula {
 	protected List<ConditionalAndExpression> orList;
 	protected Context context;
 	
-	public Expression(String text) {
+	protected Expression(String text) {
 		FormulaParser parser = new FormulaParser();
 		try {
 			Expression self = parser.expression(text);
@@ -55,6 +55,14 @@ public class Expression extends AbstractFormula {
 	
 	public Expression() {
 		 orList = new ArrayList<>();
+	}
+	
+	protected void doClone(Context context, List<ConditionalAndExpression> orList) {
+		this.context = context.deepClone();
+		this.orList = new ArrayList<>();
+		for (ConditionalAndExpression and : orList) {
+			this.orList.add(and.deepClone());
+		}
 	}
 	
 	protected Expression(Expression e) {
@@ -180,6 +188,11 @@ public class Expression extends AbstractFormula {
 		// Derived classes should override.
 	}
 	
+	public PathExpression pathExpression() {
+		PrimaryExpression primary = asPrimaryExpression();
+		return primary instanceof PathExpression ? (PathExpression) primary : null;
+	}
+	
 	/**
 	 * Get the PrimaryExpression wrapped by this Expression.
 	 * @return The PrimaryExpression wrapped by this Expression, or null if there is no single, unadorned 
@@ -214,4 +227,12 @@ public class Expression extends AbstractFormula {
 		}
 		return null;
 	}
+
+	@Override
+	public Expression deepClone() {
+		Expression clone = new Expression();
+		clone.doClone(context, orList);
+		return clone;
+	}
+
 }

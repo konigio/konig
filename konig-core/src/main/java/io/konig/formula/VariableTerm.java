@@ -58,4 +58,9 @@ public class VariableTerm extends AbstractFormula implements PathTerm {
 		return varId;
 	}
 
+	@Override
+	public VariableTerm deepClone() {
+		return new VariableTerm(varName);
+	}
+
 }

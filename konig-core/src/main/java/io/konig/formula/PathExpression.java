@@ -25,11 +25,18 @@ import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.Path;
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.path.DirectionStep;
+import io.konig.core.path.HasStep;
+import io.konig.core.path.HasStep.PredicateValuePair;
+import io.konig.core.path.Step;
 
 public class PathExpression extends AbstractFormula implements PrimaryExpression {
 	
@@ -97,6 +104,17 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 		public PathExpression build() {
 			return path;
 		}
+		
+		
+	}
+
+	@Override
+	public PathExpression deepClone() {
+		PathExpression clone = new PathExpression();
+		for (PathStep step : stepList) {
+			clone.add((PathStep)step.deepClone());
+		}
+		return clone;
 	}
 
 }

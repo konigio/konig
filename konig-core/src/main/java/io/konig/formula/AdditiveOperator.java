@@ -47,6 +47,10 @@ public enum AdditiveOperator implements Formula, PrettyPrintable {
 		visitor.exit(this);
 		
 	}
+	@Override
+	public AdditiveOperator deepClone() {
+		return this;
+	}
 	
 	
 }

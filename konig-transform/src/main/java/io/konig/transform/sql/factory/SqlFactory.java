@@ -80,6 +80,7 @@ import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
+import io.konig.sql.query.IfExpression;
 import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.JoinExpression0;
@@ -102,8 +103,11 @@ import io.konig.sql.query.UpdateItem;
 import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
 import io.konig.transform.factory.TransformBuildException;
+import io.konig.transform.proto.IriResolutionStrategy;
+import io.konig.transform.proto.LookupPredefinedNamedIndividual;
 import io.konig.transform.proto.PropertyModel;
 import io.konig.transform.proto.ShapeModel;
+import io.konig.transform.proto.StepPropertyModel;
 import io.konig.transform.rule.AnyValuePropertyRule;
 import io.konig.transform.rule.BinaryBooleanExpression;
 import io.konig.transform.rule.BooleanExpression;
@@ -581,7 +585,7 @@ public class SqlFactory {
 			TableItemExpression tableItem = simpleTableItem(channel);
 			URI predicate = p.getPredicate();
 			if (logger.isDebugEnabled()) {
-				logger.debug("column predicate: {}", predicate.getLocalName());
+				logger.debug("column: predicate={}", predicate.getLocalName());
 			}
 			if (p instanceof ExactMatchPropertyRule) {
 
@@ -605,6 +609,15 @@ public class SqlFactory {
 				if (pathIndex < 0) {
 					ValueExpression column = SqlUtil.columnExpression(tableItem, sourcePredicate);
 					return new AliasExpression(column, predicate.getLocalName());
+				}
+				
+				PropertyModel sourcePropertyModel = renameRule.getSourcePropertyModel();
+				if (sourcePropertyModel instanceof StepPropertyModel) {
+					StepPropertyModel sourceStep = (StepPropertyModel) sourcePropertyModel;
+					IriResolutionStrategy strategy = sourceStep.getIriResolutionStrategy();
+					if (strategy != null) {
+						return applyIriResolutionStrategy(tableItem, sourceStep);
+					}
 				}
 
 				Path path = renameRule.getSourceProperty().getEquivalentPath();
@@ -679,6 +692,35 @@ public class SqlFactory {
 			}
 
 			throw new TransformBuildException("Unsupported PropertyRule: " + p.getClass().getName());
+		}
+
+		private ValueExpression applyIriResolutionStrategy(TableItemExpression tableItem,
+				StepPropertyModel sourceStep) throws TransformBuildException {
+			IriResolutionStrategy strategy = sourceStep.getIriResolutionStrategy();
+			if (strategy instanceof LookupPredefinedNamedIndividual) {
+				return lookupPredefinedNamedIndividual(tableItem, sourceStep, (LookupPredefinedNamedIndividual) strategy);
+			}
+			throw new TransformBuildException("IriResolution Strategy not supported: " + strategy.getClass().getName());
+		}
+
+		private ValueExpression lookupPredefinedNamedIndividual(TableItemExpression tableItem,
+				StepPropertyModel sourceStep, LookupPredefinedNamedIndividual strategy) throws TransformBuildException {
+			
+			PropertyConstraint p = sourceStep.getDeclaringProperty().getPropertyConstraint().deepClone();
+			
+			PathExpression path = p.getFormula().pathExpression();
+			if (path == null) {
+				throw new TransformBuildException("Expected PathExpression");
+			}
+		
+			List<PathStep> stepList = path.getStepList();
+			
+			
+			
+			
+			IfExpression priorIf = null;
+			// TODO: Finish
+			return null;
 		}
 
 		private ValueExpression mapValues(RenamePropertyRule p, MapValueTransform vt) throws TransformBuildException {

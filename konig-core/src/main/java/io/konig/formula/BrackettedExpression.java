@@ -49,5 +49,10 @@ public class BrackettedExpression extends AbstractFormula implements PrimaryExpr
 		visitor.exit(this);
 	}
 
+	@Override
+	public BrackettedExpression deepClone() {
+		return new BrackettedExpression((Expression) expression.deepClone());
+	}
+
 	
 }

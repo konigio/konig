@@ -34,11 +34,13 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.Path;
+import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.path.DirectionStep;
 import io.konig.core.path.HasStep;
@@ -71,6 +73,8 @@ public class ShapeModelFactory {
 	private DataChannelFactory dataChannelFactory;
 	private OwlReasoner reasoner;
 	
+	private int maxInlineVocabularySize=30;
+	
 	
 	
 	public ShapeModelFactory(
@@ -86,6 +90,16 @@ public class ShapeModelFactory {
 	}
 	
 	
+	public int getMaxInlineVocabularySize() {
+		return maxInlineVocabularySize;
+	}
+
+
+	public void setMaxInlineVocabularySize(int maxInlineVocabularySize) {
+		this.maxInlineVocabularySize = maxInlineVocabularySize;
+	}
+
+
 	public ShapeModel createShapeModel(Shape shape) throws ShapeTransformException {
 		Worker worker = new Worker();
 		
@@ -221,24 +235,69 @@ public class ShapeModelFactory {
 			
 			while (!infoList.isEmpty()) {
 				sortSourceShapeInfo(infoList);
-				SourceShapeInfo info = infoList.remove(0);
-				if (info.getMatchCount()>0) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("mapProperties: Mapping {} to {}",
-								RdfUtil.localName(info.getSourceShape().getShape().getId()),
-								RdfUtil.localName(targetShapeModel.getShape().getId())
-								);
+				// The sorting process also filters out candidate shapes that have no matches.
+				// So we need to check, once again, that the list is not empty.
+				if (!infoList.isEmpty()) {
+					SourceShapeInfo info = infoList.remove(0);
+					if (info.getMatchCount()>0) {
+						if (logger.isDebugEnabled()) {
+							logger.debug("mapProperties: Mapping {} to {}",
+									RdfUtil.localName(info.getSourceShape().getShape().getId()),
+									RdfUtil.localName(targetShapeModel.getShape().getId())
+									);
+						}
+						
+						info.dispatch(matchMaker);
 					}
-					
-					info.dispatch(matchMaker);
 				}
 			}
+			
+			resolveIriReferences(targetShapeModel);
 			
 			
 		}
 
 		
 
+
+		private void resolveIriReferences(ShapeModel targetShapeModel) throws ShapeTransformException {
+			for (SourceShapeInfo info : targetShapeModel.getClassModel().getCommittedSources()) {
+				for (DirectPropertyModel targetDirect : info.getMatchedTargetProperties()) {
+					PropertyConstraint p = targetDirect.getPropertyConstraint();
+					if (p.getValueClass() instanceof URI && p.getShape()==null) {
+						PropertyModel sourceProperty = targetDirect.getGroup().getSourceProperty();
+						if (sourceProperty instanceof StepPropertyModel) {
+							StepPropertyModel sourceStep = (StepPropertyModel) sourceProperty;
+							resolveIriReference(sourceStep, targetDirect);
+						}
+					}
+				}
+			}
+			
+		}
+
+		private void resolveIriReference(StepPropertyModel sourceStep, DirectPropertyModel targetDirect) throws ShapeTransformException {
+			
+			URI valueClass = (URI) targetDirect.getPropertyConstraint().getValueClass();
+			
+			List<Vertex> individuals = reasoner.getGraph().v(valueClass).in(RDF.TYPE).toVertexList();
+			if (!individuals.isEmpty() && individuals.size()<=maxInlineVocabularySize) {
+				IriResolutionStrategy strategy = new LookupPredefinedNamedIndividual(individuals);
+				sourceStep.setIriResolutionStrategy(strategy);
+				if (logger.isDebugEnabled()) {
+					logger.debug("resolveIriReference: Using LookupPredefinedNamedIndividual strategy for {}.{}",
+							RdfUtil.localName(targetDirect.getDeclaringShape().getShape().getId()),
+							targetDirect.getPredicate().getLocalName());
+				}
+			} else {
+				String msg = MessageFormat.format("No strategy for resolving IRI for {0}.{1}", 
+						RdfUtil.localName(targetDirect.getDeclaringShape().getShape().getId()),
+						targetDirect.getPredicate().getLocalName());
+				
+				throw new ShapeTransformException(msg);
+			}
+			
+		}
 
 		private void sortSourceShapeInfo(List<SourceShapeInfo> infoList) throws ShapeTransformException {
 			computeMatchCounts(infoList);
@@ -346,6 +405,14 @@ public class ShapeModelFactory {
 			ShapeModel sourceShapeModelParam = sourceShapeModel;
 			ClassModel classModel = targetShapeModel.getClassModel();
 			
+			if (logger.isDebugEnabled()) {
+				logger.debug("scanSourcePath: scanning {} from {} seeking match for {} in ClassModel({})",
+						p.getPredicate().getLocalName(), 
+						RdfUtil.localName(sourceShape.getId()),
+						RdfUtil.localName(targetShapeModel.getShape().getId()),
+						classModel.hashCode());
+			}
+			
 			Path path = p.getEquivalentPath();
 			
 			
@@ -371,11 +438,15 @@ public class ShapeModelFactory {
 									PropertyGroup childGroup = classModel.produceOutGroup(predicate);
 									if (childGroup.getTargetProperty()!=null) {
 										if (logger.isDebugEnabled()) {
-											logger.debug("scanSourcePath: Adding fixed property {}={} to group #{}",
-													childGroup.getTargetProperty().simplePath(), value.stringValue(), childGroup.hashCode());
+											logger.debug("scanSourcePath: Adding fixed property {}={} to group({}) in ClassModel({})",
+													childGroup.getTargetProperty().simplePath(), 
+													value.stringValue(), 
+													childGroup.hashCode(),
+													childGroup.getParentClassModel().hashCode());
 										}
 										FixedPropertyModel fixed = new FixedPropertyModel(predicate, childGroup, value);
-										childGroup.add(fixed);
+										attachProperty(fixed, sourceShapeModel, childGroup);
+										priorStep.addFilterProperty(fixed);
 									}
 								}
 							}
@@ -418,12 +489,13 @@ public class ShapeModelFactory {
 
 
 							if (logger.isDebugEnabled()) {
-								logger.debug("scanSourcePath: Added .{} at step[{}] from {}.{} in ClassModel[{}]", 
+								logger.debug("scanSourcePath: Added .{} at step[{}] from {}.{} in group({}) of ClassModel[{}]", 
 										stepPredicate.getLocalName(), 
 										index, 
 										RdfUtil.localName(sourceShape.getId()), 
 										directSourceProperty.getPredicate().getLocalName(),
-										sourceShapeModel.getClassModel().hashCode());
+										stepGroup.hashCode(),
+										stepGroup.getParentClassModel().hashCode());
 							}
 							
 							priorStep = outStep;
@@ -816,6 +888,8 @@ public class ShapeModelFactory {
 			if (childShape != null) {
 				ShapeModel child = targetShapeModel(childShape, childShape.getTargetClass());
 				child.setAccessor(direct);
+				direct.getGroup().setValueClassModel(child.getClassModel());
+				direct.setValueModel(child);
 			}
 			return direct;
 		}

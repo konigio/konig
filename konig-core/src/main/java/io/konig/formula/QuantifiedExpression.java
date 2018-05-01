@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -120,5 +122,17 @@ public class QuantifiedExpression extends Expression {
 			}
 		}
 		visitor.exit(this);
+	}
+
+	@Override
+	public QuantifiedExpression deepClone() {
+		QuantifiedExpression clone = new QuantifiedExpression();
+		clone.doClone(context, orList);
+		clone.statementList = new ArrayList<>();
+		for (Triple triple : statementList) {
+			clone.statementList.add(triple.deepClone());
+		}
+		
+		return clone;
 	}
 }

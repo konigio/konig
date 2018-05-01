@@ -45,4 +45,11 @@ public class BoundFunction extends AbstractFormula implements BuiltInCall {
 
 	}
 
+	@Override
+	public Formula deepClone() {
+		
+		return new BoundFunction(argument.deepClone());
+	}
+	
+
 }

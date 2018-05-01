@@ -71,5 +71,10 @@ public class LocalNameTerm extends AbstractFormula implements IriValue {
 		visitor.exit(this);
 	}
 
+	@Override
+	public LocalNameTerm deepClone() {
+		return new LocalNameTerm(context.deepClone(), localName);
+	}
+
 	
 }

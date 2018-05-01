@@ -49,4 +49,13 @@ public class BareExpression extends ConditionalOrExpression {
 		
 		return new BareExpression(or);
 	}
+	
+
+
+	@Override
+	public BareExpression deepClone() {
+		BareExpression clone = new BareExpression(this);
+		clone.doClone(context, orList);
+		return clone;
+	}
 }

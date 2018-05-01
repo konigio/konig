@@ -69,4 +69,13 @@ public class ConditionalExpression extends AbstractFormula implements Relational
 		
 	}
 
+	@Override
+	public Formula deepClone() {
+		
+		return new ConditionalExpression(
+				(NumericExpression) condition.deepClone(), 
+				(NumericExpression) whenTrue.deepClone(),
+				whenFalse==null ? null : (NumericExpression) whenFalse.deepClone());
+	}
+
 }

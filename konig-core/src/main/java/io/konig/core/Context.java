@@ -72,5 +72,7 @@ public interface Context extends Serializable {
 	public void sort();	
 	
 	public void toJson(JsonGenerator json) throws IOException;
+	
+	public Context deepClone();
 
 }

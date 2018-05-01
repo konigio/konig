@@ -38,11 +38,7 @@ public class ContainerPropertyRule extends AbstractPropertyRule {
 		super(null);
 		this.predicate = predicate;
 	}
-	// TODO: eliminate the DataChannel property.  DataChannels should be defined only on the nested shape.
-	public ContainerPropertyRule(URI predicate, DataChannel channel) {
-		super(channel);
-		this.predicate = predicate;
-	}
+	
 
 	@Override
 	public URI getPredicate() {

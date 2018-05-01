@@ -98,4 +98,14 @@ public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 		visitor.exit(this);
 	}
 
+
+	@Override
+	public FunctionExpression deepClone() {
+		FunctionExpression clone = new FunctionExpression(functionName);
+		for (Expression e : argList) {
+			clone.addArg((Expression)e.deepClone());
+		}
+		return clone;
+	}
+
 }

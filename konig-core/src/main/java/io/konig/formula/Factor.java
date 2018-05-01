@@ -58,4 +58,9 @@ public class Factor extends AbstractFormula {
 		visitor.exit(this);
 	}
 
+	@Override
+	public Factor deepClone() {
+		return new Factor(operator, right.deepClone());
+	}
+
 }

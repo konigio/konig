@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -58,6 +60,16 @@ public class HasPathStep extends AbstractFormula implements PathStep {
 		}
 		visitor.exit(this);
 		
+	}
+
+	@Override
+	public HasPathStep deepClone() {
+		List<PredicateObjectList> cloneConstraints = new ArrayList<>();
+		for (PredicateObjectList pol : constraints) {
+			cloneConstraints.add(pol.deepClone());
+		}
+		
+		return new HasPathStep(cloneConstraints);
 	}
 
 }

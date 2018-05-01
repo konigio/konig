@@ -70,4 +70,13 @@ public class IfFunction extends AbstractFormula implements BuiltInCall {
 		
 	}
 
+	@Override
+	public Formula deepClone() {
+		Expression cloneCondition = (Expression) condition.deepClone();
+		Expression cloneTrue = (Expression) whenTrue.deepClone();
+		Expression cloneFalse = whenFalse==null ? null : (Expression) whenFalse.deepClone();
+	
+		return new IfFunction(cloneCondition, cloneTrue, cloneFalse);
+	}
+
 }

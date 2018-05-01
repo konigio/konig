@@ -58,4 +58,13 @@ public class ConditionalAndExpression extends AbstractFormula {
 		
 	}
 
+	@Override
+	public ConditionalAndExpression deepClone() {
+		ConditionalAndExpression clone = new ConditionalAndExpression();
+		for (ValueLogical value : andList) {
+			clone.add((ValueLogical)value);
+		}
+		return clone;
+	}
+
 }

@@ -71,4 +71,9 @@ public class Triple extends AbstractFormula {
 
 	}
 
+	@Override
+	public Triple deepClone() {
+		return new Triple((PathTerm)object.deepClone(), (IriValue)predicate.deepClone(), (PathTerm)subject.deepClone());
+	}
+
 }
