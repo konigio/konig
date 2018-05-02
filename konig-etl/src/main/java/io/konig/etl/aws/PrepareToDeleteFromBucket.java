@@ -39,7 +39,7 @@ public class PrepareToDeleteFromBucket implements Processor {
     	String fileName = exchange.getIn().getHeader("fileName", String.class);
     	String bucketName = exchange.getIn().getHeader("sourceBucketName", String.class);
         exchange.getIn().setHeader(S3Constants.KEY, fileName); 
-        exchange.getIn().setHeader(S3Constants.BUCKET_NAME, bucketName.toLowerCase());
+        exchange.getIn().setHeader(S3Constants.BUCKET_NAME, bucketName);
         exchange.getIn().setHeader(S3Constants.S3_OPERATION, S3Operations.deleteObject);
         exchange.getOut().setHeaders(exchange.getIn().getHeaders());
     }

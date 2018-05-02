@@ -27,11 +27,7 @@
   		<artifactId>konig-gcp-model</artifactId>
 			<version>${konig.version}</version>
   	</dependency>
-  	  	<dependency>
-  		<groupId>io.konig</groupId>
-  		<artifactId>konig-aws-model</artifactId>
-			<version>${konig.version}</version>
-  	</dependency>
+  	
 		<dependency>
 		    <groupId>org.apache.velocity</groupId>
 		    <artifactId>velocity</artifactId>

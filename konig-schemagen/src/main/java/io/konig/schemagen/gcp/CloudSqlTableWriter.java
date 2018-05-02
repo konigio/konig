@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.text.MessageFormat;
 
 import io.konig.core.KonigException;
-import io.konig.datasource.DatasourceFileLocator;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.schemagen.sql.SqlTable;
 import io.konig.schemagen.sql.SqlTableGenerator;
@@ -37,15 +36,12 @@ import io.konig.shacl.ShapeVisitor;
 public class CloudSqlTableWriter implements ShapeVisitor {
 	private File baseDir;
 	private SqlTableGenerator generator;
-	private DatasourceFileLocator sqlFileLocator;
 
-	// TODO: Add a DatasourceFileLocator as a private field, and pass an instance to the constructor.
-	// TODO: Remove the baseDir field.
+
 	
-	public CloudSqlTableWriter(SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator) {
-		//this.baseDir = baseDir;
+	public CloudSqlTableWriter(File baseDir, SqlTableGenerator generator) {
+		this.baseDir = baseDir;
 		this.generator = generator;
-		this.sqlFileLocator= sqlFileLocator;
 	}
 
 	@Override
@@ -63,9 +59,9 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 
 	private void writeTable(File file, SqlTable sqlTable) {
 
-	/*	if (!baseDir.exists()) {
+		if (!baseDir.exists()) {
 			baseDir.mkdirs();
-		}*/
+		}
 		try (FileWriter out = new FileWriter(file)) {
 			
 			
@@ -80,14 +76,13 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 	}
 
 	private File sqlFile(GoogleCloudSqlTable table) {
-		// TODO: Refactor this method to use the DatasourceFileLocator passed to the constructor.
-		/*String instance = table.getInstance();
+		String instance = table.getInstance();
 		String database = table.getDatabase();
 		String tableName = table.getTableName();
 		
-		String fileName = MessageFormat.format("{0}_{1}_{2}.sql", instance, database, tableName);*/
+		String fileName = MessageFormat.format("{0}_{1}_{2}.sql", instance, database, tableName);
 		
-		return sqlFileLocator.locateFile(table);
+		return new File(baseDir, fileName);
 	}
 
 	

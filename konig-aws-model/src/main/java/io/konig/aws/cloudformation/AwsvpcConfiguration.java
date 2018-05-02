@@ -30,9 +30,6 @@ public class AwsvpcConfiguration {
 	@JsonProperty("AssignPublicIp")
 	private String assignPublicIp;
 	
-	@JsonProperty("SecurityGroups")
-	private Object securityGroups;
-	
 	@JsonProperty("Subnets")
 	private Object subnets;
 
@@ -52,11 +49,5 @@ public class AwsvpcConfiguration {
 		this.subnets = subnets;
 	}
 	
-	public void getSecurityGroups() {
-		this.securityGroups = securityGroups;
-	}
-
-	public void setSecurityGroups(Object securityGroups) {
-		this.securityGroups = securityGroups;
-	}
+	
 }

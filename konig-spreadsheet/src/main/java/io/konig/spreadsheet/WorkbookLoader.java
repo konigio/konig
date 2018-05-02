@@ -1513,11 +1513,10 @@ public class WorkbookLoader {
 
 					int cellType = cell.getCellType();
 					if (cellType == Cell.CELL_TYPE_STRING) {
-						String stringValue = cell.getStringCellValue();
-						if (UNBOUNDED.equalsIgnoreCase(stringValue) || stringValue.trim().length()==0) {
+						String value = cell.getStringCellValue();
+						if (UNBOUNDED.equalsIgnoreCase(value)) {
 							return null;
 						}
-						
 					}
 
 					if (cellType == Cell.CELL_TYPE_NUMERIC) {
@@ -1526,7 +1525,6 @@ public class WorkbookLoader {
 					} else if (cellType == Cell.CELL_TYPE_BLANK) {
 						return null;
 					} else {
-						
 						String pattern = "Expected integer value in cell ({0}, {1}) on sheet {2} but found {3}";
 						String typeName = CELL_TYPE[cellType];
 						String msg = MessageFormat.format(pattern, row.getRowNum(), column,

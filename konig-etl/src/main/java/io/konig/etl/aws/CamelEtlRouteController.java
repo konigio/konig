@@ -27,12 +27,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -40,9 +36,9 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 
 @SpringBootApplication
-@RestController
 @ImportResource({"classpath:app-config.xml"})
 @PropertySource("file:camel-routes-config.properties")
+@EnableAutoConfiguration(exclude = { CamelAutoConfiguration.class })
 public class CamelEtlRouteController {
 
 	@Value("${aws.accessKey}")
@@ -65,10 +61,5 @@ public class CamelEtlRouteController {
 	AmazonS3Client s3Client() {
 		AWSCredentials credentials = new BasicAWSCredentials(ACCESS_KEY, SECRET_KEY);
 		return new AmazonS3Client(credentials);
-	}
-	
-	@RequestMapping("/health")
-	 public @ResponseBody String health() {
-		return "200 OK";
 	}
 }

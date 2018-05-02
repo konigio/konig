@@ -68,19 +68,4 @@ public class AwsAurora extends DataSource implements TableDataSource {
 	public String getTableIdentifier() {
 		return awsTableName;
 	}
-
-	@Override
-	public String getUniqueIdentifier() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("AwsAurora:");
-		builder.append(tableReference.getAwsSchema());
-		builder.append(':');
-		builder.append(tableReference.getAwsTableName());
-		return builder.toString();
-	}
-
-	@Override
-	public String getSqlDialect() {
-		return "MySQL 5.7";
-	}
 }

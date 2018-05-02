@@ -7,10 +7,10 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<awsAccountId>${aws-account-id}</awsAccountId>
+		<awsAccountId>220459826988</awsAccountId>
 		<docker.image.name>my-dockers</docker.image.name>
 		<docker.image.version>latest</docker.image.version>
-		<docker.registry.host>https://${aws-account-id}.dkr.ecr.${aws-region}.amazonaws.com</docker.registry.host>
+		<docker.registry.host>https://220459826988.dkr.ecr.us-east-1.amazonaws.com</docker.registry.host>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -150,11 +150,11 @@
 						<image>
 
 							<alias>service</alias>
-							<name>${project.artifactId}</name>
+							<name>fabric8/${project.artifactId}</name>
 
 							<build>
 							
-							<from>greyfoxit/alpine-openjdk8</from>
+							<from>openjdk:8-jdk-alpine</from>
 							<entryPoint>
 							<exec>
 						<arg>java</arg>
@@ -162,7 +162,6 @@
 						<arg>-Daws.rds.username=${aws.rds.username}</arg>
 						<arg>-Daws.rds.password=${aws.rds.password}</arg>
 						<arg>-Daws.accessKey=${aws.accessKey}</arg>
-						<arg>-DenvironmentName=${environmentName}</arg>
 						<arg>-Daws.secretKey=${aws.secretKey}</arg>
 						<arg>-jar</arg>
 						<arg>maven/konig-etl-2.0.0-8-SNAPSHOT.jar</arg>
@@ -197,8 +196,8 @@
   <artifactId>konig-aws-ecs-image-push-plugin</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <configuration>
-  <awsEcsRepositoryUrn>${aws-account-id}.dkr.ecr.${aws-region}.amazonaws.com/</awsEcsRepositoryUrn>
-  <imageName>${project.artifactId}</imageName>
+  <awsEcsRepositoryUrn>220459826988.dkr.ecr.us-east-1.amazonaws.com/</awsEcsRepositoryUrn>
+  <imageName>fabric8/${project.artifactId}</imageName>
   <repositoryName>${project.artifactId}</repositoryName>
   </configuration>
   <executions>

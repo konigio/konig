@@ -33,6 +33,8 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.openrdf.model.vocabulary.RDF;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -41,9 +43,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.konig.aws.cloudformation.AwsvpcConfiguration;
 import io.konig.aws.cloudformation.ContainerDefinition;
 import io.konig.aws.cloudformation.LoadBalancer;
-import io.konig.aws.cloudformation.LogConfiguration;
 import io.konig.aws.cloudformation.NetworkConfiguration;
-import io.konig.aws.cloudformation.Options;
 import io.konig.aws.cloudformation.PolicyDocument;
 import io.konig.aws.cloudformation.PortMapping;
 import io.konig.aws.cloudformation.Principal;
@@ -55,6 +55,7 @@ import io.konig.core.Graph;
 import io.konig.core.Vertex;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.AWS;
+import io.konig.gcp.io.GoogleCloudSqlJsonUtil;
 
 public class CloudFormationTemplateWriter {
 	private File cloudFormationDir;
@@ -83,32 +84,29 @@ public class CloudFormationTemplateWriter {
 	private void writeService() throws IOException {
 		Resource resource = new Resource();
 		resource.setType("AWS::ECS::Service");
-		resource.setDependsOn("LoadBalancerRule");
 		resource.addProperties("Cluster", "!Ref ECSCluster");
-		resource.addProperties("DesiredCount", "!Ref DesiredCount");
+		resource.addProperties("DesiredCount", "2");
 		resource.addProperties("LaunchType", "FARGATE");
 		List<LoadBalancer> loadBalancers = new ArrayList<>();
 		for(ContainerDefinition containerDefinition : containerDefinitions) {
 			LoadBalancer loadBalancer = new LoadBalancer();
 			loadBalancer.setContainerName(containerDefinition.getName());
 			loadBalancer.setContainerPort(containerDefinition.getPortMappings().get(0).getContainerPort());
-			loadBalancer.setTargetGroupArn("!Ref TargetGroup");
+			loadBalancer.setTargetGroupArn("!Ref ECSTG");
 			loadBalancers.add(loadBalancer);
 		}
 		resource.addProperties("LoadBalancers", loadBalancers);
 		NetworkConfiguration networkConfig = new NetworkConfiguration();
 		AwsvpcConfiguration configuration = new AwsvpcConfiguration();
 		configuration.setAssignPublicIp("ENABLED");
-		String[] securityGroups = {"!Ref FargateContainerSecurityGroup"};
-		configuration.setSecurityGroups(securityGroups);
 		String[] subnets = {"!Ref PublicSubnetOne","!Ref PublicSubnetTwo"};
 		configuration.setSubnets(subnets);		
 		networkConfig.setAwsvpcConfiguration(configuration);
 		resource.addProperties("NetworkConfiguration", networkConfig);
 		
-		resource.addProperties("TaskDefinition", "!Ref TaskDefinition");
+		resource.addProperties("TaskDefinition", "!Ref taskdefinition");
 		Map<String,Object> resources = new LinkedHashMap<String,Object>();
-		resources.put("Service", resource);
+		resources.put("ecsService", resource);
 
 		String ecsService = AWSCloudFormationUtil.getResourcesAsString(resources);
 		AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,ecsService, false);	
@@ -117,8 +115,8 @@ public class CloudFormationTemplateWriter {
 	private void writeTaskDefinition() throws IOException {
 		Resource resource = new Resource();
 		resource.setType("AWS::ECS::TaskDefinition");
-		resource.addProperties("Cpu", "!Ref ContainerCpu");
-		resource.addProperties("Memory", "!Ref ContainerMemory");
+		resource.addProperties("Cpu", "256");
+		resource.addProperties("Memory", "512");
 		resource.addProperties("NetworkMode", "awsvpc");
 		String[] compatibilities = {"FARGATE"};
 		resource.addProperties("RequiresCompatibilities", compatibilities);
@@ -130,26 +128,17 @@ public class CloudFormationTemplateWriter {
 			ContainerDefinition containerDefinition = new ContainerDefinition();
 			containerDefinition.setName(image.replaceAll("[^a-zA-Z0-9]", "-"));
 			containerDefinition.setImage("${aws-account-id}.dkr.ecr.${aws-region}.amazonaws.com/"+ image);
-			containerDefinition.setCpu("!Ref ContainerCpu");
-			containerDefinition.setMemoryReservation("!Ref ContainerMemory");
+			containerDefinition.setMemoryReservation("512");
 			List<PortMapping> portMappings = new ArrayList<>();
 			PortMapping portMapping = new PortMapping();
-			portMapping.setContainerPort("8080");
+			portMapping.setContainerPort("80");
 			portMappings.add(portMapping);
 			containerDefinition.setPortMappings(portMappings);
-			LogConfiguration logConfiguration = new LogConfiguration();
-			logConfiguration.setLogDriver("awslogs");
-			Options options = new Options();
-			options.setAwslogRegion("${aws-region}");
-			options.setAwslogsGroup("!Ref 'AWS::StackName'");
-			options.setAwslogsStreamPrefix(containerDefinition.getName());
-			logConfiguration.setOptions(options);
-			containerDefinition.setLogConfiguration(logConfiguration);
 			containerDefinitions.add(containerDefinition);
 		}
 		resource.addProperties("ContainerDefinitions", containerDefinitions);
 		Map<String,Object> resources = new LinkedHashMap<String,Object>();
-		resources.put("TaskDefinition", resource);
+		resources.put("taskdefinition", resource);
 		String taskDefinition = AWSCloudFormationUtil.getResourcesAsString(resources);
 		AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,taskDefinition, false);	
 	}

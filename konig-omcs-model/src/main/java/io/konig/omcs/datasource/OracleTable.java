@@ -78,22 +78,4 @@ public class OracleTable extends DataSource implements TableDataSource {
 		}
 	}
 
-	@Override
-	public String getUniqueIdentifier() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("OracleTable:");
-		builder.append(tableReference.getOmcsInstanceId());
-		builder.append(':');
-		builder.append(tableReference.getOracleSchema());
-		builder.append(':');
-		builder.append(tableReference.getOmcsTableId());
-		return builder.toString();
-	}
-
-	@Override
-	public String getSqlDialect() {
-		// TODO: Need to supply the version number supported.
-		return "PL/SQL";
-	}
-
 }

@@ -92,24 +92,6 @@ public class GoogleBigQueryTable extends DataSource implements TableDataSource {
 	public void setExternalDataConfiguration(ExternalDataConfiguration externalDataConfiguration) {
 		this.externalDataConfiguration = externalDataConfiguration;
 	}
-
-	@Override
-	public String getUniqueIdentifier() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("BigQuery:");
-		builder.append(tableReference.getProjectId());
-		builder.append(':');
-		builder.append(tableReference.getDatasetId());
-		builder.append(':');
-		builder.append(tableReference.getTableId());
-		
-		return builder.toString();
-	}
-
-	@Override
-	public String getSqlDialect() {
-		return "SQL 2011";
-	}
 	
 	
 

@@ -28,7 +28,6 @@ import io.konig.maven.GoogleCloudPlatformConfig;
 public class GoogleCloudPlatformModelGenerator extends ConfigurableProjectGenerator<GoogleCloudPlatformConfig> {
 
 	public static final String ARTIFACT_SUFFIX = "-gcp-model";
-	public static final String CLOUD_SQL_PATH = "/target/generated/gcp/cloudsql/tables";
 
 	public GoogleCloudPlatformModelGenerator(
 		MavenProjectConfig mavenProject,

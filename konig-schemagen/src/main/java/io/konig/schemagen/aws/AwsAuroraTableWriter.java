@@ -32,7 +32,6 @@ import io.konig.aws.datasource.AwsAurora;
 import io.konig.aws.datasource.AwsAuroraDefinition;
 import io.konig.aws.datasource.AwsAuroraTableReference;
 import io.konig.core.KonigException;
-import io.konig.datasource.DatasourceFileLocator;
 import io.konig.schemagen.sql.SqlTable;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.Shape;
@@ -42,14 +41,12 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 	
 	private File baseDir;
 	private SqlTableGenerator generator;
-	private DatasourceFileLocator sqlFileLocator;
 
-	// TODO: Add a DatasourceFileLocator as a private field and pass it to the constructor. 
+
 	
-	public AwsAuroraTableWriter(File baseDir,SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator) {
+	public AwsAuroraTableWriter(File baseDir, SqlTableGenerator generator) {
 		this.baseDir = baseDir;
 		this.generator = generator;
-		this.sqlFileLocator = sqlFileLocator;
 	}
 
 	@Override
@@ -59,7 +56,7 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 			AwsAuroraDefinition tableDefinition = new AwsAuroraDefinition();
 			AwsAuroraTableReference tableReference = table.getTableReference();
 			SqlTable sqlTable = generator.generateTable(shape);
-			File file = sqlFile(table);
+			File file = sqlFile(tableReference);
 			writeDDL(file, sqlTable);
 			tableDefinition.setQuery(file.getName());
 			tableDefinition.setTableReference(table.getTableReference());
@@ -106,10 +103,7 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 		return fileName(table, "json");
 	}
 
-	private File sqlFile(AwsAurora table) {
-		// TODO: use the DatasourceFileLocator to produce the file
-	
-		
-		return sqlFileLocator.locateFile(table);
+	private File sqlFile(AwsAuroraTableReference table) {
+		return fileName(table, "sql");
 	}
 }

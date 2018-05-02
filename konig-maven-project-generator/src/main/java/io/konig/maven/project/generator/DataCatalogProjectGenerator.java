@@ -1,5 +1,7 @@
 package io.konig.maven.project.generator;
 
+import java.io.File;
+
 /*
  * #%L
  * Konig Maven Project Generator
@@ -28,9 +30,9 @@ import io.konig.maven.ContentSystemConfig;
 import io.konig.maven.DataCatalogConfig;
 
 public class DataCatalogProjectGenerator extends ConfigurableProjectGenerator<DataCatalogConfig> {
-	
 
 	private ContentSystemConfig contentSystem;
+	
 	public DataCatalogProjectGenerator(MavenProjectConfig mavenProject, DataCatalogConfig config) {
 		super(config, "dataCatalog");
 		setTemplatePath("konig/generator/dataCatalog/pom.xml");
@@ -39,7 +41,8 @@ public class DataCatalogProjectGenerator extends ConfigurableProjectGenerator<Da
 		init(mavenProject);
 		
 		mavenProject = getMavenProject();
-		String rdfPath = mavenProject.getRdfSourcePath(); 
+		String rdfPath = mavenProject.getRdfSourcePath();
+		
 		config.setRdfDir(rdfPath);
 		config.setSiteDir("${project.basedir}/target/generated/data-catalog");
 		contentSystem = config.getContentSystem();
@@ -47,6 +50,7 @@ public class DataCatalogProjectGenerator extends ConfigurableProjectGenerator<Da
 		if (contentSystem != null) {
 			contentSystem.setBaseDir("${project.basedir}/target/generated/data-catalog");
 		}
+		
 	}
 
 	@Override

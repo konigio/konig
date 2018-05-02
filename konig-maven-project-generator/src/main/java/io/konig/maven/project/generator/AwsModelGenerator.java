@@ -28,21 +28,17 @@ import java.io.IOException;
 import io.konig.maven.AmazonWebServicesConfig;
 
 public class AwsModelGenerator  extends ConfigurableProjectGenerator<AmazonWebServicesConfig> {
-	
-	public static final String ARTIFACT_SUFFIX = "-aws-model";
-	public static final String TABLES_PATH = "/target/generated/aws/tables";
 
 	public AwsModelGenerator(MavenProjectConfig mavenProject, AmazonWebServicesConfig config) {
 		super(config, "amazonWebServices");
 		setTemplatePath("konig/generator/awsModel/pom.xml");
-		setArtifactSuffix(ARTIFACT_SUFFIX);
+		setArtifactSuffix("-aws-model");
 		setNameSuffix("Aws Model");
 		config.setDirectory(new File("${project.basedir}/target/generated/aws"));
-		config.setTables(new File("${project.basedir}" + TABLES_PATH));
+		config.setTables(new File("${project.basedir}/target/generated/aws/tables"));
 		config.setAwsScriptFile(new File("${project.basedir}/target/generated/aws/scripts/deploy.groovy"));
 		init(mavenProject);
 	}
-	
 	
 	@Override
 	public void run() throws MavenProjectGeneratorException, IOException {
