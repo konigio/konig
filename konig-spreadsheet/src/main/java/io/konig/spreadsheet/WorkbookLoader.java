@@ -1414,8 +1414,8 @@ public class WorkbookLoader {
 			edge(constraint, SH.minLength, minLength);
 			edge(constraint, SH.maxLength, maxLength);
 			edge(constraint, SH.uniqueLang, uniqueLang);
-			edge(constraint, SH.decimalPrecision, decimalPrecision);
-			edge(constraint, SH.decimalScale, decimalScale);
+			edge(constraint, Konig.decimalPrecision, decimalPrecision);
+			edge(constraint, Konig.decimalScale, decimalScale);
 			edge(constraint, SH.in, valueIn);
 			edge(constraint, Konig.stereotype, stereotype);
 			if (formula != null) {

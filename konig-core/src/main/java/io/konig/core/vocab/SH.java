@@ -75,8 +75,6 @@ public class SH {
 	public static final URI property = new URIImpl(PROPERTY);
 	public static final URI minLength = new URIImpl("http://www.w3.org/ns/shacl#minLength");
 	public static final URI maxLength = new URIImpl("http://www.w3.org/ns/shacl#maxLength");
-	public static final URI decimalPrecision = new URIImpl("http://www.w3.org/ns/shacl#decimalPrecision");
-	public static final URI decimalScale = new URIImpl("http://www.w3.org/ns/shacl#decimalScale");
 	public static final URI uniqueLang = new URIImpl("http://www.w3.org/ns/shacl#uniqueLang");
 	public static final URI Info = new URIImpl("http://www.w3.org/ns/shacl#Info");
 	public static final URI Warning = new URIImpl("http://www.w3.org/ns/shacl#Warning");
