@@ -34,7 +34,7 @@
 				<th>Type</th>
 				<th>Provided By</th>			
 			</tr>
-		</thead>
+		</thead> 
 		<tbody>
 			<tr>
 #if($DataSource) 
