@@ -38,6 +38,8 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.datasource.DatasourceFileLocator;
+import io.konig.datasource.DdlFileLocator;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.schemagen.aws.AwsAuroraTableWriter;
 import io.konig.schemagen.gcp.CloudSqlTableWriter;
@@ -131,8 +133,8 @@ public class SqlTableGeneratorTest {
 
 		File baseDir = new File("target/test/resources/aws/sql");
 		baseDir.mkdirs();
-		
-		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator());
+		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
+		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator(), sqlFileLocator);
 		awsTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
 		
@@ -150,8 +152,8 @@ public class SqlTableGeneratorTest {
 		shapeLoader.loadTurtle(resource("gcp/shape_PartyShape.ttl"), null);
 		File baseDir = new File("target/test/resources/gcp/sql");
 		baseDir.mkdirs();
-		
-		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter(baseDir, new SqlTableGenerator());
+		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator);
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
 		

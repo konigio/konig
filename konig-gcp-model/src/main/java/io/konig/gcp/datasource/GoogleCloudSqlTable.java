@@ -76,4 +76,22 @@ public class GoogleCloudSqlTable  extends DataSource implements TableDataSource 
 			tableName = uri.getLocalName();
 		}
 	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("GoogleCloudSql:");
+		builder.append(instance);
+		builder.append(':');
+		builder.append(database);
+		builder.append(':');
+		builder.append(tableName);
+		return builder.toString();
+	}
+
+	@Override
+	public String getSqlDialect() {
+		
+		return "MySQL 5.7";
+	}
 }

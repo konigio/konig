@@ -4,7 +4,7 @@ package io.konig.datasource;
  * #%L
  * Konig Core
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,23 +21,22 @@ package io.konig.datasource;
  */
 
 
-public interface TableDataSource {
-	
-	/**
-	 * Get a String reference to the Table suitable for use in a SELECT statement.
-	 */
-	String getTableIdentifier();
-	
-	/**
-	 * Get the name of the SQL dialect used by this TableDataSource.
-	 */
-	String getSqlDialect();
-	
-	/**
-	 * An identifier for this TableDataSource that is unique across the set of all individuals
-	 * of type TableDataSource.  This identifier may be composed of several parts each of which
-	 * is separated by a colon (':').
-	 */
-	String getUniqueIdentifier();
+import java.io.File;
 
+/**
+ * An interface for locating a file associated with a given DataSource.
+ * Different implementations of this interface can be used to locate different
+ * types of files.
+ * 
+ * @author Greg McFall
+ *
+ */
+public interface DatasourceFileLocator {
+
+	/**
+	 * Locate a file associated with a given DataSource.
+	 * @param ds
+	 * @return The file associated with the DataSource, or null if no appropriate file is found.
+	 */
+	public File locateFile(DataSource ds);
 }

@@ -26,8 +26,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -42,6 +45,9 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.json.SampleJsonGenerator;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.StringUtil;
+import io.konig.datasource.DataSource;
+import io.konig.datasource.DatasourceFileLocator;
+import io.konig.datasource.TableDataSource;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -73,6 +79,8 @@ public class ShapePage {
 		request.setPageId(shapeURI);
 		request.setActiveLink(null);
 		
+		handleDdlFile(context, request);
+		
 		List<PropertyInfo> propertyList = new ArrayList<>();
 		context.put("PropertyList", propertyList);
 		for (PropertyConstraint p : shape.getProperty()) {
@@ -86,6 +94,59 @@ public class ShapePage {
 		PrintWriter out = response.getWriter();
 		template.merge(context, out);
 		out.flush();
+	}
+
+	private void handleDdlFile(VelocityContext context, ShapeRequest request) throws DataCatalogException {
+		DatasourceFileLocator ddlLocator = request.getBuildRequest().getSqlDdlLocator();
+		if (ddlLocator != null) {
+			
+			List<DataSource> dataSourceList = request.getShape().getShapeDataSource();
+			if (dataSourceList != null) {
+				List<Link> linkList = null;
+				Set<String> memory = null;
+				for (DataSource datasource : dataSourceList) {
+
+					if (datasource instanceof TableDataSource) {
+						File ddlFile = ddlLocator.locateFile(datasource);
+						if (ddlFile != null && ddlFile.exists()) {
+							TableDataSource table = (TableDataSource) datasource;
+							String dialect = table.getSqlDialect();
+							
+							if (memory==null || !memory.contains(dialect)) {
+								if (memory==null) {
+									memory = new HashSet<>();
+								}
+								memory.add(dialect);
+								String fileName = ddlFile.getName();
+								String href = "../sql/" + fileName;
+								String name = dialect + " DDL";
+								Link link = new Link(name, href);
+								if (linkList == null) {
+									linkList = new ArrayList<>();
+								}
+								linkList.add(link);
+
+								File targetDir = new File(request.getBuildRequest().getOutDir(), "sql");
+								File ddlTargetFile = new File(targetDir, fileName);
+								
+								try {
+									FileUtils.copyFile(ddlFile, ddlTargetFile);
+								} catch (IOException e) {
+									throw new DataCatalogException(e);
+								}
+							}
+						}
+					}
+				}
+				if (linkList!=null) {
+					context.put("RelatedArtifacts", linkList);
+				}
+				
+			}
+			
+			
+		}
+		
 	}
 
 	private void addJsonSamples(ShapeRequest request) throws DataCatalogException {

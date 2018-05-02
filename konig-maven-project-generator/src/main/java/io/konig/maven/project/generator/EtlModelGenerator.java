@@ -46,11 +46,12 @@ public void setArtifactName(String artifactName) {
 	this.artifactName = artifactName;
 }
 
-	public EtlModelGenerator(MavenProjectConfig mavenProject,File baseDir,String artifactName) {		
+	public EtlModelGenerator(MavenProjectConfig mavenProject,File baseDir,String artifactName) {	
+		mavenProject.setName(artifactName);
 		setTemplatePath("konig/generator/ETL/pom.xml");
 		mavenProject.setArtifactId("etl-");
 		setArtifactSuffix(artifactName.toLowerCase());		
-		setNameSuffix("etl Model");
+		setNameSuffix("ETL Model");
 		mavenProject.setBaseDir(baseDir);
 		init(mavenProject);
 	}

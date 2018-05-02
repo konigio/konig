@@ -45,7 +45,7 @@ public class PrepareToLoadStagingTable implements Processor {
 			String bucketName = "";
 			String fileName = "";
 			for(S3EventNotificationRecord record : notification.getRecords()) {
-				bucketName = record.getS3().getBucket().getName();
+				bucketName = record.getS3().getBucket().getName().toLowerCase();
 				fileName = record.getS3().getObject().getKey();
 				
 				exchange.getOut().setBody(

@@ -1,5 +1,7 @@
 package io.konig.maven;
 
+import org.apache.maven.shared.model.fileset.FileSet;
+
 /*
  * #%L
  * Konig Maven Common
@@ -21,9 +23,6 @@ package io.konig.maven;
  */
 
 
-import java.io.File;
-
-
 public class DataCatalogConfig {
 
 	private String rdfDir;
@@ -32,6 +31,7 @@ public class DataCatalogConfig {
 	private String ontology;
 	private String logFile;
 	private ContentSystemConfig contentSystem;
+	private FileSet [] sqlFiles;
 	public String getRdfDir() {
 		return rdfDir;
 	}
@@ -67,6 +67,12 @@ public class DataCatalogConfig {
 	}
 	public void setContentSystem(ContentSystemConfig contentSystem) {
 		this.contentSystem = contentSystem;
+	}
+	public FileSet[] getSqlFiles() {
+		return sqlFiles;
+	}
+	public void setSqlFiles(FileSet[] sqlFiles) {
+		this.sqlFiles = sqlFiles;
 	}
 	
 	
