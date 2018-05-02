@@ -521,6 +521,6 @@ public class PropertyConstraint implements Cloneable {
 	}
 
 	public boolean isRequiredSingleValue() {
-		return minCount!=null && minCount==1 && maxCount!=0 && maxCount==1;
+		return minCount!=null && minCount==1 && maxCount!=null && maxCount==1;
 	}
 }

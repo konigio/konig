@@ -48,7 +48,7 @@ public class DataSourceGeneratorTest {
 	@Test
 	public void test() throws Exception {
 		
-		File templateDir = null;
+		File templateDir = new File("target/WorkbookLoader");
 		Graph graph = new MemoryGraph();
 		
 		Properties properties = new Properties();
