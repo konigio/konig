@@ -194,6 +194,8 @@ public class WorkbookLoader {
 	private static final String MAX_EXCLUSIVE = "Max Exclusive";
 	private static final String MIN_LENGTH = "Min Length";
 	private static final String MAX_LENGTH = "Max Length";
+	private static final String DECIMAL_PRECISION = "Decimal Precision";
+	private static final String DECIMAL_SCALE = "Decimal Scale";
 
 	// Cloud SQL Instance
 	private static final String INSTANCE_NAME = "Instance Name";
@@ -458,6 +460,8 @@ public class WorkbookLoader {
 		private int pcMaxExclusive = UNDEFINED;
 		private int pcMinLength = UNDEFINED;
 		private int pcMaxLength = UNDEFINED;
+		private int pcDecimalPrecision = UNDEFINED;
+		private int pcDecimalScale = UNDEFINED;
 
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
@@ -1293,6 +1297,16 @@ public class WorkbookLoader {
 			Literal maxExclusive = numericLiteral(row, pcMaxExclusive);
 			Literal minLength = numericLiteral(row, pcMinLength);
 			Literal maxLength = numericLiteral(row, pcMaxLength);
+			Literal decimalPrecision = intLiteral(row, pcDecimalPrecision);
+			if(decimalPrecision!=null && (decimalPrecision.intValue()<1 || decimalPrecision.intValue()>65)){
+				throw new KonigException("Decimal Precison should be between 1 to 65");
+			}			
+			Literal decimalScale = intLiteral(row, pcDecimalScale);
+			if(decimalScale!=null && 
+					(decimalScale.intValue()<0 || decimalScale.intValue()>30 || 
+							decimalScale.intValue()>decimalPrecision.intValue())){
+				throw new KonigException("Decimal Scale should be less than Decimal Precision and between 0-30");
+			}
 			URI valueClass = uriValue(row, pcValueClassCol);
 			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
@@ -1433,12 +1447,14 @@ public class WorkbookLoader {
 			edge(constraint, SH.minLength, minLength);
 			edge(constraint, SH.maxLength, maxLength);
 			edge(constraint, SH.uniqueLang, uniqueLang);
+			edge(constraint, Konig.decimalPrecision, decimalPrecision);
+			edge(constraint, Konig.decimalScale, decimalScale);
 			edge(constraint, SH.in, valueIn);
 			edge(constraint, Konig.stereotype, stereotype);
 			if (formula != null) {
 				formulaHandlers.add(new PropertyFormulaHandler(shapeId, constraintVertex, formula));
 			}
-
+			
 		}
 
 		private Vertex getTargetClass(Resource valueType) {
@@ -1766,7 +1782,7 @@ public class WorkbookLoader {
 		}
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
-			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = UNDEFINED;
+			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = pcDecimalPrecision = pcDecimalScale = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1819,6 +1835,12 @@ public class WorkbookLoader {
 						break;
 					case MAX_LENGTH:
 						pcMaxLength = i;
+						break;
+					case DECIMAL_PRECISION:
+						pcDecimalPrecision = i;
+						break;
+					case DECIMAL_SCALE:
+						pcDecimalScale = i;
 						break;
 					case UNIQUE_LANG:
 						pcUniqueLangCol = i;
