@@ -926,6 +926,42 @@ public class WorkbookLoaderTest {
 		assertEquals("http://example.com/shapes/PersonShape", list.get(0).getId().stringValue());
 
 	}
+	
+	@Test
+	public void testPrimaryKey() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("primarykey-stereotype.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/SourcePersonShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		
+		Shape shape = s.getShapeById(shapeId);
+		List<PropertyConstraint> propertyList = shape.getProperty();
+		//SequencePath sequence = null;
+		for (PropertyConstraint p : propertyList) {
+			//PropertyPath path = p.getPath();
+			if (p.getStereotype() != null) {
+				assertEquals((p.getStereotype().getLocalName()),"primaryKey");
+			}
+		}
+		assertTrue(shape!=null);
+	
+		
+	}
+	
 	private void checkPropertyConstraints(Graph graph) {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));

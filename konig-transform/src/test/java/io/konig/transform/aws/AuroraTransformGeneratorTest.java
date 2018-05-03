@@ -85,6 +85,24 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 		assertTrue(out.equals(statement.toString()));
 	}
 	
+	@Test
+	public void testUpsert() throws Exception {
+		
+		load("src/test/resources/konig-transform/upsert-transform");
+		
+		URI shapeId = iri("http://example.com/shapes/TargetPersonShape");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		generator.visit(shape);
+		
+		ShapeRule shapeRule = shapeRuleFactory.createShapeRule(shape);
+		InsertStatement statement = sqlFactory.insertStatement(shapeRule);
+		String path="target/test/AuroraTransformGeneratorTest/" + RdfUtil.localName(shape.getId()) + ".sql";		
+		String out = String.join("\n", Files.readAllLines(Paths.get(path)));
+		assertTrue(!statement.toString().isEmpty());
+		assertTrue(!out.isEmpty());
+	}
+	
 	private static class MockFileFactory implements ShapeFileFactory {
 
 		@Override

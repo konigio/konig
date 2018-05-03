@@ -105,7 +105,7 @@ public class QueryBuilder {
 			
 			SelectExpression select = insertSelect(targetTable, frame);
 			
-			InsertStatement insert = new InsertStatement(targetTable.getExpression(), columnList, select);
+			InsertStatement insert = new InsertStatement(targetTable.getExpression(), columnList, select,null);
 			
 			cmd = new BigQueryCommandLine();
 			cmd.setProjectId(tableRef.getProjectId());
