@@ -40,6 +40,10 @@ public class SqlTable extends AbstractPrettyPrintable {
 		return tableName;
 	}
 	
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
+
 	public SqlColumn getColumnByName(String columnName) {
 		for (SqlColumn c : columnList) {
 			if (c.getColumnName().equals(columnName)) {
