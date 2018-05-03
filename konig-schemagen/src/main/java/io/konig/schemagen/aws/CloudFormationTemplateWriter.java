@@ -44,6 +44,7 @@ import io.konig.aws.cloudformation.LoadBalancer;
 import io.konig.aws.cloudformation.LogConfiguration;
 import io.konig.aws.cloudformation.NetworkConfiguration;
 import io.konig.aws.cloudformation.Options;
+import io.konig.aws.cloudformation.Output;
 import io.konig.aws.cloudformation.PolicyDocument;
 import io.konig.aws.cloudformation.PortMapping;
 import io.konig.aws.cloudformation.Principal;
@@ -111,7 +112,7 @@ public class CloudFormationTemplateWriter {
 		resources.put("Service", resource);
 
 		String ecsService = AWSCloudFormationUtil.getResourcesAsString(resources);
-		AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,ecsService, false);	
+		AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,ecsService,null, false);	
 	}
 	
 	private void writeTaskDefinition() throws IOException {
@@ -151,14 +152,14 @@ public class CloudFormationTemplateWriter {
 		Map<String,Object> resources = new LinkedHashMap<String,Object>();
 		resources.put("TaskDefinition", resource);
 		String taskDefinition = AWSCloudFormationUtil.getResourcesAsString(resources);
-		AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,taskDefinition, false);	
+		AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,taskDefinition, null,false);	
 	}
 	
 	private void writeECR() throws IOException {
 		String repositoryName=System.getProperty("ECRRepositoryName");
 		if(repositoryName!=null){
 			String ecrTemplate=getECRTemplate(repositoryName);		
-			AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,ecrTemplate, false);		
+			AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,ecrTemplate,null, false);		
 		}		
 	}
 	private String getECRTemplate(String repositoryName) throws JsonProcessingException {		
@@ -193,9 +194,19 @@ public class CloudFormationTemplateWriter {
 				SimplePojoFactory pojoFactory = new SimplePojoFactory();
 				DbCluster instance = pojoFactory.create(v, DbCluster.class);
 				String dbClusterTemplate=getDbClusterTemplate(instance);
-				AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,dbClusterTemplate, false);
+				String dbInstanceOutput=getDbInstanceOutputTemplate(instance.getDbClusterName()+"DBInstance");
+				AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,dbClusterTemplate,dbInstanceOutput, false);
 			}
 		}
+	}
+	private String getDbInstanceOutputTemplate(String dbInstanceName) throws JsonProcessingException {
+		Map<String,Object> outputs=new LinkedHashMap<String,Object>();
+		Output dbInstanceIdOutput=new Output();
+		dbInstanceIdOutput.setDescription("The DB Instance Id.");
+		dbInstanceIdOutput.setValue("!Ref "+dbInstanceName);
+		outputs.put(dbInstanceName+"Identifier", dbInstanceIdOutput);
+		return AWSCloudFormationUtil.getResourcesAsString(outputs);
+		
 	}
 	private void writeTemplates() throws IOException {
 		

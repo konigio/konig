@@ -22,6 +22,7 @@ package io.konig.maven;
 
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,10 +44,13 @@ import com.amazonaws.services.cloudformation.model.Output;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
 import com.amazonaws.services.cloudformation.model.StackStatus;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.konig.aws.common.StackCreationException;
 import io.konig.aws.datasource.CloudFormationTemplate;
+import io.konig.gcp.io.GoogleCloudSqlJsonUtil;
 import io.konig.schemagen.aws.AWSCloudFormationUtil;
 
 public class CreateCloudFormationStackAction {
@@ -85,10 +89,27 @@ public class CreateCloudFormationStackAction {
 		             .build();
 			CreateStackResult stackResult=amazonClient.createStack(request);
 			List<Output> outputs=getOutputForRequest(cfTemplate.getStackName(),amazonClient);
+			File outputJsonFile = new File(jsonFile.getParent(), cfTemplate.getStackName() + "_output.json");
+			try (FileWriter writer = new FileWriter(outputJsonFile)) {
+				JsonFactory factory = new JsonFactory();
+				JsonGenerator json = factory.createGenerator(writer);
+				json.useDefaultPrettyPrinter();
+				
+				json.writeStartObject();
+				for(Output output:outputs){
+					if (output.getOutputKey() != null) {
+						json.writeStringField(output.getOutputKey(), output.getOutputValue());
+					}
+				}
+				json.writeEndObject();
+				
+				json.flush();
+			}
 			deployment.setResponse("Stack creation complete. Outputs::"+(outputs==null?"":outputs.toString()));
 			return deployment;
 		
 	}
+	
 	private List<Output> getOutputForRequest(String stackName, AmazonCloudFormation client) throws InterruptedException, StackCreationException {
 	    int tried = 0;
 	    String maxTime= System.getProperty("stackMaxTime");

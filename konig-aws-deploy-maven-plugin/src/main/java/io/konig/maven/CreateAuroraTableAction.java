@@ -22,13 +22,20 @@ package io.konig.maven;
 
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Iterator;
+import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 
 import io.konig.aws.datasource.AwsAurora;
 import io.konig.aws.datasource.AwsAuroraDefinition;
@@ -54,6 +61,33 @@ public class CreateAuroraTableAction {
 			
 			if(System.getProperty(awsHost) != null) {
 				awsHost = System.getProperty(awsHost);
+			}
+			else{
+				
+				File dir=new File(file.getParentFile().getParent()+"/cloudformationtemplate");
+				if(dir!=null && dir.exists() && dir.isDirectory()){
+					File[] files=dir.listFiles();
+					File outputFile=null;
+					for(File f:files){
+						if(f.getName().endsWith("output.json")){
+							outputFile=f;
+							break;
+						}
+					}
+					ObjectMapper objMapper=new ObjectMapper();
+					JsonNode jsonNode=objMapper.readTree(outputFile);
+					Iterator<String> iterator=jsonNode.fieldNames();
+					
+					while(iterator.hasNext()){
+						String fieldName=iterator.next();
+						if(fieldName.endsWith("DBInstanceIdentifier")){
+							JsonNode dbInstanceIdNode=jsonNode.get(fieldName);
+							awsHost=dbInstanceIdNode.asText();
+							break;
+						}
+					}
+					
+				}
 			}
 			
 			String instance = awsHost;

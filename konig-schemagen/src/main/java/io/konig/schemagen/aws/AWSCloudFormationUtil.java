@@ -54,7 +54,7 @@ import io.konig.aws.common.StackCreationException;
 
 public class AWSCloudFormationUtil {
 	
-	public static void writeCloudFormationTemplate(File cfDir,String template, boolean validate) throws IOException {
+	public static void writeCloudFormationTemplate(File cfDir,String template,String output, boolean validate) throws IOException {
 		for(File file:cfDir.listFiles()){
 			String contents = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
 			YAMLMapper mapper = new YAMLMapper(new YAMLFactory());
@@ -64,7 +64,9 @@ public class AWSCloudFormationUtil {
 			if(outputNode!=null){			
 				String outputs=contents.substring(contents.lastIndexOf("Outputs:"));
 				String resources=contents.substring(0,contents.lastIndexOf("Outputs:"));
-					resources=resources+template;
+				resources=resources+template;
+				if(output!=null)
+					outputs=outputs+output;
 				contents=resources+outputs;
 			}
 			
@@ -109,5 +111,5 @@ public class AWSCloudFormationUtil {
 		return new AWSStaticCredentialsProvider(
 				new BasicAWSCredentials(System.getProperty("aws.accessKeyId"), System.getProperty("aws.secretKey")));
 
-	}
+	}	
 }
