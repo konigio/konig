@@ -60,7 +60,17 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 			AwsAuroraTableReference tableReference = table.getTableReference();
 			SqlTable sqlTable = generator.generateTable(shape);
 			File file = sqlFile(table);
+			String tableName = sqlTable.getTableName();
+			String schemaName = tableReference.getAwsSchema();
+			if (schemaName != null) {
+				StringBuilder builder = new StringBuilder();
+				builder.append(schemaName);
+				builder.append('.');
+				builder.append(tableName);
+				sqlTable.setTableName(builder.toString());
+			}
 			writeDDL(file, sqlTable);
+			sqlTable.setTableName(tableName);
 			tableDefinition.setQuery(file.getName());
 			tableDefinition.setTableReference(table.getTableReference());
 			File jsonFile = jsonFile(tableReference);
