@@ -55,6 +55,9 @@ public class AmazonWebServicesConfig {
 	@Parameter(property="konig.project.directory", defaultValue="${project.basedir}")
 	private File baseDirectory;
 	
+	@Parameter(property="konig.aws.enableAuroraTransform", defaultValue="true")
+	private boolean enableAuroraTransform;
+	
 	public AmazonWebServicesConfig() {
 			
 	}
@@ -138,6 +141,14 @@ public class AmazonWebServicesConfig {
 
 	public void setBaseDirectory(File baseDirectory) {
 		this.baseDirectory = baseDirectory;
+	}
+
+	public boolean isEnableAuroraTransform() {
+		return enableAuroraTransform;
+	}
+
+	public void setEnableAuroraTransform(boolean enableAuroraTransform) {
+		this.enableAuroraTransform = enableAuroraTransform;
 	}
 	
 	
