@@ -53,12 +53,13 @@ import com.google.api.services.drive.DriveScopes;
 @Mojo( name = "download")
 public class GoogleSheetDownloadMojo extends AbstractMojo {
    
-	
+	@Parameter
+	private Document[] documents;
     
-    @Parameter(required=true)
+    @Parameter
     private String documentId;
     
-    @Parameter(required=true)
+    @Parameter
     private File saveAs;
 
 	@Override
@@ -66,10 +67,22 @@ public class GoogleSheetDownloadMojo extends AbstractMojo {
 		
 		GoogleDownloadClient client = new GoogleDownloadClient();
 		
-		try {
-			client.execute(documentId, saveAs);
-		} catch (DownloadException e) {
-			throw new MojoExecutionException("Failed to download and save Google Sheet", e);
+		if (documents !=null && documents.length>0) {
+			for (Document doc : documents) {
+				try {
+					client.execute(doc.getDocumentId(), doc.getSaveAs());
+				} catch (DownloadException e) {
+					throw new MojoExecutionException("Failed to download and save Google Sheet", e);
+				}
+			}
+			
+		} else {
+		
+			try {
+				client.execute(documentId, saveAs);
+			} catch (DownloadException e) {
+				throw new MojoExecutionException("Failed to download and save Google Sheet", e);
+			}
 		}
 
 	}
