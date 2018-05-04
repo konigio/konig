@@ -2,7 +2,12 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix aws:   <http://www.konig.io/ns/aws/> .
 @prefix schema:  <http://schema.org/> .
-@prefix sys: <http://schema.pearson.com/ns/system/> .
+#if($!{parentComponent})
+#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#foreach( $namespace in $namespaceList) 
+@prefix $namespace.Prefix: <$namespace.Name> .
+#end
+#end
 
 <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/${awsTableName}>
 	a konig:AwsAurora, konig:DataSource;

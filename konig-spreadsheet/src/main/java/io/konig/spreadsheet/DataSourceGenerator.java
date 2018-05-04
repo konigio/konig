@@ -81,6 +81,11 @@ public class DataSourceGenerator {
 	
 	
 	public static class VelocityFunctions {
+		private NamespaceManager nsManager;
+		
+		private VelocityFunctions(NamespaceManager nsManager) {
+			this.nsManager = nsManager;
+		}
 		public String spaceToComma(String text) {
 			
 			StringBuilder builder = new StringBuilder();
@@ -95,13 +100,38 @@ public class DataSourceGenerator {
 			
 			return builder.toString();
 		}
+		
+		public List<Namespace> listNamespaces(String text) {
+			List<Namespace> result = null;
+			if (text != null) {
+				StringTokenizer tokens = new StringTokenizer(text, " \t\r\n");
+				while (tokens.hasMoreTokens()) {
+					String id = tokens.nextToken();
+					int colon = id.indexOf(':');
+					String prefix = id.substring(0,  colon);
+					Namespace ns = nsManager.findByPrefix(prefix);
+					if (ns == null) {
+						ns = nsManager.findByName(id);
+					}
+					
+					if (ns == null) {
+						throw new RuntimeException("Namespace prefix not found: " + id);
+					}
+					if (result == null) {
+						result = new ArrayList<>();
+					}
+					result.add(ns);
+				}
+			}
+			return result;
+		}
 	}
 	public DataSourceGenerator(NamespaceManager nsManager, File templateDir, Properties properties) {
 		this.nsManager = nsManager;
 		this.templateDir = templateDir;
 		this.context = new VelocityContext();
 		context.put("templateException", new TemplateException());
-		context.put("functions", new VelocityFunctions());
+		context.put("functions", new VelocityFunctions(nsManager));
 		context.put("beginVar", "${");
 		context.put("endVar", "}");
 		put(properties);	

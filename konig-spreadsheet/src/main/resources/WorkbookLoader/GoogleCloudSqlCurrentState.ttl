@@ -2,7 +2,12 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
 @prefix schema:  <http://schema.org/> .
-@prefix sys: <http://schema.pearson.com/ns/system/> .
+#if($!{parentComponent})
+#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#foreach( $namespace in $namespaceList) 
+@prefix $namespace.Prefix: <$namespace.Name> .
+#end
+#end
 
 <https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/${gcpSqlInstanceId}/databases/${gcpSqlDatabaseId}/tables/${gcpSqlTableName}Current>
 	a konig:GoogleCloudSqlTable, konig:CurrentState ;
