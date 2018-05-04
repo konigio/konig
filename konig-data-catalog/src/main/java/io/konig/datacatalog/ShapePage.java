@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,6 +46,7 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.json.SampleJsonGenerator;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.StringUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.DatasourceFileLocator;
 import io.konig.datasource.TableDataSource;
@@ -54,6 +56,7 @@ import io.konig.shacl.Shape;
 public class ShapePage {
 	private static final Logger logger = LoggerFactory.getLogger(ShapePage.class);
 	private static final String SHAPE_TEMPLATE = "data-catalog/velocity/shape.vm";
+	private static final URI[] DATASOURCE_LIST={Konig.GoogleBigQueryTable,Konig.GoogleBigQueryView,Konig.GoogleCloudSqlTable,Konig.AwsAuroraTable};
 
 	public void render(ShapeRequest request, PageResponse response) throws DataCatalogException {
 
@@ -76,6 +79,20 @@ public class ShapePage {
 			return;
 		}
 		context.put("TargetClass", new Link(targetClass.getLocalName(), targetClass.stringValue()));
+		if(shape.getShapeDataSource()!=null){
+			DataSource ds=getValidDataSource(shape.getShapeDataSource(),context);
+			String providedBy=null;
+			if(ds!=null && ds.getIsPartof()!=null){
+				for(URI uri:ds.getIsPartof()){
+					if(providedBy==null)
+						providedBy=uri.getLocalName();
+					else
+						providedBy=providedBy+","+uri.getLocalName();
+				}
+				context.put("ProvidedBy", providedBy);
+			}
+			
+		}
 		request.setPageId(shapeURI);
 		request.setActiveLink(null);
 		
@@ -95,7 +112,18 @@ public class ShapePage {
 		template.merge(context, out);
 		out.flush();
 	}
+	private DataSource getValidDataSource(List<DataSource> shapeDataSourceList,VelocityContext context) {
+		for(DataSource ds:shapeDataSourceList){			
+			for(URI uri:ds.getType()){
+				if(Arrays.asList(DATASOURCE_LIST).contains(uri)){
+					context.put("DataSource",uri.getLocalName());
+					return ds;
+				}
+			}			
+		}
+		return null;
 
+	}
 	private void handleDdlFile(VelocityContext context, ShapeRequest request) throws DataCatalogException {
 		DatasourceFileLocator ddlLocator = request.getBuildRequest().getSqlDdlLocator();
 		if (ddlLocator != null) {
