@@ -44,26 +44,57 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 			throw new MavenProjectGeneratorException("workbook file must be defined");
 		}
 		
+		File workbookDir = config.getWorkbookDir();
 		File workbookFile = config.getWorkbookFile();
 		config.setWorkbookFile(localWorkbookFile());
+		config.setWorkbookDir(localWorkbookDir());
 		super.run();
 		config.setWorkbookFile(workbookFile);
+		config.setWorkbookDir(workbookDir);
 		copyAssembly();
-		copyWorkbook();
+		copyWorkbooks();
 		
 		
 	}
+
+	private File localWorkbookDir() {
+		File dir = config.getWorkbookDir();
+		return dir==null ? null : new File("src/workbooks");
+	}
+
 
 	private File localWorkbookFile() {
-		return new File("src/" + config.getWorkbookFile().getName());
+		
+		File file = config.getWorkbookFile();
+		
+		return file==null ? null : new File("src/" + file.getName());
 	}
 
 
-	private void copyWorkbook() throws MavenProjectGeneratorException, IOException {
-		File targetFile = new File(baseDir(), "src/" + config.getWorkbookFile().getName());
-		targetFile.getParentFile().mkdirs();
+	private void copyWorkbooks() throws MavenProjectGeneratorException, IOException {
 		
-		FileUtil.copy(config.getWorkbookFile(), targetFile);
+		File workbookFile = config.getWorkbookFile();
+		if (workbookFile != null) {
+		
+			File targetFile = new File(baseDir(), "src/" + workbookFile.getName());
+			targetFile.getParentFile().mkdirs();
+			
+			FileUtil.copy(config.getWorkbookFile(), targetFile);
+		} else {
+			File dir = config.getWorkbookDir();
+			if (dir == null) {
+				throw new MavenProjectGeneratorException("Either workbookFile or workbookDir must be defined");
+			}
+			
+			File targetDir = new File(baseDir(), "src/workbooks");
+			targetDir.mkdirs();
+			
+			File[] list = dir.listFiles();
+			for (File file : list) {
+				File target = new File(targetDir, file.getName());
+				FileUtil.copy(file, target);
+			}
+		}
 	}
 
 	
