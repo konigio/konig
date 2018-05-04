@@ -81,6 +81,31 @@ import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
 public class WorkbookLoaderTest {
+	
+	@Test
+	public void testBigQueryTableIdRegex() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("bigQueryTableId-regex.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		URI shapeId = uri("http://example.com/shapes/BqPersonShape");
+		
+		Literal tableId = graph.v(shapeId).out(Konig.shapeDataSource).out(GCP.tableReference).firstLiteral(GCP.tableId);
+		assertTrue(tableId != null);
+		assertEquals("BqPerson", tableId.stringValue());
+	}
 
 	@Test
 	public void testGoogleCloudSql() throws Exception {
@@ -126,7 +151,7 @@ public class WorkbookLoaderTest {
 		assertEquals("/schema:offers[schema:priceCurrency \"USD\"]/schema:price", path.toSimpleString());
 	}
 
-	@Ignore
+	@Test
 	public void testInvalidOntologyNamespace() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("invalid-ontology-namespace.xlsx");
@@ -143,7 +168,7 @@ public class WorkbookLoaderTest {
 			error = e;
 		}
 		assertTrue(error != null);
-		assertEquals("Namespace must end with '/' or '#' but found: http://schema.org", error.getMessage());
+		assertTrue(error.getMessage().contains("Namespace must end with '/' or '#' but found: http://schema.org"));
 	}
 	
 	@Test

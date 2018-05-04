@@ -172,7 +172,9 @@ public class WorkbookLoader {
 
 	private static final String SETTING_NAME = "Setting Name";
 	private static final String SETTING_VALUE = "Setting Value";
-
+	private static final String PATTERN = "Pattern";
+	private static final String REPLACEMENT = "Replacement";
+	
 	private static final String PROPERTY_PATH = "Property Path";
 	private static final String VALUE_TYPE = "Value Type";
 	private static final String MIN_COUNT = "Min Count";
@@ -192,6 +194,8 @@ public class WorkbookLoader {
 	private static final String MAX_EXCLUSIVE = "Max Exclusive";
 	private static final String MIN_LENGTH = "Min Length";
 	private static final String MAX_LENGTH = "Max Length";
+	private static final String DECIMAL_PRECISION = "Decimal Precision";
+	private static final String DECIMAL_SCALE = "Decimal Scale";
 
 	// Cloud SQL Instance
 	private static final String INSTANCE_NAME = "Instance Name";
@@ -283,7 +287,12 @@ public class WorkbookLoader {
 	private boolean failOnErrors = true;
 	private int errorCount = 0;
 
+
 	public WorkbookLoader(NamespaceManager nsManager) {
+		this(nsManager, new File("target/WorkbookLoader"));
+	}
+	
+	public WorkbookLoader(NamespaceManager nsManager, File templateDir) {
 
 		defaultNamespace.add(Schema.NAMESPACE);
 		defaultNamespace.add(Konig.NAMESPACE);
@@ -307,17 +316,13 @@ public class WorkbookLoader {
 			Properties properties = new Properties();
 			properties.load(getClass().getClassLoader().getResourceAsStream("WorkbookLoader/settings.properties"));
 
-			dataSourceGenerator = new DataSourceGenerator(nsManager, null, properties);
+			dataSourceGenerator = new DataSourceGenerator(nsManager, templateDir, properties);
 
 		} catch (IOException e) {
 			throw new KonigException("Failed to create DataSourceGenerator", e);
 		}
-
 	}
-
-	public void setTemplateDir(File templateDir) {
-		dataSourceGenerator.setTemplateDir(templateDir);
-	}
+	
 
 	public boolean isFailOnErrors() {
 		return failOnErrors;
@@ -455,9 +460,13 @@ public class WorkbookLoader {
 		private int pcMaxExclusive = UNDEFINED;
 		private int pcMinLength = UNDEFINED;
 		private int pcMaxLength = UNDEFINED;
+		private int pcDecimalPrecision = UNDEFINED;
+		private int pcDecimalScale = UNDEFINED;
 
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
+		private int settingPatternCol = UNDEFINED;
+		private int settingReplacementCol = UNDEFINED;
 
 		private int subjectCol = UNDEFINED;
 		private int labelCol = UNDEFINED;
@@ -612,11 +621,9 @@ public class WorkbookLoader {
 					for (Function func : dataSourceList) {
 						generator.generate(shape, func, graph);
 					}
+					generator.close();
 
 				} catch (IOException e) {
-					if (failOnErrors) {
-						throw new SpreadsheetException("Failed to create DataSourceGenerator", e);
-					}
 					logError("Failed to create DataSourceGenerator...", e);
 				}
 			}
@@ -680,6 +687,13 @@ public class WorkbookLoader {
 			if (!errorMessages.contains(msg)) {
 				errorMessages.add(msg);
 				errorCount++;
+			}
+			if (failOnErrors) {
+				if (e instanceof RuntimeException) {
+					throw (RuntimeException) e;
+				}
+				
+				throw new RuntimeException(e);
 			}
 
 		}
@@ -1098,13 +1112,36 @@ public class WorkbookLoader {
 			dataSourceGenerator.put(settings);
 		}
 
-		private void loadSettingsRow(Row row) {
+		private void loadSettingsRow(Row row) throws SpreadsheetException {
 
 			String name = stringValue(row, settingNameCol);
 			String value = stringValue(row, settingValueCol);
 
 			if (name != null && value != null) {
-				settings.setProperty(name, value);
+				
+				String pattern = stringValue(row, settingPatternCol);
+				String replacement = stringValue(row, settingReplacementCol);
+				
+				if (pattern!=null && replacement==null) {
+					String msg = MessageFormat.format(
+						"For the setting ''{0}'' a regular expression pattern is defined, but no replacement string is defined", name);
+					fail(msg); 
+				}
+				
+				if (replacement != null && pattern==null) {
+
+					String msg = MessageFormat.format(
+						"For the setting ''{0}'' a replacement string is defined, but no regular expression pattern is defined", name);
+					fail(msg); 
+				}
+				
+				if (replacement!=null && pattern!=null) {
+					RegexRule rule = new RegexRule(name, value, pattern, replacement);
+					dataSourceGenerator.addRegexRule(rule);
+					
+				} else {
+					settings.setProperty(name, value);
+				}
 			}
 
 		}
@@ -1260,6 +1297,16 @@ public class WorkbookLoader {
 			Literal maxExclusive = numericLiteral(row, pcMaxExclusive);
 			Literal minLength = numericLiteral(row, pcMinLength);
 			Literal maxLength = numericLiteral(row, pcMaxLength);
+			Literal decimalPrecision = intLiteral(row, pcDecimalPrecision);
+			if(decimalPrecision!=null && (decimalPrecision.intValue()<1 || decimalPrecision.intValue()>65)){
+				throw new KonigException("Decimal Precison should be between 1 to 65");
+			}			
+			Literal decimalScale = intLiteral(row, pcDecimalScale);
+			if(decimalScale!=null && 
+					(decimalScale.intValue()<0 || decimalScale.intValue()>30 || 
+							decimalScale.intValue()>decimalPrecision.intValue())){
+				throw new KonigException("Decimal Scale should be less than Decimal Precision and between 0-30");
+			}
 			URI valueClass = uriValue(row, pcValueClassCol);
 			List<Value> valueIn = valueList(row, pcValueInCol);
 			Literal uniqueLang = booleanLiteral(row, pcUniqueLangCol);
@@ -1400,12 +1447,14 @@ public class WorkbookLoader {
 			edge(constraint, SH.minLength, minLength);
 			edge(constraint, SH.maxLength, maxLength);
 			edge(constraint, SH.uniqueLang, uniqueLang);
+			edge(constraint, Konig.decimalPrecision, decimalPrecision);
+			edge(constraint, Konig.decimalScale, decimalScale);
 			edge(constraint, SH.in, valueIn);
 			edge(constraint, Konig.stereotype, stereotype);
 			if (formula != null) {
 				formulaHandlers.add(new PropertyFormulaHandler(shapeId, constraintVertex, formula));
 			}
-
+			
 		}
 
 		private Vertex getTargetClass(Resource valueType) {
@@ -1696,7 +1745,7 @@ public class WorkbookLoader {
 		}
 		
 		private void readSettingHeader(Sheet sheet) {
-			settingNameCol = settingValueCol = UNDEFINED;
+			settingNameCol = settingValueCol = settingPatternCol = settingReplacementCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -1717,6 +1766,14 @@ public class WorkbookLoader {
 					case SETTING_VALUE:
 						settingValueCol = i;
 						break;
+						
+					case PATTERN:
+						settingPatternCol = i;
+						break;
+						
+					case REPLACEMENT:
+						settingReplacementCol = i;
+						break;
 
 					}
 				}
@@ -1725,7 +1782,7 @@ public class WorkbookLoader {
 		}
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
-			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = UNDEFINED;
+			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = pcDecimalPrecision = pcDecimalScale = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1778,6 +1835,12 @@ public class WorkbookLoader {
 						break;
 					case MAX_LENGTH:
 						pcMaxLength = i;
+						break;
+					case DECIMAL_PRECISION:
+						pcDecimalPrecision = i;
+						break;
+					case DECIMAL_SCALE:
+						pcDecimalScale = i;
 						break;
 					case UNIQUE_LANG:
 						pcUniqueLangCol = i;
