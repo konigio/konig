@@ -47,7 +47,7 @@
 		<tbody>
 			<tr>
 #if($DataSource) 
-				<td>$DataSource</td>
+				<td>$TableName($DataSource)</td>
 #else
 				<td></td>
 #end
