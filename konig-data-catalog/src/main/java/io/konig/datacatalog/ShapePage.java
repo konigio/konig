@@ -38,18 +38,27 @@ import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.aws.datasource.AwsAurora;
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
+import io.konig.core.impl.URIVertex;
 import io.konig.core.json.SampleJsonGenerator;
+import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.DatasourceFileLocator;
 import io.konig.datasource.TableDataSource;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleBigQueryView;
+import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -82,14 +91,17 @@ public class ShapePage {
 		if(shape.getShapeDataSource()!=null){
 			DataSource ds=getValidDataSource(shape.getShapeDataSource(),context);
 			String providedBy=null;
-			if(ds!=null && ds.getIsPartof()!=null){
-				for(URI uri:ds.getIsPartof()){
-					if(providedBy==null)
-						providedBy=uri.getLocalName();
-					else
-						providedBy=providedBy+","+uri.getLocalName();
+			if(ds!=null){
+				setTableName(context,request);			
+				if(ds.getIsPartof()!=null){
+					for(URI uri:ds.getIsPartof()){
+						if(providedBy==null)
+							providedBy=uri.getLocalName();
+						else
+							providedBy=providedBy+","+uri.getLocalName();
+					}
+					context.put("ProvidedBy", providedBy);
 				}
-				context.put("ProvidedBy", providedBy);
 			}
 			
 		}
@@ -112,10 +124,42 @@ public class ShapePage {
 		template.merge(context, out);
 		out.flush();
 	}
+	private void setTableName(VelocityContext context,ShapeRequest request) {
+		URI dsUri=(URI)context.get("DataSourceURI");
+		Graph graph=request.getGraph();
+		List<Vertex> list = graph.v(dsUri).in(RDF.TYPE).toVertexList();
+		if (!list.isEmpty()) {			
+			for (Vertex v : list) {
+				String shapeName=(String)context.get("ShapeName");
+				String vertexName=((URIVertex)v.getId()).getLocalName();
+				if(shapeName.equals(vertexName)){
+					SimplePojoFactory pojoFactory = new SimplePojoFactory();
+					if(Konig.GoogleCloudSqlTable.equals(dsUri)){
+						GoogleCloudSqlTable table = pojoFactory.create(v, GoogleCloudSqlTable.class);
+						context.put("TableName",table.getTableName());
+					}
+					else if(Konig.GoogleBigQueryTable.equals(dsUri)){
+						GoogleBigQueryTable table =pojoFactory.create(v, GoogleBigQueryTable.class);
+						context.put("TableName", table.getTableIdentifier());
+					}
+					else if(Konig.AwsAuroraTable.equals(dsUri)){
+						AwsAurora table =pojoFactory.create(v, AwsAurora.class);
+						context.put("TableName", table.getAwsTableName());
+					}
+					else if(Konig.GoogleBigQueryView.equals(dsUri)){
+						GoogleBigQueryView table =pojoFactory.create(v, GoogleBigQueryView.class);
+						context.put("TableName", table.getIdentifier());
+					}
+				}
+			}
+		}
+		
+	}
 	private DataSource getValidDataSource(List<DataSource> shapeDataSourceList,VelocityContext context) {
 		for(DataSource ds:shapeDataSourceList){			
 			for(URI uri:ds.getType()){
-				if(Arrays.asList(DATASOURCE_LIST).contains(uri)){
+				if(Arrays.asList(DATASOURCE_LIST).contains(uri)){	
+					context.put("DataSourceURI",uri);
 					context.put("DataSource",uri.getLocalName());
 					return ds;
 				}
