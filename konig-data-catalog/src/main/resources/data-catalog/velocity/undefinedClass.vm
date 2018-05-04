@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>$ClassName</title>
+<link rel="stylesheet" type="text/css" href="//schema.org/docs/schemaorg.css">
+</head>
+<body class="mainsite">
+#parse( "data-catalog/velocity/header.vm" )
+<div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$ClassId">
+	<h1 property="rdfs:label" class="page-title">$ClassName</h1>
+#foreach( $ancestorPath in $AncestorList )
+	<h4><span class="breadcrumbs"> Thing
+#foreach(	$ancestorLink in $ancestorPath )
+	&gt; <a href="$ancestorLink.Href">$ancestorLink.Name</a>	
+#end
+	</span></h4>
+#end	
+
+#if($ShapeList) 
+	<table class="definition-table">
+		<thead>
+			<tr>
+				<th>Shapes based on this Class</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>
+#foreach( $shape in $ShapeList )
+					<code>
+						<a href="$shape.Href">$shape.Name</a>
+					</code>
+					<br>
+#end					
+				</td>
+			</tr>
+		</tbody>
+	</table>
+#end	
+	<p class="version">
+		Latest Version
+	</p>
+</div>
+</body>
+</html>

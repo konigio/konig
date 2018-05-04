@@ -60,8 +60,18 @@ public class DataCatalogBuildRequest {
 	private DataCatalogBuilder catalogBuilder;
 	private VelocityEngine engine;
 	
+	private boolean showUndefinedClass = false;
+	
 	public DataCatalogBuildRequest() {
 		
+	}
+
+	public boolean isShowUndefinedClass() {
+		return showUndefinedClass;
+	}
+
+	public void setShowUndefinedClass(boolean showUndefinedClass) {
+		this.showUndefinedClass = showUndefinedClass;
 	}
 
 	public URI getOntologyId() {
@@ -193,6 +203,7 @@ public class DataCatalogBuildRequest {
 	PathFactory getPathFactory() {
 		if (pathFactory == null) {
 			OwlReasoner reasoner = classStructure.getReasoner();
+			reasoner = new DataCatalogReasoner(reasoner.getGraph());
 			NamespaceManager nsManager = graph.getNamespaceManager();
 			pathFactory = new DataCatalogPathFactory(reasoner, nsManager, DataCatalogBuilder.DCAT_PREFIX);
 		}

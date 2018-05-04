@@ -78,6 +78,9 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	@Parameter
 	private FileSet[] sqlFiles;
 	
+	@Parameter
+	private boolean showUndefinedClass;
+	
 	@Component
 	private MavenProject mavenProject;
 	
@@ -108,6 +111,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			request.setOutDir(siteDir);
 			request.setShapeManager(shapeManager);
 			request.setSqlDdlLocator(ddlLocator());
+			request.setShowUndefinedClass(showUndefinedClass);
 			
 			if (ontologyId==null) {
 				request.useDefaultOntologyList();

@@ -30,6 +30,7 @@ public class DataCatalogConfig {
 	private String examplesDir;
 	private String ontology;
 	private String logFile;
+	private boolean showUndefinedClass = false;
 	private ContentSystemConfig contentSystem;
 	private FileSet [] sqlFiles;
 	public String getRdfDir() {
@@ -73,6 +74,12 @@ public class DataCatalogConfig {
 	}
 	public void setSqlFiles(FileSet[] sqlFiles) {
 		this.sqlFiles = sqlFiles;
+	}
+	public boolean isShowUndefinedClass() {
+		return showUndefinedClass;
+	}
+	public void setShowUndefinedClass(boolean showUndefinedClass) {
+		this.showUndefinedClass = showUndefinedClass;
 	}
 	
 	

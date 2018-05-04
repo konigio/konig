@@ -146,6 +146,7 @@ public class ShapePage {
 								}
 								memory.add(dialect);
 								String fileName = ddlFile.getName();
+								fileName = txtFile(fileName);
 								String href = "../sql/" + fileName;
 								String name = dialect + " DDL";
 								Link link = new Link(name, href);
@@ -177,6 +178,13 @@ public class ShapePage {
 		
 	}
 
+	private String txtFile(String fileName) {
+		int dot = fileName.lastIndexOf('.');
+		if (dot > 0) {
+			fileName = fileName.substring(0, dot);
+		}
+		return fileName + ".txt";
+	}
 	private void addJsonSamples(ShapeRequest request) throws DataCatalogException {
 		List<NamedText> list = new ArrayList<>();
 		
