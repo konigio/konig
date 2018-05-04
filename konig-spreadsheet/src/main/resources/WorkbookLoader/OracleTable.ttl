@@ -2,7 +2,12 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix omcs:   <http://www.konig.io/ns/omcs/> .
 @prefix schema:  <http://schema.org/> .
-@prefix sys: <http://schema.pearson.com/ns/system/> .
+#if($!{parentComponent})
+#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#foreach( $namespace in $namespaceList) 
+@prefix $namespace.Prefix: <$namespace.Name> .
+#end
+#end
 
 <http://www.konig.io/ns/omcs/instances/${omcsInstanceId}/databases/${oracleSchema}/tables/${omcsTableId}>
 	a konig:OracleTable, konig:DataSource;

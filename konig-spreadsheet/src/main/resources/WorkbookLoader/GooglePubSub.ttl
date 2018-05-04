@@ -1,6 +1,11 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix schema:  <http://schema.org/> .
-@prefix sys: <http://schema.pearson.com/ns/system/> .
+#if($!{parentComponent})
+#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#foreach( $namespace in $namespaceList) 
+@prefix $namespace.Prefix: <$namespace.Name> .
+#end
+#end
 
 <${shapeId}> konig:shapeDataSource <https://pubsub.googleapis.com/v1/projects/${gcpProjectId}/topics/${mediaSubtype}> .
 
