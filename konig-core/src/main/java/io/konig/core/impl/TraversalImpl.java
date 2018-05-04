@@ -476,6 +476,12 @@ public class TraversalImpl implements Traversal {
 		}
 		return result;
 	}
+
+	@Override
+	public Literal firstLiteral(URI predicate) {
+		Value value = firstValue(predicate);
+		return value instanceof Literal ? (Literal) value : null;
+	}
 	
 	
 	

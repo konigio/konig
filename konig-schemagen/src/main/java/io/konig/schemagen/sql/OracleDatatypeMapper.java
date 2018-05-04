@@ -59,7 +59,10 @@ public class OracleDatatypeMapper extends SqlDatatypeMapper {
 			if (datatype.equals(XMLSchema.FLOAT)) {
 				return new NumericSqlDatatype(SqlDatatype.BINARY_FLOAT, false);
 			} 
-			if (datatype.equals(XMLSchema.DOUBLE) || datatype.equals(XMLSchema.DECIMAL)) {
+			if(datatype.equals(XMLSchema.DECIMAL) && c.getDecimalPrecision()!=null && c.getDecimalScale()!=null){
+				return new NumericSqlDatatype(SqlDatatype.DOUBLE, c.getDecimalPrecision(), c.getDecimalScale());
+			}
+			else if (datatype.equals(XMLSchema.DOUBLE) || (datatype.equals(XMLSchema.DECIMAL))) {
 				return new NumericSqlDatatype(SqlDatatype.BINARY_DOUBLE, false);
 			}
 			if (datatype.equals(XMLSchema.BOOLEAN)) {

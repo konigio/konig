@@ -167,6 +167,10 @@ public class Konig {
  //   public static final URI TargetShape=new URIImpl("http://www.konig.io/ns/core/TargetShape");
 	public static final URI inputShapeOf = new URIImpl("http://www.konig.io/ns/core/inputShapeOf");
 	
+
+	public static final URI decimalPrecision = new URIImpl("http://www.konig.io/ns/core/decimalPrecision");
+	public static final URI decimalScale = new URIImpl("http://www.konig.io/ns/core/decimalScale");
+	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(Konig.JAVA_NAMESPACE);

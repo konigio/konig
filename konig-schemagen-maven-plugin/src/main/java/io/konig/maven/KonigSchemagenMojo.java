@@ -783,10 +783,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 				resourceGenerator.add(awsAuror);				
 			}
-			if(transformsDir != null){
+			if(transformsDir != null && amazonWebServices.isEnableAuroraTransform()){
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
 				ShapeRuleFactory shapeRuleFactory=new ShapeRuleFactory(shapeManager, shapeModelFactory, new ShapeModelToShapeRule());
-				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir), rdfSourceDir);resourceGenerator.add(generator);
+				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir), rdfSourceDir);
+				resourceGenerator.add(generator);
 			}
 			
 			CloudFormationTemplateWriter templateWriter = null;

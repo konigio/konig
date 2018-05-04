@@ -22,19 +22,25 @@ package io.konig.spreadsheet;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.poi.util.IOUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -62,15 +68,17 @@ import io.konig.shacl.Shape;
  */
 public class DataSourceGenerator {
 
+	private static final String EDITED = "edited";
 	private NamespaceManager nsManager;
 	private File templateDir;
-	private VelocityEngine engine;
+	private VelocityEngine velocityEngine;
 	private File velocityLog;
 	private VelocityContext context;
 	
-	public DataSourceGenerator() {
-		
-	}
+	private List<RegexRule> regexRuleList = new ArrayList<>();
+	
+	private File editedTemplateDir=null;
+	
 	
 	public static class VelocityFunctions {
 		public String spaceToComma(String text) {
@@ -96,9 +104,19 @@ public class DataSourceGenerator {
 		context.put("functions", new VelocityFunctions());
 		context.put("beginVar", "${");
 		context.put("endVar", "}");
-		put(properties);		
+		put(properties);	
 		createVelocityEngine();
 	}
+
+
+	public void addRegexRule(RegexRule rule) {
+		regexRuleList.add(rule);
+	}
+
+	public File getTemplateDir() {
+		return templateDir;
+	}
+
 
 	public File getVelocityLog() {
 		return velocityLog;
@@ -109,24 +127,30 @@ public class DataSourceGenerator {
 	}
 
 	private void createVelocityEngine() {
-
 		Properties properties = new Properties();
-		properties.put("resource.loader", "class");
-		properties.setProperty("file.resource.loader.path", "WorkbookLoader");
+		properties.put("resource.loader", "file,class");
+		properties.setProperty("file.resource.loader.path", templateDir.getPath());
 		properties.put("class.resource.loader.class", ClasspathResourceLoader.class.getName());
 		if (velocityLog != null) {
 			properties.put("runtime.log", velocityLog.getAbsolutePath());
 		}
 
-		engine = new VelocityEngine(properties);
+		velocityEngine = new VelocityEngine(properties);
 	}
 	
-	private String merge(String templateName){
+	
+	private String merge(String templateName) {
+		return regexRuleList.isEmpty() ?
+			simpleMerge(templateName) : 
+			mergeWithRegex(templateName);
+	}
+	
+	private String simpleMerge(String templateName){
 		StringWriter result = new StringWriter();
 		try {
 			templateName = "WorkbookLoader/" + templateName + ".ttl";
 			StringWriter tempresult = new StringWriter();
-			Template template = engine.getTemplate(templateName, "UTF-8");
+			Template template = velocityEngine.getTemplate(templateName, "UTF-8");
 			template.merge(context, tempresult);
 	
 			RuntimeServices runtimeServices = RuntimeSingleton.getRuntimeServices();
@@ -140,6 +164,124 @@ public class DataSourceGenerator {
 		}
 		return result.toString();
 	}
+	
+	private String mergeWithRegex(String templateName) {
+		StringWriter result = new StringWriter();
+		try {
+			
+			String templateText = loadTemplate(templateName);
+			if (templateText == null) {
+				throw new KonigException("Template not found: " + templateName);
+			}
+			
+			String editedTemplatePath = editTemplate(templateName, templateText);
+			if (editedTemplatePath == null) {
+				return simpleMerge(templateName);
+			} 
+			
+			StringWriter tempresult = new StringWriter();
+			Template template = velocityEngine.getTemplate(editedTemplatePath, "UTF-8");
+			template.merge(context, tempresult);
+	
+			RuntimeServices runtimeServices = RuntimeSingleton.getRuntimeServices();
+			StringReader reader = new StringReader(tempresult.toString());
+			template.setRuntimeServices(runtimeServices);
+			template.setData(runtimeServices.parse(reader, templateName));
+			template.initDocument();
+			template.merge(context, result);
+			
+			
+		} catch (Exception e) {
+			throw new KonigException("Failed to parse template", e);
+		}
+		return result.toString();
+	}
+	
+	public void close()  {
+		if (editedTemplateDir != null && editedTemplateDir.exists()) {
+			try {
+				FileUtils.deleteDirectory(editedTemplateDir);
+				editedTemplateDir = null;
+			} catch (IOException e) {
+				throw new KonigException(e);
+			}
+		}
+	}
+	
+	private String editTemplate(String templateName, String templateText) {
+		String templatePath = null;
+		PrintWriter out = null;
+		try {
+			for (RegexRule rule : regexRuleList) {
+				String variable = "${" + rule.getPropertyName() + "}";
+				if (templateText.contains(variable)) {
+					if (out == null) {
+						
+						if (editedTemplateDir == null) {
+							editedTemplateDir = new File(templateDir, EDITED);
+							editedTemplateDir.mkdirs();
+						}
+						templatePath = EDITED + "/" + templateName + ".ttl";
+						File outFile = new File(templateDir, templatePath);
+						
+						if (outFile.exists()) {
+							return templatePath;
+						}
+						
+						try {
+							out = new PrintWriter(new FileWriter(outFile));
+						} catch (IOException e) {
+							throw new KonigException(e);
+						}
+					}
+
+					String pattern = rule.getPattern();
+					String replacement = rule.getReplacement();
+					out.print("#set ( $");
+					out.print(rule.getPropertyName());
+					out.print(" = \"");
+					out.print(rule.getSourceExpression());
+					out.println("\" )");
+					out.print("#set ( $");
+					out.print(rule.getPropertyName());
+					out.print(" = $");
+					out.print(rule.getPropertyName());
+					out.print(".replaceAll(\"");
+					out.print(pattern);
+					out.print("\", \"");
+					out.print(replacement);
+					out.println("\") )");
+				}
+			}
+			if (out != null) {
+				out.print(templateText);
+			}
+		} finally {
+			if (out != null) {
+				out.close();
+			}
+		}
+			
+		return templatePath;
+	}
+
+
+	private String loadTemplate(String templateName) throws IOException {
+		File templateFile = new File(templateDir, templateName + ".ttl");
+		if (templateFile.exists()) {
+			byte[] array = Files.readAllBytes(templateFile.toPath());
+			return new String(array);
+		}
+		
+		String resource = "WorkbookLoader/" + templateName + ".ttl";
+		InputStream input = getClass().getClassLoader().getResourceAsStream(resource);
+		if (input != null) {
+			byte[] array = IOUtils.toByteArray(input);
+			return new String(array);
+		}
+		
+		return null;
+	}
 
 	public void put(Properties properties) {
 		Set<Entry<Object, Object>> entries = properties.entrySet();
@@ -150,13 +292,6 @@ public class DataSourceGenerator {
 		}
 	}
 	
-	public File getTemplateDir() {
-		return templateDir;
-	}
-
-	public void setTemplateDir(File templateDir) {
-		this.templateDir = templateDir;
-	}
 
 	@SuppressWarnings("rawtypes")
 	public void generate(Shape shape, Function func, Graph graph) {
@@ -207,8 +342,9 @@ public class DataSourceGenerator {
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
 			throw new KonigException("Failed to render template", e);
 		}
-
 	}
+	
+	
 
 	private void putURI(String name, URI value) {
 

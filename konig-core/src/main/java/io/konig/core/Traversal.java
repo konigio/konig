@@ -3,6 +3,8 @@ package io.konig.core;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Literal;
+
 /*
  * #%L
  * konig-core
@@ -201,5 +203,7 @@ public interface Traversal {
 	 * @param set The set into which values should be added.
 	 */
 	void addValues(Set<Value> set);
+
+	Literal firstLiteral(URI predicate);
 	
 }
