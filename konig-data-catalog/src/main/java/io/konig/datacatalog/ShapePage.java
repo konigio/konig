@@ -43,6 +43,7 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.json.SampleJsonGenerator;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.StringUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -50,7 +51,7 @@ import io.konig.shacl.Shape;
 public class ShapePage {
 	private static final Logger logger = LoggerFactory.getLogger(ShapePage.class);
 	private static final String SHAPE_TEMPLATE = "data-catalog/velocity/shape.vm";
-	private static final String[] DATASOURCE_LIST={"GoogleBigQueryTable","GoogleBigQueryView","GoogleCloudSqlTable","AwsAurora"};
+	private static final URI[] DATASOURCE_LIST={Konig.GoogleBigQueryTable,Konig.GoogleBigQueryView,Konig.GoogleCloudSqlTable,Konig.AwsAuroraTable};
 
 	public void render(ShapeRequest request, PageResponse response) throws DataCatalogException {
 
@@ -108,9 +109,8 @@ public class ShapePage {
 	private DataSource getValidDataSource(List<DataSource> shapeDataSourceList,VelocityContext context) {
 		for(DataSource ds:shapeDataSourceList){			
 			for(URI uri:ds.getType()){
-				String localName=uri.getLocalName();
-				if(Arrays.asList(DATASOURCE_LIST).contains(localName)){
-					context.put("DataSource",localName);
+				if(Arrays.asList(DATASOURCE_LIST).contains(uri)){
+					context.put("DataSource",uri.getLocalName());
 					return ds;
 				}
 			}			
