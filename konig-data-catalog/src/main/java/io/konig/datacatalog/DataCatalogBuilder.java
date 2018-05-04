@@ -46,6 +46,7 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.SimpleValueFormat;
+import io.konig.core.vocab.Konig;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.PropertyStructure;
 import io.konig.shacl.Shape;
@@ -233,7 +234,24 @@ public class DataCatalogBuilder {
 			}
 		}
 		
+		if (request.getBuildRequest().isShowUndefinedClass()) {
+			buildUndefinedClassPage(request);
+		}
+		
 	}
+
+	private void buildUndefinedClassPage(PageRequest request) throws IOException, DataCatalogException {
+
+		UndefinedClassPage page = new UndefinedClassPage();
+		URI classId = Konig.Undefined;
+		ClassRequest classRequest = new ClassRequest(request, null, resourceWriterFactory);
+		PrintWriter writer = resourceWriterFactory.createWriter(classRequest, classId);
+		PageResponse response = new PageResponseImpl(writer);
+		page.render(classRequest, response);
+		IOUtil.close(writer, classId.stringValue());
+		
+	}
+
 
 	private void buildClassIndex(PageRequest request) throws IOException, DataCatalogException {
 		
@@ -263,6 +281,11 @@ public class DataCatalogBuilder {
 		for (Shape shape : shapeManager.listShapes()) {
 			Resource shapeId = shape.getId();
 			if (shapeId instanceof URI) {
+				
+				if (shape.getTargetClass()==null && baseRequest.getBuildRequest().isShowUndefinedClass()) {
+					shape = shape.clone();
+					shape.setTargetClass(Konig.Undefined);
+				}
 				URI shapeURI = (URI) shapeId;
 				ShapeRequest request = new ShapeRequest(baseRequest, shape, exampleDir);
 				PrintWriter out = resourceWriterFactory.createWriter(request, shapeURI);

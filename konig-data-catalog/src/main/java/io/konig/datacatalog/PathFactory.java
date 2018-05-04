@@ -4,7 +4,7 @@ package io.konig.datacatalog;
  * #%L
  * Konig Data Catalog
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,6 @@ package io.konig.datacatalog;
  * limitations under the License.
  * #L%
  */
-
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;

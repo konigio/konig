@@ -34,6 +34,8 @@ import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.Vertex;
+import io.konig.core.impl.MemoryGraph;
+import io.konig.core.vocab.Konig;
 
 public class ClassIndexPage {
 
@@ -44,6 +46,8 @@ public class ClassIndexPage {
 		List<Vertex> source = request.getGraph().v(OWL.CLASS).in(RDF.TYPE).toVertexList();
 		
 		List<ClassInfo> classList = new ArrayList<>();
+		
+		addUndefinedClass(request, classList);
 		
 		for (Vertex v : source) {
 			if (v.getId() instanceof URI) {
@@ -64,6 +68,16 @@ public class ClassIndexPage {
 		out.flush();
 	}
 	
+	private void addUndefinedClass(PageRequest request, List<ClassInfo> classList) throws DataCatalogException {
+		if (request.getBuildRequest().isShowUndefinedClass()) {
+			MemoryGraph graph = new MemoryGraph();
+			Vertex v = graph.vertex(Konig.Undefined);
+			ClassInfo info = new ClassInfo(v, request);
+			classList.add(info);
+		}
+		
+	}
+
 	public static class ClassInfo implements Comparable<ClassInfo> {
 		String name;
 		String href;
