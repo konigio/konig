@@ -1,6 +1,5 @@
 package io.konig.sql.query;
 
-import static org.junit.Assert.assertEquals;
 
 /*
  * #%L
