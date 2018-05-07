@@ -8,9 +8,8 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:TargetPersonShape a sh:Shape , konig:TargetShape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/icWQZBoy0GAAAAFjJTkBRA> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ro4RMVRfc8UAAAFjOgHwtQ> ; 
 	sh:targetClass schema:Person ; 
-	konig:inputShapeOf konig:TargetShape ; 
 	sh:nodeKind sh:IRI ; 
 	sh:property  [ 
 		sh:path schema:givenName ; 
@@ -30,8 +29,8 @@ shape:TargetPersonShape a sh:Shape , konig:TargetShape ;
 		sh:maxCount 1 ]  ; 
 	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-edw-core-s3bucket3> , ""^^xsd:integer , <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/TargetPersonShape> . 
 
-<http://www.konig.io/activity/icWQZBoy0GAAAAFjJTkBRA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-05-03T14:28:03.085+05:30"^^xsd:dateTime . 
+<http://www.konig.io/activity/ro4RMVRfc8UAAAFjOgHwtQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-05-07T15:19:56.017+05:30"^^xsd:dateTime . 
 
 <https://amazonaws.konig.io/s3/bucket/${environmentName}-edw-core-s3bucket3> a konig:S3Bucket , konig:DataSource ; 
 	aws:bucketKey "edw-core-s3bucket3" ; 

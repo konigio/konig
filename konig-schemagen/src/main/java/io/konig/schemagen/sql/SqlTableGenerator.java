@@ -26,6 +26,7 @@ import java.text.MessageFormat;
 import org.openrdf.model.URI;
 
 import io.konig.schemagen.SchemaGeneratorException;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -57,7 +58,7 @@ public class SqlTableGenerator {
 				throw new SchemaGeneratorException(e);
 			}
 			
-		}
+		}addIdColumn(shape,table);
 		for (PropertyConstraint p : shape.getProperty()) {
 			SqlColumn column = column(shape, p);
 			if (column != null) {
@@ -67,6 +68,23 @@ public class SqlTableGenerator {
 		return table;
 	}
 
+
+	private void addIdColumn(Shape shape, SqlTable table) {
+		SqlKeyType keyType = SqlKeyType.PRIMARY_KEY;
+		if(shape.getNodeKind() == NodeKind.IRI){
+			for (PropertyConstraint p : shape.getProperty()) {
+				if (p.getStereotype() != null) {
+					if(p.getStereotype().getLocalName().contains("primaryKey")){
+						keyType = null;
+					}
+				}
+			}
+
+			SqlColumn column = new SqlColumn("id", FacetedSqlDatatype.IRI, keyType, false);
+			table.addColumn(column);
+		}
+		
+	}
 
 	private SqlColumn column(Shape shape, PropertyConstraint p) {
 		

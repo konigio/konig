@@ -9,9 +9,9 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:SourcePersonShape a sh:Shape , konig:SourceShape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/icWQZBoy0GAAAAFjJTkBRA> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ro4RMVRfc8UAAAFjOgHwtQ> ; 
 	sh:targetClass schema:Person ; 
-	konig:inputShapeOf konig:SourceShape ; 
+	konig:inputShapeOf shape:TargetPersonShape ; 
 	sh:nodeKind sh:IRI ; 
 	sh:property  [ 
 		sh:path alias:first_name ; 
@@ -30,8 +30,30 @@ shape:SourcePersonShape a sh:Shape , konig:SourceShape ;
 .schema:familyName''' ]  ; 
 	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-edw-core-s3bucket3> , ""^^xsd:integer , <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonShape> . 
 
-<http://www.konig.io/activity/icWQZBoy0GAAAAFjJTkBRA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-05-03T14:28:03.085+05:30"^^xsd:dateTime . 
+<http://www.konig.io/activity/ro4RMVRfc8UAAAFjOgHwtQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-05-07T15:19:56.017+05:30"^^xsd:dateTime . 
+
+shape:TargetPersonShape a sh:Shape , konig:TargetShape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ro4RMVRfc8UAAAFjOgHwtQ> ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI ; 
+	sh:property  [ 
+		sh:path schema:givenName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:primaryKey
+	 ]  ,  [ 
+		sh:path schema:familyName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path konig:modified ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-edw-core-s3bucket3> , ""^^xsd:integer , <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/TargetPersonShape> . 
 
 <https://amazonaws.konig.io/s3/bucket/${environmentName}-edw-core-s3bucket3> a konig:S3Bucket , konig:DataSource ; 
 	aws:bucketKey "edw-core-s3bucket3" ; 
@@ -75,6 +97,12 @@ shape:SourcePersonShape a sh:Shape , konig:SourceShape ;
 	aws:resourceName "SourcePersonShape_CreateEvent" ; 
 	aws:region "us-east-1" ; 
 	aws:accountId "${aws-account-id}" . 
+
+<http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/TargetPersonShape> a konig:AwsAurora , konig:DataSource ; 
+	aws:tableReference  [ 
+		aws:awsAuroraHost "devHost" ; 
+		aws:awsSchema "schema1" ; 
+		aws:awsTableName "TargetPersonShape" ]  . 
 
 <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonShape> a konig:AwsAurora , konig:DataSource ; 
 	aws:tableReference  [ 

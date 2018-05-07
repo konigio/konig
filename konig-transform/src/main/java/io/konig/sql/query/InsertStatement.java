@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -69,9 +70,10 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 		for (PropertyConstraint p : propertyList) {
 			if (p.getStereotype() != null) {
 				checkForPrimaryKey = p.getStereotype().getLocalName();
+				System.out.println(p.getId()+"p.getId()");
 			}
 		}
-		if(checkForPrimaryKey.equals("primaryKey")){
+		if(checkForPrimaryKey.equals("primaryKey") || (shape.getNodeKind() == NodeKind.IRI)){
 			upsert(out);
 		}else{
 		out.print("INSERT INTO ");
@@ -127,9 +129,12 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 		int width = 0;
 		String comma = "";
 		for (ColumnExpression c : columns) {
-			out.print(comma);
-			comma = ", ";
 			String name = c.getColumnName();
+			if (name.contains("id")){
+				
+			}else{
+				out.print(comma);
+				comma = ", ";
 			width += name.length()+2;
 			if (width > MAX_WIDTH) {
 				out.println();
@@ -138,6 +143,7 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 			}
 			out.print(c);
 		}
+			}
 		out.println(')');
 		out.popIndent();
 		out.indent();
@@ -145,10 +151,12 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 		out.print(" ON DUPLICATE KEY UPDATE ");
 		String commStr ="";
 		for(int i=0; i <columns.size(); i++){
+		String name = columns.get(i).getColumnName();
+		if (name.contains("id")){
+			
+		}else{
 			out.print(commStr);
 			commStr = ", ";
-		String name = columns.get(i).getColumnName();
-	
 		width += name.length();
 			if (width > MAX_WIDTH) {
 			out.println();
@@ -164,6 +172,7 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 		out.print(sourceColumn);
 		}else{
 			out.print(fromTable+"."+sourceColumn);
+		}
 		}
 	}
 
