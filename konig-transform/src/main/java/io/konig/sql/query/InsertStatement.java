@@ -69,7 +69,6 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 		for (PropertyConstraint p : propertyList) {
 			if (p.getStereotype() != null) {
 				checkForPrimaryKey = p.getStereotype().getLocalName();
-				System.out.println(p.getId()+"p.getId()");
 			}
 		}
 		if(checkForPrimaryKey.equals("primaryKey") || (shape.getNodeKind() == NodeKind.IRI)){
