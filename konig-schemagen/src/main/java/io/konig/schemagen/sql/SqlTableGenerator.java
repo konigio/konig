@@ -25,6 +25,7 @@ import java.text.MessageFormat;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.vocab.Konig;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
@@ -73,10 +74,8 @@ public class SqlTableGenerator {
 		SqlKeyType keyType = SqlKeyType.PRIMARY_KEY;
 		if(shape.getNodeKind() == NodeKind.IRI){
 			for (PropertyConstraint p : shape.getProperty()) {
-				if (p.getStereotype() != null) {
-					if(p.getStereotype().getLocalName().contains("primaryKey")){
+				if (p.getStereotype() != null && Konig.primaryKey.equals(p.getStereotype()) ) {
 						keyType = null;
-					}
 				}
 			}
 
@@ -108,15 +107,14 @@ public class SqlTableGenerator {
 
 		if (p.getStereotype() != null) {
 
-			switch (p.getStereotype().getLocalName()) {
-			case "primaryKey":
-				keyType = SqlKeyType.PRIMARY_KEY;
-				break;
-			case "uniqueKey":
+			if (p.getStereotype().equals(Konig.primaryKey)) {
+				
+				keyType = SqlKeyType.PRIMARY_KEY;	
+			}
+			else if(p.getStereotype().equals(Konig.uniqueKey)){
+				
 				keyType = SqlKeyType.UNIQUE_KEY;
-				break;
-			default:
-				throw new SchemaGeneratorException("Invalid Key Type: " + p.getStereotype().getLocalName());
+				
 			}
 		}
 

@@ -24,7 +24,11 @@ package io.konig.sql.query;
 
 import java.util.List;
 
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
+
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.vocab.Konig;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -64,14 +68,15 @@ public class InsertStatement extends AbstractExpression implements DmlExpression
 	}
 	@Override
 	public void print(PrettyPrintWriter out) {
-		String checkForPrimaryKey = "";
+		
+		URI checkForPrimaryKey = null;
 		List<PropertyConstraint> propertyList = shape.getProperty();
 		for (PropertyConstraint p : propertyList) {
 			if (p.getStereotype() != null) {
-				checkForPrimaryKey = p.getStereotype().getLocalName();
+				checkForPrimaryKey = p.getStereotype();
 			}
 		}
-		if(checkForPrimaryKey.equals("primaryKey") || (shape.getNodeKind() == NodeKind.IRI)){
+		if(Konig.primaryKey.equals(checkForPrimaryKey) || (shape.getNodeKind() == NodeKind.IRI)){
 			upsert(out);
 		}else{
 		out.print("INSERT INTO ");
