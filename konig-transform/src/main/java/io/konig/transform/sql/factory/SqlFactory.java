@@ -215,10 +215,11 @@ public class SqlFactory {
 			InsertStatement insert = null;
 			Object tableRef = tableRef(shapeRule);					
 			if (tableRef != null) {
+						Shape shape	=shapeRule.getTargetShape();
 						TableName tableName = tableName(tableRef, null);
 						List<ColumnExpression> columnList = columnList(shapeRule);
 						SelectExpression select = selectExpression(shapeRule);
-						insert = new InsertStatement(tableName.getExpression(), columnList, select);
+						insert = new InsertStatement(tableName.getExpression(), columnList, select, shape);
 			}
 					
 			return insert;
