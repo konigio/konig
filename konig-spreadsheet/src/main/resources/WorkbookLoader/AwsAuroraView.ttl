@@ -1,0 +1,26 @@
+
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix aws:   <http://www.konig.io/ns/aws/> .
+@prefix schema:  <http://schema.org/> .
+#if($!{parentComponent})
+#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#foreach( $namespace in $namespaceList) 
+@prefix $namespace.Prefix: <$namespace.Name> .
+#end
+#end
+
+<http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/${awsTableName}>
+	a konig:AwsAuroraView, konig:DataSource;
+	aws:tableReference [
+		aws:awsAuroraHost "${awsAuroraHost}" ;
+		aws:awsSchema "${awsAuroraSchema}" ;
+		aws:awsTableName   "${awsTableName}"
+	];
+	#if($!{parentComponent}) 
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
+	#end
+.
+
+<${shapeId}> konig:shapeDataSource 
+	<http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/${awsTableName}>
+.

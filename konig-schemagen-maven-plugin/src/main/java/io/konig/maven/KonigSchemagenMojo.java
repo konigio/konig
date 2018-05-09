@@ -145,6 +145,7 @@ import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
 import io.konig.schemagen.aws.AWSAuroraShapeFileCreator;
 import io.konig.schemagen.aws.AWSS3BucketWriter;
 import io.konig.schemagen.aws.AwsAuroraTableWriter;
+import io.konig.schemagen.aws.AwsAuroraViewWriter;
 import io.konig.schemagen.aws.AwsResourceGenerator;
 import io.konig.schemagen.aws.CloudFormationTemplateWriter;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
@@ -775,7 +776,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			File bucketsDir = Configurator.checkNull(amazonWebServices.getS3buckets());
 			File transformsDir = Configurator.checkNull(amazonWebServices.getTransforms());
 			File cloudFormationDir = Configurator.checkNull(amazonWebServices.getCloudFormationTemplates());
-
+			File viewDir = Configurator.checkNull(amazonWebServices.getViews());
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			
 			
@@ -785,6 +786,15 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator);
 			
 				resourceGenerator.add(awsAuror);				
+			}
+			if (viewDir != null) {
+				SqlTableGenerator generator = new SqlTableGenerator();
+				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(viewDir);
+				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
+				AwsAuroraViewWriter awsAuror = new AwsAuroraViewWriter(viewDir, generator,sqlFileLocator,shapeModelFactory);
+			
+				resourceGenerator.add(awsAuror);	
+				
 			}
 			if(transformsDir != null && amazonWebServices.isEnableAuroraTransform()){
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);

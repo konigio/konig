@@ -2,7 +2,7 @@ package io.konig.aws.datasource;
 
 /*
  * #%L
- * Konig AWS
+ * Konig AWS Model
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,15 +21,10 @@ package io.konig.aws.datasource;
  */
 
 
-import io.konig.core.pojo.PojoContext;
 import io.konig.core.vocab.Konig;
-import io.konig.shacl.io.ShapeLoader;
 
-public class AwsShapeConfig {
-	public static void init() {
-		PojoContext context = ShapeLoader.CONTEXT;
-		context.mapClass(Konig.AwsAuroraTable, AwsAurora.class);
-		context.mapClass(Konig.S3Bucket, S3Bucket.class);
-		context.mapClass(Konig.AwsAuroraView, AwsAuroraView.class);
-	}
+public class AwsAuroraView extends AwsAurora{
+	public AwsAuroraView() {
+		addType(Konig.AwsAuroraView);
+	}	
 }
