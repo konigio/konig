@@ -136,6 +136,7 @@ import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
+import io.konig.schemagen.RdbmsShapeGenerator;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
 import io.konig.schemagen.avro.AvroNamer;
@@ -317,7 +318,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			
 			loadResources();
-
+			preprocessResources();
 			generateGoogleCloudPlatform();
 			generateOracleManagedCloudServices();
 			generateAmazonWebServices();
@@ -351,7 +352,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
-    private void init() throws MojoExecutionException, IOException {
+    private void preprocessResources() throws MojoExecutionException, IOException {
+    	List<Shape> shapeList = shapeManager.listShapes();
+    	
+    	for( Shape shape: shapeList ){
+    	    	RdbmsShapeGenerator.createRdbmsShape(shape);
+    	}
+		
+	}
+
+	private void init() throws MojoExecutionException, IOException {
     	GcpShapeConfig.init();
     	OracleShapeConfig.init();
     	AwsShapeConfig.init();
