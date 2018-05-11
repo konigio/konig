@@ -136,7 +136,6 @@ import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
-import io.konig.schemagen.RdbmsShapeGenerator;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
 import io.konig.schemagen.avro.AvroNamer;
@@ -184,6 +183,7 @@ import io.konig.schemagen.ocms.OracleTableWriter;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.schemagen.sql.OracleDatatypeMapper;
+import io.konig.schemagen.sql.RdbmsShapeGenerator;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
@@ -353,11 +353,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     }
     
     private void preprocessResources() throws MojoExecutionException, IOException {
-    	List<Shape> shapeList = shapeManager.listShapes();
-    	
-    	for( Shape shape: shapeList ){
-    	    	RdbmsShapeGenerator.createRdbmsShape(shape);
-    	}
+    	// TODO:
+    	// RdbmsShapeHandler handler = new RdbmsShapeHandler(...);
+    	// handler.visitAll(shapeManager.listShapes());
 		
 	}
 

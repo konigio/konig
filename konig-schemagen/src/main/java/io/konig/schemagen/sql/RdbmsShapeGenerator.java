@@ -1,4 +1,4 @@
-package io.konig.schemagen;
+package io.konig.schemagen.sql;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -32,13 +32,17 @@ public class RdbmsShapeGenerator {
 	
 	public Shape createRdbmsShape(Shape shape){
 		validateLocalNames(shape);
+		// TODO: return null if there were no edits.
 		return shape;
 		
 	}
 
 
+	// TODO: Don't use static methods
 	public static void validateLocalNames(Shape shape) {
 		String propertyId = "";
+		
+		// TODO:  perform a deep clone of the shape before making any edits.
 	
 		for (PropertyConstraint p : shape.getProperty()) {
 			String fullURI =p.getPath().toString();
@@ -50,6 +54,7 @@ public class RdbmsShapeGenerator {
 			URI path = new URIImpl(stringUtilities(fullURI,propertyId)) ;
 			p.setPath(path);
 			if(propertyId != null){
+				// TODO: This functionality should not be in the RdbmsShapeGenerator.
 				removeDataSource(shape);
 				writeshape(shape);
 			}else{
