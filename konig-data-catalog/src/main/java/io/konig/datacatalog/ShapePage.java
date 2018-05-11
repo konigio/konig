@@ -27,8 +27,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -89,20 +92,69 @@ public class ShapePage {
 		}
 		context.put("TargetClass", new Link(targetClass.getLocalName(), targetClass.stringValue()));
 		if(shape.getShapeDataSource()!=null){
-			DataSource ds=getValidDataSource(shape.getShapeDataSource(),context);
-			String providedBy=null;
-			if(ds!=null){
-				setTableName(context,request);			
+		
+			Map<String,String> datasources=new HashMap<String,String>();
+			for(DataSource ds:shape.getShapeDataSource()){	
+				String types=null;
+				String providedBy=null;
+				String tableName=null;
+				if(ds.getType()!=null){
+					for(URI uri:ds.getType()){
+						if(Arrays.asList(DATASOURCE_LIST).contains(uri)){	
+							Graph graph=request.getGraph();
+							List<Vertex> list = graph.v(uri).in(RDF.TYPE).toVertexList();
+							if (!list.isEmpty()) {			
+								for (Vertex v : list) {
+									String shapeName=(String)context.get("ShapeName");
+									String vertexName=((URIVertex)v.getId()).getLocalName();
+									if(shapeName.equals(vertexName)){
+										SimplePojoFactory pojoFactory = new SimplePojoFactory();
+										if(Konig.GoogleCloudSqlTable.equals(uri)){
+											GoogleCloudSqlTable table = pojoFactory.create(v, GoogleCloudSqlTable.class);
+											tableName=table.getTableName();
+											break;
+										}
+										else if(Konig.GoogleBigQueryTable.equals(uri)){
+											GoogleBigQueryTable table =pojoFactory.create(v, GoogleBigQueryTable.class);
+											tableName=table.getTableIdentifier();
+											break;
+										}
+										else if(Konig.AwsAuroraTable.equals(uri)){
+											AwsAurora table =pojoFactory.create(v, AwsAurora.class);
+											tableName=table.getAwsTableName();
+											break;
+										}
+										else if(Konig.GoogleBigQueryView.equals(uri)){
+											GoogleBigQueryView table =pojoFactory.create(v, GoogleBigQueryView.class);
+											tableName=table.getIdentifier();
+											break;
+										}
+									}
+								}
+							}
+						}
+						if(!uri.equals(Konig.DataSource)){
+							types=uri.getLocalName();
+							break;
+						}
+					}
+				}				
 				if(ds.getIsPartof()!=null){
 					for(URI uri:ds.getIsPartof()){
-						if(providedBy==null)
-							providedBy=uri.getLocalName();
-						else
-							providedBy=providedBy+","+uri.getLocalName();
+							providedBy=(providedBy==null)?uri.getLocalName():providedBy+","+uri.getLocalName();
 					}
-					context.put("ProvidedBy", providedBy);
+					
 				}
+				if(tableName==null){
+					datasources.put(types,providedBy);
+				}
+				else{
+					datasources.put(tableName+"("+types+")",providedBy);
+				}
+				
 			}
+		
+			context.put("Datasources", datasources);
 			
 		}
 		request.setPageId(shapeURI);
@@ -155,19 +207,7 @@ public class ShapePage {
 		}
 		
 	}
-	private DataSource getValidDataSource(List<DataSource> shapeDataSourceList,VelocityContext context) {
-		for(DataSource ds:shapeDataSourceList){			
-			for(URI uri:ds.getType()){
-				if(Arrays.asList(DATASOURCE_LIST).contains(uri)){	
-					context.put("DataSourceURI",uri);
-					context.put("DataSource",uri.getLocalName());
-					return ds;
-				}
-			}			
-		}
-		return null;
-
-	}
+	
 	private void handleDdlFile(VelocityContext context, ShapeRequest request) throws DataCatalogException {
 		DatasourceFileLocator ddlLocator = request.getBuildRequest().getSqlDdlLocator();
 		if (ddlLocator != null) {

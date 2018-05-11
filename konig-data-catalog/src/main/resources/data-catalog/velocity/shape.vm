@@ -45,18 +45,12 @@
 			</tr>
 		</thead>
 		<tbody>
+#foreach( $Datasource in $Datasources.entrySet() )
 			<tr>
-#if($DataSource) 
-				<td>$TableName($DataSource)</td>
-#else
-				<td></td>
-#end
-#if($ProvidedBy)
-				<td>$ProvidedBy</td>
-#else
- 				<td></td>
-#end
+				<td>$Datasource.getKey()</td>
+				<td>$Datasource.getValue()</td>
  			</tr>
+#end
 		</tbody>
  	</table>
 #foreach( $example in $JsonExamples )
