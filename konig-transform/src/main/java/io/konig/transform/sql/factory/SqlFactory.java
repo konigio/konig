@@ -72,6 +72,7 @@ import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.AliasExpression;
+import io.konig.sql.query.BooleanTerm;
 import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
@@ -80,7 +81,6 @@ import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.FunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
-import io.konig.sql.query.IfExpression;
 import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.JoinExpression0;
@@ -90,7 +90,6 @@ import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.Result;
 import io.konig.sql.query.SearchCondition;
 import io.konig.sql.query.SelectExpression;
-import io.konig.sql.query.SignedNumericLiteral;
 import io.konig.sql.query.SimpleCase;
 import io.konig.sql.query.SimpleWhenClause;
 import io.konig.sql.query.StringLiteralExpression;
@@ -102,6 +101,7 @@ import io.konig.sql.query.UpdateExpression;
 import io.konig.sql.query.UpdateItem;
 import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
+import io.konig.sql.query.WithExpression;
 import io.konig.transform.factory.TransformBuildException;
 import io.konig.transform.proto.IriResolutionStrategy;
 import io.konig.transform.proto.LookupPredefinedNamedIndividual;
@@ -133,7 +133,9 @@ import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyComparison;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
+import io.konig.transform.rule.ResultSetRule;
 import io.konig.transform.rule.ShapeRule;
+import io.konig.transform.rule.SimpleResultSet;
 import io.konig.transform.rule.TransformBinaryOperator;
 import io.konig.transform.rule.ValueTransform;
 import io.konig.transform.sql.query.TableName;
@@ -165,6 +167,7 @@ public class SqlFactory {
 
 		private SelectExpression selectExpression(ShapeRule shapeRule) throws TransformBuildException {
 			SelectExpression select = new SelectExpression();
+			addWithClause(select, shapeRule);
 			addDataChannels(select, shapeRule);
 			addColumns(select, shapeRule);
 			addWhereClause(select, shapeRule);
@@ -173,13 +176,50 @@ public class SqlFactory {
 			return select;
 		}
 
+		private void addWithClause(SelectExpression select, ShapeRule shapeRule) {
+			ResultSetRule rule = shapeRule.getResultSetRule();
+			if (rule != null) {
+
+				if (rule.getResultSet() instanceof SimpleResultSet) {
+					select.setWith(new WithExpression((SimpleResultSet) rule.getResultSet()));
+				}
+			}
+			
+		}
+
 		private void addWhereClause(SelectExpression select, ShapeRule shapeRule) throws TransformBuildException {
 
 			for (BinaryRelationalExpression binary : shapeRule.getWhereExpressions()) {
 				ComparisonPredicate comparison = comparisonPredicate(binary);
 				select.addWhereCondition(comparison);
 			}
+			
+			if (shapeRule.getResultSetRule() != null) {
+				BooleanTerm term = booleanTerm(shapeRule.getResultSetRule().getJoinCondition());
+				select.addWhereCondition(term);
+			}
 
+		}
+
+
+		private BooleanTerm booleanTerm(BooleanExpression expr) throws TransformBuildException {
+			if (expr instanceof PropertyComparison) {
+				PropertyComparison comparison = (PropertyComparison) expr;
+				ValueExpression left = column(comparison.getLeft());
+				ValueExpression right = column(comparison.getRight());
+				return new ComparisonPredicate(ComparisonOperator.EQUALS, left, right);
+			}
+			throw new TransformBuildException("Failed to create booleanTerm");
+		}
+
+		private ValueExpression column(ChannelProperty p) throws TransformBuildException {
+
+			StringBuilder builder = new StringBuilder();
+			builder.append(p.getChannel().getName());
+			builder.append('.');
+			builder.append(p.getPredicate().getLocalName());
+			
+			return new ColumnExpression(builder.toString());
 		}
 
 		private ComparisonPredicate comparisonPredicate(BinaryRelationalExpression binary)
@@ -414,6 +454,11 @@ public class SqlFactory {
 			Collections.sort(list);
 
 			for (PropertyRule p : list) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("addColumns: Adding {} for {}", 
+							p.getPredicate().getLocalName(),
+							RdfUtil.localName(shapeRule.getTargetShape().getId()));
+				}
 				select.add(column(p));
 			}
 		}
@@ -616,7 +661,7 @@ public class SqlFactory {
 					StepPropertyModel sourceStep = (StepPropertyModel) sourcePropertyModel;
 					IriResolutionStrategy strategy = sourceStep.getIriResolutionStrategy();
 					if (strategy != null) {
-						return applyIriResolutionStrategy(tableItem, sourceStep);
+						return applyIriResolutionStrategy(tableItem, p, sourceStep);
 					}
 				}
 
@@ -695,32 +740,34 @@ public class SqlFactory {
 		}
 
 		private ValueExpression applyIriResolutionStrategy(TableItemExpression tableItem,
-				StepPropertyModel sourceStep) throws TransformBuildException {
+				PropertyRule p, StepPropertyModel sourceStep) throws TransformBuildException {
 			IriResolutionStrategy strategy = sourceStep.getIriResolutionStrategy();
 			if (strategy instanceof LookupPredefinedNamedIndividual) {
-				return lookupPredefinedNamedIndividual(tableItem, sourceStep, (LookupPredefinedNamedIndividual) strategy);
+				return lookupPredefinedNamedIndividual(tableItem, p, sourceStep, (LookupPredefinedNamedIndividual) strategy);
 			}
 			throw new TransformBuildException("IriResolution Strategy not supported: " + strategy.getClass().getName());
 		}
 
 		private ValueExpression lookupPredefinedNamedIndividual(TableItemExpression tableItem,
-				StepPropertyModel sourceStep, LookupPredefinedNamedIndividual strategy) throws TransformBuildException {
-			
-			PropertyConstraint p = sourceStep.getDeclaringProperty().getPropertyConstraint().deepClone();
-			
-			PathExpression path = p.getFormula().pathExpression();
-			if (path == null) {
-				throw new TransformBuildException("Expected PathExpression");
+				PropertyRule rule, StepPropertyModel sourceStep, LookupPredefinedNamedIndividual strategy) throws TransformBuildException {
+
+			PropertyModel targetProperty = rule.getSourcePropertyModel().getGroup().getTargetProperty();
+			String alias = targetProperty.getPredicate().getLocalName();
+			if (logger.isDebugEnabled()) {
+				logger.debug("lookupPredefinedNamedIndividual: Generating column expression for {}.{}", 
+						RdfUtil.localName(targetProperty.getDeclaringShape().getShape().getId()),
+						alias);
 			}
-		
-			List<PathStep> stepList = path.getStepList();
+			
+			StringBuilder builder = new StringBuilder();
+			builder.append(strategy.getResultSet().getChannel().getName());
+			builder.append(".id");
 			
 			
 			
+			String columnName = builder.toString();
 			
-			IfExpression priorIf = null;
-			// TODO: Finish
-			return null;
+			return new AliasExpression(new ColumnExpression(columnName), alias);
 		}
 
 		private ValueExpression mapValues(RenamePropertyRule p, MapValueTransform vt) throws TransformBuildException {
@@ -762,26 +809,7 @@ public class SqlFactory {
 		}
 
 		private ValueExpression valueExpression(Value value) throws TransformBuildException {
-			if (value instanceof Literal) {
-				Literal literal = (Literal) value;
-				URI type = literal.getDatatype();
-				if (type != null) {
-					if (reasoner.isRealNumber(type)) {
-						return new SignedNumericLiteral(new Double(literal.doubleValue()));
-					}
-					if (reasoner.isIntegerDatatype(type)) {
-						return new SignedNumericLiteral(new Long(literal.longValue()));
-					}
-					return new StringLiteralExpression(literal.stringValue());
-				}
-
-			}
-
-			if (value instanceof URI) {
-				URI uri = (URI) value;
-				return new StringLiteralExpression(uri.getLocalName());
-			}
-			throw new TransformBuildException("Cannot convert to ValueExpression: " + value.stringValue());
+			return SqlUtil.valueExpression(reasoner, value);
 		}
 
 		private void addDataChannels(SelectExpression select, ShapeRule shapeRule)

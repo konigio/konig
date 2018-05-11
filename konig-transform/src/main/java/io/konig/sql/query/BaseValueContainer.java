@@ -31,6 +31,9 @@ public abstract class BaseValueContainer extends AbstractExpression implements V
 	
 	@Override
 	public void add(ValueExpression value) {
+		if (value == null) {
+			throw new RuntimeException("Value must not be null");
+		}
 		values.add(value);
 
 	}

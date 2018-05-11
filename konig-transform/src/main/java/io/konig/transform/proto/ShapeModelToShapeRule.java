@@ -64,16 +64,15 @@ import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.FixedValuePropertyRule;
 import io.konig.transform.rule.FormulaIdRule;
 import io.konig.transform.rule.FormulaPropertyRule;
-import io.konig.transform.rule.FromItem;
 import io.konig.transform.rule.IdPropertyRule;
 import io.konig.transform.rule.IdRule;
 import io.konig.transform.rule.InjectLiteralPropertyRule;
 import io.konig.transform.rule.IriTemplateIdRule;
-import io.konig.transform.rule.JoinRule;
 import io.konig.transform.rule.NullPropertyRule;
 import io.konig.transform.rule.PropertyComparison;
 import io.konig.transform.rule.PropertyRule;
 import io.konig.transform.rule.RenamePropertyRule;
+import io.konig.transform.rule.ResultSetRule;
 import io.konig.transform.rule.ShapeRule;
 import io.konig.transform.rule.TransformBinaryOperator;
 import io.konig.transform.rule.TransformPostProcessor;
@@ -142,12 +141,24 @@ public class ShapeModelToShapeRule {
 			buildDataChannels(shapeModel);
 			
 			ShapeRule shapeRule = toShapeRule(shapeModel);
+			addRuleSet(shapeModel, shapeRule);
 			addChannelRules(shapeModel, shapeRule);
 			invokePostProcessors(shapeModel, shapeRule);
 			
 			return shapeRule;
 		}
 		
+		private void addRuleSet(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
+			ClassModel classModel = shapeModel.getClassModel();
+			if (classModel.getResultSetRule() != null) {
+				ProtoResultSetRule protoRule = classModel.getResultSetRule();
+				BooleanExpression joinCondition = booleanExpression(protoRule.getJoinCondition());
+				
+				shapeRule.setResultSetRule(new ResultSetRule(protoRule.getResultSet(), joinCondition));
+			}
+			
+		}
+
 		private void addChannelRules(ShapeModel shapeModel, ShapeRule shapeRule) throws ShapeTransformException {
 			for (SourceShapeInfo info : shapeModel.getClassModel().getCommittedSources()) {
 				DataChannel channel = info.getSourceShape().getDataChannel();
@@ -209,6 +220,12 @@ public class ShapeModelToShapeRule {
 						group.getParentClassModel().hashCode());
 			}
 			
+			PropertyRule iriResolution = resolveIri(group);
+			
+			if (iriResolution != null) {
+				return iriResolution;
+			}
+			
 			ShapeModel valueModel = targetProperty.getValueModel();
 			if (valueModel != null) {
 				ShapeRule valueRule = toShapeRule(valueModel);
@@ -221,6 +238,8 @@ public class ShapeModelToShapeRule {
 				result.setNestedRule(valueRule);
 				return result;
 			}
+			
+			
 			
 			PropertyModel sourceProperty = group.getSourceProperty();
 			
@@ -290,6 +309,7 @@ public class ShapeModelToShapeRule {
 				return new ExactMatchPropertyRule(channel, targetPredicate);
 				
 			} else if (sourceStep!=null) {
+								
 				return new RenamePropertyRule(
 					targetPredicate, channel, sourceStep.getPropertyConstraint(), sourceStep.getStepIndex());
 			} else if (targetDirect!=null && sourceDirect != null) {
@@ -312,6 +332,30 @@ public class ShapeModelToShapeRule {
 		}
 
 		
+
+		private PropertyRule resolveIri(PropertyGroup group) {
+			PropertyModel sourceProperty = group.getSourceProperty();
+			if (sourceProperty instanceof StepPropertyModel) {
+				StepPropertyModel sourceStep = (StepPropertyModel) sourceProperty;
+				StepPropertyModel previous = sourceStep.getPreviousStep();
+				if (previous != null && previous.getIriResolutionStrategy()!=null) {
+					IriResolutionStrategy strategy = previous.getIriResolutionStrategy();
+					if (strategy instanceof LookupPredefinedNamedIndividual) {
+						
+						if (logger.isDebugEnabled()) {
+							PropertyModel targetProperty = group.getTargetProperty();
+							logger.debug("resolveIri: Applying LookupPredefinedNamedIndividual for {}.{}");
+							
+						}
+						LookupPredefinedNamedIndividual lookup = (LookupPredefinedNamedIndividual) strategy;
+						
+						
+					}
+				}
+			}
+			
+			return null;
+		}
 
 		private QuantifiedExpression quantifiedExpression(Formula formula) throws ShapeTransformException {
 			
@@ -397,6 +441,13 @@ public class ShapeModelToShapeRule {
 				ChannelProperty left = new ChannelProperty(proto.getLeft().getDeclaringShape().getDataChannel(), leftPredicate);
 				ChannelProperty right = new ChannelProperty(proto.getRight().getDeclaringShape().getDataChannel(), rightPredicate);
 				
+				if (left.getChannel()==null) {
+					throw new ShapeTransformException("Null Channel detected");
+				}
+				
+				if (right.getChannel()==null) {
+					throw new ShapeTransformException("Null Channel detected");
+				}
 				result = new PropertyComparison(operator, left, right);
 			}
 			return result;
@@ -408,6 +459,16 @@ public class ShapeModelToShapeRule {
 				throw new ShapeTransformException("No committed sources found for " + RdfUtil.localName(root.getShape().getId()));
 			}
 			useAlias = list.size()>1;
+
+			
+			ProtoResultSetRule resultSetRule = root.getClassModel().getResultSetRule();
+			if (resultSetRule != null) {
+				useAlias = true;
+				resultSetRule.getResultSet().getChannel().setName(variableNamer.next());
+				if (logger.isDebugEnabled()) {
+					logger.debug("buildDataChannels: Assigned name to ResultSet");
+				}
+			}
 			
 			for (SourceShapeInfo info : list) {
 				info.getSourceShape().getDataChannel().setName(variableNamer.next());

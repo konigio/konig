@@ -1,8 +1,6 @@
 package io.konig.transform.proto;
 
-import java.util.List;
-
-import io.konig.core.Vertex;
+import io.konig.transform.rule.SimpleResultSet;
 
 /**
  * A strategy for resolving IRI references by looking up a named individual from the pre-defined, static OWL ontology.
@@ -11,14 +9,16 @@ import io.konig.core.Vertex;
  */
 public class LookupPredefinedNamedIndividual implements IriResolutionStrategy {
 	
-	private List<Vertex> individuals;
+	private SimpleResultSet resultSet;
 
-	public LookupPredefinedNamedIndividual(List<Vertex> individuals) {
-		this.individuals = individuals;
+	public LookupPredefinedNamedIndividual(SimpleResultSet resultSet) {
+		this.resultSet = resultSet;
 	}
 
-	public List<Vertex> getIndividuals() {
-		return individuals;
+	public SimpleResultSet getResultSet() {
+		return resultSet;
 	}
+
+	
 
 }

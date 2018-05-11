@@ -27,7 +27,7 @@ import io.konig.core.io.PrettyPrintWriter;
 
 public class SelectExpression extends BaseValueContainer implements ValueContainer, QueryExpression, DmlExpression {
 	
-	
+	private WithExpression with = null;
 	private FromExpression from = new FromExpression();
 	private WhereClause where;
 	private GroupByClause groupBy;
@@ -56,6 +56,16 @@ public class SelectExpression extends BaseValueContainer implements ValueContain
 			}
 		}
 	}
+	
+	
+
+	public WithExpression getWith() {
+		return with;
+	}
+
+	public void setWith(WithExpression with) {
+		this.with = with;
+	}
 
 	public void setWhere(WhereClause where) {
 		this.where = where;
@@ -71,7 +81,9 @@ public class SelectExpression extends BaseValueContainer implements ValueContain
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		
+		if (with != null) {
+			with.print(out);
+		}
 		out.print("SELECT");
 		List<ValueExpression> values = getValues();
 		if (inline()) {

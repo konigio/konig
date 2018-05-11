@@ -3,6 +3,8 @@ package io.konig.transform.sql.factory;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openrdf.model.Literal;
+
 /*
  * #%L
  * Konig Transform
@@ -25,7 +27,9 @@ import java.util.List;
 
 
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 
+import io.konig.core.OwlReasoner;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.SignedNumericLiteral;
 import io.konig.sql.query.StringLiteralExpression;
@@ -39,6 +43,30 @@ import io.konig.transform.rule.ExactMatchPropertyRule;
 import io.konig.transform.rule.PropertyRule;
 
 public class SqlUtil {
+	
+	public static ValueExpression valueExpression(OwlReasoner reasoner, Value value) throws TransformBuildException {
+		
+		if (value instanceof Literal) {
+			Literal literal = (Literal) value;
+			URI type = literal.getDatatype();
+			if (type != null) {
+				if (reasoner.isRealNumber(type)) {
+					return new SignedNumericLiteral(new Double(literal.doubleValue()));
+				}
+				if (reasoner.isIntegerDatatype(type)) {
+					return new SignedNumericLiteral(new Long(literal.longValue()));
+				}
+				return new StringLiteralExpression(literal.stringValue());
+			}
+
+		}
+
+		if (value instanceof URI) {
+			URI uri = (URI) value;
+			return new StringLiteralExpression(uri.getLocalName());
+		}
+		throw new TransformBuildException("Cannot convert to ValueExpression: " + value.stringValue());
+	}
 
 	public static ValueExpression literal(Object value) {
 		if (value instanceof String) {

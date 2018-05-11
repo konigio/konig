@@ -58,6 +58,11 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	@Deprecated 
 	private FromItem fromItem;
 	
+	/**
+	 * For now, we support only a single, named ResultSet -- which maps to a Common Table Expression in SQL.
+	 * In the future we may support multiple ResultSets.
+	 */
+	private ResultSetRule resultSetRule;
 	private List<DataChannelRule> channelRules = new ArrayList<>();
 	private Shape targetShape;
 	private IdRule idRule;
@@ -252,6 +257,16 @@ public class ShapeRule extends AbstractPrettyPrintable {
 	public void setRollUp(ShapeRule rollUp) {
 		this.rollUp = rollUp;
 	}
+
+	public ResultSetRule getResultSetRule() {
+		return resultSetRule;
+	}
+
+	public void setResultSetRule(ResultSetRule resultSetRule) {
+		this.resultSetRule = resultSetRule;
+	}
+
+
 	
 	
 }

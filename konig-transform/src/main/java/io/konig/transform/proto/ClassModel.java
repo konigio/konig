@@ -25,16 +25,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.openrdf.model.URI;
 
 import io.konig.core.io.BasePrettyPrintable;
 import io.konig.core.io.PrettyPrintWriter;
 import io.konig.formula.Direction;
+import io.konig.transform.rule.ResultSet;
 
 /**
  * A model for the properties of a given OWL Class.
@@ -50,6 +49,7 @@ public class ClassModel extends BasePrettyPrintable {
 	private Map<URI, PropertyGroup> outPropertyMap = new HashMap<>();
 	private Map<URI, PropertyGroup> inPropertyMap = null;
 	private ShapeModel targetShapeModel;
+	private ProtoResultSetRule resultSetRule;
 	private List<SourceShapeInfo> candidateSources;
 	private List<SourceShapeInfo> committedSources;
 	private ProtoFromItem fromItem;
@@ -288,6 +288,14 @@ public class ClassModel extends BasePrettyPrintable {
 			map.remove(predicate);
 		}
 		
+	}
+
+	public ProtoResultSetRule getResultSetRule() {
+		return resultSetRule;
+	}
+
+	public void setResultSetRule(ProtoResultSetRule resultSetRule) {
+		this.resultSetRule = resultSetRule;
 	}
 
 	

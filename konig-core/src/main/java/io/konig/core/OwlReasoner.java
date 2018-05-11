@@ -858,4 +858,14 @@ public class OwlReasoner {
 			isTypeOf(target, OWL.SYMMETRICPROPERTY) || 
 			isTypeOf(target, OWL.TRANSITIVEPROPERTY);
 	}
+	
+	/**
+	 * Get a list of all known instances of a given OWL class.
+	 * @param owlClass
+	 * @return
+	 */
+	public List<Vertex> instancesOfType(URI owlClass) {
+		// TODO: apply sub-type reasoning.
+		return graph.v(owlClass).in(RDF.TYPE).toVertexList();
+	}
 }
