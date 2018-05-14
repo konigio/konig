@@ -26,12 +26,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -41,18 +39,13 @@ import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.aws.datasource.AwsAurora;
-import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
-import io.konig.core.Vertex;
-import io.konig.core.impl.URIVertex;
 import io.konig.core.json.SampleJsonGenerator;
-import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
@@ -69,7 +62,13 @@ public class ShapePage {
 	private static final Logger logger = LoggerFactory.getLogger(ShapePage.class);
 	private static final String SHAPE_TEMPLATE = "data-catalog/velocity/shape.vm";
 	private static final URI[] DATASOURCE_LIST={Konig.GoogleBigQueryTable,Konig.GoogleBigQueryView,Konig.GoogleCloudSqlTable,Konig.AwsAuroraTable};
+	
+	
+	private Set<URI> excludedDataSourceType = new HashSet<>();
 
+	public ShapePage() {
+		excludedDataSourceType.add(Konig.DataSource);
+	}
 	public void render(ShapeRequest request, PageResponse response) throws DataCatalogException {
 
 		DataCatalogUtil.setSiteName(request);
@@ -91,70 +90,43 @@ public class ShapePage {
 			return;
 		}
 		context.put("TargetClass", new Link(targetClass.getLocalName(), targetClass.stringValue()));
-		if(shape.getShapeDataSource()!=null){
+		if(shape.getShapeDataSource()!=null  && !shape.getShapeDataSource().isEmpty()){
 		
-			Map<String,String> datasources=new HashMap<String,String>();
+			List<DataSourceInfo> datasourceList = new ArrayList<>();
 			for(DataSource ds:shape.getShapeDataSource()){	
-				String types=null;
-				String providedBy=null;
-				String tableName=null;
-				if(ds.getType()!=null){
-					for(URI uri:ds.getType()){
-						if(Arrays.asList(DATASOURCE_LIST).contains(uri)){	
-							Graph graph=request.getGraph();
-							List<Vertex> list = graph.v(uri).in(RDF.TYPE).toVertexList();
-							if (!list.isEmpty()) {			
-								for (Vertex v : list) {
-									String shapeName=(String)context.get("ShapeName");
-									String vertexName=((URIVertex)v.getId()).getLocalName();
-									if(shapeName.equals(vertexName)){
-										SimplePojoFactory pojoFactory = new SimplePojoFactory();
-										if(Konig.GoogleCloudSqlTable.equals(uri)){
-											GoogleCloudSqlTable table = pojoFactory.create(v, GoogleCloudSqlTable.class);
-											tableName=table.getTableName();
-											break;
-										}
-										else if(Konig.GoogleBigQueryTable.equals(uri)){
-											GoogleBigQueryTable table =pojoFactory.create(v, GoogleBigQueryTable.class);
-											tableName=table.getTableIdentifier();
-											break;
-										}
-										else if(Konig.AwsAuroraTable.equals(uri)){
-											AwsAurora table =pojoFactory.create(v, AwsAurora.class);
-											tableName=table.getAwsTableName();
-											break;
-										}
-										else if(Konig.GoogleBigQueryView.equals(uri)){
-											GoogleBigQueryView table =pojoFactory.create(v, GoogleBigQueryView.class);
-											tableName=table.getIdentifier();
-											break;
-										}
-									}
-								}
-							}
-						}
-						if(!uri.equals(Konig.DataSource)){
-							types=uri.getLocalName();
-							break;
-						}
-					}
-				}				
-				if(ds.getIsPartof()!=null){
-					for(URI uri:ds.getIsPartof()){
-							providedBy=(providedBy==null)?uri.getLocalName():providedBy+","+uri.getLocalName();
-					}
+				String type=null;
+				String providedBy=localNameList(ds.getIsPartOf(), null);
+				String tableName="";
+				
+				if (ds instanceof GoogleCloudSqlTable) {
+					GoogleCloudSqlTable table = (GoogleCloudSqlTable) ds;
+					tableName = table.getTableName();
+					type = "Google Cloud SQL Table";
+				} else if (ds instanceof GoogleBigQueryTable) {
+					GoogleBigQueryTable table = (GoogleBigQueryTable) ds;
+					type = "Google BigQuery Table";
+					tableName = table.getTableIdentifier();
+				} else if (ds instanceof GoogleBigQueryView) {
+					GoogleBigQueryView table = (GoogleBigQueryView) ds;
+					type = "Google BigQuery View";
+					tableName = table.getIdentifier();
 					
+				} else if (ds instanceof AwsAurora) {
+					AwsAurora table = (AwsAurora) ds;
+					type = "AWS Aurora Table";
+					tableName = table.getAwsTableName();
 				}
-				if(tableName==null){
-					datasources.put(types,providedBy);
+				
+				
+				if (type == null) {
+					type = localNameList(ds.getType(), excludedDataSourceType);
 				}
-				else{
-					datasources.put(tableName+"("+types+")",providedBy);
-				}
+				
+				datasourceList.add(new DataSourceInfo(type, tableName, providedBy));
 				
 			}
 		
-			context.put("Datasources", datasources);
+			context.put("Datasources", datasourceList);
 			
 		}
 		request.setPageId(shapeURI);
@@ -176,37 +148,29 @@ public class ShapePage {
 		template.merge(context, out);
 		out.flush();
 	}
-	private void setTableName(VelocityContext context,ShapeRequest request) {
-		URI dsUri=(URI)context.get("DataSourceURI");
-		Graph graph=request.getGraph();
-		List<Vertex> list = graph.v(dsUri).in(RDF.TYPE).toVertexList();
-		if (!list.isEmpty()) {			
-			for (Vertex v : list) {
-				String shapeName=(String)context.get("ShapeName");
-				String vertexName=((URIVertex)v.getId()).getLocalName();
-				if(shapeName.equals(vertexName)){
-					SimplePojoFactory pojoFactory = new SimplePojoFactory();
-					if(Konig.GoogleCloudSqlTable.equals(dsUri)){
-						GoogleCloudSqlTable table = pojoFactory.create(v, GoogleCloudSqlTable.class);
-						context.put("TableName",table.getTableName());
-					}
-					else if(Konig.GoogleBigQueryTable.equals(dsUri)){
-						GoogleBigQueryTable table =pojoFactory.create(v, GoogleBigQueryTable.class);
-						context.put("TableName", table.getTableIdentifier());
-					}
-					else if(Konig.AwsAuroraTable.equals(dsUri)){
-						AwsAurora table =pojoFactory.create(v, AwsAurora.class);
-						context.put("TableName", table.getAwsTableName());
-					}
-					else if(Konig.GoogleBigQueryView.equals(dsUri)){
-						GoogleBigQueryView table =pojoFactory.create(v, GoogleBigQueryView.class);
-						context.put("TableName", table.getIdentifier());
-					}
-				}
+	private String localNameList(Collection<URI> type, Set<URI> excludes) {
+		if (type == null || type.isEmpty()) {
+			return "";
+		}
+		ArrayList<String> nameList = new ArrayList<>();
+		for (URI uri : type) {
+			if (excludes == null || !excludes.contains(uri)) {
+				nameList.add(uri.getLocalName());
 			}
 		}
 		
+		Collections.sort(nameList);
+		
+		StringBuilder builder = new StringBuilder();
+		String comma = "";
+		for (String name : nameList) {
+			builder.append(comma);
+			comma = ", ";
+			builder.append(name);
+		}
+		return builder.toString();
 	}
+	
 	
 	private void handleDdlFile(VelocityContext context, ShapeRequest request) throws DataCatalogException {
 		DatasourceFileLocator ddlLocator = request.getBuildRequest().getSqlDdlLocator();

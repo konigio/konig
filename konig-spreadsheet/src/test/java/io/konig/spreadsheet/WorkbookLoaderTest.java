@@ -245,8 +245,8 @@ public class WorkbookLoaderTest {
 		List<DataSource> list = shape.getShapeDataSource();
 		assertEquals(2, list.size());
 		DataSource ds = list.get(1);
-		assertEquals("http://schema.pearson.com/ns/system/mdm",ds.getIsPartof().get(0).toString());
-		assertEquals("http://schema.pearson.com/ns/system/edw",ds.getIsPartof().get(1).toString());
+		assertEquals("http://schema.pearson.com/ns/system/mdm",ds.getIsPartOf().get(0).toString());
+		assertEquals("http://schema.pearson.com/ns/system/edw",ds.getIsPartOf().get(1).toString());
     }
 	
 	

@@ -36,23 +36,28 @@
 #end		
 		</tbody>
 	</table>
+	
+#if( $Datasources )	
 	<h1 property="rdfs:label" class="page-title">Data Sources</h1>
 	<table class="definition-table">
 		<thead>
 			<tr>
 				<th>Type</th>
+				<th>Table Name</th>
 				<th>Provided By</th>			
 			</tr>
 		</thead>
 		<tbody>
-#foreach( $Datasource in $Datasources.entrySet() )
+#foreach( $Datasource in $Datasources )
 			<tr>
-				<td>$Datasource.getKey()</td>
-				<td>$Datasource.getValue()</td>
+				<td>$Datasource.getType()</td>
+				<td>$Datasource.getTableName()</td>
+				<td>$Datasource.getProvidedBy()</td>
  			</tr>
 #end
 		</tbody>
  	</table>
+#end
 #foreach( $example in $JsonExamples )
 	<div style="margin-top: 2em">$example.Name</div>
 	<div class="ds-selector-tabs ds-selector">
