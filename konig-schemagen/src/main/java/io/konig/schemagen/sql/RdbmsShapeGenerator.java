@@ -31,20 +31,18 @@ import io.konig.shacl.Shape;
 public class RdbmsShapeGenerator {
 	
 	public Shape createRdbmsShape(Shape shape){
-		validateLocalNames(shape);
-		// TODO: return null if there were no edits.
+	if ( validateLocalNames(shape) == null){
+		shape = null;
+	}
 		return shape;
 		
 	}
 
 
-	// TODO: Don't use static methods
-	public static void validateLocalNames(Shape shape) {
+	public String validateLocalNames(Shape shape) {
 		String propertyId = "";
-		
-		// TODO:  perform a deep clone of the shape before making any edits.
-	
-		for (PropertyConstraint p : shape.getProperty()) {
+		Shape clonedShape = shape.deepClone(); 
+		for (PropertyConstraint p : clonedShape.getProperty()) {
 			String fullURI =p.getPath().toString();
 			int i = fullURI.lastIndexOf("/")+1;
 			int j = fullURI.lastIndexOf(">");
@@ -53,20 +51,13 @@ public class RdbmsShapeGenerator {
 			fullURI = fullURI.substring(0,fullURI.lastIndexOf("/")+1);
 			URI path = new URIImpl(stringUtilities(fullURI,propertyId)) ;
 			p.setPath(path);
-			if(propertyId != null){
-				// TODO: This functionality should not be in the RdbmsShapeGenerator.
-				removeDataSource(shape);
-				writeshape(shape);
-			}else{
-				removeDataSource(shape);
-			}
-
 		}
+		return propertyId;
 		
 	}
 	
 
-	public static String changeToSnakeCase(String propertyId) {
+	public String changeToSnakeCase(String propertyId) {
 		String camelCasePattern = "([a-z]+[A-Z]+\\w+)+"; 
 		String snakeCasePatternLowerCase ="([a-z]+(?:_[a-z]+)*)";
 		String snakeCasePatternUpperCase ="([A-Z]+(?:_[A-Z]+)*)";
@@ -80,7 +71,7 @@ public class RdbmsShapeGenerator {
 		return propertyId;
 	}
 	
-	public static String stringUtilities(String value, String val){
+	public String stringUtilities(String value, String val){
 		StringBuffer sb = new StringBuffer();
 		sb.append(value);
 		sb.append(val);
@@ -89,16 +80,5 @@ public class RdbmsShapeGenerator {
 		return sb.toString();
 		
 	}
-	public static void removeDataSource(Shape Shape) {
-		
-		
-	}
-
-	private static Shape writeshape(Shape shape) {
-		return shape;
-		
-		
-	}
-	
 
 }

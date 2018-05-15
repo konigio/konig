@@ -184,6 +184,7 @@ import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.schemagen.sql.OracleDatatypeMapper;
 import io.konig.schemagen.sql.RdbmsShapeGenerator;
+import io.konig.schemagen.sql.RdbmsShapeHandler;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
@@ -198,6 +199,7 @@ import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.impl.TemplateShapeNamer;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
+import io.konig.shacl.io.ShapeWriter;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.showl.WorkbookToTurtleRequest;
 import io.konig.showl.WorkbookToTurtleTransformer;
@@ -353,10 +355,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     }
     
     private void preprocessResources() throws MojoExecutionException, IOException {
-    	// TODO:
-    	// RdbmsShapeHandler handler = new RdbmsShapeHandler(...);
-    	// handler.visitAll(shapeManager.listShapes());
-		
+    	if (rdfOutput != null) {
+			File shapesDir = rdfOutput.shapesDir(defaults);
+			if (shapesDir != null) {
+				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
+    	RdbmsShapeGenerator generator = new RdbmsShapeGenerator();
+    	ShapeWriter shapeWriter = new ShapeWriter();
+    	 RdbmsShapeHandler handler = new RdbmsShapeHandler(generator, fileGetter, shapeWriter, nsManager);
+    	 handler.visitAll(shapeManager.listShapes());
+			}
+    	}
 	}
 
 	private void init() throws MojoExecutionException, IOException {
