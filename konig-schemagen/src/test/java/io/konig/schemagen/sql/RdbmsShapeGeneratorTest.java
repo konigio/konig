@@ -37,6 +37,7 @@ import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.schemagen.SchemaGeneratorTest;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -45,49 +46,29 @@ import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.io.ShapeWriter;
 import io.konig.spreadsheet.WorkbookLoader;
 
-public class RdbmsShapeGeneratorTest {
+public class RdbmsShapeGeneratorTest extends SchemaGeneratorTest {
+	
+	private RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape");
 	
 	@Test
-	public void testValidateLocalNames() throws Exception {
-		AwsShapeConfig.init();
-		RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape");
-		InputStream input = getClass().getClassLoader().getResourceAsStream("rdbms/rdbmsshapegenerator.xlsx");
-		Workbook book = WorkbookFactory.create(input);
-		Graph graph = new MemoryGraph();
-		NamespaceManager nsManager = new MemoryNamespaceManager();
-		graph.setNamespaceManager(nsManager);
+	public void testSnakeCase() throws Exception {
 		
-		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
-		input.close();
-		
-		URI shapeId = uri("http://example.com/shapes/TargetPersonShape");
-		
-		ShapeManager s = new MemoryShapeManager();
-		
-		ShapeLoader shapeLoader = new ShapeLoader(s);
-		shapeLoader.load(graph);
+		load("src/test/resources/rdbms-shape-generator");
 		
 		
-		Shape shape = s.getShapeById(shapeId);
-		shapeGenerator.validateLocalNames(shape);
+		URI shapeId = iri("http://example.com/shapes/TargetPersonShape");
 		
-		shapeGenerator.createRdbmsShape(shape);
+		
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		
+		assertTrue(rdbmsShape != null);
 
-				ShapeFileGetter fileGetter = new ShapeFileGetter(new File(""), nsManager);
-    	RdbmsShapeGenerator generator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape");
-    	ShapeWriter shapeWriter = new ShapeWriter();
-    	 RdbmsShapeHandler handler = new RdbmsShapeHandler(generator, fileGetter, shapeWriter, nsManager);
-    	 handler.visit(shape);
-
-		assertTrue(shape!=null);
+		// TODO: add validation steps.
 	
 		
 	}
 	
-	private URI uri(String text) {
-		return new URIImpl(text);
-	}
 
 
 }
