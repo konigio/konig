@@ -1,5 +1,6 @@
 package io.konig.schemagen.sql;
 
+
 /*
  * #%L
  * Konig Schema Generator
@@ -25,6 +26,7 @@ import java.io.File;
 import java.util.Collection;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
 import io.konig.aws.datasource.AwsAurora;
 import io.konig.core.KonigException;
@@ -63,7 +65,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	public void visit(Shape shape) {
 		
 		if (isRdbmsShape(shape)) {
-		
+			
 			Shape rdbmsShape = generator.createRdbmsShape(shape);
 
 			// The generator will return a null value if the supplied shape is already
@@ -76,6 +78,9 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			if (rdbmsShape != null) {
 				editOriginalShape(shape);
 				save(shape);
+				URI shapeId=(URI)shape.getId();
+				String rdbmsShapeId=shapeId.toString().replaceAll(generator.getShapeIriPattern(),generator.getShapeIriReplacement());
+				rdbmsShape.setId(new URIImpl(rdbmsShapeId));
 				save(rdbmsShape);
 			}
 		}
@@ -102,8 +107,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	 * Remove the RDBMS data source(s) from the given shape.
 	 */
 	private void editOriginalShape(Shape shape) {
-		
-		
+		shape.setShapeDataSource(null);		
 	}
 
 

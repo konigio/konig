@@ -355,11 +355,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     }
     
     private void preprocessResources() throws MojoExecutionException, IOException {
-    	if (rdfOutput != null) {
-			File shapesDir = rdfOutput.shapesDir(defaults);
+    	
+    	if (rdfSourceDir != null && (amazonWebServices!= null && amazonWebServices.getAurora()!=null)) {
+    		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");
+    		AuroraInfo aurora=amazonWebServices.getAurora();
+    		
 			if (shapesDir != null) {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-    	RdbmsShapeGenerator generator = new RdbmsShapeGenerator();
+    	RdbmsShapeGenerator generator = new RdbmsShapeGenerator(aurora.getShapeIriPattern(),aurora.getShapeIriReplacement());
     	ShapeWriter shapeWriter = new ShapeWriter();
     	 RdbmsShapeHandler handler = new RdbmsShapeHandler(generator, fileGetter, shapeWriter, nsManager);
     	 handler.visitAll(shapeManager.listShapes());
@@ -787,7 +790,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if(amazonWebServices != null) {
 			Configurator config = configurator();
 			config.configure(amazonWebServices);
-			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
+			AuroraInfo aurora=amazonWebServices.getAurora();
+			File tablesDir=null;
+			if(aurora!=null){
+				tablesDir = Configurator.checkNull(aurora.getTables());
+			}
 			File bucketsDir = Configurator.checkNull(amazonWebServices.getS3buckets());
 			File transformsDir = Configurator.checkNull(amazonWebServices.getTransforms());
 			File cloudFormationDir = Configurator.checkNull(amazonWebServices.getCloudFormationTemplates());
@@ -833,7 +840,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if(amazonWebServices != null) {
 			Configurator config = configurator();
 			config.configure(amazonWebServices);
-			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
+			AuroraInfo aurora=amazonWebServices.getAurora();
+			File tablesDir=null;
+			if(aurora!=null)
+				tablesDir = Configurator.checkNull(aurora.getTables());
 			
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			if(tablesDir != null) {

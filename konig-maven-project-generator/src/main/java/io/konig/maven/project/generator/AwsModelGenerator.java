@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 
 import io.konig.maven.AmazonWebServicesConfig;
+import io.konig.maven.AuroraInfo;
 
 public class AwsModelGenerator  extends ConfigurableProjectGenerator<AmazonWebServicesConfig> {
 	
@@ -38,7 +39,12 @@ public class AwsModelGenerator  extends ConfigurableProjectGenerator<AmazonWebSe
 		setArtifactSuffix(ARTIFACT_SUFFIX);
 		setNameSuffix("Aws Model");
 		config.setDirectory(new File("${project.basedir}/target/generated/aws"));
-		config.setTables(new File("${project.basedir}" + TABLES_PATH));
+		AuroraInfo aurora=new AuroraInfo();
+		aurora.setTables(new File("${project.basedir}" + TABLES_PATH));
+		aurora.setShapeIriPattern("(.*)Shape$");
+		aurora.setShapeIriReplacement("$1RdbmsShape");				
+		config.setAurora(aurora);
+		
 		config.setAwsScriptFile(new File("${project.basedir}/target/generated/aws/scripts/deploy.groovy"));
 		init(mavenProject);
 	}

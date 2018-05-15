@@ -1,5 +1,9 @@
 package io.konig.schemagen.sql;
 
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
@@ -30,30 +34,55 @@ import io.konig.shacl.Shape;
 
 public class RdbmsShapeGenerator {
 	
+	private String shapeIriPattern;
+	private String shapeIriReplacement;
+	
+	public RdbmsShapeGenerator(String shapeIriPattern,String shapeIriReplacement){
+		this.shapeIriPattern=shapeIriPattern;
+		this.shapeIriReplacement=shapeIriReplacement;
+	}
+	public String getShapeIriPattern() {
+		return shapeIriPattern;
+	}
+	public void setShapeIriPattern(String shapeIriPattern) {
+		this.shapeIriPattern = shapeIriPattern;
+	}
+	public String getShapeIriReplacement() {
+		return shapeIriReplacement;
+	}
+	public void setShapeIriReplacement(String shapeIriReplacement) {
+		this.shapeIriReplacement = shapeIriReplacement;
+	}
 	public Shape createRdbmsShape(Shape shape){
-	if ( validateLocalNames(shape) == null){
-		shape = null;
-	}
-		return shape;
-		
+		return validateLocalNames(shape);		
 	}
 
 
-	public String validateLocalNames(Shape shape) {
+	public Shape validateLocalNames(Shape shape) {
 		String propertyId = "";
 		Shape clonedShape = shape.deepClone(); 
+		List<PropertyConstraint> propConList=new ArrayList<PropertyConstraint>();
+		boolean isEdited=false;
 		for (PropertyConstraint p : clonedShape.getProperty()) {
 			String fullURI =p.getPath().toString();
 			int i = fullURI.lastIndexOf("/")+1;
 			int j = fullURI.lastIndexOf(">");
 			propertyId = fullURI.substring(i, j);
-			propertyId = changeToSnakeCase(propertyId);
-			fullURI = fullURI.substring(0,fullURI.lastIndexOf("/")+1);
-			URI path = new URIImpl(stringUtilities(fullURI,propertyId)) ;
+			String changedPropertyId = changeToSnakeCase(propertyId);
+			if(!changedPropertyId.equals(propertyId) && !isEdited){
+				isEdited=true;
+			}
+			fullURI = fullURI.substring(1,fullURI.lastIndexOf("/")+1);
+			URI path = new URIImpl(stringUtilities(fullURI,changedPropertyId)) ;
 			p.setPath(path);
+			propConList.add(p);
+			
 		}
-		return propertyId;
-		
+		clonedShape.setProperty(propConList);
+		if(isEdited)			
+			return clonedShape;
+		else
+			return null;		
 	}
 	
 
@@ -74,11 +103,11 @@ public class RdbmsShapeGenerator {
 	public String stringUtilities(String value, String val){
 		StringBuffer sb = new StringBuffer();
 		sb.append(value);
-		sb.append(val);
-		sb.append(">");
-		
+		sb.append(val);		
 		return sb.toString();
 		
 	}
+
+
 
 }

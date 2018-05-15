@@ -1,4 +1,4 @@
-package io.konig.schemagen;
+package io.konig.schemagen.sql;
 
 /*
  * #%L
@@ -37,9 +37,6 @@ import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.maven.RdfConfig;
-import io.konig.schemagen.sql.RdbmsShapeGenerator;
-import io.konig.schemagen.sql.RdbmsShapeHandler;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -53,7 +50,7 @@ public class RdbmsShapeGeneratorTest {
 	@Test
 	public void testValidateLocalNames() throws Exception {
 		AwsShapeConfig.init();
-		RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator();
+		RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape");
 		InputStream input = getClass().getClassLoader().getResourceAsStream("rdbms/rdbmsshapegenerator.xlsx");
 		Workbook book = WorkbookFactory.create(input);
 		Graph graph = new MemoryGraph();
@@ -78,7 +75,7 @@ public class RdbmsShapeGeneratorTest {
 		shapeGenerator.createRdbmsShape(shape);
 
 				ShapeFileGetter fileGetter = new ShapeFileGetter(new File(""), nsManager);
-    	RdbmsShapeGenerator generator = new RdbmsShapeGenerator();
+    	RdbmsShapeGenerator generator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape");
     	ShapeWriter shapeWriter = new ShapeWriter();
     	 RdbmsShapeHandler handler = new RdbmsShapeHandler(generator, fileGetter, shapeWriter, nsManager);
     	 handler.visit(shape);
