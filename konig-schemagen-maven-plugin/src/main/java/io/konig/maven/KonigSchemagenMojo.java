@@ -355,17 +355,37 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     }
     
     private void preprocessResources() throws MojoExecutionException, IOException {
-    	
-    	if (rdfSourceDir != null && (amazonWebServices!= null && amazonWebServices.getAurora()!=null)) {
-    		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");
-    		AuroraInfo aurora=amazonWebServices.getAurora();
+    	String shapeIriPattern=null;
+    	String shapeIriReplacement=null;
+    	AuroraInfo aurora=null;
+    	BigQueryInfo bigQuery=null;
+    	CloudSqlInfo cloudSql=null;
+    	if(amazonWebServices!=null && amazonWebServices.getAurora()!=null){
+    		aurora=amazonWebServices.getAurora();
+    		shapeIriPattern=aurora.getShapeIriPattern();
+    		shapeIriReplacement=aurora.getShapeIriReplacement();    		
+    	}
+    	else if(googleCloudPlatform!=null && googleCloudPlatform.getBigquery()!=null){
+    		bigQuery=googleCloudPlatform.getBigquery();
+    		shapeIriPattern=bigQuery.getShapeIriPattern();
+    		shapeIriReplacement=bigQuery.getShapeIriReplacement();
     		
+    	}
+    	else if(googleCloudPlatform!=null && googleCloudPlatform.getCloudsql()!=null){
+    		cloudSql=googleCloudPlatform.getCloudsql();
+    		shapeIriPattern=cloudSql.getShapeIriPattern();
+    		shapeIriReplacement=cloudSql.getShapeIriReplacement();
+    	}
+    		
+    	
+    	if (rdfSourceDir != null && (aurora!=null || bigQuery!=null || cloudSql!=null)) {
+    		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
 			if (shapesDir != null) {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-    	RdbmsShapeGenerator generator = new RdbmsShapeGenerator(aurora.getShapeIriPattern(),aurora.getShapeIriReplacement());
-    	ShapeWriter shapeWriter = new ShapeWriter();
-    	 RdbmsShapeHandler handler = new RdbmsShapeHandler(generator, fileGetter, shapeWriter, nsManager);
-    	 handler.visitAll(shapeManager.listShapes());
+				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(shapeIriPattern, shapeIriReplacement);
+				ShapeWriter shapeWriter = new ShapeWriter();
+				RdbmsShapeHandler handler = new RdbmsShapeHandler(generator, fileGetter, shapeWriter, nsManager);
+				handler.visitAll(shapeManager.listShapes());
 			}
     	}
 	}
