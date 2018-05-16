@@ -69,7 +69,7 @@ public class RdbmsShapeGenerator {
 			int j = fullURI.lastIndexOf(">");
 			propertyId = fullURI.substring(i, j);
 			String changedPropertyId = changeToSnakeCase(propertyId);
-			if(!changedPropertyId.equals(propertyId) && !isEdited){
+			if(changedPropertyId!=null && !changedPropertyId.equals(propertyId) && !isEdited){
 				isEdited=true;
 			}
 			fullURI = fullURI.substring(1,fullURI.lastIndexOf("/")+1);
