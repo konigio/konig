@@ -25,8 +25,11 @@ package io.konig.schemagen.sql;
 import java.io.File;
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.aws.datasource.AwsAurora;
 import io.konig.core.KonigException;
@@ -44,7 +47,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	private ShapeFileGetter fileGetter;
 	private ShapeWriter shapeWriter;
 	private NamespaceManager nsManager;
-	
+	private static final Logger LOG = LoggerFactory.getLogger(RdbmsShapeHandler.class);
 	
 	
 	public RdbmsShapeHandler(RdbmsShapeGenerator generator, ShapeFileGetter fileGetter, ShapeWriter shapeWriter,
@@ -76,10 +79,14 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			// and save the new RDBMS shape to a new file.
 			
 			if (rdbmsShape != null) {
+				URI shapeId=(URI)shape.getId();				
+				String rdbmsShapeId=shapeId.toString().replaceAll(generator.getShapeIriPattern(),generator.getShapeIriReplacement());	
+				if(shapeId.toString().equals(rdbmsShapeId)){
+					LOG.warn("The IRI for the original shape does not match the regular expression");
+					return;
+				}
 				editOriginalShape(shape);
-				save(shape);
-				URI shapeId=(URI)shape.getId();
-				String rdbmsShapeId=shapeId.toString().replaceAll(generator.getShapeIriPattern(),generator.getShapeIriReplacement());
+				save(shape);				
 				rdbmsShape.setId(new URIImpl(rdbmsShapeId));
 				save(rdbmsShape);
 			}
