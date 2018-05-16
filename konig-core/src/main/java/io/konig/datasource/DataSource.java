@@ -88,7 +88,7 @@ public class DataSource {
 	}
 	
 	@RdfProperty(Schema.IS_PART_OF)
-	public List<URI> getIsPartof() {
+	public List<URI> getIsPartOf() {
 		return isPartOf;
 	}
 
