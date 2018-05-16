@@ -28,7 +28,7 @@ import java.text.MessageFormat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.aws.datasource.AwsAuroraDefinition;
 import io.konig.aws.datasource.AwsAuroraTableReference;
 import io.konig.aws.datasource.AwsAuroraView;

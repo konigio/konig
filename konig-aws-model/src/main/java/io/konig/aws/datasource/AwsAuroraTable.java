@@ -24,6 +24,7 @@ package io.konig.aws.datasource;
 import io.konig.core.vocab.Konig;
 
 public class AwsAuroraTable extends AwsAurora {
+	
 	public AwsAuroraTable() {
 		addType(Konig.AwsAuroraTable);
 	}

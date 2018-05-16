@@ -25,7 +25,7 @@ import java.io.File;
 
 import org.openrdf.model.URI;
 
-import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.core.io.ShapeFileFactory;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
@@ -46,8 +46,8 @@ public class AWSAuroraShapeFileCreator implements ShapeFileFactory {
 		String awsAuroraSchema="${awsAuroraSchema}";
 		String awsAuroraTable="${awsTableName}";
 		for(DataSource ds:shape.getShapeDataSource()){
-			if(ds instanceof AwsAurora){
-				AwsAurora awsAurora=(AwsAurora) ds;
+			if(ds instanceof AwsAuroraTable){
+				AwsAuroraTable awsAurora=(AwsAuroraTable) ds;
 				if(awsAurora.getTableReference()!=null){
 					awsAuroraSchema=awsAurora.getTableReference().getAwsSchema();
 					awsAuroraTable=awsAurora.getTableReference().getAwsTableName();

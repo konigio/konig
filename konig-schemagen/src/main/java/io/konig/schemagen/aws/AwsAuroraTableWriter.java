@@ -28,7 +28,7 @@ import java.text.MessageFormat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.aws.datasource.AwsAuroraDefinition;
 import io.konig.aws.datasource.AwsAuroraTableReference;
 import io.konig.aws.datasource.AwsAuroraView;
@@ -55,7 +55,7 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 
 	@Override
 	public void visit(Shape shape) {
-		AwsAurora table = shape.findDataSource(AwsAurora.class);
+		AwsAuroraTable table = shape.findDataSource(AwsAuroraTable.class);
 		AwsAuroraView view =shape.findDataSource(AwsAuroraView.class);
 		if (table != null && view==null) {
 			AwsAuroraDefinition tableDefinition = new AwsAuroraDefinition();
@@ -118,7 +118,7 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 		return fileName(table, "json");
 	}
 
-	private File sqlFile(AwsAurora table) {
+	private File sqlFile(AwsAuroraTable table) {
 		// TODO: use the DatasourceFileLocator to produce the file
 	
 		
