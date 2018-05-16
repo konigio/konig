@@ -88,9 +88,10 @@ public class RdbmsShapeGenerator {
 
 	public String changeToSnakeCase(String propertyId) {
 		String camelCasePattern = "([a-z]+[A-Z]+\\w+)+"; 
+		String pascalCasePattern = "([A-Z][a-z]+\\w+)+";
 		String snakeCasePatternLowerCase ="([a-z]+(?:_[a-z]+)*)";
 		String snakeCasePatternUpperCase ="([A-Z]+(?:_[A-Z]+)*)";
-		if(propertyId.matches(camelCasePattern)){
+		if(propertyId.matches(camelCasePattern) || propertyId.matches(pascalCasePattern)){
 			propertyId = propertyId.replaceAll("([^_A-Z])([A-Z])", "$1_$2").toUpperCase();
 		}else if(propertyId.matches(snakeCasePatternLowerCase)){
 			propertyId = propertyId.replaceAll("([^_A-Z])([A-Z])", "$1_$2").toUpperCase();
