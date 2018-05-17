@@ -136,6 +136,7 @@ import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
+import io.konig.schemagen.ViewShapeGenerator;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
 import io.konig.schemagen.avro.AvroNamer;
@@ -266,6 +267,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private AmazonWebServicesConfig amazonWebServices;
     
     @Parameter
+    private ViewShapeGeneratorConfig viewShapeGenerator;
+    
+    @Parameter
     private HashSet<String> excludeNamespace;
 	
 
@@ -339,7 +343,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			updateRdf();
 			
 			computeSizeEstimates();
-			
+			generateViewShape();
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
@@ -809,7 +813,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			}
 			GroovyAwsDeploymentScriptWriter scriptWriter = new GroovyAwsDeploymentScriptWriter(amazonWebServices);
 			scriptWriter.run(); 
-			
 		}
 	}
 	
@@ -1139,6 +1142,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		} finally {
 			writer.flush();
 			writer.close();
+		}
+	}
+	
+	private void generateViewShape() {
+		if(rdfSourceDir != null && viewShapeGenerator != null) {
+			File shapesDir = new File(rdfSourceDir, "shapes");
+			ViewShapeGenerator shapeGenerator = new ViewShapeGenerator(nsManager, shapeManager, viewShapeGenerator);
+			shapeGenerator.generate(shapesDir);
 		}
 	}
 }
