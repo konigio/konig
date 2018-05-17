@@ -1,5 +1,8 @@
 package io.konig.aws.datasource;
 
+import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.AWS;
+
 /*
  * #%L
  * Konig AWS Model
@@ -26,12 +29,17 @@ public class AwsAuroraTableReference {
 	private String awsSchema;
 	private String awsTableName;
 	
+	@RdfProperty(AWS.AWS_AURORA_HOST)
 	public String getAwsAuroraHost() {
 		return awsAuroraHost;
 	}
+	
+	@RdfProperty(AWS.AWS_SCHEMA)
 	public String getAwsSchema() {
 		return awsSchema;
 	}
+	
+	@RdfProperty(AWS.AWS_TABLE_NAME)
 	public String getAwsTableName() {
 		return awsTableName;
 	}

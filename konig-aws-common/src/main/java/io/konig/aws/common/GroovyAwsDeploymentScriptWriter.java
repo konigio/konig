@@ -7,6 +7,7 @@ import java.io.Writer;
 import java.text.MessageFormat;
 
 import io.konig.maven.AmazonWebServicesConfig;
+import io.konig.maven.AuroraInfo;
 import io.konig.maven.FileUtil;
 import io.konig.maven.OracleManagedCloudConfig;
 
@@ -88,7 +89,10 @@ public class GroovyAwsDeploymentScriptWriter {
 	}
 
 	private void printTableCommands() throws IOException {
-		File schemaDir = amazonWebService.getTables();
+		AuroraInfo aurora=amazonWebService.getAurora();
+		File schemaDir=null;
+		if(aurora!=null)
+		 schemaDir = aurora.getTables();
 		if (schemaDir != null && schemaDir.exists()) {
 			for (File file : schemaDir.listFiles()) {
 				if (file.getName().endsWith(".json")) {

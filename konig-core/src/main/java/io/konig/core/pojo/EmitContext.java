@@ -52,12 +52,16 @@ public class EmitContext {
 	private Map<Method, String> ignoredMethod = new HashMap<>();
 	private Set<Class<?>> memory = new HashSet<>();
 	private Set<Class<?>> skipClass = new HashSet<>();
+	private Set<URI> iriReference = null;
+	
+	private Set<URI> ignoredProperty = null;
 	
 	private ValueFactory valueFactory = new ValueFactoryImpl();
 
 	public EmitContext(Graph graph) {
 		this(graph.getNamespaceManager(), graph);
 	}
+	
 	public EmitContext(NamespaceManager nsManager, LocalNameService nameService) {
 		this.nsManager = nsManager;
 		this.nameService = nameService;
@@ -69,6 +73,32 @@ public class EmitContext {
 		skipClass.add(long.class);
 		skipClass.add(Long.class);
 		
+	}
+	
+	public void addIriReference(URI... predicate) {
+		if (iriReference == null) {
+			iriReference = new HashSet<>();
+		}
+		for (URI id : predicate) {
+			iriReference.add(id);
+		}
+	}
+	
+	public void addIgnoredProperty(URI... predicate) {
+		if (ignoredProperty == null) {
+			ignoredProperty = new HashSet<>();
+		}
+		for (URI id : predicate) {
+			ignoredProperty.add(id);
+		}
+	}
+	
+	public boolean isIgnoredProperty(URI predicate) {
+		return ignoredProperty!=null && ignoredProperty.contains(predicate);
+	}
+	
+	public boolean isIriReference(URI predicate) {
+		return iriReference!=null && iriReference.contains(predicate);
 	}
 	
 	public void setLocalNameService(LocalNameService nameService) {
@@ -144,14 +174,24 @@ public class EmitContext {
 					RdfProperty annotation = m.getAnnotation(RdfProperty.class);
 					if (annotation != null) {
 						String value = annotation.value();
+						
 						for (URI uri : nameList) {
 							if (uri.stringValue().equals(value)) {
+								if (isIgnoredProperty(uri)) {
+									methodMap.put(m, NULL);
+									return null;
+								}
 								methodMap.put(m, uri);
 								return uri;
 							}
 						}
-						
-						return new URIImpl(value);
+						result = new URIImpl(value);
+						if (isIgnoredProperty(result)) {
+							methodMap.put(m, NULL);
+							return null;
+						}
+						// TODO: Should we store the mapping m -> result ?
+						return result;
 					}
 					
 					

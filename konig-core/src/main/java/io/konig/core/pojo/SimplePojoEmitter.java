@@ -233,7 +233,7 @@ public class SimplePojoEmitter implements PojoEmitter {
 							sink.edge(subject, predicate, object);
 						}
 						
-						if (object instanceof Resource) {
+						if (object instanceof Resource && !context.isIriReference(predicate)) {
 							doEmit((Resource)object, javaObject);
 						}
 					}

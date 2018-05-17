@@ -33,6 +33,16 @@
   		<artifactId>konig-core</artifactId>
   		<version>${konig.version}</version>
   	</dependency>
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-gcp-model</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-aws-model</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

@@ -48,6 +48,10 @@ public class BigQueryInfo {
 	
 	@Parameter(property="konig.gcp.bigquery.metadata", required=true)
 	private MetadataInfo metadata;
+	@Parameter(property="konig.gcp.bigquery.shapeIriPattern")
+	private String shapeIriPattern;
+	@Parameter(property="konig.gcp.bigquery.shapeIriReplacement")
+	private String shapeIriReplacement;
 	
 	
 	public File getDirectory() {
@@ -94,6 +98,18 @@ public class BigQueryInfo {
 	}
 	public void setMetadata(MetadataInfo metadata) {
 		this.metadata = metadata;
+	}
+	public String getShapeIriPattern() {
+		return shapeIriPattern;
+	}
+	public void setShapeIriPattern(String shapeIriPattern) {
+		this.shapeIriPattern = shapeIriPattern;
+	}
+	public String getShapeIriReplacement() {
+		return shapeIriReplacement;
+	}
+	public void setShapeIriReplacement(String shapeIriReplacement) {
+		this.shapeIriReplacement = shapeIriReplacement;
 	}
 	
 	

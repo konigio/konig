@@ -41,6 +41,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.datasource.DatasourceFileLocator;
 import io.konig.datasource.DdlFileLocator;
 import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.schemagen.SchemaGeneratorTest;
 import io.konig.schemagen.aws.AwsAuroraTableWriter;
 import io.konig.schemagen.gcp.CloudSqlTableWriter;
 import io.konig.shacl.Shape;
@@ -48,27 +49,11 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
-public class SqlTableGeneratorTest {
+public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 
-	protected NamespaceManager nsManager = new MemoryNamespaceManager();
-	protected Graph graph = new MemoryGraph(nsManager);
-	protected ShapeManager shapeManager = new MemoryShapeManager();
 	
 	private SqlTableGenerator generator = new SqlTableGenerator();
 
-	
-
-	protected URI iri(String value) {
-		return new URIImpl(value);
-	}
-
-	protected void load(String path) throws RDFParseException, RDFHandlerException, IOException {
-
-		GcpShapeConfig.init();
-		File sourceDir = new File(path);
-		RdfUtil.loadTurtle(sourceDir, graph, shapeManager);
-		
-	}
 
 
 	@Test
