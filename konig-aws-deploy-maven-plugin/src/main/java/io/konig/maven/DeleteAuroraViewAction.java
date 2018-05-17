@@ -23,22 +23,21 @@ package io.konig.maven;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.aws.datasource.AwsAuroraDefinition;
 import io.konig.aws.datasource.AwsAuroraTableReference;
 
-public class CreateAuroraTableAction {
-	
+
+public class DeleteAuroraViewAction 
+{
 	private AwsDeployment deployment;
 
-	public CreateAuroraTableAction(AwsDeployment deployment) {
+	public DeleteAuroraViewAction(AwsDeployment deployment) {
 		this.deployment = deployment;
 	}
 	
@@ -58,14 +57,12 @@ public class CreateAuroraTableAction {
 			
 			String instance = awsHost;
 			String schema = table.getAwsSchema();
-			String tableId = table.getAwsTableName();
-			File ddlFile = new File(file.getParentFile(), tableDefinition.getQuery());
-			String createQuery = fileToString(ddlFile);
+			String viewId = table.getAwsTableName();
 			
 			connection = MySqlConnection.getConnection(instance, schema);			
 			statement = connection.createStatement();
-			statement.execute(createQuery);
-			deployment.setResponse("Created Table " + tableId);
+			statement.execute("DROP VIEW "+viewId);
+			deployment.setResponse("Deleted View " + viewId);
 			
 		} catch (IOException | SQLException ex ) {
 			throw ex;
@@ -80,7 +77,4 @@ public class CreateAuroraTableAction {
 		return deployment;
 	}
 	
-	private String fileToString(File ddlFile) throws IOException {
-		return new String(Files.readAllBytes(ddlFile.toPath()));
-	}
 }
