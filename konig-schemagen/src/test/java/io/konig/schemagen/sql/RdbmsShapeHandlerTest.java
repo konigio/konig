@@ -1,5 +1,9 @@
 package io.konig.schemagen.sql;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 /*
  * #%L
  * Konig Schema Generator
@@ -30,10 +34,6 @@ import org.codehaus.plexus.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.model.URI;
-
-import io.konig.aws.datasource.AwsAurora;
-import io.konig.aws.datasource.AwsAuroraTableReference;
-import io.konig.datasource.DataSource;
 import io.konig.maven.FileUtil;
 import io.konig.schemagen.SchemaGeneratorTest;
 import io.konig.shacl.Shape;
@@ -76,9 +76,8 @@ public class RdbmsShapeHandlerTest extends SchemaGeneratorTest {
 		
 		handler.visit(logicalShape);
 
-		// TODO: add validation steps.
-	
-		
+		assertTrue(logicalShape!= null);
+		assertNotNull(handler);
 	}
 
 }
