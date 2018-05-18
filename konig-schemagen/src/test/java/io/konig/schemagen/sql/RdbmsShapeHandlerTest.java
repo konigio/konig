@@ -42,7 +42,7 @@ import io.konig.shacl.io.ShapeWriter;
 
 public class RdbmsShapeHandlerTest extends SchemaGeneratorTest {
 	
-	private RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape");
+	private RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape","http://example.com/ns/alias/");
 	private RdbmsShapeHandler handler = null;
 	private File targetFolder = new File("target/test/rdbms-shape-generator");
 	

@@ -42,7 +42,8 @@ public class AwsModelGenerator  extends ConfigurableProjectGenerator<AmazonWebSe
 		AuroraInfo aurora=new AuroraInfo();
 		aurora.setTables(new File("${project.basedir}" + TABLES_PATH));
 		aurora.setShapeIriPattern("(.*)Shape$");
-		aurora.setShapeIriReplacement("$1RdbmsShape");				
+		aurora.setShapeIriReplacement("$1RdbmsShape");	
+		aurora.setPropertyNameSpace("http://example.com/ns/alias/");
 		config.setAurora(aurora);
 		
 		config.setAwsScriptFile(new File("${project.basedir}/target/generated/aws/scripts/deploy.groovy"));

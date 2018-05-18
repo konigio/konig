@@ -357,6 +357,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private void preprocessResources() throws MojoExecutionException, IOException, RDFParseException, RDFHandlerException {
     	String shapeIriPattern=null;
     	String shapeIriReplacement=null;
+    	String propertyNameSpace = null;
     	AuroraInfo aurora=null;
     	BigQueryInfo bigQuery=null;
     	CloudSqlInfo cloudSql=null; 	
@@ -370,18 +371,21 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	if(amazonWebServices!=null && amazonWebServices.getAurora()!=null){
     		aurora=amazonWebServices.getAurora();
     		shapeIriPattern=aurora.getShapeIriPattern();
-    		shapeIriReplacement=aurora.getShapeIriReplacement();    		
+    		shapeIriReplacement=aurora.getShapeIriReplacement();
+    		propertyNameSpace=aurora.getPropertyNameSpace();
     	}
     	else if(googleCloudPlatform!=null && googleCloudPlatform.getBigquery()!=null){
     		bigQuery=googleCloudPlatform.getBigquery();
     		shapeIriPattern=bigQuery.getShapeIriPattern();
     		shapeIriReplacement=bigQuery.getShapeIriReplacement();
+    		propertyNameSpace=bigQuery.getPropertyNameSpace();
     		
     	}
     	else if(googleCloudPlatform!=null && googleCloudPlatform.getCloudsql()!=null){
     		cloudSql=googleCloudPlatform.getCloudsql();
     		shapeIriPattern=cloudSql.getShapeIriPattern();
     		shapeIriReplacement=cloudSql.getShapeIriReplacement();
+    		propertyNameSpace=cloudSql.getPropertyNameSpace();
     	}
     		
     	
@@ -389,7 +393,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
 			if (shapesDir != null) {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(shapeIriPattern, shapeIriReplacement);
+				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(shapeIriPattern, shapeIriReplacement,propertyNameSpace);
 				ShapeWriter shapeWriter = new ShapeWriter();
 				RdbmsShapeHandler handler = new RdbmsShapeHandler(generator, fileGetter, shapeWriter, nsManager);
 				handler.visitAll(shapeManager.listShapes());

@@ -51,7 +51,7 @@ import io.konig.spreadsheet.WorkbookLoader;
 
 public class RdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 	
-	private RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape");
+	private RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape","http://example.com/ns/alias/");
 	
 	@Test
 	public void testSnakeCase() throws Exception {
