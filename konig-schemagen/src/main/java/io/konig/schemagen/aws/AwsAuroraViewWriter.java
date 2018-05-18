@@ -38,30 +38,38 @@ import io.konig.schemagen.sql.SqlTable;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
+import io.konig.sql.query.SelectExpression;
+import io.konig.transform.ShapeTransformException;
+import io.konig.transform.factory.ShapeRuleFactory;
+import io.konig.transform.proto.ShapeModel;
+import io.konig.transform.proto.ShapeModelFactory;
+import io.konig.transform.proto.ShapeModelToShapeRule;
+import io.konig.transform.rule.ShapeRule;
+import io.konig.transform.sql.factory.SqlFactory;
 
-public class AwsAuroraTableWriter implements ShapeVisitor {
-	
+public class AwsAuroraViewWriter implements ShapeVisitor{
 	private File baseDir;
 	private SqlTableGenerator generator;
 	private DatasourceFileLocator sqlFileLocator;
+	private ShapeModelFactory shapeModelFactory;
 
 	// TODO: Add a DatasourceFileLocator as a private field and pass it to the constructor. 
 	
-	public AwsAuroraTableWriter(File baseDir,SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator) {
+	public AwsAuroraViewWriter(File baseDir,SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator,ShapeModelFactory shapeModelFactory) {
 		this.baseDir = baseDir;
 		this.generator = generator;
 		this.sqlFileLocator = sqlFileLocator;
+		this.shapeModelFactory=shapeModelFactory;
 	}
 
 	@Override
 	public void visit(Shape shape) {
-		AwsAuroraTable table = shape.findDataSource(AwsAuroraTable.class);
-		AwsAuroraView view =shape.findDataSource(AwsAuroraView.class);
-		if (table != null && view==null) {
+		AwsAuroraView view = shape.findDataSource(AwsAuroraView.class);
+		if (view != null) {
 			AwsAuroraDefinition tableDefinition = new AwsAuroraDefinition();
-			AwsAuroraTableReference tableReference = table.getTableReference();
+			AwsAuroraTableReference tableReference = view.getTableReference();
 			SqlTable sqlTable = generator.generateTable(shape);
-			File file = sqlFile(table);
+			File file = sqlFile(view);
 			String tableName = sqlTable.getTableName();
 			String schemaName = tableReference.getAwsSchema();
 			if (schemaName != null) {
@@ -71,10 +79,15 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 				builder.append(tableName);
 				sqlTable.setTableName(builder.toString());
 			}
-			writeDDL(file, sqlTable);
+			try{
+				writeDDL(file, sqlTable,shape);
+			}
+			catch(Exception ex) {
+				throw new KonigException("Unable to create the view for the shape " + shape, ex);
+			}
 			sqlTable.setTableName(tableName);
 			tableDefinition.setQuery(file.getName());
-			tableDefinition.setTableReference(table.getTableReference());
+			tableDefinition.setTableReference(view.getTableReference());
 			File jsonFile = jsonFile(tableReference);
 			writeTable(jsonFile, tableDefinition);
 		}
@@ -89,14 +102,18 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 		}
 	}
 	
-	private void writeDDL(File file, SqlTable sqlTable) {
+	private void writeDDL(File file, SqlTable sqlTable,Shape shape) throws ShapeTransformException {
 		if (!baseDir.exists()) {
 			baseDir.mkdirs();
 		}
 		try (FileWriter out = new FileWriter(file)) {
-			String text = sqlTable.toString();
-			out.write("CREATE TABLE IF NOT EXISTS ");
-			out.write(text);
+			ShapeModel shapeModel = shapeModelFactory.createShapeModel(shape);
+			ShapeModelToShapeRule shapeRuleFactory = new ShapeModelToShapeRule();
+			SqlFactory sqlFactory =new SqlFactory();
+			ShapeRule shapeRule = shapeRuleFactory.toShapeRule(shapeModel);
+			SelectExpression select = sqlFactory.selectExpression(shapeRule);
+			out.write("CREATE VIEW "+sqlTable.getTableName()+" AS ");
+			out.write(select.toString());
 			
 		} catch (IOException e) {
 			throw new KonigException(e);
@@ -118,10 +135,7 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 		return fileName(table, "json");
 	}
 
-	private File sqlFile(AwsAuroraTable table) {
-		// TODO: use the DatasourceFileLocator to produce the file
-	
-		
-		return sqlFileLocator.locateFile(table);
+	private File sqlFile(AwsAuroraView view) {		
+		return sqlFileLocator.locateFile(view);
 	}
 }

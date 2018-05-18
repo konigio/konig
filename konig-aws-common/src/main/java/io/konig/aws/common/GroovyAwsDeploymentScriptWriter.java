@@ -60,12 +60,32 @@ public class GroovyAwsDeploymentScriptWriter {
 			println("def deploymentPlan = {");
 			printCloudFormationTemplateCommands();
 			printTableCommands();
+			printTableViewCommands();
 			printS3BucketCommands();
 			println("}");
 			println("def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent");
 			println("deploymentPlan.delegate = new AwsDeployment(scriptDir)");
 			println("deploymentPlan()");
 			
+		}
+		
+	}
+
+	private void printTableViewCommands() throws IOException {
+		File viewDir = amazonWebService.getViews();
+		
+		if (viewDir != null && viewDir.exists()) {
+		
+			for (File file : viewDir.listFiles()) {
+				if (file.getName().endsWith(".json")) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("create AwsAuroraView from \"");
+					print(path);
+					println("\"");
+					println(" println response ");
+				}
+			}
 		}
 		
 	}

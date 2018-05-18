@@ -30,15 +30,14 @@ import java.sql.Statement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.aws.datasource.AwsAuroraDefinition;
 import io.konig.aws.datasource.AwsAuroraTableReference;
 
-public class CreateAuroraTableAction {
+public class CreateAuroraViewAction {
 	
 	private AwsDeployment deployment;
 
-	public CreateAuroraTableAction(AwsDeployment deployment) {
+	public CreateAuroraViewAction(AwsDeployment deployment) {
 		this.deployment = deployment;
 	}
 	
@@ -58,14 +57,14 @@ public class CreateAuroraTableAction {
 			
 			String instance = awsHost;
 			String schema = table.getAwsSchema();
-			String tableId = table.getAwsTableName();
+			String viewId = table.getAwsTableName();
 			File ddlFile = new File(file.getParentFile(), tableDefinition.getQuery());
 			String createQuery = fileToString(ddlFile);
 			
 			connection = MySqlConnection.getConnection(instance, schema);			
 			statement = connection.createStatement();
 			statement.execute(createQuery);
-			deployment.setResponse("Created Table " + tableId);
+			deployment.setResponse("Created View " + viewId);
 			
 		} catch (IOException | SQLException ex ) {
 			throw ex;

@@ -26,5 +26,6 @@ public enum AwsResourceType {
 	AwsS3Bucket,
 	AwsSnsTopic,
 	AwsSqsQueue,
-	CloudFormationStack
+	CloudFormationStack,
+	AwsAuroraView
 }

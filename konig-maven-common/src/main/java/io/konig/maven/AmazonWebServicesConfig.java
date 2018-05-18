@@ -58,6 +58,10 @@ public class AmazonWebServicesConfig {
 	@Parameter(property="konig.aws.enableAuroraTransform", defaultValue="true")
 	private boolean enableAuroraTransform;
 	
+	@Parameter(property="konig.aws.views", defaultValue="${konig.aws.directory}/views")
+	private File views;
+	
+	
 	public AmazonWebServicesConfig() {
 			
 	}
@@ -150,6 +154,13 @@ public class AmazonWebServicesConfig {
 	public void setEnableAuroraTransform(boolean enableAuroraTransform) {
 		this.enableAuroraTransform = enableAuroraTransform;
 	}
-	
+	public File getViews() {
+		return views;
+	}
+
+	public void setViews(File views) {
+		this.views = views;
+	}
+
 	
 }

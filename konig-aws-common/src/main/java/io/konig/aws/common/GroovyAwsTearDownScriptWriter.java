@@ -56,6 +56,7 @@ public class GroovyAwsTearDownScriptWriter {
 			println();
 			println("def deploymentPlan = {");
 			printCloudFormationStackCommands();
+			printTableViewCommands();
 			printTableCommands();
 			printAmazonBucketCommands();
 			println("}");
@@ -63,6 +64,24 @@ public class GroovyAwsTearDownScriptWriter {
 			println("deploymentPlan.delegate = new AwsDeployment(scriptDir)");
 			println("deploymentPlan()");
 			
+		}
+		
+	}
+
+	private void printTableViewCommands() throws IOException {
+		File viewDir = amazonWebService.getViews();
+		
+		if (viewDir != null && viewDir.exists()) {
+			for (File file : viewDir.listFiles()) {
+				if (file.getName().endsWith(".json")) {
+					String path = FileUtil.relativePath(scriptFile, file);
+					print(indent);
+					print("delete AwsAuroraView from \"");
+					print(path);
+					println("\"");
+					println(" println response ");
+				}
+			}
 		}
 		
 	}

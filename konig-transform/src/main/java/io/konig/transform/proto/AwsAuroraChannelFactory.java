@@ -20,7 +20,7 @@ package io.konig.transform.proto;
  * #L%
  */
 
-import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 import io.konig.transform.ShapeTransformException;
@@ -41,11 +41,11 @@ public class AwsAuroraChannelFactory implements DataChannelFactory {
 		if (shape.getShapeDataSource()==null) {
 			return null;
 		}
-		AwsAurora auroraTable=null;
+		AwsAuroraTable auroraTable=null;
 		
 		for (DataSource datasource : shape.getShapeDataSource()) {
-			if (datasource instanceof AwsAurora) {
-				AwsAurora table = (AwsAurora) datasource;
+			if (datasource instanceof AwsAuroraTable) {
+				AwsAuroraTable table = (AwsAuroraTable) datasource;
 				if (auroraTable != null) {
 					throw new ShapeTransformException("Multiple AwsAurora tables encountered.");
 				}

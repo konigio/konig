@@ -42,7 +42,7 @@ import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.json.SampleJsonGenerator;
@@ -111,8 +111,8 @@ public class ShapePage {
 					type = "Google BigQuery View";
 					tableName = table.getIdentifier();
 					
-				} else if (ds instanceof AwsAurora) {
-					AwsAurora table = (AwsAurora) ds;
+				} else if (ds instanceof AwsAuroraTable) {
+					AwsAuroraTable table = (AwsAuroraTable) ds;
 					type = "AWS Aurora Table";
 					tableName = table.getAwsTableName();
 				}
