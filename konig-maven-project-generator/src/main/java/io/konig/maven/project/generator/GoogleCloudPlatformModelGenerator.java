@@ -23,6 +23,8 @@ package io.konig.maven.project.generator;
 
 import java.io.IOException;
 
+import io.konig.maven.BigQueryInfo;
+import io.konig.maven.CloudSqlInfo;
 import io.konig.maven.GoogleCloudPlatformConfig;
 
 public class GoogleCloudPlatformModelGenerator extends ConfigurableProjectGenerator<GoogleCloudPlatformConfig> {
@@ -40,6 +42,20 @@ public class GoogleCloudPlatformModelGenerator extends ConfigurableProjectGenera
 		setArtifactSuffix(ARTIFACT_SUFFIX);
 		setNameSuffix("Google Cloud Platform Model");
 		init(mavenProject);
+		BigQueryInfo bigQueryInfo =new BigQueryInfo();
+		CloudSqlInfo cloudSqlInfo = new CloudSqlInfo();
+		if (bigQueryInfo != null){
+		bigQueryInfo.setShapeIriPattern("(.*)Shape$");
+		bigQueryInfo.setShapeIriReplacement("$1RdbmsShape");
+		bigQueryInfo.setPropertyNameSpace("http://example.com/ns/alias/");
+		config.setBigquery(bigQueryInfo);
+		}
+		if (cloudSqlInfo != null){
+		cloudSqlInfo.setShapeIriPattern("(.*)Shape$");
+		cloudSqlInfo.setShapeIriReplacement("$1RdbmsShape");
+		cloudSqlInfo.setPropertyNameSpace("http://example.com/ns/alias/");
+		config.setCloudsql(cloudSqlInfo);
+		}
 	}
 
 

@@ -65,6 +65,20 @@ public class FormulaParser {
 		this.localNameService = localNameService;
 		this.namespaceMap = nsMap;
 	}
+	
+	
+
+	public PropertyOracle getPropertyOracle() {
+		return propertyOracle;
+	}
+
+	public LocalNameService getLocalNameService() {
+		return localNameService;
+	}
+
+	public NamespaceMap getNamespaceMap() {
+		return namespaceMap;
+	}
 
 	public QuantifiedExpression quantifiedExpression(String text)  throws RDFParseException, IOException {
 		StringReader reader = new StringReader(text);

@@ -39,7 +39,13 @@ public class CloudSqlInfo {
 	
 	@Parameter(property="konig.gcp.cloudsql.scripts", defaultValue="${konig.gcp.cloudsql.directory}/scripts")
 	private File scripts;
-
+	@Parameter(property="konig.gcp.cloudsql.shapeIriPattern")
+	private String shapeIriPattern;
+	@Parameter(property="konig.gcp.cloudsql.shapeIriReplacement")
+	private String shapeIriReplacement;
+	@Parameter(property="konig.aws.cloudsql.propertyNameSpace")
+	private String propertyNameSpace;
+	
 	public CloudSqlInfo() {
 	}
 
@@ -83,4 +89,27 @@ public class CloudSqlInfo {
 		return scripts;
 	}
 
+	public String getShapeIriPattern() {
+		return shapeIriPattern;
+	}
+
+	public void setShapeIriPattern(String shapeIriPattern) {
+		this.shapeIriPattern = shapeIriPattern;
+	}
+
+	public String getShapeIriReplacement() {
+		return shapeIriReplacement;
+	}
+
+	public void setShapeIriReplacement(String shapeIriReplacement) {
+		this.shapeIriReplacement = shapeIriReplacement;
+	}
+	public String getPropertyNameSpace() {
+		return propertyNameSpace;
+	}
+
+	public void setPropertyNameSpace(String propertyNameSpace) {
+		this.propertyNameSpace = propertyNameSpace;
+	}
+	
 }

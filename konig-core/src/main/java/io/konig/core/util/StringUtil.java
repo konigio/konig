@@ -24,7 +24,7 @@ package io.konig.core.util;
 public class StringUtil {
     
 
-	
+	private static final int OTHER = 0;
 	private static final int DELIM = 0;
 	private static final int LOWER = 1;
 	private static final int UPPER = 2;
@@ -32,6 +32,46 @@ public class StringUtil {
 	
 	
 	private static final String DELIMITER = "_-./:";
+	
+	public static final String SNAKE_CASE(String text) {
+		StringBuilder builder = new StringBuilder();
+		
+		if (text.indexOf('_') > 0) {
+			return text.toUpperCase();
+		}
+		
+		
+		int priorCase = OTHER;
+		int prior = 0;
+		
+		for (int i=0; i<text.length();) {
+			int c = text.codePointAt(i);
+			int caseValue = caseValue(c);
+			
+			if (i>1 && caseValue!=OTHER && prior!='_' && caseValue!=priorCase  && builder.codePointAt(builder.length()-2)!='_') {
+				builder.append('_');
+			}
+			prior = c;
+			priorCase = caseValue;
+			builder.appendCodePoint(Character.toUpperCase(c));
+			i += Character.charCount(c);
+		}
+		
+		return builder.toString();
+	}
+
+	
+	private static int caseValue(int c) {
+		if (Character.isAlphabetic(c)) {
+			if (Character.isUpperCase(c)) {
+				return UPPER;
+			}
+			if (Character.isLowerCase(c)) {
+				return LOWER;
+			}
+		}
+		return OTHER;
+	}
 	
 	public static final String capitalize(String text) {
 		StringBuilder builder = new StringBuilder(text.length());

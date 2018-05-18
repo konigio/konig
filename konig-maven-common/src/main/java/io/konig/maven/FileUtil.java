@@ -29,6 +29,18 @@ import java.io.InputStream;
 
 public class FileUtil {
 	
+	public static void copyDirectory(File source, File target) throws IOException {
+		target.mkdirs();
+		for (File sourceChild : source.listFiles()) {
+			File targetChild = new File(target, sourceChild.getName());
+			if (sourceChild.isDirectory()) {
+				copyDirectory(sourceChild, targetChild);
+			} else {
+				copy(sourceChild, targetChild);
+			}
+		}
+	}
+	
 	public static void copy(File source, File target) throws IOException {
 		FileInputStream input = new FileInputStream(source);
 		copyAndCloseSource(input, target);

@@ -37,6 +37,7 @@ public class AwsAuroraTableReference {
 	public String getAwsSchema() {
 		return awsSchema;
 	}
+  
 	@RdfProperty(AWS.AWS_TABLE_NAME)
 	public String getAwsTableName() {
 		return awsTableName;

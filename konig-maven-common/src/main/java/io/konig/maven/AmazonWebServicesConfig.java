@@ -28,9 +28,6 @@ public class AmazonWebServicesConfig {
 	@Parameter(property="konig.aws.directory", defaultValue="${project.basedir}/target/generated/aws")
 	private File directory;
 	
-	@Parameter(property="konig.aws.tables", defaultValue="${konig.aws.directory}/tables")
-	private File tables;
-	
 	@Parameter(property="konig.aws.s3bucket", defaultValue="${konig.aws.directory}/s3buckets")
 	private File s3buckets;
 
@@ -58,9 +55,11 @@ public class AmazonWebServicesConfig {
 	@Parameter(property="konig.aws.enableAuroraTransform", defaultValue="true")
 	private boolean enableAuroraTransform;
 	
+	@Parameter(property="konig.aws.aurora", required=true)
+	private AuroraInfo aurora;
+  
 	@Parameter(property="konig.aws.views", defaultValue="${konig.aws.directory}/views")
 	private File views;
-	
 	
 	public AmazonWebServicesConfig() {
 			
@@ -74,13 +73,6 @@ public class AmazonWebServicesConfig {
 		this.directory = directory;
 	}
 	
-	public File getTables() {
-		return tables;
-	}
-
-	public void setTables(File tables) {
-		this.tables = tables;
-	}
 	
 	public String getKonigVersion() {
 		return konigVersion;
@@ -154,6 +146,15 @@ public class AmazonWebServicesConfig {
 	public void setEnableAuroraTransform(boolean enableAuroraTransform) {
 		this.enableAuroraTransform = enableAuroraTransform;
 	}
+
+	public AuroraInfo getAurora() {
+		return aurora;
+	}
+
+	public void setAurora(AuroraInfo aurora) {
+		this.aurora = aurora;
+	}
+	
 	public File getViews() {
 		return views;
 	}

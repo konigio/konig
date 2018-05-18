@@ -98,6 +98,8 @@ import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.impl.SimpleLocalNameService;
+import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.Konig;
@@ -111,6 +113,8 @@ import io.konig.estimator.MultiSizeEstimateRequest;
 import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
 import io.konig.etl.aws.EtlRouteBuilder;
+import io.konig.formula.FormulaParser;
+import io.konig.formula.ShapePropertyOracle;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
@@ -134,6 +138,7 @@ import io.konig.openapi.generator.OpenApiGeneratorException;
 import io.konig.openapi.generator.ShapeLocalNameJsonSchemaNamer;
 import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
+import io.konig.rio.turtle.NamespaceMap;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.ViewShapeGenerator;
@@ -185,6 +190,8 @@ import io.konig.schemagen.ocms.OracleTableWriter;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.schemagen.sql.OracleDatatypeMapper;
+import io.konig.schemagen.sql.RdbmsShapeGenerator;
+import io.konig.schemagen.sql.RdbmsShapeHandler;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
@@ -199,6 +206,7 @@ import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.impl.TemplateShapeNamer;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
+import io.konig.shacl.io.ShapeWriter;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.showl.WorkbookToTurtleRequest;
 import io.konig.showl.WorkbookToTurtleTransformer;
@@ -296,6 +304,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private ContextManager contextManager;
     private ClassStructure structure;
     private VelocityContext context;
+    private SimpleLocalNameService localNameService;
+    private FormulaParser formulaParser;
 
 	@Component
 	private MavenProject mavenProject;
@@ -322,7 +332,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			
 			loadResources();
-
+			preprocessResources();
 			generateGoogleCloudPlatform();
 			generateOracleManagedCloudServices();
 			generateAmazonWebServices();
@@ -356,7 +366,73 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
-    private void init() throws MojoExecutionException, IOException {
+    private void preprocessResources() throws MojoExecutionException, IOException, RDFParseException, RDFHandlerException {
+    	String shapeIriPattern=null;
+    	String shapeIriReplacement=null;
+    	String propertyNameSpace = null;
+    	AuroraInfo aurora=null;
+    	BigQueryInfo bigQuery=null;
+    	CloudSqlInfo cloudSql=null; 	
+	
+		if (rdfSourceDir != null) {
+			RdfUtil.loadTurtle(rdfSourceDir, owlGraph, nsManager);
+			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
+			shapeLoader.load(owlGraph);
+		}
+		
+    	if(amazonWebServices!=null && amazonWebServices.getAurora()!=null){
+    		aurora=amazonWebServices.getAurora();
+    		shapeIriPattern=aurora.getShapeIriPattern();
+    		shapeIriReplacement=aurora.getShapeIriReplacement();
+    		propertyNameSpace=aurora.getPropertyNameSpace();
+    	}
+    	else if(googleCloudPlatform!=null && googleCloudPlatform.getBigquery()!=null){
+    		bigQuery=googleCloudPlatform.getBigquery();
+    		shapeIriPattern=bigQuery.getShapeIriPattern();
+    		shapeIriReplacement=bigQuery.getShapeIriReplacement();
+    		propertyNameSpace=bigQuery.getPropertyNameSpace();
+    		
+    	}
+    	else if(googleCloudPlatform!=null && googleCloudPlatform.getCloudsql()!=null){
+    		cloudSql=googleCloudPlatform.getCloudsql();
+    		shapeIriPattern=cloudSql.getShapeIriPattern();
+    		shapeIriReplacement=cloudSql.getShapeIriReplacement();
+    		propertyNameSpace=cloudSql.getPropertyNameSpace();
+    	}
+    		
+    	
+    	if (rdfSourceDir != null && (aurora!=null || bigQuery!=null || cloudSql!=null)) {
+    		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
+			if (shapesDir != null) {
+				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
+				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), shapeIriPattern, shapeIriReplacement,propertyNameSpace);
+				ShapeWriter shapeWriter = new ShapeWriter();
+				RdbmsShapeHandler handler = new RdbmsShapeHandler(generator, fileGetter, shapeWriter, nsManager);
+				handler.visitAll(shapeManager.listShapes());
+			}
+    	}
+	}
+
+	private FormulaParser formulaParser() {
+		if (formulaParser == null) {
+			SimpleLocalNameService nameService = getLocalNameService();
+			NamespaceMap nsMap = new NamespaceMapAdapter(owlGraph.getNamespaceManager());
+			ShapePropertyOracle oracle = new ShapePropertyOracle();
+			formulaParser = new FormulaParser(oracle, nameService, nsMap);
+		}
+		
+		return formulaParser;
+	}
+
+	private SimpleLocalNameService getLocalNameService() {
+		if (localNameService == null) {
+			localNameService = new SimpleLocalNameService();
+			localNameService.addAll(owlGraph);
+		}
+		return localNameService;
+	}
+
+	private void init() throws MojoExecutionException, IOException {
     	GcpShapeConfig.init();
     	OracleShapeConfig.init();
     	AwsShapeConfig.init();
@@ -776,7 +852,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if(amazonWebServices != null) {
 			Configurator config = configurator();
 			config.configure(amazonWebServices);
-			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
+			AuroraInfo aurora=amazonWebServices.getAurora();
+			File tablesDir=null;
+			if(aurora!=null){
+				tablesDir = Configurator.checkNull(aurora.getTables());
+			}
 			File bucketsDir = Configurator.checkNull(amazonWebServices.getS3buckets());
 			File transformsDir = Configurator.checkNull(amazonWebServices.getTransforms());
 			File cloudFormationDir = Configurator.checkNull(amazonWebServices.getCloudFormationTemplates());
@@ -830,7 +910,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		if(amazonWebServices != null) {
 			Configurator config = configurator();
 			config.configure(amazonWebServices);
-			File tablesDir = Configurator.checkNull(amazonWebServices.getTables());
+			AuroraInfo aurora=amazonWebServices.getAurora();
+			File tablesDir=null;
+			if(aurora!=null)
+				tablesDir = Configurator.checkNull(aurora.getTables());
 			
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			if(tablesDir != null) {

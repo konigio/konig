@@ -48,6 +48,7 @@ import io.konig.core.io.FileGetter;
 import io.konig.core.pojo.EmitContext;
 import io.konig.core.pojo.SimplePojoEmitter;
 import io.konig.core.util.IOUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
 
@@ -59,7 +60,10 @@ public class ShapeWriter {
 			SimpleLocalNameService.getDefaultInstance(), graph);
 		
 		EmitContext context = new EmitContext(graph);
+		context.addIriReference(SH.shape, SH.path, SH.targetClass, SH.valueClass, Konig.aggregationOf, Konig.rollUpBy,
+				Konig.defaultShapeFor, Konig.inputShapeOf);
 		context.setLocalNameService(nameService);
+		context.addIgnoredProperty(Konig.equivalentPath);
 		emitter.emit(context, shape, graph);
 	}
 	
