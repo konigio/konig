@@ -41,17 +41,19 @@ import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.maven.ViewShapeGeneratorConfig;
 import io.konig.omcs.datasource.OracleTable;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.PropertyPath;
+import io.konig.shacl.PropertyPathUtil;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeWriter;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.view.CreateView;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -165,6 +167,7 @@ public class ViewShapeGenerator {
 		for(DataSource datasource : datasources) {
 			if(datasource instanceof AwsAurora){
 				AwsAurora awsAurora = (AwsAurora) datasource;
+				awsAurora.addType(Konig.AwsAuroraView);
 				URI id = new URIImpl(awsAurora.getId().toString());
 				awsAurora.setId((Resource)new URIImpl(id.getNamespace() + viewName));
 				awsAurora.setAwsTableName(viewName);
@@ -172,12 +175,14 @@ public class ViewShapeGenerator {
 				ds.add(awsAurora);
 			} else if (datasource instanceof GoogleCloudSqlTable){
 				GoogleCloudSqlTable cloudSql = (GoogleCloudSqlTable) datasource;
+				//TODO : add type as GoogleCloudSqlView
 				URI id = new URIImpl(cloudSql.getId().toString());
 				cloudSql.setId((Resource)new URIImpl(id.getNamespace() + viewName));
 				cloudSql.setTableName(viewName);
 				ds.add(cloudSql);
 			} else if (datasource instanceof OracleTable){
 				OracleTable oracle = (OracleTable) datasource;
+				//TODO : add type as OracleView
 				URI id = new URIImpl(oracle.getId().toString());
 				oracle.setId((Resource)new URIImpl(id.getNamespace() + viewName));
 				oracle.getTableReference().setOmcsTableId(viewName);
