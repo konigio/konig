@@ -2,7 +2,7 @@ package io.konig.aws.datasource;
 
 /*
  * #%L
- * Konig AWS
+ * Konig AWS Model
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -29,8 +29,7 @@ import io.konig.core.vocab.AWS;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 
-public class AwsAurora extends DataSource implements TableDataSource {
-	
+public class AwsAurora extends DataSource implements TableDataSource{
 	private AwsAuroraTableReference tableReference;
 	private String awsTableName;
 	

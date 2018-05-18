@@ -52,6 +52,8 @@ public class AwsDeployment {
 			return new CreateAwsSqsQueueAction(this);
 		case CloudFormationStack:
 			return new CreateCloudFormationStackAction(this);
+		case AwsAuroraView:
+			return new CreateAuroraViewAction(this);
 		default:
 			break;
 		}
@@ -74,7 +76,8 @@ public class AwsDeployment {
 		
 		case CloudFormationStack:
 			return new DeleteCloudFormationStackAction(this);
-			
+		case AwsAuroraView:
+			return new DeleteAuroraViewAction(this);
 		default:
 			break;
 

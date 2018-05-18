@@ -47,7 +47,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.io.Files;
 
-import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.aws.datasource.S3Bucket;
 import io.konig.shacl.Shape;
 
@@ -111,8 +111,8 @@ public class EtlRouteBuilder {
 						+ "?amazonSQSClient=#sqsClient&region=" + sourceBucket.getRegion()
 						+ "&defaultVisibilityTimeout=5000&deleteIfFiltered=false");
 
-		AwsAurora targetTable = targetShape.findDataSource(AwsAurora.class);
-		AwsAurora sourceTable = sourceShape.findDataSource(AwsAurora.class);
+		AwsAuroraTable targetTable = targetShape.findDataSource(AwsAuroraTable.class);
+		AwsAuroraTable sourceTable = sourceShape.findDataSource(AwsAuroraTable.class);
 		S3Bucket targetBucket = targetShape.findDataSource(S3Bucket.class);
 		
 		route.appendChild(fromsqs);
@@ -159,7 +159,7 @@ public class EtlRouteBuilder {
 		createDockerFile(targetLocalName, targetTable.getTableReference().getAwsSchema());
 	}
 
-	private void addConfig(AwsAurora targetTable) throws IOException {
+	private void addConfig(AwsAuroraTable targetTable) throws IOException {
 
 		File file = new File(outDir, "camel-routes-config.properties");
 		if (!file.exists()) {
