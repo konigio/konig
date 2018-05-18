@@ -212,6 +212,13 @@ public class WorkbookLoader {
 	private static final String AWS_REGION="AWS Region";
 	private static final String CLOUD_FORMATION_TEMPLATES="Cloud Formation Templates";
 	
+	/** Security Tags **/
+	private static final String SECURITY_TAGS = "Security Tags";
+	private static final String AMAZON_RESOURCE_NAME = "Amazon Resource Name";
+	private static final String TAG_KEY = "Tag Key";
+	private static final String TAG_VALUE = "Tag Value";
+	private static final String ENVIRONMENT = "Environment";
+	
 	private static final String ENUMERATION_DATASOURCE_TEMPLATE = "enumerationDatasourceTemplate";
 	private static final String ENUMERATION_SHAPE_ID = "enumerationShapeId";
 
@@ -245,6 +252,7 @@ public class WorkbookLoader {
 	private static final int COL_LABEL = 0x80;
 	private static final int COL_AMAZON_DB_CLUSTER = 0x100;
 	private static final int COL_CLOUD_FORMATION_TEMPLATE = 0x200;
+	private static final int COL_SECURITY_TAGS = 0x400;
 	
 	private static final int SHEET_ONTOLOGY = COL_NAMESPACE_URI;
 	private static final int SHEET_CLASS = COL_CLASS_ID;
@@ -257,7 +265,7 @@ public class WorkbookLoader {
 	private static final int SHEET_LABEL = COL_LABEL;
 	private static final int SHEET_AMAZON_RDS_CLUSTER = COL_AMAZON_DB_CLUSTER;
 	private static final int SHEET_CLOUD_FORMATION_TEMPLATE = COL_CLOUD_FORMATION_TEMPLATE;
-	
+	private static final int SHEET_SECURITY_TAGS = COL_SECURITY_TAGS;
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
 
@@ -487,6 +495,11 @@ public class WorkbookLoader {
 		private int stackNameCol = UNDEFINED;
 		private int awsRegionCol = UNDEFINED;
 		private int cloudFormationTemplateCol = UNDEFINED;
+		
+		private int amazonResourceName = UNDEFINED;
+		private int tagKey = UNDEFINED;
+		private int tagValue = UNDEFINED;
+		private int environment = UNDEFINED;
 		
 		private int awsDbClusterName = UNDEFINED;
 		private int awsEngine = UNDEFINED;
@@ -972,7 +985,7 @@ public class WorkbookLoader {
 
 			Sheet sheet = book.getSheetAt(info.sheetIndex);
 			int bits = info.sheetType;
-
+			
 			switch (bits) {
 			case SHEET_ONTOLOGY:
 				loadOntologies(sheet);
@@ -1007,6 +1020,9 @@ public class WorkbookLoader {
 				break;
 			case SHEET_CLOUD_FORMATION_TEMPLATE:
 				loadCloudFormationTemplate(sheet);
+				break;
+			case SHEET_SECURITY_TAGS:
+				loadSecurityTags(sheet);
 				break;
 				
 			}
@@ -1064,6 +1080,10 @@ public class WorkbookLoader {
 					break;
 				case STACK_NAME:
 					bits = bits | COL_CLOUD_FORMATION_TEMPLATE;
+					break;
+				case AMAZON_RESOURCE_NAME:
+					bits = bits | COL_SECURITY_TAGS;
+					break;
 				}
 			}
 
@@ -1097,6 +1117,15 @@ public class WorkbookLoader {
 			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
 				Row row = sheet.getRow(i);
 				loadCloudFormationTemplateRow(row);
+			}
+		}
+		
+		private void loadSecurityTags(Sheet sheet) throws SpreadsheetException {
+			readSecurityTagsHeader(sheet);
+			int rowSize = sheet.getLastRowNum() + 1;
+			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
+				Row row = sheet.getRow(i);
+				loadSecurityTagsRow(row);
 			}
 		}
 		
@@ -1744,6 +1773,37 @@ public class WorkbookLoader {
 		
 		}
 		
+		private void readSecurityTagsHeader(Sheet sheet) {
+			amazonResourceName = tagKey = tagValue = environment = UNDEFINED;
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
+			int colSize = row.getLastCellNum() + 1;
+			for (int i = row.getFirstCellNum(); i < colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+					switch (text) {
+					case AMAZON_RESOURCE_NAME :
+						amazonResourceName = i;
+						break;
+					case TAG_KEY:
+						tagKey = i;
+						break;
+					case TAG_VALUE:
+						tagValue = i;
+						break;
+					case ENVIRONMENT:
+						environment = i;
+						break;
+					}
+				}
+			}
+		}
+		
 		private void readSettingHeader(Sheet sheet) {
 			settingNameCol = settingValueCol = settingPatternCol = settingReplacementCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
@@ -1993,6 +2053,27 @@ public class WorkbookLoader {
 				}
 			}
 		}
+		
+		private void loadSecurityTagsRow(Row row) throws SpreadsheetException {
+			String awsResourceName = stringValue(row, amazonResourceName);
+			Literal awsTagKey = stringLiteral(row, tagKey);
+			Literal awsTagValue = stringLiteral(row, tagValue);
+			Literal awsEnvironment = stringLiteral(row, environment);
+			URI id = new URIImpl("https://amazonaws.konig.io/resource/"+ awsResourceName);
+			if (awsResourceName == null) {
+				id = new URIImpl("https://amazonaws.konig.io/resource/arn.all");
+			}
+			edge(id, RDF.TYPE, AWS.SecurityTag);
+			Vertex tagVertex = graph.vertex();
+			Resource tagResource = tagVertex.getId();
+			if(awsTagKey != null && !awsTagKey.equals("")) {
+				edge(id, AWS.tags, tagResource);
+				edge(tagResource, AWS.tagKey, awsTagKey);
+				edge(tagResource, AWS.tagValue, awsTagValue);
+				edge(tagResource, Konig.environment, awsEnvironment);
+			}
+		}
+		
 		private void loadCloudFormationTemplateRow(Row row) throws SpreadsheetException{
 			
 			Literal stackName = stringLiteral(row, stackNameCol);	

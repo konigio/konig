@@ -50,6 +50,7 @@ import io.konig.aws.cloudformation.PolicyDocument;
 import io.konig.aws.cloudformation.Principal;
 import io.konig.aws.cloudformation.Resource;
 import io.konig.aws.cloudformation.Statement;
+import io.konig.aws.cloudformation.Tag;
 import io.konig.aws.cloudformation.TopicConfig;
 import io.konig.aws.datasource.NotificationConfiguration;
 import io.konig.aws.datasource.Queue;
@@ -145,6 +146,7 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 						}
 						if(cfDir!=null && cfDir.exists()){
 							String s3BucketTemplate=getS3BucketTemplate(bucket);
+							s3BucketTemplate = s3BucketTemplate.replace("- Key: \"SecurityTags\"", "$functions.mergeSecurityTags('s3Bucket')");
 							AWSCloudFormationUtil.writeCloudFormationTemplate(cfDir,s3BucketTemplate, false);
 						}
 					}
@@ -161,6 +163,8 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 		Resource s3BucketResource=new Resource();
 		s3BucketResource.setType("AWS::S3::Bucket");
 		s3BucketResource.addProperties("BucketName", bucket.getBucketName().toLowerCase());
+		Tag[] tags = {new Tag("SecurityTags",null)};
+		s3BucketResource.addProperties("Tags", tags);
 		NotificationConfiguration config=bucket.getNotificationConfiguration();
 		Map<String,Object> resources=new LinkedHashMap<String,Object>();
 		resources.put(bucket.getBucketKey()+"S3Bucket", s3BucketResource);
@@ -180,6 +184,7 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 			Resource snsTopicResource = new Resource();
 			snsTopicResource.setType("AWS::SNS::Topic");
 			snsTopicResource.addProperties("TopicName", topic.getResourceName());
+			snsTopicResource.addProperties("Tags", tags);
 			resources.put(bucket.getBucketKey()+"SNSTopic", snsTopicResource);
 			
 			Resource snsTopicPolicyResource=getPolicy(bucket,"SNSTopic");			
@@ -192,12 +197,15 @@ public class AWSS3BucketWriter implements ShapeVisitor {
 				Resource sqsQueueResource = new Resource();
 				sqsQueueResource.setType("AWS::SQS::Queue");
 				sqsQueueResource.addProperties("QueueName",queue.getResourceName());
+				sqsQueueResource.addProperties("Tags", tags);
+				sqsQueueResource.addProperties("SecurityTags", "$tags");
 				resources.put(bucket.getBucketKey()+"SQSQueue", sqsQueueResource);
 				
 				Resource snsSubscriptionResource = new Resource();
 				snsSubscriptionResource.setType("AWS::SNS::Subscription");
 				snsSubscriptionResource.addProperties("Protocol", "sqs");
 				snsSubscriptionResource.addProperties("TopicArn", "!Ref "+bucket.getBucketKey()+"SNSTopic");
+				snsSubscriptionResource.addProperties("Tags", tags);
 				Map<String,String[]> function = new HashMap<String,String[]>();
 				String[] getAttParams={bucket.getBucketKey()+"SQSQueue","Arn"};
 				function.put("Fn::GetAtt", getAttParams);

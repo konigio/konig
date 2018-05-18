@@ -79,5 +79,9 @@ public class AWS {
 	public static final URI awsRegion= new URIImpl(AWS_REGION);
 
 	public static final URI topicConfiguration= new URIImpl(TOPIC_CONFIGURATION);
-
+	public static final URI SecurityTag = new URIImpl("http://www.konig.io/ns/aws/SecurityTag");
+	public static final URI tagKey = new URIImpl("http://www.konig.io/ns/aws/tagKey");
+	public static final URI tagValue = new URIImpl("http://www.konig.io/ns/aws/tagValue");
+	public static final URI tags = new URIImpl("http://www.konig.io/ns/aws/tags");
+	
 }

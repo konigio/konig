@@ -143,6 +143,7 @@ public class WorkbookToTurtleTransformer {
 		if (awsOutDir != null) {
 			turtleGenerator.generateAll(AWS.DbCluster, awsOutDir, graph, context);
 			turtleGenerator.generateAll(AWS.CloudFormationTemplate, awsOutDir, graph, context);
+			turtleGenerator.generateAll(AWS.SecurityTag, awsOutDir, graph, context);
 		}
 
 	}

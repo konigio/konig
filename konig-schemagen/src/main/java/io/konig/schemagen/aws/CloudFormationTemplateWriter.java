@@ -22,21 +22,35 @@ package io.konig.schemagen.aws;
 
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.velocity.runtime.parser.ParseException;
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import io.konig.aws.cloudformation.AwsvpcConfiguration;
 import io.konig.aws.cloudformation.ContainerDefinition;
@@ -48,7 +62,9 @@ import io.konig.aws.cloudformation.PolicyDocument;
 import io.konig.aws.cloudformation.PortMapping;
 import io.konig.aws.cloudformation.Principal;
 import io.konig.aws.cloudformation.Resource;
+import io.konig.aws.cloudformation.SecurityTags;
 import io.konig.aws.cloudformation.Statement;
+import io.konig.aws.cloudformation.Tag;
 import io.konig.aws.datasource.CloudFormationTemplate;
 import io.konig.aws.datasource.DbCluster;
 import io.konig.core.Graph;
@@ -66,27 +82,43 @@ public class CloudFormationTemplateWriter {
 		this.graph=graph;
 	}
 	public void write() throws IOException {
-		writeTemplates();
-		if(cloudFormationDir!=null && cloudFormationDir.exists()){
-			writeDbClusters();
-			//writeECR();
+		try {
+			writeTemplates();
+			if(cloudFormationDir!=null && cloudFormationDir.exists()){
+				writeSecurityTags();
+				writeDbClusters();
+				//writeECR();
+			}
+		} catch(Exception ex) {
+			throw new CloudFormationGeneratorException("Error in Cloudformation template configuration" + ex.getMessage());
 		}
 	}
 	
 	public void updateTemplate() throws IOException {
-		if(cloudFormationDir!=null && cloudFormationDir.exists()){
-			writeTaskDefinition();
-			writeService();
+		try {
+			if(cloudFormationDir!=null && cloudFormationDir.exists()){
+				writeTaskDefinition();
+				writeService();
+			}
+		} catch(Exception ex) {
+			throw new CloudFormationGeneratorException("Error in Cloudformation template configuration" + ex.getMessage());
 		}
 	}
 	
-	private void writeService() throws IOException {
+	private void addSecurityTags(Resource resource) {
+		Tag[] tags = {new Tag("SecurityTags",null)};
+		resource.addProperties("Tags", tags);
+	}
+	
+	private void writeService() throws IOException, ParseException {
 		Resource resource = new Resource();
 		resource.setType("AWS::ECS::Service");
 		resource.setDependsOn("LoadBalancerRule");
 		resource.addProperties("Cluster", "!Ref ECSCluster");
 		resource.addProperties("DesiredCount", "!Ref DesiredCount");
 		resource.addProperties("LaunchType", "FARGATE");
+		addSecurityTags(resource);
+		
 		List<LoadBalancer> loadBalancers = new ArrayList<>();
 		for(ContainerDefinition containerDefinition : containerDefinitions) {
 			LoadBalancer loadBalancer = new LoadBalancer();
@@ -111,15 +143,17 @@ public class CloudFormationTemplateWriter {
 		resources.put("Service", resource);
 
 		String ecsService = AWSCloudFormationUtil.getResourcesAsString(resources);
+		ecsService = ecsService.replace("- Key: \"SecurityTags\"", "$functions.mergeSecurityTags('TaskDefinition')");
 		AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,ecsService, false);	
 	}
 	
-	private void writeTaskDefinition() throws IOException {
+	private void writeTaskDefinition() throws IOException, ParseException {
 		Resource resource = new Resource();
 		resource.setType("AWS::ECS::TaskDefinition");
 		resource.addProperties("Cpu", "!Ref ContainerCpu");
 		resource.addProperties("Memory", "!Ref ContainerMemory");
 		resource.addProperties("NetworkMode", "awsvpc");
+		addSecurityTags(resource);
 		String[] compatibilities = {"FARGATE"};
 		resource.addProperties("RequiresCompatibilities", compatibilities);
 		resource.addProperties("ExecutionRoleArn", "!Ref ECSTaskExecutionRole");
@@ -151,10 +185,11 @@ public class CloudFormationTemplateWriter {
 		Map<String,Object> resources = new LinkedHashMap<String,Object>();
 		resources.put("TaskDefinition", resource);
 		String taskDefinition = AWSCloudFormationUtil.getResourcesAsString(resources);
+		taskDefinition = taskDefinition.replace("- Key: \"SecurityTags\"", "$functions.mergeSecurityTags('TaskDefinition')");
 		AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,taskDefinition, false);	
 	}
 	
-	private void writeECR() throws IOException {
+	private void writeECR() throws IOException, ParseException {
 		String repositoryName=System.getProperty("ECRRepositoryName");
 		if(repositoryName!=null){
 			String ecrTemplate=getECRTemplate(repositoryName);		
@@ -186,17 +221,66 @@ public class CloudFormationTemplateWriter {
 		return AWSCloudFormationUtil.getResourcesAsString(resources);
 
 	}
-	private void writeDbClusters() throws IOException {
+	private void writeDbClusters() throws IOException, ParseException {
 		List<Vertex> list = graph.v(AWS.DbCluster).in(RDF.TYPE).toVertexList();
 		if (!list.isEmpty() && cloudFormationDir!=null && cloudFormationDir.exists()) {			
 			for (Vertex v : list) {
 				SimplePojoFactory pojoFactory = new SimplePojoFactory();
 				DbCluster instance = pojoFactory.create(v, DbCluster.class);
-				String dbClusterTemplate=getDbClusterTemplate(instance);
-				AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir,dbClusterTemplate, false);
+				String dbClusterTemplate = getDbClusterTemplate(instance);
+				dbClusterTemplate = dbClusterTemplate.replace("- Key: \"SecurityTags\"", "$functions.mergeSecurityTags('DbCluster')");
+				AWSCloudFormationUtil.writeCloudFormationTemplate(cloudFormationDir, dbClusterTemplate, false);
 			}
 		}
 	}
+	private void writeSecurityTags() throws IOException {
+		List<Vertex> list = graph.v(AWS.SecurityTag).in(RDF.TYPE).toVertexList();
+		DumperOptions options = new DumperOptions();
+		options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+		options.setPrettyFlow(false);
+		if (!list.isEmpty() && cloudFormationDir!=null && cloudFormationDir.exists()) {			
+			for (Vertex v : list) {
+				try {
+					SimplePojoFactory pojoFactory = new SimplePojoFactory();
+					SecurityTags tags = pojoFactory.create(v, SecurityTags.class);
+					for(Tag tag : tags.getTags()) {
+						if(!tag.getTagValue().contains("${")) {
+							writePropertyFiles(tag);
+							tag.setTagValue("${"+tag.getTagKey()+"}");
+						}
+						tag.setEnvironment(null);
+					}
+					URI resourceName = new URIImpl(v.getId().stringValue());
+					ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+					mapper.setSerializationInclusion(Include.NON_NULL);
+					File resourceTag = new File(cloudFormationDir, resourceName.getLocalName().replace(":", "_")+".yml");
+					mapper.writeValue(resourceTag, tags);
+				} catch(Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	private void writePropertyFiles(Tag tag) throws FileNotFoundException, IOException {
+		String environment = tag.getEnvironment();
+		File config = new File(cloudFormationDir.getParentFile(), "config");
+		if(!config.exists()) {
+			config.mkdir();
+		}
+		File propertyFile = new File(config, environment+".properties");
+		Properties properties = new Properties();
+		if(propertyFile.exists()) {
+			try (InputStream inputStream = new FileInputStream(propertyFile)) {
+				properties.load(inputStream);
+			}
+		}
+		properties.setProperty(tag.getTagKey(), tag.getTagValue());
+		FileOutputStream fileOut = new FileOutputStream(propertyFile);
+		properties.store(fileOut, environment +" props");
+		fileOut.close();
+	}
+	
 	private void writeTemplates() throws IOException {
 		
 		List<Vertex> list = graph.v(AWS.CloudFormationTemplate).in(RDF.TYPE).toVertexList();
@@ -260,6 +344,7 @@ public class CloudFormationTemplateWriter {
 		resource.addProperties("DBClusterIdentifier", "!Ref "+instance.getDbClusterName()+"DBCluster");
 		resource.addProperties("DBInstanceClass", instance.getInstanceClass());
 		resource.addProperties("Engine", instance.getEngine());
+		addSecurityTags(resource);
 		return resource;
 	}
 	private Resource getDbClusterResource(DbCluster instance) {
@@ -279,6 +364,7 @@ public class CloudFormationTemplateWriter {
 		resource.addProperties("PreferredMaintenanceWindow", instance.getPreferredMaintenanceWindow());
 		if(instance.getReplicationSourceIdentifier()!=null)
 			resource.addProperties("ReplicationSourceIdentifier", instance.getReplicationSourceIdentifier());
+		addSecurityTags(resource);
 		return resource;
 	}
 	
