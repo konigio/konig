@@ -354,12 +354,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
-    private void preprocessResources() throws MojoExecutionException, IOException {
+    private void preprocessResources() throws MojoExecutionException, IOException, RDFParseException, RDFHandlerException {
     	String shapeIriPattern=null;
     	String shapeIriReplacement=null;
     	AuroraInfo aurora=null;
     	BigQueryInfo bigQuery=null;
-    	CloudSqlInfo cloudSql=null;
+    	CloudSqlInfo cloudSql=null; 	
+	
+		if (rdfSourceDir != null) {
+			RdfUtil.loadTurtle(rdfSourceDir, owlGraph, nsManager);
+			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
+			shapeLoader.load(owlGraph);
+		}
+		
     	if(amazonWebServices!=null && amazonWebServices.getAurora()!=null){
     		aurora=amazonWebServices.getAurora();
     		shapeIriPattern=aurora.getShapeIriPattern();

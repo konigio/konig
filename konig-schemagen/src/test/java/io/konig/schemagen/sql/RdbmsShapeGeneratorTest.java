@@ -1,5 +1,8 @@
 package io.konig.schemagen.sql;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 /*
  * #%L
  * Konig Schema Generator
@@ -61,11 +64,11 @@ public class RdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 		
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
-		
+		String changeCase = shapeGenerator.changeToSnakeCase("GivenName");
+		String snakeCase = shapeGenerator.changeToSnakeCase("FAMILY_NAME");
 		assertTrue(rdbmsShape != null);
-
-		// TODO: add validation steps.
-	
+		assertEquals("GIVEN_NAME",changeCase);
+		assertNull(snakeCase);
 		
 	}
 	
