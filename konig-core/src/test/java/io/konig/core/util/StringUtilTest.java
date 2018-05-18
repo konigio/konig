@@ -22,6 +22,7 @@ package io.konig.core.util;
 
 
 import static io.konig.core.util.StringUtil.PascalCase;
+import static io.konig.core.util.StringUtil.SNAKE_CASE;
 import static io.konig.core.util.StringUtil.camelCase;
 import static org.junit.Assert.assertEquals;
 
@@ -48,6 +49,17 @@ public class StringUtilTest {
 		assertEquals("FooBar", PascalCase("FOO_BAR"));
 		assertEquals("Foo", PascalCase("foo"));
 		assertEquals("FooBar", PascalCase("FooBar"));
+	}
+	
+	@Test
+	public void testSnakeCase() {
+
+		assertEquals("FOO_BAR", SNAKE_CASE("foo_bar"));
+		assertEquals("FOO_BAR_WIZ", SNAKE_CASE("Foo_Bar_Wiz"));
+		assertEquals("FOO_BAR", SNAKE_CASE("FOO_BAR"));
+		assertEquals("FOO_BAR", SNAKE_CASE("fooBar"));
+		assertEquals("FOO", SNAKE_CASE("foo"));
+		assertEquals("FOO_BAR", SNAKE_CASE("FooBar"));
 	}
 
 }

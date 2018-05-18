@@ -98,6 +98,8 @@ import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.impl.SimpleLocalNameService;
+import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.Konig;
@@ -111,6 +113,8 @@ import io.konig.estimator.MultiSizeEstimateRequest;
 import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
 import io.konig.etl.aws.EtlRouteBuilder;
+import io.konig.formula.FormulaParser;
+import io.konig.formula.ShapePropertyOracle;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
@@ -134,6 +138,7 @@ import io.konig.openapi.generator.OpenApiGeneratorException;
 import io.konig.openapi.generator.ShapeLocalNameJsonSchemaNamer;
 import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
+import io.konig.rio.turtle.NamespaceMap;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
@@ -294,6 +299,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private ContextManager contextManager;
     private ClassStructure structure;
     private VelocityContext context;
+    private SimpleLocalNameService localNameService;
+    private FormulaParser formulaParser;
 
 	@Component
 	private MavenProject mavenProject;
@@ -393,12 +400,31 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
 			if (shapesDir != null) {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(shapeIriPattern, shapeIriReplacement,propertyNameSpace);
+				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), shapeIriPattern, shapeIriReplacement,propertyNameSpace);
 				ShapeWriter shapeWriter = new ShapeWriter();
 				RdbmsShapeHandler handler = new RdbmsShapeHandler(generator, fileGetter, shapeWriter, nsManager);
 				handler.visitAll(shapeManager.listShapes());
 			}
     	}
+	}
+
+	private FormulaParser formulaParser() {
+		if (formulaParser == null) {
+			SimpleLocalNameService nameService = getLocalNameService();
+			NamespaceMap nsMap = new NamespaceMapAdapter(owlGraph.getNamespaceManager());
+			ShapePropertyOracle oracle = new ShapePropertyOracle();
+			formulaParser = new FormulaParser(oracle, nameService, nsMap);
+		}
+		
+		return formulaParser;
+	}
+
+	private SimpleLocalNameService getLocalNameService() {
+		if (localNameService == null) {
+			localNameService = new SimpleLocalNameService();
+			localNameService.addAll(owlGraph);
+		}
+		return localNameService;
 	}
 
 	private void init() throws MojoExecutionException, IOException {

@@ -34,15 +34,18 @@ import org.codehaus.plexus.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.model.URI;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
+
+import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.maven.FileUtil;
 import io.konig.schemagen.SchemaGeneratorTest;
 import io.konig.shacl.Shape;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeWriter;
 
-public class RdbmsShapeHandlerTest extends SchemaGeneratorTest {
+public class RdbmsShapeHandlerTest extends AbstractRdbmsShapeGeneratorTest {
 	
-	private RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape","http://example.com/ns/alias/");
 	private RdbmsShapeHandler handler = null;
 	private File targetFolder = new File("target/test/rdbms-shape-generator");
 	
