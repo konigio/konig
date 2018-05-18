@@ -69,9 +69,6 @@ public class AWS {
 	public static final String RESOURCE_NAME = "http://www.konig.io/ns/aws/resourceName";
 	public static final String TOPIC_REGION = "http://www.konig.io/ns/aws/region";
 	public static final String AWS_REGION = "http://www.konig.io/ns/aws/region";
-	public static final String AWS_AURORA_HOST = "http://www.konig.io/ns/aws/awsAuroraHost";
-	public static final String AWS_SCHEMA = "http://www.konig.io/ns/aws/awsSchema";
-	public static final String AWS_TABLE_NAME = "http://www.konig.io/ns/aws/awsTableName";
 	public static final URI notificationConfiguration= new URIImpl(NOTIFICATION_CONFIGURATION);
 	public static final URI queueConfiguration= new URIImpl(QUEUE_CONFIGURATION);
 	public static final URI topic= new URIImpl(TOPIC);
