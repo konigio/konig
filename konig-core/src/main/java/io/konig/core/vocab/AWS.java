@@ -43,10 +43,13 @@ public class AWS {
 	public static final URI replicationSourceIdentifier = new URIImpl("http://www.konig.io/ns/aws/replicationSourceIdentifier");
 	public static final URI storageEncrypted = new URIImpl("http://www.konig.io/ns/aws/storageEncrypted");
 	public static final String TABLE_REFERENCE = "http://www.konig.io/ns/aws/tableReference";
+	public static final String AWS_AURORA_HOST = "http://www.konig.io/ns/aws/awsAuroraHost";
+	public static final String AWS_SCHEMA = "http://www.konig.io/ns/aws/awsSchema";
+	public static final String AWS_TABLE_NAME = "http://www.konig.io/ns/aws/awsTableName";
 	public static final URI tableReference = new URIImpl(TABLE_REFERENCE);
-	public static final URI awsAuroraHost = new URIImpl("http://www.konig.io/ns/aws/awsAuroraHost");
-	public static final URI awsSchema = new URIImpl("http://www.konig.io/ns/aws/awsSchema");
-	public static final URI awsTableName = new URIImpl("http://www.konig.io/ns/aws/awsTableName");
+	public static final URI awsAuroraHost = new URIImpl(AWS_AURORA_HOST);
+	public static final URI awsSchema = new URIImpl(AWS_SCHEMA);
+	public static final URI awsTableName = new URIImpl(AWS_TABLE_NAME);
 	public static final URI CloudFormationTemplate = new URIImpl("http://www.konig.io/ns/aws/CloudFormationTemplate");
 	public static final String STACK_NAME = "http://www.konig.io/ns/aws/stackName";
 	public static final String TEMPLATE = "http://www.konig.io/ns/aws/template";

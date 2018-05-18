@@ -103,6 +103,11 @@
 			<artifactId>konig-aws-common</artifactId>
 			<version>${konig.version}</version>
 		</dependency>
+	<dependency>
+		<groupId>com.github.jsqlparser</groupId>
+		<artifactId>jsqlparser</artifactId>
+		<version>0.9</version>
+	</dependency>
   </dependencies>
   <build>
 	  <plugins>
