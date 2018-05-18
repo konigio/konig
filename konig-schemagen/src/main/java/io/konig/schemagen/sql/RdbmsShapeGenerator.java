@@ -2,11 +2,18 @@ package io.konig.schemagen.sql;
 
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
 
+import io.konig.aws.datasource.CloudFormationTemplate;
+import io.konig.core.Vertex;
+import io.konig.core.pojo.SimplePojoFactory;
+import io.konig.core.vocab.AWS;
 import io.konig.shacl.PropertyConstraint;
 
 /*
@@ -54,10 +61,63 @@ public class RdbmsShapeGenerator {
 		this.shapeIriReplacement = shapeIriReplacement;
 	}
 	public Shape createRdbmsShape(Shape shape){
-		return validateLocalNames(shape);		
+		
+		return flattenNestedShape(shape,null,null);
 	}
 
 
+	private Shape flattenNestedShape(Shape shape,String propertyId,String fullURI) {
+		String propertyId1=null;
+		//Convert to snake case
+		Shape rdbmsShape= validateLocalNames(shape);
+		Shape clonedShape=null;
+		if(rdbmsShape!=null){
+			clonedShape = rdbmsShape.deepClone(); 
+			ListIterator<PropertyConstraint> iterator=clonedShape.getProperty().listIterator();
+			List<PropertyConstraint> propConstraints=new ArrayList<PropertyConstraint>();
+			//Iterate the properties of the root shape.
+			while(iterator.hasNext()){
+				PropertyConstraint p=iterator.next();
+				String fullURI1 =p.getPath().toString();
+				int i = fullURI1.lastIndexOf("/")+1;
+				int j = fullURI1.lastIndexOf(">");
+				propertyId1 = fullURI1.substring(i, j);
+				if(p.getShape()!=null){
+					Shape flattenedNestedShape=null;
+					//Root shape - Property has a nested shape
+					if(propertyId!=null && fullURI!=null){
+						flattenedNestedShape=flattenNestedShape(p.getShape(),propertyId+"__"+propertyId1,fullURI1);
+						propConstraints.addAll(flattenedNestedShape.getProperty());
+					}
+					else if(propertyId==null && fullURI==null){
+						flattenedNestedShape=flattenNestedShape(p.getShape(),propertyId1,fullURI1);
+						propConstraints.addAll(flattenedNestedShape.getProperty());
+					}					
+				}
+				else if(propertyId!=null && fullURI!=null){						
+					//Nested shape - Property does not have a nested shape.
+					String changedPropertyId=propertyId+"__"+propertyId1;
+					fullURI1 = fullURI.substring(1,fullURI.lastIndexOf("/")+1);
+					URI path = new URIImpl(stringUtilities(fullURI1,changedPropertyId)) ;
+					p.setPath(path);
+					propConstraints.add(p);	
+				}
+				else if(propertyId==null && fullURI==null){
+					//Do nothing - root shape - property does not have a nested shape
+				}
+				if(!propConstraints.isEmpty())
+					iterator.remove();
+			}			
+			
+			if(!propConstraints.isEmpty()){
+				for(PropertyConstraint p2:propConstraints){
+					clonedShape.add(p2);
+				}
+			}
+		}
+	
+		return clonedShape;
+	}
 	public Shape validateLocalNames(Shape shape) {
 		String propertyId = "";
 		Shape clonedShape = shape.deepClone(); 
