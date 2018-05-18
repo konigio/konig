@@ -103,6 +103,7 @@ public class Konig {
 	public static final URI GoogleCloudSqlTable = new URIImpl("http://www.konig.io/ns/core/GoogleCloudSqlTable");
 	public static final URI OracleTable = new URIImpl("http://www.konig.io/ns/core/OracleTable");
 	public static final URI AwsAuroraTable = new URIImpl("http://www.konig.io/ns/core/AwsAurora");
+	public static final URI AwsAuroraView = new URIImpl("http://www.konig.io/ns/core/AwsAuroraView");
 	public static final URI S3Bucket = new URIImpl("http://www.konig.io/ns/core/S3Bucket");
 	public static final URI shapeDataSource = new URIImpl(SHAPE_DATA_SOURCE);
 	public static final URI bigQuerySource = new URIImpl(BIG_QUERY_SOURCE);
@@ -174,6 +175,7 @@ public class Konig {
 
 	public static final URI decimalPrecision = new URIImpl("http://www.konig.io/ns/core/decimalPrecision");
 	public static final URI decimalScale = new URIImpl("http://www.konig.io/ns/core/decimalScale");
+	public static final URI environment = new URIImpl("http://www.konig.io/ns/core/environment");
 	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();

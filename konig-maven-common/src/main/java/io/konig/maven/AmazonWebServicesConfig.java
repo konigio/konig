@@ -57,6 +57,9 @@ public class AmazonWebServicesConfig {
 	
 	@Parameter(property="konig.aws.aurora", required=true)
 	private AuroraInfo aurora;
+  
+	@Parameter(property="konig.aws.views", defaultValue="${konig.aws.directory}/views")
+	private File views;
 	
 	public AmazonWebServicesConfig() {
 			
@@ -152,5 +155,13 @@ public class AmazonWebServicesConfig {
 		this.aurora = aurora;
 	}
 	
+	public File getViews() {
+		return views;
+	}
+
+	public void setViews(File views) {
+		this.views = views;
+	}
+
 	
 }

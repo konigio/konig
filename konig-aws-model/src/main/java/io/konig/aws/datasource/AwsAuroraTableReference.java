@@ -33,12 +33,11 @@ public class AwsAuroraTableReference {
 	public String getAwsAuroraHost() {
 		return awsAuroraHost;
 	}
-	
 	@RdfProperty(AWS.AWS_SCHEMA)
 	public String getAwsSchema() {
 		return awsSchema;
 	}
-	
+  
 	@RdfProperty(AWS.AWS_TABLE_NAME)
 	public String getAwsTableName() {
 		return awsTableName;

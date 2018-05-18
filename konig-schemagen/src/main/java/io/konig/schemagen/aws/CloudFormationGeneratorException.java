@@ -1,8 +1,8 @@
-package io.konig.aws.datasource;
+package io.konig.schemagen.aws;
 
 /*
  * #%L
- * Konig AWS
+ * Konig Schema Generator
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,15 +21,19 @@ package io.konig.aws.datasource;
  */
 
 
-import io.konig.core.pojo.PojoContext;
-import io.konig.core.vocab.Konig;
-import io.konig.shacl.io.ShapeLoader;
+public class CloudFormationGeneratorException extends RuntimeException {
+	private static final long serialVersionUID = 1L;
 
-public class AwsShapeConfig {
-	public static void init() {
-		PojoContext context = ShapeLoader.CONTEXT;
-		context.mapClass(Konig.AwsAuroraTable, AwsAuroraTable.class);
-		context.mapClass(Konig.S3Bucket, S3Bucket.class);
-		context.mapClass(Konig.AwsAuroraView, AwsAuroraView.class);
+	public CloudFormationGeneratorException(String message) {
+		super(message);
 	}
+	
+	public CloudFormationGeneratorException(Throwable cause) {
+		super(cause);
+	}
+	
+	public CloudFormationGeneratorException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
 }

@@ -36,7 +36,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.aws.datasource.AwsAuroraTableReference;
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
@@ -373,8 +373,8 @@ public class SqlFactory {
 				if (ds.isA(Konig.GoogleBigQueryTable)) {
 					GoogleBigQueryTable bigQuery = (GoogleBigQueryTable) ds;
 					return bigQuery.getTableReference();
-				} else if(ds instanceof AwsAurora){
-					AwsAurora awsAurora = (AwsAurora) ds;
+				} else if(ds instanceof AwsAuroraTable){
+					AwsAuroraTable awsAurora = (AwsAuroraTable) ds;
 					return awsAurora.getTableReference();
 				}
 			}

@@ -1,8 +1,8 @@
-package io.konig.aws.datasource;
+package io.konig.aws.cloudformation;
 
 /*
  * #%L
- * Konig AWS
+ * Konig AWS Model
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,15 +21,20 @@ package io.konig.aws.datasource;
  */
 
 
-import io.konig.core.pojo.PojoContext;
-import io.konig.core.vocab.Konig;
-import io.konig.shacl.io.ShapeLoader;
+import java.util.List;
 
-public class AwsShapeConfig {
-	public static void init() {
-		PojoContext context = ShapeLoader.CONTEXT;
-		context.mapClass(Konig.AwsAuroraTable, AwsAuroraTable.class);
-		context.mapClass(Konig.S3Bucket, S3Bucket.class);
-		context.mapClass(Konig.AwsAuroraView, AwsAuroraView.class);
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class SecurityTags {
+	
+	@JsonProperty("Tags")
+	private List<Tag> tags;
+
+	public List<Tag> getTags() {
+		return tags;
+	}
+
+	public void setTags(List<Tag> tags) {
+		this.tags = tags;
 	}
 }
