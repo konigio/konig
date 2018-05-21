@@ -95,25 +95,29 @@ public class RdbmsShapeGenerator {
 				int i = fullURI1.lastIndexOf("/")+1;
 				int j = fullURI1.lastIndexOf(">");
 				propertyId1 = fullURI1.substring(i, j);
-				String changedPropertyId=null;
-				if(p.getShape()!=null){					
+				if(p.getShape()!=null){
+					Shape flattenedNestedShape=null;
 					//Root shape - Property has a nested shape
-					if(propertyId!=null && fullURI!=null)
-						changedPropertyId=propertyId+"__"+propertyId1;
-					else if(propertyId==null && fullURI==null)
-						changedPropertyId=propertyId1;
-					Shape flattenedNestedShape=flattenNestedShape(p.getShape(),propertyId1,fullURI1);
-					propConstraints.addAll(flattenedNestedShape.getProperty());
+					if(propertyId!=null && fullURI!=null){
+						flattenedNestedShape=flattenNestedShape(p.getShape(),propertyId+"__"+propertyId1,fullURI1);
+						propConstraints.addAll(flattenedNestedShape.getProperty());
+					}
+					else if(propertyId==null && fullURI==null){
+						flattenedNestedShape=flattenNestedShape(p.getShape(),propertyId1,fullURI1);
+						propConstraints.addAll(flattenedNestedShape.getProperty());
+					}					
 				}
 				else if(propertyId!=null && fullURI!=null){						
 					//Nested shape - Property does not have a nested shape.
-					changedPropertyId=propertyId+"__"+propertyId1;
+					String changedPropertyId=propertyId+"__"+propertyId1;
 					fullURI1 = fullURI.substring(1,fullURI.lastIndexOf("/")+1);
 					URI path = new URIImpl(stringUtilities(fullURI1,changedPropertyId)) ;
 					p.setPath(path);
 					propConstraints.add(p);	
 				}
-				
+				else if(propertyId==null && fullURI==null){
+					//Do nothing - root shape - property does not have a nested shape
+				}
 				if(!propConstraints.isEmpty())
 					iterator.remove();
 			}			
