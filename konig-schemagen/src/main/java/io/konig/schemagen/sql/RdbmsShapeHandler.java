@@ -23,13 +23,10 @@ package io.konig.schemagen.sql;
 
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +42,7 @@ import io.konig.shacl.io.ShapeWriter;
 
 public class RdbmsShapeHandler implements ShapeVisitor {
 	
+	private ShapeVisitor callback;
 	private RdbmsShapeGenerator generator;
 	private ShapeFileGetter fileGetter;
 	private ShapeWriter shapeWriter;
@@ -52,8 +50,11 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	private static final Logger LOG = LoggerFactory.getLogger(RdbmsShapeHandler.class);
 	
 	
-	public RdbmsShapeHandler(RdbmsShapeGenerator generator, ShapeFileGetter fileGetter, ShapeWriter shapeWriter,
+	public RdbmsShapeHandler(
+			ShapeVisitor callback,
+			RdbmsShapeGenerator generator, ShapeFileGetter fileGetter, ShapeWriter shapeWriter,
 			NamespaceManager nsManager) {
+		this.callback = callback;
 		this.generator = generator;
 		this.fileGetter = fileGetter;
 		this.shapeWriter = shapeWriter;
@@ -74,10 +75,8 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			Shape rdbmsShape = null;
 			try {
 				rdbmsShape = generator.createRdbmsShape(shape);
-			} catch (RDFParseException e) {
-				LOG.warn(e.getMessage());
-			} catch (IOException e) {
-				LOG.warn(e.getMessage());
+			} catch (Exception e) {
+				throw new KonigException(e);
 			}
 
 			// The generator will return a null value if the supplied shape is already
@@ -98,6 +97,9 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 				save(shape);				
 				rdbmsShape.setId(new URIImpl(rdbmsShapeId));
 				save(rdbmsShape);
+				if (callback != null) {
+					callback.visit(rdbmsShape);
+				}
 			}
 		}
 

@@ -100,7 +100,7 @@ public class RdbmsShapeGenerator {
 					String changedPropertyId=null;
 					String formulaText=null;
 					if(p.getShape()!=null){
-						if(p.getMaxCount()==1){
+						if(p.getMaxCount()!=null && p.getMaxCount()==1){
 							changedPropertyId=(propertyId==null)?propertyId1:propertyId+"__"+propertyId1;	
 							formulaText = (propertyId==null)?formula1:formula+formula1;
 							Shape flattenedNestedShape=flattenNestedShape(p.getShape(),changedPropertyId,formulaText,p);
