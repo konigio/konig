@@ -22,12 +22,26 @@ package io.konig.maven.project.generator;
 
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
+
+import org.apache.maven.model.Build;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import io.konig.maven.FileUtil;
+import io.konig.maven.ViewShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
 
 public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProcessor> {
+	
+	private ViewShapeGeneratorConfig viewShapeGeneratorConfig;
 	
 	public RdfModelGenerator(MavenProjectConfig mavenProject, WorkbookProcessor workbook) {
 		super(workbook, "workbook");
@@ -35,9 +49,13 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 		setArtifactSuffix("-rdf-model");
 		setNameSuffix("RDF Model");
 		init(mavenProject);
+		
 	}
-
-
+	
+	public void setViewShapeGeneratorConfig(ViewShapeGeneratorConfig viewShapeGeneratorConfig) {
+		this.viewShapeGeneratorConfig = viewShapeGeneratorConfig;
+	}
+	
 	@Override
 	public void run() throws MavenProjectGeneratorException, IOException {
 		if (config == null) {
@@ -51,12 +69,54 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 		super.run();
 		config.setWorkbookFile(workbookFile);
 		config.setWorkbookDir(workbookDir);
+		
+		if(viewShapeGeneratorConfig != null) {
+			try {
+				File rdfPomFile = new File(baseDir(), "pom.xml");
+				MavenXpp3Reader mavenreader = new MavenXpp3Reader();
+				FileReader reader = new FileReader(rdfPomFile);
+				Model model = mavenreader.read(reader);
+				model.setPomFile(rdfPomFile);
+				Build build = model.getBuild();
+				List<Plugin> pluginList = build.getPlugins();
+				for (Plugin p : pluginList) {
+					if ("konig-schemagen-maven-plugin".equals(p.getArtifactId())) {
+						Xpp3Dom conf = (Xpp3Dom) p.getConfiguration();
+						Xpp3Dom viewShapeGenerator = conf.getChild("viewShapeGenerator");
+						if(viewShapeGenerator == null) {
+							conf.addChild(readViewShapeGeneratorConfig(new File("pom.xml")));
+						}
+					}
+				}
+				MavenXpp3Writer writer = new MavenXpp3Writer();
+				FileWriter fw = new FileWriter(rdfPomFile);
+				writer.write(fw, model);
+				fw.close();
+			} catch (Exception ex) {
+				throw new MavenProjectGeneratorException(ex);
+			}
+		}
 		copyAssembly();
 		copyWorkbooks();
-		
-		
 	}
 
+	private Xpp3Dom readViewShapeGeneratorConfig(File pomFile) throws IOException, XmlPullParserException {
+		MavenXpp3Reader mavenreader = new MavenXpp3Reader();
+		FileReader reader = new FileReader(pomFile);
+		Model model = mavenreader.read(reader);
+		model.setPomFile(pomFile);
+		Build build = model.getBuild();
+		List<Plugin> pluginList = build.getPlugins();
+		for (Plugin p : pluginList) {
+			if ("konig-schemagen-maven-plugin".equals(p.getArtifactId())) {
+				Xpp3Dom conf = (Xpp3Dom) p.getConfiguration();
+				Xpp3Dom multiProject = conf.getChild("multiProject");
+				return multiProject.getChild("viewShapeGenerator");
+			}
+		}
+		return null;
+	}
+	
 	private File localWorkbookDir() {
 		File dir = config.getWorkbookDir();
 		return dir==null ? null : new File("src/workbooks");
