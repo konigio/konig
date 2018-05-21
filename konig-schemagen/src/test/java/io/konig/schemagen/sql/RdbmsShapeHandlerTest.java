@@ -35,6 +35,7 @@ import org.openrdf.rio.RDFParseException;
 
 import io.konig.maven.FileUtil;
 import io.konig.shacl.Shape;
+import io.konig.shacl.impl.ShapeInjector;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeWriter;
 
@@ -80,7 +81,8 @@ public class RdbmsShapeHandlerTest extends AbstractRdbmsShapeGeneratorTest {
 		
 		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
 		ShapeWriter shapeWriter = new ShapeWriter();
-		handler = new RdbmsShapeHandler(shapeGenerator, fileGetter, shapeWriter, nsManager);
+		ShapeInjector callback = new ShapeInjector(shapeManager);
+		handler = new RdbmsShapeHandler(callback, shapeGenerator, fileGetter, shapeWriter, nsManager);
 	}
 
 }

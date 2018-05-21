@@ -33,6 +33,8 @@ public class AuroraInfo {
 	private String shapeIriReplacement;
 	@Parameter(property="konig.aws.aurora.propertyNameSpace")
 	private String propertyNameSpace;
+	@Parameter(property="konig.aws.aurora.views", defaultValue="${konig.gcp.aurora.directory}/views")
+	private File views;
 	
 	public String getShapeIriPattern() {
 		return shapeIriPattern;
@@ -74,7 +76,15 @@ public class AuroraInfo {
 		this.directory = directory;
 	}
 
-	
+
+	public File getViews() {
+		return views;
+	}
+
+	public void setViews(File views) {
+		this.views = views;
+	}
+
 
 
 }

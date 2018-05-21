@@ -141,9 +141,9 @@ import io.konig.openapi.model.OpenAPI;
 import io.konig.rio.turtle.NamespaceMap;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
-import io.konig.schemagen.ViewShapeGenerator;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
+import io.konig.schemagen.ViewShapeGenerator;
 import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
@@ -202,6 +202,7 @@ import io.konig.shacl.ShapeNamer;
 import io.konig.shacl.ShapeVisitor;
 import io.konig.shacl.SimpleMediaTypeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.impl.ShapeInjector;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.impl.TemplateShapeNamer;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -298,6 +299,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private NamespaceManager nsManager;
     private OwlReasoner owlReasoner;
     private ShapeManager shapeManager;
+    private ShapeInjector shapeInjector;
     private DatasetMapper datasetMapper;
     private ShapeMediaTypeNamer mediaTypeNamer;
     private Graph owlGraph;
@@ -323,6 +325,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	try {
     		init();
 			shapeManager = new MemoryShapeManager();
+			shapeInjector = new ShapeInjector((MemoryShapeManager)shapeManager);
 			nsManager = new MemoryNamespaceManager();
 			mediaTypeNamer = new SimpleShapeMediaTypeNamer();
 			owlGraph = new MemoryGraph();
@@ -407,7 +410,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
 				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), shapeIriPattern, shapeIriReplacement,propertyNameSpace);
 				ShapeWriter shapeWriter = new ShapeWriter();
-				RdbmsShapeHandler handler = new RdbmsShapeHandler(generator, fileGetter, shapeWriter, nsManager);
+				RdbmsShapeHandler handler = new RdbmsShapeHandler(shapeInjector, generator, fileGetter, shapeWriter, nsManager);
 				handler.visitAll(shapeManager.listShapes());
 			}
     	}
@@ -860,7 +863,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			File bucketsDir = Configurator.checkNull(amazonWebServices.getS3buckets());
 			File transformsDir = Configurator.checkNull(amazonWebServices.getTransforms());
 			File cloudFormationDir = Configurator.checkNull(amazonWebServices.getCloudFormationTemplates());
-			File viewDir = Configurator.checkNull(amazonWebServices.getViews());
+			File viewDir = Configurator.checkNull(amazonWebServices.getAurora().getViews());
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			
 			

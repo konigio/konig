@@ -70,7 +70,7 @@ public class GroovyAwsTearDownScriptWriter {
 	}
 
 	private void printTableViewCommands() throws IOException {
-		File viewDir = amazonWebService.getViews();
+		File viewDir = amazonWebService.getAurora().getViews();
 		
 		if (viewDir != null && viewDir.exists()) {
 			for (File file : viewDir.listFiles()) {
