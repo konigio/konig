@@ -23,11 +23,13 @@ package io.konig.schemagen.sql;
 
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +71,14 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 		
 		if (isRdbmsShape(shape)) {
 			
-			Shape rdbmsShape = generator.createRdbmsShape(shape);
+			Shape rdbmsShape = null;
+			try {
+				rdbmsShape = generator.createRdbmsShape(shape);
+			} catch (RDFParseException e) {
+				LOG.warn(e.getMessage());
+			} catch (IOException e) {
+				LOG.warn(e.getMessage());
+			}
 
 			// The generator will return a null value if the supplied shape is already
 			// suitable for use in an RDBMS according to our standards.

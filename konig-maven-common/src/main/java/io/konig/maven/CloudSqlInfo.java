@@ -43,7 +43,9 @@ public class CloudSqlInfo {
 	private String shapeIriPattern;
 	@Parameter(property="konig.gcp.cloudsql.shapeIriReplacement")
 	private String shapeIriReplacement;
-
+	@Parameter(property="konig.aws.cloudsql.propertyNameSpace")
+	private String propertyNameSpace;
+	
 	public CloudSqlInfo() {
 	}
 
@@ -101,6 +103,13 @@ public class CloudSqlInfo {
 
 	public void setShapeIriReplacement(String shapeIriReplacement) {
 		this.shapeIriReplacement = shapeIriReplacement;
+	}
+	public String getPropertyNameSpace() {
+		return propertyNameSpace;
+	}
+
+	public void setPropertyNameSpace(String propertyNameSpace) {
+		this.propertyNameSpace = propertyNameSpace;
 	}
 	
 }

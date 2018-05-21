@@ -1,8 +1,5 @@
 package io.konig.schemagen.sql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 /*
  * #%L
  * Konig Schema Generator
@@ -25,33 +22,17 @@ import static org.junit.Assert.assertNull;
 
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import java.io.File;
-import java.io.InputStream;
-
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.junit.Test;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
 
-import io.konig.aws.datasource.AwsShapeConfig;
-import io.konig.core.Graph;
-import io.konig.core.NamespaceManager;
-import io.konig.core.impl.MemoryGraph;
-import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.schemagen.SchemaGeneratorTest;
+import io.konig.core.vocab.Schema;
+import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
-import io.konig.shacl.ShapeManager;
-import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.io.ShapeFileGetter;
-import io.konig.shacl.io.ShapeLoader;
-import io.konig.shacl.io.ShapeWriter;
-import io.konig.spreadsheet.WorkbookLoader;
 
-public class RdbmsShapeGeneratorTest extends SchemaGeneratorTest {
-	
-	private RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape");
+public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 	
 	@Test
 	public void testSnakeCase() throws Exception {
@@ -64,12 +45,18 @@ public class RdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 		
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
-		String changeCase = shapeGenerator.changeToSnakeCase("GivenName");
-		String snakeCase = shapeGenerator.changeToSnakeCase("FAMILY_NAME");
-		assertTrue(rdbmsShape != null);
-		assertEquals("GIVEN_NAME",changeCase);
-		assertNull(snakeCase);
 		
+		assertTrue(rdbmsShape.getPropertyConstraint(Schema.givenName) == null);
+		
+		URI GIVEN_NAME = iri(ALIAS + "GIVEN_NAME");
+		PropertyConstraint p = rdbmsShape.getPropertyConstraint(GIVEN_NAME);
+		assertTrue(p != null);
+		
+		QuantifiedExpression formula = p.getFormula();
+		assertTrue(formula != null);
+		
+		String text = formula.getText();
+		assertEquals(".givenName", text);
 	}
 	
 

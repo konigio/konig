@@ -1,9 +1,5 @@
 package io.konig.schemagen.sql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 /*
  * #%L
  * Konig Schema Generator
@@ -24,8 +20,8 @@ import static org.junit.Assert.assertTrue;
  * #L%
  */
 
-
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,15 +30,16 @@ import org.codehaus.plexus.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.model.URI;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
+
 import io.konig.maven.FileUtil;
-import io.konig.schemagen.SchemaGeneratorTest;
 import io.konig.shacl.Shape;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeWriter;
 
-public class RdbmsShapeHandlerTest extends SchemaGeneratorTest {
+public class RdbmsShapeHandlerTest extends AbstractRdbmsShapeGeneratorTest {
 	
-	private RdbmsShapeGenerator shapeGenerator = new RdbmsShapeGenerator("(.*)Shape$","$1RdbmsShape");
 	private RdbmsShapeHandler handler = null;
 	private File targetFolder = new File("target/test/rdbms-shape-generator");
 	
@@ -55,12 +52,7 @@ public class RdbmsShapeHandlerTest extends SchemaGeneratorTest {
 		File sourceFolder = new File("src/test/resources/rdbms-shape-generator");
 		FileUtil.copyDirectory(sourceFolder, targetFolder);
 		
-		File shapesDir = new File(targetFolder, "shapes");
-				
-		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-		ShapeWriter shapeWriter = new ShapeWriter();
 		
-		handler = new RdbmsShapeHandler(shapeGenerator, fileGetter, shapeWriter, nsManager);
 	}
 	
 	@Test
@@ -78,6 +70,17 @@ public class RdbmsShapeHandlerTest extends SchemaGeneratorTest {
 
 		assertTrue(logicalShape!= null);
 		assertNotNull(handler);
+	}
+	
+
+	protected void load(String path) throws RDFParseException, RDFHandlerException, IOException {
+		super.load(path);
+
+		File shapesDir = new File(targetFolder, "shapes");
+		
+		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
+		ShapeWriter shapeWriter = new ShapeWriter();
+		handler = new RdbmsShapeHandler(shapeGenerator, fileGetter, shapeWriter, nsManager);
 	}
 
 }

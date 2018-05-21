@@ -22,13 +22,27 @@ package io.konig.schemagen.aws;
 
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeServices;
+import org.apache.velocity.runtime.RuntimeSingleton;
+import org.apache.velocity.runtime.parser.ParseException;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -51,34 +65,81 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import io.konig.aws.common.InvalidAWSCredentialsException;
 import io.konig.aws.common.StackCreationException;
+import io.konig.spreadsheet.DataSourceGenerator.VelocityFunctions;
 
 public class AWSCloudFormationUtil {
 	
-	public static void writeCloudFormationTemplate(File cfDir,String template, boolean validate) throws IOException {
-		for(File file:cfDir.listFiles()){
-			String contents = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
-			YAMLMapper mapper = new YAMLMapper(new YAMLFactory());
-			JsonNode node = mapper.readTree(contents);
-			JsonNode outputNode=node.get("Outputs");
+	public static class VelocityFunctions {
+		private File path;
+		public VelocityFunctions(File cfDir) {
+			this.path = cfDir;
+		}
+		private void readTags(String fileName, StringBuffer template) throws FileNotFoundException, IOException {
+			File resourceFile = new File(path, fileName);
+			if(resourceFile.exists()){
+				try (InputStream inputStream = new FileInputStream(resourceFile)) {
+					String contents = IOUtils.toString(inputStream);
+					YAMLMapper mapper = new YAMLMapper(new YAMLFactory());
+					JsonNode node = mapper.readTree(contents);
+					JsonNode resourcesNode = node.get("Tags");
+					String jsonAsYaml = new YAMLMapper().writeValueAsString(resourcesNode);
+					String[] resourceLines=jsonAsYaml.split("\n");
+					for(String line:resourceLines){
+						if(!line.contains("---")){
+							template.append(""+line+"\n      ");
+						}
+					}
+				}
+			}
+		}
 		
-			if(outputNode!=null){			
-				String outputs=contents.substring(contents.lastIndexOf("Outputs:"));
-				String resources=contents.substring(0,contents.lastIndexOf("Outputs:"));
-					resources=resources+template;
-				contents=resources+outputs;
-			}
+		public String mergeSecurityTags(String text) throws FileNotFoundException, IOException {
+			StringBuffer template=new StringBuffer();
+			readTags(text + ".yml", template);
+			readTags("arn.all.yml", template);
+			return template.toString().trim();
 			
-			AmazonCloudFormationClient client = new AmazonCloudFormationClient();
-			ValidateTemplateRequest request = new ValidateTemplateRequest();
-			request.setTemplateBody(contents);	
-			if (validate) {
-				ValidateTemplateResult result=client.validateTemplate(request);
+		}
+	}
+	
+	public static void writeCloudFormationTemplate(File cfDir,String template, boolean validate) throws IOException, ParseException {
+		
+		for(File file:cfDir.listFiles()){
+			if(file.getName().endsWith("_template.yml")){
+				String contents = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
+				
+				VelocityContext context = new VelocityContext();
+				context.put("functions", new VelocityFunctions(cfDir));
+				StringWriter tempresult = new StringWriter();
+				Template vmtemplate = new Template();
+				RuntimeServices runtimeServices = RuntimeSingleton.getRuntimeServices();
+				StringReader reader = new StringReader(contents);
+				vmtemplate.setRuntimeServices(runtimeServices);
+				vmtemplate.setData(runtimeServices.parse(reader, template));
+				vmtemplate.initDocument();
+				vmtemplate.merge(context, tempresult);
+				contents = tempresult.toString();
+				YAMLMapper mapper = new YAMLMapper(new YAMLFactory());
+				JsonNode node = mapper.readTree(contents);
+				JsonNode outputNode=node.get("Outputs");
+				if(outputNode!=null){			
+					String outputs=contents.substring(contents.lastIndexOf("Outputs:"));
+					String resources=contents.substring(0,contents.lastIndexOf("Outputs:"));
+						resources=resources+template;
+					contents=resources+outputs;
+				}
+				
+				AmazonCloudFormationClient client = new AmazonCloudFormationClient();
+				ValidateTemplateRequest request = new ValidateTemplateRequest();
+				request.setTemplateBody(contents);	
+				if (validate) {
+					ValidateTemplateResult result=client.validateTemplate(request);
+				}
+				
+				try(FileWriter fileWriter= new FileWriter(file)){
+					fileWriter.write(contents);
+				}
 			}
-			
-			try(FileWriter fileWriter= new FileWriter(file)){
-				fileWriter.write(contents);
-			}
-			
 		}
 
 	}

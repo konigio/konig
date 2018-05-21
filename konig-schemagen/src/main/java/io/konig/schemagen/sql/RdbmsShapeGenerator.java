@@ -1,19 +1,27 @@
 package io.konig.schemagen.sql;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 
-import io.konig.aws.datasource.CloudFormationTemplate;
-import io.konig.core.Vertex;
-import io.konig.core.pojo.SimplePojoFactory;
-import io.konig.core.vocab.AWS;
+import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
+import io.konig.core.impl.MemoryGraph;
+import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.SimpleLocalNameService;
+import io.konig.core.path.NamespaceMapAdapter;
+import io.konig.core.util.StringUtil;
+import io.konig.formula.FormulaParser;
+import io.konig.formula.QuantifiedExpression;
+import io.konig.formula.ShapePropertyOracle;
+import io.konig.rio.turtle.NamespaceMap;
 import io.konig.shacl.PropertyConstraint;
 
 /*
@@ -43,10 +51,14 @@ public class RdbmsShapeGenerator {
 	
 	private String shapeIriPattern;
 	private String shapeIriReplacement;
+	private String propertyNameSpace;
+	private FormulaParser parser;
 	
-	public RdbmsShapeGenerator(String shapeIriPattern,String shapeIriReplacement){
+	public RdbmsShapeGenerator(FormulaParser parser, String shapeIriPattern,String shapeIriReplacement, String propertyNameSpace) {
 		this.shapeIriPattern=shapeIriPattern;
 		this.shapeIriReplacement=shapeIriReplacement;
+		this.propertyNameSpace = propertyNameSpace;
+		this.parser = new FormulaParser();
 	}
 	public String getShapeIriPattern() {
 		return shapeIriPattern;
@@ -60,13 +72,14 @@ public class RdbmsShapeGenerator {
 	public void setShapeIriReplacement(String shapeIriReplacement) {
 		this.shapeIriReplacement = shapeIriReplacement;
 	}
-	public Shape createRdbmsShape(Shape shape){
+
+	public Shape createRdbmsShape(Shape shape) throws RDFParseException, IOException{
 		
 		return flattenNestedShape(shape,null,null);
 	}
 
 
-	private Shape flattenNestedShape(Shape shape,String propertyId,String fullURI) {
+	private Shape flattenNestedShape(Shape shape,String propertyId,String fullURI) throws RDFParseException, IOException {
 		String propertyId1=null;
 		//Convert to snake case
 		Shape rdbmsShape= validateLocalNames(shape);
@@ -118,49 +131,59 @@ public class RdbmsShapeGenerator {
 	
 		return clonedShape;
 	}
-	public Shape validateLocalNames(Shape shape) {
-		String propertyId = "";
+	
+	public String getPropertyNameSpace() {
+		return propertyNameSpace;
+	}
+	public void setPropertyNameSpace(String propertyNameSpace) {
+		this.propertyNameSpace = propertyNameSpace;
+	}
+	public Shape validateLocalNames(Shape shape) throws RDFParseException, IOException {
 		Shape clonedShape = shape.deepClone(); 
-		List<PropertyConstraint> propConList=new ArrayList<PropertyConstraint>();
+		beginShape(clonedShape);
 		boolean isEdited=false;
 		for (PropertyConstraint p : clonedShape.getProperty()) {
-			String fullURI =p.getPath().toString();
-			int i = fullURI.lastIndexOf("/")+1;
-			int j = fullURI.lastIndexOf(">");
-			propertyId = fullURI.substring(i, j);
-			String changedPropertyId = changeToSnakeCase(propertyId);
-			if(changedPropertyId!=null && !changedPropertyId.equals(propertyId) && !isEdited){
-				isEdited=true;
+			URI predicate = p.getPredicate();
+			if (predicate != null) {
+				String localName = predicate.getLocalName();
+				String snakeCase = StringUtil.SNAKE_CASE(localName);
+				
+				if (!localName.equals(snakeCase)) {
+					isEdited = true;
+					URI newPredicate =  new URIImpl(propertyNameSpace + snakeCase);
+					declarePredicate(newPredicate);
+					p.setPredicate(newPredicate);
+					
+					if (p.getFormula()==null) {
+						String text = "." + localName;
+						QuantifiedExpression formula = parser.quantifiedExpression(text);
+						p.setFormula(formula);
+					}
+				}
 			}
-			fullURI = fullURI.substring(1,fullURI.lastIndexOf("/")+1);
-			URI path = new URIImpl(stringUtilities(fullURI,changedPropertyId)) ;
-			p.setPath(path);
-			propConList.add(p);
 			
 		}
-		clonedShape.setProperty(propConList);
 		if(isEdited)			
 			return clonedShape;
 		else
 			return null;		
 	}
 	
-
-	public String changeToSnakeCase(String propertyId) {
-		String camelCasePattern = "([a-z]+[A-Z]+\\w+)+"; 
-		String pascalCasePattern = "([A-Z][a-z]+\\w+)+";
-		String snakeCasePatternLowerCase ="([a-z]+(?:_[a-z]+)*)";
-		String snakeCasePatternUpperCase ="([A-Z]+(?:_[A-Z]+)*)";
-		if(propertyId.matches(camelCasePattern) || propertyId.matches(pascalCasePattern)){
-			propertyId = propertyId.replaceAll("([^_A-Z])([A-Z])", "$1_$2").toUpperCase();
-		}else if(propertyId.matches(snakeCasePatternLowerCase)){
-			propertyId = propertyId.replaceAll("([^_A-Z])([A-Z])", "$1_$2").toUpperCase();
-		} else if(propertyId.matches(snakeCasePatternUpperCase)){
-			propertyId = null;
-		}
-		return propertyId;
-	}
 	
+	private void declarePredicate(URI predicate) {
+		if (parser.getLocalNameService() instanceof SimpleLocalNameService) {
+			SimpleLocalNameService service = (SimpleLocalNameService) parser.getLocalNameService();
+			service.add(predicate);
+		}
+		
+	}
+	private void beginShape(Shape shape) {
+		if (parser.getPropertyOracle() instanceof ShapePropertyOracle) {
+			ShapePropertyOracle oracle = (ShapePropertyOracle) parser.getPropertyOracle();
+			oracle.setShape(shape);
+		}
+		
+	}
 	public String stringUtilities(String value, String val){
 		StringBuffer sb = new StringBuffer();
 		sb.append(value);
@@ -168,7 +191,27 @@ public class RdbmsShapeGenerator {
 		return sb.toString();
 		
 	}
+public QuantifiedExpression formulaParser(Shape shape, String formula) throws RDFParseException, IOException, RDFHandlerException{
+	Graph tbox = new MemoryGraph();
+	NamespaceManager nsManager = new MemoryNamespaceManager();
+	tbox.setNamespaceManager(nsManager);
+	SimpleLocalNameService localNameService = new SimpleLocalNameService();
+	localNameService.addAll(tbox);
+	tbox.vertex(shape.getId());
+	NamespaceMap nsMap = new NamespaceMapAdapter(tbox.getNamespaceManager());
+	ShapePropertyOracle oracle = new ShapePropertyOracle();
+		
+	FormulaParser parser = new FormulaParser(oracle, localNameService, nsMap);
 
+	// For a given `Shape` and a string representation of the formula, 
+	// you can parse the formula like this...
+
+	oracle.setShape(shape);
+	QuantifiedExpression e = parser.quantifiedExpression(formula);
+	return e;
+	
+	
+}
 
 
 }
