@@ -1238,9 +1238,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 	}
 	
-	private void generateViewShape() {
-		if(rdfSourceDir != null && viewShapeGenerator != null) {
-			File shapesDir = new File(rdfSourceDir, "shapes");
+	private void generateViewShape() throws RDFParseException, RDFHandlerException, IOException {
+		if(defaults.getShapesDir() != null && viewShapeGenerator != null) {
+			RdfUtil.loadTurtle(defaults.getRdfDir(), owlGraph, nsManager);
+			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
+			shapeLoader.load(owlGraph);
+			
+			File shapesDir = defaults.getShapesDir();
 			ViewShapeGenerator shapeGenerator = new ViewShapeGenerator(nsManager, shapeManager, viewShapeGenerator);
 			shapeGenerator.generate(shapesDir);
 		}
