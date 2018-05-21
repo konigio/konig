@@ -11,6 +11,8 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
+import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
@@ -18,9 +20,12 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.core.util.StringUtil;
+import io.konig.datasource.DataSource;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.ShapePropertyOracle;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.rio.turtle.NamespaceMap;
 import io.konig.shacl.PropertyConstraint;
 
@@ -75,63 +80,69 @@ public class RdbmsShapeGenerator {
 
 	public Shape createRdbmsShape(Shape shape) throws RDFParseException, IOException{
 		
-		return flattenNestedShape(shape,null,null);
+		return flattenNestedShape(shape,null,null,null);
 	}
 
 
-	private Shape flattenNestedShape(Shape shape,String propertyId,String fullURI) throws RDFParseException, IOException {
+	private Shape flattenNestedShape(Shape shape,String propertyId,String formula,PropertyConstraint parentProperty) throws RDFParseException, IOException {
 		String propertyId1=null;
-		//Convert to snake case
 		Shape rdbmsShape= validateLocalNames(shape);
-		Shape clonedShape=null;
 		if(rdbmsShape!=null){
-			clonedShape = rdbmsShape.deepClone(); 
-			ListIterator<PropertyConstraint> iterator=clonedShape.getProperty().listIterator();
-			List<PropertyConstraint> propConstraints=new ArrayList<PropertyConstraint>();
-			//Iterate the properties of the root shape.
-			while(iterator.hasNext()){
-				PropertyConstraint p=iterator.next();
-				String fullURI1 =p.getPath().toString();
-				int i = fullURI1.lastIndexOf("/")+1;
-				int j = fullURI1.lastIndexOf(">");
-				propertyId1 = fullURI1.substring(i, j);
-				if(p.getShape()!=null){
-					Shape flattenedNestedShape=null;
-					//Root shape - Property has a nested shape
-					if(propertyId!=null && fullURI!=null){
-						flattenedNestedShape=flattenNestedShape(p.getShape(),propertyId+"__"+propertyId1,fullURI1);
-						propConstraints.addAll(flattenedNestedShape.getProperty());
+				if(propertyId!=null || isValidRdbmsShape(rdbmsShape)){
+				beginShape(rdbmsShape);			
+				ListIterator<PropertyConstraint> iterator=rdbmsShape.getProperty().listIterator();
+				List<PropertyConstraint> propConstraints=new ArrayList<PropertyConstraint>();
+				while(iterator.hasNext()){
+					PropertyConstraint p=iterator.next();				
+					URI predicate =p.getPredicate();
+					String formula1=p.getFormula().toSimpleString();
+					propertyId1=predicate.getLocalName();
+					String changedPropertyId=null;
+					String formulaText=null;
+					if(p.getShape()!=null){
+						if(p.getMaxCount()==1){
+							changedPropertyId=(propertyId==null)?propertyId1:propertyId+"__"+propertyId1;	
+							formulaText = (propertyId==null)?formula1:formula+formula1;
+							Shape flattenedNestedShape=flattenNestedShape(p.getShape(),changedPropertyId,formulaText,p);
+							propConstraints.addAll(flattenedNestedShape.getProperty());
+						}
+						else
+							p.setShape(null);
 					}
-					else if(propertyId==null && fullURI==null){
-						flattenedNestedShape=flattenNestedShape(p.getShape(),propertyId1,fullURI1);
-						propConstraints.addAll(flattenedNestedShape.getProperty());
-					}					
+					else if(propertyId!=null){		
+						changedPropertyId=propertyId+"__"+propertyId1;
+						formulaText= formula+formula1;
+						if(parentProperty.getMinCount()==0){
+							p.setMinCount(0);
+						}
+						URI path = new URIImpl(stringUtilities(parentProperty.getPredicate().getNamespace(),changedPropertyId)) ;
+						p.setPath(path);
+						QuantifiedExpression formulaExp = parser.quantifiedExpression(formulaText);
+						p.setFormula(formulaExp);
+						propConstraints.add(p);	
+					}
+					
+					if(!propConstraints.isEmpty())
+						iterator.remove();
 				}
-				else if(propertyId!=null && fullURI!=null){						
-					//Nested shape - Property does not have a nested shape.
-					String changedPropertyId=propertyId+"__"+propertyId1;
-					fullURI1 = fullURI.substring(1,fullURI.lastIndexOf("/")+1);
-					URI path = new URIImpl(stringUtilities(fullURI1,changedPropertyId)) ;
-					p.setPath(path);
-					propConstraints.add(p);	
-				}
-				else if(propertyId==null && fullURI==null){
-					//Do nothing - root shape - property does not have a nested shape
-				}
-				if(!propConstraints.isEmpty())
-					iterator.remove();
-			}			
-			
-			if(!propConstraints.isEmpty()){
-				for(PropertyConstraint p2:propConstraints){
-					clonedShape.add(p2);
+				if(!propConstraints.isEmpty()){
+					for(PropertyConstraint p2:propConstraints){
+						rdbmsShape.add(p2);
+					}
 				}
 			}
 		}
-	
-		return clonedShape;
+		return rdbmsShape;
 	}
 	
+	private boolean isValidRdbmsShape(Shape rdbmsShape) {
+		AwsAurora auroraTable = rdbmsShape.findDataSource(AwsAurora.class);
+		GoogleCloudSqlTable gcpSqlTable = rdbmsShape.findDataSource(GoogleCloudSqlTable.class);
+		if (auroraTable !=null || gcpSqlTable != null){
+			return true;
+		}
+		return false;
+	}
 	public String getPropertyNameSpace() {
 		return propertyNameSpace;
 	}
