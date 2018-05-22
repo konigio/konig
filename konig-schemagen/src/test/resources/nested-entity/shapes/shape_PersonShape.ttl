@@ -1,0 +1,37 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix aws: <http://www.konig.io/ns/aws/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/lGGlqbs8s18AAAFjiZ-W_g> ; 
+	sh:targetClass schema:Person ; 
+	sh:property  [ 
+		sh:path schema:givenName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:familyName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:address ; 
+		sh:shape shape:AddressShape ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	konig:shapeDataSource <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/PersonShape> . 
+
+<http://www.konig.io/activity/lGGlqbs8s18AAAFjiZ-W_g> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-05-22T16:52:07.617-04:00"^^xsd:dateTime . 
+
+<http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/PersonShape> a konig:AwsAurora , konig:DataSource ; 
+	aws:tableReference  [ 
+		aws:awsAuroraHost "${awsAuroraHost}" ; 
+		aws:awsSchema "${awsAuroraSchema}" ; 
+		aws:awsTableName "PersonShape" ]  . 

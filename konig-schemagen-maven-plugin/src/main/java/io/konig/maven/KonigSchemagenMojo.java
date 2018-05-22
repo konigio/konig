@@ -377,11 +377,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	BigQueryInfo bigQuery=null;
     	CloudSqlInfo cloudSql=null; 	
 	
-		if (rdfSourceDir != null) {
-			RdfUtil.loadTurtle(rdfSourceDir, owlGraph, nsManager);
-			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
-			shapeLoader.load(owlGraph);
-		}
 		
     	if(amazonWebServices!=null && amazonWebServices.getAurora()!=null){
     		aurora=amazonWebServices.getAurora();
