@@ -1,0 +1,29 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:AddressShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/lGGlqbs8s18AAAFjiZ-W_g> ; 
+	sh:targetClass schema:PostalAddress ; 
+	sh:property  [ 
+		sh:path schema:streetAddress ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:addressLocality ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:addressRegion ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  . 
+
+<http://www.konig.io/activity/lGGlqbs8s18AAAFjiZ-W_g> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-05-22T16:52:07.617-04:00"^^xsd:dateTime . 

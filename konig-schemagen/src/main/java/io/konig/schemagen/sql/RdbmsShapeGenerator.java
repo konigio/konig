@@ -4,29 +4,18 @@ package io.konig.schemagen.sql;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsAurora;
-import io.konig.aws.datasource.AwsAuroraTable;
-import io.konig.core.Graph;
-import io.konig.core.NamespaceManager;
-import io.konig.core.impl.MemoryGraph;
-import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.SimpleLocalNameService;
-import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.core.util.StringUtil;
-import io.konig.datasource.DataSource;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.ShapePropertyOracle;
-import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
-import io.konig.rio.turtle.NamespaceMap;
 import io.konig.shacl.PropertyConstraint;
 
 /*
@@ -79,61 +68,90 @@ public class RdbmsShapeGenerator {
 	}
 
 	public Shape createRdbmsShape(Shape shape) throws RDFParseException, IOException{
+		Shape clone = null;
+		if (accept(shape)) {
+			clone = shape.deepClone();
+			updateOracle(shape);
+			process(clone, ".", "", clone);
+		}
+		return clone;
 		
-		return flattenNestedShape(shape,null,null,null);
 	}
-
-
-	private Shape flattenNestedShape(Shape shape,String propertyId,String formula,PropertyConstraint parentProperty) throws RDFParseException, IOException {
-		String propertyId1=null;
-		Shape rdbmsShape= validateLocalNames(shape);
-		if(rdbmsShape!=null){
-				if(propertyId!=null || isValidRdbmsShape(rdbmsShape)){
-				beginShape(rdbmsShape);			
-				ListIterator<PropertyConstraint> iterator=rdbmsShape.getProperty().listIterator();
-				List<PropertyConstraint> propConstraints=new ArrayList<PropertyConstraint>();
-				while(iterator.hasNext()){
-					PropertyConstraint p=iterator.next();				
-					URI predicate =p.getPredicate();
-					String formula1=p.getFormula().toSimpleString();
-					propertyId1=predicate.getLocalName();
-					String changedPropertyId=null;
-					String formulaText=null;
-					if(p.getShape()!=null){
-						if(p.getMaxCount()!=null && p.getMaxCount()==1){
-							changedPropertyId=(propertyId==null)?propertyId1:propertyId+"__"+propertyId1;	
-							formulaText = (propertyId==null)?formula1:formula+formula1;
-							Shape flattenedNestedShape=flattenNestedShape(p.getShape(),changedPropertyId,formulaText,p);
-							propConstraints.addAll(flattenedNestedShape.getProperty());
-						}
-						else
-							p.setShape(null);
-					}
-					else if(propertyId!=null){		
-						changedPropertyId=propertyId+"__"+propertyId1;
-						formulaText= formula+formula1;
-						if(parentProperty.getMinCount()==0){
-							p.setMinCount(0);
-						}
-						URI path = new URIImpl(stringUtilities(parentProperty.getPredicate().getNamespace(),changedPropertyId)) ;
-						p.setPath(path);
-						QuantifiedExpression formulaExp = parser.quantifiedExpression(formulaText);
-						p.setFormula(formulaExp);
-						propConstraints.add(p);	
-					}
-					
-					if(!propConstraints.isEmpty())
-						iterator.remove();
-				}
-				if(!propConstraints.isEmpty()){
-					for(PropertyConstraint p2:propConstraints){
-						rdbmsShape.add(p2);
+	
+	/**
+	 * Check whether the shape contains any properties that need to be renamed using SNAKE_CASE, or any 
+	 * nested shapes that need to be flattened, and that it is a valid shape that required RDBMS generation.
+	 * 
+	 * @param shape
+	 * @return true if the supplied shape contains fields that need to be renamed or any nested shapes.
+	 */
+	private boolean accept(Shape shape) {
+		
+		if (!isValidRdbmsShape(shape)) {
+			return false;
+		}
+		
+		for (PropertyConstraint p : shape.getProperty()) {
+			if (p.getShape() != null && p.getMaxCount()!=null && p.getMaxCount()==1) {
+				return true;
+			}
+			if (p.getDatatype() != null) {
+				URI predicate = p.getPredicate();
+				if (predicate != null) {
+					String localName = predicate.getLocalName();
+					String snakeCase = StringUtil.SNAKE_CASE(localName);
+					if (!localName.equals(snakeCase)) {
+						return true;
 					}
 				}
 			}
 		}
-		return rdbmsShape;
+		return false;
 	}
+	private void process(Shape rdbmsShape, String logicalPath, String prefix, Shape propertyContainer) throws RDFParseException, IOException {
+		
+		List<PropertyConstraint> list = new ArrayList<>(propertyContainer.getProperty());
+		
+		for (PropertyConstraint p : list) {
+			URI predicate = p.getPredicate();
+			if (predicate != null && p.getMaxCount()!=null && p.getMaxCount()==1) {
+				String localName = predicate.getLocalName();
+				String snakeCase = StringUtil.SNAKE_CASE(localName);
+
+				String newLocalName = prefix + snakeCase;
+				
+				if (p.getDatatype() != null && !localName.equals(snakeCase)) {
+						
+					URI newPredicate =  new URIImpl( propertyNameSpace + newLocalName );
+					
+					declarePredicate(newPredicate);
+					p.setPredicate(newPredicate);
+					
+					if (p.getFormula()==null) {
+						
+						String text = logicalPath + localName;
+						QuantifiedExpression formula = parser.quantifiedExpression(text);
+						p.setFormula(formula);
+					}
+					
+					if (propertyContainer != rdbmsShape) {
+						rdbmsShape.add(p);
+					}
+						
+				} else if (p.getShape() != null) {
+					String nestedPath = logicalPath + localName + '.';
+					String nestedPrefix = snakeCase + "__";
+					
+					process(rdbmsShape, nestedPath, nestedPrefix, p.getShape());
+				}
+				
+			}
+		}
+		
+	}
+
+
+	
 	
 	private boolean isValidRdbmsShape(Shape rdbmsShape) {
 		AwsAurora auroraTable = rdbmsShape.findDataSource(AwsAurora.class);
@@ -142,42 +160,6 @@ public class RdbmsShapeGenerator {
 			return true;
 		}
 		return false;
-	}
-	public String getPropertyNameSpace() {
-		return propertyNameSpace;
-	}
-	public void setPropertyNameSpace(String propertyNameSpace) {
-		this.propertyNameSpace = propertyNameSpace;
-	}
-	public Shape validateLocalNames(Shape shape) throws RDFParseException, IOException {
-		Shape clonedShape = shape.deepClone(); 
-		beginShape(clonedShape);
-		boolean isEdited=false;
-		for (PropertyConstraint p : clonedShape.getProperty()) {
-			URI predicate = p.getPredicate();
-			if (predicate != null) {
-				String localName = predicate.getLocalName();
-				String snakeCase = StringUtil.SNAKE_CASE(localName);
-				
-				if (!localName.equals(snakeCase)) {
-					isEdited = true;
-					URI newPredicate =  new URIImpl(propertyNameSpace + snakeCase);
-					declarePredicate(newPredicate);
-					p.setPredicate(newPredicate);
-					
-					if (p.getFormula()==null) {
-						String text = "." + localName;
-						QuantifiedExpression formula = parser.quantifiedExpression(text);
-						p.setFormula(formula);
-					}
-				}
-			}
-			
-		}
-		if(isEdited)			
-			return clonedShape;
-		else
-			return null;		
 	}
 	
 	
@@ -188,41 +170,13 @@ public class RdbmsShapeGenerator {
 		}
 		
 	}
-	private void beginShape(Shape shape) {
+	private void updateOracle(Shape shape) {
 		if (parser.getPropertyOracle() instanceof ShapePropertyOracle) {
 			ShapePropertyOracle oracle = (ShapePropertyOracle) parser.getPropertyOracle();
 			oracle.setShape(shape);
 		}
 		
 	}
-	public String stringUtilities(String value, String val){
-		StringBuffer sb = new StringBuffer();
-		sb.append(value);
-		sb.append(val);		
-		return sb.toString();
-		
-	}
-public QuantifiedExpression formulaParser(Shape shape, String formula) throws RDFParseException, IOException, RDFHandlerException{
-	Graph tbox = new MemoryGraph();
-	NamespaceManager nsManager = new MemoryNamespaceManager();
-	tbox.setNamespaceManager(nsManager);
-	SimpleLocalNameService localNameService = new SimpleLocalNameService();
-	localNameService.addAll(tbox);
-	tbox.vertex(shape.getId());
-	NamespaceMap nsMap = new NamespaceMapAdapter(tbox.getNamespaceManager());
-	ShapePropertyOracle oracle = new ShapePropertyOracle();
-		
-	FormulaParser parser = new FormulaParser(oracle, localNameService, nsMap);
-
-	// For a given `Shape` and a string representation of the formula, 
-	// you can parse the formula like this...
-
-	oracle.setShape(shape);
-	QuantifiedExpression e = parser.quantifiedExpression(formula);
-	return e;
-	
-	
-}
 
 
 }

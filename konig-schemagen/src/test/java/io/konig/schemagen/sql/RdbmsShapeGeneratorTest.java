@@ -22,6 +22,9 @@ package io.konig.schemagen.sql;
 
 
 import static org.junit.Assert.assertTrue;
+
+import org.junit.Ignore;
+
 import static org.junit.Assert.*;
 
 import org.junit.Test;
@@ -35,20 +38,21 @@ import io.konig.shacl.Shape;
 public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 	
 	@Test
-	public void testSnakeCase() throws Exception {
+	public void testFlatten() throws Exception {
+		load("src/test/resources/nested-entity");
 		
-		load("src/test/resources/rdbms-shape-generator");
 		
-		
-		URI shapeId = iri("http://example.com/shapes/TargetPersonShape");
+		URI shapeId = iri("http://example.com/shapes/PersonShape");
 		
 		
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
 		
+		assertTrue(rdbmsShape != null);
+		
 		assertTrue(rdbmsShape.getPropertyConstraint(Schema.givenName) == null);
 		
-		URI GIVEN_NAME = iri(ALIAS + "GIVEN_NAME");
+		URI GIVEN_NAME = iri(ALIAS + "ADDRESS__STREET_ADDRESS");
 		PropertyConstraint p = rdbmsShape.getPropertyConstraint(GIVEN_NAME);
 		assertTrue(p != null);
 		
@@ -56,8 +60,10 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		assertTrue(formula != null);
 		
 		String text = formula.getText();
-		assertEquals(".givenName", text);
+		assertEquals(".address.streetAddress", text);
 	}
+	
+	
 	
 
 
