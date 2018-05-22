@@ -1029,6 +1029,14 @@ public class WorkbookLoaderTest {
 		} catch (Exception e) {
 			throw new KonigException(e);
 		}
+		
+		// Verify that schema:givenName has the DCL4 security classification
+		
+		Set<URI> sc = graph.v(Schema.givenName).out(Konig.securityClassification).toUriSet();
+		assertEquals(1, sc.size());
+		
+		URI DCL4 = uri("https://schema.pearson.com/ns/dcl/DCL4");
+		assertEquals(DCL4, sc.iterator().next());
 
 	}
 	private void checkPropertyConstraints(Graph graph) {
