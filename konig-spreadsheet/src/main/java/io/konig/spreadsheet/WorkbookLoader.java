@@ -1485,7 +1485,7 @@ public class WorkbookLoader {
 			if(securityClassification!= null && !securityClassification.isEmpty())
 			{
 				for (URI uri : securityClassification) {
-					edge(shapeId, Konig.securityClassification, uri);					
+					edge(constraint, Konig.qualifiedSecurityClassification, uri);					
 				}
 			}	
 			if (formula != null) {
