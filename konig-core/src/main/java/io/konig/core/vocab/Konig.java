@@ -122,6 +122,7 @@ public class Konig {
 	public static final URI attribute = new URIImpl(ATTRIBUTE);
 	public static final URI variable = new URIImpl("http://www.konig.io/ns/core/variable");
 	public static final URI stereotype = new URIImpl("http://www.konig.io/ns/core/stereotype");
+	public static final URI securityClassification = new URIImpl("http://www.konig.io/ns/core/securityClassification");
 	public static final URI totalCount = new URIImpl("http://www.konig.io/ns/core/totalCount");
 	public static final URI durationUnit = new URIImpl("http://www.konig.io/ns/core/durationUnit");
 	public static final URI aggregationOf = new URIImpl("http://www.konig.io/ns/core/aggregationOf");

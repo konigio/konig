@@ -196,6 +196,7 @@ public class WorkbookLoader {
 	private static final String MAX_LENGTH = "Max Length";
 	private static final String DECIMAL_PRECISION = "Decimal Precision";
 	private static final String DECIMAL_SCALE = "Decimal Scale";
+	private static final String SECURITY_CLASSIFICATION ="Security Classification";
 
 	// Cloud SQL Instance
 	private static final String INSTANCE_NAME = "Instance Name";
@@ -470,6 +471,7 @@ public class WorkbookLoader {
 		private int pcMaxLength = UNDEFINED;
 		private int pcDecimalPrecision = UNDEFINED;
 		private int pcDecimalScale = UNDEFINED;
+		private int pcSecurityClassification = UNDEFINED;
 
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
@@ -1342,7 +1344,7 @@ public class WorkbookLoader {
 			String formula = stringValue(row, pcEqualsCol);
 			String sourcePath = stringValue(row, pcSourcePathCol);
 			String partitionOf = stringValue(row, pcPartitionOfCol);
-
+			List<URI> securityClassification = uriList(row, pcSecurityClassification);
 			if (formula == null) {
 				// Support legacy column name "Equivalent Path"
 				formula = stringValue(row, pcEquivalentPathCol);
@@ -1480,6 +1482,12 @@ public class WorkbookLoader {
 			edge(constraint, Konig.decimalScale, decimalScale);
 			edge(constraint, SH.in, valueIn);
 			edge(constraint, Konig.stereotype, stereotype);
+			if(securityClassification!= null && !securityClassification.isEmpty())
+			{
+				for (URI uri : securityClassification) {
+					edge(shapeId, Konig.securityClassification, uri);					
+				}
+			}	
 			if (formula != null) {
 				formulaHandlers.add(new PropertyFormulaHandler(shapeId, constraintVertex, formula));
 			}
@@ -1842,7 +1850,7 @@ public class WorkbookLoader {
 		}
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
-			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = pcDecimalPrecision = pcDecimalScale = UNDEFINED;
+			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol = pcPartitionOfCol = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1933,6 +1941,9 @@ public class WorkbookLoader {
 						break;
 					case TERM_STATUS:
 						pcTermStatusCol = i;
+						break;
+					case SECURITY_CLASSIFICATION:
+						pcSecurityClassification = i;
 						break;
 					}
 				}

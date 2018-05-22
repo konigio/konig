@@ -52,6 +52,7 @@ import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
 import io.konig.core.Vertex;
@@ -78,7 +79,9 @@ import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
+import io.konig.shacl.io.ShapeWriter;
 
 public class WorkbookLoaderTest {
 	
@@ -986,7 +989,39 @@ public class WorkbookLoaderTest {
 	
 		
 	}
-	
+	@Test
+	public void testSecurityClassification() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("security-classification.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		
+		Shape shape = s.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		
+
+		ShapeWriter shapeWriter = new ShapeWriter();
+		try {
+			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/security-classification/PersonShape.ttl"));
+		} catch (Exception e) {
+			throw new KonigException(e);
+		}
+
+	}
 	private void checkPropertyConstraints(Graph graph) {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));
