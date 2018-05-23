@@ -35,6 +35,7 @@ import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
 import io.konig.maven.JsonSchemaConfig;
 import io.konig.maven.OracleManagedCloudConfig;
+import io.konig.maven.ViewShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
 
 public class MultiProject extends MavenProjectConfig {
@@ -47,7 +48,8 @@ public class MultiProject extends MavenProjectConfig {
 	private JsonSchemaConfig jsonSchema;
 	private OracleManagedCloudConfig oracleManagedCloud;
 	private AmazonWebServicesConfig amazonWebServices;	
-	
+	private ViewShapeGeneratorConfig viewShapeGenerator;
+	 
 	public WorkbookProcessor getWorkbook() {
 		return workbook;
 	}
@@ -72,10 +74,17 @@ public class MultiProject extends MavenProjectConfig {
 		return jsonSchema;
 	}
 	
+	public ViewShapeGeneratorConfig getViewShapeGeneratorConfig() {
+		return viewShapeGenerator;
+	}
+	
+	public void setViewShapeGeneratorConfig(ViewShapeGeneratorConfig viewShapeGenerator) {
+		this.viewShapeGenerator = viewShapeGenerator;
+	}
+	
 	public void setJsonSchemaConfig(JsonSchemaConfig jsonSchemaConfig) {
 		this.jsonSchema = jsonSchemaConfig;
 	}
-
 
 
 	public void setWorkbook(WorkbookProcessor workbook) {
@@ -116,6 +125,7 @@ public class MultiProject extends MavenProjectConfig {
 		ParentProjectGenerator parent = new ParentProjectGenerator(this);
 		if (workbook != null) {
 			RdfModelGenerator rdf = new RdfModelGenerator(this, workbook);
+			rdf.setViewShapeGeneratorConfig(viewShapeGenerator);
 			setRdfSourceDir(new File(rdf.baseDir(), "target/generated/rdf"));
 			parent.add(rdf);
 		}

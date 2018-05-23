@@ -36,7 +36,6 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.gcp.datasource.GcpShapeConfig;
-import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class SchemaGeneratorTest {
@@ -44,7 +43,7 @@ public class SchemaGeneratorTest {
 
 	protected NamespaceManager nsManager = new MemoryNamespaceManager();
 	protected Graph graph = new MemoryGraph(nsManager);
-	protected ShapeManager shapeManager = new MemoryShapeManager();
+	protected MemoryShapeManager shapeManager = new MemoryShapeManager();
 
 	
 

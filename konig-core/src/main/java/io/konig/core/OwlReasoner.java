@@ -594,6 +594,24 @@ public class OwlReasoner {
 				Schema.Text.equals(owlClass);
 	}
 	
+	/**
+	 * Get the set of all properties that are declared to be the <code>owl:inverseOf</code>
+	 * a given property.
+	 * @param property  The IRI of the property whose inverse is to be returned.
+	 * @return  The set of identifiers for properties that are declared to be the inverse of the given property.
+	 */
+	public Set<URI> inverseOf(URI property) {
+		Set<URI> result = new HashSet<>();
+		
+		Set<URI> outward = graph.v(property).out(OWL.INVERSEOF).toUriSet();
+		result.addAll(outward);
+		
+		Set<URI> inward = graph.v(property).in(OWL.INVERSEOF).toUriSet();
+		result.addAll(inward);
+		
+		return result;
+	}
+	
 	public boolean isInverseFunctionalProperty(URI property) {
 		return instanceOf(property, OWL.INVERSEFUNCTIONALPROPERTY);
 	}

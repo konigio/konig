@@ -32,6 +32,7 @@ import io.konig.formula.FormulaParser;
 import io.konig.formula.ShapePropertyOracle;
 import io.konig.rio.turtle.NamespaceMap;
 import io.konig.schemagen.SchemaGeneratorTest;
+import io.konig.shacl.impl.ShapeInjector;
 
 public class AbstractRdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 	
