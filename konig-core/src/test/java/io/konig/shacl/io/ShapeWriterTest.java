@@ -108,11 +108,10 @@ public class ShapeWriterTest {
 	public void testFormula() throws Exception {
 
 		String text = 
-			"@context {\n" + 
-			"   \"ex\" : \"http://example.com/ns/\",\n" + 
-			"   \"status\" : \"http://example.com/ns/status\",\n" + 
-			"   \"estimatedPoints\" : \"http://example.com/ns/estimatedPoints\"\n" + 
-			"}\n" + 
+			"@prefix ex: <http://example.com/ns/> .\n" + 
+			"@term status <http://example.com/ns/status>\n" + 
+			"@term estimatedPoints <http://example.com/ns/estimatedPoints>\n" + 
+			"\n" + 
 			"(status = ex:Complete) ? estimatedPoints : 0";
 		
 		URI shapeId = uri("http://example.com/IssueShape");

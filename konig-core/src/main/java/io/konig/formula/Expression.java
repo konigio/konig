@@ -83,12 +83,8 @@ public class Expression extends AbstractFormula {
 		Context lastWrittenContext = out.getLastWrittenContext();
 		if (context != null && !out.isSuppressContext() && context!=lastWrittenContext) {
 			out.setLastWrittenContext(context);
-			
-			List<Term> termList = context.asList();
-			int remainder = printNamespaces(out, termList);
-			if (remainder>0) {
-				printContext(out, termList);
-			}
+			context.compile();
+			printContext(out, context.asList());
 			
 		}
 		printOrList(out);
@@ -119,46 +115,76 @@ public class Expression extends AbstractFormula {
 
 	private void printContext(PrettyPrintWriter out, List<Term> termList) {
 		
-		out.print("@context {");
-		out.pushIndent();
+//		out.print("@context {");
+//		out.pushIndent();
+//		
+//		String comma = "";
+//		for (Term term : termList) {
+//			if (term.getKind() != Kind.NAMESPACE ||
+//				term.getContainer()!=null ||
+//				term.getLanguage()!=null ||
+//				term.getType()!=null
+//			) {
+//				out.println(comma);
+//				term.print(out);
+//				comma = ",";
+//			}
+//		}
+//		out.println();
+//		out.popIndent();
+//		out.println('}');
 		
-		String comma = "";
-		for (Term term : termList) {
-			if (term.getKind() != Kind.NAMESPACE ||
-				term.getContainer()!=null ||
-				term.getLanguage()!=null ||
-				term.getType()!=null
-			) {
-				out.println(comma);
-				term.print(out);
-				comma = ",";
-			}
+		if (!termList.isEmpty()) {
+			printPrefixes(out, termList);
+			printTerms(out, termList);
+			out.println();
 		}
-		out.println();
-		out.popIndent();
-		out.println('}');
 		
 	}
 
-	private int printNamespaces(PrettyPrintWriter out, List<Term> termList) {
-		int count = 0;
+
+	private void printTerms(PrettyPrintWriter out, List<Term> termList) {
 		for (Term term : termList) {
-			if (term.getKind() == Kind.NAMESPACE && 
-				term.getContainer()==null &&
-				term.getLanguage()==null &&
-				term.getType()==null
-			) {
+			if (term.getKind() != Kind.NAMESPACE) {
+				out.print("@term ");
+				out.print(term.getKey());
+				out.print(' ');
 				
+				
+				if (term.getExpandedId().stringValue().equals(term.getId())) {
+					out.print('<');
+					out.print(term.getId());
+					out.println('>');
+				} else {
+					out.println(term.getId());
+				}
+			}
+		}
+		
+	}
+
+	private void printPrefixes(PrettyPrintWriter out, List<Term> termList) {
+		
+		for (Term term : termList) {
+			if (term.getKind() ==  Kind.ANY) {
+				int c = term.getId().charAt(term.getId().length()-1);
+				
+				if ( (c=='/' || c=='#' || c==':') &&
+					term.getExpandedId().stringValue().equals(term.getExpandedIdValue())
+				) {
+					term.setKind(Kind.NAMESPACE);
+				}
+			}
+			
+			if (term.getKind() == Kind.NAMESPACE) {
 				out.print("@prefix ");
 				out.print(term.getKey());
 				out.print(": <");
-				out.print(term.getExpandedIdValue());
+				out.print(term.getId());
 				out.println("> .");
-			} else {
-				count++;
 			}
 		}
-		return count;
+		
 	}
 
 	public Value toValue() {

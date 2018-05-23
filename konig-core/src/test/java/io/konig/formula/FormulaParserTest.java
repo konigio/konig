@@ -19,13 +19,14 @@ package io.konig.formula;
  * limitations under the License.
  * #L%
  */
-
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
+import io.konig.core.Context;
+import io.konig.core.Term;
 import io.konig.core.vocab.Schema;
 
 public class FormulaParserTest {
@@ -33,15 +34,42 @@ public class FormulaParserTest {
 	private FormulaParser parser = new FormulaParser();
 	
 	@Test
+	public void testTerm() throws Exception {
+		String text = 
+			"@term address <http://schema.org/address>\n" +
+			"@prefix schema : <http://schema.org/> .\n" +
+			"@term postalCode schema:postalCode\n" +
+			".address.postalCode";
+		
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		Context context = e.getContext();
+		context.compile();
+		
+		Term term = context.getTerm("address");
+		assertEquals(Schema.address, term.getExpandedId());
+		
+		term = context.getTerm("postalCode");
+		assertEquals(Schema.postalCode, term.getExpandedId());
+		
+		String actualText = e.toString();
+		String expectedText = 
+				"@prefix schema: <http://schema.org/> .\n" + 
+				"@term address <http://schema.org/address>\n" + 
+				"@term postalCode schema:postalCode\n" + 
+				"\n" + 
+				".address.postalCode";
+		
+		assertEquals(expectedText, actualText);
+	}
+	
+	@Test
 	public void testTimeInterval() throws Exception {
 
 		String text = 
-			"@context {\n" + 
-			"   \"endTime\" : \"http://schema.org/endTime\",\n" + 
-			"   \"Day\" : \"http://www.konig.io/ns/core/Day\",\n" + 
-			"   \"Day\" : \"http://www.konig.io/ns/core/Week\",\n" + 
-			"   \"Day\" : \"http://www.konig.io/ns/core/Month\"\n" + 
-			"}\n" + 
+			"@term endTime <http://schema.org/endTime>\n" + 
+			"@term Day <http://www.konig.io/ns/core/Day>\n" + 
+			"@term Week <http://www.konig.io/ns/core/Week>\n" + 
+			"@term Month <http://www.konig.io/ns/core/Month>\n\n" + 
 			"TIME_INTERVAL(?x.endTime, Day, Week, Month)";
 
 		Expression e = parser.quantifiedExpression(text);
@@ -55,9 +83,7 @@ public class FormulaParserTest {
 	public void testCountFormula() throws Exception {
 
 		String text = 
-			"@context {\n" + 
-			"   \"price\" : \"http://schema.org/price\"\n" + 
-			"}\n" + 
+			"@term price <http://schema.org/price>\n\n" + 
 			"COUNT(?x.price)";
 
 		Expression e = parser.quantifiedExpression(text);
@@ -97,11 +123,9 @@ public class FormulaParserTest {
 	@Test
 	public void testHasStep() throws Exception {
 		String text = 
-			"@context {\n" + 
-			"   \"address\" : \"http://schema.org/address\",\n" + 
-			"   \"addressCountry\" : \"http://schema.org/addressCountry\",\n" + 
-			"   \"addressRegion\" : \"http://schema.org/addressRegion\"\n" + 
-			"}\n" + 
+			"@term address <http://schema.org/address>\n" + 
+			"@term addressCountry <http://schema.org/addressCountry>\n" + 
+			"@term addressRegion <http://schema.org/addressRegion>\n\n" + 
 			"address[addressCountry \"US\"; addressRegion \"VA\"]";
 		
 		Expression e = parser.quantifiedExpression(text);
@@ -112,9 +136,7 @@ public class FormulaParserTest {
 	@Test
 	public void testBound() throws Exception {
 		String text = 
-			"@context {\n" + 
-			"   \"price\" : \"http://schema.org/price\"\n" + 
-			"}\n" + 
+			"@term price <http://schema.org/price>\n\n" + 
 			"BOUND(price)" ;
 		
 		Expression e = parser.quantifiedExpression(text);
@@ -127,11 +149,10 @@ public class FormulaParserTest {
 	@Test
 	public void testSum() throws Exception {
 		String text = 
-			"@context {\n" + 
-			"   \"price\" : \"http://schema.org/price\",\n" + 
-			"   \"OfferShape\" : \"http://example.com/ns/OfferShape\",\n" + 
-			"   \"hasShape\" : \"http://www.konig.io/ns/core/hasShape\"\n" + 
-			"}\n" + 
+			"@term price <http://schema.org/price>\n" + 
+			"@term OfferShape <http://example.com/ns/OfferShape>\n" + 
+			"@term hasShape <http://www.konig.io/ns/core/hasShape>\n\n" +
+			
 			"SUM(?x.price)\n" + 
 			"WHERE\n" + 
 			"   ?x hasShape OfferShape .\n" + 
@@ -162,9 +183,8 @@ public class FormulaParserTest {
 	@Test
 	public void testIfFunction() throws Exception {
 		
-		String text = "@context {\n" + 
-			"   \"email\" : \"http://schema.org/email\"\n" + 
-			"}\n" + 
+		String text = 
+			"@term email <http://schema.org/email>\n\n" + 
 			"IF(email , 1 , 0)";
 		
 		Expression e = parser.expression(text);
@@ -175,10 +195,9 @@ public class FormulaParserTest {
 	@Test
 	public void testNotEquals() throws Exception {
 		String text = 
-			"@context {\n" + 
-			"   \"created\" : \"http://www.konig.io/ns/core/created\",\n" + 
-			"   \"modified\" : \"http://www.konig.io/ns/core/modified\"\n" + 
-			"}\n" + 
+			"@term created <http://www.konig.io/ns/core/created>\n" + 
+			"@term modified <http://www.konig.io/ns/core/modified>\n" + 
+			"\n" + 
 			"created != modified";
 		
 		Expression e = parser.expression(text);
@@ -192,14 +211,9 @@ public class FormulaParserTest {
 	public void testContext() throws Exception {
 		
 		String text =
-			  "@prefix schema: <http://schema.org/> .\n"
-			+ "@context {\n"
-			+ "   \"knows\" : \"schema:knows\",\n"
-			+ "   \"Alice\" : {\n"
-			+ "      \"@id\" : \"http://example.com/Alice\",\n"
-			+ "      \"@type\" : \"@vocab\"\n"
-			+ "   }\n"
-			+ "}\n"
+			  "@prefix schema: <http://schema.org/> .\n" + 
+			  "@term knows schema:knows\n" + 
+			  "@term Alice <http://example.com/Alice>\n\n"
 			+ ".knows.knows = Alice";
 
 		Expression e = parser.expression(text);
@@ -225,9 +239,7 @@ public class FormulaParserTest {
 	public void testConditional() throws Exception {
 
 		String text = 
-				"@context {\n" + 
-				"   \"pmd\" : \"http://example.com/pmd\"\n" + 
-				"}\n" + 
+				"@term pmd <http://example.com/pmd>\n\n" + 
 				"(sprintIssue.status = pmd:Complete) ? sprintIssue.timeEstimate : 0";
 		
 		Expression e = parser.expression(text);
@@ -241,9 +253,7 @@ public class FormulaParserTest {
 	public void testCurieTerm() throws Exception {
 
 		String text = 
-				"@context {\n" + 
-				"   \"ex\" : \"http://example.com/core\"\n" + 
-				"}\n" + 
+				"@term ex <http://example.com/core>\n\n" + 
 				"ex:alpha.ex:beta NOT IN (ex:foo , ex:bar)";
 		
 		Expression e = parser.expression(text);

@@ -165,7 +165,9 @@ public class FormulaParser {
 
 		private Expression expression() throws RDFParseException, IOException, RDFHandlerException {
 			
-			return conditionalOrExpression();
+			Expression e = conditionalOrExpression();
+			e.getContext().compile();
+			return e;
 		}
 		
 		private BareExpression expr() throws RDFParseException, RDFHandlerException, IOException {
