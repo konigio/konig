@@ -25,11 +25,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.text.MessageFormat;
 import java.util.List;
@@ -37,7 +35,6 @@ import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -52,6 +49,7 @@ import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
 import io.konig.core.Vertex;
@@ -79,6 +77,7 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
+import io.konig.shacl.io.ShapeWriter;
 
 public class WorkbookLoaderTest {
 	
@@ -986,7 +985,56 @@ public class WorkbookLoaderTest {
 	
 		
 	}
-	
+	@Test
+	public void testSecurityClassification() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("security-classification.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);		
+		
+		Shape shape = s.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		
+
+		PropertyConstraint familyName = shape.getPropertyConstraint(Schema.familyName);
+		assertTrue(familyName != null);
+		
+		List<URI> qsc = familyName.getQualifiedSecurityClassification();
+		assertTrue(qsc != null);
+		assertEquals(1, qsc.size());
+		
+		URI Private = uri("http://example.com/ns/security/Private");
+		assertEquals(Private, qsc.get(0));
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		try {
+			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/security-classification/PersonShape.ttl"));
+		} catch (Exception e) {
+			throw new KonigException(e);
+		}
+		
+		// Verify that schema:givenName has the DCL4 security classification
+		
+		Set<URI> sc = graph.v(Schema.givenName).out(Konig.securityClassification).toUriSet();
+		assertEquals(1, sc.size());
+		
+		URI DCL4 = uri("https://schema.pearson.com/ns/dcl/DCL4");
+		assertEquals(DCL4, sc.iterator().next());
+
+	}
 	private void checkPropertyConstraints(Graph graph) {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));
