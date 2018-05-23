@@ -429,6 +429,7 @@ public class WorkbookLoader {
 		private int propertyTypeCol = UNDEFINED;
 		private int subpropertyOfCol = UNDEFINED;
 		private int propertyCommentCol = UNDEFINED;
+		private int securityClassificationCol = UNDEFINED;
 
 		private int individualNameCol = UNDEFINED;
 		private int individualCommentCol = UNDEFINED;
@@ -2384,13 +2385,13 @@ public class WorkbookLoader {
 			List<URI> propertyType = uriList(row, propertyTypeCol);
 			URI subpropertyOf = uriValue(row, subpropertyOfCol);
 			URI termStatus = uriValue(row, propertyTermStatusCol);
+			List<URI> securityClassification = uriList(row, securityClassificationCol);
 			if (propertyId == null) {
 				return;
 			}
 
 			Vertex subject = graph.vertex(propertyId);
 			propertyType = analyzePropertyType(subject, propertyType, range);
-
 			graph.edge(propertyId, RDF.TYPE, RDF.PROPERTY);
 			for (URI value : propertyType) {
 				if (!RDF.PROPERTY.equals(value)) {
@@ -2435,6 +2436,13 @@ public class WorkbookLoader {
 			}
 			if (termStatus != null) {
 				graph.edge(propertyId, XOWL.termStatus, termStatus);
+			}
+			
+			if(securityClassification!= null && !securityClassification.isEmpty())
+			{
+			  for (URI uri : securityClassification) {
+			    graph.edge(propertyId, Konig.securityClassification, uri);					
+			  }
 			}
 
 		}
@@ -2521,7 +2529,7 @@ public class WorkbookLoader {
 			propertyTypeCol = UNDEFINED;
 			subpropertyOfCol = UNDEFINED;
 			propertyCommentCol = UNDEFINED;
-
+			securityClassificationCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2564,6 +2572,9 @@ public class WorkbookLoader {
 						break;
 					case TERM_STATUS:
 						propertyTermStatusCol = i;
+						break;
+					case SECURITY_CLASSIFICATION:
+						securityClassificationCol = i;
 						break;
 					}
 				}
