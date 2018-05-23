@@ -1,8 +1,10 @@
 Formula ::= Prologue Expression
 
-Prologue	  ::=  	( PrefixDecl | ContextDecl )*
+Prologue	  ::=  	( PrefixDecl | ContextDecl | TermDecl )*
 
 PrefixDecl	::=  	('PREFIX' PNAME_NS IRIREF | '@' PNAME_NS ':' IRIREF '.')
+
+TermDecl ::= '@term' TermKey IRI
 
 ContextDecl ::= '@context' '{' (Term)+ '}'
 

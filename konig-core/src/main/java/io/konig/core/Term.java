@@ -48,6 +48,10 @@ public class Term implements Comparable<Term>{
 	private int index=-1;
 	private Kind kind = Kind.ANY;
 	
+	public Term(String key, String id) {
+		this.key = key;
+		this.id = id;
+	}
 	
 	public Term(String key, String id, Kind kind) {
 		this.key = key;

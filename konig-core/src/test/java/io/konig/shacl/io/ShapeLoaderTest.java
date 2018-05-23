@@ -164,10 +164,9 @@ public class ShapeLoaderTest {
 		Expression expr = constraint.get(0);
 		
 		String expected = 
-			"@context {\n" + 
-			"   \"Activity\" : \"http://www.w3.org/ns/activitystreams#Activity\",\n" + 
-			"   \"type\" : \"http://www.w3.org/1999/02/22-rdf-syntax-ns#type\"\n" + 
-			"}\n" + 
+			"@term Activity <http://www.w3.org/ns/activitystreams#Activity>\n" + 
+			"@term type <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>\n" + 
+			"\n" + 
 			"?x.type = Activity";
 		
 		String actual = expr.toString();
@@ -222,11 +221,9 @@ public class ShapeLoaderTest {
 		assertTrue(formula != null);
 		
 		String expected = 
-			"@context {\n" + 
-			"   \"ex\" : \"http://example.com/ns/\",\n" + 
-			"   \"status\" : \"http://example.com/ns/status\",\n" + 
-			"   \"estimatedPoints\" : \"http://example.com/ns/estimatedPoints\"\n" + 
-			"}\n" + 
+			"@prefix ex: <http://example.com/ns/> .\n" + 
+			"@term status <http://example.com/ns/status>\n" + 
+			"@term estimatedPoints <http://example.com/ns/estimatedPoints>\n\n" + 
 			"(.status = ex:Complete) ? .estimatedPoints : 0";
 		
 		assertEquals(expected, formula.toString());

@@ -132,12 +132,45 @@ public class SeaTurtleParser extends TurtleParser {
 			
 		} else if (tryWord("base")) {
 			base();
-		} 
+		} else if (tryWord("term")) {
+			termDirective();
+		}
 		
 		
 	}
 
 
+
+	/**
+	 * termDirective ::= '@term' 
+	 * @throws IOException 
+	 * @throws RDFParseException 
+	 * @throws RDFHandlerException 
+	 */
+	private void termDirective() throws RDFParseException, IOException, RDFHandlerException {
+		skipSpace();
+		String termName = pn_local();
+		String idValue = null;
+		int c = next();
+		if (c == '<') {
+			idValue = iriRef(c);
+		} else {
+			unread(c);
+			String prefix = pn_prefix();
+			c = read();
+			if (c == ':') {
+				String local = pn_local();
+				idValue = prefix + ':' + local;
+			} else {
+				fail("Expected fully-qualified IRI or CURIE");
+			}
+		}
+		
+		
+		Context context = getContext();
+		context.add(new Term(termName, idValue));
+		
+	}
 
 	/**
 	 * <pre>
@@ -169,6 +202,7 @@ public class SeaTurtleParser extends TurtleParser {
 			contextHandler.addContext((ChainedContext) currentContext);
 		}
 	}
+	
 
 	/**
 	 * Here's the official Turtle 1.1 Syntax
