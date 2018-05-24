@@ -80,13 +80,13 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		assertField(table, "signedInt", FacetedSqlDatatype.SIGNED_INT);
 		assertField(table, "date", FacetedSqlDatatype.DATE);
 		assertField(table, "dateTime", FacetedSqlDatatype.DATETIME);
-		assertStringField(table, "text", 100000);
+		assertStringField(table, "text", 0);
 		assertStringField(table, "char", 32);
 		assertStringField(table, "varchar", 200);
 		assertField(table, "float", FacetedSqlDatatype.SIGNED_FLOAT);
 		assertField(table, "double", FacetedSqlDatatype.SIGNED_DOUBLE);
 		
-//		System.out.println(table.toString());
+		//System.out.println(table.toString());
 	}
 
 	private void assertStringField(SqlTable table, String columnName, int length) {
