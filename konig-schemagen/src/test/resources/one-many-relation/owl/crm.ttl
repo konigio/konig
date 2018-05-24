@@ -1,0 +1,35 @@
+@prefix crm: <https://schema.pearson.com/ns/crm/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+crm: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "crm" ; 
+	rdfs:label "Pearson CRM Ontology" ; 
+	rdfs:comment "A namespace for entities related to Customer Relationship Management at Pearson" . 
+
+crm:AccountStatus a owl:Class ; 
+	rdfs:label "Account Status" ; 
+	rdfs:subClassOf schema:Enumeration . 
+
+crm:AccountType a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration . 
+
+crm:AccountActive a crm:AccountStatus ; 
+	schema:name "Active" . 
+
+crm:AccountInactive a crm:AccountStatus ; 
+	schema:name "Inactive" . 
+
+crm:HigherEducation a crm:AccountType ; 
+	schema:name "Higher Education" . 
+
+crm:Individual a crm:AccountType ; 
+	schema:name "Individual" . 
+
+crm:Others a crm:AccountType ; 
+	schema:name "Others" . 
+
+crm:Schools a crm:AccountType ; 
+	schema:name "Schools" . 
