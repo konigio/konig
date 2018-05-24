@@ -23,10 +23,14 @@ package io.konig.schemagen.sql;
 
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +39,7 @@ import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -48,7 +53,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	private ShapeWriter shapeWriter;
 	private NamespaceManager nsManager;
 	private static final Logger LOG = LoggerFactory.getLogger(RdbmsShapeHandler.class);
-	
+	private List<Shape> rdbmsChildShapes = null;
 	
 	public RdbmsShapeHandler(
 			ShapeVisitor callback,
@@ -66,6 +71,24 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			visit(shape);
 		}
 	}
+	
+	private void addRdbmsChildShape(Shape parentShape,URI relationshipProperty, PropertyConstraint pc) throws RDFParseException, IOException {
+		Shape childShape = null;
+		if(pc != null) {
+			childShape = pc.getShape();
+			Shape rdbmsChildShape = generator.createOneToManyChildShape(parentShape, relationshipProperty ,childShape);
+			if(rdbmsChildShape != null) {
+				rdbmsChildShapes.add(rdbmsChildShape);
+			}
+		} else {
+			childShape = parentShape;
+		}
+		for (PropertyConstraint p : childShape.getProperty()) {
+			if(p.getShape() != null){
+				addRdbmsChildShape(childShape,p.getPredicate(), p);
+			}
+		}
+	}
 
 	@Override
 	public void visit(Shape shape) {
@@ -73,8 +96,10 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 		if (isRdbmsShape(shape)) {
 			
 			Shape rdbmsShape = null;
+			rdbmsChildShapes =  new ArrayList<>();
 			try {
 				rdbmsShape = generator.createRdbmsShape(shape);
+				addRdbmsChildShape(shape, null, null);
 			} catch (Exception e) {
 				throw new KonigException(e);
 			}
@@ -86,17 +111,25 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			// save those changes to the Turtle file for the original shape,
 			// and save the new RDBMS shape to a new file.
 			
-			if (rdbmsShape != null) {
-				URI shapeId=(URI)shape.getId();				
-				String rdbmsShapeId=shapeId.toString().replaceAll(generator.getShapeIriPattern(),generator.getShapeIriReplacement());	
-				if(shapeId.toString().equals(rdbmsShapeId)){
-					LOG.warn("The IRI for the original shape does not match the regular expression");
+			if (rdbmsShape != null) {			
+				String rdbmsShapeId = getRdbmsShapeId(shape);
+				if(rdbmsShapeId == null) {
 					return;
 				}
 				editOriginalShape(shape);
 				save(shape);				
 				rdbmsShape.setId(new URIImpl(rdbmsShapeId));
 				save(rdbmsShape);
+				if(!rdbmsChildShapes.isEmpty()) {
+					for(Shape rdbmsChildShape : rdbmsChildShapes) {
+						String rdbmsChildShapeId = getRdbmsShapeId(rdbmsChildShape);
+						if(rdbmsChildShapeId == null) {
+							return;
+						}
+						rdbmsChildShape.setId(new URIImpl(rdbmsChildShapeId));
+						save(rdbmsChildShape);
+					}
+				}
 				if (callback != null) {
 					callback.visit(rdbmsShape);
 				}
@@ -105,7 +138,15 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 
 	}
 	
-	
+	private String getRdbmsShapeId(Shape shape) {
+		URI shapeId=(URI)shape.getId();				
+		String rdbmsShapeId = shapeId.toString().replaceAll(generator.getShapeIriPattern(),generator.getShapeIriReplacement());		
+		if(shapeId.toString().equals(rdbmsShapeId)){
+			LOG.warn("The IRI for the original shape does not match the regular expression");
+			return null;
+		}
+		return rdbmsShapeId;
+	}
 
 	private void save(Shape shape) {
 		if (!(shape.getId() instanceof URI)) {
@@ -113,7 +154,9 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 		}
 		File file = fileGetter.getFile((URI)shape.getId());
 		try {
-			shapeWriter.writeTurtle(nsManager, shape, file);
+			if(!file.exists()){
+				shapeWriter.writeTurtle(nsManager, shape, file);
+			}
 		} catch (Exception e) {
 			throw new KonigException(e);
 		}
