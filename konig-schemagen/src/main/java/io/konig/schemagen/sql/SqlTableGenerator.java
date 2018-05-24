@@ -24,6 +24,8 @@ package io.konig.schemagen.sql;
 import java.text.MessageFormat;
 
 import org.openrdf.model.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.vocab.Konig;
 import io.konig.schemagen.SchemaGeneratorException;
@@ -32,10 +34,11 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class SqlTableGenerator {
-
+	
+	private static final Logger LOG = LoggerFactory.getLogger(SqlTableGenerator.class);
 	private SqlTableNameFactory nameFactory;
 	private SqlDatatypeMapper datatypeMapper;
-
+	
 	public SqlTableGenerator() {
 		nameFactory = new SqlTableNameFactory();
 		datatypeMapper = new SqlDatatypeMapper();
@@ -87,7 +90,13 @@ public class SqlTableGenerator {
 
 	private SqlColumn column(Shape shape, PropertyConstraint p) {
 		
-		URI predicate = p.getPredicate();
+		URI predicate = p.getPredicate();	
+		SqlKeyType keyType=SqlTableGeneratorUtil.getKeyType(p);
+		if(!SqlTableGeneratorUtil.isValidRdbmsShape(shape) && 
+				SqlKeyType.SYNTHETIC_KEY.equals(keyType)){
+			LOG.error("konig:synthicKey is applicable only for shapes with datasource GoogleCloudSqlTable or AwsAurora");
+			p.setStereotype(null);
+		}
 		if (predicate != null) {
 			if (p.getShape() != null) {
 				String message = MessageFormat.format("Nested shape is not allowed in property ''{0}'' in {1}", 
@@ -97,27 +106,8 @@ public class SqlTableGenerator {
 			FacetedSqlDatatype datatype = datatypeMapper.type(p);
 			boolean nullable = !p.isRequiredSingleValue();
 				
-			return new SqlColumn(predicate.getLocalName(), datatype, getKeyType(p), nullable);
+			return new SqlColumn(predicate.getLocalName(), datatype, keyType, nullable);
 		}
 		return null;
-	}
-	
-	private SqlKeyType getKeyType(PropertyConstraint p) throws SchemaGeneratorException {
-		SqlKeyType keyType = null;
-
-		if (p.getStereotype() != null) {
-
-			if (p.getStereotype().equals(Konig.primaryKey)) {
-				
-				keyType = SqlKeyType.PRIMARY_KEY;	
-			}
-			else if(p.getStereotype().equals(Konig.uniqueKey)){
-				
-				keyType = SqlKeyType.UNIQUE_KEY;
-				
-			}
-		}
-
-		return keyType;
 	}
 }

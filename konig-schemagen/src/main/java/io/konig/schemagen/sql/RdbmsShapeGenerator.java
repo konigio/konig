@@ -87,7 +87,7 @@ public class RdbmsShapeGenerator {
 	 */
 	private boolean accept(Shape shape) {
 		
-		if (!isValidRdbmsShape(shape)) {
+		if (!SqlTableGeneratorUtil.isValidRdbmsShape(shape)) {
 			return false;
 		}
 		
@@ -149,19 +149,6 @@ public class RdbmsShapeGenerator {
 		}
 		
 	}
-
-
-	
-	
-	private boolean isValidRdbmsShape(Shape rdbmsShape) {
-		AwsAurora auroraTable = rdbmsShape.findDataSource(AwsAurora.class);
-		GoogleCloudSqlTable gcpSqlTable = rdbmsShape.findDataSource(GoogleCloudSqlTable.class);
-		if (auroraTable !=null || gcpSqlTable != null){
-			return true;
-		}
-		return false;
-	}
-	
 	
 	private void declarePredicate(URI predicate) {
 		if (parser.getLocalNameService() instanceof SimpleLocalNameService) {
