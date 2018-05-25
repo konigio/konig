@@ -403,7 +403,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
 			if (shapesDir != null) {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), shapeIriPattern, shapeIriReplacement,propertyNameSpace);
+				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), shapeIriPattern, shapeIriReplacement,propertyNameSpace, owlReasoner);
 				ShapeWriter shapeWriter = new ShapeWriter();
 				RdbmsShapeHandler handler = new RdbmsShapeHandler(shapeInjector, generator, fileGetter, shapeWriter, nsManager);
 				handler.visitAll(shapeManager.listShapes());

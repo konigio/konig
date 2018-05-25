@@ -1,0 +1,9 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix shape: <https://schema.pearson.com/shapes/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+shape: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "shape" ; 
+	rdfs:label "Pearson Data Shapes" ; 
+	rdfs:comment "The ontology for data shapes defined by Pearson" . 
