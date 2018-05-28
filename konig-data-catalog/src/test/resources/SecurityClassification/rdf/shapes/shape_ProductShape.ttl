@@ -1,0 +1,24 @@
+@prefix dcl: <https://schema.pearson.com/ns/dcl/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sec: <http://example.com/ns/security/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:ProductShape sh:property  [ 
+		sh:path schema:name ; 
+		rdfs:comment "A name suitable for display in a product catalog." ; 
+		sh:datatype xsd:string ; 
+		sh:predicate schema:name ; 
+		konig:qualifiedSecurityClassification dcl:DCL1 , sec:Public ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:Product ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/PQf3KxWCL_IAAAFjjM-35g> . 
+
+<http://www.konig.io/activity/PQf3KxWCL_IAAAFjjM-35g> a konig:LoadModelFromSpreadsheet . 

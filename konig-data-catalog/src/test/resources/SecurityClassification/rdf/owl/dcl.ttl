@@ -1,0 +1,29 @@
+@prefix dcl: <https://schema.pearson.com/ns/dcl/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+dcl: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "dcl" . 
+
+dcl:DataClassificationLevel a owl:Class ; 
+	rdfs:label "Data Classification Level" ; 
+	rdfs:comment "The class consisting of all possible values from Pearson's Data Classification scheme." ; 
+	rdfs:subClassOf schema:Enumeration . 
+
+dcl:DCL1 a dcl:DataClassificationLevel ; 
+	schema:name "DCL1 - Public (Unclassified)" ; 
+	rdfs:comment "Public data (also referred to as \u201cunclassified\u201d) includes any data that would not cause material harm to Pearson if disclosed to the public. By definition, there is no such thing as unauthorized disclosure of this information and it may be disseminated without potential harm. Examples include any data that is taken from public sources or any data that is explicitly created for public distribution. Public data requires minimum protection requirements." . 
+
+dcl:DCL2 a dcl:DataClassificationLevel ; 
+	schema:name "DCL2 - Internal Use Only" ; 
+	rdfs:comment "(Also referred to as \u201cInternal\u201d or \u201cProprietary\u201d data), this classification label applies to all classified data that does not clearly fit into DCL3 (Confidential) or DCL4 (Restricted) information. While its unauthorized disclosure is against policy, it is not expected to seriously or adversely impact Pearson or its users*, suppliers, business partners, or its customers. DCL2 may include things such as Pearson policies and standards that are for internal use only and contracts." . 
+
+dcl:DCL3 a dcl:DataClassificationLevel ; 
+	schema:name "DCL3 - Confidential" ; 
+	rdfs:comment "(Also \u201cCompany Confidential\u201d, \u201cCustomer Confidential\u201d, or \u201cEmployee Confidential\u201d) Data shall labeled as DCL3 when the unauthorized disclosure, alteration or destruction of that data could result in a significant risk to Pearson, its affiliates, subsidiaries, customers or users, or is a violation of any requirements or regulations. This may include sensitive student information (not complete private records which would become DCL4), Pearson financial information, and information about mergers and acquisitions." . 
+
+dcl:DCL4 a dcl:DataClassificationLevel ; 
+	schema:name "DCL4 - Restricted" ; 
+	rdfs:comment "Also \u201cHighly Confidential\u201d or \u201cHighly Restricted\u201d. This classification label applies to the most sensitive business information that is intended for use strictly within Pearson. Its unauthorized disclosure would very likely seriously and adversely impact Pearson, its customers, its business partners, and its suppliers. Examples of Restricted data include data protected by local, national or international security and privacy regulations and standards as well as data protected by confidentiality agreements. Examples of this type of data include private student information, healthcare information, or highly sensitive financial information." . 
