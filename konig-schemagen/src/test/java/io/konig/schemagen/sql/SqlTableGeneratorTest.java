@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.openrdf.model.URI;
@@ -34,6 +37,7 @@ import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
@@ -48,6 +52,8 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
+import io.konig.shacl.io.ShapeWriter;
+import io.konig.spreadsheet.WorkbookLoader;
 
 public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 
@@ -145,9 +151,51 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		assertTrue(table!=null);
 		}
 		
+	@Test
+	public void testTextField() throws Exception{
+		 AwsShapeConfig.init();
+		 InputStream input = getClass().getClassLoader().getResourceAsStream("sql/SQL-DDL-Text.xlsx");
+		 Workbook book = WorkbookFactory.create(input);
+			Graph graph = new MemoryGraph();
+			NamespaceManager nsManager = new MemoryNamespaceManager();
+			graph.setNamespaceManager(nsManager);
+			
+			WorkbookLoader loader = new WorkbookLoader(nsManager);
+			loader.load(book, graph);
+			input.close();
+			URI shapeId = uri("http://example.com/shapes/MDM_PRODUCT");
+			
+			ShapeManager s = new MemoryShapeManager();
+			
+			ShapeLoader shapeLoader = new ShapeLoader(s);
+			shapeLoader.load(graph);		
+			
+			Shape shape = s.getShapeById(shapeId);
+			assertTrue(shape!=null);
+			ShapeWriter shapeWriter = new ShapeWriter();
+			try {
+				shapeWriter.writeTurtle(nsManager, shape, new File("target/test/sql/MDM_PRODUCT.ttl"));
+			} catch (Exception e) {
+				throw new KonigException(e);
+			}
+			
+			load("target/test/sql/MDM_PRODUCT");
+			
+			assertTrue(shape!=null);
+			
+			SqlTable table = generator.generateTable(shape);
+			
+			assertTrue(table!=null);
+			assertStringField(table, "PPID", 2000);
+			assertStringField(table, "PP_NAME", 255);
+			assertStringField(table, "ASSEMBLY_INSTRUCTIONS", 1000);
+			assertStringField(table, "LONG_DESCRIPTION", 0);
+	}
 private InputStream resource(String path) {
 		
 		return getClass().getClassLoader().getResourceAsStream(path);
 	}
-
+private URI uri(String text) {
+	return new URIImpl(text);
+}
 }
