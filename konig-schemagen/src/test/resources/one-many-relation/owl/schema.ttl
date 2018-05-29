@@ -1,0 +1,24 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org Ontology" ; 
+	rdfs:comment "The namespace for an upper-level ontology defined by Google, Microsoft, Yahoo, and Yandex." . 
+
+schema:Enumeration a owl:Class ; 
+	rdfs:label "Enumeration" ; 
+	rdfs:comment "Lists or enumerations\u2014for example, a list of cuisines or music genres, etc." . 
+
+schema:Organization a owl:Class ; 
+	rdfs:label "Organization" . 
+
+schema:Person a owl:Class ; 
+	rdfs:label "Person" ; 
+	rdfs:comment "A person." . 
+
+schema:PostalAddress a owl:Class ; 
+	rdfs:label "Postal Address" ; 
+	rdfs:comment "A mailing address." . 

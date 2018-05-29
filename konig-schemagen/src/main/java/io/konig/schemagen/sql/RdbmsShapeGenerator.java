@@ -4,18 +4,23 @@ package io.konig.schemagen.sql;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsAurora;
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.util.StringUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.ShapePropertyOracle;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 
 /*
@@ -47,12 +52,15 @@ public class RdbmsShapeGenerator {
 	private String shapeIriReplacement;
 	private String propertyNameSpace;
 	private FormulaParser parser;
-	
-	public RdbmsShapeGenerator(FormulaParser parser, String shapeIriPattern,String shapeIriReplacement, String propertyNameSpace) {
+	private List<PropertyConstraint> rdbmsProperty = null;
+	private OwlReasoner owlReasoner;
+	 
+	public RdbmsShapeGenerator(FormulaParser parser, String shapeIriPattern,String shapeIriReplacement, String propertyNameSpace, OwlReasoner owlReasoner) {
 		this.shapeIriPattern=shapeIriPattern;
 		this.shapeIriReplacement=shapeIriReplacement;
 		this.propertyNameSpace = propertyNameSpace;
 		this.parser = new FormulaParser();
+		this.owlReasoner = owlReasoner;
 	}
 	public String getShapeIriPattern() {
 		return shapeIriPattern;
@@ -66,12 +74,22 @@ public class RdbmsShapeGenerator {
 	public void setShapeIriReplacement(String shapeIriReplacement) {
 		this.shapeIriReplacement = shapeIriReplacement;
 	}
-
+	
+	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {
+		Shape rdbmsChildShape = createRdbmsShape(childShape);
+		addSyntheticKey(parentShape, "_FK", relationshipProperty);
+		if(rdbmsChildShape != null) {
+			rdbmsChildShape.setProperty(rdbmsProperty);
+		}
+		return rdbmsChildShape;
+	}
+	
 	public Shape createRdbmsShape(Shape shape) throws RDFParseException, IOException{
 		Shape clone = null;
 		if (accept(shape)) {
 			clone = shape.deepClone();
 			updateOracle(shape);
+			rdbmsProperty = new ArrayList<>();
 			process(clone, ".", "", clone);
 		}
 		return clone;
@@ -114,7 +132,9 @@ public class RdbmsShapeGenerator {
 		
 		for (PropertyConstraint p : list) {
 			URI predicate = p.getPredicate();
+			
 			if (predicate != null && p.getMaxCount()!=null && p.getMaxCount()==1) {
+				
 				String localName = predicate.getLocalName();
 				String snakeCase = StringUtil.SNAKE_CASE(localName);
 
@@ -134,22 +154,88 @@ public class RdbmsShapeGenerator {
 						p.setFormula(formula);
 					}
 					
-					if (propertyContainer != rdbmsShape) {
-						rdbmsShape.add(p);
-					}
-						
+					rdbmsProperty.add(p);	
 				} else if (p.getShape() != null) {
+					
 					String nestedPath = logicalPath + localName + '.';
 					String nestedPrefix = snakeCase + "__";
-					
 					process(rdbmsShape, nestedPath, nestedPrefix, p.getShape());
 				}
-				
+			}
+			
+			if(p.getShape() != null &&  p.getMaxCount()==null ) {
+				addSyntheticKey(rdbmsShape, "_PK", null);
 			}
 		}
 		
+		rdbmsShape.setProperty(rdbmsProperty);
 	}
 	
+	private void addSyntheticKey(Shape rdbmsShape, String suffix, URI relationshipProperty) throws RDFParseException, IOException {
+		PropertyConstraint pc = hasPrimaryKey(rdbmsShape);
+		String localName = "";
+		if(pc != null) {
+			localName = StringUtil.SNAKE_CASE(pc.getPredicate().getLocalName());
+			URI newPredicate =  new URIImpl(propertyNameSpace + localName + suffix);
+			pc.setPredicate(newPredicate);
+			if(relationshipProperty != null){
+				String text = "^" + relationshipProperty.getLocalName() + "."+ localName + "_PK" ;
+				pc.setFormula(parser.quantifiedExpression(text));
+			}
+		} else {
+			pc = createSyntheticKey(rdbmsShape,suffix,relationshipProperty);
+		}
+		rdbmsProperty.add(pc);
+	}	
+	private PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
+		for (PropertyConstraint p : rdbmsShape.getProperty()) {
+			if(p.getStereotype() != null && (p.getStereotype().equals(Konig.syntheticKey) 
+					|| p.getStereotype().equals(Konig.primaryKey))){
+				return p;
+			}	
+		}
+		
+		return null;
+	}
+	
+	private PropertyConstraint createSyntheticKey(Shape rdbmsShape,String suffix, URI relationshipProperty) throws RDFParseException, IOException {
+		PropertyConstraint pc = null;
+		String localName = null;
+		String text = null;
+		if(owlReasoner != null && relationshipProperty != null) {
+			Set<URI> inverseOf = owlReasoner.inverseOf(relationshipProperty);
+			for(URI inverse : inverseOf) {
+				pc = new PropertyConstraint(new URIImpl(propertyNameSpace + StringUtil.SNAKE_CASE(inverse.getLocalName()) + suffix));
+				text = "." + inverse.getLocalName();
+				pc.setFormula(parser.quantifiedExpression(text));
+			}
+		}
+		if (rdbmsShape.getNodeKind() == NodeKind.IRI && pc == null) {
+			localName = StringUtil.SNAKE_CASE(Konig.id.getLocalName());
+			pc = new PropertyConstraint(new URIImpl(Konig.id.getNamespace() + localName));
+			pc.setDatatype(XMLSchema.STRING);
+			if(relationshipProperty != null) {
+			text = "^" + relationshipProperty.getLocalName();
+			pc.setFormula(parser.quantifiedExpression(text));
+			}
+			
+		} else if(pc == null){
+			localName = StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName());
+			String snakeCase = localName + suffix;
+			pc = new PropertyConstraint(new URIImpl(propertyNameSpace + snakeCase));
+			pc.setDatatype(XMLSchema.LONG);
+			if(relationshipProperty != null) {
+				text = "^" + relationshipProperty.getLocalName() + "."+ localName + "_PK" ;
+				pc.setFormula(parser.quantifiedExpression(text));
+			}
+		}
+		
+		pc.setMaxCount(1);
+		pc.setMinCount(1);
+		pc.setStereotype(Konig.syntheticKey);
+		return pc;
+	}
+		
 	private void declarePredicate(URI predicate) {
 		if (parser.getLocalNameService() instanceof SimpleLocalNameService) {
 			SimpleLocalNameService service = (SimpleLocalNameService) parser.getLocalNameService();

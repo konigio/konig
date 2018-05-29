@@ -26,6 +26,8 @@ import java.io.IOException;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
+import io.konig.core.OwlReasoner;
+import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.formula.FormulaParser;
@@ -47,7 +49,7 @@ public class AbstractRdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 		NamespaceMap nsMap = new NamespaceMapAdapter(graph.getNamespaceManager());
 		ShapePropertyOracle oracle = new ShapePropertyOracle();
 		FormulaParser parser = new FormulaParser(oracle, nameService, nsMap);
-		shapeGenerator =  new RdbmsShapeGenerator(parser, "(.*)Shape$","$1RdbmsShape",ALIAS);
+		shapeGenerator =  new RdbmsShapeGenerator(parser, "(.*)Shape$","$1RdbmsShape",ALIAS, null);
 	}
 
 }
