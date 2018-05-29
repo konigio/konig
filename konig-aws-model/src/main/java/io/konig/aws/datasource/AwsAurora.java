@@ -26,12 +26,14 @@ import org.openrdf.model.URI;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.AWS;
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 
 public class AwsAurora extends DataSource implements TableDataSource{
 	private AwsAuroraTableReference tableReference;
 	private String awsTableName;
+	private String rdbmsFieldNamespace;
 	
 	public AwsAurora() {
 	}
@@ -81,5 +83,14 @@ public class AwsAurora extends DataSource implements TableDataSource{
 	@Override
 	public String getSqlDialect() {
 		return "MySQL 5.7";
+	}
+
+	@RdfProperty(Konig.RDBMS_FIELD_NAMESPACE)
+	public String getRdbmsFieldNamespace() {
+		return rdbmsFieldNamespace;
+	}
+
+	public void setRdbmsFieldNamespace(String rdbmsFieldNamespace) {
+		this.rdbmsFieldNamespace = rdbmsFieldNamespace;
 	}
 }

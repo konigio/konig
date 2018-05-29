@@ -24,6 +24,8 @@ package io.konig.gcp.datasource;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
+import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 
@@ -31,6 +33,7 @@ public class GoogleCloudSqlTable  extends DataSource implements TableDataSource 
 	private String instance;
 	private String database;
 	private String tableName;
+	private String rdbmsFieldNamespace;
 
 	public GoogleCloudSqlTable() {
 	}
@@ -93,5 +96,13 @@ public class GoogleCloudSqlTable  extends DataSource implements TableDataSource 
 	public String getSqlDialect() {
 		
 		return "MySQL 5.7";
+	}
+	@RdfProperty(Konig.RDBMS_FIELD_NAMESPACE)
+	public String getRdbmsFieldNamespace() {
+		return rdbmsFieldNamespace;
+	}
+
+	public void setRdbmsFieldNamespace(String rdbmsFieldNamespace) {
+		this.rdbmsFieldNamespace = rdbmsFieldNamespace;
 	}
 }

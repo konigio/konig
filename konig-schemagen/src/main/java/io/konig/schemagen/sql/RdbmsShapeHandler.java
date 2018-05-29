@@ -54,6 +54,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	private NamespaceManager nsManager;
 	private static final Logger LOG = LoggerFactory.getLogger(RdbmsShapeHandler.class);
 	private List<Shape> rdbmsChildShapes = null;
+	private Collection<Shape> shapes =null;
 	
 	public RdbmsShapeHandler(
 			ShapeVisitor callback,
@@ -67,6 +68,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	}
 
 	public void visitAll(Collection<Shape> shapeList) {
+		shapes = shapeList;
 		for (Shape shape : shapeList) {
 			visit(shape);
 		}
@@ -75,7 +77,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	private void addRdbmsChildShape(Shape parentShape,URI relationshipProperty, PropertyConstraint pc) throws RDFParseException, IOException {
 		Shape childShape = null;
 		if(pc != null) {
-			childShape = pc.getShape();
+			childShape = getRdbmsShapeFromLogicalShape(pc.getShape());
 			Shape rdbmsChildShape = generator.createOneToManyChildShape(parentShape, relationshipProperty ,childShape);
 			if(rdbmsChildShape != null) {
 				rdbmsChildShapes.add(rdbmsChildShape);
@@ -83,7 +85,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 		} else {
 			childShape = parentShape;
 		}
-		for (PropertyConstraint p : childShape.getProperty()) {
+		for (PropertyConstraint p : childShape.getRdbmsLogicalShape().getProperty()) {
 			if(p.getShape() != null){
 				addRdbmsChildShape(childShape,p.getPredicate(), p);
 			}
@@ -93,7 +95,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	@Override
 	public void visit(Shape shape) {
 		
-		if (isRdbmsShape(shape)) {
+		if (shape.getRdbmsLogicalShape()!=null) {
 			
 			Shape rdbmsShape = null;
 			rdbmsChildShapes =  new ArrayList<>();
@@ -111,22 +113,11 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			// save those changes to the Turtle file for the original shape,
 			// and save the new RDBMS shape to a new file.
 			
-			if (rdbmsShape != null) {			
-				String rdbmsShapeId = getRdbmsShapeId(shape);
-				if(rdbmsShapeId == null) {
-					return;
-				}
-				editOriginalShape(shape);
-				save(shape);				
-				rdbmsShape.setId(new URIImpl(rdbmsShapeId));
+			if (rdbmsShape != null) {	
+				rdbmsShape.setId(shape.getId());
 				save(rdbmsShape);
 				if(!rdbmsChildShapes.isEmpty()) {
-					for(Shape rdbmsChildShape : rdbmsChildShapes) {
-						String rdbmsChildShapeId = getRdbmsShapeId(rdbmsChildShape);
-						if(rdbmsChildShapeId == null) {
-							return;
-						}
-						rdbmsChildShape.setId(new URIImpl(rdbmsChildShapeId));
+					for(Shape rdbmsChildShape : rdbmsChildShapes) {						
 						save(rdbmsChildShape);
 					}
 				}
@@ -138,16 +129,6 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 
 	}
 	
-	private String getRdbmsShapeId(Shape shape) {
-		URI shapeId=(URI)shape.getId();				
-		String rdbmsShapeId = shapeId.toString().replaceAll(generator.getShapeIriPattern(),generator.getShapeIriReplacement());		
-		if(shapeId.toString().equals(rdbmsShapeId)){
-			LOG.warn("The IRI for the original shape does not match the regular expression");
-			return null;
-		}
-		return rdbmsShapeId;
-	}
-
 	private void save(Shape shape) {
 		if (!(shape.getId() instanceof URI)) {
 			throw new KonigException("Shape must be identified by a URI");
@@ -161,32 +142,14 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			throw new KonigException(e);
 		}
 	}
-
-
-
-	/**
-	 * Remove the RDBMS data source(s) from the given shape.
-	 */
-	private void editOriginalShape(Shape shape) {
-		shape.setShapeDataSource(null);		
-	}
-
-
-
-	/**
-	 * Returns true if Shape has DataSource of type GoogleBigQueryTable, GoogleCloudSqlTable, or AwsAurora
-	 * @param shape
-	 * @return
-	 */
-	private boolean isRdbmsShape(Shape shape) {
-		boolean isRdbmsShape = false;
-		GoogleBigQueryTable bigQueryTable = shape.findDataSource(GoogleBigQueryTable.class);
-		AwsAurora auroraTable = shape.findDataSource(AwsAurora.class);
-		GoogleCloudSqlTable gcpSqlTable = shape.findDataSource(GoogleCloudSqlTable.class);
-		if (bigQueryTable!= null || auroraTable !=null || gcpSqlTable != null){
-			isRdbmsShape = true;
+	
+	public Shape getRdbmsShapeFromLogicalShape(Shape childShape) {
+		for(Shape shape:shapes){
+			if(shape.getRdbmsLogicalShape()!=null && shape.getRdbmsLogicalShape().getId().equals(childShape.getId())){
+				return shape;
+			}
 		}
-		return isRdbmsShape;
+		return null;
 	}
 
 }

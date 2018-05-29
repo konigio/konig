@@ -44,7 +44,7 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 	public void testFlatten() throws Exception {
 		load("src/test/resources/nested-entity");
 
-		URI shapeId = iri("http://example.com/shapes/PersonShape");
+		URI shapeId = iri("http://example.com/shapes/PersonRdbmsShape");
 
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
@@ -81,7 +81,7 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		load("src/test/resources/one-many-relation");
 
 		AwsShapeConfig.init();
-		URI shapeId = iri("https://schema.pearson.com/shapes/ProductShape");
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
 
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
@@ -101,11 +101,12 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 
 		Shape rdbmsChildShape = null;
 		Shape childShape = null;
-		for (PropertyConstraint pc : logicalShape.getProperty()) {
+		for (PropertyConstraint pc : logicalShape.getRdbmsLogicalShape().getProperty()) {
 			if (pc.getShape() != null) {
-				childShape = pc.getShape();
+				childShape = getRdbmsShapeFromLogicalShape(pc.getShape());
 				rdbmsChildShape = shapeGenerator.createOneToManyChildShape(logicalShape, pc.getPredicate(),
-						pc.getShape());
+						childShape);
+				break;
 			}
 		}
 
@@ -122,10 +123,11 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		PropertyConstraint p2 = rdbmsChildShape.getPropertyConstraint(iri("http://www.konig.io/ns/core/ID"));
 		assertTrue(p2 != null);
 
-		for (PropertyConstraint pc : childShape.getProperty()) {
+		for (PropertyConstraint pc : childShape.getRdbmsLogicalShape().getProperty()) {
 			if (pc.getShape() != null) {
 				rdbmsChildShape = shapeGenerator.createOneToManyChildShape(childShape, pc.getPredicate(),
-						pc.getShape());
+						getRdbmsShapeFromLogicalShape(pc.getShape()));
+				break;
 			}
 		}
 
@@ -137,7 +139,14 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 
 		assertEquals("^person", formula1.getText());
 	}
-
+	public Shape getRdbmsShapeFromLogicalShape(Shape childShape) {
+		for(Shape shape:shapeManager.listShapes()){
+			if(shape.getRdbmsLogicalShape()!=null && shape.getRdbmsLogicalShape().getId().equals(childShape.getId())){
+				return shape;
+			}
+		}
+		return null;
+	}
 	/***
 	 * Case 2 : If the predicate that describes the one-to-many relationship
 	 * does not have exactly one inverse, then the following rules apply: If the
@@ -160,17 +169,18 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		load("src/test/resources/one-many-relation");
 
 		AwsShapeConfig.init();
-		URI shapeId = iri("https://schema.pearson.com/shapes/ProductShape");
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
 
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 
 		Shape rdbmsChildShape = null;
 		Shape childShape = null;
-		for (PropertyConstraint pc : logicalShape.getProperty()) {
+		for (PropertyConstraint pc : logicalShape.getRdbmsLogicalShape().getProperty()) {
 			if (pc.getShape() != null) {
-				childShape = pc.getShape();
+				childShape = getRdbmsShapeFromLogicalShape(pc.getShape());
 				rdbmsChildShape = shapeGenerator.createOneToManyChildShape(logicalShape, pc.getPredicate(),
-						pc.getShape());
+						childShape);
+				break;
 			}
 		}
 
@@ -187,10 +197,11 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		PropertyConstraint p2 = rdbmsChildShape.getPropertyConstraint(iri("http://www.konig.io/ns/core/ID"));
 		assertTrue(p2 != null);
 
-		for (PropertyConstraint pc : childShape.getProperty()) {
+		for (PropertyConstraint pc : childShape.getRdbmsLogicalShape().getProperty()) {
 			if (pc.getShape() != null) {
 				rdbmsChildShape = shapeGenerator.createOneToManyChildShape(childShape, pc.getPredicate(),
-						pc.getShape());
+						getRdbmsShapeFromLogicalShape(pc.getShape()));
+				break;
 			}
 		}
 
@@ -219,18 +230,19 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		load("src/test/resources/one-many-relation");
 
 		AwsShapeConfig.init();
-		URI shapeId = iri("https://schema.pearson.com/shapes/ProductShape");
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
 
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 
 		OwlReasoner reasoner = new OwlReasoner(graph);
-		shapeGenerator = new RdbmsShapeGenerator(null, "(.*)Shape$", "$1RdbmsShape", ALIAS, reasoner);
+		shapeGenerator = new RdbmsShapeGenerator(null, reasoner);
 
 		Shape rdbmsChildShape = null;
-		for (PropertyConstraint pc : logicalShape.getProperty()) {
+		for (PropertyConstraint pc : logicalShape.getRdbmsLogicalShape().getProperty()) {
 			if (pc.getShape() != null) {
 				rdbmsChildShape = shapeGenerator.createOneToManyChildShape(logicalShape, pc.getPredicate(),
-						pc.getShape());
+						getRdbmsShapeFromLogicalShape(pc.getShape()));
+				break;
 			}
 		}
 
@@ -263,24 +275,26 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		load("src/test/resources/one-many-relation");
 
 		AwsShapeConfig.init();
-		URI shapeId = iri("https://schema.pearson.com/shapes/ProductShape");
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
 
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 
 		Shape rdbmsChildShape = null;
 		Shape childShape = null;
-		for (PropertyConstraint pc : logicalShape.getProperty()) {
+		for (PropertyConstraint pc : logicalShape.getRdbmsLogicalShape().getProperty()) {
 			if (pc.getShape() != null) {
-				childShape = pc.getShape();
+				childShape = getRdbmsShapeFromLogicalShape(pc.getShape());
 				rdbmsChildShape = shapeGenerator.createOneToManyChildShape(logicalShape, pc.getPredicate(),
-						pc.getShape());
+						childShape);
+				break;
 			}
 		}
 
-		for (PropertyConstraint pc : childShape.getProperty()) {
+		for (PropertyConstraint pc : childShape.getRdbmsLogicalShape().getProperty()) {
 			if (pc.getShape() != null) {
 				rdbmsChildShape = shapeGenerator.createOneToManyChildShape(childShape, pc.getPredicate(),
-						pc.getShape());
+						getRdbmsShapeFromLogicalShape(pc.getShape()));
+				break;
 			}
 		}
 

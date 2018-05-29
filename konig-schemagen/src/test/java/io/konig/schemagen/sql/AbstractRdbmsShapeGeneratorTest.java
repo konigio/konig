@@ -49,7 +49,7 @@ public class AbstractRdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 		NamespaceMap nsMap = new NamespaceMapAdapter(graph.getNamespaceManager());
 		ShapePropertyOracle oracle = new ShapePropertyOracle();
 		FormulaParser parser = new FormulaParser(oracle, nameService, nsMap);
-		shapeGenerator =  new RdbmsShapeGenerator(parser, "(.*)Shape$","$1RdbmsShape",ALIAS, null);
+		shapeGenerator =  new RdbmsShapeGenerator(parser, null);
 	}
 
 }

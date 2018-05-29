@@ -1,10 +1,20 @@
 @prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix aws: <http://www.konig.io/ns/aws/> .
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix mdm: <https://schema.pearson.com/ns/mdm/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <https://schema.pearson.com/shapes/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:ProductRdbmsShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> ; 
+	sh:targetClass mdm:Product ; 
+	konig:rdbmsLogicalShape shape:ProductShape ; 
+	konig:shapeDataSource <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ProductRdbmsShape> . 
+
+<http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-05-28T16:03:38.749+05:30"^^xsd:dateTime . 
 
 shape:ProductShape a sh:Shape ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> ; 
@@ -27,5 +37,9 @@ shape:ProductShape a sh:Shape ;
 		sh:minCount 0 ; 
 		sh:maxLength 55 ]  . 
 
-<http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-05-28T16:03:38.749+05:30"^^xsd:dateTime . 
+<http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ProductRdbmsShape> a konig:AwsAurora , konig:DataSource ; 
+	konig:rdbmsFieldNamespace "http://example.com/ns/alias/" ; 
+	aws:tableReference  [ 
+		aws:awsAuroraHost "devHost" ; 
+		aws:awsSchema "schema1" ; 
+		aws:awsTableName "ProductRdbmsShape" ]  . 

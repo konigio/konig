@@ -37,7 +37,7 @@ public class Konig {
 	public static final String INPUT_SHAPE_OF = "http://www.konig.io/ns/core/inputShapeOf";
 	public static final String IRI_TEMPLATE = "http://www.konig.io/ns/core/iriTemplate";
 	public static final String IRI_FORMULA = "http://www.konig.io/ns/core/iriFormula";
-	
+	public static final String RDBMS_FIELD_NAMESPACE = "http://www.konig.io/ns/core/rdbmsFieldNamespace";
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
@@ -69,6 +69,7 @@ public class Konig {
 
 	public static final URI id = new URIImpl("http://www.konig.io/ns/core/id");
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/core/mediaTypeBaseName");
+	public static final URI rdbmsLogicalShape = new URIImpl("http://www.konig.io/ns/core/rdbmsLogicalShape");
 	public static final URI preferredJsonSchema = new URIImpl("http://www.konig.io/ns/core/preferredJsonSchema");
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/core/avroSchemaRendition");
 	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/core/PreferredClass");
@@ -88,6 +89,7 @@ public class Konig {
 	public static final URI deleted = new URIImpl("http://www.konig.io/ns/core/deleted");
 	public static final URI derivedProperty = new URIImpl("http://www.konig.io/ns/core/derivedProperty");
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
+	public static final URI rdbmsFieldNamespace = new URIImpl(RDBMS_FIELD_NAMESPACE);
 	
 	public static final URI Undefined = new URIImpl("http://www.konig.io/ns/core/Undefined");
 	//public static final URI DerivedShape = new URIImpl("http://www.konig.io/shapes/DerivedShape");

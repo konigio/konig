@@ -38,6 +38,7 @@ public class GoogleBigQueryTable extends DataSource implements TableDataSource {
 	private Set<DataSource> bigQuerySource;
 	private BigQueryTableReference tableReference;
 	private ExternalDataConfiguration externalDataConfiguration;
+	private String rdbmsFieldNamespace;
 
 	public GoogleBigQueryTable() {
 		addType(Konig.GoogleBigQueryTable);
@@ -109,6 +110,14 @@ public class GoogleBigQueryTable extends DataSource implements TableDataSource {
 	@Override
 	public String getSqlDialect() {
 		return "SQL 2011";
+	}
+	@RdfProperty(Konig.RDBMS_FIELD_NAMESPACE)
+	public String getRdbmsFieldNamespace() {
+		return rdbmsFieldNamespace;
+	}
+
+	public void setRdbmsFieldNamespace(String rdbmsFieldNamespace) {
+		this.rdbmsFieldNamespace = rdbmsFieldNamespace;
 	}
 	
 	

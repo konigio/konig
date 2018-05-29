@@ -380,22 +380,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
     	if(amazonWebServices!=null && amazonWebServices.getAurora()!=null){
     		aurora=amazonWebServices.getAurora();
-    		shapeIriPattern=aurora.getShapeIriPattern();
-    		shapeIriReplacement=aurora.getShapeIriReplacement();
-    		propertyNameSpace=aurora.getPropertyNameSpace();
     	}
     	else if(googleCloudPlatform!=null && googleCloudPlatform.getBigquery()!=null){
     		bigQuery=googleCloudPlatform.getBigquery();
-    		shapeIriPattern=bigQuery.getShapeIriPattern();
-    		shapeIriReplacement=bigQuery.getShapeIriReplacement();
-    		propertyNameSpace=bigQuery.getPropertyNameSpace();
     		
     	}
     	else if(googleCloudPlatform!=null && googleCloudPlatform.getCloudsql()!=null){
     		cloudSql=googleCloudPlatform.getCloudsql();
-    		shapeIriPattern=cloudSql.getShapeIriPattern();
-    		shapeIriReplacement=cloudSql.getShapeIriReplacement();
-    		propertyNameSpace=cloudSql.getPropertyNameSpace();
     	}
     		
     	
@@ -403,7 +394,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
 			if (shapesDir != null) {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), shapeIriPattern, shapeIriReplacement,propertyNameSpace, owlReasoner);
+				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), owlReasoner);
 				ShapeWriter shapeWriter = new ShapeWriter();
 				RdbmsShapeHandler handler = new RdbmsShapeHandler(shapeInjector, generator, fileGetter, shapeWriter, nsManager);
 				handler.visitAll(shapeManager.listShapes());

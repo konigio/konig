@@ -48,34 +48,17 @@ import io.konig.shacl.Shape;
 
 public class RdbmsShapeGenerator {
 	
-	private String shapeIriPattern;
-	private String shapeIriReplacement;
 	private String propertyNameSpace;
 	private FormulaParser parser;
 	private List<PropertyConstraint> rdbmsProperty = null;
 	private OwlReasoner owlReasoner;
 	 
-	public RdbmsShapeGenerator(FormulaParser parser, String shapeIriPattern,String shapeIriReplacement, String propertyNameSpace, OwlReasoner owlReasoner) {
-		this.shapeIriPattern=shapeIriPattern;
-		this.shapeIriReplacement=shapeIriReplacement;
-		this.propertyNameSpace = propertyNameSpace;
+	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner) {
 		this.parser = new FormulaParser();
 		this.owlReasoner = owlReasoner;
 	}
-	public String getShapeIriPattern() {
-		return shapeIriPattern;
-	}
-	public void setShapeIriPattern(String shapeIriPattern) {
-		this.shapeIriPattern = shapeIriPattern;
-	}
-	public String getShapeIriReplacement() {
-		return shapeIriReplacement;
-	}
-	public void setShapeIriReplacement(String shapeIriReplacement) {
-		this.shapeIriReplacement = shapeIriReplacement;
-	}
 	
-	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {
+	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {		
 		Shape rdbmsChildShape = createRdbmsShape(childShape);
 		addSyntheticKey(parentShape, "_FK", relationshipProperty);
 		if(rdbmsChildShape != null) {
@@ -90,7 +73,7 @@ public class RdbmsShapeGenerator {
 			clone = shape.deepClone();
 			updateOracle(shape);
 			rdbmsProperty = new ArrayList<>();
-			process(clone, ".", "", clone);
+			process(clone, ".", "", clone.getRdbmsLogicalShape());
 		}
 		return clone;
 		
@@ -109,7 +92,7 @@ public class RdbmsShapeGenerator {
 			return false;
 		}
 		
-		for (PropertyConstraint p : shape.getProperty()) {
+		for (PropertyConstraint p : shape.getRdbmsLogicalShape().getProperty()) {
 			if (p.getShape() != null && p.getMaxCount()!=null && p.getMaxCount()==1) {
 				return true;
 			}
@@ -158,7 +141,7 @@ public class RdbmsShapeGenerator {
 				} else if (p.getShape() != null) {
 					
 					String nestedPath = logicalPath + localName + '.';
-					String nestedPrefix = snakeCase + "__";
+					String nestedPrefix = prefix + snakeCase + "__";
 					process(rdbmsShape, nestedPath, nestedPrefix, p.getShape());
 				}
 			}
@@ -172,7 +155,8 @@ public class RdbmsShapeGenerator {
 	}
 	
 	private void addSyntheticKey(Shape rdbmsShape, String suffix, URI relationshipProperty) throws RDFParseException, IOException {
-		PropertyConstraint pc = hasPrimaryKey(rdbmsShape);
+		Shape shape = rdbmsShape.getRdbmsLogicalShape();
+		PropertyConstraint pc = hasPrimaryKey(shape);
 		String localName = "";
 		if(pc != null) {
 			localName = StringUtil.SNAKE_CASE(pc.getPredicate().getLocalName());
@@ -183,7 +167,7 @@ public class RdbmsShapeGenerator {
 				pc.setFormula(parser.quantifiedExpression(text));
 			}
 		} else {
-			pc = createSyntheticKey(rdbmsShape,suffix,relationshipProperty);
+			pc = createSyntheticKey(shape,suffix,relationshipProperty);
 		}
 		rdbmsProperty.add(pc);
 	}
@@ -208,6 +192,7 @@ public class RdbmsShapeGenerator {
 			Set<URI> inverseOf = owlReasoner.inverseOf(relationshipProperty);
 			for(URI inverse : inverseOf) {
 				pc = new PropertyConstraint(new URIImpl(propertyNameSpace + StringUtil.SNAKE_CASE(inverse.getLocalName()) + suffix));
+				pc.setDatatype(XMLSchema.STRING);
 				text = "." + inverse.getLocalName();
 				pc.setFormula(parser.quantifiedExpression(text));
 			}
@@ -241,7 +226,12 @@ public class RdbmsShapeGenerator {
 	private boolean isValidRdbmsShape(Shape rdbmsShape) {
 		AwsAurora auroraTable = rdbmsShape.findDataSource(AwsAurora.class);
 		GoogleCloudSqlTable gcpSqlTable = rdbmsShape.findDataSource(GoogleCloudSqlTable.class);
-		if (auroraTable !=null || gcpSqlTable != null){
+		if (auroraTable !=null ){
+			propertyNameSpace = auroraTable.getRdbmsFieldNamespace();
+			return true;
+		}
+		if(gcpSqlTable!=null){
+			propertyNameSpace = gcpSqlTable.getRdbmsFieldNamespace();
 			return true;
 		}
 		return false;
