@@ -76,7 +76,7 @@ public class SqlTable extends AbstractPrettyPrintable {
 			out.indent();
 			column.print(out);
 			if(column.getKeytype() == SqlKeyType.SYNTHETIC_KEY){
-				out.print(" NOT NULL AUTO_INCREMENT");
+				out.print(" AUTO_INCREMENT");
 			}
 			if (column.getKeytype() == SqlKeyType.PRIMARY_KEY || column.getKeytype() == SqlKeyType.SYNTHETIC_KEY) {				
 				if (pks.length() > 0) pks.append(comma);
