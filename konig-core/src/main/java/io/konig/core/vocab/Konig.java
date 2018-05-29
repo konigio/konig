@@ -108,7 +108,6 @@ public class Konig {
 	public static final URI shapeDataSource = new URIImpl(SHAPE_DATA_SOURCE);
 	public static final URI bigQuerySource = new URIImpl(BIG_QUERY_SOURCE);
 	public static final URI primaryKey = new URIImpl("http://www.konig.io/ns/core/primaryKey");
-	public static final URI syntheticKey = new URIImpl("http://www.konig.io/ns/core/syntheticKey");
 	public static final URI uniqueKey = new URIImpl("http://www.konig.io/ns/core/uniqueKey");
 	public static final URI syntheticKey = new URIImpl("http://www.konig.io/ns/core/syntheticKey");
 	// Shape Transform Vocabulary
