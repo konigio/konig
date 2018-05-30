@@ -82,7 +82,7 @@ public class PropertyConstraint implements Cloneable {
 	private Path partitionOf;
 	private QuantifiedExpression formula;
 	private URI idFormat;
-	private List<Link> qualifiedSecurityClassification ;
+	private List<URI> qualifiedSecurityClassification ;
 	
 	private Term term;
 	private URI termStatus;
@@ -542,11 +542,11 @@ public class PropertyConstraint implements Cloneable {
 		this.decimalScale = decimalScale;
 	}
 
-	public List<Link> getQualifiedSecurityClassification() {
+	public List<URI> getQualifiedSecurityClassification() {
 		return qualifiedSecurityClassification;
 	}
 
-	public void setQualifiedSecurityClassification(List<Link> qualifiedSecurityClassification) {
+	public void setQualifiedSecurityClassification(List<URI> qualifiedSecurityClassification) {
 		this.qualifiedSecurityClassification = qualifiedSecurityClassification;
 	}
 }
