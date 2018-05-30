@@ -95,7 +95,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	@Override
 	public void visit(Shape shape) {
 		
-		if (shape.getRdbmsLogicalShape()!=null) {
+		if (shape.getRdbmsLogicalShape()!=null && !hasParentShape(shape)) {
 			
 			Shape rdbmsShape = null;
 			rdbmsChildShapes =  new ArrayList<>();
@@ -129,15 +129,31 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 
 	}
 	
+	private boolean hasParentShape(Shape shape) {
+		boolean hasParent=false;
+		for(Shape s:shapes){
+			hasParent=hasParentShape(s,shape.getRdbmsLogicalShape());
+		}
+		return hasParent;
+	}
+
+	private boolean hasParentShape(Shape parentShape, Shape childShape) {
+		for(PropertyConstraint pc:parentShape.getProperty()){
+			if(pc.getShape()!=null && pc.getShape().getId().equals(childShape.getId())){
+				return true;
+			}
+		}
+		return false;
+		
+	}
+
 	private void save(Shape shape) {
 		if (!(shape.getId() instanceof URI)) {
 			throw new KonigException("Shape must be identified by a URI");
 		}
 		File file = fileGetter.getFile((URI)shape.getId());
-		try {
-			if(!file.exists()){
-				shapeWriter.writeTurtle(nsManager, shape, file);
-			}
+		try {			
+				shapeWriter.writeTurtle(nsManager, shape, file);			
 		} catch (Exception e) {
 			throw new KonigException(e);
 		}

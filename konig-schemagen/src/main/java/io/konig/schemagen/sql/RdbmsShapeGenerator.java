@@ -59,9 +59,9 @@ public class RdbmsShapeGenerator {
 	}
 	
 	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {		
-		Shape rdbmsChildShape = createRdbmsShape(childShape);
-		addSyntheticKey(parentShape, "_FK", relationshipProperty);
+		Shape rdbmsChildShape = createRdbmsShape(childShape);		
 		if(rdbmsChildShape != null) {
+			addSyntheticKey(parentShape, "_FK", relationshipProperty);
 			rdbmsChildShape.setProperty(rdbmsProperty);
 		}
 		return rdbmsChildShape;
@@ -87,8 +87,7 @@ public class RdbmsShapeGenerator {
 	 * @return true if the supplied shape contains fields that need to be renamed or any nested shapes.
 	 */
 	private boolean accept(Shape shape) {
-		
-		if (!isValidRdbmsShape(shape)) {
+		if (!isValidRdbmsShape(shape)  || !shape.getProperty().isEmpty() ) {
 			return false;
 		}
 		
