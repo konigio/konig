@@ -37,7 +37,7 @@ public class PropertyInfo {
 	private String typeName;
 	private String typeHref;
 	private String description;
-	private List<URI> quantifiedSecurityClassificationList;
+	private List<io.konig.shacl.Link> quantifiedSecurityClassificationList;
 	public PropertyInfo(URI resourceId, PropertyConstraint constraint, PageRequest request) throws DataCatalogException {
 		this.constraint = constraint;
 		predicateId = constraint.getPredicate().stringValue();
@@ -99,11 +99,11 @@ public class PropertyInfo {
 		return propertyHref;
 	}
 
-	public List<URI> getQuantifiedSecurityClassificationList() {
+	public List<io.konig.shacl.Link> getQuantifiedSecurityClassificationList() {
 		return quantifiedSecurityClassificationList;
 	}
 
-	public void setQuantifiedSecurityClassificationList(List<URI> quantifiedSecurityClassificationList) {
+	public void setQuantifiedSecurityClassificationList(List<io.konig.shacl.Link> quantifiedSecurityClassificationList) {
 		this.quantifiedSecurityClassificationList = quantifiedSecurityClassificationList;
 	}
 

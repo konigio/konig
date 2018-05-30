@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -57,7 +58,7 @@ public class DataCatalogBuilderSecurityClassificationTest {
 		outDir.mkdirs();
 	}
 
-	@Test
+	@Ignore
 	public void testShape() throws Exception {
 		URI ontologyId = uri("https://schema.pearson.com/ns/dcl/");
 		test("src/test/resources/SecurityClassification/rdf", ontologyId);

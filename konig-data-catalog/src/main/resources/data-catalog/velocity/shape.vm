@@ -34,8 +34,8 @@
 				<td class="prop-ect">$pc.TypeName</td>
 				<td class="prop-desc" property="rdfs:comment">$pc.Description</td>
 			
-				<td class="prop-quansec">#foreach( $quantifiedSecurityClassification in $pc.quantifiedSecurityClassificationList )	
-				<div>$quantifiedSecurityClassification.getLocalName()
+				<td class="prop-quansec">#foreach( $quantifiedSecurityClassification in quanSecList )	
+				<div><a href="$quantifiedSecurityClassification.href" target="_blank">$$quantifiedSecurityClassification.name</a>
 				</div>#end</td>
 
 			</tr>

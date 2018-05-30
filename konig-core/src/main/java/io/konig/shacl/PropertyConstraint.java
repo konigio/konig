@@ -40,7 +40,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.annotation.RdfProperty;
-import io.konig.core.KonigException;
 import io.konig.core.Path;
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;
@@ -83,7 +82,7 @@ public class PropertyConstraint implements Cloneable {
 	private Path partitionOf;
 	private QuantifiedExpression formula;
 	private URI idFormat;
-	private List<URI> qualifiedSecurityClassification ;
+	private List<Link> qualifiedSecurityClassification ;
 	
 	private Term term;
 	private URI termStatus;
@@ -543,11 +542,11 @@ public class PropertyConstraint implements Cloneable {
 		this.decimalScale = decimalScale;
 	}
 
-	public List<URI> getQualifiedSecurityClassification() {
+	public List<Link> getQualifiedSecurityClassification() {
 		return qualifiedSecurityClassification;
 	}
 
-	public void setQualifiedSecurityClassification(List<URI> qualifiedSecurityClassification) {
+	public void setQualifiedSecurityClassification(List<Link> qualifiedSecurityClassification) {
 		this.qualifiedSecurityClassification = qualifiedSecurityClassification;
 	}
 }
