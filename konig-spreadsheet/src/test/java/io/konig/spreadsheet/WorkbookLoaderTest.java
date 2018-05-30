@@ -149,7 +149,63 @@ public class WorkbookLoaderTest {
 		Path path = p.getEquivalentPath();
 		assertEquals("/schema:offers[schema:priceCurrency \"USD\"]/schema:price", path.toSimpleString());
 	}
+	@Test
+	public void testCustomTableName() throws Exception {
 
+		InputStream input = getClass().getClassLoader().getResourceAsStream("custom-tablename.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		URI shapeId = uri("https://schema.pearson.com/shapes/OriginSales_TeamShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		
+		Shape shape = s.getShapeById(shapeId);
+		assertTrue(shape!=null);
+		List<DataSource> list = shape.getShapeDataSource();
+		assertEquals(2, list.size());
+		
+		DataSource ds = list.get(0);
+		// CASE 1 : Custom Table Name from the Datasource Function Parameter
+		assertEquals("http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/schema1/tables/P6_Sales_Team", 
+				ds.getId().stringValue());
+		
+		URI originCompanySubTypeShapeId = uri("https://schema.pearson.com/shapes/OriginCompanySubTypeShape");
+		
+		Shape originCompanySubTypeShape = s.getShapeById(originCompanySubTypeShapeId);
+		assertTrue(originCompanySubTypeShape!=null);
+		List<DataSource> originCompanySubTypeList = originCompanySubTypeShape.getShapeDataSource();
+		assertEquals(2, originCompanySubTypeList.size());
+		
+		// CASE 2 : Custom Table Name from the global settings
+		DataSource ds1 = originCompanySubTypeList.get(0);
+		assertEquals("http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/schema1/tables/CompanySubType", 
+				ds1.getId().stringValue());
+		
+		URI creativeWorkShapeShapeId = uri("https://schema.pearson.com/shapes/CreativeWorkShape");
+		Shape creativeWorkShape = s.getShapeById(creativeWorkShapeShapeId);
+		List<DataSource> dsList = creativeWorkShape.getShapeDataSource();
+		
+		// CASE 3 : Custom Table Name from the default settings.properties
+		DataSource ds2 = dsList.get(0);
+		assertEquals("https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/CreativeWork", 
+				ds2.getId().stringValue());
+		
+		
+	}
 	@Test
 	public void testInvalidOntologyNamespace() throws Exception {
 

@@ -54,6 +54,8 @@ import io.konig.core.vocab.Konig;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.merge.ShapeAggregator;
+import io.konig.schemagen.sql.SqlKeyType;
+import io.konig.schemagen.sql.SqlTableGeneratorUtil;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -179,6 +181,11 @@ public class BigQueryTableGenerator {
 		}
 		
 		for (PropertyConstraint p : plist) {
+			if(!SqlTableGeneratorUtil.isValidRdbmsShape(shape) && 
+					SqlKeyType.SYNTHETIC_KEY.equals(SqlTableGeneratorUtil.getKeyType(p))){
+				logger.error("konig:synthicKey is applicable only for shapes with datasource GoogleCloudSqlTable or AwsAurora");
+				p.setStereotype(null);
+			}
 			TableFieldSchema field = toField(p);
 			list.add(field);
 		}

@@ -23,5 +23,6 @@ package io.konig.schemagen.sql;
 
 public enum SqlKeyType {
 	PRIMARY_KEY,
-	UNIQUE_KEY
+	UNIQUE_KEY,
+	SYNTHETIC_KEY
 }

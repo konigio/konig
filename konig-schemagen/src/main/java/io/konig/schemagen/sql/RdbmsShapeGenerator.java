@@ -169,8 +169,8 @@ public class RdbmsShapeGenerator {
 			pc = createSyntheticKey(shape,suffix,relationshipProperty);
 		}
 		rdbmsProperty.add(pc);
-	}
-
+	}	
+		
 	
 	private PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
 		for (PropertyConstraint p : rdbmsShape.getProperty()) {
@@ -235,7 +235,6 @@ public class RdbmsShapeGenerator {
 		}
 		return false;
 	}
-	
 	
 	private void declarePredicate(URI predicate) {
 		if (parser.getLocalNameService() instanceof SimpleLocalNameService) {

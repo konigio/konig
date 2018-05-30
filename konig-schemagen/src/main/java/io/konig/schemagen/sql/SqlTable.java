@@ -69,16 +69,19 @@ public class SqlTable extends AbstractPrettyPrintable {
 		out.pushIndent();
 		String comma = "";
 		StringBuilder pks = new StringBuilder();
-		StringBuilder uks = new StringBuilder();
+		StringBuilder uks = new StringBuilder();		
 		for (SqlColumn column : columnList) {
 			out.println(comma);
 			comma = ", ";
 			out.indent();
 			column.print(out);
-			if (column.getKeytype() == SqlKeyType.PRIMARY_KEY) {
+			if(column.getKeytype() == SqlKeyType.SYNTHETIC_KEY){
+				out.print(" AUTO_INCREMENT");
+			}
+			if (column.getKeytype() == SqlKeyType.PRIMARY_KEY || column.getKeytype() == SqlKeyType.SYNTHETIC_KEY) {				
 				if (pks.length() > 0) pks.append(comma);
 				pks.append(column.getColumnName());
-			}
+			}			
 			if (column.getKeytype() == SqlKeyType.UNIQUE_KEY) {
 				if (uks.length() > 0) uks.append(comma);
 				uks.append(column.getColumnName());
