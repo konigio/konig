@@ -96,6 +96,7 @@ public class SqlTableGenerator {
 				SqlKeyType.SYNTHETIC_KEY.equals(keyType)){
 			LOG.error("konig:synthicKey is applicable only for shapes with datasource GoogleCloudSqlTable or AwsAurora");
 			p.setStereotype(null);
+			keyType=null;
 		}
 		if (predicate != null) {
 			if (p.getShape() != null) {

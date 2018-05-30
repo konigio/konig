@@ -222,14 +222,13 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 			}
 		}
 		assertTrue(!hasSyntheticKey);
-		/*String query=table.toString();
-		System.out.println(query);
+		String query=table.toString();
 		for(SqlColumn column:table.getColumnList()){
 			if(SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype())){				
 				assertFalse(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));
 				assertFalse(query.substring(query.indexOf("PRIMARY KEY")).contains(column.getColumnName()));
 			}
-		}*/
+		}
 		
 		
 		
