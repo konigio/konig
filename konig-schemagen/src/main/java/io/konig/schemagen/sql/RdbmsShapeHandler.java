@@ -130,11 +130,11 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	}
 	
 	private boolean hasParentShape(Shape shape) {
-		boolean hasParent=false;
-		for(Shape s:shapes){
-			hasParent=hasParentShape(s,shape.getRdbmsLogicalShape());
+		for(Shape s:shapes){			
+			if(hasParentShape(s,shape.getRdbmsLogicalShape()))
+				return true;
 		}
-		return hasParent;
+		return false;
 	}
 
 	private boolean hasParentShape(Shape parentShape, Shape childShape) {

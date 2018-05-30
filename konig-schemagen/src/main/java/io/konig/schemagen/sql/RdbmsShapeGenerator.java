@@ -157,7 +157,7 @@ public class RdbmsShapeGenerator {
 		Shape shape = rdbmsShape.getRdbmsLogicalShape();
 		PropertyConstraint pc = hasPrimaryKey(shape);
 		String localName = "";
-		if(pc != null) {
+		if(pc != null && "_PK".equals(suffix)) {
 			localName = StringUtil.SNAKE_CASE(pc.getPredicate().getLocalName());
 			URI newPredicate =  new URIImpl(propertyNameSpace + localName + suffix);
 			pc.setPredicate(newPredicate);
