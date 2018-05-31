@@ -86,23 +86,23 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		assertField(table, "signedInt", FacetedSqlDatatype.SIGNED_INT);
 		assertField(table, "date", FacetedSqlDatatype.DATE);
 		assertField(table, "dateTime", FacetedSqlDatatype.DATETIME);
-		assertStringField(table, "text", 0,"TEXT");
-		assertStringField(table, "char", 32,"CHAR(32)");
-		assertStringField(table, "varchar", 200,"VARCHAR(200)");
+		assertStringField(table, "text", SqlDatatype.TEXT, 0);
+		assertStringField(table, "char", SqlDatatype.CHAR, 32);
+		assertStringField(table, "varchar", SqlDatatype.VARCHAR, 200);
 		assertField(table, "float", FacetedSqlDatatype.SIGNED_FLOAT);
 		assertField(table, "double", FacetedSqlDatatype.SIGNED_DOUBLE);
 		
 		//System.out.println(table.toString());
 	}
 
-	private void assertStringField(SqlTable table, String columnName, int length,String datatype ) {
+	private void assertStringField(SqlTable table, String columnName, SqlDatatype datatype, int length ) {
 
 		SqlColumn c = table.getColumnByName(columnName);
 		assertTrue(c != null);
 		assertTrue(c.getDatatype() instanceof StringSqlDatatype);
 		StringSqlDatatype type = (StringSqlDatatype) c.getDatatype();
 		assertEquals(length, type.getMaxLength());
-		assertEquals(datatype, c.getDatatype().toString());
+		assertEquals(datatype, c.getDatatype().getDatatype());
 	}
 
 	private void assertField(SqlTable table, String columnName, FacetedSqlDatatype datatype) {
@@ -186,10 +186,10 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 			SqlTable table = generator.generateTable(shape);
 			
 			assertTrue(table!=null);
-			assertStringField(table, "PPID", 2000,"VARCHAR(2000)");
-			assertStringField(table, "PP_NAME", 255,"VARCHAR(255)");
-			assertStringField(table, "ASSEMBLY_INSTRUCTIONS", 1000,"VARCHAR(1000)");
-			assertStringField(table, "LONG_DESCRIPTION", 0,"TEXT");
+			assertStringField(table, "PPID", SqlDatatype.VARCHAR, 2000);
+			assertStringField(table, "PP_NAME", SqlDatatype.VARCHAR, 255);
+			assertStringField(table, "ASSEMBLY_INSTRUCTIONS",SqlDatatype.VARCHAR, 1000);
+			assertStringField(table, "LONG_DESCRIPTION", SqlDatatype.TEXT, 0);
 	}
 private InputStream resource(String path) {
 		
