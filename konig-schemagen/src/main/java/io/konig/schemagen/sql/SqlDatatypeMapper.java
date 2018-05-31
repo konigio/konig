@@ -80,16 +80,16 @@ public class SqlDatatypeMapper
 				Integer maxLength = c.getMaxLength();
 				Integer minLength = c.getMinLength();
 				if (maxLength == null) {
-					return new StringSqlDatatype(SqlDatatype.VARCHAR, 65535);
+					return new StringSqlDatatype(SqlDatatype.VARCHAR, 2000);
 				}
 				if (minLength!=null && maxLength<256 && minLength.equals(maxLength)) {
 					return new StringSqlDatatype(SqlDatatype.CHAR, maxLength);
 				}
-				if (maxLength!=null && maxLength<=65535) {
+				if (maxLength!=null && maxLength<=2000) {
 					return new StringSqlDatatype(SqlDatatype.VARCHAR, maxLength);
 				}
 				
-				return new StringSqlDatatype(SqlDatatype.TEXT, maxLength);
+				return new StringSqlDatatype(SqlDatatype.TEXT);
 			}
 			
 			if (XMLSchema.DATE.equals(datatype) ) {
