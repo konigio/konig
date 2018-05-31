@@ -88,15 +88,20 @@ public class DataCatalogBuilderSecurityClassificationTest {
 		File [] fileArray = shape.listFiles();
 		for (int i = 0; i < fileArray.length; i++)
 	     {
-	        if (fileArray[i].isFile() && fileArray[i].getName().contains("Shape")) 
-	        {
+	        if (fileArray[i].isFile()){
 	        	HtmlContent  = 	parseHtml(fileArray[i]);
-	        }
+	        	if(fileArray[i].getName().contains("PersonShape")) {
+		       assertTrue(HtmlContent.contains("Private"));
+		      System.out.println("Assert Value of Private: "+ HtmlContent.contains("Private"));
+	        }else if(fileArray[i].getName().contains("ProductShape")){ 
+	        	 assertTrue(HtmlContent.contains("Public"));
+	  	       assertTrue(HtmlContent.contains("DCL1"));
+	  	       System.out.println("Assert Value of Public: "+ HtmlContent.contains("Public"));
+	  	       System.out.println("Assert Value of DCL1: "+ HtmlContent.contains("DCL1"));
+	        	}
+	        	}
 	}
-	       assertTrue(HtmlContent.contains("Public"));
-	       assertTrue(HtmlContent.contains("DCL1"));
-	       System.out.println("Assert Value of Public: "+ HtmlContent.contains("Public"));
-	       System.out.println("Assert Value of DCL1: "+ HtmlContent.contains("DCL1"));
+	      
 	}
 	private String parseHtml(File file){
 		StringBuilder contentBuilder = new StringBuilder();
