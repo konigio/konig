@@ -95,8 +95,8 @@ public class DataCatalogBuilderSecurityClassificationTest {
 	}
 	       assertTrue(HtmlContent.contains("Public"));
 	       assertTrue(HtmlContent.contains("DCL1"));
-	       System.out.println("Assertion Value of Public: "+ HtmlContent.contains("Public"));
-	       System.out.println("Assertion Value of DCL1: "+ HtmlContent.contains("DCL1"));
+	       System.out.println("Assert Value of Public: "+ HtmlContent.contains("Public"));
+	       System.out.println("Assert Value of DCL1: "+ HtmlContent.contains("DCL1"));
 	}
 	private String parseHtml(File file){
 		StringBuilder contentBuilder = new StringBuilder();
