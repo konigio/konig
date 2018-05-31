@@ -23,10 +23,13 @@ package io.konig.datacatalog;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -58,7 +61,7 @@ public class DataCatalogBuilderSecurityClassificationTest {
 		outDir.mkdirs();
 	}
 
-	@Ignore
+	@Test
 	public void testShape() throws Exception {
 		URI ontologyId = uri("https://schema.pearson.com/ns/dcl/");
 		test("src/test/resources/SecurityClassification/rdf", ontologyId);
@@ -69,6 +72,7 @@ public class DataCatalogBuilderSecurityClassificationTest {
 	private void test(String sourcePath, URI ontologyId) throws Exception {
 		load(sourcePath);
 		DataCatalogBuildRequest request = new DataCatalogBuildRequest();
+		String HtmlContent ="";
 		request.setExampleDir(exampleDir);
 		request.setOntologyId(ontologyId);
 		request.setGraph(graph);
@@ -80,8 +84,32 @@ public class DataCatalogBuilderSecurityClassificationTest {
 		assertTrue(dclFile.isDirectory());
 		File secFile = new File(outDir.getPath()+"/sec");
 		assertTrue(secFile.isDirectory());
+		File shape = new File(outDir.getPath()+"/shape");
+		File [] fileArray = shape.listFiles();
+		for (int i = 0; i < fileArray.length; i++)
+	     {
+	        if (fileArray[i].isFile() && fileArray[i].getName().contains("Shape")) 
+	        {
+	        	HtmlContent  = 	parseHtml(fileArray[i]);
+	        }
 	}
-
+	       assertTrue(HtmlContent.contains("Public"));
+	       assertTrue(HtmlContent.contains("DCL1"));
+	}
+	private String parseHtml(File file){
+		StringBuilder contentBuilder = new StringBuilder();
+		try {
+		    BufferedReader in = new BufferedReader(new FileReader(file.getAbsolutePath()));
+		    String str;
+		    while ((str = in.readLine()) != null) {
+		        contentBuilder.append(str);
+		    }
+		    in.close();
+		} catch (IOException e) {
+		}
+		String content = contentBuilder.toString();
+		return content;
+	}
 
 	private void load(String path) throws Exception {
 		File file = new File(path);

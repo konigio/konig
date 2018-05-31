@@ -57,7 +57,7 @@ public class DataCatalogBuilderTest {
 		outDir.mkdirs();
 	}
 
-	@Test
+	@Ignore
 	public void testShape() throws Exception {
 		URI ontologyId = uri("http://schema.pearson.com/ns/fact/");
 		test("src/test/resources/ShapePageTest/rdf", ontologyId);

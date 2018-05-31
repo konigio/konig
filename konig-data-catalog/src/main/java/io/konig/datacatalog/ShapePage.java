@@ -90,10 +90,7 @@ public class ShapePage {
 			return;
 		}
 		context.put("TargetClass", new Link(targetClass.getLocalName(), targetClass.stringValue()));
-	for (PropertyConstraint p : shape.getProperty()) {
-			
-			context.put("quanSecList", p.getQualifiedSecurityClassification());
-		}
+
 		if(shape.getShapeDataSource()!=null  && !shape.getShapeDataSource().isEmpty()){
 		
 			List<DataSourceInfo> datasourceList = new ArrayList<>();
