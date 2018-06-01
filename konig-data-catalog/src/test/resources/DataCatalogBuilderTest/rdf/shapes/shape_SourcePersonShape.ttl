@@ -20,21 +20,25 @@ shape:SourcePersonShape sh:property  [
 		sh:datatype xsd:string ; 
 		sh:maxCount 1 ; 
 		sh:minCount 1 ; 
-		konig:equivalentPath "/schema:givenName"
+		konig:equivalentPath ".<http://schema.org/givenName>"
 	 ]  ,  [ 
 		rdfs:comment "The Person's last name." ; 
 		sh:predicate alias:last_name ; 
 		sh:datatype xsd:string ; 
 		sh:maxCount 1 ; 
 		sh:minCount 1 ; 
-		konig:equivalentPath "/schema:familyName"
+		konig:formula ".<http://schema.org/familyName>"
 	 ]  ,  [ 
 		rdfs:comment "The Person's email address at work" ; 
 		sh:predicate alias:work_email ; 
 		sh:datatype xsd:string ; 
 		sh:maxCount 1 ; 
 		sh:minCount 0 ; 
-		konig:equivalentPath "/schema:contactPoint[schema:contactType \"work\"]/schema:email" ]  ; 
+		konig:formula """
+@prefix schema: <http://schema.org/> .
+
+.schema:contactPoint[schema:contactType \"work\"].schema:email
+""" ]  ; 
 	a sh:Shape ; 
 	rdfs:comment "The data shape for a Person record stored in the enterprise CRM system." ; 
 	sh:targetClass schema:Person ; 
