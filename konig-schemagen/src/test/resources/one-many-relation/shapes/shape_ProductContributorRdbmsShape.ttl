@@ -8,52 +8,13 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:ProductContributorRdbmsShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> ; 
 	sh:targetClass mdm:ProductContributor ; 
 	konig:rdbmsLogicalShape shape:ProductContributorShape ; 
 	konig:shapeDataSource <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ProductContributorRdbmsShape> . 
 
-<http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-05-28T16:03:38.749+05:30"^^xsd:dateTime . 
-
-shape:ProductContributorShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> ; 
-	sh:targetClass mdm:ProductContributor ; 
-	sh:nodeKind sh:IRI ; 
-	sh:property  [ 
-		sh:path mdm:contributorId ; 
-		sh:datatype xsd:string ; 
-		sh:minCount 1 ; 
-		sh:maxCount 1 ; 
-		sh:maxLength 55
-	 ]  ,  [ 
-		sh:path mdm:contributorType ; 
-		sh:datatype xsd:string ; 
-		sh:minCount 0 ; 
-		sh:maxCount 1 ; 
-		sh:maxLength 55
-	 ]  ,  [ 
-		sh:path mdm:contributorFirstName ; 
-		sh:datatype xsd:string ; 
-		sh:minCount 1 ; 
-		sh:maxCount 1 ; 
-		sh:maxLength 55
-	 ]  ,  [ 
-		sh:path mdm:contributorSurname ; 
-		sh:datatype xsd:string ; 
-		sh:minCount 1 ; 
-		sh:maxCount 1 ; 
-		sh:maxLength 55
-	 ]  ,  [ 
-		sh:path mdm:primaryAuthorFlag ; 
-		sh:datatype xsd:string ; 
-		sh:minCount 1 ; 
-		sh:maxCount 1 ; 
-		sh:maxLength 55
-	 ]  ,  [ 
-		sh:path mdm:person ; 
-		sh:shape shape:PersonShape ; 
-		sh:minCount 0 ]  . 
+<http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-06-01T14:53:13.010+05:30"^^xsd:dateTime . 
 
 <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ProductContributorRdbmsShape> a konig:AwsAurora , konig:DataSource ; 
 	konig:rdbmsFieldNamespace "http://example.com/ns/alias/" ; 

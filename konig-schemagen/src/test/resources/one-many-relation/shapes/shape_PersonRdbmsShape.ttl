@@ -8,22 +8,13 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:PersonRdbmsShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> ; 
 	sh:targetClass mdm:Person ; 
 	konig:rdbmsLogicalShape shape:PersonShape ; 
 	konig:shapeDataSource <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/PersonRdbmsShape> . 
 
-<http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-05-28T16:03:38.749+05:30"^^xsd:dateTime . 
-
-shape:PersonShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> ; 
-	sh:targetClass mdm:Person ; 
-	sh:property  [ 
-		sh:path mdm:personId ; 
-		sh:datatype xsd:string ; 
-		sh:minCount 1 ; 
-		sh:maxCount 1 ]  . 
+<http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-06-01T14:53:13.010+05:30"^^xsd:dateTime . 
 
 <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/PersonRdbmsShape> a konig:AwsAurora , konig:DataSource ; 
 	konig:rdbmsFieldNamespace "http://example.com/ns/alias/" ; 

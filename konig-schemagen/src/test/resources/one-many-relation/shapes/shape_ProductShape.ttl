@@ -7,7 +7,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:ProductShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> ; 
 	sh:targetClass mdm:Product ; 
 	sh:property  [ 
 		sh:path mdm:ppid ; 
@@ -27,5 +27,5 @@ shape:ProductShape a sh:Shape ;
 		sh:minCount 0 ; 
 		sh:maxLength 55 ]  . 
 
-<http://www.konig.io/activity/kSJi2lm8ZhAAAAFjpk-Chw> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-05-28T16:03:38.749+05:30"^^xsd:dateTime . 
+<http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-06-01T14:53:13.010+05:30"^^xsd:dateTime . 

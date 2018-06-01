@@ -12,6 +12,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsAurora;
+import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.util.StringUtil;
@@ -74,11 +75,22 @@ public class RdbmsShapeGenerator {
 			updateOracle(shape);
 			rdbmsProperty = new ArrayList<>();
 			process(clone, ".", "", clone.getRdbmsLogicalShape());
+			verifyPrimaryKeyCount(clone);		
 		}
 		return clone;
-		
 	}
 	
+	private void verifyPrimaryKeyCount(Shape clone) {
+		int primaryKeyCount=0;
+		for(PropertyConstraint pc:clone.getProperty()){
+			if(Konig.primaryKey.equals(pc.getStereotype()) || Konig.syntheticKey.equals(pc.getStereotype())){
+				primaryKeyCount++;					
+			}
+			if(primaryKeyCount>1)
+				throw new KonigException("RDBMS Shape cannot have more than 1 primary key");
+		}
+	}
+
 	/**
 	 * Check whether the shape contains any properties that need to be renamed using SNAKE_CASE, or any 
 	 * nested shapes that need to be flattened, and that it is a valid shape that required RDBMS generation.
@@ -218,7 +230,9 @@ public class RdbmsShapeGenerator {
 		
 		pc.setMaxCount(1);
 		pc.setMinCount(1);
-		pc.setStereotype(Konig.syntheticKey);
+		if("_PK".equals(suffix)){
+			pc.setStereotype(Konig.syntheticKey);
+		}
 		return pc;
 	}
 	
