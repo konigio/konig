@@ -165,12 +165,12 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		assertTrue(table!=null);
 		assertTrue(table.getColumnList()!=null && !table.getColumnList().isEmpty());
 		String query=table.toString();
-		for(SqlColumn column:table.getColumnList()){
-			if(SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype())){				
-				assertTrue(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));
-				assertTrue(query.substring(query.indexOf("PRIMARY KEY")).contains(column.getColumnName()));
-			}
-		}
+		SqlColumn column=table.getColumnByName("PERSON_ID");
+		assertTrue(column!=null && SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype()));				
+		assertTrue(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));
+		assertTrue(query.substring(query.indexOf("PRIMARY KEY")).contains(column.getColumnName()));
+		
+		
 		
 	}
 	@Test
@@ -191,12 +191,11 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		assertTrue(table!=null);
 		assertTrue(table.getColumnList()!=null && !table.getColumnList().isEmpty());
 		String query=table.toString();
-		for(SqlColumn column:table.getColumnList()){
-			if(SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype())){				
-				assertTrue(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));
-				assertTrue(query.substring(query.indexOf("PRIMARY KEY")).contains(column.getColumnName()));
-			}
-		}
+		SqlColumn column=table.getColumnByName("PERSON_ID");
+		assertTrue(column!=null && SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype()));			
+		assertTrue(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));
+		assertTrue(query.substring(query.indexOf("PRIMARY KEY")).contains(column.getColumnName()));
+			
 	}
 	@Test
 	public void testSyntheticKeyForOracle() throws Exception{
@@ -212,26 +211,16 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator);
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
 		Shape shape=shapeManager.listShapes().get(0);
+		PropertyConstraint p=shape.getPropertyConstraint(new URIImpl("http://example.com/ns/alias/personId"));
+		assertTrue(Konig.syntheticKey.equals(p.getStereotype()));
 		SqlTable table = generator.generateTable(shape);
 		
 		assertTrue(table!=null);
-		boolean hasSyntheticKey =false;
-		for(PropertyConstraint p:shape.getProperty()){
-			if(Konig.syntheticKey.equals(p.getStereotype())){
-				hasSyntheticKey=true;
-			}
-		}
-		assertTrue(!hasSyntheticKey);
 		String query=table.toString();
-		for(SqlColumn column:table.getColumnList()){
-			if(SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype())){				
-				assertFalse(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));
-				assertFalse(query.substring(query.indexOf("PRIMARY KEY")).contains(column.getColumnName()));
-			}
-		}
-		
-		
-		
+		SqlColumn column=table.getColumnByName("personId");
+		assertTrue(column!=null && !SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype()));		
+		assertFalse(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));
+			
 	}
 private InputStream resource(String path) {
 		
