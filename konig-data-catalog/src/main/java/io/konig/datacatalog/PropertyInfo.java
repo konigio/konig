@@ -1,5 +1,8 @@
 package io.konig.datacatalog;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /*
  * #%L
  * Konig Data Catalog
@@ -35,7 +38,7 @@ public class PropertyInfo {
 	private String typeName;
 	private String typeHref;
 	private String description;
-	
+	private List<Link> quantifiedSecurityClassificationList;
 	public PropertyInfo(URI resourceId, PropertyConstraint constraint, PageRequest request) throws DataCatalogException {
 		this.constraint = constraint;
 		predicateId = constraint.getPredicate().stringValue();
@@ -64,8 +67,23 @@ public class PropertyInfo {
 			}
 		}
 		propertyHref = request.relativePath(resourceId, constraint.getPredicate());
+		quantifiedSecurityClassificationList = quantifiedSecurityClassificationList(constraint.getQualifiedSecurityClassification(), request);
+
 	}
 	
+	private List<Link> quantifiedSecurityClassificationList(List<URI> uriList, PageRequest request) throws DataCatalogException {
+		if (uriList == null) {
+			return null;
+		}
+		
+		List<Link> list = new ArrayList<>();
+		for (URI uri : uriList) {
+			String relativePath = request.relativePath(uri);
+			list.add(new Link(uri.getLocalName(), relativePath));
+		}
+		return list;
+	}
+
 	public String getTypeHref() {
 		return typeHref;
 	}
@@ -92,5 +110,10 @@ public class PropertyInfo {
 	public String getPropertyHref() {
 		return propertyHref;
 	}
-	
+
+	public List<Link> getQuantifiedSecurityClassificationList() {
+		return quantifiedSecurityClassificationList;
+	}
+
+
 }
