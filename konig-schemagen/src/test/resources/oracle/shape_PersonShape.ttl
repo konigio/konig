@@ -1,0 +1,56 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix omcs: <http://www.konig.io/ns/omcs/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonShape a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/gw4MP8Dg6i8AAAFjq6tvxA> ; 
+	sh:targetClass schema:Person ; 
+	konig:mediaTypeBaseName "application/vnd.example.person" ; 
+	sh:property  [ 
+		sh:path schema:name ; 
+		rdfs:comment "The full name of the person." ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:givenName ; 
+		rdfs:comment "Given name. In the U.S., the first name of a Person." ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:familyName ; 
+		rdfs:comment "Family name. In the U.S., the last name of an Person." ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:email ; 
+		rdfs:comment "The person's email address." ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		sh:path alias:personId ; 
+		rdfs:comment "Person's Id" ; 
+		sh:datatype xsd:integer ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:syntheticKey ]  ; 
+	konig:shapeDataSource <http://www.konig.io/ns/omcs/instances/${omcsInstanceId}/databases/${oracleSchema}/tables/Person> . 
+
+<http://www.konig.io/activity/gw4MP8Dg6i8AAAFjq6tvxA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-05-29T17:02:09.347+05:30"^^xsd:dateTime . 
+
+<http://www.konig.io/ns/omcs/instances/${omcsInstanceId}/databases/${oracleSchema}/tables/Person> a konig:OracleTable , konig:DataSource ; 
+	omcs:tableReference  [ 
+		omcs:oracleHost "${oracleHost}" ; 
+		omcs:omcsInstanceId "${omcsInstanceId}" ; 
+		omcs:oracleSchema "${oracleSchema}" ; 
+		omcs:omcsTableId "Person" ]  . 

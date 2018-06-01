@@ -42,12 +42,15 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DatasourceFileLocator;
 import io.konig.datasource.DdlFileLocator;
 import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.omcs.datasource.OracleShapeConfig;
 import io.konig.schemagen.SchemaGeneratorTest;
 import io.konig.schemagen.aws.AwsAuroraTableWriter;
 import io.konig.schemagen.gcp.CloudSqlTableWriter;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -150,7 +153,79 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		
 		assertTrue(table!=null);
 		}
+	@Test
+	public void testSyntheticKeyForAwsAurora() throws Exception{
+		AwsShapeConfig.init();
+		MemoryShapeManager shapeManager = new MemoryShapeManager();
+		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
 		
+		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
+		shapeLoader.loadTurtle(resource("aws/shape_PersonRdbmsShape.ttl"), null);
+		File baseDir = new File("target/test/resources/aws/sql");
+		baseDir.mkdirs();
+		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator);
+		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
+		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
+		
+		assertTrue(table!=null);
+		assertTrue(table.getColumnList()!=null && !table.getColumnList().isEmpty());
+		String query=table.toString();
+		SqlColumn column=table.getColumnByName("PERSON_ID");
+		assertTrue(column!=null && SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype()));				
+		assertTrue(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));
+		assertTrue(query.substring(query.indexOf("PRIMARY KEY")).contains(column.getColumnName()));
+		
+		
+		
+	}
+	@Test
+	public void testSyntheticKeyForCloudSql() throws Exception{
+		GcpShapeConfig.init();
+		MemoryShapeManager shapeManager = new MemoryShapeManager();
+		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
+		shapeLoader.loadTurtle(resource("gcp/shape_PersonRdbmsShape.ttl"), null);
+		File baseDir = new File("target/test/resources/gcp/sql");
+		baseDir.mkdirs();
+		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator);
+		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
+		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
+		
+		assertTrue(table!=null);
+		assertTrue(table.getColumnList()!=null && !table.getColumnList().isEmpty());
+		String query=table.toString();
+		SqlColumn column=table.getColumnByName("PERSON_ID");
+		assertTrue(column!=null && SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype()));			
+		assertTrue(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));
+		assertTrue(query.substring(query.indexOf("PRIMARY KEY")).contains(column.getColumnName()));
+			
+	}
+	@Test
+	public void testSyntheticKeyForOracle() throws Exception{
+		OracleShapeConfig.init();
+		MemoryShapeManager shapeManager = new MemoryShapeManager();
+		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
+		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
+		shapeLoader.loadTurtle(resource("oracle/shape_PersonShape.ttl"), null);
+		File baseDir = new File("target/test/resources/oracle/sql");
+		baseDir.mkdirs();
+		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator);
+		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
+		Shape shape=shapeManager.listShapes().get(0);
+		PropertyConstraint p=shape.getPropertyConstraint(new URIImpl("http://example.com/ns/alias/personId"));
+		assertTrue(Konig.syntheticKey.equals(p.getStereotype()));
+		SqlTable table = generator.generateTable(shape);
+		
+		assertTrue(table!=null);
+		String query=table.toString();
+		SqlColumn column=table.getColumnByName("personId");
+		assertTrue(column!=null && !SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype()));		
+		assertFalse(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));
+	}
 	@Test
 	public void testTextField() throws Exception{
 		 AwsShapeConfig.init();

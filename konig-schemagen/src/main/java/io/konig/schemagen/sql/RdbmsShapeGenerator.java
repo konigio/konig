@@ -105,7 +105,7 @@ public class RdbmsShapeGenerator {
 	 */
 	private boolean accept(Shape shape) {
 		
-		if (!isValidRdbmsShape(shape)) {
+		if (!SqlTableGeneratorUtil.isValidRdbmsShape(shape)) {
 			return false;
 		}
 		
@@ -186,9 +186,7 @@ public class RdbmsShapeGenerator {
 			pc = createSyntheticKey(rdbmsShape,suffix,relationshipProperty);
 		}
 		rdbmsProperty.add(pc);
-	}
-
-	
+	}	
 	private PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
 		for (PropertyConstraint p : rdbmsShape.getProperty()) {
 			if(p.getStereotype() != null && (p.getStereotype().equals(Konig.syntheticKey) 
@@ -237,17 +235,7 @@ public class RdbmsShapeGenerator {
 		pc.setStereotype(Konig.syntheticKey);
 		return pc;
 	}
-	
-	private boolean isValidRdbmsShape(Shape rdbmsShape) {
-		AwsAurora auroraTable = rdbmsShape.findDataSource(AwsAurora.class);
-		GoogleCloudSqlTable gcpSqlTable = rdbmsShape.findDataSource(GoogleCloudSqlTable.class);
-		if (auroraTable !=null || gcpSqlTable != null){
-			return true;
-		}
-		return false;
-	}
-	
-	
+		
 	private void declarePredicate(URI predicate) {
 		if (parser.getLocalNameService() instanceof SimpleLocalNameService) {
 			SimpleLocalNameService service = (SimpleLocalNameService) parser.getLocalNameService();
