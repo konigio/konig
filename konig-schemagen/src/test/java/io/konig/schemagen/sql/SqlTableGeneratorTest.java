@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.openrdf.model.URI;
@@ -34,6 +37,7 @@ import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
@@ -51,6 +55,8 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
+import io.konig.shacl.io.ShapeWriter;
+import io.konig.spreadsheet.WorkbookLoader;
 
 public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 
@@ -83,23 +89,23 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		assertField(table, "signedInt", FacetedSqlDatatype.SIGNED_INT);
 		assertField(table, "date", FacetedSqlDatatype.DATE);
 		assertField(table, "dateTime", FacetedSqlDatatype.DATETIME);
-		assertStringField(table, "text", 100000);
-		assertStringField(table, "char", 32);
-		assertStringField(table, "varchar", 200);
+		assertStringField(table, "text", SqlDatatype.TEXT, 0);
+		assertStringField(table, "char", SqlDatatype.CHAR, 32);
+		assertStringField(table, "varchar", SqlDatatype.VARCHAR, 200);
 		assertField(table, "float", FacetedSqlDatatype.SIGNED_FLOAT);
 		assertField(table, "double", FacetedSqlDatatype.SIGNED_DOUBLE);
 		
-//		System.out.println(table.toString());
+		//System.out.println(table.toString());
 	}
 
-	private void assertStringField(SqlTable table, String columnName, int length) {
+	private void assertStringField(SqlTable table, String columnName, SqlDatatype datatype, int length ) {
 
 		SqlColumn c = table.getColumnByName(columnName);
 		assertTrue(c != null);
 		assertTrue(c.getDatatype() instanceof StringSqlDatatype);
 		StringSqlDatatype type = (StringSqlDatatype) c.getDatatype();
 		assertEquals(length, type.getMaxLength());
-		
+		assertEquals(datatype, c.getDatatype().getDatatype());
 	}
 
 	private void assertField(SqlTable table, String columnName, FacetedSqlDatatype datatype) {
@@ -152,7 +158,6 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		AwsShapeConfig.init();
 		MemoryShapeManager shapeManager = new MemoryShapeManager();
 		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
-		
 		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
 		shapeLoader.loadTurtle(resource("aws/shape_PersonRdbmsShape.ttl"), null);
 		File baseDir = new File("target/test/resources/aws/sql");
@@ -229,13 +234,52 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 				assertFalse(query.substring(query.indexOf("PRIMARY KEY")).contains(column.getColumnName()));
 			}
 		}
-		
-		
-		
+	}
+	@Test
+	public void testTextField() throws Exception{
+		 AwsShapeConfig.init();
+		 InputStream input = getClass().getClassLoader().getResourceAsStream("sql/SQL-DDL-Text.xlsx");
+		 Workbook book = WorkbookFactory.create(input);
+			Graph graph = new MemoryGraph();
+			NamespaceManager nsManager = new MemoryNamespaceManager();
+			graph.setNamespaceManager(nsManager);
+			
+			WorkbookLoader loader = new WorkbookLoader(nsManager);
+			loader.load(book, graph);
+			input.close();
+			URI shapeId = uri("http://example.com/shapes/MDM_PRODUCT");
+			
+			ShapeManager s = new MemoryShapeManager();
+			
+			ShapeLoader shapeLoader = new ShapeLoader(s);
+			shapeLoader.load(graph);		
+			
+			Shape shape = s.getShapeById(shapeId);
+			assertTrue(shape!=null);
+			ShapeWriter shapeWriter = new ShapeWriter();
+			try {
+				shapeWriter.writeTurtle(nsManager, shape, new File("target/test/sql/MDM_PRODUCT.ttl"));
+			} catch (Exception e) {
+				throw new KonigException(e);
+			}
+			
+			load("target/test/sql/MDM_PRODUCT");
+			
+			assertTrue(shape!=null);
+			
+			SqlTable table = generator.generateTable(shape);
+			
+			assertTrue(table!=null);
+			assertStringField(table, "PPID", SqlDatatype.VARCHAR, 2000);
+			assertStringField(table, "PP_NAME", SqlDatatype.VARCHAR, 255);
+			assertStringField(table, "ASSEMBLY_INSTRUCTIONS",SqlDatatype.VARCHAR, 1000);
+			assertStringField(table, "LONG_DESCRIPTION", SqlDatatype.TEXT, 0);
 	}
 private InputStream resource(String path) {
 		
 		return getClass().getClassLoader().getResourceAsStream(path);
 	}
-
+private URI uri(String text) {
+	return new URIImpl(text);
+}
 }
