@@ -24,7 +24,6 @@ package io.konig.datacatalog;
 import java.io.File;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -81,7 +80,7 @@ public class DataCatalogBuilderTest {
 		builder.build(request);
 	}
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
 		load("src/test/resources/DataCatalogBuilderTest/rdf");

@@ -20,6 +20,7 @@
 				<th>Property</th>
 				<th>Type</th>
 				<th>Description</th>
+				<th>Security Classification</th>
 			</tr>
 		</thead>
 		<tbody class="supertype">
@@ -34,6 +35,9 @@
 #end					
 				</td>	
 				<td class="prop-desc" property="rdfs:comment">$pc.Description</td>
+				<td class="prop-quansec">#foreach( $quantifiedSecurityClassification in $pc.quantifiedSecurityClassificationList )	
+				<div>$quantifiedSecurityClassification.getLocalName()
+				</div>#end</td>
 			</tr>
 #end	
 #if($SuperclassPropertyList)

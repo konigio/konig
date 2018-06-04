@@ -1,0 +1,19 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sec: <http://example.com/ns/security/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+sec: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "sec" . 
+
+sec:PrivacySetting a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration . 
+
+sec:Private a sec:PrivacySetting ; 
+	schema:name "sec:Private" ; 
+	rdfs:comment "Indicates that the information must be kept private (not shared)." . 
+
+sec:Public a sec:PrivacySetting ; 
+	schema:name "sec:Public" ; 
+	rdfs:comment "Indicates that the information may be shared publicly" . 

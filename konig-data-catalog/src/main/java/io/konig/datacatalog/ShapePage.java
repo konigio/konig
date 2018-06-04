@@ -90,6 +90,7 @@ public class ShapePage {
 			return;
 		}
 		context.put("TargetClass", new Link(targetClass.getLocalName(), targetClass.stringValue()));
+
 		if(shape.getShapeDataSource()!=null  && !shape.getShapeDataSource().isEmpty()){
 		
 			List<DataSourceInfo> datasourceList = new ArrayList<>();
