@@ -59,7 +59,7 @@ public class RdbmsShapeGenerator {
 		this.shapeIriPattern=shapeIriPattern;
 		this.shapeIriReplacement=shapeIriReplacement;
 		this.propertyNameSpace = propertyNameSpace;
-		this.parser = new FormulaParser();
+		this.parser = new FormulaParser(new ShapePropertyOracle(),new SimpleLocalNameService());
 		this.owlReasoner = owlReasoner;
 	}
 	public String getShapeIriPattern() {
@@ -77,6 +77,7 @@ public class RdbmsShapeGenerator {
 	
 	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {
 		Shape rdbmsChildShape = createRdbmsShape(childShape);
+		declarePredicate(relationshipProperty);		
 		addSyntheticKey(parentShape, "_FK", relationshipProperty);
 		if(rdbmsChildShape != null) {
 			rdbmsChildShape.setProperty(rdbmsProperty);
@@ -144,21 +145,20 @@ public class RdbmsShapeGenerator {
 						
 					URI newPredicate =  new URIImpl( propertyNameSpace + newLocalName );
 					
-					declarePredicate(newPredicate);
+					declarePredicate(predicate);
 					p.setPredicate(newPredicate);
 					
-					if (p.getFormula()==null) {
-						
+					if (p.getFormula()==null) {						
 						String text = logicalPath + localName;
 						QuantifiedExpression formula = parser.quantifiedExpression(text);
 						p.setFormula(formula);
 					}
 					
 					rdbmsProperty.add(p);	
-				} else if (p.getShape() != null) {
-					
+				} else if (p.getShape() != null) {					
 					String nestedPath = logicalPath + localName + '.';
 					String nestedPrefix = snakeCase + "__";
+					declarePredicate(p.getPredicate());
 					process(rdbmsShape, nestedPath, nestedPrefix, p.getShape());
 				}
 			}
@@ -177,6 +177,7 @@ public class RdbmsShapeGenerator {
 		if(pc != null) {
 			localName = StringUtil.SNAKE_CASE(pc.getPredicate().getLocalName());
 			URI newPredicate =  new URIImpl(propertyNameSpace + localName + suffix);
+			declarePredicate(newPredicate);
 			pc.setPredicate(newPredicate);
 			if(relationshipProperty != null){
 				String text = "^" + relationshipProperty.getLocalName() + "."+ localName + "_PK" ;
@@ -209,6 +210,7 @@ public class RdbmsShapeGenerator {
 			for(URI inverse : inverseOf) {
 				pc = new PropertyConstraint(new URIImpl(propertyNameSpace + StringUtil.SNAKE_CASE(inverse.getLocalName()) + suffix));
 				text = "." + inverse.getLocalName();
+				declarePredicate(inverse);
 				pc.setFormula(parser.quantifiedExpression(text));
 			}
 		}
@@ -218,6 +220,7 @@ public class RdbmsShapeGenerator {
 			pc.setDatatype(XMLSchema.STRING);
 			if(relationshipProperty != null) {
 			text = "^" + relationshipProperty.getLocalName();
+			declarePredicate(pc.getPredicate());
 			pc.setFormula(parser.quantifiedExpression(text));
 			}
 			
@@ -225,9 +228,10 @@ public class RdbmsShapeGenerator {
 			localName = StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName());
 			String snakeCase = localName + suffix;
 			pc = new PropertyConstraint(new URIImpl(propertyNameSpace + snakeCase));
-			pc.setDatatype(XMLSchema.LONG);
+			pc.setDatatype(XMLSchema.LONG);			
 			if(relationshipProperty != null) {
 				text = "^" + relationshipProperty.getLocalName() + "."+ localName + "_PK" ;
+				declarePredicate(new URIImpl(propertyNameSpace+localName+"_PK"));
 				pc.setFormula(parser.quantifiedExpression(text));
 			}
 		}
