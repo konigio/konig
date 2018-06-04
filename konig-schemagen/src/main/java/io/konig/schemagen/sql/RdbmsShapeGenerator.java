@@ -12,6 +12,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsAurora;
+import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.util.StringUtil;
@@ -48,37 +49,20 @@ import io.konig.shacl.Shape;
 
 public class RdbmsShapeGenerator {
 	
-	private String shapeIriPattern;
-	private String shapeIriReplacement;
 	private String propertyNameSpace;
 	private FormulaParser parser;
 	private List<PropertyConstraint> rdbmsProperty = null;
 	private OwlReasoner owlReasoner;
 	 
-	public RdbmsShapeGenerator(FormulaParser parser, String shapeIriPattern,String shapeIriReplacement, String propertyNameSpace, OwlReasoner owlReasoner) {
-		this.shapeIriPattern=shapeIriPattern;
-		this.shapeIriReplacement=shapeIriReplacement;
-		this.propertyNameSpace = propertyNameSpace;
+	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner) {
 		this.parser = new FormulaParser();
 		this.owlReasoner = owlReasoner;
 	}
-	public String getShapeIriPattern() {
-		return shapeIriPattern;
-	}
-	public void setShapeIriPattern(String shapeIriPattern) {
-		this.shapeIriPattern = shapeIriPattern;
-	}
-	public String getShapeIriReplacement() {
-		return shapeIriReplacement;
-	}
-	public void setShapeIriReplacement(String shapeIriReplacement) {
-		this.shapeIriReplacement = shapeIriReplacement;
-	}
 	
-	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {
-		Shape rdbmsChildShape = createRdbmsShape(childShape);
-		addSyntheticKey(parentShape, "_FK", relationshipProperty);
+	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {		
+		Shape rdbmsChildShape = createRdbmsShape(childShape);		
 		if(rdbmsChildShape != null) {
+			addSyntheticKey(parentShape, "_FK", relationshipProperty);
 			rdbmsChildShape.setProperty(rdbmsProperty);
 		}
 		return rdbmsChildShape;
@@ -90,12 +74,23 @@ public class RdbmsShapeGenerator {
 			clone = shape.deepClone();
 			updateOracle(shape);
 			rdbmsProperty = new ArrayList<>();
-			process(clone, ".", "", clone);
+			process(clone, ".", "", clone.getRdbmsLogicalShape());
+			verifyPrimaryKeyCount(clone);		
 		}
 		return clone;
-		
 	}
 	
+	private void verifyPrimaryKeyCount(Shape clone) {
+		int primaryKeyCount=0;
+		for(PropertyConstraint pc:clone.getProperty()){
+			if(Konig.primaryKey.equals(pc.getStereotype()) || Konig.syntheticKey.equals(pc.getStereotype())){
+				primaryKeyCount++;					
+			}
+			if(primaryKeyCount>1)
+				throw new KonigException("RDBMS Shape cannot have more than 1 primary key");
+		}
+	}
+
 	/**
 	 * Check whether the shape contains any properties that need to be renamed using SNAKE_CASE, or any 
 	 * nested shapes that need to be flattened, and that it is a valid shape that required RDBMS generation.
@@ -104,12 +99,11 @@ public class RdbmsShapeGenerator {
 	 * @return true if the supplied shape contains fields that need to be renamed or any nested shapes.
 	 */
 	private boolean accept(Shape shape) {
-		
-		if (!SqlTableGeneratorUtil.isValidRdbmsShape(shape)) {
+		if (!isValidRdbmsShape(shape)  || !shape.getProperty().isEmpty() ) {
 			return false;
 		}
 		
-		for (PropertyConstraint p : shape.getProperty()) {
+		for (PropertyConstraint p : shape.getRdbmsLogicalShape().getProperty()) {
 			if (p.getShape() != null && p.getMaxCount()!=null && p.getMaxCount()==1) {
 				return true;
 			}
@@ -158,7 +152,7 @@ public class RdbmsShapeGenerator {
 				} else if (p.getShape() != null) {
 					
 					String nestedPath = logicalPath + localName + '.';
-					String nestedPrefix = snakeCase + "__";
+					String nestedPrefix = prefix + snakeCase + "__";
 					process(rdbmsShape, nestedPath, nestedPrefix, p.getShape());
 				}
 			}
@@ -172,9 +166,10 @@ public class RdbmsShapeGenerator {
 	}
 	
 	private void addSyntheticKey(Shape rdbmsShape, String suffix, URI relationshipProperty) throws RDFParseException, IOException {
-		PropertyConstraint pc = hasPrimaryKey(rdbmsShape);
+		Shape shape = rdbmsShape.getRdbmsLogicalShape();
+		PropertyConstraint pc = hasPrimaryKey(shape);
 		String localName = "";
-		if(pc != null) {
+		if(pc != null && "_PK".equals(suffix)) {
 			localName = StringUtil.SNAKE_CASE(pc.getPredicate().getLocalName());
 			URI newPredicate =  new URIImpl(propertyNameSpace + localName + suffix);
 			pc.setPredicate(newPredicate);
@@ -183,10 +178,12 @@ public class RdbmsShapeGenerator {
 				pc.setFormula(parser.quantifiedExpression(text));
 			}
 		} else {
-			pc = createSyntheticKey(rdbmsShape,suffix,relationshipProperty);
+			pc = createSyntheticKey(shape,suffix,relationshipProperty);
 		}
 		rdbmsProperty.add(pc);
 	}	
+		
+	
 	private PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
 		for (PropertyConstraint p : rdbmsShape.getProperty()) {
 			if(p.getStereotype() != null && (p.getStereotype().equals(Konig.syntheticKey) 
@@ -206,6 +203,7 @@ public class RdbmsShapeGenerator {
 			Set<URI> inverseOf = owlReasoner.inverseOf(relationshipProperty);
 			for(URI inverse : inverseOf) {
 				pc = new PropertyConstraint(new URIImpl(propertyNameSpace + StringUtil.SNAKE_CASE(inverse.getLocalName()) + suffix));
+				pc.setDatatype(XMLSchema.STRING);
 				text = "." + inverse.getLocalName();
 				pc.setFormula(parser.quantifiedExpression(text));
 			}
@@ -232,10 +230,26 @@ public class RdbmsShapeGenerator {
 		
 		pc.setMaxCount(1);
 		pc.setMinCount(1);
-		pc.setStereotype(Konig.syntheticKey);
+		if("_PK".equals(suffix)){
+			pc.setStereotype(Konig.syntheticKey);
+		}
 		return pc;
 	}
-		
+	
+	private boolean isValidRdbmsShape(Shape rdbmsShape) {
+		AwsAurora auroraTable = rdbmsShape.findDataSource(AwsAurora.class);
+		GoogleCloudSqlTable gcpSqlTable = rdbmsShape.findDataSource(GoogleCloudSqlTable.class);
+		if (auroraTable !=null ){
+			propertyNameSpace = auroraTable.getRdbmsFieldNamespace();
+			return true;
+		}
+		if(gcpSqlTable!=null){
+			propertyNameSpace = gcpSqlTable.getRdbmsFieldNamespace();
+			return true;
+		}
+		return false;
+	}
+	
 	private void declarePredicate(URI predicate) {
 		if (parser.getLocalNameService() instanceof SimpleLocalNameService) {
 			SimpleLocalNameService service = (SimpleLocalNameService) parser.getLocalNameService();

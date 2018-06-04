@@ -1,5 +1,4 @@
 @prefix as: <http://www.w3.org/ns/activitystreams#> .
-@prefix aws: <http://www.konig.io/ns/aws/> .
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix mdm: <https://schema.pearson.com/ns/mdm/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -8,7 +7,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:ProductShape a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/wJ9s3YaIZnwAAAFjjaUJSA> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> ; 
 	sh:targetClass mdm:Product ; 
 	sh:property  [ 
 		sh:path mdm:ppid ; 
@@ -26,38 +25,7 @@ shape:ProductShape a sh:Shape ;
 		sh:path mdm:contributor ; 
 		sh:shape shape:ProductContributorShape ; 
 		sh:minCount 0 ; 
-		sh:maxLength 55 ]  ; 
-	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-ProductShape> , ""^^xsd:integer , <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ProductShape> . 
+		sh:maxLength 55 ]  . 
 
-<http://www.konig.io/activity/wJ9s3YaIZnwAAAFjjaUJSA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2018-05-23T21:06:33.425+05:30"^^xsd:dateTime . 
-
-<https://amazonaws.konig.io/s3/bucket/${environmentName}-ProductShape> a konig:S3Bucket , konig:DataSource ; 
-	aws:bucketKey "ProductShape" ; 
-	aws:bucketName "${environmentName}-ProductShape" ; 
-	aws:region "${aws-region}" ; 
-	aws:bucketMediaType "application/doc" ; 
-	aws:notificationConfiguration  [ 
-		aws:topicConfiguration  [ 
-			aws:topic <arn:aws:sns:${aws-region}:${aws-account-id}:ProductShape_CreateEvent> ; 
-			aws:eventType "s3:ObjectCreated:*"
-		 ]  ; 
-		aws:queueConfiguration  [ 
-			aws:queue <arn:aws:sqs:${aws-region}:${aws-account-id}:ProductShape_CreateEvent> ; 
-			aws:eventType "s3:ObjectCreated:*" ]  ]  . 
-
-<arn:aws:sns:${aws-region}:${aws-account-id}:ProductShape_CreateEvent> a aws:Topic ; 
-	aws:resourceName "ProductShape_CreateEvent" ; 
-	aws:region "${aws-region}" ; 
-	aws:accountId "${aws-account-id}" . 
-
-<arn:aws:sqs:${aws-region}:${aws-account-id}:ProductShape_CreateEvent> a aws:Queue ; 
-	aws:resourceName "ProductShape_CreateEvent" ; 
-	aws:region "${aws-region}" ; 
-	aws:accountId "${aws-account-id}" . 
-
-<http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ProductShape> a konig:AwsAurora , konig:DataSource ; 
-	aws:tableReference  [ 
-		aws:awsAuroraHost "devHost" ; 
-		aws:awsSchema "schema1" ; 
-		aws:awsTableName "ProductShape" ]  . 
+<http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-06-01T14:53:13.010+05:30"^^xsd:dateTime . 

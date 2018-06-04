@@ -158,7 +158,6 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		AwsShapeConfig.init();
 		MemoryShapeManager shapeManager = new MemoryShapeManager();
 		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
-		
 		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
 		shapeLoader.loadTurtle(resource("aws/shape_PersonRdbmsShape.ttl"), null);
 		File baseDir = new File("target/test/resources/aws/sql");
@@ -221,7 +220,7 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		SqlTable table = generator.generateTable(shape);
 		
 		assertTrue(table!=null);
-		String query=table.toString();
+		String query=table.toString();		
 		SqlColumn column=table.getColumnByName("personId");
 		assertTrue(column!=null && !SqlKeyType.SYNTHETIC_KEY.equals(column.getKeytype()));		
 		assertFalse(query.contains(column.getColumnName()+" INT NOT NULL AUTO_INCREMENT"));

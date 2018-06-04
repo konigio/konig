@@ -88,6 +88,7 @@ public class Shape implements Cloneable {
 	private URI rollUpBy;
 	private String mediaTypeBaseName;
 	private List<URI> inputShapeOf;
+	private Shape rdbmsLogicalShape;
 	  
 	 
 	 public List<URI> getInputShapeOf() {
@@ -675,6 +676,14 @@ public class Shape implements Cloneable {
 			}
 		}
 		return null;
+	}
+
+	public Shape getRdbmsLogicalShape() {
+		return rdbmsLogicalShape;
+	}
+
+	public void setRdbmsLogicalShape(Shape rdbmsLogicalShape) {
+		this.rdbmsLogicalShape = rdbmsLogicalShape;
 	}
 	
 }
