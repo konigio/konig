@@ -39,6 +39,7 @@ import org.openrdf.rio.turtle.TurtleUtil;
 import io.konig.core.Path;
 import io.konig.core.path.HasStep;
 import io.konig.core.path.HasStep.PredicateValuePair;
+import io.konig.core.path.InStep;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.JavaDatatypeMapper;
 import io.konig.core.path.OutStep;
@@ -91,8 +92,9 @@ public class PropertyPage {
 			
 			List<PathElementView> list = new ArrayList<>();
 			for (Step step : path.asList()) {
-				
-				list.add(pathElement(request, step));
+				if(!(step instanceof InStep)){
+					list.add(pathElement(request, step));
+				}
 			}
 			
 			request.getContext().put("EquivalentPath", list);
@@ -118,9 +120,6 @@ public class PropertyPage {
 		if (predicate != null) {
 			name = predicate.getLocalName();
 			href = request.relativePath(request.getPropertyStructure().getPredicate(), predicate);
-		}
-		if (operator==null || name==null || href==null) {
-		//	throw new DataCatalogException("Unsupported step type: " + step.getClass().getSimpleName());
 		}
 		return new PathElementView(operator, name, href);
 	}
