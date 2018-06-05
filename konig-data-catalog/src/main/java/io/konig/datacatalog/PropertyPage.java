@@ -121,6 +121,9 @@ public class PropertyPage {
 			name = predicate.getLocalName();
 			href = request.relativePath(request.getPropertyStructure().getPredicate(), predicate);
 		}
+		if (operator==null || name==null || href==null) {
+			throw new DataCatalogException("Unsupported step type: " + step.getClass().getSimpleName());
+		}
 		return new PathElementView(operator, name, href);
 	}
 
