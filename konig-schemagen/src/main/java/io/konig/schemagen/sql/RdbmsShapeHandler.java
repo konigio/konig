@@ -85,7 +85,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 		} else {
 			childShape = parentShape;
 		}
-		for (PropertyConstraint p : childShape.getRdbmsLogicalShape().getProperty()) {
+		for (PropertyConstraint p : childShape.getRdbmsOriginShape().getProperty()) {
 			if(p.getShape() != null){
 				addRdbmsChildShape(childShape,p.getPredicate(), p);
 			}
@@ -95,7 +95,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	@Override
 	public void visit(Shape shape) {
 		
-		if (shape.getRdbmsLogicalShape()!=null && !hasParentShape(shape)) {
+		if (shape.getRdbmsOriginShape()!=null && !hasParentShape(shape)) {
 			
 			Shape rdbmsShape = null;
 			rdbmsChildShapes =  new ArrayList<>();
@@ -131,7 +131,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	
 	private boolean hasParentShape(Shape shape) {
 		for(Shape s:shapes){			
-			if(hasParentShape(s,shape.getRdbmsLogicalShape()))
+			if(hasParentShape(s,shape.getRdbmsOriginShape()))
 				return true;
 		}
 		return false;
@@ -161,7 +161,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	
 	public Shape getRdbmsShapeFromLogicalShape(Shape childShape) {
 		for(Shape shape:shapes){
-			if(shape.getRdbmsLogicalShape()!=null && shape.getRdbmsLogicalShape().getId().equals(childShape.getId())){
+			if(shape.getRdbmsOriginShape()!=null && shape.getRdbmsOriginShape().getId().equals(childShape.getId())){
 				return shape;
 			}
 		}

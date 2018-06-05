@@ -153,7 +153,7 @@ public class WorkbookToTurtleTransformer {
 		ShapeManager shapeManager = workbookLoader.getShapeManager();
 		VertexCopier copier = new VertexCopier();
 		copier.excludeProperty(SH.shape, SH.path, SH.targetClass, SH.valueClass, Konig.aggregationOf, Konig.rollUpBy,
-				Konig.defaultShapeFor, Konig.inputShapeOf, Konig.rdbmsLogicalShape);
+				Konig.defaultShapeFor, Konig.inputShapeOf, Konig.rdbmsOriginShape);
 		copier.excludeClass(OWL.CLASS, OWL.DATATYPEPROPERTY, OWL.OBJECTPROPERTY, OWL.FUNCTIONALPROPERTY, RDF.PROPERTY);
 		for (Shape shape : shapeManager.listShapes()) {
 			Resource shapeId = shape.getId();

@@ -10,14 +10,14 @@
 shape:ProductContributorRdbmsShape a sh:Shape ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> ; 
 	sh:targetClass mdm:ProductContributor ; 
-	konig:rdbmsLogicalShape shape:ProductContributorShape ; 
+	konig:rdbmsOriginShape shape:ProductContributorShape ; 
 	konig:shapeDataSource <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ProductContributorRdbmsShape> . 
 
 <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> a konig:LoadModelFromSpreadsheet ; 
 	as:endTime "2018-06-01T14:53:13.010+05:30"^^xsd:dateTime . 
 
 <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ProductContributorRdbmsShape> a konig:AwsAurora , konig:DataSource ; 
-	konig:rdbmsFieldNamespace "http://example.com/ns/alias/" ; 
+	konig:tabularFieldNamespace "http://example.com/ns/alias/" ; 
 	aws:tableReference  [ 
 		aws:awsAuroraHost "devHost" ; 
 		aws:awsSchema "schema1" ; 

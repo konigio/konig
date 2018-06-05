@@ -74,7 +74,7 @@ public class RdbmsShapeGenerator {
 			clone = shape.deepClone();
 			updateOracle(shape);
 			rdbmsProperty = new ArrayList<>();
-			process(clone, ".", "", clone.getRdbmsLogicalShape());
+			process(clone, ".", "", clone.getRdbmsOriginShape());
 			verifyPrimaryKeyCount(clone);		
 		}
 		return clone;
@@ -103,7 +103,7 @@ public class RdbmsShapeGenerator {
 			return false;
 		}
 		
-		for (PropertyConstraint p : shape.getRdbmsLogicalShape().getProperty()) {
+		for (PropertyConstraint p : shape.getRdbmsOriginShape().getProperty()) {
 			if (p.getShape() != null && p.getMaxCount()!=null && p.getMaxCount()==1) {
 				return true;
 			}
@@ -166,7 +166,7 @@ public class RdbmsShapeGenerator {
 	}
 	
 	private void addSyntheticKey(Shape rdbmsShape, String suffix, URI relationshipProperty) throws RDFParseException, IOException {
-		Shape shape = rdbmsShape.getRdbmsLogicalShape();
+		Shape shape = rdbmsShape.getRdbmsOriginShape();
 		PropertyConstraint pc = hasPrimaryKey(shape);
 		String localName = "";
 		if(pc != null && "_PK".equals(suffix)) {
@@ -240,11 +240,11 @@ public class RdbmsShapeGenerator {
 		AwsAurora auroraTable = rdbmsShape.findDataSource(AwsAurora.class);
 		GoogleCloudSqlTable gcpSqlTable = rdbmsShape.findDataSource(GoogleCloudSqlTable.class);
 		if (auroraTable !=null ){
-			propertyNameSpace = auroraTable.getRdbmsFieldNamespace();
+			propertyNameSpace = auroraTable.getTabularFieldNamespace();
 			return true;
 		}
 		if(gcpSqlTable!=null){
-			propertyNameSpace = gcpSqlTable.getRdbmsFieldNamespace();
+			propertyNameSpace = gcpSqlTable.getTabularFieldNamespace();
 			return true;
 		}
 		return false;
