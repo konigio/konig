@@ -40,7 +40,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.annotation.RdfProperty;
-import io.konig.core.KonigException;
 import io.konig.core.Path;
 import io.konig.core.Term;
 import io.konig.core.UidGenerator;

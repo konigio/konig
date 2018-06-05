@@ -11,6 +11,7 @@
 
 <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/${awsTableName}>
 	a konig:AwsAurora, konig:DataSource;
+	konig:rdbmsFieldNamespace "${rdbmsFieldNamespace}";
 	aws:tableReference [
 		aws:awsAuroraHost "${awsAuroraHost}" ;
 		aws:awsSchema "${awsAuroraSchema}" ;
