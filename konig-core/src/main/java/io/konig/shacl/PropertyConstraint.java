@@ -64,6 +64,7 @@ public class PropertyConstraint implements Cloneable {
 	private Double maxExclusive;
 	private Double minInclusive;
 	private Double maxInclusive;
+	private Boolean uniqueLang;
 	private URI datatype;
 	private URI directType;
 	private Shape shape;
@@ -490,13 +491,6 @@ public class PropertyConstraint implements Cloneable {
 		return path;
 	}
 
-	public Path getPartitionOf() {
-		return partitionOf;
-	}
-
-	public void setPartitionOf(Path partitionOf) {
-		this.partitionOf = partitionOf;
-	}
 
 	public QuantifiedExpression getFormula() {
 		return formula;
@@ -549,4 +543,14 @@ public class PropertyConstraint implements Cloneable {
 	public void setQualifiedSecurityClassification(List<URI> qualifiedSecurityClassification) {
 		this.qualifiedSecurityClassification = qualifiedSecurityClassification;
 	}
+
+	public Boolean getUniqueLang() {
+		return uniqueLang;
+	}
+
+	public void setUniqueLang(Boolean uniqueLang) {
+		this.uniqueLang = uniqueLang;
+	}
+	
+	
 }

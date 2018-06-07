@@ -69,7 +69,7 @@ public class Konig {
 
 	public static final URI id = new URIImpl("http://www.konig.io/ns/core/id");
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/core/mediaTypeBaseName");
-	public static final URI rdbmsLogicalShape = new URIImpl("http://www.konig.io/ns/core/rdbmsLogicalShape");
+	public static final URI tabularOriginShape = new URIImpl("http://www.konig.io/ns/core/tabularOriginShape");
 	public static final URI preferredJsonSchema = new URIImpl("http://www.konig.io/ns/core/preferredJsonSchema");
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/core/avroSchemaRendition");
 	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/core/PreferredClass");
@@ -133,7 +133,6 @@ public class Konig {
 	public static final URI fromAggregationSource = new URIImpl("http://www.konig.io/ns/core/fromAggregationSource");
 	public static final URI timeInterval = new URIImpl("http://www.konig.io/ns/core/timeInterval");
 	public static final URI sourcePath = new URIImpl(SOURCE_PATH);
-	public static final URI partitionOf = new URIImpl("http://www.konig.io/ns/core/partitionOf");
 	public static final URI TimeUnit = new URIImpl("http://www.konig.io/ns/core/TimeUnit");
 	public static final URI TimeInterval = new URIImpl("http://www.konig.io/ns/core/TimeInterval");
 	public static final URI intervalStart = new URIImpl("http://www.konig.io/ns/core/intervalStart");

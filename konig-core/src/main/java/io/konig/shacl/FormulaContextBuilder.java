@@ -25,20 +25,15 @@ package io.konig.shacl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.LiteralImpl;
 
 import io.konig.core.Context;
-import io.konig.core.Edge;
-import io.konig.core.Graph;
 import io.konig.core.NameMap;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Term;
 import io.konig.core.Term.Kind;
-import io.konig.core.Vertex;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.formula.CurieValue;
@@ -53,34 +48,20 @@ public class FormulaContextBuilder implements ShapeVisitor {
 	private NameMap map;
 	private Map<String, Warning> warnings = new HashMap<>();
 	private Worker worker = new Worker();
-	private Graph graph;
 	
 	public FormulaContextBuilder(NamespaceManager nsManager, NameMap map) {
 		this.nsManager = nsManager;
 		this.map = map;
 	}
 	
-	public FormulaContextBuilder(NamespaceManager nsManager, NameMap map, Graph graph) {
-		this.nsManager = nsManager;
-		this.map = map;
-		this.graph = graph;
-	}
-
-	public Graph getGraph() {
-		return graph;
-	}
-
-	public void setGraph(Graph graph) {
-		this.graph = graph;
-	}
 
 	@Override
 	public void visit(Shape shape) {
 		worker.setShape(shape);
 		
 		handleIriFormula(shape);
-		visit(shape, SH.property, shape.getProperty());
-		visit(shape, Konig.derivedProperty, shape.getDerivedProperty());
+		visit(shape, shape.getProperty());
+		visit(shape, shape.getDerivedProperty());
 
 	}
 	
@@ -90,36 +71,16 @@ public class FormulaContextBuilder implements ShapeVisitor {
 		if (formula != null) {
 			worker.setProperty(null);
 			formula.dispatch(worker);
-			if (graph != null) {
-				Vertex shapeVertex = graph.getVertex(shape.getId());
-				if (shapeVertex != null) {
-					Set<Edge> doomed = shapeVertex.outProperty(Konig.iriFormula);
-					doomed.clear();
-					shapeVertex.addProperty(Konig.iriFormula, new LiteralImpl(formula.toString()));
-				}
-			}
 		}
 	}
 
-	private void visit(Shape shape, URI predicate, List<PropertyConstraint> list) {
+	private void visit(Shape shape, List<PropertyConstraint> list) {
 		if (list != null) {
 			for (PropertyConstraint p : list) {
 				Expression formula = p.getFormula();
 				if (formula != null) {
 					worker.setProperty(p);
 					formula.dispatch(worker);
-					if (graph != null) {
-						Vertex shapeVertex = graph.getVertex(shape.getId());
-						if (shapeVertex!=null) {
-							Vertex constraintVertex = shapeVertex.asTraversal().out(predicate).hasValue(SH.path, p.getPredicate()).firstVertex();
-							if (constraintVertex != null) {
-								Set<Edge> doomed = constraintVertex.outProperty(Konig.formula);
-								doomed.clear();
-								
-								constraintVertex.addProperty(Konig.formula, new LiteralImpl(formula.toString()));
-							}
-						}
-					}
 				}
 				
 			}

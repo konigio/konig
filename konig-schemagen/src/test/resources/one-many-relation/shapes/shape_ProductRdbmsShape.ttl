@@ -10,7 +10,7 @@
 shape:ProductRdbmsShape a sh:Shape ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> ; 
 	sh:targetClass mdm:Product ; 
-	konig:rdbmsLogicalShape shape:ProductShape ; 
+	konig:tabularOriginShape shape:ProductShape ; 
 	konig:shapeDataSource <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ProductRdbmsShape> . 
 
 <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> a konig:LoadModelFromSpreadsheet ; 

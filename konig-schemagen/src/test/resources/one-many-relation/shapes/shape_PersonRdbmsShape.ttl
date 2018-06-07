@@ -10,7 +10,7 @@
 shape:PersonRdbmsShape a sh:Shape ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> ; 
 	sh:targetClass mdm:Person ; 
-	konig:rdbmsLogicalShape shape:PersonShape ; 
+	konig:tabularOriginShape shape:PersonShape ; 
 	konig:shapeDataSource <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/PersonRdbmsShape> . 
 
 <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> a konig:LoadModelFromSpreadsheet ; 

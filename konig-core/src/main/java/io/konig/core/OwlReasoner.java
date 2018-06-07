@@ -46,6 +46,9 @@ import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.XSD;
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
 
 public class OwlReasoner {
 	
@@ -136,46 +139,53 @@ public class OwlReasoner {
 		}
 	}
 	
-	public void inferRdfPropertiesFromPropertyConstraints(Graph sink) {
+	public void inferRdfPropertiesFromPropertyConstraints(ShapeManager shapeManager, Graph sink) {
+		if (shapeManager == null) {
+			return;
+		}
 		if (sink == null) {
 			sink = graph;
 		}
 		
-		List<Vertex> shapeList = graph.v(SH.Shape).in(RDF.TYPE).toVertexList();
 		
-		for (Vertex shape : shapeList) {
-			URI targetClass = shape.getURI(SH.targetClass);
-			List<Vertex> constraintList = shape.asTraversal().out(SH.property).toVertexList();
+		for (Shape shape : shapeManager.listShapes()) {
+			URI targetClass = shape.getTargetClass();
 		
-			for (Vertex p : constraintList) {
-				Vertex property = p.getVertex(SH.path);
-				URI predicate = p.getURI(SH.path);
+			for (PropertyConstraint p : shape.getProperty()) {
+				URI predicate = p.getPredicate();
 				if (predicate != null) {
-					
-					URI propertyType = property.getURI(RDF.TYPE);
-					URI range = property.getURI(RDFS.RANGE);
-					URI domain = property.getURI(RDFS.RANGE);
-					if (domain != null) {
-						targetClass = null;
+
+					Vertex property = graph.getVertex(predicate);
+					URI propertyType = null;
+					URI range = null;
+					URI domain = null;
+					if (property != null) {
+
+						propertyType = property.getURI(RDF.TYPE);
+						range = property.getURI(RDFS.RANGE);
+						domain = property.getURI(RDFS.RANGE);
+						if (domain != null) {
+							targetClass = null;
+						}
 					}
 					
-					URI datatype =  p.getURI(SH.datatype);
+					URI datatype =  p.getDatatype();
 					if (datatype != null) {
 						URI type = propertyType==null ? OWL.DATATYPEPROPERTY : null;
 						edge(sink, predicate, RDF.TYPE, type);
 						edge(sink, predicate, Schema.domainIncludes, targetClass);
 						edge(sink, predicate, Schema.rangeIncludes, datatype);
 					} else {
-						URI valueClass = range==null ? p.getURI(SH.valueClass) : null;
+						URI valueClass = range==null ? asIRI(p.getValueClass()) : null;
 						URI type = propertyType==null ? OWL.OBJECTPROPERTY : null;
 						if (valueClass != null) {
 							edge(sink, predicate, RDF.TYPE, type);
 							edge(sink, predicate, Schema.domainIncludes, targetClass);
 							edge(sink, predicate, Schema.rangeIncludes, valueClass);
 						} else {
-							Vertex valueShape = p.getVertex(SH.shape);
+							Shape valueShape = p.getShape();
 							if (valueShape != null) {
-								valueClass = valueShape.getURI(SH.targetClass);
+								valueClass = valueShape.getTargetClass();
 								if (valueClass != null) {
 									edge(sink, predicate, RDF.TYPE, type);
 									edge(sink, predicate, Schema.domainIncludes, targetClass);
@@ -196,6 +206,11 @@ public class OwlReasoner {
 		
 	}
 	
+	private URI asIRI(Resource resource) {
+		
+		return resource instanceof URI ? (URI) resource : null;
+	}
+
 	private void edge(Graph sink, Resource subject, URI predicate, Value object) {
 		if (sink!=null && subject!=null && predicate!=null && object!=null) {
 			sink.edge(subject, predicate, object);
@@ -328,17 +343,6 @@ public class OwlReasoner {
 		return false;
 	}
 	
-	public Set<URI> valueType(Vertex predicate) {
-		
-		Set<URI> set = new HashSet<>();
-		set.addAll(predicate.asTraversal().out(RDFS.RANGE).toUriSet());
-		set.addAll(predicate.asTraversal().in(SH.path).out(SH.datatype).toUriSet());
-		set.addAll(predicate.asTraversal().in(SH.path).out(SH.valueClass).toUriSet());
-		set.addAll(predicate.asTraversal().in(SH.path).out(SH.shape).out(SH.targetClass).toUriSet());
-		
-		
-		return set;
-	}
 
 	/**
 	 * Compute the least common super datatype between two given datatypes.
