@@ -449,7 +449,7 @@ public class WorkbookLoader {
 		private int shapeDatasourceCol = UNDEFINED;
 		private int shapeIriTemplateCol = UNDEFINED;
 		private int defaultShapeForCol = UNDEFINED;
-		private int rdbmsOriginShapeCol = UNDEFINED;
+		private int tabularOriginShapeCol = UNDEFINED;
 
 		private int pcShapeIdCol = UNDEFINED;
 		private int pcPropertyIdCol = UNDEFINED;
@@ -1979,7 +1979,7 @@ public class WorkbookLoader {
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
             URI shapeType=uriValue(row, shapeTypeCol);
-            URI rdbmsOriginShape = uriValue(row, rdbmsOriginShapeCol);
+            URI tabularOriginShape = uriValue(row, tabularOriginShapeCol);
 
 			String iriTemplate = stringValue(row, shapeIriTemplateCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
@@ -2003,7 +2003,7 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
-			edge(shapeId, Konig.rdbmsOriginShape, rdbmsOriginShape);
+			edge(shapeId, Konig.tabularOriginShape, tabularOriginShape);
 			edge(shapeId, SH.or, orList);
 			
 
@@ -2204,7 +2204,7 @@ public class WorkbookLoader {
 		}
 
 		private void readShapeHeader(Sheet sheet) {
-			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = rdbmsOriginShapeCol = UNDEFINED;
+			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = tabularOriginShapeCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2262,7 +2262,7 @@ public class WorkbookLoader {
 						defaultShapeForCol = i;
 						break;
 					case TABULAR_ORIGIN_SHAPE:
-						rdbmsOriginShapeCol = i;
+						tabularOriginShapeCol = i;
 						break;
 
 					}

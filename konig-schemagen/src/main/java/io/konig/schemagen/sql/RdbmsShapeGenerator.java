@@ -74,7 +74,7 @@ public class RdbmsShapeGenerator {
 			clone = shape.deepClone();
 			updateOracle(shape);
 			rdbmsProperty = new ArrayList<>();
-			process(clone, ".", "", clone.getRdbmsOriginShape());
+			process(clone, ".", "", clone.getTabularOriginShape());
 			verifyPrimaryKeyCount(clone);		
 		}
 		return clone;
@@ -103,7 +103,7 @@ public class RdbmsShapeGenerator {
 			return false;
 		}
 		
-		for (PropertyConstraint p : shape.getRdbmsOriginShape().getProperty()) {
+		for (PropertyConstraint p : shape.getTabularOriginShape().getProperty()) {
 			if (p.getShape() != null && p.getMaxCount()!=null && p.getMaxCount()==1) {
 				return true;
 			}
@@ -166,7 +166,7 @@ public class RdbmsShapeGenerator {
 	}
 	
 	private void addSyntheticKey(Shape rdbmsShape, String suffix, URI relationshipProperty) throws RDFParseException, IOException {
-		Shape shape = rdbmsShape.getRdbmsOriginShape();
+		Shape shape = rdbmsShape.getTabularOriginShape();
 		PropertyConstraint pc = hasPrimaryKey(shape);
 		String localName = "";
 		if(pc != null && "_PK".equals(suffix)) {
