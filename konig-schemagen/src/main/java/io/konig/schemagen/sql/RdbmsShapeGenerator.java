@@ -2,6 +2,7 @@ package io.konig.schemagen.sql;
 
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +13,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsAurora;
+import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.util.StringUtil;
@@ -132,7 +134,19 @@ public class RdbmsShapeGenerator {
 		
 		for (PropertyConstraint p : list) {
 			URI predicate = p.getPredicate();
-			
+			if(p.getShape() == null && (p.getDatatype() == null || p.getMaxCount() == null || p.getMaxCount() > 1) 
+					&& rdbmsShape.getNodeKind() != NodeKind.IRI ) {
+				
+				String errorMessage = MessageFormat.format("\n In Shape {0}, the property {1} is ill-defined. \n"
+						, new URIImpl(rdbmsShape.getId().toString()).getLocalName(), predicate.getLocalName());
+				StringBuilder msg = new StringBuilder();
+				msg.append(errorMessage);
+				msg.append(" 1. Set sh:maxCount = 1 \n");
+				msg.append(" 2. Set sh:shape so that it references a nested shape. \n");
+				msg.append(" 3. Set sh:nodeKind equal to sh:IRI and specify a value for sh:class \n");
+				msg.append(" 4. Set sh:datatype equal to one of the XML Schema datatype names.");
+				throw new KonigException(msg.toString());
+			}
 			if (predicate != null && p.getMaxCount()!=null && p.getMaxCount()==1) {
 				
 				String localName = predicate.getLocalName();
