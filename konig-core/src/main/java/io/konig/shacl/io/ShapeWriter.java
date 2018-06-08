@@ -37,6 +37,7 @@ import org.openrdf.rio.RDFHandlerException;
 import io.konig.activity.Activity;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.RdbmsShapeValidator;
 import io.konig.core.Vertex;
 import io.konig.core.extract.ExtractException;
 import io.konig.core.extract.OntologyExtractor;
@@ -81,7 +82,10 @@ public class ShapeWriter {
 
 		MemoryGraph graph = new MemoryGraph();
 		graph.setNamespaceManager(nsManager);
-		
+		RdbmsShapeValidator validator = new RdbmsShapeValidator();
+		if (shape != null && validator.validate(shape)){
+			graph.edge(shape.getId(), RDF.TYPE, Konig.TabularNodeShape);
+		}
 		emitShape(shape, graph);
 		
 		RdfUtil.prettyPrintTurtle(nsManager, graph, file);

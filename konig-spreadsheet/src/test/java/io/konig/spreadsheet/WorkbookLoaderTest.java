@@ -1091,6 +1091,66 @@ public class WorkbookLoaderTest {
 		assertEquals(DCL4, sc.iterator().next());
 
 	}
+	@Test
+	public void testTabularNodeShape_1() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("rdbms-node-shape.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/SourcePersonShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		Shape shape = s.getShapeById(shapeId);
+		
+		assertTrue(shape!=null);
+		try {
+			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/rdbmsNodeShape/PersonShape.ttl"));
+		} catch (Exception e) {
+			throw new KonigException(e);
+		}
+	}
+	
+	@Test
+	public void testTabularNodeShape_2() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("rdbms-node-shape-generator.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		URI shapeId = uri("http://example.com/shapes/TargetPersonRdbmsShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		Shape shape = s.getShapeById(shapeId);
+		System.out.println(shape.getRdbmsLogicalShape()+" shape.getRdbmsLogicalShape()");
+		assertTrue(shape!=null);
+		try {	
+			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/rdbmsNodeShape/Shape_TargetShape.ttl"));
+		} catch (Exception e) {
+			throw new KonigException(e);
+		}
+	}
 	private void checkPropertyConstraints(Graph graph) {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));
