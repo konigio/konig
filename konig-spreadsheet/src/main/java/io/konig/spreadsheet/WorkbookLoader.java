@@ -1131,6 +1131,7 @@ public class WorkbookLoader {
 			Resource constraint = constraintVertex.getId();			
 
 			edge(shapeId, RDF.TYPE, SH.Shape);
+			edge(shapeId, RDF.TYPE, Konig.TabularNodeShape);			
 			edge(shapeId, SH.property, constraint);
 
 			edge(constraint, SH.path, propertyId);

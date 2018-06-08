@@ -83,6 +83,7 @@ public class PropertyConstraint implements Cloneable {
 	private QuantifiedExpression formula;
 	private URI idFormat;
 	private List<URI> qualifiedSecurityClassification ;
+	private String dataSteward;
 	
 	private Term term;
 	private URI termStatus;
@@ -548,5 +549,13 @@ public class PropertyConstraint implements Cloneable {
 
 	public void setQualifiedSecurityClassification(List<URI> qualifiedSecurityClassification) {
 		this.qualifiedSecurityClassification = qualifiedSecurityClassification;
+	}
+
+	public String getDataSteward() {
+		return dataSteward;
+	}
+
+	public void setDataSteward(String dataSteward) {
+		this.dataSteward = dataSteward;
 	}
 }

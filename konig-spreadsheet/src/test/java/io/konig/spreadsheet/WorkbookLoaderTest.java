@@ -60,6 +60,7 @@ import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
+import io.konig.core.vocab.DCL;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
@@ -1090,6 +1091,122 @@ public class WorkbookLoaderTest {
 		URI DCL4 = uri("https://schema.pearson.com/ns/dcl/DCL4");
 		assertEquals(DCL4, sc.iterator().next());
 
+	}
+	
+	@Test
+	public void testDataDictionaryForString() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);		
+		
+		Shape shape1 = s.getShapeById(shapeId);
+		assertTrue(shape1!=null);
+		assertTrue(shape1.getType()!=null && shape1.getType().contains(Konig.TabularNodeShape));		
+		
+		//Test String property
+		PropertyConstraint pc=shape1.getPropertyConstraint(uri("http://example.com/alias/ADDRESS_VERIFICATION_CODE"));
+		assertTrue(pc!=null);
+		assertTrue("Address Verification Code".equals(pc.getComment()));
+		assertTrue(Konig.primaryKey.equals(pc.getStereotype()));
+		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()));
+		assertTrue(pc.getMinCount()==1);
+		assertTrue(pc.getMaxCount()==1);
+		assertTrue(pc.getMaxLength()==80);
+		assertTrue(pc.getMaxExclusive()==null);
+		assertTrue(pc.getMinInclusive()==null);
+		assertTrue(pc.getDecimalScale()==null);
+		assertTrue(pc.getDecimalPrecision()==null);
+		assertTrue("Sample Data Steward".equals(pc.getDataSteward()));
+		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification().contains(DCL.Public));
+		
+		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/NAME"));
+		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()) && pc.getMaxLength()==80);
+		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification().contains(DCL.Confidential));
+		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/GENDER"));
+		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()) && pc.getMaxLength()==1);
+		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/ADDRESS"));
+		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()) && pc.getMaxLength()==80);
+		assertTrue(pc!=null);
+		
+		shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
+		Shape shape2 = s.getShapeById(shapeId);
+		assertTrue(shape2!=null);
+	}
+	@Test
+	public void testDataDictionaryForInteger() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);		
+		
+		Shape shape1 = s.getShapeById(shapeId);
+		assertTrue(shape1!=null);
+		assertTrue(shape1.getType()!=null && shape1.getType().contains(Konig.TabularNodeShape));
+		
+		shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
+		Shape shape2 = s.getShapeById(shapeId);
+		assertTrue(shape2!=null);
+		PropertyConstraint pc=shape2.getPropertyConstraint(uri("http://example.com/alias/ORDER_DATE"));
+		assertTrue(XMLSchema.DATE.equals(pc.getDatatype()) && pc.getMaxLength()==null);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/ORDER_TIME"));
+		assertTrue(XMLSchema.DATETIME.equals(pc.getDatatype()) && pc.getMaxLength()==null);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/INVOICE_VALUE"));
+		assertTrue(XMLSchema.DECIMAL.equals(pc.getDatatype()) && pc.getDecimalPrecision()==15 && pc.getDecimalScale()==null);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/DICOUNT_PC"));
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive()==-32768 && pc.getMaxExclusive()==32767);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/NO_OF_ITEMS"));
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive()==0 && pc.getMaxExclusive()==65535);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/CREDIT_VALUE"));
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive()==-2147483648 && pc.getMaxExclusive()==2147483647);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/ORDER_NUMBER"));
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive()==0 && pc.getMaxExclusive().equals(Double.parseDouble("4294967295")));
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/TOTAL_VALUE"));
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive().equals(Double.parseDouble("-9223372036854775808")) 
+				&& pc.getMaxExclusive().equals(Double.parseDouble("9223372036854775807")));
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/INVOICE_NUMBER"));
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive()==0
+				&& pc.getMaxExclusive().equals(Double.parseDouble("18446744073709551615")));
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/DISCOUNT_AMOUNT"));
+		assertTrue(XMLSchema.FLOAT.equals(pc.getDatatype()) && pc.getMinInclusive()==null
+				&& pc.getMaxExclusive()==null && pc.getDecimalPrecision()==null && pc.getDecimalScale()==null);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/VALUE_OF_ITEMS"));
+		assertTrue(XMLSchema.DOUBLE.equals(pc.getDatatype()) && pc.getMinInclusive()==null
+				&& pc.getMaxExclusive()==null && pc.getDecimalPrecision()==null && pc.getDecimalScale()==null);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/SERVICE_TAX_APPLIED"));
+		assertTrue(XMLSchema.DECIMAL.equals(pc.getDatatype()) && pc.getMinInclusive()==null
+				&& pc.getMaxExclusive()==null && pc.getDecimalPrecision()==15 && pc.getDecimalScale()==6);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/CODE"));
+		assertTrue(XMLSchema.BASE64BINARY.equals(pc.getDatatype()) && pc.getMaxLength()==5);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/IS_NEW"));
+		assertTrue(XMLSchema.BOOLEAN.equals(pc.getDatatype()));
+		
 	}
 	private void checkPropertyConstraints(Graph graph) {
 		
