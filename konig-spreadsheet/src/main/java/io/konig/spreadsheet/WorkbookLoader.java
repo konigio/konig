@@ -169,7 +169,7 @@ public class WorkbookLoader {
 	private static final String IRI_TEMPLATE = "IRI Template";
 	private static final String DEFAULT_FOR = "Default For";
 	private static final String TERM_STATUS = "Term Status";
-	private static final String RDBMS_LOGICAL_SHAPE = "RDBMS Logical Shape";
+	private static final String TABULAR_ORIGIN_SHAPE = "Tabular Origin Shape";
 
 	private static final String SETTING_NAME = "Setting Name";
 	private static final String SETTING_VALUE = "Setting Value";
@@ -449,7 +449,7 @@ public class WorkbookLoader {
 		private int shapeDatasourceCol = UNDEFINED;
 		private int shapeIriTemplateCol = UNDEFINED;
 		private int defaultShapeForCol = UNDEFINED;
-		private int rdbmsLogicalShapeCol = UNDEFINED;
+		private int tabularOriginShapeCol = UNDEFINED;
 
 		private int pcShapeIdCol = UNDEFINED;
 		private int pcPropertyIdCol = UNDEFINED;
@@ -1979,7 +1979,7 @@ public class WorkbookLoader {
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
             URI shapeType=uriValue(row, shapeTypeCol);
-            URI rdbmsLogicalShape = uriValue(row, rdbmsLogicalShapeCol);
+            URI tabularOriginShape = uriValue(row, tabularOriginShapeCol);
 
 			String iriTemplate = stringValue(row, shapeIriTemplateCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
@@ -2003,7 +2003,7 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
-			edge(shapeId, Konig.rdbmsLogicalShape, rdbmsLogicalShape);
+			edge(shapeId, Konig.tabularOriginShape, tabularOriginShape);
 			edge(shapeId, SH.or, orList);
 			
 
@@ -2204,7 +2204,7 @@ public class WorkbookLoader {
 		}
 
 		private void readShapeHeader(Sheet sheet) {
-			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = rdbmsLogicalShapeCol = UNDEFINED;
+			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = tabularOriginShapeCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2261,8 +2261,8 @@ public class WorkbookLoader {
 					case DEFAULT_FOR:
 						defaultShapeForCol = i;
 						break;
-					case RDBMS_LOGICAL_SHAPE:
-						rdbmsLogicalShapeCol = i;
+					case TABULAR_ORIGIN_SHAPE:
+						tabularOriginShapeCol = i;
 						break;
 
 					}
