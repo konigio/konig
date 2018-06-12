@@ -1385,7 +1385,15 @@ public class WorkbookLoader {
 					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
 			}
+			ShapeManager shapeManager = new MemoryShapeManager();
+			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
+			shapeLoader.load(graph);
+			Shape shape = shapeManager.getShapeById(shapeId);
+			io.konig.core.RdbmsShapeValidator validator = new io.konig.core.RdbmsShapeValidator();
 
+			if (shape != null && validator.isValidRDBMSShape(shape)){
+				edge(shape.getId(), RDF.TYPE, Konig.TabularNodeShape);
+			}
 			if (Konig.id.equals(propertyId)) {
 				int min = minCount == null ? 0 : minCount.intValue();
 				int max = maxCount == null ? -1 : maxCount.intValue();
