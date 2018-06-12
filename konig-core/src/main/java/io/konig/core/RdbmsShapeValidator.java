@@ -31,7 +31,7 @@ public class RdbmsShapeValidator {
 
 	
 	public boolean validate(Shape shape){
-		if (shape!= null && shape.getRdbmsLogicalShape()!= null){
+		if (shape!= null && shape.getTabularOriginShape()!= null){
 			return true;
 		}
 		return false;

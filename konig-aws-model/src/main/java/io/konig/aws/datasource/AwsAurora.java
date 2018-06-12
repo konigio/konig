@@ -33,7 +33,7 @@ import io.konig.datasource.TableDataSource;
 public class AwsAurora extends DataSource implements TableDataSource{
 	private AwsAuroraTableReference tableReference;
 	private String awsTableName;
-	private String rdbmsFieldNamespace;
+	private String tabularFieldNamespace;
 	
 	public AwsAurora() {
 	}
@@ -85,12 +85,12 @@ public class AwsAurora extends DataSource implements TableDataSource{
 		return "MySQL 5.7";
 	}
 
-	@RdfProperty(Konig.RDBMS_FIELD_NAMESPACE)
-	public String getRdbmsFieldNamespace() {
-		return rdbmsFieldNamespace;
+	@RdfProperty(Konig.TABULAR_FIELD_NAMESPACE)
+	public String getTabularFieldNamespace() {
+		return tabularFieldNamespace;
 	}
 
-	public void setRdbmsFieldNamespace(String rdbmsFieldNamespace) {
-		this.rdbmsFieldNamespace = rdbmsFieldNamespace;
+	public void setTabularFieldNamespace(String tabularFieldNamespace) {
+		this.tabularFieldNamespace = tabularFieldNamespace;
 	}
 }

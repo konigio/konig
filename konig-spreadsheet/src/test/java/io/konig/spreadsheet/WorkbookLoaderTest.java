@@ -1143,7 +1143,7 @@ public class WorkbookLoaderTest {
 		
 		ShapeWriter shapeWriter = new ShapeWriter();
 		Shape shape = s.getShapeById(shapeId);
-		System.out.println(shape.getRdbmsLogicalShape()+" shape.getRdbmsLogicalShape()");
+		System.out.println(shape.getTabularOriginShape()+" shape.getTabularOriginShape()");
 		assertTrue(shape!=null);
 		try {	
 			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/rdbmsNodeShape/Shape_TargetShape.ttl"));

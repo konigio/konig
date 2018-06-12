@@ -84,6 +84,7 @@ public class ShapeWriter {
 		graph.setNamespaceManager(nsManager);
 		RdbmsShapeValidator validator = new RdbmsShapeValidator();
 		if (shape != null && validator.validate(shape)){
+			shape.setTabularOriginShape(null);
 			graph.edge(shape.getId(), RDF.TYPE, Konig.TabularNodeShape);
 		}
 		emitShape(shape, graph);

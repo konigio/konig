@@ -11,7 +11,7 @@
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}>
 	a konig:GoogleBigQueryTable, konig:DataSource;
-	konig:rdbmsFieldNamespace "${rdbmsFieldNamespace}";
+	konig:tabularFieldNamespace "${tabularFieldNamespace}";
 	gcp:tableReference [
 		gcp:projectId "${gcpProjectId}" ;
 		gcp:datasetId "${gcpDatasetId}" ;
