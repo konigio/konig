@@ -678,7 +678,7 @@ public class Shape implements Cloneable {
 		return null;
 	}
 
-	public Shape getRdbmsLogicalShape() {
+	public Shape getTabularOriginShape() {
 		return rdbmsLogicalShape;
 	}
 

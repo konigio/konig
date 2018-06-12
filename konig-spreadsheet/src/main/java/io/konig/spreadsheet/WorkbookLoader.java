@@ -393,6 +393,10 @@ public class WorkbookLoader {
 	public ShapeManager getShapeManager() {
 		return shapeManager;
 	}
+	
+	public void setShapeManager(ShapeManager shapeManager) {
+		this.shapeManager = shapeManager;
+	}
 
 	private class Worker {
 		private Workbook book;
@@ -485,6 +489,7 @@ public class WorkbookLoader {
 		private int labelCol = UNDEFINED;
 		private int languageCol = UNDEFINED;
 
+		private Activity provenance;
 		private URI activityId;
 		private int pcTermStatusCol = UNDEFINED;
 		private int classTermStatusCol = UNDEFINED;
@@ -527,6 +532,9 @@ public class WorkbookLoader {
 				shapeManager = new MemoryShapeManager();
 			}
 			activityId = Activity.nextActivityId();
+			provenance = new Activity(activityId);
+			provenance.setType(Konig.LoadModelFromSpreadsheet);
+			provenance.setEndTime(GregorianCalendar.getInstance());
 
 			owlReasoner = new OwlReasoner(graph);
 			dataInjector = new DataInjector();
@@ -1974,16 +1982,16 @@ public class WorkbookLoader {
 		private void loadShapeRow(Row row) throws SpreadsheetException {
 
 			URI shapeId = uriValue(row, shapeIdCol);
-			Literal shapeComment = stringLiteral(row, shapeCommentCol);
+			String shapeComment = stringValue(row, shapeCommentCol);
 			URI targetClass = uriValue(row, shapeTargetClassCol);
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
-            URI shapeType=uriValue(row, shapeTypeCol);
+            List<URI> shapeType=uriList(row, shapeTypeCol);
             URI rdbmsLogicalShape = uriValue(row, rdbmsLogicalShapeCol);
 
 			String iriTemplate = stringValue(row, shapeIriTemplateCol);
-			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
-			Literal bigqueryTable = bigQueryTableId(row, targetClass);
+			String mediaType = stringValue(row, shapeMediaTypeCol);
+			String bigqueryTable = bigQueryTableId(row, targetClass);
 			List<URI> applicationList = uriList(row, defaultShapeForCol);
 			List<URI> shapeOfList = uriList(row, inputShapeOfCol);
 			List<Value> orList = valueList(row, oneOfCol);
@@ -1992,17 +2000,30 @@ public class WorkbookLoader {
 			if (shapeId == null) {
 				return;
 			}
-
-			edge(shapeId, RDF.TYPE, SH.Shape);
-            edge(shapeId, RDF.TYPE, shapeType);
-			edge(shapeId, PROV.wasGeneratedBy, activityId);
-			edge(shapeId, RDFS.COMMENT, shapeComment);
-			edge(shapeId, SH.targetClass, targetClass);
+			
+			Shape shape = new Shape(shapeId);
+			shape.addType(SH.Shape);
+			shape.addType(SH.NodeShape);
+			shape.setWasGeneratedBy(provenance);
+			if (shapeType != null) {
+				for (URI type : shapeType) {
+					shape.addType(type);
+				}
+			}
+			shape.setComment(shapeComment);
+			shape.setTargetClass(targetClass);
+			
 			edge(targetClass, RDF.TYPE, OWL.CLASS);
-			edge(shapeId, Konig.aggregationOf, aggregationOf);
-			edge(shapeId, Konig.rollUpBy, rollUpBy);
-			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
-			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
+			
+			shape.setAggregationOf(aggregationOf);
+			shape.setRollUpBy(rollUpBy);
+			
+			shape.setMediaTypeBaseName(mediaType);
+			
+//			shape.setBigQueryTableId(bigqueryTable);
+			
+			
+			
 			edge(shapeId, Konig.rdbmsLogicalShape, rdbmsLogicalShape);
 			edge(shapeId, SH.or, orList);
 			
@@ -2173,7 +2194,7 @@ public class WorkbookLoader {
 			return list.isEmpty() ? null : list;
 		}
 
-		private Literal bigQueryTableId(Row row, URI targetClass) throws SpreadsheetException {
+		private String bigQueryTableId(Row row, URI targetClass) throws SpreadsheetException {
 
 			if (targetClass != null) {
 
@@ -2197,7 +2218,7 @@ public class WorkbookLoader {
 						builder.append(localName);
 						text = builder.toString();
 					}
-					return literal(text);
+					return text;
 				}
 			}
 			return null;
