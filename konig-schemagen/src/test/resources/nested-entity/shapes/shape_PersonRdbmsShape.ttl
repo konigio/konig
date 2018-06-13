@@ -11,7 +11,7 @@
 shape:PersonRdbmsShape a sh:Shape ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/ctCCAwJN0aQAAAFjpXH-Bw> ; 
 	sh:targetClass schema:Person ; 
-	konig:rdbmsLogicalShape shape:PersonShape ; 
+	konig:tabularOriginShape shape:PersonShape ; 
 	konig:shapeDataSource <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/PersonRdbmsShape> . 
 
 <http://www.konig.io/activity/ctCCAwJN0aQAAAFjpXH-Bw> a konig:LoadModelFromSpreadsheet ; 
@@ -43,7 +43,7 @@ shape:PersonShape a sh:Shape ;
 	 ]  . 
 
 <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/PersonRdbmsShape> a konig:AwsAurora , konig:DataSource ; 
-	konig:rdbmsFieldNamespace "http://example.com/ns/alias/" ; 
+	konig:tabularFieldNamespace "http://example.com/ns/alias/" ; 
 	aws:tableReference  [ 
 		aws:awsAuroraHost "${awsAuroraHost}" ; 
 		aws:awsSchema "${awsAuroraSchema}" ; 
