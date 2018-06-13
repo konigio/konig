@@ -11,7 +11,7 @@
 
 <https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/${gcpSqlInstanceId}/databases/${gcpSqlDatabaseId}/tables/${gcpSqlTableName}>
 	a konig:GoogleCloudSqlTable, konig:DataSource ;
-	konig:rdbmsFieldNamespace "${rdbmsFieldNamespace}";
+	konig:tabularFieldNamespace "${tabularFieldNamespace}";
 	gcp:instance "${gcpSqlInstanceId}" ;
 	gcp:database "${gcpSqlDatabaseId}" ;
 	gcp:name "${gcpSqlTableName}" ;
