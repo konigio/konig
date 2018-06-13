@@ -137,7 +137,7 @@ public class RdbmsShapeGenerator {
 						
 					URI newPredicate =  new URIImpl( propertyNameSpace + newLocalName );
 					
-					declarePredicate(predicate);
+					declarePredicate(newPredicate);
 					p.setPredicate(newPredicate);
 					
 					if (p.getFormula()==null) {						

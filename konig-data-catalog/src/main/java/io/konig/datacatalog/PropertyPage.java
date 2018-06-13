@@ -92,9 +92,7 @@ public class PropertyPage {
 			
 			List<PathElementView> list = new ArrayList<>();
 			for (Step step : path.asList()) {
-				if(!(step instanceof InStep)){
 					list.add(pathElement(request, step));
-				}
 			}
 			
 			request.getContext().put("EquivalentPath", list);
@@ -115,6 +113,11 @@ public class PropertyPage {
 			OutStep out = (OutStep) step;
 			operator = "/";
 			predicate = out.getPredicate();
+		}
+		if (step instanceof InStep) {
+			InStep in = (InStep) step;
+			operator = "^";
+			predicate = in.getPredicate();
 		}
 		
 		if (predicate != null) {
