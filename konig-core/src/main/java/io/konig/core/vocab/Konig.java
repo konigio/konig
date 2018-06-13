@@ -181,7 +181,6 @@ public class Konig {
 	public static final URI decimalScale = new URIImpl("http://www.konig.io/ns/core/decimalScale");
 	public static final URI environment = new URIImpl("http://www.konig.io/ns/core/environment");
 	public static final URI dataSteward = new URIImpl("http://www.konig.io/ns/core/dataSteward");
-
 	public static final URI TabularNodeShape = new URIImpl("http://www.konig.io/ns/core/TabularNodeShape");
 	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
