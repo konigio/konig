@@ -60,7 +60,6 @@ import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
-import io.konig.core.vocab.DCL;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
@@ -1131,11 +1130,12 @@ public class WorkbookLoaderTest {
 		assertTrue(pc.getDecimalScale()==null);
 		assertTrue(pc.getDecimalPrecision()==null);
 		assertTrue("Sample Data Steward".equals(pc.getDataSteward()));
-		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification().contains(DCL.Public));
+		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification()
+				.contains(uri("https://schema.pearson.com/ns/dcl/DCL1")));
 		
 		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/NAME"));
 		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()) && pc.getMaxLength()==80);
-		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification().contains(DCL.Confidential));
+		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification().contains(uri("https://schema.pearson.com/ns/dcl/DCL3")));
 		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/GENDER"));
 		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()) && pc.getMaxLength()==1);
 		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/ADDRESS"));

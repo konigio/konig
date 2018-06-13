@@ -96,7 +96,6 @@ import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.DC;
-import io.konig.core.vocab.DCL;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
@@ -340,7 +339,6 @@ public class WorkbookLoader {
 		nsManager.add("as", AS.NAMESPACE);
 		nsManager.add("gcp", GCP.NAMESPACE);
 		nsManager.add("aws",AWS.NAMESPACE);
-		nsManager.add("dcl",DCL.NAMESPACE);
 		this.nsManager = nsManager;
 
 		try {
@@ -1118,9 +1116,8 @@ public class WorkbookLoader {
 			Literal businessName = stringLiteral(row, businessNameCol);
 			Literal businessDefinition = stringLiteral(row, businessDefinitionCol);
 			Literal dataSteward = stringLiteral(row, dataStewardCol);
-			String securityClassification=stringValue(row,securityClassifCol);
-			String constraints = stringValue(row,constraintsCol);			
-			URI rdfSecurityClassification=getRdfSecurityClassification(securityClassification);
+			URI securityClassification=uriValue(row, securityClassifCol);
+			String constraints = stringValue(row,constraintsCol);
 			
 			Vertex prior = getPropertyConstraint(shapeId, propertyId);
 			if (prior != null) {
@@ -1161,7 +1158,7 @@ public class WorkbookLoader {
 				edge(constraint, Konig.decimalScale, decimalScale);
 			}
 			edge(constraint, Konig.dataSteward, dataSteward);
-			edge(constraint, Konig.qualifiedSecurityClassification, rdfSecurityClassification);
+			edge(constraint, Konig.qualifiedSecurityClassification, securityClassification);
 			
 		}
 
@@ -1196,21 +1193,7 @@ public class WorkbookLoader {
 			}
 			return shapeURI;
 		}
-
-		private URI getRdfSecurityClassification(String securityClassification) {
-			switch(securityClassification){
-				case "Public (DCL1)":
-					return DCL.Public;
-				case "Internal Use Only (DCL2)":
-					return DCL.InternalUse;
-				case "Confidential (DCL3)":
-					return DCL.Confidential;
-				case "Restricted (DCL4)":
-					return DCL.Restricted;
-			}
-			return null;
-		}
-
+		
 		private URI getRdfDatatype(String dataDictionarydataType, Resource constraint) {
 			switch(dataDictionarydataType){
 				case "CHAR":
