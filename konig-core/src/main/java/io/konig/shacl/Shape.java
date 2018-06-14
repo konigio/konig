@@ -89,6 +89,7 @@ public class Shape implements Cloneable {
 	private String mediaTypeBaseName;
 	private List<URI> inputShapeOf;
 	private Shape tabularOriginShape;
+	private URI usesAbbreviationScheme;
 	  
 	 
 	 public List<URI> getInputShapeOf() {
@@ -684,6 +685,14 @@ public class Shape implements Cloneable {
 
 	public void setTabularOriginShape(Shape tabularOriginShape) {
 		this.tabularOriginShape = tabularOriginShape;
+	}
+
+	public URI getUsesAbbreviationScheme() {
+		return usesAbbreviationScheme;
+	}
+
+	public void setUsesAbbreviationScheme(URI usesAbbreviationScheme) {
+		this.usesAbbreviationScheme = usesAbbreviationScheme;
 	}
 	
 }

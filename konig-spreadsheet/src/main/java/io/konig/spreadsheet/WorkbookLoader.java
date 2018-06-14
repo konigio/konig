@@ -60,6 +60,7 @@ import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.SKOS;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -219,7 +220,6 @@ public class WorkbookLoader {
 	private static final String CLOUD_FORMATION_TEMPLATES="Cloud Formation Templates";
 	
 	//Data Dictionary Template
-	private static final String DATA_DICTIONARY_TEMPLATE="Template";
 	private static final String SOURCE_SYSTEM = "Source System";
 	private static final String SOURCE_OBJECT_NAME = "Source Object Name";
 	private static final String FIELD = "Field";
@@ -230,6 +230,10 @@ public class WorkbookLoader {
 	private static final String DATA_STEWARD = "Data Steward";
 	private static final String TARGET_OBJECT_NAME = "Target Object Name\n(Flatfile or Aurora Tables)";
 	private static final String TARGET_FIELD_NAME = "Target field Name";
+	
+	//Data Dictionary Abbreviations
+	private static final String TERM = "Term";
+	private static final String ABBREVIATION = "Abbreviation";
 
 	
 	/** Security Tags **/
@@ -274,6 +278,7 @@ public class WorkbookLoader {
 	private static final int COL_CLOUD_FORMATION_TEMPLATE = 0x200;
 	private static final int COL_SECURITY_TAGS = 0x400;
 	private static final int COL_SOURCE_SYSTEM = 0x800;
+	private static final int COL_TERM = 0x1000;
 	
 	private static final int SHEET_ONTOLOGY = COL_NAMESPACE_URI;
 	private static final int SHEET_CLASS = COL_CLASS_ID;
@@ -288,6 +293,7 @@ public class WorkbookLoader {
 	private static final int SHEET_CLOUD_FORMATION_TEMPLATE = COL_CLOUD_FORMATION_TEMPLATE;
 	private static final int SHEET_SECURITY_TAGS = COL_SECURITY_TAGS;
 	private static final int SHEET_DATA_DICTIONARY_TEMPLATE=COL_SOURCE_SYSTEM;
+	private static final int SHEET_DATA_DICTIONARY_ABBREVIATIONS=COL_TERM;
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
 
@@ -339,6 +345,7 @@ public class WorkbookLoader {
 		nsManager.add("as", AS.NAMESPACE);
 		nsManager.add("gcp", GCP.NAMESPACE);
 		nsManager.add("aws",AWS.NAMESPACE);
+		nsManager.add("skos",SKOS.NAMESPACE);
 		this.nsManager = nsManager;
 
 		try {
@@ -535,6 +542,9 @@ public class WorkbookLoader {
 		private int securityClassifCol = UNDEFINED;
 		private int targetObjectNameCol = UNDEFINED;
 		private int targetFieldNameCol = UNDEFINED;
+		
+		private int termCol = UNDEFINED;
+		private int abbreviationCol = UNDEFINED;
 		
 		private int amazonResourceName = UNDEFINED;
 		private int tagKey = UNDEFINED;
@@ -1065,14 +1075,94 @@ public class WorkbookLoader {
 				loadSecurityTags(sheet);
 				break;
 			case SHEET_DATA_DICTIONARY_TEMPLATE:
-				loadDataDictionary(sheet);
+				loadDataDictionaryTemplate(sheet);
 				break;
-				
+			case SHEET_DATA_DICTIONARY_ABBREVIATIONS:
+				loadDataDictionaryAbbreviations(sheet);
+				break;				
 			}
 
 		}
 
-		private void loadDataDictionary(Sheet sheet) throws SpreadsheetException {
+		private void loadDataDictionaryAbbreviations(Sheet sheet) throws SpreadsheetException {
+			readDataDictionaryAbbreviationsHeader(sheet);
+			
+			String abbreviationSchemeIRI =getAbbreviationSchemeIRI();;
+			if(abbreviationSchemeIRI==null)
+				throw new SpreadsheetException("abbreviationSchemeIRI is should not be null");
+			edge(uri(abbreviationSchemeIRI), RDF.TYPE, SKOS.CONCEPT_SCHEME);
+			nsManager.add("abbrev",abbreviationSchemeIRI);
+			int rowSize = sheet.getLastRowNum() + 1;
+			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
+				Row row = sheet.getRow(i);
+				loadDataDictionaryAbbreviationsRow(row,abbreviationSchemeIRI);
+			}
+			List<Vertex> list = graph.v(SH.Shape).in(RDF.TYPE).toVertexList();
+			for(Vertex v:list){
+				URI shapeId=(URI)v.getId();			
+				graph.edge(shapeId, Konig.usesAbbreviationScheme, uri(abbreviationSchemeIRI));
+			}
+		}
+
+		private String getAbbreviationSchemeIRI() {
+			String abbreviationSchemeIri=null;
+			if(settings!=null){
+				abbreviationSchemeIri=(String)settings.get("abbreviationSchemeIri");
+				if(abbreviationSchemeIri!=null && abbreviationSchemeIri.contains("{") && abbreviationSchemeIri.contains("}")){
+					for(String key:settings.stringPropertyNames()){
+						abbreviationSchemeIri=abbreviationSchemeIri.replace("{"+key+"}", settings.getProperty(key));
+					}
+				}
+			}
+			return abbreviationSchemeIri;
+		}
+
+		private void loadDataDictionaryAbbreviationsRow(Row row,String abbreviationSchemeIRI) {
+			Literal term=stringLiteral(row, termCol);
+			Literal abbreviation=stringLiteral(row, abbreviationCol);
+			String termValue = stringValue(row, termCol);
+			if(termValue!=null){
+				URI abbrevTermIRI=uri(abbreviationSchemeIRI+termValue);
+				edge(abbrevTermIRI, RDF.TYPE, SKOS.CONCEPT);
+				edge(abbrevTermIRI, SKOS.PREF_LABEL, term);
+				edge(abbrevTermIRI,Konig.abbreviationLabel, abbreviation);
+				edge(abbrevTermIRI, SKOS.IN_SCHEME, uri(abbreviationSchemeIRI));		
+			}
+		}
+
+		private void readDataDictionaryAbbreviationsHeader(Sheet sheet) {
+			termCol = abbreviationCol = UNDEFINED;
+			
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
+
+			int colSize = row.getLastCellNum() + 1;
+			for (int i = row.getFirstCellNum(); i < colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+
+					switch (text) {
+
+					case TERM:
+						termCol = i;
+						break;
+					
+					case ABBREVIATION:
+						abbreviationCol = i;
+						break;
+					}
+				}
+			}
+			
+		
+		}
+
+		private void loadDataDictionaryTemplate(Sheet sheet) throws SpreadsheetException {
 			readDataDictionaryTemplateHeader(sheet);
 
 			int rowSize = sheet.getLastRowNum() + 1;
@@ -1116,8 +1206,8 @@ public class WorkbookLoader {
 			Literal businessName = stringLiteral(row, businessNameCol);
 			Literal businessDefinition = stringLiteral(row, businessDefinitionCol);
 			Literal dataSteward = stringLiteral(row, dataStewardCol);
-			URI securityClassification=uriValue(row, securityClassifCol);
-			String constraints = stringValue(row,constraintsCol);
+			URI securityClassification=uriValue(row,securityClassifCol);
+			String constraints = stringValue(row,constraintsCol);	
 			
 			Vertex prior = getPropertyConstraint(shapeId, propertyId);
 			if (prior != null) {
@@ -1202,7 +1292,9 @@ public class WorkbookLoader {
 			}
 			return shapeURI;
 		}
+
 		
+
 		private URI getRdfDatatype(String dataDictionarydataType, Resource constraint) {
 			switch(dataDictionarydataType){
 				case "CHAR":
@@ -1391,6 +1483,10 @@ public class WorkbookLoader {
 					break;
 				case SOURCE_SYSTEM:
 					bits = bits | COL_SOURCE_SYSTEM;
+					break;
+				case TERM:
+					bits = bits | COL_TERM;
+					break;
 				}
 			}
 
@@ -1687,15 +1783,17 @@ public class WorkbookLoader {
 					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
 			}
-			ShapeManager shapeManager = new MemoryShapeManager();
-			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
-			shapeLoader.load(graph);
-			Shape shape = shapeManager.getShapeById(shapeId);
-			io.konig.core.RdbmsShapeValidator validator = new io.konig.core.RdbmsShapeValidator();
+			
+            ShapeManager shapeManager = new MemoryShapeManager();
+            ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
+            shapeLoader.load(graph);
+            Shape shape = shapeManager.getShapeById(shapeId);
+            io.konig.core.RdbmsShapeValidator validator = new io.konig.core.RdbmsShapeValidator();
 
-			if (shape != null && validator.isValidRDBMSShape(shape)){
-				edge(shape.getId(), RDF.TYPE, Konig.TabularNodeShape);
-			}
+            if (shape != null && validator.isValidRDBMSShape(shape)){
+                edge(shape.getId(), RDF.TYPE, Konig.TabularNodeShape);
+            }
+
 			if (Konig.id.equals(propertyId)) {
 				int min = minCount == null ? 0 : minCount.intValue();
 				int max = maxCount == null ? -1 : maxCount.intValue();

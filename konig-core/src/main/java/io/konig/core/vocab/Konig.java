@@ -70,6 +70,7 @@ public class Konig {
 	public static final URI id = new URIImpl("http://www.konig.io/ns/core/id");
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/core/mediaTypeBaseName");
 	public static final URI tabularOriginShape = new URIImpl("http://www.konig.io/ns/core/tabularOriginShape");
+	public static final URI usesAbbreviationScheme = new URIImpl("http://www.konig.io/ns/core/usesAbbreviationScheme");
 	public static final URI preferredJsonSchema = new URIImpl("http://www.konig.io/ns/core/preferredJsonSchema");
 	public static final URI avroSchemaRendition = new URIImpl("http://www.konig.io/ns/core/avroSchemaRendition");
 	public static final URI PreferredClass = new URIImpl("http://www.konig.io/ns/core/PreferredClass");
@@ -182,6 +183,7 @@ public class Konig {
 	public static final URI environment = new URIImpl("http://www.konig.io/ns/core/environment");
 	public static final URI dataSteward = new URIImpl("http://www.konig.io/ns/core/dataSteward");
 	public static final URI TabularNodeShape = new URIImpl("http://www.konig.io/ns/core/TabularNodeShape");
+	public static final URI abbreviationLabel = new URIImpl("http://www.konig.io/ns/core/abbreviationLabel");
 	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();
