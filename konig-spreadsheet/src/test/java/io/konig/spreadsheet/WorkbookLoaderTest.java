@@ -40,12 +40,15 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.SKOS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Graph;
@@ -1233,6 +1236,63 @@ public class WorkbookLoaderTest {
 		assertTrue(XMLSchema.BASE64BINARY.equals(pc.getDatatype()) && pc.getMaxLength()==5);
 		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/IS_NEW"));
 		assertTrue(XMLSchema.BOOLEAN.equals(pc.getDatatype()));
+	}
+	@Test
+	public void testDataDictionaryForAbbreviations() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);		
+			
+		
+		Shape shape1 = s.getShapeById(shapeId);
+		assertTrue(shape1!=null);
+		assertTrue(shape1.getUsesAbbreviationScheme()!=null && 
+				uri("https://example.com/exampleModel/AbbreviationScheme/").equals(shape1.getUsesAbbreviationScheme()));		
+		
+		shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
+		Shape shape2 = s.getShapeById(shapeId);
+		assertTrue(shape2!=null);
+		assertTrue(shape2.getUsesAbbreviationScheme()!=null && 
+				uri("https://example.com/exampleModel/AbbreviationScheme/").equals(shape2.getUsesAbbreviationScheme()));	
+		
+		List<Vertex> vertexList = graph.v(SKOS.CONCEPT_SCHEME).in(RDF.TYPE).toVertexList();
+		assertTrue(vertexList!=null && vertexList.size()==1);
+		Vertex abbrev=vertexList.get(0);
+		assertTrue(uri("https://example.com/exampleModel/AbbreviationScheme/").equals(abbrev.getId()));
+		
+		vertexList = graph.v(SKOS.CONCEPT).in(RDF.TYPE).toVertexList();
+		assertTrue(vertexList!=null && vertexList.size()==3);
+		Vertex mfgVertex=vertexList.get(0);
+		assertTrue(uri("https://example.com/exampleModel/AbbreviationScheme/MANUFACTURING").equals(mfgVertex.getId()));
+		ValueFactory vf=new ValueFactoryImpl();
+		assertTrue(vf.createLiteral("MANUFACTURING").equals(mfgVertex.getValue(SKOS.PREF_LABEL)));
+		assertTrue(vf.createLiteral("MFG").equals(mfgVertex.getValue(Konig.abbreviationLabel)));
+		assertTrue(vf.createURI("https://example.com/exampleModel/AbbreviationScheme/").equals(mfgVertex.getValue(SKOS.IN_SCHEME)));
+		
+		Vertex uda=vertexList.get(1);
+		assertTrue(uri("https://example.com/exampleModel/AbbreviationScheme/USER_DEFINED_ATTRIBUTES").equals(uda.getId()));
+		assertTrue(vf.createLiteral("USER_DEFINED_ATTRIBUTES").equals(uda.getValue(SKOS.PREF_LABEL)));
+		assertTrue(vf.createLiteral("UDA").equals(uda.getValue(Konig.abbreviationLabel)));
+		assertTrue(vf.createURI("https://example.com/exampleModel/AbbreviationScheme/").equals(uda.getValue(SKOS.IN_SCHEME)));
+		
+		Vertex org=vertexList.get(2);
+		assertTrue(uri("https://example.com/exampleModel/AbbreviationScheme/ORGANIZATION").equals(org.getId()));
+		assertTrue(vf.createLiteral("ORGANIZATION").equals(org.getValue(SKOS.PREF_LABEL)));
+		assertTrue(vf.createLiteral("ORG").equals(org.getValue(Konig.abbreviationLabel)));
+		assertTrue(vf.createURI("https://example.com/exampleModel/AbbreviationScheme/").equals(org.getValue(SKOS.IN_SCHEME)));
+		
 	}
 	
 	@Test
