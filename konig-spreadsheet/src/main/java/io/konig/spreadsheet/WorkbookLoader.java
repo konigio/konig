@@ -1096,7 +1096,7 @@ public class WorkbookLoader {
 				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
 				return;
 			}
-			URI propertyId = expandPropertyId(getPropertyBaseURL()+propertyIdValue);
+			URI propertyId = expandPropertyId(getPropertyBaseURL()+"/"+propertyIdValue);
 
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
 
