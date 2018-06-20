@@ -23,6 +23,7 @@ package io.konig.schemagen.sql;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -73,7 +74,7 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		Shape shape = shapeManager.getShapeById(shapeId);
 		assertTrue(shape!=null);
 		
-		SqlTable table = generator.generateTable(shape);
+		SqlTable table = generator.generateTable(shape,null);
 		
 		assertTrue(table!=null);
 		
@@ -128,13 +129,37 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		File baseDir = new File("target/test/resources/aws/sql");
 		baseDir.mkdirs();
 		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator(), sqlFileLocator);
+		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator(), sqlFileLocator,null);
 		awsTableWriter.visit(shapeManager.listShapes().get(0));
-		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
+		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),null);
 		
 		assertTrue(table!=null);
 	}
-	
+	@Test
+	public void testAWSWithAbbreviations() throws Exception {
+		
+		 AwsShapeConfig.init();
+		MemoryShapeManager shapeManager = new MemoryShapeManager();
+		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
+		shapeLoader.loadTurtle(resource("aws_abbrev/shape_OE_ORDER_LINES_ALL.ttl"), null);
+		
+
+		File baseDir = new File("target/test/resources/aws_abbrev/sql");
+		baseDir.mkdirs();
+		File abbrevDir = new File("src/test/resources/aws_abbrev/abbrev/");
+		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
+		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator(), sqlFileLocator,abbrevDir);
+		awsTableWriter.visit(shapeManager.listShapes().get(0));
+		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),abbrevDir);
+		
+		assertTrue(table!=null && "OE_ORDER_LINES_ALL".equals(table.getTableName()));
+		assertTrue(table.getColumnList()!=null && table.getColumnList().size()==2);
+		assertTrue(table.getColumnByName("ORGANIZATION_ID")==null && table.getColumnByName("ORG_ID")!=null);
+		assertTrue(table.getColumnByName("LINE_ID")!=null);
+		
+	}
 	@Test
 	public void testGCP() throws Exception {
 		
@@ -147,12 +172,33 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		File baseDir = new File("target/test/resources/gcp/sql");
 		baseDir.mkdirs();
 		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator);
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator,null);
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
-		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
+		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),null);
 		
 		assertTrue(table!=null);
 		}
+	@Test
+	public void testGCPWithAbbreviations() throws Exception {
+		
+		GcpShapeConfig.init();
+		MemoryShapeManager shapeManager = new MemoryShapeManager();
+		MemoryNamespaceManager nsManager = new MemoryNamespaceManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(null, shapeManager, nsManager);
+		shapeLoader.loadTurtle(resource("gcp_abbrev/shape_RA_CUSTOMER_TRX_ALL.ttl"), null);
+		File baseDir = new File("target/test/resources/gcp_abbrev/sql");
+		baseDir.mkdirs();
+		File abbrevDir=new File("src/test/resources/gcp_abbrev/abbrev/");
+		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator,abbrevDir);
+		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
+		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),abbrevDir);
+		
+		assertTrue(table!=null && "RA_CUSTOMER_TRX_ALL".equals(table.getTableName()));
+		assertTrue(table.getColumnList()!=null && table.getColumnList().size()==1);
+		assertTrue(table.getColumnByName("MANUFACTURING_VERIFICATION_CODE")==null && table.getColumnByName("MFG_VERIFICATION_CODE")!=null);
+	}
 	@Test
 	public void testSyntheticKeyForAwsAurora() throws Exception{
 		AwsShapeConfig.init();
@@ -163,9 +209,9 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		File baseDir = new File("target/test/resources/aws/sql");
 		baseDir.mkdirs();
 		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator);
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator,null);
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
-		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
+		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),null);
 		
 		assertTrue(table!=null);
 		assertTrue(table.getColumnList()!=null && !table.getColumnList().isEmpty());
@@ -189,9 +235,9 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		File baseDir = new File("target/test/resources/gcp/sql");
 		baseDir.mkdirs();
 		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator);
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator,null);
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
-		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0));
+		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),null);
 		
 		assertTrue(table!=null);
 		assertTrue(table.getColumnList()!=null && !table.getColumnList().isEmpty());
@@ -212,12 +258,12 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		File baseDir = new File("target/test/resources/oracle/sql");
 		baseDir.mkdirs();
 		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator);
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator,null);
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
 		Shape shape=shapeManager.listShapes().get(0);
 		PropertyConstraint p=shape.getPropertyConstraint(new URIImpl("http://example.com/ns/alias/personId"));
 		assertTrue(Konig.syntheticKey.equals(p.getStereotype()));
-		SqlTable table = generator.generateTable(shape);
+		SqlTable table = generator.generateTable(shape,null);
 		
 		assertTrue(table!=null);
 		String query=table.toString();		
@@ -257,7 +303,7 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 			
 			assertTrue(shape!=null);
 			
-			SqlTable table = generator.generateTable(shape);
+			SqlTable table = generator.generateTable(shape,null);
 			
 			assertTrue(table!=null);
 			assertStringField(table, "PPID", SqlDatatype.VARCHAR, 2000);

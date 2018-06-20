@@ -1,0 +1,26 @@
+@prefix abbrev: <https://example.com/exampleModel/AbbreviationScheme/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/MDM/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+
+shape:RA_CUSTOMER_TRX_ALL a sh:Shape , konig:TabularNodeShape ; 
+	sh:property  [ 
+		sh:path <http://example.com/ns/alias/MANUFACTURING_VERIFICATION_CODE> ; 
+		konig:stereotype konig:primaryKey ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:maxLength 80 ; 
+		konig:qualifiedSecurityClassification <https://schema.pearson.com/ns/dcl/DCL1> ]  ; 
+	konig:usesAbbreviationScheme abbrev: ; 
+	konig:shapeDataSource <https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/schema/databases/schema/tables/RA_CUSTOMER_TRX_ALL> .
+	 
+abbrev: a skos:ConceptScheme . 
+
+<https://www.googleapis.com/sql/v1beta4/projects/${gcpProjectId}/instances/schema/databases/schema/tables/RA_CUSTOMER_TRX_ALL> a konig:GoogleCloudSqlTable , konig:DataSource ; 
+	gcp:instance "schema" ; 
+	gcp:database "schema" ; 
+	gcp:name "RA_CUSTOMER_TRX_ALL" . 

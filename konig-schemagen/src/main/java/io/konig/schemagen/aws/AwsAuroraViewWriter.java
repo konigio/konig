@@ -52,14 +52,17 @@ public class AwsAuroraViewWriter implements ShapeVisitor{
 	private SqlTableGenerator generator;
 	private DatasourceFileLocator sqlFileLocator;
 	private ShapeModelFactory shapeModelFactory;
+	private File abbrevDir;
 
 	// TODO: Add a DatasourceFileLocator as a private field and pass it to the constructor. 
 	
-	public AwsAuroraViewWriter(File baseDir,SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator,ShapeModelFactory shapeModelFactory) {
+	public AwsAuroraViewWriter(File baseDir,SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator,ShapeModelFactory shapeModelFactory,
+			File abbrevDir) {
 		this.baseDir = baseDir;
 		this.generator = generator;
 		this.sqlFileLocator = sqlFileLocator;
 		this.shapeModelFactory=shapeModelFactory;
+		this.abbrevDir=abbrevDir;
 	}
 
 	@Override
@@ -68,7 +71,7 @@ public class AwsAuroraViewWriter implements ShapeVisitor{
 		if (view != null) {
 			AwsAuroraDefinition tableDefinition = new AwsAuroraDefinition();
 			AwsAuroraTableReference tableReference = view.getTableReference();
-			SqlTable sqlTable = generator.generateTable(shape);
+			SqlTable sqlTable = generator.generateTable(shape,abbrevDir);
 			File file = sqlFile(view);
 			String tableName = sqlTable.getTableName();
 			String schemaName = tableReference.getAwsSchema();
