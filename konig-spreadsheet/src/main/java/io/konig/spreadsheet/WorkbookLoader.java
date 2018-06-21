@@ -669,6 +669,22 @@ public class WorkbookLoader {
 		}
 
 		private void processDataSources() throws SpreadsheetException {
+			String datasource=settings.getProperty("datasource");
+			if(datasource!=null){
+				ListFunctionVisitor visitor = new ListFunctionVisitor();
+				FunctionParser parser = new FunctionParser(visitor);
+				try {
+					parser.parse(datasource);
+				} catch (FunctionParseException e) {
+					throw new SpreadsheetException("Failed to parse Datasource definition: " + datasource, e);
+				}
+				List<Function> list = visitor.getList();
+				if (list != null) {
+					for (Shape shape : shapeManager.listShapes()) {
+						dataSourceMap.put((URI)shape.getId(), list);
+					}
+				}
+			}
 
 			for (Entry<URI, List<Function>> entry : dataSourceMap.entrySet()) {
 				URI shapeId = entry.getKey();
@@ -1540,7 +1556,7 @@ public class WorkbookLoader {
 				Row row = sheet.getRow(i);
 				loadSettingsRow(row);
 			}
-
+			
 			dataSourceGenerator.put(settings);
 		}
 
@@ -1573,7 +1589,7 @@ public class WorkbookLoader {
 					
 				} else {
 					settings.setProperty(name, value);
-				}
+				}				
 			}
 
 		}

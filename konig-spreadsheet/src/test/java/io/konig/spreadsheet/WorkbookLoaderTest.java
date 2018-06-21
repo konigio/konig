@@ -1294,6 +1294,42 @@ public class WorkbookLoaderTest {
 		assertTrue(vf.createURI("https://example.com/exampleModel/AbbreviationScheme/").equals(org.getValue(SKOS.IN_SCHEME)));
 		
 	}
+	@Test
+	public void testDataDictionaryForDatasource() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);		
+			
+		
+		Shape shape1 = s.getShapeById(shapeId);
+		assertTrue(shape1!=null);
+		assertTrue(shape1.getShapeDataSource()!=null);
+		List<DataSource> datasourceList=shape1.getShapeDataSource();
+		assertTrue(datasourceList.size()==1);
+		assertTrue(datasourceList.get(0).getType()!=null && datasourceList.get(0).getType().size()==2);
+		assertTrue(datasourceList.get(0).getType().contains(Konig.AwsAuroraTable));
+		
+		shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
+		Shape shape2 = s.getShapeById(shapeId);
+		assertTrue(shape2!=null);	
+		assertTrue(shape2.getShapeDataSource()!=null);
+		datasourceList=shape2.getShapeDataSource();
+		assertTrue(datasourceList.size()==1);
+		assertTrue(datasourceList.get(0).getType()!=null && datasourceList.get(0).getType().size()==2);
+		assertTrue(datasourceList.get(0).getType().contains(Konig.AwsAuroraTable));
+		
+	}
 	
 	@Test
 	public void testTabularNodeShape_2() throws Exception {
