@@ -41,6 +41,7 @@ public class SH {
 	public static final URI IRIOrLiteral = new URIImpl("http://www.w3.org/ns/shacl#IRIOrLiteral");
 
 	public static final URI path = new URIImpl(PATH);
+	public static final URI name = new URIImpl("http://www.w3.org/ns/shacl#name");
 	public static final URI in = new URIImpl("http://www.w3.org/ns/shacl#in");
 	public static final URI equals = new URIImpl("http://www.w3.org/ns/shacl#equals");
 	public static final URI and = new URIImpl("http://www.w3.org/ns/shacl#and");

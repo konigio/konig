@@ -39,6 +39,8 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.bind.annotation.XmlSchema;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Hyperlink;
@@ -89,6 +91,7 @@ import io.konig.core.path.Step;
 import io.konig.core.pojo.BeanUtil;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.SimpleValueFormat;
+import io.konig.core.util.StringUtil;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
@@ -100,6 +103,7 @@ import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.XOWL;
+import io.konig.core.vocab.XSD;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.FormulaParser;
@@ -214,6 +218,20 @@ public class WorkbookLoader {
 	private static final String AWS_REGION="AWS Region";
 	private static final String CLOUD_FORMATION_TEMPLATES="Cloud Formation Templates";
 	
+	//Data Dictionary Template
+	private static final String DATA_DICTIONARY_TEMPLATE="Template";
+	private static final String SOURCE_SYSTEM = "Source System";
+	private static final String SOURCE_OBJECT_NAME = "Source Object Name";
+	private static final String FIELD = "Field";
+	private static final String DATA_TYPE = "Data Type";
+	private static final String CONSTRAINTS = "Constraints";
+	private static final String BUSINESS_NAME = "Business Name";
+	private static final String BUSINESS_DEFINITION = "Business Definition (Optional)";
+	private static final String DATA_STEWARD = "Data Steward";
+	private static final String TARGET_OBJECT_NAME = "Target Object Name\n(Flatfile or Aurora Tables)";
+	private static final String TARGET_FIELD_NAME = "Target field Name";
+
+	
 	/** Security Tags **/
 	private static final String SECURITY_TAGS = "Security Tags";
 	private static final String AMAZON_RESOURCE_NAME = "Amazon Resource Name";
@@ -255,6 +273,7 @@ public class WorkbookLoader {
 	private static final int COL_AMAZON_DB_CLUSTER = 0x100;
 	private static final int COL_CLOUD_FORMATION_TEMPLATE = 0x200;
 	private static final int COL_SECURITY_TAGS = 0x400;
+	private static final int COL_SOURCE_SYSTEM = 0x800;
 	
 	private static final int SHEET_ONTOLOGY = COL_NAMESPACE_URI;
 	private static final int SHEET_CLASS = COL_CLASS_ID;
@@ -268,6 +287,7 @@ public class WorkbookLoader {
 	private static final int SHEET_AMAZON_RDS_CLUSTER = COL_AMAZON_DB_CLUSTER;
 	private static final int SHEET_CLOUD_FORMATION_TEMPLATE = COL_CLOUD_FORMATION_TEMPLATE;
 	private static final int SHEET_SECURITY_TAGS = COL_SECURITY_TAGS;
+	private static final int SHEET_DATA_DICTIONARY_TEMPLATE=COL_SOURCE_SYSTEM;
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
 
@@ -500,6 +520,21 @@ public class WorkbookLoader {
 		private int stackNameCol = UNDEFINED;
 		private int awsRegionCol = UNDEFINED;
 		private int cloudFormationTemplateCol = UNDEFINED;
+		
+		private int sourceSystemCol = UNDEFINED;
+		private int sourceObjectNameCol = UNDEFINED;
+		private int fieldCol = UNDEFINED;
+		private int dataTypeCol = UNDEFINED;
+		private int maxLengthCol = UNDEFINED;
+		private int decimalPrecisionCol = UNDEFINED;
+		private int decimalScaleCol = UNDEFINED;
+		private int constraintsCol = UNDEFINED;
+		private int businessNameCol = UNDEFINED;
+		private int businessDefinitionCol = UNDEFINED;
+		private int dataStewardCol = UNDEFINED;
+		private int securityClassifCol = UNDEFINED;
+		private int targetObjectNameCol = UNDEFINED;
+		private int targetFieldNameCol = UNDEFINED;
 		
 		private int amazonResourceName = UNDEFINED;
 		private int tagKey = UNDEFINED;
@@ -1029,9 +1064,265 @@ public class WorkbookLoader {
 			case SHEET_SECURITY_TAGS:
 				loadSecurityTags(sheet);
 				break;
+			case SHEET_DATA_DICTIONARY_TEMPLATE:
+				loadDataDictionary(sheet);
+				break;
 				
 			}
 
+		}
+
+		private void loadDataDictionary(Sheet sheet) throws SpreadsheetException {
+			readDataDictionaryTemplateHeader(sheet);
+
+			int rowSize = sheet.getLastRowNum() + 1;
+			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
+				Row row = sheet.getRow(i);
+				loadDataDictionaryTemplateRow(row);
+			}
+			
+		}
+
+		private void loadDataDictionaryTemplateRow(Row row) throws SpreadsheetException {
+			String sourceSystemName = stringValue(row, sourceSystemCol);
+			String shapeIdLocalName = stringValue(row, sourceObjectNameCol);
+			if(shapeIdLocalName==null )
+				return;
+			URI shapeId = getShapeURL(sourceSystemName,shapeIdLocalName);
+			if (shapeId == null)
+				return;
+			String propertyIdValue = stringValue(row, fieldCol);
+			if (propertyIdValue == null) {
+				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
+				return;
+			}
+			URI propertyId = expandPropertyId(getPropertyBaseURL()+"/"+propertyIdValue);
+
+			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
+
+			String dataDictionarydataType=stringValue(row,dataTypeCol);
+
+			Literal maxLength = numericLiteral(row, maxLengthCol);
+			Literal decimalPrecision = intLiteral(row, decimalPrecisionCol);
+			if(decimalPrecision!=null && (decimalPrecision.intValue()<1 || decimalPrecision.intValue()>65)){
+				throw new KonigException("Decimal Precison should be between 1 to 65");
+			}
+			Literal decimalScale = intLiteral(row, decimalScaleCol);
+			if(decimalScale!=null && 
+					(decimalScale.intValue()<0 || decimalScale.intValue()>30 || 
+							decimalScale.intValue()>decimalPrecision.intValue())){
+				throw new KonigException("Decimal Scale should be less than Decimal Precision and between 0-30");
+			}
+			Literal businessName = stringLiteral(row, businessNameCol);
+			Literal businessDefinition = stringLiteral(row, businessDefinitionCol);
+			Literal dataSteward = stringLiteral(row, dataStewardCol);
+			URI securityClassification=uriValue(row, securityClassifCol);
+			String constraints = stringValue(row,constraintsCol);
+			
+			Vertex prior = getPropertyConstraint(shapeId, propertyId);
+			if (prior != null) {
+				logger.warn("Duplicate definition of property '{}' on '{}'", propertyId.getLocalName(),
+						shapeId.getLocalName());
+			}
+			Vertex constraintVertex = graph.vertex();
+			Resource constraint = constraintVertex.getId();			
+
+			edge(shapeId, RDF.TYPE, SH.Shape);
+			edge(shapeId, RDF.TYPE, Konig.TabularNodeShape);			
+			edge(shapeId, SH.property, constraint);
+
+			edge(constraint, SH.path, propertyId);
+			edge(constraint, SH.name, businessName);
+			edge(constraint, RDFS.COMMENT, businessDefinition);
+			if(constraints!=null && constraints.contains("Primary Key")){
+				edge(constraint, Konig.stereotype, Konig.primaryKey);
+				edge(constraint, SH.minCount, vf.createLiteral(1));
+			}
+			else if(constraints!=null && constraints.contains("NOT NULL")){
+				edge(constraint, SH.minCount, vf.createLiteral(1));
+			}
+			else{
+				edge(constraint, SH.minCount, vf.createLiteral(0));
+			}
+
+			URI rdfDatatype=getRdfDatatype(dataDictionarydataType,constraint);
+			edge(constraint,SH.datatype,rdfDatatype);
+			edge(constraint, SH.maxCount, vf.createLiteral(1));
+			if(rdfDatatype!=null && (rdfDatatype.equals(XMLSchema.STRING)|| (rdfDatatype.equals(XMLSchema.BASE64BINARY)))){
+				edge(constraint, SH.maxLength, maxLength);
+			}
+			if(rdfDatatype!=null && rdfDatatype.equals(XMLSchema.DECIMAL)){
+				edge(constraint, Konig.decimalPrecision, decimalPrecision);
+			}
+			if(dataDictionarydataType!=null && "DECIMAL".equals(dataDictionarydataType)){
+				edge(constraint, Konig.decimalScale, decimalScale);
+			}
+			edge(constraint, Konig.dataSteward, dataSteward);
+			edge(constraint, Konig.qualifiedSecurityClassification, securityClassification);
+			
+		}
+
+		private String getPropertyBaseURL() throws SpreadsheetException {
+			String propertyBaseURL=settings.getProperty("propertyBaseURL");
+			if(propertyBaseURL==null){
+				propertyBaseURL=System.getProperty("propertyBaseURL");
+			}
+			if(propertyBaseURL == null){
+				throw new SpreadsheetException("propertyBaseURL is not found in both settings tab and system property.");			
+			}
+			else{
+				nsManager.add("alias",propertyBaseURL);
+			}
+			return propertyBaseURL;
+		}
+
+		private URI getShapeURL(String sourceSystemName, String shapeIdLocalName) throws SpreadsheetException {
+			URI shapeURI=null;
+			String shapeURLTemplate=settings.getProperty("shapeURLTemplate");
+			if(shapeURLTemplate==null){
+				shapeURLTemplate=System.getProperty("shapeURLTemplate");
+			}
+			if(shapeURLTemplate == null){
+				throw new SpreadsheetException("shapeURLTemplate is not found in both settings tab and system property.");			
+			}
+			else{
+				String shapeURL=sourceSystemName==null?shapeURLTemplate:shapeURLTemplate.replace("{SOURCE_SYSTEM}", StringUtil.SNAKE_CASE(sourceSystemName));
+				shapeURL=shapeURL.replace("{SOURCE_OBJECT_NAME}", StringUtil.SNAKE_CASE(shapeIdLocalName));
+				shapeURI=new URIImpl(shapeURL);
+				nsManager.add("shape", shapeURI.getNamespace());
+			}
+			return shapeURI;
+		}
+		
+		private URI getRdfDatatype(String dataDictionarydataType, Resource constraint) {
+			switch(dataDictionarydataType){
+				case "CHAR":
+				case "VARCHAR":
+				case "TEXT":
+				case "VARCHAR2":
+					return XMLSchema.STRING;
+				case "DATE":
+					return XMLSchema.DATE;
+				case "DATETIME":
+					return XMLSchema.DATETIME;
+				case "NUMBER":
+					return XMLSchema.DECIMAL;
+				case "SMALLINT":
+					edge(constraint, SH.minInclusive, vf.createLiteral("-32768",XMLSchema.INTEGER));
+					edge(constraint, SH.maxExclusive, vf.createLiteral("32767",XMLSchema.INTEGER));
+					return XMLSchema.INTEGER;
+				case "UNSIGNED SMALLINT":
+					edge(constraint, SH.minInclusive, vf.createLiteral("0",XMLSchema.INTEGER));
+					edge(constraint, SH.maxExclusive, vf.createLiteral("65535",XMLSchema.INTEGER));
+					return XMLSchema.INTEGER;
+				case "INT":
+					edge(constraint, SH.minInclusive, vf.createLiteral("-2147483648",XMLSchema.INTEGER));
+					edge(constraint, SH.maxExclusive, vf.createLiteral("2147483647",XMLSchema.INTEGER));
+					return XMLSchema.INTEGER;
+				case "UNSIGNED INT":
+					edge(constraint, SH.minInclusive, vf.createLiteral("0",XMLSchema.INTEGER));
+					edge(constraint, SH.maxExclusive, vf.createLiteral("4294967295",XMLSchema.INTEGER));
+					return XMLSchema.INTEGER;
+				case "BIGINT":
+					edge(constraint, SH.minInclusive, vf.createLiteral("-9223372036854775808",XMLSchema.INTEGER));
+					edge(constraint, SH.maxExclusive, vf.createLiteral("9223372036854775807",XMLSchema.INTEGER));
+					return XMLSchema.INTEGER;
+				case "UNSIGNED BIGINT":
+					edge(constraint, SH.minInclusive, vf.createLiteral("0",XMLSchema.INTEGER));
+					edge(constraint, SH.maxExclusive, vf.createLiteral("18446744073709551615F",XMLSchema.INTEGER));
+					return XMLSchema.INTEGER;
+				case "FLOAT":
+					return XMLSchema.FLOAT;
+				case "DOUBLE":
+					return XMLSchema.DOUBLE;
+				case "DECIMAL":
+					return XMLSchema.DECIMAL;
+				case "BINARY":
+					return XMLSchema.BASE64BINARY;
+				case "BOOLEAN":
+					return XMLSchema.BOOLEAN;
+			}
+			return null;
+		}
+
+		private void readDataDictionaryTemplateHeader(Sheet sheet) {
+			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = maxLengthCol = decimalPrecisionCol = decimalScaleCol = constraintsCol = businessNameCol = businessDefinitionCol = dataStewardCol = securityClassifCol = targetObjectNameCol = targetFieldNameCol = UNDEFINED;
+
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
+
+			int colSize = row.getLastCellNum() + 1;
+			for (int i = row.getFirstCellNum(); i < colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+
+					switch (text) {
+
+					case SOURCE_SYSTEM:
+						sourceSystemCol = i;
+						break;
+					
+					case SOURCE_OBJECT_NAME:
+						sourceObjectNameCol = i;
+						break;
+						
+					case FIELD:
+						fieldCol = i;
+						break;
+					
+					case DATA_TYPE:
+						dataTypeCol = i;
+						break;
+					
+					case MAX_LENGTH:
+						maxLengthCol = i;
+						break;
+						
+					case DECIMAL_PRECISION:
+						decimalPrecisionCol = i;
+						break;
+					
+					case DECIMAL_SCALE:
+						decimalScaleCol = i;
+						break;
+						
+					case CONSTRAINTS:
+						constraintsCol = i;
+						break;
+					
+					case BUSINESS_NAME:
+						businessNameCol = i;
+						break;
+					
+					case BUSINESS_DEFINITION:
+						businessDefinitionCol = i;
+						break;
+						
+					case DATA_STEWARD:
+						dataStewardCol = i;
+						break;
+						
+					case SECURITY_CLASSIFICATION:
+						securityClassifCol =i;
+						break;
+						
+					case TARGET_OBJECT_NAME:
+						targetObjectNameCol =i;
+						break;
+						
+					case TARGET_FIELD_NAME:
+						targetFieldNameCol = i;
+						break;
+					
+					}
+				}
+			}
+			
 		}
 
 		private int sheetType(Sheet sheet) {
@@ -1089,6 +1380,8 @@ public class WorkbookLoader {
 				case AMAZON_RESOURCE_NAME:
 					bits = bits | COL_SECURITY_TAGS;
 					break;
+				case SOURCE_SYSTEM:
+					bits = bits | COL_SOURCE_SYSTEM;
 				}
 			}
 
