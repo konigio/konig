@@ -60,7 +60,6 @@ import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
-import io.konig.core.vocab.DCL;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
@@ -1092,6 +1091,36 @@ public class WorkbookLoaderTest {
 		assertEquals(DCL4, sc.iterator().next());
 
 	}
+	@Test
+	public void testTabularNodeShape_1() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("rdbms-node-shape.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/SourcePersonShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		Shape shape = s.getShapeById(shapeId);
+		
+		assertTrue(shape!=null);
+		try {
+			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/rdbmsNodeShape/PersonShape.ttl"));
+		} catch (Exception e) {
+			throw new KonigException(e);
+		}
+	}
 	
 	@Test
 	public void testDataDictionaryForString() throws Exception {
@@ -1105,9 +1134,7 @@ public class WorkbookLoaderTest {
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
 		loader.load(book, graph);
 		input.close();
-		
 		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
-		
 		ShapeManager s = new MemoryShapeManager();
 		
 		ShapeLoader shapeLoader = new ShapeLoader(s);
@@ -1131,11 +1158,12 @@ public class WorkbookLoaderTest {
 		assertTrue(pc.getDecimalScale()==null);
 		assertTrue(pc.getDecimalPrecision()==null);
 		assertTrue("Sample Data Steward".equals(pc.getDataSteward()));
-		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification().contains(DCL.Public));
+		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification()
+				.contains(uri("https://schema.pearson.com/ns/dcl/DCL1")));
 		
 		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/NAME"));
 		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()) && pc.getMaxLength()==80);
-		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification().contains(DCL.Confidential));
+		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification().contains(uri("https://schema.pearson.com/ns/dcl/DCL3")));
 		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/GENDER"));
 		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()) && pc.getMaxLength()==1);
 		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/ADDRESS"));
@@ -1186,13 +1214,12 @@ public class WorkbookLoaderTest {
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
 		loader.load(book, graph);
 		input.close();
-		
 		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
-		
 		ShapeManager s = new MemoryShapeManager();
 		
 		ShapeLoader shapeLoader = new ShapeLoader(s);
 		shapeLoader.load(graph);		
+			
 		
 		Shape shape1 = s.getShapeById(shapeId);
 		assertTrue(shape1!=null);
@@ -1234,7 +1261,37 @@ public class WorkbookLoaderTest {
 		assertTrue(XMLSchema.BASE64BINARY.equals(pc.getDatatype()) && pc.getMaxLength()==5);
 		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/IS_NEW"));
 		assertTrue(XMLSchema.BOOLEAN.equals(pc.getDatatype()));
+	}
+	
+	@Test
+	public void testTabularNodeShape_2() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("rdbms-node-shape-generator.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
 		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		URI shapeId = uri("http://example.com/shapes/TargetPersonRdbmsShape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+
+		shapeLoader.load(graph);
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		Shape shape = s.getShapeById(shapeId);
+		System.out.println(shape.getTabularOriginShape()+" shape.getTabularOriginShape()");
+		assertTrue(shape!=null);
+		try {	
+			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/rdbmsNodeShape/Shape_TargetShape.ttl"));
+		} catch (Exception e) {
+			throw new KonigException(e);
+		}
 	}
 	private void checkPropertyConstraints(Graph graph) {
 		

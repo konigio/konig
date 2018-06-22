@@ -96,7 +96,6 @@ import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.DC;
-import io.konig.core.vocab.DCL;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
@@ -174,7 +173,7 @@ public class WorkbookLoader {
 	private static final String IRI_TEMPLATE = "IRI Template";
 	private static final String DEFAULT_FOR = "Default For";
 	private static final String TERM_STATUS = "Term Status";
-	private static final String RDBMS_LOGICAL_SHAPE = "RDBMS Logical Shape";
+	private static final String TABULAR_ORIGIN_SHAPE = "Tabular Origin Shape";
 
 	private static final String SETTING_NAME = "Setting Name";
 	private static final String SETTING_VALUE = "Setting Value";
@@ -340,7 +339,6 @@ public class WorkbookLoader {
 		nsManager.add("as", AS.NAMESPACE);
 		nsManager.add("gcp", GCP.NAMESPACE);
 		nsManager.add("aws",AWS.NAMESPACE);
-		nsManager.add("dcl",DCL.NAMESPACE);
 		this.nsManager = nsManager;
 
 		try {
@@ -471,7 +469,7 @@ public class WorkbookLoader {
 		private int shapeDatasourceCol = UNDEFINED;
 		private int shapeIriTemplateCol = UNDEFINED;
 		private int defaultShapeForCol = UNDEFINED;
-		private int rdbmsLogicalShapeCol = UNDEFINED;
+		private int tabularOriginShapeCol = UNDEFINED;
 
 		private int pcShapeIdCol = UNDEFINED;
 		private int pcPropertyIdCol = UNDEFINED;
@@ -1098,7 +1096,7 @@ public class WorkbookLoader {
 				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
 				return;
 			}
-			URI propertyId = expandPropertyId(getPropertyBaseURL()+propertyIdValue);
+			URI propertyId = expandPropertyId(getPropertyBaseURL()+"/"+propertyIdValue);
 
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
 
@@ -1118,9 +1116,8 @@ public class WorkbookLoader {
 			Literal businessName = stringLiteral(row, businessNameCol);
 			Literal businessDefinition = stringLiteral(row, businessDefinitionCol);
 			Literal dataSteward = stringLiteral(row, dataStewardCol);
-			String securityClassification=stringValue(row,securityClassifCol);
-			String constraints = stringValue(row,constraintsCol);			
-			URI rdfSecurityClassification=getRdfSecurityClassification(securityClassification);
+			URI securityClassification=uriValue(row, securityClassifCol);
+			String constraints = stringValue(row,constraintsCol);
 			
 			Vertex prior = getPropertyConstraint(shapeId, propertyId);
 			if (prior != null) {
@@ -1161,7 +1158,7 @@ public class WorkbookLoader {
 				edge(constraint, Konig.decimalScale, decimalScale);
 			}
 			edge(constraint, Konig.dataSteward, dataSteward);
-			edge(constraint, Konig.qualifiedSecurityClassification, rdfSecurityClassification);
+			edge(constraint, Konig.qualifiedSecurityClassification, securityClassification);
 			
 		}
 
@@ -1205,21 +1202,7 @@ public class WorkbookLoader {
 			}
 			return shapeURI;
 		}
-
-		private URI getRdfSecurityClassification(String securityClassification) {
-			switch(securityClassification){
-				case "Public (DCL1)":
-					return DCL.Public;
-				case "Internal Use Only (DCL2)":
-					return DCL.InternalUse;
-				case "Confidential (DCL3)":
-					return DCL.Confidential;
-				case "Restricted (DCL4)":
-					return DCL.Restricted;
-			}
-			return null;
-		}
-
+		
 		private URI getRdfDatatype(String dataDictionarydataType, Resource constraint) {
 			switch(dataDictionarydataType){
 				case "CHAR":
@@ -1704,7 +1687,15 @@ public class WorkbookLoader {
 					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
 			}
+			ShapeManager shapeManager = new MemoryShapeManager();
+			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
+			shapeLoader.load(graph);
+			Shape shape = shapeManager.getShapeById(shapeId);
+			io.konig.core.RdbmsShapeValidator validator = new io.konig.core.RdbmsShapeValidator();
 
+			if (shape != null && validator.isValidRDBMSShape(shape)){
+				edge(shape.getId(), RDF.TYPE, Konig.TabularNodeShape);
+			}
 			if (Konig.id.equals(propertyId)) {
 				int min = minCount == null ? 0 : minCount.intValue();
 				int max = maxCount == null ? -1 : maxCount.intValue();
@@ -2298,7 +2289,7 @@ public class WorkbookLoader {
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
             URI shapeType=uriValue(row, shapeTypeCol);
-            URI rdbmsLogicalShape = uriValue(row, rdbmsLogicalShapeCol);
+            URI tabularOriginShape = uriValue(row, tabularOriginShapeCol);
 
 			String iriTemplate = stringValue(row, shapeIriTemplateCol);
 			Literal mediaType = stringLiteral(row, shapeMediaTypeCol);
@@ -2322,7 +2313,7 @@ public class WorkbookLoader {
 			edge(shapeId, Konig.rollUpBy, rollUpBy);
 			edge(shapeId, Konig.mediaTypeBaseName, mediaType);
 			edge(shapeId, Konig.bigQueryTableId, bigqueryTable);
-			edge(shapeId, Konig.rdbmsLogicalShape, rdbmsLogicalShape);
+			edge(shapeId, Konig.tabularOriginShape, tabularOriginShape);
 			edge(shapeId, SH.or, orList);
 			
 
@@ -2523,7 +2514,7 @@ public class WorkbookLoader {
 		}
 
 		private void readShapeHeader(Sheet sheet) {
-			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = rdbmsLogicalShapeCol = UNDEFINED;
+			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = shapeIriTemplateCol = tabularOriginShapeCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2580,8 +2571,8 @@ public class WorkbookLoader {
 					case DEFAULT_FOR:
 						defaultShapeForCol = i;
 						break;
-					case RDBMS_LOGICAL_SHAPE:
-						rdbmsLogicalShapeCol = i;
+					case TABULAR_ORIGIN_SHAPE:
+						tabularOriginShapeCol = i;
 						break;
 
 					}
