@@ -1175,6 +1175,34 @@ public class WorkbookLoaderTest {
 		assertTrue(shape2!=null);
 	}
 	@Test
+	public void testDataDictionaryShapeURL() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary-settings.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/model/MDM/shapes/RA_CUSTOMER_TRX_ALL_Shape");
+		
+		ShapeManager s = new MemoryShapeManager();
+		
+		ShapeLoader shapeLoader = new ShapeLoader(s);
+		shapeLoader.load(graph);		
+		
+		Shape shape1 = s.getShapeById(shapeId);
+		assertTrue(shape1!=null);
+		assertTrue(shape1.getType()!=null && shape1.getType().contains(Konig.TabularNodeShape));
+		
+		shapeId = uri("http://example.com/model/ORACLE_EBS/shapes/OE_ORDER_LINES_ALL_Shape");
+		Shape shape2 = s.getShapeById(shapeId);
+		assertTrue(shape2!=null);		
+	}
+	@Test
 	public void testDataDictionaryForInteger() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");

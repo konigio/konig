@@ -1178,7 +1178,9 @@ public class WorkbookLoader {
 
 		private URI getShapeURL(String sourceSystemName, String shapeIdLocalName) throws SpreadsheetException {
 			URI shapeURI=null;
-			String shapeURLTemplate=settings.getProperty("shapeURLTemplate");
+			String shapeURLTemplate=null;
+			if(settings!=null)
+				shapeURLTemplate=settings.getProperty("shapeURLTemplate");
 			if(shapeURLTemplate==null){
 				shapeURLTemplate=System.getProperty("shapeURLTemplate");
 			}
@@ -1187,7 +1189,14 @@ public class WorkbookLoader {
 			}
 			else{
 				String shapeURL=sourceSystemName==null?shapeURLTemplate:shapeURLTemplate.replace("{SOURCE_SYSTEM}", StringUtil.SNAKE_CASE(sourceSystemName));
-				shapeURL=shapeURL.replace("{SOURCE_OBJECT_NAME}", StringUtil.SNAKE_CASE(shapeIdLocalName));
+				shapeURL=shapeURL.replace("{SOURCE_OBJECT_NAME}", StringUtil.SNAKE_CASE(shapeIdLocalName));		
+				if(settings!=null){
+					for(Object key:settings.keySet()){
+						String propertyKey=(String)key;
+						String propertyValue=settings.getProperty(propertyKey);	
+						shapeURL=(propertyValue==null)?shapeURL:shapeURL.replace("{"+propertyKey+"}", propertyValue);
+					}
+				}
 				shapeURI=new URIImpl(shapeURL);
 				nsManager.add("shape", shapeURI.getNamespace());
 			}
