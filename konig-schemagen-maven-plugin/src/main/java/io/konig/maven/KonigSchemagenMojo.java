@@ -143,6 +143,7 @@ import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
+import io.konig.schemagen.TableShapeGenerator;
 import io.konig.schemagen.ViewShapeGenerator;
 import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
@@ -280,6 +281,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private ViewShapeGeneratorConfig viewShapeGenerator;
     
     @Parameter
+    private TableShapeGeneratorConfig tableShapeGenerator;
+    
+    @Parameter
     private HashSet<String> excludeNamespace;
 	
 
@@ -358,6 +362,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			computeSizeEstimates();
 			generateViewShape();
+			generateTableShape();
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
@@ -1235,7 +1240,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			File shapesDir = defaults.getShapesDir();
 			ViewShapeGenerator shapeGenerator = new ViewShapeGenerator(nsManager, shapeManager, viewShapeGenerator);
-			shapeGenerator.generate(shapesDir);
+			shapeGenerator.generateView(shapesDir);
+		}
+	}
+	
+	private void generateTableShape() throws RDFParseException, RDFHandlerException, IOException {
+		if(defaults.getShapesDir() != null && tableShapeGenerator != null) {
+			RdfUtil.loadTurtle(defaults.getRdfDir(), owlGraph, nsManager);
+			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
+			shapeLoader.load(owlGraph);
+			
+			File shapesDir = defaults.getShapesDir();
+			TableShapeGenerator tbleShapeGenerator = new TableShapeGenerator(nsManager, tableShapeGenerator);
+			tbleShapeGenerator.generateTable(shapesDir);
 		}
 	}
 }

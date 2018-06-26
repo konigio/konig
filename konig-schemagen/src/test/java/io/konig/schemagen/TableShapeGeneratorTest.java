@@ -20,9 +20,12 @@ package io.konig.schemagen;
  * #L%
  */
 
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.maven.model.FileSet;
 import org.junit.Test;
@@ -36,26 +39,25 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IOUtil;
-import io.konig.maven.ViewShapeGeneratorConfig;
+import io.konig.maven.TableShapeGeneratorConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
-public class ViewShapeGeneratorTest {
+public class TableShapeGeneratorTest {
 
 	@Test
 	public void test() throws Exception {
-	
+		List<String> inputDataSourceList = new ArrayList<String>();
+		inputDataSourceList.add("AwsAuroraTable");
 		AwsShapeConfig.init();
-		ViewShapeGeneratorConfig config = new ViewShapeGeneratorConfig();
-		config.setPropertyNamespace("http://schema.org/");
-		config.setShapeIriPattern("(.*)View$");
-		config.setShapeIriReplacement("http://example.com/shapes/$1Shape");
-		FileSet[] viewFiles = new FileSet[1];
+		TableShapeGeneratorConfig tableConfig = new TableShapeGeneratorConfig();
+		tableConfig.setPropertyNamespace("http://schema.org/");
+		FileSet[] tableFiles = new FileSet[1];
 		FileSet fileset = new FileSet();
-		fileset.setDirectory("src/test/resources/view-shape-generator/view");
-		viewFiles[0] = fileset;
-		config.setViewFiles(viewFiles);
+		fileset.setDirectory("src/test/resources/table-shape-generator/table");
+		tableFiles[0] = fileset;
+		tableConfig.setTableFiles(tableFiles);
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", "http://schema.org/");
@@ -65,29 +67,11 @@ public class ViewShapeGeneratorTest {
 		nsManager.add("konig", "http://www.konig.io/ns/core/");
 		nsManager.add("xsd", "http://www.w3.org/2001/XMLSchema#");
 		
-		ShapeManager shapeManager = loadShapes("view-shape-generator/shape_OriginAccountShape.ttl");
-		File outDir = new File("target/test/view-shape-generator");
-		ViewShapeGenerator viewShapeGenerator = new ViewShapeGenerator(nsManager, shapeManager, config);
-		viewShapeGenerator.generateView(outDir);
+		File outDir = new File("target/test/table-shape-generator");
+		TableShapeGenerator tableShapeGenerator = new TableShapeGenerator(nsManager, tableConfig);	
+		tableShapeGenerator.generateTable(outDir);
 		
 	}
 	
-	private ShapeManager loadShapes(String resource) throws RDFParseException, RDFHandlerException, IOException {
-		Graph graph = loadGraph(resource);
-		ShapeManager shapeManager = new MemoryShapeManager();
-		ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
-		shapeLoader.load(graph);
-		return shapeManager;
-	}
 
-	private Graph loadGraph(String resource) throws RDFParseException, RDFHandlerException, IOException {
-		Graph graph = new MemoryGraph();
-		InputStream stream = getClass().getClassLoader().getResourceAsStream(resource);
-		try {
-			RdfUtil.loadTurtle(graph, stream, "");
-		} finally {
-			IOUtil.close(stream, resource);
-		}
-		return graph;
-	}
 }
