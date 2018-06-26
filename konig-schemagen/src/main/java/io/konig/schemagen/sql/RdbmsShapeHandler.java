@@ -39,6 +39,7 @@ import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
@@ -87,6 +88,9 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 		}
 		for (PropertyConstraint p : childShape.getTabularOriginShape().getProperty()) {
 			if(p.getShape() != null){
+				addRdbmsChildShape(childShape,p.getPredicate(), p);
+			}
+			if(p.getMaxCount() == null && p.getShape() == null && childShape.getNodeKind() ==  NodeKind.IRI) {
 				addRdbmsChildShape(childShape,p.getPredicate(), p);
 			}
 		}
