@@ -172,7 +172,7 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
 
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
-
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
 		Shape rdbmsChildShape = null;
 		Shape childShape = null;
 		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
@@ -233,7 +233,7 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
 
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
-
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
 		OwlReasoner reasoner = new OwlReasoner(graph);
 		shapeGenerator = new RdbmsShapeGenerator(null, reasoner);
 
@@ -278,7 +278,7 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
 
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
-
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
 		Shape rdbmsChildShape = null;
 		Shape childShape = null;
 		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
