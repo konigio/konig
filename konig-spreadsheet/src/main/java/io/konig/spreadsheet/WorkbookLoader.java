@@ -411,9 +411,9 @@ public class WorkbookLoader {
 		this.datasetMapper = datasetMapper;
 	}
 
-	public void load(Workbook book, Graph graph) throws SpreadsheetException {
+	public void load(Workbook book, Graph graph,File file) throws SpreadsheetException {
 		this.graph = graph;
-		Worker worker = new Worker(book);
+		Worker worker = new Worker(book,file);
 		worker.run();
 	}
 
@@ -428,6 +428,7 @@ public class WorkbookLoader {
 		private DataInjector dataInjector;
 		private DataFormatter dataFormatter;
 		private Graph defaultOntologies;
+		private File workbookFile;
 
 		private Properties settings = new Properties();
 		private List<ShapeTemplate> shapeTemplateList = new ArrayList<>();
@@ -566,8 +567,9 @@ public class WorkbookLoader {
 		private int inputShapeOfCol = UNDEFINED;
 		private int oneOfCol = UNDEFINED;
 		
-		public Worker(Workbook book) {
+		public Worker(Workbook book,File file) {
 			this.book = book;
+			this.workbookFile=file;
 			if (shapeManager == null) {
 				shapeManager = new MemoryShapeManager();
 			}
@@ -1197,7 +1199,7 @@ public class WorkbookLoader {
 			if(decimalPrecision!=null && (decimalPrecision.intValue()<1 || decimalPrecision.intValue()>65)){
 				throw new KonigException("Decimal Precison should be between 1 to 65");
 			}
-			Literal decimalScale = intLiteral(row, decimalScaleCol);
+			Literal decimalScale = intLiteral(row, decimalScaleCol);			
 			if(decimalScale!=null && 
 					(decimalScale.intValue()<0 || decimalScale.intValue()>30 || 
 							decimalScale.intValue()>decimalPrecision.intValue())){
@@ -1734,6 +1736,14 @@ public class WorkbookLoader {
 				throw new KonigException("Decimal Precison should be between 1 to 65");
 			}			
 			Literal decimalScale = intLiteral(row, pcDecimalScale);
+			if(valueType!=null && XMLSchema.DECIMAL.equals((URI)valueType)){
+				if(decimalScale==null){
+					throw new KonigException("Property "+propertyIdValue+" is missing required decimal scale on row "+row.getRowNum()+" in workbook "+workbookFile.getName());
+				}
+				if(decimalPrecision==null){
+					throw new KonigException("Property "+propertyIdValue+" is missing required decimal scale on row "+row.getRowNum()+" in workbook "+workbookFile.getName());
+				}
+			}
 			if(decimalScale!=null && 
 					(decimalScale.intValue()<0 || decimalScale.intValue()>30 || 
 							decimalScale.intValue()>decimalPrecision.intValue())){

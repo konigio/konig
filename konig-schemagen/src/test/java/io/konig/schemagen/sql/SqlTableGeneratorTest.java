@@ -235,7 +235,8 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 			graph.setNamespaceManager(nsManager);
 			
 			WorkbookLoader loader = new WorkbookLoader(nsManager);
-			loader.load(book, graph);
+			File file = new File("src/test/resources/sql/test-datasource-params-bucket.xlsx");
+			loader.load(book, graph,file);
 			input.close();
 			URI shapeId = uri("http://example.com/shapes/MDM_PRODUCT");
 			

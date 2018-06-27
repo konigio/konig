@@ -122,7 +122,7 @@ public class WorkbookToTurtleTransformer {
 				graph.setNamespaceManager(nsManager);
 
 				workbookLoader.setDatasetMapper(datasetMapper);
-				workbookLoader.load(workbook, graph);
+				workbookLoader.load(workbook, graph,file);
 			} finally {
 				input.close();
 			}
