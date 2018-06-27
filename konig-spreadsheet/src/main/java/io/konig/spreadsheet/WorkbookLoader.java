@@ -1604,7 +1604,6 @@ public class WorkbookLoader {
 
 		private void loadPropertyConstraintRow(Row row) throws SpreadsheetException {
 			URI shapeId = uriValue(row, pcShapeIdCol);
-			boolean isValidProperty = false;
 			if (shapeId == null)
 				return;
 
@@ -1719,7 +1718,6 @@ public class WorkbookLoader {
 				if (formula != null) {
 					formulaHandlers.add(new ShapeFormulaHandler(shapeId, formula));
 				}
-				isValidProperty = true;		
 				return;
 			}
 
@@ -1761,7 +1759,6 @@ public class WorkbookLoader {
 				}
 			} else if (isDatatype(valueType)) {
 				edge(constraint, SH.datatype, valueType);
-				isValidProperty = true;
 			} else if (SH.IRI.equals(valueType)) {
 				edge(constraint, SH.nodeKind, SH.IRI);
 				if (valueClass != null) {
@@ -1805,20 +1802,6 @@ public class WorkbookLoader {
 			}	
 			if (formula != null) {
 				formulaHandlers.add(new PropertyFormulaHandler(shapeId, constraintVertex, formula));
-			}
-
-			if((valueType == null  && isValidProperty )
-					||((maxCount == null || maxCount.intValue() > 1 ) && isValidProperty )) {
-				
-				String errorMessage = MessageFormat.format("\n In Shape {0}, the property {1} is ill-defined. \n"
-						, shapeId , propertyId);
-				StringBuilder msg = new StringBuilder();
-				msg.append(errorMessage);
-				msg.append(" 1. Set Max Count equal to 1 \n");
-				msg.append(" 2. Set Data Type equal to the identifier for a nested shape. \n");
-				msg.append(" 3. Set Data Type equals to sh:IRI and specify the Value Class. \n");
-				msg.append(" 4. Set Data Type equal to one of the XML Schema datatype names.");
-				throw new KonigException(msg.toString());
 			}
 		}
 
