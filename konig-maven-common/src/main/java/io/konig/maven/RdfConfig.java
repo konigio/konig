@@ -30,6 +30,7 @@ public class RdfConfig {
 	private File owlDir;
 	private File shapesDir;
 	private File derivedDir;
+	private File abbrevDir;
 	
 	public File getRdfDir() {
 		if (rdfDir==null && rootDir != null) {
@@ -88,6 +89,15 @@ public class RdfConfig {
 			result = defaults.getShapesDir();
 		}
 		return result;
+	}
+	public File getAbbrevDir() {
+		if (abbrevDir == null && getRdfDir()!=null) {
+			abbrevDir = new File(getRdfDir(), "abbrev");
+		}
+		return abbrevDir;
+	}
+	public void setAbbrevDir(File abbrevDir) {
+		this.abbrevDir = abbrevDir;
 	}
 	
 }
