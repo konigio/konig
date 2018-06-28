@@ -1,5 +1,7 @@
 package io.konig.schemagen.sql;
 
+import static org.junit.Assert.assertEquals;
+
 /*
  * #%L
  * Konig Schema Generator
@@ -22,15 +24,14 @@ package io.konig.schemagen.sql;
 
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Ignore;
-
-import static org.junit.Assert.*;
-
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.aws.datasource.AwsShapeConfig;
+import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
@@ -39,6 +40,8 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
 	@Test
 	public void testFlatten() throws Exception {
@@ -305,6 +308,22 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		assertTrue(formula1 != null);
 
 		assertEquals("^person", formula1.getText());
+	}
+	@Test
+	public void testMaxCount() throws Exception {
+		load("src/test/resources/maxCount");
+
+		URI shapeId = iri("http://example.com/shapes/PersonRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);		
+		thrown.expect(KonigException.class);
+		String msg="\n In Shape PersonRdbmsShape, the property familyName is ill-defined. \n"
+				+" 1. Set sh:maxCount = 1 \n"
+				+" 2. Set sh:shape so that it references a nested shape. \n"
+				+" 3. Set sh:nodeKind equal to sh:IRI and specify a value for sh:class \n"
+				+" 4. Set sh:datatype equal to one of the XML Schema datatype names.";
+		thrown.expectMessage(msg);
+		shapeGenerator.createRdbmsShape(logicalShape);
 	}
 
 	private PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
