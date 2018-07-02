@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,70 +81,13 @@ import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.rio.turtle.IriTemplateParseException;
 import io.konig.rio.turtle.IriTemplateParser;
+import io.konig.spreadsheet.SpreadsheetException;
+import io.konig.spreadsheet.Worksheet;
 
-public class GoogleSheetUpdater {
+public class GoogleSheetUpdater extends Worksheet{
 	
 	private static Logger LOG = Logger.getLogger(GoogleSheetUpdater.class.getName());
 	
-	private static final String SHEET_ONTOLOGY = "Ontologies";
-	private static final String SHEET_CLASSES = "Classes";
-	private static final String SHEET_PROPERTIES = "Properties";
-	private static final String SHEET_PROPERTY_CONSTRAINTS = "Property Constraints";
-	private static final String SHEET_SHAPES = "Shapes";
-	
-	private static final String ONTOLOGY_NAME = "Ontology Name";
-	private static final String COMMENT = "Comment";
-	private static final String NAMESPACE_URI = "Namespace URI";
-	private static final String PREFIX = "Prefix";
-	
-	private static final String SHAPE_ID = "Shape Id";
-	private static final String TARGET_CLASS = "Target Class";
-	private static final String SCOPE_CLASS = "Scope Class";
-	private static final String MEDIA_TYPE = "Media Type";
-	private static final String AGGREGATION_OF = "Aggregation Of";
-	private static final String ROLL_UP_BY = "Roll-up By";
-	private static final String BIGQUERY_TABLE = "BigQuery Table";
-	private static final String DATASOURCE = "Datasource";
-	private static final String IRI_TEMPLATE = "IRI Template";
-	private static final String DEFAULT_FOR = "Default For";
-	private static final String TERM_STATUS = "Term Status";
-	private static final String RDBMS_LOGICAL_SHAPE = "RDBMS Logical Shape";
-	private static final String ONE_OF = "One Of";
-	private static final String SHAPE_OF = "Input Of";
-	
-	private static final String CLASS_NAME = "Class Name";
-	private static final String CLASS_ID = "Class Id";
-	private static final String CLASS_SUBCLASS_OF = "Subclass Of";
-	
-	private static final String PROPERTY_NAME = "Property Name";
-	private static final String PROPERTY_ID = "Property Id";
-	private static final String DOMAIN = "Domain";
-	private static final String RANGE = "Range";
-	private static final String INVERSE_OF = "Inverse Of";
-	private static final String PROPERTY_TYPE = "Property Type";
-	private static final String SUBPROPERTY_OF = "Subproperty Of";
-	private static final String SECURITY_CLASSIFICATION ="Security Classification";
-	
-	private static final String VALUE_TYPE = "Value Type";
-	private static final String MIN_COUNT = "Min Count";
-	private static final String MAX_COUNT = "Max Count";
-	private static final String UNIQUE_LANG = "Unique Lang";
-	private static final String VALUE_CLASS = "Value Class";
-	private static final String STEREOTYPE = "Stereotype";
-	private static final String VALUE_IN = "Value In";
-	private static final String EQUALS = "Equals";
-	private static final String EQUIVALENT_PATH = "Equivalent Path";
-	private static final String SOURCE_PATH = "Source Path";
-	private static final String PARTITION_OF = "Partition Of";
-	private static final String FORMULA = "Formula";
-	private static final String MIN_INCLUSIVE = "Min Inclusive";
-	private static final String MAX_INCLUSIVE = "Max Inclusive";
-	private static final String MIN_EXCLUSIVE = "Min Exclusive";
-	private static final String MAX_EXCLUSIVE = "Max Exclusive";
-	private static final String MIN_LENGTH = "Min Length";
-	private static final String MAX_LENGTH = "Max Length";
-	private static final String DECIMAL_PRECISION = "Decimal Precision";
-	private static final String DECIMAL_SCALE = "Decimal Scale";
 	private static final int HEADER_ROW = 1;
 	private Map<URI,String> prefixList = new HashMap<>();
 	private Map<String,String> targetClassList = new HashMap<>();
@@ -153,11 +97,11 @@ public class GoogleSheetUpdater {
 	private boolean isOverrideRDFValues = false;
 	private boolean isRaiseError = false;
 	
-	private  Sheets sheet = null;
+	private  Sheets sheets = null;
 	private  String sheetId = null;
 	
 	public GoogleSheetUpdater(String option) {
-		sheet = getSheetService();
+		sheets = getSheetService();
 		if(option.equals("OPTION 1")) {
 			isOverrideSheetValues = true;
 		} else if (option.equals("OPTION 2")) {
@@ -167,8 +111,21 @@ public class GoogleSheetUpdater {
 		} 
 	}
 	
-	public void execute(FileSet[] owlFileSet ,FileSet[] shaclFileSet, String documentId) throws RDFParseException, RDFHandlerException, IOException, IriTemplateParseException {
+	public Sheet getSheet(List<SheetInfo> list, int sheetType) {
+		for (SheetInfo info : list) {
+			if(info.sheetType == sheetType){
+				return info.sheet;
+			}
+		}
+		return null;
+	}
+	
+	public void execute(FileSet[] owlFileSet ,FileSet[] shaclFileSet, String documentId) throws RDFParseException, RDFHandlerException, IOException, IriTemplateParseException, SpreadsheetException {
 		this.sheetId = documentId;
+		
+		List<SheetInfo> sheetlist = collectSheetInfo();
+		Collections.sort(sheetlist);
+
 		for(FileSet fileSet : owlFileSet) {
 			if(fileSet.getDirectory() != null){
 				File viewDir = new File(fileSet.getDirectory());
@@ -177,13 +134,14 @@ public class GoogleSheetUpdater {
 					try (InputStream inputStream = new FileInputStream(file)) {
 						Graph graph = new MemoryGraph();
 						RdfUtil.loadTurtle(graph, inputStream, "");
-						updateOntology(graph);
-						//updateClasses(graph);
-						//updateProperties(graph);
+						updateOntology(graph, getSheet(sheetlist, SHEET_ONTOLOGY));
+						updateClasses(graph , getSheet(sheetlist, SHEET_CLASS));
+						updateProperties(graph , getSheet(sheetlist, SHEET_PROPERTY));
 					}
 				}
 			}
 		}
+		
 		for(FileSet fileSet : shaclFileSet) {
 			if(fileSet.getDirectory() != null){
 				File viewDir = new File(fileSet.getDirectory());
@@ -192,13 +150,14 @@ public class GoogleSheetUpdater {
 					try (InputStream inputStream = new FileInputStream(file)) {
 						Graph graph = new MemoryGraph();
 						RdfUtil.loadTurtle(graph, inputStream, "");
-						updateShapes(graph);
-						updatePropertyConstraints(graph);
+						updateShapes(graph, getSheet(sheetlist, SHEET_SHAPE));
+						updatePropertyConstraints(graph, getSheet(sheetlist, SHEET_PROPERTY_CONSTRAINT));
 					}
 				}
 			}
 		}
 	}
+	
 	
 	private Sheets getSheetService() {
 		String credentialFile = System.getProperty("io.konig.maven.google.update");
@@ -209,24 +168,24 @@ public class GoogleSheetUpdater {
 		try {
 			in = new FileInputStream(new File(credentialFile));
 			GoogleCredential credential = GoogleCredential.fromStream(in).createScoped(DriveScopes.all());
-			sheet = new Sheets.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), credential)
+			sheets = new Sheets.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(), credential)
 					.setApplicationName("Google Sheet API")
 					.build();
 		}catch(Exception ex){
 			throw new KonigException(ex);
 		}
-		return sheet;
+		return sheets;
 	}
 	
-	private void updateOntology(Graph graph) throws IOException {
+	private void updateOntology(Graph graph, Sheet sheet) throws IOException {
 		List<Vertex> ontologyList = graph.v(OWL.ONTOLOGY).in(RDF.TYPE).toVertexList();
 		List<List<Object>> ontologies = null;
 		List<Object> headers = new ArrayList<>();
 		int columns = 0;
 		
-		if(isSheetExist(SHEET_ONTOLOGY)) {
-			ValueRange response = sheet.spreadsheets().values()
-					.get(sheetId, SHEET_ONTOLOGY)
+		if(sheet != null) {
+			ValueRange response = sheets.spreadsheets().values()
+					.get(sheetId, sheet.getProperties().getTitle())
 					.execute();
 			ontologies = response.getValues();
 			if(ontologies != null) {
@@ -235,13 +194,13 @@ public class GoogleSheetUpdater {
 				addPrefix(ontologies);
 			}
 		} else {
-			addNewSheet(SHEET_ONTOLOGY);
+			addNewSheet("Ontologies");
 		}
 		
 		addOntologyHeaders(headers, ontologyList);
 		
 		if(columns < headers.size()) {
-			updateValues(headers, SHEET_ONTOLOGY, HEADER_ROW);
+			updateValues(headers, sheet.getProperties().getTitle(), HEADER_ROW);
 		}
 		
 		List<List<Object>> newOntologies = new ArrayList<>();
@@ -269,9 +228,9 @@ public class GoogleSheetUpdater {
 		int rowNumber = ontologyExistRow(ontologies, nameSpaceURI);
 		if( rowNumber == 0) {
 			newOntologies.add(ontology);
-			appendValues(newOntologies, SHEET_ONTOLOGY);
+			appendValues(newOntologies, sheet.getProperties().getTitle());
 		} else if(rowNumber != 0 && isOverrideRDFValues) {
-			updateValues(ontology, SHEET_ONTOLOGY, rowNumber);
+			updateValues(ontology, sheet.getProperties().getTitle(), rowNumber);
 		} else if(isRaiseError) {
 			throw new KonigException("Conflict in the NamespaceURI["+nameSpaceURI.toString()+"]");
 		} else if(isOverrideSheetValues) {
@@ -318,15 +277,15 @@ public class GoogleSheetUpdater {
 		}
 	}
 	
-	private void updatePropertyConstraints(Graph graph) throws IOException, RDFParseException {
+	private void updatePropertyConstraints(Graph graph, Sheet sheet) throws IOException, RDFParseException {
 		List<Vertex> shapeList = graph.v(SH.Shape).in(RDF.TYPE).toVertexList();
 		List<List<Object>> propertyContraints = null;
 		List<Object> headers = new ArrayList<>();
 		int columns = 0;
 		
-		if(isSheetExist(SHEET_PROPERTY_CONSTRAINTS)) {
-			ValueRange response = sheet.spreadsheets().values()
-					.get(sheetId, SHEET_PROPERTY_CONSTRAINTS)
+		if(sheet != null) {
+			ValueRange response = sheets.spreadsheets().values()
+					.get(sheetId, sheet.getProperties().getTitle())
 					.execute();
 			propertyContraints = response.getValues();
 			if(propertyContraints != null) {
@@ -334,11 +293,11 @@ public class GoogleSheetUpdater {
 				columns = headers.size();
 			}
 		} else if(!shapeList.isEmpty()){
-			addNewSheet(SHEET_PROPERTY_CONSTRAINTS);
+			addNewSheet("Property Constraints");
 		}
 		addPropertyConstraintHeaders(headers, shapeList);
 		if(columns < headers.size()) {
-			updateValues(headers, SHEET_PROPERTY_CONSTRAINTS, HEADER_ROW);
+			updateValues(headers, sheet.getProperties().getTitle(), HEADER_ROW);
 		}
 		
 		List<Object> newPropertyConstraint = null;
@@ -431,9 +390,9 @@ public class GoogleSheetUpdater {
 				int rowNumber = propertyConstraintsMatchingRow(propertyContraints, shapeId, propertyId);
 				if( rowNumber == 0) {
 					newPropertyConstraints.add(newPropertyConstraint);
-					appendValues(newPropertyConstraints, SHEET_PROPERTY_CONSTRAINTS);
+					appendValues(newPropertyConstraints, sheet.getProperties().getTitle());
 				} else if(rowNumber != 0 && isOverrideRDFValues) {
-					updateValues(newPropertyConstraint, SHEET_PROPERTY_CONSTRAINTS, rowNumber);
+					updateValues(newPropertyConstraint, sheet.getProperties().getTitle(), rowNumber);
 				} else if(isRaiseError) {
 					throw new KonigException("Conflict in the Shape ["+shapeId+"], Property ["+propertyId+"] ");
 				} else if(isOverrideSheetValues) {
@@ -551,15 +510,15 @@ public class GoogleSheetUpdater {
 		}
 	}
 	
-	private void updateProperties(Graph graph) throws IOException {
+	private void updateProperties(Graph graph, Sheet sheet) throws IOException {
 		List<Vertex> propertyList = graph.v(RDF.PROPERTY).in(RDF.TYPE).toVertexList();
 		int columns = 0;
 		
 		List<List<Object>> properties = null;
 		List<Object> headers = new ArrayList<>();
-		if(isSheetExist(SHEET_PROPERTIES)) {
-			ValueRange response = sheet.spreadsheets().values()
-					.get(sheetId, SHEET_PROPERTIES)
+		if(sheet != null) {
+			ValueRange response = sheets.spreadsheets().values()
+					.get(sheetId, sheet.getProperties().getTitle())
 					.execute();
 			properties = response.getValues();
 			if(properties != null) {
@@ -567,12 +526,12 @@ public class GoogleSheetUpdater {
 				columns = headers.size();
 			}
 		} else if(!propertyList.isEmpty()){
-			addNewSheet(SHEET_PROPERTIES);
+			addNewSheet("Properties");
 		}
 		
 		addPropertyHeaders(headers, propertyList);
 		if(columns < headers.size()) {
-			updateValues(headers, SHEET_PROPERTIES, HEADER_ROW);
+			updateValues(headers, sheet.getProperties().getTitle(), HEADER_ROW);
 		}
 		
 		List<List<Object>> newProperties = new ArrayList<>();
@@ -639,9 +598,9 @@ public class GoogleSheetUpdater {
 			int rowNumber = propertyExistRow(properties, propertyId);
 			if( rowNumber == 0) {
 				newProperties.add(property);
-				appendValues(newProperties, SHEET_PROPERTIES);
+				appendValues(newProperties, sheet.getProperties().getTitle());
 			} else if(rowNumber != 0 && isOverrideRDFValues) {
-				updateValues(property, SHEET_PROPERTIES, rowNumber);
+				updateValues(property, sheet.getProperties().getTitle(), rowNumber);
 			} else if(isRaiseError) {
 				throw new KonigException("Conflict in the Property["+propertyId+"]");
 			} else if(isOverrideSheetValues) {
@@ -729,14 +688,14 @@ public class GoogleSheetUpdater {
 	}
 	
 	
-	private void updateClasses(Graph graph) throws IOException {
+	private void updateClasses(Graph graph, Sheet sheet) throws IOException {
 		List<Vertex> classList = graph.v(OWL.CLASS).in(RDF.TYPE).toVertexList();
 		List<List<Object>> classes = null;
 		List<Object> headers = new ArrayList<>();
 		int columns = 0;
-		if(isSheetExist(SHEET_CLASSES)) {
-			ValueRange response = sheet.spreadsheets().values()
-					.get(sheetId, SHEET_CLASSES)
+		if(sheet != null) {
+			ValueRange response = sheets.spreadsheets().values()
+					.get(sheetId, sheet.getProperties().getTitle())
 					.execute();
 			classes = response.getValues();
 			if(classes != null) {
@@ -744,11 +703,11 @@ public class GoogleSheetUpdater {
 				columns = headers.size();
 			}
 		} else if(!classList.isEmpty()){
-			addNewSheet(SHEET_CLASSES);
+			addNewSheet("Classes");
 		}
 		addClassHeaders(headers, classList);
 		if(columns < headers.size()) {
-			updateValues(headers, SHEET_CLASSES, HEADER_ROW);
+			updateValues(headers, sheet.getProperties().getTitle(), HEADER_ROW);
 		}
 		List<List<Object>> newClasses = new ArrayList<>();
 		List<Object> newclass = null;
@@ -776,9 +735,9 @@ public class GoogleSheetUpdater {
 				if( rowNumber == 0) {
 					newClasses = new ArrayList<>();
 					newClasses.add(newclass);
-					appendValues(newClasses, SHEET_CLASSES);
+					appendValues(newClasses, sheet.getProperties().getTitle());
 				} else if(rowNumber != 0 && isOverrideRDFValues) {
-					updateValues(newclass, SHEET_CLASSES, rowNumber);
+					updateValues(newclass, sheet.getProperties().getTitle(), rowNumber);
 				} else if(isRaiseError) {
 					throw new KonigException("Conflict in the class["+classId+"]");
 				} else if(isOverrideSheetValues) {
@@ -827,15 +786,15 @@ public class GoogleSheetUpdater {
 		}
 	}
 	
-	private void updateShapes(Graph graph) throws IOException, IriTemplateParseException {
+	private void updateShapes(Graph graph, Sheet sheet) throws IOException, IriTemplateParseException {
 		List<Vertex> shapeList = graph.v(SH.Shape).in(RDF.TYPE).toVertexList();
 		List<List<Object>> shapes = null;
 		List<Object> headers = new ArrayList<>();
 		int columns = 0;
 		
-		if(isSheetExist(SHEET_SHAPES)) {
-			ValueRange response = sheet.spreadsheets().values()
-					.get(sheetId, SHEET_SHAPES)
+		if(sheet != null) {
+			ValueRange response = sheets.spreadsheets().values()
+					.get(sheetId, sheet.getProperties().getTitle())
 					.execute();
 			shapes = response.getValues();
 			if(shapes != null) {
@@ -843,11 +802,11 @@ public class GoogleSheetUpdater {
 				columns = headers.size();
 			}
 		}  else if(!shapeList.isEmpty()){
-			addNewSheet(SHEET_SHAPES);
+			addNewSheet("Shapes");
 		}
 		addShapeHeaders(headers, shapeList);
 		if(columns < headers.size()) {
-			updateValues(headers, SHEET_SHAPES, HEADER_ROW);
+			updateValues(headers, sheet.getProperties().getTitle(), HEADER_ROW);
 		}
 		
 		List<List<Object>> newshapes = new ArrayList<>();
@@ -905,8 +864,8 @@ public class GoogleSheetUpdater {
 					shape.add(defaultShapeValue);
 				} else if(TERM_STATUS.equals(header)) {
 					shape.add(stringLiteral(v.getValue(Konig.KeyTerm)));
-				} else if(RDBMS_LOGICAL_SHAPE.equals(header)) {
-					shape.add(stringLiteral(v.getValue(Konig.rdbmsLogicalShape)));
+				} else if(TABULAR_ORIGIN_SHAPE.equals(header)) {
+					shape.add(stringLiteral(v.getValue(Konig.tabularOriginShape)));
 				} else if(ONE_OF.equals(header)) {
 					String orValue = "";
 					if(v.getValueSet(SH.or) != null) {
@@ -937,9 +896,9 @@ public class GoogleSheetUpdater {
 			int rowNumber = shapeExistRow(shapes, shapeId);
 			if( rowNumber == 0) {
 				newshapes.add(shape);
-				appendValues(newshapes, SHEET_SHAPES);
+				appendValues(newshapes, sheet.getProperties().getTitle());
 			} else if(rowNumber != 0 && isOverrideRDFValues) {
-				updateValues(shape, SHEET_SHAPES, rowNumber);
+				updateValues(shape, sheet.getProperties().getTitle(), rowNumber);
 			} else if(isRaiseError) {
 				throw new KonigException("Conflict in the Shape["+shapeId+"]");
 			} else if(isOverrideSheetValues) {
@@ -1012,8 +971,8 @@ public class GoogleSheetUpdater {
 			if(v.getValue(Konig.KeyTerm) != null && !headers.contains(TERM_STATUS)) {
 				headers.add(TERM_STATUS);
 			} 
-			if(v.getValue(Konig.rdbmsLogicalShape) != null && !headers.contains(RDBMS_LOGICAL_SHAPE)) {
-				headers.add(RDBMS_LOGICAL_SHAPE);
+			if(v.getValue(Konig.tabularOriginShape) != null && !headers.contains(TABULAR_ORIGIN_SHAPE)) {
+				headers.add(TABULAR_ORIGIN_SHAPE);
 			} 
  			if(v.getValue(SH.or) != null && !headers.contains(ONE_OF)) {
 				headers.add(ONE_OF);
@@ -1027,20 +986,29 @@ public class GoogleSheetUpdater {
 		}
 	}
 	
-	private void appendValues(List<List<Object>> value, String sheetTitle) throws IOException {
+	private boolean appendValues(List<List<Object>> value, String sheetTitle) throws IOException {
 		if(!value.isEmpty()){
 			ValueRange body = new ValueRange()
 			        .setValues(value);
 			AppendValuesResponse result =
-					sheet.spreadsheets().values().append(sheetId, sheetTitle, body)
+					sheets.spreadsheets().values().append(sheetId, sheetTitle, body)
 					.setValueInputOption("RAW")
 					.setInsertDataOption("INSERT_ROWS")
 			        .execute();
+			while(result == null) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				return true;
+			}
 			LOG.info("Total number of cells added ["+result.toPrettyString()+ "]");	
-		} 
+		}
+		return false;
 	}
 	
-	private void updateValues(List<Object> value, String sheetTitle, int rowNumber) throws IOException {
+	private boolean updateValues(List<Object> value, String sheetTitle, int rowNumber) throws IOException {
 		if(!value.isEmpty()){
 			String defaultRange = sheetTitle+"!A"+rowNumber;
 			List<List<Object>> values = new ArrayList<>();
@@ -1049,12 +1017,20 @@ public class GoogleSheetUpdater {
 					.setMajorDimension("ROWS")
 			        .setValues(values);
 			UpdateValuesResponse result =
-					sheet.spreadsheets().values().update(sheetId, defaultRange, body)
+					sheets.spreadsheets().values().update(sheetId, defaultRange, body)
 					.setValueInputOption("RAW")
 			        .execute();
-			
+			while(result == null) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				return true;
+			}
 			LOG.info("Total number of cells updated ["+result.toPrettyString()+ "]");
 		} 
+		return false;
 	}
 	
 	private void addNewSheet(String title) throws IOException {
@@ -1065,23 +1041,83 @@ public class GoogleSheetUpdater {
 		BatchUpdateSpreadsheetRequest req = new BatchUpdateSpreadsheetRequest();
 		req.setRequests(requests);
 		req.setIncludeSpreadsheetInResponse(false);
-		BatchUpdateSpreadsheetResponse rsp = sheet.spreadsheets().batchUpdate(sheetId, req).execute();
+		BatchUpdateSpreadsheetResponse rsp = sheets.spreadsheets().batchUpdate(sheetId, req).execute();
 		List<Response> responses = rsp.getReplies();
 		AddSheetResponse addSheetResponse = responses.get(0).getAddSheet();
 		LOG.info("New Sheet Added [" + addSheetResponse.toPrettyString()+ "] ");
 	}
 	
-	private boolean isSheetExist(String title) throws IOException {
-		Spreadsheet response= sheet.spreadsheets().get(sheetId).setIncludeGridData(false)
-				.execute ();
-		List<Sheet> sheets = response.getSheets();
-		for(Sheet s : sheets) {
-			String sheetTitle = s.getProperties().getTitle();
-			if(title.equals(sheetTitle)){
-				return true;
+	private int sheetType(Sheet sheet) throws IOException {
+		ValueRange responseValue = sheets.spreadsheets().values()
+				.get(sheetId, sheet.getProperties().getTitle())
+				.execute();
+		List<List<Object>> values = responseValue.getValues();
+		List<Object> header = values.get(0);
+		if (header == null) {
+			return 0;
+		}
+		int colSize = header.size();
+		int bits = 0;
+		for (int i = 0; i < colSize; i++) {
+			String cell = (String)header.get(i);
+			if (cell == null)
+				continue;
+			switch (cell) {
+				case NAMESPACE_URI:
+					bits = bits | COL_NAMESPACE_URI;
+					break;
+				case CLASS_ID:
+					bits = bits | COL_CLASS_ID;
+					break;
+				case PROPERTY_ID:
+					bits = bits | COL_PROPERTY_PATH;
+					break;
+				case SHAPE_ID:
+					bits = bits | COL_SHAPE_ID;
+					break;
 			}
 		}
-		return false;
+		return bits;
+	}
+	
+	static class SheetInfo implements Comparable<SheetInfo> {
+		int sheetType;
+		int sheetIndex;
+		Sheet sheet;
+		
+		public SheetInfo(int sheetType, int sheetIndex) {
+			this.sheetType = sheetType;
+			this.sheetIndex = sheetIndex;
+			
+		}
+
+		public SheetInfo(int sheetType, Sheet sheet) {
+			this.sheetType = sheetType;
+			this.sheetIndex = sheet.getProperties().getIndex();
+			this.sheet = sheet;
+		}
+		
+		@Override
+		public int compareTo(SheetInfo other) {
+			int result = sheetType - other.sheetType;
+			if (result == 0) {
+				result = sheetIndex - other.sheetIndex;
+			}
+			return result;
+		}
+	}
+	
+	private List<SheetInfo> collectSheetInfo() throws IOException {
+		List<SheetInfo> list = new ArrayList<>();
+		Spreadsheet response= sheets.spreadsheets().get(sheetId).setIncludeGridData(false)
+				.execute ();
+		List<Sheet> sheetList = response.getSheets();
+		for (int i = 0; i < sheetList.size(); i++) {
+			Sheet s = sheetList.get(i);
+			int sheetType = sheetType(s);
+			list.add(new SheetInfo(sheetType, s));
+		}
+		return list;
 	}
 	
 	private String stringLiteral(Value v) {
