@@ -87,6 +87,7 @@ public class WorkbookToTurtleTransformer {
 		File gcpOutDir = request.getGcpOutDir();
 		File awsOutDir = request.getAwsOutDir();
 		File derivedDir = request.getDerivedFormOutDir();
+		File abbrevDir = request.getAbbrevDir();
 
 		if (workbookFile != null && !workbookFile.exists()) {
 			throw new SpreadsheetException("File not found: " + workbookFile);
@@ -112,6 +113,7 @@ public class WorkbookToTurtleTransformer {
 			try {
 
 				owlOutDir.mkdirs();
+				abbrevDir.mkdirs();
 				if (shapesOutDir != null) {
 					shapesOutDir.mkdirs();
 				}
@@ -130,6 +132,9 @@ public class WorkbookToTurtleTransformer {
 
 		OntologyWriter ontologyWriter = new OntologyWriter(new OntologyFileGetter(owlOutDir, nsManager));
 		ontologyWriter.writeOntologies(graph);
+		
+		AbbreviationsWriter abbrevWriter = new AbbreviationsWriter(abbrevDir);
+		abbrevWriter.writeAbbreviations(graph);
 
 		if (shapesOutDir != null) {
 			writeShapes(shapesOutDir);
