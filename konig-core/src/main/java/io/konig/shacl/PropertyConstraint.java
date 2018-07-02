@@ -84,6 +84,7 @@ public class PropertyConstraint implements Cloneable {
 	private URI idFormat;
 	private List<URI> qualifiedSecurityClassification ;
 	private String dataSteward;
+	private RelationshipDegree relationshipDegree;
 	
 	private Term term;
 	private URI termStatus;
@@ -558,4 +559,13 @@ public class PropertyConstraint implements Cloneable {
 	public void setDataSteward(String dataSteward) {
 		this.dataSteward = dataSteward;
 	}
+
+	public RelationshipDegree getRelationshipDegree() {
+		return relationshipDegree;
+	}
+
+	public void setRelationshipDegree(RelationshipDegree relationshipDegree) {
+		this.relationshipDegree = relationshipDegree;
+	}
+	
 }
