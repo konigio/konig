@@ -32,10 +32,10 @@ import java.io.StringWriter;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -57,7 +57,6 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
@@ -69,6 +68,10 @@ import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.VAR;
 import io.konig.core.vocab.XOWL;
 import io.konig.datasource.DataSource;
+import io.konig.gcp.datasource.BigQueryTableReference;
+import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
@@ -82,9 +85,10 @@ import io.konig.shacl.io.ShapeWriter;
 
 public class WorkbookLoaderTest {
 	
-	@Ignore
+	@Test
 	public void testBigQueryTableIdRegex() throws Exception {
 
+		GcpShapeConfig.init();
 		InputStream input = getClass().getClassLoader().getResourceAsStream("bigQueryTableId-regex.xlsx");
 		Workbook book = WorkbookFactory.create(input);
 		Graph graph = new MemoryGraph();
@@ -102,12 +106,27 @@ public class WorkbookLoaderTest {
 		
 		URI shapeId = uri("http://example.com/shapes/BqPersonShape");
 		
-		Literal tableId = graph.v(shapeId).out(Konig.shapeDataSource).out(GCP.tableReference).firstLiteral(GCP.tableId);
+		ShapeManager shapeManager = loader.getShapeManager();
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape != null);
+		
+		assertTrue(shape.getShapeDataSource()!=null);
+		
+		List<DataSource> dsList = shape.getShapeDataSource().stream()
+			.filter(ds -> ds.isA(Konig.GoogleBigQueryTable))
+			.collect(Collectors.toList());
+		
+		assertEquals(1, dsList.size());
+		
+		DataSource ds = dsList.get(0);
+		assertTrue(ds instanceof GoogleBigQueryTable);
+		GoogleBigQueryTable table = (GoogleBigQueryTable) ds;
+		String tableId = table.getTableReference().getTableId();
 		assertTrue(tableId != null);
-		assertEquals("BqPerson", tableId.stringValue());
+		assertEquals("BqPerson", tableId);
 	}
 
-	@Ignore
+	@Test
 	public void testGoogleCloudSql() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("google-cloud-sql.xlsx");
@@ -127,7 +146,7 @@ public class WorkbookLoaderTest {
 		// TODO: Add assertions
 	}
 
-	@Ignore
+	@Test
 	public void testBigQueryTransform() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("bigquery-transform.xlsx");
@@ -139,9 +158,7 @@ public class WorkbookLoaderTest {
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
 		loader.load(book, graph);
 		
-		ShapeManager shapeManager = new MemoryShapeManager();
-		ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
-		shapeLoader.load(graph);
+		ShapeManager shapeManager = loader.getShapeManager();
 		
 		Shape shape = shapeManager.getShapeById(uri("http://example.com/shapes/OriginProductShape"));
 		URI predicate = uri("http://example.com/ns/alias/PRD_PRICE");
@@ -150,7 +167,7 @@ public class WorkbookLoaderTest {
 		Path path = p.getEquivalentPath();
 		assertEquals("/schema:offers[schema:priceCurrency \"USD\"]/schema:price", path.toSimpleString());
 	}
-	@Ignore
+	@Test
 	public void testCustomTableName() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("custom-tablename.xlsx");
@@ -168,10 +185,7 @@ public class WorkbookLoaderTest {
 		writer.close();
 		URI shapeId = uri("https://schema.pearson.com/shapes/OriginSales_TeamShape");
 		
-		ShapeManager s = new MemoryShapeManager();
-		
-		ShapeLoader shapeLoader = new ShapeLoader(s);
-		shapeLoader.load(graph);
+		ShapeManager s = loader.getShapeManager();
 		
 		
 		Shape shape = s.getShapeById(shapeId);
@@ -207,7 +221,7 @@ public class WorkbookLoaderTest {
 		
 		
 	}
-	@Ignore
+	@Test
 	public void testInvalidOntologyNamespace() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("invalid-ontology-namespace.xlsx");
@@ -227,7 +241,7 @@ public class WorkbookLoaderTest {
 		assertTrue(error.getMessage().contains("Namespace must end with '/' or '#' but found: http://schema.org"));
 	}
 	
-	@Ignore
+	@Test
 	public void testGoogleCloudSqlTable() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("google-cloud-sql-table.xlsx");
@@ -242,13 +256,10 @@ public class WorkbookLoaderTest {
 		
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		
-		ShapeManager s = new MemoryShapeManager();
-		
-		ShapeLoader shapeLoader = new ShapeLoader(s);
-		shapeLoader.load(graph);
+		ShapeManager shapeManager = loader.getShapeManager();
 		
 		
-		Shape shape = s.getShapeById(shapeId);
+		Shape shape = shapeManager.getShapeById(shapeId);
 		assertTrue(shape!=null);
 		List<DataSource> list = shape.getShapeDataSource();
 		assertEquals(1, list.size());
@@ -260,8 +271,9 @@ public class WorkbookLoaderTest {
 		assertTrue(ds.isA(Konig.GoogleCloudSqlTable));
 	}
 	
-	@Ignore
+	@Test
 	public void testDatasourceParamsGoogleBucket() throws Exception {
+		GcpShapeConfig.init();
         InputStream input = new FileInputStream(new File("src/test/resources/test-datasource-params-bucket.xlsx"));
         Workbook book = WorkbookFactory.create(input);
         
@@ -272,14 +284,25 @@ public class WorkbookLoaderTest {
         WorkbookLoader loader = new WorkbookLoader(nsManager);
         loader.load(book, graph);
         input.close();
-        System.out.println(graph);
+        
+        
         URI shapeId = uri("http://example.com/shapes/ProductShape");
-        List<Value> list = graph.v(shapeId).out(Konig.shapeDataSource).out(GCP.notificationInfo).out(GCP.notificationEventTypes).toValueList();
-        assertEquals(3, list.size());
-        assertEquals("OBJECT_METADATA_UPDATE", list.get(0).stringValue());
+        
+        ShapeManager shapeManager = loader.getShapeManager();
+        Shape shape = shapeManager.getShapeById(shapeId);
+        assertTrue(shape != null);
+        
+        List<String> eventTypes = shape.getShapeDataSource().stream()
+        	.filter( e -> e instanceof GoogleCloudStorageBucket)
+        	.map(e -> (GoogleCloudStorageBucket) e)
+        	.findFirst().get().getNotificationInfo().get(0).getEventTypes();
+        
+        
+        assertEquals(3, eventTypes.size());
+        assertEquals("OBJECT_METADATA_UPDATE", eventTypes.get(0));
     }
 	
-	@Ignore
+	@Test
 	public void testDatasourceParentComponent() throws Exception {
         InputStream input = getClass().getClassLoader().getResourceAsStream("test-datasource-params-parentComponent.xlsx");
         Workbook book = WorkbookFactory.create(input);
@@ -292,10 +315,7 @@ public class WorkbookLoaderTest {
         
         input.close();
         URI shapeId = uri("https://schema.pearson.com/shapes/AccountShape");
-        ShapeManager s = new MemoryShapeManager();
-		
-		ShapeLoader shapeLoader = new ShapeLoader(s);
-		shapeLoader.load(graph);
+        ShapeManager s = loader.getShapeManager();
 		
         Shape shape = s.getShapeById(shapeId);
 		List<DataSource> list = shape.getShapeDataSource();
@@ -306,7 +326,7 @@ public class WorkbookLoaderTest {
     }
 	
 	
-	@Ignore
+	@Test
 	public void testGoogleOracleTable() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("omcs-oracle-table.xlsx");
@@ -321,10 +341,7 @@ public class WorkbookLoaderTest {
 		
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		
-		ShapeManager s = new MemoryShapeManager();
-		
-		ShapeLoader shapeLoader = new ShapeLoader(s);
-		shapeLoader.load(graph);
+		ShapeManager s = loader.getShapeManager();
 		
 		
 		Shape shape = s.getShapeById(shapeId);
@@ -339,7 +356,7 @@ public class WorkbookLoaderTest {
 		assertTrue(ds.isA(Konig.OracleTable));
 	}
 	
-	@Ignore
+	@Test
 	public void testAssessmentEndeavor() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("assessment-endeavor.xlsx");
@@ -366,7 +383,7 @@ public class WorkbookLoaderTest {
 		assertEquals(NodeKind.IRI, p.getNodeKind());
 	}
 	
-	@Ignore
+	@Test
 	public void testAddressCountry() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("address-country.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -410,7 +427,7 @@ public class WorkbookLoaderTest {
 	}
 
 	
-	@Ignore
+	@Test
 	public void testSequencePath() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("sequence-path.xlsx");
@@ -462,7 +479,7 @@ public class WorkbookLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testIriReference() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("iri-reference.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -476,16 +493,18 @@ public class WorkbookLoaderTest {
 		
 		URI shapeId = uri("http://example.com/shape/PersonShape");
 		
-		Vertex v = graph.getVertex(shapeId);
+		Shape shape = loader.getShapeManager().getShapeById(shapeId);
+		assertTrue(shape != null);
+		assertEquals(shape.getNodeKind(), NodeKind.IRI);
 		
-		assertValue(v, SH.nodeKind, SH.IRI);
-		Vertex p = v.getVertex(SH.property);
+		PropertyConstraint p = shape.getPropertyConstraint(Schema.memberOf);
+		assertTrue(p != null);
 		
-		assertValue(p, SH.nodeKind, SH.IRI);
+		assertEquals(p.getNodeKind(), NodeKind.IRI);
 	}
 	
 	
-	@Ignore
+	@Test
 	public void testLabels() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("labels.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -510,7 +529,7 @@ public class WorkbookLoaderTest {
 		assertTrue(graph.contains(subject, RDFS.LABEL, literal));
 	}
 
-	@Ignore
+	@Test
 	public void testPubSub() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("pubsub.xlsx");
@@ -525,16 +544,24 @@ public class WorkbookLoaderTest {
 		loader.load(book, graph);
 		input.close();
 		
+	
 		
-		URI topic = uri("https://pubsub.googleapis.com/v1/projects/${gcpProjectId}/topics/vnd.example.person");
+		URI topicId = uri("https://pubsub.googleapis.com/v1/projects/${gcpProjectId}/topics/vnd.example.person");
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
-		assertTrue(graph.contains(topic, RDF.TYPE, Konig.GooglePubSubTopic));
-		Vertex shapeVertex = graph.vertex(shapeId);
-		Vertex topicVertex = shapeVertex.getVertex(Konig.shapeDataSource);
-		assertTrue(topicVertex != null);
+		
+		
+		Shape shape = loader.getShapeManager().getShapeById(shapeId);
+		assertTrue(shape != null);
+		DataSource topic = 
+				shape.getShapeDataSource().stream()
+				.filter(s -> s.isA(Konig.GooglePubSubTopic))
+				.findFirst().get();
+		
+		assertEquals(topicId, topic.getId());
+		
 	}
 	
-	@Ignore
+	@Test
 	public void testSubproperty() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("subproperty.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -553,7 +580,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDefaultShape() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("default-shape.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -575,10 +602,6 @@ public class WorkbookLoaderTest {
 		Shape shape = shapeManager.getShapeById(shapeId);
 		assertTrue(shape != null);
 		
-		Set<URI> set = graph.v(shapeId).out(Konig.defaultShapeFor).toUriSet();
-		assertEquals(2, set.size());
-		assertTrue(set.contains(uri("http://example.com/applications/MyCatalog")));
-		assertTrue(set.contains(uri("http://example.com/applications/MyShoppingCart")));
 		
 		List<URI> appList = shape.getDefaultShapeFor();
 		assertTrue(appList != null);
@@ -587,7 +610,7 @@ public class WorkbookLoaderTest {
 		assertTrue(appList.contains(uri("http://example.com/applications/MyShoppingCart")));
 	}
 	
-	@Ignore
+	@Test
 	public void testAggregateFunction() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("aggregate-function.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -617,8 +640,9 @@ public class WorkbookLoaderTest {
 	}
 	
 	
-	@Ignore
+	@Test
 	public void testDatasourceParams() throws Exception {
+		GcpShapeConfig.init();
 		InputStream input = getClass().getClassLoader().getResourceAsStream("test-datasource-params.xlsx");
 		Workbook book = WorkbookFactory.create(input);
 
@@ -632,13 +656,27 @@ public class WorkbookLoaderTest {
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/ProductShape");
-		List<Value> list = graph.v(shapeId).out(Konig.shapeDataSource).out(GCP.tableReference).out(GCP.tableId).toValueList();
-		assertEquals(1, list.size());
-		assertEquals("CustomProduct", list.get(0).stringValue());
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		List<DataSource> dsList = shape.getShapeDataSource().stream()
+				.filter(ds -> ds.isA(Konig.GoogleBigQueryTable))
+				.collect(Collectors.toList());
+			
+		assertEquals(1, dsList.size());
+		
+		DataSource ds = dsList.get(0);
+		assertTrue(ds instanceof GoogleBigQueryTable);
+		GoogleBigQueryTable table = (GoogleBigQueryTable) ds;
+		String tableId = table.getTableReference().getTableId();
+		assertTrue(tableId != null);
+		assertEquals("CustomProduct", tableId);
+		
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIriTemplate() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("test-iri-template.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -670,9 +708,10 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDataSource() throws Exception {
 
+		GcpShapeConfig.init();
 		InputStream input = getClass().getClassLoader().getResourceAsStream("issue-161.xlsx");
 		Workbook book = WorkbookFactory.create(input);
 
@@ -685,23 +724,25 @@ public class WorkbookLoaderTest {
 		loader.load(book, graph);
 		input.close();
 		
+		URI shapeId = uri("http://example.com/shapes/PersonLiteShape");
+		Shape shape = loader.getShapeManager().getShapeById(shapeId);
 		
-		Vertex shape = graph.getVertex(uri("http://example.com/shapes/PersonLiteShape"));
 		assertTrue(shape != null);
+		
+		GoogleBigQueryTable table = shape.findDataSource(GoogleBigQueryTable.class);
+		assertTrue(table != null);
+		
 		URI datasourceId = uri("https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person");
 		
-		Vertex datasource = shape.getVertex(Konig.shapeDataSource);
-		assertTrue(datasource != null);
+		assertEquals(table.getId(), datasourceId);
 		
-		assertEquals(datasourceId, datasource.getId());
+		BigQueryTableReference tableRef = table.getTableReference();
 		
-		
-		Vertex tableRef = datasource.getVertex(GCP.tableReference);
 		assertTrue(tableRef != null);
 		
-		assertValue(tableRef, GCP.projectId, "${gcpProjectId}");
-		assertValue(tableRef, GCP.datasetId, "schema");
-		assertValue(tableRef, GCP.tableId, "Person");
+		assertEquals(tableRef.getProjectId(), "${gcpProjectId}");
+		assertEquals(tableRef.getDatasetId(), "schema");
+		assertEquals(tableRef.getTableId(), "Person");
 	}
 	
 
@@ -768,7 +809,7 @@ public class WorkbookLoaderTest {
 		assertValue(address, Schema.addressRegion, "NJ");
 	}
 	
-	@Ignore
+	@Test
 	public void testEquivalentPath() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -782,11 +823,10 @@ public class WorkbookLoaderTest {
 		loader.load(book, graph);
 
 		URI shapeId = uri("http://example.com/shapes/SalesByCityShape");
-		Vertex shapeVertex = graph.getVertex(shapeId);
-		assertTrue(shapeVertex != null);
+		ShapeManager shapeManager = loader.getShapeManager();
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape!=null);
 		
-		SimplePojoFactory pojoFactory = new SimplePojoFactory();
-		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
 		
 		URI state = uri("http://example.com/ns/alias/state");
 		PropertyConstraint p = shape.getPropertyConstraint(state);
@@ -858,7 +898,7 @@ public class WorkbookLoaderTest {
 	
 	
 	
-	@Ignore
+	@Test
 	public void testStereotype() throws Exception {
 
 		
@@ -873,11 +913,12 @@ public class WorkbookLoaderTest {
 		loader.load(book, graph);
 		
 		URI shapeId = uri("http://example.com/shapes/SalesByCityShape");
-		Vertex shapeVertex = graph.getVertex(shapeId);
-		assertTrue(shapeVertex != null);
 		
-		SimplePojoFactory pojoFactory = new SimplePojoFactory();
-		Shape shape = pojoFactory.create(shapeVertex, Shape.class);
+		ShapeManager shapeManager = loader.getShapeManager();
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		assertTrue(shape != null);
+		
 		
 		PropertyConstraint totalCount = shape.getPropertyConstraint(Konig.totalCount);
 		assertTrue(totalCount!=null);
@@ -892,7 +933,7 @@ public class WorkbookLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
 		InputStream input = getClass().getClassLoader().getResourceAsStream("person-model.xlsx");
@@ -911,13 +952,13 @@ public class WorkbookLoaderTest {
 		checkClasses(graph);
 		checkProperties(graph);
 		checkIndividuals(graph);
-		checkShapes(graph);
-		checkPropertyConstraints(graph);
+		checkShapes(loader);
+		checkPropertyConstraints(loader);
 		
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAmazonRDSCluster() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("person-model-amazon-rds.xlsx");
 		
@@ -947,7 +988,7 @@ public class WorkbookLoaderTest {
 		assertEquals(3, list.size());
 	}
 
-	@Ignore
+	@Test
 	public void testAwsTable() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("awsAurora-transform.xlsx");
@@ -962,10 +1003,7 @@ public class WorkbookLoaderTest {
 		
 		URI shapeId = uri("http://example.com/shapes/AuroraProductShape");
 		
-		ShapeManager s = new MemoryShapeManager();
-		
-		ShapeLoader shapeLoader = new ShapeLoader(s);
-		shapeLoader.load(graph);
+		ShapeManager s = loader.getShapeManager();
 		
 		
 		Shape shape = s.getShapeById(shapeId);
@@ -978,7 +1016,7 @@ public class WorkbookLoaderTest {
 		assertTrue(ds.isA(Konig.AwsAuroraTable));
 	}
 	
-	@Ignore
+	@Test
 	public void testOneOfCol() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("awsAuroraTransformOneOF.xlsx");
@@ -993,13 +1031,9 @@ public class WorkbookLoaderTest {
 		
 		URI shapeId = uri("http://example.com/shapes/PartyShape");
 		
-		ShapeManager s = new MemoryShapeManager();
+		ShapeManager shapeManager = loader.getShapeManager();
 		
-		ShapeLoader shapeLoader = new ShapeLoader(s);
-		shapeLoader.load(graph);
-		
-		
-		Shape shape = s.getShapeById(shapeId);
+		Shape shape = shapeManager.getShapeById(shapeId);
 		assertTrue(shape!=null);
 		
 		List<Shape> list = shape.getOr().getShapes();
@@ -1008,7 +1042,7 @@ public class WorkbookLoaderTest {
 
 	}
 	
-	@Ignore
+	@Test
 	public void testPrimaryKey() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("primarykey-stereotype.xlsx");
@@ -1039,7 +1073,8 @@ public class WorkbookLoaderTest {
 	
 		
 	}
-	@Ignore
+	
+	@Test
 	public void testSecurityClassification() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("security-classification.xlsx");
@@ -1054,10 +1089,8 @@ public class WorkbookLoaderTest {
 		
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		
-		ShapeManager s = new MemoryShapeManager();
-		
-		ShapeLoader shapeLoader = new ShapeLoader(s);
-		shapeLoader.load(graph);		
+		ShapeManager s = loader.getShapeManager();
+			
 		
 		Shape shape = s.getShapeById(shapeId);
 		assertTrue(shape!=null);
@@ -1089,28 +1122,37 @@ public class WorkbookLoaderTest {
 		assertEquals(DCL4, sc.iterator().next());
 
 	}
-	private void checkPropertyConstraints(Graph graph) {
+	private void checkPropertyConstraints(WorkbookLoader loader) {
 		
-		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));
+		ShapeManager shapeManager = loader.getShapeManager();
+		URI shapeId = uri("http://example.com/shapes/v1/schema/Person");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
 		assertTrue(shape!=null);
 		
-		Vertex id = propertyConstraint(shape, Konig.id);
-		assertTrue(id == null);
 		
-		Vertex givenName = propertyConstraint(shape, Schema.givenName);
-		assertValue(givenName, SH.datatype, XMLSchema.STRING);
-		assertInt(givenName, SH.minCount, 0);
-		assertInt(givenName, SH.maxCount, 1);
-		assertValue(givenName, XOWL.termStatus, XOWL.Experimental);
-		Vertex familyName = propertyConstraint(shape, Schema.familyName);
-		assertInt(familyName, SH.minCount, 1);
+		assertTrue(shape.getPropertyConstraint(Konig.id) == null);
 		
-		Vertex address = propertyConstraint(shape, Schema.address);
-		assertValue(address, SH.shape, uri("http://example.com/shapes/v1/schema/Address"));
+		PropertyConstraint givenName = shape.getPropertyConstraint(Schema.givenName);
 		
-		Vertex worksFor = propertyConstraint(shape, uri("http://schema.org/worksFor"));
-		assertValue(worksFor, SH.valueClass, Schema.Organization);
-		assertValue(worksFor, SH.nodeKind, SH.IRI);
+		assertEquals(givenName.getDatatype(), XMLSchema.STRING);
+		assertEquals(givenName.getMinCount().intValue(), 0);
+		assertEquals(givenName.getMaxCount().intValue(), 1);
+		assertEquals(givenName.getTermStatus(), XOWL.Experimental);
+		
+		
+		PropertyConstraint familyName = shape.getPropertyConstraint(Schema.familyName);
+		assertEquals(familyName.getMinCount().intValue(), 1);
+		
+		PropertyConstraint address = shape.getPropertyConstraint(Schema.address);
+		Shape addressValueShape = address.getShape();
+		
+		assertEquals(addressValueShape.getId(), uri("http://example.com/shapes/v1/schema/Address"));
+		
+		PropertyConstraint worksFor = shape.getPropertyConstraint(uri("http://schema.org/worksFor"));
+		
+		assertEquals(worksFor.getValueClass(), Schema.Organization);
+		assertEquals(worksFor.getNodeKind(), NodeKind.IRI);
 	}
 	
 	
@@ -1127,15 +1169,18 @@ public class WorkbookLoaderTest {
 	}
 
 
-	private void checkShapes(Graph graph) {
-		Vertex v = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));
-		assertTrue(v!=null);
+	private void checkShapes(WorkbookLoader loader) {
+		ShapeManager shapeManager = loader.getShapeManager();
+		URI shapeId = uri("http://example.com/shapes/v1/schema/Person");
 		
-		assertValue(v, RDF.TYPE, SH.Shape);
-		assertValue(v, RDFS.COMMENT, "A light-weight data shape for a person.");
-		assertValue(v, SH.targetClass, Schema.Person);
-		assertValue(v, SH.nodeKind, SH.IRI);
-		assertValue(v, Konig.mediaTypeBaseName, "application/vnd.example.v1.schema.person");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape != null);
+		assertTrue(shape.getType().contains(SH.Shape));
+		
+		assertEquals(shape.getComment(), "A light-weight data shape for a person.");
+		assertEquals(shape.getTargetClass(), Schema.Person);
+		assertEquals(shape.getNodeKind(), NodeKind.IRI);
+		assertEquals(shape.getMediaTypeBaseName(), "application/vnd.example.v1.schema.person");
 		
 		
 	}

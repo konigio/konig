@@ -49,7 +49,7 @@ public class ShapeReasoner {
 						Set<URI> set = valueType.get(property);
 						if (set == null) {
 							set = new HashSet<>();
-							valueType.put(predicate, set);
+							valueType.put(property, set);
 						}
 						add(set, p.getDatatype());
 						add(set, p.getValueClass());

@@ -139,6 +139,15 @@ public class OwlReasoner {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	public Set<URI> rangeIncludes(URI property) {
+		Set<URI> result =  graph.v(property).out(RDFS.RANGE).toUriSet();
+		Set<URI> rest = graph.v(property).out(Schema.rangeIncludes).toUriSet();
+		result.addAll(rest);
+		
+		return result;
+	}
+	
 	public void inferRdfPropertiesFromPropertyConstraints(ShapeManager shapeManager, Graph sink) {
 		if (shapeManager == null) {
 			return;

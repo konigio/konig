@@ -50,14 +50,19 @@ import org.apache.velocity.runtime.parser.ParseException;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 
 /**
  * A utility that generates DataSource definitions associated with Shapes based
@@ -340,7 +345,7 @@ public class DataSourceGenerator {
 	
 
 	@SuppressWarnings("rawtypes")
-	public void generate(Shape shape, Function func, Graph graph) {
+	public void generate(Shape shape, Function func, ShapeManager shapeManager) {
 		String templateName = func.getName();
 		HashMap params = (HashMap) func.getParameters();
 		Iterator it = params.entrySet().iterator();
@@ -360,7 +365,12 @@ public class DataSourceGenerator {
 		ByteArrayInputStream input = new ByteArrayInputStream(result.getBytes());
 
 		try {
+			Graph graph = new MemoryGraph(nsManager);
 			RdfUtil.loadTurtle(graph, input, "");
+			graph.edge(shape.getId(), RDF.TYPE, SH.Shape);
+			ShapeLoader loader = new ShapeLoader(shapeManager);
+			loader.load(graph);
+			
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
 			throw new KonigException("Failed to render template", e);
 		}
@@ -382,13 +392,17 @@ public class DataSourceGenerator {
 		putURI("class", shape.getTargetClass());
 	}
 
-	public void generate(Shape shape, String templateName, Graph graph) {
+	public void generate(Shape shape, String templateName, ShapeManager shapeManager) {
 		defaultMap(shape);
 		String result = merge(templateName);
 		ByteArrayInputStream input = new ByteArrayInputStream(result.getBytes());
 
 		try {
+			Graph graph = new MemoryGraph(nsManager);
 			RdfUtil.loadTurtle(graph, input, "");
+			graph.edge(shape.getId(), RDF.TYPE, SH.Shape);
+			ShapeLoader loader = new ShapeLoader(shapeManager);
+			loader.load(graph);
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
 			throw new KonigException("Failed to render template", e);
 		}

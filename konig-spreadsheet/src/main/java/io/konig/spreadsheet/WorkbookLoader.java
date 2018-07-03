@@ -566,7 +566,6 @@ public class WorkbookLoader {
 				loadIndividualProperties();
 				emitProvenance();
 				inferPropertyDefinitions();
-				loadShapes();
 				handleFormulas();
 				produceEnumShapes();
 				processShapeTemplates();
@@ -585,6 +584,7 @@ public class WorkbookLoader {
 
 			localNameService = new SimpleLocalNameService();
 			localNameService.addAll(getGraph());
+			localNameService.addShapes(shapeManager.listShapes());
 			localNameService.add(Konig.Day);
 			localNameService.add(Konig.Week);
 			localNameService.add(Konig.Month);
@@ -602,6 +602,7 @@ public class WorkbookLoader {
 
 		private void handlePaths() throws SpreadsheetException {
 			NameMap nameMap = new NameMap(graph);
+			nameMap.addShapes(shapeManager.listShapes());
 			nameMap.addStaticFields(Konig.class);
 			PathFactory pathFactory = new PathFactory(nsManager, nameMap);
 			for (AbstractPathBuilder handler : pathHandlers) {
@@ -640,7 +641,7 @@ public class WorkbookLoader {
 						throw new SpreadsheetException("Shape not found: " + shapeId);
 					}
 					for (Function func : dataSourceList) {
-						generator.generate(shape, func, graph);
+						generator.generate(shape, func, shapeManager);
 					}
 					generator.close();
 
@@ -804,11 +805,6 @@ public class WorkbookLoader {
 
 		}
 
-		private void loadShapes() {
-			ShapeLoader loader = new ShapeLoader(getShapeManager());
-			loader.load(graph);
-		}
-
 		private void visitShapes() {
 
 			NameMap nameMap = new NameMap();
@@ -839,7 +835,7 @@ public class WorkbookLoader {
 					producer.setVisitor(new EnumShapeVistor(new ShapeWriter(), getShapeManager(), graph));
 
 					EnumShapeGenerator generator = new EnumShapeGenerator(producer, getDataSourceGenerator());
-					generator.generateShapes(graph, shapeIdTemplate, dataSourceTemplates);
+					generator.generateShapes(graph, shapeManager, shapeIdTemplate, dataSourceTemplates);
 				}
 
 			} catch (IOException e) {
@@ -1339,7 +1335,7 @@ public class WorkbookLoader {
 			
 
 			Shape shape = produceShape(shapeId);
-			PropertyConstraint prior = shape.getPropertyConstraint(propertyId);
+			PropertyConstraint prior = propertyId==null ? null : shape.getPropertyConstraint(propertyId);
 			if (prior != null) {
 
 				logger.warn("Duplicate definition of property '{}' on '{}'", propertyId.getLocalName(),
@@ -2956,7 +2952,9 @@ public class WorkbookLoader {
 				Step lastStep = stepList.get(stepList.size() - 1);
 				if (lastStep instanceof OutStep) {
 					URI predicate = ((OutStep) lastStep).getPredicate();
-					Set<URI> valueClassSet = shapeReasoner.valueType(predicate);
+					Set<URI> valueClassSet = owlReasoner.rangeIncludes(predicate);
+					Set<URI> shaclValueType = shapeReasoner.valueType(predicate);
+					valueClassSet.addAll(shaclValueType);
 					for (URI valueClass : valueClassSet) {
 						if (owlReasoner.isDatatype(valueClass)) {
 							if (datatype == null) {
