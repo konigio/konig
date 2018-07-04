@@ -2868,8 +2868,17 @@ public class WorkbookLoader {
 			    graph.edge(propertyId, Konig.securityClassification, uri);					
 			  }
 			}
-			if(relationshipDegree!=null){
-				graph.edge(propertyId, Konig.relationshipDegree, relationshipDegree);
+			if(relationshipDegree!=null){				
+				for(URI d:domain){
+					Vertex restrictionVertex = graph.vertex();
+					Resource restriction = restrictionVertex.getId();
+					edge(restriction, RDF.TYPE, OWL.RESTRICTION);
+					edge(restriction, OWL.ONPROPERTY, propertyId);
+					edge(restriction, Konig.relationshipDegree, relationshipDegree);
+					edge(d, RDF.TYPE, OWL.CLASS);
+					edge(d,RDFS.SUBCLASSOF,restriction);
+					
+				}
 			}
 
 		}
