@@ -34,6 +34,9 @@ public class Schema {
 	public static final String NAMESPACE = "http://schema.org/";
 	public static final URI NAMESPACE_URI = new URIImpl(NAMESPACE);
 	
+	public static final String NAME = "http://schema.org/name";
+	public static final String EMAIL = "http://schema.org/email";
+	
 	
 	public static final URI Boolean = new URIImpl("http://schema.org/Boolean");
 	public static final URI BuyAction = new URIImpl("http://schema.org/BuyAction");
@@ -75,7 +78,7 @@ public class Schema {
 	public static final URI datePublished = new URIImpl("http://schema.org/datePublished");
 	public static final URI description = new URIImpl("http://schema.org/description");
 	public static final URI duns = new URIImpl("http://schema.org/duns");
-	public static final URI email = new URIImpl("http://schema.org/email");
+	public static final URI email = new URIImpl(EMAIL);
 	public static final URI exampleOfWork = new URIImpl("http://schema.org/exampleOfWork");
 	public static final URI familyName = new URIImpl("http://schema.org/familyName");
 	public static final URI givenName = new URIImpl("http://schema.org/givenName");
@@ -84,7 +87,7 @@ public class Schema {
 	public static final URI lastReviewed = new URIImpl("http://schema.org/lastReviewed");
 	public static final URI manufacturer = new URIImpl("http://schema.org/manufacturer");
 	public static final URI memberOf = new URIImpl("http://schema.org/memberOf");
-	public static final URI name = new URIImpl("http://schema.org/name");
+	public static final URI name = new URIImpl(NAME);
 	public static final URI object = new URIImpl("http://schema.org/object");
 	public static final URI parent = new URIImpl("http://schema.org/parent");
 	public static final URI postalCode = new URIImpl("http://schema.org/postalCode");

@@ -44,7 +44,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.util.StringUtil;
-import io.konig.core.vocab.SH;
 import io.konig.schemagen.Generator;
 import io.konig.schemagen.IriEnumStyle;
 import io.konig.shacl.NodeKind;
@@ -170,7 +169,7 @@ public class AvroSchemaGenerator extends Generator {
 				fieldArray.add(idField);
 				
 				idField.put("name", "id");
-				if (SH.IRI.equals(nodeKind)) {
+				if (NodeKind.IRI.equals(nodeKind)) {
 					idField.put("type", "string");
 				} else {
 					ArrayNode typeValue = mapper.createArrayNode();
