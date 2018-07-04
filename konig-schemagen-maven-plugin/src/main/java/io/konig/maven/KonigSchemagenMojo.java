@@ -104,6 +104,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
+import io.konig.core.io.SkosEmitter;
 import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
@@ -806,6 +807,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				 emitter.add(new OntologyEmitter(workbook.owlDir(defaults)));
 				 emitter.add(new ShapeToGraphEmitter(shapeManager));
 				 emitter.add(new ShapeToFileEmitter(shapeManager, workbook.shapesDir(defaults)));
+				 emitter.add(new SkosEmitter(workbook.skosDir(defaults)));
 				 
 				 if (context != null) {
 					 if(context.get("ECRRepositoryName")!=null) {

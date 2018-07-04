@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
+import io.konig.core.io.Emitter;
 import io.konig.showl.OntologyFileGetter;
 import io.konig.showl.OntologyWriter;
 

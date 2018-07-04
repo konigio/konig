@@ -102,12 +102,12 @@ public class OracleDatatypeMapper extends SqlDatatypeMapper {
 	}
 
 	private int precision(PropertyConstraint c) {
-		Double min = c.getMinInclusive();
+		Number min = c.getMinInclusive();
 		if (min==null) {
 			min = c.getMinExclusive();
 		}
 		
-		Double max = c.getMaxInclusive();
+		Number max = c.getMaxInclusive();
 		if (max == null) {
 			max = c.getMaxExclusive();
 		}
@@ -115,7 +115,7 @@ public class OracleDatatypeMapper extends SqlDatatypeMapper {
 		return Math.max(precision(min), precision(max));
 	}
 
-	private int precision(Double value) {
+	private int precision(Number value) {
 		if (value ==null) {
 			return 0;
 		}

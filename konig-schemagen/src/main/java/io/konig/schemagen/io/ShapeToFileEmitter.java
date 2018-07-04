@@ -36,6 +36,7 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.io.Emitter;
 import io.konig.core.io.VertexCopier;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;

@@ -28,6 +28,8 @@ public class WorkbookProcessor {
 	private File workbookDir;
 	private File owlDir;
 	private File shapesDir;
+	private File skosDir;
+	
 	private boolean inferRdfPropertyDefinitions=true;
 	private boolean failOnWarnings = false;
 	private boolean failOnErrors = false;
@@ -47,6 +49,10 @@ public class WorkbookProcessor {
 	}
 	public File owlDir(RdfConfig defaults) {
 		return owlDir == null ? defaults.getOwlDir() : owlDir;
+	}
+	public File skosDir(RdfConfig defaults) {
+		return skosDir == null ? defaults.getSkosDir() : skosDir;
+		
 	}
 	public File getShapesDir() {
 		return shapesDir;
@@ -69,6 +75,12 @@ public class WorkbookProcessor {
 	public void setShapesDir(File shapesOutDir) {
 		this.shapesDir = shapesOutDir;
 	}
+	public File getSkosDir() {
+		return skosDir;
+	}
+	public void setAbbrevDir(File abbrevDir) {
+		this.skosDir = abbrevDir;
+	}
 	public boolean isFailOnWarnings() {
 		return failOnWarnings;
 	}
@@ -87,5 +99,4 @@ public class WorkbookProcessor {
 	public void setWorkbookDir(File workbookDir) {
 		this.workbookDir = workbookDir;
 	}
-
 }

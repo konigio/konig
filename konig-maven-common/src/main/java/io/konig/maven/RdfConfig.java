@@ -30,6 +30,7 @@ public class RdfConfig {
 	private File owlDir;
 	private File shapesDir;
 	private File derivedDir;
+	private File skosDir;
 	
 	public File getRdfDir() {
 		if (rdfDir==null && rootDir != null) {
@@ -88,6 +89,15 @@ public class RdfConfig {
 			result = defaults.getShapesDir();
 		}
 		return result;
+	}
+	public File getSkosDir() {
+		if (skosDir == null && getRdfDir()!=null) {
+			skosDir = new File(getRdfDir(), "abbrev");
+		}
+		return skosDir;
+	}
+	public void setSkosDir(File skosDir) {
+		this.skosDir = skosDir;
 	}
 	
 }

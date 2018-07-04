@@ -23,6 +23,7 @@ package io.konig.spreadsheet;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,6 +59,7 @@ import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.SKOS;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -88,6 +90,7 @@ import io.konig.core.path.Step;
 import io.konig.core.pojo.BeanUtil;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.SimpleValueFormat;
+import io.konig.core.util.StringUtil;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
@@ -116,7 +119,6 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeReasoner;
 import io.konig.shacl.ShapeVisitor;
 import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.io.ShapeWriter;
 import io.konig.shacl.services.ShapeProducer;
 
@@ -210,6 +212,25 @@ public class WorkbookLoader {
 	private static final String AWS_REGION="AWS Region";
 	private static final String CLOUD_FORMATION_TEMPLATES="Cloud Formation Templates";
 	
+	//Data Dictionary Template
+	private static final String SOURCE_SYSTEM = "Source System";
+	private static final String SOURCE_OBJECT_NAME = "Source Object Name";
+	private static final String FIELD = "Field";
+	private static final String DATA_TYPE = "Data Type";
+	private static final String CONSTRAINTS = "Constraints";
+	private static final String BUSINESS_NAME = "Business Name";
+	private static final String BUSINESS_DEFINITION = "Business Definition (Optional)";
+	private static final String DATA_STEWARD = "Data Steward";
+	private static final String TARGET_OBJECT_NAME = "Target Object Name\n(Flatfile or Aurora Tables)";
+	private static final String TARGET_FIELD_NAME = "Target field Name";
+	
+	//Data Dictionary Abbreviations
+	private static final String TERM = "Term";
+	private static final String ABBREVIATION = "Abbreviation";
+
+	
+	/** Security Tags **/
+	private static final String SECURITY_TAGS = "Security Tags";
 	private static final String AMAZON_RESOURCE_NAME = "Amazon Resource Name";
 	private static final String TAG_KEY = "Tag Key";
 	private static final String TAG_VALUE = "Tag Value";
@@ -249,6 +270,8 @@ public class WorkbookLoader {
 	private static final int COL_AMAZON_DB_CLUSTER = 0x100;
 	private static final int COL_CLOUD_FORMATION_TEMPLATE = 0x200;
 	private static final int COL_SECURITY_TAGS = 0x400;
+	private static final int COL_SOURCE_SYSTEM = 0x800;
+	private static final int COL_TERM = 0x1000;
 	
 	private static final int SHEET_ONTOLOGY = COL_NAMESPACE_URI;
 	private static final int SHEET_CLASS = COL_CLASS_ID;
@@ -262,6 +285,8 @@ public class WorkbookLoader {
 	private static final int SHEET_AMAZON_RDS_CLUSTER = COL_AMAZON_DB_CLUSTER;
 	private static final int SHEET_CLOUD_FORMATION_TEMPLATE = COL_CLOUD_FORMATION_TEMPLATE;
 	private static final int SHEET_SECURITY_TAGS = COL_SECURITY_TAGS;
+	private static final int SHEET_DATA_DICTIONARY_TEMPLATE=COL_SOURCE_SYSTEM;
+	private static final int SHEET_DATA_DICTIONARY_ABBREVIATIONS=COL_TERM;
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
 
@@ -313,6 +338,7 @@ public class WorkbookLoader {
 		nsManager.add("as", AS.NAMESPACE);
 		nsManager.add("gcp", GCP.NAMESPACE);
 		nsManager.add("aws",AWS.NAMESPACE);
+		nsManager.add("skos",SKOS.NAMESPACE);
 		this.nsManager = nsManager;
 
 		try {
@@ -499,6 +525,24 @@ public class WorkbookLoader {
 		private int stackNameCol = UNDEFINED;
 		private int awsRegionCol = UNDEFINED;
 		private int cloudFormationTemplateCol = UNDEFINED;
+		
+		private int sourceSystemCol = UNDEFINED;
+		private int sourceObjectNameCol = UNDEFINED;
+		private int fieldCol = UNDEFINED;
+		private int dataTypeCol = UNDEFINED;
+		private int maxLengthCol = UNDEFINED;
+		private int decimalPrecisionCol = UNDEFINED;
+		private int decimalScaleCol = UNDEFINED;
+		private int constraintsCol = UNDEFINED;
+		private int businessNameCol = UNDEFINED;
+		private int businessDefinitionCol = UNDEFINED;
+		private int dataStewardCol = UNDEFINED;
+		private int securityClassifCol = UNDEFINED;
+		private int targetObjectNameCol = UNDEFINED;
+		private int targetFieldNameCol = UNDEFINED;
+		
+		private int termCol = UNDEFINED;
+		private int abbreviationCol = UNDEFINED;
 		
 		private int amazonResourceName = UNDEFINED;
 		private int tagKey = UNDEFINED;
@@ -1028,9 +1072,403 @@ public class WorkbookLoader {
 			case SHEET_SECURITY_TAGS:
 				loadSecurityTags(sheet);
 				break;
-				
+			case SHEET_DATA_DICTIONARY_TEMPLATE:
+				loadDataDictionaryTemplate(sheet);
+				break;
+			case SHEET_DATA_DICTIONARY_ABBREVIATIONS:
+				loadDataDictionaryAbbreviations(sheet);
+				break;				
 			}
 
+		}
+
+		private void loadDataDictionaryAbbreviations(Sheet sheet) throws SpreadsheetException {
+			readDataDictionaryAbbreviationsHeader(sheet);
+			
+			String abbreviationSchemeIRI = getAbbreviationSchemeIRI();
+			if(abbreviationSchemeIRI==null)
+				throw new SpreadsheetException("abbreviationSchemeIRI is should not be null");
+			
+			URI scheme = uri(abbreviationSchemeIRI);
+			String abbrevPrefix = abbreviationNamespacePrefix(abbreviationSchemeIRI);
+			
+			Namespace ns = nsManager.findByName(abbrevPrefix);
+			if (ns == null) {
+				nsManager.add(abbrevPrefix, abbreviationSchemeIRI);
+			} else if (!abbreviationSchemeIRI.equals(ns.getName())) {
+				String msg = MessageFormat.format(
+						"Conflicting namespace prefix {0}: Used for <{1}> and <{2}>", 
+						abbrevPrefix,
+						ns.getName(), 
+						abbreviationSchemeIRI);
+				fail(msg);
+			}
+		
+			
+			edge(scheme, RDF.TYPE, SKOS.CONCEPT_SCHEME);
+			edge(scheme, VANN.preferredNamespacePrefix, literal(abbrevPrefix));
+			int rowSize = sheet.getLastRowNum() + 1;
+			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
+				Row row = sheet.getRow(i);
+				loadDataDictionaryAbbreviationsRow(row,abbreviationSchemeIRI);
+			}
+			for (Shape shape : shapeManager.listShapes()) {
+				shape.setUsesAbbreviationScheme(scheme);
+			}
+		}
+
+		private String abbreviationNamespacePrefix(String abbreviationSchemeIRI) {
+			String result = null;
+			if (settings != null) {
+				result = settings.getProperty("abbreviationNamespacePrefix");
+				if (result == null) {
+					int end = abbreviationSchemeIRI.length()-1;
+					int start = abbreviationSchemeIRI.lastIndexOf('/', end-1)+1;
+					result = abbreviationSchemeIRI.substring(start, end);
+				}
+			}
+			return result;
+		}
+
+		private String getAbbreviationSchemeIRI() {
+			String abbreviationSchemeIRI=null;
+			if(settings!=null){
+				abbreviationSchemeIRI=(String)settings.get("abbreviationSchemeIri");
+				if(abbreviationSchemeIRI!=null && abbreviationSchemeIRI.contains("{") && abbreviationSchemeIRI.contains("}")){
+					for(String key:settings.stringPropertyNames()){
+						abbreviationSchemeIRI=abbreviationSchemeIRI.replace("{"+key+"}", settings.getProperty(key));
+					}
+				}
+				if (abbreviationSchemeIRI != null) {
+
+					if (!abbreviationSchemeIRI.endsWith("/") && !abbreviationSchemeIRI.endsWith("#")) {
+						abbreviationSchemeIRI = abbreviationSchemeIRI + "/";
+					}
+				}
+			}
+			return abbreviationSchemeIRI;
+		}
+
+		private void loadDataDictionaryAbbreviationsRow(Row row,String abbreviationSchemeIRI) {
+			Literal term=stringLiteral(row, termCol);
+			Literal abbreviation=stringLiteral(row, abbreviationCol);
+			String termValue = stringValue(row, termCol);
+			if(termValue!=null){
+				URI abbrevTermIRI=uri(abbreviationSchemeIRI+termValue);
+				edge(abbrevTermIRI, RDF.TYPE, SKOS.CONCEPT);
+				edge(abbrevTermIRI, SKOS.PREF_LABEL, term);
+				edge(abbrevTermIRI,Konig.abbreviationLabel, abbreviation);
+				edge(abbrevTermIRI, SKOS.IN_SCHEME, uri(abbreviationSchemeIRI));		
+			}
+		}
+
+		private void readDataDictionaryAbbreviationsHeader(Sheet sheet) {
+			termCol = abbreviationCol = UNDEFINED;
+			
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
+
+			int colSize = row.getLastCellNum() + 1;
+			for (int i = row.getFirstCellNum(); i < colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+
+					switch (text) {
+
+					case TERM:
+						termCol = i;
+						break;
+					
+					case ABBREVIATION:
+						abbreviationCol = i;
+						break;
+					}
+				}
+			}
+			
+		
+		}
+
+		private void loadDataDictionaryTemplate(Sheet sheet) throws SpreadsheetException {
+			readDataDictionaryTemplateHeader(sheet);
+
+			int rowSize = sheet.getLastRowNum() + 1;
+			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
+				Row row = sheet.getRow(i);
+				loadDataDictionaryTemplateRow(row);
+			}
+			
+		}
+
+		private void loadDataDictionaryTemplateRow(Row row) throws SpreadsheetException {
+			String sourceSystemName = stringValue(row, sourceSystemCol);
+			String shapeIdLocalName = stringValue(row, sourceObjectNameCol);
+			if(shapeIdLocalName==null )
+				return;
+			URI shapeId = getShapeURL(sourceSystemName,shapeIdLocalName);
+			if (shapeId == null)
+				return;
+			
+						
+			String propertyIdValue = stringValue(row, fieldCol);
+			if (propertyIdValue == null) {
+				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
+				return;
+			}
+			URI propertyId = expandPropertyId(getPropertyBaseURL()+"/"+propertyIdValue);
+
+			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
+
+			String dataDictionarydataType=stringValue(row,dataTypeCol);
+
+			Integer maxLength = integer(row, maxLengthCol);
+			Integer decimalPrecision = integer(row, decimalPrecisionCol);
+			if (decimalPrecision!=null && (decimalPrecision<1 || decimalPrecision>65)){
+				throw new KonigException("Decimal Precison should be between 1 to 65");
+			}
+			Integer decimalScale = integer(row, decimalScaleCol);
+			if(decimalScale!=null &&(decimalScale<0 || decimalScale>30)){
+				String msg = MessageFormat.format("Decimal Scale must be in the range [0, 30] on {0}.{1}", shapeIdLocalName, propertyIdValue);
+				fail(msg);
+			}
+			if (decimalScale!=null && decimalPrecision!=null && decimalScale>decimalPrecision) {
+				String msg = MessageFormat.format("Decimal Scale must be less than or equal to Decimal Precision on {0}.{1}", shapeIdLocalName, propertyIdValue);
+				fail(msg);
+			}
+			String businessName = stringValue(row, businessNameCol);
+			String businessDefinition = stringValue(row, businessDefinitionCol);
+			String dataStewardName = stringValue(row, dataStewardCol);
+			List<URI> securityClassification=uriList(row,securityClassifCol);
+			String constraints = stringValue(row,constraintsCol);	
+			
+
+			Shape shape = produceShape(shapeId);
+			PropertyConstraint p = shape.getPropertyConstraint(propertyId);
+			
+			if (p != null) {
+				logger.warn("Duplicate definition of property '{}' on '{}'", propertyId.getLocalName(),
+						shapeId.getLocalName());
+			} else {
+				p = new PropertyConstraint(propertyId);
+				shape.add(p);
+			}
+			
+			shape.addType(Konig.TabularNodeShape);
+
+			p.setPredicate(propertyId);
+			p.setName(businessName);
+			p.setComment(businessDefinition);
+			p.setMaxCount(1);
+			
+			
+			if(constraints!=null && constraints.contains("Primary Key")){
+				p.setStereotype(Konig.primaryKey);
+				p.setMinCount(1);
+			}
+			else if(constraints!=null && constraints.contains("NOT NULL")){
+				p.setMinCount(1);
+			}
+			else{
+				p.setMinCount(0);
+			}
+
+			URI rdfDatatype=getRdfDatatype(dataDictionarydataType,p);
+			p.setDatatype(rdfDatatype);
+			
+			if(rdfDatatype!=null && (rdfDatatype.equals(XMLSchema.STRING)|| (rdfDatatype.equals(XMLSchema.BASE64BINARY)))){
+				p.setMaxLength(maxLength);
+				
+			}
+			p.setDecimalPrecision(decimalPrecision);
+			p.setDecimalScale(decimalScale);
+			
+			if (dataStewardName != null) {
+				p.dataSteward().setName(dataStewardName);
+			}
+			p.setQualifiedSecurityClassification(securityClassification);
+			
+		}
+		
+
+		private String getPropertyBaseURL() throws SpreadsheetException {
+			String propertyBaseURL=settings.getProperty("propertyBaseURL");
+			if(propertyBaseURL==null){
+				propertyBaseURL=System.getProperty("propertyBaseURL");
+			}
+			if(propertyBaseURL == null){
+				throw new SpreadsheetException("propertyBaseURL is not found in both settings tab and system property.");			
+			}
+			else{
+				nsManager.add("alias",propertyBaseURL);
+			}
+			return propertyBaseURL;
+		}
+
+		private URI getShapeURL(String sourceSystemName, String shapeIdLocalName) throws SpreadsheetException {
+			URI shapeURI=null;
+			String shapeURLTemplate=null;
+			if(settings!=null)
+				shapeURLTemplate=settings.getProperty("shapeURLTemplate");
+			if(shapeURLTemplate==null){
+				shapeURLTemplate=System.getProperty("shapeURLTemplate");
+			}
+			if(shapeURLTemplate == null){
+				throw new SpreadsheetException("shapeURLTemplate is not found in both settings tab and system property.");			
+			}
+			else{
+				String shapeURL=sourceSystemName==null?shapeURLTemplate:shapeURLTemplate.replace("{SOURCE_SYSTEM}", StringUtil.SNAKE_CASE(sourceSystemName));
+				shapeURL=shapeURL.replace("{SOURCE_OBJECT_NAME}", StringUtil.SNAKE_CASE(shapeIdLocalName));		
+				if(settings!=null){
+					for(Object key:settings.keySet()){
+						String propertyKey=(String)key;
+						String propertyValue=settings.getProperty(propertyKey);	
+						shapeURL=(propertyValue==null)?shapeURL:shapeURL.replace("{"+propertyKey+"}", propertyValue);
+					}
+				}
+				shapeURI=new URIImpl(shapeURL);
+				nsManager.add("shape", shapeURI.getNamespace());
+			}
+			return shapeURI;
+		}
+
+		
+
+		private URI getRdfDatatype(String dataDictionarydataType, PropertyConstraint constraint) {
+			switch(dataDictionarydataType){
+				case "CHAR":
+				case "VARCHAR":
+				case "TEXT":
+				case "VARCHAR2":
+					return XMLSchema.STRING;
+				case "DATE":
+					return XMLSchema.DATE;
+				case "DATETIME":
+					return XMLSchema.DATETIME;
+				case "NUMBER":
+					return XMLSchema.DECIMAL;
+				case "SMALLINT":
+					constraint.setMinInclusive(-32768);
+					constraint.setMaxInclusive(32767);
+					return XMLSchema.INTEGER;
+				case "UNSIGNED SMALLINT":
+					constraint.setMinInclusive(0);
+					constraint.setMaxInclusive(65535);
+					return XMLSchema.INTEGER;
+				case "INT":
+					constraint.setMinInclusive(-2147483648);
+					constraint.setMaxInclusive(2147483647);
+					return XMLSchema.INTEGER;
+				case "UNSIGNED INT":
+					constraint.setMinInclusive(0);
+					constraint.setMaxInclusive(4294967295L);
+					return XMLSchema.INTEGER;
+				case "BIGINT":
+					constraint.setMinInclusive(-9223372036854775808L);
+					constraint.setMaxInclusive(9223372036854775807L);
+					return XMLSchema.INTEGER;
+				case "UNSIGNED BIGINT":
+					constraint.setMinInclusive(0);
+					constraint.setMaxInclusive(new BigInteger("18446744073709551615"));
+					return XMLSchema.INTEGER;
+				case "FLOAT":
+					return XMLSchema.FLOAT;
+				case "DOUBLE":
+					return XMLSchema.DOUBLE;
+				case "DECIMAL":
+					return XMLSchema.DECIMAL;
+				case "BINARY":
+					return XMLSchema.BASE64BINARY;
+				case "BOOLEAN":
+					return XMLSchema.BOOLEAN;
+			}
+			return null;
+		}
+
+		private void readDataDictionaryTemplateHeader(Sheet sheet) {
+			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = maxLengthCol = decimalPrecisionCol = decimalScaleCol 
+					= constraintsCol = businessNameCol = businessDefinitionCol = dataStewardCol = securityClassifCol = 
+					targetObjectNameCol = targetFieldNameCol = UNDEFINED;
+
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
+
+			int colSize = row.getLastCellNum() + 1;
+			for (int i = row.getFirstCellNum(); i < colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+
+					switch (text) {
+
+					case SOURCE_SYSTEM:
+						sourceSystemCol = i;
+						break;
+					
+					case SOURCE_OBJECT_NAME:
+						sourceObjectNameCol = i;
+						break;
+						
+					case FIELD:
+						fieldCol = i;
+						break;
+					
+					case DATA_TYPE:
+						dataTypeCol = i;
+						break;
+					
+					case MAX_LENGTH:
+						maxLengthCol = i;
+						break;
+						
+					case DECIMAL_PRECISION:
+						decimalPrecisionCol = i;
+						break;
+					
+					case DECIMAL_SCALE:
+						decimalScaleCol = i;
+						break;
+						
+					case CONSTRAINTS:
+						constraintsCol = i;
+						break;
+					
+					case BUSINESS_NAME:
+						businessNameCol = i;
+						break;
+					
+					case BUSINESS_DEFINITION:
+						businessDefinitionCol = i;
+						break;
+						
+					case DATA_STEWARD:
+						dataStewardCol = i;
+						break;
+						
+					case SECURITY_CLASSIFICATION:
+						securityClassifCol =i;
+						break;
+						
+					case TARGET_OBJECT_NAME:
+						targetObjectNameCol =i;
+						break;
+						
+					case TARGET_FIELD_NAME:
+						targetFieldNameCol = i;
+						break;
+					
+					}
+				}
+			}
+			
 		}
 
 		private int sheetType(Sheet sheet) {
@@ -1087,6 +1525,12 @@ public class WorkbookLoader {
 					break;
 				case AMAZON_RESOURCE_NAME:
 					bits = bits | COL_SECURITY_TAGS;
+					break;
+				case SOURCE_SYSTEM:
+					bits = bits | COL_SOURCE_SYSTEM;
+					break;
+				case TERM:
+					bits = bits | COL_TERM;
 					break;
 				}
 			}
@@ -1286,9 +1730,8 @@ public class WorkbookLoader {
 			String comment = stringValue(row, pcCommentCol);
 
 			String valueTypeText = stringValue(row, pcValueTypeCol);
-			OrConstraint orConstraint = orConstraint(valueTypeText);
 			
-			Resource valueType = orConstraint==null ? valueType(valueTypeText) : null;
+			Resource valueType =  valueType(valueTypeText);
 			Integer minCount = integer(row, pcMinCountCol);
 			Integer maxCount = maxCount(row, pcMaxCountCol);
 			Double minInclusive = doubleValue(row, pcMinInclusive);
@@ -1362,6 +1805,12 @@ public class WorkbookLoader {
 					valueShape.setTargetClass(valueClass);
 				}
 			}
+			
+            io.konig.core.RdbmsShapeValidator validator = new io.konig.core.RdbmsShapeValidator();
+
+            if (shape != null && validator.isValidRDBMSShape(shape)){
+                edge(shape.getId(), RDF.TYPE, Konig.TabularNodeShape);
+            }
 
 			if (Konig.id.equals(propertyId)) {
 				int min = minCount == null ? 0 : minCount.intValue();
@@ -1492,14 +1941,16 @@ public class WorkbookLoader {
 
 		private OrConstraint orConstraint(String valueTypeText) throws SpreadsheetException {
 			OrConstraint or = null;
-			if (valueTypeText!=null && valueTypeText.contains("|")) {
-				or = new OrConstraint();
-				StringTokenizer tokenizer = new StringTokenizer(valueTypeText, "|");
-				while (tokenizer.hasMoreTokens()) {
-					String iri = tokenizer.nextToken().trim();
-					URI shapeId = expandCurie(iri);
-					Shape shape = produceShape(shapeId);
-					or.add(shape);
+			if (valueTypeText != null) {
+				StringTokenizer tokenizer = new StringTokenizer(valueTypeText, "| \n\r\t");
+				if (tokenizer.hasMoreTokens()) {
+					or = new OrConstraint();
+					while (tokenizer.hasMoreTokens()) {
+						String iri = tokenizer.nextToken();
+						URI shapeId = expandCurie(iri);
+						Shape shape = produceShape(shapeId);
+						or.add(shape);
+					}
 				}
 			}
 			return or;
@@ -1914,26 +2365,30 @@ public class WorkbookLoader {
 		private void loadShapeRow(Row row) throws SpreadsheetException {
 
 			URI shapeId = uriValue(row, shapeIdCol);
-
 			if (shapeId == null) {
 				return;
 			}
-			String shapeComment = stringValue(row, shapeCommentCol);
+
+			String iriTemplate = stringValue(row, shapeIriTemplateCol);
 			URI targetClass = uriValue(row, shapeTargetClassCol);
+			String mediaType = stringValue(row, shapeMediaTypeCol);
+			String bigqueryTable = bigQueryTableId(row, targetClass);
+			List<URI> applicationList = uriList(row, defaultShapeForCol);
+			List<URI> shapeOfList = uriList(row, inputShapeOfCol);
+			String orList = stringValue(row, oneOfCol);
+			List<Function> dataSourceList = dataSourceList(row);
+
+			String shapeComment = stringValue(row, shapeCommentCol);
 			URI aggregationOf = uriValue(row, shapeAggregationOfCol);
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
             List<URI> shapeType=uriList(row, shapeTypeCol);
             URI tabularOriginShape = uriValue(row, tabularOriginShapeCol);
 
-			String iriTemplate = stringValue(row, shapeIriTemplateCol);
-			String mediaType = stringValue(row, shapeMediaTypeCol);
-			String bigqueryTable = bigQueryTableId(row, targetClass);
-			List<URI> applicationList = uriList(row, defaultShapeForCol);
-			List<URI> shapeOfList = uriList(row, inputShapeOfCol);
-			List<URI> orList = uriList(row, oneOfCol);
-			List<Function> dataSourceList = dataSourceList(row);
+
 			
 			Shape shape = produceShape(shapeId);
+
+			shape.setWasGeneratedBy(provenance);
 			
 			if (shapeType != null) {
 				for (URI type : shapeType) {
@@ -1977,17 +2432,6 @@ public class WorkbookLoader {
 			
 			shape.setInputShapeOf(shapeOfList);
 
-		}
-		
-		private OrConstraint orConstraint(List<URI> orList) {
-			OrConstraint or = null;
-			if (orList != null) {
-				or = new OrConstraint();
-				for (URI id : orList) {
-					or.add(produceShape(id));
-				}
-			}
-			return or;
 		}
 
 		private void loadAmazonRDSClusterRow(Row row) {
@@ -2166,7 +2610,6 @@ public class WorkbookLoader {
 			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = 
 				shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = 
 				shapeIriTemplateCol = tabularOriginShapeCol = UNDEFINED;
-			
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 

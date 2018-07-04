@@ -45,9 +45,11 @@ import io.konig.core.Term;
 import io.konig.core.UidGenerator;
 import io.konig.core.impl.KonigLiteral;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.Schema;
 import io.konig.formula.Formula2PathTranslator;
 import io.konig.formula.Path2FormulaTranslator;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.schema.Person;
 
 public class PropertyConstraint implements Cloneable {
 
@@ -60,10 +62,10 @@ public class PropertyConstraint implements Cloneable {
 	private Integer maxLength;
 	private Integer decimalPrecision;
 	private Integer decimalScale;
-	private Double minExclusive;
-	private Double maxExclusive;
-	private Double minInclusive;
-	private Double maxInclusive;
+	private Number minExclusive;
+	private Number maxExclusive;
+	private Number minInclusive;
+	private Number maxInclusive;
 	private Boolean uniqueLang;
 	private URI datatype;
 	private URI directType;
@@ -84,6 +86,8 @@ public class PropertyConstraint implements Cloneable {
 	private QuantifiedExpression formula;
 	private URI idFormat;
 	private List<URI> qualifiedSecurityClassification ;
+	private Person dataSteward;
+	private String name;
 	
 	private Term term;
 	private URI termStatus;
@@ -113,6 +117,16 @@ public class PropertyConstraint implements Cloneable {
 		
 	}
 	
+	
+	@RdfProperty(Schema.NAME)
+	public String getName() {
+		return name;
+	}
+
+	@RdfProperty(Schema.NAME)
+	public void setName(String name) {
+		this.name = name;
+	}
 
 	public void setId(Resource id) {
 		this.id = id;
@@ -158,16 +172,16 @@ public class PropertyConstraint implements Cloneable {
 	public void setMaxLength(Integer maxLength) {
 		this.maxLength = maxLength;
 	}
-	public Double getMinExclusive() {
+	public Number getMinExclusive() {
 		return minExclusive;
 	}
-	public void setMinExclusive(Double minExclusive) {
+	public void setMinExclusive(Number minExclusive) {
 		this.minExclusive = minExclusive;
 	}
-	public Double getMaxExclusive() {
+	public Number getMaxExclusive() {
 		return maxExclusive;
 	}
-	public void setMaxExclusive(Double maxExclusive) {
+	public void setMaxExclusive(Number maxExclusive) {
 		this.maxExclusive = maxExclusive;
 	}
 	/**
@@ -185,16 +199,16 @@ public class PropertyConstraint implements Cloneable {
 	public void setTerm(Term term) {
 		this.term = term;
 	}
-	public Double getMinInclusive() {
+	public Number getMinInclusive() {
 		return minInclusive;
 	}
-	public void setMinInclusive(Double minInclusive) {
+	public void setMinInclusive(Number minInclusive) {
 		this.minInclusive = minInclusive;
 	}
-	public Double getMaxInclusive() {
+	public Number getMaxInclusive() {
 		return maxInclusive;
 	}
-	public void setMaxInclusive(Double maxInclusive) {
+	public void setMaxInclusive(Number maxInclusive) {
 		this.maxInclusive = maxInclusive;
 	}
 	
@@ -347,6 +361,13 @@ public class PropertyConstraint implements Cloneable {
 		return out.toString();
 	}
 	
+	public Person dataSteward() {
+		if (dataSteward == null) {
+			dataSteward = new Person();
+		}
+		return dataSteward;
+	}
+	
 	public void toJson(Set<Shape> memory, JsonGenerator json) throws IOException {
 		json.writeStartObject();
 		if (path instanceof PredicatePath) {
@@ -367,10 +388,10 @@ public class PropertyConstraint implements Cloneable {
 			json.writeStringField("directType", directType.stringValue());
 		}
 		if (minInclusive != null) {
-			json.writeNumberField("minInclusive", minInclusive);
+			json.writeNumberField("minInclusive", minInclusive.doubleValue());
 		}
 		if (maxInclusive != null) {
-			json.writeNumberField("maxInclusive", maxInclusive);
+			json.writeNumberField("maxInclusive", maxInclusive.doubleValue());
 		}
 		if (nodeKind != null) {
 			json.writeStringField("nodeKind", "sh:" + nodeKind.getURI().getLocalName());
@@ -553,4 +574,11 @@ public class PropertyConstraint implements Cloneable {
 	}
 	
 	
+	public Person getDataSteward() {
+		return dataSteward;
+	}
+
+	public void setDataSteward(Person dataSteward) {
+		this.dataSteward = dataSteward;
+	}
 }

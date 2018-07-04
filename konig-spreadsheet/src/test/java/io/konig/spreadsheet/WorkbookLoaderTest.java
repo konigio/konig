@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Set;
@@ -41,12 +42,15 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.SKOS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Graph;
@@ -57,10 +61,11 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.io.SkosEmitter;
+import io.konig.core.util.IOUtil;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
-import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
@@ -72,6 +77,7 @@ import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudStorageBucket;
+import io.konig.schema.Person;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
@@ -79,8 +85,6 @@ import io.konig.shacl.PropertyPath;
 import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.io.ShapeWriter;
 
 public class WorkbookLoaderTest {
@@ -958,6 +962,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
+	
 	@Test
 	public void testAmazonRDSCluster() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("person-model-amazon-rds.xlsx");
@@ -1035,7 +1040,7 @@ public class WorkbookLoaderTest {
 		
 		Shape shape = shapeManager.getShapeById(shapeId);
 		assertTrue(shape!=null);
-		
+		assertTrue(shape.getOr()!=null);
 		List<Shape> list = shape.getOr().getShapes();
 		assertEquals(2, list.size());
 		assertEquals("http://example.com/shapes/PersonShape", list.get(0).getId().stringValue());
@@ -1122,6 +1127,276 @@ public class WorkbookLoaderTest {
 		assertEquals(DCL4, sc.iterator().next());
 
 	}
+	
+	
+	public void testTabularNodeShape_1() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("rdbms-node-shape.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		
+		URI shapeId = uri("http://example.com/shapes/SourcePersonShape");
+		
+		ShapeManager s = loader.getShapeManager();
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		Shape shape = s.getShapeById(shapeId);
+		
+		assertTrue(shape!=null);
+		try {
+			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/rdbmsNodeShape/PersonShape.ttl"));
+		} catch (Exception e) {
+			throw new KonigException(e);
+		}
+	}
+	
+	@Test
+	public void testDataDictionaryForString() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
+		ShapeManager s = loader.getShapeManager();
+		
+		Shape shape1 = s.getShapeById(shapeId);
+		assertTrue(shape1!=null);
+		assertTrue(shape1.getType()!=null && shape1.getType().contains(Konig.TabularNodeShape));		
+		
+		//Test String property
+		PropertyConstraint pc=shape1.getPropertyConstraint(uri("http://example.com/alias/ADDRESS_VERIFICATION_CODE"));
+		assertTrue(pc!=null);
+		assertTrue("Address Verification Code".equals(pc.getComment()));
+		assertTrue(Konig.primaryKey.equals(pc.getStereotype()));
+		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()));
+		assertTrue(pc.getMinCount()==1);
+		assertTrue(pc.getMaxCount()==1);
+		assertTrue(pc.getMaxLength()==80);
+		assertTrue(pc.getMaxInclusive()==null);
+		assertTrue(pc.getMinInclusive()==null);
+		assertTrue(pc.getDecimalScale()==null);
+		assertTrue(pc.getDecimalPrecision()==null);
+		Person person = pc.getDataSteward();
+		assertTrue(person != null);
+		assertEquals("Sample Data Steward", person.getName());
+		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification()
+				.contains(uri("https://schema.pearson.com/ns/dcl/DCL1")));
+		
+		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/NAME"));
+		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()) && pc.getMaxLength()==80);
+		assertTrue(pc.getQualifiedSecurityClassification()!=null && pc.getQualifiedSecurityClassification().contains(uri("https://schema.pearson.com/ns/dcl/DCL3")));
+		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/GENDER"));
+		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()) && pc.getMaxLength()==1);
+		pc=shape1.getPropertyConstraint(uri("http://example.com/alias/ADDRESS"));
+		assertTrue(XMLSchema.STRING.equals(pc.getDatatype()) && pc.getMaxLength()==80);
+		assertTrue(pc!=null);
+		
+		shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
+		Shape shape2 = s.getShapeById(shapeId);
+		assertTrue(shape2!=null);
+	}
+	
+	@Test
+	public void testDataDictionaryForInteger() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
+		ShapeManager s = loader.getShapeManager();
+			
+		
+		Shape shape1 = s.getShapeById(shapeId);
+		assertTrue(shape1!=null);
+		assertTrue(shape1.getType()!=null && shape1.getType().contains(Konig.TabularNodeShape));
+		
+		shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
+		Shape shape2 = s.getShapeById(shapeId);
+		assertTrue(shape2!=null);
+		
+		PropertyConstraint pc=shape2.getPropertyConstraint(uri("http://example.com/alias/ORDER_DATE"));
+		assertTrue(XMLSchema.DATE.equals(pc.getDatatype()) && pc.getMaxLength()==null);
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/ORDER_TIME"));
+		assertTrue(XMLSchema.DATETIME.equals(pc.getDatatype()) && pc.getMaxLength()==null);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/INVOICE_VALUE"));
+		
+		assertTrue(XMLSchema.DECIMAL.equals(pc.getDatatype()));
+		assertEquals(15, pc.getDecimalPrecision().intValue());
+		assertEquals(6, pc.getDecimalScale().intValue());
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/DICOUNT_PC"));
+		
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive().intValue()==-32768 
+				&& pc.getMaxInclusive().intValue()==32767);
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/NO_OF_ITEMS"));
+		
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive().intValue()==0 
+				&& pc.getMaxInclusive().intValue()==65535);
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/CREDIT_VALUE"));
+		
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && 
+				pc.getMinInclusive().intValue()==-2147483648 && pc.getMaxInclusive().intValue()==2147483647);
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/ORDER_NUMBER"));
+		
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive().intValue()==0 
+				&& pc.getMaxInclusive().longValue() == 4294967295L);
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/TOTAL_VALUE"));
+		
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && (pc.getMinInclusive().longValue() == -9223372036854775808L) 
+				&& (pc.getMaxInclusive().longValue() == 9223372036854775807L));
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/INVOICE_NUMBER"));
+		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive().intValue()==0
+				&& pc.getMaxInclusive().equals(new BigInteger("18446744073709551615")));
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/DISCOUNT_AMOUNT"));
+		assertTrue(XMLSchema.FLOAT.equals(pc.getDatatype()));
+		assertTrue(pc.getMinInclusive()==null);
+		assertTrue(pc.getMaxInclusive()==null);
+		assertTrue(pc.getDecimalPrecision()!=null);
+		assertEquals(15, pc.getDecimalPrecision().intValue());
+		assertTrue(pc.getDecimalScale() != null);
+		assertEquals(6, pc.getDecimalScale().intValue());
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/VALUE_OF_ITEMS"));
+		assertTrue(XMLSchema.DOUBLE.equals(pc.getDatatype()));
+		assertTrue(pc.getMinInclusive()==null);
+		assertTrue(pc.getMaxInclusive()==null);
+		assertTrue(pc.getDecimalPrecision()!=null);
+		assertEquals(15, pc.getDecimalPrecision().intValue());
+		assertTrue(pc.getDecimalScale() != null);
+		assertEquals(6, pc.getDecimalScale().intValue());
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/SERVICE_TAX_APPLIED"));
+		assertTrue(XMLSchema.DECIMAL.equals(pc.getDatatype()));
+		assertTrue(pc.getMinInclusive()==null);
+		assertTrue(pc.getMaxInclusive()==null);
+		assertTrue(pc.getDecimalPrecision()!=null);
+		assertEquals(15, pc.getDecimalPrecision().intValue());
+		assertTrue(pc.getDecimalScale() != null);
+		assertEquals(6, pc.getDecimalScale().intValue());
+		
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/CODE"));
+		assertTrue(XMLSchema.BASE64BINARY.equals(pc.getDatatype()) && pc.getMaxLength()==5);
+		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/IS_NEW"));
+		assertTrue(XMLSchema.BOOLEAN.equals(pc.getDatatype()));
+	}
+	
+	@Test
+	public void testDataDictionaryForAbbreviations() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
+		ShapeManager s = loader.getShapeManager();
+		
+		// We'll also test the SkosEmitter in this test case.
+
+		File testDir = new File("target/test/WorkbookLoaderTest/dataDictionaryAbbrev");
+		SkosEmitter emitter = new SkosEmitter(testDir);
+		emitter.emit(graph);
+		
+		graph = new MemoryGraph(nsManager);
+		RdfUtil.loadTurtle(testDir, graph);
+		
+		Shape shape1 = s.getShapeById(shapeId);
+		assertTrue(shape1!=null);
+		assertTrue(shape1.getUsesAbbreviationScheme()!=null && 
+				uri("https://example.com/exampleModel/AbbreviationScheme/").equals(shape1.getUsesAbbreviationScheme()));		
+		
+		shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
+		Shape shape2 = s.getShapeById(shapeId);
+		assertTrue(shape2!=null);
+		assertTrue(shape2.getUsesAbbreviationScheme()!=null && 
+				uri("https://example.com/exampleModel/AbbreviationScheme/").equals(shape2.getUsesAbbreviationScheme()));	
+		
+		List<Vertex> vertexList = graph.v(SKOS.CONCEPT_SCHEME).in(RDF.TYPE).toVertexList();
+		assertTrue(vertexList!=null && vertexList.size()==1);
+		Vertex abbrev=vertexList.get(0);
+		assertTrue(uri("https://example.com/exampleModel/AbbreviationScheme/").equals(abbrev.getId()));
+		
+		vertexList = graph.v(SKOS.CONCEPT).in(RDF.TYPE).toVertexList();
+		assertTrue(vertexList!=null && vertexList.size()==3);
+		Vertex mfgVertex=vertexList.get(0);
+		assertTrue(uri("https://example.com/exampleModel/AbbreviationScheme/MANUFACTURING").equals(mfgVertex.getId()));
+		ValueFactory vf=new ValueFactoryImpl();
+		assertTrue(vf.createLiteral("MANUFACTURING").equals(mfgVertex.getValue(SKOS.PREF_LABEL)));
+		assertTrue(vf.createLiteral("MFG").equals(mfgVertex.getValue(Konig.abbreviationLabel)));
+		assertTrue(vf.createURI("https://example.com/exampleModel/AbbreviationScheme/").equals(mfgVertex.getValue(SKOS.IN_SCHEME)));
+		
+		Vertex uda=vertexList.get(1);
+		assertTrue(uri("https://example.com/exampleModel/AbbreviationScheme/USER_DEFINED_ATTRIBUTES").equals(uda.getId()));
+		assertTrue(vf.createLiteral("USER_DEFINED_ATTRIBUTES").equals(uda.getValue(SKOS.PREF_LABEL)));
+		assertTrue(vf.createLiteral("UDA").equals(uda.getValue(Konig.abbreviationLabel)));
+		assertTrue(vf.createURI("https://example.com/exampleModel/AbbreviationScheme/").equals(uda.getValue(SKOS.IN_SCHEME)));
+		
+		Vertex org=vertexList.get(2);
+		assertTrue(uri("https://example.com/exampleModel/AbbreviationScheme/ORGANIZATION").equals(org.getId()));
+		assertTrue(vf.createLiteral("ORGANIZATION").equals(org.getValue(SKOS.PREF_LABEL)));
+		assertTrue(vf.createLiteral("ORG").equals(org.getValue(Konig.abbreviationLabel)));
+		assertTrue(vf.createURI("https://example.com/exampleModel/AbbreviationScheme/").equals(org.getValue(SKOS.IN_SCHEME)));
+		
+		IOUtil.recursiveDelete(testDir);
+		
+	}
+	
+	public void testTabularNodeShape_2() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("rdbms-node-shape-generator.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		URI shapeId = uri("http://example.com/shapes/TargetPersonRdbmsShape");
+		
+		ShapeManager s = loader.getShapeManager();
+		
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		Shape shape = s.getShapeById(shapeId);
+		System.out.println(shape.getTabularOriginShape()+" shape.getTabularOriginShape()");
+		assertTrue(shape!=null);
+		try {	
+			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/rdbmsNodeShape/Shape_TargetShape.ttl"));
+		} catch (Exception e) {
+			throw new KonigException(e);
+		}
+	}
+	
 	private void checkPropertyConstraints(WorkbookLoader loader) {
 		
 		ShapeManager shapeManager = loader.getShapeManager();
@@ -1155,14 +1430,6 @@ public class WorkbookLoaderTest {
 		assertEquals(worksFor.getNodeKind(), NodeKind.IRI);
 	}
 	
-	
-	private Vertex propertyConstraint(Vertex shape, URI predicate) {
-		return shape.asTraversal().out(SH.property).hasValue(SH.path, predicate).firstVertex();
-	}
-	
-	private void assertInt(Vertex v, URI predicate, int value) {
-		assertEquals(literal(v.getValue(predicate)).intValue(), value);
-	}
 	
 	private Literal literal(Value value) {
 		return (Literal) value;

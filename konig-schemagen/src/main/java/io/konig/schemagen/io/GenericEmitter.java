@@ -30,6 +30,7 @@ import org.openrdf.rio.RDFHandlerException;
 
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
+import io.konig.core.io.Emitter;
 import io.konig.schemagen.gcp.TurtleGenerator;
 
 public class GenericEmitter implements Emitter {

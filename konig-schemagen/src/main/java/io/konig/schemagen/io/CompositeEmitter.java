@@ -26,6 +26,7 @@ import java.util.ArrayList;
 
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
+import io.konig.core.io.Emitter;
 
 public class CompositeEmitter extends ArrayList<Emitter> implements Emitter {
 	private static final long serialVersionUID = 1L;

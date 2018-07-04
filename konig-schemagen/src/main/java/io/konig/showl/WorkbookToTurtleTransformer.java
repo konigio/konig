@@ -86,7 +86,7 @@ public class WorkbookToTurtleTransformer {
 		File shapesOutDir = request.getShapesOutDir();
 		File gcpOutDir = request.getGcpOutDir();
 		File awsOutDir = request.getAwsOutDir();
-		File derivedDir = request.getDerivedFormOutDir();
+		File abbrevDir = request.getAbbrevDir();
 
 		if (workbookFile != null && !workbookFile.exists()) {
 			throw new SpreadsheetException("File not found: " + workbookFile);
@@ -112,6 +112,7 @@ public class WorkbookToTurtleTransformer {
 			try {
 
 				owlOutDir.mkdirs();
+				abbrevDir.mkdirs();
 				if (shapesOutDir != null) {
 					shapesOutDir.mkdirs();
 				}
@@ -130,6 +131,9 @@ public class WorkbookToTurtleTransformer {
 
 		OntologyWriter ontologyWriter = new OntologyWriter(new OntologyFileGetter(owlOutDir, nsManager));
 		ontologyWriter.writeOntologies(graph);
+		
+		AbbreviationsWriter abbrevWriter = new AbbreviationsWriter(abbrevDir);
+		abbrevWriter.writeAbbreviations(graph);
 
 		if (shapesOutDir != null) {
 			writeShapes(shapesOutDir);
@@ -153,7 +157,7 @@ public class WorkbookToTurtleTransformer {
 		ShapeManager shapeManager = workbookLoader.getShapeManager();
 		VertexCopier copier = new VertexCopier();
 		copier.excludeProperty(SH.shape, SH.path, SH.targetClass, SH.valueClass, Konig.aggregationOf, Konig.rollUpBy,
-				Konig.defaultShapeFor, Konig.inputShapeOf, Konig.tabularOriginShape);
+				Konig.defaultShapeFor, Konig.inputShapeOf, Konig.tabularOriginShape, Konig.TabularNodeShape);
 		copier.excludeClass(OWL.CLASS, OWL.DATATYPEPROPERTY, OWL.OBJECTPROPERTY, OWL.FUNCTIONALPROPERTY, RDF.PROPERTY);
 		for (Shape shape : shapeManager.listShapes()) {
 			Resource shapeId = shape.getId();

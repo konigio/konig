@@ -1,4 +1,4 @@
-package io.konig.schemagen.io;
+package io.konig.core.io;
 
 /*
  * #%L

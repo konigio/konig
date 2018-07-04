@@ -31,6 +31,7 @@ public class WorkbookToTurtleRequest {
 	private File gcpOutDir;
 	private File awsOutDir;
 	private File derivedFormOutDir;
+	private File abbrevDir;
 	
 	public File getDerivedFormOutDir() {
 		return derivedFormOutDir;
@@ -73,6 +74,12 @@ public class WorkbookToTurtleRequest {
 	}
 	public void setWorkbookDir(File workbookDir) {
 		this.workbookDir = workbookDir;
+	}
+	public File getAbbrevDir() {
+		return abbrevDir;
+	}
+	public void setAbbrevDir(File abbrevDir) {
+		this.abbrevDir = abbrevDir;
 	}
 
 }

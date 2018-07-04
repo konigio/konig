@@ -53,14 +53,13 @@ public class RdbmsShapeGenerator {
 	private FormulaParser parser;
 	private List<PropertyConstraint> rdbmsProperty = null;
 	private OwlReasoner owlReasoner;
-	 
 	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner) {
 		this.parser = new FormulaParser();
 		this.owlReasoner = owlReasoner;
 	}
-	
 	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {		
-		Shape rdbmsChildShape = createRdbmsShape(childShape);		
+		Shape rdbmsChildShape = createRdbmsShape(childShape);
+		declarePredicate(relationshipProperty);	
 		if(rdbmsChildShape != null) {
 			addSyntheticKey(parentShape, "_FK", relationshipProperty);
 			rdbmsChildShape.setProperty(rdbmsProperty);
@@ -141,18 +140,17 @@ public class RdbmsShapeGenerator {
 					declarePredicate(newPredicate);
 					p.setPredicate(newPredicate);
 					
-					if (p.getFormula()==null) {
-						
+					if (p.getFormula()==null) {						
 						String text = logicalPath + localName;
 						QuantifiedExpression formula = parser.quantifiedExpression(text);
 						p.setFormula(formula);
 					}
 					
 					rdbmsProperty.add(p);	
-				} else if (p.getShape() != null) {
-					
+				} else if (p.getShape() != null) {					
 					String nestedPath = logicalPath + localName + '.';
 					String nestedPrefix = prefix + snakeCase + "__";
+					declarePredicate(p.getPredicate());
 					process(rdbmsShape, nestedPath, nestedPrefix, p.getShape());
 				}
 			}
@@ -172,6 +170,7 @@ public class RdbmsShapeGenerator {
 		if(pc != null && "_PK".equals(suffix)) {
 			localName = StringUtil.SNAKE_CASE(pc.getPredicate().getLocalName());
 			URI newPredicate =  new URIImpl(propertyNameSpace + localName + suffix);
+			declarePredicate(newPredicate);
 			pc.setPredicate(newPredicate);
 			if(relationshipProperty != null){
 				String text = "^" + relationshipProperty.getLocalName() + "."+ localName + "_PK" ;
@@ -205,6 +204,7 @@ public class RdbmsShapeGenerator {
 				pc = new PropertyConstraint(new URIImpl(propertyNameSpace + StringUtil.SNAKE_CASE(inverse.getLocalName()) + suffix));
 				pc.setDatatype(XMLSchema.STRING);
 				text = "." + inverse.getLocalName();
+				declarePredicate(inverse);
 				pc.setFormula(parser.quantifiedExpression(text));
 			}
 		}
@@ -214,6 +214,7 @@ public class RdbmsShapeGenerator {
 			pc.setDatatype(XMLSchema.STRING);
 			if(relationshipProperty != null) {
 			text = "^" + relationshipProperty.getLocalName();
+			declarePredicate(pc.getPredicate());
 			pc.setFormula(parser.quantifiedExpression(text));
 			}
 			
@@ -221,9 +222,10 @@ public class RdbmsShapeGenerator {
 			localName = StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName());
 			String snakeCase = localName + suffix;
 			pc = new PropertyConstraint(new URIImpl(propertyNameSpace + snakeCase));
-			pc.setDatatype(XMLSchema.LONG);
+			pc.setDatatype(XMLSchema.LONG);			
 			if(relationshipProperty != null) {
 				text = "^" + relationshipProperty.getLocalName() + "."+ localName + "_PK" ;
+				declarePredicate(new URIImpl(propertyNameSpace+localName+"_PK"));
 				pc.setFormula(parser.quantifiedExpression(text));
 			}
 		}
@@ -240,11 +242,11 @@ public class RdbmsShapeGenerator {
 		AwsAurora auroraTable = rdbmsShape.findDataSource(AwsAurora.class);
 		GoogleCloudSqlTable gcpSqlTable = rdbmsShape.findDataSource(GoogleCloudSqlTable.class);
 		if (auroraTable !=null ){
-			propertyNameSpace = auroraTable.getRdbmsFieldNamespace();
+			propertyNameSpace = auroraTable.getTabularFieldNamespace();
 			return true;
 		}
 		if(gcpSqlTable!=null){
-			propertyNameSpace = gcpSqlTable.getRdbmsFieldNamespace();
+			propertyNameSpace = gcpSqlTable.getTabularFieldNamespace();
 			return true;
 		}
 		return false;

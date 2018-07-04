@@ -17,7 +17,7 @@ shape:ProductRdbmsShape a sh:Shape ;
 	as:endTime "2018-06-01T14:53:13.010+05:30"^^xsd:dateTime . 
 
 <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ProductRdbmsShape> a konig:AwsAurora , konig:DataSource ; 
-	konig:rdbmsFieldNamespace "http://example.com/ns/alias/" ; 
+	konig:tabularFieldNamespace "http://example.com/ns/alias/" ; 
 	aws:tableReference  [ 
 		aws:awsAuroraHost "devHost" ; 
 		aws:awsSchema "schema1" ; 
