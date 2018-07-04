@@ -36,7 +36,8 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IOUtil;
-import io.konig.maven.ViewShapeGeneratorConfig;
+import io.konig.maven.IriTemplateConfig;
+import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
@@ -47,15 +48,17 @@ public class ViewShapeGeneratorTest {
 	public void test() throws Exception {
 	
 		AwsShapeConfig.init();
-		ViewShapeGeneratorConfig config = new ViewShapeGeneratorConfig();
+		TabularShapeGeneratorConfig config = new TabularShapeGeneratorConfig();
+		IriTemplateConfig iriTemplateConfig = new IriTemplateConfig();
 		config.setPropertyNamespace("http://schema.org/");
-		config.setShapeIriPattern("(.*)View$");
-		config.setShapeIriReplacement("http://example.com/shapes/$1Shape");
+		iriTemplateConfig.setIriPattern("(.*)View$");
+		iriTemplateConfig.setIriReplacement("http://example.com/shapes/$1Shape");
+		config.setViewIriTemplate(iriTemplateConfig);
 		FileSet[] viewFiles = new FileSet[1];
 		FileSet fileset = new FileSet();
 		fileset.setDirectory("src/test/resources/view-shape-generator/view");
 		viewFiles[0] = fileset;
-		config.setViewFiles(viewFiles);
+		config.setSqlFiles(viewFiles);
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", "http://schema.org/");
@@ -67,8 +70,8 @@ public class ViewShapeGeneratorTest {
 		
 		ShapeManager shapeManager = loadShapes("view-shape-generator/shape_OriginAccountShape.ttl");
 		File outDir = new File("target/test/view-shape-generator");
-		ViewShapeGenerator viewShapeGenerator = new ViewShapeGenerator(nsManager, shapeManager, config);
-		viewShapeGenerator.generateView(outDir);
+		TabularShapeGenerator tabularShapeGenerator = new TabularShapeGenerator(nsManager, shapeManager);
+		tabularShapeGenerator.generateTabularShapes(outDir, config);
 		
 	}
 	

@@ -19,21 +19,15 @@ package io.konig.schemagen;
  * limitations under the License.
  * #L%
  */
-
-
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.maven.model.FileSet;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
-import io.konig.maven.ViewShapeGeneratorConfig;
+import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -48,52 +42,45 @@ import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 
+
+
 public class ViewShapeGenerator{
 	
 	private NamespaceManager nsManager;
 	private ShapeManager shapeManager;
-	private ViewShapeGeneratorConfig config;
+	private TabularShapeGeneratorConfig config;
 	private SQLShapeGenerator sqlShapeGenerator = new SQLShapeGenerator();
-	public ViewShapeGenerator(NamespaceManager nsManager, ShapeManager shapeManager, ViewShapeGeneratorConfig config) {
+
+	public ViewShapeGenerator(NamespaceManager nsManager, ShapeManager shapeManager,
+			TabularShapeGeneratorConfig config) {
 		this.nsManager = nsManager;
 		this.shapeManager = shapeManager;
 		this.config = config;
 	}
 
-	public void generateView(File shapesDir) {
+	public void generateView(File shapesDir, Statement createViewStmt) {
 		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-		FileSet[] fileSets = config.getViewFiles();
-		for(FileSet fileSet : fileSets) {
-			if(fileSet.getDirectory() != null){
-				File viewDir = new File(fileSet.getDirectory());
-				File[] files = viewDir.listFiles();
-				for(File file : files) {
-					try (InputStream inputStream = new FileInputStream(file)) {
-						String sqlQuery = IOUtils.toString(inputStream);
-						
-						Statement createViewStmt = CCJSqlParserUtil.parse(sqlQuery);
-						CreateView createView = (CreateView) createViewStmt;
-						SelectBody selectStmt = createView.getSelectBody();
-						
-						Select selectStatement = (Select) CCJSqlParserUtil.parse(selectStmt.toString());
-						TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
-						List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
-						
-						Shape shape = createViewShape(createView,tableList);
-						
-						sqlShapeGenerator.writeShape(shape, fileGetter,nsManager);
-						
-					} catch(Exception ex) {
-						throw new KonigException(ex);
-					}
-				}
-			}	
+
+		try {
+			CreateView createView = (CreateView) createViewStmt;
+			SelectBody selectStmt = createView.getSelectBody();
+
+			Select selectStatement = (Select) CCJSqlParserUtil.parse(selectStmt.toString());
+			TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
+			List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
+
+			Shape shape = createViewShape(createView, tableList);
+
+			sqlShapeGenerator.writeShape(shape, fileGetter, nsManager);
+
+		} catch (Exception ex) {
+			throw new KonigException(ex);
 		}
 	}
-	
+
 	public Shape createViewShape(CreateView createView, List<String> tableList) {
 		String viewName = createView.getView().getName();
-		String shapeId = viewName.replaceAll(config.getShapeIriPattern(), config.getShapeIriReplacement());
+		String shapeId = viewName.replaceAll(config.getViewIriTemplate().getIriPattern(), config.getViewIriTemplate().getIriReplacement());
 		Shape shape = new Shape(new URIImpl(shapeId));
 		SelectBody selectStmt = createView.getSelectBody();
 		

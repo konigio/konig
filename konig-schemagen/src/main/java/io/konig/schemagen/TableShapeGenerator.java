@@ -24,24 +24,15 @@ package io.konig.schemagen;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
-
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
-import io.konig.maven.TableShapeGeneratorConfig;
-import io.konig.shacl.NodeKind;
+import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
-import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeFileGetter;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import org.apache.commons.io.IOUtils;
-import org.apache.maven.model.FileSet;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.ColDataType;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
@@ -50,43 +41,29 @@ import net.sf.jsqlparser.statement.create.table.CreateTable;
 public class TableShapeGenerator {
 	
 	private SQLShapeGenerator sqlShapeGenerator = new SQLShapeGenerator();
-
 	private NamespaceManager nsManager;
-	private TableShapeGeneratorConfig tableConfig;
+	private TabularShapeGeneratorConfig tableConfig;
 	
-	public TableShapeGenerator(NamespaceManager nsManager,TableShapeGeneratorConfig tableConfig) {
+	public TableShapeGenerator(NamespaceManager nsManager,TabularShapeGeneratorConfig tableConfig) {
 		this.nsManager = nsManager;
 		this.tableConfig = tableConfig;
 	}
 
-	public void generateTable(File shapesDir) {
+	public void generateTable(File shapesDir, Statement createTableStmt) {
 		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-		FileSet[] fileSets = tableConfig.getTableFiles();
-		for(FileSet fileSet : fileSets) {
-			if(fileSet.getDirectory() != null){
-				File viewDir = new File(fileSet.getDirectory());
-				File[] files = viewDir.listFiles();
-				for(File file : files) {
-					try (InputStream inputStream = new FileInputStream(file)) {
-						String sqlQuery = IOUtils.toString(inputStream);
-						Statement createTableStmt = CCJSqlParserUtil.parse(sqlQuery); 
-						CreateTable createTable = (CreateTable)createTableStmt;
-						List<ColumnDefinition> columnList = createTable.getColumnDefinitions();
-						Shape shape = createTableShape(createTable,columnList);
-						sqlShapeGenerator.writeShape(shape, fileGetter, nsManager);
-					} catch(Exception ex) {
-						throw new KonigException(ex);
-					}
-				}
-			}	
+		try {
+			CreateTable createTable = (CreateTable) createTableStmt;
+			List<ColumnDefinition> columnList = createTable.getColumnDefinitions();
+			Shape shape = createTableShape(createTable, columnList);
+			sqlShapeGenerator.writeShape(shape, fileGetter, nsManager);
+		} catch (Exception ex) {
+			throw new KonigException(ex);
 		}
 	}
-	
-	
+
 	private Shape createTableShape(CreateTable createTable, List<ColumnDefinition> columnList) {
-		String URI ="http://example.com/shapes/";
 		String tableName = createTable.getTable().getName();
-		String shapeId = URI+tableName;
+		String shapeId = tableName.replaceAll(tableConfig.getTableIriTemplate().getIriPattern(), tableConfig.getTableIriTemplate().getIriReplacement());
 		Shape shape = new Shape(new URIImpl(shapeId));
 		addPropertyContraint(shape, columnList);
 		return shape;
@@ -95,22 +72,103 @@ public class TableShapeGenerator {
 	private void addPropertyContraint(Shape shape,  List<ColumnDefinition> columnList) {
 		
 		List<PropertyConstraint> propertyConstraints = new ArrayList<PropertyConstraint>();
-			for(ColumnDefinition column : columnList) {
-				PropertyConstraint pc = new PropertyConstraint();			
-						pc.setPath(new URIImpl(tableConfig.getPropertyNamespace()+column.getColumnName()));
-						pc.setMaxCount(1);
-						pc.setMinCount(getMinCount(column));
-						pc.setFormula(null);
-						if(("ID").equals(column.getColumnName())){
-							pc.setDatatype(XMLSchema.ANYURI);
-						}else{
-						pc.setDatatype(getDataType(column));
-						}
-						shape.add(pc);
-						propertyConstraints.add(pc);
-				}
+		for (ColumnDefinition column : columnList) {
+			PropertyConstraint pc = new PropertyConstraint();
+			pc.setPath(new URIImpl(tableConfig.getPropertyNamespace() + column.getColumnName()));
+			pc.setMaxCount(1);
+			pc.setMinCount(getMinCount(column));
+			pc.setMaxLength(getMaxLength(column));
+			pc.setMinLength(0);
+			if (("ID").equals(column.getColumnName())) {
+				pc.setDatatype(XMLSchema.ANYURI);
+			} else {
+				pc.setDatatype(getMySqlDataType(column));
 			}
-	private URI getDataType(ColumnDefinition column){
+			if("DOUBLE".equals(column.getColDataType().getDataType()) 
+					&& (getDecimalPrecision(column.getColDataType())!=0)){
+			pc.setDecimalPrecision(getDecimalPrecision(column.getColDataType()));
+			pc.setDecimalScale(getDecimalScale(column.getColDataType()));
+			pc.setDatatype(XMLSchema.DECIMAL);
+			}
+			if ("SIGNED TINYINT".equals(column.getColDataType().getDataType())) {
+				pc.setMinInclusive((double) MySqlDatatype.SIGNED_TINYINT_MIN);
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_TINYINT_MAX);
+			} else if ("UNSIGNED TINYINT".equals(column.getColDataType().getDataType())) {
+				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_TINYINT_MIN);
+				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_TINYINT_MAX);
+			} else if ("TINYINT".equals(column.getColDataType().getDataType())) {
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_TINYINT_MAX);
+			} else if ("SIGNED SMALLINT".equals(column.getColDataType().getDataType())) {
+				pc.setMinInclusive((double) MySqlDatatype.SIGNED_SMALLINT_MIN);
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_SMALLINT_MAX);
+			} else if ("UNSIGNED SMALLINT".equals(column.getColDataType().getDataType())) {
+				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_SMALLINT_MIN);
+				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_SMALLINT_MAX);
+			} else if ("SMALLINT".equals(column.getColDataType().getDataType())) {
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_SMALLINT_MAX);
+			} else if ("SIGNED MEDIUMINT".equals(column.getColDataType().getDataType())) {
+				pc.setMinInclusive((double) MySqlDatatype.SIGNED_MEDIUMINT_MIN);
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_MEDIUMINT_MAX);
+			} else if ("UNSIGNED MEDIUMINT".equals(column.getColDataType().getDataType())) {
+				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_MEDIUMINT_MIN);
+				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_MEDIUMINT_MAX);
+			} else if ("MEDIUMINT".equals(column.getColDataType().getDataType())) {
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_MEDIUMINT_MAX);
+			} else if ("SIGNED INT".equals(column.getColDataType().getDataType())) {
+				pc.setMinInclusive((double) MySqlDatatype.SIGNED_INT_MIN);
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
+			} else if ("UNSIGNED INT".equals(column.getColDataType().getDataType())) {
+				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_INT_MIN);
+				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_INT_MAX);
+			} else if ("INT".equals(column.getColDataType().getDataType())) {
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
+			}else if ("SIGNED BIGINT".equals(column.getColDataType().getDataType())) {
+				pc.setMinInclusive((double) MySqlDatatype.SIGNED_BIGINT_MIN);
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_BIGINT_MAX);
+			}else if ("BIGINT".equals(column.getColDataType().getDataType())) {
+					pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
+				}
+			pc.setFormula(null);
+			shape.add(pc);
+			propertyConstraints.add(pc);
+		}
+	}
+	private Integer getMaxLength(ColumnDefinition column){
+		Integer maxLength = 0;
+		ColDataType colDatatype = column.getColDataType();
+		List<String> colList = colDatatype.getArgumentsStringList();
+		if(colList!=null){
+		for(String length : colList){
+			System.out.println(length+" length");
+			maxLength = Integer.valueOf(length);
+		}
+		}
+		return maxLength;
+		
+	}
+	
+	private Integer getDecimalPrecision(ColDataType colDatatype){
+		Integer decimalPrecision = 0;
+		List<String> colList = colDatatype.getArgumentsStringList();
+		if(colList!=null && colList.size() >1){
+		for(int i =0; i<colList.size(); i++){
+			decimalPrecision = Integer.valueOf(colList.get(0));
+		}
+		
+	}return decimalPrecision;
+		}
+	
+	private Integer getDecimalScale(ColDataType colDatatype){
+		Integer decimalScale = 0;
+		List<String> colList = colDatatype.getArgumentsStringList();
+		if(colList!=null && colList.size() >1){
+		for(int i =0; i<colList.size(); i++){
+			decimalScale = Integer.valueOf(colList.get(1));
+		}
+	}
+		return decimalScale;
+	}
+	private URI getMySqlDataType(ColumnDefinition column){
 		URI datatypeURI = null;
 		ColDataType colDatatype = column.getColDataType();
 		switch(colDatatype.getDataType()){
@@ -144,7 +202,18 @@ public class TableShapeGenerator {
 		case "CHAR":
 			datatypeURI = XMLSchema.STRING;
 			break;
-
+		case "TINYINT":
+			datatypeURI = XMLSchema.INTEGER;
+			break;
+		case "SMALLINT":
+			datatypeURI = XMLSchema.INTEGER;
+			break;
+		case "MEDIUMINT":
+			datatypeURI = XMLSchema.INTEGER;
+			break;
+		case "BIGINT":
+			datatypeURI = XMLSchema.INTEGER;
+			break;
 		}
 		return datatypeURI;
 		

@@ -22,42 +22,31 @@ package io.konig.schemagen;
 
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.maven.model.FileSet;
 import org.junit.Test;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFParseException;
-
 import io.konig.aws.datasource.AwsShapeConfig;
-import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
-import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.RdfUtil;
-import io.konig.core.util.IOUtil;
-import io.konig.maven.TableShapeGeneratorConfig;
-import io.konig.shacl.ShapeManager;
-import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.io.ShapeLoader;
+import io.konig.maven.IriTemplateConfig;
+import io.konig.maven.TabularShapeGeneratorConfig;
 
 public class TableShapeGeneratorTest {
 
 	@Test
 	public void test() throws Exception {
-		List<String> inputDataSourceList = new ArrayList<String>();
-		inputDataSourceList.add("AwsAuroraTable");
-		AwsShapeConfig.init();
-		TableShapeGeneratorConfig tableConfig = new TableShapeGeneratorConfig();
+		TabularShapeGeneratorConfig tableConfig = new TabularShapeGeneratorConfig();
+		IriTemplateConfig iriTemplateConfig = new IriTemplateConfig();
+		iriTemplateConfig.setIriPattern("(.*)Table$");
+		iriTemplateConfig.setIriReplacement("http://example.com/shapes/$1Shape");
+		tableConfig.setTableIriTemplate(iriTemplateConfig);
 		tableConfig.setPropertyNamespace("http://schema.org/");
 		FileSet[] tableFiles = new FileSet[1];
 		FileSet fileset = new FileSet();
 		fileset.setDirectory("src/test/resources/table-shape-generator/table");
 		tableFiles[0] = fileset;
-		tableConfig.setTableFiles(tableFiles);
+		tableConfig.setSqlFiles(tableFiles);
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", "http://schema.org/");
@@ -68,8 +57,8 @@ public class TableShapeGeneratorTest {
 		nsManager.add("xsd", "http://www.w3.org/2001/XMLSchema#");
 		
 		File outDir = new File("target/test/table-shape-generator");
-		TableShapeGenerator tableShapeGenerator = new TableShapeGenerator(nsManager, tableConfig);	
-		tableShapeGenerator.generateTable(outDir);
+		TabularShapeGenerator tableShapeGenerator = new TabularShapeGenerator(nsManager, null);	
+		tableShapeGenerator.generateTabularShapes(outDir, tableConfig);
 		
 	}
 	
