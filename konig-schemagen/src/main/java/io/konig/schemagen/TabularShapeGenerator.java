@@ -58,7 +58,6 @@ public class TabularShapeGenerator {
 						sqlQuery = sqlQuery.replaceAll("\\bIF NOT EXISTS\\b", "");
 						Statement statement = CCJSqlParserUtil.parse(sqlQuery);
 						if (statement != null && !"".equals(statement) && statement instanceof CreateView) {
-
 							ViewShapeGenerator viewShapeGenerator = new ViewShapeGenerator(nsManager, shapeManager,
 									config);
 							viewShapeGenerator.generateView(shapesDir, statement);
