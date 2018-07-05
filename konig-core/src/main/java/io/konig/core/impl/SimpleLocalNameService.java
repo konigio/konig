@@ -2,6 +2,7 @@ package io.konig.core.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Collection;
 
 /*
  * #%L
@@ -44,6 +45,8 @@ import io.konig.core.vocab.OMCS;
 import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
 
 public class SimpleLocalNameService implements LocalNameService {
 	
@@ -82,7 +85,27 @@ public class SimpleLocalNameService implements LocalNameService {
 		}
 	}
 	
+	public void addShapes(Collection<Shape> shapeList) {
+		for (Shape s : shapeList) {
+			addPropertyConstraints(s.getProperty());
+		}
+	}
 	
+	
+	private void addPropertyConstraints(Collection<PropertyConstraint> propertyList) {
+		for (PropertyConstraint p : propertyList) {
+			safeAdd(p.getPredicate());
+		}
+		
+	}
+
+	private void safeAdd(URI uri) {
+		if (uri != null) {
+			add(uri);
+		}
+		
+	}
+
 	public void add(URI uri) {
 		add(uri.getLocalName(), uri);
 	}
