@@ -2,6 +2,7 @@ package io.konig.core;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 
 /*
@@ -37,6 +38,9 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
+
 public class NameMap extends HashMap<String,URI> {
 	private static final long serialVersionUID = 1L;
 	public static URI AMBIGUOUS = new URIImpl("urn:ambiguous");
@@ -50,6 +54,8 @@ public class NameMap extends HashMap<String,URI> {
 	public NameMap(Graph graph) {
 		addAll(graph);
 	}
+	
+
 	
 	public void addStaticFields(Class<?> type) {
 		Field[] declaredFields = type.getDeclaredFields();
@@ -78,6 +84,21 @@ public class NameMap extends HashMap<String,URI> {
 			add(predicate);
 			add(object);
 		}
+	}
+	
+	public void addShapes(Collection<Shape> shapeList) {
+		for (Shape s : shapeList) {
+			addProperties(s.getProperty());
+		}
+	}
+
+	private void addProperties(List<PropertyConstraint> property) {
+		if (property != null) {
+			for (PropertyConstraint c : property) {
+				add(c.getPredicate());
+			}
+		}
+		
 	}
 
 	public void add(Value value) {

@@ -239,10 +239,7 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 			input.close();
 			URI shapeId = uri("http://example.com/shapes/MDM_PRODUCT");
 			
-			ShapeManager s = new MemoryShapeManager();
-			
-			ShapeLoader shapeLoader = new ShapeLoader(s);
-			shapeLoader.load(graph);		
+			ShapeManager s = loader.getShapeManager();
 			
 			Shape shape = s.getShapeById(shapeId);
 			assertTrue(shape!=null);

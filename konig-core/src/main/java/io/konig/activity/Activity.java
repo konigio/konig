@@ -44,6 +44,14 @@ public class Activity {
 		return new URIImpl(value);
 	}
 	
+	public Activity() {
+		
+	}
+	
+	public Activity(Resource id) {
+		this.id = id;
+	}
+	
 	public Resource getId() {
 		return id;
 	}
