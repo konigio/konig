@@ -85,11 +85,16 @@ import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.SKOS;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import com.sun.codemodel.JCodeModel;
 
+import io.konig.abbrev.AbbreviationConfig;
+import io.konig.abbrev.AbbreviationManager;
+import io.konig.abbrev.MemoryAbbreviationManager;
 import io.konig.aws.common.GroovyAwsDeploymentScriptWriter;
 import io.konig.aws.common.GroovyAwsTearDownScriptWriter;
 import io.konig.aws.datasource.AwsShapeConfig;
@@ -316,6 +321,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private DatasetMapper datasetMapper;
     private ShapeMediaTypeNamer mediaTypeNamer;
     private Graph owlGraph;
+    private AbbreviationManager abbrevManager;
     private ContextManager contextManager;
     private ClassStructure structure;
     private SimpleLocalNameService localNameService;
@@ -904,15 +910,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
 				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(tablesDir);
-				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator);
-			
+
+				
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator,abbrevManager());
 				resourceGenerator.add(awsAuror);				
 			}
 			if (viewDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
 				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(viewDir);
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
-				AwsAuroraViewWriter awsAuror = new AwsAuroraViewWriter(viewDir, generator,sqlFileLocator,shapeModelFactory);
+
+				AwsAuroraViewWriter awsAuror = new AwsAuroraViewWriter(viewDir, generator,sqlFileLocator,shapeModelFactory,abbrevManager());
 			
 				resourceGenerator.add(awsAuror);	
 				
@@ -943,6 +951,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 	}
 	
+	private AbbreviationManager abbrevManager() {
+		if (abbrevManager == null) {
+			AbbreviationConfig config = new AbbreviationConfig();
+			config.setDelimiters("_ \t\r\n");
+			config.setPreferredDelimiter("_");
+			abbrevManager = new MemoryAbbreviationManager(owlGraph, config);
+		}
+		return abbrevManager;
+	}
+
+
 	private void deleteAmazonWebServices() throws IOException, ConfigurationException {
 		if(amazonWebServices != null) {
 			Configurator config = configurator();
@@ -956,7 +975,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
 				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(tablesDir);
-				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator);
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator,abbrevManager());
 			
 				resourceGenerator.add(awsAuror);
 				resourceGenerator.dispatch(shapeManager.listShapes());
@@ -1053,7 +1072,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		CloudSqlInfo info = googleCloudPlatform.getCloudsql();
 		SqlTableGenerator generator = new SqlTableGenerator();
 		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(info.getTables());
-		return new CloudSqlTableWriter(generator, sqlFileLocator);
+		return new CloudSqlTableWriter(generator, sqlFileLocator, abbrevManager());
 	}
 
 	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {
@@ -1286,4 +1305,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			shapeGenerator.generate(shapesDir);
 		}
 	}
+	
+	
 }
