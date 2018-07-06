@@ -92,7 +92,7 @@ public class RdfConfig {
 	}
 	public File getSkosDir() {
 		if (skosDir == null && getRdfDir()!=null) {
-			skosDir = new File(getRdfDir(), "abbrev");
+			skosDir = new File(getRdfDir(), "skos");
 		}
 		return skosDir;
 	}

@@ -1,8 +1,5 @@
 package io.konig.schemagen.sql;
 
-import java.io.File;
-import java.io.IOException;
-
 /*
  * #%L
  * Konig Schema Generator
@@ -25,22 +22,13 @@ import java.io.IOException;
 
 
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.SKOS;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.core.Graph;
-import io.konig.core.Vertex;
-import io.konig.core.impl.MemoryGraph;
-import io.konig.core.impl.RdfUtil;
+import io.konig.abbrev.AbbreviationManager;
+import io.konig.abbrev.AbbreviationScheme;
 import io.konig.core.vocab.Konig;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.NodeKind;
@@ -52,7 +40,6 @@ public class SqlTableGenerator {
 	private static final Logger LOG = LoggerFactory.getLogger(SqlTableGenerator.class);
 	private SqlTableNameFactory nameFactory;
 	private SqlDatatypeMapper datatypeMapper;
-	private Map<String,String> abbreviations;
 	
 	public SqlTableGenerator() {
 		nameFactory = new SqlTableNameFactory();
@@ -63,7 +50,7 @@ public class SqlTableGenerator {
 		this.datatypeMapper = datatypeMapper;
 	}
 	
-	public SqlTable generateTable(Shape shape,File abbrevDir) throws SchemaGeneratorException {
+	public SqlTable generateTable(Shape shape, AbbreviationManager abbrevManager) throws SchemaGeneratorException {
 		
 		String tableName = nameFactory.getTableName(shape);
 		SqlTable table = new SqlTable(tableName);
@@ -77,13 +64,9 @@ public class SqlTableGenerator {
 			}
 			
 		}addIdColumn(shape,table);
-		try {
-			setAbbreviations(abbrevDir);
-		} catch (RDFParseException | RDFHandlerException | IOException e) {
-			throw new SchemaGeneratorException(e);
-		}
+		
 		for (PropertyConstraint p : shape.getProperty()) {
-			SqlColumn column = column(shape, p);
+			SqlColumn column = column(shape, p, abbrevManager);
 			if (column != null) {
 				table.addColumn(column);
 			}
@@ -92,23 +75,6 @@ public class SqlTableGenerator {
 	}
 
 
-	private void setAbbreviations(File abbrevDir) throws RDFParseException, RDFHandlerException, IOException {
-		Graph graph=new MemoryGraph();
-		if(abbrevDir!=null && abbrevDir.exists()){
-			RdfUtil.loadTurtle(abbrevDir, graph);
-		}
-			abbreviations=new HashMap<String,String>();
-			List<Vertex> vertexList=graph.v(SKOS.CONCEPT).in(RDF.TYPE).toVertexList();
-			if(vertexList!=null){
-				for(Vertex v:vertexList){
-					String abbreviation=v.getValue(Konig.abbreviationLabel).stringValue();
-					String description = v.getValue(SKOS.PREF_LABEL).stringValue();
-					abbreviations.put(description, abbreviation);
-				}
-			}
-			
-		
-	}
 	private void addIdColumn(Shape shape, SqlTable table) {
 		SqlKeyType keyType = SqlKeyType.PRIMARY_KEY;
 		if(shape.getNodeKind() == NodeKind.IRI){
@@ -124,7 +90,7 @@ public class SqlTableGenerator {
 		
 	}
 
-	private SqlColumn column(Shape shape, PropertyConstraint p) {
+	private SqlColumn column(Shape shape, PropertyConstraint p, AbbreviationManager abbrev) {
 		
 		URI predicate = p.getPredicate();	
 		SqlKeyType keyType=SqlTableGeneratorUtil.getKeyType(p);
@@ -143,12 +109,15 @@ public class SqlTableGenerator {
 			FacetedSqlDatatype datatype = datatypeMapper.type(p);
 			boolean nullable = !p.isRequiredSingleValue();	
 			String columnName=predicate.getLocalName();
-			if(shape.getUsesAbbreviationScheme()!=null){
-				if(abbreviations!=null){
-					for(String key:abbreviations.keySet()){
-						columnName=columnName.replace(key,abbreviations.get(key));
-					}
+			if(shape.getUsesAbbreviationScheme()!=null && abbrev != null){
+				AbbreviationScheme scheme = abbrev.getSchemeById(shape.getUsesAbbreviationScheme());
+				if (scheme == null) {
+					String msg = MessageFormat.format(
+							"For shape <{0}>, abbreviation scheme not found: <{1}>", 
+							shape.getId(), shape.getUsesAbbreviationScheme());
+					throw new SchemaGeneratorException(msg);
 				}
+				columnName = scheme.abbreviate(columnName).toUpperCase();
 			}
 			return new SqlColumn(columnName, datatype, keyType, nullable);
 		}
