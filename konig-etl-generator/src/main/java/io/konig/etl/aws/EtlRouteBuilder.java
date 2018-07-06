@@ -228,7 +228,7 @@ public class EtlRouteBuilder {
 		}
 //	}
 
-	public void createDockerComposeFile(Map<String, Object> services)
+	public void createDockerComposeFile(Map<String, Map<String,String>> services)
 			throws IOException {
 		DumperOptions options = new DumperOptions();
 		options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
