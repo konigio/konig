@@ -156,7 +156,8 @@ import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
-import io.konig.schemagen.ViewShapeGenerator;
+import io.konig.schemagen.TabularShapeGenerationException;
+import io.konig.schemagen.TabularShapeGenerator;
 import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
@@ -295,7 +296,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private AmazonWebServicesConfig amazonWebServices;
     
     @Parameter
-    private ViewShapeGeneratorConfig viewShapeGenerator;
+    private TabularShapeGeneratorConfig config;
     
     @Parameter
     private HashSet<String> excludeNamespace;
@@ -376,7 +377,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			updateRdf();
 			
 			computeSizeEstimates();
-			generateViewShape();
+			generateTabularShapes();
+			//generateViewShape();
+			//generateTableShape();
 			
 			emitter.emit(owlGraph);
 			
@@ -1294,16 +1297,21 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 	}
 	
-	private void generateViewShape() throws RDFParseException, RDFHandlerException, IOException {
-		if(defaults.getShapesDir() != null && viewShapeGenerator != null) {
+	private void generateTabularShapes() throws RDFParseException, RDFHandlerException, IOException {
+		
+		if(defaults.getShapesDir() != null && config != null) {
 			RdfUtil.loadTurtle(defaults.getRdfDir(), owlGraph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
 			shapeLoader.load(owlGraph);
 			
 			File shapesDir = defaults.getShapesDir();
-			ViewShapeGenerator shapeGenerator = new ViewShapeGenerator(nsManager, shapeManager, viewShapeGenerator);
-			shapeGenerator.generate(shapesDir);
-		}
+			TabularShapeGenerator tabularShapeGenerator = new TabularShapeGenerator(nsManager, shapeManager);
+			try {
+				tabularShapeGenerator.generateTabularShapes(shapesDir, config);
+			} catch (TabularShapeGenerationException e) {
+				e.printStackTrace();
+			}
+	}
 	}
 	
 	
