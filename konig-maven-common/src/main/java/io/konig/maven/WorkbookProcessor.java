@@ -78,8 +78,8 @@ public class WorkbookProcessor {
 	public File getSkosDir() {
 		return skosDir;
 	}
-	public void setAbbrevDir(File abbrevDir) {
-		this.skosDir = abbrevDir;
+	public void setSkosDir(File skosDir) {
+		this.skosDir = skosDir;
 	}
 	public boolean isFailOnWarnings() {
 		return failOnWarnings;

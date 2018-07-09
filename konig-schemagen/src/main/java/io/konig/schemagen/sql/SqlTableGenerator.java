@@ -27,6 +27,8 @@ import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.abbrev.AbbreviationManager;
+import io.konig.abbrev.AbbreviationScheme;
 import io.konig.core.vocab.Konig;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.NodeKind;
@@ -42,14 +44,13 @@ public class SqlTableGenerator {
 	public SqlTableGenerator() {
 		nameFactory = new SqlTableNameFactory();
 		datatypeMapper = new SqlDatatypeMapper();
-	}
-	
+	}	
 	public SqlTableGenerator(SqlDatatypeMapper datatypeMapper) {
 		nameFactory = new SqlTableNameFactory();
 		this.datatypeMapper = datatypeMapper;
 	}
 	
-	public SqlTable generateTable(Shape shape) throws SchemaGeneratorException {
+	public SqlTable generateTable(Shape shape, AbbreviationManager abbrevManager) throws SchemaGeneratorException {
 		
 		String tableName = nameFactory.getTableName(shape);
 		SqlTable table = new SqlTable(tableName);
@@ -63,8 +64,9 @@ public class SqlTableGenerator {
 			}
 			
 		}addIdColumn(shape,table);
+		
 		for (PropertyConstraint p : shape.getProperty()) {
-			SqlColumn column = column(shape, p);
+			SqlColumn column = column(shape, p, abbrevManager);
 			if (column != null) {
 				table.addColumn(column);
 			}
@@ -88,7 +90,7 @@ public class SqlTableGenerator {
 		
 	}
 
-	private SqlColumn column(Shape shape, PropertyConstraint p) {
+	private SqlColumn column(Shape shape, PropertyConstraint p, AbbreviationManager abbrev) {
 		
 		URI predicate = p.getPredicate();	
 		SqlKeyType keyType=SqlTableGeneratorUtil.getKeyType(p);
@@ -105,9 +107,19 @@ public class SqlTableGenerator {
 				throw new SchemaGeneratorException(message);
 			}
 			FacetedSqlDatatype datatype = datatypeMapper.type(p);
-			boolean nullable = !p.isRequiredSingleValue();
-				
-			return new SqlColumn(predicate.getLocalName(), datatype, keyType, nullable);
+			boolean nullable = !p.isRequiredSingleValue();	
+			String columnName=predicate.getLocalName();
+			if(shape.getUsesAbbreviationScheme()!=null && abbrev != null){
+				AbbreviationScheme scheme = abbrev.getSchemeById(shape.getUsesAbbreviationScheme());
+				if (scheme == null) {
+					String msg = MessageFormat.format(
+							"For shape <{0}>, abbreviation scheme not found: <{1}>", 
+							shape.getId(), shape.getUsesAbbreviationScheme());
+					throw new SchemaGeneratorException(msg);
+				}
+				columnName = scheme.abbreviate(columnName).toUpperCase();
+			}
+			return new SqlColumn(columnName, datatype, keyType, nullable);
 		}
 		return null;
 	}

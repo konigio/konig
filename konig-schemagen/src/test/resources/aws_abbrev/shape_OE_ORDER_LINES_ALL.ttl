@@ -1,0 +1,35 @@
+@prefix abbrev: <https://example.com/exampleModel/AbbreviationScheme/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/ORACLE_EBS/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix aws: <http://www.konig.io/ns/aws/> .
+
+shape:OE_ORDER_LINES_ALL a sh:Shape , konig:TabularNodeShape ; 
+	sh:property  [ 
+		sh:path <http://example.com/ns/alias/ORGANIZATION_ID> ; 
+		sh:name "HEADER IDENTIFIER" ; 
+		sh:minCount 0 ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:maxLength 80 ; 
+		konig:qualifiedSecurityClassification <https://schema.pearson.com/ns/dcl/DCL1>
+	 ]  ,  [ 
+		sh:path <http://example.com/ns/alias/LINE_ID> ; 
+		sh:name "LINE IDENTIFIER" ; 
+		sh:minCount 0 ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:maxLength 80 ; 
+		konig:qualifiedSecurityClassification <https://schema.pearson.com/ns/dcl/DCL1> ]  ; 
+	konig:usesAbbreviationScheme abbrev: ; 
+	konig:shapeDataSource <http://www.konig.io/ns/aws/host/devHost/databases/edwcore/tables/OE_ORDER_LINES_ALL> . 
+	
+abbrev: a skos:ConceptScheme . 
+
+<http://www.konig.io/ns/aws/host/devHost/databases/edwcore/tables/OE_ORDER_LINES_ALL> a konig:AwsAurora , konig:DataSource ; 
+	aws:tableReference  [ 
+		aws:awsAuroraHost "devHost" ; 
+		aws:awsSchema "edwcore" ; 
+		aws:awsTableName "OE_ORDER_LINES_ALL" ]  . 
