@@ -1,5 +1,9 @@
 package io.konig.schemagen;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 /*
  * #%L
  * Konig Schema Generator
@@ -26,16 +30,31 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.maven.model.FileSet;
 import org.junit.Test;
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
+
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.NamespaceManager;
+import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.RdfUtil;
 import io.konig.maven.IriTemplateConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 
 public class TableShapeGeneratorTest {
 
+	private ShapeManager shapeManager = new MemoryShapeManager();
+	private ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
+
 	@Test
 	public void test() throws Exception {
+
+		
 		TabularShapeGeneratorConfig tableConfig = new TabularShapeGeneratorConfig();
 		IriTemplateConfig iriTemplateConfig = new IriTemplateConfig();
 		iriTemplateConfig.setIriPattern("(.*)Table$");
@@ -59,8 +78,25 @@ public class TableShapeGeneratorTest {
 		File outDir = new File("target/test/table-shape-generator");
 		TabularShapeGenerator tableShapeGenerator = new TabularShapeGenerator(nsManager, null);	
 		tableShapeGenerator.generateTabularShapes(outDir, tableConfig);
+		MemoryGraph graph = new MemoryGraph();
 		
+		RdfUtil.loadTurtle(new File("target/test/table-shape-generator"), graph, nsManager);
+		
+		shapeLoader.load(graph);
+		
+		
+		URI shapeId = uri("http://example.com/shapes/PartyShape");
+		Shape shape = shapeManager.getShapeById(shapeId);
+			assertTrue(shape!=null);
+			URI email = uri("http://schema.org/email");
+			PropertyConstraint emailconstraint = shape.getPropertyConstraint(email);
+			//System.out.println(q+" q");
+		assertNotNull(emailconstraint);
+		assertEquals(emailconstraint.getPredicate(),uri("http://schema.org/email"));
+		assertEquals(emailconstraint.getDatatype(),uri("http://www.w3.org/2001/XMLSchema#string"));
 	}
-	
+	private URI uri(String value) {
+		return new URIImpl(value);
+	}
 
 }

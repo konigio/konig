@@ -8,5 +8,6 @@ CREATE TABLE IF NOT EXISTS sofa.PartyTable (
    Number INT,
    Name CHAR(35),
    Phone FLOAT,
-   SerialNumber TINYINT(1)
+   SerialNumber TINYINT UNSIGNED,
+   RollNumber INT
 );

@@ -24,6 +24,8 @@ package io.konig.schemagen;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -90,44 +92,64 @@ public class TableShapeGenerator {
 			pc.setDecimalScale(getDecimalScale(column.getColDataType()));
 			pc.setDatatype(XMLSchema.DECIMAL);
 			}
-			if ("SIGNED TINYINT".equals(column.getColDataType().getDataType())) {
+			if("INT".equals(column.getColDataType().getDataType())){
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
+			}
+			String colDataType = column.getColDataType().getDataType();
+			colDataType = getMySqlAttribute(column)+" "+colDataType;
+			
+			switch(colDataType){
+			case "SIGNED TINYINT":
 				pc.setMinInclusive((double) MySqlDatatype.SIGNED_TINYINT_MIN);
 				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_TINYINT_MAX);
-			} else if ("UNSIGNED TINYINT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "UNSIGNED TINYINT":
 				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_TINYINT_MIN);
 				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_TINYINT_MAX);
-			} else if ("TINYINT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "TINYINT":
 				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_TINYINT_MAX);
-			} else if ("SIGNED SMALLINT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "SIGNED SMALLINT":
 				pc.setMinInclusive((double) MySqlDatatype.SIGNED_SMALLINT_MIN);
 				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_SMALLINT_MAX);
-			} else if ("UNSIGNED SMALLINT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "UNSIGNED SMALLINT":
 				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_SMALLINT_MIN);
 				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_SMALLINT_MAX);
-			} else if ("SMALLINT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "SMALLINT":
 				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_SMALLINT_MAX);
-			} else if ("SIGNED MEDIUMINT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "SIGNED MEDIUMINT":
 				pc.setMinInclusive((double) MySqlDatatype.SIGNED_MEDIUMINT_MIN);
 				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_MEDIUMINT_MAX);
-			} else if ("UNSIGNED MEDIUMINT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "UNSIGNED MEDIUMINT":
 				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_MEDIUMINT_MIN);
 				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_MEDIUMINT_MAX);
-			} else if ("MEDIUMINT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "MEDIUMINT":
 				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_MEDIUMINT_MAX);
-			} else if ("SIGNED INT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "SIGNED INT":
 				pc.setMinInclusive((double) MySqlDatatype.SIGNED_INT_MIN);
 				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
-			} else if ("UNSIGNED INT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "UNSIGNED INT":
 				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_INT_MIN);
 				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_INT_MAX);
-			} else if ("INT".equals(column.getColDataType().getDataType())) {
-				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
-			}else if ("SIGNED BIGINT".equals(column.getColDataType().getDataType())) {
+				break;
+			case "INT":
+				System.out.println(colDataType+" colDataType");
+
+			case "SIGNED BIGINT":
 				pc.setMinInclusive((double) MySqlDatatype.SIGNED_BIGINT_MIN);
 				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_BIGINT_MAX);
-			}else if ("BIGINT".equals(column.getColDataType().getDataType())) {
-					pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
-				}
+			case "BIGINT":
+				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
+				break;
+			}
 			pc.setFormula(null);
 			shape.add(pc);
 			propertyConstraints.add(pc);
@@ -139,7 +161,6 @@ public class TableShapeGenerator {
 		List<String> colList = colDatatype.getArgumentsStringList();
 		if(colList!=null){
 		for(String length : colList){
-			System.out.println(length+" length");
 			maxLength = Integer.valueOf(length);
 		}
 		}
@@ -212,7 +233,7 @@ public class TableShapeGenerator {
 			datatypeURI = XMLSchema.INTEGER;
 			break;
 		case "BIGINT":
-			datatypeURI = XMLSchema.INTEGER;
+			datatypeURI = XMLSchema.LONG;
 			break;
 		}
 		return datatypeURI;
@@ -221,10 +242,24 @@ public class TableShapeGenerator {
 	private int getMinCount(ColumnDefinition column){
 		int minCount = 0;
 		List<String> colSpecList = column.getColumnSpecStrings();
-		if (colSpecList!=null && colSpecList.size() >0){
+		if (colSpecList!=null && colSpecList.size() >0 && colSpecList.get(0).equals("NOT")){
 			minCount = 1;
 		}
 		return minCount;
 	}
+	
+	private String getMySqlAttribute(ColumnDefinition column){
+		String attribute = "";
+		List<String> colSpecList = column.getColumnSpecStrings();
+		if (colSpecList!=null && colSpecList.size() >0){
+			if((colSpecList.get(0)).contains("SIGNED")){
+			attribute = colSpecList.get(0);
+			}
+		}
+		return attribute;
+	}
+	
+	
+
 	}
 

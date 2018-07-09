@@ -23,4 +23,21 @@ package io.konig.schemagen;
 
 public class TabularShapeGenerationException extends Exception {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	public TabularShapeGenerationException(String message) {
+		super(message);
+	}
+	
+	public TabularShapeGenerationException(Throwable cause) {
+		super(cause);
+	}
+	
+	public TabularShapeGenerationException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
 }
