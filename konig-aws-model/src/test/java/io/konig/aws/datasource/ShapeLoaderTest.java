@@ -1,7 +1,11 @@
 package io.konig.aws.datasource;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 
 /*
  * #%L
@@ -27,29 +31,25 @@ import java.io.IOException;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
-import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.vocab.AWS;
-import io.konig.core.vocab.GCP;
-import io.konig.core.vocab.Konig;
-import io.konig.core.vocab.SH;
 import io.konig.datasource.DataSource;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
+import io.konig.shacl.io.ShapeWriter;
 
 public class ShapeLoaderTest {
 
@@ -59,6 +59,33 @@ public class ShapeLoaderTest {
 	@Before
 	public void setUp() {
 		AwsShapeConfig.init();
+	}
+	
+	@Test
+	public void testMinInclusive() throws Exception {
+		URI shapeId = uri("http://example.com/shape");
+		Shape shape = new Shape(shapeId);
+		
+		URI age = uri("http://example.com/age");
+		PropertyConstraint p = new PropertyConstraint(age);
+		shape.add(p);
+		p.setMinInclusive(2);
+		
+		ShapeWriter writer = new ShapeWriter();
+		
+		Graph graph = new MemoryGraph();
+		
+		writer.emitShape(shape, graph);
+		
+		shapeLoader.load(graph);
+		
+		Shape loaded = shapeManager.getShapeById(shapeId);
+		
+		
+		
+		PropertyConstraint q = loaded.getPropertyConstraint(age);
+		assertTrue(q.getMinInclusive() != null);
+		assertEquals(2, q.getMinInclusive().intValue());
 	}
 	
 	@Test
