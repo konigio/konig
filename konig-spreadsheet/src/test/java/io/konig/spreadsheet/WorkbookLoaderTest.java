@@ -1325,6 +1325,40 @@ public class WorkbookLoaderTest {
 			throw new KonigException(e);
 		}
 	}
+	@Test
+	public void testRelationshipDegree() throws Exception{
+
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("relationship-degree.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		Vertex genderTypeClass=graph.getVertex(uri("http://schema.org/GenderType"));
+		assertTrue(genderTypeClass!=null);
+		Vertex subClassOf = genderTypeClass.getVertex(RDFS.SUBCLASSOF);
+		assertTrue(OWL.RESTRICTION.equals(subClassOf.getURI(RDF.TYPE)));
+		assertTrue(uri("http://example.com/ns/demo/genderCode").equals(subClassOf.getURI(OWL.ONPROPERTY)));
+		assertTrue(Konig.OneToOne.equals(subClassOf.getURI(Konig.relationshipDegree)));
+		
+		Vertex imageObjectClass=graph.getVertex(uri("http://schema.org/ImageObject"));
+		assertTrue(imageObjectClass!=null);		
+		List<Vertex> subClassOfList = imageObjectClass.asTraversal().out(RDFS.SUBCLASSOF).toVertexList();
+		assertTrue(OWL.RESTRICTION.equals(subClassOfList.get(1).getURI(RDF.TYPE)));
+		assertTrue(uri("http://schema.org/thumbnail").equals(subClassOfList.get(1).getURI(OWL.ONPROPERTY)));
+		assertTrue(Konig.OneToMany.equals(subClassOfList.get(1).getURI(Konig.relationshipDegree)));
+		
+		Vertex videoObjectClass=graph.getVertex(uri("http://schema.org/VideoObject"));
+		assertTrue(videoObjectClass!=null);
+		subClassOfList = videoObjectClass.asTraversal().out(RDFS.SUBCLASSOF).toVertexList();
+		assertTrue(OWL.RESTRICTION.equals(subClassOfList.get(1).getURI(RDF.TYPE)));
+		assertTrue(uri("http://schema.org/thumbnail").equals(subClassOfList.get(1).getURI(OWL.ONPROPERTY)));
+		assertTrue(Konig.OneToMany.equals(subClassOfList.get(1).getURI(Konig.relationshipDegree)));	
+	}
 	private void checkPropertyConstraints(Graph graph) {
 		
 		Vertex shape = graph.getVertex(uri("http://example.com/shapes/v1/schema/Person"));
