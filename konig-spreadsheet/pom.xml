@@ -31,6 +31,15 @@
 		    <artifactId>velocity</artifactId>
 		    <version>${velocity.version}</version>
 		</dependency>
+		
+		
+    <dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-gcp-model</artifactId>
+			<version>${konig.version}</version>
+      <scope>test</scope>
+    </dependency>
+		
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

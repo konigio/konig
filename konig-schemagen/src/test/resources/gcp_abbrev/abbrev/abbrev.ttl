@@ -1,0 +1,10 @@
+@prefix abbrev: <https://example.com/exampleModel/AbbreviationScheme/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+abbrev: a skos:ConceptScheme . 
+
+abbrev:MANUFACTURING a skos:Concept ; 
+	skos:prefLabel "MANUFACTURING" ; 
+	konig:abbreviationLabel "MFG" ; 
+	skos:inScheme abbrev: . 

@@ -24,8 +24,8 @@ package io.konig.schemagen.gcp;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.MessageFormat;
 
+import io.konig.abbrev.AbbreviationManager;
 import io.konig.core.KonigException;
 import io.konig.datasource.DatasourceFileLocator;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
@@ -38,14 +38,16 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 	private File baseDir;
 	private SqlTableGenerator generator;
 	private DatasourceFileLocator sqlFileLocator;
+	private AbbreviationManager abbrevManager;
 
 	// TODO: Add a DatasourceFileLocator as a private field, and pass an instance to the constructor.
 	// TODO: Remove the baseDir field.
 	
-	public CloudSqlTableWriter(SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator) {
+	public CloudSqlTableWriter(SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator, AbbreviationManager abbrevManager) {
 		//this.baseDir = baseDir;
 		this.generator = generator;
 		this.sqlFileLocator= sqlFileLocator;
+		this.abbrevManager=abbrevManager;
 	}
 
 	@Override
@@ -53,7 +55,7 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 		
 		GoogleCloudSqlTable table = shape.findDataSource(GoogleCloudSqlTable.class);
 		if (table != null) {
-			SqlTable sqlTable = generator.generateTable(shape);
+			SqlTable sqlTable = generator.generateTable(shape,abbrevManager);
 			File file = sqlFile(table);
 			
 			writeTable(file, sqlTable);
