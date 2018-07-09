@@ -95,59 +95,77 @@ public class TableShapeGenerator {
 			if("INT".equals(column.getColDataType().getDataType())){
 				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
 			}
-			String colDataType = column.getColDataType().getDataType();
-			colDataType = getMySqlAttribute(column)+" "+colDataType;
+			String colDataType = column.getColDataType().getDataType().toUpperCase();
+			String signage = getMySqlAttribute(column).trim().toUpperCase();
+			String delim = signage.length()==0 ? "" : " ";
+			
+			colDataType = signage+delim+colDataType;
 			
 			switch(colDataType){
+				
 			case "SIGNED TINYINT":
-				pc.setMinInclusive((double) MySqlDatatype.SIGNED_TINYINT_MIN);
-				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_TINYINT_MAX);
+				pc.setMinInclusive(MySqlDatatype.SIGNED_TINYINT_MIN);
+				pc.setMaxInclusive(MySqlDatatype.SIGNED_TINYINT_MAX);
 				break;
+				
 			case "UNSIGNED TINYINT":
-				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_TINYINT_MIN);
-				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_TINYINT_MAX);
+				pc.setMinInclusive(MySqlDatatype.UNSIGNED_TINYINT_MIN);
+				pc.setMaxInclusive(MySqlDatatype.UNSIGNED_TINYINT_MAX);
 				break;
-			case "TINYINT":
-				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_TINYINT_MAX);
+				
+			case "TINYINT" :
+				pc.setMaxInclusive(MySqlDatatype.SIGNED_TINYINT_MAX);
 				break;
+				
 			case "SIGNED SMALLINT":
-				pc.setMinInclusive((double) MySqlDatatype.SIGNED_SMALLINT_MIN);
-				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_SMALLINT_MAX);
+				pc.setMinInclusive(MySqlDatatype.SIGNED_SMALLINT_MIN);
+				pc.setMaxInclusive(MySqlDatatype.SIGNED_SMALLINT_MAX);
 				break;
+				
 			case "UNSIGNED SMALLINT":
-				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_SMALLINT_MIN);
-				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_SMALLINT_MAX);
+				pc.setMinInclusive(MySqlDatatype.UNSIGNED_SMALLINT_MIN);
+				pc.setMaxInclusive(MySqlDatatype.UNSIGNED_SMALLINT_MAX);
 				break;
+				
 			case "SMALLINT":
-				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_SMALLINT_MAX);
+				pc.setMaxInclusive(MySqlDatatype.SIGNED_SMALLINT_MAX);
 				break;
+				
 			case "SIGNED MEDIUMINT":
-				pc.setMinInclusive((double) MySqlDatatype.SIGNED_MEDIUMINT_MIN);
-				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_MEDIUMINT_MAX);
+				pc.setMinInclusive(MySqlDatatype.SIGNED_MEDIUMINT_MIN);
+				pc.setMaxInclusive(MySqlDatatype.SIGNED_MEDIUMINT_MAX);
 				break;
+				
 			case "UNSIGNED MEDIUMINT":
-				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_MEDIUMINT_MIN);
-				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_MEDIUMINT_MAX);
+				pc.setMinInclusive(MySqlDatatype.UNSIGNED_MEDIUMINT_MIN);
+				pc.setMaxInclusive(MySqlDatatype.UNSIGNED_MEDIUMINT_MAX);
 				break;
+				
 			case "MEDIUMINT":
-				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_MEDIUMINT_MAX);
+				pc.setMaxInclusive(MySqlDatatype.SIGNED_MEDIUMINT_MAX);
 				break;
+				
 			case "SIGNED INT":
-				pc.setMinInclusive((double) MySqlDatatype.SIGNED_INT_MIN);
-				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
+				pc.setMinInclusive(MySqlDatatype.SIGNED_INT_MIN);
+				pc.setMaxInclusive(MySqlDatatype.SIGNED_INT_MAX);
 				break;
+				
 			case "UNSIGNED INT":
-				pc.setMinInclusive((double) MySqlDatatype.UNSIGNED_INT_MIN);
-				pc.setMaxInclusive((double) MySqlDatatype.UNSIGNED_INT_MAX);
+				pc.setMinInclusive(MySqlDatatype.UNSIGNED_INT_MIN);
+				pc.setMaxInclusive(MySqlDatatype.UNSIGNED_INT_MAX);
 				break;
+				
 			case "INT":
-				System.out.println(colDataType+" colDataType");
+				pc.setMaxInclusive(MySqlDatatype.SIGNED_INT_MAX);
+				break;
 
 			case "SIGNED BIGINT":
-				pc.setMinInclusive((double) MySqlDatatype.SIGNED_BIGINT_MIN);
-				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_BIGINT_MAX);
+				pc.setMinInclusive(MySqlDatatype.SIGNED_BIGINT_MIN);
+				pc.setMaxInclusive(MySqlDatatype.SIGNED_BIGINT_MAX);
+				break;
+				
 			case "BIGINT":
-				pc.setMaxInclusive((double) MySqlDatatype.SIGNED_INT_MAX);
+				pc.setMaxInclusive(MySqlDatatype.SIGNED_BIGINT_MAX);
 				break;
 			}
 			pc.setFormula(null);
