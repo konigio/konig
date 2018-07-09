@@ -24,6 +24,7 @@ package io.konig.formula;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -820,6 +821,9 @@ public class FormulaParser {
 						URI id = iriOptions.iterator().next();
 						term = new Term(localName, id.stringValue(), Kind.ANY);
 						context.add(term);
+					} else if (iriOptions.isEmpty()) {
+						String msg = MessageFormat.format("Local name not found: {0}", localName);
+						throw new RDFParseException(msg);
 					} else {
 						StringBuilder builder = new StringBuilder();
 						builder.append("Local name \"");

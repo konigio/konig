@@ -138,6 +138,8 @@ public class BasicPojoHandler implements PojoHandler {
 			result = new StringValueHandler(m);
 		} else if (isCollectionType(type)) {
 			result = collectionHandler(m);
+		} else if (type == Number.class) {
+			result = new NumberValueHandler(m);
 		} else if (type == float.class || type==Float.class) {
 			result = new FloatValueHandler(m);
 		} else if (type == URI.class) {
