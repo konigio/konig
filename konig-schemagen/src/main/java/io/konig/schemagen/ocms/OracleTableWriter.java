@@ -52,7 +52,7 @@ public class OracleTableWriter implements ShapeVisitor {
 		OracleTable table = shape.findDataSource(OracleTable.class);
 		if (table != null) {
 			OracleTableDefinition tableDefinition = new OracleTableDefinition();
-			SqlTable sqlTable = generator.generateTable(shape);
+			SqlTable sqlTable = generator.generateTable(shape,null);
 			File sqlFile = sqlFile(table);
 			File jsonFile = jsonFile(table);
 			tableDefinition.setQuery(new CreateOracleTableStatement(sqlTable).toString());

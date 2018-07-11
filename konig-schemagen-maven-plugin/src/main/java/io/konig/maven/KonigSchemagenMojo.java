@@ -85,11 +85,16 @@ import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.SKOS;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import com.sun.codemodel.JCodeModel;
 
+import io.konig.abbrev.AbbreviationConfig;
+import io.konig.abbrev.AbbreviationManager;
+import io.konig.abbrev.MemoryAbbreviationManager;
 import io.konig.aws.common.GroovyAwsDeploymentScriptWriter;
 import io.konig.aws.common.GroovyAwsTearDownScriptWriter;
 import io.konig.aws.datasource.AwsShapeConfig;
@@ -151,7 +156,8 @@ import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
-import io.konig.schemagen.ViewShapeGenerator;
+import io.konig.schemagen.TabularShapeGenerationException;
+import io.konig.schemagen.TabularShapeGenerator;
 import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
@@ -290,7 +296,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private AmazonWebServicesConfig amazonWebServices;
     
     @Parameter
-    private ViewShapeGeneratorConfig viewShapeGenerator;
+    private TabularShapeGeneratorConfig config;
     
     @Parameter
     private HashSet<String> excludeNamespace;
@@ -316,6 +322,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private DatasetMapper datasetMapper;
     private ShapeMediaTypeNamer mediaTypeNamer;
     private Graph owlGraph;
+    private AbbreviationManager abbrevManager;
     private ContextManager contextManager;
     private ClassStructure structure;
     private SimpleLocalNameService localNameService;
@@ -370,7 +377,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			updateRdf();
 			
 			computeSizeEstimates();
-			generateViewShape();
+			generateTabularShapes();
+			//generateViewShape();
+			//generateTableShape();
 			
 			emitter.emit(owlGraph);
 			
@@ -904,15 +913,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
 				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(tablesDir);
-				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator);
-			
+
+				
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator,abbrevManager());
 				resourceGenerator.add(awsAuror);				
 			}
 			if (viewDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
 				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(viewDir);
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
-				AwsAuroraViewWriter awsAuror = new AwsAuroraViewWriter(viewDir, generator,sqlFileLocator,shapeModelFactory);
+
+				AwsAuroraViewWriter awsAuror = new AwsAuroraViewWriter(viewDir, generator,sqlFileLocator,shapeModelFactory,abbrevManager());
 			
 				resourceGenerator.add(awsAuror);	
 				
@@ -943,6 +954,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 	}
 	
+	private AbbreviationManager abbrevManager() {
+		if (abbrevManager == null) {
+			AbbreviationConfig config = new AbbreviationConfig();
+			config.setDelimiters("_ \t\r\n");
+			config.setPreferredDelimiter("_");
+			abbrevManager = new MemoryAbbreviationManager(owlGraph, config);
+		}
+		return abbrevManager;
+	}
+
+
 	private void deleteAmazonWebServices() throws IOException, ConfigurationException {
 		if(amazonWebServices != null) {
 			Configurator config = configurator();
@@ -956,7 +978,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
 				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(tablesDir);
-				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator);
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator,abbrevManager());
 			
 				resourceGenerator.add(awsAuror);
 				resourceGenerator.dispatch(shapeManager.listShapes());
@@ -1053,7 +1075,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		CloudSqlInfo info = googleCloudPlatform.getCloudsql();
 		SqlTableGenerator generator = new SqlTableGenerator();
 		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(info.getTables());
-		return new CloudSqlTableWriter(generator, sqlFileLocator);
+		return new CloudSqlTableWriter(generator, sqlFileLocator, abbrevManager());
 	}
 
 	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {
@@ -1275,15 +1297,22 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 	}
 	
-	private void generateViewShape() throws RDFParseException, RDFHandlerException, IOException {
-		if(defaults.getShapesDir() != null && viewShapeGenerator != null) {
+	private void generateTabularShapes() throws RDFParseException, RDFHandlerException, IOException {
+		
+		if(defaults.getShapesDir() != null && config != null) {
 			RdfUtil.loadTurtle(defaults.getRdfDir(), owlGraph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
 			shapeLoader.load(owlGraph);
 			
 			File shapesDir = defaults.getShapesDir();
-			ViewShapeGenerator shapeGenerator = new ViewShapeGenerator(nsManager, shapeManager, viewShapeGenerator);
-			shapeGenerator.generate(shapesDir);
-		}
+			TabularShapeGenerator tabularShapeGenerator = new TabularShapeGenerator(nsManager, shapeManager);
+			try {
+				tabularShapeGenerator.generateTabularShapes(shapesDir, config);
+			} catch (TabularShapeGenerationException e) {
+				e.printStackTrace();
+			}
 	}
+	}
+	
+	
 }
