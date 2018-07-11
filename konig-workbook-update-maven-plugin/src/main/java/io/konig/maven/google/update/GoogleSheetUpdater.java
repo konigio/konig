@@ -352,9 +352,9 @@ public class GoogleSheetUpdater extends Worksheet{
 						newPropertyConstraint.add("");
 					} else if(SOURCE_PATH.equals(header)) {
 						newPropertyConstraint.add(stringLiteral(property.getValue(Konig.sourcePath)));
-					} else if(PARTITION_OF.equals(header)) {
+					} /*else if(PARTITION_OF.equals(header)) {
 						newPropertyConstraint.add(stringLiteral(property.getValue(Konig.partitionOf)));
-					} else if(FORMULA.equals(header)) {
+					} */else if(FORMULA.equals(header)) {
 						if(property.getValue(Konig.formula) != null){
 							FormulaParser parser = new FormulaParser();
 							QuantifiedExpression e = parser.quantifiedExpression(property.getValue(Konig.formula).stringValue());
@@ -473,9 +473,9 @@ public class GoogleSheetUpdater extends Worksheet{
 				if(property.getValue(Konig.sourcePath) != null && !headers.contains(SOURCE_PATH)) {
 					headers.add(SOURCE_PATH);
 				} 
-				if(property.getValue(Konig.partitionOf) != null && !headers.contains(PARTITION_OF)) {
+				/*if(property.getValue(Konig.partitionOf) != null && !headers.contains(PARTITION_OF)) {
 					headers.add(PARTITION_OF);
-				} 
+				} */
 				if(property.getValue(Konig.formula) != null && !headers.contains(FORMULA)) {
 					headers.add(FORMULA);
 				}
