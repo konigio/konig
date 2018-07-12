@@ -27,13 +27,14 @@ import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
+import io.konig.shacl.RelationshipDegree;
 import io.konig.shacl.Shape;
 
 public class RdbmsShapeHelperTest extends AbstractRdbmsShapeGeneratorTest {
 	@Test
 	public void testGetShMaxCardinality() throws Exception {
 		load("src/test/resources/rdbms-shape-helper");
-		Integer shMaxCardinality=rdbmsShapeHelper.getShMaxCardinality(uri("http://schema.org/address"));
+		Integer shMaxCardinality=rdbmsShapeHelper.getShMaxCardinality(uri("http://example.com/ns/alias/address"));
 		assertTrue(shMaxCardinality==3);
 	}
 	@Test
@@ -41,11 +42,27 @@ public class RdbmsShapeHelperTest extends AbstractRdbmsShapeGeneratorTest {
 		load("src/test/resources/rdbms-shape-helper");
 		Integer owlMaxCardinality=rdbmsShapeHelper.getOwlMaxCardinality(uri("http://schema.org/givenName"));
 		assertTrue(owlMaxCardinality==1);
-		owlMaxCardinality=rdbmsShapeHelper.getOwlMaxCardinality(uri("http://schema.org/address"));
+		owlMaxCardinality=rdbmsShapeHelper.getOwlMaxCardinality(uri("http://example.com/ns/alias/address"));
 		assertTrue(owlMaxCardinality==5);
 		owlMaxCardinality=rdbmsShapeHelper.getOwlMaxCardinality(uri("http://schema.org/owns"));
 		assertTrue(owlMaxCardinality==3);
 		
+	}
+	
+	@Test
+	public void testGetRelationshipDegree() throws Exception{
+		load("src/test/resources/rdbms-shape-helper");
+		URI shapeId = iri("http://example.com/shapes/PersonShape");
+
+		Shape shape = shapeManager.getShapeById(shapeId);
+		RelationshipDegree relationshipDegree=rdbmsShapeHelper.getRelationshipDegree(shape.getPropertyConstraint(uri("http://schema.org/owns")));
+		assertTrue(RelationshipDegree.OneToMany.equals(relationshipDegree));
+		relationshipDegree=rdbmsShapeHelper.getRelationshipDegree(shape.getPropertyConstraint(uri("http://example.com/ns/alias/address")));
+		assertTrue(RelationshipDegree.ManyToMany.equals(relationshipDegree));
+		relationshipDegree=rdbmsShapeHelper.getRelationshipDegree(shape.getPropertyConstraint(uri("http://schema.org/birthPlace")));
+		assertTrue(RelationshipDegree.OneToOne.equals(relationshipDegree));
+		relationshipDegree=rdbmsShapeHelper.getRelationshipDegree(shape.getPropertyConstraint(uri("http://schema.org/knowsAbout")));
+		assertTrue(RelationshipDegree.ManyToOne.equals(relationshipDegree));
 	}
 	
 	private URI uri(String text) {

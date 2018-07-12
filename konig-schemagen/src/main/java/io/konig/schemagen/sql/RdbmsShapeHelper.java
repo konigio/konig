@@ -156,7 +156,7 @@ public class RdbmsShapeHelper {
 			else if(Konig.OneToMany.equals(relationshipDegree))
 				return RelationshipDegree.OneToMany;
 			else if(Konig.ManyToOne.equals(relationshipDegree))
-				return RelationshipDegree.OneToMany;
+				return RelationshipDegree.ManyToOne;
 			else if(Konig.ManyToMany.equals(relationshipDegree))
 				return RelationshipDegree.ManyToMany;			
 		}

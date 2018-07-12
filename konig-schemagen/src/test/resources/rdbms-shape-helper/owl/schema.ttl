@@ -1,5 +1,6 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix alias: <http://example.com/ns/alias/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
 @prefix schema: <http://schema.org/> .
 @prefix vann: <http://purl.org/vocab/vann/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -10,13 +11,17 @@ schema: a owl:Ontology ;
 schema:Person a owl:Class ;
   rdfs:subClassOf [
     a owl:Restriction;
-    owl:onProperty schema:address ;
+    owl:onProperty alias:address ;
     owl:maxCardinality 5
   ] , [
     a owl:Restriction;
     owl:onProperty schema:owns ;
     owl:onClass schema:Vehicle ;
     owl:maxQualifiedCardinality 3
+  ] , [
+    a owl:Restriction;
+    owl:onProperty schema:birthPlace ;
+    owl:maxCardinality 1
   ]
 .   
 schema:Organization a owl:Class .
@@ -25,11 +30,31 @@ schema:Vehicle a owl:Class .
 
 schema:PostalAddress a owl:Class . 
 
-schema:Product a owl:Class .   
+schema:Product a owl:Class .  
 
-schema:address a owl:ObjectProperty ; 
+schema:Place a owl:Class ;
+  rdfs:subClassOf [
+    a owl:Restriction;
+    owl:onProperty schema:globalLocationNumber ;
+    owl:maxCardinality 1
+  ] 
+.
+
+schema:Thing a owl:Class .  
+	
+schema:owns a owl:ObjectProperty ; 
 	schema:domainIncludes schema:Person ; 
-	schema:rangeIncludes schema:PostalAddress . 
+	schema:rangeIncludes schema:Product . 
+	
+schema:birthPlace a owl:ObjectProperty ;
+	owl:inverseOf  schema:globalLocationNumber ;
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes schema:Place .
+
+schema:knowsAbout a owl:ObjectProperty ;
+	owl:inverseOf  schema:name ;
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes schema:Thing . 
 
 schema:addressLocality a owl:DatatypeProperty ; 
 	schema:domainIncludes schema:PostalAddress ; 
@@ -50,3 +75,12 @@ schema:givenName a owl:FunctionalProperty ;
 schema:streetAddress a owl:DatatypeProperty ; 
 	schema:domainIncludes schema:PostalAddress ; 
 	schema:rangeIncludes xsd:string . 
+
+schema:globalLocationNumber a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Place ; 
+	schema:rangeIncludes xsd:string .
+	
+schema:name a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Thing ; 
+	schema:rangeIncludes xsd:string ;
+	konig:relationshipDegree konig:ManyToOne .

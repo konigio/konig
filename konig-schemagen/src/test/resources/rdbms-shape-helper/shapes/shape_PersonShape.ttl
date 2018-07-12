@@ -18,7 +18,7 @@ shape:PersonShape a sh:Shape ;
 		rdfs:comment "Given name. In the U.S., the first name of a Person." ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1
+		sh:maxCount 1 
 	 ]  ,  [ 
 		sh:path schema:familyName ; 
 		rdfs:comment "Family name. In the U.S., the last name of an Person." ; 
@@ -38,7 +38,19 @@ shape:PersonShape a sh:Shape ;
 		rdfs:comment "Products owned by the organization or person." ; 
 		sh:shape shape:ProductShape ; 
 		sh:minCount 0 ; 
-		sh:maxCount 3
+		sh:maxCount 3 ;
+		konig:relationshipDegree konig:OneToMany
+	 ]  ,  [ 
+		sh:path schema:birthPlace ; 
+		rdfs:comment "The place where the person was born." ; 
+		sh:shape shape:PlaceShape ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ;
+	 ] ,  [ 
+		sh:path schema:knowsAbout ; 
+		sh:shape shape:ThingShape ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ;
 	 ]  . 
 
 <http://www.konig.io/activity/ctCCAwJN0aQAAAFjpXH-Bw> a konig:LoadModelFromSpreadsheet ; 
