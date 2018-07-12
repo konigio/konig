@@ -35,7 +35,7 @@ import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
 import io.konig.maven.JsonSchemaConfig;
 import io.konig.maven.OracleManagedCloudConfig;
-import io.konig.maven.ViewShapeGeneratorConfig;
+import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
 
 public class MultiProject extends MavenProjectConfig {
@@ -48,7 +48,7 @@ public class MultiProject extends MavenProjectConfig {
 	private JsonSchemaConfig jsonSchema;
 	private OracleManagedCloudConfig oracleManagedCloud;
 	private AmazonWebServicesConfig amazonWebServices;	
-	private ViewShapeGeneratorConfig viewShapeGenerator;
+	private TabularShapeGeneratorConfig tabularShapeGenerator;
 	 
 	public WorkbookProcessor getWorkbook() {
 		return workbook;
@@ -74,12 +74,12 @@ public class MultiProject extends MavenProjectConfig {
 		return jsonSchema;
 	}
 	
-	public ViewShapeGeneratorConfig getViewShapeGeneratorConfig() {
-		return viewShapeGenerator;
+	public TabularShapeGeneratorConfig getTabularShapeGeneratorConfig() {
+		return tabularShapeGenerator;
 	}
 	
-	public void setViewShapeGeneratorConfig(ViewShapeGeneratorConfig viewShapeGenerator) {
-		this.viewShapeGenerator = viewShapeGenerator;
+	public void setTabularShapeGeneratorConfig(TabularShapeGeneratorConfig tabularShapeGenerator) {
+		this.tabularShapeGenerator = tabularShapeGenerator;
 	}
 	
 	public void setJsonSchemaConfig(JsonSchemaConfig jsonSchemaConfig) {
@@ -114,7 +114,7 @@ public class MultiProject extends MavenProjectConfig {
 	public void setGoogleCloudPlatform(GoogleCloudPlatformConfig googleCloudPlatform) {
 		this.googleCloudPlatform = googleCloudPlatform;
 	}
-
+	
 	public ParentProjectGenerator run() throws MavenProjectGeneratorException, IOException {
 		ParentProjectGenerator parent = prepare();
 		parent.run();
@@ -125,7 +125,7 @@ public class MultiProject extends MavenProjectConfig {
 		ParentProjectGenerator parent = new ParentProjectGenerator(this);
 		if (workbook != null) {
 			RdfModelGenerator rdf = new RdfModelGenerator(this, workbook);
-			rdf.setViewShapeGeneratorConfig(viewShapeGenerator);
+			rdf.setTabularShapeGeneratorConfig(tabularShapeGenerator);
 			setRdfSourceDir(new File(rdf.baseDir(), "target/generated/rdf"));
 			parent.add(rdf);
 		}
@@ -208,6 +208,7 @@ public class MultiProject extends MavenProjectConfig {
 		}
 		
 	}
+
 
 
 	
