@@ -348,10 +348,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			shapeInjector = new ShapeInjector((MemoryShapeManager)shapeManager);
 			nsManager = new MemoryNamespaceManager();
 			mediaTypeNamer = new SimpleShapeMediaTypeNamer();
-			owlGraph = new MemoryGraph();
+			owlGraph = new MemoryGraph(nsManager);
 			contextManager = new MemoryContextManager();
 			owlReasoner = new OwlReasoner(owlGraph);
-			owlGraph.setNamespaceManager(nsManager);
 			
 			emitter = new CompositeEmitter();
 			loadResources();
@@ -773,6 +772,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		 try {			
 			 if (workbook != null) {	
 				 WorkbookLoader workbookLoader = new WorkbookLoader(nsManager);
+				 workbookLoader.setShapeManager(shapeManager);
 				 workbookLoader.setFailOnWarnings(workbook.isFailOnWarnings());
 				 workbookLoader.setFailOnErrors(workbook.isFailOnErrors());
 				 workbookLoader.setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
@@ -793,17 +793,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 					if(files!=null && files.isEmpty()){
 						throw new SpreadsheetException("No files available in workbookDir and workbookFile.");
 					}
-					Graph graph = new MemoryGraph();
 					for (File file : files) {
 						FileInputStream input = new FileInputStream(file);
 						try {
 
 							Workbook workbook = new XSSFWorkbook(input);
 
-							graph.setNamespaceManager(nsManager);
-
 							workbookLoader.setDatasetMapper(datasetMapper);
-							workbookLoader.load(workbook, graph);
+							workbookLoader.load(workbook, owlGraph);
 						} finally {
 							input.close();
 						}
@@ -1023,7 +1020,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 			if (bigQuery != null) {
 				resourceGenerator.addBigQueryGenerator(bigQuery.getSchema());
-				resourceGenerator.addBigQueryViewGenerator(bigQuery.getView());
+				if (googleCloudPlatform.isEnableBigQueryTransform()) {
+					resourceGenerator.addBigQueryViewGenerator(bigQuery.getView());
+				}
 				
 				resourceGenerator.add(labelGenerator());
 			}
