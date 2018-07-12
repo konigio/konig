@@ -1,0 +1,52 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" . 
+
+schema:Person a owl:Class ;
+  rdfs:subClassOf [
+    a owl:Restriction;
+    owl:onProperty schema:address ;
+    owl:maxCardinality 5
+  ] , [
+    a owl:Restriction;
+    owl:onProperty schema:owns ;
+    owl:onClass schema:Vehicle ;
+    owl:maxQualifiedCardinality 3
+  ]
+.   
+schema:Organization a owl:Class .
+
+schema:Vehicle a owl:Class .
+
+schema:PostalAddress a owl:Class . 
+
+schema:Product a owl:Class .   
+
+schema:address a owl:ObjectProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes schema:PostalAddress . 
+
+schema:addressLocality a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:PostalAddress ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:addressRegion a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:PostalAddress ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:familyName a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:givenName a owl:FunctionalProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:streetAddress a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:PostalAddress ; 
+	schema:rangeIncludes xsd:string . 

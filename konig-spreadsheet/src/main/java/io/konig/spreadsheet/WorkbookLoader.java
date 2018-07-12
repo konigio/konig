@@ -458,6 +458,7 @@ public class WorkbookLoader {
 		private int subpropertyOfCol = UNDEFINED;
 		private int propertyCommentCol = UNDEFINED;
 		private int securityClassificationCol = UNDEFINED;
+		private int relationshipDegreeCol = UNDEFINED;
 
 		private int individualNameCol = UNDEFINED;
 		private int individualCommentCol = UNDEFINED;
@@ -2807,6 +2808,7 @@ public class WorkbookLoader {
 			URI subpropertyOf = uriValue(row, subpropertyOfCol);
 			URI termStatus = uriValue(row, propertyTermStatusCol);
 			List<URI> securityClassification = uriList(row, securityClassificationCol);
+			URI relationshipDegree = uriValue(row,relationshipDegreeCol);
 			if (propertyId == null) {
 				return;
 			}
@@ -2864,6 +2866,18 @@ public class WorkbookLoader {
 			  for (URI uri : securityClassification) {
 			    graph.edge(propertyId, Konig.securityClassification, uri);					
 			  }
+			}
+			if(relationshipDegree!=null){				
+				for(URI d:domain){
+					Vertex restrictionVertex = graph.vertex();
+					Resource restriction = restrictionVertex.getId();
+					edge(restriction, RDF.TYPE, OWL.RESTRICTION);
+					edge(restriction, OWL.ONPROPERTY, propertyId);
+					edge(restriction, Konig.relationshipDegree, relationshipDegree);
+					edge(d, RDF.TYPE, OWL.CLASS);
+					edge(d,RDFS.SUBCLASSOF,restriction);
+					
+				}
 			}
 
 		}
@@ -2951,6 +2965,7 @@ public class WorkbookLoader {
 			subpropertyOfCol = UNDEFINED;
 			propertyCommentCol = UNDEFINED;
 			securityClassificationCol = UNDEFINED;
+			relationshipDegreeCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2996,6 +3011,9 @@ public class WorkbookLoader {
 						break;
 					case SECURITY_CLASSIFICATION:
 						securityClassificationCol = i;
+						break;
+					case RELATIONSHIP_DEGREE:
+						relationshipDegreeCol = i;
 						break;
 					}
 				}

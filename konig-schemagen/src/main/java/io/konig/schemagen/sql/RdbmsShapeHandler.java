@@ -37,9 +37,11 @@ import org.slf4j.LoggerFactory;
 import io.konig.aws.datasource.AwsAurora;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.RelationshipDegree;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -55,16 +57,18 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	private static final Logger LOG = LoggerFactory.getLogger(RdbmsShapeHandler.class);
 	private List<Shape> rdbmsChildShapes = null;
 	private Collection<Shape> shapes =null;
+	private RdbmsShapeHelper rdbmsShapeHelper;
 	
 	public RdbmsShapeHandler(
 			ShapeVisitor callback,
 			RdbmsShapeGenerator generator, ShapeFileGetter fileGetter, ShapeWriter shapeWriter,
-			NamespaceManager nsManager) {
+			NamespaceManager nsManager, RdbmsShapeHelper rdbmsShapeHelper) {
 		this.callback = callback;
 		this.generator = generator;
 		this.fileGetter = fileGetter;
 		this.shapeWriter = shapeWriter;
 		this.nsManager = nsManager;
+		this.rdbmsShapeHelper=rdbmsShapeHelper;
 	}
 
 	public void visitAll(Collection<Shape> shapeList) {
@@ -86,7 +90,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			childShape = parentShape;
 		}
 		for (PropertyConstraint p : childShape.getTabularOriginShape().getProperty()) {
-			if(p.getShape() != null){
+			if(p.getShape() != null && p.getMaxCount()==null){
 				addRdbmsChildShape(childShape,p.getPredicate(), p);
 			}
 		}

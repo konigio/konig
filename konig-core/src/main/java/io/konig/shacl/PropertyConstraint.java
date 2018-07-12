@@ -590,5 +590,4 @@ public class PropertyConstraint implements Cloneable {
 	public void setRelationshipDegree(RelationshipDegree relationshipDegree) {
 		this.relationshipDegree = relationshipDegree;
 	}
-	
 }
