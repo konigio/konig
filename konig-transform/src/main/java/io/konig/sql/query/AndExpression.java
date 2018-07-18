@@ -30,6 +30,14 @@ public class AndExpression extends AbstractExpression implements BooleanTerm {
 	
 	private List<BooleanTerm> termList = new ArrayList<>();
 
+	public AndExpression() {
+	}
+	
+	public AndExpression(BooleanTerm... term) {
+		for (BooleanTerm t : term) {
+			add(t);
+		}
+	}
 	
 	public void add(BooleanTerm term) {
 		termList.add(term);
@@ -50,7 +58,13 @@ public class AndExpression extends AbstractExpression implements BooleanTerm {
 				out.indent();
 				out.print(and);
 			} 
+			if (term instanceof OrExpression)  {
+				out.print('(');
+			}
 			term.print(out);
+			if (term instanceof OrExpression) {
+				out.print(')');
+			}
 			and = "AND ";
 		}
 		out.popIndent();
