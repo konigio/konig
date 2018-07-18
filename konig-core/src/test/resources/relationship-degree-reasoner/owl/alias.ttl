@@ -1,0 +1,15 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix schema: <http://schema.org/> .
+
+alias: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "alias" . 
+	
+alias:founder_address a owl:ObjectProperty ; 
+	schema:domainIncludes schema:Organization ; 
+	schema:rangeIncludes schema:PostalAddress . 
+	
+alias:address a owl:ObjectProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes schema:PostalAddress .
