@@ -153,6 +153,7 @@ import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
 import io.konig.rio.turtle.NamespaceMap;
 import io.konig.schemagen.AllJsonldWriter;
+import io.konig.schemagen.CalculateMaximumRowSize;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
@@ -377,8 +378,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			computeSizeEstimates();
 			generateTabularShapes();
-			//generateViewShape();
-			//generateTableShape();
+			computeMaxRowSize();
 			
 			emitter.emit(owlGraph);
 			
@@ -1313,5 +1313,15 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 	}
 	
-	
+	private void computeMaxRowSize() throws RDFParseException, RDFHandlerException, IOException {
+		if(defaults.getShapesDir() != null){
+			RdfUtil.loadTurtle(defaults.getRdfDir(), owlGraph, nsManager);
+			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
+			shapeLoader.load(owlGraph);
+			
+			File shapesDir = defaults.getShapesDir();
+			CalculateMaximumRowSize calculateMaximumRowSize = new CalculateMaximumRowSize();
+			calculateMaximumRowSize.addMaximumRowSizeAll(shapeManager.listShapes(),shapesDir, nsManager);
+		}
+	}
 }

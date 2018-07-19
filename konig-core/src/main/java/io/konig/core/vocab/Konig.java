@@ -42,6 +42,10 @@ public class Konig {
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
 
+	public static final String ShapeMaxRowLength = "http://www.konig.io/ns/core/shapeMaxRowLength";
+	public static final String TargetDatasource = "http://www.konig.io/ns/core/targetDatasource";
+	public static final String MaxRowLength = "http://www.konig.io/ns/core/maxRowLength";
+
 	public static final String MEASURE = "http://www.konig.io/ns/core/measure";
 	public static final String ATTRIBUTE = "http://www.konig.io/ns/core/attribute";
 	public static final String DIMENSION = "http://www.konig.io/ns/core/dimension";

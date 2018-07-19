@@ -90,7 +90,7 @@ public class Shape implements Cloneable {
 	private List<URI> inputShapeOf;
 	private Shape tabularOriginShape;
 	private URI usesAbbreviationScheme;
-	  
+	private List<ShapeMaxRowLength> shapeMaxRowLengthList;
 	 
 	 public List<URI> getInputShapeOf() {
 	 	return inputShapeOf;
@@ -693,6 +693,15 @@ public class Shape implements Cloneable {
 
 	public void setUsesAbbreviationScheme(URI usesAbbreviationScheme) {
 		this.usesAbbreviationScheme = usesAbbreviationScheme;
+	}
+	 @RdfProperty(Konig.ShapeMaxRowLength)
+	public List<ShapeMaxRowLength> getShapeMaxRowLengthList() {
+		return shapeMaxRowLengthList;
+	}
+
+	
+	public void setShapeMaxRowLengthList(List<ShapeMaxRowLength> shapeMaxRowLengthList) {
+		this.shapeMaxRowLengthList = shapeMaxRowLengthList;
 	}
 	
 }
