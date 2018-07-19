@@ -125,6 +125,7 @@ public class Konig {
 	public static final URI attribute = new URIImpl(ATTRIBUTE);
 	public static final URI variable = new URIImpl("http://www.konig.io/ns/core/variable");
 	public static final URI stereotype = new URIImpl("http://www.konig.io/ns/core/stereotype");
+	public static final URI relationshipDegree = new URIImpl("http://www.konig.io/ns/core/relationshipDegree");
 	public static final URI securityClassification = new URIImpl("http://www.konig.io/ns/core/securityClassification");
 	public static final URI qualifiedSecurityClassification = new URIImpl("http://www.konig.io/ns/core/qualifiedSecurityClassification");
 	public static final URI totalCount = new URIImpl("http://www.konig.io/ns/core/totalCount");
@@ -183,6 +184,10 @@ public class Konig {
 	public static final URI dataSteward = new URIImpl("http://www.konig.io/ns/core/dataSteward");
 	public static final URI TabularNodeShape = new URIImpl("http://www.konig.io/ns/core/TabularNodeShape");
 	public static final URI abbreviationLabel = new URIImpl("http://www.konig.io/ns/core/abbreviationLabel");
+	public static final URI OneToOne = new URIImpl("http://www.konig.io/ns/core/OneToOne");
+	public static final URI OneToMany = new URIImpl("http://www.konig.io/ns/core/OneToMany");
+	public static final URI ManyToOne = new URIImpl("http://www.konig.io/ns/core/ManyToOne");
+	public static final URI ManyToMany = new URIImpl("http://www.konig.io/ns/core/ManyToMany");
 	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();

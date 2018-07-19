@@ -79,7 +79,7 @@
 		<artifactId>jackson-databind</artifactId>
 		<version>${jackson.version}</version>
 	</dependency>
-	
+	 
   
   
     <dependency>
@@ -88,6 +88,13 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>junit-addons</groupId>
+      <artifactId>junit-addons</artifactId>
+      <version>1.4</version>
+      <scope>test</scope>
+    </dependency>
+   
   </dependencies>
   
   <build>
