@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -76,6 +77,7 @@ import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleBigQueryView;
 import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.schema.Person;
 import io.konig.shacl.NodeKind;
@@ -88,6 +90,43 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeWriter;
 
 public class WorkbookLoaderTest {
+	
+	@Test
+	public void testCurrentStateView() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("current-state-view.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape != null);
+		
+
+		
+		GoogleBigQueryView datasource = shape.getShapeDataSource().stream()
+				.filter(ds -> ds instanceof GoogleBigQueryView)
+				.map(ds -> (GoogleBigQueryView) ds)
+				.findFirst()
+				.get();
+		
+		assertTrue(datasource != null);
+		
+	}
 	
 	@Test
 	public void testBigQueryTableIdRegex() throws Exception {

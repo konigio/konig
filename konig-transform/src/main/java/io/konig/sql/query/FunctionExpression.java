@@ -34,6 +34,7 @@ public class FunctionExpression extends AbstractExpression implements NumericVal
 	public static final String UNNEST = "UNNEST";
 	public static final String SUM = "SUM";
 	public static final String COUNT = "COUNT";
+	public static final String MAX = "MAX";
 	public static final String ARRAY_AGG = "ARRAY_AGG";
 	
 	private static final Set<String> AGGREGATE_FUNCTION = new HashSet<>();
@@ -41,6 +42,7 @@ public class FunctionExpression extends AbstractExpression implements NumericVal
 		AGGREGATE_FUNCTION.add(SUM);
 		AGGREGATE_FUNCTION.add(COUNT);
 		AGGREGATE_FUNCTION.add(ARRAY_AGG);
+		AGGREGATE_FUNCTION.add(MAX);
 	}
 	
 	private String functionName;
