@@ -19,37 +19,36 @@ package io.konig.spreadsheet;
  * limitations under the License.
  * #L%
  */
-
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.openrdf.model.URI;
-import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
 
-import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
-import io.konig.core.Vertex;
-import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.vocab.GCP;
-import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
+import io.konig.gcp.datasource.BigQueryTableReference;
+import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.Shape;
+import io.konig.shacl.impl.MemoryShapeManager;
 
 public class DataSourceGeneratorTest {
+	private MemoryShapeManager shapeManager = new MemoryShapeManager();
 
 	@Test
 	public void test() throws Exception {
 		
+		GcpShapeConfig.init();
+		
 		File templateDir = new File("target/WorkbookLoader");
-		Graph graph = new MemoryGraph();
 		
 		Properties properties = new Properties();
 		properties.load(getClass().getClassLoader().getResourceAsStream("WorkbookLoader/settings.properties"));
@@ -62,28 +61,31 @@ public class DataSourceGeneratorTest {
 		Shape shape = new Shape(uri("http://example.com/shapes/PersonOriginShape"));
 		shape.setTargetClass(Schema.Person);
 		
+		shapeManager.addShape(shape);
+		
 		DataSourceGenerator generator = new DataSourceGenerator(nsManager, templateDir, properties);
-		generator.generate(shape, "BigQueryTable", graph);
+		generator.generate(shape, "BigQueryTable", shapeManager);
 		
-		Vertex v = graph.v(Konig.GoogleBigQueryTable).in(RDF.TYPE).firstVertex();
-		assertTrue(v != null);
-		assertEquals(uri("https://www.googleapis.com/bigquery/v2/projects/warehouse/datasets/schema/tables/Person"), v.getId());
+		List<GoogleBigQueryTable> tableList = shape.getShapeDataSource().stream()
+				.filter(s -> s instanceof GoogleBigQueryTable)
+				.map(s -> (GoogleBigQueryTable)s)
+				.collect(Collectors.toList());
+		
+		assertEquals(1, tableList.size());
+		
+		GoogleBigQueryTable table = tableList.get(0);
+		
+		assertEquals(uri("https://www.googleapis.com/bigquery/v2/projects/warehouse/datasets/schema/tables/Person"), table.getId());
 		
 		
-		Vertex tableRef = v.asTraversal().out(GCP.tableReference).firstVertex();
+		BigQueryTableReference tableRef = table.getTableReference();
 		assertTrue(tableRef != null);
 		
-		assertValue(tableRef, GCP.projectId, "warehouse");
-		assertValue(tableRef, GCP.datasetId, "schema");
-		assertValue(tableRef, GCP.tableId, "Person");
+		assertEquals(tableRef.getProjectId(), "warehouse");
+		assertEquals(tableRef.getDatasetId(), "schema");
+		assertEquals(tableRef.getTableId(), "Person");
 	}
 
-	private void assertValue(Vertex v, URI predicate, String expected) {
-		Value value = v.getValue(predicate);
-		assertTrue(value != null);
-		assertEquals(expected, value.stringValue());
-		
-	}
 
 	private URI uri(String value) {
 		return new URIImpl(value);

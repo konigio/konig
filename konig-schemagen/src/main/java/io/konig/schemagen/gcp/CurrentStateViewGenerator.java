@@ -34,6 +34,7 @@ import io.konig.core.path.Step;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleBigQueryView;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.SelectExpression;
@@ -49,12 +50,27 @@ public class CurrentStateViewGenerator {
 	private ShapeModelToShapeRule shapeRuleFactory;
 	private SqlFactory sqlFactory = new SqlFactory();
 	
+	private SimpleCurrentStateViewGenerator simpleGenerator = new SimpleCurrentStateViewGenerator();
+	
 	public CurrentStateViewGenerator(ShapeModelFactory shapeModelFactory){
 		this.shapeModelFactory = shapeModelFactory;
 		this.shapeRuleFactory = new ShapeModelToShapeRule();
 	}
 	
 	public ViewDefinition createViewDefinition(Shape shape, DataSource source) {
+		
+		if (source instanceof GoogleBigQueryView) {
+			try {
+				GoogleBigQueryView viewSource = (GoogleBigQueryView) source;
+				ViewDefinition view = simpleGenerator.createViewDefinition(shape, viewSource);
+				if (view != null) {
+					return view;
+				}
+			} catch (Throwable error) {
+				// Ignore
+			}
+		}
+		
 		SelectExpression select = null;
 		ViewDefinition result = new ViewDefinition();
 		try {
