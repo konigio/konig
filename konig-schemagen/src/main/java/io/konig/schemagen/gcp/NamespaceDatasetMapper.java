@@ -1,5 +1,7 @@
 package io.konig.schemagen.gcp;
 
+import org.openrdf.model.Literal;
+
 /*
  * #%L
  * Konig Schema Generator
@@ -25,10 +27,12 @@ package io.konig.schemagen.gcp;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
+import io.konig.core.vocab.GCP;
 
 /**
  * A DatasetMapper that uses the preferred prefix for the namespace
@@ -50,6 +54,11 @@ public class NamespaceDatasetMapper implements DatasetMapper {
 
 	@Override
 	public String datasetForClass(Vertex owlClass) {
+		
+		Value preferred = owlClass.getValue(GCP.preferredGcpDatasetId);
+		if (preferred instanceof Literal) {
+			return preferred.stringValue();
+		}
 		
 		Resource id = owlClass.getId();
 		if (id instanceof URI) {

@@ -257,14 +257,14 @@ public class WorkbookLoader {
 	private static final String AWS_DB_CLUSTER_MAINTENANCE_WINDOW = "Preferred Maintenance Window";
 	private static final String AWS_DB_CLUSTER_REPLICATION_SOURCE = "Replication Source Identifier";
 	private static final String AWS_DB_CLUSTER_STORAGE_ENCRYPTED = "Storage Encrypted";
-	
-	private static final int COL_NAMESPACE_URI = 0x1;
-	private static final int COL_CLASS_ID = 0x2;
-	private static final int COL_PROPERTY_PATH = 0x4;
-	private static final int COL_PROPERTY_ID = 0x4;
-	private static final int COL_INDIVIDUAL_ID = 0x8;
-	private static final int COL_SHAPE_ID = 0x10;
-	private static final int COL_SETTING_NAME = 0x20;
+
+	private static final int COL_SETTING_NAME = 0x1;
+	private static final int COL_NAMESPACE_URI = 0x2;
+	private static final int COL_CLASS_ID = 0x4;
+	private static final int COL_PROPERTY_PATH = 0x8;
+	private static final int COL_PROPERTY_ID = 0x8;
+	private static final int COL_INDIVIDUAL_ID = 0x10;
+	private static final int COL_SHAPE_ID = 0x20;
 	private static final int COL_INSTANCE_NAME = 0x40;
 	private static final int COL_LABEL = 0x80;
 	private static final int COL_AMAZON_DB_CLUSTER = 0x100;
@@ -419,6 +419,7 @@ public class WorkbookLoader {
 	}
 
 	private class Worker {
+		private static final String GCP_DATASET_ID = "gcpDatasetId";
 		private Workbook book;
 		private PathFactory pathFactory;
 		private OwlReasoner owlReasoner;
@@ -2699,6 +2700,8 @@ public class WorkbookLoader {
 			URI individualId = uriValue(row, individualIdCol);
 			List<URI> typeList = uriList(row, individualTypeCol);
 			Literal codeValue = stringLiteral(row, individualCodeValueCol);
+			Literal gcpDatasetId = gcpDatasetId();
+			
 			if (individualId == null) {
 				return;
 			}
@@ -2713,6 +2716,7 @@ public class WorkbookLoader {
 						graph.edge(value, RDF.TYPE, OWL.CLASS);
 						graph.edge(value, RDFS.SUBCLASSOF, Schema.Enumeration);
 					}
+					edge(value, GCP.preferredGcpDatasetId, gcpDatasetId);
 				}
 			} else {
 				graph.edge(individualId, RDF.TYPE, Schema.Enumeration);
@@ -2723,6 +2727,13 @@ public class WorkbookLoader {
 			edge(individualId, Schema.name, name);
 			edge(individualId, RDFS.COMMENT, comment);
 			edge(individualId, DCTERMS.IDENTIFIER, codeValue);
+		}
+
+		private Literal gcpDatasetId() {
+			String value = settings.getProperty(GCP_DATASET_ID);
+			
+			
+			return value==null ? null : new LiteralImpl(value);
 		}
 
 		private Row readIndividualHeader(Sheet sheet) {
