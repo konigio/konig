@@ -203,7 +203,7 @@ public class GroovyTearDownScriptWriter {
 
 		File viewDir = googleCloudInfo.getBigquery().getView();
 		
-		if (viewDir != null) {
+		if (viewDir != null && viewDir.isDirectory()) {
 			for (File file : viewDir.listFiles()) {
 					String path = FileUtil.relativePath(scriptFile, file);
 					print(indent);
