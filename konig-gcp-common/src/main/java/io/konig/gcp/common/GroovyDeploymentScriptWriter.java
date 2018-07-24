@@ -198,7 +198,8 @@ public class GroovyDeploymentScriptWriter {
 
 		File viewDir = googleCloudInfo.getBigquery().getView();
 		
-		if (viewDir != null) {
+		if (viewDir != null && viewDir.isDirectory()) {
+			
 		
 			for (File file : viewDir.listFiles()) {
 				
