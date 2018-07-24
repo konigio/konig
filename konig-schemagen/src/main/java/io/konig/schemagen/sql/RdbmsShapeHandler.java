@@ -29,17 +29,12 @@ import java.util.Collection;
 import java.util.List;
 
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.aws.datasource.AwsAurora;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
-import io.konig.core.OwlReasoner;
-import io.konig.gcp.datasource.GoogleBigQueryTable;
-import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.RelationshipDegree;
@@ -58,22 +53,20 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	private static final Logger LOG = LoggerFactory.getLogger(RdbmsShapeHandler.class);
 	private List<Shape> rdbmsChildShapes = null;
 	private Collection<Shape> shapes =null;
-	private RdbmsShapeHelper rdbmsShapeHelper;
 	
 	public RdbmsShapeHandler(
 			ShapeVisitor callback,
 			RdbmsShapeGenerator generator, ShapeFileGetter fileGetter, ShapeWriter shapeWriter,
-			NamespaceManager nsManager, RdbmsShapeHelper rdbmsShapeHelper) {
+			NamespaceManager nsManager) {
 		this.callback = callback;
 		this.generator = generator;
 		this.fileGetter = fileGetter;
 		this.shapeWriter = shapeWriter;
 		this.nsManager = nsManager;
-		this.rdbmsShapeHelper=rdbmsShapeHelper;
 	}
 
 	public void visitAll(Collection<Shape> shapeList) {
-		shapes = shapeList;
+		shapes = shapeList;		
 		for (Shape shape : shapeList) {
 			visit(shape);
 		}
@@ -91,12 +84,13 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			childShape = parentShape;
 		}
 		for (PropertyConstraint p : childShape.getTabularOriginShape().getProperty()) {
-			if(p.getShape() != null && p.getMaxCount()==null){
+			if(p.getShape() != null && p.getMaxCount()==null && RelationshipDegree.OneToMany.equals(p.getRelationshipDegree())){
 				addRdbmsChildShape(childShape,p.getPredicate(), p);
 			}
             if(p.getMaxCount() == null && p.getShape() == null && childShape.getNodeKind() ==  NodeKind.IRI) {
                 addRdbmsChildShape(childShape,p.getPredicate(), p);
             }
+            
 		}
 	}
 

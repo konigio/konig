@@ -54,11 +54,9 @@ public class RdbmsShapeGenerator {
 	private FormulaParser parser;
 	private List<PropertyConstraint> rdbmsProperty = null;
 	private OwlReasoner owlReasoner;
-	private RdbmsShapeHelper rdbmsShapeHelper;
-	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner,RdbmsShapeHelper rdbmsShapeHelper) {
+	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner) {
 		this.parser = new FormulaParser();
 		this.owlReasoner = owlReasoner;
-		this.rdbmsShapeHelper = rdbmsShapeHelper;
 	}
 	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {		
 		Shape rdbmsChildShape = createRdbmsShape(childShape);

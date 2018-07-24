@@ -235,8 +235,7 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
 		OwlReasoner reasoner = new OwlReasoner(graph);
-		RdbmsShapeHelper rdbmsShapeHelper = new RdbmsShapeHelper(reasoner);
-		shapeGenerator = new RdbmsShapeGenerator(null, reasoner,rdbmsShapeHelper);
+		shapeGenerator = new RdbmsShapeGenerator(null, reasoner);
 
 		Shape rdbmsChildShape = null;
 		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {

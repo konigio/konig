@@ -42,7 +42,6 @@ public class AbstractRdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 
 	protected RdbmsShapeGenerator shapeGenerator;
 	
-	protected RdbmsShapeHelper rdbmsShapeHelper;
 
 	protected void load(String path) throws RDFParseException, RDFHandlerException, IOException {
 		super.load(path);
@@ -52,8 +51,7 @@ public class AbstractRdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 		ShapePropertyOracle oracle = new ShapePropertyOracle();
 		FormulaParser parser = new FormulaParser(oracle, nameService, nsMap);
 		OwlReasoner owlReasoner = new OwlReasoner(graph);
-		rdbmsShapeHelper = new RdbmsShapeHelper(owlReasoner);
-		shapeGenerator =  new RdbmsShapeGenerator(parser,null, rdbmsShapeHelper);
+		shapeGenerator =  new RdbmsShapeGenerator(parser,null);
 	}
 
 }

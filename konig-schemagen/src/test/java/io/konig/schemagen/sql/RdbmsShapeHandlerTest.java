@@ -82,7 +82,7 @@ public class RdbmsShapeHandlerTest extends AbstractRdbmsShapeGeneratorTest {
 		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
 		ShapeWriter shapeWriter = new ShapeWriter();
 		ShapeInjector callback = new ShapeInjector(shapeManager);
-		handler = new RdbmsShapeHandler(callback, shapeGenerator, fileGetter, shapeWriter, nsManager,null);
+		handler = new RdbmsShapeHandler(callback, shapeGenerator, fileGetter, shapeWriter, nsManager);
 	}
 
 }

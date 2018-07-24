@@ -109,6 +109,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.io.SkosEmitter;
 import io.konig.core.path.NamespaceMapAdapter;
+import io.konig.core.reasoners.RelationshipDegreeReasoner;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.AWS;
@@ -209,7 +210,6 @@ import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.schemagen.sql.OracleDatatypeMapper;
 import io.konig.schemagen.sql.RdbmsShapeGenerator;
 import io.konig.schemagen.sql.RdbmsShapeHandler;
-import io.konig.schemagen.sql.RdbmsShapeHelper;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
@@ -414,10 +414,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
 			if (shapesDir != null) {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-				RdbmsShapeHelper rdbmsShapeHelper = new RdbmsShapeHelper(owlReasoner);
-				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), owlReasoner,rdbmsShapeHelper);
-				ShapeWriter shapeWriter = new ShapeWriter();
-				RdbmsShapeHandler handler = new RdbmsShapeHandler(shapeInjector, generator, fileGetter, shapeWriter, nsManager,rdbmsShapeHelper);
+				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), owlReasoner);
+				ShapeWriter shapeWriter = new ShapeWriter();	
+				RelationshipDegreeReasoner reasoner=new RelationshipDegreeReasoner();
+				reasoner.computeRelationshipDegree(owlGraph, shapeManager, false);
+				RdbmsShapeHandler handler = new RdbmsShapeHandler(shapeInjector, generator, fileGetter, shapeWriter, nsManager);
 				handler.visitAll(shapeManager.listShapes());
 			}
     	}
