@@ -50,6 +50,10 @@ public class BigQueryDatatypeMapper {
 				return BigQueryDatatype.STRING;
 			}
 			
+			if (XMLSchema.BOOLEAN.equals(datatype)) {
+				return BigQueryDatatype.BOOLEAN;
+			}
+			
 			if (
 				XMLSchema.DATETIME.equals(datatype) ||
 				XMLSchema.DATE.equals(datatype) 

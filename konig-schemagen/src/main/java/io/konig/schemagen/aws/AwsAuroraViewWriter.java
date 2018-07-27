@@ -28,7 +28,7 @@ import java.text.MessageFormat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.konig.aws.datasource.AwsAuroraTable;
+import io.konig.abbrev.AbbreviationManager;
 import io.konig.aws.datasource.AwsAuroraDefinition;
 import io.konig.aws.datasource.AwsAuroraTableReference;
 import io.konig.aws.datasource.AwsAuroraView;
@@ -40,7 +40,6 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
 import io.konig.sql.query.SelectExpression;
 import io.konig.transform.ShapeTransformException;
-import io.konig.transform.factory.ShapeRuleFactory;
 import io.konig.transform.proto.ShapeModel;
 import io.konig.transform.proto.ShapeModelFactory;
 import io.konig.transform.proto.ShapeModelToShapeRule;
@@ -52,14 +51,17 @@ public class AwsAuroraViewWriter implements ShapeVisitor{
 	private SqlTableGenerator generator;
 	private DatasourceFileLocator sqlFileLocator;
 	private ShapeModelFactory shapeModelFactory;
+	private AbbreviationManager abbrevManager;
 
 	// TODO: Add a DatasourceFileLocator as a private field and pass it to the constructor. 
 	
-	public AwsAuroraViewWriter(File baseDir,SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator,ShapeModelFactory shapeModelFactory) {
+	public AwsAuroraViewWriter(File baseDir,SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator,ShapeModelFactory shapeModelFactory,
+			AbbreviationManager abbrevManager) {
 		this.baseDir = baseDir;
 		this.generator = generator;
 		this.sqlFileLocator = sqlFileLocator;
 		this.shapeModelFactory=shapeModelFactory;
+		this.abbrevManager = abbrevManager;
 	}
 
 	@Override
@@ -68,7 +70,7 @@ public class AwsAuroraViewWriter implements ShapeVisitor{
 		if (view != null) {
 			AwsAuroraDefinition tableDefinition = new AwsAuroraDefinition();
 			AwsAuroraTableReference tableReference = view.getTableReference();
-			SqlTable sqlTable = generator.generateTable(shape);
+			SqlTable sqlTable = generator.generateTable(shape,abbrevManager);
 			File file = sqlFile(view);
 			String tableName = sqlTable.getTableName();
 			String schemaName = tableReference.getAwsSchema();

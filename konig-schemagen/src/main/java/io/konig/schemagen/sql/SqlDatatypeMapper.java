@@ -109,47 +109,47 @@ public class SqlDatatypeMapper
 	}
 
 	public boolean inRange(long min, long max, PropertyConstraint c) {
-		Double minInclusive = c.getMinInclusive();
-		Double maxInclusive = c.getMaxInclusive();
-		Double minExclusive = c.getMinExclusive();
-		Double maxExclusive = c.getMaxExclusive();
+		Number minInclusive = c.getMinInclusive();
+		Number maxInclusive = c.getMaxInclusive();
+		Number minExclusive = c.getMinExclusive();
+		Number maxExclusive = c.getMaxExclusive();
 		
 		return
 			(
-				(minInclusive!=null && minInclusive>=min) ||
-				(minExclusive!=null && minExclusive>min)
+				(minInclusive!=null && minInclusive.longValue()>=min) ||
+				(minExclusive!=null && minExclusive.longValue()>min)
 			) && (
-				(maxInclusive!=null && maxInclusive<=max) ||
-				(maxExclusive!=null && maxExclusive<max)
+				(maxInclusive!=null && maxInclusive.longValue()<=max) ||
+				(maxExclusive!=null && maxExclusive.longValue()<max)
 			) ? true : false;
 		
 	}
 
 	public Long integerMin(PropertyConstraint c) {
-		Double doubleMin = minValue(c);
+		Number doubleMin = minValue(c);
 		return doubleMin==null ? null : new Long(doubleMin.longValue());
 	}
 	
 	public Long integerMax(PropertyConstraint c) {
-		Double doubleMax = maxValue(c);
+		Number doubleMax = maxValue(c);
 		return doubleMax == null ? null : new Long(doubleMax.longValue());
 	}
 
 	public boolean isSigned(PropertyConstraint c) {
-		Double minValue = minValue(c);
-		return minValue==null || minValue<0;
+		Number minValue = minValue(c);
+		return minValue==null || minValue.doubleValue()<0;
 	}
 
-	public Double maxValue(PropertyConstraint c) {
-		Double result = c.getMaxInclusive();
+	public Number maxValue(PropertyConstraint c) {
+		Number result = c.getMaxInclusive();
 		if (result == null) {
 			result = c.getMaxExclusive();
 		}
 		return result;
 	}
 
-	public Double minValue(PropertyConstraint c) {
-		Double result = c.getMinInclusive();
+	public Number minValue(PropertyConstraint c) {
+		Number result = c.getMinInclusive();
 		if (result == null) {
 			result = c.getMinExclusive();
 		}

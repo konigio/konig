@@ -22,13 +22,11 @@ package io.konig.spreadsheet;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,24 +38,27 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.poi.util.IOUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeInstance;
 import org.apache.velocity.runtime.RuntimeServices;
-import org.apache.velocity.runtime.RuntimeSingleton;
 import org.apache.velocity.runtime.parser.ParseException;
-import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
+import info.aduna.io.IOUtil;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 
 /**
  * A utility that generates DataSource definitions associated with Shapes based
@@ -68,16 +69,14 @@ import io.konig.shacl.Shape;
  */
 public class DataSourceGenerator {
 
-	private static final String EDITED = "edited";
 	private NamespaceManager nsManager;
 	private File templateDir;
-	private VelocityEngine velocityEngine;
 	private File velocityLog;
-	private VelocityContext context;
-	private Properties defaultProperties;
+	private DatasourceVelocityContext context;
 	private List<RegexRule> regexRuleList = new ArrayList<>();
 	
 	private File editedTemplateDir=null;
+	private RuntimeServices runtime;
 	
 	
 	public static class VelocityFunctions {
@@ -129,8 +128,7 @@ public class DataSourceGenerator {
 	public DataSourceGenerator(NamespaceManager nsManager, File templateDir, Properties properties) {
 		this.nsManager = nsManager;
 		this.templateDir = templateDir;
-		this.context = new VelocityContext();
-		this.defaultProperties = properties;
+		this.context = new DatasourceVelocityContext(properties);
 		context.put("templateException", new TemplateException());
 		context.put("functions", new VelocityFunctions(nsManager));
 		context.put("beginVar", "${");
@@ -157,90 +155,147 @@ public class DataSourceGenerator {
 	}
 
 	private void createVelocityEngine() {
-		Properties properties = new Properties();
-		properties.put("resource.loader", "file,class");
-		properties.setProperty("file.resource.loader.path", templateDir.getPath());
-		properties.put("class.resource.loader.class", ClasspathResourceLoader.class.getName());
+		runtime = new RuntimeInstance();
 		if (velocityLog != null) {
-			properties.put("runtime.log", velocityLog.getAbsolutePath());
+			runtime.addProperty("runtime.log", velocityLog.getAbsolutePath());
 		}
 
-		velocityEngine = new VelocityEngine(properties);
 	}
 	
 	
 	private String merge(String templateName) {
-		String templateText =  simpleMerge(templateName);
+		String templateText =  getTemplateText(templateName);
 		if(!regexRuleList.isEmpty()) {
-			templateText = mergeWithRegex(templateName, templateText);
+			templateText = addRegex(templateName, templateText);
 		}
-		if(defaultProperties != null) {
-			templateText = mergeWithDefaultProperties(templateName, templateText);
-			removeDefaultProperties(defaultProperties);
-			templateText = mergeDefaultMap(templateName, templateText);
-		}
-		return templateText;
+		return mergeTemplate(templateName, templateText);
 	}
 	
+	private String addRegex(String templateName, String templateText) {
+		StringWriter out = null;
+			for (RegexRule rule : regexRuleList) {
+				String variable = "${" + rule.getPropertyName() + "}";
+				
+				if (templateText.contains(variable)) {
+					if (out == null) {
+						out = new StringWriter();
+					}
+
+					String pattern = rule.getPattern();
+					String replacement = rule.getReplacement();
+					out.write("#set ( $");
+					out.write(rule.getPropertyName());
+					out.write(" = \"");
+					out.write(rule.getSourceExpression());
+					out.write("\" )");
+					out.write("#set ( $");
+					out.write(rule.getPropertyName());
+					out.write(" = $");
+					out.write(rule.getPropertyName());
+					out.write(".replaceAll(\"");
+					out.write(pattern);
+					out.write("\", \"");
+					out.write(replacement);
+					out.write("\") )");
+					out.write("\n");
+				}
+			}
+			if (out != null) {
+				out.write(templateText);
+			}
+			
+		if (out != null) {
+			try {
+				out.close();
+			} catch (IOException e) {
+				throw new KonigException("Failed to add regex to template: " + templateName, e);
+			}
+			templateText = out.toString();
+		}
+			
+		return templateText;
+	}
+
+	private static final int MAX_ITERATIONS = 20;
 	
 	private String mergeTemplate(String templateName, String templateText) {
-		StringWriter result = new StringWriter();
-		try {
-			Template template = new Template();
-			RuntimeServices runtimeServices = RuntimeSingleton.getRuntimeServices();
-			StringReader reader = new StringReader(templateText);
-			template.setRuntimeServices(runtimeServices);
-			template.setData(runtimeServices.parse(reader, templateName));
-			template.initDocument();
-			template.merge(context, result);
-			templateText = result.toString();
-		} catch (ParseException e) {
-			throw new KonigException("Failed to parse template", e);
+		String priorText = null;
+		int count = 0;
+		while (!templateText.equals(priorText) && count < MAX_ITERATIONS) {
+			count++;
+			priorText = templateText;
+			StringWriter result = new StringWriter();
+			try {
+				Template template = new Template();
+
+				StringReader reader = new StringReader(templateText);
+				template.setRuntimeServices(runtime);
+				template.setData(runtime.parse(reader, templateName));
+				template.initDocument();
+				template.merge(context, result);
+				templateText = result.toString();
+			} catch (ParseException e) {
+				throw new KonigException("Failed to parse template", e);
+			}
 		}
 		return templateText;
 	}
-	private String mergeWithDefaultProperties(String templateName, String templateText){
-		put(defaultProperties);	
-		return mergeTemplate(templateName, templateText); 
-	}
+//	private String mergeWithDefaultProperties(String templateName, String templateText){
+//		put(defaultProperties);	
+//		return mergeTemplate(templateName, templateText); 
+//	}
+//	
+//	private String mergeDefaultMap(String templateName, String templateText) {
+//		return mergeTemplate(templateName, templateText); 
+//	}
 	
-	private String mergeDefaultMap(String templateName, String templateText) {
-		return mergeTemplate(templateName, templateText); 
-	}
+//	public void removeDefaultProperties(Properties properties) {
+//		Set<Entry<Object, Object>> entries = properties.entrySet();
+//		for (Entry<Object, Object> e : entries) {
+//			context.remove(e.getKey());
+//		}
+//	}
 	
-	public void removeDefaultProperties(Properties properties) {
-		Set<Entry<Object, Object>> entries = properties.entrySet();
-		for (Entry<Object, Object> e : entries) {
-			context.remove(e.getKey());
-		}
-	}
-	private String simpleMerge(String templateName){
-			templateName = "WorkbookLoader/" + templateName + ".ttl";
-			StringWriter tempresult = new StringWriter();
-			Template template = velocityEngine.getTemplate(templateName, "UTF-8");
-			template.merge(context, tempresult);
-			return mergeTemplate(templateName, tempresult.toString());
-	}
-	
-	private String mergeWithRegex(String templateName, String templateText) {
-		try {			
-			if (templateText == null) {
+	private String getTemplateText(String templateName) {
+		
+		String text = getCustomTemplate(templateName);
+		
+		if (text == null) {
+			String path = "WorkbookLoader/" + templateName + ".ttl";
+			InputStream input = getClass().getClassLoader().getResourceAsStream(path);
+			if (input == null) {
 				throw new KonigException("Template not found: " + templateName);
 			}
-			String editedTemplatePath = editTemplate(templateName, templateText);
-			if (editedTemplatePath == null) {
-				return simpleMerge(templateName);
-			} 
-			StringWriter tempresult = new StringWriter();
-			Template template = velocityEngine.getTemplate(editedTemplatePath, "UTF-8");
-			template.merge(context, tempresult);
-			return mergeTemplate(templateName, tempresult.toString());
-			
-		} catch (Exception e) {
-			throw new KonigException("Failed to parse template", e);
+			try (InputStreamReader reader = new InputStreamReader(input)) {
+				
+				text = org.apache.commons.io.IOUtils.toString(reader);
+				
+			} catch (IOException e) {
+				throw new KonigException("Failed to load template: " + templateName, e);
+			}
 		}
+		
+		return text;
 	}
 	
+	
+	private String getCustomTemplate(String templateName) {
+		String text = null;
+		if (templateDir != null) {
+			String fileName = templateName + ".ttl";
+			File file = new File(templateDir, fileName);
+			if (file.exists()) {
+				try {
+					text = IOUtil.readString(file);
+				} catch (IOException e) {
+					throw new KonigException("Failed to read template: " + templateName, e);
+				}
+			}
+		}
+		return text;
+	}
+
+
 	public void close()  {
 		if (editedTemplateDir != null && editedTemplateDir.exists()) {
 			try {
@@ -252,82 +307,8 @@ public class DataSourceGenerator {
 		}
 	}
 	
-	private String editTemplate(String templateName, String templateText) {
-		String templatePath = null;
-		PrintWriter out = null;
-		try {
-			for (RegexRule rule : regexRuleList) {
-				String variable = "${" + rule.getPropertyName() + "}";
-				
-				if (templateText.contains(variable)) {
-					context.put(rule.getPropertyName(),  rule.getPattern());
-					if (out == null) {
-						
-						if (editedTemplateDir == null) {
-							editedTemplateDir = new File(templateDir, EDITED);
-							editedTemplateDir.mkdirs();
-						}
-						templatePath = EDITED + "/" + templateName + ".ttl";
-						File outFile = new File(templateDir, templatePath);
-						
-						if (outFile.exists()) {
-							return templatePath;
-						}
-						
-						try {
-							out = new PrintWriter(new FileWriter(outFile));
-						} catch (IOException e) {
-							throw new KonigException(e);
-						}
-					}
-
-					String pattern = rule.getPattern();
-					String replacement = rule.getReplacement();
-					out.print("#set ( $");
-					out.print(rule.getPropertyName());
-					out.print(" = \"");
-					out.print(rule.getSourceExpression());
-					out.println("\" )");
-					out.print("#set ( $");
-					out.print(rule.getPropertyName());
-					out.print(" = $");
-					out.print(rule.getPropertyName());
-					out.print(".replaceAll(\"");
-					out.print(pattern);
-					out.print("\", \"");
-					out.print(replacement);
-					out.println("\") )");
-				}
-			}
-			if (out != null) {
-				out.print(templateText);
-			}
-		} finally {
-			if (out != null) {
-				out.close();
-			}
-		}
-			
-		return templatePath;
-	}
-
-
-	private String loadTemplate(String templateName) throws IOException {
-		File templateFile = new File(templateDir, templateName + ".ttl");
-		if (templateFile.exists()) {
-			byte[] array = Files.readAllBytes(templateFile.toPath());
-			return new String(array);
-		}
-		
-		String resource = "WorkbookLoader/" + templateName + ".ttl";
-		InputStream input = getClass().getClassLoader().getResourceAsStream(resource);
-		if (input != null) {
-			byte[] array = IOUtils.toByteArray(input);
-			return new String(array);
-		}
-		
-		return null;
-	}
+	
+	
 
 	public void put(Properties properties) {
 		Set<Entry<Object, Object>> entries = properties.entrySet();
@@ -340,13 +321,14 @@ public class DataSourceGenerator {
 	
 
 	@SuppressWarnings("rawtypes")
-	public void generate(Shape shape, Function func, Graph graph) {
+	public void generate(Shape shape, Function func, ShapeManager shapeManager) {
+		context.clearParameters();
 		String templateName = func.getName();
 		HashMap params = (HashMap) func.getParameters();
 		Iterator it = params.entrySet().iterator();
 		while (it.hasNext()) {
 			Map.Entry pair = (Map.Entry) it.next();
-			context.put(pair.getKey().toString(), pair.getValue().toString());
+			context.putParameter(pair.getKey().toString(), pair.getValue().toString());
 		}
 
 		defaultMap(shape);
@@ -360,7 +342,12 @@ public class DataSourceGenerator {
 		ByteArrayInputStream input = new ByteArrayInputStream(result.getBytes());
 
 		try {
+			Graph graph = new MemoryGraph(nsManager);
 			RdfUtil.loadTurtle(graph, input, "");
+			graph.edge(shape.getId(), RDF.TYPE, SH.Shape);
+			ShapeLoader loader = new ShapeLoader(shapeManager);
+			loader.load(graph);
+			
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
 			throw new KonigException("Failed to render template", e);
 		}
@@ -382,13 +369,17 @@ public class DataSourceGenerator {
 		putURI("class", shape.getTargetClass());
 	}
 
-	public void generate(Shape shape, String templateName, Graph graph) {
+	public void generate(Shape shape, String templateName, ShapeManager shapeManager) {
 		defaultMap(shape);
 		String result = merge(templateName);
 		ByteArrayInputStream input = new ByteArrayInputStream(result.getBytes());
 
 		try {
+			Graph graph = new MemoryGraph(nsManager);
 			RdfUtil.loadTurtle(graph, input, "");
+			graph.edge(shape.getId(), RDF.TYPE, SH.Shape);
+			ShapeLoader loader = new ShapeLoader(shapeManager);
+			loader.load(graph);
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
 			throw new KonigException("Failed to render template", e);
 		}
