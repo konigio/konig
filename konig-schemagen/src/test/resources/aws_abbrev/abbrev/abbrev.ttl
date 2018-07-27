@@ -1,0 +1,10 @@
+@prefix abbrev: <https://example.com/exampleModel/AbbreviationScheme/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+abbrev: a skos:ConceptScheme . 
+
+abbrev:ORGANIZATION a skos:Concept ; 
+	skos:prefLabel "ORGANIZATION" ; 
+	konig:abbreviationLabel "ORG" ; 
+	skos:inScheme abbrev: . 

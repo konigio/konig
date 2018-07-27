@@ -49,6 +49,8 @@ public class BigQueryEnumShapeGenerator {
 	private ShapeManager shapeManager;
 	private ShapeVisitor shapeVisitor;
 	
+	private boolean omitTypeProperty=false;
+	
 	public BigQueryEnumShapeGenerator(DatasetMapper datasetMapper, BigQueryTableMapper tableMapper,
 			ShapeNamer shapeNamer, ShapeManager shapeManager, ShapeVisitor shapeVisitor) {
 		this.datasetMapper = datasetMapper;
@@ -58,9 +60,24 @@ public class BigQueryEnumShapeGenerator {
 		this.shapeVisitor = shapeVisitor;
 	}
 
+	
+
+	public boolean isOmitTypeProperty() {
+		return omitTypeProperty;
+	}
+
+
+
+	public void setOmitTypeProperty(boolean omitTypeProperty) {
+		this.omitTypeProperty = omitTypeProperty;
+	}
+
+
 
 	public void generateAll(OwlReasoner reasoner) {
 		ShapeGenerator shapeGenerator = new ShapeGenerator(reasoner);
+		shapeGenerator.setOmitTypeProperty(omitTypeProperty);
+		
 		Graph graph = reasoner.getGraph();
 		
 		List<Vertex> enumList = graph.v(Schema.Enumeration).in(RDFS.SUBCLASSOF).toVertexList();

@@ -1,8 +1,6 @@
 package io.konig.shacl.io;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 
 /*
  * #%L
@@ -31,7 +29,6 @@ import java.io.InputStream;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -41,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.KonigValueFactory;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
@@ -50,6 +48,8 @@ import io.konig.core.io.JsonldLoader;
 import io.konig.core.pojo.PojoContext;
 import io.konig.core.pojo.PojoListener;
 import io.konig.core.pojo.SimplePojoFactory;
+import io.konig.core.pojo.impl.BasicPojoHandler;
+import io.konig.core.pojo.impl.PojoInfo;
 import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -156,6 +156,7 @@ public class ShapeLoader {
 	public void load(Graph graph) throws ShapeLoadException {
 		
 		PojoContext context = new PojoContext(CONTEXT);
+		context.putPojoHandler(Shape.class, new ShapePojoHandler(shapeManager));
 		context.setListener(new PojoListener() {
 
 			@Override
@@ -182,6 +183,25 @@ public class ShapeLoader {
 		return shapeManager;
 	}
 	
+	private static class ShapePojoHandler extends BasicPojoHandler {
+
+		private ShapeManager shapeManager;
+		
+		public ShapePojoHandler(ShapeManager shapeManager) {
+			super(Shape.class);
+			this.shapeManager = shapeManager;
+		}
+
+		protected Object newInstance(PojoInfo pojoInfo) throws KonigException {
+			Resource id = pojoInfo.getVertex().getId();
+			Shape shape = shapeManager.getShapeById(id);
+			if (shape != null) {
+				return shape;
+			}
+			return super.newInstance(pojoInfo);
+		}
+		
+	}
 	
 
 }
