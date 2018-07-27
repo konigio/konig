@@ -228,6 +228,20 @@ public class BeanUtil {
 				// Ignore
 			}
 		}
+		if (object instanceof Float) {
+			float floatValue = (Float) object;
+			return valueFactory.createLiteral(floatValue);
+		}
+		if (object instanceof Double) {
+			double doubleValue = (Double) object;
+			if (doubleValue % 1 == 0) {
+				if (doubleValue>=Integer.MIN_VALUE && doubleValue<=Integer.MAX_VALUE) {
+					return valueFactory.createLiteral((int) doubleValue);
+				}
+				return valueFactory.createLiteral((long) doubleValue);
+			} 
+			return valueFactory.createLiteral(doubleValue);
+		}
 		
 		Method[] methodList = object.getClass().getMethods();
 		for (Method m : methodList) {

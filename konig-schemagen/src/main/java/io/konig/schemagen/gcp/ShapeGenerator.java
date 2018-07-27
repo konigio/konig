@@ -49,9 +49,18 @@ public class ShapeGenerator {
 	private static final int MAX_DEPTH = 10;
 	
 	private OwlReasoner reasoner;
+	private boolean omitTypeProperty=false;
 	
 	public ShapeGenerator(OwlReasoner reasoner) {
 		this.reasoner = reasoner;
+	}
+
+	public boolean isOmitTypeProperty() {
+		return omitTypeProperty;
+	}
+
+	public void setOmitTypeProperty(boolean omitTypeProperty) {
+		this.omitTypeProperty = omitTypeProperty;
 	}
 
 	public Shape generateShape(List<Vertex> individuals) {
@@ -68,7 +77,9 @@ public class ShapeGenerator {
 			collectTypes(v, typeInfo);
 			setProperties(shape, v, 0);
 		}
-		addTypeProperty(shape, typeInfo);
+		if (!omitTypeProperty) {
+			addTypeProperty(shape, typeInfo);
+		}
 		
 		if (OWL.THING.equals(shape.getTargetClass())) {
 			shape.setTargetClass(null);

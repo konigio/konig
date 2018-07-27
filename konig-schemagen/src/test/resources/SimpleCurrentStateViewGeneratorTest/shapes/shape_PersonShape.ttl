@@ -1,0 +1,55 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonShape konig:mediaTypeBaseName "application/vnd.example.example.com.shapes.person" ; 
+	sh:property  [ 
+		sh:path schema:givenName ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:predicate schema:givenName ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		sh:path schema:familyName ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:predicate schema:familyName ; 
+		sh:datatype xsd:string
+	 ]  ,  [ 
+		sh:path konig:modified ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:predicate konig:modified ; 
+		sh:datatype xsd:dateTime
+	 ]  ,  [ 
+		sh:path konig:deleted ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:predicate konig:deleted ; 
+		sh:datatype xsd:boolean ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> , <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonCurrentView> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/yvnbEqW_MowAAAFkmNv7Ig> ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "Person" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	a konig:GoogleBigQueryTable , konig:DataSource . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonCurrentView> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "PersonCurrent" ]  ; 
+	a konig:GoogleBigQueryTable , konig:GoogleBigQueryView , konig:CurrentState . 
+
+<http://www.konig.io/activity/yvnbEqW_MowAAAFkmNv7Ig> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-07-14T08:55:11.044-04:00"^^xsd:dateTime , "2018-07-14T08:55:10.885-04:00"^^xsd:dateTime . 
