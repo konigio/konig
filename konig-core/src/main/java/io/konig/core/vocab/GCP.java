@@ -40,6 +40,7 @@ public class GCP {
 	public static final URI projectId = new URIImpl(PROJECT_ID);
 	public static final URI datasetId = new URIImpl("http://www.konig.io/ns/gcp/datasetId");
 	public static final URI tableId = new URIImpl("http://www.konig.io/ns/gcp/tableId");
+	public static final URI preferredGcpDatasetId = new URIImpl("http://www.konig.io/ns/gcp/preferredGcpDatasetId");
 	public static final URI notificationInfo = new URIImpl(NOTIFICATION_INFO);
 	public static final URI notificationTopic = new URIImpl(NOTIFICATION_TOPIC);
 	public static final URI notificationEventTypes = new URIImpl(NOTIFICATION_EVENT_TYPES);

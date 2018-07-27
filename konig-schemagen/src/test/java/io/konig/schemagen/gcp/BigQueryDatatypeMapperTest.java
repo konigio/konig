@@ -54,6 +54,7 @@ public class BigQueryDatatypeMapperTest {
 		assertEquals(BigQueryDatatype.FLOAT64, type(XMLSchema.FLOAT));
 		assertEquals(BigQueryDatatype.FLOAT64, type(XMLSchema.DECIMAL));
 		assertEquals(BigQueryDatatype.FLOAT64, type(XMLSchema.DOUBLE));
+		assertEquals(BigQueryDatatype.BOOLEAN, type(XMLSchema.BOOLEAN));
 		
 	}
 
