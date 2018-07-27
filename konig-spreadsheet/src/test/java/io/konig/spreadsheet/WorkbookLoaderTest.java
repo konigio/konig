@@ -22,6 +22,7 @@ package io.konig.spreadsheet;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -31,6 +32,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -1436,6 +1438,42 @@ public class WorkbookLoaderTest {
 		}
 	}
 	
+	@Test
+	public void testDataDictionaryForIndividual() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("multi-project-data-dictionary.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
+		
+		ShapeManager s = loader.getShapeManager();
+		
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		Shape shape = s.getShapeById(shapeId);
+		List<URI> qualifiedList = new ArrayList<URI>();
+		try {	
+			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/WorkbookLoaderTest/dataDictionaryIndividual/RA_CUSTOMER_TRX_ALL.ttl"));
+		} catch (Exception e) {
+			throw new KonigException(e);
+		}
+		assertTrue(shape!=null);
+		List<PropertyConstraint> p = shape.getProperty();
+		
+		for(PropertyConstraint prop :p){
+			qualifiedList =prop.getQualifiedSecurityClassification();
+		}
+		assertEquals(qualifiedList.size(),2);
+		assertNotNull(qualifiedList);
+		assertEquals(qualifiedList.get(0),new URIImpl("https://schema.pearson.com/ns/dcl/DCL1"));
+	}
+
 	private void checkPropertyConstraints(WorkbookLoader loader) {
 		
 		ShapeManager shapeManager = loader.getShapeManager();
