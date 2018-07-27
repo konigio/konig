@@ -61,10 +61,27 @@ public class GoogleCloudPlatformConfig {
 	@Parameter(property="konig.gcp.deployment")
 	private GroovyDeploymentScript deployment;
 	
+	@Parameter(property="konig.gcp.omitTypeFromEnumTables", defaultValue="false")
+	private boolean omitTypeFromEnumTables;
+	
 	public GoogleCloudPlatformConfig() {
 		
 	}
 	
+	
+	
+	public boolean isOmitTypeFromEnumTables() {
+		return omitTypeFromEnumTables;
+	}
+
+
+
+	public void setOmitTypeFromEnumTables(boolean omitTypeFromEnumTables) {
+		this.omitTypeFromEnumTables = omitTypeFromEnumTables;
+	}
+
+
+
 	public String getBqShapeBaseURL() {
 		return bqShapeBaseURL;
 	}

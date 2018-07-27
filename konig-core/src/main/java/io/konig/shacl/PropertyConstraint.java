@@ -426,6 +426,10 @@ public class PropertyConstraint implements Cloneable {
 	public void setValueClass(Resource valueClass) {
 		this.valueClass = valueClass;
 	}
+	
+	public boolean isRequired() {
+		return minCount!=null && minCount>0;
+	}
 
 	public boolean isUniqueCountKey() {
 		return uniqueCountKey;

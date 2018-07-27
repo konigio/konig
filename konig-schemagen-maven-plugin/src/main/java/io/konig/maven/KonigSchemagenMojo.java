@@ -85,8 +85,6 @@ import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.SKOS;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
@@ -156,7 +154,8 @@ import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
-import io.konig.schemagen.ViewShapeGenerator;
+import io.konig.schemagen.TabularShapeGenerationException;
+import io.konig.schemagen.TabularShapeGenerator;
 import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
@@ -295,7 +294,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private AmazonWebServicesConfig amazonWebServices;
     
     @Parameter
-    private ViewShapeGeneratorConfig viewShapeGenerator;
+    private TabularShapeGeneratorConfig config;
     
     @Parameter
     private HashSet<String> excludeNamespace;
@@ -347,10 +346,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			shapeInjector = new ShapeInjector((MemoryShapeManager)shapeManager);
 			nsManager = new MemoryNamespaceManager();
 			mediaTypeNamer = new SimpleShapeMediaTypeNamer();
-			owlGraph = new MemoryGraph();
+			owlGraph = new MemoryGraph(nsManager);
 			contextManager = new MemoryContextManager();
 			owlReasoner = new OwlReasoner(owlGraph);
-			owlGraph.setNamespaceManager(nsManager);
 			
 			emitter = new CompositeEmitter();
 			loadResources();
@@ -376,7 +374,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			updateRdf();
 			
 			computeSizeEstimates();
-			generateViewShape();
+			generateTabularShapes();
+			//generateViewShape();
+			//generateTableShape();
 			
 			emitter.emit(owlGraph);
 			
@@ -687,6 +687,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				ShapeVisitor shapeVisitor = new EnumShapeVisitor(fileGetter, shapeManager);
 				BigQueryEnumShapeGenerator generator = new BigQueryEnumShapeGenerator(datasetMapper(), 
 						createTableMapper(), shapeNamer, shapeManager, shapeVisitor);
+				generator.setOmitTypeProperty(googleCloudPlatform.isOmitTypeFromEnumTables());
 				generator.generateAll(owlReasoner);
 			}
 		}
@@ -770,6 +771,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		 try {			
 			 if (workbook != null) {	
 				 WorkbookLoader workbookLoader = new WorkbookLoader(nsManager);
+				 workbookLoader.setShapeManager(shapeManager);
 				 workbookLoader.setFailOnWarnings(workbook.isFailOnWarnings());
 				 workbookLoader.setFailOnErrors(workbook.isFailOnErrors());
 				 workbookLoader.setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
@@ -790,17 +792,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 					if(files!=null && files.isEmpty()){
 						throw new SpreadsheetException("No files available in workbookDir and workbookFile.");
 					}
-					Graph graph = new MemoryGraph();
 					for (File file : files) {
 						FileInputStream input = new FileInputStream(file);
 						try {
 
 							Workbook workbook = new XSSFWorkbook(input);
 
-							graph.setNamespaceManager(nsManager);
-
 							workbookLoader.setDatasetMapper(datasetMapper);
-							workbookLoader.load(workbook, graph);
+							workbookLoader.load(workbook, owlGraph);
 						} finally {
 							input.close();
 						}
@@ -1020,7 +1019,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 			if (bigQuery != null) {
 				resourceGenerator.addBigQueryGenerator(bigQuery.getSchema());
-				resourceGenerator.addBigQueryViewGenerator(bigQuery.getView());
+				if (googleCloudPlatform.isEnableBigQueryTransform()) {
+					resourceGenerator.addBigQueryViewGenerator(bigQuery.getView());
+				}
 				
 				resourceGenerator.add(labelGenerator());
 			}
@@ -1294,16 +1295,21 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 	}
 	
-	private void generateViewShape() throws RDFParseException, RDFHandlerException, IOException {
-		if(defaults.getShapesDir() != null && viewShapeGenerator != null) {
+	private void generateTabularShapes() throws RDFParseException, RDFHandlerException, IOException {
+		
+		if(defaults.getShapesDir() != null && config != null) {
 			RdfUtil.loadTurtle(defaults.getRdfDir(), owlGraph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
 			shapeLoader.load(owlGraph);
 			
 			File shapesDir = defaults.getShapesDir();
-			ViewShapeGenerator shapeGenerator = new ViewShapeGenerator(nsManager, shapeManager, viewShapeGenerator);
-			shapeGenerator.generate(shapesDir);
-		}
+			TabularShapeGenerator tabularShapeGenerator = new TabularShapeGenerator(nsManager, shapeManager);
+			try {
+				tabularShapeGenerator.generateTabularShapes(shapesDir, config);
+			} catch (TabularShapeGenerationException e) {
+				e.printStackTrace();
+			}
+	}
 	}
 	
 	

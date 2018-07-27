@@ -137,6 +137,7 @@ public class XmlSerializerTest {
 			"      </dataServices>\n" + 
 			"      <enableBigQueryTransform>true</enableBigQueryTransform>\n" + 
 			"      <enableMySqlTransform>true</enableMySqlTransform>\n" + 
+			"      <omitTypeFromEnumTables>false</omitTypeFromEnumTables>\n" +
 			"   </googleCloudPlatform>\n" + 
 			"";
 		String actual = buffer.toString().replace("\r", "");
