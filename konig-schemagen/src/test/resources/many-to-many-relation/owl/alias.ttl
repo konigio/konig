@@ -1,0 +1,9 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+alias: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "alias" ; 
+	rdfs:label "Alias Ontology" ; 
+	rdfs:comment "An ontology that contains alternative names for properties.  This ontology is used mostly for internal representations of entities that are not intended to be shared outside a bounded context." . 

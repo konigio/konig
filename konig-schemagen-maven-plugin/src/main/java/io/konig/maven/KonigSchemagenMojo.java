@@ -414,7 +414,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
 			if (shapesDir != null) {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), owlReasoner);
+				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), owlReasoner,shapeManager);
 				ShapeWriter shapeWriter = new ShapeWriter();	
 				RelationshipDegreeReasoner reasoner=new RelationshipDegreeReasoner();
 				reasoner.computeRelationshipDegree(owlGraph, shapeManager, false);

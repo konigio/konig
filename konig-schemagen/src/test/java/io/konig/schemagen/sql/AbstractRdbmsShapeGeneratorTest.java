@@ -51,7 +51,7 @@ public class AbstractRdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 		ShapePropertyOracle oracle = new ShapePropertyOracle();
 		FormulaParser parser = new FormulaParser(oracle, nameService, nsMap);
 		OwlReasoner owlReasoner = new OwlReasoner(graph);
-		shapeGenerator =  new RdbmsShapeGenerator(parser,null);
+		shapeGenerator =  new RdbmsShapeGenerator(parser,null,shapeManager);
 	}
 
 }

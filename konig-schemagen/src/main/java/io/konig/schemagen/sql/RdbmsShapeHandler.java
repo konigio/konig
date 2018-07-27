@@ -76,7 +76,17 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 		Shape childShape = null;
 		if(pc != null) {
 			childShape = getRdbmsShapeFromLogicalShape(pc.getShape());
-			Shape rdbmsChildShape = generator.createOneToManyChildShape(parentShape, relationshipProperty ,childShape);
+			Shape rdbmsChildShape=null;
+			if(RelationshipDegree.OneToMany.equals(pc.getRelationshipDegree())){
+				rdbmsChildShape = generator.createOneToManyChildShape(parentShape, relationshipProperty ,childShape);
+			}
+			else if(RelationshipDegree.ManyToMany.equals(pc.getRelationshipDegree())){
+				PropertyConstraint relationshipPc=parentShape.getTabularOriginShape().getPropertyConstraint(relationshipProperty);
+				List<Shape> manyToManyShapes = generator.createManyToManyChildShape(parentShape, relationshipPc ,childShape);
+				if(manyToManyShapes!=null){
+					rdbmsChildShapes.addAll(manyToManyShapes);
+				}
+			}
 			if(rdbmsChildShape != null) {
 				rdbmsChildShapes.add(rdbmsChildShape);
 			}
@@ -84,13 +94,12 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			childShape = parentShape;
 		}
 		for (PropertyConstraint p : childShape.getTabularOriginShape().getProperty()) {
-			if(p.getShape() != null && p.getMaxCount()==null && RelationshipDegree.OneToMany.equals(p.getRelationshipDegree())){
+			if(p.getShape() != null && p.getMaxCount()==null){
 				addRdbmsChildShape(childShape,p.getPredicate(), p);
 			}
             if(p.getMaxCount() == null && p.getShape() == null && childShape.getNodeKind() ==  NodeKind.IRI) {
                 addRdbmsChildShape(childShape,p.getPredicate(), p);
             }
-            
 		}
 	}
 
@@ -172,5 +181,6 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 		}
 		return null;
 	}
+	
 
 }

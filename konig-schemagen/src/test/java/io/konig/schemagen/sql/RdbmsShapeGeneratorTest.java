@@ -22,6 +22,8 @@ package io.konig.schemagen.sql;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import org.junit.Ignore;
 
 import static org.junit.Assert.*;
@@ -235,7 +237,7 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
 		OwlReasoner reasoner = new OwlReasoner(graph);
-		shapeGenerator = new RdbmsShapeGenerator(null, reasoner);
+		shapeGenerator = new RdbmsShapeGenerator(null, reasoner,shapeManager);
 
 		Shape rdbmsChildShape = null;
 		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
@@ -306,7 +308,28 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 
 		assertEquals("^person", formula1.getText());
 	}
+	@Test
+	public void testManyToMany() throws Exception{
+		load("src/test/resources/many-to-many-relation");
 
+		AwsShapeConfig.init();
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		List<Shape> manyToManyShapes = null;
+		Shape childShape = null;
+		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
+			if (pc.getShape() != null) {
+				childShape = getRdbmsShapeFromLogicalShape(pc.getShape());
+				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
+						childShape);
+				break;
+			}
+		}
+		assertTrue(rdbmsShape!=null);
+		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==2);
+	}
 	private PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
 		for (PropertyConstraint p : rdbmsShape.getProperty()) {
 			if (p.getStereotype() != null
