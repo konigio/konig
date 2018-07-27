@@ -196,6 +196,7 @@ public class WorkbookLoader {
 	private static final String DECIMAL_PRECISION = "Decimal Precision";
 	private static final String DECIMAL_SCALE = "Decimal Scale";
 	private static final String SECURITY_CLASSIFICATION ="Security Classification";
+	private static final String PII_CLASSIFICATION ="PII Classification";
 
 	// Cloud SQL Instance
 	private static final String INSTANCE_NAME = "Instance Name";
@@ -315,6 +316,7 @@ public class WorkbookLoader {
 	private boolean failOnWarnings = true;
 	private boolean failOnErrors = true;
 	private int errorCount = 0;
+	private Map individualsMap = new HashMap();
 
 
 	public WorkbookLoader(NamespaceManager nsManager) {
@@ -541,6 +543,7 @@ public class WorkbookLoader {
 		private int securityClassifCol = UNDEFINED;
 		private int targetObjectNameCol = UNDEFINED;
 		private int targetFieldNameCol = UNDEFINED;
+		private int piiClassificationCol = UNDEFINED;
 		
 		private int termCol = UNDEFINED;
 		private int abbreviationCol = UNDEFINED;
@@ -1209,6 +1212,7 @@ public class WorkbookLoader {
 		private void loadDataDictionaryTemplateRow(Row row) throws SpreadsheetException {
 			String sourceSystemName = stringValue(row, sourceSystemCol);
 			String shapeIdLocalName = stringValue(row, sourceObjectNameCol);
+			
 			if(shapeIdLocalName==null )
 				return;
 			URI shapeId = getShapeURL(sourceSystemName,shapeIdLocalName);
@@ -1241,13 +1245,20 @@ public class WorkbookLoader {
 				String msg = MessageFormat.format("Decimal Scale must be less than or equal to Decimal Precision on {0}.{1}", shapeIdLocalName, propertyIdValue);
 				fail(msg);
 			}
+
+			Literal securityClassifColValue = stringLiteral(row, securityClassifCol);
+			Literal piiClassificationColValue = stringLiteral(row, piiClassificationCol);	
+		 
+			URI securityClassifId = (URI)individualsMap.get(securityClassifColValue);
+			URI piiClassifId = (URI)individualsMap.get(piiClassificationColValue);
+
 			String businessName = stringValue(row, businessNameCol);
 			String businessDefinition = stringValue(row, businessDefinitionCol);
 			String dataStewardName = stringValue(row, dataStewardCol);
-			List<URI> securityClassification=uriList(row,securityClassifCol);
 			String constraints = stringValue(row,constraintsCol);	
-			
-
+			List<URI> qualSecClassList = new ArrayList<URI>();
+			qualSecClassList.add(securityClassifId);
+			qualSecClassList.add(piiClassifId);
 			Shape shape = produceShape(shapeId);
 			PropertyConstraint p = shape.getPropertyConstraint(propertyId);
 			
@@ -1291,7 +1302,7 @@ public class WorkbookLoader {
 			if (dataStewardName != null) {
 				p.dataSteward().setName(dataStewardName);
 			}
-			p.setQualifiedSecurityClassification(securityClassification);
+			p.setQualifiedSecurityClassification(qualSecClassList);
 			
 		}
 		
@@ -1393,7 +1404,7 @@ public class WorkbookLoader {
 		private void readDataDictionaryTemplateHeader(Sheet sheet) {
 			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = maxLengthCol = decimalPrecisionCol = decimalScaleCol 
 					= constraintsCol = businessNameCol = businessDefinitionCol = dataStewardCol = securityClassifCol = 
-					targetObjectNameCol = targetFieldNameCol = UNDEFINED;
+					targetObjectNameCol = targetFieldNameCol = piiClassificationCol= UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1464,6 +1475,9 @@ public class WorkbookLoader {
 						
 					case TARGET_FIELD_NAME:
 						targetFieldNameCol = i;
+						break;
+					case PII_CLASSIFICATION:
+						piiClassificationCol =i;
 						break;
 					
 					}
@@ -2725,6 +2739,7 @@ public class WorkbookLoader {
 				name = literal(individualId.getLocalName());
 			}
 			edge(individualId, Schema.name, name);
+			individualsMap.put(name, individualId);
 			edge(individualId, RDFS.COMMENT, comment);
 			edge(individualId, DCTERMS.IDENTIFIER, codeValue);
 		}
