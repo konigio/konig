@@ -381,10 +381,13 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==2);
 		assertTrue(manyToManyShapes.get(1).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR_ID_PK"))!=null);
 		
-		PropertyConstraint childShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR"));
+		PropertyConstraint parentShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_FK"));
+		assertTrue(parentShapeRef!=null);		
+		assertEquals("PPID_PK", parentShapeRef.getFormula().getText());
+		
+		PropertyConstraint childShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_CONTRIBUTOR_FK"));
 		assertTrue(childShapeRef!=null);
-		assertTrue(((URI)childShapeRef.getValueClass()).equals(childShape.getTargetClass()));
-		assertEquals(".contributor", childShapeRef.getFormula().getText());
+		assertEquals(".contributor.CONTRIBUTOR_ID_PK", childShapeRef.getFormula().getText());
 		
 	}
 	
@@ -420,6 +423,10 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_PK"))!=null);
 		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==2);
 		assertTrue(manyToManyShapes.get(1).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_CONTRIBUTOR_PK"))!=null);
+		
+		PropertyConstraint parentShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_FK"));
+		assertTrue(parentShapeRef!=null);		
+		assertEquals("PRODUCT_PK", parentShapeRef.getFormula().getText());
 		
 		PropertyConstraint childShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_CONTRIBUTOR_FK"));
 		assertTrue(childShapeRef!=null);

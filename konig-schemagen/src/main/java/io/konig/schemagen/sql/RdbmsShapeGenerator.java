@@ -351,15 +351,19 @@ public class RdbmsShapeGenerator {
 			pc.setFormula(parser.quantifiedExpression(text));
 			
 		} else if(pc == null){
+			PropertyConstraint pcPk=hasPrimaryKey(shape);
 			localName = StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName());
 			String snakeCase = localName + suffix;
 			pc = new PropertyConstraint(new URIImpl(propertyNameSpace + snakeCase));
-			pc.setDatatype(XMLSchema.LONG);			
+			pc.setDatatype(XMLSchema.LONG);	
+			String pkLocalName=(pcPk!=null)?(pcPk.getPredicate().getLocalName()): 
+				(StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName())+"_PK");
+			
 			if(relationshipPc != null) {
-				text = "." + relationshipPc.getPredicate().getLocalName() + "."+ localName + "_PK" ;				
+				text = "." + relationshipPc.getPredicate().getLocalName() + "."+ pkLocalName ;				
 			}
 			else{
-				text = "."+ localName + "_PK" ;
+				text = pkLocalName ;
 			}
 			declarePredicate(new URIImpl(propertyNameSpace+localName+"_PK"));
 			pc.setFormula(parser.quantifiedExpression(text));
