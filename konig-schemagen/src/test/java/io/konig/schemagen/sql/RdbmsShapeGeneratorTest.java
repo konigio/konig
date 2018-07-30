@@ -379,7 +379,7 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		assertTrue(rdbmsShape!=null);
 		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://example.com/ns/alias/PPID_PK"))!=null);
 		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==2);
-		assertTrue(manyToManyShapes.get(1).getPropertyConstraint(iri("http://example.com/ns/alias/CONTIBUTOR_ID_PK"))!=null);
+		assertTrue(manyToManyShapes.get(1).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR_ID_PK"))!=null);
 		
 		PropertyConstraint childShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR"));
 		assertTrue(childShapeRef!=null);
