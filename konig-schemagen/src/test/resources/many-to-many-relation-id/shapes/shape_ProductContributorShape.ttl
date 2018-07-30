@@ -6,28 +6,41 @@
 @prefix shape: <https://schema.pearson.com/shapes/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-shape:ProductShape a sh:Shape ; 
+shape:ProductContributorShape a sh:Shape ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> ; 
-	sh:targetClass mdm:Product ;
+	sh:targetClass mdm:ProductContributor ; 
+	sh:nodeKind sh:IRI ;
 	sh:property  [ 
-		sh:path mdm:ppid ; 
+		sh:path mdm:contributorId ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
-		sh:maxLength 55 ;
-		konig:stereotype konig:primaryKey 
+		sh:maxLength 55 
 	 ]  ,  [ 
-		sh:path mdm:productName ; 
+		sh:path mdm:contributorType ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:maxLength 55
+	 ]  ,  [ 
+		sh:path mdm:contributorFirstName ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		sh:maxLength 55
 	 ]  ,  [ 
-		sh:path mdm:contributor ; 
-		sh:shape shape:ProductContributorShape ; 
-		sh:minCount 0 ; 
-		sh:maxLength 55 ;
-		konig:relationshipDegree konig:ManyToMany]  . 
+		sh:path mdm:contributorSurname ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:maxLength 55
+	 ]  ,  [ 
+		sh:path mdm:primaryAuthorFlag ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:maxLength 55
+	 ]  . 
 
 <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> a konig:LoadModelFromSpreadsheet ; 
 	as:endTime "2018-06-01T14:53:13.010+05:30"^^xsd:dateTime . 

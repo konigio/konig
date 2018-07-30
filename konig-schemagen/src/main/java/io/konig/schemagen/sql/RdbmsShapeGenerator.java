@@ -341,7 +341,7 @@ public class RdbmsShapeGenerator {
 				pc.setFormula(parser.quantifiedExpression(text));
 			}
 		}
-		if (rdbmsShape.getNodeKind() == NodeKind.IRI && pc == null) {
+		if (shape.getNodeKind() == NodeKind.IRI && pc == null) {
 			localName = StringUtil.SNAKE_CASE(relationshipPc.getPredicate().getLocalName());
 			pc = new PropertyConstraint(new URIImpl(propertyNameSpace + localName));
 			pc.setValueClass(relationshipPc.getShape().getTargetClass());

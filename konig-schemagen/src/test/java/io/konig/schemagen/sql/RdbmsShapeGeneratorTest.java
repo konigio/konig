@@ -308,9 +308,16 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 
 		assertEquals("^person", formula1.getText());
 	}
+	/**
+	 * Case 1 : Both the shapes having many to many relationship have sh:nodeKind as sh:IRI
+	 * and hence the association shape created will have 
+	 * sh:targetClass as the parent class which have the konig:ManyToMany relationship in the property constraint 
+	 * and sh:nodeKind as sh:IRI. The association shape will also include another property that refers to the id property 
+	 * of the other shape. The sh:class should be set and the formula will be set as '.' relationshipProperty. 
+	 */
 	@Test
-	public void testManyToMany() throws Exception{
-		load("src/test/resources/many-to-many-relation");
+	public void testManyToManyCase1() throws Exception{
+		load("src/test/resources/many-to-many-relation-id");
 
 		AwsShapeConfig.init();
 		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
@@ -318,18 +325,108 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
 		List<Shape> manyToManyShapes = null;
+		Shape childRdbmsShape = null;
 		Shape childShape = null;
 		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
-			if (pc.getShape() != null) {
-				childShape = getRdbmsShapeFromLogicalShape(pc.getShape());
+			childShape=pc.getShape();
+			if (childShape != null) {
+				childRdbmsShape = getRdbmsShapeFromLogicalShape(childShape);
 				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
-						childShape);
+						childRdbmsShape);
 				break;
 			}
 		}
 		assertTrue(rdbmsShape!=null);
+		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://www.konig.io/ns/core/ID"))!=null);
 		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==2);
+		assertTrue(manyToManyShapes.get(1).getPropertyConstraint(iri("http://www.konig.io/ns/core/ID"))!=null);
+		
+		assertTrue(manyToManyShapes.get(0).getTargetClass().equals(logicalShape.getTabularOriginShape().getTargetClass()));
+		PropertyConstraint childShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR"));
+		assertTrue(childShapeRef!=null);
+		assertTrue(((URI)childShapeRef.getValueClass()).equals(childShape.getTargetClass()));
+		assertEquals(".contributor", childShapeRef.getFormula().getText());
+		
 	}
+	/**
+	 * Case 2 : Both the shapes having many to many relationship have konig:stereotype as konig:primaryKey or
+	 * konig:syntheticKey and hence the association shape created will have the foreign key reference properties with suffix "_FK"
+	 * and the target class as the parent class which has konig:ManyToMany relationship in the property constraint 
+	 * and the formula for the parent shape reference will be the primary key property and the formula for the child shape reference 
+	 * will be the "." relationshipProperty "."  primary key property.
+	 */
+	@Test
+	public void testManyToManyCase2() throws Exception{
+		load("src/test/resources/many-to-many-relation-pk");
+
+		AwsShapeConfig.init();
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		List<Shape> manyToManyShapes = null;
+		Shape childRdbmsShape = null;
+		Shape childShape = null;
+		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
+			childShape=pc.getShape();
+			if (childShape != null) {
+				childRdbmsShape = getRdbmsShapeFromLogicalShape(childShape);
+				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
+						childRdbmsShape);
+				break;
+			}
+		}
+		assertTrue(rdbmsShape!=null);
+		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://example.com/ns/alias/PPID_PK"))!=null);
+		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==2);
+		assertTrue(manyToManyShapes.get(1).getPropertyConstraint(iri("http://example.com/ns/alias/CONTIBUTOR_ID_PK"))!=null);
+		
+		PropertyConstraint childShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR"));
+		assertTrue(childShapeRef!=null);
+		assertTrue(((URI)childShapeRef.getValueClass()).equals(childShape.getTargetClass()));
+		assertEquals(".contributor", childShapeRef.getFormula().getText());
+		
+	}
+	
+	/**
+	 * Case 3 : Both the shapes having many to many relationship do not have konig:stereotype as konig:primaryKey or
+	 * konig:syntheticKey and hence the association shape created will have the foreign key reference properties with suffix "_FK"
+	 * and the target class as the parent class which has konig:ManyToMany relationship in the property constraint 
+	 * and the formula for the parent shape reference will be the primary key property and the formula for the child shape reference 
+	 * will be the "." relationshipProperty "."  primary key property.
+	 */
+	@Test
+	public void testManyToManyCase3() throws Exception{
+		load("src/test/resources/many-to-many-relation-create-pk");
+
+		AwsShapeConfig.init();
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		List<Shape> manyToManyShapes = null;
+		Shape childRdbmsShape = null;
+		Shape childShape = null;
+		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
+			childShape=pc.getShape();
+			if (childShape != null) {
+				childRdbmsShape = getRdbmsShapeFromLogicalShape(childShape);
+				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
+						childRdbmsShape);
+				break;
+			}
+		}
+		assertTrue(rdbmsShape!=null);
+		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_PK"))!=null);
+		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==2);
+		assertTrue(manyToManyShapes.get(1).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_CONTRIBUTOR_PK"))!=null);
+		
+		PropertyConstraint childShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_CONTRIBUTOR_FK"));
+		assertTrue(childShapeRef!=null);
+		assertEquals(".contributor.PRODUCT_CONTRIBUTOR_PK", childShapeRef.getFormula().getText());
+		
+	}
+	
 	private PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
 		for (PropertyConstraint p : rdbmsShape.getProperty()) {
 			if (p.getStereotype() != null
