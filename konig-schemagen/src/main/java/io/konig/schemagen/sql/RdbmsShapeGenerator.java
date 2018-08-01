@@ -7,7 +7,6 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -15,19 +14,22 @@ import org.openrdf.rio.RDFParseException;
 
 import io.konig.activity.Activity;
 import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTable;
+import io.konig.aws.datasource.AwsAuroraTableReference;
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
+import io.konig.datasource.DataSource;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.ShapePropertyOracle;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
-import io.konig.shacl.RelationshipDegree;
 
 /*
  * #%L
@@ -275,17 +277,13 @@ public class RdbmsShapeGenerator {
 	}
 	public List<Shape> createManyToManyChildShape(Shape parentShape, PropertyConstraint relationshipPc, Shape childShape) throws RDFParseException, IOException {
 		List<Shape> manyToManyShapes=null;
-		//1. Create Child RDBMS Shape
 		Shape rdbmsChildShape = createRdbmsShape(childShape);
 		if(rdbmsChildShape != null) {
-			//2. Add Primary key to the child shape if not exists. Primary key will be added to the parent shape in the calling method itself
 			addSyntheticKey(rdbmsChildShape, "_PK", null);
 			rdbmsChildShape.setProperty(rdbmsProperty);			
 			manyToManyShapes=new ArrayList<Shape>();
-			//3. Create association shape
 			Shape assocShape=getAssociationShape(parentShape,relationshipPc,childShape);
 			if(assocShape!=null){
-				//4. Add both association shape and child shape.
 				manyToManyShapes.add(assocShape);
 				manyToManyShapes.add(rdbmsChildShape);
 			}
@@ -294,8 +292,7 @@ public class RdbmsShapeGenerator {
 	}
 	private Shape getAssociationShape(Shape parentShape, PropertyConstraint relationshipPc, Shape childShape) throws RDFParseException, IOException {	
 		
-		boolean hasAssocShape=false;
-		//boolean hasAssocShape=associationShapeExists(parentShape, childShape);
+		boolean hasAssocShape=associationShapeExists(parentShape.getTabularOriginShape(),relationshipPc, childShape.getTabularOriginShape());
 		Shape assocShape =null;
 		if(!hasAssocShape){
 			URI assocShapeId=getAssocShapeId((URI)(parentShape.getId()),(URI)(childShape.getId()));
@@ -306,6 +303,32 @@ public class RdbmsShapeGenerator {
 				assocShape.addType(SH.Shape);
 				assocShape.addType(Konig.TabularNodeShape);
 				assocShape.setTargetClass(parentShape.getTabularOriginShape().getTargetClass());
+				for(DataSource ds:parentShape.getShapeDataSource()){
+					String namespace=((URI)ds.getId()).getNamespace();
+					if(ds instanceof AwsAuroraTable){
+						AwsAuroraTable aurora= new AwsAuroraTable();
+						aurora.setAwsTableName(assocShapeId.getLocalName());
+						AwsAuroraTableReference tableRef=new AwsAuroraTableReference();
+						tableRef.setAwsAuroraHost(((AwsAuroraTable) ds).getTableReference().getAwsAuroraHost());
+						tableRef.setAwsSchema(((AwsAuroraTable) ds).getTableReference().getAwsSchema());
+						tableRef.setAwsTableName(assocShapeId.getLocalName());
+						aurora.setTableReference(tableRef);
+						aurora.setId(new URIImpl(namespace+assocShapeId.getLocalName()));
+						assocShape.addShapeDataSource(aurora);
+						break;
+					}
+					else if(ds instanceof GoogleCloudSqlTable){
+						GoogleCloudSqlTable cloudSql=new GoogleCloudSqlTable();
+						cloudSql.setInstance(((GoogleCloudSqlTable) ds).getInstance());
+						cloudSql.setDatabase(((GoogleCloudSqlTable) ds).getDatabase());
+						cloudSql.setTableName(assocShapeId.getLocalName());
+						cloudSql.setId(new URIImpl(namespace+assocShapeId.getLocalName()));
+						cloudSql.setTabularFieldNamespace(((GoogleCloudSqlTable) ds).getTabularFieldNamespace());
+						assocShape.addShapeDataSource(cloudSql);
+						break;
+					}
+				}
+				
 				URI activityId = Activity.nextActivityId();
 				Activity shapeGen = new Activity(activityId);
 				shapeGen.setType(Konig.AssociationShape);
@@ -324,6 +347,73 @@ public class RdbmsShapeGenerator {
 		}
 		
 		return assocShape;
+	}
+	private boolean associationShapeExists(Shape parentShape, PropertyConstraint relationshipPc, Shape childShape) {
+		for(Shape rdbmsShape:shapeManager.listShapes()){
+			Shape shape=rdbmsShape.getTabularOriginShape();
+			if(shape!=null){
+				boolean parentRef=false;
+				boolean childRef = false;
+				List<PropertyConstraint> pcList= shape.getProperty();
+				if(shape.getTargetClass().equals(parentShape.getTargetClass())){
+					if(NodeKind.IRI.equals(shape.getNodeKind())){
+						parentRef=true;
+					}
+					for(PropertyConstraint pc:pcList){
+						if(pc.getFormula()!=null){
+							String formula=pc.getFormula().getText();
+							PropertyConstraint parentPk=hasPrimaryKey(parentShape);
+							PropertyConstraint childPk=hasPrimaryKey(childShape);
+							if(parentPk!=null && ("."+parentPk.getPredicate().getLocalName()).equals(formula)){
+									parentRef=true;
+									break;
+							}	
+							
+							if(NodeKind.IRI.equals(childShape.getNodeKind())){
+								childRef=childShape.getTargetClass().equals(pc.getValueClass()) &&
+											NodeKind.IRI.equals(pc.getNodeKind()) &&
+											("."+relationshipPc.getPredicate().getLocalName()).equals(formula);
+								break;
+							}
+							else if(childPk!=null){
+								childRef = ("."+relationshipPc.getPredicate().getLocalName()+"."+childPk.getPredicate().getLocalName()).equals(formula);
+								break;
+							}
+						}
+					}
+				}
+				else if(shape.getTargetClass().equals(childShape.getTargetClass())){
+					if(NodeKind.IRI.equals(shape.getNodeKind())){
+						childRef=true;
+					}
+					for(PropertyConstraint pc:pcList){
+						if(pc.getFormula()!=null){
+							String formula=pc.getFormula().getText();
+							PropertyConstraint parentPk=hasPrimaryKey(parentShape);
+							PropertyConstraint childPk=hasPrimaryKey(childShape);
+							if(childPk!=null && ("."+childPk.getPredicate().getLocalName()).equals(formula)){
+									childRef=true;
+									break;
+							}	
+							
+							if(NodeKind.IRI.equals(parentShape.getNodeKind())){
+								parentRef=parentShape.getTargetClass().equals(pc.getValueClass()) &&
+											NodeKind.IRI.equals(pc.getNodeKind()) &&
+											("^"+relationshipPc.getPredicate().getLocalName()).equals(formula);
+								break;
+							}
+							else if(parentPk!=null){
+								parentRef = ("^"+relationshipPc.getPredicate().getLocalName()+"."+parentPk.getPredicate().getLocalName()).equals(formula);
+								break;
+							}
+						}
+					}
+				}
+				if(childRef && parentRef)
+					return true;
+			}
+		}
+		return false;
 	}
 	private void addSyntheticKeyToAssocShape(Shape rdbmsShape, String suffix, PropertyConstraint relationshipPc) throws RDFParseException, IOException {
 		Shape shape = rdbmsShape.getTabularOriginShape();
