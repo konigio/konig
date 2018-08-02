@@ -64,6 +64,12 @@ public class GoogleCloudPlatformConfig {
 	@Parameter(property="konig.gcp.omitTypeFromEnumTables", defaultValue="false")
 	private boolean omitTypeFromEnumTables;
 	
+	@Parameter(property="konig.gcp.etl", defaultValue="${konig.gcp.directory}/camel-etl")
+	private File camelEtl;
+	
+	@Parameter(property="konig.project.directory", defaultValue="${project.basedir}")
+	private File baseDirectory;
+	
 	public GoogleCloudPlatformConfig() {
 		
 	}
@@ -206,6 +212,19 @@ public class GoogleCloudPlatformConfig {
 		this.cloudsql = cloudsql;
 	}
 	
+	public File getCamelEtl() {
+		return camelEtl;
+	}
+
+	public void setCamelEtl(File camelEtl) {
+		this.camelEtl = camelEtl;
+	}
 	
-	
+	public File getBaseDirectory() {
+		return baseDirectory;
+	}
+
+	public void setBaseDirectory(File baseDirectory) {
+		this.baseDirectory = baseDirectory;
+	}
 }

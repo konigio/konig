@@ -49,6 +49,8 @@ import com.google.common.io.Files;
 
 import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.aws.datasource.S3Bucket;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.Shape;
 
 public class EtlRouteBuilder {
@@ -158,7 +160,48 @@ public class EtlRouteBuilder {
 		addConfig(targetTable);
 		createDockerFile(targetLocalName, targetTable.getTableReference().getAwsSchema());
 	}
+	
+	public void generateGcpEtl() throws ParserConfigurationException, TransformerException, IOException {
+		if (!outDir.exists()) {
+			outDir.mkdirs();
+		}
+		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 
+		doc = docBuilder.newDocument();
+
+		Element rootElement = doc.createElement("routes");
+		doc.appendChild(rootElement);
+
+		String targetLocalName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
+
+		rootElement.setAttribute("id", "Route" + targetLocalName);
+		rootElement.setAttribute("xmlns", "http://camel.apache.org/schema/spring");
+
+		Element route = doc.createElement("route");
+		rootElement.appendChild(route);
+		GoogleCloudStorageBucket googleStorageBucket = sourceShape.findDataSource(GoogleCloudStorageBucket.class);
+		
+		Element from = doc.createElement("from");
+		from.setAttribute("uri", "google-pubsub://pearson-edw-core:"+googleStorageBucket.getNotificationInfo().get(0).getTopic());
+		route.appendChild(from);
+		route.appendChild(addProcess("ref", "prepareToLoadTargetTable"));
+		Element toG = doc.createElement("to");
+		GoogleBigQueryTable googleBigQueryTable = targetShape.findDataSource(GoogleBigQueryTable.class);
+		
+		toG.setAttribute("uri", "google-bigquery-insert:"+googleBigQueryTable.getTableReference().getProjectId()
+				+":"+googleBigQueryTable.getTableReference().getDatasetId()+":"+googleBigQueryTable.getTableReference().getTableId());
+		route.appendChild(toG);
+
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+		DOMSource source = new DOMSource(doc);
+		StreamResult result = new StreamResult(new File(outDir, "Route" + targetLocalName + ".xml"));
+		transformer.transform(source, result);
+	}
+	
 	private void addConfig(AwsAuroraTable targetTable) throws IOException {
 
 		File file = new File(outDir, "camel-routes-config.properties");

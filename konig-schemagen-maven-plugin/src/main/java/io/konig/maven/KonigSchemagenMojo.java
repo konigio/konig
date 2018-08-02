@@ -1063,7 +1063,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 					generateTransformScripts(bqScriptsDir);
 				}
 			}
-
+			generateCamelEtl();
 			generateDeploymentScript();
 		}
 	}
@@ -1233,7 +1233,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				
 				for (Vertex targetShapeVertex : graph.vertices()) {					
 					Shape targetShape = shapeManager.getShapeById(targetShapeVertex.getId());
-					dockerComposer=targetShape;
+					dockerComposer = targetShape;
 					if (targetShape.hasDataSourceType(Konig.AwsAuroraTable)) {
 						if(amazonWebServices != null) {
 							outDir = amazonWebServices.getCamelEtl();
@@ -1259,10 +1259,30 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 							}
 						}
 					}
-					
+					if(targetShape.hasDataSourceType(Konig.GoogleBigQueryTable)) {
+						if(googleCloudPlatform != null) {
+							outDir = googleCloudPlatform.getCamelEtl();
+						}						
+						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.DERIVEDFROM).toVertexList();
+						if (!sourceList.isEmpty()) {
+							Vertex sourceShapeVertex = sourceList.get(0);
+							Resource sourceShapeId = sourceShapeVertex.getId();
+							Shape sourceShape = shapeManager.getShapeById(sourceShapeId);
+
+							if (sourceShape.hasDataSourceType(Konig.GoogleBigQueryTable)
+									&& sourceShape.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
+								EtlRouteBuilder builder = new EtlRouteBuilder(sourceShape, targetShape, outDir);
+								builder.setEtlBaseDir(googleCloudPlatform.getBaseDirectory());
+								builder.generateGcpEtl();
+								String serviceName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
+								Map<String, String> service=new HashMap<>();
+								service.put("image", "etl-"+serviceName+":latest");
+								services.put(serviceName, service);
+							}
+						}
+					}
 				}
 				EtlRouteBuilder builder = new EtlRouteBuilder(null, dockerComposer, outDir);
-				
 				builder.createDockerComposeFile(services);
 				createImageList(services, outDir);
 			}
