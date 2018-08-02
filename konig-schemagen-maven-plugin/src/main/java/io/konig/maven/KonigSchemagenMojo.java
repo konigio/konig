@@ -124,6 +124,7 @@ import io.konig.estimator.MultiSizeEstimateRequest;
 import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
 import io.konig.etl.aws.EtlRouteBuilder;
+import io.konig.etl.gcp.GcpEtlRouteBuilder;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.ShapePropertyOracle;
 import io.konig.gae.datastore.CodeGeneratorException;
@@ -1271,9 +1272,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 							if (sourceShape.hasDataSourceType(Konig.GoogleBigQueryTable)
 									&& sourceShape.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
-								EtlRouteBuilder builder = new EtlRouteBuilder(sourceShape, targetShape, outDir);
+								GcpEtlRouteBuilder builder = new GcpEtlRouteBuilder(sourceShape, targetShape, outDir);
 								builder.setEtlBaseDir(googleCloudPlatform.getBaseDirectory());
-								builder.generateGcpEtl();
+								builder.generate();
 								String serviceName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
 								Map<String, String> service=new HashMap<>();
 								service.put("image", "etl-"+serviceName+":latest");
