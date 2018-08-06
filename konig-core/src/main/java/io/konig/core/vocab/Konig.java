@@ -80,7 +80,7 @@ public class Konig {
 	public static final URI defaultShapeFor = new URIImpl("http://www.konig.io/ns/core/defaultShapeFor");
 	public static final URI equivalentPath = new URIImpl(EQUIVALENT_PATH);
 	public static final URI LoadModelFromSpreadsheet = new URIImpl("http://www.konig.io/ns/core/LoadModelFromSpreadsheet");
-	public static final URI AssociationShape = new URIImpl("http://www.konig.io/ns/core/RdbmsAssociationShapeForManyToMany");
+	public static final URI AssociationShape = new URIImpl("http://www.konig.io/ns/core/AssociationShape");
 	public static final URI iriTemplate = new URIImpl(IRI_TEMPLATE);
 	public static final URI iriFormula = new URIImpl(IRI_FORMULA);
 	public static final URI idFormat = new URIImpl("http://www.konig.io/ns/core/idFormat");

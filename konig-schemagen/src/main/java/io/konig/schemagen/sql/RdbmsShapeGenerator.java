@@ -4,11 +4,14 @@ package io.konig.schemagen.sql;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFParseException;
 
@@ -26,9 +29,9 @@ import io.konig.datasource.DataSource;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.ShapePropertyOracle;
-import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.NodeKind;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
 
 /*
@@ -290,8 +293,7 @@ public class RdbmsShapeGenerator {
 		}
 		return manyToManyShapes;
 	}
-	private Shape getAssociationShape(Shape parentShape, PropertyConstraint relationshipPc, Shape childShape) throws RDFParseException, IOException {	
-		
+	private Shape getAssociationShape(Shape parentShape, PropertyConstraint relationshipPc, Shape childShape) throws RDFParseException, IOException {
 		boolean hasAssocShape=associationShapeExists(parentShape.getTabularOriginShape(),relationshipPc, childShape.getTabularOriginShape());
 		Shape assocShape =null;
 		if(!hasAssocShape){
@@ -302,7 +304,19 @@ public class RdbmsShapeGenerator {
 				shapeManager.addShape(assocShape);
 				assocShape.addType(SH.Shape);
 				assocShape.addType(Konig.TabularNodeShape);
-				assocShape.setTargetClass(parentShape.getTabularOriginShape().getTargetClass());
+				assocShape.addType(Konig.AssociationShape);
+				assocShape.setTargetClass(RDF.STATEMENT);
+				assocShape.setNodeKind(NodeKind.BlankNode);
+				List<PropertyConstraint> derivedPcList=new ArrayList<PropertyConstraint>();
+				PropertyConstraint derivedPc=new PropertyConstraint();
+				derivedPc.setPath(RDF.PREDICATE);
+				Set<Value> valueSet=new HashSet<Value>();
+				valueSet.add(relationshipPc.getPredicate());
+				derivedPc.setHasValue(valueSet);
+				derivedPc.setMinCount(1);
+				derivedPc.setMaxCount(1);
+				derivedPcList.add(derivedPc);
+				assocShape.setDerivedProperty(derivedPcList);
 				for(DataSource ds:parentShape.getShapeDataSource()){
 					String namespace=((URI)ds.getId()).getNamespace();
 					if(ds instanceof AwsAuroraTable){
@@ -328,145 +342,124 @@ public class RdbmsShapeGenerator {
 						break;
 					}
 				}
-				
 				URI activityId = Activity.nextActivityId();
 				Activity shapeGen = new Activity(activityId);
 				shapeGen.setType(Konig.AssociationShape);
 				shapeGen.setEndTime(GregorianCalendar.getInstance());
 				assocShape.setWasGeneratedBy(shapeGen);
 				rdbmsProperty = new ArrayList<>();
+				addFkToAssocShape(parentShape, relationshipPc,true);
+				addFkToAssocShape(childShape,relationshipPc,false);
+				assocShape.setProperty(rdbmsProperty);			
 			}
-			if(parentShape.getTabularOriginShape().getNodeKind() == NodeKind.IRI){
-				assocShape.setNodeKind(NodeKind.IRI);
-			}
-			else{
-				addSyntheticKeyToAssocShape(parentShape,"_FK", null);
-			}
-			addSyntheticKeyToAssocShape(childShape,"_FK", relationshipPc);
-			assocShape.setProperty(rdbmsProperty);				
+			
 		}
-		
 		return assocShape;
 	}
-	private boolean associationShapeExists(Shape parentShape, PropertyConstraint relationshipPc, Shape childShape) {
-		for(Shape rdbmsShape:shapeManager.listShapes()){
-			Shape shape=rdbmsShape.getTabularOriginShape();
-			if(shape!=null){
-				boolean parentRef=false;
-				boolean childRef = false;
-				List<PropertyConstraint> pcList= shape.getProperty();
-				if(shape.getTargetClass().equals(parentShape.getTargetClass())){
-					if(NodeKind.IRI.equals(shape.getNodeKind())){
-						parentRef=true;
-					}
-					for(PropertyConstraint pc:pcList){
-						if(pc.getFormula()!=null){
-							String formula=pc.getFormula().getText();
-							PropertyConstraint parentPk=hasPrimaryKey(parentShape);
-							PropertyConstraint childPk=hasPrimaryKey(childShape);
-							if(parentPk!=null && ("."+parentPk.getPredicate().getLocalName()).equals(formula)){
-									parentRef=true;
-									break;
-							}	
-							
-							if(NodeKind.IRI.equals(childShape.getNodeKind())){
-								childRef=childShape.getTargetClass().equals(pc.getValueClass()) &&
-											NodeKind.IRI.equals(pc.getNodeKind()) &&
-											("."+relationshipPc.getPredicate().getLocalName()).equals(formula);
-								break;
-							}
-							else if(childPk!=null){
-								childRef = ("."+relationshipPc.getPredicate().getLocalName()+"."+childPk.getPredicate().getLocalName()).equals(formula);
-								break;
-							}
-						}
-					}
-				}
-				else if(shape.getTargetClass().equals(childShape.getTargetClass())){
-					if(NodeKind.IRI.equals(shape.getNodeKind())){
-						childRef=true;
-					}
-					for(PropertyConstraint pc:pcList){
-						if(pc.getFormula()!=null){
-							String formula=pc.getFormula().getText();
-							PropertyConstraint parentPk=hasPrimaryKey(parentShape);
-							PropertyConstraint childPk=hasPrimaryKey(childShape);
-							if(childPk!=null && ("."+childPk.getPredicate().getLocalName()).equals(formula)){
-									childRef=true;
-									break;
-							}	
-							
-							if(NodeKind.IRI.equals(parentShape.getNodeKind())){
-								parentRef=parentShape.getTargetClass().equals(pc.getValueClass()) &&
-											NodeKind.IRI.equals(pc.getNodeKind()) &&
-											("^"+relationshipPc.getPredicate().getLocalName()).equals(formula);
-								break;
-							}
-							else if(parentPk!=null){
-								parentRef = ("^"+relationshipPc.getPredicate().getLocalName()+"."+parentPk.getPredicate().getLocalName()).equals(formula);
-								break;
-							}
-						}
-					}
-				}
-				if(childRef && parentRef)
-					return true;
-			}
-		}
-		return false;
-	}
-	private void addSyntheticKeyToAssocShape(Shape rdbmsShape, String suffix, PropertyConstraint relationshipPc) throws RDFParseException, IOException {
+	private void addFkToAssocShape(Shape rdbmsShape,PropertyConstraint relationshipPc,boolean isSubject) throws RDFParseException, IOException {
+
 		Shape shape = rdbmsShape.getTabularOriginShape();
 		PropertyConstraint pc = null;
 		String localName = null;
 		String text = null;
 		
-		if(owlReasoner != null && relationshipPc!=null && relationshipPc.getPredicate()!= null) {
-			Set<URI> inverseOf = owlReasoner.inverseOf(relationshipPc.getPredicate());
-			for(URI inverse : inverseOf) {
-				pc = new PropertyConstraint(new URIImpl(propertyNameSpace + StringUtil.SNAKE_CASE(inverse.getLocalName()) + suffix));
-				pc.setDatatype(XMLSchema.STRING);
-				text = "." + inverse.getLocalName();
-				declarePredicate(inverse);
-				pc.setFormula(parser.quantifiedExpression(text));
-			}
-		}
-		if (shape.getNodeKind() == NodeKind.IRI && pc == null) {
-			localName = StringUtil.SNAKE_CASE(relationshipPc.getPredicate().getLocalName());
+		if (shape.getNodeKind() == NodeKind.IRI) {
+			localName = StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName()+"_ID");
 			pc = new PropertyConstraint(new URIImpl(propertyNameSpace + localName));
-			pc.setValueClass(relationshipPc.getShape().getTargetClass());
+			pc.setValueClass(rdbmsShape.getTargetClass());
 			pc.setNodeKind(NodeKind.IRI);
-			text = "." + relationshipPc.getPredicate().getLocalName();
+			if(isSubject){
+				text = "subject";
+				declarePredicate(RDF.SUBJECT);
+			}
+			else{
+				text = "object";
+				declarePredicate(RDF.OBJECT);
+			}
 			declarePredicate(pc.getPredicate());
 			pc.setFormula(parser.quantifiedExpression(text));
 			
-		} else if(pc == null){
+		} else{
 			PropertyConstraint pcPk=hasPrimaryKey(shape);
 			localName = StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName());
-			String snakeCase = localName + suffix;
+			String snakeCase = localName + "_FK";
 			pc = new PropertyConstraint(new URIImpl(propertyNameSpace + snakeCase));
 			pc.setDatatype(XMLSchema.LONG);	
 			String pkLocalName=(pcPk!=null)?(pcPk.getPredicate().getLocalName()): 
 				(StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName())+"_PK");
 			
-			if(relationshipPc != null) {
-				text = "." + relationshipPc.getPredicate().getLocalName() + "."+ pkLocalName ;				
+			if(isSubject) {
+				text =  "subject."+ pkLocalName ;	
+				declarePredicate(RDF.SUBJECT);
 			}
 			else{
-				text = pkLocalName ;
+				text =  "object."+ pkLocalName ;	
+				declarePredicate(RDF.OBJECT);
 			}
-			declarePredicate(new URIImpl(propertyNameSpace+localName+"_PK"));
+			declarePredicate(pc.getPredicate());
 			pc.setFormula(parser.quantifiedExpression(text));
 		}
 		
 		pc.setMaxCount(1);
-		pc.setMinCount(1);
-		if("_PK".equals(suffix)){
-			pc.setStereotype(Konig.syntheticKey);
-		}
+		pc.setMinCount(1);		
 		rdbmsProperty.add(pc);
 	
+	
 	}
+	private boolean associationShapeExists(Shape parentShape, PropertyConstraint relationshipPc,
+			Shape childShape) {
+		for(Shape shape:shapeManager.listShapes()){
+			List<URI> types=shape.getType();
+			List<PropertyConstraint> derivedPcList=shape.getDerivedProperty();
+			PredicatePath derivedPcPath=null;
+			Value value=null;
+			boolean parentId =false, childId =false,parentRef = false,childRef = false;
+			if(derivedPcList!=null && derivedPcList.size()==1){
+				PropertyConstraint derivedPc=derivedPcList.get(0);		
+				if(derivedPc!=null && derivedPc.getPath() instanceof PredicatePath){
+					derivedPcPath=(PredicatePath)(derivedPc.getPath());
+				}
+				Set<Value> derivedPcValueSet=derivedPc.getHasValue();
+				if(derivedPcValueSet!=null && derivedPcValueSet.size()==1){
+					value=derivedPcValueSet.iterator().next();
+				}
+			}
+			
+			List<PropertyConstraint> pcList=shape.getProperty();
+			if(parentShape.getNodeKind() == NodeKind.IRI){
+				parentId=true;
+			}
+			if(childShape.getNodeKind() == NodeKind.IRI){
+				childId=true;
+			}
+			PropertyConstraint parentPk=hasPrimaryKey(parentShape);
+			PropertyConstraint childPk=hasPrimaryKey(childShape);
+			String parentPkLocalName=(parentPk!=null)?(parentPk.getPredicate().getLocalName()): 
+				(StringUtil.SNAKE_CASE(parentShape.getTargetClass().getLocalName())+"_PK");
+			String childPkLocalName=(childPk!=null)?(childPk.getPredicate().getLocalName()): 
+				(StringUtil.SNAKE_CASE(childShape.getTargetClass().getLocalName())+"_PK");
+			for(PropertyConstraint pc:pcList){
+				if(pc.getFormula()!=null){
+					String formula= pc.getFormula().getText();
+					if(("subject".equals(formula) && parentId) || (!parentId && ("subject."+parentPkLocalName).equals(formula))){
+						parentRef=true;
+					}
+					if(("object".equals(formula) && childId) || (!childId && ("subject."+childPkLocalName).equals(formula))){
+						childRef=true;
+					}
+				}
+				//TODO: To handle comparison of formula with alias
+			}
+			if(types!=null && types.contains(Konig.AssociationShape) && types.contains(Konig.TabularNodeShape) 
+					&& shape.getTargetClass().equals(RDF.STATEMENT)
+					&& RDF.PREDICATE.equals(derivedPcPath.getPredicate()) && relationshipPc.getPredicate().equals((URI)value)
+					&& parentRef && childRef){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private URI getAssocShapeId(URI parentShapeId, URI childShapeId) {
 		URI assocShapeId=null;
 		String namespace=parentShapeId.getNamespace();
@@ -481,31 +474,6 @@ public class RdbmsShapeGenerator {
 		assocShapeId=new URIImpl(namespace+parentShapeName+childShapeName+"Shape");
 		return assocShapeId;
 	}
-	
-	/*public PropertyConstraint hasIRIProperty(Shape shape) {
-		for (PropertyConstraint p : shape.getProperty()) {
-			if(p.getNodeKind() == NodeKind.IRI){
-				return p;
-			}	
-		}
-		return null;
-	}
-	private boolean associationShapeExists(Shape parentShape,Shape childShape) {
-		PropertyConstraint parentPk=hasPrimaryKey(parentShape);
-		PropertyConstraint parentIri=hasIRIProperty(parentShape);
-		PropertyConstraint childPk=hasPrimaryKey(parentShape);
-		PropertyConstraint childIri=hasIRIProperty(parentShape);
-		if((parentPk!=null || parentIri!=null) && (childPk!=null || childIri!=null)){
-			for(Shape shape:shapeManager.listShapes()){
-				if((shape.hasPropertyConstraint(parentPk.getPredicate()) || shape.hasPropertyConstraint(parentIri.getPredicate()))
-						&& (shape.hasPropertyConstraint(childPk.getPredicate()) || shape.hasPropertyConstraint(childIri.getPredicate()))){
-							return true;
-						}
-			}
-		}
-		return false;
-	}*/
-	
 
 
 }
