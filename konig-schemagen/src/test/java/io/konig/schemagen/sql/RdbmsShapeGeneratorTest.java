@@ -22,6 +22,7 @@ package io.konig.schemagen.sql;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -32,6 +33,8 @@ import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.OwlReasoner;
@@ -397,13 +400,37 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		
 	}
 	
-	/**
-	 * Case 3 : Both the shapes having many to many relationship do not have konig:stereotype as konig:primaryKey or
-	 * konig:syntheticKey and hence the association shape created will have the foreign key reference properties with suffix "_FK"
-	 * and the target class as the parent class which has konig:ManyToMany relationship in the property constraint 
-	 * and the formula for the parent shape reference will be the primary key property and the formula for the child shape reference 
-	 * will be the "." relationshipProperty "."  primary key property.
-	 */
+	@Test
+	public void testManyToManyAssocShapeExists() throws Exception{
+		load("src/test/resources/many-to-many-relation-assoc-shape");
+
+		AwsShapeConfig.init();
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		List<Shape> manyToManyShapes = null;
+		Shape childRdbmsShape = null;
+		Shape childShape = null;
+		PropertyConstraint relationshipPc =null;
+		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
+			childShape=pc.getShape();
+			if (childShape != null) {
+				relationshipPc=pc;
+				childRdbmsShape = getRdbmsShapeFromLogicalShape(childShape);
+				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
+						childRdbmsShape);
+				break;
+			}
+		}
+		assertTrue(rdbmsShape!=null);
+		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://example.com/ns/alias/PPID_PK"))!=null);
+		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==1);
+		//Association shape already exists and hence it will not create an association shape.
+		assertTrue(manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR_ID_PK"))!=null);
+		
+	}
+	
 	@Test
 	public void testManyToManyCase3() throws Exception{
 		load("src/test/resources/many-to-many-relation-create-pk");
@@ -448,6 +475,8 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		assertTrue(derivedPc.getHasValue().contains(relationshipPc.getPredicate()));
 		
 	}
+	
+	
 	
 	private PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
 		for (PropertyConstraint p : rdbmsShape.getProperty()) {

@@ -288,8 +288,9 @@ public class RdbmsShapeGenerator {
 			Shape assocShape=getAssociationShape(parentShape,relationshipPc,childShape);
 			if(assocShape!=null){
 				manyToManyShapes.add(assocShape);
-				manyToManyShapes.add(rdbmsChildShape);
 			}
+				manyToManyShapes.add(rdbmsChildShape);
+			
 		}
 		return manyToManyShapes;
 	}
@@ -444,11 +445,10 @@ public class RdbmsShapeGenerator {
 					if(("subject".equals(formula) && parentId) || (!parentId && ("subject."+parentPkLocalName).equals(formula))){
 						parentRef=true;
 					}
-					if(("object".equals(formula) && childId) || (!childId && ("subject."+childPkLocalName).equals(formula))){
+					if(("object".equals(formula) && childId) || (!childId && ("object."+childPkLocalName).equals(formula))){
 						childRef=true;
 					}
 				}
-				//TODO: To handle comparison of formula with alias
 			}
 			if(types!=null && types.contains(Konig.AssociationShape) && types.contains(Konig.TabularNodeShape) 
 					&& shape.getTargetClass().equals(RDF.STATEMENT)
