@@ -21,7 +21,7 @@ shape:ContributorTabularShape a sh:Shape , konig:TabularNodeShape, konig:Associa
     konig:formula '''
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix alias: <http://example.com/ns/alias/> .
-@term object rdf:object
+@term subject rdf:subject
 @term PPID_PK alias:PPID_PK
 
 subject.PPID_PK
