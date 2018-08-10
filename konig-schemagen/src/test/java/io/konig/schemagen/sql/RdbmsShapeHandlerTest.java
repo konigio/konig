@@ -72,6 +72,27 @@ public class RdbmsShapeHandlerTest extends AbstractRdbmsShapeGeneratorTest {
 		assertTrue(logicalShape!= null);
 		assertNotNull(handler);
 	}
+	@Test
+	public void testVisitForManyToMany() throws Exception {
+		super.load("src/test/resources/many-to-many-relation");
+
+		File shapesDir = new File(new File("target/test/many-to-many-relation"), "shapes");
+		
+		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
+		ShapeWriter shapeWriter = new ShapeWriter();
+		ShapeInjector callback = new ShapeInjector(shapeManager);
+		handler = new RdbmsShapeHandler(callback, shapeGenerator, fileGetter, shapeWriter, nsManager);
+		
+		/*URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+		
+		
+		Shape logicalShape = shapeManager.getShapeById(shapeId);*/
+		
+		handler.visitAll(shapeManager.listShapes());
+
+		//assertTrue(logicalShape!= null);
+		assertNotNull(handler);
+	}
 	
 
 	protected void load(String path) throws RDFParseException, RDFHandlerException, IOException {

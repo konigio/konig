@@ -41,6 +41,7 @@ public class AbstractRdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 	public static final String ALIAS = "http://example.com/ns/alias/";
 
 	protected RdbmsShapeGenerator shapeGenerator;
+	
 
 	protected void load(String path) throws RDFParseException, RDFHandlerException, IOException {
 		super.load(path);
@@ -49,7 +50,8 @@ public class AbstractRdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 		NamespaceMap nsMap = new NamespaceMapAdapter(graph.getNamespaceManager());
 		ShapePropertyOracle oracle = new ShapePropertyOracle();
 		FormulaParser parser = new FormulaParser(oracle, nameService, nsMap);
-		shapeGenerator =  new RdbmsShapeGenerator(parser, null);
+		OwlReasoner owlReasoner = new OwlReasoner(graph);
+		shapeGenerator =  new RdbmsShapeGenerator(parser,null,shapeManager);
 	}
 
 }

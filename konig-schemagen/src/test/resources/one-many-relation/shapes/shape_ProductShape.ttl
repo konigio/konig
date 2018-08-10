@@ -25,7 +25,8 @@ shape:ProductShape a sh:Shape ;
 		sh:path mdm:contributor ; 
 		sh:shape shape:ProductContributorShape ; 
 		sh:minCount 0 ; 
-		sh:maxLength 55 ]  . 
+		sh:maxLength 55 ;
+		konig:relationshipDegree konig:OneToMany]  . 
 
 <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> a konig:LoadModelFromSpreadsheet ; 
 	as:endTime "2018-06-01T14:53:13.010+05:30"^^xsd:dateTime . 

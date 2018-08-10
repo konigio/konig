@@ -114,6 +114,7 @@ import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.PropertyPath;
 import io.konig.shacl.PropertyPathUtil;
+import io.konig.shacl.RelationshipDegree;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeReasoner;
@@ -196,6 +197,7 @@ public class WorkbookLoader {
 	private static final String DECIMAL_PRECISION = "Decimal Precision";
 	private static final String DECIMAL_SCALE = "Decimal Scale";
 	private static final String SECURITY_CLASSIFICATION ="Security Classification";
+	private static final String RELATIONSHIP_DEGREE="Relationship Degree";
 
 	// Cloud SQL Instance
 	private static final String INSTANCE_NAME = "Instance Name";
@@ -457,6 +459,7 @@ public class WorkbookLoader {
 		private int subpropertyOfCol = UNDEFINED;
 		private int propertyCommentCol = UNDEFINED;
 		private int securityClassificationCol = UNDEFINED;
+		private int relationshipDegreeCol = UNDEFINED;
 
 		private int individualNameCol = UNDEFINED;
 		private int individualCommentCol = UNDEFINED;
@@ -500,6 +503,7 @@ public class WorkbookLoader {
 		private int pcDecimalPrecision = UNDEFINED;
 		private int pcDecimalScale = UNDEFINED;
 		private int pcSecurityClassification = UNDEFINED;
+		private int pcRelationshipDegree = UNDEFINED;
 
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
@@ -1757,6 +1761,7 @@ public class WorkbookLoader {
 			String formula = stringValue(row, pcEqualsCol);
 			String sourcePath = stringValue(row, pcSourcePathCol);
 			List<URI> securityClassification = uriList(row, pcSecurityClassification);
+			URI relationshipDegree = uriValue(row,pcRelationshipDegree);
 			if (formula == null) {
 				// Support legacy column name "Equivalent Path"
 				formula = stringValue(row, pcEquivalentPathCol);
@@ -1911,7 +1916,9 @@ public class WorkbookLoader {
 			p.setUniqueLang(uniqueLang);
 			p.setDecimalPrecision(decimalPrecision);
 			p.setDecimalScale(decimalScale);
-			p.setDecimalPrecision(decimalPrecision);
+			if(relationshipDegree!=null){
+				p.setRelationshipDegree(RelationshipDegree.fromURI(relationshipDegree));
+			}
 			p.setIn(valueIn);
 			p.setStereotype(stereotype);
 			if(securityClassification!= null && !securityClassification.isEmpty()) {
@@ -2235,7 +2242,7 @@ public class WorkbookLoader {
 		}
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
-			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol  = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= UNDEFINED;
+			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol  = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= pcRelationshipDegree = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -2326,6 +2333,9 @@ public class WorkbookLoader {
 						break;
 					case SECURITY_CLASSIFICATION:
 						pcSecurityClassification = i;
+						break;
+					case RELATIONSHIP_DEGREE:
+						pcRelationshipDegree = i;
 						break;
 					}
 				}
@@ -2809,6 +2819,7 @@ public class WorkbookLoader {
 			URI subpropertyOf = uriValue(row, subpropertyOfCol);
 			URI termStatus = uriValue(row, propertyTermStatusCol);
 			List<URI> securityClassification = uriList(row, securityClassificationCol);
+			URI relationshipDegree = uriValue(row,relationshipDegreeCol);
 			if (propertyId == null) {
 				return;
 			}
@@ -2866,6 +2877,18 @@ public class WorkbookLoader {
 			  for (URI uri : securityClassification) {
 			    graph.edge(propertyId, Konig.securityClassification, uri);					
 			  }
+			}
+			if(relationshipDegree!=null){				
+				for(URI d:domain){
+					Vertex restrictionVertex = graph.vertex();
+					Resource restriction = restrictionVertex.getId();
+					edge(restriction, RDF.TYPE, OWL.RESTRICTION);
+					edge(restriction, OWL.ONPROPERTY, propertyId);
+					edge(restriction, Konig.relationshipDegree, relationshipDegree);
+					edge(d, RDF.TYPE, OWL.CLASS);
+					edge(d,RDFS.SUBCLASSOF,restriction);
+					
+				}
 			}
 
 		}
@@ -2953,6 +2976,7 @@ public class WorkbookLoader {
 			subpropertyOfCol = UNDEFINED;
 			propertyCommentCol = UNDEFINED;
 			securityClassificationCol = UNDEFINED;
+			relationshipDegreeCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2998,6 +3022,9 @@ public class WorkbookLoader {
 						break;
 					case SECURITY_CLASSIFICATION:
 						securityClassificationCol = i;
+						break;
+					case RELATIONSHIP_DEGREE:
+						relationshipDegreeCol = i;
 						break;
 					}
 				}

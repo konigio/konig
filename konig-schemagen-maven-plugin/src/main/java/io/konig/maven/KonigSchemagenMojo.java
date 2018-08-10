@@ -109,6 +109,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.io.SkosEmitter;
 import io.konig.core.path.NamespaceMapAdapter;
+import io.konig.core.reasoners.RelationshipDegreeReasoner;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.AWS;
@@ -413,8 +414,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
 			if (shapesDir != null) {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), owlReasoner);
-				ShapeWriter shapeWriter = new ShapeWriter();
+				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), owlReasoner,shapeManager);
+				ShapeWriter shapeWriter = new ShapeWriter();	
+				RelationshipDegreeReasoner reasoner=new RelationshipDegreeReasoner();
+				reasoner.computeRelationshipDegree(owlGraph, shapeManager, false);
 				RdbmsShapeHandler handler = new RdbmsShapeHandler(shapeInjector, generator, fileGetter, shapeWriter, nsManager);
 				handler.visitAll(shapeManager.listShapes());
 			}

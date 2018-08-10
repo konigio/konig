@@ -29,17 +29,15 @@ import java.util.Collection;
 import java.util.List;
 
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.aws.datasource.AwsAurora;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
-import io.konig.gcp.datasource.GoogleBigQueryTable;
-import io.konig.gcp.datasource.GoogleCloudSqlTable;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.RelationshipDegree;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -68,7 +66,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	}
 
 	public void visitAll(Collection<Shape> shapeList) {
-		shapes = shapeList;
+		shapes = shapeList;		
 		for (Shape shape : shapeList) {
 			visit(shape);
 		}
@@ -78,7 +76,17 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 		Shape childShape = null;
 		if(pc != null) {
 			childShape = getRdbmsShapeFromLogicalShape(pc.getShape());
-			Shape rdbmsChildShape = generator.createOneToManyChildShape(parentShape, relationshipProperty ,childShape);
+			Shape rdbmsChildShape=null;
+			if(RelationshipDegree.OneToMany.equals(pc.getRelationshipDegree())){
+				rdbmsChildShape = generator.createOneToManyChildShape(parentShape, relationshipProperty ,childShape);
+			}
+			else if(RelationshipDegree.ManyToMany.equals(pc.getRelationshipDegree())){
+				PropertyConstraint relationshipPc=parentShape.getTabularOriginShape().getPropertyConstraint(relationshipProperty);
+				List<Shape> manyToManyShapes = generator.createManyToManyChildShape(parentShape, relationshipPc ,childShape);
+				if(manyToManyShapes!=null){
+					rdbmsChildShapes.addAll(manyToManyShapes);
+				}
+			}
 			if(rdbmsChildShape != null) {
 				rdbmsChildShapes.add(rdbmsChildShape);
 			}
@@ -86,9 +94,12 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			childShape = parentShape;
 		}
 		for (PropertyConstraint p : childShape.getTabularOriginShape().getProperty()) {
-			if(p.getShape() != null){
+			if(p.getShape() != null && p.getMaxCount()==null){
 				addRdbmsChildShape(childShape,p.getPredicate(), p);
 			}
+            if(p.getMaxCount() == null && p.getShape() == null && childShape.getNodeKind() ==  NodeKind.IRI) {
+                addRdbmsChildShape(childShape,p.getPredicate(), p);
+            }
 		}
 	}
 
@@ -119,6 +130,9 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 				if(!rdbmsChildShapes.isEmpty()) {
 					for(Shape rdbmsChildShape : rdbmsChildShapes) {						
 						save(rdbmsChildShape);
+						if (callback != null) {
+							callback.visit(rdbmsChildShape);
+						}
 					}
 				}
 				if (callback != null) {
@@ -167,5 +181,6 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 		}
 		return null;
 	}
+	
 
 }

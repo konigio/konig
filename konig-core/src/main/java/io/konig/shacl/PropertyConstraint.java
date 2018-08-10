@@ -86,6 +86,7 @@ public class PropertyConstraint implements Cloneable {
 	private QuantifiedExpression formula;
 	private URI idFormat;
 	private List<URI> qualifiedSecurityClassification ;
+	private RelationshipDegree relationshipDegree;
 	private Person dataSteward;
 	private String name;
 	
@@ -584,5 +585,13 @@ public class PropertyConstraint implements Cloneable {
 
 	public void setDataSteward(Person dataSteward) {
 		this.dataSteward = dataSteward;
+	}
+
+	public RelationshipDegree getRelationshipDegree() {
+		return relationshipDegree;
+	}
+
+	public void setRelationshipDegree(RelationshipDegree relationshipDegree) {
+		this.relationshipDegree = relationshipDegree;
 	}
 }

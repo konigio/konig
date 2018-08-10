@@ -43,7 +43,8 @@ shape:ProductContributorShape a sh:Shape ;
 	 ]  ,  [ 
 		sh:path mdm:person ; 
 		sh:shape shape:PersonShape ; 
-		sh:minCount 0 ]  . 
+		sh:minCount 0 ;
+		konig:relationshipDegree konig:OneToMany]  . 
 
 <http://www.konig.io/activity/Xp8n9GbCjtAAAAFjuqh3tQ> a konig:LoadModelFromSpreadsheet ; 
 	as:endTime "2018-06-01T14:53:13.010+05:30"^^xsd:dateTime . 

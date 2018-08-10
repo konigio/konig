@@ -1,0 +1,61 @@
+@prefix mdm: <https://schema.pearson.com/ns/mdm/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+mdm: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "mdm" ; 
+	rdfs:label "Pearson MDM Ontology" ; 
+	rdfs:comment "A namespace for terms from Pearson's Master Data Model" . 
+
+mdm:Account a owl:Class ; 
+	rdfs:label "Account" ; 
+	rdfs:comment "Represents an individual account, which is an organization   involved with your business (such as customers, competitors, and partners). This also includes prospective clients." . 
+
+mdm:AccountType a owl:Class ; 
+	rdfs:label "Account Type" ; 
+	rdfs:subClassOf schema:Enumeration . 
+	
+mdm:Product a owl:Class . 
+
+mdm:ProductContributor a owl:Class . 
+
+mdm:contributesTo a rdf:Property , owl:DatatypeProperty ; 
+	rdfs:domain mdm:ProductContributor ; 
+	rdfs:range xsd:string ; 
+	owl:inverseOf mdm:contributor . 
+
+mdm:contributor a owl:ObjectProperty ; 
+	schema:domainIncludes mdm:Product ; 
+	schema:rangeIncludes mdm:ProductContributor . 
+
+mdm:contributorFirstName a owl:DatatypeProperty ; 
+	schema:domainIncludes mdm:ProductContributor ; 
+	schema:rangeIncludes xsd:string . 
+
+mdm:contributorId a owl:DatatypeProperty ; 
+	schema:domainIncludes mdm:ProductContributor ; 
+	schema:rangeIncludes xsd:string . 
+
+mdm:contributorSurname a owl:DatatypeProperty ; 
+	schema:domainIncludes mdm:ProductContributor ; 
+	schema:rangeIncludes xsd:string . 
+
+mdm:contributorType a owl:DatatypeProperty ; 
+	schema:domainIncludes mdm:ProductContributor ; 
+	schema:rangeIncludes xsd:string . 
+
+mdm:ppid a owl:DatatypeProperty ; 
+	schema:domainIncludes mdm:Product ; 
+	schema:rangeIncludes xsd:string . 
+
+mdm:primaryAuthorFlag a owl:DatatypeProperty ; 
+	schema:domainIncludes mdm:ProductContributor ; 
+	schema:rangeIncludes xsd:string . 
+
+mdm:productName a owl:DatatypeProperty ; 
+	schema:domainIncludes mdm:Product ; 
+	schema:rangeIncludes xsd:string . 

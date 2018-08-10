@@ -22,19 +22,26 @@ package io.konig.schemagen.sql;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.junit.Ignore;
 
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.OwlReasoner;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -235,7 +242,7 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 		Shape logicalShape = shapeManager.getShapeById(shapeId);
 		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
 		OwlReasoner reasoner = new OwlReasoner(graph);
-		shapeGenerator = new RdbmsShapeGenerator(null, reasoner);
+		shapeGenerator = new RdbmsShapeGenerator(null, reasoner,shapeManager);
 
 		Shape rdbmsChildShape = null;
 		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
@@ -306,7 +313,202 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 
 		assertEquals("^person", formula1.getText());
 	}
+	@Test
+	public void testManyToManyCase1() throws Exception{
+		load("src/test/resources/many-to-many-relation-id");
 
+		AwsShapeConfig.init();
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		List<Shape> manyToManyShapes = null;
+		Shape childRdbmsShape = null;
+		Shape childShape = null;
+		PropertyConstraint relationshipPc=null;
+		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
+			childShape=pc.getShape();
+			if (childShape != null) {
+				relationshipPc=pc;
+				childRdbmsShape = getRdbmsShapeFromLogicalShape(childShape);
+				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
+						childRdbmsShape);
+				break;
+			}
+		}
+		assertTrue(rdbmsShape!=null);
+		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://www.konig.io/ns/core/ID"))!=null);
+		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==2);
+		assertTrue(manyToManyShapes.get(1).getPropertyConstraint(iri("http://www.konig.io/ns/core/ID"))!=null);
+		
+		Shape assocShape=manyToManyShapes.get(0);
+		assertTrue(assocShape.getType().contains(Konig.AssociationShape) && assocShape.getType().contains(Konig.TabularNodeShape));
+		assertTrue(assocShape.getDerivedProperty()!=null && assocShape.getDerivedProperty().size()==1);
+		PropertyConstraint derivedPc=assocShape.getDerivedProperty().get(0);
+		assertTrue(derivedPc.getPath() instanceof PredicatePath && RDF.PREDICATE.equals(((PredicatePath)derivedPc.getPath()).getPredicate()));
+		assertTrue(derivedPc.getHasValue().contains(relationshipPc.getPredicate()));
+		List<PropertyConstraint> pcList=assocShape.getProperty();
+		assertTrue("subject".equals(pcList.get(0).getFormula().getText()));
+		assertTrue(assocShape.getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_ID"))!=null);
+		assertTrue("object".equals(pcList.get(1).getFormula().getText()));
+		assertTrue(assocShape.getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCTCONTRIBUTOR_ID"))!=null);
+	}
+	
+	@Test
+	public void testManyToManyCase2() throws Exception{
+		load("src/test/resources/many-to-many-relation-pk");
+
+		AwsShapeConfig.init();
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		List<Shape> manyToManyShapes = null;
+		Shape childRdbmsShape = null;
+		Shape childShape = null;
+		PropertyConstraint relationshipPc =null;
+		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
+			childShape=pc.getShape();
+			if (childShape != null) {
+				relationshipPc=pc;
+				childRdbmsShape = getRdbmsShapeFromLogicalShape(childShape);
+				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
+						childRdbmsShape);
+				break;
+			}
+		}
+		assertTrue(rdbmsShape!=null);
+		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://example.com/ns/alias/PPID_PK"))!=null);
+		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==2);
+		assertTrue(manyToManyShapes.get(1).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR_ID_PK"))!=null);
+		
+		PropertyConstraint parentShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_FK"));
+		assertTrue(parentShapeRef!=null);		
+		assertEquals("subject.PPID_PK", parentShapeRef.getFormula().getText());
+		
+		PropertyConstraint childShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_CONTRIBUTOR_FK"));
+		assertTrue(childShapeRef!=null);
+		assertEquals("object.CONTRIBUTOR_ID_PK", childShapeRef.getFormula().getText());
+		
+		Shape assocShape=manyToManyShapes.get(0);
+		assertTrue(assocShape.getType().contains(Konig.AssociationShape) && assocShape.getType().contains(Konig.TabularNodeShape));
+		assertTrue(assocShape.getDerivedProperty()!=null && assocShape.getDerivedProperty().size()==1);
+		PropertyConstraint derivedPc=assocShape.getDerivedProperty().get(0);
+		assertTrue(derivedPc.getPath() instanceof PredicatePath && RDF.PREDICATE.equals(((PredicatePath)derivedPc.getPath()).getPredicate()));
+		assertTrue(derivedPc.getHasValue().contains(relationshipPc.getPredicate()));
+		
+		
+	}
+	
+	@Test
+	public void testManyToManyAssocShapeExists() throws Exception{
+		load("src/test/resources/many-to-many-relation-assoc-shape");
+
+		AwsShapeConfig.init();
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		List<Shape> manyToManyShapes = null;
+		Shape childRdbmsShape = null;
+		Shape childShape = null;
+		PropertyConstraint relationshipPc =null;
+		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
+			childShape=pc.getShape();
+			if (childShape != null) {
+				relationshipPc=pc;
+				childRdbmsShape = getRdbmsShapeFromLogicalShape(childShape);
+				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
+						childRdbmsShape);
+				break;
+			}
+		}
+		assertTrue(rdbmsShape!=null);
+		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://example.com/ns/alias/PPID_PK"))!=null);
+		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==1);
+		//Association shape already exists and hence it will not create an association shape.
+		assertTrue(manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR_ID_PK"))!=null);
+		
+	}
+	
+	@Test
+	public void testManyToManyAssocShapeExistsWithAlias() throws Exception{
+		load("src/test/resources/many-to-many-relation-assoc-shape-alias");
+
+		AwsShapeConfig.init();
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		List<Shape> manyToManyShapes = null;
+		Shape childRdbmsShape = null;
+		Shape childShape = null;
+		PropertyConstraint relationshipPc =null;
+		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
+			childShape=pc.getShape();
+			if (childShape != null) {
+				relationshipPc=pc;
+				childRdbmsShape = getRdbmsShapeFromLogicalShape(childShape);
+				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
+						childRdbmsShape);
+				break;
+			}
+		}
+		assertTrue(rdbmsShape!=null);
+		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://example.com/ns/alias/PPID_PK"))!=null);
+		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==1);
+		//Association shape already exists and hence it will not create an association shape.
+		assertTrue(manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR_ID_PK"))!=null);
+		
+	}
+	
+	@Test
+	public void testManyToManyCase3() throws Exception{
+		load("src/test/resources/many-to-many-relation-create-pk");
+
+		AwsShapeConfig.init();
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		List<Shape> manyToManyShapes = null;
+		Shape childRdbmsShape = null;
+		Shape childShape = null;
+		PropertyConstraint relationshipPc=null;
+		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
+			childShape=pc.getShape();
+			if (childShape != null) {
+				relationshipPc=pc;
+				childRdbmsShape = getRdbmsShapeFromLogicalShape(childShape);
+				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
+						childRdbmsShape);
+				break;
+			}
+		}
+		assertTrue(rdbmsShape!=null);
+		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_PK"))!=null);
+		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==2);
+		assertTrue(manyToManyShapes.get(1).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_CONTRIBUTOR_PK"))!=null);
+		
+		PropertyConstraint parentShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_FK"));
+		assertTrue(parentShapeRef!=null);		
+		assertEquals("subject.PRODUCT_PK", parentShapeRef.getFormula().getText());
+		
+		PropertyConstraint childShapeRef=manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/PRODUCT_CONTRIBUTOR_FK"));
+		assertTrue(childShapeRef!=null);
+		assertEquals("object.PRODUCT_CONTRIBUTOR_PK", childShapeRef.getFormula().getText());
+		
+		Shape assocShape=manyToManyShapes.get(0);
+		assertTrue(assocShape.getType().contains(Konig.AssociationShape) && assocShape.getType().contains(Konig.TabularNodeShape));
+		assertTrue(assocShape.getDerivedProperty()!=null && assocShape.getDerivedProperty().size()==1);
+		PropertyConstraint derivedPc=assocShape.getDerivedProperty().get(0);
+		assertTrue(derivedPc.getPath() instanceof PredicatePath && RDF.PREDICATE.equals(((PredicatePath)derivedPc.getPath()).getPredicate()));
+		assertTrue(derivedPc.getHasValue().contains(relationshipPc.getPredicate()));
+		
+	}
+	
+	
+	
 	private PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
 		for (PropertyConstraint p : rdbmsShape.getProperty()) {
 			if (p.getStereotype() != null

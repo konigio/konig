@@ -3,25 +3,41 @@ package io.konig.schemagen.sql;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.rio.RDFParseException;
 
+import io.konig.activity.Activity;
 import io.konig.aws.datasource.AwsAurora;
+import io.konig.aws.datasource.AwsAuroraTable;
+import io.konig.aws.datasource.AwsAuroraTableReference;
+import io.konig.core.Context;
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Term;
+import io.konig.core.Term.Kind;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.SH;
+import io.konig.datasource.DataSource;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.ShapePropertyOracle;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.NodeKind;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
 
 /*
@@ -46,16 +62,19 @@ import io.konig.shacl.PropertyConstraint;
 
 
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
 
-public class RdbmsShapeGenerator {
+public class RdbmsShapeGenerator {  
 	
 	private String propertyNameSpace;
 	private FormulaParser parser;
 	private List<PropertyConstraint> rdbmsProperty = null;
 	private OwlReasoner owlReasoner;
-	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner) {
+	private ShapeManager shapeManager;
+	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner, ShapeManager shapeManager) {
 		this.parser = new FormulaParser();
 		this.owlReasoner = owlReasoner;
+		this.shapeManager=shapeManager;
 	}
 	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {		
 		Shape rdbmsChildShape = createRdbmsShape(childShape);
@@ -120,7 +139,6 @@ public class RdbmsShapeGenerator {
 		return false;
 	}
 	private void process(Shape rdbmsShape, String logicalPath, String prefix, Shape propertyContainer) throws RDFParseException, IOException {
-		
 		List<PropertyConstraint> list = new ArrayList<>(propertyContainer.getProperty());
 		
 		for (PropertyConstraint p : list) {
@@ -178,12 +196,12 @@ public class RdbmsShapeGenerator {
 			}
 		} else {
 			pc = createSyntheticKey(shape,suffix,relationshipProperty);
+			rdbmsProperty.add(pc);
 		}
-		rdbmsProperty.add(pc);
 	}	
 		
 	
-	private PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
+	public PropertyConstraint hasPrimaryKey(Shape rdbmsShape) {
 		for (PropertyConstraint p : rdbmsShape.getProperty()) {
 			if(p.getStereotype() != null && (p.getStereotype().equals(Konig.syntheticKey) 
 					|| p.getStereotype().equals(Konig.primaryKey))){
@@ -265,6 +283,244 @@ public class RdbmsShapeGenerator {
 			oracle.setShape(shape);
 		}
 		
+	}
+	public List<Shape> createManyToManyChildShape(Shape parentShape, PropertyConstraint relationshipPc, Shape childShape) throws RDFParseException, IOException {
+		List<Shape> manyToManyShapes=null;
+		Shape rdbmsChildShape = createRdbmsShape(childShape);
+		if(rdbmsChildShape != null) {
+			addSyntheticKey(rdbmsChildShape, "_PK", null);
+			rdbmsChildShape.setProperty(rdbmsProperty);			
+			manyToManyShapes=new ArrayList<Shape>();
+			Shape assocShape=getAssociationShape(parentShape,relationshipPc,childShape);
+			if(assocShape!=null){
+				manyToManyShapes.add(assocShape);
+			}
+				manyToManyShapes.add(rdbmsChildShape);
+			
+		}
+		return manyToManyShapes;
+	}
+	private Shape getAssociationShape(Shape parentShape, PropertyConstraint relationshipPc, Shape childShape) throws RDFParseException, IOException {
+		boolean hasAssocShape=associationShapeExists(parentShape.getTabularOriginShape(),relationshipPc, childShape.getTabularOriginShape());
+		Shape assocShape =null;
+		if(!hasAssocShape){
+			URI assocShapeId=getAssocShapeId((URI)(parentShape.getId()),(URI)(childShape.getId()));
+			assocShape = shapeManager.getShapeById(assocShapeId);
+			if (assocShape == null) {
+				assocShape = new Shape(assocShapeId);
+				shapeManager.addShape(assocShape);
+				assocShape.addType(SH.Shape);
+				assocShape.addType(Konig.TabularNodeShape);
+				assocShape.addType(Konig.AssociationShape);
+				assocShape.setTargetClass(RDF.STATEMENT);
+				assocShape.setNodeKind(NodeKind.BlankNode);
+				List<PropertyConstraint> derivedPcList=new ArrayList<PropertyConstraint>();
+				PropertyConstraint derivedPc=new PropertyConstraint();
+				derivedPc.setPath(RDF.PREDICATE);
+				Set<Value> valueSet=new HashSet<Value>();
+				valueSet.add(relationshipPc.getPredicate());
+				derivedPc.setHasValue(valueSet);
+				derivedPc.setMinCount(1);
+				derivedPc.setMaxCount(1);
+				derivedPcList.add(derivedPc);
+				assocShape.setDerivedProperty(derivedPcList);
+				for(DataSource ds:parentShape.getShapeDataSource()){
+					String namespace=((URI)ds.getId()).getNamespace();
+					if(ds instanceof AwsAuroraTable){
+						AwsAuroraTable aurora= new AwsAuroraTable();
+						aurora.setAwsTableName(assocShapeId.getLocalName());
+						AwsAuroraTableReference tableRef=new AwsAuroraTableReference();
+						tableRef.setAwsAuroraHost(((AwsAuroraTable) ds).getTableReference().getAwsAuroraHost());
+						tableRef.setAwsSchema(((AwsAuroraTable) ds).getTableReference().getAwsSchema());
+						tableRef.setAwsTableName(assocShapeId.getLocalName());
+						aurora.setTableReference(tableRef);
+						aurora.setId(new URIImpl(namespace+assocShapeId.getLocalName()));
+						assocShape.addShapeDataSource(aurora);
+						break;
+					}
+					else if(ds instanceof GoogleCloudSqlTable){
+						GoogleCloudSqlTable cloudSql=new GoogleCloudSqlTable();
+						cloudSql.setInstance(((GoogleCloudSqlTable) ds).getInstance());
+						cloudSql.setDatabase(((GoogleCloudSqlTable) ds).getDatabase());
+						cloudSql.setTableName(assocShapeId.getLocalName());
+						cloudSql.setId(new URIImpl(namespace+assocShapeId.getLocalName()));
+						cloudSql.setTabularFieldNamespace(((GoogleCloudSqlTable) ds).getTabularFieldNamespace());
+						assocShape.addShapeDataSource(cloudSql);
+						break;
+					}
+				}
+				URI activityId = Activity.nextActivityId();
+				Activity shapeGen = new Activity(activityId);
+				shapeGen.setType(Konig.AssociationShape);
+				shapeGen.setEndTime(GregorianCalendar.getInstance());
+				assocShape.setWasGeneratedBy(shapeGen);
+				rdbmsProperty = new ArrayList<>();
+				addFkToAssocShape(parentShape, relationshipPc,true);
+				addFkToAssocShape(childShape,relationshipPc,false);
+				assocShape.setProperty(rdbmsProperty);			
+			}
+			
+		}
+		return assocShape;
+	}
+	private void addFkToAssocShape(Shape rdbmsShape,PropertyConstraint relationshipPc,boolean isSubject) throws RDFParseException, IOException {
+
+		Shape shape = rdbmsShape.getTabularOriginShape();
+		PropertyConstraint pc = null;
+		String localName = null;
+		String text = null;
+		
+		if (shape.getNodeKind() == NodeKind.IRI) {
+			localName = StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName()+"_ID");
+			pc = new PropertyConstraint(new URIImpl(propertyNameSpace + localName));
+			pc.setValueClass(rdbmsShape.getTargetClass());
+			pc.setNodeKind(NodeKind.IRI);
+			if(isSubject){
+				text = "subject";
+				declarePredicate(RDF.SUBJECT);
+			}
+			else{
+				text = "object";
+				declarePredicate(RDF.OBJECT);
+			}
+			declarePredicate(pc.getPredicate());
+			pc.setFormula(parser.quantifiedExpression(text));
+			
+		} else{
+			PropertyConstraint pcPk=hasPrimaryKey(shape);
+			localName = StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName());
+			String snakeCase = localName + "_FK";
+			pc = new PropertyConstraint(new URIImpl(propertyNameSpace + snakeCase));
+			pc.setDatatype(XMLSchema.LONG);	
+			String pkLocalName=(pcPk!=null)?(pcPk.getPredicate().getLocalName()): 
+				(StringUtil.SNAKE_CASE(rdbmsShape.getTargetClass().getLocalName())+"_PK");
+			
+			if(isSubject) {
+				text =  "subject."+ pkLocalName ;	
+				declarePredicate(RDF.SUBJECT);
+			}
+			else{
+				text =  "object."+ pkLocalName ;	
+				declarePredicate(RDF.OBJECT);
+			}
+			declarePredicate(pc.getPredicate());
+			pc.setFormula(parser.quantifiedExpression(text));
+		}
+		
+		pc.setMaxCount(1);
+		pc.setMinCount(1);		
+		rdbmsProperty.add(pc);
+	
+	
+	}
+	private boolean associationShapeExists(Shape parentShape, PropertyConstraint relationshipPc,
+			Shape childShape) {
+		for(Shape shape:shapeManager.listShapes()){
+			List<URI> types=shape.getType();
+			List<PropertyConstraint> derivedPcList=shape.getDerivedProperty();
+			PredicatePath derivedPcPath=null;
+			Value value=null;
+			boolean parentRef = false,childRef = false;
+			if(derivedPcList!=null && derivedPcList.size()==1){
+				PropertyConstraint derivedPc=derivedPcList.get(0);		
+				if(derivedPc!=null && derivedPc.getPath() instanceof PredicatePath){
+					derivedPcPath=(PredicatePath)(derivedPc.getPath());
+				}
+				Set<Value> derivedPcValueSet=derivedPc.getHasValue();
+				if(derivedPcValueSet!=null && derivedPcValueSet.size()==1){
+					value=derivedPcValueSet.iterator().next();
+				}
+			}
+			List<PropertyConstraint> pcList=shape.getProperty();
+			
+			for(PropertyConstraint pc:pcList){
+				if(pc.getFormula()!=null){				
+					if(!parentRef && hasRef(parentShape,pc,true)){
+						parentRef=true;
+						continue;
+					}
+					if(!childRef && hasRef(childShape,pc,false)){
+						childRef=true;
+					}
+				}
+			}
+			if(types!=null && types.contains(Konig.AssociationShape) && types.contains(Konig.TabularNodeShape) 
+					&& shape.getTargetClass().equals(RDF.STATEMENT)
+					&& RDF.PREDICATE.equals(derivedPcPath.getPredicate()) && relationshipPc.getPredicate().equals((URI)value)
+					&& parentRef && childRef){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean hasRef(Shape shape, PropertyConstraint pc, boolean isSubject) {
+		boolean isIRI=false;
+		if(shape.getNodeKind() == NodeKind.IRI){
+			isIRI=true;
+		}
+		PropertyConstraint pk=hasPrimaryKey(shape);
+		String pkLocalName=(pk!=null)?(pk.getPredicate().getLocalName()): 
+			(StringUtil.SNAKE_CASE(shape.getTargetClass().getLocalName())+"_PK");
+		URI expectedPkUri=new URIImpl(pc.getPredicate().getNamespace()+pkLocalName);
+		
+		Context context=pc.getFormula().getContext();
+		String formulaText=pc.getFormula().getText();
+		if(isIRI){
+			if(!hasSpecialChar(formulaText)){
+				URI uri=getURIFromFormulaStr(formulaText,context);
+				if((isSubject && RDF.SUBJECT.equals(uri)) || (!isSubject && RDF.OBJECT.equals(uri)))
+					return true;
+			}
+		}
+		else{
+			if(formulaText.contains(".") && StringUtils.split(formulaText, ".").length==2){
+				String[] formulaTextStr=StringUtils.split(formulaText, ".");
+				URI uri1=getURIFromFormulaStr(formulaTextStr[0],context);
+				URI uri2=getURIFromFormulaStr(formulaTextStr[1],context);
+				if((isSubject && RDF.SUBJECT.equals(uri1)) || (!isSubject && RDF.OBJECT.equals(uri1))){
+					if(expectedPkUri.equals(uri2))
+						return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean hasSpecialChar(String formulaText) {
+		Pattern p = Pattern.compile("[^a-z0-9]", Pattern.CASE_INSENSITIVE);
+		Matcher m = p.matcher(formulaText);
+		return m.find();
+	}
+	private URI getURIFromFormulaStr(String str,Context context){
+		Term term=context.getTerm(str);
+		String termId=term.getId();
+		if(term.getKind()==Kind.NAMESPACE){
+			return new URIImpl(term.getId());
+		}
+		else if(termId.contains(":") && termId.split(":").length==2){
+			String[] termIdStr=term.getId().split(":");
+			URI uri=getURIFromFormulaStr(termIdStr[0],context);
+			return new URIImpl(uri.getNamespace()+uri.getLocalName()+termIdStr[1]);
+		}
+		else if(!hasSpecialChar(termId)){
+			return getURIFromFormulaStr(termId, context);
+		}
+		return null;
+	}
+	private URI getAssocShapeId(URI parentShapeId, URI childShapeId) {
+		URI assocShapeId=null;
+		String namespace=parentShapeId.getNamespace();
+		String parentShapeName=parentShapeId.getLocalName();
+		String childShapeName=childShapeId.getLocalName();
+		if(parentShapeName.indexOf("Shape")!=-1){
+			parentShapeName=parentShapeName.substring(0, parentShapeName.indexOf("Shape"));			
+		}
+		if(childShapeName.indexOf("Shape")!=-1){
+			childShapeName=childShapeName.substring(0, childShapeName.indexOf("Shape"));		
+		}
+		assocShapeId=new URIImpl(namespace+parentShapeName+childShapeName+"Shape");
+		return assocShapeId;
 	}
 
 
