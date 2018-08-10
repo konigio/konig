@@ -64,7 +64,7 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
-public class RdbmsShapeGenerator {
+public class RdbmsShapeGenerator {  
 	
 	private String propertyNameSpace;
 	private FormulaParser parser;
