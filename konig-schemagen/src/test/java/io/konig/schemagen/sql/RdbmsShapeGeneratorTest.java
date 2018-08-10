@@ -432,6 +432,37 @@ public class RdbmsShapeGeneratorTest extends AbstractRdbmsShapeGeneratorTest {
 	}
 	
 	@Test
+	public void testManyToManyAssocShapeExistsWithAlias() throws Exception{
+		load("src/test/resources/many-to-many-relation-assoc-shape-alias");
+
+		AwsShapeConfig.init();
+		URI shapeId = iri("https://schema.pearson.com/shapes/ProductRdbmsShape");
+
+		Shape logicalShape = shapeManager.getShapeById(shapeId);
+		Shape rdbmsShape = shapeGenerator.createRdbmsShape(logicalShape);
+		List<Shape> manyToManyShapes = null;
+		Shape childRdbmsShape = null;
+		Shape childShape = null;
+		PropertyConstraint relationshipPc =null;
+		for (PropertyConstraint pc : logicalShape.getTabularOriginShape().getProperty()) {
+			childShape=pc.getShape();
+			if (childShape != null) {
+				relationshipPc=pc;
+				childRdbmsShape = getRdbmsShapeFromLogicalShape(childShape);
+				manyToManyShapes = shapeGenerator.createManyToManyChildShape(logicalShape, pc,
+						childRdbmsShape);
+				break;
+			}
+		}
+		assertTrue(rdbmsShape!=null);
+		assertTrue(rdbmsShape.getPropertyConstraint(iri("http://example.com/ns/alias/PPID_PK"))!=null);
+		assertTrue(manyToManyShapes!=null && manyToManyShapes.size()==1);
+		//Association shape already exists and hence it will not create an association shape.
+		assertTrue(manyToManyShapes.get(0).getPropertyConstraint(iri("http://example.com/ns/alias/CONTRIBUTOR_ID_PK"))!=null);
+		
+	}
+	
+	@Test
 	public void testManyToManyCase3() throws Exception{
 		load("src/test/resources/many-to-many-relation-create-pk");
 

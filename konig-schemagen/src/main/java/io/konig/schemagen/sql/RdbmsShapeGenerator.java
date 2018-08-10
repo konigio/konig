@@ -7,7 +7,10 @@ import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
@@ -19,8 +22,11 @@ import io.konig.activity.Activity;
 import io.konig.aws.datasource.AwsAurora;
 import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.aws.datasource.AwsAuroraTableReference;
+import io.konig.core.Context;
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Term;
+import io.konig.core.Term.Kind;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
@@ -414,7 +420,7 @@ public class RdbmsShapeGenerator {
 			List<PropertyConstraint> derivedPcList=shape.getDerivedProperty();
 			PredicatePath derivedPcPath=null;
 			Value value=null;
-			boolean parentId =false, childId =false,parentRef = false,childRef = false;
+			boolean parentRef = false,childRef = false;
 			if(derivedPcList!=null && derivedPcList.size()==1){
 				PropertyConstraint derivedPc=derivedPcList.get(0);		
 				if(derivedPc!=null && derivedPc.getPath() instanceof PredicatePath){
@@ -425,27 +431,15 @@ public class RdbmsShapeGenerator {
 					value=derivedPcValueSet.iterator().next();
 				}
 			}
-			
 			List<PropertyConstraint> pcList=shape.getProperty();
-			if(parentShape.getNodeKind() == NodeKind.IRI){
-				parentId=true;
-			}
-			if(childShape.getNodeKind() == NodeKind.IRI){
-				childId=true;
-			}
-			PropertyConstraint parentPk=hasPrimaryKey(parentShape);
-			PropertyConstraint childPk=hasPrimaryKey(childShape);
-			String parentPkLocalName=(parentPk!=null)?(parentPk.getPredicate().getLocalName()): 
-				(StringUtil.SNAKE_CASE(parentShape.getTargetClass().getLocalName())+"_PK");
-			String childPkLocalName=(childPk!=null)?(childPk.getPredicate().getLocalName()): 
-				(StringUtil.SNAKE_CASE(childShape.getTargetClass().getLocalName())+"_PK");
+			
 			for(PropertyConstraint pc:pcList){
-				if(pc.getFormula()!=null){
-					String formula= pc.getFormula().getText();
-					if(("subject".equals(formula) && parentId) || (!parentId && ("subject."+parentPkLocalName).equals(formula))){
+				if(pc.getFormula()!=null){				
+					if(!parentRef && hasRef(parentShape,pc,true)){
 						parentRef=true;
+						continue;
 					}
-					if(("object".equals(formula) && childId) || (!childId && ("object."+childPkLocalName).equals(formula))){
+					if(!childRef && hasRef(childShape,pc,false)){
 						childRef=true;
 					}
 				}
@@ -460,6 +454,60 @@ public class RdbmsShapeGenerator {
 		return false;
 	}
 	
+	private boolean hasRef(Shape shape, PropertyConstraint pc, boolean isSubject) {
+		boolean isIRI=false;
+		if(shape.getNodeKind() == NodeKind.IRI){
+			isIRI=true;
+		}
+		PropertyConstraint pk=hasPrimaryKey(shape);
+		String pkLocalName=(pk!=null)?(pk.getPredicate().getLocalName()): 
+			(StringUtil.SNAKE_CASE(shape.getTargetClass().getLocalName())+"_PK");
+		URI expectedPkUri=new URIImpl(pc.getPredicate().getNamespace()+pkLocalName);
+		
+		Context context=pc.getFormula().getContext();
+		String formulaText=pc.getFormula().getText();
+		if(isIRI){
+			if(!hasSpecialChar(formulaText)){
+				URI uri=getURIFromFormulaStr(formulaText,context);
+				if((isSubject && RDF.SUBJECT.equals(uri)) || (!isSubject && RDF.OBJECT.equals(uri)))
+					return true;
+			}
+		}
+		else{
+			if(formulaText.contains(".") && StringUtils.split(formulaText, ".").length==2){
+				String[] formulaTextStr=StringUtils.split(formulaText, ".");
+				URI uri1=getURIFromFormulaStr(formulaTextStr[0],context);
+				URI uri2=getURIFromFormulaStr(formulaTextStr[1],context);
+				if((isSubject && RDF.SUBJECT.equals(uri1)) || (!isSubject && RDF.OBJECT.equals(uri1))){
+					if(expectedPkUri.equals(uri2))
+						return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean hasSpecialChar(String formulaText) {
+		Pattern p = Pattern.compile("[^a-z0-9]", Pattern.CASE_INSENSITIVE);
+		Matcher m = p.matcher(formulaText);
+		return m.find();
+	}
+	private URI getURIFromFormulaStr(String str,Context context){
+		Term term=context.getTerm(str);
+		String termId=term.getId();
+		if(term.getKind()==Kind.NAMESPACE){
+			return new URIImpl(term.getId());
+		}
+		else if(termId.contains(":") && termId.split(":").length==2){
+			String[] termIdStr=term.getId().split(":");
+			URI uri=getURIFromFormulaStr(termIdStr[0],context);
+			return new URIImpl(uri.getNamespace()+uri.getLocalName()+termIdStr[1]);
+		}
+		else if(!hasSpecialChar(termId)){
+			return getURIFromFormulaStr(termId, context);
+		}
+		return null;
+	}
 	private URI getAssocShapeId(URI parentShapeId, URI childShapeId) {
 		URI assocShapeId=null;
 		String namespace=parentShapeId.getNamespace();

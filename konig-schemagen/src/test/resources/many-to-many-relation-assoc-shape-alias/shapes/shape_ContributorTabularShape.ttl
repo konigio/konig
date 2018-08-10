@@ -1,0 +1,57 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix aws: <http://www.konig.io/ns/aws/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix mdm: <https://schema.pearson.com/ns/mdm/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <https://schema.pearson.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix alias: <http://example.com/ns/alias/> .
+
+shape:ContributorTabularShape a sh:Shape , konig:TabularNodeShape, konig:AssociationShape ;
+  sh:targetClass rdf:Statement ;
+  sh:nodeKind sh:BlankNode ;
+  konig:shapeDataSource <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ContributorTabularShape> ;
+  sh:property [
+    sh:path alias:PRODUCT_FK ;
+    sh:datatype xsd:long ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    
+    konig:formula '''
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix alias: <http://example.com/ns/alias/> .
+@term SUB rdf:subject
+@term PRODUCT_PRIMARY_KEY alias:PPID_PK
+
+SUB.PRODUCT_PRIMARY_KEY
+'''
+  ] , [
+    sh:path alias:PRODUCT_CONTRIBUTOR_FK ;
+    sh:datatype xsd:long ;
+    sh:minCount 1;
+    sh:maxCount 1;
+    
+    konig:formula '''
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix alias: <http://example.com/ns/alias/> .
+@term OBJ rdf:object
+@term PRODUCT_CONTRIBUTOR_PRIMARY_KEY alias:CONTRIBUTOR_ID_PK
+
+OBJ.PRODUCT_CONTRIBUTOR_PRIMARY_KEY
+'''    
+  ] ; 
+  sh:derivedProperty [
+    sh:path rdf:predicate ;
+    sh:hasValue mdm:contributor ;
+    sh:minCount 1;
+    sh:maxCount 1;
+  ] 
+. 
+
+<http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/ContributorTabularShape> a konig:AwsAurora , konig:DataSource ; 
+	konig:tabularFieldNamespace "http://example.com/ns/alias/" ; 
+	aws:tableReference  [ 
+		aws:awsAuroraHost "devHost" ; 
+		aws:awsSchema "schema1" ; 
+		aws:awsTableName "ContributorTabularShape" ]  . 
