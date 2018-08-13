@@ -88,6 +88,7 @@ public class PropertyConstraint implements Cloneable {
 	private List<URI> qualifiedSecurityClassification ;
 	private Person dataSteward;
 	private String name;
+	private Literal exampleValue;
 	
 	private Term term;
 	private URI termStatus;
@@ -584,5 +585,14 @@ public class PropertyConstraint implements Cloneable {
 
 	public void setDataSteward(Person dataSteward) {
 		this.dataSteward = dataSteward;
+	}
+	
+	@RdfProperty(Konig.EXAMPLE)
+	public Literal getExampleValue() {
+		return exampleValue;
+	}
+
+	public void setExampleValue(Literal exampleValue) {
+		this.exampleValue = exampleValue;
 	}
 }

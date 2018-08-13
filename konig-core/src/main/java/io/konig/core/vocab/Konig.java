@@ -41,6 +41,7 @@ public class Konig {
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
+	public static final String EXAMPLE = "http://www.konig.io/ns/core/exampleValue";
 
 	public static final String MEASURE = "http://www.konig.io/ns/core/measure";
 	public static final String ATTRIBUTE = "http://www.konig.io/ns/core/attribute";
@@ -137,6 +138,7 @@ public class Konig {
 	public static final URI TimeUnit = new URIImpl("http://www.konig.io/ns/core/TimeUnit");
 	public static final URI TimeInterval = new URIImpl("http://www.konig.io/ns/core/TimeInterval");
 	public static final URI intervalStart = new URIImpl("http://www.konig.io/ns/core/intervalStart");
+	public static final URI exampleValue = new URIImpl("http://www.konig.io/ns/core/exampleValue");
 	
 	// Time Units
 	

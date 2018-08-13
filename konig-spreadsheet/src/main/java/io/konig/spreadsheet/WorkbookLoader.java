@@ -39,7 +39,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Hyperlink;
@@ -257,7 +256,8 @@ public class WorkbookLoader {
 	private static final String AWS_DB_CLUSTER_MAINTENANCE_WINDOW = "Preferred Maintenance Window";
 	private static final String AWS_DB_CLUSTER_REPLICATION_SOURCE = "Replication Source Identifier";
 	private static final String AWS_DB_CLUSTER_STORAGE_ENCRYPTED = "Storage Encrypted";
-
+	private static final String EXAMPLE = "Example";
+	
 	private static final int COL_SETTING_NAME = 0x1;
 	private static final int COL_NAMESPACE_URI = 0x2;
 	private static final int COL_CLASS_ID = 0x4;
@@ -500,7 +500,8 @@ public class WorkbookLoader {
 		private int pcDecimalPrecision = UNDEFINED;
 		private int pcDecimalScale = UNDEFINED;
 		private int pcSecurityClassification = UNDEFINED;
-
+		private int pcExampleCol = UNDEFINED;
+		
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
 		private int settingPatternCol = UNDEFINED;
@@ -564,6 +565,7 @@ public class WorkbookLoader {
 		private int awsStorageEncrypted	 = UNDEFINED;
 		private int inputShapeOfCol = UNDEFINED;
 		private int oneOfCol = UNDEFINED;
+		private int exampleCol = UNDEFINED;
 		
 		public Worker(Workbook book) {
 			this.book = book;
@@ -1203,7 +1205,6 @@ public class WorkbookLoader {
 				Row row = sheet.getRow(i);
 				loadDataDictionaryTemplateRow(row);
 			}
-			
 		}
 
 		private void loadDataDictionaryTemplateRow(Row row) throws SpreadsheetException {
@@ -1246,7 +1247,6 @@ public class WorkbookLoader {
 			String dataStewardName = stringValue(row, dataStewardCol);
 			List<URI> securityClassification=uriList(row,securityClassifCol);
 			String constraints = stringValue(row,constraintsCol);	
-			
 
 			Shape shape = produceShape(shapeId);
 			PropertyConstraint p = shape.getPropertyConstraint(propertyId);
@@ -1291,8 +1291,9 @@ public class WorkbookLoader {
 			if (dataStewardName != null) {
 				p.dataSteward().setName(dataStewardName);
 			}
+			Literal exampleValue = writeLiteral(row,exampleCol,p.getDatatype());
 			p.setQualifiedSecurityClassification(securityClassification);
-			
+			p.setExampleValue(exampleValue);
 		}
 		
 
@@ -1393,7 +1394,7 @@ public class WorkbookLoader {
 		private void readDataDictionaryTemplateHeader(Sheet sheet) {
 			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = maxLengthCol = decimalPrecisionCol = decimalScaleCol 
 					= constraintsCol = businessNameCol = businessDefinitionCol = dataStewardCol = securityClassifCol = 
-					targetObjectNameCol = targetFieldNameCol = UNDEFINED;
+					targetObjectNameCol = targetFieldNameCol = exampleCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -1465,7 +1466,10 @@ public class WorkbookLoader {
 					case TARGET_FIELD_NAME:
 						targetFieldNameCol = i;
 						break;
-					
+					case EXAMPLE:
+						exampleCol = i;
+						break;
+						
 					}
 				}
 			}
@@ -1920,7 +1924,9 @@ public class WorkbookLoader {
 			if (formula != null) {
 				formulaHandlers.add(new PropertyFormulaHandler(shape, p, formula));
 			}
-			
+			Literal exampleValue = writeLiteral(row,pcExampleCol,p.getDatatype());
+				p.setExampleValue(exampleValue);
+
 		}
 
 		private Integer maxCount(Row row, int col) {
@@ -2235,7 +2241,8 @@ public class WorkbookLoader {
 		}
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
-			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol  = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= UNDEFINED;
+			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol  = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive
+					= pcMinLength = pcMaxLength = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification=pcExampleCol= UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -2326,6 +2333,9 @@ public class WorkbookLoader {
 						break;
 					case SECURITY_CLASSIFICATION:
 						pcSecurityClassification = i;
+						break;
+					case EXAMPLE:
+						pcExampleCol = i;
 						break;
 					}
 				}
@@ -2867,7 +2877,17 @@ public class WorkbookLoader {
 			    graph.edge(propertyId, Konig.securityClassification, uri);					
 			  }
 			}
+			if (range != null) {
+				for (URI value : range) {
+			
+			Literal example = writeLiteral(row, exampleCol,value);
 
+			if (example!= null){
+				graph.edge(propertyId, Konig.exampleValue, example);	
+			}
+			}
+			}
+			
 		}
 
 		private List<URI> analyzePropertyType(Vertex subject, List<URI> propertyType, List<URI> range) {
@@ -2953,6 +2973,7 @@ public class WorkbookLoader {
 			subpropertyOfCol = UNDEFINED;
 			propertyCommentCol = UNDEFINED;
 			securityClassificationCol = UNDEFINED;
+			exampleCol =UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2998,6 +3019,9 @@ public class WorkbookLoader {
 						break;
 					case SECURITY_CLASSIFICATION:
 						securityClassificationCol = i;
+						break;
+					case EXAMPLE:
+						exampleCol = i;
 						break;
 					}
 				}
@@ -3072,6 +3096,15 @@ public class WorkbookLoader {
 			if (text != null) {
 				result = vf.createLiteral(text);
 			}
+			return result;
+		}
+		
+		private Literal writeLiteral(Row row, int col, URI dataType) {
+			Literal result = null;
+			String text = stringValue(row, col);
+			if (text != null) {
+				result = vf.createLiteral(text, dataType);
+				}
 			return result;
 		}
 

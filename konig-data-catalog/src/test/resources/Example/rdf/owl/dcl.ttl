@@ -1,0 +1,13 @@
+@prefix dcl: <https://schema.pearson.com/ns/dcl/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+dcl: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "dcl" . 
+
+dcl:DataClassificationLevel a owl:Class ; 
+	rdfs:label "Data Classification Level" ; 
+	rdfs:comment "The class consisting of all possible values from Pearson's Data Classification scheme." ; 
+	rdfs:subClassOf schema:Enumeration . 

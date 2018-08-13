@@ -197,6 +197,11 @@ public class BeanUtil {
 		if (object == null) {
 			return null;
 		}
+			if (object instanceof Value) {
+			
+			return(Value)object;
+		}
+
 		ValueFactory valueFactory = ValueFactoryImpl.getInstance();
 
 		if (object instanceof URI) {

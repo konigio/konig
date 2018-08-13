@@ -1408,7 +1408,89 @@ public class WorkbookLoaderTest {
 		IOUtil.recursiveDelete(testDir);
 		
 	}
+	@Test
+ 	public void testKonigExample_1() throws Exception {
+
+ 		InputStream input = getClass().getClassLoader().getResourceAsStream("Example-DataDictionary.xlsx");
+ 		Workbook book = WorkbookFactory.create(input);
+ 		Graph graph = new MemoryGraph();
+ 		NamespaceManager nsManager = new MemoryNamespaceManager();
+ 		graph.setNamespaceManager(nsManager);
+ 		
+ 		WorkbookLoader loader = new WorkbookLoader(nsManager);
+ 		loader.load(book, graph);
+ 		input.close();
+ 		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
+ 		
+ 		ShapeManager s = loader.getShapeManager();
+ 		
+ 		
+ 		ShapeWriter shapeWriter = new ShapeWriter();
+ 		Shape shape = s.getShapeById(shapeId);
+ 		try {	
+ 			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/WorkbookLoaderTest/example/PersonShapeData.ttl"));
+ 		} catch (Exception e) {
+ 			throw new KonigException(e);
+ 		}
+ 		assertTrue(shape!=null);
+
+ 	}
 	
+	@Test
+ 	public void testKonigExample_2() throws Exception {
+
+ 		InputStream input = getClass().getClassLoader().getResourceAsStream("Example-DataDictionary.xlsx");
+ 		Workbook book = WorkbookFactory.create(input);
+ 		Graph graph = new MemoryGraph();
+ 		NamespaceManager nsManager = new MemoryNamespaceManager();
+ 		graph.setNamespaceManager(nsManager);
+ 		
+ 		WorkbookLoader loader = new WorkbookLoader(nsManager);
+ 		loader.load(book, graph);
+ 		input.close();
+ 		URI shapeId = uri("http://example.com/shapes/ABCD/ABCD_CUSTOMER_ALL");
+ 		
+ 		ShapeManager s = loader.getShapeManager();
+ 		
+ 		
+ 		ShapeWriter shapeWriter = new ShapeWriter();
+ 		Shape shape = s.getShapeById(shapeId);
+ 		try {	
+ 			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/WorkbookLoaderTest/example/PersonShapeOrder.ttl"));
+ 		} catch (Exception e) {
+ 			throw new KonigException(e);
+ 		}
+ 		assertTrue(shape!=null);
+
+ 	}
+	
+	@Test
+ 	public void testKonigExample_3() throws Exception {
+
+ 		InputStream input = getClass().getClassLoader().getResourceAsStream("Example-DataDictionary.xlsx");
+ 		Workbook book = WorkbookFactory.create(input);
+ 		Graph graph = new MemoryGraph();
+ 		NamespaceManager nsManager = new MemoryNamespaceManager();
+ 		graph.setNamespaceManager(nsManager);
+ 		
+ 		WorkbookLoader loader = new WorkbookLoader(nsManager);
+ 		loader.load(book, graph);
+ 		input.close();
+ 		URI shapeId = uri("http://example.com/shapes/EFGH/EFGH_CUSTOMER_ALL");
+ 		
+ 		ShapeManager s = loader.getShapeManager();
+ 		
+ 		
+ 		ShapeWriter shapeWriter = new ShapeWriter();
+ 		Shape shape = s.getShapeById(shapeId);
+ 		try {	
+ 			shapeWriter.writeTurtle(nsManager, shape, new File("target/test/WorkbookLoaderTest/example/PersonShapeNumber.ttl"));
+ 		} catch (Exception e) {
+ 			throw new KonigException(e);
+ 		}
+ 		assertTrue(shape!=null);
+
+ 	}
 	public void testTabularNodeShape_2() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("rdbms-node-shape-generator.xlsx");
