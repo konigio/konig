@@ -180,6 +180,7 @@ public class Shape implements Cloneable {
 	
 	
 
+	@RdfProperty(SH.OR)
 	public OrConstraint getOr() {
 		return or;
 	}
