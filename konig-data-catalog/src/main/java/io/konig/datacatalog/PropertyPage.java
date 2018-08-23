@@ -189,6 +189,12 @@ public class PropertyPage {
 					}
 				}
 				
+			} else if (rdfValue instanceof URI) {
+				
+				URI uri = (URI) rdfValue;
+				href = request.relativePath(propertyId, uri);
+				stringValue = uri.getLocalName();
+				
 			}
 			
 			if (stringValue == null) {
