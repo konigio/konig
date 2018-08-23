@@ -214,6 +214,8 @@ public class SampleGenerator {
 					value = nextTime();
 				} else if (XMLSchema.TOKEN.equals(datatype)) {
 					value = random.loremIpsum(1);
+				} else if (XMLSchema.DURATION.equals(datatype)) {
+					value = random.nextDuration();
 				} else {
 					String msg = MessageFormat.format("On shape <{0}>, unsupported datatype: <{1}>", 
 							shape.getId().stringValue(), datatype.stringValue());
