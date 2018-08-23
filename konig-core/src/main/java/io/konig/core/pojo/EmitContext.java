@@ -54,6 +54,8 @@ public class EmitContext {
 	private Set<Class<?>> skipClass = new HashSet<>();
 	private Set<URI> iriReference = null;
 	
+	private Map<Class<?>, Method> listGetterMap;
+	
 	private Set<URI> ignoredProperty = null;
 	
 	private ValueFactory valueFactory = new ValueFactoryImpl();
@@ -73,6 +75,17 @@ public class EmitContext {
 		skipClass.add(long.class);
 		skipClass.add(Long.class);
 		
+	}
+	
+	public Method listGetterMethod(Class<?> rdfListProxy) {
+		return listGetterMap==null ? null : listGetterMap.get(rdfListProxy);
+	}
+	
+	public void putListGetterMethod(Class<?> rdfListProxy, Method getter) {
+		if (listGetterMap==null) {
+			listGetterMap = new HashMap<>();
+		}
+		listGetterMap.put(rdfListProxy, getter);
 	}
 	
 	public void addIriReference(URI... predicate) {
