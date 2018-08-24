@@ -35,11 +35,13 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.Graph;
+import io.konig.core.NamespaceInfoManager;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.vocab.SH;
 import io.konig.datasource.DatasourceFileLocator;
+import io.konig.schema.EnumerationReasoner;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.ShapeManager;
 
@@ -54,6 +56,7 @@ public class DataCatalogBuildRequest {
 	private Set<URI> ontologyExclude;
 	private List<Vertex> ontologyList;
 	private DatasourceFileLocator sqlDdlLocator;
+	private NamespaceInfoManager namespaceInfoManager = new NamespaceInfoManager();
 	
 	private PathFactory pathFactory;
 	private ClassStructure classStructure;
@@ -104,6 +107,9 @@ public class DataCatalogBuildRequest {
 
 	public void setGraph(Graph graph) {
 		this.graph = graph;
+		namespaceInfoManager.load(graph);
+		EnumerationReasoner reasoner = new EnumerationReasoner();
+		reasoner.annotateEnumerationNamespaces(graph, namespaceInfoManager);
 	}
 
 	public ShapeManager getShapeManager() {
@@ -233,5 +239,10 @@ public class DataCatalogBuildRequest {
 	void setEngine(VelocityEngine engine) {
 		this.engine = engine;
 	}
+
+	public NamespaceInfoManager getNamespaceInfoManager() {
+		return namespaceInfoManager;
+	}
+
 	
 }

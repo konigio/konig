@@ -67,6 +67,7 @@ public class Konig {
 	
 	// Generic Data Modeling
 
+	public static final URI EnumNamespace = new URIImpl("http://www.konig.io/ns/core/EnumNamespace");
 	public static final URI id = new URIImpl("http://www.konig.io/ns/core/id");
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/core/mediaTypeBaseName");
 	public static final URI tabularOriginShape = new URIImpl("http://www.konig.io/ns/core/tabularOriginShape");
