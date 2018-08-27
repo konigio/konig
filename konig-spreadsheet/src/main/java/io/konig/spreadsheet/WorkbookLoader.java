@@ -1206,7 +1206,19 @@ public class WorkbookLoader {
 			int rowSize = sheet.getLastRowNum() + 1;
 			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
 				Row row = sheet.getRow(i);
-				loadDataDictionaryTemplateRow(row);
+				try {
+					loadDataDictionaryTemplateRow(row);
+				} catch (Throwable oops) {
+					SpreadsheetException e = null;
+					if (oops instanceof SpreadsheetException) {
+						e = (SpreadsheetException) oops;
+					} else {
+						e = new SpreadsheetException(oops.getMessage(), oops);
+					}
+					e.setRow(i);
+					e.setSheetName(sheet.getSheetName());
+					throw e;
+				}
 			}
 			
 		}
