@@ -92,6 +92,43 @@ import io.konig.shacl.io.ShapeWriter;
 public class WorkbookLoaderTest {
 	
 	@Test
+	public void testsecurityClassificationByName() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("security-classification-by-name.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		URI shapeId = uri("https://schema.pearson.com/shapes/PERSON_STG_Shape");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		URI predicate = uri("https://schema.pearson.com/ns/alias/first_name");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		PropertyConstraint p = shape.getPropertyConstraint(predicate);
+		
+		List<URI> list = p.getQualifiedSecurityClassification();
+		URI dcl3 = uri("https://schema.pearson.com/ns/dcl/DCL3");
+		URI pii = uri("https://schema.pearson.com/ns/dcl/PII");
+		assertTrue(list.contains(dcl3));
+		assertTrue(list.contains(pii));
+		
+	}
+	
+	
+	@Test
 	public void testCurrentStateView() throws Exception {
 
 		GcpShapeConfig.init();
