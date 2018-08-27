@@ -259,6 +259,10 @@ public class WorkbookLoader {
 	private static final String AWS_DB_CLUSTER_MAINTENANCE_WINDOW = "Preferred Maintenance Window";
 	private static final String AWS_DB_CLUSTER_REPLICATION_SOURCE = "Replication Source Identifier";
 	private static final String AWS_DB_CLUSTER_STORAGE_ENCRYPTED = "Storage Encrypted";
+	
+	// Well-known Setting names
+	private static final String DICTIONARY_DEFAULT_MIN_LENGTH = "dictionary.defaultMinLength";
+	private static final String DICTIONARY_DEFAULT_MAX_LENGTH = "dictionary.defaultMaxLength";
 
 	private static final int COL_SETTING_NAME = 0x1;
 	private static final int COL_NAMESPACE_URI = 0x2;
@@ -499,8 +503,8 @@ public class WorkbookLoader {
 		private int pcMaxInclusive = UNDEFINED;
 		private int pcMinExclusive = UNDEFINED;
 		private int pcMaxExclusive = UNDEFINED;
-		private int pcMinLength = UNDEFINED;
-		private int pcMaxLength = UNDEFINED;
+		private int pcMinLengthCol = UNDEFINED;
+		private int pcMaxLengthCol = UNDEFINED;
 		private int pcDecimalPrecision = UNDEFINED;
 		private int pcDecimalScale = UNDEFINED;
 		private int pcSecurityClassification = UNDEFINED;
@@ -535,7 +539,6 @@ public class WorkbookLoader {
 		private int sourceObjectNameCol = UNDEFINED;
 		private int fieldCol = UNDEFINED;
 		private int dataTypeCol = UNDEFINED;
-		private int maxLengthCol = UNDEFINED;
 		private int decimalPrecisionCol = UNDEFINED;
 		private int decimalScaleCol = UNDEFINED;
 		private int constraintsCol = UNDEFINED;
@@ -1244,7 +1247,6 @@ public class WorkbookLoader {
 
 			String dataDictionarydataType=stringValue(row,dataTypeCol);
 
-			Integer maxLength = integer(row, maxLengthCol);
 			Integer decimalPrecision = integer(row, decimalPrecisionCol);
 			if (decimalPrecision!=null && (decimalPrecision<1 || decimalPrecision>65)){
 				throw new KonigException("Decimal Precison should be between 1 to 65");
@@ -1300,9 +1302,13 @@ public class WorkbookLoader {
 
 			URI rdfDatatype=getRdfDatatype(dataDictionarydataType,p);
 			p.setDatatype(rdfDatatype);
+
+			Integer maxLength = dictionaryMaxLength(row, pcMaxLengthCol, rdfDatatype);
+			Integer minLength = dictionaryMinLength(row, pcMinLengthCol, rdfDatatype);
 			
 			if(rdfDatatype!=null && (rdfDatatype.equals(XMLSchema.STRING)|| (rdfDatatype.equals(XMLSchema.BASE64BINARY)))){
 				p.setMaxLength(maxLength);
+				p.setMinLength(minLength);
 				
 			}
 			p.setDecimalPrecision(decimalPrecision);
@@ -1317,7 +1323,39 @@ public class WorkbookLoader {
 			p.setQualifiedSecurityClassification(securityClassificationList);
 			
 		}
+
+		private Integer dictionaryMinLength(Row row, int col, URI rdfDatatype) {
+			Integer value = integer(row, col);
+			if (value == null) {
+				if (XMLSchema.STRING.equals(rdfDatatype)) {
+					value = settingsInteger(DICTIONARY_DEFAULT_MIN_LENGTH);
+					if (value == null) {
+						value = 0;
+					}
+				}
+			}
+			return value;
+		}
 		
+
+		private Integer dictionaryMaxLength(Row row, int col, URI rdfDatatype) {
+			Integer value = integer(row, col);
+			if (value == null) {
+				if (XMLSchema.STRING.equals(rdfDatatype)) {
+					value = settingsInteger(DICTIONARY_DEFAULT_MAX_LENGTH);
+				}
+			}
+			return value;
+		}
+
+		private Integer settingsInteger(String propertyName) {
+			String text = settingsValue(propertyName);
+			return text==null ? null : new Integer(text);
+		}
+
+		private String settingsValue(String propertyName) {
+			return settings==null ? null : settings.getProperty(propertyName);
+		}
 
 		private String concatPath(String baseURL, String pathElement) {
 			StringBuilder builder = new StringBuilder(baseURL);
@@ -1434,10 +1472,12 @@ public class WorkbookLoader {
 		
 
 		private URI getRdfDatatype(String dataDictionarydataType, PropertyConstraint constraint) {
+			dataDictionarydataType = dataDictionarydataType.trim().toUpperCase();
 			switch(dataDictionarydataType){
 				case "CHAR":
 				case "VARCHAR":
 				case "TEXT":
+				case "STRING":
 				case "VARCHAR2":
 					return XMLSchema.STRING;
 				case "DATE":
@@ -1485,8 +1525,9 @@ public class WorkbookLoader {
 		}
 
 		private void readDataDictionaryTemplateHeader(Sheet sheet) {
-			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = maxLengthCol = decimalPrecisionCol = decimalScaleCol 
-					= constraintsCol = businessNameCol = businessDefinitionCol = dataStewardCol = securityClassifCol = piiClassifCol =
+			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = pcMaxLengthCol = pcMinLengthCol =
+					decimalPrecisionCol = decimalScaleCol = constraintsCol = businessNameCol = businessDefinitionCol = 
+					dataStewardCol = securityClassifCol = piiClassifCol =
 					targetObjectNameCol = targetFieldNameCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
@@ -1519,9 +1560,13 @@ public class WorkbookLoader {
 					case DATA_TYPE:
 						dataTypeCol = i;
 						break;
+						
+					case MIN_LENGTH:
+						pcMinLengthCol = i;
+						break;
 					
 					case MAX_LENGTH:
-						maxLengthCol = i;
+						pcMaxLengthCol = i;
 						break;
 						
 					case DECIMAL_PRECISION:
@@ -1837,8 +1882,8 @@ public class WorkbookLoader {
 			Double maxInclusive = doubleValue(row, pcMaxInclusive);
 			Double minExclusive = doubleValue(row, pcMinExclusive);
 			Double maxExclusive = doubleValue(row, pcMaxExclusive);
-			Integer minLength = integer(row, pcMinLength);
-			Integer maxLength = integer(row, pcMaxLength);
+			Integer minLength = integer(row, pcMinLengthCol);
+			Integer maxLength = integer(row, pcMaxLengthCol);
 			Integer decimalPrecision = integer(row, pcDecimalPrecision);
 			if(decimalPrecision!=null && (decimalPrecision.intValue()<1 || decimalPrecision.intValue()>65)){
 				throw new KonigException("Decimal Precison should be between 1 to 65");
@@ -2333,7 +2378,10 @@ public class WorkbookLoader {
 		}
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
-			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol  = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= UNDEFINED;
+			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol =
+					pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol  = pcSourcePathCol = 
+					pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = 
+					pcMinLengthCol = pcMaxLengthCol = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -2382,10 +2430,10 @@ public class WorkbookLoader {
 						pcMaxExclusive = i;
 						break;
 					case MIN_LENGTH:
-						pcMinLength = i;
+						pcMinLengthCol = i;
 						break;
 					case MAX_LENGTH:
-						pcMaxLength = i;
+						pcMaxLengthCol = i;
 						break;
 					case DECIMAL_PRECISION:
 						pcDecimalPrecision = i;
