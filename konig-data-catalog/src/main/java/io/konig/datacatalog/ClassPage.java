@@ -21,16 +21,12 @@ package io.konig.datacatalog;
  */
 
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
+import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
+import io.konig.core.util.ClassHierarchyPaths;
+import io.konig.shacl.ClassStructure;
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -39,12 +35,10 @@ import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
-import io.konig.core.OwlReasoner;
-import io.konig.core.Vertex;
-import io.konig.core.util.ClassHierarchyPaths;
-import io.konig.shacl.ClassStructure;
-import io.konig.shacl.PropertyConstraint;
-import io.konig.shacl.Shape;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.*;
 
 public class ClassPage {
 	private static final String CLASS_TEMPLATE = "data-catalog/velocity/class.vm";
@@ -190,8 +184,6 @@ public class ClassPage {
 		}
 	}
 
-
-
 	private void defineEnumerationMembers(ClassRequest request) throws DataCatalogException, IOException {
 		
 		Vertex owlClass = request.getOwlClass();
@@ -203,22 +195,21 @@ public class ClassPage {
 				IndividualPage individualPage = new IndividualPage();
 				Set<URI> set = owlClass.asTraversal().in(RDF.TYPE).toUriSet();
 				if (!set.isEmpty()) {
-					List<Link> memberList = new ArrayList<>();
+					List<EnumerationMember> memberList = new ArrayList<>();
 					request.getContext().put("Members", memberList);
-					
-					for (URI memberId : set) {
-						String href = request.relativePath(classId, memberId);
-						Link link = new Link(memberId.getLocalName(), href);
-						memberList.add(link);
 
+					for (URI memberId : set) {
 						Vertex member = reasoner.getGraph().getVertex(memberId);
+						String href = request.relativePath(classId, memberId);
+						EnumerationMember enumerationMember = new EnumerationMember(member, href);
+						memberList.add(enumerationMember);
+
 						IndividualRequest individual = new IndividualRequest(request, member, classId);
 						Writer writer = request.getWriterFactory().createWriter(individual, memberId);
 						PageResponse individualResponse = new PageResponseImpl(writer);
 						individualPage.render(individual, individualResponse);
 					}
 				}
-				
 				
 			}
 		}

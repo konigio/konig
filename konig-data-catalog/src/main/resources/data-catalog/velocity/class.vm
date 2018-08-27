@@ -5,7 +5,7 @@
 </head>
 <body class="mainsite">
 #parse( "data-catalog/velocity/header.vm" )
-<div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$ClassId">
+<table id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$ClassId">
 	<h1 property="rdfs:label" class="page-title">$ClassName</h1>
 #foreach( $ancestorPath in $AncestorList )
 	<h4><span class="breadcrumbs"> Thing
@@ -67,16 +67,31 @@
 #if($Members) 
 	<br>
 	<b>Enumeration members</b>
-	<ul>
+
+	<table>
+		<thead class="definition-table">
+        <tr>
+            <th>Individual</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Code</th>
+        </tr>
+		</thead>
 #foreach( $member in $Members )
-		<li><a href="$member.Href">$member.Name</a></li>
+		<tr>
+			<td><a href="${member.href}">${member.curie}</a></td>
+			<td>${member.name}</td>
+            <td>${member.description}</td>
+            <td>${member.code}</td>
+		</tr>
+
 #end	
-	</ul>
-#end	
+</table>
+#end
 #if( $SubclassList )
 	<br>
 	<b>More specific Types</b>
-	<ul>
+	<ul style="text-align: left">
 #foreach( $subclassLink in $SubclassList ) 
 		<li><a href="$subclassLink.Href">$subclassLink.Name</a></li>
 #end	
