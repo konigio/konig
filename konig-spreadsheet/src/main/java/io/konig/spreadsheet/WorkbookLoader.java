@@ -106,6 +106,7 @@ import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.ShapePropertyOracle;
 import io.konig.rio.turtle.NamespaceMap;
+import io.konig.schema.EnumerationReasoner;
 import io.konig.shacl.CompositeShapeVisitor;
 import io.konig.shacl.FormulaContextBuilder;
 import io.konig.shacl.NodeKind;
@@ -196,6 +197,7 @@ public class WorkbookLoader {
 	private static final String DECIMAL_PRECISION = "Decimal Precision";
 	private static final String DECIMAL_SCALE = "Decimal Scale";
 	private static final String SECURITY_CLASSIFICATION ="Security Classification";
+	private static final String PII_CLASSIFICATION = "PII Classification";
 
 	// Cloud SQL Instance
 	private static final String INSTANCE_NAME = "Instance Name";
@@ -427,6 +429,8 @@ public class WorkbookLoader {
 		private DataFormatter dataFormatter;
 		private Graph defaultOntologies;
 		private ShapeReasoner shapeReasoner;
+		
+		private EnumerationReasoner enumReasoner;
 
 		private Properties settings = new Properties();
 		private List<ShapeTemplate> shapeTemplateList = new ArrayList<>();
@@ -539,6 +543,7 @@ public class WorkbookLoader {
 		private int businessDefinitionCol = UNDEFINED;
 		private int dataStewardCol = UNDEFINED;
 		private int securityClassifCol = UNDEFINED;
+		private int piiClassifCol = UNDEFINED;
 		private int targetObjectNameCol = UNDEFINED;
 		private int targetFieldNameCol = UNDEFINED;
 		
@@ -1221,7 +1226,7 @@ public class WorkbookLoader {
 				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
 				return;
 			}
-			URI propertyId = expandPropertyId(getPropertyBaseURL()+"/"+propertyIdValue);
+			URI propertyId = expandPropertyId(concatPath(getPropertyBaseURL(),propertyIdValue));
 
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
 
@@ -1244,7 +1249,10 @@ public class WorkbookLoader {
 			String businessName = stringValue(row, businessNameCol);
 			String businessDefinition = stringValue(row, businessDefinitionCol);
 			String dataStewardName = stringValue(row, dataStewardCol);
-			List<URI> securityClassification=uriList(row,securityClassifCol);
+			URI securityClassification = individualByName(row, securityClassifCol);
+			URI piiClassification = individualByName(row, piiClassifCol);
+			
+			List<URI> securityClassificationList=null;
 			String constraints = stringValue(row,constraintsCol);	
 			
 
@@ -1291,10 +1299,84 @@ public class WorkbookLoader {
 			if (dataStewardName != null) {
 				p.dataSteward().setName(dataStewardName);
 			}
-			p.setQualifiedSecurityClassification(securityClassification);
+			
+			securityClassificationList = safeAdd(securityClassificationList, securityClassification);
+			securityClassificationList = safeAdd(securityClassificationList, piiClassification);
+			p.setQualifiedSecurityClassification(securityClassificationList);
 			
 		}
 		
+
+		private String concatPath(String baseURL, String pathElement) {
+			StringBuilder builder = new StringBuilder(baseURL);
+			if (!baseURL.endsWith("/")) {
+				builder.append('/');
+			}
+			builder.append(pathElement);
+			return builder.toString();
+		}
+
+		private List<URI> safeAdd(List<URI> list, URI id) {
+			if (id !=null) {
+				if (list == null) {
+					list = new ArrayList<>();
+				}
+				list.add(id);
+			}
+			return list;
+		}
+
+		private URI individualByName(Row row, int col) throws SpreadsheetException {
+			String name = stringValue(row, col);
+			if (name==null) {
+				return null;
+			}
+			name = name.trim();
+			
+			String curieValue = curieValue(name);
+			
+			if (curieValue != null) {
+				return expandCurie(curieValue);
+			}
+			
+			EnumerationReasoner reasoner = enumReasoner();
+			Set<URI> set = reasoner.getIndividualsByName(name);
+			if (set.size() == 0) {
+				throw new SpreadsheetException("Individual not found for name: " + name);
+			}
+			if (set.size() > 1) {
+				StringBuilder builder = new StringBuilder("Multiple individuals found for name: " + name + ", including...");
+				for (URI id : set) {
+					builder.append('\n');
+					builder.append(id.stringValue());
+				}
+				throw new SpreadsheetException(builder.toString());
+			}
+			
+			return set.iterator().next();
+		}
+
+		private String curieValue(String name) {
+			int colon = name.indexOf(':');
+			if (colon < 0) {
+				return null;
+			}
+			for (int i=0; i<name.length(); i++) {
+				int c = name.charAt(i);
+				if (Character.isWhitespace(c)) {
+					return null;
+				}
+			}
+			return name;
+		}
+
+		private EnumerationReasoner enumReasoner() {
+			if (enumReasoner == null) {
+				enumReasoner = new EnumerationReasoner();
+				enumReasoner.mapIndividualsByName(graph);
+			}
+			return enumReasoner;
+		}
 
 		private String getPropertyBaseURL() throws SpreadsheetException {
 			String propertyBaseURL=settings.getProperty("propertyBaseURL");
@@ -1392,7 +1474,7 @@ public class WorkbookLoader {
 
 		private void readDataDictionaryTemplateHeader(Sheet sheet) {
 			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = maxLengthCol = decimalPrecisionCol = decimalScaleCol 
-					= constraintsCol = businessNameCol = businessDefinitionCol = dataStewardCol = securityClassifCol = 
+					= constraintsCol = businessNameCol = businessDefinitionCol = dataStewardCol = securityClassifCol = piiClassifCol =
 					targetObjectNameCol = targetFieldNameCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
@@ -1456,6 +1538,10 @@ public class WorkbookLoader {
 						
 					case SECURITY_CLASSIFICATION:
 						securityClassifCol =i;
+						break;
+						
+					case PII_CLASSIFICATION :
+						piiClassifCol = i;
 						break;
 						
 					case TARGET_OBJECT_NAME:
@@ -2327,6 +2413,7 @@ public class WorkbookLoader {
 					case SECURITY_CLASSIFICATION:
 						pcSecurityClassification = i;
 						break;
+						
 					}
 				}
 			}
