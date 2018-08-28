@@ -95,7 +95,7 @@ public class XmlSerializerTest {
 				"      <workbookFile>foo/bar.xlsx</workbookFile>\n" + 
 				"      <inferRdfPropertyDefinitions>true</inferRdfPropertyDefinitions>\n" + 
 				"      <failOnWarnings>false</failOnWarnings>\n" + 
-				"      <failOnErrors>false</failOnErrors>\n" + 
+				"      <failOnErrors>true</failOnErrors>\n" + 
 				"   </googleCloudPlatform>\n" + 
 				"";
 		String actual = buffer.toString().replace("\r", "");
