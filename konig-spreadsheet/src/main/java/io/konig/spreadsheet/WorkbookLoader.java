@@ -1499,8 +1499,8 @@ public class WorkbookLoader {
 				throw new SpreadsheetException("shapeURLTemplate is not found in both settings tab and system property.");			
 			}
 			else{
-				String shapeURL=sourceSystemName==null?shapeURLTemplate:shapeURLTemplate.replace("{SOURCE_SYSTEM}", StringUtil.SNAKE_CASE(sourceSystemName));
-				shapeURL=shapeURL.replace("{SOURCE_OBJECT_NAME}", StringUtil.SNAKE_CASE(shapeIdLocalName));		
+				String shapeURL=sourceSystemName==null?shapeURLTemplate:shapeURLTemplate.replace("{SOURCE_SYSTEM}", StringUtil.LABEL_TO_SNAKE_CASE(sourceSystemName));
+				shapeURL=shapeURL.replace("{SOURCE_OBJECT_NAME}", StringUtil.LABEL_TO_SNAKE_CASE(shapeIdLocalName));		
 				if(settings!=null){
 					for(Object key:settings.keySet()){
 						String propertyKey=(String)key;
