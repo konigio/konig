@@ -90,7 +90,39 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeWriter;
 
 public class WorkbookLoaderTest {
-	
+
+	@Test
+	public void testDefaultDataSource() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("default-data-source.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		URI shapeId = uri("https://schema.pearson.com/shapes/PERSON_STG_Shape");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		List<DataSource> list = shape.getShapeDataSource();
+		assertTrue(list != null);
+		assertTrue(list.size()==2);
+		
+		assertTrue(list.stream().filter(ds -> ds.isA(Konig.GoogleBigQueryTable)).count()==1);
+		assertTrue(list.stream().filter(ds -> ds.isA(Konig.GoogleCloudStorageBucket)).count()==1);
+	}
 
 	@Test
 	public void testDictionaryDefaultDatatype() throws Exception {
