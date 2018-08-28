@@ -92,7 +92,44 @@ import io.konig.shacl.io.ShapeWriter;
 public class WorkbookLoaderTest {
 	
 	@Test
-	public void testsecurityClassificationByName() throws Exception {
+	public void testDictionaryDefaultMaxLength() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("dictionary-max-length.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		URI shapeId = uri("https://schema.pearson.com/shapes/PERSON_STG_Shape");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		URI predicate = uri("https://schema.pearson.com/ns/alias/first_name");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		PropertyConstraint p = shape.getPropertyConstraint(predicate);
+		Integer maxLength = p.getMaxLength();
+		assertTrue(maxLength != null);
+		assertEquals(new Integer(256), maxLength);
+		
+		Integer minLength = p.getMinLength();
+		assertTrue(minLength != null);
+		assertEquals(new Integer(0), minLength);
+	}
+	
+	
+	@Test
+	public void testSecurityClassificationByName() throws Exception {
 
 		GcpShapeConfig.init();
 		InputStream input = getClass().getClassLoader().getResourceAsStream("security-classification-by-name.xlsx");
