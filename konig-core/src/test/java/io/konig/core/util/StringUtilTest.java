@@ -22,13 +22,20 @@ package io.konig.core.util;
 
 
 import static io.konig.core.util.StringUtil.PascalCase;
-import static io.konig.core.util.StringUtil.SNAKE_CASE;
+import static io.konig.core.util.StringUtil.*;
 import static io.konig.core.util.StringUtil.camelCase;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 public class StringUtilTest {
+	
+	@Test
+	public void testLabelToSnakeCase() {
+		assertEquals("FOO_BAR_WIZ", LABEL_TO_SNAKE_CASE("FooBar Wiz") );
+		assertEquals("FOO_BAR_WIZ", LABEL_TO_SNAKE_CASE("FooBar (Wiz)") );
+		assertEquals("FOO_BAR_WIZ", LABEL_TO_SNAKE_CASE("Foo_Bar_Wiz") );
+	}
 
 	@Test
 	public void testCamelCase() {
