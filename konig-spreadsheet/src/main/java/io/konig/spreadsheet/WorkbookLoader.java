@@ -3552,7 +3552,7 @@ public class WorkbookLoader {
 				}
 			}
 
-			return text == null || text.isEmpty() ? null : text;
+			return text == null || text.isEmpty() ? null : text.replaceAll("(^\\h*)|(\\h*$)", "");
 		}
 
 		private void readOntologyHeader(Sheet sheet) throws SpreadsheetException {
