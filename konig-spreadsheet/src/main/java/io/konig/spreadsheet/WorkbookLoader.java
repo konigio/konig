@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -263,6 +264,7 @@ public class WorkbookLoader {
 	// Well-known Setting names
 	private static final String DICTIONARY_DEFAULT_MIN_LENGTH = "dictionary.defaultMinLength";
 	private static final String DICTIONARY_DEFAULT_MAX_LENGTH = "dictionary.defaultMaxLength";
+	private static final String DICTIONARY_ENABLE_DEFAULT_DATATYPE = "dictionary.enableDefaultDatatype";
 
 	private static final int COL_SETTING_NAME = 0x1;
 	private static final int COL_NAMESPACE_URI = 0x2;
@@ -444,7 +446,7 @@ public class WorkbookLoader {
 		private List<AbstractPathBuilder> pathHandlers = new ArrayList<>();
 		private List<FormulaHandler> formulaHandlers = new ArrayList<>();
 
-		private Set<String> errorMessages = new HashSet<>();
+		private Set<String> errorMessages = new LinkedHashSet<>();
 		private int ontologyNameCol = UNDEFINED;
 		private int ontologyCommentCol = UNDEFINED;
 		private int namespaceUriCol = UNDEFINED;
@@ -627,10 +629,27 @@ public class WorkbookLoader {
 				processImportStatements();
 				declareDefaultOntologies();
 				handleWarnings();
+				handleErrors();
 			} catch (Throwable e) {
 				logError("Failed to process workbook", e);
 				
 			}
+		}
+
+		private void handleErrors() throws SpreadsheetException {
+
+			if (!errorMessages.isEmpty()) {
+				for (String msg : errorMessages) {
+					logger.error(msg);
+				}
+				
+				if (errorMessages.size()==1) {
+					throw new SpreadsheetException(errorMessages.iterator().next());
+				}
+				throw new SpreadsheetException("Multiple errors.  See log for details.");
+				
+			}
+			
 		}
 
 		private void handleFormulas() throws SpreadsheetException {
@@ -1300,7 +1319,8 @@ public class WorkbookLoader {
 				p.setMinCount(0);
 			}
 
-			URI rdfDatatype=getRdfDatatype(dataDictionarydataType,p);
+			URI rdfDatatype=dictionaryDatatype(dataDictionarydataType,p);
+			
 			p.setDatatype(rdfDatatype);
 
 			Integer maxLength = dictionaryMaxLength(row, pcMaxLengthCol, rdfDatatype);
@@ -1322,6 +1342,31 @@ public class WorkbookLoader {
 			securityClassificationList = safeAdd(securityClassificationList, piiClassification);
 			p.setQualifiedSecurityClassification(securityClassificationList);
 			
+		}
+
+		private URI dictionaryDatatype(String typeName, PropertyConstraint p) throws SpreadsheetException {
+			URI type=getRdfDatatype(typeName, p);
+			if (type==null) {
+				if (typeName!=null) {
+					throw new SpreadsheetException("On property " + p.getPredicate().getLocalName() + ", type " + typeName + " is not supported.");
+				}
+				String value = settings.getProperty(DICTIONARY_ENABLE_DEFAULT_DATATYPE);
+				if (value!=null && "true".equalsIgnoreCase(value)) {
+					type = XMLSchema.STRING;
+					logger.warn("Property {} does not declare a datatype.  Using xsd:string by default.", p.getPredicate().getLocalName());
+				} else {
+					StringBuilder message = new StringBuilder();
+					message.append("Property ");
+					message.append(p.getPredicate().getLocalName());
+					message.append(" must declare a value for the " );
+					message.append(DATA_TYPE);
+					message.append(" or you must specify ");
+					message.append(DICTIONARY_ENABLE_DEFAULT_DATATYPE);
+					message.append("=TRUE in the settings");
+					fail(message.toString());
+				}
+			}
+			return type;
 		}
 
 		private Integer dictionaryMinLength(Row row, int col, URI rdfDatatype) {
@@ -1471,11 +1516,15 @@ public class WorkbookLoader {
 
 		
 
-		private URI getRdfDatatype(String dataDictionarydataType, PropertyConstraint constraint) {
-			dataDictionarydataType = dataDictionarydataType.trim().toUpperCase();
-			switch(dataDictionarydataType){
+		private URI getRdfDatatype(String typeName, PropertyConstraint constraint) {
+			if (typeName==null) {
+				return null;
+			}
+			typeName = typeName.trim().toUpperCase();
+			switch(typeName){
 				case "CHAR":
 				case "VARCHAR":
+				case "UUID":
 				case "TEXT":
 				case "STRING":
 				case "VARCHAR2":
@@ -1494,6 +1543,8 @@ public class WorkbookLoader {
 					constraint.setMinInclusive(0);
 					constraint.setMaxInclusive(65535);
 					return XMLSchema.INTEGER;
+					
+				case "INTEGER":
 				case "INT":
 					constraint.setMinInclusive(-2147483648);
 					constraint.setMaxInclusive(2147483647);
