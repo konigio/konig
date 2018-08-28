@@ -265,6 +265,8 @@ public class WorkbookLoader {
 	private static final String DICTIONARY_DEFAULT_MIN_LENGTH = "dictionary.defaultMinLength";
 	private static final String DICTIONARY_DEFAULT_MAX_LENGTH = "dictionary.defaultMaxLength";
 	private static final String DICTIONARY_ENABLE_DEFAULT_DATATYPE = "dictionary.enableDefaultDatatype";
+	private static final String DEFAULT_DATA_SOURCE = "defaultDataSource";
+	
 
 	private static final int COL_SETTING_NAME = 0x1;
 	private static final int COL_NAMESPACE_URI = 0x2;
@@ -445,6 +447,8 @@ public class WorkbookLoader {
 		private List<String> warningList = new ArrayList<>();
 		private List<AbstractPathBuilder> pathHandlers = new ArrayList<>();
 		private List<FormulaHandler> formulaHandlers = new ArrayList<>();
+		
+		private List<Function> defaultDataSource = null;
 
 		private Set<String> errorMessages = new LinkedHashSet<>();
 		private int ontologyNameCol = UNDEFINED;
@@ -1342,6 +1346,27 @@ public class WorkbookLoader {
 			securityClassificationList = safeAdd(securityClassificationList, piiClassification);
 			p.setQualifiedSecurityClassification(securityClassificationList);
 			
+			setDefaultDataSource(shapeId);
+			
+		}
+
+		private void setDefaultDataSource(URI shapeId) throws SpreadsheetException {
+			
+			List<Function> list = defaultDataSource();
+			if (list != null  && dataSourceMap.get(shapeId) == null) {
+				dataSourceMap.put(shapeId, list);
+			}
+			
+		}
+
+		private List<Function> defaultDataSource() throws SpreadsheetException {
+			if (defaultDataSource == null) {
+				String value = settings.getProperty(DEFAULT_DATA_SOURCE);
+				if (value != null) {
+					defaultDataSource = dataSourceList(value);
+				}
+			}
+			return defaultDataSource;
 		}
 
 		private URI dictionaryDatatype(String typeName, PropertyConstraint p) throws SpreadsheetException {
@@ -2755,10 +2780,9 @@ public class WorkbookLoader {
 
 			return value == null ? null : new URIImpl(GCP.NAMESPACE + value);
 		}
+		
+		private  List<Function> dataSourceList(String text) throws SpreadsheetException {
 
-		private List<Function> dataSourceList(Row row) throws SpreadsheetException {
-
-			String text = stringValue(row, shapeDatasourceCol);
 			if (text == null) {
 				return null;
 			}
@@ -2773,6 +2797,12 @@ public class WorkbookLoader {
 			List<Function> list = visitor.getList();
 
 			return list.isEmpty() ? null : list;
+		}
+
+		private List<Function> dataSourceList(Row row) throws SpreadsheetException {
+
+			String text = stringValue(row, shapeDatasourceCol);
+			return dataSourceList(text);
 		}
 
 		private String bigQueryTableId(Row row, URI targetClass) throws SpreadsheetException {
