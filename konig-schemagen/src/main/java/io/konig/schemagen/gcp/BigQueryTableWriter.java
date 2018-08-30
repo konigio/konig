@@ -28,10 +28,11 @@ import java.io.IOException;
 import com.google.api.client.json.JsonGenerator;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.bigquery.model.Table;
-import com.google.api.services.bigquery.model.TableReference;
 
 import io.konig.core.KonigException;
 import io.konig.core.util.IOUtil;
+import io.konig.datasource.DataSource;
+import io.konig.datasource.TableDataSource;
 
 public class BigQueryTableWriter implements BigQueryTableVisitor {
 	
@@ -43,9 +44,9 @@ public class BigQueryTableWriter implements BigQueryTableVisitor {
 	}
 
 	@Override
-	public void visit(Table table) {
+	public void visit(DataSource ds, Table table) {
 		
-		File tableFile = tableFile(table);
+		File tableFile = tableFile(ds);
 		JacksonFactory factory = JacksonFactory.getDefaultInstance();
 
 		FileWriter writer = null;
@@ -65,28 +66,12 @@ public class BigQueryTableWriter implements BigQueryTableVisitor {
 		
 	}
 
-	private File tableFile(Table table) {
+	private File tableFile(DataSource ds) {
 		
-		TableReference tableRef = table.getTableReference();
-		if (tableRef == null) {
-			throw new KonigException("Table reference");
-		}
-		String tableId = tableRef.getTableId();
-		if (tableId == null) {
-			throw new KonigException("tableId is not defined");
-		}
-		String datasetId = tableRef.getDatasetId();
-		if (datasetId == null) {
-			throw new KonigException("Dataset Id is not defined for table: " + tableId);
-		}
+		TableDataSource table = (TableDataSource) ds;
+		String fileName = table.getDdlFileName();
 		
-		StringBuilder builder = new StringBuilder();
-		builder.append(datasetId);
-		builder.append('.');
-		builder.append(tableId);
-		builder.append(".json");
-		
-		return new File(baseDir, builder.toString());
+		return new File(baseDir, fileName);
 	}
 	
 

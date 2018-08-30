@@ -26,10 +26,10 @@ import org.openrdf.model.URI;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.Konig;
-import io.konig.datasource.DataSource;
+import io.konig.datasource.BaseTableDataSource;
 import io.konig.datasource.TableDataSource;
 
-public class GoogleCloudSqlTable  extends DataSource implements TableDataSource {
+public class GoogleCloudSqlTable  extends BaseTableDataSource {
 	private String instance;
 	private String database;
 	private String tableName;
@@ -104,5 +104,18 @@ public class GoogleCloudSqlTable  extends DataSource implements TableDataSource 
 
 	public void setTabularFieldNamespace(String tabularFieldNamespace) {
 		this.tabularFieldNamespace = tabularFieldNamespace;
+	}
+
+	@Override
+	public String getDdlFileName() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(instance);
+		builder.append('.');
+		builder.append(database);
+		builder.append('.');
+		builder.append(tableName);
+		builder.append(".sql");
+		
+		return builder.toString();
 	}
 }

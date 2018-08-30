@@ -42,6 +42,11 @@ public class Konig {
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
 
+	public static final String RELATIVE_PATH = "http://www.konig.io/ns/core/relativePath";
+	public static final String BASE_PROJECT = "http://www.konig.io/ns/core/baseProject";
+	public static final String DDL_FILE = "http://www.konig.io/ns/core/ddlFile";
+	public static final String TRANSFORM_FILE = "http://www.konig.io/ns/core/transformFile";
+
 	public static final String MEASURE = "http://www.konig.io/ns/core/measure";
 	public static final String ATTRIBUTE = "http://www.konig.io/ns/core/attribute";
 	public static final String DIMENSION = "http://www.konig.io/ns/core/dimension";
@@ -114,6 +119,9 @@ public class Konig {
 	public static final URI primaryKey = new URIImpl("http://www.konig.io/ns/core/primaryKey");
 	public static final URI uniqueKey = new URIImpl("http://www.konig.io/ns/core/uniqueKey");
 	public static final URI syntheticKey = new URIImpl("http://www.konig.io/ns/core/syntheticKey");
+	public static final URI ddlFile = new URIImpl("http://www.konig.io/ns/core/ddlFile");
+	public static final URI transformFile = new URIImpl("http://www.konig.io/ns/core/transformFile");
+	
 	// Shape Transform Vocabulary
 	
 	public static final URI sourceShape = new URIImpl("http://www.konig.io/ns/core/sourceShape");
@@ -145,6 +153,11 @@ public class Konig {
 	public static final URI Week = new URIImpl("http://www.konig.io/ns/core/Week");
 	public static final URI Month = new URIImpl("http://www.konig.io/ns/core/Month");
 	public static final URI Year = new URIImpl("http://www.konig.io/ns/core/Year");
+	
+	// Software Projects 
+	public static final URI Project = new URIImpl("http://www.konig.io/ns/core/Project");
+	public static final URI baseProject = new URIImpl(BASE_PROJECT);
+	public static final URI relativePath = new URIImpl(RELATIVE_PATH);
 	
 
 	// Project Management terms

@@ -33,7 +33,8 @@ import io.konig.aws.datasource.AwsAuroraDefinition;
 import io.konig.aws.datasource.AwsAuroraTableReference;
 import io.konig.aws.datasource.AwsAuroraView;
 import io.konig.core.KonigException;
-import io.konig.datasource.DatasourceFileLocator;
+import io.konig.core.project.ProjectFile;
+import io.konig.core.project.ProjectFolder;
 import io.konig.schemagen.sql.SqlTable;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.Shape;
@@ -49,17 +50,15 @@ import io.konig.transform.sql.factory.SqlFactory;
 public class AwsAuroraViewWriter implements ShapeVisitor{
 	private File baseDir;
 	private SqlTableGenerator generator;
-	private DatasourceFileLocator sqlFileLocator;
 	private ShapeModelFactory shapeModelFactory;
 	private AbbreviationManager abbrevManager;
-
-	// TODO: Add a DatasourceFileLocator as a private field and pass it to the constructor. 
+	private ProjectFolder folder;
+ 
 	
-	public AwsAuroraViewWriter(File baseDir,SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator,ShapeModelFactory shapeModelFactory,
+	public AwsAuroraViewWriter(File baseDir,SqlTableGenerator generator, ProjectFolder folder, ShapeModelFactory shapeModelFactory,
 			AbbreviationManager abbrevManager) {
 		this.baseDir = baseDir;
 		this.generator = generator;
-		this.sqlFileLocator = sqlFileLocator;
 		this.shapeModelFactory=shapeModelFactory;
 		this.abbrevManager = abbrevManager;
 	}
@@ -137,7 +136,9 @@ public class AwsAuroraViewWriter implements ShapeVisitor{
 		return fileName(table, "json");
 	}
 
-	private File sqlFile(AwsAuroraView view) {		
-		return sqlFileLocator.locateFile(view);
+	private File sqlFile(AwsAuroraView view) {
+		ProjectFile file = folder.createFile(view.getDdlFileName());
+		view.setDdlFile(file);
+		return file.getLocalFile();
 	}
 }

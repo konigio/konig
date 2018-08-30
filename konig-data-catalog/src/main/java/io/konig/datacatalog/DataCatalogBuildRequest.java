@@ -40,7 +40,6 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.vocab.SH;
-import io.konig.datasource.DatasourceFileLocator;
 import io.konig.schema.EnumerationReasoner;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.ShapeManager;
@@ -55,7 +54,6 @@ public class DataCatalogBuildRequest {
 	private Set<URI> ontologyInclude;
 	private Set<URI> ontologyExclude;
 	private List<Vertex> ontologyList;
-	private DatasourceFileLocator sqlDdlLocator;
 	private NamespaceInfoManager namespaceInfoManager = new NamespaceInfoManager();
 	
 	private PathFactory pathFactory;
@@ -153,21 +151,6 @@ public class DataCatalogBuildRequest {
 	}
 	
 	
-	/**
-	 * 
-	 * @return A utility that can locate SQL DDL files associated with a given Shape, or null if no ShapeFileLocator has been set.
-	 */
-	public DatasourceFileLocator getSqlDdlLocator() {
-		return sqlDdlLocator;
-	}
-
-	/**
-	 * Set a utility that can locate SQL DDL files associated with a given Shape.
-	 * @param sqlDdlLocator
-	 */
-	public void setSqlDdlLocator(DatasourceFileLocator sqlDdlLocator) {
-		this.sqlDdlLocator = sqlDdlLocator;
-	}
 
 	public void useDefaultOntologyList() throws DataCatalogException {
 		if (graph == null) {

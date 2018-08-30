@@ -1,5 +1,7 @@
 package io.konig.datasource;
 
+import io.konig.core.project.ProjectFile;
+
 /*
  * #%L
  * Konig Core
@@ -39,5 +41,19 @@ public interface TableDataSource {
 	 * is separated by a colon (':').
 	 */
 	String getUniqueIdentifier();
+	
+	/**
+	 * Returns a string suitable for use as the name of a file containing a DDL description.
+	 * @return A file name which, when combined with the datasource type, is unique.
+	 */
+	String getDdlFileName();
+	
+	ProjectFile getDdlFile();
+	
+	void setDdlFile(ProjectFile ddlFile);
+	
+	ProjectFile getTransformFile();
+	
+	void setTransformFile(ProjectFile transformFile);
 
 }

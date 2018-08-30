@@ -59,10 +59,12 @@ public class DataCatalogBuilder {
 	
 	public static final String CATALOG_BASE_URI = "urn:datacatalog/";
 	public static final URI OVERVIEW_URI = new URIImpl("urn:datacatalog/overview");
+	public static final URI DATASOURCE_SUMMARY_URI = new URIImpl("urn:datacatalog/datasources");
 	public static final URI INDEX_ALL_URI = new URIImpl("urn:datacatalog/index-all");
 	
 	private static List<MenuItem> menu = new ArrayList<>();
 	static {
+		menu.add(new MenuItem(DATASOURCE_SUMMARY_URI, "Datasources"));
 		menu.add(new MenuItem(OVERVIEW_URI, "Overview"));
 		menu.add(new MenuItem(INDEX_ALL_URI, "Index"));
 	}
@@ -123,12 +125,25 @@ public class DataCatalogBuilder {
 			buildOntologyIndex(request);
 			buildIndexPage(request);
 			buildOverviewPage(request);
+			buildDatasourceSummary(request);
 			buildIndexAllPage(request);
 		} catch (IOException e) {
 			throw new DataCatalogException(e);
 		}
 		
 	
+		
+	}
+
+
+	private void buildDatasourceSummary(PageRequest request) throws IOException, DataCatalogException {
+
+		File overviewFile = new File(outDir, "datasources.html");
+		PrintWriter out = new PrintWriter(new FileWriter(overviewFile));
+		PageResponse response = new PageResponseImpl(out);
+		DataSourceSummaryPage page = new DataSourceSummaryPage();
+		page.render(request, response);
+		IOUtil.close(out, "datasources.html");
 		
 	}
 

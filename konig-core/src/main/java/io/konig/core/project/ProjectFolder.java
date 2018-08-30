@@ -1,10 +1,10 @@
-package io.konig.schemagen.gcp;
+package io.konig.core.project;
 
 /*
  * #%L
- * Konig Schema Generator
+ * Konig Core
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,29 @@ package io.konig.schemagen.gcp;
  */
 
 
-import com.google.api.services.bigquery.model.Table;
+import java.io.File;
 
-import io.konig.datasource.DataSource;
+public class ProjectFolder {
 
-public interface BigQueryTableVisitor {
+	private Project project;
+	private File folder;
 	
-	public void visit(DataSource ds, Table table);
+	public ProjectFolder(Project project, File folder) {
+		this.project = project;
+		this.folder = folder;
+	}
+
+	public ProjectFile createFile(String fileName) {
+		File file = new File(folder, fileName);
+		return project.createProjectFile(file);
+	}
+	
+	public boolean exists() {
+		return folder.exists();
+	}
+	
+	public void mkdirs() {
+		folder.mkdirs();
+	}
 
 }

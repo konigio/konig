@@ -1,10 +1,10 @@
-package io.konig.schemagen.gcp;
+package io.konig.core.project;
 
 /*
  * #%L
- * Konig Schema Generator
+ * Konig Core
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,25 @@ package io.konig.schemagen.gcp;
  */
 
 
-import com.google.api.services.bigquery.model.Table;
+import java.util.HashMap;
+import java.util.Map;
 
-import io.konig.datasource.DataSource;
+import org.openrdf.model.URI;
 
-public interface BigQueryTableVisitor {
+public class ProjectManager {
+
+	private static ProjectManager instance = new ProjectManager();
+	private Map<URI, Project> projectMap = new HashMap<>();
 	
-	public void visit(DataSource ds, Table table);
-
+	public static ProjectManager instance() {
+		return instance;
+	}
+	
+	public Project getProjectById(URI id) {
+		return projectMap.get(id);
+	}
+	
+	public void add(Project project) {
+		projectMap.put(project.getId(), project);
+	}
 }

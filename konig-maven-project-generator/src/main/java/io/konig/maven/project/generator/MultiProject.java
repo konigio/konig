@@ -175,7 +175,8 @@ public class MultiProject extends MavenProjectConfig {
 		
 		List<FileSet> list = new ArrayList<>();
 		
-		addGoogleFileSet(list);
+		addGoogleCloudSqlFileSet(list);
+		addBigQueryFileSet(list);
 		addAwsFileSet(list);
 		
 		FileSet[] array = null;
@@ -198,7 +199,7 @@ public class MultiProject extends MavenProjectConfig {
 		
 	}
 
-	private void addGoogleFileSet(List<FileSet> list) {
+	private void addGoogleCloudSqlFileSet(List<FileSet> list) {
 		if (googleCloudPlatform != null) {
 			FileSet fileSet = new FileSet();
 			fileSet.setDirectory("../" + getArtifactId() + GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX 
@@ -209,6 +210,18 @@ public class MultiProject extends MavenProjectConfig {
 		
 	}
 
+
+	private void addBigQueryFileSet(List<FileSet> list) {
+
+		if (googleCloudPlatform != null) {
+			FileSet fileSet = new FileSet();
+			fileSet.setDirectory("../" + getArtifactId() + GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX 
+					+ GoogleCloudPlatformModelGenerator.BIGQUERY_SCHEMA_PATH+"/");
+			fileSet.addInclude("*.json");
+			list.add(fileSet);
+		}
+		
+	}
 
 
 	

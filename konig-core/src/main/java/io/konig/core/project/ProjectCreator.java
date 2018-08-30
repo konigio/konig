@@ -1,4 +1,4 @@
-package io.konig.datasource;
+package io.konig.core.project;
 
 /*
  * #%L
@@ -21,22 +21,29 @@ package io.konig.datasource;
  */
 
 
-import java.io.File;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 
-/**
- * An interface for locating a file associated with a given DataSource.
- * Different implementations of this interface can be used to locate different
- * types of files.
- * 
- * @author Greg McFall
- *
- */
-public interface DatasourceFileLocator {
+import io.konig.core.KonigException;
+import io.konig.core.Vertex;
+import io.konig.core.pojo.PojoCreator;
 
-	/**
-	 * Locate a file associated with a given DataSource.
-	 * @param ds
-	 * @return The file associated with the DataSource, or null if no appropriate file is found.
-	 */
-	public File locateFile(DataSource ds);
+public class ProjectCreator implements PojoCreator<Project> {
+	
+
+	@Override
+	public Project create(Vertex v) {
+		Resource id = v.getId();
+		if (id instanceof URI) {
+			URI uri = (URI) id;
+			Project p = ProjectManager.instance().getProjectById(uri);
+			if (p == null) {
+				p = new Project(uri, null);
+				ProjectManager.instance().add(p);
+			}
+			return p;
+		}
+		throw new KonigException("Project must be identified by an IRI");
+	}
+
 }

@@ -109,7 +109,9 @@ public class PathFactory {
 				}
 				addFolder(builder, target);
 				builder.append(localName);
-				builder.append(".html");
+				if (!localName.endsWith(".json") && !localName.endsWith(".sql")) {
+					builder.append(".html");
+				}
 				
 				return builder.toString();
 			}

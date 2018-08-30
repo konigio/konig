@@ -46,11 +46,11 @@ import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.json.SampleJsonGenerator;
+import io.konig.core.project.ProjectFile;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
-import io.konig.datasource.DatasourceFileLocator;
 import io.konig.datasource.TableDataSource;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleBigQueryView;
@@ -174,54 +174,53 @@ public class ShapePage {
 	
 	
 	private void handleDdlFile(VelocityContext context, ShapeRequest request) throws DataCatalogException {
-		DatasourceFileLocator ddlLocator = request.getBuildRequest().getSqlDdlLocator();
-		if (ddlLocator != null) {
-			
-			List<DataSource> dataSourceList = request.getShape().getShapeDataSource();
-			if (dataSourceList != null) {
-				List<Link> linkList = null;
-				Set<String> memory = null;
-				for (DataSource datasource : dataSourceList) {
+		
+		
+		List<DataSource> dataSourceList = request.getShape().getShapeDataSource();
+		if (dataSourceList != null) {
+			List<Link> linkList = null;
+			Set<String> memory = null;
+			for (DataSource datasource : dataSourceList) {
 
-					if (datasource instanceof TableDataSource) {
-						File ddlFile = ddlLocator.locateFile(datasource);
-						if (ddlFile != null && ddlFile.exists()) {
-							TableDataSource table = (TableDataSource) datasource;
-							String dialect = table.getSqlDialect();
+				if (datasource instanceof TableDataSource) {
+					TableDataSource tds = (TableDataSource) datasource;
+					ProjectFile file = tds.getDdlFile();
+					
+					File ddlFile = file.getLocalFile();
+					if (ddlFile != null && ddlFile.exists()) {
+						TableDataSource table = (TableDataSource) datasource;
+						String dialect = table.getSqlDialect();
+						
+						if (memory==null || !memory.contains(dialect)) {
+							if (memory==null) {
+								memory = new HashSet<>();
+							}
+							memory.add(dialect);
+							String fileName = ddlFile.getName();
+							fileName = txtFile(fileName);
+							String href = "../sql/" + fileName;
+							String name = dialect + " DDL";
+							Link link = new Link(name, href);
+							if (linkList == null) {
+								linkList = new ArrayList<>();
+							}
+							linkList.add(link);
+
+							File targetDir = new File(request.getBuildRequest().getOutDir(), "sql");
+							File ddlTargetFile = new File(targetDir, fileName);
 							
-							if (memory==null || !memory.contains(dialect)) {
-								if (memory==null) {
-									memory = new HashSet<>();
-								}
-								memory.add(dialect);
-								String fileName = ddlFile.getName();
-								fileName = txtFile(fileName);
-								String href = "../sql/" + fileName;
-								String name = dialect + " DDL";
-								Link link = new Link(name, href);
-								if (linkList == null) {
-									linkList = new ArrayList<>();
-								}
-								linkList.add(link);
-
-								File targetDir = new File(request.getBuildRequest().getOutDir(), "sql");
-								File ddlTargetFile = new File(targetDir, fileName);
-								
-								try {
-									FileUtils.copyFile(ddlFile, ddlTargetFile);
-								} catch (IOException e) {
-									throw new DataCatalogException(e);
-								}
+							try {
+								FileUtils.copyFile(ddlFile, ddlTargetFile);
+							} catch (IOException e) {
+								throw new DataCatalogException(e);
 							}
 						}
 					}
 				}
-				if (linkList!=null) {
-					context.put("RelatedArtifacts", linkList);
-				}
-				
 			}
-			
+			if (linkList!=null && !linkList.isEmpty()) {
+				context.put("RelatedArtifacts", linkList);
+			}
 			
 		}
 		

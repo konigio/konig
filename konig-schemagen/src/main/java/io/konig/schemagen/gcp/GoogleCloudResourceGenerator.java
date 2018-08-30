@@ -71,7 +71,7 @@ public class GoogleCloudResourceGenerator {
 	
 	public void addBigQueryViewGenerator(File bigQueryViewDir) {
 		
-		BigQueryViewWriter viewWriter = new BigQueryViewWriter(bigQueryViewDir);
+		BigQueryTableWriter viewWriter = new BigQueryTableWriter(bigQueryViewDir);
 		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
 		
 		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, viewWriter ,shapeModelFactory());

@@ -30,10 +30,11 @@ import io.konig.annotation.RdfProperty;
 import io.konig.core.KonigException;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.BaseTableDataSource;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 
-public class GoogleBigQueryTable extends DataSource implements TableDataSource {
+public class GoogleBigQueryTable extends BaseTableDataSource implements TableDataSource {
 	
 	private Set<DataSource> bigQuerySource;
 	private BigQueryTableReference tableReference;
@@ -118,6 +119,17 @@ public class GoogleBigQueryTable extends DataSource implements TableDataSource {
 
 	public void setTabularFieldNamespace(String tabularFieldNamespace) {
 		this.tabularFieldNamespace = tabularFieldNamespace;
+	}
+
+	@Override
+	public String getDdlFileName() {
+		BigQueryTableReference ref = getTableReference();
+		StringBuilder builder = new StringBuilder();
+		builder.append(ref.getDatasetId());
+		builder.append('.');
+		builder.append(ref.getTableId());
+		builder.append(".json");
+		return builder.toString();
 	}
 	
 	

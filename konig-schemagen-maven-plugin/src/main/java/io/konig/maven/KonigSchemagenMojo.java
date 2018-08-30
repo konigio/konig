@@ -109,6 +109,8 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.io.SkosEmitter;
 import io.konig.core.path.NamespaceMapAdapter;
+import io.konig.core.project.Project;
+import io.konig.core.project.ProjectFolder;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.AWS;
@@ -118,8 +120,6 @@ import io.konig.data.app.common.DataApp;
 import io.konig.data.app.generator.DataAppGenerator;
 import io.konig.data.app.generator.DataAppGeneratorException;
 import io.konig.data.app.generator.EntityStructureWorker;
-import io.konig.datasource.DatasourceFileLocator;
-import io.konig.datasource.DdlFileLocator;
 import io.konig.estimator.MultiSizeEstimateRequest;
 import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
@@ -160,7 +160,6 @@ import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
-import io.konig.schemagen.aws.AWSAuroraShapeFileCreator;
 import io.konig.schemagen.aws.AWSS3BucketWriter;
 import io.konig.schemagen.aws.AwsAuroraTableWriter;
 import io.konig.schemagen.aws.AwsAuroraViewWriter;
@@ -326,6 +325,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private SimpleLocalNameService localNameService;
     private FormulaParser formulaParser;
     private CompositeEmitter emitter;
+    private Project project;
 
 	@Component
 	private MavenProject mavenProject;
@@ -351,6 +351,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			owlReasoner = new OwlReasoner(owlGraph);
 			
 			emitter = new CompositeEmitter();
+			createProject();
 			loadResources();
 			preprocessResources();
 			generateGoogleCloudPlatform();
@@ -390,6 +391,23 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
+
+	private void createProject() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("urn:maven:");
+		builder.append(mavenProject.getGroupId());
+		builder.append('.');
+		builder.append(mavenProject.getArtifactId());
+		builder.append('.');
+		builder.append(mavenProject.getVersion());
+		
+		URI projectId = new URIImpl(builder.toString());
+		File baseDir = mavenProject.getBasedir();
+		
+		project = new Project(projectId, baseDir);
+		
+	}
+
 
 	private void preprocessResources() throws MojoExecutionException, IOException, RDFParseException, RDFHandlerException {
     	AuroraInfo aurora=null;
@@ -908,18 +926,18 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
-				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(tablesDir);
 
-				
-				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator,abbrevManager());
+				ProjectFolder tablesFolder = new ProjectFolder(project, tablesDir);
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,tablesFolder,abbrevManager());
 				resourceGenerator.add(awsAuror);				
 			}
 			if (viewDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
-				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(viewDir);
+				ProjectFolder viewFolder = new ProjectFolder(project, viewDir);
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
+		
 
-				AwsAuroraViewWriter awsAuror = new AwsAuroraViewWriter(viewDir, generator,sqlFileLocator,shapeModelFactory,abbrevManager());
+				AwsAuroraViewWriter awsAuror = new AwsAuroraViewWriter(viewDir, generator,viewFolder,shapeModelFactory,abbrevManager());
 			
 				resourceGenerator.add(awsAuror);	
 				
@@ -927,7 +945,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if(transformsDir != null && amazonWebServices.isEnableAuroraTransform()){
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
 				ShapeRuleFactory shapeRuleFactory=new ShapeRuleFactory(shapeManager, shapeModelFactory, new ShapeModelToShapeRule());
-				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir), rdfSourceDir);
+				ProjectFolder transformsFolder = new ProjectFolder(project, transformsDir);
+				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(),transformsFolder, rdfSourceDir);
 				resourceGenerator.add(generator);
 			}
 			
@@ -973,8 +992,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
-				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(tablesDir);
-				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator,abbrevManager());
+				ProjectFolder tablesFolder = new ProjectFolder(project, tablesDir);
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,tablesFolder,abbrevManager());
 			
 				resourceGenerator.add(awsAuror);
 				resourceGenerator.dispatch(shapeManager.listShapes());
@@ -1072,8 +1091,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private CloudSqlTableWriter cloudSqlTableWriter() {
 		CloudSqlInfo info = googleCloudPlatform.getCloudsql();
 		SqlTableGenerator generator = new SqlTableGenerator();
-		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(info.getTables());
-		return new CloudSqlTableWriter(generator, sqlFileLocator, abbrevManager());
+		ProjectFolder folder = new ProjectFolder(project, info.getTables());
+		return new CloudSqlTableWriter(generator, folder, abbrevManager());
 	}
 
 	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {

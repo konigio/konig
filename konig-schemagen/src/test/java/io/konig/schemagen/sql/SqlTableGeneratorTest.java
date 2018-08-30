@@ -29,7 +29,6 @@ import java.io.InputStream;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -43,10 +42,9 @@ import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.RdfUtil;
+import io.konig.core.project.Project;
+import io.konig.core.project.ProjectFolder;
 import io.konig.core.vocab.Konig;
-import io.konig.datasource.DatasourceFileLocator;
-import io.konig.datasource.DdlFileLocator;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.omcs.datasource.OracleShapeConfig;
 import io.konig.schemagen.SchemaGeneratorTest;
@@ -117,6 +115,12 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		assertEquals(datatype, c.getDatatype());
 		
 	}
+	
+	private ProjectFolder folder(File baseDir) {
+		Project project = new Project(uri("urn:maven:test-SqlTableGenerator-1.0"), baseDir.getParentFile());
+		return new ProjectFolder(project, baseDir);
+	}
+	
 	@Test
 	public void testAWS() throws Exception {
 		
@@ -127,8 +131,10 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 
 		File baseDir = new File("target/test/resources/aws/sql");
 		baseDir.mkdirs();
-		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator(), sqlFileLocator,null);
+		
+		
+		ProjectFolder folder = folder(baseDir);
+		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator(), folder,null);
 		awsTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),null);
 		
@@ -143,9 +149,9 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 
 		File baseDir = new File("target/test/resources/aws_abbrev/sql");
 		baseDir.mkdirs();
-		
-		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator(), sqlFileLocator, abbrevManager());
+
+		ProjectFolder folder = folder(baseDir);
+		AwsAuroraTableWriter awsTableWriter = new AwsAuroraTableWriter(baseDir, new SqlTableGenerator(), folder, abbrevManager());
 		
 		URI shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
 		Shape shape = shapeManager.getShapeById(shapeId);
@@ -182,8 +188,8 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		shapeLoader.loadTurtle(resource("gcp/shape_PartyShape.ttl"), null);
 		File baseDir = new File("target/test/resources/gcp/sql");
 		baseDir.mkdirs();
-		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator,null);
+		ProjectFolder folder = folder(baseDir);
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),folder,null);
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),null);
 		
@@ -202,8 +208,8 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		
 		File baseDir = new File("target/test/resources/gcp_abbrev/sql");
 		baseDir.mkdirs();
-		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator,abbrevManager());
+		ProjectFolder folder = folder(baseDir);
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),folder,abbrevManager());
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),abbrevManager());
 		
@@ -221,8 +227,8 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		shapeLoader.loadTurtle(resource("aws/shape_PersonRdbmsShape.ttl"), null);
 		File baseDir = new File("target/test/resources/aws/sql");
 		baseDir.mkdirs();
-		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator,null);
+		ProjectFolder folder = folder(baseDir);
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),folder,null);
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),null);
 		
@@ -247,8 +253,8 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		shapeLoader.loadTurtle(resource("gcp/shape_PersonRdbmsShape.ttl"), null);
 		File baseDir = new File("target/test/resources/gcp/sql");
 		baseDir.mkdirs();
-		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator,null);
+		ProjectFolder folder = folder(baseDir);
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),folder,null);
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
 		SqlTable table = generator.generateTable(shapeManager.listShapes().get(0),null);
 		
@@ -270,8 +276,8 @@ public class SqlTableGeneratorTest extends SchemaGeneratorTest {
 		shapeLoader.loadTurtle(resource("oracle/shape_PersonShape.ttl"), null);
 		File baseDir = new File("target/test/resources/oracle/sql");
 		baseDir.mkdirs();
-		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(new File(baseDir.toString()));
-		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),sqlFileLocator,null);
+		ProjectFolder folder = folder(baseDir);
+		CloudSqlTableWriter cloudSqlTableWriter = new CloudSqlTableWriter( new SqlTableGenerator(),folder,null);
 		cloudSqlTableWriter.visit(shapeManager.listShapes().get(0));
 		Shape shape=shapeManager.listShapes().get(0);
 		PropertyConstraint p=shape.getPropertyConstraint(new URIImpl("http://example.com/ns/alias/personId"));

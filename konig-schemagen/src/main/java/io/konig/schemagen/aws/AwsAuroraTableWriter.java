@@ -34,7 +34,8 @@ import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.aws.datasource.AwsAuroraTableReference;
 import io.konig.aws.datasource.AwsAuroraView;
 import io.konig.core.KonigException;
-import io.konig.datasource.DatasourceFileLocator;
+import io.konig.core.project.ProjectFile;
+import io.konig.core.project.ProjectFolder;
 import io.konig.schemagen.sql.SqlTable;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.Shape;
@@ -44,16 +45,12 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 	
 	private File baseDir;
 	private SqlTableGenerator generator;
-	private DatasourceFileLocator sqlFileLocator;
 	private AbbreviationManager abbrevManager;
-
-	// TODO: Add a DatasourceFileLocator as a private field and pass it to the constructor. 
+	private ProjectFolder folder;
 	
-	public AwsAuroraTableWriter(File baseDir,SqlTableGenerator generator, 
-			DatasourceFileLocator sqlFileLocator, AbbreviationManager abbrevManager) {
+	public AwsAuroraTableWriter(File baseDir,SqlTableGenerator generator, ProjectFolder folder, AbbreviationManager abbrevManager) {
 		this.baseDir = baseDir;
 		this.generator = generator;
-		this.sqlFileLocator = sqlFileLocator;
 		this.abbrevManager=abbrevManager;
 	}
 
@@ -123,9 +120,9 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 	}
 
 	private File sqlFile(AwsAuroraTable table) {
-		// TODO: use the DatasourceFileLocator to produce the file
-	
+		ProjectFile file = folder.createFile(table.getDdlFileName());
+		table.setDdlFile(file);
 		
-		return sqlFileLocator.locateFile(table);
+		return file.getLocalFile();
 	}
 }

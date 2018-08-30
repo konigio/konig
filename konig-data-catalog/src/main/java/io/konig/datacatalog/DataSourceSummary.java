@@ -1,10 +1,10 @@
-package io.konig.schemagen.gcp;
+package io.konig.datacatalog;
 
 /*
  * #%L
- * Konig Schema Generator
+ * Konig Data Catalog
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,29 @@ package io.konig.schemagen.gcp;
  */
 
 
-import com.google.api.services.bigquery.model.Table;
-
-import io.konig.datasource.DataSource;
-
-public interface BigQueryTableVisitor {
+public class DataSourceSummary {
 	
-	public void visit(DataSource ds, Table table);
+	private Link datasourceName;
+	private String datasourceType;
+	private Link shape;
+	
+	public DataSourceSummary(Link datasourceName, String datasourceType, Link shape) {
+		this.datasourceName = datasourceName;
+		this.datasourceType = datasourceType;
+		this.shape = shape;
+	}
+
+	public Link getDatasourceName() {
+		return datasourceName;
+	}
+
+	public String getDatasourceType() {
+		return datasourceType;
+	}
+
+	public Link getShape() {
+		return shape;
+	}
+	
 
 }
