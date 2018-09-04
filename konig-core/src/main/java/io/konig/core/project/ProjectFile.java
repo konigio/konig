@@ -57,6 +57,9 @@ public class ProjectFile {
 	}
 
 	public File getLocalFile() {
+		if (localFile==null && project!=null && project.getBaseDir()!=null) {
+			localFile = new File(project.getBaseDir(), relativePath);
+		}
 		return localFile;
 	}
 

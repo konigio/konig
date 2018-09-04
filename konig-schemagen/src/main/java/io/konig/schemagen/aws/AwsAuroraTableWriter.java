@@ -49,6 +49,7 @@ public class AwsAuroraTableWriter implements ShapeVisitor {
 	private ProjectFolder folder;
 	
 	public AwsAuroraTableWriter(File baseDir,SqlTableGenerator generator, ProjectFolder folder, AbbreviationManager abbrevManager) {
+		this.folder = folder;
 		this.baseDir = baseDir;
 		this.generator = generator;
 		this.abbrevManager=abbrevManager;

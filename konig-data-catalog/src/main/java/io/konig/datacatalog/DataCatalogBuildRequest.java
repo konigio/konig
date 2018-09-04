@@ -39,6 +39,7 @@ import io.konig.core.NamespaceInfoManager;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.project.ProjectManager;
 import io.konig.core.vocab.SH;
 import io.konig.schema.EnumerationReasoner;
 import io.konig.shacl.ClassStructure;
@@ -60,6 +61,7 @@ public class DataCatalogBuildRequest {
 	private ClassStructure classStructure;
 	private DataCatalogBuilder catalogBuilder;
 	private VelocityEngine engine;
+	private CatalogFileFactory fileFactory;
 	
 	private boolean showUndefinedClass = false;
 	
@@ -227,5 +229,14 @@ public class DataCatalogBuildRequest {
 		return namespaceInfoManager;
 	}
 
+	public CatalogFileFactory getFileFactory() {
+		return fileFactory;
+	}
+
+	public void setFileFactory(CatalogFileFactory fileFactory) {
+		this.fileFactory = fileFactory;
+	}
+
+	
 	
 }

@@ -180,40 +180,41 @@ public class ShapePage {
 		if (dataSourceList != null) {
 			List<Link> linkList = null;
 			Set<String> memory = null;
+			URI pageId = request.getPageId();
 			for (DataSource datasource : dataSourceList) {
 
 				if (datasource instanceof TableDataSource) {
 					TableDataSource tds = (TableDataSource) datasource;
 					ProjectFile file = tds.getDdlFile();
+					if (file==null) {
+						logger.warn("DDL file missing for {}", datasource.getId());
+						continue;
+					}
 					
 					File ddlFile = file.getLocalFile();
+					
+					if (ddlFile == null) {
+						logger.warn("Local file missing for {}", datasource.getId());
+						continue;
+					}
+					
 					if (ddlFile != null && ddlFile.exists()) {
-						TableDataSource table = (TableDataSource) datasource;
-						String dialect = table.getSqlDialect();
+						String dialect = tds.getSqlDialect();
 						
 						if (memory==null || !memory.contains(dialect)) {
 							if (memory==null) {
 								memory = new HashSet<>();
 							}
+							URI artifactId = request.getBuildRequest().getFileFactory().catalogDdlFileIri(tds);
+							String href = request.getBuildRequest().getPathFactory().relativePath(pageId, artifactId);
+							
 							memory.add(dialect);
-							String fileName = ddlFile.getName();
-							fileName = txtFile(fileName);
-							String href = "../sql/" + fileName;
 							String name = dialect + " DDL";
 							Link link = new Link(name, href);
 							if (linkList == null) {
 								linkList = new ArrayList<>();
 							}
 							linkList.add(link);
-
-							File targetDir = new File(request.getBuildRequest().getOutDir(), "sql");
-							File ddlTargetFile = new File(targetDir, fileName);
-							
-							try {
-								FileUtils.copyFile(ddlFile, ddlTargetFile);
-							} catch (IOException e) {
-								throw new DataCatalogException(e);
-							}
 						}
 					}
 				}

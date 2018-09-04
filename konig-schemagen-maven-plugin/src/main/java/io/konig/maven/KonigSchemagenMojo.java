@@ -393,15 +393,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
 
 	private void createProject() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("urn:maven:");
-		builder.append(mavenProject.getGroupId());
-		builder.append('.');
-		builder.append(mavenProject.getArtifactId());
-		builder.append('.');
-		builder.append(mavenProject.getVersion());
 		
-		URI projectId = new URIImpl(builder.toString());
+		URI projectId = Project.createId(mavenProject.getGroupId(), mavenProject.getArtifactId(), mavenProject.getVersion());
 		File baseDir = mavenProject.getBasedir();
 		
 		project = new Project(projectId, baseDir);
@@ -1037,9 +1030,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			GoogleCloudResourceGenerator resourceGenerator = new GoogleCloudResourceGenerator(shapeManager, owlReasoner);
 	
 			if (bigQuery != null) {
-				resourceGenerator.addBigQueryGenerator(bigQuery.getSchema());
+				ProjectFolder schemaFolder = project.createFolder(bigQuery.getSchema());
+				resourceGenerator.addBigQueryGenerator(schemaFolder);
 				if (googleCloudPlatform.isEnableBigQueryTransform()) {
-					resourceGenerator.addBigQueryViewGenerator(bigQuery.getView());
+					ProjectFolder viewFolder = project.createFolder(bigQuery.getView());
+					resourceGenerator.addBigQueryViewGenerator(viewFolder);
 				}
 				
 				resourceGenerator.add(labelGenerator());

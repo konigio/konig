@@ -26,10 +26,9 @@ import org.openrdf.model.URI;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.Konig;
-import io.konig.datasource.BaseTableDataSource;
 import io.konig.datasource.TableDataSource;
 
-public class GoogleCloudSqlTable  extends BaseTableDataSource {
+public class GoogleCloudSqlTable  extends TableDataSource {
 	private String instance;
 	private String database;
 	private String tableName;
@@ -116,6 +115,15 @@ public class GoogleCloudSqlTable  extends BaseTableDataSource {
 		builder.append(tableName);
 		builder.append(".sql");
 		
+		return builder.toString();
+	}
+
+	@Override
+	public String getQualifiedTableName() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(database);
+		builder.append('.');
+		builder.append(tableName);
 		return builder.toString();
 	}
 }

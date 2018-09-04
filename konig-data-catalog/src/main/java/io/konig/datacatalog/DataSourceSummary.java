@@ -1,5 +1,8 @@
 package io.konig.datacatalog;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /*
  * #%L
  * Konig Data Catalog
@@ -23,17 +26,18 @@ package io.konig.datacatalog;
 
 public class DataSourceSummary {
 	
-	private Link datasourceName;
+	private String datasourceName;
 	private String datasourceType;
 	private Link shape;
+	private List<Link> artifactList=new ArrayList<>();
 	
-	public DataSourceSummary(Link datasourceName, String datasourceType, Link shape) {
+	public DataSourceSummary(String datasourceName, String datasourceType, Link shape) {
 		this.datasourceName = datasourceName;
 		this.datasourceType = datasourceType;
 		this.shape = shape;
 	}
 
-	public Link getDatasourceName() {
+	public String getDatasourceName() {
 		return datasourceName;
 	}
 
@@ -43,6 +47,14 @@ public class DataSourceSummary {
 
 	public Link getShape() {
 		return shape;
+	}
+
+	public List<Link> getArtifactList() {
+		return artifactList;
+	}
+
+	public void addArtifact(Link link) {
+		artifactList.add(link);
 	}
 	
 

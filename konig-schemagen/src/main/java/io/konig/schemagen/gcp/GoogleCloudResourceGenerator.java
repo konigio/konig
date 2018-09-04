@@ -27,6 +27,7 @@ import java.util.List;
 
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
+import io.konig.core.project.ProjectFolder;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeManager;
@@ -52,9 +53,9 @@ public class GoogleCloudResourceGenerator {
 		}
 	}
 	
-	public void addBigQueryGenerator(File bigQuerySchemaDir) {
+	public void addBigQueryGenerator(ProjectFolder folder) {
 
-		BigQueryTableWriter tableWriter = new BigQueryTableWriter(bigQuerySchemaDir);
+		BigQueryTableWriter tableWriter = new BigQueryTableWriter(folder);
 		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
 		
 		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, tableWriter, shapeModelFactory());
@@ -69,7 +70,7 @@ public class GoogleCloudResourceGenerator {
 		return shapeModelFactory;
 	}
 	
-	public void addBigQueryViewGenerator(File bigQueryViewDir) {
+	public void addBigQueryViewGenerator(ProjectFolder bigQueryViewDir) {
 		
 		BigQueryTableWriter viewWriter = new BigQueryTableWriter(bigQueryViewDir);
 		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();

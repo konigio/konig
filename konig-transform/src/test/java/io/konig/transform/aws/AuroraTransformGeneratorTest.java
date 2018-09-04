@@ -39,6 +39,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.ShapeFileFactory;
 import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
+import io.konig.maven.FileUtil;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.InsertStatement;
 import io.konig.transform.factory.ShapeRuleFactory;
@@ -59,7 +60,8 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 	@Before
 	public void setUp() {
 		AwsShapeConfig.init();
-		File baseDir = new File("target/test");
+		File baseDir = new File("target/test/AuroraTransformGeneratorTest");
+		FileUtil.delete(baseDir);
 		ProjectFolder folder = folder(baseDir);
 		sqlFactory = new SqlFactory();
 		ShapeModelFactory shapeModelFactory;
@@ -72,19 +74,22 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 		generator = new AuroraTransformGenerator(shapeRuleFactory, sqlFactory, folder,new File("target/test/AuroraTransformGeneratorTest"));
 	}
 	
-	@Ignore
+	@Test
 	public void testVisit() throws Exception {
 		
 		load("src/test/resources/konig-transform/aurora-transform");
 		
 		URI shapeId = iri("http://example.com/shapes/TargetPersonShape");
 		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape != null);
 		
 		generator.visit(shape);
 		
 		ShapeRule shapeRule = shapeRuleFactory.createShapeRule(shape);
 		InsertStatement statement = sqlFactory.insertStatement(shapeRule);
-		String path="target/test/AuroraTransformGeneratorTest/" + RdfUtil.localName(shape.getId()) + ".sql";		
+		String path="target/test/AuroraTransformGeneratorTest/schema1.TargetPersonShape.sql";		
+		File file = new File(path);
+		assertTrue(file.exists());
 		String out = String.join("\n", Files.readAllLines(Paths.get(path)));
 		assertTrue(!out.isEmpty());
 		assertTrue(out.equals(statement.toString()));
@@ -102,7 +107,7 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 		
 		ShapeRule shapeRule = shapeRuleFactory.createShapeRule(shape);
 		InsertStatement statement = sqlFactory.insertStatement(shapeRule);
-		String path="target/test/AuroraTransformGeneratorTest/" + RdfUtil.localName(shape.getId()) + ".sql";		
+		String path="target/test/AuroraTransformGeneratorTest/schema1.TargetPersonShape.sql";		
 		String out = String.join("\n", Files.readAllLines(Paths.get(path)));
 		assertTrue(!out.isEmpty());
 		assertTrue(out.equals(statement.toString()));

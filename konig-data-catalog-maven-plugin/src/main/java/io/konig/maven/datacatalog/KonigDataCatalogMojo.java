@@ -31,7 +31,6 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.model.fileset.FileSet;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
@@ -43,6 +42,8 @@ import io.konig.core.PathFactory;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.project.Project;
+import io.konig.core.project.ProjectManager;
 import io.konig.datacatalog.DataCatalogBuildRequest;
 import io.konig.datacatalog.DataCatalogBuilder;
 import io.konig.datacatalog.DataCatalogException;
@@ -70,7 +71,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	private File logFile;
 
 	@Parameter
-	private FileSet[] sqlFiles;
+	private Dependency[] dependencies;
 	
 	@Parameter
 	private boolean showUndefinedClass;
@@ -92,6 +93,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 		try {
 			AwsShapeConfig.init();
 			GcpShapeConfig.init();
+			handleDependencies();
 			RdfUtil.loadTurtle(rdfDir, graph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
 			shapeLoader.load(graph);
@@ -119,6 +121,23 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 		}
 
 	}
+
+	private void handleDependencies() {
+		if (dependencies != null) {
+			File baseDir = mavenProject.getBasedir();
+			
+			ProjectManager manager = ProjectManager.instance();
+			for (Dependency d : dependencies) {
+				manager.add(new Project(uri(d.getId()), new File(baseDir, d.getBaseDir())));
+			}
+		}
+		
+	}
+
+	private URI uri(String value) {
+		return new URIImpl(value);
+	}
+
 	
 
 

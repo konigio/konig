@@ -24,6 +24,7 @@ package io.konig.core.project;
 import java.io.File;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
 /**
  * A Project that contains a collection of file resources.
@@ -35,6 +36,19 @@ public class Project {
 	private File baseDir;
 	private String baseDirPath;
 	
+	public static URI createId(String groupId, String artifactId, String version) {
+
+		StringBuilder builder = new StringBuilder();
+		builder.append("urn:maven:");
+		builder.append(groupId);
+		builder.append('.');
+		builder.append(artifactId);
+		builder.append('-');
+		builder.append(version);
+		
+		return new URIImpl(builder.toString());
+	}
+	
 	public Project(URI id, File baseDir) {
 		this.id = id;
 		this.baseDir = baseDir;
@@ -45,7 +59,7 @@ public class Project {
 	 * Get a URI that identifies the project as a logical entity.
 	 * Typically this will be a URN that identifies a maven project based on the following template:
 	 * <pre>
-	 *    urn:maven:{groupId}.{artifactId}.{version}
+	 *    urn:maven:{groupId}.{artifactId}-{version}
 	 * </pre>
 	 * 
 	 * 
@@ -66,6 +80,16 @@ public class Project {
 	public ProjectFile createProjectFile(String path) throws ProjectFileException {
 		File file = baseDir==null ? null : new File(baseDir, path);
 		return new ProjectFile(this, path, file);
+	}
+	
+	public ProjectFolder createFolder(File localDir) throws ProjectFileException {
+
+		String localPath = localDir.getAbsolutePath();
+		if (!localPath.startsWith(baseDirPath)) {
+			throw new ProjectFileException("Given file is not contained within the parent project: " + localPath);
+		}
+		return new ProjectFolder(this, localDir);
+		
 	}
 	
 	public ProjectFile createProjectFile(File localFile) throws ProjectFileException {

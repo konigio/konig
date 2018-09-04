@@ -1,12 +1,10 @@
 package io.konig.datasource;
 
-import io.konig.core.project.ProjectFile;
-
 /*
  * #%L
  * Konig Core
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,37 +21,38 @@ import io.konig.core.project.ProjectFile;
  */
 
 
-public interface TableDataSource {
+import io.konig.annotation.RdfProperty;
+import io.konig.core.project.ProjectFile;
+import io.konig.core.vocab.Konig;
+
+public abstract class TableDataSource extends DataSource {
+
+	private ProjectFile ddlFile;
+	private ProjectFile transformFile;
+
+	abstract public String getDdlFileName();
+	abstract public String getTableIdentifier();
+	abstract public String getSqlDialect();
+	abstract public String getUniqueIdentifier();
+	abstract public String getQualifiedTableName();
+
+	@RdfProperty(Konig.DDL_FILE)
+	public ProjectFile getDdlFile() {
+		return ddlFile;
+	}
 	
-	/**
-	 * Get a String reference to the Table suitable for use in a SELECT statement.
-	 */
-	String getTableIdentifier();
+	public void setDdlFile(ProjectFile file) {
+		ddlFile = file;
+	}
 	
-	/**
-	 * Get the name of the SQL dialect used by this TableDataSource.
-	 */
-	String getSqlDialect();
+
+	@RdfProperty(Konig.TRANSFORM_FILE)
+	public ProjectFile getTransformFile() {
+		return transformFile;
+	}
 	
-	/**
-	 * An identifier for this TableDataSource that is unique across the set of all individuals
-	 * of type TableDataSource.  This identifier may be composed of several parts each of which
-	 * is separated by a colon (':').
-	 */
-	String getUniqueIdentifier();
-	
-	/**
-	 * Returns a string suitable for use as the name of a file containing a DDL description.
-	 * @return A file name which, when combined with the datasource type, is unique.
-	 */
-	String getDdlFileName();
-	
-	ProjectFile getDdlFile();
-	
-	void setDdlFile(ProjectFile ddlFile);
-	
-	ProjectFile getTransformFile();
-	
-	void setTransformFile(ProjectFile transformFile);
+	public void setTransformFile(ProjectFile file) {
+		transformFile = file;
+	}
 
 }

@@ -1,0 +1,67 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.konig.examples</groupId>
+  <artifactId>sheet-download</artifactId>
+  <version>1.0.0</version>
+  <name>JSON IO</name>
+  
+  <properties>
+    <maven.compiler.target>1.7</maven.compiler.target>
+    <maven.compiler.source>1.7</maven.compiler.source>
+  	<konig.version>2.0.0-8-SNAPSHOT</konig.version>
+  </properties>
+  
+   <dependencies>
+  
+		<dependency>
+			<groupId>io.konig</groupId>
+			<artifactId>konig-java</artifactId>
+			<version>${konig.version}</version>
+		</dependency>  
+	</dependencies>
+  <build>
+  	<sourceDirectory>${basedir}/target/generated/src/main/java</sourceDirectory>
+  	<plugins>
+  		<plugin>
+	  		<groupId>io.konig</groupId>
+	  		<artifactId>konig-schemagen-maven-plugin</artifactId>
+	  		<version>${konig.version}</version>
+	  		<configuration>
+	  			<defaults>
+	  				<rootDir>${basedir}/target/generated</rootDir>
+	  			</defaults>
+	  			<workbook>
+		  			<workbookFile>${basedir}/src/data-model.xlsx</workbookFile>
+		  			<failOnErrors>true</failOnErrors>
+	  			</workbook> 		
+	  		</configuration>
+	  		<executions>
+	  			<execution>
+		  			<phase>generate-sources</phase>
+		  			<goals>
+		  				<goal>generate</goal>
+		  			</goals>
+	  			</execution>
+	  		</executions>
+  		</plugin>
+ 		
+ 			<plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.5.3</version>
+        <configuration>
+          <descriptor>src/assembly/dep.xml</descriptor>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-archive</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>  	
+  		
+  	</plugins>
+  </build>
+</project>

@@ -30,17 +30,19 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.bigquery.model.Table;
 
 import io.konig.core.KonigException;
+import io.konig.core.project.ProjectFile;
+import io.konig.core.project.ProjectFolder;
 import io.konig.core.util.IOUtil;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 
 public class BigQueryTableWriter implements BigQueryTableVisitor {
 	
-	private File baseDir;
+	private ProjectFolder folder;
 
-	public BigQueryTableWriter(File baseDir) {
-		this.baseDir = baseDir;
-		baseDir.mkdirs();
+	public BigQueryTableWriter(ProjectFolder folder) {
+		this.folder = folder;
+		folder.mkdirs();
 	}
 
 	@Override
@@ -70,8 +72,10 @@ public class BigQueryTableWriter implements BigQueryTableVisitor {
 		
 		TableDataSource table = (TableDataSource) ds;
 		String fileName = table.getDdlFileName();
+		ProjectFile file = folder.createFile(fileName);
+		table.setDdlFile(file);
 		
-		return new File(baseDir, fileName);
+		return file.getLocalFile();
 	}
 	
 

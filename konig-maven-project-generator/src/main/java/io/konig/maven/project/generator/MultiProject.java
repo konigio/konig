@@ -27,13 +27,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.maven.shared.model.fileset.FileSet;
-
+import io.konig.core.project.Project;
 import io.konig.maven.AmazonWebServicesConfig;
 import io.konig.maven.DataCatalogConfig;
 import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
 import io.konig.maven.JsonSchemaConfig;
+import io.konig.maven.KonigProject;
 import io.konig.maven.OracleManagedCloudConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
@@ -161,7 +161,7 @@ public class MultiProject extends MavenProjectConfig {
 			parent.add(new AwsModelGenerator(this, amazonWebServices));
 		}
 		if (dataCatalog != null) {
-			dataCatalog.setSqlFiles(sqlFileSet());
+			dataCatalog.setDependencies(catalogDependencies());
 			parent.add(new DataCatalogProjectGenerator(this, dataCatalog));
 		}
 		if(oracleManagedCloud != null) {
@@ -170,55 +170,32 @@ public class MultiProject extends MavenProjectConfig {
 		
 		return parent;
 	}
-
-	private FileSet[] sqlFileSet() {
+	
+	private KonigProject[] catalogDependencies() {
+		List<KonigProject> list = new ArrayList<>();
 		
-		List<FileSet> list = new ArrayList<>();
+		addProject(list, amazonWebServices, AwsModelGenerator.ARTIFACT_SUFFIX);
+		addProject(list, googleCloudPlatform, GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX);
 		
-		addGoogleCloudSqlFileSet(list);
-		addBigQueryFileSet(list);
-		addAwsFileSet(list);
-		
-		FileSet[] array = null;
-		
+		KonigProject[] array = null;
 		if (!list.isEmpty()) {
-			array = new FileSet[list.size()];
+			array = new KonigProject[list.size()];
 			list.toArray(array);
 		}
-		
 		return array;
 	}
 
-	private void addAwsFileSet(List<FileSet> list) {
-		if (amazonWebServices != null) {
-			FileSet fileSet = new FileSet();
-			fileSet.setDirectory("../" + getArtifactId() + AwsModelGenerator.ARTIFACT_SUFFIX + AwsModelGenerator.TABLES_PATH+"/");
-			fileSet.addInclude("*.sql");
-			list.add(fileSet);
-		}
-		
-	}
-
-	private void addGoogleCloudSqlFileSet(List<FileSet> list) {
-		if (googleCloudPlatform != null) {
-			FileSet fileSet = new FileSet();
-			fileSet.setDirectory("../" + getArtifactId() + GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX 
-					+ GoogleCloudPlatformModelGenerator.CLOUD_SQL_PATH+"/");
-			fileSet.addInclude("*.sql");
-			list.add(fileSet);
-		}
-		
-	}
-
-
-	private void addBigQueryFileSet(List<FileSet> list) {
-
-		if (googleCloudPlatform != null) {
-			FileSet fileSet = new FileSet();
-			fileSet.setDirectory("../" + getArtifactId() + GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX 
-					+ GoogleCloudPlatformModelGenerator.BIGQUERY_SCHEMA_PATH+"/");
-			fileSet.addInclude("*.json");
-			list.add(fileSet);
+	private void addProject(List<KonigProject> list, Object config,	String artifactSuffix) {
+		if (config != null) {
+			String groupId = getGroupId();
+			String artifactId = getArtifactId() + artifactSuffix;
+			String version = getVersion();
+			
+			String baseDir = "../" + getArtifactId() + artifactSuffix;
+			
+			String id = Project.createId(groupId, artifactId, version).stringValue();
+			
+			list.add(new KonigProject(id, baseDir));
 		}
 		
 	}

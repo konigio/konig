@@ -30,11 +30,10 @@ import io.konig.annotation.RdfProperty;
 import io.konig.core.KonigException;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
-import io.konig.datasource.BaseTableDataSource;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 
-public class GoogleBigQueryTable extends BaseTableDataSource implements TableDataSource {
+public class GoogleBigQueryTable extends TableDataSource {
 	
 	private Set<DataSource> bigQuerySource;
 	private BigQueryTableReference tableReference;
@@ -129,6 +128,18 @@ public class GoogleBigQueryTable extends BaseTableDataSource implements TableDat
 		builder.append('.');
 		builder.append(ref.getTableId());
 		builder.append(".json");
+		return builder.toString();
+	}
+
+	@Override
+	public String getQualifiedTableName() {
+		if (tableReference==null) {
+			throw new KonigException("tableReference must be defined");
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append(tableReference.getDatasetId());
+		builder.append('.');
+		builder.append(tableReference.getTableId());
 		return builder.toString();
 	}
 	

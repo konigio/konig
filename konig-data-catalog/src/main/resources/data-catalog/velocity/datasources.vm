@@ -15,14 +15,18 @@
 				<th>Data Source Name</th>
 				<th>Data Source Type</th>
 				<th>Shape</th>
+				<th>Artifacts</th>
 			</tr>
 		</thead>
 		<tbody>
 #foreach( $ds in $DataSourceList )
 			<tr>
-				<th><a href="$ds.DatasourceName.Href">$ds.DatasourceName.Name</a></th>
+				<th>$ds.DatasourceName</th>
 				<td>$ds.DatasourceType</td>
 				<td><a href="$ds.Shape.Href">$ds.Shape.Name</a></td>
+				<td>#foreach( $artifact in $ds.ArtifactList )
+					<div><a href="$artifact.Href">$artifact.Name</a></div>#end				
+				</td>
 			</tr>
 #end		
 		</tbody>

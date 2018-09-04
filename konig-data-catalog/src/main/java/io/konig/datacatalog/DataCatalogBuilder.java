@@ -98,6 +98,7 @@ public class DataCatalogBuilder {
 		graph.getNamespaceManager().add("rdf", RDF.NAMESPACE);
 			
 		this.outDir = buildRequest.getOutDir();
+		buildRequest.setFileFactory(new CatalogFileFactory(outDir));
 		classIndexWriterFactory = new ClassIndexWriterFactory(outDir);
 		resourceWriterFactory = new ResourceWriterFactory(outDir);
 		Properties properties = new Properties();

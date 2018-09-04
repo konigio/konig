@@ -26,24 +26,28 @@ import java.io.File;
 public class ProjectFolder {
 
 	private Project project;
-	private File folder;
+	private File localFile;
 	
 	public ProjectFolder(Project project, File folder) {
 		this.project = project;
-		this.folder = folder;
+		this.localFile = folder;
 	}
 
 	public ProjectFile createFile(String fileName) {
-		File file = new File(folder, fileName);
+		File file = new File(localFile, fileName);
 		return project.createProjectFile(file);
 	}
 	
 	public boolean exists() {
-		return folder.exists();
+		return localFile.exists();
 	}
 	
 	public void mkdirs() {
-		folder.mkdirs();
+		localFile.mkdirs();
+	}
+
+	public File getLocalFile() {
+		return localFile;
 	}
 
 }

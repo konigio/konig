@@ -1,5 +1,8 @@
 package io.konig.datacatalog;
 
+import java.io.File;
+import java.io.IOException;
+
 /*
  * #%L
  * Konig Data Catalog
@@ -33,6 +36,8 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.URI;
 
+import info.aduna.io.FileUtil;
+import io.konig.core.project.ProjectFile;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
@@ -88,12 +93,34 @@ public class DataSourceSummaryPage {
 
 	private DataSourceSummary createSummary(PageRequest request, Shape shape, DataSource ds) throws DataCatalogException {
 		
-		Link name = name(request, ds);
+		String name = name(request, ds);
 		String type = type(request, ds);
 		Link shapeLink = shape(request, shape);
+		DataSourceSummary summary = new DataSourceSummary(name, type, shapeLink);
 		
+		try {
+			addArtifacts(summary, request, ds);
+		} catch (IOException e) {
+			throw new DataCatalogException(e);
+		}
 		
-		return new DataSourceSummary(name, type, shapeLink);
+		return summary;
+	}
+
+	private void addArtifacts(DataSourceSummary summary, PageRequest request, DataSource ds) throws IOException {
+		CatalogFileFactory factory = request.getBuildRequest().getFileFactory();
+		
+		if (ds instanceof TableDataSource) {
+			TableDataSource table = (TableDataSource) ds;
+			ProjectFile ddlfile = table.getDdlFile();
+			if (ddlfile != null) {
+				File targetFile = factory.catalogDdlFile(table);
+				FileUtil.copyFile(ddlfile.getLocalFile(), targetFile);
+				URI ddlUri = factory.catalogDdlFileIri(table);
+				summary.addArtifact(new Link("DDL", ddlUri.stringValue()));
+			}
+		}
+		
 	}
 
 	private Link shape(PageRequest request, Shape shape) throws DataCatalogException {
@@ -104,31 +131,12 @@ public class DataSourceSummaryPage {
 		return new Link(name, href);
 	}
 
-	private Link name(PageRequest request, DataSource ds) {
-		String identifier = ds.getIdentifier();
-		if (identifier == null) {
-
-			if (ds instanceof TableDataSource) {
-			
-				identifier = ((TableDataSource) ds).getTableIdentifier();
-				int dot = identifier.lastIndexOf('.');
-				if (dot > 0) {
-					identifier = identifier.substring(dot+1);
-				}
-			}
+	private String name(PageRequest request, DataSource ds) {
+		if (ds instanceof TableDataSource) {
+			return ((TableDataSource) ds).getQualifiedTableName();
 		}
-		if (identifier == null) {
-			identifier = ds.getId().stringValue();
-		}
-		if (identifier.startsWith("$")) {
-			int dot = identifier.indexOf('.');
-			if (dot > 0) {
-				identifier = identifier.substring(dot+1);
-			}
-		}
-		// TODO: compute the actual href
-		String href = "#";
-		return new Link(identifier, href);
+		return ds.getIdentifier();
+		
 	}
 
 	private String type(PageRequest request, DataSource ds) {
