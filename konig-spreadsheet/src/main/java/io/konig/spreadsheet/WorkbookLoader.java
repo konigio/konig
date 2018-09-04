@@ -67,6 +67,8 @@ import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectWriter.GeneratorSettings;
+
 import io.konig.activity.Activity;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
@@ -266,6 +268,7 @@ public class WorkbookLoader {
 	private static final String DICTIONARY_DEFAULT_MAX_LENGTH = "dictionary.defaultMaxLength";
 	private static final String DICTIONARY_ENABLE_DEFAULT_DATATYPE = "dictionary.enableDefaultDatatype";
 	private static final String DEFAULT_DATA_SOURCE = "defaultDataSource";
+	private static final String IGNORE_SHEETS = "ignoreSheets";
 	
 
 	private static final int COL_SETTING_NAME = 0x1;
@@ -1227,6 +1230,11 @@ public class WorkbookLoader {
 		}
 
 		private void loadDataDictionaryTemplate(Sheet sheet) throws SpreadsheetException {
+			
+			if (ignoreSheet(sheet)) {
+				logger.info("Ignoring sheet because of the `ignoreSheets` setting: {}", sheet.getSheetName());
+				return;
+			}
 			readDataDictionaryTemplateHeader(sheet);
 
 			int rowSize = sheet.getLastRowNum() + 1;
@@ -1247,6 +1255,20 @@ public class WorkbookLoader {
 				}
 			}
 			
+		}
+
+		private boolean ignoreSheet(Sheet sheet) {
+			String value = settingsValue(IGNORE_SHEETS);
+			if (value != null) {
+				String sheetName = sheet.getSheetName();
+				StringTokenizer tokens = new StringTokenizer(value, "\r\n");
+				while (tokens.hasMoreTokens()) {
+					if (sheetName.equalsIgnoreCase(tokens.nextToken())) {
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		private void loadDataDictionaryTemplateRow(Row row) throws SpreadsheetException {
