@@ -1,0 +1,63 @@
+@prefix contacttype: <https://schema.pearson.com/ns/mdm/contacttype/> .
+@prefix mdm: <https://schema.pearson.com/ns/mdm/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix phonetype: <https://schema.pearson.com/ns/mdm/phonetype/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+mdm: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "mdm" ; 
+	rdfs:label "Pearson MDM Ontology" ; 
+	rdfs:comment "A namespace for terms from Pearson's Master Data Model" . 
+
+mdm:ContactPointType a owl:Class ; 
+	rdfs:label "Contact Point Type" ; 
+	rdfs:comment "A class that enumerates the possible types of contact point." ; 
+	rdfs:subClassOf schema:Enumeration . 
+
+mdm:EmailContactPoint a owl:Class ; 
+	rdfs:label "EmailContactPoint" ; 
+	rdfs:comment "A specific kind of Contact Point that contains the email address of a given Person." ; 
+	rdfs:subClassOf schema:ContactPoint . 
+
+mdm:PartySite a owl:Class ; 
+	rdfs:label "Party Site" ; 
+	rdfs:comment "An entity that represents a physical place associated with a Person such as the place to which bills will be sent or the place to which products will be shipped.  All sites stored within the de-identification service should have a postal address." . 
+
+mdm:PhoneLineType a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration . 
+
+mdm:TelephoneContactPoint a owl:Class ; 
+	rdfs:label "Telephone Contact Point" ; 
+	rdfs:comment "A specific kind of Contact Point that holds a Person's telephone number." ; 
+	rdfs:subClassOf schema:ContactPoint . 
+
+mdm:WebContactPoint a owl:Class ; 
+	rdfs:label "Web Contact Point" ; 
+	rdfs:comment "A specific kind of Contact Point that contains the address of a web site associated with a given Person." ; 
+	rdfs:subClassOf schema:ContactPoint . 
+
+contacttype:Email a mdm:ContactPointType ; 
+	schema:name "Email" . 
+
+phonetype:Fax a mdm:PhoneLineType ; 
+	schema:name "Fax" . 
+
+phonetype:Mobile a mdm:PhoneLineType ; 
+	schema:name "Mobile" . 
+
+phonetype:Pager a mdm:PhoneLineType ; 
+	schema:name "Pager" . 
+
+contacttype:Phone a mdm:ContactPointType ; 
+	schema:name "Phone" . 
+
+phonetype:Telephone a mdm:PhoneLineType ; 
+	schema:name "Telephone" . 
+
+phonetype:Voice_Mail a mdm:PhoneLineType ; 
+	schema:name "Voice Mail" . 
+
+contacttype:Web a mdm:ContactPointType ; 
+	schema:name "Web" . 

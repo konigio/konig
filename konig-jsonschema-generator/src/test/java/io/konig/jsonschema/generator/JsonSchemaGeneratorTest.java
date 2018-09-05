@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -52,9 +53,27 @@ public class JsonSchemaGeneratorTest {
 	private SimpleJsonSchemaNamer namer = new SimpleJsonSchemaNamer(".jsonschema");
 	private SimpleJsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
 	private JsonSchemaGenerator generator = new JsonSchemaGenerator(nsManager, namer, typeMapper);
-
+	
 	@Test
-	public void test() throws Exception {
+	public void testOjectArray() throws Exception {
+
+		load("src/test/resources/object-array");
+		URI shapeId = uri("https://schema.pearson.com/shapes/PiiPersonV1Shape");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		JsonSchema schema = generator.asJsonSchema(shape);
+		
+		ObjectMapper mapper = new ObjectMapper();
+		
+		
+		mapper.enable(SerializationFeature.INDENT_OUTPUT);
+		mapper.setSerializationInclusion(Include.NON_NULL);
+		String actualJson = mapper.writeValueAsString(schema);
+		System.out.println(actualJson);
+	}
+
+	@Ignore
+	public void testPerson() throws Exception {
 		load("src/test/resources/json-io");
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		Shape shape = shapeManager.getShapeById(shapeId);

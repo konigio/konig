@@ -1,0 +1,20 @@
+@prefix contacttype: <https://schema.pearson.com/ns/mdm/contacttype/> .
+@prefix mdm: <https://schema.pearson.com/ns/mdm/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+contacttype: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "contacttype" ; 
+	rdfs:label "MDM Contact Point Type" ; 
+	rdfs:comment "The namespace for terms within the Contact Point Type enumeration." . 
+
+contacttype:Email a mdm:ContactPointType ; 
+	schema:name "Email" . 
+
+contacttype:Phone a mdm:ContactPointType ; 
+	schema:name "Phone" . 
+
+contacttype:Web a mdm:ContactPointType ; 
+	schema:name "Web" . 

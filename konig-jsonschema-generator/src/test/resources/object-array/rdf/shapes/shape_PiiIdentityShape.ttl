@@ -1,0 +1,34 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <https://schema.pearson.com/shapes/> .
+@prefix sys: <https://schema.pearson.com/ns/system/> .
+@prefix xid: <https://schema.pearson.com/ns/xid/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PiiIdentityShape konig:preferredJsonSchema <https://schema.pearson.com/shapes/PiiIdentityShape/jsonSchema> ; 
+	konig:mediaTypeBaseName "application/vnd.pearson.schema.pearson.com.shapes.identity" ; 
+	sh:property  [ 
+		sh:path xid:identifier ; 
+		rdfs:comment "A unique identifier for the Person within the specified Identity Provider." ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string ; 
+		sh:predicate xid:identifier
+	 ]  ,  [ 
+		sh:path xid:identityProvider ; 
+		rdfs:comment "The IRI that names the Identity Provider." ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:predicate xid:identityProvider ; 
+		sh:nodeKind sh:IRI ; 
+		sh:class sys:System ]  ; 
+	a sh:Shape , sh:NodeShape ; 
+	rdfs:comment "Encapsulates a unique identifier for a Person as defined by some Identity Provider." ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/-2qvURdR7gUAAAFlpi9fig> ; 
+	sh:targetClass xid:Identity . 
+
+<http://www.konig.io/activity/-2qvURdR7gUAAAFlpi9fig> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-09-04T16:04:07.258-04:00"^^xsd:dateTime , "2018-09-04T16:04:07.183-04:00"^^xsd:dateTime . 
