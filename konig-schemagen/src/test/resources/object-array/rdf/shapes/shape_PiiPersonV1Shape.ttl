@@ -1,0 +1,25 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <https://schema.pearson.com/shapes/> .
+@prefix xid: <https://schema.pearson.com/ns/xid/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PiiPersonV1Shape konig:preferredJsonSchema <https://schema.pearson.com/shapes/PiiPersonV1Shape/jsonSchema> ; 
+	konig:mediaTypeBaseName "application/vnd.pearson.schema.pearson.com.shapes.person" ; 
+	sh:property  [ 
+		sh:path xid:identifiedBy ; 
+		rdfs:comment "An entity that records a unique identifier for the Person as defined by some Identity Provider." ; 
+		sh:minCount 0 ; 
+		sh:predicate xid:identifiedBy ; 
+		sh:shape shape:PiiIdentityShape ]  ; 
+	a sh:Shape , sh:NodeShape ; 
+	rdfs:comment "Stores PII for a Person in version 1 of the De-Identification schema." ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/-2qvURdR7gUAAAFlpi9fig> ; 
+	sh:targetClass schema:Person . 
+
+<http://www.konig.io/activity/-2qvURdR7gUAAAFlpi9fig> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-09-04T16:04:07.258-04:00"^^xsd:dateTime , "2018-09-04T16:04:07.183-04:00"^^xsd:dateTime . 
