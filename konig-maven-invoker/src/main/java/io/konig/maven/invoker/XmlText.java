@@ -1,6 +1,6 @@
 package io.konig.maven.invoker;
 
-public class XmlText implements XmlNode {
+public class XmlText extends BaseXmlNode {
 
 	private String stringValue;
 

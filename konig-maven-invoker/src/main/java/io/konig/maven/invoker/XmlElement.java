@@ -3,7 +3,7 @@ package io.konig.maven.invoker;
 import java.util.ArrayList;
 import java.util.List;
 
-public class XmlElement implements XmlNode {
+public class XmlElement extends BaseXmlNode {
 	private String tagName;
 	private List<XmlAttribute> attributeList = null;
 	private List<XmlNode> nodeList=new ArrayList<>();
