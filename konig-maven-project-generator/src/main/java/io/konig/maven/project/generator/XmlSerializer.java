@@ -73,7 +73,12 @@ public class XmlSerializer {
 		out.println();
 		
 		if (pojo.getClass().isArray()) {
-			printArray((Object[]) pojo);
+			Class<?> componentType = pojo.getClass().getComponentType();
+			if (componentType == String.class) {
+				printArray((String[]) pojo);
+			} else {
+				printArray((Object[]) pojo);
+			}
 		} else if (pojo instanceof Collection<?>) {
 			printCollection((Collection<?>) pojo);
 		} else {
@@ -206,7 +211,18 @@ public class XmlSerializer {
 	private void pop() {
 		indent--;
 	}
-	
+	private void printArray(String[] array){
+
+		push();
+		for (Object value : array) {
+			indent();
+			out.print("<value>");
+			out.print(value);
+			out.println("</value>");
+		}
+		pop();
+
+	}
 	
 	private void printArray(Object[] array){
 

@@ -37,6 +37,7 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsShapeConfig;
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.PathFactory;
 import io.konig.core.impl.MemoryGraph;
@@ -57,6 +58,9 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 
 	@Parameter
 	private File rdfDir;
+	
+	@Parameter
+	private File[] rdfSources;
 	
 	@Parameter(defaultValue="${project.basedir}/target/generated/datacatalog")
 	private File siteDir;
@@ -94,7 +98,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			AwsShapeConfig.init();
 			GcpShapeConfig.init();
 			handleDependencies();
-			RdfUtil.loadTurtle(rdfDir, graph, nsManager);
+			loadRdf(graph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
 			shapeLoader.load(graph);
 			URI ontologyId = ontology==null ? null : new URIImpl(ontology);
@@ -120,6 +124,19 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			PathFactory.RETURN_NULL_ON_FAILURE = false;
 		}
 
+	}
+
+	private void loadRdf(Graph graph, NamespaceManager nsManager) throws RDFParseException, RDFHandlerException, IOException {
+
+		if (rdfDir!=null) {
+			RdfUtil.loadTurtle(rdfDir, graph, nsManager);
+		}
+		if (rdfSources!=null) {
+			for (File dir : rdfSources) {
+				RdfUtil.loadTurtle(dir, graph, nsManager);
+			}
+		}
+		
 	}
 
 	private void handleDependencies() {

@@ -120,6 +120,8 @@ import io.konig.data.app.common.DataApp;
 import io.konig.data.app.generator.DataAppGenerator;
 import io.konig.data.app.generator.DataAppGeneratorException;
 import io.konig.data.app.generator.EntityStructureWorker;
+import io.konig.datasource.DataSource;
+import io.konig.datasource.TableDataSource;
 import io.konig.estimator.MultiSizeEstimateRequest;
 import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
@@ -221,6 +223,8 @@ import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.ShapeInjector;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.impl.TemplateShapeNamer;
+import io.konig.shacl.io.DdlFileEmitter;
+import io.konig.shacl.io.ShapeAuxiliaryWriter;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.io.ShapeWriter;
@@ -379,18 +383,66 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			//generateViewShape();
 			//generateTableShape();
 			
-			emitter.emit(owlGraph);
+			emit();
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
-				SizeEstimateException | SQLException e) {
+				SizeEstimateException | KonigException | SQLException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
     }
     
+
+	private void emit() throws KonigException, IOException, RDFHandlerException {
+		emitter.emit(owlGraph);
+		
+		writeDdlFiles(googleCloudPlatform, Konig.GoogleBigQueryTable, Konig.GoogleBigQueryView, Konig.GoogleCloudSqlTable);
+		writeDdlFiles(amazonWebServices, Konig.AwsAuroraTable, Konig.AwsAuroraView);
+
+	}
+
+	private void writeDdlFiles(RdfSource rdfSource, URI...datasourceType) throws RDFHandlerException, IOException {
+		if (rdfSource != null && anyDdlFiles(datasourceType)) {
+			File file = new File(rdfSource.getRdfDirectory(), "ddlFiles.ttl");
+			writeDdlFiles(file, datasourceType);
+		}
+	}
+
+	private void writeDdlFiles(File file, URI... datasourceType) throws RDFHandlerException, IOException {
+		ShapeAuxiliaryWriter writer = new ShapeAuxiliaryWriter(file);
+		writer.addShapeEmitter(new DdlFileEmitter(datasourceType));
+		writer.writeAll(nsManager, shapeManager.listShapes());
+	}
+
+	private boolean anyDdlFiles(URI... datasourceTypeId) {
+		if (shapeManager != null) {
+			List<Shape> shapeList = shapeManager.listShapes();
+			if (shapeList != null) {
+				for (Shape shape : shapeList) {
+					List<DataSource> datasourceList = shape.getShapeDataSource();
+					if (datasourceList != null) {
+						for (DataSource ds : datasourceList) {
+							if (ds instanceof TableDataSource) {
+								for (URI typeId : datasourceTypeId) {
+									if (ds.getType().contains(typeId)) {
+										TableDataSource table = (TableDataSource) ds;
+										if (table.getDdlFile() != null) {
+											return true;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 
 	private void createProject() {
 		

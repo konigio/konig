@@ -162,6 +162,8 @@ public class MultiProject extends MavenProjectConfig {
 		}
 		if (dataCatalog != null) {
 			dataCatalog.setDependencies(catalogDependencies());
+			dataCatalog.setRdfSources(rdfSources());
+			
 			parent.add(new DataCatalogProjectGenerator(this, dataCatalog));
 		}
 		if(oracleManagedCloud != null) {
@@ -171,6 +173,28 @@ public class MultiProject extends MavenProjectConfig {
 		return parent;
 	}
 	
+	private String[] rdfSources() {
+		List<String> list = new ArrayList<>();
+
+		addRdfSource(list, amazonWebServices, AwsModelGenerator.ARTIFACT_SUFFIX, "/target/generated");
+		addRdfSource(list, googleCloudPlatform, GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX, "/target/generated");
+		
+		if (!list.isEmpty()) {
+			String[] array = new String[list.size()];
+			list.toArray(array);
+			return array;
+		}
+		return null;
+	}
+
+	private void addRdfSource(List<String> list, Object config, String artifactSuffix, String path) {
+		if (config != null) {
+			String source = "../" + getArtifactId() + artifactSuffix + path ;
+			list.add(source);
+		}
+		
+	}
+
 	private KonigProject[] catalogDependencies() {
 		List<KonigProject> list = new ArrayList<>();
 		

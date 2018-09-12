@@ -31,6 +31,8 @@ public class DataCatalogConfig {
 	private boolean showUndefinedClass = false;
 	private ContentSystemConfig contentSystem;
 	private KonigProject[] dependencies;
+	private String[] rdfSources;
+	
 	public String getRdfDir() {
 		return rdfDir;
 	}
@@ -79,6 +81,13 @@ public class DataCatalogConfig {
 	public void setDependencies(KonigProject[] dependencies) {
 		this.dependencies = dependencies;
 	}
+	public String[] getRdfSources() {
+		return rdfSources;
+	}
+	public void setRdfSources(String[] rdfSources) {
+		this.rdfSources = rdfSources;
+	}
+	
 	
 	
 

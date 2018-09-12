@@ -41,7 +41,7 @@ public class ProjectFile {
 	
 	ProjectFile(Project project, String relativePath, File localFile) {
 		this.project = project;
-		this.relativePath = relativePath;
+		this.relativePath = relativePath.replace('\\', '/');
 		this.localFile = localFile;
 	}
 	

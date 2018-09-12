@@ -135,7 +135,11 @@ public class DataSourceSummaryPage {
 		if (ds instanceof TableDataSource) {
 			return ((TableDataSource) ds).getQualifiedTableName();
 		}
-		return ds.getIdentifier();
+		String name =  ds.getIdentifier();
+		if (name == null) {
+			name = "";
+		}
+		return name;
 		
 	}
 
