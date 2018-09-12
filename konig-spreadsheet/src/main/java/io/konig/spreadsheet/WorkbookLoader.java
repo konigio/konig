@@ -1575,6 +1575,8 @@ public class WorkbookLoader {
 				case "TEXT":
 				case "STRING":
 				case "VARCHAR2":
+				case "NVARCHAR":
+				case "NVARCHAR2":
 					return XMLSchema.STRING;
 				case "DATE":
 					return XMLSchema.DATE;
