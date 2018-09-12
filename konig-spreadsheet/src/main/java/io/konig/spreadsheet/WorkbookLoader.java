@@ -1578,9 +1578,18 @@ public class WorkbookLoader {
 				case "TEXT":
 				case "STRING":
 				case "VARCHAR2":
+				case "NVARCHAR":
+				case "NVARCHAR2":
 					return XMLSchema.STRING;
 				case "DATE":
 					return XMLSchema.DATE;
+					
+				case "BIT" :
+					constraint.setMinInclusive(0);
+					constraint.setMaxInclusive(1);
+					return XMLSchema.INTEGER;
+					
+				case "DATETIME2":
 				case "DATETIME":
 					return XMLSchema.DATETIME;
 				case "NUMBER":
@@ -1611,6 +1620,8 @@ public class WorkbookLoader {
 					constraint.setMinInclusive(0);
 					constraint.setMaxInclusive(new BigInteger("18446744073709551615"));
 					return XMLSchema.INTEGER;
+					
+				case "MONEY":
 				case "FLOAT":
 					return XMLSchema.FLOAT;
 				case "DOUBLE":
