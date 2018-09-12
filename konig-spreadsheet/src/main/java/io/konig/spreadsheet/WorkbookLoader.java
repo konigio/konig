@@ -1287,7 +1287,7 @@ public class WorkbookLoader {
 				return;
 			}
 			
-			propertyIdValue = propertyIdValue.trim().replaceAll("\\s+", "_");
+			propertyIdValue = StringUtil.LABEL_TO_SNAKE_CASE(propertyIdValue);
 			
 			URI propertyId = expandPropertyId(concatPath(getPropertyBaseURL(),propertyIdValue));
 
