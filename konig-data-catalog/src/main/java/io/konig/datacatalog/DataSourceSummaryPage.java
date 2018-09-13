@@ -96,8 +96,8 @@ public class DataSourceSummaryPage {
 		String name = name(request, ds);
 		String type = type(request, ds);
 		Link shapeLink = shape(request, shape);
-		DataSourceSummary summary = new DataSourceSummary(name, type, shapeLink);
-		
+		DataSourceSummary summary = new DataSourceSummary(name, type);
+		summary.addArtifact(shapeLink);
 		try {
 			addArtifacts(summary, request, ds);
 		} catch (IOException e) {
@@ -107,7 +107,7 @@ public class DataSourceSummaryPage {
 		return summary;
 	}
 
-	private void addArtifacts(DataSourceSummary summary, PageRequest request, DataSource ds) throws IOException {
+	private void addArtifacts(DataSourceSummary summary, PageRequest request, DataSource ds) throws IOException, DataCatalogException {
 		CatalogFileFactory factory = request.getBuildRequest().getFileFactory();
 		
 		if (ds instanceof TableDataSource) {
@@ -115,9 +115,11 @@ public class DataSourceSummaryPage {
 			ProjectFile ddlfile = table.getDdlFile();
 			if (ddlfile != null) {
 				File targetFile = factory.catalogDdlFile(table);
+				targetFile.getParentFile().mkdirs();
 				FileUtil.copyFile(ddlfile.getLocalFile(), targetFile);
 				URI ddlUri = factory.catalogDdlFileIri(table);
-				summary.addArtifact(new Link("DDL", ddlUri.stringValue()));
+				String href = request.relativePath(ddlUri);
+				summary.addArtifact(new Link("DDL", href));
 			}
 		}
 		
@@ -127,8 +129,7 @@ public class DataSourceSummaryPage {
 		
 		URI shapeId = (URI) shape.getId();
 		String href = DataCatalogUtil.path(request, shapeId);
-		String name = shapeId.getLocalName();
-		return new Link(name, href);
+		return new Link("Shape", href);
 	}
 
 	private String name(PageRequest request, DataSource ds) {
@@ -137,7 +138,7 @@ public class DataSourceSummaryPage {
 		}
 		String name =  ds.getIdentifier();
 		if (name == null) {
-			name = "";
+			name = ds.getId().stringValue();
 		}
 		return name;
 		

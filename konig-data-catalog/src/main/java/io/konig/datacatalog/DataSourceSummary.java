@@ -28,13 +28,11 @@ public class DataSourceSummary {
 	
 	private String datasourceName;
 	private String datasourceType;
-	private Link shape;
 	private List<Link> artifactList=new ArrayList<>();
 	
-	public DataSourceSummary(String datasourceName, String datasourceType, Link shape) {
+	public DataSourceSummary(String datasourceName, String datasourceType) {
 		this.datasourceName = datasourceName;
 		this.datasourceType = datasourceType;
-		this.shape = shape;
 	}
 
 	public String getDatasourceName() {
@@ -43,10 +41,6 @@ public class DataSourceSummary {
 
 	public String getDatasourceType() {
 		return datasourceType;
-	}
-
-	public Link getShape() {
-		return shape;
 	}
 
 	public List<Link> getArtifactList() {
