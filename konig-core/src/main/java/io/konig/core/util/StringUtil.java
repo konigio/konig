@@ -37,7 +37,7 @@ public class StringUtil {
 		StringBuilder builder = new StringBuilder();
 		
 		
-		
+		label = label.trim();
 		
 		int priorCase = OTHER;
 		int prior = 0;

@@ -1286,6 +1286,9 @@ public class WorkbookLoader {
 				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
 				return;
 			}
+			
+			propertyIdValue = StringUtil.LABEL_TO_SNAKE_CASE(propertyIdValue);
+			
 			URI propertyId = expandPropertyId(concatPath(getPropertyBaseURL(),propertyIdValue));
 
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
@@ -1580,6 +1583,13 @@ public class WorkbookLoader {
 					return XMLSchema.STRING;
 				case "DATE":
 					return XMLSchema.DATE;
+					
+				case "BIT" :
+					constraint.setMinInclusive(0);
+					constraint.setMaxInclusive(1);
+					return XMLSchema.INTEGER;
+					
+				case "DATETIME2":
 				case "DATETIME":
 					return XMLSchema.DATETIME;
 				case "NUMBER":
@@ -1610,6 +1620,8 @@ public class WorkbookLoader {
 					constraint.setMinInclusive(0);
 					constraint.setMaxInclusive(new BigInteger("18446744073709551615"));
 					return XMLSchema.INTEGER;
+					
+				case "MONEY":
 				case "FLOAT":
 					return XMLSchema.FLOAT;
 				case "DOUBLE":

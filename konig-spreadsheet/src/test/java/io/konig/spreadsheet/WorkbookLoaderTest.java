@@ -147,7 +147,7 @@ public class WorkbookLoaderTest {
 		
 		ShapeManager shapeManager = loader.getShapeManager();
 		
-		URI predicate = uri("https://schema.pearson.com/ns/alias/first_name");
+		URI predicate = uri("https://schema.pearson.com/ns/alias/FIRST_NAME");
 		Shape shape = shapeManager.getShapeById(shapeId);
 		
 		PropertyConstraint p = shape.getPropertyConstraint(predicate);
@@ -177,7 +177,7 @@ public class WorkbookLoaderTest {
 		
 		ShapeManager shapeManager = loader.getShapeManager();
 		
-		URI predicate = uri("https://schema.pearson.com/ns/alias/first_name");
+		URI predicate = uri("https://schema.pearson.com/ns/alias/FIRST_NAME");
 		Shape shape = shapeManager.getShapeById(shapeId);
 		
 		PropertyConstraint p = shape.getPropertyConstraint(predicate);
@@ -214,7 +214,7 @@ public class WorkbookLoaderTest {
 		
 		ShapeManager shapeManager = loader.getShapeManager();
 		
-		URI predicate = uri("https://schema.pearson.com/ns/alias/first_name");
+		URI predicate = uri("https://schema.pearson.com/ns/alias/FIRST_NAME");
 		Shape shape = shapeManager.getShapeById(shapeId);
 		
 		PropertyConstraint p = shape.getPropertyConstraint(predicate);
