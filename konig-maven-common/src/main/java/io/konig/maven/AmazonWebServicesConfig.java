@@ -23,7 +23,7 @@ package io.konig.maven;
 
 import java.io.File;
 
-public class AmazonWebServicesConfig {
+public class AmazonWebServicesConfig implements RdfSource {
 	
 	@Parameter(property="konig.aws.directory", defaultValue="${project.basedir}/target/generated/aws")
 	private File directory;
@@ -57,6 +57,9 @@ public class AmazonWebServicesConfig {
 	
 	@Parameter(property="konig.aws.aurora", required=true)
 	private AuroraInfo aurora;
+	
+	@Parameter(property="konig.aws.rdf.directory", defaultValue="${konig.aws.directory}/rdf")
+	private File rdfDirectory;
 	
 	
 	public AmazonWebServicesConfig() {
@@ -151,6 +154,14 @@ public class AmazonWebServicesConfig {
 
 	public void setAurora(AuroraInfo aurora) {
 		this.aurora = aurora;
+	}
+
+	public File getRdfDirectory() {
+		return rdfDirectory;
+	}
+
+	public void setRdfDirectory(File rdfDirectory) {
+		this.rdfDirectory = rdfDirectory;
 	}
 
 	

@@ -31,11 +31,15 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.ShapeFileFactory;
+import io.konig.core.project.Project;
+import io.konig.core.project.ProjectFolder;
+import io.konig.maven.FileUtil;
 import io.konig.shacl.Shape;
 import io.konig.sql.query.InsertStatement;
 import io.konig.transform.factory.ShapeRuleFactory;
@@ -56,7 +60,9 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 	@Before
 	public void setUp() {
 		AwsShapeConfig.init();
-		ShapeFileFactory fileFactory = new MockFileFactory();
+		File baseDir = new File("target/test/AuroraTransformGeneratorTest");
+		FileUtil.delete(baseDir);
+		ProjectFolder folder = folder(baseDir);
 		sqlFactory = new SqlFactory();
 		ShapeModelFactory shapeModelFactory;
 		OwlReasoner reasoner = new OwlReasoner(graph);
@@ -64,22 +70,26 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 		DataChannelFactory dataChannelFactory = new AwsAuroraChannelFactory();
 		shapeModelFactory = new ShapeModelFactory(shapeManager, dataChannelFactory, reasoner);
 		shapeRuleFactory = new ShapeRuleFactory(shapeManager, shapeModelFactory, shapeModelToShapeRule);
-		generator = new AuroraTransformGenerator(shapeRuleFactory, sqlFactory, fileFactory,new File("target/test/AuroraTransformGeneratorTest"));
+		
+		generator = new AuroraTransformGenerator(shapeRuleFactory, sqlFactory, folder,new File("target/test/AuroraTransformGeneratorTest"));
 	}
 	
-	@Ignore
+	@Test
 	public void testVisit() throws Exception {
 		
 		load("src/test/resources/konig-transform/aurora-transform");
 		
 		URI shapeId = iri("http://example.com/shapes/TargetPersonShape");
 		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape != null);
 		
 		generator.visit(shape);
 		
 		ShapeRule shapeRule = shapeRuleFactory.createShapeRule(shape);
 		InsertStatement statement = sqlFactory.insertStatement(shapeRule);
-		String path="target/test/AuroraTransformGeneratorTest/" + RdfUtil.localName(shape.getId()) + ".sql";		
+		String path="target/test/AuroraTransformGeneratorTest/schema1.TargetPersonShape.sql";		
+		File file = new File(path);
+		assertTrue(file.exists());
 		String out = String.join("\n", Files.readAllLines(Paths.get(path)));
 		assertTrue(!out.isEmpty());
 		assertTrue(out.equals(statement.toString()));
@@ -97,7 +107,7 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 		
 		ShapeRule shapeRule = shapeRuleFactory.createShapeRule(shape);
 		InsertStatement statement = sqlFactory.insertStatement(shapeRule);
-		String path="target/test/AuroraTransformGeneratorTest/" + RdfUtil.localName(shape.getId()) + ".sql";		
+		String path="target/test/AuroraTransformGeneratorTest/schema1.TargetPersonShape.sql";		
 		String out = String.join("\n", Files.readAllLines(Paths.get(path)));
 		assertTrue(!out.isEmpty());
 		assertTrue(out.equals(statement.toString()));
@@ -111,6 +121,11 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 			return new File(path);
 		}
 		
+	}
+	
+	private ProjectFolder folder(File baseDir) {
+		Project project = new Project(new URIImpl("urn:maven:test-AuroraTransformGenerator-1.0"), baseDir.getParentFile());
+		return new ProjectFolder(project, baseDir);
 	}
 
 }

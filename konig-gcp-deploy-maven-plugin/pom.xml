@@ -65,11 +65,6 @@
     <version>${google-cloud.version}</version>
 	</dependency>
 	
-	<dependency>
-    <groupId>org.apache.maven</groupId>
-    <artifactId>maven-project</artifactId>
-    <version>2.0.6</version>
-	</dependency>
     
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
@@ -157,7 +152,7 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <version>3.4</version>
         <configuration>
-          <goalPrefix>konig-model-merge-maven-plugin</goalPrefix>
+          <goalPrefix>konig-gcp-deploy</goalPrefix>
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
         </configuration>
         <executions>

@@ -25,12 +25,12 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 import io.konig.annotation.RdfProperty;
+import io.konig.core.KonigException;
 import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.Konig;
-import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 
-public class AwsAurora extends DataSource implements TableDataSource{
+public class AwsAurora extends TableDataSource {
 	private AwsAuroraTableReference tableReference;
 	private String awsTableName;
 	private String tabularFieldNamespace;
@@ -92,5 +92,28 @@ public class AwsAurora extends DataSource implements TableDataSource{
 
 	public void setTabularFieldNamespace(String tabularFieldNamespace) {
 		this.tabularFieldNamespace = tabularFieldNamespace;
+	}
+
+	@Override
+	public String getDdlFileName() {
+		StringBuilder builder = new StringBuilder();
+		AwsAuroraTableReference ref = getTableReference();
+		builder.append(ref.getAwsSchema());
+		builder.append('.');
+		builder.append(ref.getAwsTableName());
+		builder.append(".sql");
+		return builder.toString();
+	}
+
+	@Override
+	public String getQualifiedTableName() {
+		if (tableReference==null) {
+			throw new KonigException("tableReference must be defined");
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append(tableReference.getAwsSchema());
+		builder.append('.');
+		builder.append(tableReference.getAwsTableName());
+		return builder.toString();
 	}
 }

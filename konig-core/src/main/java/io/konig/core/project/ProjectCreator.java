@@ -1,4 +1,4 @@
-package io.konig.datasource;
+package io.konig.core.project;
 
 /*
  * #%L
@@ -21,24 +21,29 @@ package io.konig.datasource;
  */
 
 
-import java.io.File;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 
-public class DdlFileLocator implements DatasourceFileLocator {
+import io.konig.core.KonigException;
+import io.konig.core.Vertex;
+import io.konig.core.pojo.PojoCreator;
 
-	private File baseDir;
+public class ProjectCreator implements PojoCreator<Project> {
 	
-	public DdlFileLocator(File baseDir) {
-		this.baseDir = baseDir;
-	}
 
 	@Override
-	public File locateFile(DataSource ds) {
-		if (ds instanceof TableDataSource) {
-			TableDataSource table = (TableDataSource) ds;
-			String fileName = table.getUniqueIdentifier().replace(':', '_') + ".sql";
-			return new File(baseDir, fileName);
+	public Project create(Vertex v) {
+		Resource id = v.getId();
+		if (id instanceof URI) {
+			URI uri = (URI) id;
+			Project p = ProjectManager.instance().getProjectById(uri);
+			if (p == null) {
+				p = new Project(uri, null);
+				ProjectManager.instance().add(p);
+			}
+			return p;
 		}
-		return null;
+		throw new KonigException("Project must be identified by an IRI");
 	}
 
 }
