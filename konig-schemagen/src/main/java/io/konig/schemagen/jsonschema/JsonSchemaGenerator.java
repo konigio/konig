@@ -50,6 +50,7 @@ public class JsonSchemaGenerator extends Generator {
 	private boolean includeIdValue;
 	private JsonSchemaNamer namer;
 	private JsonSchemaTypeMapper typeMapper;
+	private boolean additionalProperties;
 
 	/**
 	 * For now, we hard-code a GeneratedMediaTypeTransformer.  In the future, the shape
@@ -58,9 +59,13 @@ public class JsonSchemaGenerator extends Generator {
 	private ShapeTransformer shapeTransformer = new GeneratedMediaTypeTransformer("+json");
 	
 	public JsonSchemaGenerator(JsonSchemaNamer namer, NamespaceManager nsManager, JsonSchemaTypeMapper typeMapper) {
+		this(namer, nsManager, typeMapper, false);
+	}
+	public JsonSchemaGenerator(JsonSchemaNamer namer, NamespaceManager nsManager, JsonSchemaTypeMapper typeMapper, boolean additionalProperties) {
 		super(nsManager);
 		this.namer = namer;
 		this.typeMapper = typeMapper;
+		this.additionalProperties = additionalProperties;
 	}
 	
 
@@ -152,6 +157,7 @@ public class JsonSchemaGenerator extends Generator {
 			if (list != null && !list.isEmpty()) {
 				ObjectNode properties = mapper.createObjectNode();
 				json.set("properties", properties);
+				json.put("additionalProperties", additionalProperties);
 				for (PropertyConstraint constraint : list) {
 					
 					if (shapeTransformer != null) {
@@ -232,6 +238,7 @@ public class JsonSchemaGenerator extends Generator {
 				object.put("type", "object");
 				ObjectNode properties = mapper.createObjectNode();
 				object.set("properties", properties);
+				object.put("additionalProperties", additionalProperties);
 				
 				ObjectNode value = mapper.createObjectNode();
 				properties.set("@value", value);
