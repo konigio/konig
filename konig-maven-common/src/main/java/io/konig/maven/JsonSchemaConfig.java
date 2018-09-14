@@ -27,6 +27,7 @@ public class JsonSchemaConfig {
 
 	private String uriTemplate;
 	private File jsonSchemaDir;
+	private boolean additionalProperties=false;
 	
 	public String getUriTemplate() {
 		return uriTemplate;
@@ -40,6 +41,14 @@ public class JsonSchemaConfig {
 	public void setJsonSchemaDir(File jsonSchemaDir) {
 		this.jsonSchemaDir = jsonSchemaDir;
 	}
+	public boolean getAdditionalProperties() {
+		return additionalProperties;
+	}
+	public void setAdditionalProperties(boolean additionalProperties) {
+		this.additionalProperties = additionalProperties;
+	}
+	
+	
 	
 	
 //	public JsonSchemaNamer namer(NamespaceManager nsManager, ShapeManager shapeManager) {

@@ -104,6 +104,58 @@ public class JsonSchemaGeneratorTest {
 //		System.out.println(actualJson);
 	}
 	
+
+	@Test
+	public void testAdditionalProperties() throws Exception {
+
+		URI personShapeId = uri("http://example.com/shapes/v1/schema/PersonShape");
+		URI addressShapeId = uri("http://example.com/shapes/v1/schema/AddressShape");
+		
+		ShapeBuilder shapeBuilder = new ShapeBuilder();
+		
+		shapeBuilder
+		
+			.beginShape(personShapeId)
+				.beginProperty(Schema.familyName)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+				.beginProperty(Schema.address)
+					.minCount(1)
+					.maxCount(1)
+					.beginValueShape(addressShapeId)
+						.beginProperty(Schema.postalCode)
+						.datatype(XMLSchema.STRING)
+						.minCount(1)
+						.maxCount(1)
+					.endValueShape()
+				.endProperty()
+			.endShape()
+			;
+		
+		ShapeManager shapeManager = shapeBuilder.getShapeManager();
+
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", "http://schema.org/");
+
+		ShapeMediaTypeNamer mediaTypeNamer = new SimpleShapeMediaTypeNamer();
+		
+		JsonSchemaNamer namer = new SimpleJsonSchemaNamer("/json-schema", mediaTypeNamer);
+		JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
+		JsonSchemaGenerator generator = new JsonSchemaGenerator(namer, nsManager, typeMapper, true);
+		
+		Shape shape = shapeManager.getShapeById(personShapeId);
+		ObjectNode node = generator.generateJsonSchema(shape);
+
+		assertEquals(node.get("additionalProperties").booleanValue(), true);
+		assertEquals(node.get("definitions").get("AddressShape").get("additionalProperties").booleanValue(), true);
+		
+		
+		
+	}
+
+	
 	@Test
 	public void testOrConstraint() throws Exception {
 
