@@ -4,7 +4,7 @@ package io.konig.datacatalog;
  * #%L
  * Konig Data Catalog
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,45 +21,33 @@ package io.konig.datacatalog;
  */
 
 
-public class Link implements Comparable<Link> {
-
-	private String name;
-	private String href;
-	private String className;
+public class NameDescriptionStatus implements Comparable<NameDescriptionStatus> {
+	private Link name;
+	private String description;
+	private Link status;
 	
-	public Link(String name, String href) {
+	public NameDescriptionStatus(Link name, String description, Link status) {
 		this.name = name;
-		this.href = href;
+		this.description = description;
+		this.status = status;
 	}
-
-	public Link(String name, String href, String className) {
-		this.name = name;
-		this.href = href;
-		this.className = className;
-	}
-
-	public String getClassName() {
-		return className;
-	}
-
-	public String getName() {
+	
+	public Link getName() {
 		return name;
 	}
-
-	public String getHref() {
-		return href;
+	public String getDescription() {
+		return description;
+	}
+	public Link getStatus() {
+		return status;
 	}
 
 	@Override
-	public int compareTo(Link o) {
-		return name.compareToIgnoreCase(o.getName());
-	}
-
-	public static Link create(String name, String href) {
-		if (name != null) {
-			return new Link(name, href);
-		}
-		return null;
+	public int compareTo(NameDescriptionStatus o) {
+		return this.name.getName().compareTo(o.getName().getName());
 	}
 	
+	
+	
+
 }

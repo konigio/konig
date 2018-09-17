@@ -62,6 +62,7 @@ public class Shape implements Cloneable {
 	private URI equivalentRelationalShape;
 	private NodeKind nodeKind;
 	private String comment;
+	private URI termStatus;
 	
 	
 	private AndConstraint and;
@@ -695,5 +696,16 @@ public class Shape implements Cloneable {
 	public void setUsesAbbreviationScheme(URI usesAbbreviationScheme) {
 		this.usesAbbreviationScheme = usesAbbreviationScheme;
 	}
+
+	@RdfProperty(Konig.TERM_STATUS)
+	public URI getTermStatus() {
+		return termStatus;
+	}
+
+	public void setTermStatus(URI termStatus) {
+		this.termStatus = termStatus;
+	}
+	
+	
 	
 }

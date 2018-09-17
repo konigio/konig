@@ -68,6 +68,7 @@ public class PropertyPage {
 			description = "";
 		}
 		
+		request.handleTermStatus(predicate);
 		context.put("PropertyName", predicate.getLocalName());
 		context.put("PropertyId", predicate.stringValue());
 		context.put("PropertyDescription", description);

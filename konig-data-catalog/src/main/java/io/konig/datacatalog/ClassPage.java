@@ -1,5 +1,25 @@
 package io.konig.datacatalog;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
+
+import io.konig.core.Graph;
+
 /*
  * #%L
  * Konig Data Catalog
@@ -24,21 +44,10 @@ package io.konig.datacatalog;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.util.ClassHierarchyPaths;
+import io.konig.core.vocab.Konig;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.RDFS;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.*;
 
 public class ClassPage {
 	private static final String CLASS_TEMPLATE = "data-catalog/velocity/class.vm";
@@ -51,6 +60,7 @@ public class ClassPage {
 		ClassStructure structure = request.getClassStructure();
 		
 		Vertex owlClass = request.getOwlClass();
+		ClassPageInfo pageInfo = new ClassPageInfo();
 
 		DataCatalogUtil.setSiteName(request);
 		Shape shape = structure.getShapeForClass(owlClass.getId());
@@ -64,14 +74,18 @@ public class ClassPage {
 		
 		context.put("ClassName", classId.getLocalName());
 		context.put("ClassId", classId.stringValue());
+		
+		request.handleTermStatus(owlClass.getId());
 		setAncestorPaths(request);
 		setSubClasses(request);
 		setShapes(request, classId);
 		defineEnumerationMembers(request);
-		setSuperclassProperties(request);
+		setSuperclassProperties(request, pageInfo);
 		
-		List<PropertyInfo> propertyList = propertyList(request, shape);
+		List<PropertyInfo> propertyList = propertyList(request, shape, pageInfo);
 				
+		context.put("AnyTermStatus", pageInfo.anyTermStatus);
+		context.put("AnySecurityClassification", pageInfo.anySecurityClassification);
 		context.put("PropertyList", propertyList);
 		
 		
@@ -84,20 +98,74 @@ public class ClassPage {
 
 
 
-	private List<PropertyInfo> propertyList(ClassRequest request, Shape shape) throws DataCatalogException {
+	private List<PropertyInfo> propertyList(ClassRequest request, Shape shape, ClassPageInfo pageInfo) throws DataCatalogException {
 		URI classId = shape.getTargetClass();
 		List<PropertyInfo> propertyList = new ArrayList<>();
 		for (PropertyConstraint p : shape.getProperty()) {
 			if (RDF.TYPE.equals(p.getPredicate())) {
 				continue;
 			}
-			propertyList.add(new PropertyInfo(classId, p, request));
+			Link termStatus = termStatus(p, request, pageInfo);
+			PropertyInfo info = new PropertyInfo(classId, p, termStatus, request);
+			if (info.anySecurityClassification()) {
+				pageInfo.anySecurityClassification = true;
+			}
+			propertyList.add(info);
+			
 		}
 		
 		DataCatalogUtil.sortProperties(propertyList);
 		return propertyList;
 	}
 
+
+
+	private Link termStatus(PropertyConstraint p, ClassRequest request, ClassPageInfo info) throws DataCatalogException {
+		URI predicate = p.getPredicate();
+		URI termStatus = propertyStatus(predicate, request);
+		if (termStatus == null) {
+		
+			PropertyManager pm = request.getPropertyManager();
+			PropertyUsage usage = pm.getPropertyUsage(predicate);
+			if (usage != null) {
+				for (PropertyConstraint pc : usage.getConstraintList()) {
+					URI ts = pc.getTermStatus();
+					if (termStatus == null) {
+						termStatus = ts;
+					} else if (ts != null && !termStatus.equals(ts)) {
+						// Conflicting term status values
+						return null;
+					}
+				}
+			}
+		}
+		
+		if (termStatus != null) {
+			String name = request.getOwlReasoner().friendlyName(termStatus);
+			String href = request.relativePath(termStatus);
+			info.anyTermStatus = true;
+			return new Link(name, href);
+		}
+		
+		return null;
+	}
+
+
+
+	private URI propertyStatus(URI predicate, ClassRequest request) {
+		Graph graph = request.getGraph();
+		Vertex v = graph.getVertex(predicate);
+		if (v != null) {
+			return v.getURI(Konig.termStatus);
+		}
+		return null;
+	}
+
+	private static class ClassPageInfo {
+		private boolean anyTermStatus=false;
+		private boolean anySecurityClassification=false;
+		
+	}
 
 
 	private void setSubClasses(ClassRequest request) throws DataCatalogException {
@@ -122,7 +190,7 @@ public class ClassPage {
 	}
 
 
-	private void setSuperclassProperties(ClassRequest request) throws DataCatalogException {
+	private void setSuperclassProperties(ClassRequest request, ClassPageInfo pageInfo) throws DataCatalogException {
 		
 		Set<Resource> memory = new HashSet<>();
 		List<SuperclassProperties> list = new ArrayList<>();
@@ -144,7 +212,8 @@ public class ClassPage {
 						URI superId = (URI) id;
 						
 						Shape shape = request.getClassStructure().getShapeForClass(superId);
-						List<PropertyInfo> propertyList = propertyList(request, shape);
+						List<PropertyInfo> propertyList = propertyList(request, shape, pageInfo);
+						
 
 						if (!propertyList.isEmpty()) {
 							String name = superId.getLocalName();

@@ -67,8 +67,6 @@ import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectWriter.GeneratorSettings;
-
 import io.konig.activity.Activity;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
@@ -104,7 +102,6 @@ import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
-import io.konig.core.vocab.XOWL;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.ShapePropertyOracle;
@@ -171,7 +168,7 @@ public class WorkbookLoader {
 	private static final String DATASOURCE = "Datasource";
 	private static final String IRI_TEMPLATE = "IRI Template";
 	private static final String DEFAULT_FOR = "Default For";
-	private static final String TERM_STATUS = "Term Status";
+	private static final String TERM_STATUS = "Status";
 	private static final String TABULAR_ORIGIN_SHAPE = "Tabular Origin Shape";
 
 	private static final String SETTING_NAME = "Setting Name";
@@ -452,6 +449,8 @@ public class WorkbookLoader {
 		private List<FormulaHandler> formulaHandlers = new ArrayList<>();
 		
 		private List<Function> defaultDataSource = null;
+		private boolean describeTermStatus = true;
+		private boolean describeKonig = true;
 
 		private Set<String> errorMessages = new LinkedHashSet<>();
 		private int ontologyNameCol = UNDEFINED;
@@ -529,9 +528,7 @@ public class WorkbookLoader {
 
 		private Activity provenance;
 		private URI activityId;
-		private int pcTermStatusCol = UNDEFINED;
-		private int classTermStatusCol = UNDEFINED;
-		private int propertyTermStatusCol = UNDEFINED;
+		private int termStatusCol = UNDEFINED;
 
 		private int gcpInstanceNameCol = UNDEFINED;
 		private int gcpInstanceTypeCol = UNDEFINED;
@@ -1982,7 +1979,7 @@ public class WorkbookLoader {
 
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
 
-			URI termStatus = uriValue(row, pcTermStatusCol);
+			URI termStatus = uriValue(row, termStatusCol);
 			String comment = stringValue(row, pcCommentCol);
 
 			String valueTypeText = stringValue(row, pcValueTypeCol);
@@ -2154,6 +2151,8 @@ public class WorkbookLoader {
 				pathHandlers.add(new SourcePathBuilder(p, sourcePath));
 			}
 
+			termStatus(termStatus);
+			p.setTermStatus(termStatus);
 			p.setTermStatus(termStatus);
 			p.setMinCount(minCount);
 			p.setMaxCount(maxCount);
@@ -2493,7 +2492,8 @@ public class WorkbookLoader {
 			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol =
 					pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol  = pcSourcePathCol = 
 					pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = 
-					pcMinLengthCol = pcMaxLengthCol = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= UNDEFINED;
+					pcMinLengthCol = pcMaxLengthCol = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= 
+					termStatusCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -2580,7 +2580,7 @@ public class WorkbookLoader {
 						pcFormulaCol = i;
 						break;
 					case TERM_STATUS:
-						pcTermStatusCol = i;
+						termStatusCol = i;
 						break;
 					case SECURITY_CLASSIFICATION:
 						pcSecurityClassification = i;
@@ -2643,7 +2643,7 @@ public class WorkbookLoader {
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
             List<URI> shapeType=uriList(row, shapeTypeCol);
             URI tabularOriginShape = uriValue(row, tabularOriginShapeCol);
-
+            URI termStatus = uriValue(row, termStatusCol);
 
 			
 			Shape shape = produceShape(shapeId);
@@ -2664,7 +2664,6 @@ public class WorkbookLoader {
 			shape.setRollUpBy(rollUpBy);
 			
 			shape.setMediaTypeBaseName(mediaType);
-			
 			shape.setBigQueryTableId(bigqueryTable);
 			shape.setAggregationOf(aggregationOf);
 			shape.setRollUpBy(rollUpBy);
@@ -2691,6 +2690,8 @@ public class WorkbookLoader {
 			}
 			
 			shape.setInputShapeOf(shapeOfList);
+			shape.setTermStatus(termStatus);
+			termStatus(termStatus);
 
 		}
 
@@ -2874,7 +2875,7 @@ public class WorkbookLoader {
 		private void readShapeHeader(Sheet sheet) {
 			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = 
 				shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = 
-				shapeIriTemplateCol = tabularOriginShapeCol = UNDEFINED;
+				shapeIriTemplateCol = tabularOriginShapeCol = termStatusCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2934,6 +2935,10 @@ public class WorkbookLoader {
 					case TABULAR_ORIGIN_SHAPE:
 						tabularOriginShapeCol = i;
 						break;
+						
+					case TERM_STATUS :
+						termStatusCol = i;
+						break;
 
 					}
 				}
@@ -2965,6 +2970,7 @@ public class WorkbookLoader {
 			List<URI> typeList = uriList(row, individualTypeCol);
 			Literal codeValue = stringLiteral(row, individualCodeValueCol);
 			Literal gcpDatasetId = gcpDatasetId();
+			URI termStatus = uriValue(row, termStatusCol);
 			
 			if (individualId == null) {
 				return;
@@ -2988,9 +2994,38 @@ public class WorkbookLoader {
 			if (name == null && useDefaultName()) {
 				name = literal(individualId.getLocalName());
 			}
+
 			edge(individualId, Schema.name, name);
 			edge(individualId, RDFS.COMMENT, comment);
 			edge(individualId, DCTERMS.IDENTIFIER, codeValue);
+			termStatus(individualId, termStatus);
+		}
+
+		private void termStatus(URI subject, URI termStatus) {
+			termStatus(termStatus);
+			edge(subject, Konig.termStatus, termStatus);
+		}
+
+		private void termStatus(URI termStatus) {
+
+			if (termStatus != null) {
+				if (describeTermStatus) {
+					describeTermStatus = false;
+					describeKonig();
+					edge(Konig.TermStatus, RDF.TYPE, OWL.CLASS);
+					edge(Konig.TermStatus, RDFS.SUBCLASSOF, Schema.Enumeration);
+				}
+				edge(termStatus, RDF.TYPE, Konig.TermStatus);
+			}
+		}
+
+		private void describeKonig() {
+			if (describeKonig) {
+				describeKonig = false;
+				edge(Konig.NAMESPACE_ID, RDF.TYPE, OWL.ONTOLOGY);
+				edge(Konig.NAMESPACE_ID, VANN.preferredNamespacePrefix, literal("konig"));
+			}
+			
 		}
 
 		private Literal gcpDatasetId() {
@@ -3001,6 +3036,12 @@ public class WorkbookLoader {
 		}
 
 		private Row readIndividualHeader(Sheet sheet) {
+
+			individualNameCol = UNDEFINED;
+			individualIdCol = UNDEFINED;
+			individualTypeCol = UNDEFINED;
+			individualCodeValueCol = UNDEFINED;
+			termStatusCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -3030,6 +3071,10 @@ public class WorkbookLoader {
 						break;
 					case INDIVIDUAL_CODE_VALUE:
 						individualCodeValueCol = i;
+						break;
+
+					case TERM_STATUS:
+						termStatusCol = i;
 						break;
 
 					}
@@ -3071,7 +3116,7 @@ public class WorkbookLoader {
 			URI inverseOf = uriValue(row, inverseOfCol);
 			List<URI> propertyType = uriList(row, propertyTypeCol);
 			URI subpropertyOf = uriValue(row, subpropertyOfCol);
-			URI termStatus = uriValue(row, propertyTermStatusCol);
+			URI termStatus = uriValue(row, termStatusCol);
 			List<URI> securityClassification = uriList(row, securityClassificationCol);
 			if (propertyId == null) {
 				return;
@@ -3121,9 +3166,7 @@ public class WorkbookLoader {
 			if (inverseOf != null) {
 				graph.edge(propertyId, OWL.INVERSEOF, inverseOf);
 			}
-			if (termStatus != null) {
-				graph.edge(propertyId, XOWL.termStatus, termStatus);
-			}
+			termStatus(propertyId, termStatus);
 			
 			if(securityClassification!= null && !securityClassification.isEmpty())
 			{
@@ -3217,6 +3260,8 @@ public class WorkbookLoader {
 			subpropertyOfCol = UNDEFINED;
 			propertyCommentCol = UNDEFINED;
 			securityClassificationCol = UNDEFINED;
+			termStatusCol = UNDEFINED;
+			
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -3258,7 +3303,7 @@ public class WorkbookLoader {
 						subpropertyOfCol = i;
 						break;
 					case TERM_STATUS:
-						propertyTermStatusCol = i;
+						termStatusCol = i;
 						break;
 					case SECURITY_CLASSIFICATION:
 						securityClassificationCol = i;
@@ -3306,7 +3351,7 @@ public class WorkbookLoader {
 			Literal comment = stringLiteral(row, classCommentCol);
 			URI classId = uriValue(row, classIdCol);
 			List<URI> subclassOf = uriList(row, classSubclassOfCol);
-			URI termStatus = uriValue(row, classTermStatusCol);
+			URI termStatus = uriValue(row, termStatusCol);
 			if (classId != null) {
 				graph.edge(classId, RDF.TYPE, OWL.CLASS);
 				if (className != null) {
@@ -3322,10 +3367,8 @@ public class WorkbookLoader {
 					}
 
 				}
-
-				if (termStatus != null) {
-					graph.edge(classId, XOWL.termStatus, termStatus);
-				}
+				
+				termStatus(classId, termStatus);
 			}
 
 		}
@@ -3412,7 +3455,7 @@ public class WorkbookLoader {
 			classCommentCol = UNDEFINED;
 			classIdCol = UNDEFINED;
 			classSubclassOfCol = UNDEFINED;
-			classTermStatusCol = UNDEFINED;
+			termStatusCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -3441,7 +3484,7 @@ public class WorkbookLoader {
 						classSubclassOfCol = i;
 						break;
 					case TERM_STATUS:
-						classTermStatusCol = i;
+						termStatusCol = i;
 						break;
 					}
 				}

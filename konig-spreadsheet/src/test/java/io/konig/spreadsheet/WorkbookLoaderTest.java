@@ -1589,7 +1589,7 @@ public class WorkbookLoaderTest {
 		assertEquals(givenName.getDatatype(), XMLSchema.STRING);
 		assertEquals(givenName.getMinCount().intValue(), 0);
 		assertEquals(givenName.getMaxCount().intValue(), 1);
-		assertEquals(givenName.getTermStatus(), XOWL.Experimental);
+		assertEquals(XOWL.Experimental, givenName.getTermStatus());
 		
 		
 		PropertyConstraint familyName = shape.getPropertyConstraint(Schema.familyName);
@@ -1653,7 +1653,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDFS.LABEL, "Given Name");
 		assertValue(v, RDFS.COMMENT, "The person's given name. In the U.S., the first name of a Person. "
 				+ "This can be used along with familyName instead of the name property.");
-		assertValue(v, XOWL.termStatus, XOWL.Stable);
+		assertValue(v, Konig.termStatus, XOWL.Stable);
 		assertValue(v, RDF.TYPE, RDF.PROPERTY);
 		assertValue(v, RDF.TYPE, OWL.DATATYPEPROPERTY);
 		assertValue(v, RDFS.DOMAIN, Schema.Person);
@@ -1675,7 +1675,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDFS.LABEL, "Person");
 		assertValue(v, RDFS.COMMENT, "Any person (alive, dead, undead or fictional).");
 		assertValue(v, RDFS.SUBCLASSOF, Schema.Thing);
-		assertValue(v, XOWL.termStatus, XOWL.Stable);
+		assertValue(v, Konig.termStatus, XOWL.Stable);
 		
 	}
 

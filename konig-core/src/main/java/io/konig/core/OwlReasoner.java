@@ -65,6 +65,36 @@ public class OwlReasoner {
 		return graph;
 	}
 	
+	public String friendlyName(Resource subject) {
+		if (subject != null) {
+			Vertex v = graph.getVertex(subject);
+			if (v != null) {
+				return friendlyName(v);
+			}
+		}
+		return null;
+	}
+	
+	public String friendlyName(Vertex subject) {
+		String name = stringValue(subject, Schema.name, RDFS.LABEL);
+		if (name == null) {
+			name = subject.getId() instanceof URI ?
+					((URI)subject.getId()).getLocalName() : subject.getId().stringValue();
+		}
+		
+		return name;
+	}
+	
+	public String stringValue(Vertex subject, URI...predicate) {
+		for (URI p : predicate) {
+			Value value = subject.getValue(p);
+			if (value != null) {
+				return value.stringValue();
+			}
+		}
+		return null;
+	}
+
 	public List<Vertex> owlClassList() {
 		return graph.v(OWL.CLASS).in(RDF.TYPE).toVertexList();
 	}
@@ -813,6 +843,10 @@ public class OwlReasoner {
 
 	public boolean isEnumerationMember(Resource id) {
 		return isTypeOf(id, Schema.Enumeration);
+	}
+	
+	public boolean isNamedIndividual(Resource subject) {
+		return isTypeOf(subject, Schema.Enumeration) || isTypeOf(subject, OwlVocab.NamedIndividual);
 	}
 
 	public boolean isProperty(URI target) {
