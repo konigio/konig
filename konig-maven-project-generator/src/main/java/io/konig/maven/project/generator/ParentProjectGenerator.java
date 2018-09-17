@@ -36,6 +36,7 @@ public class ParentProjectGenerator extends MavenProjectGenerator {
 
 	private List<MavenProjectGenerator> children = new ArrayList<>();
 	private File mavenHome;
+	private String distributionManagement;
 	
 	public ParentProjectGenerator(MavenProjectConfig mavenProject) {
 		super();
@@ -45,6 +46,16 @@ public class ParentProjectGenerator extends MavenProjectGenerator {
 		init(mavenProject);
 	}
 
+	public String getDistributionManagement() {
+		return distributionManagement;
+	}
+
+	public void setDistributionManagement(String distributionManagement) {
+		this.distributionManagement = distributionManagement;
+	}
+
+
+
 	public void add(MavenProjectGenerator child) {
 		if (child != null) {
 			String parentId = getMavenProject().getArtifactId();
@@ -53,10 +64,12 @@ public class ParentProjectGenerator extends MavenProjectGenerator {
 		}
 	}
 
+	
 
 	@Override
 	public void run() throws MavenProjectGeneratorException, IOException {
 		super.run();
+		
 		for (MavenProjectGenerator child : children) {
 			child.run();
 		}
@@ -99,6 +112,7 @@ public class ParentProjectGenerator extends MavenProjectGenerator {
 		for (MavenProjectGenerator child : children) {
 			moduleNameList.add(child.getMavenProject().getArtifactId());
 		}
+		context.put("distributionManagement", distributionManagement);
 		context.put("moduleList", moduleNameList);
 		return context;
 	}
