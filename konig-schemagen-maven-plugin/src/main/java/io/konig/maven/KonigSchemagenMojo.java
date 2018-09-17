@@ -38,6 +38,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +51,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.DistributionManagement;
 import org.apache.maven.model.Plugin;
 
 /*
@@ -144,6 +146,7 @@ import io.konig.maven.project.generator.MavenProjectConfig;
 import io.konig.maven.project.generator.MavenProjectGeneratorException;
 import io.konig.maven.project.generator.MultiProject;
 import io.konig.maven.project.generator.ParentProjectGenerator;
+import io.konig.maven.project.generator.XmlSerializer;
 import io.konig.omcs.datasource.OracleShapeConfig;
 import io.konig.openapi.generator.OpenApiGenerateRequest;
 import io.konig.openapi.generator.OpenApiGenerator;
@@ -536,6 +539,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 	private void generateMultiProject() throws MavenProjectGeneratorException, IOException {
 		if (multiProject != null) {
+			configureDistributionManagement();
 			ParentProjectGenerator generator = multiProject.run();
 			if (multiProject.isAutoBuild()) {
 				List<String> goalList = mavenSession.getGoals();
@@ -550,6 +554,25 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
+
+	private void configureDistributionManagement() {
+		
+		DistributionManagement pojo = mavenProject.getDistributionManagement();
+		if (pojo != null) {
+			StringWriter out = new StringWriter();
+			XmlSerializer serializer = new XmlSerializer(out);
+			serializer.write(pojo, "distributionManagement");
+			serializer.flush();
+			
+			
+			ParentProjectConfig config = new ParentProjectConfig();
+			config.setDistributionManagement(out.toString());
+			multiProject.setParentProject(config);
+		}
+		
+		
+	}
+
 
 	private void generateDataServices() throws IOException, OpenApiGeneratorException, YamlParseException, DataAppGeneratorException, MojoExecutionException {
 		DataServicesConfig dataServices = googleCloudPlatform==null ? null : googleCloudPlatform.getDataServices();

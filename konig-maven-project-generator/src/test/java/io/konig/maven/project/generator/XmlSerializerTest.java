@@ -19,7 +19,7 @@ package io.konig.maven.project.generator;
  * limitations under the License.
  * #L%
  */
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.StringWriter;
@@ -28,6 +28,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.maven.model.DeploymentRepository;
+import org.apache.maven.model.DistributionManagement;
+import org.apache.maven.model.InputLocation;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -41,6 +44,30 @@ import io.konig.maven.WorkbookProcessor;
 public class XmlSerializerTest {
 	
 	@Test
+	public void testDistributionManagement() {
+		DistributionManagement pojo = new DistributionManagement();
+		DeploymentRepository repository = new DeploymentRepository();
+		repository.setId("pearson-releases");
+		repository.setUniqueVersion(true);
+		repository.setName("Pearson EDW Releases");
+		repository.setUrl("https://devops-tools.pearson.com/nexus-master/content/repositories/releases/edw/");
+		pojo.setRepository(repository);
+		
+	
+		pojo.setLocation("foo", new InputLocation(1, 1));
+		
+		StringWriter out = new StringWriter();
+		XmlSerializer xml = new XmlSerializer(out);
+		
+		xml.write(pojo, "distributionManagement");
+		xml.flush();
+	
+		String actual = out.toString();
+		assertTrue(actual.contains("pearson-releases"));
+		
+	}
+	
+	@Ignore
 	public void testJava() {
 		JavaCodeGeneratorConfig java = new JavaCodeGeneratorConfig();
 		List<FilterPart> filter = new ArrayList<>();
@@ -75,7 +102,7 @@ public class XmlSerializerTest {
 		assertEquals(expected, actual);
 	}
 	
-	@Test
+	@Ignore
 	public void testWorkbook() {
 		WorkbookProcessor workbook = new WorkbookProcessor();
 		workbook.setWorkbookFile(new File("foo/bar.xlsx"));
@@ -102,7 +129,7 @@ public class XmlSerializerTest {
 		assertEquals(expected, actual);
 	}
 
-	@Test
+	@Ignore
 	public void testGoogleCloudPlatform() {
 		
 		DataServicesConfig dataServices = new DataServicesConfig();

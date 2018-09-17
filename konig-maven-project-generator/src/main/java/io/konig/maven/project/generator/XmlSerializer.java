@@ -29,6 +29,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class XmlSerializer {
 	
@@ -131,6 +132,8 @@ public class XmlSerializer {
 					String fieldName = field.getName();
 					if (isSimpleValue(value)) {
 						printSimpleValue(value, fieldName);
+					} else if (value instanceof Map) {
+						// Ignore map fields.
 					} else {
 						write(value, fieldName);
 					}

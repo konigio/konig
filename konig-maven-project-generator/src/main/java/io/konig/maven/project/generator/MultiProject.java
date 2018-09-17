@@ -35,11 +35,13 @@ import io.konig.maven.JavaCodeGeneratorConfig;
 import io.konig.maven.JsonSchemaConfig;
 import io.konig.maven.KonigProject;
 import io.konig.maven.OracleManagedCloudConfig;
+import io.konig.maven.ParentProjectConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
 
 public class MultiProject extends MavenProjectConfig {
 	
+	private ParentProjectConfig parentProject;
 	private WorkbookProcessor workbook;
 	private JavaCodeGeneratorConfig java;
 	private GoogleCloudPlatformConfig googleCloudPlatform;
@@ -49,11 +51,23 @@ public class MultiProject extends MavenProjectConfig {
 	private OracleManagedCloudConfig oracleManagedCloud;
 	private AmazonWebServicesConfig amazonWebServices;	
 	private TabularShapeGeneratorConfig tabularShapeGenerator;
+	
+	public MultiProject() {
+		
+	}
 	 
 	public WorkbookProcessor getWorkbook() {
 		return workbook;
 	}
 	
+	public ParentProjectConfig getParentProject() {
+		return parentProject;
+	}
+
+	public void setParentProject(ParentProjectConfig parentProject) {
+		this.parentProject = parentProject;
+	}
+
 	public OracleManagedCloudConfig getOracleManagedCloudConfig() {
 		return oracleManagedCloud;
 	}
@@ -123,6 +137,9 @@ public class MultiProject extends MavenProjectConfig {
 	
 	public ParentProjectGenerator prepare() throws MavenProjectGeneratorException {
 		ParentProjectGenerator parent = new ParentProjectGenerator(this);
+		if (parentProject != null) {
+			parent.setDistributionManagement(parentProject.getDistributionManagement());
+		}
 		if (workbook != null) {
 			RdfModelGenerator rdf = new RdfModelGenerator(this, workbook);
 			rdf.setTabularShapeGeneratorConfig(tabularShapeGenerator);
