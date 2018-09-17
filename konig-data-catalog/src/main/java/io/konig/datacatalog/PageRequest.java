@@ -28,12 +28,17 @@ import java.util.Set;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.Namespace;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.Schema;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.ShapeManager;
 
@@ -68,6 +73,10 @@ public class PageRequest {
 
 	public DataCatalogBuilder getBuilder() {
 		return buildRequest.getCatalogBuilder();
+	}
+	
+	public OwlReasoner getOwlReasoner() {
+		return getClassStructure().getReasoner();
 	}
 
 	public ClassStructure getClassStructure() {
@@ -167,7 +176,52 @@ public class PageRequest {
 		return buildRequest.getPathFactory().relativePath(a, b);
 	}
 	
+	
+	public void handleTermStatus(Resource subject) throws DataCatalogException {
+		Vertex v = buildRequest.getGraph().getVertex(subject);
+		if (v != null) {
+			Value termStatus = v.getValue(Konig.termStatus);
+			if (termStatus instanceof URI) {
+				putTermStatus((URI) termStatus);
+			}
+		}
+	}
+	
+	public Link termStatusLink(URI termStatus) throws DataCatalogException {
 
+		if (termStatus != null) {			
+			String name = stringValue(termStatus, Schema.name, RDFS.LABEL);
+			if (name == null) {
+				name = termStatus.getLocalName();
+			}
+			String href = relativePath(termStatus);
+			return new Link(name, href);
+		}
+		return null;
+	}
+
+	public void putTermStatus(URI termStatus) throws DataCatalogException {
+		
+		Link link = termStatusLink(termStatus);
+		if (link != null) {
+			context.put("termStatus", link);
+		}
+	}
+
+	private String stringValue(URI subject, URI...predicate) {
+		Graph graph = buildRequest.getGraph();
+		Vertex v = graph.getVertex(subject);
+		if (v != null) {
+			for (URI p : predicate) {
+				Value value = v.getValue(p);
+				if (value != null) {
+					return value.stringValue();
+				}
+			}
+		}
+				
+		return null;
+	}
 
 	public String relativePath(URI target) throws DataCatalogException {
 		return relativePath(pageId, target);

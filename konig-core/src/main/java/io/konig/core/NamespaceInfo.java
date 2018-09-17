@@ -36,12 +36,19 @@ public class NamespaceInfo {
 	private String namespaceIri;
 	private Set<URI> type = new HashSet<>();
 	private Set<URI> terms = new HashSet<>();
+	private Set<URI> individuals = new HashSet<>();
 	
 	
 	public NamespaceInfo(String namespaceIri) {
 		this.namespaceIri = namespaceIri;
 	}
 	
+	
+	
+	public Set<URI> getIndividuals() {
+		return individuals;
+	}
+
 	public Set<URI> getType() {
 		return type;
 	}

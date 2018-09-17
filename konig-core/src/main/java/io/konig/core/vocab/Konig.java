@@ -27,6 +27,7 @@ import org.openrdf.model.impl.URIImpl;
 public class Konig {
 	
 	public static final String NAMESPACE = "http://www.konig.io/ns/core/";
+	public static final URI NAMESPACE_ID = new URIImpl("http://www.konig.io/ns/core/");
 	
 	public static final String JAVA_NAMESPACE = "http://www.konig.io/ns/java/";
 	public static final String ACTIVIY_BASE_URL = "http://www.konig.io/activity/";
@@ -41,6 +42,7 @@ public class Konig {
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
+	public static final String TERM_STATUS = "http://www.konig.io/ns/core/termStatus";
 
 	public static final String RELATIVE_PATH = "http://www.konig.io/ns/core/relativePath";
 	public static final String BASE_PROJECT = "http://www.konig.io/ns/core/baseProject";
@@ -68,7 +70,8 @@ public class Konig {
 	public static final URI constrainedShape = new URIImpl("http://www.konig.io/ns/core/constrainedShape");
 	public static final URI classInstanceCount = new URIImpl("http://www.konig.io/ns/core/classInstanceCount");
 	public static final URI shapeInstanceCount = new URIImpl("http://www.konig.io/ns/core/shapeInstanceCount");
-	
+	public static final URI TermStatus = new URIImpl("http://www.konig.io/ns/core/TermStatus");
+	public static final URI termStatus = new URIImpl("http://www.konig.io/ns/core/termStatus");
 	
 	// Generic Data Modeling
 

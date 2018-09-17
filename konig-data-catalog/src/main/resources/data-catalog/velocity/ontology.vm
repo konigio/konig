@@ -63,6 +63,30 @@
 		</tbody>
 	</table>
 #end
+#if( $IndividualList )
+	<table class="definition-table">
+		<thead>
+			<tr>
+				<th>Individual</th>#if( $AnyDescription)
+				<th>Description</th>#end#if( $AnyIndividualStatus )
+				<th>Status</th>#end				
+			</tr>
+		</thead>
+		<tbody>
+#foreach( $individual in $IndividualList )
+			<tr>
+				<th><a href="$individual.Name.Href">$individual.Name.Name</a></th>#if( $AnyDescription )
+				<td>$individual.Description</td>#end#if( $AnyIndividualStatus )
+				<td>
+#if( $individual.Status )				
+					<a href="$individual.Status.Href">$individual.Status.Name</a>
+#end				
+				</td>#end
+			</tr>
+#end
+		</tbody>
+	</table>
+#end
 	<p class="version">
 		Latest Version
 	</p>

@@ -24,7 +24,9 @@ package io.konig.datacatalog;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -34,8 +36,10 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDFS;
 
+import io.konig.core.NamespaceInfo;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.VANN;
 import io.konig.shacl.Shape;
 
@@ -75,6 +79,7 @@ public class OntologyPage {
 		}
 		
 		setClassList(request, ontologyId);
+		setIndividualsList(request, ontologyId);
 		setShapeList(request, ontologyId);
 
 		VelocityEngine engine = request.getEngine();
@@ -83,6 +88,52 @@ public class OntologyPage {
 		PrintWriter out = response.getWriter();
 		template.merge(context, out);
 		out.flush();
+		
+	}
+	
+	private void setIndividualsList(OntologyRequest request, URI ontologyId) throws DataCatalogException {
+		NamespaceInfo info = request.getBuildRequest().getNamespaceInfoManager().getNamespaceInfo(ontologyId.stringValue());
+		if (info == null) {
+			throw new DataCatalogException("Namespace info not found: " + ontologyId.stringValue());
+		}
+		
+		Set<URI> individualSet = info.getIndividuals();
+		if (individualSet.isEmpty()) {
+			return;
+		}
+		
+		boolean anyDescription=false;
+		boolean anyIndividualStatus=false;
+		List<NameDescriptionStatus> list = new ArrayList<>();
+		for (URI individualId : individualSet) {
+			Vertex subject = request.getGraph().getVertex(individualId);
+			if (subject == null) {
+				throw new DataCatalogException("Vertex not found: " + individualId);
+			}
+			String name = individualId.getLocalName();
+			String nameHref = request.relativePath(individualId);
+			String description = RdfUtil.getDescription(subject);
+			if (description == null) {
+				description = "";
+			} else {
+				anyDescription = true;
+			}
+			
+			String statusName = null;
+			String statusHref = null;
+			URI statusId = subject.getURI(Konig.termStatus);
+			if (statusId != null) {
+				statusName = request.getBuildRequest().getOwlReasoner().friendlyName(statusId);
+				statusHref = request.relativePath(statusId);
+				anyIndividualStatus = true;
+			}
+			
+			list.add(new NameDescriptionStatus(Link.create(name, nameHref), description, Link.create(statusName, statusHref)));
+		}
+		request.getContext().put("AnyDescription", anyDescription);
+		request.getContext().put("AnyIndividualStatus", anyIndividualStatus);
+		Collections.sort(list);
+		request.getContext().put("IndividualList", list);
 		
 	}
 

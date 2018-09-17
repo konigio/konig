@@ -25,7 +25,6 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 public class XOWL {
-	public static final URI termStatus = new URIImpl("http://schema.pearson.com/ns/xowl/termStatus");
 	public static final URI Stable = new URIImpl("http://schema.pearson.com/ns/xowl/termStatus/statusStable");
 	public static final URI Experimental = new URIImpl("http://schema.pearson.com/ns/xowl/termStatus/statusExperimental");
 	public static final URI Invalid = new URIImpl("http://schema.pearson.com/ns/xowl/termStatus/statusInvalid");

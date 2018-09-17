@@ -132,17 +132,23 @@ public class ShapePage {
 		}
 		request.setPageId(shapeURI);
 		request.setActiveLink(null);
-		
+
+		request.putTermStatus(shape.getTermStatus());
 		handleDdlFile(context, request);
 		
 		List<PropertyInfo> propertyList = new ArrayList<>();
 		context.put("PropertyList", propertyList);
+		boolean anyTermStatus = false;
 		for (PropertyConstraint p : shape.getProperty()) {
-			propertyList.add(new PropertyInfo(shapeURI, p, request));
+			PropertyInfo info = new PropertyInfo(shapeURI, p, request);
+			propertyList.add(info);
+			if (info.getTermStatus() != null) {
+				anyTermStatus = true;
+			}
 		}
+		context.put("AnyTermStatus", anyTermStatus);
 		DataCatalogUtil.sortProperties(propertyList);
 		addJsonSamples(request);
-		
 		Template template = engine.getTemplate(SHAPE_TEMPLATE);
 		
 		PrintWriter out = response.getWriter();

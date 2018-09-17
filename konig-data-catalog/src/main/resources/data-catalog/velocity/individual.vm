@@ -8,8 +8,11 @@
 <div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$IndividualId">
 	<h1 property="rdfs:label" class="page-title">$IndividualName</h1>
 	<div><span class="canonicalUrl">Canonical URL: <a href="$IndividualId">$IndividualId</a></span></div>
-	<div><span class="canonicalUrl">Instance of: <a href="$EnumerationClass.Href">$EnumerationClass.Name</a></span></div>
 	<div property="rdfs:comment">$IndividualDescription</div>
+	<div><span class="canonicalUrl">Instance of: <a href="$EnumerationClass.Href">$EnumerationClass.Name</a></span></div>
+#if( $termStatus ) 
+  <div><span class="canonicalUrl">Status: <a href="$termStatus.Href">$termStatus.Name</a></span></div>
+#end	
 </div>
 </body>
 </html>

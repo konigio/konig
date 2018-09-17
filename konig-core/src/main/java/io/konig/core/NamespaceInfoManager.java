@@ -33,6 +33,7 @@ public class NamespaceInfoManager {
 	private Map<String, NamespaceInfo> map = new HashMap<>();
 	
 	public void load(Graph graph) {
+		OwlReasoner owl = new OwlReasoner(graph);
 		for (Vertex v : graph.vertices()) {
 			Resource node = v.getId();
 			if (node instanceof URI) {
@@ -45,6 +46,9 @@ public class NamespaceInfoManager {
 					map.put(namespace, set);
 				}
 				set.getTerms().add(iri);
+				if (owl.isNamedIndividual(iri)) {
+					set.getIndividuals().add(iri);
+				}
 			}
 		}
 	}

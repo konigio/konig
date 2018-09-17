@@ -26,7 +26,9 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.PropertyStructure;
 
@@ -38,8 +40,19 @@ public class PropertyInfo {
 	private String typeName;
 	private String typeHref;
 	private String description;
-	private List<Link> quantifiedSecurityClassificationList;
+	private Link termStatus;
+	private List<Link> qualifiedSecurityClassificationList;
+	
+	public PropertyInfo(URI resourceId, PropertyConstraint constraint, Link termStatus, PageRequest request) throws DataCatalogException {
+		this(resourceId, constraint, request, false);
+		this.termStatus = termStatus;
+	}
+
 	public PropertyInfo(URI resourceId, PropertyConstraint constraint, PageRequest request) throws DataCatalogException {
+		this(resourceId, constraint, request, true);
+	}
+	
+	public PropertyInfo(URI resourceId, PropertyConstraint constraint, PageRequest request, boolean computeTermStatus) throws DataCatalogException {
 		this.constraint = constraint;
 		predicateId = constraint.getPredicate().stringValue();
 		predicateLocalName = constraint.getPredicate().getLocalName();
@@ -66,8 +79,22 @@ public class PropertyInfo {
 				description = "";
 			}
 		}
+		
+		if (computeTermStatus) {
+			URI termStatus = constraint.getTermStatus();
+			if (termStatus == null) {
+				Vertex v = request.getGraph().getVertex(constraint.getPredicate());
+				if (v != null) {
+					termStatus = v.getURI(Konig.termStatus);
+				}
+			}
+			if (termStatus != null) {
+				this.termStatus = request.termStatusLink(termStatus);
+			}
+		}
+		
 		propertyHref = request.relativePath(resourceId, constraint.getPredicate());
-		quantifiedSecurityClassificationList = quantifiedSecurityClassificationList(constraint.getQualifiedSecurityClassification(), request);
+		qualifiedSecurityClassificationList = quantifiedSecurityClassificationList(constraint.getQualifiedSecurityClassification(), request);
 
 	}
 	
@@ -111,9 +138,22 @@ public class PropertyInfo {
 		return propertyHref;
 	}
 
-	public List<Link> getQuantifiedSecurityClassificationList() {
-		return quantifiedSecurityClassificationList;
+	public List<Link> getQualifiedSecurityClassificationList() {
+		return qualifiedSecurityClassificationList;
 	}
+	
+	public boolean anySecurityClassification() {
+		return qualifiedSecurityClassificationList!=null && !qualifiedSecurityClassificationList.isEmpty();
+	}
+
+	public Link getTermStatus() {
+		return termStatus;
+	}
+
+	public void setTermStatus(Link termStatus) {
+		this.termStatus = termStatus;
+	}
+	
 
 
 }
