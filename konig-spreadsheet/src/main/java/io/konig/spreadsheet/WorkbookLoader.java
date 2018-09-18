@@ -685,7 +685,12 @@ public class WorkbookLoader {
 				List<Function> list = visitor.getList();
 				if (list != null) {
 					for (Shape shape : shapeManager.listShapes()) {
-						dataSourceMap.put((URI)shape.getId(), list);
+						if (shape.getId() instanceof URI) {
+							URI shapeId = (URI) shape.getId();
+							if (dataSourceMap.get(shapeId) == null) {
+								dataSourceMap.put(shapeId, list);
+							}
+						}
 					}
 				}
 			}
