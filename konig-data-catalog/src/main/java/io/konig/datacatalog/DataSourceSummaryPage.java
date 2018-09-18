@@ -56,7 +56,7 @@ public class DataSourceSummaryPage {
 		buildMap(request, map, shapeManager);
 		
 		List<DataSourceSummary> list = new ArrayList<>(map.values());
-		
+		Collections.sort(list);
 
 		VelocityContext context = request.getContext();
 		context.put(DATASOURCE_LIST, list);
