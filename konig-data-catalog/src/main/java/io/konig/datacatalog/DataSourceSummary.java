@@ -24,7 +24,7 @@ import java.util.List;
  */
 
 
-public class DataSourceSummary {
+public class DataSourceSummary implements Comparable<DataSourceSummary>{
 	
 	private String datasourceName;
 	private String datasourceType;
@@ -49,6 +49,11 @@ public class DataSourceSummary {
 
 	public void addArtifact(Link link) {
 		artifactList.add(link);
+	}
+
+	@Override
+	public int compareTo(DataSourceSummary other) {
+		return datasourceName.compareTo(other.getDatasourceName());
 	}
 	
 
