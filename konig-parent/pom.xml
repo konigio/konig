@@ -117,6 +117,7 @@
     	<module>../konig-aws-common</module>
    	    <module>../konig-aws-deploy-maven-plugin</module>
    	    <module>../konig-etl-generator</module>
+   	    <module>../konig-camel-google-bigquery</module>
 	</modules>
 
 	<developers>
