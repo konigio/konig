@@ -23,11 +23,21 @@ package io.konig.gcp.datasource;
 
 import java.io.File;
 
-public class GoogleCloudSqlTableInfo extends GoogleCloudSqlTable {
+import org.openrdf.model.Resource;
 
+public class GoogleCloudSqlTableInfo  {
+
+	private Resource id;
 	private File ddlFile;
+	private String tableName;
+	private String database;
+	private String instance;
 	
 	private File instanceFile;
+	
+	public GoogleCloudSqlTableInfo() {
+		
+	}
 
 	public File getDdlFile() {
 		return ddlFile;
@@ -45,4 +55,37 @@ public class GoogleCloudSqlTableInfo extends GoogleCloudSqlTable {
 		this.instanceFile = instanceFile;
 	}
 
+	public String getTableName() {
+		return tableName;
+	}
+
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
+
+	public String getDatabase() {
+		return database;
+	}
+
+	public void setDatabase(String database) {
+		this.database = database;
+	}
+
+	public String getInstance() {
+		return instance;
+	}
+
+	public void setInstance(String instance) {
+		this.instance = instance;
+	}
+
+	public Resource getId() {
+		return id;
+	}
+
+	public void setId(Resource id) {
+		this.id = id;
+	}
+
+	
 }

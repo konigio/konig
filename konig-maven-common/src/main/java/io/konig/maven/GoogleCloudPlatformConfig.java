@@ -23,7 +23,7 @@ package io.konig.maven;
 
 import java.io.File;
 
-public class GoogleCloudPlatformConfig {
+public class GoogleCloudPlatformConfig implements RdfSource {
 
 	
 	
@@ -67,8 +67,8 @@ public class GoogleCloudPlatformConfig {
 	@Parameter(property="konig.gcp.etl", defaultValue="${konig.gcp.directory}/camel-etl")
 	private File camelEtl;
 	
-	@Parameter(property="konig.project.directory", defaultValue="${project.basedir}")
-	private File baseDirectory;
+	@Parameter(property="konig.gcp.rdf.directory", defaultValue="${konig.gcp.directory}/rdf")
+	private File rdfDirectory;
 	
 	public GoogleCloudPlatformConfig() {
 		
@@ -211,6 +211,15 @@ public class GoogleCloudPlatformConfig {
 	public void setCloudsql(CloudSqlInfo cloudsql) {
 		this.cloudsql = cloudsql;
 	}
+
+	@Override
+	public File getRdfDirectory() {
+		return rdfDirectory;
+	}
+	
+	public void setRdfDirectory(File rdfDirectory) {
+		this.rdfDirectory = rdfDirectory;
+	}
 	
 	public File getCamelEtl() {
 		return camelEtl;
@@ -218,13 +227,5 @@ public class GoogleCloudPlatformConfig {
 
 	public void setCamelEtl(File camelEtl) {
 		this.camelEtl = camelEtl;
-	}
-	
-	public File getBaseDirectory() {
-		return baseDirectory;
-	}
-
-	public void setBaseDirectory(File baseDirectory) {
-		this.baseDirectory = baseDirectory;
 	}
 }

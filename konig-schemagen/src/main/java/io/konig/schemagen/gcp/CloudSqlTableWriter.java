@@ -27,7 +27,8 @@ import java.io.IOException;
 
 import io.konig.abbrev.AbbreviationManager;
 import io.konig.core.KonigException;
-import io.konig.datasource.DatasourceFileLocator;
+import io.konig.core.project.ProjectFile;
+import io.konig.core.project.ProjectFolder;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.schemagen.sql.SqlTable;
 import io.konig.schemagen.sql.SqlTableGenerator;
@@ -35,18 +36,14 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
 
 public class CloudSqlTableWriter implements ShapeVisitor {
-	private File baseDir;
 	private SqlTableGenerator generator;
-	private DatasourceFileLocator sqlFileLocator;
+	private ProjectFolder folder;
 	private AbbreviationManager abbrevManager;
 
-	// TODO: Add a DatasourceFileLocator as a private field, and pass an instance to the constructor.
-	// TODO: Remove the baseDir field.
 	
-	public CloudSqlTableWriter(SqlTableGenerator generator, DatasourceFileLocator sqlFileLocator, AbbreviationManager abbrevManager) {
-		//this.baseDir = baseDir;
+	public CloudSqlTableWriter(SqlTableGenerator generator, ProjectFolder folder, AbbreviationManager abbrevManager) {
 		this.generator = generator;
-		this.sqlFileLocator= sqlFileLocator;
+		this.folder = folder;
 		this.abbrevManager=abbrevManager;
 	}
 
@@ -65,9 +62,9 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 
 	private void writeTable(File file, SqlTable sqlTable) {
 
-	/*	if (!baseDir.exists()) {
-			baseDir.mkdirs();
-		}*/
+		if (!folder.exists()) {
+			folder.mkdirs();
+		}
 		try (FileWriter out = new FileWriter(file)) {
 			
 			
@@ -82,14 +79,10 @@ public class CloudSqlTableWriter implements ShapeVisitor {
 	}
 
 	private File sqlFile(GoogleCloudSqlTable table) {
-		// TODO: Refactor this method to use the DatasourceFileLocator passed to the constructor.
-		/*String instance = table.getInstance();
-		String database = table.getDatabase();
-		String tableName = table.getTableName();
+		ProjectFile file = folder.createFile(table.getDdlFileName());
+		table.setDdlFile(file);
 		
-		String fileName = MessageFormat.format("{0}_{1}_{2}.sql", instance, database, tableName);*/
-		
-		return sqlFileLocator.locateFile(table);
+		return file.getLocalFile();
 	}
 
 	

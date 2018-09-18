@@ -19,9 +19,7 @@ package io.konig.schemagen.gcp;
  * limitations under the License.
  * #L%
  */
-
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +32,8 @@ import org.openrdf.rio.RDFParseException;
 import io.konig.core.Graph;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.project.ProjectFolder;
+import io.konig.core.project.ProjectUtil;
 import io.konig.core.util.IOUtil;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
@@ -47,13 +47,14 @@ public class GoogleCloudResourceGeneratorTest {
 	public void testBigQueryTable() throws Exception {
 		GcpShapeConfig.init();
 		ShapeManager shapeManager = loadShapes("GoogleCloudResourceGeneratorTest/testBigQueryTable.ttl");
-		File outDir = new File("target/test/GoogleCloudResourceGeneratorTest");
+		ProjectFolder folder = ProjectUtil.createProjectFolder("target/test", "GoogleCloudResourceGeneratorTest");
+		
 
-		File expectedFile = new File(outDir, "schema.Person.json" );
+		File expectedFile = new File(folder.getLocalFile(), "schema.Person.json" );
 		expectedFile.delete();
 		
 		GoogleCloudResourceGenerator generator = new GoogleCloudResourceGenerator(null,null);
-		generator.addBigQueryGenerator(outDir);
+		generator.addBigQueryGenerator(folder);
 		generator.dispatch(shapeManager.listShapes());
 		
 		assertTrue(expectedFile.exists());

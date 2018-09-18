@@ -222,8 +222,13 @@ public class SimplePojoEmitter implements PojoEmitter {
 					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 						throw new KonigException(e);
 					}
+					if (javaObject == null) {
+						continue;
+					}
 					
-					if (javaObject instanceof Collection) {
+					if (javaObject.getClass().getAnnotation(RdfList.class) != null) {
+						emitRdfListProxy(subject, predicate, javaObject);
+					} else if (javaObject instanceof Collection) {
 						emitCollection(subject, predicate, (Collection<?>) javaObject);
 					} else {
 						Value object = toValue(javaObject);
@@ -240,32 +245,55 @@ public class SimplePojoEmitter implements PojoEmitter {
 					
 					
 				}
-			}
-			
+			}	
 		}
 		
+		private void emitRdfListProxy(Resource subject, URI predicate, Object javaObject) {
+			Collection<?> collection = null;
+			if (javaObject instanceof Collection<?>) {
+				collection = (Collection<?>) javaObject;
+			} else {
+				Class<?> type = javaObject.getClass();
+				Method m = context.listGetterMethod(type);
+				if (m == null) {
+					for (Method method : type.getMethods()) {
+						if (
+							method.getParameterCount()==0 && 
+							method.getName().startsWith("get") && 
+							Collection.class.isAssignableFrom(method.getReturnType())
+						) {
+							context.putListGetterMethod(type, method);
+							try {
+								collection = (Collection<?>) method.invoke(javaObject);
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								throw new KonigException("Failed to invoke getter for @RdfList class: " + type.getName());
+							}
+						}
+					}
+				}
+				if (collection == null) {
+					throw new KonigException("Getter not found for @RdfList class: " + type.getName());
+				}
+			}
+			
+			emitRdfList(subject, predicate, collection);
+			
+		}
+
 		private void emitCollection(Resource subject, URI predicate, Collection<?> javaObject) {
 			
-			Class<?> javaClass = javaObject.getClass();
-			RdfList listNote = javaClass.getAnnotation(RdfList.class);
-			
-			if (listNote != null) {
-				emitRdfList(subject,  predicate, javaObject);
-			} else {
-
-				boolean registered = false;
-				for (Object value : javaObject) {
-					Value object = toValue(value);
-					if (object != null) {
-						if (!registered) {
-							registerNamespace(predicate);
-							registered = true;
-						}
-						sink.edge(subject, predicate, object);
-						
-						if (object instanceof Resource) {
-							doEmit((Resource)object, value);
-						}
+			boolean registered = false;
+			for (Object value : javaObject) {
+				Value object = toValue(value);
+				if (object != null) {
+					if (!registered) {
+						registerNamespace(predicate);
+						registered = true;
+					}
+					sink.edge(subject, predicate, object);
+					
+					if (object instanceof Resource) {
+						doEmit((Resource)object, value);
 					}
 				}
 			}

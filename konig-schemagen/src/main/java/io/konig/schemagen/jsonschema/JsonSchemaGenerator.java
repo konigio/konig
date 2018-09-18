@@ -27,8 +27,10 @@ import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -45,8 +47,10 @@ import io.konig.shacl.Shape;
 
 public class JsonSchemaGenerator extends Generator {
 	
+	private boolean includeIdValue;
 	private JsonSchemaNamer namer;
 	private JsonSchemaTypeMapper typeMapper;
+	private boolean additionalProperties;
 
 	/**
 	 * For now, we hard-code a GeneratedMediaTypeTransformer.  In the future, the shape
@@ -55,11 +59,23 @@ public class JsonSchemaGenerator extends Generator {
 	private ShapeTransformer shapeTransformer = new GeneratedMediaTypeTransformer("+json");
 	
 	public JsonSchemaGenerator(JsonSchemaNamer namer, NamespaceManager nsManager, JsonSchemaTypeMapper typeMapper) {
+		this(namer, nsManager, typeMapper, false);
+	}
+	public JsonSchemaGenerator(JsonSchemaNamer namer, NamespaceManager nsManager, JsonSchemaTypeMapper typeMapper, boolean additionalProperties) {
 		super(nsManager);
 		this.namer = namer;
 		this.typeMapper = typeMapper;
+		this.additionalProperties = additionalProperties;
 	}
 	
+
+	public boolean isIncludeIdValue() {
+		return includeIdValue;
+	}
+
+	public void setIncludeIdValue(boolean includeIdValue) {
+		this.includeIdValue = includeIdValue;
+	}
 
 	public JsonSchemaNamer getNamer() {
 		return namer;
@@ -80,11 +96,16 @@ public class JsonSchemaGenerator extends Generator {
 
 		private ObjectMapper mapper = new ObjectMapper();
 		private Set<String> memory = new HashSet<>();
+		private ObjectNode root;
+		private ObjectNode definitions;
 
 		public ObjectNode generateJsonSchema(Shape shape) {
 			
 			String schemaId = namer.schemaId(shape);
 			ObjectNode json = mapper.createObjectNode();
+			if (root == null) {
+				root = json;
+			}
 			if (memory.contains(schemaId)) {
 				json.put("$ref", schemaId);
 			} else {
@@ -93,7 +114,9 @@ public class JsonSchemaGenerator extends Generator {
 				}
 				
 				memory.add(schemaId);
-				json.put("id", schemaId);
+				if (includeIdValue) {
+					json.put("id", schemaId);
+				}
 				json.put("type", "object");
 				
 				putProperties(json, shape);
@@ -134,6 +157,7 @@ public class JsonSchemaGenerator extends Generator {
 			if (list != null && !list.isEmpty()) {
 				ObjectNode properties = mapper.createObjectNode();
 				json.set("properties", properties);
+				json.put("additionalProperties", additionalProperties);
 				for (PropertyConstraint constraint : list) {
 					
 					if (shapeTransformer != null) {
@@ -214,6 +238,7 @@ public class JsonSchemaGenerator extends Generator {
 				object.put("type", "object");
 				ObjectNode properties = mapper.createObjectNode();
 				object.set("properties", properties);
+				object.put("additionalProperties", additionalProperties);
 				
 				ObjectNode value = mapper.createObjectNode();
 				properties.set("@value", value);
@@ -267,10 +292,31 @@ public class JsonSchemaGenerator extends Generator {
 				
 			} else if (valueShapeId != null) {
 				Shape valueShape = property.getShape();
-				object.put("type",  generateJsonSchema(valueShape));
+				String valueSchemaName = jsonSchemaLocalName(valueShape);
+				
+				object.put("$ref", "#/definitions/" + valueSchemaName);
+				
+				
+				ObjectNode valueSchema = generateJsonSchema(valueShape);
+				if (definitions == null) {
+					definitions = mapper.createObjectNode();
+					root.set("definitions", definitions);
+				}
+				definitions.set(valueSchemaName, valueSchema);
 			}
 			
 			return object;
+		}
+
+		private String jsonSchemaLocalName(Shape shape) {
+			Resource shapeId = shape.getId();
+			if (shapeId instanceof URI) {
+				URI uri = (URI) shapeId;
+				return uri.getLocalName();
+			}
+			String iri = namer.schemaId(shape);
+			URI uri = new URIImpl(iri);
+			return uri.getLocalName();
 		}
 
 	}

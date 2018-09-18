@@ -24,16 +24,19 @@ package io.konig.datacatalog;
 import java.io.File;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
+import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IOUtil;
+import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
@@ -55,17 +58,33 @@ public class DataCatalogBuilderTest {
 		}
 		outDir.mkdirs();
 	}
+	
+	
 
 	@Test
+	public void testDatasourceSummary() throws Exception {
+		GcpShapeConfig.init();
+    	AwsShapeConfig.init();
+		URI ontologyId = uri("http://schema.org/");
+		test("src/test/resources/DatasourceSummary", ontologyId);
+	}
+
+	@Ignore
 	public void testShape() throws Exception {
 		URI ontologyId = uri("http://schema.pearson.com/ns/fact/");
 		test("src/test/resources/ShapePageTest/rdf", ontologyId);
 	}
 
-	@Test
+	@Ignore
 	public void testHierarchicalNames() throws Exception {
 		URI ontologyId = uri("http://example.com/ns/categories/");
 		test("src/test/resources/DataCatalogBuilderTest/hierarchicalNames", ontologyId);
+	}
+	
+	@Ignore
+	public void testEnumNamespace() throws Exception {
+		URI ontologyId = uri("http://example.com/");
+		test("src/test/resources/EnumNamespaceTest", ontologyId);
 	}
 	
 	private void test(String sourcePath, URI ontologyId) throws Exception {
@@ -80,7 +99,7 @@ public class DataCatalogBuilderTest {
 		builder.build(request);
 	}
 
-	@Test
+	@Ignore
 	public void test() throws Exception {
 		
 		load("src/test/resources/DataCatalogBuilderTest/rdf");

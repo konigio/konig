@@ -33,6 +33,44 @@ public class StringUtil {
 	
 	private static final String DELIMITER = "_-./:";
 	
+	public static final String LABEL_TO_SNAKE_CASE(String label) {
+		StringBuilder builder = new StringBuilder();
+		
+		
+		label = label.trim();
+		
+		int priorCase = OTHER;
+		int prior = 0;
+		
+		for (int i=0; i<label.length();) {
+			int c = label.codePointAt(i);
+			
+			if (!Character.isAlphabetic(c) && !Character.isDigit(c)) {
+				
+				if (prior == '_') {
+					i += Character.charCount(c);
+					continue;
+				}
+				c = '_';
+			}
+			if (c=='_' && i==(label.length()-1)) {
+				break;
+			}
+			int caseValue = caseValue(c);
+			
+			if (i>1 && caseValue!=OTHER && prior!='_' && caseValue!=priorCase  && builder.codePointAt(builder.length()-2)!='_') {
+				builder.append('_');
+			}
+			prior = c;
+			priorCase = caseValue;
+			
+			builder.appendCodePoint(Character.toUpperCase(c));
+			i += Character.charCount(c);
+		}
+		
+		return builder.toString();
+	}
+	
 	public static final String SNAKE_CASE(String text) {
 		StringBuilder builder = new StringBuilder();
 		

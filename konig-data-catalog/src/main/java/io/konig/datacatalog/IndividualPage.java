@@ -45,6 +45,8 @@ public class IndividualPage {
 		request.setPageId(individualId);
 		request.setActiveLink(null);
 		
+		request.handleTermStatus(individualId);
+		
 		context.put("IndividualName", individualId.getLocalName());
 		context.put("IndividualId", individualId.stringValue());
 		

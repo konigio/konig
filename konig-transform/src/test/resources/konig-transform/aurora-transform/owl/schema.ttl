@@ -11,10 +11,10 @@ schema: a owl:Ontology ;
 
 schema:Person a owl:Class . 
 
-schema:familyName a owl:DatatypeProperty ; 
+schema:familyName a owl:Class ; 
 	schema:domainIncludes schema:Person ; 
 	schema:rangeIncludes xsd:string . 
 
-schema:givenName a owl:DatatypeProperty ; 
+schema:givenName a owl:Class ; 
 	schema:domainIncludes schema:Person ; 
 	schema:rangeIncludes xsd:string . 

@@ -28,6 +28,13 @@ public class RandomGenerator {
 	
 	private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
 	
+	private static final String[] DURATION = new String[]{
+			"P1D",
+			"P1M",
+			"P6M",
+			"P1Y"
+	};
+	
 	private static final String[] LOREM = ("Lorem ipsum dolor sit amet consectetur adipiscing elit "
 			+ "Donec eu scelerisque justo ac egestas dolor Sed tempor leo id vestibulum tincidunt "
 			+ "purus ipsum pellentesque magna sed dignissim odio mauris sed magna Morbi ac viverra "
@@ -74,6 +81,10 @@ public class RandomGenerator {
 	
 	public RandomGenerator(long seed) {
 		random = new Random(seed);
+	}
+	
+	public String nextDuration() {
+		return DURATION[random.nextInt(DURATION.length)];
 	}
 	
 	public String loremIpsum(int wordCount) {

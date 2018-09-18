@@ -2,6 +2,23 @@
 <head>
 <title>$ClassName</title>
 <link rel="stylesheet" type="text/css" href="//schema.org/docs/schemaorg.css">
+<style>
+.hidden {
+	display: none
+}
+.button {
+	margin-top: 12pt;
+	font-size: 75%
+}
+
+.visibleRow {
+	display: table-row
+}
+#EnumToggle {
+	padding-left: 1em;
+	padding-right: 1em;
+}
+</style>
 </head>
 <body>
 #parse( "data-catalog/velocity/header.vm" )
@@ -16,14 +33,53 @@
 			</tr>
 		</thead>
 		<tbody>
-#foreach( $ontology in $OntologyList ) 
+#foreach( $ontology in $OntologyList )
+#if( $ontology.IsEnumNamespace ) 
+			<tr class="EnumNamespace hidden">
+#else
 			<tr>
+#end 
 				<th><a href="$ontology.Href">$ontology.Name</a></th>
 				<td>$ontology.Description</td>
 			</tr>
 #end		
 		</tbody>
 	</table>
+#if($showHideEnumNamespaces)
+<script>
+showEnumNamespaces=false;
+function toggleEnumNamespaces() {
+	var oldClass = "";
+	var newClass = "";
+	var newText = "";
+	if (showEnumNamespaces) {
+	  showEnumNamespaces = false;
+	  oldClass = "visibleRow";
+	  newClass = "hidden";
+	  newText = "Show Enumeration Namespaces";
+	} else {
+	  showEnumNamespaces=true;
+	  oldClass = "hidden";
+	  newClass = "visibleRow";
+	  newText = "Hide Enumeration Namespaces";
+	}
+	
+	var enumList = document.getElementsByClassName("EnumNamespace");
+	for (var i=0; i<enumList.length; i++) {
+	  var row = enumList[i];
+	  row.classList.remove(oldClass);
+	  row.classList.add(newClass);
+	}
+	var toggle = document.getElementById("EnumToggle");
+	toggle.innerHTML = "<span>" + newText + "</span>";
+}
+</script>
+<div class="button">
+<a id="EnumToggle" href="#" onclick="toggleEnumNamespaces();return false;">Show Enum Namespaces</a>
+</div>
+
+
+#end	
 	
 
 	<p class="version">

@@ -23,10 +23,10 @@ package io.konig.shacl.io;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -40,7 +40,10 @@ import com.google.api.services.bigquery.model.ExternalDataConfiguration;
 import io.konig.core.Graph;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
+import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.project.Project;
+import io.konig.core.project.ProjectFile;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
@@ -50,6 +53,48 @@ import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.Shape;
 
 public class GcpShapeWriterTest {
+	
+	@Test
+	public void testDdlFile() throws Exception {
+
+		URI shapeId = uri("http://example.com/PersonShape");
+		URI dataSourceId = uri("http://example.com/datasource");
+		
+		Shape shape = new Shape(shapeId);
+		GoogleBigQueryTable table = new GoogleBigQueryTable();
+		table.setId(dataSourceId);
+		
+		
+		shape.addShapeDataSource(table);
+		File baseDir = new File("target");
+		
+		URI projectId = uri("urn:maven:GcpShapeWriterTest.testDdlFile-1.0");
+		Project project = new Project(projectId, baseDir);
+		
+		ProjectFile file = project.createProjectFile("gcp/bigquery/schema/person.sql");
+		table.setDdlFile(file);
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		
+		Graph graph = new MemoryGraph();
+		shapeWriter.emitShape(shape, graph);
+		
+		Vertex v = graph.getVertex(dataSourceId);
+		Vertex ddlFile = v.getVertex(Konig.ddlFile);
+		assertTrue(ddlFile != null);
+		
+		Value baseProject = ddlFile.getValue(Konig.baseProject);
+		assertTrue(baseProject != null);
+		assertEquals(projectId.stringValue(), baseProject.stringValue());
+		
+		Value relativePath = ddlFile.getValue(Konig.relativePath);
+		
+		assertTrue(relativePath!=null);
+		assertEquals("gcp/bigquery/schema/person.sql", relativePath.stringValue());
+		
+		graph.setNamespaceManager(MemoryNamespaceManager.getDefaultInstance());
+		RdfUtil.prettyPrintTurtle(graph, System.out);
+	}
 	
 	@Test
 	public void testBigQueryCsvBucket() throws Exception {

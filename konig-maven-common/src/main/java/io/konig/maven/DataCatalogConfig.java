@@ -1,7 +1,5 @@
 package io.konig.maven;
 
-import org.apache.maven.shared.model.fileset.FileSet;
-
 /*
  * #%L
  * Konig Maven Common
@@ -32,7 +30,9 @@ public class DataCatalogConfig {
 	private String logFile;
 	private boolean showUndefinedClass = false;
 	private ContentSystemConfig contentSystem;
-	private FileSet [] sqlFiles;
+	private KonigProject[] dependencies;
+	private String[] rdfSources;
+	
 	public String getRdfDir() {
 		return rdfDir;
 	}
@@ -69,18 +69,25 @@ public class DataCatalogConfig {
 	public void setContentSystem(ContentSystemConfig contentSystem) {
 		this.contentSystem = contentSystem;
 	}
-	public FileSet[] getSqlFiles() {
-		return sqlFiles;
-	}
-	public void setSqlFiles(FileSet[] sqlFiles) {
-		this.sqlFiles = sqlFiles;
-	}
 	public boolean isShowUndefinedClass() {
 		return showUndefinedClass;
 	}
 	public void setShowUndefinedClass(boolean showUndefinedClass) {
 		this.showUndefinedClass = showUndefinedClass;
 	}
+	public KonigProject[] getDependencies() {
+		return dependencies;
+	}
+	public void setDependencies(KonigProject[] dependencies) {
+		this.dependencies = dependencies;
+	}
+	public String[] getRdfSources() {
+		return rdfSources;
+	}
+	public void setRdfSources(String[] rdfSources) {
+		this.rdfSources = rdfSources;
+	}
+	
 	
 	
 

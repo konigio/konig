@@ -1,0 +1,9 @@
+@prefix crm: <https://schema.pearson.com/ns/crm/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+crm: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "crm" ; 
+	rdfs:label "Pearson CRM Ontology" ; 
+	rdfs:comment "A namespace for terms from Pearson's Customer Resource Management Model" . 

@@ -22,7 +22,8 @@ package io.konig.core.pojo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Ignore;
+import java.util.Set;
+
 import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -32,6 +33,7 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 
+import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Path;
@@ -43,10 +45,41 @@ import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
+import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class SimplePojoEmitterTest {
+	
+	@Test
+	public void testRdfList() throws Exception {
+
+		URI agentShapeId = uri("http://example.ecom/shapes/AgentShape");
+		URI personShapeId = uri("http://example.com/shapes/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/OrgShape");
+		
+		Shape agentShape = new Shape(agentShapeId);
+		Shape orgShape = new Shape(orgShapeId);
+		Shape personShape = new Shape(personShapeId);
+		
+		OrConstraint or = new OrConstraint();
+		or.add(orgShape);
+		or.add(personShape);
+		
+		agentShape.setOr(or);
+		
+		Graph graph = new MemoryGraph();
+		SimplePojoEmitter emitter = new SimplePojoEmitter();
+		
+		EmitContext context = new EmitContext(graph);
+		
+		emitter.emit(context, agentShape, graph);
+		
+		Vertex v = graph.getVertex(agentShapeId);
+		Set<Edge> set = v.outProperty(SH.or);
+		assertEquals(1, set.size());
+		
+	}
 	
 	
 	@Test

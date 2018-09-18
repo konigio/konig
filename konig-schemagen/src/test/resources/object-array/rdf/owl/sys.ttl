@@ -1,0 +1,13 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sys: <https://schema.pearson.com/ns/system/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+sys: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "sys" ; 
+	rdfs:label "Pearson System Ontology" ; 
+	rdfs:comment "An ontology for managing Pearson software systems" . 
+
+sys:System a owl:Class ; 
+	rdfs:label "System" ; 
+	rdfs:comment "A Pearson software system or software component." . 

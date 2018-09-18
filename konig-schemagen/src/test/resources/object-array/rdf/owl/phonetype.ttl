@@ -1,0 +1,26 @@
+@prefix mdm: <https://schema.pearson.com/ns/mdm/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix phonetype: <https://schema.pearson.com/ns/mdm/phonetype/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+phonetype: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "phonetype" ; 
+	rdfs:label "MDM Phone Line Type" ; 
+	rdfs:comment "The namespace for terms within the Phone Type enumeration." . 
+
+phonetype:Fax a mdm:PhoneLineType ; 
+	schema:name "Fax" . 
+
+phonetype:Mobile a mdm:PhoneLineType ; 
+	schema:name "Mobile" . 
+
+phonetype:Pager a mdm:PhoneLineType ; 
+	schema:name "Pager" . 
+
+phonetype:Telephone a mdm:PhoneLineType ; 
+	schema:name "Telephone" . 
+
+phonetype:Voice_Mail a mdm:PhoneLineType ; 
+	schema:name "Voice Mail" . 

@@ -5,6 +5,23 @@
 <style>
 #include( "data-catalog/velocity/style.vm" )
 </style>
+<style>
+.hidden {
+	display: none
+}
+.button {
+	margin-top: 12pt;
+	font-size: 75%
+}
+
+.visibleRow {
+	display: table-row
+}
+#EnumToggle {
+	padding-left: 1em;
+	padding-right: 1em;
+}
+</style>
 </head>
 <body>
 <div class="index-heading">
@@ -12,8 +29,47 @@
 </div>
 <div  class="listing">
 #foreach( $ontology in $OntologyList )
+#if( $ontology.IsEnumNamespace ) 
+	<div class="EnumNamespace hidden"><a href="$ontology.href" target="mainContentFrame">$ontology.Name</a></div>
+#else
 	<div><a href="$ontology.href" target="mainContentFrame">$ontology.Name</a></div>
+#end 
 #end
 </div>
+#if($showHideEnumNamespaces)
+<script>
+showEnumNamespaces=false;
+function toggleEnumNamespaces() {
+	var oldClass = "";
+	var newClass = "";
+	var newText = "";
+	if (showEnumNamespaces) {
+	  showEnumNamespaces = false;
+	  oldClass = "visibleRow";
+	  newClass = "hidden";
+	  newText = "Show Enumeration Namespaces";
+	} else {
+	  showEnumNamespaces=true;
+	  oldClass = "hidden";
+	  newClass = "visibleRow";
+	  newText = "Hide Enumeration Namespaces";
+	}
+	
+	var enumList = document.getElementsByClassName("EnumNamespace");
+	for (var i=0; i<enumList.length; i++) {
+	  var row = enumList[i];
+	  row.classList.remove(oldClass);
+	  row.classList.add(newClass);
+	}
+	var toggle = document.getElementById("EnumToggle");
+	toggle.innerHTML = "<span>" + newText + "</span>";
+}
+</script>
+<div class="button">
+<a id="EnumToggle" href="#" onclick="toggleEnumNamespaces();return false;">Show Enum Namespaces</a>
+</div>
+
+
+#end	
 </body>
 </html>

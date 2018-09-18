@@ -12,7 +12,9 @@ table {
 #parse( "data-catalog/velocity/header.vm" )
 <div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$PropertyId">
 	<h1 property="rdfs:label" class="page-title">$PropertyName</h1>
-	<span class="canonicalUrl">Canonical URL: <a href="$PropertyId">$PropertyId</a></span>
+	<div><b>Canonical URL:</b> <a href="$PropertyId">$PropertyId</a></div>#if( $termStatus )
+	<div><b>Term Status:</b><a href="$termStatus.Href">$termStatus.Name</a></div>
+#end	
 #if($EquivalentPath)
 	<div>
 	<span class="canonicalUrl">Canonical Path: 
