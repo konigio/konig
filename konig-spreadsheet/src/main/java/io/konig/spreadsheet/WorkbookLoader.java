@@ -2112,7 +2112,6 @@ public class WorkbookLoader {
 				if (formula != null) {
 					formulaHandlers.add(new ShapeFormulaHandler(shapeId, formula));
 				}
-
 				return;
 			}
 
@@ -2202,7 +2201,6 @@ public class WorkbookLoader {
 			if (formula != null) {
 				formulaHandlers.add(new PropertyFormulaHandler(shape, p, formula));
 			}
-			
 		}
 
 		private Integer maxCount(Row row, int col) {
