@@ -49,6 +49,10 @@ public class Konig {
 	public static final String DDL_FILE = "http://www.konig.io/ns/core/ddlFile";
 	public static final String TRANSFORM_FILE = "http://www.konig.io/ns/core/transformFile";
 
+	public static final String ShapeMaxRowLength = "http://www.konig.io/ns/core/shapeMaxRowLength";
+	public static final String TargetDatasource = "http://www.konig.io/ns/core/targetDatasource";
+	public static final String MaxRowLength = "http://www.konig.io/ns/core/maxRowLength";
+
 	public static final String MEASURE = "http://www.konig.io/ns/core/measure";
 	public static final String ATTRIBUTE = "http://www.konig.io/ns/core/attribute";
 	public static final String DIMENSION = "http://www.konig.io/ns/core/dimension";
