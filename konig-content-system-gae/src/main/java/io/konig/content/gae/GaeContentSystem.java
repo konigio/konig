@@ -78,6 +78,7 @@ public class GaeContentSystem implements ContentSystem {
 			"image/jpeg jpeg jpg\n" + 
 			"image/svg+xml svg\n" + 
 			"image/tiff tiff\n" + 
+			"application/json json\n" +
 			"text/css css"
 		);
 	}

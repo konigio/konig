@@ -1,0 +1,48 @@
+
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix gcp:   <http://www.konig.io/ns/gcp/> .
+@prefix schema:  <http://schema.org/> .
+#if($!{parentComponent})
+#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#foreach( $namespace in $namespaceList) 
+@prefix $namespace.Prefix: <$namespace.Name> .
+#end
+#end
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${shapeLocalName}>
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "${gcpProjectId}" ;
+		gcp:datasetId "${gcpDatasetId}" ;
+		gcp:tableId   "${shapeLocalName}" 
+	] ;
+	gcp:externalDataConfiguration [
+		gcp:sourceUris <gs://${gcpBucketName}/*> ;
+		gcp:sourceFormat "NEWLINE_DELIMITED_JSON" ;
+	] ;
+	#if($!{parentComponent}) 
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
+	#end
+.
+
+<${shapeId}> konig:shapeDataSource 
+	<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${shapeLocalName}> ,
+	<gs://${gcpBucketName}>
+.
+
+<gs://${gcpBucketName}>
+	a konig:GoogleCloudStorageBucket, konig:DataSource;
+	gcp:name "${gcpBucketName}" ;
+	gcp:projectId "${gcpProjectId}" ;
+	gcp:storageClass "${gcpBucketStorageClass}" ;
+	gcp:location   "${gcpBucketLocation}" ;	
+#if(${topicName} && ${eventType})
+	gcp:notificationInfo [
+		gcp:topic "${topicName}" ;
+		gcp:eventTypes "${eventType}";
+	] 
+#end	
+.
+
+<${shapeId}> konig:shapeDataSource <gs://${gcpBucketName}>
+.	

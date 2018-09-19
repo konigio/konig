@@ -22,6 +22,7 @@ package io.konig.shacl.io;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -43,6 +44,9 @@ import com.google.api.services.bigquery.model.ExternalDataConfiguration;
 import io.konig.core.Graph;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.project.Project;
+import io.konig.core.project.ProjectFile;
+import io.konig.core.project.ProjectManager;
 import io.konig.core.util.IOUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
@@ -60,6 +64,35 @@ public class GcpShapeLoaderTest {
 	@Before
 	public void setUp() {
 		GcpShapeConfig.init();
+	}
+	@Test
+	public void testDdlFile() throws Exception {
+		Graph graph = loadGraph("ShapeLoaderTest/testDdlFile.ttl");
+
+		File baseDir = new File("target");
+		URI projectId = uri("urn:maven:GcpShapeWriterTest.testDdlFile-1.0");
+		Project project = new Project(projectId, baseDir);
+		ProjectManager.instance().add(project);
+
+		ShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader loader = new ShapeLoader(shapeManager);
+		loader.load(graph);
+		URI shapeId = uri("http://example.com/PersonShape");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		assertTrue(shape != null);
+		
+		List<DataSource> list = shape.getShapeDataSource();
+		assertTrue(list != null);
+		assertEquals(1, list.size());
+		
+		GoogleBigQueryTable table = (GoogleBigQueryTable) list.get(0);
+		
+		ProjectFile file = table.getDdlFile();
+		assertTrue(file != null);
+		assertEquals(project, file.getBaseProject());
+		File expectedLocalFile = new File(baseDir, "gcp/bigquery/schema/person.sql");
+		assertEquals(expectedLocalFile, file.getLocalFile());
 	}
 
 	@Test

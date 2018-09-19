@@ -448,6 +448,7 @@ public class RdfUtil {
 		
 		return uri.stringValue();
 	}
+	
 
 	public static String getDescription(Vertex subject) {
 		

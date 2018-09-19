@@ -41,6 +41,40 @@ public class FileUtil {
 		}
 	}
 	
+	public static File leastCommonParent(File a, File b) {
+		String aPath = a.getAbsolutePath().replace('\\', '/');
+		String bPath = b.getAbsolutePath().replace('\\', '/');
+		
+		String parent = null;
+		int aPoint = aPath.lastIndexOf('/');
+		int bPoint = bPath.length();
+		while (aPoint > 0) {
+			
+			bPoint = bPath.lastIndexOf('/', bPoint-1);
+			if (bPoint != aPoint) {
+				break;
+			}
+			parent = aPath.substring(0, aPoint);
+			String bParent = bPath.substring(0, bPoint);
+			if (!parent.equals(bParent)) {
+				break;
+			}
+			
+			aPoint = aPath.lastIndexOf('/', aPoint-1);
+		}
+		
+		if (aPoint <= 0) {
+			return null;
+		}
+		
+		
+		if (File.separator.equals("\\")) {
+			parent = parent.replace('/', '\\');
+		}
+		
+		return new File(parent);
+	}
+	
 	public static void copy(File source, File target) throws IOException {
 		FileInputStream input = new FileInputStream(source);
 		copyAndCloseSource(input, target);

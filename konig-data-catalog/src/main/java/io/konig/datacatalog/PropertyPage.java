@@ -68,6 +68,7 @@ public class PropertyPage {
 			description = "";
 		}
 		
+		request.handleTermStatus(predicate);
 		context.put("PropertyName", predicate.getLocalName());
 		context.put("PropertyId", predicate.stringValue());
 		context.put("PropertyDescription", description);
@@ -188,6 +189,12 @@ public class PropertyPage {
 						href = request.relativePath(propertyId, literal.getDatatype());
 					}
 				}
+				
+			} else if (rdfValue instanceof URI) {
+				
+				URI uri = (URI) rdfValue;
+				href = request.relativePath(propertyId, uri);
+				stringValue = uri.getLocalName();
 				
 			}
 			

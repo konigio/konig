@@ -27,19 +27,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.maven.shared.model.fileset.FileSet;
-
+import io.konig.core.project.Project;
 import io.konig.maven.AmazonWebServicesConfig;
 import io.konig.maven.DataCatalogConfig;
 import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
 import io.konig.maven.JsonSchemaConfig;
+import io.konig.maven.KonigProject;
 import io.konig.maven.OracleManagedCloudConfig;
+import io.konig.maven.ParentProjectConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
 
 public class MultiProject extends MavenProjectConfig {
 	
+	private ParentProjectConfig parentProject;
 	private WorkbookProcessor workbook;
 	private JavaCodeGeneratorConfig java;
 	private GoogleCloudPlatformConfig googleCloudPlatform;
@@ -49,11 +51,23 @@ public class MultiProject extends MavenProjectConfig {
 	private OracleManagedCloudConfig oracleManagedCloud;
 	private AmazonWebServicesConfig amazonWebServices;	
 	private TabularShapeGeneratorConfig tabularShapeGenerator;
+	
+	public MultiProject() {
+		
+	}
 	 
 	public WorkbookProcessor getWorkbook() {
 		return workbook;
 	}
 	
+	public ParentProjectConfig getParentProject() {
+		return parentProject;
+	}
+
+	public void setParentProject(ParentProjectConfig parentProject) {
+		this.parentProject = parentProject;
+	}
+
 	public OracleManagedCloudConfig getOracleManagedCloudConfig() {
 		return oracleManagedCloud;
 	}
@@ -123,6 +137,9 @@ public class MultiProject extends MavenProjectConfig {
 	
 	public ParentProjectGenerator prepare() throws MavenProjectGeneratorException {
 		ParentProjectGenerator parent = new ParentProjectGenerator(this);
+		if (parentProject != null) {
+			parent.setDistributionManagement(parentProject.getDistributionManagement());
+		}
 		if (workbook != null) {
 			RdfModelGenerator rdf = new RdfModelGenerator(this, workbook);
 			rdf.setTabularShapeGeneratorConfig(tabularShapeGenerator);
@@ -161,7 +178,9 @@ public class MultiProject extends MavenProjectConfig {
 			parent.add(new AwsModelGenerator(this, amazonWebServices));
 		}
 		if (dataCatalog != null) {
-			dataCatalog.setSqlFiles(sqlFileSet());
+			dataCatalog.setDependencies(catalogDependencies());
+			dataCatalog.setRdfSources(rdfSources());
+			
 			parent.add(new DataCatalogProjectGenerator(this, dataCatalog));
 		}
 		if(oracleManagedCloud != null) {
@@ -170,45 +189,57 @@ public class MultiProject extends MavenProjectConfig {
 		
 		return parent;
 	}
+	
+	private String[] rdfSources() {
+		List<String> list = new ArrayList<>();
 
-	private FileSet[] sqlFileSet() {
-		
-		List<FileSet> list = new ArrayList<>();
-		
-		addGoogleFileSet(list);
-		addAwsFileSet(list);
-		
-		FileSet[] array = null;
+		addRdfSource(list, amazonWebServices, AwsModelGenerator.ARTIFACT_SUFFIX, "/target/generated");
+		addRdfSource(list, googleCloudPlatform, GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX, "/target/generated");
 		
 		if (!list.isEmpty()) {
-			array = new FileSet[list.size()];
+			String[] array = new String[list.size()];
 			list.toArray(array);
+			return array;
+		}
+		return null;
+	}
+
+	private void addRdfSource(List<String> list, Object config, String artifactSuffix, String path) {
+		if (config != null) {
+			String source = "../" + getArtifactId() + artifactSuffix + path ;
+			list.add(source);
 		}
 		
+	}
+
+	private KonigProject[] catalogDependencies() {
+		List<KonigProject> list = new ArrayList<>();
+		
+		addProject(list, amazonWebServices, AwsModelGenerator.ARTIFACT_SUFFIX);
+		addProject(list, googleCloudPlatform, GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX);
+		
+		KonigProject[] array = null;
+		if (!list.isEmpty()) {
+			array = new KonigProject[list.size()];
+			list.toArray(array);
+		}
 		return array;
 	}
 
-	private void addAwsFileSet(List<FileSet> list) {
-		if (amazonWebServices != null) {
-			FileSet fileSet = new FileSet();
-			fileSet.setDirectory("../" + getArtifactId() + AwsModelGenerator.ARTIFACT_SUFFIX + AwsModelGenerator.TABLES_PATH+"/");
-			fileSet.addInclude("*.sql");
-			list.add(fileSet);
+	private void addProject(List<KonigProject> list, Object config,	String artifactSuffix) {
+		if (config != null) {
+			String groupId = getGroupId();
+			String artifactId = getArtifactId() + artifactSuffix;
+			String version = getVersion();
+			
+			String baseDir = "../" + getArtifactId() + artifactSuffix;
+			
+			String id = Project.createId(groupId, artifactId, version).stringValue();
+			
+			list.add(new KonigProject(id, baseDir));
 		}
 		
 	}
-
-	private void addGoogleFileSet(List<FileSet> list) {
-		if (googleCloudPlatform != null) {
-			FileSet fileSet = new FileSet();
-			fileSet.setDirectory("../" + getArtifactId() + GoogleCloudPlatformModelGenerator.ARTIFACT_SUFFIX 
-					+ GoogleCloudPlatformModelGenerator.CLOUD_SQL_PATH+"/");
-			fileSet.addInclude("*.sql");
-			list.add(fileSet);
-		}
-		
-	}
-
 
 
 	

@@ -24,6 +24,9 @@ package io.konig.spreadsheet;
 public class SpreadsheetException extends Exception {
 	private static final long serialVersionUID = 1L;
 	
+	private Integer row;
+	private String sheetName;
+	
 	public SpreadsheetException(Throwable cause) {
 		super(cause);
 	}
@@ -35,5 +38,39 @@ public class SpreadsheetException extends Exception {
 	public SpreadsheetException(String message, Throwable cause) {
 		super(message, cause);
 	}
+
+	public Integer getRow() {
+		return row;
+	}
+
+	public void setRow(Integer row) {
+		this.row = row;
+	}
+
+	public String getSheetName() {
+		return sheetName;
+	}
+
+	public void setSheetName(String sheetName) {
+		this.sheetName = sheetName;
+	}
+	
+	public String getMessage() {
+		String msg = super.getMessage();
+		if (sheetName != null && row != null) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("On sheet '");
+			builder.append(sheetName);
+			builder.append("', row #");
+			builder.append(row+1);
+			builder.append("... ");
+			builder.append(msg);
+			msg = builder.toString();
+		}
+		
+		return msg;
+	}
+	
+	
 
 }

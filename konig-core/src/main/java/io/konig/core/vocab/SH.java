@@ -30,6 +30,7 @@ public class SH {
 	
 	public static final String PROPERTY = "http://www.w3.org/ns/shacl#property";
 	public static final String PATH = "http://www.w3.org/ns/shacl#path";
+	public static final String OR = "http://www.w3.org/ns/shacl#or";
 
 	public static final URI NAMESPACE_URI = new URIImpl("http://www.w3.org/ns/shacl#");
 	public static final URI IRI = new URIImpl("http://www.w3.org/ns/shacl#IRI");
@@ -58,7 +59,7 @@ public class SH {
 	public static final URI maxInclusive = new URIImpl("http://www.w3.org/ns/shacl#maxInclusive");
 	public static final URI nodeKind = new URIImpl("http://www.w3.org/ns/shacl#nodeKind");
 	public static final URI not = new URIImpl("http://www.w3.org/ns/shacl#not");
-	public static final URI or = new URIImpl("http://www.w3.org/ns/shacl#or");
+	public static final URI or = new URIImpl(OR);
 	public static final URI pattern = new URIImpl("http://www.w3.org/ns/shacl#pattern");
 	public static final URI valueClass = new URIImpl("http://www.w3.org/ns/shacl#class");
 	public static final URI shape = new URIImpl("http://www.w3.org/ns/shacl#shape");

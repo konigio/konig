@@ -29,11 +29,16 @@ public class ClassRequest extends PageRequest {
 
 	private Vertex owlClass;
 	private ResourceWriterFactory writerFactory;
+	private PropertyManager propertyManager;
 
-	public ClassRequest(PageRequest other, Vertex owlClass, ResourceWriterFactory writerFactory) {
-		super(other);
+	public ClassRequest(PageRequest request, Vertex owlClass, ResourceWriterFactory writerFactory) throws DataCatalogException {
+		super(request);
 		this.owlClass = owlClass;
 		this.writerFactory = writerFactory;
+		
+		propertyManager = new PropertyManager();
+		propertyManager.build(request.getClassStructure());
+		
 	}
 
 	public Vertex getOwlClass() {
@@ -47,5 +52,11 @@ public class ClassRequest extends PageRequest {
 	public String localName(URI resourceId) {
 		return resourceId.getLocalName();
 	}
+
+	public PropertyManager getPropertyManager() {
+		return propertyManager;
+	}
+	
+	
 	
 }

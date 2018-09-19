@@ -1,0 +1,38 @@
+<html>
+<head>
+<title>$ClassName</title>
+<link rel="stylesheet" type="text/css" href="//schema.org/docs/schemaorg.css">
+
+</head>
+<body>
+#parse( "data-catalog/velocity/header.vm" )
+<div id="mainContent">
+	<h1 property="rdfs:label" class="page-title">Data Sources</h1>
+
+	<table class="definition-table">
+		<thead>
+			<tr>
+				<th>Data Source Name</th>
+				<th>Data Source Type</th>
+				<th>Related Links</th>
+			</tr>
+		</thead>
+		<tbody>
+#foreach( $ds in $DataSourceList )
+			<tr>
+				<th>$ds.DatasourceName</th>
+				<td>$ds.DatasourceType</td>
+				<td>#foreach( $artifact in $ds.ArtifactList )
+					<div><a href="$artifact.Href">$artifact.Name</a></div>#end				
+				</td>
+			</tr>
+#end		
+		</tbody>
+	</table>
+	
+	<p class="version">
+		Latest Version
+	</p>
+</div>
+</body>
+</html>

@@ -23,8 +23,10 @@ package io.konig.schemagen.gcp;
 
 import com.google.api.services.bigquery.model.Table;
 
+import io.konig.datasource.DataSource;
+
 public interface BigQueryTableVisitor {
 	
-	public void visit(Table table);
+	public void visit(DataSource ds, Table table);
 
 }
