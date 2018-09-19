@@ -31,6 +31,7 @@ public class GoogleCloudPlatformModelGenerator extends ConfigurableProjectGenera
 
 	public static final String ARTIFACT_SUFFIX = "-gcp-model";
 	public static final String CLOUD_SQL_PATH = "/target/generated/gcp/cloudsql/tables";
+	public static final String BIGQUERY_SCHEMA_PATH = "/target/generated/gcp/bigquery/schema";
 
 	public GoogleCloudPlatformModelGenerator(
 		MavenProjectConfig mavenProject,

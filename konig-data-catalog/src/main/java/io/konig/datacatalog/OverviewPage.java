@@ -31,19 +31,27 @@ import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
+import io.konig.core.NamespaceInfo;
+import io.konig.core.NamespaceInfoManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Konig;
 
 public class OverviewPage {
 	private static final String ONTOLOGY_LIST = "OntologyList";
 	private static final String OVERVIEW_FILE = "data-catalog/velocity/overview.vm";
+	public static final String SHOW_HIDE_ENUM_NAMESPACES = "showHideEnumNamespaces";
 	
 	public void render(PageRequest request, PageResponse response) throws DataCatalogException {
+		
+		NamespaceInfoManager nim = request.getBuildRequest().getNamespaceInfoManager();
+		
 		
 		request.setPageId(DataCatalogBuilder.OVERVIEW_URI);
 		request.setActiveLink(DataCatalogBuilder.OVERVIEW_URI);
 		List<Vertex> list = DataCatalogUtil.ontologyList(request);
 		List<ResourceDescription> ontologyList = new ArrayList<>();
+		boolean anyEnumNamespace = false;
 		for (Vertex v : list) {
 			Resource id = v.getId();
 			if (id instanceof URI) {
@@ -53,8 +61,12 @@ public class OverviewPage {
 				String description = RdfUtil.getDescription(v);
 				URI pageId = DataCatalogUtil.ontologySummary(ontologyId.getNamespace());
 				String href = DataCatalogUtil.path(request, pageId);
-				
-				ontologyList.add(new ResourceDescription(href, name, description));
+				NamespaceInfo info = nim.getNamespaceInfo(ontologyId.stringValue());
+				boolean isEnumNamespace = info==null ? false : info.getType().contains(Konig.EnumNamespace);
+				ontologyList.add(new OntologyDescription(href, name, description, isEnumNamespace));
+				if (isEnumNamespace) {
+					anyEnumNamespace = true;
+				}
 			}
 		}
 		
@@ -62,6 +74,7 @@ public class OverviewPage {
 		
 		VelocityContext context = request.getContext();
 		context.put(ONTOLOGY_LIST, ontologyList);
+		context.put(SHOW_HIDE_ENUM_NAMESPACES, anyEnumNamespace);
 		VelocityEngine engine = request.getEngine();
 		Template template = engine.getTemplate(OVERVIEW_FILE);
 		

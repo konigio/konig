@@ -23,7 +23,7 @@ package io.konig.maven;
 
 import java.io.File;
 
-public class GoogleCloudPlatformConfig {
+public class GoogleCloudPlatformConfig implements RdfSource {
 
 	
 	
@@ -61,10 +61,33 @@ public class GoogleCloudPlatformConfig {
 	@Parameter(property="konig.gcp.deployment")
 	private GroovyDeploymentScript deployment;
 	
+	@Parameter(property="konig.gcp.omitTypeFromEnumTables", defaultValue="false")
+	private boolean omitTypeFromEnumTables;
+	
+	@Parameter(property="konig.gcp.etl", defaultValue="${konig.gcp.directory}/camel-etl")
+	private File camelEtl;
+	
+	@Parameter(property="konig.gcp.rdf.directory", defaultValue="${konig.gcp.directory}/rdf")
+	private File rdfDirectory;
+	
 	public GoogleCloudPlatformConfig() {
 		
 	}
 	
+	
+	
+	public boolean isOmitTypeFromEnumTables() {
+		return omitTypeFromEnumTables;
+	}
+
+
+
+	public void setOmitTypeFromEnumTables(boolean omitTypeFromEnumTables) {
+		this.omitTypeFromEnumTables = omitTypeFromEnumTables;
+	}
+
+
+
 	public String getBqShapeBaseURL() {
 		return bqShapeBaseURL;
 	}
@@ -188,7 +211,21 @@ public class GoogleCloudPlatformConfig {
 	public void setCloudsql(CloudSqlInfo cloudsql) {
 		this.cloudsql = cloudsql;
 	}
+
+	@Override
+	public File getRdfDirectory() {
+		return rdfDirectory;
+	}
 	
+	public void setRdfDirectory(File rdfDirectory) {
+		this.rdfDirectory = rdfDirectory;
+	}
 	
-	
+	public File getCamelEtl() {
+		return camelEtl;
+	}
+
+	public void setCamelEtl(File camelEtl) {
+		this.camelEtl = camelEtl;
+	}
 }

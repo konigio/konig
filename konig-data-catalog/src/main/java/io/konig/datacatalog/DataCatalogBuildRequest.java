@@ -35,11 +35,12 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.Graph;
+import io.konig.core.NamespaceInfoManager;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.vocab.SH;
-import io.konig.datasource.DatasourceFileLocator;
+import io.konig.schema.EnumerationReasoner;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.ShapeManager;
 
@@ -53,12 +54,14 @@ public class DataCatalogBuildRequest {
 	private Set<URI> ontologyInclude;
 	private Set<URI> ontologyExclude;
 	private List<Vertex> ontologyList;
-	private DatasourceFileLocator sqlDdlLocator;
+	private NamespaceInfoManager namespaceInfoManager = new NamespaceInfoManager();
 	
 	private PathFactory pathFactory;
 	private ClassStructure classStructure;
 	private DataCatalogBuilder catalogBuilder;
 	private VelocityEngine engine;
+	private CatalogFileFactory fileFactory;
+	private OwlReasoner owlReasoner;
 	
 	private boolean showUndefinedClass = false;
 	
@@ -104,6 +107,9 @@ public class DataCatalogBuildRequest {
 
 	public void setGraph(Graph graph) {
 		this.graph = graph;
+		namespaceInfoManager.load(graph);
+		EnumerationReasoner reasoner = new EnumerationReasoner();
+		reasoner.annotateEnumerationNamespaces(graph, namespaceInfoManager);
 	}
 
 	public ShapeManager getShapeManager() {
@@ -147,21 +153,6 @@ public class DataCatalogBuildRequest {
 	}
 	
 	
-	/**
-	 * 
-	 * @return A utility that can locate SQL DDL files associated with a given Shape, or null if no ShapeFileLocator has been set.
-	 */
-	public DatasourceFileLocator getSqlDdlLocator() {
-		return sqlDdlLocator;
-	}
-
-	/**
-	 * Set a utility that can locate SQL DDL files associated with a given Shape.
-	 * @param sqlDdlLocator
-	 */
-	public void setSqlDdlLocator(DatasourceFileLocator sqlDdlLocator) {
-		this.sqlDdlLocator = sqlDdlLocator;
-	}
 
 	public void useDefaultOntologyList() throws DataCatalogException {
 		if (graph == null) {
@@ -233,5 +224,26 @@ public class DataCatalogBuildRequest {
 	void setEngine(VelocityEngine engine) {
 		this.engine = engine;
 	}
+
+	public NamespaceInfoManager getNamespaceInfoManager() {
+		return namespaceInfoManager;
+	}
+
+	public CatalogFileFactory getFileFactory() {
+		return fileFactory;
+	}
+
+	public void setFileFactory(CatalogFileFactory fileFactory) {
+		this.fileFactory = fileFactory;
+	}
+
+	public OwlReasoner getOwlReasoner() {
+		if (owlReasoner == null) {
+			owlReasoner = new OwlReasoner(graph);
+		}
+		return owlReasoner;
+	}
+
+	
 	
 }

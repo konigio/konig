@@ -1,12 +1,5 @@
 package io.konig.omcs.datasource;
 
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-
-import io.konig.annotation.RdfProperty;
-import io.konig.core.vocab.Konig;
-import io.konig.core.vocab.OMCS;
-
 /*
  * #%L
  * Konig Oracle Managed Cloud Model
@@ -27,11 +20,16 @@ import io.konig.core.vocab.OMCS;
  * #L%
  */
 
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 
-import io.konig.datasource.DataSource;
+import io.konig.annotation.RdfProperty;
+import io.konig.core.KonigException;
+import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.OMCS;
 import io.konig.datasource.TableDataSource;
 
-public class OracleTable extends DataSource implements TableDataSource {
+public class OracleTable extends TableDataSource {
 	private String tableName;
 	private OracleTableReference tableReference;
 	private String tableId;
@@ -94,6 +92,31 @@ public class OracleTable extends DataSource implements TableDataSource {
 	public String getSqlDialect() {
 		// TODO: Need to supply the version number supported.
 		return "PL/SQL";
+	}
+
+	@Override
+	public String getDdlFileName() {
+		OracleTableReference ref = getTableReference();
+		StringBuilder builder = new StringBuilder();
+		builder.append(ref.getOmcsInstanceId());
+		builder.append('.');
+		builder.append(ref.getOracleSchema());
+		builder.append('.');
+		builder.append(ref.getOmcsTableId());
+		builder.append(".sql");
+		return builder.toString();
+	}
+
+	@Override
+	public String getQualifiedTableName() {
+		if (tableReference == null) {
+			throw new KonigException("tableReference must be defined");
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append(tableReference.getOracleSchema());
+		builder.append('.');
+		builder.append(tableName);
+		return builder.toString();
 	}
 
 }

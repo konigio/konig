@@ -38,6 +38,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +51,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.DistributionManagement;
 import org.apache.maven.model.Plugin;
 
 /*
@@ -109,6 +111,8 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.io.SkosEmitter;
 import io.konig.core.path.NamespaceMapAdapter;
+import io.konig.core.project.Project;
+import io.konig.core.project.ProjectFolder;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.AWS;
@@ -118,12 +122,13 @@ import io.konig.data.app.common.DataApp;
 import io.konig.data.app.generator.DataAppGenerator;
 import io.konig.data.app.generator.DataAppGeneratorException;
 import io.konig.data.app.generator.EntityStructureWorker;
-import io.konig.datasource.DatasourceFileLocator;
-import io.konig.datasource.DdlFileLocator;
+import io.konig.datasource.DataSource;
+import io.konig.datasource.TableDataSource;
 import io.konig.estimator.MultiSizeEstimateRequest;
 import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
 import io.konig.etl.aws.EtlRouteBuilder;
+import io.konig.etl.gcp.GcpEtlRouteBuilder;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.ShapePropertyOracle;
 import io.konig.gae.datastore.CodeGeneratorException;
@@ -142,6 +147,7 @@ import io.konig.maven.project.generator.MavenProjectConfig;
 import io.konig.maven.project.generator.MavenProjectGeneratorException;
 import io.konig.maven.project.generator.MultiProject;
 import io.konig.maven.project.generator.ParentProjectGenerator;
+import io.konig.maven.project.generator.XmlSerializer;
 import io.konig.omcs.datasource.OracleShapeConfig;
 import io.konig.openapi.generator.OpenApiGenerateRequest;
 import io.konig.openapi.generator.OpenApiGenerator;
@@ -161,7 +167,6 @@ import io.konig.schemagen.avro.AvroNamer;
 import io.konig.schemagen.avro.AvroSchemaGenerator;
 import io.konig.schemagen.avro.impl.SimpleAvroNamer;
 import io.konig.schemagen.avro.impl.SmartAvroDatatypeMapper;
-import io.konig.schemagen.aws.AWSAuroraShapeFileCreator;
 import io.konig.schemagen.aws.AWSS3BucketWriter;
 import io.konig.schemagen.aws.AwsAuroraTableWriter;
 import io.konig.schemagen.aws.AwsAuroraViewWriter;
@@ -223,6 +228,8 @@ import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.ShapeInjector;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.impl.TemplateShapeNamer;
+import io.konig.shacl.io.DdlFileEmitter;
+import io.konig.shacl.io.ShapeAuxiliaryWriter;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.io.ShapeWriter;
@@ -327,6 +334,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private SimpleLocalNameService localNameService;
     private FormulaParser formulaParser;
     private CompositeEmitter emitter;
+    private Project project;
 
 	@Component
 	private MavenProject mavenProject;
@@ -352,6 +360,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			owlReasoner = new OwlReasoner(owlGraph);
 			
 			emitter = new CompositeEmitter();
+			createProject();
 			loadResources();
 			preprocessResources();
 			generateGoogleCloudPlatform();
@@ -378,18 +387,76 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generateTabularShapes();
 			computeMaxRowSize();
 			
-			emitter.emit(owlGraph);
+			emit();
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
-				SizeEstimateException | SQLException e) {
+				SizeEstimateException | KonigException | SQLException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
     }
     
+
+	private void emit() throws KonigException, IOException, RDFHandlerException {
+		emitter.emit(owlGraph);
+		
+		writeDdlFiles(googleCloudPlatform, Konig.GoogleBigQueryTable, Konig.GoogleBigQueryView, Konig.GoogleCloudSqlTable);
+		writeDdlFiles(amazonWebServices, Konig.AwsAuroraTable, Konig.AwsAuroraView);
+
+	}
+
+	private void writeDdlFiles(RdfSource rdfSource, URI...datasourceType) throws RDFHandlerException, IOException {
+		if (rdfSource != null && anyDdlFiles(datasourceType)) {
+			File file = new File(rdfSource.getRdfDirectory(), "ddlFiles.ttl");
+			writeDdlFiles(file, datasourceType);
+		}
+	}
+
+	private void writeDdlFiles(File file, URI... datasourceType) throws RDFHandlerException, IOException {
+		ShapeAuxiliaryWriter writer = new ShapeAuxiliaryWriter(file);
+		writer.addShapeEmitter(new DdlFileEmitter(datasourceType));
+		writer.writeAll(nsManager, shapeManager.listShapes());
+	}
+
+	private boolean anyDdlFiles(URI... datasourceTypeId) {
+		if (shapeManager != null) {
+			List<Shape> shapeList = shapeManager.listShapes();
+			if (shapeList != null) {
+				for (Shape shape : shapeList) {
+					List<DataSource> datasourceList = shape.getShapeDataSource();
+					if (datasourceList != null) {
+						for (DataSource ds : datasourceList) {
+							if (ds instanceof TableDataSource) {
+								for (URI typeId : datasourceTypeId) {
+									if (ds.getType().contains(typeId)) {
+										TableDataSource table = (TableDataSource) ds;
+										if (table.getDdlFile() != null) {
+											return true;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+
+	private void createProject() {
+		
+		URI projectId = Project.createId(mavenProject.getGroupId(), mavenProject.getArtifactId(), mavenProject.getVersion());
+		File baseDir = mavenProject.getBasedir();
+		
+		project = new Project(projectId, baseDir);
+		
+	}
+
 
 	private void preprocessResources() throws MojoExecutionException, IOException, RDFParseException, RDFHandlerException {
     	AuroraInfo aurora=null;
@@ -473,6 +540,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 	private void generateMultiProject() throws MavenProjectGeneratorException, IOException {
 		if (multiProject != null) {
+			configureDistributionManagement();
 			ParentProjectGenerator generator = multiProject.run();
 			if (multiProject.isAutoBuild()) {
 				List<String> goalList = mavenSession.getGoals();
@@ -487,6 +555,25 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
+
+	private void configureDistributionManagement() {
+		
+		DistributionManagement pojo = mavenProject.getDistributionManagement();
+		if (pojo != null) {
+			StringWriter out = new StringWriter();
+			XmlSerializer serializer = new XmlSerializer(out);
+			serializer.write(pojo, "distributionManagement");
+			serializer.flush();
+			
+			
+			ParentProjectConfig config = new ParentProjectConfig();
+			config.setDistributionManagement(out.toString());
+			multiProject.setParentProject(config);
+		}
+		
+		
+	}
+
 
 	private void generateDataServices() throws IOException, OpenApiGeneratorException, YamlParseException, DataAppGeneratorException, MojoExecutionException {
 		DataServicesConfig dataServices = googleCloudPlatform==null ? null : googleCloudPlatform.getDataServices();
@@ -687,6 +774,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				ShapeVisitor shapeVisitor = new EnumShapeVisitor(fileGetter, shapeManager);
 				BigQueryEnumShapeGenerator generator = new BigQueryEnumShapeGenerator(datasetMapper(), 
 						createTableMapper(), shapeNamer, shapeManager, shapeVisitor);
+				generator.setOmitTypeProperty(googleCloudPlatform.isOmitTypeFromEnumTables());
 				generator.generateAll(owlReasoner);
 			}
 		}
@@ -907,18 +995,18 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
-				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(tablesDir);
 
-				
-				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator,abbrevManager());
+				ProjectFolder tablesFolder = new ProjectFolder(project, tablesDir);
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,tablesFolder,abbrevManager());
 				resourceGenerator.add(awsAuror);				
 			}
 			if (viewDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
-				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(viewDir);
+				ProjectFolder viewFolder = new ProjectFolder(project, viewDir);
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
+		
 
-				AwsAuroraViewWriter awsAuror = new AwsAuroraViewWriter(viewDir, generator,sqlFileLocator,shapeModelFactory,abbrevManager());
+				AwsAuroraViewWriter awsAuror = new AwsAuroraViewWriter(viewDir, generator,viewFolder,shapeModelFactory,abbrevManager());
 			
 				resourceGenerator.add(awsAuror);	
 				
@@ -926,7 +1014,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if(transformsDir != null && amazonWebServices.isEnableAuroraTransform()){
 				ShapeModelFactory shapeModelFactory=new ShapeModelFactory(shapeManager, new AwsAuroraChannelFactory(), owlReasoner);
 				ShapeRuleFactory shapeRuleFactory=new ShapeRuleFactory(shapeManager, shapeModelFactory, new ShapeModelToShapeRule());
-				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(), new AWSAuroraShapeFileCreator(transformsDir), rdfSourceDir);
+				ProjectFolder transformsFolder = new ProjectFolder(project, transformsDir);
+				AuroraTransformGenerator generator=new AuroraTransformGenerator(shapeRuleFactory, new SqlFactory(),transformsFolder, rdfSourceDir);
 				resourceGenerator.add(generator);
 			}
 			
@@ -972,8 +1061,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			if(tablesDir != null) {
 				SqlTableGenerator generator = new SqlTableGenerator();
-				DatasourceFileLocator sqlFileLocator = new DdlFileLocator(tablesDir);
-				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,sqlFileLocator,abbrevManager());
+				ProjectFolder tablesFolder = new ProjectFolder(project, tablesDir);
+				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,tablesFolder,abbrevManager());
 			
 				resourceGenerator.add(awsAuror);
 				resourceGenerator.dispatch(shapeManager.listShapes());
@@ -1017,9 +1106,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			GoogleCloudResourceGenerator resourceGenerator = new GoogleCloudResourceGenerator(shapeManager, owlReasoner);
 	
 			if (bigQuery != null) {
-				resourceGenerator.addBigQueryGenerator(bigQuery.getSchema());
+				ProjectFolder schemaFolder = project.createFolder(bigQuery.getSchema());
+				resourceGenerator.addBigQueryGenerator(schemaFolder);
 				if (googleCloudPlatform.isEnableBigQueryTransform()) {
-					resourceGenerator.addBigQueryViewGenerator(bigQuery.getView());
+					ProjectFolder viewFolder = project.createFolder(bigQuery.getView());
+					resourceGenerator.addBigQueryViewGenerator(viewFolder);
 				}
 				
 				resourceGenerator.add(labelGenerator());
@@ -1062,7 +1153,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 					generateTransformScripts(bqScriptsDir);
 				}
 			}
-
+			generateCamelEtl();
 			generateDeploymentScript();
 		}
 	}
@@ -1071,8 +1162,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private CloudSqlTableWriter cloudSqlTableWriter() {
 		CloudSqlInfo info = googleCloudPlatform.getCloudsql();
 		SqlTableGenerator generator = new SqlTableGenerator();
-		DatasourceFileLocator sqlFileLocator = new DdlFileLocator(info.getTables());
-		return new CloudSqlTableWriter(generator, sqlFileLocator, abbrevManager());
+		ProjectFolder folder = new ProjectFolder(project, info.getTables());
+		return new CloudSqlTableWriter(generator, folder, abbrevManager());
 	}
 
 	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {
@@ -1232,7 +1323,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				
 				for (Vertex targetShapeVertex : graph.vertices()) {					
 					Shape targetShape = shapeManager.getShapeById(targetShapeVertex.getId());
-					dockerComposer=targetShape;
+					dockerComposer = targetShape;
 					if (targetShape.hasDataSourceType(Konig.AwsAuroraTable)) {
 						if(amazonWebServices != null) {
 							outDir = amazonWebServices.getCamelEtl();
@@ -1258,10 +1349,30 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 							}
 						}
 					}
-					
+					if(targetShape.hasDataSourceType(Konig.GoogleBigQueryTable)) {
+						if(googleCloudPlatform != null) {
+							outDir = googleCloudPlatform.getCamelEtl();
+						}						
+						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.DERIVEDFROM).toVertexList();
+						if (!sourceList.isEmpty()) {
+							Vertex sourceShapeVertex = sourceList.get(0);
+							Resource sourceShapeId = sourceShapeVertex.getId();
+							Shape sourceShape = shapeManager.getShapeById(sourceShapeId);
+
+							if (sourceShape.hasDataSourceType(Konig.GoogleBigQueryTable)
+									&& sourceShape.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
+								GcpEtlRouteBuilder builder = new GcpEtlRouteBuilder(sourceShape, targetShape, outDir);
+								builder.setEtlBaseDir(googleCloudPlatform.getDirectory());
+								builder.generate();
+								String serviceName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
+								Map<String, String> service=new HashMap<>();
+								service.put("image", "etl-"+serviceName+":latest");
+								services.put(serviceName, service);
+							}
+						}
+					}
 				}
 				EtlRouteBuilder builder = new EtlRouteBuilder(null, dockerComposer, outDir);
-				
 				builder.createDockerComposeFile(services);
 				createImageList(services, outDir);
 			}

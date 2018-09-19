@@ -1,5 +1,7 @@
 package io.konig.schemagen.gcp;
 
+import java.text.MessageFormat;
+
 /*
  * #%L
  * Konig Schema Generator
@@ -24,7 +26,9 @@ package io.konig.schemagen.gcp;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
@@ -49,6 +53,8 @@ public class BigQueryEnumShapeGenerator {
 	private ShapeManager shapeManager;
 	private ShapeVisitor shapeVisitor;
 	
+	private boolean omitTypeProperty=false;
+	
 	public BigQueryEnumShapeGenerator(DatasetMapper datasetMapper, BigQueryTableMapper tableMapper,
 			ShapeNamer shapeNamer, ShapeManager shapeManager, ShapeVisitor shapeVisitor) {
 		this.datasetMapper = datasetMapper;
@@ -58,9 +64,24 @@ public class BigQueryEnumShapeGenerator {
 		this.shapeVisitor = shapeVisitor;
 	}
 
+	
+
+	public boolean isOmitTypeProperty() {
+		return omitTypeProperty;
+	}
+
+
+
+	public void setOmitTypeProperty(boolean omitTypeProperty) {
+		this.omitTypeProperty = omitTypeProperty;
+	}
+
+
 
 	public void generateAll(OwlReasoner reasoner) {
 		ShapeGenerator shapeGenerator = new ShapeGenerator(reasoner);
+		shapeGenerator.setOmitTypeProperty(omitTypeProperty);
+		
 		Graph graph = reasoner.getGraph();
 		
 		List<Vertex> enumList = graph.v(Schema.Enumeration).in(RDFS.SUBCLASSOF).toVertexList();
@@ -81,6 +102,9 @@ public class BigQueryEnumShapeGenerator {
 						String datasetId = datasetMapper.datasetForClass(v);
 						
 						GoogleBigQueryTable table = new GoogleBigQueryTable();
+						
+						String iriValue = MessageFormat.format("https://www.googleapis.com/bigquery/v2/projects/$'{'gcpProjectId'}'/datasets/{0}/tables/{1}", datasetId, tableId);
+						table.setId(uri(iriValue));
 						BigQueryTableReference tableReference = new BigQueryTableReference("{gcpProjectId}", datasetId, tableId);
 						table.setTableReference(tableReference);
 						shape.addShapeDataSource(table);
@@ -92,6 +116,12 @@ public class BigQueryEnumShapeGenerator {
 		}
 		
 	}
+
+
+	private Resource uri(String value) {
+		return new URIImpl(value);
+	}
+
 
 
 	private boolean accept(URI enumId, OwlReasoner reasoner) {
