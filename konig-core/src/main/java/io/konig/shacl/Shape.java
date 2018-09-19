@@ -274,6 +274,22 @@ public class Shape implements Cloneable {
 		property.add(c);
 		return this;
 	}
+	
+	public Shape updatePropertyConstraint(PropertyConstraint c) {
+		if (property == null) {
+			return this;
+		}
+		URI id = c.getPredicate();
+		for (int i=0;i<property.size();i++) {
+			PropertyConstraint p=property.get(i);
+			URI predicate = p.getPredicate();
+			if (predicate!=null && predicate.equals(id)) {
+				p=c;
+				property.set(i, p);
+			}
+		}
+		return this;
+	}
 
 	public URI getTargetClass() {
 		return targetClass;

@@ -23,6 +23,7 @@ import io.konig.formula.ShapePropertyOracle;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.RelationshipDegree;
 
 /*
  * #%L
@@ -53,9 +54,11 @@ public class RdbmsShapeGenerator {
 	private FormulaParser parser;
 	private List<PropertyConstraint> rdbmsProperty = null;
 	private OwlReasoner owlReasoner;
-	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner) {
+	private RdbmsShapeHelper rdbmsShapeHelper;
+	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner,RdbmsShapeHelper rdbmsShapeHelper) {
 		this.parser = new FormulaParser();
 		this.owlReasoner = owlReasoner;
+		this.rdbmsShapeHelper = rdbmsShapeHelper;
 	}
 	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {		
 		Shape rdbmsChildShape = createRdbmsShape(childShape);
@@ -120,7 +123,6 @@ public class RdbmsShapeGenerator {
 		return false;
 	}
 	private void process(Shape rdbmsShape, String logicalPath, String prefix, Shape propertyContainer) throws RDFParseException, IOException {
-		
 		List<PropertyConstraint> list = new ArrayList<>(propertyContainer.getProperty());
 		
 		for (PropertyConstraint p : list) {

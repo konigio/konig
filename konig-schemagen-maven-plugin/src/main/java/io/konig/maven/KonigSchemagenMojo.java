@@ -215,6 +215,7 @@ import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.schemagen.sql.OracleDatatypeMapper;
 import io.konig.schemagen.sql.RdbmsShapeGenerator;
 import io.konig.schemagen.sql.RdbmsShapeHandler;
+import io.konig.schemagen.sql.RdbmsShapeHelper;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
@@ -480,9 +481,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
 			if (shapesDir != null) {
 				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), owlReasoner);
+				RdbmsShapeHelper rdbmsShapeHelper = new RdbmsShapeHelper(owlReasoner);
+				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), owlReasoner,rdbmsShapeHelper);
 				ShapeWriter shapeWriter = new ShapeWriter();
-				RdbmsShapeHandler handler = new RdbmsShapeHandler(shapeInjector, generator, fileGetter, shapeWriter, nsManager);
+				RdbmsShapeHandler handler = new RdbmsShapeHandler(shapeInjector, generator, fileGetter, shapeWriter, nsManager,rdbmsShapeHelper);
 				handler.visitAll(shapeManager.listShapes());
 			}
     	}
