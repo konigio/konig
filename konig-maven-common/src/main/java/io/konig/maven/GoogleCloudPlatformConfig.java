@@ -64,6 +64,9 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 	@Parameter(property="konig.gcp.omitTypeFromEnumTables", defaultValue="false")
 	private boolean omitTypeFromEnumTables;
 	
+	@Parameter(property="konig.gcp.etl", defaultValue="${konig.gcp.directory}/camel-etl")
+	private File camelEtl;
+	
 	@Parameter(property="konig.gcp.rdf.directory", defaultValue="${konig.gcp.directory}/rdf")
 	private File rdfDirectory;
 	
@@ -218,4 +221,11 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 		this.rdfDirectory = rdfDirectory;
 	}
 	
+	public File getCamelEtl() {
+		return camelEtl;
+	}
+
+	public void setCamelEtl(File camelEtl) {
+		this.camelEtl = camelEtl;
+	}
 }
