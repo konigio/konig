@@ -9,6 +9,9 @@
 	<h1 property="rdfs:label" class="page-title">$ShapeName</h1>
 	<div><span class="canonicalUrl">Canonical URL: <a href="$ShapeId">$ShapeId</a></span></div>
 	<div><span class="canonicalUrl">Target Class: <a href="$TargetClass.Href">$TargetClass.Name</a></span></div>
+#if( $termStatus )
+	<div><span class="canonicalUrl">Term Status:</span><a href="$termStatus.Href">$termStatus.Name</a></div>
+#end
 #if( $RelatedArtifacts ) 
   <div><span class="canonicalUrl">Related Artifacts:</span>
     <ul>
@@ -25,6 +28,9 @@
 				<th>Type</th>
 				<th>Description</th>
 				<th>Security Classification</th>
+#if( $AnyTermStatus )
+				<th>Status</th>
+#end				
 			</tr>
 		</thead>
 		<tbody class="supertype">
@@ -32,11 +38,20 @@
 			<tr typeof="sh:PropertyConstraint" resource="$pc.PredicateId">
 				<th class="prop-nam">$pc.PredicateLocalName</th>
 				<td class="prop-ect">$pc.TypeName</td>
-				<td class="prop-desc" property="rdfs:comment">$pc.Description</td>
+				<td class="prop-desc" property="rdfs:comment">
+					$pc.Description
+				</td>
 			
-				<td class="prop-quansec">#foreach( $quantifiedSecurityClassification in $pc.quantifiedSecurityClassificationList )	
-				<div><a href="$quantifiedSecurityClassification.href" target="_blank">$$quantifiedSecurityClassification.name</a>
+				<td class="prop-quansec">#foreach( $qsc in $pc.qualifiedSecurityClassificationList )	
+				<div><a href="$qsc.href" target="_blank">$qsc.name</a>
 				</div>#end</td>
+#if( $AnyTermStatus )
+				<td>
+#if( $pc.TermStatus )
+				<a href="$pc.TermStatus.Href">$pc.TermStatus.Name</a>
+#end
+				</td>
+#end			
 
 			</tr>
 #end		

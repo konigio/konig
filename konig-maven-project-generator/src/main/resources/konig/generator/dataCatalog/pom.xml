@@ -37,7 +37,16 @@ $dataCatalog
           </execution>
         </executions>
       </plugin> 
-      
+#if($contentSystem)      	
+      <plugin>
+        <groupId>io.konig</groupId>
+        <artifactId>konig-content-system-maven-plugin</artifactId>
+        <version>${konig.version}</version>
+        <configuration>
+$contentSystem        
+        </configuration>
+      </plugin>  
+#end        
        <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>2.5.3</version>

@@ -24,34 +24,30 @@ package io.konig.maven.datacatalog;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.model.fileset.FileSet;
-import org.apache.maven.shared.model.fileset.util.FileSetManager;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import io.konig.aws.datasource.AwsShapeConfig;
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.PathFactory;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.project.Project;
+import io.konig.core.project.ProjectManager;
 import io.konig.datacatalog.DataCatalogBuildRequest;
 import io.konig.datacatalog.DataCatalogBuilder;
 import io.konig.datacatalog.DataCatalogException;
-import io.konig.datasource.DatasourceFileLocator;
-import io.konig.datasource.DdlFileLocator;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -62,6 +58,9 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 
 	@Parameter
 	private File rdfDir;
+	
+	@Parameter
+	private File[] rdfSources;
 	
 	@Parameter(defaultValue="${project.basedir}/target/generated/datacatalog")
 	private File siteDir;
@@ -76,7 +75,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 	private File logFile;
 
 	@Parameter
-	private FileSet[] sqlFiles;
+	private Dependency[] dependencies;
 	
 	@Parameter
 	private boolean showUndefinedClass;
@@ -98,7 +97,8 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 		try {
 			AwsShapeConfig.init();
 			GcpShapeConfig.init();
-			RdfUtil.loadTurtle(rdfDir, graph, nsManager);
+			handleDependencies();
+			loadRdf(graph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
 			shapeLoader.load(graph);
 			URI ontologyId = ontology==null ? null : new URIImpl(ontology);
@@ -110,7 +110,6 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			request.setOntologyId(ontologyId);
 			request.setOutDir(siteDir);
 			request.setShapeManager(shapeManager);
-			request.setSqlDdlLocator(ddlLocator());
 			request.setShowUndefinedClass(showUndefinedClass);
 			
 			if (ontologyId==null) {
@@ -126,49 +125,38 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 		}
 
 	}
-	
-	private DatasourceFileLocator ddlLocator() throws MojoExecutionException {
-		DatasourceFileLocator locator = null;
-		if (sqlFiles != null) {
-			File sqlDir = createTempSqlFolder();
-			FileSetManager manager = new FileSetManager();
-			int count = 0;
-			
-			for (FileSet fileset : sqlFiles) {
-				String[] fileList = manager.getIncludedFiles(fileset);
-				count += fileList.length;
-				for (String filePath : fileList) {
-					filePath = 	fileset.getDirectory()+filePath;
-					File sourceFile = new File(filePath);
-					File targetFile = new File(sqlDir, sourceFile.getName());
-					
-					try {
-						FileUtils.copyFile(sourceFile, targetFile);
-					} catch (IOException e) {
-						throw new MojoExecutionException("Failed to copy file", e);
-					}
-				}
-			}
-			if (count > 0) {
-				locator = new DdlFileLocator(sqlDir);
+
+	private void loadRdf(Graph graph, NamespaceManager nsManager) throws RDFParseException, RDFHandlerException, IOException {
+
+		if (rdfDir!=null) {
+			RdfUtil.loadTurtle(rdfDir, graph, nsManager);
+		}
+		if (rdfSources!=null) {
+			for (File dir : rdfSources) {
+				RdfUtil.loadTurtle(dir, graph, nsManager);
 			}
 		}
-		return locator;
+		
 	}
 
-	private File createTempSqlFolder() throws MojoExecutionException {
-		File baseDir = mavenProject.getBasedir();
-		File sqlDir = new File(baseDir, "target/tmp/sql");
-		if (sqlDir.exists()) {
-			try {
-				FileUtils.deleteDirectory(sqlDir);
-			} catch (IOException e) {
-				throw new MojoExecutionException("Failed to delete old SQL files", e);
+	private void handleDependencies() {
+		if (dependencies != null) {
+			File baseDir = mavenProject.getBasedir();
+			
+			ProjectManager manager = ProjectManager.instance();
+			for (Dependency d : dependencies) {
+				manager.add(new Project(uri(d.getId()), new File(baseDir, d.getBaseDir())));
 			}
 		}
-		sqlDir.mkdirs();
-		return sqlDir;
+		
 	}
+
+	private URI uri(String value) {
+		return new URIImpl(value);
+	}
+
+	
+
 
 	
 }

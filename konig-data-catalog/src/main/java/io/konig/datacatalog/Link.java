@@ -54,5 +54,12 @@ public class Link implements Comparable<Link> {
 	public int compareTo(Link o) {
 		return name.compareToIgnoreCase(o.getName());
 	}
+
+	public static Link create(String name, String href) {
+		if (name != null) {
+			return new Link(name, href);
+		}
+		return null;
+	}
 	
 }

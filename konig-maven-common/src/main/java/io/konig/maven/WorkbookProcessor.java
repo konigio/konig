@@ -32,7 +32,7 @@ public class WorkbookProcessor {
 	
 	private boolean inferRdfPropertyDefinitions=true;
 	private boolean failOnWarnings = false;
-	private boolean failOnErrors = false;
+	private boolean failOnErrors = true;
 	
 	public File getWorkbookFile() {
 		return workbookFile;

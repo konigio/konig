@@ -49,6 +49,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.SequencePath;
@@ -59,6 +60,41 @@ public class ShapeWriterTest {
 	
 	private ShapeWriter shapeWriter = new ShapeWriter();
 	private Graph graph = new MemoryGraph();
+	
+	@Test
+	public void testOrConstraint() throws Exception {
+		URI agentShapeId = uri("http://example.ecom/shapes/AgentShape");
+		URI personShapeId = uri("http://example.com/shapes/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/OrgShape");
+		
+		Shape agentShape = new Shape(agentShapeId);
+		Shape orgShape = new Shape(orgShapeId);
+		Shape personShape = new Shape(personShapeId);
+		
+		OrConstraint or = new OrConstraint();
+		or.add(orgShape);
+		or.add(personShape);
+		
+		agentShape.setOr(or);
+		
+
+		shapeWriter.emitShape(agentShape, graph);
+		
+		Vertex agentV = graph.getVertex(agentShapeId);
+		
+		assertTrue(agentV != null);
+		
+		Vertex orV = agentV.getVertex(SH.or);
+		
+		assertTrue(orV != null);
+		
+		List<Value> list = orV.asList();
+		
+		assertEquals(2, list.size());
+		
+		
+		
+	}
 	
 	@Test
 	public void testSequencePath() throws Exception {
@@ -87,7 +123,7 @@ public class ShapeWriterTest {
 		assertEquals(Schema.address, javaList.get(0));
 		assertEquals(Schema.addressCountry, javaList.get(1));
 		
-		RdfUtil.prettyPrintTurtle(graph, System.out);
+//		RdfUtil.prettyPrintTurtle(graph, System.out);
 	}
 	
 	@Test

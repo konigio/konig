@@ -87,9 +87,148 @@ import io.konig.shacl.PropertyPath;
 import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.io.ShapeWriter;
 
 public class WorkbookLoaderTest {
+
+	@Test
+	public void testDefaultDataSource() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("default-data-source.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		URI shapeId = uri("https://schema.pearson.com/shapes/PERSON_STG_Shape");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		List<DataSource> list = shape.getShapeDataSource();
+		assertTrue(list != null);
+		assertTrue(list.size()==2);
+		
+		assertTrue(list.stream().filter(ds -> ds.isA(Konig.GoogleBigQueryTable)).count()==1);
+		assertTrue(list.stream().filter(ds -> ds.isA(Konig.GoogleCloudStorageBucket)).count()==1);
+	}
+
+	@Test
+	public void testDictionaryDefaultDatatype() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("dictionary-default-datatype.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		URI shapeId = uri("https://schema.pearson.com/shapes/PERSON_STG_Shape");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		URI predicate = uri("https://schema.pearson.com/ns/alias/FIRST_NAME");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		PropertyConstraint p = shape.getPropertyConstraint(predicate);
+		assertEquals(XMLSchema.STRING, p.getDatatype());
+	}
+	
+	@Test
+	public void testDictionaryDefaultMaxLength() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("dictionary-max-length.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		URI shapeId = uri("https://schema.pearson.com/shapes/PERSON_STG_Shape");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		URI predicate = uri("https://schema.pearson.com/ns/alias/FIRST_NAME");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		PropertyConstraint p = shape.getPropertyConstraint(predicate);
+		Integer maxLength = p.getMaxLength();
+		assertTrue(maxLength != null);
+		assertEquals(new Integer(256), maxLength);
+		
+		Integer minLength = p.getMinLength();
+		assertTrue(minLength != null);
+		assertEquals(new Integer(0), minLength);
+	}
+	
+	
+	@Test
+	public void testSecurityClassificationByName() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("security-classification-by-name.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		URI shapeId = uri("https://schema.pearson.com/shapes/PERSON_STG_Shape");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		URI predicate = uri("https://schema.pearson.com/ns/alias/FIRST_NAME");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		PropertyConstraint p = shape.getPropertyConstraint(predicate);
+		
+		List<URI> list = p.getQualifiedSecurityClassification();
+		URI dcl3 = uri("https://schema.pearson.com/ns/dcl/DCL3");
+		URI pii = uri("https://schema.pearson.com/ns/dcl/PII");
+		assertTrue(list.contains(dcl3));
+		assertTrue(list.contains(pii));
+		
+	}
+	
 	
 	@Test
 	public void testCurrentStateView() throws Exception {
@@ -1212,7 +1351,7 @@ public class WorkbookLoaderTest {
 		
 		Shape shape1 = s.getShapeById(shapeId);
 		assertTrue(shape1!=null);
-		assertTrue(shape1.getType()!=null && shape1.getType().contains(Konig.TabularNodeShape));		
+		//assertTrue(shape1.getType()!=null && shape1.getType().contains(Konig.TabularNodeShape));		
 		
 		//Test String property
 		PropertyConstraint pc=shape1.getPropertyConstraint(uri("http://example.com/alias/ADDRESS_VERIFICATION_CODE"));
@@ -1265,7 +1404,7 @@ public class WorkbookLoaderTest {
 		
 		Shape shape1 = s.getShapeById(shapeId);
 		assertTrue(shape1!=null);
-		assertTrue(shape1.getType()!=null && shape1.getType().contains(Konig.TabularNodeShape));
+		//assertTrue(shape1.getType()!=null && shape1.getType().contains(Konig.TabularNodeShape));
 		
 		shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
 		Shape shape2 = s.getShapeById(shapeId);
@@ -1408,6 +1547,39 @@ public class WorkbookLoaderTest {
 		IOUtil.recursiveDelete(testDir);
 		
 	}
+	@Test
+	public void testDataDictionaryForDatasource() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.load(book, graph);
+		input.close();
+		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
+		ShapeManager s = loader.getShapeManager();
+			
+		
+		Shape shape1 = s.getShapeById(shapeId);
+		assertTrue(shape1!=null);
+		assertTrue(shape1.getShapeDataSource()!=null);
+		List<DataSource> datasourceList=shape1.getShapeDataSource();
+		assertTrue(datasourceList.size()==1);
+		assertTrue(datasourceList.get(0).getType()!=null && datasourceList.get(0).getType().size()==2);
+		assertTrue(datasourceList.get(0).getType().contains(Konig.AwsAuroraTable));
+		
+		shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
+		Shape shape2 = s.getShapeById(shapeId);
+		assertTrue(shape2!=null);	
+		assertTrue(shape2.getShapeDataSource()!=null);
+		datasourceList=shape2.getShapeDataSource();
+		assertTrue(datasourceList.size()==1);
+		assertTrue(datasourceList.get(0).getType()!=null && datasourceList.get(0).getType().size()==2);
+		assertTrue(datasourceList.get(0).getType().contains(Konig.AwsAuroraTable));
+		
+	}
 	
 	public void testTabularNodeShape_2() throws Exception {
 
@@ -1486,7 +1658,7 @@ public class WorkbookLoaderTest {
 		assertEquals(givenName.getDatatype(), XMLSchema.STRING);
 		assertEquals(givenName.getMinCount().intValue(), 0);
 		assertEquals(givenName.getMaxCount().intValue(), 1);
-		assertEquals(givenName.getTermStatus(), XOWL.Experimental);
+		assertEquals(XOWL.Experimental, givenName.getTermStatus());
 		
 		
 		PropertyConstraint familyName = shape.getPropertyConstraint(Schema.familyName);
@@ -1550,7 +1722,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDFS.LABEL, "Given Name");
 		assertValue(v, RDFS.COMMENT, "The person's given name. In the U.S., the first name of a Person. "
 				+ "This can be used along with familyName instead of the name property.");
-		assertValue(v, XOWL.termStatus, XOWL.Stable);
+		assertValue(v, Konig.termStatus, XOWL.Stable);
 		assertValue(v, RDF.TYPE, RDF.PROPERTY);
 		assertValue(v, RDF.TYPE, OWL.DATATYPEPROPERTY);
 		assertValue(v, RDFS.DOMAIN, Schema.Person);
@@ -1572,7 +1744,7 @@ public class WorkbookLoaderTest {
 		assertValue(v, RDFS.LABEL, "Person");
 		assertValue(v, RDFS.COMMENT, "Any person (alive, dead, undead or fictional).");
 		assertValue(v, RDFS.SUBCLASSOF, Schema.Thing);
-		assertValue(v, XOWL.termStatus, XOWL.Stable);
+		assertValue(v, Konig.termStatus, XOWL.Stable);
 		
 	}
 

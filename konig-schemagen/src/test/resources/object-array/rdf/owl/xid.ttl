@@ -1,0 +1,28 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sys: <https://schema.pearson.com/ns/system/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xid: <https://schema.pearson.com/ns/xid/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+xid: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "xid" ; 
+	rdfs:label "Pearson Identity Ontology" ; 
+	rdfs:comment "An ontology for managing object identity" . 
+
+xid:Identity a owl:Class ; 
+	rdfs:label "Identity" ; 
+	rdfs:comment "A unique identifier for a Person as defined by some Identity Provider" . 
+
+xid:identifiedBy a owl:ObjectProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xid:Identity . 
+
+xid:identifier a owl:DatatypeProperty ; 
+	schema:domainIncludes xid:Identity ; 
+	schema:rangeIncludes xsd:string . 
+
+xid:identityProvider a owl:ObjectProperty ; 
+	schema:domainIncludes xid:Identity ; 
+	schema:rangeIncludes sys:System . 

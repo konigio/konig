@@ -1,0 +1,17 @@
+@prefix example: <http://example.com/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+example: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "example" . 
+
+example:Status a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration . 
+
+example:Active a example:Status ; 
+	schema:name "Active" . 
+
+example:Inactive a example:Status ; 
+	schema:name "Inactive" . 

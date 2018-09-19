@@ -139,6 +139,7 @@ public class CompactTurtleWriter extends TurtleWriter {
 					writer.write("(");
 					context.listInfo = listInfo = new ListInfo();
 					startList = true;
+					
 				}  
 				if (RDF.FIRST.equals(predicate)) {
 					listInfo.first = object;

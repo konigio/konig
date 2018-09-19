@@ -49,6 +49,8 @@ import com.google.common.io.Files;
 
 import io.konig.aws.datasource.AwsAuroraTable;
 import io.konig.aws.datasource.S3Bucket;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.Shape;
 
 public class EtlRouteBuilder {
@@ -158,7 +160,8 @@ public class EtlRouteBuilder {
 		addConfig(targetTable);
 		createDockerFile(targetLocalName, targetTable.getTableReference().getAwsSchema());
 	}
-
+	
+	
 	private void addConfig(AwsAuroraTable targetTable) throws IOException {
 
 		File file = new File(outDir, "camel-routes-config.properties");

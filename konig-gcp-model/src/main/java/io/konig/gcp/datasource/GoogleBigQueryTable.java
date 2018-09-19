@@ -33,7 +33,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 
-public class GoogleBigQueryTable extends DataSource implements TableDataSource {
+public class GoogleBigQueryTable extends TableDataSource {
 	
 	private Set<DataSource> bigQuerySource;
 	private BigQueryTableReference tableReference;
@@ -118,6 +118,29 @@ public class GoogleBigQueryTable extends DataSource implements TableDataSource {
 
 	public void setTabularFieldNamespace(String tabularFieldNamespace) {
 		this.tabularFieldNamespace = tabularFieldNamespace;
+	}
+
+	@Override
+	public String getDdlFileName() {
+		BigQueryTableReference ref = getTableReference();
+		StringBuilder builder = new StringBuilder();
+		builder.append(ref.getDatasetId());
+		builder.append('.');
+		builder.append(ref.getTableId());
+		builder.append(".json");
+		return builder.toString();
+	}
+
+	@Override
+	public String getQualifiedTableName() {
+		if (tableReference==null) {
+			throw new KonigException("tableReference must be defined");
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append(tableReference.getDatasetId());
+		builder.append('.');
+		builder.append(tableReference.getTableId());
+		return builder.toString();
 	}
 	
 	
