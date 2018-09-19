@@ -37,8 +37,10 @@ import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.junit.Ignore;
+import org.hamcrest.CoreMatchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
@@ -87,11 +89,11 @@ import io.konig.shacl.PropertyPath;
 import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.io.ShapeWriter;
 
 public class WorkbookLoaderTest {
+	@Rule
+    public ExpectedException thrown = ExpectedException.none();
 
 	@Test
 	public void testDefaultDataSource() throws Exception {
@@ -235,6 +237,7 @@ public class WorkbookLoaderTest {
 
 		GcpShapeConfig.init();
 		InputStream input = getClass().getClassLoader().getResourceAsStream("current-state-view.xlsx");
+		File file = new File("src/test/resources/current-state-view.xlsx");
 		Workbook book = WorkbookFactory.create(input);
 		Graph graph = new MemoryGraph();
 		NamespaceManager nsManager = new MemoryNamespaceManager();
@@ -242,7 +245,7 @@ public class WorkbookLoaderTest {
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
 		loader.setFailOnErrors(true);
-		loader.load(book, graph);
+		loader.load(book, graph,file);
 		
 		StringWriter writer = new StringWriter();
 		RdfUtil.prettyPrintTurtle(graph, writer);
@@ -279,7 +282,8 @@ public class WorkbookLoaderTest {
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
 		loader.setFailOnErrors(true);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/bigQueryTableId-regex.xlsx");
+		loader.load(book, graph,file);
 		
 		StringWriter writer = new StringWriter();
 		RdfUtil.prettyPrintTurtle(graph, writer);
@@ -318,7 +322,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/google-cloud-sql.xlsx");
+		loader.load(book, graph,file);
 		
 		StringWriter writer = new StringWriter();
 		RdfUtil.prettyPrintTurtle(graph, writer);
@@ -338,7 +343,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/bigquery-transform.xlsx");
+		loader.load(book, graph,file);
 		
 		ShapeManager shapeManager = loader.getShapeManager();
 		
@@ -359,7 +365,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/custom-tablename.xlsx");
+		loader.load(book, graph,file);
 		
 		StringWriter writer = new StringWriter();
 		RdfUtil.prettyPrintTurtle(graph, writer);
@@ -415,7 +422,8 @@ public class WorkbookLoaderTest {
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
 		Throwable error = null;
 		try {
-			loader.load(book, graph);
+			File file = new File("src/test/resources/invalid-ontology-namespace.xlsx");
+			loader.load(book, graph,file);
 		} catch (Throwable e) {
 			error = e;
 		}
@@ -433,7 +441,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/google-cloud-sql-table.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
@@ -464,7 +473,8 @@ public class WorkbookLoaderTest {
         graph.setNamespaceManager(nsManager);
         
         WorkbookLoader loader = new WorkbookLoader(nsManager);
-        loader.load(book, graph);
+        File file = new File("src/test/resources/test-datasource-params-bucket.xlsx");
+        loader.load(book, graph,file);
         input.close();
         
         
@@ -493,7 +503,8 @@ public class WorkbookLoaderTest {
         graph.setNamespaceManager(nsManager);
         
         WorkbookLoader loader = new WorkbookLoader(nsManager);
-        loader.load(book, graph);
+        File file = new File("src/test/resources/test-datasource-params-parentComponent.xlsx");
+        loader.load(book, graph,file);
         
         input.close();
         URI shapeId = uri("https://schema.pearson.com/shapes/AccountShape");
@@ -518,7 +529,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/omcs-oracle-table.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
@@ -548,7 +560,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/assessment-endeavor.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://schema.pearson.com/shapes/AssessmentEndeavorShape");
@@ -574,7 +587,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/address-country.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
@@ -619,7 +633,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/sequence-path.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
@@ -670,7 +685,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/iri-reference.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shape/PersonShape");
@@ -695,8 +711,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/labels.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		String arabicValue = "\u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0645\u0639\u0637\u0649";
 		
@@ -722,8 +738,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/pubsub.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 	
@@ -753,8 +769,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/subproperty.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		assertTrue(graph.contains(Schema.taxID, RDFS.SUBPROPERTYOF, Schema.identifier));
@@ -772,8 +788,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/default-shape.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		ShapeManager shapeManager = loader.getShapeManager();
@@ -802,8 +818,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/aggregate-function.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		ShapeManager shapeManager = loader.getShapeManager();
@@ -833,8 +849,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/test-datasource-params.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/ProductShape");
@@ -868,8 +884,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/test-iri-template.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/ProductShape");
@@ -902,8 +918,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/issue-161.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/PersonLiteShape");
@@ -973,7 +989,8 @@ public class WorkbookLoaderTest {
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
 		loader.setFailOnWarnings(false);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/place-data.xlsx");
+		loader.load(book, graph,file);
 
 		URI placeId = uri("http://example.com/place/us");
 		Vertex place = graph.getVertex(placeId);
@@ -1001,8 +1018,8 @@ public class WorkbookLoaderTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/analytics-model.xlsx");
+		loader.load(book, graph,file);
 
 		URI shapeId = uri("http://example.com/shapes/SalesByCityShape");
 		ShapeManager shapeManager = loader.getShapeManager();
@@ -1091,8 +1108,8 @@ public class WorkbookLoaderTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/analytics-model.xlsx");
+		loader.load(book, graph,file);
 		
 		URI shapeId = uri("http://example.com/shapes/SalesByCityShape");
 		
@@ -1125,8 +1142,8 @@ public class WorkbookLoaderTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);
+		File file = new File("src/test/resources/person-model.xlsx");
+		loader.load(book, graph,file);
 
 		
 		checkOntologySheet(graph);
@@ -1150,8 +1167,8 @@ public class WorkbookLoaderTest {
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		
-		loader.load(book, graph);		
+		File file = new File("src/test/resources/person-model-amazon-rds.xlsx");
+		loader.load(book, graph,file);		
 		
 		Vertex shape = graph.getVertex(uri("https://amazonaws.konig.io/rds/cluster/${environmentName}-test"));		
 		
@@ -1181,7 +1198,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/awsAurora-transform.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/AuroraProductShape");
@@ -1209,7 +1227,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/awsAuroraTransformOneOF.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/PartyShape");
@@ -1235,7 +1254,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/primarykey-stereotype.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/SourcePersonShape");
@@ -1267,7 +1287,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/security-classification.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
@@ -1316,7 +1337,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/rdbms-node-shape.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		
 		URI shapeId = uri("http://example.com/shapes/SourcePersonShape");
@@ -1344,7 +1366,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/data-dictionary.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
 		ShapeManager s = loader.getShapeManager();
@@ -1396,7 +1419,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/data-dictionary.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
 		ShapeManager s = loader.getShapeManager();
@@ -1493,7 +1517,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/data-dictionary.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		URI shapeId = uri("http://example.com/shapes/MDM/RA_CUSTOMER_TRX_ALL");
 		ShapeManager s = loader.getShapeManager();
@@ -1590,7 +1615,8 @@ public class WorkbookLoaderTest {
 		graph.setNamespaceManager(nsManager);
 		
 		WorkbookLoader loader = new WorkbookLoader(nsManager);
-		loader.load(book, graph);
+		File file = new File("src/test/resources/rdbms-node-shape-generator.xlsx");
+		loader.load(book, graph,file);
 		input.close();
 		URI shapeId = uri("http://example.com/shapes/TargetPersonRdbmsShape");
 		
@@ -1608,6 +1634,22 @@ public class WorkbookLoaderTest {
 		}
 	}
 	@Test
+	public void testDecimalDataType() throws Exception {
+
+		InputStream input = getClass().getClassLoader().getResourceAsStream("decimal-datatype.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		File file = new File("src/test/resources/decimal-datatype.xlsx");
+		thrown.expect(RuntimeException.class);
+		thrown.expectCause(CoreMatchers.isA(SpreadsheetException.class));		
+		thrown.expectMessage("Property alias:ISDELETED is missing required decimal scale on row 17 in workbook decimal-datatype.xlsx");
+		loader.load(book, graph, file);
+	}
 	public void testRelationshipDegree() throws Exception{
 
 

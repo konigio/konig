@@ -888,7 +888,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 							Workbook workbook = new XSSFWorkbook(input);
 
 							workbookLoader.setDatasetMapper(datasetMapper);
-							workbookLoader.load(workbook, owlGraph);
+							workbookLoader.load(workbook, owlGraph,workbookFile);
 						} finally {
 							input.close();
 						}

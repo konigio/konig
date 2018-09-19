@@ -417,8 +417,12 @@ public class WorkbookLoader {
 	}
 
 	public void load(Workbook book, Graph graph) throws SpreadsheetException {
+		load(book, graph, null);
+	}
+
+	public void load(Workbook book, Graph graph,File file) throws SpreadsheetException {
 		this.graph = graph;
-		Worker worker = new Worker(book);
+		Worker worker = new Worker(book,file);
 		worker.run();
 	}
 
@@ -438,6 +442,7 @@ public class WorkbookLoader {
 		private DataInjector dataInjector;
 		private DataFormatter dataFormatter;
 		private Graph defaultOntologies;
+		private File workbookFile;
 		private ShapeReasoner shapeReasoner;
 		
 		private EnumerationReasoner enumReasoner;
@@ -583,8 +588,9 @@ public class WorkbookLoader {
 		private int inputShapeOfCol = UNDEFINED;
 		private int oneOfCol = UNDEFINED;
 		
-		public Worker(Workbook book) {
+		public Worker(Workbook book,File file) {
 			this.book = book;
+			this.workbookFile=file;
 			if (shapeManager == null) {
 				shapeManager = new MemoryShapeManager();
 			}
@@ -2021,8 +2027,17 @@ public class WorkbookLoader {
 			Integer decimalPrecision = integer(row, pcDecimalPrecision);
 			if(decimalPrecision!=null && (decimalPrecision.intValue()<1 || decimalPrecision.intValue()>65)){
 				throw new KonigException("Decimal Precison should be between 1 to 65");
-			}			
+			}
+
 			Integer decimalScale = integer(row, pcDecimalScale);
+			if(valueType!=null && XMLSchema.DECIMAL.equals((URI)valueType)){
+				if(decimalScale==null){
+					throw new KonigException("Property "+propertyIdValue+" is missing required decimal scale on row "+row.getRowNum()+ inFile());
+				}
+				if(decimalPrecision==null){
+					throw new KonigException("Property "+propertyIdValue+" is missing required decimal scale on row "+row.getRowNum()+inFile());
+				}
+			}
 			if(decimalScale!=null && 
 					(decimalScale<0 || decimalScale>30 || decimalScale>decimalPrecision)){
 				throw new KonigException("Decimal Scale should be less than Decimal Precision and between 0-30");
@@ -2201,6 +2216,10 @@ public class WorkbookLoader {
 			if (formula != null) {
 				formulaHandlers.add(new PropertyFormulaHandler(shape, p, formula));
 			}
+		}
+
+		private String inFile() {
+			return workbookFile==null ? "" : " in workbook "+workbookFile.getName();
 		}
 
 		private Integer maxCount(Row row, int col) {
