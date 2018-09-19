@@ -33,7 +33,10 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDFS;
 
+import io.konig.core.NamespaceInfo;
+import io.konig.core.NamespaceInfoManager;
 import io.konig.core.Vertex;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.VANN;
 
 public class OntologyIndexPage {
@@ -42,17 +45,24 @@ public class OntologyIndexPage {
 	private static final String ONTOLOGY_LIST = "OntologyList";
 
 	public void render(PageRequest request, PageResponse response) throws DataCatalogException {
-		
+
+		NamespaceInfoManager nim = request.getBuildRequest().getNamespaceInfoManager();
 		List<Vertex> source = DataCatalogUtil.ontologyList(request);
 		
-		List<Link> ontologyList = new ArrayList<>();
+		List<OntologyDescription> ontologyList = new ArrayList<>();
+		boolean anyEnumNamespace = false;
 		for (Vertex v : source) {
 			if (v.getId() instanceof URI) {
 				URI ontologyId = (URI) v.getId();
 				String name = ontologyName(v);
 				URI summaryResource = DataCatalogUtil.ontologySummary(ontologyId.stringValue());
 				String href = DataCatalogUtil.path(request, summaryResource);
-				ontologyList.add(new Link(name, href));
+				NamespaceInfo info = nim.getNamespaceInfo(ontologyId.stringValue());
+				boolean isEnumNamespace = info==null ? false : info.getType().contains(Konig.EnumNamespace);
+				ontologyList.add(new OntologyDescription(href, name, null, isEnumNamespace));
+				if (isEnumNamespace) {
+					anyEnumNamespace = true;
+				}
 			}
 		}
 		Collections.sort(ontologyList);
@@ -60,6 +70,7 @@ public class OntologyIndexPage {
 		VelocityEngine engine = request.getEngine();
 		VelocityContext context = request.getContext();
 		context.put(ONTOLOGY_LIST, ontologyList);
+		context.put(OverviewPage.SHOW_HIDE_ENUM_NAMESPACES, anyEnumNamespace);
 		
 		Template template = engine.getTemplate(ONTOLOGY_LIST_TEMPLATE);
 		

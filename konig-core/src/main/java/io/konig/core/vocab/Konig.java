@@ -27,6 +27,7 @@ import org.openrdf.model.impl.URIImpl;
 public class Konig {
 	
 	public static final String NAMESPACE = "http://www.konig.io/ns/core/";
+	public static final URI NAMESPACE_ID = new URIImpl("http://www.konig.io/ns/core/");
 	
 	public static final String JAVA_NAMESPACE = "http://www.konig.io/ns/java/";
 	public static final String ACTIVIY_BASE_URL = "http://www.konig.io/activity/";
@@ -41,6 +42,16 @@ public class Konig {
 	public static final String BIG_QUERY_SOURCE = "http://www.konig.io/ns/core/bigQuerySource";
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
+	public static final String TERM_STATUS = "http://www.konig.io/ns/core/termStatus";
+
+	public static final String RELATIVE_PATH = "http://www.konig.io/ns/core/relativePath";
+	public static final String BASE_PROJECT = "http://www.konig.io/ns/core/baseProject";
+	public static final String DDL_FILE = "http://www.konig.io/ns/core/ddlFile";
+	public static final String TRANSFORM_FILE = "http://www.konig.io/ns/core/transformFile";
+
+	public static final String ShapeMaxRowLength = "http://www.konig.io/ns/core/shapeMaxRowLength";
+	public static final String TargetDatasource = "http://www.konig.io/ns/core/targetDatasource";
+	public static final String MaxRowLength = "http://www.konig.io/ns/core/maxRowLength";
 
 	public static final String MEASURE = "http://www.konig.io/ns/core/measure";
 	public static final String ATTRIBUTE = "http://www.konig.io/ns/core/attribute";
@@ -63,10 +74,12 @@ public class Konig {
 	public static final URI constrainedShape = new URIImpl("http://www.konig.io/ns/core/constrainedShape");
 	public static final URI classInstanceCount = new URIImpl("http://www.konig.io/ns/core/classInstanceCount");
 	public static final URI shapeInstanceCount = new URIImpl("http://www.konig.io/ns/core/shapeInstanceCount");
-	
+	public static final URI TermStatus = new URIImpl("http://www.konig.io/ns/core/TermStatus");
+	public static final URI termStatus = new URIImpl("http://www.konig.io/ns/core/termStatus");
 	
 	// Generic Data Modeling
 
+	public static final URI EnumNamespace = new URIImpl("http://www.konig.io/ns/core/EnumNamespace");
 	public static final URI id = new URIImpl("http://www.konig.io/ns/core/id");
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/core/mediaTypeBaseName");
 	public static final URI tabularOriginShape = new URIImpl("http://www.konig.io/ns/core/tabularOriginShape");
@@ -113,6 +126,9 @@ public class Konig {
 	public static final URI primaryKey = new URIImpl("http://www.konig.io/ns/core/primaryKey");
 	public static final URI uniqueKey = new URIImpl("http://www.konig.io/ns/core/uniqueKey");
 	public static final URI syntheticKey = new URIImpl("http://www.konig.io/ns/core/syntheticKey");
+	public static final URI ddlFile = new URIImpl("http://www.konig.io/ns/core/ddlFile");
+	public static final URI transformFile = new URIImpl("http://www.konig.io/ns/core/transformFile");
+	
 	// Shape Transform Vocabulary
 	
 	public static final URI sourceShape = new URIImpl("http://www.konig.io/ns/core/sourceShape");
@@ -125,6 +141,7 @@ public class Konig {
 	public static final URI attribute = new URIImpl(ATTRIBUTE);
 	public static final URI variable = new URIImpl("http://www.konig.io/ns/core/variable");
 	public static final URI stereotype = new URIImpl("http://www.konig.io/ns/core/stereotype");
+	public static final URI relationshipDegree = new URIImpl("http://www.konig.io/ns/core/relationshipDegree");
 	public static final URI securityClassification = new URIImpl("http://www.konig.io/ns/core/securityClassification");
 	public static final URI qualifiedSecurityClassification = new URIImpl("http://www.konig.io/ns/core/qualifiedSecurityClassification");
 	public static final URI totalCount = new URIImpl("http://www.konig.io/ns/core/totalCount");
@@ -144,6 +161,11 @@ public class Konig {
 	public static final URI Week = new URIImpl("http://www.konig.io/ns/core/Week");
 	public static final URI Month = new URIImpl("http://www.konig.io/ns/core/Month");
 	public static final URI Year = new URIImpl("http://www.konig.io/ns/core/Year");
+	
+	// Software Projects 
+	public static final URI Project = new URIImpl("http://www.konig.io/ns/core/Project");
+	public static final URI baseProject = new URIImpl(BASE_PROJECT);
+	public static final URI relativePath = new URIImpl(RELATIVE_PATH);
 	
 
 	// Project Management terms
@@ -183,6 +205,10 @@ public class Konig {
 	public static final URI dataSteward = new URIImpl("http://www.konig.io/ns/core/dataSteward");
 	public static final URI TabularNodeShape = new URIImpl("http://www.konig.io/ns/core/TabularNodeShape");
 	public static final URI abbreviationLabel = new URIImpl("http://www.konig.io/ns/core/abbreviationLabel");
+	public static final URI OneToOne = new URIImpl("http://www.konig.io/ns/core/OneToOne");
+	public static final URI OneToMany = new URIImpl("http://www.konig.io/ns/core/OneToMany");
+	public static final URI ManyToOne = new URIImpl("http://www.konig.io/ns/core/ManyToOne");
+	public static final URI ManyToMany = new URIImpl("http://www.konig.io/ns/core/ManyToMany");
 	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();

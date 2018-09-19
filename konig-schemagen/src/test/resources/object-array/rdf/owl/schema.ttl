@@ -1,0 +1,23 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org Ontology" ; 
+	rdfs:comment "The namespace for an upper-level ontology defined by Google, Microsoft, Yahoo, and Yandex." . 
+
+schema:ContactPoint a owl:Class ; 
+	rdfs:label "Contact Point" ; 
+	rdfs:comment "An entity that provides one method for contacting a Person." . 
+
+schema:Enumeration a owl:Class . 
+
+schema:Person a owl:Class ; 
+	rdfs:label "Person" ; 
+	rdfs:comment "An individual person who has some Personally Identifiable Information." . 
+
+schema:PostalAddress a owl:Class ; 
+	rdfs:label "Postal Address" ; 
+	rdfs:comment "A record that stores the postal address of a Person." . 

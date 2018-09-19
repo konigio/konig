@@ -2,6 +2,7 @@ package io.konig.schemagen.sql;
 
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +24,7 @@ import io.konig.formula.ShapePropertyOracle;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.RelationshipDegree;
 
 /*
  * #%L
@@ -53,9 +55,11 @@ public class RdbmsShapeGenerator {
 	private FormulaParser parser;
 	private List<PropertyConstraint> rdbmsProperty = null;
 	private OwlReasoner owlReasoner;
-	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner) {
+	private RdbmsShapeHelper rdbmsShapeHelper;
+	public RdbmsShapeGenerator(FormulaParser parser, OwlReasoner owlReasoner,RdbmsShapeHelper rdbmsShapeHelper) {
 		this.parser = new FormulaParser();
 		this.owlReasoner = owlReasoner;
+		this.rdbmsShapeHelper = rdbmsShapeHelper;
 	}
 	public Shape createOneToManyChildShape(Shape parentShape, URI relationshipProperty, Shape childShape) throws RDFParseException, IOException {		
 		Shape rdbmsChildShape = createRdbmsShape(childShape);
@@ -120,12 +124,23 @@ public class RdbmsShapeGenerator {
 		return false;
 	}
 	private void process(Shape rdbmsShape, String logicalPath, String prefix, Shape propertyContainer) throws RDFParseException, IOException {
-		
 		List<PropertyConstraint> list = new ArrayList<>(propertyContainer.getProperty());
 		
 		for (PropertyConstraint p : list) {
 			URI predicate = p.getPredicate();
-			
+			if(p.getShape() == null && (p.getDatatype() == null || p.getMaxCount() == null || p.getMaxCount() > 1) 
+					&& rdbmsShape.getNodeKind() != NodeKind.IRI ) {
+				
+				String errorMessage = MessageFormat.format("\n In Shape {0}, the property {1} is ill-defined. \n"
+						, new URIImpl(rdbmsShape.getId().toString()).getLocalName(), predicate.getLocalName());
+				StringBuilder msg = new StringBuilder();
+				msg.append(errorMessage);
+				msg.append(" 1. Set sh:maxCount = 1 \n");
+				msg.append(" 2. Set sh:shape so that it references a nested shape. \n");
+				msg.append(" 3. Set sh:nodeKind equal to sh:IRI and specify a value for sh:class \n");
+				msg.append(" 4. Set sh:datatype equal to one of the XML Schema datatype names.");
+				throw new KonigException(msg.toString());
+			}
 			if (predicate != null && p.getMaxCount()!=null && p.getMaxCount()==1) {
 				
 				String localName = predicate.getLocalName();

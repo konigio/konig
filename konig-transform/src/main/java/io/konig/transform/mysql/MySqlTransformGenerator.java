@@ -237,11 +237,10 @@ public class MySqlTransformGenerator implements ShapeHandler {
 	}
 
 	private File sqlLoadFile(GoogleCloudSqlTable table, String fileType) {
-		String instance = table.getInstance();
-		String database = table.getDatabase();
-		String tableName = table.getTableName();
-
-		String fileName = MessageFormat.format("{0}_{1}_{2}.{3}", instance, database, tableName, fileType);
+		String ddlFileName = table.getDdlFileName();
+		int dot = ddlFileName.lastIndexOf('.');
+		String baseFileName = ddlFileName.substring(0, dot);
+		String fileName = baseFileName + '.' + fileType;
 
 		return new File(outDir, fileName);
 	}

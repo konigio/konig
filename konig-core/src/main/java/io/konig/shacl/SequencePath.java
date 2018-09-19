@@ -41,5 +41,16 @@ public class SequencePath extends ArrayList<PropertyPath> implements PropertyPat
 		builder.append(')');
 		return builder.toString();
 	}
+	
+	public PropertyPath getLast() {
+		PropertyPath result = null;
+		if (!isEmpty()) {
+			result = get(size()-1);
+			if (result instanceof SequencePath) {
+				result = ((SequencePath) result).getLast();
+			}
+		}
+		return result;
+	}
 
 }

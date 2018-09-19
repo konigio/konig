@@ -1,4 +1,4 @@
-package io.konig.datasource;
+package io.konig.core.project;
 
 /*
  * #%L
@@ -23,20 +23,18 @@ package io.konig.datasource;
 
 import java.io.File;
 
-/**
- * An interface for locating a file associated with a given DataSource.
- * Different implementations of this interface can be used to locate different
- * types of files.
- * 
- * @author Greg McFall
- *
- */
-public interface DatasourceFileLocator {
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
-	/**
-	 * Locate a file associated with a given DataSource.
-	 * @param ds
-	 * @return The file associated with the DataSource, or null if no appropriate file is found.
-	 */
-	public File locateFile(DataSource ds);
+public class ProjectUtil {
+
+	public static ProjectFolder createProjectFolder(String projectPath, String folderPath) {
+		File projectDir = new File(projectPath);
+		URI projectId = new URIImpl(projectDir.toURI().toString());
+		Project project = new Project(projectId, projectDir);
+		
+		File folderDir = new File(projectDir, folderPath);
+		return new ProjectFolder(project, folderDir);
+	}
+
 }

@@ -1,0 +1,14 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+<http://example.com/PersonShape> a sh:Shape ; 
+	konig:shapeDataSource <http://example.com/datasource> . 
+
+<http://example.com/datasource> konig:ddlFile  [ 
+		konig:baseProject <urn:maven:GcpShapeWriterTest.testDdlFile-1.0> ; 
+		konig:relativePath "gcp/bigquery/schema/person.sql"
+	 ]  ; 
+	konig:transformFile  [ 
+		konig:baseProject <urn:maven:GcpShapeWriterTest.testDdlFile-1.0> ; 
+		konig:relativePath "gcp/bigquery/schema/person.sql" ]  ; 
+	a konig:GoogleBigQueryTable . 

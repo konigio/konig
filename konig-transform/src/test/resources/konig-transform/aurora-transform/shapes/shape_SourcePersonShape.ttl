@@ -1,0 +1,66 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix aws: <http://www.konig.io/ns/aws/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:SourcePersonShape konig:mediaTypeBaseName "application/vnd.example.example.com.shapes.person" ; 
+	sh:property  [ 
+		sh:path alias:first_name ; 
+		sh:datatype xsd:string ; 
+		sh:predicate alias:first_name ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		konig:formula '''@prefix schema: <http://schema.org/> .
+
+.schema:givenName'''
+	 ]  ,  [ 
+		sh:path alias:last_name ; 
+		sh:datatype xsd:string ; 
+		sh:predicate alias:last_name ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		konig:formula '''@prefix schema: <http://schema.org/> .
+
+.schema:familyName''' ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-edw-core-s3bucket3> , <http://www.konig.io/ns/aws/host/devHost/databases/${awsAuroraSchema}/tables/SourcePersonShape> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/lyspAYaSRJsAAAFlkJH84A> ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI . 
+
+<https://amazonaws.konig.io/s3/bucket/${environmentName}-edw-core-s3bucket3> aws:bucketRegion "${aws-region}" ; 
+	aws:notificationConfiguration  [ 
+		aws:queueConfiguration  [ 
+			aws:eventType "s3:ObjectCreated:*" ; 
+			aws:queue <arn:aws:sqs:${aws-region}:${aws-account-id}:SourcePersonShape_CreateEvent>
+		 ]  ; 
+		aws:topicConfiguration  [ 
+			aws:eventType "s3:ObjectCreated:*" ; 
+			aws:topic <arn:aws:sns:${aws-region}:${aws-account-id}:SourcePersonShape_CreateEvent> ]  ]  ; 
+	aws:bucketMediaType "application/doc" ; 
+	aws:bucketKey "edw-core-s3bucket3" ; 
+	aws:bucketName "${environmentName}-edw-core-s3bucket3" ; 
+	a konig:S3Bucket , konig:DataSource . 
+
+<arn:aws:sqs:${aws-region}:${aws-account-id}:SourcePersonShape_CreateEvent> aws:region "${aws-region}" ; 
+	aws:resourceName "SourcePersonShape_CreateEvent" ; 
+	aws:accountId "${aws-account-id}" . 
+
+<arn:aws:sns:${aws-region}:${aws-account-id}:SourcePersonShape_CreateEvent> aws:region "${aws-region}" ; 
+	aws:resourceName "SourcePersonShape_CreateEvent" ; 
+	aws:accountId "${aws-account-id}" . 
+
+<http://www.konig.io/ns/aws/host/devHost/databases/${awsAuroraSchema}/tables/SourcePersonShape> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	aws:tableReference  [ 
+		aws:awsTableName "SourcePersonShape" ; 
+		aws:awsSchema "${awsAuroraSchema}" ; 
+		aws:awsAuroraHost "devHost" ]  ; 
+	a konig:AwsAurora , konig:DataSource . 
+
+<http://www.konig.io/activity/lyspAYaSRJsAAAFlkJH84A> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2018-08-31T11:20:11.338-04:00"^^xsd:dateTime , "2018-08-31T11:20:11.236-04:00"^^xsd:dateTime . 

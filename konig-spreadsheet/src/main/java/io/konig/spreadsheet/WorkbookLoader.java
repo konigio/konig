@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -101,11 +102,11 @@ import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
-import io.konig.core.vocab.XOWL;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.ShapePropertyOracle;
 import io.konig.rio.turtle.NamespaceMap;
+import io.konig.schema.EnumerationReasoner;
 import io.konig.shacl.CompositeShapeVisitor;
 import io.konig.shacl.FormulaContextBuilder;
 import io.konig.shacl.NodeKind;
@@ -114,6 +115,7 @@ import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.PropertyPath;
 import io.konig.shacl.PropertyPathUtil;
+import io.konig.shacl.RelationshipDegree;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeReasoner;
@@ -167,7 +169,7 @@ public class WorkbookLoader {
 	private static final String DATASOURCE = "Datasource";
 	private static final String IRI_TEMPLATE = "IRI Template";
 	private static final String DEFAULT_FOR = "Default For";
-	private static final String TERM_STATUS = "Term Status";
+	private static final String TERM_STATUS = "Status";
 	private static final String TABULAR_ORIGIN_SHAPE = "Tabular Origin Shape";
 
 	private static final String SETTING_NAME = "Setting Name";
@@ -196,6 +198,8 @@ public class WorkbookLoader {
 	private static final String DECIMAL_PRECISION = "Decimal Precision";
 	private static final String DECIMAL_SCALE = "Decimal Scale";
 	private static final String SECURITY_CLASSIFICATION ="Security Classification";
+	private static final String RELATIONSHIP_DEGREE="Relationship Degree";
+	private static final String PII_CLASSIFICATION = "PII Classification";
 
 	// Cloud SQL Instance
 	private static final String INSTANCE_NAME = "Instance Name";
@@ -257,6 +261,14 @@ public class WorkbookLoader {
 	private static final String AWS_DB_CLUSTER_MAINTENANCE_WINDOW = "Preferred Maintenance Window";
 	private static final String AWS_DB_CLUSTER_REPLICATION_SOURCE = "Replication Source Identifier";
 	private static final String AWS_DB_CLUSTER_STORAGE_ENCRYPTED = "Storage Encrypted";
+	
+	// Well-known Setting names
+	private static final String DICTIONARY_DEFAULT_MIN_LENGTH = "dictionary.defaultMinLength";
+	private static final String DICTIONARY_DEFAULT_MAX_LENGTH = "dictionary.defaultMaxLength";
+	private static final String DICTIONARY_ENABLE_DEFAULT_DATATYPE = "dictionary.enableDefaultDatatype";
+	private static final String DEFAULT_DATA_SOURCE = "defaultDataSource";
+	private static final String IGNORE_SHEETS = "ignoreSheets";
+	
 
 	private static final int COL_SETTING_NAME = 0x1;
 	private static final int COL_NAMESPACE_URI = 0x2;
@@ -404,6 +416,10 @@ public class WorkbookLoader {
 		this.datasetMapper = datasetMapper;
 	}
 
+	public void load(Workbook book, Graph graph) throws SpreadsheetException {
+		load(book, graph, null);
+	}
+
 	public void load(Workbook book, Graph graph,File file) throws SpreadsheetException {
 		this.graph = graph;
 		Worker worker = new Worker(book,file);
@@ -428,6 +444,8 @@ public class WorkbookLoader {
 		private Graph defaultOntologies;
 		private File workbookFile;
 		private ShapeReasoner shapeReasoner;
+		
+		private EnumerationReasoner enumReasoner;
 
 		private Properties settings = new Properties();
 		private List<ShapeTemplate> shapeTemplateList = new ArrayList<>();
@@ -436,8 +454,12 @@ public class WorkbookLoader {
 		private List<String> warningList = new ArrayList<>();
 		private List<AbstractPathBuilder> pathHandlers = new ArrayList<>();
 		private List<FormulaHandler> formulaHandlers = new ArrayList<>();
+		
+		private List<Function> defaultDataSource = null;
+		private boolean describeTermStatus = true;
+		private boolean describeKonig = true;
 
-		private Set<String> errorMessages = new HashSet<>();
+		private Set<String> errorMessages = new LinkedHashSet<>();
 		private int ontologyNameCol = UNDEFINED;
 		private int ontologyCommentCol = UNDEFINED;
 		private int namespaceUriCol = UNDEFINED;
@@ -458,6 +480,7 @@ public class WorkbookLoader {
 		private int subpropertyOfCol = UNDEFINED;
 		private int propertyCommentCol = UNDEFINED;
 		private int securityClassificationCol = UNDEFINED;
+		private int relationshipDegreeCol = UNDEFINED;
 
 		private int individualNameCol = UNDEFINED;
 		private int individualCommentCol = UNDEFINED;
@@ -496,11 +519,12 @@ public class WorkbookLoader {
 		private int pcMaxInclusive = UNDEFINED;
 		private int pcMinExclusive = UNDEFINED;
 		private int pcMaxExclusive = UNDEFINED;
-		private int pcMinLength = UNDEFINED;
-		private int pcMaxLength = UNDEFINED;
+		private int pcMinLengthCol = UNDEFINED;
+		private int pcMaxLengthCol = UNDEFINED;
 		private int pcDecimalPrecision = UNDEFINED;
 		private int pcDecimalScale = UNDEFINED;
 		private int pcSecurityClassification = UNDEFINED;
+		private int pcRelationshipDegree = UNDEFINED;
 
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
@@ -513,9 +537,7 @@ public class WorkbookLoader {
 
 		private Activity provenance;
 		private URI activityId;
-		private int pcTermStatusCol = UNDEFINED;
-		private int classTermStatusCol = UNDEFINED;
-		private int propertyTermStatusCol = UNDEFINED;
+		private int termStatusCol = UNDEFINED;
 
 		private int gcpInstanceNameCol = UNDEFINED;
 		private int gcpInstanceTypeCol = UNDEFINED;
@@ -532,7 +554,6 @@ public class WorkbookLoader {
 		private int sourceObjectNameCol = UNDEFINED;
 		private int fieldCol = UNDEFINED;
 		private int dataTypeCol = UNDEFINED;
-		private int maxLengthCol = UNDEFINED;
 		private int decimalPrecisionCol = UNDEFINED;
 		private int decimalScaleCol = UNDEFINED;
 		private int constraintsCol = UNDEFINED;
@@ -540,6 +561,7 @@ public class WorkbookLoader {
 		private int businessDefinitionCol = UNDEFINED;
 		private int dataStewardCol = UNDEFINED;
 		private int securityClassifCol = UNDEFINED;
+		private int piiClassifCol = UNDEFINED;
 		private int targetObjectNameCol = UNDEFINED;
 		private int targetFieldNameCol = UNDEFINED;
 		
@@ -621,10 +643,27 @@ public class WorkbookLoader {
 				processImportStatements();
 				declareDefaultOntologies();
 				handleWarnings();
+				handleErrors();
 			} catch (Throwable e) {
 				logError("Failed to process workbook", e);
 				
 			}
+		}
+
+		private void handleErrors() throws SpreadsheetException {
+
+			if (!errorMessages.isEmpty()) {
+				for (String msg : errorMessages) {
+					logger.error(msg);
+				}
+				
+				if (errorMessages.size()==1) {
+					throw new SpreadsheetException(errorMessages.iterator().next());
+				}
+				throw new SpreadsheetException("Multiple errors.  See log for details.");
+				
+			}
+			
 		}
 
 		private void handleFormulas() throws SpreadsheetException {
@@ -675,6 +714,27 @@ public class WorkbookLoader {
 		}
 
 		private void processDataSources() throws SpreadsheetException {
+			String datasource=settings.getProperty("datasource");
+			if(datasource!=null){
+				ListFunctionVisitor visitor = new ListFunctionVisitor();
+				FunctionParser parser = new FunctionParser(visitor);
+				try {
+					parser.parse(datasource);
+				} catch (FunctionParseException e) {
+					throw new SpreadsheetException("Failed to parse Datasource definition: " + datasource, e);
+				}
+				List<Function> list = visitor.getList();
+				if (list != null) {
+					for (Shape shape : shapeManager.listShapes()) {
+						if (shape.getId() instanceof URI) {
+							URI shapeId = (URI) shape.getId();
+							if (dataSourceMap.get(shapeId) == null) {
+								dataSourceMap.put(shapeId, list);
+							}
+						}
+					}
+				}
+			}
 
 			for (Entry<URI, List<Function>> entry : dataSourceMap.entrySet()) {
 				URI shapeId = entry.getKey();
@@ -1198,14 +1258,45 @@ public class WorkbookLoader {
 		}
 
 		private void loadDataDictionaryTemplate(Sheet sheet) throws SpreadsheetException {
+			
+			if (ignoreSheet(sheet)) {
+				logger.info("Ignoring sheet because of the `ignoreSheets` setting: {}", sheet.getSheetName());
+				return;
+			}
 			readDataDictionaryTemplateHeader(sheet);
 
 			int rowSize = sheet.getLastRowNum() + 1;
 			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
 				Row row = sheet.getRow(i);
-				loadDataDictionaryTemplateRow(row);
+				try {
+					loadDataDictionaryTemplateRow(row);
+				} catch (Throwable oops) {
+					SpreadsheetException e = null;
+					if (oops instanceof SpreadsheetException) {
+						e = (SpreadsheetException) oops;
+					} else {
+						e = new SpreadsheetException(oops.getMessage(), oops);
+					}
+					e.setRow(i);
+					e.setSheetName(sheet.getSheetName());
+					throw e;
+				}
 			}
 			
+		}
+
+		private boolean ignoreSheet(Sheet sheet) {
+			String value = settingsValue(IGNORE_SHEETS);
+			if (value != null) {
+				String sheetName = sheet.getSheetName();
+				StringTokenizer tokens = new StringTokenizer(value, "\r\n");
+				while (tokens.hasMoreTokens()) {
+					if (sheetName.equalsIgnoreCase(tokens.nextToken())) {
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		private void loadDataDictionaryTemplateRow(Row row) throws SpreadsheetException {
@@ -1223,13 +1314,15 @@ public class WorkbookLoader {
 				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
 				return;
 			}
-			URI propertyId = expandPropertyId(getPropertyBaseURL()+"/"+propertyIdValue);
+			
+			propertyIdValue = StringUtil.LABEL_TO_SNAKE_CASE(propertyIdValue);
+			
+			URI propertyId = expandPropertyId(concatPath(getPropertyBaseURL(),propertyIdValue));
 
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
 
 			String dataDictionarydataType=stringValue(row,dataTypeCol);
 
-			Integer maxLength = integer(row, maxLengthCol);
 			Integer decimalPrecision = integer(row, decimalPrecisionCol);
 			if (decimalPrecision!=null && (decimalPrecision<1 || decimalPrecision>65)){
 				throw new KonigException("Decimal Precison should be between 1 to 65");
@@ -1246,7 +1339,10 @@ public class WorkbookLoader {
 			String businessName = stringValue(row, businessNameCol);
 			String businessDefinition = stringValue(row, businessDefinitionCol);
 			String dataStewardName = stringValue(row, dataStewardCol);
-			List<URI> securityClassification=uriList(row,securityClassifCol);
+			URI securityClassification = individualByName(row, securityClassifCol);
+			URI piiClassification = individualByName(row, piiClassifCol);
+			
+			List<URI> securityClassificationList=null;
 			String constraints = stringValue(row,constraintsCol);	
 			
 
@@ -1280,11 +1376,16 @@ public class WorkbookLoader {
 				p.setMinCount(0);
 			}
 
-			URI rdfDatatype=getRdfDatatype(dataDictionarydataType,p);
+			URI rdfDatatype=dictionaryDatatype(dataDictionarydataType,p);
+			
 			p.setDatatype(rdfDatatype);
+
+			Integer maxLength = dictionaryMaxLength(row, pcMaxLengthCol, rdfDatatype);
+			Integer minLength = dictionaryMinLength(row, pcMinLengthCol, rdfDatatype);
 			
 			if(rdfDatatype!=null && (rdfDatatype.equals(XMLSchema.STRING)|| (rdfDatatype.equals(XMLSchema.BASE64BINARY)))){
 				p.setMaxLength(maxLength);
+				p.setMinLength(minLength);
 				
 			}
 			p.setDecimalPrecision(decimalPrecision);
@@ -1293,10 +1394,162 @@ public class WorkbookLoader {
 			if (dataStewardName != null) {
 				p.dataSteward().setName(dataStewardName);
 			}
-			p.setQualifiedSecurityClassification(securityClassification);
+			
+			securityClassificationList = safeAdd(securityClassificationList, securityClassification);
+			securityClassificationList = safeAdd(securityClassificationList, piiClassification);
+			p.setQualifiedSecurityClassification(securityClassificationList);
+			
+			setDefaultDataSource(shapeId);
 			
 		}
+
+		private void setDefaultDataSource(URI shapeId) throws SpreadsheetException {
+			
+			List<Function> list = defaultDataSource();
+			if (list != null  && dataSourceMap.get(shapeId) == null) {
+				dataSourceMap.put(shapeId, list);
+			}
+			
+		}
+
+		private List<Function> defaultDataSource() throws SpreadsheetException {
+			if (defaultDataSource == null) {
+				String value = settings.getProperty(DEFAULT_DATA_SOURCE);
+				if (value != null) {
+					defaultDataSource = dataSourceList(value);
+				}
+			}
+			return defaultDataSource;
+		}
+
+		private URI dictionaryDatatype(String typeName, PropertyConstraint p) throws SpreadsheetException {
+			URI type=getRdfDatatype(typeName, p);
+			if (type==null) {
+				if (typeName!=null) {
+					throw new SpreadsheetException("On property " + p.getPredicate().getLocalName() + ", type " + typeName + " is not supported.");
+				}
+				String value = settings.getProperty(DICTIONARY_ENABLE_DEFAULT_DATATYPE);
+				if (value!=null && "true".equalsIgnoreCase(value)) {
+					type = XMLSchema.STRING;
+					logger.warn("Property {} does not declare a datatype.  Using xsd:string by default.", p.getPredicate().getLocalName());
+				} else {
+					StringBuilder message = new StringBuilder();
+					message.append("Property ");
+					message.append(p.getPredicate().getLocalName());
+					message.append(" must declare a value for the " );
+					message.append(DATA_TYPE);
+					message.append(" or you must specify ");
+					message.append(DICTIONARY_ENABLE_DEFAULT_DATATYPE);
+					message.append("=TRUE in the settings");
+					fail(message.toString());
+				}
+			}
+			return type;
+		}
+
+		private Integer dictionaryMinLength(Row row, int col, URI rdfDatatype) {
+			Integer value = integer(row, col);
+			if (value == null) {
+				if (XMLSchema.STRING.equals(rdfDatatype)) {
+					value = settingsInteger(DICTIONARY_DEFAULT_MIN_LENGTH);
+					if (value == null) {
+						value = 0;
+					}
+				}
+			}
+			return value;
+		}
 		
+
+		private Integer dictionaryMaxLength(Row row, int col, URI rdfDatatype) {
+			Integer value = integer(row, col);
+			if (value == null) {
+				if (XMLSchema.STRING.equals(rdfDatatype)) {
+					value = settingsInteger(DICTIONARY_DEFAULT_MAX_LENGTH);
+				}
+			}
+			return value;
+		}
+
+		private Integer settingsInteger(String propertyName) {
+			String text = settingsValue(propertyName);
+			return text==null ? null : new Integer(text);
+		}
+
+		private String settingsValue(String propertyName) {
+			return settings==null ? null : settings.getProperty(propertyName);
+		}
+
+		private String concatPath(String baseURL, String pathElement) {
+			StringBuilder builder = new StringBuilder(baseURL);
+			if (!baseURL.endsWith("/")) {
+				builder.append('/');
+			}
+			builder.append(pathElement);
+			return builder.toString();
+		}
+
+		private List<URI> safeAdd(List<URI> list, URI id) {
+			if (id !=null) {
+				if (list == null) {
+					list = new ArrayList<>();
+				}
+				list.add(id);
+			}
+			return list;
+		}
+
+		private URI individualByName(Row row, int col) throws SpreadsheetException {
+			String name = stringValue(row, col);
+			if (name==null) {
+				return null;
+			}
+			name = name.trim();
+			
+			String curieValue = curieValue(name);
+			
+			if (curieValue != null) {
+				return expandCurie(curieValue);
+			}
+			
+			EnumerationReasoner reasoner = enumReasoner();
+			Set<URI> set = reasoner.getIndividualsByName(name);
+			if (set.size() == 0) {
+				throw new SpreadsheetException("Individual not found for name: " + name);
+			}
+			if (set.size() > 1) {
+				StringBuilder builder = new StringBuilder("Multiple individuals found for name: " + name + ", including...");
+				for (URI id : set) {
+					builder.append('\n');
+					builder.append(id.stringValue());
+				}
+				throw new SpreadsheetException(builder.toString());
+			}
+			
+			return set.iterator().next();
+		}
+
+		private String curieValue(String name) {
+			int colon = name.indexOf(':');
+			if (colon < 0) {
+				return null;
+			}
+			for (int i=0; i<name.length(); i++) {
+				int c = name.charAt(i);
+				if (Character.isWhitespace(c)) {
+					return null;
+				}
+			}
+			return name;
+		}
+
+		private EnumerationReasoner enumReasoner() {
+			if (enumReasoner == null) {
+				enumReasoner = new EnumerationReasoner();
+				enumReasoner.mapIndividualsByName(graph);
+			}
+			return enumReasoner;
+		}
 
 		private String getPropertyBaseURL() throws SpreadsheetException {
 			String propertyBaseURL=settings.getProperty("propertyBaseURL");
@@ -1324,8 +1577,8 @@ public class WorkbookLoader {
 				throw new SpreadsheetException("shapeURLTemplate is not found in both settings tab and system property.");			
 			}
 			else{
-				String shapeURL=sourceSystemName==null?shapeURLTemplate:shapeURLTemplate.replace("{SOURCE_SYSTEM}", StringUtil.SNAKE_CASE(sourceSystemName));
-				shapeURL=shapeURL.replace("{SOURCE_OBJECT_NAME}", StringUtil.SNAKE_CASE(shapeIdLocalName));		
+				String shapeURL=sourceSystemName==null?shapeURLTemplate:shapeURLTemplate.replace("{SOURCE_SYSTEM}", StringUtil.LABEL_TO_SNAKE_CASE(sourceSystemName));
+				shapeURL=shapeURL.replace("{SOURCE_OBJECT_NAME}", StringUtil.LABEL_TO_SNAKE_CASE(shapeIdLocalName));		
 				if(settings!=null){
 					for(Object key:settings.keySet()){
 						String propertyKey=(String)key;
@@ -1341,15 +1594,30 @@ public class WorkbookLoader {
 
 		
 
-		private URI getRdfDatatype(String dataDictionarydataType, PropertyConstraint constraint) {
-			switch(dataDictionarydataType){
+		private URI getRdfDatatype(String typeName, PropertyConstraint constraint) {
+			if (typeName==null) {
+				return null;
+			}
+			typeName = typeName.trim().toUpperCase();
+			switch(typeName){
 				case "CHAR":
 				case "VARCHAR":
+				case "UUID":
 				case "TEXT":
+				case "STRING":
 				case "VARCHAR2":
+				case "NVARCHAR":
+				case "NVARCHAR2":
 					return XMLSchema.STRING;
 				case "DATE":
 					return XMLSchema.DATE;
+					
+				case "BIT" :
+					constraint.setMinInclusive(0);
+					constraint.setMaxInclusive(1);
+					return XMLSchema.INTEGER;
+					
+				case "DATETIME2":
 				case "DATETIME":
 					return XMLSchema.DATETIME;
 				case "NUMBER":
@@ -1362,6 +1630,8 @@ public class WorkbookLoader {
 					constraint.setMinInclusive(0);
 					constraint.setMaxInclusive(65535);
 					return XMLSchema.INTEGER;
+					
+				case "INTEGER":
 				case "INT":
 					constraint.setMinInclusive(-2147483648);
 					constraint.setMaxInclusive(2147483647);
@@ -1378,6 +1648,8 @@ public class WorkbookLoader {
 					constraint.setMinInclusive(0);
 					constraint.setMaxInclusive(new BigInteger("18446744073709551615"));
 					return XMLSchema.INTEGER;
+					
+				case "MONEY":
 				case "FLOAT":
 					return XMLSchema.FLOAT;
 				case "DOUBLE":
@@ -1393,8 +1665,9 @@ public class WorkbookLoader {
 		}
 
 		private void readDataDictionaryTemplateHeader(Sheet sheet) {
-			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = maxLengthCol = decimalPrecisionCol = decimalScaleCol 
-					= constraintsCol = businessNameCol = businessDefinitionCol = dataStewardCol = securityClassifCol = 
+			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = pcMaxLengthCol = pcMinLengthCol =
+					decimalPrecisionCol = decimalScaleCol = constraintsCol = businessNameCol = businessDefinitionCol = 
+					dataStewardCol = securityClassifCol = piiClassifCol =
 					targetObjectNameCol = targetFieldNameCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
@@ -1427,9 +1700,13 @@ public class WorkbookLoader {
 					case DATA_TYPE:
 						dataTypeCol = i;
 						break;
+						
+					case MIN_LENGTH:
+						pcMinLengthCol = i;
+						break;
 					
 					case MAX_LENGTH:
-						maxLengthCol = i;
+						pcMaxLengthCol = i;
 						break;
 						
 					case DECIMAL_PRECISION:
@@ -1458,6 +1735,10 @@ public class WorkbookLoader {
 						
 					case SECURITY_CLASSIFICATION:
 						securityClassifCol =i;
+						break;
+						
+					case PII_CLASSIFICATION :
+						piiClassifCol = i;
 						break;
 						
 					case TARGET_OBJECT_NAME:
@@ -1588,7 +1869,7 @@ public class WorkbookLoader {
 				Row row = sheet.getRow(i);
 				loadSettingsRow(row);
 			}
-
+			
 			dataSourceGenerator.put(settings);
 		}
 
@@ -1621,7 +1902,7 @@ public class WorkbookLoader {
 					
 				} else {
 					settings.setProperty(name, value);
-				}
+				}				
 			}
 
 		}
@@ -1729,7 +2010,7 @@ public class WorkbookLoader {
 
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
 
-			URI termStatus = uriValue(row, pcTermStatusCol);
+			URI termStatus = uriValue(row, termStatusCol);
 			String comment = stringValue(row, pcCommentCol);
 
 			String valueTypeText = stringValue(row, pcValueTypeCol);
@@ -1741,8 +2022,8 @@ public class WorkbookLoader {
 			Double maxInclusive = doubleValue(row, pcMaxInclusive);
 			Double minExclusive = doubleValue(row, pcMinExclusive);
 			Double maxExclusive = doubleValue(row, pcMaxExclusive);
-			Integer minLength = integer(row, pcMinLength);
-			Integer maxLength = integer(row, pcMaxLength);
+			Integer minLength = integer(row, pcMinLengthCol);
+			Integer maxLength = integer(row, pcMaxLengthCol);
 			Integer decimalPrecision = integer(row, pcDecimalPrecision);
 			if(decimalPrecision!=null && (decimalPrecision.intValue()<1 || decimalPrecision.intValue()>65)){
 				throw new KonigException("Decimal Precison should be between 1 to 65");
@@ -1751,10 +2032,10 @@ public class WorkbookLoader {
 			Integer decimalScale = integer(row, pcDecimalScale);
 			if(valueType!=null && XMLSchema.DECIMAL.equals((URI)valueType)){
 				if(decimalScale==null){
-					throw new KonigException("Property "+propertyIdValue+" is missing required decimal scale on row "+row.getRowNum()+" in workbook "+workbookFile.getName());
+					throw new KonigException("Property "+propertyIdValue+" is missing required decimal scale on row "+row.getRowNum()+ inFile());
 				}
 				if(decimalPrecision==null){
-					throw new KonigException("Property "+propertyIdValue+" is missing required decimal scale on row "+row.getRowNum()+" in workbook "+workbookFile.getName());
+					throw new KonigException("Property "+propertyIdValue+" is missing required decimal scale on row "+row.getRowNum()+inFile());
 				}
 			}
 			if(decimalScale!=null && 
@@ -1768,6 +2049,7 @@ public class WorkbookLoader {
 			String formula = stringValue(row, pcEqualsCol);
 			String sourcePath = stringValue(row, pcSourcePathCol);
 			List<URI> securityClassification = uriList(row, pcSecurityClassification);
+			URI relationshipDegree = uriValue(row,pcRelationshipDegree);
 			if (formula == null) {
 				// Support legacy column name "Equivalent Path"
 				formula = stringValue(row, pcEquivalentPathCol);
@@ -1845,7 +2127,6 @@ public class WorkbookLoader {
 				if (formula != null) {
 					formulaHandlers.add(new ShapeFormulaHandler(shapeId, formula));
 				}
-
 				return;
 			}
 
@@ -1910,6 +2191,8 @@ public class WorkbookLoader {
 				pathHandlers.add(new SourcePathBuilder(p, sourcePath));
 			}
 
+			termStatus(termStatus);
+			p.setTermStatus(termStatus);
 			p.setTermStatus(termStatus);
 			p.setMinCount(minCount);
 			p.setMaxCount(maxCount);
@@ -1922,7 +2205,9 @@ public class WorkbookLoader {
 			p.setUniqueLang(uniqueLang);
 			p.setDecimalPrecision(decimalPrecision);
 			p.setDecimalScale(decimalScale);
-			p.setDecimalPrecision(decimalPrecision);
+			if(relationshipDegree!=null){
+				p.setRelationshipDegree(RelationshipDegree.fromURI(relationshipDegree));
+			}
 			p.setIn(valueIn);
 			p.setStereotype(stereotype);
 			if(securityClassification!= null && !securityClassification.isEmpty()) {
@@ -1931,7 +2216,10 @@ public class WorkbookLoader {
 			if (formula != null) {
 				formulaHandlers.add(new PropertyFormulaHandler(shape, p, formula));
 			}
-			
+		}
+
+		private String inFile() {
+			return workbookFile==null ? "" : " in workbook "+workbookFile.getName();
 		}
 
 		private Integer maxCount(Row row, int col) {
@@ -2246,7 +2534,11 @@ public class WorkbookLoader {
 		}
 
 		private void readPropertyConstraintHeader(Sheet sheet) {
-			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol = pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol  = pcSourcePathCol = pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = pcMinLength = pcMaxLength = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= UNDEFINED;
+			pcShapeIdCol = pcCommentCol = pcPropertyIdCol = pcValueTypeCol = pcMinCountCol = pcMaxCountCol =
+					pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol  = pcSourcePathCol = 
+					pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = 
+					pcMinLengthCol = pcMaxLengthCol = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= 
+					termStatusCol = pcRelationshipDegree = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -2295,10 +2587,10 @@ public class WorkbookLoader {
 						pcMaxExclusive = i;
 						break;
 					case MIN_LENGTH:
-						pcMinLength = i;
+						pcMinLengthCol = i;
 						break;
 					case MAX_LENGTH:
-						pcMaxLength = i;
+						pcMaxLengthCol = i;
 						break;
 					case DECIMAL_PRECISION:
 						pcDecimalPrecision = i;
@@ -2333,10 +2625,13 @@ public class WorkbookLoader {
 						pcFormulaCol = i;
 						break;
 					case TERM_STATUS:
-						pcTermStatusCol = i;
+						termStatusCol = i;
 						break;
 					case SECURITY_CLASSIFICATION:
 						pcSecurityClassification = i;
+						break;
+					case RELATIONSHIP_DEGREE:
+						pcRelationshipDegree = i;
 						break;
 					}
 				}
@@ -2395,7 +2690,7 @@ public class WorkbookLoader {
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
             List<URI> shapeType=uriList(row, shapeTypeCol);
             URI tabularOriginShape = uriValue(row, tabularOriginShapeCol);
-
+            URI termStatus = uriValue(row, termStatusCol);
 
 			
 			Shape shape = produceShape(shapeId);
@@ -2416,7 +2711,6 @@ public class WorkbookLoader {
 			shape.setRollUpBy(rollUpBy);
 			
 			shape.setMediaTypeBaseName(mediaType);
-			
 			shape.setBigQueryTableId(bigqueryTable);
 			shape.setAggregationOf(aggregationOf);
 			shape.setRollUpBy(rollUpBy);
@@ -2443,6 +2737,8 @@ public class WorkbookLoader {
 			}
 			
 			shape.setInputShapeOf(shapeOfList);
+			shape.setTermStatus(termStatus);
+			termStatus(termStatus);
 
 		}
 
@@ -2568,10 +2864,9 @@ public class WorkbookLoader {
 
 			return value == null ? null : new URIImpl(GCP.NAMESPACE + value);
 		}
+		
+		private  List<Function> dataSourceList(String text) throws SpreadsheetException {
 
-		private List<Function> dataSourceList(Row row) throws SpreadsheetException {
-
-			String text = stringValue(row, shapeDatasourceCol);
 			if (text == null) {
 				return null;
 			}
@@ -2586,6 +2881,12 @@ public class WorkbookLoader {
 			List<Function> list = visitor.getList();
 
 			return list.isEmpty() ? null : list;
+		}
+
+		private List<Function> dataSourceList(Row row) throws SpreadsheetException {
+
+			String text = stringValue(row, shapeDatasourceCol);
+			return dataSourceList(text);
 		}
 
 		private String bigQueryTableId(Row row, URI targetClass) throws SpreadsheetException {
@@ -2621,7 +2922,7 @@ public class WorkbookLoader {
 		private void readShapeHeader(Sheet sheet) {
 			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = 
 				shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = 
-				shapeIriTemplateCol = tabularOriginShapeCol = UNDEFINED;
+				shapeIriTemplateCol = tabularOriginShapeCol = termStatusCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -2681,6 +2982,10 @@ public class WorkbookLoader {
 					case TABULAR_ORIGIN_SHAPE:
 						tabularOriginShapeCol = i;
 						break;
+						
+					case TERM_STATUS :
+						termStatusCol = i;
+						break;
 
 					}
 				}
@@ -2712,6 +3017,7 @@ public class WorkbookLoader {
 			List<URI> typeList = uriList(row, individualTypeCol);
 			Literal codeValue = stringLiteral(row, individualCodeValueCol);
 			Literal gcpDatasetId = gcpDatasetId();
+			URI termStatus = uriValue(row, termStatusCol);
 			
 			if (individualId == null) {
 				return;
@@ -2735,9 +3041,38 @@ public class WorkbookLoader {
 			if (name == null && useDefaultName()) {
 				name = literal(individualId.getLocalName());
 			}
+
 			edge(individualId, Schema.name, name);
 			edge(individualId, RDFS.COMMENT, comment);
 			edge(individualId, DCTERMS.IDENTIFIER, codeValue);
+			termStatus(individualId, termStatus);
+		}
+
+		private void termStatus(URI subject, URI termStatus) {
+			termStatus(termStatus);
+			edge(subject, Konig.termStatus, termStatus);
+		}
+
+		private void termStatus(URI termStatus) {
+
+			if (termStatus != null) {
+				if (describeTermStatus) {
+					describeTermStatus = false;
+					describeKonig();
+					edge(Konig.TermStatus, RDF.TYPE, OWL.CLASS);
+					edge(Konig.TermStatus, RDFS.SUBCLASSOF, Schema.Enumeration);
+				}
+				edge(termStatus, RDF.TYPE, Konig.TermStatus);
+			}
+		}
+
+		private void describeKonig() {
+			if (describeKonig) {
+				describeKonig = false;
+				edge(Konig.NAMESPACE_ID, RDF.TYPE, OWL.ONTOLOGY);
+				edge(Konig.NAMESPACE_ID, VANN.preferredNamespacePrefix, literal("konig"));
+			}
+			
 		}
 
 		private Literal gcpDatasetId() {
@@ -2748,6 +3083,12 @@ public class WorkbookLoader {
 		}
 
 		private Row readIndividualHeader(Sheet sheet) {
+
+			individualNameCol = UNDEFINED;
+			individualIdCol = UNDEFINED;
+			individualTypeCol = UNDEFINED;
+			individualCodeValueCol = UNDEFINED;
+			termStatusCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -2777,6 +3118,10 @@ public class WorkbookLoader {
 						break;
 					case INDIVIDUAL_CODE_VALUE:
 						individualCodeValueCol = i;
+						break;
+
+					case TERM_STATUS:
+						termStatusCol = i;
 						break;
 
 					}
@@ -2818,8 +3163,9 @@ public class WorkbookLoader {
 			URI inverseOf = uriValue(row, inverseOfCol);
 			List<URI> propertyType = uriList(row, propertyTypeCol);
 			URI subpropertyOf = uriValue(row, subpropertyOfCol);
-			URI termStatus = uriValue(row, propertyTermStatusCol);
+			URI termStatus = uriValue(row, termStatusCol);
 			List<URI> securityClassification = uriList(row, securityClassificationCol);
+			URI relationshipDegree = uriValue(row,relationshipDegreeCol);
 			if (propertyId == null) {
 				return;
 			}
@@ -2868,15 +3214,25 @@ public class WorkbookLoader {
 			if (inverseOf != null) {
 				graph.edge(propertyId, OWL.INVERSEOF, inverseOf);
 			}
-			if (termStatus != null) {
-				graph.edge(propertyId, XOWL.termStatus, termStatus);
-			}
+			termStatus(propertyId, termStatus);
 			
 			if(securityClassification!= null && !securityClassification.isEmpty())
 			{
 			  for (URI uri : securityClassification) {
 			    graph.edge(propertyId, Konig.securityClassification, uri);					
 			  }
+			}
+			if(relationshipDegree!=null){				
+				for(URI d:domain){
+					Vertex restrictionVertex = graph.vertex();
+					Resource restriction = restrictionVertex.getId();
+					edge(restriction, RDF.TYPE, OWL.RESTRICTION);
+					edge(restriction, OWL.ONPROPERTY, propertyId);
+					edge(restriction, Konig.relationshipDegree, relationshipDegree);
+					edge(d, RDF.TYPE, OWL.CLASS);
+					edge(d,RDFS.SUBCLASSOF,restriction);
+					
+				}
 			}
 
 		}
@@ -2964,6 +3320,9 @@ public class WorkbookLoader {
 			subpropertyOfCol = UNDEFINED;
 			propertyCommentCol = UNDEFINED;
 			securityClassificationCol = UNDEFINED;
+			relationshipDegreeCol = UNDEFINED;
+			termStatusCol = UNDEFINED;
+      
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -3005,10 +3364,13 @@ public class WorkbookLoader {
 						subpropertyOfCol = i;
 						break;
 					case TERM_STATUS:
-						propertyTermStatusCol = i;
+						termStatusCol = i;
 						break;
 					case SECURITY_CLASSIFICATION:
 						securityClassificationCol = i;
+						break;
+					case RELATIONSHIP_DEGREE:
+						relationshipDegreeCol = i;
 						break;
 					}
 				}
@@ -3053,7 +3415,7 @@ public class WorkbookLoader {
 			Literal comment = stringLiteral(row, classCommentCol);
 			URI classId = uriValue(row, classIdCol);
 			List<URI> subclassOf = uriList(row, classSubclassOfCol);
-			URI termStatus = uriValue(row, classTermStatusCol);
+			URI termStatus = uriValue(row, termStatusCol);
 			if (classId != null) {
 				graph.edge(classId, RDF.TYPE, OWL.CLASS);
 				if (className != null) {
@@ -3069,10 +3431,8 @@ public class WorkbookLoader {
 					}
 
 				}
-
-				if (termStatus != null) {
-					graph.edge(classId, XOWL.termStatus, termStatus);
-				}
+				
+				termStatus(classId, termStatus);
 			}
 
 		}
@@ -3159,7 +3519,7 @@ public class WorkbookLoader {
 			classCommentCol = UNDEFINED;
 			classIdCol = UNDEFINED;
 			classSubclassOfCol = UNDEFINED;
-			classTermStatusCol = UNDEFINED;
+			termStatusCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -3188,7 +3548,7 @@ public class WorkbookLoader {
 						classSubclassOfCol = i;
 						break;
 					case TERM_STATUS:
-						classTermStatusCol = i;
+						termStatusCol = i;
 						break;
 					}
 				}
@@ -3335,7 +3695,7 @@ public class WorkbookLoader {
 				}
 			}
 
-			return text == null || text.isEmpty() ? null : text;
+			return text == null || text.isEmpty() ? null : text.replaceAll("(^\\h*)|(\\h*$)", "");
 		}
 
 		private void readOntologyHeader(Sheet sheet) throws SpreadsheetException {

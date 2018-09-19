@@ -62,12 +62,12 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 			for (DataSource dataSource : list) {
 				try {
 				if (dataSource instanceof GoogleBigQueryTable) {
-					if (dataSource instanceof GoogleBigQueryView && tableVisitor instanceof BigQueryViewWriter) {
+					if (dataSource instanceof GoogleBigQueryView && tableVisitor instanceof BigQueryTableWriter) {
 						Table table = toTable(shape, (GoogleBigQueryView) dataSource);
 						table.setView(currentStateViewGenerator.createViewDefinition(shape, dataSource));
 						if (table.getView() != null) {
 							table.setType("VIEW");
-							tableVisitor.visit(table);
+							tableVisitor.visit(dataSource, table);
 						}
 					} else if (!(dataSource instanceof GoogleBigQueryView) && tableVisitor instanceof BigQueryTableWriter) {
 						Table table = toTable(shape, (GoogleBigQueryTable) dataSource);
@@ -77,10 +77,10 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 						}
 						if (table.getExternalDataConfiguration() != null) {
 							table.setType("EXTERNAL");
-							tableVisitor.visit(table);
+							tableVisitor.visit(dataSource, table);
 						} else {
 							table.setType("TABLE");
-							tableVisitor.visit(table);
+							tableVisitor.visit(dataSource, table);
 						}
 						}catch(Exception ex){
 							ex.printStackTrace();

@@ -39,7 +39,7 @@ public class NamespaceReasoner {
 		return namespaceManager;
 	}
 	
-	public void gatherAllNamespces(ContextManager contextManager) {
+	public void gatherAllNamespaces(ContextManager contextManager) {
 		List<String> list = contextManager.listContexts();
 		for (String contextId : list) {
 			Context context = contextManager.getContextByURI(contextId);
