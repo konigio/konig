@@ -9,12 +9,12 @@
 #end
 #end
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${shapeLocalName}>
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}>
 	a konig:GoogleBigQueryTable, konig:DataSource;
 	gcp:tableReference [
 		gcp:projectId "${gcpProjectId}" ;
 		gcp:datasetId "${gcpDatasetId}" ;
-		gcp:tableId   "${shapeLocalName}" 
+		gcp:tableId   "${bigQueryTableId}" 
 	] ;
 	gcp:externalDataConfiguration [
 		gcp:sourceUris <gs://${gcpBucketName}/*> ;
@@ -29,7 +29,7 @@
 .
 
 <${shapeId}> konig:shapeDataSource 
-	<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${shapeLocalName}> ,
+	<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}> ,
 	<gs://${gcpBucketName}>
 .
 
