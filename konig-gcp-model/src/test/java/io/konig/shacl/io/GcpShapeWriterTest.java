@@ -47,12 +47,62 @@ import io.konig.core.project.ProjectFile;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
+import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.Shape;
+import io.konig.shacl.impl.MemoryShapeManager;
 
 public class GcpShapeWriterTest {
+	
+	@Test
+	public void testGoogleCloudSqlTable() throws Exception {
+
+
+		URI shapeId = uri("http://example.com/PersonShape");
+		URI dataSourceId = uri("http://example.com/datasource");
+		
+		Shape shape = new Shape(shapeId);
+		GoogleCloudSqlTable table = new GoogleCloudSqlTable();
+		table.setId(dataSourceId);
+		
+		table.setName("Person");
+		table.setInstance("example_instance");
+		table.setDatabase("example_db");
+		
+		shape.addShapeDataSource(table);
+		
+		
+		ShapeWriter shapeWriter = new ShapeWriter();
+		
+		Graph graph = new MemoryGraph();
+		shapeWriter.emitShape(shape, graph);		
+		
+		graph.setNamespaceManager(MemoryNamespaceManager.getDefaultInstance());
+		RdfUtil.prettyPrintTurtle(graph, System.out);
+
+		GcpShapeConfig.init();
+		MemoryShapeManager shapeManager = new MemoryShapeManager();
+		ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
+		shapeLoader.load(graph);
+		
+		shape = shapeManager.getShapeById(shapeId);
+		
+		assertTrue(shape.getShapeDataSource() != null);
+		assertEquals(1, shape.getShapeDataSource().size());
+		DataSource ds = shape.getShapeDataSource().get(0);
+		assertTrue(ds instanceof GoogleCloudSqlTable);
+		GoogleCloudSqlTable actual = (GoogleCloudSqlTable) ds;
+
+		assertEquals(table.getInstance(), actual.getInstance());
+		assertEquals(table.getDatabase(), actual.getDatabase());
+		assertEquals(table.getTableName(), actual.getTableName());
+		
+		
+	}
 	
 	@Test
 	public void testDdlFile() throws Exception {
@@ -92,8 +142,8 @@ public class GcpShapeWriterTest {
 		assertTrue(relativePath!=null);
 		assertEquals("gcp/bigquery/schema/person.sql", relativePath.stringValue());
 		
-		graph.setNamespaceManager(MemoryNamespaceManager.getDefaultInstance());
-		RdfUtil.prettyPrintTurtle(graph, System.out);
+//		graph.setNamespaceManager(MemoryNamespaceManager.getDefaultInstance());
+//		RdfUtil.prettyPrintTurtle(graph, System.out);
 	}
 	
 	@Test
