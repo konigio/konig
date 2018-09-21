@@ -25,6 +25,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.TableDataSource;
 
@@ -35,9 +36,9 @@ public class GoogleCloudSqlTable  extends TableDataSource {
 	private String tabularFieldNamespace;
 
 	public GoogleCloudSqlTable() {
+		addType(Konig.GoogleCloudSqlTable);
 	}
 
-	@Override
 	public String getTableIdentifier() {
 		return tableName;
 	}
@@ -50,6 +51,7 @@ public class GoogleCloudSqlTable  extends TableDataSource {
 		this.tableName = tableName;
 	}
 
+	@RdfProperty(GCP.INSTANCE)
 	public String getInstance() {
 		return instance;
 	}
@@ -58,12 +60,18 @@ public class GoogleCloudSqlTable  extends TableDataSource {
 		this.instance = instance;
 	}
 
+	@RdfProperty(GCP.DATABASE)
 	public String getDatabase() {
 		return database;
 	}
 
 	public void setDatabase(String database) {
 		this.database = database;
+	}
+
+	@RdfProperty(GCP.NAME)
+	public String getName() {
+		return tableName;
 	}
 	
 	public void setName(String name) {

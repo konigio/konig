@@ -25,6 +25,9 @@ import java.io.File;
 
 import org.openrdf.model.Resource;
 
+import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.GCP;
+
 public class GoogleCloudSqlTableInfo  {
 
 	private Resource id;
@@ -55,10 +58,12 @@ public class GoogleCloudSqlTableInfo  {
 		this.instanceFile = instanceFile;
 	}
 
+	@RdfProperty(GCP.NAME)
 	public String getTableName() {
 		return tableName;
 	}
 
+	@RdfProperty(GCP.NAME)
 	public void setTableName(String tableName) {
 		this.tableName = tableName;
 	}

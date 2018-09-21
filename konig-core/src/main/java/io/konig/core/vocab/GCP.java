@@ -62,6 +62,8 @@ public class GCP {
 	public static final String DATABASE_VERSION = "http://www.konig.io/ns/gcp/databaseVersion";
 	public static final String REGION = "http://www.konig.io/ns/gcp/region";
 	public static final String SETTINGS = "http://www.konig.io/ns/gcp/settings";
+	public static final String INSTANCE = "http://www.konig.io/ns/gcp/instance";
+	public static final String DATABASE = "http://www.konig.io/ns/gcp/database";
 	public static final String TIER = "http://www.konig.io/ns/gcp/tier";
 
 	public static final URI GoogleCloudSqlInstance = new URIImpl("http://www.konig.io/ns/gcp/GoogleCloudSqlInstance");
