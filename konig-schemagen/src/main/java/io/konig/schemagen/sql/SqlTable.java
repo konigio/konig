@@ -68,6 +68,7 @@ public class SqlTable extends AbstractPrettyPrintable {
 		out.print(" (");
 		out.pushIndent();
 		String comma = "";
+		String syntheticKey = null;
 		StringBuilder pks = new StringBuilder();
 		StringBuilder uks = new StringBuilder();		
 		for (SqlColumn column : columnList) {
@@ -78,16 +79,25 @@ public class SqlTable extends AbstractPrettyPrintable {
 			if(column.getKeytype() == SqlKeyType.SYNTHETIC_KEY){
 				out.print(" AUTO_INCREMENT");
 			}
-			if (column.getKeytype() == SqlKeyType.PRIMARY_KEY || column.getKeytype() == SqlKeyType.SYNTHETIC_KEY) {				
+			if (column.getKeytype() == SqlKeyType.PRIMARY_KEY) {				
 				if (pks.length() > 0) pks.append(comma);
 				pks.append(column.getColumnName());
-			}			
+			}		
+			if (column.getKeytype() == SqlKeyType.SYNTHETIC_KEY) {
+				syntheticKey = column.getColumnName();
+			}
 			if (column.getKeytype() == SqlKeyType.UNIQUE_KEY) {
 				if (uks.length() > 0) uks.append(comma);
 				uks.append(column.getColumnName());
 			}
 		}
-		if (pks.length() > 0) {
+		if (syntheticKey != null) {
+			out.println(comma);
+			out.indent();
+			out.print("PRIMARY KEY (");
+			out.print(syntheticKey);
+			out.print(')');
+		} else if (pks.length() > 0) {
 			out.println(comma);
 			out.indent();
 			out.print("PRIMARY KEY (" + pks.toString() + ")");
