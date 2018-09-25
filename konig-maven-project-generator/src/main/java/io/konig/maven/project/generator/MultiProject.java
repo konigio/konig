@@ -36,6 +36,7 @@ import io.konig.maven.JsonSchemaConfig;
 import io.konig.maven.KonigProject;
 import io.konig.maven.OracleManagedCloudConfig;
 import io.konig.maven.ParentProjectConfig;
+import io.konig.maven.TabularShapeFactoryConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
 
@@ -51,11 +52,22 @@ public class MultiProject extends MavenProjectConfig {
 	private OracleManagedCloudConfig oracleManagedCloud;
 	private AmazonWebServicesConfig amazonWebServices;	
 	private TabularShapeGeneratorConfig tabularShapeGenerator;
+	private TabularShapeFactoryConfig tabularShapes;
 	
 	public MultiProject() {
 		
 	}
 	 
+	public TabularShapeFactoryConfig getTabularShapes() {
+		return tabularShapes;
+	}
+
+
+	public void setTabularShapes(TabularShapeFactoryConfig tabularShapes) {
+		this.tabularShapes = tabularShapes;
+	}
+
+
 	public WorkbookProcessor getWorkbook() {
 		return workbook;
 	}
@@ -143,6 +155,7 @@ public class MultiProject extends MavenProjectConfig {
 		if (workbook != null) {
 			RdfModelGenerator rdf = new RdfModelGenerator(this, workbook);
 			rdf.setTabularShapeGeneratorConfig(tabularShapeGenerator);
+			rdf.setTabularShapeFactoryConfig(tabularShapes);
 			setRdfSourceDir(new File(rdf.baseDir(), "target/generated/rdf"));
 			parent.add(rdf);
 		}

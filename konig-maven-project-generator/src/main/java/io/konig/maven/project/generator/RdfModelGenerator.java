@@ -32,16 +32,19 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
+import org.apache.velocity.VelocityContext;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import io.konig.maven.FileUtil;
+import io.konig.maven.TabularShapeFactoryConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
 
 public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProcessor> {
 	
 	private TabularShapeGeneratorConfig tabularShapeGeneratorConfig;
+	private TabularShapeFactoryConfig tabularShapeFactoryConfig;
 	
 	public RdfModelGenerator(MavenProjectConfig mavenProject, WorkbookProcessor workbook) {
 		super(workbook, "workbook");
@@ -51,8 +54,28 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 		init(mavenProject);
 		
 	}
+
+	protected VelocityContext createVelocityContext() {
+		VelocityContext context = super.createVelocityContext();
+		if (tabularShapeFactoryConfig != null) {
+			putObject("tabularShapes", tabularShapeFactoryConfig);
+		}
+		return context;
+	}
 	
 	
+	public TabularShapeFactoryConfig getTabularShapeFactoryConfig() {
+		return tabularShapeFactoryConfig;
+	}
+
+
+
+	public void setTabularShapeFactoryConfig(TabularShapeFactoryConfig tabularShapeFactoryConfig) {
+		this.tabularShapeFactoryConfig = tabularShapeFactoryConfig;
+	}
+
+
+
 	public void setTabularShapeGeneratorConfig(TabularShapeGeneratorConfig tabularShapeGeneratorConfig) {
 		this.tabularShapeGeneratorConfig = tabularShapeGeneratorConfig;
 	}
@@ -70,6 +93,7 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 		super.run();
 		config.setWorkbookFile(workbookFile);
 		config.setWorkbookDir(workbookDir);
+		
 		
 		if(tabularShapeGeneratorConfig != null) {
 			try {

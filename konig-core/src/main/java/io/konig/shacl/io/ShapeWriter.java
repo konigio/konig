@@ -24,6 +24,8 @@ package io.konig.shacl.io;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.List;
@@ -43,6 +45,7 @@ import io.konig.core.extract.ExtractException;
 import io.konig.core.extract.OntologyExtractor;
 import io.konig.core.impl.CompositeLocalNameService;
 import io.konig.core.impl.MemoryGraph;
+import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.io.FileGetter;
@@ -54,6 +57,15 @@ import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
 
 public class ShapeWriter {
+	
+	public static void write(OutputStream out, Shape...shapeList) throws RDFHandlerException, IOException {
+		ShapeWriter writer = new ShapeWriter();
+		
+		for (Shape s : shapeList) {
+			writer.writeTurtle(s, out);
+		}
+		
+	}
 
 	public void emitShape(Shape shape, Graph graph) {
 		SimplePojoEmitter emitter = SimplePojoEmitter.getInstance();
@@ -62,11 +74,25 @@ public class ShapeWriter {
 		
 		EmitContext context = new EmitContext(graph);
 		context.addIriReference(SH.shape, SH.path, SH.targetClass, SH.valueClass, Konig.aggregationOf, Konig.rollUpBy,
-				Konig.defaultShapeFor, Konig.inputShapeOf);
+				Konig.defaultShapeFor, Konig.inputShapeOf, Konig.tabularOriginShape);
 		context.setLocalNameService(nameService);
 		context.addIgnoredProperty(Konig.equivalentPath);
 		emitter.emit(context, shape, graph);
 	}
+	
+
+	public void writeTurtle(NamespaceManager nsManager, Shape shape, OutputStream out) throws RDFHandlerException, IOException {
+		try (OutputStreamWriter writer = new OutputStreamWriter(out)) {
+			writeTurtle(nsManager, shape, out);
+		}
+	}
+	
+	public void writeTurtle(Shape shape, OutputStream out) throws RDFHandlerException, IOException {
+		try (OutputStreamWriter writer = new OutputStreamWriter(out)) {
+			writeTurtle(MemoryNamespaceManager.getDefaultInstance(), shape, writer);
+		}
+	}
+	
 	
 	public void writeTurtle(NamespaceManager nsManager, Shape shape, Writer writer) throws RDFHandlerException, IOException {
 		MemoryGraph graph = new MemoryGraph();

@@ -29,6 +29,7 @@ import io.konig.core.KonigException;
 import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.TableDataSource;
+import io.konig.shacl.Shape;
 
 public class AwsAurora extends TableDataSource {
 	private AwsAuroraTableReference tableReference;
@@ -115,5 +116,10 @@ public class AwsAurora extends TableDataSource {
 		builder.append('.');
 		builder.append(tableReference.getAwsTableName());
 		return builder.toString();
+	}
+
+	@Override
+	public TableDataSource generateAssociationTable(Shape subjectShape, URI predicate) {
+		throw new UnsupportedOperationException();
 	}
 }

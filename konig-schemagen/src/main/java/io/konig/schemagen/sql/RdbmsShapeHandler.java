@@ -1,6 +1,5 @@
 package io.konig.schemagen.sql;
 
-
 /*
  * #%L
  * Konig Schema Generator
@@ -22,54 +21,35 @@ package io.konig.schemagen.sql;
  */
 
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.aws.datasource.AwsAurora;
 import io.konig.core.KonigException;
-import io.konig.core.NamespaceManager;
-import io.konig.core.OwlReasoner;
-import io.konig.gcp.datasource.GoogleBigQueryTable;
-import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
-import io.konig.shacl.RelationshipDegree;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeVisitor;
-import io.konig.shacl.io.ShapeFileGetter;
-import io.konig.shacl.io.ShapeWriter;
 
 public class RdbmsShapeHandler implements ShapeVisitor {
 	
 	private ShapeVisitor callback;
 	private RdbmsShapeGenerator generator;
-	private ShapeFileGetter fileGetter;
-	private ShapeWriter shapeWriter;
-	private NamespaceManager nsManager;
 	private static final Logger LOG = LoggerFactory.getLogger(RdbmsShapeHandler.class);
 	private List<Shape> rdbmsChildShapes = null;
 	private Collection<Shape> shapes =null;
-	private RdbmsShapeHelper rdbmsShapeHelper;
 	
 	public RdbmsShapeHandler(
 			ShapeVisitor callback,
-			RdbmsShapeGenerator generator, ShapeFileGetter fileGetter, ShapeWriter shapeWriter,
-			NamespaceManager nsManager, RdbmsShapeHelper rdbmsShapeHelper) {
+			RdbmsShapeGenerator generator) {
 		this.callback = callback;
 		this.generator = generator;
-		this.fileGetter = fileGetter;
-		this.shapeWriter = shapeWriter;
-		this.nsManager = nsManager;
-		this.rdbmsShapeHelper=rdbmsShapeHelper;
 	}
 
 	public void visitAll(Collection<Shape> shapeList) {
@@ -103,7 +83,7 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 	@Override
 	public void visit(Shape shape) {
 		
-		if (shape.getTabularOriginShape()!=null && !hasParentShape(shape)) {
+		if (shape.getTabularOriginShape()!=null && noProperties(shape)) {
 			
 			Shape rdbmsShape = null;
 			rdbmsChildShapes =  new ArrayList<>();
@@ -123,12 +103,6 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 			
 			if (rdbmsShape != null) {	
 				rdbmsShape.setId(shape.getId());
-				save(rdbmsShape);
-				if(!rdbmsChildShapes.isEmpty()) {
-					for(Shape rdbmsChildShape : rdbmsChildShapes) {						
-						save(rdbmsChildShape);
-					}
-				}
 				if (callback != null) {
 					callback.visit(rdbmsShape);
 				}
@@ -137,35 +111,12 @@ public class RdbmsShapeHandler implements ShapeVisitor {
 
 	}
 	
-	private boolean hasParentShape(Shape shape) {
-		for(Shape s:shapes){			
-			if(hasParentShape(s,shape.getTabularOriginShape()))
-				return true;
-		}
-		return false;
-	}
 
-	private boolean hasParentShape(Shape parentShape, Shape childShape) {
-		for(PropertyConstraint pc:parentShape.getProperty()){
-			if(pc.getShape()!=null && pc.getShape().getId().equals(childShape.getId())){
-				return true;
-			}
-		}
-		return false;
+	private boolean noProperties(Shape shape) {
 		
+		return shape.getProperty()==null || shape.getProperty().isEmpty();
 	}
 
-	private void save(Shape shape) {
-		if (!(shape.getId() instanceof URI)) {
-			throw new KonigException("Shape must be identified by a URI");
-		}
-		File file = fileGetter.getFile((URI)shape.getId());
-		try {			
-				shapeWriter.writeTurtle(nsManager, shape, file);			
-		} catch (Exception e) {
-			throw new KonigException(e);
-		}
-	}
 	
 	public Shape getRdbmsShapeFromLogicalShape(Shape childShape) {
 		for(Shape shape:shapes){
