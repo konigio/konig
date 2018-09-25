@@ -25,9 +25,11 @@ import org.openrdf.model.URI;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.KonigException;
+import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OMCS;
 import io.konig.datasource.TableDataSource;
+import io.konig.shacl.Shape;
 
 public class OracleTable extends TableDataSource {
 	private String tableName;
@@ -118,5 +120,11 @@ public class OracleTable extends TableDataSource {
 		builder.append(tableName);
 		return builder.toString();
 	}
+
+	@Override
+	public TableDataSource generateAssociationTable(Shape subjectShape, URI predicate) {
+		throw new UnsupportedOperationException();
+	}
+	
 
 }

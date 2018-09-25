@@ -30,25 +30,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.activity.Activity;
+import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.FileGetter;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
@@ -60,6 +61,35 @@ public class ShapeWriterTest {
 	
 	private ShapeWriter shapeWriter = new ShapeWriter();
 	private Graph graph = new MemoryGraph();
+	
+	@Test
+	public void testTabularOriginShape() throws Exception {
+		URI personShapeId = uri("http://example.com/shapes/PersonShape");
+		URI tabularPersonShapeId = uri("http://example.com/shapes/TabularPersonShape");
+		
+		ShapeBuilder builder = new ShapeBuilder();
+		builder.beginShape(personShapeId)
+			.targetClass(Schema.Person)
+			.nodeKind(NodeKind.IRI)
+			.beginProperty(Schema.email)
+				.datatype(XMLSchema.STRING)
+				.maxCount(1)
+			.endProperty()
+		.endShape()
+		.beginShape(tabularPersonShapeId)
+			.targetClass(personShapeId)
+			.tabularOriginShape(personShapeId)
+		.endShape()
+		;
+		
+		Shape shape = builder.getShape(tabularPersonShapeId);
+
+		shapeWriter.emitShape(shape, graph);
+		Vertex v = graph.getVertex(personShapeId);
+		Set<Edge> set = v.outProperty(SH.property);
+		assertTrue(set.isEmpty());
+		
+	}
 	
 	@Test
 	public void testOrConstraint() throws Exception {

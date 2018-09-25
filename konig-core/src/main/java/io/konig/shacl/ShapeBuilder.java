@@ -1,5 +1,8 @@
 package io.konig.shacl;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+
 /*
  * #%L
  * konig-shacl
@@ -71,6 +74,17 @@ public class ShapeBuilder {
 	}
 	
 
+	@SuppressWarnings("unchecked")
+	public <T> T beginDataSource(Class<T> builderType) {
+	
+		Constructor<?> ctor = builderType.getConstructors()[0];
+		try {
+			return (T) ctor.newInstance(this);
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+			throw new RuntimeException(e);
+		}
+	}
 	
 	public Shape getShape(URI uri) {
 		return shapeManager.getShapeById(uri);
@@ -89,7 +103,7 @@ public class ShapeBuilder {
 		return stack.isEmpty() ? null : stack.get(stack.size()-1);
 	}
 	
-	private Shape peekShape() {
+	public Shape peekShape() {
 		Object result = peek();
 		return (result instanceof Shape) ? (Shape) result : null;
 	}
@@ -151,6 +165,14 @@ public class ShapeBuilder {
 	
 	public ShapeBuilder targetClass(URI type) {
 		peekShape().setTargetClass(type);
+		return this;
+	}
+	
+	public ShapeBuilder tabularOriginShape(URI shapeId) {
+		beginShape(shapeId);
+		endShape();
+		Shape shape = shapeManager.getShapeById(shapeId);
+		peekShape().setTabularOriginShape(shape);
 		return this;
 	}
 	
@@ -430,5 +452,6 @@ public class ShapeBuilder {
 		}
 
 	}
+	
 
 }

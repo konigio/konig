@@ -298,6 +298,10 @@ public class Shape implements Cloneable {
 	public void setTargetClass(URI targetClass) {
 		this.targetClass = targetClass;
 	}
+	
+	public URI getIri() {
+		return id instanceof URI ? (URI) id : null;
+	}
 
 	public Resource getId() {
 		return id;

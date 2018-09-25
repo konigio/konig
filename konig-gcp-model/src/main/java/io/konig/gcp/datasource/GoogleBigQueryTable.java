@@ -24,6 +24,8 @@ package io.konig.gcp.datasource;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.openrdf.model.URI;
+
 import com.google.api.services.bigquery.model.ExternalDataConfiguration;
 
 import io.konig.annotation.RdfProperty;
@@ -32,6 +34,7 @@ import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.shacl.Shape;
 
 public class GoogleBigQueryTable extends TableDataSource {
 	
@@ -141,6 +144,11 @@ public class GoogleBigQueryTable extends TableDataSource {
 		builder.append('.');
 		builder.append(tableReference.getTableId());
 		return builder.toString();
+	}
+
+	@Override
+	public TableDataSource generateAssociationTable(Shape subjectShape, URI predicate) {
+		throw new UnsupportedOperationException();
 	}
 	
 	

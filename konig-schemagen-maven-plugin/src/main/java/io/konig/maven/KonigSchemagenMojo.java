@@ -110,7 +110,6 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.io.SkosEmitter;
-import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
 import io.konig.core.util.BasicJavaDatatypeMapper;
@@ -129,8 +128,6 @@ import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
 import io.konig.etl.aws.EtlRouteBuilder;
 import io.konig.etl.gcp.GcpEtlRouteBuilder;
-import io.konig.formula.FormulaParser;
-import io.konig.formula.ShapePropertyOracle;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
@@ -155,7 +152,6 @@ import io.konig.openapi.generator.OpenApiGeneratorException;
 import io.konig.openapi.generator.ShapeLocalNameJsonSchemaNamer;
 import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
-import io.konig.rio.turtle.NamespaceMap;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.CalculateMaximumRowSize;
 import io.konig.schemagen.OntologySummarizer;
@@ -217,6 +213,8 @@ import io.konig.schemagen.sql.RdbmsShapeGenerator;
 import io.konig.schemagen.sql.RdbmsShapeHandler;
 import io.konig.schemagen.sql.RdbmsShapeHelper;
 import io.konig.schemagen.sql.SqlTableGenerator;
+import io.konig.schemagen.sql.TabularShapeException;
+import io.konig.schemagen.sql.TabularShapeFactory;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeFilter;
@@ -233,7 +231,6 @@ import io.konig.shacl.io.DdlFileEmitter;
 import io.konig.shacl.io.ShapeAuxiliaryWriter;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
-import io.konig.shacl.io.ShapeWriter;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.spreadsheet.SpreadsheetException;
 import io.konig.spreadsheet.WorkbookLoader;
@@ -276,6 +273,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     @Parameter
     private JsonSchemaConfig jsonSchema;
+    
+    @Parameter
+    private TabularShapeFactoryConfig tabularShapes;
     
     @Parameter
     private File rdfSourceDir;
@@ -333,7 +333,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private ContextManager contextManager;
     private ClassStructure structure;
     private SimpleLocalNameService localNameService;
-    private FormulaParser formulaParser;
     private CompositeEmitter emitter;
     private Project project;
 
@@ -476,38 +475,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		cloudSql=googleCloudPlatform.getCloudsql();
     	}
     		
-    	
-    	if (rdfSourceDir != null && (aurora!=null || bigQuery!=null || cloudSql!=null)) {
-    		File shapesDir = new File(rdfSourceDir.getPath()+"/shapes");    		
-			if (shapesDir != null) {
-				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-				RdbmsShapeHelper rdbmsShapeHelper = new RdbmsShapeHelper(owlReasoner);
-				RdbmsShapeGenerator generator = new RdbmsShapeGenerator(formulaParser(), owlReasoner,rdbmsShapeHelper);
-				ShapeWriter shapeWriter = new ShapeWriter();
-				RdbmsShapeHandler handler = new RdbmsShapeHandler(shapeInjector, generator, fileGetter, shapeWriter, nsManager,rdbmsShapeHelper);
-				handler.visitAll(shapeManager.listShapes());
+    	if (tabularShapes != null) {
+    		String namespace = tabularShapes.getTabularPropertyNamespace();
+    		TabularShapeFactory factory = new TabularShapeFactory(shapeManager, namespace);
+    		try {
+				factory.processAll(shapeManager.listShapes());
+			} catch (TabularShapeException e) {
+				throw new MojoExecutionException("Failed to generate tabular shapes", e);
 			}
     	}
 	}
 
-	private FormulaParser formulaParser() {
-		if (formulaParser == null) {
-			SimpleLocalNameService nameService = getLocalNameService();
-			NamespaceMap nsMap = new NamespaceMapAdapter(owlGraph.getNamespaceManager());
-			ShapePropertyOracle oracle = new ShapePropertyOracle();
-			formulaParser = new FormulaParser(oracle, nameService, nsMap);
-		}
-		
-		return formulaParser;
-	}
-
-	private SimpleLocalNameService getLocalNameService() {
-		if (localNameService == null) {
-			localNameService = new SimpleLocalNameService();
-			localNameService.addAll(owlGraph);
-		}
-		return localNameService;
-	}
 
 	private void init() throws MojoExecutionException, IOException {
     	GcpShapeConfig.init();

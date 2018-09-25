@@ -89,6 +89,7 @@ public class PropertyConstraint implements Cloneable {
 	private RelationshipDegree relationshipDegree;
 	private Person dataSteward;
 	private String name;
+	private URI equals;
 	
 	private Term term;
 	private URI termStatus;
@@ -213,7 +214,6 @@ public class PropertyConstraint implements Cloneable {
 		this.maxInclusive = maxInclusive;
 	}
 	
-	@RdfProperty("http://www.w3.org/ns/shacl#predicate")
 	public URI getPredicate() {
 		return path instanceof PredicatePath ? ((PredicatePath)path).getPredicate() : null;
 	}
@@ -594,4 +594,13 @@ public class PropertyConstraint implements Cloneable {
 	public void setRelationshipDegree(RelationshipDegree relationshipDegree) {
 		this.relationshipDegree = relationshipDegree;
 	}
+
+	public URI getEquals() {
+		return equals;
+	}
+
+	public void setEquals(URI equals) {
+		this.equals = equals;
+	}
+	
 }

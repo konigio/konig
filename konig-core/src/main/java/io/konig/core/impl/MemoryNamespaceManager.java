@@ -29,6 +29,8 @@ import java.util.Map;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.impl.NamespaceImpl;
 import org.openrdf.model.vocabulary.OWL;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.NamespaceManager;
@@ -55,6 +57,8 @@ public class MemoryNamespaceManager implements NamespaceManager {
 		INSTANCE.add("xsd", XMLSchema.NAMESPACE);
 		INSTANCE.add("dc", DC.NAMESPACE);
 		INSTANCE.add("owl", OWL.NAMESPACE);
+		INSTANCE.add("rdf", RDF.NAMESPACE);
+		INSTANCE.add("rdfs", RDFS.NAMESPACE);
 	}
 	
 	public static MemoryNamespaceManager getDefaultInstance() {

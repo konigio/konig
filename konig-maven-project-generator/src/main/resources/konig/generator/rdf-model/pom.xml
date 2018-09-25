@@ -46,6 +46,7 @@
 	  			<defaults>
 	  				<rootDir>${basedir}/target/generated</rootDir>
 	  			</defaults>
+#if($tabularShapes)$tabularShapes#end	  			
 $workbook
 	  		</configuration>
 	  		<executions>

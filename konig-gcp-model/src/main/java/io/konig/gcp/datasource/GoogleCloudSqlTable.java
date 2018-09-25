@@ -1,5 +1,7 @@
 package io.konig.gcp.datasource;
 
+import java.text.MessageFormat;
+
 /*
  * #%L
  * Konig Google Cloud Platform Model
@@ -23,11 +25,14 @@ package io.konig.gcp.datasource;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.TableDataSource;
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeBuilder;
 
 public class GoogleCloudSqlTable  extends TableDataSource {
 	private String instance;
@@ -133,5 +138,62 @@ public class GoogleCloudSqlTable  extends TableDataSource {
 		builder.append('.');
 		builder.append(tableName);
 		return builder.toString();
+	}
+	
+	public static class Builder {
+		private GoogleCloudSqlTable table = new GoogleCloudSqlTable();
+		private ShapeBuilder shapeBuilder;
+		
+		public Builder(ShapeBuilder shapeBuilder) {
+			this.shapeBuilder = shapeBuilder;
+		}
+		
+		public Builder database(String database) {
+			table.setDatabase(database);
+			return this;
+		}
+		
+		public Builder instance(String instance) {
+			table.setInstance(instance);
+			return this;
+		}
+		
+		public Builder name(String name) {
+			table.setName(name);
+			return this;
+		}
+		
+		public Builder id(URI id) {
+			table.setId(id);
+			return this;
+		}
+		
+		public ShapeBuilder endDataSource() {
+			shapeBuilder.peekShape().addShapeDataSource(table);
+			return shapeBuilder;
+		}
+		
+		
+		
+	}
+
+	@Override
+	public TableDataSource generateAssociationTable(Shape subjectShape, URI predicate) {
+		
+		GoogleCloudSqlTable table = new GoogleCloudSqlTable();
+		table.setInstance(instance);
+		table.setDatabase(database);
+		table.setName(associationTableName(subjectShape, predicate));
+		table.setTabularFieldNamespace(tabularFieldNamespace);
+		
+
+		String pattern = 
+			"https://www.googleapis.com/sql/v1beta4/projects/{0}/instances/{1}/databases/{2}/tables/{3}";
+		
+		String idValue = MessageFormat.format(pattern, "${gcpProjectId}", instance, database, table.getName());
+		
+		table.setId(new URIImpl(idValue));
+		
+		return table;
 	}
 }

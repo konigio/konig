@@ -76,13 +76,9 @@ public class RdbmsShapeHandlerTest extends AbstractRdbmsShapeGeneratorTest {
 
 	protected void load(String path) throws RDFParseException, RDFHandlerException, IOException {
 		super.load(path);
-
-		File shapesDir = new File(targetFolder, "shapes");
 		
-		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-		ShapeWriter shapeWriter = new ShapeWriter();
 		ShapeInjector callback = new ShapeInjector(shapeManager);
-		handler = new RdbmsShapeHandler(callback, shapeGenerator, fileGetter, shapeWriter, nsManager,null);
+		handler = new RdbmsShapeHandler(callback, shapeGenerator);
 	}
 
 }

@@ -1,5 +1,7 @@
 package io.konig.datasource;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * Konig Core
@@ -22,8 +24,11 @@ package io.konig.datasource;
 
 
 import io.konig.annotation.RdfProperty;
+import io.konig.core.KonigException;
 import io.konig.core.project.ProjectFile;
+import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
+import io.konig.shacl.Shape;
 
 public abstract class TableDataSource extends DataSource {
 
@@ -35,6 +40,8 @@ public abstract class TableDataSource extends DataSource {
 	abstract public String getSqlDialect();
 	abstract public String getUniqueIdentifier();
 	abstract public String getQualifiedTableName();
+	
+	abstract public TableDataSource generateAssociationTable(Shape subjectShape, URI predicate);
 
 	@RdfProperty(Konig.DDL_FILE)
 	public ProjectFile getDdlFile() {
@@ -55,4 +62,17 @@ public abstract class TableDataSource extends DataSource {
 		transformFile = file;
 	}
 
+	protected String associationTableName(Shape subjectShape, URI predicate) {
+		URI targetClass = subjectShape.getTargetClass();
+		if (targetClass == null) {
+			throw new KonigException("targetClass must be defined for Shape " + subjectShape.getId().stringValue());
+		}
+
+		StringBuilder builder = new StringBuilder();
+		builder.append(StringUtil.SNAKE_CASE(targetClass.getLocalName()));
+		builder.append('_');
+		builder.append(StringUtil.SNAKE_CASE(predicate.getLocalName()));
+		
+		return builder.toString();
+	}
 }

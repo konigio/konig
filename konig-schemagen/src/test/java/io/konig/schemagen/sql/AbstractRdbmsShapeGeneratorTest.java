@@ -48,12 +48,9 @@ public class AbstractRdbmsShapeGeneratorTest extends SchemaGeneratorTest {
 		super.load(path);
 		SimpleLocalNameService nameService = new SimpleLocalNameService();
 		nameService.addAll(graph);
-		NamespaceMap nsMap = new NamespaceMapAdapter(graph.getNamespaceManager());
-		ShapePropertyOracle oracle = new ShapePropertyOracle();
-		FormulaParser parser = new FormulaParser(oracle, nameService, nsMap);
 		OwlReasoner owlReasoner = new OwlReasoner(graph);
 		rdbmsShapeHelper = new RdbmsShapeHelper(owlReasoner);
-		shapeGenerator =  new RdbmsShapeGenerator(parser,null, rdbmsShapeHelper);
+		shapeGenerator =  new RdbmsShapeGenerator(null, rdbmsShapeHelper);
 	}
 
 }
