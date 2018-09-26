@@ -76,7 +76,7 @@ public class TabularShapeFactory {
 	public List<Shape> process(Shape shape) throws TabularShapeException {
 		List<Shape> result = null;
 
-		if (shape.getTabularOriginShape() != null && shape.getProperty() == null || shape.getProperty().isEmpty()) {
+		if (shape.getTabularOriginShape() != null && (shape.getProperty() == null || shape.getProperty().isEmpty())) {
 
 			FormulaBuilder formula = new FormulaBuilder();
 			result = new ArrayList<>();
