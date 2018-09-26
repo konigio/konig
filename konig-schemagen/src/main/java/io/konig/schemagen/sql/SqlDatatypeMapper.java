@@ -75,6 +75,10 @@ public class SqlDatatypeMapper
 					(!signed && (max==null || inRange(0, 4294967295L, c))) ? FacetedSqlDatatype.UNSIGNED_INT :
 					(signed) ? FacetedSqlDatatype.SIGNED_BIGINT : FacetedSqlDatatype.UNSIGNED_BIGINT;
 			}
+
+			if (XMLSchema.GYEAR.equals(datatype)) {
+				return FacetedSqlDatatype.UNSIGNED_SMALLINT;
+			}
 			
 			if (XMLSchema.STRING.equals(datatype)) {
 				Integer maxLength = c.getMaxLength();
