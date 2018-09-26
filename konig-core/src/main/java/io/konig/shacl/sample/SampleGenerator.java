@@ -2,6 +2,8 @@ package io.konig.shacl.sample;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 
 /*
@@ -78,8 +80,6 @@ public class SampleGenerator {
 	private boolean failWhenEnumHasNoMembers = false;
 	private String undefinedFieldType = "?";
 	
-	
-
 	private OwlReasoner reasoner;
 	
 	public SampleGenerator(OwlReasoner reasoner) {
@@ -216,6 +216,12 @@ public class SampleGenerator {
 					value = random.loremIpsum(1);
 				} else if (XMLSchema.DURATION.equals(datatype)) {
 					value = random.nextDuration();
+				} else if (XMLSchema.GYEAR.equals(datatype)) {
+					
+					int currentYear = GregorianCalendar.getInstance().get(Calendar.YEAR);
+					int future = random.nextInt(10);
+					value = Integer.toString(currentYear - 3 + future);
+					
 				} else {
 					String msg = MessageFormat.format("On shape <{0}>, unsupported datatype: <{1}>", 
 							shape.getId().stringValue(), datatype.stringValue());
