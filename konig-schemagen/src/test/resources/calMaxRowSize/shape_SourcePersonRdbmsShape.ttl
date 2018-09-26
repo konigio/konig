@@ -28,40 +28,40 @@ shape:SourcePersonRdbmsShape sh:property  [
 
 .schema:familyName''' ]  ; 
 	a konig:TabularNodeShape , sh:Shape ; 
+	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-SourcePersonRdbmsShape> , <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonRdbmsShape> ; 
 	konig:shapeMaxRowLength  [ 
 		konig:targetDatasource <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonRdbmsShape> ; 
 		konig:maxRowLength 3012 ]  ; 
-	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-SourcePersonRdbmsShape> , <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonRdbmsShape> ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/5N0Olwa8L38AAAFkjhlLig> ; 
 	sh:targetClass schema:Person ; 
 	konig:mediaTypeBaseName "application/vnd.example.example.com.shapes.person" . 
 
-<http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonRdbmsShape> konig:tabularFieldNamespace "http://example.com/ns/alias/" ; 
-	aws:tableReference  [ 
-		aws:awsSchema "schema1" ; 
-		aws:awsTableName "SourcePersonRdbmsShape" ; 
-		aws:awsAuroraHost "devHost" ]  ; 
-	a konig:AwsAurora , konig:DataSource . 
-
-<https://amazonaws.konig.io/s3/bucket/${environmentName}-SourcePersonRdbmsShape> aws:bucketMediaType "application/doc" ; 
+<https://amazonaws.konig.io/s3/bucket/${environmentName}-SourcePersonRdbmsShape> aws:bucketName "${environmentName}-SourcePersonRdbmsShape" ; 
+	aws:bucketKey "SourcePersonRdbmsShape" ; 
+	aws:bucketMediaType "application/doc" ; 
 	aws:notificationConfiguration  [ 
+		aws:queueConfiguration  [ 
+			aws:queue <arn:aws:sqs:us-east-1:${aws-account-id}:SourcePersonRdbmsShape_CreateEvent> ; 
+			aws:eventType "s3:ObjectCreated:*"
+		 ]  ; 
 		aws:topicConfiguration  [ 
 			aws:eventType "s3:ObjectCreated:*" ; 
-			aws:topic <arn:aws:sns:us-east-1:${aws-account-id}:SourcePersonRdbmsShape_CreateEvent>
-		 ]  ; 
-		aws:queueConfiguration  [ 
-			aws:eventType "s3:ObjectCreated:*" ; 
-			aws:queue <arn:aws:sqs:us-east-1:${aws-account-id}:SourcePersonRdbmsShape_CreateEvent> ]  ]  ; 
-	aws:bucketKey "SourcePersonRdbmsShape" ; 
-	aws:bucketName "${environmentName}-SourcePersonRdbmsShape" ; 
+			aws:topic <arn:aws:sns:us-east-1:${aws-account-id}:SourcePersonRdbmsShape_CreateEvent> ]  ]  ; 
 	a konig:S3Bucket , konig:DataSource . 
 
-<arn:aws:sns:us-east-1:${aws-account-id}:SourcePersonRdbmsShape_CreateEvent> aws:region "us-east-1" ; 
-	aws:accountId "${aws-account-id}" ; 
-	aws:resourceName "SourcePersonRdbmsShape_CreateEvent" . 
-
 <arn:aws:sqs:us-east-1:${aws-account-id}:SourcePersonRdbmsShape_CreateEvent> aws:region "us-east-1" ; 
-	aws:accountId "${aws-account-id}" ; 
-	aws:resourceName "SourcePersonRdbmsShape_CreateEvent" . 
+	aws:resourceName "SourcePersonRdbmsShape_CreateEvent" ; 
+	aws:accountId "${aws-account-id}" . 
+
+<arn:aws:sns:us-east-1:${aws-account-id}:SourcePersonRdbmsShape_CreateEvent> aws:region "us-east-1" ; 
+	aws:resourceName "SourcePersonRdbmsShape_CreateEvent" ; 
+	aws:accountId "${aws-account-id}" . 
+
+<http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonRdbmsShape> konig:tabularFieldNamespace "http://example.com/ns/alias/" ; 
+	aws:tableReference  [ 
+		aws:awsTableName "SourcePersonRdbmsShape" ; 
+		aws:awsSchema "schema1" ; 
+		aws:awsAuroraHost "devHost" ]  ; 
+	a konig:AwsAurora , konig:DataSource . 
 
 <http://www.konig.io/activity/5N0Olwa8L38AAAFkjhlLig> a konig:LoadModelFromSpreadsheet . 
