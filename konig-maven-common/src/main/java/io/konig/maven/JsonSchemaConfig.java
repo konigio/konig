@@ -28,6 +28,7 @@ public class JsonSchemaConfig {
 	private String uriTemplate;
 	private File jsonSchemaDir;
 	private boolean additionalProperties=false;
+	private boolean generateSchemaId = false;
 	
 	public String getUriTemplate() {
 		return uriTemplate;
@@ -47,6 +48,14 @@ public class JsonSchemaConfig {
 	public void setAdditionalProperties(boolean additionalProperties) {
 		this.additionalProperties = additionalProperties;
 	}
+	
+	public boolean getGenerateSchemaId() {
+		return generateSchemaId;
+	}
+	public void setGenerateSchemaId(boolean generateSchemaId) {
+		this.generateSchemaId = generateSchemaId;
+	}
+	
 	
 	
 	

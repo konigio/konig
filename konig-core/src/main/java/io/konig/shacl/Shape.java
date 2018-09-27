@@ -465,7 +465,7 @@ public class Shape implements Cloneable {
 
 	@RdfProperty(Konig.SHAPE_DATA_SOURCE)
 	public List<DataSource> getShapeDataSource() {
-		return shapeDataSource;
+		return shapeDataSource==null ? Collections.emptyList() : shapeDataSource;
 	}
 	
 	public void addShapeDataSource(DataSource dataSource) {
