@@ -28,10 +28,7 @@ shape:SourcePersonRdbmsShape sh:property  [
 
 .schema:familyName''' ]  ; 
 	a konig:TabularNodeShape , sh:Shape ; 
-	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-SourcePersonRdbmsShape> , <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonRdbmsShape> ; 
-	konig:shapeMaxRowLength  [ 
-		konig:targetDatasource <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonRdbmsShape> ; 
-		konig:maxRowLength 3012 ]  ; 
+	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-SourcePersonRdbmsShape> , <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonRdbmsShape> ;  
 	prov:wasGeneratedBy <http://www.konig.io/activity/5N0Olwa8L38AAAFkjhlLig> ; 
 	sh:targetClass schema:Person ; 
 	konig:mediaTypeBaseName "application/vnd.example.example.com.shapes.person" . 

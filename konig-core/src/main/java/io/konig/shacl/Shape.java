@@ -27,6 +27,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -70,7 +71,7 @@ public class Shape implements Cloneable {
 	
 	private Activity wasGeneratedBy;
 	private String bigQueryTableId;
-	private List<URI> type;
+	private Set<URI> type;
 
 	
 	private IriTemplate iriTemplate;
@@ -436,7 +437,7 @@ public class Shape implements Cloneable {
 
 	public void addType(URI type) {
 		if (this.type == null) {
-			this.type = new ArrayList<>();
+			this.type = new LinkedHashSet<>();
 		}
 		if (!this.type.contains(type)) {
 			this.type.add(type);
@@ -446,11 +447,11 @@ public class Shape implements Cloneable {
 	
 
 	@RdfProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
-	public List<URI> getType() {
-		return type;
+	public Set<URI> getType() {
+		return type==null ? Collections.emptySet() : type;
 	}
 
-	public void setType(List<URI> type) {
+	public void setType(Set<URI> type) {
 		this.type = type;
 	}
 
@@ -707,6 +708,7 @@ public class Shape implements Cloneable {
 
 	public void setTabularOriginShape(Shape tabularOriginShape) {
 		this.tabularOriginShape = tabularOriginShape;
+		addType(Konig.TabularNodeShape);
 	}
 
 	public URI getUsesAbbreviationScheme() {

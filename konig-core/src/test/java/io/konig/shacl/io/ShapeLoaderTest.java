@@ -24,7 +24,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -263,11 +265,12 @@ public class ShapeLoaderTest {
 		Shape shape = shapeManager.getShapeById(shapeId);
 		assertTrue(shape!=null);
 		
-		List<URI> typeList = shape.getType();
+		Set<URI> typeList = shape.getType();
 		assertTrue(typeList != null);
+		Iterator<URI> sequence = typeList.iterator();
 		assertEquals(2, typeList.size());
-		assertEquals(SH.Shape, typeList.get(0));
-		assertEquals(OriginShape, typeList.get(1));
+		assertEquals(SH.Shape, sequence.next());
+		assertEquals(OriginShape, sequence.next());
 		
 		
 	}

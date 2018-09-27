@@ -1,6 +1,7 @@
 package io.konig.schemagen;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,23 +31,21 @@ import java.util.List;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.schemagen.sql.SqlDatatypeMapper;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMaxRowLength;
 import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 
 public class CalculateMaxRowSizeTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
-	private SqlDatatypeMapper datatypeMapper = new SqlDatatypeMapper();
 
 	CalculateMaximumRowSize calculateMaxRowSize = new CalculateMaximumRowSize();
 
@@ -66,10 +65,8 @@ public class CalculateMaxRowSizeTest {
 		URI shapeId = uri("http://example.com/shapes/SourcePersonRdbmsShape");
 			Shape shape = shapeManager.getShapeById(shapeId);
 	
-			File outDir = new File("src/test/resources/calMaxRowSize");
-			ShapeFileGetter fileGetter = new ShapeFileGetter(outDir, nsManager);
 			
-			calculateMaxRowSize.addMaximumRowSize(shape,fileGetter,nsManager);
+			calculateMaxRowSize.addMaximumRowSize(shape, nsManager);
 			assertTrue(shape!=null);
 			List<ShapeMaxRowLength> shapemaxList = new ArrayList<ShapeMaxRowLength>();
 			shapemaxList= shape.getShapeMaxRowLengthList();

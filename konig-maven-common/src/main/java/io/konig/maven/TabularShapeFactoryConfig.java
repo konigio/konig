@@ -23,8 +23,11 @@ package io.konig.maven;
 
 public class TabularShapeFactoryConfig {
 
-	@Parameter(property="konig.tabularPropertyNamespace", required=true)
+	@Parameter(property="konig.tabularPropertyNamespace", required=false)
 	private String tabularPropertyNamespace;
+	
+	@Parameter(property="konig.tabularPropertyNamespace", required=false, defaultValue="true")
+	private boolean computeMaxRowSize=true;
 
 	public String getTabularPropertyNamespace() {
 		return tabularPropertyNamespace;
@@ -32,6 +35,14 @@ public class TabularShapeFactoryConfig {
 
 	public void setTabularPropertyNamespace(String tabularPropertyNamespace) {
 		this.tabularPropertyNamespace = tabularPropertyNamespace;
+	}
+
+	public boolean getComputeMaxRowSize() {
+		return computeMaxRowSize;
+	}
+
+	public void setComputeMaxRowSize(boolean computeMaxRowSize) {
+		this.computeMaxRowSize = computeMaxRowSize;
 	}
 	
 	
