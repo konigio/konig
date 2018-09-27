@@ -477,12 +477,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     		
     	if (tabularShapes != null) {
     		String namespace = tabularShapes.getTabularPropertyNamespace();
-    		TabularShapeFactory factory = new TabularShapeFactory(shapeManager, namespace);
-    		try {
-				factory.processAll(shapeManager.listShapes());
-			} catch (TabularShapeException e) {
-				throw new MojoExecutionException("Failed to generate tabular shapes", e);
-			}
+    		if (namespace != null) {
+	    		TabularShapeFactory factory = new TabularShapeFactory(shapeManager, namespace);
+	    		try {
+					factory.processAll(shapeManager.listShapes());
+				} catch (TabularShapeException e) {
+					throw new MojoExecutionException("Failed to generate tabular shapes", e);
+				}
+    		}
     	}
 	}
 
@@ -491,6 +493,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	GcpShapeConfig.init();
     	OracleShapeConfig.init();
     	AwsShapeConfig.init();
+    	if (tabularShapes==null) {
+    		tabularShapes = new TabularShapeFactoryConfig();
+    	}
     }
 
 	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException, SQLException {
@@ -1406,14 +1411,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 	
 	private void computeMaxRowSize() throws RDFParseException, RDFHandlerException, IOException {
-		if(defaults.getShapesDir() != null){
-			RdfUtil.loadTurtle(defaults.getRdfDir(), owlGraph, nsManager);
-			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
-			shapeLoader.load(owlGraph);
+		if(tabularShapes.getComputeMaxRowSize()){
 			
-			File shapesDir = defaults.getShapesDir();
-			CalculateMaximumRowSize calculateMaximumRowSize = new CalculateMaximumRowSize();
-			calculateMaximumRowSize.addMaximumRowSizeAll(shapeManager.listShapes(),shapesDir, nsManager);
+			CalculateMaximumRowSize calculator = new CalculateMaximumRowSize();
+			calculator.addMaximumRowSizeAll(shapeManager.listShapes(), nsManager);
 		}
 	}
 }

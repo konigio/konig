@@ -1,6 +1,5 @@
 package io.konig.schemagen;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,93 +25,76 @@ import java.util.Collection;
  */
 
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
 
-import io.konig.shacl.PropertyConstraint;
-import io.konig.shacl.Shape;
-import io.konig.shacl.ShapeManager;
-import io.konig.shacl.ShapeMaxRowLength;
-import io.konig.shacl.impl.MemoryShapeManager;
-import io.konig.shacl.io.ShapeFileGetter;
-import io.konig.shacl.io.ShapeLoader;
-import io.konig.shacl.io.ShapeWriter;
 import io.konig.aws.datasource.AwsAurora;
-import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
-import io.konig.core.impl.MemoryGraph;
-import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.omcs.datasource.OracleTable;
 import io.konig.schemagen.sql.FacetedSqlDatatype;
 import io.konig.schemagen.sql.SqlDatatypeMapper;
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.ShapeMaxRowLength;
+import io.konig.shacl.impl.MemoryShapeManager;
 
 public class CalculateMaximumRowSize {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private SqlDatatypeMapper datatypeMapper = new SqlDatatypeMapper();
-	
-	public void addMaximumRowSizeAll(Collection<Shape> shapeList,File shapesDir, NamespaceManager nsManager)
+
+	public void addMaximumRowSizeAll(Collection<Shape> shapeList, NamespaceManager nsManager)
 			throws RDFHandlerException, IOException {
-		//List<Shape> shapeList = shapeManager.listShapes();
-		ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
+		// List<Shape> shapeList = shapeManager.listShapes();
 		for (Shape shape : shapeList) {
-			addMaximumRowSize(shape,fileGetter, nsManager);
+			addMaximumRowSize(shape, nsManager);
 
 		}
 	}
 
-	public void addMaximumRowSize(Shape shape, ShapeFileGetter fileGetter, NamespaceManager nsManager  )
-			throws RDFHandlerException, IOException {
+	public void addMaximumRowSize(Shape shape, NamespaceManager nsManager) throws RDFHandlerException, IOException {
 		List<PropertyConstraint> propList = new ArrayList<PropertyConstraint>();
 		propList = shape.getProperty();
-		List<URI> uriList = new ArrayList<URI>();
-		uriList = shape.getType();
-		for (URI uri : uriList){
-			if (uri != null && uri.getLocalName().equals("TabularNodeShape")){	
-		List<FacetedSqlDatatype> sqlDataTypeList = new ArrayList<FacetedSqlDatatype>();
+		for (URI shapeType : shape.getType()) {
+			if (Konig.TabularNodeShape.equals(shapeType)) {
+				List<FacetedSqlDatatype> sqlDataTypeList = new ArrayList<FacetedSqlDatatype>();
 
-		for(PropertyConstraint p : propList){
-			FacetedSqlDatatype datatype = datatypeMapper.type(p);
-			sqlDataTypeList.add(datatype);
-		}
+				for (PropertyConstraint p : propList) {
+					FacetedSqlDatatype datatype = datatypeMapper.type(p);
+					sqlDataTypeList.add(datatype);
+				}
 
-		List<ShapeMaxRowLength> shapeMaxRowLengthList = new ArrayList<ShapeMaxRowLength>();
-		ShapeMaxRowLength shapeMaxRowLength = new ShapeMaxRowLength();
-		shapeMaxRowLength.setTargetDatasource(getDatasource(shape));
-		shapeMaxRowLength.setMaxRowLength(getMaxRowSize(sqlDataTypeList));
-		shapeMaxRowLengthList.add(shapeMaxRowLength);
-		shape.setShapeMaxRowLengthList(shapeMaxRowLengthList);
+				List<ShapeMaxRowLength> shapeMaxRowLengthList = new ArrayList<ShapeMaxRowLength>();
+				ShapeMaxRowLength shapeMaxRowLength = new ShapeMaxRowLength();
+				shapeMaxRowLength.setTargetDatasource(getDatasource(shape));
+				shapeMaxRowLength.setMaxRowLength(getMaxRowSize(sqlDataTypeList));
+				shapeMaxRowLengthList.add(shapeMaxRowLength);
+				shape.setShapeMaxRowLengthList(shapeMaxRowLengthList);
 
-		writeShape(shape, fileGetter, nsManager);
 			}
 		}
-		}
-	protected void writeShape(Shape shape, ShapeFileGetter fileGetter, NamespaceManager nsManager)
-			throws RDFHandlerException, IOException {
-		ShapeWriter shapeWriter = new ShapeWriter();
-		Graph graph = new MemoryGraph();
-		shapeWriter.emitShape(shape, graph);
-		File shapeFile = fileGetter.getFile(new URIImpl(shape.getId().toString()));
-		RdfUtil.prettyPrintTurtle(nsManager, graph, shapeFile);
 	}
 
 	protected URI getDatasource(Shape shape) {
 		URI id = null;
 		List<DataSource> datasources = shape.getShapeDataSource();
-		for(DataSource datasource : datasources) {
-			if(datasource instanceof AwsAurora){
+		for (DataSource datasource : datasources) {
+			if (datasource instanceof AwsAurora) {
 				AwsAurora awsAurora = (AwsAurora) datasource;
-				 id = new URIImpl(awsAurora.getId().toString());
-			} else if (datasource instanceof GoogleCloudSqlTable){
+				id = new URIImpl(awsAurora.getId().toString());
+			} else if (datasource instanceof GoogleCloudSqlTable) {
 				GoogleCloudSqlTable cloudSql = (GoogleCloudSqlTable) datasource;
-				 id = new URIImpl(cloudSql.getId().toString());
+				id = new URIImpl(cloudSql.getId().toString());
 
-			} else if (datasource instanceof OracleTable){
+			} else if (datasource instanceof OracleTable) {
 				OracleTable oracle = (OracleTable) datasource;
-				 id = new URIImpl(oracle.getId().toString());
+				id = new URIImpl(oracle.getId().toString());
 			}
 		}
 		return id;
@@ -178,12 +160,12 @@ public class CalculateMaximumRowSize {
 		}
 		return dataTypeSize;
 	}
-	
-	private Integer getMaxRowSize(List<FacetedSqlDatatype> sqlDataTypeList){
+
+	private Integer getMaxRowSize(List<FacetedSqlDatatype> sqlDataTypeList) {
 		Integer rowSize = 0;
-		for(FacetedSqlDatatype sqlDataType :sqlDataTypeList){
+		for (FacetedSqlDatatype sqlDataType : sqlDataTypeList) {
 			String dataType = sqlDataType.toString().toUpperCase();
-			rowSize =getsize(dataType)+rowSize;		
+			rowSize = getsize(dataType) + rowSize;
 		}
 
 		return rowSize;
