@@ -805,7 +805,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			JsonSchemaNamer jsonSchemaNamer = TemplateJsonSchemaNamer.namer(nsManager, shapeManager, jsonSchema);
 			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
 			ShapeToJsonSchema generator = new ShapeToJsonSchema(jsonSchemaGenerator);
-			generator.setListener(new ShapeToJsonSchemaLinker(owlGraph));
+			if (jsonSchema.getGenerateSchemaId()) {
+				jsonSchemaGenerator.setIncludeIdValue(true);
+				generator.setListener(new ShapeToJsonSchemaLinker(owlGraph));
+			}
 			generator.generateAll(shapeManager.listShapes(), jsonSchema.getJsonSchemaDir());
 		}
 		
