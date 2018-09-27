@@ -1,10 +1,10 @@
-package io.konig.schemagen.sql;
+package io.konig.schemagen;
 
 /*
  * #%L
  * Konig Schema Generator
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,29 +21,11 @@ package io.konig.schemagen.sql;
  */
 
 
-public enum SqlDatatype {
+public class InvalidDatatypeException extends Exception {
+	private static final long serialVersionUID = 1L;
+	
+	public InvalidDatatypeException(String msg) {
+		super(msg);
+	}
 
-	BOOLEAN,
-	BIT,
-	TINYINT,
-	SMALLINT,
-	MEDIUMINT,
-	INT,
-	INTEGER,
-	BIGINT,
-	FLOAT,
-	DECIMAL,
-	DOUBLE,
-	DATE,
-	DATETIME,
-	TEXT,
-	CHAR,
-	VARCHAR,
-	VARCHAR2,
-	NUMBER,
-	TIMESTAMP,
-	CLOB,
-	LONG,
-	BINARY_FLOAT,
-	BINARY_DOUBLE
 }

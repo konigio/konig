@@ -1,6 +1,5 @@
 package io.konig.schemagen;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -25,11 +24,9 @@ import java.util.Collection;
  */
 
 import java.util.List;
-import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFHandlerException;
 
 import io.konig.aws.datasource.AwsAurora;
 import io.konig.core.NamespaceManager;
@@ -39,6 +36,7 @@ import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.omcs.datasource.OracleTable;
 import io.konig.schemagen.sql.FacetedSqlDatatype;
 import io.konig.schemagen.sql.SqlDatatypeMapper;
+import io.konig.schemagen.sql.StringSqlDatatype;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -48,17 +46,32 @@ import io.konig.shacl.impl.MemoryShapeManager;
 public class CalculateMaximumRowSize {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private SqlDatatypeMapper datatypeMapper = new SqlDatatypeMapper();
+	private int maxCharacterSize = 3;
 
 	public void addMaximumRowSizeAll(Collection<Shape> shapeList, NamespaceManager nsManager)
-			throws RDFHandlerException, IOException {
-		// List<Shape> shapeList = shapeManager.listShapes();
+			throws InvalidDatatypeException {
+		
 		for (Shape shape : shapeList) {
 			addMaximumRowSize(shape, nsManager);
 
 		}
 	}
+	
+	
 
-	public void addMaximumRowSize(Shape shape, NamespaceManager nsManager) throws RDFHandlerException, IOException {
+	public int getMaxCharacterSize() {
+		return maxCharacterSize;
+	}
+
+
+
+	public void setMaxCharacterSize(int maxCharacterSize) {
+		this.maxCharacterSize = maxCharacterSize;
+	}
+
+
+
+	public void addMaximumRowSize(Shape shape, NamespaceManager nsManager) throws InvalidDatatypeException {
 		List<PropertyConstraint> propList = new ArrayList<PropertyConstraint>();
 		propList = shape.getProperty();
 		for (URI shapeType : shape.getType()) {
@@ -100,72 +113,85 @@ public class CalculateMaximumRowSize {
 		return id;
 	}
 
-	private Integer getsize(String dataTypeWithLen) {
-		String dataType = dataTypeWithLen;
-		Integer lenColumn = 1;
-		if (dataTypeWithLen.contains("(")) {
-			dataType = dataTypeWithLen.substring(0, dataTypeWithLen.indexOf("("));
-			String length = dataTypeWithLen.substring(dataTypeWithLen.indexOf("(") + 1, dataTypeWithLen.indexOf(")"));
-			lenColumn = Integer.valueOf(length);
-		}
-		Integer dataTypeSize = 0;
-		switch (dataType) {
-		case "TINYINT":
+	private Integer getsize(FacetedSqlDatatype sqlDataType) throws InvalidDatatypeException {
+	
+		int dataTypeSize = 0;
+		
+		switch (sqlDataType.getDatatype()) {
+		case BIT:
+		case TINYINT: 
 			dataTypeSize = 1;
 			break;
-		case "SMALLINT":
+		case SMALLINT:
 			dataTypeSize = 2;
 			break;
-		case "MEDIUMINT":
+		case MEDIUMINT:
 			dataTypeSize = 3;
 			break;
-		case "INT":
+		case INT:
 			dataTypeSize = 1;
 			break;
-		case "INTEGER":
+		case INTEGER:
 			dataTypeSize = 1;
 			break;
-		case "TEXT":
+		case TEXT:
 			dataTypeSize = 12;
 			break;
-		case "CHAR":
-			dataTypeSize = 3;
-			dataTypeSize = dataTypeSize * lenColumn;
+
+
+		case CLOB:
+		case VARCHAR2:
+		case VARCHAR:
+		case CHAR:
+			dataTypeSize = maxLengthBytes(sqlDataType);
 			break;
-		case "VARCHAR":
-			dataTypeSize = 3;
-			dataTypeSize = dataTypeSize * lenColumn;
-			break;
-		case "DATE":
-			dataTypeSize = 3;
-			break;
-		case "DATETIME":
+			
+		case DATE:
 			dataTypeSize = 3;
 			break;
-		case "DECIMAL":
+		case DATETIME:
+			dataTypeSize = 3;
+			break;
+		case DECIMAL:
 			dataTypeSize = 4;
 			break;
-		case "BIGINT":
+		case BIGINT:
 			dataTypeSize = 8;
 			break;
-		case "FLOAT":
+		case FLOAT:
 			dataTypeSize = 4;
 			break;
-		case "DOUBLE":
+			
+		case LONG:
+		case DOUBLE:
 			dataTypeSize = 8;
 			break;
-		case "BOOLEAN":
+		case NUMBER:
+		case BOOLEAN:
 			dataTypeSize = 1;
+			break;
+		case BINARY_DOUBLE:
+			break;
+		case BINARY_FLOAT:
+			break;
+		case TIMESTAMP:
 			break;
 		}
 		return dataTypeSize;
 	}
 
-	private Integer getMaxRowSize(List<FacetedSqlDatatype> sqlDataTypeList) {
-		Integer rowSize = 0;
+	private int maxLengthBytes(FacetedSqlDatatype sqlDataType) throws InvalidDatatypeException {
+		if (sqlDataType instanceof StringSqlDatatype) {
+			StringSqlDatatype stringType = (StringSqlDatatype) sqlDataType;
+			return maxCharacterSize * stringType.getMaxLength();
+		}
+		throw new InvalidDatatypeException("Expected StringSqlDatatype");
+	}
+
+	private int getMaxRowSize(List<FacetedSqlDatatype> sqlDataTypeList) throws InvalidDatatypeException {
+		int rowSize = 0;
 		for (FacetedSqlDatatype sqlDataType : sqlDataTypeList) {
-			String dataType = sqlDataType.toString().toUpperCase();
-			rowSize = getsize(dataType) + rowSize;
+			rowSize = getsize(sqlDataType) + rowSize;
 		}
 
 		return rowSize;

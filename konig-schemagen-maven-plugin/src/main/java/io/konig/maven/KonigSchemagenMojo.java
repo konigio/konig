@@ -154,6 +154,7 @@ import io.konig.openapi.generator.TableDatasourceFilter;
 import io.konig.openapi.model.OpenAPI;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.CalculateMaximumRowSize;
+import io.konig.schemagen.InvalidDatatypeException;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
@@ -393,7 +394,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
-				SizeEstimateException | KonigException | SQLException e) {
+				SizeEstimateException | KonigException | SQLException | InvalidDatatypeException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
@@ -1410,7 +1411,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 	}
 	
-	private void computeMaxRowSize() throws RDFParseException, RDFHandlerException, IOException {
+	private void computeMaxRowSize() throws InvalidDatatypeException {
 		if(tabularShapes.getComputeMaxRowSize()){
 			
 			CalculateMaximumRowSize calculator = new CalculateMaximumRowSize();
