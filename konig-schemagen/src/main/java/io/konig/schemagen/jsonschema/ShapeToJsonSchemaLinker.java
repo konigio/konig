@@ -25,6 +25,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.konig.core.Graph;
@@ -45,10 +46,13 @@ public class ShapeToJsonSchemaLinker implements JsonSchemaListener {
 	public void handleJsonSchema(Shape shape, ObjectNode schema) {
 		
 		Resource shapeId = shape.getId();
-		URI schemaId = new URIImpl(schema.get("id").asText());
-		
-		shape.setPreferredJsonSchema(schemaId);
-		graph.edge(shapeId, Konig.preferredJsonSchema, schemaId);
+		JsonNode idNode = schema.get("id");
+		if (idNode != null) {
+			URI schemaId = new URIImpl(idNode.asText());
+			
+			shape.setPreferredJsonSchema(schemaId);
+			graph.edge(shapeId, Konig.preferredJsonSchema, schemaId);
+		}
 	}
 
 }
