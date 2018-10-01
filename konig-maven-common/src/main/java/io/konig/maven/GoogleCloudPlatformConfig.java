@@ -35,8 +35,6 @@ public class GoogleCloudPlatformConfig implements RdfSource {
     
     
 	private String bigQueryDatasetId;
-	private File enumShapeDir;
-	private String enumShapeNameTemplate;
     private File credentials;
     
     @Parameter(property="konig.gcp.topicsFile", defaultValue="${konig.gcp.directory}/topics.txt")
@@ -107,22 +105,6 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 		this.bigQueryDatasetId = bigQueryDatasetId;
 	}
 
-	public File getEnumShapeDir() {
-		return enumShapeDir;
-	}
-
-	public void setEnumShapeDir(File enumShapeDir) {
-		this.enumShapeDir = enumShapeDir;
-	}
-
-	public String getEnumShapeNameTemplate() {
-		return enumShapeNameTemplate;
-	}
-
-	public void setEnumShapeNameTemplate(String enumShapeNameTemplate) {
-		this.enumShapeNameTemplate = enumShapeNameTemplate;
-	}
-
 	public File gcpDir(RdfConfig defaults) {
 		if (directory == null) {
 			File root = defaults.getRootDir();
@@ -131,13 +113,6 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 			}
 		}
 		return directory;
-	}
-
-	public File enumShapeDir(RdfConfig defaults) {
-		if (enumShapeDir == null) {
-			enumShapeDir = defaults.getShapesDir();
-		}
-		return enumShapeDir;
 	}
 
 	public DataServicesConfig getDataServices() {

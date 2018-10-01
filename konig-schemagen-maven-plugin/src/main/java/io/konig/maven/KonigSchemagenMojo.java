@@ -171,14 +171,12 @@ import io.konig.schemagen.aws.AwsResourceGenerator;
 import io.konig.schemagen.aws.CloudFormationTemplateWriter;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
-import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
 import io.konig.schemagen.gcp.BigQueryLabelGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
 import io.konig.schemagen.gcp.CloudSqlJsonGenerator;
 import io.konig.schemagen.gcp.CloudSqlTableWriter;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
-import io.konig.schemagen.gcp.EnumShapeVisitor;
 import io.konig.schemagen.gcp.GoogleAnalyticsShapeFileCreator;
 import io.konig.schemagen.gcp.GoogleAnalyticsUdfGenerator;
 import io.konig.schemagen.gcp.GoogleCloudResourceGenerator;
@@ -210,9 +208,6 @@ import io.konig.schemagen.ocms.OracleTableWriter;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.schemagen.sql.OracleDatatypeMapper;
-import io.konig.schemagen.sql.RdbmsShapeGenerator;
-import io.konig.schemagen.sql.RdbmsShapeHandler;
-import io.konig.schemagen.sql.RdbmsShapeHelper;
 import io.konig.schemagen.sql.SqlTableGenerator;
 import io.konig.schemagen.sql.TabularShapeException;
 import io.konig.schemagen.sql.TabularShapeFactory;
@@ -221,13 +216,10 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeFilter;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
-import io.konig.shacl.ShapeNamer;
-import io.konig.shacl.ShapeVisitor;
 import io.konig.shacl.SimpleMediaTypeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.ShapeInjector;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
-import io.konig.shacl.impl.TemplateShapeNamer;
 import io.konig.shacl.io.DdlFileEmitter;
 import io.konig.shacl.io.ShapeAuxiliaryWriter;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -743,29 +735,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
 			shapeLoader.load(owlGraph);
 		}
-		generateEnumShapes();
 		
 		
 	}
 
-	private void generateEnumShapes() throws MojoExecutionException {
-		File enumShapeDir = googleCloudPlatform==null ? null : googleCloudPlatform.enumShapeDir(defaults);
-		if (enumShapeDir!=null) {
-			
-			String enumShapeNameTemplate = googleCloudPlatform.getEnumShapeNameTemplate();
-			if (enumShapeNameTemplate != null) {
-				ShapeFileGetter fileGetter = new ShapeFileGetter(enumShapeDir, nsManager);
-				
-				ShapeNamer shapeNamer = new TemplateShapeNamer(nsManager, new SimpleValueFormat(enumShapeNameTemplate));
-				ShapeVisitor shapeVisitor = new EnumShapeVisitor(fileGetter, shapeManager);
-				BigQueryEnumShapeGenerator generator = new BigQueryEnumShapeGenerator(datasetMapper(), 
-						createTableMapper(), shapeNamer, shapeManager, shapeVisitor);
-				generator.setOmitTypeProperty(googleCloudPlatform.isOmitTypeFromEnumTables());
-				generator.generateAll(owlReasoner);
-			}
-		}
-		
-	}
 
 	private void generateJava() throws IOException, CodeGeneratorException {
 
@@ -1131,7 +1104,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				File bqScriptsDir = Configurator.checkNull(bigQuery.getScripts());
 				
 				if (bqDataDir != null) {
-					DataFileMapperImpl dataFileMapper = new DataFileMapperImpl(bqDataDir, datasetMapper, createTableMapper());
+					DataFileMapperImpl dataFileMapper = new DataFileMapperImpl(bqDataDir, datasetMapper(), createTableMapper());
 					enumGenerator.generate(owlGraph, dataFileMapper);
 				}
 				if (bqSchemaDir != null && bqDatasetDir!=null) {
