@@ -513,9 +513,9 @@ public class FormulaParser {
 			BuiltInCall call = 
 			
 			(call=tryIfFunction()) !=null ? call :
-			(call=tryGenericFunction(FunctionExpression.SUM)) != null ? call :
-			(call=tryGenericFunction(FunctionExpression.AVG)) != null ? call :
-			(call=tryGenericFunction(FunctionExpression.COUNT)) != null ? call :
+			(call=trySetFunction(FunctionExpression.SUM)) != null ? call :
+			(call=trySetFunction(FunctionExpression.AVG)) != null ? call :
+			(call=trySetFunction(FunctionExpression.COUNT)) != null ? call :
 			(call=tryGenericFunction(FunctionExpression.DATE_TRUNC)) != null ? call :
 			(call=tryGenericFunction(FunctionExpression.UNIX_TIME)) != null ? call :
 			(call=tryGenericFunction(FunctionExpression.TIME_INTERVAL)) != null ? call :
@@ -525,6 +525,30 @@ public class FormulaParser {
 			return call;
 		}
 		
+
+		private SetFunctionExpression trySetFunction(String functionName) throws IOException, RDFParseException, RDFHandlerException {
+			skipSpace();
+			String name = tryCaseInsensitiveWord(functionName);
+			if (name != null) {
+				int c = next();
+				if (c != '(') {
+					unread(c);
+					unread(name);
+				} else {
+					skipSpace();
+					boolean distinct = tryCaseInsensitiveWord("DISTINCT") != null;
+					if (distinct) {
+						skipSpace();
+					}
+					List<Expression> argList = argList();
+					assertNext(')');
+					return new SetFunctionExpression(name, distinct, argList);
+				}
+				
+			}
+			
+			return null;
+		}
 
 		private BoundFunction tryBoundFunction() throws IOException, RDFParseException, RDFHandlerException {
 			
