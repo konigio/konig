@@ -97,9 +97,12 @@ OutStep ::= '.' PathTerm
 
 InStep ::= '^' PathTerm
 
+DISTINCT ::= 'DISTINCT'
+
 BuiltInCall ::= 
 		'IF' '(' Expression ',' Expression ',' Expression  ')'
-	| 'SUM' '(' Expression ')' 
-	| 'AVG' '(' Expression ')' 
+	| 'COUNT' '(' DISTINCT? Expression ')'
+	| 'SUM' '('  DISTINCT? Expression ')' 
+	| 'AVG' '('  DISTINCT? Expression ')' 
 	| 'BOUND' '(' Variable | Path ')'
 	| 'UNIX_TIME' '(' Expression ')'

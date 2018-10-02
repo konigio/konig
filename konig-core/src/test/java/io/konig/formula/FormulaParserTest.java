@@ -22,7 +22,6 @@ package io.konig.formula;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import io.konig.core.Context;
@@ -32,6 +31,23 @@ import io.konig.core.vocab.Schema;
 public class FormulaParserTest {
 	
 	private FormulaParser parser = new FormulaParser();
+	
+
+	@Test
+	public void testDistinct() throws Exception {
+		String text = 
+			"@term dateCreated <http://schema.org/dateCreated>\n" +
+			"COUNT( DISTINCT .dateCreated )";
+		
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		
+		PrimaryExpression primary = e.asPrimaryExpression();
+		assertTrue(primary instanceof SetFunctionExpression);
+	
+		SetFunctionExpression function = (SetFunctionExpression) primary;
+		assertEquals("COUNT", function.getFunctionName());
+		assertTrue(function.isDistinct());
+	}
 	
 	@Test
 	public void testUnixTime() throws Exception {
