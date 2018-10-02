@@ -27,9 +27,12 @@ import java.util.List;
 import io.konig.core.io.PrettyPrintWriter;
 
 public class FunctionExpression extends AbstractFormula implements BuiltInCall {
-	public static final String SUM = "Sum";
+	public static final String SUM = "SUM";
+	public static final String AVG = "AVG";
 	public static final String COUNT = "COUNT";
 	public static final String DATE_TRUNC = "DATE_TRUNC";
+	public static final String TIME_INTERVAL = "TIME_INTERVAL";
+	public static final String UNIX_TIME = "UNIX_TIME";
 	
 	private String functionName;
 	private List<Expression> argList = new ArrayList<>();
