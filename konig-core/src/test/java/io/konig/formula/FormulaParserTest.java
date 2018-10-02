@@ -34,6 +34,22 @@ public class FormulaParserTest {
 	private FormulaParser parser = new FormulaParser();
 	
 	@Test
+	public void testUnixTime() throws Exception {
+		String text = 
+			"@term dateCreated <http://schema.org/dateCreated>\n" +
+			"UNIX_TIME(.dateCreated)";
+		
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		
+		PrimaryExpression primary = e.asPrimaryExpression();
+		assertTrue(primary instanceof FunctionExpression);
+	
+		FunctionExpression function = (FunctionExpression) primary;
+		assertEquals("UNIX_TIME", function.getFunctionName());
+	}
+	
+	
+	@Test
 	public void testTerm() throws Exception {
 		String text = 
 			"@term address <http://schema.org/address>\n" +

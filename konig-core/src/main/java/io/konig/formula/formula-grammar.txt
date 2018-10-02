@@ -102,3 +102,4 @@ BuiltInCall ::=
 	| 'SUM' '(' Expression ')' 
 	| 'AVG' '(' Expression ')' 
 	| 'BOUND' '(' Variable | Path ')'
+	| 'UNIX_TIME' '(' Expression ')'

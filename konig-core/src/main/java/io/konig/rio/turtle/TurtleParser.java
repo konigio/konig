@@ -1621,6 +1621,25 @@ public class TurtleParser extends RDFParserBase {
 		unread(c);
 		return false;
 	}
+	
+	protected String tryCaseInsensitiveWord(String text) throws IOException {
+		StringBuilder buffer = buffer();
+		String upper = text.toUpperCase();
+		for (int i=0; i<upper.length(); i++) {
+			char c = upper.charAt(i);
+			int k = read();
+			char cc = Character.toUpperCase((char)k);
+			buffer.append((char)k);
+			if (cc != c) {
+				unread(k);
+				for (int j=i-1; j>=0; j--) {
+					unread(buffer.charAt(j));
+				}
+				return null;
+			}
+		}
+		return buffer.toString();
+	}
 	protected boolean tryWord(String text) throws IOException {
 		for (int i=0; i<text.length(); i++) {
 			char c = text.charAt(i);
