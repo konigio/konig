@@ -38,7 +38,7 @@ public class DefaultTabularShapeNamerTest {
 		URI subjectShapeId = uri("http://example.com/shapes/EducationalOrganizationShape");
 		URI actual = namer.reifiedPropertyShapeId(subjectShapeId, Schema.name);
 		
-		assertEquals("http://example.com/shapes/EDUCATIONAL_ORGANIZATION_NAME_SHAPE", actual.stringValue());
+		assertEquals("http://example.com/shapes/EDUCATIONAL_ORGANIZATION_NAME_ASSOC_SHAPE", actual.stringValue());
 	}
 
 	private URI uri(String value) {
