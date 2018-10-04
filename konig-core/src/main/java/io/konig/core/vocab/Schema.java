@@ -51,6 +51,7 @@ public class Schema {
 	public static final URI Enumeration = new URIImpl("http://schema.org/Enumeration");
 	public static final URI GenderType = new URIImpl("http://schema.org/GenderType");
 	public static final URI Number = new URIImpl("http://schema.org/Number");
+	public static final URI Order = new URIImpl("http://schema.org/Order");
 	public static final URI Organization = new URIImpl("http://schema.org/Organization");
 	public static final URI School = new URIImpl("http://schema.org/School");
 	public static final URI Person = new URIImpl("http://schema.org/Person");

@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -32,6 +33,7 @@ import org.apache.velocity.app.VelocityEngine;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.SKOS;
 
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
@@ -79,6 +81,7 @@ public class ClassIndexPage {
 	}
 
 	public static class ClassInfo implements Comparable<ClassInfo> {
+		String className;
 		String name;
 		String href;
 		
@@ -86,8 +89,21 @@ public class ClassIndexPage {
 			URI id = (URI) v.getId();
 			name = id.getLocalName();
 			href = DataCatalogUtil.classFileName(request, id);
-			
+			className = request.getBuildRequest().classSubjects(v);
 		}
+		
+
+
+
+		public String getClassName() {
+			return className;
+		}
+
+
+		public void setClassName(String className) {
+			this.className = className;
+		}
+
 
 		public String getName() {
 			return name;

@@ -5,6 +5,19 @@
 <style>
 #include( "data-catalog/velocity/style.vm" )
 </style>
+<script>
+function filterBySubject(className) {
+	var list = document.getElementsByClassName("AllClasses");
+	for (var i=0; i<list.length; i++) {
+		var e = list[i];
+		if (e.classList.contains(className)) {
+			e.style.display = "block";
+		} else {
+			e.style.display = "none";
+		}
+	}
+}
+</script>
 </head>
 <body>
 <div class="index-heading">
@@ -12,7 +25,7 @@
 </div>
 <div class="listing">
 #foreach( $type in $ClassList )
-	<div><a href="$type.href" target="mainContentFrame">$type.Name</a></div>
+	<div class="$type.ClassName"><a href="$type.href" target="mainContentFrame">$type.Name</a></div>
 #end
 </div>
 </body>

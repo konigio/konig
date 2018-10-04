@@ -24,10 +24,56 @@
 </style>
 </head>
 <body>
-<div class="index-heading">
-	Ontologies
+#if($SubjectList)
+<script>
+FILTER="AllClasses";
+CURRENT_LIST = 'subjectList';
+function showList(listId) {
+
+  document.getElementById(CURRENT_LIST).style.display = "none";
+  document.getElementById(CURRENT_LIST + "Button").classList.remove("activeLink");
+  
+  document.getElementById(listId).style.display = "block";;
+  document.getElementById(listId + "Button").classList.add("activeLink");
+  
+	CURRENT_LIST = listId;
+}
+function filterSubject(className) {
+	FILTER=className;
+	parent.window.frames["classListFrame"].filterBySubject(className);
+	var mainContent = parent.window.frames["mainContentFrame"];
+	if (mainContent.filterBySubject) {
+		mainContent.filterBySubject(className);
+	}
+}
+</script>
+<div id="selectionbar">
+	<div class="wrapper">
+		<ul>
+			<li id="ontologyListButton">
+				<a href="#" onclick="showList('ontologyList');return false;">Ontologies</a>
+		  </li>
+		  <li id="subjectListButton" class="activeLink">
+		  	<a href="#" onclick="showList('subjectList'); return false;">Subjects</a>
+		  </li>
+		</ul>
+	</div>
 </div>
-<div  class="listing">
+
+<div id="subjectList" class="listing">
+#foreach( $subject in $SubjectList )
+	<div><a href="#" onclick="filterSubject('$subject.ClassName');return false;" title="$subject.Name">$subject.Name</a></div>
+#end
+  <div><a href="#" onclick="filterSubject('AllClasses');return false;" title="All Classes">All Subjects</a></div>
+</div>
+
+#else
+
+<div class="index-heading">Ontologies</div>
+
+#end
+
+<div id="ontologyList" class="listing"#if($SubjectList) style="display: none"#end>
 #foreach( $ontology in $OntologyList )
 #if( $ontology.IsEnumNamespace ) 
 	<div class="EnumNamespace hidden"><a href="$ontology.href" target="mainContentFrame">$ontology.Name</a></div>

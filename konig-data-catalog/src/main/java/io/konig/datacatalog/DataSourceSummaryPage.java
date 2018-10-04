@@ -96,7 +96,7 @@ public class DataSourceSummaryPage {
 		String name = name(request, ds);
 		String type = type(request, ds);
 		Link shapeLink = shape(request, shape);
-		DataSourceSummary summary = new DataSourceSummary(name, type);
+		DataSourceSummary summary = new DataSourceSummary(name, type, className(request, shape));
 		summary.addArtifact(shapeLink);
 		try {
 			addArtifacts(summary, request, ds);
@@ -105,6 +105,10 @@ public class DataSourceSummaryPage {
 		}
 		
 		return summary;
+	}
+
+	private String className(PageRequest request, Shape shape) {
+		return request.getBuildRequest().classSubjects(shape);
 	}
 
 	private void addArtifacts(DataSourceSummary summary, PageRequest request, DataSource ds) throws IOException, DataCatalogException {

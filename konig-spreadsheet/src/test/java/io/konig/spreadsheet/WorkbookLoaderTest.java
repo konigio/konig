@@ -96,6 +96,32 @@ public class WorkbookLoaderTest {
     public ExpectedException thrown = ExpectedException.none();
 
 	@Test
+	public void testClassSubjectArea() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("class-subject-area.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		Vertex v = graph.getVertex(Schema.Order);
+		
+		URI finance = uri("http://example.com/subject/Finance");
+		URI crm = uri("http://example.com/subject/CRM");
+		
+		Set<Value> set = v.getValueSet(SKOS.BROADER);
+		assertEquals(2, set.size());
+		assertTrue(set.contains(finance));
+		assertTrue(set.contains(crm));
+		
+	}
+	
+	@Test
 	public void testDefaultDataSource() throws Exception {
 
 		GcpShapeConfig.init();

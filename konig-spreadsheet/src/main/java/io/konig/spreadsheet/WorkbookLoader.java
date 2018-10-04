@@ -470,6 +470,7 @@ public class WorkbookLoader {
 		private int classCommentCol = UNDEFINED;
 		private int classIdCol = UNDEFINED;
 		private int classSubclassOfCol = UNDEFINED;
+		private int subjectAreaCol = UNDEFINED;
 
 		private int propertyNameCol = UNDEFINED;
 		private int propertyIdCol = UNDEFINED;
@@ -3415,6 +3416,8 @@ public class WorkbookLoader {
 			Literal comment = stringLiteral(row, classCommentCol);
 			URI classId = uriValue(row, classIdCol);
 			List<URI> subclassOf = uriList(row, classSubclassOfCol);
+			List<URI> subjectArea = uriList(row, subjectAreaCol);
+			
 			URI termStatus = uriValue(row, termStatusCol);
 			if (classId != null) {
 				graph.edge(classId, RDF.TYPE, OWL.CLASS);
@@ -3434,7 +3437,20 @@ public class WorkbookLoader {
 				
 				termStatus(classId, termStatus);
 			}
+			if (subjectArea !=null && !subjectArea.isEmpty()) {
+				addNamespace("skos", SKOS.NAMESPACE);
+				for (URI subject : subjectArea) {
+					edge(classId, SKOS.BROADER, subject);
+				}
+			}
 
+		}
+
+		private void addNamespace(String prefix, String namespace) {
+			if (nsManager.findByName(namespace) == null) {
+				nsManager.add(prefix, namespace);
+			}
+			
 		}
 
 		private Literal stringLiteral(Row row, int col) {
@@ -3520,6 +3536,7 @@ public class WorkbookLoader {
 			classIdCol = UNDEFINED;
 			classSubclassOfCol = UNDEFINED;
 			termStatusCol = UNDEFINED;
+			subjectAreaCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -3535,18 +3552,27 @@ public class WorkbookLoader {
 					text = text.trim();
 
 					switch (text) {
+					
 					case CLASS_NAME:
 						classNameCol = i;
 						break;
+						
 					case COMMENT:
 						classCommentCol = i;
 						break;
+						
 					case CLASS_ID:
 						classIdCol = i;
 						break;
+						
 					case CLASS_SUBCLASS_OF:
 						classSubclassOfCol = i;
 						break;
+						
+					case SUBJECT:
+						subjectAreaCol = i;
+						break;
+						
 					case TERM_STATUS:
 						termStatusCol = i;
 						break;
