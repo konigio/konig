@@ -268,6 +268,7 @@ public class WorkbookLoader {
 	private static final String DICTIONARY_ENABLE_DEFAULT_DATATYPE = "dictionary.enableDefaultDatatype";
 	private static final String DEFAULT_DATA_SOURCE = "defaultDataSource";
 	private static final String IGNORE_SHEETS = "ignoreSheets";
+	private static final String EXCLUDE_SECURITY_CLASSIFICATIONS = "dictionary.excludeSecurityClassifications";
 	
 
 	private static final int COL_SETTING_NAME = 0x1;
@@ -454,6 +455,7 @@ public class WorkbookLoader {
 		private List<String> warningList = new ArrayList<>();
 		private List<AbstractPathBuilder> pathHandlers = new ArrayList<>();
 		private List<FormulaHandler> formulaHandlers = new ArrayList<>();
+		private Set<URI> excludedSecurityClassifications = null;
 		
 		private List<Function> defaultDataSource = null;
 		private boolean describeTermStatus = true;
@@ -604,6 +606,22 @@ public class WorkbookLoader {
 			dataInjector = new DataInjector();
 			dataFormatter = new DataFormatter(true);
 
+		}
+		
+		private Set<URI> excludedSecurityClassifications() throws SpreadsheetException {
+			if (excludedSecurityClassifications == null) {
+				excludedSecurityClassifications = new HashSet<>();
+				String value = settingsValue(EXCLUDE_SECURITY_CLASSIFICATIONS);
+				if (value != null) {
+					StringTokenizer tokens = new StringTokenizer(value, " \t\r\n");
+					while (tokens.hasMoreTokens()) {
+						String token = tokens.nextToken();
+						URI id = expandCurie(token);
+						excludedSecurityClassifications.add(id);
+					}
+				}
+			}
+			return excludedSecurityClassifications;
 		}
 
 		private boolean useDefaultName() {
@@ -1309,11 +1327,33 @@ public class WorkbookLoader {
 			if (shapeId == null)
 				return;
 			
-						
+			
+			
 			String propertyIdValue = stringValue(row, fieldCol);
+			
+			
+			
 			if (propertyIdValue == null) {
 				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
 				return;
+			}
+
+			List<URI> securityClassificationList=null;
+
+			URI securityClassification = individualByName(row, securityClassifCol);
+			URI piiClassification = individualByName(row, piiClassifCol);
+			securityClassificationList = safeAdd(securityClassificationList, securityClassification);
+			securityClassificationList = safeAdd(securityClassificationList, piiClassification);
+			
+			Set<URI> filter = excludedSecurityClassifications();
+			if (!filter.isEmpty() && securityClassificationList != null && !securityClassificationList.isEmpty()) {
+				for (URI id : securityClassificationList) {
+					if (filter.contains(id)) {
+						logger.debug("Excluding property {} on Shape {} because of its security classification", 
+								propertyIdValue, shapeId.getLocalName());
+						return;
+					}
+				}
 			}
 			
 			propertyIdValue = StringUtil.LABEL_TO_SNAKE_CASE(propertyIdValue);
@@ -1340,10 +1380,7 @@ public class WorkbookLoader {
 			String businessName = stringValue(row, businessNameCol);
 			String businessDefinition = stringValue(row, businessDefinitionCol);
 			String dataStewardName = stringValue(row, dataStewardCol);
-			URI securityClassification = individualByName(row, securityClassifCol);
-			URI piiClassification = individualByName(row, piiClassifCol);
 			
-			List<URI> securityClassificationList=null;
 			String constraints = stringValue(row,constraintsCol);	
 			
 
@@ -1396,8 +1433,6 @@ public class WorkbookLoader {
 				p.dataSteward().setName(dataStewardName);
 			}
 			
-			securityClassificationList = safeAdd(securityClassificationList, securityClassification);
-			securityClassificationList = safeAdd(securityClassificationList, piiClassification);
 			p.setQualifiedSecurityClassification(securityClassificationList);
 			
 			setDefaultDataSource(shapeId);
