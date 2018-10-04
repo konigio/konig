@@ -1,6 +1,7 @@
 package io.konig.core.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /*
  * #%L
@@ -266,6 +267,26 @@ public class VertexImpl implements Vertex {
 	}
 
 	@Override
+	public Set<Vertex> getVertexSet(URI predicate) {
+		Set<Edge> set = outProperty(predicate);
+		if (set.isEmpty()) {
+			return Collections.emptySet();
+		}
+		Set<Vertex> result = new HashSet<>();
+		for (Edge e : set) {
+			Value object = e.getObject();
+			if (object instanceof Resource) {
+				Vertex v = graph.getVertex((Resource) object);
+				if (v == null) {
+					throw new KonigException("Vertex not found for resource: " + object.stringValue());
+				}
+				result.add(v);
+			}
+		}
+		return result;
+	}
+
+	@Override
 	public Value getValue(URI predicate) throws KonigException {
 		Set<Edge> set = outProperty(predicate);
 		if (set==null || set.isEmpty()) {
@@ -385,5 +406,6 @@ public class VertexImpl implements Vertex {
 		
 		return !outProperty(RDF.FIRST).isEmpty();
 	}
+
 
 }

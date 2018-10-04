@@ -33,6 +33,7 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.SKOS;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceInfoManager;
@@ -42,9 +43,11 @@ import io.konig.core.Vertex;
 import io.konig.core.vocab.SH;
 import io.konig.schema.EnumerationReasoner;
 import io.konig.shacl.ClassStructure;
+import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class DataCatalogBuildRequest {
+	private static final String ALL_CLASSES = "AllClasses";
 	private String siteName;
 	private URI ontologyId;
 	private File outDir;
@@ -63,6 +66,8 @@ public class DataCatalogBuildRequest {
 	private CatalogFileFactory fileFactory;
 	private OwlReasoner owlReasoner;
 	
+	private SubjectManager subjectManager = null;
+	
 	private boolean showUndefinedClass = false;
 	
 	public DataCatalogBuildRequest() {
@@ -71,6 +76,14 @@ public class DataCatalogBuildRequest {
 
 	public boolean isShowUndefinedClass() {
 		return showUndefinedClass;
+	}
+	
+	public SubjectManager getSubjectMananger() {
+		if (subjectManager == null) {
+			subjectManager = new SubjectManager();
+			subjectManager.load(graph);
+		}
+		return subjectManager;
 	}
 
 	public void setShowUndefinedClass(boolean showUndefinedClass) {
@@ -243,7 +256,36 @@ public class DataCatalogBuildRequest {
 		}
 		return owlReasoner;
 	}
-
 	
+	public String classSubjects(Shape shape) {
+		URI targetClass = shape.getTargetClass();
+		if (targetClass != null) {
+			Vertex owlClass = graph.getVertex(targetClass);
+			if (owlClass != null) {
+				return classSubjects(owlClass);
+			}
+		}
+		return ALL_CLASSES;
+	}
+
+	public String classSubjects(Vertex owlClass) {
+		SubjectManager subjectManager = getSubjectMananger();
+		if (!subjectManager.isEmpty()) {
+			Set<Vertex> subjectSet = owlClass.getVertexSet(SKOS.BROADER);
+			if (!subjectSet.isEmpty()) {
+				StringBuilder builder = new StringBuilder();
+				builder.append(ALL_CLASSES);
+				for (Vertex s : subjectSet) {
+					ClassifiedName cname = subjectManager.getSubjectName(s.getId());
+					if (cname != null) {
+						builder.append(' ');
+						builder.append(cname.getClassName());
+					}
+				}
+				return builder.toString();
+			}
+		}
+		return ALL_CLASSES;
+	}
 	
 }

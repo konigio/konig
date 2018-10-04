@@ -26,13 +26,15 @@ import java.util.List;
 
 public class DataSourceSummary implements Comparable<DataSourceSummary>{
 	
+	private String className;
 	private String datasourceName;
 	private String datasourceType;
 	private List<Link> artifactList=new ArrayList<>();
 	
-	public DataSourceSummary(String datasourceName, String datasourceType) {
+	public DataSourceSummary(String datasourceName, String datasourceType, String className) {
 		this.datasourceName = datasourceName;
 		this.datasourceType = datasourceType;
+		this.className = className;
 	}
 
 	public String getDatasourceName() {
@@ -54,6 +56,10 @@ public class DataSourceSummary implements Comparable<DataSourceSummary>{
 	@Override
 	public int compareTo(DataSourceSummary other) {
 		return datasourceName.compareTo(other.getDatasourceName());
+	}
+
+	public String getClassName() {
+		return className;
 	}
 	
 

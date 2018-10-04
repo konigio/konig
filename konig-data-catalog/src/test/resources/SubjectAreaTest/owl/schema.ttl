@@ -1,0 +1,14 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix schema: <http://schema.org/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix subject: <http://example.com/subject/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" . 
+
+schema:Order a owl:Class ; 
+	skos:broader subject:Finance , subject:CRM . 
+
+schema:Product a owl:Class ; 
+	skos:broader subject:Sales . 

@@ -3,8 +3,29 @@
 <title>$ClassName</title>
 <link rel="stylesheet" type="text/css" href="//schema.org/docs/schemaorg.css">
 
+<script>
+function filterBySubject(className) {
+	var list = document.getElementsByClassName("AllClasses");
+	for (var i=0; i<list.length; i++) {
+		var e = list[i];
+		if (e.classList.contains(className)) {
+			e.style.display = "table-row";
+		} else {
+			e.style.display = "none";
+		}
+	}
+}
+function startUp() {
+	if (parent) {
+		var packageFrame = parent.frames['packageListFrame'];
+		if (packageFrame && packageFrame.FILTER) {
+ 			filterBySubject(packageFrame.FILTER);
+ 		}
+	}
+}
+</script>
 </head>
-<body>
+<body onload="startUp()">
 #parse( "data-catalog/velocity/header.vm" )
 <div id="mainContent">
 	<h1 property="rdfs:label" class="page-title">Data Sources</h1>
@@ -19,7 +40,7 @@
 		</thead>
 		<tbody>
 #foreach( $ds in $DataSourceList )
-			<tr>
+			<tr class="$ds.ClassName">
 				<th>$ds.DatasourceName</th>
 				<td>$ds.DatasourceType</td>
 				<td>#foreach( $artifact in $ds.ArtifactList )

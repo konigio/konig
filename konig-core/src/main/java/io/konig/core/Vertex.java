@@ -100,6 +100,11 @@ public interface Vertex {
 	Set<Value> getValueSet(URI predicate);
 	
 	/**
+	 * Get the set of values of a specified property as a set of vertices.
+	 */
+	Set<Vertex> getVertexSet(URI predicate);
+	
+	/**
 	 * Get the value of a specified property as a URI.
 	 * @param predicate The predicate that identifies the properties whose value is to be returned.
 	 * @return The URI value for the specified property.  If no such property exists or does not have 

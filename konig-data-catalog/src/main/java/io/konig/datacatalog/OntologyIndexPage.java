@@ -43,6 +43,7 @@ public class OntologyIndexPage {
 
 	private static final String ONTOLOGY_LIST_TEMPLATE = "data-catalog/velocity/ontologyIndex.vm";
 	private static final String ONTOLOGY_LIST = "OntologyList";
+	private static final String SUBJECT_LIST = "SubjectList";
 
 	public void render(PageRequest request, PageResponse response) throws DataCatalogException {
 
@@ -71,6 +72,12 @@ public class OntologyIndexPage {
 		VelocityContext context = request.getContext();
 		context.put(ONTOLOGY_LIST, ontologyList);
 		context.put(OverviewPage.SHOW_HIDE_ENUM_NAMESPACES, anyEnumNamespace);
+		
+		SubjectManager subjectManager = request.getBuildRequest().getSubjectMananger();
+		if (!subjectManager.isEmpty()) {
+			List<ClassifiedName> subjectList = new ArrayList<>(subjectManager.listSubjectNames());
+			context.put(SUBJECT_LIST, subjectList);
+		}
 		
 		Template template = engine.getTemplate(ONTOLOGY_LIST_TEMPLATE);
 		

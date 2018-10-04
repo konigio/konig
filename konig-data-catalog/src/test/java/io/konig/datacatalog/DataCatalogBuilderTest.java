@@ -1,5 +1,6 @@
 package io.konig.datacatalog;
 
+
 /*
  * #%L
  * Konig Data Catalog
@@ -23,6 +24,12 @@ package io.konig.datacatalog;
 
 import java.io.File;
 
+import static org.junit.Assert.*;
+import org.apache.commons.io.FileUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -59,9 +66,24 @@ public class DataCatalogBuilderTest {
 		outDir.mkdirs();
 	}
 	
-	
 
 	@Test
+	public void testSubjectArea() throws Exception {
+		GcpShapeConfig.init();
+    	AwsShapeConfig.init();
+		URI ontologyId = uri("http://schema.org/");
+		test("src/test/resources/SubjectAreaTest", ontologyId);
+		
+		File ontologyIndexFile = new File("target/test/DataCatalogBuilder/ontology-index.html");
+		
+		Document doc = Jsoup.parse(ontologyIndexFile, "UTF-8");
+		Element subjectList = doc.getElementById("subjectList");
+		assertTrue(subjectList != null);
+		Elements subjectElements = subjectList.children();
+		assertEquals(4, subjectElements.size());
+	}
+
+	@Ignore
 	public void testDatasourceSummary() throws Exception {
 		GcpShapeConfig.init();
     	AwsShapeConfig.init();
@@ -88,6 +110,7 @@ public class DataCatalogBuilderTest {
 	}
 	
 	private void test(String sourcePath, URI ontologyId) throws Exception {
+		FileUtils.deleteDirectory(outDir);
 		load(sourcePath);
 		DataCatalogBuildRequest request = new DataCatalogBuildRequest();
 		request.setExampleDir(exampleDir);
