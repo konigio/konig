@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
@@ -269,6 +270,7 @@ public class WorkbookLoader {
 	private static final String DEFAULT_DATA_SOURCE = "defaultDataSource";
 	private static final String IGNORE_SHEETS = "ignoreSheets";
 	private static final String EXCLUDE_SECURITY_CLASSIFICATIONS = "dictionary.excludeSecurityClassifications";
+	private static final String DEFAULT_SUBJECT = "defaultSubject";
 	
 
 	private static final int COL_SETTING_NAME = 0x1;
@@ -456,6 +458,7 @@ public class WorkbookLoader {
 		private List<AbstractPathBuilder> pathHandlers = new ArrayList<>();
 		private List<FormulaHandler> formulaHandlers = new ArrayList<>();
 		private Set<URI> excludedSecurityClassifications = null;
+		private Set<URI> defaultSubject = null;
 		
 		private List<Function> defaultDataSource = null;
 		private boolean describeTermStatus = true;
@@ -608,18 +611,34 @@ public class WorkbookLoader {
 
 		}
 		
+		private Set<URI> defaultSubject() throws SpreadsheetException {
+			if (defaultSubject == null) {
+				defaultSubject = uriSet(DEFAULT_SUBJECT);
+			}
+			
+			return defaultSubject;
+		}
+		
+		private Set<URI> uriSet(String propertyName) throws SpreadsheetException {
+			Set<URI> set = new LinkedHashSet<>();
+
+			String value = settingsValue(propertyName);
+			if (value != null) {
+				StringTokenizer tokens = new StringTokenizer(value, " \t\r\n");
+				while (tokens.hasMoreTokens()) {
+					String token = tokens.nextToken();
+					URI id = expandCurie(token);
+					set.add(id);
+				}
+			}
+			
+			
+			return set;
+		}
+
 		private Set<URI> excludedSecurityClassifications() throws SpreadsheetException {
 			if (excludedSecurityClassifications == null) {
-				excludedSecurityClassifications = new HashSet<>();
-				String value = settingsValue(EXCLUDE_SECURITY_CLASSIFICATIONS);
-				if (value != null) {
-					StringTokenizer tokens = new StringTokenizer(value, " \t\r\n");
-					while (tokens.hasMoreTokens()) {
-						String token = tokens.nextToken();
-						URI id = expandCurie(token);
-						excludedSecurityClassifications.add(id);
-					}
-				}
+				excludedSecurityClassifications = uriSet(EXCLUDE_SECURITY_CLASSIFICATIONS);
 			}
 			return excludedSecurityClassifications;
 		}
@@ -2106,6 +2125,8 @@ public class WorkbookLoader {
 
 			}
 			
+		
+			
 
 			Shape shape = produceShape(shapeId);
 			PropertyConstraint prior = propertyId==null ? null : shape.getPropertyConstraint(propertyId);
@@ -2117,6 +2138,7 @@ public class WorkbookLoader {
 			
 			if (valueClass != null) {
 				edge(valueClass, RDF.TYPE, OWL.CLASS);
+				setDefaultSubject(valueClass);
 			}
 
 			if (
@@ -2252,6 +2274,21 @@ public class WorkbookLoader {
 			if (formula != null) {
 				formulaHandlers.add(new PropertyFormulaHandler(shape, p, formula));
 			}
+		}
+
+		private void setDefaultSubject(URI owlClass) throws SpreadsheetException {
+			if (owlClass != null) {
+				Set<URI> defaults = defaultSubject();
+				if (!defaults.isEmpty()) {
+					Vertex v = graph.vertex(owlClass);
+					if (v.getURI(SKOS.BROADER) == null) {
+						for (URI subject : defaults) {
+							edge(owlClass, SKOS.BROADER, subject);
+						}
+					}
+				}
+			}
+			
 		}
 
 		private String inFile() {
@@ -2740,6 +2777,7 @@ public class WorkbookLoader {
 			}
 			shape.setComment(shapeComment);
 			shape.setTargetClass(targetClass);
+			setDefaultSubject(targetClass);
 			
 			edge(targetClass, RDF.TYPE, OWL.CLASS);
 			
@@ -3451,7 +3489,10 @@ public class WorkbookLoader {
 			Literal comment = stringLiteral(row, classCommentCol);
 			URI classId = uriValue(row, classIdCol);
 			List<URI> subclassOf = uriList(row, classSubclassOfCol);
-			List<URI> subjectArea = uriList(row, subjectAreaCol);
+			Collection<URI> subjectArea = uriList(row, subjectAreaCol);
+			if (subjectArea == null) {
+				subjectArea = defaultSubject();
+			}
 			
 			URI termStatus = uriValue(row, termStatusCol);
 			if (classId != null) {
