@@ -26,7 +26,5 @@ import org.openrdf.model.URI;
 public interface TabularShapeNamer {
 	
 	URI reifiedPropertyShapeId(URI subjectShapeId, URI predicate);
-	
-	String reifiedPropertyTableName(URI subjectShapeId, URI predicate);
 
 }

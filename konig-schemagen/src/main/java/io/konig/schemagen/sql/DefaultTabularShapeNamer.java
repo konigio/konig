@@ -47,28 +47,10 @@ public class DefaultTabularShapeNamer implements TabularShapeNamer {
 		builder.append(baseName);
 		builder.append('_');
 		builder.append(snakePredicate);
+		builder.append("_ASSOC");
 		builder.append(suffix);
 		
 		return new URIImpl(builder.toString());
-	}
-
-	@Override
-	public String reifiedPropertyTableName(URI subjectShapeId, URI predicate) {
-		String subjectShapeLocalName = subjectShapeId.getLocalName();
-		
-		if (subjectShapeLocalName.toLowerCase().endsWith("shape")) {
-			subjectShapeLocalName = subjectShapeLocalName.substring(0, subjectShapeLocalName.length()-5);
-		}
-		
-		String baseName = StringUtil.SNAKE_CASE(subjectShapeLocalName);
-		String snakePredicate = StringUtil.SNAKE_CASE(predicate.getLocalName());
-		
-		StringBuilder builder = new StringBuilder();
-		builder.append(baseName);
-		builder.append('_');
-		builder.append(snakePredicate);
-		
-		return builder.toString();
 	}
 
 }

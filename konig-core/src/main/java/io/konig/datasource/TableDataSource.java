@@ -72,6 +72,7 @@ public abstract class TableDataSource extends DataSource {
 		builder.append(StringUtil.SNAKE_CASE(targetClass.getLocalName()));
 		builder.append('_');
 		builder.append(StringUtil.SNAKE_CASE(predicate.getLocalName()));
+		builder.append("_ASSOC");
 		
 		return builder.toString();
 	}
