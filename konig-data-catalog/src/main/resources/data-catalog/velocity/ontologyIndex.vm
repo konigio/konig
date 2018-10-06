@@ -81,6 +81,11 @@ function filterSubject(className) {
 	<div><a href="$ontology.href" target="mainContentFrame">$ontology.Name</a></div>
 #end 
 #end
+#if($showHideEnumNamespaces)
+<div class="button">
+<a id="EnumToggle" href="#" onclick="toggleEnumNamespaces();return false;">Show Enum Namespaces</a>
+</div>
+#end
 </div>
 #if($showHideEnumNamespaces)
 <script>
@@ -111,9 +116,6 @@ function toggleEnumNamespaces() {
 	toggle.innerHTML = "<span>" + newText + "</span>";
 }
 </script>
-<div class="button">
-<a id="EnumToggle" href="#" onclick="toggleEnumNamespaces();return false;">Show Enum Namespaces</a>
-</div>
 
 
 #end	
