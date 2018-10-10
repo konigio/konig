@@ -132,6 +132,8 @@ public class XmlSerializer {
 					String fieldName = field.getName();
 					if (isSimpleValue(value)) {
 						printSimpleValue(value, fieldName);
+					} else if (isEnumValue(value)) {
+						printSimpleValue(enumName(value), fieldName);
 					} else if (value instanceof Map) {
 						// Ignore map fields.
 					} else {
@@ -145,6 +147,15 @@ public class XmlSerializer {
 		}
 		pop();
 		
+	}
+
+	private Object enumName(Object value) {
+		Enum<?> enumValue = (Enum<?>) value;
+		return enumValue.name();
+	}
+
+	private boolean isEnumValue(Object value) {
+		return value.getClass().isEnum();
 	}
 
 	private void printSimpleValue(Object value, String fieldName) {

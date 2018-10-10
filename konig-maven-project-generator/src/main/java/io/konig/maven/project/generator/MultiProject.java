@@ -34,6 +34,7 @@ import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
 import io.konig.maven.JsonSchemaConfig;
 import io.konig.maven.KonigProject;
+import io.konig.maven.ModelValidationConfig;
 import io.konig.maven.OracleManagedCloudConfig;
 import io.konig.maven.ParentProjectConfig;
 import io.konig.maven.TabularShapeFactoryConfig;
@@ -53,6 +54,7 @@ public class MultiProject extends MavenProjectConfig {
 	private AmazonWebServicesConfig amazonWebServices;	
 	private TabularShapeGeneratorConfig tabularShapeGenerator;
 	private TabularShapeFactoryConfig tabularShapes;
+	private ModelValidationConfig modelValidation;
 	
 	public MultiProject() {
 		
@@ -156,6 +158,7 @@ public class MultiProject extends MavenProjectConfig {
 			RdfModelGenerator rdf = new RdfModelGenerator(this, workbook);
 			rdf.setTabularShapeGeneratorConfig(tabularShapeGenerator);
 			rdf.setTabularShapeFactoryConfig(tabularShapes);
+			rdf.setModelValidationConfig(modelValidation);
 			setRdfSourceDir(new File(rdf.baseDir(), "target/generated/rdf"));
 			parent.add(rdf);
 		}
@@ -252,6 +255,14 @@ public class MultiProject extends MavenProjectConfig {
 			list.add(new KonigProject(id, baseDir));
 		}
 		
+	}
+
+	public ModelValidationConfig getModelValidation() {
+		return modelValidation;
+	}
+
+	public void setModelValidation(ModelValidationConfig modelValidation) {
+		this.modelValidation = modelValidation;
 	}
 
 

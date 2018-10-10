@@ -39,11 +39,35 @@ import io.konig.maven.Exclude;
 import io.konig.maven.FilterPart;
 import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
+import io.konig.maven.ModelValidationConfig;
 import io.konig.maven.WorkbookProcessor;
+import io.konig.validation.CaseStyle;
+import io.konig.validation.CaseStyleConventions;
 
 public class XmlSerializerTest {
 	
 	@Test
+	public void testModelValidationConfig() {
+
+		ModelValidationConfig model = new ModelValidationConfig();
+		CaseStyleConventions namingConventions = new CaseStyleConventions();
+		model.setTextReportFile(new File("target/generated/rdf/validation.txt"));
+		namingConventions.setClasses(CaseStyle.PascalCase);
+		model.setNamingConventions(namingConventions);
+		
+
+		StringWriter out = new StringWriter();
+		XmlSerializer xml = new XmlSerializer(out);
+		xml.write(model, "modelValidation");
+		xml.flush();
+		
+		String actual = out.toString();
+		assertTrue(actual.contains("<textReportFile>target/generated/rdf/validation.txt</textReportFile>"));
+		assertTrue(actual.contains("<classes>PascalCase</classes>"));
+	
+	}
+	
+	@Ignore
 	public void testDistributionManagement() {
 		DistributionManagement pojo = new DistributionManagement();
 		DeploymentRepository repository = new DeploymentRepository();

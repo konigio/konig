@@ -74,6 +74,92 @@ public class OwlReasoner {
 		}
 		return null;
 	}
+
+	public Set<Vertex> allNamedIndividuals() {
+		Set<Vertex> set = new HashSet<>();
+	
+		addSubclasses(set, Schema.Enumeration);
+		addSubclasses(set, OwlVocab.NamedIndividual);
+		
+		Set<Vertex> result = new HashSet<>();
+		for (Vertex v : set) {
+			Resource id = v.getId();
+			if (id instanceof URI) {
+				addAllInstances(result, (URI)id);
+			}
+		}
+		
+		return result;
+	}
+	
+	private void addSubclasses(Set<Vertex> set, URI classId) {
+		Vertex v = graph.getVertex(classId);
+		if (v != null) {
+			set.add(v);
+			set.addAll(subClassVertices(classId));
+		}
+		
+	}
+
+	public Set<URI> allClassIds() {
+		Set<URI> set = new HashSet<>();
+		for (Vertex v : owlClassList()) {
+			if (v.getId() instanceof URI) {
+				set.add((URI) v.getId());
+			}
+		}
+		return set;
+	}
+	
+	public Set<URI> allRdfOwlAndShaclProperties(ShapeManager shapeManager) {
+		Set<Vertex> rdfOwl = allRdfAndOwlProperties();
+		
+		Set<URI> result = new HashSet<>();
+		for (Vertex v : rdfOwl) {
+			if (v.getId() instanceof URI) {
+				result.add((URI) v.getId());
+			}
+		}
+		
+		if (shapeManager != null) {
+			for (Shape shape : shapeManager.listShapes()) {
+				for (PropertyConstraint p : shape.getProperty()) {
+					URI predicate = p.getPredicate();
+					if (predicate != null) {
+						result.add(predicate);
+					}
+				}
+			}
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Get the set of vertices that are declared in the Graph as RDF Properties (including terms from the OWL vocabulary).
+	 */
+	public Set<Vertex> allRdfAndOwlProperties() {
+		Set<Vertex> set = new HashSet<>();
+		addAllInstances(set, RDF.PROPERTY);
+		addAllInstances(set, OWL.FUNCTIONALPROPERTY);
+		addAllInstances(set, OWL.DATATYPEPROPERTY);
+		addAllInstances(set, OWL.OBJECTPROPERTY);
+		addAllInstances(set, OWL.ANNOTATIONPROPERTY);
+		addAllInstances(set, OWL.DEPRECATEDPROPERTY);
+		addAllInstances(set, OWL.EQUIVALENTPROPERTY);
+		addAllInstances(set, OWL.INVERSEFUNCTIONALPROPERTY);
+		addAllInstances(set, OWL.ONTOLOGYPROPERTY);
+		addAllInstances(set, OWL.SYMMETRICPROPERTY);
+		addAllInstances(set, OWL.TRANSITIVEPROPERTY);
+		return set;
+	}
+	
+	private void addAllInstances(Set<Vertex> set, URI entityType) {
+		Vertex v = graph.getVertex(entityType);
+		if (v != null) {
+			set.addAll(v.asTraversal().in(RDF.TYPE).toVertexList());
+		}
+	}
 	
 	public String friendlyName(Vertex subject) {
 		String name = stringValue(subject, Schema.name, RDFS.LABEL);
@@ -105,6 +191,11 @@ public class OwlReasoner {
 	
 	public List<Vertex> subClasses(Vertex v) {
 		return v.asTraversal().in(RDFS.SUBCLASSOF).toVertexList();
+	}
+	
+	public List<Vertex> subClassVertices(URI classId) {
+
+		return graph.v(classId).in(RDFS.SUBCLASSOF).toVertexList();
 	}
 	
 	public Set<URI> subClasses(URI classId) {
@@ -568,6 +659,21 @@ public class OwlReasoner {
 		}
 		
 		return best;
+	}
+	
+	public void inferClassesFromShapes(ShapeManager shapeManager, Graph sink) {
+		for (Shape shape : shapeManager.listShapes()) {
+			URI targetClass = shape.getTargetClass();
+			if (targetClass != null) {
+				sink.edge(targetClass, RDF.TYPE, OWL.CLASS);
+			}
+			for (PropertyConstraint p : shape.getProperty()) {
+				Resource owlClass = p.getValueClass();
+				if (owlClass != null) {
+					sink.edge(owlClass, RDF.TYPE, OWL.CLASS);
+				}
+			}
+		}
 	}
 	
 	public void inferClassFromSubclassOf() {

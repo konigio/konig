@@ -235,6 +235,10 @@ import io.konig.transform.proto.AwsAuroraChannelFactory;
 import io.konig.transform.proto.ShapeModelFactory;
 import io.konig.transform.proto.ShapeModelToShapeRule;
 import io.konig.transform.sql.factory.SqlFactory;
+import io.konig.validation.ModelValidationReport;
+import io.konig.validation.ModelValidationRequest;
+import io.konig.validation.ModelValidator;
+import io.konig.validation.PlainTextModelValidationReportWriter;
 import io.konig.yaml.Yaml;
 import io.konig.yaml.YamlParseException;
 import net.sourceforge.plantuml.SourceFileReader;
@@ -276,6 +280,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private MultiSizeEstimateRequest sizeEstimate;
     
+    @Parameter
+    private ModelValidationConfig modelValidation;
 
     @Parameter
     private File domainModelPngFile;
@@ -356,6 +362,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			createProject();
 			loadResources();
 			preprocessResources();
+			generateModelValidationReport();
 			generateGoogleCloudPlatform();
 			generateOracleManagedCloudServices();
 			generateAmazonWebServices();
@@ -392,6 +399,32 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
+
+	private void generateModelValidationReport() throws IOException, ConfigurationException {
+		if (modelValidation != null) {
+			Configurator configurator = configurator();
+			configurator.configure(modelValidation);
+			ModelValidationRequest request = new ModelValidationRequest(owlReasoner, shapeManager);
+			if (modelValidation.getNamingConventions() != null) {
+				request.setCaseStyle(modelValidation.getNamingConventions());
+			}
+
+			ModelValidator validator = new ModelValidator();
+			
+			ModelValidationReport report = validator.process(request);
+			PlainTextModelValidationReportWriter reportWriter = new PlainTextModelValidationReportWriter();
+			
+			File textFile = modelValidation.getTextReportFile();
+			textFile.getParentFile().mkdirs();
+			try (FileWriter out = new FileWriter(textFile)) {
+				reportWriter.writeReport(report, out);
+			}
+			
+			
+		}
+		
+	}
+
 
 	private void emit() throws KonigException, IOException, RDFHandlerException {
 		emitter.emit(owlGraph);
