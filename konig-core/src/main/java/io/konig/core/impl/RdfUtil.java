@@ -799,6 +799,33 @@ public class RdfUtil {
 		out.print('>');
 	}
 	
+	public static String compactName(NamespaceManager nsManager, Resource resource) {
+		
+		if (resource instanceof BNode) {
+			return "_:" + ((BNode)resource).getID();
+		}
+		String iriValue = resource.stringValue();
+		
+		if (nsManager != null) {
+			URI id = (URI) resource;
+			Namespace ns = nsManager.findByName(id.getNamespace());
+			if (ns != null) {
+				String prefix = ns.getPrefix();
+				StringBuilder builder = new StringBuilder();
+				builder.append(prefix);
+				builder.append(':');
+				builder.append(id.getLocalName());
+				return builder.toString();
+			}
+		}
+		
+		StringBuilder builder = new StringBuilder();
+		builder.append('<');
+		builder.append(iriValue);
+		builder.append('>');
+		return builder.toString();
+	}
+	
 	public static String compactName(Context context, URI resource) {
 
 		String iriValue = resource.stringValue();

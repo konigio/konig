@@ -37,6 +37,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import io.konig.maven.FileUtil;
+import io.konig.maven.ModelValidationConfig;
 import io.konig.maven.TabularShapeFactoryConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
@@ -45,6 +46,7 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 	
 	private TabularShapeGeneratorConfig tabularShapeGeneratorConfig;
 	private TabularShapeFactoryConfig tabularShapeFactoryConfig;
+	private ModelValidationConfig modelValidationConfig;
 	
 	public RdfModelGenerator(MavenProjectConfig mavenProject, WorkbookProcessor workbook) {
 		super(workbook, "workbook");
@@ -60,6 +62,9 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 		if (tabularShapeFactoryConfig != null) {
 			putObject("tabularShapes", tabularShapeFactoryConfig);
 		}
+		if (modelValidationConfig != null) {
+			putObject("modelValidation", modelValidationConfig);
+		}
 		return context;
 	}
 	
@@ -69,6 +74,14 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 	}
 
 
+
+	public ModelValidationConfig getModelValidationConfig() {
+		return modelValidationConfig;
+	}
+
+	public void setModelValidationConfig(ModelValidationConfig modelValidationConfig) {
+		this.modelValidationConfig = modelValidationConfig;
+	}
 
 	public void setTabularShapeFactoryConfig(TabularShapeFactoryConfig tabularShapeFactoryConfig) {
 		this.tabularShapeFactoryConfig = tabularShapeFactoryConfig;
@@ -93,6 +106,7 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 		super.run();
 		config.setWorkbookFile(workbookFile);
 		config.setWorkbookDir(workbookDir);
+		
 		
 		
 		if(tabularShapeGeneratorConfig != null) {

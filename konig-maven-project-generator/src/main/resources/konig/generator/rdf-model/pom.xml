@@ -46,8 +46,11 @@
 	  			<defaults>
 	  				<rootDir>${basedir}/target/generated</rootDir>
 	  			</defaults>
-#if($tabularShapes)$tabularShapes#end	  			
+#if($tabularShapes)$tabularShapes
+#end	  			
 $workbook
+#if($modelValidation)$modelValidation
+#end
 	  		</configuration>
 	  		<executions>
 	  			<execution>
