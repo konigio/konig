@@ -881,9 +881,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 							Workbook workbook = new XSSFWorkbook(input);
 
 							workbookLoader.setDatasetMapper(datasetMapper);
+							getLog().debug("Opening Workbook: " + file.getName());
 							workbookLoader.load(workbook, owlGraph,workbookFile);
 						} finally {
 							input.close();
+							getLog().debug("Closing Workbook: " + file.getName());
 						}
 					}
 				 
