@@ -28,7 +28,7 @@ import java.util.Set;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class FunctionExpression extends AbstractExpression implements NumericValueExpression, GroupingElement, TableItemExpression {
+public class SqlFunctionExpression extends AbstractExpression implements NumericValueExpression, GroupingElement, TableItemExpression {
 	
 	public static final String ANY_VALUE = "ANY_VALUE";
 	public static final String UNNEST = "UNNEST";
@@ -36,6 +36,7 @@ public class FunctionExpression extends AbstractExpression implements NumericVal
 	public static final String COUNT = "COUNT";
 	public static final String MAX = "MAX";
 	public static final String ARRAY_AGG = "ARRAY_AGG";
+	public static final String CONCAT = "CONCAT";
 	
 	private static final Set<String> AGGREGATE_FUNCTION = new HashSet<>();
 	static {
@@ -48,11 +49,11 @@ public class FunctionExpression extends AbstractExpression implements NumericVal
 	private String functionName;
 	private List<QueryExpression> argList = new ArrayList<>();
 	
-	public FunctionExpression(String functionName) {
+	public SqlFunctionExpression(String functionName) {
 		this.functionName = functionName;
 	}
 	
-	public FunctionExpression(String functionName, QueryExpression...arg) {
+	public SqlFunctionExpression(String functionName, QueryExpression...arg) {
 		this.functionName = functionName;
 		for (QueryExpression e : arg) {
 			addArg(e);

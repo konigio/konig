@@ -54,7 +54,7 @@ import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.ExistsExpression;
 import io.konig.sql.query.FromExpression;
-import io.konig.sql.query.FunctionExpression;
+import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.NotExpression;
@@ -105,7 +105,7 @@ public class QueryBuilder {
 			
 			SelectExpression select = insertSelect(targetTable, frame);
 			
-			InsertStatement insert = new InsertStatement(targetTable.getExpression(), columnList, select,null);
+			InsertStatement insert = new InsertStatement(targetTable.getExpression(), columnList, select);
 			
 			cmd = new BigQueryCommandLine();
 			cmd.setProjectId(tableRef.getProjectId());
@@ -346,7 +346,7 @@ public class QueryBuilder {
 				if (templateInfo != null) {
 					TableName tableName = s.getTableName(mappedId);
 
-					FunctionExpression right = idValue(tableName, templateInfo);
+					SqlFunctionExpression right = idValue(tableName, templateInfo);
 					
 					ColumnExpression left = targetTable.column("id");
 					ComparisonPredicate comparison = new ComparisonPredicate(ComparisonOperator.EQUALS, left, right);
@@ -455,7 +455,7 @@ public class QueryBuilder {
 				}
 				
 			} else if (mappedProperty.getTemplateInfo() != null) {
-				FunctionExpression func = QueryBuilder.idValue(null, mappedProperty.getTemplateInfo());
+				SqlFunctionExpression func = QueryBuilder.idValue(null, mappedProperty.getTemplateInfo());
 				result = new AliasExpression(func, targetName);
 			} else {
 				
@@ -730,9 +730,9 @@ public class QueryBuilder {
 		return null;
 	}
 
-	static FunctionExpression idValue(TableName tableName, IriTemplateInfo templateInfo) {
+	static SqlFunctionExpression idValue(TableName tableName, IriTemplateInfo templateInfo) {
 		StringBuffer buffer = null;
-		FunctionExpression func = new FunctionExpression("CONCAT");
+		SqlFunctionExpression func = new SqlFunctionExpression("CONCAT");
 		for (IriTemplateElement e : templateInfo) {
 			PropertyConstraint p = e.getProperty();
 			Namespace ns = e.getNamespace();
@@ -767,7 +767,7 @@ public class QueryBuilder {
 
 	private void addIriReference(TableName tableName, ValueContainer container, IriTemplateInfo templateInfo, String aliasName) {
 		
-		FunctionExpression func = idValue(tableName, templateInfo);
+		SqlFunctionExpression func = idValue(tableName, templateInfo);
 		container.add(new AliasExpression(func, aliasName));
 		
 	}

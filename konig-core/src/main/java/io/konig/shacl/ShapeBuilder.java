@@ -38,7 +38,10 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 
 import io.konig.activity.Activity;
 import io.konig.core.Path;
+import io.konig.core.util.IriTemplate;
 import io.konig.datasource.DataSource;
+import io.konig.formula.FormulaBuilder;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShapeBuilder {
@@ -180,6 +183,13 @@ public class ShapeBuilder {
 		return property(predicate);
 	}
 	
+	public PropertyBuilder beginDerivedProperty(URI predicate) {
+		BNode id = valueFactory.createBNode();
+		PropertyConstraint p = new PropertyConstraint(id, predicate);
+		peekShape().addDerivedProperty(p);
+		return new PropertyBuilder(this, p);
+	}
+	
 	public PropertyBuilder property(URI predicate) {
 		BNode id = valueFactory.createBNode();
 		PropertyConstraint p = new PropertyConstraint(id, predicate);
@@ -297,6 +307,10 @@ public class ShapeBuilder {
 			this.property = property;
 		}
 		
+		public PropertyConstraint getPropertyConstraint() {
+			return property;
+		}
+		
 		public ShapeBuilder beginValueShape(String iri) {
 			URI uri = parent.valueFactory.createURI(iri);
 			return beginValueShape(uri);
@@ -405,6 +419,12 @@ public class ShapeBuilder {
 			return this;
 		}
 		
+		public FormulaBuilder beginFormula() {
+			return new FormulaBuilder(this);
+		}
+		
+		
+		
 		public PropertyBuilder valueShape(URI shapeId) {
 			
 			Shape shape = parent.shapeManager.getShapeById(shapeId);
@@ -456,7 +476,21 @@ public class ShapeBuilder {
 			return this;
 		}
 
+		public ShapeBuilder endDerivedProperty() {
+			return endProperty();
+		}
+
 	}
+
+
+
+	public ShapeBuilder iriTemplate(String value) {
+		IriTemplate template = new IriTemplate(value);
+		peekShape().setNodeKind(NodeKind.IRI);
+		peekShape().setIriTemplate(template);
+		return this;
+	}
+	
 	
 
 }

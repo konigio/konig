@@ -50,7 +50,7 @@ import io.konig.sql.query.BooleanTerm;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
-import io.konig.sql.query.FunctionExpression;
+import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.NullPredicate;
 import io.konig.sql.query.OnExpression;
@@ -206,8 +206,8 @@ public class SimpleCurrentStateViewGeneratorTest {
 
 		AliasExpression alias = getAlias(rightSelect, "maxModified");
 		QueryExpression e = alias.getExpression();
-		assertTrue(e instanceof FunctionExpression);
-		FunctionExpression func = (FunctionExpression) e;
+		assertTrue(e instanceof SqlFunctionExpression);
+		SqlFunctionExpression func = (SqlFunctionExpression) e;
 		assertEquals("MAX", func.getFunctionName());
 		assertEquals(1, func.getArgList().size());
 		

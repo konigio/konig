@@ -75,7 +75,7 @@ import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.FromExpression;
-import io.konig.sql.query.FunctionExpression;
+import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.InsertStatement;
@@ -215,11 +215,10 @@ public class SqlFactory {
 			InsertStatement insert = null;
 			Object tableRef = tableRef(shapeRule);					
 			if (tableRef != null) {
-						Shape shape	=shapeRule.getTargetShape();
 						TableName tableName = tableName(tableRef, null);
 						List<ColumnExpression> columnList = columnList(shapeRule);
 						SelectExpression select = selectExpression(shapeRule);
-						insert = new InsertStatement(tableName.getExpression(), columnList, select, shape);
+						insert = new InsertStatement(tableName.getExpression(), columnList, select);
 			}
 					
 			return insert;
@@ -302,7 +301,7 @@ public class SqlFactory {
 			
 		}
 
-		private FunctionExpression sqlFunction(FunctionGroupingElement fge) throws TransformBuildException {
+		private SqlFunctionExpression sqlFunction(FunctionGroupingElement fge) throws TransformBuildException {
 			PropertyConstraint constraint = new PropertyConstraint();
 			constraint.setMaxCount(1);
 			constraint.setMinCount(1);
@@ -313,7 +312,7 @@ public class SqlFactory {
 				.withProperty(constraint)
 				.withTableMap(this)
 				.build();
-			return (FunctionExpression) formulaFactory.formula(request);
+			return (SqlFunctionExpression) formulaFactory.formula(request);
 		}
 
 		private UpdateExpression updateExpression(ShapeRule shapeRule) throws TransformBuildException {
@@ -493,7 +492,7 @@ public class SqlFactory {
 
 		private ValueExpression createIriTemplateValue(ShapeRule shapeRule, IriTemplateIdRule idRule)
 				throws TransformBuildException {
-			FunctionExpression func = new FunctionExpression("CONCAT");
+			SqlFunctionExpression func = new SqlFunctionExpression("CONCAT");
 			Shape shape = idRule.getDeclaringShape();
 			IriTemplate template = shape.getIriTemplate();
 			Context context = template.getContext();
@@ -592,7 +591,7 @@ public class SqlFactory {
 				AliasExpression alias = new AliasExpression(struct, predicate.getLocalName());
 				
 				if (containerRule.isRepeated()) {
-					FunctionExpression func = new FunctionExpression("ARRAY_AGG");
+					SqlFunctionExpression func = new SqlFunctionExpression("ARRAY_AGG");
 					func.addArg(alias);
 					return func;
 				}
@@ -637,9 +636,9 @@ public class SqlFactory {
 				ValueExpression ve = column(anyValue.getCollection(), suppressRename);
 				if (ve instanceof AliasExpression) {
 					AliasExpression alias = (AliasExpression) ve;
-					return new AliasExpression(new FunctionExpression(FunctionExpression.ANY_VALUE, alias.getExpression()), alias.getAlias());
+					return new AliasExpression(new SqlFunctionExpression(SqlFunctionExpression.ANY_VALUE, alias.getExpression()), alias.getAlias());
 				}
-				return new FunctionExpression(FunctionExpression.ANY_VALUE, ve);
+				return new SqlFunctionExpression(SqlFunctionExpression.ANY_VALUE, ve);
 			}
 
 			throw new TransformBuildException("Unsupported PropertyRule: " + p.getClass().getName());
@@ -876,7 +875,7 @@ public class SqlFactory {
 							if (ok) {
 								String columnName = builder.toString();
 								ColumnExpression column = new ColumnExpression(columnName);
-								return new FunctionExpression(FunctionExpression.UNNEST, column);
+								return new SqlFunctionExpression(SqlFunctionExpression.UNNEST, column);
 							}
 							
 						}

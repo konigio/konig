@@ -34,7 +34,8 @@ import org.openrdf.model.vocabulary.RDF;
 import io.konig.core.util.StringUtil;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
-import io.konig.formula.FormulaBuilder;
+import io.konig.formula.FormulaBuilder.BasicPathBuilder;
+import io.konig.formula.FormulaBuilder.PathBuilder;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -78,7 +79,7 @@ public class TabularShapeFactory {
 
 		if (shape.getTabularOriginShape() != null && (shape.getProperty() == null || shape.getProperty().isEmpty())) {
 
-			FormulaBuilder formula = new FormulaBuilder();
+			BasicPathBuilder formula = new BasicPathBuilder();
 			result = new ArrayList<>();
 			Shape origin = shape.getTabularOriginShape();
 			shape.setNodeKind(origin.getNodeKind());
@@ -106,7 +107,7 @@ public class TabularShapeFactory {
 
 
 	
-	private void addProperties(Shape sink, List<PropertyConstraint> propertyList, String fieldPrefix, FormulaBuilder formula, List<Shape> result) throws TabularShapeException {
+	private void addProperties(Shape sink, List<PropertyConstraint> propertyList, String fieldPrefix, PathBuilder formula, List<Shape> result) throws TabularShapeException {
 
 		for (PropertyConstraint originProperty : propertyList) {
 			
@@ -146,7 +147,7 @@ public class TabularShapeFactory {
 		Shape tabularShape, 
 		PropertyConstraint originProperty, 
 		String fieldPrefix,
-		FormulaBuilder formula,
+		PathBuilder formula,
 		List<Shape> result
 	) throws TabularShapeException {
 
@@ -162,7 +163,7 @@ public class TabularShapeFactory {
 		Shape sink, 
 		PropertyConstraint originProperty,
 		String fieldPrefix,
-		FormulaBuilder formula, 
+		PathBuilder formula, 
 		List<Shape> result
 	) throws TabularShapeException {
 		
@@ -183,7 +184,8 @@ public class TabularShapeFactory {
 		URI objectAlias = snakeCase(fieldPrefix, originProperty.getPredicate());
 		Shape shape = reificationShape(tabularShape, originProperty, objectAlias, result);
 		
-		FormulaBuilder formula = new FormulaBuilder().out(RDF.SUBJECT).out(originProperty.getPredicate());
+		BasicPathBuilder formula = new BasicPathBuilder();
+		formula.out(RDF.SUBJECT).out(originProperty.getPredicate());
 		addProperties(shape, originProperty.getShape().getProperty(), "", formula, result);
 
 		
@@ -270,7 +272,7 @@ public class TabularShapeFactory {
 			p.setNodeKind(NodeKind.IRI);
 			
 
-			FormulaBuilder formulaBuilder = new FormulaBuilder();
+			BasicPathBuilder formulaBuilder = new BasicPathBuilder();
 			p.setFormula(formulaBuilder.out(RDF.SUBJECT).build());
 			
 			return p;
@@ -325,13 +327,13 @@ public class TabularShapeFactory {
 	}
 
 	private void oneObjectReference(Shape sink, PropertyConstraint originProperty, String fieldPrefix,
-			FormulaBuilder formula, List<Shape> result) throws TabularShapeException {
+			PathBuilder formula, List<Shape> result) throws TabularShapeException {
 		
 		linkingStrategy.addSingleIriReference(sink, originProperty);
 		
 	}
 
-	private void oneLiteral(Shape shape, PropertyConstraint p, String fieldPrefix, FormulaBuilder formula) throws TabularShapeException {
+	private void oneLiteral(Shape shape, PropertyConstraint p, String fieldPrefix, PathBuilder formula) throws TabularShapeException {
 		PropertyConstraint clone = p.deepClone();
 		
 		

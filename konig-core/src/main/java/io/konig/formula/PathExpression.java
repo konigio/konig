@@ -99,4 +99,13 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 		}
 	}
 
+	public static PathExpression toPathExpression(QuantifiedExpression formula) {
+		if (formula == null) {
+			return null;
+		}
+		PrimaryExpression primary = formula.asPrimaryExpression();
+		
+		return primary instanceof PathExpression ? (PathExpression) primary : null;
+	}
+
 }
