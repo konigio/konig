@@ -40,7 +40,7 @@ import io.konig.sql.query.BooleanTerm;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
-import io.konig.sql.query.FunctionExpression;
+import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.NullPredicate;
 import io.konig.sql.query.OnExpression;
@@ -179,7 +179,7 @@ public class SimpleCurrentStateViewGenerator {
 		SelectExpression s = new SelectExpression();
 		
 		s.add(new AliasExpression(new ColumnExpression("id"), "identifier"));
-		s.add(new AliasExpression(new FunctionExpression("MAX", new ColumnExpression("modified")), "maxModified"));
+		s.add(new AliasExpression(new SqlFunctionExpression("MAX", new ColumnExpression("modified")), "maxModified"));
 		s.getFrom().add(new TableNameExpression(tableName));
 		
 		TableItemExpression right = new SelectTableItemExpression(s);

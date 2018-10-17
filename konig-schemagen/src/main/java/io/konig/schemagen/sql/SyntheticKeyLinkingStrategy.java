@@ -31,7 +31,8 @@ import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
-import io.konig.formula.FormulaBuilder;
+import io.konig.formula.FormulaBuilder.BasicPathBuilder;
+import io.konig.formula.FormulaBuilder.PathBuilder;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -87,7 +88,7 @@ public class SyntheticKeyLinkingStrategy implements TabularLinkingStrategy {
 					if (!snakeCase.equals(localName)) {
 						URI predicate = new URIImpl(tabularFieldNamespace + snakeCase);
 						pc.setPredicate(predicate);
-						FormulaBuilder path = new FormulaBuilder();
+						BasicPathBuilder path = new BasicPathBuilder();
 						path.out(p.getPredicate());
 						pc.setFormula(path.build());
 					}
@@ -130,7 +131,7 @@ public class SyntheticKeyLinkingStrategy implements TabularLinkingStrategy {
 		}
 		
 		URI pk = primaryKey((URI)valueClass);
-		FormulaBuilder formula = new FormulaBuilder();
+		BasicPathBuilder formula = new BasicPathBuilder();
 		p.setFormula(formula.out(RDF.SUBJECT).out(originProperty.getPredicate()).out(pk).build());
 		
 		tabularShape.add(p);
@@ -161,7 +162,7 @@ public class SyntheticKeyLinkingStrategy implements TabularLinkingStrategy {
 		
 		p.setComment(description.toString());
 		
-		p.setFormula(new FormulaBuilder().out(RDF.SUBJECT).out(subjectPk).build());
+		p.setFormula(new BasicPathBuilder().out(RDF.SUBJECT).out(subjectPk).build());
 		
 		associationShape.add(p);
 		
@@ -201,7 +202,7 @@ public class SyntheticKeyLinkingStrategy implements TabularLinkingStrategy {
 		
 		p.setComment(description.toString());
 		
-		p.setFormula(new FormulaBuilder().out(RDF.OBJECT).out(objectPk).build());
+		p.setFormula(new BasicPathBuilder().out(RDF.OBJECT).out(objectPk).build());
 		
 		associationShape.add(p);
 		

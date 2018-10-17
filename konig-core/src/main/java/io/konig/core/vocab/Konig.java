@@ -209,6 +209,7 @@ public class Konig {
 	public static final URI OneToMany = new URIImpl("http://www.konig.io/ns/core/OneToMany");
 	public static final URI ManyToOne = new URIImpl("http://www.konig.io/ns/core/ManyToOne");
 	public static final URI ManyToMany = new URIImpl("http://www.konig.io/ns/core/ManyToMany");
+	public static final URI uid = new URIImpl("http://www.konig.io/ns/core/uid");
 	
 	public static URI javaMethodId(Class<?> javaClass, String methodName) {
 		StringBuilder builder = new StringBuilder();

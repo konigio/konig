@@ -48,7 +48,7 @@ import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.CountStar;
 import io.konig.sql.query.DateTimeUnitExpression;
 import io.konig.sql.query.FromExpression;
-import io.konig.sql.query.FunctionExpression;
+import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.InsertStatement;
@@ -120,8 +120,8 @@ FROM
 		assertEquals("id", alias.getAlias());
 		
 		QueryExpression q = alias.getExpression();
-		assertTrue(q instanceof FunctionExpression);
-		FunctionExpression f = (FunctionExpression) q;
+		assertTrue(q instanceof SqlFunctionExpression);
+		SqlFunctionExpression f = (SqlFunctionExpression) q;
 		
 		assertEquals("CONCAT", f.getFunctionName());
 		List<QueryExpression> argList = f.getArgList();
@@ -146,8 +146,8 @@ FROM
 		
 		v = valueList.get(1);
 		
-		assertTrue(v instanceof FunctionExpression);
-		f = (FunctionExpression) v;
+		assertTrue(v instanceof SqlFunctionExpression);
+		f = (SqlFunctionExpression) v;
 		assertEquals("ARRAY_AGG", f.getFunctionName());
 		
 		assertEquals(1, f.getArgList().size());
@@ -266,8 +266,8 @@ FROM schema.BuyAction;
 		assertEquals("intervalStart", alias.getAlias());
 		
 		query = alias.getExpression();
-		assertTrue(query instanceof FunctionExpression);
-		FunctionExpression func = (FunctionExpression) query;
+		assertTrue(query instanceof SqlFunctionExpression);
+		SqlFunctionExpression func = (SqlFunctionExpression) query;
 		assertEquals("DATE_TRUNC", func.getFunctionName());
 		List<QueryExpression> argList = func.getArgList();
 		assertEquals(2, argList.size());
@@ -426,8 +426,8 @@ GROUP BY e.id, timeInterval.intervalStart
 		assertEquals("intervalStart", a.getAlias());
 		q = a.getExpression();
 	
-		assertTrue(q instanceof FunctionExpression);
-		FunctionExpression f = (FunctionExpression) q;
+		assertTrue(q instanceof SqlFunctionExpression);
+		SqlFunctionExpression f = (SqlFunctionExpression) q;
 		assertEquals("DATE_TRUNC", f.getFunctionName());
 		List<QueryExpression> qList = f.getArgList();
 		assertEquals(2, qList.size());
@@ -546,8 +546,8 @@ GROUP BY e.id, timeInterval.intervalStart
 		aliasSet.add(a.getAlias());
 		
 		e = a.getTableName();
-		assertTrue(e instanceof FunctionExpression);
-		FunctionExpression f = (FunctionExpression) e;
+		assertTrue(e instanceof SqlFunctionExpression);
+		SqlFunctionExpression f = (SqlFunctionExpression) e;
 		assertEquals("UNNEST", f.getFunctionName());
 		List<QueryExpression> argList = f.getArgList();
 		assertEquals(1, argList.size());
@@ -630,8 +630,8 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		assertEquals("timeInterval", alias.getAlias());
 		
 		QueryExpression q = alias.getExpression();
-		assertTrue(q instanceof FunctionExpression);
-		FunctionExpression func = (FunctionExpression) q;
+		assertTrue(q instanceof SqlFunctionExpression);
+		SqlFunctionExpression func = (SqlFunctionExpression) q;
 		assertEquals("ANY_VALUE", func.getFunctionName());
 		assertEquals(1, func.getArgList().size());
 		QueryExpression query = func.getArgList().get(0);
@@ -654,8 +654,8 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		alias = (AliasExpression)v;
 		assertEquals("intervalStart", alias.getAlias());
 		q = alias.getExpression();
-		assertTrue(q instanceof FunctionExpression);
-		func = (FunctionExpression) q;
+		assertTrue(q instanceof SqlFunctionExpression);
+		func = (SqlFunctionExpression) q;
 		assertDateTrunc(func);
 		
 		v = valueList.get(5);
@@ -697,8 +697,8 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		assertEquals("city.id", c.getColumnName());
 		
 		ge = g.getElementList().get(1);
-		assertTrue(ge instanceof FunctionExpression);
-		func = (FunctionExpression) ge;
+		assertTrue(ge instanceof SqlFunctionExpression);
+		func = (SqlFunctionExpression) ge;
 		assertDateTrunc(func);
 		
 		ShapeRule yearRollUp = monthRollUp.getRollUp();
@@ -709,7 +709,7 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		
 	}
 
-	private void assertDateTrunc(FunctionExpression func) {
+	private void assertDateTrunc(SqlFunctionExpression func) {
 
 		assertEquals("DATE_TRUNC", func.getFunctionName());
 		assertEquals(2, func.getArgList().size());
@@ -727,8 +727,8 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 	private void assertColumn(List<ValueExpression> valueList, int i, String colName) {
 
 		ValueExpression v1 = valueList.get(i);
-		assertTrue(v1 instanceof FunctionExpression);
-		FunctionExpression func = (FunctionExpression) v1;
+		assertTrue(v1 instanceof SqlFunctionExpression);
+		SqlFunctionExpression func = (SqlFunctionExpression) v1;
 		assertEquals("ANY_VALUE", func.getFunctionName());
 		assertEquals(1, func.getArgList().size());
 		QueryExpression funcArg = func.getArgList().get(0);
@@ -1018,9 +1018,9 @@ GROUP BY organization
 		assertEquals("hasMember", memberAlias.getAlias());
 		
 		QueryExpression memberRoot = memberAlias.getExpression();
-		assertTrue(memberRoot instanceof FunctionExpression);
+		assertTrue(memberRoot instanceof SqlFunctionExpression);
 		
-		FunctionExpression memberFunction = (FunctionExpression) memberRoot;
+		SqlFunctionExpression memberFunction = (SqlFunctionExpression) memberRoot;
 		assertEquals("ARRAY_AGG", memberFunction.getFunctionName());
 		
 		GroupByClause groupBy = select.getGroupBy();
@@ -1091,8 +1091,8 @@ FROM
 		
 		assertTrue(albumId instanceof AliasExpression);
 		AliasExpression idAlias = (AliasExpression) albumId;
-		assertTrue(idAlias.getExpression() instanceof FunctionExpression);
-		FunctionExpression func = (FunctionExpression) idAlias.getExpression();
+		assertTrue(idAlias.getExpression() instanceof SqlFunctionExpression);
+		SqlFunctionExpression func = (SqlFunctionExpression) idAlias.getExpression();
 		assertEquals("CONCAT", func.getFunctionName());
 		List<QueryExpression> argList = func.getArgList();
 		assertEquals(2, argList.size());
@@ -1135,8 +1135,8 @@ FROM
 		
 		assertColumn(select, "resultOf", "assessment");
 		QueryExpression qe = assertAlias(select, "avgScore").getExpression();
-		assertTrue(qe instanceof FunctionExpression);
-		FunctionExpression fe = (FunctionExpression) qe;
+		assertTrue(qe instanceof SqlFunctionExpression);
+		SqlFunctionExpression fe = (SqlFunctionExpression) qe;
 		assertEquals("AVG", fe.getFunctionName());
 		
 		List<QueryExpression> argList = fe.getArgList();
@@ -1324,8 +1324,8 @@ FROM
 		assertTrue(idValue instanceof AliasExpression);
 		AliasExpression idAlias = (AliasExpression) idValue;
 		
-		assertTrue(idAlias.getExpression() instanceof FunctionExpression);
-		FunctionExpression func = (FunctionExpression) idAlias.getExpression();
+		assertTrue(idAlias.getExpression() instanceof SqlFunctionExpression);
+		SqlFunctionExpression func = (SqlFunctionExpression) idAlias.getExpression();
 		assertEquals("CONCAT", func.getFunctionName());
 		List<QueryExpression> argList = func.getArgList();
 		assertEquals(2, argList.size());

@@ -537,7 +537,7 @@ public class Shape implements Cloneable {
 	}
 
 	public List<PropertyConstraint> getDerivedProperty() {
-		return derivedProperty;
+		return derivedProperty==null ? Collections.emptyList() : derivedProperty;
 	}
 
 	public void setDerivedProperty(List<PropertyConstraint> derivedProperty) {

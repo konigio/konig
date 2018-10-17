@@ -23,6 +23,11 @@ package io.konig.sql.query;
 
 import io.konig.core.io.PrettyPrintWriter;
 
+/**
+ * An expression for a path to a column within a nested record.
+ * @author Greg McFall
+ *
+ */
 public class LinkedPathExpression extends AbstractExpression implements PathExpression {
 	
 	private PathExpression first;

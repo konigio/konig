@@ -25,51 +25,47 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.LiteralImpl;
 
 import io.konig.core.Context;
 import io.konig.core.Term;
 import io.konig.core.impl.BasicContext;
+import io.konig.shacl.ShapeBuilder.PropertyBuilder;
 
-public class FormulaBuilder {
+public class FormulaBuilder implements FormulaConsumer {
 
-	private List<DirectedPredicate> predicateList;
+	private PropertyBuilder propertyBuilder;
+	private QuantifiedExpression formula;
 	
-	public FormulaBuilder out(URI predicate) {
-		predicateList().add(new DirectedPredicate(Direction.OUT, predicate));
-		return this;
+	public FormulaBuilder() {
+	}
+
+	public PropertyBuilder endFormula() {
+		QuantifiedExpression q = getFormula();
+		propertyBuilder.getPropertyConstraint().setFormula(q);
+		return propertyBuilder;
+	}
+
+	public FormulaBuilder(PropertyBuilder propertyBuilder) {
+		this.propertyBuilder = propertyBuilder;
 	}
 	
-	private List<DirectedPredicate> predicateList() {
-		if (predicateList == null) {
-			predicateList = new ArrayList<>();
-		}
-		return predicateList;
+	public PathBuilder<FormulaBuilder> beginPath() {
+		return new PathBuilder<FormulaBuilder>(this);
 	}
 	
-	public FormulaBuilder in(URI predicate) {
-		predicateList().add(new DirectedPredicate(Direction.IN, predicate));
-		return this;
+	public FunctionBuilder beginFunction(String functionName) {
+		return new FunctionBuilder(this, functionName);
 	}
-	
-	public void pop() {
-		List<DirectedPredicate> list = predicateList();
-		list.remove(list.size()-1);
-	}
-	
-	public QuantifiedExpression build() {
-		PathExpression path = new PathExpression();
-		QuantifiedExpression formula = QuantifiedExpression.wrap(path);
-		Context context = new BasicContext(null);
-		formula.setContext(context);
-		for (DirectedPredicate e : predicateList()) {
-			URI predicate = e.getPredicate();
-			context.add(new Term(predicate.getLocalName(), predicate.stringValue()));
-			PathStep step = new DirectionStep(e.getDirection(), new LocalNameTerm(context, predicate.getLocalName()));
-			path.add(step);
-		}
+
+	public QuantifiedExpression getFormula() {
 		return formula;
 	}
-	
+
+	@Override
+	public void setFormula(QuantifiedExpression formula) {
+		this.formula = formula;
+	}
 
 	private static class DirectedPredicate {
 		private Direction direction;
@@ -83,6 +79,122 @@ public class FormulaBuilder {
 		}
 		public URI getPredicate() {
 			return predicate;
+		}
+		
+		
+	}
+	
+	
+	public static class PathBuilder<T extends FormulaConsumer> {
+
+		private T formulaConsumer;
+		private List<DirectedPredicate> predicateList;
+		
+		
+		public PathBuilder() {
+		}
+
+		public PathBuilder(T formulaConsumer) {
+			this.formulaConsumer = formulaConsumer;
+		}
+		
+		
+
+		public PathBuilder<T> out(URI predicate) {
+			predicateList().add(new DirectedPredicate(Direction.OUT, predicate));
+			return this;
+		}
+		
+		private List<DirectedPredicate> predicateList() {
+			if (predicateList == null) {
+				predicateList = new ArrayList<>();
+			}
+			return predicateList;
+		}
+		
+		public PathBuilder<T> in(URI predicate) {
+			predicateList().add(new DirectedPredicate(Direction.IN, predicate));
+			return this;
+		}
+		
+		public PathBuilder<T> pop() {
+			List<DirectedPredicate> list = predicateList();
+			list.remove(list.size()-1);
+			return this;
+		}
+		
+		public QuantifiedExpression build() {
+			PathExpression path = new PathExpression();
+			QuantifiedExpression formula = QuantifiedExpression.wrap(path);
+			Context context = new BasicContext(null);
+			formula.setContext(context);
+			for (DirectedPredicate e : predicateList()) {
+				URI predicate = e.getPredicate();
+				context.add(new Term(predicate.getLocalName(), predicate.stringValue()));
+				PathStep step = new DirectionStep(e.getDirection(), new LocalNameTerm(context, predicate.getLocalName()));
+				path.add(step);
+			}
+			return formula;
+		}
+
+		
+		public T endPath() {
+			
+			QuantifiedExpression formula = build();
+			formulaConsumer.setFormula(formula);
+			
+			return formulaConsumer;
+		}
+		
+	}
+	
+	public static class DummyFormulaConsumer implements FormulaConsumer {
+
+		@Override
+		public void setFormula(QuantifiedExpression formula) {
+			// Do nothing
+		}
+	}
+	
+	public static class BasicPathBuilder extends PathBuilder<DummyFormulaConsumer> {
+		
+	}
+	
+	
+	
+	public static class FunctionBuilder implements FormulaConsumer {
+		private String functionName;
+		private FormulaBuilder formulaBuilder;
+		private List<Expression> argList = new ArrayList<>();
+		
+		public FunctionBuilder(FormulaBuilder formulaBuilder, String functionName) {
+			this.formulaBuilder = formulaBuilder;
+			this.functionName = functionName;
+			
+		}
+		
+		public FunctionBuilder literal(String value) {
+			LiteralFormula literal = new LiteralFormula(new LiteralImpl(value));
+			Expression e = ConditionalOrExpression.wrap(literal);
+			argList.add(e);
+			return this;
+		}
+		
+		public PathBuilder<FunctionBuilder> beginPath() {
+			return new PathBuilder<FunctionBuilder>(this);
+		}
+		
+		
+		public FormulaBuilder endFunction() {
+			FunctionExpression function = new FunctionExpression(functionName, argList);
+			QuantifiedExpression formula = QuantifiedExpression.wrap(function);
+			formulaBuilder.setFormula(formula);
+			return formulaBuilder;
+		}
+
+		@Override
+		public void setFormula(QuantifiedExpression formula) {
+			argList.add(formula);
 		}
 		
 		

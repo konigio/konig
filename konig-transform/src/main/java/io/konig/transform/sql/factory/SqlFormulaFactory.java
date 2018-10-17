@@ -241,7 +241,7 @@ public class SqlFormulaFactory {
 				}
 				String funcName = func.getFunctionName();
 				
-				io.konig.sql.query.FunctionExpression sqlFunc = new io.konig.sql.query.FunctionExpression(funcName);
+				io.konig.sql.query.SqlFunctionExpression sqlFunc = new io.konig.sql.query.SqlFunctionExpression(funcName);
 				addArguments(sqlFunc, func);
 				return sqlFunc;
 			}
@@ -291,7 +291,7 @@ public class SqlFormulaFactory {
 			return false;
 		}
 
-		private void addArguments(io.konig.sql.query.FunctionExpression sqlFunc, FunctionExpression sparqlFunc) throws ShapeTransformException {
+		private void addArguments(io.konig.sql.query.SqlFunctionExpression sqlFunc, FunctionExpression sparqlFunc) throws ShapeTransformException {
 			
 			for (Expression e : sparqlFunc.getArgList()) {
 				ValueExpression ve = valueExpression(e);
@@ -390,7 +390,7 @@ public class SqlFormulaFactory {
 									// path starts with a variable.  Shouldn't this logic apply
 									// in all cases?
 									
-									io.konig.sql.query.FunctionExpression func = new io.konig.sql.query.FunctionExpression("ARRAY_AGG");
+									io.konig.sql.query.SqlFunctionExpression func = new io.konig.sql.query.SqlFunctionExpression("ARRAY_AGG");
 									func.addArg(column);
 									result = func;
 								}

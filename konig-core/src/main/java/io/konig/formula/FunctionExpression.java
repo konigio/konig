@@ -33,6 +33,7 @@ public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 	public static final String DATE_TRUNC = "DATE_TRUNC";
 	public static final String TIME_INTERVAL = "TIME_INTERVAL";
 	public static final String UNIX_TIME = "UNIX_TIME";
+	public static final String CONCAT = "CONCAT";
 	
 	private String functionName;
 	private List<Expression> argList = new ArrayList<>();
