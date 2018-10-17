@@ -69,7 +69,11 @@ public class UpdateExpression extends AbstractExpression implements DmlExpressio
 	public void print(PrettyPrintWriter out) {
 		
 		out.print("UPDATE ");
-		table.print(out);
+		if (table != null) {
+			table.print(out);
+		} else {
+			out.pushIndent();
+		}
 		out.println();
 		out.indent();
 		out.print("SET");
@@ -87,7 +91,10 @@ public class UpdateExpression extends AbstractExpression implements DmlExpressio
 			}
 			out.popIndent();
 		}
-		if (from != null) {
+		if (table ==null) {
+			out.popIndent();
+		}
+		if (!from.getTableItems().isEmpty()) {
 			out.println();
 			out.indent();
 			from.print(out);

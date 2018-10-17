@@ -43,7 +43,7 @@ import io.konig.datasource.TableDataSource;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
-import io.konig.sql.query.FunctionExpression;
+import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.ValueExpression;
 import io.konig.transform.IriTemplateInfo;
@@ -58,7 +58,7 @@ public class SqlFrameFactory {
 	
 	private static final Logger logger = LoggerFactory.getLogger(SqlFrameFactory.class);
 	
-	private FunctionExpression currentDate = null;
+	private SqlFunctionExpression currentDate = null;
 	
 	private int tableCount = 0;
 	private Map<ShapePath,TableName> tableMap = new HashMap<>();
@@ -296,7 +296,7 @@ public class SqlFrameFactory {
 
 	private ValueExpression current_date() {
 		if (currentDate == null) {
-			currentDate = new FunctionExpression("TIMESTAMP");
+			currentDate = new SqlFunctionExpression("TIMESTAMP");
 			currentDate.addArg(new StringLiteralExpression("{modified}"));
 		}
 		return currentDate;
