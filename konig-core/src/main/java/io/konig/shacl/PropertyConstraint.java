@@ -90,6 +90,7 @@ public class PropertyConstraint implements Cloneable {
 	private Person dataSteward;
 	private String name;
 	private URI equals;
+	private URI preferredTabularShape;
 	
 	private Term term;
 	private URI termStatus;
@@ -602,5 +603,16 @@ public class PropertyConstraint implements Cloneable {
 	public void setEquals(URI equals) {
 		this.equals = equals;
 	}
+
+	@RdfProperty(Konig.PREFERRED_TABULAR_SHAPE)
+	public URI getPreferredTabularShape() {
+		return preferredTabularShape;
+	}
+
+	public void setPreferredTabularShape(URI preferredTabularShape) {
+		this.preferredTabularShape = preferredTabularShape;
+	}
+	
+	
 	
 }
