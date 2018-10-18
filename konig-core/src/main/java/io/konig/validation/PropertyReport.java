@@ -26,6 +26,7 @@ import org.openrdf.model.URI;
 public class PropertyReport implements Comparable<PropertyReport>{
 	private URI propertyId;
 	private boolean nameHasWrongCase;
+	private URI invalidXmlSchemaDatatype;
 	
 	public PropertyReport(URI propertyId) {
 		this.propertyId = propertyId;
@@ -47,7 +48,13 @@ public class PropertyReport implements Comparable<PropertyReport>{
 	public int compareTo(PropertyReport o) {
 		return propertyId.stringValue().compareTo(o.getPropertyId().stringValue());
 	}
-	
-	
+
+	public URI getInvalidXmlSchemaDatatype() {
+		return invalidXmlSchemaDatatype;
+	}
+
+	public void setInvalidXmlSchemaDatatype(URI invalidXmlSchemaDatatype) {
+		this.invalidXmlSchemaDatatype = invalidXmlSchemaDatatype;
+	}
 
 }

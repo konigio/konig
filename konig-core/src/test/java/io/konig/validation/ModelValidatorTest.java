@@ -57,6 +57,13 @@ public class ModelValidatorTest {
 	public void setUp() throws Exception {
 		OwlReasoner owl = new OwlReasoner(graph);
 		request = new ModelValidationRequest(owl, shapeManager);
+		CommentConventions comments = new CommentConventions();
+		comments.setRequireClassComments(true);
+		comments.setRequireNamedIndividualComments(true);
+		comments.setRequireNodeShapeComments(true);
+		comments.setRequirePropertyComments(true);
+		comments.setRequirePropertyShapeComments(true);
+		request.setCommentConventions(comments);
 	
 	}
 

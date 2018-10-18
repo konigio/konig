@@ -33,6 +33,7 @@ public class ModelValidationRequest {
 	private ShapeManager shapeManager;
 	private OwlReasoner owl;
 	private CaseStyleConventions caseStyle = new CaseStyleConventions();
+	private CommentConventions commentConventions;
 	
 	public ModelValidationRequest(OwlReasoner owl, ShapeManager shapeManager) {
 		this.owl = owl;
@@ -53,6 +54,14 @@ public class ModelValidationRequest {
 
 	public ShapeManager getShapeManager() {
 		return shapeManager;
+	}
+
+	public CommentConventions getCommentConventions() {
+		return commentConventions;
+	}
+
+	public void setCommentConventions(CommentConventions commentConventions) {
+		this.commentConventions = commentConventions;
 	}
 	
 	

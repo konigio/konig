@@ -24,6 +24,7 @@ package io.konig.maven;
 import java.io.File;
 
 import io.konig.validation.CaseStyleConventions;
+import io.konig.validation.CommentConventions;
 
 public class ModelValidationConfig {
 	
@@ -31,6 +32,7 @@ public class ModelValidationConfig {
 	private File textReportFile;
 	
 	private CaseStyleConventions namingConventions;
+	private CommentConventions commentConventions;
 
 	public File getTextReportFile() {
 		return textReportFile;
@@ -46,6 +48,14 @@ public class ModelValidationConfig {
 
 	public void setNamingConventions(CaseStyleConventions namingConventions) {
 		this.namingConventions = namingConventions;
+	}
+
+	public CommentConventions getCommentConventions() {
+		return commentConventions;
+	}
+
+	public void setCommentConventions(CommentConventions commentConventions) {
+		this.commentConventions = commentConventions;
 	}
 	
 	

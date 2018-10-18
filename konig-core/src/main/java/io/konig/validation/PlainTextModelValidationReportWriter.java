@@ -143,9 +143,19 @@ public class PlainTextModelValidationReportWriter implements ModelValidationRepo
 				if (p.getNameHasWrongCase()) {
 					wrongCaseMessage(expectedStyle);
 				}
+				if (p.getInvalidXmlSchemaDatatype() != null) {
+					invalidXmlSchemaDatatypeMessage(p);
+				}
 				out.popIndent();
 			}
 			out.println();
+			
+		}
+
+		private void invalidXmlSchemaDatatypeMessage(PropertyReport p) {
+			out.indent();
+			out.print("Invalid XML Schema datatype: ");
+			out.println(p.getInvalidXmlSchemaDatatype().getLocalName());
 			
 		}
 
@@ -278,6 +288,11 @@ public class PlainTextModelValidationReportWriter implements ModelValidationRepo
 				if (p.getRequiresDescription()) {
 					out.indent();
 					out.println("SHOULD define rdfs:comment");
+				}
+				if (p.getInvalidXmlSchemaDatatype()!=null) {
+					out.indent();
+					out.print("Invalid XML Schema datatype: ");
+					out.println(p.getInvalidXmlSchemaDatatype().getLocalName());
 				}
 				out.popIndent();
 				out.println();

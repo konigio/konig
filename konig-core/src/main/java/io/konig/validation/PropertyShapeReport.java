@@ -1,5 +1,7 @@
 package io.konig.validation;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * Konig Core
@@ -33,7 +35,7 @@ public class PropertyShapeReport implements Comparable<PropertyShapeReport> {
 	private boolean requiresDatatypeClassOrShape;
 	private boolean requiresMinCount;
 	private boolean requiresDescription;
-	
+	private URI invalidXmlSchemaDatatype;
 	private TypeConflict typeConflict;
 	
 	public PropertyShapeReport(PropertyConstraint propertyShape) {
@@ -60,6 +62,7 @@ public class PropertyShapeReport implements Comparable<PropertyShapeReport> {
 			!datatypeWithShape &&
 			!requiresDatatypeClassOrShape &&
 			!requiresDescription &&
+			invalidXmlSchemaDatatype==null &&
 			typeConflict==null;
 	}
 
@@ -123,6 +126,14 @@ public class PropertyShapeReport implements Comparable<PropertyShapeReport> {
 
 	public void setRequiresDescription(boolean requiresDescription) {
 		this.requiresDescription = requiresDescription;
+	}
+
+	public URI getInvalidXmlSchemaDatatype() {
+		return invalidXmlSchemaDatatype;
+	}
+
+	public void setInvalidXmlSchemaDatatype(URI invalidXmlSchemaDatatype) {
+		this.invalidXmlSchemaDatatype = invalidXmlSchemaDatatype;
 	}
 
 	
