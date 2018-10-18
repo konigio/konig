@@ -94,6 +94,30 @@ import io.konig.shacl.io.ShapeWriter;
 public class WorkbookLoaderTest {
 	@Rule
     public ExpectedException thrown = ExpectedException.none();
+	
+	@Test
+	public void testPreferredTabularShape() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("preferred-tabular-shape.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		Shape shape = loader.getShapeManager().getShapeById(shapeId);
+		
+		URI orgShapeId = uri("http://example.com/shapes/OrganizationShape");
+		
+		PropertyConstraint p = shape.getPropertyConstraint(Schema.worksFor);
+		assertEquals(orgShapeId, p.getPreferredTabularShape());
+		
+	}
 
 	@Test
 	public void testClassSubjectArea() throws Exception {

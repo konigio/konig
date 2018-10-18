@@ -105,6 +105,9 @@ public class Konig {
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI tabularFieldNamespace = new URIImpl(TABULAR_FIELD_NAMESPACE);
 	
+	public static final String PREFERRED_TABULAR_SHAPE = "http://www.konig.io/shapes/preferredTabularShape";
+	public static final URI preferredTabularShape = new URIImpl(PREFERRED_TABULAR_SHAPE);
+	
 	public static final URI Undefined = new URIImpl("http://www.konig.io/ns/core/Undefined");
 	//public static final URI DerivedShape = new URIImpl("http://www.konig.io/shapes/DerivedShape");
 	

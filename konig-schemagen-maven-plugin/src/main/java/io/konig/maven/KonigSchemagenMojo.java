@@ -991,7 +991,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			
 			if(tablesDir != null) {
-				SqlTableGenerator generator = new SqlTableGenerator();
+				SqlTableGenerator generator = new SqlTableGenerator(shapeManager);
 
 				ProjectFolder tablesFolder = new ProjectFolder(project, tablesDir);
 				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,tablesFolder,abbrevManager());
@@ -1057,7 +1057,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			AwsResourceGenerator resourceGenerator = new AwsResourceGenerator();
 			if(tablesDir != null) {
-				SqlTableGenerator generator = new SqlTableGenerator();
+				SqlTableGenerator generator = new SqlTableGenerator(shapeManager);
 				ProjectFolder tablesFolder = new ProjectFolder(project, tablesDir);
 				AwsAuroraTableWriter awsAuror = new AwsAuroraTableWriter(tablesDir, generator,tablesFolder,abbrevManager());
 			
@@ -1077,7 +1077,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			File tablesDir = Configurator.checkNull(oracleManagedCloud.getTables());
 			if(directory != null && tablesDir != null) {
 				OracleCloudResourceGenerator resourceGenerator = new OracleCloudResourceGenerator();
-				SqlTableGenerator sqlgenerator = new SqlTableGenerator(new OracleDatatypeMapper());
+				SqlTableGenerator sqlgenerator = new SqlTableGenerator(new OracleDatatypeMapper(), shapeManager);
 				OracleTableWriter oracle = new OracleTableWriter(tablesDir, sqlgenerator);
 				resourceGenerator.add(oracle);
 				resourceGenerator.dispatch(shapeManager.listShapes());
@@ -1158,7 +1158,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 	private CloudSqlTableWriter cloudSqlTableWriter() {
 		CloudSqlInfo info = googleCloudPlatform.getCloudsql();
-		SqlTableGenerator generator = new SqlTableGenerator();
+		SqlTableGenerator generator = new SqlTableGenerator(shapeManager);
 		ProjectFolder folder = new ProjectFolder(project, info.getTables());
 		return new CloudSqlTableWriter(generator, folder, abbrevManager());
 	}

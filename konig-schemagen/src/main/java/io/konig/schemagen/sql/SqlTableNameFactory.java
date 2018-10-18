@@ -32,7 +32,8 @@ import io.konig.shacl.Shape;
 
 public class SqlTableNameFactory {
 
-	
+	// This solution assumes there is at most one type of tabular datasource.
+	// TODO: build a more robust solution.
 	public String getTableName(Shape shape) throws SchemaGeneratorException {
 		
 		List<DataSource> list = shape.getShapeDataSource();

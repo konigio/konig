@@ -31,6 +31,7 @@ public class SqlTable extends AbstractPrettyPrintable {
 	
 	private String tableName;
 	private List<SqlColumn> columnList = new ArrayList<>();
+	private List<ForeignKeyConstraint> foreignKeys=new ArrayList<>();
 
 	public SqlTable(String tableName) {
 		this.tableName = tableName;
@@ -53,6 +54,10 @@ public class SqlTable extends AbstractPrettyPrintable {
 		return null;
 	}
 	
+	public void addForeignKey(ForeignKeyConstraint fk) {
+		foreignKeys.add(fk);
+	}
+	
 	public void addColumn(SqlColumn column) {
 		columnList.add(column);
 	}
@@ -64,7 +69,7 @@ public class SqlTable extends AbstractPrettyPrintable {
 	@Override
 	public void print(PrettyPrintWriter out) {
 		
-		out.print(tableName);
+		out.print(SqlKeyword.quote(tableName));
 		out.print(" (");
 		out.pushIndent();
 		String comma = "";
@@ -95,19 +100,26 @@ public class SqlTable extends AbstractPrettyPrintable {
 			out.println(comma);
 			out.indent();
 			out.print("PRIMARY KEY (");
-			out.print(syntheticKey);
+			out.print(SqlKeyword.quote(syntheticKey));
 			out.print(')');
 		} else if (pks.length() > 0) {
 			out.println(comma);
 			out.indent();
-			out.print("PRIMARY KEY (" + pks.toString() + ")");
+			out.print("PRIMARY KEY (" + SqlKeyword.quote(pks.toString()) + ")");
 		}
 		
 		if (uks.length() > 0) {
 			out.println(comma);
 			out.indent();
-			out.print("UNIOUE KEY (" + uks.toString() + ")");
+			out.print("UNIOUE KEY (" + SqlKeyword.quote(uks.toString()) + ")");
 		}	
+		
+		for (ForeignKeyConstraint fk : foreignKeys) {
+			out.println(",");
+			out.println();
+			out.indent();
+			out.print(fk);
+		}
 		
 		out.println();
 		out.popIndent();

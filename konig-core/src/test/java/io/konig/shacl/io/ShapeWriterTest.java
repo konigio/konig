@@ -63,6 +63,34 @@ public class ShapeWriterTest {
 	private Graph graph = new MemoryGraph();
 	
 	@Test
+	public void testPreferredTabularShape() throws Exception {
+		URI personShapeId = uri("http://example.com/shapes/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/OrganizationShape");
+		
+		ShapeBuilder builder = new ShapeBuilder();
+		builder.beginShape(personShapeId)
+			.targetClass(Schema.Person)
+			.nodeKind(NodeKind.IRI)
+			.beginProperty(Schema.worksFor)
+				.preferredTabularShape(orgShapeId)
+			.endProperty()
+		.endShape()
+		;
+		
+		Shape shape = builder.getShape(personShapeId);
+
+		shapeWriter.emitShape(shape, graph);
+		Vertex v = graph.getVertex(personShapeId);
+		
+		Vertex property = v.getVertex(SH.property);
+		URI worksFor = property.getURI(Konig.preferredTabularShape);
+		
+		
+		assertEquals(orgShapeId, worksFor);
+		
+	}
+	
+	@Test
 	public void testTabularOriginShape() throws Exception {
 		URI personShapeId = uri("http://example.com/shapes/PersonShape");
 		URI tabularPersonShapeId = uri("http://example.com/shapes/TabularPersonShape");

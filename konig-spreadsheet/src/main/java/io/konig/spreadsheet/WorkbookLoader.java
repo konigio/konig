@@ -201,6 +201,7 @@ public class WorkbookLoader {
 	private static final String SECURITY_CLASSIFICATION ="Security Classification";
 	private static final String RELATIONSHIP_DEGREE="Relationship Degree";
 	private static final String PII_CLASSIFICATION = "PII Classification";
+	private static final String REFERENCES_SHAPE = "References Shape";
 
 	// Cloud SQL Instance
 	private static final String INSTANCE_NAME = "Instance Name";
@@ -531,6 +532,7 @@ public class WorkbookLoader {
 		private int pcDecimalScale = UNDEFINED;
 		private int pcSecurityClassification = UNDEFINED;
 		private int pcRelationshipDegree = UNDEFINED;
+		private int pcPreferredTabularShapeCol = UNDEFINED;
 
 		private int settingNameCol = UNDEFINED;
 		private int settingValueCol = UNDEFINED;
@@ -2105,6 +2107,7 @@ public class WorkbookLoader {
 			String sourcePath = stringValue(row, pcSourcePathCol);
 			List<URI> securityClassification = uriList(row, pcSecurityClassification);
 			URI relationshipDegree = uriValue(row,pcRelationshipDegree);
+			URI preferredTabularShape = uriValue(row, pcPreferredTabularShapeCol);
 			if (formula == null) {
 				// Support legacy column name "Equivalent Path"
 				formula = stringValue(row, pcEquivalentPathCol);
@@ -2191,6 +2194,7 @@ public class WorkbookLoader {
 			
 			PropertyConstraint p = new PropertyConstraint();
 			
+			p.setPreferredTabularShape(preferredTabularShape);
 
 			if (RDF.TYPE.equals(propertyId)) {
 
@@ -2611,7 +2615,7 @@ public class WorkbookLoader {
 					pcUniqueLangCol = pcValueClassCol = pcValueInCol = pcStereotypeCol = pcFormulaCol  = pcSourcePathCol = 
 					pcEquivalentPathCol = pcEqualsCol = pcMinInclusive = pcMaxInclusive = pcMinExclusive = pcMaxExclusive = 
 					pcMinLengthCol = pcMaxLengthCol = pcDecimalPrecision = pcDecimalScale = pcSecurityClassification= 
-					termStatusCol = pcRelationshipDegree = UNDEFINED;
+					termStatusCol = pcRelationshipDegree = pcPreferredTabularShapeCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -2705,6 +2709,10 @@ public class WorkbookLoader {
 						break;
 					case RELATIONSHIP_DEGREE:
 						pcRelationshipDegree = i;
+						break;
+						
+					case REFERENCES_SHAPE:
+						pcPreferredTabularShapeCol = i;
 						break;
 					}
 				}

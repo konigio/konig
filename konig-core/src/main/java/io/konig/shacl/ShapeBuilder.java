@@ -325,6 +325,11 @@ public class ShapeBuilder {
 			return parent;
 		}
 		
+		public PropertyBuilder preferredTabularShape(URI shapeId) {
+			property.setPreferredTabularShape(shapeId);
+			return this;
+		}
+		
 		public PropertyBuilder endValueShape() {
 			return parent.endValueShape();
 		}
