@@ -55,7 +55,7 @@ public class SqlColumn extends AbstractPrettyPrintable {
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		out.print(columnName);
+		out.print(SqlKeyword.quote(columnName));
 		out.print(' ');
 		datatype.print(out);
 		if (!nullable) {

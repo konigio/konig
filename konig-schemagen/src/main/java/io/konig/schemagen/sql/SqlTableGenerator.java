@@ -29,25 +29,36 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.abbrev.AbbreviationManager;
 import io.konig.abbrev.AbbreviationScheme;
+import io.konig.core.KonigException;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.ShapeNotFoundException;
 
 public class SqlTableGenerator {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SqlTableGenerator.class);
 	private SqlTableNameFactory nameFactory;
 	private SqlDatatypeMapper datatypeMapper;
+	private ShapeManager shapeManager;
 	
 	public SqlTableGenerator() {
 		nameFactory = new SqlTableNameFactory();
 		datatypeMapper = new SqlDatatypeMapper();
 	}	
-	public SqlTableGenerator(SqlDatatypeMapper datatypeMapper) {
+	
+	public SqlTableGenerator(ShapeManager shapeManager) {
+		this();
+		this.shapeManager = shapeManager;
+	}
+	public SqlTableGenerator(SqlDatatypeMapper datatypeMapper, ShapeManager shapeManager) {
 		nameFactory = new SqlTableNameFactory();
 		this.datatypeMapper = datatypeMapper;
+		this.shapeManager = shapeManager;
 	}
 	
 	public SqlTable generateTable(Shape shape, AbbreviationManager abbrevManager) throws SchemaGeneratorException {
@@ -68,12 +79,42 @@ public class SqlTableGenerator {
 		for (PropertyConstraint p : shape.getProperty()) {
 			SqlColumn column = column(shape, p, abbrevManager);
 			if (column != null) {
+				addForeignKeyConstraint(table, column, p);
 				table.addColumn(column);
 			}
 		}
 		return table;
 	}
 
+
+	private void addForeignKeyConstraint(SqlTable table, SqlColumn column, PropertyConstraint p) {
+		URI foreignShapeId = p.getPreferredTabularShape();
+		if (foreignShapeId != null) {
+			Shape foreignShape = shapeManager.getShapeById(foreignShapeId);
+			if (foreignShape == null) {
+				throw new ShapeNotFoundException(foreignShapeId.stringValue());
+			}
+
+			String localColumnName = column.getColumnName();
+			String tableName = nameFactory.getTableName(foreignShape);
+			String foreignColumnName = foreignColumnName(foreignShape);
+			
+			table.addForeignKey(new ForeignKeyConstraint(localColumnName, tableName, foreignColumnName));
+		}
+		
+	}
+	private String foreignColumnName(Shape foreignShape) {
+		for (PropertyConstraint p : foreignShape.getProperty()) {
+			URI stereotype = p.getStereotype();
+			if (
+				Konig.primaryKey.equals(stereotype) ||
+				Konig.syntheticKey.equals(stereotype)
+			) {
+				return p.getPredicate().getLocalName();
+			}
+		}
+		throw new KonigException("Failed to find key for table on foreign shape: " + RdfUtil.localName(foreignShape.getId()));
+	}
 
 	private void addIdColumn(Shape shape, SqlTable table) {
 		SqlKeyType keyType = SqlKeyType.PRIMARY_KEY;
