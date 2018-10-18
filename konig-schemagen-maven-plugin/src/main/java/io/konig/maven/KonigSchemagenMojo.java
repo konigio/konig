@@ -413,6 +413,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ModelValidator validator = new ModelValidator();
 			
 			ModelValidationReport report = validator.process(request);
+			report.setNamespaceManager(nsManager);
 			PlainTextModelValidationReportWriter reportWriter = new PlainTextModelValidationReportWriter();
 			
 			File textFile = modelValidation.getTextReportFile();

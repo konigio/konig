@@ -88,6 +88,26 @@ import io.konig.shacl.io.ShapeLoader;
 
 public class RdfUtil {
 	
+	public static String compactId(Resource id, NamespaceManager nsManager) {
+		if (id == null) {
+			return null;
+		}
+		if (id instanceof BNode) {
+			return "_:" + ((BNode)id).getID();
+		}
+		if (id instanceof URI) {
+			URI iri = (URI) id;
+			if (nsManager != null) {
+				Namespace ns = nsManager.findByName(iri.getNamespace());
+				if (ns != null) {
+					return ns.getPrefix() + ":" + iri.getLocalName();
+				}
+				return "<" + iri.stringValue() + ">";
+			}
+		}
+
+		throw new IllegalArgumentException("Unsuppported Resource type: " + id.getClass().getName());
+	}
 	
 	public static String localName(Resource id) {
 		if (id == null) {
