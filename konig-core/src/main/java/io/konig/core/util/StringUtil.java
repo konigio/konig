@@ -33,6 +33,40 @@ public class StringUtil {
 	
 	private static final String DELIMITER = "_-./:";
 	
+	
+	public static final String normalizedLocalName(String label) {
+		StringBuilder builder = new StringBuilder();
+		
+		
+		label = label.trim();
+		
+		int prior = 0;
+		
+		for (int i=0; i<label.length();) {
+			int c = label.codePointAt(i);
+			
+			if (!Character.isAlphabetic(c) && !Character.isDigit(c)) {
+				
+				if (prior == '_') {
+					i += Character.charCount(c);
+					continue;
+				}
+				c = '_';
+			}
+			if (c=='_' && i==(label.length()-1)) {
+				break;
+			}
+			
+			
+			prior = c;
+			
+			builder.appendCodePoint(c);
+			i += Character.charCount(c);
+		}
+		
+		return builder.toString();
+	}
+	
 	public static final String LABEL_TO_SNAKE_CASE(String label) {
 		StringBuilder builder = new StringBuilder();
 		

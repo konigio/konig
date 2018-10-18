@@ -57,6 +57,7 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.util.URIUtil;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
@@ -331,6 +332,7 @@ public class WorkbookLoader {
 	private boolean failOnWarnings = true;
 	private boolean failOnErrors = true;
 	private int errorCount = 0;
+	private boolean normalizeTerms = false;
 
 
 	public WorkbookLoader(NamespaceManager nsManager) {
@@ -369,6 +371,14 @@ public class WorkbookLoader {
 		}
 	}
 	
+
+	public boolean isNormalizeTerms() {
+		return normalizeTerms;
+	}
+
+	public void setNormalizeTerms(boolean normalizeTerms) {
+		this.normalizeTerms = normalizeTerms;
+	}
 
 	public boolean isFailOnErrors() {
 		return failOnErrors;
@@ -460,7 +470,8 @@ public class WorkbookLoader {
 		private List<FormulaHandler> formulaHandlers = new ArrayList<>();
 		private Set<URI> excludedSecurityClassifications = null;
 		private Set<URI> defaultSubject = null;
-		
+		private Map<String,String> normalizedMap;
+		private Set<String> normalizedTerms;
 		private List<Function> defaultDataSource = null;
 		private boolean describeTermStatus = true;
 		private boolean describeKonig = true;
@@ -663,6 +674,7 @@ public class WorkbookLoader {
 		private void run() throws SpreadsheetException {
 
 			try {
+				init();
 				List<SheetInfo> list = collectSheetInfo();
 				Collections.sort(list);
 
@@ -688,6 +700,14 @@ public class WorkbookLoader {
 				logError("Failed to process workbook", e);
 				
 			}
+		}
+
+		private void init() {
+			if (normalizeTerms) {
+				normalizedMap = new HashMap<>();
+				normalizedTerms = new HashSet<>();
+			}
+			
 		}
 
 		private void handleErrors() throws SpreadsheetException {
@@ -3600,6 +3620,29 @@ public class WorkbookLoader {
 			builder.append(ns.getName());
 
 			String localName = text.substring(colon + 1);
+			if (normalizeTerms) {
+				
+				String normalized = StringUtil.normalizedLocalName(localName);
+				if (!localName.equals(normalized)) {
+					String prior = normalizedMap.get(localName);
+					if (prior != null) {
+						normalized = prior;
+					} else if (normalizedTerms.contains(normalized)){
+						
+						for (int count=2; count<102; count++) {
+							String candidate = normalized + count;
+							if (!normalizedTerms.contains(candidate)) {
+								normalized = candidate;
+								break;
+							}
+						}
+						normalizedMap.put(localName, normalized);
+						normalizedTerms.add(normalized);
+					}
+					localName = normalized;
+					warn(text + " has been normalized as " + prefix + ":" + normalized);
+				}
+			}
 
 			builder.append(localName);
 
@@ -3609,6 +3652,11 @@ public class WorkbookLoader {
 				err.append(text);
 				err.append("'");
 				warningList.add(err.toString());
+			}
+			
+			String iriValue = builder.toString();
+			if (!URIUtil.isValidURIReference(iriValue)) {
+				fail("Invalid IRI <" + text + ">");
 			}
 
 			return vf.createURI(builder.toString());
@@ -3685,6 +3733,10 @@ public class WorkbookLoader {
 				}
 			}
 
+		}
+		
+		private void warn(String message) {
+			warningList.add(message);
 		}
 
 		private void fail(String message) throws SpreadsheetException {
