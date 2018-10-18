@@ -20,8 +20,6 @@ package io.konig.validation;
  * #L%
  */
 
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -31,6 +29,7 @@ import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
@@ -62,12 +61,37 @@ public class ModelValidator {
 		}
 
 		public ModelValidationReport run() {
+			setDefaults();
 			applyInferencing();
 			validateCase();
 			validateClassPropertyDisjoint();
+			validateDatatypeRange();
 			validateShapes();
 			computeStatistics();
 			return report;
+		}
+
+		private void setDefaults() {
+			if (request.getCommentConventions()==null) {
+				request.setCommentConventions(new CommentConventions());
+			}
+			
+		}
+
+		private void validateDatatypeRange() {
+			for (Vertex v : graph.vertices()) {
+				if (v.getId() instanceof URI) {
+					Vertex range = v.getVertex(RDFS.RANGE);
+					if (range!=null && range.getId() instanceof URI) {
+						URI rangeId = (URI) range.getId();
+						if (rangeId.getNamespace().equals(XMLSchema.NAMESPACE) && !XmlSchemaTerms.isXmlSchemaTerm(rangeId)) {
+							URI propertyId = (URI) v.getId();
+							producePropertyReport(propertyId).setInvalidXmlSchemaDatatype(rangeId);
+						}
+					}
+				}
+			}
+			
 		}
 
 		private void applyInferencing() {
@@ -111,8 +135,10 @@ public class ModelValidator {
 				if (id instanceof URI) {
 					if (v.getValue(RDFS.COMMENT) == null) {
 						URI iri = (URI) id;
-						NamedIndividualReport r = produceNamedIndividualReport(iri);
-						r.setRequiresDescription(true);
+						if (request.getCommentConventions().getRequireNamedIndividualComments()) {
+							NamedIndividualReport r = produceNamedIndividualReport(iri);
+							r.setRequiresDescription(true);
+						}
 						noDescription++;
 					}
 				}
@@ -135,8 +161,10 @@ public class ModelValidator {
 				if (id instanceof URI) {
 					if (v.getValue(RDFS.COMMENT) == null) {
 						URI iri = (URI) id;
-						ClassReport r = produceClassReport(iri);
-						r.setRequiresDescription(true);
+						if (request.getCommentConventions().getRequireClassComments()) {
+							ClassReport r = produceClassReport(iri);
+							r.setRequiresDescription(true);
+						}
 						noDescription++;
 					}
 				}
@@ -156,6 +184,7 @@ public class ModelValidator {
 			if (shapeManager != null) {
 				for (Shape shape : shapeManager.listShapes()) {
 					NodeShapeReport shapeReport = new NodeShapeReport(shape.getId());
+					
 					if (expectedStyle != null) {
 						CaseStyle actualStyle = caseStyle(shape.getId());
 						if (expectedStyle != actualStyle) {
@@ -197,11 +226,17 @@ public class ModelValidator {
 			if (p.getComment()==null) {
 				Vertex v = graph.getVertex(predicate);
 				if (v == null || v.getValue(RDFS.COMMENT)==null) {
-					report.setRequiresDescription(true);
+					if (request.getCommentConventions().getRequirePropertyShapeComments()) {
+						report.setRequiresDescription(true);
+					}
 				}
 			}
 			
 			if (p.getDatatype() != null) {
+				URI datatype = p.getDatatype();
+				if (datatype.getNamespace().equals(XMLSchema.NAMESPACE) && !XmlSchemaTerms.isXmlSchemaTerm(datatype)) {
+					report.setInvalidXmlSchemaDatatype(datatype);
+				}
 				if (p.getValueClass() != null) {
 					report.setDatatypeWithClass(true);
 				}
