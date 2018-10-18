@@ -174,7 +174,7 @@ public class PlainTextModelValidationReportWriter implements ModelValidationRepo
 					out.indent();
 					out.print(compactId(type));
 					out.print(" defined by ");
-					out.print(compactId(source));
+					out.println(compactId(source));
 				}
 				out.popIndent();
 			}
