@@ -31,6 +31,7 @@ public class WorkbookProcessor {
 	private File skosDir;
 	
 	private boolean inferRdfPropertyDefinitions=true;
+	private boolean normalizeTerms=true;
 	private boolean failOnWarnings = false;
 	private boolean failOnErrors = true;
 	
@@ -99,4 +100,11 @@ public class WorkbookProcessor {
 	public void setWorkbookDir(File workbookDir) {
 		this.workbookDir = workbookDir;
 	}
+	public boolean isNormalizeTerms() {
+		return normalizeTerms;
+	}
+	public void setNormalizeTerms(boolean normalizeTerms) {
+		this.normalizeTerms = normalizeTerms;
+	}
+	
 }

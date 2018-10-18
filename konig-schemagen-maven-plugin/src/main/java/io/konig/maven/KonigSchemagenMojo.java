@@ -857,6 +857,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				 workbookLoader.setFailOnWarnings(workbook.isFailOnWarnings());
 				 workbookLoader.setFailOnErrors(workbook.isFailOnErrors());
 				 workbookLoader.setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
+				 workbookLoader.setNormalizeTerms(workbook.isNormalizeTerms());
 				 
 				 File workbookFile = workbook.getWorkbookFile();
 				 File workbookDir = workbook.getWorkbookDir();
