@@ -1,5 +1,8 @@
 package io.konig.validation;
 
+import java.util.Collections;
+import java.util.List;
+
 /*
  * #%L
  * Konig Core
@@ -27,6 +30,7 @@ public class PropertyReport implements Comparable<PropertyReport>{
 	private URI propertyId;
 	private boolean nameHasWrongCase;
 	private URI invalidXmlSchemaDatatype;
+	private List<RangeInfo> rangeConflict;
 	
 	public PropertyReport(URI propertyId) {
 		this.propertyId = propertyId;
@@ -56,5 +60,15 @@ public class PropertyReport implements Comparable<PropertyReport>{
 	public void setInvalidXmlSchemaDatatype(URI invalidXmlSchemaDatatype) {
 		this.invalidXmlSchemaDatatype = invalidXmlSchemaDatatype;
 	}
+
+	public List<RangeInfo> getRangeConflict() {
+		return rangeConflict==null ? Collections.emptyList() : rangeConflict;
+	}
+
+	public void setRangeConflict(List<RangeInfo> rangeConflict) {
+		this.rangeConflict = rangeConflict;
+	}
+	
+	
 
 }

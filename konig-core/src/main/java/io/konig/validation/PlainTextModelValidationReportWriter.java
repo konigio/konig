@@ -30,11 +30,15 @@ import java.util.Collections;
 import java.util.List;
 
 import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.io.PrettyPrintWriter;
 
 public class PlainTextModelValidationReportWriter implements ModelValidationReportWriter {
+	
+	
 
 	@Override
 	public void writeReport(ModelValidationReport report, Writer out) throws IOException {
@@ -146,10 +150,41 @@ public class PlainTextModelValidationReportWriter implements ModelValidationRepo
 				if (p.getInvalidXmlSchemaDatatype() != null) {
 					invalidXmlSchemaDatatypeMessage(p);
 				}
+				printRangeConflict(p);
 				out.popIndent();
 			}
 			out.println();
 			
+		}
+
+		private void printRangeConflict(PropertyReport p) {
+			List<RangeInfo> rangeConflict = p.getRangeConflict();
+			if (!rangeConflict.isEmpty()) {
+				out.indent();
+				out.println("Incompatible values for range:");
+				out.pushIndent();
+				for (RangeInfo info : rangeConflict) {
+					URI datatype = info.getDatatype();
+					URI owlClass = info.getOwlClass();
+					URI type = datatype==null ? owlClass : datatype;
+					Resource shapeId = info.getParentShapeId();
+					
+					Resource source = shapeId==null ? RDFS.RANGE :	shapeId;
+					
+					out.indent();
+					out.print(compactId(type));
+					out.print(" defined by ");
+					out.print(compactId(source));
+				}
+				out.popIndent();
+			}
+			
+		}
+
+		
+
+		private String compactId(Resource id) {
+			return RdfUtil.compactId(id, report.getNamespaceManager());
 		}
 
 		private void invalidXmlSchemaDatatypeMessage(PropertyReport p) {

@@ -30,8 +30,11 @@ import java.util.Map;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
+import io.konig.core.NamespaceManager;
+
 public class ModelValidationReport {
 	
+	private NamespaceManager namespaceManager;
 	private Map<URI,ClassReport> classReports = new HashMap<>();
 	private Map<URI,PropertyReport> propertyReports = new HashMap<>();
 	private Map<URI,NamedIndividualReport> individualReports = new HashMap<>();
@@ -120,6 +123,14 @@ public class ModelValidationReport {
 
 	public void setRequest(ModelValidationRequest request) {
 		this.request = request;
+	}
+
+	public NamespaceManager getNamespaceManager() {
+		return namespaceManager;
+	}
+
+	public void setNamespaceManager(NamespaceManager namespaceManager) {
+		this.namespaceManager = namespaceManager;
 	}
 	
 	

@@ -1,5 +1,8 @@
 package io.konig.validation;
 
+import java.util.HashMap;
+import java.util.Iterator;
+
 /*
  * #%L
  * Konig Core
@@ -21,6 +24,8 @@ package io.konig.validation;
  */
 
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.openrdf.model.Resource;
@@ -53,6 +58,8 @@ public class ModelValidator {
 		private ModelValidationRequest request;
 		private ModelValidationReport report = new ModelValidationReport();
 		private Graph graph;
+		private Map<URI, PropertyInfo> propertyMap = new HashMap<>();
+		
 
 		public Worker(ModelValidationRequest request) {
 			this.request = request;
@@ -67,8 +74,24 @@ public class ModelValidator {
 			validateClassPropertyDisjoint();
 			validateDatatypeRange();
 			validateShapes();
+			validatePropertyRanges();
 			computeStatistics();
 			return report;
+		}
+
+		private void validatePropertyRanges() {
+			OwlReasoner owl = request.getOwl();
+			Iterator<Entry<URI,PropertyInfo>> sequence = propertyMap.entrySet().iterator();
+			while (sequence.hasNext()) {
+				Entry<URI,PropertyInfo> e = sequence.next();
+				PropertyInfo info = e.getValue();
+				if (!info.isConflict(owl)) {
+					sequence.remove();
+				} else {
+					producePropertyReport(e.getKey()).setRangeConflict(info.getRangeInfo());
+				}
+			}
+			
 		}
 
 		private void setDefaults() {
@@ -81,17 +104,44 @@ public class ModelValidator {
 		private void validateDatatypeRange() {
 			for (Vertex v : graph.vertices()) {
 				if (v.getId() instanceof URI) {
+					URI propertyId = (URI) v.getId();
 					Vertex range = v.getVertex(RDFS.RANGE);
 					if (range!=null && range.getId() instanceof URI) {
 						URI rangeId = (URI) range.getId();
+						addPropertyInfo(propertyId, rangeId);
 						if (rangeId.getNamespace().equals(XMLSchema.NAMESPACE) && !XmlSchemaTerms.isXmlSchemaTerm(rangeId)) {
-							URI propertyId = (URI) v.getId();
 							producePropertyReport(propertyId).setInvalidXmlSchemaDatatype(rangeId);
 						}
 					}
 				}
 			}
 			
+		}
+
+		private void addPropertyInfo(URI propertyId, URI rangeId) {
+			if (!request.getTabularPropertyNamespaces().contains(propertyId.getNamespace())) {
+				URI datatype = null;
+				URI owlClass = null;
+				if (request.getOwl().isDatatype(rangeId)) {
+					datatype = rangeId;
+				} else {
+					owlClass = rangeId;
+				}
+				
+				PropertyInfo info = producePropertyInfo(propertyId);
+				info.add(new RangeInfo(null, datatype, owlClass));
+				
+			}
+			
+		}
+
+		private PropertyInfo producePropertyInfo(URI propertyId) {
+			PropertyInfo info = propertyMap.get(propertyId);
+			if (info == null) {
+				info = new PropertyInfo(propertyId);
+				propertyMap.put(propertyId, info);
+			}
+			return info;
 		}
 
 		private void applyInferencing() {
@@ -232,6 +282,9 @@ public class ModelValidator {
 				}
 			}
 			
+			PropertyInfo info = producePropertyInfo(predicate);
+			info.add(new RangeInfo(shapeReport.getShapeId(), p.getDatatype(), valueClass(p)));
+			
 			if (p.getDatatype() != null) {
 				URI datatype = p.getDatatype();
 				if (datatype.getNamespace().equals(XMLSchema.NAMESPACE) && !XmlSchemaTerms.isXmlSchemaTerm(datatype)) {
@@ -283,6 +336,17 @@ public class ModelValidator {
 				shapeReport.add(report);
 			}
 			
+		}
+
+		private URI valueClass(PropertyConstraint p) {
+			if (p.getValueClass() instanceof URI) {
+				return (URI) p.getValueClass();
+			}
+			Shape valueShape = p.getShape();
+			if (valueShape != null && valueShape.getTargetClass()!= null) {
+				return valueShape.getTargetClass();
+			}
+			return null;
 		}
 
 		private void validateClassPropertyDisjoint() {

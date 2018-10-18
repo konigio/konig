@@ -1,5 +1,9 @@
 package io.konig.validation;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /*
  * #%L
  * Konig Core
@@ -34,6 +38,7 @@ public class ModelValidationRequest {
 	private OwlReasoner owl;
 	private CaseStyleConventions caseStyle = new CaseStyleConventions();
 	private CommentConventions commentConventions;
+	private Set<String> tabularPropertyNamespaces;
 	
 	public ModelValidationRequest(OwlReasoner owl, ShapeManager shapeManager) {
 		this.owl = owl;
@@ -42,6 +47,19 @@ public class ModelValidationRequest {
 
 	public OwlReasoner getOwl() {
 		return owl;
+	}
+	
+	public void addTabularPropertyNamespace(String namespace) {
+		if (tabularPropertyNamespaces == null) {
+			tabularPropertyNamespaces = new HashSet<>();
+		}
+		tabularPropertyNamespaces.add(namespace);
+	}
+	
+	
+
+	public Set<String> getTabularPropertyNamespaces() {
+		return tabularPropertyNamespaces==null ? Collections.emptySet() : tabularPropertyNamespaces;
 	}
 
 	public CaseStyleConventions getCaseStyle() {
