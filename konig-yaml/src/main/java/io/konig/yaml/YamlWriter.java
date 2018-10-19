@@ -22,6 +22,7 @@ package io.konig.yaml;
 
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Array;
@@ -532,7 +533,7 @@ public class YamlWriter extends YamlWriterConfig  implements AutoCloseable {
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() throws IOException {
 		out.close();
 	}
 }

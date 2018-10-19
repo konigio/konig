@@ -28,6 +28,7 @@ import java.util.List;
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.project.ProjectFolder;
+import io.konig.gcp.common.BigQueryTableListener;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeManager;
@@ -41,12 +42,27 @@ public class GoogleCloudResourceGenerator {
 	private OwlReasoner owlReasoner;
 	private List<ShapeVisitor> visitors = new ArrayList<>();
 	private ShapeModelFactory shapeModelFactory;
+	private BigQueryTableListener bigqueryTableListener;
 	
 	public GoogleCloudResourceGenerator(ShapeManager shapeManager,OwlReasoner owlReasoner ) {
 		this.shapeManager = shapeManager;
 		this.owlReasoner = owlReasoner;
 	}
 	
+	
+	
+	public BigQueryTableListener getBigqueryTableListener() {
+		return bigqueryTableListener;
+	}
+
+
+
+	public void setBigqueryTableListener(BigQueryTableListener bigqueryTableListener) {
+		this.bigqueryTableListener = bigqueryTableListener;
+	}
+
+
+
 	public void add(ShapeVisitor visitor) {
 		if (visitor != null) {
 			visitors.add(visitor);
@@ -59,6 +75,7 @@ public class GoogleCloudResourceGenerator {
 		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
 		
 		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, tableWriter, shapeModelFactory());
+		transformer.setBigQueryTableListener(bigqueryTableListener);
 		add(transformer);
 		
 	}
@@ -76,6 +93,7 @@ public class GoogleCloudResourceGenerator {
 		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
 		
 		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, viewWriter ,shapeModelFactory());
+		transformer.setBigQueryTableListener(bigqueryTableListener);
 		add(transformer);
 		
 	}

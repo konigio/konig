@@ -50,6 +50,12 @@
 		
   	<dependency>
   		<groupId>io.konig</groupId>
+  		<artifactId>konig-gcp-deployment-manager</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
+		
+  	<dependency>
+  		<groupId>io.konig</groupId>
   		<artifactId>konig-openapi-generator</artifactId>
   		<version>${konig.version}</version>
   	</dependency>

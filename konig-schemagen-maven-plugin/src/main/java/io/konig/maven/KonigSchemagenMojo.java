@@ -138,6 +138,7 @@ import io.konig.gcp.common.GroovyDeploymentScriptWriter;
 import io.konig.gcp.common.GroovyTearDownScriptWriter;
 import io.konig.gcp.common.InvalidGoogleCredentialsException;
 import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.gcp.deployment.GcpDeploymentConfigManager;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
 import io.konig.maven.project.generator.EtlModelGenerator;
 import io.konig.maven.project.generator.MavenProjectConfig;
@@ -1103,7 +1104,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			BigQueryInfo bigQuery = googleCloudPlatform.getBigquery();
 			CloudStorageInfo cloudStorage = googleCloudPlatform.getCloudstorage();
 			
+			GcpDeploymentConfigManager deployManager = new GcpDeploymentConfigManager();
+			
 			GoogleCloudResourceGenerator resourceGenerator = new GoogleCloudResourceGenerator(shapeManager, owlReasoner);
+			resourceGenerator.setBigqueryTableListener(deployManager.createBigQueryTableListener());
 	
 			if (bigQuery != null) {
 				ProjectFolder schemaFolder = project.createFolder(bigQuery.getSchema());
@@ -1131,6 +1135,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			}
 			resourceGenerator.add(new GooglePubSubTopicListGenerator(googleCloudPlatform.getTopicsFile()));
 			resourceGenerator.dispatch(shapeManager.listShapes());
+			
+			File deploymentDir = new File(googleCloudPlatform.getDirectory(), "deployment");
+			
+			File deploymentYaml = new File(deploymentDir, "gcp-deployment.yaml");
+			deployManager.writeConfig(deploymentYaml);
 
 			if (bigQuery != null) {
 
