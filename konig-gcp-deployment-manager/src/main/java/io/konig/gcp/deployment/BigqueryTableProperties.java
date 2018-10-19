@@ -21,53 +21,33 @@ package io.konig.gcp.deployment;
  */
 
 
-public class BaseGcpResource<T> implements GcpResource<T> {
-	private String name;
-	private String type;
-	private T properties;
-	private GcpMetadata metadata;
+import com.google.api.services.bigquery.model.TableReference;
+import com.google.api.services.bigquery.model.TableSchema;
 
-	public BaseGcpResource(String type) {
-		this.type = type;
+public class BigqueryTableProperties  {
+
+	private String datasetId;
+	private TableSchema schema;
+	private TableReference tableReference;
+	public String getDatasetId() {
+		return datasetId;
 	}
-
-
-
-	@Override
-	public String getName() {
-		return name;
+	public void setDatasetId(String datasetId) {
+		this.datasetId = datasetId;
 	}
-	
-	
-
-	public void setProperties(T properties) {
-		this.properties = properties;
+	public TableSchema getSchema() {
+		return schema;
 	}
-
-
-
-	public void setName(String name) {
-		this.name = name;
+	public void setSchema(TableSchema schema) {
+		this.schema = schema;
 	}
-
-	@Override
-	public String getType() {
-		return type;
+	public TableReference getTableReference() {
+		return tableReference;
 	}
-
-	@Override
-	public T getProperties() {
-		return properties;
-	}
-	
-	public GcpMetadata getMetadata() {
-		return metadata;
-	}
-	
-	public void setMetadata(GcpMetadata metadata) {
-		this.metadata = metadata;
+	public void setTableReference(TableReference tableReference) {
+		this.tableReference = tableReference;
 	}
 	
 	
-
+	
 }

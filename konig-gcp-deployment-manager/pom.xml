@@ -22,6 +22,11 @@
   		<artifactId>konig-yaml</artifactId>
 			<version>${konig.version}</version>
   	</dependency>
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-gcp-common</artifactId>
+			<version>${konig.version}</version>
+  	</dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

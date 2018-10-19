@@ -30,6 +30,7 @@ import com.google.api.services.bigquery.model.TableSchema;
 
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
+import io.konig.gcp.common.BigQueryTableListener;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleBigQueryView;
@@ -47,13 +48,27 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 	private BigQueryTableGenerator tableGenerator;
 	private BigQueryTableVisitor tableVisitor;
 	private CurrentStateViewGenerator currentStateViewGenerator;
+	private BigQueryTableListener bigQueryTableListener;
 	
 	public ShapeToBigQueryTransformer(BigQueryTableGenerator tableGenerator, BigQueryTableVisitor tableVisitor, ShapeModelFactory shapeModelFactory) {
 		this.tableGenerator = tableGenerator;
 		this.tableVisitor = tableVisitor;
 		this.currentStateViewGenerator = new CurrentStateViewGenerator(shapeModelFactory);
 	}
-	
+
+	public BigQueryTableListener getBigQueryTableListener() {
+		return bigQueryTableListener;
+	}
+
+	public void setBigQueryTableListener(BigQueryTableListener bigQueryTableListener) {
+		this.bigQueryTableListener = bigQueryTableListener;
+	}
+
+
+
+
+
+
 	@Override
 	public void visit(Shape shape) {
 		
@@ -68,6 +83,9 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 						if (table.getView() != null) {
 							table.setType("VIEW");
 							tableVisitor.visit(dataSource, table);
+						}
+						if (bigQueryTableListener != null) {
+							bigQueryTableListener.handleTable(table);
 						}
 					} else if (!(dataSource instanceof GoogleBigQueryView) && tableVisitor instanceof BigQueryTableWriter) {
 						Table table = toTable(shape, (GoogleBigQueryTable) dataSource);
@@ -84,6 +102,9 @@ public class ShapeToBigQueryTransformer implements ShapeVisitor {
 						}
 						}catch(Exception ex){
 							ex.printStackTrace();
+						}
+						if (bigQueryTableListener != null) {
+							bigQueryTableListener.handleTable(table);
 						}
 					}
 				}

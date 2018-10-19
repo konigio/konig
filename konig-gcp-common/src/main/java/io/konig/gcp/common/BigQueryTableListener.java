@@ -1,8 +1,8 @@
-package io.konig.gcp.deployment;
+package io.konig.gcp.common;
 
 /*
  * #%L
- * Konig GCP Deployment Manager
+ * Konig GCP Common
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,19 +21,9 @@ package io.konig.gcp.deployment;
  */
 
 
-import java.io.Writer;
+import com.google.api.services.bigquery.model.Table;
 
-import io.konig.yaml.AnchorFeature;
-import io.konig.yaml.YamlWriter;
+public interface BigQueryTableListener {
 
-public class DeploymentConfigWriter {
-	
-	public void write(Writer out, DeploymentConfig config) throws Exception {
-		YamlWriter yaml = new YamlWriter(out);
-		yaml.setAnchorFeature(AnchorFeature.NONE);
-		yaml.setIncludeClassTag(false);
-		yaml.write(config);
-		yaml.close();
-	}
-
+	void handleTable(Table table);
 }
