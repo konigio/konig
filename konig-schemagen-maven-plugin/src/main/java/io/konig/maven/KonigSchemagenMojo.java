@@ -1132,16 +1132,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 					generateMySqlTransformScripts(mysqlScriptsDir);
 				}
 			}
-			if (googleCloudPlatform.getCloudsql().getInstances()!=null) {
-				CloudSqlJsonGenerator instanceWriter = new CloudSqlJsonGenerator();
-				instanceWriter.writeAll(googleCloudPlatform.getCloudsql(), owlGraph);
-			}
+			// For now, commenting out the old CloudSqlJsonGenerator
+			// TODO: delete the code block permanently.
+//			if (googleCloudPlatform.getCloudsql().getInstances()!=null) {
+//				CloudSqlJsonGenerator instanceWriter = new CloudSqlJsonGenerator();
+//				instanceWriter.writeAll(googleCloudPlatform.getCloudsql(), owlGraph);
+//			}
 			resourceGenerator.add(new GooglePubSubTopicListGenerator(googleCloudPlatform.getTopicsFile()));
 			resourceGenerator.dispatch(shapeManager.listShapes());
 			
 			File deploymentDir = new File(googleCloudPlatform.getDirectory(), "deployment");
 			
-			// TODO: Delay writing the config file until the "emit" phase
 			CloudSqlAdminManager sqlAdmin = new CloudSqlAdminManager(
 				deployManager.createCloudSqlInstanceVisitor(),
 				deployManager.createCloudSqlDatabaseVisitor());

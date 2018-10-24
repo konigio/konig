@@ -39,9 +39,6 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.vocab.GCP;
 import io.konig.gcp.common.CloudSqlDatabaseVisitor;
 import io.konig.gcp.common.CloudSqlInstanceVisitor;
-import io.konig.gcp.datasource.GoogleCloudSqlTable;
-import io.konig.shacl.Shape;
-import io.konig.shacl.ShapeBuilder;
 
 public class CloudSqlAdminManagerTest {
 	
