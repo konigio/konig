@@ -1,0 +1,94 @@
+Data Model Statistics
+=====================
+
+Number of OWL Classes: 27
+Number of OWL Classes with description: 0 (0%)
+
+Number of Properties: 677
+
+Number of Named Individuals: 86
+Number of Named Individuals with description: 2 (2.3%)
+
+Number of Node Shapes: 68
+
+Node Shapes
+===========
+
+<https://schema.pearson.com/shapes/GcssHookShape>
+   Property Constraints
+   ====================
+      <https://schema.pearson.com/ns/gcss/timestamp>
+         Invalid XML Schema datatype: datetime
+
+<https://schema.pearson.com/shapes/GcssInboundInteractionShape>
+   Property Constraints
+   ====================
+      <https://schema.pearson.com/ns/gcss/answeredCallCount>
+         Invalid XML Schema datatype: datetime
+
+      <https://schema.pearson.com/ns/gcss/phoneNumberDialled>
+         Invalid XML Schema datatype: datetime
+
+<https://schema.pearson.com/shapes/GcssInteractionShape>
+   Property Constraints
+   ====================
+      <https://schema.pearson.com/ns/gcss/endTimestamp>
+         Invalid XML Schema datatype: datetime
+
+      <https://schema.pearson.com/ns/gcss/startTimestamp>
+         Invalid XML Schema datatype: datetime
+
+<https://schema.pearson.com/shapes/GcssIntervalShape>
+   Property Constraints
+   ====================
+      <https://schema.pearson.com/ns/gcss/endTimeStamp>
+         Invalid XML Schema datatype: datetime
+
+<https://schema.pearson.com/shapes/GcssQueueShape>
+   Property Constraints
+   ====================
+      <https://schema.pearson.com/ns/gcss/endTimestamp>
+         Invalid XML Schema datatype: datetime
+
+      <https://schema.pearson.com/ns/gcss/startTimestamp>
+         Invalid XML Schema datatype: datetime
+
+<https://schema.pearson.com/shapes/GcssSegmentShape>
+   Property Constraints
+   ====================
+      <https://schema.pearson.com/ns/gcss/endTimestamp>
+         Invalid XML Schema datatype: datetime
+
+      <https://schema.pearson.com/ns/gcss/segmentCancelTime>
+         Invalid XML Schema datatype: datetime
+
+      <https://schema.pearson.com/ns/gcss/startTimestamp>
+         Invalid XML Schema datatype: datetime
+
+<https://schema.pearson.com/shapes/JacadaOriginPageShape>
+   Property Constraints
+   ====================
+      <https://schema.pearson.com/ns/jacada/timeSpent>
+         MUST specify one of sh:datatype, sh:class, OR sh:shape
+         MUST define the sh:minCount attribute
+
+<https://schema.pearson.com/shapes/JacadaPageShape>
+   Property Constraints
+   ====================
+      <http://www.konig.io/ns/core/uid>
+         MUST specify one of sh:datatype, sh:class, OR sh:shape
+         MUST define the sh:minCount attribute
+
+<https://schema.pearson.com/shapes/JacadaTransactionShape>
+   Property Constraints
+   ====================
+      <http://www.konig.io/ns/core/uid>
+         MUST specify one of sh:datatype, sh:class, OR sh:shape
+         MUST define the sh:minCount attribute
+
+<https://schema.pearson.com/shapes/SerenovaWfmIntervalsAgentAndQueueShape>
+   Property Constraints
+   ====================
+      <https://schema.pearson.com/ns/serenova-cxengage/results>
+         MUST specify one of sh:datatype, sh:class, OR sh:shape
+

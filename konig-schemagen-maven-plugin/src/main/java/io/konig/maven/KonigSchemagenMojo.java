@@ -174,6 +174,7 @@ import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryLabelGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
+import io.konig.schemagen.gcp.CloudSqlAdminManager;
 import io.konig.schemagen.gcp.CloudSqlJsonGenerator;
 import io.konig.schemagen.gcp.CloudSqlTableWriter;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
@@ -187,6 +188,7 @@ import io.konig.schemagen.gcp.NamespaceDatasetMapper;
 import io.konig.schemagen.gcp.SimpleDatasetMapper;
 import io.konig.schemagen.io.CompositeEmitter;
 import io.konig.schemagen.io.GenericEmitter;
+import io.konig.schemagen.io.NamedGraphEmitter;
 import io.konig.schemagen.io.OntologyEmitter;
 import io.konig.schemagen.io.ShapeToFileEmitter;
 import io.konig.schemagen.io.ShapeToGraphEmitter;
@@ -901,6 +903,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				 emitter.add(new ShapeToGraphEmitter(shapeManager));
 				 emitter.add(new ShapeToFileEmitter(shapeManager, workbook.shapesDir(defaults)));
 				 emitter.add(new SkosEmitter(workbook.skosDir(defaults)));
+				 emitter.add(new NamedGraphEmitter(workbook.owlDir(defaults)));
 				 
 				 if (context != null) {
 					 if(context.get("ECRRepositoryName")!=null) {
@@ -1138,8 +1141,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			File deploymentDir = new File(googleCloudPlatform.getDirectory(), "deployment");
 			
+			// TODO: Delay writing the config file until the "emit" phase
+			CloudSqlAdminManager sqlAdmin = new CloudSqlAdminManager(
+				deployManager.createCloudSqlInstanceVisitor(),
+				deployManager.createCloudSqlDatabaseVisitor());
+
 			File deploymentYaml = new File(deploymentDir, "gcp-deployment.yaml");
-			deployManager.writeConfig(deploymentYaml);
+			emitter.add(new GoogleDeploymentManagerEmitter(sqlAdmin, deployManager, deploymentYaml));
 
 			if (bigQuery != null) {
 

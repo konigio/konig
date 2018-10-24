@@ -36,6 +36,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -48,12 +49,14 @@ import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
@@ -203,6 +206,10 @@ public class WorkbookLoader {
 	private static final String RELATIONSHIP_DEGREE="Relationship Degree";
 	private static final String PII_CLASSIFICATION = "PII Classification";
 	private static final String REFERENCES_SHAPE = "References Shape";
+	
+	// Triples
+	private static final String PREDICATE = "Predicate";
+	private static final String OBJECT = "Object";
 
 	// Cloud SQL Instance
 	private static final String INSTANCE_NAME = "Instance Name";
@@ -289,6 +296,7 @@ public class WorkbookLoader {
 	private static final int COL_SECURITY_TAGS = 0x400;
 	private static final int COL_SOURCE_SYSTEM = 0x800;
 	private static final int COL_TERM = 0x1000;
+	private static final int COL_PREDICATE = 0x2000;
 	
 	private static final int SHEET_ONTOLOGY = COL_NAMESPACE_URI;
 	private static final int SHEET_CLASS = COL_CLASS_ID;
@@ -304,6 +312,7 @@ public class WorkbookLoader {
 	private static final int SHEET_SECURITY_TAGS = COL_SECURITY_TAGS;
 	private static final int SHEET_DATA_DICTIONARY_TEMPLATE=COL_SOURCE_SYSTEM;
 	private static final int SHEET_DATA_DICTIONARY_ABBREVIATIONS=COL_TERM;
+	private static final int SHEET_TRIPLES=COL_PREDICATE;
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
 
@@ -553,6 +562,9 @@ public class WorkbookLoader {
 		private int subjectCol = UNDEFINED;
 		private int labelCol = UNDEFINED;
 		private int languageCol = UNDEFINED;
+		
+		private int predicateCol = UNDEFINED;
+		private int objectCol = UNDEFINED;
 
 		private Activity provenance;
 		private URI activityId;
@@ -1200,9 +1212,180 @@ public class WorkbookLoader {
 				break;
 			case SHEET_DATA_DICTIONARY_ABBREVIATIONS:
 				loadDataDictionaryAbbreviations(sheet);
-				break;				
+				break;	
+			case SHEET_TRIPLES:
+				loadTriples(sheet);
+				break;
 			}
 
+		}
+
+		private void loadTriples(Sheet sheet) throws SpreadsheetException {
+			readTriplesHeader(sheet);
+			int rowSize = sheet.getLastRowNum() + 1;
+			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
+				Row row = sheet.getRow(i);
+				if (row == null) {
+					continue;
+				}
+				loadTriplesRow(row);
+			}
+			
+		}
+
+		private void loadTriplesRow(Row row) throws SpreadsheetException {
+			Resource subject = subject(row);
+			URI predicate = uriValue(row, predicateCol);
+			Value object = object(row, predicate);
+			URI context = context(subject);
+			
+			edge(subject, predicate, object, context);
+		}
+
+		private void edge(Resource subject, URI predicate, Value object, URI context) {
+			if (subject!=null && predicate!=null && object!=null) {
+				graph.edge(subject, predicate, object, context);
+			}
+			
+		}
+
+		private URI context(Resource subject) {
+			if (subject ==null) {
+				return null;
+			}
+			if (subject instanceof URI) {
+				String value = subject.stringValue();
+				
+				return RdfUtil.namespace(graph, value);
+			} else if (subject instanceof BNode) {
+				BNode bnode = (BNode) subject;
+				Vertex v = graph.mappedBNode(bnode);
+				if (v != null) {
+					Optional<URI> owner = v.inEdgeSet().stream()
+							.filter(e -> e.getSubject() instanceof URI) 
+							.map(e -> (URI) e.getSubject())
+							.findFirst();
+					if (owner.isPresent()) {
+						return RdfUtil.namespace(graph, owner.get().stringValue());
+					}
+					
+				}
+				
+			}
+			return null;
+		}
+
+		private Value object(Row row, URI predicate) {
+
+			if (predicate == null) {
+				return null;
+			}
+			String text = stringValue(row, objectCol);
+			if (text == null) {
+				return null;
+			}
+			Resource resource = tryResource(text);
+			if (resource != null) {
+				return resource;
+			}
+			
+			Vertex property = graph.getVertex(predicate);
+			URI range = null;
+			if (property != null) {
+				range = property.getURI(RDFS.RANGE);
+			}
+			
+			if (range!=null) {
+				return new LiteralImpl(text, range);
+			}
+			return new LiteralImpl(text);
+		}
+
+
+		private Resource tryResource(String text) {
+			if (text.startsWith("_:")) {
+				return new BNodeImpl(text.substring(2));
+			}
+			
+			return tryCurie(text);
+		}
+
+		private URI tryCurie(String text) {
+			if (text == null) {
+				return null;
+			}
+			if (text.startsWith("http://") || text.startsWith("https://") || text.startsWith("urn:")) {
+				return vf.createURI(text);
+			}
+			int colon = text.indexOf(':');
+			if (colon < 1) {
+				return null;
+			}
+			String prefix = text.substring(0, colon);
+			Namespace ns = nsManager.findByPrefix(prefix);
+			if (ns == null) {
+				return null;
+			}
+			StringBuilder builder = new StringBuilder();
+			builder.append(ns.getName());
+
+			String localName = text.substring(colon + 1);
+			
+			builder.append(localName);
+			
+			String iriValue = builder.toString();
+			if (!URIUtil.isValidURIReference(iriValue)) {
+				return null;
+			}
+
+			return vf.createURI(builder.toString());
+		}
+
+		private Resource subject(Row row) throws SpreadsheetException {
+			String text = stringValue(row, subjectCol);
+			if (text == null) {
+				return null;
+			}
+			if (text.startsWith("_:")) {
+				String id = text.substring(2);
+				return new BNodeImpl(id);
+			}
+			return uriValue(row,  subjectCol);
+		}
+
+		private void readTriplesHeader(Sheet sheet) {
+			subjectCol = predicateCol = objectCol = UNDEFINED;
+			
+			int firstRow = sheet.getFirstRowNum();
+			Row row = sheet.getRow(firstRow);
+
+			int colSize = row.getLastCellNum() + 1;
+			for (int i = row.getFirstCellNum(); i < colSize; i++) {
+				Cell cell = row.getCell(i);
+				if (cell == null) {
+					continue;
+				}
+				String text = cell.getStringCellValue();
+				if (text != null) {
+					text = text.trim();
+
+					switch (text) {
+
+					case SUBJECT:
+						subjectCol = i;
+						break;
+					
+					case PREDICATE:
+						predicateCol = i;
+						break;
+						
+					case OBJECT:
+						objectCol = i;
+						break;
+					}
+				}
+			}
+			
 		}
 
 		private void loadDataDictionaryAbbreviations(Sheet sheet) throws SpreadsheetException {
@@ -1893,6 +2076,9 @@ public class WorkbookLoader {
 				case TERM:
 					bits = bits | COL_TERM;
 					break;
+					
+				case PREDICATE:
+					bits = bits | COL_PREDICATE;
 				}
 			}
 

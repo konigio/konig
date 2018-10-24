@@ -29,8 +29,12 @@ import java.util.Set;
 
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableReference;
+import com.google.api.services.sqladmin.model.Database;
+import com.google.api.services.sqladmin.model.DatabaseInstance;
 
 import io.konig.gcp.common.BigQueryTableListener;
+import io.konig.gcp.common.CloudSqlDatabaseVisitor;
+import io.konig.gcp.common.CloudSqlInstanceVisitor;
 import io.konig.yaml.AnchorFeature;
 import io.konig.yaml.YamlWriter;
 
@@ -42,6 +46,14 @@ public class GcpDeploymentConfigManager {
 	
 	public BigQueryTableListener createBigQueryTableListener() {
 		return new MyBigQueryTableListener();
+	}
+	
+	public CloudSqlInstanceVisitor createCloudSqlInstanceVisitor() {
+		return new MyCloudSqlInstanceVisitor();
+	}
+	
+	public CloudSqlDatabaseVisitor createCloudSqlDatabaseVisitor() {
+		return new MyCloudSqlDatabaseVisitor();
 	}
 	
 	
@@ -58,6 +70,30 @@ public class GcpDeploymentConfigManager {
 				yaml.write(config);
 			}
 		}
+	}
+	private class MyCloudSqlDatabaseVisitor implements CloudSqlDatabaseVisitor {
+
+		@Override
+		public void visit(Database database) {
+			CloudSqlDatabaseResource resource = new CloudSqlDatabaseResource();
+			config.addResource(resource);
+			resource.setProperties(database);
+		}
+		
+	}
+	
+	private class MyCloudSqlInstanceVisitor implements CloudSqlInstanceVisitor {
+
+		@Override
+		public void visit(DatabaseInstance instance) {
+			
+			CloudSqlInstanceResource instanceResource = new CloudSqlInstanceResource();
+			config.addResource(instanceResource);
+			instanceResource.setProperties(instance);
+			
+			
+		}
+		
 	}
 
 	private class MyBigQueryTableListener implements BigQueryTableListener {
