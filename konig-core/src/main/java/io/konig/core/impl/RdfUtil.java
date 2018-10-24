@@ -88,6 +88,21 @@ import io.konig.shacl.io.ShapeLoader;
 
 public class RdfUtil {
 	
+	public static URI namespace(Graph graph, String value) {
+
+		NamespaceManager nsManager = graph.getNamespaceManager();
+		int index = value.length()-1;
+		for (index=value.lastIndexOf('/', index); index>0; index=value.lastIndexOf('/', --index)) {
+			String namespace = value.substring(0, index+1);
+			Namespace ns = nsManager.findByName(namespace);
+			if (ns != null) {
+				return (URI) graph.vertex(new URIImpl(namespace)).getId();
+			}
+		}
+		
+		return null;
+	}
+	
 	public static String compactId(Resource id, NamespaceManager nsManager) {
 		if (id == null) {
 			return null;

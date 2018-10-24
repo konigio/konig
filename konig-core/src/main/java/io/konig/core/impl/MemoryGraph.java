@@ -702,6 +702,11 @@ public class MemoryGraph implements Graph, Transaction {
 		}
 		return result;
 	}
+
+	@Override
+	public Vertex mappedBNode(BNode bnode) {
+		return bnodeMap.get(bnode.getID());
+	}
 	
 
 }

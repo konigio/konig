@@ -35,7 +35,6 @@ public class GcpShapeConfig {
 		context.mapClass(Konig.GoogleBigQueryTable, GoogleBigQueryTable.class);
 		context.mapClass(Konig.GoogleCloudStorageBucket, GoogleCloudStorageBucket.class);
 		context.mapClass(Konig.GoogleCloudSqlTable, GoogleCloudSqlTable.class);
-		context.mapClass(GCP.GoogleCloudSqlInstance, GoogleCloudSqlInstance.class);
 	
 	}
 

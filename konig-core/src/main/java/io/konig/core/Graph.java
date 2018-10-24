@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
@@ -161,4 +162,9 @@ public interface Graph extends Set<Edge>, LocalNameService {
 	 * @return The set of all URI values that have the given localName
 	 */
 	Set<URI> lookupLocalName(String localName);
+	
+	/**
+	 * Obtain the Vertex that is mapped to a given BNode in the current transaction.
+	 */
+	Vertex mappedBNode(BNode bnode);
 }

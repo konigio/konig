@@ -25,7 +25,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 public class GCP {
-
+	
 	public static final String NAMESPACE = "http://www.konig.io/ns/gcp/";
 	public static final String TABLE_REFERENCE = "http://www.konig.io/ns/gcp/tableReference";
 	public static final String STORAGE_CLASS = "http://www.konig.io/ns/gcp/storageClass";
@@ -67,6 +67,7 @@ public class GCP {
 	public static final String TIER = "http://www.konig.io/ns/gcp/tier";
 
 	public static final URI GoogleCloudSqlInstance = new URIImpl("http://www.konig.io/ns/gcp/GoogleCloudSqlInstance");
+	public static final URI GoogleCloudSqlDatabase = new URIImpl("http://www.konig.io/ns/gcp/GoogleCloudSqlDatabase");
 	public static final URI backendType = new URIImpl(BACKEND_TYPE);
 	public static final URI instanceType = new URIImpl(INSTANCE_TYPE);
 	public static final URI databaseVersion = new URIImpl(DATABASE_VERSION);
@@ -134,6 +135,8 @@ public class GCP {
 	public static final URI CLOUD_SQL_INSTANCE = new URIImpl("http://www.konig.io/ns/gcp/CLOUD_SQL_INSTANCE");
 	public static final URI READ_REPLICA_INSTANCE = new URIImpl("http://www.konig.io/ns/gcp/READ_REPLICA_INSTANCE");
 	public static final URI ON_PREMISES_INSTANCE = new URIImpl("http://www.konig.io/ns/gcp/ON_PREMISES_INSTANCE");
+	public static final URI instance = new URIImpl("http://www.konig.io/ns/gcp/instance");
+	public static final URI charset = new URIImpl("http://www.konig.io/ns/gcp/charset");
 	
 	
 	
