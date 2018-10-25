@@ -34,7 +34,9 @@ import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.gcp.datasource.GoogleCloudSqlTable.Builder;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeBuilder;
 
 public class GoogleBigQueryTable extends TableDataSource {
 	
@@ -134,6 +136,19 @@ public class GoogleBigQueryTable extends TableDataSource {
 		return builder.toString();
 	}
 
+
+	@Override
+	public String getTransformFileName() {
+
+		BigQueryTableReference ref = getTableReference();
+		StringBuilder builder = new StringBuilder();
+		builder.append(ref.getDatasetId());
+		builder.append('.');
+		builder.append(ref.getTableId());
+		builder.append(".dml.sql");
+		return builder.toString();
+	}
+
 	@Override
 	public String getQualifiedTableName() {
 		if (tableReference==null) {
@@ -151,6 +166,30 @@ public class GoogleBigQueryTable extends TableDataSource {
 		throw new UnsupportedOperationException();
 	}
 	
-	
+
+	public static class Builder {
+		private GoogleBigQueryTable table = new GoogleBigQueryTable();
+		private ShapeBuilder shapeBuilder;
+		
+		public Builder(ShapeBuilder shapeBuilder) {
+			this.shapeBuilder = shapeBuilder;
+		}
+		
+		
+		
+		public Builder id(URI id) {
+			table.setId(id);
+			return this;
+		}
+		
+		public ShapeBuilder endDataSource() {
+			shapeBuilder.peekShape().addShapeDataSource(table);
+			return shapeBuilder;
+		}
+		
+		
+		
+	}
+
 
 }

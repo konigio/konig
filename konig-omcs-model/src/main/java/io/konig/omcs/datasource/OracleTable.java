@@ -110,6 +110,19 @@ public class OracleTable extends TableDataSource {
 	}
 
 	@Override
+	public String getTransformFileName() {
+		OracleTableReference ref = getTableReference();
+		StringBuilder builder = new StringBuilder();
+		builder.append(ref.getOmcsInstanceId());
+		builder.append('.');
+		builder.append(ref.getOracleSchema());
+		builder.append('.');
+		builder.append(ref.getOmcsTableId());
+		builder.append(".dml.sql");
+		return builder.toString();
+	}
+
+	@Override
 	public String getQualifiedTableName() {
 		if (tableReference == null) {
 			throw new KonigException("tableReference must be defined");
