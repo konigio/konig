@@ -78,6 +78,10 @@ public class ModelValidator {
 			computeStatistics();
 			return report;
 		}
+		
+		private NamespaceValidationConfig getNamespaceConfig(String namespaceName) {
+			return request.getNamespaceConfig(namespaceName);
+		}
 
 		private void validatePropertyRanges() {
 			OwlReasoner owl = request.getOwl();
@@ -88,7 +92,10 @@ public class ModelValidator {
 				if (!info.isConflict(owl)) {
 					sequence.remove();
 				} else {
-					producePropertyReport(e.getKey()).setRangeConflict(info.getRangeInfo());
+					NamespaceValidationConfig config = getNamespaceConfig(info.getProperty().getNamespace());
+					if (config==null || !config.isIgnoreRangeConflicts()) {
+						producePropertyReport(e.getKey()).setRangeConflict(info.getRangeInfo());
+					}
 				}
 			}
 			
