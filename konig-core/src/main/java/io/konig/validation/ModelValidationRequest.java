@@ -1,7 +1,9 @@
 package io.konig.validation;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /*
@@ -39,6 +41,7 @@ public class ModelValidationRequest {
 	private CaseStyleConventions caseStyle = new CaseStyleConventions();
 	private CommentConventions commentConventions;
 	private Set<String> tabularPropertyNamespaces;
+	private Map<String, NamespaceValidationConfig> namespaceMap = new HashMap<>();
 	
 	public ModelValidationRequest(OwlReasoner owl, ShapeManager shapeManager) {
 		this.owl = owl;
@@ -49,14 +52,28 @@ public class ModelValidationRequest {
 		return owl;
 	}
 	
+	public NamespaceValidationConfig getNamespaceConfig(String namespaceName) {
+		return namespaceMap.get(namespaceName);
+	}
+	
+	public void addAll(NamespaceValidationConfig[] array) {
+		if (array != null) {
+			for (NamespaceValidationConfig config : array) {
+				namespaceMap.put(config.getNamespaceName(), config);
+			}
+		}
+	}
+	
+	public void add(NamespaceValidationConfig config) {
+		namespaceMap.put(config.getNamespaceName(), config);
+	}
+	
 	public void addTabularPropertyNamespace(String namespace) {
 		if (tabularPropertyNamespaces == null) {
 			tabularPropertyNamespaces = new HashSet<>();
 		}
 		tabularPropertyNamespaces.add(namespace);
 	}
-	
-	
 
 	public Set<String> getTabularPropertyNamespaces() {
 		return tabularPropertyNamespaces==null ? Collections.emptySet() : tabularPropertyNamespaces;

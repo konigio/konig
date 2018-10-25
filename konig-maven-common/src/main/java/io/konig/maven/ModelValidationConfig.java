@@ -25,6 +25,7 @@ import java.io.File;
 
 import io.konig.validation.CaseStyleConventions;
 import io.konig.validation.CommentConventions;
+import io.konig.validation.NamespaceValidationConfig;
 
 public class ModelValidationConfig {
 	
@@ -33,6 +34,7 @@ public class ModelValidationConfig {
 	
 	private CaseStyleConventions namingConventions;
 	private CommentConventions commentConventions;
+	private NamespaceValidationConfig[] namespaces;
 
 	public File getTextReportFile() {
 		return textReportFile;
@@ -57,6 +59,15 @@ public class ModelValidationConfig {
 	public void setCommentConventions(CommentConventions commentConventions) {
 		this.commentConventions = commentConventions;
 	}
+
+	public NamespaceValidationConfig[] getNamespaces() {
+		return namespaces;
+	}
+
+	public void setNamespaces(NamespaceValidationConfig[] namespaces) {
+		this.namespaces = namespaces;
+	}
+	
 	
 	
 

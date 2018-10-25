@@ -412,6 +412,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				request.setCaseStyle(modelValidation.getNamingConventions());
 			}
 			request.setCommentConventions(modelValidation.getCommentConventions());
+			request.addAll(modelValidation.getNamespaces());
 
 			ModelValidator validator = new ModelValidator();
 			
