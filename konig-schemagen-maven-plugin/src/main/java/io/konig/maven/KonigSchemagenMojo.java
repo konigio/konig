@@ -1161,10 +1161,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			}
 			if (googleCloudPlatform.getCloudsql() != null) {
 				resourceGenerator.add(cloudSqlTableWriter());
-				File mysqlScriptsDir = googleCloudPlatform.getCloudsql().getScripts();
-				if(mysqlScriptsDir != null) {
-					generateMySqlTransformScripts(mysqlScriptsDir);
-				}
+//				File mysqlScriptsDir = googleCloudPlatform.getCloudsql().getScripts();
+//				if(mysqlScriptsDir != null) {
+//					generateMySqlTransformScripts(mysqlScriptsDir);
+//				}
 			}
 			if (googleCloudPlatform.isEnableBigQueryTransform()) {
 				configureBigQueryTransform();
@@ -1253,20 +1253,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		return new CloudSqlTableWriter(generator, folder, abbrevManager());
 	}
 
-	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {
-		if (googleCloudPlatform.isEnableMySqlTransform()) {
-			OldMySqlTransformGenerator generator = new OldMySqlTransformGenerator(shapeManager, outDir, owlReasoner);
-			generator.generateAll();
-			List<Throwable> errorList = generator.getErrorList();
-			if (errorList != null && !errorList.isEmpty()) {
-				Log logger = getLog();
-				for (Throwable e : errorList) {
-					logger.error(e.getMessage());
-				}
-				throw new MojoExecutionException("Failed to generate MySql Transform", errorList.get(0));
-			}
-		}
-	}
+//	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {
+//		if (googleCloudPlatform.isEnableMySqlTransform()) {
+//			OldMySqlTransformGenerator generator = new OldMySqlTransformGenerator(shapeManager, outDir, owlReasoner);
+//			generator.generateAll();
+//			List<Throwable> errorList = generator.getErrorList();
+//			if (errorList != null && !errorList.isEmpty()) {
+//				Log logger = getLog();
+//				for (Throwable e : errorList) {
+//					logger.error(e.getMessage());
+//				}
+//				throw new MojoExecutionException("Failed to generate MySql Transform", errorList.get(0));
+//			}
+//		}
+//	}
 
 	private BigQueryLabelGenerator labelGenerator() {
 		File schemaDir = googleCloudPlatform.getBigquery().getSchema();

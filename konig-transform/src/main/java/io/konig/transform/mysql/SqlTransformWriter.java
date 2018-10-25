@@ -50,6 +50,7 @@ public class SqlTransformWriter implements SqlTransformVisitor {
 		ds.setTransformFile(file);
 		
 		File localFile = file.getLocalFile();
+		localFile.getParentFile().mkdirs();
 		try (FileWriter writer = new FileWriter(localFile)) {
 			writer.write(transform.getInsert().toString());
 		} catch (IOException e) {

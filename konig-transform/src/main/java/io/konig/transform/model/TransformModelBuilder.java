@@ -217,8 +217,8 @@ public class TransformModelBuilder {
 		
 
 		private void addSourceIdProperty(TNodeShape tshape) {
-			
-			if (tshape.getShape().getNodeKind() == NodeKind.IRI) {
+			Shape shape = tshape.getShape();
+			if (shape.getNodeKind() == NodeKind.IRI || tshape.getShape().getIriTemplate()!=null ) {
 				new TIdPropertyShape(this, tshape);
 			}
 			
@@ -302,7 +302,7 @@ public class TransformModelBuilder {
 		private void addTargetIdProperty(TNodeShape tshape) {
 			Shape shape = tshape.getShape();
 			
-			if (shape.getNodeKind() == NodeKind.IRI) {
+			if (shape.getNodeKind() == NodeKind.IRI || shape.getIriTemplate()!=null) {
 				TIdPropertyShape p = new TIdPropertyShape(this, tshape);
 				p.getPropertyGroup().setTargetProperty(p);
 			}
