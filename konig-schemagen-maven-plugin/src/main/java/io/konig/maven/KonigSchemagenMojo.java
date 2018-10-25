@@ -233,7 +233,11 @@ import io.konig.spreadsheet.WorkbookLoader;
 import io.konig.transform.aws.AuroraTransformGenerator;
 import io.konig.transform.bigquery.BigQueryTransformGenerator;
 import io.konig.transform.factory.ShapeRuleFactory;
+import io.konig.transform.model.ShapeTransformException;
 import io.konig.transform.mysql.MySqlTransformGenerator;
+import io.konig.transform.mysql.OldMySqlTransformGenerator;
+import io.konig.transform.mysql.RoutedSqlTransformVisitor;
+import io.konig.transform.mysql.SqlTransformWriter;
 import io.konig.transform.proto.AwsAuroraChannelFactory;
 import io.konig.transform.proto.ShapeModelFactory;
 import io.konig.transform.proto.ShapeModelToShapeRule;
@@ -337,6 +341,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private SimpleLocalNameService localNameService;
     private CompositeEmitter emitter;
     private Project project;
+    private MySqlTransformGenerator mysqlTransformGenerator;
+    private RoutedSqlTransformVisitor mysqlTransformVisitor;
 
 	@Component
 	private MavenProject mavenProject;
@@ -373,6 +379,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generateJsonld();
 			generateAvro();
 			generateJsonSchema();
+			generateSqlTransforms();
 			
 			ShapeMediaTypeLinker linker = new ShapeMediaTypeLinker(mediaTypeNamer);
 			linker.assignAll(shapeManager.listShapes(), owlGraph);
@@ -396,12 +403,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
-				SizeEstimateException | KonigException | SQLException | InvalidDatatypeException e) {
+				SizeEstimateException | KonigException | SQLException | InvalidDatatypeException | ShapeTransformException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
     }
     
+
+	private void generateSqlTransforms() throws ShapeTransformException {
+		if (mysqlTransformGenerator != null) {
+			mysqlTransformGenerator.buildAll(shapeManager, owlReasoner);
+		}
+		
+	}
+
 
 	private void generateModelValidationReport() throws IOException, ConfigurationException {
 		if (modelValidation != null) {
@@ -521,16 +536,34 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 
 
-	private void init() throws MojoExecutionException, IOException {
+	private void init() throws MojoExecutionException, IOException, ConfigurationException {
     	GcpShapeConfig.init();
     	OracleShapeConfig.init();
     	AwsShapeConfig.init();
     	if (tabularShapes==null) {
     		tabularShapes = new TabularShapeFactoryConfig();
     	}
+
     }
 
+	private void initMySqlTransformGenerator() throws ConfigurationException {
+		
+		RoutedSqlTransformVisitor visitor = new RoutedSqlTransformVisitor();
+		if (googleCloudPlatform != null) {
+
+			
+			if (googleCloudPlatform.isEnableBigQueryTransform()) {
+				visitor = new RoutedSqlTransformVisitor();
+//				ProjectFolder folder = new ProjectFolder(project, folder)
+			}
+		}
+		
+	}
+
+
 	private void generateDeploymentScript() throws MojoExecutionException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, IOException, SQLException {
+		
+		
 		
 		GroovyDeploymentScript deploy = googleCloudPlatform.getDeployment();
 		if (deploy != null) {
@@ -1097,6 +1130,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, SQLException {
 		if (googleCloudPlatform != null) {
 			
+
 			Configurator config = configurator();
 			config.configure(googleCloudPlatform);
 			
@@ -1128,10 +1162,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			}
 			if (googleCloudPlatform.getCloudsql() != null) {
 				resourceGenerator.add(cloudSqlTableWriter());
-				File mysqlScriptsDir = googleCloudPlatform.getCloudsql().getScripts();
-				if(mysqlScriptsDir != null) {
-					generateMySqlTransformScripts(mysqlScriptsDir);
-				}
+//				File mysqlScriptsDir = googleCloudPlatform.getCloudsql().getScripts();
+//				if(mysqlScriptsDir != null) {
+//					generateMySqlTransformScripts(mysqlScriptsDir);
+//				}
+			}
+			if (googleCloudPlatform.isEnableBigQueryTransform()) {
+				configureBigQueryTransform();
+			}
+			if (googleCloudPlatform.isEnableMySqlTransform()) {
+				configureCloudSqlTransform();
 			}
 			// For now, commenting out the old CloudSqlJsonGenerator
 			// TODO: delete the code block permanently.
@@ -1172,12 +1212,41 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 					generateTransformScripts(bqScriptsDir);
 				}
 			}
+			
 			generateCamelEtl();
 			generateDeploymentScript();
 		}
 	}
 
 	
+	private void configureCloudSqlTransform() {
+
+		ProjectFolder folder = new ProjectFolder(project, googleCloudPlatform.getCloudsql().getScripts());
+		SqlTransformWriter writer = new SqlTransformWriter(folder);
+		RoutedSqlTransformVisitor visitor = sqlTransformVisitor();
+		visitor.put(Konig.GoogleCloudSqlTable, writer);
+	}
+
+
+	private void configureBigQueryTransform() {
+		
+		ProjectFolder folder = new ProjectFolder(project, googleCloudPlatform.getBigquery().getScripts());
+		SqlTransformWriter writer = new SqlTransformWriter(folder);
+		RoutedSqlTransformVisitor visitor = sqlTransformVisitor();
+		visitor.put(Konig.GoogleBigQueryTable, writer);
+		
+	}
+
+
+	private RoutedSqlTransformVisitor sqlTransformVisitor() {
+		if (mysqlTransformVisitor==null) {
+			mysqlTransformVisitor = new RoutedSqlTransformVisitor();
+			mysqlTransformGenerator = new MySqlTransformGenerator(mysqlTransformVisitor, mysqlTransformVisitor);
+		}
+		return mysqlTransformVisitor;
+	}
+
+
 	private CloudSqlTableWriter cloudSqlTableWriter() {
 		CloudSqlInfo info = googleCloudPlatform.getCloudsql();
 		SqlTableGenerator generator = new SqlTableGenerator(shapeManager);
@@ -1185,20 +1254,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		return new CloudSqlTableWriter(generator, folder, abbrevManager());
 	}
 
-	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {
-		if (googleCloudPlatform.isEnableMySqlTransform()) {
-			MySqlTransformGenerator generator = new MySqlTransformGenerator(shapeManager, outDir, owlReasoner);
-			generator.generateAll();
-			List<Throwable> errorList = generator.getErrorList();
-			if (errorList != null && !errorList.isEmpty()) {
-				Log logger = getLog();
-				for (Throwable e : errorList) {
-					logger.error(e.getMessage());
-				}
-				throw new MojoExecutionException("Failed to generate MySql Transform", errorList.get(0));
-			}
-		}
-	}
+//	private void generateMySqlTransformScripts(File outDir) throws MojoExecutionException {
+//		if (googleCloudPlatform.isEnableMySqlTransform()) {
+//			OldMySqlTransformGenerator generator = new OldMySqlTransformGenerator(shapeManager, outDir, owlReasoner);
+//			generator.generateAll();
+//			List<Throwable> errorList = generator.getErrorList();
+//			if (errorList != null && !errorList.isEmpty()) {
+//				Log logger = getLog();
+//				for (Throwable e : errorList) {
+//					logger.error(e.getMessage());
+//				}
+//				throw new MojoExecutionException("Failed to generate MySql Transform", errorList.get(0));
+//			}
+//		}
+//	}
 
 	private BigQueryLabelGenerator labelGenerator() {
 		File schemaDir = googleCloudPlatform.getBigquery().getSchema();

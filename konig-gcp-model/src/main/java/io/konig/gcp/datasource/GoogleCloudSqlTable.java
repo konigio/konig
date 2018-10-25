@@ -132,6 +132,20 @@ public class GoogleCloudSqlTable  extends TableDataSource {
 	}
 
 	@Override
+	public String getTransformFileName() {
+
+		StringBuilder builder = new StringBuilder();
+		builder.append(instance);
+		builder.append('.');
+		builder.append(database);
+		builder.append('.');
+		builder.append(tableName);
+		builder.append(".dml.sql");
+		
+		return builder.toString();
+	}
+
+	@Override
 	public String getQualifiedTableName() {
 		StringBuilder builder = new StringBuilder();
 		builder.append(database);

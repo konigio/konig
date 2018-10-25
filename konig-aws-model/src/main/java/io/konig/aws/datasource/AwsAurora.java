@@ -107,6 +107,18 @@ public class AwsAurora extends TableDataSource {
 	}
 
 	@Override
+	public String getTransformFileName() {
+
+		StringBuilder builder = new StringBuilder();
+		AwsAuroraTableReference ref = getTableReference();
+		builder.append(ref.getAwsSchema());
+		builder.append('.');
+		builder.append(ref.getAwsTableName());
+		builder.append(".dml.sql");
+		return builder.toString();
+	}
+
+	@Override
 	public String getQualifiedTableName() {
 		if (tableReference==null) {
 			throw new KonigException("tableReference must be defined");
@@ -122,4 +134,5 @@ public class AwsAurora extends TableDataSource {
 	public TableDataSource generateAssociationTable(Shape subjectShape, URI predicate) {
 		throw new UnsupportedOperationException();
 	}
+
 }

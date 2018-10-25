@@ -486,7 +486,6 @@ public class ShapeBuilder {
 
 	public ShapeBuilder iriTemplate(String value) {
 		IriTemplate template = new IriTemplate(value);
-		peekShape().setNodeKind(NodeKind.IRI);
 		peekShape().setIriTemplate(template);
 		return this;
 	}

@@ -36,6 +36,7 @@ public abstract class TableDataSource extends DataSource {
 	private ProjectFile transformFile;
 
 	abstract public String getDdlFileName();
+	abstract public String getTransformFileName();
 	abstract public String getTableIdentifier();
 	abstract public String getSqlDialect();
 	abstract public String getUniqueIdentifier();

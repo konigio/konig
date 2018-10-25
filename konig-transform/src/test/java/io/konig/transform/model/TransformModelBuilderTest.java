@@ -40,6 +40,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 import io.konig.shacl.ShapeManager;
@@ -54,6 +55,49 @@ public class TransformModelBuilderTest {
 	protected ShapeBuilder shapeBuilder = new ShapeBuilder(shapeManager);
 	
 	@Test
+	public void testIriTemplate() throws Exception {
+		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
+		URI sourceShapeId = uri("http://example.com/shapes/SourcePersonShape");
+		URI personId = uri("http://example.com/ns/alias/person_id");
+		
+		shapeBuilder
+			.beginShape(sourceShapeId)
+				.targetClass(Schema.Person)
+				.iriTemplate("http://example.com/resources/Person/{person_id}")
+				.beginProperty(personId)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+				.beginDataSource(GoogleCloudSqlTable.Builder.class)
+					.id(uri("http://example.com/database/Person"))
+					.database("exampleDatabase")
+					.instance("exampleInstance")
+					.name("Person")
+				.endDataSource()
+			.endShape()
+			.beginShape(targetShapeId)
+				.targetClass(Schema.Person)
+				.nodeKind(NodeKind.IRI)
+				.beginDataSource(GoogleCloudSqlTable.Builder.class)
+					.id(uri("http://example.com/database/Person"))
+					.database("exampleDatabase")
+					.instance("exampleInstance")
+					.name("Person_STG")
+				.endDataSource()
+			.endShape();
+		
+		Shape shape = shapeManager.getShapeById(targetShapeId);
+		DataSource ds = shape.getShapeDataSource().get(0);
+		
+		TNodeShape rootShape = builder.build(shape, ds);
+	
+		TPropertyShape idProperty = rootShape.getProperty(Konig.id);
+		assertTrue(idProperty != null);
+		
+	}
+	
+	@Ignore
 	public void testConcat() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/TargetPersonShape");
 		URI sourceShapeId = uri("http://example.com/shapes/SourcePersonShape");
@@ -109,7 +153,7 @@ public class TransformModelBuilderTest {
 		assertTrue(e != null);
 	}
 	
-	@Test
+	@Ignore
 	public void testUnmatchedProperty() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/TargetPersonShape");
 		URI sourceShapeId = uri("http://example.com/shapes/SourcePersonShape");
@@ -155,7 +199,7 @@ public class TransformModelBuilderTest {
 		assertTrue(e != null);
 	}
 	
-	@Test
+	@Ignore
 	public void testExactMatchDatatypeProperty() throws Exception {
 		
 		URI shapeId = uri("http://example.com/shapes/TargetPersonShape");
@@ -231,7 +275,7 @@ public class TransformModelBuilderTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testRenameDatatypeProperty() throws Exception {
 		
 		URI shapeId = uri("http://example.com/shapes/TargetPersonShape");

@@ -33,7 +33,7 @@ import io.konig.transform.proto.AbstractShapeModelToShapeRuleTest;
 public class MySqlTransformGeneratorTest extends AbstractShapeModelToShapeRuleTest  {
 
 	File outDir = new File("target/test/mysql-transform");
-	MySqlTransformGenerator generator = new MySqlTransformGenerator(shapeManager, outDir, owlReasoner);
+	OldMySqlTransformGenerator generator = new OldMySqlTransformGenerator(shapeManager, outDir, owlReasoner);
 	
 	@Test
 	public void testLoad() throws Throwable {
