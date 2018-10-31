@@ -176,6 +176,7 @@ public class WorkbookLoader {
 	private static final String DEFAULT_FOR = "Default For";
 	private static final String TERM_STATUS = "Status";
 	private static final String TABULAR_ORIGIN_SHAPE = "Tabular Origin Shape";
+	private static final String PROCESSING_INSTRUCTIONS = "Processing Instructions";
 
 	private static final String SETTING_NAME = "Setting Name";
 	private static final String SETTING_VALUE = "Setting Value";
@@ -527,6 +528,7 @@ public class WorkbookLoader {
 		private int shapeIriTemplateCol = UNDEFINED;
 		private int defaultShapeForCol = UNDEFINED;
 		private int tabularOriginShapeCol = UNDEFINED;
+		private int shapeProcessingCol = UNDEFINED;
 
 		private int pcShapeIdCol = UNDEFINED;
 		private int pcPropertyIdCol = UNDEFINED;
@@ -2478,7 +2480,7 @@ public class WorkbookLoader {
 			}
 			p.setIn(valueIn);
 			p.setStereotype(stereotype);
-			if(securityClassification!= null && !securityClassification.isEmpty()) {
+			if(!securityClassification.isEmpty()) {
 				p.setQualifiedSecurityClassification(securityClassification);
 			}	
 			if (formula != null) {
@@ -2969,6 +2971,7 @@ public class WorkbookLoader {
 			String bigqueryTable = bigQueryTableId(row, targetClass);
 			List<URI> applicationList = uriList(row, defaultShapeForCol);
 			List<URI> shapeOfList = uriList(row, inputShapeOfCol);
+			List<URI> shapeProcessing = uriList(row, shapeProcessingCol);
 			String orList = stringValue(row, oneOfCol);
 			List<Function> dataSourceList = dataSourceList(row);
 
@@ -2993,6 +2996,10 @@ public class WorkbookLoader {
 			shape.setTargetClass(targetClass);
 			setDefaultSubject(targetClass);
 			
+			if (!shapeProcessing.isEmpty()) {
+				shape.setShapeProcessing(new LinkedHashSet<>(shapeProcessing));
+			}
+			
 			edge(targetClass, RDF.TYPE, OWL.CLASS);
 			
 			shape.setAggregationOf(aggregationOf);
@@ -3014,7 +3021,7 @@ public class WorkbookLoader {
 			
 			shape.setDefaultShapeFor(applicationList);
 			
-			if (applicationList != null && !applicationList.isEmpty()) {
+			if (!applicationList.isEmpty()) {
 				for (URI uri : applicationList) {
 					edge(uri, RDF.TYPE, Schema.SoftwareApplication);
 				}
@@ -3024,7 +3031,9 @@ public class WorkbookLoader {
 				dataSourceMap.put(shapeId, dataSourceList);
 			}
 			
-			shape.setInputShapeOf(shapeOfList);
+			if (!shapeOfList.isEmpty()) {
+				shape.setInputShapeOf(shapeOfList);
+			}
 			shape.setTermStatus(termStatus);
 			termStatus(termStatus);
 
@@ -3210,7 +3219,7 @@ public class WorkbookLoader {
 		private void readShapeHeader(Sheet sheet) {
 			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = 
 				shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = 
-				shapeIriTemplateCol = tabularOriginShapeCol = termStatusCol = UNDEFINED;
+				shapeIriTemplateCol = tabularOriginShapeCol = termStatusCol = shapeProcessingCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -3274,6 +3283,10 @@ public class WorkbookLoader {
 					case TERM_STATUS :
 						termStatusCol = i;
 						break;
+						
+					case PROCESSING_INSTRUCTIONS :
+						shapeProcessingCol = i;
+						break;
 
 					}
 				}
@@ -3314,7 +3327,7 @@ public class WorkbookLoader {
 			if (prior != null) {
 				logger.warn("Duplicate definition of named individual: {}", individualId.stringValue());
 			}
-			if (typeList != null) {
+			if (!typeList.isEmpty()) {
 				for (URI value : typeList) {
 					if (!value.equals(Schema.Enumeration)) {
 						graph.edge(individualId, RDF.TYPE, value);
@@ -3479,7 +3492,7 @@ public class WorkbookLoader {
 				graph.edge(propertyId, RDFS.COMMENT, comment);
 			}
 
-			if (domain != null) {
+			if (!domain.isEmpty()) {
 				if (domain.size() == 1) {
 					graph.edge(propertyId, RDFS.DOMAIN, domain.get(0));
 				} else {
@@ -3489,7 +3502,7 @@ public class WorkbookLoader {
 				}
 			}
 
-			if (range != null) {
+			if (!range.isEmpty()) {
 				if (range.size() == 1) {
 					graph.edge(propertyId, RDFS.RANGE, range.get(0));
 				} else {
@@ -3504,7 +3517,7 @@ public class WorkbookLoader {
 			}
 			termStatus(propertyId, termStatus);
 			
-			if(securityClassification!= null && !securityClassification.isEmpty())
+			if(!securityClassification.isEmpty())
 			{
 			  for (URI uri : securityClassification) {
 			    graph.edge(propertyId, Konig.securityClassification, uri);					
@@ -3595,7 +3608,7 @@ public class WorkbookLoader {
 					}
 				}
 			}
-			return result;
+			return result==null ? Collections.emptyList() : result;
 		}
 
 		private void readPropertyHeader(Sheet sheet) throws SpreadsheetException {
@@ -3717,17 +3730,14 @@ public class WorkbookLoader {
 				if (comment != null) {
 					graph.edge(classId, RDFS.COMMENT, comment);
 				}
-				if (subclassOf != null && !subclassOf.isEmpty()) {
-					for (URI subclassId : subclassOf) {
-						graph.edge(classId, RDFS.SUBCLASSOF, subclassId);
-						graph.edge(subclassId, RDF.TYPE, OWL.CLASS);
-					}
-
+				for (URI subclassId : subclassOf) {
+					graph.edge(classId, RDFS.SUBCLASSOF, subclassId);
+					graph.edge(subclassId, RDF.TYPE, OWL.CLASS);
 				}
 				
 				termStatus(classId, termStatus);
 			}
-			if (subjectArea !=null && !subjectArea.isEmpty()) {
+			if (!subjectArea.isEmpty()) {
 				addNamespace("skos", SKOS.NAMESPACE);
 				for (URI subject : subjectArea) {
 					edge(classId, SKOS.BROADER, subject);

@@ -52,8 +52,12 @@ public class BigQueryInfo {
 	private String shapeIriPattern;
 	@Parameter(property="konig.gcp.bigquery.shapeIriReplacement")
 	private String shapeIriReplacement;
+	
 	@Parameter(property="konig.gcp.bigquery.propertyNameSpace")
 	private String propertyNameSpace;
+	
+	@Parameter(property="konig.gcp.bigquery.transformScope")
+	private TransformProcessingScope transformScope;
 	
 	public File getDirectory() {
 		return directory;
@@ -119,6 +123,12 @@ public class BigQueryInfo {
 
 	public void setPropertyNameSpace(String propertyNameSpace) {
 		this.propertyNameSpace = propertyNameSpace;
+	}
+	public TransformProcessingScope getTransformScope() {
+		return transformScope;
+	}
+	public void setTransformScope(TransformProcessingScope transformScope) {
+		this.transformScope = transformScope;
 	}
 	
 	
