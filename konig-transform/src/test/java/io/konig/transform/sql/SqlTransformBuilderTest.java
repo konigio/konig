@@ -30,7 +30,12 @@ import java.util.Optional;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
@@ -38,6 +43,7 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.Shape;
@@ -47,11 +53,15 @@ import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.sql.query.AliasExpression;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.FromExpression;
+import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.PathExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.SelectExpression;
+import io.konig.sql.query.SimpleCase;
+import io.konig.sql.query.SimpleWhenClause;
 import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.StringLiteralExpression;
+import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.TableNameExpression;
 import io.konig.sql.query.UpdateExpression;
@@ -70,6 +80,136 @@ public class SqlTransformBuilderTest {
 	
 	private SqlTransformBuilder sqlBuilder = new SqlTransformBuilder();
 	
+	@Test
+	public void testNamedIndividualReference() throws Exception {
+
+		URI sourceShapeId = uri("http://example.com/shapes/SourcePersonShape");
+		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
+		URI enumShapeId = uri("http://example.com/shapes/EnumShape");
+		URI gender_code = uri("http://example.com/ns/gender_code");
+		URI codeValue = uri("http://example.com/ns/codeValue");
+		
+		
+		shapeBuilder
+			.beginShape(sourceShapeId)
+				.targetClass(Schema.Person)
+				.nodeKind(NodeKind.IRI)
+				.beginProperty(gender_code)
+					.datatype(XMLSchema.STRING)
+					.minCount(0)
+					.maxCount(1)
+					.beginFormula()
+						.beginPath()
+							.out(Schema.gender)
+							.out(codeValue)
+						.endPath()
+					.endFormula()
+				.endProperty()
+				.beginDataSource(GoogleBigQueryTable.Builder.class)
+					.id(uri("http://example.com/bq/SourcePerson"))
+					.datasetId("exampleDataset")
+					.tableId("SourcePerson")
+				.endDataSource()
+			.endShape()
+			.beginShape(targetShapeId)
+				.targetClass(Schema.Person)
+				.nodeKind(NodeKind.IRI)
+				.beginProperty(Schema.gender)
+					.valueShape(enumShapeId)
+					.valueClass(Schema.GenderType)
+				.endProperty()
+				.beginDataSource(GoogleBigQueryTable.Builder.class)
+					.id(uri("http://example.com/bq/TargetPerson"))
+					.datasetId("exampleDataset")
+					.tableId("TargetPerson")
+				.endDataSource()
+			.endShape()
+			.beginShape(enumShapeId)
+				.targetClass(Schema.Enumeration)
+				.nodeKind(NodeKind.IRI)
+				.beginProperty(Schema.name)
+					.datatype(XMLSchema.STRING)
+					.minCount(1)
+					.maxCount(1)
+				.endProperty()
+			.endShape();
+
+		graph.edge(Schema.GenderType, RDFS.SUBCLASSOF, Schema.Enumeration);
+		graph.edge(Schema.Male, RDF.TYPE, Schema.GenderType);
+		graph.edge(Schema.Male, Schema.name, literal("Male Gender"));
+		graph.edge(Schema.Male, codeValue, literal("M"));
+		
+		graph.edge(Schema.Female, RDF.TYPE, Schema.GenderType);
+		graph.edge(Schema.Female, Schema.name, literal("Female Gender"));
+		graph.edge(Schema.Female, codeValue, literal("F"));
+
+		Shape shape = shapeManager.getShapeById(targetShapeId);
+		DataSource ds = shape.getShapeDataSource().get(0);
+		
+		TNodeShape tshape = modelBuilder.build(shape, ds);
+
+		SqlTransform transform = new SqlTransform(tshape, new OwlReasoner(graph));
+		sqlBuilder.build(transform);
+		
+		InsertStatement insert = transform.getInsert();
+		assertTrue(insert.getColumns().stream().filter(c -> c.getColumnName().equals("gender")).findAny().isPresent());
+		SelectExpression select = insert.getSelectQuery();
+		Optional<AliasExpression> gender = 	select.getValues().stream()
+				.filter(e -> e instanceof AliasExpression)
+				.map(e -> (AliasExpression) e)
+				.filter(a -> a.getAlias().equals("gender"))
+				.findFirst();
+		
+		assertTrue(gender.isPresent());
+		assertTrue(gender.get().getExpression() instanceof StructExpression);
+		StructExpression struct = (StructExpression) gender.get().getExpression();
+		
+		SimpleCase idCase = caseExpression(struct, "id");
+		assertTrue(idCase.getCaseOperand() instanceof ColumnExpression);
+		ColumnExpression idCol = (ColumnExpression) idCase.getCaseOperand();
+		assertEquals("gender_code", idCol.getColumnName());
+		
+		String male = whenClause(idCase, "M");
+		assertEquals("Male", male);
+		String female = whenClause(idCase, "F");
+		assertEquals("Female", female);
+		
+		SimpleCase nameCase = caseExpression(struct, "name");
+		assertEquals("Male Gender", whenClause(nameCase, "M"));
+		assertEquals("Female Gender", whenClause(nameCase, "F"));
+	}
+	
+
+	private String whenClause(SimpleCase idCase, String operand) {
+		Optional<String> when = idCase.getWhenClauseList().stream()
+				.filter(e -> e.getWhenOperand() instanceof StringLiteralExpression)
+				.filter(e -> ((StringLiteralExpression)e.getWhenOperand()).getValue().equals(operand))
+				.filter(e -> e.getResult() instanceof StringLiteralExpression)
+				.map(e -> ((StringLiteralExpression) e.getResult()).getValue())
+				.findFirst();
+		assertTrue(when.isPresent());
+		return when.get();
+	}
+
+
+	private SimpleCase caseExpression(StructExpression struct, String columnName) {
+		
+		Optional<SimpleCase> e = 
+				struct.getValues().stream().filter(v -> v instanceof AliasExpression)
+				.map(v -> (AliasExpression)v)
+				.filter(v -> v.getAlias().equals(columnName))
+				.filter(v -> v.getExpression() instanceof SimpleCase)
+				.map(v -> (SimpleCase) v.getExpression())
+				.findFirst();
+		assertTrue(e.isPresent());
+		return e.get();
+	}
+
+
+	private Value literal(String value) {
+		return new LiteralImpl(value);
+	}
+
 	@Test
 	public void testIriTemplate() throws Exception {
 		
@@ -106,14 +246,13 @@ public class SqlTransformBuilderTest {
 		
 		TNodeShape rootShape = modelBuilder.build(shape, ds);
 		
-		SqlTransform transform = new SqlTransform(rootShape);
+		SqlTransform transform = new SqlTransform(rootShape, new OwlReasoner(new MemoryGraph()));
 		sqlBuilder.build(transform);
 		
-		System.out.println(transform.getInsert().toString());
 		
 		
 	}
-	@Ignore
+	@Test
 	public void testUniqueKey() throws Exception {
 		
 		URI shapeId = uri("http://example.com/shapes/TargetPersonShape");
@@ -168,7 +307,7 @@ public class SqlTransformBuilderTest {
 		
 		TNodeShape rootShape = modelBuilder.build(shape, ds);
 		
-		SqlTransform transform = new SqlTransform(rootShape);
+		SqlTransform transform = new SqlTransform(rootShape, new OwlReasoner(new MemoryGraph()));
 		sqlBuilder.build(transform);
 		
 		SelectExpression select = transform.getInsert().getSelectQuery();
@@ -211,7 +350,7 @@ public class SqlTransformBuilderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testExactMatchDatatypeProperty() throws Exception {
 		
 		URI shapeId = uri("http://example.com/shapes/TargetPersonShape");
@@ -246,7 +385,7 @@ public class SqlTransformBuilderTest {
 		
 		TNodeShape rootShape = modelBuilder.build(shape, ds);
 		
-		SqlTransform transform = new SqlTransform(rootShape);
+		SqlTransform transform = new SqlTransform(rootShape, new OwlReasoner(new MemoryGraph()));
 		sqlBuilder.build(transform);
 		
 		SelectExpression select = transform.getSelectExpression();
@@ -267,7 +406,7 @@ public class SqlTransformBuilderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRenameDatatypeProperty() throws Exception {
 
 		URI shapeId = uri("http://example.com/shapes/TargetPersonShape");
@@ -308,7 +447,7 @@ public class SqlTransformBuilderTest {
 		
 		TNodeShape rootShape = modelBuilder.build(shape, ds);
 		
-		SqlTransform transform = new SqlTransform(rootShape);
+		SqlTransform transform = new SqlTransform(rootShape, new OwlReasoner(new MemoryGraph()));
 		sqlBuilder.build(transform);
 		
 		SelectExpression select = transform.getSelectExpression();
@@ -329,8 +468,6 @@ public class SqlTransformBuilderTest {
 		assertTrue(item instanceof TableNameExpression);
 		TableNameExpression tableName = (TableNameExpression) item;
 		assertEquals("SourcePerson", tableName.getTableName());
-		
-		System.out.println(transform.getInsert().toString());
 	}
 
 

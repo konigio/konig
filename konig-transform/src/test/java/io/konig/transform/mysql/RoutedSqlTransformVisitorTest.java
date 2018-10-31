@@ -19,8 +19,8 @@ package io.konig.transform.mysql;
  * limitations under the License.
  * #L%
  */
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +30,8 @@ import org.mockito.MockitoAnnotations;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
+import io.konig.core.OwlReasoner;
+import io.konig.core.impl.MemoryGraph;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
@@ -79,7 +81,7 @@ public class RoutedSqlTransformVisitorTest {
 		assertTrue(accepted);
 		
 		TNodeShape targetShape = new TNodeShape(shape);
-		SqlTransform transform = new SqlTransform(targetShape);
+		SqlTransform transform = sqlTransform(targetShape);
 		TDataSource tds = new TDataSource(ds, targetShape);
 		targetShape.setTdatasource(tds);
 		
@@ -100,6 +102,13 @@ public class RoutedSqlTransformVisitorTest {
 		
 		
 
+	}
+
+	private SqlTransform sqlTransform(TNodeShape targetShape) {
+		MemoryGraph graph = new MemoryGraph();
+		OwlReasoner reasoner = new OwlReasoner(graph);
+		
+		return new SqlTransform(targetShape, reasoner);
 	}
 
 	private URI uri(String value) {

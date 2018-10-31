@@ -52,7 +52,9 @@ public class SimpleCase extends AbstractExpression implements CaseSpecification 
 	public void print(PrettyPrintWriter out) {
 		
 		out.print("CASE ");
-		caseOperand.print(out);
+		if (caseOperand != null) {
+			caseOperand.print(out);
+		}
 		out.println();
 		out.pushIndent();
 		for (SimpleWhenClause when : whenClauseList) {

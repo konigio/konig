@@ -37,11 +37,15 @@ abstract public class BaseTPropertyShape implements TPropertyShape {
 		this.owner = owner;
 	}
 	
-	protected void init() {
+	protected void init(boolean isTarget) {
 
 		owner.add(this);
 		TProperty group = owner.getTclass().produceOut(getPredicate());
-		group.addCandidateSourceProperty(this);
+		if (isTarget) {
+			group.setTargetProperty(this);
+		} else {
+			group.addCandidateSourceProperty(this);
+		}
 	}
 
 	@Override
@@ -69,7 +73,7 @@ abstract public class BaseTPropertyShape implements TPropertyShape {
 	}
 	
 	public String toString() {
-		return getClass().getSimpleName() + "[" + getPredicate().getLocalName() + "]";
+		return getClass().getSimpleName() + "[" + getPath() + "]";
 	}
 
 

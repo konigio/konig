@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.Context;
 import io.konig.core.Term;
@@ -57,9 +58,20 @@ public class FormulaBuilder implements FormulaConsumer {
 	public FunctionBuilder beginFunction(String functionName) {
 		return new FunctionBuilder(this, functionName);
 	}
+	
+	public FormulaBuilder iri(String value) {
+		FullyQualifiedIri id = new FullyQualifiedIri(new URIImpl(value));
+		formula = QuantifiedExpression.wrap(id);
+		return this;
+	}
 
 	public QuantifiedExpression getFormula() {
 		return formula;
+	}
+	
+	
+	public IfFunctionBuilder<FormulaBuilder> beginIf() {
+		return new IfFunctionBuilder<FormulaBuilder>(this);
 	}
 
 	@Override
@@ -81,6 +93,192 @@ public class FormulaBuilder implements FormulaConsumer {
 			return predicate;
 		}
 		
+		
+	}
+	
+	public static class BinaryRelationBuilder<T extends FormulaConsumer> {
+		private T formulaConsumer;
+		private BinaryOperator operator;
+		private NumericExpression left;
+		private NumericExpression right;
+		
+		public BinaryRelationBuilder(T formulaConsumer, BinaryOperator operator) {
+			this.formulaConsumer = formulaConsumer;
+			this.operator = operator;
+		}
+		
+		
+		
+		public T endEquals() {
+			BinaryRelationalExpression binary = new BinaryRelationalExpression(operator, left, right);
+			
+			formulaConsumer.setFormula(QuantifiedExpression.wrap(binary));
+			return formulaConsumer;
+		}
+		
+		public LeftNumericBuilder<BinaryRelationBuilder<T>> beginLeft() {
+			return new LeftNumericBuilder<BinaryRelationBuilder<T>>(new NumericExpressionConsumer(){
+
+				@Override
+				public void setNumericExpression(NumericExpression numeric) {
+					left = numeric;
+				}
+				
+			}, this);
+		}
+		
+		public RightNumericBuilder<BinaryRelationBuilder<T>> beginRight() {
+			return new RightNumericBuilder<BinaryRelationBuilder<T>>(new NumericExpressionConsumer(){
+
+				@Override
+				public void setNumericExpression(NumericExpression numeric) {
+					right = numeric;
+				}
+				
+			}, this);
+		}
+		
+		void setLeft(NumericExpression left) {
+			this.left = left;
+		}
+
+
+		void setRight(NumericExpression right) {
+			this.right = right;
+		}
+		
+		
+		
+	}
+	
+	public static class LeftNumericBuilder<T> extends NumericExpressionBuilder<T> {
+
+		public LeftNumericBuilder(NumericExpressionConsumer numericConsumer, T formulaConsumer) {
+			super(numericConsumer, formulaConsumer);
+		}
+		
+		public T endLeft() {
+			return end();
+		}
+		
+	}
+	
+	public static class RightNumericBuilder<T> extends NumericExpressionBuilder<T> {
+
+		public RightNumericBuilder(NumericExpressionConsumer numericConsumer, T formulaConsumer) {
+			super(numericConsumer, formulaConsumer);
+		}
+		
+		public T endRight() {
+			return end();
+		}
+		
+	}
+	
+	public static class NumericExpressionBuilder<T> extends FormulaBuilder {
+		private NumericExpressionConsumer numericConsumer;
+		private T formulaConsumer;
+		
+		public NumericExpressionBuilder(NumericExpressionConsumer numericConsumer, T formulaConsumer) {
+			this.numericConsumer = numericConsumer;
+			this.formulaConsumer = formulaConsumer;
+		}
+		
+		
+		protected T end() {
+			numericConsumer.setNumericExpression(getFormula().asNumericExpression());
+			return formulaConsumer;
+		}
+	}
+	
+	
+	public static class IfFunctionBuilder<T extends FormulaConsumer> {
+		private T formulaConsumer;
+		private Expression condition;
+		private Expression whenTrue;
+		private Expression whenFalse;
+		
+		
+		public IfFunctionBuilder(T formulaConsumer) {
+			this.formulaConsumer = formulaConsumer;
+		}
+
+		public IfConditionBuilder<T> beginCondition() {
+			return new IfConditionBuilder<T>(this);
+		}
+		
+		public WhenTrueBuilder<T> beginWhenTrue() {
+			return new WhenTrueBuilder<T>(this);
+		}
+		
+		public T endIf() {
+			IfFunction func = new IfFunction(condition, whenTrue, whenFalse);
+			formulaConsumer.setFormula(QuantifiedExpression.wrap(func));
+			return formulaConsumer;
+		}
+		
+		void setFormulaConsumer(T formulaConsumer) {
+			this.formulaConsumer = formulaConsumer;
+		}
+		void setCondition(Expression condition) {
+			this.condition = condition;
+		}
+		void setWhenTrue(Expression whenTrue) {
+			this.whenTrue = whenTrue;
+		}
+		void setWhenFalse(Expression whenFalse) {
+			this.whenFalse = whenFalse;
+		}
+		
+		
+		
+		
+	}
+	
+	public static class IfConditionBuilder<T extends FormulaConsumer> extends FormulaBuilder {
+		private IfFunctionBuilder<T> ifFunction;
+
+		public IfConditionBuilder(IfFunctionBuilder<T> ifFunction) {
+			this.ifFunction = ifFunction;
+		}
+		
+		public IfFunctionBuilder<T> endCondition() {
+			ifFunction.setCondition(getFormula());
+			return ifFunction;
+		}
+		
+		public BinaryRelationBuilder<IfConditionBuilder<T>> beginEquals() {
+			return new BinaryRelationBuilder<IfConditionBuilder<T>>(this, BinaryOperator.EQUALS);
+		}
+		
+	}
+	
+	public static class WhenTrueBuilder<T extends FormulaConsumer> extends FormulaBuilder {
+		private IfFunctionBuilder<T> ifFunction;
+
+		public WhenTrueBuilder(IfFunctionBuilder<T> ifFunction) {
+			this.ifFunction = ifFunction;
+		}
+		
+		public IfFunctionBuilder<T> endWhenTrue() {
+			ifFunction.setWhenTrue(getFormula());
+			return ifFunction;
+		}
+		
+	}
+
+	
+	public static class WhenFalseBuilder<T extends FormulaConsumer> extends FormulaBuilder {
+		private IfFunctionBuilder<T> ifFunction;
+
+		public WhenFalseBuilder(IfFunctionBuilder<T> ifFunction) {
+			this.ifFunction = ifFunction;
+		}
+		
+		public IfFunctionBuilder<T> endWhenFalse() {
+			ifFunction.setWhenFalse(getFormula());
+			return ifFunction;
+		}
 		
 	}
 	

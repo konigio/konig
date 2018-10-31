@@ -29,16 +29,18 @@ import io.konig.formula.DirectionStep;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
 
-public class OutTPropertyShape extends BaseTPropertyShape {
+public class OutTPropertyShape extends BaseTPropertyShape implements TPathPropertyShape {
 
 	private DirectionStep step;
 	private SimpleTPropertyShape baseProperty;
+	private TNodeShape valueShape;
+	private TPathPropertyShape next;
 	
-	public OutTPropertyShape(TNodeShape owner, DirectionStep step, SimpleTPropertyShape baseProperty) {
+	public OutTPropertyShape(TNodeShape owner, DirectionStep step, SimpleTPropertyShape baseProperty, boolean isTargetProperty) {
 		super(owner);
 		this.step = step;
 		this.baseProperty = baseProperty;
-		init();
+		init(isTargetProperty);
 	}
 
 	@Override
@@ -48,7 +50,9 @@ public class OutTPropertyShape extends BaseTPropertyShape {
 
 	@Override
 	protected TExpression createValueExpression() {
-		return new ValueOfExpression(baseProperty);
+		return (next == null) ?
+			new ValueOfExpression(baseProperty) :
+			new TStructExpression(this);
 	}
 
 	@Override
@@ -75,6 +79,27 @@ public class OutTPropertyShape extends BaseTPropertyShape {
 	}
 
 
+	@Override
+	public TNodeShape getValueShape() {
+		return valueShape;
+	}
 
+	public void setValueShape(TNodeShape valueShape) {
+		this.valueShape = valueShape;
+	}
+	
+	@Override
+	public TPathPropertyShape getNext() {
+		return next;
+	}
+
+	@Override
+	public void setNext(TPathPropertyShape next) {
+		this.next = next;
+	}
+
+	public SimpleTPropertyShape getBaseProperty() {
+		return baseProperty;
+	}
 
 }

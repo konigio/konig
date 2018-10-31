@@ -46,6 +46,17 @@ public class QuantifiedExpression extends Expression {
 		String[] text = toString().split("\\n");
 		return text[text.length-1];
 	}
+	public static QuantifiedExpression wrap(ValueLogical valueLogical) {
+		
+		ConditionalAndExpression and = new ConditionalAndExpression();
+		and.add(valueLogical);
+		
+		ConditionalOrExpression or = new ConditionalOrExpression();
+		or.add(and);
+		
+		return new QuantifiedExpression(or, null);
+		
+	}
 	
 	public static QuantifiedExpression wrap(NumericExpression numeric) {
 		ValueLogical valueLogical = new BinaryRelationalExpression(null, numeric, null);
@@ -59,7 +70,7 @@ public class QuantifiedExpression extends Expression {
 		return new QuantifiedExpression(or, null);
 		
 	}
-	
+		
 	public static QuantifiedExpression wrap(PrimaryExpression primary) {
 		UnaryExpression unary = new UnaryExpression(primary);
 		MultiplicativeExpression mult = new MultiplicativeExpression(unary);
