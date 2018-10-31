@@ -21,25 +21,8 @@ package io.konig.transform.model;
  */
 
 
-public class ValueOfExpression implements TIriTemplateItem {
+public interface TPathPropertyShape extends TPropertyShape {
 
-	private TPropertyShape tpropertyShape;
-
-	public ValueOfExpression(TPropertyShape tpropertyShape) {
-		this.tpropertyShape = tpropertyShape;
-	}
-
-	public TPropertyShape getTpropertyShape() {
-		return tpropertyShape;
-	}
-	
-	public String toString() {
-		return "ValueOfExpression[" + tpropertyShape.getPath() + "]";
-	}
-
-	@Override
-	public TPropertyShape valueOf() {
-		return tpropertyShape;
-	}
-	
+	TPathPropertyShape getNext();
+	void setNext(TPathPropertyShape next);
 }

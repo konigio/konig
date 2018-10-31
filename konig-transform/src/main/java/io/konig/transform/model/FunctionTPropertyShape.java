@@ -32,11 +32,11 @@ public class FunctionTPropertyShape extends BaseTPropertyShape {
 	private PropertyConstraint constraint;
 
 
-	public FunctionTPropertyShape(TExpressionFactory expressionFactory, TNodeShape owner, PropertyConstraint constraint) {
+	public FunctionTPropertyShape(TExpressionFactory expressionFactory, TNodeShape owner, PropertyConstraint constraint, boolean isTargetProperty) {
 		super(owner);
 		this.expressionFactory = expressionFactory;
 		this.constraint = constraint;
-		init();
+		init(isTargetProperty);
 	}
 
 	@Override

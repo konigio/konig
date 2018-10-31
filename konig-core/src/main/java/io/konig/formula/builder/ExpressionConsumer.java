@@ -1,8 +1,8 @@
-package io.konig.transform.model;
+package io.konig.formula.builder;
 
 /*
  * #%L
- * Konig Transform
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,25 +21,9 @@ package io.konig.transform.model;
  */
 
 
-public class ValueOfExpression implements TIriTemplateItem {
+import io.konig.formula.Expression;
 
-	private TPropertyShape tpropertyShape;
+public interface ExpressionConsumer {
 
-	public ValueOfExpression(TPropertyShape tpropertyShape) {
-		this.tpropertyShape = tpropertyShape;
-	}
-
-	public TPropertyShape getTpropertyShape() {
-		return tpropertyShape;
-	}
-	
-	public String toString() {
-		return "ValueOfExpression[" + tpropertyShape.getPath() + "]";
-	}
-
-	@Override
-	public TPropertyShape valueOf() {
-		return tpropertyShape;
-	}
-	
+	void setExpression(Expression e);
 }

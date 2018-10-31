@@ -506,6 +506,22 @@ public class OwlReasoner {
 		return RDFS.DATATYPE;
 	}
 	
+	public Resource leastCommonSuperClass(Collection<URI> classes) {
+		Resource result = null;
+		for (URI owlClass : classes) {
+			if (result == null) {
+				result = owlClass;
+			} else {
+				result = leastCommonSuperClass(result, owlClass);
+				if (result.equals(OWL.THING)) {
+					return OWL.THING;
+				}
+			}
+			
+		}
+		return result;
+	}
+	
 	/**
 	 * Compute the least common super class between two given classes.
 	 * @param aClass The first class

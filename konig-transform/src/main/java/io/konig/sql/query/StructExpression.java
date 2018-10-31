@@ -26,6 +26,9 @@ import io.konig.core.io.PrettyPrintWriter;
 public class StructExpression extends BaseValueContainer
 implements ItemExpression, ValueContainer {
 	
+	public StructExpression() {
+		
+	}
 	
 	@Override
 	public void print(PrettyPrintWriter out) {

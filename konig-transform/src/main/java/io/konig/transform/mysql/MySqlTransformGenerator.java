@@ -61,7 +61,7 @@ public class MySqlTransformGenerator {
 			List<DataSource> list = datasourceList(shape);
 			for (DataSource ds : list) {
 				TNodeShape model = modelBuilder.build(shape, ds);
-				SqlTransform transform = new SqlTransform(model);
+				SqlTransform transform = new SqlTransform(model, reasoner);
 				transformBuilder.build(transform);
 				visitor.visit(transform);
 			}

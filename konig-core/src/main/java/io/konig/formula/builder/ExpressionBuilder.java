@@ -1,8 +1,8 @@
-package io.konig.transform.model;
+package io.konig.formula.builder;
 
 /*
  * #%L
- * Konig Transform
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
@@ -21,25 +21,27 @@ package io.konig.transform.model;
  */
 
 
-public class ValueOfExpression implements TIriTemplateItem {
+import io.konig.formula.Expression;
+import io.konig.formula.QuantifiedExpression;
 
-	private TPropertyShape tpropertyShape;
-
-	public ValueOfExpression(TPropertyShape tpropertyShape) {
-		this.tpropertyShape = tpropertyShape;
-	}
-
-	public TPropertyShape getTpropertyShape() {
-		return tpropertyShape;
-	}
-	
-	public String toString() {
-		return "ValueOfExpression[" + tpropertyShape.getPath() + "]";
-	}
+public class ExpressionBuilder<T extends ExpressionConsumer> implements ExpressionConsumer {
+	private Expression expression;
 
 	@Override
-	public TPropertyShape valueOf() {
-		return tpropertyShape;
+	public void setExpression(Expression e) {
+		expression = e;
 	}
+	
+	public Expression getExpression() {
+		return expression;
+	}
+	
+	public QuantifiedExpression getQuantifiedExpression() {
+		if (expression instanceof QuantifiedExpression) {
+			return (QuantifiedExpression) expression;
+		}
+		return  new QuantifiedExpression(expression, null);
+	}
+
 	
 }

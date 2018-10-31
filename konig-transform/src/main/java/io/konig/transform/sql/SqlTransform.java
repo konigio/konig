@@ -1,5 +1,7 @@
 package io.konig.transform.sql;
 
+import io.konig.core.OwlReasoner;
+
 /*
  * #%L
  * Konig Transform
@@ -26,11 +28,13 @@ import io.konig.sql.query.SelectExpression;
 import io.konig.transform.model.TNodeShape;
 
 public class SqlTransform {
+	private OwlReasoner owlReasoner;
 	private TNodeShape targetShape;
 	private InsertStatement insert;
 	
-	public SqlTransform(TNodeShape targetShape) {
+	public SqlTransform(TNodeShape targetShape, OwlReasoner owlReasoner) {
 		this.targetShape = targetShape;
+		this.owlReasoner = owlReasoner;
 	}
 	public TNodeShape getTargetShape() {
 		return targetShape;
@@ -46,6 +50,9 @@ public class SqlTransform {
 	
 	public void setInsert(InsertStatement insert) {
 		this.insert = insert;
+	}
+	public OwlReasoner getOwlReasoner() {
+		return owlReasoner;
 	}
 
 }

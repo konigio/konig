@@ -35,16 +35,16 @@ public class SimpleTPropertyShape extends BaseTPropertyShape {
 	private TNodeShape tvalueShape;
 	private boolean derived;
 
-	public SimpleTPropertyShape(TNodeShape owner, PropertyConstraint constraint) {
-		this(owner, constraint, false);
+	public SimpleTPropertyShape(boolean isTargetProperty, TNodeShape owner, PropertyConstraint constraint) {
+		this(owner, constraint, false, isTargetProperty);
 	}
 
 
-	public SimpleTPropertyShape(TNodeShape owner, PropertyConstraint constraint, boolean derived) {
+	public SimpleTPropertyShape(TNodeShape owner, PropertyConstraint constraint, boolean derived, boolean isTargetProperty) {
 		super(owner);
 		this.constraint = constraint;
 		this.derived = derived;
-		init();
+		init(isTargetProperty);
 	}
 
 

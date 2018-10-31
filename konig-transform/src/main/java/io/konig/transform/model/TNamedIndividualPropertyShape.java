@@ -21,28 +21,38 @@ package io.konig.transform.model;
  */
 
 
+import java.util.List;
+
 import org.openrdf.model.URI;
 
-import io.konig.core.util.IriTemplate;
-import io.konig.core.vocab.Konig;
+import io.konig.core.Vertex;
 
-public class TIdPropertyShape extends BaseTPropertyShape implements TPropertyShape {
+public class TNamedIndividualPropertyShape extends BaseTPropertyShape {
 
-	private TExpressionFactory expressionFactory;
+	private URI predicate;
+	private List<Vertex> individuals;
+	private TPropertyShape keyProperty;
 	
-	public TIdPropertyShape(TExpressionFactory expressionFactory, TNodeShape owner, boolean isTargetProperty) {
+	public TNamedIndividualPropertyShape(TNodeShape owner, URI predicate, TPropertyShape keyProperty, List<Vertex> individuals) {
 		super(owner);
-		this.expressionFactory = expressionFactory;
-		init(isTargetProperty);
+		this.predicate = predicate;
+		init(false);
+		this.individuals = individuals;
+		this.keyProperty = keyProperty;
 	}
 
 	@Override
 	public URI getPredicate() {
-		return Konig.id;
+		return predicate;
+	}
+
+	public TPropertyShape getKeyProperty() {
+		return keyProperty;
 	}
 
 	@Override
 	public TProperty getValueExpressionGroup() {
+
 		TProperty result = getPropertyGroup();
 		if (result.getTargetProperty() == null) {
 			result = null;
@@ -52,13 +62,7 @@ public class TIdPropertyShape extends BaseTPropertyShape implements TPropertySha
 
 	@Override
 	protected TExpression createValueExpression() throws ShapeTransformException {
-		
-		IriTemplate template = getOwner().getShape().getIriTemplate();
-		if (template == null) {
-			return new ValueOfExpression(this);
-		}
-		
-		return expressionFactory.createIriTemplate(this, template);
+		return new TReferenceDataExpression(this, keyProperty, individuals);
 	}
 
 	@Override

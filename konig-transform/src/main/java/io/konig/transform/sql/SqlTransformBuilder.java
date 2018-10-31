@@ -28,9 +28,14 @@ import java.util.Set;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.XMLSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.aws.datasource.AwsAuroraTable;
+import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
@@ -39,16 +44,25 @@ import io.konig.formula.FunctionExpression;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
 import io.konig.sql.query.AliasExpression;
 import io.konig.sql.query.ColumnExpression;
+import io.konig.sql.query.ComparisonOperator;
+import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.QueryExpression;
+import io.konig.sql.query.Result;
 import io.konig.sql.query.SelectExpression;
+import io.konig.sql.query.SignedNumericLiteral;
+import io.konig.sql.query.SimpleCase;
+import io.konig.sql.query.SimpleWhenClause;
 import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.StringLiteralExpression;
+import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.TableNameExpression;
 import io.konig.sql.query.UpdateExpression;
 import io.konig.sql.query.UpdateItem;
+import io.konig.sql.query.ValueContainer;
 import io.konig.sql.query.ValueExpression;
+import io.konig.transform.model.OutTPropertyShape;
 import io.konig.transform.model.ShapeTransformException;
 import io.konig.transform.model.SimpleTPropertyShape;
 import io.konig.transform.model.TDataSource;
@@ -59,9 +73,12 @@ import io.konig.transform.model.TIriTemplateItem;
 import io.konig.transform.model.TLiteralExpression;
 import io.konig.transform.model.TNodeShape;
 import io.konig.transform.model.TPropertyShape;
+import io.konig.transform.model.TReferenceDataExpression;
+import io.konig.transform.model.TStructExpression;
 import io.konig.transform.model.ValueOfExpression;
 
 public class SqlTransformBuilder {
+	private static final Logger logger = LoggerFactory.getLogger(SqlTransformBuilder.class);
 
 	public void build(SqlTransform transform) throws ShapeTransformException {
 		Worker worker = new Worker();
@@ -140,25 +157,52 @@ public class SqlTransformBuilder {
 			throw new ShapeTransformException("In shape <" + shapeId + ">, expected TableDataSource but found "  + ds.getClass().getSimpleName());
 		}
 
-		private void addValues(TNodeShape targetShape, SelectExpression select, List<ColumnExpression> columns, UpdateExpression update) throws ShapeTransformException {
+		private void addValues(TNodeShape targetShape, ValueContainer select, List<ColumnExpression> columns, UpdateExpression update) throws ShapeTransformException {
 			
 			currentNode = targetShape;
 			for (TPropertyShape p : targetShape.getProperties()) {
 				currentProperty = p;
-				ValueExpression e = valueExpression(p, columns, update);
-				select.add(e);
 				
-				// TODO: handle nested values
+				TExpression ve = p.getPropertyGroup().getValueExpression();
+				if (ve instanceof TStructExpression) {
+					AliasExpression alias = buildStruct(p, update);
+					select.add(alias);
+					if (columns != null) {
+						columns.add(column(p));
+					}
+				} else {
+					ValueExpression e = valueExpression(p, columns, update);
+					select.add(e);
+				}
+				
 			}
 			currentProperty = null;
 			currentNode = null;
 			
 		}
 
+
+
+		private AliasExpression buildStruct(TPropertyShape p, UpdateExpression update) throws ShapeTransformException {
+
+			TStructExpression e = (TStructExpression) p.getPropertyGroup().getValueExpression();
+			TNodeShape targetValueShape = p.getValueShape();
+			
+			StructExpression struct = new StructExpression();
+			addValues(targetValueShape, struct, null, update);
+			String aliasName = p.getPredicate().getLocalName();
+		
+			return new AliasExpression(struct, aliasName);
+		}
+
 		private ValueExpression valueExpression(TPropertyShape p, List<ColumnExpression> columns, UpdateExpression update) throws ShapeTransformException {
 			URI targetPredicate = p.getPredicate();
-			ColumnExpression targetColumn = new ColumnExpression(targetPredicate.getLocalName());
-			columns.add(targetColumn);
+			ColumnExpression targetColumn = columns!=null || update!=null ?
+					new ColumnExpression(targetPredicate.getLocalName()) : null;
+					
+			if (columns != null) {
+				columns.add(targetColumn);
+			}
 			QueryExpression right = null;
 			ValueExpression result = null;
 			
@@ -185,6 +229,8 @@ public class SqlTransformBuilder {
 				right = result = iriTemplate(template);
 				
 				addFromItem(template.valueOf().getOwner());
+			} else if (e instanceof TReferenceDataExpression) {
+				right = result = new AliasExpression(referenceData((TReferenceDataExpression)e), targetPredicate.getLocalName());
 			}
 
 			if (update != null && !isKey(p) && right!=null) {
@@ -202,6 +248,83 @@ public class SqlTransformBuilder {
 			}
 			
 			return result;
+		}
+
+
+		private ValueExpression referenceData(TReferenceDataExpression e) throws ShapeTransformException {
+			TPropertyShape p = e.valueOf();
+			
+			TPropertyShape keyProperty = e.getKeyProperty();
+			URI targetPredicate = p.getPropertyGroup().getTargetProperty().getPredicate();
+			List<Vertex> individualList = e.getIndividuals();
+			
+			if (logger.isDebugEnabled()) {
+				logger.debug("referenceData: {}", e.toString());
+				logger.debug("referenceData: keyProperty={}", keyProperty.toString());
+			}
+
+			ValueExpression left = null;
+			if (keyProperty instanceof OutTPropertyShape) {
+				OutTPropertyShape out = (OutTPropertyShape) keyProperty;
+				TPropertyShape base = out.getBaseProperty();
+				left = column(base);
+			}
+			
+			if (left == null) {
+				throw new ShapeTransformException("Failed to find left operand for " + e.toString());
+			}
+			
+			List<SimpleWhenClause> whenList = new ArrayList<>();
+			for (Vertex v : individualList) {
+				
+				Value rightValue = v.getValue(keyProperty.getPredicate());
+				ValueExpression right = valueExpression(rightValue);
+				
+				Result result = enumValueExpression(v, targetPredicate);
+				SimpleWhenClause clause = new SimpleWhenClause(right, result);
+				whenList.add(clause);
+			}
+			
+			return new SimpleCase(left, whenList, null);
+		}
+		
+		private Result enumValueExpression(Vertex v, URI targetPredicate) throws ShapeTransformException {
+			if (Konig.id.equals(targetPredicate)) {
+				if (v.getId() instanceof URI) {
+					return new StringLiteralExpression(((URI)v.getId()).getLocalName());
+				} else {
+					throw new ShapeTransformException("Expected URI identifier but found " + v.getId().stringValue());
+				}
+			}
+			Value value = v.getValue(targetPredicate);
+			return valueExpression(value);
+		}
+
+		private ValueExpression valueExpression(Value value) throws ShapeTransformException {
+			if (value == null) {
+				throw new ShapeTransformException("value must be defined");
+			}
+			if (value instanceof Literal) {
+				OwlReasoner reasoner = transform.getOwlReasoner();
+				Literal literal = (Literal) value;
+				URI type = literal.getDatatype();
+				if (type != null) {
+					if (reasoner.isRealNumber(type)) {
+						return new SignedNumericLiteral(new Double(literal.doubleValue()));
+					}
+					if (reasoner.isIntegerDatatype(type)) {
+						return new SignedNumericLiteral(new Long(literal.longValue()));
+					}
+					return new StringLiteralExpression(literal.stringValue());
+				}
+
+			}
+			
+			if (value instanceof URI) {
+				URI uri = (URI) value;
+				return new StringLiteralExpression(uri.getLocalName());
+			}
+			throw new ShapeTransformException("Cannot convert to ValueExpression: " + value.stringValue());
 		}
 
 		private AliasExpression iriTemplate(TIriTemplateExpression e) throws ShapeTransformException {

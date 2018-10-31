@@ -21,25 +21,19 @@ package io.konig.transform.model;
  */
 
 
-public class ValueOfExpression implements TIriTemplateItem {
-
-	private TPropertyShape tpropertyShape;
-
-	public ValueOfExpression(TPropertyShape tpropertyShape) {
-		this.tpropertyShape = tpropertyShape;
-	}
-
-	public TPropertyShape getTpropertyShape() {
-		return tpropertyShape;
-	}
+public class TStructExpression implements TExpression {
 	
-	public String toString() {
-		return "ValueOfExpression[" + tpropertyShape.getPath() + "]";
+	private TPropertyShape valueOf;
+
+	public TStructExpression(TPropertyShape valueOf) {
+		this.valueOf = valueOf;
 	}
+
+
 
 	@Override
 	public TPropertyShape valueOf() {
-		return tpropertyShape;
+		return valueOf;
 	}
-	
+
 }

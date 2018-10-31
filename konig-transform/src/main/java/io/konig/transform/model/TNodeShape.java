@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.impl.RdfUtil;
 import io.konig.shacl.Shape;
@@ -38,6 +40,7 @@ import io.konig.shacl.Shape;
  *
  */
 public class TNodeShape {
+	private static Logger logger = LoggerFactory.getLogger(TNodeShape.class);
 	private Shape shape;
 	private TClass tclass;
 	private TDataSource tdatasource;
@@ -130,6 +133,14 @@ public class TNodeShape {
 					
 					group.setValueExpression(null);
 					return;
+				}
+			} 
+			
+			if (logger.isDebugEnabled()) {
+				if (group != null) {
+					logger.debug("assignValue: {} => {}", group.getValueExpression().toString(), group.getTargetProperty().getPath());
+				} else {
+					logger.debug("assignValue: No assignment for: {}", p.getPath());
 				}
 			}
 			

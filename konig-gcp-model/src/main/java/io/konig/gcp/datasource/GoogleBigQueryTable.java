@@ -27,6 +27,7 @@ import java.util.Set;
 import org.openrdf.model.URI;
 
 import com.google.api.services.bigquery.model.ExternalDataConfiguration;
+import com.google.api.services.bigquery.model.TableReference;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.KonigException;
@@ -175,8 +176,6 @@ public class GoogleBigQueryTable extends TableDataSource {
 			this.shapeBuilder = shapeBuilder;
 		}
 		
-		
-		
 		public Builder id(URI id) {
 			table.setId(id);
 			return this;
@@ -185,6 +184,32 @@ public class GoogleBigQueryTable extends TableDataSource {
 		public ShapeBuilder endDataSource() {
 			shapeBuilder.peekShape().addShapeDataSource(table);
 			return shapeBuilder;
+		}
+		
+		public Builder tableId(String tableId) {
+			tableReference().setTableId(tableId);
+			return this;
+		}
+		
+		public Builder datasetId(String datasetId) {
+			tableReference().setDatasetId(datasetId);
+			return this;
+		}
+		
+		public Builder projectId(String projectId) {
+			tableReference().setProjectId(projectId);
+			return this;
+		}
+
+
+
+		private BigQueryTableReference tableReference() {
+			BigQueryTableReference ref = table.getTableReference();
+			if (ref == null) {
+				ref = new BigQueryTableReference();
+				table.setTableReference(ref);
+			}
+			return ref;
 		}
 		
 		

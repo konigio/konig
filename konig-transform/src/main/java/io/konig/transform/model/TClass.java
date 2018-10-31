@@ -1,5 +1,7 @@
 package io.konig.transform.model;
 
+import java.io.StringWriter;
+
 /*
  * #%L
  * Konig Transform
@@ -26,7 +28,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+
+import io.konig.core.io.PrettyPrintWriter;
 
 /**
  * A representation of an OWL Class that is helpful when generating transforms.
@@ -36,16 +41,22 @@ import org.openrdf.model.URI;
  */
 public class TClass {
 
-	private URI id;
+	private Resource id;
 	private TNodeShape targetShape;
 	private Set<TNodeShape> sourceShapes = new HashSet<>();
 	private Map<URI, TProperty> in = new HashMap<>();
 	private Map<URI, TProperty> out = new HashMap<>();
 	
-	public TClass(URI id, TNodeShape targetShape) {
+	public TClass(Resource id, TNodeShape targetShape) {
 		this.id = id;
 		this.targetShape = targetShape;
 	}
+	
+
+	void setTargetShape(TNodeShape targetShape) {
+		this.targetShape = targetShape;
+	}
+
 
 	public void putIn(URI predicate, TProperty property) {
 		in.put(predicate, property);
@@ -72,7 +83,7 @@ public class TClass {
 		return result;
 	}
 
-	public URI getId() {
+	public Resource getId() {
 		return id;
 	}
 
@@ -86,6 +97,67 @@ public class TClass {
 
 	public Set<TNodeShape> getSourceShapes() {
 		return sourceShapes;
+	}
+	
+	public String toStructureString() {
+		StringWriter writer = new StringWriter();
+		PrettyPrintWriter out = new PrettyPrintWriter(writer);
+		Set<TClass> memory = new HashSet<>();
+		out.setIndentText("  ");
+		
+		printStructure(memory, out, this);
+		
+		out.flush();
+		
+		return writer.toString();
+	}
+
+
+	private void printStructure(Set<TClass> memory, PrettyPrintWriter out, TClass tClass) {
+		if (tClass.id == null) {
+			out.println("null");
+		} else {
+			out.println(tClass.id.stringValue());
+		}
+		if (memory.contains(tClass)) {
+			out.println("ERROR: Cyclic Structure");
+			return;
+		}
+		memory.add(tClass);
+		out.pushIndent();
+		out.indent();
+		out.println("out:");
+		out.pushIndent();
+		for (TProperty p : tClass.out.values()) {
+			out.indent();
+			out.print("- targetProperty: ");
+			if (p.getTargetProperty() != null) {
+				out.println(p.getTargetProperty().toString());
+			} else {
+				out.println("null");
+			}
+			out.pushIndent();
+			out.indent();
+			out.print("rangeClass: ");
+			if (p.getRangeClass() == null) {
+				out.println("null");
+			} else {
+				printStructure(memory, out, p.getRangeClass());
+			}
+			out.indent();
+			out.println("sourceProperties: ");
+			out.pushIndent();
+				for (TPropertyShape s : p.getCandidateSourceProperties()) {
+					out.indent();
+					out.println(s.toString());
+				}
+			out.popIndent();
+			out.popIndent();
+		}
+		out.popIndent();
+		
+		out.popIndent();
+		
 	}
 
 }
