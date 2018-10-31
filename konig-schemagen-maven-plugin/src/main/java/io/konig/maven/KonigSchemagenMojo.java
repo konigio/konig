@@ -234,7 +234,7 @@ import io.konig.transform.aws.AuroraTransformGenerator;
 import io.konig.transform.bigquery.BigQueryTransformGenerator;
 import io.konig.transform.factory.ShapeRuleFactory;
 import io.konig.transform.model.ShapeTransformException;
-import io.konig.transform.mysql.MySqlTransformGenerator;
+import io.konig.transform.mysql.SqlTransformGenerator;
 import io.konig.transform.mysql.OldMySqlTransformGenerator;
 import io.konig.transform.mysql.RoutedSqlTransformVisitor;
 import io.konig.transform.mysql.SqlTransformWriter;
@@ -341,8 +341,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private SimpleLocalNameService localNameService;
     private CompositeEmitter emitter;
     private Project project;
-    private MySqlTransformGenerator mysqlTransformGenerator;
-    private RoutedSqlTransformVisitor mysqlTransformVisitor;
+    private SqlTransformGenerator mysqlTransformGenerator;
+    private RoutedSqlTransformVisitor sqlTransformVisitor;
 
 	@Component
 	private MavenProject mavenProject;
@@ -1224,7 +1224,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		ProjectFolder folder = new ProjectFolder(project, googleCloudPlatform.getCloudsql().getScripts());
 		SqlTransformWriter writer = new SqlTransformWriter(folder);
 		RoutedSqlTransformVisitor visitor = sqlTransformVisitor();
-		visitor.put(Konig.GoogleCloudSqlTable, writer);
+		boolean some = TransformProcessingScope.SOME == googleCloudPlatform.getCloudsql().getTransformScope() ?
+				true : false;
+		visitor.put(Konig.GoogleCloudSqlTable, writer, some);
 	}
 
 
@@ -1233,17 +1235,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		ProjectFolder folder = new ProjectFolder(project, googleCloudPlatform.getBigquery().getScripts());
 		SqlTransformWriter writer = new SqlTransformWriter(folder);
 		RoutedSqlTransformVisitor visitor = sqlTransformVisitor();
-		visitor.put(Konig.GoogleBigQueryTable, writer);
+		boolean some = TransformProcessingScope.SOME == googleCloudPlatform.getBigquery().getTransformScope() ?
+				true : false;
+		visitor.put(Konig.GoogleBigQueryTable, writer, some);
 		
 	}
 
 
 	private RoutedSqlTransformVisitor sqlTransformVisitor() {
-		if (mysqlTransformVisitor==null) {
-			mysqlTransformVisitor = new RoutedSqlTransformVisitor();
-			mysqlTransformGenerator = new MySqlTransformGenerator(mysqlTransformVisitor, mysqlTransformVisitor);
+		if (sqlTransformVisitor==null) {
+			sqlTransformVisitor = new RoutedSqlTransformVisitor();
+			mysqlTransformGenerator = new SqlTransformGenerator(sqlTransformVisitor, sqlTransformVisitor);
 		}
-		return mysqlTransformVisitor;
+		return sqlTransformVisitor;
 	}
 
 
@@ -1416,7 +1420,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 						if(amazonWebServices != null) {
 							outDir = amazonWebServices.getCamelEtl();
 						}						
-						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.DERIVEDFROM).toVertexList();
+						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.derivedFrom).toVertexList();
 						
 						if (!sourceList.isEmpty()) {
 							Vertex sourceShapeVertex = sourceList.get(0);
@@ -1441,7 +1445,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 						if(googleCloudPlatform != null) {
 							outDir = googleCloudPlatform.getCamelEtl();
 						}						
-						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.DERIVEDFROM).toVertexList();
+						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.derivedFrom).toVertexList();
 						if (!sourceList.isEmpty()) {
 							Vertex sourceShapeVertex = sourceList.get(0);
 							Resource sourceShapeId = sourceShapeVertex.getId();

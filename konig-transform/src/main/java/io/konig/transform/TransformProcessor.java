@@ -63,7 +63,7 @@ public TransformProcessor(File outDir) {
 		    while (sequence.hasNext()) {
 		      Shape sourceShape = sequence.next();
 		      URI sourceShapeId = (URI)sourceShape.getId();
-		      graph.edge(targetShapeId, Konig.DERIVEDFROM, sourceShapeId);
+		      graph.edge(targetShapeId, Konig.derivedFrom, sourceShapeId);
 		    }
 		    Namespace n = nsManager.findByName(targetShapeId.getNamespace());
 		    if(outDir!=null)

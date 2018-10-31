@@ -45,6 +45,10 @@ public class CloudSqlInfo {
 	private String shapeIriReplacement;
 	@Parameter(property="konig.aws.cloudsql.propertyNameSpace")
 	private String propertyNameSpace;
+
+	
+	@Parameter(property="konig.gcp.cloudsql.transformScope")
+	private TransformProcessingScope transformScope;
 	
 	public CloudSqlInfo() {
 	}
@@ -110,6 +114,14 @@ public class CloudSqlInfo {
 
 	public void setPropertyNameSpace(String propertyNameSpace) {
 		this.propertyNameSpace = propertyNameSpace;
+	}
+
+	public TransformProcessingScope getTransformScope() {
+		return transformScope;
+	}
+
+	public void setTransformScope(TransformProcessingScope transformScope) {
+		this.transformScope = transformScope;
 	}
 	
 }

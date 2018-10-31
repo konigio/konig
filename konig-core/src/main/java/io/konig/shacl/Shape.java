@@ -93,6 +93,7 @@ public class Shape implements Cloneable {
 	private Shape tabularOriginShape;
 	private URI usesAbbreviationScheme;
 	private List<ShapeMaxRowLength> shapeMaxRowLengthList;
+	private Set<URI> shapeProcessing;
 	 
 	 public List<URI> getInputShapeOf() {
 	 	return inputShapeOf;
@@ -736,5 +737,23 @@ public class Shape implements Cloneable {
 	public void setTermStatus(URI termStatus) {
 		this.termStatus = termStatus;
 	}
+
+	public Set<URI> getShapeProcessing() {
+		return shapeProcessing==null ? Collections.emptySet() : shapeProcessing;
+	}
+	
+	public void addShapeProcessing(URI shapeProcessing) {
+		if (shapeProcessing != null) {
+			if (this.shapeProcessing == null) {
+				this.shapeProcessing = new LinkedHashSet<>();
+			}
+			this.shapeProcessing.add(shapeProcessing);
+		}
+	}
+
+	public void setShapeProcessing(Set<URI> shapeProcessing) {
+		this.shapeProcessing = shapeProcessing;
+	}
+	
 	
 }

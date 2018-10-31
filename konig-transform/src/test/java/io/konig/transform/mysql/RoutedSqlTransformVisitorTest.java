@@ -73,7 +73,7 @@ public class RoutedSqlTransformVisitorTest {
 				.endDataSource()
 			.endShape();
 
-		visitor.put(Konig.GoogleBigQueryTable, bigQueryVisitor);
+		visitor.put(Konig.GoogleBigQueryTable, bigQueryVisitor, false);
 		
 		Shape shape = builder.getShape(shapeId);
 		DataSource ds = shape.getShapeDataSource().get(0);

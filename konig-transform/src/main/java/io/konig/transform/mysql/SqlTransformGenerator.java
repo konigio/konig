@@ -42,12 +42,12 @@ import io.konig.transform.model.TransformModelBuilder;
 import io.konig.transform.sql.SqlTransform;
 import io.konig.transform.sql.SqlTransformBuilder;
 
-public class MySqlTransformGenerator {
+public class SqlTransformGenerator {
 	private SqlTransformFilter filter;
 	private SqlTransformVisitor visitor;
 	
 	
-	public MySqlTransformGenerator(SqlTransformFilter filter, SqlTransformVisitor visitor) {
+	public SqlTransformGenerator(SqlTransformFilter filter, SqlTransformVisitor visitor) {
 		this.filter = filter;
 		this.visitor = visitor;
 	}
