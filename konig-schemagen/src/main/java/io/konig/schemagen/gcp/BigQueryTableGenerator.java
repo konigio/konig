@@ -44,6 +44,7 @@ import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableSchema;
 
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
@@ -155,12 +156,18 @@ public class BigQueryTableGenerator {
 	}
 	
 	public TableSchema toTableSchema(Shape shape) {
+		Traversal traversal = new Traversal(shape);
+		return toTableSchema(shape, traversal);
+	}
+	
+	private TableSchema toTableSchema(Shape shape, Traversal traversal) {
+
 		TableSchema schema = new TableSchema();
-		schema.setFields(listFields(shape));
+		schema.setFields(listFields(shape, traversal));
 		return schema;
 	}
 	
-	private List<TableFieldSchema> listFields(Shape shape) {
+	private List<TableFieldSchema> listFields(Shape shape, Traversal traversal) {
 		List<TableFieldSchema> list = new ArrayList<>();
 
 		List<PropertyConstraint> plist = shape.getProperty();
@@ -186,14 +193,14 @@ public class BigQueryTableGenerator {
 				logger.error("konig:synthicKey is applicable only for shapes with datasource GoogleCloudSqlTable or AwsAurora");
 				p.setStereotype(null);
 			}
-			TableFieldSchema field = toField(p);
+			TableFieldSchema field = toField(p, traversal);
 			list.add(field);
 		}
 		return list;
 	}
 
-	private TableFieldSchema toField(PropertyConstraint p) {
-		
+	private TableFieldSchema toField(PropertyConstraint p, Traversal traversal) {
+		traversal.push(p);
 		TableFieldSchema result = new TableFieldSchema();
 		String fieldName = p.getPredicate().getLocalName();
 		FieldMode fieldMode = fieldMode(p);
@@ -216,11 +223,11 @@ public class BigQueryTableGenerator {
 					throw new SchemaGeneratorException("Blank nodes not supported for valueShape identifier");
 				}
 			}
-			TableSchema fieldSchema = toTableSchema(valueShape);
+			TableSchema fieldSchema = toTableSchema(valueShape, traversal);
 			result.setFields(fieldSchema.getFields());
 		}
 		
-		
+		traversal.pop();
 		return result;
 	}
 
@@ -470,5 +477,38 @@ public class BigQueryTableGenerator {
 		}
 		return FieldMode.NULLABLE;
 	}
+	
+	private static class Traversal {
+		private Shape root;
+		private List<PropertyConstraint> path = new ArrayList<>();
+		private Traversal(Shape root) {
+			this.root = root;
+		}
+		
+		private void push(PropertyConstraint p) {
+			boolean err = path.contains(p);
+			path.add(p);
+			if (err) {
+				StringBuilder builder = new StringBuilder();
+				builder.append("Cyclic path detected: ");
+				builder.append(RdfUtil.localName(root.getId()));
+				for (PropertyConstraint c : path) {
+					builder.append('.');
+					builder.append(RdfUtil.localName(c.getPredicate()));
+				}
+				
+				throw new KonigException(builder.toString());
+			}
+		}
+		
+		private void pop() {
+			if (!path.isEmpty()) {
+				path.remove(path.size()-1);
+			}
+		}
+		
+	}
+	
+	
 	
 }
