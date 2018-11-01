@@ -36,17 +36,18 @@ mvn clean install
 
 In Eclipse, commit changes with the message: "Release candidate 1.2.1"
 
+## Deploy to Maven Central
+
+```
+	mvn clean deploy -DperformRelease=true
+```
+## Tag the release
+
+
 In Repositories view, right-click `Tags` and choose `Create Tag...`
 
 > Enter the tag name: v1.2.1
 > Enter a message: "Version 1.2.1"
 
 Right click the newly created tag and choose `Push tag...`
-
-## Deploy to Maven Central
-
-```
-	mvn clean deploy -DperformRelease=true
-```
-
 

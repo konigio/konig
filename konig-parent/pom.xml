@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.konig</groupId>
 	<artifactId>konig-parent</artifactId>
-	<version>2.0.0-8</version>
+	<version>2.0.0</version>
 	<name>Konig Parent</name>
 	<description>The parent project from which all the konig modules are built</description>
 	<url>http://developers.konig.io/</url>
@@ -18,7 +18,7 @@
 		<junit.version>4.12</junit.version>
 		<slf4j.version>1.7.10</slf4j.version>
 		<javax.inject.version>1</javax.inject.version>
-		<jackson.version>2.6.3</jackson.version>
+		<jackson.version>2.9.7</jackson.version>
 		<jsonld-java.version>0.7.0</jsonld-java.version>
 		<httpclient.version>4.5.2</httpclient.version>
 		<poi.version>3.15</poi.version>
@@ -276,6 +276,9 @@
 					<value>true</value>
 				</property>
 			</activation>
+			<properties>
+				<doclint>none</doclint>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
@@ -305,12 +308,17 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>3.0.1</version>
 						<executions>
 							<execution>
 								<id>attach-javadocs</id>
 								<goals>
 									<goal>jar</goal>
 								</goals>
+		            <configuration>
+		              <failOnError>false</failOnError>
+		              <doclint>none</doclint>
+		            </configuration>
 							</execution>
 						</executions>
 					</plugin>
