@@ -345,13 +345,7 @@
                         <goal>enforce</goal>
                     </goals>
                     <configuration>
-                        <rules>
-                            <bannedDependencies>
-                                <excludes>                             
-                                    <exclude>com.google.guava:guava:[0.0,20.0)</exclude>
-                                </excludes>
-                            </bannedDependencies>
-                        </rules>
+                        
                     </configuration>
                 </execution>
             </executions>
