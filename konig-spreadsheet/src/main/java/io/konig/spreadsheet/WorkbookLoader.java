@@ -125,6 +125,7 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeReasoner;
 import io.konig.shacl.ShapeVisitor;
+import io.konig.shacl.XoneConstraint;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeWriter;
 import io.konig.shacl.services.ShapeProducer;
@@ -221,6 +222,7 @@ public class WorkbookLoader {
 	private static final String TIER = "Tier";
     private static final String SHAPE_OF = "Input Of";
     private static final String ONE_OF = "One Of";
+    private static final String EXACTLY_ONE_OF = "Exactly One Of";
 
 	//Cloud Formation Templates
 	private static final String STACK_NAME="Stack name";
@@ -620,6 +622,7 @@ public class WorkbookLoader {
 		private int awsStorageEncrypted	 = UNDEFINED;
 		private int inputShapeOfCol = UNDEFINED;
 		private int oneOfCol = UNDEFINED;
+		private int xoneCol = UNDEFINED;
 		
 		public Worker(Workbook book,File file) {
 			this.book = book;
@@ -2523,6 +2526,26 @@ public class WorkbookLoader {
 			}
 			return result;
 		}
+		
+
+
+		private XoneConstraint xoneConstraint(String xoneList) throws SpreadsheetException {
+
+			XoneConstraint xone = null;
+			if (xoneList != null) {
+				StringTokenizer tokenizer = new StringTokenizer(xoneList, " \n\r\t");
+				if (tokenizer.hasMoreTokens()) {
+					xone = new XoneConstraint();
+					while (tokenizer.hasMoreTokens()) {
+						String iri = tokenizer.nextToken();
+						URI shapeId = expandCurie(iri);
+						Shape shape = produceShape(shapeId);
+						xone.add(shape);
+					}
+				}
+			}
+			return xone;
+		}
 
 		private OrConstraint orConstraint(String valueTypeText) throws SpreadsheetException {
 			OrConstraint or = null;
@@ -2973,6 +2996,8 @@ public class WorkbookLoader {
 			List<URI> shapeOfList = uriList(row, inputShapeOfCol);
 			List<URI> shapeProcessing = uriList(row, shapeProcessingCol);
 			String orList = stringValue(row, oneOfCol);
+			String xoneList = stringValue(row, xoneCol);
+			
 			List<Function> dataSourceList = dataSourceList(row);
 
 			String shapeComment = stringValue(row, shapeCommentCol);
@@ -3013,7 +3038,7 @@ public class WorkbookLoader {
 				shape.setTabularOriginShape(produceShape(tabularOriginShape));
 			}
 			shape.setOr(orConstraint(orList));
-
+			shape.setXone(xoneConstraint(xoneList));
 
 			if (iriTemplate != null) {
 				shapeTemplateList.add(new ShapeTemplate(shapeId, iriTemplate));
@@ -3273,6 +3298,10 @@ public class WorkbookLoader {
 					case ONE_OF:
 						oneOfCol = i;
 						break;
+					case EXACTLY_ONE_OF:
+						xoneCol = i;
+						break;
+						
 					case DEFAULT_FOR:
 						defaultShapeForCol = i;
 						break;

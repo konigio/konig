@@ -145,6 +145,25 @@ public class ShapeBuilder {
 		return this;
 	}
 	
+	public ShapeBuilder xone(Resource...shapeId) {
+
+		XoneConstraint constraint = peekShape().getXone();
+		if (constraint == null) {
+			constraint = new XoneConstraint();
+			peekShape().setXone(constraint);
+		}
+		for (Resource id : shapeId) {
+			Shape shape = shapeManager.getShapeById(id);
+			if (shape == null) {
+				shape = new Shape(id);
+				shapeManager.addShape(shape);
+			}
+			constraint.add(shape);
+		}
+		
+		return this;
+	}
+	
 	
 	public ShapeBuilder(String shapeId) {
 		this(new URIImpl(shapeId));

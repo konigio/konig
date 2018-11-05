@@ -68,6 +68,7 @@ public class Shape implements Cloneable {
 	
 	private AndConstraint and;
 	private OrConstraint or;
+	private XoneConstraint xone;
 	
 	private Activity wasGeneratedBy;
 	private String bigQueryTableId;
@@ -754,6 +755,16 @@ public class Shape implements Cloneable {
 	public void setShapeProcessing(Set<URI> shapeProcessing) {
 		this.shapeProcessing = shapeProcessing;
 	}
+
+	@RdfProperty(SH.XONE)
+	public XoneConstraint getXone() {
+		return xone;
+	}
+
+	public void setXone(XoneConstraint xone) {
+		this.xone = xone;
+	}
+	
 	
 	
 }
