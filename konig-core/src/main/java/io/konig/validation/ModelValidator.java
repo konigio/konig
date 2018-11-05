@@ -162,7 +162,7 @@ public class ModelValidator {
 			if (!request.getTabularPropertyNamespaces().contains(propertyId.getNamespace())) {
 				URI datatype = null;
 				URI owlClass = null;
-				if (request.getOwl().isDatatype(rangeId)) {
+				if (request.getOwl().isSubclassOfLiteral(rangeId)) {
 					datatype = rangeId;
 				} else {
 					owlClass = rangeId;
@@ -353,7 +353,7 @@ public class ModelValidator {
 						Value range = rangeSet.iterator().next();
 						if (range instanceof URI) {
 							URI rangeId = (URI) range;
-							boolean datatypeRange = owl.isDatatype(rangeId);
+							boolean datatypeRange = owl.isSubclassOfLiteral(rangeId);
 							if (p.getDatatype()!=null && !datatypeRange) {
 								report.setTypeConflict(new TypeConflict(p.getDatatype(), rangeId));
 							}

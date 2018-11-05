@@ -117,6 +117,7 @@ import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.XOWL;
 import io.konig.core.vocab.XSD;
 import io.konig.data.app.common.DataApp;
 import io.konig.data.app.generator.DataAppGenerator;
@@ -219,6 +220,7 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeFilter;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
+import io.konig.shacl.ShapeReasoner;
 import io.konig.shacl.SimpleMediaTypeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.ShapeInjector;
@@ -315,6 +317,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
     @Parameter
 	private OwlProfile[] profiles;
+    
+    @Parameter
+    private OwlInference[] inferences;
 
     @Parameter
     private ClassDiagram[] plantUML;
@@ -517,6 +522,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				case XML_SCHEMA_DATATYPE_HIERARCHY :
 					XSD.addDatatypeHierarchy(owlGraph);
 					break;
+				}
+			}
+		}
+		
+		if (inferences != null) {
+			ShapeReasoner shapeReasoner = new ShapeReasoner(shapeManager);
+			for (OwlInference inference : inferences) {
+				switch (inference) {
+				case OWL_PROPERTY_CLASSIFICATION :
+					XOWL.classifyProperties(owlReasoner, shapeReasoner);
 				}
 			}
 		}

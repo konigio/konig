@@ -20,10 +20,10 @@ package io.konig.shacl;
  * #L%
  */
 
-
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,45 +32,64 @@ import org.openrdf.model.URI;
 
 public class ShapeReasoner {
 	private ShapeManager shapeManager;
-	private Map<URI,Set<URI>> valueType;
+	private Map<URI,PropertyInfo> propertyInfo;
 
 	public ShapeReasoner(ShapeManager shapeManager) {
 		this.shapeManager = shapeManager;
 	}
 	
-	@SuppressWarnings("unchecked")
+	public PropertyInfo getPropertyInfo(URI predicate) {
+		collectPropertyInfo();
+		return propertyInfo.get(predicate);
+	}
+	
 	public Set<URI> valueType(URI predicate) {
-		if (valueType == null) {
-			valueType = new HashMap<>();
+		
+		collectPropertyInfo();
+
+		PropertyInfo result = propertyInfo.get(predicate);
+		if (result == null) {
+			result = new PropertyInfo(predicate);
+			propertyInfo.put(predicate, result);
+		}
+		return result.getValueTypes();
+		
+	}
+	
+
+	/**
+	 * Return the set of predicates referenced by all known PropertyShape instances.
+	 */
+	public Set<URI> predicates() {
+		collectPropertyInfo();
+		return propertyInfo.keySet();
+	}
+
+	private void collectPropertyInfo() {
+		if (propertyInfo == null) {
+			propertyInfo = new HashMap<>();
 			for (Shape shape : shapeManager.listShapes()) {
 				for (PropertyConstraint p : shape.getProperty()) {
 					URI property = p.getPredicate();
 					if (property != null) {
-						Set<URI> set = valueType.get(property);
-						if (set == null) {
-							set = new HashSet<>();
-							valueType.put(property, set);
+						PropertyInfo info = propertyInfo.get(property);
+						if (info == null) {
+							info = new PropertyInfo(property);
+							propertyInfo.put(property, info);
 						}
-						add(set, p.getDatatype());
-						add(set, p.getValueClass());
+						add(info.getValueTypes(), p.getDatatype());
+						add(info.getValueTypes(), p.getValueClass());
+						info.addUsage(new ShapePropertyPair(shape, p));
 						Shape valueShape = p.getShape();
 						if (valueShape != null) {
-							add(set, valueShape.getTargetClass());
+							add(info.getValueTypes(), valueShape.getTargetClass());
 						}
 					}
 				}
 			}
 		}
-
-		Set<URI> result = valueType.get(predicate);
-		if (result == null) {
-			result = Collections.EMPTY_SET;
-			valueType.put(predicate, result);
-		}
-		return result;
 		
 	}
-
 
 	private void add(Set<URI> set, Resource element) {
 		if (element instanceof URI) {
@@ -78,5 +97,39 @@ public class ShapeReasoner {
 		}
 		
 	}
+	
+	public static class PropertyInfo {
+		private URI predicate;
+		private List<ShapePropertyPair> usage = new ArrayList<>();
+		private Set<URI> values = new HashSet<>();
+		
+		public PropertyInfo(URI predicate) {
+			this.predicate = predicate;
+		}
+		
+		public void addUsage(ShapePropertyPair pair) {
+			usage.add(pair);
+		}
+		
+		public void addValue(URI valueType) {
+			values.add(valueType);
+		}
+
+		public URI getPredicate() {
+			return predicate;
+		}
+
+		public List<ShapePropertyPair> getUsage() {
+			return usage;
+		}
+
+		public Set<URI> getValueTypes() {
+			return values;
+		}
+		
+		
+	}
+	
+	
 
 }
