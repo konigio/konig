@@ -41,6 +41,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.vocab.Schema;
+import io.konig.core.vocab.XSD;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.ShapeBuilder;
 import io.konig.shacl.ShapeManager;
@@ -65,6 +66,27 @@ public class ModelValidatorTest {
 		comments.setRequirePropertyShapeComments(true);
 		request.setCommentConventions(comments);
 	
+	}
+	
+	@Test
+	public void testDatatypeHierarchy() {
+		XSD.addDatatypeHierarchy(graph);
+		URI length = uri("http://example.com/ns/length");
+		
+		graph.edge(length, RDF.TYPE, OWL.DATATYPEPROPERTY);
+		graph.edge(length, RDFS.RANGE, XMLSchema.DECIMAL);
+		
+		new ShapeBuilder(shapeManager)
+			.beginShape("http://example.com/shapes/BuildingShape")
+				.beginProperty(length)
+					.datatype(XMLSchema.INT)
+				.endProperty()
+			.endShape();
+
+		ModelValidationReport report = validator.process(request);
+		assertTrue(report.findPropertyReport(length)==null);
+		
+		
 	}
 
 	@Test

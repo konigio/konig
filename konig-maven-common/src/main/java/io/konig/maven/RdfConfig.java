@@ -96,6 +96,7 @@ public class RdfConfig {
 		}
 		return skosDir;
 	}
+	
 	public void setSkosDir(File skosDir) {
 		this.skosDir = skosDir;
 	}
