@@ -36,6 +36,7 @@ import io.konig.maven.JsonSchemaConfig;
 import io.konig.maven.KonigProject;
 import io.konig.maven.ModelValidationConfig;
 import io.konig.maven.OracleManagedCloudConfig;
+import io.konig.maven.OwlProfile;
 import io.konig.maven.ParentProjectConfig;
 import io.konig.maven.TabularShapeFactoryConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
@@ -55,6 +56,7 @@ public class MultiProject extends MavenProjectConfig {
 	private TabularShapeGeneratorConfig tabularShapeGenerator;
 	private TabularShapeFactoryConfig tabularShapes;
 	private ModelValidationConfig modelValidation;
+	private OwlProfile[] profiles;
 	
 	public MultiProject() {
 		
@@ -159,6 +161,7 @@ public class MultiProject extends MavenProjectConfig {
 			rdf.setTabularShapeGeneratorConfig(tabularShapeGenerator);
 			rdf.setTabularShapeFactoryConfig(tabularShapes);
 			rdf.setModelValidationConfig(modelValidation);
+			rdf.setProfiles(profiles);
 			setRdfSourceDir(new File(rdf.baseDir(), "target/generated/rdf"));
 			parent.add(rdf);
 		}
@@ -263,6 +266,14 @@ public class MultiProject extends MavenProjectConfig {
 
 	public void setModelValidation(ModelValidationConfig modelValidation) {
 		this.modelValidation = modelValidation;
+	}
+
+	public OwlProfile[] getProfiles() {
+		return profiles;
+	}
+
+	public void setProfiles(OwlProfile[] profiles) {
+		this.profiles = profiles;
 	}
 
 

@@ -94,11 +94,44 @@ public class ModelValidator {
 				} else {
 					NamespaceValidationConfig config = getNamespaceConfig(info.getProperty().getNamespace());
 					if (config==null || !config.isIgnoreRangeConflicts()) {
-						producePropertyReport(e.getKey()).setRangeConflict(info.getRangeInfo());
+						if (isRangeConflict(info)) {
+							producePropertyReport(e.getKey()).setRangeConflict(info.getRangeInfo());
+						}
 					}
 				}
 			}
 			
+		}
+
+		private boolean isRangeConflict(PropertyInfo info) {
+			URI rdfPropertyRange = info.rdfPropertyRange();
+			URI top = null;
+			for (RangeInfo r : info.getRangeInfo()) {
+				if (r.getParentShapeId()==null) {
+					continue;
+				}
+				URI  range = r.getDatatype();
+				if (range == null) {
+					range = r.getOwlClass();
+				}
+				
+				if (rdfPropertyRange != null) {
+					if (!owl().isSubClassOf(range, rdfPropertyRange)) {
+						return true;
+					}
+				} else if (top == null) {
+					top = range;
+				} else if (owl().isSubClassOf(top, range)) {
+					top = range;
+				} else if (!owl().isSubClassOf(range, top)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		private OwlReasoner owl() {
+			return request.getOwl();
 		}
 
 		private void setDefaults() {

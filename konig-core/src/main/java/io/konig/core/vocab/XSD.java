@@ -23,6 +23,11 @@ package io.konig.core.vocab;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.XMLSchema;
+
+import io.konig.core.Graph;
+
 
 public class XSD {
 	public static final URI length = new URIImpl("http://www.w3.org/2001/XMLSchema#length");
@@ -33,5 +38,44 @@ public class XSD {
 	public static final URI minInclusive = new URIImpl("http://www.w3.org/2001/XMLSchema#minInclusive");
 	public static final URI minLength = new URIImpl("http://www.w3.org/2001/XMLSchema#minLength");
 	public static final URI pattern = new URIImpl("http://www.w3.org/2001/XMLSchema#pattern");
+	
+	public static void addDatatypeHierarchy(Graph graph) {
+		graph.edge(XMLSchema.ANYURI, RDFS.SUBCLASSOF, XMLSchema.STRING);
+		graph.edge(XMLSchema.BASE64BINARY, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.BOOLEAN, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.BYTE, RDFS.SUBCLASSOF, XMLSchema.SHORT);
+		graph.edge(XMLSchema.DATE, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.DATETIME, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.DAYTIMEDURATION, RDFS.SUBCLASSOF, XMLSchema.DURATION);
+		graph.edge(XMLSchema.DECIMAL, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.DOUBLE, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.DURATION, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.FLOAT, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.GDAY, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.GMONTH, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.GMONTHDAY, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.GYEAR, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.GYEARMONTH, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.HEXBINARY, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.INT, RDFS.SUBCLASSOF, XMLSchema.LONG);
+		graph.edge(XMLSchema.INTEGER, RDFS.SUBCLASSOF, XMLSchema.DECIMAL);
+		graph.edge(XMLSchema.LANGUAGE, RDFS.SUBCLASSOF, XMLSchema.TOKEN);
+		graph.edge(XMLSchema.LONG, RDFS.SUBCLASSOF, XMLSchema.INTEGER);
+		graph.edge(XMLSchema.NAME, RDFS.SUBCLASSOF, XMLSchema.TOKEN);
+		graph.edge(XMLSchema.NEGATIVE_INTEGER, RDFS.SUBCLASSOF, XMLSchema.NON_POSITIVE_INTEGER);
+		graph.edge(XMLSchema.NON_NEGATIVE_INTEGER, RDFS.SUBCLASSOF, XMLSchema.INTEGER);
+		graph.edge(XMLSchema.NON_POSITIVE_INTEGER, RDFS.SUBCLASSOF, XMLSchema.INTEGER);
+		graph.edge(XMLSchema.NORMALIZEDSTRING, RDFS.SUBCLASSOF, XMLSchema.STRING);
+		graph.edge(XMLSchema.POSITIVE_INTEGER, RDFS.SUBCLASSOF, XMLSchema.NON_NEGATIVE_INTEGER);
+		graph.edge(XMLSchema.SHORT, RDFS.SUBCLASSOF, XMLSchema.INT);
+		graph.edge(XMLSchema.STRING, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.TIME, RDFS.SUBCLASSOF, RDFS.DATATYPE);
+		graph.edge(XMLSchema.UNSIGNED_BYTE, RDFS.SUBCLASSOF, XMLSchema.UNSIGNED_SHORT);
+		graph.edge(XMLSchema.UNSIGNED_INT, RDFS.SUBCLASSOF, XMLSchema.UNSIGNED_LONG);
+		graph.edge(XMLSchema.UNSIGNED_LONG, RDFS.SUBCLASSOF, XMLSchema.NON_NEGATIVE_INTEGER);
+		graph.edge(XMLSchema.UNSIGNED_SHORT, RDFS.SUBCLASSOF, XMLSchema.UNSIGNED_INT);
+	}
+
+	
 	
 }

@@ -117,6 +117,7 @@ import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.XSD;
 import io.konig.data.app.common.DataApp;
 import io.konig.data.app.generator.DataAppGenerator;
 import io.konig.data.app.generator.DataAppGeneratorException;
@@ -175,7 +176,6 @@ import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryLabelGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
 import io.konig.schemagen.gcp.CloudSqlAdminManager;
-import io.konig.schemagen.gcp.CloudSqlJsonGenerator;
 import io.konig.schemagen.gcp.CloudSqlTableWriter;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
@@ -234,9 +234,8 @@ import io.konig.transform.aws.AuroraTransformGenerator;
 import io.konig.transform.bigquery.BigQueryTransformGenerator;
 import io.konig.transform.factory.ShapeRuleFactory;
 import io.konig.transform.model.ShapeTransformException;
-import io.konig.transform.mysql.SqlTransformGenerator;
-import io.konig.transform.mysql.OldMySqlTransformGenerator;
 import io.konig.transform.mysql.RoutedSqlTransformVisitor;
+import io.konig.transform.mysql.SqlTransformGenerator;
 import io.konig.transform.mysql.SqlTransformWriter;
 import io.konig.transform.proto.AwsAuroraChannelFactory;
 import io.konig.transform.proto.ShapeModelFactory;
@@ -314,6 +313,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter
     private HashSet<String> excludeNamespace;
 	
+    @Parameter
+	private OwlProfile[] profiles;
 
     @Parameter
     private ClassDiagram[] plantUML;
@@ -510,6 +511,15 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	BigQueryInfo bigQuery=null;
     	CloudSqlInfo cloudSql=null; 	
 	
+		if (profiles != null) {
+			for (OwlProfile profile : profiles) {
+				switch (profile) {
+				case XML_SCHEMA_DATATYPE_HIERARCHY :
+					XSD.addDatatypeHierarchy(owlGraph);
+					break;
+				}
+			}
+		}
 		
     	if(amazonWebServices!=null && amazonWebServices.getAurora()!=null){
     		aurora=amazonWebServices.getAurora();

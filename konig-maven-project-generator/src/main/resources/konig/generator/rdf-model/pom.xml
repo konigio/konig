@@ -46,6 +46,13 @@
 	  			<defaults>
 	  				<rootDir>${basedir}/target/generated</rootDir>
 	  			</defaults>
+#if($profiles)
+				<profiles>
+				#foreach( $profile in $profiles )
+					<profile>$profile.name()</profile>
+				#end
+				</profiles>
+#end
 #if($tabularShapes)$tabularShapes
 #end	  			
 $workbook

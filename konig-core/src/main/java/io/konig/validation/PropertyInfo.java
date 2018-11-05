@@ -74,6 +74,18 @@ public class PropertyInfo {
 		
 		return false;
 	}
+
+	public URI rdfPropertyRange() {
+		for (RangeInfo r : rangeInfo) {
+			if (r.getParentShapeId()==null) {
+				if (r.getDatatype()!=null) {
+					return r.getDatatype();
+				}
+				return r.getOwlClass();
+			}
+		}
+		return null;
+	}
 	
 
 }
