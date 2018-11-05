@@ -455,6 +455,10 @@ public class OwlReasoner {
 		return owlClass;
 	}
 	
+	public boolean isSubclassOfLiteral(Resource id) {
+		return isDatatype(id) || isSubClassOf(id, RDFS.LITERAL);
+	}
+	
 	public boolean isDatatype(Resource id) {
 		if (id instanceof URI) {
 			URI uri = (URI) id;

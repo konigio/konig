@@ -38,6 +38,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import io.konig.maven.FileUtil;
 import io.konig.maven.ModelValidationConfig;
+import io.konig.maven.OwlInference;
 import io.konig.maven.OwlProfile;
 import io.konig.maven.TabularShapeFactoryConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
@@ -49,6 +50,7 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 	private TabularShapeFactoryConfig tabularShapeFactoryConfig;
 	private ModelValidationConfig modelValidationConfig;
 	private OwlProfile[] profiles;
+	private OwlInference[] inferences;
 	
 	public RdfModelGenerator(MavenProjectConfig mavenProject, WorkbookProcessor workbook) {
 		super(workbook, "workbook");
@@ -73,6 +75,7 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 			// Use default profiles
 			context.put("profiles", new OwlProfile[]{OwlProfile.XML_SCHEMA_DATATYPE_HIERARCHY});
 		}
+		context.put("inferences",  inferences);
 		return context;
 	}
 	
@@ -210,6 +213,14 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 
 	public void setProfiles(OwlProfile[] profiles) {
 		this.profiles = profiles;
+	}
+
+	public OwlInference[] getInferences() {
+		return inferences;
+	}
+
+	public void setInferences(OwlInference[] inferences) {
+		this.inferences = inferences;
 	}
 
 	

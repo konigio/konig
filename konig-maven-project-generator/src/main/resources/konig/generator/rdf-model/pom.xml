@@ -53,6 +53,13 @@
 				#end
 				</profiles>
 #end
+#if($inferences)
+				<inferences>
+				#foreach( $inference in $inferences ) 
+					<inference>$inference.name()</inference>
+				#end
+				</inferences>
+#end
 #if($tabularShapes)$tabularShapes
 #end	  			
 $workbook

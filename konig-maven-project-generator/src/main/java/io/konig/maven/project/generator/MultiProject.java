@@ -36,6 +36,7 @@ import io.konig.maven.JsonSchemaConfig;
 import io.konig.maven.KonigProject;
 import io.konig.maven.ModelValidationConfig;
 import io.konig.maven.OracleManagedCloudConfig;
+import io.konig.maven.OwlInference;
 import io.konig.maven.OwlProfile;
 import io.konig.maven.ParentProjectConfig;
 import io.konig.maven.TabularShapeFactoryConfig;
@@ -57,6 +58,7 @@ public class MultiProject extends MavenProjectConfig {
 	private TabularShapeFactoryConfig tabularShapes;
 	private ModelValidationConfig modelValidation;
 	private OwlProfile[] profiles;
+	private OwlInference[] inferences;
 	
 	public MultiProject() {
 		
@@ -162,6 +164,7 @@ public class MultiProject extends MavenProjectConfig {
 			rdf.setTabularShapeFactoryConfig(tabularShapes);
 			rdf.setModelValidationConfig(modelValidation);
 			rdf.setProfiles(profiles);
+			rdf.setInferences(inferences());
 			setRdfSourceDir(new File(rdf.baseDir(), "target/generated/rdf"));
 			parent.add(rdf);
 		}
@@ -209,6 +212,15 @@ public class MultiProject extends MavenProjectConfig {
 		return parent;
 	}
 	
+	private OwlInference[] inferences() {
+		if (inferences == null) {
+			inferences = new OwlInference[] {
+				OwlInference.OWL_PROPERTY_CLASSIFICATION	
+			};
+		}
+		return inferences;
+	}
+
 	private String[] rdfSources() {
 		List<String> list = new ArrayList<>();
 
@@ -274,6 +286,14 @@ public class MultiProject extends MavenProjectConfig {
 
 	public void setProfiles(OwlProfile[] profiles) {
 		this.profiles = profiles;
+	}
+
+	public OwlInference[] getInferences() {
+		return inferences;
+	}
+
+	public void setInferences(OwlInference[] inferences) {
+		this.inferences = inferences;
 	}
 
 

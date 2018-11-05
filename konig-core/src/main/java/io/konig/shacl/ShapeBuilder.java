@@ -282,6 +282,7 @@ public class ShapeBuilder {
 	public ShapeBuilder beginShape() {
 		BNode shapeId = valueFactory.createBNode();
 		Shape shape = new Shape(shapeId);
+		shapeManager.addShape(shape);
 		
 		ShapeConsumer consumer = peekConsumer();
 		if (consumer != null) {
