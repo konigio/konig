@@ -210,7 +210,9 @@ public class BigQueryTableGenerator {
 		result.setType(fieldType.name());
 		result.setMode(fieldMode.name());
 		
-		if (fieldType == BigQueryDatatype.RECORD) {
+		if (RDF.LANGSTRING.equals(p.getDatatype())) {
+			result.setFields(langStringFields(p));
+		} else if (fieldType == BigQueryDatatype.RECORD) {
 			Shape valueShape = p.getShape();
 			if (valueShape == null) {
 				Resource shapeId = p.getShapeId();
@@ -229,6 +231,30 @@ public class BigQueryTableGenerator {
 		
 		traversal.pop();
 		return result;
+	}
+
+	private List<TableFieldSchema> langStringFields(PropertyConstraint p) {
+		
+		List<TableFieldSchema> list = new ArrayList<>();
+		TableFieldSchema stringValue = new TableFieldSchema();
+		list.add(stringValue);
+		stringValue.setName("stringValue");
+		stringValue.setMode(FieldMode.REQUIRED.name());
+		stringValue.setType(BigQueryDatatype.STRING.name());
+		
+		TableFieldSchema languageCode = new TableFieldSchema();
+		list.add(languageCode);
+		languageCode.setName("languageCode");
+		languageCode.setMode(FieldMode.REQUIRED.name());
+		languageCode.setType(BigQueryDatatype.STRING.name());
+		
+		
+		return list;
+	}
+
+	private String stringValueType(PropertyConstraint p) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	/**
