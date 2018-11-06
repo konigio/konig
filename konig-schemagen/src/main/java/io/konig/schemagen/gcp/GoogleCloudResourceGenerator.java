@@ -32,6 +32,7 @@ import io.konig.gcp.common.BigQueryTableListener;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.ShapeNamer;
 import io.konig.shacl.ShapeVisitor;
 import io.konig.transform.proto.BigQueryChannelFactory;
 import io.konig.transform.proto.ShapeModelFactory;
@@ -72,7 +73,7 @@ public class GoogleCloudResourceGenerator {
 	public void addBigQueryGenerator(ProjectFolder folder) {
 
 		BigQueryTableWriter tableWriter = new BigQueryTableWriter(folder);
-		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
+		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator(shapeManager, null, owlReasoner);
 		
 		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, tableWriter, shapeModelFactory());
 		transformer.setBigQueryTableListener(bigqueryTableListener);
@@ -90,7 +91,7 @@ public class GoogleCloudResourceGenerator {
 	public void addBigQueryViewGenerator(ProjectFolder bigQueryViewDir) {
 		
 		BigQueryTableWriter viewWriter = new BigQueryTableWriter(bigQueryViewDir);
-		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator();
+		BigQueryTableGenerator tableGenerator = new BigQueryTableGenerator(shapeManager, null, owlReasoner);
 		
 		ShapeToBigQueryTransformer transformer = new ShapeToBigQueryTransformer(tableGenerator, viewWriter ,shapeModelFactory());
 		transformer.setBigQueryTableListener(bigqueryTableListener);

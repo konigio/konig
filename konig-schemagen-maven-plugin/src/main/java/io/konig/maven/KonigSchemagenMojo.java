@@ -959,7 +959,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				 
 				 VelocityContext context = workbookLoader.getDataSourceGenerator().getContext();
 				 emitter.add(new OntologyEmitter(workbook.owlDir(defaults)));
-				 emitter.add(new ShapeToGraphEmitter(shapeManager));
 				 emitter.add(new ShapeToFileEmitter(shapeManager, workbook.shapesDir(defaults)));
 				 emitter.add(new SkosEmitter(workbook.skosDir(defaults)));
 				 emitter.add(new NamedGraphEmitter(workbook.owlDir(defaults)));

@@ -3247,7 +3247,8 @@ public class WorkbookLoader {
 		private void readShapeHeader(Sheet sheet) {
 			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = 
 				shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = 
-				shapeIriTemplateCol = tabularOriginShapeCol = termStatusCol = shapeProcessingCol = UNDEFINED;
+				shapeIriTemplateCol = tabularOriginShapeCol = termStatusCol = shapeProcessingCol = 
+				oneOfCol = xoneCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 

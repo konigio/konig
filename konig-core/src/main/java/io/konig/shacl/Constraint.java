@@ -1,5 +1,7 @@
 package io.konig.shacl;
 
+import java.util.List;
+
 import org.openrdf.model.URI;
 
 /*
@@ -34,6 +36,8 @@ public interface Constraint {
 	 */
 	boolean accept(Vertex v);
 	
+	List<Shape> getShapes();
+	
 	Shape findShapeByTargetClass(URI targetClass);
 	
 	/**
@@ -42,4 +46,6 @@ public interface Constraint {
 	 * @return
 	 */
 	boolean hasPropertyConstraint(URI predicate);
+	
+	Shape getDeclaringShape();
 }

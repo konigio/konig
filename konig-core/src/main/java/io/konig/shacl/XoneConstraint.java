@@ -34,6 +34,7 @@ import io.konig.core.Vertex;
 public class XoneConstraint implements Constraint, ShapeConsumer {
 
 	private List<Shape> shapes = new ArrayList<>();
+	private Shape declaringShape;
 	
 	public XoneConstraint() {
 		
@@ -85,5 +86,14 @@ public class XoneConstraint implements Constraint, ShapeConsumer {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public Shape getDeclaringShape() {
+		return declaringShape;
+	}
+	
+	public void setDeclaringShape(Shape s) {
+		declaringShape = s;
 	}
 }

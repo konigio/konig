@@ -69,6 +69,7 @@ public class Shape implements Cloneable {
 	private AndConstraint and;
 	private OrConstraint or;
 	private XoneConstraint xone;
+	private NotConstraint not;
 	
 	private Activity wasGeneratedBy;
 	private String bigQueryTableId;
@@ -161,6 +162,19 @@ public class Shape implements Cloneable {
 				cloneOr.add(shape.deepClone());
 			}
 		}
+		
+		if (xone != null) {
+			XoneConstraint cloneXone = new XoneConstraint();
+			clone.setXone(cloneXone);
+			for (Shape s : xone.getShapes()) {
+				cloneXone.add(s.deepClone());
+			}
+		}
+		if (not != null) {
+			NotConstraint cloneNot = new NotConstraint();
+			clone.setNot(cloneNot);
+			cloneNot.setShape(not.getShape().deepClone());
+		}
 		return clone;
 	}
 
@@ -180,6 +194,9 @@ public class Shape implements Cloneable {
 
 	public void setAnd(AndConstraint and) {
 		this.and = and;
+		if (and != null) {
+			and.setDeclaringShape(this);
+		}
 	}
 	
 	
@@ -191,6 +208,9 @@ public class Shape implements Cloneable {
 
 	public void setOr(OrConstraint or) {
 		this.or = or;
+		if (or != null) {
+			or.setDeclaringShape(this);
+		}
 	}
 	
 	public PropertyConstraint getTimeParam() {
@@ -763,6 +783,20 @@ public class Shape implements Cloneable {
 
 	public void setXone(XoneConstraint xone) {
 		this.xone = xone;
+		if (xone!=null) {
+			xone.setDeclaringShape(this);
+		}
+	}
+
+	public NotConstraint getNot() {
+		return not;
+	}
+
+	public void setNot(NotConstraint not) {
+		this.not = not;
+		if (not != null) {
+			not.setDeclaringShape(this);
+		}
 	}
 	
 	

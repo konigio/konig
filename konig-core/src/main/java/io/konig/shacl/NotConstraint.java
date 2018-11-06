@@ -1,5 +1,8 @@
 package io.konig.shacl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.openrdf.model.URI;
 
 /*
@@ -28,8 +31,13 @@ import io.konig.core.Vertex;
 public class NotConstraint implements Constraint {
 
 	private Shape shape;
+	private Shape declaringShape;
+	
+	public NotConstraint() {
+		
+	}
 
-	public NotConstraint(Shape shape) {
+	public void setShape(Shape shape) {
 		this.shape = shape;
 	}
 
@@ -53,7 +61,22 @@ public class NotConstraint implements Constraint {
 		
 		return targetClass.equals(shape.getTargetClass()) ? shape : null;
 	}
+
+	@Override
+	public List<Shape> getShapes() {
+		List<Shape> result = new ArrayList<>();
+		result.add(shape);
+		return result;
+	}
+
+	@Override
+	public Shape getDeclaringShape() {
+		return declaringShape;
+	}
 	
+	public void setDeclaringShape(Shape s) {
+		declaringShape = s;
+	}
 	
 
 }
