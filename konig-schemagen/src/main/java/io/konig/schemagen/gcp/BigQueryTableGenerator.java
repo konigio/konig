@@ -26,10 +26,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -57,11 +60,14 @@ import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.merge.ShapeAggregator;
 import io.konig.schemagen.sql.SqlKeyType;
 import io.konig.schemagen.sql.SqlTableGeneratorUtil;
+import io.konig.shacl.AndConstraint;
 import io.konig.shacl.NodeKind;
+import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeNamer;
+import io.konig.shacl.XoneConstraint;
 
 /**
  * A utility that generates BigQuery table definitions from SHACL Shapes.
@@ -162,6 +168,7 @@ public class BigQueryTableGenerator {
 	
 	private TableSchema toTableSchema(Shape shape, Traversal traversal) {
 
+		shape = flatten(shape);
 		TableSchema schema = new TableSchema();
 		schema.setFields(listFields(shape, traversal));
 		return schema;
@@ -210,7 +217,9 @@ public class BigQueryTableGenerator {
 		result.setType(fieldType.name());
 		result.setMode(fieldMode.name());
 		
-		if (fieldType == BigQueryDatatype.RECORD) {
+		if (RDF.LANGSTRING.equals(p.getDatatype())) {
+			result.setFields(langStringFields(p));
+		} else if (fieldType == BigQueryDatatype.RECORD) {
 			Shape valueShape = p.getShape();
 			if (valueShape == null) {
 				Resource shapeId = p.getShapeId();
@@ -230,6 +239,26 @@ public class BigQueryTableGenerator {
 		traversal.pop();
 		return result;
 	}
+
+	private List<TableFieldSchema> langStringFields(PropertyConstraint p) {
+		
+		List<TableFieldSchema> list = new ArrayList<>();
+		TableFieldSchema stringValue = new TableFieldSchema();
+		list.add(stringValue);
+		stringValue.setName("stringValue");
+		stringValue.setMode(FieldMode.REQUIRED.name());
+		stringValue.setType(BigQueryDatatype.STRING.name());
+		
+		TableFieldSchema languageCode = new TableFieldSchema();
+		list.add(languageCode);
+		languageCode.setName("languageCode");
+		languageCode.setMode(FieldMode.REQUIRED.name());
+		languageCode.setType(BigQueryDatatype.STRING.name());
+		
+		
+		return list;
+	}
+
 
 	/**
 	 * Generate a BigQuery table definition for each resource of type gcp:BigQueryTable within a given graph.
@@ -509,6 +538,292 @@ public class BigQueryTableGenerator {
 		
 	}
 	
+	private Shape flatten(Shape sourceShape) {
+		AndConstraint and = sourceShape.getAnd();
+		OrConstraint or = sourceShape.getOr();
+		XoneConstraint xone = sourceShape.getXone();
+		
+		
+		
+		if (and==null && or==null && xone==null) {
+			return sourceShape;
+		}
+		sourceShape.setXone(null);
+		sourceShape.setOr(null);
+		sourceShape.setAnd(null);
+		
+		Shape result = sourceShape.deepClone();
+		
+		sourceShape.setAnd(and);
+		sourceShape.setOr(or);
+		sourceShape.setXone(xone);
+		
+		if (or != null) {
+			OrContext orContext = new OrContext();
+			orContext.doMerge(result, or.getShapes());
+		}
+		
+		if (and != null) {
+			AndContext andContext = new AndContext();
+			andContext.doMerge(result, and.getShapes());
+		}
+		
+		if (xone != null) {
+			OrContext orContext = new OrContext();
+			orContext.doMerge(result, xone.getShapes());
+		}
+		
+		
+		return result;
+	}
+
+
 	
+	
+	private abstract class BaseConstraintContext  {
+		
+		
+
+		
+		void doMerge(Shape sourceShape, List<Shape> constraints) {
+
+			Set<URI> predicateSet = collectPredicates(constraints);
+			for (URI predicate : predicateSet) {
+				merge(sourceShape,predicate, constraints);
+			}
+			
+		}
+
+
+		private void merge(Shape sinkShape, URI predicate, List<Shape> constraints) {
+			PropertyConstraint q = sinkShape.getPropertyConstraint(predicate);
+			
+			if (q != null) {
+				throw new KonigException("Base shape <" + sinkShape.getId().stringValue() + "> must not contain property " + predicate);
+			}
+			q = new PropertyConstraint(predicate);
+			q.setMinCount(-1);
+			q.setMaxCount(-1);
+			sinkShape.add(q);
+
+			List<Shape> valueShapes = new ArrayList<>();
+			for (Shape s : constraints) {
+				
+				PropertyConstraint p = s.getPropertyConstraint(predicate);
+				q.setMaxCount(maxCount(p, q));
+				q.setMinCount(minCount(p, q));
+				if (p==null) {
+					 continue;
+				}
+				q.setNodeKind(nodeKind(p.getNodeKind(), q.getNodeKind()));
+				setValueType(p, q);
+				Shape pShape = p.getShape();
+				
+				if (pShape != null) {
+					valueShapes.add(pShape);
+				}
+			}
+			if (!valueShapes.isEmpty()) {
+				Shape childShape = new Shape();
+				q.setShape(childShape);
+				doMerge(childShape, valueShapes);
+			}
+			q.setMinCount(countValue(q.getMinCount()));
+			q.setMaxCount(countValue(q.getMaxCount()));
+			
+		}
+
+		
+
+
+		private Integer countValue(Integer count) {
+			return 
+				count==null || count.intValue()<0  ? null : count;
+		}
+
+
+		abstract protected Integer maxCount(PropertyConstraint p, PropertyConstraint q);
+
+		abstract protected Integer minCount(PropertyConstraint p, PropertyConstraint q);
+
+
+
+		/**
+		 * Merge the properties into a single target
+		 * @param p The property whose values are to be merged into the sink
+		 * @param q The property into which values are to be merged.
+		 */
+		private void setValueType(PropertyConstraint p, PropertyConstraint q) {
+			URI predicate = p.getPredicate();
+			URI pDatatype = p.getDatatype();
+			URI qDatatype = q.getDatatype();
+			
+			Resource pValueClass = valueClass(p);
+			Resource qValueClass = valueClass(q);
+			
+			if (
+				(pDatatype!=null && qValueClass!=null) ||
+				(pValueClass!=null && qDatatype!=null) ) {
+				throw new KonigException("Cannot merge " + predicate);
+			}
+
+			
+			q.setDatatype(leastCommonDatatype(predicate, pDatatype, qDatatype));
+			q.setValueClass(leastCommonValueClass(predicate, pValueClass, qValueClass));
+			
+			
+			
+			
+			
+		}
+
+		private Resource leastCommonValueClass(URI predicate, Resource a, Resource b) {
+			if (a==null && b==null) {
+				return null;
+			}
+			Resource least = owl.leastCommonSuperClass(a, b);
+			return least instanceof URI ? (URI) least : null;
+		}
+
+		private NodeKind nodeKind(NodeKind a, NodeKind b) {
+			if (a==b) {
+				return a;
+			}
+			if (a==null) {
+				return b;
+			}
+			if (b==null) {
+				return a;
+			}
+			if (a==NodeKind.IRI || b==NodeKind.IRI) {
+				return NodeKind.IRI;
+			}
+			return null;
+		}
+
+		private URI leastCommonDatatype(URI predicate, URI a, URI b) {
+			if (a==null && b==null) {
+				return null;
+			}
+			Resource least = owl.leastCommonSuperClass(a, b);
+			if (least instanceof URI && !OWL.THING.equals(least)) {
+				return (URI)least;
+			}
+			throw new KonigException("Incompatible datatypes for predicate < " + 
+					predicate + ">: " + a.getLocalName() + " AND " + b.getLocalName());
+		}
+
+		private Resource valueClass(PropertyConstraint q) {
+			Resource valueClass = q.getValueClass();
+			if (valueClass == null && q.getShape()!= null) {
+				valueClass = q.getShape().getTargetClass();
+			}
+			return valueClass;
+		}
+
+		private Set<URI> collectPredicates(List<Shape> list) {
+			Set<URI> result = new HashSet<>();
+			for (Shape s : list) {
+				for (PropertyConstraint p : s.getProperty()) {
+					URI predicate = p.getPredicate();
+					if (predicate != null) {
+						result.add(predicate);
+					}
+				}
+			}
+			return result;
+		}
+
+		
+	}
+	
+	private class OrContext extends BaseConstraintContext {
+		
+		
+
+		@Override
+		protected Integer minCount(PropertyConstraint p, PropertyConstraint q) {
+			if (p==null) {
+				return 0;
+			}
+			Integer pMin = p.getMinCount();
+			Integer qMin = q.getMinCount();
+			
+			if (qMin.intValue()==-1) {
+				return pMin;
+			}
+			
+			if (pMin == null) {
+				pMin = 0;
+			}
+			
+			
+			return pMin.intValue() < qMin.intValue() ? pMin : qMin;
+		}
+
+		@Override
+		protected Integer maxCount(PropertyConstraint p, PropertyConstraint q) {
+			if (p == null) {
+				return q.getMaxCount();
+			}
+	
+			
+			Integer pMax = p.getMaxCount();
+			Integer qMax = q.getMaxCount();
+			
+			if (qMax==null) {
+				return null;
+			}
+			if (qMax.intValue()==-1) {
+				return pMax;
+			}
+			
+			return pMax.intValue() > qMax.intValue() ? pMax : qMax;
+		}
+
+		
+	}
+	
+	private class AndContext extends BaseConstraintContext {
+
+		@Override
+		protected Integer maxCount(PropertyConstraint p, PropertyConstraint q) {
+
+			if (p == null) {
+				return q.getMaxCount();
+			}
+			Integer pMax = p.getMaxCount();
+			Integer qMax = q.getMaxCount();
+			if (qMax==null) {
+				return pMax;
+			}
+			if (pMax == null) {
+				return qMax;
+			}
+			return pMax.intValue() > qMax.intValue() ? qMax : pMax;
+		}
+
+		@Override
+		protected Integer minCount(PropertyConstraint p, PropertyConstraint q) {
+
+			if (p==null) {
+				return q.getMinCount();
+			}
+			Integer pMin = p.getMinCount();
+			Integer qMin = q.getMinCount();
+			
+			if (pMin == null) {
+				pMin = 0;
+			}
+			if (qMin == null) {
+				qMin = 0;
+			}
+			
+			return pMin.intValue() > qMin.intValue() ? pMin : qMin;
+		}
+
+	
+		
+	}
 	
 }

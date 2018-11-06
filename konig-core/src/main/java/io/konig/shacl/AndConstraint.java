@@ -30,6 +30,7 @@ import io.konig.core.Vertex;
 
 public class AndConstraint implements Constraint, ShapeConsumer {
 
+	private Shape declaringShape;
 	private List<Shape> shapes = new ArrayList<>();
 
 	public List<Shape> getShapes() {
@@ -75,5 +76,14 @@ public class AndConstraint implements Constraint, ShapeConsumer {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public Shape getDeclaringShape() {
+		return declaringShape;
+	}
+	
+	public void setDeclaringShape(Shape s) {
+		declaringShape = s;
 	}
 }

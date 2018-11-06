@@ -22,6 +22,7 @@ package io.konig.schemagen.gcp;
 
 
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.OwlReasoner;
@@ -59,6 +60,9 @@ public class BigQueryDatatypeMapper {
 				XMLSchema.DATE.equals(datatype) 
 			) {
 				return BigQueryDatatype.TIMESTAMP;
+			}
+			if (RDF.LANGSTRING.equals(datatype)) {
+				return BigQueryDatatype.RECORD;
 			}
 		}
 		

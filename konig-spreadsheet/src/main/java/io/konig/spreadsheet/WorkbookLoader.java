@@ -2354,9 +2354,12 @@ public class WorkbookLoader {
 				edge(valueClass, RDF.TYPE, OWL.CLASS);
 				setDefaultSubject(valueClass);
 			}
+			
+			boolean isDatatype = isDatatype(valueType);
 
 			if (
-					valueClass != null 
+					!isDatatype 
+					&& valueClass != null 
 					&& (valueType instanceof URI)
 					&& !Konig.id.equals(propertyId)
 					&& !XMLSchema.NAMESPACE.equals(((URI) valueType).getNamespace())
@@ -2445,7 +2448,7 @@ public class WorkbookLoader {
 				if (!RDF.TYPE.equals(propertyId)) {
 					edge(valueClass, RDF.TYPE, OWL.CLASS);
 				}
-			} else if (isDatatype(valueType)) {
+			} else if (isDatatype) {
 				p.setDatatype((URI)valueType);
 			} else if (SH.IRI.equals(valueType)) {
 				p.setNodeKind(NodeKind.IRI);
@@ -3244,7 +3247,8 @@ public class WorkbookLoader {
 		private void readShapeHeader(Sheet sheet) {
 			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = 
 				shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = 
-				shapeIriTemplateCol = tabularOriginShapeCol = termStatusCol = shapeProcessingCol = UNDEFINED;
+				shapeIriTemplateCol = tabularOriginShapeCol = termStatusCol = shapeProcessingCol = 
+				oneOfCol = xoneCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
 
@@ -3611,9 +3615,10 @@ public class WorkbookLoader {
 				}
 
 				if (subject.equals(Schema.Boolean) || subject.equals(Schema.Date) || subject.equals(Schema.DateTime)
+						|| subject.equals(RDF.LANGSTRING) 
 						|| subject.equals(Schema.Number) || subject.equals(Schema.Float)
 						|| subject.equals(Schema.Integer) || subject.equals(Schema.Text) || subject.equals(Schema.Time)
-						|| subject.equals(RDFS.LITERAL) || subject.equals(RDFS.DATATYPE)
+						|| subject.equals(RDFS.LITERAL) || subject.equals(RDFS.DATATYPE) 
 						|| subject.equals(RDF.XMLLITERAL)
 
 				) {
