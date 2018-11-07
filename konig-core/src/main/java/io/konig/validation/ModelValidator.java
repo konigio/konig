@@ -507,6 +507,9 @@ public class ModelValidator {
 						Resource id = v.getId();
 						if (id instanceof URI) {
 							URI iri = (URI) id;
+							if (request.getOwl().isDatatype(iri)) {
+								continue;
+							}
 							CaseStyle actualStyle = caseStyle(iri);
 							if (!expectedStyle.equals(actualStyle)) {
 								produceClassReport(iri).setNameHasWrongCase(true);
