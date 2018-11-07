@@ -1080,6 +1080,9 @@ public class WorkbookLoader {
 
 		private void loadIndividualProperties(Sheet sheet) throws SpreadsheetException {
 
+			if(ignoreSheet(sheet)) {
+				return;
+			}
 			Row header = readIndividualHeader(sheet);
 			int rowSize = sheet.getLastRowNum() + 1;
 
@@ -1226,6 +1229,9 @@ public class WorkbookLoader {
 		}
 
 		private void loadTriples(Sheet sheet) throws SpreadsheetException {
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readTriplesHeader(sheet);
 			int rowSize = sheet.getLastRowNum() + 1;
 			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
@@ -1394,6 +1400,9 @@ public class WorkbookLoader {
 		}
 
 		private void loadDataDictionaryAbbreviations(Sheet sheet) throws SpreadsheetException {
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readDataDictionaryAbbreviationsHeader(sheet);
 			
 			String abbreviationSchemeIRI = getAbbreviationSchemeIRI();
@@ -1504,11 +1513,11 @@ public class WorkbookLoader {
 			
 		
 		}
+		
 
 		private void loadDataDictionaryTemplate(Sheet sheet) throws SpreadsheetException {
 			
 			if (ignoreSheet(sheet)) {
-				logger.info("Ignoring sheet because of the `ignoreSheets` setting: {}", sheet.getSheetName());
 				return;
 			}
 			readDataDictionaryTemplateHeader(sheet);
@@ -1540,6 +1549,7 @@ public class WorkbookLoader {
 				StringTokenizer tokens = new StringTokenizer(value, "\r\n");
 				while (tokens.hasMoreTokens()) {
 					if (sheetName.equalsIgnoreCase(tokens.nextToken())) {
+						logger.info("Ignoring sheet because of the `ignoreSheets` setting: {}", sheet.getSheetName());
 						return true;
 					}
 				}
@@ -2091,6 +2101,9 @@ public class WorkbookLoader {
 		}
 
 		private void loadGoogleCloudSqlInstance(Sheet sheet) {
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readGoogleCloudSqlInstanceHeader(sheet);
 
 			int rowSize = sheet.getLastRowNum() + 1;
@@ -2102,6 +2115,9 @@ public class WorkbookLoader {
 		
 		
 		private void loadAmazonRDSCluster(Sheet sheet) {
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readAmazonRDSClusterHeader(sheet);
 			
 			int rowSize = sheet.getLastRowNum() + 1;
@@ -2111,6 +2127,9 @@ public class WorkbookLoader {
 			}
 		}
 		private void loadCloudFormationTemplate(Sheet sheet) throws SpreadsheetException{
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readCloudFormationTemplateHeader(sheet);
 
 			int rowSize = sheet.getLastRowNum() + 1;
@@ -2121,6 +2140,9 @@ public class WorkbookLoader {
 		}
 		
 		private void loadSecurityTags(Sheet sheet) throws SpreadsheetException {
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readSecurityTagsHeader(sheet);
 			int rowSize = sheet.getLastRowNum() + 1;
 			for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
@@ -2130,6 +2152,9 @@ public class WorkbookLoader {
 		}
 		
 		private void loadSettings(Sheet sheet) throws SpreadsheetException {
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readSettingHeader(sheet);
 			int rowSize = sheet.getLastRowNum() + 1;
 
@@ -2242,6 +2267,9 @@ public class WorkbookLoader {
 		}
 
 		private void loadPropertyConstraints(Sheet sheet) throws SpreadsheetException {
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readPropertyConstraintHeader(sheet);
 			int rowSize = sheet.getLastRowNum() + 1;
 
@@ -2956,6 +2984,9 @@ public class WorkbookLoader {
 
 		private void loadShapes(Sheet sheet) throws SpreadsheetException {
 
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readShapeHeader(sheet);
 
 			int rowSize = sheet.getLastRowNum() + 1;
@@ -3328,7 +3359,9 @@ public class WorkbookLoader {
 		}
 
 		private void loadIndividuals(Sheet sheet) throws SpreadsheetException {
-
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readIndividualHeader(sheet);
 			int rowSize = sheet.getLastRowNum() + 1;
 
@@ -3467,6 +3500,9 @@ public class WorkbookLoader {
 
 		private void loadProperties(Sheet sheet) throws SpreadsheetException {
 
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			try {
 				readPropertyHeader(sheet);
 			} catch (Throwable e) {
@@ -3729,6 +3765,9 @@ public class WorkbookLoader {
 
 		private void loadClasses(Sheet sheet) throws SpreadsheetException {
 
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			readClassHeader(sheet);
 
 			int rowSize = sheet.getLastRowNum() + 1;
@@ -3945,6 +3984,9 @@ public class WorkbookLoader {
 
 		private void loadOntologies(Sheet sheet) throws SpreadsheetException {
 
+			if (ignoreSheet(sheet)) {
+				return;
+			}
 			try {
 				readOntologyHeader(sheet);
 			} catch (Throwable e) {
