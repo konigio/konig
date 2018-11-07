@@ -114,6 +114,7 @@ import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
+import io.konig.core.util.ValueFormat;
 import io.konig.core.vocab.AWS;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
@@ -174,6 +175,7 @@ import io.konig.schemagen.aws.AwsResourceGenerator;
 import io.konig.schemagen.aws.CloudFormationTemplateWriter;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
+import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
 import io.konig.schemagen.gcp.BigQueryLabelGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
 import io.konig.schemagen.gcp.CloudSqlAdminManager;
@@ -192,7 +194,6 @@ import io.konig.schemagen.io.GenericEmitter;
 import io.konig.schemagen.io.NamedGraphEmitter;
 import io.konig.schemagen.io.OntologyEmitter;
 import io.konig.schemagen.io.ShapeToFileEmitter;
-import io.konig.schemagen.io.ShapeToGraphEmitter;
 import io.konig.schemagen.java.BasicJavaNamer;
 import io.konig.schemagen.java.Filter;
 import io.konig.schemagen.java.JavaClassBuilder;
@@ -220,11 +221,14 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeFilter;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
+import io.konig.shacl.ShapeNamer;
 import io.konig.shacl.ShapeReasoner;
+import io.konig.shacl.ShapeVisitor;
 import io.konig.shacl.SimpleMediaTypeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.ShapeInjector;
 import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
+import io.konig.shacl.impl.TemplateShapeNamer;
 import io.konig.shacl.io.DdlFileEmitter;
 import io.konig.shacl.io.ShapeAuxiliaryWriter;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -332,6 +336,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 
 	@Parameter
 	private MultiProject multiProject;
+	
+	@Parameter
+	private BuildTarget buildTarget;
 	 
     
     private NamespaceManager nsManager;
@@ -539,8 +546,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	if(amazonWebServices!=null && amazonWebServices.getAurora()!=null){
     		aurora=amazonWebServices.getAurora();
     	}
-    	else if(googleCloudPlatform!=null && googleCloudPlatform.getBigquery()!=null){
-    		bigQuery=googleCloudPlatform.getBigquery();
+    	else if(googleCloudPlatform!=null && googleCloudPlatform.getBigquery()!=null && buildTarget==BuildTarget.RDF){
+    		generateBigQueryEnumShapes();
+    		
     		
     	}
     	else if(googleCloudPlatform!=null && googleCloudPlatform.getCloudsql()!=null){
@@ -558,6 +566,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				}
     		}
     	}
+	}
+
+
+	private void generateBigQueryEnumShapes() {
+		
+		if (googleCloudPlatform.getBigqueryEnumShapeIriTemplate() != null) {
+
+			ValueFormat format = new SimpleValueFormat(googleCloudPlatform.getBigqueryEnumShapeIriTemplate());
+			ShapeNamer shapeNamer = new TemplateShapeNamer(nsManager, format);
+			
+			BigQueryEnumShapeGenerator generator = new BigQueryEnumShapeGenerator(datasetMapper(), createTableMapper(), shapeNamer, shapeManager);
+			generator.generateAll(owlReasoner);
+		}
+		
 	}
 
 
@@ -1154,6 +1176,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, SQLException {
 		if (googleCloudPlatform != null) {
 			
+			if (buildTarget!=null && buildTarget!=BuildTarget.GCP) {
+				return;
+			}
 
 			Configurator config = configurator();
 			config.configure(googleCloudPlatform);
