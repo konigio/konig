@@ -46,6 +46,7 @@
 	  			<defaults>
 	  				<rootDir>${basedir}/target/generated</rootDir>
 	  			</defaults>
+	  			<buildTarget>RDF</buildTarget>
 #if($profiles)
 				<profiles>
 				#foreach( $profile in $profiles )
@@ -59,6 +60,9 @@
 					<inference>$inference.name()</inference>
 				#end
 				</inferences>
+#end
+#if($googleCloudPlatform)
+$googleCloudPlatform
 #end
 #if($tabularShapes)$tabularShapes
 #end	  			

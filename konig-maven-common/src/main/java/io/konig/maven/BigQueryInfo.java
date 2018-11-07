@@ -59,6 +59,7 @@ public class BigQueryInfo {
 	@Parameter(property="konig.gcp.bigquery.transformScope")
 	private TransformProcessingScope transformScope;
 	
+	
 	public File getDirectory() {
 		return directory;
 	}

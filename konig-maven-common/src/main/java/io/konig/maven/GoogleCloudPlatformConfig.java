@@ -67,6 +67,9 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 	
 	@Parameter(property="konig.gcp.rdf.directory", defaultValue="${konig.gcp.directory}/rdf")
 	private File rdfDirectory;
+
+	@Parameter(property="konig.gcp.bigqueryEnumShapeIriTemplate")
+	private String bigqueryEnumShapeIriTemplate;
 	
 	public GoogleCloudPlatformConfig() {
 		
@@ -203,4 +206,16 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 	public void setCamelEtl(File camelEtl) {
 		this.camelEtl = camelEtl;
 	}
+
+
+
+	public String getBigqueryEnumShapeIriTemplate() {
+		return bigqueryEnumShapeIriTemplate;
+	}
+
+	public void setBigqueryEnumShapeIriTemplate(String bigqueryEnumShapeIriTemplate) {
+		this.bigqueryEnumShapeIriTemplate = bigqueryEnumShapeIriTemplate;
+	}
+	
+	
 }

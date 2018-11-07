@@ -37,6 +37,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import io.konig.maven.FileUtil;
+import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.ModelValidationConfig;
 import io.konig.maven.OwlInference;
 import io.konig.maven.OwlProfile;
@@ -49,6 +50,7 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 	private TabularShapeGeneratorConfig tabularShapeGeneratorConfig;
 	private TabularShapeFactoryConfig tabularShapeFactoryConfig;
 	private ModelValidationConfig modelValidationConfig;
+	private GoogleCloudPlatformConfig googleCloudPlatform;
 	private OwlProfile[] profiles;
 	private OwlInference[] inferences;
 	
@@ -68,6 +70,9 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 		}
 		if (modelValidationConfig != null) {
 			putObject("modelValidation", modelValidationConfig);
+		}
+		if (googleCloudPlatform != null) {
+			putObject("googleCloudPlatform", googleCloudPlatform);
 		}
 		if (profiles != null) {
 			context.put("profiles", profiles);
@@ -221,6 +226,14 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 
 	public void setInferences(OwlInference[] inferences) {
 		this.inferences = inferences;
+	}
+
+	public GoogleCloudPlatformConfig getGoogleCloudPlatform() {
+		return googleCloudPlatform;
+	}
+
+	public void setGoogleCloudPlatform(GoogleCloudPlatformConfig googleCloudPlatform) {
+		this.googleCloudPlatform = googleCloudPlatform;
 	}
 
 	

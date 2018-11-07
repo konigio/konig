@@ -29,6 +29,7 @@ import java.util.List;
 
 import io.konig.core.project.Project;
 import io.konig.maven.AmazonWebServicesConfig;
+import io.konig.maven.BuildTarget;
 import io.konig.maven.DataCatalogConfig;
 import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
@@ -59,6 +60,7 @@ public class MultiProject extends MavenProjectConfig {
 	private ModelValidationConfig modelValidation;
 	private OwlProfile[] profiles;
 	private OwlInference[] inferences;
+	private BuildTarget buildTarget;
 	
 	public MultiProject() {
 		
@@ -165,6 +167,7 @@ public class MultiProject extends MavenProjectConfig {
 			rdf.setModelValidationConfig(modelValidation);
 			rdf.setProfiles(profiles);
 			rdf.setInferences(inferences());
+			rdf.setGoogleCloudPlatform(googleCloudPlatform);
 			setRdfSourceDir(new File(rdf.baseDir(), "target/generated/rdf"));
 			parent.add(rdf);
 		}
@@ -296,6 +299,15 @@ public class MultiProject extends MavenProjectConfig {
 		this.inferences = inferences;
 	}
 
+	public BuildTarget getBuildTarget() {
+		return buildTarget;
+	}
+
+	public void setBuildTarget(BuildTarget buildTarget) {
+		this.buildTarget = buildTarget;
+	}
+
+	
 
 	
 }
