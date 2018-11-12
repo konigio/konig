@@ -81,6 +81,7 @@ import io.konig.core.vocab.VANN;
 import io.konig.core.vocab.VAR;
 import io.konig.core.vocab.XOWL;
 import io.konig.datasource.DataSource;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
@@ -249,6 +250,44 @@ public class WorkbookLoaderTest {
 		
 		assertTrue(list.stream().filter(ds -> ds.isA(Konig.GoogleBigQueryTable)).count()==1);
 		assertTrue(list.stream().filter(ds -> ds.isA(Konig.GoogleCloudStorageBucket)).count()==1);
+	}
+
+	@Test
+	public void testSddFormula() throws Exception {
+
+		GcpShapeConfig.init();
+		InputStream input = getClass().getClassLoader().getResourceAsStream("sdd-formula.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(true);
+		loader.load(book, graph);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		writer.close();
+		
+		URI shapeId = uri("https://schema.pearson.com/shapes/PERSON_STG_Shape");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		URI predicate = uri("https://schema.pearson.com/ns/alias/GIVEN_NAME");
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape != null);
+		
+		
+		PropertyConstraint p = shape.getPropertyConstraint(predicate);
+		assertTrue(p != null);
+		
+		QuantifiedExpression formula = p.getFormula();
+		assertTrue(formula != null);
+		String text = formula.toSimpleString();
+		
+		assertEquals("$.givenName", text);
 	}
 
 	@Test
