@@ -1619,6 +1619,8 @@ public class WorkbookLoader {
 			String businessName = stringValue(row, businessNameCol);
 			String businessDefinition = stringValue(row, businessDefinitionCol);
 			String dataStewardName = stringValue(row, dataStewardCol);
+
+			
 			
 			String constraints = stringValue(row,constraintsCol);	
 			
@@ -1633,7 +1635,19 @@ public class WorkbookLoader {
 				p = new PropertyConstraint(propertyId);
 				shape.add(p);
 			}
-			
+			String formula = stringValue(row, pcFormulaCol);
+			if (formula != null) {
+				// Check that the user terminates the where clause with a dot.
+
+				Pattern pattern = Pattern.compile("\\sWHERE\\s");
+				Matcher matcher = pattern.matcher(formula);
+				if (matcher.find() && !formula.endsWith(".")) {
+					formula = formula + " .";
+				}
+
+				formulaHandlers.add(new PropertyFormulaHandler(shape, p, formula));
+
+			}
 			shape.addType(Konig.TabularNodeShape);
 
 			p.setPredicate(propertyId);
@@ -1943,7 +1957,7 @@ public class WorkbookLoader {
 			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = pcMaxLengthCol = pcMinLengthCol =
 					decimalPrecisionCol = decimalScaleCol = constraintsCol = businessNameCol = businessDefinitionCol = 
 					dataStewardCol = securityClassifCol = piiClassifCol =
-					targetObjectNameCol = targetFieldNameCol = UNDEFINED;
+					targetObjectNameCol = targetFieldNameCol = pcFormulaCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -2022,6 +2036,10 @@ public class WorkbookLoader {
 						
 					case TARGET_FIELD_NAME:
 						targetFieldNameCol = i;
+						break;
+						
+					case FORMULA :
+						pcFormulaCol = i;
 						break;
 					
 					}
