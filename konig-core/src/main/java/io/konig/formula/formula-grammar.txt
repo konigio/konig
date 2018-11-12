@@ -77,7 +77,7 @@ PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | Path | Literal | 
 
 BrackettedExpression	  ::=  	'(' Expression ')'
 
-Path	::= (InStep | PathTerm) ( OutStep | InStep | HasStep)*
+Path	::= '$'? (InStep | PathTerm) ( OutStep | InStep | HasStep)*
 
 PathTerm ::= IRI | CURIE | LocalName | Variable
 

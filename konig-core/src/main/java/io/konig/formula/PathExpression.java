@@ -52,7 +52,17 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 		
 		if (!stepList.isEmpty()) {
 			Iterator<PathStep> sequence = stepList.iterator();
-			
+			if (!stepList.isEmpty()) {
+				String dollar = "$";
+				PathStep first = stepList.get(0);
+				if (first instanceof DirectionStep) {
+					DirectionStep dirStep = (DirectionStep) first;
+					if (dirStep.getTerm() instanceof VariableTerm) {
+						dollar = "";
+					}
+				}
+				out.print(dollar);
+			}
 			while (sequence.hasNext()) {
 				PathStep step = sequence.next();
 				step.print(out);

@@ -226,7 +226,7 @@ public class ShapeLoaderTest {
 			"@prefix ex: <http://example.com/ns/> .\n" + 
 			"@term status <http://example.com/ns/status>\n" + 
 			"@term estimatedPoints <http://example.com/ns/estimatedPoints>\n\n" + 
-			"(.status = ex:Complete) ? .estimatedPoints : 0";
+			"($.status = ex:Complete) ? $.estimatedPoints : 0";
 		
 		assertEquals(expected, formula.toString());
 	}

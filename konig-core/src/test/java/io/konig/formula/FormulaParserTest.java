@@ -22,6 +22,7 @@ package io.konig.formula;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import io.konig.core.Context;
@@ -89,10 +90,12 @@ public class FormulaParserTest {
 				"@term address <http://schema.org/address>\n" + 
 				"@term postalCode schema:postalCode\n" + 
 				"\n" + 
-				".address.postalCode";
+				"$.address.postalCode";
 		
 		assertEquals(expectedText, actualText);
 	}
+	
+	
 	
 	@Test
 	public void testTimeInterval() throws Exception {
@@ -136,11 +139,15 @@ public class FormulaParserTest {
 		PrimaryExpression primary = e.asPrimaryExpression();
 		assertTrue(primary instanceof PathExpression);
 		
-		assertEquals(text, primary.toString());
+		assertEquals(prependDollar(text), primary.toString());
 		
 	}
 	
 	
+	private Object prependDollar(String text) {
+		return "$" + text;
+	}
+
 	@Test
 	public void testPathValue() throws Exception {
 		
@@ -158,7 +165,7 @@ public class FormulaParserTest {
 			"@term address <http://schema.org/address>\n" + 
 			"@term addressCountry <http://schema.org/addressCountry>\n" + 
 			"@term addressRegion <http://schema.org/addressRegion>\n\n" + 
-			"address[addressCountry \"US\"; addressRegion \"VA\"]";
+			"$.address[addressCountry \"US\"; addressRegion \"VA\"]";
 		
 		Expression e = parser.quantifiedExpression(text);
 		String actual = e.toString();
@@ -169,7 +176,7 @@ public class FormulaParserTest {
 	public void testBound() throws Exception {
 		String text = 
 			"@term price <http://schema.org/price>\n\n" + 
-			"BOUND(price)" ;
+			"BOUND($.price)" ;
 		
 		Expression e = parser.quantifiedExpression(text);
 		String actual = e.toString();
@@ -200,15 +207,15 @@ public class FormulaParserTest {
 	@Test
 	public void testIfPlus() throws Exception {
 		String text = 
-			"IF(reviewer0Approved, 1, 0)\n" + 
-			"+ IF(reviewer1Approved, 1, 0)\n" + 
-			"+ IF(reviewer2Approved, 1, 0)\n" + 
-			"+ IF(reviewer3Approved, 1, 0)";
+			"IF($.reviewer0Approved, 1, 0)\n" + 
+			"+ IF($.reviewer1Approved, 1, 0)\n" + 
+			"+ IF($.reviewer2Approved, 1, 0)\n" + 
+			"+ IF($.reviewer3Approved, 1, 0)";
 
 		Expression e = parser.expression(text);
 		String actual = e.toString();
 		
-		String expected = "IF(reviewer0Approved , 1 , 0) + IF(reviewer1Approved , 1 , 0) + IF(reviewer2Approved , 1 , 0) + IF(reviewer3Approved , 1 , 0)";
+		String expected = "IF($.reviewer0Approved , 1 , 0) + IF($.reviewer1Approved , 1 , 0) + IF($.reviewer2Approved , 1 , 0) + IF($.reviewer3Approved , 1 , 0)";
 		assertEquals(expected, actual);
 	}
 	
@@ -217,7 +224,7 @@ public class FormulaParserTest {
 		
 		String text = 
 			"@term email <http://schema.org/email>\n\n" + 
-			"IF(email , 1 , 0)";
+			"IF($.email , 1 , 0)";
 		
 		Expression e = parser.expression(text);
 		String actual = e.toString();
@@ -230,7 +237,7 @@ public class FormulaParserTest {
 			"@term created <http://www.konig.io/ns/core/created>\n" + 
 			"@term modified <http://www.konig.io/ns/core/modified>\n" + 
 			"\n" + 
-			"created != modified";
+			"$.created != $.modified";
 		
 		Expression e = parser.expression(text);
 		
@@ -246,7 +253,7 @@ public class FormulaParserTest {
 			  "@prefix schema: <http://schema.org/> .\n" + 
 			  "@term knows schema:knows\n" + 
 			  "@term Alice <http://example.com/Alice>\n\n"
-			+ ".knows.knows = Alice";
+			+ "$.knows.knows = Alice";
 
 		Expression e = parser.expression(text);
 		
@@ -272,7 +279,7 @@ public class FormulaParserTest {
 
 		String text = 
 				"@term pmd <http://example.com/pmd>\n\n" + 
-				"(sprintIssue.status = pmd:Complete) ? sprintIssue.timeEstimate : 0";
+				"($.sprintIssue.status = pmd:Complete) ? $.sprintIssue.timeEstimate : 0";
 		
 		Expression e = parser.expression(text);
 		
@@ -286,7 +293,7 @@ public class FormulaParserTest {
 
 		String text = 
 				"@term ex <http://example.com/core>\n\n" + 
-				"ex:alpha.ex:beta NOT IN (ex:foo , ex:bar)";
+				"$.ex:alpha.ex:beta NOT IN (ex:foo , ex:bar)";
 		
 		Expression e = parser.expression(text);
 		
@@ -299,7 +306,7 @@ public class FormulaParserTest {
 	@Test
 	public void testIriTerm() throws Exception {
 
-		String text = "<http://example.com/alpha>.beta NOT IN (foo , bar)";
+		String text = "$.<http://example.com/alpha>.beta NOT IN (foo , bar)";
 		
 		Expression e = parser.expression(text);
 		
@@ -311,7 +318,7 @@ public class FormulaParserTest {
 	@Test
 	public void testNotIn() throws Exception {
 
-		String text = "alpha.beta NOT IN (foo , bar)";
+		String text = "$.alpha.beta NOT IN (foo , bar)";
 		
 		Expression e = parser.expression(text);
 		
@@ -323,7 +330,7 @@ public class FormulaParserTest {
 	@Test
 	public void testIn() throws Exception {
 
-		String text = "alpha.beta IN (foo , bar)";
+		String text = "$.alpha.beta IN (foo , bar)";
 		
 		Expression e = parser.expression(text);
 		
@@ -335,7 +342,7 @@ public class FormulaParserTest {
 	@Test
 	public void testEquals() throws Exception {
 
-		String text = "alpha.beta = one.two";
+		String text = "$.alpha.beta = $.one.two";
 		
 		Expression e = parser.expression(text);
 		
@@ -360,23 +367,23 @@ public class FormulaParserTest {
 	@Test
 	public void testPathPlusNumber() throws Exception {
 
-		String text = "address.streetAddress + 3";
+		String text = "$.address.streetAddress + 3";
 		
 		Expression e = parser.expression(text);
 		
 		String actual = e.toString();
 	
-		assertEquals(text, actual);
+		assertEquals("$.address.streetAddress + 3", actual);
 	}
 	
 	@Test
 	public void testBracket() throws Exception {
 
-		String text = "(owner.age + 3*7)/(owner.weight*4)";
+		String text = "($.owner.age + 3*7)/($.owner.weight*4)";
 		
 		Expression e = parser.expression(text);
 		
-		String expected = "(owner.age + 3 * 7) / (owner.weight * 4)";
+		String expected = "($.owner.age + 3 * 7) / ($.owner.weight * 4)";
 		String actual = e.toString();
 	
 		assertEquals(expected, actual);
