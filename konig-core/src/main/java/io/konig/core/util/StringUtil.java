@@ -1,5 +1,8 @@
 package io.konig.core.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /*
  * #%L
  * konig-core
@@ -28,7 +31,6 @@ public class StringUtil {
 	private static final int DELIM = 0;
 	private static final int LOWER = 1;
 	private static final int UPPER = 2;
-	
 	
 	
 	private static final String DELIMITER = "_-./:";
@@ -74,32 +76,52 @@ public class StringUtil {
 		label = label.trim();
 		
 		int priorCase = OTHER;
-		int prior = 0;
+		int prior = '_';
+		
+		int k = label.codePointAt(0);
+		if (!Character.isAlphabetic(k) && !Character.isDigit(k)) {
+			builder.append('_');
+		}
+		
 		
 		for (int i=0; i<label.length();) {
 			int c = label.codePointAt(i);
+			i += Character.charCount(c);
 			
 			if (!Character.isAlphabetic(c) && !Character.isDigit(c)) {
 				
-				if (prior == '_') {
-					i += Character.charCount(c);
+				if (c=='-' || Character.isWhitespace(c) || c=='_') {
+					builder.append('_');
+					prior = '_';
+					priorCase = OTHER;
 					continue;
+				} 
+				
+				if (prior != '_') {
+					builder.append('_');
 				}
-				c = '_';
-			}
-			if (c=='_' && i==(label.length()-1)) {
-				break;
+				builder.append('x');
+				builder.append(Integer.toHexString(c));
+				builder.append('_');
+				prior = '_';
+				priorCase = OTHER;
+				
+				continue;
 			}
 			int caseValue = caseValue(c);
 			
-			if (i>1 && caseValue!=OTHER && prior!='_' && caseValue!=priorCase  && builder.codePointAt(builder.length()-2)!='_') {
+			if (i>2 && caseValue!=OTHER && prior!='_' && caseValue!=priorCase && c!='_' 
+					&& builder.length()>2 && builder.charAt(builder.length()-2) != '_') {
 				builder.append('_');
 			}
 			prior = c;
 			priorCase = caseValue;
 			
 			builder.appendCodePoint(Character.toUpperCase(c));
-			i += Character.charCount(c);
+		}
+		
+		while (builder.length()>0 && builder.charAt(builder.length()-1) == '_') {
+			builder.setLength(builder.length()-1);
 		}
 		
 		return builder.toString();

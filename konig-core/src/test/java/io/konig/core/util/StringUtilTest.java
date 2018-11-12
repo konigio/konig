@@ -33,7 +33,7 @@ public class StringUtilTest {
 	@Test
 	public void testLabelToSnakeCase() {
 		assertEquals("FOO_BAR_WIZ", LABEL_TO_SNAKE_CASE("FooBar Wiz") );
-		assertEquals("FOO_BAR_WIZ", LABEL_TO_SNAKE_CASE("FooBar (Wiz)") );
+		assertEquals("FOO_BAR_x28_WIZ_x29", LABEL_TO_SNAKE_CASE("FooBar (Wiz)") );
 		assertEquals("FOO_BAR_WIZ", LABEL_TO_SNAKE_CASE("Foo_Bar_Wiz") );
 	}
 
