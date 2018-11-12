@@ -729,7 +729,7 @@ public class FormulaParser {
 
 		private PathStep tryInStep() throws IOException, RDFParseException {
 			PathStep step = null;
-			if (tryWord("^")) {
+			if (tryWord("^") || tryWord("$^")) {
 				step = new DirectionStep(Direction.IN, pathTerm());
 			}
 			return step;
@@ -746,7 +746,7 @@ public class FormulaParser {
 
 		private PathStep tryOutStep() throws IOException, RDFParseException {
 			PathStep step = null;
-			if (tryWord(".")) {
+			if (tryWord(".") || tryWord("$.")) {
 				PathTerm term = tryPathTerm();
 				if (term == null) {
 					unread('.');
