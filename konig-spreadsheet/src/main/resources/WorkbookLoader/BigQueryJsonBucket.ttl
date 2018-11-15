@@ -9,12 +9,12 @@
 #end
 #end
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigqueryTableId}>
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}>
 	a konig:GoogleBigQueryTable, konig:DataSource;
 	gcp:tableReference [
 		gcp:projectId "${gcpProjectId}" ;
 		gcp:datasetId "${gcpDatasetId}" ;
-		gcp:tableId   "${bigqueryTableId}" 
+		gcp:tableId   "${bigQueryTableId}" 
 	] ;
 	gcp:externalDataConfiguration [
 		gcp:sourceUris <gs://${gcpBucketName}/*> ;
