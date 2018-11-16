@@ -1926,6 +1926,10 @@ public class WorkbookLoader {
 					constraint.setMinInclusive(-2147483648);
 					constraint.setMaxInclusive(2147483647);
 					return XMLSchema.INTEGER;
+					
+				case "INT64":
+					return XMLSchema.LONG;
+					
 				case "UNSIGNED INT":
 					constraint.setMinInclusive(0);
 					constraint.setMaxInclusive(4294967295L);
@@ -1942,6 +1946,8 @@ public class WorkbookLoader {
 				case "MONEY":
 				case "FLOAT":
 					return XMLSchema.FLOAT;
+					
+				case "FLOAT64":
 				case "DOUBLE":
 					return XMLSchema.DOUBLE;
 				case "DECIMAL":
