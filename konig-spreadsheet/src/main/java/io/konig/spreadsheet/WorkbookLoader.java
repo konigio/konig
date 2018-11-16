@@ -1906,6 +1906,7 @@ public class WorkbookLoader {
 					constraint.setMaxInclusive(1);
 					return XMLSchema.INTEGER;
 					
+				case "TIMESTAMP":
 				case "DATETIME2":
 				case "DATETIME":
 					return XMLSchema.DATETIME;
