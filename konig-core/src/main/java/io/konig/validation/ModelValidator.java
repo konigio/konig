@@ -115,7 +115,7 @@ public class ModelValidator {
 					range = r.getOwlClass();
 				}
 				
-				if (rdfPropertyRange != null) {
+				if (rdfPropertyRange != null && range!=null) {
 					if (!owl().isSubClassOf(range, rdfPropertyRange)) {
 						return true;
 					}
