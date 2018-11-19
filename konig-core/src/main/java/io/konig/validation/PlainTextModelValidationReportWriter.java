@@ -266,11 +266,10 @@ public class PlainTextModelValidationReportWriter implements ModelValidationRepo
 		}
 
 		private void printAllPropertyShapeReports(NodeShapeReport nodeReport, PrettyPrintWriter out) {
-			
-			List<PropertyShapeReport> list = nodeReport.getPropertyReports();
-			if (list.isEmpty()) {
+			if (!nodeReport.hasNonEmptyPropertyReport()) {
 				return;
 			}
+			List<PropertyShapeReport> list = nodeReport.getPropertyReports();
 			Collections.sort(list);
 			out.pushIndent();
 			out.indent();
@@ -328,6 +327,19 @@ public class PlainTextModelValidationReportWriter implements ModelValidationRepo
 					out.indent();
 					out.print("Invalid XML Schema datatype: ");
 					out.println(p.getInvalidXmlSchemaDatatype().getLocalName());
+				}
+				if (p.getTypeConflict() != null) {
+					TypeConflict conflict = p.getTypeConflict();
+					out.indent();
+					out.println("Type Conflict:");
+					out.pushIndent();
+					out.indent();
+					out.print("Property Range: ");
+					out.println(iriRef(conflict.getRange()));
+					out.indent();
+					out.print("Property Constraint: ");
+					out.println(iriRef(conflict.getPropertyShapeType()));
+					out.popIndent();
 				}
 				out.popIndent();
 				out.println();

@@ -52,7 +52,17 @@ public class NodeShapeReport implements Comparable<NodeShapeReport>{
 	public boolean isValid() {
 		return 
 			!nameHasWrongCase &&	
-			propertyReports.isEmpty();
+			!hasNonEmptyPropertyReport();
+	}
+
+	public boolean hasNonEmptyPropertyReport() {
+		
+		for (PropertyShapeReport r : propertyReports) {
+			if (!r.isValid()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public PropertyShapeReport findPropertyReport(URI propertyId) {
