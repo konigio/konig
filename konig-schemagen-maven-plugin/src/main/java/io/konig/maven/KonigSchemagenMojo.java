@@ -577,6 +577,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ShapeNamer shapeNamer = new TemplateShapeNamer(nsManager, format);
 			
 			BigQueryEnumShapeGenerator generator = new BigQueryEnumShapeGenerator(datasetMapper(), createTableMapper(), shapeNamer, shapeManager);
+			generator.setOmitTypeProperty(googleCloudPlatform.isOmitTypeFromEnumTables());
 			generator.generateAll(owlReasoner);
 		}
 		
