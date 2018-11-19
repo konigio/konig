@@ -60,6 +60,7 @@ public class XSD {
 		xmlSchemaDatatype(graph, XMLSchema.HEXBINARY,  RDFS.LITERAL);
 		xmlSchemaDatatype(graph, XMLSchema.INT,  XMLSchema.LONG);
 		xmlSchemaDatatype(graph, XMLSchema.INTEGER,  XMLSchema.DECIMAL);
+		xmlSchemaDatatype(graph, RDF.LANGSTRING,  RDFS.LITERAL);
 		xmlSchemaDatatype(graph, XMLSchema.LANGUAGE,  XMLSchema.TOKEN);
 		xmlSchemaDatatype(graph, XMLSchema.LONG,  XMLSchema.INTEGER);
 		xmlSchemaDatatype(graph, XMLSchema.NAME,  XMLSchema.TOKEN);
