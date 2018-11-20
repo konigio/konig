@@ -4,7 +4,7 @@ package io.konig.formula;
  * #%L
  * Konig Core
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2018 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,6 @@ package io.konig.formula;
  * #L%
  */
 
-
-import java.util.ArrayList;
 import java.util.List;
 
 import io.konig.core.io.PrettyPrintWriter;

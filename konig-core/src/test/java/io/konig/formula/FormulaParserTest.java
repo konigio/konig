@@ -22,8 +22,9 @@ package io.konig.formula;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.Context;
 import io.konig.core.Term;
@@ -33,6 +34,64 @@ public class FormulaParserTest {
 	
 	private FormulaParser parser = new FormulaParser();
 	
+	@Test
+	public void testNestedPath() throws Exception {
+		String text = 
+			"@prefix xapi : <http://example.org/xapi/> .\n" +
+			"@prefix xid : <http://example.org/xid/> .\n" +
+			"@term identifiedBy xid:identifiedBy\n" +
+			"@term identityProvider xid:identityProvider\n" +
+			"@term identifier xid:identifier\n" +
+			"@term name xapi:name\n" +
+			"@term homePage xapi:homePage\n" +
+			"$.identifiedBy[" + 
+			"  identityProvider $.homePage;\n" +
+			"  identifier $.name\n" +
+			"]";
+		
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		
+		PrimaryExpression primary = e.asPrimaryExpression();
+		assertTrue(primary instanceof PathExpression);
+	
+		PathExpression path = (PathExpression) primary;
+		assertEquals(2, path.getStepList().size());
+		
+		PathStep step = path.getStepList().get(1);
+		assertTrue(step instanceof HasPathStep);
+		
+		URI identityProvider = uri("http://example.org/xid/identityProvider");
+		URI identifier = uri("http://example.org/xid/identifier");
+		
+		HasPathStep bnode = (HasPathStep) step;
+		assertEquals(2, bnode.getConstraints().size());
+		PredicateObjectList providerList = bnode.getConstraints().get(0);
+		assertEquals(identityProvider, providerList.getVerb().getIri());
+		
+		PrimaryExpression providerExpression = providerList.getObjectList().getExpressions().get(0).asPrimaryExpression();
+		assertTrue(providerExpression instanceof PathExpression);
+		
+		PathExpression providerPath = (PathExpression) providerExpression;
+		assertEquals("$.homePage", providerPath.simpleText());
+		
+		
+		
+		PredicateObjectList identifierList = bnode.getConstraints().get(1);
+		assertEquals(identifier, identifierList.getVerb().getIri());
+		PrimaryExpression identifierExpression = identifierList.getObjectList().getExpressions().get(0).asPrimaryExpression();
+		assertTrue(identifierExpression instanceof PathExpression);
+		
+		PathExpression identifierPath = (PathExpression) identifierExpression;
+		assertEquals("$.name", identifierPath.simpleText());
+		
+		
+		
+		
+	}
+	
+	private URI uri(String value) {
+		return new URIImpl(value);
+	}
 
 	@Test
 	public void testDistinct() throws Exception {
