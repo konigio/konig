@@ -1,4 +1,4 @@
-package io.konig.formula;
+package io.konig.core.jsonpath;
 
 /*
  * #%L
@@ -20,40 +20,20 @@ package io.konig.formula;
  * #L%
  */
 
-import java.util.List;
+
+import java.util.ArrayList;
 
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.io.PrettyPrintable;
 
-public class ObjectList extends AbstractFormula {
-	
-	private List<Expression> list;
-	
-	public ObjectList(List<Expression> list) {
-		this.list = list;
-	}
-	
-	public List<Expression> getExpressions() {
-		return list;
-	}
+public class JsonPath extends ArrayList<JsonPathOperator> implements PrettyPrintable {
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		String comma = "";
-		for (Expression e : list) {
-			out.print(comma);
-			e.print(out);
-			comma = ",";
+		for (JsonPathOperator jop : this) {
+			out.print(jop);
 		}
-
-	}
-
-	@Override
-	public void dispatch(FormulaVisitor visitor) {
-		visitor.enter(this);
-		for (Expression e : list) {
-			e.dispatch(visitor);
-		}
-		visitor.exit(this);
 
 	}
 

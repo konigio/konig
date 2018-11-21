@@ -89,6 +89,7 @@ import io.konig.core.impl.BasicContext;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
+import io.konig.core.jsonpath.JsonPathParseException;
 import io.konig.core.path.DataInjector;
 import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.core.path.OutStep;
@@ -472,6 +473,7 @@ public class WorkbookLoader {
 		private ShapeReasoner shapeReasoner;
 		
 		private EnumerationReasoner enumReasoner;
+		private JsonPathProcessor jsonPathProcessor;
 
 		private Properties settings = new Properties();
 		private List<ShapeTemplate> shapeTemplateList = new ArrayList<>();
@@ -1595,9 +1597,19 @@ public class WorkbookLoader {
 				}
 			}
 			
-			propertyIdValue = StringUtil.LABEL_TO_SNAKE_CASE(propertyIdValue);
+
+
+			Shape shape = produceShape(shapeId);
 			
-			URI propertyId = expandPropertyId(concatPath(getPropertyBaseURL(),propertyIdValue));
+			PropertyConstraint p;
+			try {
+				p = dataDictionaryPropertyConstraint(shape, propertyIdValue);
+			} catch (JsonPathParseException | IOException e) {
+				throw new SpreadsheetException(e);
+			}
+			
+			
+			URI propertyId = p.getPredicate();
 
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
 
@@ -1624,17 +1636,7 @@ public class WorkbookLoader {
 			
 			String constraints = stringValue(row,constraintsCol);	
 			
-
-			Shape shape = produceShape(shapeId);
-			PropertyConstraint p = shape.getPropertyConstraint(propertyId);
 			
-			if (p != null) {
-				logger.warn("Duplicate definition of property '{}' on '{}'", propertyId.getLocalName(),
-						shapeId.getLocalName());
-			} else {
-				p = new PropertyConstraint(propertyId);
-				shape.add(p);
-			}
 			String formula = stringValue(row, pcFormulaCol);
 			if (formula != null) {
 				// Check that the user terminates the where clause with a dot.
@@ -1653,7 +1655,6 @@ public class WorkbookLoader {
 			p.setPredicate(propertyId);
 			p.setName(businessName);
 			p.setComment(businessDefinition);
-			p.setMaxCount(1);
 			
 			
 			if(constraints!=null && constraints.contains("Primary Key")){
@@ -1690,6 +1691,43 @@ public class WorkbookLoader {
 			
 			setDefaultDataSource(shapeId);
 			
+		}
+
+		private PropertyConstraint dataDictionaryPropertyConstraint(Shape shape, String propertyIdValue) throws SpreadsheetException, JsonPathParseException, IOException {
+			
+			if (propertyIdValue.startsWith("$")) {
+				return jsonPathProcessor().parse(shape, propertyIdValue);
+			}
+			propertyIdValue = StringUtil.LABEL_TO_SNAKE_CASE(propertyIdValue);
+			URI predicate = expandPropertyId(concatPath(getPropertyBaseURL(),propertyIdValue));
+			
+			PropertyConstraint p = shape.getPropertyConstraint(predicate);
+
+			if (p != null) {
+				logger.warn("Duplicate definition of property '{}' on '{}'", predicate.getLocalName(),
+						RdfUtil.localName(shape.getId()));
+			} else {
+				p = new PropertyConstraint(predicate);
+				shape.add(p);
+			}
+
+			p.setMaxCount(1);
+			
+			return p;
+		}
+
+		private JsonPathProcessor jsonPathProcessor() throws SpreadsheetException {
+			if (jsonPathProcessor == null) {
+				jsonPathProcessor = new JsonPathProcessor(shapeManager, namespace(getPropertyBaseURL()));
+			}
+			return jsonPathProcessor;
+		}
+
+		private String namespace(String baseURL) {
+			if (baseURL.endsWith("/") || baseURL.endsWith("#")) {
+				return baseURL;
+			}
+			return baseURL + "/";
 		}
 
 		private void setDefaultDataSource(URI shapeId) throws SpreadsheetException {

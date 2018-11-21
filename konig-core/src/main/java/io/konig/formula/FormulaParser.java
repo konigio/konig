@@ -612,15 +612,19 @@ public class FormulaParser {
 
 				step = tryOutStep();
 				if (step == null) {
+					
+					step = tryHasStep();
+					if (step == null) {
 				
-					PathTerm term = tryPathTerm();
-					if (term != null) {
-						if (
-							useDirectionStep(term)
-						) {
-							step = new DirectionStep(Direction.OUT, term);
-						} else if (term instanceof PathStep){
-							step = (PathStep) term;
+						PathTerm term = tryPathTerm();
+						if (term != null) {
+							if (
+								useDirectionStep(term)
+							) {
+								step = new DirectionStep(Direction.OUT, term);
+							} else if (term instanceof PathStep){
+								step = (PathStep) term;
+							}
 						}
 					}
 				}

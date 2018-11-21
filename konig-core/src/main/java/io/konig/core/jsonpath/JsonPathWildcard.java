@@ -1,4 +1,4 @@
-package io.konig.formula;
+package io.konig.core.jsonpath;
 
 /*
  * #%L
@@ -20,41 +20,45 @@ package io.konig.formula;
  * #L%
  */
 
-import java.util.List;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class ObjectList extends AbstractFormula {
-	
-	private List<Expression> list;
-	
-	public ObjectList(List<Expression> list) {
-		this.list = list;
-	}
-	
-	public List<Expression> getExpressions() {
-		return list;
-	}
+public class JsonPathWildcard implements JsonPathKey {
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		String comma = "";
-		for (Expression e : list) {
-			out.print(comma);
-			e.print(out);
-			comma = ",";
-		}
+		out.print('*');
 
 	}
 
 	@Override
-	public void dispatch(FormulaVisitor visitor) {
-		visitor.enter(this);
-		for (Expression e : list) {
-			e.dispatch(visitor);
-		}
-		visitor.exit(this);
+	public boolean isIndex() {
+		return false;
+	}
 
+	@Override
+	public boolean isName() {
+		return false;
+	}
+
+	@Override
+	public boolean isWildCard() {
+		return true;
+	}
+
+	@Override
+	public JsonPathIndex asIndex() {
+		return null;
+	}
+
+	@Override
+	public JsonPathName asName() {
+		return null;
+	}
+
+	@Override
+	public JsonPathWildcard asWildcard() {
+		return this;
 	}
 
 }

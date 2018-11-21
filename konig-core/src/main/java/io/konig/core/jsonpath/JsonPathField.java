@@ -1,4 +1,4 @@
-package io.konig.formula;
+package io.konig.core.jsonpath;
 
 /*
  * #%L
@@ -20,41 +20,65 @@ package io.konig.formula;
  * #L%
  */
 
-import java.util.List;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class ObjectList extends AbstractFormula {
+public class JsonPathField implements JsonPathOperator {
 	
-	private List<Expression> list;
+	private JsonPathKey fieldName;
 	
-	public ObjectList(List<Expression> list) {
-		this.list = list;
+
+	public JsonPathField(JsonPathKey fieldName) {
+		this.fieldName = fieldName;
 	}
-	
-	public List<Expression> getExpressions() {
-		return list;
+
+
+	public JsonPathKey getFieldName() {
+		return fieldName;
 	}
+
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		String comma = "";
-		for (Expression e : list) {
-			out.print(comma);
-			e.print(out);
-			comma = ",";
-		}
+		out.print('.');
+		out.print(fieldName);
 
 	}
 
-	@Override
-	public void dispatch(FormulaVisitor visitor) {
-		visitor.enter(this);
-		for (Expression e : list) {
-			e.dispatch(visitor);
-		}
-		visitor.exit(this);
 
+	@Override
+	public boolean isRoot() {
+		return false;
+	}
+
+
+	@Override
+	public boolean isField() {
+		return true;
+	}
+
+
+	@Override
+	public boolean isBracket() {
+		return false;
+	}
+
+
+	@Override
+	public JsonPathRoot asRoot() {
+		return null;
+	}
+
+
+	@Override
+	public JsonPathField asField() {
+		return this;
+	}
+
+
+	@Override
+	public JsonPathBracket asBracket() {
+		return null;
 	}
 
 }
