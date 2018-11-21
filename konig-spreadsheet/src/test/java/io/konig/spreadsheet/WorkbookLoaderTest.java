@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.hamcrest.CoreMatchers;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -103,6 +102,111 @@ public class WorkbookLoaderTest {
     public ExpectedException thrown = ExpectedException.none();
 	
 	@Test
+	public void testJsonPathObjectArray() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("json-path-object-array.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(false);
+		loader.setFailOnWarnings(false);
+		loader.load(book, graph);
+		
+		URI userShapeId = uri("https://example.com/shapes/USER_STG_Shape");
+		URI addressShapeId = uri("https://example.com/shapes/USER_STG_.addressShape");
+		URI addressId = uri("https://example.com/ns/alias/address");
+		URI postalCodeId = uri("https://example.com/ns/alias/postalCode");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		Shape userShape = shapeManager.getShapeById(userShapeId);
+		Shape addressShape = shapeManager.getShapeById(addressShapeId);
+		
+		assertTrue(userShape != null);
+		PropertyConstraint address = userShape.getPropertyConstraint(addressId);
+		assertTrue(address != null);
+		assertTrue(address.getMaxCount() == null);
+		
+		Shape nestedAddressShape = address.getShape();
+		assertTrue(nestedAddressShape == addressShape);
+		
+		
+		assertTrue(addressShape != null);
+		PropertyConstraint postalCode = addressShape.getPropertyConstraint(postalCodeId);
+		assertTrue(postalCode != null);
+		assertEquals(new Integer(1), postalCode.getMaxCount());
+		assertEquals(XMLSchema.STRING, postalCode.getDatatype());
+	}
+	
+	@Test
+	public void testJsonPathNestedString() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("json-path-nested-string.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(false);
+		loader.setFailOnWarnings(false);
+		loader.load(book, graph);
+		
+		URI userShapeId = uri("https://example.com/shapes/USER_STG_Shape");
+		URI addressShapeId = uri("https://example.com/shapes/USER_STG_.addressShape");
+		URI addressId = uri("https://example.com/ns/alias/address");
+		URI postalCodeId = uri("https://example.com/ns/alias/postalCode");
+		
+		ShapeManager shapeManager = loader.getShapeManager();
+		
+		Shape userShape = shapeManager.getShapeById(userShapeId);
+		Shape addressShape = shapeManager.getShapeById(addressShapeId);
+		
+		assertTrue(userShape != null);
+		PropertyConstraint address = userShape.getPropertyConstraint(addressId);
+		assertTrue(address != null);
+		assertEquals(new Integer(1), address.getMaxCount());
+		
+		Shape nestedAddressShape = address.getShape();
+		assertTrue(nestedAddressShape == addressShape);
+		
+		
+		assertTrue(addressShape != null);
+		PropertyConstraint postalCode = addressShape.getPropertyConstraint(postalCodeId);
+		assertTrue(postalCode != null);
+		assertEquals(new Integer(1), postalCode.getMaxCount());
+		assertEquals(XMLSchema.STRING, postalCode.getDatatype());
+		
+		
+	}
+	
+	@Test
+	public void testJsonPathString() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("json-path-string.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		loader.setFailOnErrors(false);
+		loader.setFailOnWarnings(false);
+		loader.load(book, graph);
+		
+
+		URI shapeId = uri("https://example.com/shapes/USER_STG_Shape");
+		ShapeManager shapeManager = loader.getShapeManager();
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		URI givenName = uri("https://example.com/ns/alias/givenName");
+		PropertyConstraint p = shape.getPropertyConstraint(givenName);
+		assertTrue(p != null);
+		assertEquals(new Integer(1), p.getMaxCount());
+		assertEquals(XMLSchema.STRING, p.getDatatype());
+	}
+	
+	@Test
 	public void testBigQueryJsonBucket() throws Exception {
 		GcpShapeConfig.init();
 		InputStream input = getClass().getClassLoader().getResourceAsStream("bigquery-json-bucket.xlsx");
@@ -135,7 +239,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testXone() throws Exception {
 		GcpShapeConfig.init();
 		InputStream input = getClass().getClassLoader().getResourceAsStream("xone.xlsx");
@@ -168,7 +272,7 @@ public class WorkbookLoaderTest {
 		return value.isPresent();
 	}
 
-	@Ignore
+	@Test
 	public void testTriples() throws Exception {
 
 		GcpShapeConfig.init();
@@ -202,7 +306,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testPreferredTabularShape() throws Exception {
 
 		GcpShapeConfig.init();
@@ -226,7 +330,7 @@ public class WorkbookLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testClassSubjectArea() throws Exception {
 
 		GcpShapeConfig.init();
@@ -252,7 +356,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDefaultDataSource() throws Exception {
 
 		GcpShapeConfig.init();
@@ -285,7 +389,7 @@ public class WorkbookLoaderTest {
 		assertTrue(list.stream().filter(ds -> ds.isA(Konig.GoogleCloudStorageBucket)).count()==1);
 	}
 
-	@Ignore
+	@Test
 	public void testSddFormula() throws Exception {
 
 		GcpShapeConfig.init();
@@ -323,7 +427,7 @@ public class WorkbookLoaderTest {
 		assertEquals("$.givenName", text);
 	}
 
-	@Ignore
+	@Test
 	public void testDictionaryDefaultDatatype() throws Exception {
 
 		GcpShapeConfig.init();
@@ -353,7 +457,7 @@ public class WorkbookLoaderTest {
 		assertEquals(XMLSchema.STRING, p.getDatatype());
 	}
 	
-	@Ignore
+	@Test
 	public void testDictionaryDefaultMaxLength() throws Exception {
 
 		GcpShapeConfig.init();
@@ -390,7 +494,7 @@ public class WorkbookLoaderTest {
 	}
 	
 	
-	@Ignore
+	@Test
 	public void testSecurityClassificationByName() throws Exception {
 
 		GcpShapeConfig.init();
@@ -427,7 +531,7 @@ public class WorkbookLoaderTest {
 	}
 	
 	
-	@Ignore
+	@Test
 	public void testCurrentStateView() throws Exception {
 
 		GcpShapeConfig.init();
@@ -465,7 +569,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testBigQueryTableIdRegex() throws Exception {
 
 		GcpShapeConfig.init();
@@ -507,7 +611,7 @@ public class WorkbookLoaderTest {
 		assertEquals("BqPerson", tableId);
 	}
 
-	@Ignore
+	@Test
 	public void testGoogleCloudSql() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("google-cloud-sql.xlsx");
@@ -528,7 +632,7 @@ public class WorkbookLoaderTest {
 		// TODO: Add assertions
 	}
 
-	@Ignore
+	@Test
 	public void testBigQueryTransform() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("bigquery-transform.xlsx");
@@ -550,7 +654,7 @@ public class WorkbookLoaderTest {
 		Path path = p.getEquivalentPath();
 		assertEquals("/schema:offers[schema:priceCurrency \"USD\"]/schema:price", path.toSimpleString());
 	}
-	@Ignore
+	@Test
 	public void testCustomTableName() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("custom-tablename.xlsx");
@@ -605,7 +709,7 @@ public class WorkbookLoaderTest {
 		
 		
 	}
-	@Ignore
+	@Test
 	public void testInvalidOntologyNamespace() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("invalid-ontology-namespace.xlsx");
@@ -626,7 +730,7 @@ public class WorkbookLoaderTest {
 		assertTrue(error.getMessage().contains("Namespace must end with '/' or '#' but found: http://schema.org"));
 	}
 	
-	@Ignore
+	@Test
 	public void testGoogleCloudSqlTable() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("google-cloud-sql-table.xlsx");
@@ -657,7 +761,7 @@ public class WorkbookLoaderTest {
 		assertTrue(ds.isA(Konig.GoogleCloudSqlTable));
 	}
 	
-	@Ignore
+	@Test
 	public void testDatasourceParamsGoogleBucket() throws Exception {
 		GcpShapeConfig.init();
         InputStream input = new FileInputStream(new File("src/test/resources/test-datasource-params-bucket.xlsx"));
@@ -689,7 +793,7 @@ public class WorkbookLoaderTest {
         assertEquals("OBJECT_METADATA_UPDATE", eventTypes.get(0));
     }
 	
-	@Ignore
+	@Test
 	public void testDatasourceParentComponent() throws Exception {
         InputStream input = getClass().getClassLoader().getResourceAsStream("test-datasource-params-parentComponent.xlsx");
         Workbook book = WorkbookFactory.create(input);
@@ -714,7 +818,7 @@ public class WorkbookLoaderTest {
     }
 	
 	
-	@Ignore
+	@Test
 	public void testGoogleOracleTable() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("omcs-oracle-table.xlsx");
@@ -745,7 +849,7 @@ public class WorkbookLoaderTest {
 		assertTrue(ds.isA(Konig.OracleTable));
 	}
 	
-	@Ignore
+	@Test
 	public void testAssessmentEndeavor() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("assessment-endeavor.xlsx");
@@ -773,7 +877,7 @@ public class WorkbookLoaderTest {
 		assertEquals(NodeKind.IRI, p.getNodeKind());
 	}
 	
-	@Ignore
+	@Test
 	public void testAddressCountry() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("address-country.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -818,7 +922,7 @@ public class WorkbookLoaderTest {
 	}
 
 	
-	@Ignore
+	@Test
 	public void testSequencePath() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("sequence-path.xlsx");
@@ -871,7 +975,7 @@ public class WorkbookLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testIriReference() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("iri-reference.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -897,7 +1001,7 @@ public class WorkbookLoaderTest {
 	}
 	
 	
-	@Ignore
+	@Test
 	public void testLabels() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("labels.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -922,7 +1026,7 @@ public class WorkbookLoaderTest {
 		assertTrue(graph.contains(subject, RDFS.LABEL, literal));
 	}
 
-	@Ignore
+	@Test
 	public void testPubSub() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("pubsub.xlsx");
@@ -954,7 +1058,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testSubproperty() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("subproperty.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -972,7 +1076,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDefaultShape() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("default-shape.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -1002,7 +1106,7 @@ public class WorkbookLoaderTest {
 		assertTrue(appList.contains(uri("http://example.com/applications/MyShoppingCart")));
 	}
 	
-	@Ignore
+	@Test
 	public void testAggregateFunction() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("aggregate-function.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -1032,7 +1136,7 @@ public class WorkbookLoaderTest {
 	}
 	
 	
-	@Ignore
+	@Test
 	public void testDatasourceParams() throws Exception {
 		GcpShapeConfig.init();
 		InputStream input = getClass().getClassLoader().getResourceAsStream("test-datasource-params.xlsx");
@@ -1068,7 +1172,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIriTemplate() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("test-iri-template.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -1100,7 +1204,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDataSource() throws Exception {
 
 		GcpShapeConfig.init();
@@ -1173,7 +1277,7 @@ public class WorkbookLoaderTest {
 //		
 //	}
 	
-	@Ignore
+	@Test
 	public void testPlaceData() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("place-data.xlsx");
 		
@@ -1202,7 +1306,7 @@ public class WorkbookLoaderTest {
 		assertValue(address, Schema.addressRegion, "NJ");
 	}
 	
-	@Ignore
+	@Test
 	public void testEquivalentPath() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("analytics-model.xlsx");
@@ -1291,7 +1395,7 @@ public class WorkbookLoaderTest {
 	
 	
 	
-	@Ignore
+	@Test
 	public void testStereotype() throws Exception {
 
 		
@@ -1326,7 +1430,7 @@ public class WorkbookLoaderTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void test() throws Exception {
 		
 		InputStream input = getClass().getClassLoader().getResourceAsStream("person-model.xlsx");
@@ -1352,7 +1456,7 @@ public class WorkbookLoaderTest {
 	}
 	
 	
-	@Ignore
+	@Test
 	public void testAmazonRDSCluster() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("person-model-amazon-rds.xlsx");
 		
@@ -1382,7 +1486,7 @@ public class WorkbookLoaderTest {
 		assertEquals(3, list.size());
 	}
 
-	@Ignore
+	@Test
 	public void testAwsTable() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("awsAurora-transform.xlsx");
@@ -1411,7 +1515,7 @@ public class WorkbookLoaderTest {
 		assertTrue(ds.isA(Konig.AwsAuroraTable));
 	}
 	
-	@Ignore
+	@Test
 	public void testOneOfCol() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("awsAuroraTransformOneOF.xlsx");
@@ -1438,7 +1542,7 @@ public class WorkbookLoaderTest {
 
 	}
 	
-	@Ignore
+	@Test
 	public void testPrimaryKey() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("primarykey-stereotype.xlsx");
@@ -1471,7 +1575,7 @@ public class WorkbookLoaderTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testSecurityClassification() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("security-classification.xlsx");
@@ -1550,7 +1654,7 @@ public class WorkbookLoaderTest {
 		}
 	}
 	
-	@Ignore
+	@Test
 	public void testDataDictionaryForString() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
@@ -1603,7 +1707,7 @@ public class WorkbookLoaderTest {
 		assertTrue(shape2!=null);
 	}
 	
-	@Ignore
+	@Test
 	public void testDataDictionaryForInteger() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
@@ -1701,7 +1805,7 @@ public class WorkbookLoaderTest {
 		assertTrue(XMLSchema.BOOLEAN.equals(pc.getDatatype()));
 	}
 	
-	@Ignore
+	@Test
 	public void testDataDictionaryForAbbreviations() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
@@ -1766,7 +1870,7 @@ public class WorkbookLoaderTest {
 		IOUtil.recursiveDelete(testDir);
 		
 	}
-	@Ignore
+	@Test
 	public void testDataDictionaryForDatasource() throws Exception {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
 		Workbook book = WorkbookFactory.create(input);
@@ -1827,7 +1931,7 @@ public class WorkbookLoaderTest {
 			throw new KonigException(e);
 		}
 	}
-	@Ignore
+	@Test
 	public void testDecimalDataType() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("decimal-datatype.xlsx");

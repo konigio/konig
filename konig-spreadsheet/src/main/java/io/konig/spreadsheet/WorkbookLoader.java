@@ -1655,7 +1655,6 @@ public class WorkbookLoader {
 			p.setPredicate(propertyId);
 			p.setName(businessName);
 			p.setComment(businessDefinition);
-			p.setMaxCount(1);
 			
 			
 			if(constraints!=null && constraints.contains("Primary Key")){
@@ -1711,6 +1710,8 @@ public class WorkbookLoader {
 				p = new PropertyConstraint(predicate);
 				shape.add(p);
 			}
+
+			p.setMaxCount(1);
 			
 			return p;
 		}

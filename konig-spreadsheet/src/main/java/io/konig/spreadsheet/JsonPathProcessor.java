@@ -115,6 +115,7 @@ public class JsonPathProcessor {
 					targetShape = new Shape(nextShapeId);
 					shapeManager.addShape(targetShape);
 				}
+				p.setShape(targetShape);
 			}
 			
 		}
