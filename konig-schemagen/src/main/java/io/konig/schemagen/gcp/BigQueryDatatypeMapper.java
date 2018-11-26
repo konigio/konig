@@ -54,11 +54,10 @@ public class BigQueryDatatypeMapper {
 			if (XMLSchema.BOOLEAN.equals(datatype)) {
 				return BigQueryDatatype.BOOLEAN;
 			}
-			
-			if (
-				XMLSchema.DATETIME.equals(datatype) ||
-				XMLSchema.DATE.equals(datatype) 
-			) {
+			if (XMLSchema.DATE.equals(datatype)) {
+				return BigQueryDatatype.DATE;
+			}
+			if (XMLSchema.DATE.equals(datatype)) {
 				return BigQueryDatatype.TIMESTAMP;
 			}
 			if (RDF.LANGSTRING.equals(datatype)) {
