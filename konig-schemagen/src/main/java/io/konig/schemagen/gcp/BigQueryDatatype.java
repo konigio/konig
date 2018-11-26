@@ -29,6 +29,7 @@ public enum BigQueryDatatype {
 	FLOAT64,
 	BOOLEAN,
 	TIMESTAMP,
-	RECORD
+	RECORD, 
+	DATE
 
 }
