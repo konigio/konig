@@ -26,6 +26,7 @@ import static io.konig.core.util.StringUtil.*;
 import static io.konig.core.util.StringUtil.camelCase;
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class StringUtilTest {
@@ -35,6 +36,8 @@ public class StringUtilTest {
 		assertEquals("FOO_BAR_WIZ", LABEL_TO_SNAKE_CASE("FooBar Wiz") );
 		assertEquals("FOO_BAR_x28_WIZ_x29", LABEL_TO_SNAKE_CASE("FooBar (Wiz)") );
 		assertEquals("FOO_BAR_WIZ", LABEL_TO_SNAKE_CASE("Foo_Bar_Wiz") );
+		assertEquals("IS_DELETED", LABEL_TO_SNAKE_CASE("IsDeleted"));
+		assertEquals("DO_NOT_CALL", LABEL_TO_SNAKE_CASE("DO_NOT_CALL"));
 	}
 
 	@Test
