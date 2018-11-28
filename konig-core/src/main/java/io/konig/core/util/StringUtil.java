@@ -86,6 +86,7 @@ public class StringUtil {
 		
 		for (int i=0; i<label.length();) {
 			int c = label.codePointAt(i);
+			char ch = (char) c;
 			i += Character.charCount(c);
 			
 			if (!Character.isAlphabetic(c) && !Character.isDigit(c)) {
@@ -110,8 +111,8 @@ public class StringUtil {
 			}
 			int caseValue = caseValue(c);
 			
-			if (i>2 && caseValue!=OTHER && prior!='_' && caseValue!=priorCase && c!='_' 
-					&& builder.length()>2 && builder.charAt(builder.length()-2) != '_') {
+			if (i>=2 && caseValue!=OTHER && prior!='_' && caseValue!=priorCase && c!='_' 
+					&& builder.length()>=2 && builder.charAt(builder.length()-2) != '_') {
 				builder.append('_');
 			}
 			prior = c;
