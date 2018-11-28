@@ -43,7 +43,6 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.OwlVocab;
-import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.XSD;
 import io.konig.shacl.PropertyConstraint;
@@ -510,13 +509,13 @@ public class OwlReasoner {
 		return RDFS.DATATYPE;
 	}
 	
-	public Resource leastCommonSuperClass(Collection<URI> classes) {
-		Resource result = null;
+	public URI leastCommonSuperClass(Collection<URI> classes) {
+		URI result = null;
 		for (URI owlClass : classes) {
 			if (result == null) {
 				result = owlClass;
 			} else {
-				result = leastCommonSuperClass(result, owlClass);
+				result = (URI) leastCommonSuperClass(result, owlClass);
 				if (result.equals(OWL.THING)) {
 					return OWL.THING;
 				}
