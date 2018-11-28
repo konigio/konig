@@ -1197,6 +1197,8 @@ public class WorkbookLoader {
 				break;
 			case SHEET_PROPERTY_CONSTRAINT:
 				loadPropertyConstraints(sheet);
+				break;
+				
 			case SHEET_SETTING:
 				loadSettings(sheet);
 				break;
@@ -2497,7 +2499,20 @@ public class WorkbookLoader {
 			}
 
 			
-			PropertyConstraint p = new PropertyConstraint();
+			PropertyConstraint p = prior;
+			if (p == null) {
+
+				p = new PropertyConstraint(propertyId);
+				
+				if (Konig.derivedProperty.equals(stereotype)) {
+					shape.addDerivedProperty(p);
+				} else if (Konig.variable.equals(stereotype)) {
+					shape.addVariable(p);
+				} else {
+					shape.add(p);
+				}
+			}
+			
 			
 			p.setPreferredTabularShape(preferredTabularShape);
 
@@ -2517,13 +2532,7 @@ public class WorkbookLoader {
 				}
 			}
 			
-			if (Konig.derivedProperty.equals(stereotype)) {
-				shape.addDerivedProperty(p);
-			} else if (Konig.variable.equals(stereotype)) {
-				shape.addVariable(p);
-			} else {
-				shape.add(p);
-			}
+			
 
 
 			if (propertyId != null) {
@@ -2559,7 +2568,6 @@ public class WorkbookLoader {
 			}
 
 			termStatus(termStatus);
-			p.setTermStatus(termStatus);
 			p.setTermStatus(termStatus);
 			p.setMinCount(minCount);
 			p.setMaxCount(maxCount);
