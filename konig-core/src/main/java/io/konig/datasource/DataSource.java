@@ -27,12 +27,14 @@ import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.DC;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
+import io.konig.shacl.ShapeBuilder;
 
 public class DataSource {
 	
@@ -43,6 +45,38 @@ public class DataSource {
 	private List<URI> isPartOf;
  	
 	public DataSource() {
+		
+	}
+	
+	public static class Builder {
+		
+		private ShapeBuilder shapeBuilder;
+		private DataSource ds;
+		
+		public Builder(ShapeBuilder shapeBuilder) {
+			this.shapeBuilder = shapeBuilder;
+			ds = new DataSource();
+		}
+		
+		public Builder id(Resource id) {
+			ds.setId(id);
+			return this;
+		}
+		
+		public Builder id(String idValue) {
+			ds.setId(new URIImpl(idValue));
+			return this;
+		}
+		
+		public Builder type(URI type) {
+			ds.addType(type);
+			return this;
+		}
+		
+		public ShapeBuilder endDataSource() {
+			shapeBuilder.peekShape().addShapeDataSource(ds);
+			return shapeBuilder;
+		}
 		
 	}
 

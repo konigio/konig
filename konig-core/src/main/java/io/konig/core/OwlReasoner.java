@@ -64,6 +64,17 @@ public class OwlReasoner {
 		return graph;
 	}
 	
+	public Resource getRange(URI predicate) {
+		Vertex v = graph.getVertex(predicate);
+		return v==null ? null : v.getResource(RDFS.RANGE);
+	}
+	
+	public Resource getDomain(URI predicate) {
+
+		Vertex v = graph.getVertex(predicate);
+		return v==null ? null : v.getResource(RDFS.DOMAIN);
+	}
+	
 	public String friendlyName(Resource subject) {
 		if (subject != null) {
 			Vertex v = graph.getVertex(subject);

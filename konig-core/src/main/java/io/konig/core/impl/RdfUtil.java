@@ -888,4 +888,9 @@ public class RdfUtil {
 		builder.append('>');
 		return builder.toString();
 	}
+
+	public static URI uri(Value value) {
+		return value instanceof URI ? (URI) value : null;
+	}
+	
 }

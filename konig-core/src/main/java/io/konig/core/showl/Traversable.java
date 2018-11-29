@@ -1,4 +1,4 @@
-package io.konig.shacl.graph;
+package io.konig.core.showl;
 
 public interface Traversable {
 
