@@ -1,5 +1,6 @@
 package io.konig.shacl;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -35,12 +36,15 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.rio.RDFParseException;
 
 import io.konig.activity.Activity;
+import io.konig.core.KonigException;
 import io.konig.core.Path;
 import io.konig.core.util.IriTemplate;
 import io.konig.datasource.DataSource;
 import io.konig.formula.FormulaBuilder;
+import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.impl.MemoryShapeManager;
 
@@ -436,6 +440,32 @@ public class ShapeBuilder {
 		
 		public PropertyBuilder equivalentPath(Path value) {
 			property.setEquivalentPath(value);
+			return this;
+		}
+		
+		public PropertyBuilder formula(String text, URI...terms) {
+			
+			StringBuilder builder = new StringBuilder();
+			for (URI term : terms) {
+				builder.append("@term ");
+				builder.append(term.getLocalName());
+				builder.append(" <");
+				builder.append(term.stringValue());
+				builder.append(">\n");
+			}
+			builder.append(text);
+			return formula(builder.toString());
+			
+		}
+		
+		public PropertyBuilder formula(String text) {
+			FormulaParser parser = new FormulaParser();
+			try {
+				QuantifiedExpression formula = parser.quantifiedExpression(text);
+				property.setFormula(formula);
+			} catch (RDFParseException | IOException e) {
+				throw new KonigException(e);
+			}
 			return this;
 		}
 		
