@@ -1,6 +1,9 @@
 package io.konig.datacatalog;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /*
  * #%L
  * Konig Data Catalog
@@ -24,7 +27,6 @@ package io.konig.datacatalog;
 
 import java.io.File;
 
-import static org.junit.Assert.*;
 import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -39,9 +41,11 @@ import org.openrdf.model.impl.URIImpl;
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.ShowlManager;
 import io.konig.core.util.IOUtil;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
@@ -57,6 +61,7 @@ public class DataCatalogBuilderTest {
 	private NamespaceManager nsManager = new MemoryNamespaceManager();
 	private Graph graph = new MemoryGraph(nsManager);
 	private ShapeManager shapeManager = new MemoryShapeManager();
+	private ShowlManager showlManager;
 	
 	@Before
 	public void setUp() {
@@ -66,13 +71,55 @@ public class DataCatalogBuilderTest {
 		outDir.mkdirs();
 	}
 	
+	@Test
+	public void testMappings() throws Exception {
+
+		GcpShapeConfig.init();
+		URI ontologyId = uri("http://schema.org/");
+		showlManager = new ShowlManager();
+		build("src/test/resources/MappingTest", ontologyId);
+
+		File htmlFile = new File("target/test/DataCatalogBuilder/shape/TargetPersonShape.html");
+		
+		Document doc = Jsoup.parse(htmlFile, "UTF-8");
+		Element e = findResource(doc, "http://schema.org/givenName");
+		assertTrue(e != null);
+		Element mappedField = findProperty(e, "konig:mappedField");
+		assertTrue(mappedField != null);
+		
+		Element div = mappedField.getAllElements().first();
+		assertTrue(div != null);
+		assertEquals("schema.PERSON_STG.first_name", div.text());
+	}
+	
+
+	private Element findProperty(Element parent, String propertyId) {
+		for (Element e : parent.getAllElements()) {
+			String value = e.attr("property");
+			if (propertyId.equals(value)) {
+				return e;
+			}
+		}
+		return null;
+	}
+
+	private Element findResource(Document doc, String resourceId) {
+		Elements list = doc.getAllElements();
+		for (Element e : list) {
+			String value = e.attr("resource");
+			if (resourceId.equals(value)) {
+				return e;
+			}
+		}
+		return null;
+	}
 
 	@Test
 	public void testSubjectArea() throws Exception {
 		GcpShapeConfig.init();
     	AwsShapeConfig.init();
 		URI ontologyId = uri("http://schema.org/");
-		test("src/test/resources/SubjectAreaTest", ontologyId);
+		build("src/test/resources/SubjectAreaTest", ontologyId);
 		
 		File ontologyIndexFile = new File("target/test/DataCatalogBuilder/ontology-index.html");
 		
@@ -88,28 +135,28 @@ public class DataCatalogBuilderTest {
 		GcpShapeConfig.init();
     	AwsShapeConfig.init();
 		URI ontologyId = uri("http://schema.org/");
-		test("src/test/resources/DatasourceSummary", ontologyId);
+		build("src/test/resources/DatasourceSummary", ontologyId);
 	}
 
 	@Ignore
 	public void testShape() throws Exception {
 		URI ontologyId = uri("http://schema.pearson.com/ns/fact/");
-		test("src/test/resources/ShapePageTest/rdf", ontologyId);
+		build("src/test/resources/ShapePageTest/rdf", ontologyId);
 	}
 
 	@Ignore
 	public void testHierarchicalNames() throws Exception {
 		URI ontologyId = uri("http://example.com/ns/categories/");
-		test("src/test/resources/DataCatalogBuilderTest/hierarchicalNames", ontologyId);
+		build("src/test/resources/DataCatalogBuilderTest/hierarchicalNames", ontologyId);
 	}
 	
 	@Ignore
 	public void testEnumNamespace() throws Exception {
 		URI ontologyId = uri("http://example.com/");
-		test("src/test/resources/EnumNamespaceTest", ontologyId);
+		build("src/test/resources/EnumNamespaceTest", ontologyId);
 	}
 	
-	private void test(String sourcePath, URI ontologyId) throws Exception {
+	private void build(String sourcePath, URI ontologyId) throws Exception {
 		FileUtils.deleteDirectory(outDir);
 		load(sourcePath);
 		DataCatalogBuildRequest request = new DataCatalogBuildRequest();
@@ -118,6 +165,11 @@ public class DataCatalogBuilderTest {
 		request.setGraph(graph);
 		request.setOutDir(outDir);
 		request.setShapeManager(shapeManager);
+		if (showlManager != null) {
+			OwlReasoner reasoner = new OwlReasoner(graph);
+			showlManager.load(shapeManager, reasoner);
+			request.setShowlManager(showlManager);
+		}
 		
 		builder.build(request);
 	}
@@ -142,7 +194,6 @@ public class DataCatalogBuilderTest {
 
 	private void load(String path) throws Exception {
 		File file = new File(path);
-		System.out.println(file.getAbsolutePath());
 		RdfUtil.loadTurtle(file, graph, nsManager);
 		
 		ShapeLoader loader = new ShapeLoader(shapeManager);

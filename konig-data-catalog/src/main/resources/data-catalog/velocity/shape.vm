@@ -5,7 +5,7 @@
 </head>
 <body>
 #parse( "data-catalog/velocity/header.vm" )
-<div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl#"  typeof="sh:Shape" resource="$ShapeId">
+<div id="mainContent" prefix="sh: http://www.w3.org/ns/shacl# konig: http://www.konig.io/ns/core/"  typeof="sh:Shape" resource="$ShapeId">
 	<h1 property="rdfs:label" class="page-title">$ShapeName</h1>
 	<div><span class="canonicalUrl">Canonical URL: <a href="$ShapeId">$ShapeId</a></span></div>
 	<div><span class="canonicalUrl">Target Class: <a href="$TargetClass.Href">$TargetClass.Name</a></span></div>
@@ -27,6 +27,9 @@
 				<th>Property</th>
 				<th>Type</th>
 				<th>Description</th>
+#if( $HasMappings )
+        <th>Also Known As</th>
+#end				
 				<th>Security Classification</th>
 #if( $AnyTermStatus )
 				<th>Status</th>
@@ -41,7 +44,13 @@
 				<td class="prop-desc" property="rdfs:comment">
 					$pc.Description
 				</td>
-			
+#if( $HasMappings )
+        <td property="konig:mappedField"> 
+#foreach( $mapping in $pc.MappingList )
+          <div>$mapping.Text</div>
+#end
+        </td>
+#end
 				<td class="prop-quansec">#foreach( $qsc in $pc.qualifiedSecurityClassificationList )	
 				<div><a href="$qsc.href" target="_blank">$qsc.name</a>
 				</div>#end</td>

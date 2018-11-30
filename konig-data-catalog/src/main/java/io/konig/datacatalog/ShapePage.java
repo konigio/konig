@@ -32,7 +32,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -47,6 +46,11 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.json.SampleJsonGenerator;
 import io.konig.core.project.ProjectFile;
+import io.konig.core.showl.ShowlManager;
+import io.konig.core.showl.ShowlMapping;
+import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlNodeShapeSet;
+import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
@@ -141,6 +145,7 @@ public class ShapePage {
 		boolean anyTermStatus = false;
 		for (PropertyConstraint p : shape.getProperty()) {
 			PropertyInfo info = new PropertyInfo(shapeURI, p, request);
+			buildMappings(shapeURI, info, request);
 			propertyList.add(info);
 			if (info.getTermStatus() != null) {
 				anyTermStatus = true;
@@ -154,6 +159,50 @@ public class ShapePage {
 		PrintWriter out = response.getWriter();
 		template.merge(context, out);
 		out.flush();
+	}
+	private void buildMappings(URI shapeId, PropertyInfo info, ShapeRequest request) {
+		ShowlManager manager = request.getBuildRequest().getShowlManager();
+		if (manager != null) {
+			URI predicate = info.getConstraint().getPredicate();
+			ShowlNodeShapeSet set = manager.getNodeShape(shapeId);
+			if (!set.isEmpty()) {
+				List<MappedField> list = new ArrayList<>();
+				for (ShowlNodeShape node : set) {
+					ShowlPropertyShape p = node.findProperty(predicate);
+					if (p != null) {
+						for (ShowlMapping mapping : p.getMappings()) {
+							produceMappedField(list, p, mapping);
+						}
+					}
+				}
+				
+				if (!list.isEmpty()) {
+					info.setMappingList(list);
+					request.getContext().put("HasMappings", Boolean.TRUE);
+				}
+			}
+		}
+		
+	}
+	private void produceMappedField(List<MappedField> list, ShowlPropertyShape p, ShowlMapping mapping) {
+	
+		ShowlPropertyShape q = mapping.findOther(p);
+		if (q != null) {
+			
+			int size = list.size();
+			ShowlNodeShape node = q.getDeclaringShape();
+			for (DataSource ds : node.getShape().getShapeDataSource()) {
+				if (ds instanceof TableDataSource) {
+					TableDataSource table = (TableDataSource) ds;
+					String fieldName = table.getTableIdentifier() + "." + q.getPredicate().getLocalName();
+					list.add(new MappedField(fieldName));
+					
+				}
+			}
+			if (size == list.size()) {
+				list.add(new MappedField(q.getPath()));
+			}
+		}
 	}
 	private String localNameList(Collection<URI> type, Set<URI> excludes) {
 		if (type == null || type.isEmpty()) {

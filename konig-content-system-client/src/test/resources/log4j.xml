@@ -30,7 +30,7 @@
   </appender> 
 
   <root> 
-    <priority value ="info" /> 
+    <priority value ="off" /> 
     <appender-ref ref="console" /> 
   </root>
   

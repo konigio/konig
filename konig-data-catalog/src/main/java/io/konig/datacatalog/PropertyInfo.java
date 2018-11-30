@@ -1,6 +1,7 @@
 package io.konig.datacatalog;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /*
@@ -28,6 +29,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.ShowlManager;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.PropertyStructure;
@@ -42,6 +44,7 @@ public class PropertyInfo {
 	private String description;
 	private Link termStatus;
 	private List<Link> qualifiedSecurityClassificationList;
+	private List<MappedField> mappingList;
 	
 	public PropertyInfo(URI resourceId, PropertyConstraint constraint, Link termStatus, PageRequest request) throws DataCatalogException {
 		this(resourceId, constraint, request, false);
@@ -95,9 +98,12 @@ public class PropertyInfo {
 		
 		propertyHref = request.relativePath(resourceId, constraint.getPredicate());
 		qualifiedSecurityClassificationList = quantifiedSecurityClassificationList(constraint.getQualifiedSecurityClassification(), request);
+		
 
 	}
 	
+	
+
 	private List<Link> quantifiedSecurityClassificationList(List<URI> uriList, PageRequest request) throws DataCatalogException {
 		if (uriList == null) {
 			return null;
@@ -152,6 +158,14 @@ public class PropertyInfo {
 
 	public void setTermStatus(Link termStatus) {
 		this.termStatus = termStatus;
+	}
+
+	public List<MappedField> getMappingList() {
+		return mappingList==null ? Collections.emptyList() : mappingList;
+	}
+
+	public void setMappingList(List<MappedField> mappingList) {
+		this.mappingList = mappingList;
 	}
 	
 

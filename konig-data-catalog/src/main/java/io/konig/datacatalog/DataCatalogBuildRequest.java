@@ -40,6 +40,7 @@ import io.konig.core.NamespaceInfoManager;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.showl.ShowlManager;
 import io.konig.core.vocab.SH;
 import io.konig.schema.EnumerationReasoner;
 import io.konig.shacl.ClassStructure;
@@ -65,6 +66,7 @@ public class DataCatalogBuildRequest {
 	private VelocityEngine engine;
 	private CatalogFileFactory fileFactory;
 	private OwlReasoner owlReasoner;
+	private ShowlManager showlManager;
 	
 	private SubjectManager subjectManager = null;
 	
@@ -84,6 +86,14 @@ public class DataCatalogBuildRequest {
 			subjectManager.load(graph);
 		}
 		return subjectManager;
+	}
+
+	public ShowlManager getShowlManager() {
+		return showlManager;
+	}
+
+	public void setShowlManager(ShowlManager showlManager) {
+		this.showlManager = showlManager;
 	}
 
 	public void setShowUndefinedClass(boolean showUndefinedClass) {
