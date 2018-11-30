@@ -39,12 +39,14 @@ import org.openrdf.rio.RDFParseException;
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.PathFactory;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.project.Project;
 import io.konig.core.project.ProjectManager;
+import io.konig.core.showl.ShowlManager;
 import io.konig.datacatalog.DataCatalogBuildRequest;
 import io.konig.datacatalog.DataCatalogBuilder;
 import io.konig.datacatalog.DataCatalogException;
@@ -102,6 +104,8 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
 			shapeLoader.load(graph);
 			URI ontologyId = ontology==null ? null : new URIImpl(ontology);
+			ShowlManager showlManager = new ShowlManager();
+			showlManager.load(shapeManager, new OwlReasoner(graph));
 			
 			DataCatalogBuildRequest request = new DataCatalogBuildRequest();
 		
@@ -111,6 +115,7 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			request.setOutDir(siteDir);
 			request.setShapeManager(shapeManager);
 			request.setShowUndefinedClass(showUndefinedClass);
+			request.setShowlManager(showlManager);
 			
 			if (ontologyId==null) {
 				request.useDefaultOntologyList();
