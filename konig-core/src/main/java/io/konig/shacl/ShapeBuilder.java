@@ -443,6 +443,21 @@ public class ShapeBuilder {
 			return this;
 		}
 		
+		public PropertyBuilder formula(String text, URI...terms) {
+			
+			StringBuilder builder = new StringBuilder();
+			for (URI term : terms) {
+				builder.append("@term ");
+				builder.append(term.getLocalName());
+				builder.append(" <");
+				builder.append(term.stringValue());
+				builder.append(">\n");
+			}
+			builder.append(text);
+			return formula(builder.toString());
+			
+		}
+		
 		public PropertyBuilder formula(String text) {
 			FormulaParser parser = new FormulaParser();
 			try {

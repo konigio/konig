@@ -21,19 +21,13 @@ package io.konig.core.showl;
  */
 
 
-public class ShowlDerivedPropertyShape extends ShowlPropertyShape {
+import java.util.HashSet;
+
+public class ShowlNodeShapeSet extends HashSet<ShowlNodeShape> {
+	private static final long serialVersionUID = 1L;
 	
-	public ShowlDerivedPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property) {
-		super(declaringShape, property, null);
+	public ShowlNodeShape findAny() {
+		return isEmpty() ? null : iterator().next();
 	}
-	
-	@Override
-	public ShowlDerivedPropertyShape asDerivedPropertyShape() {
-		return this;
-	}
-	
-	@Override
-	public boolean isDirect() {
-		return false;
-	}
+
 }

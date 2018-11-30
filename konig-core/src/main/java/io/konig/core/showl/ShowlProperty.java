@@ -1,5 +1,26 @@
 package io.konig.core.showl;
 
+/*
+ * #%L
+ * Konig Core
+ * %%
+ * Copyright (C) 2015 - 2018 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -95,8 +116,34 @@ public class ShowlProperty {
 			range.addRangeOf(this);
 		}
 	}
-
 	
+
+	/**
+	 * Get the transitive closure consisting of this Property plus all other
+	 * Properties reachable via Property Groups.
+	 * @return
+	 */
+	public Set<ShowlProperty> getConnectedProperties() {
+		Set<ShowlProperty> result = new HashSet<>();
+		addConnectedProperties(this, result);
+		return result;
+	}
+
+	private void addConnectedProperties(ShowlProperty p, Set<ShowlProperty> result) {
+		if (!result.contains(p)) {
+			result.add(p);
+			for (ShowlPropertyShape q : p.getPropertyShapes()) {
+				ShowlPropertyGroup g = q.getGroup();
+				if (g != null && g.size()>1) {
+					for (ShowlPropertyShape r : g) {
+						ShowlProperty s = r.getProperty();
+						addConnectedProperties(s, result);
+					}
+				}
+			}
+		}
+	}
+
 	public String toString() {
 		return "ShowlProperty(" + predicate.toString() + ")";
 	}

@@ -1,7 +1,32 @@
 package io.konig.core.showl;
 
+/*
+ * #%L
+ * Konig Core
+ * %%
+ * Copyright (C) 2015 - 2018 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.openrdf.model.URI;
 
@@ -19,13 +44,39 @@ public class ShowlPropertyShape implements Traversable {
 	private PropertyConstraint propertyConstraint;
 	private ShowlNodeShape valueShape;
 	private ShowlPropertyGroup group;
-	
+	private Map<ShowlJoinCondition, ShowlMapping> mappings;
 	
 	public ShowlPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, PropertyConstraint propertyConstraint) {
 		this.declaringShape = declaringShape;
 		this.property = property;
 		this.propertyConstraint = propertyConstraint;
 		property.addPropertyShape(this);
+	}
+	
+	public void addMapping(ShowlMapping mapping) {
+		if (mappings==null) {
+			mappings = new HashMap<>();
+		}
+		mappings.put(mapping.getJoinCondition(), mapping);
+	}
+	
+	public Collection<ShowlMapping> getMappings() {
+		return mappings==null ? Collections.emptySet() : mappings.values();
+	}
+	
+	public ShowlMapping getMapping(ShowlJoinCondition joinCondition) {
+		return mappings==null ? null : mappings.get(joinCondition);
+	}
+	
+	/**
+	 * Returns true if this PropertyShape describes a direct property (i.e. not derived).
+	 */
+	public boolean isDirect() {
+		return true;
+	}
+	
+	public boolean isLeaf() {
+		return valueShape==null;
 	}
 	
 	public ShowlDerivedPropertyShape asDerivedPropertyShape() {
@@ -105,9 +156,28 @@ public class ShowlPropertyShape implements Traversable {
 	public void setValueShape(ShowlNodeShape valueShape) {
 		this.valueShape = valueShape;
 	}
+	
+	public ShowlNodeShape getRootNode() {
+		ShowlNodeShape root = declaringShape;
+		while (root.getAccessor() != null) {
+			root = root.getAccessor().getDeclaringShape();
+		}
+		return root;
+	}
+	
+	public ShowlPropertyShape getPeer() {
+		if (group!=null) {
+			for (ShowlPropertyShape p : group) {
+				if (p != this) {
+					return p;
+				}
+			}
+		}
+		return null;
+	}
 
 	/**
-	 * Should be used only by ShowlPropertyGroup
+	 * This method should be used only by ShowlPropertyGroup
 	 * @param group
 	 */
 	void group(ShowlPropertyGroup group) {

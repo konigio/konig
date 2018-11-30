@@ -128,9 +128,6 @@ public class TransformModelBuilderTest {
 					.maxCount(1)
 				.endProperty()
 				.beginDerivedProperty(Konig.uid)
-					.beginFormula()
-					
-					.endFormula()
 				.endProperty()
 				.beginDataSource(GoogleCloudSqlTable.Builder.class)
 					.id(uri("http://example.com/database/SourcePerson"))

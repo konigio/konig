@@ -1,5 +1,26 @@
 package io.konig.core.showl;
 
+/*
+ * #%L
+ * Konig Core
+ * %%
+ * Copyright (C) 2015 - 2018 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +35,6 @@ import org.openrdf.model.impl.URIImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
@@ -25,69 +45,168 @@ import io.konig.formula.FormulaVisitor;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class ShowlManager {
 	private static final Logger logger = LoggerFactory.getLogger(ShowlManager.class);
-	private Map<Resource,ShowlNodeShape> nodeShapes = new HashMap<>();
+	private Map<Resource,ShowlNodeShapeSet> nodeShapes = new HashMap<>();
 	private Map<URI,ShowlClass> owlClasses = new HashMap<>();
 	private Map<URI, ShowlProperty> properties = new HashMap<>();
+	private ShowlNodeShapeSet emptySet = null;
 	
 	public void load(ShapeManager shapeManager, OwlReasoner reasoner) {
-		Worker worker = new Worker(reasoner);
+		Worker worker = new Worker(shapeManager, reasoner);
 		
-		worker.load(shapeManager);
+		worker.load();
 	}
 	
-	public ShowlNodeShape getNodeShape(Resource shapeId) {
-		return nodeShapes.get(shapeId);
+	public ShowlNodeShapeSet getNodeShape(Resource shapeId) {
+		ShowlNodeShapeSet set =  nodeShapes.get(shapeId);
+		return (set == null) ? emptySet() : set;
+	}
+	
+	private ShowlNodeShapeSet emptySet() {
+		if (emptySet==null) {
+			emptySet = new ShowlNodeShapeSet();
+		}
+		return emptySet;
 	}
 	
 	
+
 	private class Worker {
 
+		private ShapeManager shapeManager;
 		private OwlReasoner reasoner;
 		private List<ShowlNodeShape> classlessShapes = new ArrayList<>();
 	
 
-		public Worker(OwlReasoner reasoner) {
+		public Worker(ShapeManager shapeManager, OwlReasoner reasoner) {
+			this.shapeManager = shapeManager;
 			this.reasoner = reasoner;
 		}
 
-		private void load(ShapeManager shapeManager) {
-			loadShapes(shapeManager);
+		private void load() {
+			loadShapes();
 			inferTargetClasses();
-			mergeGroups();
+			buildJoinConditions();
 		}
+
+
 		
-	
 
+		
 
-		/**
-		 * Merge groups whose members have a compatible domain and the same predicate
-		 */
-		private void mergeGroups() {
-			Map<ClassPropertyPair,ShowlPropertyGroup> map = new HashMap<>();
-			for (ShowlProperty property : properties.values()) {
-				for (ShowlPropertyShape p : property.getPropertyShapes()) {
-					ShowlPropertyGroup g = produceGroup(p);
-					URI domainId = p.getDeclaringShape().getOwlClass().getId();
-					if (!Konig.Undefined.equals(domainId)) {
-						
-						ClassPropertyPair key = new ClassPropertyPair(domainId, property.getPredicate());
-						
-						ShowlPropertyGroup h = map.get(key);
-						if (h == null) {
-							map.put(key, g);
-						} else {
-							h.addAll(g);
+		private void buildJoinConditions() {
+			
+			for (Shape shape : shapeManager.listShapes()) {
+				if (!shape.getShapeDataSource().isEmpty()) {
+					for (ShowlNodeShape node : getNodeShape(shape.getId())) {
+						if ((node.findProperty(Konig.id) != null) && (node.getAccessor()==null)) {
+							buildJoinConditions(node);
 						}
+					}
+				}
+				
+			}
+			
+		}
+
+		private void buildJoinConditions(ShowlNodeShape leftNode) {
+			
+			ShowlClass owlClass = leftNode.getOwlClass();
+			if (!owlClass.getId().equals(Konig.Undefined)) {
+				
+				for (ShowlNodeShape rightNode : owlClass.getTargetClassOf()) {
+					if (
+						(!rightNode.getId().equals(leftNode.getId()) ) &&
+						(leftNode.getJoinCondition(rightNode) == null) &&
+						(rightNode.hasDataSource()) &&
+						(leftNode.getRoot() != rightNode.getRoot())
+					) {
+						buildJoinCondition(leftNode, rightNode);
 					}
 				}
 			}
 			
+		}
+
+		private void buildJoinCondition(ShowlNodeShape leftNode, ShowlNodeShape rightNode) {
+
+			ShowlPropertyShape leftId = leftNode.findProperty(Konig.id);
+			ShowlPropertyShape rightId = rightNode.findProperty(Konig.id);
+
+			if (rightId != null && leftId != null) {
+				ShowlJoinCondition join = new ShowlJoinCondition(leftId, rightId);
+				leftNode.putJoinCondition(rightNode, join);
+				rightNode.putJoinCondition(leftNode, join);
+				
+				for (ShowlPropertyShape p : leftNode.getProperties()) {
+					buildMapping(join, leftNode, p, rightNode);
+				}
+			}
+			
+		}
+
+		
+
+		private void buildMapping(
+				ShowlJoinCondition join, 
+				ShowlNodeShape leftNode, 
+				ShowlPropertyShape leftProperty,
+				ShowlNodeShape rightNode) {
+			
+			if (leftProperty.getMapping(join)==null) {
+				ShowlPropertyShape rightProperty = rightNode.findProperty(leftProperty.getPredicate());
+				
+				if (rightProperty == null) {
+					Set<ShowlProperty> set = leftProperty.getProperty().getConnectedProperties();
+					for (ShowlProperty q : set) {
+						if (q == leftProperty.getProperty()) {
+							continue;
+						}
+						rightProperty = rightNode.findProperty(q.getPredicate());
+						if (rightProperty != null) {
+							break;
+						}
+						
+					}
+				}
+				
+				if (rightProperty != null) {
+					if (rightProperty.isLeaf() && !rightProperty.isDirect()) {
+						rightProperty = rightProperty.getPeer();
+						if (rightProperty == null) {
+							return;
+						}
+						
+					}
+					ShowlMapping mapping = new ShowlMapping(join, leftProperty, rightProperty);
+					leftProperty.addMapping(mapping);
+					rightProperty.addMapping(mapping);
+					buildNestedMappings(join, leftProperty, rightProperty);
+				}
+				
+				
+			}
+			
+			
+			
+		}
+
+		private void buildNestedMappings(ShowlJoinCondition join, ShowlPropertyShape leftProperty,
+				ShowlPropertyShape rightProperty) {
+
+			ShowlNodeShape leftNode = leftProperty.getValueShape();
+			ShowlNodeShape rightNode = rightProperty.getValueShape();
+			if (leftNode!=null && rightNode!=null) {
+				for (ShowlPropertyShape p : leftNode.getProperties()) {
+					buildMapping(join, leftNode, p, rightNode);
+				}
+			}
 			
 		}
 
@@ -169,27 +288,64 @@ public class ShowlManager {
 
 
 
-		private void loadShapes(ShapeManager shapeManager) {
-			for (Shape shape : shapeManager.listShapes()) {
-				if (!shape.getShapeDataSource().isEmpty()) {
-					createNodeShape(null, shape);
-				}
+		private void loadShapes() {
+			
+			Set<Shape> rootShapes = rootShapes(shapeManager);
+			for (Shape shape : rootShapes) {
+				createNodeShape(null, shape);
 			}
 		}
 		
+		private Set<Shape> rootShapes(ShapeManager shapeManager) {
+			Set<Shape> result = new HashSet<>();
+			Map<Shape,Boolean> hasReference = new HashMap<>();
+			List<Shape> shapeList = shapeManager.listShapes();
+			for (Shape shape : shapeList) {
+				putReferences(shape.getProperty(), hasReference);
+			}
+			for (Shape shape : shapeList) {
+				if (!shape.getShapeDataSource().isEmpty() || hasReference.get(shape)==null) {
+					result.add(shape);
+				}
+			}
+			
+			return result;
+		}
+
+		
+
+		private void putReferences(List<PropertyConstraint> property, Map<Shape, Boolean> hasReference) {
+			for (PropertyConstraint p : property) {
+				Shape shape = p.getShape();
+				if (shape != null) {
+					
+					if (hasReference.put(shape, Boolean.TRUE)==null) {
+						putReferences(shape.getProperty(), hasReference);
+					}
+				}
+				
+			}
+			
+		}
+
 		private ShowlNodeShape createShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
 
 			ShowlNodeShape result = new ShowlNodeShape(accessor, shape, owlClass);
 			if (Konig.Undefined.equals(owlClass.getId())) {
 				classlessShapes.add(result);
 			}
+			ShowlNodeShapeSet set = nodeShapes.get(shape.getId());
+			if (set == null) {
+				set = new ShowlNodeShapeSet();
+				nodeShapes.put(shape.getId(), set);
+			}
+			set.add(result);
 			return result;
 		}
 		
 		private ShowlNodeShape createNodeShape(ShowlPropertyShape accessor, Shape shape) {
 			ShowlClass owlClass = targetOwlClass(accessor, shape);
 			ShowlNodeShape result = createShowlNodeShape(accessor, shape, owlClass);
-			nodeShapes.put(shape.getId(), result);
 			addProperties(result);
 			return result;
 		}
@@ -223,6 +379,7 @@ public class ShowlManager {
 
 		private void addProperties(ShowlNodeShape declaringShape) {
 			
+			addIdProperty(declaringShape);
 			
 			for (PropertyConstraint p : declaringShape.getShape().getProperty()) {
 				URI predicate = p.getPredicate();
@@ -235,7 +392,7 @@ public class ShowlManager {
 					Shape childShape = p.getShape();
 					if (childShape != null) {
 						if (declaringShape.hasAncestor(childShape.getId())) {
-							throw new KonigException("Cyclic shape detected at: " + q.getPath());
+							error("Cyclic shape detected at: " + q.getPath());
 						}
 						createNodeShape(q, childShape);
 					}
@@ -244,6 +401,24 @@ public class ShowlManager {
 			
 		}
 		
+		private void addIdProperty(ShowlNodeShape declaringShape) {
+			if (declaringShape.getShape().getIriTemplate() != null) {
+				ShowlProperty property = produceShowlProperty(Konig.id);
+				ShowlTemplatePropertyShape p = new ShowlTemplatePropertyShape(
+						declaringShape, property, declaringShape.getShape().getIriTemplate());
+				declaringShape.addDerivedProperty(p);
+			} else if (declaringShape.getShape().getNodeKind() == NodeKind.IRI) {
+				ShowlProperty property = produceShowlProperty(Konig.id);
+				ShowlPropertyShape p = new ShowlPropertyShape(declaringShape, property, null);
+				declaringShape.addProperty(p);
+			}
+			
+		}
+
+		private void error(String text) {
+			logger.error(text);
+		}
+
 		private ShowlProperty produceShowlProperty(URI predicate) {
 			ShowlProperty property = properties.get(predicate);
 			if (property == null) {
@@ -321,10 +496,10 @@ public class ShowlManager {
 								}
 								prior = p;
 							} else {
-								throw new KonigException("In step not supported yet");
+								error("In step not supported yet");
 							}
 						} else {
-							throw new KonigException("HasStep not supported yet");
+							error("HasStep not supported yet");
 						}
 					}
 					if (prior != null) {

@@ -21,19 +21,18 @@ package io.konig.core.showl;
  */
 
 
-public class ShowlDerivedPropertyShape extends ShowlPropertyShape {
+import io.konig.core.util.IriTemplate;
+
+public class ShowlTemplatePropertyShape extends ShowlDerivedPropertyShape {
+
+	private IriTemplate template;
 	
-	public ShowlDerivedPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property) {
-		super(declaringShape, property, null);
+	public ShowlTemplatePropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, IriTemplate template) {
+		super(declaringShape, property);
+		this.template = template;
 	}
 	
-	@Override
-	public ShowlDerivedPropertyShape asDerivedPropertyShape() {
-		return this;
-	}
-	
-	@Override
-	public boolean isDirect() {
-		return false;
+	public IriTemplate getTemplate() {
+		return template;
 	}
 }

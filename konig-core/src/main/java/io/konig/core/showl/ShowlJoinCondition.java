@@ -21,19 +21,23 @@ package io.konig.core.showl;
  */
 
 
-public class ShowlDerivedPropertyShape extends ShowlPropertyShape {
-	
-	public ShowlDerivedPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property) {
-		super(declaringShape, property, null);
+public class ShowlJoinCondition {
+
+	private ShowlPropertyShape left;
+	private ShowlPropertyShape right;
+
+	public ShowlJoinCondition(ShowlPropertyShape left, ShowlPropertyShape right) {
+		this.left = left;
+		this.right = right;
+	}
+
+	public ShowlPropertyShape getLeft() {
+		return left;
+	}
+
+	public ShowlPropertyShape getRight() {
+		return right;
 	}
 	
-	@Override
-	public ShowlDerivedPropertyShape asDerivedPropertyShape() {
-		return this;
-	}
 	
-	@Override
-	public boolean isDirect() {
-		return false;
-	}
 }
