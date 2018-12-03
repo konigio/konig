@@ -118,4 +118,24 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 		return primary instanceof PathExpression ? (PathExpression) primary : null;
 	}
 
+	public DirectionStep directionStepAfter(int i) {
+		for (int j=i+1; j<stepList.size(); j++) {
+			PathStep step = stepList.get(j);
+			if (step instanceof DirectionStep) {
+				return (DirectionStep) step;
+			}
+		}
+		return null;
+	}
+
+	public DirectionStep directionStepBefore(int i) {
+		for (int j=i-1; j>=0; j--) {
+			PathStep step = stepList.get(j);
+			if (step instanceof DirectionStep) {
+				return (DirectionStep) step;
+			}
+		}
+		return null;
+	}
+
 }

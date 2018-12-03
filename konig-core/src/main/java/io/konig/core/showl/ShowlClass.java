@@ -57,11 +57,19 @@ public class ShowlClass {
 	}
 
 	public String toString() {
-		return "GraphOwlClass[" + owlClassId.getLocalName() + "]";
+		return "ShowlClass[" + owlClassId.getLocalName() + "]";
+	}
+	
+	public Set<ShowlProperty> getRangeOf() {
+		return rangeOf;
 	}
 	
 	public void addRangeOf(ShowlProperty p) {
 		rangeOf.add(p);
+	}
+	
+	public Set<ShowlProperty> getDomainOf() {
+		return domainOf;
 	}
 	
 	public void addDomainOf(ShowlProperty p) {
