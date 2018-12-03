@@ -39,12 +39,10 @@ import org.openrdf.model.impl.NamespaceImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
-import io.konig.core.util.IOUtil;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.ClassStructure;
@@ -140,11 +138,11 @@ public class DataCatalogBuilder {
 	private void buildDatasourceSummary(PageRequest request) throws IOException, DataCatalogException {
 
 		File overviewFile = new File(outDir, "datasources.html");
-		PrintWriter out = new PrintWriter(new FileWriter(overviewFile));
-		PageResponse response = new PageResponseImpl(out);
-		DataSourceSummaryPage page = new DataSourceSummaryPage();
-		page.render(request, response);
-		IOUtil.close(out, "datasources.html");
+		try (PrintWriter out = new PrintWriter(new FileWriter(overviewFile))) {
+			PageResponse response = new PageResponseImpl(out);
+			DataSourceSummaryPage page = new DataSourceSummaryPage();
+			page.render(request, response);
+		}	
 		
 	}
 
@@ -156,10 +154,12 @@ public class DataCatalogBuilder {
 		
 		for (PropertyStructure p : baseRequest.getClassStructure().listProperties()) {
 			PropertyRequest request = new PropertyRequest(baseRequest, p);
-			PrintWriter writer = resourceWriterFactory.createWriter(request, p.getPredicate());
-			PageResponse response = new PageResponseImpl(writer);
-			request.setContext(new VelocityContext());
-			page.render(request, response);
+			try (PrintWriter writer = resourceWriterFactory.createWriter(request, p.getPredicate()) ) {
+		
+				PageResponse response = new PageResponseImpl(writer);
+				request.setContext(new VelocityContext());
+				page.render(request, response);
+			}
 		}
 	}
 
@@ -184,22 +184,22 @@ public class DataCatalogBuilder {
 	private void buildOverviewPage(PageRequest request) throws IOException, DataCatalogException {
 		
 		File overviewFile = new File(outDir, "overview.html");
-		PrintWriter out = new PrintWriter(new FileWriter(overviewFile));
-		PageResponse response = new PageResponseImpl(out);
-		OverviewPage page = new OverviewPage();
-		page.render(request, response);
-		IOUtil.close(out, "overview.html");
+		try (PrintWriter out = new PrintWriter(new FileWriter(overviewFile))) {
+			PageResponse response = new PageResponseImpl(out);
+			OverviewPage page = new OverviewPage();
+			page.render(request, response);
+		}
 		
 	}
 
 	
 	private void buildIndexAllPage(PageRequest request) throws IOException, DataCatalogException {
 		File indexAllFile = new File(outDir, "index-all.html");
-		PrintWriter out = new PrintWriter(new FileWriter(indexAllFile));
-		PageResponse response = new PageResponseImpl(out);
-		IndexAllPage page = new IndexAllPage();
-		page.render(request, response);
-		IOUtil.close(out, "index-all.html");
+		try (PrintWriter out = new PrintWriter(new FileWriter(indexAllFile))) {
+			PageResponse response = new PageResponseImpl(out);
+			IndexAllPage page = new IndexAllPage();
+			page.render(request, response);
+		}
 		
 	}
 
@@ -208,11 +208,10 @@ public class DataCatalogBuilder {
 		File index = new File(outDir, "index.html");
 		VelocityEngine engine = request.getEngine();
 		VelocityContext context = request.getContext();
-		FileWriter out = new FileWriter(index);
-		Template template = engine.getTemplate("data-catalog/velocity/index.vm");
-		template.merge(context, out);
-		
-		IOUtil.close(out, "index.html");
+		try (FileWriter out = new FileWriter(index)) {
+			Template template = engine.getTemplate("data-catalog/velocity/index.vm");
+			template.merge(context, out);
+		}
 		
 	}
 
@@ -226,10 +225,10 @@ public class DataCatalogBuilder {
 				URI ontologyId = (URI) v.getId();
 				OntologyRequest ontologyRequest = new OntologyRequest(request, v);
 				URI summary = DataCatalogUtil.ontologySummary(ontologyId.stringValue());
-				PrintWriter out = resourceWriterFactory.createWriter(ontologyRequest, summary);
-				PageResponse response = new PageResponseImpl(out);
-				page.render(ontologyRequest, response);
-				IOUtil.close(out, ontologyId.stringValue());
+				try (PrintWriter out = resourceWriterFactory.createWriter(ontologyRequest, summary)) {
+					PageResponse response = new PageResponseImpl(out);
+					page.render(ontologyRequest, response);
+				}
 			}
 		}
 		
@@ -243,10 +242,10 @@ public class DataCatalogBuilder {
 			if (v.getId() instanceof URI) {
 				URI classId = (URI) v.getId();
 				ClassRequest classRequest = new ClassRequest(request, v, resourceWriterFactory);
-				PrintWriter writer = resourceWriterFactory.createWriter(classRequest, classId);
-				PageResponse response = new PageResponseImpl(writer);
-				page.render(classRequest, response);
-				IOUtil.close(writer, classId.stringValue());
+				try (PrintWriter writer = resourceWriterFactory.createWriter(classRequest, classId)) {
+					PageResponse response = new PageResponseImpl(writer);
+					page.render(classRequest, response);
+				}
 			}
 		}
 		
@@ -261,10 +260,10 @@ public class DataCatalogBuilder {
 		UndefinedClassPage page = new UndefinedClassPage();
 		URI classId = Konig.Undefined;
 		ClassRequest classRequest = new ClassRequest(request, null, resourceWriterFactory);
-		PrintWriter writer = resourceWriterFactory.createWriter(classRequest, classId);
-		PageResponse response = new PageResponseImpl(writer);
-		page.render(classRequest, response);
-		IOUtil.close(writer, classId.stringValue());
+		try (PrintWriter writer = resourceWriterFactory.createWriter(classRequest, classId)) {
+			PageResponse response = new PageResponseImpl(writer);
+			page.render(classRequest, response);
+		}
 		
 	}
 
@@ -272,21 +271,21 @@ public class DataCatalogBuilder {
 	private void buildClassIndex(PageRequest request) throws IOException, DataCatalogException {
 		
 		ClassIndexPage page = new ClassIndexPage();
-		PrintWriter out = classIndexWriterFactory.createWriter(request, null);
-		PageResponse response = new PageResponseImpl(out);
-		page.render(request, response);
-		IOUtil.close(out, "allclasses-index.html" );
+		try (PrintWriter out = classIndexWriterFactory.createWriter(request, null)) {
+			PageResponse response = new PageResponseImpl(out);
+			page.render(request, response);
+		}
 	}
 	
 
 
 	private void buildOntologyIndex(PageRequest request) throws IOException, DataCatalogException {
 		File file = new File(outDir, DataCatalogUtil.ONTOLOGY_INDEX_FILE);
-		PrintWriter out = new PrintWriter(new FileWriter(file));
-		PageResponse response = new PageResponseImpl(out);
-		OntologyIndexPage page = new OntologyIndexPage();
-		page.render(request, response);
-		IOUtil.close(out, DataCatalogUtil.ONTOLOGY_INDEX_FILE);
+		try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
+			PageResponse response = new PageResponseImpl(out);
+			OntologyIndexPage page = new OntologyIndexPage();
+			page.render(request, response);
+		}
 	}
 
 	private void buildShapePages(PageRequest baseRequest, File exampleDir) throws IOException, DataCatalogException {
@@ -304,11 +303,11 @@ public class DataCatalogBuilder {
 				}
 				URI shapeURI = (URI) shapeId;
 				ShapeRequest request = new ShapeRequest(baseRequest, shape, exampleDir);
-				PrintWriter out = resourceWriterFactory.createWriter(request, shapeURI);
-				PageResponse response = new PageResponseImpl(out);
-				
-				shapePage.render(request, response);
-				IOUtil.close(out, shapeURI.stringValue());
+				try (PrintWriter out = resourceWriterFactory.createWriter(request, shapeURI)) {
+					PageResponse response = new PageResponseImpl(out);
+					
+					shapePage.render(request, response);
+				}
 			}
 		}
 		

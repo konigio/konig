@@ -1,5 +1,8 @@
 package io.konig.core.showl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /*
  * #%L
  * Konig Core
@@ -22,21 +25,45 @@ package io.konig.core.showl;
 
 
 public class ShowlJoinCondition {
+	
+	private static Logger logger = LoggerFactory.getLogger(ShowlJoinCondition.class);
 
 	private ShowlPropertyShape left;
 	private ShowlPropertyShape right;
+	
+	private ShowlJoinCondition previous;
 
-	public ShowlJoinCondition(ShowlPropertyShape left, ShowlPropertyShape right) {
+	public ShowlJoinCondition(ShowlPropertyShape left, ShowlPropertyShape right, ShowlJoinCondition previous) {
 		this.left = left;
 		this.right = right;
+		this.previous = previous;
+
+		left.addJoinCondition(this);
+		right.addJoinCondition(this);
+		
+		if (logger.isTraceEnabled()) {
+			logger.trace("new JoinCondition: {} ... {}", left.getPath(), right.getPath());
+		}
 	}
 
+	
 	public ShowlPropertyShape getLeft() {
 		return left;
 	}
 
 	public ShowlPropertyShape getRight() {
 		return right;
+	}
+
+	public ShowlJoinCondition getPrevious() {
+		return previous;
+	}
+
+	public ShowlPropertyShape otherProperty(ShowlPropertyShape p) {
+		
+		return 
+			p==left ? right :
+			p==right ? left : null;
 	}
 	
 	

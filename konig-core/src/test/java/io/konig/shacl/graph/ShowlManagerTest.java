@@ -53,8 +53,105 @@ public class ShowlManagerTest {
 	private ShapeBuilder shapeBuilder = new ShapeBuilder();
 	private ShowlManager showlManager = new ShowlManager();
 	
+	@Test
+	public void testFlatten() {
+		
+		URI personShapeId = uri("http://example.com/shapes/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/OrganizationShape");
+		URI employerName = uri("http://example.com/ns/alias/EMPLOYER_NAME");
+		
+		shapeBuilder
+			.beginShape(personShapeId)
+			.targetClass(Schema.Person)
+				.nodeKind(NodeKind.IRI)
+				.beginProperty(employerName)
+					.datatype(XMLSchema.STRING)
+					.maxCount(1)
+					.formula("$^employee.name", Schema.employee, Schema.name)
+				.endProperty()
+				.beginDataSource(DataSource.Builder.class)
+				.endDataSource()
+			.endShape()
+			.beginShape(orgShapeId)
+				.targetClass(Schema.Organization)
+				.nodeKind(NodeKind.IRI)
+				.beginProperty(Schema.name)
+					.datatype(XMLSchema.STRING)
+					.maxCount(1)
+				.endProperty()
+				.beginProperty(Schema.employee)
+					.nodeKind(NodeKind.IRI)
+					.valueClass(Schema.Person)
+				.endProperty()
+				.beginDataSource(DataSource.Builder.class)
+				.endDataSource()
+			.endShape();
+		load();
+		
+
+		ShowlNodeShape personShape = showlManager.getNodeShape(personShapeId).findAny();
+		ShowlNodeShape orgShape = showlManager.getNodeShape(orgShapeId).findAny();
+		
+		ShowlPropertyShape personId = personShape.findProperty(Konig.id);
+		ShowlPropertyShape employee = orgShape.findProperty(Schema.employee);
+		
+		ShowlJoinCondition join = personId.findJoinCondition(employee);
+		assertTrue(join != null);
+		
+		ShowlPropertyShape personEmployerName = personShape.findProperty(employerName);
+		ShowlMapping mapping = personEmployerName.getMapping(join);
+		assertTrue(mapping != null);
+		
+		ShowlPropertyShape orgName = orgShape.findProperty(Schema.name);
+		assertEquals(orgName, mapping.findOther(personEmployerName));
+	}
 	
-	@Ignore
+	@Test
+	public void testInwardStep() {
+		
+		URI personShapeId = uri("http://example.com/shapes/PersonShape");
+		URI orgShapeId = uri("http://example.com/shapes/OrganizationShape");
+		
+		
+		
+		shapeBuilder
+			.beginShape(personShapeId)
+			.targetClass(Schema.Person)
+				.nodeKind(NodeKind.IRI)
+				.beginProperty(Schema.worksFor)
+					.formula("$^employee", Schema.employee)
+					.nodeKind(NodeKind.IRI)
+					.valueClass(Schema.Organization)
+				.endProperty()
+				.beginDataSource(DataSource.Builder.class)
+				.endDataSource()
+			.endShape()
+			.beginShape(orgShapeId)
+				.targetClass(Schema.Organization)
+				.nodeKind(NodeKind.IRI)
+				.beginProperty(Schema.employee)
+					.nodeKind(NodeKind.IRI)
+					.valueClass(Schema.Person)
+				.endProperty()
+				.beginDataSource(DataSource.Builder.class)
+				.endDataSource()
+			.endShape();
+		load();
+		
+		ShowlNodeShape personShape = showlManager.getNodeShape(personShapeId).findAny();
+		ShowlNodeShape orgShape = showlManager.getNodeShape(orgShapeId).findAny();
+		ShowlPropertyShape employee = orgShape.getProperty(Schema.employee);
+		
+		ShowlJoinCondition join = personShape.findProperty(Konig.id).findJoinCondition(employee);
+		assertTrue(join != null);
+		
+		ShowlPropertyShape employer = personShape.getInwardProperty(Schema.employee);
+		ShowlMapping mapping = employer.getMapping(join);
+		assertTrue(mapping != null);
+		
+	}
+	
+	@Test
 	public void testSourceToSource() {
 		
 		URI aPersonShapeId = uri("http://example.com/shapes/APersonShape");
@@ -89,7 +186,10 @@ public class ShowlManagerTest {
 		ShowlNodeShape aPersonShape = showlManager.getNodeShape(aPersonShapeId).findAny();
 		ShowlNodeShape bPersonShape = showlManager.getNodeShape(bPersonShapeId).findAny();
 		
-		ShowlJoinCondition join = aPersonShape.getJoinCondition(bPersonShape);
+		ShowlPropertyShape aId = aPersonShape.findProperty(Konig.id);
+		ShowlPropertyShape bId = bPersonShape.findProperty(Konig.id);
+		
+		ShowlJoinCondition join = aId.findJoinCondition(bId);
 		assertTrue(join != null);
 		
 		
@@ -170,7 +270,10 @@ public class ShowlManagerTest {
 		
 		assertTrue(targetCity != null);
 		
-		ShowlJoinCondition join = targetPersonShape.getJoinCondition(sourcePersonShape);
+		ShowlPropertyShape sourceId = sourcePersonShape.findProperty(Konig.id);
+		ShowlPropertyShape targetId = targetPersonShape.findProperty(Konig.id);
+		
+		ShowlJoinCondition join = sourceId.findJoinCondition(targetId);
 		assertTrue(join != null);
 		
 		ShowlPropertyShape sourceCity = sourcePersonShape.findProperty(city);
@@ -187,7 +290,7 @@ public class ShowlManagerTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testInferNullTargetClass() {
 		URI sourceShapeId = uri("http://example.com/shapes/SourcePersonShape");
 		URI targetShapeId = uri("http://example.com/shapes/TargetPersonShape");
@@ -229,7 +332,7 @@ public class ShowlManagerTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testInferUndefinedTargetClass() {
 
 		URI sourceShapeId = uri("http://example.com/shapes/SourcePersonShape");

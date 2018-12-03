@@ -31,26 +31,28 @@ import java.util.Map;
 import org.openrdf.model.URI;
 
 import io.konig.core.impl.RdfUtil;
+import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.Shape;
 
-public class ShowlPropertyShape implements Traversable {
+public abstract class ShowlPropertyShape implements Traversable {
 	private ShowlNodeShape declaringShape;
 	private ShowlProperty property;
 	private PropertyConstraint propertyConstraint;
 	private ShowlNodeShape valueShape;
-	private ShowlPropertyGroup group;
+	private ShowlPropertyShape peer;
 	private Map<ShowlJoinCondition, ShowlMapping> mappings;
+	private Map<ShowlPropertyShape, ShowlJoinCondition> joinConditions;
 	
 	public ShowlPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, PropertyConstraint propertyConstraint) {
 		this.declaringShape = declaringShape;
 		this.property = property;
 		this.propertyConstraint = propertyConstraint;
-		property.addPropertyShape(this);
 	}
 	
 	public void addMapping(ShowlMapping mapping) {
@@ -98,10 +100,6 @@ public class ShowlPropertyShape implements Traversable {
 		return propertyConstraint;
 	}
 	
-	public ShowlPropertyGroup getGroup() {
-		return group;
-	}
-	
 	public boolean isNestedAccordingToFormula() {
 		if (propertyConstraint != null) {
 			QuantifiedExpression formula = propertyConstraint.getFormula();
@@ -126,10 +124,10 @@ public class ShowlPropertyShape implements Traversable {
 	@Override
 	public String getPath() {
 		
-		List<String> elements = new ArrayList<>();
+		List<ShowlPropertyShape> elements = new ArrayList<>();
 		ShowlNodeShape node = null;
 		for (ShowlPropertyShape p=this; p!=null; p=node.getAccessor()) {
-			elements.add(p.getPredicate().getLocalName());
+			elements.add(p);
 			node = p.getDeclaringShape();
 		}
 		StringBuilder builder = new StringBuilder();
@@ -137,8 +135,9 @@ public class ShowlPropertyShape implements Traversable {
 		builder.append(RdfUtil.localName(node.getShape().getId()));
 		builder.append('}');
 		for (int i=elements.size()-1; i>=0; i--) {
-			builder.append('.');
-			builder.append(elements.get(i));
+			ShowlPropertyShape p = elements.get(i);
+			builder.append(p.pathSeparator());
+			builder.append(p.getPredicate().getLocalName());
 		}
 		
 		return builder.toString();
@@ -165,26 +164,64 @@ public class ShowlPropertyShape implements Traversable {
 		return root;
 	}
 	
-	public ShowlPropertyShape getPeer() {
-		if (group!=null) {
-			for (ShowlPropertyShape p : group) {
-				if (p != this) {
-					return p;
+	public ShowlClass getValueType(ShowlManager manager) {
+		if (propertyConstraint != null) {
+			URI valueClass = RdfUtil.uri(propertyConstraint.getValueClass());
+			if (valueClass == null) {
+				Shape shape = propertyConstraint.getShape();
+				if (shape != null) {
+					valueClass = shape.getTargetClass();
 				}
 			}
+			if (valueClass != null) {
+				return manager.produceOwlClass(valueClass);
+			}
 		}
-		return null;
+		return property.inferRange(manager);
 	}
-
+	
 	/**
-	 * This method should be used only by ShowlPropertyGroup
-	 * @param group
+	 * Returns the Property Shape linked to this one via a Formula.
+	 * The link connects the PropertyShape that declares the Formula to the tail of the path in the formula.
 	 */
-	void group(ShowlPropertyGroup group) {
-		this.group = group;
+	public ShowlPropertyShape getPeer() {
+		return peer;
+	}
+	
+	/**
+	 * Sets the Property Shape linked to this one via a Formula, and visa versa.
+	 * The link connects the PropertyShape that declares the Formula to the tail of the path in the formula.
+	 * 
+	 */
+	void setPeer(ShowlPropertyShape peer) {
+		this.peer = peer;
+		peer.peer = this;
+	}
+	
+	public void addJoinCondition(ShowlJoinCondition join) {
+		if (joinConditions == null) {
+			joinConditions = new HashMap<>();
+		}
+		ShowlPropertyShape other = join.otherProperty(this);
+		if (other != null) {
+			joinConditions.put(other, join);
+		} else {
+			throw new IllegalArgumentException();
+		}
 		
 	}
-
 	
+	public ShowlJoinCondition findJoinCondition(ShowlPropertyShape otherProperty) {
+		return joinConditions==null ? null : joinConditions.get(otherProperty);
+	}
+
+
+	public char pathSeparator() {
+		return '.';
+	}
+	
+	public Direction getDirection() {
+		return Direction.OUT;
+	}
 
 }

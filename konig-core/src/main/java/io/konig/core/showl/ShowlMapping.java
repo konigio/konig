@@ -32,6 +32,9 @@ public class ShowlMapping {
 		this.joinCondition = joinCondition;
 		this.leftProperty = leftProperty;
 		this.rightProperty = rightProperty;
+		
+		leftProperty.addMapping(this);
+		rightProperty.addMapping(this);
 	}
 
 	public ShowlJoinCondition getJoinCondition() {

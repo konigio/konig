@@ -21,17 +21,28 @@ package io.konig.core.showl;
  */
 
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
 
-public class ShowlPropertyGroup extends HashSet<ShowlPropertyShape>{
+import io.konig.formula.Direction;
+
+public class ShowlPropertyPath extends ArrayList<ShowlPropertyShape> {
 	private static final long serialVersionUID = 1L;
 	
-	@Override
-	public boolean add(ShowlPropertyShape p) {
-		p.group(this);
-		return super.add(p);
+	public boolean containsInwardStep() {
+		for (ShowlPropertyShape p : this) {
+			if (p.getDirection()==Direction.IN) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
+	public ShowlPropertyShape first() {
+		return isEmpty() ? null : get(0);
+	}
+	
+	public ShowlPropertyShape lastStep() {
+		return isEmpty() ? null : get(size()-1);
+	}
 
 }
