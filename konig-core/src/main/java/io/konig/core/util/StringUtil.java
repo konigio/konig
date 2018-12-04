@@ -43,27 +43,28 @@ public class StringUtil {
 		label = label.trim();
 		
 		int prior = 0;
-		
 		for (int i=0; i<label.length();) {
 			int c = label.codePointAt(i);
-			
-			if (!Character.isAlphabetic(c) && !Character.isDigit(c)) {
-				
-				if (prior == '_') {
-					i += Character.charCount(c);
-					continue;
-				}
+
+			i += Character.charCount(c);
+			if (Character.isWhitespace(c)) {
 				c = '_';
 			}
-			if (c=='_' && i==(label.length()-1)) {
-				break;
+			if (!Character.isAlphabetic(c) && !Character.isDigit(c) && c!='-' && c!='_') {
+				if (prior != '_') {
+					builder.append('_');
+				}
+				builder.append('x');
+				builder.append(Integer.toHexString(c));
+				builder.append('_');
+				prior = '_';
+			} else {	
+				builder.appendCodePoint(c);
+				prior = c;
 			}
-			
-			
-			prior = c;
-			
-			builder.appendCodePoint(c);
-			i += Character.charCount(c);
+		}
+		if (builder.charAt(builder.length()-1) == '_') {
+			builder.setLength(builder.length()-1);
 		}
 		
 		return builder.toString();

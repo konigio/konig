@@ -1,5 +1,7 @@
 package io.konig.core.util;
 
+import static io.konig.core.util.StringUtil.LABEL_TO_SNAKE_CASE;
+
 /*
  * #%L
  * Konig Core
@@ -22,14 +24,25 @@ package io.konig.core.util;
 
 
 import static io.konig.core.util.StringUtil.PascalCase;
-import static io.konig.core.util.StringUtil.*;
+import static io.konig.core.util.StringUtil.SNAKE_CASE;
 import static io.konig.core.util.StringUtil.camelCase;
+import static io.konig.core.util.StringUtil.normalizedLocalName;
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class StringUtilTest {
+	
+	@Test
+	public void testNormalizedLabel() {
+
+		assertEquals("FooBar_Wiz", normalizedLocalName("FooBar Wiz") );
+		assertEquals("FooBar_x28_Wiz_x29", normalizedLocalName("FooBar (Wiz)") );
+		assertEquals("Foo_Bar_Wiz", normalizedLocalName("Foo_Bar_Wiz") );
+		assertEquals("IsDeleted", normalizedLocalName("IsDeleted"));
+		assertEquals("DO_NOT_CALL", normalizedLocalName("DO_NOT_CALL"));
+		assertEquals("Foo-Bar", normalizedLocalName("Foo-Bar"));
+	}
 	
 	@Test
 	public void testLabelToSnakeCase() {
