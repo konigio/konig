@@ -57,7 +57,7 @@ public class BigQueryDatatypeMapper {
 			if (XMLSchema.DATE.equals(datatype)) {
 				return BigQueryDatatype.DATE;
 			}
-			if (XMLSchema.DATE.equals(datatype)) {
+			if (XMLSchema.DATETIME.equals(datatype)) {
 				return BigQueryDatatype.TIMESTAMP;
 			}
 			if (RDF.LANGSTRING.equals(datatype)) {
