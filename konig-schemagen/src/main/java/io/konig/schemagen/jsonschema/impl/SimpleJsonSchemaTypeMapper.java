@@ -75,6 +75,9 @@ public class SimpleJsonSchemaTypeMapper implements JsonSchemaTypeMapper {
 		if (XMLSchema.FLOAT.equals(rdfDatatype)) {
 			return JsonSchemaDatatype.FLOAT;
 		}
+		if (XMLSchema.GYEAR.equals(rdfDatatype)) {
+			return JsonSchemaDatatype.INT;
+		}
 
 		if (XMLSchema.INT.equals(rdfDatatype)) {
 			return JsonSchemaDatatype.INT;
