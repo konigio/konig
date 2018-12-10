@@ -107,7 +107,8 @@ public class ShowlManager {
 		}
 
 		private void inferInverses() {
-			for (ShowlProperty p : getProperties()) {
+			List<ShowlProperty> list = new ArrayList<>(getProperties());
+			for (ShowlProperty p : list) {
 				if (p.getInverses().isEmpty()) {
 					inferInverse(p);
 				}
@@ -473,7 +474,7 @@ public class ShowlManager {
 					
 					// Remove elements from the domain that are superclasses of an existing candidate.
 					Iterator<URI> sequence = domainIncludes.iterator();
-					while (sequence.hasNext()) {
+					outer : while (sequence.hasNext()) {
 						URI domain = sequence.next();
 						if (Konig.Undefined.equals(domain)) {
 							sequence.remove();
@@ -481,6 +482,7 @@ public class ShowlManager {
 							for (URI candidate : candidates) {
 								if (reasoner.isSubClassOf(candidate, domain)) {
 									sequence.remove();
+									continue outer;
 								}
 							}
 						}
