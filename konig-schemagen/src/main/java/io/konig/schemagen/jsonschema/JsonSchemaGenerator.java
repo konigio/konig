@@ -302,7 +302,11 @@ public class JsonSchemaGenerator extends Generator {
 					definitions = mapper.createObjectNode();
 					root.set("definitions", definitions);
 				}
-				definitions.set(valueSchemaName, valueSchema);
+				// This is a bit of a hack to fix Issue #1177
+				// TODO: Provide a better solution
+				if (definitions.get(valueSchemaName) == null) {
+					definitions.set(valueSchemaName, valueSchema);
+				}
 			}
 			
 			return object;
