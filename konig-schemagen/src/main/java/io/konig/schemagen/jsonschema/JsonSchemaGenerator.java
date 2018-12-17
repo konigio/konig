@@ -267,6 +267,8 @@ public class JsonSchemaGenerator extends Generator {
 				Number maximum = jsonType.getMaximum();
 				Boolean exclusiveMaximum = jsonType.getExclusiveMaximum();
 				Boolean exclusiveMinimum = jsonType.getExclusiveMinimum();
+				Integer minLength = property.getMinLength();
+				Integer maxLength = property.getMaxLength();
 
 				if (field != null && format==null && minimum==null && maximum==null) {
 					object.put("type", typeName);
@@ -289,6 +291,15 @@ public class JsonSchemaGenerator extends Generator {
 						}
 					}
 				}
+				
+				if (minLength != null)  {
+					object.put("minLength", minLength.intValue());
+				}
+				if (maxLength != null) {
+					object.put("maxLength",  maxLength.intValue());
+				}
+				
+				
 				
 			} else if (valueShapeId != null) {
 				Shape valueShape = property.getShape();
