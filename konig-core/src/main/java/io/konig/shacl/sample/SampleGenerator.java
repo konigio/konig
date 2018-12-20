@@ -80,6 +80,13 @@ public class SampleGenerator {
 	private boolean failWhenEnumHasNoMembers = false;
 	private String undefinedFieldType = "?";
 	
+	private static final String[] languageCodes = new String[]{
+		"en",
+		"de",
+		"fr",
+		"ja"
+	};
+	
 	private OwlReasoner reasoner;
 	
 	public SampleGenerator(OwlReasoner reasoner) {
@@ -221,7 +228,10 @@ public class SampleGenerator {
 					int currentYear = GregorianCalendar.getInstance().get(Calendar.YEAR);
 					int future = random.nextInt(10);
 					value = Integer.toString(currentYear - 3 + future);
-					
+				} else if (RDF.LANGSTRING.equals(datatype)) {
+					value  = random.loremIpsum(stringWordCount);
+					String lang = languageCodes[random.nextInt(languageCodes.length)];
+					return new LiteralImpl(value, lang);
 				} else {
 					String msg = MessageFormat.format("On shape <{0}>, unsupported datatype: <{1}>", 
 							shape.getId().stringValue(), datatype.stringValue());
