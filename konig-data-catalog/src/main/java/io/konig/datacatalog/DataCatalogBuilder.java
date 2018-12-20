@@ -94,6 +94,7 @@ public class DataCatalogBuilder {
 		
 		graph.getNamespaceManager().add(new NamespaceImpl(DCAT_PREFIX, CATALOG_BASE_URI));
 		graph.getNamespaceManager().add("rdf", RDF.NAMESPACE);
+		graph.getNamespaceManager().add("konig", Konig.NAMESPACE);
 			
 		this.outDir = buildRequest.getOutDir();
 		buildRequest.setFileFactory(new CatalogFileFactory(outDir));
