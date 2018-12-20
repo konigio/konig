@@ -700,10 +700,12 @@ public class ClassStructure {
 					if (isFunctional) {
 						setMaxCount(p, 1);
 					}
-					if (reasoner.isDatatype(range)) {
-						setDatatype(p, range);
-					} else {
-						setValueClass(p, range);
+					if (range != null) {
+						if (reasoner.isSubclassOfLiteral(range)) {
+							setDatatype(p, range);
+						} else {
+							setValueClass(p, range);
+						}
 					}
 					
 					
