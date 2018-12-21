@@ -755,12 +755,12 @@ public class WorkbookLoader {
 			localNameService.add(Konig.Month);
 			localNameService.add(Konig.Year);
 
-			try {
-				for (FormulaHandler handler : formulaHandlers) {
+			for (FormulaHandler handler : formulaHandlers) {
+				try {
 					handler.execute();
+				} catch (Throwable oops) {
+					error(oops);
 				}
-			} catch (Throwable oops) {
-				throw new SpreadsheetException(oops);
 			}
 
 		}
