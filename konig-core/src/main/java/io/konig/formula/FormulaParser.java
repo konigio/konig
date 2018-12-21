@@ -518,6 +518,7 @@ public class FormulaParser {
 			(call=trySetFunction(FunctionExpression.COUNT)) != null ? call :
 			(call=tryGenericFunction(FunctionExpression.DATE_TRUNC)) != null ? call :
 			(call=tryGenericFunction(FunctionExpression.UNIX_TIME)) != null ? call :
+			(call=tryGenericFunction(FunctionExpression.CONCAT)) != null ? call :
 			(call=tryGenericFunction(FunctionExpression.TIME_INTERVAL)) != null ? call :
 			(call=tryBoundFunction()) != null ? call :
 			null;

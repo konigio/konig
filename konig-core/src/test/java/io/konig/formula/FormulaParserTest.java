@@ -35,6 +35,22 @@ public class FormulaParserTest {
 	private FormulaParser parser = new FormulaParser();
 	
 	@Test
+	public void testConcat() throws Exception {
+		String text =
+			"@term givenName: <http://schema.org/givenName>\n" +
+			"CONCAT($.givenName, \"foo\")";
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		PrimaryExpression primary = e.asPrimaryExpression();
+		assertTrue(primary instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) primary;
+		assertEquals(FunctionExpression.CONCAT, func.getFunctionName());
+		assertEquals(2, func.getArgList().size());
+		Expression arg1 = func.getArgList().get(0);
+		assertTrue(arg1.asPrimaryExpression() instanceof PathExpression);
+		assertTrue(func.getArgList().get(1).asPrimaryExpression() instanceof LiteralFormula);
+	}
+	
+	@Test
 	public void testNestedPath() throws Exception {
 		String text = 
 			"@prefix xapi : <http://example.org/xapi/> .\n" +
