@@ -1,5 +1,7 @@
 package io.konig.aws.datasource;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * Konig AWS Model
@@ -22,9 +24,17 @@ package io.konig.aws.datasource;
 
 
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.TableDataSource;
+import io.konig.shacl.Shape;
 
 public class AwsAuroraView extends AwsAurora{
 	public AwsAuroraView() {
 		addType(Konig.AwsAuroraView);
 	}	
+
+	@Override
+	public TableDataSource generateAssociationTable(Shape subjectShape, URI predicate) {
+		
+		throw new UnsupportedOperationException();
+	}
 }

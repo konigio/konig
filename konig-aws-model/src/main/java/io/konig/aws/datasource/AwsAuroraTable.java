@@ -1,5 +1,10 @@
 package io.konig.aws.datasource;
 
+import java.text.MessageFormat;
+
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
+
 /*
  * #%L
  * Konig AWS Model
@@ -22,10 +27,35 @@ package io.konig.aws.datasource;
 
 
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.TableDataSource;
+import io.konig.shacl.Shape;
 
 public class AwsAuroraTable extends AwsAurora {
 	
 	public AwsAuroraTable() {
 		addType(Konig.AwsAuroraTable);
+	}
+	
+
+	@Override
+	public TableDataSource generateAssociationTable(Shape subjectShape, URI predicate) {
+		
+		AwsAuroraTable table = new AwsAuroraTable();
+		AwsAuroraTableReference tableRef = getTableReference().clone();
+	
+		String tableName = associationTableName(subjectShape, predicate);
+		tableRef.setAwsTableName(tableName);
+		table.setAwsTableName(tableName);
+		table.setTableReference(tableRef);
+		
+		String pattern =
+			"http://www.konig.io/ns/aws/host/{0}/databases/{1}/tables/{2}";
+		
+		String awsAuroraHost = tableRef.getAwsAuroraHost();
+		String awsAuroraSchema = tableRef.getAwsSchema();
+		String idValue = MessageFormat.format(pattern, awsAuroraHost, awsAuroraSchema, tableName);
+		table.setId(new URIImpl(idValue));
+		
+		return table;
 	}
 }
