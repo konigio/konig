@@ -28,6 +28,10 @@ public class TabularShapeException extends Exception {
 		super(msg);
 	}
 	
+	public TabularShapeException(Throwable cause) {
+		super(cause);
+	}
+	
 	
 
 }

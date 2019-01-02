@@ -53,6 +53,21 @@ public class FormulaParser {
 	public FormulaParser() {
 	}
 	
+	public QuantifiedExpression quantifiedExpression(String formula, URI...terms) throws RDFParseException, IOException {
+		
+		StringBuilder builder = new StringBuilder();
+		for (URI term : terms) {
+			builder.append("@term ");
+			builder.append(term.getLocalName());
+			builder.append(" <");
+			builder.append(term.stringValue());
+			builder.append(">\n");
+		}
+		builder.append(formula);
+		
+		return quantifiedExpression(builder.toString());
+	}
+	
 	public FormulaParser(PropertyOracle propertyOracle) {
 		this.propertyOracle = propertyOracle;
 	}

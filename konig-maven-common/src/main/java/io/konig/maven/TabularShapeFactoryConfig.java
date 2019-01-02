@@ -26,8 +26,11 @@ public class TabularShapeFactoryConfig {
 	@Parameter(property="konig.tabularPropertyNamespace", required=false)
 	private String tabularPropertyNamespace;
 	
-	@Parameter(property="konig.tabularPropertyNamespace", required=false, defaultValue="true")
+	@Parameter(property="konig.tabularShapeFactory.computeMaxRowSize", required=false, defaultValue="true")
 	private boolean computeMaxRowSize=true;
+
+	@Parameter(property="konig.tabularShapeFactory.linkingStrategy", required=false, defaultValue="io.konig.schemagen.sql.SyntheticKeyLinkingStrategy")
+	private String linkingStrategy;
 
 	public String getTabularPropertyNamespace() {
 		return tabularPropertyNamespace;
@@ -43,6 +46,14 @@ public class TabularShapeFactoryConfig {
 
 	public void setComputeMaxRowSize(boolean computeMaxRowSize) {
 		this.computeMaxRowSize = computeMaxRowSize;
+	}
+
+	public String getLinkingStrategy() {
+		return linkingStrategy;
+	}
+
+	public void setLinkingStrategy(String linkingStrategy) {
+		this.linkingStrategy = linkingStrategy;
 	}
 	
 	

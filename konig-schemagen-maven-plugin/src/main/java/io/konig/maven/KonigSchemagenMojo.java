@@ -212,8 +212,11 @@ import io.konig.schemagen.ocms.OracleCloudResourceGenerator;
 import io.konig.schemagen.ocms.OracleTableWriter;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
+import io.konig.schemagen.sql.KonigIdLinkingStrategy;
 import io.konig.schemagen.sql.OracleDatatypeMapper;
 import io.konig.schemagen.sql.SqlTableGenerator;
+import io.konig.schemagen.sql.SyntheticKeyLinkingStrategy;
+import io.konig.schemagen.sql.TabularLinkingStrategy;
 import io.konig.schemagen.sql.TabularShapeException;
 import io.konig.schemagen.sql.TabularShapeFactory;
 import io.konig.shacl.ClassStructure;
@@ -223,7 +226,6 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeMediaTypeNamer;
 import io.konig.shacl.ShapeNamer;
 import io.konig.shacl.ShapeReasoner;
-import io.konig.shacl.ShapeVisitor;
 import io.konig.shacl.SimpleMediaTypeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.impl.ShapeInjector;
@@ -558,7 +560,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	if (tabularShapes != null) {
     		String namespace = tabularShapes.getTabularPropertyNamespace();
     		if (namespace != null) {
-	    		TabularShapeFactory factory = new TabularShapeFactory(shapeManager, namespace);
+    			TabularLinkingStrategy linkingStrategy = linkingStrategy(tabularShapes);
+	    		TabularShapeFactory factory = new TabularShapeFactory(shapeManager, namespace, linkingStrategy);
 	    		try {
 					factory.processAll(shapeManager.listShapes());
 				} catch (TabularShapeException e) {
@@ -566,6 +569,22 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				}
     		}
     	}
+	}
+
+
+	private TabularLinkingStrategy linkingStrategy(TabularShapeFactoryConfig config) throws MojoExecutionException {
+		String linkingStrategyClassName = config.getLinkingStrategy();
+		if (linkingStrategyClassName == null || 
+				"io.konig.schemagen.sql.SyntheticKeyLinkingStrategy".equals(linkingStrategyClassName)) { 
+			return new SyntheticKeyLinkingStrategy(config.getTabularPropertyNamespace());
+		}
+		
+		if (KonigIdLinkingStrategy.class.getName().equals(linkingStrategyClassName)) {
+			URI idPredicate = new URIImpl(config.getTabularPropertyNamespace() + "ID");
+			return new KonigIdLinkingStrategy(idPredicate, config.getTabularPropertyNamespace());
+		}
+		
+		throw new MojoExecutionException("Cannot create linking strategy: " + linkingStrategyClassName);
 	}
 
 
