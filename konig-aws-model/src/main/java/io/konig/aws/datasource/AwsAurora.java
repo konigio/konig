@@ -31,12 +31,12 @@ import io.konig.core.vocab.Konig;
 import io.konig.datasource.TableDataSource;
 import io.konig.shacl.Shape;
 
-public class AwsAurora extends TableDataSource {
+abstract public class AwsAurora extends TableDataSource {
 	private AwsAuroraTableReference tableReference;
 	private String awsTableName;
 	private String tabularFieldNamespace;
 	
-	public AwsAurora() {
+	protected AwsAurora() {
 	}
 
 	public String getAwsTableName() {
@@ -130,9 +130,5 @@ public class AwsAurora extends TableDataSource {
 		return builder.toString();
 	}
 
-	@Override
-	public TableDataSource generateAssociationTable(Shape subjectShape, URI predicate) {
-		throw new UnsupportedOperationException();
-	}
 
 }

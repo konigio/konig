@@ -24,7 +24,7 @@ import io.konig.core.vocab.AWS;
  */
 
 
-public class AwsAuroraTableReference {
+public class AwsAuroraTableReference implements Cloneable {
 	private String awsAuroraHost;
 	private String awsSchema;
 	private String awsTableName;
@@ -50,5 +50,14 @@ public class AwsAuroraTableReference {
 	}
 	public void setAwsTableName(String awsTableName) {
 		this.awsTableName = awsTableName;
+	}
+	
+	@Override
+	public AwsAuroraTableReference clone()  {
+		try {
+			return (AwsAuroraTableReference) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }
