@@ -472,13 +472,15 @@ public class RdfUtil {
 	}
 
 	public static String optionalCurie(NamespaceManager nsManager, URI uri) {
-		Namespace ns = nsManager.findByName(uri.getNamespace());
-		if (ns != null) {
-			StringBuilder builder = new StringBuilder();
-			builder.append(ns.getPrefix());
-			builder.append(':');
-			builder.append(uri.getLocalName());
-			return builder.toString();
+		if (nsManager != null) {
+			Namespace ns = nsManager.findByName(uri.getNamespace());
+			if (ns != null) {
+				StringBuilder builder = new StringBuilder();
+				builder.append(ns.getPrefix());
+				builder.append(':');
+				builder.append(uri.getLocalName());
+				return builder.toString();
+			}
 		}
 		
 		return uri.stringValue();
