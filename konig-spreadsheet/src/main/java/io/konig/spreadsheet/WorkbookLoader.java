@@ -3606,7 +3606,7 @@ public class WorkbookLoader {
 			URI subpropertyOf = uriValue(row, subpropertyOfCol);
 			URI termStatus = uriValue(row, termStatusCol);
 			List<URI> securityClassification = uriList(row, securityClassificationCol);
-			URI relationshipDegree = uriValue(row,relationshipDegreeCol);
+			URI relationshipDegree = uriValue(row, relationshipDegreeCol);
 			if (propertyId == null) {
 				return;
 			}
@@ -3634,17 +3634,46 @@ public class WorkbookLoader {
 
 			if (!domain.isEmpty()) {
 				if (domain.size() == 1) {
-					graph.edge(propertyId, RDFS.DOMAIN, domain.get(0));
+
+					URI domainValue = domain.get(0);
+					Value oldDomain = subject.getValue(RDFS.DOMAIN);
+
+					if (oldDomain != null && !domainValue.equals(oldDomain)) {
+						String propertyCurie = RdfUtil.optionalCurie(graph.getNamespaceManager(), propertyId);
+						String oldDomainCurie = RdfUtil.optionalCurie(graph.getNamespaceManager(), (URI) oldDomain);
+						String newDomainCurie = RdfUtil.optionalCurie(graph.getNamespaceManager(), domainValue);
+						String msg = MessageFormat.format(
+								"At (sheet: {0}, row: {1}). The domain of {2} is redefined from {3} to {4}",
+								row.getSheet().getSheetName(), row.getRowNum(), propertyCurie, oldDomainCurie,
+								newDomainCurie);
+						fail(msg);
+					}
+					graph.edge(propertyId, RDFS.DOMAIN, domainValue);
 				} else {
 					for (URI value : domain) {
 						graph.edge(propertyId, Schema.domainIncludes, value);
 					}
 				}
+				
 			}
 
 			if (!range.isEmpty()) {
 				if (range.size() == 1) {
-					graph.edge(propertyId, RDFS.RANGE, range.get(0));
+					URI rangeValue = range.get(0);
+					Value oldRange = subject.getValue(RDFS.RANGE);
+					
+
+					if (oldRange != null && !rangeValue.equals(oldRange)) {
+						String propertyCurie = RdfUtil.optionalCurie(graph.getNamespaceManager(), propertyId);
+						String oldRangeCurie = RdfUtil.optionalCurie(graph.getNamespaceManager(), (URI) oldRange);
+						String newRangeCurie = RdfUtil.optionalCurie(graph.getNamespaceManager(), rangeValue);
+						String msg = MessageFormat.format(
+								"At (sheet: {0}, row: {1}). The range of {2} is redefined from {3} to {4}",
+								row.getSheet().getSheetName(), row.getRowNum(), propertyCurie, oldRangeCurie,
+								newRangeCurie);
+						fail(msg);
+					}
+					graph.edge(propertyId, RDFS.RANGE, rangeValue);
 				} else {
 					for (URI value : range) {
 						graph.edge(propertyId, Schema.rangeIncludes, value);
@@ -3656,23 +3685,22 @@ public class WorkbookLoader {
 				graph.edge(propertyId, OWL.INVERSEOF, inverseOf);
 			}
 			termStatus(propertyId, termStatus);
-			
-			if(!securityClassification.isEmpty())
-			{
-			  for (URI uri : securityClassification) {
-			    graph.edge(propertyId, Konig.securityClassification, uri);					
-			  }
+
+			if (!securityClassification.isEmpty()) {
+				for (URI uri : securityClassification) {
+					graph.edge(propertyId, Konig.securityClassification, uri);
+				}
 			}
-			if(relationshipDegree!=null){				
-				for(URI d:domain){
+			if (relationshipDegree != null) {
+				for (URI d : domain) {
 					Vertex restrictionVertex = graph.vertex();
 					Resource restriction = restrictionVertex.getId();
 					edge(restriction, RDF.TYPE, OWL.RESTRICTION);
 					edge(restriction, OWL.ONPROPERTY, propertyId);
 					edge(restriction, Konig.relationshipDegree, relationshipDegree);
 					edge(d, RDF.TYPE, OWL.CLASS);
-					edge(d,RDFS.SUBCLASSOF,restriction);
-					
+					edge(d, RDFS.SUBCLASSOF, restriction);
+
 				}
 			}
 
