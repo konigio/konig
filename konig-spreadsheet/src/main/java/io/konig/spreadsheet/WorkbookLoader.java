@@ -774,7 +774,7 @@ public class WorkbookLoader {
 				try {
 					handler.execute(pathFactory);
 				} catch (Throwable e) {
-					error(e);
+					error(handler.getSheetName(), handler.getRowNumber(), e);
 				}
 			}
 		}
@@ -2360,6 +2360,8 @@ public class WorkbookLoader {
 				logger.warn("Shape Id is defined but Property Id is not defined: {}", shapeId.getLocalName());
 				return;
 			}
+			String sheetName = row.getSheet().getSheetName();
+			int rowNumber = row.getRowNum();
 			URI stereotype = uriValue(row, pcStereotypeCol);
 			
 			URI propertyId = null;
@@ -2560,11 +2562,11 @@ public class WorkbookLoader {
 			}
 
 			if (propertyId == null) {
-				pathHandlers.add(new ShaclPathBuilder(p, propertyIdValue));
+				pathHandlers.add(new ShaclPathBuilder(sheetName, rowNumber, p, propertyIdValue));
 			}
 
 			if (sourcePath != null) {
-				pathHandlers.add(new SourcePathBuilder(p, sourcePath));
+				pathHandlers.add(new SourcePathBuilder(sheetName, rowNumber, p, sourcePath));
 			}
 
 			termStatus(termStatus);
@@ -4116,6 +4118,13 @@ public class WorkbookLoader {
 			}
 			logError(message);
 		}
+		
+		private void error(String sheetName, int rowNumber, Throwable cause) throws SpreadsheetException {
+			SpreadsheetException e = cause instanceof SpreadsheetException ? (SpreadsheetException) cause : new SpreadsheetException(cause);
+			e.setSheetName(sheetName);
+			e.setRow(rowNumber);
+			error(e);
+		}
 
 		private void error(Throwable e) throws SpreadsheetException {
 			if (failOnErrors) {
@@ -4481,8 +4490,12 @@ public class WorkbookLoader {
 	private abstract static class AbstractPathBuilder {
 		protected PropertyConstraint property;
 		protected String pathText;
+		protected String sheetName;
+		protected int rowNumber;
 		
-		public AbstractPathBuilder(PropertyConstraint property, String pathText) {
+		public AbstractPathBuilder(String sheetName, int rowNumber, PropertyConstraint property, String pathText) {
+			this.sheetName = sheetName;
+			this.rowNumber = rowNumber;
 			this.property = property;
 			this.pathText = pathText;
 		}
@@ -4497,14 +4510,24 @@ public class WorkbookLoader {
 			set(property, path);
 		}
 		
+		
+		
+		public String getSheetName() {
+			return sheetName;
+		}
+
+		public int getRowNumber() {
+			return rowNumber;
+		}
+
 		abstract protected void set(PropertyConstraint p, Path path);
 		
 	}
 	
 	private static class ShaclPathBuilder extends AbstractPathBuilder {
 
-		public ShaclPathBuilder(PropertyConstraint property, String pathText) {
-			super(property, pathText);
+		public ShaclPathBuilder(String sheetName, int rowNumber, PropertyConstraint property, String pathText) {
+			super(sheetName, rowNumber, property, pathText);
 		}
 
 		@Override
@@ -4517,8 +4540,8 @@ public class WorkbookLoader {
 
 	private static class SourcePathBuilder extends AbstractPathBuilder {
 
-		public SourcePathBuilder(PropertyConstraint property, String pathText) {
-			super(property, pathText);
+		public SourcePathBuilder(String sheetName, int rowNumber, PropertyConstraint property, String pathText) {
+			super(sheetName, rowNumber, property, pathText);
 		}
 
 		@Override
