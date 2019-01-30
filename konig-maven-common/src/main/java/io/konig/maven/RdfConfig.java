@@ -32,6 +32,7 @@ public class RdfConfig {
 	private File derivedDir;
 	private File skosDir;
 	
+	
 	public File getRdfDir() {
 		if (rdfDir==null && rootDir != null) {
 			rdfDir = new File(rootDir, "rdf");

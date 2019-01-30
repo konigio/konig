@@ -69,6 +69,8 @@ $googleCloudPlatform
 $workbook
 #if($modelValidation)$modelValidation
 #end
+#if($rdfModel)$rdfModel
+#end
 	  		</configuration>
 	  		<executions>
 	  			<execution>

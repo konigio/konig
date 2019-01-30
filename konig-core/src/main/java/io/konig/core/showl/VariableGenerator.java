@@ -4,7 +4,7 @@ package io.konig.core.showl;
  * #%L
  * Konig Core
  * %%
- * Copyright (C) 2015 - 2018 Gregory McFall
+ * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,20 +21,21 @@ package io.konig.core.showl;
  */
 
 
-import java.util.HashSet;
+public class VariableGenerator {
+	
+	private int count;
 
-/**
- * The collection of all instances of ShowlNodeShape for a given SHACL Node Shape.
- * There is one instance for each usage of the SHACL Node shape.  
- * @author Greg McFall
- *
- */
-public class ShowlNodeShapeSet extends HashSet<ShowlNodeShape> {
-	private static final long serialVersionUID = 1L;
-	
-	public ShowlNodeShape findAny() {
-		return isEmpty() ? null : iterator().next();
+	public VariableGenerator() {
+		count = 0;
 	}
-	
+
+	public String next() {
+	 char[] str = Integer.toString(count++, 26).toCharArray();
+	    for (int i = 0; i < str.length; i++) {
+	        str[i] += str[i] > '9' ? 10 : 49;
+	    }
+	    return new String(str);
+	}
+
 
 }

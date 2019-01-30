@@ -58,6 +58,20 @@ public class ShowlJoinCondition {
 	public ShowlJoinCondition getPrevious() {
 		return previous;
 	}
+	
+	public ShowlPropertyShape getPropertyOf(ShowlNodeShape node) {
+		return
+			node==left.getDeclaringShape() ? left :
+			node==right.getDeclaringShape() ? right :
+			null;
+	}
+	
+	public ShowlNodeShape otherNode(ShowlNodeShape n) {
+		return
+			n==left.getDeclaringShape() ? right.getDeclaringShape() :
+			n==right.getDeclaringShape() ? left.getDeclaringShape() :
+			null;
+	}
 
 	public ShowlPropertyShape otherProperty(ShowlPropertyShape p) {
 		

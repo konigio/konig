@@ -35,6 +35,7 @@ import java.util.Set;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.datatypes.XMLDatatypeUtil;
@@ -67,6 +68,10 @@ public class PrettyPrintWriter extends PrintWriter {
 	public PrettyPrintWriter(Writer arg0) {
 		super(arg0);
 		autoMode.add(AutoMode.NONE);
+	}
+	
+	public static PrettyPrintWriter of(Writer out) {
+		return out instanceof PrettyPrintWriter ? (PrettyPrintWriter) out : new PrettyPrintWriter(out);
 	}
 
 	public PrettyPrintWriter(OutputStream arg0) {
@@ -394,6 +399,15 @@ public class PrettyPrintWriter extends PrintWriter {
 	public void bnode(BNode bnode) {
 		print("_:");
 		print(bnode.getID());
+	}
+	
+	public void resource(Resource resource) {
+		if (resource instanceof URI) {
+			uri((URI) resource);
+		} else if (resource instanceof BNode) {
+			bnode((BNode)resource);
+		}
+		
 	}
 
 	public void uri(URI uri) {

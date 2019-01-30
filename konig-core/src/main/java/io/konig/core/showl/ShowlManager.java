@@ -66,6 +66,10 @@ public class ShowlManager {
 		worker.load();
 	}
 	
+	public Set<Resource> listNodeShapeIds() {
+		return nodeShapes.keySet();
+	}
+	
 	public ShowlNodeShapeSet getNodeShape(Resource shapeId) {
 		ShowlNodeShapeSet set =  nodeShapes.get(shapeId);
 		return (set == null) ? emptySet() : set;

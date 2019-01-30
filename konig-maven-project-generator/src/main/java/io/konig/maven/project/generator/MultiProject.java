@@ -40,6 +40,7 @@ import io.konig.maven.OracleManagedCloudConfig;
 import io.konig.maven.OwlInference;
 import io.konig.maven.OwlProfile;
 import io.konig.maven.ParentProjectConfig;
+import io.konig.maven.RdfModelConfig;
 import io.konig.maven.TabularShapeFactoryConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
@@ -48,6 +49,7 @@ public class MultiProject extends MavenProjectConfig {
 	
 	private ParentProjectConfig parentProject;
 	private WorkbookProcessor workbook;
+	private RdfModelConfig rdfModel;
 	private JavaCodeGeneratorConfig java;
 	private GoogleCloudPlatformConfig googleCloudPlatform;
 	private GoogleCloudPlatformConfig googleCloudPlatformDeployment;
@@ -168,6 +170,8 @@ public class MultiProject extends MavenProjectConfig {
 			rdf.setProfiles(profiles);
 			rdf.setInferences(inferences());
 			rdf.setGoogleCloudPlatform(googleCloudPlatform);
+			rdf.setRdfModel(rdfModel);
+			
 			setRdfSourceDir(new File(rdf.baseDir(), "target/generated/rdf"));
 			parent.add(rdf);
 		}
@@ -305,6 +309,14 @@ public class MultiProject extends MavenProjectConfig {
 
 	public void setBuildTarget(BuildTarget buildTarget) {
 		this.buildTarget = buildTarget;
+	}
+
+	public RdfModelConfig getRdfModel() {
+		return rdfModel;
+	}
+
+	public void setRdfModel(RdfModelConfig rdfModel) {
+		this.rdfModel = rdfModel;
 	}
 
 	
