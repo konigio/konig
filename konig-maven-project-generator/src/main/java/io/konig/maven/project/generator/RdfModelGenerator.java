@@ -41,6 +41,7 @@ import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.ModelValidationConfig;
 import io.konig.maven.OwlInference;
 import io.konig.maven.OwlProfile;
+import io.konig.maven.RdfModelConfig;
 import io.konig.maven.TabularShapeFactoryConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
 import io.konig.maven.WorkbookProcessor;
@@ -51,6 +52,7 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 	private TabularShapeFactoryConfig tabularShapeFactoryConfig;
 	private ModelValidationConfig modelValidationConfig;
 	private GoogleCloudPlatformConfig googleCloudPlatform;
+	private RdfModelConfig rdfModel;
 	private OwlProfile[] profiles;
 	private OwlInference[] inferences;
 	
@@ -73,6 +75,9 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 		}
 		if (googleCloudPlatform != null) {
 			putObject("googleCloudPlatform", googleCloudPlatform);
+		}
+		if (rdfModel != null) {
+			putObject("rdfModel", rdfModel);
 		}
 		if (profiles != null) {
 			context.put("profiles", profiles);
@@ -234,6 +239,14 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 
 	public void setGoogleCloudPlatform(GoogleCloudPlatformConfig googleCloudPlatform) {
 		this.googleCloudPlatform = googleCloudPlatform;
+	}
+
+	public RdfModelConfig getRdfModel() {
+		return rdfModel;
+	}
+
+	public void setRdfModel(RdfModelConfig rdfModel) {
+		this.rdfModel = rdfModel;
 	}
 
 	

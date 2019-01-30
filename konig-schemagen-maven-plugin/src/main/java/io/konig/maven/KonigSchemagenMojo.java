@@ -112,6 +112,8 @@ import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.io.SkosEmitter;
 import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
+import io.konig.core.showl.MappingReport;
+import io.konig.core.showl.ShowlManager;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat;
@@ -272,6 +274,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	@Parameter
 	private RdfConfig rdfOutput;
 	
+	@Parameter
+	private RdfModelConfig rdfModel;
+	
     /**
      * Location of the file.
      */
@@ -394,6 +399,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generateJsonld();
 			generateAvro();
 			generateJsonSchema();
+			generateMappingReport();
 			generateSqlTransforms();
 			
 			ShapeMediaTypeLinker linker = new ShapeMediaTypeLinker(mediaTypeNamer);
@@ -424,6 +430,25 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
+
+	private void generateMappingReport() throws IOException {
+		if (rdfModel!=null && rdfModel.isPrintMappings()) {
+			
+			ShowlManager showlManager = new ShowlManager();
+			showlManager.load(shapeManager, owlReasoner);
+			
+			MappingReport report = new MappingReport();
+			File rdfDir = rdfDir();
+			rdfDir.mkdirs();
+			File outFile = new File(rdfDir, "mappingReport.txt");
+			
+			try (FileWriter out = new FileWriter(outFile)) {
+				report.write(out, showlManager, nsManager);
+			}
+		}
+		
+	}
+
 
 	private void generateSqlTransforms() throws ShapeTransformException {
 		if (mysqlTransformGenerator != null) {
@@ -1021,6 +1046,13 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
 		 }
 	 }
+	
+	private File rdfDir() {
+		if (workbook != null) {
+			return workbook.owlDir(defaults).getParentFile();
+		}
+		return defaults.getRdfDir();
+	}
 
 
 	private void generatePlantUMLDomainModel() throws IOException, PlantumlGeneratorException, MojoExecutionException {

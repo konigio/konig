@@ -1,10 +1,10 @@
-package io.konig.core.showl;
+package io.konig.maven;
 
 /*
  * #%L
- * Konig Core
+ * Konig Maven Common
  * %%
- * Copyright (C) 2015 - 2018 Gregory McFall
+ * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,20 +21,18 @@ package io.konig.core.showl;
  */
 
 
-import java.util.HashSet;
+public class RdfModelConfig {
 
-/**
- * The collection of all instances of ShowlNodeShape for a given SHACL Node Shape.
- * There is one instance for each usage of the SHACL Node shape.  
- * @author Greg McFall
- *
- */
-public class ShowlNodeShapeSet extends HashSet<ShowlNodeShape> {
-	private static final long serialVersionUID = 1L;
-	
-	public ShowlNodeShape findAny() {
-		return isEmpty() ? null : iterator().next();
+	private boolean printMappings;
+
+	public boolean isPrintMappings() {
+		return printMappings;
 	}
+
+	public void setPrintMappings(boolean printMappings) {
+		this.printMappings = printMappings;
+	}
+	
 	
 
 }
