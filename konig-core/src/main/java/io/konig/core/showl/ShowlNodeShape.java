@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -25,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,7 +36,6 @@ import org.openrdf.model.URI;
 
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
-import io.konig.formula.Direction;
 import io.konig.shacl.Shape;
 
 public class ShowlNodeShape implements Traversable {
@@ -45,6 +47,8 @@ public class ShowlNodeShape implements Traversable {
 	private Map<URI,ShowlDirectPropertyShape> properties = new HashMap<>();
 	private Map<URI, ShowlDerivedPropertyShape> derivedProperties = new HashMap<>();
 	private Map<URI,ShowlInwardPropertyShape> inProperties = null;
+	
+	private List<ShowlJoinCondition> selectedJoins;
 	
 	public ShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
 		this.accessor = accessor;
@@ -181,8 +185,20 @@ public class ShowlNodeShape implements Traversable {
 		}
 		return accessor.getDeclaringShape().getRoot();
 	}
+	
+	public void addSelectedJoin(ShowlJoinCondition join) {
+		if (selectedJoins==null) {
+			selectedJoins = new ArrayList<>();
+		}
+		selectedJoins.add(join);
+	}
+
+	public List<ShowlJoinCondition> getSelectedJoins() {
+		return selectedJoins == null ? Collections.emptyList() : selectedJoins;
+	}
 
 
+	
 	
 
 }

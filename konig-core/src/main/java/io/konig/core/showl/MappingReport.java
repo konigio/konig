@@ -56,19 +56,6 @@ public class MappingReport {
 		
 	}
 	
-	private static class NodeNamer {
-		private Map<ShowlJoinCondition,String> map = new HashMap<>();
-		private VariableGenerator vargen = new VariableGenerator();
-
-		String varname(ShowlJoinCondition join) {
-			String result = map.get(join);
-			if (result == null) {
-				result = vargen.next();
-				map.put(join, result);
-			}
-			return result;
-		}
-	}
 	
 	private static class Worker {
 		private ShowlManager manager;
