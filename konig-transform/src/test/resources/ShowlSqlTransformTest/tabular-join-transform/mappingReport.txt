@@ -1,0 +1,25 @@
+CONSTRUCT shape:PersonSource2Shape
+FROM
+   shape:PersonTargetShape AS a
+   shape:PersonSource1Shape AS b
+SET
+   email_address = a.email, 
+   person_id = b.person_id
+
+CONSTRUCT shape:PersonTargetShape
+FROM
+   shape:PersonSource1Shape AS a
+   shape:PersonSource2Shape AS b
+SET
+   email = b.email_address, 
+   givenName = a.first_name, 
+   id = CONCAT("http://example.com/person/", b.person_id)
+
+CONSTRUCT shape:PersonSource1Shape
+FROM
+   shape:PersonTargetShape AS a
+   shape:PersonSource2Shape AS b
+SET
+   first_name = a.givenName, 
+   person_id = b.person_id
+

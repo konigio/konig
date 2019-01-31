@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -38,16 +39,24 @@ public class ShowlSqlTransformTest {
 	private MappingStrategy strategy = new MappingStrategy();
 	private ShowlSqlTransform transform = new ShowlSqlTransform();
 	
-	@Test
-	public void testTabular() throws Exception {
+	private InsertStatement insert(String resourcePath, String shapeId) throws Exception {
+
 		GcpShapeConfig.init();
-		load("src/test/resources/ShowlSqlTransformTest/tabular");
-		URI shapeId = uri("http://example.com/ns/shape/PersonTargetShape");
-		ShowlNodeShape node = showlManager.getNodeShape(shapeId).findAny();
+		load(resourcePath);
+		URI shapeIri = uri(shapeId);
+		ShowlNodeShape node = showlManager.getNodeShape(shapeIri).findAny();
 
 		strategy.selectMappings(node);
 		
-		InsertStatement insert = transform.createInsert(node, GoogleBigQueryTable.class);
+		return transform.createInsert(node, GoogleBigQueryTable.class);
+	}
+	
+	@Ignore
+	public void testTabular() throws Exception {
+		
+		InsertStatement insert = insert(
+			"src/test/resources/ShowlSqlTransformTest/tabular", 
+			"http://example.com/ns/shape/PersonTargetShape");
 		
 		assertEquals("schema.PersonTarget", insert.getTargetTable().getTableName());
 		
@@ -63,6 +72,18 @@ public class ShowlSqlTransformTest {
 		assertEquals(1, from.size());
 		
 		assertEquals("schema.PersonSource AS a", from.get(0).toString());
+		
+		
+	}
+	
+	@Test
+	public void testTabularJoin() throws Exception {
+		
+		InsertStatement insert = insert(
+			"src/test/resources/ShowlSqlTransformTest/tabular-join-transform", 
+			"http://example.com/ns/shape/PersonTargetShape");
+		
+		
 		
 		System.out.println(insert.toString());
 		

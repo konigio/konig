@@ -1,0 +1,60 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonSource1Shape sh:property  [ 
+		sh:path alias:person_id ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:person_id
+	 ]  ,  [ 
+		sh:path alias:first_name ; 
+		sh:minCount 0 ; 
+		konig:formula '''@term givenName <http://schema.org/givenName>
+
+$.givenName''' ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:first_name ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource1> , <gs://personsource1shape-${gcpBucketSuffix}> ; 
+	konig:iriTemplate '''@context {
+   "alias" : "http://example.com/ns/alias/",
+   "person_id" : "alias:person_id"
+}
+
+<http://example.com/person/{person_id}>''' ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/1gXMAh-ysBgAAAFoo_z9PA> ; 
+	sh:targetClass schema:Person . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource1> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "PersonSource1"
+	 ]  ; 
+	gcp:externalDataConfiguration  [ 
+		gcp:csvOptions  [ 
+			gcp:skipLeadingRows "1"^^xsd:long ]  ; 
+		gcp:sourceFormat "CSV" ; 
+		gcp:sourceUris "gs://personsource1shape-${gcpBucketSuffix}/*" ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource . 
+
+<gs://personsource1shape-${gcpBucketSuffix}> gcp:name "personsource1shape-${gcpBucketSuffix}" ; 
+	gcp:location "us" ; 
+	gcp:projectId "${gcpProjectId}" ; 
+	gcp:storageClass "multi_regional" ; 
+	gcp:notificationInfo  [ 
+		gcp:eventTypes "${eventType}" ; 
+		gcp:topic "${topicName}" ]  ; 
+	a konig:GoogleCloudStorageBucket , konig:DataSource . 
+
+<http://www.konig.io/activity/1gXMAh-ysBgAAAFoo_z9PA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2019-01-31T07:58:12.672-05:00"^^xsd:dateTime . 
