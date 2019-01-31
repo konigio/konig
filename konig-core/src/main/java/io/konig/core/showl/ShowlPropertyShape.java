@@ -48,6 +48,7 @@ public abstract class ShowlPropertyShape implements Traversable {
 	private ShowlPropertyShape peer;
 	private Map<ShowlJoinCondition, ShowlMapping> mappings;
 	private Map<ShowlPropertyShape, ShowlJoinCondition> joinConditions;
+	private ShowlMapping selectedMapping;
 	
 	public ShowlPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, PropertyConstraint propertyConstraint) {
 		this.declaringShape = declaringShape;
@@ -223,5 +224,15 @@ public abstract class ShowlPropertyShape implements Traversable {
 	public Direction getDirection() {
 		return Direction.OUT;
 	}
+
+	public ShowlMapping getSelectedMapping() {
+		return selectedMapping;
+	}
+
+	public void setSelectedMapping(ShowlMapping selectedMapping) {
+		this.selectedMapping = selectedMapping;
+	}
+	
+	
 
 }
