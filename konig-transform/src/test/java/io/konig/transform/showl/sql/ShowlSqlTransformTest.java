@@ -25,6 +25,7 @@ import io.konig.core.showl.ShowlNodeShape;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.filters.DatasourceIsPartOfFilter;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.InsertStatement;
@@ -102,9 +103,10 @@ public class ShowlSqlTransformTest {
 		ShapeManager shapeManager = new MemoryShapeManager();
 		
 		RdfUtil.loadTurtle(sourceDir, graph, shapeManager);
-		
+		URI parent = uri("http://example.com/ns/sys/EDW");
+		DatasourceIsPartOfFilter filter = new DatasourceIsPartOfFilter(parent);
 		showlManager = new ShowlManager();
-		showlManager.load(shapeManager, reasoner);
+		showlManager.load(shapeManager, reasoner, filter);
 		
 	}
 

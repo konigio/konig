@@ -9,8 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.konig.core.vocab.Konig;
+
 public class MappingStrategy {
-	
+	public static final Logger logger = LoggerFactory.getLogger(MappingStrategy.class);
 
 	/**
 	 * Select the source-to-target-mappings for the specified target NodeShape.
@@ -21,6 +26,9 @@ public class MappingStrategy {
 	 * @return The set of properties for which no mapping was found.
 	 */
 	public List<ShowlDirectPropertyShape> selectMappings(ShowlNodeShape target) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("selecteMappings: target={}", target.getPath());
+		}
 		Set<ShowlJoinCondition> set = new HashSet<>();
 		
 		List<ShowlDirectPropertyShape> pool = new ArrayList<>();
@@ -33,21 +41,29 @@ public class MappingStrategy {
 		
 		Map<ShowlJoinCondition, RankedJoinCondition> rankingMap = new HashMap<>();
 		for (ShowlJoinCondition join : set) {
-			rankingMap.put(join, new RankedJoinCondition(join));
+			rankingMap.put(join, new RankedJoinCondition((ShowlTargetToSourceJoinCondition)join));
 		}
 		
 		while (!pool.isEmpty()) {
 			int originalSize = pool.size();
-			
 			updateRankings(rankingMap, pool);
-			RankedJoinCondition best = findBestJoinCondition(rankingMap.values());
-			
-			if (best != null) {
-				rankingMap.remove(best.getJoin());
-				target.addSelectedJoin(best.getJoin());
+
+			RankedJoinCondition best=null;
+			do {
+				best = findBestJoinCondition(rankingMap.values());
 				
-				selectMappings(target, best.getJoin(), pool);
-			}
+				if (best != null) {
+					if (addSelectedJoin(target, best)) {
+						rankingMap.remove(best.getJoin());
+					
+						selectMappings(target, best.getJoin(), pool);
+						break;
+					} else {
+						best.invalidate();
+						logger.trace("selectMappings: Failed to generate join condition.");
+					}
+				}
+			} while (best != null);
 			
 			if (pool.size() == originalSize) {
 				break;
@@ -59,8 +75,50 @@ public class MappingStrategy {
 		return pool;	
 	}
 
+	private boolean addSelectedJoin(ShowlNodeShape targetNode, RankedJoinCondition ranked) {
+		
+		ShowlTargetToSourceJoinCondition s2t = ranked.getJoin();
+		
+		ShowlPropertyShape targetProperty = s2t.propertyOf(targetNode);
+		ShowlPropertyShape sourceProperty = s2t.otherProperty(targetProperty);
+		ShowlNodeShape sourceNode = sourceProperty.getDeclaringShape();
+		
+		if (targetNode.getSelectedJoins().isEmpty()) {
+			targetNode.addSelectedJoin(new ShowlFromCondition(s2t, sourceNode));
+			return true;
+		} else {
+			// Build a source-to-source join condition
+			
+			List<ShowlJoinCondition> list = targetNode.getSelectedJoins();
+			for (int i=list.size()-1; i>=0; i--) {
+				ShowlJoinCondition prior = list.get(i);
+				ShowlSourceToSourceJoinCondition s2s = sourceToSourceJoin(s2t, prior, sourceNode);
+				if (s2s != null) {
+					s2t.setSourceToSource(s2s);
+					targetNode.addSelectedJoin(s2s);
+					return true;
+				}
+			}
+		}
+		return false;
+		
+	}
+
+	private ShowlSourceToSourceJoinCondition sourceToSourceJoin(ShowlTargetToSourceJoinCondition s2t, ShowlJoinCondition prior, ShowlNodeShape b) {
+		// For now, we only support join by Id
+		
+		ShowlNodeShape a = prior.focusNode();
+		ShowlPropertyShape aId = a.findProperty(Konig.id);
+		ShowlPropertyShape bId = b.findProperty(Konig.id);
+		if (aId != null && bId!=null) {
+			return new ShowlSourceToSourceJoinCondition(s2t, aId, bId, null);
+		}
+		
+		return null;
+	}
+
 	private void selectMappings(ShowlNodeShape node, ShowlJoinCondition join, List<ShowlDirectPropertyShape> pool) {
-		ShowlPropertyShape joinProperty = join.getPropertyOf(node);
+		ShowlPropertyShape joinProperty = join.propertyOf(node);
 		Iterator<ShowlDirectPropertyShape> sequence = pool.iterator();
 		while (sequence.hasNext()) {
 			ShowlDirectPropertyShape p = sequence.next();
@@ -81,8 +139,12 @@ public class MappingStrategy {
 	private RankedJoinCondition findBestJoinCondition(Collection<RankedJoinCondition> values) {
 		int best = 0;
 		RankedJoinCondition result = null;
-		for (RankedJoinCondition r : values) {
-			if (r.getRanking() > best) {
+		Iterator<RankedJoinCondition> sequence = values.iterator();
+		while (sequence.hasNext()) {
+			RankedJoinCondition r = sequence.next();
+			if (r.getRanking()==0) {
+				sequence.remove();
+			} else  if (r.getRanking() > best) {
 				best = r.getRanking();
 				result = r;
 			}
@@ -114,8 +176,8 @@ public class MappingStrategy {
 
 	private static class RankedJoinCondition  {
 		private int ranking;
-		private ShowlJoinCondition join;
-		public RankedJoinCondition(ShowlJoinCondition join) {
+		private ShowlTargetToSourceJoinCondition join;
+		public RankedJoinCondition(ShowlTargetToSourceJoinCondition join) {
 			this.join = join;
 		}
 		public void incrementRanking() {
@@ -130,10 +192,14 @@ public class MappingStrategy {
 		public int getRanking() {
 			return ranking;
 		}
-		public ShowlJoinCondition getJoin() {
+		
+		public ShowlTargetToSourceJoinCondition getJoin() {
 			return join;
 		}
 		
+		public void invalidate() {
+			ranking = -1;
+		}
 		
 		
 		

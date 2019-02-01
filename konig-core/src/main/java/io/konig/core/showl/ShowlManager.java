@@ -49,7 +49,9 @@ import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeFilter;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.filters.AnyShapeFilter;
 
 public class ShowlManager {
 	private static final Logger logger = LoggerFactory.getLogger(ShowlManager.class);
@@ -60,10 +62,13 @@ public class ShowlManager {
 	private OwlReasoner reasoner;
 	
 	public void load(ShapeManager shapeManager, OwlReasoner reasoner) {
+		load(shapeManager, reasoner, AnyShapeFilter.INSTANCE);
+	}
+	public void load(ShapeManager shapeManager, OwlReasoner reasoner, ShapeFilter filter) {
 		this.reasoner = reasoner;
 		Worker worker = new Worker(shapeManager);
 		
-		worker.load();
+		worker.load(filter);
 	}
 	
 	public Set<Resource> listNodeShapeIds() {
@@ -89,6 +94,28 @@ public class ShowlManager {
 	public OwlReasoner getReasoner() {
 		return reasoner;
 	}
+	
+	public void inferTargetClasses(ShapeManager shapeManager, OwlReasoner reasoner) {
+		for (Shape shape : shapeManager.listShapes()) {
+			if (shape.getTargetClass()==null || Konig.Undefined.equals(shape.getTargetClass())) {
+				inferTargetClass(shape, reasoner);
+			}
+		}
+	}
+
+
+
+	private void inferTargetClass(Shape shape, OwlReasoner reasoner) {
+		
+		for (PropertyConstraint p : shape.getProperty()) {
+			URI predicate = p.getPredicate();
+			if (predicate != null) {
+				
+			}
+			
+		}
+		
+	}
 
 
 
@@ -103,8 +130,9 @@ public class ShowlManager {
 			this.shapeManager = shapeManager;
 		}
 
-		private void load() {
-			loadShapes();
+		private void load(ShapeFilter filter) {
+			
+			loadShapes(filter);
 			inferTargetClasses();
 			inferInverses();
 			buildJoinConditions();
@@ -143,7 +171,7 @@ public class ShowlManager {
 			for (Shape shape : shapeManager.listShapes()) {
 				if (!shape.getShapeDataSource().isEmpty()) {
 					for (ShowlNodeShape node : getNodeShape(shape.getId())) {
-						buildJoinConditions(node, null);
+						buildJoinConditions(node, MappingRole.TARGET, null);
 					}
 				}
 				
@@ -152,23 +180,36 @@ public class ShowlManager {
 			
 		}
 		
-		private void buildJoinConditions(ShowlNodeShape leftNode, ShowlJoinCondition joinCondition) {
+		private void buildJoinConditions(ShowlNodeShape nodeA, MappingRole role, ShowlJoinCondition joinCondition) {
 			
-			if (leftNode.isNamedRoot()) {
-				ShowlClass owlClass = leftNode.getOwlClass();
+			if (nodeA.isNamedRoot()) {
+				ShowlClass owlClass = nodeA.getOwlClass();
 				if (!isUndefinedClass(owlClass)) {
-					for (ShowlNodeShape rightNode : owlClass.getTargetClassOf()) {
-						if (rightNode == leftNode) {
+					for (ShowlNodeShape nodeB : owlClass.getTargetClassOf()) {
+						if (nodeB == nodeA) {
 							continue;
 						}
-						if (rightNode.isNamedRoot()) {
+						if (nodeB.isNamedRoot()) {
 							// TODO: consider shapes that are not named roots
 							
-							doJoin(leftNode, rightNode, joinCondition);
+							ShowlNodeShape sourceNode = null;
+							ShowlNodeShape targetNode = null;
+							switch (role) {
+							case SOURCE:
+								sourceNode = nodeA;
+								targetNode = nodeB;
+								break;
+								
+							case TARGET:
+								sourceNode = nodeB;
+								targetNode = nodeA;
+							}
+							
+							doJoin(targetNode, sourceNode, joinCondition);
 							
 						}
 					}
-					joinObjectProperties(leftNode, joinCondition);
+					joinObjectProperties(nodeA, joinCondition);
 				}
 			}
 		}
@@ -220,7 +261,7 @@ public class ShowlManager {
 				return;
 			}
 			
-			ShowlJoinCondition newJoin = new ShowlJoinCondition(leftJoinProperty, rightJoinProperty, joinCondition);
+			ShowlJoinCondition newJoin = new ShowlTargetToSourceJoinCondition(leftJoinProperty, rightJoinProperty, joinCondition);
 			new ShowlMapping(newJoin, leftProperty, rightProperty);
 			if (logger.isTraceEnabled()) {
 				logger.trace("doJoinInwardObjectProperty: {} ... {}", leftProperty.getPath(), rightJoinProperty.getPath());
@@ -237,32 +278,32 @@ public class ShowlManager {
 		private void joinOutwardObjectProperties(Collection<? extends ShowlPropertyShape> properties,
 				ShowlJoinCondition joinCondition) {
 			
-			for (ShowlPropertyShape leftProperty : properties) {
-				ShowlNodeShape leftChild = leftProperty.getValueShape();
+			for (ShowlPropertyShape sourceProperty : properties) {
+				ShowlNodeShape sourceNode = sourceProperty.getValueShape();
 			
-				if (leftChild != null) {	
-					ShowlClass childClass = leftChild.getOwlClass();
+				if (sourceNode != null) {	
+					ShowlClass childClass = sourceNode.getOwlClass();
 					if (!isUndefinedClass(childClass)) {
-						ShowlPropertyShape leftChildId = leftChild.findProperty(Konig.id);
-						if (leftChildId != null) {
-							buildJoinConditions(leftChild, joinCondition);
+						ShowlPropertyShape sourceNodeId = sourceNode.findProperty(Konig.id);
+						if (sourceNodeId != null) {
+							buildJoinConditions(sourceNode, MappingRole.SOURCE, joinCondition);
 						}
 						
 						// Find other cases where the child object is referenced via the same predicate as
 						// the leftProperty.
 						for (ShowlProperty p : childClass.getRangeOf()) {
 							for (ShowlPropertyShape rightProperty : p.getPropertyShapes()) {
-								if (rightProperty == leftProperty) {
+								if (rightProperty == sourceProperty) {
 									continue;
 								}
-								if (leftChildId!=null && rightProperty.getDeclaringShape().isNamedRoot()) {
+								if (sourceNodeId!=null && rightProperty.getDeclaringShape().isNamedRoot()) {
 									continue;
 								}
 								if (rightProperty.getValueShape()==null) {
 									continue;
 								}
 								
-								doJoinOutwardObjectProperty(leftChild, rightProperty, joinCondition);
+								doJoinOutwardObjectProperty(sourceNode, rightProperty, joinCondition);
 								
 							}
 						}
@@ -282,14 +323,14 @@ public class ShowlManager {
 			
 		}
 
-		private void doJoin(ShowlNodeShape leftNode, ShowlNodeShape rightNode, ShowlJoinCondition joinCondition) {
-			ShowlPropertyShape leftId = leftNode.findProperty(Konig.id);
-			ShowlPropertyShape rightId = rightNode.findProperty(Konig.id);
+		private void doJoin(ShowlNodeShape targetNode, ShowlNodeShape sourceNode, ShowlJoinCondition joinCondition) {
+			ShowlPropertyShape sourceId = sourceNode.findProperty(Konig.id);
+			ShowlPropertyShape targetId = targetNode.findProperty(Konig.id);
 			
-			if (leftId.findJoinCondition(rightId) == null) {
-				ShowlJoinCondition join = new ShowlJoinCondition(leftId, rightId, joinCondition);
+			if (sourceId.findJoinCondition(targetId) == null) {
+				ShowlJoinCondition join = new ShowlTargetToSourceJoinCondition(targetId, sourceId, joinCondition);
 				
-				buildMappings(leftNode, rightNode, join);
+				buildMappings(sourceNode, targetNode, join);
 			}
 			
 		}
@@ -533,11 +574,13 @@ public class ShowlManager {
 
 
 
-		private void loadShapes() {
+		private void loadShapes(ShapeFilter filter) {
 			
 			Set<Shape> rootShapes = rootShapes(shapeManager);
 			for (Shape shape : rootShapes) {
-				createNodeShape(null, shape);
+				if (filter.accept(shape)) {
+					createNodeShape(null, shape);
+				}
 			}
 		}
 		
@@ -859,7 +902,10 @@ public class ShowlManager {
 			return Objects.hash(leftNode, rightNode, join);
 		}
 		
-		
-		
+	}
+	
+	private static enum MappingRole {
+		SOURCE,
+		TARGET
 	}
 }

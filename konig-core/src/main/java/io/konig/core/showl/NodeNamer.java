@@ -3,16 +3,24 @@ package io.konig.core.showl;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class NodeNamer {
 
-	private Map<ShowlJoinCondition,String> map = new HashMap<>();
+	private static final Logger logger = LoggerFactory.getLogger(NodeNamer.class);
+	
+	private Map<ShowlNodeShape,String> map = new HashMap<>();
 	private VariableGenerator vargen = new VariableGenerator();
 
-	public String varname(ShowlJoinCondition join) {
-		String result = map.get(join);
+	public String varname(ShowlNodeShape node) {
+		String result = map.get(node);
 		if (result == null) {
 			result = vargen.next();
-			map.put(join, result);
+			map.put(node, result);
+			if (logger.isTraceEnabled()) {
+				logger.trace("varname: node={}, alias={}", node.getPath(), result);
+			}
 		}
 		return result;
 	}

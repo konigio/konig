@@ -6,32 +6,34 @@
 @prefix schema: <http://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:PersonTargetShape sh:property  [ 
 		sh:path schema:givenName ; 
-		sh:minCount 0 ; 
-		sh:maxCount 1 ; 
+		rdf:predicate schema:givenName ; 
 		sh:datatype xsd:string ; 
-		rdf:predicate schema:givenName
+		sh:maxCount 1 ; 
+		sh:minCount 0
 	 ]  ,  [ 
 		sh:path schema:email ; 
-		sh:minCount 0 ; 
-		sh:maxCount 1 ; 
+		rdf:predicate schema:email ; 
 		sh:datatype xsd:string ; 
-		rdf:predicate schema:email ]  ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ]  ; 
 	a sh:Shape ; 
+	sh:nodeKind sh:IRI ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/1gXMAh-ysBgAAAFoo_z9PA> ; 
-	sh:targetClass schema:Person ; 
-	sh:nodeKind sh:IRI . 
+	prov:wasGeneratedBy <http://www.konig.io/activity/E7oyyDMIR4cAAAFopNZy1Q> ; 
+	sh:targetClass schema:Person . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> gcp:tableReference  [ 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
-		gcp:datasetId "schema" ; 
-		gcp:tableId "PersonTarget" ]  ; 
-	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+		gcp:tableId "PersonTarget" ; 
+		gcp:datasetId "schema" ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:EDW . 
 
-<http://www.konig.io/activity/1gXMAh-ysBgAAAFoo_z9PA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2019-01-31T07:58:12.672-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/E7oyyDMIR4cAAAFopNZy1Q> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2019-01-31T11:55:44.089-05:00"^^xsd:dateTime . 

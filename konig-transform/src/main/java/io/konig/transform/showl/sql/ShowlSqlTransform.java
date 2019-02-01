@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.konig.core.showl.NodeNamer;
 import io.konig.core.showl.ShowlDirectPropertyShape;
+import io.konig.core.showl.ShowlFromCondition;
 import io.konig.core.showl.ShowlJoinCondition;
 import io.konig.core.showl.ShowlMapping;
 import io.konig.core.showl.ShowlNodeShape;
@@ -53,32 +54,38 @@ public class ShowlSqlTransform {
 			SelectExpression select = new SelectExpression();
 			for (ShowlDirectPropertyShape p : targetNode.getProperties()) {
 				ValueExpression value = mappedValue(p);
-				select.add(value);
+				if (value != null) {
+					select.add(value);
+				}
 			}
 			addFrom(targetNode, select);
 			return select;
 		}
 
 		private void addFrom(ShowlNodeShape targetNode, SelectExpression select) throws ShowlSqlTransformException {
+			
 			for (ShowlJoinCondition join : targetNode.getSelectedJoins()) {
-				
-				ShowlNodeShape nodeShape = join.otherNode(targetNode);
+
+				ShowlNodeShape nodeShape = join.focusNode();
 				TableNameExpression tableName = tableName(nodeShape);
-				TableAliasExpression alias = new TableAliasExpression(tableName, nodeNamer.varname(join));
-				
-				
+				TableAliasExpression alias = new TableAliasExpression(tableName, join.focusAlias(nodeNamer));
 				select.getFrom().add(alias);
+				
+				
 			}
 			
 		}
 
 		private ValueExpression mappedValue(ShowlDirectPropertyShape p) throws ShowlSqlTransformException {
 			ShowlMapping m = p.getSelectedMapping();
+			if (m == null) {
+				return null;
+			}
 			ShowlPropertyShape other = m.findOther(p);
 			if (other instanceof ShowlTemplatePropertyShape) {
 				return templateValue(m, (ShowlTemplatePropertyShape) other);
 			}
-			String tableAlias = nodeNamer.varname(m.getJoinCondition());
+			String tableAlias = m.getJoinCondition().focusAlias(nodeNamer);
 			
 			String sourceColumnName = other.getPredicate().getLocalName();
 			String targetColumnName = p.getPredicate().getLocalName();
@@ -91,7 +98,7 @@ public class ShowlSqlTransform {
 		}
 
 		private ValueExpression templateValue(ShowlMapping m, ShowlTemplatePropertyShape other) throws ShowlSqlTransformException {
-			String tableAlias = nodeNamer.varname(m.getJoinCondition());
+			String tableAlias = m.getJoinCondition().focusAlias(nodeNamer);
 			IriTemplate template = other.getTemplate();
 			SqlFunctionExpression func = new SqlFunctionExpression(SqlFunctionExpression.CONCAT);
 
