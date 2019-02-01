@@ -12,6 +12,10 @@ public class NodeNamer {
 	
 	private Map<ShowlNodeShape,String> map = new HashMap<>();
 	private VariableGenerator vargen = new VariableGenerator();
+	
+	public NodeNamer() {
+		
+	}
 
 	public String varname(ShowlNodeShape node) {
 		String result = map.get(node);

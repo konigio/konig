@@ -104,9 +104,9 @@ public class ShowlSqlTransformTest {
 		
 		RdfUtil.loadTurtle(sourceDir, graph, shapeManager);
 		URI parent = uri("http://example.com/ns/sys/EDW");
-		DatasourceIsPartOfFilter filter = new DatasourceIsPartOfFilter(parent);
-		showlManager = new ShowlManager();
-		showlManager.load(shapeManager, reasoner, filter);
+//		DatasourceIsPartOfFilter filter = new DatasourceIsPartOfFilter(parent);
+		showlManager = new ShowlManager(shapeManager, reasoner);
+		showlManager.load();
 		
 	}
 

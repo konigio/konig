@@ -60,6 +60,7 @@ public class DataCatalogBuilderTest {
 	private File outDir = new File("target/test/DataCatalogBuilder");
 	private NamespaceManager nsManager = new MemoryNamespaceManager();
 	private Graph graph = new MemoryGraph(nsManager);
+	private OwlReasoner reasoner = new OwlReasoner(graph);
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShowlManager showlManager;
 	
@@ -76,7 +77,7 @@ public class DataCatalogBuilderTest {
 
 		GcpShapeConfig.init();
 		URI ontologyId = uri("http://schema.org/");
-		showlManager = new ShowlManager();
+		showlManager = new ShowlManager(shapeManager, reasoner);
 		build("src/test/resources/MappingTest", ontologyId);
 
 		File htmlFile = new File("target/test/DataCatalogBuilder/shape/TargetPersonShape.html");
@@ -166,8 +167,7 @@ public class DataCatalogBuilderTest {
 		request.setOutDir(outDir);
 		request.setShapeManager(shapeManager);
 		if (showlManager != null) {
-			OwlReasoner reasoner = new OwlReasoner(graph);
-			showlManager.load(shapeManager, reasoner);
+			showlManager.load();
 			request.setShowlManager(showlManager);
 		}
 		

@@ -1,5 +1,8 @@
 package io.konig.core.showl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /*
  * #%L
  * Konig Core
@@ -22,6 +25,7 @@ package io.konig.core.showl;
 
 
 public class ShowlMapping {
+	private static final Logger logger = LoggerFactory.getLogger(ShowlMapping.class);
 	
 	private ShowlJoinCondition joinCondition;
 	private ShowlPropertyShape leftProperty;
@@ -35,6 +39,9 @@ public class ShowlMapping {
 		
 		leftProperty.addMapping(this);
 		rightProperty.addMapping(this);
+		if (logger.isTraceEnabled()) {
+			logger.trace("create (left: {}, right: {})", leftProperty.getPath(), rightProperty.getPath());
+		}
 	}
 
 	public ShowlJoinCondition getJoinCondition() {

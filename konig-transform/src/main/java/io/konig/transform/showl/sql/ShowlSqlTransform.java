@@ -10,6 +10,7 @@ import io.konig.core.showl.ShowlJoinCondition;
 import io.konig.core.showl.ShowlMapping;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlTargetToSourceJoinCondition;
 import io.konig.core.showl.ShowlTemplatePropertyShape;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat;
@@ -39,9 +40,12 @@ public class ShowlSqlTransform {
 	
 		private NodeNamer nodeNamer = new NodeNamer();
 		private Class<? extends TableDataSource> datasourceType;
+		private ShowlNodeShape rootNode;
 		
 		public InsertStatement createInsert(ShowlNodeShape targetNode, Class<? extends TableDataSource> datasourceType) throws ShowlSqlTransformException  {
 			this.datasourceType = datasourceType;
+			rootNode = targetNode;
+			
 			TableNameExpression tableName = tableName(targetNode);
 			List<ColumnExpression> columns = insertColumns(targetNode);
 			SelectExpression selectQuery = selectInto(targetNode);
@@ -81,6 +85,7 @@ public class ShowlSqlTransform {
 			if (m == null) {
 				return null;
 			}
+			m = twiddleMapping(m);
 			ShowlPropertyShape other = m.findOther(p);
 			if (other instanceof ShowlTemplatePropertyShape) {
 				return templateValue(m, (ShowlTemplatePropertyShape) other);
@@ -95,6 +100,25 @@ public class ShowlSqlTransform {
 			}
 			
 			return column;
+		}
+
+		/**
+		 * Ensure that the focus node is NOT the rootNode.
+		 * This is a bit of a hack.  We really ought to find a cleaner solution.
+		 */
+		private ShowlMapping twiddleMapping(ShowlMapping m) {
+			ShowlPropertyShape right = m.getRightProperty();
+			if (right.getDeclaringShape() == rootNode) {
+				ShowlJoinCondition join = m.getJoinCondition();
+				
+				ShowlTargetToSourceJoinCondition t2s = new ShowlTargetToSourceJoinCondition(
+						join.getRight(), join.getLeft(), join.getPrevious());
+				
+				m = new ShowlMapping(t2s, right, m.getLeftProperty());
+			}
+			
+			return m;
+			
 		}
 
 		private ValueExpression templateValue(ShowlMapping m, ShowlTemplatePropertyShape other) throws ShowlSqlTransformException {

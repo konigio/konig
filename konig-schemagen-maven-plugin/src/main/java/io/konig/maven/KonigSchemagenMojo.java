@@ -434,8 +434,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private void generateMappingReport() throws IOException {
 		if (rdfModel!=null && rdfModel.isPrintMappings()) {
 			
-			ShowlManager showlManager = new ShowlManager();
-			showlManager.load(shapeManager, owlReasoner);
+			ShowlManager showlManager = new ShowlManager(shapeManager, owlReasoner);
+			showlManager.load();
 			
 			MappingReport report = new MappingReport();
 			File rdfDir = rdfDir();
