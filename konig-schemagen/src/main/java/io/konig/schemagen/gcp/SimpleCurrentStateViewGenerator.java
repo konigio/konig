@@ -41,7 +41,7 @@ import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.SqlFunctionExpression;
-import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.DeprecatedJoinExpression;
 import io.konig.sql.query.NullPredicate;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.OrExpression;
@@ -189,7 +189,7 @@ public class SimpleCurrentStateViewGenerator {
 		SearchCondition searchCondition = new ComparisonPredicate(ComparisonOperator.EQUALS, idCol, identifierCol);
 		OnExpression on = new OnExpression(searchCondition);
 		
-		JoinExpression join = new JoinExpression(left, right, on);
+		DeprecatedJoinExpression join = new DeprecatedJoinExpression(left, right, on);
 		
 		select.getFrom().add(join);
 	

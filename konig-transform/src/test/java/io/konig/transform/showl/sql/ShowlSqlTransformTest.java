@@ -1,5 +1,26 @@
 package io.konig.transform.showl.sql;
 
+/*
+ * #%L
+ * Konig Transform
+ * %%
+ * Copyright (C) 2015 - 2019 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -19,6 +40,7 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.ConsumesDataFromFilter;
 import io.konig.core.showl.MappingStrategy;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeShape;
@@ -36,8 +58,9 @@ import io.konig.sql.query.ValueExpression;
 public class ShowlSqlTransformTest {
 
 	private ShowlManager showlManager;
-	private NamespaceManager nsManager;
-	private MappingStrategy strategy = new MappingStrategy();
+	private NamespaceManager nsManager = new MemoryNamespaceManager();
+	private Graph graph = new MemoryGraph(nsManager);
+	private MappingStrategy strategy = new MappingStrategy(new ConsumesDataFromFilter(graph));
 	private ShowlSqlTransform transform = new ShowlSqlTransform();
 	
 	private InsertStatement insert(String resourcePath, String shapeId) throws Exception {
@@ -97,8 +120,6 @@ public class ShowlSqlTransformTest {
 
 	private void load(String filePath) throws RDFParseException, RDFHandlerException, IOException {
 		File sourceDir = new File(filePath);
-		nsManager = new MemoryNamespaceManager();
-		Graph graph = new MemoryGraph(nsManager);
 		OwlReasoner reasoner = new OwlReasoner(graph);
 		ShapeManager shapeManager = new MemoryShapeManager();
 		

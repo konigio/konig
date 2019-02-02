@@ -1,28 +1,56 @@
 package io.konig.transform.showl.sql;
 
+/*
+ * #%L
+ * Konig Transform
+ * %%
+ * Copyright (C) 2015 - 2019 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import java.util.ArrayList;
 import java.util.List;
 
 import io.konig.core.showl.NodeNamer;
 import io.konig.core.showl.ShowlDirectPropertyShape;
-import io.konig.core.showl.ShowlFromCondition;
 import io.konig.core.showl.ShowlJoinCondition;
 import io.konig.core.showl.ShowlMapping;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
-import io.konig.core.showl.ShowlTargetToSourceJoinCondition;
+import io.konig.core.showl.ShowlSourceToSourceJoinCondition;
 import io.konig.core.showl.ShowlTemplatePropertyShape;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat;
+import io.konig.core.util.ValueFormat.ElementType;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 import io.konig.sql.query.AliasExpression;
+import io.konig.sql.query.AndExpression;
+import io.konig.sql.query.BooleanTerm;
 import io.konig.sql.query.ColumnExpression;
+import io.konig.sql.query.ComparisonOperator;
+import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.InsertStatement;
+import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.SelectExpression;
 import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.TableAliasExpression;
+import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.TableNameExpression;
 import io.konig.sql.query.ValueExpression;
 
@@ -40,11 +68,9 @@ public class ShowlSqlTransform {
 	
 		private NodeNamer nodeNamer = new NodeNamer();
 		private Class<? extends TableDataSource> datasourceType;
-		private ShowlNodeShape rootNode;
 		
 		public InsertStatement createInsert(ShowlNodeShape targetNode, Class<? extends TableDataSource> datasourceType) throws ShowlSqlTransformException  {
 			this.datasourceType = datasourceType;
-			rootNode = targetNode;
 			
 			TableNameExpression tableName = tableName(targetNode);
 			List<ColumnExpression> columns = insertColumns(targetNode);
@@ -70,14 +96,97 @@ public class ShowlSqlTransform {
 			
 			for (ShowlJoinCondition join : targetNode.getSelectedJoins()) {
 
-				ShowlNodeShape nodeShape = join.focusNode();
-				TableNameExpression tableName = tableName(nodeShape);
-				TableAliasExpression alias = new TableAliasExpression(tableName, join.focusAlias(nodeNamer));
-				select.getFrom().add(alias);
+				ShowlNodeShape focusNode = join.focusNode();
+				TableItemExpression tableItem = tableAlias(focusNode);
+				
+				if (join instanceof ShowlSourceToSourceJoinCondition) {
+					
+					OnExpression on = onExpression(join);
+					
+					
+					tableItem = new JoinExpression(tableItem, on);
+				}
+				select.getFrom().add(tableItem);
 				
 				
 			}
 			
+		}
+
+		private OnExpression onExpression(ShowlJoinCondition join) throws ShowlSqlTransformException {
+			
+			ShowlPropertyShape left = join.getLeft();
+			ShowlPropertyShape right = join.getRight();
+			
+			if (left instanceof ShowlTemplatePropertyShape && right instanceof ShowlTemplatePropertyShape) {
+				ShowlTemplatePropertyShape leftT = (ShowlTemplatePropertyShape) left;
+				ShowlTemplatePropertyShape rightT = (ShowlTemplatePropertyShape) right;
+				
+				// We handle the special case where the templates are equal.
+				// There are other special cases we should handle, such as the case
+				// where the templates are the same except for variables that are equivalent
+				// by mapping.  But that's too complicated for now.  
+				
+				if (leftT.getTemplate().equals(rightT.getTemplate())) {
+					String leftTableAlias = nodeNamer.varname(left.getDeclaringShape());
+					String rightTableAlias = nodeNamer.varname(right.getDeclaringShape());
+					List<? extends ValueFormat.Element> elements = leftT.getTemplate().toList();
+					BooleanTerm booleanTerm = null;
+					AndExpression andExpression=null;
+					
+					for (ValueFormat.Element e : elements) {
+						if (e.getType() == ElementType.VARIABLE) {
+							String varName = e.getText();
+							
+							ColumnExpression leftCol = new ColumnExpression(leftTableAlias + "." + varName);
+							ColumnExpression rightCol = new ColumnExpression(rightTableAlias + "." + varName);
+							
+							ComparisonPredicate compare = new ComparisonPredicate(
+								ComparisonOperator.EQUALS, leftCol, rightCol);
+							
+							if (andExpression != null) {
+								andExpression.add(compare);
+							} else if (booleanTerm != null) {
+								andExpression = new AndExpression();
+								andExpression.add(booleanTerm);
+								andExpression.add(compare);
+								booleanTerm = andExpression;
+							} else {
+								booleanTerm = compare;
+							}
+							
+						}
+					}
+					return new OnExpression(booleanTerm);
+				} else {
+					ValueExpression leftValue = templateValue(leftT);
+					ValueExpression rightValue = templateValue(rightT);
+					return new OnExpression(new ComparisonPredicate(
+							ComparisonOperator.EQUALS,
+							leftValue,
+							rightValue));
+				}
+				
+			}
+			
+			ComparisonPredicate compare = new ComparisonPredicate(
+					ComparisonOperator.EQUALS,
+					valueExpression(left),
+					valueExpression(right));
+				
+			return new OnExpression(compare);
+		}
+
+		private ValueExpression valueExpression(ShowlPropertyShape p) {
+			
+			return qualifiedColumn(p);
+		}
+
+		private TableAliasExpression tableAlias(ShowlNodeShape node) throws ShowlSqlTransformException {
+			TableNameExpression tableName = tableName(node);
+			String alias = nodeNamer.varname(node);
+			
+			return new TableAliasExpression(tableName, alias);
 		}
 
 		private ValueExpression mappedValue(ShowlDirectPropertyShape p) throws ShowlSqlTransformException {
@@ -85,12 +194,13 @@ public class ShowlSqlTransform {
 			if (m == null) {
 				return null;
 			}
-			m = twiddleMapping(m);
 			ShowlPropertyShape other = m.findOther(p);
 			if (other instanceof ShowlTemplatePropertyShape) {
-				return templateValue(m, (ShowlTemplatePropertyShape) other);
+				return templateValue((ShowlTemplatePropertyShape) other);
 			}
-			String tableAlias = m.getJoinCondition().focusAlias(nodeNamer);
+			
+			
+			String tableAlias = nodeNamer.varname(other.getDeclaringShape());
 			
 			String sourceColumnName = other.getPredicate().getLocalName();
 			String targetColumnName = p.getPredicate().getLocalName();
@@ -102,28 +212,12 @@ public class ShowlSqlTransform {
 			return column;
 		}
 
-		/**
-		 * Ensure that the focus node is NOT the rootNode.
-		 * This is a bit of a hack.  We really ought to find a cleaner solution.
-		 */
-		private ShowlMapping twiddleMapping(ShowlMapping m) {
-			ShowlPropertyShape right = m.getRightProperty();
-			if (right.getDeclaringShape() == rootNode) {
-				ShowlJoinCondition join = m.getJoinCondition();
-				
-				ShowlTargetToSourceJoinCondition t2s = new ShowlTargetToSourceJoinCondition(
-						join.getRight(), join.getLeft(), join.getPrevious());
-				
-				m = new ShowlMapping(t2s, right, m.getLeftProperty());
-			}
-			
-			return m;
-			
-		}
+		
 
-		private ValueExpression templateValue(ShowlMapping m, ShowlTemplatePropertyShape other) throws ShowlSqlTransformException {
-			String tableAlias = m.getJoinCondition().focusAlias(nodeNamer);
-			IriTemplate template = other.getTemplate();
+		private ValueExpression templateValue(ShowlTemplatePropertyShape showlTemplate) throws ShowlSqlTransformException {
+			ShowlNodeShape node = showlTemplate.getDeclaringShape();
+			String tableAlias = nodeNamer.varname(node);
+			IriTemplate template = showlTemplate.getTemplate();
 			SqlFunctionExpression func = new SqlFunctionExpression(SqlFunctionExpression.CONCAT);
 
 			for (ValueFormat.Element e : template.toList()) {
@@ -142,9 +236,16 @@ public class ShowlSqlTransform {
 					
 				}
 			}
-			String targetName = m.findOther(other).getPredicate().getLocalName();
+			String targetName = showlTemplate.getPredicate().getLocalName();
 			
 			return new AliasExpression(func, targetName);
+		}
+		
+		private ColumnExpression qualifiedColumn(ShowlPropertyShape p) {
+			String tableName = nodeNamer.varname(p.getDeclaringShape());
+			String columnName = tableName + "." + p.getPredicate().getLocalName();
+			return new ColumnExpression(columnName);
+			
 		}
 
 		private List<ColumnExpression> insertColumns(ShowlNodeShape targetNode) {

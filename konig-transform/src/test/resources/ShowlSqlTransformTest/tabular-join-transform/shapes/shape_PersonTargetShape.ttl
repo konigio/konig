@@ -23,17 +23,17 @@ shape:PersonTargetShape sh:property  [
 		sh:minCount 0 ]  ; 
 	a sh:Shape ; 
 	sh:nodeKind sh:IRI ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/E7oyyDMIR4cAAAFopNZy1Q> ; 
-	sh:targetClass schema:Person . 
+	sh:targetClass schema:Person ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/bto0io9xV_AAAAForlO7TA> ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> . 
+
+<http://www.konig.io/activity/bto0io9xV_AAAAForlO7TA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2019-02-02T08:09:09.586-05:00"^^xsd:dateTime . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
 	gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
-		gcp:tableId "PersonTarget" ; 
-		gcp:datasetId "schema" ]  ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "PersonTarget" ]  ; 
 	a konig:GoogleBigQueryTable , konig:DataSource ; 
 	schema:isPartOf sys:EDW . 
-
-<http://www.konig.io/activity/E7oyyDMIR4cAAAFopNZy1Q> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2019-01-31T11:55:44.089-05:00"^^xsd:dateTime . 

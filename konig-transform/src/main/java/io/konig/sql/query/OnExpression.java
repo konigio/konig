@@ -37,11 +37,8 @@ public class OnExpression extends AbstractExpression implements SearchCondition 
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		out.println(" ON");
-		out.pushIndent();
-		out.indent();
-		searchCondition.print(out);
-		out.popIndent();
+		out.print("ON "); 
+		searchCondition.print(out); 
 	}
 
 	@Override

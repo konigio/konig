@@ -51,7 +51,7 @@ import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.SqlFunctionExpression;
-import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.DeprecatedJoinExpression;
 import io.konig.sql.query.NullPredicate;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.OrExpression;
@@ -104,7 +104,7 @@ public class SimpleCurrentStateViewGeneratorTest {
 		
 		assertTrue(select.getFrom().getTableItems().size() == 1);
 		
-		JoinExpression join = (JoinExpression) select.getFrom().getTableItems().get(0);
+		DeprecatedJoinExpression join = (DeprecatedJoinExpression) select.getFrom().getTableItems().get(0);
 		
 		assertTrue(join.getLeftTable() instanceof TableAliasExpression);
 		

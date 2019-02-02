@@ -1,5 +1,26 @@
 package io.konig.core.showl;
 
+/*
+ * #%L
+ * Konig Core
+ * %%
+ * Copyright (C) 2015 - 2019 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,6 +37,16 @@ import io.konig.core.vocab.Konig;
 
 public class MappingStrategy {
 	public static final Logger logger = LoggerFactory.getLogger(MappingStrategy.class);
+	
+	private ShowlMappingFilter filter;
+	
+	public MappingStrategy() {
+		
+	}
+
+	public MappingStrategy(ShowlMappingFilter filter) {
+		this.filter = filter;
+	}
 
 	/**
 	 * Select the source-to-target-mappings for the specified target NodeShape.
@@ -35,6 +66,15 @@ public class MappingStrategy {
 		for (ShowlDirectPropertyShape direct : target.getProperties()) {
 			pool.add(direct);
 			for (ShowlMapping m : direct.getMappings()) {
+				
+				if (filter != null) {
+					ShowlPropertyShape other = m.findOther(direct);
+					ShowlNodeShape sourceNode = other.getDeclaringShape();
+					if (!filter.allowMapping(sourceNode, target)) {
+						continue;
+					}
+				}
+				
 				set.add(m.getJoinCondition());
 			}
 		}
