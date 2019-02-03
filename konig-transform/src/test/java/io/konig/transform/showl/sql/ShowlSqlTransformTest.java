@@ -107,9 +107,19 @@ public class ShowlSqlTransformTest {
 			"src/test/resources/ShowlSqlTransformTest/tabular-join-transform", 
 			"http://example.com/ns/shape/PersonTargetShape");
 		
+		String text = insert.toString();
+		String[] lines = text.split("\\r?\\n");
+		
+		assertEquals("INSERT INTO schema.PersonTarget (id, email, givenName)", lines[0]);
+		assertEquals("SELECT", lines[1]);
+		assertEquals("   CONCAT(\"http://example.com/person/\", a.person_id) AS id,", lines[2]);
+		assertEquals("   a.email_address AS email,", lines[3]);
+		assertEquals("   b.first_name AS givenName", lines[4]);
+		assertEquals("FROM schema.PersonSource2 AS a", lines[5]);
+		assertEquals("JOIN schema.PersonSource1 AS b", lines[6]);
+		assertEquals("   ON a.person_id=b.person_id", lines[7]);
 		
 		
-		System.out.println(insert.toString());
 		
 	}
 
