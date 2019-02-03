@@ -21,32 +21,14 @@ package io.konig.core.showl;
  */
 
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class NodeNamer {
-
-	private static final Logger logger = LoggerFactory.getLogger(NodeNamer.class);
+public interface ShowlMappingFilter {
 	
-	private Map<ShowlNodeShape,String> map = new HashMap<>();
-	private VariableGenerator vargen = new VariableGenerator();
-	
-	public NodeNamer() {
-		
-	}
+	/**
+	 * Determine whether a mapping is allowed from source to target.
+	 * @param source The source NodeShape
+	 * @param target The target NodeShape
+	 * @return true if a mapping is allowed from source to target
+	 */
+	boolean allowMapping(ShowlNodeShape source, ShowlNodeShape target);
 
-	public String varname(ShowlNodeShape node) {
-		String result = map.get(node);
-		if (result == null) {
-			result = vargen.next();
-			map.put(node, result);
-			if (logger.isTraceEnabled()) {
-				logger.trace("varname: node={}, alias={}", node.getPath(), result);
-			}
-		}
-		return result;
-	}
 }

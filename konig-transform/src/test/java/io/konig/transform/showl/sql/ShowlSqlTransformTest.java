@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -39,12 +40,14 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.ConsumesDataFromFilter;
 import io.konig.core.showl.MappingStrategy;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.ShapeManager;
+import io.konig.shacl.filters.DatasourceIsPartOfFilter;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.InsertStatement;
@@ -55,20 +58,29 @@ import io.konig.sql.query.ValueExpression;
 public class ShowlSqlTransformTest {
 
 	private ShowlManager showlManager;
-	private NamespaceManager nsManager;
-	private MappingStrategy strategy = new MappingStrategy();
+	private NamespaceManager nsManager = new MemoryNamespaceManager();
+	private Graph graph = new MemoryGraph(nsManager);
+	private MappingStrategy strategy = new MappingStrategy(new ConsumesDataFromFilter(graph));
 	private ShowlSqlTransform transform = new ShowlSqlTransform();
 	
-	@Test
-	public void testTabular() throws Exception {
+	private InsertStatement insert(String resourcePath, String shapeId) throws Exception {
+
 		GcpShapeConfig.init();
-		load("src/test/resources/ShowlSqlTransformTest/tabular");
-		URI shapeId = uri("http://example.com/ns/shape/PersonTargetShape");
-		ShowlNodeShape node = showlManager.getNodeShape(shapeId).findAny();
+		load(resourcePath);
+		URI shapeIri = uri(shapeId);
+		ShowlNodeShape node = showlManager.getNodeShape(shapeIri).findAny();
 
 		strategy.selectMappings(node);
 		
-		InsertStatement insert = transform.createInsert(node, GoogleBigQueryTable.class);
+		return transform.createInsert(node, GoogleBigQueryTable.class);
+	}
+	
+	@Ignore
+	public void testTabular() throws Exception {
+		
+		InsertStatement insert = insert(
+			"src/test/resources/ShowlSqlTransformTest/tabular", 
+			"http://example.com/ns/shape/PersonTargetShape");
 		
 		assertEquals("schema.PersonTarget", insert.getTargetTable().getTableName());
 		
@@ -85,7 +97,29 @@ public class ShowlSqlTransformTest {
 		
 		assertEquals("schema.PersonSource AS a", from.get(0).toString());
 		
-		System.out.println(insert.toString());
+		
+	}
+	
+	@Ignore
+	public void testTabularJoin() throws Exception {
+		
+		InsertStatement insert = insert(
+			"src/test/resources/ShowlSqlTransformTest/tabular-join-transform", 
+			"http://example.com/ns/shape/PersonTargetShape");
+		
+		String text = insert.toString();
+		String[] lines = text.split("\\r?\\n");
+		
+		assertEquals("INSERT INTO schema.PersonTarget (id, email, givenName)", lines[0]);
+		assertEquals("SELECT", lines[1]);
+		assertEquals("   CONCAT(\"http://example.com/person/\", a.person_id) AS id,", lines[2]);
+		assertEquals("   a.email_address AS email,", lines[3]);
+		assertEquals("   b.first_name AS givenName", lines[4]);
+		assertEquals("FROM schema.PersonSource2 AS a", lines[5]);
+		assertEquals("JOIN schema.PersonSource1 AS b", lines[6]);
+		assertEquals("   ON a.person_id=b.person_id", lines[7]);
+		
+		
 		
 	}
 
@@ -96,15 +130,14 @@ public class ShowlSqlTransformTest {
 
 	private void load(String filePath) throws RDFParseException, RDFHandlerException, IOException {
 		File sourceDir = new File(filePath);
-		nsManager = new MemoryNamespaceManager();
-		Graph graph = new MemoryGraph(nsManager);
 		OwlReasoner reasoner = new OwlReasoner(graph);
 		ShapeManager shapeManager = new MemoryShapeManager();
 		
 		RdfUtil.loadTurtle(sourceDir, graph, shapeManager);
-		
-		showlManager = new ShowlManager();
-		showlManager.load(shapeManager, reasoner);
+		URI parent = uri("http://example.com/ns/sys/EDW");
+//		DatasourceIsPartOfFilter filter = new DatasourceIsPartOfFilter(parent);
+		showlManager = new ShowlManager(shapeManager, reasoner);
+		showlManager.load();
 		
 	}
 

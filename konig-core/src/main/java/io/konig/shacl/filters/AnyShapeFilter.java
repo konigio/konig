@@ -1,4 +1,4 @@
-package io.konig.core.showl;
+package io.konig.shacl.filters;
 
 /*
  * #%L
@@ -21,16 +21,21 @@ package io.konig.core.showl;
  */
 
 
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeFilter;
+
 /**
- * A mapping defined within a given JoinCondition
+ * A filter that accepts all shapes
  * @author Greg McFall
  *
  */
-public class ShowlJoinMapping extends ShowlMapping {
+public class AnyShapeFilter implements ShapeFilter {
 	
+	public static final AnyShapeFilter INSTANCE = new AnyShapeFilter();
 
-	public ShowlJoinMapping(ShowlJoinCondition joinCondition) {
-		super(joinCondition, joinCondition.getLeft(), joinCondition.getRight());
+	@Override
+	public boolean accept(Shape shape) {
+		return true;
 	}
 
 }

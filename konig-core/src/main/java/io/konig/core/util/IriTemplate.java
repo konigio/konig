@@ -75,6 +75,32 @@ public class IriTemplate extends SimpleValueFormat {
 		}
 		
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof IriTemplate) {
+			IriTemplate t = (IriTemplate) other;
+			List<? extends ValueFormat.Element> aList = toList();
+			List<? extends ValueFormat.Element> bList = t.toList();
+			
+			if (aList.size() != bList.size()) {
+				return false;
+			}
+			
+			for (int i=0; i<aList.size(); i++) {
+				ValueFormat.Element a = aList.get(i);
+				ValueFormat.Element b = bList.get(i);
+				
+				if (!a.equals(b)) {
+					return false;
+				}
+			}
+			return true;
+			
+			
+		}
+		return false;
+	}
 
 
 	public URI expand(ValueMap map) {

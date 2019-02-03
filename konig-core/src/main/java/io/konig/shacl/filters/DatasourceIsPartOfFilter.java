@@ -1,4 +1,4 @@
-package io.konig.core.showl;
+package io.konig.shacl.filters;
 
 /*
  * #%L
@@ -21,16 +21,29 @@ package io.konig.core.showl;
  */
 
 
-/**
- * A mapping defined within a given JoinCondition
- * @author Greg McFall
- *
- */
-public class ShowlJoinMapping extends ShowlMapping {
-	
+import org.openrdf.model.URI;
 
-	public ShowlJoinMapping(ShowlJoinCondition joinCondition) {
-		super(joinCondition, joinCondition.getLeft(), joinCondition.getRight());
+import io.konig.datasource.DataSource;
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeFilter;
+
+public class DatasourceIsPartOfFilter implements ShapeFilter {
+	private URI parentId;
+
+	public DatasourceIsPartOfFilter(URI parentId) {
+		this.parentId = parentId;
+	}
+
+	@Override
+	public boolean accept(Shape shape) {
+		for (DataSource ds : shape.getShapeDataSource()) {
+			for (URI p : ds.getIsPartOf()) {
+				if (parentId.equals(p)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 }

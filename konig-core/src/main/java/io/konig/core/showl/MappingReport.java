@@ -126,7 +126,7 @@ public class MappingReport {
 				
 				ShowlNodeShape other = join.otherNode(shape);
 				out.uri(other.getShape().getIri());
-				String varName = namer.varname(join);
+				String varName = join.focusAlias(namer);
 				out.print(" AS ");
 				out.print(varName);
 			}
@@ -189,7 +189,7 @@ public class MappingReport {
 				StringBuilder builder = new StringBuilder();
 				builder.append("CONCAT(");
 				String comma = "";
-				String shapeAlias = namer.varname(join);
+				String shapeAlias = join.focusAlias(namer);
 				for (ValueFormat.Element e : template.toList()) {
 					builder.append(comma);
 					comma = ", ";
@@ -296,7 +296,7 @@ public class MappingReport {
 				for (ShowlMapping m : q.getMappings()) {
 					ShowlJoinCondition join = m.getJoinCondition();
 					
-					ShowlPropertyShape r = join.getPropertyOf(node);
+					ShowlPropertyShape r = join.propertyOf(node);
 					if (r == p) {
 						ShowlPropertyShape other = join.otherProperty(r);
 						out.print(" = ");
@@ -318,7 +318,7 @@ public class MappingReport {
 				node = p.getDeclaringShape();
 			}
 			StringBuilder builder = new StringBuilder();
-			String varname = namer.varname(join);
+			String varname = join.focusAlias(namer);
 			builder.append(varname);
 			for (int i=elements.size()-1; i>=0; i--) {
 				ShowlPropertyShape p = elements.get(i);

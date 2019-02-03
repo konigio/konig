@@ -88,8 +88,8 @@ public class MappingStrategyTest {
 		
 		RdfUtil.loadTurtle(sourceDir, graph, shapeManager);
 		
-		showlManager = new ShowlManager();
-		showlManager.load(shapeManager, reasoner);
+		showlManager = new ShowlManager(shapeManager, reasoner);
+		showlManager.load();
 		
 	}
 

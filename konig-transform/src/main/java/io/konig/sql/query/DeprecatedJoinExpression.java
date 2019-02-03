@@ -23,20 +23,25 @@ package io.konig.sql.query;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class JoinExpression extends AbstractExpression implements TableItemExpression {
+public class DeprecatedJoinExpression extends AbstractExpression implements TableItemExpression {
 	
-	private TableItemExpression table;
+	private TableItemExpression leftTable;
+	private TableItemExpression rightTable;
 	private OnExpression joinSpecification;
 
-	public JoinExpression(TableItemExpression table,
+	public DeprecatedJoinExpression(TableItemExpression leftTable, TableItemExpression rightTable,
 			OnExpression joinSpecification) {
-		this.table = table;
+		this.leftTable = leftTable;
+		this.rightTable = rightTable;
 		this.joinSpecification = joinSpecification;
 	}
 	
+	public TableItemExpression getLeftTable() {
+		return leftTable;
+	}
 
-	public TableItemExpression getTable() {
-		return table;
+	public TableItemExpression getRightTable() {
+		return rightTable;
 	}
 
 	public OnExpression getJoinSpecification() {
@@ -46,24 +51,45 @@ public class JoinExpression extends AbstractExpression implements TableItemExpre
 	@Override
 	public void print(PrettyPrintWriter out) {
 		out.println();
-		out.print("JOIN ");
-		table.print(out);
+		out.pushIndent();
+		out.indent();
+		leftTable.print(out);
 		
 		if (joinSpecification!=null) {
 			out.println();
-			out.pushIndent();
-			out.indent();
-			joinSpecification.print(out);
 			out.popIndent();
-		} 
+			out.indent();
+
+			out.println(" JOIN");
+
+			if (rightTable instanceof DeprecatedJoinExpression) {
+				rightTable.print(out);
+			} else {
+				out.pushIndent();
+				out.indent();
+				rightTable.print(out);
+				out.println();
+				out.popIndent();
+			}
+			joinSpecification.print(out);
+		} else {
+			out.print(',');
+			if (!(rightTable instanceof DeprecatedJoinExpression)) {
+				out.println();
+				out.indent();
+			}
+			out.popIndent();
+			rightTable.print(out);
+		}
 		
 		
 	}
 
 	@Override
 	protected void dispatchProperties(QueryExpressionVisitor visitor) {
-		visit(visitor, "table", table);
 		visit(visitor, "joinSpecification", joinSpecification);
+		visit(visitor, "leftTable", leftTable);
+		visit(visitor, "rightTable", rightTable);
 		
 	}
 

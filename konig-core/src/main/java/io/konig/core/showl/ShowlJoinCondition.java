@@ -37,13 +37,18 @@ public class ShowlJoinCondition {
 		this.left = left;
 		this.right = right;
 		this.previous = previous;
-
-		left.addJoinCondition(this);
-		right.addJoinCondition(this);
 		
-		if (logger.isTraceEnabled()) {
+		if (logger.isTraceEnabled() && left!=null &&right!=null) {
 			logger.trace("new JoinCondition: {} ... {}", left.getPath(), right.getPath());
 		}
+
+		if (left != null) {
+			left.addJoinCondition(this);
+		}
+		if (right != null) {
+			right.addJoinCondition(this);
+		}
+		
 	}
 
 	
@@ -59,7 +64,7 @@ public class ShowlJoinCondition {
 		return previous;
 	}
 	
-	public ShowlPropertyShape getPropertyOf(ShowlNodeShape node) {
+	public ShowlPropertyShape propertyOf(ShowlNodeShape node) {
 		return
 			node==left.getDeclaringShape() ? left :
 			node==right.getDeclaringShape() ? right :
@@ -68,8 +73,8 @@ public class ShowlJoinCondition {
 	
 	public ShowlNodeShape otherNode(ShowlNodeShape n) {
 		return
-			n==left.getDeclaringShape() ? right.getDeclaringShape() :
-			n==right.getDeclaringShape() ? left.getDeclaringShape() :
+			left!=null && n==left.getDeclaringShape() ? right.getDeclaringShape() :
+			right!=null && n==right.getDeclaringShape() ? left.getDeclaringShape() :
 			null;
 	}
 
@@ -79,6 +84,22 @@ public class ShowlJoinCondition {
 			p==left ? right :
 			p==right ? left : null;
 	}
+	
+	/**
+	 * Get the node that is the focus of this join (i.e. the new node being added to the select statement).
+	 */
+	public ShowlNodeShape focusNode() {
+		return right.getDeclaringShape();
+	}
+
+
+	/**
+	 * Get an alias for the the focus node as assigned by the given namer.
+	 */
+	public String focusAlias(NodeNamer namer) {
+		return namer.varname(focusNode());
+	}
+	
 	
 	
 }

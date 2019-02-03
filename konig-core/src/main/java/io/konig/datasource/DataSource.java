@@ -1,5 +1,6 @@
 package io.konig.datasource;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -123,7 +124,7 @@ public class DataSource {
 	
 	@RdfProperty(Schema.IS_PART_OF)
 	public List<URI> getIsPartOf() {
-		return isPartOf;
+		return isPartOf==null ? Collections.emptyList() : isPartOf;
 	}
 
 	public void setIsPartof(List<URI> isPartOf) {
