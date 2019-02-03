@@ -140,6 +140,16 @@ public class Konig {
 	public static final URI sourceShape = new URIImpl("http://www.konig.io/ns/core/sourceShape");
 	public static final URI updateWhen = new URIImpl("http://www.konig.io/ns/core/updateWhen");
 	
+	/**
+	 * The triple (subject consumesDataFrom object) implies:
+	 * <ul>
+	 *   <li> subject is a System
+	 *   <li> object is a System
+	 *   <li> ETL processes that extract from object and load into subject are permitted. 
+	 * </ul>
+	 */
+	public static final URI consumesDataFrom = new URIImpl("http://www.konig.io/ns/core/consumesDataFrom");
+	
 	// Fact Modeling
 
 	public static final URI measure = new URIImpl(MEASURE);

@@ -79,7 +79,7 @@ import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.InsertStatement;
-import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.DeprecatedJoinExpression;
 import io.konig.sql.query.NullValueExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
@@ -742,8 +742,8 @@ public class SqlFactory {
 		 */
 		private TableItemExpression simpleTableItem(DataChannel channel) throws TransformBuildException {
 			TableItemExpression e = toTableItemExpression(channel);
-			if (e instanceof JoinExpression) {
-				JoinExpression join = (JoinExpression) e;
+			if (e instanceof DeprecatedJoinExpression) {
+				DeprecatedJoinExpression join = (DeprecatedJoinExpression) e;
 				e = join.getRightTable();
 			}
 			return e;
@@ -784,7 +784,7 @@ public class SqlFactory {
 				TableItemExpression left = tableItem;
 				TableItemExpression right = tableItemExpression(select, joinRule.getRight(),shapeRule);
 				OnExpression condition = onExpression(joinRule.getCondition());
-				tableItem = new JoinExpression(left, right, condition);
+				tableItem = new DeprecatedJoinExpression(left, right, condition);
 			}
 
 			return tableItem;
@@ -1007,7 +1007,7 @@ public class SqlFactory {
 					TableItemExpression left = simpleTableItem(join.getLeft());
 					TableItemExpression right = tableItem;
 					OnExpression joinSpecification = onExpression(left, right, join);
-					tableItem = new JoinExpression(left, right, joinSpecification);
+					tableItem = new DeprecatedJoinExpression(left, right, joinSpecification);
 				}
 
 				tableItemMap.put(channel.getName(), tableItem);

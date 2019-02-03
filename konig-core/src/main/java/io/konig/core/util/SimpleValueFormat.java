@@ -128,6 +128,16 @@ public class SimpleValueFormat implements ValueFormat {
 		public String getText() {
 			return text;
 		}
+		
+		@Override
+		public boolean equals(Object other) {
+			if (other.getClass() == getClass()) {
+				Element e = (Element) other;
+				return text.equals(e.getText());
+			}
+			
+			return false;
+		}
 	}
 	
 	static class Variable extends Element {

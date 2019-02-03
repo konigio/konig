@@ -1,8 +1,8 @@
-package io.konig.transform.showl.sql;
+package io.konig.core.showl;
 
 /*
  * #%L
- * Konig Transform
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -21,12 +21,16 @@ package io.konig.transform.showl.sql;
  */
 
 
-@SuppressWarnings("serial")
-public class ShowlSqlTransformException extends Exception {
+/**
+ * A condition that describes the join between two source shapes.
+ * @author Greg McFall
+ *
+ */
+public class ShowlSourceToSourceJoinCondition extends ShowlDerivedJoinCondition {
 
-	public ShowlSqlTransformException(String msg) {
-		super(msg);
+	public ShowlSourceToSourceJoinCondition(ShowlJoinCondition derivedFrom, ShowlPropertyShape left, ShowlPropertyShape right,
+			ShowlJoinCondition previous) {
+		super(derivedFrom, left, right, previous);
 	}
-	
 
 }

@@ -1,8 +1,8 @@
-package io.konig.transform.showl.sql;
+package io.konig.shacl.filters;
 
 /*
  * #%L
- * Konig Transform
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -21,12 +21,29 @@ package io.konig.transform.showl.sql;
  */
 
 
-@SuppressWarnings("serial")
-public class ShowlSqlTransformException extends Exception {
+import org.openrdf.model.URI;
 
-	public ShowlSqlTransformException(String msg) {
-		super(msg);
+import io.konig.datasource.DataSource;
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeFilter;
+
+public class DatasourceIsPartOfFilter implements ShapeFilter {
+	private URI parentId;
+
+	public DatasourceIsPartOfFilter(URI parentId) {
+		this.parentId = parentId;
 	}
-	
+
+	@Override
+	public boolean accept(Shape shape) {
+		for (DataSource ds : shape.getShapeDataSource()) {
+			for (URI p : ds.getIsPartOf()) {
+				if (parentId.equals(p)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 }

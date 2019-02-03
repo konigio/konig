@@ -52,7 +52,7 @@ import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.GroupByClause;
 import io.konig.sql.query.GroupingElement;
 import io.konig.sql.query.InsertStatement;
-import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.DeprecatedJoinExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.Result;
@@ -455,8 +455,8 @@ GROUP BY e.id, timeInterval.intervalStart
 		assertEquals(1, fList.size());
 		
 		TableItemExpression t = fList.get(0);
-		assertTrue(t instanceof JoinExpression);
-		JoinExpression j = (JoinExpression) t;
+		assertTrue(t instanceof DeprecatedJoinExpression);
+		DeprecatedJoinExpression j = (DeprecatedJoinExpression) t;
 		
 		t = j.getLeftTable();
 		assertTrue(t instanceof TableAliasExpression);
@@ -535,8 +535,8 @@ GROUP BY e.id, timeInterval.intervalStart
 	private TableItemExpression assertUnnest(Set<String> aliasSet, TableItemExpression e) {
 	
 		TableItemExpression right = null;
-		if (e instanceof JoinExpression) {
-			JoinExpression j = (JoinExpression) e;
+		if (e instanceof DeprecatedJoinExpression) {
+			DeprecatedJoinExpression j = (DeprecatedJoinExpression) e;
 			e = j.getLeftTable();
 			right = j.getRightTable();
 			
@@ -754,9 +754,9 @@ GROUP BY city.id, DATE_TRUNC(timeInterval.intervalStart, Month)
 		assertEquals(1, tableItems.size());
 		
 		TableItemExpression tableItem = tableItems.get(0);
-		assertTrue(tableItem instanceof JoinExpression);
+		assertTrue(tableItem instanceof DeprecatedJoinExpression);
 		
-		JoinExpression join = (JoinExpression) tableItem;
+		DeprecatedJoinExpression join = (DeprecatedJoinExpression) tableItem;
 		
 		TableItemExpression leftTable = join.getLeftTable();
 		
@@ -915,9 +915,9 @@ GROUP BY actor, object
 		assertEquals(1, from.getTableItems().size());
 		TableItemExpression tableItem = from.getTableItems().get(0);
 		
-		assertTrue(tableItem instanceof JoinExpression);
+		assertTrue(tableItem instanceof DeprecatedJoinExpression);
 		
-		JoinExpression join = (JoinExpression) tableItem;
+		DeprecatedJoinExpression join = (DeprecatedJoinExpression) tableItem;
 		
 		assertTrue(join.getLeftTable() instanceof TableAliasExpression);
 		TableAliasExpression left = (TableAliasExpression)join.getLeftTable();
@@ -1106,9 +1106,9 @@ FROM
 		List<TableItemExpression> tableItems = from.getTableItems();
 		assertEquals(1, tableItems.size());
 		TableItemExpression tableItem = tableItems.get(0);
-		assertTrue(tableItem instanceof JoinExpression);
+		assertTrue(tableItem instanceof DeprecatedJoinExpression);
 		
-		JoinExpression join = (JoinExpression) tableItem;
+		DeprecatedJoinExpression join = (DeprecatedJoinExpression) tableItem;
 		OnExpression on = join.getJoinSpecification();
 		SearchCondition search = on.getSearchCondition();
 		assertTrue(search instanceof ComparisonPredicate);
@@ -1258,9 +1258,9 @@ FROM
 		
 		TableItemExpression item = itemList.get(0);
 		
-		assertTrue(item instanceof JoinExpression);
+		assertTrue(item instanceof DeprecatedJoinExpression);
 		
-		JoinExpression join = (JoinExpression) item;
+		DeprecatedJoinExpression join = (DeprecatedJoinExpression) item;
 		assertTrue(join.getLeftTable() instanceof TableAliasExpression);
 		TableAliasExpression leftAlias = (TableAliasExpression) join.getLeftTable();
 		assertEquals("schema.OriginPersonShape", leftAlias.getTableName().toString());
@@ -1373,9 +1373,9 @@ FROM
 		assertEquals(1, tableItems.size());
 		
 		TableItemExpression tableItem = tableItems.get(0);
-		assertTrue(tableItem instanceof JoinExpression);
+		assertTrue(tableItem instanceof DeprecatedJoinExpression);
 		
-		JoinExpression join = (JoinExpression) tableItem;
+		DeprecatedJoinExpression join = (DeprecatedJoinExpression) tableItem;
 		
 		TableItemExpression leftTable = join.getLeftTable();
 		

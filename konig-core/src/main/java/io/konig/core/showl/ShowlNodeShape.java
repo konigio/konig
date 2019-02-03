@@ -45,18 +45,30 @@ public class ShowlNodeShape implements Traversable {
 	private Shape shape; 
 	
 	private Map<URI,ShowlDirectPropertyShape> properties = new HashMap<>();
-	private Map<URI, ShowlDerivedPropertyShape> derivedProperties = new HashMap<>();
+	private Map<URI, ShowlDerivedPropertyShape> derivedProperties = null;
 	private Map<URI,ShowlInwardPropertyShape> inProperties = null;
 	
 	private List<ShowlJoinCondition> selectedJoins;
 	
+	
 	public ShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
+		derivedProperties = new HashMap<>();
 		this.accessor = accessor;
 		this.shape = shape;
 		setOwlClass(owlClass);
 		if (accessor != null) {
 			accessor.setValueShape(this);
 		}
+	}
+	
+	/**
+	 * Create a copy of this node that contains only the (outbound) direct properties.
+	 * @param accessor The accessor for the
+	 * @return A copy of this node with a private instance of all the Shapes listed in the selected joins.
+	 */
+	public ShowlNodeShape finalizeMapping(ShowlPropertyShape accessor) {
+		
+		return null;
 	}
 	
 	public void addInwardProperty(ShowlInwardPropertyShape p) {

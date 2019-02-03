@@ -1,8 +1,8 @@
-package io.konig.transform.showl.sql;
+package io.konig.core.showl;
 
 /*
  * #%L
- * Konig Transform
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -21,12 +21,19 @@ package io.konig.transform.showl.sql;
  */
 
 
-@SuppressWarnings("serial")
-public class ShowlSqlTransformException extends Exception {
+public class ShowlDerivedJoinCondition extends ShowlJoinCondition {
 
-	public ShowlSqlTransformException(String msg) {
-		super(msg);
+	private ShowlJoinCondition derivedFrom;
+	
+	public ShowlDerivedJoinCondition(ShowlJoinCondition derivedFrom, ShowlPropertyShape left, ShowlPropertyShape right, ShowlJoinCondition previous) {
+		super(left, right, previous);
+		this.derivedFrom = derivedFrom;
 	}
+
+	public ShowlJoinCondition getDerivedFrom() {
+		return derivedFrom;
+	}
+	
 	
 
 }

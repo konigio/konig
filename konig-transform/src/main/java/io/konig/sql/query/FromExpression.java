@@ -53,11 +53,8 @@ public class FromExpression extends AbstractExpression implements QueryExpressio
 	public void print(PrettyPrintWriter out) {
 	
 		out.print("FROM ");
-		String comma = "";
 		for (TableItemExpression item : tableItems) {
-			out.print(comma);
 			item.print(out);
-			comma = ", ";
 		}
 		
 	}

@@ -24,7 +24,6 @@ package io.konig.shacl.graph;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -45,13 +44,16 @@ import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.ShapeBuilder;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.impl.MemoryShapeManager;
 
 public class ShowlManagerTest {
 	
 	private Graph graph = new MemoryGraph(MemoryNamespaceManager.getDefaultInstance());
 	private OwlReasoner reasoner = new OwlReasoner(graph);
-	private ShapeBuilder shapeBuilder = new ShapeBuilder();
-	private ShowlManager showlManager = new ShowlManager();
+	private ShapeManager shapeManager = new MemoryShapeManager();
+	private ShapeBuilder shapeBuilder = new ShapeBuilder(shapeManager);
+	private ShowlManager showlManager = new ShowlManager(shapeManager, reasoner);
 	
 	@Test
 	public void testFlatten() {
@@ -328,7 +330,7 @@ public class ShowlManagerTest {
 
 	private void load() {
 
-		showlManager.load(shapeBuilder.getShapeManager(), reasoner);
+		showlManager.load();
 		
 	}
 
@@ -360,7 +362,7 @@ public class ShowlManagerTest {
 				.endDataSource()
 			.endShape();
 		
-		showlManager.load(shapeBuilder.getShapeManager(), reasoner);
+		showlManager.load();
 		
 		ShowlNodeShape sourceNode = showlManager.getNodeShape(sourceShapeId).findAny();
 		

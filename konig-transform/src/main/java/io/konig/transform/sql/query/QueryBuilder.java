@@ -56,7 +56,7 @@ import io.konig.sql.query.ExistsExpression;
 import io.konig.sql.query.FromExpression;
 import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.InsertStatement;
-import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.DeprecatedJoinExpression;
 import io.konig.sql.query.NotExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
@@ -590,7 +590,7 @@ public class QueryBuilder {
 						rightValue
 					)
 				);
-				left = new JoinExpression(left, rightItem, on);
+				left = new DeprecatedJoinExpression(left, rightItem, on);
 				
 			}
 			

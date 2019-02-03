@@ -104,8 +104,8 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
 			shapeLoader.load(graph);
 			URI ontologyId = ontology==null ? null : new URIImpl(ontology);
-			ShowlManager showlManager = new ShowlManager();
-			showlManager.load(shapeManager, new OwlReasoner(graph));
+			ShowlManager showlManager = new ShowlManager(shapeManager, new OwlReasoner(graph));
+			showlManager.load();
 			
 			DataCatalogBuildRequest request = new DataCatalogBuildRequest();
 		

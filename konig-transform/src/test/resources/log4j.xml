@@ -30,29 +30,20 @@
   </appender> 
   
 <!-- 
-  <logger name="io.konig.transform.proto.VariableShapeFactory" additivity="false">
-      <level value="debug"/>
-      <appender-ref ref="console"/>
-  </logger>  
+
   
-  <logger name="io.konig.transform.proto.ShapeModelToShapeRule" additivity="false">
-      <level value="debug"/>
+  <logger name="io.konig.transform" additivity="false">
+      <level value="trace"/>
       <appender-ref ref="console"/>
   </logger>
   
-  <logger name="io.konig.transform.sql.factory.SqlFactory" additivity="false">
-      <level value="debug"/>
+  <logger name="io.konig.core.showl.NodeNamer" additivity="false">
+      <level value="trace"/>
       <appender-ref ref="console"/>
   </logger>
   
-  
-  <logger name="io.konig.transform.proto.ShapeModelFactory" additivity="false">
-      <level value="debug"/>
-      <appender-ref ref="console"/>
-  </logger>
-  
-  <logger name="io.konig.transform.proto.SimplePropertyMapper" additivity="false">
-      <level value="debug"/>
+  <logger name="io.konig.core.showl.ShowlMapping" additivity="false">
+      <level value="trace"/>
       <appender-ref ref="console"/>
   </logger>
 -->
@@ -60,7 +51,7 @@
   
   
   <root> 
-    <priority value ="off" /> 
+    <priority value ="info" /> 
     <appender-ref ref="console" /> 
   </root>
   

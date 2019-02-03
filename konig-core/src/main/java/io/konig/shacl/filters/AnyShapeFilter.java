@@ -1,8 +1,8 @@
-package io.konig.transform.showl.sql;
+package io.konig.shacl.filters;
 
 /*
  * #%L
- * Konig Transform
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -21,12 +21,21 @@ package io.konig.transform.showl.sql;
  */
 
 
-@SuppressWarnings("serial")
-public class ShowlSqlTransformException extends Exception {
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeFilter;
 
-	public ShowlSqlTransformException(String msg) {
-		super(msg);
-	}
+/**
+ * A filter that accepts all shapes
+ * @author Greg McFall
+ *
+ */
+public class AnyShapeFilter implements ShapeFilter {
 	
+	public static final AnyShapeFilter INSTANCE = new AnyShapeFilter();
+
+	@Override
+	public boolean accept(Shape shape) {
+		return true;
+	}
 
 }
