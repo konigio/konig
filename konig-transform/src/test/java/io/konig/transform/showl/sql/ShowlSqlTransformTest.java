@@ -100,7 +100,7 @@ public class ShowlSqlTransformTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testTabularJoin() throws Exception {
 		
 		InsertStatement insert = insert(
