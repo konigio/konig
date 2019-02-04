@@ -319,6 +319,7 @@ public class WorkbookLoader {
 	private static final int SHEET_TRIPLES=COL_PREDICATE;
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
+	private static final String KONIG_ID = "<" + Konig.ID + ">";
 
 	private static final String[] CELL_TYPE = new String[6];
 	static {
@@ -967,6 +968,22 @@ public class WorkbookLoader {
 			Shape shape = shapeManager.getShapeById(s.shapeId);
 			if (shape == null) {
 				throw new SpreadsheetException("Shape not found: " + s.shapeId);
+			}
+			
+			IriTemplate prior = shape.getIriTemplate();
+			if (prior != null) {
+				String priorText = prior.getText();
+				String newText = s.getTemplateText();
+				if (newText.equals(priorText)) {
+					return;
+				}
+				String msg = MessageFormat.format(
+					"Conflicting IRI templates:\n" +
+					"   On Shape: {0}\n" +
+					"   Old IRI template: {1}\n" +
+					"   New IRI template: {2}", 
+					RdfUtil.compactId(shape.getId(), nsManager), priorText, newText);
+				throw new SpreadsheetException(msg);
 			}
 
 			IriTemplate template = s.createTemplate(shape, nsManager);
@@ -4392,6 +4409,10 @@ public class WorkbookLoader {
 			this.shapeId = shapeId;
 			this.templateText = iriTemplate;
 		}
+		
+		public String getTemplateText() {
+			return templateText;
+		}
 
 		public IriTemplate createTemplate(Shape shape, NamespaceManager nsManager) throws SpreadsheetException {
 			SimpleValueFormat format = new SimpleValueFormat(templateText);
@@ -4603,6 +4624,45 @@ public class WorkbookLoader {
 
 
 		public void execute() throws KonigException {
+			
+			if ("$.id".equals(formula) || "$.konig:id".equals(formula) || KONIG_ID.equals(formula)) {
+				// Special handling for a property that maps to $.id
+				
+				String templateText = "{" + property.getPredicate().getLocalName() + "}";
+				IriTemplate template = shape.getIriTemplate();
+				if (template != null) {
+					if (!templateText.equals(template.toString())) {
+						
+						String msg = MessageFormat.format(
+							"Failed to parse formula...\n" +
+							"   Shape: <{0}>\n" +
+							"   Property: {1}\n" +
+						    "   Formula: {2}\n" +
+							"   Cause: Cannot set IRI template to {3} because it is currently set as {4}", 
+							shape.getId(), property.getPath(), formula, templateText, template.toString());
+						
+						throw new KonigException(msg);
+					}
+					return;
+				}
+				ShapeTemplate shapeTemplate = new ShapeTemplate((URI)shape.getId(), templateText);
+				try {
+					shape.setIriTemplate(shapeTemplate.createTemplate(shape, nsManager));
+				} catch (SpreadsheetException e) {
+
+					String msg = MessageFormat.format(
+						"Failed to parse formula...\n" +
+						"   Shape: <{0}>\n" +
+						"   Property: {1}\n" +
+					    "   Formula: {2}\n" +
+						"   Cause: {3}", 
+						shape.getId(), property.getPath(), formula, e.getMessage());
+					
+					throw new KonigException(msg, e);
+				}
+				return;
+			}
+			
 			propertyOracle.setShape(shape);
 			NamespaceMap nsMap = new NamespaceMapAdapter(getNamespaceManager());
 			FormulaParser parser = new FormulaParser(propertyOracle, localNameService, nsMap);
