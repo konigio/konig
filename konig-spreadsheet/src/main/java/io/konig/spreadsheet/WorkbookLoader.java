@@ -4613,7 +4613,7 @@ public class WorkbookLoader {
 				expression = parser.quantifiedExpression(formula);
 			} catch (Throwable oops) {
 				String message = "Failed to parse formula...\n" + "   Shape: <" + shapeId + ">\n" + "   Property: "
-						+ property.getPath() + "\n" + "   Formula: " + formula;
+						+ property.getPath() + "\n" + "   Formula: " + formula + "\n   Cause: " + oops.getMessage();
 				throw new KonigException(message, oops);
 			}
 
