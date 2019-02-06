@@ -96,6 +96,7 @@ public class Shape implements Cloneable {
 	private URI usesAbbreviationScheme;
 	private List<ShapeMaxRowLength> shapeMaxRowLengthList;
 	private Set<URI> shapeProcessing;
+	private Set<Shape> explicitDerivedFrom;
 	 
 	 public List<URI> getInputShapeOf() {
 	 	return inputShapeOf;
@@ -799,6 +800,18 @@ public class Shape implements Cloneable {
 		}
 	}
 	
+	public void addExplicitDerivedFrom(Shape sourceShape) {
+		if (explicitDerivedFrom == null) {
+			explicitDerivedFrom = new HashSet<>();
+		}
+		explicitDerivedFrom.add(sourceShape);
+	}
+
+	@RdfProperty(Konig.EXPLICIT_DERIVED_FROM)
+	public Set<Shape> getExplicitDerivedFrom() {
+		return explicitDerivedFrom==null ? Collections.emptySet() : explicitDerivedFrom;
+	}
+
 	
 	
 }

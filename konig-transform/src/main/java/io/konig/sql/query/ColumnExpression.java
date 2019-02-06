@@ -41,6 +41,10 @@ implements ItemExpression, PathExpression, NumericValueExpression, GroupingEleme
 	public String getColumnName() {
 		return columnName;
 	}
+	
+	public void setColumnName(String name) {
+		columnName = name;
+	}
 
 	@Override
 	protected void dispatchProperties(QueryExpressionVisitor visitor) {

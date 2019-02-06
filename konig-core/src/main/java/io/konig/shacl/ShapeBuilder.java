@@ -76,6 +76,14 @@ public class ShapeBuilder {
 		return this;
 	}
 	
+	public ShapeBuilder derivedFrom(URI...shapeId) {
+		for (URI sId : shapeId) {
+			Shape s = produceShape(sId);
+			peekShape().addExplicitDerivedFrom(s);
+		}
+		return this;
+	}
+	
 	public PropertyBuilder endValueShape() {
 		return propertyBuilder;
 	}
@@ -221,15 +229,21 @@ public class ShapeBuilder {
 	}
 	
 	public ShapeBuilder beginShape(URI shapeId) {
+		Shape shape = produceShape(shapeId);
+		stack.add(shape);
+		return this;
+	}
+	
+	private Shape produceShape(URI shapeId) {
+
 		Shape shape = shapeManager.getShapeById(shapeId);
 		if (shape == null) {
 			shape = new Shape(shapeId);
 			shapeManager.addShape(shape);
 		}
-		stack.add(shape);
-		return this;
+		return shape;
 	}
-	
+
 	public ShapeBuilder wasGeneratedBy(Activity activity) {
 	
 		Shape shape = peekShape();

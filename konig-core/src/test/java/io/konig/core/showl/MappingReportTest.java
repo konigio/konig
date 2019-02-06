@@ -58,6 +58,7 @@ public class MappingReportTest {
 		report.write(writer, showlManager, nsManager);
 		
 		String text = writer.toString();
+		System.out.println(text);
 		
 		assertText("src/test/resources/MappingReportTest/direct/expected.txt", text);
 		

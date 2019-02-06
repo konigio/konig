@@ -50,6 +50,24 @@ public class ShowlJoinCondition {
 		}
 		
 	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("ShowlJoinCondition(");
+		String comma = "";
+		if (left != null) {
+			builder.append("left: ");
+			builder.append(left.toString());
+			comma = ", ";
+		}
+		if (right != null) {
+			builder.append(comma);
+			builder.append("right: ");
+			builder.append(right.toString());
+		}
+		builder.append(")");
+		return builder.toString();
+	}
 
 	
 	public ShowlPropertyShape getLeft() {

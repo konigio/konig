@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -49,32 +51,48 @@ import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
-import io.konig.shacl.ShapeFilter;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.filters.AnyShapeFilter;
 
 public class ShowlManager {
 	private static final Logger logger = LoggerFactory.getLogger(ShowlManager.class);
-	private Map<Resource,ShowlNodeShapeSet> nodeShapes = new HashMap<>();
-	private Map<URI,ShowlClass> owlClasses = new HashMap<>();
-	private Map<URI, ShowlProperty> properties = new HashMap<>();
+	private Map<Resource,ShowlNodeShapeSet> nodeShapes = new LinkedHashMap<>();
+	private Map<URI,ShowlClass> owlClasses = new LinkedHashMap<>();
+	private Map<URI, ShowlProperty> properties = new LinkedHashMap<>();
 	private ShowlNodeShapeSet emptySet = null;
 	private OwlReasoner reasoner;
+	private ShowlNodeShapeConsumer consumer;
 	
 
 	private ShapeManager shapeManager;
 	private List<ShowlNodeShape> classlessShapes;
 
 	private Set<NodeMapping> nodeMappings = null;
+	private ShowlSourceNodeSelector sourceNodeSelector;
 	
 	
 	public ShowlManager(ShapeManager shapeManager, OwlReasoner reasoner) {
-		this.shapeManager = shapeManager;
-		this.reasoner = reasoner;
+		this(shapeManager, reasoner, new ShowlRootTargetClassSelector(), null);
 	}
 	
-	public void load() {
-		load(AnyShapeFilter.INSTANCE);
+	public ShowlManager(
+		ShapeManager shapeManager, 
+		OwlReasoner reasoner, 
+		ShowlSourceNodeSelector sourceNodeSelector,
+		ShowlNodeShapeConsumer consumer
+	) {
+		this.shapeManager = shapeManager;
+		this.reasoner = reasoner;
+		this.sourceNodeSelector = sourceNodeSelector;
+		this.consumer = consumer;
+	}
+	
+	public void load() throws ShowlProcessingException {
+
+		clear();
+		loadShapes();
+		inferTargetClasses();
+		inferInverses();
+		buildJoinConditions();
 	}
 	
 	public Set<Resource> listNodeShapeIds() {
@@ -131,15 +149,7 @@ public class ShowlManager {
 		classlessShapes = null;
 	}
 
-
-	public void load(ShapeFilter filter) {
-
-		clear();
-		loadShapes(filter);
-		inferTargetClasses();
-		inferInverses();
-		buildJoinConditions();
-	}
+	
 
 	private void inferInverses() {
 		List<ShowlProperty> list = new ArrayList<>(getProperties());
@@ -169,12 +179,12 @@ public class ShowlManager {
 		
 	}
 
-	private void buildJoinConditions() {
-		nodeMappings = new HashSet<>();
+	private void buildJoinConditions() throws ShowlProcessingException {
+		nodeMappings = new LinkedHashSet<>();
 		for (Shape shape : shapeManager.listShapes()) {
 			if (!shape.getShapeDataSource().isEmpty()) {
 				for (ShowlNodeShape node : getNodeShape(shape.getId())) {
-					buildJoinConditions(node, MappingRole.TARGET, null);
+					buildJoinConditions(node, MappingRole.TARGET, null, consumer);
 				}
 			}
 			
@@ -182,42 +192,68 @@ public class ShowlManager {
 		nodeMappings = null;
 		
 	}
+
+	private void buildJoinConditions(ShowlNodeShape nodeA, MappingRole role, ShowlJoinCondition joinCondition) throws ShowlProcessingException {
+		buildJoinConditions(nodeA, role, joinCondition, null);
+	}
 	
-	private void buildJoinConditions(ShowlNodeShape nodeA, MappingRole role, ShowlJoinCondition joinCondition) {
-		
-		if (nodeA.isNamedRoot()) {
-			ShowlClass owlClass = nodeA.getOwlClass();
-			if (!isUndefinedClass(owlClass)) {
-				for (ShowlNodeShape nodeB : owlClass.getTargetClassOf()) {
-					if (nodeB == nodeA) {
-						continue;
-					}
-					if (nodeB.isNamedRoot()) {
-						// TODO: consider shapes that are not named roots
-						
-						ShowlNodeShape sourceNode = null;
-						ShowlNodeShape targetNode = null;
-						switch (role) {
-						case SOURCE:
-							sourceNode = nodeA;
-							targetNode = nodeB;
-							break;
-							
-						case TARGET:
-							sourceNode = nodeB;
-							targetNode = nodeA;
-						}
-						
+	private void buildJoinConditions(ShowlNodeShape nodeA, MappingRole role, ShowlJoinCondition joinCondition, ShowlNodeShapeConsumer consumer) throws ShowlProcessingException {
+		if (nodeA.isNamedRoot() && !isUndefinedClass(nodeA.getOwlClass())) {
+			Set<Shape> candidates = sourceNodeSelector.selectCandidateSources(nodeA);
+			if (candidates.isEmpty() && role==MappingRole.TARGET) {
+				nodeA.setUnmapped(true);
+			}
+			for (Shape shapeB : candidates) {
+				for (ShowlNodeShape nodeB : getNodeShape(shapeB.getId())) {
+					// For now we consider only root shapes.
+					// TODO: Consider nested shapes.
+					if (nodeB.getAccessor()==null) {
+						ShowlNodeShape targetNode = role==MappingRole.TARGET ? nodeA : nodeB;
+						ShowlNodeShape sourceNode = role==MappingRole.TARGET ? nodeB : nodeA;
 						doJoin(targetNode, sourceNode, joinCondition);
-						
 					}
 				}
-				joinObjectProperties(nodeA, joinCondition);
+			}
+			joinObjectProperties(nodeA, joinCondition);
+			if (consumer != null) {
+				consumer.consume(nodeA);
 			}
 		}
+		
+		
+//		if (nodeA.isNamedRoot()) {
+//			ShowlClass owlClass = nodeA.getOwlClass();
+//			if (!isUndefinedClass(owlClass)) {
+//				for (ShowlNodeShape nodeB : owlClass.getTargetClassOf()) {
+//					if (nodeB == nodeA) {
+//						continue;
+//					}
+//					if (nodeB.isNamedRoot()) {
+//						// TODO: consider shapes that are not named roots
+//						
+//						ShowlNodeShape sourceNode = null;
+//						ShowlNodeShape targetNode = null;
+//						switch (role) {
+//						case SOURCE:
+//							sourceNode = nodeA;
+//							targetNode = nodeB;
+//							break;
+//							
+//						case TARGET:
+//							sourceNode = nodeB;
+//							targetNode = nodeA;
+//						}
+//						
+//						doJoin(targetNode, sourceNode, joinCondition);
+//						
+//					}
+//				}
+//				joinObjectProperties(nodeA, joinCondition);
+//			}
+//		}
 	}
 
-	private void joinObjectProperties(ShowlNodeShape leftNode, ShowlJoinCondition joinCondition) {
+	private void joinObjectProperties(ShowlNodeShape leftNode, ShowlJoinCondition joinCondition) throws ShowlProcessingException {
 		joinOutwardObjectPropeties(leftNode, joinCondition);
 		joinInwardObjectProperties(leftNode, joinCondition);
 		
@@ -272,14 +308,14 @@ public class ShowlManager {
 		doBuildMappings(leftProperty.getValueShape(), rightJoinProperty.getDeclaringShape(), newJoin);
 	}
 
-	private void joinOutwardObjectPropeties(ShowlNodeShape leftNode, ShowlJoinCondition joinCondition) {
+	private void joinOutwardObjectPropeties(ShowlNodeShape leftNode, ShowlJoinCondition joinCondition) throws ShowlProcessingException {
 		joinOutwardObjectProperties(leftNode.getProperties(), joinCondition);
 		joinOutwardObjectProperties(leftNode.getDerivedProperties(), joinCondition);
 		
 	}
 
 	private void joinOutwardObjectProperties(Collection<? extends ShowlPropertyShape> properties,
-			ShowlJoinCondition joinCondition) {
+			ShowlJoinCondition joinCondition) throws ShowlProcessingException {
 		
 		for (ShowlPropertyShape sourceProperty : properties) {
 			ShowlNodeShape sourceNode = sourceProperty.getValueShape();
@@ -435,7 +471,7 @@ public class ShowlManager {
 
 	private boolean isUndefinedClass(ShowlClass owlClass) {
 		
-		return owlClass == null || Konig.Undefined.equals(owlClass.getId());
+		return ShowlUtil.isUndefinedClass(owlClass);
 	}
 
 	private void buildMapping(
@@ -505,7 +541,7 @@ public class ShowlManager {
 
 	private void inferTargetClass(ShowlNodeShape node) {
 		
-		Set<URI> candidates = new HashSet<>();
+		Set<URI> candidates = new LinkedHashSet<>();
 		
 		Set<ShowlPropertyShape> allProperties = node.allOutwardProperties();
 		for (ShowlPropertyShape p : allProperties) {
@@ -577,19 +613,17 @@ public class ShowlManager {
 
 
 
-	private void loadShapes(ShapeFilter filter) {
+	private void loadShapes() {
 		classlessShapes = new ArrayList<>();
 		Set<Shape> rootShapes = rootShapes(shapeManager);
 		for (Shape shape : rootShapes) {
-			if (filter.accept(shape)) {
-				createNodeShape(null, shape);
-			}
+			createNodeShape(null, shape);
 		}
 	}
 	
 	private Set<Shape> rootShapes(ShapeManager shapeManager) {
-		Set<Shape> result = new HashSet<>();
-		Map<Shape,Boolean> hasReference = new HashMap<>();
+		Set<Shape> result = new LinkedHashSet<>();
+		Map<Shape,Boolean> hasReference = new LinkedHashMap<>();
 		List<Shape> shapeList = shapeManager.listShapes();
 		for (Shape shape : shapeList) {
 			putReferences(shape.getProperty(), hasReference);

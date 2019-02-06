@@ -48,6 +48,9 @@ public class TableAliasExpression extends AbstractExpression implements TableIte
 		return alias;
 	}
 
+	public void setAlias(String alias) {
+		this.alias = alias;
+	}
 
 
 	public TableItemExpression getTableName() {

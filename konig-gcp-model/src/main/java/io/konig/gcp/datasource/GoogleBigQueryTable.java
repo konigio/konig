@@ -27,7 +27,6 @@ import java.util.Set;
 import org.openrdf.model.URI;
 
 import com.google.api.services.bigquery.model.ExternalDataConfiguration;
-import com.google.api.services.bigquery.model.TableReference;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.KonigException;
@@ -35,7 +34,6 @@ import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
-import io.konig.gcp.datasource.GoogleCloudSqlTable.Builder;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 

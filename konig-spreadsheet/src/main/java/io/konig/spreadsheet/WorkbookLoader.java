@@ -167,6 +167,7 @@ public class WorkbookLoader {
 
 	private static final String SHAPE_ID = "Shape Id";
 	private static final String TARGET_CLASS = "Target Class";
+	private static final String DERIVED_FROM = "Derived From";
 	private static final String SCOPE_CLASS = "Scope Class";
 	private static final String MEDIA_TYPE = "Media Type";
     private static final String SHAPE_TYPE = "Shape Type";
@@ -523,6 +524,7 @@ public class WorkbookLoader {
 		private int shapeIdCol = UNDEFINED;
 		private int shapeCommentCol = UNDEFINED;
 		private int shapeTargetClassCol = UNDEFINED;
+		private int shapeDerivedFromCol = UNDEFINED;
 		private int shapeAggregationOfCol = UNDEFINED;
 		private int shapeRollUpByCol = UNDEFINED;
 		private int shapeMediaTypeCol = UNDEFINED;
@@ -3112,6 +3114,7 @@ public class WorkbookLoader {
 			URI rollUpBy = uriValue(row, shapeRollUpByCol);
             List<URI> shapeType=uriList(row, shapeTypeCol);
             URI tabularOriginShape = uriValue(row, tabularOriginShapeCol);
+            List<URI> derivedFromUriList = uriList(row, shapeDerivedFromCol);
             URI termStatus = uriValue(row, termStatusCol);
 
 			
@@ -3130,6 +3133,9 @@ public class WorkbookLoader {
 			
 			if (!shapeProcessing.isEmpty()) {
 				shape.setShapeProcessing(new LinkedHashSet<>(shapeProcessing));
+			}
+			for (URI derivedFromId : derivedFromUriList) {
+				shape.addExplicitDerivedFrom(produceShape(derivedFromId));
 			}
 			
 			edge(targetClass, RDF.TYPE, OWL.CLASS);
@@ -3351,7 +3357,7 @@ public class WorkbookLoader {
 		private void readShapeHeader(Sheet sheet) {
 			shapeIdCol = shapeCommentCol = shapeTargetClassCol = shapeAggregationOfCol = shapeRollUpByCol = 
 				shapeTypeCol = shapeMediaTypeCol = shapeBigQueryTableCol = shapeDatasourceCol = defaultShapeForCol = 
-				shapeIriTemplateCol = tabularOriginShapeCol = termStatusCol = shapeProcessingCol = 
+				shapeIriTemplateCol = tabularOriginShapeCol = termStatusCol = shapeProcessingCol = shapeDerivedFromCol =
 				oneOfCol = xoneCol = UNDEFINED;
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -3415,6 +3421,10 @@ public class WorkbookLoader {
 						break;
 					case TABULAR_ORIGIN_SHAPE:
 						tabularOriginShapeCol = i;
+						break;
+						
+					case DERIVED_FROM:
+						shapeDerivedFromCol = i;
 						break;
 						
 					case TERM_STATUS :

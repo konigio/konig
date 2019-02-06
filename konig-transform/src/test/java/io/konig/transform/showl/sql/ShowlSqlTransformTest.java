@@ -47,7 +47,6 @@ import io.konig.core.showl.ShowlNodeShape;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.filters.DatasourceIsPartOfFilter;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.InsertStatement;
@@ -55,6 +54,11 @@ import io.konig.sql.query.SelectExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.ValueExpression;
 
+/**
+ * These tests are not deterministic and may fail.  Need to rework the code to ensure deterministic behavior.
+ * @author Greg McFall
+ *
+ */
 public class ShowlSqlTransformTest {
 
 	private ShowlManager showlManager;
@@ -79,7 +83,7 @@ public class ShowlSqlTransformTest {
 	public void testTabular() throws Exception {
 		
 		InsertStatement insert = insert(
-			"src/test/resources/ShowlSqlTransformTest/tabular", 
+			"src/test/resources/ShowlSqlTransformTest/tabular-mapping", 
 			"http://example.com/ns/shape/PersonTargetShape");
 		
 		assertEquals("schema.PersonTarget", insert.getTargetTable().getTableName());
@@ -107,23 +111,31 @@ public class ShowlSqlTransformTest {
 			"src/test/resources/ShowlSqlTransformTest/tabular-join-transform", 
 			"http://example.com/ns/shape/PersonTargetShape");
 		
+//		SqlValidator validator = new SqlValidator();
+//		validator.normalize(insert.getSelectQuery());
+		
 		String text = insert.toString();
+//		System.out.println(text);
+		
 		String[] lines = text.split("\\r?\\n");
+		
+		
 		
 		assertEquals("INSERT INTO schema.PersonTarget (id, email, givenName)", lines[0]);
 		assertEquals("SELECT", lines[1]);
 		assertEquals("   CONCAT(\"http://example.com/person/\", a.person_id) AS id,", lines[2]);
-		assertEquals("   a.email_address AS email,", lines[3]);
-		assertEquals("   b.first_name AS givenName", lines[4]);
-		assertEquals("FROM schema.PersonSource2 AS a", lines[5]);
-		assertEquals("JOIN schema.PersonSource1 AS b", lines[6]);
+		assertEquals("   b.email_address AS email,", lines[3]);
+		assertEquals("   a.first_name AS givenName", lines[4]);
+		assertEquals("FROM schema.PersonSource1 AS a", lines[5]);
+		assertEquals("JOIN schema.PersonSource2 AS b", lines[6]);
 		assertEquals("   ON a.person_id=b.person_id", lines[7]);
-		
 		
 		
 	}
 
 	
+
+
 	private URI uri(String value) {
 		return new URIImpl(value);
 	}

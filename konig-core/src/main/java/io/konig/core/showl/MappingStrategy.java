@@ -23,9 +23,9 @@ package io.konig.core.showl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +60,7 @@ public class MappingStrategy {
 		if (logger.isTraceEnabled()) {
 			logger.trace("selecteMappings: target={}", target.getPath());
 		}
-		Set<ShowlJoinCondition> set = new HashSet<>();
+		Set<ShowlJoinCondition> set = new LinkedHashSet<>();
 		
 		List<ShowlDirectPropertyShape> pool = new ArrayList<>();
 		for (ShowlDirectPropertyShape direct : target.getProperties()) {
@@ -71,6 +71,7 @@ public class MappingStrategy {
 					ShowlPropertyShape other = m.findOther(direct);
 					ShowlNodeShape sourceNode = other.getDeclaringShape();
 					if (!filter.allowMapping(sourceNode, target)) {
+						logger.trace("selectMappings: filtering {}", sourceNode);
 						continue;
 					}
 				}
@@ -79,9 +80,12 @@ public class MappingStrategy {
 			}
 		}
 		
-		Map<ShowlJoinCondition, RankedJoinCondition> rankingMap = new HashMap<>();
+		Map<ShowlJoinCondition, RankedJoinCondition> rankingMap = new LinkedHashMap<>();
 		for (ShowlJoinCondition join : set) {
 			rankingMap.put(join, new RankedJoinCondition((ShowlTargetToSourceJoinCondition)join));
+			if (logger.isTraceEnabled()) {
+				logger.trace("selectMappings: rankingMap put {}", join);
+			}
 		}
 		
 		while (!pool.isEmpty()) {
@@ -239,6 +243,10 @@ public class MappingStrategy {
 		
 		public void invalidate() {
 			ranking = -1;
+		}
+		
+		public String toString() {
+			return "RankedJoinCondition(ranking: " + ranking + ", join: " + join.toString()+")";
 		}
 		
 		
