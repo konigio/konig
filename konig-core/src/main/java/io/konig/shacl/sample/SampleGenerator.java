@@ -52,6 +52,7 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.impl.ShapeIdGenerator;
 import io.konig.core.path.HasStep.PredicateValuePair;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.RandomGenerator;
@@ -375,7 +376,25 @@ public class SampleGenerator {
 					map.put(propertyName, value.stringValue());
 				}
 			}
-			URI subject = template.expand(map);
+			URI subject = null;
+			try {
+				subject = template.expand(map);
+			} catch (Throwable e) {
+				String text = template.format(map);
+				if (shape.getId() instanceof URI) {
+					String shapeId = shape.getId().stringValue();
+					if (shapeId.endsWith("#") || shapeId.endsWith("/")) {
+						shapeId = shapeId.substring(0,  shapeId.length()-1);
+					}
+					subject = new URIImpl(shapeId+"/" + text);
+				} else if (shape.getTargetClass() != null) {
+					
+					subject = new URIImpl("http://example.com/" + shape.getTargetClass().getLocalName() + random.alphanumeric(5));
+				} else {
+					subject = new URIImpl("http://example.com/resource/" + random.alphanumeric(5));
+				}
+				
+			}
 			for (PredicateValuePair pair : valueList) {
 				URI predicate = pair.getPredicate();
 				Value object = pair.getValue();

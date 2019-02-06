@@ -58,6 +58,7 @@ public class Konig {
 	public static final String DIMENSION = "http://www.konig.io/ns/core/dimension";
 	public static final String SHAPE_PROCESSING = "http://www.konig.io/ns/core/shapeProcessing";
 	public static final String EXPLICIT_DERIVED_FROM = "http://www.konig.io/ns/core/explicitDerivedFrom";
+	public static final String ID = "http://www.konig.io/ns/core/id";
 	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
@@ -81,7 +82,7 @@ public class Konig {
 	// Generic Data Modeling
 
 	public static final URI EnumNamespace = new URIImpl("http://www.konig.io/ns/core/EnumNamespace");
-	public static final URI id = new URIImpl("http://www.konig.io/ns/core/id");
+	public static final URI id = new URIImpl(ID);
 	public static final URI mediaTypeBaseName = new URIImpl("http://www.konig.io/ns/core/mediaTypeBaseName");
 	public static final URI tabularOriginShape = new URIImpl("http://www.konig.io/ns/core/tabularOriginShape");
 	public static final URI usesAbbreviationScheme = new URIImpl("http://www.konig.io/ns/core/usesAbbreviationScheme");
