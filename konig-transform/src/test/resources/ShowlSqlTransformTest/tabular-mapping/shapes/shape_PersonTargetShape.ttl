@@ -6,6 +6,7 @@
 @prefix schema: <http://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:PersonTargetShape sh:property  [ 
@@ -16,16 +17,17 @@ shape:PersonTargetShape sh:property  [
 		sh:minCount 0 ]  ; 
 	a sh:Shape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ZAP06Bs-LYwAAAFouc617A> ; 
 	sh:nodeKind sh:IRI ; 
-	sh:targetClass schema:Person ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/cacqdFS78tYAAAFoo-JfCg> . 
+	sh:targetClass schema:Person . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
-	gcp:tableReference  [ 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
 		gcp:datasetId "schema" ; 
 		gcp:tableId "PersonTarget" ]  ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:EDW . 
 
-<http://www.konig.io/activity/cacqdFS78tYAAAFoo-JfCg> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2019-01-31T07:29:08.239-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/ZAP06Bs-LYwAAAFouc617A> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2019-02-04T13:39:18.512-05:00"^^xsd:dateTime . 

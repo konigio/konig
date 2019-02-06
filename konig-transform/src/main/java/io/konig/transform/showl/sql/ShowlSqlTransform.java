@@ -24,6 +24,9 @@ package io.konig.transform.showl.sql;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.konig.core.showl.NodeNamer;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlJoinCondition;
@@ -55,11 +58,15 @@ import io.konig.sql.query.TableNameExpression;
 import io.konig.sql.query.ValueExpression;
 
 public class ShowlSqlTransform {
+	private static final Logger logger = LoggerFactory.getLogger(ShowlSqlTransform.class);
 
 	public ShowlSqlTransform() {
 	}
 	
 	public InsertStatement createInsert(ShowlNodeShape targetNode, Class<? extends TableDataSource> datasourceType) throws ShowlSqlTransformException  {
+		if (logger.isTraceEnabled()) {
+			logger.trace("createInsert({})", targetNode.getPath());
+		}
 		Worker worker = new Worker();
 		return worker.createInsert(targetNode, datasourceType);
 	}

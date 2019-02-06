@@ -39,10 +39,12 @@ import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlMapping;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlSourceNodeSelector;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.NodeKind;
+import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeBuilder;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -54,6 +56,36 @@ public class ShowlManagerTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeBuilder shapeBuilder = new ShapeBuilder(shapeManager);
 	private ShowlManager showlManager = new ShowlManager(shapeManager, reasoner);
+	
+	@Test
+	public void testCreateNode() {
+		URI personTargetShapeId = uri("http://example.com/shapes/PersonTargetShape");
+		URI personSourceShapeId = uri("http://example.com/shapes/PersonSourceShape");
+		URI firstName = uri("http:/example.com/ns/alias/first_name");
+		
+		shapeBuilder
+			.beginShape(personTargetShapeId)
+				.targetClass(Schema.Person)
+				.nodeKind(NodeKind.IRI)
+				.derivedFrom(personSourceShapeId)
+				.beginProperty(Schema.givenName)
+					.datatype(XMLSchema.STRING)
+					.maxCount(1)
+				.endProperty()
+			.endShape()
+			.beginShape(personSourceShapeId)
+				.targetClass(Schema.Person)
+				.nodeKind(NodeKind.IRI)
+				.beginProperty(firstName)
+					.datatype(XMLSchema.STRING)
+					.maxCount(1)
+				.endProperty()
+			.endShape();
+		
+		ShowlSourceNodeSelector selector = null;
+		Shape targetShape = shapeManager.getShapeById(personTargetShapeId);
+		
+	}
 	
 	@Test
 	public void testFlatten() {

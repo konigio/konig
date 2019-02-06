@@ -39,7 +39,6 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.BNodeImpl;
-import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.RDF;
 
@@ -64,7 +63,7 @@ public class MemoryGraph implements Graph, Transaction {
 	private ValueFactory valueFactory = new ValueFactoryImpl();
 	
 	private Resource id;
-	private Map<String, Vertex> bnodeMap = new HashMap<>();
+	private Map<String, Vertex> bnodeMap = new LinkedHashMap<>();
 	private Map<Resource, Vertex> vertexMap = new LinkedHashMap<Resource, Vertex>();
 	private List<Edge> txn;
 	private List<Edge> sink;
@@ -257,7 +256,7 @@ public class MemoryGraph implements Graph, Transaction {
 			}
 		}
 		
-		bnodeMap = new HashMap<>();
+		bnodeMap = new LinkedHashMap<>();
 		
 	}
 
@@ -395,7 +394,7 @@ public class MemoryGraph implements Graph, Transaction {
 
 	@Override
 	public void clear() {
-		bnodeMap = new HashMap<>();
+		bnodeMap = new LinkedHashMap<>();
 		vertexMap = new LinkedHashMap<Resource, Vertex>();
 		txn = null;
 		sink=null;

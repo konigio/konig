@@ -49,6 +49,7 @@ public class ShowlNodeShape implements Traversable {
 	private Map<URI,ShowlInwardPropertyShape> inProperties = null;
 	
 	private List<ShowlJoinCondition> selectedJoins;
+	private boolean unmapped;
 	
 	
 	public ShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
@@ -61,15 +62,6 @@ public class ShowlNodeShape implements Traversable {
 		}
 	}
 	
-	/**
-	 * Create a copy of this node that contains only the (outbound) direct properties.
-	 * @param accessor The accessor for the
-	 * @return A copy of this node with a private instance of all the Shapes listed in the selected joins.
-	 */
-	public ShowlNodeShape finalizeMapping(ShowlPropertyShape accessor) {
-		
-		return null;
-	}
 	
 	public void addInwardProperty(ShowlInwardPropertyShape p) {
 		if (inProperties == null) {
@@ -207,6 +199,19 @@ public class ShowlNodeShape implements Traversable {
 
 	public List<ShowlJoinCondition> getSelectedJoins() {
 		return selectedJoins == null ? Collections.emptyList() : selectedJoins;
+	}
+
+	/**
+	 * Returns true if there are no shapes that are candidates as sources from which this node may 
+	 * be derived.
+	 */
+	public boolean isUnmapped() {
+		return unmapped;
+	}
+
+
+	public void setUnmapped(boolean unmapped) {
+		this.unmapped = unmapped;
 	}
 
 

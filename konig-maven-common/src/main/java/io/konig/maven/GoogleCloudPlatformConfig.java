@@ -43,6 +43,7 @@ public class GoogleCloudPlatformConfig implements RdfSource {
     @Parameter(property="konig.gcp.dataServices")
 	private DataServicesConfig dataServices;
     
+    
 	private boolean enableBigQueryTransform=true;
 	
 	private boolean enableMySqlTransform=true;
@@ -216,6 +217,4 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 	public void setBigqueryEnumShapeIriTemplate(String bigqueryEnumShapeIriTemplate) {
 		this.bigqueryEnumShapeIriTemplate = bigqueryEnumShapeIriTemplate;
 	}
-	
-	
 }

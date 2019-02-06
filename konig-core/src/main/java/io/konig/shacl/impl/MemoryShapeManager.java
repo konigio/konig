@@ -1,12 +1,10 @@
 package io.konig.shacl.impl;
 
-import java.util.ArrayList;
-
 /*
  * #%L
- * konig-shacl
+ * Konig Core
  * %%
- * Copyright (C) 2015 Gregory McFall
+ * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,23 +20,21 @@ import java.util.ArrayList;
  * #L%
  */
 
-
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 import io.konig.core.KonigException;
-import io.konig.core.UnnamedResourceException;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class MemoryShapeManager implements ShapeManager {
-	private Map<String, Shape> shapeMap = new HashMap<String, Shape>();
+	private Map<String, Shape> shapeMap = new LinkedHashMap<String, Shape>();
 
 	public Shape getShapeById(Resource shapeId) {
 		return shapeMap.get(shapeId.stringValue());

@@ -7,6 +7,7 @@
 @prefix schema: <http://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:PersonSourceShape sh:property  [ 
@@ -20,42 +21,42 @@ shape:PersonSourceShape sh:property  [
 		sh:datatype xsd:string ; 
 		rdf:predicate alias:first_name ; 
 		sh:maxCount 1 ; 
-		sh:minCount 0 ; 
 		konig:formula '''@term givenName <http://schema.org/givenName>
 
-$.givenName''' ]  ; 
+$.givenName''' ; 
+		sh:minCount 0 ]  ; 
 	a sh:Shape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource> , <gs://personsourceshape-${gcpBucketSuffix}> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/ZAP06Bs-LYwAAAFouc617A> ; 
 	sh:targetClass schema:Person ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
    "person_id" : "alias:person_id"
 }
 
-<http://example.com/person/{person_id}>''' ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/cacqdFS78tYAAAFoo-JfCg> . 
+<http://example.com/person/{person_id}>''' . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource> gcp:externalDataConfiguration  [ 
-		gcp:sourceFormat "CSV" ; 
-		gcp:sourceUris "gs://personsourceshape-${gcpBucketSuffix}/*" ; 
-		gcp:csvOptions  [ 
-			gcp:skipLeadingRows "1"^^xsd:long
-		 ] 
-	 ]  ; 
-	gcp:tableReference  [ 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource> gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
 		gcp:datasetId "schema" ; 
-		gcp:tableId "PersonSource" ]  ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+		gcp:tableId "PersonSource"
+	 ]  ; 
+	gcp:externalDataConfiguration  [ 
+		gcp:csvOptions  [ 
+			gcp:skipLeadingRows "1"^^xsd:long ]  ; 
+		gcp:sourceUris "gs://personsourceshape-${gcpBucketSuffix}/*" ; 
+		gcp:sourceFormat "CSV" ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:ERP . 
 
 <gs://personsourceshape-${gcpBucketSuffix}> gcp:name "personsourceshape-${gcpBucketSuffix}" ; 
 	gcp:location "us" ; 
 	gcp:projectId "${gcpProjectId}" ; 
 	gcp:storageClass "multi_regional" ; 
 	gcp:notificationInfo  [ 
-		gcp:topic "${topicName}" ; 
-		gcp:eventTypes "${eventType}" ]  ; 
+		gcp:eventTypes "${eventType}" ; 
+		gcp:topic "${topicName}" ]  ; 
 	a konig:GoogleCloudStorageBucket , konig:DataSource . 
 
-<http://www.konig.io/activity/cacqdFS78tYAAAFoo-JfCg> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2019-01-31T07:29:08.239-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/ZAP06Bs-LYwAAAFouc617A> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2019-02-04T13:39:18.512-05:00"^^xsd:dateTime . 

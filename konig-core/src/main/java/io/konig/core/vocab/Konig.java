@@ -57,6 +57,7 @@ public class Konig {
 	public static final String ATTRIBUTE = "http://www.konig.io/ns/core/attribute";
 	public static final String DIMENSION = "http://www.konig.io/ns/core/dimension";
 	public static final String SHAPE_PROCESSING = "http://www.konig.io/ns/core/shapeProcessing";
+	public static final String EXPLICIT_DERIVED_FROM = "http://www.konig.io/ns/core/explicitDerivedFrom";
 	public static final String ID = "http://www.konig.io/ns/core/id";
 	
 	// ChangeSet terms
@@ -105,6 +106,12 @@ public class Konig {
 	public static final URI derivedProperty = new URIImpl("http://www.konig.io/ns/core/derivedProperty");
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI tabularFieldNamespace = new URIImpl(TABULAR_FIELD_NAMESPACE);
+	
+	/**
+	 * A sub-property of konig:derivedFrom which asserts that the "derived from" relationship was defined
+	 * explicitly by a human data modeler.
+	 */
+	public static final URI explicitDerivedFrom = new URIImpl(EXPLICIT_DERIVED_FROM);
 	public static final URI derivedFrom = new URIImpl("http://www.konig.io/ns/core/derivedfrom");
 	public static final URI shapeProcessing = new URIImpl("http://www.konig.io/ns/core/shapeProcessing");
 	public static final URI SqlTransform = new URIImpl("http://www.konig.io/ns/core/SqlTransform");

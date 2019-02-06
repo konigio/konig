@@ -1,11 +1,11 @@
-CONSTRUCT shape:PersonTargetShape
-FROM shape:PersonSourceShape AS a
-SET
-   givenName = a.first_name, 
-   id = CONCAT("http://example.com/person/", a.person_id)
-
 CONSTRUCT shape:PersonSourceShape
 FROM shape:PersonTargetShape AS a
 SET
    first_name = a.givenName, 
    person_id = ?
+
+CONSTRUCT shape:PersonTargetShape
+FROM shape:PersonSourceShape AS a
+SET
+   givenName = a.first_name, 
+   id = CONCAT("http://example.com/person/", a.person_id)
