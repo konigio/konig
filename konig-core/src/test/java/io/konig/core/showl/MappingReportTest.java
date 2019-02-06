@@ -19,9 +19,7 @@ package io.konig.core.showl;
  * limitations under the License.
  * #L%
  */
-
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +29,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.Ignore;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
@@ -44,13 +42,19 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
+/**
+ * This test is not deterministic.
+ * We should develop a new solution that is deterministic.
+ * @author Greg McFall
+ *
+ */
 public class MappingReportTest {
 	
 	private MappingReport report = new MappingReport();
 	private ShowlManager showlManager;
 	private NamespaceManager nsManager;
 
-	@Test
+	@Ignore
 	public void testDirect() throws Exception {
 		
 		load("src/test/resources/MappingReportTest/direct");
