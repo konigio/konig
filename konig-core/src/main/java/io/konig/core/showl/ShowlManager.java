@@ -434,6 +434,9 @@ public class ShowlManager {
 		
 		for (ShowlPropertyShape leftProperty : properties) {
 			ShowlPropertyShape rightProperty = rightNode.findProperty(leftProperty.getPredicate());
+			if (rightProperty == null) {
+				continue;
+			}
 			
 			ShowlPropertyShape directLeft = directProperty(leftProperty);
 			ShowlPropertyShape directRight = directProperty(rightProperty);
