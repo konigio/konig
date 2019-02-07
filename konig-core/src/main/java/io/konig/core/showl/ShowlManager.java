@@ -192,10 +192,6 @@ public class ShowlManager {
 		nodeMappings = null;
 		
 	}
-
-	private void buildJoinConditions(ShowlNodeShape nodeA, MappingRole role, ShowlJoinCondition joinCondition) throws ShowlProcessingException {
-		buildJoinConditions(nodeA, role, joinCondition, null);
-	}
 	
 	private void buildJoinConditions(ShowlNodeShape nodeA, MappingRole role, ShowlJoinCondition joinCondition, ShowlNodeShapeConsumer consumer) throws ShowlProcessingException {
 		if (nodeA.isNamedRoot() && !isUndefinedClass(nodeA.getOwlClass())) {
@@ -325,27 +321,10 @@ public class ShowlManager {
 				if (!isUndefinedClass(childClass)) {
 					ShowlPropertyShape sourceNodeId = sourceNode.findProperty(Konig.id);
 					if (sourceNodeId != null) {
-						buildJoinConditions(sourceNode, MappingRole.SOURCE, joinCondition);
+						buildJoinConditions(sourceNode, MappingRole.SOURCE, joinCondition, null);
 					}
 					
-					// Find other cases where the child object is referenced via the same predicate as
-					// the leftProperty.
-					for (ShowlProperty p : childClass.getRangeOf()) {
-						for (ShowlPropertyShape rightProperty : p.getPropertyShapes()) {
-							if (rightProperty == sourceProperty) {
-								continue;
-							}
-							if (sourceNodeId!=null && rightProperty.getDeclaringShape().isNamedRoot()) {
-								continue;
-							}
-							if (rightProperty.getValueShape()==null) {
-								continue;
-							}
-							
-							doJoinOutwardObjectProperty(sourceNode, rightProperty, joinCondition);
-							
-						}
-					}
+					
 				}
 				
 			}
@@ -353,14 +332,6 @@ public class ShowlManager {
 		
 	}
 
-	private void doJoinOutwardObjectProperty(ShowlNodeShape leftChild, ShowlPropertyShape rightProperty,
-			ShowlJoinCondition joinCondition) {
-		
-		if (logger.isTraceEnabled()) {
-			logger.trace("doJoinOutwardObjectProperty: {} ... {}", leftChild.getPath(), rightProperty.getPath());
-		}
-		
-	}
 
 	private void doJoin(ShowlNodeShape targetNode, ShowlNodeShape sourceNode, ShowlJoinCondition joinCondition) {
 		ShowlPropertyShape sourceId = sourceNode.findProperty(Konig.id);
@@ -460,9 +431,6 @@ public class ShowlManager {
 			ShowlPropertyShape directRight) {
 		
 		new ShowlMapping(join, directLeft, directRight);
-		if (logger.isTraceEnabled()) {
-			logger.trace("doBuildMappings: new Mapping {} ... {}", directLeft.getPath(), directRight.getPath());
-		}
 		
 	}
 
@@ -544,6 +512,9 @@ public class ShowlManager {
 
 	private void inferTargetClass(ShowlNodeShape node) {
 		
+		if (!ShowlUtil.isUndefinedClass(node.getOwlClass())) {
+			return;
+		}
 		Set<URI> candidates = new LinkedHashSet<>();
 		
 		Set<ShowlPropertyShape> allProperties = node.allOutwardProperties();
@@ -819,8 +790,7 @@ public class ShowlManager {
 								parentShape = createNodeShape(prior, shapeIdValue, owlClass);
 							}
 
-							ShowlOutwardPropertyShape p = new ShowlOutwardPropertyShape(parentShape, property);
-							parentShape.addDerivedProperty(p);
+							ShowlPropertyShape p = outwardProperty(parentShape, property);
 							if (logger.isTraceEnabled()) {
 								logger.trace("PathVisitor.enter: Created derived Property Shape: {}", p.getPath());
 							}
@@ -839,8 +809,8 @@ public class ShowlManager {
 								parentShape = createNodeShape(prior, shapeIdValue, owlClass);
 								
 							}
-							ShowlInwardPropertyShape p = new ShowlInwardPropertyShape(parentShape, property);
-							parentShape.addInwardProperty(p);
+							
+							ShowlInwardPropertyShape p = inwardProperty(parentShape, property);
 							thisStep = p;
 						}
 						}
@@ -861,11 +831,38 @@ public class ShowlManager {
 		}
 		
 
-		private ShowlNodeShape createNodeShape(ShowlPropertyShape prior, String shapeIdValue,
+		private ShowlInwardPropertyShape inwardProperty(ShowlNodeShape parentShape, ShowlProperty property) {
+
+			ShowlInwardPropertyShape prior = parentShape.getInwardProperty(property.getPredicate());
+			if (prior != null) {
+				return prior;
+			}
+			ShowlInwardPropertyShape p = new ShowlInwardPropertyShape(parentShape, property);
+			parentShape.addInwardProperty(p);
+			return p;
+		}
+
+		private ShowlPropertyShape outwardProperty(ShowlNodeShape parentShape, ShowlProperty property) {
+			
+			ShowlPropertyShape prior = parentShape.findProperty(property.getPredicate());
+			if (prior != null) {
+				return prior;
+			}
+
+			ShowlOutwardPropertyShape p = new ShowlOutwardPropertyShape(parentShape, property);
+			parentShape.addDerivedProperty(p);
+			return p;
+		}
+
+		private ShowlNodeShape createNodeShape(ShowlPropertyShape accessor, String shapeIdValue,
 				ShowlClass owlClass) {
+			ShowlNodeShape value = accessor.getValueShape();
+			if (value != null) {
+				return value;
+			}
 			URI shapeId = new URIImpl(shapeIdValue);
 			Shape shape = new Shape(shapeId);
-			return createShowlNodeShape(prior, shape, owlClass);
+			return createShowlNodeShape(accessor, shape, owlClass);
 		}
 
 		/**

@@ -41,9 +41,11 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ConsumesDataFromFilter;
+import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.MappingStrategy;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlSourceNodeSelector;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.ShapeManager;
@@ -64,8 +66,10 @@ public class ShowlSqlTransformTest {
 	private ShowlManager showlManager;
 	private NamespaceManager nsManager = new MemoryNamespaceManager();
 	private Graph graph = new MemoryGraph(nsManager);
-	private MappingStrategy strategy = new MappingStrategy(new ConsumesDataFromFilter(graph));
+	private MappingStrategy strategy = new MappingStrategy();
 	private ShowlSqlTransform transform = new ShowlSqlTransform();
+	private OwlReasoner reasoner = new OwlReasoner(graph);
+	private ShapeManager shapeManager = new MemoryShapeManager();
 	
 	private InsertStatement insert(String resourcePath, String shapeId) throws Exception {
 
@@ -77,6 +81,18 @@ public class ShowlSqlTransformTest {
 		strategy.selectMappings(node);
 		
 		return transform.createInsert(node, GoogleBigQueryTable.class);
+	}
+	
+	@Test
+	public void testFlatToNested() throws Exception {
+		
+		ShowlSourceNodeSelector selector = new ExplicitDerivedFromSelector();
+		showlManager = new ShowlManager(shapeManager, reasoner, selector, null);
+		
+		InsertStatement insert = insert(
+				"src/test/resources/ShowlSqlTransformTest/flat-to-nested-transform", 
+				"http://example.com/ns/shape/PersonTargetShape");
+		System.out.println(insert);
 	}
 	
 	@Ignore
@@ -142,13 +158,13 @@ public class ShowlSqlTransformTest {
 
 	private void load(String filePath) throws RDFParseException, RDFHandlerException, IOException {
 		File sourceDir = new File(filePath);
-		OwlReasoner reasoner = new OwlReasoner(graph);
-		ShapeManager shapeManager = new MemoryShapeManager();
 		
 		RdfUtil.loadTurtle(sourceDir, graph, shapeManager);
 		URI parent = uri("http://example.com/ns/sys/EDW");
 //		DatasourceIsPartOfFilter filter = new DatasourceIsPartOfFilter(parent);
-		showlManager = new ShowlManager(shapeManager, reasoner);
+		if (showlManager == null) {
+			showlManager = new ShowlManager(shapeManager, reasoner);
+		}
 		showlManager.load();
 		
 	}
