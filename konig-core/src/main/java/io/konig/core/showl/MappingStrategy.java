@@ -63,22 +63,8 @@ public class MappingStrategy {
 		Set<ShowlJoinCondition> set = new LinkedHashSet<>();
 		
 		List<ShowlDirectPropertyShape> pool = new ArrayList<>();
-		for (ShowlDirectPropertyShape direct : target.getProperties()) {
-			pool.add(direct);
-			for (ShowlMapping m : direct.getMappings()) {
-				
-				if (filter != null) {
-					ShowlPropertyShape other = m.findOther(direct);
-					ShowlNodeShape sourceNode = other.getDeclaringShape();
-					if (!filter.allowMapping(sourceNode, target)) {
-						logger.trace("selectMappings: filtering {}", sourceNode);
-						continue;
-					}
-				}
-				
-				set.add(m.getJoinCondition());
-			}
-		}
+		buildPool(target, pool, set);
+		
 		
 		Map<ShowlJoinCondition, RankedJoinCondition> rankingMap = new LinkedHashMap<>();
 		for (ShowlJoinCondition join : set) {
@@ -117,6 +103,34 @@ public class MappingStrategy {
 		
 		
 		return pool;	
+	}
+
+	private void buildPool(ShowlNodeShape target, List<ShowlDirectPropertyShape> pool, Set<ShowlJoinCondition> set) {
+		for (ShowlDirectPropertyShape direct : target.getProperties()) {
+			pool.add(direct);
+			if (logger.isTraceEnabled()) {
+				logger.trace("buildPool: added {}", direct.getPath());
+			}
+			for (ShowlMapping m : direct.getMappings()) {
+				
+				if (filter != null) {
+					ShowlPropertyShape other = m.findOther(direct);
+					ShowlNodeShape sourceNode = other.getDeclaringShape();
+					if (!filter.allowMapping(sourceNode, target)) {
+						logger.trace("selectMappings: filtering {}", sourceNode);
+						continue;
+					}
+				}
+				
+				set.add(m.getJoinCondition());
+			}
+			ShowlNodeShape valueShape = direct.getValueShape();
+			if (valueShape != null) {
+				buildPool(valueShape, pool, set);
+			}
+			
+		}
+		
 	}
 
 	private boolean addSelectedJoin(ShowlNodeShape targetNode, RankedJoinCondition ranked) {
@@ -166,6 +180,7 @@ public class MappingStrategy {
 		Iterator<ShowlDirectPropertyShape> sequence = pool.iterator();
 		while (sequence.hasNext()) {
 			ShowlDirectPropertyShape p = sequence.next();
+			String action = "was NOT selected";
 			ShowlMapping m = p.getMapping(join);
 			if (m == null && p==joinProperty) {
 				m = new ShowlJoinMapping(join);
@@ -173,7 +188,14 @@ public class MappingStrategy {
 			if (m != null) {
 				p.setSelectedMapping(m);
 				sequence.remove();
+				action = "was selected";
 			} 
+			
+			if (logger.isTraceEnabled()) {
+				
+				logger.trace("selectMappings: {} {}", p.getPath(), action);
+			}
+			
 		}
 		
 	}
@@ -206,13 +228,42 @@ public class MappingStrategy {
 		}
 		
 		for (ShowlDirectPropertyShape p : pool) {
+			if (logger.isTraceEnabled()) {
+				logger.trace("updateRankings: updating {}", p.getPath());
+			}
 			for (ShowlMapping m : p.getMappings()) {
+
+				
 				RankedJoinCondition r = rankingMap.get(m.getJoinCondition());
 				if (r != null) {
 					r.incrementRanking();
+					if (logger.isTraceEnabled()) {
+						logger.trace("updateRankings: ranking({}...{})={}", 
+							m.getLeftProperty().getPath(), 
+							m.getRightProperty().getPath(),
+							r.getRanking());
+					}
+				} else {
+					if (logger.isTraceEnabled()) {
+						logger.trace("updateRankings: ranking({}...{})=null",
+								m.getLeftProperty().getPath(), 
+								m.getRightProperty().getPath());
+					}
 				}
+				
 			}
 		}
+	}
+
+
+
+
+	private void updateNestedRanking(ShowlNodeShape valueShape, RankedJoinCondition r) {
+		
+		if (logger.isTraceEnabled()) {
+			logger.trace("updateNestedRanking({})", valueShape.getPath());
+		}
+		
 	}
 
 

@@ -66,7 +66,7 @@ public class ShowlSqlTransformTest {
 	private ShowlManager showlManager;
 	private NamespaceManager nsManager = new MemoryNamespaceManager();
 	private Graph graph = new MemoryGraph(nsManager);
-	private MappingStrategy strategy = new MappingStrategy(new ConsumesDataFromFilter(graph));
+	private MappingStrategy strategy = new MappingStrategy();
 	private ShowlSqlTransform transform = new ShowlSqlTransform();
 	private OwlReasoner reasoner = new OwlReasoner(graph);
 	private ShapeManager shapeManager = new MemoryShapeManager();

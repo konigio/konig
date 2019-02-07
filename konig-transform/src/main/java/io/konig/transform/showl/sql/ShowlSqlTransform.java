@@ -52,6 +52,7 @@ import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.SelectExpression;
 import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.StringLiteralExpression;
+import io.konig.sql.query.StructExpression;
 import io.konig.sql.query.TableAliasExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.TableNameExpression;
@@ -197,6 +198,12 @@ public class ShowlSqlTransform {
 		}
 
 		private ValueExpression mappedValue(ShowlDirectPropertyShape p) throws ShowlSqlTransformException {
+			
+			ShowlNodeShape valueShape = p.getValueShape();
+			if (valueShape != null) {
+				return struct(valueShape);
+			}
+			
 			ShowlMapping m = p.getSelectedMapping();
 			if (m == null) {
 				return null;
@@ -220,6 +227,22 @@ public class ShowlSqlTransform {
 		}
 
 		
+
+		private ValueExpression struct(ShowlNodeShape node) throws ShowlSqlTransformException {
+			StructExpression struct = new StructExpression();
+			for (ShowlDirectPropertyShape p : node.getProperties()) {
+				ValueExpression v = mappedValue(p);
+				if (v == null) {
+					throw new ShowlSqlTransformException("Value not mapped: " + p.getPath());
+				}
+				struct.add(v);
+			}
+			String fieldName = node.getAccessor().getPredicate().getLocalName();
+			
+		
+			
+			return new AliasExpression(struct, fieldName);
+		}
 
 		private ValueExpression templateValue(ShowlTemplatePropertyShape showlTemplate) throws ShowlSqlTransformException {
 			ShowlNodeShape node = showlTemplate.getDeclaringShape();
