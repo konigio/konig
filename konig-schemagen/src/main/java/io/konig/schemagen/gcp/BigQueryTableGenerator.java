@@ -771,7 +771,7 @@ public class BigQueryTableGenerator {
 			Integer pMax = p.getMaxCount();
 			Integer qMax = q.getMaxCount();
 			
-			if (qMax==null) {
+			if (qMax==null || pMax==null) {
 				return null;
 			}
 			if (qMax.intValue()==-1) {
