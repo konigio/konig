@@ -40,7 +40,7 @@ public class ShowlMapping {
 		leftProperty.addMapping(this);
 		rightProperty.addMapping(this);
 		if (logger.isTraceEnabled()) {
-			logger.trace("create (left: {}, right: {})", leftProperty.getPath(), rightProperty.getPath());
+			logger.trace("new ShowlMapping {}...{}", leftProperty.getPath(), rightProperty.getPath());
 		}
 	}
 

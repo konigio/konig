@@ -23,6 +23,8 @@ package io.konig.core.project;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.KonigException;
 import io.konig.core.Vertex;
@@ -31,6 +33,8 @@ import io.konig.core.vocab.Konig;
 
 public class ProjectFileCreator implements PojoCreator<ProjectFile> {
 
+	private static final Logger logger = LoggerFactory.getLogger(ProjectFileCreator.class);
+	
 	@Override
 	public ProjectFile create(Vertex v) {
 		
@@ -43,6 +47,10 @@ public class ProjectFileCreator implements PojoCreator<ProjectFile> {
 			throw new KonigException("ProjectFile(relativePath: '" + path + "') is missing the `baseProject` property");
 		}
 		Project project = ProjectManager.instance().getProjectById(projectId);
+		if (project == null) {
+			logger.warn("Cannot create ProjectFile " + path.toString() + " because the Project <" + projectId + "> is not found.");
+			return null;
+		}
 		
 		return project.createProjectFile(path.stringValue());
 	}

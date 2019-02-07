@@ -460,9 +460,6 @@ public class ShowlManager {
 			ShowlPropertyShape directRight) {
 		
 		new ShowlMapping(join, directLeft, directRight);
-		if (logger.isTraceEnabled()) {
-			logger.trace("doBuildMappings: new Mapping {} ... {}", directLeft.getPath(), directRight.getPath());
-		}
 		
 	}
 
@@ -544,6 +541,9 @@ public class ShowlManager {
 
 	private void inferTargetClass(ShowlNodeShape node) {
 		
+		if (!ShowlUtil.isUndefinedClass(node.getOwlClass())) {
+			return;
+		}
 		Set<URI> candidates = new LinkedHashSet<>();
 		
 		Set<ShowlPropertyShape> allProperties = node.allOutwardProperties();
@@ -861,11 +861,11 @@ public class ShowlManager {
 		}
 		
 
-		private ShowlNodeShape createNodeShape(ShowlPropertyShape prior, String shapeIdValue,
+		private ShowlNodeShape createNodeShape(ShowlPropertyShape accessor, String shapeIdValue,
 				ShowlClass owlClass) {
 			URI shapeId = new URIImpl(shapeIdValue);
 			Shape shape = new Shape(shapeId);
-			return createShowlNodeShape(prior, shape, owlClass);
+			return createShowlNodeShape(accessor, shape, owlClass);
 		}
 
 		/**

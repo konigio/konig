@@ -1,0 +1,20 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org" . 
+
+schema:Person a owl:Class . 
+
+schema:address a owl:ObjectProperty ; 
+	schema:domainIncludes schema:Person . 
+
+schema:addressLocality a owl:DatatypeProperty ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:streetAddress a owl:DatatypeProperty ; 
+	schema:rangeIncludes xsd:string . 
