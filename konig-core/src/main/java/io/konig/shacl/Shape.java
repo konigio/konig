@@ -566,13 +566,14 @@ public class Shape implements Cloneable {
 	public void setDerivedProperty(List<PropertyConstraint> derivedProperty) {
 		this.derivedProperty = derivedProperty;
 	}
-	
+
 	public void addDerivedProperty(PropertyConstraint p) {
 		if (derivedProperty == null) {
 			derivedProperty = new ArrayList<>();
 		}
 		derivedProperty.add(p);
 	}
+	
 
 	public void addVariable(PropertyConstraint p) {
 		if (variable == null) {

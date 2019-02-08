@@ -53,6 +53,11 @@ public class SqlFunctionExpression extends AbstractExpression implements Numeric
 		this.functionName = functionName;
 	}
 	
+	public SqlFunctionExpression(String functionName, List<QueryExpression> argList) {
+		this.functionName = functionName;
+		this.argList = argList;
+	}
+	
 	public SqlFunctionExpression(String functionName, QueryExpression...arg) {
 		this.functionName = functionName;
 		for (QueryExpression e : arg) {

@@ -23,7 +23,9 @@ package io.konig.transform.showl.sql;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 
@@ -40,7 +42,6 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.showl.ConsumesDataFromFilter;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.MappingStrategy;
 import io.konig.core.showl.ShowlManager;
@@ -82,8 +83,46 @@ public class ShowlSqlTransformTest {
 		
 		return transform.createInsert(node, GoogleBigQueryTable.class);
 	}
+
+	@Ignore
+	public void testCastConcat() throws Exception {
+		
+		test(
+			"src/test/resources/ShowlSqlTransformTest/cast-concat-transform", 
+			"http://example.com/ns/shape/PersonTargetShape");
+	}
 	
-	@Test
+	private void test(String dataDir, String targetShapeId) throws Exception {
+		ShowlSourceNodeSelector selector = new ExplicitDerivedFromSelector();
+		showlManager = new ShowlManager(shapeManager, reasoner, selector, null);
+		
+		InsertStatement insert = insert(dataDir, targetShapeId);
+		System.out.println(insert);
+		
+		assertFileEquals(
+			dataDir + "/expected.sql",
+			insert.toString());
+		
+	}
+
+	@Ignore
+	public void testConcat() throws Exception {
+		
+		ShowlSourceNodeSelector selector = new ExplicitDerivedFromSelector();
+		showlManager = new ShowlManager(shapeManager, reasoner, selector, null);
+		
+		InsertStatement insert = insert(
+				"src/test/resources/ShowlSqlTransformTest/concat-transform", 
+				"http://example.com/ns/shape/PersonTargetShape");
+		
+		assertFileEquals(
+			"src/test/resources/ShowlSqlTransformTest/concat-transform/expected.sql",
+			insert.toString());
+	}
+	
+
+	
+	@Ignore
 	public void testFlatToNested() throws Exception {
 		
 		ShowlSourceNodeSelector selector = new ExplicitDerivedFromSelector();
@@ -92,9 +131,20 @@ public class ShowlSqlTransformTest {
 		InsertStatement insert = insert(
 				"src/test/resources/ShowlSqlTransformTest/flat-to-nested-transform", 
 				"http://example.com/ns/shape/PersonTargetShape");
-		System.out.println(insert);
+
 	}
 	
+	private void assertFileEquals(String expectedFile, String actualText) throws Exception {
+		String[] actual = actualText.split("\\r?\\n");
+		int index = 0;
+		try (BufferedReader reader = new BufferedReader(new FileReader(new File(expectedFile)))) {
+			String expected = reader.readLine();
+			assertEquals(expected, actual[index++]);
+		}
+		
+	}
+
+
 	@Ignore
 	public void testTabular() throws Exception {
 		

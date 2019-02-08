@@ -1,5 +1,7 @@
 package io.konig.transform.showl.sql;
 
+import java.text.MessageFormat;
+
 /*
  * #%L
  * Konig Transform
@@ -24,11 +26,15 @@ package io.konig.transform.showl.sql;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openrdf.model.Literal;
+import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.showl.NodeNamer;
 import io.konig.core.showl.ShowlDirectPropertyShape;
+import io.konig.core.showl.ShowlFormulaPropertyShape;
 import io.konig.core.showl.ShowlJoinCondition;
 import io.konig.core.showl.ShowlMapping;
 import io.konig.core.showl.ShowlNodeShape;
@@ -40,15 +46,27 @@ import io.konig.core.util.ValueFormat;
 import io.konig.core.util.ValueFormat.ElementType;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.formula.Direction;
+import io.konig.formula.DirectionStep;
+import io.konig.formula.Expression;
+import io.konig.formula.FunctionExpression;
+import io.konig.formula.LiteralFormula;
+import io.konig.formula.PathExpression;
+import io.konig.formula.PathStep;
+import io.konig.formula.PrimaryExpression;
+import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.sql.query.AliasExpression;
 import io.konig.sql.query.AndExpression;
 import io.konig.sql.query.BooleanTerm;
+import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
 import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
 import io.konig.sql.query.OnExpression;
+import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.SelectExpression;
 import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.StringLiteralExpression;
@@ -186,9 +204,9 @@ public class ShowlSqlTransform {
 		}
 
 		private ValueExpression valueExpression(ShowlPropertyShape p) {
-			
 			return qualifiedColumn(p);
 		}
+
 
 		private TableAliasExpression tableAlias(ShowlNodeShape node) throws ShowlSqlTransformException {
 			TableNameExpression tableName = tableName(node);
@@ -213,6 +231,11 @@ public class ShowlSqlTransform {
 				return templateValue((ShowlTemplatePropertyShape) other);
 			}
 			
+		
+			if (other instanceof ShowlFormulaPropertyShape) {
+				return alias(formula((ShowlFormulaPropertyShape)other), p);
+			}
+			
 			
 			String tableAlias = nodeNamer.varname(other.getDeclaringShape());
 			
@@ -227,6 +250,148 @@ public class ShowlSqlTransform {
 		}
 
 		
+
+		private ValueExpression alias(ValueExpression e, ShowlDirectPropertyShape p) {
+			String aliasName = p.getPredicate().getLocalName();
+			return new AliasExpression(e, aliasName);
+		}
+
+		private ValueExpression formula(ShowlFormulaPropertyShape p) throws ShowlSqlTransformException {
+			QuantifiedExpression formula = p.getPropertyConstraint().getFormula();
+			PrimaryExpression primary = formula.asPrimaryExpression();
+			if (primary instanceof FunctionExpression) {
+				return function(p.getDeclaringShape(), (FunctionExpression)primary);
+			}
+			String msg = MessageFormat.format("For property {0}, failed to generate SQL from {1}", p.getPath(), formula.getText());
+			throw new ShowlSqlTransformException(msg);
+		}
+
+		
+
+		private ValueExpression function(ShowlNodeShape node, FunctionExpression function) throws ShowlSqlTransformException {
+			String functionName = function.getFunctionName();
+			boolean castToString = SqlFunctionExpression.CONCAT.equals(functionName);
+			List<QueryExpression> argList = argList(node, function.getArgList(), castToString);
+			SqlFunctionExpression sql = new SqlFunctionExpression(functionName, argList);
+			
+			return sql;
+		}
+
+		private List<QueryExpression> argList(ShowlNodeShape node, List<Expression> argList, boolean castToString) throws ShowlSqlTransformException {
+			List<QueryExpression> list = new ArrayList<>();
+			for (Expression e : argList) {
+				PrimaryExpression primary = e.asPrimaryExpression();
+				if (primary instanceof LiteralFormula) {
+					list.add(stringLiteral((LiteralFormula)primary));
+				} else if (primary instanceof PathExpression) {
+					// TODO: cast to string if necessary
+					list.add(path(node, (PathExpression)primary, castToString));
+				} 
+				logger.trace(primary.getClass().getSimpleName());
+			}
+			
+			return list;
+		}
+
+		private QueryExpression path(ShowlNodeShape node, PathExpression path, boolean castToString) throws ShowlSqlTransformException {
+			StringBuilder builder = new StringBuilder();
+			String nodeAlias = nodeNamer.varname(node);
+			builder.append(nodeAlias);
+			
+			ShowlPropertyShape p = null;
+			
+			for (PathStep step : path.getStepList()) {
+				if (step instanceof DirectionStep) {
+					DirectionStep dirStep = (DirectionStep) step;
+					if (dirStep.getDirection() == Direction.OUT) {
+						URI predicate = dirStep.getTerm().getIri();
+						String localName = predicate.getLocalName();
+						builder.append('.');
+						builder.append(localName);
+						
+						if (castToString) {
+							ShowlPropertyShape q = null;
+							if (p == null) {
+								q = node.findProperty(predicate);
+							} else if (p.getValueShape()!=null){
+								q = p.getValueShape().findProperty(predicate);
+							}
+							
+							if (q == null) {
+								
+								String basePath = p==null ? node.getPath() : p.getPath();
+								
+								throw ShowlSqlTransformException.format(
+									"Property not found {0}.{1}", basePath, predicate.getLocalName());
+							}
+							p = q;
+						}
+						
+					} else {
+						throw new ShowlSqlTransformException("IN steps not supported yet in path" + path.simpleText());
+					}
+					
+				} else {
+					throw new ShowlSqlTransformException("Path not supported: " + path.simpleText());
+				}
+			}
+			
+			ColumnExpression column = new ColumnExpression(builder.toString());
+			
+			if (castToString) {
+				return castToString(p, column);
+			}
+			
+			return column;
+		}
+
+		private QueryExpression castToString(ShowlPropertyShape p, ColumnExpression column) {
+			PropertyConstraint constraint = p.getPropertyConstraint();
+			if (constraint != null) {
+				URI datatype = constraint.getDatatype();
+				if (XMLSchema.DATE.equals(datatype)) {
+					SqlFunctionExpression func = new SqlFunctionExpression("FORMAT_DATE");
+					func.addArg(new StringLiteralExpression("%Y-%m-%d"));
+					func.addArg(column);
+					return func;
+				} else if (XMLSchema.DATETIME.equals(datatype)) {
+					SqlFunctionExpression func = new SqlFunctionExpression("FORMAT_DATETIME");
+					func.addArg(new StringLiteralExpression("%Y-%m-%dT%TZ"));
+					func.addArg(column);
+					return func;
+					
+				} else if (
+					XMLSchema.BOOLEAN.equals(datatype) ||
+					XMLSchema.FLOAT.equals(datatype) ||
+					XMLSchema.DOUBLE.equals(datatype) ||
+					XMLSchema.DECIMAL.equals(datatype) ||
+					XMLSchema.INTEGER.equals(datatype) ||
+					XMLSchema.NON_POSITIVE_INTEGER.equals(datatype) ||
+					XMLSchema.LONG.equals(datatype) ||
+					XMLSchema.NON_NEGATIVE_INTEGER.equals(datatype) ||
+					XMLSchema.NEGATIVE_INTEGER.equals(datatype) ||
+					XMLSchema.INT.equals(datatype) ||
+					XMLSchema.UNSIGNED_LONG.equals(datatype) ||
+					XMLSchema.POSITIVE_INTEGER.equals(datatype) ||
+					XMLSchema.SHORT.equals(datatype) ||
+					XMLSchema.UNSIGNED_INT.equals(datatype) ||
+					XMLSchema.BYTE.equals(datatype) ||
+					XMLSchema.UNSIGNED_SHORT.equals(datatype) ||
+					XMLSchema.UNSIGNED_BYTE.equals(datatype)
+				) {
+					return new CastSpecification(column, "STRING");
+				}
+			}
+			return column;
+		}
+
+		private StringLiteralExpression stringLiteral(LiteralFormula e) throws ShowlSqlTransformException {
+			Literal literal = e.getLiteral();
+			if (literal.getDatatype()==null || XMLSchema.STRING.equals(literal.getDatatype())) {
+				return new StringLiteralExpression(literal.stringValue());
+			}
+			throw new ShowlSqlTransformException("Failed to produce string literal from " + e.getLiteral().toString());
+		}
 
 		private ValueExpression struct(ShowlNodeShape node) throws ShowlSqlTransformException {
 			StructExpression struct = new StructExpression();

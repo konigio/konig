@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -63,6 +64,32 @@ public class ShapeWriterTest {
 	private Graph graph = new MemoryGraph();
 	
 	@Test
+	public void testExplicitDerivedFrom() throws Exception {
+
+		URI personTargetShapeId = uri("http://example.com/shapes/PersonTargetShape");
+		URI personSourceShapeId = uri("http://example.com/shapes/PersonSourceShape");
+		
+		ShapeBuilder builder = new ShapeBuilder();
+		builder
+			.beginShape(personTargetShapeId)
+				.derivedFrom(personSourceShapeId)
+			.endShape()
+			.beginShape(personSourceShapeId)
+				.targetClass(Schema.Person)
+			.endShape();
+		
+
+		Shape shape = builder.getShape(personTargetShapeId);
+
+		shapeWriter.emitShape(shape, graph);
+		Vertex v = graph.getVertex(personSourceShapeId);
+		
+		URI targetClass = v.getURI(SH.targetClass);
+		assertTrue(targetClass == null);
+		
+	}
+	
+	@Ignore
 	public void testPreferredTabularShape() throws Exception {
 		URI personShapeId = uri("http://example.com/shapes/PersonShape");
 		URI orgShapeId = uri("http://example.com/shapes/OrganizationShape");
@@ -90,7 +117,7 @@ public class ShapeWriterTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testTabularOriginShape() throws Exception {
 		URI personShapeId = uri("http://example.com/shapes/PersonShape");
 		URI tabularPersonShapeId = uri("http://example.com/shapes/TabularPersonShape");
@@ -119,7 +146,7 @@ public class ShapeWriterTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testOrConstraint() throws Exception {
 		URI agentShapeId = uri("http://example.ecom/shapes/AgentShape");
 		URI personShapeId = uri("http://example.com/shapes/PersonShape");
@@ -154,7 +181,7 @@ public class ShapeWriterTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testSequencePath() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		Shape shape = new Shape(shapeId);
@@ -184,7 +211,7 @@ public class ShapeWriterTest {
 //		RdfUtil.prettyPrintTurtle(graph, System.out);
 	}
 	
-	@Test
+	@Ignore
 	public void testIdFormat() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		Shape shape = new Shape(shapeId);
@@ -198,7 +225,7 @@ public class ShapeWriterTest {
 		assertTrue(graph.contains(subject, predicate, object));
 	}
 
-	@Test
+	@Ignore
 	public void testFormula() throws Exception {
 
 		String text = 
@@ -235,7 +262,7 @@ public class ShapeWriterTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void test() throws Exception {
 		NamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
 		File baseDir = new File("target/test/ShapeWriterTest");

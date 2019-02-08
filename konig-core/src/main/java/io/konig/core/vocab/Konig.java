@@ -58,6 +58,7 @@ public class Konig {
 	public static final String DIMENSION = "http://www.konig.io/ns/core/dimension";
 	public static final String SHAPE_PROCESSING = "http://www.konig.io/ns/core/shapeProcessing";
 	public static final String EXPLICIT_DERIVED_FROM = "http://www.konig.io/ns/core/explicitDerivedFrom";
+	public static final String DERIVED_PROPERTY = "http://www.konig.io/ns/core/derivedProperty";
 	public static final String ID = "http://www.konig.io/ns/core/id";
 	
 	// ChangeSet terms
@@ -103,7 +104,7 @@ public class Konig {
 	public static final URI FullyQualifiedIri = new URIImpl("http://www.konig.io/ns/core/FullyQualifiedIri");
 	public static final URI modified = new URIImpl("http://www.konig.io/ns/core/modified");
 	public static final URI deleted = new URIImpl("http://www.konig.io/ns/core/deleted");
-	public static final URI derivedProperty = new URIImpl("http://www.konig.io/ns/core/derivedProperty");
+	public static final URI derivedProperty = new URIImpl(DERIVED_PROPERTY);
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI tabularFieldNamespace = new URIImpl(TABULAR_FIELD_NAMESPACE);
 	

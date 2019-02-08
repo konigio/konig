@@ -1,0 +1,54 @@
+@prefix as: <http://www.w3.org/ns/activitystreams#> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonTargetShape sh:property  [ 
+		sh:path schema:givenName ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate schema:givenName ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		sh:path schema:familyName ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate schema:familyName ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		sh:path schema:name ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate schema:name ; 
+		sh:minCount 0 ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/vt3JuSV6BsAAAAFoyZQsyg> ; 
+	konig:explicitDerivedFrom shape:PersonSourceShape ; 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:Person . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:tableId "PersonTarget" ; 
+		gcp:datasetId "schema"
+	 ]  ; 
+	konig:ddlFile  [ 
+		konig:baseProject <urn:maven:io.konig.examples.sheet-download-1.0.0> ; 
+		konig:relativePath "target/generated/gcp/bigquery/view/schema.PersonTarget.json"
+	 ]  ; 
+	konig:transformFile  [ 
+		konig:baseProject <urn:maven:io.konig.examples.sheet-download-1.0.0> ; 
+		konig:relativePath "target/generated/gcp/bigquery/scripts/schema.PersonTarget.dml.sql" ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:EDW . 
+
+<http://www.konig.io/activity/vt3JuSV6BsAAAAFoyZQsyg> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2019-02-07T15:09:17.778-05:00"^^xsd:dateTime . 

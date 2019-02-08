@@ -1,10 +1,8 @@
-package io.konig.transform.showl.sql;
-
-import java.text.MessageFormat;
+package io.konig.core.showl;
 
 /*
  * #%L
- * Konig Transform
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -23,16 +21,14 @@ import java.text.MessageFormat;
  */
 
 
-@SuppressWarnings("serial")
-public class ShowlSqlTransformException extends Exception {
+import io.konig.shacl.PropertyConstraint;
 
-	public ShowlSqlTransformException(String msg) {
-		super(msg);
+public class ShowlFormulaPropertyShape extends ShowlDerivedPropertyShape {
+
+	public ShowlFormulaPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property,
+			PropertyConstraint constraint) {
+		super(declaringShape, property, constraint);
 	}
-	
-	public static ShowlSqlTransformException format(String pattern, Object...args) {
-		return new ShowlSqlTransformException(MessageFormat.format(pattern, args));
-	}
-	
+
 
 }
