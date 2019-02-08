@@ -1,0 +1,26 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+alias: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "alias" ; 
+	rdfs:label "Alias Ontology" . 
+
+alias:date_value a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:date . 
+
+alias:datetime_value a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:dateTime . 
+
+alias:float_value a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:float . 
+
+alias:person_id a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:string . 

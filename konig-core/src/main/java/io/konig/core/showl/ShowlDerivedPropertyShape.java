@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import io.konig.shacl.PropertyConstraint;
+
 /*
  * #%L
  * Konig Core
@@ -21,7 +23,11 @@ package io.konig.core.showl;
  */
 
 
-public class ShowlDerivedPropertyShape extends ShowlPropertyShape {
+public abstract class ShowlDerivedPropertyShape extends ShowlPropertyShape {
+	
+	public ShowlDerivedPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, PropertyConstraint constraint) {
+		super(declaringShape, property, constraint);
+	}
 	
 	public ShowlDerivedPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property) {
 		super(declaringShape, property, null);

@@ -23,8 +23,6 @@ package io.konig.core.showl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -347,6 +345,9 @@ public class ShowlManager {
 
 	private void buildMappings(ShowlNodeShape leftNode, ShowlNodeShape rightNode, ShowlJoinCondition join) {
 		doBuildMappings(leftNode, rightNode, join);
+		
+		// TODO: re-think the following line.  
+		// Do we really want to do this?
 		doBuildMappings(rightNode, leftNode, join);
 		
 	}
@@ -408,12 +409,24 @@ public class ShowlManager {
 			if (rightProperty == null) {
 				continue;
 			}
-			
-			ShowlPropertyShape directLeft = directProperty(leftProperty);
-			ShowlPropertyShape directRight = directProperty(rightProperty);
-			if (directLeft!=null && directRight!=null && directLeft.getMapping(join)==null) {
-				produceMapping(join, directLeft, directRight);
+			if (Konig.id.equals(leftProperty.getPredicate()) || Konig.id.equals(rightProperty.getPredicate())) {
+				// TODO: We ought to find a better way to handle konig:id mappings
+				
+				// For now, we skip them
+				if (logger.isTraceEnabled()) {
+					logger.trace("Skipping mapping: {}...{}", 
+						leftProperty.getPath(), rightProperty.getPath());
+				}
+				continue;
 			}
+			
+			leftProperty = propertyToMap(leftProperty);
+			rightProperty = propertyToMap(rightProperty);
+			
+
+			produceMapping(join, leftProperty, rightProperty);
+			
+			
 
 			ShowlNodeShape leftChild = leftProperty.getValueShape();
 			if (leftChild != null) {
@@ -425,6 +438,29 @@ public class ShowlManager {
 			
 		}
 		
+	}
+
+	private ShowlPropertyShape propertyToMap(ShowlPropertyShape p) {
+		ShowlPropertyShape result = directProperty(p);
+		if (result != null) {
+			return result;
+		}
+		result = derivedByFormula(p);
+		if (result != null) {
+			return result;
+		}
+		return p;
+	}
+
+	private ShowlDerivedPropertyShape derivedByFormula(ShowlPropertyShape p) {
+		if (p instanceof ShowlDerivedPropertyShape) {
+			ShowlDerivedPropertyShape derived = (ShowlDerivedPropertyShape) p;
+			if (derived.getPropertyConstraint()!=null && derived.getPropertyConstraint().getFormula()!=null) {
+				return derived;
+			}
+		}
+			
+		return null;
 	}
 
 	private void produceMapping(ShowlJoinCondition join, ShowlPropertyShape directLeft,
@@ -450,7 +486,9 @@ public class ShowlManager {
 			ShowlNodeShape leftNode, 
 			ShowlPropertyShape leftProperty,
 			ShowlNodeShape rightNode) {
-		
+		if (logger.isTraceEnabled()) {
+			logger.trace("buildMapping: {}...{}", leftProperty.getPath(), rightNode.getPath());
+		}
 		if (leftProperty.getMapping(join)==null) {
 			ShowlPropertyShape rightProperty = rightNode.findProperty(leftProperty.getPredicate());
 			
@@ -669,6 +707,9 @@ public class ShowlManager {
 
 
 	private void addProperties(ShowlNodeShape declaringShape) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("addProperties({})", declaringShape.getPath());
+		}
 		
 		addIdProperty(declaringShape);
 		
@@ -690,8 +731,36 @@ public class ShowlManager {
 			}
 		}
 		
+		for (PropertyConstraint p : declaringShape.getShape().getDerivedProperty()) {
+			URI predicate = p.getPredicate();
+			if (predicate != null) {
+				ShowlProperty property = produceShowlProperty(predicate);
+				ShowlFormulaPropertyShape q = createFormulaPropertyShape(declaringShape, property, p);
+				declaringShape.addDerivedProperty(q);
+				
+				Shape childShape = p.getShape();
+				if (childShape != null) {
+					if (declaringShape.hasAncestor(childShape.getId())) {
+						error("Cyclic shape detected at: " + q.getPath());
+					}
+					// TODO: create node shape for childShape.
+					error("child shape of derived property not supported yet for " + q.getPath());
+				}
+			}
+		}
+		
 	}
 	
+	private ShowlFormulaPropertyShape createFormulaPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property,
+			PropertyConstraint constraint) {
+
+		ShowlFormulaPropertyShape p = new ShowlFormulaPropertyShape(declaringShape, property, constraint);
+		if (logger.isTraceEnabled()) {
+			logger.trace("createDerivedPropertyShape: {}", p.getPath());
+		}
+		return p;
+	}
+
 	private void addIdProperty(ShowlNodeShape declaringShape) {
 		if (declaringShape.getShape().getIriTemplate() != null) {
 			ShowlProperty property = produceShowlProperty(Konig.id);
@@ -710,7 +779,7 @@ public class ShowlManager {
 			PropertyConstraint constraint) {
 		ShowlDirectPropertyShape p = new ShowlDirectPropertyShape(declaringShape, property, constraint);
 		if (logger.isTraceEnabled()) {
-			logger.trace("Created direct Property Shape: {}", p.getPath());
+			logger.trace("createDirectPropertyShape: created {}", p.getPath());
 		}
 		return p;
 	}
@@ -739,11 +808,14 @@ public class ShowlManager {
 		
 	}
 	
-	private void processFormula(ShowlPropertyShape gps) {
-		PropertyConstraint p = gps.getPropertyConstraint();
+	private void processFormula(ShowlPropertyShape ps) {
+		PropertyConstraint p = ps.getPropertyConstraint();
 		QuantifiedExpression e = (p==null) ? null : p.getFormula();
 		if (e != null) {
-			e.dispatch(new PathVisitor(gps));
+			if (logger.isTraceEnabled()) {
+				logger.trace("processFormula({})", ps.getPath());
+			}
+			e.dispatch(new PathVisitor(ps));
 		}
 		
 	}
@@ -791,9 +863,7 @@ public class ShowlManager {
 							}
 
 							ShowlPropertyShape p = outwardProperty(parentShape, property);
-							if (logger.isTraceEnabled()) {
-								logger.trace("PathVisitor.enter: Created derived Property Shape: {}", p.getPath());
-							}
+							
 							thisStep = p;
 							break;								
 						}
@@ -851,6 +921,9 @@ public class ShowlManager {
 
 			ShowlOutwardPropertyShape p = new ShowlOutwardPropertyShape(parentShape, property);
 			parentShape.addDerivedProperty(p);
+			if (logger.isTraceEnabled()) {
+				logger.trace("outwardProperty: created {}", p.getPath());
+			}
 			return p;
 		}
 
