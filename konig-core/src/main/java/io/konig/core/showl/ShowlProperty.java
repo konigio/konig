@@ -25,6 +25,7 @@ import java.util.Collections;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.URI;
@@ -36,6 +37,11 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.Direction;
+import io.konig.formula.DirectionStep;
+import io.konig.formula.PathExpression;
+import io.konig.formula.PathStep;
+import io.konig.formula.PrimaryExpression;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -81,12 +87,14 @@ public class ShowlProperty {
 	 * Get the set of OWL Classes that are known to be in the domain of
 	 * the property. Subclasses are excluded.
 	 */
-	public Set<URI> domainIncludes(OwlReasoner reasoner) {
+	public Set<URI> domainIncludes(ShowlManager manager) {
 		Set<URI> result = new HashSet<>();
 		if (domain != null  && !Konig.Undefined.equals(domain.getId())) {
 			result.add(domain.getId());
 		}
-		addDomain(result, reasoner, propertyShapes);
+		Set<URI> equivalent = new HashSet<>();
+		equivalent.add(predicate);
+		addDomain(equivalent, result, manager, propertyShapes);
 		return result;
 	}
 	
@@ -131,7 +139,8 @@ public class ShowlProperty {
 		
 	}
 
-	private void addDomain(Set<URI> result, OwlReasoner reasoner, Set<ShowlPropertyShape> set) {
+	private void addDomain(Set<URI> equivalentProperty, Set<URI> result, ShowlManager manager, Set<ShowlPropertyShape> set) {
+		OwlReasoner reasoner = manager.getReasoner();
 		outer : for (ShowlPropertyShape p : set) {
 			URI owlClass = p.getDeclaringShape().getOwlClass().getId();
 			Iterator<URI> sequence = result.iterator();
@@ -147,7 +156,10 @@ public class ShowlProperty {
 			if (!Konig.Undefined.equals(owlClass)) {
 				result.add(owlClass);
 			}
+		
+
 		}
+	
 		
 	}
 	
@@ -155,7 +167,7 @@ public class ShowlProperty {
 		if (domain != null) {
 			return domain;
 		}
-		Set<URI> domainIncludes = domainIncludes(manager.getReasoner());
+		Set<URI> domainIncludes = domainIncludes(manager);
 		
 		return domainIncludes.size()==1 ? 
 				manager.produceOwlClass(domainIncludes.iterator().next()) : 

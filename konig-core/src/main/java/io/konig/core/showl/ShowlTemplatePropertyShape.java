@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * Konig Core
@@ -22,6 +24,7 @@ package io.konig.core.showl;
 
 
 import io.konig.core.util.IriTemplate;
+import io.konig.core.vocab.Konig;
 
 public class ShowlTemplatePropertyShape extends ShowlDerivedPropertyShape {
 
@@ -30,6 +33,11 @@ public class ShowlTemplatePropertyShape extends ShowlDerivedPropertyShape {
 	public ShowlTemplatePropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, IriTemplate template) {
 		super(declaringShape, property);
 		this.template = template;
+	}
+	
+	@Override
+	public URI getPredicate() {
+		return Konig.id;
 	}
 	
 	public IriTemplate getTemplate() {

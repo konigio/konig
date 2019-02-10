@@ -95,6 +95,10 @@ public class ShowlJoinCondition {
 			right!=null && n==right.getDeclaringShape() ? left.getDeclaringShape() :
 			null;
 	}
+	
+	public boolean isJoinProperty(ShowlPropertyShape p) {
+		return p==left || p==right;
+	}
 
 	public ShowlPropertyShape otherProperty(ShowlPropertyShape p) {
 		
