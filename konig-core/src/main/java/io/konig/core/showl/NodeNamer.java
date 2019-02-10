@@ -39,6 +39,7 @@ public class NodeNamer {
 	}
 
 	public String varname(ShowlNodeShape node) {
+		node = node.getRoot();
 		String result = map.get(node);
 		if (result == null) {
 			result = vargen.next();
