@@ -479,6 +479,7 @@ public class WorkbookLoader {
 
 		private Properties settings = new Properties();
 		private List<ShapeTemplate> shapeTemplateList = new ArrayList<>();
+		private List<ClassTemplateBuilder> classTemplateList = new ArrayList<>();
 		private List<ImportInfo> importList = new ArrayList<>();
 		private Map<URI, List<Function>> dataSourceMap = new HashMap<>();
 		private List<String> warningList = new ArrayList<>();
@@ -503,6 +504,7 @@ public class WorkbookLoader {
 		private int classCommentCol = UNDEFINED;
 		private int classIdCol = UNDEFINED;
 		private int classSubclassOfCol = UNDEFINED;
+		private int classIriTemplateCol = UNDEFINED;
 		private int subjectAreaCol = UNDEFINED;
 
 		private int propertyNameCol = UNDEFINED;
@@ -712,6 +714,7 @@ public class WorkbookLoader {
 				handleFormulas();
 				produceEnumShapes();
 				processShapeTemplates();
+				processClassTemplates();
 				processDataSources();
 				visitShapes();
 				processImportStatements();
@@ -722,6 +725,13 @@ public class WorkbookLoader {
 				logError("Failed to process workbook", e);
 				
 			}
+		}
+
+		private void processClassTemplates() throws SpreadsheetException {
+			for (ClassTemplateBuilder worker : classTemplateList) {
+				worker.createTemplate(graph, shapeManager, nsManager);
+			}
+			
 		}
 
 		private void init() {
@@ -3917,6 +3927,9 @@ public class WorkbookLoader {
 			Literal comment = stringLiteral(row, classCommentCol);
 			URI classId = uriValue(row, classIdCol);
 			List<URI> subclassOf = uriList(row, classSubclassOfCol);
+
+
+			String iriTemplate = stringValue(row, classIriTemplateCol);
 			Collection<URI> subjectArea = uriList(row, subjectAreaCol);
 			if (subjectArea == null) {
 				subjectArea = defaultSubject();
@@ -3937,6 +3950,10 @@ public class WorkbookLoader {
 				}
 				
 				termStatus(classId, termStatus);
+				
+				if (iriTemplate != null) {
+					classTemplateList.add(new ClassTemplateBuilder(classId, iriTemplate));
+				}
 			}
 			if (!subjectArea.isEmpty()) {
 				addNamespace("skos", SKOS.NAMESPACE);
@@ -4064,6 +4081,7 @@ public class WorkbookLoader {
 			classCommentCol = UNDEFINED;
 			classIdCol = UNDEFINED;
 			classSubclassOfCol = UNDEFINED;
+			classIriTemplateCol = UNDEFINED;
 			termStatusCol = UNDEFINED;
 			subjectAreaCol = UNDEFINED;
 
@@ -4096,6 +4114,10 @@ public class WorkbookLoader {
 						
 					case CLASS_SUBCLASS_OF:
 						classSubclassOfCol = i;
+						break;
+						
+					case IRI_TEMPLATE:
+						classIriTemplateCol = i;
 						break;
 						
 					case SUBJECT:
@@ -4409,6 +4431,129 @@ public class WorkbookLoader {
 			shapeWriter.emitShape(shape, graph);
 		}
 
+	}
+	
+	static class LocalNameLookup {
+		private List<Shape> shapeList;
+
+		public LocalNameLookup(List<Shape> shapeList) {
+			this.shapeList = shapeList;
+		}
+		
+		public URI toQualifiedIri(String localName) {
+			
+			for (Shape shape : shapeList) {
+				URI result = findIri(shape.getProperty(), localName);
+				if (result == null) {
+					result = findIri(shape.getDerivedProperty(), localName);
+				}
+				if (result != null) {
+					return result;
+				}
+			}
+			
+			return null;
+		}
+
+		private URI findIri(List<PropertyConstraint> property, String localName) {
+			for (PropertyConstraint p : property) {
+				URI predicate = p.getPredicate();
+				if (predicate != null && predicate.getLocalName().equals(localName)) {
+					return predicate;
+				}
+			}
+			return null;
+		}
+		
+	}
+	
+	static class ClassTemplateBuilder {
+
+		private URI classId;
+		private String templateText;
+		private LocalNameLookup lookup;
+
+		public ClassTemplateBuilder(URI classId, String iriTemplate) {
+			this.classId = classId;
+			this.templateText = iriTemplate;
+			
+		}
+		
+		public String getTemplateText() {
+			return templateText;
+		}
+
+		public void createTemplate(Graph graph, ShapeManager shapeManager, NamespaceManager nsManager) throws SpreadsheetException {
+			if (lookup == null) {
+				lookup = new LocalNameLookup(shapeManager.getShapesByTargetClass(classId));
+			}
+			SimpleValueFormat format = new SimpleValueFormat(templateText);
+			BasicContext context = new BasicContext(null);
+			IriTemplate iriTemplate = new IriTemplate();
+			iriTemplate.setContext(context);
+
+			for (Element e : format.toList()) {
+
+				switch (e.getType()) {
+
+				case TEXT:
+					iriTemplate.addText(e.getText());
+					break;
+
+				case VARIABLE:
+					String name = e.getText();
+					iriTemplate.addVariable(name);
+					int colon = name.indexOf(':');
+					if (colon > 0) {
+						String prefix = name.substring(0, colon);
+
+						Term nsTerm = context.getTerm(prefix);
+						if (nsTerm == null) {
+							Namespace ns = nsManager.findByPrefix(prefix);
+							if (ns != null) {
+								nsTerm = new Term(prefix, ns.getName(), Kind.NAMESPACE);
+								context.add(nsTerm);
+							} else {
+								throw new SpreadsheetException("Namespace prefix not defined: " + prefix);
+							}
+						}
+					} else {
+						URI p = lookup.toQualifiedIri(name);
+						if (p == null) {
+
+							Namespace ns = nsManager.findByPrefix(name);
+							if (ns != null) {
+								context.add(new Term(name, ns.getName(), Kind.NAMESPACE));
+								break;
+							}
+
+							throw new SpreadsheetException(
+									"For Class <" + classId + "> template property not found: " + name);
+						}
+						String namespace = p.getNamespace();
+						Namespace ns = nsManager.findByName(namespace);
+						if (ns == null) {
+							context.add(new Term(name, p.stringValue(), Kind.PROPERTY));
+						} else {
+							String prefix = ns.getPrefix();
+							Term nsTerm = context.getTerm(prefix);
+							if (nsTerm == null) {
+								context.add(new Term(prefix, namespace, Kind.NAMESPACE));
+							}
+							context.add(new Term(name, prefix + ":" + name, Kind.PROPERTY));
+						}
+					}
+					break;
+				}
+			}
+			context.sort();
+
+			Literal literal = new LiteralImpl(iriTemplate.toString());
+			graph.edge(classId, Konig.iriTemplate, literal);
+		}
+
+		
+	
 	}
 
 	static class ShapeTemplate {

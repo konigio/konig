@@ -453,7 +453,8 @@ public class ShowlSqlTransform {
 		}
 
 		private TableNameExpression tableName(ShowlNodeShape targetNode) throws ShowlSqlTransformException {
-			for (DataSource ds : targetNode.getShape().getShapeDataSource()) {
+		
+			for (DataSource ds : targetNode.getRoot().getShape().getShapeDataSource()) {
 				if (datasourceType.isInstance(ds)) {
 					TableDataSource table = (TableDataSource) ds;
 					String tableName = table.getQualifiedTableName();
@@ -462,7 +463,7 @@ public class ShowlSqlTransform {
 				
 			}
 			throw new ShowlSqlTransformException(
-					"Datasource of type " + datasourceType.getSimpleName() + " not found in Shape ");
+					"Datasource of type " + datasourceType.getSimpleName() + " not found in  " + targetNode.getPath());
 		}
 	}
 }

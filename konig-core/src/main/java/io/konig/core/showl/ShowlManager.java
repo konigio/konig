@@ -23,6 +23,8 @@ package io.konig.core.showl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -34,17 +36,21 @@ import java.util.Set;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.OWL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
+import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.Formula;
 import io.konig.formula.FormulaVisitor;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
+import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
@@ -101,7 +107,9 @@ public class ShowlManager {
 		ShowlNodeShapeSet set =  nodeShapes.get(shapeId);
 		return (set == null) ? emptySet() : set;
 	}
-	
+	public ShowlProperty getProperty(URI propertyId) {
+		return properties.get(propertyId);
+	}
 	public Collection<ShowlProperty> getProperties() {
 		return properties.values();
 	}
@@ -117,27 +125,10 @@ public class ShowlManager {
 		return reasoner;
 	}
 	
-	public void inferTargetClasses(ShapeManager shapeManager, OwlReasoner reasoner) {
-		for (Shape shape : shapeManager.listShapes()) {
-			if (shape.getTargetClass()==null || Konig.Undefined.equals(shape.getTargetClass())) {
-				inferTargetClass(shape, reasoner);
-			}
-		}
-	}
+	
 
 
 
-	private void inferTargetClass(Shape shape, OwlReasoner reasoner) {
-		
-		for (PropertyConstraint p : shape.getProperty()) {
-			URI predicate = p.getPredicate();
-			if (predicate != null) {
-				
-			}
-			
-		}
-		
-	}
 
 
 
@@ -201,10 +192,19 @@ public class ShowlManager {
 				for (ShowlNodeShape nodeB : getNodeShape(shapeB.getId())) {
 					// For now we consider only root shapes.
 					// TODO: Consider nested shapes.
-					if (nodeB.getAccessor()==null) {
-						ShowlNodeShape targetNode = role==MappingRole.TARGET ? nodeA : nodeB;
-						ShowlNodeShape sourceNode = role==MappingRole.TARGET ? nodeB : nodeA;
+					
+					
+					ShowlClass classA = nodeA.getOwlClass();
+					ShowlClass classB = nodeB.getOwlClass();
+
+					ShowlNodeShape targetNode = role==MappingRole.TARGET ? nodeA : nodeB;
+					ShowlNodeShape sourceNode = role==MappingRole.TARGET ? nodeB : nodeA;
+					
+					if (classA.isSubClassOf(classB) || classB.isSubClassOf(classA)) {
+						
 						doJoin(targetNode, sourceNode, joinCondition);
+					} else {
+						joinNested(sourceNode, targetNode, joinCondition);
 					}
 				}
 			}
@@ -245,6 +245,30 @@ public class ShowlManager {
 //				joinObjectProperties(nodeA, joinCondition);
 //			}
 //		}
+	}
+
+	private void joinNested(ShowlNodeShape sourceNode, ShowlNodeShape targetNode, ShowlJoinCondition prior) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("joinNested({}, {})", sourceNode.getPath(), targetNode.getPath());
+			
+			
+			ShowlClass targetClass = targetNode.getOwlClass();
+			ShowlNodeShape nestedSource = findNestedSource(sourceNode, targetClass);
+			if (nestedSource != null) {
+				
+				doJoin(targetNode, nestedSource, prior);
+			}
+		}
+		
+	}
+
+	private ShowlNodeShape findNestedSource(ShowlNodeShape sourceNode, ShowlClass targetClass) {
+		
+		NestedShapeSelector selector = new NestedShapeSelector(targetClass);
+		selector.scan(sourceNode.getProperties());
+		selector.scan(sourceNode.getDerivedProperties());
+		
+		return selector.getSelected();
 	}
 
 	private void joinObjectProperties(ShowlNodeShape leftNode, ShowlJoinCondition joinCondition) throws ShowlProcessingException {
@@ -335,6 +359,25 @@ public class ShowlManager {
 		ShowlPropertyShape sourceId = sourceNode.findProperty(Konig.id);
 		ShowlPropertyShape targetId = targetNode.findProperty(Konig.id);
 		
+		if (sourceId==null) {
+			sourceId = useClassIriTemplate(sourceNode);
+			if (sourceId == null) {
+				if (logger.isTraceEnabled()) {
+					logger.trace("Cannot join {}...{} because left Id is not defined", sourceNode.getPath(), targetNode.getPath());
+				}
+				return;
+			}
+		}
+		if (targetId==null) {
+			targetId = useClassIriTemplate(targetNode);
+			if (targetId == null) {
+				if (logger.isTraceEnabled()) {
+					logger.trace("Cannot join {}...{} because right Id is not defined", sourceNode.getPath(), targetNode.getPath());
+				}
+				return;
+			}
+		}
+		
 		if (sourceId.findJoinCondition(targetId) == null) {
 			ShowlJoinCondition join = new ShowlTargetToSourceJoinCondition(targetId, sourceId, joinCondition);
 			
@@ -343,7 +386,26 @@ public class ShowlManager {
 		
 	}
 
+	private ShowlPropertyShape useClassIriTemplate(ShowlNodeShape sourceNode) {
+		ShowlClass owlClass = sourceNode.getOwlClass();
+		if (owlClass != null) {
+			IriTemplate template = owlClass.getIriTemplate();
+			if (template != null) {
+				ShowlTemplatePropertyShape p = new ShowlTemplatePropertyShape(sourceNode, null, template);
+				sourceNode.addDerivedProperty(p);
+				if (logger.isTraceEnabled()) {
+					logger.trace("useClassIriTemplate({}) ... {}", sourceNode.getPath(), template.getText());
+				}
+				return p;
+			}
+		}
+		return null;
+	}
+
 	private void buildMappings(ShowlNodeShape leftNode, ShowlNodeShape rightNode, ShowlJoinCondition join) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("buildMappings({}, {})", leftNode.getPath(), rightNode.getPath());
+		}
 		doBuildMappings(leftNode, rightNode, join);
 		
 		// TODO: re-think the following line.  
@@ -409,16 +471,16 @@ public class ShowlManager {
 			if (rightProperty == null) {
 				continue;
 			}
-			if (Konig.id.equals(leftProperty.getPredicate()) || Konig.id.equals(rightProperty.getPredicate())) {
-				// TODO: We ought to find a better way to handle konig:id mappings
-				
-				// For now, we skip them
-				if (logger.isTraceEnabled()) {
-					logger.trace("Skipping mapping: {}...{}", 
-						leftProperty.getPath(), rightProperty.getPath());
-				}
-				continue;
-			}
+//			if (Konig.id.equals(leftProperty.getPredicate()) || Konig.id.equals(rightProperty.getPredicate())) {
+//				// TODO: We ought to find a better way to handle konig:id mappings
+//				
+//				// For now, we skip them
+//				if (logger.isTraceEnabled()) {
+//					logger.trace("doBuildMappings - Skipping mapping: {}...{}", 
+//						leftProperty.getPath(), rightProperty.getPath());
+//				}
+//				continue;
+//			}
 			
 			leftProperty = propertyToMap(leftProperty);
 			rightProperty = propertyToMap(rightProperty);
@@ -463,10 +525,14 @@ public class ShowlManager {
 		return null;
 	}
 
-	private void produceMapping(ShowlJoinCondition join, ShowlPropertyShape directLeft,
-			ShowlPropertyShape directRight) {
+	private void produceMapping(ShowlJoinCondition join, ShowlPropertyShape left,
+			ShowlPropertyShape right) {
 		
-		new ShowlMapping(join, directLeft, directRight);
+		if (join.isJoinProperty(left) && join.isJoinProperty(right)) {
+			new ShowlJoinMapping(join);
+		} else {
+			new ShowlMapping(join, left, right);
+		}
 		
 	}
 
@@ -553,46 +619,42 @@ public class ShowlManager {
 		if (!ShowlUtil.isUndefinedClass(node.getOwlClass())) {
 			return;
 		}
-		Set<URI> candidates = new LinkedHashSet<>();
+		
+		DomainReasoner domainReasoner = new DomainReasoner(reasoner);
 		
 		Set<ShowlPropertyShape> allProperties = node.allOutwardProperties();
 		for (ShowlPropertyShape p : allProperties) {
 			
 			if (p.isNestedAccordingToFormula()) {
 				continue;
-				// TODO: add reasoning about nested fields
 			}
 			
 			ShowlProperty property = p.getProperty();
 			if (property != null) {
-				Set<URI> domainIncludes = property.domainIncludes(reasoner);
-				
-				
-				// Remove elements from the domain that are superclasses of an existing candidate.
-				Iterator<URI> sequence = domainIncludes.iterator();
-				outer : while (sequence.hasNext()) {
-					URI domain = sequence.next();
-					if (Konig.Undefined.equals(domain)) {
-						sequence.remove();
-					} else {
-						for (URI candidate : candidates) {
-							if (reasoner.isSubClassOf(candidate, domain)) {
-								sequence.remove();
-								continue outer;
-							}
-						}
-					}
-				}
-				candidates.addAll(domainIncludes);
+				domainReasoner.domainIncludes(property.domainIncludes(this));
 			}
 		}
 		
+		Set<URI> candidates = domainReasoner.getRequiredClasses();
+		
+		if (candidates.isEmpty()) {
+			candidates = inferTargetClassFromFormula(node, domainReasoner);
+		}
+		
 		if (candidates.size()==1) {
-			
-			replaceOwlClass(node, candidates.iterator().next());
+			URI owlClass = candidates.iterator().next();
+			replaceOwlClass(node, owlClass);
+			if (logger.isTraceEnabled()) {
+				logger.trace("inferTargetClass: Set {} as target class of {}", owlClass.getLocalName(), node.getPath());
+			}
 		} else {
 			
+		
+			
 			if (logger.isWarnEnabled()) {
+				if (candidates.isEmpty()) {
+					candidates = domainReasoner.getAllClasses();
+				}
 				if (candidates.isEmpty()) {
 					logger.warn("No candidates found for target class of " + node.getPath());
 				} else {
@@ -609,6 +671,111 @@ public class ShowlManager {
 			}
 		}
 		
+		
+	}
+
+	/**
+	 * Add OWL classes from the domain of a given Property to the set of candidates.
+	 * @param candidates The set of candidates to be augmented.
+	 * @param property
+	 * @return true if there is no conflict between the existing candidates and the given property
+	 */
+	private boolean updateCandidates(Set<URI> candidates, ShowlProperty property) {
+
+		Set<URI> domainIncludes = property.domainIncludes(this);
+		
+		// Remove owl:Thing and konig:Undefined from consideration
+		Iterator<URI> sequence = domainIncludes.iterator();
+		while (sequence.hasNext()) {
+			URI domain = sequence.next();
+			if (OWL.THING.equals(domain) || Konig.Undefined.equals(domain)) {
+				sequence.remove();
+			}
+		}
+		
+		if (domainIncludes.isEmpty()) {
+			return true;
+		}
+		
+		if (candidates.isEmpty()) {
+			candidates.addAll(domainIncludes);
+			return true;
+		}
+		
+		
+		boolean compatible = true;
+		
+		domainLoop : for (URI domain : domainIncludes) {
+			sequence = candidates.iterator();
+			while (sequence.hasNext()) {
+				URI candidate = sequence.next();
+				if (domain.equals(candidate)) {
+					continue domainLoop;
+				}
+				if (reasoner.isSubClassOf(domain, candidate)) {
+					// replace candidate with the more narrow domain
+					sequence.remove();
+					candidates.add(domain);
+					continue domainLoop;
+				}
+				if (reasoner.isSubClassOf(candidate, domain)) {
+					// The domain element is consistent with the existing
+					// candidates since there is a candidate that is a 
+					// subclass of the domain.
+					
+					// Keep the more narrow candidate.
+					
+					continue domainLoop;
+				}
+			}
+		}
+		
+		
+		
+		
+		
+		return compatible;
+	}
+	
+
+
+
+	private Set<URI> inferTargetClassFromFormula(ShowlNodeShape node, DomainReasoner domainReasoner) {
+		
+		boolean updated = false;
+		for (ShowlPropertyShape p : node.getProperties()) {
+			
+			PropertyConstraint constraint = p.getPropertyConstraint();
+			if (constraint != null) {
+				QuantifiedExpression formula = constraint.getFormula();
+				if (formula != null) {
+					PrimaryExpression primary = formula.asPrimaryExpression();
+					if (primary instanceof PathExpression) {
+						PathExpression path = (PathExpression) primary;
+						List<PathStep> stepList = path.getStepList();
+						if (stepList.size() == 1) {
+							PathStep step = stepList.get(0);
+							if (step instanceof DirectionStep) {
+								DirectionStep dirStep = (DirectionStep) step;
+								if (dirStep.getDirection() == Direction.OUT) {
+									URI predicate = dirStep.getTerm().getIri();
+									ShowlProperty property = getProperty(predicate);
+									if (property != null) {
+										Set<URI> domainIncludes = property.domainIncludes(this);
+										
+										domainReasoner.domainIncludes(domainIncludes);
+										updated = true;
+										
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return updated ? domainReasoner.getRequiredClasses() : Collections.emptySet();
 		
 	}
 
@@ -982,7 +1149,7 @@ public class ShowlManager {
 		}
 		ShowlClass result = owlClasses.get(owlClass);
 		if (result == null) {
-			result = new ShowlClass(owlClass);
+			result = new ShowlClass(this, owlClass);
 			owlClasses.put(owlClass, result);
 		}
 		return result;
@@ -1018,4 +1185,127 @@ public class ShowlManager {
 		SOURCE,
 		TARGET
 	}
+	
+	private class DomainReasoner  {
+		private OwlReasoner reasoner;
+		private Set<ModalClass> candidates = new HashSet<>();
+		
+		
+		public DomainReasoner(OwlReasoner reasoner) {
+			this.reasoner = reasoner;
+		}
+
+		public void domainIncludes(Set<URI> domainIncludes) {
+			
+			boolean required = domainIncludes.size()==1;
+			for (URI domain : domainIncludes) {
+				URI matched = null;
+				for (ModalClass modal : candidates) {
+					URI candidate = modal.getOwlClass();
+					if (reasoner.isSubClassOf(domain, candidate)) {
+						// The domain is more narrow than the candidate
+						// so replace the candidate with the domain.
+						
+						modal.update(domain, required);
+						matched = domain;
+					} else if (reasoner.isSubClassOf(candidate, domain)) {
+						// The existing candidate is more narrow than the domain
+						// so keep the existing candidate
+						
+						modal.update(candidate, required);
+						matched = candidate;
+					}
+				}
+				if (matched==null) {
+					candidates.add(new ModalClass(domain, required));
+				}
+			}
+		}
+		
+		public Set<URI> getRequiredClasses() {
+			Set<URI> result = new HashSet<>();
+			for (ModalClass modal : candidates) {
+				if (modal.isRequired()) {
+					result.add(modal.getOwlClass());
+				}
+			}
+			return result;
+		}
+		
+		public Set<URI> getAllClasses() {
+			Set<URI> result = new HashSet<>();
+			for (ModalClass modal : candidates) {
+				result.add(modal.getOwlClass());
+			}
+			return result;
+		}
+	}
+	
+	/**
+	 * A structure that decorates the URI for an OWL class with
+	 * a flag that specifies whether or not the class is required.
+	 *
+	 */
+	private class ModalClass {
+		private boolean required;
+		private URI owlClass;
+		public ModalClass(URI owlClass, boolean required) {
+			this.required = required;
+			this.owlClass = owlClass;
+		}
+		public boolean isRequired() {
+			return required;
+		}
+		public URI getOwlClass() {
+			return owlClass;
+		}
+		
+		public void update(URI owlClass, boolean required) {
+			this.owlClass = owlClass;
+			if (required) {
+				this.required = true;
+			}
+		}
+		
+		
+	}
+	
+	private static class NestedShapeSelector {
+		private ShowlNodeShape selected;
+		private ShowlClass owlClass;
+		private boolean failed=false;
+		
+		
+		
+		public NestedShapeSelector(ShowlClass owlClass) {
+			this.owlClass = owlClass;
+		}
+
+		void scan(Collection<? extends ShowlPropertyShape> list) {
+			if (!failed) {
+				for (ShowlPropertyShape p : list) {
+					ShowlNodeShape nested = p.getValueShape();
+					if (nested != null &&  nested.getOwlClass().isSubClassOf(owlClass)) {
+						if (selected == null) {
+							selected = nested;
+						} else {
+							if (logger.isTraceEnabled() && failed == false) {
+								logger.trace(
+									"Nested shape selection is ambiguous. Options include {} and {}",
+									selected.getPath(), nested.getPath());
+							}
+							failed = true;
+							return;
+						}
+					}
+				}
+			}
+		}
+		
+		public ShowlNodeShape getSelected() {
+			return failed ? null : selected;
+		}
+		
+	}
+	
 }

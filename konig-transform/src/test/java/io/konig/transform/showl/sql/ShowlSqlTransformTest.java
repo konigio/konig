@@ -84,6 +84,14 @@ public class ShowlSqlTransformTest {
 		return transform.createInsert(node, GoogleBigQueryTable.class);
 	}
 
+	@Test
+	public void testNestedSource() throws Exception {
+		
+		test(
+			"src/test/resources/ShowlSqlTransformTest/nested-source-transform", 
+			"http://example.com/ns/shape/PersonTargetShape");
+	}
+
 	@Ignore
 	public void testCastConcat() throws Exception {
 		

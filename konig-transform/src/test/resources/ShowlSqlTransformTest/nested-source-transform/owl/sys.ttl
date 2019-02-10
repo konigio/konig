@@ -1,0 +1,4 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix sys: <http://example.com/ns/sys/> .
+
+sys:EDW konig:consumesDataFrom sys:ERP , sys:CRM . 

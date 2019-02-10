@@ -25,6 +25,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+
+import io.konig.core.Graph;
+import io.konig.core.Vertex;
+import io.konig.core.util.IriTemplate;
+import io.konig.core.vocab.Konig;
 
 public class ShowlClass {
 	
@@ -33,15 +39,21 @@ public class ShowlClass {
 	private Set<ShowlProperty> domainOf = new HashSet<>();
 	private Set<ShowlProperty> rangeOf = new HashSet<>();
 	private Set<ShowlClass> superClasses = null;
-	
+	private ShowlManager manager;
+	private IriTemplate iriTemplate;
 	private Set<ShowlNodeShape> targetClassOf = new HashSet<>();
 	
-	public ShowlClass(URI owlClassId) {
+	public ShowlClass(ShowlManager manager, URI owlClassId) {
+		this.manager = manager;
 		this.owlClassId = owlClassId;
 	}
 
 	public URI getId() {
 		return owlClassId;
+	}
+	
+	public boolean isSubClassOf(ShowlClass other) {
+		return manager.getReasoner().isSubClassOf(owlClassId, other.getId());
 	}
 
 	
@@ -82,6 +94,22 @@ public class ShowlClass {
 
 	public Set<ShowlNodeShape> getTargetClassOf() {
 		return targetClassOf;
+	}
+
+	public IriTemplate getIriTemplate() {
+		
+		if (iriTemplate == null) {
+			Graph graph = manager.getReasoner().getGraph();
+			Vertex v = graph.getVertex(owlClassId);
+			if (v != null) {
+				Value value = v.getValue(Konig.iriTemplate);
+				if (value != null) {
+					iriTemplate = new IriTemplate(value.stringValue());
+				}
+			}
+		}
+		
+		return iriTemplate;
 	}
 	
 }
