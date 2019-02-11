@@ -28,11 +28,14 @@ import java.util.List;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.core.Context;
 import io.konig.core.showl.NodeNamer;
+import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlFormulaPropertyShape;
 import io.konig.core.showl.ShowlJoinCondition;
@@ -214,6 +217,7 @@ public class ShowlSqlTransform {
 			
 			return new TableAliasExpression(tableName, alias);
 		}
+		
 
 		private ValueExpression mappedValue(ShowlDirectPropertyShape p) throws ShowlSqlTransformException {
 			
@@ -415,6 +419,8 @@ public class ShowlSqlTransform {
 			IriTemplate template = showlTemplate.getTemplate();
 			SqlFunctionExpression func = new SqlFunctionExpression(SqlFunctionExpression.CONCAT);
 
+			Context context = template.getContext();
+			
 			for (ValueFormat.Element e : template.toList()) {
 				switch (e.getType()) {
 				case TEXT:
@@ -423,7 +429,25 @@ public class ShowlSqlTransform {
 					
 				case VARIABLE:
 					String fieldName = e.getText();
-					String fullName = tableAlias + "." + fieldName;
+					
+					URI predicate = new URIImpl(context.expandIRI(fieldName));
+					
+					ShowlPropertyShape p = node.findProperty(predicate);
+					if (p == null) {
+						String msg = MessageFormat.format("Template variable {0} not found for {1}", 
+								fieldName, showlTemplate.getPath());
+						throw new ShowlSqlTransformException(msg);
+					}
+					
+					String fullName = null;
+					if (p instanceof ShowlDerivedPropertyShape) {
+						ShowlPropertyShape peer = p.getPeer();
+						fullName = tableAlias + "." + peer.getPredicate().getLocalName();
+					} else {
+					
+						fullName = tableAlias + "." + fieldName;
+					}
+					
 					
 					ColumnExpression column = new ColumnExpression(fullName);
 					func.addArg(column);
@@ -453,7 +477,8 @@ public class ShowlSqlTransform {
 		}
 
 		private TableNameExpression tableName(ShowlNodeShape targetNode) throws ShowlSqlTransformException {
-			for (DataSource ds : targetNode.getShape().getShapeDataSource()) {
+		
+			for (DataSource ds : targetNode.getRoot().getShape().getShapeDataSource()) {
 				if (datasourceType.isInstance(ds)) {
 					TableDataSource table = (TableDataSource) ds;
 					String tableName = table.getQualifiedTableName();
@@ -462,7 +487,7 @@ public class ShowlSqlTransform {
 				
 			}
 			throw new ShowlSqlTransformException(
-					"Datasource of type " + datasourceType.getSimpleName() + " not found in Shape ");
+					"Datasource of type " + datasourceType.getSimpleName() + " not found in  " + targetNode.getPath());
 		}
 	}
 }

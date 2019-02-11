@@ -93,6 +93,14 @@ public class ShowlSqlTransformTest {
 	}
 
 	@Ignore
+	public void testNestedSource() throws Exception {
+		
+		test(
+			"src/test/resources/ShowlSqlTransformTest/nested-source-transform", 
+			"http://example.com/ns/shape/PersonTargetShape");
+	}
+
+	@Ignore
 	public void testCastConcat() throws Exception {
 		
 		test(
