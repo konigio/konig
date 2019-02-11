@@ -83,6 +83,14 @@ public class ShowlSqlTransformTest {
 		
 		return transform.createInsert(node, GoogleBigQueryTable.class);
 	}
+	
+	@Test
+	public void testInverseProperty() throws Exception {
+		
+		test(
+			"src/test/resources/ShowlSqlTransformTest/inverse-property-transform", 
+			"http://example.com/ns/shape/BookTargetShape");
+	}
 
 	@Ignore
 	public void testCastConcat() throws Exception {

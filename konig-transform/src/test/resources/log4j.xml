@@ -32,12 +32,10 @@
 <!-- 
 
   
-  <logger name="io.konig.transform" additivity="false">
-      <level value="trace"/>
-      <appender-ref ref="console"/>
-  </logger>
   
-  <logger name="io.konig.core.showl.NodeNamer" additivity="false">
+-->
+  
+  <logger name="io.konig.transform" additivity="false">
       <level value="trace"/>
       <appender-ref ref="console"/>
   </logger>
@@ -47,9 +45,6 @@
       <level value="trace"/>
       <appender-ref ref="console"/>
   </logger>
-  
--->
-  
   
   <root> 
     <priority value ="info" /> 
