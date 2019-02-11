@@ -26,12 +26,13 @@ schema:Person a owl:Class ;
 <http://example.com/person/{uid}>''' . 
 
 schema:author a owl:ObjectProperty ; 
-	schema:domainIncludes schema:Person . 
+	schema:domainIncludes schema:Book ; 
+	schema:rangeIncludes schema:Person . 
 
 schema:isbn a owl:DatatypeProperty ; 
-	schema:domainIncludes schema:Person ; 
+	schema:domainIncludes schema:Book ; 
 	schema:rangeIncludes xsd:string . 
 
 schema:name a owl:DatatypeProperty ; 
-	schema:domainIncludes schema:Person ; 
+	schema:domainIncludes schema:Book , schema:Person ; 
 	schema:rangeIncludes xsd:string . 

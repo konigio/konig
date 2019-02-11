@@ -58,6 +58,9 @@ public class ShowlProperty {
 	
 	public ShowlProperty(URI predicate) {
 		this.predicate = predicate;
+//		if (logger.isTraceEnabled()) {
+//			logger.trace("new ShowlProperty({})", predicate.getLocalName());
+//		}
 	}
 
 	public URI getPredicate() {
@@ -72,6 +75,9 @@ public class ShowlProperty {
 			throw new KonigException("addPropertyShape: Inward property not allowed: " + p.getPath());
 		}
 		propertyShapes.add(p);
+//		if (logger.isTraceEnabled()) {
+//			logger.trace("addPropertyShape({})", p.getPath());
+//		}
 	}
 	
 	/**

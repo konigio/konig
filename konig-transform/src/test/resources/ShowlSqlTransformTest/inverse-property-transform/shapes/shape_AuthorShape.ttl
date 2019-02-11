@@ -9,13 +9,14 @@
 
 shape:AuthorShape sh:property  [ 
 		sh:path schema:name ; 
-		sh:datatype xsd:string ; 
 		rdf:predicate schema:name ; 
+		sh:datatype xsd:string ; 
 		sh:maxCount 1 ; 
 		sh:minCount 1 ]  ; 
 	a sh:Shape , sh:NodeShape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/PmawIbmDlI4AAAFo3PKxWA> ; 
-	sh:nodeKind sh:IRI . 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:Person ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/2rbulJkcFb8AAAFo3XJOjg> . 
 
-<http://www.konig.io/activity/PmawIbmDlI4AAAFo3PKxWA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2019-02-11T09:25:19.196-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/2rbulJkcFb8AAAFo3XJOjg> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2019-02-11T11:44:42.515-05:00"^^xsd:dateTime . 

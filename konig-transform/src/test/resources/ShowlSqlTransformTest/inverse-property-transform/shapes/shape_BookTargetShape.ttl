@@ -10,14 +10,14 @@
 
 shape:BookTargetShape sh:property  [ 
 		sh:path schema:isbn ; 
-		sh:datatype xsd:string ; 
 		rdf:predicate schema:isbn ; 
+		sh:datatype xsd:string ; 
 		sh:maxCount 1 ; 
 		sh:minCount 1
 	 ]  ,  [ 
 		sh:path schema:name ; 
-		sh:datatype xsd:string ; 
 		rdf:predicate schema:name ; 
+		sh:datatype xsd:string ; 
 		sh:maxCount 1 ; 
 		sh:minCount 1
 	 ]  ,  [ 
@@ -27,18 +27,18 @@ shape:BookTargetShape sh:property  [
 		sh:maxCount 1 ; 
 		sh:minCount 1 ]  ; 
 	a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/PmawIbmDlI4AAAFo3PKxWA> ; 
-	konig:explicitDerivedFrom shape:PersonSourceShape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/example/tables/BookTarget> ; 
 	sh:nodeKind sh:IRI ; 
-	sh:targetClass schema:Person . 
-
-<http://www.konig.io/activity/PmawIbmDlI4AAAFo3PKxWA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2019-02-11T09:25:19.196-05:00"^^xsd:dateTime . 
+	sh:targetClass schema:Book ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/2rbulJkcFb8AAAFo3XJOjg> ; 
+	konig:explicitDerivedFrom shape:PersonSourceShape . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/example/tables/BookTarget> gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
-		gcp:tableId "BookTarget" ; 
-		gcp:datasetId "example" ]  ; 
+		gcp:datasetId "example" ; 
+		gcp:tableId "BookTarget" ]  ; 
 	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
 	a konig:GoogleBigQueryTable , konig:DataSource . 
+
+<http://www.konig.io/activity/2rbulJkcFb8AAAFo3XJOjg> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2019-02-11T11:44:42.515-05:00"^^xsd:dateTime . 

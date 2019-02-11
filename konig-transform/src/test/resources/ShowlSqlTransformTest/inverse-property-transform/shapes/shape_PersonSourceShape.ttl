@@ -11,72 +11,71 @@
 
 shape:PersonSourceShape sh:property  [ 
 		sh:path alias:person_id ; 
-		sh:datatype xsd:string ; 
 		rdf:predicate alias:person_id ; 
+		sh:datatype xsd:string ; 
 		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
 		konig:formula '''@prefix konig: <http://www.konig.io/ns/core/> .
 @term uid konig:uid
 
-$.uid''' ; 
-		sh:minCount 1
+$.uid'''
 	 ]  ,  [ 
 		sh:path alias:person_name ; 
-		sh:datatype xsd:string ; 
 		rdf:predicate alias:person_name ; 
+		sh:datatype xsd:string ; 
 		sh:maxCount 1 ; 
+		sh:minCount 0 ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
 @term name schema:name
 
-$.name''' ; 
-		sh:minCount 0
+$.name'''
 	 ]  ,  [ 
 		sh:path alias:most_famous_book_isbn ; 
-		sh:datatype xsd:string ; 
 		rdf:predicate alias:most_famous_book_isbn ; 
+		sh:datatype xsd:string ; 
 		sh:maxCount 1 ; 
+		sh:minCount 0 ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
 @term author schema:author
 @term isbn schema:isbn
 
-$^author.isbn''' ; 
-		sh:minCount 0
+$^author.isbn'''
 	 ]  ,  [ 
 		sh:path alias:most_famous_book_title ; 
-		sh:datatype xsd:date ; 
 		rdf:predicate alias:most_famous_book_title ; 
+		sh:datatype xsd:date ; 
 		sh:maxCount 1 ; 
+		sh:minCount 0 ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
 @term author schema:author
 @term name schema:name
 
-$^author.name''' ; 
-		sh:minCount 0 ]  ; 
+$^author.name''' ]  ; 
 	a sh:Shape ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/PmawIbmDlI4AAAFo3PKxWA> ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/example/tables/PersonSource> , <gs://personsourceshape-${gcpBucketSuffix}> ; 
-	sh:targetClass schema:Person . 
-
-<http://www.konig.io/activity/PmawIbmDlI4AAAFo3PKxWA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2019-02-11T09:25:19.196-05:00"^^xsd:dateTime . 
+	sh:targetClass schema:Person ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/2rbulJkcFb8AAAFo3XJOjg> . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/example/tables/PersonSource> gcp:externalDataConfiguration  [ 
-		gcp:sourceFormat "CSV" ; 
-		gcp:sourceUris "gs://personsourceshape-${gcpBucketSuffix}/*" ; 
 		gcp:csvOptions  [ 
-			gcp:skipLeadingRows "1"^^xsd:long
-		 ] 
+			gcp:skipLeadingRows "1"^^xsd:long ]  ; 
+		gcp:sourceFormat "CSV" ; 
+		gcp:sourceUris "gs://personsourceshape-${gcpBucketSuffix}/*"
 	 ]  ; 
 	gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
-		gcp:tableId "PersonSource" ; 
-		gcp:datasetId "example" ]  ; 
+		gcp:datasetId "example" ; 
+		gcp:tableId "PersonSource" ]  ; 
 	a konig:GoogleBigQueryTable , konig:DataSource . 
 
 <gs://personsourceshape-${gcpBucketSuffix}> gcp:name "personsourceshape-${gcpBucketSuffix}" ; 
 	gcp:location "us" ; 
+	gcp:projectId "${gcpProjectId}" ; 
+	gcp:storageClass "multi_regional" ; 
 	gcp:notificationInfo  [ 
 		gcp:eventTypes "${eventType}" ; 
 		gcp:topic "${topicName}" ]  ; 
-	gcp:projectId "${gcpProjectId}" ; 
-	gcp:storageClass "multi_regional" ; 
 	a konig:GoogleCloudStorageBucket , konig:DataSource . 
+
+<http://www.konig.io/activity/2rbulJkcFb8AAAFo3XJOjg> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2019-02-11T11:44:42.515-05:00"^^xsd:dateTime . 
