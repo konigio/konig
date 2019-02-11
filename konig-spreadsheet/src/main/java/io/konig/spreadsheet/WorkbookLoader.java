@@ -76,6 +76,7 @@ import io.konig.activity.Activity;
 import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
+import io.konig.core.LocalNameService;
 import io.konig.core.NameMap;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
@@ -473,6 +474,7 @@ public class WorkbookLoader {
 		private Graph defaultOntologies;
 		private File workbookFile;
 		private ShapeReasoner shapeReasoner;
+		private SimpleLocalNameService localNameService = new SimpleLocalNameService();
 		
 		private EnumerationReasoner enumReasoner;
 		private JsonPathProcessor jsonPathProcessor;
@@ -2401,6 +2403,7 @@ public class WorkbookLoader {
 			}
 
 			logger.debug("loadPropertyConstraintRow({},{})", RdfUtil.localName(shapeId), RdfUtil.localName(propertyId));
+			localNameService.add(propertyId);
 
 			URI termStatus = uriValue(row, termStatusCol);
 			String comment = stringValue(row, pcCommentCol);
@@ -3650,6 +3653,7 @@ public class WorkbookLoader {
 				return;
 			}
 
+			localNameService.add(propertyId);
 			Vertex subject = graph.vertex(propertyId);
 			propertyType = analyzePropertyType(subject, propertyType, range);
 			graph.edge(propertyId, RDF.TYPE, RDF.PROPERTY);
@@ -3952,7 +3956,7 @@ public class WorkbookLoader {
 				termStatus(classId, termStatus);
 				
 				if (iriTemplate != null) {
-					classTemplateList.add(new ClassTemplateBuilder(classId, iriTemplate));
+					classTemplateList.add(new ClassTemplateBuilder(localNameService, classId, iriTemplate));
 				}
 			}
 			if (!subjectArea.isEmpty()) {
@@ -4435,12 +4439,19 @@ public class WorkbookLoader {
 	
 	static class LocalNameLookup {
 		private List<Shape> shapeList;
+		private LocalNameService service;
+		
 
-		public LocalNameLookup(List<Shape> shapeList) {
+		public LocalNameLookup(List<Shape> shapeList, LocalNameService service) {
 			this.shapeList = shapeList;
+			this.service = service;
 		}
 		
 		public URI toQualifiedIri(String localName) {
+			Set<URI> set = service.lookupLocalName(localName);
+			if (set.size() == 1) {
+				return set.iterator().next();
+			}
 			
 			for (Shape shape : shapeList) {
 				URI result = findIri(shape.getProperty(), localName);
@@ -4472,11 +4483,12 @@ public class WorkbookLoader {
 		private URI classId;
 		private String templateText;
 		private LocalNameLookup lookup;
+		private LocalNameService localNameService;
 
-		public ClassTemplateBuilder(URI classId, String iriTemplate) {
+		public ClassTemplateBuilder(LocalNameService localNameService, URI classId, String iriTemplate) {
 			this.classId = classId;
 			this.templateText = iriTemplate;
-			
+			this.localNameService = localNameService;
 		}
 		
 		public String getTemplateText() {
@@ -4485,7 +4497,7 @@ public class WorkbookLoader {
 
 		public void createTemplate(Graph graph, ShapeManager shapeManager, NamespaceManager nsManager) throws SpreadsheetException {
 			if (lookup == null) {
-				lookup = new LocalNameLookup(shapeManager.getShapesByTargetClass(classId));
+				lookup = new LocalNameLookup(shapeManager.getShapesByTargetClass(classId), localNameService);
 			}
 			SimpleValueFormat format = new SimpleValueFormat(templateText);
 			BasicContext context = new BasicContext(null);
@@ -4526,6 +4538,7 @@ public class WorkbookLoader {
 								context.add(new Term(name, ns.getName(), Kind.NAMESPACE));
 								break;
 							}
+							
 
 							throw new SpreadsheetException(
 									"For Class <" + classId + "> template property not found: " + name);
