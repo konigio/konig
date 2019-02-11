@@ -267,6 +267,7 @@ public class ShowlManager {
 		NestedShapeSelector selector = new NestedShapeSelector(targetClass);
 		selector.scan(sourceNode.getProperties());
 		selector.scan(sourceNode.getDerivedProperties());
+		selector.scan(sourceNode.getInwardProperties());
 		
 		return selector.getSelected();
 	}
@@ -431,6 +432,7 @@ public class ShowlManager {
 			ShowlJoinCondition join) {
 		
 		
+		
 		for (ShowlPropertyShape leftProperty : properties) {
 			ShowlPropertyShape rightProperty = rightNode.getInwardProperty(leftProperty.getPredicate());
 		
@@ -444,7 +446,15 @@ public class ShowlManager {
 			}
 			
 			
-			
+			if (rightProperty == null) {
+				 
+				 if (logger.isTraceEnabled()) {
+					 logger.trace("buildInwardMapping - Failed to find mapping for {} in {}", 
+							 leftProperty.getPath(), rightNode.getPath());
+				 }
+
+				 continue;
+			}
 			
 			ShowlPropertyShape directLeft = directProperty(leftProperty);
 			ShowlPropertyShape directRight = directProperty(rightProperty);
@@ -465,11 +475,30 @@ public class ShowlManager {
 	}
 	private void doBuildMappings(Collection<? extends ShowlPropertyShape> properties, ShowlNodeShape rightNode,
 			ShowlJoinCondition join) {
-		
+
+		ShowlPropertyShape rightAccessor = rightNode.getAccessor();
 		for (ShowlPropertyShape leftProperty : properties) {
 			ShowlPropertyShape rightProperty = rightNode.findProperty(leftProperty.getPredicate());
 			if (rightProperty == null) {
-				continue;
+				
+				if (
+					rightAccessor instanceof ShowlInwardPropertyShape && 
+					rightAccessor.getPredicate().equals(leftProperty.getPredicate())
+				) { 
+					
+					ShowlPropertyShape rightId = produceIdProperty(rightAccessor.getDeclaringShape());
+					produceMapping(join, leftProperty, rightId);
+					if (leftProperty.getValueShape() != null) {
+						
+						doBuildMappings(leftProperty.getValueShape(), rightAccessor.getDeclaringShape(), join);
+					}
+				} else {
+					if (logger.isTraceEnabled()) {
+						logger.trace("doBuildMappings - mapping not found for {} in {}",
+							leftProperty.getPath(), rightNode.getPath());
+					}
+					continue;
+				}
 			}
 //			if (Konig.id.equals(leftProperty.getPredicate()) || Konig.id.equals(rightProperty.getPredicate())) {
 //				// TODO: We ought to find a better way to handle konig:id mappings
@@ -486,6 +515,9 @@ public class ShowlManager {
 			rightProperty = propertyToMap(rightProperty);
 			
 
+			if (leftProperty == null || rightProperty==null) {
+				continue;
+			}
 			produceMapping(join, leftProperty, rightProperty);
 			
 			
@@ -500,6 +532,14 @@ public class ShowlManager {
 			
 		}
 		
+	}
+
+	private ShowlPropertyShape produceIdProperty(ShowlNodeShape rightNode) {
+		ShowlPropertyShape id = rightNode.findProperty(Konig.id);
+		if (id == null) {
+			id = useClassIriTemplate(rightNode);
+		}
+		return id;
 	}
 
 	private ShowlPropertyShape propertyToMap(ShowlPropertyShape p) {
@@ -631,7 +671,11 @@ public class ShowlManager {
 			
 			ShowlProperty property = p.getProperty();
 			if (property != null) {
-				domainReasoner.domainIncludes(property.domainIncludes(this));
+				if (property.getDomain() != null) {
+					domainReasoner.require(property.getDomain().getId());
+				} else {
+					domainReasoner.domainIncludes(property.domainIncludes(this));
+				}
 			}
 		}
 		
@@ -1194,6 +1238,10 @@ public class ShowlManager {
 		public DomainReasoner(OwlReasoner reasoner) {
 			this.reasoner = reasoner;
 		}
+		
+		public void require(URI owlClass) {
+			candidates.add(new ModalClass(owlClass, true));
+		}
 
 		public void domainIncludes(Set<URI> domainIncludes) {
 			
@@ -1301,6 +1349,8 @@ public class ShowlManager {
 				}
 			}
 		}
+		
+		
 		
 		public ShowlNodeShape getSelected() {
 			return failed ? null : selected;
