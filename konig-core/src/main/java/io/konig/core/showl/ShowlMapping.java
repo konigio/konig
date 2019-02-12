@@ -64,4 +64,7 @@ public class ShowlMapping {
 	}
 	
 
+	public String toString() {
+		return "ShowlMapping(" + leftProperty.getPath() + "..." + rightProperty.getPath() + ")";
+	}
 }

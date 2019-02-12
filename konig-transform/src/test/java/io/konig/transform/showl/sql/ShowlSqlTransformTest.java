@@ -84,7 +84,7 @@ public class ShowlSqlTransformTest {
 		return transform.createInsert(node, GoogleBigQueryTable.class);
 	}
 	
-	@Ignore
+	@Test
 	public void testInverseProperty() throws Exception {
 		
 		test(
