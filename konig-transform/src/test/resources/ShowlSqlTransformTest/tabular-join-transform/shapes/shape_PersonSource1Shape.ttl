@@ -12,51 +12,52 @@
 
 shape:PersonSource1Shape sh:property  [ 
 		sh:path alias:person_id ; 
-		rdf:predicate alias:person_id ; 
 		sh:datatype xsd:string ; 
+		rdf:predicate alias:person_id ; 
 		sh:maxCount 1 ; 
 		sh:minCount 1
 	 ]  ,  [ 
 		sh:path alias:first_name ; 
-		rdf:predicate alias:first_name ; 
 		sh:datatype xsd:string ; 
+		rdf:predicate alias:first_name ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@term givenName <http://schema.org/givenName>
 
 $.givenName''' ; 
 		sh:minCount 0 ]  ; 
 	a sh:Shape ; 
+	prov:wasGeneratedBy <http://www.konig.io/activity/YckTLRGHTbUAAAFo4r66hA> ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource1> , <gs://personsource1shape-${gcpBucketSuffix}> ; 
+	konig:explicitDerivedFrom shape:PersonSource1Shape , shape:PersonSource2Shape ; 
 	sh:targetClass schema:Person ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
    "person_id" : "alias:person_id"
 }
 
-<http://example.com/person/{person_id}>''' ; 
-	prov:wasGeneratedBy <http://www.konig.io/activity/bto0io9xV_AAAAForlO7TA> ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource1> , <gs://personsource1shape-${gcpBucketSuffix}> . 
+<http://example.com/person/{person_id}>''' . 
 
-<http://www.konig.io/activity/bto0io9xV_AAAAForlO7TA> a konig:LoadModelFromSpreadsheet ; 
-	as:endTime "2019-02-02T08:09:09.586-05:00"^^xsd:dateTime . 
+<http://www.konig.io/activity/YckTLRGHTbUAAAFo4r66hA> a konig:LoadModelFromSpreadsheet ; 
+	as:endTime "2019-02-12T12:26:16.969-05:00"^^xsd:dateTime . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource1> gcp:externalDataConfiguration  [ 
-		gcp:csvOptions  [ 
-			gcp:skipLeadingRows "1"^^xsd:long ]  ; 
-		gcp:sourceUris "gs://personsource1shape-${gcpBucketSuffix}/*" ; 
-		gcp:sourceFormat "CSV"
-	 ]  ; 
-	gcp:tableReference  [ 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource1> gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
 		gcp:datasetId "schema" ; 
-		gcp:tableId "PersonSource1" ]  ; 
+		gcp:tableId "PersonSource1"
+	 ]  ; 
+	gcp:externalDataConfiguration  [ 
+		gcp:csvOptions  [ 
+			gcp:skipLeadingRows "1"^^xsd:long ]  ; 
+		gcp:sourceFormat "CSV" ; 
+		gcp:sourceUris "gs://personsource1shape-${gcpBucketSuffix}/*" ]  ; 
 	a konig:GoogleBigQueryTable , konig:DataSource ; 
 	schema:isPartOf sys:ERP . 
 
 <gs://personsource1shape-${gcpBucketSuffix}> gcp:name "personsource1shape-${gcpBucketSuffix}" ; 
 	gcp:location "us" ; 
 	gcp:projectId "${gcpProjectId}" ; 
-	gcp:storageClass "multi_regional" ; 
 	gcp:notificationInfo  [ 
-		gcp:topic "${topicName}" ; 
-		gcp:eventTypes "${eventType}" ]  ; 
+		gcp:eventTypes "${eventType}" ; 
+		gcp:topic "${topicName}" ]  ; 
+	gcp:storageClass "multi_regional" ; 
 	a konig:GoogleCloudStorageBucket , konig:DataSource . 

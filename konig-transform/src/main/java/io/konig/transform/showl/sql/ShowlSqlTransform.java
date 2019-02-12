@@ -164,13 +164,20 @@ public class ShowlSqlTransform {
 					List<? extends ValueFormat.Element> elements = leftT.getTemplate().toList();
 					BooleanTerm booleanTerm = null;
 					AndExpression andExpression=null;
+					Context leftContext = leftT.getTemplate().getContext();
+					leftContext.compile();
 					
 					for (ValueFormat.Element e : elements) {
 						if (e.getType() == ElementType.VARIABLE) {
 							String varName = e.getText();
 							
-							ColumnExpression leftCol = new ColumnExpression(leftTableAlias + "." + varName);
-							ColumnExpression rightCol = new ColumnExpression(rightTableAlias + "." + varName);
+							URI predicate = leftContext.getTerm(varName).getExpandedId();
+							
+							ShowlPropertyShape leftProperty = left.getDeclaringShape().findProperty(predicate);
+							ShowlPropertyShape rightProperty = right.getDeclaringShape().findProperty(predicate);
+							
+							ValueExpression leftCol = valueExpression(leftProperty);
+							ValueExpression rightCol = valueExpression(rightProperty);
 							
 							ComparisonPredicate compare = new ComparisonPredicate(
 								ComparisonOperator.EQUALS, leftCol, rightCol);
@@ -209,6 +216,12 @@ public class ShowlSqlTransform {
 		}
 
 		private ValueExpression valueExpression(ShowlPropertyShape p) {
+			if (p instanceof ShowlDerivedPropertyShape) {
+				ShowlPropertyShape peer = p.getPeer();
+				if (peer != null) {
+					return qualifiedColumn(peer);
+				}
+			}
 			return qualifiedColumn(p);
 		}
 
