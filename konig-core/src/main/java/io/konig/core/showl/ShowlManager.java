@@ -250,14 +250,14 @@ public class ShowlManager {
 	private void joinNested(ShowlNodeShape sourceNode, ShowlNodeShape targetNode, ShowlJoinCondition prior) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("joinNested({}, {})", sourceNode.getPath(), targetNode.getPath());
+		}
 			
 			
-			ShowlClass targetClass = targetNode.getOwlClass();
-			ShowlNodeShape nestedSource = findNestedSource(sourceNode, targetClass);
-			if (nestedSource != null) {
-				
-				doJoin(targetNode, nestedSource, prior);
-			}
+		ShowlClass targetClass = targetNode.getOwlClass();
+		ShowlNodeShape nestedSource = findNestedSource(sourceNode, targetClass);
+		if (nestedSource != null) {
+			
+			doJoin(targetNode, nestedSource, prior);
 		}
 		
 	}
