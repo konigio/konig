@@ -1,0 +1,44 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org" . 
+
+schema:Person a owl:Class ; 
+	konig:iriTemplate '''@context {
+   "konig" : "http://www.konig.io/ns/core/",
+   "uid" : "konig:uid"
+}
+
+<http://example.com/person/{uid}>''' . 
+
+schema:PostalAddress a owl:Class . 
+
+schema:address a owl:ObjectProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes schema:PostalAddress . 
+
+schema:addressLocality a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:PostalAddress ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:addressRegion a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:PostalAddress ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:familyName a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:givenName a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:Person ; 
+	schema:rangeIncludes xsd:string . 
+
+schema:streetAddress a owl:DatatypeProperty ; 
+	schema:domainIncludes schema:PostalAddress ; 
+	schema:rangeIncludes xsd:string . 
