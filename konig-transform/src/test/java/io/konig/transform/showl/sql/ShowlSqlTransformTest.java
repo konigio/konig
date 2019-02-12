@@ -93,12 +93,23 @@ public class ShowlSqlTransformTest {
 	}
 
 	@Ignore
-	public void testNestedSource() throws Exception {
+	public void testNestedSourcePerson() throws Exception {
 		
 		test(
 			"src/test/resources/ShowlSqlTransformTest/nested-source-transform", 
-			"http://example.com/ns/shape/PersonTargetShape");
+			"http://example.com/ns/shape/PersonTargetShape",
+			"person.sql");
 	}
+
+	@Ignore
+	public void testNestedSourceBook() throws Exception {
+		
+		test(
+			"src/test/resources/ShowlSqlTransformTest/nested-source-transform", 
+			"http://example.com/ns/shape/BookTargetShape",
+			"book.sql");
+	}
+
 
 	@Ignore
 	public void testCastConcat() throws Exception {
@@ -109,6 +120,11 @@ public class ShowlSqlTransformTest {
 	}
 	
 	private void test(String dataDir, String targetShapeId) throws Exception {
+		test(dataDir, targetShapeId, "expected.sql");
+	}
+
+	private void test(String dataDir, String targetShapeId, String expectedDml) throws Exception {
+
 		ShowlSourceNodeSelector selector = new ExplicitDerivedFromSelector();
 		showlManager = new ShowlManager(shapeManager, reasoner, selector, null);
 		
@@ -116,9 +132,8 @@ public class ShowlSqlTransformTest {
 		System.out.println(insert);
 		
 		assertFileEquals(
-			dataDir + "/expected.sql",
+			dataDir + "/" + expectedDml,
 			insert.toString());
-		
 	}
 
 	@Ignore
