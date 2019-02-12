@@ -47,6 +47,7 @@ import io.konig.core.showl.ShowlTemplatePropertyShape;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat;
 import io.konig.core.util.ValueFormat.ElementType;
+import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
 import io.konig.formula.Direction;
@@ -58,6 +59,7 @@ import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.sql.query.AliasExpression;
 import io.konig.sql.query.AndExpression;
@@ -235,6 +237,10 @@ public class ShowlSqlTransform {
 				return templateValue((ShowlTemplatePropertyShape) other);
 			}
 			
+			if (p.getPropertyConstraint().getNodeKind() == NodeKind.IRI) {
+				return iriReference(p, other);
+			}
+			
 		
 			if (other instanceof ShowlFormulaPropertyShape) {
 				return alias(formula((ShowlFormulaPropertyShape)other), p);
@@ -254,6 +260,23 @@ public class ShowlSqlTransform {
 		}
 
 		
+
+		private ValueExpression iriReference(ShowlDirectPropertyShape p, ShowlPropertyShape other) throws ShowlSqlTransformException {
+			
+			ShowlNodeShape otherNode = other.getValueShape();
+			if (otherNode != null) {
+				ShowlPropertyShape otherId = otherNode.findProperty(Konig.id);
+				if (otherId instanceof ShowlTemplatePropertyShape) {
+					ValueExpression e = templateValue((ShowlTemplatePropertyShape)otherId);
+					
+					return new AliasExpression(e, p.getPredicate().getLocalName());
+				}
+			}
+			
+			throw new ShowlSqlTransformException(
+				MessageFormat.format("Failed to construct IRI reference for {0} from {1}",
+						p.getPath(), other.getPath()));
+		}
 
 		private ValueExpression alias(ValueExpression e, ShowlDirectPropertyShape p) {
 			String aliasName = p.getPredicate().getLocalName();
@@ -459,6 +482,8 @@ public class ShowlSqlTransform {
 			
 			return new AliasExpression(func, targetName);
 		}
+		
+		
 		
 		private ColumnExpression qualifiedColumn(ShowlPropertyShape p) {
 			String tableName = nodeNamer.varname(p.getDeclaringShape());
