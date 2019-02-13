@@ -28,15 +28,35 @@ import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.Context;
 import io.konig.core.Term;
+import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.vocab.Schema;
 
 public class FormulaParserTest {
-	
+
 	private FormulaParser parser = new FormulaParser();
+	
+	
+	@Test
+	public void testVarId() throws Exception {
+		String text = "DATE_TRUNC(Day, ?product.dateCreated)";
+		
+		URI productId = uri("http://example.com/ns/product");
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		FormulaParser parser = new FormulaParser(null, service);
+		service.add(productId);
+		service.add(Schema.dateCreated);
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		
+		Term productTerm = e.getContext().getTerm("product");
+		assertTrue(productTerm != null);
+		
+		assertEquals(productId.stringValue(), productTerm.getExpandedIdValue());
+		
+	}
 	
 	@Test
 	public void testConcat() throws Exception {
-		String text =
+		String text = "\n" +
 			"@term givenName: <http://schema.org/givenName>\n" +
 			"CONCAT($.givenName, \"foo\")";
 		QuantifiedExpression e = parser.quantifiedExpression(text);
@@ -143,7 +163,7 @@ public class FormulaParserTest {
 	
 	@Test
 	public void testTerm() throws Exception {
-		String text = 
+		String text =  "\n"+
 			"@term address <http://schema.org/address>\n" +
 			"@prefix schema : <http://schema.org/> .\n" +
 			"@term postalCode schema:postalCode\n" +
@@ -160,7 +180,7 @@ public class FormulaParserTest {
 		assertEquals(Schema.postalCode, term.getExpandedId());
 		
 		String actualText = e.toString();
-		String expectedText = 
+		String expectedText =  "\n"+
 				"@prefix schema: <http://schema.org/> .\n" + 
 				"@term address <http://schema.org/address>\n" + 
 				"@term postalCode schema:postalCode\n" + 
@@ -175,7 +195,7 @@ public class FormulaParserTest {
 	@Test
 	public void testTimeInterval() throws Exception {
 
-		String text = 
+		String text =  "\n"+
 			"@term endTime <http://schema.org/endTime>\n" + 
 			"@term Day <http://www.konig.io/ns/core/Day>\n" + 
 			"@term Week <http://www.konig.io/ns/core/Week>\n" + 
@@ -192,7 +212,7 @@ public class FormulaParserTest {
 	@Test
 	public void testCountFormula() throws Exception {
 
-		String text = 
+		String text =  "\n"+
 			"@term price <http://schema.org/price>\n\n" + 
 			"COUNT(?x.price)";
 
@@ -236,7 +256,7 @@ public class FormulaParserTest {
 	
 	@Test
 	public void testHasStep() throws Exception {
-		String text = 
+		String text =  "\n"+
 			"@term address <http://schema.org/address>\n" + 
 			"@term addressCountry <http://schema.org/addressCountry>\n" + 
 			"@term addressRegion <http://schema.org/addressRegion>\n\n" + 
@@ -249,7 +269,7 @@ public class FormulaParserTest {
 
 	@Test
 	public void testBound() throws Exception {
-		String text = 
+		String text =  "\n"+
 			"@term price <http://schema.org/price>\n\n" + 
 			"BOUND($.price)" ;
 		
@@ -262,7 +282,7 @@ public class FormulaParserTest {
 	
 	@Test
 	public void testSum() throws Exception {
-		String text = 
+		String text = "\n"+
 			"@term price <http://schema.org/price>\n" + 
 			"@term OfferShape <http://example.com/ns/OfferShape>\n" + 
 			"@term hasShape <http://www.konig.io/ns/core/hasShape>\n\n" +
@@ -297,7 +317,7 @@ public class FormulaParserTest {
 	@Test
 	public void testIfFunction() throws Exception {
 		
-		String text = 
+		String text =  "\n"+
 			"@term email <http://schema.org/email>\n\n" + 
 			"IF($.email , 1 , 0)";
 		
@@ -308,7 +328,7 @@ public class FormulaParserTest {
 	
 	@Test
 	public void testNotEquals() throws Exception {
-		String text = 
+		String text =  "\n"+
 			"@term created <http://www.konig.io/ns/core/created>\n" + 
 			"@term modified <http://www.konig.io/ns/core/modified>\n" + 
 			"\n" + 
@@ -324,7 +344,7 @@ public class FormulaParserTest {
 	@Test
 	public void testContext() throws Exception {
 		
-		String text =
+		String text = "\n"+
 			  "@prefix schema: <http://schema.org/> .\n" + 
 			  "@term knows schema:knows\n" + 
 			  "@term Alice <http://example.com/Alice>\n\n"
@@ -352,7 +372,7 @@ public class FormulaParserTest {
 	@Test
 	public void testConditional() throws Exception {
 
-		String text = 
+		String text =  "\n"+
 				"@term pmd <http://example.com/pmd>\n\n" + 
 				"($.sprintIssue.status = pmd:Complete) ? $.sprintIssue.timeEstimate : 0";
 		
@@ -366,7 +386,7 @@ public class FormulaParserTest {
 	@Test
 	public void testCurieTerm() throws Exception {
 
-		String text = 
+		String text =  "\n"+
 				"@term ex <http://example.com/core>\n\n" + 
 				"$.ex:alpha.ex:beta NOT IN (ex:foo , ex:bar)";
 		

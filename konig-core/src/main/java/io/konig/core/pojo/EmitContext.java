@@ -184,7 +184,7 @@ public class EmitContext {
 					Set<URI> nameList = nameService.lookupLocalName(resourceName);
 					
 
-					RdfProperty annotation = m.getAnnotation(RdfProperty.class);
+					RdfProperty annotation = rdfPropertyAnnotation(m);
 					if (annotation != null) {
 						String value = annotation.value();
 						
@@ -231,6 +231,31 @@ public class EmitContext {
 
 		} 
 		return result;
+	}
+
+	private RdfProperty rdfPropertyAnnotation(Method m) {
+		
+		String methodName = m.getName();
+		while (m != null) {
+			RdfProperty a = m.getAnnotation(RdfProperty.class);
+			if (a != null) {
+				return a;
+			}
+			Class<?> type = m.getDeclaringClass();
+			while (type != null) {
+				type = type.getSuperclass();
+				if (type == Object.class) {
+					return null;
+				}
+				try {
+					m = type.getDeclaredMethod(methodName);
+					break;
+				} catch (NoSuchMethodException | SecurityException e) {
+					// Ignore
+				}
+			}
+		}
+		return null;
 	}
 
 	private String getterResourceName(String name) {

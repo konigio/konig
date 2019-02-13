@@ -53,6 +53,17 @@ import info.aduna.text.StringUtil;
 public class CompactTurtleWriter extends TurtleWriter {
 	
 	private List<Context> stack = new ArrayList<>();
+	private String baseIRI = null;
+	
+	
+
+	public String getBaseIRI() {
+		return baseIRI;
+	}
+
+	public void setBaseIRI(String baseIRI) {
+		this.baseIRI = baseIRI;
+	}
 
 	public CompactTurtleWriter(OutputStream out) {
 		super(out);
@@ -87,8 +98,13 @@ public class CompactTurtleWriter extends TurtleWriter {
 				writer.write(prefix);
 				writer.write(":");
 				writer.write(localName);
-			} 
+			} else if (baseIRI!=null && uriString.startsWith(baseIRI)) {
+				writer.write('<');
+				writer.write(TurtleUtil.encodeURIString(uriString.substring(baseIRI.length())));
+				writer.write('>');
+			}
 			else {
+				
 				// Write full URI
 				writer.write("<");
 				writer.write(TurtleUtil.encodeURIString(uriString));

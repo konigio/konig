@@ -135,6 +135,7 @@ public class Expression extends AbstractFormula {
 //		out.println('}');
 		
 		if (!termList.isEmpty()) {
+			out.println();
 			printPrefixes(out, termList);
 			printTerms(out, termList);
 			out.println();

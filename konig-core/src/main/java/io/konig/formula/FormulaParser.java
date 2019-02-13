@@ -531,16 +531,18 @@ public class FormulaParser {
 			(call=trySetFunction(FunctionExpression.SUM)) != null ? call :
 			(call=trySetFunction(FunctionExpression.AVG)) != null ? call :
 			(call=trySetFunction(FunctionExpression.COUNT)) != null ? call :
-			(call=tryGenericFunction(FunctionExpression.DATE_TRUNC)) != null ? call :
 			(call=tryGenericFunction(FunctionExpression.UNIX_TIME)) != null ? call :
 			(call=tryGenericFunction(FunctionExpression.CONCAT)) != null ? call :
 			(call=tryGenericFunction(FunctionExpression.TIME_INTERVAL)) != null ? call :
+			(call=tryDateTrunc()) != null ? call :
 			(call=tryBoundFunction()) != null ? call :
+				
 			null;
 			
 			return call;
 		}
 		
+
 
 		private SetFunctionExpression trySetFunction(String functionName) throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
@@ -588,6 +590,34 @@ public class FormulaParser {
 			return null;
 		}
 
+		private BuiltInCall tryDateTrunc() throws IOException, RDFHandlerException, RDFParseException {
+			skipSpace();
+			String name = tryCaseInsensitiveWord(FunctionExpression.DATE_TRUNC);
+			if (name != null) {
+				int c = next();
+				if (c != '(') {
+					unread(c);
+					unread(name);
+				} else {
+					String unitName = nextWord(" \r\n\t,");
+					TimeUnit timeUnit = TimeUnit.forName(unitName);
+					if (timeUnit == null) {
+						throw new RDFHandlerException("Invalid time unit: " + unitName);
+					}
+					assertNext(',');
+					Expression e = expr();
+					
+					List<Expression> argList = new ArrayList<>();
+					argList.add(timeUnit);
+					argList.add(e);
+					
+					return new FunctionExpression(FunctionExpression.DATE_TRUNC, argList);
+					
+					
+				}
+			}
+			return null;
+		}
 		private BuiltInCall tryGenericFunction(String functionName) throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
 			String name = tryCaseInsensitiveWord(functionName);
@@ -900,6 +930,23 @@ public class FormulaParser {
 			} while (Character.isLetter(c) || Character.isDigit(c) || c=='_');
 			unread(c);
 			String varName = buffer.toString();
+
+			Context context = getContext();
+			String termName = varName.substring(1);
+			Term term = context.getTerm(termName);
+			if (term != null) {
+				String iri = context.expandIRI(termName);
+				return new VariableTerm(varName, new URIImpl(iri));
+			}
+			if (localNameService != null) {
+				Set<URI> set = localNameService.lookupLocalName(termName);
+				if (set.size() == 1) {
+					URI varId = set.iterator().next();
+					context.addTerm(termName, varId.stringValue());
+					return new VariableTerm(varName, varId);
+				}
+				
+			}
 			return new VariableTerm(varName);
 		}
 

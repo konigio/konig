@@ -556,17 +556,27 @@ public class RdfUtil {
 	public static void prettyPrintTurtle(Graph graph, Writer writer) throws IOException, RDFHandlerException {
 		prettyPrintTurtle(graph.getNamespaceManager(), graph, writer);
 	}
-	
+
+	public static void prettyPrintTurtle(String baseIri, Graph graph, Writer writer) throws IOException, RDFHandlerException {
+		prettyPrintTurtle(graph.getNamespaceManager(), baseIri, graph, writer);
+	}
+
 	public static void prettyPrintTurtle(NamespaceManager nsManager, Graph graph, Writer writer) throws IOException, RDFHandlerException {
+		prettyPrintTurtle(nsManager, null, graph, writer);
+	}
+	
+	public static void prettyPrintTurtle(NamespaceManager nsManager, String baseIRI, Graph graph, Writer writer) throws IOException, RDFHandlerException {
 		
 		nsManager = nsManager==null ? null : filterNamespaces(graph, nsManager);
 		
 		CompactTurtleWriter turtle = new CompactTurtleWriter(writer);
+		turtle.setBaseIRI(baseIRI);
 		turtle.getWriterConfig().set(BasicWriterSettings.PRETTY_PRINT, true);
 		NaturalEdgeIterable sequence = new NaturalEdgeIterable(graph);
 		
 		turtle.startRDF();
 		printNamespaces(nsManager, turtle);
+		
 		
 		for (Edge e : sequence) {
 			turtle.handleStatement(e);

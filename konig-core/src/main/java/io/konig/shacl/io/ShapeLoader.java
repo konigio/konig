@@ -36,6 +36,7 @@ import org.openrdf.rio.turtle.TurtleParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.cadl.Cube;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
@@ -50,6 +51,7 @@ import io.konig.core.pojo.PojoListener;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.pojo.impl.BasicPojoHandler;
 import io.konig.core.pojo.impl.PojoInfo;
+import io.konig.core.vocab.CADL;
 import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
