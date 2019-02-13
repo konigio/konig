@@ -165,7 +165,7 @@ public class ShapeLoaderTest {
 		
 		Expression expr = constraint.get(0);
 		
-		String expected = 
+		String expected = "\n" +
 			"@term Activity <http://www.w3.org/ns/activitystreams#Activity>\n" + 
 			"@term type <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>\n" + 
 			"\n" + 
@@ -222,7 +222,7 @@ public class ShapeLoaderTest {
 		Expression formula = p.getFormula();
 		assertTrue(formula != null);
 		
-		String expected = 
+		String expected = "\n" +
 			"@prefix ex: <http://example.com/ns/> .\n" + 
 			"@term status <http://example.com/ns/status>\n" + 
 			"@term estimatedPoints <http://example.com/ns/estimatedPoints>\n\n" + 

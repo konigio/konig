@@ -63,6 +63,10 @@ public class SimplePojoEmitter implements PojoEmitter {
 		worker.emit(pojo);
 
 	}
+	
+	public void emit(Object pojo, Graph sink) {
+		emit(new EmitContext(sink), pojo, sink);
+	}
 
 
 	@Override

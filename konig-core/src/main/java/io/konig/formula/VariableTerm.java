@@ -36,6 +36,11 @@ public class VariableTerm extends AbstractFormula implements PathTerm {
 		this.varName = varName;
 		this.varId = new URIImpl(VAR.NAMESPACE + varName);
 	}
+	
+	public VariableTerm(String varName, URI varId) {
+		this.varName = varName;
+		this.varId = varId;
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

@@ -71,6 +71,21 @@ public class TurtleParser extends RDFParserBase {
 		return buffer;
 	}
 	
+	protected String nextWord(String delim) throws IOException {
+		skipSpace();
+		StringBuilder buffer = buffer();
+		int c;
+		while ((c = read()) != -1) {
+			if (delim.lastIndexOf(c) >= 0) {
+				unread(c);
+				break;
+			}
+			buffer.appendCodePoint(c);
+		}
+		
+		return buffer.toString();
+	}
+	
 	public NamespaceMap getNamespaceMap() {
 		return namespaceMap;
 	}
