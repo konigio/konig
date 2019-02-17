@@ -39,7 +39,7 @@ In Eclipse, commit changes with the message: "Release candidate 1.2.1"
 ## Deploy to Maven Central
 
 ```
-	mvn clean deploy -DperformRelease=true
+	mvn clean deploy -DperformRelease=true -Dgpg.passphrase=<your-passphrase>
 ```
 ## Tag the release
 
