@@ -112,4 +112,17 @@ public class ShowlClass {
 		return iriTemplate;
 	}
 	
+	@Override
+	public int hashCode() {
+		return owlClassId.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof ShowlClass) {
+			ShowlClass peer = (ShowlClass) other;
+			return owlClassId.equals(peer.getId());
+		}
+		return false;
+	}
 }

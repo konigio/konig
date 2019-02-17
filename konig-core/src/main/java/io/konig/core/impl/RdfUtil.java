@@ -847,7 +847,9 @@ public class RdfUtil {
 	}
 	
 	public static String compactName(NamespaceManager nsManager, Resource resource) {
-		
+		if (resource==null) {
+			return null;
+		}
 		if (resource instanceof BNode) {
 			return "_:" + ((BNode)resource).getID();
 		}

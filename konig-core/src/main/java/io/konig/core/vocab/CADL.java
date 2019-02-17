@@ -35,6 +35,7 @@ public class CADL {
 		public static final String Dimension = "http://www.konig.io/ns/cadl/Dimension";
 		public static final String Measure = "http://www.konig.io/ns/cadl/Measure";
 		public static final String Level = "http://www.konig.io/ns/cadl/Level";
+		public static final String Attribute = "http://www.konig.io/ns/cadl/Attribute";
 
 		public static final String dimension = "http://www.konig.io/ns/cadl/dimension";
 		public static final String measure = "http://www.konig.io/ns/cadl/measure";
@@ -43,6 +44,7 @@ public class CADL {
 		public static final String valueType = "http://www.konig.io/ns/cadl/valueType";
 		public static final String source = "http://www.konig.io/ns/cadl/source";
 		public static final String rollUpTo = "http://www.konig.io/ns/cadl/rollUpTo";
+		public static final String attribute = "http://www.konig.io/ns/cadl/attribute";
 		
 	}
 	
@@ -52,6 +54,7 @@ public class CADL {
 	public static final URI Dimension = new URIImpl(Term.Dimension);
 	public static final URI Measure = new URIImpl(Term.Measure);
 	public static final URI Level = new URIImpl(Term.Level);
+	public static final URI Attribute = new URIImpl(Term.Attribute);
 
 
 	public static final URI dimension = new URIImpl(Term.dimension);

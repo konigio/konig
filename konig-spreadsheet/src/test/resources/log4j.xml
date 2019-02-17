@@ -30,12 +30,11 @@
   </appender> 
 
   <!-- 
-  <logger name="io.konig.spreadsheet.WorkbookLoader" additivity="false">
+  <logger name="io.konig.spreadsheet" additivity="false">
       <level value="debug"/>
       <appender-ref ref="console"/>
   </logger>
    -->
-   
   <root> 
     <priority value ="off" /> 
     <appender-ref ref="console" /> 

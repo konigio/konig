@@ -47,6 +47,14 @@ public class DirectionStep extends AbstractFormula implements PathStep {
 		}
 		term.print(out);
 	}
+	
+	public boolean equals(Object other) {
+		if (other instanceof DirectionStep) {
+			DirectionStep dir = (DirectionStep) other;
+			return dir.getDirection() == direction && dir.getTerm().getIri().equals(term.getIri());
+		}
+		return false;
+	}
 
 	@Override
 	public void dispatch(FormulaVisitor visitor) {
