@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.konig</groupId>
 	<artifactId>konig-parent</artifactId>
-	<version>2.2.0-SNAPSHOT</version>
+	<version>2.3.0-SNAPSHOT</version>
 	<name>Konig Parent</name>
 	<description>The parent project from which all the konig modules are built</description>
 	<url>http://developers.konig.io/</url>
@@ -118,7 +118,9 @@
     	<module>../konig-aws-common</module>
    	    <module>../konig-aws-deploy-maven-plugin</module>
    	    <module>../konig-etl-generator</module>
+  <!--    	    
    	    <module>../konig-camel-google-bigquery</module>
+   -->
 	</modules>
 
 	<developers>
@@ -131,11 +133,11 @@
 
 	<distributionManagement>
 		<snapshotRepository>
-			<id>ossrh</id>
+			<id>ossrh-snapshots</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
 		<repository>
-			<id>ossrh</id>
+			<id>ossrh-releases</id>
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 	</distributionManagement>
