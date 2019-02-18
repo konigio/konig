@@ -45,7 +45,8 @@ public class ShapeSheet extends BaseSheetProcessor {
 		AND,
 		TABULAR_ORIGIN_SHAPE,
 		STATUS,
-		MEDIA_TYPE
+		MEDIA_TYPE,
+		SUBJECT
 	};
 
 	private DataSourceGeneratorFactory dataSourceGeneratorFactory;
@@ -131,7 +132,7 @@ public class ShapeSheet extends BaseSheetProcessor {
 				new BuildDataSourceAction(
 					location(row, DATASOURCE),
 					processor,
-					dataSourceGeneratorFactory,
+					dataSourceGeneratorFactory.getDataSourceGenerator(),
 					shape,
 					processor.getShapeManager(),
 					dataSourceList

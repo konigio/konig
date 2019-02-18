@@ -110,6 +110,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		addSheetProcessor(new ClassSheet(this, settingSheet));
 		addSheetProcessor(new PropertySheet(this));
 		addSheetProcessor(new IndividualSheet(this, settingSheet));
+		addSheetProcessor(new ShapeSheet(this, dataSourceGeneratorFactory));
 		
 	}
 
@@ -202,7 +203,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		
 		if (location.getRowNum() != null) {
 			builder.append("At row ");
-			builder.append(location.getRowNum());
+			builder.append(location.getRowNum() + 1);
 			ellipsis = " ... ";
 		}
 		

@@ -10,7 +10,7 @@ public class BuildDataSourceAction implements Action {
 	
 	private WorkbookLocation location;
 	private WorkbookProcessor processor;
-	private DataSourceGeneratorFactory factory;
+	private DataSourceGenerator generator;
 	private Shape shape;
 	private ShapeManager shapeManager;
 	private List<Function> functionList;
@@ -18,10 +18,10 @@ public class BuildDataSourceAction implements Action {
 	
 
 	public BuildDataSourceAction(WorkbookLocation location, WorkbookProcessor processor,
-			DataSourceGeneratorFactory factory, Shape shape, ShapeManager shapeManager, List<Function> functionList) {
+			DataSourceGenerator generator, Shape shape, ShapeManager shapeManager, List<Function> functionList) {
 		this.location = location;
 		this.processor = processor;
-		this.factory = factory;
+		this.generator = generator;
 		this.shape = shape;
 		this.shapeManager = shapeManager;
 		this.functionList = functionList;
@@ -32,7 +32,6 @@ public class BuildDataSourceAction implements Action {
 	@Override
 	public void execute() throws SpreadsheetException {
 
-		DataSourceGenerator generator = factory.getDataSourceGenerator();
 		for (Function function : functionList) {
 			try {
 				generator.generate(shape, function, shapeManager);
