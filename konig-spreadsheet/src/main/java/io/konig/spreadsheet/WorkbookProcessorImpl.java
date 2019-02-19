@@ -60,6 +60,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 	private List<SheetProcessor> sheetProcessors = new ArrayList<>();
 	private List<WorkbookListener> bookListeners = new ArrayList<>();
 
+
 	private io.konig.spreadsheet.nextgen.Workbook activeBook;
 	
 	// Graph specific fields
@@ -99,6 +100,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 	private void addServices(File templateDir) {
 		SettingsSheet settingSheet = settings =  new SettingsSheet(this);
 		DataSourceGeneratorFactory dataSourceGeneratorFactory = new DataSourceGeneratorFactory(nsManager, templateDir, settings);
+		addService(WorkbookProcessor.class, this);
 		addService(dataSourceGeneratorFactory);
 		addService(Graph.class, graph);
 		addService(NamespaceManager.class, nsManager);
@@ -111,6 +113,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		addSheetProcessor(new PropertySheet(this));
 		addSheetProcessor(new IndividualSheet(this, settingSheet));
 		addSheetProcessor(new ShapeSheet(this, dataSourceGeneratorFactory));
+		addSheetProcessor(new PropertyConstraintSheet(this, owlReasoner));
 		
 	}
 
@@ -340,6 +343,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 
 
 	private void beginWorkbook() {
+		logger.debug("beginWorkbook({})", activeBook.getFile().getName());
 		for (WorkbookListener listener : bookListeners) {
 			listener.beginWorkbook(activeBook);
 		}
@@ -348,6 +352,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 
 
 	private void visitSheet(WorkbookSheet bookSheet) throws SpreadsheetException {
+		logger.debug("visitSheet({})", bookSheet.getSheet().getSheetName());
 		List<SheetColumn> undeclaredColumns = new ArrayList<>();
 		assignColumnIndexes(bookSheet, undeclaredColumns);
 		SheetProcessor processor = bookSheet.getProcessor();
@@ -370,8 +375,10 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		
 	}
 
-	private boolean accept(SheetRow sheetRow, SheetProcessor processor) {
+	private boolean accept(SheetRow sheetRow, SheetProcessor processor) throws SpreadsheetException {
 		Row row = sheetRow.getRow();
+		boolean foundAny = false;
+		List<String> missingRequired = null;
 		for (SheetColumn column : processor.getColumns()) {
 			
 			if (column.isRequired()) {
@@ -379,27 +386,60 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 					return false;
 				}
 				Cell cell = row.getCell(column.getIndex());
+				
 				if (cell == null) {
-					return false;
-				}
-				@SuppressWarnings("deprecation")
-				CellType cellType = cell.getCellTypeEnum();
-				switch (cellType) {
-				case _NONE :
-				case BLANK:
-					return false;
-					
-				default:
-					// Do nothing
+					missingRequired = append(missingRequired, column.getName());
+				} else {
+//					if (sheetRow.getSheetName().equals("Property Constraints")) {
+//						String value = cellStringValue(cell);
+//						logger.debug("accept - sheet: {}, column: {}, value: {}", sheetRow.getSheetName(), column.getName(), value);
+//					}
+					@SuppressWarnings("deprecation")
+					CellType cellType = cell.getCellTypeEnum();
+					switch (cellType) {
+					case _NONE :
+					case BLANK:
+						missingRequired = append(missingRequired, column.getName());
+						break;
+						
+					default:
+						foundAny=true;
+					}
 				}
 				
+			} else if (!foundAny && column.getIndex()>=0) {
+				Cell cell = row.getCell(column.getIndex());
+				foundAny = cell!=null && cellStringValue(cell)!=null;
 			}
 		}
-		return true;
+		if (foundAny && missingRequired != null) {
+			StringBuilder text = new StringBuilder();
+			text.append("Values are required for: ");
+			String comma = "";
+			for (String name : missingRequired) {
+				text.append(comma);
+				comma = ", ";
+				text.append('[');
+				text.append(name);
+				text.append(']');
+			}
+			
+			warn(sheetRow, null, text.toString());
+		}
+		return missingRequired == null;
 	}
 
 
 	
+
+
+	private List<String> append(List<String> list, String value) {
+		if (list == null) {
+			list = new ArrayList<>();
+		}
+		list.add(value);
+		return list;
+	}
 
 
 	private List<WorkbookSheet> listSheets(Workbook workbook) throws SpreadsheetException {
@@ -527,7 +567,11 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		@Override
 		public void onRegister(Object service) {
 			if (service instanceof WorkbookListener) {
-				bookListeners.add((WorkbookListener)service);
+				WorkbookListener listener =(WorkbookListener)service; 
+				bookListeners.add(listener);
+				if (activeBook != null) {
+					listener.beginWorkbook(activeBook);
+				}
 			}
 			
 		}
@@ -535,9 +579,9 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 	}
 
 	@Override
-	public void fail(SheetRow row, SheetColumn column, Throwable cause, String pattern, Object... arg) throws SpreadsheetException {
+	public void fail(Throwable cause, SheetRow row, SheetColumn column, String pattern, Object... arg) throws SpreadsheetException {
 		String message = MessageFormat.format(pattern, arg);
-		error(row, column, message, cause);
+		error(cause, row, column, message);
 		
 	}
 

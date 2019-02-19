@@ -30,6 +30,7 @@ public class IndividualSheet extends BaseSheetProcessor {
 	private static final SheetColumn INDIVIDUAL_TYPE = new SheetColumn("Individual Type", true);
 	private static final SheetColumn CODE = new SheetColumn("Code");
 	private static final SheetColumn STATUS = new SheetColumn("Status");
+	private static final SheetColumn SUBJECT = new SheetColumn("Subject");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
 		INDIVIDUAL_NAME,
@@ -37,7 +38,8 @@ public class IndividualSheet extends BaseSheetProcessor {
 		INDIVIDUAL_ID,
 		INDIVIDUAL_TYPE,
 		CODE,
-		STATUS
+		STATUS,
+		SUBJECT
 	};
 	
 	private SettingsSheet settings;
@@ -65,6 +67,7 @@ public class IndividualSheet extends BaseSheetProcessor {
 		Literal codeValue = stringLiteral(row, CODE);
 		Literal gcpDatasetId = settings.gcpDatasetId();
 		URI termStatus = iriValue(row, STATUS);
+		List<URI> subjects = iriList(row, SUBJECT);
 		
 		if (logger.isDebugEnabled()) {
 			logger.debug("visit({})", compactName(individualId));
@@ -96,6 +99,7 @@ public class IndividualSheet extends BaseSheetProcessor {
 		edge(individualId, RDFS.COMMENT, comment);
 		edge(individualId, DCTERMS.IDENTIFIER, codeValue);
 		termStatus(individualId, termStatus);
+		assignSubject(individualId, subjects);
 		
 		for (SheetColumn c : row.getUndeclaredColumns()) {
 			undeclaredColumn(individualId, row, c);

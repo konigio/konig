@@ -1,6 +1,7 @@
 package io.konig.spreadsheet;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -15,10 +16,14 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.DCTERMS;
+import org.openrdf.model.vocabulary.SKOS;
 
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -89,17 +94,23 @@ abstract public class BaseSheetProcessor implements SheetProcessor {
 	}
 	
 	protected void fail(SheetRow row, SheetColumn col, Throwable cause, String pattern, Object...arg) throws SpreadsheetException {
-		processor.fail(row, col, cause, pattern, arg);
+		processor.fail(cause, row, col, pattern, arg);
 	}
 
 	protected void fail(SheetRow row, SheetColumn col, String pattern, Object...arg) throws SpreadsheetException {
-		processor.fail(row, col, null, pattern, arg);
+		processor.fail(null, row, col, pattern, arg);
 	}
 
 	protected void termStatus(URI subject, URI termStatus) {
 		if (subject!=null && termStatus!=null) {
 			TermStatusProcessor tsp = service(TermStatusProcessor.class);
 			tsp.assertStatus(subject, termStatus);
+		}
+	}
+	
+	protected void declareStatus(URI termStatus) {
+		if (termStatus != null) {
+			service(TermStatusProcessor.class).declareStatus(termStatus);
 		}
 	}
 
@@ -131,6 +142,49 @@ abstract public class BaseSheetProcessor implements SheetProcessor {
 	protected String stringValue(SheetRow row, SheetColumn column) {
 		return processor.stringValue(row, column);
 	}
+
+
+	protected Double doubleValue(SheetRow row, SheetColumn column) throws SpreadsheetException {
+		String text = stringValue(row, column);
+		if (text != null) {
+			try {
+				return new Double(text);
+			} catch (Throwable e) {
+				processor.fail(e, row, column, "Expected a numeric expression but found: {0}", text);
+			}
+		}
+		return null;
+	}
+
+	protected Boolean booleanValue(SheetRow row, SheetColumn column) throws SpreadsheetException {
+		String text = stringValue(row, column);
+		if (text != null) {
+			
+			if (!text.equalsIgnoreCase("true") && !text.equalsIgnoreCase("false")) {
+			
+				processor.fail(null, row,  column, "Expected 'true' or 'false' but value was {0}", text);
+			}
+			try {
+				return new Boolean(text);
+			} catch (Throwable e) {
+				processor.fail(e, row, column, "Failed to parse boolean: {0}", text);
+			}
+		}
+		return null;
+	}
+
+
+	protected Integer intValue(SheetRow row, SheetColumn column) throws SpreadsheetException {
+		String text = stringValue(row, column);
+		if (text != null) {
+			try {
+				return new Integer(text);
+			} catch (Throwable e) {
+				fail(row, column, e, "Failed to parse Integer value");
+			}
+		}
+		return null;
+	}
 	
 	protected URI iriValue(SheetRow row, SheetColumn column) throws SpreadsheetException {
 		return processor.iriValue(row, column);
@@ -141,7 +195,8 @@ abstract public class BaseSheetProcessor implements SheetProcessor {
 		return text==null ? null : new LiteralImpl(text);
 	}
 	
-	protected List<URI> iriList(SheetRow row, SheetColumn column) throws SpreadsheetException {
+	protected List<URI> nullableIriList(SheetRow row, SheetColumn column) throws SpreadsheetException {
+
 		List<URI> result = null;
 
 		String text = stringValue(row, column);
@@ -155,6 +210,11 @@ abstract public class BaseSheetProcessor implements SheetProcessor {
 				}
 			}
 		}
+		return result;
+	}
+	
+	protected List<URI> iriList(SheetRow row, SheetColumn column) throws SpreadsheetException {
+		List<URI> result = nullableIriList(row, column);
 		return result==null ? Collections.emptyList() : result;
 	}
 
@@ -228,6 +288,30 @@ abstract public class BaseSheetProcessor implements SheetProcessor {
 			shape.addType(SH.NodeShape);
 		}
 		return shape;
+	}
+	
+	protected void assignSubject(URI term, Collection<URI> subjects) throws SpreadsheetException {
+		if (term != null) {
+			if (subjects==null || subjects.isEmpty()) {
+				subjects = service(SettingsSheet.class).getDefaultSubject();
+			}
+			Graph graph = processor.getGraph();
+			for (URI value : subjects) {
+				edge(term, DCTERMS.SUBJECT, value);
+			}
+		}
+		
+	}
+	
+	protected void setDefaultSubject(URI term) throws SpreadsheetException {
+		if (term != null) {
+			Set<URI> subjectSet = service(SettingsSheet.class).getDefaultSubject();
+			if (!subjectSet.isEmpty()) {
+				for (URI value : subjectSet) {
+					edge(term, Konig.termStatus, value);
+				}
+			}
+		}
 	}
 
 	protected Set<URI> subjectSet(SheetRow row, SheetColumn column) throws SpreadsheetException {

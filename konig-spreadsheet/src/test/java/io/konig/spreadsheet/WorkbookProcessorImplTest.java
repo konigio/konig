@@ -30,18 +30,28 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.core.vocab.VANN;
 import io.konig.datasource.DataSource;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.AndConstraint;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.OrConstraint;
+import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.RelationshipDegree;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.XoneConstraint;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class WorkbookProcessorImplTest {
+	private static final Integer ONE = new Integer(1);
+	private static final Integer ZERO = new Integer(0);
+
+	private static final URI Harvard = new URIImpl("http://example.com/ns/core/Harvard");
 	private static final URI Stable = new URIImpl("http://example.com/ns/status/Stable");
 	private static final URI Customer = new URIImpl("http://example.com/ns/subject/Customer");
+	private static final URI organizationShapeId = new URIImpl("http://example.com/shape/OrganizationShape");
+	private static final URI Sensitive = new URIImpl("http://example.com/ns/security/Sensitive");
 	private NamespaceManager nsManager = new MemoryNamespaceManager();
 	private Graph graph = new MemoryGraph(nsManager);
 	private ShapeManager shapeManager = new MemoryShapeManager();
@@ -50,6 +60,71 @@ public class WorkbookProcessorImplTest {
 	@Before
 	public void setUp() {
 		GcpShapeConfig.init();
+	}
+
+	@Test
+	public void testPropertyConstraint() throws Exception {
+
+		
+		File file = new File("src/test/resources/workbook-property-constraints.xlsx");
+		process(file);
+		
+		URI personShapeId = uri("http://example.com/shape/PersonShape");
+		Shape personShape = shapeManager.getShapeById(personShapeId);
+		
+		assertTrue(personShape != null);
+		assertEquals(Schema.Person, personShape.getTargetClass());
+		assertEquals(NodeKind.IRI, personShape.getNodeKind());
+		
+		PropertyConstraint givenName = personShape.getPropertyConstraint(Schema.givenName);
+		
+		
+		assertTrue(givenName != null);
+		assertEquals("The Person's given name.  In the U.S., the first name.", givenName.getComment());
+		assertEquals(XMLSchema.STRING, givenName.getDatatype());
+		assertEquals(ONE, givenName.getMinCount());
+		assertEquals(ONE, givenName.getMaxCount());
+		assertTrue(givenName.getQualifiedSecurityClassification().contains(Sensitive));
+		assertEquals(Stable, givenName.getTermStatus());
+		assertEquals(Boolean.TRUE, givenName.getUniqueLang());
+		assertEquals(ONE, givenName.getMinLength());
+		assertEquals(new Integer(64), givenName.getMaxLength());
+		
+		PropertyConstraint name = personShape.getDerivedPropertyByPredicate(Schema.name);
+		assertTrue(name != null);
+		QuantifiedExpression formula = name.getFormula();
+		assertTrue(formula != null);
+		String formulaText = formula.toSimpleString();
+		assertEquals("CONCAT(givenName, \" \", familyName)", formulaText);
+		
+		PropertyConstraint alumniOf = personShape.getPropertyConstraint(Schema.alumniOf);
+		assertTrue(alumniOf != null);
+		assertEquals(NodeKind.IRI, alumniOf.getNodeKind());
+		assertEquals(null, alumniOf.getMaxCount());
+		assertEquals(Schema.Organization, alumniOf.getValueClass());
+		assertEquals(2, alumniOf.getIn().size());
+		assertTrue(alumniOf.getIn().contains(Harvard));
+		assertEquals(RelationshipDegree.ManyToMany, alumniOf.getRelationshipDegree());
+		assertEquals(organizationShapeId, alumniOf.getPreferredTabularShape());
+		
+		PropertyConstraint age = personShape.getPropertyConstraint(uri("http://example.com/ns/core/age"));
+		assertTrue(age != null);
+		assertEquals(new Double(0), age.getMinInclusive());
+		assertEquals(new Double(120), age.getMaxInclusive());		
+
+		PropertyConstraint weight = personShape.getPropertyConstraint(uri("http://example.com/ns/core/weight"));
+		assertTrue(weight != null);
+		assertEquals(new Double(0.5), weight.getMinExclusive());
+		assertEquals(new Double(500.01), weight.getMaxExclusive());
+		
+		PropertyConstraint gender = personShape.getPropertyConstraint(Schema.gender);
+		Shape enumShape = gender.getShape();
+		assertTrue(enumShape != null);
+		assertEquals(uri("http://example.com/shape/EnumerationShape"), enumShape.getId());
+		assertEquals(Schema.GenderType, gender.getValueClass());
+		
+		
+				
 	}
 	
 	@Test
@@ -114,7 +189,7 @@ public class WorkbookProcessorImplTest {
 		
 				
 	}
-	@Ignore
+	@Test
 	public void testIndividual() throws Exception {
 
 		File file = new File("src/test/resources/workbook-individual.xlsx");
@@ -142,7 +217,7 @@ public class WorkbookProcessorImplTest {
 		// TODO: test deferred action for custom properties
 	}
 	
-	@Ignore
+	@Test
 	public void testProperty() throws Exception {
 
 		File file = new File("src/test/resources/workbook-property.xlsx");
@@ -161,7 +236,7 @@ public class WorkbookProcessorImplTest {
 		assertIri(Schema.name, givenName.getURI(RDFS.SUBPROPERTYOF));
 
 		assertIri(uri("http://example.com/ns/status/stable"), givenName.getURI(Konig.termStatus));
-		assertIri(uri("http://example.com/ns/security/Sensitive"), givenName.getURI(Konig.securityClassification));
+		assertIri(Sensitive, givenName.getURI(Konig.securityClassification));
 		Vertex Person = graph.getVertex(Schema.Person);
 		
 		int relationshipDegree = Person.asTraversal()
@@ -190,7 +265,7 @@ public class WorkbookProcessorImplTest {
 	}
 
 	
-	@Ignore
+	@Test
 	public void testClass() throws Exception {
 
 		File file = new File("src/test/resources/workbook-class.xlsx");
@@ -222,7 +297,7 @@ public class WorkbookProcessorImplTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testOntology() throws Exception {
 		
 		File file = new File("src/test/resources/ontologies-test.xlsx");
@@ -251,7 +326,7 @@ public class WorkbookProcessorImplTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testSubproperty() throws Exception {
 
 		File file = new File("src/test/resources/subproperty.xlsx");

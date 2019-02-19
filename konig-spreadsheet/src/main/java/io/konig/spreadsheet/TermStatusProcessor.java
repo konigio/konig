@@ -26,6 +26,12 @@ public class TermStatusProcessor {
 		
 	}
 	
+	public void declareStatus(URI statusValue) {
+		if (statusValue != null) {
+			graph.edge(statusValue, RDF.TYPE, Konig.TermStatus);
+		}
+	}
+	
 	public void assertStatus(URI term, URI statusValue) {
 		if (term != null && statusValue!=null) {
 			graph.edge(statusValue, RDF.TYPE, Konig.TermStatus);

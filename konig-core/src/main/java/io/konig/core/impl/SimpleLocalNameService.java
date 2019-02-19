@@ -87,14 +87,35 @@ public class SimpleLocalNameService implements LocalNameService {
 	
 	public void addShapes(Collection<Shape> shapeList) {
 		for (Shape s : shapeList) {
-			addPropertyConstraints(s.getProperty());
+			addShape(s);
 		}
 	}
 	
 	
-	private void addPropertyConstraints(Collection<PropertyConstraint> propertyList) {
+	public void addShape(Shape s) {
+		Set<Shape> memory = new HashSet<>();
+		doAddShape(memory, s);
+		
+	}
+
+
+	private void doAddShape(Set<Shape> memory, Shape s) {
+
+		if (!memory.contains(s)) {
+			memory.add(s);
+			addPropertyConstraints(memory, s.getProperty());
+			addPropertyConstraints(memory, s.getDerivedProperty());
+		}
+		
+	}
+
+	private void addPropertyConstraints(Set<Shape> memory, Collection<PropertyConstraint> propertyList) {
 		for (PropertyConstraint p : propertyList) {
 			safeAdd(p.getPredicate());
+			Shape shape = p.getShape();
+			if (shape != null) {
+				doAddShape(memory, shape);
+			}
 		}
 		
 	}

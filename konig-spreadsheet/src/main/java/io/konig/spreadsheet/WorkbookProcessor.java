@@ -30,7 +30,7 @@ public interface WorkbookProcessor {
 	
 	void executeDeferredActions() throws SpreadsheetException;
 	
-	void fail(SheetRow row, SheetColumn column, Throwable cause, String pattern, Object...arg) throws SpreadsheetException;
+	void fail(Throwable cause, SheetRow row, SheetColumn column, String pattern, Object...arg) throws SpreadsheetException;
 
 	void fail(WorkbookLocation location, String pattern, Object...arg) throws SpreadsheetException;
 	void fail(Throwable cause, WorkbookLocation location, String pattern, Object...arg) throws SpreadsheetException;

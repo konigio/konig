@@ -1,6 +1,7 @@
 package io.konig.spreadsheet;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -32,6 +33,7 @@ public class PropertySheet extends BaseSheetProcessor {
 	static private final SheetColumn PROPERTY_TYPE = new SheetColumn("Property Type");
 	static private final SheetColumn SUBPROPERTY_OF = new SheetColumn("Subproperty Of");
 	static private final SheetColumn STATUS = new SheetColumn("Status");
+	static private final SheetColumn SUBJECT = new SheetColumn("Subject");
 	static private final SheetColumn SECURITY_CLASSIFICATION = new SheetColumn("Security Classification");
 	static private final SheetColumn RELATIONSHIP_DEGREE = new SheetColumn("Relationship Degree");
 	
@@ -45,6 +47,7 @@ public class PropertySheet extends BaseSheetProcessor {
 		PROPERTY_TYPE,
 		SUBPROPERTY_OF,
 		STATUS,
+		SUBJECT,
 		SECURITY_CLASSIFICATION,
 		RELATIONSHIP_DEGREE
 	};
@@ -74,6 +77,7 @@ public class PropertySheet extends BaseSheetProcessor {
 		URI subpropertyOf = iriValue(row, SUBPROPERTY_OF);
 		URI termStatus = iriValue(row, STATUS);
 		List<URI> securityClassification = iriList(row, SECURITY_CLASSIFICATION);
+		Collection<URI> subjectList = iriList(row, SUBJECT);
 		URI relationshipDegree = iriValue(row, RELATIONSHIP_DEGREE);
 		
 
@@ -91,6 +95,7 @@ public class PropertySheet extends BaseSheetProcessor {
 		edge(propertyId, RDFS.SUBPROPERTYOF, subpropertyOf);
 		edge(propertyId, RDFS.LABEL, propertyName);
 		edge(propertyId, RDFS.COMMENT, comment);
+		assignSubject(propertyId, subjectList);
 
 		if (!domain.isEmpty()) {
 			if (domain.size() == 1) {
