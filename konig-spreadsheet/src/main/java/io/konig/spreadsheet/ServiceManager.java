@@ -15,6 +15,7 @@ import io.konig.core.KonigException;
 public class ServiceManager {
 	
 	private Map<Class<?>, Object> serviceMap = new HashMap<>();
+	private Map<Class<?>, ServiceFactory<?>> factoryMap = new HashMap<>();
 	private ServiceListener listener;
 	
 	public ServiceManager() {
@@ -26,6 +27,9 @@ public class ServiceManager {
 
 	public void setListener(ServiceListener listener) {
 		this.listener = listener;
+	}
+	public void addFactory(Class<?> type, ServiceFactory<?> factory) {
+		factoryMap.put(type, factory);
 	}
 
 	public void addService(Object service) {
@@ -65,6 +69,13 @@ public class ServiceManager {
 	}
 
 	protected <T> T createService(Class<T> javaClass) {
+		
+		ServiceFactory<T> factory = getFactory(javaClass);
+		
+		if (factory != null) {
+			return factory.createInstance();
+		}
+		
 		List<Constructor<T>> ctorList = serviceConstructor(javaClass);
 		for (Constructor<T> ctor : ctorList) {
 			
@@ -84,6 +95,11 @@ public class ServiceManager {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
+	private <T> ServiceFactory<T> getFactory(Class<T> javaClass) {
+		
+		return (ServiceFactory<T>) factoryMap.get(javaClass);
+	}
 	private Object[] serviceArgs(Constructor<?> ctor) {
 		Object[] array = new Object[ctor.getParameterCount()];
 	

@@ -14,10 +14,10 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
-import org.openrdf.model.vocabulary.SKOS;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -188,6 +188,19 @@ abstract public class BaseSheetProcessor implements SheetProcessor {
 	
 	protected URI iriValue(SheetRow row, SheetColumn column) throws SpreadsheetException {
 		return processor.iriValue(row, column);
+	}
+
+
+	protected Resource resourceValue(SheetRow row, SheetColumn column) throws SpreadsheetException {
+		String text = stringValue(row, column);
+		if (text != null) {
+			if (text.startsWith("_:")) {
+				String bnodeId = text.substring(2);
+				return new BNodeImpl(bnodeId);
+			}
+			return processor.expandCurie(text, row, column);
+		}
+		return null;
 	}
 
 	protected Literal stringLiteral(SheetRow row, SheetColumn column) {

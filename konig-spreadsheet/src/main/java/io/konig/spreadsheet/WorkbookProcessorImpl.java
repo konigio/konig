@@ -114,6 +114,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		addSheetProcessor(new IndividualSheet(this, settingSheet));
 		addSheetProcessor(new ShapeSheet(this, dataSourceGeneratorFactory));
 		addSheetProcessor(new PropertyConstraintSheet(this, owlReasoner));
+		addSheetProcessor(new TripleSheet(this));
 		
 	}
 
@@ -801,6 +802,12 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 	@Override
 	public ShapeManager getShapeManager() {
 		return shapeManager;
+	}
+
+
+	@Override
+	public io.konig.spreadsheet.nextgen.Workbook getActiveWorkbook() {
+		return activeBook;
 	}
 
 

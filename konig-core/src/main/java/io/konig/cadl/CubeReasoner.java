@@ -78,6 +78,12 @@ public class CubeReasoner {
 	private ShowlClassManager classManager;
 	private Map<String, Set<ShowlClass>> classesByLocalName;
 	
+	
+	
+	public CubeReasoner(ShowlClassManager classManager) {
+		this.classManager = classManager;
+	}
+
 	public void visit(Cube cube) {
 		buildMap();
 		setSourceType(cube);

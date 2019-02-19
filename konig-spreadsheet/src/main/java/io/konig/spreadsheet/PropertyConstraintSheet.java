@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
@@ -184,6 +185,7 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 				// TODO: consider supporting Formula as an alternative for Shape IRI template.
 				return;
 			}
+			
 			// Special Processing for rdf:type
 			if (RDF.TYPE.equals(predicate)) {
 				if (valueClass == null) {
@@ -290,8 +292,11 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 		p.setDecimalPrecision(decimalPrecision);
 		p.setDecimalScale(decimalScale);
 		p.setPreferredTabularShape(preferredTabularShapeId);
+		
 	}
 	
+	
+
 	private Integer maxCount(SheetRow row, SheetColumn maxCount) throws SpreadsheetException {
 		String text = stringValue(row, maxCount);
 		if ("unbounded".equals(text)) {

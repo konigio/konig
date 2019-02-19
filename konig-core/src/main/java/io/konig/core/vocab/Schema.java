@@ -134,6 +134,8 @@ public class Schema {
 	public static final URI taxID = new URIImpl("http://schema.org/taxID");
 	public static final String IS_PART_OF = "http://schema.org/isPartOf";
 	public static final URI isPartOf = new URIImpl(IS_PART_OF);
+	public static final URI Book = new URIImpl("http://schema.org/Book");
+	public static final URI numberOfPages = new URIImpl("http://schema.org/numberOfPages");
 	public static URI employee = new URIImpl("http://schema.org/employee");
 
 }

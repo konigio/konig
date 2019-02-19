@@ -3,11 +3,11 @@ package io.konig.spreadsheet;
 import java.io.File;
 
 import org.openrdf.model.URI;
-import org.openrdf.model.Value;
 
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
 import io.konig.shacl.ShapeManager;
+import io.konig.spreadsheet.nextgen.Workbook;
 
 public interface WorkbookProcessor {
 	
@@ -20,6 +20,8 @@ public interface WorkbookProcessor {
 	OwlReasoner getOwlReasoner();
 	
 	URI iriValue(SheetRow row, SheetColumn col) throws SpreadsheetException;
+	
+	Workbook getActiveWorkbook();
 	
 	void addSheetProcessor(SheetProcessor processor);
 	

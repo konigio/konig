@@ -90,6 +90,10 @@ public class ShowlManager implements ShowlClassManager {
 		this.consumer = consumer;
 	}
 	
+	public ShapeManager getShapeManager() {
+		return shapeManager;
+	}
+	
 	public void load() throws ShowlProcessingException {
 
 		clear();
@@ -140,7 +144,7 @@ public class ShowlManager implements ShowlClassManager {
 
 	
 
-	private void inferInverses() {
+	protected void inferInverses() {
 		List<ShowlProperty> list = new ArrayList<>(getProperties());
 		for (ShowlProperty p : list) {
 			if (p.getInverses().isEmpty()) {
@@ -862,7 +866,7 @@ public class ShowlManager implements ShowlClassManager {
 
 	
 
-	private void putReferences(List<PropertyConstraint> property, Map<Shape, Boolean> hasReference) {
+	protected void putReferences(List<PropertyConstraint> property, Map<Shape, Boolean> hasReference) {
 		for (PropertyConstraint p : property) {
 			Shape shape = p.getShape();
 			if (shape != null) {
@@ -999,7 +1003,7 @@ public class ShowlManager implements ShowlClassManager {
 		logger.error(text);
 	}
 
-	private ShowlProperty produceShowlProperty(URI predicate) {
+	protected ShowlProperty produceShowlProperty(URI predicate) {
 		ShowlProperty property = properties.get(predicate);
 		if (property == null) {
 			property = new ShowlProperty(predicate);

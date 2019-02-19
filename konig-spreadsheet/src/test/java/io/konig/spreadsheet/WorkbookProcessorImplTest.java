@@ -61,7 +61,34 @@ public class WorkbookProcessorImplTest {
 	public void setUp() {
 		GcpShapeConfig.init();
 	}
+	
+	@Test
+	public void testTriples() throws Exception {
 
+		
+		File file = new File("src/test/resources/workbook-triples.xlsx");
+		process(file);
+		
+		URI tolkienId = uri("http://example.com/ns/core/Tolkien");
+		
+		Vertex book = graph.getVertex(uri("http://example.com/ns/core/LordOfTheRings"));
+		assertTrue(book != null);
+		assertIri(Schema.Book, book.getURI(RDF.TYPE));
+		assertValue("Lord of the Rings", book.getValue(Schema.name));
+		
+		Value numberOfPages = book.getValue(Schema.numberOfPages);
+		assertTrue(numberOfPages instanceof Literal);
+		Literal numberOfPagesLiteral = (Literal) numberOfPages;
+		assertEquals(XMLSchema.INT, numberOfPagesLiteral.getDatatype());
+		assertEquals(1216, numberOfPagesLiteral.intValue());
+		
+		Vertex tolkien = book.getVertex(Schema.author);
+		assertTrue(tolkien != null);
+		assertEquals(tolkienId, tolkien.getId());
+		assertValue("J.R.R. Tolkien", tolkien.getValue(Schema.name));	
+				
+	}
+	
 	@Test
 	public void testPropertyConstraint() throws Exception {
 
