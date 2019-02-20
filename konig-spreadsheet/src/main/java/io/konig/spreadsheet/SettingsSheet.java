@@ -28,6 +28,7 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	private static final String PROPERTY_BASE_URL = "propertyBaseURL";
 	private static final String DEFAULT_DATA_SOURCE = "defaultDataSource";
 	private static final String DICTIONARY_DEFAULT_MAX_LENGTH = "dictionary.defaultMaxLength";
+	public static final String ABBREVIATION_SCHEME_IRI = "abbreviationSchemeIri";
 	
 	private static final SheetColumn SETTING_NAME = new SheetColumn("Setting Name", true);
 	private static final SheetColumn SETTING_VALUE =  new SheetColumn("Setting Value", true);
@@ -59,6 +60,10 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 		} catch (IOException e) {
 			throw new KonigException(e);
 		}
+	}
+	
+	public String getAbbreviationSchemeIri() {
+		return settings.getProperty(ABBREVIATION_SCHEME_IRI);
 	}
 	
 	public Set<URI> getExcludeSecurityClassification() throws SpreadsheetException {

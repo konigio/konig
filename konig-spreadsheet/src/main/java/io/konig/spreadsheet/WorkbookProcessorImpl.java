@@ -100,7 +100,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 
 
 	private void addServices(File templateDir) {
-		SettingsSheet settingSheet = settings =  new SettingsSheet(this);
+		settings =  new SettingsSheet(this);
 		DataSourceGeneratorFactory dataSourceGeneratorFactory = new DataSourceGeneratorFactory(nsManager, templateDir, settings);
 		addService(WorkbookProcessor.class, this);
 		addService(dataSourceGeneratorFactory);
@@ -111,16 +111,17 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		addService(NamespaceMap.class, new NamespaceMapAdapter(nsManager));
 
 		addSheetProcessor(new OntologySheet(this, nsManager));
-		addSheetProcessor(settingSheet);
-		addSheetProcessor(new ClassSheet(this, settingSheet));
+		addSheetProcessor(settings);
+		addSheetProcessor(new ClassSheet(this, settings));
 		addSheetProcessor(new PropertySheet(this));
-		addSheetProcessor(new IndividualSheet(this, settingSheet));
+		addSheetProcessor(new IndividualSheet(this, settings));
 		addSheetProcessor(new ShapeSheet(this, dataSourceGeneratorFactory));
 		addSheetProcessor(new PropertyConstraintSheet(this, owlReasoner));
 		addSheetProcessor(new TripleSheet(this));
 		addSheetProcessor(new LabelSheet(this));
 		addSheetProcessor(new CubeSheet(this));
-		addSheetProcessor(new SourceDataDictionarySheet(this, settingSheet, service(IndividualSheet.class)));
+		addSheetProcessor(new SourceDataDictionarySheet(this, settings, service(IndividualSheet.class)));
+		addSheetProcessor(new AbbreviationSheet(this, settings));
 		
 	}
 
@@ -541,7 +542,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		try {
 			return WorkbookFactory.create(workbookFile);
 		} catch (Throwable e) {
-			throw new SpreadsheetException("Failed to create workbookboo: " + workbookFile.getName(), e);
+			throw new SpreadsheetException("Failed to create workbook: " + workbookFile.getName(), e);
 		}
 	}
 

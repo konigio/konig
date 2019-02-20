@@ -55,7 +55,6 @@ import io.konig.shacl.impl.MemoryShapeManager;
 
 public class WorkbookProcessorImplTest {
 	private static final Integer ONE = new Integer(1);
-	private static final Integer ZERO = new Integer(0);
 
 	private static final URI Harvard = new URIImpl("http://example.com/ns/core/Harvard");
 	private static final URI Stable = new URIImpl("http://example.com/ns/status/Stable");
@@ -73,6 +72,24 @@ public class WorkbookProcessorImplTest {
 	}
 
 	@Test
+	public void testAbbreviations() throws Exception {
+
+		
+		File file = new File("src/test/resources/workbook-abbreviation.xlsx");
+		process(file);
+		
+		Vertex v = graph.getVertex(uri("http://example.com/ns/abbrev/MANUFACTURING"));
+		assertTrue(v != null);
+		assertValue("MANUFACTURING", v.getValue(SKOS.PREF_LABEL));
+		assertValue("MFG", v.getValue(Konig.abbreviationLabel));
+		assertIri(SKOS.CONCEPT, v.getURI(RDF.TYPE));
+		assertIri(uri("http://example.com/ns/abbrev/"), v.getURI(SKOS.IN_SCHEME));
+		
+	
+				
+	}
+	
+	@Ignore
 	public void testSourceDataDictionary() throws Exception {
 
 		
