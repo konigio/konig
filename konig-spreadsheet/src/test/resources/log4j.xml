@@ -35,6 +35,7 @@
       <appender-ref ref="console"/>
   </logger>
    -->
+   
   <root> 
     <priority value ="off" /> 
     <appender-ref ref="console" /> 

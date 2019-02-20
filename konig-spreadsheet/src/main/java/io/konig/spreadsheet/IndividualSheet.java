@@ -16,8 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.Graph;
+import io.konig.core.LocalNameService;
 import io.konig.core.Vertex;
-import io.konig.core.impl.RdfUtil;
+import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Schema;
 
@@ -43,6 +44,7 @@ public class IndividualSheet extends BaseSheetProcessor {
 	};
 	
 	private SettingsSheet settings;
+	private IndividualManager individualManager = new IndividualManager();
 
 	@SuppressWarnings("unchecked")
 	public IndividualSheet(WorkbookProcessor processor, SettingsSheet settings) {
@@ -51,6 +53,10 @@ public class IndividualSheet extends BaseSheetProcessor {
 		dependsOn(OntologySheet.class);
 		dependsOn(SettingsSheet.class);
 		dependsOn(PropertySheet.class);
+	}
+	
+	public IndividualManager getIndividualManager() {
+		return individualManager;
 	}
 
 	@Override
@@ -95,6 +101,9 @@ public class IndividualSheet extends BaseSheetProcessor {
 			name = new LiteralImpl(individualId.getLocalName());
 		}
 
+		if (name != null) {
+			individualManager.put(name.stringValue(), individualId);
+		}
 		edge(individualId, Schema.name, name);
 		edge(individualId, RDFS.COMMENT, comment);
 		edge(individualId, DCTERMS.IDENTIFIER, codeValue);

@@ -120,6 +120,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		addSheetProcessor(new TripleSheet(this));
 		addSheetProcessor(new LabelSheet(this));
 		addSheetProcessor(new CubeSheet(this));
+		addSheetProcessor(new SourceDataDictionarySheet(this, settingSheet, service(IndividualSheet.class)));
 		
 	}
 

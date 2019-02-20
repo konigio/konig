@@ -334,5 +334,15 @@ abstract public class BaseSheetProcessor implements SheetProcessor {
 		}
 		return new LinkedHashSet<>(list);
 	}
+	
+
+	protected String concatPath(String baseURL, String pathElement) {
+		StringBuilder builder = new StringBuilder(baseURL);
+		if (!baseURL.endsWith("/")) {
+			builder.append('/');
+		}
+		builder.append(pathElement);
+		return builder.toString();
+	}
 
 }

@@ -37,8 +37,10 @@ public class CubeSheet extends BaseSheetProcessor {
 	private Dimension dimension;
 	private Level level;
 	
+	@SuppressWarnings("unchecked")
 	public CubeSheet(WorkbookProcessor processor) {
 		super(processor);
+		dependsOn(OntologySheet.class);
 	}
 
 	@Override

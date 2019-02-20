@@ -23,6 +23,11 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	private static final String GCP_DATASET_ID = "gcpDatasetId";
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
+	public static final String SHAPE_URL_TEMPLATE = "shapeURLTemplate";
+	private static final String EXCLUDE_SECURITY_CLASSIFICATIONS = "dictionary.excludeSecurityClassifications";
+	private static final String PROPERTY_BASE_URL = "propertyBaseURL";
+	private static final String DEFAULT_DATA_SOURCE = "defaultDataSource";
+	private static final String DICTIONARY_DEFAULT_MAX_LENGTH = "dictionary.defaultMaxLength";
 	
 	private static final SheetColumn SETTING_NAME = new SheetColumn("Setting Name", true);
 	private static final SheetColumn SETTING_VALUE =  new SheetColumn("Setting Value", true);
@@ -41,6 +46,8 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	private Map<String,WorkbookLocation> locations = new HashMap<>();
 	private Set<URI> defaultSubject;
 	private List<RegexRule> ruleList = null;
+	private Set<URI> excludeSecurityClassification;
+	private List<Function> defaultDataSource;
 
 	public SettingsSheet(WorkbookProcessor processor)  {
 		super(processor);
@@ -53,6 +60,34 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 			throw new KonigException(e);
 		}
 	}
+	
+	public Set<URI> getExcludeSecurityClassification() throws SpreadsheetException {
+		if (excludeSecurityClassification == null) {
+			excludeSecurityClassification = iriSet(EXCLUDE_SECURITY_CLASSIFICATIONS);
+		}
+		return excludeSecurityClassification;
+	}
+	
+	public Integer getDictionaryDefaultMaxLength() throws SpreadsheetException {
+		return intValue(DICTIONARY_DEFAULT_MAX_LENGTH);
+	}
+	
+	public Integer intValue(String propertyName) throws SpreadsheetException {
+
+		String value = settings.getProperty(propertyName);
+	
+		if (value != null) {
+			try {
+				return new Integer(value);
+			} catch (Throwable e) {
+				WorkbookLocation location = locations.get(propertyName);
+				processor.fail(e, location, "Setting {0} must be an integer but found {1}", propertyName, value);
+				
+			}
+		}
+		
+		return null;
+	}
 
 	@Override
 	public SheetColumn[] getColumns() {
@@ -63,12 +98,45 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	public void beginWorkbook(Workbook book) {
 		settings = new Properties();
 		ruleList = new ArrayList<>();
+		excludeSecurityClassification = null;
+		defaultDataSource = null;
 		loadDefaultProperties();
 	}
 
 	@Override
 	public void endWorkbook(Workbook book) {
 		settings = null;
+	}
+	
+	public String getShapeUrlTemplate() {
+		return settings.getProperty(SHAPE_URL_TEMPLATE);
+	}
+	
+	public List<Function> getDefaultDataSource() throws SpreadsheetException {
+		if (defaultDataSource == null) {
+			String value = settings.getProperty(DEFAULT_DATA_SOURCE);
+			defaultDataSource = dataSourceList(value);
+		}
+		return defaultDataSource;
+	}
+	
+	private  List<Function> dataSourceList(String text) throws SpreadsheetException {
+
+		if (text == null) {
+			return null;
+		}
+
+		ListFunctionVisitor visitor = new ListFunctionVisitor();
+		FunctionParser parser = new FunctionParser(visitor);
+		try {
+			parser.parse(text);
+		} catch (FunctionParseException e) {
+			WorkbookLocation location = locations.get(DEFAULT_DATA_SOURCE);
+			processor.fail(location, "Failed to parse Datasource definition: {0}", text);
+		}
+		List<Function> list = visitor.getList();
+
+		return list.isEmpty() ? null : list;
 	}
 
 	@Override
@@ -163,6 +231,10 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 		}
 		
 		return defaultSubject;
+	}
+
+	public String getPropertyBaseURL() {
+		return settings.getProperty(PROPERTY_BASE_URL);
 	}
 
 }

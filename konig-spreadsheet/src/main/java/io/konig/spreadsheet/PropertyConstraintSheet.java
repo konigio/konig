@@ -235,7 +235,7 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 			processor.service(SimpleLocalNameService.class);
 			ShapeFormulaAction action = processor.service(ShapeFormulaAction.class);
 			action.addShapeFormulaBuilder(
-				shape, new SequencePathBuilder(
+				shape, true, new SequencePathBuilder(
 						location(row, PROPERTY_ID), 
 						p, 
 						propertyPathText));
@@ -271,7 +271,7 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 			// Ensure that the BuildLocalNameServiceAction gets executed
 			processor.service(SimpleLocalNameService.class);
 			ShapeFormulaAction action = processor.service(ShapeFormulaAction.class);
-			action.addShapeFormulaBuilder(shape, 
+			action.addShapeFormulaBuilder(shape, true,
 				new PropertyConstraintFormulaBuilder(
 					location(row, FORMULA), 
 					p, 

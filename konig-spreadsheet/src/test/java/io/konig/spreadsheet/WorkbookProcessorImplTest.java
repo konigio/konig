@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
@@ -70,8 +71,39 @@ public class WorkbookProcessorImplTest {
 	public void setUp() {
 		GcpShapeConfig.init();
 	}
-	
+
 	@Test
+	public void testSourceDataDictionary() throws Exception {
+
+		
+		File file = new File("src/test/resources/workbook-sdd.xlsx");
+		process(file);
+		
+		URI shapeId = uri("https://schema.pearson.com/shapes/CUSTOMER_STG_Shape");
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		assertTrue(shape != null);
+		
+		PropertyConstraint firstName = shape.getPropertyConstraint(uri("https://schema.pearson.com/ns/alias/FIRST_NAME"));
+		assertTrue(firstName == null);
+		PropertyConstraint jobTitle = shape.getPropertyConstraint(uri("https://schema.pearson.com/ns/alias/JOB_TITLE"));
+		assertTrue(jobTitle != null);
+		assertEquals(XMLSchema.STRING, jobTitle.getDatatype());
+		assertEquals(ONE, jobTitle.getMinCount());
+		assertEquals(new Integer(128), jobTitle.getMaxLength());
+		
+		List<DataSource> datasourceList = shape.getShapeDataSource();
+		assertEquals(1, datasourceList.size());
+		
+		List<URI> securityList = jobTitle.getQualifiedSecurityClassification();
+		assertEquals(1, securityList.size());
+		
+		assertEquals("https://schema.pearson.com/ns/dcl/DCL4", securityList.get(0).stringValue());
+		
+	
+				
+	}
+	@Ignore
 	public void testCube() throws Exception {
 
 		

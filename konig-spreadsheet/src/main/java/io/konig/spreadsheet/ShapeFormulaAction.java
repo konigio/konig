@@ -24,11 +24,11 @@ public class ShapeFormulaAction implements Action {
 		this.processor = processor;
 	}
 	
-	public void addShapeFormulaBuilder(Shape shape, ShapeFormulaBuilder builder) {
+	public void addShapeFormulaBuilder(Shape shape, boolean withShapeNames, ShapeFormulaBuilder builder) {
 		Resource shapeId = shape.getId();
 		ShapeFormulaBuilderInvoker invoker = map.get(shapeId);
 		if (invoker == null) {
-			invoker = new ShapeFormulaBuilderInvoker(shape);
+			invoker = new ShapeFormulaBuilderInvoker(shape, withShapeNames);
 			map.put(shapeId, invoker);
 		}
 		invoker.add(builder);
@@ -50,13 +50,19 @@ public class ShapeFormulaAction implements Action {
 	
 	private static class ShapeFormulaBuilderInvoker  {
 		private Shape shape;
+		private boolean withShapeNames=true;
 		private List<ShapeFormulaBuilder> list = new ArrayList<>();
 		
-		ShapeFormulaBuilderInvoker(Shape shape) {
+		ShapeFormulaBuilderInvoker(Shape shape, boolean withShapeNames) {
 			this.shape = shape;
+			this.withShapeNames = withShapeNames;
 		}
 		
 		private LocalNameService nameService(SimpleLocalNameService global) {
+			
+			if (!withShapeNames) {
+				return global;
+			}
 			
 			SimpleLocalNameService shapeNames = new SimpleLocalNameService();
 			shapeNames.addShape(shape);
