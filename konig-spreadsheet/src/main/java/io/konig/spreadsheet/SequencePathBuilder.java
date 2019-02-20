@@ -1,40 +1,29 @@
 package io.konig.spreadsheet;
 
-import org.openrdf.model.URI;
-
 import io.konig.formula.FormulaParser;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.SequencePath;
+import io.konig.shacl.Shape;
 
-public class SequencePathAction implements Action {
+public class SequencePathBuilder implements ShapeFormulaBuilder {
 	
-	private WorkbookProcessor processor;
 	private WorkbookLocation location;
-	private URI shapeId;
 	private PropertyConstraint constraint;
 	private String propertyPathText;
-	private FormulaParserFactory formulaParserFactory;
-	
-	public SequencePathAction(WorkbookProcessor processor, WorkbookLocation location, URI shapeId, PropertyConstraint constraint,
-			String propertyPathText, FormulaParserFactory formulaParserFactory) {
-		this.processor = processor;
+
+	public SequencePathBuilder(WorkbookLocation location, PropertyConstraint constraint, String propertyPathText) {
 		this.location = location;
-		this.shapeId = shapeId;
 		this.constraint = constraint;
 		this.propertyPathText = propertyPathText;
-		this.formulaParserFactory = formulaParserFactory;
 	}
 
-
-
 	@Override
-	public void execute() throws SpreadsheetException {
-		
+	public void build(WorkbookProcessor processor, Shape shape, FormulaParser formulaParser) throws SpreadsheetException {
+
 		try {
-			FormulaParser formulaParser = formulaParserFactory.forShape(shapeId);
 			QuantifiedExpression formula = formulaParser.quantifiedExpression(propertyPathText);
 			PrimaryExpression primary = formula.asPrimaryExpression();
 			if (primary instanceof PathExpression) {
@@ -53,7 +42,7 @@ public class SequencePathAction implements Action {
 		} catch (Throwable e) {
 			processor.fail(e, location, "Failed to parse PropertyPath: {0}", propertyPathText);
 		}
-
+		
 	}
 
 }

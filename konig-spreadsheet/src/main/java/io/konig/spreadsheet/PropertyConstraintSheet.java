@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.OwlReasoner;
+import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.shacl.NodeKind;
@@ -230,15 +231,14 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 			break;
 			
 		case SEQUENCE :
-			processor.defer(
-				new SequencePathAction(
-					processor, 
-					location(row, PROPERTY_ID), 
-					shapeId,
-					p, 
-					propertyPathText, 
-					service(FormulaParserFactory.class)
-			));
+			// Ensure that the BuildLocalNameServiceAction gets executed
+			processor.service(SimpleLocalNameService.class);
+			ShapeFormulaAction action = processor.service(ShapeFormulaAction.class);
+			action.addShapeFormulaBuilder(
+				shape, new SequencePathBuilder(
+						location(row, PROPERTY_ID), 
+						p, 
+						propertyPathText));
 			break;
 		}
 		
@@ -268,15 +268,14 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 		p.setIn(valueIn);
 		
 		if (formulaText != null) {
-			processor.defer(
-				new PropertyConstraintFormulaAction(
-					processor,
-					location(row, FORMULA),
-					shapeId,
-					p,
-					formulaText,
-					service(FormulaParserFactory.class)
-			));
+			// Ensure that the BuildLocalNameServiceAction gets executed
+			processor.service(SimpleLocalNameService.class);
+			ShapeFormulaAction action = processor.service(ShapeFormulaAction.class);
+			action.addShapeFormulaBuilder(shape, 
+				new PropertyConstraintFormulaBuilder(
+					location(row, FORMULA), 
+					p, 
+					formulaText));
 		}
 		
 		declareStatus(status);

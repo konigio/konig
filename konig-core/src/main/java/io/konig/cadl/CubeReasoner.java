@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ShowlClass;
-import io.konig.core.showl.ShowlClassManager;
+import io.konig.core.showl.ShowlManager;
 
 /**
  * A reasoner that sets properties of the cube based on heuristics.
@@ -75,13 +75,13 @@ import io.konig.core.showl.ShowlClassManager;
  */
 public class CubeReasoner {
 	private static Logger logger = LoggerFactory.getLogger(CubeReasoner.class);
-	private ShowlClassManager classManager;
+	private ShowlManager showlManager;
 	private Map<String, Set<ShowlClass>> classesByLocalName;
 	
 	
 	
-	public CubeReasoner(ShowlClassManager classManager) {
-		this.classManager = classManager;
+	public CubeReasoner(ShowlManager classManager) {
+		this.showlManager = classManager;
 	}
 
 	public void visit(Cube cube) {
@@ -112,13 +112,13 @@ public class CubeReasoner {
 	}
 
 	private Object curie(URI id) {
-		return RdfUtil.optionalCurie(classManager.getReasoner().getGraph().getNamespaceManager(), id);
+		return RdfUtil.optionalCurie(showlManager.getReasoner().getGraph().getNamespaceManager(), id);
 	}
 
 	private void buildMap() {
 		if (classesByLocalName == null) {
 			classesByLocalName = new HashMap<>();
-			for (ShowlClass owlClass : classManager.listClasses()) {
+			for (ShowlClass owlClass : showlManager.listClasses()) {
 				URI classId = owlClass.getId();
 				String key = classId.getLocalName().toLowerCase();
 				

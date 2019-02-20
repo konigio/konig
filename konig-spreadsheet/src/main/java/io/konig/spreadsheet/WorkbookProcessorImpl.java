@@ -36,6 +36,7 @@ import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.SimpleLocalNameService;
+import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
@@ -45,6 +46,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
+import io.konig.rio.turtle.NamespaceMap;
 import io.konig.shacl.ShapeManager;
 
 public class WorkbookProcessorImpl implements WorkbookProcessor {
@@ -106,6 +108,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		addService(NamespaceManager.class, nsManager);
 		addService(ValueFactory.class, vf);
 		addService(ShapeManager.class, shapeManager);
+		addService(NamespaceMap.class, new NamespaceMapAdapter(nsManager));
 
 		addSheetProcessor(new OntologySheet(this, nsManager));
 		addSheetProcessor(settingSheet);
@@ -115,6 +118,8 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		addSheetProcessor(new ShapeSheet(this, dataSourceGeneratorFactory));
 		addSheetProcessor(new PropertyConstraintSheet(this, owlReasoner));
 		addSheetProcessor(new TripleSheet(this));
+		addSheetProcessor(new LabelSheet(this));
+		addSheetProcessor(new CubeSheet(this));
 		
 	}
 
@@ -563,6 +568,9 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 					(SimpleLocalNameService)service, graph, shapeManager));
 			}
 			
+			if (service instanceof Action) {
+				defer((Action) service);
+			}
 		}
 
 		@Override
@@ -808,6 +816,12 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 	@Override
 	public io.konig.spreadsheet.nextgen.Workbook getActiveWorkbook() {
 		return activeBook;
+	}
+
+
+	@Override
+	public <T> T service(Class<T> javaClass) {
+		return serviceManager.service(javaClass);
 	}
 
 

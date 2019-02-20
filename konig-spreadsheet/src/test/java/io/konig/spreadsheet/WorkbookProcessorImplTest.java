@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.Before;
@@ -12,6 +13,7 @@ import org.junit.Test;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.OWL;
@@ -20,6 +22,13 @@ import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.SKOS;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import io.konig.cadl.Attribute;
+import io.konig.cadl.Cube;
+import io.konig.cadl.CubeManager;
+import io.konig.cadl.Dimension;
+import io.konig.cadl.Level;
+import io.konig.cadl.Measure;
+import io.konig.cadl.Variable;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
@@ -63,6 +72,88 @@ public class WorkbookProcessorImplTest {
 	}
 	
 	@Test
+	public void testCube() throws Exception {
+
+		
+		File file = new File("src/test/resources/workbook-cube.xlsx");
+		process(file);
+		
+		URI cubeId = uri("http://example.com/ns/cube/OpportunityRevenueCube");
+		CubeManager cubeManager = processor.service(CubeManager.class);
+		Cube cube = cubeManager.findById(cubeId);
+		
+		assertTrue(cube != null);
+		
+		Variable source = cube.getSource();
+		URI sourceId = uri("http://example.com/ns/cube/OpportunityRevenueCube/source/?opportunity");
+		URI Opportunity = uri("http://example.com/ns/crm/Opportunity");
+		assertEquals(sourceId, source.getId());
+		assertEquals(Opportunity, source.getValueType());
+		
+		assertEquals(2, cube.getDimension().size());
+		Iterator<Dimension> dimensions = cube.getDimension().iterator();
+		Dimension timeDim = dimensions.next();
+		URI timeDimId = uri("http://example.com/ns/cube/OpportunityRevenueCube/dimension/timeDim");
+		assertEquals(timeDimId, timeDim.getId());
+		assertEquals(3, timeDim.getLevel().size());
+		
+		Iterator<Level> levels = timeDim.getLevel().iterator();
+		Level dayLevel = levels.next();
+		
+		URI dayLevelId = uri("http://example.com/ns/cube/OpportunityRevenueCube/dimension/timeDim/level/day");
+		assertEquals(dayLevelId, dayLevel.getId());
+		
+		QuantifiedExpression formula = dayLevel.getFormula();
+		assertTrue(formula != null);
+		assertEquals("DATE_TRUNC(DAY, ?opportunity.dateCreated)", formula.toSimpleString());
+		
+		Dimension accountDim = dimensions.next();
+		URI accountDimId = uri("http://example.com/ns/cube/OpportunityRevenueCube/dimension/accountDim");
+		assertEquals(accountDimId, accountDim.getId());
+		
+		assertEquals(3, accountDim.getLevel().size());
+		levels = accountDim.getLevel().iterator();
+		Level accountLevel = levels.next();
+		assertEquals(2, accountLevel.getAttribute().size());
+		
+		Iterator<Attribute> attributes = accountLevel.getAttribute().iterator();
+		Attribute idAttr = attributes.next();
+		URI accountId = uri("http://example.com/ns/cube/OpportunityRevenueCube/dimension/accountDim/level/account/attribute/id");
+		assertEquals(accountId, idAttr.getId());
+		
+		Measure measure = cube.getMeasure().iterator().next();
+		URI measureId = uri("http://example.com/ns/cube/OpportunityRevenueCube/measure/expectedRevenue");
+		assertEquals(measureId, measure.getId());
+		
+		formula = measure.getFormula();
+		assertEquals("SUM(?opportunity.salePrice)", formula.toSimpleString());
+		
+		
+		
+	}
+	
+	@Ignore
+	public void testLabels() throws Exception {
+
+		
+		File file = new File("src/test/resources/workbook-labels.xlsx");
+		process(file);
+		
+		String arabicValue = "\u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0645\u0639\u0637\u0649";
+		
+		assertLabel(graph, Schema.givenName, "Given Name", "en");
+		assertLabel(graph, Schema.givenName, "Pr\u00E9nom", "fr");
+		assertLabel(graph, Schema.givenName, arabicValue, "ar");
+		
+				
+	}
+
+	private void assertLabel(Graph graph, URI subject, String label, String language) {
+		Literal literal = new LiteralImpl(label, language);
+		assertTrue(graph.contains(subject, RDFS.LABEL, literal));
+	}
+	
+	@Ignore
 	public void testTriples() throws Exception {
 
 		
@@ -89,7 +180,7 @@ public class WorkbookProcessorImplTest {
 				
 	}
 	
-	@Test
+	@Ignore
 	public void testPropertyConstraint() throws Exception {
 
 		
@@ -154,7 +245,7 @@ public class WorkbookProcessorImplTest {
 				
 	}
 	
-	@Test
+	@Ignore
 	public void testShape() throws Exception {
 
 		
@@ -216,7 +307,7 @@ public class WorkbookProcessorImplTest {
 		
 				
 	}
-	@Test
+	@Ignore
 	public void testIndividual() throws Exception {
 
 		File file = new File("src/test/resources/workbook-individual.xlsx");
@@ -244,7 +335,7 @@ public class WorkbookProcessorImplTest {
 		// TODO: test deferred action for custom properties
 	}
 	
-	@Test
+	@Ignore
 	public void testProperty() throws Exception {
 
 		File file = new File("src/test/resources/workbook-property.xlsx");
@@ -292,7 +383,7 @@ public class WorkbookProcessorImplTest {
 	}
 
 	
-	@Test
+	@Ignore
 	public void testClass() throws Exception {
 
 		File file = new File("src/test/resources/workbook-class.xlsx");
@@ -324,7 +415,7 @@ public class WorkbookProcessorImplTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testOntology() throws Exception {
 		
 		File file = new File("src/test/resources/ontologies-test.xlsx");
@@ -353,7 +444,7 @@ public class WorkbookProcessorImplTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testSubproperty() throws Exception {
 
 		File file = new File("src/test/resources/subproperty.xlsx");

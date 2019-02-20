@@ -9,7 +9,6 @@ import io.konig.cadl.CubeManager;
 import io.konig.cadl.Dimension;
 import io.konig.cadl.HasFormula;
 import io.konig.cadl.Level;
-import io.konig.cadl.CubeReasoner;
 import io.konig.cadl.Measure;
 import io.konig.cadl.Variable;
 import io.konig.core.impl.SimpleLocalNameService;
@@ -21,17 +20,18 @@ public class CubeSheet extends BaseSheetProcessor {
 	private static SheetColumn ELEMENT_NAME = new SheetColumn("Element Name", true);
 	private static SheetColumn ELEMENT_TYPE = new SheetColumn("Element Type");
 	private static SheetColumn FORMULA = new SheetColumn("Formula");
+	private static SheetColumn ROLL_UP_FROM = new SheetColumn("Roll-up From");
 	
 	private static SheetColumn[] columns = new SheetColumn[] {
 		CUBE_ID,
 		STEREOTYPE,
 		ELEMENT_NAME,
 		ELEMENT_TYPE,
-		FORMULA
+		FORMULA,
+		ROLL_UP_FROM
 	};
 	
 	private CubeManager cubeManager;
-	private CubeReasoner levelReasoner;
 	
 	private Cube cube;
 	private Dimension dimension;
@@ -39,9 +39,6 @@ public class CubeSheet extends BaseSheetProcessor {
 	
 	public CubeSheet(WorkbookProcessor processor) {
 		super(processor);
-		ServiceManager sm = processor.getServiceManager();
-		cubeManager = sm.service(CubeManager.class);
-		levelReasoner = sm.service(CubeReasoner.class);
 	}
 
 	@Override
@@ -51,54 +48,67 @@ public class CubeSheet extends BaseSheetProcessor {
 
 	@Override
 	public void visit(SheetRow row) throws SpreadsheetException {
-		if (cubeManager != null) {
-			URI cubeId = iriValue(row, CUBE_ID);
-			if (cube == null || !cube.getId().equals(cubeId)) {
-				cube = cubeManager.produceCube(cubeId);
-				processor.defer(new LevelReasoningAction(levelReasoner, cube));
-			}
-			
-			
-			String stereotypeName = stringValue(row, STEREOTYPE).toUpperCase();
-			
-			CadlStereotype stereotype = CadlStereotype.valueOf(stereotypeName);
-			switch (stereotype) {
-			
-			case SOURCE :
-				Variable source = new Variable();
-				source.setId(sourceId(row, cubeId));
-				source.setValueType(iriValue(row, ELEMENT_TYPE));
-				cube.setSource(source);
-				break;
+		init();
+		URI cubeId = iriValue(row, CUBE_ID);
+		if (cube == null || !cube.getId().equals(cubeId)) {
+			cube = cubeManager.produceCube(cubeId);
+		}
+		
+		
+		String stereotypeName = stringValue(row, STEREOTYPE).toUpperCase();
+		
+		CadlKind kind = CadlKind.valueOf(stereotypeName);
+		switch (kind) {
+		
+		case SOURCE :
+			Variable source = new Variable();
+			source.setId(sourceId(row, cubeId));
+			source.setValueType(iriValue(row, ELEMENT_TYPE));
+			cube.setSource(source);
+			break;
 
-			case DIMENSION :
-				dimension = new Dimension();
-				dimension.setId(dimensionId(row, cubeId));
-				cube.addDimension(dimension);
-				break;
-				
-			case LEVEL :
-				level = new Level();
-				level.setId(levelId(row));
-				handleFormula(level, row);
-				dimension.addLevel(level);
-				break;
-				
-			case ATTRIBUTE :
-				Attribute attr = new Attribute();
-				attr.setId(attributeId(row));
-				level.addAttribute(attr);
-				break;
-				
-			case MEASURE :
-				Measure measure = new Measure();
-				measure.setId(measureId(row, cubeId));
-				handleFormula(measure, row);
-				cube.addMeasure(measure);
-				break;
-			}
+		case DIMENSION :
+			dimension = new Dimension();
+			dimension.setId(dimensionId(row, cubeId));
+			cube.addDimension(dimension);
+			level = null;
+			break;
+			
+		case LEVEL :
+			level = new Level();
+			level.setId(levelId(row));
+			handleFormula(level, row);
+			dimension.addLevel(level);
+			break;
+			
+		case ATTRIBUTE :
+			Attribute attr = new Attribute();
+			attr.setId(attributeId(row));
+			level.addAttribute(attr);
+			break;
+			
+		case MEASURE :
+			Measure measure = new Measure();
+			measure.setId(measureId(row, cubeId));
+			handleFormula(measure, row);
+			cube.addMeasure(measure);
+			break;
+		}
+		
+		String rollUpFrom = stringValue(row, ROLL_UP_FROM);
+		if (rollUpFrom != null) {
+			LevelRollUpAction action = processor.service(LevelRollUpAction.class);
+			action.register(
+				location(row, ROLL_UP_FROM), dimension, level, rollUpFrom);
 		}
 
+	}
+
+	private void init() {
+		if (cubeManager == null) {
+			cubeManager = processor.service(CubeManager.class);
+		}
+		
 	}
 
 	private URI measureId(SheetRow row, URI cubeId) {
@@ -145,27 +155,14 @@ public class CubeSheet extends BaseSheetProcessor {
 		return new URIImpl( baseIri + "/level/" + localName);
 	}
 
-	private enum CadlStereotype {
+	private enum CadlKind {
 		SOURCE,
 		DIMENSION,
 		LEVEL,
-		ATTRIBUTE, MEASURE
+		ATTRIBUTE, 
+		MEASURE
 	}
 
-	private static class LevelReasoningAction implements Action {
-		private CubeReasoner reasoner;
-		private Cube cube;
-		
-		public LevelReasoningAction(CubeReasoner reasoner, Cube cube) {
-			this.reasoner = reasoner;
-			this.cube = cube;
-		}
-
-		@Override
-		public void execute() throws SpreadsheetException {
-			reasoner.visit(cube);
-		}
-	}
 
 
 

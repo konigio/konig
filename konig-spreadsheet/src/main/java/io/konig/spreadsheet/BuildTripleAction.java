@@ -90,7 +90,7 @@ public class BuildTripleAction implements Action {
 		}
 
 		URI range = null;
-		ShowlManagerFactory factory = processor.getServiceManager().service(ShowlManagerFactory.class);
+		ShowlManagerFactory factory = processor.service(ShowlManagerFactory.class);
 		
 		ShowlManager showl = factory.createInstance();
 		ShowlProperty property = showl.getProperty(predicate);

@@ -49,5 +49,7 @@ public interface WorkbookProcessor {
 	ShapeManager getShapeManager();
 
 	void warn(WorkbookLocation location, String pattern, Object...args);
+	
+	<T> T service(Class<T> javaClass);
 
 }
