@@ -57,6 +57,7 @@ import io.konig.core.io.CompositeRdfHandler;
 import io.konig.core.io.GraphLoadHandler;
 import io.konig.core.io.NamespaceRDFHandler;
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.io.TurtleConfig;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
 import io.konig.core.vocab.Schema;
@@ -557,6 +558,7 @@ public class RdfUtil {
 		prettyPrintTurtle(graph.getNamespaceManager(), graph, writer);
 	}
 
+
 	public static void prettyPrintTurtle(String baseIri, Graph graph, Writer writer) throws IOException, RDFHandlerException {
 		prettyPrintTurtle(graph.getNamespaceManager(), baseIri, graph, writer);
 	}
@@ -567,9 +569,17 @@ public class RdfUtil {
 	
 	public static void prettyPrintTurtle(NamespaceManager nsManager, String baseIRI, Graph graph, Writer writer) throws IOException, RDFHandlerException {
 		
+		prettyPrintTurtle(nsManager, baseIRI, graph, writer, null);
+	}
+
+	public static void prettyPrintTurtle(NamespaceManager nsManager, String baseIRI, Graph graph, Writer writer, TurtleConfig config) throws IOException, RDFHandlerException {
+		
 		nsManager = nsManager==null ? null : filterNamespaces(graph, nsManager);
 		
 		CompactTurtleWriter turtle = new CompactTurtleWriter(writer);
+		if (config != null) {
+			turtle.setConfig(config);
+		}
 		turtle.setBaseIRI(baseIRI);
 		turtle.getWriterConfig().set(BasicWriterSettings.PRETTY_PRINT, true);
 		NaturalEdgeIterable sequence = new NaturalEdgeIterable(graph);

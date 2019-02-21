@@ -1,5 +1,26 @@
 package io.konig.spreadsheet;
 
+/*
+ * #%L
+ * Konig Spreadsheet
+ * %%
+ * Copyright (C) 2015 - 2019 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -40,20 +61,20 @@ import io.konig.core.path.NamespaceMapAdapter;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.AS;
 import io.konig.core.vocab.AWS;
+import io.konig.core.vocab.CADL;
 import io.konig.core.vocab.DC;
 import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.PROV;
 import io.konig.core.vocab.SH;
 import io.konig.core.vocab.Schema;
+import io.konig.core.vocab.VANN;
 import io.konig.rio.turtle.NamespaceMap;
 import io.konig.shacl.ShapeManager;
 
 public class WorkbookProcessorImpl implements WorkbookProcessor {
 	
 	private static final Logger logger = LoggerFactory.getLogger(WorkbookProcessorImpl.class);
-
-	
 	
 	private ServiceManager serviceManager = new ServiceManager();
 	private DataFormatter dataFormatter = new DataFormatter(true);
@@ -70,26 +91,37 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 	private Graph graph;
 	private OwlReasoner owlReasoner;
 	private ValueFactory vf = new ValueFactoryImpl();
-	private NamespaceManager nsManager;
+	private NamespaceHandler nsHandler;
+//	private NamespaceManager nsManager;
 	private ShapeManager shapeManager;
 
 	private boolean normalizeTerms;
 	private Map<String,String> normalizedMap = new HashMap<>();
 	private Set<String> normalizedTerms = new HashSet<>();
 	private SettingsSheet settings;
+	private File templateDir;
+	
+	private int maxErrorCount = 0;
+	private int errorCount;
 	
 	
 	public WorkbookProcessorImpl(Graph graph, ShapeManager shapeManager, File templateDir) {
-
+		this.templateDir = templateDir;
 		this.graph = graph;
-		this.nsManager = graph.getNamespaceManager();
-		this.owlReasoner = new OwlReasoner(graph);
 		this.shapeManager = shapeManager;
+	}
+	
+	private void init() {
 
-		serviceManager.setListener(new BaseServiceListener());
-		addNamespaces();
-		addServices(templateDir);
-		sortBookListeners();
+		if (nsHandler == null) {
+			this.nsHandler = new NamespaceHandler(graph);
+			this.owlReasoner = new OwlReasoner(graph);
+	
+			serviceManager.setListener(new BaseServiceListener());
+			addNamespaces();
+			addServices();
+			sortBookListeners();
+		}
 	}
 
 
@@ -99,8 +131,19 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 	}
 
 
-	private void addServices(File templateDir) {
+	public int getMaxErrorCount() {
+		return maxErrorCount;
+	}
+
+
+	public void setMaxErrorCount(int maxErrorCount) {
+		this.maxErrorCount = maxErrorCount;
+	}
+
+
+	private void addServices() {
 		settings =  new SettingsSheet(this);
+		NamespaceManager nsManager = graph.getNamespaceManager();
 		DataSourceGeneratorFactory dataSourceGeneratorFactory = new DataSourceGeneratorFactory(nsManager, templateDir, settings);
 		addService(WorkbookProcessor.class, this);
 		addService(dataSourceGeneratorFactory);
@@ -127,20 +170,22 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 
 
 	private void addNamespaces() {
-		nsManager.add("vann", "http://purl.org/vocab/vann/");
-		nsManager.add("owl", OWL.NAMESPACE);
-		nsManager.add("sh", SH.NAMESPACE);
-		nsManager.add("rdf", RDF.NAMESPACE);
-		nsManager.add("rdfs", RDFS.NAMESPACE);
-		nsManager.add("konig", Konig.NAMESPACE);
-		nsManager.add("xsd", XMLSchema.NAMESPACE);
-		nsManager.add("schema", Schema.NAMESPACE);
-		nsManager.add("dc", DC.NAMESPACE);
-		nsManager.add("prov", PROV.NAMESPACE);
-		nsManager.add("as", AS.NAMESPACE);
-		nsManager.add("gcp", GCP.NAMESPACE);
-		nsManager.add("aws",AWS.NAMESPACE);
-		nsManager.add("skos",SKOS.NAMESPACE);
+	
+		nsHandler.addNamespace("vann", VANN.NAMESPACE);
+		nsHandler.addNamespace("owl", OWL.NAMESPACE);
+		nsHandler.addNamespace("sh", SH.NAMESPACE);
+		nsHandler.addNamespace("rdf", RDF.NAMESPACE);
+		nsHandler.addNamespace("rdfs", RDFS.NAMESPACE);
+		nsHandler.addNamespace("konig", Konig.NAMESPACE);
+		nsHandler.addNamespace("xsd", XMLSchema.NAMESPACE);
+		nsHandler.addNamespace("schema", Schema.NAMESPACE);
+		nsHandler.addNamespace("dc", DC.NAMESPACE);
+		nsHandler.addNamespace("prov", PROV.NAMESPACE);
+		nsHandler.addNamespace("as", AS.NAMESPACE);
+		nsHandler.addNamespace("gcp", GCP.NAMESPACE);
+		nsHandler.addNamespace("aws",AWS.NAMESPACE);
+		nsHandler.addNamespace("skos",SKOS.NAMESPACE);
+		nsHandler.addNamespace("cadl", CADL.NAMESPACE);
 		
 	}
 
@@ -326,10 +371,16 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			}
 		}
 		
+		// We have a single action that must run after all the other actions..
+		if (nsHandler != null) {
+			nsHandler.execute();
+		}
+		
 	}
 
 	@Override
 	public void process(File workbookFile) throws SpreadsheetException {
+		init();
 		activeBook = new io.konig.spreadsheet.nextgen.Workbook(workbookFile);
 		Collections.sort(sheetProcessors);
 		Workbook workbook = createWorkbook(workbookFile);
@@ -375,7 +426,15 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 				SheetRow sheetRow = new SheetRow(bookSheet, row);
 				sheetRow.setUndeclaredColumns(undeclaredColumns);
 				if (accept(sheetRow, processor)) {
-					processor.visit(sheetRow);
+					try {
+						processor.visit(sheetRow);
+					} catch (SpreadsheetException e) {
+						if (++errorCount > maxErrorCount) {
+							throw e;
+						} else {
+							logger.error(" Error " + errorCount + ". ", e);
+						}
+					}
 				}
 			}
 		}
@@ -628,7 +687,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			fail(location, "Invalid URI: {0} ", text);
 		}
 		String prefix = text.substring(0, colon);
-		Namespace ns = nsManager.findByPrefix(prefix);
+		Namespace ns = graph.getNamespaceManager().findByPrefix(prefix);
 		if (ns == null) {
 			error(location, MessageFormat.format("Namespace not found for prefix ''{0}''", prefix));
 		}
@@ -708,7 +767,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			fail(location(row, col), "Invalid URI: {0} ", text);
 		}
 		String prefix = text.substring(0, colon);
-		Namespace ns = nsManager.findByPrefix(prefix);
+		Namespace ns = graph.getNamespaceManager().findByPrefix(prefix);
 		if (ns == null) {
 			error(row, col, "Namespace not found for prefix ''{0}''", prefix);
 		}
@@ -824,6 +883,17 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 	@Override
 	public <T> T service(Class<T> javaClass) {
 		return serviceManager.service(javaClass);
+	}
+
+
+	@Override
+	public void processAll(List<File> files) throws SpreadsheetException {
+
+		for (File file : files) {
+			process(file);
+		}
+		executeDeferredActions();
+		
 	}
 
 

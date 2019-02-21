@@ -43,12 +43,12 @@ import io.konig.maven.ParentProjectConfig;
 import io.konig.maven.RdfModelConfig;
 import io.konig.maven.TabularShapeFactoryConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
-import io.konig.maven.WorkbookProcessor;
+import io.konig.maven.WorkbookProcessorConfig;
 
 public class MultiProject extends MavenProjectConfig {
 	
 	private ParentProjectConfig parentProject;
-	private WorkbookProcessor workbook;
+	private WorkbookProcessorConfig workbook;
 	private RdfModelConfig rdfModel;
 	private JavaCodeGeneratorConfig java;
 	private GoogleCloudPlatformConfig googleCloudPlatform;
@@ -78,7 +78,7 @@ public class MultiProject extends MavenProjectConfig {
 	}
 
 
-	public WorkbookProcessor getWorkbook() {
+	public WorkbookProcessorConfig getWorkbook() {
 		return workbook;
 	}
 	
@@ -123,7 +123,7 @@ public class MultiProject extends MavenProjectConfig {
 	}
 
 
-	public void setWorkbook(WorkbookProcessor workbook) {
+	public void setWorkbook(WorkbookProcessorConfig workbook) {
 		this.workbook = workbook;
 	}
 

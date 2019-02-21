@@ -1,8 +1,8 @@
-package io.konig.spreadsheet;
+package io.konig.core.io;
 
 /*
  * #%L
- * Konig Spreadsheet
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -21,21 +21,9 @@ package io.konig.spreadsheet;
  */
 
 
-import org.openrdf.model.impl.LiteralImpl;
-import org.openrdf.model.vocabulary.OWL;
-import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.URI;
 
-import io.konig.core.Graph;
-import io.konig.core.vocab.Konig;
-import io.konig.core.vocab.VANN;
+public interface BaseDirectiveHandler {
 
-public class KonigDescriber {
-
-	
-	public KonigDescriber(Graph graph) {
-
-		graph.edge(Konig.NAMESPACE_ID, RDF.TYPE, OWL.ONTOLOGY);
-		graph.edge(Konig.NAMESPACE_ID, VANN.preferredNamespacePrefix, new LiteralImpl("konig"));
-	}
-
+	String injectBaseDirective(URI resource);
 }

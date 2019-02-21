@@ -50,7 +50,7 @@ public class CompositeLocalNameService implements LocalNameService {
 	public Set<URI> lookupLocalName(String localName) {
 		for (LocalNameService service : list) {
 			Set<URI> result = service.lookupLocalName(localName);
-			if (result != null) {
+			if (result != null && !result.isEmpty()) {
 				return result;
 			}
 		}

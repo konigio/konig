@@ -23,17 +23,20 @@ package io.konig.maven;
 
 import java.io.File;
 
-public class WorkbookProcessor {
+public class WorkbookProcessorConfig {
 	private File workbookFile;
 	private File workbookDir;
 	private File owlDir;
 	private File shapesDir;
 	private File skosDir;
 	
+	private File templateDir;
+	
 	private boolean inferRdfPropertyDefinitions=true;
 	private boolean normalizeTerms=true;
 	private boolean failOnWarnings = false;
 	private boolean failOnErrors = true;
+	private int maxErrorCount = 0;
 	
 	public File getWorkbookFile() {
 		return workbookFile;
@@ -105,6 +108,18 @@ public class WorkbookProcessor {
 	}
 	public void setNormalizeTerms(boolean normalizeTerms) {
 		this.normalizeTerms = normalizeTerms;
+	}
+	public int getMaxErrorCount() {
+		return maxErrorCount;
+	}
+	public void setMaxErrorCount(int maxErrorCount) {
+		this.maxErrorCount = maxErrorCount;
+	}
+	public File getTemplateDir() {
+		return templateDir;
+	}
+	public void setTemplateDir(File templateDir) {
+		this.templateDir = templateDir;
 	}
 	
 }

@@ -55,7 +55,17 @@ public class CompactTurtleWriter extends TurtleWriter {
 	private List<Context> stack = new ArrayList<>();
 	private String baseIRI = null;
 	
+	private TurtleConfig config = new TurtleConfig();
 	
+	private boolean emitBase = false;
+
+	public TurtleConfig getConfig() {
+		return config;
+	}
+
+	public void setConfig(TurtleConfig config) {
+		this.config = config;
+	}
 
 	public String getBaseIRI() {
 		return baseIRI;
@@ -75,42 +85,72 @@ public class CompactTurtleWriter extends TurtleWriter {
 		stack.add(new Context());
 	}
 	
-	protected void writeURI(URI uri)
-			throws IOException
-		{
-			String uriString = uri.toString();
-			String namespaceName = uri.getNamespace();
-			String localName = uri.getLocalName();
-
-			// Try to find a prefix for the URI's namespace
-
-			String prefix = namespaceTable.get(namespaceName);
-			if (prefix == null) {
-				prefix = namespaceTable.get(uriString);
-				if (prefix != null) {
-					localName = "";
-				}
-			}
-			
-
-			if (useCurie(prefix, localName)) {
-				// Namespace is mapped to a prefix; write abbreviated URI
-				writer.write(prefix);
-				writer.write(":");
-				writer.write(localName);
-			} else if (baseIRI!=null && uriString.startsWith(baseIRI)) {
+	public void startRDF()
+			throws RDFHandlerException {
+		if (config.getBaseDirectiveHandler()!=null) {
+			emitBase = true;
+		}
+		if (baseIRI != null) {
+			try {
+				writer.write("@base ");
 				writer.write('<');
-				writer.write(TurtleUtil.encodeURIString(uriString.substring(baseIRI.length())));
-				writer.write('>');
-			}
-			else {
-				
-				// Write full URI
-				writer.write("<");
-				writer.write(TurtleUtil.encodeURIString(uriString));
-				writer.write(">");
+				writer.write(baseIRI);
+				writer.write("> .");
+				writer.writeEOL();
+			} catch (IOException e) {
+				throw new RDFHandlerException(e);
 			}
 		}
+		super.startRDF();
+	}
+			
+	protected void writeURI(URI uri)
+			throws IOException	{
+			
+		if (emitBase) {
+			String newBase = config.getBaseDirectiveHandler().injectBaseDirective(uri);
+			if (newBase != null) {
+				baseIRI = newBase;
+				writer.write("@base <");
+				writer.write(baseIRI);
+				writer.write("> .");
+				writer.writeEOL();
+			}
+			emitBase = false;
+		}
+		String uriString = uri.toString();
+		String namespaceName = uri.getNamespace();
+		String localName = uri.getLocalName();
+
+		// Try to find a prefix for the URI's namespace
+
+		String prefix = namespaceTable.get(namespaceName);
+		if (prefix == null) {
+			prefix = namespaceTable.get(uriString);
+			if (prefix != null) {
+				localName = "";
+			}
+		}
+		
+
+		if (useCurie(prefix, localName)) {
+			// Namespace is mapped to a prefix; write abbreviated URI
+			writer.write(prefix);
+			writer.write(":");
+			writer.write(localName);
+		} else if (baseIRI!=null && uriString.startsWith(baseIRI)) {
+			writer.write('<');
+			writer.write(TurtleUtil.encodeURIString(uriString.substring(baseIRI.length())));
+			writer.write('>');
+		}
+		else {
+			
+			// Write full URI
+			writer.write("<");
+			writer.write(TurtleUtil.encodeURIString(uriString));
+			writer.write(">");
+		}
+	}
 	
 	private boolean useCurie(String prefix, String localName) {
 		if (prefix != null && localName !=null) {
@@ -217,6 +257,9 @@ public class CompactTurtleWriter extends TurtleWriter {
 					writer.write(" . ");
 					writer.writeEOL();
 					writer.decreaseIndentation();
+					if (config.getBaseDirectiveHandler()!=null) {
+						emitBase = true;
+					}
 				}
 				
 				// Write new subject
@@ -523,5 +566,6 @@ public class CompactTurtleWriter extends TurtleWriter {
 		URI lastPredicate;
 		ListInfo listInfo;
 	}
+
 
 }

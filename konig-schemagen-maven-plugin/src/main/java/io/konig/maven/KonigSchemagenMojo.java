@@ -98,6 +98,8 @@ import io.konig.abbrev.MemoryAbbreviationManager;
 import io.konig.aws.common.GroovyAwsDeploymentScriptWriter;
 import io.konig.aws.common.GroovyAwsTearDownScriptWriter;
 import io.konig.aws.datasource.AwsShapeConfig;
+import io.konig.cadl.CubeEmitter;
+import io.konig.cadl.CubeManager;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
@@ -244,6 +246,7 @@ import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.spreadsheet.SpreadsheetException;
 import io.konig.spreadsheet.WorkbookLoader;
+import io.konig.spreadsheet.WorkbookProcessorImpl;
 import io.konig.transform.bigquery.BigQueryTransformGenerator;
 import io.konig.transform.model.ShapeTransformException;
 import io.konig.transform.mysql.RoutedSqlTransformVisitor;
@@ -312,7 +315,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private JavaCodeGeneratorConfig java;
     
     @Parameter
-    private WorkbookProcessor workbook;
+    private WorkbookProcessorConfig workbook;
     
     @Parameter
     private GoogleCloudPlatformConfig googleCloudPlatform;
@@ -982,73 +985,96 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
-	private void loadSpreadsheet() throws MojoExecutionException   {
-		 try {			
-			 if (workbook != null) {	
-				 WorkbookLoader workbookLoader = new WorkbookLoader(nsManager);
-				 workbookLoader.setShapeManager(shapeManager);
-				 workbookLoader.setFailOnWarnings(workbook.isFailOnWarnings());
-				 workbookLoader.setFailOnErrors(workbook.isFailOnErrors());
-				 workbookLoader.setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
-				 workbookLoader.setNormalizeTerms(workbook.isNormalizeTerms());
-				 
-				 File workbookFile = workbook.getWorkbookFile();
-				 File workbookDir = workbook.getWorkbookDir();
-				 List<File> files = new ArrayList<File>();
-					if (workbookFile != null) {
-						files.add(workbookFile);
-					}
-					if (workbookDir != null && workbookDir.exists() && workbookDir.isDirectory()) {
-						File[] filesArr = workbookDir.listFiles();
-						if (filesArr != null && filesArr.length > 0) {
-							List<File> filesTmp = Arrays.asList(filesArr);
-							files.addAll(filesTmp);
-						}
-					}
-					if(files!=null && files.isEmpty()){
-						throw new SpreadsheetException("No files available in workbookDir and workbookFile.");
-					}
-					for (File file : files) {
-						FileInputStream input = new FileInputStream(file);
-						try {
 
-							Workbook workbook = new XSSFWorkbook(input);
+	private void loadSpreadsheet() throws MojoExecutionException {
+		try {
+			if (workbook != null) {
+				File templateDir = workbook.getTemplateDir();
+				int maxErrorCount = workbook.getMaxErrorCount();
 
-							workbookLoader.setDatasetMapper(datasetMapper);
-							getLog().debug("Opening Workbook: " + file.getName());
-							workbookLoader.load(workbook, owlGraph,workbookFile);
-						} finally {
-							input.close();
-							getLog().debug("Closing Workbook: " + file.getName());
-						}
+				WorkbookProcessorImpl processor = new WorkbookProcessorImpl(owlGraph, shapeManager, templateDir);
+				processor.setMaxErrorCount(maxErrorCount);
+
+				// WorkbookLoader workbookLoader = new
+				// WorkbookLoader(nsManager);
+				// workbookLoader.setShapeManager(shapeManager);
+				// workbookLoader.setFailOnWarnings(workbook.isFailOnWarnings());
+				// workbookLoader.setFailOnErrors(workbook.isFailOnErrors());
+				// workbookLoader.setInferRdfPropertyDefinitions(workbook.isInferRdfPropertyDefinitions());
+				// workbookLoader.setNormalizeTerms(workbook.isNormalizeTerms());
+
+				File workbookFile = workbook.getWorkbookFile();
+				File workbookDir = workbook.getWorkbookDir();
+				List<File> files = new ArrayList<File>();
+				if (workbookFile != null) {
+					files.add(workbookFile);
+				}
+				if (workbookDir != null && workbookDir.exists() && workbookDir.isDirectory()) {
+					File[] filesArr = workbookDir.listFiles();
+					if (filesArr != null && filesArr.length > 0) {
+						List<File> filesTmp = Arrays.asList(filesArr);
+						files.addAll(filesTmp);
 					}
-				 
-				 File gcpDir = workbook.gcpDir(defaults);
-				 File awsDir = workbook.awsDir(defaults);
-				 
-				 VelocityContext context = workbookLoader.getDataSourceGenerator().getContext();
-				 emitter.add(new OntologyEmitter(workbook.owlDir(defaults)));
-				 emitter.add(new ShapeToFileEmitter(shapeManager, workbook.shapesDir(defaults)));
-				 emitter.add(new SkosEmitter(workbook.skosDir(defaults)));
-				 emitter.add(new NamedGraphEmitter(workbook.owlDir(defaults)));
-				 
-				 if (context != null) {
-					 if(context.get("ECRRepositoryName")!=null) {
-						 System.setProperty("ECRRepositoryName", (String)context.get("ECRRepositoryName"));
-					 }
-					 emitter.add(new GenericEmitter(GCP.GoogleCloudSqlInstance, gcpDir, context));
-					 emitter.add(new GenericEmitter(AWS.DbCluster, awsDir, context));
-					 emitter.add(new GenericEmitter(AWS.CloudFormationTemplate, awsDir, context));
-					 emitter.add(new GenericEmitter(AWS.SecurityTag, awsDir, context));
-				 }
-				 
-			 }
-			
-		 } catch (Throwable oops) {
-			 throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
-		 }
-	 }
+				}
+				if (files.isEmpty()) {
+					throw new SpreadsheetException("No files available in workbookDir and workbookFile.");
+				}
+				// for (File file : files) {
+				// FileInputStream input = new FileInputStream(file);
+				// try {
+				//
+				// Workbook workbook = new XSSFWorkbook(input);
+				//
+				// workbookLoader.setDatasetMapper(datasetMapper);
+				// getLog().debug("Opening Workbook: " + file.getName());
+				// workbookLoader.load(workbook, owlGraph,workbookFile);
+				// } finally {
+				// input.close();
+				// getLog().debug("Closing Workbook: " + file.getName());
+				// }
+				// }
+
+				processor.processAll(files);
+				
+				emitter.add(new OntologyEmitter(workbook.owlDir(defaults)));
+				emitter.add(new ShapeToFileEmitter(shapeManager, workbook.shapesDir(defaults)));
+				emitter.add(new SkosEmitter(workbook.skosDir(defaults)));
+				emitter.add(new NamedGraphEmitter(workbook.owlDir(defaults)));
+				
+				addCadEmitter(processor.getServiceManager().getService(CubeManager.class));
+
+
+//				VelocityContext context = workbookLoader.getDataSourceGenerator().getContext();
+//				File gcpDir = workbook.gcpDir(defaults);
+//				File awsDir = workbook.awsDir(defaults);
+//				if (context != null) {
+//					if (context.get("ECRRepositoryName") != null) {
+//						System.setProperty("ECRRepositoryName", (String) context.get("ECRRepositoryName"));
+//					}
+//					emitter.add(new GenericEmitter(GCP.GoogleCloudSqlInstance, gcpDir, context));
+//					emitter.add(new GenericEmitter(AWS.DbCluster, awsDir, context));
+//					emitter.add(new GenericEmitter(AWS.CloudFormationTemplate, awsDir, context));
+//					emitter.add(new GenericEmitter(AWS.SecurityTag, awsDir, context));
+//				}
+
+			}
+
+		} catch (Throwable oops) {
+			throw new MojoExecutionException("Failed to transform workbook to RDF", oops);
+		}
+	}
 	
+	private void addCadEmitter(CubeManager cubeManager) {
+		if (cubeManager != null) {
+			// TODO:  Handle the case where cubes are defined in the same namespace as 
+			//        an OWL ontology.  As it stands, this method will overwrite the OWL ontology.
+			
+			emitter.add(new CubeEmitter(workbook.owlDir(defaults), cubeManager));
+		}
+		
+	}
+
+
 	private File rdfDir() {
 		if (workbook != null) {
 			return workbook.owlDir(defaults).getParentFile();

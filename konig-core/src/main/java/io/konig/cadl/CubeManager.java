@@ -1,5 +1,7 @@
 package io.konig.cadl;
 
+import java.util.Collection;
+
 /*
  * #%L
  * Konig Core
@@ -45,6 +47,10 @@ public class CubeManager {
 			add(cube);
 		}
 		return cube;
+	}
+
+	public Collection<Cube> listCubes() {
+		return cubes.values();
 	}
 
 }
