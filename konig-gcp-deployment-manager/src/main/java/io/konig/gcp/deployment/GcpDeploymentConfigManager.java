@@ -38,6 +38,11 @@ import io.konig.gcp.common.CloudSqlInstanceVisitor;
 import io.konig.yaml.AnchorFeature;
 import io.konig.yaml.YamlWriter;
 
+/**
+ * @deprecated Replaced by {@link GcpConfigManager}
+ * @author Greg McFall
+ *
+ */
 public class GcpDeploymentConfigManager {
 
 	private DeploymentConfig config = new DeploymentConfig();

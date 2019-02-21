@@ -4,7 +4,7 @@ package io.konig.gcp.deployment;
  * #%L
  * Konig GCP Deployment Manager
  * %%
- * Copyright (C) 2015 - 2018 Gregory McFall
+ * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,28 @@ package io.konig.gcp.deployment;
  * #L%
  */
 
-
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DeploymentConfig {
-	private List<GcpResource<?>> resources = new ArrayList<>();
+	private Map<String, GcpResource<?>> resources = new LinkedHashMap<>();
 	
 	public void addResource(GcpResource<?> resource) {
-		resources.add(resource);
+		resources.put(resource.getName(), resource);
+	}
+	
+	public <T> T findResource(String name, Class<T> type) {
+		Object result = (Object) resources.get(name);
+		return result==null ? null : type.cast(result);
 	}
 
 	public List<GcpResource<?>> getResources() {
-		return resources;
+		return new ArrayList<GcpResource<?>>(resources.values());
 	}
 	
+
 	
 
 }
