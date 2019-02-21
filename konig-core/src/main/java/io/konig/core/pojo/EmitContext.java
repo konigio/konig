@@ -22,6 +22,7 @@ package io.konig.core.pojo;
 
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -181,7 +182,7 @@ public class EmitContext {
 					
 					String resourceName = getterResourceName(name);
 					
-					Set<URI> nameList = nameService.lookupLocalName(resourceName);
+					Set<URI> nameList = nameService==null ? Collections.emptySet() : nameService.lookupLocalName(resourceName);
 					
 
 					RdfProperty annotation = rdfPropertyAnnotation(m);

@@ -23,11 +23,36 @@ package io.konig.shacl;
 
 import java.util.ArrayList;
 
+import org.openrdf.model.URI;
+
 import io.konig.annotation.RdfList;
+import io.konig.core.KonigException;
+import io.konig.formula.Direction;
+import io.konig.formula.DirectionStep;
+import io.konig.formula.PathExpression;
+import io.konig.formula.PathStep;
 
 @RdfList
 public class SequencePath extends ArrayList<PropertyPath> implements PropertyPath {
 	private static final long serialVersionUID = 1L;
+	
+	static public SequencePath fromPathExpression(PathExpression e) throws KonigException {
+		SequencePath sequence = new SequencePath();
+		for (PathStep step : e.getStepList()) {
+			if (step instanceof DirectionStep) {
+				DirectionStep dirStep = (DirectionStep) step;
+				if (dirStep.getDirection() == Direction.IN) {
+					throw new KonigException("Inverse paths not supported: " + e.simpleText());
+				}
+				URI term = dirStep.getTerm().getIri();
+				sequence.add(new PredicatePath(term));
+			} else {
+				throw new KonigException("Invalid sequence path: " + e.simpleText());
+			}
+		}
+		
+		return sequence;
+	}
 	
 	public String toString() {
 		StringBuilder builder = new StringBuilder();

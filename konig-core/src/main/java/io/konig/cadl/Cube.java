@@ -30,7 +30,7 @@ import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.CADL;
 
 public class Cube extends CadlEntity {
-	private Set<Variable> source = new LinkedHashSet<>();
+	private Variable source;
 	private Set<Dimension> dimension = new LinkedHashSet<>();
 	private Set<Measure> measure = new LinkedHashSet<>();
 	
@@ -39,16 +39,17 @@ public class Cube extends CadlEntity {
 		return CADL.Cube;
 	}
 	
-	public void addSource(Variable source) {
-		this.source.add(source);
-	}
 
 
 	@RdfProperty(CADL.Term.source)
-	public Set<Variable> getSource() {
+	public Variable getSource() {
 		return source;
 	}
 	
+	public void setSource(Variable source) {
+		this.source = source;
+	}
+
 	public void addDimension(Dimension dimension) {
 		this.dimension.add(dimension);
 	}
@@ -88,7 +89,7 @@ public class Cube extends CadlEntity {
 		}
 		
 		public Builder source(Variable source) {
-			cube.addSource(source);
+			cube.setSource(source);
 			return this;
 		}
 		

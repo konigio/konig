@@ -34,7 +34,7 @@ import io.konig.core.vocab.CADL;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 
-public class Measure extends CadlEntity {
+public class Measure extends CadlEntity implements HasFormula {
 
 	private QuantifiedExpression formula;
 	

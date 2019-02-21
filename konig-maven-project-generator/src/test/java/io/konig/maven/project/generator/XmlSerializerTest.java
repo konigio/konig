@@ -40,7 +40,7 @@ import io.konig.maven.FilterPart;
 import io.konig.maven.GoogleCloudPlatformConfig;
 import io.konig.maven.JavaCodeGeneratorConfig;
 import io.konig.maven.ModelValidationConfig;
-import io.konig.maven.WorkbookProcessor;
+import io.konig.maven.WorkbookProcessorConfig;
 import io.konig.validation.CaseStyle;
 import io.konig.validation.CaseStyleConventions;
 
@@ -128,7 +128,7 @@ public class XmlSerializerTest {
 	
 	@Ignore
 	public void testWorkbook() {
-		WorkbookProcessor workbook = new WorkbookProcessor();
+		WorkbookProcessorConfig workbook = new WorkbookProcessorConfig();
 		workbook.setWorkbookFile(new File("foo/bar.xlsx"));
 		
 		StringWriter buffer = new StringWriter();

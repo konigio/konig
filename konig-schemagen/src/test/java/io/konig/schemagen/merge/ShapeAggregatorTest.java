@@ -251,7 +251,7 @@ public class ShapeAggregatorTest {
 		
 		PropertyConstraint c = s.getPropertyConstraint(Schema.alumniOf);
 		assertTrue(c != null);
-		List<Value> list = c.getIn();
+		List<? extends Value> list = c.getIn();
 		assertTrue(list != null);
 		assertTrue(list.contains(harvard));
 		assertTrue(list.contains(mit));

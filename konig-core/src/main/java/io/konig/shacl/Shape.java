@@ -34,6 +34,7 @@ import java.util.Set;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.BNodeImpl;
+import org.openrdf.model.vocabulary.SKOS;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -97,6 +98,7 @@ public class Shape implements Cloneable {
 	private List<ShapeMaxRowLength> shapeMaxRowLengthList;
 	private Set<URI> shapeProcessing;
 	private Set<Shape> explicitDerivedFrom;
+	private Set<URI> broader;
 	 
 	 public List<URI> getInputShapeOf() {
 	 	return inputShapeOf;
@@ -813,6 +815,17 @@ public class Shape implements Cloneable {
 		return explicitDerivedFrom==null ? Collections.emptySet() : explicitDerivedFrom;
 	}
 
+	public Set<URI> getBroader() {
+		return broader == null ? Collections.emptySet() : broader;
+	}
+
+	@RdfProperty(SKOS.NAMESPACE + "broader")
+	public void addBroader(URI skosConcept) {
+		if (broader == null) {
+			broader = new LinkedHashSet<>();
+		}
+		broader.add(skosConcept);
+	}
 	
 	
 }

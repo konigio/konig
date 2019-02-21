@@ -42,6 +42,7 @@ public class Schema {
 	public static final URI BuyAction = new URIImpl("http://schema.org/BuyAction");
 	public static final URI ContactPoint = new URIImpl("http://schema.org/ContactPoint");
 	public static final URI CreativeWork = new URIImpl("http://schema.org/CreativeWork");
+	public static final URI Trip = new URIImpl("http://schema.org/Trip");
 	public static final URI DataType = new URIImpl("http://schema.org/DataType");
 	public static final URI Date = new URIImpl("http://schema.org/Date");
 	public static final URI DateTime = new URIImpl("http://schema.org/DateTime");
@@ -53,6 +54,7 @@ public class Schema {
 	public static final URI Number = new URIImpl("http://schema.org/Number");
 	public static final URI Order = new URIImpl("http://schema.org/Order");
 	public static final URI Organization = new URIImpl("http://schema.org/Organization");
+	public static final URI EducationalOrganization = new URIImpl("http://schema.org/EducationalOrganization");
 	public static final URI School = new URIImpl("http://schema.org/School");
 	public static final URI Person = new URIImpl("http://schema.org/Person");
 	public static final URI Product = new URIImpl("http://schema.org/Product");
@@ -132,6 +134,8 @@ public class Schema {
 	public static final URI taxID = new URIImpl("http://schema.org/taxID");
 	public static final String IS_PART_OF = "http://schema.org/isPartOf";
 	public static final URI isPartOf = new URIImpl(IS_PART_OF);
+	public static final URI Book = new URIImpl("http://schema.org/Book");
+	public static final URI numberOfPages = new URIImpl("http://schema.org/numberOfPages");
 	public static URI employee = new URIImpl("http://schema.org/employee");
 
 }

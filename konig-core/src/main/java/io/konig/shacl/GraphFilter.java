@@ -85,7 +85,7 @@ public class GraphFilter {
 		URI datatype = p.getDatatype();
 		URI directType = p.getDirectValueType();
 		Shape valueShape = p.getShape();
-		List<Value> allowedValues = p.getIn();
+		List<? extends Value> allowedValues = p.getIn();
 		
 		Set<Edge> set = vertex.outProperty(predicate);
 		if (minCount !=null && set.size()<minCount) {

@@ -44,9 +44,9 @@ import io.konig.maven.OwlProfile;
 import io.konig.maven.RdfModelConfig;
 import io.konig.maven.TabularShapeFactoryConfig;
 import io.konig.maven.TabularShapeGeneratorConfig;
-import io.konig.maven.WorkbookProcessor;
+import io.konig.maven.WorkbookProcessorConfig;
 
-public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProcessor> {
+public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProcessorConfig> {
 	
 	private TabularShapeGeneratorConfig tabularShapeGeneratorConfig;
 	private TabularShapeFactoryConfig tabularShapeFactoryConfig;
@@ -56,7 +56,7 @@ public class RdfModelGenerator extends ConfigurableProjectGenerator<WorkbookProc
 	private OwlProfile[] profiles;
 	private OwlInference[] inferences;
 	
-	public RdfModelGenerator(MavenProjectConfig mavenProject, WorkbookProcessor workbook) {
+	public RdfModelGenerator(MavenProjectConfig mavenProject, WorkbookProcessorConfig workbook) {
 		super(workbook, "workbook");
 		setTemplatePath("konig/generator/rdf-model/pom.xml");
 		setArtifactSuffix("-rdf-model");

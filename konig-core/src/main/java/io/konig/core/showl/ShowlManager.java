@@ -57,7 +57,7 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
-public class ShowlManager {
+public class ShowlManager implements ShowlClassManager {
 	private static final Logger logger = LoggerFactory.getLogger(ShowlManager.class);
 	private Map<Resource,ShowlNodeShapeSet> nodeShapes = new LinkedHashMap<>();
 	private Map<URI,ShowlClass> owlClasses = new LinkedHashMap<>();
@@ -88,6 +88,10 @@ public class ShowlManager {
 		this.reasoner = reasoner;
 		this.sourceNodeSelector = sourceNodeSelector;
 		this.consumer = consumer;
+	}
+	
+	public ShapeManager getShapeManager() {
+		return shapeManager;
 	}
 	
 	public void load() throws ShowlProcessingException {
@@ -140,7 +144,7 @@ public class ShowlManager {
 
 	
 
-	private void inferInverses() {
+	protected void inferInverses() {
 		List<ShowlProperty> list = new ArrayList<>(getProperties());
 		for (ShowlProperty p : list) {
 			if (p.getInverses().isEmpty()) {
@@ -836,15 +840,15 @@ public class ShowlManager {
 
 
 
-	private void loadShapes() {
+	protected void loadShapes() {
 		classlessShapes = new ArrayList<>();
-		Set<Shape> rootShapes = rootShapes(shapeManager);
+		Set<Shape> rootShapes = selectShapes();
 		for (Shape shape : rootShapes) {
 			createNodeShape(null, shape);
 		}
 	}
 	
-	private Set<Shape> rootShapes(ShapeManager shapeManager) {
+	protected Set<Shape> selectShapes() {
 		Set<Shape> result = new LinkedHashSet<>();
 		Map<Shape,Boolean> hasReference = new LinkedHashMap<>();
 		List<Shape> shapeList = shapeManager.listShapes();
@@ -862,7 +866,7 @@ public class ShowlManager {
 
 	
 
-	private void putReferences(List<PropertyConstraint> property, Map<Shape, Boolean> hasReference) {
+	protected void putReferences(List<PropertyConstraint> property, Map<Shape, Boolean> hasReference) {
 		for (PropertyConstraint p : property) {
 			Shape shape = p.getShape();
 			if (shape != null) {
@@ -999,7 +1003,7 @@ public class ShowlManager {
 		logger.error(text);
 	}
 
-	private ShowlProperty produceShowlProperty(URI predicate) {
+	protected ShowlProperty produceShowlProperty(URI predicate) {
 		ShowlProperty property = properties.get(predicate);
 		if (property == null) {
 			property = new ShowlProperty(predicate);
@@ -1356,6 +1360,19 @@ public class ShowlManager {
 			return failed ? null : selected;
 		}
 		
+	}
+
+
+
+
+	@Override
+	public Collection<ShowlClass> listClasses() {
+		return owlClasses.values();
+	}
+
+	@Override
+	public ShowlClass findClassById(URI classId) {
+		return owlClasses.get(classId);
 	}
 	
 }

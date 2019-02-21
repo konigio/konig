@@ -36,10 +36,11 @@ import io.konig.core.vocab.CADL;
 import io.konig.formula.FormulaParser;
 import io.konig.formula.QuantifiedExpression;
 
-public class Level extends CadlEntity {
+public class Level extends CadlEntity implements HasFormula {
 	
 	private Set<Level> rollUpTo;
 	private QuantifiedExpression formula;
+	private Set<Attribute> attribute;
 
 	@Override
 	public URI getType() {
@@ -47,6 +48,19 @@ public class Level extends CadlEntity {
 	}
 	
 
+	public void addAttribute(Attribute a) {
+		if (attribute == null) {
+			attribute = new LinkedHashSet<>();
+		}
+		attribute.add(a);
+	}
+	
+	@RdfProperty(CADL.Term.attribute)
+	public Set<Attribute> getAttribute() {
+		return attribute == null ? Collections.emptySet() : attribute;
+	}
+	
+	
 	@RdfProperty(CADL.Term.rollUpTo)
 	public Set<Level> getRollUpTo() {
 		return rollUpTo==null ? Collections.emptySet() : rollUpTo;

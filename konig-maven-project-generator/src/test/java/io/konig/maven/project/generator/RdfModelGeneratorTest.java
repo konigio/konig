@@ -28,7 +28,7 @@ import java.io.File;
 import org.junit.Test;
 
 import io.konig.maven.FileUtil;
-import io.konig.maven.WorkbookProcessor;
+import io.konig.maven.WorkbookProcessorConfig;
 
 public class RdfModelGeneratorTest {
 
@@ -49,7 +49,7 @@ public class RdfModelGeneratorTest {
 		project.setRdfSourceDir(new File("target/generated/rdf-model"));
 		project.setRdfSourcePath("target/generated/rdf-model");
 		
-		WorkbookProcessor workbook = new WorkbookProcessor();
+		WorkbookProcessorConfig workbook = new WorkbookProcessorConfig();
 		workbook.setWorkbookFile(workbookFile);
 		
 		RdfModelGenerator generator = new RdfModelGenerator(project, workbook);

@@ -175,6 +175,7 @@ public class XmlSerializer {
 		return 
 			(value instanceof String) ||
 			(value instanceof File) ||
+			(value instanceof Number) ||
 			(value.getClass() == Boolean.class);
 	}
 

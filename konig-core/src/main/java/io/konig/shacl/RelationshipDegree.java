@@ -44,6 +44,9 @@ public enum RelationshipDegree implements HasURI{
 	}
 	
 	public static RelationshipDegree fromURI(URI uri) {
+		if (uri == null) {
+			return null;
+		}
 		for (RelationshipDegree value : values()) {
 			if (value.getURI().equals(uri)) {
 				return value;
