@@ -1,10 +1,10 @@
-package io.konig.gcp.deployment;
+package io.konig.datasource;
 
 /*
  * #%L
- * Konig GCP Deployment Manager
+ * Konig Core
  * %%
- * Copyright (C) 2015 - 2018 Gregory McFall
+ * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,27 +21,9 @@ package io.konig.gcp.deployment;
  */
 
 
-public class BigqueryDatasetProperties {
+import io.konig.core.Graph;
 
-	private BigqueryDatasetReference datasetReference;
-	private String location;
+public interface DataSourceVisitor {
 
-	public BigqueryDatasetReference getDatasetReference() {
-		return datasetReference;
-	}
-
-	public void setDatasetReference(BigqueryDatasetReference datasetReference) {
-		this.datasetReference = datasetReference;
-	}
-
-	public String getLocation() {
-		return location;
-	}
-
-	public void setLocation(String location) {
-		this.location = location;
-	}
-	
-	
-	
+	void visit(Graph graph, DataSource ds);
 }

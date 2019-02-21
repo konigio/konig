@@ -34,7 +34,6 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -42,7 +41,6 @@ import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -73,15 +71,11 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.MavenInvocationException;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.velocity.VelocityContext;
 import org.codehaus.plexus.util.FileUtils;
 import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
 import org.openrdf.model.Resource;
@@ -105,7 +99,6 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
-import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
@@ -123,8 +116,6 @@ import io.konig.core.showl.ShowlSourceNodeSelector;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat;
-import io.konig.core.vocab.AWS;
-import io.konig.core.vocab.GCP;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.XOWL;
 import io.konig.core.vocab.XSD;
@@ -137,8 +128,8 @@ import io.konig.datasource.TableDataSource;
 import io.konig.estimator.MultiSizeEstimateRequest;
 import io.konig.estimator.MultiSizeEstimator;
 import io.konig.estimator.SizeEstimateException;
-import io.konig.etl.aws.EtlRouteBuilder;
-import io.konig.etl.gcp.GcpEtlRouteBuilder;
+//import io.konig.etl.aws.EtlRouteBuilder;
+//import io.konig.etl.gcp.GcpEtlRouteBuilder;
 import io.konig.gae.datastore.CodeGeneratorException;
 import io.konig.gae.datastore.FactDaoGenerator;
 import io.konig.gae.datastore.SimpleDaoNamer;
@@ -149,10 +140,9 @@ import io.konig.gcp.common.GroovyDeploymentScriptWriter;
 import io.konig.gcp.common.GroovyTearDownScriptWriter;
 import io.konig.gcp.common.InvalidGoogleCredentialsException;
 import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.gcp.deployment.DeploymentConfigEmitter;
 import io.konig.gcp.deployment.GcpDeploymentConfigManager;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
-import io.konig.maven.project.generator.EtlModelGenerator;
-import io.konig.maven.project.generator.MavenProjectConfig;
 import io.konig.maven.project.generator.MavenProjectGeneratorException;
 import io.konig.maven.project.generator.MultiProject;
 import io.konig.maven.project.generator.ParentProjectGenerator;
@@ -198,7 +188,6 @@ import io.konig.schemagen.gcp.LocalNameTableMapper;
 import io.konig.schemagen.gcp.NamespaceDatasetMapper;
 import io.konig.schemagen.gcp.SimpleDatasetMapper;
 import io.konig.schemagen.io.CompositeEmitter;
-import io.konig.schemagen.io.GenericEmitter;
 import io.konig.schemagen.io.NamedGraphEmitter;
 import io.konig.schemagen.io.OntologyEmitter;
 import io.konig.schemagen.io.ShapeToFileEmitter;
@@ -245,9 +234,7 @@ import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.spreadsheet.SpreadsheetException;
-import io.konig.spreadsheet.WorkbookLoader;
 import io.konig.spreadsheet.WorkbookProcessorImpl;
-import io.konig.transform.bigquery.BigQueryTransformGenerator;
 import io.konig.transform.model.ShapeTransformException;
 import io.konig.transform.mysql.RoutedSqlTransformVisitor;
 import io.konig.transform.mysql.SqlTransformGenerator;
@@ -1193,7 +1180,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				 resourceGenerator.add(awsS3);
 			}
 			resourceGenerator.dispatch(shapeManager.listShapes());
-			generateCamelEtl();
+//			generateCamelEtl();
 			if(templateWriter != null) {
 				templateWriter.updateTemplate();
 			}
@@ -1318,6 +1305,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				deployManager.createCloudSqlDatabaseVisitor());
 
 			File deploymentYaml = new File(deploymentDir, "gcp-deployment.yaml");
+			
+			emitter.add(new DeploymentConfigEmitter(shapeManager, new File(deploymentDir, "config.yaml")));
+			
+			// TODO: remove the following, obsolete emitter
 			emitter.add(new GoogleDeploymentManagerEmitter(sqlAdmin, deployManager, deploymentYaml));
 
 			if (bigQuery != null) {
@@ -1342,7 +1333,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				}
 			}
 			
-			generateCamelEtl();
+//			generateCamelEtl();
 			generateDeploymentScript();
 		}
 	}
@@ -1546,79 +1537,80 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 		
 	}
-	private void generateCamelEtl() throws MojoExecutionException {
-		File outDir = null;
-		Map<String, Map<String,String>> services=new HashMap<>();
-		Shape dockerComposer = null;
-		try {
-			File derivedDir = new File(rdfSourceDir, "shape-dependencies");
-		
-			if (derivedDir.exists()) {
-				Graph graph = new MemoryGraph();
-				NamespaceManager nsManager = new MemoryNamespaceManager();
-				RdfUtil.loadTurtle(derivedDir, graph, nsManager);
-				
-				for (Vertex targetShapeVertex : graph.vertices()) {					
-					Shape targetShape = shapeManager.getShapeById(targetShapeVertex.getId());
-					dockerComposer = targetShape;
-					if (targetShape.hasDataSourceType(Konig.AwsAuroraTable)) {
-						if(amazonWebServices != null) {
-							outDir = amazonWebServices.getCamelEtl();
-						}						
-						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.derivedFrom).toVertexList();
-						
-						if (!sourceList.isEmpty()) {
-							Vertex sourceShapeVertex = sourceList.get(0);
-							Resource sourceShapeId = sourceShapeVertex.getId();
-							Shape sourceShape = shapeManager.getShapeById(sourceShapeId);
-
-							if (sourceShape.hasDataSourceType(Konig.AwsAuroraTable)
-									&& sourceShape.hasDataSourceType(Konig.S3Bucket)) {
-								EtlModelGenerator etlModelGenerator=new EtlModelGenerator(new MavenProjectConfig(),new File(amazonWebServices.getBaseDirectory(),"../"),new URIImpl(targetShape.getId().stringValue()).getLocalName());
-								etlModelGenerator.run();
-								EtlRouteBuilder builder = new EtlRouteBuilder(sourceShape, targetShape, outDir);
-								builder.setEtlBaseDir(amazonWebServices.getBaseDirectory());
-								builder.generate();
-								String serviceName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
-								Map<String, String> service=new HashMap<>();
-								service.put("image", "etl-"+serviceName+":latest");
-								services.put(serviceName, service);
-							}
-						}
-					}
-					if(targetShape.hasDataSourceType(Konig.GoogleBigQueryTable)) {
-						if(googleCloudPlatform != null) {
-							outDir = googleCloudPlatform.getCamelEtl();
-						}						
-						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.derivedFrom).toVertexList();
-						if (!sourceList.isEmpty()) {
-							Vertex sourceShapeVertex = sourceList.get(0);
-							Resource sourceShapeId = sourceShapeVertex.getId();
-							Shape sourceShape = shapeManager.getShapeById(sourceShapeId);
-
-							if (sourceShape.hasDataSourceType(Konig.GoogleBigQueryTable)
-									&& sourceShape.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
-								GcpEtlRouteBuilder builder = new GcpEtlRouteBuilder(sourceShape, targetShape, outDir);
-								builder.setEtlBaseDir(googleCloudPlatform.getDirectory());
-								builder.generate();
-								String serviceName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
-								Map<String, String> service=new HashMap<>();
-								service.put("image", "etl-"+serviceName+":latest");
-								services.put(serviceName, service);
-							}
-						}
-					}
-				}
-				EtlRouteBuilder builder = new EtlRouteBuilder(null, dockerComposer, outDir);
-				builder.createDockerComposeFile(services);
-				createImageList(services, outDir);
-			}
-			
-		} catch (Exception ex) {
-			throw new MojoExecutionException("Failed to generate camel etl routes", ex);
-		}
-		
-	}
+	
+//	private void generateCamelEtl() throws MojoExecutionException {
+//		File outDir = null;
+//		Map<String, Map<String,String>> services=new HashMap<>();
+//		Shape dockerComposer = null;
+//		try {
+//			File derivedDir = new File(rdfSourceDir, "shape-dependencies");
+//		
+//			if (derivedDir.exists()) {
+//				Graph graph = new MemoryGraph();
+//				NamespaceManager nsManager = new MemoryNamespaceManager();
+//				RdfUtil.loadTurtle(derivedDir, graph, nsManager);
+//				
+//				for (Vertex targetShapeVertex : graph.vertices()) {					
+//					Shape targetShape = shapeManager.getShapeById(targetShapeVertex.getId());
+//					dockerComposer = targetShape;
+//					if (targetShape.hasDataSourceType(Konig.AwsAuroraTable)) {
+//						if(amazonWebServices != null) {
+//							outDir = amazonWebServices.getCamelEtl();
+//						}						
+//						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.derivedFrom).toVertexList();
+//						
+//						if (!sourceList.isEmpty()) {
+//							Vertex sourceShapeVertex = sourceList.get(0);
+//							Resource sourceShapeId = sourceShapeVertex.getId();
+//							Shape sourceShape = shapeManager.getShapeById(sourceShapeId);
+//
+//							if (sourceShape.hasDataSourceType(Konig.AwsAuroraTable)
+//									&& sourceShape.hasDataSourceType(Konig.S3Bucket)) {
+//								EtlModelGenerator etlModelGenerator=new EtlModelGenerator(new MavenProjectConfig(),new File(amazonWebServices.getBaseDirectory(),"../"),new URIImpl(targetShape.getId().stringValue()).getLocalName());
+//								etlModelGenerator.run();
+//								EtlRouteBuilder builder = new EtlRouteBuilder(sourceShape, targetShape, outDir);
+//								builder.setEtlBaseDir(amazonWebServices.getBaseDirectory());
+//								builder.generate();
+//								String serviceName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
+//								Map<String, String> service=new HashMap<>();
+//								service.put("image", "etl-"+serviceName+":latest");
+//								services.put(serviceName, service);
+//							}
+//						}
+//					}
+//					if(targetShape.hasDataSourceType(Konig.GoogleBigQueryTable)) {
+//						if(googleCloudPlatform != null) {
+//							outDir = googleCloudPlatform.getCamelEtl();
+//						}						
+//						List<Vertex> sourceList = targetShapeVertex.asTraversal().out(Konig.derivedFrom).toVertexList();
+//						if (!sourceList.isEmpty()) {
+//							Vertex sourceShapeVertex = sourceList.get(0);
+//							Resource sourceShapeId = sourceShapeVertex.getId();
+//							Shape sourceShape = shapeManager.getShapeById(sourceShapeId);
+//
+//							if (sourceShape.hasDataSourceType(Konig.GoogleBigQueryTable)
+//									&& sourceShape.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
+//								GcpEtlRouteBuilder builder = new GcpEtlRouteBuilder(sourceShape, targetShape, outDir);
+//								builder.setEtlBaseDir(googleCloudPlatform.getDirectory());
+//								builder.generate();
+//								String serviceName = new URIImpl(targetShape.getId().stringValue()).getLocalName();
+//								Map<String, String> service=new HashMap<>();
+//								service.put("image", "etl-"+serviceName+":latest");
+//								services.put(serviceName, service);
+//							}
+//						}
+//					}
+//				}
+//				EtlRouteBuilder builder = new EtlRouteBuilder(null, dockerComposer, outDir);
+//				builder.createDockerComposeFile(services);
+//				createImageList(services, outDir);
+//			}
+//			
+//		} catch (Exception ex) {
+//			throw new MojoExecutionException("Failed to generate camel etl routes", ex);
+//		}
+//		
+//	}
 	private void createImageList(Map<String,Map<String,String>> services, File outDir ) throws IOException {
 		File cloudformationtemplateDir = new File(outDir.getParent(), "cloudformationtemplate");
 

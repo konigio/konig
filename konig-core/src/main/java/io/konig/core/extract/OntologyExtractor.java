@@ -119,6 +119,7 @@ public class OntologyExtractor {
 		private List<Vertex> classList = new ArrayList<>();
 		private List<Vertex> propertyList = new ArrayList<>();
 		private List<Vertex> namedIndividualList = new ArrayList<>();
+		private List<Vertex> otherList = new ArrayList<>();
 		private OwlReasoner reasoner;
 		
 		private Worker(Vertex ontology, Graph target) {
@@ -134,6 +135,7 @@ public class OntologyExtractor {
 			copyList(classList);
 			copyList(propertyList);
 			copyList(namedIndividualList);
+			copyList(otherList);
 		}
 
 		
@@ -200,6 +202,8 @@ public class OntologyExtractor {
 				propertyList.add(v);
 			} else if (reasoner.isEnumerationMember(v.getId())) {
 				namedIndividualList.add(v);
+			} else {
+				otherList.add(v);
 			}
 			
 		}
