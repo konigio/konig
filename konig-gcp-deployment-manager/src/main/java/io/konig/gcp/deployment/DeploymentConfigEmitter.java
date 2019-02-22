@@ -22,18 +22,20 @@ package io.konig.gcp.deployment;
 
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
+import io.konig.core.OwlReasoner;
 import io.konig.core.io.Emitter;
+import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.shacl.ShapeManager;
 
 public class DeploymentConfigEmitter implements Emitter {
 	
 	private ShapeManager shapeManager;
 	private File configFile;
+	
 
 
 	public DeploymentConfigEmitter(ShapeManager shapeManager, File configFile) {
@@ -46,7 +48,9 @@ public class DeploymentConfigEmitter implements Emitter {
 	public void emit(Graph graph) throws IOException, KonigException {
 		
 		configFile.getParentFile().mkdirs();
-		GcpConfigManager manager = new GcpConfigManager();
+		OwlReasoner reasoner = new OwlReasoner(graph);
+		BigQueryTableGenerator bigQueryTableGenerator = new BigQueryTableGenerator(shapeManager, null, reasoner);
+		GcpConfigManager manager = new GcpConfigManager(bigQueryTableGenerator);
 		manager.build(graph, shapeManager);
 		try {
 			manager.write(configFile);

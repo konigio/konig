@@ -38,6 +38,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.konig.core.Graph;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.DataSourceVisitor;
+import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
@@ -47,14 +48,23 @@ public class GcpConfigManager {
 	
 	
 	
-	public GcpConfigManager() {
-		addVisitors();
+	public GcpConfigManager(BigQueryTableGenerator bigQueryTableGenerator) {
+		addVisitors(bigQueryTableGenerator);
 	}
 	
-	private void addVisitors() {
+	private void addVisitors(BigQueryTableGenerator bigQueryTableGenerator) {
 		
-		visitors.add(new GoogleBigqueryTableVisitor(this));
+		visitors.add(new GoogleBigqueryTableVisitor(this, bigQueryTableGenerator));
 		
+	}
+	
+	public String bigqueryTableName(String datasetId, String tableId) {
+		return "bigquery-" + datasetId + "-" + tableId;
+	}
+	
+	public URI bigqueryTableIri(String datasetId, String tableId) {
+		return new URIImpl("https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/" + 
+				datasetId + "/tables/" + tableId);
 	}
 	
 	public String datasetName(String datasetId) {
@@ -73,7 +83,7 @@ public class GcpConfigManager {
 		for (Shape shape : shapeManager.listShapes()) {
 			for (DataSource ds : shape.getShapeDataSource()) {
 				for (DataSourceVisitor visitor : visitors) {
-					visitor.visit(graph, ds);
+					visitor.visit(graph, shape, ds);
 				}
 			}
 		}

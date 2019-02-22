@@ -22,8 +22,9 @@ package io.konig.datasource;
 
 
 import io.konig.core.Graph;
+import io.konig.shacl.Shape;
 
 public interface DataSourceVisitor {
 
-	void visit(Graph graph, DataSource ds);
+	void visit(Graph graph, Shape shape, DataSource ds);
 }

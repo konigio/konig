@@ -75,7 +75,6 @@ public class DeploymentConfigWriterTest {
 		StringWriter out = new StringWriter();
 		writer.write(out, config);
 		
-		System.out.println(out.toString());
 		
 		String actual = out.toString().replace("\r", "");
 		
@@ -84,13 +83,13 @@ public class DeploymentConfigWriterTest {
 				"resources: \n" + 
 				"   - \n" + 
 				"      name: example_dataset\n" + 
-				"      type: bigquery.v2.dataset\n" + 
+				"      type: gcp-types/bigquery-v2:datasets\n" + 
 				"      properties: \n" + 
 				"         datasetReference: \n" + 
 				"            datasetId: example_dataset_id\n" +
 				"   - \n" + 
 				"      name: person_table\n" + 
-				"      type: bigquery.v2.table\n" + 
+				"      type: gcp-types/bigquery-v2:tables\n" + 
 				"      metadata: \n" + 
 				"         dependsOn: \n" + 
 				"            - example_dataset\n" + 

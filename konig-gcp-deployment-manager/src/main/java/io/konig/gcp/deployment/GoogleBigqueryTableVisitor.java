@@ -23,33 +23,90 @@ package io.konig.gcp.deployment;
 
 import org.openrdf.model.URI;
 
+import com.google.api.services.bigquery.model.TableReference;
+import com.google.api.services.bigquery.model.TableSchema;
+
 import io.konig.core.Graph;
 import io.konig.core.Vertex;
 import io.konig.core.pojo.SimplePojoFactory;
-import io.konig.core.vocab.GCP;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.DataSourceVisitor;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.schemagen.gcp.BigQueryTableGenerator;
+import io.konig.shacl.Shape;
 
 public class GoogleBigqueryTableVisitor implements DataSourceVisitor {
 	
 	private GcpConfigManager manager;
+	private BigQueryTableGenerator tableGenerator;
 
-	public GoogleBigqueryTableVisitor(GcpConfigManager manager) {
+	public GoogleBigqueryTableVisitor(GcpConfigManager manager, BigQueryTableGenerator tableGenerator) {
 		this.manager = manager;
+		this.tableGenerator = tableGenerator;
 	}
 
 	@Override
-	public void visit(Graph graph, DataSource ds) {
+	public void visit(Graph graph, Shape shape, DataSource ds) {
 		
 		if (ds instanceof GoogleBigQueryTable) {
 			GoogleBigQueryTable bigquery = (GoogleBigQueryTable) ds;
-			handle(graph, bigquery);
+			handle(graph, shape, bigquery);
 		}
 	}
 
-	private void handle(Graph graph, GoogleBigQueryTable bigquery) {
+	private void handle(Graph graph, Shape shape, GoogleBigQueryTable bigquery) {
 		
+		addDataset(graph, bigquery);
+		addTable(graph, shape, bigquery);
+	
+		
+		
+		
+		
+	}
+
+	private void addTable(Graph graph, Shape shape, GoogleBigQueryTable bigquery) {
+		
+		String datasetId = bigquery.getTableReference().getDatasetId();
+		String tableId = bigquery.getTableReference().getTableId();
+		
+		String resourceName = manager.bigqueryTableName(datasetId, tableId);
+
+		DeploymentConfig config = manager.getConfig();
+		BigqueryTableResource resource = config.findResource(resourceName, BigqueryTableResource.class);
+		if (resource == null) {
+			resource = new BigqueryTableResource();
+			resource.setName(resourceName);
+			config.addResource(resource);
+			BigqueryTableProperties properties = null;
+			
+			URI resourceIri = manager.bigqueryTableIri(datasetId, tableId);
+			
+			
+			Vertex v = graph.getVertex(resourceIri);
+			if (v != null) {
+				SimplePojoFactory factory = new SimplePojoFactory();
+				properties = factory.create(v, BigqueryTableProperties.class);
+			} else {
+				properties = new BigqueryTableProperties();
+			}
+
+			resource.setProperties(properties);
+			
+			properties.setDatasetId(datasetId);
+			TableReference tableReference = new TableReference();
+			properties.setTableReference(tableReference);
+			tableReference.setDatasetId(datasetId);
+			tableReference.setTableId(tableId);
+			
+			TableSchema tableSchema = tableGenerator.toTableSchema(shape);
+			properties.setSchema(tableSchema);
+		}
+		
+		
+	}
+
+	private void addDataset(Graph graph, GoogleBigQueryTable bigquery) {
 		String datasetId = bigquery.getTableReference().getDatasetId();
 		URI datasetIri = manager.datasetIri(datasetId);
 		
@@ -76,9 +133,6 @@ public class GoogleBigqueryTableVisitor implements DataSourceVisitor {
 			properties.setDatasetReference(reference);
 
 		}
-		
-		
-		
 		
 	}
 

@@ -24,6 +24,15 @@ package io.konig.gcp.deployment;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableSchema;
 
+/**
+ * A POJO for the bigquery.v2.table resource.
+ * Ideally, this class would extend com.google.api.services.bigquery.model.Table by
+ * adding the "datasetId" field.  But that Table class is declared to be final.
+ * So we must essentially replicate it.
+ * 
+ * @author Greg McFall
+ *
+ */
 public class BigqueryTableProperties  {
 
 	private String datasetId;

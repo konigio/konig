@@ -19,9 +19,7 @@ package io.konig.gcp.deployment;
  * limitations under the License.
  * #L%
  */
-
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.StringWriter;
 import java.util.Map;
@@ -36,10 +34,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import io.konig.core.Graph;
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.vocab.GCP;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -47,7 +47,9 @@ import io.konig.shacl.impl.MemoryShapeManager;
 public class GcpConfigManagerTest {
 	private Graph graph = new MemoryGraph();
 	private ShapeManager shapeManager = new MemoryShapeManager();
-	private GcpConfigManager configManager = new GcpConfigManager();
+	private OwlReasoner reasoner = new OwlReasoner(graph);
+	private BigQueryTableGenerator bigQueryTableGenerator = new BigQueryTableGenerator(shapeManager, null, reasoner);
+	private GcpConfigManager configManager = new GcpConfigManager(bigQueryTableGenerator);
 	private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 	
 	@SuppressWarnings("unchecked")
@@ -81,7 +83,7 @@ public class GcpConfigManagerTest {
 				.findAny()
 				.get();
 		
-		assertEquals("bigquery.v2.dataset", ds.stringValue("type"));
+		assertEquals("gcp-types/bigquery-v2:datasets", ds.stringValue("type"));
 		
 		ObjectMap properties = ds.objectValue("properties");
 		assertEquals("edw", properties.objectValue("datasetReference").stringValue("datasetId"));
