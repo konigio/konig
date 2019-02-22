@@ -22,7 +22,10 @@ package io.konig.gcp.deployment;
 
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,12 +46,15 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class GcpConfigManager {
+	
 	private DeploymentConfig config = new DeploymentConfig();
 	private List<DataSourceVisitor> visitors = new ArrayList<>();
+	private File globalConfigTemplate;
 	
 	
 	
-	public GcpConfigManager(BigQueryTableGenerator bigQueryTableGenerator) {
+	public GcpConfigManager(BigQueryTableGenerator bigQueryTableGenerator, File globalConfigTemplate) {
+		this.globalConfigTemplate = globalConfigTemplate;
 		addVisitors(bigQueryTableGenerator);
 	}
 	
@@ -91,14 +97,34 @@ public class GcpConfigManager {
 	
 	public void write(Writer out) throws Exception {
 		
+		
 		YAMLFactory yf = new YAMLFactory();
 		ObjectMapper mapper = new ObjectMapper(yf);
 		mapper.setSerializationInclusion(Include.NON_NULL);
 		SequenceWriter sw = mapper.writerWithDefaultPrettyPrinter().writeValues(out);
 		sw.write(config);
+		out.write(System.lineSeparator());
+
+		writeGlobalConfigTemplate(out);
 	}
 	
+	private void writeGlobalConfigTemplate(Writer out) throws FileNotFoundException, IOException {
+		if (globalConfigTemplate != null && globalConfigTemplate.exists()) {
+			
+			try (FileInputStream input = new FileInputStream(globalConfigTemplate)) {
+				byte[] buffer = new byte[1024];
+				int len = 0;
+				while ( (len = input.read(buffer)) != -1) {
+					String text = new String(buffer, 0, len);
+					out.write(text);
+				}
+			}
+		}
+		
+	}
+
 	public void write(File file) throws Exception {
+		file.getParentFile().mkdirs();
 		try (FileWriter out = new FileWriter(file)) {
 			write(out);
 		}
