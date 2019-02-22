@@ -83,7 +83,7 @@ public class GcpConfigManagerTest {
 				.findAny()
 				.get();
 		
-		assertEquals("bigquery.v2.dataset", ds.stringValue("type"));
+		assertEquals("gcp-types/bigquery-v2:datasets", ds.stringValue("type"));
 		
 		ObjectMap properties = ds.objectValue("properties");
 		assertEquals("edw", properties.objectValue("datasetReference").stringValue("datasetId"));
