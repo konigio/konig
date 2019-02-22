@@ -34,26 +34,24 @@ import io.konig.shacl.ShapeManager;
 public class DeploymentConfigEmitter implements Emitter {
 	
 	private ShapeManager shapeManager;
+	GcpConfigManager configManager;
 	private File configFile;
 	
 
 
-	public DeploymentConfigEmitter(ShapeManager shapeManager, File configFile) {
+	public DeploymentConfigEmitter(ShapeManager shapeManager, GcpConfigManager configManager, File configFile) {
 		this.shapeManager = shapeManager;
+		this.configManager = configManager;
 		this.configFile = configFile;
 	}
 
 
 	@Override
 	public void emit(Graph graph) throws IOException, KonigException {
-		
-		configFile.getParentFile().mkdirs();
-		OwlReasoner reasoner = new OwlReasoner(graph);
-		BigQueryTableGenerator bigQueryTableGenerator = new BigQueryTableGenerator(shapeManager, null, reasoner);
-		GcpConfigManager manager = new GcpConfigManager(bigQueryTableGenerator);
-		manager.build(graph, shapeManager);
+
+		configManager.build(graph, shapeManager);
 		try {
-			manager.write(configFile);
+			configManager.write(configFile);
 		} catch (Exception e) {
 			throw new KonigException(e);
 		}

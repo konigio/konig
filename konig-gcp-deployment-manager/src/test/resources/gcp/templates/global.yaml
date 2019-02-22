@@ -1,0 +1,10 @@
+- name: ${gcpProjectId}-test-landing
+  type: storage.v1.bucket
+  properties:
+    name: ${gcpProjectId}-test-landing
+    storageClass: regional
+- name: ${gcpProjectId}-test-archive
+  type: storage.v1.bucket
+  properties:
+    name: ${gcpProjectId}-test-archive
+    storageClass: coldline

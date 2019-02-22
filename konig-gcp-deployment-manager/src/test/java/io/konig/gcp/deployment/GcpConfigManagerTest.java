@@ -19,8 +19,9 @@ package io.konig.gcp.deployment;
  * limitations under the License.
  * #L%
  */
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.StringWriter;
 import java.util.Map;
 
@@ -49,7 +50,9 @@ public class GcpConfigManagerTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private OwlReasoner reasoner = new OwlReasoner(graph);
 	private BigQueryTableGenerator bigQueryTableGenerator = new BigQueryTableGenerator(shapeManager, null, reasoner);
-	private GcpConfigManager configManager = new GcpConfigManager(bigQueryTableGenerator);
+	private File globalYaml = new File("src/test/resources/gcp/templates/global.yaml");
+	
+	private GcpConfigManager configManager = new GcpConfigManager(bigQueryTableGenerator, globalYaml);
 	private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 	
 	@SuppressWarnings("unchecked")
@@ -75,6 +78,7 @@ public class GcpConfigManagerTest {
 		configManager.write(out);
 		
 		String text = out.toString();
+		System.out.println(text);
 
 		ObjectMap actual = new ObjectMap( mapper.readValue(text.getBytes(), Map.class) );
 		
@@ -88,6 +92,15 @@ public class GcpConfigManagerTest {
 		ObjectMap properties = ds.objectValue("properties");
 		assertEquals("edw", properties.objectValue("datasetReference").stringValue("datasetId"));
 		assertEquals("us-east1", properties.stringValue("location"));
+		
+
+		ObjectMap landing = actual.objectList("resources").stream()
+				.filter(x -> "${gcpProjectId}-test-landing".equals(x.stringValue("name")))
+				.findAny()
+				.get();
+		
+		assertTrue(landing != null);
+		assertEquals("storage.v1.bucket", landing.stringValue("type"));
 		
 		
 		

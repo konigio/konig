@@ -191,7 +191,9 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 
 
 	public void addService(Object service) {
-		serviceManager.addService(service);
+		if (service != null) {
+			serviceManager.addService(service);
+		}
 	}
 	
 	public void addService(Class<?> type, Object service) {

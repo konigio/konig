@@ -107,6 +107,7 @@ import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.io.SkosEmitter;
 import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
+import io.konig.core.project.ProjectManager;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.MappingReport;
 import io.konig.core.showl.MappingStrategy;
@@ -141,6 +142,7 @@ import io.konig.gcp.common.GroovyTearDownScriptWriter;
 import io.konig.gcp.common.InvalidGoogleCredentialsException;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.deployment.DeploymentConfigEmitter;
+import io.konig.gcp.deployment.GcpConfigManager;
 import io.konig.gcp.deployment.GcpDeploymentConfigManager;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
 import io.konig.maven.project.generator.MavenProjectGeneratorException;
@@ -175,6 +177,7 @@ import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
 import io.konig.schemagen.gcp.BigQueryLabelGenerator;
+import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
 import io.konig.schemagen.gcp.CloudSqlAdminManager;
 import io.konig.schemagen.gcp.CloudSqlTableWriter;
@@ -233,6 +236,7 @@ import io.konig.shacl.io.ShapeAuxiliaryWriter;
 import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
+import io.konig.spreadsheet.GcpDeploymentSheet;
 import io.konig.spreadsheet.SpreadsheetException;
 import io.konig.spreadsheet.WorkbookProcessorImpl;
 import io.konig.transform.model.ShapeTransformException;
@@ -339,6 +343,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 	@Parameter
 	private BuildTarget buildTarget;
+	
+	@Parameter
+	private Dependency[] dependencies;
 	 
     
     private NamespaceManager nsManager;
@@ -534,6 +541,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		File baseDir = mavenProject.getBasedir();
 		
 		project = new Project(projectId, baseDir);
+		
+		ProjectManager manager = ProjectManager.instance();
+		manager.add(project);
+		
+		if (dependencies != null) {
+			for (Dependency dep : dependencies) {
+				URI depId = new URIImpl(dep.getId());
+				File depDir = new File(baseDir, dep.getBaseDir());
+				manager.add(new Project(depId, depDir));
+			}
+		}
 		
 	}
 
@@ -981,6 +999,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 				WorkbookProcessorImpl processor = new WorkbookProcessorImpl(owlGraph, shapeManager, templateDir);
 				processor.setMaxErrorCount(maxErrorCount);
+				processor.addService(gcpDeploymentSheet(processor));
 
 				// WorkbookLoader workbookLoader = new
 				// WorkbookLoader(nsManager);
@@ -1051,6 +1070,24 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		}
 	}
 	
+	private Object gcpDeploymentSheet(WorkbookProcessorImpl processor) {
+		File yamlFile = globalGcpYamlTemplate();
+		if (yamlFile != null) {
+			return new GcpDeploymentSheet(processor, yamlFile);
+		}
+		return null;
+	}
+
+
+	private File globalGcpYamlTemplate() {
+		if (googleCloudPlatform != null) {
+			File gcpDir = googleCloudPlatform.gcpDir(defaults);
+			return new File(gcpDir, "deployment/templates/global.yaml");
+		}
+		return null;
+	}
+
+
 	private void addCadEmitter(CubeManager cubeManager) {
 		if (cubeManager != null) {
 			// TODO:  Handle the case where cubes are defined in the same namespace as 
@@ -1306,7 +1343,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 			File deploymentYaml = new File(deploymentDir, "gcp-deployment.yaml");
 			
-			emitter.add(new DeploymentConfigEmitter(shapeManager, new File(deploymentDir, "config.yaml")));
+			BigQueryTableGenerator bigQueryTableGenerator = new BigQueryTableGenerator(shapeManager, null, owlReasoner);
+			GcpConfigManager configManager = new GcpConfigManager(bigQueryTableGenerator, globalGcpYamlTemplate());
+			File gcpConfigFile = new File(deploymentDir, "config.yaml");
+			emitter.add(new DeploymentConfigEmitter(shapeManager, configManager, gcpConfigFile));
 			
 			// TODO: remove the following, obsolete emitter
 			emitter.add(new GoogleDeploymentManagerEmitter(sqlAdmin, deployManager, deploymentYaml));
