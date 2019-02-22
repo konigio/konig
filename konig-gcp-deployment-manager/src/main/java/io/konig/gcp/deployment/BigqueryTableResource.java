@@ -1,5 +1,7 @@
 package io.konig.gcp.deployment;
 
+import com.google.api.services.bigquery.model.Table;
+
 /*
  * #%L
  * Konig GCP Deployment Manager
@@ -24,7 +26,7 @@ package io.konig.gcp.deployment;
 public class BigqueryTableResource extends BaseGcpResource<BigqueryTableProperties> {
 	
 	public BigqueryTableResource() {
-		super("bigquery.v2.table");
+		super("gcp-types/bigquery-v2:tables");
 	}
 
 	

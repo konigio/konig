@@ -28,6 +28,11 @@
 			<version>${konig.version}</version>
   	</dependency>
     <dependency>
+      <groupId>io.konig</groupId>
+      <artifactId>konig-schemagen</artifactId>
+      <version>${konig.version}</version>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.8.2</version>

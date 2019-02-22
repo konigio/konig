@@ -83,8 +83,8 @@
 		<module>../konig-maven-diff</module>
 		<module>../konig-gae-datastore</module>
 		<module>../konig-spreadsheet</module>
-		<module>../konig-gcp-deployment-manager</module>
 		<module>../konig-schemagen</module>
+    <module>../konig-gcp-deployment-manager</module>
 		<module>../konig-gae-generator</module>
 		<module>../konig-maven-project-generator</module>
 		<module>../konig-schemagen-maven-plugin</module>
