@@ -1,0 +1,9 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+shape: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "shape" . 
+
+shape:EDW_PERSON_STAGE_SHAPE konig:mediaTypeBaseName "application/vnd.example.example.com.shape.person" . 

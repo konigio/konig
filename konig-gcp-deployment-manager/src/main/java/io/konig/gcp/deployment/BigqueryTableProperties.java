@@ -1,5 +1,7 @@
 package io.konig.gcp.deployment;
 
+import com.google.api.services.bigquery.model.ExternalDataConfiguration;
+
 /*
  * #%L
  * Konig GCP Deployment Manager
@@ -38,6 +40,7 @@ public class BigqueryTableProperties  {
 	private String datasetId;
 	private TableSchema schema;
 	private TableReference tableReference;
+	private ExternalDataConfiguration externalDataConfiguration;
 	public String getDatasetId() {
 		return datasetId;
 	}
@@ -55,6 +58,12 @@ public class BigqueryTableProperties  {
 	}
 	public void setTableReference(TableReference tableReference) {
 		this.tableReference = tableReference;
+	}
+	public ExternalDataConfiguration getExternalDataConfiguration() {
+		return externalDataConfiguration;
+	}
+	public void setExternalDataConfiguration(ExternalDataConfiguration externalDataConfiguration) {
+		this.externalDataConfiguration = externalDataConfiguration;
 	}
 	
 	

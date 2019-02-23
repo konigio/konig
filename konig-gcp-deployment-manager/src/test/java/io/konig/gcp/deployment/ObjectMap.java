@@ -38,6 +38,10 @@ public class ObjectMap {
 		return (String) map.get(fieldName);
 	}
 	
+	public Object rawValue(String fieldName) {
+		return map.get(fieldName);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public ObjectMap objectValue(String fieldName) {
 		Object value = map.get(fieldName);
@@ -59,5 +63,17 @@ public class ObjectMap {
 		
 		return result;
 	}
+	
+
+	@SuppressWarnings("unchecked")
+	public List<String> stringList(String fieldName) {
+		Object value = map.get(fieldName);
+		if (value instanceof List) {
+			return (List<String>) value;
+		}
+		
+		return null;
+	}
+
 
 }

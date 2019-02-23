@@ -1,0 +1,34 @@
+
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix gcp:   <http://www.konig.io/ns/gcp/> .
+@prefix schema:  <http://schema.org/> .
+#if($!{parentComponent})
+#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#foreach( $namespace in $namespaceList) 
+@prefix $namespace.Prefix: <$namespace.Name> .
+#end
+#end
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}>
+	a konig:GoogleBigQueryTable, konig:DataSource;
+	gcp:tableReference [
+		gcp:projectId "${gcpProjectId}" ;
+		gcp:datasetId "${gcpDatasetId}" ;
+		gcp:tableId   "${bigQueryTableId}" 
+	] ;
+	gcp:externalDataConfiguration [
+		gcp:sourceUris <gs://${gcpProjectId}-${gcpLandingBucketName}/${resourceType}.${resourceFormat.toLowerCase()}/*> ;
+		gcp:sourceFormat "${resourceFormat.toUpperCase()}"#if($resourceFormat.caseInsensitiveEquals("csv")) ;
+		gcp:csvOptions [
+			gcp:skipLeadingRows 1
+		]
+#end		
+	] ;
+	#if($!{parentComponent}) 
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
+	#end
+.
+
+<${shapeId}> konig:shapeDataSource 
+	<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}>
+.
