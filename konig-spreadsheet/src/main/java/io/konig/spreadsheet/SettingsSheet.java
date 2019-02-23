@@ -1,5 +1,8 @@
 package io.konig.spreadsheet;
 
+import java.io.File;
+import java.io.FileOutputStream;
+
 /*
  * #%L
  * Konig Spreadsheet
@@ -22,6 +25,7 @@ package io.konig.spreadsheet;
 
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,6 +67,7 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 		REPLACEMENT
 	};
 	
+	private File outDir;
 	private Properties settings;
 //	private DataSourceGenerator dataSourceGenerator;
 	private Map<String,WorkbookLocation> locations = new HashMap<>();
@@ -74,6 +79,16 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	public SettingsSheet(WorkbookProcessor processor)  {
 		super(processor);
 	}
+
+	public File getOutDir() {
+		return outDir;
+	}
+
+	public void setOutDir(File outDir) {
+		this.outDir = outDir;
+	}
+
+
 
 	private void loadDefaultProperties()  {
 		try {
@@ -131,9 +146,30 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 
 	@Override
 	public void endWorkbook(Workbook book) {
+		persist();
 		settings = null;
 	}
 	
+	private void persist() {
+		if (outDir != null) {
+			outDir.mkdirs();
+			String fileName = processor.getActiveWorkbook().getFile().getName();
+			int dot = fileName.lastIndexOf('.');
+			if (dot > 0) {
+				fileName = fileName.substring(0, dot);
+			}
+			fileName = fileName + ".properties";
+			File outFile = new File(outDir, fileName);
+			
+			try (OutputStream out = new FileOutputStream(outFile)) {
+				settings.store(out, "");
+			} catch (Throwable e) {
+				throw new KonigException(e);
+			}
+		}
+		
+	}
+
 	public String getShapeUrlTemplate() {
 		return settings.getProperty(SHAPE_URL_TEMPLATE);
 	}

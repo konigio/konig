@@ -38,6 +38,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -237,6 +238,7 @@ import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.spreadsheet.GcpDeploymentSheet;
+import io.konig.spreadsheet.SettingsSheet;
 import io.konig.spreadsheet.SpreadsheetException;
 import io.konig.spreadsheet.WorkbookProcessorImpl;
 import io.konig.transform.model.ShapeTransformException;
@@ -279,6 +281,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
      */
     @Parameter
     private File avroDir;
+    
+    @Parameter 
+    private File settingsSourceDir;
+    
+    @Parameter(defaultValue="${basedir}/target/generated/settings")
+    private File settingsDir;
     
     
     @Parameter
@@ -388,6 +396,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			owlReasoner = new OwlReasoner(owlGraph);
 			
 			emitter = new CompositeEmitter();
+			copySettings();
 			createProject();
 			loadResources();
 			preprocessResources();
@@ -430,6 +439,20 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
+
+	private void copySettings() throws IOException {
+		if (settingsSourceDir != null) {
+			settingsDir.mkdirs();
+			for (File child : settingsSourceDir.listFiles()) {
+				if (child.getName().endsWith(".properties")) {
+					File dest = new File(settingsDir, child.getName());
+					Files.copy(child.toPath(), dest.toPath());
+				}
+			}
+		}
+		
+	}
+
 
 	private void generateMappingReport() throws IOException {
 		if (rdfModel!=null && rdfModel.isPrintMappings()) {
@@ -1000,6 +1023,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				WorkbookProcessorImpl processor = new WorkbookProcessorImpl(owlGraph, shapeManager, templateDir);
 				processor.setMaxErrorCount(maxErrorCount);
 				processor.addService(gcpDeploymentSheet(processor));
+				processor.init();
+				processor.service(SettingsSheet.class).setOutDir(settingsDir);
 
 				// WorkbookLoader workbookLoader = new
 				// WorkbookLoader(nsManager);
