@@ -34,6 +34,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -174,6 +175,8 @@ import io.konig.schemagen.aws.AwsAuroraTableWriter;
 import io.konig.schemagen.aws.AwsAuroraViewWriter;
 import io.konig.schemagen.aws.AwsResourceGenerator;
 import io.konig.schemagen.aws.CloudFormationTemplateWriter;
+import io.konig.schemagen.env.EnvironmentGenerationException;
+import io.konig.schemagen.env.EnvironmentGenerator;
 import io.konig.schemagen.gcp.BigQueryDatasetGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumGenerator;
 import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
@@ -287,6 +290,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     @Parameter(defaultValue="${basedir}/target/generated/settings")
     private File settingsDir;
+    
+    @Parameter(defaultValue="${basedir}/target/env/")
+    private File envDir;
     
     
     @Parameter
@@ -429,16 +435,41 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			emit();
 			
+			buildEnvironments();
+			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
-				SizeEstimateException | KonigException | SQLException | InvalidDatatypeException | ShapeTransformException e) {
+				SizeEstimateException | KonigException | SQLException | InvalidDatatypeException | 
+				ShapeTransformException | EnvironmentGenerationException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
     }
     
+
+	private void buildEnvironments() throws FileNotFoundException, EnvironmentGenerationException, IOException {
+		
+		File velocityLog = new File(project.getBaseDir(), "target/logs/EnvironmentGenerator/velocity.log");
+		velocityLog.getParentFile().mkdirs();
+		
+		EnvironmentGenerator generator = new EnvironmentGenerator(velocityLog);
+		
+		// TODO: Find a better way to define the source directory
+		File sourceDir = null;
+		if (workbook!=null) {
+			sourceDir = workbook.owlDir(defaults);
+		} else {
+			sourceDir = defaults.getOwlDir();
+		}
+		sourceDir = sourceDir.getParentFile().getParentFile();
+		
+		generator.run(settingsDir, sourceDir, envDir);
+		
+		
+	}
+
 
 	private void copySettings() throws IOException {
 		if (settingsSourceDir != null) {
