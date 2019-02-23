@@ -26,6 +26,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class FileUtil {
 	
@@ -146,6 +148,11 @@ public class FileUtil {
 			source.close();
 		}
 		
+	}
+	
+	public static String readString(File file) throws IOException {
+		byte[] encoded = Files.readAllBytes(file.toPath());
+		return new String(encoded);
 	}
 
 	public static void deleteDir(String path) {
