@@ -36,6 +36,8 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.velocity.Template;
@@ -68,6 +70,8 @@ import io.konig.shacl.io.ShapeLoader;
  *
  */
 public class DataSourceGenerator {
+	
+	private static Pattern resourceTypePattern = Pattern.compile("application/vnd[.][^.]+[.](.*)");
 
 	private NamespaceManager nsManager;
 	private File templateDir;
@@ -360,11 +364,17 @@ public class DataSourceGenerator {
 		}
 		String mediaType = shape.getMediaTypeBaseName();
 		if (mediaType != null) {
+			Matcher matcher = resourceTypePattern.matcher(mediaType);
+			if (matcher.matches()) {
+				context.put("resourceType", matcher.group(1));
+			}
 			int slash = mediaType.lastIndexOf('/');
 			if (slash > 0) {
 				String mediaSubtype = mediaType.substring(slash + 1);
 				context.put("mediaSubtype", mediaSubtype);
 			}
+			
+			
 		}
 		putURI("class", shape.getTargetClass());
 	}

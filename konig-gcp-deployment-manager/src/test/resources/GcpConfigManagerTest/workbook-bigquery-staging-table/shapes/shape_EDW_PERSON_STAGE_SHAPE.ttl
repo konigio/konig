@@ -1,0 +1,24 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+
+shape:EDW_PERSON_STAGE_SHAPE a sh:Shape ; 
+	sh:targetClass schema:Person ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> ; 
+	konig:mediaTypeBaseName "application/vnd.pearson.edw.staging.person" . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:tableId "Person" ; 
+		gcp:datasetId "schema"
+	 ]  ; 
+	gcp:externalDataConfiguration  [ 
+		gcp:sourceFormat "CSV" ; 
+		gcp:sourceUris "gs://${gcpProjectId}-edw-landing/edw.staging.person.csv/*"
+	 ]  ; 
+	konig:ddlFile  [ 
+		konig:relativePath "target/generated/gcp/bigquery/view/schema.Person.json" ; 
+		konig:baseProject <urn:maven:io.konig.examples.sheet-download-1.0.0> ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource . 

@@ -92,6 +92,7 @@ public class GoogleBigqueryTableVisitor implements DataSourceVisitor {
 			}
 
 			resource.setProperties(properties);
+			properties.setExternalDataConfiguration(bigquery.getExternalDataConfiguration());
 			
 			properties.setDatasetId(datasetId);
 			TableReference tableReference = new TableReference();
