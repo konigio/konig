@@ -111,7 +111,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		this.shapeManager = shapeManager;
 	}
 	
-	private void init() {
+	public void init() {
 
 		if (nsHandler == null) {
 			this.nsHandler = new NamespaceHandler(graph);
