@@ -1,0 +1,34 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>${mavenProject.groupId</groupId>
+  <artifactId>${mavenProject.artifactId}</artifactId>
+  <version>${mavenProject.version}</version>
+  <name>${mavenProject.name}</name>
+  
+ 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.5.3</version>
+        <executions>
+#foreach( $assembly in $assemblyList )        
+          <execution>
+            <id>${assembly.pom.id}</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>${assembly.pom.descriptor}</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+#end          
+        </executions>
+      </plugin>   
+      
+    </plugins>
+  </build>
+</project>
