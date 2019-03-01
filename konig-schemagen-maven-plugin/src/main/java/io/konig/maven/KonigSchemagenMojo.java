@@ -77,7 +77,12 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.invoker.DefaultInvocationRequest;
+import org.apache.maven.shared.invoker.DefaultInvoker;
+import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.apache.velocity.runtime.parser.ParseException;
 import org.codehaus.plexus.util.FileUtils;
 import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
 import org.openrdf.model.Resource;
@@ -214,6 +219,10 @@ import io.konig.schemagen.jsonschema.TemplateJsonSchemaNamer;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.ocms.OracleCloudResourceGenerator;
 import io.konig.schemagen.ocms.OracleTableWriter;
+import io.konig.schemagen.packaging.MavenPackage;
+import io.konig.schemagen.packaging.MavenPackagingProjectGenerator;
+import io.konig.schemagen.packaging.PackagingProjectRequest;
+import io.konig.schemagen.packaging.ResourceKind;
 import io.konig.schemagen.plantuml.PlantumlClassDiagramGenerator;
 import io.konig.schemagen.plantuml.PlantumlGeneratorException;
 import io.konig.schemagen.sql.KonigIdLinkingStrategy;
@@ -269,6 +278,8 @@ import net.sourceforge.plantuml.SourceFileReader;
 public class KonigSchemagenMojo  extends AbstractMojo {
 	
 	private static final String DEV_NULL = "/dev/null";
+    
+    private static final String GCP_PATTERN = "$'{'basedir'}'/src/main/resources/env/{0}/gcp";
 	
 	@Parameter
 	private RdfConfig defaults;
@@ -291,9 +302,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     @Parameter(defaultValue="${basedir}/target/generated/settings")
     private File settingsDir;
     
-    @Parameter(defaultValue="${basedir}/target/env/")
+    @Parameter(defaultValue="${basedir}/target/deploy/src/main/resources/env/")
     private File envDir;
-    
     
     @Parameter
     private JsonldConfig jsonld;
@@ -377,6 +387,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private Project project;
     private SqlTransformGenerator mysqlTransformGenerator;
     private RoutedSqlTransformVisitor sqlTransformVisitor;
+    private File mavenHome;
 
 	@Component
 	private MavenProject mavenProject;
@@ -436,19 +447,70 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			emit();
 			
 			buildEnvironments();
+			buildPackagingProject();
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
 				PlantumlGeneratorException | CodeGeneratorException | OpenApiGeneratorException | 
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
 				SizeEstimateException | KonigException | SQLException | InvalidDatatypeException | 
-				ShapeTransformException | EnvironmentGenerationException e) {
+				ShapeTransformException | EnvironmentGenerationException | ParseException | 
+				MavenInvocationException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
     }
     
 
+	private void buildPackagingProject() throws IOException, ParseException, MavenInvocationException {
+		MavenPackagingProjectGenerator generator = new MavenPackagingProjectGenerator();
+		PackagingProjectRequest request = new PackagingProjectRequest();
+		request.setBasedir(mavenProject.getBasedir());
+		
+		io.konig.schemagen.packaging.MavenProject deployProject = new io.konig.schemagen.packaging.MavenProject();
+		deployProject.setGroupId(mavenProject.getGroupId());
+		deployProject.setArtifactId(mavenProject.getArtifactId());
+		deployProject.setVersion(mavenProject.getVersion());
+		deployProject.setName(mavenProject.getName());
+		
+		request.setMavenProject(deployProject);
+		
+		File logDir = new File("target/logs");
+		logDir.mkdirs();
+		request.setVelocityLogFile(new File(logDir, "velocity.log"));
+		
+		if (googleCloudPlatform != null) {
+			request.addPackage(
+				new MavenPackage(ResourceKind.gcp)
+					.include(GCP_PATTERN, "/gcp", "deployment/config.yaml")
+			);
+		}
+		
+		File pomFile = generator.generate(request);
+		
+		InvocationRequest invokeRequest = new DefaultInvocationRequest();
+		List<String> goalList = mavenSession.getGoals();
+		invokeRequest.setPomFile(pomFile);
+		invokeRequest.setGoals(goalList);
+		
+		Invoker invoker = new DefaultInvoker();
+		invoker.setMavenHome(mavenHome());
+		invoker.execute(invokeRequest);
+		
+		
+		
+	}
+
+
+	/**
+	 * Generates environment-specific resource files.
+	 * 
+	 * For example, if the project generates GCP resources, then the environment-specific
+	 * versions of those resources will be found at...
+	 * <pre>
+	 *   /target/deploy/src/main/resources/env/{environmentName}/gcp/...
+	 * </pre>
+	 */
 	private void buildEnvironments() throws FileNotFoundException, EnvironmentGenerationException, IOException {
 		
 		File velocityLog = new File(project.getBaseDir(), "target/logs/EnvironmentGenerator/velocity.log");
@@ -472,7 +534,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 
 	private void copySettings() throws IOException {
-		if (settingsSourceDir != null) {
+		if (settingsSourceDir != null && settingsSourceDir.isDirectory()) {
 			settingsDir.mkdirs();
 			for (File child : settingsSourceDir.listFiles()) {
 				if (child.getName().endsWith(".properties")) {
@@ -760,6 +822,21 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 		}
 		
+	}
+	
+	private File mavenHome() {
+		if (mavenHome == null) {
+
+			for (String dirname : System.getenv("PATH").split(File.pathSeparator)) {
+				File file = new File(dirname, "mvn");
+				if (file.isFile()) {
+					mavenHome = file.getParentFile().getParentFile();
+					return mavenHome;
+				}
+			}
+			throw new RuntimeException("Maven executable not found.");
+		}
+		return mavenHome;
 	}
 
 	private void configureDistributionManagement() {
