@@ -2,15 +2,24 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
   
-  <id>bin</id>
+  <id>$packageId</id>
   <formats>
       <format>zip</format>
   </formats> 
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
+#foreach( $set in $fileSetList )  
       <fileSet>
-          <directory>${sourceDir}</directory>
-          <outputDirectory>/</outputDirectory>
+          <directory>${set.directory}</directory>
+          <outputDirectory>${set.outputDirectory}</outputDirectory>
+#if($set.includes.size() > 0)
+          <includes>
+#foreach( $includeFile in $set.includes)
+            <include>$includeFile</include>
+#end
+          </includes>
+#end          
       </fileSet>
+#end      
   </fileSets>
 </assembly>

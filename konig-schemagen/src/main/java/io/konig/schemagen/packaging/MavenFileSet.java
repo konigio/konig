@@ -21,37 +21,38 @@ package io.konig.schemagen.packaging;
  */
 
 
-public class MavenProject {
+import java.util.Collections;
+import java.util.List;
 
-	private String groupId;
-	private String artifactId;
-	private String version;
-	private String name;
-	public String getGroupId() {
-		return groupId;
+public class MavenFileSet {
+
+	private String directory;
+	private String outputDirectory;
+	private List<String> includes = null;
+	
+	public MavenFileSet(String directory, String outputDirectory, List<String> includes) {
+		this.directory = directory;
+		this.outputDirectory = outputDirectory;
+		this.includes = includes;
 	}
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
+
+	public String getDirectory() {
+		return directory;
 	}
-	public String getArtifactId() {
-		return artifactId;
+
+	public String getOutputDirectory() {
+		return outputDirectory;
 	}
-	public void setArtifactId(String artifactId) {
-		this.artifactId = artifactId;
+
+	public List<String> getIncludes() {
+		return includes==null ? Collections.emptyList() : includes;
 	}
-	public String getVersion() {
-		return version;
-	}
-	public void setVersion(String version) {
-		this.version = version;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
+
+	public void setIncludes(List<String> includes) {
+		this.includes = includes;
 	}
 	
-	
 
+	
+	
 }
