@@ -85,7 +85,6 @@ import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.apache.velocity.runtime.parser.ParseException;
 import org.codehaus.plexus.util.FileUtils;
 import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
@@ -246,7 +245,6 @@ import io.konig.shacl.impl.SimpleShapeMediaTypeNamer;
 import io.konig.shacl.impl.TemplateShapeNamer;
 import io.konig.shacl.io.DdlFileEmitter;
 import io.konig.shacl.io.ShapeAuxiliaryWriter;
-import io.konig.shacl.io.ShapeFileGetter;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.jsonld.ContextNamer;
 import io.konig.spreadsheet.GcpDeploymentSheet;
@@ -281,11 +279,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     
     private static final String GCP_PATTERN = "$'{'basedir'}'/src/main/resources/env/{0}/gcp";
 	
-	@Parameter
-	private RdfConfig defaults;
-	
-	@Parameter
-	private RdfConfig rdfOutput;
+	@Parameter(defaultValue="${basedir}/target/generated/rdf")
+	private File rdfDir;
 	
 	@Parameter
 	private RdfModelConfig rdfModel;
@@ -371,7 +366,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	@Parameter
 	private Dependency[] dependencies;
 	 
-    
+
+	private RdfConfig rdf;
     private NamespaceManager nsManager;
     private OwlReasoner owlReasoner;
     private ShapeManager shapeManager;
@@ -438,7 +434,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generateDataServices();
 			generateMultiProject();
 			
-			updateRdf();
 			
 			computeSizeEstimates();
 			generateTabularShapes();
@@ -519,13 +514,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		EnvironmentGenerator generator = new EnvironmentGenerator(velocityLog);
 		
 		// TODO: Find a better way to define the source directory
-		File sourceDir = null;
-		if (workbook!=null) {
-			sourceDir = workbook.owlDir(defaults);
-		} else {
-			sourceDir = defaults.getOwlDir();
-		}
-		sourceDir = sourceDir.getParentFile().getParentFile();
+		File sourceDir = rdf.getOwlDir().getParentFile().getParentFile();
 		
 		generator.run(settingsDir, sourceDir, envDir);
 		
@@ -756,15 +745,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 
 	private void init() throws MojoExecutionException, IOException, ConfigurationException {
+		rdf = new RdfConfig();
+		rdf.setRootDir(rdfDir.getParentFile());
     	GcpShapeConfig.init();
     	OracleShapeConfig.init();
     	AwsShapeConfig.init();
     	if (tabularShapes==null) {
     		tabularShapes = new TabularShapeFactoryConfig();
     	}
-    	if (defaults == null) {
-    		defaults = new RdfConfig();
-    		defaults.setRootDir(new File(mavenProject.getBasedir(), "target/generated/rdf"));
+    	if (rdf == null) {
+    		rdf = new RdfConfig();
+    		rdf.setRootDir(new File(mavenProject.getBasedir(), "target/generated/rdf"));
     	}
 
     }
@@ -995,33 +986,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 	}
 
-	private void updateRdf() throws RDFHandlerException, IOException {
-		if (rdfOutput != null) {
-			File shapesDir = rdfOutput.shapesDir(defaults);
-			if (shapesDir != null) {
-				ShapeFileGetter fileGetter = new ShapeFileGetter(shapesDir, nsManager);
-				io.konig.shacl.io.ShapeWriter shapeWriter = new io.konig.shacl.io.ShapeWriter();
-				for (Shape shape : shapeManager.listShapes()) {
-					Resource shapeId = shape.getId();
-					if (shapeId instanceof URI) {
-						URI shapeURI = (URI) shapeId;
-
-						Graph graph = new MemoryGraph();
-						shapeWriter.emitShape(shape, graph);
-						File shapeFile = fileGetter.getFile(shapeURI);
-						RdfUtil.prettyPrintTurtle(nsManager, graph, shapeFile);
-					}
-					
-				}
-			}
-		}
-		
-	}
+	
 
 	private void loadResources() throws MojoExecutionException, RDFParseException, RDFHandlerException, IOException {
 
-    	if (defaults == null) {
-    		defaults = new RdfConfig();
+    	if (rdf == null) {
+    		rdf = new RdfConfig();
     	}
 		loadSpreadsheet();
 		
@@ -1036,7 +1006,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				amazonWebServices != null
 			)
 		) {
-			rdfSourceDir = defaults.getRdfDir();
+			rdfSourceDir = rdf.getRdfDir();
 		}
 		
 		if (rdfSourceDir != null) {
@@ -1184,10 +1154,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 				processor.processAll(files);
 				
-				emitter.add(new OntologyEmitter(workbook.owlDir(defaults)));
-				emitter.add(new ShapeToFileEmitter(shapeManager, workbook.shapesDir(defaults)));
-				emitter.add(new SkosEmitter(workbook.skosDir(defaults)));
-				emitter.add(new NamedGraphEmitter(workbook.owlDir(defaults)));
+				emitter.add(new OntologyEmitter(rdf.getOwlDir()));
+				emitter.add(new ShapeToFileEmitter(shapeManager, rdf.getShapesDir()));
+				emitter.add(new SkosEmitter(rdf.getOwlDir()));
+				emitter.add(new NamedGraphEmitter(rdf.getOwlDir()));
 				
 				addCadEmitter(processor.getServiceManager().getService(CubeManager.class));
 
@@ -1223,7 +1193,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 	private File globalGcpYamlTemplate() {
 		if (googleCloudPlatform != null) {
-			File gcpDir = googleCloudPlatform.gcpDir(defaults);
+			File gcpDir = googleCloudPlatform.gcpDir(rdf);
 			return new File(gcpDir, "deployment/templates/global.yaml");
 		}
 		return null;
@@ -1235,17 +1205,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			// TODO:  Handle the case where cubes are defined in the same namespace as 
 			//        an OWL ontology.  As it stands, this method will overwrite the OWL ontology.
 			
-			emitter.add(new CubeEmitter(workbook.owlDir(defaults), cubeManager));
+			emitter.add(new CubeEmitter(rdf.getOwlDir(), cubeManager));
 		}
 		
 	}
 
 
 	private File rdfDir() {
-		if (workbook != null) {
-			return workbook.owlDir(defaults).getParentFile();
-		}
-		return defaults.getRdfDir();
+		return rdf.getRdfDir();
 	}
 
 
@@ -1429,7 +1396,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			Configurator config = configurator();
 			config.configure(googleCloudPlatform);
 			
-			File gcpDir = googleCloudPlatform.gcpDir(defaults);
+			File gcpDir = googleCloudPlatform.gcpDir(rdf);
 			if (gcpDir == null) {
 				throw new MojoExecutionException("googleCloudPlatform.gcpDir must be defined");
 			}
@@ -1521,15 +1488,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 
 	
-	private void configureCloudSqlTransform() {
-
-		ProjectFolder folder = new ProjectFolder(project, googleCloudPlatform.getCloudsql().getScripts());
-		SqlTransformWriter writer = new SqlTransformWriter(folder);
-		RoutedSqlTransformVisitor visitor = sqlTransformVisitor();
-		boolean some = TransformProcessingScope.SOME == googleCloudPlatform.getCloudsql().getTransformScope() ?
-				true : false;
-		visitor.put(Konig.GoogleCloudSqlTable, writer, some);
-	}
 
 
 	private void configureBigQueryTransform() {
@@ -1818,12 +1776,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 	private void generateTabularShapes() throws RDFParseException, RDFHandlerException, IOException {
 		
-		if(defaults.getShapesDir() != null && config != null) {
-			RdfUtil.loadTurtle(defaults.getRdfDir(), owlGraph, nsManager);
+		if(rdf.getShapesDir() != null && config != null) {
+			RdfUtil.loadTurtle(rdf.getRdfDir(), owlGraph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(contextManager, shapeManager, nsManager);
 			shapeLoader.load(owlGraph);
 			
-			File shapesDir = defaults.getShapesDir();
+			File shapesDir = rdf.getShapesDir();
 			TabularShapeGenerator tabularShapeGenerator = new TabularShapeGenerator(nsManager, shapeManager);
 			try {
 				tabularShapeGenerator.generateTabularShapes(shapesDir, config);

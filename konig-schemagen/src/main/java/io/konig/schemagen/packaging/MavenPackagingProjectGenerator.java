@@ -148,7 +148,9 @@ public class MavenPackagingProjectGenerator {
 	}
 
 	private File mergePom(RuntimeServices runtime, VelocityContext context, PackagingProjectRequest request) throws IOException, ParseException {
+	
 		File targetFile = new File(request.getBasedir(), POM_TARGET);
+		targetFile.getParentFile().mkdirs();
 		
 		ClassLoader classLoader = getClass().getClassLoader();
 		
