@@ -762,6 +762,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	if (tabularShapes==null) {
     		tabularShapes = new TabularShapeFactoryConfig();
     	}
+    	if (defaults == null) {
+    		defaults = new RdfConfig();
+    		defaults.setRootDir(new File(mavenProject.getBasedir(), "target/generated/rdf"));
+    	}
 
     }
 
@@ -1093,7 +1097,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				jsonSchemaGenerator.setIncludeIdValue(true);
 				generator.setListener(new ShapeToJsonSchemaLinker(owlGraph));
 			}
-			generator.generateAll(shapeManager.listShapes(), jsonSchema.getJsonSchemaDir());
+			File outDir = jsonSchema.getJsonSchemaDir();
+			if (outDir == null) {
+				outDir = new File(mavenProject.getBasedir(), "target/generated/json-schema");
+				jsonSchema.setJsonSchemaDir(outDir);
+			}
+			generator.generateAll(shapeManager.listShapes(), outDir);
 		}
 		
 	}

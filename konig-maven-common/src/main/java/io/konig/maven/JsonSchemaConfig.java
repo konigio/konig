@@ -26,6 +26,7 @@ import java.io.File;
 public class JsonSchemaConfig {
 
 	private String uriTemplate;
+	@Parameter(property="konig.jsonschema.dir", defaultValue="${basedir}/target/generated/json-schema")
 	private File jsonSchemaDir;
 	private boolean additionalProperties=false;
 	private boolean generateSchemaId = false;
@@ -36,6 +37,7 @@ public class JsonSchemaConfig {
 	public void setUriTemplate(String uriTemplate) {
 		this.uriTemplate = uriTemplate;
 	}
+
 	public File getJsonSchemaDir() {
 		return jsonSchemaDir;
 	}
