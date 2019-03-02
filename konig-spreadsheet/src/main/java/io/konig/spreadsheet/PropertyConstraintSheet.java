@@ -259,7 +259,7 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 				shape, true, new SequencePathBuilder(
 						location(row, PROPERTY_ID), 
 						p, 
-						propertyPathText));
+						propertyPathText), processor);
 			break;
 		}
 		
@@ -296,7 +296,7 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 				new PropertyConstraintFormulaBuilder(
 					location(row, FORMULA), 
 					p, 
-					formulaText));
+					formulaText), processor);
 		}
 		
 		declareStatus(status);

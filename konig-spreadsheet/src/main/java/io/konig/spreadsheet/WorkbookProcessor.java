@@ -31,7 +31,7 @@ import io.konig.core.OwlReasoner;
 import io.konig.shacl.ShapeManager;
 import io.konig.spreadsheet.nextgen.Workbook;
 
-public interface WorkbookProcessor {
+public interface WorkbookProcessor extends SpreadsheetExceptionHandler {
 	
 	ServiceManager getServiceManager();
 	

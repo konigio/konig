@@ -384,6 +384,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private SqlTransformGenerator mysqlTransformGenerator;
     private RoutedSqlTransformVisitor sqlTransformVisitor;
     private File mavenHome;
+    private boolean anyError;
 
 	@Component
 	private MavenProject mavenProject;
@@ -440,7 +441,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			computeMaxRowSize();
 			
 			emit();
-			
+			failIfAnyError();
 			buildEnvironments();
 			buildPackagingProject();
 			
@@ -456,6 +457,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
+
+	private void failIfAnyError() throws MojoExecutionException {
+		if (anyError) {
+			throw new MojoExecutionException("One or more errors occurred.  See the log for details");
+		}
+		
+	}
+
 
 	private void buildPackagingProject() throws IOException, ParseException, MavenInvocationException {
 		MavenPackagingProjectGenerator generator = new MavenPackagingProjectGenerator();
@@ -1153,6 +1162,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				// }
 
 				processor.processAll(files);
+				if (processor.getErrorCount() > 0) {
+					anyError = true;
+				}
 				
 				emitter.add(new OntologyEmitter(rdf.getOwlDir()));
 				emitter.add(new ShapeToFileEmitter(shapeManager, rdf.getShapesDir()));
