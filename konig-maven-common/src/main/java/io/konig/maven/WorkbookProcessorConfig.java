@@ -26,9 +26,6 @@ import java.io.File;
 public class WorkbookProcessorConfig {
 	private File workbookFile;
 	private File workbookDir;
-	private File owlDir;
-	private File shapesDir;
-	private File skosDir;
 	
 	private File templateDir;
 	
@@ -41,29 +38,6 @@ public class WorkbookProcessorConfig {
 	public File getWorkbookFile() {
 		return workbookFile;
 	}
-	public File getOwlDir() {
-		return owlDir;
-	}
-	public File awsDir(RdfConfig defaults) {
-		return new File(defaults.getRdfDir(), "aws");
-	}	
-		
-	public File gcpDir(RdfConfig defaults) {
-		return new File(defaults.getRdfDir(), "gcp");
-	}
-	public File owlDir(RdfConfig defaults) {
-		return owlDir == null ? defaults.getOwlDir() : owlDir;
-	}
-	public File skosDir(RdfConfig defaults) {
-		return skosDir == null ? defaults.getSkosDir() : skosDir;
-		
-	}
-	public File getShapesDir() {
-		return shapesDir;
-	}
-	public File shapesDir(RdfConfig defaults) {
-		return shapesDir == null ? defaults.getShapesDir() : shapesDir;
-	}
 	public boolean isInferRdfPropertyDefinitions() {
 		return inferRdfPropertyDefinitions;
 	}
@@ -72,18 +46,6 @@ public class WorkbookProcessorConfig {
 	}
 	public void setWorkbookFile(File workbookFile) {
 		this.workbookFile = workbookFile;
-	}
-	public void setOwlDir(File owlOutDir) {
-		this.owlDir = owlOutDir;
-	}
-	public void setShapesDir(File shapesOutDir) {
-		this.shapesDir = shapesOutDir;
-	}
-	public File getSkosDir() {
-		return skosDir;
-	}
-	public void setSkosDir(File skosDir) {
-		this.skosDir = skosDir;
 	}
 	public boolean isFailOnWarnings() {
 		return failOnWarnings;

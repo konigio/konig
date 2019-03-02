@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +47,7 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 
 	public static final String DEFAULT_SUBJECT = "defaultSubject";
 	private static final String GCP_DATASET_ID = "gcpDatasetId";
+	private static final String IGNORE_SHEETS = "ignoreSheets"; 
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
 	public static final String SHAPE_URL_TEMPLATE = "shapeURLTemplate";
@@ -75,6 +77,7 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	private List<RegexRule> ruleList = null;
 	private Set<URI> excludeSecurityClassification;
 	private List<Function> defaultDataSource;
+	private Set<String> ignoreSheets = null;
 
 	public SettingsSheet(WorkbookProcessor processor)  {
 		super(processor);
@@ -86,6 +89,11 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 
 	public void setOutDir(File outDir) {
 		this.outDir = outDir;
+	}
+	
+	public Set<String> getIgnoreSheets() {
+		
+		return ignoreSheets==null ? Collections.emptySet() : ignoreSheets;
 	}
 
 
@@ -141,6 +149,7 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 		ruleList = new ArrayList<>();
 		excludeSecurityClassification = null;
 		defaultDataSource = null;
+		ignoreSheets = null;
 		loadDefaultProperties();
 	}
 
@@ -148,6 +157,7 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	public void endWorkbook(Workbook book) {
 		persist();
 		settings = null;
+		ignoreSheets = null;
 	}
 	
 	private void persist() {
@@ -211,7 +221,9 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 		String pattern = stringValue(row, PATTERN);
 		String replacement = stringValue(row, REPLACEMENT);
 		
-		
+		if (name.equals(IGNORE_SHEETS)) {
+			buildIgnoreSheets(value);
+		}
 		if (pattern!=null && replacement==null) {
 			fail(
 				row, REPLACEMENT, 
@@ -239,8 +251,23 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 		} else {
 			settings.setProperty(name, value);
 		}	
+		
+		
 	}
 	
+	private void buildIgnoreSheets(String value) {
+
+		ignoreSheets = new HashSet<>();
+		if (value != null) {
+			StringTokenizer tokens = new StringTokenizer(value, "\r\n");
+			while (tokens.hasMoreTokens()) {
+				String token = tokens.nextToken().trim();
+				ignoreSheets.add(token);
+			}
+		}
+		
+	}
+
 	public List<RegexRule> getRuleList() {
 		return ruleList;
 	}

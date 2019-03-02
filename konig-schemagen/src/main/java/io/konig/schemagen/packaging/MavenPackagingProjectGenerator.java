@@ -99,28 +99,30 @@ public class MavenPackagingProjectGenerator {
 	private List<AssemblyConfig> assemblyList(PackagingProjectRequest request) {
 		List<AssemblyConfig> list = new ArrayList<>();
 		File envRoot = new File(request.getBasedir(), ENV_PATH);
-		for (File envDir : envRoot.listFiles() ) {
-			if (envDir.isDirectory()) {
-				String envName = envDir.getName();
-				for (File resourceKind : envDir.listFiles()) {
-					if (resourceKind.isDirectory()) {
-						String resourceKindName = resourceKind.getName();
-						
-						String id = MessageFormat.format(ASSEMBLY_ID_PATTERN, envName, resourceKindName);
-						String descriptorRef = MessageFormat.format(ASSEMBLY_DESCRIPTOR_PATTERN, envName, resourceKindName);
-						
-						AssemblyPomConfig pom = new AssemblyPomConfig(id, descriptorRef);
-						
-						String sourcePath = MessageFormat.format(ASSEMBLY_SOURCE_DIR_PATTERN, envName, resourceKindName);
-						String descriptorPath = MessageFormat.format(ASSEMBLY_FILE_PATTERN, envName, resourceKindName);
-						File descriptorFile = new File(request.getBasedir(), descriptorPath);
-						
-						String packageId = envName + "-" + resourceKindName;
-						
-						AssemblyDescriptorConfig descriptor = new AssemblyDescriptorConfig(packageId, sourcePath, descriptorFile);
-						addFileSets(descriptor, request, resourceKindName, envName);
-						
-						list.add(new AssemblyConfig(pom, descriptor));
+		if (envRoot.isDirectory()) {
+			for (File envDir : envRoot.listFiles() ) {
+				if (envDir.isDirectory()) {
+					String envName = envDir.getName();
+					for (File resourceKind : envDir.listFiles()) {
+						if (resourceKind.isDirectory()) {
+							String resourceKindName = resourceKind.getName();
+							
+							String id = MessageFormat.format(ASSEMBLY_ID_PATTERN, envName, resourceKindName);
+							String descriptorRef = MessageFormat.format(ASSEMBLY_DESCRIPTOR_PATTERN, envName, resourceKindName);
+							
+							AssemblyPomConfig pom = new AssemblyPomConfig(id, descriptorRef);
+							
+							String sourcePath = MessageFormat.format(ASSEMBLY_SOURCE_DIR_PATTERN, envName, resourceKindName);
+							String descriptorPath = MessageFormat.format(ASSEMBLY_FILE_PATTERN, envName, resourceKindName);
+							File descriptorFile = new File(request.getBasedir(), descriptorPath);
+							
+							String packageId = envName + "-" + resourceKindName;
+							
+							AssemblyDescriptorConfig descriptor = new AssemblyDescriptorConfig(packageId, sourcePath, descriptorFile);
+							addFileSets(descriptor, request, resourceKindName, envName);
+							
+							list.add(new AssemblyConfig(pom, descriptor));
+						}
 					}
 				}
 			}
@@ -146,7 +148,9 @@ public class MavenPackagingProjectGenerator {
 	}
 
 	private File mergePom(RuntimeServices runtime, VelocityContext context, PackagingProjectRequest request) throws IOException, ParseException {
+	
 		File targetFile = new File(request.getBasedir(), POM_TARGET);
+		targetFile.getParentFile().mkdirs();
 		
 		ClassLoader classLoader = getClass().getClassLoader();
 		

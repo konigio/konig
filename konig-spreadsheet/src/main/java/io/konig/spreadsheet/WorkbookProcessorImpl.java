@@ -369,7 +369,15 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			List<Action> oldList = actionList;
 			actionList = new ArrayList<>();
 			for (Action action : oldList) {
-				action.execute();
+				try {
+					action.execute();
+				} catch (SpreadsheetException e) {
+					errorCount++;
+					if (errorCount > maxErrorCount) {
+						throw e;
+					}
+					logger.error("Failed to execute deferred action", e);
+				}
 			}
 		}
 		
@@ -413,7 +421,13 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 
 
 	private void visitSheet(WorkbookSheet bookSheet) throws SpreadsheetException {
-		logger.debug("visitSheet({})", bookSheet.getSheet().getSheetName());
+		
+		String sheetName = bookSheet.getSheet().getSheetName();
+		if (settings.getIgnoreSheets().contains(sheetName)) {
+			logger.debug("Ignoring Sheet ... {}", sheetName);
+			return;
+		}
+		logger.debug("visitSheet({})", sheetName);
 		List<SheetColumn> undeclaredColumns = new ArrayList<>();
 		assignColumnIndexes(bookSheet, undeclaredColumns);
 		SheetProcessor processor = bookSheet.getProcessor();

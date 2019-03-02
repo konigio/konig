@@ -319,7 +319,7 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 
 	private Integer maxCount(SheetRow row, SheetColumn maxCount) throws SpreadsheetException {
 		String text = stringValue(row, maxCount);
-		if ("unbounded".equals(text)) {
+		if ("unbounded".equalsIgnoreCase(text)) {
 			return null;
 		}
 		try {
