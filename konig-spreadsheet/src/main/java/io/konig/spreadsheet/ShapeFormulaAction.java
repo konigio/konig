@@ -40,16 +40,23 @@ public class ShapeFormulaAction implements Action {
 	
 	private Map<Resource,ShapeFormulaBuilderInvoker> map = new HashMap<>();
 	private WorkbookProcessor processor;
+	private SpreadsheetExceptionHandler exceptionHandler;
 
 	public ShapeFormulaAction(WorkbookProcessor processor) {
 		this.processor = processor;
 	}
 	
-	public void addShapeFormulaBuilder(Shape shape, boolean withShapeNames, ShapeFormulaBuilder builder) {
+	public void addShapeFormulaBuilder(
+		Shape shape, 
+		boolean withShapeNames, 
+		ShapeFormulaBuilder builder,
+		SpreadsheetExceptionHandler handler
+	) {
+		this.exceptionHandler = handler;
 		Resource shapeId = shape.getId();
 		ShapeFormulaBuilderInvoker invoker = map.get(shapeId);
 		if (invoker == null) {
-			invoker = new ShapeFormulaBuilderInvoker(shape, withShapeNames);
+			invoker = new ShapeFormulaBuilderInvoker(shape, withShapeNames, processor);
 			map.put(shapeId, invoker);
 		}
 		invoker.add(builder);
@@ -64,7 +71,11 @@ public class ShapeFormulaAction implements Action {
 			processor.getGraph().getNamespaceManager());
 		
 		for (ShapeFormulaBuilderInvoker invoker : map.values()) {
-			invoker.execute(processor, nsMap, global);
+			try {
+				invoker.execute(processor, nsMap, global);
+			} catch (SpreadsheetException e) {
+				exceptionHandler.handle(e);
+			}
 		}
 
 	}
@@ -73,10 +84,12 @@ public class ShapeFormulaAction implements Action {
 		private Shape shape;
 		private boolean withShapeNames=true;
 		private List<ShapeFormulaBuilder> list = new ArrayList<>();
+		private SpreadsheetExceptionHandler exceptionHandler;
 		
-		ShapeFormulaBuilderInvoker(Shape shape, boolean withShapeNames) {
+		ShapeFormulaBuilderInvoker(Shape shape, boolean withShapeNames, SpreadsheetExceptionHandler handler) {
 			this.shape = shape;
 			this.withShapeNames = withShapeNames;
+			exceptionHandler = handler;
 		}
 		
 		private LocalNameService nameService(SimpleLocalNameService global) {
@@ -96,11 +109,15 @@ public class ShapeFormulaAction implements Action {
 		}
 		
 		void execute(WorkbookProcessor processor, NamespaceMap nsMap, 
-				SimpleLocalNameService global) throws SpreadsheetException {
+				SimpleLocalNameService global) throws SpreadsheetException  {
 			
 			FormulaParser parser = formulaParser(processor, nsMap, global);
 			for (ShapeFormulaBuilder builder : list) {
-				builder.build(processor, shape, parser);
+				try {
+					builder.build(processor, shape, parser);
+				} catch (SpreadsheetException e) {
+					exceptionHandler.handle(e);
+				}
 			}
 		}
 

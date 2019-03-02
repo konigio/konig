@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.net.ssl.HandshakeCompletedListener;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -103,6 +105,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 	
 	private int maxErrorCount = 0;
 	private int errorCount;
+	private boolean showStackTrace=false;
 	
 	
 	public WorkbookProcessorImpl(Graph graph, ShapeManager shapeManager, File templateDir) {
@@ -124,12 +127,22 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		}
 	}
 
+	public boolean isShowStackTrace() {
+		return showStackTrace;
+	}
+
+	public void setShowStackTrace(boolean showStackTrace) {
+		this.showStackTrace = showStackTrace;
+	}
 
 	private void sortBookListeners() {
 		DependencyManager<WorkbookListener> sorter = new DependencyManager<WorkbookListener>();
 		sorter.sort(bookListeners);
 	}
 
+	public int getErrorCount() {
+		return errorCount;
+	}
 
 	public int getMaxErrorCount() {
 		return maxErrorCount;
@@ -372,11 +385,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 				try {
 					action.execute();
 				} catch (SpreadsheetException e) {
-					errorCount++;
-					if (errorCount > maxErrorCount) {
-						throw e;
-					}
-					logger.error("Failed to execute deferred action", e);
+					handle(e);
 				}
 			}
 		}
@@ -441,16 +450,12 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			if (row != null) {
 				SheetRow sheetRow = new SheetRow(bookSheet, row);
 				sheetRow.setUndeclaredColumns(undeclaredColumns);
-				if (accept(sheetRow, processor)) {
-					try {
-						processor.visit(sheetRow);
-					} catch (SpreadsheetException e) {
-						if (++errorCount > maxErrorCount) {
-							throw e;
-						} else {
-							logger.error(" Error " + errorCount + ". ", e);
-						}
+				try {
+					if (accept(sheetRow, processor)) {
+							processor.visit(sheetRow);
 					}
+				} catch (SpreadsheetException e) {
+					handle(e);
 				}
 			}
 		}
@@ -909,6 +914,25 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			process(file);
 		}
 		executeDeferredActions();
+		
+	}
+	
+
+	@Override
+	public void handle(SpreadsheetException e) throws SpreadsheetException {
+		if ( ++errorCount > maxErrorCount) {
+			throw e;
+		}
+		if (showStackTrace) {
+			logger.error("Workbook Error #" + errorCount, e);
+		} else {
+			Throwable cause = e.getCause();
+			if (cause == null) {
+				logger.error("Workbook Error #{}. {}", errorCount, e.getMessage());
+			} else {
+				logger.error("Workbook Error #{}. {} ... {}", errorCount, e.getMessage(), cause.getMessage());
+			}
+		}
 		
 	}
 

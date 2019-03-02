@@ -172,7 +172,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 				new PropertyConstraintFormulaBuilder(
 					location(row, FORMULA), 
 					p, 
-					formulaValue));
+					formulaValue), processor);
 		}
 		
 		if (isNewShape) {
