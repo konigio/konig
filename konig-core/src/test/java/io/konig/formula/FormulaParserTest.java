@@ -34,6 +34,20 @@ import io.konig.core.vocab.Schema;
 public class FormulaParserTest {
 
 	private FormulaParser parser = new FormulaParser();
+
+	@Test
+	public void testSubstr() throws Exception {
+		String text = "SUBSTR($.name, 3, 5)";
+		
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		FormulaParser parser = new FormulaParser(null, service);
+		service.add(Schema.name);
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		String actual = e.toSimpleString();
+		
+		assertEquals(text, actual);
+		
+	}
 	
 	
 	@Test
@@ -192,22 +206,6 @@ public class FormulaParserTest {
 	
 	
 	
-	@Test
-	public void testTimeInterval() throws Exception {
-
-		String text =  "\n"+
-			"@term endTime <http://schema.org/endTime>\n" + 
-			"@term Day <http://www.konig.io/ns/core/Day>\n" + 
-			"@term Week <http://www.konig.io/ns/core/Week>\n" + 
-			"@term Month <http://www.konig.io/ns/core/Month>\n\n" + 
-			"TIME_INTERVAL(?x.endTime, Day, Week, Month)";
-
-		Expression e = parser.quantifiedExpression(text);
-		String actual = e.toString();
-		String expected = text;
-		assertEquals(expected, actual);
-		
-	}
 	
 	@Test
 	public void testCountFormula() throws Exception {

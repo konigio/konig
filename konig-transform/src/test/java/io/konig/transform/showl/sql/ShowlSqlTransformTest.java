@@ -83,6 +83,23 @@ public class ShowlSqlTransformTest {
 		
 		return transform.createInsert(node, GoogleBigQueryTable.class);
 	}
+
+	
+	@Test
+	public void testSubstrStrpos() throws Exception {
+		
+		test(
+			"src/test/resources/ShowlSqlTransformTest/substr-strpos", 
+			"http://example.com/ns/shape/PersonTargetShape");
+	}
+	
+	@Ignore
+	public void testSubstrFunction() throws Exception {
+		
+		test(
+			"src/test/resources/ShowlSqlTransformTest/substr-function", 
+			"http://example.com/ns/shape/PersonTargetShape");
+	}
 	
 	@Ignore
 	public void testJoinNameAndAddress() throws Exception {

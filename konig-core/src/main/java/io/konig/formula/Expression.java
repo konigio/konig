@@ -242,6 +242,28 @@ public class Expression extends AbstractFormula {
 		return null;
 	}
 	
+	public GeneralAdditiveExpression asAdditiveExpression() {
+
+		List<ConditionalAndExpression> orList = getOrList();
+		if (orList.size()==1) {
+			ConditionalAndExpression and = orList.get(0);
+			List<ValueLogical> andList = and.getAndList();
+			if (andList.size()==1) {
+				ValueLogical value = andList.get(0);
+				if (value instanceof BinaryRelationalExpression) {
+					BinaryRelationalExpression binary = (BinaryRelationalExpression) value;
+					if (binary.getRight() == null) {
+						NumericExpression left = binary.getLeft();
+						if (left instanceof GeneralAdditiveExpression) {
+							return (GeneralAdditiveExpression) left;
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
 	public NumericExpression asNumericExpression() {
 
 		List<ConditionalAndExpression> orList = getOrList();

@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.Context;
+import io.konig.core.KonigException;
 import io.konig.core.showl.NodeNamer;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyShape;
@@ -44,23 +45,39 @@ import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlSourceToSourceJoinCondition;
 import io.konig.core.showl.ShowlTemplatePropertyShape;
+import io.konig.core.showl.ShowlUtil;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat;
 import io.konig.core.util.ValueFormat.ElementType;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.TableDataSource;
+import io.konig.formula.Addend;
+import io.konig.formula.AdditiveOperator;
+import io.konig.formula.BuiltInName;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.Expression;
+import io.konig.formula.FullyQualifiedIri;
 import io.konig.formula.FunctionExpression;
+import io.konig.formula.FunctionModel;
+import io.konig.formula.GeneralAdditiveExpression;
+import io.konig.formula.IfFunction;
+import io.konig.formula.KqlType;
 import io.konig.formula.LiteralFormula;
+import io.konig.formula.LocalNameTerm;
+import io.konig.formula.MultiplicativeExpression;
+import io.konig.formula.ParameterModel;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
+import io.konig.formula.PathTerm;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.formula.UnaryExpression;
+import io.konig.formula.VariableTerm;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.sql.query.AdditiveValueExpression;
 import io.konig.sql.query.AliasExpression;
 import io.konig.sql.query.AndExpression;
 import io.konig.sql.query.BooleanTerm;
@@ -68,11 +85,15 @@ import io.konig.sql.query.CastSpecification;
 import io.konig.sql.query.ColumnExpression;
 import io.konig.sql.query.ComparisonOperator;
 import io.konig.sql.query.ComparisonPredicate;
+import io.konig.sql.query.CountStar;
+import io.konig.sql.query.DateTimeUnitExpression;
 import io.konig.sql.query.InsertStatement;
 import io.konig.sql.query.JoinExpression;
+import io.konig.sql.query.NumericValueExpression;
 import io.konig.sql.query.OnExpression;
 import io.konig.sql.query.QueryExpression;
 import io.konig.sql.query.SelectExpression;
+import io.konig.sql.query.SignedNumericLiteral;
 import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.StructExpression;
@@ -310,30 +331,137 @@ public class ShowlSqlTransform {
 
 		private ValueExpression function(ShowlNodeShape node, FunctionExpression function) throws ShowlSqlTransformException {
 			String functionName = function.getFunctionName();
-			boolean castToString = SqlFunctionExpression.CONCAT.equals(functionName);
-			List<QueryExpression> argList = argList(node, function.getArgList(), castToString);
+			List<QueryExpression> argList = argList(node, function.getArgList(), function.getModel());
 			SqlFunctionExpression sql = new SqlFunctionExpression(functionName, argList);
 			
 			return sql;
 		}
 
-		private List<QueryExpression> argList(ShowlNodeShape node, List<Expression> argList, boolean castToString) throws ShowlSqlTransformException {
+		private List<QueryExpression> argList(ShowlNodeShape node,  List<Expression> argList, FunctionModel model) throws ShowlSqlTransformException {
+			
+			List<ParameterModel> paramList = model.getParameters();
+			
 			List<QueryExpression> list = new ArrayList<>();
+			int paramIndex = 0;
 			for (Expression e : argList) {
+				if (paramIndex >= paramList.size()) {
+					String msg = MessageFormat.format("Invalid number of arguments to function {0}", model.getName());
+					throw new ShowlSqlTransformException(msg);
+				}
+				
+				ParameterModel param = paramList.get(paramIndex);
+				if (!param.isEllipsis()) {
+					paramIndex++;
+				}
+				
 				PrimaryExpression primary = e.asPrimaryExpression();
 				if (primary instanceof LiteralFormula) {
-					list.add(stringLiteral((LiteralFormula)primary));
+					list.add(literal((LiteralFormula)primary));
 				} else if (primary instanceof PathExpression) {
 					// TODO: cast to string if necessary
-					list.add(path(node, (PathExpression)primary, castToString));
+					list.add(path(node, (PathExpression)primary, param.getType()));
+				} else if (primary == null) {
+					GeneralAdditiveExpression additive = e.asAdditiveExpression();
+					if (additive != null) {
+						list.add(additive(node, param.getType(), additive));
+					}
 				} 
-				logger.trace(primary.getClass().getSimpleName());
 			}
 			
 			return list;
 		}
 
-		private QueryExpression path(ShowlNodeShape node, PathExpression path, boolean castToString) throws ShowlSqlTransformException {
+		private ValueExpression additive(ShowlNodeShape node, KqlType type, GeneralAdditiveExpression additive) throws ShowlSqlTransformException {
+			ValueExpression left = multiplicative(node, type, additive.getLeft());
+			List<Addend> addendList = additive.getAddendList();
+			if (addendList != null) {
+				for (Addend a : addendList) {
+					AdditiveOperator op = a.getOperator();
+					ValueExpression right = multiplicative(node, type, a.getRight());
+					left = new AdditiveValueExpression(op, left, right);
+				}
+			}
+			
+			return left;
+		}
+
+		private ValueExpression multiplicative(ShowlNodeShape node, KqlType type, MultiplicativeExpression source) throws ShowlSqlTransformException {
+			UnaryExpression unary = source.getLeft();
+			if (unary.getOperator() != null) {
+				throw new KonigException("Unary operators not supported");
+			}
+			if (source.getMultiplierList() != null && !source.getMultiplierList().isEmpty()) {
+				throw new KonigException("Multipliers not supported");
+			}
+			PrimaryExpression primary = unary.getPrimary();
+			if (primary instanceof LiteralFormula) {
+				return literal((LiteralFormula) primary);
+			}
+			
+			
+			if (primary instanceof PathExpression) {
+				QueryExpression e = path(node, (PathExpression) primary, type);
+				if (e instanceof NumericValueExpression) {
+					return (NumericValueExpression) e;
+				}
+				throw new KonigException("Expected a NumericValueExpression but found " + e.getClass().getSimpleName());
+			}
+			
+			if (primary instanceof FunctionExpression) {
+				FunctionExpression func = (FunctionExpression) primary;
+				
+				if (isCountStar(func)) {
+					return new CountStar();
+				}
+				return function(node, (FunctionExpression)primary);
+			}
+			if (primary instanceof FullyQualifiedIri) {
+				FullyQualifiedIri full = (FullyQualifiedIri) primary;
+				URI iri = full.getIri();
+				return new StringLiteralExpression(iri.getLocalName());
+			}
+			if (primary instanceof LocalNameTerm) {
+				LocalNameTerm local = (LocalNameTerm) primary;
+				return new StringLiteralExpression(local.getLocalName());
+			}
+			if (primary instanceof BuiltInName) {
+				BuiltInName builtIn = (BuiltInName) primary;
+				// TODO: confirm that the built-in name is a date-time unit.
+				return new DateTimeUnitExpression(builtIn.getIri().getLocalName());
+			}
+			
+			throw new KonigException("Expression type not supported: " + primary.getClass().getSimpleName());
+		}
+
+		private boolean isCountStar(FunctionExpression func) {
+			if (FunctionExpression.COUNT.equalsIgnoreCase(func.getFunctionName())) {
+				
+				Expression arg = func.getArgList().get(0);
+				
+				PrimaryExpression primary = arg.asPrimaryExpression();
+				if (primary instanceof PathExpression) {
+					
+					PathExpression path = (PathExpression) primary;
+					List<PathStep> stepList = path.getStepList();
+					if (stepList.size()==1) {
+						PathStep step = stepList.get(0);
+						if (step instanceof DirectionStep) {
+							DirectionStep dir = (DirectionStep) step;
+							if (dir.getDirection() == Direction.OUT) {
+								PathTerm term = dir.getTerm();
+								if (term instanceof VariableTerm) {
+									return true;
+								}
+							}
+						}
+					}
+				}
+				
+			}
+			return false;
+		}
+
+		private QueryExpression path(ShowlNodeShape node, PathExpression path, KqlType expectedType) throws ShowlSqlTransformException {
 			StringBuilder builder = new StringBuilder();
 			String nodeAlias = nodeNamer.varname(node);
 			builder.append(nodeAlias);
@@ -349,23 +477,21 @@ public class ShowlSqlTransform {
 						builder.append('.');
 						builder.append(localName);
 						
-						if (castToString) {
-							ShowlPropertyShape q = null;
-							if (p == null) {
-								q = node.findProperty(predicate);
-							} else if (p.getValueShape()!=null){
-								q = p.getValueShape().findProperty(predicate);
-							}
-							
-							if (q == null) {
-								
-								String basePath = p==null ? node.getPath() : p.getPath();
-								
-								throw ShowlSqlTransformException.format(
-									"Property not found {0}.{1}", basePath, predicate.getLocalName());
-							}
-							p = q;
+						ShowlPropertyShape q = null;
+						if (p == null) {
+							q = node.findProperty(predicate);
+						} else if (p.getValueShape()!=null){
+							q = p.getValueShape().findProperty(predicate);
 						}
+						
+						if (q == null) {
+							
+							String basePath = p==null ? node.getPath() : p.getPath();
+							
+							throw ShowlSqlTransformException.format(
+								"Property not found {0}.{1}", basePath, predicate.getLocalName());
+						}
+						p = q;
 						
 					} else {
 						throw new ShowlSqlTransformException("IN steps not supported yet in path" + path.simpleText());
@@ -377,15 +503,85 @@ public class ShowlSqlTransform {
 			}
 			
 			ColumnExpression column = new ColumnExpression(builder.toString());
-			
-			if (castToString) {
-				return castToString(p, column);
+			return cast(expectedType, p, column);
+		}
+		
+	
+		private QueryExpression cast(KqlType expectedType, ShowlPropertyShape p, ValueExpression e) throws ShowlSqlTransformException {
+			KqlType actualType = kqlType(p);
+			if (actualType == null) {
+				String msg = MessageFormat.format("KQL type of property not known: {0}", p.getPath());
+				throw new ShowlSqlTransformException(msg);
+				
+			}
+			if (actualType.equals(expectedType)) {
+				return e;
 			}
 			
-			return column;
+			switch (expectedType) {
+			case STRING :
+				return castToString(p, e);
+				
+			case INTEGER :
+				return castToInteger(actualType, p, e);
+				
+			default:
+				String msg = MessageFormat.format("Don't know how to cast property {0}", p.getPath());
+				throw new ShowlSqlTransformException(msg);
+			}
 		}
 
-		private QueryExpression castToString(ShowlPropertyShape p, ColumnExpression column) {
+		
+
+		private QueryExpression castToInteger(KqlType kqlType, ShowlPropertyShape p, ValueExpression e) throws ShowlSqlTransformException {
+			switch(kqlType) {
+			case STRING :
+				return new CastSpecification(e, "INT");
+				
+			default:
+				String msg = MessageFormat.format("Cannot cast to integer: {0}",  p.getPath());
+				throw new ShowlSqlTransformException(msg);
+			}
+		}
+
+		private KqlType kqlType(ShowlPropertyShape p) {
+			if (p == null) {
+				return null;
+			}
+			
+			if (p instanceof ShowlDirectPropertyShape) {
+				PropertyConstraint c = p.getPropertyConstraint();
+				URI datatype = c.getDatatype();
+				if (datatype != null) {
+					return ShowlUtil.kqlType(datatype);
+				}
+			} else {
+				ShowlPropertyShape peer = p.getPeer();
+				if (peer != null) {
+					PropertyConstraint c = peer.getPropertyConstraint();
+					URI datatype = c.getDatatype();
+					if (datatype != null) {
+						return ShowlUtil.kqlType(datatype);
+					}
+				} else {
+					PropertyConstraint c = p.getPropertyConstraint();
+					if (c != null) {
+						QuantifiedExpression q = c.getFormula();
+						if (q != null) {
+							PrimaryExpression primary = q.asPrimaryExpression();
+							if (primary instanceof FunctionExpression) {
+								FunctionExpression func = (FunctionExpression) primary;
+								return func.getModel().getReturnType();
+							}
+						}
+					}
+				}
+			}
+			
+			return null;
+		}
+
+		private QueryExpression castToString(ShowlPropertyShape p, ValueExpression column) {
 			PropertyConstraint constraint = p.getPropertyConstraint();
 			if (constraint != null) {
 				URI datatype = constraint.getDatatype();
@@ -425,12 +621,21 @@ public class ShowlSqlTransform {
 			return column;
 		}
 
-		private StringLiteralExpression stringLiteral(LiteralFormula e) throws ShowlSqlTransformException {
+		private ValueExpression literal(LiteralFormula e) throws ShowlSqlTransformException {
 			Literal literal = e.getLiteral();
-			if (literal.getDatatype()==null || XMLSchema.STRING.equals(literal.getDatatype())) {
+			KqlType type = ShowlUtil.kqlType(literal.getDatatype());
+			switch (type) {
+			case STRING :
 				return new StringLiteralExpression(literal.stringValue());
+			case INTEGER :
+				return new SignedNumericLiteral(literal.longValue());
+				
+			case NUMBER :
+				return new SignedNumericLiteral(literal.doubleValue());
+				
+			default:
+				throw new ShowlSqlTransformException("Failed to produce literal from " + e.getLiteral().toString());
 			}
-			throw new ShowlSqlTransformException("Failed to produce string literal from " + e.getLiteral().toString());
 		}
 
 		private ValueExpression struct(ShowlNodeShape node) throws ShowlSqlTransformException {

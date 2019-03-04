@@ -528,12 +528,13 @@ public class FormulaParser {
 			BuiltInCall call = 
 			
 			(call=tryIfFunction()) !=null ? call :
-			(call=trySetFunction(FunctionExpression.SUM)) != null ? call :
-			(call=trySetFunction(FunctionExpression.AVG)) != null ? call :
-			(call=trySetFunction(FunctionExpression.COUNT)) != null ? call :
-			(call=tryGenericFunction(FunctionExpression.UNIX_TIME)) != null ? call :
-			(call=tryGenericFunction(FunctionExpression.CONCAT)) != null ? call :
-			(call=tryGenericFunction(FunctionExpression.TIME_INTERVAL)) != null ? call :
+			(call=trySetFunction(FunctionModel.SUM)) != null ? call :
+			(call=trySetFunction(FunctionModel.AVG)) != null ? call :
+			(call=trySetFunction(FunctionModel.COUNT)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.UNIX_TIME)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.CONCAT)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.SUBSTR)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.STRPOS)) != null ? call :
 			(call=tryDateTrunc()) != null ? call :
 			(call=tryBoundFunction()) != null ? call :
 				
@@ -544,8 +545,9 @@ public class FormulaParser {
 		
 
 
-		private SetFunctionExpression trySetFunction(String functionName) throws IOException, RDFParseException, RDFHandlerException {
+		private SetFunctionExpression trySetFunction(FunctionModel model) throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
+			String functionName = model.getName();
 			String name = tryCaseInsensitiveWord(functionName);
 			if (name != null) {
 				int c = next();
@@ -560,7 +562,7 @@ public class FormulaParser {
 					}
 					List<Expression> argList = argList();
 					assertNext(')');
-					return new SetFunctionExpression(name, distinct, argList);
+					return new SetFunctionExpression(model, distinct, argList);
 				}
 				
 			}
@@ -611,15 +613,18 @@ public class FormulaParser {
 					argList.add(timeUnit);
 					argList.add(e);
 					
-					return new FunctionExpression(FunctionExpression.DATE_TRUNC, argList);
+					
+					
+					return new FunctionExpression(FunctionModel.DATE_TRUNC, argList);
 					
 					
 				}
 			}
 			return null;
 		}
-		private BuiltInCall tryGenericFunction(String functionName) throws IOException, RDFParseException, RDFHandlerException {
+		private BuiltInCall tryGenericFunction(FunctionModel model) throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
+			String functionName = model.getName();
 			String name = tryCaseInsensitiveWord(functionName);
 			if (name != null) {
 				int c = next();
@@ -630,7 +635,7 @@ public class FormulaParser {
 					skipSpace();
 					List<Expression> argList = argList();
 					assertNext(')');
-					return new FunctionExpression(name, argList);
+					return new FunctionExpression(model, argList);
 				}
 				
 			}

@@ -20,7 +20,6 @@ package io.konig.formula;
  * #L%
  */
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,37 +33,40 @@ public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 	public static final String TIME_INTERVAL = "TIME_INTERVAL";
 	public static final String UNIX_TIME = "UNIX_TIME";
 	public static final String CONCAT = "CONCAT";
-	
+	public static final String SUBSTR = "SUBSTR";
+	public static final String STRPOS = "STRPOS";
+
 	private String functionName;
 	private List<Expression> argList = new ArrayList<>();
+	private FunctionModel model;
 
-	public FunctionExpression(String functionName) {
-		this.functionName = functionName;
-	}
-	
-	
-	public boolean isAggregation() {
-		return functionName.equalsIgnoreCase(SUM) || functionName.equalsIgnoreCase(COUNT);
-	}
+	public FunctionExpression(FunctionModel model, Expression... arg) {
 
-	public FunctionExpression(String functionName, Expression... arg) {
-		this.functionName = functionName;
+		this.functionName = model.getName();
+		this.model = model;
 		this.argList = new ArrayList<>();
 		for (Expression e : arg) {
 			argList.add(e);
 		}
 	}
-	
-	public FunctionExpression(String functionName, List<Expression> argList) {
-		this.functionName = functionName;
+
+	public FunctionExpression(FunctionModel model, List<Expression> argList) {
+		this.functionName = model.getName();
+		this.model = model;
 		this.argList = argList;
 	}
-	
+
+	public FunctionModel getModel() {
+		return model;
+	}
+
+	public boolean isAggregation() {
+		return functionName.equalsIgnoreCase(SUM) || functionName.equalsIgnoreCase(COUNT);
+	}
 
 	public static String getSum() {
 		return SUM;
 	}
-
 
 	public String getFunctionName() {
 		return functionName;
@@ -77,7 +79,6 @@ public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 	public List<Expression> getArgList() {
 		return argList;
 	}
-
 
 	@Override
 	public void print(PrettyPrintWriter out) {

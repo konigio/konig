@@ -1,5 +1,8 @@
 package io.konig.core.showl;
 
+import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.XMLSchema;
+
 /*
  * #%L
  * Konig Core
@@ -22,11 +25,74 @@ package io.konig.core.showl;
 
 
 import io.konig.core.vocab.Konig;
+import io.konig.formula.KqlType;
 
 public class ShowlUtil {
 
 	public static boolean isUndefinedClass(ShowlClass owlClass) {
 		
 		return owlClass == null || Konig.Undefined.equals(owlClass.getId());
+	}
+	
+	public static KqlType kqlType(URI rdfType) {
+		if (
+			XMLSchema.INT.equals(rdfType) ||
+			XMLSchema.INTEGER.equals(rdfType) ||
+			XMLSchema.LONG.equals(rdfType) ||
+			XMLSchema.SHORT.equals(rdfType) ||
+			XMLSchema.BYTE.equals(rdfType) ||
+			XMLSchema.NON_POSITIVE_INTEGER.equals(rdfType) ||
+			XMLSchema.NON_NEGATIVE_INTEGER.equals(rdfType) ||
+			XMLSchema.NEGATIVE_INTEGER.equals(rdfType) ||
+			XMLSchema.UNSIGNED_BYTE.equals(rdfType) ||
+			XMLSchema.UNSIGNED_BYTE.equals(rdfType) ||
+			XMLSchema.UNSIGNED_LONG.equals(rdfType) ||
+			XMLSchema.UNSIGNED_SHORT.equals(rdfType) ||
+			XMLSchema.UNSIGNED_BYTE.equals(rdfType)
+		) {
+			return KqlType.INTEGER;
+		}
+			
+		if (
+			XMLSchema.DECIMAL.equals(rdfType) ||
+			XMLSchema.FLOAT.equals(rdfType) ||
+			XMLSchema.DOUBLE.equals(rdfType)
+		) {
+			return KqlType.NUMBER;
+		}
+		
+		if (
+			XMLSchema.DATETIME.equals(rdfType) ||
+			XMLSchema.DATE.equals(rdfType) ||
+			XMLSchema.GYEAR.equals(rdfType) ||
+			XMLSchema.GYEARMONTH.equals(rdfType)
+		) {
+			return KqlType.INSTANT;
+		}
+
+		if (
+			XMLSchema.BASE64BINARY.equals(rdfType) ||
+			XMLSchema.HEXBINARY.equals(rdfType) ||
+			XMLSchema.ANYURI.equals(rdfType) ||
+			XMLSchema.NOTATION.equals(rdfType) ||
+			XMLSchema.STRING.equals(rdfType) ||
+			XMLSchema.NORMALIZEDSTRING.equals(rdfType) ||
+			XMLSchema.TOKEN.equals(rdfType) ||
+			XMLSchema.LANGUAGE.equals(rdfType) ||
+			XMLSchema.NAME.equals(rdfType) ||
+			XMLSchema.NMTOKEN.equals(rdfType) ||
+			XMLSchema.NCNAME.equals(rdfType) ||
+			XMLSchema.NMTOKENS.equals(rdfType) ||
+			XMLSchema.ID.equals(rdfType) ||
+			XMLSchema.IDREF.equals(rdfType) ||
+			XMLSchema.ENTITY.equals(rdfType) ||
+			XMLSchema.QNAME.equals(rdfType)
+		) {
+			return KqlType.STRING;
+		}
+		
+		
+		
+		return null;
 	}
 }
