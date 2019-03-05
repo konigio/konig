@@ -482,6 +482,7 @@ public class FormulaParser {
 			primary = 
 				(primary=tryBrackettedExpression()) != null ? primary :
 				(primary=tryBuiltInCall()) != null ? primary :
+				(primary=tryCase()) != null ? primary :
 				(primary=tryLiteralFormula()) != null ? primary :
 				(primary=tryPath()) != null ? primary :
 				null;
@@ -498,8 +499,6 @@ public class FormulaParser {
 			
 			return primary;
 		}
-		
-		
 
 		private IfFunction tryIfFunction() throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
@@ -528,12 +527,13 @@ public class FormulaParser {
 			BuiltInCall call = 
 			
 			(call=tryIfFunction()) !=null ? call :
-			(call=trySetFunction(FunctionExpression.SUM)) != null ? call :
-			(call=trySetFunction(FunctionExpression.AVG)) != null ? call :
-			(call=trySetFunction(FunctionExpression.COUNT)) != null ? call :
-			(call=tryGenericFunction(FunctionExpression.UNIX_TIME)) != null ? call :
-			(call=tryGenericFunction(FunctionExpression.CONCAT)) != null ? call :
-			(call=tryGenericFunction(FunctionExpression.TIME_INTERVAL)) != null ? call :
+			(call=trySetFunction(FunctionModel.SUM)) != null ? call :
+			(call=trySetFunction(FunctionModel.AVG)) != null ? call :
+			(call=trySetFunction(FunctionModel.COUNT)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.UNIX_TIME)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.CONCAT)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.SUBSTR)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.STRPOS)) != null ? call :
 			(call=tryDateTrunc()) != null ? call :
 			(call=tryBoundFunction()) != null ? call :
 				
@@ -541,11 +541,15 @@ public class FormulaParser {
 			
 			return call;
 		}
+
+		
 		
 
 
-		private SetFunctionExpression trySetFunction(String functionName) throws IOException, RDFParseException, RDFHandlerException {
+
+		private SetFunctionExpression trySetFunction(FunctionModel model) throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
+			String functionName = model.getName();
 			String name = tryCaseInsensitiveWord(functionName);
 			if (name != null) {
 				int c = next();
@@ -560,7 +564,7 @@ public class FormulaParser {
 					}
 					List<Expression> argList = argList();
 					assertNext(')');
-					return new SetFunctionExpression(name, distinct, argList);
+					return new SetFunctionExpression(model, distinct, argList);
 				}
 				
 			}
@@ -611,15 +615,18 @@ public class FormulaParser {
 					argList.add(timeUnit);
 					argList.add(e);
 					
-					return new FunctionExpression(FunctionExpression.DATE_TRUNC, argList);
+					
+					
+					return new FunctionExpression(FunctionModel.DATE_TRUNC, argList);
 					
 					
 				}
 			}
 			return null;
 		}
-		private BuiltInCall tryGenericFunction(String functionName) throws IOException, RDFParseException, RDFHandlerException {
+		private BuiltInCall tryGenericFunction(FunctionModel model) throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
+			String functionName = model.getName();
 			String name = tryCaseInsensitiveWord(functionName);
 			if (name != null) {
 				int c = next();
@@ -630,12 +637,69 @@ public class FormulaParser {
 					skipSpace();
 					List<Expression> argList = argList();
 					assertNext(')');
-					return new FunctionExpression(name, argList);
+					return new FunctionExpression(model, argList);
 				}
 				
 			}
 			
 			return null;
+		}
+
+		private CaseStatement tryCase() throws IOException, RDFParseException, RDFHandlerException {
+			skipSpace();
+			String name = tryCaseInsensitiveWord("CASE");
+			if (name != null) {
+				
+				Expression caseCondition = null;
+				skipSpace();
+				String when = tryCaseInsensitiveWord("WHEN");
+				if (when == null) {
+					caseCondition = expression();
+				} else {
+					unread(when);
+				}
+				
+			
+				List<WhenThenClause> whenThenList = whenThenList();
+				Expression elseClause = null;
+				if (tryCaseInsensitiveWord("ELSE") != null) {
+					elseClause = expression();
+				}
+				
+				skipSpace();
+				assertIgnoreCase("END");
+				
+				return new CaseStatement(caseCondition, whenThenList, elseClause);
+			}
+			
+			return null;
+		}
+
+		private List<WhenThenClause> whenThenList() throws IOException, RDFParseException, RDFHandlerException {
+			
+			List<WhenThenClause> list = new ArrayList<>();
+			
+			for (;;) {
+			
+				skipSpace();
+				if (tryCaseInsensitiveWord("WHEN") != null) {
+					skipSpace();
+					Expression when = expression();
+					skipSpace();
+					assertIgnoreCase("THEN");
+					Expression then = expression();
+					list.add(new WhenThenClause(when, then));
+				} else {
+					break;
+				}
+			}
+			
+			if (list.isEmpty()) {
+				throw new RDFParseException("CASE statement is missing WHEN...THEN clause");
+			}
+			
+			return list;
+			
 		}
 
 		private List<Expression> argList() throws IOException, RDFParseException, RDFHandlerException {
@@ -872,11 +936,23 @@ public class FormulaParser {
 
 			
 			unread(c);
-			if ("IN".equals(predicate)) {
-				unread("IN");
+			if ("IN".equalsIgnoreCase(predicate)) {
+				unread(predicate);
 				predicate = null;
-			} else if ("NOT".equals(predicate)) {
-				unread("NOT");
+			} else if ("NOT".equalsIgnoreCase(predicate)) {
+				unread(predicate);
+				predicate = null;
+			} else if ("THEN".equalsIgnoreCase(predicate)) {
+				unread(predicate);
+				predicate = null;
+			} else if ("WHEN".equalsIgnoreCase(predicate)) {
+				unread(predicate);
+				predicate = null;
+			} else if ("ELSE".equalsIgnoreCase(predicate)) {
+				unread(predicate);
+				predicate = null;
+			} else if ("END".equalsIgnoreCase(predicate)) {
+				unread(predicate);
 				predicate = null;
 			}
 

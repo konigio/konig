@@ -384,7 +384,7 @@ public class FormulaBuilder implements FormulaConsumer {
 		
 		
 		public FormulaBuilder endFunction() {
-			FunctionExpression function = new FunctionExpression(functionName, argList);
+			FunctionExpression function = new FunctionExpression(FunctionModel.fromName(functionName), argList);
 			QuantifiedExpression formula = QuantifiedExpression.wrap(function);
 			formulaBuilder.setFormula(formula);
 			return formulaBuilder;

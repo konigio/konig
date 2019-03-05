@@ -40,6 +40,7 @@ import io.konig.formula.Formula;
 import io.konig.formula.FormulaVisitor;
 import io.konig.formula.FullyQualifiedIri;
 import io.konig.formula.FunctionExpression;
+import io.konig.formula.FunctionModel;
 import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.IriValue;
 import io.konig.formula.MultiplicativeExpression;
@@ -88,7 +89,7 @@ public class TimeIntervalFormulaHandler implements FormulaHandler {
 						
 						Expression intervalStartExpression = argList.get(0);
 						
-						FunctionExpression intervalStartValue = new FunctionExpression(FunctionExpression.DATE_TRUNC, intervalStartExpression, asExpression(minTime));
+						FunctionExpression intervalStartValue = new FunctionExpression(FunctionModel.DATE_TRUNC, intervalStartExpression, asExpression(minTime));
 						
 						ShapeModel timeIntervalModel = targetProperty.getValueModel();
 						if (timeIntervalModel == null) {

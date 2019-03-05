@@ -69,5 +69,10 @@ public class BinaryRelationalExpression extends AbstractFormula implements Relat
 		
 	}
 	
+	@Override
+	public BinaryRelationalExpression asBinaryRelationalExpression() {
+		return this;
+	}
+	
 
 }

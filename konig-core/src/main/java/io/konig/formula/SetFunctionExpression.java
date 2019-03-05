@@ -29,8 +29,8 @@ public class SetFunctionExpression extends FunctionExpression {
 
 	private boolean distinct;
 	
-	public SetFunctionExpression(String functionName, boolean distinct, List<Expression> argList) {
-		super(functionName, argList);
+	public SetFunctionExpression(FunctionModel model, boolean distinct, List<Expression> argList) {
+		super(model, argList);
 		this.distinct = distinct;
 	}
 	

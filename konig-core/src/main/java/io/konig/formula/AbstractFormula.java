@@ -36,5 +36,15 @@ public abstract class AbstractFormula implements Formula {
 		
 		return buffer.toString();
 	}
+	
+
+	public PrimaryExpression asPrimaryExpression() {
+		return null;
+	}
+	
+	
+	public BinaryRelationalExpression asBinaryRelationalExpression() {
+		return null;
+	}
 
 }

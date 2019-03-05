@@ -832,8 +832,8 @@ public class ShowlManager implements ShowlClassManager {
 		ShowlClass newClass = produceOwlClass(owlClassId);
 		node.setOwlClass(newClass);
 		
-		if (logger.isInfoEnabled()) {
-			logger.info("Set OWL Class of " + node.getPath() + " as " + "<" + owlClassId.stringValue() + ">");
+		if (logger.isDebugEnabled()) {
+			logger.debug("Set OWL Class of " + node.getPath() + " as " + "<" + owlClassId.stringValue() + ">");
 		}
 		
 	}

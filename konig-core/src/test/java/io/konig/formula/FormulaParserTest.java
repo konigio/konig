@@ -22,6 +22,7 @@ package io.konig.formula;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -34,6 +35,69 @@ import io.konig.core.vocab.Schema;
 public class FormulaParserTest {
 
 	private FormulaParser parser = new FormulaParser();
+	
+	
+	@Test
+	public void testNamedIndividual() throws Exception {
+		String text = "Male";
+
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		service.add(Schema.Male);
+		
+
+		FormulaParser parser = new FormulaParser(null, service);
+
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		String actual = e.toSimpleString();
+		
+		PrimaryExpression primary = e.asPrimaryExpression();
+		
+		assertEquals("io.konig.formula.LocalNameTerm", primary.getClass().getName());
+		
+		assertEquals("Male", actual);
+		
+		
+	}
+	
+	@Test
+	public void testCase() throws Exception {
+		String text = "CASE "
+				+ "WHEN $.code = 'alpha' THEN alpha "
+				+ "WHEN $.code = 'beta' THEN beta "
+				+ "ELSE gamma "
+				+ "END";
+
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		service.add(uri("http://example.com/code"));
+		service.add(uri("http://example.com/alpha"));
+		service.add(uri("http://example.com/beta"));
+		service.add(uri("http://example.com/gamma"));
+		
+		
+		FormulaParser parser = new FormulaParser(null, service);
+
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		String actual = e.toString();
+		assertTrue(actual.contains("CASE"));
+		assertTrue(actual.contains("WHEN $.code = \"alpha\" THEN alpha"));
+		assertTrue(actual.contains("WHEN $.code = \"beta\" THEN beta"));
+		assertTrue(actual.contains("ELSE gamma"));
+		assertTrue(actual.contains("END"));
+	}
+
+	@Test
+	public void testSubstr() throws Exception {
+		String text = "SUBSTR($.name, 3, 5)";
+		
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		FormulaParser parser = new FormulaParser(null, service);
+		service.add(Schema.name);
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		String actual = e.toSimpleString();
+		
+		assertEquals(text, actual);
+		
+	}
 	
 	
 	@Test
@@ -192,22 +256,6 @@ public class FormulaParserTest {
 	
 	
 	
-	@Test
-	public void testTimeInterval() throws Exception {
-
-		String text =  "\n"+
-			"@term endTime <http://schema.org/endTime>\n" + 
-			"@term Day <http://www.konig.io/ns/core/Day>\n" + 
-			"@term Week <http://www.konig.io/ns/core/Week>\n" + 
-			"@term Month <http://www.konig.io/ns/core/Month>\n\n" + 
-			"TIME_INTERVAL(?x.endTime, Day, Week, Month)";
-
-		Expression e = parser.quantifiedExpression(text);
-		String actual = e.toString();
-		String expected = text;
-		assertEquals(expected, actual);
-		
-	}
 	
 	@Test
 	public void testCountFormula() throws Exception {

@@ -39,6 +39,7 @@ import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.FullyQualifiedIri;
 import io.konig.formula.FunctionExpression;
+import io.konig.formula.FunctionModel;
 import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.LiteralFormula;
 import io.konig.formula.NumericExpression;
@@ -122,7 +123,7 @@ public class TimeIntervalRollupProcessor  implements TransformPostProcessor {
 						BareExpression intervalStartArg = intervalStartArg();
 
 						BareExpression timeUnitLiteral = BareExpression.wrap(new BuiltInName(timeUnit.getIri()));
-						function = new FunctionExpression("DATE_TRUNC", intervalStartArg, timeUnitLiteral);
+						function = new FunctionExpression(FunctionModel.DATE_TRUNC, intervalStartArg, timeUnitLiteral);
 						
 						QuantifiedExpression sourceFormula = QuantifiedExpression.wrap(function);
 						PropertyConstraint sourceProperty = new PropertyConstraint(Konig.intervalStart);

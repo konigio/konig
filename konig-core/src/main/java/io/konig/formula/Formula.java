@@ -27,5 +27,8 @@ public interface Formula {
 
 	void print(PrettyPrintWriter out);
 	void dispatch(FormulaVisitor visitor);
+	
+	PrimaryExpression asPrimaryExpression();
+	BinaryRelationalExpression asBinaryRelationalExpression();
 
 }
