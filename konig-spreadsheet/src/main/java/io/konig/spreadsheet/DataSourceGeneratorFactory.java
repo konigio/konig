@@ -45,14 +45,14 @@ public class DataSourceGeneratorFactory implements WorkbookListener {
 	@Override
 	public void beginWorkbook(Workbook workbook) {
 		generator = new DataSourceGenerator(nsManager, templateDir, settings.getProperties());
-		List<RegexRule> ruleList = settings.getRuleList();
-		for (RegexRule rule : ruleList) {
-			generator.addRegexRule(rule);
-		}
 	}
 
 	@Override
 	public void endWorkbook(Workbook workbook) {
+		List<RegexRule> ruleList = settings.getRuleList();
+		for (RegexRule rule : ruleList) {
+			generator.addRegexRule(rule);
+		}
 		generator = null;
 	}
 	

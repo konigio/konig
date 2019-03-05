@@ -106,3 +106,4 @@ BuiltInCall ::=
 	| 'AVG' '('  DISTINCT? Expression ')' 
 	| 'BOUND' '(' Variable | Path ')'
 	| 'UNIX_TIME' '(' Expression ')'
+	| 'CASE' ('WHEN' Expression 'THEN' Expression)+ ('ELSE' Expression) 'END'

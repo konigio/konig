@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PushbackReader;
 import java.io.Reader;
+import java.io.StringReader;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
@@ -45,6 +46,7 @@ import io.konig.core.util.IriTemplate;
 
 public class TurtleParser extends RDFParserBase {
 
+	private static final int PUSH_BACK_SIZE = 20;
 	
 	protected PushbackReader reader;
 	protected StringBuilder buffer = new StringBuilder();
@@ -1569,7 +1571,7 @@ public class TurtleParser extends RDFParserBase {
 	
 	protected void initParse(Reader reader, String baseURI) {
 		if (this.reader != reader) {
-			this.reader = new PushbackReader(reader, 20);
+			this.reader = new PushbackReader(reader, PUSH_BACK_SIZE);
 		}
 		this.baseURI = baseURI;
 	}
@@ -1615,6 +1617,9 @@ public class TurtleParser extends RDFParserBase {
 				} else {
 					columnNumber--;
 				}
+				if (reader == null) {
+					reader = new PushbackReader(new StringReader(""), PUSH_BACK_SIZE);
+				}
 				reader.unread(codePoint);
 			}
 		}
@@ -1652,6 +1657,14 @@ public class TurtleParser extends RDFParserBase {
 				}
 				return null;
 			}
+		}
+		int next = read();
+		unread(next);
+		if (next > 0 && Character.isAlphabetic(next)) {
+			for (int j=text.length(); j>=0; j--) {
+				unread(buffer.charAt(j));
+			}
+			return null;
 		}
 		return buffer.toString();
 	}

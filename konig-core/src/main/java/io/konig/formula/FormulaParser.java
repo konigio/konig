@@ -482,6 +482,7 @@ public class FormulaParser {
 			primary = 
 				(primary=tryBrackettedExpression()) != null ? primary :
 				(primary=tryBuiltInCall()) != null ? primary :
+				(primary=tryCase()) != null ? primary :
 				(primary=tryLiteralFormula()) != null ? primary :
 				(primary=tryPath()) != null ? primary :
 				null;
@@ -498,8 +499,6 @@ public class FormulaParser {
 			
 			return primary;
 		}
-		
-		
 
 		private IfFunction tryIfFunction() throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
@@ -542,7 +541,10 @@ public class FormulaParser {
 			
 			return call;
 		}
+
 		
+		
+
 
 
 		private SetFunctionExpression trySetFunction(FunctionModel model) throws IOException, RDFParseException, RDFHandlerException {
@@ -641,6 +643,63 @@ public class FormulaParser {
 			}
 			
 			return null;
+		}
+
+		private CaseStatement tryCase() throws IOException, RDFParseException, RDFHandlerException {
+			skipSpace();
+			String name = tryCaseInsensitiveWord("CASE");
+			if (name != null) {
+				
+				Expression caseCondition = null;
+				skipSpace();
+				String when = tryCaseInsensitiveWord("WHEN");
+				if (when == null) {
+					caseCondition = expression();
+				} else {
+					unread(when);
+				}
+				
+			
+				List<WhenThenClause> whenThenList = whenThenList();
+				Expression elseClause = null;
+				if (tryCaseInsensitiveWord("ELSE") != null) {
+					elseClause = expression();
+				}
+				
+				skipSpace();
+				assertIgnoreCase("END");
+				
+				return new CaseStatement(caseCondition, whenThenList, elseClause);
+			}
+			
+			return null;
+		}
+
+		private List<WhenThenClause> whenThenList() throws IOException, RDFParseException, RDFHandlerException {
+			
+			List<WhenThenClause> list = new ArrayList<>();
+			
+			for (;;) {
+			
+				skipSpace();
+				if (tryCaseInsensitiveWord("WHEN") != null) {
+					skipSpace();
+					Expression when = expression();
+					skipSpace();
+					assertIgnoreCase("THEN");
+					Expression then = expression();
+					list.add(new WhenThenClause(when, then));
+				} else {
+					break;
+				}
+			}
+			
+			if (list.isEmpty()) {
+				throw new RDFParseException("CASE statement is missing WHEN...THEN clause");
+			}
+			
+			return list;
+			
 		}
 
 		private List<Expression> argList() throws IOException, RDFParseException, RDFHandlerException {
@@ -877,11 +936,23 @@ public class FormulaParser {
 
 			
 			unread(c);
-			if ("IN".equals(predicate)) {
-				unread("IN");
+			if ("IN".equalsIgnoreCase(predicate)) {
+				unread(predicate);
 				predicate = null;
-			} else if ("NOT".equals(predicate)) {
-				unread("NOT");
+			} else if ("NOT".equalsIgnoreCase(predicate)) {
+				unread(predicate);
+				predicate = null;
+			} else if ("THEN".equalsIgnoreCase(predicate)) {
+				unread(predicate);
+				predicate = null;
+			} else if ("WHEN".equalsIgnoreCase(predicate)) {
+				unread(predicate);
+				predicate = null;
+			} else if ("ELSE".equalsIgnoreCase(predicate)) {
+				unread(predicate);
+				predicate = null;
+			} else if ("END".equalsIgnoreCase(predicate)) {
+				unread(predicate);
 				predicate = null;
 			}
 

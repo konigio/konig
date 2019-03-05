@@ -207,6 +207,21 @@ public class Expression extends AbstractFormula {
 		// Derived classes should override.
 	}
 	
+	public BinaryRelationalExpression asBinaryRelationalExpression() {
+		List<ConditionalAndExpression> orList = getOrList();
+		if (orList.size()==1) {
+			ConditionalAndExpression and = orList.get(0);
+			List<ValueLogical> andList = and.getAndList();
+			if (andList.size()==1) {
+				ValueLogical value = andList.get(0);
+				if (value instanceof BinaryRelationalExpression) {
+					return (BinaryRelationalExpression) value;
+				}
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * Get the PrimaryExpression wrapped by this Expression.
 	 * @return The PrimaryExpression wrapped by this Expression, or null if there is no single, unadorned 

@@ -46,4 +46,13 @@ public enum Direction implements Formula {
 		
 	}
 
+	public PrimaryExpression asPrimaryExpression() {
+		return null;
+	}
+	
+	
+	public BinaryRelationalExpression asBinaryRelationalExpression() {
+		return null;
+	}
+
 }

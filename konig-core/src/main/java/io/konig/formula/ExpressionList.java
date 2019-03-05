@@ -63,4 +63,14 @@ public class ExpressionList extends ArrayList<Expression> implements Formula {
 		visitor.exit(this);
 	}
 
+	public PrimaryExpression asPrimaryExpression() {
+		return null;
+	}
+	
+	
+	public BinaryRelationalExpression asBinaryRelationalExpression() {
+		return null;
+	}
+
+
 }

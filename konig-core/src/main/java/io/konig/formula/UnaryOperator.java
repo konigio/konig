@@ -48,5 +48,14 @@ public enum UnaryOperator implements Formula {
 		visitor.enter(this);
 		visitor.exit(this);
 	}
+
+	public PrimaryExpression asPrimaryExpression() {
+		return null;
+	}
 	
+	
+	public BinaryRelationalExpression asBinaryRelationalExpression() {
+		return null;
+	}
+
 }

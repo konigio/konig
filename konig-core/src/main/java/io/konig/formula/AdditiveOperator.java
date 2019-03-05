@@ -48,5 +48,14 @@ public enum AdditiveOperator implements Formula, PrettyPrintable {
 		
 	}
 	
+
+	public PrimaryExpression asPrimaryExpression() {
+		return null;
+	}
 	
+	
+	public BinaryRelationalExpression asBinaryRelationalExpression() {
+		return null;
+	}
+
 }

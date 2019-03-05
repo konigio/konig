@@ -46,6 +46,15 @@ public enum MultiplicativeOperator implements Formula {
 		visitor.exit(this);
 	}
 	
+
+	public PrimaryExpression asPrimaryExpression() {
+		return null;
+	}
 	
+	
+	public BinaryRelationalExpression asBinaryRelationalExpression() {
+		return null;
+	}
+
 
 }

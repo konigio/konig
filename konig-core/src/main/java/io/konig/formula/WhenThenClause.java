@@ -4,7 +4,7 @@ package io.konig.formula;
  * #%L
  * Konig Core
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,43 +23,41 @@ package io.konig.formula;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public enum ContainmentOperator implements Formula {
-
-	IN("IN"),
-	NOT_IN("NOT IN") ;
+public class WhenThenClause extends AbstractFormula {
 	
-	private String text;
+	private Expression when;
+	private Expression then;
 
-	private ContainmentOperator(String text) {
-		this.text = text;
+	public WhenThenClause(Expression when, Expression then) {
+		this.when = when;
+		this.then = then;
 	}
 
-	public String getText() {
-		return text;
+	public Expression getWhen() {
+		return when;
+	}
+
+	public Expression getThen() {
+		return then;
 	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {
-		out.print(' ');
-		out.print(text);
-		out.print(' ');
+		out.println();
+		out.indent();
+		out.print("WHEN ");
+		when.print(out);
+		out.print(" THEN ");
+		then.print(out);
 	}
 
 	@Override
 	public void dispatch(FormulaVisitor visitor) {
 		visitor.enter(this);
+		when.dispatch(visitor);
+		then.dispatch(visitor);
 		visitor.exit(this);
-	}
-	
 
-	public PrimaryExpression asPrimaryExpression() {
-		return null;
-	}
-	
-	
-	public BinaryRelationalExpression asBinaryRelationalExpression() {
-		return null;
 	}
 
-	
 }

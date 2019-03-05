@@ -84,6 +84,13 @@ public class ShowlSqlTransformTest {
 		return transform.createInsert(node, GoogleBigQueryTable.class);
 	}
 
+	@Test
+	public void testCaseStatement() throws Exception {
+		
+		test(
+			"src/test/resources/ShowlSqlTransformTest/case-statement", 
+			"http://example.com/ns/shape/PersonTargetShape");
+	}
 	
 	@Test
 	public void testSubstrStrpos() throws Exception {
@@ -93,7 +100,7 @@ public class ShowlSqlTransformTest {
 			"http://example.com/ns/shape/PersonTargetShape");
 	}
 	
-	@Ignore
+	@Test
 	public void testSubstrFunction() throws Exception {
 		
 		test(
@@ -101,7 +108,7 @@ public class ShowlSqlTransformTest {
 			"http://example.com/ns/shape/PersonTargetShape");
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinNameAndAddress() throws Exception {
 		
 		test(
@@ -109,7 +116,7 @@ public class ShowlSqlTransformTest {
 			"http://example.com/ns/shape/PersonTargetShape");
 	}
 	
-	@Ignore
+	@Test
 	public void testInverseProperty() throws Exception {
 		
 		test(
@@ -117,7 +124,7 @@ public class ShowlSqlTransformTest {
 			"http://example.com/ns/shape/BookTargetShape");
 	}
 
-	@Ignore
+	@Test
 	public void testNestedSourcePerson() throws Exception {
 		
 		test(
@@ -126,7 +133,7 @@ public class ShowlSqlTransformTest {
 			"person.sql");
 	}
 
-	@Ignore
+	@Test
 	public void testNestedSourceBook() throws Exception {
 		
 		test(
@@ -136,7 +143,7 @@ public class ShowlSqlTransformTest {
 	}
 
 
-	@Ignore
+	@Test
 	public void testCastConcat() throws Exception {
 		
 		test(
@@ -154,14 +161,14 @@ public class ShowlSqlTransformTest {
 		showlManager = new ShowlManager(shapeManager, reasoner, selector, null);
 		
 		InsertStatement insert = insert(dataDir, targetShapeId);
-		System.out.println(insert);
+//		System.out.println(insert);
 		
 		assertFileEquals(
 			dataDir + "/" + expectedDml,
 			insert.toString());
 	}
 
-	@Ignore
+	@Test
 	public void testConcat() throws Exception {
 		
 		ShowlSourceNodeSelector selector = new ExplicitDerivedFromSelector();
@@ -178,7 +185,7 @@ public class ShowlSqlTransformTest {
 	
 
 	
-	@Ignore
+	@Test
 	public void testFlatToNested() throws Exception {
 		
 		ShowlSourceNodeSelector selector = new ExplicitDerivedFromSelector();
@@ -201,7 +208,7 @@ public class ShowlSqlTransformTest {
 	}
 
 
-	@Ignore
+	@Test
 	public void testTabular() throws Exception {
 		
 		InsertStatement insert = insert(

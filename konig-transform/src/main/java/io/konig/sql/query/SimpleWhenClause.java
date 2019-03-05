@@ -31,6 +31,12 @@ public class SimpleWhenClause extends AbstractExpression {
 	
 
 	public SimpleWhenClause(ValueExpression whenOperand, Result result) {
+		if (whenOperand == null) {
+			throw new IllegalArgumentException("whenOperand must not be null");
+		}
+		if (result == null) {
+			throw new IllegalArgumentException("result must not be null");
+		}
 		this.whenOperand = whenOperand;
 		this.result = result;
 	}
