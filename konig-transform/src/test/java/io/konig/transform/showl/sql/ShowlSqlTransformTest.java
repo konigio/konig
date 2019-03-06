@@ -85,6 +85,14 @@ public class ShowlSqlTransformTest {
 	}
 
 	@Test
+	public void testMonthFunction() throws Exception {
+		
+		test(
+			"src/test/resources/ShowlSqlTransformTest/month-function", 
+			"http://example.com/ns/shape/PersonTargetShape");
+	}
+	
+	@Test
 	public void testCaseStatement() throws Exception {
 		
 		test(

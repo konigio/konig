@@ -530,11 +530,13 @@ public class FormulaParser {
 			(call=trySetFunction(FunctionModel.SUM)) != null ? call :
 			(call=trySetFunction(FunctionModel.AVG)) != null ? call :
 			(call=trySetFunction(FunctionModel.COUNT)) != null ? call :
-			(call=tryGenericFunction(FunctionModel.UNIX_TIME)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.DAY)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.MONTH)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.YEAR)) != null ? call :
 			(call=tryGenericFunction(FunctionModel.CONCAT)) != null ? call :
 			(call=tryGenericFunction(FunctionModel.SUBSTR)) != null ? call :
 			(call=tryGenericFunction(FunctionModel.STRPOS)) != null ? call :
-			(call=tryDateTrunc()) != null ? call :
+			(call=tryGenericFunction(FunctionModel.UNIX_TIME)) != null ? call :
 			(call=tryBoundFunction()) != null ? call :
 				
 			null;
@@ -594,36 +596,7 @@ public class FormulaParser {
 			return null;
 		}
 
-		private BuiltInCall tryDateTrunc() throws IOException, RDFHandlerException, RDFParseException {
-			skipSpace();
-			String name = tryCaseInsensitiveWord(FunctionExpression.DATE_TRUNC);
-			if (name != null) {
-				int c = next();
-				if (c != '(') {
-					unread(c);
-					unread(name);
-				} else {
-					String unitName = nextWord(" \r\n\t,");
-					TimeUnit timeUnit = TimeUnit.forName(unitName);
-					if (timeUnit == null) {
-						throw new RDFHandlerException("Invalid time unit: " + unitName);
-					}
-					assertNext(',');
-					Expression e = expr();
-					
-					List<Expression> argList = new ArrayList<>();
-					argList.add(timeUnit);
-					argList.add(e);
-					
-					
-					
-					return new FunctionExpression(FunctionModel.DATE_TRUNC, argList);
-					
-					
-				}
-			}
-			return null;
-		}
+		
 		private BuiltInCall tryGenericFunction(FunctionModel model) throws IOException, RDFParseException, RDFHandlerException {
 			skipSpace();
 			String functionName = model.getName();

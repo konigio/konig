@@ -29,7 +29,9 @@ public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 	public static final String SUM = "SUM";
 	public static final String AVG = "AVG";
 	public static final String COUNT = "COUNT";
-	public static final String DATE_TRUNC = "DATE_TRUNC";
+	public static final String DAY = "DAY";
+	public static final String MONTH = "MONTH";
+	public static final String YEAR = "YEAR";
 	public static final String TIME_INTERVAL = "TIME_INTERVAL";
 	public static final String UNIX_TIME = "UNIX_TIME";
 	public static final String CONCAT = "CONCAT";

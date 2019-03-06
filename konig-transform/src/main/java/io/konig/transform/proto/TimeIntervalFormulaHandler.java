@@ -68,74 +68,75 @@ public class TimeIntervalFormulaHandler implements FormulaHandler {
 
 	@Override
 	public boolean handleFormula(PropertyGroupHandler groupHandler, PropertyModel targetProperty) throws ShapeTransformException {
+		throw new ShapeTransformException("This method is no longer supported");
 		
-		URI predicate = targetProperty.getPredicate();
-		if (predicate.equals(Konig.timeInterval) && targetProperty instanceof DirectPropertyModel) {
-			
-			DirectPropertyModel direct = (DirectPropertyModel) targetProperty;
-			PropertyConstraint pc = direct.getPropertyConstraint();
-			QuantifiedExpression formula = pc.getFormula();
-			if (formula != null) {
-				PrimaryExpression primary = formula.asPrimaryExpression();
-				if (primary instanceof FunctionExpression) {
-					FunctionExpression function = (FunctionExpression) primary;
-					if (function.getFunctionName().equals(TIME_INTERVAL)) {
-						List<Expression> argList = function.getArgList();
-						List<KonigTime> durationUnitList = durationUnitList(argList);
-						
-						Collections.sort(durationUnitList);
-						
-						KonigTime minTime = durationUnitList.get(0);
-						
-						Expression intervalStartExpression = argList.get(0);
-						
-						FunctionExpression intervalStartValue = new FunctionExpression(FunctionModel.DATE_TRUNC, intervalStartExpression, asExpression(minTime));
-						
-						ShapeModel timeIntervalModel = targetProperty.getValueModel();
-						if (timeIntervalModel == null) {
-							throw new ShapeTransformException("ShapeModel is not defined for timeInterval");
-						}
-						
-						
-						
-						PropertyModel intervalStart = timeIntervalModel.getPropertyByPredicate(Konig.intervalStart);
-						if (intervalStart == null) {
-							throw new ShapeTransformException("intervalStart property is not defined");
-						}
-						PropertyGroup group = intervalStart.getGroup();
-						FormulaPropertyModel value = new FormulaPropertyModel(Konig.intervalStart, group, intervalStartValue);
-						group.setSourceProperty(value);
-						groupHandler.declareMatch(group);
-						value.setDeclaringShape(timeIntervalModel);
-
-						ShapeModel root = timeIntervalModel.rootTargetShapeModel();
-						root.addGroupBy(value);
-						
-						
-						PropertyModel durationUnit = timeIntervalModel.getPropertyByPredicate(Konig.durationUnit);
-						if (durationUnit == null) {
-							throw new ShapeTransformException("durationUnit property is not defined");
-						}
-						group = durationUnit.getGroup();
-						FixedPropertyModel fixed = new FixedPropertyModel(Konig.durationUnit, group, minTime.getIri());
-						group.setSourceProperty(fixed);
-						groupHandler.declareMatch(group);
-						
-						if (logger.isDebugEnabled()) {
-							logger.debug("handled {}", targetProperty.simplePath());
-						}
-						
-						if (durationUnitList.size()>1) {
-							DataChannel channel = dataChannelFactory.createDataChannel(root.getShape());
-							root.addPostProcessor(new TimeIntervalRollupProcessor(channel, durationUnitList));
-						}
-						
-						return true;
-					}
-				}
-			}
-		}
-		return false;
+//		URI predicate = targetProperty.getPredicate();
+//		if (predicate.equals(Konig.timeInterval) && targetProperty instanceof DirectPropertyModel) {
+//			
+//			DirectPropertyModel direct = (DirectPropertyModel) targetProperty;
+//			PropertyConstraint pc = direct.getPropertyConstraint();
+//			QuantifiedExpression formula = pc.getFormula();
+//			if (formula != null) {
+//				PrimaryExpression primary = formula.asPrimaryExpression();
+//				if (primary instanceof FunctionExpression) {
+//					FunctionExpression function = (FunctionExpression) primary;
+//					if (function.getFunctionName().equals(TIME_INTERVAL)) {
+//						List<Expression> argList = function.getArgList();
+//						List<KonigTime> durationUnitList = durationUnitList(argList);
+//						
+//						Collections.sort(durationUnitList);
+//						
+//						KonigTime minTime = durationUnitList.get(0);
+//						
+//						Expression intervalStartExpression = argList.get(0);
+//						
+//						FunctionExpression intervalStartValue = new FunctionExpression("DATE_TRUNC", intervalStartExpression, asExpression(minTime));
+//						
+//						ShapeModel timeIntervalModel = targetProperty.getValueModel();
+//						if (timeIntervalModel == null) {
+//							throw new ShapeTransformException("ShapeModel is not defined for timeInterval");
+//						}
+//						
+//						
+//						
+//						PropertyModel intervalStart = timeIntervalModel.getPropertyByPredicate(Konig.intervalStart);
+//						if (intervalStart == null) {
+//							throw new ShapeTransformException("intervalStart property is not defined");
+//						}
+//						PropertyGroup group = intervalStart.getGroup();
+//						FormulaPropertyModel value = new FormulaPropertyModel(Konig.intervalStart, group, intervalStartValue);
+//						group.setSourceProperty(value);
+//						groupHandler.declareMatch(group);
+//						value.setDeclaringShape(timeIntervalModel);
+//
+//						ShapeModel root = timeIntervalModel.rootTargetShapeModel();
+//						root.addGroupBy(value);
+//						
+//						
+//						PropertyModel durationUnit = timeIntervalModel.getPropertyByPredicate(Konig.durationUnit);
+//						if (durationUnit == null) {
+//							throw new ShapeTransformException("durationUnit property is not defined");
+//						}
+//						group = durationUnit.getGroup();
+//						FixedPropertyModel fixed = new FixedPropertyModel(Konig.durationUnit, group, minTime.getIri());
+//						group.setSourceProperty(fixed);
+//						groupHandler.declareMatch(group);
+//						
+//						if (logger.isDebugEnabled()) {
+//							logger.debug("handled {}", targetProperty.simplePath());
+//						}
+//						
+//						if (durationUnitList.size()>1) {
+//							DataChannel channel = dataChannelFactory.createDataChannel(root.getShape());
+//							root.addPostProcessor(new TimeIntervalRollupProcessor(channel, durationUnitList));
+//						}
+//						
+//						return true;
+//					}
+//				}
+//			}
+//		}
+//		return false;
 	}
 
 
