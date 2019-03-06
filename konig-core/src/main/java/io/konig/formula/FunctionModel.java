@@ -47,11 +47,18 @@ public class FunctionModel {
 	public static final FunctionModel UNIX_TIME = 
 		new FunctionModel(FunctionExpression.UNIX_TIME, KqlType.INTEGER)
 		.param("temporalValue", KqlType.INSTANT);
-
-	public static final FunctionModel DATE_TRUNC = 
-		new FunctionModel(FunctionExpression.DATE_TRUNC, KqlType.INSTANT)
-		.param("temporalUnit", KqlType.STRING)
-		.param("temporalValue", KqlType.INSTANT);
+	
+	public static final FunctionModel DAY = 
+			new DateTruncFunctionModel(FunctionExpression.DAY, KqlType.INSTANT)
+			.param("timestamp", KqlType.INSTANT);
+	
+	public static final FunctionModel MONTH = 
+			new DateTruncFunctionModel(FunctionExpression.MONTH, KqlType.INSTANT)
+			.param("timestamp", KqlType.INSTANT);
+	
+	public static final FunctionModel YEAR = 
+			new DateTruncFunctionModel(FunctionExpression.YEAR, KqlType.INSTANT)
+			.param("timestamp", KqlType.INSTANT);
 
 	public static final FunctionModel STRPOS = 
 		new FunctionModel(FunctionExpression.STRPOS, KqlType.INTEGER)
@@ -66,12 +73,16 @@ public class FunctionModel {
 		.param("length", KqlType.INTEGER);
 	
 	private static FunctionModel[] LIST = new FunctionModel[]{
-		CONCAT,
-		SUM,
 		AVG,
+		CONCAT,
 		COUNT,
+		DAY,
+		MONTH,
+		STRPOS,
+		SUBSTR,
+		SUM,
 		UNIX_TIME,
-		DATE_TRUNC
+		YEAR
 	};
 	
 	public static FunctionModel fromName(String name) {

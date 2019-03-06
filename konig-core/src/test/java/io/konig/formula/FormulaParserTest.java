@@ -36,6 +36,23 @@ public class FormulaParserTest {
 
 	private FormulaParser parser = new FormulaParser();
 	
+	@Test
+	public void testMonth() throws Exception {
+		String text = "MONTH($.dateCreated)";
+
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		service.add(Schema.dateCreated);
+		
+
+		FormulaParser parser = new FormulaParser(null, service);
+
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		String actual = e.toSimpleString();
+		
+		assertEquals(text, actual);
+		
+		
+	}
 	
 	@Test
 	public void testNamedIndividual() throws Exception {
@@ -102,7 +119,7 @@ public class FormulaParserTest {
 	
 	@Test
 	public void testVarId() throws Exception {
-		String text = "DATE_TRUNC(Day, ?product.dateCreated)";
+		String text = "DAY(?product.dateCreated)";
 		
 		URI productId = uri("http://example.com/ns/product");
 		SimpleLocalNameService service = new SimpleLocalNameService();
@@ -213,7 +230,7 @@ public class FormulaParserTest {
 	public void testUnixTime() throws Exception {
 		String text = 
 			"@term dateCreated <http://schema.org/dateCreated>\n" +
-			"UNIX_TIME(.dateCreated)";
+			"UNIX_TIME($.dateCreated)";
 		
 		QuantifiedExpression e = parser.quantifiedExpression(text);
 		

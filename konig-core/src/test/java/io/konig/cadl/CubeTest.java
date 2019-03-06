@@ -53,7 +53,7 @@ public class CubeTest {
 	
 		Level month = Level.builder()
 			.id(monthLevel)
-			.formula("DATE_TRUNC(MONTH, ?product.dateCreated)", productVar, Schema.dateCreated)
+			.formula("MONTH(?product.dateCreated)", productVar, Schema.dateCreated)
 			.build();
 		Cube cube = Cube.builder()
 			.id(cubeId)
@@ -65,7 +65,7 @@ public class CubeTest {
 				.id(timeDim)
 				.level(Level.builder()
 					.id(dayLevel)
-					.formula("DATE_TRUNC(DAY, ?product.dateCreated)", productVar, Schema.dateCreated)
+					.formula("DAY(?product.dateCreated)", productVar, Schema.dateCreated)
 					.rollUpTo(month)
 					.build())
 				.level(month)
@@ -83,7 +83,7 @@ public class CubeTest {
 		
 		emitter.emit(cube, graph);
 		
-		RdfUtil.prettyPrintTurtle(cubeId.stringValue() + "/", graph, new OutputStreamWriter(System.out));
+//		RdfUtil.prettyPrintTurtle(cubeId.stringValue() + "/", graph, new OutputStreamWriter(System.out));
 		
 		CubeLoader loader = new CubeLoader();
 		CubeManager manager = new CubeManager();

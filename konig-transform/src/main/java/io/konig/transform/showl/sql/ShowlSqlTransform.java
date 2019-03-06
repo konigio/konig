@@ -58,6 +58,7 @@ import io.konig.formula.BinaryOperator;
 import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.BuiltInName;
 import io.konig.formula.CaseStatement;
+import io.konig.formula.DateTruncFunctionModel;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.Expression;
@@ -79,6 +80,7 @@ import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.UnaryExpression;
 import io.konig.formula.VariableTerm;
 import io.konig.formula.WhenThenClause;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.sql.query.AdditiveValueExpression;
@@ -101,6 +103,7 @@ import io.konig.sql.query.SelectExpression;
 import io.konig.sql.query.SignedNumericLiteral;
 import io.konig.sql.query.SimpleCase;
 import io.konig.sql.query.SimpleWhenClause;
+import io.konig.sql.query.SqlDialect;
 import io.konig.sql.query.SqlFunctionExpression;
 import io.konig.sql.query.StringLiteralExpression;
 import io.konig.sql.query.StructExpression;
@@ -111,6 +114,12 @@ import io.konig.sql.query.ValueExpression;
 
 public class ShowlSqlTransform {
 	private static final Logger logger = LoggerFactory.getLogger(ShowlSqlTransform.class);
+
+
+	private static final FunctionModel DATE_TRUNC = 
+		new FunctionModel("DATE_TRUNC", KqlType.INSTANT)
+		.param("temporalUnit", KqlType.STRING)
+		.param("temporalValue", KqlType.INSTANT);
 
 	public ShowlSqlTransform() {
 	}
@@ -127,9 +136,11 @@ public class ShowlSqlTransform {
 	
 		private NodeNamer nodeNamer = new NodeNamer();
 		private Class<? extends TableDataSource> datasourceType;
+		private SqlDialect dialect;
 		
 		public InsertStatement createInsert(ShowlNodeShape targetNode, Class<? extends TableDataSource> datasourceType) throws ShowlSqlTransformException  {
 			this.datasourceType = datasourceType;
+			setDialect();
 			
 			TableNameExpression tableName = tableName(targetNode);
 			List<ColumnExpression> columns = insertColumns(targetNode);
@@ -137,6 +148,15 @@ public class ShowlSqlTransform {
 			InsertStatement insert = new InsertStatement(tableName, columns, selectQuery);
 			
 			return insert;
+		}
+
+		private void setDialect() {
+			if (GoogleBigQueryTable.class.isAssignableFrom(datasourceType)) {
+				dialect = SqlDialect.BIGQUERY;
+			} else {
+				dialect = SqlDialect.MYSQL;
+			}
+			
 		}
 
 		private SelectExpression selectInto(ShowlNodeShape targetNode) throws ShowlSqlTransformException {
@@ -436,11 +456,45 @@ public class ShowlSqlTransform {
 		}
 
 		private ValueExpression function(ShowlPropertyShape p, FunctionExpression function) throws ShowlSqlTransformException {
-			String functionName = function.getFunctionName();
-			List<QueryExpression> argList = argList(p, function.getArgList(), function.getModel());
-			SqlFunctionExpression sql = new SqlFunctionExpression(functionName, argList);
+			
+			SqlFunctionExpression sql = dateTrunc(p, function);
+			if (sql == null) {
+				String functionName = function.getFunctionName();
+				
+				List<QueryExpression> argList = argList(p, function.getArgList(), function.getModel());
+				sql = new SqlFunctionExpression(functionName, argList);
+			}
 			
 			return sql;
+		}
+
+		
+
+		
+
+		private SqlFunctionExpression dateTrunc(ShowlPropertyShape p, FunctionExpression function) throws ShowlSqlTransformException {
+			if (function.getModel() instanceof DateTruncFunctionModel) {
+				String timeUnit = function.getFunctionName();
+				if (function.getArgList().size() != 1) {
+					fail(p, "Expected 1 argument for {0} function but found {1}", 
+							function.getFunctionName(), function.toString());
+				}
+				ValueExpression value = valueExpression(p, function.getArgList().get(0));
+				List<QueryExpression> argList = new ArrayList<>();
+				switch (dialect) {
+				case BIGQUERY :
+					argList.add(value);
+					argList.add(new DateTimeUnitExpression(timeUnit));
+					break;
+					
+				default:
+					argList.add(new StringLiteralExpression(timeUnit));
+					argList.add(value);
+				}
+				return new SqlFunctionExpression("DATE_TRUNC", argList);
+			}
+			
+			return null;
 		}
 
 		private List<QueryExpression> argList(ShowlPropertyShape p,  List<Expression> argList, FunctionModel model) throws ShowlSqlTransformException {

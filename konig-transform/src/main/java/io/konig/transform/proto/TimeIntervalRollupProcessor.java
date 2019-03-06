@@ -78,95 +78,96 @@ public class TimeIntervalRollupProcessor  implements TransformPostProcessor {
 
 	@Override
 	public void process(ShapeRule shapeRule) throws ShapeTransformException {
-		ShapeModel shapeModel = shapeRule.getTargetShapeModel();
-		
-		FunctionExpression function = null;
-		
-		ShapeRule priorRule = shapeRule;
-		for (int i = 1; i < timeUnits.size(); i++) {
-			KonigTime timeUnit = timeUnits.get(i);
-
-			ShapeRule nextRule = new ShapeRule(shapeModel);
-			priorRule.setRollUp(nextRule);
-			priorRule = nextRule;
-			
-			for (PropertyModel p : shapeModel.getProperties()) {
-				
-				URI predicate = p.getPredicate();
-				if (logger.isDebugEnabled()) {
-					logger.debug("process property: " + predicate.getLocalName());
-				}
-				PropertyRule q = null;
-				
-				if (Konig.timeInterval.equals(predicate)) {
-					ContainerPropertyRule container = new ContainerPropertyRule(predicate);
-					container.setContainer(nextRule);
-					ShapeRule nested = new ShapeRule(p.getValueModel());
-					container.setNestedRule(nested);
-					
-					q = container;
-					
-					
-					PropertyRule timeInterval = shapeRule.getProperty(Konig.timeInterval);
-					if (timeInterval == null) {
-						throw new ShapeTransformException("timeInterval property not found in shape: " + shapeRule.getTargetShape().getId());
-					}
-					PropertyRule intervalStart = timeInterval.getNestedRule().getProperty(Konig.intervalStart);
-					if (intervalStart == null) {
-						throw new ShapeTransformException("intervalStart property not found in shape: " + shapeRule.getTargetShape().getId());
-					}
-					
-					if (intervalStart instanceof FormulaPropertyRule) {
-						FormulaPropertyRule formulaRule = (FormulaPropertyRule) intervalStart;
-						PropertyConstraint targetProperty = formulaRule.getTargetProperty();
-						
-						BareExpression intervalStartArg = intervalStartArg();
-
-						BareExpression timeUnitLiteral = BareExpression.wrap(new BuiltInName(timeUnit.getIri()));
-						function = new FunctionExpression(FunctionModel.DATE_TRUNC, intervalStartArg, timeUnitLiteral);
-						
-						QuantifiedExpression sourceFormula = QuantifiedExpression.wrap(function);
-						PropertyConstraint sourceProperty = new PropertyConstraint(Konig.intervalStart);
-						sourceProperty.setMaxCount(1);
-						sourceProperty.setMinCount(1);
-						sourceProperty.setFormula(sourceFormula);
-						
-						FormulaPropertyRule newFormulaRule = new FormulaPropertyRule(targetChannel, targetProperty, sourceProperty);
-											
-						ContainerPropertyRule containerRule = new ContainerPropertyRule(Konig.timeInterval);
-						ShapeRule timeIntervalRule = new ShapeRule(p.getValueModel());
-						containerRule.setNestedRule(timeIntervalRule);
-
-						Literal literal = new LiteralImpl(timeUnit.getIri().getLocalName());
-						
-						timeIntervalRule.addPropertyRule(new FixedValuePropertyRule(null, Konig.durationUnit, literal));
-						timeIntervalRule.addPropertyRule(newFormulaRule);
-						
-						q = new AnyValuePropertyRule(containerRule);
-					} else {
-						throw new ShapeTransformException("Expected intervalStart to be of type FormulaPropertyRule in Shape: " + shapeRule.getTargetShape().getId());
-					}
-					
-				
-					
-				} else {
-					q = propertyRule(nextRule, shapeRule, p);
-					if (q == null) {
-						continue;
-					}
-				}
-				
-				nextRule.addPropertyRule(q);
-			}
-
-
-			nextRule.setFromItem(targetChannel);
-			targetChannel.setVariableName(VARIABLE_NAME);
-			ShapeRule root = nextRule.getRoot();
-			addGroupingElement(root, function);
-			addWhereExpression(root, timeUnits.get(i-1));
-
-		}
+		throw new ShapeTransformException("This method is no longer supported");
+//		ShapeModel shapeModel = shapeRule.getTargetShapeModel();
+//		
+//		FunctionExpression function = null;
+//		
+//		ShapeRule priorRule = shapeRule;
+//		for (int i = 1; i < timeUnits.size(); i++) {
+//			KonigTime timeUnit = timeUnits.get(i);
+//
+//			ShapeRule nextRule = new ShapeRule(shapeModel);
+//			priorRule.setRollUp(nextRule);
+//			priorRule = nextRule;
+//			
+//			for (PropertyModel p : shapeModel.getProperties()) {
+//				
+//				URI predicate = p.getPredicate();
+//				if (logger.isDebugEnabled()) {
+//					logger.debug("process property: " + predicate.getLocalName());
+//				}
+//				PropertyRule q = null;
+//				
+//				if (Konig.timeInterval.equals(predicate)) {
+//					ContainerPropertyRule container = new ContainerPropertyRule(predicate);
+//					container.setContainer(nextRule);
+//					ShapeRule nested = new ShapeRule(p.getValueModel());
+//					container.setNestedRule(nested);
+//					
+//					q = container;
+//					
+//					
+//					PropertyRule timeInterval = shapeRule.getProperty(Konig.timeInterval);
+//					if (timeInterval == null) {
+//						throw new ShapeTransformException("timeInterval property not found in shape: " + shapeRule.getTargetShape().getId());
+//					}
+//					PropertyRule intervalStart = timeInterval.getNestedRule().getProperty(Konig.intervalStart);
+//					if (intervalStart == null) {
+//						throw new ShapeTransformException("intervalStart property not found in shape: " + shapeRule.getTargetShape().getId());
+//					}
+//					
+//					if (intervalStart instanceof FormulaPropertyRule) {
+//						FormulaPropertyRule formulaRule = (FormulaPropertyRule) intervalStart;
+//						PropertyConstraint targetProperty = formulaRule.getTargetProperty();
+//						
+//						BareExpression intervalStartArg = intervalStartArg();
+//
+//						BareExpression timeUnitLiteral = BareExpression.wrap(new BuiltInName(timeUnit.getIri()));
+//						function = new FunctionExpression(FunctionModel.DATE_TRUNC, intervalStartArg, timeUnitLiteral);
+//						
+//						QuantifiedExpression sourceFormula = QuantifiedExpression.wrap(function);
+//						PropertyConstraint sourceProperty = new PropertyConstraint(Konig.intervalStart);
+//						sourceProperty.setMaxCount(1);
+//						sourceProperty.setMinCount(1);
+//						sourceProperty.setFormula(sourceFormula);
+//						
+//						FormulaPropertyRule newFormulaRule = new FormulaPropertyRule(targetChannel, targetProperty, sourceProperty);
+//											
+//						ContainerPropertyRule containerRule = new ContainerPropertyRule(Konig.timeInterval);
+//						ShapeRule timeIntervalRule = new ShapeRule(p.getValueModel());
+//						containerRule.setNestedRule(timeIntervalRule);
+//
+//						Literal literal = new LiteralImpl(timeUnit.getIri().getLocalName());
+//						
+//						timeIntervalRule.addPropertyRule(new FixedValuePropertyRule(null, Konig.durationUnit, literal));
+//						timeIntervalRule.addPropertyRule(newFormulaRule);
+//						
+//						q = new AnyValuePropertyRule(containerRule);
+//					} else {
+//						throw new ShapeTransformException("Expected intervalStart to be of type FormulaPropertyRule in Shape: " + shapeRule.getTargetShape().getId());
+//					}
+//					
+//				
+//					
+//				} else {
+//					q = propertyRule(nextRule, shapeRule, p);
+//					if (q == null) {
+//						continue;
+//					}
+//				}
+//				
+//				nextRule.addPropertyRule(q);
+//			}
+//
+//
+//			nextRule.setFromItem(targetChannel);
+//			targetChannel.setVariableName(VARIABLE_NAME);
+//			ShapeRule root = nextRule.getRoot();
+//			addGroupingElement(root, function);
+//			addWhereExpression(root, timeUnits.get(i-1));
+//
+//		}
 	
 	}
 

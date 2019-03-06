@@ -35,7 +35,7 @@ public class MySqlTransformGeneratorTest extends AbstractShapeModelToShapeRuleTe
 	File outDir = new File("target/test/mysql-transform");
 	OldMySqlTransformGenerator generator = new OldMySqlTransformGenerator(shapeManager, outDir, owlReasoner);
 	
-	@Test
+	@Ignore
 	public void testLoad() throws Throwable {
 		FileUtils.deleteDirectory(outDir);
 		load("src/test/resources/konig-transform/mysql-transform");
