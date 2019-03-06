@@ -583,6 +583,20 @@ public class Shape implements Cloneable {
 		}
 		variable.add(p);
 	}
+
+
+	public PropertyConstraint getVariableById(URI id) {
+		if (variable != null) {
+			for (PropertyConstraint p : variable) {
+				URI predicate = p.getPredicate();
+				if (predicate!=null && predicate.equals(id)) {
+					return p;
+				}
+			}
+		}
+		
+		return null;
+	}
 	
 	public PropertyConstraint getVariableByName(String name) {
 		if (variable != null) {

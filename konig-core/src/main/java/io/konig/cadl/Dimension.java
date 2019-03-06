@@ -1,5 +1,7 @@
 package io.konig.cadl;
 
+import java.io.IOException;
+
 /*
  * #%L
  * Konig Core
@@ -25,19 +27,31 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.openrdf.rio.RDFParseException;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.CADL;
+import io.konig.formula.FormulaParser;
+import io.konig.formula.QuantifiedExpression;
 
 public class Dimension extends CadlEntity {
 	
 	public Set<Level> level = new LinkedHashSet<>();
+	private QuantifiedExpression formula;
 
 	@Override
 	public URI getType() {
 		return CADL.Dimension;
 	}
 	
+	public QuantifiedExpression getFormula() {
+		return formula;
+	}
+
+	public void setFormula(QuantifiedExpression formula) {
+		this.formula = formula;
+	}
+
 	public void addLevel(Level level) {
 		this.level.add(level);
 	}
@@ -56,6 +70,12 @@ public class Dimension extends CadlEntity {
 		private Dimension dimension;
 		private Builder() {
 			dimension = new Dimension();
+		}
+		
+		public Builder formula(String text, URI...term) throws RDFParseException, IOException {
+			FormulaParser parser = new FormulaParser();
+			dimension.setFormula(parser.quantifiedExpression(text, term));
+			return this;
 		}
 		
 		public Builder id(URI id) {
