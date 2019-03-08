@@ -1,0 +1,23 @@
+@prefix crm: <http://example.com/ns/crm/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+crm: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "crm" . 
+
+crm:Opportunity a owl:Class . 
+
+crm:accountType a rdf:Property ; 
+	rdfs:range crm:AccountType . 
+
+crm:customerAccount a rdf:Property ; 
+	rdfs:range crm:Account . 
+
+crm:industry a rdf:Property ; 
+	rdfs:range crm:Industry . 
+
+crm:salePrice a rdf:Property ; 
+	rdfs:range xsd:float . 

@@ -26,6 +26,12 @@ import org.openrdf.model.impl.URIImpl;
 
 public class GCP {
 	
+	public static final class Term {
+		public static final String projectId = "http://www.konig.io/ns/gcp/projectId";
+		public static final String datasetId = "http://www.konig.io/ns/gcp/datasetId";
+		public static final String tableId = "http://www.konig.io/ns/gcp/tableId";
+	}
+	
 	public static final String NAMESPACE = "http://www.konig.io/ns/gcp/";
 	public static final String TABLE_REFERENCE = "http://www.konig.io/ns/gcp/tableReference";
 	public static final String STORAGE_CLASS = "http://www.konig.io/ns/gcp/storageClass";
@@ -37,9 +43,9 @@ public class GCP {
 	public static final String NOTIFICATION_EVENT_TYPES = "http://www.konig.io/ns/gcp/eventTypes";
 	
 	public static final URI tableReference = new URIImpl(TABLE_REFERENCE);
-	public static final URI projectId = new URIImpl(PROJECT_ID);
-	public static final URI datasetId = new URIImpl("http://www.konig.io/ns/gcp/datasetId");
-	public static final URI tableId = new URIImpl("http://www.konig.io/ns/gcp/tableId");
+	public static final URI projectId = new URIImpl(Term.projectId);
+	public static final URI datasetId = new URIImpl(Term.datasetId);
+	public static final URI tableId = new URIImpl(Term.tableId);
 	public static final URI preferredGcpDatasetId = new URIImpl("http://www.konig.io/ns/gcp/preferredGcpDatasetId");
 	public static final URI notificationInfo = new URIImpl(NOTIFICATION_INFO);
 	public static final URI notificationTopic = new URIImpl(NOTIFICATION_TOPIC);

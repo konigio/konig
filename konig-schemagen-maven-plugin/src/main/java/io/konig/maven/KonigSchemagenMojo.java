@@ -85,6 +85,7 @@ import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.apache.velocity.runtime.parser.ParseException;
 import org.codehaus.plexus.util.FileUtils;
 import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
+import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
@@ -98,8 +99,10 @@ import io.konig.abbrev.MemoryAbbreviationManager;
 import io.konig.aws.common.GroovyAwsDeploymentScriptWriter;
 import io.konig.aws.common.GroovyAwsTearDownScriptWriter;
 import io.konig.aws.datasource.AwsShapeConfig;
+import io.konig.cadl.Cube;
 import io.konig.cadl.CubeEmitter;
 import io.konig.cadl.CubeManager;
+import io.konig.cadl.CubeShapeBuilder;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
@@ -254,7 +257,6 @@ import io.konig.spreadsheet.WorkbookProcessorImpl;
 import io.konig.transform.model.ShapeTransformException;
 import io.konig.transform.mysql.RoutedSqlTransformVisitor;
 import io.konig.transform.mysql.SqlTransformGenerator;
-import io.konig.transform.mysql.SqlTransformWriter;
 import io.konig.transform.proto.AwsAuroraChannelFactory;
 import io.konig.transform.proto.ShapeModelFactory;
 import io.konig.transform.showl.sql.BigQueryTransformConsumer;
@@ -385,6 +387,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private RoutedSqlTransformVisitor sqlTransformVisitor;
     private File mavenHome;
     private boolean anyError;
+    private CubeManager cubeManager;
 
 	@Component
 	private MavenProject mavenProject;
@@ -414,6 +417,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			createProject();
 			loadResources();
 			preprocessResources();
+			generateCubeShapes();
 			generateModelValidationReport();
 			generateGoogleCloudPlatform();
 			generateOracleManagedCloudServices();
@@ -457,6 +461,28 @@ public class KonigSchemagenMojo  extends AbstractMojo {
       
     }
     
+
+	private void generateCubeShapes() throws KonigException {
+		if (cubeManager != null) {
+			
+			// For now, we assume that the shape namespace has "shape" as the prefix.
+			// TODO: This is OK as a default, but there should be a way to override the default
+			
+			Namespace ns = nsManager.findByPrefix("shape");
+			if (ns == null) {
+				throw new KonigException("shape namespace is not defined");
+			}
+			String shapeNamespace = ns.getName();
+			
+			CubeShapeBuilder builder = new CubeShapeBuilder(owlReasoner, shapeManager, shapeNamespace);
+			
+			for (Cube cube : cubeManager.listCubes()) {
+				builder.buildShape(cube);
+			}
+		}
+		
+	}
+
 
 	private void failIfAnyError() throws MojoExecutionException {
 		if (anyError) {
@@ -1170,8 +1196,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				emitter.add(new ShapeToFileEmitter(shapeManager, rdf.getShapesDir()));
 				emitter.add(new SkosEmitter(rdf.getOwlDir()));
 				emitter.add(new NamedGraphEmitter(rdf.getOwlDir()));
-				
-				addCadEmitter(processor.getServiceManager().getService(CubeManager.class));
+				cubeManager = processor.getServiceManager().getService(CubeManager.class);
+				addCadEmitter(cubeManager);
 
 
 //				VelocityContext context = workbookLoader.getDataSourceGenerator().getContext();

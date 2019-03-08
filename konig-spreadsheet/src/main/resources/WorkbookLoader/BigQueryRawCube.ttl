@@ -1,0 +1,23 @@
+
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix gcp:   <http://www.konig.io/ns/gcp/> .
+@prefix schema:  <http://schema.org/> .
+#if($!{parentComponent})
+#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#foreach( $namespace in $namespaceList) 
+@prefix $namespace.Prefix: <$namespace.Name> .
+#end
+#end
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryRawCubeTableName}>
+	a konig:GoogleBigQueryTable, konig:DataSource; #if($!{tabularFieldNamespace})
+	konig:tabularFieldNamespace "${tabularFieldNamespace}";#end
+	schema:description "Holds the raw data used to construct cubes of type ${cube.localName}" ;
+	gcp:tableReference [
+		gcp:projectId "${gcpProjectId}" ;
+		gcp:datasetId "${gcpDatasetId}" ;
+		gcp:tableId   "${bigQueryRawCubeTableName}" 
+	]	#if($!{parentComponent}) ;
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
+	#end
+.

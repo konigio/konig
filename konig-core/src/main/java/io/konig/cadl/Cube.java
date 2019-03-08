@@ -28,18 +28,27 @@ import org.openrdf.model.URI;
 
 import io.konig.annotation.RdfProperty;
 import io.konig.core.vocab.CADL;
+import io.konig.datasource.DataSource;
 
 public class Cube extends CadlEntity {
 	private Variable source;
 	private Set<Dimension> dimension = new LinkedHashSet<>();
 	private Set<Measure> measure = new LinkedHashSet<>();
+	private Set<DataSource> storage = new LinkedHashSet<>();
 	
 	@Override
 	public URI getType() {
 		return CADL.Cube;
 	}
 	
+	public void addStorage(DataSource ds) {
+		storage.add(ds);
+	}
 
+	@RdfProperty(CADL.Term.storage)
+	public Set<DataSource> getStorage() {
+		return storage;
+	}
 
 	@RdfProperty(CADL.Term.source)
 	public Variable getSource() {
@@ -48,6 +57,25 @@ public class Cube extends CadlEntity {
 	
 	public void setSource(Variable source) {
 		this.source = source;
+	}
+	
+	public Dimension findDimensionByName(String localName) {
+
+		for (Dimension d : dimension) {
+			if (localName.equals(d.getId().getLocalName())) {
+				return d;
+			}
+		}
+		return null;
+	}
+	
+	public Dimension findDimensionById(URI id) {
+		for (Dimension d : dimension) {
+			if (id.equals(d.getId())) {
+				return d;
+			}
+		}
+		return null;
 	}
 
 	public void addDimension(Dimension dimension) {
@@ -67,6 +95,7 @@ public class Cube extends CadlEntity {
 	public Set<Measure> getMeasure() {
 		return measure;
 	}
+
 	public static Builder builder() {
 		return new Builder();
 	}

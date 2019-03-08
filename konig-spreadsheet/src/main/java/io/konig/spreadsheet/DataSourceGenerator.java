@@ -46,18 +46,24 @@ import org.apache.velocity.runtime.RuntimeInstance;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.parser.ParseException;
 import org.openrdf.model.Namespace;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 
 import info.aduna.io.IOUtil;
+import io.konig.cadl.Cube;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.pojo.PojoContext;
+import io.konig.core.pojo.PojoListener;
+import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.vocab.SH;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeLoader;
@@ -322,6 +328,51 @@ public class DataSourceGenerator {
 			context.put(key, value);
 		}
 	}
+
+	@SuppressWarnings("rawtypes")
+	public void generate(final Cube cube, Function func) {
+		context.clearParameters();
+		context.put("cube", new NamedIndividual(
+				cube.getId().getLocalName())
+		);
+		
+		String templateName = func.getName();
+		HashMap params = (HashMap) func.getParameters();
+		Iterator it = params.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry pair = (Map.Entry) it.next();
+			context.putParameter(pair.getKey().toString(), pair.getValue().toString());
+		}
+
+		String result = merge(templateName);
+		
+		for (Object entry : params.entrySet()) {
+			Map.Entry pair = (Map.Entry)entry;
+			context.remove(pair.getKey());
+		}
+		ByteArrayInputStream input = new ByteArrayInputStream(result.getBytes());
+		try {
+			Graph graph = new MemoryGraph(nsManager);
+			RdfUtil.loadTurtle(graph, input, "");
+			
+
+			PojoContext context = new PojoContext(ShapeLoader.CONTEXT);
+			SimplePojoFactory factory = new SimplePojoFactory(context);
+			context.setListener(new PojoListener() {
+
+				@Override
+				public void map(Resource id, Object pojo) {
+					if (pojo instanceof DataSource) {
+						cube.addStorage((DataSource)pojo);
+					}
+				}
+			});
+			factory.createAll(graph);
+			
+		} catch (RDFParseException | RDFHandlerException | IOException e) {
+			throw new KonigException("Failed to render template", e);
+		}
+	}
 	
 
 	@SuppressWarnings("rawtypes")
@@ -413,5 +464,17 @@ public class DataSourceGenerator {
 	
 	public VelocityContext getContext(){
 		return context;
+	}
+	
+	public static class NamedIndividual {
+		private String localName;
+		
+		public NamedIndividual(String localName) {
+			this.localName = localName;
+		}
+		public String getLocalName() {
+			return localName;
+		}
+		
 	}
 }

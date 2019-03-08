@@ -1,5 +1,8 @@
 package io.konig.gcp.datasource;
 
+import io.konig.annotation.RdfProperty;
+import io.konig.core.vocab.GCP;
+
 /*
  * #%L
  * Konig Core
@@ -40,19 +43,21 @@ public class BigQueryTableReference {
 	}
 
 
-
+	@RdfProperty(GCP.Term.projectId)
 	public String getProjectId() {
 		return projectId;
 	}
 	public void setProjectId(String projectId) {
 		this.projectId = projectId;
 	}
+	@RdfProperty(GCP.Term.datasetId)
 	public String getDatasetId() {
 		return datasetId;
 	}
 	public void setDatasetId(String datasetId) {
 		this.datasetId = datasetId;
 	}
+	@RdfProperty(GCP.Term.tableId)
 	public String getTableId() {
 		return tableId;
 	}

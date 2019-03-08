@@ -27,13 +27,17 @@ import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
+import io.konig.cadl.Cube;
 import io.konig.core.NamespaceManager;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.util.SimpleValueMap;
 import io.konig.core.vocab.Schema;
+import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
@@ -43,8 +47,52 @@ import io.konig.shacl.impl.MemoryShapeManager;
 public class DataSourceGeneratorTest {
 	private MemoryShapeManager shapeManager = new MemoryShapeManager();
 
+	
 	@Test
-	public void test() throws Exception {
+	public void testCube() throws Exception {
+		
+		GcpShapeConfig.init();
+		
+		File templateDir = new File("target/WorkbookLoader");
+		
+		URI cubeId = uri("http://example.com/cube/RevenueCube");
+		Cube cube = new Cube();
+		cube.setId(cubeId);
+		
+		Properties properties = new Properties();
+		properties.load(getClass().getClassLoader().getResourceAsStream("WorkbookLoader/settings.properties"));
+		properties.setProperty("gcpDatasetId", "example");
+		
+		
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", Schema.NAMESPACE);
+
+		Shape shape = new Shape(uri("http://example.com/shapes/PersonOriginShape"));
+		shape.setTargetClass(Schema.Person);
+		
+		shapeManager.addShape(shape);
+		
+		DataSourceGenerator generator = new DataSourceGenerator(nsManager, templateDir, properties);
+		Function func = new Function("BigQueryRawCube", new SimpleValueMap());
+		
+		generator.generate(cube, func);
+		
+		assertTrue(!cube.getStorage().isEmpty());
+		DataSource ds = cube.getStorage().iterator().next();
+		assertEquals(
+			"https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/example/tables/RawRevenueCube", 
+			ds.getId().stringValue()
+		);
+		
+		assertTrue(ds instanceof GoogleBigQueryTable);
+		GoogleBigQueryTable table = (GoogleBigQueryTable) ds;
+		assertEquals("example", table.getTableReference().getDatasetId());
+		assertEquals("RawRevenueCube", table.getTableReference().getTableId());
+		
+	}
+	
+	@Test
+	public void testShape() throws Exception {
 		
 		GcpShapeConfig.init();
 		

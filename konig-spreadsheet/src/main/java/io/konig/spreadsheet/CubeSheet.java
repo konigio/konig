@@ -1,5 +1,7 @@
 package io.konig.spreadsheet;
 
+import java.util.List;
+
 /*
  * #%L
  * Konig Spreadsheet
@@ -38,7 +40,7 @@ import io.konig.rio.turtle.NamespaceMap;
 public class CubeSheet extends BaseSheetProcessor {
 	private static SheetColumn CUBE_ID = new SheetColumn("Cube Id", true);
 	private static SheetColumn STEREOTYPE = new SheetColumn("Stereotype", true);
-	private static SheetColumn ELEMENT_NAME = new SheetColumn("Element Name", true);
+	private static SheetColumn ELEMENT_NAME = new SheetColumn("Element Name");
 	private static SheetColumn ELEMENT_TYPE = new SheetColumn("Element Type");
 	private static SheetColumn FORMULA = new SheetColumn("Formula");
 	private static SheetColumn ROLL_UP_FROM = new SheetColumn("Roll-up From");
@@ -57,10 +59,13 @@ public class CubeSheet extends BaseSheetProcessor {
 	private Cube cube;
 	private Dimension dimension;
 	private Level level;
+
+	private DataSourceGeneratorFactory dataSourceGeneratorFactory;
 	
 	@SuppressWarnings("unchecked")
-	public CubeSheet(WorkbookProcessor processor) {
+	public CubeSheet(WorkbookProcessor processor, DataSourceGeneratorFactory factory) {
 		super(processor);
+		dataSourceGeneratorFactory = factory;
 		dependsOn(OntologySheet.class);
 	}
 
@@ -79,6 +84,7 @@ public class CubeSheet extends BaseSheetProcessor {
 		
 		
 		String stereotypeName = stringValue(row, STEREOTYPE).toUpperCase();
+		List<Function> dataSourceList = null;
 		
 		CadlKind kind = CadlKind.valueOf(stereotypeName);
 		switch (kind) {
@@ -88,6 +94,10 @@ public class CubeSheet extends BaseSheetProcessor {
 			source.setId(sourceId(row, cubeId));
 			source.setValueType(iriValue(row, ELEMENT_TYPE));
 			cube.setSource(source);
+			break;
+			
+		case STORAGE :
+			dataSourceList = dataSourceList(row, ELEMENT_TYPE);
 			break;
 
 		case DIMENSION :
@@ -123,6 +133,17 @@ public class CubeSheet extends BaseSheetProcessor {
 			LevelRollUpAction action = processor.service(LevelRollUpAction.class);
 			action.register(
 				location(row, ROLL_UP_FROM), dimension, level, rollUpFrom);
+		}
+		
+		if (dataSourceList != null) {
+			processor.defer(
+				new BuildCubeDataSourceAction(
+					location(row, ELEMENT_TYPE),
+					processor,
+					dataSourceGeneratorFactory.getDataSourceGenerator(),
+					cube,
+					dataSourceList					
+			));
 		}
 
 	}
@@ -180,6 +201,7 @@ public class CubeSheet extends BaseSheetProcessor {
 
 	private enum CadlKind {
 		SOURCE,
+		STORAGE,
 		DIMENSION,
 		LEVEL,
 		ATTRIBUTE, 
