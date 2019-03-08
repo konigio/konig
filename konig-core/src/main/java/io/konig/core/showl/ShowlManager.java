@@ -921,7 +921,7 @@ public class ShowlManager implements ShowlClassManager {
 
 
 
-	private void addProperties(ShowlNodeShape declaringShape) {
+	void addProperties(ShowlNodeShape declaringShape) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("addProperties({})", declaringShape.getPath());
 		}
@@ -976,7 +976,7 @@ public class ShowlManager implements ShowlClassManager {
 		return p;
 	}
 
-	private void addIdProperty(ShowlNodeShape declaringShape) {
+	void addIdProperty(ShowlNodeShape declaringShape) {
 		if (declaringShape.getShape().getIriTemplate() != null) {
 			ShowlProperty property = produceShowlProperty(Konig.id);
 			ShowlTemplatePropertyShape p = new ShowlTemplatePropertyShape(

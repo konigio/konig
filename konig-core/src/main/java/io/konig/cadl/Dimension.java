@@ -56,6 +56,23 @@ public class Dimension extends CadlEntity {
 		this.level.add(level);
 	}
 	
+	public Level findLevelByName(String localName) {
+		for (Level e : level) {
+			if (localName.equals(e.getId().getLocalName())) {
+				return e;
+			}
+		}
+		return null;
+	}
+	
+	public Level findLevelById(URI id) {
+		for (Level e : level) {
+			if (id.equals(e.getId())) {
+				return e;
+			}
+		}
+		return null;
+	}
 
 	@RdfProperty(CADL.Term.level)
 	public Set<Level> getLevel() {

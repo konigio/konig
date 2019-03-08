@@ -175,7 +175,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		addSheetProcessor(new PropertyConstraintSheet(this, owlReasoner));
 		addSheetProcessor(new TripleSheet(this));
 		addSheetProcessor(new LabelSheet(this));
-		addSheetProcessor(new CubeSheet(this));
+		addSheetProcessor(new CubeSheet(this, dataSourceGeneratorFactory));
 		addSheetProcessor(new SourceDataDictionarySheet(this, settings, service(IndividualSheet.class)));
 		addSheetProcessor(new AbbreviationSheet(this, settings));
 		

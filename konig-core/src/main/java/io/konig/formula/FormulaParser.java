@@ -833,7 +833,7 @@ public class FormulaParser {
 
 		private PathStep tryOutStep() throws IOException, RDFParseException {
 			PathStep step = null;
-			if (tryWord(".") || tryWord("$.")) {
+			if (tryWord(".") || tryWord("$.") || peek()=='?') {
 				PathTerm term = tryPathTerm();
 				if (term == null) {
 					unread('.');

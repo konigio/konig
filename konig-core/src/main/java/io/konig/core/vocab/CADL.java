@@ -45,6 +45,7 @@ public class CADL {
 		public static final String source = "http://www.konig.io/ns/cadl/source";
 		public static final String rollUpTo = "http://www.konig.io/ns/cadl/rollUpTo";
 		public static final String attribute = "http://www.konig.io/ns/cadl/attribute";
+		public static final String storage = "http://www.konig.io/ns/cadl/storage";
 		
 	}
 	
@@ -63,6 +64,7 @@ public class CADL {
 	public static final URI formula = new URIImpl(Term.formula);
 	public static final URI valueType = new URIImpl(Term.valueType);
 	public static final URI source = new URIImpl(Term.source);
+	public static final URI storage = new URIImpl(Term.storage);
 	public static final URI rollUpTo = new URIImpl(Term.rollUpTo);
 
 }

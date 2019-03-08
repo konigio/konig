@@ -32,7 +32,9 @@ public class ShowlDirectPropertyShape extends ShowlPropertyShape {
 			PropertyConstraint propertyConstraint) {
 		super(declaringShape, property, propertyConstraint);
 		
-		property.addPropertyShape(this);
+		if (property != null) {
+			property.addPropertyShape(this);
+		}
 	}
 	
 	public boolean isObjectProperty() {

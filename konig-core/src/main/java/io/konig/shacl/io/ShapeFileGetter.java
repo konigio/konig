@@ -52,8 +52,10 @@ public class ShapeFileGetter implements FileGetter {
 		
 		Namespace n = nsManager.findByName(shapeId.getNamespace());
 		if (n == null) {
-			throw new KonigException("Prefix for namespace not found: " + shapeId.getNamespace());
+			return nestedShapeFile(shapeId);
 		}
+		
+		
 		
 		StringBuilder builder = new StringBuilder();
 		builder.append(n.getPrefix());
@@ -63,6 +65,31 @@ public class ShapeFileGetter implements FileGetter {
 		
 		
 		return new File(baseDir, builder.toString());
+	}
+
+
+	private File nestedShapeFile(URI shapeId) {
+		
+		String iriValue = shapeId.stringValue();
+		for(int end = iriValue.lastIndexOf('/'); end>0; end=iriValue.lastIndexOf('/', end-1)) {
+			
+			int mark = end+1;
+			String namespaceName = iriValue.substring(0, mark);
+			Namespace ns = nsManager.findByName(namespaceName);
+			if (ns != null) {
+			
+				String fileName = iriValue.substring(mark).replace('/', '.');
+				StringBuilder builder = new StringBuilder();
+				builder.append(ns.getPrefix());
+				builder.append('_');
+				builder.append(fileName);
+				builder.append(".ttl");
+
+				return new File(baseDir, builder.toString());
+			}
+		}
+
+		throw new KonigException("Prefix for namespace not found: " + shapeId.getNamespace());
 	}
 
 }

@@ -54,6 +54,24 @@ public class Level extends CadlEntity implements HasFormula {
 		}
 		attribute.add(a);
 	}
+
+	public Attribute findAttributeByName(String localName) {
+		for (Attribute a : attribute) {
+			if (localName.equals(a.getId().getLocalName())) {
+				return a;
+			}
+		}
+		return null;
+	}
+
+	public Attribute findAttributeById(URI id) {
+		for (Attribute a : attribute) {
+			if (id.equals(a.getId())) {
+				return a;
+			}
+		}
+		return null;
+	}
 	
 	@RdfProperty(CADL.Term.attribute)
 	public Set<Attribute> getAttribute() {

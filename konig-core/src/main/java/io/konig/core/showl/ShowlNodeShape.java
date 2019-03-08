@@ -125,12 +125,15 @@ public class ShowlNodeShape implements Traversable {
 	}
 
 	public void setOwlClass(ShowlClass owlClass) {
+	
 		if (this.owlClass != owlClass) {
 			if (this.owlClass != null) {
 				this.owlClass.getTargetClassOf().remove(this);
 			}
 			this.owlClass = owlClass;
-			owlClass.addTargetClassOf(this);
+			if (owlClass != null) {
+				owlClass.addTargetClassOf(this);
+			}
 		}
 		
 	}
