@@ -45,7 +45,7 @@ public class VariableShapeFactoryTest extends TransformTest {
 		
 		Shape focusShape = shapeManager.getShapeById(shapeId);
 		
-		PropertyConstraint variable = focusShape.getVariableByName("?x");
+		PropertyConstraint variable = focusShape.getVariableByName("x");
 		
 		Shape varShape = factory.createShape(focusShape, variable);
 		

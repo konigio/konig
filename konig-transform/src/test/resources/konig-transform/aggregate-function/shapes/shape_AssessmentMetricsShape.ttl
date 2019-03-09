@@ -11,7 +11,7 @@
 shape:AssessmentMetricsShape a sh:Shape ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/37ZO88_E1lQAAAFcQNWt9g> ; 
 	konig:variable  [ 
-		sh:predicate <http://www.konig.io/ns/var/?x> ; 
+		sh:predicate <http://www.konig.io/ns/var/x> ; 
 		sh:class ex:AssessmentResult ; 
 		sh:nodeKind sh:IRI ; 
 		konig:stereotype konig:variable

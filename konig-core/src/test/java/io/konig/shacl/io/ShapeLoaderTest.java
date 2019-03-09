@@ -168,6 +168,7 @@ public class ShapeLoaderTest {
 		String expected = "\n" +
 			"@term Activity <http://www.w3.org/ns/activitystreams#Activity>\n" + 
 			"@term type <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>\n" + 
+			"@term x <http://www.konig.io/ns/var/x>\n" + 
 			"\n" + 
 			"?x.type = Activity";
 		

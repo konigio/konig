@@ -84,7 +84,7 @@ public class Term implements Comparable<Term>{
 	}
 	
 	public Kind getKind() {
-		return kind;
+		return kind==null ? Kind.ANY : kind;
 	}
 	
 	public String getContainer() {
@@ -161,8 +161,15 @@ public class Term implements Comparable<Term>{
 	}
 
 	public int compareTo(Term other) {
-		
-		int delta = kind.ordinal() - other.kind.ordinal();
+		Kind otherKind = other.kind;
+		if (otherKind == null) {
+			otherKind = Kind.ANY;
+		}
+		Kind thisKind = this.kind;
+		if (thisKind == null) {
+			thisKind = Kind.ANY;
+		}
+		int delta = thisKind.ordinal() - otherKind.ordinal();
 		if (delta == 0) {
 			delta = key.compareTo(other.key);
 		}

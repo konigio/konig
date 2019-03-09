@@ -34,6 +34,7 @@ import io.konig.cadl.HasFormula;
 import io.konig.cadl.Level;
 import io.konig.cadl.Measure;
 import io.konig.cadl.Variable;
+import io.konig.core.LocalNameService;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.rio.turtle.NamespaceMap;
 
@@ -110,7 +111,7 @@ public class CubeSheet extends BaseSheetProcessor {
 		case LEVEL :
 			level = new Level();
 			level.setId(levelId(row));
-			handleFormula(level, row);
+			handleFormula(cube, level, row);
 			dimension.addLevel(level);
 			break;
 			
@@ -123,7 +124,7 @@ public class CubeSheet extends BaseSheetProcessor {
 		case MEASURE :
 			Measure measure = new Measure();
 			measure.setId(measureId(row, cubeId));
-			handleFormula(measure, row);
+			handleFormula(cube, measure, row);
 			cube.addMeasure(measure);
 			break;
 		}
@@ -162,6 +163,9 @@ public class CubeSheet extends BaseSheetProcessor {
 
 	private URI sourceId(SheetRow row, URI cubeId) {
 		String localName = stringValue(row, ELEMENT_NAME);
+		if (localName.startsWith("?")) {
+			localName = localName.substring(1);
+		}
 		return new URIImpl(cubeId.stringValue() + "/source/" + localName);
 	}
 
@@ -178,13 +182,15 @@ public class CubeSheet extends BaseSheetProcessor {
 		return new URIImpl(baseIri + "/attribute/" + localName);
 	}
 
-	private void handleFormula(HasFormula container, SheetRow row) {
+	private void handleFormula(Cube cube, HasFormula container, SheetRow row) {
 		
 		String formulaText = stringValue(row, FORMULA);
 		if (formulaText != null) {
 			ServiceManager sm = processor.getServiceManager();
+			LocalNameService defaultService = sm.service(SimpleLocalNameService.class);
+			CubeLocalNameService cubeNameService = new CubeLocalNameService(defaultService, cube);
 			processor.defer(new CadlFormulaSetter(
-				sm.service(SimpleLocalNameService.class),
+				cubeNameService,
 				sm.service(NamespaceMap.class),
 				container,
 				formulaText));
