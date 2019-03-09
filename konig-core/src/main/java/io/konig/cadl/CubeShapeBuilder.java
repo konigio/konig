@@ -1,5 +1,8 @@
 package io.konig.cadl;
 
+import java.text.MessageFormat;
+import java.util.HashSet;
+
 /*
  * #%L
  * Konig Core
@@ -27,16 +30,20 @@ import java.util.regex.Pattern;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Term;
 import io.konig.core.impl.BasicContext;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.ShowlClass;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlProperty;
 import io.konig.core.showl.ShowlTraverser;
 import io.konig.datasource.DataSource;
+import io.konig.formula.FunctionExpression;
+import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
@@ -55,7 +62,7 @@ public class CubeShapeBuilder {
 		this.shapeNamespace = shapeNamespace;
 	}
 
-	public Shape buildShape(Cube cube) {
+	public Shape buildShape(Cube cube) throws CubeShapeException {
 		Worker worker = new Worker();
 		return worker.buildShape(cube);
 	}
@@ -65,7 +72,7 @@ public class CubeShapeBuilder {
 		private ShowlTraverser traverser;
 		private PropertyConstraint sourceVariable;
 		
-		public Shape buildShape(Cube cube) {
+		public Shape buildShape(Cube cube) throws CubeShapeException {
 			
 			
 			ShowlManager showlManager = new ShowlManager(shapeManager, reasoner);
@@ -111,13 +118,15 @@ public class CubeShapeBuilder {
 			
 		}
 
-		private void addLevel(Shape shape, Cube cube, Dimension dim, Level level) {
+		private void addLevel(Shape shape, Cube cube, Dimension dim, Level level) throws CubeShapeException {
 			
 			PropertyConstraint p = shape.getPropertyConstraint(level.getId());
 			if (p == null) {
 				p = new PropertyConstraint(level.getId());
 				shape.add(p);
 			}
+			p.setMinCount(0);
+			p.setMaxCount(1);
 			
 			setLevelFormula(dim, level, p);
 			
@@ -128,12 +137,14 @@ public class CubeShapeBuilder {
 				p.setShape(levelShape);
 				addAttributes(levelShape, level, p.getFormula());
 				
+			} else {
+				setDatatype(p, p.getFormula(), level.getId());
 			}
 			
 		}
 
 
-		private void addAttributes(Shape shape, Level level, QuantifiedExpression levelFormula) {
+		private void addAttributes(Shape shape, Level level, QuantifiedExpression levelFormula) throws CubeShapeException {
 			
 			for (Attribute attr : level.getAttribute()) {
 				
@@ -151,15 +162,88 @@ public class CubeShapeBuilder {
 				QuantifiedExpression formula = attr.getFormula();
 				
 				if (formula == null) {
-					formula = defaultAttrFormula(levelFormula, attr);
+					formula = defaultAttrFormula(levelFormula, attr, p);
 				}
 				p.setFormula(formula);
+				p.setMinCount(0);
+				p.setMaxCount(1);
+				
+				if (p.getDatatype() == null) {
+					setDatatype(p, formula, attr.getId());
+				}
 				
 			}
 			
 		}
 
-		private QuantifiedExpression defaultAttrFormula(QuantifiedExpression levelFormula, Attribute attr) {
+		private void setDatatype(PropertyConstraint p, QuantifiedExpression formula, URI elementId) throws CubeShapeException {
+			
+			if (formula == null) {
+				throw new CubeShapeException(
+						MessageFormat.format("Formula must be defined for <{0}>", elementId.stringValue())
+				);
+			}
+			
+			PrimaryExpression primary = formula.asPrimaryExpression();
+			if (primary instanceof FunctionExpression) {
+				FunctionExpression func = (FunctionExpression) primary;
+				URI datatype = func.getModel().getReturnType().getRdfType();
+				p.setDatatype(datatype);
+				return;
+				
+			}
+			
+			Set<ShowlProperty> propertySet =
+					traverser.traverse(sourceVariable.getPredicate(), RdfUtil.uri(sourceVariable.getValueClass()), formula);
+			
+			if (propertySet.size()==1) {
+				setDatatype(propertySet.iterator().next(), p, elementId, formula);
+			} else if (propertySet.isEmpty()) {
+				throw new CubeShapeException(
+					MessageFormat.format("Datatype not found for <{0}> mapped by {1}", elementId.stringValue(), formula.toSimpleString())
+				);
+			} else {
+				// propertySet contains multiple properties
+				
+				Set<URI> datatypeSet = new HashSet<>();
+				for (ShowlProperty property : propertySet) {
+					datatypeSet.addAll(property.rangeIncludes(reasoner));
+				}
+				
+				if (datatypeSet.size() == 1) {
+					URI datatype = datatypeSet.iterator().next();
+					if (reasoner.isDatatype(datatype)) {
+						p.setDatatype(datatype);
+					} else {
+
+						throw new CubeShapeException(
+								MessageFormat.format(
+									"<{0}> must have a Datatype value, but the formula {1} implies <{2}>", 
+									elementId.stringValue(), 
+									formula.toSimpleString(), 
+									datatype.stringValue())
+						);
+					}
+				} else if (datatypeSet.isEmpty()) {
+
+					throw new CubeShapeException(
+							MessageFormat.format(
+									"Datatype for <{0}> is not known.  The datatype must be specified explicitly.", 
+									elementId.stringValue()));
+				} else {
+
+					StringBuilder msg = new StringBuilder();
+					msg.append("Datatype is ambiguous for <");
+					msg.append(elementId.stringValue());
+					msg.append(">.  The datatype must be specified explicitly.");
+					throw new CubeShapeException(msg.toString());
+				}
+			}
+			
+			
+		}
+
+		private QuantifiedExpression defaultAttrFormula(QuantifiedExpression levelFormula, Attribute attr, PropertyConstraint p) throws CubeShapeException {
 			
 			String attributeName = attr.getId().getLocalName();
 			
@@ -168,7 +252,10 @@ public class CubeShapeBuilder {
 			propertySet = traverser.out(propertySet, attributeName);
 			
 			if (propertySet.size() == 1) {
-				URI predicate = propertySet.iterator().next().getPredicate();
+				ShowlProperty property = propertySet.iterator().next();
+				
+				
+				URI predicate = property.getPredicate();
 				Context context = new BasicContext("");
 				copyContext(levelFormula.getContext(), context);
 				context.addTerm(predicate.getLocalName(), predicate.stringValue());
@@ -180,12 +267,70 @@ public class CubeShapeBuilder {
 				builder.append('.');
 				builder.append(attributeName);
 				String text = builder.toString();
-				return QuantifiedExpression.fromString(text);
+				
+				QuantifiedExpression formula = QuantifiedExpression.fromString(text);
+
+				setDatatype(property, p, attr.getId(), formula);
+				
+				return formula;
+			} else if (propertySet.isEmpty()) {
+				throw new CubeShapeException(
+					MessageFormat.format("Default mapping for <{0}> not found.", attr.getId().stringValue()));
 			}
 			
-			
-			return null;
+			StringBuilder msg = new StringBuilder();
+			msg.append("Default mapping for <");
+			msg.append(attr.getId().stringValue());
+			msg.append("> is ambiguous.  Possible properties include:\n");
+			for (ShowlProperty q : propertySet) {
+				msg.append("   <");
+				msg.append(q.getPredicate().stringValue());
+				msg.append(">\n");
+			}
+			throw new CubeShapeException(msg.toString());
 		}
+		
+		private void setDatatype(ShowlProperty property, PropertyConstraint p, URI element, QuantifiedExpression formula) throws CubeShapeException {
+			
+			ShowlClass range = property.getRange();
+			URI datatype = null;
+			if (range == null) {
+				Set<URI> set = property.rangeIncludes(reasoner);
+				if (set.size()==1) {
+					datatype = set.iterator().next();
+				} else if (set.size()>1) {
+					StringBuilder msg = new StringBuilder();
+					msg.append("Datatype is ambiguous for <");
+					msg.append(element.stringValue());
+					msg.append(">.  The datatype must be specified explicitly.");
+					throw new CubeShapeException(msg.toString());
+				}
+			} else {
+				datatype = range.getId();
+			}
+			
+			if (datatype == null) {
+				throw new CubeShapeException(
+						MessageFormat.format(
+								"Datatype for <{0}> is not known.  The datatype must be specified explicitly.", 
+								element.stringValue()));
+			}
+			
+			if (!reasoner.isDatatype(datatype)) {
+				throw new CubeShapeException(
+						MessageFormat.format(
+							"<{0}> must have a Datatype value, but the formula {1} implies <{2}>", 
+							element.stringValue(), 
+							formula.toSimpleString(), 
+							datatype.stringValue())
+				);
+			}
+			
+			p.setDatatype(datatype);
+			
+			
+		}
+
 		private Shape produceShape(URI shapeId) {
 			Shape shape = shapeManager.getShapeById(shapeId);
 			if (shape == null) {

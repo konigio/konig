@@ -103,6 +103,7 @@ import io.konig.cadl.Cube;
 import io.konig.cadl.CubeEmitter;
 import io.konig.cadl.CubeManager;
 import io.konig.cadl.CubeShapeBuilder;
+import io.konig.cadl.CubeShapeException;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
@@ -113,6 +114,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
+import io.konig.core.io.Emitter;
 import io.konig.core.io.SkosEmitter;
 import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
@@ -286,7 +288,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 	@Parameter
 	private RdfModelConfig rdfModel;
-	
+
     /**
      * Location of the file.
      */
@@ -455,14 +457,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
 				SizeEstimateException | KonigException | SQLException | InvalidDatatypeException | 
 				ShapeTransformException | EnvironmentGenerationException | ParseException | 
-				MavenInvocationException e) {
+				MavenInvocationException | CubeShapeException e) {
 			throw new MojoExecutionException("Schema generation failed", e);
 		}
       
     }
     
 
-	private void generateCubeShapes() throws KonigException {
+	private void generateCubeShapes() throws KonigException, CubeShapeException {
 		if (cubeManager != null) {
 			
 			// For now, we assume that the shape namespace has "shape" as the prefix.
