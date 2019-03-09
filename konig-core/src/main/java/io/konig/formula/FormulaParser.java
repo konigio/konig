@@ -971,7 +971,6 @@ public class FormulaParser {
 		private VariableTerm variable() throws RDFParseException, IOException {
 			assertNext('?');
 			buffer = buffer();
-			buffer.append('?');
 			int c = read();
 			do {
 				buffer.appendCodePoint(c);
@@ -981,7 +980,7 @@ public class FormulaParser {
 			String varName = buffer.toString();
 
 			Context context = getContext();
-			String termName = varName.substring(1);
+			String termName = varName;
 			Term term = context.getTerm(termName);
 			if (term != null) {
 				String iri = context.expandIRI(termName);
@@ -996,7 +995,9 @@ public class FormulaParser {
 				}
 				
 			}
-			return new VariableTerm(varName);
+			VariableTerm result = new VariableTerm(varName);
+			context.addTerm(varName, result.getIri().stringValue());
+			return result;
 		}
 
 		private LiteralFormula tryLiteralFormula() throws RDFParseException, RDFHandlerException, IOException {

@@ -5,7 +5,7 @@
 @base <http://example.com/ns/cube/OpportunityRevenueCube/> .
 cube:OpportunityRevenueCube a cadl:Cube ; 
 	cadl:measure <measure/expectedRevenue> ; 
-	cadl:source <source/?opportunity> ; 
+	cadl:source <source/opportunity> ; 
 	cadl:dimension <dimension/timeDim> , <dimension/accountDim> . 
 
 <measure/expectedRevenue> a cadl:Measure ; 
@@ -14,7 +14,7 @@ cube:OpportunityRevenueCube a cadl:Cube ;
 
 SUM(?opportunity.salePrice)''' . 
 
-<source/?opportunity> a cadl:Variable ; 
+<source/opportunity> a cadl:Variable ; 
 	cadl:valueType crm:Opportunity . 
 
 <dimension/timeDim> a cadl:Dimension ; 

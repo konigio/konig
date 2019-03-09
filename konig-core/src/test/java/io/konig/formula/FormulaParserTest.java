@@ -278,7 +278,8 @@ public class FormulaParserTest {
 	public void testCountFormula() throws Exception {
 
 		String text =  "\n"+
-			"@term price <http://schema.org/price>\n\n" + 
+			"@term price <http://schema.org/price>\n" + 
+			"@term x <http://www.konig.io/ns/var/x>\n\n" + 
 			"COUNT(?x.price)";
 
 		Expression e = parser.quantifiedExpression(text);
@@ -350,7 +351,8 @@ public class FormulaParserTest {
 		String text = "\n"+
 			"@term price <http://schema.org/price>\n" + 
 			"@term OfferShape <http://example.com/ns/OfferShape>\n" + 
-			"@term hasShape <http://www.konig.io/ns/core/hasShape>\n\n" +
+			"@term hasShape <http://www.konig.io/ns/core/hasShape>\n" +
+			"@term x <http://www.konig.io/ns/var/x>\n\n" +
 			
 			"SUM(?x.price)\n" + 
 			"WHERE\n" + 
