@@ -1,7 +1,4 @@
-package io.konig.formula;
-
-import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.XMLSchema;
+package io.konig.cadl;
 
 /*
  * #%L
@@ -24,21 +21,12 @@ import org.openrdf.model.vocabulary.XMLSchema;
  */
 
 
-public enum KqlType {
-	STRING(XMLSchema.STRING),
-	INTEGER(XMLSchema.LONG),
-	NUMBER(XMLSchema.DOUBLE),
-	BOOLEAN(XMLSchema.BOOLEAN),
-	INSTANT(XMLSchema.DATETIME);
-	
-	private URI rdfType;
-	
-	private KqlType(URI rdfType) {
-		this.rdfType = rdfType;
-	}
+@SuppressWarnings("serial")
+public class CubeShapeException extends Exception {
 
-	public URI getRdfType() {
-		return rdfType;
+
+	public CubeShapeException(String message) {
+		super(message);
 	}
 
 }
