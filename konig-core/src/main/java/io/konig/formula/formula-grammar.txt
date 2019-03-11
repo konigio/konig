@@ -1,12 +1,10 @@
 Formula ::= Prologue Expression
 
-Prologue	  ::=  	( PrefixDecl | ContextDecl | TermDecl )*
+Prologue	  ::=  	( PrefixDecl | TermDecl )*
 
-PrefixDecl	::=  	('PREFIX' PNAME_NS IRIREF | '@' PNAME_NS ':' IRIREF '.')
+PrefixDecl	::=  	'@prefix' PNAME_NS ':' IRIREF '.'
 
 TermDecl ::= '@term' TermKey IRI
-
-ContextDecl ::= '@context' '{' (Term)+ '}'
 
 Term ::= JsonString ':' TermValue 
 
@@ -30,7 +28,7 @@ QuantifiedExpression ::= Expression WhereClause?
 
 WhereClause := 'WHERE' (Triple)+
 
-Triple ::= PathTerm IRI PathTerm '.'
+Triple ::= Path IRI PathTerm '.'
 
 ConditionalOrExpression	  ::=  	ConditionalAndExpression ( OrOperator ConditionalAndExpression )*
 
@@ -52,7 +50,6 @@ RelationalExpression	  ::=
 		| '>=' NumericExpression
 		| 'IN' ExpressionList
 		| 'NOT' 'IN' ExpressionList
-		| '?' NumericExpression '|' NumericExpression
 	)?
 
 ExpressionList ::= '(' Expression ( ',' Expression )* ')'
@@ -104,6 +101,39 @@ BuiltInCall ::=
 	| 'COUNT' '(' DISTINCT? Expression ')'
 	| 'SUM' '('  DISTINCT? Expression ')' 
 	| 'AVG' '('  DISTINCT? Expression ')' 
+	| 'DAY' '(' Expression ')'
+  | 'MONTH' '(' Expression ')'
+  | 'YEAR' '(' Expression ')'
+  | 'CONCAT' '(' Expression (',' Expression)* ')'
+  | 'STRPOS' '(' Expression ',' Expression ')'
+  | 'SUBSTR' '(' Expression ',' Expression ',' Expression ')'
 	| 'BOUND' '(' Variable | Path ')'
 	| 'UNIX_TIME' '(' Expression ')'
 	| 'CASE' ('WHEN' Expression 'THEN' Expression)+ ('ELSE' Expression) 'END'
+	
+Keyword ::=	
+    'IF' 
+  | 'COUNT'
+  | 'SUM'
+  | 'AVG'
+  | 'DAY'
+  | 'MONTH'
+  | 'YEAR' 
+  | 'CONCAT'
+  | 'STRPOS'
+  | 'SUBSTR'
+  | 'BOUND'
+  | 'UNIX_TIME'
+  | 'CASE' 
+  | 'WHEN'
+  | 'THEN' 
+  | 'ELSE'
+  | 'END'
+  | 'DISTINCT'
+  | 'IN'
+  | 'NOT'
+  | 'AND'
+  | 'OR'
+  | 'WHERE'
+  | '@prefix'
+  | '@term'

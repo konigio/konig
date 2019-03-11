@@ -20,7 +20,7 @@ package io.konig.formula;
  * #L%
  */
 
-public interface PathStep extends Formula {
+public interface PathStep extends IriValue {
 	
 
 }

@@ -18,42 +18,42 @@ shape:OriginAccountShape a sh:Shape , konig:SourceShape ;
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
-.schema:name'''
+$.schema:name'''
 	 ]  ,  [ 
 		sh:path alias:ID ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@prefix crm: <https://schema.pearson.com/ns/crm/> .
-.crm:crmID'''
+$.crm:crmID'''
 	 ]  ,  [ 
 		sh:path alias:CREATEDDATE ; 
 		sh:datatype xsd:dateTime ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
-.schema:dateCreated'''
+$.schema:dateCreated'''
 	 ]  ,  [ 
 		sh:path alias:LASTMODIFIEDDATE ; 
 		sh:datatype xsd:dateTime ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
-.schema:dateModified'''
+$.schema:dateModified'''
 	 ]  ,  [ 
 		sh:path alias:SAMPLING_ACCOUNT_NUMBER__C ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@prefix crm: <https://schema.pearson.com/ns/crm/> .
-.crm:samplingAccountNumber'''
+$.crm:samplingAccountNumber'''
 	 ]  ,  [ 
 		sh:path alias:ACCOUNTNUMBER ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@prefix crm: <https://schema.pearson.com/ns/crm/> .
-.crm:accountNumber''' ]  ; 
+$.crm:accountNumber''' ]  ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
    "ID" : "alias:ID"

@@ -20,14 +20,14 @@ shape:SourcePersonShape a sh:Shape , konig:SourceShape ;
 		sh:maxCount 1 ; 
 		konig:stereotype konig:primaryKey ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
-.schema:givenName'''
+$.schema:givenName'''
 	 ]  ,  [ 
 		sh:path alias:last_name ; 
 		sh:datatype xsd:string ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
-.schema:familyName''' ]  ; 
+$.schema:familyName''' ]  ; 
 	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-edw-core-s3bucket3> , ""^^xsd:integer , <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonShape> . 
 
 <http://www.konig.io/activity/GU2MDMByUEcAAAFjZMVYgA> a konig:LoadModelFromSpreadsheet ; 

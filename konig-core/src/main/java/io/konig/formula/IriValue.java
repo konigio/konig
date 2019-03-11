@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * Konig Core
@@ -22,12 +24,13 @@ package io.konig.formula;
 
 
 /**
- * An expression that represents an IRI value such as a fully-qualified IRI, a CURIE, or local name (together with a context).
- * This expression can be used as a PathTerm in a DirectionStep.  It can be used as the starting point of a Path. And it can
- * be used as 
+ * An expression that MAY represent an IRI value such as a fully-qualified IRI, a CURIE, or local name (together with a context).
+ * This expression may appear as a PathTerm in a DirectionStep. Or it may be a fully-qualified IRI that stands alone. 
+ * This expression does not ALWAYS represent an IRI value.  The <code>getIri</code> may return null. 
  * @author Greg McFall
  *
  */
-public interface IriValue extends PathTerm, PathStep, PrimaryExpression {
-
+public interface IriValue extends PrimaryExpression {
+// extends PathTerm, PathStep, PrimaryExpression
+	URI getIri();
 }

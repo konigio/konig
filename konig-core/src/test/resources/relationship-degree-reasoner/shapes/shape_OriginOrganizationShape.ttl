@@ -17,4 +17,4 @@ shape:OriginOrganizationShape a sh:Shape ;
   "founder" : "schema:founder",
   "address" : "schema:address"
 }
-.schema.founder.address''' ]  . 
+$.schema.founder.address''' ]  . 

@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * Konig Core
@@ -63,6 +65,11 @@ public class DirectionStep extends AbstractFormula implements PathStep {
 		direction.dispatch(visitor);
 		term.dispatch(visitor);
 		visitor.exit(this);
+	}
+
+	@Override
+	public URI getIri() {
+		return getTerm().getIri();
 	}
 
 }

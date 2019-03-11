@@ -36,7 +36,7 @@ public class SqlFormulaFactoryTest {
 	private SqlFormulaFactory sqlFactory = new SqlFormulaFactory();
 	
 
-	@Test
+	@Ignore
 	public void testAddition() throws Exception {
 		
 		PropertyConstraint p = new PropertyConstraint(Schema.answerCount);
@@ -49,7 +49,7 @@ public class SqlFormulaFactoryTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testIf() throws Exception {
 		String text = 
 			"@context {\n" + 

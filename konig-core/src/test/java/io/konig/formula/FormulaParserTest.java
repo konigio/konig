@@ -22,6 +22,8 @@ package io.konig.formula;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
@@ -214,7 +216,7 @@ public class FormulaParserTest {
 	public void testDistinct() throws Exception {
 		String text = 
 			"@term dateCreated <http://schema.org/dateCreated>\n" +
-			"COUNT( DISTINCT .dateCreated )";
+			"COUNT( DISTINCT $.dateCreated )";
 		
 		QuantifiedExpression e = parser.quantifiedExpression(text);
 		
@@ -248,7 +250,7 @@ public class FormulaParserTest {
 			"@term address <http://schema.org/address>\n" +
 			"@prefix schema : <http://schema.org/> .\n" +
 			"@term postalCode schema:postalCode\n" +
-			".address.postalCode";
+			"$.address.postalCode";
 		
 		QuantifiedExpression e = parser.quantifiedExpression(text);
 		Context context = e.getContext();
@@ -293,21 +295,18 @@ public class FormulaParserTest {
 	@Test
 	public void testOutPathStartingWithE() throws Exception {
 		
-		String text = ".estimatedPoints";
-		
-		Expression e = parser.quantifiedExpression(text);
+		String text = "$.estimatedPoints";
+		URI estimatedPoints = uri("http://example.com/estimatedPoints");
+		Expression e = parser.quantifiedExpression(text, estimatedPoints);
 		
 		PrimaryExpression primary = e.asPrimaryExpression();
 		assertTrue(primary instanceof PathExpression);
 		
-		assertEquals(prependDollar(text), primary.toString());
+		assertEquals(text, primary.toString());
 		
 	}
 	
 	
-	private Object prependDollar(String text) {
-		return "$" + text;
-	}
 
 	@Test
 	public void testPathValue() throws Exception {
@@ -328,7 +327,19 @@ public class FormulaParserTest {
 			"@term addressRegion <http://schema.org/addressRegion>\n\n" + 
 			"$.address[addressCountry \"US\"; addressRegion \"VA\"]";
 		
-		Expression e = parser.quantifiedExpression(text);
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		PrimaryExpression primary = e.asPrimaryExpression();
+		assertTrue(primary instanceof PathExpression);
+		PathExpression path = (PathExpression) primary;
+		List<PathStep> stepList = path.getStepList();
+		assertEquals(2, stepList.size());
+		PathStep step = stepList.get(1);
+		assertTrue(step instanceof HasPathStep);
+		HasPathStep hasStep = (HasPathStep) step;
+		List<PredicateObjectList> list = hasStep.getConstraints();
+		assertEquals(2, list.size());
+		
+		
 		String actual = e.toString();
 		assertEquals(text, actual);
 	}
@@ -346,25 +357,25 @@ public class FormulaParserTest {
 		
 	}
 	
-	@Test
-	public void testSum() throws Exception {
-		String text = "\n"+
-			"@term price <http://schema.org/price>\n" + 
-			"@term OfferShape <http://example.com/ns/OfferShape>\n" + 
-			"@term hasShape <http://www.konig.io/ns/core/hasShape>\n" +
-			"@term x <http://www.konig.io/ns/var/x>\n\n" +
-			
-			"SUM(?x.price)\n" + 
-			"WHERE\n" + 
-			"   ?x hasShape OfferShape .\n" + 
-			"";
-		
-		Expression e = parser.quantifiedExpression(text);
-		String actual = e.toString();
-		String expected = text;
-		assertEquals(expected, actual);
-		
-	}
+	
+//	public void testSum() throws Exception {
+//		String text = "\n"+
+//			"@term price <http://schema.org/price>\n" + 
+//			"@term OfferShape <http://example.com/ns/OfferShape>\n" + 
+//			"@term hasShape <http://www.konig.io/ns/core/hasShape>\n" +
+//			"@term x <http://www.konig.io/ns/var/x>\n\n" +
+//			
+//			"SUM(?x.price)\n" + 
+//			"WHERE\n" + 
+//			"   ?x hasShape OfferShape .\n" + 
+//			"";
+//		
+//		Expression e = parser.quantifiedExpression(text);
+//		String actual = e.toString();
+//		String expected = text;
+//		assertEquals(expected, actual);
+//		
+//	}
 	
 	@Test
 	public void testIfPlus() throws Exception {
@@ -482,11 +493,15 @@ public class FormulaParserTest {
 
 		String text = "$.alpha.beta NOT IN (foo , bar)";
 		
-		Expression e = parser.expression(text);
 		
-		String actual = e.toString();
+		QuantifiedExpression e = parser.quantifiedExpression(text, term("alpha"), term("beta"), term("foo"), term("bar"));
+		
+		String actual = e.toSimpleString();
 	
 		assertEquals(text, actual);
+	}
+	private URI term(String text) {
+		return uri("http://example.com/term/" + text);
 	}
 
 	@Test

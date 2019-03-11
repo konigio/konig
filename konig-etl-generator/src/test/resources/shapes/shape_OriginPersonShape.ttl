@@ -17,7 +17,7 @@ shape:OriginPersonShape a sh:Shape ;
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
-.schema:givenName''' ]  ; 
+$.schema:givenName''' ]  ; 
 	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/devAws-edw-core-s3bucket2> , ""^^xsd:integer , <http://www.konig.io/ns/aws/host/devHost/databases/edwcore/tables/OriginPersonShape> . 
 
 <http://www.konig.io/activity/mXuE6WGS4wgAAAFiGYOZAA> a konig:LoadModelFromSpreadsheet ; 

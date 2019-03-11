@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.openrdf.model.Literal;
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
@@ -88,19 +87,12 @@ public class Path2FormulaTranslator {
 		} else if (step instanceof HasStep) {
 			result = hasStep((HasStep) step, context);
 		} else if (step instanceof VertexStep) {
-			result = iriStep((VertexStep)step, context);
+			throw new KonigException("VertexStep is not supported");
 		}
 		return result;
 	}
 
-	private PathStep iriStep(VertexStep step, Context context) {
-		Resource resource = step.getResource();
-		
-		if (resource instanceof URI) {
-			return iriValue((URI) resource, context);
-		}
-		throw new KonigException("BNode not supported");
-	}
+
 
 	private HasPathStep hasStep(HasStep step, Context context) {
 		
@@ -114,12 +106,15 @@ public class Path2FormulaTranslator {
 			
 			PredicateObjectList pol = map.get(predicate);
 			if (pol == null) {
-				IriValue predicateValue = iriValue(predicate, context);
+				PathTerm predicateValue = iriValue(predicate, context);
 				List<Expression> expressionList = new ArrayList<>();
 				ObjectList objectList = new ObjectList(expressionList);
 				expressionList.add(valueExpression);
 				
-				pol = new PredicateObjectList(predicateValue, objectList);
+				PathExpression path = new PathExpression();
+				path.add(new DirectionStep(Direction.OUT, predicateValue));
+				
+				pol = new PredicateObjectList(path, objectList);
 				constraints.add(pol);
 				map.put(predicate, pol);
 			} else {
@@ -155,7 +150,7 @@ public class Path2FormulaTranslator {
 		throw new KonigException("PrimaryExpression for BNode not supported");
 	}
 
-	private IriValue iriValue(URI predicate, Context context) {
+	private PathTerm iriValue(URI predicate, Context context) {
 		if (context == null) {
 			return new FullyQualifiedIri(predicate);
 		}
@@ -180,7 +175,7 @@ public class Path2FormulaTranslator {
 
 	private PathStep directionStep(Direction direction, URI predicate, Context context) {
 		
-		IriValue pathTerm = iriValue(predicate, context);
+		PathTerm pathTerm = iriValue(predicate, context);
 		return new DirectionStep(direction, pathTerm);
 	}
 

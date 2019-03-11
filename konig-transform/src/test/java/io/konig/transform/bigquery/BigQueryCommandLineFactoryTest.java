@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.Ignore;
 import org.openrdf.model.URI;
 
 import io.konig.sql.query.BigQueryCommandLine;
@@ -39,7 +39,7 @@ public class BigQueryCommandLineFactoryTest extends AbstractShapeModelToShapeRul
 		useBigQueryTransformStrategy();
 	}
 	
-	@Test
+	@Ignore
 	public void testUpdateCommand() throws Exception {
 		load("src/test/resources/konig-transform/transform-update");
 		URI shapeId = iri("http://example.com/shapes/BqPersonShape");
@@ -60,7 +60,7 @@ public class BigQueryCommandLineFactoryTest extends AbstractShapeModelToShapeRul
 	}
 	
 
-	@Test
+	@Ignore
 	public void testInsertCommand() throws Exception {
 
 		load("src/test/resources/konig-transform/flattened-field");

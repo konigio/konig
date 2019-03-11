@@ -22,6 +22,8 @@ package io.konig.formula;
 
 import java.util.List;
 
+import org.openrdf.model.URI;
+
 import io.konig.core.io.PrettyPrintWriter;
 
 public class HasPathStep extends AbstractFormula implements PathStep {
@@ -58,6 +60,11 @@ public class HasPathStep extends AbstractFormula implements PathStep {
 		}
 		visitor.exit(this);
 		
+	}
+
+	@Override
+	public URI getIri() {
+		return null;
 	}
 
 }

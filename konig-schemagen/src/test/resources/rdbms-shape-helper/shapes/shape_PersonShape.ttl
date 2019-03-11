@@ -32,7 +32,7 @@ shape:PersonShape a sh:Shape ;
 		sh:minCount 0 ; 
 		sh:maxCount 1 ;
 		konig:formula '''@prefix schema: <http://schema.org/> .
-.schema:address'''
+$.schema:address'''
 	 ]  ,  [ 
 		sh:path schema:owns ; 
 		rdfs:comment "Products owned by the organization or person." ; 

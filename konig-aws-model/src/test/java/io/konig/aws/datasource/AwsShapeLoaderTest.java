@@ -51,7 +51,7 @@ import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 import io.konig.shacl.io.ShapeWriter;
 
-public class ShapeLoaderTest {
+public class AwsShapeLoaderTest {
 
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
