@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import java.util.List;
+
 /*
  * #%L
  * Konig Core
@@ -25,16 +27,30 @@ import io.konig.core.io.PrettyPrintWriter;
 
 public class PredicateObjectList extends AbstractFormula {
 	
-	private IriValue verb;
+	private PathExpression path;
 	private ObjectList objectList;
 
-	public PredicateObjectList(IriValue verb, ObjectList objectList) {
-		this.verb = verb;
+	public PredicateObjectList(PathExpression path, ObjectList objectList) {
+		this.path = path;
 		this.objectList = objectList;
 	}
 
 	public IriValue getVerb() {
-		return verb;
+		List<PathStep> list = path.getStepList();
+		if (list.size() == 1) {
+			PathStep step = list.get(0);
+			if (step instanceof DirectionStep) {
+				DirectionStep dirStep = (DirectionStep) step;
+				if (dirStep.getDirection() == Direction.OUT) {
+					return dirStep.getTerm();
+				}
+			}
+		}
+		return null;
+	}
+
+	public PathExpression getPath() {
+		return path;
 	}
 
 	public ObjectList getObjectList() {
@@ -44,16 +60,35 @@ public class PredicateObjectList extends AbstractFormula {
 	@Override
 	public void print(PrettyPrintWriter out) {
 		
-		verb.print(out);
+		PathTerm predicate = predicatePath();
+		if (predicate != null) {
+			predicate.print(out);
+		} else {
+			path.print(out);
+		}
 		out.print(' ');
 		objectList.print(out);
 
 	}
 
+	private PathTerm predicatePath() {
+
+		if (path.getStepList().size()==1) {
+			PathStep step = path.getStepList().get(0);
+			if (step instanceof DirectionStep) {
+				DirectionStep dirStep = (DirectionStep) step;
+				if (dirStep.getDirection()==Direction.OUT) {
+					return dirStep.getTerm();
+				}
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public void dispatch(FormulaVisitor visitor) {
 		visitor.enter(this);
-		verb.dispatch(visitor);
+		path.dispatch(visitor);
 		objectList.dispatch(visitor);
 		visitor.exit(this);
 

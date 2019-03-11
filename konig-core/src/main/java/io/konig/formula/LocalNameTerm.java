@@ -30,7 +30,7 @@ import io.konig.core.Term;
 
 import io.konig.core.io.PrettyPrintWriter;
 
-public class LocalNameTerm extends AbstractFormula implements IriValue {
+public class LocalNameTerm extends AbstractFormula implements PathTerm {
 	
 	private String localName;
 	private Context context;

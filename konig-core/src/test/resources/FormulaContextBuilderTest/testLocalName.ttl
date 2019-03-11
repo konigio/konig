@@ -13,6 +13,6 @@ shape:RootedPersonShape a sh:Shape ;
 		sh:predicate schema:birthPlace ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ;
-		konig:formula "parent.birthPlace"
+		konig:formula "$.parent.birthPlace"
 	 ]   
 . 

@@ -55,7 +55,7 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
-public class ShapeLoaderTest {
+public class ShaclShapeLoaderTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeLoader loader = new ShapeLoader(shapeManager);
 	
@@ -193,7 +193,7 @@ public class ShapeLoaderTest {
 		assertEquals("1 + 2 + 3", p.getFormula().toString());
 	}
 	
-	@Ignore
+	@Test
 	public void testIdFormat() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		Graph graph = new MemoryGraph();
@@ -223,13 +223,14 @@ public class ShapeLoaderTest {
 		Expression formula = p.getFormula();
 		assertTrue(formula != null);
 		
-		String expected = "\n" +
-			"@prefix ex: <http://example.com/ns/> .\n" + 
-			"@term status <http://example.com/ns/status>\n" + 
-			"@term estimatedPoints <http://example.com/ns/estimatedPoints>\n\n" + 
-			"($.status = ex:Complete) ? $.estimatedPoints : 0";
+		String expected = 
+				"@prefix ex: <http://example.com/ns/> .\n" + 
+				"@term status <http://example.com/ns/status>\n" + 
+				"@term estimatedPoints <http://example.com/ns/estimatedPoints>\n" + 
+				"\n" + 
+				"IF($.status = ex:Complete , $.estimatedPoints , 0)";
 		
-		assertEquals(expected, formula.toString());
+		assertEquals(expected, formula.toString().trim());
 	}
 
 

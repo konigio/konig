@@ -16,7 +16,7 @@ shape:SourcePersonRdbmsShape sh:property  [
 		<http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate> alias:FIRST_NAME ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
 
-.schema:givenName'''
+$.schema:givenName'''
 	 ]  ,  [ 
 		sh:path alias:LAST_NAME ; 
 		sh:minCount 0 ; 
@@ -26,7 +26,7 @@ shape:SourcePersonRdbmsShape sh:property  [
 		<http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate> alias:LAST_NAME ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
 
-.schema:familyName''' ]  ; 
+$.schema:familyName''' ]  ; 
 	a konig:TabularNodeShape , sh:Shape ; 
 	konig:shapeDataSource <https://amazonaws.konig.io/s3/bucket/${environmentName}-SourcePersonRdbmsShape> , <http://www.konig.io/ns/aws/host/devHost/databases/schema1/tables/SourcePersonRdbmsShape> ;  
 	prov:wasGeneratedBy <http://www.konig.io/activity/5N0Olwa8L38AAAFkjhlLig> ; 

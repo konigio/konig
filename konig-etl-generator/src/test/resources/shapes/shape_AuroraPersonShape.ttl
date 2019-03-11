@@ -17,7 +17,7 @@ shape:AuroraPersonShape a sh:Shape ;
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		konig:formula '''@prefix schema: <http://schema.org/> .
-.schema:givenName''' ]  ; 
+$.schema:givenName''' ]  ; 
 	konig:shapeDataSource <http://www.konig.io/ns/aws/host/devHost/databases/edwcore/tables/AuroraPersonShape> . 
 
 <http://www.konig.io/activity/mXuE6WGS4wgAAAFiGYOZAA> a konig:LoadModelFromSpreadsheet ; 

@@ -42,7 +42,7 @@ shape:PersonShape a sh:Shape ;
 		sh:minCount 0 ; 
 		sh:maxCount 1 ;
 		konig:formula '''@prefix schema: <http://schema.org/> .
-.schema:address'''
+$.schema:address'''
 	 ]  . 
 
 <http://www.konig.io/ns/aws/host/${awsAuroraHost}/databases/${awsAuroraSchema}/tables/PersonRdbmsShape> a konig:AwsAurora , konig:DataSource ; 

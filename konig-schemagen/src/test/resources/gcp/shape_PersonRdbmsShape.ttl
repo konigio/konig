@@ -13,7 +13,7 @@ shape:PersonRdbmsShape sh:property  [
 		sh:datatype xsd:string ; 
 		sh:predicate alias:NAME ; 
 		sh:minCount 0 ; 
-		konig:formula ".name" ; 
+		konig:formula "$.name" ; 
 		sh:maxCount 1
 	 ]  ,  [ 
 		sh:path alias:GIVEN_NAME ; 
@@ -21,7 +21,7 @@ shape:PersonRdbmsShape sh:property  [
 		sh:datatype xsd:string ; 
 		sh:predicate alias:GIVEN_NAME ; 
 		sh:minCount 0 ; 
-		konig:formula ".givenName" ; 
+		konig:formula "$.givenName" ; 
 		sh:maxCount 1
 	 ]  ,  [ 
 		sh:path alias:FAMILY_NAME ; 
@@ -29,7 +29,7 @@ shape:PersonRdbmsShape sh:property  [
 		sh:datatype xsd:string ; 
 		sh:predicate alias:FAMILY_NAME ; 
 		sh:minCount 0 ; 
-		konig:formula ".familyName" ; 
+		konig:formula "$.familyName" ; 
 		sh:maxCount 1
 	 ]  ,  [ 
 		sh:path alias:PERSON_ID ; 
@@ -38,7 +38,7 @@ shape:PersonRdbmsShape sh:property  [
 		sh:predicate alias:PERSON_ID ; 
 		sh:minCount 1 ; 
 		konig:stereotype konig:syntheticKey ; 
-		konig:formula ".personId" ; 
+		konig:formula "$.personId" ; 
 		sh:maxCount 1 ]  ; 
 	a sh:Shape ; 
 	sh:targetClass schema:Person ; 

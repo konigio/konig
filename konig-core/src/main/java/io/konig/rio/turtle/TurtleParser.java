@@ -1587,6 +1587,7 @@ public class TurtleParser extends RDFParserBase {
 			return -1;
 		}
 		int next = reader.read();
+//		System.out.println("  READ " + (char)next);
 		if (next == -1) {
 			reader = null;
 			return -1;
@@ -1606,6 +1607,7 @@ public class TurtleParser extends RDFParserBase {
 	
 	protected void unread(int codePoint) throws IOException {
 		if (codePoint != -1) {
+//			System.out.println("UNREAD " + (char) codePoint);
 			if (Character.isSupplementaryCodePoint(codePoint)) {
 				final char[] surrogatePair = Character.toChars(codePoint);
 				reader.unread(surrogatePair);

@@ -12,9 +12,9 @@ shape:OriginOrganizationShape a sh:Shape ;
 		sh:shape shape:PostalAddressShape ; 
 		sh:minCount 0 ; 
 		sh:maxCount 3 ;
-		konig:formula '''@context {
-  "schema" : "http://schema.org/",
-  "founder" : "schema:founder",
-  "address" : "schema:address"
-}
-.schema.founder.address''' ]  . 
+		konig:formula '''
+@term schema  <http://schema.org/>
+@term founder schema:founder
+@term address schema:address
+
+$.schema.founder.address''' ]  . 

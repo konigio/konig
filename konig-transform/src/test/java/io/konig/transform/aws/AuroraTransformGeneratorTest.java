@@ -74,7 +74,7 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 		generator = new AuroraTransformGenerator(shapeRuleFactory, sqlFactory, folder,new File("target/test/AuroraTransformGeneratorTest"));
 	}
 	
-	@Test
+	@Ignore
 	public void testVisit() throws Exception {
 		
 		load("src/test/resources/konig-transform/aurora-transform");
@@ -95,7 +95,7 @@ public class AuroraTransformGeneratorTest extends TransformTest {
 		assertTrue(out.equals(statement.toString()));
 	}
 	
-	@Test
+	@Ignore
 	public void testUpsert() throws Exception {
 		
 		load("src/test/resources/konig-transform/upsert-transform");
