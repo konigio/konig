@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.vocab.SH;
 import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
 import io.konig.schemagen.ShapeTransformer;
@@ -153,10 +154,17 @@ public class JsonSchemaGenerator extends Generator {
 
 		private void putProperties(ObjectNode json, Shape shape) {
 			
+			boolean hasIdProperty =  (shape.getNodeKind() == NodeKind.IRI);
+			
 			List<PropertyConstraint> list = shape.getProperty();
-			if (list != null && !list.isEmpty()) {
+			if (hasIdProperty  || !list.isEmpty()) {
 				ObjectNode properties = mapper.createObjectNode();
 				json.set("properties", properties);
+				
+				if (hasIdProperty) {
+					addIdProperty(properties, shape);
+				}
+				
 				json.put("additionalProperties", additionalProperties);
 				for (PropertyConstraint constraint : list) {
 					
@@ -168,6 +176,21 @@ public class JsonSchemaGenerator extends Generator {
 			}
 			
 			// TODO: list required fields.
+			
+		}
+
+		private void addIdProperty(ObjectNode properties, Shape shape) {
+
+			ObjectNode field = mapper.createObjectNode();
+			properties.set("id", field);
+			field.put("type", "string");
+			if (shape.getTargetClass() != null) {
+				StringBuilder builder = new StringBuilder();
+				builder.append("The IRI that identifies this ");
+				builder.append(shape.getTargetClass().getLocalName());
+				
+				field.put("description", builder.toString());
+			}
 			
 		}
 
