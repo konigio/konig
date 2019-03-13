@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,12 +33,10 @@ public class ShowlJoinCondition {
 	private ShowlPropertyShape left;
 	private ShowlPropertyShape right;
 	
-	private ShowlJoinCondition previous;
 
-	public ShowlJoinCondition(ShowlPropertyShape left, ShowlPropertyShape right, ShowlJoinCondition previous) {
+	public ShowlJoinCondition(ShowlPropertyShape left, ShowlPropertyShape right) {
 		this.left = left;
 		this.right = right;
-		this.previous = previous;
 		
 		if (logger.isTraceEnabled() && left!=null &&right!=null) {
 			logger.trace("new JoinCondition: {} ... {}", left.getPath(), right.getPath());
@@ -77,10 +77,6 @@ public class ShowlJoinCondition {
 	public ShowlPropertyShape getRight() {
 		return right;
 	}
-
-	public ShowlJoinCondition getPrevious() {
-		return previous;
-	}
 	
 	public ShowlPropertyShape propertyOf(ShowlNodeShape node) {
 		return
@@ -120,6 +116,17 @@ public class ShowlJoinCondition {
 	 */
 	public String focusAlias(NodeNamer namer) {
 		return namer.varname(focusNode());
+	}
+
+	public ShowlNodeShape otherNode(Set<ShowlNodeShape> set) {
+		if (left!=null && !set.contains(left.getDeclaringShape())) {
+			return left.getDeclaringShape();
+		}
+		if (right!=null && !set.contains(right.getDeclaringShape())) {
+			return right.getDeclaringShape();
+		}
+		
+		return null;
 	}
 	
 	

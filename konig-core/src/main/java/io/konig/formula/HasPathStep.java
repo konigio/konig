@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import java.io.StringWriter;
+
 /*
  * #%L
  * Konig Core
@@ -37,6 +39,8 @@ public class HasPathStep extends AbstractFormula implements PathStep {
 	public List<PredicateObjectList> getConstraints() {
 		return constraints;
 	}
+	
+	
 
 	@Override
 	public void print(PrettyPrintWriter out) {

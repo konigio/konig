@@ -25,10 +25,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.impl.RdfUtil;
 import io.konig.formula.Direction;
@@ -37,10 +42,12 @@ import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public abstract class ShowlPropertyShape implements Traversable {
+	private static final Logger logger = LoggerFactory.getLogger(ShowlPropertyShape.class);
 	private ShowlNodeShape declaringShape;
 	private ShowlProperty property;
 	private PropertyConstraint propertyConstraint;
@@ -49,6 +56,7 @@ public abstract class ShowlPropertyShape implements Traversable {
 	private Map<ShowlJoinCondition, ShowlMapping> mappings;
 	private Map<ShowlPropertyShape, ShowlJoinCondition> joinConditions;
 	private ShowlMapping selectedMapping;
+	private Set<Value> hasValue;
 	
 	public ShowlPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, PropertyConstraint propertyConstraint) {
 		this.declaringShape = declaringShape;
@@ -56,6 +64,9 @@ public abstract class ShowlPropertyShape implements Traversable {
 		this.propertyConstraint = propertyConstraint;
 	}
 	
+	public NodeKind getNodeKind() {
+		return propertyConstraint == null ? null : propertyConstraint.getNodeKind();
+	}
 	public void addMapping(ShowlMapping mapping) {
 		if (mappings==null) {
 			mappings = new HashMap<>();
@@ -67,6 +78,11 @@ public abstract class ShowlPropertyShape implements Traversable {
 		return mappings==null ? Collections.emptySet() : mappings.values();
 	}
 	
+	/**
+	 * Get the mapping for this property within the given join condition.
+	 * @param joinCondition The join condition for which the mapping is requested.
+	 * @return The mapping for this property within the join condition, or null if no mapping exists.
+	 */
 	public ShowlMapping getMapping(ShowlJoinCondition joinCondition) {
 		return mappings==null ? null : mappings.get(joinCondition);
 	}
@@ -195,6 +211,9 @@ public abstract class ShowlPropertyShape implements Traversable {
 	 * 
 	 */
 	void setPeer(ShowlPropertyShape peer) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("setPeer: {} <=> {}", this.getPath(), peer.getPath());
+		}
 		this.peer = peer;
 		peer.peer = this;
 	}
@@ -212,6 +231,11 @@ public abstract class ShowlPropertyShape implements Traversable {
 		
 	}
 	
+	/**
+	 * Check whether there exists a join condition involving this property and some other property.
+	 * @param otherProperty  The other property in the join condition.
+	 * @return The join condition if one exists; otherwise return null.
+	 */
 	public ShowlJoinCondition findJoinCondition(ShowlPropertyShape otherProperty) {
 		return joinConditions==null ? null : joinConditions.get(otherProperty);
 	}
@@ -232,7 +256,16 @@ public abstract class ShowlPropertyShape implements Traversable {
 	public void setSelectedMapping(ShowlMapping selectedMapping) {
 		this.selectedMapping = selectedMapping;
 	}
+
+	public Set<Value> getHasValue() {
+		return hasValue==null ? Collections.emptySet() : hasValue;
+	}
 	
-	
+	public void addHasValue(Value value) {
+		if (hasValue == null) {
+			hasValue = new LinkedHashSet<>();
+		}
+		hasValue.add(value);
+	}
 
 }

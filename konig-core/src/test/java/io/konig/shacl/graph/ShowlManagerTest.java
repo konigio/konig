@@ -24,6 +24,9 @@ package io.konig.shacl.graph;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -34,6 +37,9 @@ import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.showl.ShowlDerivedPropertyList;
+import io.konig.core.showl.ShowlDerivedPropertyShape;
+import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlJoinCondition;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlMapping;
@@ -56,7 +62,49 @@ public class ShowlManagerTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShapeBuilder shapeBuilder = new ShapeBuilder(shapeManager);
 	private ShowlManager showlManager = new ShowlManager(shapeManager, reasoner);
+
 	
+	@Test
+	public void testHasFilter() {
+
+		URI personShapeId = uri("http://example.com/shapes/PersonShape");
+		URI mother = uri("http://example.com/term/mother");
+		shapeBuilder
+			.beginShape(personShapeId)
+			.targetClass(Schema.Person)
+			.nodeKind(NodeKind.IRI)
+			.beginProperty(mother)
+				.nodeKind(NodeKind.IRI)
+				.minCount(0)
+				.maxCount(1)
+				.formula("$.parent[gender Female]", Schema.parent, Schema.gender, Schema.Female)
+			.endProperty()
+			.endShape();
+
+		load();
+
+		ShowlNodeShape personShape = showlManager.getNodeShape(personShapeId).findAny();
+		List<ShowlDerivedPropertyShape> list = personShape.getDerivedProperty(Schema.parent);
+		assertTrue(list != null);
+		
+		ShowlDerivedPropertyShape parent = list.get(0);
+		assertTrue(parent.getValueShape() != null);
+		
+		ShowlNodeShape parentShape = parent.getValueShape();
+		ShowlDerivedPropertyList genderList = parentShape.getDerivedProperty(Schema.gender);
+		assertTrue(!genderList.isEmpty());
+		assertEquals(1, genderList.size());
+		
+		ShowlDerivedPropertyShape female = genderList.get(0);
+	
+		assertEquals(1, female.getHasValue().size());
+		assertTrue(female.getHasValue().contains(Schema.Female));
+		
+		ShowlDirectPropertyShape motherProperty = personShape.getProperty(mother);
+		assertEquals(parent, motherProperty.getPeer());
+		
+		
+	}
 	@Test
 	public void testCreateNode() {
 		URI personTargetShapeId = uri("http://example.com/shapes/PersonTargetShape");

@@ -83,6 +83,19 @@ public class ShowlSqlTransformTest {
 		
 		return transform.createInsert(node, GoogleBigQueryTable.class);
 	}
+	
+	@Test
+	public void testMotherToParent() throws Exception {
+		
+//		test(
+//			"src/test/resources/ShowlSqlTransformTest/mother-to-parent", 
+//			"http://example.com/shape/PersonTargetShape");
+		
+		test(
+			"src/test/resources/ShowlSqlTransformTest/mother-to-parent", 
+			"http://example.com/shape/PersonSourceShape",
+			"parent-to-mother.sql");
+	}
 
 	@Test
 	public void testMonthFunction() throws Exception {
@@ -209,8 +222,11 @@ public class ShowlSqlTransformTest {
 		String[] actual = actualText.split("\\r?\\n");
 		int index = 0;
 		try (BufferedReader reader = new BufferedReader(new FileReader(new File(expectedFile)))) {
-			String expected = reader.readLine();
-			assertEquals(expected, actual[index++]);
+			String expected = null;
+			while ( (expected = reader.readLine()) != null ) {
+				assertEquals(expected, actual[index++]);
+			}
+			assertEquals(index, actual.length);
 		}
 		
 	}

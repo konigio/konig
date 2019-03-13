@@ -36,6 +36,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
+import io.konig.shacl.NodeKind;
 import io.konig.shacl.Shape;
 
 public class ShowlNodeShape implements Traversable {
@@ -45,7 +46,7 @@ public class ShowlNodeShape implements Traversable {
 	private Shape shape; 
 	
 	private Map<URI,ShowlDirectPropertyShape> properties = new HashMap<>();
-	private Map<URI, ShowlDerivedPropertyShape> derivedProperties = null;
+	private Map<URI, ShowlDerivedPropertyList> derivedProperties = null;
 	private Map<URI,ShowlInwardPropertyShape> inProperties = null;
 	
 	private List<ShowlJoinCondition> selectedJoins;
@@ -91,7 +92,9 @@ public class ShowlNodeShape implements Traversable {
 	public Set<ShowlPropertyShape> allOutwardProperties() {
 		Set<ShowlPropertyShape> set = new HashSet<>();
 		set.addAll(getProperties());
-		set.addAll(getDerivedProperties());
+		for (List<ShowlDerivedPropertyShape> list : getDerivedProperties()) {
+			set.addAll(list);
+		}
 		return set;
 	}
 
@@ -100,12 +103,13 @@ public class ShowlNodeShape implements Traversable {
 		properties.put(p.getPredicate(), p);
 	}
 	
-	public ShowlPropertyShape getProperty(URI predicate) {
+	public ShowlDirectPropertyShape getProperty(URI predicate) {
 		return properties.get(predicate);
 	}
 	
-	public ShowlDerivedPropertyShape getDerivedProperty(URI predicate) {
-		return derivedProperties.get(predicate);
+	public ShowlDerivedPropertyList getDerivedProperty(URI predicate) {
+		ShowlDerivedPropertyList list = derivedProperties.get(predicate);
+		return list == null ? (ShowlDerivedPropertyList) Collections.EMPTY_LIST : list;
 	}
 	
 	public Resource getId() {
@@ -154,23 +158,49 @@ public class ShowlNodeShape implements Traversable {
 	}
 	
 	public void addDerivedProperty(ShowlDerivedPropertyShape p) {
-		derivedProperties.put(p.getPredicate(), p);
+		ShowlDerivedPropertyList list = derivedProperties.get(p.getPredicate());
+		if (list == null) {
+			list = new ShowlDerivedPropertyList(p.getPredicate());
+			derivedProperties.put(p.getPredicate(),  list);
+		}
+		list.add(p);
 	}
 	
+	public List<ShowlPropertyShape> out(URI predicate) {
+		ShowlDirectPropertyShape direct = properties.get(predicate);
+		ShowlDerivedPropertyList indirect = derivedProperties.get(predicate);
+		
+		if (direct==null && indirect==null) {
+			return Collections.emptyList();
+		}
+		
+		List<ShowlPropertyShape> list = new ArrayList<>();
+		if (direct != null) {
+			list.add(direct);
+		}
+		if (indirect!=null) {
+			list.addAll(indirect);
+		}
+		return list;
+	}
 	
 	
 	/**
 	 * Find an outward property.
 	 */
+	@Deprecated
 	public ShowlPropertyShape findProperty(URI predicate) {
 		ShowlPropertyShape p = getProperty(predicate);
 		if (p == null) {
-			p = getDerivedProperty(predicate);
+			List<ShowlDerivedPropertyShape> list = derivedProperties.get(predicate);
+			if (list != null && list.size() == 1) {
+				p = list.get(0);
+			}
 		}
 		return p;
 	}
 
-	public Collection<ShowlDerivedPropertyShape> getDerivedProperties() {
+	public Collection<ShowlDerivedPropertyList> getDerivedProperties() {
 		return derivedProperties.values();
 	}
 
@@ -215,6 +245,11 @@ public class ShowlNodeShape implements Traversable {
 
 	public void setUnmapped(boolean unmapped) {
 		this.unmapped = unmapped;
+	}
+
+
+	public NodeKind getNodeKind() {
+		return shape == null ? null : shape.getNodeKind();
 	}
 
 

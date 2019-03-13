@@ -24,10 +24,13 @@ import java.text.MessageFormat;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
@@ -39,6 +42,7 @@ import io.konig.core.showl.NodeNamer;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlFormulaPropertyShape;
+import io.konig.core.showl.ShowlIdRefPropertyShape;
 import io.konig.core.showl.ShowlJoinCondition;
 import io.konig.core.showl.ShowlMapping;
 import io.konig.core.showl.ShowlNodeShape;
@@ -67,6 +71,7 @@ import io.konig.formula.FullyQualifiedIri;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.FunctionModel;
 import io.konig.formula.GeneralAdditiveExpression;
+import io.konig.formula.HasPathStep;
 import io.konig.formula.KqlType;
 import io.konig.formula.LiteralFormula;
 import io.konig.formula.LocalNameTerm;
@@ -111,15 +116,12 @@ import io.konig.sql.query.TableAliasExpression;
 import io.konig.sql.query.TableItemExpression;
 import io.konig.sql.query.TableNameExpression;
 import io.konig.sql.query.ValueExpression;
+import io.konig.sql.query.WhereClause;
 
 public class ShowlSqlTransform {
 	private static final Logger logger = LoggerFactory.getLogger(ShowlSqlTransform.class);
 
 
-	private static final FunctionModel DATE_TRUNC = 
-		new FunctionModel("DATE_TRUNC", KqlType.INSTANT)
-		.param("temporalUnit", KqlType.STRING)
-		.param("temporalValue", KqlType.INSTANT);
 
 	public ShowlSqlTransform() {
 	}
@@ -138,6 +140,8 @@ public class ShowlSqlTransform {
 		private Class<? extends TableDataSource> datasourceType;
 		private SqlDialect dialect;
 		
+		private List<BooleanTerm> whereList = new ArrayList<>();
+		
 		public InsertStatement createInsert(ShowlNodeShape targetNode, Class<? extends TableDataSource> datasourceType) throws ShowlSqlTransformException  {
 			this.datasourceType = datasourceType;
 			setDialect();
@@ -147,7 +151,17 @@ public class ShowlSqlTransform {
 			SelectExpression selectQuery = selectInto(targetNode);
 			InsertStatement insert = new InsertStatement(tableName, columns, selectQuery);
 			
+			
 			return insert;
+		}
+		
+
+		private AliasExpression alias(QueryExpression e, String alias) {
+			if (e instanceof AliasExpression) {
+				AliasExpression a = (AliasExpression) e;
+				e = a.getExpression();
+			}
+			return new AliasExpression(e, alias);
 		}
 
 		private void setDialect() {
@@ -168,14 +182,34 @@ public class ShowlSqlTransform {
 				}
 			}
 			addFrom(targetNode, select);
+			addWhere(select);
 			return select;
 		}
 
+		private void addWhere(SelectExpression select) {
+			if (whereList.size()==1) {
+				WhereClause clause = new WhereClause(whereList.get(0));
+				select.setWhere(clause);
+			} else if (whereList.size()>1) {
+				AndExpression and = new AndExpression();
+				for (BooleanTerm term : whereList) {
+					and.add(term);
+				}
+				
+				select.setWhere(new WhereClause(and));
+			}
+			
+		}
+
+
 		private void addFrom(ShowlNodeShape targetNode, SelectExpression select) throws ShowlSqlTransformException {
 			
+			Set<ShowlNodeShape> mapped = new HashSet<>();
+			mapped.add(targetNode);
 			for (ShowlJoinCondition join : targetNode.getSelectedJoins()) {
 
-				ShowlNodeShape focusNode = join.focusNode();
+				ShowlNodeShape focusNode = join.otherNode(mapped);
+				mapped.add(focusNode);
 				TableItemExpression tableItem = tableAlias(focusNode);
 				
 				if (join instanceof ShowlSourceToSourceJoinCondition) {
@@ -292,11 +326,12 @@ public class ShowlSqlTransform {
 				return null;
 			}
 			ShowlPropertyShape other = m.findOther(p);
+			addWhereCondition(p);
 			if (other instanceof ShowlTemplatePropertyShape) {
 				return templateValue((ShowlTemplatePropertyShape) other);
 			}
 			
-			if (p.getPropertyConstraint().getNodeKind() == NodeKind.IRI) {
+			if (p.getNodeKind() == NodeKind.IRI) {
 				return iriReference(p, other);
 			}
 			
@@ -305,20 +340,76 @@ public class ShowlSqlTransform {
 				return alias(formula((ShowlFormulaPropertyShape)other), p);
 			}
 			
+			if (other instanceof ShowlIdRefPropertyShape) {
+				ShowlIdRefPropertyShape idref = (ShowlIdRefPropertyShape) other;
+				other = idref.getIdref();
+			}
+			
 			
 			String tableAlias = nodeNamer.varname(other.getDeclaringShape());
 			
 			String sourceColumnName = other.getPredicate().getLocalName();
 			String targetColumnName = p.getPredicate().getLocalName();
 			ColumnExpression column = new ColumnExpression(tableAlias + "." + sourceColumnName);
+			
+			
 			if (!targetColumnName.equals(sourceColumnName)) {
-				return new AliasExpression(column, targetColumnName);
+				return alias(column, targetColumnName);
 			}
 			
 			return column;
 		}
 
 		
+
+		private void addWhereCondition(ShowlDirectPropertyShape targetProperty) throws ShowlSqlTransformException {
+			
+			doAddWhereCondition(targetProperty);
+			doAddWhereCondition(targetProperty.getPeer());
+			
+		}
+
+		private void doAddWhereCondition(ShowlPropertyShape targetProperty) throws ShowlSqlTransformException {
+			if (targetProperty != null) {
+				ShowlNodeShape node = targetProperty.getValueShape();
+				if (node != null) {
+					for (ShowlPropertyShape p : node.allOutwardProperties()) {
+						for (Value value : p.getHasValue()) {
+
+							
+							ShowlMapping m = p.getSelectedMapping();
+							if (m == null) {
+								fail(p, "Mapping not found");
+							}
+							ShowlPropertyShape other = m.findOther(p);
+							
+							ValueExpression left = valuePath(other);
+							ValueExpression right = null;
+							if (value instanceof URI) {
+								// For now, we assume that the IRI is an enumerated value.
+								// TODO: Handle the general case.
+								URI iri = (URI) value;
+								
+								right = new StringLiteralExpression(iri.getLocalName());
+								
+								
+							}
+							
+							if (right == null) {
+								fail(targetProperty, "Failed to construct value {0}", value.stringValue());
+							}
+
+							
+							if (logger.isTraceEnabled()) {
+								logger.trace("addWhereCondition: {} = {}", p.getPath(), value.stringValue());
+							}
+							whereList.add( new ComparisonPredicate(ComparisonOperator.EQUALS, left, right) );
+						}
+					}
+				}
+			}
+			
+		}
 
 		private ValueExpression iriReference(ShowlDirectPropertyShape p, ShowlPropertyShape other) throws ShowlSqlTransformException {
 			
@@ -328,7 +419,16 @@ public class ShowlSqlTransform {
 				if (otherId instanceof ShowlTemplatePropertyShape) {
 					ValueExpression e = templateValue((ShowlTemplatePropertyShape)otherId);
 					
-					return new AliasExpression(e, p.getPredicate().getLocalName());
+					return alias(e, p.getPredicate().getLocalName());
+				}
+				if (otherId != null) {
+					
+					ValueExpression path = valuePath(otherId);
+					
+					if (!otherId.getPredicate().getLocalName().equals(p.getPredicate().getLocalName())) {
+						path = alias(path, p.getPredicate().getLocalName());
+					}
+					return path;
 				}
 			}
 			
@@ -337,14 +437,49 @@ public class ShowlSqlTransform {
 				return valueExpression(other, formula);
 			}
 			
+			if (other.getHasValue().size()==1) {
+				Value value = other.getHasValue().iterator().next();
+				if (value instanceof URI) {
+					// For now we assume that hasValue members belong to an Enumeration
+					// and we supply only the local name.
+					
+					URI uri = (URI) value;
+					return alias(new StringLiteralExpression(uri.getLocalName()), p.getPredicate().getLocalName());
+				}
+			}
+			
+			if (other instanceof ShowlDirectPropertyShape) {
+				return valueExpression(other);
+			}
+			
 			throw new ShowlSqlTransformException(
 				MessageFormat.format("Failed to construct IRI reference for {0} from {1}",
 						p.getPath(), other.getPath()));
 		}
 
+		private ValueExpression valuePath(ShowlPropertyShape p) {
+
+			String tableName = nodeNamer.varname(p.getDeclaringShape());
+			
+			List<String> fieldList = new ArrayList<>();
+			for (ShowlPropertyShape q=p; q != null; q=q.getDeclaringShape().getAccessor()) {
+				fieldList.add(q.getPredicate().getLocalName());
+			}
+			
+			StringBuilder builder = new StringBuilder();
+			builder.append(tableName);
+			for (int i=fieldList.size()-1; i>=0; i--) {
+				builder.append('.');
+				builder.append(fieldList.get(i));
+			}
+			
+			return new ColumnExpression(builder.toString());
+		}
+
+
 		private ValueExpression alias(ValueExpression e, ShowlDirectPropertyShape p) {
 			String aliasName = p.getPredicate().getLocalName();
-			return new AliasExpression(e, aliasName);
+			return alias(e, aliasName);
 		}
 
 		private ValueExpression formula(ShowlFormulaPropertyShape p) throws ShowlSqlTransformException {
@@ -356,10 +491,6 @@ public class ShowlSqlTransform {
 			}
 			return v;
 		}
-		
-		
-
-		
 
 		private ValueExpression caseStatement(ShowlPropertyShape p, CaseStatement kql) throws ShowlSqlTransformException {
 			
@@ -658,8 +789,9 @@ public class ShowlSqlTransform {
 						throw new ShowlSqlTransformException("IN steps not supported yet in path" + path.simpleText());
 					}
 					
-				} else {
-					throw new ShowlSqlTransformException("Path not supported: " + path.simpleText());
+				} else if (step instanceof HasPathStep) {
+					throw new ShowlSqlTransformException("HAS steps not supported yet in path " + path.simpleText());
+//					ShowlNodeShape node = p == null ? node 
 				}
 			}
 			
@@ -816,7 +948,7 @@ public class ShowlSqlTransform {
 			
 		
 			
-			return new AliasExpression(struct, fieldName);
+			return alias(struct, fieldName);
 		}
 
 		private ValueExpression templateValue(ShowlTemplatePropertyShape showlTemplate) throws ShowlSqlTransformException {
@@ -863,7 +995,7 @@ public class ShowlSqlTransform {
 			}
 			String targetName = showlTemplate.getPredicate().getLocalName();
 			
-			return new AliasExpression(func, targetName);
+			return alias(func, targetName);
 		}
 		
 		

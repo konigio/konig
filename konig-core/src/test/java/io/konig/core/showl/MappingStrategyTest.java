@@ -56,7 +56,7 @@ public class MappingStrategyTest {
 		URI shapeId = uri("http://example.com/ns/shape/PersonTargetShape");
 		ShowlNodeShape node = showlManager.getNodeShape(shapeId).findAny();
 		
-		List<ShowlDirectPropertyShape> remains = strategy.selectMappings(node);
+		List<ShowlPropertyShape> remains = strategy.selectMappings(node);
 		
 		ShowlPropertyShape givenName = node.findProperty(Schema.givenName);
 		

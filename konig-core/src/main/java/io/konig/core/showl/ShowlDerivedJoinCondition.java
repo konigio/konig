@@ -25,8 +25,8 @@ public class ShowlDerivedJoinCondition extends ShowlJoinCondition {
 
 	private ShowlJoinCondition derivedFrom;
 	
-	public ShowlDerivedJoinCondition(ShowlJoinCondition derivedFrom, ShowlPropertyShape left, ShowlPropertyShape right, ShowlJoinCondition previous) {
-		super(left, right, previous);
+	public ShowlDerivedJoinCondition(ShowlJoinCondition derivedFrom, ShowlPropertyShape left, ShowlPropertyShape right) {
+		super(left, right);
 		this.derivedFrom = derivedFrom;
 	}
 

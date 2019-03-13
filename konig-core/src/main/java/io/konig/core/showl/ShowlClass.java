@@ -32,6 +32,14 @@ import io.konig.core.Vertex;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
 
+/**
+ * 
+ * An OWL Class structure with relationships to (a) Properties that reference the class in the domain or range,
+ * (b) superclasses, (c) NodeShapes that have the class as its targetClass.
+ * 
+ * This is the primary vehicle through which one discovers mappings between properties.
+ * 
+ */
 public class ShowlClass {
 	
 	private URI owlClassId;

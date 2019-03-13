@@ -28,7 +28,12 @@
       <param name="ConversionPattern" value="%-5p %c{1} - %m%n"/> 
     </layout> 
   </appender> 
-
+<!-- 
+  <logger name="io.konig.core.showl" additivity="false">
+      <level value="trace"/>
+      <appender-ref ref="console"/>
+  </logger>
+-->
   <root> 
     <priority value ="off" /> 
     <appender-ref ref="console" /> 

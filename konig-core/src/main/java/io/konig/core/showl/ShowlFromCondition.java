@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.Set;
+
 /*
  * #%L
  * Konig Core
@@ -26,7 +28,7 @@ public class ShowlFromCondition extends ShowlDerivedJoinCondition {
 	private ShowlNodeShape sourceNode;
 	
 	public ShowlFromCondition(ShowlJoinCondition derivedFrom, ShowlNodeShape sourceNode) {
-		super(derivedFrom, null, null, null);
+		super(derivedFrom, null, null);
 		this.sourceNode = sourceNode;
 	}
 
@@ -34,5 +36,11 @@ public class ShowlFromCondition extends ShowlDerivedJoinCondition {
 		return sourceNode;
 	}
 	
-
+	public ShowlNodeShape otherNode(Set<ShowlNodeShape> set) {
+		if (!set.contains(sourceNode)) {
+			return sourceNode;
+		}
+		
+		return super.otherNode(set);
+	}
 }

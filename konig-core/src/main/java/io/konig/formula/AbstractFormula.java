@@ -37,7 +37,15 @@ public abstract class AbstractFormula implements Formula {
 		return buffer.toString();
 	}
 	
-
+	public String toSimpleString() {
+		StringWriter buffer = new StringWriter();
+		PrettyPrintWriter out = new PrettyPrintWriter(buffer);
+		out.setSuppressContext(true);
+		print(out);
+		out.flush();
+		return buffer.toString();
+	}
+	
 	public PrimaryExpression asPrimaryExpression() {
 		return null;
 	}
