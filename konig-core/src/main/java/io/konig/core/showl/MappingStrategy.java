@@ -56,13 +56,13 @@ public class MappingStrategy {
 	 * @param target The NodeShape whose mappings are to be selected.
 	 * @return The set of properties for which no mapping was found.
 	 */
-	public List<ShowlDirectPropertyShape> selectMappings(ShowlNodeShape target) {
+	public List<ShowlPropertyShape> selectMappings(ShowlNodeShape target) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("selecteMappings: target={}", target.getPath());
 		}
 		Set<ShowlJoinCondition> set = new LinkedHashSet<>();
 		
-		List<ShowlDirectPropertyShape> pool = new ArrayList<>();
+		List<ShowlPropertyShape> pool = new ArrayList<>();
 		buildPool(target, pool, set);
 		
 		
@@ -105,7 +105,7 @@ public class MappingStrategy {
 		return pool;	
 	}
 
-	private void buildPool(ShowlNodeShape target, List<ShowlDirectPropertyShape> pool, Set<ShowlJoinCondition> set) {
+	private void buildPool(ShowlNodeShape target, List<ShowlPropertyShape> pool, Set<ShowlJoinCondition> set) {
 		for (ShowlDirectPropertyShape direct : target.getProperties()) {
 			pool.add(direct);
 			if (logger.isTraceEnabled()) {
@@ -127,8 +127,64 @@ public class MappingStrategy {
 			ShowlNodeShape valueShape = direct.getValueShape();
 			if (valueShape != null) {
 				buildPool(valueShape, pool, set);
+			} else {
+				// Does this logic really belong inside the else block?
+				// Is there a better way to handle this case?
+
+				ShowlPropertyShape peer = direct.getPeer();
+				if (peer != null) {
+					valueShape = peer.getValueShape();
+					if (valueShape != null) {
+						buildPeerPool(valueShape, pool, set);
+					}
+				}
 			}
 			
+			
+			
+		}
+		
+	}
+
+	private void buildPeerPool(ShowlNodeShape target, List<ShowlPropertyShape> pool,	Set<ShowlJoinCondition> set) {
+		for (ShowlDerivedPropertyList list : target.getDerivedProperties()) {
+			for (ShowlPropertyShape ps : list) {
+				pool.add(ps);
+				if (logger.isTraceEnabled()) {
+					logger.trace("buildPool: added {}", ps.getPath());
+				}
+				for (ShowlMapping m : ps.getMappings()) {
+					
+					if (filter != null) {
+						ShowlPropertyShape other = m.findOther(ps);
+						ShowlNodeShape sourceNode = other.getDeclaringShape();
+						if (!filter.allowMapping(sourceNode, target)) {
+							logger.trace("selectMappings: filtering {}", sourceNode);
+							continue;
+						}
+					}
+					
+					set.add(m.getJoinCondition());
+				}
+				ShowlNodeShape valueShape = ps.getValueShape();
+				if (valueShape != null) {
+					buildPool(valueShape, pool, set);
+				} else {
+					// Does this logic really belong inside the else block?
+					// Is there a better way to handle this case?
+	
+					ShowlPropertyShape peer = ps.getPeer();
+					if (peer != null) {
+						valueShape = peer.getValueShape();
+						if (valueShape != null) {
+							buildPeerPool(valueShape, pool, set);
+						}
+					}
+				}
+				
+				
+				
+			}
 		}
 		
 	}
@@ -169,17 +225,17 @@ public class MappingStrategy {
 		ShowlPropertyShape aId = a.findProperty(Konig.id);
 		ShowlPropertyShape bId = b.findProperty(Konig.id);
 		if (aId != null && bId!=null) {
-			return new ShowlSourceToSourceJoinCondition(s2t, aId, bId, null);
+			return new ShowlSourceToSourceJoinCondition(s2t, aId, bId);
 		}
 		
 		return null;
 	}
 
-	private void selectMappings(ShowlNodeShape node, ShowlJoinCondition join, List<ShowlDirectPropertyShape> pool) {
+	private void selectMappings(ShowlNodeShape node, ShowlJoinCondition join, List<ShowlPropertyShape> pool) {
 		ShowlPropertyShape joinProperty = join.propertyOf(node);
-		Iterator<ShowlDirectPropertyShape> sequence = pool.iterator();
+		Iterator<ShowlPropertyShape> sequence = pool.iterator();
 		while (sequence.hasNext()) {
-			ShowlDirectPropertyShape p = sequence.next();
+			ShowlPropertyShape p = sequence.next();
 			String action = "was NOT selected";
 			ShowlMapping m = p.getMapping(join);
 			if (m == null && p==joinProperty) {
@@ -221,13 +277,13 @@ public class MappingStrategy {
 
 
 	private void updateRankings(Map<ShowlJoinCondition, RankedJoinCondition> rankingMap,
-			List<ShowlDirectPropertyShape> pool) {
+			List<ShowlPropertyShape> pool) {
 		
 		for (RankedJoinCondition e : rankingMap.values()) {
 			e.reset();
 		}
 		
-		for (ShowlDirectPropertyShape p : pool) {
+		for (ShowlPropertyShape p : pool) {
 			if (logger.isTraceEnabled()) {
 				logger.trace("updateRankings: updating {}", p.getPath());
 			}

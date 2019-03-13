@@ -21,26 +21,21 @@ package io.konig.core.showl;
  */
 
 
+import java.util.ArrayList;
 
-/**
- * A condition that joins a source shape to the target shape. 
- * @author Greg McFall
- *
- */
-public class ShowlTargetToSourceJoinCondition extends ShowlJoinCondition {
+import org.openrdf.model.URI;
+
+@SuppressWarnings("serial")
+public class ShowlDerivedPropertyList extends ArrayList<ShowlDerivedPropertyShape> {
+
+	private URI predicate;
 	
-	private ShowlSourceToSourceJoinCondition sourceToSource;
-
-	public ShowlTargetToSourceJoinCondition(ShowlPropertyShape left, ShowlPropertyShape right) {
-		super(left, right);
+	public ShowlDerivedPropertyList(URI predicate) {
+		this.predicate = predicate;
 	}
 
-	public ShowlSourceToSourceJoinCondition getSourceToSource() {
-		return sourceToSource;
-	}
-
-	public void setSourceToSource(ShowlSourceToSourceJoinCondition sourceToSource) {
-		this.sourceToSource = sourceToSource;
+	public URI getPredicate() {
+		return predicate;
 	}
 	
 	

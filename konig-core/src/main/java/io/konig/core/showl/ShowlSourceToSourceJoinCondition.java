@@ -28,9 +28,8 @@ package io.konig.core.showl;
  */
 public class ShowlSourceToSourceJoinCondition extends ShowlDerivedJoinCondition {
 
-	public ShowlSourceToSourceJoinCondition(ShowlJoinCondition derivedFrom, ShowlPropertyShape left, ShowlPropertyShape right,
-			ShowlJoinCondition previous) {
-		super(derivedFrom, left, right, previous);
+	public ShowlSourceToSourceJoinCondition(ShowlJoinCondition derivedFrom, ShowlPropertyShape left, ShowlPropertyShape right) {
+		super(derivedFrom, left, right);
 	}
 
 }

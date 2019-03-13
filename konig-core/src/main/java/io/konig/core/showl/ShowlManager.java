@@ -46,10 +46,15 @@ import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
+import io.konig.formula.Expression;
 import io.konig.formula.Formula;
 import io.konig.formula.FormulaVisitor;
+import io.konig.formula.HasPathStep;
+import io.konig.formula.IriValue;
+import io.konig.formula.LiteralFormula;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
+import io.konig.formula.PredicateObjectList;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.NodeKind;
@@ -270,10 +275,17 @@ public class ShowlManager implements ShowlClassManager {
 		
 		NestedShapeSelector selector = new NestedShapeSelector(targetClass);
 		selector.scan(sourceNode.getProperties());
-		selector.scan(sourceNode.getDerivedProperties());
+		scanDerivedProperties(selector, sourceNode);
 		selector.scan(sourceNode.getInwardProperties());
 		
 		return selector.getSelected();
+	}
+
+	private void scanDerivedProperties(NestedShapeSelector selector, ShowlNodeShape sourceNode) {
+		for (List<ShowlDerivedPropertyShape> list : sourceNode.getDerivedProperties()) {
+			selector.scan(list);
+		}
+		
 	}
 
 	private void joinObjectProperties(ShowlNodeShape leftNode, ShowlJoinCondition joinCondition) throws ShowlProcessingException {
@@ -323,7 +335,7 @@ public class ShowlManager implements ShowlClassManager {
 			return;
 		}
 		
-		ShowlJoinCondition newJoin = new ShowlTargetToSourceJoinCondition(leftJoinProperty, rightJoinProperty, joinCondition);
+		ShowlJoinCondition newJoin = new ShowlTargetToSourceJoinCondition(leftJoinProperty, rightJoinProperty);
 		new ShowlMapping(newJoin, leftProperty, rightProperty);
 		if (logger.isTraceEnabled()) {
 			logger.trace("doJoinInwardObjectProperty: {} ... {}", leftProperty.getPath(), rightJoinProperty.getPath());
@@ -333,8 +345,17 @@ public class ShowlManager implements ShowlClassManager {
 
 	private void joinOutwardObjectPropeties(ShowlNodeShape leftNode, ShowlJoinCondition joinCondition) throws ShowlProcessingException {
 		joinOutwardObjectProperties(leftNode.getProperties(), joinCondition);
-		joinOutwardObjectProperties(leftNode.getDerivedProperties(), joinCondition);
+		joinOutwardDerivedObjectProperties(leftNode.getDerivedProperties(), joinCondition);
 		
+	}
+
+
+	private void joinOutwardDerivedObjectProperties(Collection<ShowlDerivedPropertyList> collection,
+			ShowlJoinCondition joinCondition) {
+		
+		for (List<ShowlDerivedPropertyShape> list : collection) {
+			joinOutwardObjectProperties(list, joinCondition);
+		}
 	}
 
 	private void joinOutwardObjectProperties(Collection<? extends ShowlPropertyShape> properties,
@@ -384,7 +405,7 @@ public class ShowlManager implements ShowlClassManager {
 		}
 		
 		if (sourceId.findJoinCondition(targetId) == null) {
-			ShowlJoinCondition join = new ShowlTargetToSourceJoinCondition(targetId, sourceId, joinCondition);
+			ShowlJoinCondition join = new ShowlTargetToSourceJoinCondition(targetId, sourceId);
 			
 			buildMappings(sourceNode, targetNode, join);
 		}
@@ -427,9 +448,17 @@ public class ShowlManager implements ShowlClassManager {
 		if (!nodeMappings.contains(key)) {
 			nodeMappings.add(key);
 			doBuildMappings(leftNode.getProperties(), rightNode, join);
-			doBuildMappings(leftNode.getDerivedProperties(), rightNode, join);
+			buildDerivedMappings(leftNode.getDerivedProperties(), rightNode, join);
 			buildInwardMappings(leftNode.getInwardProperties(), rightNode, join);
 		}
+	}
+
+	private void buildDerivedMappings(Collection<ShowlDerivedPropertyList> collection,
+			ShowlNodeShape rightNode, ShowlJoinCondition join) {
+		for (List<ShowlDerivedPropertyShape> list : collection) {
+			doBuildMappings(list, rightNode, join);
+		}
+		
 	}
 
 	private void buildInwardMappings(Collection<? extends ShowlPropertyShape> properties, ShowlNodeShape rightNode,
@@ -504,6 +533,12 @@ public class ShowlManager implements ShowlClassManager {
 					continue;
 				}
 			}
+			
+			if (Konig.id.equals(leftProperty.getPredicate()) && rightProperty!=null && Konig.id.equals(rightProperty.getPredicate())) {
+
+				produceMapping(join, leftProperty, rightProperty);
+				continue;
+			}
 //			if (Konig.id.equals(leftProperty.getPredicate()) || Konig.id.equals(rightProperty.getPredicate())) {
 //				// TODO: We ought to find a better way to handle konig:id mappings
 //				
@@ -527,6 +562,12 @@ public class ShowlManager implements ShowlClassManager {
 			
 
 			ShowlNodeShape leftChild = leftProperty.getValueShape();
+			if (leftChild == null) {
+				ShowlPropertyShape peer = leftProperty.getPeer();
+				if (peer != null) {
+					leftChild = peer.getValueShape();
+				}
+			}
 			if (leftChild != null) {
 				ShowlNodeShape rightChild = rightProperty.getValueShape();
 				if (rightChild != null) {
@@ -553,6 +594,9 @@ public class ShowlManager implements ShowlClassManager {
 		}
 		result = derivedByFormula(p);
 		if (result != null) {
+			if (logger.isTraceEnabled()) {
+				logger.trace("propertyToMap({}) => {}", p.getPath(), result.getPath());
+			}
 			return result;
 		}
 		return p;
@@ -666,6 +710,7 @@ public class ShowlManager implements ShowlClassManager {
 		
 		DomainReasoner domainReasoner = new DomainReasoner(reasoner);
 		
+		// TODO: handle derived properties separately.
 		Set<ShowlPropertyShape> allProperties = node.allOutwardProperties();
 		for (ShowlPropertyShape p : allProperties) {
 			
@@ -1035,23 +1080,53 @@ public class ShowlManager implements ShowlClassManager {
 		
 	}
 
-	
+	class HasPathVisitor extends PathVisitor {
+
+		public HasPathVisitor(ShowlPropertyShape propertyShape) {
+			super(propertyShape);
+		}
+
+		@Override
+		protected ShowlNodeShape targetShape() {
+			return propertyShape.getValueShape();
+		}
+		
+		@Override
+		protected void setPeer() {
+			
+		}
+	}
 	
 	class PathVisitor implements FormulaVisitor {
-		private ShowlPropertyShape propertyShape;
+		protected ShowlPropertyShape propertyShape;
+		private ShowlPropertyShape prior;
+		private int depth=0;
 		
 		public PathVisitor(ShowlPropertyShape propertyShape) {
 			this.propertyShape = propertyShape;
 		}
+		
+		public ShowlPropertyShape getLast() {
+			return prior;
+		}
 
 		@Override
 		public void enter(Formula formula) {
+			
+			if (formula instanceof HasPathStep) {
+				enterHasPathStep();
+			}
+			
 			if (formula instanceof PathExpression) {
 				PathExpression path = (PathExpression) formula;
-				ShowlNodeShape declaringShape = propertyShape.getDeclaringShape();
+				ShowlNodeShape declaringShape = targetShape();
+				
+				if (logger.isTraceEnabled()) {
+					logger.debug("PathVisitor.enter(declaringShape: {}, formula: {}", declaringShape.getPath(), ((PathExpression) formula).simpleText());
+				}
 				
 				String shapeIdValue = declaringShape.getShape().getId().stringValue();
-				ShowlPropertyShape prior = null;
+				prior = null;
 				List<PathStep> stepList = path.getStepList();
 				for (int i=0; i<stepList.size(); i++) {
 					
@@ -1077,7 +1152,8 @@ public class ShowlManager implements ShowlClassManager {
 								parentShape = createNodeShape(prior, shapeIdValue, owlClass);
 							}
 
-							ShowlPropertyShape p = outwardProperty(parentShape, property);
+							ShowlPropertyShape p = outwardProperty(parentShape, property, i);
+							
 							
 							thisStep = p;
 							break;								
@@ -1103,18 +1179,80 @@ public class ShowlManager implements ShowlClassManager {
 						prior = thisStep;
 						
 					} else {
-						error("HasStep not supported yet");
+						 
+						if (prior == null) {
+							error("Top-level filter not supported");
+						}
+
+						ShowlNodeShape valueShape = prior.getValueShape();
+						if (valueShape == null) {
+							ShowlProperty property = produceShowlProperty(prior.getPredicate());
+							ShowlClass owlClass = property.inferRange(ShowlManager.this);
+							valueShape = createNodeShape(prior, shapeIdValue, owlClass);
+							prior.setValueShape(valueShape);
+						}
+						buildHasStep(prior, (HasPathStep) step);
+					
 					}
 				}
-				if (prior != null) {
-					propertyShape.setPeer(prior);
-				}
+				
+				setPeer();
 				
 				
 			}
 			
 		}
 		
+
+		private void enterHasPathStep() {
+			depth++;
+		}
+
+		protected void setPeer() {
+			if (depth==0 && prior != null) {
+				propertyShape.setPeer(prior);
+			}
+			
+		}
+
+		protected ShowlNodeShape targetShape() {
+			return propertyShape.getDeclaringShape();
+		}
+
+		private void buildHasStep(ShowlPropertyShape p, HasPathStep step) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("buildHasStep(propertyShape: {}, step: {})", p.getPath(), step.toSimpleString());
+			}
+			for (PredicateObjectList pol : step.getConstraints()) {
+				PathExpression path = pol.getPath();
+				
+				HasPathVisitor predicateVisitor = new HasPathVisitor(p);
+				path.dispatch(predicateVisitor);
+				
+				ShowlPropertyShape last = predicateVisitor.getLast();
+				
+				for (Expression e : pol.getObjectList().getExpressions()) {
+					
+					PrimaryExpression primary = e.asPrimaryExpression();
+					if (primary == null) {
+						error("Expression not supported");
+					}
+					
+					if (primary instanceof IriValue) {
+						IriValue value = (IriValue) primary;
+						URI iri = value.getIri();
+						last.addHasValue(iri);
+					} else if (primary instanceof LiteralFormula) {
+						LiteralFormula formula = (LiteralFormula) primary;
+						last.addHasValue(formula.getLiteral());
+					}
+					
+					
+					
+				}
+			}
+			
+		}
 
 		private ShowlInwardPropertyShape inwardProperty(ShowlNodeShape parentShape, ShowlProperty property) {
 
@@ -1127,14 +1265,19 @@ public class ShowlManager implements ShowlClassManager {
 			return p;
 		}
 
-		private ShowlPropertyShape outwardProperty(ShowlNodeShape parentShape, ShowlProperty property) {
+		private ShowlPropertyShape outwardProperty(ShowlNodeShape parentShape, ShowlProperty property, int i) {
 			
 			ShowlPropertyShape prior = parentShape.findProperty(property.getPredicate());
 			if (prior != null) {
 				return prior;
 			}
 
-			ShowlOutwardPropertyShape p = new ShowlOutwardPropertyShape(parentShape, property);
+			PropertyConstraint c = null;
+			if (i == 0) {
+				c = new PropertyConstraint(property.getPredicate());
+				c.setNodeKind(propertyShape.getNodeKind());
+			}
+			ShowlOutwardPropertyShape p = new ShowlOutwardPropertyShape(parentShape, property, c);
 			parentShape.addDerivedProperty(p);
 			if (logger.isTraceEnabled()) {
 				logger.trace("outwardProperty: created {}", p.getPath());
@@ -1150,7 +1293,24 @@ public class ShowlManager implements ShowlClassManager {
 			}
 			URI shapeId = new URIImpl(shapeIdValue);
 			Shape shape = new Shape(shapeId);
-			return createShowlNodeShape(accessor, shape, owlClass);
+			
+			NodeKind kind = accessor.getNodeKind();
+			if (kind == null) {
+				ShowlNodeShape nestedShape = accessor.getValueShape();
+				if (nestedShape != null) {
+					kind = nestedShape.getNodeKind();
+				}
+			}
+			shape.setNodeKind(kind);
+
+			ShowlNodeShape node = createShowlNodeShape(accessor, shape, owlClass);
+
+			if (kind == NodeKind.IRI) {
+				ShowlProperty konigId = produceShowlProperty(Konig.id);
+				ShowlIdRefPropertyShape p = new ShowlIdRefPropertyShape(node, konigId, propertyShape);
+				node.addDerivedProperty(p);
+			}
+			return node;
 		}
 
 		/**
@@ -1169,7 +1329,9 @@ public class ShowlManager implements ShowlClassManager {
 
 		@Override
 		public void exit(Formula formula) {
-			// Do Nothing
+			if (formula instanceof HasPathStep) {
+				depth--;
+			}
 		}
 		
 	}

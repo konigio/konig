@@ -21,31 +21,20 @@ package io.konig.core.showl;
  */
 
 
-import java.util.Comparator;
-
-public class ShowlJoinConditionComparator implements Comparator<ShowlJoinCondition> {
-
-	@Override
-	public int compare(ShowlJoinCondition a, ShowlJoinCondition b) {
-		if (a == b) {
-			return 0;
-		}
-		return 
-			precedes(a, b) ? -1 : 
-			precedes(b, a) ? 1 :
-			0;
-	}
-
-	private boolean precedes(ShowlJoinCondition a, ShowlJoinCondition b) {
-		while (b != null) {
-			if (b == a) {
-				return true;
-			}
-			b = b.getPrevious();
-		}
-		return false;
-	}
-
+public class ShowlIdRefPropertyShape extends ShowlDerivedPropertyShape {
 	
+	private ShowlPropertyShape idref;
+
+	public ShowlIdRefPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, ShowlPropertyShape idref) {
+		super(declaringShape, property);
+		this.idref = idref;
+	}
+
+	public ShowlPropertyShape getIdref() {
+		return idref;
+	}
+	
+	
+
 
 }

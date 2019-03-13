@@ -30,15 +30,12 @@
   </appender> 
   
 <!-- 
-  
-  
-  <logger name="io.konig.transform" additivity="false">
+   <logger name="io.konig.core.showl" additivity="false">
       <level value="trace"/>
       <appender-ref ref="console"/>
   </logger>
   
-  
-  <logger name="io.konig.core.showl" additivity="false">
+  <logger name="io.konig.transform" additivity="false">
       <level value="trace"/>
       <appender-ref ref="console"/>
   </logger>

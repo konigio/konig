@@ -1,0 +1,6 @@
+@prefix ex: <http://example.com/ns/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+ex: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "ex" . 
