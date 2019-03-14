@@ -369,6 +369,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 	@Parameter
 	private Dependency[] dependencies;
+	
+	@Parameter
+	private boolean failOnError = true;
 	 
 
 	private RdfConfig rdf;
@@ -456,9 +459,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				YamlParseException | DataAppGeneratorException | MavenProjectGeneratorException | 
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
 				SizeEstimateException | KonigException | SQLException | InvalidDatatypeException | 
-				ShapeTransformException | EnvironmentGenerationException | ParseException | 
+				ShapeTransformException | EnvironmentGenerationException | ParseException | MojoExecutionException |
 				MavenInvocationException | CubeShapeException e) {
-			throw new MojoExecutionException("Schema generation failed", e);
+			
+			if (failOnError) {
+				
+				throw e instanceof MojoExecutionException ? 
+					(MojoExecutionException) e :
+					new MojoExecutionException("Schema generation failed", e);
+			} else {
+				getLog().error("Swallowing fatal error since failOnError=false", e);
+			}
 		}
       
     }
