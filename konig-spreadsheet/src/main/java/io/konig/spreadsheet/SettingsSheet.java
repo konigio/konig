@@ -48,6 +48,7 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	public static final String DEFAULT_SUBJECT = "defaultSubject";
 	private static final String GCP_DATASET_ID = "gcpDatasetId";
 	private static final String IGNORE_SHEETS = "ignoreSheets"; 
+	private static final String  INDIVIVIDUAL_LOCAL_NAME_ENCODING = "individual.localname.encoding"; 
 
 	private static final String USE_DEFAULT_NAME = "useDefaultName";
 	public static final String SHAPE_URL_TEMPLATE = "shapeURLTemplate";
@@ -61,6 +62,8 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	private static final SheetColumn SETTING_VALUE =  new SheetColumn("Setting Value", true);
 	private static final SheetColumn PATTERN =  new SheetColumn("Pattern");
 	private static final SheetColumn REPLACEMENT =  new SheetColumn("Replacement");
+	
+	private static final String URLENCODING= "urlencoding";
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
 		SETTING_NAME,
@@ -94,6 +97,16 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	public Set<String> getIgnoreSheets() {
 		
 		return ignoreSheets==null ? Collections.emptySet() : ignoreSheets;
+	}
+	
+
+	public IndividualLocalNameEncoding getIndividualLocalNameEncoding() {
+		String value = settings.getProperty(
+				INDIVIVIDUAL_LOCAL_NAME_ENCODING, 
+				IndividualLocalNameEncoding.NONE.name());
+				
+		return URLENCODING.equalsIgnoreCase(value) ? IndividualLocalNameEncoding.URL_ENCODING : 
+			IndividualLocalNameEncoding.NONE;
 	}
 
 
