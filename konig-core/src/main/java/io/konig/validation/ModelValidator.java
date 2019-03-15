@@ -180,6 +180,11 @@ public class ModelValidator {
 			if (info == null) {
 				info = new PropertyInfo(propertyId);
 				propertyMap.put(propertyId, info);
+				
+				Vertex v = graph.getVertex(propertyId);
+				if (v != null && v.getValue(RDFS.COMMENT)!=null) {
+					info.setHasDefinition(true);
+				}
 			}
 			return info;
 		}
@@ -215,6 +220,25 @@ public class ModelValidator {
 			
 			evaluateClassDescriptions(owlClasses);
 			evaluateNamedIndividualDescriptions(namedIndividuals);
+			evaluatePropertyDescriptions();
+			
+			stats.setNumberOfErrors(report.errorCount());
+			
+		}
+
+		private void evaluatePropertyDescriptions() {
+			if (!propertyMap.isEmpty()) {
+
+				int count=0;
+				for (PropertyInfo info : propertyMap.values()) {
+					if (info.isHasDefinition()) {
+						count++;
+					}
+				}
+				RationalNumber number = new RationalNumber(count, propertyMap.size());
+				report.getStatistics().setPropertiesWithDescription(number);
+			}
+			
 			
 		}
 
@@ -324,6 +348,10 @@ public class ModelValidator {
 			
 			PropertyInfo info = producePropertyInfo(predicate);
 			info.add(new RangeInfo(shapeReport.getShapeId(), p.getDatatype(), valueClass(p)));
+			
+			if (p.getComment() != null) {
+				info.setHasDefinition(true);
+			}
 			
 			if (p.getDatatype() != null) {
 				URI datatype = p.getDatatype();

@@ -114,7 +114,6 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.impl.SimpleLocalNameService;
-import io.konig.core.io.Emitter;
 import io.konig.core.io.SkosEmitter;
 import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
@@ -264,8 +263,11 @@ import io.konig.transform.proto.ShapeModelFactory;
 import io.konig.transform.showl.sql.BigQueryTransformConsumer;
 import io.konig.transform.showl.sql.ShowlSqlNodeConsumer;
 import io.konig.transform.showl.sql.ShowlSqlTransform;
+import io.konig.validation.IdNamePair;
+import io.konig.validation.MavenProjectId;
 import io.konig.validation.ModelValidationReport;
 import io.konig.validation.ModelValidationRequest;
+import io.konig.validation.ModelValidationSummaryWriter;
 import io.konig.validation.ModelValidator;
 import io.konig.validation.PlainTextModelValidationReportWriter;
 import io.konig.yaml.Yaml;
@@ -625,18 +627,40 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ModelValidator validator = new ModelValidator();
 			
 			ModelValidationReport report = validator.process(request);
+			
+			report.setProject(new IdNamePair(
+				new MavenProjectId(
+					mavenProject.getGroupId(),
+					mavenProject.getArtifactId()), 
+				mavenProjectName()));
+			
 			report.setNamespaceManager(nsManager);
 			PlainTextModelValidationReportWriter reportWriter = new PlainTextModelValidationReportWriter();
 			
 			File textFile = modelValidation.getTextReportFile();
+			
 			textFile.getParentFile().mkdirs();
 			try (FileWriter out = new FileWriter(textFile)) {
 				reportWriter.writeReport(report, out);
 			}
 			
-			
+			File summaryFile = new File(textFile.getParentFile(), "model-validation-summary.csv");
+			try (FileWriter out = new FileWriter(summaryFile)) {
+				ModelValidationSummaryWriter summaryWriter = new ModelValidationSummaryWriter(true);
+				
+				summaryWriter.writeReport(report, out);
+			}
 		}
 		
+	}
+
+
+	private String mavenProjectName() {
+		String name = mavenProject.getName().trim();
+		if (name == null || name.length()==0) {
+			name = mavenProject.getArtifactId();
+		}
+		return name;
 	}
 
 

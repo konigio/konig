@@ -25,7 +25,7 @@ import org.openrdf.model.URI;
 
 import io.konig.shacl.PropertyConstraint;
 
-public class PropertyShapeReport implements Comparable<PropertyShapeReport> {
+public class PropertyShapeReport implements Comparable<PropertyShapeReport>, ReportElement {
 
 	private PropertyConstraint propertyShape;
 	private boolean requiresShapeOrIriNodeKind;
@@ -134,6 +134,16 @@ public class PropertyShapeReport implements Comparable<PropertyShapeReport> {
 
 	public void setInvalidXmlSchemaDatatype(URI invalidXmlSchemaDatatype) {
 		this.invalidXmlSchemaDatatype = invalidXmlSchemaDatatype;
+	}
+
+	@Override
+	public int errorCount() {
+		
+		return 
+			Sum.whereTrue(
+					datatypeWithClass, datatypeWithIriNodeKind, datatypeWithShape,
+					requiresDatatypeClassOrShape, requiresMinCount, requiresShapeOrIriNodeKind)
+			+ Sum.whereNonNull(invalidXmlSchemaDatatype, typeConflict);
 	}
 
 	

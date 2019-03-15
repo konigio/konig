@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 
-public class PropertyReport implements Comparable<PropertyReport>{
+public class PropertyReport implements Comparable<PropertyReport>, ReportElement {
 	private URI propertyId;
 	private boolean nameHasWrongCase;
 	private URI invalidXmlSchemaDatatype;
@@ -71,4 +71,7 @@ public class PropertyReport implements Comparable<PropertyReport>{
 	
 	
 
+	public int errorCount() {
+		return Sum.whereTrue(nameHasWrongCase) + Sum.whereNonNull(invalidXmlSchemaDatatype) + getRangeConflict().size();
+	}
 }

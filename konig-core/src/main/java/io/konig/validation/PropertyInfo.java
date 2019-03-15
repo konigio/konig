@@ -32,6 +32,7 @@ public class PropertyInfo {
 	private URI property;
 	
 	private List<RangeInfo> rangeInfo = new ArrayList<>();
+	private boolean hasDefinition;
 
 	public PropertyInfo(URI property) {
 		this.property = property;
@@ -86,6 +87,15 @@ public class PropertyInfo {
 		}
 		return null;
 	}
+
+	public boolean isHasDefinition() {
+		return hasDefinition;
+	}
+
+	public void setHasDefinition(boolean hasDefinition) {
+		this.hasDefinition = hasDefinition;
+	}
+	
 	
 
 }
