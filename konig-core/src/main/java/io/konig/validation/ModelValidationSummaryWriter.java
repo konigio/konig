@@ -32,17 +32,17 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
 public class ModelValidationSummaryWriter implements ModelValidationReportWriter {
-	private static final String PROJECT_ID = "Project Id";
-	private static final String PROJECT_NAME = "Project Name";
+	private static final String PROJECT_ID = "projectId";
+	private static final String PROJECT_NAME = "projectName";
 	private static final String DATE = "Date";
-	private static final String NUMBER_OF_TERMS = "Number of Terms";
-	private static final String TERMS_WITH_DESCRIPTION = "% Terms Described";
-	private static final String NUMBER_OF_CLASSES = "Number of Classes";
-	private static final String CLASSES_WITH_DESCRIPTION = "% Classes Described";
-	private static final String NUMBER_OF_PROPERTIES = "Number of Properties";
-	private static final String PROPERTIES_WITH_DESCRIPTION = "% Properties Described";
-	private static final String NUMBER_OF_NAMED_INDIVIDUALS = "Number of Named Individuals";
-	private static final String NAMED_INDIVIDUALS_WITH_DESCRIPTION = "% Named Individuals Described";
+	private static final String NUMBER_OF_TERMS = "termCount";
+	private static final String TERMS_WITH_DESCRIPTION = "termDescriptionCount";
+	private static final String NUMBER_OF_CLASSES = "classCount";
+	private static final String CLASSES_WITH_DESCRIPTION = "classDescribedCount";
+	private static final String NUMBER_OF_PROPERTIES = "propertyCount";
+	private static final String PROPERTIES_WITH_DESCRIPTION = "propertyDescripionCount";
+	private static final String NUMBER_OF_NAMED_INDIVIDUALS = "namedIndividualCount";
+	private static final String NAMED_INDIVIDUALS_WITH_DESCRIPTION = "namedIndividualDescriptionCount";
 	private static final String NUMBER_OF_ERRORS = "Number of Errors";
 
 	private boolean withHeader;
