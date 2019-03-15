@@ -30,6 +30,19 @@ public class RationalNumber {
 		this.numerator = numerator;
 		this.denominator = denominator;
 	}
+	
+	public static RationalNumber combine(RationalNumber...value) {
+		int numerator = 0;
+		int denominator = 0;
+		for (RationalNumber number : value) {
+			if (number != null) {
+				numerator += number.getNumerator();
+				denominator += number.getDenominator();
+			}
+		}
+		
+		return new RationalNumber(numerator, denominator);
+	}
 
 	public int getNumerator() {
 		return numerator;
@@ -40,8 +53,12 @@ public class RationalNumber {
 	}
 	
 	public float getValue() {
-		return ((float)numerator)/((float)denominator);
+		return denominator==0 ? 0 : ((float)numerator)/((float)denominator);
 	}
 	
+	
+	public float asPercentage() {
+		return getValue()*100;
+	}
 	
 }

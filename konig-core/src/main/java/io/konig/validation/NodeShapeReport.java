@@ -27,7 +27,7 @@ import java.util.List;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
-public class NodeShapeReport implements Comparable<NodeShapeReport>{
+public class NodeShapeReport implements Comparable<NodeShapeReport>, ReportElement {
 
 	private Resource shapeId;
 	private List<PropertyShapeReport> propertyReports = new ArrayList<>();
@@ -86,6 +86,12 @@ public class NodeShapeReport implements Comparable<NodeShapeReport>{
 	@Override
 	public int compareTo(NodeShapeReport o) {
 		return shapeId.stringValue().compareTo(o.getShapeId().stringValue());
+	}
+
+	@Override
+	public int errorCount() {
+		
+		return Sum.whereTrue(nameHasWrongCase) + Sum.errorCount(propertyReports);
 	}
 	
 }

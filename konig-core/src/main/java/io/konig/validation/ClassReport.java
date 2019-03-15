@@ -23,7 +23,7 @@ package io.konig.validation;
 
 import org.openrdf.model.URI;
 
-public class ClassReport implements Comparable<ClassReport> {
+public class ClassReport implements Comparable<ClassReport>, ReportElement {
 	private URI classId;
 	private boolean nameHasWrongCase;
 	private boolean requiresDescription;
@@ -61,4 +61,7 @@ public class ClassReport implements Comparable<ClassReport> {
 	
 	
 
+	public int errorCount() {
+		return Sum.whereTrue(nameHasWrongCase);
+	}
 }

@@ -26,7 +26,9 @@ public class ModelStatistics {
 	private int numberOfProperties;
 	private int numberOfNamedIndividuals;
 	private int numberOfShapes;
+	private int numberOfErrors;
 	private RationalNumber classesWithDescription;
+	private RationalNumber propertiesWithDescription;
 	private RationalNumber propertyShapesWithDescription;
 	private RationalNumber namedIndividualsWithDescription;
 	
@@ -79,4 +81,25 @@ public class ModelStatistics {
 	public void setNamedIndividualsWithDescription(RationalNumber namedIndividualsWithDescription) {
 		this.namedIndividualsWithDescription = namedIndividualsWithDescription;
 	}
+	public RationalNumber getPropertiesWithDescription() {
+		return propertiesWithDescription;
+	}
+	public void setPropertiesWithDescription(RationalNumber propertiesWithDescription) {
+		this.propertiesWithDescription = propertiesWithDescription;
+	}
+	public int getNumberOfErrors() {
+		return numberOfErrors;
+	}
+	public void setNumberOfErrors(int numberOfErrors) {
+		this.numberOfErrors = numberOfErrors;
+	}
+	
+	public int getNumberOfTerms() {
+		return numberOfClasses + numberOfProperties + numberOfNamedIndividuals;
+	}
+	
+	public RationalNumber getTermsWithDescription() {
+		return RationalNumber.combine(classesWithDescription, propertiesWithDescription, namedIndividualsWithDescription);
+	}
+	
 }

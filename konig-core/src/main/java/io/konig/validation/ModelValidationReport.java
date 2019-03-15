@@ -23,6 +23,7 @@ package io.konig.validation;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.NamespaceManager;
 
-public class ModelValidationReport {
+public class ModelValidationReport implements ReportElement {
 	
 	private NamespaceManager namespaceManager;
 	private Map<URI,ClassReport> classReports = new HashMap<>();
@@ -45,9 +46,16 @@ public class ModelValidationReport {
 	private List<NodeShapeReport> shapeReports = new ArrayList<>();
 	private List<PropertyShapeReference> propertyShapeCaseViolation=new ArrayList<>();
 	
-	
+	private IdNamePair project;
+	private GregorianCalendar createdTimestamp;
 	private ModelStatistics statistics;
 	
+	
+	
+	public ModelValidationReport() {
+		createdTimestamp = (GregorianCalendar) GregorianCalendar.getInstance();
+	}
+
 	public ClassReport findClassReport(URI classId) {
 		return classReports.get(classId);
 	}
@@ -132,7 +140,28 @@ public class ModelValidationReport {
 	public void setNamespaceManager(NamespaceManager namespaceManager) {
 		this.namespaceManager = namespaceManager;
 	}
-	
-	
+
+	@Override
+	public int errorCount() {
+		
+		return Sum.size(classPropertyDisjointViolation, propertyShapeCaseViolation)
+				+ Sum.errorCount(classReports.values(), individualReports.values(), propertyReports.values(), shapeReports);
+	}
+
+	public GregorianCalendar getCreatedTimestamp() {
+		return createdTimestamp;
+	}
+
+	public void setCreatedTimestamp(GregorianCalendar createdTimestamp) {
+		this.createdTimestamp = createdTimestamp;
+	}
+
+	public IdNamePair getProject() {
+		return project;
+	}
+
+	public void setProject(IdNamePair project) {
+		this.project = project;
+	}
 
 }

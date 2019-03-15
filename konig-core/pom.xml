@@ -80,7 +80,11 @@
 		<version>${jackson.version}</version>
 	</dependency>
 	 
-  
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-csv</artifactId>
+		    <version>${apache.commons-csv.version}</version>
+		</dependency>  
   
     <dependency>
       <groupId>junit</groupId>
