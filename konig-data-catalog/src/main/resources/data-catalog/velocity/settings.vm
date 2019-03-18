@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>$ClassName</title>
+<link rel="stylesheet" type="text/css" href="//schema.org/docs/schemaorg.css">
+<script>
+#include( "data-catalog/velocity/cookies.vm" )
+
+function onMixEntityAndEnum() {
+  var isChecked = document.getElementById("settingsForm").elements["mixEntityAndEnum"].checked;
+  var src = isChecked ? "allclasses-index.html" : "entity-index.html";
+  parent.window.frames["classListFrame"].location = src;
+  setCookie("classListSrc",src, 10*365);
+}
+
+function loadSettings() {
+  var classListSrc = getCookie("classListSrc");
+  if (classListSrc == "allclasses-index.html") {
+    document.getElementById("settingsForm").elements["mixEntityAndEnum"].checked = true
+  }
+}
+
+</script>
+</head>
+<body class="mainsite" onload="loadSettings()">
+#parse( "data-catalog/velocity/header.vm" )
+
+<div id="mainContent">
+<h1 property="rdfs:label" class="page-title">Settings</h1>
+<form id="settingsForm" style="margin-top: 1em">
+<input type="checkbox" name="mixEntityAndEnum" onclick="onMixEntityAndEnum()">&nbsp;Mix Entity and Enum Classes</input>
+</form>
+</body>
+</html>

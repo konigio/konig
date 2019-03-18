@@ -15,7 +15,10 @@
 #if( $Menu )
 <div id="selectionbar">
 	<div class="wrapper">
-		<ul>
+		<ul>  
+      <li>
+       <a href="settings.html"><img src=".images/settings.png"></a>
+      </li> 
 #foreach( $menuItem in $Menu )
 #if( $menuItem.ClassName )
 			<li class="$menuItem.ClassName">
@@ -24,7 +27,7 @@
 #end
 				<a href="$menuItem.Href">$menuItem.Name</a>
 			</li>
-#end			
+#end	
 		</ul>
 	</div>
 </div>

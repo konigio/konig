@@ -22,8 +22,11 @@ package io.konig.datacatalog;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +46,7 @@ import org.openrdf.model.vocabulary.RDF;
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.util.IOUtil;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.ClassStructure;
@@ -59,6 +63,7 @@ public class DataCatalogBuilder {
 	public static final URI OVERVIEW_URI = new URIImpl("urn:datacatalog/overview");
 	public static final URI DATASOURCE_SUMMARY_URI = new URIImpl("urn:datacatalog/datasources");
 	public static final URI INDEX_ALL_URI = new URIImpl("urn:datacatalog/index-all");
+	public static final URI SETTINGS_URI = new URIImpl("urn:datacatalog/settings");
 	
 	private static List<MenuItem> menu = new ArrayList<>();
 	static {
@@ -84,7 +89,6 @@ public class DataCatalogBuilder {
 	public void setVelocityLog(File velocityLog) {
 		this.velocityLog = velocityLog;
 	}
-
 
 	public void build(DataCatalogBuildRequest buildRequest) throws DataCatalogException {
 
@@ -117,11 +121,15 @@ public class DataCatalogBuilder {
 		
 		PageRequest request = new PageRequest(buildRequest);
 		try {
+			buildImages();
+			buildSettingsPage(request);
 			buildOntologyPages(request);
 			buildShapePages(request, exampleDir);
 			buildClassPages(request);
 			buildPropertyPages(request);
 			buildClassIndex(request);
+			buildEntityIndex(request);
+			buildEnumIndex(request);
 			buildOntologyIndex(request);
 			buildIndexPage(request);
 			buildOverviewPage(request);
@@ -132,6 +140,67 @@ public class DataCatalogBuilder {
 		}
 		
 	
+		
+	}
+
+
+	private void buildSettingsPage(PageRequest request) throws IOException, DataCatalogException {
+				
+		File overviewFile = new File(outDir, "settings.html");
+		try (PrintWriter out = new PrintWriter(new FileWriter(overviewFile))) {
+			PageResponse response = new PageResponseImpl(out);
+			SettingsPage page = new SettingsPage();
+			page.render(request, response);
+		}
+		
+		
+	}
+
+
+	private void buildImages() throws IOException {
+		
+		File imagesFolder = new File(outDir, ".images");
+		File settings = new File(imagesFolder, "settings.png");
+		
+		copyResource("data-catalog/velocity/images/settings.png", settings);
+		
+		
+	}
+	
+	private void copyResource(String path, File file) throws IOException {
+		file.getParentFile().mkdirs();
+		InputStream input = getClass().getClassLoader().getResourceAsStream(path);
+		try (FileOutputStream out = new FileOutputStream(file)) {
+			byte[] array = new byte[1024];
+			int len = 0;
+			while ( (len=input.read(array)) > 0) {
+				out.write(array, 0, len);
+			}
+		} finally {
+			IOUtil.close(input, "settings.png");
+		}
+	}
+
+
+	private void buildEntityIndex(PageRequest request) throws IOException, DataCatalogException {
+		EntityIndexPage page = new EntityIndexPage();
+		File entityIndex = new File(outDir, "entity-index.html");
+		
+		try (PrintWriter out = new PrintWriter(new FileWriter(entityIndex))) {
+			PageResponse response = new PageResponseImpl(out);
+			page.render(request, response);
+		}
+		
+	}
+
+
+	private void buildEnumIndex(PageRequest request) throws IOException, DataCatalogException {
+		EnumerationIndexPage page = new EnumerationIndexPage();
+		File enumIndex = new File(outDir, "enum-index.html");
+		try (PrintWriter out = new PrintWriter(new FileWriter(enumIndex))) {
+			PageResponse response = new PageResponseImpl(out);
+			page.render(request, response);
+		}
 		
 	}
 
@@ -272,7 +341,8 @@ public class DataCatalogBuilder {
 	private void buildClassIndex(PageRequest request) throws IOException, DataCatalogException {
 		
 		ClassIndexPage page = new ClassIndexPage();
-		try (PrintWriter out = classIndexWriterFactory.createWriter(request, null)) {
+		File indexFile = new File(outDir, "allclasses-index.html");
+		try (PrintWriter out = new PrintWriter(new FileWriter(indexFile))) {
 			PageResponse response = new PageResponseImpl(out);
 			page.render(request, response);
 		}
@@ -313,6 +383,7 @@ public class DataCatalogBuilder {
 		}
 		
 	}
+
 	
 
 

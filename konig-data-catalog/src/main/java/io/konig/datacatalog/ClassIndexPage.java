@@ -24,6 +24,7 @@ package io.konig.datacatalog;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -35,6 +36,7 @@ import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.SKOS;
 
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.vocab.Konig;
@@ -42,10 +44,15 @@ import io.konig.core.vocab.Konig;
 public class ClassIndexPage {
 
 	
-	private static final String CLASS_LIST_TEMPLATE = "data-catalog/velocity/classIndex.vm";
+	protected static final String CLASS_LIST_TEMPLATE = "data-catalog/velocity/classIndex.vm";
+	protected static final String ENTITY_LIST_TEMPLATE = "data-catalog/velocity/entityIndex.vm";
 
 	public void render(PageRequest request, PageResponse response) throws DataCatalogException {
 		List<Vertex> source = request.getGraph().v(OWL.CLASS).in(RDF.TYPE).toVertexList();
+		
+		if (!request.getBuildRequest().getSettings().isMixEntitiesAndEnums()) {
+			filter(request.getOwlReasoner(), source);
+		}
 		
 		List<ClassInfo> classList = new ArrayList<>();
 		
@@ -61,15 +68,40 @@ public class ClassIndexPage {
 
 		VelocityEngine engine = request.getEngine();
 		VelocityContext context = request.getContext();
+		buildContext(context);
 		context.put("ClassList", classList);
 
-		Template template = engine.getTemplate(CLASS_LIST_TEMPLATE);
+		Template template = getTemplate(engine);
 		
 		PrintWriter out = response.getWriter();
 		template.merge(context, out);
 		out.flush();
 	}
 	
+	protected void buildContext(VelocityContext context) {
+		// Do nothing
+		
+	}
+
+	protected Template getTemplate(VelocityEngine engine) {
+		return engine.getTemplate(CLASS_LIST_TEMPLATE);
+	}
+
+	protected void filter(OwlReasoner reasoner, List<Vertex> source) {
+		// Do nothing
+	}
+
+	protected void filter(OwlReasoner reasoner, List<Vertex> source, boolean truthValue) {
+		Iterator<Vertex> sequence = source.iterator();
+		while (sequence.hasNext()) {
+			Vertex v = sequence.next();			
+			if (reasoner.isEnumerationClass(v.getId()) == truthValue) {
+				sequence.remove();
+			}
+		}
+		
+	}
+
 	private void addUndefinedClass(PageRequest request, List<ClassInfo> classList) throws DataCatalogException {
 		if (request.getBuildRequest().isShowUndefinedClass()) {
 			MemoryGraph graph = new MemoryGraph();
