@@ -40,6 +40,8 @@ public class ClassIndexWriterFactory implements WriterFactory {
 		this.baseDir = baseDir;
 		baseDir.mkdirs();
 	}
+	
+	
 
 	@Override
 	public PrintWriter createWriter(PageRequest request, URI resourceId) throws IOException, DataCatalogException {

@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>Class Index</title>
+<link rel="stylesheet" type="text/css" href="//schema.org/docs/schemaorg.css">
+<style>
+#include( "data-catalog/velocity/style.vm" )
+</style>
+<script>
+function filterBySubject(className) {
+	var list = document.getElementsByClassName("AllClasses");
+	for (var i=0; i<list.length; i++) {
+		var e = list[i];
+		if (e.classList.contains(className)) {
+			e.style.display = "block";
+		} else {
+			e.style.display = "none";
+		}
+	}
+}
+function showList(pageAddress) {
+  parent.window.frames["classListFrame"].location = pageAddress;
+}
+</script>
+</head>
+<body>
+<div id="selectionbar">
+	<div class="wrapper">
+	 <ul>
+     <li id="enumListButton" class="$enumIndexClass">
+       <a href="#" onclick="showList('enum-index.html');return false;">Enums</a>
+     </li>
+     <li id="entityListButton" class="$entityIndexClass">
+       <a href="#" onclick="showList('entity-index.html');return false;">Entities</a>
+     </li>
+	 </ul>
+	</div>
+</div>
+<div class="listing">
+#foreach( $type in $ClassList )
+	<div class="$type.ClassName"><a href="$type.href" target="mainContentFrame">$type.Name</a></div>
+#end
+</div>
+</body>
+</html>
