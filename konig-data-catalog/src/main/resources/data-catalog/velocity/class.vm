@@ -21,30 +21,51 @@
 #end	
 
 #if( $description )
-<div>
-  <b>Description:</b>
+<div style="margin-bottom: 1em">
   $description
 </div>
 #end
 
-#if($ShapeList) 
+#if($!dataStructureList) 
+  <div><b>Data Structures based on this Entity</b></div>
+  
   <table class="definition-table">
     <thead>
       <tr>
-        <th>Data Structures based on this Entity</th>
+        <th>Structure Name</th>
+        <th>Data Source</th>
       </tr>
     </thead>
-    <tbody>
-      <tr>
-        <td>
-#foreach( $shape in $ShapeList )
-          <code>
-            <a href="$shape.Href">$shape.Name</a>
-          </code>
-          <br>
-#end          
-        </td>
-      </tr>
+    <tbody>    
+  #foreach( $structure in $dataStructureList )
+    #if( $!structure.DataSource )
+      #foreach($path in $!structure.DataSource)
+            <tr>   
+              <td>
+                <code>
+                  <a href="$structure.Shape.Href">$structure.Shape.Name</a>
+                </code>
+                <br>
+               
+              </td>
+              <td>
+                #foreach( $link in $path )#if($link.Href)<a href="$link.Href">$link.Name</a>#else$link.Name#end#if($foreach.hasNext) > #end#end
+              </td>
+            </tr>
+      #end
+    #else
+            <tr>   
+              <td>
+                <code>
+                  <a href="$structure.Shape.Href">$structure.shape.Name</a>
+                </code>
+                <br>
+               
+              </td>
+              <td></td>
+            </tr>
+    #end
+  #end 
     </tbody>
   </table>
 #end  

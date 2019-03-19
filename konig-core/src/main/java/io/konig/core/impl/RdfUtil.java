@@ -916,5 +916,19 @@ public class RdfUtil {
 	public static URI uri(Value value) {
 		return value instanceof URI ? (URI) value : null;
 	}
+
+	public static String getName(Vertex v) {
+		if (v != null) {
+			Value name = v.getValue(Schema.name);
+			if (name == null) {
+				name = v.getValue(RDFS.LABEL);
+			}
+			if (name != null) {
+				return name.stringValue();
+			}
+			return localName(v.getId());
+		}
+		return null;
+	}
 	
 }
