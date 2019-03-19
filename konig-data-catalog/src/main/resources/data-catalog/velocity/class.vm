@@ -20,6 +20,13 @@
 	</span></h4>
 #end	
 
+#if( $description )
+<div>
+  <b>Description:</b>
+  $description
+</div>
+#end
+
 #if($ShapeList) 
   <table class="definition-table">
     <thead>

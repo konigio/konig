@@ -43,6 +43,7 @@ import io.konig.core.Graph;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.ClassHierarchyPaths;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.ClassStructure;
@@ -88,7 +89,10 @@ public class ClassPage {
 		context.put("AnySecurityClassification", pageInfo.anySecurityClassification);
 		context.put("PropertyList", propertyList);
 		
-		
+		String description = RdfUtil.getDescription(owlClass);
+		if (description != null) {
+			context.put("description", description);
+		}
 		Template template = engine.getTemplate(CLASS_TEMPLATE);
 
 		PrintWriter out = response.getWriter();
