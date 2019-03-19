@@ -46,6 +46,9 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.ClassHierarchyPaths;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.Schema;
+import io.konig.datasource.DataSource;
+import io.konig.datasource.TableDataSource;
 import io.konig.shacl.ClassStructure;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -88,6 +91,7 @@ public class ClassPage {
 		context.put("AnyTermStatus", pageInfo.anyTermStatus);
 		context.put("AnySecurityClassification", pageInfo.anySecurityClassification);
 		context.put("PropertyList", propertyList);
+		
 		
 		String description = RdfUtil.getDescription(owlClass);
 		if (description != null) {
@@ -295,7 +299,8 @@ public class ClassPage {
 		
 		List<Shape> shapeList = request.getShapeManager().getShapesByTargetClass(classId);
 		if (!shapeList.isEmpty()) {
-			List<Link> linkList = new ArrayList<>();
+			
+			List<DataStructureInfo> dataStructureList = new ArrayList<>();
 			for (Shape shape : shapeList) {
 				Resource id = shape.getId();
 				if (id instanceof URI) {
@@ -303,14 +308,68 @@ public class ClassPage {
 					String shapeName = shapeId.getLocalName();
 					String href = request.relativePath(classId, shapeId);
 					
-					linkList.add(new Link(shapeName, href));
+					Link shapeLink = new Link(shapeName, href);
+					List<DataSourcePath> path = dataSourcePath(shape, request);
+					
+					dataStructureList.add(new DataStructureInfo(shapeLink, path));
 				}
 			}
-			if (!linkList.isEmpty()) {
-				request.getContext().put("ShapeList", linkList);
+			if (!dataStructureList.isEmpty()) {
+				request.getContext().put("dataStructureList", dataStructureList);
 			}
 		}
 		
 	}
+
+
+
+	private List<DataSourcePath> dataSourcePath(Shape shape, ClassRequest request) {
+		List<DataSourcePath> result = new ArrayList<>();
+		for (DataSource ds : shape.getShapeDataSource()) {
+			
+			String name = dataSourceName(ds);
+			
+			DataSourcePath path = new DataSourcePath();
+			
+			path.add(new Link(name, null));
+			
+			
+			Graph graph = request.getBuildRequest().getGraph();
+			
+			addPartOfTransitive(path, ds.getId(), graph);
+			Collections.reverse(path);
+			result.add(path);
+		}
+		return result.isEmpty() ? null : result;
+	}
+
+
+
+	private void addPartOfTransitive(DataSourcePath list, Resource id, Graph graph) {
+		
+		Vertex v = graph.getVertex(id);
+		if (v != null) {
+			Vertex parent = v.getVertex(Schema.isPartOf);
+			if (parent != null) {
+				String name = RdfUtil.getName(parent);
+				list.add(new Link(name, null));
+				addPartOfTransitive(list, parent.getId(), graph);
+			}
+		}
+		
+	}
+
+
+
+	private String dataSourceName(DataSource ds) {
+		if (ds instanceof TableDataSource) {
+			TableDataSource table = (TableDataSource) ds;
+			return table.getQualifiedTableName();
+		}
+		return RdfUtil.localName(ds.getId());
+	}
+
+
+
 
 }
