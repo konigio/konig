@@ -19,6 +19,36 @@
 #end
 	</span></h4>
 #end	
+
+#if( $description )
+<div>
+  <b>Description:</b>
+  $description
+</div>
+#end
+
+#if($ShapeList) 
+  <table class="definition-table">
+    <thead>
+      <tr>
+        <th>Data Structures based on this Entity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+#foreach( $shape in $ShapeList )
+          <code>
+            <a href="$shape.Href">$shape.Name</a>
+          </code>
+          <br>
+#end          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+#end  
+
 	<table class="definition-table">
 		<thead>
 			<tr>
@@ -119,27 +149,7 @@
 #end	
 	</ul>
 #end
-#if($ShapeList) 
-	<table class="definition-table">
-		<thead>
-			<tr>
-				<th>Data Structures based on this Entity</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td>
-#foreach( $shape in $ShapeList )
-					<code>
-						<a href="$shape.Href">$shape.Name</a>
-					</code>
-					<br>
-#end					
-				</td>
-			</tr>
-		</tbody>
-	</table>
-#end	
+
 	<p class="version">
 		Latest Version
 	</p>
