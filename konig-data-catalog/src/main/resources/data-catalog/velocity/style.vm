@@ -13,3 +13,7 @@
 	color: #fff;
 	background-color: rgb(102, 0, 0);
 }
+.form-component {
+  margin-left: 1em;
+  margin-top: 0.5em;
+}

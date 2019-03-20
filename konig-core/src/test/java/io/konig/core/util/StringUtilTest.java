@@ -27,11 +27,24 @@ import static io.konig.core.util.StringUtil.PascalCase;
 import static io.konig.core.util.StringUtil.SNAKE_CASE;
 import static io.konig.core.util.StringUtil.camelCase;
 import static io.konig.core.util.StringUtil.normalizedLocalName;
+import static io.konig.core.util.StringUtil.label;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 public class StringUtilTest {
+	
+	@Test
+	public void testLabel() {
+
+		assertEquals("Courseware Fulfillment Profile", label("CoursewareFulfillmentProfile"));
+		assertEquals("Foo Bar Wiz", label("FooBar_Wiz") );
+		assertEquals("Foo Bar Wiz", label("Foo_Bar_Wiz") );
+		assertEquals("Foo Bar Wiz", label("foo_bar_wiz") );
+		assertEquals("Is Deleted", label("IsDeleted"));
+		assertEquals("DO NOT CALL", label("DO_NOT_CALL"));
+		assertEquals("Foo-Bar", label("Foo-Bar"));
+	}
 	
 	@Test
 	public void testNormalizedLabel() {

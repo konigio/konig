@@ -32,9 +32,70 @@ public class StringUtil {
 	private static final int LOWER = 1;
 	private static final int UPPER = 2;
 	
+	private static final int WORD_BOUNDARY = 3;
+	
 	
 	private static final String DELIMITER = "_-./:";
 	
+	/**
+	 * Converts a technicalName in pascalCase or snake_case to a human-friendly name with spaces between
+	 * the words, with each word capitalized.
+	 * @return
+	 */
+	public static final String label(String technicalName) {
+		technicalName = technicalName.trim();
+		if (technicalName.indexOf(' ') > 0) {
+			return technicalName;
+		}
+		int prior = 0;
+		
+		StringBuilder builder = new StringBuilder();
+		for (int i=0; i<technicalName.length();) {
+			int c = technicalName.codePointAt(i);
+			i += Character.charCount(c);
+			
+			if (!Character.isAlphabetic(c)) {
+				if (c=='_' || c=='.') {
+					c = ' ';
+				}
+				
+				builder.appendCodePoint(c);
+				prior = c;
+				continue;
+				
+			} else {
+				
+				if (prior == ' ' || builder.length()==0) {
+					c = Character.toUpperCase(c);
+					builder.appendCodePoint(c);
+					prior = c;
+					continue;
+				}
+
+				int priorCase = caseValue(prior);
+				int thisCase = caseValue(c);
+				
+				
+				if (priorCase != thisCase) {
+					
+					if (Character.isAlphabetic(prior) && priorCase==LOWER) {
+						builder.append(' ');
+					}
+					
+
+					prior = c;
+					builder.appendCodePoint(c);
+					continue;
+				}
+				
+				builder.appendCodePoint(c);
+				prior = c;
+			}
+			
+			
+		}
+		return builder.toString();
+	}
 	
 	public static final String normalizedLocalName(String label) {
 		StringBuilder builder = new StringBuilder();

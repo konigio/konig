@@ -33,10 +33,11 @@ public class SettingsPage {
 
 	public void render(PageRequest request, PageResponse response) throws DataCatalogException, IOException {
 
+		request.setPageId(DataCatalogBuilder.SETTINGS_URI);
+		request.setActiveLink(DataCatalogBuilder.SETTINGS_URI);
+		
 		VelocityEngine engine = request.getEngine();
 		VelocityContext context = request.getContext();
-
-		request.setPageId(DataCatalogBuilder.SETTINGS_URI);
 
 		Template template = engine.getTemplate(SETTINGS_TEMPLATE);
 

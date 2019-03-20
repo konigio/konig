@@ -70,8 +70,6 @@ public class DataCatalogBuildRequest {
 	
 	private SubjectManager subjectManager = null;
 	
-	private DataCatalogSettings settings = new DataCatalogSettings();
-	
 	private boolean showUndefinedClass = false;
 	
 	public DataCatalogBuildRequest() {
@@ -298,10 +296,6 @@ public class DataCatalogBuildRequest {
 			}
 		}
 		return ALL_CLASSES;
-	}
-
-	public DataCatalogSettings getSettings() {
-		return settings;
 	}
 	
 	

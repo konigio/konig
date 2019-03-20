@@ -76,7 +76,8 @@ public class ClassPage {
 		request.setPageId(classId);
 		request.setActiveLink(null);
 		
-		context.put("ClassName", classId.getLocalName());
+		String className = RdfUtil.getName(owlClass);
+		context.put("ClassName", className);
 		context.put("ClassId", classId.stringValue());
 		
 		request.handleTermStatus(owlClass.getId());

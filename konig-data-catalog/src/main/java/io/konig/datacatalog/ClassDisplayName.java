@@ -23,7 +23,7 @@ package io.konig.datacatalog;
 
 public enum ClassDisplayName {
 
-	BUSINESS_NAME,
-	TECHNICAL_NAME
+	business,
+	technical
 	
 }

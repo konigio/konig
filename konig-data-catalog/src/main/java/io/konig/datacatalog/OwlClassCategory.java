@@ -21,31 +21,9 @@ package io.konig.datacatalog;
  */
 
 
-import java.util.List;
+public enum OwlClassCategory {
 
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-
-import io.konig.core.OwlReasoner;
-import io.konig.core.Vertex;
-
-public class EnumerationIndexPage extends ClassIndexPage {
-
-	
-	protected void filter(OwlReasoner reasoner, List<Vertex> source) {
-		filter(reasoner, source, false);
-		
-	}
-	
-	protected Template getTemplate(VelocityEngine engine) {
-		return engine.getTemplate(ENTITY_LIST_TEMPLATE);
-	}
-
-	
-	protected void buildContext(VelocityContext context) {
-		context.put("entityIndexClass", "");
-		context.put("enumIndexClass", "activeLink");
-		
-	}
+	classes,
+	entities,
+	enums
 }
