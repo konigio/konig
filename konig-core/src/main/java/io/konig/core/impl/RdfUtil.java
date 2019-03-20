@@ -60,6 +60,7 @@ import io.konig.core.io.PrettyPrintWriter;
 import io.konig.core.io.TurtleConfig;
 import io.konig.core.path.OutStep;
 import io.konig.core.path.Step;
+import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -926,7 +927,9 @@ public class RdfUtil {
 			if (name != null) {
 				return name.stringValue();
 			}
-			return localName(v.getId());
+			String localName = localName(v.getId());
+			
+			return StringUtil.label(localName);
 		}
 		return null;
 	}

@@ -55,24 +55,28 @@
         return true;
     }
     
-    
+function loadClassList() {
+  if (frames["classListFrame"].location == "about:blank") {
+    var classListSrc = getCookie("classListSrc") || "index-business-entities.html";
+    frames["classListFrame"].location = classListSrc;
+  }
+
+}    
     
 function loadFrames() {
     if (targetPage != "" && targetPage != "undefined") {
          top.mainContentFrame.location = top.targetPage;
     }
     
-    var classListSrc = getCookie("classListSrc");
-    if (classListSrc) {
-      frames["classListFrame"].location = classListSrc;
-    }
+    
+   
 }
 </script>
 </head>
 <frameset cols="20%,80%" title="Documentation frame" onload="top.loadFrames()">
 <frameset rows="30%,70%" title="Left frames" onload="top.loadFrames()">
 <frame src="ontology-index.html" name="packageListFrame" title="All Packages">
-<frame src="entity-index.html" name="classListFrame" >
+<frame src="about:blank" name="classListFrame" onload="top.loadClassList()" >
 </frameset>
 <frame src="overview.html" name="mainContentFrame" scrolling="yes">
 <noframes>

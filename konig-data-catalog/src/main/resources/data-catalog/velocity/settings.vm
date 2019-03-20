@@ -5,18 +5,56 @@
 <script>
 #include( "data-catalog/velocity/cookies.vm" )
 
-function onMixEntityAndEnum() {
-  var isChecked = document.getElementById("settingsForm").elements["mixEntityAndEnum"].checked;
-  var src = isChecked ? "allclasses-index.html" : "entity-index.html";
+function onNavigationTabs() {
+  var navigationTabs = getNavigationTabs();
+  setCookie("navigationTabs", navigationTabs);
+  
+  updateNavigationPanel();
+}
+
+function onClassDisplayName() {
+  
+  var classDisplayName = getClassDisplayName();  
+  setCookie("classDisplayName", classDisplayName);
+  
+  updateNavigationPanel();
+
+}
+
+function updateNavigationPanel() {
+  var src = getNavigationSrc();
+  setCookie("classListSrc",src);
   parent.window.frames["classListFrame"].location = src;
-  setCookie("classListSrc",src, 10*365);
+}
+
+function getNavigationTabs() {
+
+  return document.getElementById("AllInOne").checked ? "AllInOne" :
+              "SeparateTabs" ;
+}
+
+function getClassDisplayName() {
+  return document.getElementById("technical").checked ? "technical" :
+              "business" ;
+}
+
+function getNavigationSrc() {
+  var classDisplayName = getClassDisplayName();
+  var navigationTabs = getNavigationTabs();
+  
+  var tabPart = "AllInOne" == navigationTabs ? "classes" : "entities";
+  
+  return "index-" + classDisplayName + "-" + tabPart + ".html";
 }
 
 function loadSettings() {
-  var classListSrc = getCookie("classListSrc");
-  if (classListSrc == "allclasses-index.html") {
-    document.getElementById("settingsForm").elements["mixEntityAndEnum"].checked = true
-  }
+
+  var classDisplayName = getCookie("classDisplayName") || "business";
+  var navigationTabs = getCookie("navigationTabs") || "SeparateTabs";
+  
+  document.getElementById(classDisplayName).checked = true;
+  document.getElementById(navigationTabs).checked = true;
+ 
 }
 
 </script>
@@ -27,7 +65,19 @@ function loadSettings() {
 <div id="mainContent">
 <h1 property="rdfs:label" class="page-title">Settings</h1>
 <form id="settingsForm" style="margin-top: 1em">
-<input type="checkbox" name="mixEntityAndEnum" onclick="onMixEntityAndEnum()">&nbsp;Mix Entity and Enum Classes</input>
+<h2>Left Navigation Panel</h2>
+<div class="form-component">
+  <h3>Navigation Tabs</h3>
+  <div class="form-component">
+    <input type="radio" id="AllInOne" name="navigationTabs" value="AllInOne" onclick="onNavigationTabs()"> Display entities and enumerations together in a single panel<br>
+    <input type="radio" id="SeparateTabs" name="navigationTabs" value="SeparateTabs" onclick="onNavigationTabs()">Display entities and enumerations in separate tabs<br>
+  </div>
+  <h3>Display Name</h3>
+  <div class="form-component">
+    <input type="radio" id="business" name="classDisplayName" value="business" onclick="onClassDisplayName()"> Business Name<br>
+    <input type="radio" id="technical" name="classDisplayName" value="technical" onclick="onClassDisplayName()"> Technical Name<br>
+  </div>
+</div>
 </form>
 </body>
 </html>

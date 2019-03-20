@@ -43,6 +43,13 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 
+import static io.konig.datacatalog.OwlClassCategory.classes;
+import static io.konig.datacatalog.OwlClassCategory.entities;
+import static io.konig.datacatalog.OwlClassCategory.enums;
+
+import static io.konig.datacatalog.ClassDisplayName.business;
+import static io.konig.datacatalog.ClassDisplayName.technical;
+
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
@@ -127,9 +134,12 @@ public class DataCatalogBuilder {
 			buildShapePages(request, exampleDir);
 			buildClassPages(request);
 			buildPropertyPages(request);
-			buildClassIndex(request);
-			buildEntityIndex(request);
-			buildEnumIndex(request);
+			buildClassIndex(request, business, classes);
+			buildClassIndex(request, technical, classes);
+			buildClassIndex(request, business, entities);
+			buildClassIndex(request, technical, entities);
+			buildClassIndex(request, business, enums);
+			buildClassIndex(request, technical, enums);
 			buildOntologyIndex(request);
 			buildIndexPage(request);
 			buildOverviewPage(request);
@@ -181,28 +191,6 @@ public class DataCatalogBuilder {
 		}
 	}
 
-
-	private void buildEntityIndex(PageRequest request) throws IOException, DataCatalogException {
-		EntityIndexPage page = new EntityIndexPage();
-		File entityIndex = new File(outDir, "entity-index.html");
-		
-		try (PrintWriter out = new PrintWriter(new FileWriter(entityIndex))) {
-			PageResponse response = new PageResponseImpl(out);
-			page.render(request, response);
-		}
-		
-	}
-
-
-	private void buildEnumIndex(PageRequest request) throws IOException, DataCatalogException {
-		EnumerationIndexPage page = new EnumerationIndexPage();
-		File enumIndex = new File(outDir, "enum-index.html");
-		try (PrintWriter out = new PrintWriter(new FileWriter(enumIndex))) {
-			PageResponse response = new PageResponseImpl(out);
-			page.render(request, response);
-		}
-		
-	}
 
 
 	private void buildDatasourceSummary(PageRequest request) throws IOException, DataCatalogException {
@@ -338,10 +326,11 @@ public class DataCatalogBuilder {
 	}
 
 
-	private void buildClassIndex(PageRequest request) throws IOException, DataCatalogException {
+	private void buildClassIndex(PageRequest request, ClassDisplayName displayName, OwlClassCategory classCategory) throws IOException, DataCatalogException {
 		
-		ClassIndexPage page = new ClassIndexPage();
-		File indexFile = new File(outDir, "allclasses-index.html");
+		String fileName = "index-" + displayName.name() + "-" + classCategory.name() + ".html";
+		ClassIndexPage page = new ClassIndexPage(displayName, classCategory);
+		File indexFile = new File(outDir, fileName);
 		try (PrintWriter out = new PrintWriter(new FileWriter(indexFile))) {
 			PageResponse response = new PageResponseImpl(out);
 			page.render(request, response);
