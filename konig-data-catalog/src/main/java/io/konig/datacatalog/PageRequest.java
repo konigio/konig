@@ -224,6 +224,9 @@ public class PageRequest {
 	}
 
 	public String relativePath(URI target) throws DataCatalogException {
+		if (target == null) {
+			return null;
+		}
 		return relativePath(pageId, target);
 	}
 }
