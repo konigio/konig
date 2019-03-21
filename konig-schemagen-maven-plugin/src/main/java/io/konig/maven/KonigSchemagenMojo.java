@@ -446,14 +446,14 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			generateDataServices();
 			generateMultiProject();
 			
-			
 			computeSizeEstimates();
 			generateTabularShapes();
 			computeMaxRowSize();
 			
 			emit();
-			failIfAnyError();
+			
 			buildEnvironments();
+			failIfAnyError();
 			buildPackagingProject();
 			
 		} catch (IOException | SchemaGeneratorException | RDFParseException | RDFHandlerException | 
