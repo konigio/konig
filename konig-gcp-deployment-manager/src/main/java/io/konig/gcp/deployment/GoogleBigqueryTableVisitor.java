@@ -1,5 +1,7 @@
 package io.konig.gcp.deployment;
 
+import java.util.List;
+
 /*
  * #%L
  * Konig GCP Deployment Manager
@@ -23,6 +25,7 @@ package io.konig.gcp.deployment;
 
 import org.openrdf.model.URI;
 
+import com.google.api.services.bigquery.model.ExternalDataConfiguration;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableSchema;
 
@@ -58,10 +61,39 @@ public class GoogleBigqueryTableVisitor implements DataSourceVisitor {
 		
 		addDataset(graph, bigquery);
 		addTable(graph, shape, bigquery);
-	
 		
 		
 		
+		
+	}
+
+	private void addStorageBucket(GoogleBigQueryTable bigquery, BigqueryTableResource table) {
+		
+		ExternalDataConfiguration ext = bigquery.getExternalDataConfiguration();
+		if (ext != null) {
+			List<String> list = ext.getSourceUris();
+			if (list != null) {
+				for (String uri : list) {
+					if (uri.startsWith("gs://")) {
+						String bucketName = manager.storageBucketName(uri);
+						String configName = manager.storageBucketConfigName(bucketName);
+						
+						StorageBucketResource resource = manager.getConfig().findResource(configName, StorageBucketResource.class);
+						if (resource == null) {
+							resource = new StorageBucketResource();
+							resource.setName(configName);
+							StorageBucketProperties properties = new StorageBucketProperties();
+							properties.setName(bucketName);
+							resource.setProperties(properties);
+							
+							manager.getConfig().addResource(resource);
+							
+							table.produceMetadata().addDependency(configName);
+						}
+					}
+				}
+			}
+		}
 		
 	}
 
@@ -102,6 +134,8 @@ public class GoogleBigqueryTableVisitor implements DataSourceVisitor {
 			
 			TableSchema tableSchema = tableGenerator.toTableSchema(shape);
 			properties.setSchema(tableSchema);
+			
+			addStorageBucket(bigquery, resource);
 		}
 		
 		

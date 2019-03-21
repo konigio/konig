@@ -109,7 +109,7 @@ public class GcpConfigManagerTest {
 		assertEquals("storage.v1.bucket", landing.stringValue("type"));
 	}
 	
-	@Test
+	@Ignore
 	public void testBigqueryStagingTable() throws Exception {
 		load("src/test/resources/GcpConfigManagerTest/workbook-bigquery-staging-table");
 		
