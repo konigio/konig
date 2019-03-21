@@ -1479,10 +1479,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			BigQueryInfo bigQuery = googleCloudPlatform.getBigquery();
 			CloudStorageInfo cloudStorage = googleCloudPlatform.getCloudstorage();
 			
-			GcpDeploymentConfigManager deployManager = new GcpDeploymentConfigManager();
+//			GcpDeploymentConfigManager deployManager = new GcpDeploymentConfigManager();
 			
 			GoogleCloudResourceGenerator resourceGenerator = new GoogleCloudResourceGenerator(shapeManager, owlReasoner);
-			resourceGenerator.setBigqueryTableListener(deployManager.createBigQueryTableListener());
+//			resourceGenerator.setBigqueryTableListener(deployManager.createBigQueryTableListener());
 	
 			if (bigQuery != null) {
 				ProjectFolder schemaFolder = project.createFolder(bigQuery.getSchema());
@@ -1521,11 +1521,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			File deploymentDir = new File(googleCloudPlatform.getDirectory(), "deployment");
 			
-			CloudSqlAdminManager sqlAdmin = new CloudSqlAdminManager(
-				deployManager.createCloudSqlInstanceVisitor(),
-				deployManager.createCloudSqlDatabaseVisitor());
+//			CloudSqlAdminManager sqlAdmin = new CloudSqlAdminManager(
+//				deployManager.createCloudSqlInstanceVisitor(),
+//				deployManager.createCloudSqlDatabaseVisitor());
 
-			File deploymentYaml = new File(deploymentDir, "gcp-deployment.yaml");
+//			File deploymentYaml = new File(deploymentDir, "gcp-deployment.yaml");
 			
 			BigQueryTableGenerator bigQueryTableGenerator = new BigQueryTableGenerator(shapeManager, null, owlReasoner);
 			GcpConfigManager configManager = new GcpConfigManager(bigQueryTableGenerator, globalGcpYamlTemplate());
@@ -1533,7 +1533,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			emitter.add(new DeploymentConfigEmitter(shapeManager, configManager, gcpConfigFile));
 			
 			// TODO: remove the following, obsolete emitter
-			emitter.add(new GoogleDeploymentManagerEmitter(sqlAdmin, deployManager, deploymentYaml));
+//			emitter.add(new GoogleDeploymentManagerEmitter(sqlAdmin, deployManager, deploymentYaml));
 
 			if (bigQuery != null) {
 

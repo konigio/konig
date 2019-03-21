@@ -4,7 +4,7 @@ package io.konig.gcp.deployment;
  * #%L
  * Konig GCP Deployment Manager
  * %%
- * Copyright (C) 2015 - 2018 Gregory McFall
+ * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,59 +21,21 @@ package io.konig.gcp.deployment;
  */
 
 
-public class BaseGcpResource<T> implements GcpResource<T> {
+public class StorageBucketProperties {
+
 	private String name;
-	private String type;
-	private T properties;
-	private GcpMetadata metadata;
 
-	public BaseGcpResource(String type) {
-		this.type = type;
-	}
-
-
-
-	@Override
 	public String getName() {
 		return name;
 	}
-	
-	
-
-	public void setProperties(T properties) {
-		this.properties = properties;
-	}
-
-
 
 	public void setName(String name) {
 		this.name = name;
 	}
 
-	@Override
-	public String getType() {
-		return type;
-	}
+	
 
-	@Override
-	public T getProperties() {
-		return properties;
-	}
 	
-	public GcpMetadata produceMetadata() {
-		if (metadata == null) {
-			metadata = new GcpMetadata();
-		}
-		return metadata;
-	}
-	
-	public GcpMetadata getMetadata() {
-		return metadata;
-	}
-	
-	public void setMetadata(GcpMetadata metadata) {
-		this.metadata = metadata;
-	}
 	
 	
 

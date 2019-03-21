@@ -47,6 +47,7 @@ import io.konig.shacl.ShapeManager;
 
 public class GcpConfigManager {
 	
+	private static final String GS_PREFIX = "gs://";
 	private DeploymentConfig config = new DeploymentConfig();
 	private List<DataSourceVisitor> visitors = new ArrayList<>();
 	private File globalConfigTemplate;
@@ -66,6 +67,21 @@ public class GcpConfigManager {
 	
 	public String bigqueryTableName(String datasetId, String tableId) {
 		return "bigquery-" + datasetId + "-" + tableId;
+	}
+	
+	public String storageBucketName(String bucketURI) {
+		if (bucketURI.startsWith(GS_PREFIX)) {
+			int end = bucketURI.indexOf('/', GS_PREFIX.length());
+			if (end < 0) {
+				end = bucketURI.length();
+			}
+			return bucketURI.substring(GS_PREFIX.length(), end);
+		}
+		throw new IllegalArgumentException("Invalid bucketURI: " + bucketURI);
+	}
+	
+	public String storageBucketConfigName(String bucketName) {
+		return "bucket-" + bucketName;
 	}
 	
 	public URI bigqueryTableIri(String datasetId, String tableId) {
