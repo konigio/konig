@@ -26,10 +26,18 @@ import org.openrdf.model.URI;
 public class MenuItem {
 	private URI itemId;
 	private String name;
+	private URI icon;
 	
 	public MenuItem(URI itemId, String name) {
 		this.itemId = itemId;
 		this.name = name;
+	}
+	
+
+	public MenuItem(URI itemId, String name, URI icon) {
+		this.itemId = itemId;
+		this.name = name;
+		this.icon = icon;
 	}
 
 	public URI getItemId() {
@@ -39,5 +47,10 @@ public class MenuItem {
 	public String getName() {
 		return name;
 	}
+
+	public URI getIcon() {
+		return icon;
+	}
+	
 	
 }

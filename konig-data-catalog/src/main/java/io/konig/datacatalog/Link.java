@@ -26,6 +26,7 @@ public class Link implements Comparable<Link> {
 	private String name;
 	private String href;
 	private String className;
+	private String iconSrc;
 	
 	public Link(String name, String href) {
 		this.name = name;
@@ -36,6 +37,15 @@ public class Link implements Comparable<Link> {
 		this.name = name;
 		this.href = href;
 		this.className = className;
+	}
+	
+	
+
+	public Link(String name, String href, String className, String iconSrc) {
+		this.name = name;
+		this.href = href;
+		this.className = className;
+		this.iconSrc = iconSrc;
 	}
 
 	public String getClassName() {
@@ -60,6 +70,10 @@ public class Link implements Comparable<Link> {
 			return new Link(name, href);
 		}
 		return null;
+	}
+	
+	public String getIconSrc() {
+		return iconSrc;
 	}
 	
 }

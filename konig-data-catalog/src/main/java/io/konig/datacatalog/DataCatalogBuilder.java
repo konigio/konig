@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -71,12 +72,16 @@ public class DataCatalogBuilder {
 	public static final URI DATASOURCE_SUMMARY_URI = new URIImpl("urn:datacatalog/datasources");
 	public static final URI INDEX_ALL_URI = new URIImpl("urn:datacatalog/index-all");
 	public static final URI SETTINGS_URI = new URIImpl("urn:datacatalog/settings");
+	public static final URI SETTINGS_ICON = new URIImpl("urn:datacatalog/.images/settings.png");
 	
 	private static List<MenuItem> menu = new ArrayList<>();
 	static {
-		menu.add(new MenuItem(DATASOURCE_SUMMARY_URI, "Datasources"));
 		menu.add(new MenuItem(OVERVIEW_URI, "Overview"));
 		menu.add(new MenuItem(INDEX_ALL_URI, "Index"));
+		menu.add(new MenuItem(DATASOURCE_SUMMARY_URI, "Datasources"));
+		menu.add(new MenuItem(SETTINGS_URI, "Settings", SETTINGS_ICON));
+		
+		Collections.reverse(menu);
 	}
 	
 	private ResourceWriterFactory resourceWriterFactory;
@@ -227,12 +232,11 @@ public class DataCatalogBuilder {
 		for (MenuItem item : menu) {
 			String name = item.getName();
 			String href = request.relativePath(item.getItemId());
+			String className = item.getItemId().equals(pageId) ? "activeLink" : null;
+			String iconSrc = request.relativePath(item.getIcon());
 			
-			if (item.getItemId().equals(pageId)) {
-				list.add(new Link(name, href, "activelink"));
-			} else {
-				list.add(new Link(name, href));
-			}
+			list.add(new Link(name, href, className, iconSrc));
+			
 		}
 		request.getContext().put("Menu", list);
 		
