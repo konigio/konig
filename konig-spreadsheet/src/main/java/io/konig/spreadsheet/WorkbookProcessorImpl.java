@@ -604,7 +604,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 
 			Cell cell = row.getCell(i);
 			if (cell != null) {
-				String text = cell.getStringCellValue();
+				String text = cellStringValue(cell);
 				if (text != null) {
 					SheetColumn column = p.findColumnByName(text);
 					if (column != null) {
