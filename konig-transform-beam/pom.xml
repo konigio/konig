@@ -1,0 +1,157 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.konig</groupId>
+    <artifactId>konig-parent</artifactId>
+    <version>2.4.0-SNAPSHOT</version>
+    <relativePath>../konig-parent/pom.xml</relativePath>
+  </parent>
+  <artifactId>konig-transform-beam</artifactId>
+  <packaging>jar</packaging>
+  <name>Konig Transform Beam</name>
+  
+  <dependencies>
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-core</artifactId>
+			<version>${konig.version}</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>io.konig</groupId>
+  		<artifactId>konig-gcp-model</artifactId>
+  		<version>${konig.version}</version>
+  	</dependency>
+		<dependency>
+		    <groupId>com.google.apis</groupId>
+		    <artifactId>google-api-services-bigquery</artifactId>
+		    <version>${google-api-services-bigquery.version}</version>
+		</dependency>
+		
+    <!-- https://mvnrepository.com/artifact/com.helger/jcodemodel -->
+		<dependency>
+		    <groupId>com.helger</groupId>
+		    <artifactId>jcodemodel</artifactId>
+		    <version>${helger-jcodemodel.version}</version>
+		</dependency>
+    
+		
+		<!-- Adds a dependency on the Beam SDK. -->
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-core</artifactId>
+      <version>${beam.version}</version>
+    </dependency>
+
+    <!-- Adds a dependency on the Beam Google Cloud Platform IO module. -->
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
+      <version>${beam.version}</version>
+    </dependency>
+
+    <!-- Dependencies below this line are specific dependencies needed by the examples code. -->
+    <dependency>
+      <groupId>com.google.api-client</groupId>
+      <artifactId>google-api-client</artifactId>
+      <version>${google-clients.version}</version>
+      <exclusions>
+        <!-- Exclude an old version of guava that is being pulled
+             in by a transitive dependency of google-api-client -->
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava-jdk5</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-bigquery</artifactId>
+      <version>${google-api-services-bigquery.version}</version>
+      <exclusions>
+        <!-- Exclude an old version of guava that is being pulled
+             in by a transitive dependency of google-api-client -->
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava-jdk5</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.http-client</groupId>
+      <artifactId>google-http-client</artifactId>
+      <version>${google-http-client.version}</version>
+      <exclusions>
+        <!-- Exclude an old version of guava that is being pulled
+             in by a transitive dependency of google-api-client -->
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava-jdk5</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+        <!-- Exclude an old version of guava that is being pulled
+             in by a transitive dependency of google-api-client -->
+             
+<!--     <dependency> -->
+<!--       <groupId>com.google.apis</groupId> -->
+<!--       <artifactId>google-api-services-pubsub</artifactId> -->
+<!--       <version>${pubsub.version}</version> -->
+<!--       <exclusions> -->
+<!--         <exclusion> -->
+<!--           <groupId>com.google.guava</groupId> -->
+<!--           <artifactId>guava-jdk5</artifactId> -->
+<!--         </exclusion> -->
+<!--       </exclusions> -->
+<!--     </dependency> -->
+
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>${jodatime.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
+		
+		<!-- Dependencies beyond generic Apache Beam -->
+		
+    
+    <dependency>
+        <groupId>org.apache.velocity</groupId>
+        <artifactId>velocity</artifactId>
+        <version>${velocity.version}</version>
+    </dependency>
+		
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-csv</artifactId>
+		    <version>${apache.commons-csv.version}</version>
+		</dependency>
+		
+		
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+	  <plugins>
+		</plugins>
+	</build>
+  <description>Tools for building code generators based on semantic models</description>
+</project>

@@ -21,14 +21,32 @@ package io.konig.core.showl;
  */
 
 
-@SuppressWarnings("serial")
-public class ShowlProcessingException extends RuntimeException {
+import java.util.ArrayList;
+import java.util.List;
 
-	public ShowlProcessingException(Throwable cause) {
-		super(cause);
+public class ShowlNodeListingConsumer implements ShowlNodeShapeConsumer {
+	
+	private List<ShowlNodeShape> list = new ArrayList<>();
+	private MappingStrategy mappingStrategy;
+	
+	
+
+	public ShowlNodeListingConsumer(MappingStrategy mappingStrategy) {
+		this.mappingStrategy = mappingStrategy;
+	}
+
+	@Override
+	public void consume(ShowlNodeShape node) throws ShowlProcessingException {
+		if (mappingStrategy != null) {
+			mappingStrategy.selectMappings(node);
+		}
+		list.add(node);
+	}
+
+	public List<ShowlNodeShape> getList() {
+		return list;
 	}
 	
-	public ShowlProcessingException(String message) {
-		super(message);
-	}
+	
+
 }

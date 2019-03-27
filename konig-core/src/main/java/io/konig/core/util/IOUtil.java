@@ -26,12 +26,17 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.io.Files;
 
 public class IOUtil {
 	
@@ -56,7 +61,30 @@ public class IOUtil {
 		}
 		file.delete();
 	}
-
+	
+	public static void replaceAll(File file, List<RewriteRule> rules) throws IOException {
+		
+		File tmpFile = File.createTempFile(file.getName(), "tmp", file.getParentFile());
+		try {
+			try (FileWriter out = new FileWriter(tmpFile)) {
+				try (BufferedReader buffered = new BufferedReader(new FileReader(file))) {
+					String line = null;
+					while ( (line = buffered.readLine()) != null) {
+						for (RewriteRule rule : rules) {
+							line = line.replace(rule.getSourceString(), rule.getTargetString());
+						}
+						out.write(line);
+						out.write('\n');
+					}
+				}
+			}
+			Files.copy(tmpFile, file);
+			
+		} finally {
+			tmpFile.delete();
+		}
+	}
+	
 	public static String stringContent(File file) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		InputStream is = new FileInputStream(file);

@@ -1,8 +1,8 @@
-package io.konig.core.showl;
+package io.konig.transform.beam;
 
 /*
  * #%L
- * Konig Core
+ * Konig Transform Beam
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -21,14 +21,18 @@ package io.konig.core.showl;
  */
 
 
-@SuppressWarnings("serial")
-public class ShowlProcessingException extends RuntimeException {
+import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlNodeShapeConsumer;
+import io.konig.core.showl.ShowlProcessingException;
 
-	public ShowlProcessingException(Throwable cause) {
-		super(cause);
-	}
+public class BeamTransformNodeShapeConsumer implements ShowlNodeShapeConsumer {
+
 	
-	public ShowlProcessingException(String message) {
-		super(message);
+
+	@Override
+	public void consume(ShowlNodeShape node) throws ShowlProcessingException {
+		
+
 	}
+
 }

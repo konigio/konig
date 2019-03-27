@@ -1,8 +1,8 @@
-package io.konig.core.showl;
+package io.konig.transform.beam;
 
 /*
  * #%L
- * Konig Core
+ * Konig Transform Beam
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -22,13 +22,14 @@ package io.konig.core.showl;
 
 
 @SuppressWarnings("serial")
-public class ShowlProcessingException extends RuntimeException {
-
-	public ShowlProcessingException(Throwable cause) {
-		super(cause);
+public class BeamTransformGenerationException extends Exception {
+	
+	public BeamTransformGenerationException(String msg, Throwable cause) {
+		super(msg, cause);
 	}
 	
-	public ShowlProcessingException(String message) {
+	public BeamTransformGenerationException(String message) {
 		super(message);
 	}
+
 }

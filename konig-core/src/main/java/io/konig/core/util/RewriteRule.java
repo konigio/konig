@@ -1,4 +1,4 @@
-package io.konig.core.showl;
+package io.konig.core.util;
 
 /*
  * #%L
@@ -21,14 +21,24 @@ package io.konig.core.showl;
  */
 
 
-@SuppressWarnings("serial")
-public class ShowlProcessingException extends RuntimeException {
-
-	public ShowlProcessingException(Throwable cause) {
-		super(cause);
-	}
+public class RewriteRule {
 	
-	public ShowlProcessingException(String message) {
-		super(message);
+	private String sourceString;
+	private String targetString;
+
+	public RewriteRule(String sourceString, String targetString) {
+		this.sourceString = sourceString;
+		this.targetString = targetString;
 	}
+
+	public String getSourceString() {
+		return sourceString;
+	}
+
+	public String getTargetString() {
+		return targetString;
+	}
+
+
+
 }

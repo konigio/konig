@@ -36,6 +36,10 @@ public class ShowlFromCondition extends ShowlDerivedJoinCondition {
 		return sourceNode;
 	}
 	
+	public ShowlNodeShape otherNode(ShowlNodeShape node) {
+		return node != sourceNode ? sourceNode : null;
+	}
+	
 	public ShowlNodeShape otherNode(Set<ShowlNodeShape> set) {
 		if (!set.contains(sourceNode)) {
 			return sourceNode;
