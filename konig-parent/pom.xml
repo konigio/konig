@@ -46,6 +46,7 @@
 		<velocity.version>1.7</velocity.version>
 		<apache.commons-csv.version>1.6</apache.commons-csv.version>
 		<groovy-all.version>2.4.12</groovy-all.version>
+		<helger-jcodemodel.version>3.2.2</helger-jcodemodel.version>
 		<ivy.version>2.4.0</ivy.version>
 		<ant.version>1.8.2</ant.version>
 		<guava.version>20.0</guava.version>
@@ -92,7 +93,8 @@
 		<module>../konig-schemagen</module>
 		<module>../konig-gcp-deployment-manager</module>
 		<module>../konig-gae-generator</module>
-		<module>../konig-maven-project-generator</module>
+    <module>../konig-maven-project-generator</module>
+    <module>../konig-transform-beam</module>
 		<module>../konig-schemagen-maven-plugin</module>
 		<module>../konig-ldp</module>
 		<module>../konig-ldp-maven-plugin</module>

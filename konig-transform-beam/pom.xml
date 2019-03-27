@@ -6,7 +6,6 @@
     <version>2.4.0-SNAPSHOT</version>
     <relativePath>../konig-parent/pom.xml</relativePath>
   </parent>
-  <groupId>io.konig</groupId>
   <artifactId>konig-transform-beam</artifactId>
   <packaging>jar</packaging>
   <name>Konig Transform Beam</name>
@@ -28,11 +27,13 @@
 		    <version>${google-api-services-bigquery.version}</version>
 		</dependency>
 		
-    <dependency>
-      <groupId>com.sun.codemodel</groupId>
-      <artifactId>codemodel</artifactId>
-      <version>${codemodel.version}</version>
-    </dependency>
+    <!-- https://mvnrepository.com/artifact/com.helger/jcodemodel -->
+		<dependency>
+		    <groupId>com.helger</groupId>
+		    <artifactId>jcodemodel</artifactId>
+		    <version>${helger-jcodemodel.version}</version>
+		</dependency>
+    
 		
 		<!-- Adds a dependency on the Beam SDK. -->
     <dependency>
@@ -117,6 +118,21 @@
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
     </dependency>
+		
+		<!-- Dependencies beyond generic Apache Beam -->
+		
+    
+    <dependency>
+        <groupId>org.apache.velocity</groupId>
+        <artifactId>velocity</artifactId>
+        <version>${velocity.version}</version>
+    </dependency>
+		
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-csv</artifactId>
+		    <version>${apache.commons-csv.version}</version>
+		</dependency>
 		
 		
     <dependency>

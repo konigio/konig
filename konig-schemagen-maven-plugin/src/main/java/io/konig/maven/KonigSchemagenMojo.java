@@ -122,7 +122,8 @@ import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.MappingReport;
 import io.konig.core.showl.MappingStrategy;
 import io.konig.core.showl.ShowlManager;
-import io.konig.core.showl.ShowlNodeShapeConsumer;
+import io.konig.core.showl.ShowlNodeListingConsumer;
+import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlSourceNodeSelector;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
@@ -255,14 +256,14 @@ import io.konig.spreadsheet.GcpDeploymentSheet;
 import io.konig.spreadsheet.SettingsSheet;
 import io.konig.spreadsheet.SpreadsheetException;
 import io.konig.spreadsheet.WorkbookProcessorImpl;
+import io.konig.transform.beam.BeamTransformGenerationException;
+import io.konig.transform.beam.BeamTransformGenerator;
+import io.konig.transform.beam.BeamTransformRequest;
 import io.konig.transform.model.ShapeTransformException;
 import io.konig.transform.mysql.RoutedSqlTransformVisitor;
 import io.konig.transform.mysql.SqlTransformGenerator;
 import io.konig.transform.proto.AwsAuroraChannelFactory;
 import io.konig.transform.proto.ShapeModelFactory;
-import io.konig.transform.showl.sql.BigQueryTransformConsumer;
-import io.konig.transform.showl.sql.ShowlSqlNodeConsumer;
-import io.konig.transform.showl.sql.ShowlSqlTransform;
 import io.konig.validation.IdNamePair;
 import io.konig.validation.MavenProjectId;
 import io.konig.validation.ModelValidationReport;
@@ -462,7 +463,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
 				SizeEstimateException | KonigException | SQLException | InvalidDatatypeException | 
 				ShapeTransformException | EnvironmentGenerationException | ParseException | MojoExecutionException |
-				MavenInvocationException | CubeShapeException e) {
+				MavenInvocationException | CubeShapeException | BeamTransformGenerationException e) {
 			
 			if (failOnError) {
 				
@@ -1461,7 +1462,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			}
 		}
 	}
-	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, SQLException {
+	private void generateGoogleCloudPlatform() throws IOException, MojoExecutionException, ConfigurationException, GoogleCredentialsNotFoundException, InvalidGoogleCredentialsException, SQLException, BeamTransformGenerationException {
 		if (googleCloudPlatform != null) {
 			
 			if (buildTarget!=null && buildTarget!=BuildTarget.GCP) {
@@ -1565,20 +1566,36 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 
 
-	private void configureBigQueryTransform() {
+	private void configureBigQueryTransform() throws BeamTransformGenerationException, IOException {
 		// We really ought to batch up all the transform jobs and run them all at once.
 		// To that end, this method ought to simply configure the batch to include BigQuery transforms.
 		// For now, however, we'll go ahead and run the BigQuery transform job by itself.
 		
-		ProjectFolder folder = new ProjectFolder(project, googleCloudPlatform.getBigquery().getScripts());
-		BigQueryTransformConsumer transformConsumer = new BigQueryTransformConsumer(folder);
-		ShowlSqlTransform transform = new ShowlSqlTransform();
 		MappingStrategy mappingStrategy = new MappingStrategy();
-		ShowlNodeShapeConsumer sqlNodeConsumer = new ShowlSqlNodeConsumer(transformConsumer, mappingStrategy, transform);
+		ShowlNodeListingConsumer nodeConsumer = new ShowlNodeListingConsumer(mappingStrategy);
+		
+//		ShowlSqlTransform transform = new ShowlSqlTransform();
+//		BigQueryTransformConsumer transformConsumer = new BigQueryTransformConsumer(folder);
+//		ShowlNodeShapeConsumer nodeConsumer = new ShowlSqlNodeConsumer(transformConsumer, mappingStrategy, transform);
 		
 		ShowlSourceNodeSelector sourceNodeSelector = new ExplicitDerivedFromSelector();
-		ShowlManager showlManager = new ShowlManager(shapeManager, owlReasoner, sourceNodeSelector, sqlNodeConsumer);
+		ShowlManager showlManager = new ShowlManager(shapeManager, owlReasoner, sourceNodeSelector, nodeConsumer);
 		showlManager.load();
+		
+		List<ShowlNodeShape> nodeList = nodeConsumer.getList();
+		File projectDir = new File(mavenProject.getBasedir(), "target/generated/beam");
+		if (!nodeList.isEmpty()) {
+			BeamTransformRequest request = BeamTransformRequest.builder()
+				.groupId(mavenProject.getGroupId())
+				.artifactBaseId(mavenProject.getArtifactId())
+				.version(mavenProject.getVersion())
+				.projectDir(projectDir)
+				.nodeList(nodeList)
+				.build();
+			String basePackage = mavenProject.getGroupId() + ".beam";
+			BeamTransformGenerator generator = new BeamTransformGenerator(basePackage, nsManager);
+			generator.generateAll(request);
+		}
 		
 		// The remaining lines comment out the old implementation.  
 		// Once the new solution is stable, we should delete these lines.

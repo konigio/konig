@@ -23,5 +23,5 @@ package io.konig.core.showl;
 
 public interface ShowlNodeShapeConsumer {
 
-	public void consume(ShowlNodeShape consumer) throws ShowlProcessingException;
+	public void consume(ShowlNodeShape node) throws ShowlProcessingException;
 }

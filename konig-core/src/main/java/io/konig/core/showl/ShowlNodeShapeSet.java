@@ -22,6 +22,7 @@ package io.konig.core.showl;
 
 
 import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * The collection of all instances of ShowlNodeShape for a given SHACL Node Shape.
@@ -34,6 +35,17 @@ public class ShowlNodeShapeSet extends HashSet<ShowlNodeShape> {
 	
 	public ShowlNodeShape findAny() {
 		return isEmpty() ? null : iterator().next();
+	}
+	
+	public ShowlNodeShape top() {
+		Iterator<ShowlNodeShape> sequence = iterator();
+		while (sequence.hasNext()) {
+			ShowlNodeShape node = sequence.next();
+			if (node.getAccessor() == null) {
+				return node;
+			}
+		}
+		return null;
 	}
 	
 

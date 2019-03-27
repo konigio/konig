@@ -33,8 +33,13 @@ import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
+import io.konig.core.Context;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.util.IriTemplate;
+import io.konig.core.util.ValueFormat.Element;
+import io.konig.core.util.ValueFormat.ElementType;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.Shape;
@@ -63,6 +68,78 @@ public class ShowlNodeShape implements Traversable {
 		}
 	}
 	
+	public Set<ShowlPropertyShape> joinProperties(ShowlJoinCondition join) throws ShowlProcessingException {
+		
+		Set<ShowlPropertyShape> set = new HashSet<>();
+		
+		if (join instanceof ShowlFromCondition) {
+			ShowlFromCondition from = (ShowlFromCondition) join;
+			join = from.getDerivedFrom();
+		}
+
+		for (ShowlDirectPropertyShape p : getProperties()) {
+			
+			ShowlMapping mapping = p.getSelectedMapping();
+			if (mapping == null) {
+				throw new ShowlProcessingException("Mapping not found for " + p.getPath());
+			}
+			
+			if (mapping.getJoinCondition() == join) {
+				ShowlPropertyShape other = mapping.findOther(p);
+				addMappedProperty(set, other, p);
+				
+			}
+		}
+		
+		return set;
+		
+	}
+	
+	private void addMappedProperty(Set<ShowlPropertyShape> set, ShowlPropertyShape other, ShowlPropertyShape target) {
+
+		
+		if (other instanceof ShowlDirectPropertyShape) {
+			set.add(other);
+			return;
+			
+		} else {
+			ShowlPropertyShape peer = other.getPeer();
+			if (peer instanceof ShowlDirectPropertyShape) {
+				set.add(other);
+				return;
+			}
+			
+			if (other instanceof ShowlTemplatePropertyShape) {
+				addTemplateParameters(set, (ShowlTemplatePropertyShape) other, target);
+				return;
+			}
+		}
+		
+		throw new ShowlProcessingException("Mapping not supported for " + target.getPath());
+		
+	}
+
+	private void addTemplateParameters(Set<ShowlPropertyShape> set, ShowlTemplatePropertyShape other, ShowlPropertyShape target) {
+		
+		IriTemplate template = other.getTemplate();
+		Context context = template.getContext();
+		
+		ShowlNodeShape node = other.getDeclaringShape();
+		
+		for (Element e : template.toList()) {
+			if (e.getType() == ElementType.VARIABLE) {
+				URI varId = new URIImpl(context.expandIRI(e.getText()));
+				
+				List<ShowlPropertyShape> outSet = node.out(varId);
+				
+				for (ShowlPropertyShape p : outSet) {
+					addMappedProperty(set, p, target);
+				}
+				
+			}
+		}
+		
+	}
 	
 	public void addInwardProperty(ShowlInwardPropertyShape p) {
 		if (inProperties == null) {
