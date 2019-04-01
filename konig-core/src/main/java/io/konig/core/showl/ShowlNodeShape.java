@@ -36,6 +36,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.Context;
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat.Element;
@@ -68,6 +69,9 @@ public class ShowlNodeShape implements Traversable {
 		}
 	}
 	
+	/**
+	 * Get all the properties mapped to this NodeShape via a given join condition.
+	 */
 	public Set<ShowlPropertyShape> joinProperties(ShowlJoinCondition join) throws ShowlProcessingException {
 		
 		Set<ShowlPropertyShape> set = new HashSet<>();
@@ -98,7 +102,10 @@ public class ShowlNodeShape implements Traversable {
 	private void addMappedProperty(Set<ShowlPropertyShape> set, ShowlPropertyShape other, ShowlPropertyShape target) {
 
 		
-		if (other instanceof ShowlDirectPropertyShape) {
+		if ((other instanceof ShowlDirectPropertyShape) || 
+			(other instanceof ShowlStaticPropertyShape) ||
+			(other.getValueShape() != null)
+		) {
 			set.add(other);
 			return;
 			
@@ -117,6 +124,33 @@ public class ShowlNodeShape implements Traversable {
 		
 		throw new ShowlProcessingException("Mapping not supported for " + target.getPath());
 		
+	}
+	
+	public ShowlPropertyShape enumSourceKey(OwlReasoner reasoner) {
+		if (accessor != null && reasoner.isEnumerationClass(owlClass.getId())) {
+			ShowlMapping mapping = accessor.getSelectedMapping();
+			if (mapping != null) {
+				ShowlPropertyShape otherAccessor = mapping.findOther(accessor);
+				ShowlNodeShape sourceNode = otherAccessor.getValueShape();
+				if (sourceNode != null) {
+					for (ShowlPropertyShape p : sourceNode.allOutwardProperties()) {
+						if (reasoner.isInverseFunctionalProperty(p.getPredicate())) {
+							if (p.isDirect()) {
+								return p;
+							}
+							
+							ShowlPropertyShape peer = p.getPeer();
+							if (peer instanceof ShowlDirectPropertyShape) {
+								return peer;
+							}
+						}
+						
+						
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	private void addTemplateParameters(Set<ShowlPropertyShape> set, ShowlTemplatePropertyShape other, ShowlPropertyShape target) {
@@ -328,6 +362,28 @@ public class ShowlNodeShape implements Traversable {
 	public NodeKind getNodeKind() {
 		return shape == null ? null : shape.getNodeKind();
 	}
+
+	public ShowlStaticPropertyShape staticProperty(ShowlProperty property) {
+		URI predicate = property.getPredicate();
+		ShowlDerivedPropertyList list = derivedProperties.get(predicate);
+		if (list != null) {
+			for (ShowlDerivedPropertyShape p : list) {
+				if (p instanceof ShowlStaticPropertyShape) {
+					return (ShowlStaticPropertyShape) p;
+				}
+			}
+		}
+		if (list == null) {
+			list = new ShowlDerivedPropertyList(predicate);
+			derivedProperties.put(predicate, list);
+		}
+		
+		ShowlStaticPropertyShape p = new ShowlStaticPropertyShape(this, property);
+		list.add(p);
+		return p;
+	}
+	
+	
 
 
 	

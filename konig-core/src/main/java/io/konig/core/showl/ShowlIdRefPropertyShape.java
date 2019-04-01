@@ -20,11 +20,47 @@ package io.konig.core.showl;
  * #L%
  */
 
-
+/**
+ * A PropertyShape for the konig:id pseudo-property that appears in a virtual NodeShape
+ * induced by a KQL formula.
+ * 
+ * Consider the following example:
+ * <pre>
+ * shape:SourcePerson a sh:NodeShape;
+ *   sh:property [
+ *     sh:path ex:mother ;
+ *     sh:nodeKind sh:IRI ;
+ *     konig:formula "$.parent[gender Female]"
+ *   ]
+ * .
+ * </pre>
+ * <p>
+ * In this example, the 'parent' property has a virtual sh:shape which contains the 'gender' property.
+ * For the sake of argument, let's call the virtual shape 'shape:SourcePerson_parent'.
+ * </p>
+ * <p>
+ * Clearly, shape:SourcePerson_parent describes the same individual as {shape:SourcePerson}.mother, and
+ * since {shape:SourcePerson}.mother has nodeKind sh:IRI.  
+ * 
+ * The ShowlIdRefPropertyShape describes the 'konig:id' property of 'shape:SourcePerson_parent'.
+ * The {@link getIdRef()} method returns the {shape:SourcePerson}.mother PropertyShape.
+ * </p>
+ * 
+ * The ShowlIdRefPropertyShape 
+ * 
+ * @author Greg McFall
+ *
+ */
 public class ShowlIdRefPropertyShape extends ShowlDerivedPropertyShape {
 	
 	private ShowlPropertyShape idref;
 
+	/**
+	 * Create a new ShowlIdRefPropertyShape.
+	 * @param declaringShape The 'virtual' shape within the formula.
+	 * @param property The ShowlProperty for 'konig:id'.
+	 * @param idref  The source property that references the virtual shape.
+	 */
 	public ShowlIdRefPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, ShowlPropertyShape idref) {
 		super(declaringShape, property);
 		this.idref = idref;

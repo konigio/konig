@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,15 @@ public abstract class ShowlPropertyShape implements Traversable {
 	
 	public Collection<ShowlMapping> getMappings() {
 		return mappings==null ? Collections.emptySet() : mappings.values();
+	}
+	
+	public Collection<ShowlJoinCondition> listJoinConditions() {
+		
+		Set<ShowlJoinCondition> set = new HashSet<>();
+		for (ShowlMapping m : getMappings()) {
+			set.add(m.getJoinCondition());
+		}
+		return set;
 	}
 	
 	/**

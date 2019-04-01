@@ -84,7 +84,7 @@ public class ShowlSqlTransformTest {
 		return transform.createInsert(node, GoogleBigQueryTable.class);
 	}
 	
-	@Ignore
+	@Test
 	public void testMotherToParent() throws Exception {
 		
 //		test(
@@ -97,7 +97,7 @@ public class ShowlSqlTransformTest {
 			"parent-to-mother.sql");
 	}
 
-	@Ignore
+	@Test
 	public void testMonthFunction() throws Exception {
 		
 		test(
@@ -105,7 +105,7 @@ public class ShowlSqlTransformTest {
 			"http://example.com/ns/shape/PersonTargetShape");
 	}
 	
-	@Ignore
+	@Test
 	public void testCaseStatement() throws Exception {
 		
 		test(
@@ -113,7 +113,7 @@ public class ShowlSqlTransformTest {
 			"http://example.com/ns/shape/PersonTargetShape");
 	}
 	
-	@Ignore
+	@Test
 	public void testSubstrStrpos() throws Exception {
 		
 		test(
@@ -121,7 +121,7 @@ public class ShowlSqlTransformTest {
 			"http://example.com/ns/shape/PersonTargetShape");
 	}
 	
-	@Ignore
+	@Test
 	public void testSubstrFunction() throws Exception {
 		
 		test(
@@ -129,7 +129,7 @@ public class ShowlSqlTransformTest {
 			"http://example.com/ns/shape/PersonTargetShape");
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinNameAndAddress() throws Exception {
 		
 		test(
@@ -137,7 +137,7 @@ public class ShowlSqlTransformTest {
 			"http://example.com/ns/shape/PersonTargetShape");
 	}
 	
-	@Ignore
+	@Test
 	public void testInverseProperty() throws Exception {
 		
 		test(
@@ -145,7 +145,7 @@ public class ShowlSqlTransformTest {
 			"http://example.com/ns/shape/BookTargetShape");
 	}
 
-	@Ignore
+	@Test
 	public void testNestedSourcePerson() throws Exception {
 		
 		test(
@@ -154,7 +154,7 @@ public class ShowlSqlTransformTest {
 			"person.sql");
 	}
 
-	@Ignore
+	@Test
 	public void testNestedSourceBook() throws Exception {
 		
 		test(
@@ -164,7 +164,7 @@ public class ShowlSqlTransformTest {
 	}
 
 
-	@Ignore
+	@Test
 	public void testCastConcat() throws Exception {
 		
 		test(
@@ -189,7 +189,7 @@ public class ShowlSqlTransformTest {
 			insert.toString());
 	}
 
-	@Ignore
+	@Test
 	public void testConcat() throws Exception {
 		
 		ShowlSourceNodeSelector selector = new ExplicitDerivedFromSelector();
@@ -206,7 +206,7 @@ public class ShowlSqlTransformTest {
 	
 
 	
-	@Ignore
+	@Test
 	public void testFlatToNested() throws Exception {
 		
 		ShowlSourceNodeSelector selector = new ExplicitDerivedFromSelector();

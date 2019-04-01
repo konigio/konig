@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,10 +57,13 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
 
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
@@ -70,22 +74,30 @@ import com.helger.jcodemodel.JClassAlreadyExistsException;
 import com.helger.jcodemodel.JCodeModel;
 import com.helger.jcodemodel.JConditional;
 import com.helger.jcodemodel.JDefinedClass;
+import com.helger.jcodemodel.JEnumConstant;
 import com.helger.jcodemodel.JExpr;
+import com.helger.jcodemodel.JFieldVar;
 import com.helger.jcodemodel.JForEach;
 import com.helger.jcodemodel.JInvocation;
 import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
+import com.helger.jcodemodel.JStringLiteral;
 import com.helger.jcodemodel.JTryBlock;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.Context;
+import io.konig.core.Edge;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.ShowlClass;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlJoinCondition;
 import io.konig.core.showl.ShowlMapping;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlStaticPropertyShape;
 import io.konig.core.showl.ShowlTemplatePropertyShape;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.IOUtil;
@@ -110,10 +122,12 @@ public class BeamTransformGenerator {
 	private String basePackage;
 	private NamespaceManager nsManager;
 	private JavaDatatypeMapper datatypeMapper;
+	private OwlReasoner reasoner;
 	
-	public BeamTransformGenerator(String basePackage, NamespaceManager nsManager) {
+	public BeamTransformGenerator(String basePackage, OwlReasoner reasoner) {
 		this.basePackage = basePackage;
-		this.nsManager = nsManager;
+		this.reasoner = reasoner;
+		this.nsManager = reasoner.getGraph().getNamespaceManager();
 		datatypeMapper = new BasicJavaDatatypeMapper();
 	}
 	
@@ -244,16 +258,48 @@ public class BeamTransformGenerator {
 		private JDefinedClass options;
 		private JDefinedClass toTargetFnClass;
 		
+		private JDefinedClass iriClass;
+		
+		private Map<URI,Map<URI, RdfProperty>> enumClassProperties = new HashMap<>();
+		
 		
 		public Worker(JCodeModel model, ShowlNodeShape targetShape) {
 			this.model = model;
 			this.targetShape = targetShape;
 		}
 
-		
+
+		/**
+		 * Get the Java Class for the datatype of a given property.
+		 * @param p
+		 * @return The Java Class for the datatype of the property 'p', or null if 'p' is an ObjectProperty.
+		 */
+		private Class<?> javaDatatype(ShowlPropertyShape p) throws BeamTransformGenerationException {
+
+			PropertyConstraint constraint = p.getPropertyConstraint();
+			if (constraint == null) {
+				ShowlPropertyShape peer = p.getPeer();
+				if (peer != null) {
+					constraint = peer.getPropertyConstraint();
+				}
+			}
+			
+			if (constraint == null) {
+				fail("Property Constraint not found for {0}", p.getPath());
+			}
+			
+			URI datatype = constraint.getDatatype();
+			
+			if (datatype == null) {
+				return null;
+			}
+			
+			return datatypeMapper.javaDatatype(datatype);
+		}
 		private JDefinedClass generateTransform() throws BeamTransformGenerationException {
 			
 			try {
+				declareEnumClasses();
 				declareReadFileFnClass();
 				declareToTargetClass();
 				declareMainClass();
@@ -263,6 +309,289 @@ public class BeamTransformGenerator {
 			}
 		}
 		
+		private void declareEnumClasses() throws BeamTransformGenerationException {
+			
+			Set<ShowlClass> enumClasses = new HashSet<>();
+			addEnumClasses(enumClasses, targetShape);
+			
+			if (!enumClasses.isEmpty()) {
+				declareIriClass();
+			}
+			
+			for (ShowlClass enumClass : enumClasses) {
+				declareEnumClass(enumClass);
+			}
+			
+		}
+
+
+		private void declareIriClass() throws BeamTransformGenerationException {
+			String iriClassName = iriClassName();
+			try {
+				iriClass = model._class(iriClassName);
+				AbstractJClass stringClass = model.ref(String.class);
+				
+				JFieldVar namespace = iriClass.field(JMod.PRIVATE, stringClass, "namespace");
+				JFieldVar localName = iriClass.field(JMod.PRIVATE, stringClass, "localName");
+				
+				JMethod ctor = iriClass.constructor(JMod.PUBLIC);
+				JVar namespaceParam = ctor.param(stringClass, "namespace");
+				JVar localNameParam = ctor.param(stringClass, "localName");
+			
+				ctor.body().assign(JExpr._this().ref(namespace), namespaceParam);
+				ctor.body().assign(JExpr._this().ref(localName), localNameParam);
+				
+				iriClass.method(JMod.PUBLIC, stringClass, "getNamespace").body()._return(namespace);
+				iriClass.method(JMod.PUBLIC, stringClass, "getLocalName").body()._return(localName);
+				
+				iriClass.method(JMod.PUBLIC, stringClass, "stringValue").body()._return(namespace.plus(localName));
+				
+				iriClass.method(JMod.PUBLIC, stringClass, "toString").body()._return(JExpr.invoke("stringValue"));
+				
+				
+			} catch (JClassAlreadyExistsException e) {
+				throw new BeamTransformGenerationException("Failed to declare IRI class", e);
+			}
+			
+			
+		}
+
+
+		private String iriClassName() {
+			StringBuilder builder = new StringBuilder();
+			builder.append(basePackage);
+			builder.append(".rdf.IRI");
+			return builder.toString();
+		}
+
+
+		private void declareEnumClass(ShowlClass owlClass) throws BeamTransformGenerationException {
+			
+			String enumClassName = enumClassName(owlClass);
+			
+			
+			try {
+				// public class $enumClassName {
+				JDefinedClass enumClass = model._class(enumClassName, EClassType.ENUM);
+				
+				List<Vertex> individuals = reasoner.getGraph().getVertex(owlClass.getId()).asTraversal().in(RDF.TYPE).toVertexList();
+
+				Map<URI, RdfProperty> propertyMap = enumProperties(individuals);
+				
+				Map<URI, JFieldVar> enumIndex = enumIndex(enumClass, propertyMap);
+				
+				enumClassProperties.put(owlClass.getId(), propertyMap);
+				
+				JBlock staticInit = enumClass.init();
+				for (Vertex individual : individuals) {
+					enumMember(enumIndex, enumClass, staticInit, individual);
+				}
+				
+				for (Map.Entry<URI, JFieldVar> entry : enumIndex.entrySet()) {
+					URI property = entry.getKey();
+					JFieldVar field = entry.getValue();
+					
+					String methodName = "findBy" + StringUtil.capitalize(property.getLocalName());
+					// For now we assume that inverse functional properties have a String datatype.
+					
+					RdfProperty rdf = propertyMap.get(property);
+					
+					AbstractJClass propertyType = model.ref(datatypeMapper.javaDatatype(rdf.getRange()));
+					
+					JMethod method = enumClass.method(JMod.STATIC | JMod.PUBLIC , enumClass, methodName);
+					JVar param = method.param(propertyType, property.getLocalName());
+					
+					method.body()._return(field.invoke("get").arg(param));
+							 
+				}
+				
+				//   private IRI id;
+				
+				JFieldVar idField = enumClass.field(JMod.PRIVATE, iriClass, "id");
+				AbstractJClass stringClass = model.ref(String.class);
+				
+				//   public $enumClassName id(String namespace, String localName) {
+				//     id = new IRI(namespace, localName);
+				//     return this;
+				//   }
+				
+				JMethod idMethod = enumClass.method(JMod.PRIVATE, enumClass, "id");
+				JVar namespaceParam = idMethod.param(stringClass, "namespace");
+				JVar localNameParam = idMethod.param(stringClass, "localName");
+				
+				idMethod.body().assign(idField, iriClass._new().arg(namespaceParam).arg(localNameParam));
+				idMethod.body()._return(JExpr._this());
+				
+				
+				//  public IRI getId() {
+				//    return id;
+				//  }
+				
+				enumClass.method(JMod.PUBLIC, iriClass, "getId").body()._return(idField);
+				
+				
+				for (RdfProperty rdfProperty : propertyMap.values()) {
+					URI propertyId = rdfProperty.getId();
+					URI range = rdfProperty.getRange();
+					
+					AbstractJClass datatypeClass = model.ref(datatypeMapper.javaDatatype(range));
+					String fieldName = propertyId.getLocalName();
+					
+					
+					//  private $datatypeClass $fieldName;
+					
+					JFieldVar field = enumClass.field(JMod.PRIVATE, datatypeClass, fieldName);
+					
+					//  public $enumClassName $fieldName($datatypeClass $fieldName) {
+					//    this.$fieldName = $fieldName;
+					//    return this;
+					//  }
+					
+					JMethod setter = enumClass.method(JMod.PRIVATE, enumClass, fieldName);
+					JVar param = setter.param(datatypeClass, fieldName);
+					setter.body().assign(JExpr._this().ref(field), param);
+					setter.body()._return(JExpr._this());
+					
+					JMethod getter = enumClass.method(JMod.PUBLIC, datatypeClass, "get" + StringUtil.capitalize(fieldName));
+					getter.body()._return(field);
+			
+				}
+				
+				
+			} catch (JClassAlreadyExistsException e) {
+				throw new BeamTransformGenerationException("Failed to declare enum " + owlClass.getId().stringValue(), e);
+			}
+		}
+
+		private Map<URI, JFieldVar> enumIndex(JDefinedClass enumClass, Map<URI, RdfProperty> propertyMap) {
+			Map<URI, JFieldVar> map = new HashMap<>();
+			for (RdfProperty property : propertyMap.values()) {
+
+				URI propertyId = property.getId();
+				JFieldVar mapField = null;
+				if (reasoner.isInverseFunctionalProperty(propertyId)) {
+					Class<?> datatypeJavaClass = datatypeMapper.javaDatatype(property.getRange());
+					AbstractJClass datatypeClass = model.ref(datatypeJavaClass);
+					String fieldName = propertyId.getLocalName();
+					AbstractJClass mapClass = model.ref(Map.class).narrow(datatypeClass, enumClass);
+					AbstractJClass hashMapClass = model.ref(HashMap.class).narrow(datatypeClass, enumClass);
+					mapField = enumClass.field(JMod.PRIVATE | JMod.STATIC | JMod.FINAL, mapClass, fieldName + "Map", hashMapClass._new());
+					
+					map.put(propertyId, mapField);
+				}
+			}
+			return map;
+		}
+
+
+		private void enumMember(Map<URI, JFieldVar> enumIndex, JDefinedClass enumClass, JBlock staticInit, Vertex individual) throws BeamTransformGenerationException {
+			String fieldName = RdfUtil.localName(individual.getId());
+			
+			JEnumConstant constant = enumClass.enumConstant(fieldName);
+			
+			URI individualId = RdfUtil.uri(individual.getId());
+			
+			JInvocation invoke = constant.invoke("id")
+					.arg(JExpr.lit(individualId.getNamespace()))
+					.arg(JExpr.lit(individualId.getLocalName()));
+			 
+			for (Edge edge : individual.outEdgeSet()) {
+				URI predicate = edge.getPredicate();
+				if (RDF.TYPE.equals(predicate)) {
+					continue;
+				}
+				
+				Value object = edge.getObject();
+				
+				Literal literal = null;
+				if (object instanceof Literal) {
+					literal = (Literal) object;
+				}
+				
+				if (literal == null) {
+					fail("Cannot build enum member {0}.  Object Property not suported: {1}", 
+						RdfUtil.compactId(individual.getId(), nsManager),
+						RdfUtil.compactId(predicate, nsManager));
+				}
+				
+				
+				JStringLiteral litValue = JExpr.lit(object.stringValue());
+				invoke = invoke.invoke(predicate.getLocalName()).arg(litValue);
+				
+				JFieldVar mapField = enumIndex.get(predicate);
+				if (mapField != null) {
+					staticInit.add(mapField.invoke("put").arg(litValue).arg(constant));
+				}
+				
+					
+			}
+
+			staticInit.add(invoke);
+			
+			
+		}
+
+
+		private Map<URI, RdfProperty> enumProperties(List<Vertex> individuals) {
+			Map<URI, RdfProperty> map = new HashMap<>();
+			for (Vertex v : individuals) {
+				for (Edge e : v.outEdgeSet()) {
+					URI predicate = e.getPredicate();
+					if (RDF.TYPE.equals(predicate) || map.containsKey(predicate)) {
+						continue;
+					}
+					Value object = e.getObject();
+					if (object instanceof Literal) {
+						Literal literal = (Literal) object;
+						
+						
+						boolean isInverseFunctional = reasoner.isInverseFunctionalProperty(predicate);
+						map.put(predicate, new RdfProperty(predicate, literal.getDatatype()));
+					}
+				}
+			}
+			return map;
+		}
+
+
+		private String enumClassName(ShowlClass enumClass) throws BeamTransformGenerationException {
+			StringBuilder builder = new StringBuilder();
+			builder.append(basePackage);
+			builder.append('.');
+			
+			URI classId = enumClass.getId();
+			Namespace ns = nsManager.findByName(classId.getNamespace());
+			if (ns == null) {
+				fail("Prefix not found for namespace: {0}", classId.getNamespace());
+			}
+			builder.append(ns.getPrefix());
+			builder.append('.');
+			builder.append(classId.getLocalName());
+			
+			return builder.toString();
+		}
+
+
+		private void addEnumClasses(Set<ShowlClass> enumClasses, ShowlNodeShape node) {
+			for (ShowlPropertyShape p : node.allOutwardProperties()) {
+				
+				ShowlMapping m = p.getSelectedMapping();
+				if (m != null) {
+					ShowlPropertyShape other = m.findOther(p);
+
+					if (other instanceof ShowlStaticPropertyShape) {
+						ShowlNodeShape enumShape = other.getDeclaringShape();
+						enumClasses.add(enumShape.getOwlClass());
+					}
+				}
+				if (p.getValueShape() != null) {
+					addEnumClasses(enumClasses, p.getValueShape());
+				}
+			}
+			
+		}
+
+
 		private void declareToTargetClass() throws BeamTransformGenerationException, JClassAlreadyExistsException {
 			
 			ToTargetFnGenerator generator = new ToTargetFnGenerator();
@@ -276,6 +605,7 @@ public class BeamTransformGenerator {
 		}
 		
 		private class ToTargetFnGenerator {
+			private JDefinedClass iriClass;
 
 			private void generate() throws BeamTransformGenerationException, JClassAlreadyExistsException {
 				String prefix = namespacePrefix(targetShape.getId());
@@ -319,7 +649,7 @@ public class BeamTransformGenerator {
 				JVar outputRow = tryBlock.body().decl(tableRowClass, "outputRow", tableRowClass._new());
 				
 				for (ShowlDirectPropertyShape p : targetShape.getProperties()) {
-					transformProperty(tryBlock.body(), p, inputRow, outputRow);
+					transformProperty(tryBlock.body(), p, inputRow, outputRow, null);
 				}
 				
 				//     if (!outputRow.isEmpty()) {
@@ -341,16 +671,22 @@ public class BeamTransformGenerator {
 				
 			}
 
-			private void transformProperty(JBlock body, ShowlDirectPropertyShape p, JVar inputRow, JVar outputRow) throws BeamTransformGenerationException {
+			private void transformProperty(JBlock body, ShowlDirectPropertyShape p, JVar inputRow, JVar outputRow, JVar enumObject) throws BeamTransformGenerationException {
 				
 				ShowlMapping mapping = p.getSelectedMapping();
 				if (mapping == null) {
-					fail("Mapping not found for property {0}");
+					fail("Mapping not found for property {0}", p.getPath());
 				}
 				
 				ShowlPropertyShape other = mapping.findOther(p);
 				
-				if (other instanceof ShowlTemplatePropertyShape) {
+				if (p.getValueShape() != null) {
+					transformObjectProperty(body, p, inputRow, outputRow);
+					
+				} else if (other instanceof ShowlStaticPropertyShape) {
+					transformStaticProperty(body, p, (ShowlStaticPropertyShape)other, inputRow, outputRow, enumObject);
+					
+				} else if (other instanceof ShowlTemplatePropertyShape) {
 					
 					transformTemplateProperty(body, p, (ShowlTemplatePropertyShape)other, inputRow, outputRow);
 					
@@ -369,6 +705,140 @@ public class BeamTransformGenerator {
 				
 				
 				
+			}
+
+			private void transformStaticProperty(JBlock body, ShowlDirectPropertyShape p,
+					ShowlStaticPropertyShape other, JVar inputRow, JVar outputRow, JVar enumObject) throws BeamTransformGenerationException {
+				
+				
+				URI predicate = p.getPredicate();
+				String fieldName = predicate.getLocalName();
+				
+				String getterName = "get" + StringUtil.capitalize(fieldName);
+				
+				AbstractJClass fieldType = model.ref(Object.class);
+				
+				
+				// Object $fieldName = enumObject.get("$fieldName");
+				JVar field = body.decl(fieldType, fieldName, enumObject.invoke(getterName));
+				
+				// if ($field != null) {
+				//  outputRow.set("$fieldName", $field);
+				// }
+				
+				body._if(field.ne(JExpr._null()))._then().add(outputRow.invoke("set").arg(JExpr.lit(fieldName)).arg(field));
+				
+				
+				
+			}
+
+			private void transformObjectProperty(JBlock body, ShowlDirectPropertyShape p, JVar inputRow,
+					JVar outputRow) throws BeamTransformGenerationException {
+				
+				ShowlNodeShape valueShape = p.getValueShape();
+
+				ShowlPropertyShape enumSourceKey = valueShape.enumSourceKey(reasoner);
+				if (enumSourceKey != null) {
+					transformEnumObject(body, p, inputRow, outputRow, enumSourceKey);
+					return;
+				}
+				
+				
+				String targetFieldName = p.getPredicate().getLocalName();
+				AbstractJClass tableRowClass = model.ref(TableRow.class);
+
+				
+				
+				// TableRow $targetFieldName = new TableRow();
+				
+				JVar fieldRow = body.decl(tableRowClass, targetFieldName, tableRowClass._new());
+				
+				
+				for (ShowlDirectPropertyShape direct : valueShape.getProperties()) {
+					transformProperty(body, direct, inputRow, fieldRow, null);
+					
+				}
+				
+				
+			}
+
+			
+
+
+			private void transformEnumObject(JBlock body, ShowlDirectPropertyShape p, JVar inputRow, JVar outputRow,
+					ShowlPropertyShape enumSourceKey) throws BeamTransformGenerationException {
+				
+
+				ShowlNodeShape valueShape = p.getValueShape();
+				
+				URI targetProperty = p.getPredicate();
+				
+				String targetFieldName = targetProperty.getLocalName();
+				AbstractJClass tableRowClass = model.ref(TableRow.class);
+				
+				String enumTransformMethodName = "transform" + StringUtil.capitalize(targetFieldName);
+				
+				JMethod method = toTargetFnClass.method(JMod.PRIVATE, model.VOID, enumTransformMethodName);
+				
+				JVar inputRowParam = method.param(tableRowClass, "inputRow");
+				
+				JVar outputRowParam = method.param(tableRowClass, "outputRow");
+				
+
+				JVar enumObject = enumObject(method.body(), enumSourceKey, valueShape, inputRow);
+				
+				
+				
+				// TableRow $targetFieldName = new TableRow();
+				
+				JVar fieldRow = method.body().decl(tableRowClass, targetFieldName + "Row", tableRowClass._new());
+				
+				for (ShowlDirectPropertyShape direct : valueShape.getProperties()) {
+					transformProperty(method.body(), direct, inputRow, fieldRow, enumObject);
+					
+				}
+
+				method.body()._if(enumObject.invoke("isEmpty").not())._then()
+					.add(outputRow.invoke("set").arg(JExpr.lit(targetFieldName)).arg(outputRowParam));
+				
+				
+				
+				body.add(JExpr.invoke(method).arg(inputRow).arg(outputRow));
+				
+			}
+
+			private JVar enumObject(JBlock block, ShowlPropertyShape enumSourceKey, ShowlNodeShape valueShape, JVar inputRow) throws BeamTransformGenerationException {
+
+				
+				String enumSourceKeyName = enumSourceKeyName(enumSourceKey, valueShape);
+				
+			
+				String enumClassName = enumClassName(valueShape.getOwlClass());
+				AbstractJClass enumClass = model.directClass(enumClassName);
+				URI property = valueShape.getAccessor().getPredicate();
+				
+				String findMethodName = "findBy" + StringUtil.capitalize(enumSourceKeyName);
+				JInvocation arg = inputRow.invoke("get").arg(JExpr.lit(enumSourceKey.getPredicate().getLocalName())).invoke("toString");
+				String varName = property.getLocalName();
+				return block.decl(enumClass, varName, enumClass.staticInvoke(findMethodName).arg(arg));
+			}
+
+			private String enumSourceKeyName(ShowlPropertyShape enumSourceKey, ShowlNodeShape valueShape) throws BeamTransformGenerationException {
+				URI enumClassId = valueShape.getOwlClass().getId();
+				Map<URI,RdfProperty> propertyMap = enumClassProperties.get(enumClassId);
+
+				// Remove the propertyMap so that it is eligible for garbage collection
+				enumClassProperties.remove(enumClassId);
+				
+				if (propertyMap.containsKey(enumSourceKey.getPredicate())) {
+					return enumSourceKey.getPredicate().getLocalName();
+				}
+				
+				ShowlPropertyShape peer = enumSourceKey.getPeer();
+				if (peer != null && propertyMap.containsKey(peer.getPredicate())) {
+					return peer.getPredicate().getLocalName();
+				}
+				throw new BeamTransformGenerationException("Failed to get enumSourceKeyName for " + enumSourceKey.getPath());
 			}
 
 			private void transformDirectProperty(JBlock body, ShowlDirectPropertyShape p, ShowlDirectPropertyShape other,
@@ -433,7 +903,7 @@ public class BeamTransformGenerator {
 				
 				body.add(outputRow.invoke("set").arg(JExpr.lit(targetPropertyName)).arg(builder.invoke("toString")));
 
-				// TODO Auto-generated method stub
+			
 			}
 
 			private ShowlDirectPropertyShape directProperty(ShowlNodeShape declaringShape, URI predicate) throws BeamTransformGenerationException {
@@ -568,6 +1038,9 @@ public class BeamTransformGenerator {
 
 				for (ShowlPropertyShape sourceProperty : sourceProperties) {
 					Class<?> datatype = javaDatatype(sourceProperty);
+					if (datatype == null) {
+						continue;
+					}
 					AbstractJClass datatypeClass = model.ref(datatype);
 					String fieldName = sourceProperty.getPredicate().getLocalName();
 					JMethod getter = getterMap.get(datatype);
@@ -629,7 +1102,7 @@ public class BeamTransformGenerator {
 				Set<ShowlPropertyShape> set = targetShape.joinProperties(join);
 				
 				for (ShowlPropertyShape p : set) {
-					
+				
 					declareDatatypeGetter(p);
 					
 					
@@ -641,6 +1114,9 @@ public class BeamTransformGenerator {
 				
 				
 				Class<?> javaClass = javaDatatype(p);
+				if (javaClass == null) {
+					return;
+				}
 				
 				if (!getterMap.containsKey(javaClass)) {
 					String typeName = StringUtil.camelCase(javaClass.getSimpleName());
@@ -690,28 +1166,6 @@ public class BeamTransformGenerator {
 
 
 
-			private Class<?> javaDatatype(ShowlPropertyShape p) throws BeamTransformGenerationException {
-
-				PropertyConstraint constraint = p.getPropertyConstraint();
-				if (constraint == null) {
-					ShowlPropertyShape peer = p.getPeer();
-					if (peer != null) {
-						constraint = peer.getPropertyConstraint();
-					}
-				}
-				
-				if (constraint == null) {
-					fail("Property Constraint not found for {0}", p.getPath());
-				}
-				
-				URI datatype = constraint.getDatatype();
-				
-				if (datatype == null) {
-					fail("Expected a datatype property at {0}", p.getPath());
-				}
-				
-				return datatypeMapper.javaDatatype(datatype);
-			}
 
 			
 		}
@@ -911,5 +1365,26 @@ public class BeamTransformGenerator {
 	
 	private String className(String namespacePrefix, String simpleName) throws BeamTransformGenerationException {
 		return className(namespacePrefix + "." + simpleName);
+	}
+	
+	private static class RdfProperty {
+		private URI id;
+		private URI range;
+		
+		
+
+		public RdfProperty(URI id, URI range) {
+			this.id = id;
+			this.range = range;
+		}
+
+		public URI getId() {
+			return id;
+		}
+
+		public URI getRange() {
+			return range;
+		}
+
 	}
 }
