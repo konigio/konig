@@ -22,26 +22,16 @@ package io.konig.core.showl;
 
 
 /**
- * A mapping defined within the ON clause within a given JoinCondition.
- * 
- * Suppose, for example, that you have the following SQL statement:
- * <pre>
- *   SELECT ...
- *   FROM DemographicInfo AS a
- *   JOIN TestResult AS b ON a.person_id = b.candidate_id
- * </pre>
- * 
- * Then, this mapping expresses that a.person_id and b.candidate_id
- * map to each other.
+ * A PropertyShape whose value is drawn from a static background graph.
+ * This is used for properties of Named Individuals that are members of an Enumeration.
  * 
  * @author Greg McFall
  *
  */
-public class ShowlJoinMapping extends ShowlMapping {
-	
+public class ShowlStaticPropertyShape extends ShowlDerivedPropertyShape {
 
-	public ShowlJoinMapping(ShowlJoinCondition joinCondition) {
-		super(joinCondition, joinCondition.getLeft(), joinCondition.getRight());
+	public ShowlStaticPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property) {
+		super(declaringShape, property);
 	}
 
 }

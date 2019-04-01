@@ -59,14 +59,43 @@ public class BeamTransformGeneratorTest {
 	private ShowlManager showlManager = new ShowlManager(shapeManager, reasoner, new ExplicitDerivedFromSelector(), consumer);
 	private JCodeModel model = new JCodeModel();
 	
-	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", nsManager);
+	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
 	@Ignore
 	public void testTabularMapping() throws Exception {
 		
-		URI shapeId = uri("http://example.com/ns/shape/PersonTargetShape");
-		generate("src/test/resources/BeamTransformGeneratorTest/tabular-mapping", shapeId);
+		generateAll("src/test/resources/BeamTransformGeneratorTest/tabular-mapping");
 		
+	}
+	
+	@Test
+	public void testEnumMapping() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-mapping");
+		
+	}
+	
+	public void generateAll(String path) throws Exception {
+		
+		File rdfDir = new File(path);
+		GcpShapeConfig.init();
+		RdfUtil.loadTurtle(rdfDir, graph, shapeManager);
+		
+		showlManager.load();
+		
+		File projectDir = new File("target/test/BeamTransformGenerator/" + rdfDir.getName());		
+
+		IOUtil.recursiveDelete(projectDir);
+		
+		BeamTransformRequest request = BeamTransformRequest.builder()
+				.groupId("com.example")
+				.artifactBaseId("example")
+				.version("1.0")
+				.projectDir(projectDir)
+				.nodeList(consumer.getList())
+				.build();
+		
+		generator.generateAll(request);
 	}
 	
 	@Ignore
@@ -94,28 +123,6 @@ public class BeamTransformGeneratorTest {
 		generator.generateAll(request);
 	}
 
-	private void generate(String rdfPath, URI shapeId) throws RDFParseException, RDFHandlerException, IOException, BeamTransformGenerationException {
-		
-		File rdfDir = new File(rdfPath);
-		GcpShapeConfig.init();
-		RdfUtil.loadTurtle(rdfDir, graph, shapeManager);
-		showlManager.load();
-		
-		ShowlNodeShape node = showlManager.getNodeShape(shapeId).top();
-		
-		generator.generateTransform(model, node);
-
-		File file = new File("target/test/BeamTransformGenerator/" + rdfDir.getName());		
-		
-		IOUtil.recursiveDelete(file);
-		file.mkdirs();
-		model.build(file);
-		
-
-	}
-
-	private URI uri(String value) {
-		return new URIImpl(value);
-	}
+	
 	
 }

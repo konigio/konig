@@ -1593,7 +1593,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				.nodeList(nodeList)
 				.build();
 			String basePackage = mavenProject.getGroupId() + ".beam";
-			BeamTransformGenerator generator = new BeamTransformGenerator(basePackage, nsManager);
+			BeamTransformGenerator generator = new BeamTransformGenerator(basePackage, owlReasoner);
 			generator.generateAll(request);
 		}
 		

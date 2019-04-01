@@ -24,6 +24,7 @@ package io.konig.core.showl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -40,6 +42,7 @@ import org.openrdf.model.vocabulary.OWL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IriTemplate;
@@ -77,6 +80,10 @@ public class ShowlManager implements ShowlClassManager {
 
 	private Set<NodeMapping> nodeMappings = null;
 	private ShowlSourceNodeSelector sourceNodeSelector;
+	private Map<Resource, EnumMappingAction> enumMappingActions;
+	private ShowlFactory showlFactory;
+	
+	private Set<ShowlNodeShape> consumable;
 	
 	
 	public ShowlManager(ShapeManager shapeManager, OwlReasoner reasoner) {
@@ -93,6 +100,7 @@ public class ShowlManager implements ShowlClassManager {
 		this.reasoner = reasoner;
 		this.sourceNodeSelector = sourceNodeSelector;
 		this.consumer = consumer;
+		this.showlFactory = new Factory();
 	}
 	
 	public ShapeManager getShapeManager() {
@@ -179,6 +187,8 @@ public class ShowlManager implements ShowlClassManager {
 
 	private void buildJoinConditions() throws ShowlProcessingException {
 		nodeMappings = new LinkedHashSet<>();
+		enumMappingActions = new HashMap<>();
+		consumable = null;
 		for (Shape shape : shapeManager.listShapes()) {
 			if (!shape.getShapeDataSource().isEmpty()) {
 				for (ShowlNodeShape node : getNodeShape(shape.getId())) {
@@ -187,7 +197,19 @@ public class ShowlManager implements ShowlClassManager {
 			}
 			
 		}
+		
+		for (EnumMappingAction action : enumMappingActions.values()) {
+			action.execute();
+		}
+		
+		if (consumable != null) {
+			for (ShowlNodeShape node : consumable) {
+				consumer.consume(node);
+			}
+		}
+		consumable = null;
 		nodeMappings = null;
+		enumMappingActions = null;
 		
 	}
 	
@@ -219,7 +241,7 @@ public class ShowlManager implements ShowlClassManager {
 			}
 			joinObjectProperties(nodeA, joinCondition);
 			if (consumer != null) {
-				consumer.consume(nodeA);
+				addConsumable(nodeA);
 			}
 		}
 		
@@ -254,6 +276,14 @@ public class ShowlManager implements ShowlClassManager {
 //				joinObjectProperties(nodeA, joinCondition);
 //			}
 //		}
+	}
+
+	private void addConsumable(ShowlNodeShape nodeA) {
+		if (consumable == null) {
+			consumable = new HashSet<>();
+		}
+		consumable.add(nodeA);
+		
 	}
 
 	private void joinNested(ShowlNodeShape sourceNode, ShowlNodeShape targetNode, ShowlJoinCondition prior) {
@@ -438,6 +468,8 @@ public class ShowlManager implements ShowlClassManager {
 		// Do we really want to do this?
 		doBuildMappings(rightNode, leftNode, join);
 		
+	
+		
 	}
 
 	private void doBuildMappings(ShowlNodeShape leftNode, ShowlNodeShape rightNode, ShowlJoinCondition join) {
@@ -526,7 +558,16 @@ public class ShowlManager implements ShowlClassManager {
 						doBuildMappings(leftProperty.getValueShape(), rightAccessor.getDeclaringShape(), join);
 					}
 				} else {
-					if (logger.isTraceEnabled()) {
+					
+					if (reasoner.isEnumerationClass(rightNode.getOwlClass().getId())) {
+						ShowlNodeShape leftNode = leftProperty.getDeclaringShape();
+						EnumMappingAction action = enumMappingActions.get(rightNode.getId());
+						if (action == null) {
+							action = new EnumMappingAction(leftNode, showlFactory, reasoner);
+							enumMappingActions.put(leftNode.getId(), action);
+						}
+						
+					} else if (logger.isTraceEnabled()) {
 						logger.trace("doBuildMappings - mapping not found for {} in {}",
 							leftProperty.getPath(), rightNode.getPath());
 					}
@@ -1537,4 +1578,45 @@ public class ShowlManager implements ShowlClassManager {
 		return owlClasses.get(classId);
 	}
 	
+	public class Factory implements ShowlFactory {
+
+		@Override
+		public ShowlNodeShape logicalNodeShape(URI owlClass) throws ShowlProcessingException {
+			NamespaceManager nsManager = reasoner.getGraph().getNamespaceManager();
+			Namespace ns = nsManager.findByName(owlClass.getNamespace());
+			if (ns == null) {
+				throw new ShowlProcessingException("Prefix not found for namespace <" + owlClass.getNamespace() + ">");
+			}
+			StringBuilder builder = new StringBuilder();
+			builder.append("urn:konig:logicalShape:");
+			builder.append(ns.getPrefix());
+			builder.append(':');
+			builder.append(owlClass.getLocalName());
+			
+			URI shapeId = new URIImpl(builder.toString());
+			
+			ShowlNodeShapeSet set = nodeShapes.get(shapeId);
+			if (set == null) {
+				set = new ShowlNodeShapeSet();
+				nodeShapes.put(shapeId, set);
+				Shape shape = new Shape(shapeId);
+				ShowlClass showlClass = produceOwlClass(owlClass);
+				
+				ShowlNodeShape node = new ShowlNodeShape(null, shape, showlClass);
+				set.add(node);
+				
+				// For now, we assume that every logical shape describes a named individual.
+				// We may need to back off that assumption in the future.
+				
+				shape.setNodeKind(NodeKind.IRI);
+				addIdProperty(node);
+				
+				return node;
+			}
+			
+			return set.top();
+		}
+
+		
+	}
 }

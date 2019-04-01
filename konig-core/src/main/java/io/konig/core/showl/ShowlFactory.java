@@ -21,27 +21,10 @@ package io.konig.core.showl;
  */
 
 
-/**
- * A mapping defined within the ON clause within a given JoinCondition.
- * 
- * Suppose, for example, that you have the following SQL statement:
- * <pre>
- *   SELECT ...
- *   FROM DemographicInfo AS a
- *   JOIN TestResult AS b ON a.person_id = b.candidate_id
- * </pre>
- * 
- * Then, this mapping expresses that a.person_id and b.candidate_id
- * map to each other.
- * 
- * @author Greg McFall
- *
- */
-public class ShowlJoinMapping extends ShowlMapping {
+import org.openrdf.model.URI;
+
+public interface ShowlFactory {
 	
-
-	public ShowlJoinMapping(ShowlJoinCondition joinCondition) {
-		super(joinCondition, joinCondition.getLeft(), joinCondition.getRight());
-	}
-
+	
+	ShowlNodeShape logicalNodeShape(URI owlClass) throws ShowlProcessingException;
 }

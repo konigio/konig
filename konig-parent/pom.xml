@@ -52,6 +52,7 @@
 		<guava.version>20.0</guava.version>
 		<camel.version>2.20.2</camel.version>
 		<maven.version>3.5.3</maven.version>
+		<lombok.version>1.18.6</lombok.version>
 	</properties>
 
 	<licenses>
