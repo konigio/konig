@@ -22,14 +22,10 @@ package io.konig.transform.beam;
 
 
 import java.io.File;
-import java.io.IOException;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFParseException;
+import static org.junit.Assert.*;
 
 import com.helger.jcodemodel.JCodeModel;
 
@@ -43,7 +39,6 @@ import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.MappingStrategy;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
-import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.util.IOUtil;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
@@ -68,7 +63,14 @@ public class BeamTransformGeneratorTest {
 		
 	}
 	
-	@Test
+	@Ignore
+	public void testLongMapping() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/long-mapping");
+		
+	}
+	
+	@Ignore
 	public void testEnumMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-mapping");
@@ -78,6 +80,8 @@ public class BeamTransformGeneratorTest {
 	public void generateAll(String path) throws Exception {
 		
 		File rdfDir = new File(path);
+		assertTrue(rdfDir.exists());
+		
 		GcpShapeConfig.init();
 		RdfUtil.loadTurtle(rdfDir, graph, shapeManager);
 		

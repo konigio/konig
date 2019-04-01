@@ -1,0 +1,9 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+sys: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "sys" ; 
+	rdfs:label "System Ontology" ; 
+	rdfs:comment "A namespace for software systems within the enterprise" . 
