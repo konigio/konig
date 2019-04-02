@@ -1154,7 +1154,10 @@ public class BeamTransformGenerator {
 					if (javaClass.equals(String.class)) {
 						     block1._return(stringValue);
 						     
-					} else if (javaClass == Long.class || javaClass==long.class) {
+					} else if (javaClass==Boolean.class) {
+						block1._return(JExpr.lit("true").invoke("equalsIgnoreCase").arg(stringValue));
+						
+					} else if (javaClass == Long.class) {
 						AbstractJClass longClass = model.ref(Long.class);
 						block1._return(longClass._new().arg(stringValue));
 						
