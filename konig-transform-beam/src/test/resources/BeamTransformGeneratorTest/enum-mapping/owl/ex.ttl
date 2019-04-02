@@ -1,7 +1,9 @@
 @prefix ex: <http://example.com/ns/core/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
 @prefix vann: <http://purl.org/vocab/vann/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
@@ -9,5 +11,18 @@ ex: a owl:Ontology ;
 	vann:preferredNamespacePrefix "ex" ; 
 	rdfs:label "Example Ontology" . 
 
+ex:GreekGod a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration ; 
+	gcp:preferredGcpDatasetId "${classNamespacePrefix}" . 
+
 ex:genderCode a rdf:Property , owl:InverseFunctionalProperty ; 
 	rdfs:range xsd:string . 
+
+ex:personifiedBy a rdf:Property ; 
+	rdfs:range ex:GreekGod . 
+
+ex:Mars a ex:GreekGod ; 
+	schema:name "Mars" . 
+
+ex:Venus a ex:GreekGod ; 
+	schema:name "Venus" . 

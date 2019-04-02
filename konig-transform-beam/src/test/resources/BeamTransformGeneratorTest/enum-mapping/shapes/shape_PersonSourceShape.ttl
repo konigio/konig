@@ -10,49 +10,49 @@
 
 shape:PersonSourceShape sh:property  [ 
 		sh:path alias:person_id ; 
-		rdf:predicate alias:person_id ; 
 		sh:datatype xsd:string ; 
+		rdf:predicate alias:person_id ; 
 		sh:maxCount 1 ; 
 		sh:minCount 1
 	 ]  ,  [ 
 		sh:path alias:gender_code ; 
-		rdf:predicate alias:gender_code ; 
 		sh:datatype xsd:string ; 
-		sh:maxCount 1 ; 
-		sh:minCount 0 ; 
+		rdf:predicate alias:gender_code ; 
 		konig:formula '''
 @term gender <http://schema.org/gender>
 @term genderCode <http://example.com/ns/core/genderCode>
 
-$.gender.genderCode''' ]  ; 
+$.gender.genderCode''' ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ]  ; 
 	a sh:Shape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource> , <gs://personsourceshape-${gcpBucketSuffix}> ; 
-	sh:targetClass schema:Person ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
    "person_id" : "alias:person_id"
 }
 
-<http://example.com/person/{person_id}>''' . 
+<http://example.com/person/{person_id}>''' ; 
+	sh:targetClass schema:Person . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource> gcp:externalDataConfiguration  [ 
-		gcp:sourceUris "gs://personsourceshape-${gcpBucketSuffix}/*" ; 
 		gcp:csvOptions  [ 
 			gcp:skipLeadingRows "1"^^xsd:long ]  ; 
-		gcp:sourceFormat "CSV"
+		gcp:sourceFormat "CSV" ; 
+		gcp:sourceUris "gs://personsourceshape-${gcpBucketSuffix}/*"
 	 ]  ; 
 	gcp:tableReference  [ 
-		gcp:projectId "${gcpProjectId}" ; 
 		gcp:tableId "PersonSource" ; 
-		gcp:datasetId "schema" ]  ; 
+		gcp:datasetId "schema" ; 
+		gcp:projectId "${gcpProjectId}" ]  ; 
 	a konig:GoogleBigQueryTable , konig:DataSource ; 
 	schema:isPartOf sys:ERP . 
 
 <gs://personsourceshape-${gcpBucketSuffix}> gcp:name "personsourceshape-${gcpBucketSuffix}" ; 
 	gcp:location "us" ; 
-	gcp:projectId "${gcpProjectId}" ; 
-	gcp:storageClass "multi_regional" ; 
 	gcp:notificationInfo  [ 
-		gcp:topic "${topicName}" ; 
-		gcp:eventTypes "${eventType}" ]  ; 
+		gcp:eventTypes "${eventType}" ; 
+		gcp:topic "${topicName}" ]  ; 
+	gcp:storageClass "multi_regional" ; 
+	gcp:projectId "${gcpProjectId}" ; 
 	a konig:GoogleCloudStorageBucket , konig:DataSource . 

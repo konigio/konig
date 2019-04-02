@@ -77,7 +77,7 @@ public class BeamTransformGeneratorTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testEnumMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-mapping");
