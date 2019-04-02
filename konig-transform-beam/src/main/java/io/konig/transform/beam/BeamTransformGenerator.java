@@ -1154,6 +1154,10 @@ public class BeamTransformGenerator {
 						AbstractJClass longClass = model.ref(Long.class);
 						block1._return(longClass._new().arg(stringValue));
 						
+					} else if (javaClass == Double.class || javaClass==double.class) {
+						AbstractJClass doubleClass = model.ref(Double.class);
+						block1._return(doubleClass._new().arg(stringValue));
+						
 					} else {
 						// TODO: Handle other datatypes
 						fail("Field type {0} not supported yet, for property {1}.", typeName, p.getPath());
