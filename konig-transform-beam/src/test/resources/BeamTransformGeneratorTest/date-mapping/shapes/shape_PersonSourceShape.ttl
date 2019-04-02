@@ -1,0 +1,57 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonSourceShape sh:property  [ 
+		sh:path alias:person_id ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:person_id ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path alias:birth_date ; 
+		sh:datatype xsd:date ; 
+		rdf:predicate alias:birth_date ; 
+		konig:formula '''
+@term birthDate <http://schema.org/birthDate>
+
+$.birthDate''' ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource> , <gs://personsourceshape-${gcpBucketSuffix}> ; 
+	sh:targetClass schema:Person ; 
+	konig:iriTemplate '''@context {
+   "alias" : "http://example.com/ns/alias/",
+   "person_id" : "alias:person_id"
+}
+
+<http://example.com/person/{person_id}>''' . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "PersonSource"
+	 ]  ; 
+	gcp:externalDataConfiguration  [ 
+		gcp:sourceFormat "CSV" ; 
+		gcp:sourceUris "gs://personsourceshape-${gcpBucketSuffix}/*" ; 
+		gcp:csvOptions  [ 
+			gcp:skipLeadingRows "1"^^xsd:long ]  ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:ERP . 
+
+<gs://personsourceshape-${gcpBucketSuffix}> gcp:name "personsourceshape-${gcpBucketSuffix}" ; 
+	gcp:location "us" ; 
+	gcp:projectId "${gcpProjectId}" ; 
+	gcp:storageClass "multi_regional" ; 
+	gcp:notificationInfo  [ 
+		gcp:topic "${topicName}" ; 
+		gcp:eventTypes "${eventType}" ]  ; 
+	a konig:GoogleCloudStorageBucket , konig:DataSource . 
