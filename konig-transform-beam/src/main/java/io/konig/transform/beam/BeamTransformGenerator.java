@@ -29,12 +29,18 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.FileIO;
@@ -543,9 +549,6 @@ public class BeamTransformGenerator {
 					Value object = e.getObject();
 					if (object instanceof Literal) {
 						Literal literal = (Literal) object;
-						
-						
-						boolean isInverseFunctional = reasoner.isInverseFunctionalProperty(predicate);
 						map.put(predicate, new RdfProperty(predicate, literal.getDatatype()));
 					}
 				}
@@ -605,7 +608,6 @@ public class BeamTransformGenerator {
 		}
 		
 		private class ToTargetFnGenerator {
-			private JDefinedClass iriClass;
 
 			private void generate() throws BeamTransformGenerationException, JClassAlreadyExistsException {
 				String prefix = namespacePrefix(targetShape.getId());
@@ -739,7 +741,7 @@ public class BeamTransformGenerator {
 
 				ShowlPropertyShape enumSourceKey = valueShape.enumSourceKey(reasoner);
 				if (enumSourceKey != null) {
-					transformEnumObject(body, p, inputRow, outputRow, enumSourceKey);
+					transformEnumObject(body, p, enumSourceKey);
 					return;
 				}
 				
@@ -765,7 +767,7 @@ public class BeamTransformGenerator {
 			
 
 
-			private void transformEnumObject(JBlock body, ShowlDirectPropertyShape p, JVar inputRow, JVar outputRow,
+			private void transformEnumObject(JBlock body, ShowlDirectPropertyShape p, 
 					ShowlPropertyShape enumSourceKey) throws BeamTransformGenerationException {
 				
 
@@ -785,7 +787,7 @@ public class BeamTransformGenerator {
 				JVar outputRowParam = method.param(tableRowClass, "outputRow");
 				
 
-				JVar enumObject = enumObject(method.body(), enumSourceKey, valueShape, inputRow);
+				JVar enumObject = enumObject(method.body(), enumSourceKey, valueShape, inputRowParam);
 				
 				
 				
@@ -794,16 +796,16 @@ public class BeamTransformGenerator {
 				JVar fieldRow = method.body().decl(tableRowClass, targetFieldName + "Row", tableRowClass._new());
 				
 				for (ShowlDirectPropertyShape direct : valueShape.getProperties()) {
-					transformProperty(method.body(), direct, inputRow, fieldRow, enumObject);
+					transformProperty(method.body(), direct, inputRowParam, fieldRow, enumObject);
 					
 				}
 
 				method.body()._if(enumObject.invoke("isEmpty").not())._then()
-					.add(outputRow.invoke("set").arg(JExpr.lit(targetFieldName)).arg(outputRowParam));
+					.add(outputRowParam.invoke("set").arg(JExpr.lit(targetFieldName)).arg(outputRowParam));
 				
 				
 				
-				body.add(JExpr.invoke(method).arg(inputRow).arg(outputRow));
+				body.add(JExpr.invoke(method).arg(inputRowParam).arg(outputRowParam));
 				
 			}
 
@@ -926,6 +928,7 @@ public class BeamTransformGenerator {
 		private class ReadFileFnGenerator {
 
 			Map<Class<?>, JMethod> getterMap = new HashMap<>();
+			private JFieldVar patternField = null;
 
 			private void generate() throws JClassAlreadyExistsException, BeamTransformGenerationException {
 				
@@ -1041,7 +1044,7 @@ public class BeamTransformGenerator {
 					if (datatype == null) {
 						continue;
 					}
-					AbstractJClass datatypeClass = model.ref(datatype);
+					AbstractJClass datatypeClass = datatype==GregorianCalendar.class ? model.ref(Long.class) : model.ref(datatype);
 					String fieldName = sourceProperty.getPredicate().getLocalName();
 					JMethod getter = getterMap.get(datatype);
 					
@@ -1119,15 +1122,16 @@ public class BeamTransformGenerator {
 				}
 				
 				if (!getterMap.containsKey(javaClass)) {
-					String typeName = StringUtil.camelCase(javaClass.getSimpleName());
+					String typeName = javaClass==GregorianCalendar.class ? "temporal" : StringUtil.camelCase(javaClass.getSimpleName());
 					
 					String methodName = typeName + "Value";
-					
-					AbstractJClass returnType = model.ref(javaClass);
+
+					AbstractJClass stringClass = model.ref(String.class);
+					AbstractJClass returnType = 
+							javaClass == GregorianCalendar.class ? model.ref(Long.class) : model.ref(javaClass);
 					
 					
 
-					AbstractJClass stringClass = model.ref(String.class);
 					
 					// $returnType ${returnType}Value(String stringValue) {
 					JMethod method = readFileFnClass.method(JMod.PRIVATE, returnType, methodName);
@@ -1158,6 +1162,62 @@ public class BeamTransformGenerator {
 						AbstractJClass doubleClass = model.ref(Double.class);
 						block1._return(doubleClass._new().arg(stringValue));
 						
+					} else if (javaClass == GregorianCalendar.class) {
+						
+						// if (stringValue.contains("T")) {
+						//   if (stringValue.contains("/") {
+						//     return Instant.from(ZonedDateTime.parse(stringValue).toEpochMilli();
+						//   } else if (stringValue.contains("Z") {
+						//     return Instant.parse(stringValue).toEpochMilli();
+						//   } else {
+					    //     return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
+						//   }
+						//  } 
+						//  Matcher matcher = DATE_PATTERN.matcher(stringValue);
+						//  String datePart = matcher.group(1);
+						//  String zoneOffset = matcher.group(2);
+						//  if (zoneOffset.length() == 0 || zoneOffset.equals("Z")) {
+						//    zoneOffset = "+00:00";
+						//  } 
+						//  stringValue = datePart + "T00:00:00.000" + zoneOffset;
+						//  return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
+						
+						JFieldVar datePattern = patternField();
+						
+						AbstractJClass instantClass = model.ref(Instant.class);
+						AbstractJClass offsetDateTimeClass = model.ref(OffsetDateTime.class);
+						AbstractJClass matcherClass = model.ref(Matcher.class);
+						AbstractJClass zonedDateTimeClass = model.ref(ZonedDateTime.class);
+						JConditional outerIf = block1._if(stringValue.invoke("contains").arg(JExpr.lit("T")));
+						
+						JConditional innerIf = outerIf._then()._if(stringValue.invoke("contains").arg(JExpr.lit("/")));
+						
+						innerIf._then()._return(instantClass.staticInvoke("from").arg(
+								zonedDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli"));
+						
+						innerIf._elseif(stringValue.invoke("contains").arg("Z"))._then()._return(
+								instantClass.staticInvoke("parse").arg(stringValue).invoke("toEpochMilli"));
+						
+						innerIf._else()._return(instantClass.staticInvoke("from").arg(
+								offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli"));
+						
+						JVar matcher = block1.decl(matcherClass, "matcher", 
+								datePattern.invoke("matcher").arg(stringValue));
+						
+						JVar datePart = block1.decl(stringClass, "datePart", 
+								matcher.invoke("group").arg(JExpr.lit(1)));
+						
+						JVar zoneOffset = block1.decl(stringClass, "zoneOffset", 
+								matcher.invoke("group").arg(JExpr.lit(2)));
+						
+						block1._if(zoneOffset.invoke("length").eq(JExpr.lit(0))
+								.cor(zoneOffset.invoke("equals").arg(JExpr.lit("Z"))))._then().add(
+										JExpr.assign(stringValue, datePart.plus("T00:00:00.000").plus(zoneOffset)));
+						
+						block1._return(instantClass.staticInvoke("from").arg(
+								offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMill"));
+					
+						
 					} else {
 						// TODO: Handle other datatypes
 						fail("Field type {0} not supported yet, for property {1}.", typeName, p.getPath());
@@ -1170,6 +1230,28 @@ public class BeamTransformGenerator {
 					method.body()._return(JExpr._null());
 				}
 				
+				
+			}
+
+
+
+
+
+
+
+			private JFieldVar patternField() {
+				if (patternField == null) {
+					
+					// private static final DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
+					
+					AbstractJClass patternClass = model.ref(Pattern.class);
+					patternField = readFileFnClass.field(JMod.PRIVATE | JMod.FINAL | JMod.STATIC , patternClass, 
+							"DATE_PATTERN", 
+							patternClass.staticInvoke("compile").arg(
+									JExpr.lit("(\\d+-\\d+-\\d+)(.*)")));
+				}
+				
+				return patternField;
 				
 			}
 
@@ -1361,7 +1443,7 @@ public class BeamTransformGenerator {
 			if (ns != null) {
 				return ns.getPrefix();
 			}
-			fail("Prefix not found for namespace <{0}>", ns.getName());
+			fail("Prefix not found for namespace <{0}>", uri.getNamespace());
 		}
 		fail("URI expected but id is a BNode");
 		return null;
