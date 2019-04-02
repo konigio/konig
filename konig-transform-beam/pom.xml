@@ -21,11 +21,11 @@
   		<artifactId>konig-gcp-model</artifactId>
   		<version>${konig.version}</version>
   	</dependency>
-		<dependency>
+		<!-- <dependency>
 		    <groupId>com.google.apis</groupId>
 		    <artifactId>google-api-services-bigquery</artifactId>
 		    <version>${google-api-services-bigquery.version}</version>
-		</dependency>
+		</dependency> -->
 		
 		 <dependency>
         <groupId>org.projectlombok</groupId>
