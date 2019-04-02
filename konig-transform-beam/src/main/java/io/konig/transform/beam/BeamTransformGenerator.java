@@ -112,6 +112,7 @@ import io.konig.core.util.JavaDatatypeMapper;
 import io.konig.core.util.RewriteRule;
 import io.konig.core.util.StringUtil;
 import io.konig.core.util.ValueFormat.Element;
+import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.shacl.PropertyConstraint;
@@ -325,7 +326,7 @@ public class BeamTransformGenerator {
 			}
 			
 			for (ShowlClass enumClass : enumClasses) {
-				declareEnumClass(enumClass);
+				declareEnumClass(enumClass.getId());
 			}
 			
 		}
@@ -371,7 +372,11 @@ public class BeamTransformGenerator {
 		}
 
 
-		private void declareEnumClass(ShowlClass owlClass) throws BeamTransformGenerationException {
+		private void declareEnumClass(URI owlClass) throws BeamTransformGenerationException {
+			
+			if (enumClassProperties.containsKey(owlClass)) {
+				return;
+			}
 			
 			String enumClassName = enumClassName(owlClass);
 			
@@ -380,13 +385,13 @@ public class BeamTransformGenerator {
 				// public class $enumClassName {
 				JDefinedClass enumClass = model._class(enumClassName, EClassType.ENUM);
 				
-				List<Vertex> individuals = reasoner.getGraph().getVertex(owlClass.getId()).asTraversal().in(RDF.TYPE).toVertexList();
+				List<Vertex> individuals = reasoner.getGraph().getVertex(owlClass).asTraversal().in(RDF.TYPE).toVertexList();
 
 				Map<URI, RdfProperty> propertyMap = enumProperties(individuals);
 				
 				Map<URI, JFieldVar> enumIndex = enumIndex(enumClass, propertyMap);
 				
-				enumClassProperties.put(owlClass.getId(), propertyMap);
+				enumClassProperties.put(owlClass, propertyMap);
 				
 				JBlock staticInit = enumClass.init();
 				for (Vertex individual : individuals) {
@@ -440,7 +445,14 @@ public class BeamTransformGenerator {
 					URI propertyId = rdfProperty.getId();
 					URI range = rdfProperty.getRange();
 					
-					AbstractJClass datatypeClass = model.ref(datatypeMapper.javaDatatype(range));
+					
+					
+					Class<?> fieldClass = datatypeMapper.javaDatatype(range);
+					
+					AbstractJClass datatypeClass = fieldClass==null ? 
+							model.directClass(enumClassName(range)) : 
+							model.ref(fieldClass);
+							
 					String fieldName = propertyId.getLocalName();
 					
 					
@@ -465,7 +477,7 @@ public class BeamTransformGenerator {
 				
 				
 			} catch (JClassAlreadyExistsException e) {
-				throw new BeamTransformGenerationException("Failed to declare enum " + owlClass.getId().stringValue(), e);
+				throw new BeamTransformGenerationException("Failed to declare enum " + owlClass.stringValue(), e);
 			}
 		}
 
@@ -491,9 +503,34 @@ public class BeamTransformGenerator {
 
 
 		private void enumMember(Map<URI, JFieldVar> enumIndex, JDefinedClass enumClass, JBlock staticInit, Vertex individual) throws BeamTransformGenerationException {
-			String fieldName = RdfUtil.localName(individual.getId());
+			String fieldName = enumMemberName(RdfUtil.uri(individual.getId()));
+			
+			// Suppose we are building the following enumeration...
+			
+			// public enum GenderType {
+			//   Male,
+			//   Female;
+			//   ..
+			// }
+			
+			// Then 'Male' and 'Female' are the enum constants.
+			
+			// The next line will create the enum constant, or get the existing constant if it was already created.
+			
 			
 			JEnumConstant constant = enumClass.enumConstant(fieldName);
+			
+			// We build static initializers for each member of the enumeration, and we build
+			// a map for for inverse functional properties.  For example, if genderCode is
+			// inverse functional, we would have...
+			
+			//  static {
+			//    Male.id("http://schema.org/", "Male").name("Male").genderCode("M");
+			//    genderCodeMap.put("M", Male);
+			//
+			//    Female.id("http://schema.org/", "Female").name("Female").genderCode("F");
+			//    genderCodeMap.put("M", Female);
+			//  }
 			
 			URI individualId = RdfUtil.uri(individual.getId());
 			
@@ -501,13 +538,46 @@ public class BeamTransformGenerator {
 					.arg(JExpr.lit(individualId.getNamespace()))
 					.arg(JExpr.lit(individualId.getLocalName()));
 			 
-			for (Edge edge : individual.outEdgeSet()) {
+			outerLoop : for (Edge edge : individual.outEdgeSet()) {
 				URI predicate = edge.getPredicate();
 				if (RDF.TYPE.equals(predicate)) {
 					continue;
 				}
 				
 				Value object = edge.getObject();
+				
+				if (object instanceof URI) {
+					
+					URI objectId = (URI) object;
+					if (reasoner.isEnumerationMember(objectId)) {
+						
+						
+						Set<URI> objectTypeSet = reasoner.getGraph().v(objectId).out(RDF.TYPE).toUriSet();
+						for (URI objectType : objectTypeSet) {
+							if (Schema.Enumeration.equals(objectType)) {
+								continue;
+							}
+							if (reasoner.isEnumerationClass(objectType)) {
+								declareEnumClass(objectType);
+								
+								String objectClassName = enumClassName(objectType);
+								AbstractJClass objectClass = model.directClass(objectClassName);
+								
+								// Male.subject(Category.Demographics);
+								
+								invoke = invoke.invoke(predicate.getLocalName()).arg(
+										objectClass.staticRef(enumMemberName(objectId)));
+								
+								// For now, we do not support IRI references to be inverse functional properties suitable
+								// for indexing.
+								
+								continue outerLoop;
+							}
+						}
+					}
+					
+					
+				}
 				
 				Literal literal = null;
 				if (object instanceof Literal) {
@@ -538,9 +608,9 @@ public class BeamTransformGenerator {
 		}
 
 
-		private Map<URI, RdfProperty> enumProperties(List<Vertex> individuals) {
+		private Map<URI, RdfProperty> enumProperties(List<Vertex> individuals) throws BeamTransformGenerationException {
 			Map<URI, RdfProperty> map = new HashMap<>();
-			for (Vertex v : individuals) {
+			outerLoop : for (Vertex v : individuals) {
 				for (Edge e : v.outEdgeSet()) {
 					URI predicate = e.getPredicate();
 					if (RDF.TYPE.equals(predicate) || map.containsKey(predicate)) {
@@ -550,26 +620,50 @@ public class BeamTransformGenerator {
 					if (object instanceof Literal) {
 						Literal literal = (Literal) object;
 						map.put(predicate, new RdfProperty(predicate, literal.getDatatype()));
+					} else if (object instanceof URI) {
+						URI objectId = (URI) object;
+						
+						Set<URI> typeSet = reasoner.getGraph().v(objectId).out(RDF.TYPE).toUriSet();
+						for (URI typeId : typeSet) {
+							if (typeId.equals(Schema.Enumeration)) {
+								continue;
+							}
+							if (reasoner.isEnumerationClass(typeId)) {
+								map.put(predicate, new RdfProperty(predicate, typeId));
+								continue outerLoop;
+							}
+						}
+						
+						fail("Object property {0} not supported on individual {1}", 
+								RdfUtil.compactId(predicate, nsManager),
+								RdfUtil.compactId(objectId, nsManager));
 					}
 				}
 			}
 			return map;
 		}
 
+		private String enumMemberName(URI individualId) {
+			
+			String localName = individualId.getLocalName();
+			localName = localName.replace("%20", "_");
+			localName = localName.replace("%", "x");
+			
+			return localName;
+		}
 
-		private String enumClassName(ShowlClass enumClass) throws BeamTransformGenerationException {
+		private String enumClassName(URI enumClass) throws BeamTransformGenerationException {
 			StringBuilder builder = new StringBuilder();
 			builder.append(basePackage);
 			builder.append('.');
 			
-			URI classId = enumClass.getId();
-			Namespace ns = nsManager.findByName(classId.getNamespace());
+			Namespace ns = nsManager.findByName(enumClass.getNamespace());
 			if (ns == null) {
-				fail("Prefix not found for namespace: {0}", classId.getNamespace());
+				fail("Prefix not found for namespace: {0}", enumClass.getNamespace());
 			}
 			builder.append(ns.getPrefix());
 			builder.append('.');
-			builder.append(classId.getLocalName());
+			builder.append(enumClass.getLocalName());
 			
 			return builder.toString();
 		}
@@ -815,7 +909,7 @@ public class BeamTransformGenerator {
 				String enumSourceKeyName = enumSourceKeyName(enumSourceKey, valueShape);
 				
 			
-				String enumClassName = enumClassName(valueShape.getOwlClass());
+				String enumClassName = enumClassName(valueShape.getOwlClass().getId());
 				AbstractJClass enumClass = model.directClass(enumClassName);
 				URI property = valueShape.getAccessor().getPredicate();
 				
@@ -828,9 +922,6 @@ public class BeamTransformGenerator {
 			private String enumSourceKeyName(ShowlPropertyShape enumSourceKey, ShowlNodeShape valueShape) throws BeamTransformGenerationException {
 				URI enumClassId = valueShape.getOwlClass().getId();
 				Map<URI,RdfProperty> propertyMap = enumClassProperties.get(enumClassId);
-
-				// Remove the propertyMap so that it is eligible for garbage collection
-				enumClassProperties.remove(enumClassId);
 				
 				if (propertyMap.containsKey(enumSourceKey.getPredicate())) {
 					return enumSourceKey.getPredicate().getLocalName();
@@ -1325,7 +1416,7 @@ public class BeamTransformGenerator {
 
 
 
-		private void processMethod() {
+		private void processMethod() throws BeamTransformGenerationException {
 			
 			// public static void process(Options options) {
 			
@@ -1390,7 +1481,7 @@ public class BeamTransformGenerator {
 			
 		}
 
-		private String targetTableSpec() {
+		private String targetTableSpec() throws BeamTransformGenerationException {
 			// For now we only support BigQuery
 			for (DataSource ds : targetShape.getShape().getShapeDataSource()) {
 				if (ds instanceof GoogleBigQueryTable) {
@@ -1398,6 +1489,7 @@ public class BeamTransformGenerator {
 					return table.getQualifiedTableName();
 				}
 			}
+			fail("Target table not found for {0}", RdfUtil.compactId(targetShape.getId(), nsManager));
 			return null;
 		}
 

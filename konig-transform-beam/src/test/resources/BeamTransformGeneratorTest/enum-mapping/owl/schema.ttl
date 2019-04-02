@@ -19,8 +19,10 @@ schema:Person a owl:Class .
 
 schema:Female a schema:GenderType ; 
 	schema:name "Female" ; 
-	ex:genderCode "F" . 
+	ex:genderCode "F" ; 
+	ex:personifiedBy ex:Venus . 
 
 schema:Male a schema:GenderType ; 
 	schema:name "Male" ; 
-	ex:genderCode "M" . 
+	ex:genderCode "M" ; 
+	ex:personifiedBy ex:Mars . 

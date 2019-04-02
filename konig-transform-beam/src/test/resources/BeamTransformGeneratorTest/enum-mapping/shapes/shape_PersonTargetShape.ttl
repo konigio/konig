@@ -15,15 +15,15 @@ shape:PersonTargetShape sh:property  [
 		sh:maxCount 1 ; 
 		sh:minCount 0 ]  ; 
 	a sh:Shape ; 
-	sh:nodeKind sh:IRI ; 
+	konig:explicitDerivedFrom shape:PersonSourceShape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
-	sh:targetClass schema:Person ; 
-	konig:explicitDerivedFrom shape:PersonSourceShape . 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:Person . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
-	gcp:tableReference  [ 
-		gcp:projectId "${gcpProjectId}" ; 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> gcp:tableReference  [ 
 		gcp:tableId "PersonTarget" ; 
-		gcp:datasetId "schema" ]  ; 
+		gcp:datasetId "schema" ; 
+		gcp:projectId "${gcpProjectId}" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
 	a konig:GoogleBigQueryTable , konig:DataSource ; 
 	schema:isPartOf sys:EDW . 
