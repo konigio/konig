@@ -917,6 +917,18 @@ public class RdfUtil {
 	public static URI uri(Value value) {
 		return value instanceof URI ? (URI) value : null;
 	}
+	
+	public static String shortShapeName(Resource id) {
+		URI uri = uri(id);
+		if (uri != null) {
+			String name = uri.getLocalName();
+			if (name.endsWith("Shape")) {
+				name = name.substring(0, name.length()-5);
+			}
+			return name;
+		}
+		return null;
+	}
 
 	public static String getName(Vertex v) {
 		if (v != null) {

@@ -21,7 +21,7 @@ package io.konig.core.showl;
  */
 
 
-public class ShowlDerivedJoinCondition extends ShowlJoinCondition {
+abstract public class ShowlDerivedJoinCondition extends ShowlJoinCondition {
 
 	private ShowlJoinCondition derivedFrom;
 	

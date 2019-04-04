@@ -56,12 +56,19 @@ public class BeamTransformGeneratorTest {
 	
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
+	@Test
+	public void testJoinById() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/join-by-id");
+		
+	}
 	@Ignore
 	public void testDateMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/date-mapping");
 		
 	}
+	
 
 	@Ignore
 	public void testTabularMapping() throws Exception {
@@ -77,7 +84,7 @@ public class BeamTransformGeneratorTest {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testEnumMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-mapping");
