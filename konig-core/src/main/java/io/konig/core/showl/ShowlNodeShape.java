@@ -70,6 +70,51 @@ public class ShowlNodeShape implements Traversable {
 	}
 	
 	/**
+	 * Get the key through which the specified source node is joined according to the given join condition.
+	 * @param sourceNode The source node whose key is being requested
+	 * @param join The join condition for the key.
+	 */
+	public ShowlPropertyShape keyProperty(ShowlNodeShape sourceNode, ShowlJoinCondition join) {
+		if (join instanceof ShowlFromCondition) {
+			for (ShowlJoinCondition j : getSelectedJoins()) {
+				if (j == join) {
+					continue;
+				}
+				
+				ShowlNodeShape otherNode = j.otherNode(sourceNode);
+				if (otherNode != null) {
+					return j.propertyOf(sourceNode);
+				}
+			}
+		} else {
+			return join.propertyOf(sourceNode);
+		}
+		
+		return null;
+	}
+	
+	public Set<ShowlPropertyShape> joinProperties(ShowlNodeShape otherNode) throws ShowlProcessingException {
+
+		Set<ShowlPropertyShape> set = new HashSet<>();
+		
+		for (ShowlDirectPropertyShape p : getProperties()) {
+			
+			ShowlMapping mapping = p.getSelectedMapping();
+			if (mapping == null) {
+				throw new ShowlProcessingException("Mapping not found for " + p.getPath());
+			}
+			
+			ShowlPropertyShape otherProperty = mapping.findOther(p);
+			if (otherNode == otherProperty.getDeclaringShape()) {
+				addMappedProperty(set, otherProperty, p);
+			}
+			
+		}
+		
+		return set;
+	}
+	
+	/**
 	 * Get all the properties mapped to this NodeShape via a given join condition.
 	 */
 	public Set<ShowlPropertyShape> joinProperties(ShowlJoinCondition join) throws ShowlProcessingException {
