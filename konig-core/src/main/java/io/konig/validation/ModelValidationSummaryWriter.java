@@ -38,12 +38,12 @@ public class ModelValidationSummaryWriter implements ModelValidationReportWriter
 	private static final String NUMBER_OF_TERMS = "termCount";
 	private static final String TERMS_WITH_DESCRIPTION = "termDescriptionCount";
 	private static final String NUMBER_OF_CLASSES = "classCount";
-	private static final String CLASSES_WITH_DESCRIPTION = "classDescribedCount";
+	private static final String CLASSES_WITH_DESCRIPTION = "classDescriptionCount";
 	private static final String NUMBER_OF_PROPERTIES = "propertyCount";
 	private static final String PROPERTIES_WITH_DESCRIPTION = "propertyDescripionCount";
 	private static final String NUMBER_OF_NAMED_INDIVIDUALS = "namedIndividualCount";
 	private static final String NAMED_INDIVIDUALS_WITH_DESCRIPTION = "namedIndividualDescriptionCount";
-	private static final String NUMBER_OF_ERRORS = "Number of Errors";
+	private static final String NUMBER_OF_ERRORS = "errorCount";
 
 	private boolean withHeader;
 

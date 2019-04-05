@@ -1,0 +1,88 @@
+@prefix ms: <http://www.io.konig/ns/model-summary/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ms: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "ms" ; 
+	rdfs:label "Konig Model Summary Ontology" ; 
+	rdfs:comment "An ontology containing terms used in model summaries." . 
+
+ms:ModelSummary a owl:Class ; 
+	rdfs:label "Model Summary" ; 
+	rdfs:comment "An entity that holds metrics about the data model used by a given project." . 
+
+ms:classCount a rdf:Property ; 
+	rdfs:label "Number of Classes" ; 
+	rdfs:comment "The number of classes within the model" ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:int . 
+
+ms:classDescriptionCount a rdf:Property ; 
+	rdfs:label "Number of Class Descriptions" ; 
+	rdfs:comment "The number of classes that have a description" ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:int . 
+
+ms:date a rdf:Property ; 
+	rdfs:label "Date" ; 
+	rdfs:comment "The date when the report was generated" ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:date . 
+
+ms:errorCount a rdf:Property ; 
+	rdfs:label "Number of Errors" ; 
+	rdfs:comment "The number of errors that were logged when the project was built." ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:int . 
+
+ms:namedIndividualCount a rdf:Property ; 
+	rdfs:label "Number of Individuals" ; 
+	rdfs:comment "The number of named individuals (i.e. enumerated values) within the model" ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:int . 
+
+ms:namedIndividualDescriptionCount a rdf:Property ; 
+	rdfs:label "Number of Individual Descriptions" ; 
+	rdfs:comment "The number of named individuals that have a description" ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:int . 
+
+ms:projectId a rdf:Property ; 
+	rdfs:label "Project Id" ; 
+	rdfs:comment "An IRI that identifies the project being summarized." ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range schema:Project . 
+
+ms:projectName a rdf:Property ; 
+	rdfs:label "Project Name" ; 
+	rdfs:comment "The name of the project being summarized." ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:string . 
+
+ms:propertyCount a rdf:Property ; 
+	rdfs:label "Number of Properties" ; 
+	rdfs:comment "The number of properties within the model" ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:int . 
+
+ms:propertyDescriptionCount a rdf:Property ; 
+	rdfs:label "Number of Property Descriptions" ; 
+	rdfs:comment "The number of properties that have a description" ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:int . 
+
+ms:termCount a rdf:Property ; 
+	rdfs:label "Number of Terms" ; 
+	rdfs:comment "The total number of terms (classes, properties, named individuals) within the model.  This is equal to (classCount + propertyCount + individualCount)." ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:int . 
+
+ms:termDescriptionCount a rdf:Property ; 
+	rdfs:label "Number of Term Descriptions" ; 
+	rdfs:comment "The number of terms that have a description. This is equal to (classDescriptionCount + propertyDescriptionCount + individualDescriptionCount)" ; 
+	rdfs:domain ms:ModelSummary ; 
+	rdfs:range xsd:int . 

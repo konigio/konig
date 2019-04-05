@@ -113,6 +113,7 @@ import io.konig.core.showl.ShowlJoinCondition;
 import io.konig.core.showl.ShowlMapping;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlSourceToSourceJoinCondition;
 import io.konig.core.showl.ShowlStaticPropertyShape;
 import io.konig.core.showl.ShowlTemplatePropertyShape;
 import io.konig.core.util.BasicJavaDatatypeMapper;
@@ -162,7 +163,7 @@ public class BeamTransformGenerator {
 			// Consider refactoring so that we don't need to check that explicitDerivedFrom is not empty.
 			// The list of nodes from the request should already be filtered!
 			
-			if (!node.getShape().getExplicitDerivedFrom().isEmpty()) {
+//			if (!node.getShape().getExplicitDerivedFrom().isEmpty()) {
 				File projectDir = projectDir(request, node);
 				childProjectList.add(projectDir);
 				JCodeModel model = new JCodeModel();
@@ -182,7 +183,7 @@ public class BeamTransformGenerator {
 				} catch (IOException e) {
 					throw new BeamTransformGenerationException("Failed to save Beam Transform code", e);
 				}
-			}
+//			}
 		}
 
 		generateBeamParentPom(request, childProjectList);
@@ -1471,12 +1472,16 @@ public class BeamTransformGenerator {
 
 			private Set<ShowlPropertyShape> propertySet() throws BeamTransformGenerationException {
 				Set<ShowlPropertyShape> set = targetNode.joinProperties(sourceInfo.getFocusNode());
-				ShowlPropertyShape joinProperty = sourceInfo.getJoin()
-						.propertyOf(sourceInfo.getFocusNode());
 				
-				assertTrue(joinProperty!=null, "Join property not found for {0}", sourceInfo.getFocusNode().getPath());
+				ShowlJoinCondition join = sourceInfo.getJoin();
+				if (join instanceof ShowlSourceToSourceJoinCondition) {
+					ShowlPropertyShape joinProperty = sourceInfo.getJoin()
+							.propertyOf(sourceInfo.getFocusNode());
 				
-				set.add(joinProperty);
+					assertTrue(joinProperty!=null, "Join property not found for {0}", sourceInfo.getFocusNode().getPath());
+				
+					set.add(joinProperty);
+				}
 				
 				return set;
 			}
@@ -1512,7 +1517,9 @@ public class BeamTransformGenerator {
 
 					AbstractJClass stringClass = model.ref(String.class);
 					AbstractJClass returnType = 
-							javaClass == GregorianCalendar.class ? model.ref(Long.class) : model.ref(javaClass);
+							javaClass == GregorianCalendar.class ? model.ref(Long.class) : 
+							javaClass == Integer.class ? model.ref(Long.class) :
+							model.ref(javaClass);
 					
 					
 
@@ -1541,7 +1548,7 @@ public class BeamTransformGenerator {
 					} else if (javaClass==Boolean.class) {
 						block1._return(JExpr.lit("true").invoke("equalsIgnoreCase").arg(stringValue));
 						
-					} else if (javaClass == Long.class) {
+					} else if (javaClass == Long.class || javaClass == Integer.class) {
 						AbstractJClass longClass = model.ref(Long.class);
 						block1._return(longClass._new().arg(stringValue));
 						

@@ -1,5 +1,7 @@
 package io.konig.transform.beam;
 
+import static org.junit.Assert.assertTrue;
+
 /*
  * #%L
  * Konig Transform Beam
@@ -25,9 +27,6 @@ import java.io.File;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.*;
-
-import com.helger.jcodemodel.JCodeModel;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -35,7 +34,9 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.CompositeSourceNodeSelector;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
+import io.konig.core.showl.IdentityMappingSelector;
 import io.konig.core.showl.MappingStrategy;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
@@ -51,12 +52,23 @@ public class BeamTransformGeneratorTest {
 	private OwlReasoner reasoner = new OwlReasoner(graph);
 	private MappingStrategy strategy = new MappingStrategy();
 	private ShowlNodeListingConsumer consumer = new ShowlNodeListingConsumer(strategy);
-	private ShowlManager showlManager = new ShowlManager(shapeManager, reasoner, new ExplicitDerivedFromSelector(), consumer);
-	private JCodeModel model = new JCodeModel();
+	private ShowlManager showlManager = new ShowlManager(shapeManager, reasoner, nodeSelector(), consumer);
 	
+	private static CompositeSourceNodeSelector nodeSelector() {
+		return new CompositeSourceNodeSelector(
+				new IdentityMappingSelector(),
+				new ExplicitDerivedFromSelector());
+	}
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
 	@Test
+	public void testModelSummary() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/model-summary");
+		
+	}
+	
+	@Ignore
 	public void testJoinById() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-by-id");

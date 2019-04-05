@@ -1,0 +1,101 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix ms: <http://www.io.konig/ns/model-summary/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://www.io.konig/ns/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:ModelSummaryShape sh:property  [ 
+		sh:path ms:projectId ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate ms:projectId ; 
+		sh:class schema:Project ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:projectName ; 
+		rdf:predicate ms:projectName ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:date ; 
+		rdf:predicate ms:date ; 
+		sh:datatype xsd:date ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:termCount ; 
+		rdf:predicate ms:termCount ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:termDescriptionCount ; 
+		rdf:predicate ms:termDescriptionCount ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:classCount ; 
+		rdf:predicate ms:classCount ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:classDescriptionCount ; 
+		rdf:predicate ms:classDescriptionCount ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:propertyCount ; 
+		rdf:predicate ms:propertyCount ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:propertyDescriptionCount ; 
+		rdf:predicate ms:propertyDescriptionCount ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:namedIndividualCount ; 
+		rdf:predicate ms:namedIndividualCount ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:namedIndividualDescriptionCount ; 
+		rdf:predicate ms:namedIndividualDescriptionCount ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path ms:errorCount ; 
+		rdf:predicate ms:errorCount ; 
+		sh:datatype xsd:int ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape ; 
+	sh:targetClass ms:ModelSummary ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/ms/tables/ModelSummary> , <gs://modelsummaryshape-${gcpBucketSuffix}> . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/ms/tables/ModelSummary> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "ms" ; 
+		gcp:tableId "ModelSummary" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	konig:ddlFile  [ 
+		konig:relativePath "target/generated/gcp/bigquery/view/ms.ModelSummary.json" ; 
+		konig:baseProject <urn:maven:io.konig.examples.model-summary-1.0.0> ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource . 
+
+<gs://modelsummaryshape-${gcpBucketSuffix}> gcp:name "modelsummaryshape-${gcpBucketSuffix}" ; 
+	gcp:location "us" ; 
+	gcp:projectId "${gcpProjectId}" ; 
+	gcp:storageClass "multi_regional" ; 
+	a konig:GoogleCloudStorageBucket , konig:DataSource . 

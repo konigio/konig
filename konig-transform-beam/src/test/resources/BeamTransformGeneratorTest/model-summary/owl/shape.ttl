@@ -1,0 +1,12 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix shape: <http://www.io.konig/ns/shape/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+shape: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "shape" ; 
+	rdfs:label "Konig Shapes" ; 
+	rdfs:comment "An ontology consisting of NodeShape definitions used in the Konig project." . 
+
+shape:ModelSummaryShape konig:mediaTypeBaseName "application/vnd.io.ns.shape.modelsummary" . 

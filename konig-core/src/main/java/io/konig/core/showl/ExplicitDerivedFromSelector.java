@@ -31,22 +31,11 @@ import org.slf4j.LoggerFactory;
 import io.konig.shacl.Shape;
 
 public class ExplicitDerivedFromSelector implements ShowlSourceNodeSelector {
-	private static final Logger logger = LoggerFactory.getLogger(ExplicitDerivedFromSelector.class);
-
 	@Override
 	public Set<Shape> selectCandidateSources(ShowlNodeShape targetShape) {
 		Set<Shape> result = targetShape.getShape().getExplicitDerivedFrom();
 		if (!result.isEmpty()) {
 			return result;
-		}
-		
-		ShowlPropertyShape accessor = targetShape.getAccessor();
-		if (accessor != null) {
-			for (ShowlPropertyShape candidate : accessor.getProperty().getPropertyShapes()) {
-				if (logger.isTraceEnabled()) {
-					logger.trace("Adding {} as candidate of {}", candidate.getPath(), targetShape.getPath());
-				}
-			}
 		}
 		
 		

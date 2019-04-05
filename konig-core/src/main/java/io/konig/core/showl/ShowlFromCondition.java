@@ -40,7 +40,7 @@ public class ShowlFromCondition extends ShowlDerivedJoinCondition {
 		return node != sourceNode ? sourceNode : null;
 	}
 	public ShowlPropertyShape propertyOf(ShowlNodeShape node) {
-		return getDerivedFrom().propertyOf(node);
+		return null;
 	}
 	
 	public ShowlNodeShape otherNode(Set<ShowlNodeShape> set) {
