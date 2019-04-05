@@ -316,6 +316,10 @@ public class ShowlManager implements ShowlClassManager {
 		}
 		consumable.add(nodeA);
 		
+		if (logger.isTraceEnabled()) {
+			logger.trace("addConsumable({})", nodeA.getPath());
+		}
+		
 	}
 
 	private void joinNested(ShowlNodeShape sourceNode, ShowlNodeShape targetNode, ShowlJoinCondition prior) {

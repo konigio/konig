@@ -23,7 +23,8 @@ package io.konig.core.showl;
 
 
 /**
- * A condition that joins a source shape to the target shape. 
+ * A condition that joins a source shape to the target shape.
+ * This is used to rank the source shapes based on the number of mappings that exist. 
  * @author Greg McFall
  *
  */

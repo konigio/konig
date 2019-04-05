@@ -68,7 +68,7 @@ public class MappingStrategy {
 		
 		Map<ShowlJoinCondition, RankedJoinCondition> rankingMap = new LinkedHashMap<>();
 		for (ShowlJoinCondition join : set) {
-			rankingMap.put(join, new RankedJoinCondition((ShowlTargetToSourceJoinCondition)join));
+			rankingMap.put(join, new RankedJoinCondition(join));
 			if (logger.isTraceEnabled()) {
 				logger.trace("selectMappings: rankingMap put {}", join);
 			}
@@ -190,15 +190,21 @@ public class MappingStrategy {
 	}
 
 	private boolean addSelectedJoin(ShowlNodeShape targetNode, RankedJoinCondition ranked) {
+
+		ShowlJoinCondition rankedJoin = ranked.getJoin();
+
+		if (rankedJoin instanceof ShowlFromCondition) {
+			targetNode.addSelectedJoin(rankedJoin);
+			return true;
+		}
 		
-		ShowlTargetToSourceJoinCondition s2t = ranked.getJoin();
 		
-		ShowlPropertyShape targetProperty = s2t.propertyOf(targetNode);
-		ShowlPropertyShape sourceProperty = s2t.otherProperty(targetProperty);
+		ShowlPropertyShape targetProperty = rankedJoin.propertyOf(targetNode);
+		ShowlPropertyShape sourceProperty = rankedJoin.otherProperty(targetProperty);
 		ShowlNodeShape sourceNode = sourceProperty.getDeclaringShape();
 		
 		if (targetNode.getSelectedJoins().isEmpty()) {
-			targetNode.addSelectedJoin(new ShowlFromCondition(s2t, sourceNode));
+			targetNode.addSelectedJoin(new ShowlFromCondition(rankedJoin, sourceNode));
 			return true;
 		} else {
 			// Build a source-to-source join condition
@@ -206,9 +212,8 @@ public class MappingStrategy {
 			List<ShowlJoinCondition> list = targetNode.getSelectedJoins();
 			for (int i=list.size()-1; i>=0; i--) {
 				ShowlJoinCondition prior = list.get(i);
-				ShowlSourceToSourceJoinCondition s2s = sourceToSourceJoin(s2t, prior, sourceNode);
+				ShowlSourceToSourceJoinCondition s2s = sourceToSourceJoin(prior, sourceNode);
 				if (s2s != null) {
-					s2t.setSourceToSource(s2s);
 					targetNode.addSelectedJoin(s2s);
 					return true;
 				}
@@ -218,14 +223,14 @@ public class MappingStrategy {
 		
 	}
 
-	private ShowlSourceToSourceJoinCondition sourceToSourceJoin(ShowlTargetToSourceJoinCondition s2t, ShowlJoinCondition prior, ShowlNodeShape b) {
+	private ShowlSourceToSourceJoinCondition sourceToSourceJoin(ShowlJoinCondition prior, ShowlNodeShape b) {
 		// For now, we only support join by Id
 		
 		ShowlNodeShape a = prior.focusNode();
 		ShowlPropertyShape aId = a.findProperty(Konig.id);
 		ShowlPropertyShape bId = b.findProperty(Konig.id);
 		if (aId != null && bId!=null) {
-			return new ShowlSourceToSourceJoinCondition(s2t, aId, bId);
+			return new ShowlSourceToSourceJoinCondition(null, aId, bId);
 		}
 		
 		return null;
@@ -327,8 +332,8 @@ public class MappingStrategy {
 
 	private static class RankedJoinCondition  {
 		private int ranking;
-		private ShowlTargetToSourceJoinCondition join;
-		public RankedJoinCondition(ShowlTargetToSourceJoinCondition join) {
+		private ShowlJoinCondition join;
+		public RankedJoinCondition(ShowlJoinCondition join) {
 			this.join = join;
 		}
 		public void incrementRanking() {
@@ -344,7 +349,7 @@ public class MappingStrategy {
 			return ranking;
 		}
 		
-		public ShowlTargetToSourceJoinCondition getJoin() {
+		public ShowlJoinCondition getJoin() {
 			return join;
 		}
 		
