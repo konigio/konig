@@ -45,6 +45,14 @@ import io.konig.core.vocab.Konig;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.Shape;
 
+/**
+ * A particular instance of a SHACL NodeShape.
+ * The instance may be bound to a particular location with a graph via the accessor, and it may
+ * be bound to a particular DataSource.
+ * 
+ * @author Greg McFall
+ *
+ */
 public class ShowlNodeShape implements Traversable {
 	
 	private ShowlPropertyShape accessor;
@@ -56,6 +64,7 @@ public class ShowlNodeShape implements Traversable {
 	private Map<URI,ShowlInwardPropertyShape> inProperties = null;
 	
 	private List<ShowlJoinCondition> selectedJoins;
+	private ShowlDataSource shapeDataSource;
 	private boolean unmapped;
 	
 	
@@ -235,6 +244,7 @@ public class ShowlNodeShape implements Traversable {
 		return inProperties==null ? Collections.emptyList() : inProperties.values();
 	}
 	
+	@Deprecated
 	public boolean isNamedRoot() {
 		return accessor == null && findProperty(Konig.id) != null && hasDataSource();
 	}
@@ -427,11 +437,15 @@ public class ShowlNodeShape implements Traversable {
 		list.add(p);
 		return p;
 	}
-	
-	
-
 
 	
-	
+	public ShowlDataSource getShapeDataSource() {
+		return shapeDataSource;
+	}
 
+	public void setShapeDataSource(ShowlDataSource shapeDataSource) {
+		this.shapeDataSource = shapeDataSource;
+	}
+
+	
 }

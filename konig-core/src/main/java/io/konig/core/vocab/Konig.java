@@ -61,6 +61,10 @@ public class Konig {
 	public static final String DERIVED_PROPERTY = "http://www.konig.io/ns/core/derivedProperty";
 	public static final String ID = "http://www.konig.io/ns/core/id";
 	
+	public static class Terms {
+		public static final String dataSourceShape = "http://www.konig.io/ns/core/dataSourceShape";
+	}
+	
 	// ChangeSet terms
 	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
 	public static final URI Falsehood = new URIImpl("http://www.konig.io/ns/core/Falsehood");
@@ -137,6 +141,7 @@ public class Konig {
 	public static final URI AwsAuroraView = new URIImpl("http://www.konig.io/ns/core/AwsAuroraView");
 	public static final URI S3Bucket = new URIImpl("http://www.konig.io/ns/core/S3Bucket");
 	public static final URI shapeDataSource = new URIImpl(SHAPE_DATA_SOURCE);
+	public static final URI dataSourceShape = new URIImpl(Terms.dataSourceShape);
 	public static final URI bigQuerySource = new URIImpl(BIG_QUERY_SOURCE);
 	public static final URI primaryKey = new URIImpl("http://www.konig.io/ns/core/primaryKey");
 	public static final URI uniqueKey = new URIImpl("http://www.konig.io/ns/core/uniqueKey");

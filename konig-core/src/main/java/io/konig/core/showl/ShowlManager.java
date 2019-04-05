@@ -214,15 +214,24 @@ public class ShowlManager implements ShowlClassManager {
 	}
 	
 	private void buildJoinConditions(ShowlNodeShape nodeA, MappingRole role, ShowlJoinCondition joinCondition, ShowlNodeShapeConsumer consumer) throws ShowlProcessingException {
-		if (nodeA.isNamedRoot() && !isUndefinedClass(nodeA.getOwlClass())) {
+		if (nodeA.getAccessor()==null && nodeA.hasDataSource() && !isUndefinedClass(nodeA.getOwlClass())) {
 			Set<Shape> candidates = sourceNodeSelector.selectCandidateSources(nodeA);
 			if (candidates.isEmpty() && role==MappingRole.TARGET) {
 				nodeA.setUnmapped(true);
 			}
+			boolean joinObjectProperties = false;
 			for (Shape shapeB : candidates) {
+				
+				if (shapeB == nodeA.getShape()) {
+					// Identity mapping
+					ShowlNodeShape nodeB = createNodeShape(null, nodeA.getShape());
+					ShowlNodeShape targetNode = role==MappingRole.TARGET ? nodeA : nodeB;
+					ShowlNodeShape sourceNode = role==MappingRole.TARGET ? nodeB : nodeA;
+					createIdentityMapping(sourceNode, targetNode, null);
+					continue;
+				}
+				
 				for (ShowlNodeShape nodeB : getNodeShape(shapeB.getId())) {
-					// For now we consider only root shapes.
-					// TODO: Consider nested shapes.
 					
 					
 					ShowlClass classA = nodeA.getOwlClass();
@@ -231,6 +240,7 @@ public class ShowlManager implements ShowlClassManager {
 					ShowlNodeShape targetNode = role==MappingRole.TARGET ? nodeA : nodeB;
 					ShowlNodeShape sourceNode = role==MappingRole.TARGET ? nodeB : nodeA;
 					
+					joinObjectProperties = true;
 					if (classA.isSubClassOf(classB) || classB.isSubClassOf(classA)) {
 						
 						doJoin(targetNode, sourceNode, joinCondition);
@@ -239,7 +249,10 @@ public class ShowlManager implements ShowlClassManager {
 					}
 				}
 			}
-			joinObjectProperties(nodeA, joinCondition);
+			
+			if (joinObjectProperties) {
+				joinObjectProperties(nodeA, joinCondition);
+			}
 			if (consumer != null) {
 				addConsumable(nodeA);
 			}
@@ -276,6 +289,25 @@ public class ShowlManager implements ShowlClassManager {
 //				joinObjectProperties(nodeA, joinCondition);
 //			}
 //		}
+	}
+
+	private void createIdentityMapping(ShowlNodeShape sourceNode, ShowlNodeShape targetNode, ShowlJoinCondition join) {
+		
+		if (join == null) {
+			join = new ShowlFromCondition(null, sourceNode);
+		}
+		
+		for (ShowlDirectPropertyShape targetProperty : targetNode.getProperties()) {
+			ShowlDirectPropertyShape sourceProperty = sourceNode.getProperty(targetProperty.getPredicate());
+			
+			new ShowlMapping(join, sourceProperty, targetProperty);
+			
+			if (targetProperty.getValueShape() != null) {
+				createIdentityMapping(sourceProperty.getValueShape(), targetProperty.getValueShape(), join);
+			}
+			
+		}
+		
 	}
 
 	private void addConsumable(ShowlNodeShape nodeA) {
