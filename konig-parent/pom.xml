@@ -138,11 +138,11 @@
 
 	<distributionManagement>
 		<snapshotRepository>
-			<id>ossrh-snapshots</id>
+			<id>ossrh</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
 		<repository>
-			<id>ossrh-releases</id>
+			<id>ossrh</id>
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 	</distributionManagement>
@@ -277,11 +277,10 @@
 
 	<profiles>
 		<profile>
-			<id>release-profile</id>
+			<id>release</id>
 			<activation>
 				<property>
-					<name>performRelease</name>
-					<value>true</value>
+					<name>release</name>
 				</property>
 			</activation>
 			<properties>
@@ -292,7 +291,7 @@
 					<plugin>
 						<groupId>org.sonatype.plugins</groupId>
 						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.3</version>
+						<version>1.6.8</version>
 						<extensions>true</extensions>
 						<configuration>
 							<serverId>ossrh</serverId>
@@ -303,6 +302,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.6</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>

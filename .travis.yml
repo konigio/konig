@@ -2,7 +2,11 @@ language: java
 
 before_install: 
   - cd konig-parent
-  - mvn install -N
+  - echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
+  - echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
+
+install:
+    mvn --settings ../.maven.xml install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 
 # skip cleanup is true so the working directory is not reset
 
@@ -11,7 +15,7 @@ before_install:
 
 deploy:
   - provider: script
-    script: "mvn deploy --settings ../travis-settings.xml -DskipTests=true"
+    script: "mvn clean deploy --settings ../.maven.xml -DskipTests=true -B -U -P release"
     skip_cleanup: true
     on:
       branch: master
