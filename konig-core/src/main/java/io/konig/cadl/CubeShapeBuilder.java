@@ -81,6 +81,7 @@ public class CubeShapeBuilder {
 			
 			URI shapeId = uri(shapeNamespace + cube.getId().getLocalName() + "RawShape");
 			Shape shape = produceShape(shapeId);
+			shape.setNodeShapeCube(cube);
 			
 			addVariable(shape, cube.getSource());
 			
