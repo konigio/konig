@@ -1,5 +1,6 @@
 package io.konig.spreadsheet;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -37,8 +38,9 @@ import io.konig.cadl.Variable;
 import io.konig.core.LocalNameService;
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.rio.turtle.NamespaceMap;
+import io.konig.spreadsheet.nextgen.Workbook;
 
-public class CubeSheet extends BaseSheetProcessor {
+public class CubeSheet extends BaseSheetProcessor implements WorkbookListener {
 	private static SheetColumn CUBE_ID = new SheetColumn("Cube Id", true);
 	private static SheetColumn STEREOTYPE = new SheetColumn("Stereotype", true);
 	private static SheetColumn ELEMENT_NAME = new SheetColumn("Element Name");
@@ -60,13 +62,12 @@ public class CubeSheet extends BaseSheetProcessor {
 	private Cube cube;
 	private Dimension dimension;
 	private Level level;
+	private List<Action> actionList;
 
-	private DataSourceGeneratorFactory dataSourceGeneratorFactory;
 	
 	@SuppressWarnings("unchecked")
-	public CubeSheet(WorkbookProcessor processor, DataSourceGeneratorFactory factory) {
+	public CubeSheet(WorkbookProcessor processor) {
 		super(processor);
-		dataSourceGeneratorFactory = factory;
 		dependsOn(OntologySheet.class);
 	}
 
@@ -85,7 +86,6 @@ public class CubeSheet extends BaseSheetProcessor {
 		
 		
 		String stereotypeName = stringValue(row, STEREOTYPE).toUpperCase();
-		List<Function> dataSourceList = null;
 		
 		CadlKind kind = CadlKind.valueOf(stereotypeName);
 		switch (kind) {
@@ -97,9 +97,7 @@ public class CubeSheet extends BaseSheetProcessor {
 			cube.setSource(source);
 			break;
 			
-		case STORAGE :
-			dataSourceList = dataSourceList(row, ELEMENT_TYPE);
-			break;
+		
 
 		case DIMENSION :
 			dimension = new Dimension();
@@ -127,6 +125,11 @@ public class CubeSheet extends BaseSheetProcessor {
 			handleFormula(cube, measure, row);
 			cube.addMeasure(measure);
 			break;
+		case RAWDATA:
+			buildRawDataShape(row);
+			break;
+		default:
+			break;
 		}
 		
 		String rollUpFrom = stringValue(row, ROLL_UP_FROM);
@@ -136,17 +139,25 @@ public class CubeSheet extends BaseSheetProcessor {
 				location(row, ROLL_UP_FROM), dimension, level, rollUpFrom);
 		}
 		
-		if (dataSourceList != null) {
-			processor.defer(
-				new BuildCubeDataSourceAction(
-					location(row, ELEMENT_TYPE),
-					processor,
-					dataSourceGeneratorFactory.getDataSourceGenerator(),
-					cube,
-					dataSourceList					
-			));
-		}
+	
+	}
 
+	private void buildRawDataShape(SheetRow row) throws SpreadsheetException {
+		List<Function> functionList = dataSourceList(row, FORMULA);
+		WorkbookLocation location = location(row, FORMULA);
+		DataSourceGenerator dsGenerator = processor.service(DataSourceGeneratorFactory.class).getDataSourceGenerator();
+		BuildRawCubeShapeAction action = 
+				new BuildRawCubeShapeAction(location, processor, dsGenerator, cube, functionList);
+		// We don't add BuildRawCubeShapeAction to the processor because we need to ensure that
+		// the formulas for the levels and attributes are executed first.
+		
+		// So we'll add the BuildRawCubeShapeAction to the internal actionList.
+		// Later, when the workbook closes, we'll add all such actions to the processor.
+		
+		if (actionList == null) {
+			actionList = new ArrayList<>();
+		}
+		actionList.add(action);
 	}
 
 	private void init() {
@@ -207,11 +218,29 @@ public class CubeSheet extends BaseSheetProcessor {
 
 	private enum CadlKind {
 		SOURCE,
-		STORAGE,
+		RAWDATA,
 		DIMENSION,
 		LEVEL,
 		ATTRIBUTE, 
 		MEASURE
+	}
+
+	@Override
+	public void beginWorkbook(Workbook workbook) {
+		
+	}
+
+	@Override
+	public void endWorkbook(Workbook workbook) {
+		if (actionList != null) {
+			for (Action action : actionList) {
+				processor.defer(action);
+			}
+		}
+		
+		// Release the actionList so it is eligible for garbage collection
+		actionList = null;
+		
 	}
 
 
