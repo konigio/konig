@@ -41,6 +41,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.konig.activity.Activity;
 import io.konig.annotation.RdfProperty;
+import io.konig.cadl.Cube;
 import io.konig.core.Context;
 import io.konig.core.UidGenerator;
 import io.konig.core.io.PrettyPrintWriter;
@@ -65,6 +66,7 @@ public class Shape implements Cloneable {
 	private NodeKind nodeKind;
 	private String comment;
 	private URI termStatus;
+	private Cube nodeShapeCube;
 	
 	
 	private AndConstraint and;
@@ -839,6 +841,15 @@ public class Shape implements Cloneable {
 			broader = new LinkedHashSet<>();
 		}
 		broader.add(skosConcept);
+	}
+
+	@RdfProperty(Konig.Terms.nodeShapeCube)
+	public Cube getNodeShapeCube() {
+		return nodeShapeCube;
+	}
+
+	public void setNodeShapeCube(Cube nodeShapeCube) {
+		this.nodeShapeCube = nodeShapeCube;
 	}
 	
 	

@@ -76,7 +76,7 @@ public class ShapeWriter {
 		EmitContext context = new EmitContext(graph);
 		context.addIriReference(SH.shape, SH.path, SH.targetClass, SH.valueClass, Konig.aggregationOf, Konig.rollUpBy,
 				Konig.defaultShapeFor, Konig.inputShapeOf, Konig.tabularOriginShape, Konig.preferredTabularShape,
-				Konig.explicitDerivedFrom, SKOS.BROADER,
+				Konig.explicitDerivedFrom, SKOS.BROADER, Konig.nodeShapeCube,
 				SH.xone, SH.and, SH.or, SH.not);
 		context.setLocalNameService(nameService);
 		context.addIgnoredProperty(Konig.equivalentPath);

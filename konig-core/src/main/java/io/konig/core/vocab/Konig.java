@@ -63,6 +63,7 @@ public class Konig {
 	
 	public static class Terms {
 		public static final String dataSourceShape = "http://www.konig.io/ns/core/dataSourceShape";
+		public static final String nodeShapeCube = "http://www.konig.io/ns/core/nodeShapeCube";
 	}
 	
 	// ChangeSet terms
@@ -141,6 +142,7 @@ public class Konig {
 	public static final URI AwsAuroraView = new URIImpl("http://www.konig.io/ns/core/AwsAuroraView");
 	public static final URI S3Bucket = new URIImpl("http://www.konig.io/ns/core/S3Bucket");
 	public static final URI shapeDataSource = new URIImpl(SHAPE_DATA_SOURCE);
+	public static final URI nodeShapeCube = new URIImpl(Terms.nodeShapeCube);
 	public static final URI dataSourceShape = new URIImpl(Terms.dataSourceShape);
 	public static final URI bigQuerySource = new URIImpl(BIG_QUERY_SOURCE);
 	public static final URI primaryKey = new URIImpl("http://www.konig.io/ns/core/primaryKey");
