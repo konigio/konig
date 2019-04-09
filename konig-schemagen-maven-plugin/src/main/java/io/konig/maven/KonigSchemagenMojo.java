@@ -425,7 +425,6 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			createProject();
 			loadResources();
 			preprocessResources();
-			generateCubeShapes();
 			generateModelValidationReport();
 			generateGoogleCloudPlatform();
 			generateOracleManagedCloudServices();
@@ -463,7 +462,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				ConfigurationException | GoogleCredentialsNotFoundException | InvalidGoogleCredentialsException | 
 				SizeEstimateException | KonigException | SQLException | InvalidDatatypeException | 
 				ShapeTransformException | EnvironmentGenerationException | ParseException | MojoExecutionException |
-				MavenInvocationException | CubeShapeException | BeamTransformGenerationException e) {
+				MavenInvocationException | BeamTransformGenerationException e) {
 			
 			if (failOnError) {
 				
@@ -478,26 +477,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     }
     
 
-	private void generateCubeShapes() throws KonigException, CubeShapeException {
-		if (cubeManager != null) {
-			
-			// For now, we assume that the shape namespace has "shape" as the prefix.
-			// TODO: This is OK as a default, but there should be a way to override the default
-			
-			Namespace ns = nsManager.findByPrefix("shape");
-			if (ns == null) {
-				throw new KonigException("shape namespace is not defined");
-			}
-			String shapeNamespace = ns.getName();
-			
-			CubeShapeBuilder builder = new CubeShapeBuilder(owlReasoner, shapeManager, shapeNamespace);
-			
-			for (Cube cube : cubeManager.listCubes()) {
-				builder.buildShape(cube);
-			}
-		}
-		
-	}
+	
 
 
 	private void failIfAnyError() throws MojoExecutionException {

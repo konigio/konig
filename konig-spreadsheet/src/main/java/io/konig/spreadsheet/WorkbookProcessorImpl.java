@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.net.ssl.HandshakeCompletedListener;
-
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -158,6 +156,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		settings =  new SettingsSheet(this);
 		NamespaceManager nsManager = graph.getNamespaceManager();
 		DataSourceGeneratorFactory dataSourceGeneratorFactory = new DataSourceGeneratorFactory(nsManager, templateDir, settings);
+		
 		addService(WorkbookProcessor.class, this);
 		addService(dataSourceGeneratorFactory);
 		addService(Graph.class, graph);
@@ -175,7 +174,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		addSheetProcessor(new PropertyConstraintSheet(this, owlReasoner));
 		addSheetProcessor(new TripleSheet(this));
 		addSheetProcessor(new LabelSheet(this));
-		addSheetProcessor(new CubeSheet(this, dataSourceGeneratorFactory));
+		addSheetProcessor(new CubeSheet(this));
 		addSheetProcessor(new SourceDataDictionarySheet(this, settings, service(IndividualSheet.class)));
 		addSheetProcessor(new AbbreviationSheet(this, settings));
 		
