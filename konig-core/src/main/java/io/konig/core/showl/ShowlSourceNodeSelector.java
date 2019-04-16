@@ -39,5 +39,5 @@ public interface ShowlSourceNodeSelector {
 	 * @param targetShape The target NodeShape.
 	 * @return The set of potential source node shapes, or null if there are no restrictions on the set of candidates.
 	 */
-	public Set<Shape> selectCandidateSources(ShowlNodeShape targetShape);
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape);
 }

@@ -43,7 +43,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
-import io.konig.core.showl.MappingStrategy;
+import io.konig.core.showl.ObsoleteMappingStrategy;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlSourceNodeSelector;
@@ -67,7 +67,7 @@ public class ShowlSqlTransformTest {
 	private ShowlManager showlManager;
 	private NamespaceManager nsManager = new MemoryNamespaceManager();
 	private Graph graph = new MemoryGraph(nsManager);
-	private MappingStrategy strategy = new MappingStrategy();
+	private ObsoleteMappingStrategy strategy = new ObsoleteMappingStrategy();
 	private ShowlSqlTransform transform = new ShowlSqlTransform();
 	private OwlReasoner reasoner = new OwlReasoner(graph);
 	private ShapeManager shapeManager = new MemoryShapeManager();
@@ -77,9 +77,9 @@ public class ShowlSqlTransformTest {
 		GcpShapeConfig.init();
 		load(resourcePath);
 		URI shapeIri = uri(shapeId);
-		ShowlNodeShape node = showlManager.getNodeShape(shapeIri).findAny();
+		ShowlNodeShape node = showlManager.getNodeShapeSet(shapeIri).findAny();
 
-		strategy.selectMappings(node);
+		strategy.selectMappings(showlManager, node);
 		
 		return transform.createInsert(node, GoogleBigQueryTable.class);
 	}

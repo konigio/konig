@@ -27,10 +27,14 @@ import java.util.Set;
 import io.konig.shacl.Shape;
 
 public class ShowlRootTargetClassSelector implements ShowlSourceNodeSelector {
+	
+	public ShowlRootTargetClassSelector() {
+		
+	}
 
 	@Override
-	public Set<Shape> selectCandidateSources(ShowlNodeShape targetShape) {
-		Set<Shape> result=new HashSet<>();
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape) {
+		Set<ShowlNodeShape> result=new HashSet<>();
 		ShowlClass owlClass = targetShape.getOwlClass();
 		if (!ShowlUtil.isUndefinedClass(owlClass)) {
 			for (ShowlNodeShape nodeB : owlClass.getTargetClassOf()) {
@@ -38,7 +42,7 @@ public class ShowlRootTargetClassSelector implements ShowlSourceNodeSelector {
 					continue;
 				}
 				if (nodeB.isNamedRoot()) {
-					result.add(nodeB.getShape());
+					result.add(factory.createNodeShape(nodeB.getShape()));
 				}
 			}
 		}

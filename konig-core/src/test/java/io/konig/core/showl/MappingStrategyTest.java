@@ -48,15 +48,15 @@ public class MappingStrategyTest {
 
 	private ShowlManager showlManager;
 	private NamespaceManager nsManager;
-	private MappingStrategy strategy = new MappingStrategy();
+	private ObsoleteMappingStrategy strategy = new ObsoleteMappingStrategy();
 
 	@Test
 	public void testTabular() throws Exception {
 		load("src/test/resources/MappingStrategyTest/tabular");
 		URI shapeId = uri("http://example.com/ns/shape/PersonTargetShape");
-		ShowlNodeShape node = showlManager.getNodeShape(shapeId).findAny();
+		ShowlNodeShape node = showlManager.getNodeShapeSet(shapeId).findAny();
 		
-		List<ShowlPropertyShape> remains = strategy.selectMappings(node);
+		List<ShowlDirectPropertyShape> remains = strategy.selectMappings(showlManager, node);
 		
 		ShowlPropertyShape givenName = node.findProperty(Schema.givenName);
 		

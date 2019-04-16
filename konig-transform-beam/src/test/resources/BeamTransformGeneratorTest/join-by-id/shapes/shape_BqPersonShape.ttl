@@ -21,7 +21,7 @@ shape:BqPersonShape sh:property  [
 		sh:class schema:Organization ]  ; 
 	a sh:Shape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> ; 
-	konig:explicitDerivedFrom shape:PersonNameShape , shape:PersonAlumniOfShape ; 
+# konig:explicitDerivedFrom shape:PersonNameShape , shape:PersonAlumniOfShape ; 
 	sh:nodeKind sh:IRI ; 
 	sh:targetClass schema:Person . 
 

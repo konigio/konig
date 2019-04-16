@@ -1,0 +1,33 @@
+@prefix crm: <http://example.com/ns/crm/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:AccountShape sh:property  [ 
+		sh:path crm:accountType ; 
+		rdf:predicate crm:accountType ; 
+		sh:nodeKind sh:IRI ; 
+		sh:class crm:AccountType ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path crm:industry ; 
+		rdf:predicate crm:industry ; 
+		sh:nodeKind sh:IRI ; 
+		sh:class crm:Industry ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Account> ; 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass crm:Account . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Account> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "crm" ; 
+		gcp:tableId "Account" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	a konig:GoogleBigQueryTable , konig:DataSource . 

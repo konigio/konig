@@ -83,7 +83,7 @@ public class CubeShapeBuilder {
 			Shape shape = produceShape(shapeId);
 			shape.setNodeShapeCube(cube);
 			
-			addVariable(shape, cube.getSource());
+			addVariable(shape, cube, cube.getSource());
 			
 			for (Dimension dim : cube.getDimension()) {
 				for (Level level : dim.getLevel()) {
@@ -104,11 +104,12 @@ public class CubeShapeBuilder {
 			
 		}
 
-		private void addVariable(Shape shape, Variable source) {
+		private void addVariable(Shape shape, Cube cube, Variable source) {
 			
 			PropertyConstraint p = shape.getVariableById(source.getId());
 			if (p == null) {
-				p = new PropertyConstraint(source.getId());
+				URI predicate = CubeUtil.predicate(cube, source.getId());
+				p = new PropertyConstraint(predicate);
 				shape.addVariable(p);
 			}
 			
@@ -116,14 +117,27 @@ public class CubeShapeBuilder {
 			
 			sourceVariable = p;
 			
+			shape.setTargetClass(targetClass(cube));
+			
 			
 		}
+		
+		private URI targetClass(Cube cube) {
+			StringBuilder builder = new StringBuilder();
+			builder.append(cube.getId().stringValue());
+			String variableType = RdfUtil.uri(sourceVariable.getValueClass()).getLocalName();
+			builder.append("/ns/Raw");
+			builder.append(variableType);
+			builder.append("Fact");
+			return new URIImpl(builder.toString());
+		}
+
 
 		private void addLevel(Shape shape, Cube cube, Dimension dim, Level level) throws CubeShapeException {
-			
-			PropertyConstraint p = shape.getPropertyConstraint(level.getId());
+			URI predicate = CubeUtil.predicate(cube, level.getId());
+			PropertyConstraint p = shape.getPropertyConstraint(predicate);
 			if (p == null) {
-				p = new PropertyConstraint(level.getId());
+				p = new PropertyConstraint(predicate);
 				shape.add(p);
 			}
 			p.setMinCount(0);
@@ -136,7 +150,7 @@ public class CubeShapeBuilder {
 				URI levelShapeId = uri(shapeNamespace + cube.getId().getLocalName() + "RawShape/level/" + level.getId().getLocalName() + "Shape");
 				Shape levelShape = produceShape(levelShapeId);
 				p.setShape(levelShape);
-				addAttributes(levelShape, level, p.getFormula());
+				addAttributes(levelShape, cube, level, p.getFormula());
 				
 			} else {
 				setDatatype(p, p.getFormula(), level.getId());
@@ -145,7 +159,7 @@ public class CubeShapeBuilder {
 		}
 
 
-		private void addAttributes(Shape shape, Level level, QuantifiedExpression levelFormula) throws CubeShapeException {
+		private void addAttributes(Shape shape, Cube cube, Level level, QuantifiedExpression levelFormula) throws CubeShapeException {
 			
 			for (Attribute attr : level.getAttribute()) {
 				
@@ -154,9 +168,10 @@ public class CubeShapeBuilder {
 					continue;
 				}
 				
-				PropertyConstraint p = shape.getPropertyConstraint(attr.getId());
+				URI predicate = CubeUtil.predicate(cube, attr.getId());
+				PropertyConstraint p = shape.getPropertyConstraint(predicate);
 				if (p == null) {
-					p = new PropertyConstraint(attr.getId());
+					p = new PropertyConstraint(predicate);
 					shape.add(p);
 				}
 				

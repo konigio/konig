@@ -1,6 +1,6 @@
 package io.konig.core.showl;
 
-import java.util.Collections;
+import java.util.HashSet;
 
 /*
  * #%L
@@ -25,21 +25,18 @@ import java.util.Collections;
 
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.konig.shacl.Shape;
 
 public class ExplicitDerivedFromSelector implements ShowlSourceNodeSelector {
 	@Override
-	public Set<Shape> selectCandidateSources(ShowlNodeShape targetShape) {
-		Set<Shape> result = targetShape.getShape().getExplicitDerivedFrom();
-		if (!result.isEmpty()) {
-			return result;
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape) {
+		Set<ShowlNodeShape> result = new HashSet<>();
+		Set<Shape> candidates = targetShape.getShape().getExplicitDerivedFrom();
+		for (Shape shape : candidates) {
+			result.add(factory.createNodeShape(shape));
 		}
 		
-		
-		return Collections.emptySet();
+		return result;
 	}
 
 }

@@ -21,28 +21,32 @@ package io.konig.core.showl;
  */
 
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
-import io.konig.core.vocab.Konig;
-import io.konig.shacl.Shape;
+public class ObsoleteShowlNodeListingConsumer implements ShowlNodeShapeConsumer {
+	
+	private List<ShowlNodeShape> list = new ArrayList<>();
+	private ObsoleteMappingStrategy mappingStrategy;
+	
+	
 
-public class IdentityMappingSelector implements ShowlSourceNodeSelector {
-
-	@Override
-	public Set<Shape> selectCandidateSources(ShowlNodeShape targetShape) {
-		
-		Shape target = targetShape.getShape();
-		
-		if (target.hasDataSourceType(Konig.GoogleBigQueryTable) && target.hasDataSourceType(Konig.GoogleCloudStorageBucket)) {
-			Set<Shape> set = new HashSet<>();
-			set.add(target);
-			return set;
-		}
-		
-		return Collections.emptySet();
+	public ObsoleteShowlNodeListingConsumer(ObsoleteMappingStrategy mappingStrategy) {
+		this.mappingStrategy = mappingStrategy;
 	}
 
+	@Override
+	public void consume(ShowlNodeShape node) throws ShowlProcessingException {
+		if (mappingStrategy != null) {
+//			mappingStrategy.selectMappings(node);
+		}
+		list.add(node);
+	}
+
+	public List<ShowlNodeShape> getList() {
+		return list;
+	}
+	
+	
 
 }

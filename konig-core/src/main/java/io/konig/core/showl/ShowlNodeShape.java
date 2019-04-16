@@ -67,6 +67,9 @@ public class ShowlNodeShape implements Traversable {
 	private ShowlDataSource shapeDataSource;
 	private boolean unmapped;
 	
+	private List<ShowlChannel> channelList;
+	private ShowlPropertyShape targetProperty;
+	
 	
 	public ShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
 		derivedProperties = new HashMap<>();
@@ -102,11 +105,22 @@ public class ShowlNodeShape implements Traversable {
 		return null;
 	}
 	
+	/**
+	 * Get the properties of some otherNode that are reachable from the selected mappings
+	 * of this NodeShape.
+	 */
 	public Set<ShowlPropertyShape> joinProperties(ShowlNodeShape otherNode) throws ShowlProcessingException {
 
 		Set<ShowlPropertyShape> set = new HashSet<>();
 		
 		for (ShowlDirectPropertyShape p : getProperties()) {
+			
+			if (p.getValueShape() != null) {
+				
+				Set<ShowlPropertyShape> nested = p.getValueShape().joinProperties(otherNode);
+				set.addAll(nested);
+				continue;
+			}
 			
 			ShowlMapping mapping = p.getSelectedMapping();
 			if (mapping == null) {
@@ -114,6 +128,8 @@ public class ShowlNodeShape implements Traversable {
 			}
 			
 			ShowlPropertyShape otherProperty = mapping.findOther(p);
+			
+				
 			if (otherNode == otherProperty.getDeclaringShape()) {
 				addMappedProperty(set, otherProperty, p);
 			}
@@ -155,6 +171,7 @@ public class ShowlNodeShape implements Traversable {
 	
 	private void addMappedProperty(Set<ShowlPropertyShape> set, ShowlPropertyShape other, ShowlPropertyShape target) {
 
+		
 		
 		if ((other instanceof ShowlDirectPropertyShape) || 
 			(other instanceof ShowlStaticPropertyShape) ||
@@ -273,11 +290,23 @@ public class ShowlNodeShape implements Traversable {
 		return properties.get(predicate);
 	}
 	
+	/**
+	 * Get the list of derived properties having a specified predicate.
+	 * This is a list because there are multiple ways in which a given property might be derived:
+	 * <ol>
+	 *   <li> Explicit derived property having a formula within the sh:NodeShape
+	 *   <li> Implicit property from some other formula that includes the predicate in a path expression.
+	 * </ol>
+	 * 
+	 * In the case where the property is induced from a path expression, a separate entry is required
+	 * for each path expression that has a filter.
+	 */
 	public ShowlDerivedPropertyList getDerivedProperty(URI predicate) {
 		ShowlDerivedPropertyList list = derivedProperties.get(predicate);
-		return list == null ? (ShowlDerivedPropertyList) Collections.EMPTY_LIST : list;
+		return list == null ? new ShowlDerivedPropertyList(predicate) : list;
 	}
 	
+
 	public Resource getId() {
 		return shape.getId();
 	}
@@ -330,6 +359,22 @@ public class ShowlNodeShape implements Traversable {
 			derivedProperties.put(p.getPredicate(),  list);
 		}
 		list.add(p);
+	}
+	
+	public ShowlPropertyShape findOut(URI predicate) {
+		ShowlPropertyShape p = properties.get(predicate);
+		if (p != null) {
+			return p;
+		}
+		ShowlDerivedPropertyList indirect = derivedProperties.get(predicate);
+		if (indirect != null) {
+			for (ShowlDerivedPropertyShape derived : indirect) {
+				// TODO: Do we need special handling for filtered properties?
+				return derived;
+			}
+		}
+		
+		return null;
 	}
 	
 	public List<ShowlPropertyShape> out(URI predicate) {
@@ -446,6 +491,53 @@ public class ShowlNodeShape implements Traversable {
 	public void setShapeDataSource(ShowlDataSource shapeDataSource) {
 		this.shapeDataSource = shapeDataSource;
 	}
+	
+	public void addChannel(ShowlChannel channel) {
+		if (channelList == null) {
+			channelList = new ArrayList<>();
+		}
+		channelList.add(channel);
+		
+	}
 
+	public List<ShowlChannel> getChannels() {
+		return channelList == null ? Collections.emptyList() : channelList;
+	}
+	
+	/**
+	 * Get all properties from a specified source NodeShape that contribute to the 
+	 * definition of this target NodeShape.
+	 */
+	public Set<ShowlPropertyShape> selectedPropertiesOf(ShowlNodeShape sourceNodeShape) {
+		Set<ShowlPropertyShape> set = new HashSet<>();
+		addSelectedProperties(set, sourceNodeShape);
+		return set;
+	}
+
+	private void addSelectedProperties(Set<ShowlPropertyShape> set, ShowlNodeShape sourceNodeShape) {
+		for (ShowlDirectPropertyShape direct : getProperties()) {
+			ShowlExpression e = direct.getSelectedExpression();
+			if (e != null) {
+				e.addRequiredProperties(sourceNodeShape, set);
+			}
+			if (direct.getValueShape() != null) {
+				addSelectedProperties(set, direct.getValueShape());
+			}
+		}
+		
+	}
+
+	/**
+	 * Get the property on the target NodeShape to which this
+	 * source NodeShape is bound.
+	 */
+	public ShowlPropertyShape getTargetProperty() {
+		return targetProperty;
+	}
+
+	public void setTargetProperty(ShowlPropertyShape targetProperty) {
+		this.targetProperty = targetProperty;
+	}
+	
 	
 }

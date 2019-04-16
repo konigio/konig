@@ -38,6 +38,17 @@ public class ShowlDerivedPropertyList extends ArrayList<ShowlDerivedPropertyShap
 		return predicate;
 	}
 	
-	
+	/**
+	 * Return the one derived property in this list that is not filtered, or null
+	 * if no such property is found.
+	 */
+	public ShowlDerivedPropertyShape unfiltered() {
+		for (ShowlDerivedPropertyShape p : this) {
+			if (p.getHasValue().isEmpty()) {
+				return p;
+			}
+		}
+		return null;
+	}
 
 }

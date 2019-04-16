@@ -1,0 +1,84 @@
+@prefix cadl: <http://www.konig.io/ns/cadl/> .
+@prefix crm: <http://example.com/ns/crm/> .
+@prefix cube: <http://example.com/cube/> .
+
+@base <http://example.com/cube/OpportunityRevenueCube/> .
+cube:OpportunityRevenueCube a cadl:Cube ; 
+	cadl:source <source/opportunity> ; 
+	cadl:dimension <dimension/timeDim> , <dimension/accountDim> ; 
+	cadl:measure <measure/expectedRevenue> . 
+
+<source/opportunity> a cadl:Variable ; 
+	cadl:valueType crm:Opportunity . 
+
+<dimension/timeDim> a cadl:Dimension ; 
+	cadl:level <dimension/timeDim/level/day> , <dimension/timeDim/level/month> , <dimension/timeDim/level/year> . 
+
+<dimension/timeDim/level/day> a cadl:Level ; 
+	cadl:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term dateCreated <http://schema.org/dateCreated>
+
+DAY(?opportunity.dateCreated)''' . 
+
+<dimension/timeDim/level/month> a cadl:Level ; 
+	cadl:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term dateCreated <http://schema.org/dateCreated>
+
+MONTH(?opportunity.dateCreated)''' . 
+
+<dimension/timeDim/level/year> a cadl:Level ; 
+	cadl:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term dateCreated <http://schema.org/dateCreated>
+
+YEAR(?opportunity.dateCreated)''' . 
+
+<dimension/accountDim> a cadl:Dimension ; 
+	cadl:level <dimension/accountDim/level/account> , <dimension/accountDim/level/industry> , <dimension/accountDim/level/accountType> . 
+
+<dimension/accountDim/level/account> a cadl:Level ; 
+	cadl:attribute <dimension/accountDim/level/account/attribute/id> , <dimension/accountDim/level/account/attribute/name> ; 
+	cadl:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term customerAccount <http://example.com/ns/crm/customerAccount>
+
+?opportunity.customerAccount''' . 
+
+<dimension/accountDim/level/account/attribute/id> a cadl:Attribute . 
+
+<dimension/accountDim/level/account/attribute/name> a cadl:Attribute . 
+
+<dimension/accountDim/level/industry> a cadl:Level ; 
+	cadl:attribute <dimension/accountDim/level/industry/attribute/id> , <dimension/accountDim/level/industry/attribute/name> ; 
+	cadl:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term customerAccount <http://example.com/ns/crm/customerAccount>
+@term industry <http://example.com/ns/crm/industry>
+
+?opportunity.customerAccount.industry''' . 
+
+<dimension/accountDim/level/industry/attribute/id> a cadl:Attribute . 
+
+<dimension/accountDim/level/industry/attribute/name> a cadl:Attribute . 
+
+<dimension/accountDim/level/accountType> a cadl:Level ; 
+	cadl:attribute <dimension/accountDim/level/accountType/attribute/id> , <dimension/accountDim/level/accountType/attribute/name> ; 
+	cadl:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term customerAccount <http://example.com/ns/crm/customerAccount>
+@term accountType <http://example.com/ns/crm/accountType>
+
+?opportunity.customerAccount.accountType''' . 
+
+<dimension/accountDim/level/accountType/attribute/id> a cadl:Attribute . 
+
+<dimension/accountDim/level/accountType/attribute/name> a cadl:Attribute . 
+
+<measure/expectedRevenue> a cadl:Measure ; 
+	cadl:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term salePrice <http://example.com/ns/crm/salePrice>
+
+SUM(?opportunity.salePrice)''' . 

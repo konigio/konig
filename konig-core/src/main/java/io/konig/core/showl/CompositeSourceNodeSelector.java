@@ -43,10 +43,10 @@ public class CompositeSourceNodeSelector implements ShowlSourceNodeSelector {
 	}
 
 	@Override
-	public Set<Shape> selectCandidateSources(ShowlNodeShape targetShape) {
-		Set<Shape> set = null;
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape) {
+		Set<ShowlNodeShape> set = null;
 		for (ShowlSourceNodeSelector s : list) {
-			Set<Shape> t = s.selectCandidateSources(targetShape);
+			Set<ShowlNodeShape> t = s.selectCandidateSources(factory, targetShape);
 			if (!t.isEmpty()) {
 				if (set == null) {
 					set = new HashSet<>();

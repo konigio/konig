@@ -27,19 +27,14 @@ import java.util.List;
 public class ShowlNodeListingConsumer implements ShowlNodeShapeConsumer {
 	
 	private List<ShowlNodeShape> list = new ArrayList<>();
-	private MappingStrategy mappingStrategy;
 	
 	
 
-	public ShowlNodeListingConsumer(MappingStrategy mappingStrategy) {
-		this.mappingStrategy = mappingStrategy;
+	public ShowlNodeListingConsumer() {
 	}
 
 	@Override
 	public void consume(ShowlNodeShape node) throws ShowlProcessingException {
-		if (mappingStrategy != null) {
-			mappingStrategy.selectMappings(node);
-		}
 		list.add(node);
 	}
 

@@ -1,0 +1,36 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonTargetShape sh:property  [ 
+		sh:path schema:givenName ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate schema:givenName ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
+	konig:explicitDerivedFrom shape:PersonSourceShape ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "PersonTarget"
+	 ]  ; 
+	konig:ddlFile  [ 
+		konig:relativePath "target/generated/gcp/bigquery/view/schema.PersonTarget.json" ; 
+		konig:baseProject <urn:maven:io.konig.examples.sheet-download-1.0.0>
+	 ]  ; 
+	konig:transformFile  [ 
+		konig:relativePath "target/generated/gcp/bigquery/scripts/schema.PersonTarget.dml.sql" ; 
+		konig:baseProject <urn:maven:io.konig.examples.sheet-download-1.0.0> ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:EDW . 

@@ -53,11 +53,13 @@ public abstract class ShowlPropertyShape implements Traversable {
 	private ShowlProperty property;
 	private PropertyConstraint propertyConstraint;
 	private ShowlNodeShape valueShape;
-	private ShowlPropertyShape peer;
 	private Map<ShowlJoinCondition, ShowlMapping> mappings;
 	private Map<ShowlPropertyShape, ShowlJoinCondition> joinConditions;
 	private ShowlMapping selectedMapping;
 	private Set<Value> hasValue;
+	private Set<ShowlPropertyShape> peerGroup = new HashSet<>();
+	
+	private List<ShowlExpression> expressionList = new ArrayList<>();
 	
 	public ShowlPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, PropertyConstraint propertyConstraint) {
 		this.declaringShape = declaringShape;
@@ -212,7 +214,7 @@ public abstract class ShowlPropertyShape implements Traversable {
 	 * The link connects the PropertyShape that declares the Formula to the tail of the path in the formula.
 	 */
 	public ShowlPropertyShape getPeer() {
-		return peer;
+		return peerGroup.size()==1 ? peerGroup.iterator().next() : null;
 	}
 	
 	/**
@@ -220,12 +222,16 @@ public abstract class ShowlPropertyShape implements Traversable {
 	 * The link connects the PropertyShape that declares the Formula to the tail of the path in the formula.
 	 * 
 	 */
-	void setPeer(ShowlPropertyShape peer) {
+	void addPeer(ShowlPropertyShape peer) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("setPeer: {} <=> {}", this.getPath(), peer.getPath());
+			logger.debug("addPeer: {} <=> {}", this.getPath(), peer.getPath());
 		}
-		this.peer = peer;
-		peer.peer = this;
+		peerGroup.add(peer);
+		peer.peerGroup.add(this);
+	}
+	
+	public Set<ShowlPropertyShape> getPeerGroup() {
+		return peerGroup;
 	}
 	
 	public void addJoinCondition(ShowlJoinCondition join) {
@@ -278,4 +284,41 @@ public abstract class ShowlPropertyShape implements Traversable {
 		hasValue.add(value);
 	}
 
+	public List<ShowlExpression> getExpressionList() {
+		return expressionList;
+	}
+
+	public void addExpression(ShowlExpression expression) {
+		expressionList.add(expression);
+	}
+	
+	public boolean isDeclaredWithin(ShowlNodeShape node) {
+		for (ShowlNodeShape parent=declaringShape; 
+				parent!=null; 
+				parent = parent.getAccessor()==null ? null : parent.getAccessor().getDeclaringShape()) {
+		
+			if (parent == node) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public boolean inSameNodeShape(ShowlPropertyShape other) {
+		return other.isDeclaredWithin(declaringShape) || isDeclaredWithin(other.getDeclaringShape());
+	}
+	
+	public ShowlPropertyShape getSynonym() {
+		for (ShowlExpression e : expressionList) {
+			if (e instanceof ShowlPropertyExpression) {
+				ShowlPropertyShape other = ((ShowlPropertyExpression) e).getSourceProperty();
+				if (inSameNodeShape(other)) {
+					return other;
+				}
+				
+			}
+		}
+		return null;
+	}
 }

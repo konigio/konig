@@ -23,7 +23,12 @@ import org.slf4j.LoggerFactory;
  * #L%
  */
 
-
+/**
+ * Expresses the mapping for a given direct property on a target NodeShape.
+ * 
+ * @author Greg McFall
+ *
+ */
 public class ShowlMapping {
 	private static final Logger logger = LoggerFactory.getLogger(ShowlMapping.class);
 	
