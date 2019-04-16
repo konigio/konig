@@ -289,6 +289,9 @@ public abstract class ShowlPropertyShape implements Traversable {
 	}
 
 	public void addExpression(ShowlExpression expression) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("{}.addExpression({})", getPath(), expression.displayValue());
+		}
 		expressionList.add(expression);
 	}
 	

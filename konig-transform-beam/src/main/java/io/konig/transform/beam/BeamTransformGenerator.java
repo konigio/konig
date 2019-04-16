@@ -79,6 +79,8 @@ import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
@@ -110,6 +112,8 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlClass;
+import io.konig.core.showl.ShowlDerivedPropertyExpression;
+import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlEqualStatement;
@@ -143,6 +147,7 @@ import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 
 public class BeamTransformGenerator {
+	private static final Logger logger = LoggerFactory.getLogger(BeamTransformGenerator.class);
 	private static final List<RewriteRule> rewriteRuleList = new ArrayList<>();
 	
 	static {
@@ -174,7 +179,7 @@ public class BeamTransformGenerator {
 			// Consider refactoring so that we don't need to check that explicitDerivedFrom is not empty.
 			// The list of nodes from the request should already be filtered!
 			
-			if (!node.getShape().getExplicitDerivedFrom().isEmpty()) {
+//			if (!node.getShape().getExplicitDerivedFrom().isEmpty()) {
 				File projectDir = projectDir(request, node);
 				childProjectList.add(projectDir);
 				JCodeModel model = new JCodeModel();
@@ -194,7 +199,7 @@ public class BeamTransformGenerator {
 				} catch (IOException e) {
 					throw new BeamTransformGenerationException("Failed to save Beam Transform code", e);
 				}
-			}
+//			}
 		}
 
 		generateBeamParentPom(request, childProjectList);
@@ -812,9 +817,9 @@ public class BeamTransformGenerator {
 			if (sourceNode == channel.getSourceNode()) {
 				return channel;
 			}
-			for (ShowlChannel c : key.getRootNode().getChannels()) {
+			for (ShowlChannel c : targetNode.getChannels()) {
 				if (sourceNode == c.getSourceNode()) {
-					return channel;
+					return c;
 				}
 			}
 			
@@ -823,6 +828,10 @@ public class BeamTransformGenerator {
 
 
 		private void generateFileToKvFn(ShowlPropertyShape keyProperty, ShowlChannel channel) throws BeamTransformGenerationException, JClassAlreadyExistsException {
+			
+			if (logger.isTraceEnabled()) {
+				logger.trace("generateFileToKvFn({})", keyProperty.getPath());
+			}
 			
 			URI sourceNodeId = RdfUtil.uri(channel.getSourceNode().getId());
 			SourceInfo info = sourceInfoMap.get(sourceNodeId);
@@ -839,7 +848,10 @@ public class BeamTransformGenerator {
 
 		private ShowlPropertyShape rightKey(ShowlStatement joinStatement) throws BeamTransformGenerationException {
 			if (joinStatement instanceof ShowlEqualStatement) {
-				((ShowlEqualStatement) joinStatement).getRight();
+				ShowlExpression e = ((ShowlEqualStatement) joinStatement).getRight();
+				if (e instanceof ShowlDirectPropertyExpression) {
+					return ((ShowlDirectPropertyExpression) e).getSourceProperty();
+				}
 			}
 			throw new BeamTransformGenerationException("Failed to get rightKey from " + joinStatement.toString());
 		}
@@ -848,7 +860,10 @@ public class BeamTransformGenerator {
 		private ShowlPropertyShape leftKey(ShowlStatement joinStatement) throws BeamTransformGenerationException {
 
 			if (joinStatement instanceof ShowlEqualStatement) {
-				((ShowlEqualStatement) joinStatement).getLeft();
+				ShowlExpression e = ((ShowlEqualStatement) joinStatement).getLeft();
+				if (e instanceof ShowlDirectPropertyExpression) {
+					return ((ShowlDirectPropertyExpression) e).getSourceProperty();
+				}
 			}
 			throw new BeamTransformGenerationException("Failed to get leftKey from " + joinStatement.toString());
 		}
@@ -891,6 +906,9 @@ public class BeamTransformGenerator {
 				
 				String simpleClassName = "Read" + shapeName + "Fn";
 				String className = className(namespacePrefix(shapeId), simpleClassName);
+		
+				logger.trace("generating class {}", className);
+				
 				thisClass = model._class(className)._extends(doFnClass);
 				
 				
@@ -899,6 +917,9 @@ public class BeamTransformGenerator {
 
 			@Override
 			protected void registerSourceField(ShowlPropertyShape sourceProperty, JVar fieldVar) {
+				if (logger.isTraceEnabled()) {
+					logger.trace("FileToKvFnGenerator.registerSourceField({})", sourceProperty.getPath() );
+				}
 				if (sourceProperty == keyProperty) {
 					keyPropertyVar = fieldVar;
 				}
@@ -2518,6 +2539,10 @@ public class BeamTransformGenerator {
 		
 		public ShowlNodeShape getFocusNode() {
 			return channel.getSourceNode();
+		}
+		
+		public String toString() {
+			return "SourceInfo(" + channel.toString() + ")";
 		}
 		
 	}

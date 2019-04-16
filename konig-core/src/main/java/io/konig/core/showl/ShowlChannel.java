@@ -24,7 +24,10 @@ public class ShowlChannel {
 		return joinStatement;
 	}
 	
-	
+	public String toString() {
+		return "ShowlChannel(" + sourceShape.getPath() + ", " + 
+				(joinStatement==null ? "null" : joinStatement.toString() + ")");
+	}
 
 	
 
