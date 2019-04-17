@@ -43,6 +43,7 @@ public class OntologySheet extends BaseSheetProcessor {
 	private static SheetColumn NAMESPACE_URI = new SheetColumn("Namespace URI", true);
 	private static SheetColumn PREFIX = new SheetColumn("Prefix", true);
 	private static SheetColumn IMPORTS = new SheetColumn("Imports");
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 
 	private NamespaceManager nsManager;
@@ -61,7 +62,8 @@ public class OntologySheet extends BaseSheetProcessor {
 			COMMENT,
 			NAMESPACE_URI,
 			PREFIX,
-			IMPORTS
+			IMPORTS,
+			PROJECT
 		};
 	}
 

@@ -104,6 +104,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 	private int maxErrorCount = 0;
 	private int errorCount;
 	private boolean showStackTrace=false;
+	private String acceptProject;
 	
 	
 	public WorkbookProcessorImpl(Graph graph, ShapeManager shapeManager, File templateDir) {
@@ -112,6 +113,19 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		this.shapeManager = shapeManager;
 	}
 	
+	/**
+	 * Get the identifier for the Maven project to accept, in the form "{groupId}:{artifactId}"
+	 */
+	public String getAcceptProject() {
+		return acceptProject;
+	}
+	/**
+	 * Set the identifier for the Maven project to accept, in the form "{groupId}:{artifactId}"
+	 */
+	public void setAcceptProject(String acceptProject) {
+		this.acceptProject = acceptProject;
+	}
+
 	public void init() {
 
 		if (nsHandler == null) {
@@ -442,6 +456,8 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		Sheet sheet = bookSheet.getSheet();
 
 		int rowSize = sheet.getLastRowNum() + 1;
+		
+		SheetColumn projectColumn = filterByProject(bookSheet);
 
 		// Skip the first row since it is the column header row
 		for (int i = sheet.getFirstRowNum() + 1; i < rowSize; i++) {
@@ -450,7 +466,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 				SheetRow sheetRow = new SheetRow(bookSheet, row);
 				sheetRow.setUndeclaredColumns(undeclaredColumns);
 				try {
-					if (accept(sheetRow, processor)) {
+					if (accept(sheetRow, processor, projectColumn)) {
 							processor.visit(sheetRow);
 					}
 				} catch (SpreadsheetException e) {
@@ -462,11 +478,26 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		
 	}
 
-	private boolean accept(SheetRow sheetRow, SheetProcessor processor) throws SpreadsheetException {
+	private SheetColumn filterByProject(WorkbookSheet bookSheet) {
+		if (acceptProject != null) {
+			return bookSheet.getProcessor().findColumnByName("Project");
+		}
+		return null;
+	}
+
+	private boolean accept(SheetRow sheetRow, SheetProcessor processor, SheetColumn projectColumn) throws SpreadsheetException {
 		Row row = sheetRow.getRow();
 		boolean foundAny = false;
+		
+		if (projectColumn !=null && projectColumn.getIndex()>=0) {
+			String projectList = stringValue(sheetRow, projectColumn);
+			if (projectList==null || !projectList.contains(acceptProject)) {
+				return false;
+			}
+		}
 		List<String> missingRequired = null;
 		for (SheetColumn column : processor.getColumns()) {
+			
 			
 			if (column.isRequired()) {
 				if (column.getIndex()<0) {

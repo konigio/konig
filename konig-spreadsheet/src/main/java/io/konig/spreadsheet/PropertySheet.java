@@ -57,6 +57,7 @@ public class PropertySheet extends BaseSheetProcessor {
 	static private final SheetColumn SUBJECT = new SheetColumn("Subject");
 	static private final SheetColumn SECURITY_CLASSIFICATION = new SheetColumn("Security Classification");
 	static private final SheetColumn RELATIONSHIP_DEGREE = new SheetColumn("Relationship Degree");
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static SheetColumn[] COLUMNS = new SheetColumn[]{
 		PROPERTY_NAME,
@@ -70,7 +71,8 @@ public class PropertySheet extends BaseSheetProcessor {
 		STATUS,
 		SUBJECT,
 		SECURITY_CLASSIFICATION,
-		RELATIONSHIP_DEGREE
+		RELATIONSHIP_DEGREE,
+		PROJECT
 	};
 	
 //	private Graph graph;

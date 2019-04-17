@@ -52,6 +52,7 @@ public class ShapeSheet extends BaseSheetProcessor {
 	private static final SheetColumn STATUS = new SheetColumn("Status");
 	private static final SheetColumn MEDIA_TYPE = new SheetColumn("Media Type");
 	private static final SheetColumn SUBJECT = new SheetColumn("Subject");
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[] {
 		SHAPE_ID,
@@ -67,7 +68,8 @@ public class ShapeSheet extends BaseSheetProcessor {
 		TABULAR_ORIGIN_SHAPE,
 		STATUS,
 		MEDIA_TYPE,
-		SUBJECT
+		SUBJECT,
+		PROJECT
 	};
 
 	private DataSourceGeneratorFactory dataSourceGeneratorFactory;
