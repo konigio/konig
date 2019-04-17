@@ -117,7 +117,11 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 						ShowlPropertyExpression left = ShowlPropertyExpression.from(leftId);
 						ShowlPropertyExpression right = ShowlPropertyExpression.from(rightId);
 						
-						return new ShowlEqualStatement(left, right);
+						ShowlStatement statement = new ShowlEqualStatement(left, right);
+						if (logger.isTraceEnabled()) {
+							logger.trace("joinStatement: {}", statement.toString());
+						}
+						return statement;
 					}
 					
 				}

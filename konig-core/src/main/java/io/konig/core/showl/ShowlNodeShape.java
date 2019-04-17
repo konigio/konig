@@ -506,19 +506,31 @@ public class ShowlNodeShape implements Traversable {
 	
 	/**
 	 * Get all properties from a specified source NodeShape that contribute to the 
-	 * definition of this target NodeShape.
+	 * definition of this target NodeShape.  This includes selected properties from the
+	 * source NodeShape, and properties in any join statements.
 	 */
 	public Set<ShowlPropertyShape> selectedPropertiesOf(ShowlNodeShape sourceNodeShape) {
 		Set<ShowlPropertyShape> set = new HashSet<>();
 		addSelectedProperties(set, sourceNodeShape);
+		addJoinProperties(set, sourceNodeShape);
 		return set;
+	}
+
+	private void addJoinProperties(Set<ShowlPropertyShape> set, ShowlNodeShape sourceNodeShape) {
+		for (ShowlChannel channel : getChannels()) {
+			ShowlStatement statement = channel.getJoinStatement();
+			if (statement != null) {
+				statement.addDeclaredProperties(sourceNodeShape, set);
+			}
+		}
+		
 	}
 
 	private void addSelectedProperties(Set<ShowlPropertyShape> set, ShowlNodeShape sourceNodeShape) {
 		for (ShowlDirectPropertyShape direct : getProperties()) {
 			ShowlExpression e = direct.getSelectedExpression();
 			if (e != null) {
-				e.addRequiredProperties(sourceNodeShape, set);
+				e.addDeclaredProperties(sourceNodeShape, set);
 			}
 			if (direct.getValueShape() != null) {
 				addSelectedProperties(set, direct.getValueShape());

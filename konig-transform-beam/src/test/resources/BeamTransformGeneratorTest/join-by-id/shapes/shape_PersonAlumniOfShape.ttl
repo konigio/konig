@@ -8,33 +8,18 @@
 
 shape:PersonAlumniOfShape sh:property  [ 
 		sh:path schema:alumniOf ; 
-		sh:maxCount 1 ; 
-		sh:minCount 0 ; 
-		sh:nodeKind sh:IRI ; 
 		rdf:predicate schema:alumniOf ; 
-		sh:class schema:Organization ]  ; 
+		sh:nodeKind sh:IRI ; 
+		sh:class schema:Organization ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ]  ; 
 	a sh:Shape ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> , <gs://personalumniofshape-${gcpBucketSuffix}> ; 
 	sh:nodeKind sh:IRI ; 
-	sh:targetClass schema:Person . 
-
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> gcp:tableReference  [ 
-		gcp:tableId "Person" ; 
-		gcp:datasetId "schema" ; 
-		gcp:projectId "${gcpProjectId}"
-	 ]  ; 
-	gcp:externalDataConfiguration  [ 
-		gcp:csvOptions  [ 
-			gcp:skipLeadingRows "1"^^xsd:long ]  ; 
-		gcp:sourceUris "gs://personalumniofshape-${gcpBucketSuffix}/*" ; 
-		gcp:sourceFormat "CSV" ]  ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+	sh:targetClass schema:Person ; 
+	konig:shapeDataSource <gs://personalumniofshape-${gcpBucketSuffix}> . 
 
 <gs://personalumniofshape-${gcpBucketSuffix}> gcp:name "personalumniofshape-${gcpBucketSuffix}" ; 
 	gcp:location "us" ; 
 	gcp:projectId "${gcpProjectId}" ; 
 	gcp:storageClass "multi_regional" ; 
-	gcp:notificationInfo  [ 
-		gcp:eventTypes "${eventType}" ; 
-		gcp:topic "${topicName}" ]  ; 
 	a konig:GoogleCloudStorageBucket , konig:DataSource . 

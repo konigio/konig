@@ -61,7 +61,7 @@ public class BeamTransformGeneratorTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private OwlReasoner reasoner = new OwlReasoner(graph);
 	private ShowlTargetNodeSelector targetNodeSelector = new HasDataSourceTypeSelector(Konig.GoogleBigQueryTable);
-	private ShapeFilter targetNodeFilter = new ExplicitDerivedFromFilter();
+	
 	private ShowlNodeListingConsumer consumer = new ShowlNodeListingConsumer();
 	private ShowlManager showlManager = new ShowlManager(
 			shapeManager, reasoner, targetNodeSelector, nodeSelector(shapeManager), consumer);

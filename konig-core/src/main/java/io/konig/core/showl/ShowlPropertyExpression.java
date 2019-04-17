@@ -47,8 +47,10 @@ public abstract class ShowlPropertyExpression implements ShowlExpression {
 	}
 
 	@Override
-	public void addRequiredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set) {
-		set.add(sourceProperty);
+	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set) {
+		if (sourceNodeShape.getRoot().equals(sourceProperty.getRootNode())) {
+			set.add(sourceProperty);
+		}
 	}
 	
 	

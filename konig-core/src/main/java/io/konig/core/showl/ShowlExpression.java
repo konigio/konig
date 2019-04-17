@@ -15,5 +15,11 @@ public interface ShowlExpression {
 	
 	public String displayValue();
 
-	public void addRequiredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set);
+	/**
+	 * Collect from this expression all properties declared by the specified source NodeShape, or any 
+	 * NodeShape nested within the source NodeShape.
+	 * @param sourceNodeShape
+	 * @param set  The set to which the properties should be added.
+	 */
+	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set);
 }

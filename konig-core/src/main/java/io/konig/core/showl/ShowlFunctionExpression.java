@@ -35,7 +35,7 @@ public class ShowlFunctionExpression implements ShowlExpression {
 	}
 
 	@Override
-	public void addRequiredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set) {
+	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set) {
 		
 		MyFormulaVisitor visitor = new MyFormulaVisitor(sourceNodeShape, set);
 		function.dispatch(visitor);

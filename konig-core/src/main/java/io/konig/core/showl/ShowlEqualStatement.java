@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.Set;
+
 public class ShowlEqualStatement implements ShowlStatement {
 	
 	private ShowlExpression left;
@@ -21,6 +23,14 @@ public class ShowlEqualStatement implements ShowlStatement {
 	public String toString() {
 		return left.displayValue() + " = " + right.displayValue();
 	}
+
+	@Override
+	public void addDeclaredProperties(ShowlNodeShape sourceNode, Set<ShowlPropertyShape> set) {
+		left.addDeclaredProperties(sourceNode, set);
+		right.addDeclaredProperties(sourceNode, set);
+		
+	}
+
 
 
 }

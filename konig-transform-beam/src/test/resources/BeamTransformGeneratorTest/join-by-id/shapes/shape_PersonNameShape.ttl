@@ -8,32 +8,17 @@
 
 shape:PersonNameShape sh:property  [ 
 		sh:path schema:givenName ; 
-		sh:maxCount 1 ; 
-		sh:minCount 0 ; 
+		rdf:predicate schema:givenName ; 
 		sh:datatype xsd:string ; 
-		rdf:predicate schema:givenName ]  ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ]  ; 
 	a sh:Shape ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> , <gs://personnameshape-${gcpBucketSuffix}> ; 
 	sh:nodeKind sh:IRI ; 
-	sh:targetClass schema:Person . 
-
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> gcp:tableReference  [ 
-		gcp:tableId "Person" ; 
-		gcp:datasetId "schema" ; 
-		gcp:projectId "${gcpProjectId}"
-	 ]  ; 
-	gcp:externalDataConfiguration  [ 
-		gcp:csvOptions  [ 
-			gcp:skipLeadingRows "1"^^xsd:long ]  ; 
-		gcp:sourceUris "gs://personnameshape-${gcpBucketSuffix}/*" ; 
-		gcp:sourceFormat "CSV" ]  ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+	sh:targetClass schema:Person ; 
+	konig:shapeDataSource <gs://personnameshape-${gcpBucketSuffix}> . 
 
 <gs://personnameshape-${gcpBucketSuffix}> gcp:name "personnameshape-${gcpBucketSuffix}" ; 
 	gcp:location "us" ; 
 	gcp:projectId "${gcpProjectId}" ; 
 	gcp:storageClass "multi_regional" ; 
-	gcp:notificationInfo  [ 
-		gcp:eventTypes "${eventType}" ; 
-		gcp:topic "${topicName}" ]  ; 
 	a konig:GoogleCloudStorageBucket , konig:DataSource . 

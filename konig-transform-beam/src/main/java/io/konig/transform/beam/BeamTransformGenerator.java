@@ -112,8 +112,6 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlClass;
-import io.konig.core.showl.ShowlDerivedPropertyExpression;
-import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlEqualStatement;
@@ -121,6 +119,7 @@ import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlMapping;
 import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStaticPropertyShape;
@@ -888,6 +887,10 @@ public class BeamTransformGenerator {
 					fail("keyProperty is null for source node {0}", sourceInfo.getFocusNode().getPath());
 				}
 				this.keyProperty = keyProperty;
+				if (logger.isTraceEnabled()) {
+					logger.trace("new FileToKvFnGenerator({}, keyProperty={})", 
+							sourceInfo.getFocusNode().getPath(), keyProperty.getPath());
+				}
 			}
 
 			private void generate() throws BeamTransformGenerationException, JClassAlreadyExistsException {
@@ -910,6 +913,8 @@ public class BeamTransformGenerator {
 				logger.trace("generating class {}", className);
 				
 				thisClass = model._class(className)._extends(doFnClass);
+				
+				sourceInfo.setReadFileFn(thisClass);
 				
 				
 				processElement();
@@ -1492,14 +1497,21 @@ public class BeamTransformGenerator {
 				JVar inputRow = forEach.var();
 				
 				for (ShowlDirectPropertyShape p : targetNode.getProperties()) {
-					ShowlMapping mapping = p.getSelectedMapping();
-					if (mapping == null) {
+					
+					ShowlExpression expression = p.getSelectedExpression();
+					if (expression == null) {
 						fail("Mapping not found for property {0}", p.getPath());
 					}
 					
-					ShowlPropertyShape other = mapping.findOther(p);
+					ShowlPropertyShape other = null;
+					if (expression instanceof ShowlPropertyExpression) {
+						other = ((ShowlPropertyExpression) expression).getSourceProperty();
+					} else {
+						fail("For property {0}, unsupported expression: {1}", p.getPath(), expression.displayValue());
+					}
+					
 					if (other.getDeclaringShape() == sourceInfo.getFocusNode()) {
-						transformProperty(method.body(), p, inputRow, outputRow, null);
+						transformProperty(forEach.body(), p, inputRow, outputRow, null);
 					}
 				}
 				
@@ -2071,18 +2083,21 @@ public class BeamTransformGenerator {
 			
 			
 			defineTupleTagsAndPcollections(body, p, optionsVar);
-			Map<URI,GroupInfo> groupMap = groupMap();
-			defineKeyedCollectionTuples(body, groupMap);
-			generateMergeFnClasses(groupMap);
-			applyMergeFnClasses(body, groupMap);
+			List<GroupInfo> groupList = groupList();
+			defineKeyedCollectionTuples(body, groupList);
+			generateMergeFnClasses(groupList);
+			applyMergeFnClasses(body, groupList);
 			
 
 		}
 
-		private void applyMergeFnClasses(JBlock body, Map<URI, GroupInfo> groupMap) throws BeamTransformGenerationException {
+		private void applyMergeFnClasses(JBlock body, List<GroupInfo> groupList) throws BeamTransformGenerationException {
 			
-			if (groupMap.size()==1) {
-				applySingleMerge(body, groupMap.values().iterator().next());
+			if (groupList.isEmpty()) {
+				fail("No groups found for {}", targetNode.getPath());
+			}
+			if (groupList.size()==1) {
+				applySingleMerge(body, groupList.get(0));
 			} else {
 				fail("Multiple groups not supported yet for {0}", targetNode.getPath());
 			}
@@ -2118,8 +2133,8 @@ public class BeamTransformGenerator {
 		}
 
 
-		private void generateMergeFnClasses(Map<URI, GroupInfo> groupMap) throws BeamTransformGenerationException {
-			for (GroupInfo groupInfo : groupMap.values()) {
+		private void generateMergeFnClasses(List<GroupInfo> groupList) throws BeamTransformGenerationException {
+			for (GroupInfo groupInfo : groupList) {
 				MergeFnGenerator generator = new MergeFnGenerator(groupInfo);
 				generator.generate();
 			}
@@ -2127,7 +2142,7 @@ public class BeamTransformGenerator {
 		}
 
 
-		private void defineKeyedCollectionTuples(JBlock body, Map<URI, GroupInfo> groupMap) {
+		private void defineKeyedCollectionTuples(JBlock body, List<GroupInfo> groupList) {
 			// For now, we require that the key is a string.
 			// We should relax this condition in the future.
 			
@@ -2139,9 +2154,9 @@ public class BeamTransformGenerator {
 			AbstractJClass coGroupByKeyClass = model.ref(CoGroupByKey.class);
 			
 			int count = 1;
-			for (GroupInfo groupInfo : groupMap.values()) {
+			for (GroupInfo groupInfo : groupList) {
 				
-				String varName = groupInfo.kvpCollectionName(count++, groupMap.size());
+				String varName = groupInfo.kvpCollectionName(count++, groupList.size());
 				
 				// PCollectionKV<String, CoGbkResult>> kvpCollection = KeyedPCollectionTuple
 				//   .of($firstTupleTag, $firstPCollection)
@@ -2172,23 +2187,54 @@ public class BeamTransformGenerator {
 		}
 
 
-		private Map<URI, GroupInfo> groupMap() throws BeamTransformGenerationException {
-			Map<URI,GroupInfo> map = new HashMap<>();
+		private List<GroupInfo> groupList() throws BeamTransformGenerationException {
+			List<GroupInfo> list = new ArrayList<>();
 			for (SourceInfo sourceInfo : sourceInfoMap.values()) {
-				ShowlNodeShape sourceNode = sourceInfo.getFocusNode();
-				
-				fail("need to reimplent the following code");
-//				ShowlPropertyShape p = targetNode.keyProperty(sourceNode, join);
-//				URI predicate = p.getPredicate();
-//				GroupInfo groupInfo = map.get(predicate);
-//				if (groupInfo == null) {
-//					groupInfo = new GroupInfo(predicate);
-//					map.put(predicate, groupInfo);
-//				}
-//				groupInfo.getSourceList().add(sourceInfo);
+				ShowlChannel channel = sourceInfo.getChannel();
+				ShowlStatement statement = channel.getJoinStatement();
+				if (statement instanceof ShowlEqualStatement) {
+					ShowlEqualStatement equal = (ShowlEqualStatement) statement;
+					
+					ShowlExpression left = equal.getLeft();
+					ShowlExpression right = equal.getRight();
+					
+					ShowlPropertyShape leftProperty = propertyOf(left);
+					ShowlPropertyShape rightProperty = propertyOf(right);
+					
+					SourceInfo leftInfo = sourceInfoFor(leftProperty);
+					SourceInfo rightInfo = sourceInfoFor(rightProperty);
+					
+					GroupInfo group = new GroupInfo();
+					group.getSourceList().add(leftInfo);
+					group.getSourceList().add(rightInfo);
+					
+					list.add(group);
+					
+				} else if (statement != null) {
+					fail("Unsupported statement: " + statement.toString());
+				}
 			}
-			return map;
+			return list;
 		}
+		private SourceInfo sourceInfoFor(ShowlPropertyShape p) throws BeamTransformGenerationException {
+			ShowlNodeShape root = p.getRootNode();
+			SourceInfo result = sourceInfoMap.get(RdfUtil.uri(root.getId()));
+			if (result == null) {
+				fail("SourceInfo not found for {0}", p.getPath());
+			}
+			return result;
+		}
+
+
+		private ShowlPropertyShape propertyOf(ShowlExpression e) throws BeamTransformGenerationException {
+			if (e instanceof ShowlPropertyExpression) {
+				return ((ShowlPropertyExpression) e).getSourceProperty();
+			}
+			fail("Cannot get property from: {0}", e.displayValue());
+			return null;
+		}
+
+
 
 
 		private void defineTupleTagsAndPcollections(JBlock block, JVar pipeline, JVar options) throws BeamTransformGenerationException {
@@ -2444,15 +2490,14 @@ public class BeamTransformGenerator {
 	
 	
 	private static class GroupInfo {
-		private URI predicate;
 		private List<SourceInfo> sourceList = new ArrayList<>();
 		private JVar kvpCollection;
 		private JDefinedClass mergeFnClass;
 		private JVar outputRowCollection;
 		
-		public GroupInfo(URI predicate) {
-			this.predicate = predicate;
+		public GroupInfo() {
 		}
+		
 		public String kvpCollectionName(int count, int size) {
 			
 			return size>1 ? "kvpCollection" + count : "kvpCollection";
@@ -2477,9 +2522,6 @@ public class BeamTransformGenerator {
 		}
 		public void setKvpCollection(JVar kvpCollection) {
 			this.kvpCollection = kvpCollection;
-		}
-		public URI getPredicate() {
-			return predicate;
 		}
 		public List<SourceInfo> getSourceList() {
 			return sourceList;
@@ -2511,6 +2553,23 @@ public class BeamTransformGenerator {
 
 		public SourceInfo(ShowlChannel channel) {
 			this.channel = channel;
+		}
+
+		public ShowlChannel getChannel() {
+			return channel;
+		}
+
+		public ShowlPropertyShape getKey() throws BeamTransformGenerationException {
+			if (channel.getJoinStatement() != null) {
+				Set<ShowlPropertyShape> set = new HashSet<>();
+				channel.getJoinStatement().addDeclaredProperties(channel.getSourceNode(), set);
+				
+				if (set.size()==1) {
+					return set.iterator().next();
+				}
+				
+			}
+			throw new BeamTransformGenerationException("key not found in " + channel.toString());
 		}
 
 		public JVar getPcollection() {
