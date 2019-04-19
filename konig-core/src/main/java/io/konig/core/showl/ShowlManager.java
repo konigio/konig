@@ -68,7 +68,6 @@ import io.konig.formula.VariableTerm;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
-import io.konig.shacl.ShapeFilter;
 import io.konig.shacl.ShapeManager;
 
 public class ShowlManager implements ShowlClassManager {
@@ -90,6 +89,8 @@ public class ShowlManager implements ShowlClassManager {
 	private Map<Resource, EnumMappingAction> enumMappingActions;
 	private ShowlFactory showlFactory;
 	private ShowlMappingStrategy mappingStrategy;
+	
+	private StaticDataSource staticDataSource = null;
 	
 	private Set<ShowlNodeShape> consumable;
 	
@@ -279,7 +280,9 @@ public class ShowlManager implements ShowlClassManager {
 		
 		for (ShowlNodeShape sourceNode : candidates) {
 
-			
+			if (logger.isTraceEnabled()) {
+				logger.trace("buildTransform: From source {} to target {}", sourceNode.getPath(), targetNode.getPath());
+			}
 		    for (ShowlDirectPropertyShape targetProperty : targetNode.getProperties()) {
 		    	
 		    	// Check for a direct match.
@@ -294,14 +297,94 @@ public class ShowlManager implements ShowlClassManager {
 			    	matched = matchProperty(sourceNode, synonym);
 		    	}
 		    	
-		    	
+		    	if (!matched) {
+		    		System.out.println("now what?");
+		    	}
 		    }
+		}
+		
+		// Add mappings to static enum values
+		
+		for (ShowlDirectPropertyShape direct : targetNode.getProperties()) {
 			
-			
+			ShowlNodeShape valueShape = direct.getValueShape();
+			if (valueShape != null) {
+				ShowlClass owlClass = valueShape.getOwlClass();
+				if (owlClass != null && reasoner.isEnumerationClass(owlClass.getId())) {
+					addEnumMappings(valueShape);
+				}
+			}
 			
 		}
 		
 		
+	}
+
+	private void addEnumMappings(ShowlNodeShape targetShape) {
+		
+		// We need two NodeShape instances for an enumeration.
+		
+		// The globalEnumShape keeps track of all properties of the Enumeration class that are referenced.
+		// This is necessary because the same enumeration might be referenced at more than one point within 
+		// the transform.  It's unlikely, but possible so we need to handle that case.
+		
+		// The localEnumShape keeps track of the properties of the Enumeration class that are referenced by
+		// the given targetShape.
+		
+		ShowlNodeShape globalEnumShape = showlFactory.logicalNodeShape(targetShape.getOwlClass().getId());
+		ShowlNodeShape localEnumShape = localEnumShape(globalEnumShape, targetShape);
+		
+		localEnumShape.setLogicalNodeShape(globalEnumShape);
+		
+		
+		for (ShowlDirectPropertyShape direct : targetShape.getProperties()) {
+			
+			// For now, we assume that every property of the enumTargetShape is available statically within
+			// the background graph.
+			
+			// We may need to back off that assumption later and consider synonyms.
+			
+			// Add the property from the target shape to both the global and the local Enumeration NodeShape.
+			// In the case of the globalEnumShape, this call will do nothing if the property already exists.
+			
+			directProperty(globalEnumShape, direct.getProperty());
+			
+			ShowlDirectPropertyShape localEnumProperty = directProperty(localEnumShape, direct.getProperty());
+			
+			direct.addExpression(new ShowlEnumPropertyExpression(localEnumProperty));
+			
+			if (logger.isTraceEnabled()) {
+				logger.trace("addEnumMapping: {}...{}", localEnumProperty.getPath(), direct.getPath());
+			}
+		}
+		
+	}
+
+	
+
+	private ShowlNodeShape localEnumShape(ShowlNodeShape globalEnumShape, ShowlNodeShape targetShape) {
+		ShowlNodeShape local = new ShowlNodeShape(null, globalEnumShape.getShape(), globalEnumShape.getOwlClass());
+		local.setTargetProperty(targetShape.getAccessor());
+		local.setShapeDataSource(new ShowlDataSource(local, staticDataSource()));
+		
+		return local;
+	}
+
+	private DataSource staticDataSource() {
+		if (staticDataSource == null) {
+			staticDataSource = new StaticDataSource();
+		}
+		return staticDataSource;
+	}
+
+	private ShowlDirectPropertyShape directProperty(ShowlNodeShape enumShape, ShowlProperty property) {
+		URI predicate = property.getPredicate();
+		ShowlDirectPropertyShape direct = enumShape.getProperty(predicate);
+		if (direct == null) {
+			direct = createDirectPropertyShape(enumShape, property, null);
+			enumShape.addProperty(direct);
+		}
+		return direct;
 	}
 
 	private boolean matchProperty(ShowlNodeShape sourceNode, ShowlPropertyShape targetProperty) {
@@ -1233,7 +1316,9 @@ public class ShowlManager implements ShowlClassManager {
 
 		ShowlNodeShape result = new ShowlNodeShape(accessor, shape, owlClass);
 		if (Konig.Undefined.equals(owlClass.getId())) {
-			classlessShapes.add(result);
+			if (classlessShapes != null) {
+				classlessShapes.add(result);
+			}
 		}
 		ShowlNodeShapeSet set = nodeShapes.get(shape.getId());
 		if (set == null) {
@@ -1914,6 +1999,7 @@ public class ShowlManager implements ShowlClassManager {
 				nodeShapes.put(shapeId, set);
 				Shape shape = new Shape(shapeId);
 				ShowlClass showlClass = produceOwlClass(owlClass);
+				shape.addShapeDataSource(staticDataSource());
 				
 				ShowlNodeShape node = new ShowlNodeShape(null, shape, showlClass);
 				set.add(node);
@@ -1923,6 +2009,8 @@ public class ShowlManager implements ShowlClassManager {
 				
 				shape.setNodeKind(NodeKind.IRI);
 				addIdProperty(node);
+				
+				node.setShapeDataSource(new ShowlDataSource(node, staticDataSource()));
 				
 				return node;
 			}

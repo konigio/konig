@@ -9,27 +9,27 @@
 
 shape:OpportunityShape sh:property  [ 
 		sh:path schema:dateCreated ; 
-		rdf:predicate schema:dateCreated ; 
 		sh:datatype xsd:dateTime ; 
+		rdf:predicate schema:dateCreated ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
 		sh:path crm:customerAccount ; 
-		rdf:predicate crm:customerAccount ; 
-		sh:nodeKind sh:IRI ; 
 		sh:class crm:Account ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate crm:customerAccount ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
 		sh:path crm:salePrice ; 
-		rdf:predicate crm:salePrice ; 
 		sh:datatype xsd:float ; 
+		rdf:predicate crm:salePrice ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ]  ; 
 	a sh:Shape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Opportunity> ; 
-	sh:nodeKind sh:IRI ; 
-	sh:targetClass crm:Opportunity . 
+	sh:targetClass crm:Opportunity ; 
+	sh:nodeKind sh:IRI . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Opportunity> gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 

@@ -324,4 +324,27 @@ public abstract class ShowlPropertyShape implements Traversable {
 		}
 		return null;
 	}
+
+	public List<ShowlPropertyShape> propertyPath() {
+		List<ShowlPropertyShape> list = new ArrayList<>();
+		for (ShowlPropertyShape p = this; p!=null; p=p.getDeclaringShape().getAccessor()) {
+			list.add(p);
+		}
+		Collections.reverse(list);
+		return list;
+	}
+
+	/**
+	 * Return the synonym of this property if the synonym is direct.  Otherwise, return this property.
+	 */
+	public ShowlPropertyShape maybeDirect() {
+		if (this instanceof ShowlDirectPropertyShape) {
+			return this;
+		}
+		ShowlPropertyShape synonym = getSynonym();
+		if (synonym instanceof ShowlDirectPropertyShape) {
+			return synonym;
+		}
+		return this;
+	}
 }

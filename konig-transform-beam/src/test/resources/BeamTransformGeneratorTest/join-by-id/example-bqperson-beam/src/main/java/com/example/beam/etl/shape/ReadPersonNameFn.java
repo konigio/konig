@@ -38,13 +38,13 @@ public class ReadPersonNameFn
                 CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180);
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
-                    String id = stringValue(record.get("id"));
-                    if (id!= null) {
-                        row.set("id", id);
-                    }
                     String givenName = stringValue(record.get("givenName"));
                     if (givenName!= null) {
                         row.set("givenName", givenName);
+                    }
+                    String id = stringValue(record.get("id"));
+                    if (id!= null) {
+                        row.set("id", id);
                     }
                     if (!row.isEmpty()) {
                         c.output(KV.of(id.toString(), row));

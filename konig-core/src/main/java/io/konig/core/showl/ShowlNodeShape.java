@@ -25,8 +25,10 @@ import java.util.ArrayList;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,6 +71,10 @@ public class ShowlNodeShape implements Traversable {
 	
 	private List<ShowlChannel> channelList;
 	private ShowlPropertyShape targetProperty;
+	private ShowlStatement joinStatement;
+	
+	@Deprecated
+	private ShowlNodeShape logicalNodeShape;
 	
 	
 	public ShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
@@ -79,6 +85,10 @@ public class ShowlNodeShape implements Traversable {
 		if (accessor != null) {
 			accessor.setValueShape(this);
 		}
+	}
+	
+	public boolean isStaticEnumShape() {
+		return shapeDataSource!=null && shapeDataSource.getDataSource() instanceof StaticDataSource;
 	}
 	
 	/**
@@ -197,28 +207,47 @@ public class ShowlNodeShape implements Traversable {
 		
 	}
 	
+	@Deprecated
 	public ShowlPropertyShape enumSourceKey(OwlReasoner reasoner) {
 		if (accessor != null && reasoner.isEnumerationClass(owlClass.getId())) {
-			ShowlMapping mapping = accessor.getSelectedMapping();
-			if (mapping != null) {
-				ShowlPropertyShape otherAccessor = mapping.findOther(accessor);
-				ShowlNodeShape sourceNode = otherAccessor.getValueShape();
-				if (sourceNode != null) {
-					for (ShowlPropertyShape p : sourceNode.allOutwardProperties()) {
-						if (reasoner.isInverseFunctionalProperty(p.getPredicate())) {
-							if (p.isDirect()) {
-								return p;
-							}
-							
-							ShowlPropertyShape peer = p.getPeer();
-							if (peer instanceof ShowlDirectPropertyShape) {
-								return peer;
-							}
-						}
-						
+			for (ShowlDirectPropertyShape direct : getProperties()) {
+				ShowlExpression e = direct.getSelectedExpression();
+				if (e != null) {
+					System.out.print(e.displayValue());
+					System.out.println();
+				}
+				
+				if (e instanceof ShowlEnumPropertyExpression) {
+					ShowlPropertyShape p = ((ShowlEnumPropertyExpression) e).getSourceProperty();
+					ShowlStatement joinStatement = p.getDeclaringShape().getJoinStatement();
+					if (joinStatement instanceof ShowlEqualStatement) {
+						ShowlEqualStatement equals = (ShowlEqualStatement)joinStatement;
+						return otherProperty(equals, p.getDeclaringShape());
 						
 					}
 				}
+			}
+		}
+		return null;
+	}
+
+	private ShowlPropertyShape otherProperty(ShowlEqualStatement equals, ShowlNodeShape declaringShape) {
+		if (equals != null) {
+			ShowlPropertyShape p = propertyOf(declaringShape, equals.getLeft());
+			if (p == null) {
+				p = propertyOf(declaringShape, equals.getRight());
+			}
+			return p;
+			
+		}
+		return null;
+	}
+
+	private ShowlPropertyShape propertyOf(ShowlNodeShape declaringShape, ShowlExpression e) {
+		if (e instanceof ShowlPropertyExpression) {
+			ShowlPropertyShape p = ((ShowlPropertyExpression) e).getSourceProperty();
+			if (p.getDeclaringShape() != declaringShape) {
+				return p;
 			}
 		}
 		return null;
@@ -509,11 +538,31 @@ public class ShowlNodeShape implements Traversable {
 	 * definition of this target NodeShape.  This includes selected properties from the
 	 * source NodeShape, and properties in any join statements.
 	 */
-	public Set<ShowlPropertyShape> selectedPropertiesOf(ShowlNodeShape sourceNodeShape) {
+	public List<ShowlPropertyShape> selectedPropertiesOf(ShowlNodeShape sourceNodeShape) {
 		Set<ShowlPropertyShape> set = new HashSet<>();
-		addSelectedProperties(set, sourceNodeShape);
+		Set<ShowlStatement> statements = new HashSet<>();
+		
+		sourceNodeShape = sourceNodeShape.getRoot();
+		addSelectedProperties(statements, set, this, sourceNodeShape);
 		addJoinProperties(set, sourceNodeShape);
-		return set;
+		
+		// Filter object properties.
+		Iterator<ShowlPropertyShape> sequence = set.iterator();
+		while (sequence.hasNext()) {
+			ShowlPropertyShape p = sequence.next();
+			if (p.getValueShape() != null) {
+				sequence.remove();
+			}
+		}
+		List<ShowlPropertyShape> list = new ArrayList<>(set);
+		Collections.sort(list, new Comparator<ShowlPropertyShape>() {
+
+			@Override
+			public int compare(ShowlPropertyShape a, ShowlPropertyShape b) {
+				return a.getPredicate().getLocalName().compareTo(b.getPredicate().getLocalName());
+			}
+		});
+		return list;
 	}
 
 	private void addJoinProperties(Set<ShowlPropertyShape> set, ShowlNodeShape sourceNodeShape) {
@@ -526,15 +575,26 @@ public class ShowlNodeShape implements Traversable {
 		
 	}
 
-	private void addSelectedProperties(Set<ShowlPropertyShape> set, ShowlNodeShape sourceNodeShape) {
-		for (ShowlDirectPropertyShape direct : getProperties()) {
+	private void addSelectedProperties(Set<ShowlStatement> statements, Set<ShowlPropertyShape> set, ShowlNodeShape targetNodeShape, ShowlNodeShape sourceNodeShape) {
+		
+		for (ShowlDirectPropertyShape direct : targetNodeShape.getProperties()) {
 			ShowlExpression e = direct.getSelectedExpression();
 			if (e != null) {
 				e.addDeclaredProperties(sourceNodeShape, set);
+				if (e instanceof ShowlPropertyExpression) {
+					ShowlPropertyShape p = ((ShowlPropertyExpression) e).getSourceProperty();
+					ShowlStatement statement = p.getDeclaringShape().getJoinStatement();
+					if (statement != null && !statements.contains(statement)) {
+						statements.add(statement);
+						statement.addDeclaredProperties(sourceNodeShape, set);
+					}
+				}
 			}
 			if (direct.getValueShape() != null) {
-				addSelectedProperties(set, direct.getValueShape());
+				addSelectedProperties(statements, set, direct.getValueShape(), sourceNodeShape);
 			}
+			
+			
 		}
 		
 	}
@@ -550,6 +610,27 @@ public class ShowlNodeShape implements Traversable {
 	public void setTargetProperty(ShowlPropertyShape targetProperty) {
 		this.targetProperty = targetProperty;
 	}
+
+	public ShowlNodeShape getLogicalNodeShape() {
+		return logicalNodeShape;
+	}
+
+	public void setLogicalNodeShape(ShowlNodeShape logicalNodeShape) {
+		this.logicalNodeShape = logicalNodeShape;
+	}
+
+	/**
+	 * Get the statement used to join this source NodeShape to some other source NodeShape(s)
+	 */
+	public ShowlStatement getJoinStatement() {
+		return joinStatement;
+	}
+
+	public void setJoinStatement(ShowlStatement joinStatement) {
+		this.joinStatement = joinStatement;
+	}
+
 	
+
 	
 }

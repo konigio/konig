@@ -33,6 +33,8 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -114,16 +116,17 @@ import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlClass;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
+import io.konig.core.showl.ShowlEnumPropertyExpression;
 import io.konig.core.showl.ShowlEqualStatement;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
-import io.konig.core.showl.ShowlMapping;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStaticPropertyShape;
 import io.konig.core.showl.ShowlTemplatePropertyShape;
+import io.konig.core.showl.StaticDataSource;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.IriTemplate;
@@ -744,16 +747,12 @@ public class BeamTransformGenerator {
 
 
 		private void addEnumClasses(Set<ShowlClass> enumClasses, ShowlNodeShape node) {
-			for (ShowlPropertyShape p : node.allOutwardProperties()) {
+			for (ShowlDirectPropertyShape p : node.getProperties()) {
 				
-				ShowlMapping m = p.getSelectedMapping();
-				if (m != null) {
-					ShowlPropertyShape other = m.findOther(p);
-
-					if (other instanceof ShowlStaticPropertyShape) {
-						ShowlNodeShape enumShape = other.getDeclaringShape();
-						enumClasses.add(enumShape.getOwlClass());
-					}
+				ShowlExpression e = p.getSelectedExpression();
+				if (e instanceof ShowlEnumPropertyExpression) {
+					ShowlPropertyShape q = ((ShowlEnumPropertyExpression) e).getSourceProperty();
+					enumClasses.add(q.getDeclaringShape().getOwlClass());
 				}
 				if (p.getValueShape() != null) {
 					addEnumClasses(enumClasses, p.getValueShape());
@@ -828,6 +827,11 @@ public class BeamTransformGenerator {
 
 		private void generateFileToKvFn(ShowlPropertyShape keyProperty, ShowlChannel channel) throws BeamTransformGenerationException, JClassAlreadyExistsException {
 			
+			ShowlNodeShape node = channel.getSourceNode();
+			if (isEnumNode(node)) {
+				return;
+			}
+			
 			if (logger.isTraceEnabled()) {
 				logger.trace("generateFileToKvFn({})", keyProperty.getPath());
 			}
@@ -845,11 +849,17 @@ public class BeamTransformGenerator {
 			
 		}
 
+		private boolean isEnumNode(ShowlNodeShape node) {
+		
+			return node.getShapeDataSource()!=null && node.getShapeDataSource().getDataSource() instanceof StaticDataSource;
+		}
+
+
 		private ShowlPropertyShape rightKey(ShowlStatement joinStatement) throws BeamTransformGenerationException {
 			if (joinStatement instanceof ShowlEqualStatement) {
 				ShowlExpression e = ((ShowlEqualStatement) joinStatement).getRight();
-				if (e instanceof ShowlDirectPropertyExpression) {
-					return ((ShowlDirectPropertyExpression) e).getSourceProperty();
+				if (e instanceof ShowlDirectPropertyExpression || e instanceof ShowlEnumPropertyExpression) {
+					return ((ShowlPropertyExpression) e).getSourceProperty();
 				}
 			}
 			throw new BeamTransformGenerationException("Failed to get rightKey from " + joinStatement.toString());
@@ -959,6 +969,7 @@ public class BeamTransformGenerator {
 			protected JDefinedClass thisClass;
 			private JMethod concatMethod = null;
 			private JMethod requiredMethod = null;
+			
 			protected void transformProperty(JBlock body, ShowlDirectPropertyShape p, JVar inputRow, JVar outputRow, JVar enumObject) throws BeamTransformGenerationException {
 				
 				
@@ -973,6 +984,12 @@ public class BeamTransformGenerator {
 					
 				} else if (e instanceof ShowlFunctionExpression) {
 					transformFunction(body, p, (ShowlFunctionExpression)e, inputRow, outputRow);
+				} else if (e instanceof ShowlEnumPropertyExpression) {
+					transformEnumProperty(body, p, (ShowlEnumPropertyExpression)e, inputRow, outputRow, enumObject);
+				} else if (p.getValueShape() != null) {
+					transformObjectProperty(body, p, inputRow, outputRow);
+				} else {
+					fail("At {0}, expression not supported: {1}", p.getPath(), e.displayValue());
 				}
 				
 
@@ -1013,6 +1030,29 @@ public class BeamTransformGenerator {
 				
 			}
 
+			private void transformEnumProperty(JBlock body, ShowlDirectPropertyShape p, ShowlEnumPropertyExpression e,
+					JVar inputRow, JVar outputRow, JVar enumObject) {
+				
+				URI predicate = p.getPredicate();
+				String fieldName = predicate.getLocalName();
+				
+				String getterName = "get" + StringUtil.capitalize(fieldName);
+				
+				AbstractJClass fieldType = model.ref(Object.class);
+				
+				
+				// Object $fieldName = enumObject.get("$fieldName");
+				JVar field = body.decl(fieldType, fieldName, enumObject.invoke(getterName));
+				
+				// if ($field != null) {
+				//  outputRow.set("$fieldName", $field);
+				// }
+				
+				body._if(field.ne(JExpr._null()))._then().add(outputRow.invoke("set").arg(JExpr.lit(fieldName)).arg(field));
+				
+				
+			}
+
 			private void transformFunction(JBlock body, ShowlDirectPropertyShape p, ShowlFunctionExpression e, JVar inputRow, JVar outputRow) throws BeamTransformGenerationException {
 				
 				FunctionExpression function = e.getFunction();
@@ -1023,7 +1063,7 @@ public class BeamTransformGenerator {
 			}
 
 			private void transformConcat(JBlock body, ShowlDirectPropertyShape p, FunctionExpression function, JVar inputRow, JVar outputRow) throws BeamTransformGenerationException {
-				JMethod requiredMethod = declareRequiredMethod();
+				declareRequiredMethod();
 				JMethod concatMethod = declareConcatMethod();
 				
 				AbstractJClass objectClass = model.ref(Object.class);
@@ -1143,6 +1183,8 @@ public class BeamTransformGenerator {
 					JVar outputRow) throws BeamTransformGenerationException {
 				
 				ShowlNodeShape valueShape = p.getValueShape();
+				
+				ShowlStatement joinStatement = valueShape.getJoinStatement();
 
 				ShowlPropertyShape enumSourceKey = valueShape.enumSourceKey(reasoner);
 				if (enumSourceKey != null) {
@@ -1570,7 +1612,7 @@ public class BeamTransformGenerator {
 			
 			protected void processElement() throws BeamTransformGenerationException {
 				
-				Set<ShowlPropertyShape> sourceProperties = sourceProperties();
+				List<ShowlPropertyShape> sourceProperties = sourceProperties();
 				
 				
 				// @ProcessElement
@@ -1713,21 +1755,24 @@ public class BeamTransformGenerator {
 
 			abstract protected void deliverOutput(JBlock outputBlock, JVar c, JVar row) throws BeamTransformGenerationException;
 
-			protected Set<ShowlPropertyShape> sourceProperties() throws BeamTransformGenerationException {
+			protected List<ShowlPropertyShape> sourceProperties() throws BeamTransformGenerationException {
 				
+
+				List<ShowlPropertyShape> list = targetNode.selectedPropertiesOf(sourceInfo.getFocusNode());
 				
-				Set<ShowlPropertyShape> set = targetNode.selectedPropertiesOf(sourceInfo.getFocusNode());
-				
-				for (ShowlPropertyShape p : set) {
+				for (ShowlPropertyShape p : list) {
 				
 					declareDatatypeGetter(p);
 					
 					
 				}
-				return set;
+				
+				
+				return list;
 			}
 
 			
+
 
 			protected JFieldVar patternField() {
 				if (patternField == null) {
@@ -2094,7 +2139,7 @@ public class BeamTransformGenerator {
 		private void applyMergeFnClasses(JBlock body, List<GroupInfo> groupList) throws BeamTransformGenerationException {
 			
 			if (groupList.isEmpty()) {
-				fail("No groups found for {}", targetNode.getPath());
+				fail("No groups found for {0}", targetNode.getPath());
 			}
 			if (groupList.size()==1) {
 				applySingleMerge(body, groupList.get(0));
@@ -2189,7 +2234,8 @@ public class BeamTransformGenerator {
 
 		private List<GroupInfo> groupList() throws BeamTransformGenerationException {
 			List<GroupInfo> list = new ArrayList<>();
-			for (SourceInfo sourceInfo : sourceInfoMap.values()) {
+			
+			for (SourceInfo sourceInfo : sortedSourceInfoList()) {
 				ShowlChannel channel = sourceInfo.getChannel();
 				ShowlStatement statement = channel.getJoinStatement();
 				if (statement instanceof ShowlEqualStatement) {
@@ -2208,6 +2254,8 @@ public class BeamTransformGenerator {
 					group.getSourceList().add(leftInfo);
 					group.getSourceList().add(rightInfo);
 					
+					sortSourceInfo(group.getSourceList());
+					
 					list.add(group);
 					
 				} else if (statement != null) {
@@ -2216,6 +2264,7 @@ public class BeamTransformGenerator {
 			}
 			return list;
 		}
+		
 		private SourceInfo sourceInfoFor(ShowlPropertyShape p) throws BeamTransformGenerationException {
 			ShowlNodeShape root = p.getRootNode();
 			SourceInfo result = sourceInfoMap.get(RdfUtil.uri(root.getId()));
@@ -2235,6 +2284,26 @@ public class BeamTransformGenerator {
 		}
 
 
+		private List<SourceInfo> sortedSourceInfoList() {
+			List<SourceInfo> list = new ArrayList<>(sourceInfoMap.values());
+			sortSourceInfo(list);
+			return list;
+		}
+		
+		private void sortSourceInfo(List<SourceInfo> list) {
+
+			Collections.sort(list, new Comparator<SourceInfo>(){
+
+				@Override
+				public int compare(SourceInfo a, SourceInfo b) {
+					URI nodeA = RdfUtil.uri(a.getFocusNode().getId());
+					URI nodeB = RdfUtil.uri(b.getFocusNode().getId());
+					
+					return nodeA.getLocalName().compareTo(nodeB.getLocalName());
+				}
+				
+			});
+		}
 
 
 		private void defineTupleTagsAndPcollections(JBlock block, JVar pipeline, JVar options) throws BeamTransformGenerationException {
@@ -2244,7 +2313,9 @@ public class BeamTransformGenerator {
 			AbstractJClass fileIoClass = model.ref(FileIO.class);
 			AbstractJClass stringClass = model.ref(String.class);
 			AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(stringClass);
-			for (SourceInfo sourceInfo : sourceInfoMap.values()) {
+			
+		
+			for (SourceInfo sourceInfo : sortedSourceInfoList()) {
 				ShowlNodeShape node = sourceInfo.getFocusNode();
 				set.add(node);
 				URI shapeId = RdfUtil.uri(node.getId());

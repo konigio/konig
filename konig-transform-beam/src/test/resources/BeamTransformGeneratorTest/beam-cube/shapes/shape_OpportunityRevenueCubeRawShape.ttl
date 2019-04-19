@@ -14,8 +14,8 @@ shape:OpportunityRevenueCubeRawShape sh:property  [
 @term dateCreated <http://schema.org/dateCreated>
 
 DAY(?opportunity.dateCreated)''' ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/day> ; 
 		sh:datatype xsd:dateTime ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/day> ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
@@ -25,8 +25,8 @@ DAY(?opportunity.dateCreated)''' ;
 @term dateCreated <http://schema.org/dateCreated>
 
 MONTH(?opportunity.dateCreated)''' ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/month> ; 
 		sh:datatype xsd:dateTime ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/month> ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
@@ -36,8 +36,8 @@ MONTH(?opportunity.dateCreated)''' ;
 @term dateCreated <http://schema.org/dateCreated>
 
 YEAR(?opportunity.dateCreated)''' ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/year> ; 
 		sh:datatype xsd:dateTime ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/year> ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
@@ -47,8 +47,8 @@ YEAR(?opportunity.dateCreated)''' ;
 @term customerAccount <http://example.com/ns/crm/customerAccount>
 
 ?opportunity.customerAccount''' ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/account> ; 
 		sh:shape <http://example.com/shape/OpportunityRevenueCubeRawShape/level/accountShape> ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/account> ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
@@ -59,8 +59,8 @@ YEAR(?opportunity.dateCreated)''' ;
 @term industry <http://example.com/ns/crm/industry>
 
 ?opportunity.customerAccount.industry''' ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/industry> ; 
 		sh:shape <http://example.com/shape/OpportunityRevenueCubeRawShape/level/industryShape> ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/industry> ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
@@ -71,18 +71,18 @@ YEAR(?opportunity.dateCreated)''' ;
 @term accountType <http://example.com/ns/crm/accountType>
 
 ?opportunity.customerAccount.accountType''' ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/accountType> ; 
 		sh:shape <http://example.com/shape/OpportunityRevenueCubeRawShape/level/accountTypeShape> ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/accountType> ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ]  ; 
 	a sh:Shape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/RawOpportunityFact> ; 
+	sh:targetClass <http://example.com/cube/OpportunityRevenueCube/ns/RawOpportunityFact> ; 
 	konig:variable  [ 
 		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity> ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity> ; 
-		sh:class crm:Opportunity ]  ; 
-	konig:nodeShapeCube cube:OpportunityRevenueCube ; 
-	sh:targetClass <http://example.com/cube/OpportunityRevenueCube/ns/RawOpportunityFact> . 
+		sh:class crm:Opportunity ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity> ]  ; 
+	konig:nodeShapeCube cube:OpportunityRevenueCube . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/RawOpportunityFact> gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 

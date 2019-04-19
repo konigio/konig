@@ -29,10 +29,6 @@ public class MergePersonAlumniOfAndPersonNameFn
     {
         Iterable<TableRow> inputRowList = e.getValue().getAll(BqPersonShapeBeam.personAlumniOfTag);
         for (TableRow inputRow: inputRowList) {
-            Object id = inputRow.get("id");
-            if (id!= null) {
-                outputRow.set("id", id);
-            }
             Object alumniOf = inputRow.get("alumniOf");
             if (alumniOf!= null) {
                 outputRow.set("alumniOf", alumniOf);
@@ -45,6 +41,10 @@ public class MergePersonAlumniOfAndPersonNameFn
     {
         Iterable<TableRow> inputRowList = e.getValue().getAll(BqPersonShapeBeam.personNameTag);
         for (TableRow inputRow: inputRowList) {
+            Object id = inputRow.get("id");
+            if (id!= null) {
+                outputRow.set("id", id);
+            }
             Object givenName = inputRow.get("givenName");
             if (givenName!= null) {
                 outputRow.set("givenName", givenName);

@@ -8,26 +8,25 @@
 
 shape:AccountShape sh:property  [ 
 		sh:path crm:accountType ; 
-		rdf:predicate crm:accountType ; 
-		sh:nodeKind sh:IRI ; 
 		sh:class crm:AccountType ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate crm:accountType ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
 		sh:path crm:industry ; 
-		rdf:predicate crm:industry ; 
-		sh:nodeKind sh:IRI ; 
 		sh:class crm:Industry ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate crm:industry ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ]  ; 
 	a sh:Shape ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Account> ; 
-	sh:nodeKind sh:IRI ; 
-	sh:targetClass crm:Account . 
+	konig:shapeDataSource <gs://accountshape-${gcpBucketSuffix}> ; 
+	sh:targetClass crm:Account ; 
+	sh:nodeKind sh:IRI . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Account> gcp:tableReference  [ 
-		gcp:projectId "${gcpProjectId}" ; 
-		gcp:datasetId "crm" ; 
-		gcp:tableId "Account" ]  ; 
-	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+<gs://accountshape-${gcpBucketSuffix}> gcp:name "accountshape-${gcpBucketSuffix}" ; 
+	gcp:location "us" ; 
+	gcp:projectId "${gcpProjectId}" ; 
+	gcp:storageClass "multi_regional" ; 
+	a konig:GoogleCloudStorageBucket , konig:DataSource . 

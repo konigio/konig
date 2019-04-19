@@ -12,8 +12,8 @@
 @term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
 
 ?opportunity.customerAccount.industry.name''' ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/industry/attribute/name> ; 
 		sh:datatype xsd:string ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/industry/attribute/name> ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ]  ; 
 	a sh:Shape ; 

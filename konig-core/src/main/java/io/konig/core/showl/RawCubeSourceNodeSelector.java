@@ -37,7 +37,6 @@ import io.konig.shacl.ShapeManager;
 public class RawCubeSourceNodeSelector implements ShowlSourceNodeSelector {
 	private ShapeManager shapeManager;
 	
-	
 
 	public RawCubeSourceNodeSelector(ShapeManager shapeManager) {
 		this.shapeManager = shapeManager;
@@ -62,7 +61,7 @@ public class RawCubeSourceNodeSelector implements ShowlSourceNodeSelector {
 					// For now, we only consider candidates that have a BigQuery data source.
 					// We should relax this constraint later.
 					
-					DataSource ds = candidate.findDataSourceByType(Konig.GoogleBigQueryTable);
+					DataSource ds = candidate.findDataSourceByType(Konig.GoogleCloudStorageBucket);
 					
 					if (ds != null) {
 						result.add(factory.createNodeShape(candidate, ds));
