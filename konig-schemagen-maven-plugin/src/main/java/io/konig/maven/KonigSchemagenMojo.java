@@ -118,13 +118,18 @@ import io.konig.core.io.SkosEmitter;
 import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
 import io.konig.core.project.ProjectManager;
+import io.konig.core.showl.CompositeSourceNodeSelector;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
+import io.konig.core.showl.GoogleStorageBucketSourceNodeSelector;
+import io.konig.core.showl.HasDataSourceTypeSelector;
 import io.konig.core.showl.MappingReport;
 import io.konig.core.showl.ObsoleteMappingStrategy;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ObsoleteShowlNodeListingConsumer;
+import io.konig.core.showl.RawCubeSourceNodeSelector;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlSourceNodeSelector;
+import io.konig.core.showl.ShowlTargetNodeSelector;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat;
@@ -1558,8 +1563,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 //		BigQueryTransformConsumer transformConsumer = new BigQueryTransformConsumer(folder);
 //		ShowlNodeShapeConsumer nodeConsumer = new ShowlSqlNodeConsumer(transformConsumer, mappingStrategy, transform);
 		
-		ShowlSourceNodeSelector sourceNodeSelector = new ExplicitDerivedFromSelector();
-		ShowlManager showlManager = new ShowlManager(shapeManager, owlReasoner, sourceNodeSelector, nodeConsumer);
+		ShowlTargetNodeSelector targetNodeSelector = new HasDataSourceTypeSelector(Konig.GoogleBigQueryTable);
+		ShowlManager showlManager = new ShowlManager(
+				shapeManager, owlReasoner, targetNodeSelector, nodeSelector(shapeManager), nodeConsumer);
 		showlManager.load();
 		
 		List<ShowlNodeShape> nodeList = nodeConsumer.getList();
@@ -1588,7 +1594,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 //		visitor.put(Konig.GoogleBigQueryTable, writer, some);
 		
 	}
-
+	private CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
+		return new CompositeSourceNodeSelector(
+				new RawCubeSourceNodeSelector(shapeManager),
+				new GoogleStorageBucketSourceNodeSelector(shapeManager),
+				new ExplicitDerivedFromSelector());
+	}
 
 	private RoutedSqlTransformVisitor sqlTransformVisitor() {
 		if (sqlTransformVisitor==null) {
