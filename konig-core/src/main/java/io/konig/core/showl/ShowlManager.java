@@ -1480,7 +1480,19 @@ public class ShowlManager implements ShowlClassManager {
 			if (logger.isTraceEnabled()) {
 				logger.trace("processFormula({})", ps.getPath());
 			}
-			e.dispatch(new PathVisitor(ps));
+			
+			PrimaryExpression primary = e.asPrimaryExpression();
+			if (primary instanceof IriValue) {
+				// Special handling for IriValue
+				
+				URI iri = ((IriValue) primary).getIri();
+				ShowlIriReferenceExpression ref = new ShowlIriReferenceExpression(iri, ps);
+				ps.addExpression(ref);
+				
+				
+			} else {
+				e.dispatch(new PathVisitor(ps));
+			}
 		}
 		
 	}

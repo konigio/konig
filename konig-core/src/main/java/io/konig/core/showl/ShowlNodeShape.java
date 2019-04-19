@@ -207,7 +207,6 @@ public class ShowlNodeShape implements Traversable {
 		
 	}
 	
-	@Deprecated
 	public ShowlPropertyShape enumSourceKey(OwlReasoner reasoner) {
 		if (accessor != null && reasoner.isEnumerationClass(owlClass.getId())) {
 			for (ShowlDirectPropertyShape direct : getProperties()) {

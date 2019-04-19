@@ -1,0 +1,23 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+schema: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "schema" ; 
+	rdfs:label "Schema.org" . 
+
+schema:Enumeration a owl:Class . 
+
+schema:GenderType a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration ; 
+	gcp:preferredGcpDatasetId "${classNamespacePrefix}" . 
+
+schema:Person a owl:Class . 
+
+schema:Female a schema:GenderType ; 
+	schema:name "Female" . 
+
+schema:Male a schema:GenderType ; 
+	schema:name "Male" . 
