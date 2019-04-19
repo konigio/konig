@@ -22,6 +22,8 @@ package io.konig.validation;
 
 
 public class RationalNumber {
+	
+	public static RationalNumber UNDEFINED = new RationalNumber(0,0);
 
 	private int numerator;
 	private int denominator;
@@ -42,6 +44,10 @@ public class RationalNumber {
 		}
 		
 		return new RationalNumber(numerator, denominator);
+	}
+	
+	public static RationalNumber safeValue(RationalNumber value) {
+		return value == null ? UNDEFINED : value;
 	}
 
 	public int getNumerator() {

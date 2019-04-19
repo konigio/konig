@@ -1170,6 +1170,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				processor.addService(gcpDeploymentSheet(processor));
 				processor.init();
 				processor.service(SettingsSheet.class).setOutDir(settingsDir);
+				
+				if (workbook.isApplyProjectFilter()) {
+					String acceptProject = mavenProject.getGroupId() + ":" + mavenProject.getArtifactId();
+					processor.setAcceptProject(acceptProject);
+				}
 
 				// WorkbookLoader workbookLoader = new
 				// WorkbookLoader(nsManager);

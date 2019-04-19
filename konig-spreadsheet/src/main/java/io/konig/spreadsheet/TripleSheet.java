@@ -29,11 +29,13 @@ public class TripleSheet extends BaseSheetProcessor {
 	private static final SheetColumn SUBJECT = new SheetColumn("Subject", true);
 	private static final SheetColumn PREDICATE = new SheetColumn("Predicate", true);
 	private static final SheetColumn OBJECT = new SheetColumn("Object", true);
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[] {
 		SUBJECT,
 		PREDICATE,
-		OBJECT
+		OBJECT,
+		PROJECT
 	};
 
 	@SuppressWarnings("unchecked")

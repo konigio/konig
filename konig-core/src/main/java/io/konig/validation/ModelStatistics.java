@@ -27,10 +27,10 @@ public class ModelStatistics {
 	private int numberOfNamedIndividuals;
 	private int numberOfShapes;
 	private int numberOfErrors;
-	private RationalNumber classesWithDescription;
-	private RationalNumber propertiesWithDescription;
-	private RationalNumber propertyShapesWithDescription;
-	private RationalNumber namedIndividualsWithDescription;
+	private RationalNumber classesWithDescription = RationalNumber.UNDEFINED;
+	private RationalNumber propertiesWithDescription = RationalNumber.UNDEFINED;
+	private RationalNumber propertyShapesWithDescription = RationalNumber.UNDEFINED;
+	private RationalNumber namedIndividualsWithDescription= RationalNumber.UNDEFINED;
 	
 	public int getNumberOfClasses() {
 		return numberOfClasses;
