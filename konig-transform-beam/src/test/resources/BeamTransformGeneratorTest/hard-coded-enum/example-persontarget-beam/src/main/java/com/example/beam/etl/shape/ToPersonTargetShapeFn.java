@@ -17,7 +17,11 @@ public class ToPersonTargetShapeFn
             TableRow outputRow = new TableRow();
             Object id = concat("http://example.com/person/", required(inputRow, "person_id"));
             outputRow.set("id", id);
-            transformGender(inputRow, outputRow);
+            setGender(outputRow);
+            Object first_name = inputRow.get("first_name");
+            if (first_name!= null) {
+                outputRow.set("givenName", first_name);
+            }
             if (!outputRow.isEmpty()) {
                 c.output(outputRow);
             }
@@ -42,8 +46,8 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private void transformGender(TableRow inputRow, TableRow outputRow) {
-        GenderType gender = GenderType.findByGenderCode(inputRow.get("gender_code").toString());
+    private void setGender(TableRow outputRow) {
+        GenderType gender = GenderType.Male;
         TableRow genderRow = new TableRow();
         Object id = gender.getId();
         if (id!= null) {
@@ -52,10 +56,6 @@ public class ToPersonTargetShapeFn
         Object name = gender.getName();
         if (name!= null) {
             genderRow.set("name", name);
-        }
-        Object genderCode = gender.getGenderCode();
-        if (genderCode!= null) {
-            genderRow.set("genderCode", genderCode);
         }
         if (!genderRow.isEmpty()) {
             outputRow.set("gender", genderRow);

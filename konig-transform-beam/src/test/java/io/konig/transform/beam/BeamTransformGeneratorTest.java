@@ -74,6 +74,13 @@ public class BeamTransformGeneratorTest {
 	}
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
+	@Test
+	public void testHardCodedEnum() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/hard-coded-enum");
+		
+	}
+
 	@Ignore
 	public void testBeamCube() throws Exception {
 		
@@ -81,21 +88,21 @@ public class BeamTransformGeneratorTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testModelSummary() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/model-summary", false);
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinById() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/join-by-id");
+		generateAll("src/test/resources/BeamTransformGeneratorTest/join-by-id", false);
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDateMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/date-mapping");
@@ -103,21 +110,21 @@ public class BeamTransformGeneratorTest {
 	}
 	
 
-	@Ignore
+	@Test
 	public void testTabularMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/tabular-mapping");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testLongMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/long-mapping");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testEnumMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-mapping");

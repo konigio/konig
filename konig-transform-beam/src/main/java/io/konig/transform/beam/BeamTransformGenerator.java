@@ -97,6 +97,7 @@ import com.helger.jcodemodel.JConditional;
 import com.helger.jcodemodel.JDefinedClass;
 import com.helger.jcodemodel.JEnumConstant;
 import com.helger.jcodemodel.JExpr;
+import com.helger.jcodemodel.JFieldRef;
 import com.helger.jcodemodel.JFieldVar;
 import com.helger.jcodemodel.JForEach;
 import com.helger.jcodemodel.JInvocation;
@@ -120,6 +121,7 @@ import io.konig.core.showl.ShowlEnumPropertyExpression;
 import io.konig.core.showl.ShowlEqualStatement;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
+import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
@@ -1184,11 +1186,16 @@ public class BeamTransformGenerator {
 				
 				ShowlNodeShape valueShape = p.getValueShape();
 				
-				ShowlStatement joinStatement = valueShape.getJoinStatement();
 
 				ShowlPropertyShape enumSourceKey = valueShape.enumSourceKey(reasoner);
 				if (enumSourceKey != null) {
 					transformEnumObject(body, p, enumSourceKey);
+					return;
+				}
+				
+				ShowlIriReferenceExpression iriRef = iriRef(p);
+				if (iriRef != null) {
+					transformHardCodedEnumObject(body, p, iriRef);
 					return;
 				}
 				
@@ -1213,6 +1220,72 @@ public class BeamTransformGenerator {
 
 			
 
+
+			private void transformHardCodedEnumObject(JBlock body, ShowlDirectPropertyShape p,
+					ShowlIriReferenceExpression iriRef) throws BeamTransformGenerationException {
+				
+ShowlNodeShape valueShape = p.getValueShape();
+				
+				URI targetProperty = p.getPredicate();
+				
+				String targetFieldName = targetProperty.getLocalName();
+				AbstractJClass tableRowClass = model.ref(TableRow.class);
+				
+				String enumTransformMethodName = "set" + StringUtil.capitalize(targetFieldName);
+				
+				JMethod method = toTargetFnClass.method(JMod.PRIVATE, model.VOID, enumTransformMethodName);
+				
+				
+				JVar outputRowParam = method.param(tableRowClass, "outputRow");
+				
+
+				JVar enumObject = hardCodedEnumObject(method.body(), iriRef, valueShape);
+				
+				
+				
+				// TableRow $targetFieldName = new TableRow();
+				
+				JVar fieldRow = method.body().decl(tableRowClass, targetFieldName + "Row", tableRowClass._new());
+				
+				for (ShowlDirectPropertyShape direct : valueShape.getProperties()) {
+					transformProperty(method.body(), direct, null, fieldRow, enumObject);
+					
+				}
+				//     if (!$fieldRow.isEmpty()) {
+		        //       outputRow.set("$targetFieldName", $targetFieldName);
+		        //     }
+				method.body()._if(fieldRow.invoke("isEmpty").not())._then()
+					.add(outputRowParam.invoke("set").arg(JExpr.lit(targetFieldName)).arg(fieldRow));
+				
+				
+				
+				body.add(JExpr.invoke(method).arg(outputRowParam));
+				
+			}
+
+			private JVar hardCodedEnumObject(JBlock block, ShowlIriReferenceExpression iriRef, ShowlNodeShape valueShape) throws BeamTransformGenerationException {
+
+				
+			
+				String individualLocalName = iriRef.getIriValue().getLocalName();
+				
+				String enumClassName = enumClassName(valueShape.getOwlClass().getId());
+				AbstractJClass enumClass = model.directClass(enumClassName);
+				JFieldRef fieldRef = enumClass.staticRef(individualLocalName);
+				URI property = valueShape.getAccessor().getPredicate();
+				
+				
+				
+				String varName = property.getLocalName();
+				return block.decl(enumClass, varName, fieldRef);
+			}
+
+			private ShowlIriReferenceExpression iriRef(ShowlDirectPropertyShape p) {
+				if (p.getSelectedExpression() instanceof ShowlIriReferenceExpression) {
+					return (ShowlIriReferenceExpression) p.getSelectedExpression();
+				}
+				return null;
+			}
 
 			protected void transformEnumObject(JBlock body, ShowlDirectPropertyShape p, 
 					ShowlPropertyShape enumSourceKey) throws BeamTransformGenerationException {
@@ -1246,10 +1319,10 @@ public class BeamTransformGenerator {
 					transformProperty(method.body(), direct, inputRowParam, fieldRow, enumObject);
 					
 				}
-				//     if (!$targetFieldName.isEmpty()) {
+				//     if (!$fieldRow.isEmpty()) {
 		        //       outputRow.set("$targetFieldName", $targetFieldName);
 		        //     }
-				method.body()._if(enumObject.invoke("isEmpty").not())._then()
+				method.body()._if(fieldRow.invoke("isEmpty").not())._then()
 					.add(outputRowParam.invoke("set").arg(JExpr.lit(targetFieldName)).arg(fieldRow));
 				
 				

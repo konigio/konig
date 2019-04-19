@@ -76,7 +76,11 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 		while (sequence.hasNext()) {
 			ShowlDirectPropertyShape p = sequence.next();
 			for (ShowlExpression e : p.getExpressionList()) {
-				if (e.rootNode() == sourceNode) {
+				
+				if (e instanceof ShowlIriReferenceExpression) {
+					sequence.remove();
+					p.setSelectedExpression(e);
+				} else	if (e.rootNode() == sourceNode) {
 					sequence.remove();
 					p.setSelectedExpression(e);
 					
@@ -159,6 +163,11 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 				} else if (hasStaticDataSource(sourceNode)) {
 					
 					
+					ShowlIriReferenceExpression iriRef = iriRef(sourceNode);
+					if (iriRef != null) {
+						return null;
+					}
+					
 					ShowlNodeShape leftJoinNode = findJoinNode(leftSourceNode, sourceNode.getTargetProperty());
 					
 					if (leftJoinNode != null) {
@@ -187,6 +196,19 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 			}
 			
 			throw new ShowlProcessingException("In target node, " + targetNode.getPath()  + ", failed to produce join statement for " + sourceNode.getPath());
+		}
+		return null;
+	}
+
+
+	private ShowlIriReferenceExpression iriRef(ShowlNodeShape sourceNode) {
+		ShowlPropertyShape targetProperty = sourceNode.getTargetProperty();
+		if (targetProperty != null) {
+			for (ShowlExpression e : targetProperty.getExpressionList()) {
+				if (e instanceof ShowlIriReferenceExpression) {
+					return (ShowlIriReferenceExpression) e;
+				}
+			}
 		}
 		return null;
 	}
