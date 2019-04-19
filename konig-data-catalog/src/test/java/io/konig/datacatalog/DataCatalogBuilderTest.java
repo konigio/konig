@@ -72,7 +72,7 @@ public class DataCatalogBuilderTest {
 		outDir.mkdirs();
 	}
 	
-	@Test
+	@Ignore
 	public void testMappings() throws Exception {
 
 		GcpShapeConfig.init();

@@ -732,6 +732,18 @@ public class Shape implements Cloneable {
 		
 	}
 	
+	public DataSource findDataSourceByType(URI type) {
+		if (shapeDataSource != null) {
+			for (DataSource ds : shapeDataSource) {
+				if (ds.isA(type)) {
+					return ds;
+				}
+			}
+		}
+		
+		return null;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public <T> T findDataSource(Class<T> type) {
 		if (shapeDataSource != null) {

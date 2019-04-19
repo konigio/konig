@@ -1,0 +1,19 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+shape: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "shape" . 
+
+shape:AccountShape konig:mediaTypeBaseName "application/vnd.example.example.com.shape.account" . 
+
+shape:OpportunityRevenueCubeRawShape konig:mediaTypeBaseName "application/vnd.example.example.com.shape.rawopportunityfact" . 
+
+shape:OpportunityShape konig:mediaTypeBaseName "application/vnd.example.example.com.shape.opportunity" . 
+
+<http://example.com/shape/OpportunityRevenueCubeRawShape/level/accountShape> konig:mediaTypeBaseName "application/vnd.example.opportunityrevenuecuberawshape.level.accountshape" . 
+
+<http://example.com/shape/OpportunityRevenueCubeRawShape/level/accountTypeShape> konig:mediaTypeBaseName "application/vnd.example.opportunityrevenuecuberawshape.level.accounttypeshape" . 
+
+<http://example.com/shape/OpportunityRevenueCubeRawShape/level/industryShape> konig:mediaTypeBaseName "application/vnd.example.opportunityrevenuecuberawshape.level.industryshape" . 

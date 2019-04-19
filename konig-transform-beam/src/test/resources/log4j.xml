@@ -43,6 +43,11 @@
       <appender-ref ref="console"/>
   </logger>
   
+   <logger name="io.konig.transform.beam" additivity="false">
+      <level value="trace"/>
+      <appender-ref ref="console"/>
+  </logger>
+  
   <root> 
     <priority value ="info" /> 
     <appender-ref ref="console" /> 

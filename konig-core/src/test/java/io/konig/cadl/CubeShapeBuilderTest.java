@@ -69,7 +69,7 @@ public class CubeShapeBuilderTest {
 		
 		Level accountLevel = cube.findDimensionByName("accountDim").findLevelByName("account");
 		
-		PropertyConstraint accountConstraint = shape.getPropertyConstraint(accountLevel.getId());
+		PropertyConstraint accountConstraint = shape.getPropertyConstraint(CubeUtil.predicate(cube, accountLevel.getId()));
 		assertTrue(accountConstraint != null);
 		
 		QuantifiedExpression formula = accountConstraint.getFormula();
@@ -81,7 +81,7 @@ public class CubeShapeBuilderTest {
 
 		
 		Attribute accountNameAttr = accountLevel.findAttributeByName("name");
-		PropertyConstraint accountNameConstraint = accountShape.getPropertyConstraint(accountNameAttr.getId());
+		PropertyConstraint accountNameConstraint = accountShape.getPropertyConstraint(CubeUtil.predicate(cube, accountNameAttr.getId()));
 		assertTrue(accountNameConstraint != null);
 		
 		formula = accountNameConstraint.getFormula();

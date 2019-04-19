@@ -23,7 +23,15 @@ package io.konig.formula;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openrdf.model.Literal;
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.impl.URIImpl;
+
+import io.konig.core.Context;
 import io.konig.core.io.PrettyPrintWriter;
+import io.konig.core.util.IriTemplate;
+import io.konig.core.util.ValueFormat;
 
 public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 	public static final String SUM = "SUM";
@@ -41,6 +49,35 @@ public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 	private String functionName;
 	private List<Expression> argList = new ArrayList<>();
 	private FunctionModel model;
+	
+	public static FunctionExpression fromIriTemplate(IriTemplate template) {
+		
+		List<Expression> argList = new ArrayList<>();
+		
+		Context context = template.getContext();
+		context.compile();
+		for (ValueFormat.Element e : template.toList()) {
+			
+			String text = e.getText();
+			switch (e.getType()) {
+			
+			case TEXT :
+				Literal literal = new LiteralImpl(text);
+				argList.add(ConditionalOrExpression.wrap(new LiteralFormula(literal)));
+				break;
+				
+			case VARIABLE:
+				URI iri = new URIImpl(context.expandIRI(text));
+				
+				FullyQualifiedIri iriTerm = new FullyQualifiedIri(iri);
+				argList.add(ConditionalOrExpression.wrap(iriTerm));
+				break;
+			}
+			
+		}
+		
+		return new FunctionExpression(FunctionModel.CONCAT, argList);
+	}
 
 	public FunctionExpression(FunctionModel model, Expression... arg) {
 

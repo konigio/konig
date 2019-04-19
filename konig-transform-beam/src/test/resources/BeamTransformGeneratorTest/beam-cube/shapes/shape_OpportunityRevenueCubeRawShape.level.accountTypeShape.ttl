@@ -1,0 +1,20 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.com/shape/OpportunityRevenueCubeRawShape/level/accountTypeShape> sh:property  [ 
+		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/accountType/attribute/name> ; 
+		konig:formula '''
+@term accountType <http://example.com/ns/crm/accountType>
+@term customerAccount <http://example.com/ns/crm/customerAccount>
+@term name <http://schema.org/name>
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+
+?opportunity.customerAccount.accountType.name''' ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/accountType/attribute/name> ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI . 

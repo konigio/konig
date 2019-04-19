@@ -41,13 +41,65 @@ public class EnumMappingAction {
 		this.enumTargetShape = enumTargetShape;
 		this.factory = factory;
 		this.reasoner = reasoner;
+		if (logger.isTraceEnabled()) {
+			logger.trace("new EnumMappingAction({})", enumTargetShape.getPath());
+		}
 	}
 
 	public ShowlNodeShape getEnumTargetShape() {
 		return enumTargetShape;
 	}
-
+	
 	public void execute() {
+		List<ShowlPropertyShape> inverseFunctionals = listInverseFunctionals();
+		
+		if (inverseFunctionals.isEmpty()) {
+			if (logger.isWarnEnabled()) {
+				StringBuilder builder = new StringBuilder();
+				String comma = "";
+				List<ShowlDirectPropertyShape> unmapped = unmappedProperties();
+				for (ShowlDirectPropertyShape direct : unmapped) {
+					builder.append(comma);
+					builder.append(direct.getPredicate().getLocalName());
+					comma = ", ";
+				}
+				logger.warn("In enumeration shape {}, no mapping found for: {} ", 
+						enumTargetShape.getPath(), builder.toString());
+			}
+		} else {
+			ShowlNodeShape enumSourceShape = factory.logicalNodeShape(enumTargetShape.getOwlClass().getId());
+			
+
+			
+			for (ShowlPropertyShape key : inverseFunctionals) {
+				
+			
+					
+				for (ShowlDirectPropertyShape direct : enumTargetShape.getProperties()) {
+					
+					if (direct == key) {
+						continue;
+					}
+					
+					// For now, we assume that every property of the enumTargetShape is available statically within
+					// the background graph.
+					
+					// We may need to back off that assumption later.
+					
+					
+					// TODO: eliminate ShowlStaticPropertyShape
+					ShowlStaticPropertyShape staticProperty = enumSourceShape.staticProperty(direct.getProperty());
+					
+					ShowlDerivedPropertyExpression e = new ShowlDerivedPropertyExpression(staticProperty);
+					direct.addExpression(e);
+					
+					
+				}
+			}
+		}
+	}
+
+	public void obsoleteExecute() {
 		
 		List<ShowlPropertyShape> inverseFunctionals = listInverseFunctionals();
 		
@@ -101,7 +153,7 @@ public class EnumMappingAction {
 				list.add(direct);
 				
 			} else {
-				ShowlPropertyShape peer = direct.getPeer();
+				ShowlPropertyShape peer = direct.getSynonym();
 				if (peer!=null && !peer.getMappings().isEmpty() && reasoner.isInverseFunctionalProperty(peer.getPredicate())) {
 					list.add(direct);
 				}

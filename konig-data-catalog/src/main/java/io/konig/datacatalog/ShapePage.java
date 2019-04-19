@@ -164,7 +164,7 @@ public class ShapePage {
 		ShowlManager manager = request.getBuildRequest().getShowlManager();
 		if (manager != null) {
 			URI predicate = info.getConstraint().getPredicate();
-			ShowlNodeShapeSet set = manager.getNodeShape(shapeId);
+			ShowlNodeShapeSet set = manager.getNodeShapeSet(shapeId);
 			if (!set.isEmpty()) {
 				List<MappedField> list = new ArrayList<>();
 				for (ShowlNodeShape node : set) {

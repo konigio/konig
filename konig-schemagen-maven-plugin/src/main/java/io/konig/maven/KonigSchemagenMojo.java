@@ -120,9 +120,9 @@ import io.konig.core.project.ProjectFolder;
 import io.konig.core.project.ProjectManager;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.MappingReport;
-import io.konig.core.showl.MappingStrategy;
+import io.konig.core.showl.ObsoleteMappingStrategy;
 import io.konig.core.showl.ShowlManager;
-import io.konig.core.showl.ShowlNodeListingConsumer;
+import io.konig.core.showl.ObsoleteShowlNodeListingConsumer;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlSourceNodeSelector;
 import io.konig.core.util.BasicJavaDatatypeMapper;
@@ -1551,8 +1551,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		// To that end, this method ought to simply configure the batch to include BigQuery transforms.
 		// For now, however, we'll go ahead and run the BigQuery transform job by itself.
 		
-		MappingStrategy mappingStrategy = new MappingStrategy();
-		ShowlNodeListingConsumer nodeConsumer = new ShowlNodeListingConsumer(mappingStrategy);
+		ObsoleteMappingStrategy mappingStrategy = new ObsoleteMappingStrategy();
+		ObsoleteShowlNodeListingConsumer nodeConsumer = new ObsoleteShowlNodeListingConsumer(mappingStrategy);
 		
 //		ShowlSqlTransform transform = new ShowlSqlTransform();
 //		BigQueryTransformConsumer transformConsumer = new BigQueryTransformConsumer(folder);

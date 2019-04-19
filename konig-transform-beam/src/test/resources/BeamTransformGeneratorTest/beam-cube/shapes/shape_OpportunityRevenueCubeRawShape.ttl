@@ -1,0 +1,92 @@
+@prefix crm: <http://example.com/ns/crm/> .
+@prefix cube: <http://example.com/cube/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:OpportunityRevenueCubeRawShape sh:property  [ 
+		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/day> ; 
+		konig:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term dateCreated <http://schema.org/dateCreated>
+
+DAY(?opportunity.dateCreated)''' ; 
+		sh:datatype xsd:dateTime ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/day> ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/month> ; 
+		konig:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term dateCreated <http://schema.org/dateCreated>
+
+MONTH(?opportunity.dateCreated)''' ; 
+		sh:datatype xsd:dateTime ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/month> ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/year> ; 
+		konig:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term dateCreated <http://schema.org/dateCreated>
+
+YEAR(?opportunity.dateCreated)''' ; 
+		sh:datatype xsd:dateTime ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/year> ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/account> ; 
+		konig:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term customerAccount <http://example.com/ns/crm/customerAccount>
+
+?opportunity.customerAccount''' ; 
+		sh:shape <http://example.com/shape/OpportunityRevenueCubeRawShape/level/accountShape> ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/account> ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/industry> ; 
+		konig:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term customerAccount <http://example.com/ns/crm/customerAccount>
+@term industry <http://example.com/ns/crm/industry>
+
+?opportunity.customerAccount.industry''' ; 
+		sh:shape <http://example.com/shape/OpportunityRevenueCubeRawShape/level/industryShape> ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/industry> ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/accountType> ; 
+		konig:formula '''
+@term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
+@term customerAccount <http://example.com/ns/crm/customerAccount>
+@term accountType <http://example.com/ns/crm/accountType>
+
+?opportunity.customerAccount.accountType''' ; 
+		sh:shape <http://example.com/shape/OpportunityRevenueCubeRawShape/level/accountTypeShape> ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/accountType> ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/RawOpportunityFact> ; 
+	sh:targetClass <http://example.com/cube/OpportunityRevenueCube/ns/RawOpportunityFact> ; 
+	konig:variable  [ 
+		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity> ; 
+		sh:class crm:Opportunity ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity> ]  ; 
+	konig:nodeShapeCube cube:OpportunityRevenueCube . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/RawOpportunityFact> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "crm" ; 
+		gcp:tableId "RawOpportunityFact" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	a konig:GoogleBigQueryTable , konig:DataSource . 

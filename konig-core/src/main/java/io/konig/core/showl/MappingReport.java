@@ -65,7 +65,7 @@ public class MappingReport {
 		}
 		public void printAll() {
 			for (Resource shapeId : manager.listNodeShapeIds()) {
-				ShowlNodeShapeSet set = manager.getNodeShape(shapeId);
+				ShowlNodeShapeSet set = manager.getNodeShapeSet(shapeId);
 				for (ShowlNodeShape shape : set) {
 					if (shape.getAccessor()==null) {
 						printRootShape(shape);

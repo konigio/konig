@@ -27,6 +27,7 @@ import java.util.Set;
 import org.openrdf.model.URI;
 
 import io.konig.cadl.Cube;
+import io.konig.cadl.CubeUtil;
 import io.konig.core.LocalNameService;
 
 public class CubeLocalNameService implements LocalNameService {
@@ -45,7 +46,8 @@ public class CubeLocalNameService implements LocalNameService {
 			URI sourceId = cube.getSource().getId();
 			if (localName.equals(sourceId.getLocalName())) {
 				Set<URI> set = new HashSet<>();
-				set.add(sourceId);
+				URI predicate = CubeUtil.predicate(cube, sourceId);
+				set.add(predicate);
 				return set;
 			}
 		}

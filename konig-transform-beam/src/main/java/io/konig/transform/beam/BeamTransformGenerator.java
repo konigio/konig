@@ -34,6 +34,7 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,10 +80,14 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.XMLSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.EClassType;
+import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.JAnnotationUse;
 import com.helger.jcodemodel.JBlock;
 import com.helger.jcodemodel.JCatchBlock;
@@ -107,15 +112,21 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlClass;
+import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
-import io.konig.core.showl.ShowlJoinCondition;
-import io.konig.core.showl.ShowlMapping;
+import io.konig.core.showl.ShowlEnumPropertyExpression;
+import io.konig.core.showl.ShowlEqualStatement;
+import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
-import io.konig.core.showl.ShowlSourceToSourceJoinCondition;
+import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStaticPropertyShape;
 import io.konig.core.showl.ShowlTemplatePropertyShape;
+import io.konig.core.showl.StaticDataSource;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.IriTemplate;
@@ -126,12 +137,19 @@ import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
+import io.konig.formula.Expression;
+import io.konig.formula.FunctionExpression;
+import io.konig.formula.FunctionModel;
+import io.konig.formula.LiteralFormula;
+import io.konig.formula.PathTerm;
+import io.konig.formula.PrimaryExpression;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 
 public class BeamTransformGenerator {
+	private static final Logger logger = LoggerFactory.getLogger(BeamTransformGenerator.class);
 	private static final List<RewriteRule> rewriteRuleList = new ArrayList<>();
 	
 	static {
@@ -293,7 +311,7 @@ public class BeamTransformGenerator {
 
 
 		private boolean singleSource() {
-			return targetNode.getSelectedJoins().size()==1;
+			return targetNode.getChannels().size()==1;
 		}
 
 		private void assertTrue(boolean isTrue, String pattern, Object...args) throws BeamTransformGenerationException {
@@ -330,6 +348,7 @@ public class BeamTransformGenerator {
 					
 					return String.class;
 				}
+				
 				
 				fail("Failed to determine Java type of {0}", p.getPath());
 			}
@@ -728,16 +747,12 @@ public class BeamTransformGenerator {
 
 
 		private void addEnumClasses(Set<ShowlClass> enumClasses, ShowlNodeShape node) {
-			for (ShowlPropertyShape p : node.allOutwardProperties()) {
+			for (ShowlDirectPropertyShape p : node.getProperties()) {
 				
-				ShowlMapping m = p.getSelectedMapping();
-				if (m != null) {
-					ShowlPropertyShape other = m.findOther(p);
-
-					if (other instanceof ShowlStaticPropertyShape) {
-						ShowlNodeShape enumShape = other.getDeclaringShape();
-						enumClasses.add(enumShape.getOwlClass());
-					}
+				ShowlExpression e = p.getSelectedExpression();
+				if (e instanceof ShowlEnumPropertyExpression) {
+					ShowlPropertyShape q = ((ShowlEnumPropertyExpression) e).getSourceProperty();
+					enumClasses.add(q.getDeclaringShape().getOwlClass());
 				}
 				if (p.getValueShape() != null) {
 					addEnumClasses(enumClasses, p.getValueShape());
@@ -759,9 +774,9 @@ public class BeamTransformGenerator {
 			
 			if (singleSource()) {
 			
-				ShowlJoinCondition join = targetNode.getSelectedJoins().get(0);
-				ShowlNodeShape sourceNode = join.otherNode(Collections.emptySet());
-				SourceInfo sourceInfo = new SourceInfo(sourceNode, join);
+				ShowlChannel channel = targetNode.getChannels().get(0);
+				ShowlNodeShape sourceNode = channel.getSourceNode();
+				SourceInfo sourceInfo = new SourceInfo(channel);
 				sourceInfoMap.put(RdfUtil.uri(sourceNode.getId()), sourceInfo);
 				ReadFileFnGenerator generator = new ReadFileFnGenerator(sourceInfo);
 				generator.generate();
@@ -771,26 +786,99 @@ public class BeamTransformGenerator {
 		}
 		
 		private void declareFileToKvFn() throws BeamTransformGenerationException, JClassAlreadyExistsException {
-			Set<ShowlNodeShape> set = new HashSet<>();
-			for (ShowlJoinCondition join : targetNode.getSelectedJoins()) {
-				ShowlNodeShape sourceNode = join.otherNode(set);
-				set.add(sourceNode);
+			
+			for (ShowlChannel channel : targetNode.getChannels()) {
 				
-				SourceInfo sourceInfo = new SourceInfo(sourceNode, join);
-				URI sourceNodeId = RdfUtil.uri(sourceNode.getId());
+				ShowlStatement joinStatement = channel.getJoinStatement();
 				
-				sourceInfoMap.put(sourceNodeId, sourceInfo);
+				if (joinStatement == null) {
+					continue;
+				}
+		
+				ShowlPropertyShape leftKey = leftKey(joinStatement);
+				ShowlPropertyShape rightKey = rightKey(joinStatement);
 				
-				ShowlPropertyShape keyProperty = targetNode.keyProperty(sourceNode, join);
 				
-				FileToKvFnGenerator generator = new FileToKvFnGenerator(sourceInfo, keyProperty);
-				generator.generate();
+				generateFileToKvFn(leftKey, channel(leftKey, channel));
+				generateFileToKvFn(rightKey, channel(rightKey, channel));
+				
+				
 			}
 			
 		}
 		
 	
 		
+
+		private ShowlChannel channel(ShowlPropertyShape key, ShowlChannel channel) throws BeamTransformGenerationException {
+			ShowlNodeShape sourceNode = key.getDeclaringShape();
+			if (sourceNode == channel.getSourceNode()) {
+				return channel;
+			}
+			for (ShowlChannel c : targetNode.getChannels()) {
+				if (sourceNode == c.getSourceNode()) {
+					return c;
+				}
+			}
+			
+			throw new BeamTransformGenerationException("Channel not found for " + key.getPath());
+		}
+
+
+		private void generateFileToKvFn(ShowlPropertyShape keyProperty, ShowlChannel channel) throws BeamTransformGenerationException, JClassAlreadyExistsException {
+			
+			ShowlNodeShape node = channel.getSourceNode();
+			if (isEnumNode(node)) {
+				return;
+			}
+			
+			if (logger.isTraceEnabled()) {
+				logger.trace("generateFileToKvFn({})", keyProperty.getPath());
+			}
+			
+			URI sourceNodeId = RdfUtil.uri(channel.getSourceNode().getId());
+			SourceInfo info = sourceInfoMap.get(sourceNodeId);
+			if (info == null) {
+				info = new SourceInfo(channel);
+				sourceInfoMap.put(sourceNodeId, info);
+			}
+			
+
+			FileToKvFnGenerator generator = new FileToKvFnGenerator(info, keyProperty);
+			generator.generate();
+			
+		}
+
+		private boolean isEnumNode(ShowlNodeShape node) {
+		
+			return node.getShapeDataSource()!=null && node.getShapeDataSource().getDataSource() instanceof StaticDataSource;
+		}
+
+
+		private ShowlPropertyShape rightKey(ShowlStatement joinStatement) throws BeamTransformGenerationException {
+			if (joinStatement instanceof ShowlEqualStatement) {
+				ShowlExpression e = ((ShowlEqualStatement) joinStatement).getRight();
+				if (e instanceof ShowlDirectPropertyExpression || e instanceof ShowlEnumPropertyExpression) {
+					return ((ShowlPropertyExpression) e).getSourceProperty();
+				}
+			}
+			throw new BeamTransformGenerationException("Failed to get rightKey from " + joinStatement.toString());
+		}
+
+
+		private ShowlPropertyShape leftKey(ShowlStatement joinStatement) throws BeamTransformGenerationException {
+
+			if (joinStatement instanceof ShowlEqualStatement) {
+				ShowlExpression e = ((ShowlEqualStatement) joinStatement).getLeft();
+				if (e instanceof ShowlDirectPropertyExpression) {
+					return ((ShowlDirectPropertyExpression) e).getSourceProperty();
+				}
+			}
+			throw new BeamTransformGenerationException("Failed to get leftKey from " + joinStatement.toString());
+		}
+
+
+
 
 		/**
 		 * Generates a DoFn that converts ReadableFile instances to KV<String, TableRow> instances.
@@ -808,8 +896,11 @@ public class BeamTransformGenerator {
 				if (keyProperty == null) {
 					fail("keyProperty is null for source node {0}", sourceInfo.getFocusNode().getPath());
 				}
-				this.sourceInfo = sourceInfo;
 				this.keyProperty = keyProperty;
+				if (logger.isTraceEnabled()) {
+					logger.trace("new FileToKvFnGenerator({}, keyProperty={})", 
+							sourceInfo.getFocusNode().getPath(), keyProperty.getPath());
+				}
 			}
 
 			private void generate() throws BeamTransformGenerationException, JClassAlreadyExistsException {
@@ -828,15 +919,22 @@ public class BeamTransformGenerator {
 				
 				String simpleClassName = "Read" + shapeName + "Fn";
 				String className = className(namespacePrefix(shapeId), simpleClassName);
+		
+				logger.trace("generating class {}", className);
+				
 				thisClass = model._class(className)._extends(doFnClass);
 				
 				sourceInfo.setReadFileFn(thisClass);
+				
 				
 				processElement();
 			}
 
 			@Override
 			protected void registerSourceField(ShowlPropertyShape sourceProperty, JVar fieldVar) {
+				if (logger.isTraceEnabled()) {
+					logger.trace("FileToKvFnGenerator.registerSourceField({})", sourceProperty.getPath() );
+				}
 				if (sourceProperty == keyProperty) {
 					keyPropertyVar = fieldVar;
 				}
@@ -868,40 +966,192 @@ public class BeamTransformGenerator {
 		
 		private abstract class BaseTargetFnGenerator {
 
+			protected JDefinedClass thisClass;
+			private JMethod concatMethod = null;
+			private JMethod requiredMethod = null;
+			
 			protected void transformProperty(JBlock body, ShowlDirectPropertyShape p, JVar inputRow, JVar outputRow, JVar enumObject) throws BeamTransformGenerationException {
 				
-				ShowlMapping mapping = p.getSelectedMapping();
-				if (mapping == null) {
+				
+				ShowlExpression e = p.getSelectedExpression();
+				if (e == null) {
 					fail("Mapping not found for property {0}", p.getPath());
 				}
 				
-				ShowlPropertyShape other = mapping.findOther(p);
-				
-				if (p.getValueShape() != null) {
+				if (e instanceof ShowlDirectPropertyExpression) {
+					ShowlDirectPropertyShape other = ((ShowlDirectPropertyExpression) e).getSourceProperty();
+					transformDirectProperty(body, p, other, inputRow, outputRow);
+					
+				} else if (e instanceof ShowlFunctionExpression) {
+					transformFunction(body, p, (ShowlFunctionExpression)e, inputRow, outputRow);
+				} else if (e instanceof ShowlEnumPropertyExpression) {
+					transformEnumProperty(body, p, (ShowlEnumPropertyExpression)e, inputRow, outputRow, enumObject);
+				} else if (p.getValueShape() != null) {
 					transformObjectProperty(body, p, inputRow, outputRow);
-					
-				} else if (other instanceof ShowlStaticPropertyShape) {
-					transformStaticProperty(body, p, (ShowlStaticPropertyShape)other, inputRow, outputRow, enumObject);
-					
-				} else if (other instanceof ShowlTemplatePropertyShape) {
-					
-					transformTemplateProperty(body, p, (ShowlTemplatePropertyShape)other, inputRow, outputRow);
-					
-				} else if (other instanceof ShowlDirectPropertyShape) {
-					transformDirectProperty(body, p, (ShowlDirectPropertyShape)other, inputRow, outputRow);
-					
 				} else {
-					other = other.getPeer();
-					if (other instanceof ShowlDirectPropertyShape) {
-						transformDirectProperty(body, p, (ShowlDirectPropertyShape) other, inputRow, outputRow);
-					} else {
-						fail("Failed to transform {0}", p.getPath());
-					}
+					fail("At {0}, expression not supported: {1}", p.getPath(), e.displayValue());
+				}
+				
+
+				// TODO: Finish reimplementation here!!!
+				
+				
+//				ShowlMapping mapping = p.getSelectedMapping();
+//				if (mapping == null) {
+//					fail("Mapping not found for property {0}", p.getPath());
+//				}
+//				
+//				ShowlPropertyShape other = mapping.findOther(p);
+//				
+//				if (p.getValueShape() != null) {
+//					transformObjectProperty(body, p, inputRow, outputRow);
+//					
+//				} else if (other instanceof ShowlStaticPropertyShape) {
+//					transformStaticProperty(body, p, (ShowlStaticPropertyShape)other, inputRow, outputRow, enumObject);
+//					
+//				} else if (other instanceof ShowlTemplatePropertyShape) {
+//					
+//					transformTemplateProperty(body, p, (ShowlTemplatePropertyShape)other, inputRow, outputRow);
+//					
+//				} else if (other instanceof ShowlDirectPropertyShape) {
+//					transformDirectProperty(body, p, (ShowlDirectPropertyShape)other, inputRow, outputRow);
+//					
+//				} else {
+//					other = other.getPeer();
+//					if (other instanceof ShowlDirectPropertyShape) {
+//						transformDirectProperty(body, p, (ShowlDirectPropertyShape) other, inputRow, outputRow);
+//					} else {
+//						fail("Failed to transform {0}", p.getPath());
+//					}
+//					
+//				} 
+				
+				
+				
+			}
+
+			private void transformEnumProperty(JBlock body, ShowlDirectPropertyShape p, ShowlEnumPropertyExpression e,
+					JVar inputRow, JVar outputRow, JVar enumObject) {
+				
+				URI predicate = p.getPredicate();
+				String fieldName = predicate.getLocalName();
+				
+				String getterName = "get" + StringUtil.capitalize(fieldName);
+				
+				AbstractJClass fieldType = model.ref(Object.class);
+				
+				
+				// Object $fieldName = enumObject.get("$fieldName");
+				JVar field = body.decl(fieldType, fieldName, enumObject.invoke(getterName));
+				
+				// if ($field != null) {
+				//  outputRow.set("$fieldName", $field);
+				// }
+				
+				body._if(field.ne(JExpr._null()))._then().add(outputRow.invoke("set").arg(JExpr.lit(fieldName)).arg(field));
+				
+				
+			}
+
+			private void transformFunction(JBlock body, ShowlDirectPropertyShape p, ShowlFunctionExpression e, JVar inputRow, JVar outputRow) throws BeamTransformGenerationException {
+				
+				FunctionExpression function = e.getFunction();
+				if (function.getModel() == FunctionModel.CONCAT) {
+					transformConcat(body, p, function, inputRow, outputRow);
+				}
+				
+			}
+
+			private void transformConcat(JBlock body, ShowlDirectPropertyShape p, FunctionExpression function, JVar inputRow, JVar outputRow) throws BeamTransformGenerationException {
+				declareRequiredMethod();
+				JMethod concatMethod = declareConcatMethod();
+				
+				AbstractJClass objectClass = model.ref(Object.class);
+				
+				JInvocation concatInvoke = JExpr.invoke(concatMethod);
+				
+				// Object $targetProperty = concat(...)
+				
+				JVar targetProperty = body.decl(objectClass, p.getPredicate().getLocalName());
+				
+				/*  Use a handler to declare the arguments of the concat method.
+				 *  The arguments will be either a string literal, or an expression of the form:
+				 *  
+				 *     required(inputRow, "$fieldName")
+				 *     
+				 */
+			
+				TableRowExpressionHandler handler = new TableRowExpressionHandler(inputRow);
+				for (Expression arg : function.getArgList()) {
+					IJExpression e = handler.javaExpression(arg);
+					concatInvoke.arg(e);
+				}
+
+				targetProperty.init(concatInvoke);
+				
+				// outputRow.set("$targetPropertyName", $targetProperty);
+				
+				body.add(
+					outputRow.invoke("set").arg(JExpr.lit(p.getPredicate().getLocalName())).arg(targetProperty)
+				);
+				
+			}
+
+			private JMethod declareRequiredMethod() {
+				if (requiredMethod == null) {
+					// private Object reqired(TableRow row, String fieldName) throws RuntimeException {
+					AbstractJClass objectClass = model.ref(Object.class);
+					AbstractJClass tableRowClass = model.ref(TableRow.class);
+					AbstractJClass stringClass = model.ref(String.class);
 					
-				} 
-				
-				
-				
+					requiredMethod = thisClass.method(JMod.PRIVATE, objectClass, "required");
+					JVar row = requiredMethod.param(objectClass, "row");
+					JVar fieldName = requiredMethod.param(stringClass, "fieldName");
+					
+					//  Object value = row.get(fieldName);
+					JVar value = requiredMethod.body().decl(objectClass, "value", row.invoke("get").arg(fieldName));
+					
+					//  if (value == null) {
+					//    throw new RuntimeException("Field " + fieldName + " must not be null.");
+					//  }
+					
+					AbstractJClass runtimeExceptionClass = model.ref(RuntimeException.class);
+					requiredMethod.body()._if(value.eq(JExpr._null()))._then()
+						._throw(runtimeExceptionClass._new().arg(
+								JExpr.lit("Field ").plus(fieldName).plus(JExpr.lit(" must not be null."))));
+					
+					//  return value;
+					requiredMethod.body()._return(value);
+					
+				    // }
+				}
+				return requiredMethod;
+			}
+
+			private JMethod declareConcatMethod() {
+				if (concatMethod == null) {
+					// String concat(Object...args) {
+					AbstractJClass objectClass = model.ref(Object.class);
+					AbstractJClass stringClass = model.ref(String.class);
+					concatMethod = thisClass.method(JMod.PRIVATE, stringClass, "concat");
+					JVar args = concatMethod.varParam(objectClass, "args");
+					
+					JBlock body = concatMethod.body();
+					
+					//  StringBuilder builder = new StringBuilder();
+					AbstractJClass stringBuilderClass = model.ref(StringBuilder.class);
+					JVar builder = body.decl(stringBuilderClass, "builder", stringBuilderClass._new());
+					
+					//  for (Object value : args) {
+					JForEach forEach = body.forEach(objectClass, "value", args);
+					
+					//    builder.append(value.toString());
+					
+					forEach.body().add(builder.invoke("append").arg(forEach.var().invoke("toString")));
+					
+					body._return(builder.invoke("toString"));
+				}
+				return concatMethod;
 			}
 
 			protected void transformStaticProperty(JBlock body, ShowlDirectPropertyShape p,
@@ -933,6 +1183,8 @@ public class BeamTransformGenerator {
 					JVar outputRow) throws BeamTransformGenerationException {
 				
 				ShowlNodeShape valueShape = p.getValueShape();
+				
+				ShowlStatement joinStatement = valueShape.getJoinStatement();
 
 				ShowlPropertyShape enumSourceKey = valueShape.enumSourceKey(reasoner);
 				if (enumSourceKey != null) {
@@ -994,9 +1246,11 @@ public class BeamTransformGenerator {
 					transformProperty(method.body(), direct, inputRowParam, fieldRow, enumObject);
 					
 				}
-
+				//     if (!$targetFieldName.isEmpty()) {
+		        //       outputRow.set("$targetFieldName", $targetFieldName);
+		        //     }
 				method.body()._if(enumObject.invoke("isEmpty").not())._then()
-					.add(outputRowParam.invoke("set").arg(JExpr.lit(targetFieldName)).arg(outputRowParam));
+					.add(outputRowParam.invoke("set").arg(JExpr.lit(targetFieldName)).arg(fieldRow));
 				
 				
 				
@@ -1123,7 +1377,7 @@ public class BeamTransformGenerator {
 				String localName = RdfUtil.localName(targetNode.getId());
 				String className = className(prefix, "To" + localName + "Fn");
 				
-				toTargetFnClass = model._class(className);
+				toTargetFnClass = thisClass = model._class(className);
 
 				// public class ReadFileFn extends DoFn<FileIO.ReadableFile, TableRow> {
 				
@@ -1209,7 +1463,7 @@ public class BeamTransformGenerator {
 				
 				
 				try {
-					JDefinedClass mergeFnClass = model._class(className)._extends(doFnClass);
+					JDefinedClass mergeFnClass = thisClass = model._class(className)._extends(doFnClass);
 					groupInfo.setMergeFnClass(mergeFnClass);
 					
 					// @ProcessElement
@@ -1285,17 +1539,60 @@ public class BeamTransformGenerator {
 				JVar inputRow = forEach.var();
 				
 				for (ShowlDirectPropertyShape p : targetNode.getProperties()) {
-					ShowlMapping mapping = p.getSelectedMapping();
-					if (mapping == null) {
+					
+					ShowlExpression expression = p.getSelectedExpression();
+					if (expression == null) {
 						fail("Mapping not found for property {0}", p.getPath());
 					}
 					
-					ShowlPropertyShape other = mapping.findOther(p);
+					ShowlPropertyShape other = null;
+					if (expression instanceof ShowlPropertyExpression) {
+						other = ((ShowlPropertyExpression) expression).getSourceProperty();
+					} else {
+						fail("For property {0}, unsupported expression: {1}", p.getPath(), expression.displayValue());
+					}
+					
 					if (other.getDeclaringShape() == sourceInfo.getFocusNode()) {
-						transformProperty(method.body(), p, inputRow, outputRow, null);
+						transformProperty(forEach.body(), p, inputRow, outputRow, null);
 					}
 				}
 				
+			}
+			
+		}
+		private class TableRowExpressionHandler implements ExpressionHandler {
+			
+			private JVar inputRow;
+			
+			public TableRowExpressionHandler(JVar inputRow) {
+				this.inputRow = inputRow;
+			}
+
+
+
+			@Override
+			public IJExpression javaExpression(Expression e) throws BeamTransformGenerationException {
+				PrimaryExpression primary = e.asPrimaryExpression();
+				
+				if (primary instanceof LiteralFormula) {
+					Literal literal = ((LiteralFormula) primary).getLiteral();
+					if (literal.getDatatype().equals(XMLSchema.STRING)) {
+						return JExpr.lit(literal.stringValue());
+					} else {
+						fail("Typed literal not supported in expression: {0}", e.toSimpleString());
+					}
+				}
+				
+				if (primary instanceof PathTerm) {
+					PathTerm term = (PathTerm) primary;
+					URI iri = term.getIri();
+					
+					
+					return JExpr.invoke("required").arg(inputRow).arg(JExpr.lit(iri.getLocalName()));
+				}
+
+				fail("Unsupported expression: {0}", e.toSimpleString());
+				return null;
 			}
 			
 		}
@@ -1312,9 +1609,10 @@ public class BeamTransformGenerator {
 				this.sourceInfo = sourceInfo;
 			}
 			
+			
 			protected void processElement() throws BeamTransformGenerationException {
 				
-				Set<ShowlPropertyShape> sourceProperties = sourceProperties();
+				List<ShowlPropertyShape> sourceProperties = sourceProperties();
 				
 				
 				// @ProcessElement
@@ -1457,34 +1755,24 @@ public class BeamTransformGenerator {
 
 			abstract protected void deliverOutput(JBlock outputBlock, JVar c, JVar row) throws BeamTransformGenerationException;
 
-			protected Set<ShowlPropertyShape> sourceProperties() throws BeamTransformGenerationException {
+			protected List<ShowlPropertyShape> sourceProperties() throws BeamTransformGenerationException {
 				
-				Set<ShowlPropertyShape> set = propertySet();
+
+				List<ShowlPropertyShape> list = targetNode.selectedPropertiesOf(sourceInfo.getFocusNode());
 				
-				for (ShowlPropertyShape p : set) {
+				for (ShowlPropertyShape p : list) {
 				
 					declareDatatypeGetter(p);
 					
 					
 				}
-				return set;
+				
+				
+				return list;
 			}
 
-			private Set<ShowlPropertyShape> propertySet() throws BeamTransformGenerationException {
-				Set<ShowlPropertyShape> set = targetNode.joinProperties(sourceInfo.getFocusNode());
-				
-				ShowlJoinCondition join = sourceInfo.getJoin();
-				if (join instanceof ShowlSourceToSourceJoinCondition) {
-					ShowlPropertyShape joinProperty = sourceInfo.getJoin()
-							.propertyOf(sourceInfo.getFocusNode());
-				
-					assertTrue(joinProperty!=null, "Join property not found for {0}", sourceInfo.getFocusNode().getPath());
-				
-					set.add(joinProperty);
-				}
-				
-				return set;
-			}
+			
+
 
 			protected JFieldVar patternField() {
 				if (patternField == null) {
@@ -1504,6 +1792,13 @@ public class BeamTransformGenerator {
 
 			protected void declareDatatypeGetter(ShowlPropertyShape p) throws BeamTransformGenerationException {
 				
+				if (p.getValueShape() != null) {
+					Set<ShowlPropertyShape> set = p.getValueShape().allOutwardProperties();
+					for (ShowlPropertyShape q : set) {
+						declareDatatypeGetter(q);
+					}
+					return;
+				}
 				
 				Class<?> javaClass = javaType(p);
 				if (javaClass == null) {
@@ -1741,8 +2036,7 @@ public class BeamTransformGenerator {
 			
 			//  return "$bucketId".replace("${gcpBucketSuffix}", envName);
 
-			ShowlJoinCondition join = targetNode.getSelectedJoins().get(0);
-			ShowlNodeShape sourceNode = join.otherNode(targetNode);
+			ShowlNodeShape sourceNode = targetNode.getChannels().get(0).getSourceNode();
 			GoogleCloudStorageBucket bucket = sourceNode.getShape().findDataSource(GoogleCloudStorageBucket.class);
 			String bucketId = bucket.getId().stringValue();
 			
@@ -1834,18 +2128,21 @@ public class BeamTransformGenerator {
 			
 			
 			defineTupleTagsAndPcollections(body, p, optionsVar);
-			Map<URI,GroupInfo> groupMap = groupMap();
-			defineKeyedCollectionTuples(body, groupMap);
-			generateMergeFnClasses(groupMap);
-			applyMergeFnClasses(body, groupMap);
+			List<GroupInfo> groupList = groupList();
+			defineKeyedCollectionTuples(body, groupList);
+			generateMergeFnClasses(groupList);
+			applyMergeFnClasses(body, groupList);
 			
 
 		}
 
-		private void applyMergeFnClasses(JBlock body, Map<URI, GroupInfo> groupMap) throws BeamTransformGenerationException {
+		private void applyMergeFnClasses(JBlock body, List<GroupInfo> groupList) throws BeamTransformGenerationException {
 			
-			if (groupMap.size()==1) {
-				applySingleMerge(body, groupMap.values().iterator().next());
+			if (groupList.isEmpty()) {
+				fail("No groups found for {0}", targetNode.getPath());
+			}
+			if (groupList.size()==1) {
+				applySingleMerge(body, groupList.get(0));
 			} else {
 				fail("Multiple groups not supported yet for {0}", targetNode.getPath());
 			}
@@ -1881,8 +2178,8 @@ public class BeamTransformGenerator {
 		}
 
 
-		private void generateMergeFnClasses(Map<URI, GroupInfo> groupMap) throws BeamTransformGenerationException {
-			for (GroupInfo groupInfo : groupMap.values()) {
+		private void generateMergeFnClasses(List<GroupInfo> groupList) throws BeamTransformGenerationException {
+			for (GroupInfo groupInfo : groupList) {
 				MergeFnGenerator generator = new MergeFnGenerator(groupInfo);
 				generator.generate();
 			}
@@ -1890,7 +2187,7 @@ public class BeamTransformGenerator {
 		}
 
 
-		private void defineKeyedCollectionTuples(JBlock body, Map<URI, GroupInfo> groupMap) {
+		private void defineKeyedCollectionTuples(JBlock body, List<GroupInfo> groupList) {
 			// For now, we require that the key is a string.
 			// We should relax this condition in the future.
 			
@@ -1902,9 +2199,9 @@ public class BeamTransformGenerator {
 			AbstractJClass coGroupByKeyClass = model.ref(CoGroupByKey.class);
 			
 			int count = 1;
-			for (GroupInfo groupInfo : groupMap.values()) {
+			for (GroupInfo groupInfo : groupList) {
 				
-				String varName = groupInfo.kvpCollectionName(count++, groupMap.size());
+				String varName = groupInfo.kvpCollectionName(count++, groupList.size());
 				
 				// PCollectionKV<String, CoGbkResult>> kvpCollection = KeyedPCollectionTuple
 				//   .of($firstTupleTag, $firstPCollection)
@@ -1935,22 +2232,77 @@ public class BeamTransformGenerator {
 		}
 
 
-		private Map<URI, GroupInfo> groupMap() {
-			Map<URI,GroupInfo> map = new HashMap<>();
-			for (SourceInfo sourceInfo : sourceInfoMap.values()) {
-				ShowlJoinCondition join = sourceInfo.getJoin();
-				ShowlNodeShape sourceNode = sourceInfo.getFocusNode();
-				
-				ShowlPropertyShape p = targetNode.keyProperty(sourceNode, join);
-				URI predicate = p.getPredicate();
-				GroupInfo groupInfo = map.get(predicate);
-				if (groupInfo == null) {
-					groupInfo = new GroupInfo(predicate);
-					map.put(predicate, groupInfo);
+		private List<GroupInfo> groupList() throws BeamTransformGenerationException {
+			List<GroupInfo> list = new ArrayList<>();
+			
+			for (SourceInfo sourceInfo : sortedSourceInfoList()) {
+				ShowlChannel channel = sourceInfo.getChannel();
+				ShowlStatement statement = channel.getJoinStatement();
+				if (statement instanceof ShowlEqualStatement) {
+					ShowlEqualStatement equal = (ShowlEqualStatement) statement;
+					
+					ShowlExpression left = equal.getLeft();
+					ShowlExpression right = equal.getRight();
+					
+					ShowlPropertyShape leftProperty = propertyOf(left);
+					ShowlPropertyShape rightProperty = propertyOf(right);
+					
+					SourceInfo leftInfo = sourceInfoFor(leftProperty);
+					SourceInfo rightInfo = sourceInfoFor(rightProperty);
+					
+					GroupInfo group = new GroupInfo();
+					group.getSourceList().add(leftInfo);
+					group.getSourceList().add(rightInfo);
+					
+					sortSourceInfo(group.getSourceList());
+					
+					list.add(group);
+					
+				} else if (statement != null) {
+					fail("Unsupported statement: " + statement.toString());
 				}
-				groupInfo.getSourceList().add(sourceInfo);
 			}
-			return map;
+			return list;
+		}
+		
+		private SourceInfo sourceInfoFor(ShowlPropertyShape p) throws BeamTransformGenerationException {
+			ShowlNodeShape root = p.getRootNode();
+			SourceInfo result = sourceInfoMap.get(RdfUtil.uri(root.getId()));
+			if (result == null) {
+				fail("SourceInfo not found for {0}", p.getPath());
+			}
+			return result;
+		}
+
+
+		private ShowlPropertyShape propertyOf(ShowlExpression e) throws BeamTransformGenerationException {
+			if (e instanceof ShowlPropertyExpression) {
+				return ((ShowlPropertyExpression) e).getSourceProperty();
+			}
+			fail("Cannot get property from: {0}", e.displayValue());
+			return null;
+		}
+
+
+		private List<SourceInfo> sortedSourceInfoList() {
+			List<SourceInfo> list = new ArrayList<>(sourceInfoMap.values());
+			sortSourceInfo(list);
+			return list;
+		}
+		
+		private void sortSourceInfo(List<SourceInfo> list) {
+
+			Collections.sort(list, new Comparator<SourceInfo>(){
+
+				@Override
+				public int compare(SourceInfo a, SourceInfo b) {
+					URI nodeA = RdfUtil.uri(a.getFocusNode().getId());
+					URI nodeB = RdfUtil.uri(b.getFocusNode().getId());
+					
+					return nodeA.getLocalName().compareTo(nodeB.getLocalName());
+				}
+				
+			});
 		}
 
 
@@ -1961,7 +2313,9 @@ public class BeamTransformGenerator {
 			AbstractJClass fileIoClass = model.ref(FileIO.class);
 			AbstractJClass stringClass = model.ref(String.class);
 			AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(stringClass);
-			for (SourceInfo sourceInfo : sourceInfoMap.values()) {
+			
+		
+			for (SourceInfo sourceInfo : sortedSourceInfoList()) {
 				ShowlNodeShape node = sourceInfo.getFocusNode();
 				set.add(node);
 				URI shapeId = RdfUtil.uri(node.getId());
@@ -2205,16 +2559,16 @@ public class BeamTransformGenerator {
 
 	}
 	
+	
 	private static class GroupInfo {
-		private URI predicate;
 		private List<SourceInfo> sourceList = new ArrayList<>();
 		private JVar kvpCollection;
 		private JDefinedClass mergeFnClass;
 		private JVar outputRowCollection;
 		
-		public GroupInfo(URI predicate) {
-			this.predicate = predicate;
+		public GroupInfo() {
 		}
+		
 		public String kvpCollectionName(int count, int size) {
 			
 			return size>1 ? "kvpCollection" + count : "kvpCollection";
@@ -2240,9 +2594,6 @@ public class BeamTransformGenerator {
 		public void setKvpCollection(JVar kvpCollection) {
 			this.kvpCollection = kvpCollection;
 		}
-		public URI getPredicate() {
-			return predicate;
-		}
 		public List<SourceInfo> getSourceList() {
 			return sourceList;
 		}
@@ -2264,80 +2615,72 @@ public class BeamTransformGenerator {
 	}
 	
 	private static class SourceInfo {
-		private ShowlNodeShape focusNode;
-		private ShowlJoinCondition join;
+		private ShowlChannel channel;
 		private JVar pcollection;
 		private JVar tupleTag;
 		
 		private JDefinedClass readFileFn;
 		
-		
-		
-		
-		public SourceInfo(ShowlNodeShape focusNode, ShowlJoinCondition join) {
-			this.focusNode = focusNode;
-			this.join = join;
+
+		public SourceInfo(ShowlChannel channel) {
+			this.channel = channel;
 		}
 
+		public ShowlChannel getChannel() {
+			return channel;
+		}
 
-
+		public ShowlPropertyShape getKey() throws BeamTransformGenerationException {
+			if (channel.getJoinStatement() != null) {
+				Set<ShowlPropertyShape> set = new HashSet<>();
+				channel.getJoinStatement().addDeclaredProperties(channel.getSourceNode(), set);
+				
+				if (set.size()==1) {
+					return set.iterator().next();
+				}
+				
+			}
+			throw new BeamTransformGenerationException("key not found in " + channel.toString());
+		}
 
 		public JVar getPcollection() {
 			return pcollection;
 		}
 
-
-
-
 		public void setPcollection(JVar pcollection) {
 			this.pcollection = pcollection;
 		}
-
-
-
 
 		public JVar getTupleTag() {
 			return tupleTag;
 		}
 
-
-
-
 		public void setTupleTag(JVar tupleTag) {
 			this.tupleTag = tupleTag;
 		}
-
-
-
-
+		
 		public JDefinedClass getReadFileFn() {
 			return readFileFn;
 		}
 
-
-
-
 		public void setReadFileFn(JDefinedClass readFileFn) {
 			this.readFileFn = readFileFn;
 		}
-
-
-
-
+		
 		public ShowlNodeShape getFocusNode() {
-			return focusNode;
+			return channel.getSourceNode();
 		}
-
-
-
-
-		public ShowlJoinCondition getJoin() {
-			return join;
+		
+		public String toString() {
+			return "SourceInfo(" + channel.toString() + ")";
 		}
+		
+	}
+	
+	
 
-
+	private interface ExpressionHandler {
 		
-		
-		
+		IJExpression javaExpression(Expression e) throws BeamTransformGenerationException;
 	}
 }
