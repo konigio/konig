@@ -47,6 +47,7 @@ public class CubeSheet extends BaseSheetProcessor implements WorkbookListener {
 	private static SheetColumn ELEMENT_TYPE = new SheetColumn("Element Type");
 	private static SheetColumn FORMULA = new SheetColumn("Formula");
 	private static SheetColumn ROLL_UP_FROM = new SheetColumn("Roll-up From");
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static SheetColumn[] columns = new SheetColumn[] {
 		CUBE_ID,
@@ -54,7 +55,8 @@ public class CubeSheet extends BaseSheetProcessor implements WorkbookListener {
 		ELEMENT_NAME,
 		ELEMENT_TYPE,
 		FORMULA,
-		ROLL_UP_FROM
+		ROLL_UP_FROM,
+		PROJECT
 	};
 	
 	private CubeManager cubeManager;

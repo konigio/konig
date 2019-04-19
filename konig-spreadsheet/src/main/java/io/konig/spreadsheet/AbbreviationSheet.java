@@ -35,10 +35,12 @@ public class AbbreviationSheet extends BaseSheetProcessor {
 
 	private static final SheetColumn TERM = new SheetColumn("Term", true);
 	private static final SheetColumn ABBREVIATION = new SheetColumn("Abbreviation", true);
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
 		TERM, 
-		ABBREVIATION
+		ABBREVIATION,
+		PROJECT
 	};
 
 	private SettingsSheet settings;

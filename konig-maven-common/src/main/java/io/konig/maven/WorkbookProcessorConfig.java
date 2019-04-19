@@ -35,6 +35,8 @@ public class WorkbookProcessorConfig {
 	private boolean failOnErrors = true;
 	private int maxErrorCount = 0;
 	
+	private boolean applyProjectFilter;
+	
 	public File getWorkbookFile() {
 		return workbookFile;
 	}
@@ -82,6 +84,12 @@ public class WorkbookProcessorConfig {
 	}
 	public void setTemplateDir(File templateDir) {
 		this.templateDir = templateDir;
+	}
+	public boolean isApplyProjectFilter() {
+		return applyProjectFilter;
+	}
+	public void setApplyProjectFilter(boolean applyProjectFilter) {
+		this.applyProjectFilter = applyProjectFilter;
 	}
 	
 }

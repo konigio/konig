@@ -72,6 +72,7 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 	private static final SheetColumn DECIMAL_PRECISION = new SheetColumn("Decimal Precision");
 	private static final SheetColumn DECIMAL_SCALE = new SheetColumn("Decimal Scale");
 	private static final SheetColumn PREFERRED_TABULAR_SHAPE = new SheetColumn("References Shape");
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
 
@@ -98,7 +99,8 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 			MAX_LENGTH,
 			DECIMAL_PRECISION,
 			DECIMAL_SCALE,
-			PREFERRED_TABULAR_SHAPE
+			PREFERRED_TABULAR_SHAPE,
+			PROJECT
 	};
 	
 	private OwlReasoner reasoner;

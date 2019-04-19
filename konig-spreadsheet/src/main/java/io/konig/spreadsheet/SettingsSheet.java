@@ -62,6 +62,7 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	private static final SheetColumn SETTING_VALUE =  new SheetColumn("Setting Value", true);
 	private static final SheetColumn PATTERN =  new SheetColumn("Pattern");
 	private static final SheetColumn REPLACEMENT =  new SheetColumn("Replacement");
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static final String URLENCODING= "urlencoding";
 	
@@ -69,7 +70,8 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 		SETTING_NAME,
 		SETTING_VALUE,
 		PATTERN,
-		REPLACEMENT
+		REPLACEMENT,
+		PROJECT
 	};
 	
 	private File outDir;

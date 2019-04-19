@@ -56,6 +56,7 @@ public class IndividualSheet extends BaseSheetProcessor {
 	private static final SheetColumn CODE = new SheetColumn("Code");
 	private static final SheetColumn STATUS = new SheetColumn("Status");
 	private static final SheetColumn SUBJECT = new SheetColumn("Subject");
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
 		INDIVIDUAL_NAME,
@@ -64,7 +65,8 @@ public class IndividualSheet extends BaseSheetProcessor {
 		INDIVIDUAL_TYPE,
 		CODE,
 		STATUS,
-		SUBJECT
+		SUBJECT,
+		PROJECT
 	};
 	
 	private SettingsSheet settings;

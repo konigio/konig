@@ -27,9 +27,11 @@ import java.io.IOException;
 
 public class GcpDeploymentSheet extends BaseSheetProcessor {
 	private static final SheetColumn TEMPLATE_TEXT = new SheetColumn("Template Text", true);
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
-		TEMPLATE_TEXT	
+		TEMPLATE_TEXT,
+		PROJECT
 	};
 
 	private File globalConfig;

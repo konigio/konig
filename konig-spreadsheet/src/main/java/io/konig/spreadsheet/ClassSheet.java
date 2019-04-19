@@ -42,6 +42,7 @@ public class ClassSheet extends BaseSheetProcessor {
 	private static final SheetColumn IRI_TEMPLATE = new SheetColumn("IRI Template");
 	private static final SheetColumn SUBJECT = new SheetColumn("Subject");
 	private static final SheetColumn STATUS = new SheetColumn("Status");
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[] {
 		CLASS_NAME,
@@ -50,7 +51,8 @@ public class ClassSheet extends BaseSheetProcessor {
 		SUBCLASS_OF,
 		IRI_TEMPLATE,
 		SUBJECT,
-		STATUS
+		STATUS,
+		PROJECT
 	};
 	
 	private SettingsSheet settings;

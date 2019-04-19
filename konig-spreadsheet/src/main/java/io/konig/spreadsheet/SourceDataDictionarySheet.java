@@ -55,6 +55,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 	private static final SheetColumn DATA_STEWARD = new SheetColumn("Data Steward");
 	private static final SheetColumn SECURITY_CLASSIFICATION = new SheetColumn("Security Classification");
 	private static final SheetColumn PII_CLASSIFICATION = new SheetColumn("PII Classification");
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
 		SOURCE_TYPE,
@@ -71,7 +72,8 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 		BUSINESS_DEFINITION,
 		DATA_STEWARD,
 		SECURITY_CLASSIFICATION,
-		PII_CLASSIFICATION
+		PII_CLASSIFICATION,
+		PROJECT
 	};
 
 	private SettingsSheet settings;

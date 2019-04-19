@@ -30,11 +30,13 @@ public class LabelSheet extends BaseSheetProcessor {
 	private static final SheetColumn SUBJECT = new SheetColumn("Subject", true);
 	private static final SheetColumn LABEL = new SheetColumn("Label", true);
 	private static final SheetColumn LANGUAGE = new SheetColumn("Language", true);
+	private static final SheetColumn PROJECT = new SheetColumn("Project");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
 		SUBJECT,
 		LABEL,
-		LANGUAGE
+		LANGUAGE,
+		PROJECT
 	};
 	
 
