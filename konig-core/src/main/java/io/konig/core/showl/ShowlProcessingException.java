@@ -31,4 +31,8 @@ public class ShowlProcessingException extends RuntimeException {
 	public ShowlProcessingException(String message) {
 		super(message);
 	}
+
+	public ShowlProcessingException(String msg, Throwable oops) {
+		super(msg, oops);
+	}
 }

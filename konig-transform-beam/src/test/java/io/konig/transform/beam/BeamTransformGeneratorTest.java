@@ -75,6 +75,13 @@ public class BeamTransformGeneratorTest {
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
 	@Test
+	public void testIriTemplateFormula() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/iri-template-formula");
+		
+	}
+	
+	@Test
 	public void testHardCodedEnum() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/hard-coded-enum");

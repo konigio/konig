@@ -42,5 +42,6 @@ public interface ShowlExpression {
 	 * @param sourceNodeShape
 	 * @param set  The set to which the properties should be added.
 	 */
-	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set);
+	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set)
+	throws ShowlProcessingException;
 }

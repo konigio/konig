@@ -115,6 +115,8 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlClass;
+import io.konig.core.showl.ShowlDerivedPropertyExpression;
+import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlEnumPropertyExpression;
@@ -142,9 +144,11 @@ import io.konig.datasource.DataSource;
 import io.konig.formula.Expression;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.FunctionModel;
+import io.konig.formula.IriTemplateExpression;
 import io.konig.formula.LiteralFormula;
 import io.konig.formula.PathTerm;
 import io.konig.formula.PrimaryExpression;
+import io.konig.formula.QuantifiedExpression;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.NodeKind;
@@ -990,6 +994,10 @@ public class BeamTransformGenerator {
 					transformEnumProperty(body, p, (ShowlEnumPropertyExpression)e, inputRow, outputRow, enumObject);
 				} else if (p.getValueShape() != null) {
 					transformObjectProperty(body, p, inputRow, outputRow);
+					
+				} else if (e instanceof ShowlDerivedPropertyExpression) {
+					transformDerivedProperty(body, p, (ShowlDerivedPropertyExpression) e, inputRow, outputRow);
+					
 				} else {
 					fail("At {0}, expression not supported: {1}", p.getPath(), e.displayValue());
 				}
@@ -1029,6 +1037,80 @@ public class BeamTransformGenerator {
 //				} 
 				
 				
+				
+			}
+
+			private void transformDerivedProperty(JBlock body, ShowlDirectPropertyShape p,
+					ShowlDerivedPropertyExpression e, JVar inputRow, JVar outputRow) throws BeamTransformGenerationException {
+				
+				PropertyConstraint constraint = e.getSourceProperty().getPropertyConstraint();
+				if (constraint == null) {
+					fail("At {0}, failed to transform derived property {1}: PropertyConstraint is null ", 
+							p.getPath(), e.getSourceProperty().getPath());
+				}
+				
+				QuantifiedExpression formula = constraint.getFormula();
+				if (formula == null) {
+
+					fail("At {0}, failed to transform derived property {1}: PropertyConstraint does not define a formula", 
+							p.getPath(), e.getSourceProperty().getPath());
+				}
+				
+				PrimaryExpression primary = formula.asPrimaryExpression();
+				if (primary instanceof IriTemplateExpression) {
+					transformIriTemplateExpression(body, p, e.getSourceProperty(), (IriTemplateExpression) primary, inputRow, outputRow);
+				
+				} else {
+
+					fail("At {0}, failed to transform derived property {1}: Formula not supported {2}", 
+							p.getPath(), e.getSourceProperty().getPath(), formula.toSimpleString());
+				}
+				
+			}
+
+			private void transformIriTemplateExpression(JBlock body, ShowlDirectPropertyShape p,
+					ShowlDerivedPropertyShape other, IriTemplateExpression primary, JVar inputRow,
+					JVar outputRow) throws BeamTransformGenerationException {
+				
+				IriTemplate template = primary.getTemplate();
+				
+				// StringBuilder $builder = new StringBuilder();
+				
+				String targetPropertyName = p.getPredicate().getLocalName();
+				
+				AbstractJClass stringBuilderClass = model.ref(StringBuilder.class);
+				String builderName = targetPropertyName + "Builder";
+				
+				JVar builder = body.decl(stringBuilderClass, builderName, stringBuilderClass._new());
+			
+				
+				Context context = template.getContext();
+				
+				
+				
+				for (Element e : template.toList()) {
+					switch (e.getType()) {
+					case TEXT :
+						// $builder.add("$e.getText()");
+						body.add(builder.invoke("append").arg(JExpr.lit(e.getText())));
+						break;
+						
+					case VARIABLE :
+						// $builder.add(inputRow.get("$varName"));
+						String simpleName = e.getText();
+						URI predicate = new URIImpl(context.expandIRI(simpleName));
+						ShowlDirectPropertyShape directProperty = directProperty(other.getDeclaringShape(), predicate);
+						String varName = directProperty.getPredicate().getLocalName();
+						body.add(builder.invoke("append").arg(inputRow.invoke("get").arg(varName)));
+						break;
+						
+					}
+				}
+				
+				// outputRow.set("$targetPropertyName", $builder.toString());
+				
+				body.add(outputRow.invoke("set").arg(JExpr.lit(targetPropertyName)).arg(builder.invoke("toString")));
+
 				
 			}
 

@@ -41,6 +41,9 @@ import io.konig.core.KonigException;
 import io.konig.core.LocalNameService;
 import io.konig.core.Term;
 import io.konig.core.Term.Kind;
+import io.konig.core.util.IriTemplate;
+import io.konig.core.util.ValueFormat.Element;
+import io.konig.core.util.ValueFormat.ElementType;
 import io.konig.rio.turtle.NamespaceMap;
 import io.konig.rio.turtle.SeaTurtleParser;
 
@@ -190,22 +193,22 @@ public class FormulaParser {
 //			return list;
 //		}
 
-		private Triple tryTriple() throws RDFParseException, IOException {
-			Triple triple = null;
-			PathTerm subject = tryPathTerm();
-			if (subject != null) {
-				PathTerm term = pathTerm();
-				if (!(term instanceof IriValue)) {
-					throw new RDFParseException("Expected curie, iri, or local name");
-				}
-				IriValue predicate = (IriValue) term;
-				PathTerm object = pathTerm();
-				assertNext('.');
-				triple = new Triple(subject, predicate, object);
-				
-			}
-			return triple;
-		}
+//		private Triple tryTriple() throws RDFParseException, IOException {
+//			Triple triple = null;
+//			PathTerm subject = tryPathTerm();
+//			if (subject != null) {
+//				PathTerm term = pathTerm();
+//				if (!(term instanceof IriValue)) {
+//					throw new RDFParseException("Expected curie, iri, or local name");
+//				}
+//				IriValue predicate = (IriValue) term;
+//				PathTerm object = pathTerm();
+//				assertNext('.');
+//				triple = new Triple(subject, predicate, object);
+//				
+//			}
+//			return triple;
+//		}
 
 
 		private Expression expression() throws RDFParseException, IOException, RDFHandlerException {
@@ -548,12 +551,13 @@ public class FormulaParser {
 		 * Return one of fully-qualified IRI, CURIE, or localName registered with the LocalNameService.
 		 * @throws IOException 
 		 * @throws RDFParseException 
+		 * @throws RDFHandlerException 
 		 */
-		private PathTerm tryIri() throws IOException, RDFParseException {
+		private PrimaryExpression tryIri() throws IOException, RDFParseException, RDFHandlerException {
 			
 			
 			
-			PathTerm result = null;
+			PrimaryExpression result = null;
 			
 			return
 				(result=tryFullIri()) != null ? result :
@@ -649,7 +653,7 @@ public class FormulaParser {
 			return null;
 		}
 
-		private PathTerm tryFullIri() throws RDFParseException, IOException {
+		private PrimaryExpression tryFullIri() throws RDFParseException, IOException, RDFHandlerException {
 			if (
 				isString("<http://") ||
 				isString("<https://") ||
@@ -657,6 +661,49 @@ public class FormulaParser {
 				isString("<file:")
 			) {				
 				String iriText = iriRef();
+				if (iriText.indexOf('{')>=0) {
+					Context context = getContext();
+					IriTemplate template = new IriTemplate(context, iriText);
+					
+					if (namespaceMap != null && localNameService!=null) {
+						for (Element e : template.toList()) {
+							if (e.getType() == ElementType.VARIABLE) {
+								String text = e.getText();
+								int colon = text.indexOf(':');
+								if (colon > 0) {
+									String prefix = text.substring(0, colon);
+									String namespaceURI = namespaceMap.get(prefix);
+									if (namespaceURI == null) {
+										throw new RDFHandlerException("namespace prefix not defined: " + prefix);
+									}
+									context.add(new Term(prefix, namespaceURI, Kind.NAMESPACE));
+									String localName = text.substring(colon+1);
+									context.addTerm(localName, text);
+								} else {
+									
+									Set<URI> set = localNameService.lookupLocalName(text);
+									if (set.size() > 1) {
+										StringBuilder builder = new StringBuilder();
+										builder.append("Local name '");
+										builder.append(text);
+										builder.append("' is ambiguous.  Possible values include: ");
+										for (URI uri : set) {
+											builder.append("\n  ");
+											builder.append(uri.stringValue());
+										}
+										throw new RDFHandlerException(builder.toString());
+									} else if (set.isEmpty()) {
+										throw new RDFHandlerException("Local name not known: " + text);
+									}
+									
+									URI uri = set.iterator().next();
+									context.addTerm(text, uri.stringValue());
+								}
+							}
+						}
+					}
+					return new IriTemplateExpression(template);
+				}
 				return new FullyQualifiedIri(new URIImpl(iriText));
 			}
 			return null;
