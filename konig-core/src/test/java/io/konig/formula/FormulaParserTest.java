@@ -22,22 +22,64 @@ package io.konig.formula;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.rio.RDFParseException;
 
 import io.konig.core.Context;
 import io.konig.core.Term;
 import io.konig.core.impl.SimpleLocalNameService;
+import io.konig.core.util.IriTemplate;
+import io.konig.core.util.ValueFormat.Element;
+import io.konig.core.util.ValueFormat.ElementType;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 
 public class FormulaParserTest {
 
 	private FormulaParser parser = new FormulaParser();
 	
+	@Test
+	public void testIriTemplate() throws Exception {
+		String text = "<http://example.com/person/{uid}>";
+
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		service.add(Konig.uid);
+		
+
+
+		String expected = "@term uid <http://www.konig.io/ns/core/uid>\n" + 
+				"\n" + 
+				"<http://example.com/person/{uid}>";
+		
+		validate(expected, text, new FormulaParser(null, service));
+		validate(expected, expected, parser);
+		
+	}
+	
+	private void validate(String expected, String text, FormulaParser parser) throws RDFParseException, IOException {
+
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		PrimaryExpression primary = e.asPrimaryExpression();
+		assertTrue(primary instanceof IriTemplateExpression);
+		
+		IriTemplate template = ((IriTemplateExpression)primary).getTemplate();
+		assertEquals(2, template.toList().size());
+		Element element = template.toList().get(1);
+		assertEquals(ElementType.VARIABLE, element.getType());
+		assertEquals("uid", element.getText());
+		
+		String formulaText = e.toString();
+		
+		
+		assertEquals(expected, formulaText.trim());
+		
+	}
+
 	@Test
 	public void testMonth() throws Exception {
 		String text = "MONTH($.dateCreated)";
