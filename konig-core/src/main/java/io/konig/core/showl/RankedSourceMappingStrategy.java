@@ -73,13 +73,14 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 		boolean wasAdded = false;
 		
 		Iterator<ShowlDirectPropertyShape> sequence = pool.iterator();
-		while (sequence.hasNext()) {
+		outer: while (sequence.hasNext()) {
 			ShowlDirectPropertyShape p = sequence.next();
 			for (ShowlExpression e : p.getExpressionList()) {
 				
 				if (e instanceof ShowlIriReferenceExpression) {
 					sequence.remove();
 					p.setSelectedExpression(e);
+					continue outer;
 				} else	if (e.rootNode() == sourceNode) {
 					sequence.remove();
 					p.setSelectedExpression(e);
@@ -89,6 +90,7 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 						addChannel(manager, sourceNode, targetNode);
 						wasAdded = true;
 					}
+					continue outer;
 					
 				}
 			}
