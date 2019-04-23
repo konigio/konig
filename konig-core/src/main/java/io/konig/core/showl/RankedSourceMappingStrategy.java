@@ -81,16 +81,19 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 					sequence.remove();
 					p.setSelectedExpression(e);
 					continue outer;
-				} else	if (e.rootNode() == sourceNode) {
-					sequence.remove();
-					p.setSelectedExpression(e);
-					
-					if (!wasAdded) {
+				} else	{
+					ShowlNodeShape root = e.rootNode();
+					if (root == sourceNode) {
+						sequence.remove();
+						p.setSelectedExpression(e);
 						
-						addChannel(manager, sourceNode, targetNode);
-						wasAdded = true;
+						if (!wasAdded) {
+							
+							addChannel(manager, sourceNode, targetNode);
+							wasAdded = true;
+						}
+						continue outer;
 					}
-					continue outer;
 					
 				}
 			}

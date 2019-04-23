@@ -75,6 +75,13 @@ public class BeamTransformGeneratorTest {
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
 	@Test
+	public void testNestedRecord() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/nested-record");
+		
+	}
+	
+	@Test
 	public void testIriTemplateFormula() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/iri-template-formula");
@@ -168,6 +175,7 @@ public class BeamTransformGeneratorTest {
 		
 		if (withValidation) {
 		
+			assertTrue(!consumer.getList().isEmpty());
 			for (ShowlNodeShape targetNodeShape : consumer.getList()) {
 				URI shapeId = RdfUtil.uri(targetNodeShape.getId());
 				File actualDir = request.projectDir(shapeId);

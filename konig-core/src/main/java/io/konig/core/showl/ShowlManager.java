@@ -278,28 +278,24 @@ public class ShowlManager implements ShowlClassManager {
 			}
 		}
 		
+		buildTransforms(targetNode, candidates);
+		
+		
+		
+		
+	}
+
+	private void buildTransforms(ShowlNodeShape targetNode, Collection<ShowlNodeShape> candidates) {
 		for (ShowlNodeShape sourceNode : candidates) {
 
 			if (logger.isTraceEnabled()) {
-				logger.trace("buildTransform: From source {} to target {}", sourceNode.getPath(), targetNode.getPath());
+				logger.trace("buildTransforms: From source {} to target {}", sourceNode.getPath(), targetNode.getPath());
 			}
 		    for (ShowlDirectPropertyShape targetProperty : targetNode.getProperties()) {
 		    	
-		    	// Check for a direct match.
 		    	
-		    	boolean matched = matchProperty(sourceNode, targetProperty);
+		    	matchProperty(sourceNode, targetProperty);
 		    	
-		    	if (!matched) {
-		    		
-		    		// Check for a synonym match
-		    	
-			    	ShowlPropertyShape synonym = targetProperty.getSynonym();
-			    	matched = matchProperty(sourceNode, synonym);
-		    	}
-		    	
-		    	if (!matched) {
-		    		System.out.println("now what?");
-		    	}
 		    }
 		}
 		
@@ -317,8 +313,8 @@ public class ShowlManager implements ShowlClassManager {
 			
 		}
 		
-		
 	}
+
 
 	private void addEnumMappings(ShowlNodeShape targetShape) {
 		
@@ -412,6 +408,7 @@ public class ShowlManager implements ShowlClassManager {
 	private boolean match(ShowlPropertyShape sourceProperty, ShowlPropertyShape targetProperty) {
 
     	if (sourceProperty != null) {
+    		
     		
     		
     		if (!(sourceProperty instanceof ShowlDirectPropertyShape)) {
@@ -2063,15 +2060,28 @@ public class ShowlManager implements ShowlClassManager {
 	}
 
 
-	private void addExpression(ShowlPropertyShape a, ShowlPropertyShape b) {
-		if (b instanceof ShowlDirectPropertyShape) {
-			a.addExpression(new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)b));
+	private void addExpression(ShowlPropertyShape target, ShowlPropertyShape source) {
+		if (source instanceof ShowlDirectPropertyShape) {
+			target.addExpression(new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)source));
 		} else {
-			ShowlDerivedPropertyShape derived = (ShowlDerivedPropertyShape) b;
+			ShowlDerivedPropertyShape derived = (ShowlDerivedPropertyShape) source;
 			if (derived.getFormula() != null) {
-				a.addExpression(derived.getFormula());
+				target.addExpression(derived.getFormula());
 			} else {
-				a.addExpression(new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape)b));
+				target.addExpression(new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape)source));
+			}
+		}
+
+		ShowlNodeShape targetNode = target.getValueShape();
+		
+		if (targetNode != null && !reasoner.isEnumerationClass(targetNode.getOwlClass().getId())) {
+		
+			ShowlNodeShape sourceNode = source.getValueShape();
+			
+			if (sourceNode!=null) {
+				List<ShowlNodeShape> list = new ArrayList<>();
+				list.add(sourceNode);
+				buildTransforms(targetNode, list);
 			}
 		}
 		
