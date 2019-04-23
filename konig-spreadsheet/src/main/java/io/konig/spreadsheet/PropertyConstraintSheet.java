@@ -22,11 +22,12 @@ package io.konig.spreadsheet;
 
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
@@ -103,6 +104,13 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 			PROJECT
 	};
 	
+	private static final Set<String> KONIG_ID_FORMULA = new HashSet<>();
+	static {
+		KONIG_ID_FORMULA.add("$.id");
+		KONIG_ID_FORMULA.add("$.konig:id");
+		KONIG_ID_FORMULA.add("$.<" + Konig.NAMESPACE + "id>");
+	}
+	
 	private OwlReasoner reasoner;
 
 	@SuppressWarnings("unchecked")
@@ -146,7 +154,6 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 		Integer decimalPrecision = intValue(row, DECIMAL_PRECISION);
 		Integer decimalScale = intValue(row, DECIMAL_SCALE);
 		URI preferredTabularShapeId = iriValue(row, PREFERRED_TABULAR_SHAPE);
-		Collection<URI> subject = iriList(row, SUBJECT);
 		
 		logger.trace("visit - shapeId: {}, propertyId: {}", compactName(shapeId), propertyPathText);
 		
@@ -291,14 +298,41 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 		p.setIn(valueIn);
 		
 		if (formulaText != null) {
-			// Ensure that the BuildLocalNameServiceAction gets executed
-			processor.service(SimpleLocalNameService.class);
-			ShapeFormulaAction action = processor.service(ShapeFormulaAction.class);
-			action.addShapeFormulaBuilder(shape, true,
-				new PropertyConstraintFormulaBuilder(
-					location(row, FORMULA), 
-					p, 
-					formulaText), processor);
+			
+			if (KONIG_ID_FORMULA.contains(formulaText)) {
+				// Generate an IRI template on the shape based on the
+				// property.
+				
+				// The template has the form...  <{predicate}>
+				
+				URI predicate = p.getPredicate();
+				if (predicate == null) {
+					fail(row, PROPERTY_ID, "The ''Property Id'' value must be a predicate when the formula is {0}", formulaText);
+				}
+				String templateText = "{" + predicate.getLocalName() + "}";
+
+				processor.defer(
+					new BuildShapeTemplateAction(
+						location(row, FORMULA),
+						processor, 
+						processor.getGraph().getNamespaceManager(), 
+						service(SimpleLocalNameService.class), 
+						shape, 
+						templateText
+				));
+				
+			} else {
+			
+				// Ensure that the BuildLocalNameServiceAction gets executed
+				
+				processor.service(SimpleLocalNameService.class);
+				ShapeFormulaAction action = processor.service(ShapeFormulaAction.class);
+				action.addShapeFormulaBuilder(shape, true,
+					new PropertyConstraintFormulaBuilder(
+						location(row, FORMULA), 
+						p, 
+						formulaText), processor);
+			}
 		}
 		
 		declareStatus(status);
