@@ -1,0 +1,20 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:AddressShape sh:property  [ 
+		sh:path schema:addressLocality ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate schema:addressLocality ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path schema:addressRegion ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate schema:addressRegion ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape , sh:NodeShape ; 
+	sh:targetClass schema:PostalAddress . 
