@@ -39,15 +39,20 @@ import java.util.Set;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.core.Context;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
+import io.konig.core.impl.BasicContext;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.util.IriTemplate;
+import io.konig.core.util.ValueFormat;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.formula.Direction;
@@ -56,6 +61,7 @@ import io.konig.formula.Expression;
 import io.konig.formula.Formula;
 import io.konig.formula.FormulaVisitor;
 import io.konig.formula.HasPathStep;
+import io.konig.formula.IriTemplateExpression;
 import io.konig.formula.IriValue;
 import io.konig.formula.LiteralFormula;
 import io.konig.formula.PathExpression;
@@ -2055,8 +2061,6 @@ public class ShowlManager implements ShowlClassManager {
 		}
 
 		
-
-		
 	}
 
 
@@ -2065,6 +2069,7 @@ public class ShowlManager implements ShowlClassManager {
 			target.addExpression(new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)source));
 		} else {
 			ShowlDerivedPropertyShape derived = (ShowlDerivedPropertyShape) source;
+			addClassIriTemplateFormula(target, derived);
 			if (derived.getFormula() != null) {
 				target.addExpression(derived.getFormula());
 			} else {
@@ -2088,6 +2093,66 @@ public class ShowlManager implements ShowlClassManager {
 				List<ShowlNodeShape> list = new ArrayList<>();
 				list.add(sourceNode);
 				buildTransforms(targetNode, list);
+			}
+		}
+		
+	}
+
+	
+	/**
+	 * Use the IRI Template from the OWL Class to inject a formula for the target IRI.
+	 */
+	private void addClassIriTemplateFormula(ShowlPropertyShape target, ShowlDerivedPropertyShape derived) {
+		if (derived.getFormula()==null && derived.getValueShape()!=null) {
+			ShowlClass owlClass = target.getValueType(this);
+			Vertex v = reasoner.getGraph().getVertex(owlClass.getId());
+			if (v != null) {
+				Value templateValue = v.getValue(Konig.iriTemplate);
+				if (templateValue != null) {
+					ShowlNodeShape node = derived.getValueShape();
+					IriTemplate classTemplate = new IriTemplate(templateValue.stringValue());
+					Context classContext = classTemplate.getContext();
+					classContext.compile();
+					
+					IriTemplate template = new IriTemplate();
+					BasicContext context = new BasicContext("");
+					template.setContext(context);
+					
+					
+					for (ValueFormat.Element e : classTemplate.toList()) {
+						switch (e.getType()) {
+						case TEXT :
+							template.addText(e.getText());
+							break;
+							
+						case VARIABLE :
+							URI termId = new URIImpl(classContext.expandIRI(e.getText()));
+							ShowlPropertyShape p = node.findOut(termId);
+							if (p != null) {
+								if (p instanceof ShowlDerivedPropertyShape) {
+									p = p.getSynonym();
+								}
+								
+								if (p instanceof ShowlDirectPropertyShape) {
+									URI predicate = p.getPredicate();
+									context.addTerm(predicate.getLocalName(), predicate.stringValue());
+									
+									template.addVariable(predicate.getLocalName());
+								} else {
+									// abort
+									return;
+								}
+							}
+							break;
+						}
+					}
+					
+					ShowlFunctionExpression e = ShowlFunctionExpression.fromIriTemplate(
+							derived.getValueShape(), template);
+					derived.setFormula(e);
+					
+					
+				}
 			}
 		}
 		

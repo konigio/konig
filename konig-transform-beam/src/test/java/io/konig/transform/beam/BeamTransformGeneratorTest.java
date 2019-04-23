@@ -75,6 +75,13 @@ public class BeamTransformGeneratorTest {
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
 	@Test
+	public void testClassIriTemplate() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/class-iri-template");
+		
+	}
+
+	@Test
 	public void testNestedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/nested-record");
