@@ -37,9 +37,17 @@ public class ReadPersonSourceShapeFn
                 CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180);
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
+                    String address_id = stringValue(record.get("address_id"));
+                    if (address_id!= null) {
+                        row.set("address_id", address_id);
+                    }
                     String city = stringValue(record.get("city"));
                     if (city!= null) {
                         row.set("city", city);
+                    }
+                    String id = stringValue(record.get("id"));
+                    if (id!= null) {
+                        row.set("id", id);
                     }
                     String person_id = stringValue(record.get("person_id"));
                     if (person_id!= null) {

@@ -16,14 +16,9 @@ public class ToPersonTargetShapeFn
             TableRow outputRow = new TableRow();
             Object id = concat("http://example.com/person/", required(inputRow, "person_id"));
             outputRow.set("id", id);
-            TableRow address = new TableRow();
-            Object city = inputRow.get("city");
-            if (city!= null) {
-                address.set("addressLocality", city);
-            }
-            Object state = inputRow.get("state");
-            if (state!= null) {
-                address.set("addressRegion", state);
+            Object address_id = inputRow.get("address_id");
+            if (address_id!= null) {
+                outputRow.set("address", address_id);
             }
             if (!outputRow.isEmpty()) {
                 c.output(outputRow);
