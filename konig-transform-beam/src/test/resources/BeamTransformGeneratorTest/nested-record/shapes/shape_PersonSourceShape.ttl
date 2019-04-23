@@ -9,44 +9,55 @@
 
 shape:PersonSourceShape sh:property  [ 
 		sh:path alias:person_id ; 
-		sh:datatype xsd:string ; 
 		rdf:predicate alias:person_id ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path alias:address_id ; 
+		konig:formula '''
+@term address <http://schema.org/address>
+
+$.address''' ; 
+		rdf:predicate alias:address_id ; 
+		sh:nodeKind sh:IRI ; 
+		sh:class schema:PostalAddress ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
 		sh:path alias:city ; 
-		sh:datatype xsd:string ; 
-		rdf:predicate alias:city ; 
 		konig:formula '''
 @term address <http://schema.org/address>
 @term addressLocality <http://schema.org/addressLocality>
 
 $.address.addressLocality''' ; 
+		rdf:predicate alias:city ; 
+		sh:datatype xsd:string ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1
 	 ]  ,  [ 
 		sh:path alias:state ; 
-		sh:datatype xsd:string ; 
-		rdf:predicate alias:state ; 
 		konig:formula '''
 @term address <http://schema.org/address>
 @term addressRegion <http://schema.org/addressRegion>
 
 $.address.addressRegion''' ; 
+		rdf:predicate alias:state ; 
+		sh:datatype xsd:string ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ]  ; 
 	a sh:Shape ; 
-	sh:targetClass schema:Person ; 
+	konig:shapeDataSource <gs://personsourceshape-${gcpBucketSuffix}> ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
    "person_id" : "alias:person_id"
 }
 
 <http://example.com/person/{person_id}>''' ; 
-	konig:shapeDataSource <gs://personsourceshape-${gcpBucketSuffix}> . 
+	sh:targetClass schema:Person . 
 
 <gs://personsourceshape-${gcpBucketSuffix}> gcp:name "personsourceshape-${gcpBucketSuffix}" ; 
 	gcp:location "us" ; 
-	gcp:projectId "${gcpProjectId}" ; 
 	gcp:storageClass "multi_regional" ; 
+	gcp:projectId "${gcpProjectId}" ; 
 	a konig:GoogleCloudStorageBucket , konig:DataSource . 

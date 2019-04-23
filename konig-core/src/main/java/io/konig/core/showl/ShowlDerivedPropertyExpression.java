@@ -56,11 +56,7 @@ public class ShowlDerivedPropertyExpression extends ShowlPropertyExpression {
 		if (sourceProperty.getRootNode() == sourceNodeShape.getRoot()) {
 			PropertyConstraint constraint = sourceProperty.getPropertyConstraint();
 			
-			if (constraint == null) {
-				throw new ShowlProcessingException("PropertyConstraint not found at " + sourceProperty.getPath());
-			}
-			
-			QuantifiedExpression formula = constraint.getFormula();
+			QuantifiedExpression formula = constraint==null ? null : constraint.getFormula();
 			
 			if (formula == null) {
 				super.addDeclaredProperties(sourceNodeShape, set);

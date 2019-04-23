@@ -2077,6 +2077,12 @@ public class ShowlManager implements ShowlClassManager {
 		if (targetNode != null && !reasoner.isEnumerationClass(targetNode.getOwlClass().getId())) {
 		
 			ShowlNodeShape sourceNode = source.getValueShape();
+			if (sourceNode == null) {
+				ShowlPropertyShape synonym = source.getSynonym();
+				if (synonym != null) {
+					sourceNode = synonym.getValueShape();
+				}
+			}
 			
 			if (sourceNode!=null) {
 				List<ShowlNodeShape> list = new ArrayList<>();
