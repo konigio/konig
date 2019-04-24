@@ -31,13 +31,14 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.annotation.RdfProperty;
+import io.konig.core.pojo.ConditionalEmbeddable;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.DC;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.shacl.ShapeBuilder;
 
-public class DataSource {
+public class DataSource implements ConditionalEmbeddable {
 	
 	private Resource id;
 	private String identifier;
@@ -110,6 +111,9 @@ public class DataSource {
 
 	public void setId(Resource id) {
 		this.id = id;
+		if (id != null) {
+			DataSourceManager.getInstance().add(this);
+		}
 	}
 
 	@RdfProperty(Konig.IRI_TEMPLATE)
@@ -142,6 +146,11 @@ public class DataSource {
 			return id.equals(((DataSource) other).getId());
 		}
 		return false;
+	}
+
+	@Override
+	public boolean isEmbeddabled() {
+		return true;
 	}
 	
 }

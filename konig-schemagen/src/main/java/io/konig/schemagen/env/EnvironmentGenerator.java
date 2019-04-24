@@ -192,6 +192,7 @@ public class EnvironmentGenerator {
 				File outDir = new File(targetDir, envName);
 				
 				buildContext(propertiesFile);
+				context.put("environmentName", envName);
 				Environment env = new Environment(envName, outDir);
 				
 				generate(sourceDir, env);

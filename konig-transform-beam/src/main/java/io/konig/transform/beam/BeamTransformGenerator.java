@@ -2165,10 +2165,10 @@ ShowlNodeShape valueShape = p.getValueShape();
 			JVar pattern = method.param(stringClass, "pattern");
 			JVar options = method.param(optionsClass, "options");
 			
-			//   return pattern.replace("${gcpBucketSuffix}", options.getEnvironment());
+			//   return pattern.replace("${environmentName}", options.getEnvironment());
 			
 			method.body()._return(pattern.invoke("replace")
-					.arg(JExpr.lit("${gcpBucketSuffix}"))
+					.arg(JExpr.lit("${environmentName}"))
 					.arg(options.invoke("getEnvironment")));
 			
 			// }
@@ -2189,7 +2189,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 			JVar envName = method.body().decl(stringClass, "envName", options.invoke("getEnvironment"));
 
 			
-			//  return "$bucketId".replace("${gcpBucketSuffix}", envName);
+			//  return "$bucketId".replace("${environmentName}", envName);
 
 			ShowlNodeShape sourceNode = targetNode.getChannels().get(0).getSourceNode();
 			GoogleCloudStorageBucket bucket = sourceNode.getShape().findDataSource(GoogleCloudStorageBucket.class);
