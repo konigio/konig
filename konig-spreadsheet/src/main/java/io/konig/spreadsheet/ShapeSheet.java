@@ -30,6 +30,7 @@ import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 
 import io.konig.core.impl.SimpleLocalNameService;
+import io.konig.core.util.SimpleValueMap;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.AndConstraint;
 import io.konig.shacl.OrConstraint;
@@ -73,6 +74,7 @@ public class ShapeSheet extends BaseSheetProcessor {
 	};
 
 	private DataSourceGeneratorFactory dataSourceGeneratorFactory;
+	private boolean generatedBatchFileBucket=false;
 	
 	@SuppressWarnings("unchecked")
 	public ShapeSheet(WorkbookProcessor processor, DataSourceGeneratorFactory dataSourceGeneratorFactory) {
@@ -168,6 +170,25 @@ public class ShapeSheet extends BaseSheetProcessor {
 
 	}
 	
+	protected  List<Function> dataSourceList(SheetRow row, SheetColumn column) throws SpreadsheetException {
+		List<Function> list = super.dataSourceList(row, column);
+		addBatchFileBucket(list);
+		return list;
+	}
+	
+	private void addBatchFileBucket(List<Function> list) {
+		if (!generatedBatchFileBucket && list!=null) {
+			for (Function func : list) {
+				String name = func.getName();
+				if ("BigQueryCsvBucket".equals(name) || "GoogleCloudStorageBucket".equals(name)) {
+					generatedBatchFileBucket = true;
+					list.add(new Function("BatchFileInboundBucket",  new SimpleValueMap()));
+					break;
+				}
+			}
+		}
+	}
+
 	private AndConstraint andConstraint(SheetRow row, SheetColumn col, String andList) throws SpreadsheetException {
 
 		AndConstraint and = null;

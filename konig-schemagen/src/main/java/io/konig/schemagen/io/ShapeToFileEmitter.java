@@ -23,6 +23,8 @@ package io.konig.schemagen.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -31,9 +33,14 @@ import org.openrdf.rio.RDFHandlerException;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.impl.CompositeLocalNameService;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.io.Emitter;
+import io.konig.core.pojo.EmitContext;
+import io.konig.core.pojo.SimplePojoEmitter;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.ShapeFileGetter;
@@ -50,8 +57,6 @@ public class ShapeToFileEmitter implements Emitter {
 	}
 
 
-
-
 	@Override
 	public void emit(Graph graph) throws IOException, KonigException {
 		if (!outDir.exists()) {
@@ -60,11 +65,13 @@ public class ShapeToFileEmitter implements Emitter {
 		NamespaceManager nsManager = graph.getNamespaceManager();
 		ShapeFileGetter fileGetter = new ShapeFileGetter(outDir, nsManager);
 		ShapeWriter shapeWriter = new ShapeWriter();
+		Set<DataSource> dataSourceList = new HashSet<>();
 		for (Shape shape : shapeManager.listShapes()) {
 			Resource shapeId = shape.getId();
 			if (shapeId instanceof URI) {
 				URI shapeURI = (URI) shapeId;
 
+				addDataSources(dataSourceList, shape);
 				Graph shapeGraph = new MemoryGraph(graph.getNamespaceManager());
 				shapeWriter.emitShape(shape, shapeGraph);
 				File shapeFile = fileGetter.getFile(shapeURI);
@@ -74,9 +81,79 @@ public class ShapeToFileEmitter implements Emitter {
 					throw new KonigException("Failed to save Shape: " + shapeId, e);
 				}
 			}
-
 		}
+		
+		emitDataSources(graph, dataSourceList);
 
+	}
+
+
+	private void emitDataSources(Graph graph, Set<DataSource> dataSourceList) {
+		
+		for (DataSource ds : dataSourceList) {
+			String fileName = dataSourceFileName(ds);
+			File file = new File(outDir, fileName);
+			Graph fileGraph = new MemoryGraph(graph.getNamespaceManager());
+			
+
+			SimplePojoEmitter emitter = SimplePojoEmitter.getInstance();
+			CompositeLocalNameService nameService = new CompositeLocalNameService(
+				SimpleLocalNameService.getDefaultInstance(), graph);
+			
+			EmitContext context = new EmitContext(graph);
+			context.setLocalNameService(nameService);
+			emitter.emit(context, ds, fileGraph);
+			
+			try {
+				RdfUtil.prettyPrintTurtle(graph.getNamespaceManager(),  fileGraph, file);
+			} catch (Throwable oops) {
+				throw new KonigException("Failed to save DataSource " + ds.getId().stringValue(), oops);
+			}
+			
+		}
+		
+	}
+
+
+	private String dataSourceFileName(DataSource ds) {
+		String fileName = null;
+		Resource id = ds.getId();
+		if (id instanceof URI) {
+			// Remove unsatisfied variables like ${environmentName}
+			
+			String idValue = id.stringValue().replaceAll("\\$\\{[^}]*}", "");
+			int start = idValue.indexOf(':');
+			int end = idValue.length();
+			
+			// Trim leading and trailing slashes
+			while (++start < idValue.length() && idValue.charAt(start)=='/');
+			while (--end>0 && idValue.charAt(end)=='/');
+			
+			// Trim trailing dashes
+			while (end>0 && idValue.charAt(end)=='-') {
+				end--;
+			}
+			
+			fileName = idValue.substring(start, end+1);
+			
+			if (fileName.length()==0) {
+				throw new KonigException("Invalid IRI: " + id.stringValue());
+			}
+			
+			fileName = fileName + ".ttl";
+			
+		}
+		return fileName;
+	}
+
+
+	private void addDataSources(Set<DataSource> dataSourceList, Shape shape) {
+		for (DataSource ds : shape.getShapeDataSource()) {
+			if (!ds.isEmbeddabled()) {
+				dataSourceList.add(ds);
+			}
+		}
+		
 	}
 
 }

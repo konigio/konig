@@ -63,7 +63,20 @@ public class PojoContext {
 	}
 	
 	public PojoHandler getPojoHandler(Class<?> javaClass) {
-		return pojoHandlerMap.get(javaClass);
+		PojoHandler handler = null;
+		while (javaClass != null && handler==null) {
+
+			handler = pojoHandlerMap.get(javaClass);
+			if (handler == null) {
+				javaClass = javaClass.getSuperclass();
+				if (javaClass == Object.class) {
+					break;
+				}
+			}
+		}
+		
+		
+		return handler;
 	}
 	
 	public PojoHandler putPojoHandler(Class<?> javaClass, PojoHandler pojoHandler) {

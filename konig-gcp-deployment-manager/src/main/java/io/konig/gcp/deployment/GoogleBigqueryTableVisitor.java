@@ -35,6 +35,7 @@ import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.DataSourceVisitor;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.shacl.Shape;
 
@@ -54,7 +55,27 @@ public class GoogleBigqueryTableVisitor implements DataSourceVisitor {
 		if (ds instanceof GoogleBigQueryTable) {
 			GoogleBigQueryTable bigquery = (GoogleBigQueryTable) ds;
 			handle(graph, shape, bigquery);
+		} else if (ds instanceof GoogleCloudStorageBucket) {
+			handleStorageBucket(graph, (GoogleCloudStorageBucket) ds);
 		}
+	}
+
+	private void handleStorageBucket(Graph graph, GoogleCloudStorageBucket bucket) {
+		String bucketName = bucket.getName();
+		String configName = manager.storageBucketConfigName(bucketName);
+		
+		StorageBucketResource resource = manager.getConfig().findResource(configName, StorageBucketResource.class);
+		if (resource == null) {
+			resource = new StorageBucketResource();
+			resource.setName(configName);
+			StorageBucketProperties properties = new StorageBucketProperties();
+			resource.setProperties(properties);
+			properties.setName(bucketName);
+			manager.getConfig().addResource(resource);
+			// TODO: add other properties
+		}
+		
+		
 	}
 
 	private void handle(Graph graph, Shape shape, GoogleBigQueryTable bigquery) {
