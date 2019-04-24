@@ -26,7 +26,7 @@ public class ToPersonTargetShapeFn
         }
     }
 
-    private Object required(Object row, String fieldName) {
+    private Object required(TableRow row, String fieldName) {
         Object value = row.get(fieldName);
         if (value == null) {
             throw new RuntimeException((("Field "+ fieldName)+" must not be null."));

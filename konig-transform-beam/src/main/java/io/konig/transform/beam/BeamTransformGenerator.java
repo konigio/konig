@@ -1183,13 +1183,13 @@ public class BeamTransformGenerator {
 
 			private JMethod declareRequiredMethod() {
 				if (requiredMethod == null) {
-					// private Object reqired(TableRow row, String fieldName) throws RuntimeException {
+					// private Object required(TableRow row, String fieldName) throws RuntimeException {
 					AbstractJClass objectClass = model.ref(Object.class);
 					AbstractJClass tableRowClass = model.ref(TableRow.class);
 					AbstractJClass stringClass = model.ref(String.class);
 					
 					requiredMethod = thisClass.method(JMod.PRIVATE, objectClass, "required");
-					JVar row = requiredMethod.param(objectClass, "row");
+					JVar row = requiredMethod.param(tableRowClass, "row");
 					JVar fieldName = requiredMethod.param(stringClass, "fieldName");
 					
 					//  Object value = row.get(fieldName);
@@ -2059,7 +2059,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 										JExpr.assign(stringValue, datePart.plus("T00:00:00.000").plus(zoneOffset)));
 						
 						block1._return(instantClass.staticInvoke("from").arg(
-								offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMill"));
+								offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli"));
 					
 						
 					} else {
