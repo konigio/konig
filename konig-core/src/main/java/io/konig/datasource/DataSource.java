@@ -1,5 +1,6 @@
 package io.konig.datasource;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -36,6 +37,8 @@ import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.DC;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
+import io.konig.lineage.DatasourceProperty;
+import io.konig.lineage.DatasourcePropertyPath;
 import io.konig.shacl.ShapeBuilder;
 
 public class DataSource implements ConditionalEmbeddable {
@@ -45,6 +48,8 @@ public class DataSource implements ConditionalEmbeddable {
 	private Set<URI> type = new LinkedHashSet<>();
 	private IriTemplate iriTemplate;
 	private List<URI> isPartOf;
+	
+	private List<DatasourceProperty> datasourceProperty;
  	
 	public DataSource() {
 		
@@ -152,5 +157,39 @@ public class DataSource implements ConditionalEmbeddable {
 	public boolean isEmbeddabled() {
 		return true;
 	}
+	
+	public void addDatasourceProperty(DatasourceProperty p) {
+		if (datasourceProperty == null) {
+			datasourceProperty = new ArrayList<>();
+		}
+		datasourceProperty.add(p);
+		p.setPropertySource(this);
+	}
+	
+	public DatasourceProperty findPropertyByPath(DatasourcePropertyPath path) {
+		for (DatasourceProperty p : getDatasourceProperty()) {
+			if (p.getPropertyPath().equals(path)) {
+				return p;
+			}
+		}
+		return null;
+	}
+
+	public DatasourceProperty findPropertyByPredicate(URI predicate) {
+		for (DatasourceProperty p : getDatasourceProperty()) {
+			if (p.getPropertyPath().size()==1) {
+				URI value = p.getPropertyPath().get(0);
+				if (value.equals(predicate)) {
+					return p;
+				}
+			}
+		}
+		
+		return null;
+	}
+	public List<DatasourceProperty> getDatasourceProperty() {
+		return datasourceProperty==null ? Collections.emptyList() : datasourceProperty;
+	}
+	
 	
 }

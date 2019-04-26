@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  * An annotation which marks a Java class as a container that corresponds to an RDF List.
  * Any Java class with this annotation must satisfy the following design patterns:
  * <ol> 
- *   <li> Must have an 'add' method to add the elements of the list. This method must accpet a single parameter.
+ *   <li> Must have an 'add' method to add the elements of the list. This method must accept a single parameter.
  *   <li> Must implement java.util.list, or have a single method whose name starts with "get" and returns an object whose class extends Collection.
  * </ol>
  * @author Greg McFall

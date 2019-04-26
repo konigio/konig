@@ -32,7 +32,6 @@ public class Konig {
 	public static final String JAVA_NAMESPACE = "http://www.konig.io/ns/java/";
 	public static final String ACTIVIY_BASE_URL = "http://www.konig.io/activity/";
 	
-	public static final String DATA_SOURCE = "http://www.konig.io/ns/core/DataSource"; 
 	public static final String GOOGLE_BIG_QUERY_TABLE = "http://www.konig.io/ns/core/GoogleBigQueryTable";
 	public static final String SHAPE_DATA_SOURCE = "http://www.konig.io/ns/core/shapeDataSource";
 	public static final String INPUT_SHAPE_OF = "http://www.konig.io/ns/core/inputShapeOf";
@@ -62,8 +61,17 @@ public class Konig {
 	public static final String ID = "http://www.konig.io/ns/core/id";
 	
 	public static class Terms {
+		public static final String DataSource = "http://www.konig.io/ns/core/DataSource"; 
 		public static final String dataSourceShape = "http://www.konig.io/ns/core/dataSourceShape";
 		public static final String nodeShapeCube = "http://www.konig.io/ns/core/nodeShapeCube";
+		public static final String propertyPath = "http://www.konig.io/ns/core/propertyPath";
+		public static final String propertySource = "http://www.konig.io/ns/core/propertySource";
+		public static final String generatedFrom = "http://www.konig.io/ns/core/generatedFrom";
+		public static final String generatorInputOf = "http://www.konig.io/ns/core/generatorInputOf";
+		public static final String generatorInput = "http://www.konig.io/ns/core/generatorInput";
+		public static final String generatorOutput = "http://www.konig.io/ns/core/generatorOutput";
+		public static final String DatasourceProperty = "http://www.konig.io/ns/core/DatasourceProperty";
+		public static final String PropertyGenerator = "http://www.konig.io/ns/core/PropertyGenerator";
 	}
 	
 	// ChangeSet terms
@@ -112,6 +120,15 @@ public class Konig {
 	public static final URI derivedProperty = new URIImpl(DERIVED_PROPERTY);
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI tabularFieldNamespace = new URIImpl(TABULAR_FIELD_NAMESPACE);
+
+	public static final URI propertyPath = new URIImpl(Terms.propertyPath);
+	public static final URI propertySource = new URIImpl(Terms.propertySource);
+	public static final URI generatedFrom = new URIImpl(Terms.generatedFrom);
+	public static final URI generatorInputOf = new URIImpl(Terms.generatorInputOf);
+	public static final URI generatorInput = new URIImpl(Terms.generatorInput);
+	public static final URI generatorOutput = new URIImpl(Terms.generatorOutput);
+	public static final URI DatasourceProperty = new URIImpl(Terms.DatasourceProperty);
+	public static final URI PropertyGenerator = new URIImpl(Terms.PropertyGenerator);
 	
 	/**
 	 * A sub-property of konig:derivedFrom which asserts that the "derived from" relationship was defined
@@ -130,7 +147,7 @@ public class Konig {
 	
 	// Data Sources
 
-	public static final URI DataSource = new URIImpl(DATA_SOURCE);
+	public static final URI DataSource = new URIImpl(Terms.DataSource);
 	public static final URI CurrentState = new URIImpl("http://www.konig.io/ns/core/CurrentState");
 	public static final URI AuthoritativeDataSource = new URIImpl("http://www.konig.io/ns/core/AuthoritativeDataSource");
 	public static final URI StagingDataSource = new URIImpl("http://www.konig.io/ns/core/StagingDataSource");

@@ -1,4 +1,4 @@
-package io.konig.datasource;
+package io.konig.shacl.io;
 
 /*
  * #%L
@@ -21,41 +21,30 @@ package io.konig.datasource;
  */
 
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openrdf.model.Resource;
+import io.konig.core.KonigException;
+import io.konig.core.pojo.impl.PojoHandler;
+import io.konig.core.pojo.impl.PojoInfo;
+import io.konig.core.pojo.impl.PojoUtil;
 
-public class DataSourceManager {
-	
-	
-	private static DataSourceManager INSTANCE = new DataSourceManager();
-	
-	public static DataSourceManager getInstance() {
-		return INSTANCE;
-	}
+public class MasterDataSourcePojoHandler implements PojoHandler {
 
-	private Map<Resource,DataSource> datasourceMap = new HashMap<>();
+	private Map<Class<?>, PojoHandler> handlerMap = new HashMap<>();
 	
-	public DataSourceManager() {
+	@Override
+	public void buildPojo(PojoInfo pojoInfo) throws KonigException {
 		
+		Class<?> javaType = PojoUtil.selectType(pojoInfo);
+		
+		PojoHandler handler = handlerMap.get(javaType);
+		if (handler == null) {
+			handler = new DataSourcePojoHandler(javaType);
+			handlerMap.put(javaType, handler);
+		}
+		
+		handler.buildPojo(pojoInfo);
 	}
 	
-	public void clear() {
-		datasourceMap.clear();
-	}
-	
-	public void add(DataSource ds) {
-		datasourceMap.put(ds.getId(), ds);
-	}
-	
-	public DataSource findDataSourceById(Resource id) {
-		return datasourceMap.get(id);
-	}
-	
-	public Collection<DataSource> listDataSources() {
-		return datasourceMap.values();
-	}
-
 }
