@@ -211,10 +211,22 @@ public class BasicPojoHandler implements PojoHandler {
 				
 			}
 		} else {
-			RdfList rdfList = collectionType.getAnnotation(RdfList.class);
-			if (rdfList != null) {
-				argType = adderMethod.getParameterTypes()[0];
-				
+			
+			Type superClass = collectionType.getGenericSuperclass();
+			if (superClass instanceof ParameterizedType) {
+				ParameterizedType type = (ParameterizedType) superClass;
+				if (type.getActualTypeArguments().length==1) {
+					argType = (Class<?>)type.getActualTypeArguments()[0];
+				}
+			}
+			
+			if (argType == null) {
+			
+				RdfList rdfList = collectionType.getAnnotation(RdfList.class);
+				if (rdfList != null) {
+					argType = adderMethod.getParameterTypes()[0];
+					
+				}
 			}
 		}
 		
@@ -230,6 +242,7 @@ public class BasicPojoHandler implements PojoHandler {
 
 
 	private Method adderMethod(Class<?> collectionType) {
+		
 
 		Method[] methodList = collectionType.getMethods();
 		for (Method m : methodList) {
@@ -297,9 +310,12 @@ public class BasicPojoHandler implements PojoHandler {
 							phaseHandler.setUp(propertyInfo);
 						}
 						for (Edge edge : edgeSet) {
-							Value object = edge.getObject();
-							propertyInfo.setObject(object);
-							edgeHandler.handleValue(propertyInfo);
+							if (!handleList(edgeHandler, propertyInfo, edge)) {
+								Value object = edge.getObject();
+								
+								propertyInfo.setObject(object);
+								edgeHandler.handleValue(propertyInfo);
+							}
 						}
 						if (phaseHandler != null) {
 							phaseHandler.tearDown(propertyInfo);
@@ -311,6 +327,12 @@ public class BasicPojoHandler implements PojoHandler {
 	}
 
 	
+
+
+	private boolean handleList(ValueHandler edgeHandler, PropertyInfo propertyInfo, Edge edge) {
+		
+		return false;
+	}
 
 
 	private void setId(PojoInfo pojoInfo) throws KonigException {

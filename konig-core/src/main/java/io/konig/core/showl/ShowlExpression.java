@@ -35,6 +35,9 @@ public interface ShowlExpression {
 	public ShowlNodeShape rootNode();
 	
 	public String displayValue();
+	
+	// TODO: Replace addDeclaredProperties with a more generic method that scans for all properties,
+	//       Not just those rooted at a given sourceNodeShape.
 
 	/**
 	 * Collect from this expression all properties declared by the specified source NodeShape, or any 
