@@ -51,6 +51,7 @@ import io.konig.datacatalog.DataCatalogBuildRequest;
 import io.konig.datacatalog.DataCatalogBuilder;
 import io.konig.datacatalog.DataCatalogException;
 import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.lineage.LineageLoader;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
@@ -103,9 +104,11 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			loadRdf(graph, nsManager);
 			ShapeLoader shapeLoader = new ShapeLoader(shapeManager);
 			shapeLoader.load(graph);
+			
+			LineageLoader lineageLoader = new LineageLoader();
+			lineageLoader.load(graph);
+			
 			URI ontologyId = ontology==null ? null : new URIImpl(ontology);
-			ShowlManager showlManager = new ShowlManager(shapeManager, new OwlReasoner(graph));
-			showlManager.load();
 			
 			DataCatalogBuildRequest request = new DataCatalogBuildRequest();
 		
@@ -115,7 +118,6 @@ public class KonigDataCatalogMojo extends AbstractMojo {
 			request.setOutDir(siteDir);
 			request.setShapeManager(shapeManager);
 			request.setShowUndefinedClass(showUndefinedClass);
-			request.setShowlManager(showlManager);
 			
 			if (ontologyId==null) {
 				request.useDefaultOntologyList();

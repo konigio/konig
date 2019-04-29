@@ -62,5 +62,27 @@ public class DatasourcePropertyPath extends ArrayList<URI> {
 		
 		return false;
 	}
+	
+	public URI pop() {
+		return remove(size()-1);
+	}
+	
+	public String simpleName() {
+		if (size() == 1) {
+			return get(0).getLocalName();
+		}
+		if (isEmpty()) {
+			return "null";
+		}
+		
+		StringBuilder builder = new StringBuilder();
+		String dot = "";
+		for (URI predicate : this) {
+			builder.append(dot);
+			builder.append(predicate.getLocalName());
+			dot = ".";
+		}
+		return builder.toString();
+	}
 
 }

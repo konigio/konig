@@ -93,7 +93,13 @@ public class DatasourceProperty {
 		return generatorInputOf==null ? Collections.emptySet() : generatorInputOf;
 	}
 
-	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("DatasourceProperty(");
+		builder.append(id);
+		builder.append(")");
+		return builder.toString();
+	}
 
 	
 }

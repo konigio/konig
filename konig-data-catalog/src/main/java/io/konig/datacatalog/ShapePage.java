@@ -46,11 +46,6 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.json.SampleJsonGenerator;
 import io.konig.core.project.ProjectFile;
-import io.konig.core.showl.ShowlManager;
-import io.konig.core.showl.ShowlMapping;
-import io.konig.core.showl.ShowlNodeShape;
-import io.konig.core.showl.ShowlNodeShapeSet;
-import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
@@ -59,14 +54,15 @@ import io.konig.datasource.TableDataSource;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleBigQueryView;
 import io.konig.gcp.datasource.GoogleCloudSqlTable;
+import io.konig.lineage.DatasourceProperty;
+import io.konig.lineage.DatasourcePropertyPath;
+import io.konig.lineage.PropertyGenerator;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class ShapePage {
 	private static final Logger logger = LoggerFactory.getLogger(ShapePage.class);
 	private static final String SHAPE_TEMPLATE = "data-catalog/velocity/shape.vm";
-	private static final URI[] DATASOURCE_LIST={Konig.GoogleBigQueryTable,Konig.GoogleBigQueryView,Konig.GoogleCloudSqlTable,Konig.AwsAuroraTable};
-	
 	
 	private Set<URI> excludedDataSourceType = new HashSet<>();
 
@@ -161,49 +157,80 @@ public class ShapePage {
 		out.flush();
 	}
 	private void buildMappings(URI shapeId, PropertyInfo info, ShapeRequest request) {
-		ShowlManager manager = request.getBuildRequest().getShowlManager();
-		if (manager != null) {
-			URI predicate = info.getConstraint().getPredicate();
-			ShowlNodeShapeSet set = manager.getNodeShapeSet(shapeId);
-			if (!set.isEmpty()) {
-				List<MappedField> list = new ArrayList<>();
-				for (ShowlNodeShape node : set) {
-					ShowlPropertyShape p = node.findProperty(predicate);
-					if (p != null) {
-						for (ShowlMapping mapping : p.getMappings()) {
-							produceMappedField(list, p, mapping);
-						}
-					}
-				}
-				
-				if (!list.isEmpty()) {
-					info.setMappingList(list);
-					request.getContext().put("HasMappings", Boolean.TRUE);
+		Shape shape = request.getShape();
+		
+		List<MappedField> list = new ArrayList<>();
+		PropertyConstraint p = info.getConstraint();
+		DatasourcePropertyPath path = new DatasourcePropertyPath();
+		
+		addMappings(shape, path, p, list);
+		
+		if (!list.isEmpty()) {
+			request.getContext().put("HasMappings", Boolean.TRUE);
+			info.setMappingList(list);
+		}
+		
+		
+	}
+	private void addMappings(Shape shape, DatasourcePropertyPath path, PropertyConstraint p, List<MappedField> list) {
+		
+		path.add(p.getPredicate());
+		for (DataSource ds : shape.getShapeDataSource()) {
+			DatasourceProperty q = ds.findPropertyByPath(path);
+			
+			if (q != null) {
+				addPredecessors(q, list);
+				addSuccessors(q, list);
+			}
+			
+		}
+		
+		path.pop();
+		
+	}
+	
+	private void addSuccessors(DatasourceProperty q, List<MappedField> list) {
+		
+		for (PropertyGenerator generator : q.getGeneratorInputOf()) {
+			if (generator.getGeneratorOutput() != null) {
+				DatasourceProperty output = generator.getGeneratorOutput();
+				if (output != null) {
+					addMappedField(output, list);
+					addSuccessors(output, list);
 				}
 			}
 		}
 		
 	}
-	private void produceMappedField(List<MappedField> list, ShowlPropertyShape p, ShowlMapping mapping) {
-	
-		ShowlPropertyShape q = mapping.findOther(p);
-		if (q != null) {
-			
-			int size = list.size();
-			ShowlNodeShape node = q.getDeclaringShape();
-			for (DataSource ds : node.getShape().getShapeDataSource()) {
-				if (ds instanceof TableDataSource) {
-					TableDataSource table = (TableDataSource) ds;
-					String fieldName = table.getTableIdentifier() + "." + q.getPredicate().getLocalName();
-					list.add(new MappedField(fieldName));
-					
-				}
-			}
-			if (size == list.size()) {
-				list.add(new MappedField(q.getPath()));
+	private void addPredecessors(DatasourceProperty q, List<MappedField> list) {
+		
+		PropertyGenerator generator = q.getGeneratedFrom();
+		if (generator != null) {
+			for (DatasourceProperty input : generator.getGeneratorInput()) {
+				addMappedField(input, list);
+				addPredecessors(input, list);
 			}
 		}
+		
 	}
+	
+	private void addMappedField(DatasourceProperty p, List<MappedField> list) {
+
+		if (p.getPropertySource() instanceof TableDataSource) {
+			TableDataSource table = (TableDataSource) p.getPropertySource();
+			String fieldName = table.getTableIdentifier() + "." + p.getPropertyPath().simpleName();
+			list.add(new MappedField(fieldName));
+		} else if (p.getPropertySource() != null){
+			StringBuilder builder = new StringBuilder();
+			builder.append('<');
+			builder.append(p.getPropertySource().getId().stringValue());
+			builder.append(">.");
+			builder.append(p.getPropertyPath().simpleName());
+			list.add(new MappedField(builder.toString()));
+		}
+		
+	}
+	
 	private String localNameList(Collection<URI> type, Set<URI> excludes) {
 		if (type == null || type.isEmpty()) {
 			return "";

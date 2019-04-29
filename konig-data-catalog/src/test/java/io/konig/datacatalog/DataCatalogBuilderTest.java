@@ -37,6 +37,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.aws.datasource.AwsShapeConfig;
 import io.konig.core.Graph;
@@ -45,15 +47,23 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.CompositeSourceNodeSelector;
+import io.konig.core.showl.ExplicitDerivedFromSelector;
+import io.konig.core.showl.GoogleStorageBucketSourceNodeSelector;
+import io.konig.core.showl.HasDataSourceTypeSelector;
+import io.konig.core.showl.LineageShowlNodeShapeConsumer;
+import io.konig.core.showl.RawCubeSourceNodeSelector;
 import io.konig.core.showl.ShowlManager;
+import io.konig.core.showl.ShowlTargetNodeSelector;
 import io.konig.core.util.IOUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 import io.konig.shacl.io.ShapeLoader;
 
 public class DataCatalogBuilderTest {
-	
+	private static Logger logger = LoggerFactory.getLogger(DataCatalogBuilderTest.class);
 	private DataCatalogBuilder builder = new DataCatalogBuilder();
 
 	private File exampleDir = new File("src/test/resources/DataCatalogBuilder/examples");
@@ -64,23 +74,25 @@ public class DataCatalogBuilderTest {
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private ShowlManager showlManager;
 	
-	@Before
-	public void setUp() {
-		if (outDir.exists()) {
-			IOUtil.recursiveDelete(outDir);
-		}
-		outDir.mkdirs();
-	}
 	
-	@Ignore
+	
+	@Test
 	public void testMappings() throws Exception {
 
 		GcpShapeConfig.init();
 		URI ontologyId = uri("http://schema.org/");
-		showlManager = new ShowlManager(shapeManager, reasoner);
+
+
+		ShowlTargetNodeSelector targetNodeSelector = new HasDataSourceTypeSelector(Konig.GoogleBigQueryTable);
+		showlManager = new ShowlManager(
+				shapeManager, reasoner, targetNodeSelector, nodeSelector(shapeManager), 
+				new LineageShowlNodeShapeConsumer());
+		
+		
+		
 		build("src/test/resources/MappingTest", ontologyId);
 
-		File htmlFile = new File("target/test/DataCatalogBuilder/shape/TargetPersonShape.html");
+		File htmlFile = new File("target/test/DataCatalogBuilder/MappingTest/shape/TargetPersonShape.html");
 		
 		Document doc = Jsoup.parse(htmlFile, "UTF-8");
 		Element e = findResource(doc, "http://schema.org/givenName");
@@ -90,9 +102,16 @@ public class DataCatalogBuilderTest {
 		
 		Element div = mappedField.getAllElements().first();
 		assertTrue(div != null);
-		assertEquals("schema.PERSON_STG.first_name", div.text());
+		assertEquals("<gs://person-staging>.first_name", div.text());
 	}
-	
+
+
+	private CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
+		return new CompositeSourceNodeSelector(
+				new RawCubeSourceNodeSelector(shapeManager),
+				new GoogleStorageBucketSourceNodeSelector(shapeManager),
+				new ExplicitDerivedFromSelector());
+	}
 
 	private Element findProperty(Element parent, String propertyId) {
 		for (Element e : parent.getAllElements()) {
@@ -122,7 +141,7 @@ public class DataCatalogBuilderTest {
 		URI ontologyId = uri("http://schema.org/");
 		build("src/test/resources/SubjectAreaTest", ontologyId);
 		
-		File ontologyIndexFile = new File("target/test/DataCatalogBuilder/ontology-index.html");
+		File ontologyIndexFile = new File("target/test/DataCatalogBuilder/SubjectAreaTest/ontology-index.html");
 		
 		Document doc = Jsoup.parse(ontologyIndexFile, "UTF-8");
 		Element subjectList = doc.getElementById("subjectList");
@@ -131,7 +150,7 @@ public class DataCatalogBuilderTest {
 		assertEquals(4, subjectElements.size());
 	}
 
-	@Ignore
+	@Test
 	public void testDatasourceSummary() throws Exception {
 		GcpShapeConfig.init();
     	AwsShapeConfig.init();
@@ -139,61 +158,52 @@ public class DataCatalogBuilderTest {
 		build("src/test/resources/DatasourceSummary", ontologyId);
 	}
 
-	@Ignore
+	@Test
 	public void testShape() throws Exception {
 		URI ontologyId = uri("http://schema.pearson.com/ns/fact/");
 		build("src/test/resources/ShapePageTest/rdf", ontologyId);
 	}
 
-	@Ignore
+	@Test
 	public void testHierarchicalNames() throws Exception {
 		URI ontologyId = uri("http://example.com/ns/categories/");
 		build("src/test/resources/DataCatalogBuilderTest/hierarchicalNames", ontologyId);
 	}
 	
-	@Ignore
+	@Test
 	public void testEnumNamespace() throws Exception {
 		URI ontologyId = uri("http://example.com/");
 		build("src/test/resources/EnumNamespaceTest", ontologyId);
 	}
 	
 	private void build(String sourcePath, URI ontologyId) throws Exception {
-		FileUtils.deleteDirectory(outDir);
-		load(sourcePath);
-		DataCatalogBuildRequest request = new DataCatalogBuildRequest();
-		request.setExampleDir(exampleDir);
-		request.setOntologyId(ontologyId);
-		request.setGraph(graph);
-		request.setOutDir(outDir);
-		request.setShapeManager(shapeManager);
+
+		File file = new File(sourcePath);
+		File targetDir = new File(outDir, file.getName());
+		if (targetDir.exists()) {
+			try {
+				FileUtils.deleteDirectory(targetDir);
+			} catch (Throwable e) {
+				logger.warn("Failed to delete directory: {}", targetDir.getPath());
+			}
+		}
+		load(file);
 		if (showlManager != null) {
 			showlManager.load();
-			request.setShowlManager(showlManager);
 		}
-		
-		builder.build(request);
-	}
-
-	@Ignore
-	public void test() throws Exception {
-		
-		load("src/test/resources/DataCatalogBuilderTest/rdf");
-		URI ontologyId = uri("http://example.com/ns/core/");
-		
 		DataCatalogBuildRequest request = new DataCatalogBuildRequest();
 		request.setExampleDir(exampleDir);
-		request.setGraph(graph);
 		request.setOntologyId(ontologyId);
-		request.setOutDir(outDir);
+		request.setGraph(graph);
+		request.setOutDir(targetDir);
 		request.setShapeManager(shapeManager);
 		
 		builder.build(request);
-		
 	}
 
 
-	private void load(String path) throws Exception {
-		File file = new File(path);
+
+	private void load(File file) throws Exception {
 		RdfUtil.loadTurtle(file, graph, nsManager);
 		
 		ShapeLoader loader = new ShapeLoader(shapeManager);
