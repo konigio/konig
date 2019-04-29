@@ -66,7 +66,6 @@ public class DataCatalogBuildRequest {
 	private VelocityEngine engine;
 	private CatalogFileFactory fileFactory;
 	private OwlReasoner owlReasoner;
-	private ShowlManager showlManager;
 	
 	private SubjectManager subjectManager = null;
 	
@@ -86,14 +85,6 @@ public class DataCatalogBuildRequest {
 			subjectManager.load(graph);
 		}
 		return subjectManager;
-	}
-
-	public ShowlManager getShowlManager() {
-		return showlManager;
-	}
-
-	public void setShowlManager(ShowlManager showlManager) {
-		this.showlManager = showlManager;
 	}
 
 	public void setShowUndefinedClass(boolean showUndefinedClass) {

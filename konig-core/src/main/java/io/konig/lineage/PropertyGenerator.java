@@ -70,5 +70,32 @@ public class PropertyGenerator {
 	public Set<DatasourceProperty> getGeneratorInput() {
 		return generatorInput==null ? Collections.emptySet() : generatorInput;
 	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("PropertyGenerator(\n");
+		builder.append("  id: ");
+		builder.append(id);
+		if (generatorOutput!= null) {
+			builder.append("  output: ");
+			builder.append(generatorOutput.getPropertyPath().simpleName());
+			builder.append("\n");
+		} 
+		if (generatorInput!=null) {
+			builder.append("  input: ");
+			if (generatorInput.size()==1) {
+				builder.append(generatorInput.iterator().next().getPropertyPath().simpleName());
+			} else {
+				String comma = "\n      ";
+				for (DatasourceProperty p : generatorInput) {
+					builder.append(comma);
+					builder.append(p.getPropertyPath().simpleName());
+					comma = ",\n      ";
+				}
+			}
+		}
+		builder.append("\n)");
+		return builder.toString();
+	}
 
 }
