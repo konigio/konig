@@ -57,7 +57,11 @@ public abstract class ShowlPropertyShape implements Traversable {
 	private Map<ShowlPropertyShape, ShowlJoinCondition> joinConditions;
 	private ShowlMapping selectedMapping;
 	private Set<Value> hasValue;
+	private ShowlExpression selectedExpression;
 	private Set<ShowlPropertyShape> peerGroup = new HashSet<>();
+	
+	private ShowlExpression formula;
+	private Set<ShowlExpression> usedIn;
 	
 	private List<ShowlExpression> expressionList = new ArrayList<>();
 	
@@ -347,4 +351,51 @@ public abstract class ShowlPropertyShape implements Traversable {
 		}
 		return this;
 	}
+
+	public ShowlExpression getFormula() {
+		return formula;
+	}
+
+	public void setFormula(ShowlExpression formula) {
+		this.formula = formula;
+	}
+
+	/**
+	 * Get the expression that was selected to construct the value for this property.
+	 */
+	public ShowlExpression getSelectedExpression() {
+		return selectedExpression;
+	}
+
+	/**
+	 * Set the expression that was selected to construct the value for this property.
+	 */
+	public void setSelectedExpression(ShowlExpression selectedExpression) {
+		this.selectedExpression = selectedExpression;
+		if (logger.isTraceEnabled()) {
+			logger.trace("setSelectedExpression {} = {}", getPath(), selectedExpression.displayValue());
+			System.out.print("");
+		}
+	}
+
+	/**
+	 * The set of 'selected' expressions in which this property appears.
+	 * A 'selected' expression is one that is used in the mapping from source to target.
+	 * If this set is non-empty, then it must be the case that this property is a source property.
+	 */
+	public Set<ShowlExpression> getUsedIn() {
+		return usedIn==null ? Collections.emptySet() : usedIn;
+	}
+
+	/**
+	 * Declared that this property appears in a given selected expression.
+	 */
+	public void usedIn(ShowlExpression e) {
+		if (usedIn == null) {
+			usedIn = new LinkedHashSet<>();
+		}
+		usedIn.add(e);
+	}
+
+
 }

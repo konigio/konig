@@ -1185,6 +1185,9 @@ public class BeamTransformGenerator {
 				ShowlNodeShape valueShape = p.getValueShape();
 				
 				ShowlStatement joinStatement = valueShape.getJoinStatement();
+				if (logger.isTraceEnabled()) {
+					logger.trace("transformObjectProperty({})", p.getPath());
+				}
 
 				ShowlPropertyShape enumSourceKey = valueShape.enumSourceKey(reasoner);
 				if (enumSourceKey != null) {

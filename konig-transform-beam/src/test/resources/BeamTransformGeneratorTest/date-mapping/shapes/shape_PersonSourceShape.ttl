@@ -25,7 +25,7 @@ $.birthDate''' ;
 		sh:minCount 0 ; 
 		sh:maxCount 1 ]  ; 
 	a sh:Shape ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource> , <gs://personsourceshape-${gcpBucketSuffix}> ; 
+	konig:shapeDataSource  <gs://personsourceshape-${gcpBucketSuffix}> ; 
 	sh:targetClass schema:Person ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
@@ -34,18 +34,6 @@ $.birthDate''' ;
 
 <http://example.com/person/{person_id}>''' . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonSource> gcp:tableReference  [ 
-		gcp:projectId "${gcpProjectId}" ; 
-		gcp:datasetId "schema" ; 
-		gcp:tableId "PersonSource"
-	 ]  ; 
-	gcp:externalDataConfiguration  [ 
-		gcp:sourceFormat "CSV" ; 
-		gcp:sourceUris "gs://personsourceshape-${gcpBucketSuffix}/*" ; 
-		gcp:csvOptions  [ 
-			gcp:skipLeadingRows "1"^^xsd:long ]  ]  ; 
-	a konig:GoogleBigQueryTable , konig:DataSource ; 
-	schema:isPartOf sys:ERP . 
 
 <gs://personsourceshape-${gcpBucketSuffix}> gcp:name "personsourceshape-${gcpBucketSuffix}" ; 
 	gcp:location "us" ; 

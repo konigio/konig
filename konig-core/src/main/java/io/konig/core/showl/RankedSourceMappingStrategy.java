@@ -1,31 +1,12 @@
 package io.konig.core.showl;
 
-/*
- * #%L
- * Konig Core
- * %%
- * Copyright (C) 2015 - 2019 Gregory McFall
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
- */
-
-
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.slf4j.Logger;
@@ -39,11 +20,17 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 	private static Logger logger = LoggerFactory.getLogger(RankedSourceMappingStrategy.class);
 
 	@Override
-	public List<ShowlDirectPropertyShape> selectMappings(ShowlManager manager, ShowlNodeShape targetNode) {
+	public Set<ShowlPropertyShape> selectMappings(ShowlManager manager, ShowlNodeShape targetNode) {
 		Map<ShowlNodeShape, NodeRanking> rankingMap = new HashMap<>();
-		List<ShowlDirectPropertyShape> pool = new ArrayList<>();
+		Set<ShowlPropertyShape> pool = new LinkedHashSet<>();
 		
 		init(targetNode, rankingMap, pool);
+		if (logger.isTraceEnabled()) {
+			logger.trace("selectMappings:  pool contains...");
+			for (ShowlPropertyShape p : pool) {
+				logger.trace("   {}", p.getPath());
+			}
+		}
 		
 		while (!pool.isEmpty() && !rankingMap.isEmpty()) {
 			int originalSize = pool.size();
@@ -52,7 +39,7 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 			
 			if (best != null) {
 				rankingMap.remove(best.getSourceNode());
-				selectExpressions(manager, targetNode, pool, best);
+				handleSourceNode(manager, targetNode, pool, best);
 			}
 			
 			if (pool.size() == originalSize) {
@@ -65,32 +52,62 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 		return pool;
 	}
 	
+	
 
-	private void selectExpressions(ShowlManager manager, ShowlNodeShape targetNode, List<ShowlDirectPropertyShape> pool, NodeRanking best) {
+	private void handleSourceNode(ShowlManager manager, ShowlNodeShape targetNode, Set<ShowlPropertyShape> pool, NodeRanking best) {
 		
 		ShowlNodeShape sourceNode = best.getSourceNode();
+		if (logger.isTraceEnabled()) {
+			logger.trace("handleSourceNode: Map from source {} to target {}", sourceNode.getPath(), targetNode.getPath());
+		}
 		
-		boolean wasAdded = false;
-		
-		Iterator<ShowlDirectPropertyShape> sequence = pool.iterator();
-		while (sequence.hasNext()) {
-			ShowlDirectPropertyShape p = sequence.next();
+
+		Set<ShowlPropertyShape> set = new HashSet<>();
+		boolean addChannel = true;
+		Iterator<ShowlPropertyShape> sequence = pool.iterator();
+		outerLoop: while (sequence.hasNext()) {
+			ShowlPropertyShape p = sequence.next();
+			if (logger.isTraceEnabled()) {
+				
+			}
+			
+			
+			// Iterate through the list of expressions for the given property,
+			// and check whether each expression is satisfied.
+			// An expression is 'satisified' if there is a direct source property
+			// for each path within the expression.
+			
+			
+			
 			for (ShowlExpression e : p.getExpressionList()) {
-				if (e.rootNode() == sourceNode) {
-					sequence.remove();
+		
+				expressionProperties(e, set);
+				if (satisifiedBySourceNode(set, sourceNode)) {
 					p.setSelectedExpression(e);
-					
-					if (!wasAdded) {
-						
+					if (addChannel) {
+						addChannel = false;
 						addChannel(manager, sourceNode, targetNode);
-						wasAdded = true;
 					}
-					
+					sequence.remove();
+					continue outerLoop;
 				}
+				
+				
 			}
 		}
 		
-		
+	}
+
+
+
+	private boolean satisifiedBySourceNode(Set<ShowlPropertyShape> set, ShowlNodeShape sourceNode) {
+		ShowlNodeShape root = sourceNode.getRoot();
+		for (ShowlPropertyShape p : set) {
+			if (p.getRootNode() != root) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 
@@ -243,41 +260,44 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 		return direct;
 	}
 
+//
+//	private List<ShowlDirectPropertyShape> inverseFunctionList(ShowlManager manager, ShowlNodeShape sourceNode) {
+//		if (hasStaticDataSource(sourceNode)) {
+//			ShowlNodeShape globalEnumShape = sourceNode.getLogicalNodeShape();
+//			if (globalEnumShape != null) {
+//				OwlReasoner reasoner = manager.getReasoner();
+//				List<ShowlDirectPropertyShape> list = new ArrayList<>();
+//				for (ShowlDirectPropertyShape direct : globalEnumShape.getProperties()) {
+//					URI predicate = direct.getPredicate();
+//					if (reasoner.isInverseFunctionalProperty(predicate)) {
+//						list.add(direct);
+//					}
+//				}
+//				return list;
+//			}
+//		}
+//		return null;
+//	}
 
-	private List<ShowlDirectPropertyShape> inverseFunctionList(ShowlManager manager, ShowlNodeShape sourceNode) {
-		if (hasStaticDataSource(sourceNode)) {
-			ShowlNodeShape globalEnumShape = sourceNode.getLogicalNodeShape();
-			if (globalEnumShape != null) {
-				OwlReasoner reasoner = manager.getReasoner();
-				List<ShowlDirectPropertyShape> list = new ArrayList<>();
-				for (ShowlDirectPropertyShape direct : globalEnumShape.getProperties()) {
-					URI predicate = direct.getPredicate();
-					if (reasoner.isInverseFunctionalProperty(predicate)) {
-						list.add(direct);
-					}
-				}
-				return list;
-			}
-		}
-		return null;
-	}
 
-
-	private void updateRankings(ShowlNodeShape targetNode, List<ShowlDirectPropertyShape> pool, Map<ShowlNodeShape, NodeRanking> rankingMap) {
+	private void updateRankings(ShowlNodeShape targetNode, Set<ShowlPropertyShape> pool, Map<ShowlNodeShape, NodeRanking> rankingMap) {
 		for (NodeRanking ranking : rankingMap.values()) {
 			ranking.reset();
 		}
 		
+		ShowlNodeShape targetRoot = targetNode.getRoot();
+
+		Set<ShowlPropertyShape> set = new HashSet<>();
 		for (ShowlPropertyShape p : pool) {
 			for (ShowlExpression e : p.getExpressionList()) {
-				
-				ShowlNodeShape root = e.rootNode();
-				if (root == targetNode) {
-					continue;
-				}
-				NodeRanking ranking = rankingMap.get(root);
-				if (ranking != null) {
-					ranking.increment();
+				for (ShowlPropertyShape sourceProperty : expressionProperties(e, set)) {
+					ShowlNodeShape sourceRoot = sourceProperty.getRootNode();
+					if (sourceRoot != targetRoot) {
+						NodeRanking ranking = rankingMap.get(sourceRoot);
+						if (ranking != null) {
+							ranking.increment();
+						}
+					}
 				}
 			}
 		}
@@ -330,28 +350,39 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 
 
 	private void init(ShowlNodeShape targetNode, Map<ShowlNodeShape, NodeRanking> rankingMap,
-			List<ShowlDirectPropertyShape> pool) {
+			Set<ShowlPropertyShape> pool) {
 		
+		Set<ShowlPropertyShape> sourcePropertySet = new HashSet<>();
+		ShowlNodeShape targetRoot = targetNode.getRoot();
 		for (ShowlDirectPropertyShape p : targetNode.getProperties()) {
 			if (p.getSelectedExpression() == null) {
-				pool.add(p);
+				
+				if (p.getFormula()==null) {
+					pool.add(p);
+				} else {
+					p.getFormula().addProperties(pool);
+				}
+				
 				
 				for (ShowlExpression e : p.getExpressionList()) {
 					
-					ShowlNodeShape root = e.rootNode();
-					if (root == targetNode) {
-						continue;
-					}
-					NodeRanking ranking = rankingMap.get(root);
-					if (ranking == null) {
-						ranking = new NodeRanking(root);
-						rankingMap.put(root, ranking);
+					
+					for (ShowlPropertyShape sourceProperty : expressionProperties(e, sourcePropertySet)) {
+						ShowlNodeShape sourceRoot = sourceProperty.getRootNode();
+						if (sourceRoot != targetRoot) {
 
-						if (logger.isTraceEnabled()) {
-							logger.trace("init: new NodeRanking({}) for {}", root.getPath());
+							NodeRanking ranking = rankingMap.get(sourceRoot);
+							if (ranking == null) {
+								ranking = new NodeRanking(sourceRoot);
+								rankingMap.put(sourceRoot, ranking);
+
+								if (logger.isTraceEnabled()) {
+									logger.trace("init: new NodeRanking({}) for {}", sourceRoot.getPath());
+								}
+							}
+							ranking.increment();
 						}
 					}
-					ranking.increment();
 				}
 				
 				if (p.getValueShape() != null) {
@@ -361,6 +392,25 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 		}
 		
 	}
+
+
+
+
+
+
+
+
+	private Set<ShowlPropertyShape> expressionProperties(ShowlExpression e, Set<ShowlPropertyShape> set) {
+		set.clear();
+		e.addProperties(set);
+		return set;
+	}
+
+
+
+
+
+
 
 
 	private static class NodeRanking  {

@@ -44,6 +44,7 @@ import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.GoogleStorageBucketSourceNodeSelector;
 import io.konig.core.showl.HasDataSourceTypeSelector;
 import io.konig.core.showl.RawCubeSourceNodeSelector;
+import io.konig.core.showl.RawCubeTargetNodeSelector;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
 import io.konig.core.showl.ShowlNodeShape;
@@ -60,11 +61,10 @@ public class BeamTransformGeneratorTest {
 	private Graph graph = new MemoryGraph(nsManager);
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private OwlReasoner reasoner = new OwlReasoner(graph);
-	private ShowlTargetNodeSelector targetNodeSelector = new HasDataSourceTypeSelector(Konig.GoogleBigQueryTable);
 	
 	private ShowlNodeListingConsumer consumer = new ShowlNodeListingConsumer();
 	private ShowlManager showlManager = new ShowlManager(
-			shapeManager, reasoner, targetNodeSelector, nodeSelector(shapeManager), consumer);
+			shapeManager, reasoner, null, null, consumer);
 	
 	private static CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
 		return new CompositeSourceNodeSelector(
@@ -74,13 +74,19 @@ public class BeamTransformGeneratorTest {
 	}
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
-	@Ignore
+	@Test
 	public void testBeamCube() throws Exception {
-		
+		prepareBeamCube();
 		generateAll("src/test/resources/BeamTransformGeneratorTest/beam-cube");
 		
 	}
 	
+	private void prepareBeamCube() {
+
+		showlManager.setTargetNodeSelector(new RawCubeTargetNodeSelector());
+		
+	}
+
 	@Ignore
 	public void testModelSummary() throws Exception {
 		
@@ -91,7 +97,7 @@ public class BeamTransformGeneratorTest {
 	@Ignore
 	public void testJoinById() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/join-by-id");
+		generateAll("src/test/resources/BeamTransformGeneratorTest/join-by-id", false);
 		
 	}
 	
@@ -135,7 +141,13 @@ public class BeamTransformGeneratorTest {
 		
 		GcpShapeConfig.init();
 		RdfUtil.loadTurtle(rdfDir, graph, shapeManager);
-		
+		if (showlManager.getSourceNodeSelector() == null) {
+			showlManager.setSourceNodeSelector(nodeSelector(shapeManager));
+		}
+		if (showlManager.getTargetNodeSelector()==null) {
+
+			showlManager.setTargetNodeSelector(new HasDataSourceTypeSelector(Konig.GoogleBigQueryTable));
+		}
 		showlManager.load();
 		
 		File projectDir = new File("target/test/BeamTransformGenerator/" + rdfDir.getName());		
@@ -153,6 +165,8 @@ public class BeamTransformGeneratorTest {
 		generator.generateAll(request);
 		
 		if (withValidation) {
+			
+			assertTrue(!consumer.getList().isEmpty());
 		
 			for (ShowlNodeShape targetNodeShape : consumer.getList()) {
 				URI shapeId = RdfUtil.uri(targetNodeShape.getId());

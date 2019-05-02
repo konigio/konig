@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.Set;
+
 /*
  * #%L
  * Konig Core
@@ -30,5 +32,6 @@ public class ShowlDirectPropertyExpression extends ShowlPropertyExpression {
 	public ShowlDirectPropertyShape getSourceProperty() {
 		return (ShowlDirectPropertyShape) super.getSourceProperty();
 	}
+
 
 }

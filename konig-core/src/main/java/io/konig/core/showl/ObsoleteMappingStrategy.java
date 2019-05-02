@@ -1,27 +1,5 @@
 package io.konig.core.showl;
 
-/*
- * #%L
- * Konig Core
- * %%
- * Copyright (C) 2015 - 2019 Gregory McFall
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
- */
-
-
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -57,13 +35,13 @@ public class ObsoleteMappingStrategy implements ShowlMappingStrategy {
 	 * @return The set of properties for which no mapping was found.
 	 */
 	@Override
-	public List<ShowlDirectPropertyShape> selectMappings(ShowlManager manager, ShowlNodeShape target) {
+	public Set<ShowlPropertyShape> selectMappings(ShowlManager manager, ShowlNodeShape target) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("selecteMappings: target={}", target.getPath());
 		}
 		Set<ShowlJoinCondition> set = new LinkedHashSet<>();
 		
-		List<ShowlDirectPropertyShape> pool = new ArrayList<>();
+		Set<ShowlPropertyShape> pool = new LinkedHashSet<>();
 		buildPool(target, pool, set);
 		
 		
@@ -106,7 +84,7 @@ public class ObsoleteMappingStrategy implements ShowlMappingStrategy {
 		return pool;	
 	}
 
-	private void buildPool(ShowlNodeShape target, List<ShowlDirectPropertyShape> pool, Set<ShowlJoinCondition> set) {
+	private void buildPool(ShowlNodeShape target, Set<ShowlPropertyShape> pool, Set<ShowlJoinCondition> set) {
 		for (ShowlDirectPropertyShape direct : target.getProperties()) {
 			pool.add(direct);
 			if (logger.isTraceEnabled()) {
@@ -147,7 +125,7 @@ public class ObsoleteMappingStrategy implements ShowlMappingStrategy {
 		
 	}
 
-	private void buildPeerPool(ShowlNodeShape target, List<ShowlDirectPropertyShape> pool,	Set<ShowlJoinCondition> set) {
+	private void buildPeerPool(ShowlNodeShape target, Set<ShowlPropertyShape> pool,	Set<ShowlJoinCondition> set) {
 //		for (ShowlDerivedPropertyList list : target.getDerivedProperties()) {
 //			for (ShowlPropertyShape ps : list) {
 //				pool.add(ps);
@@ -237,9 +215,9 @@ public class ObsoleteMappingStrategy implements ShowlMappingStrategy {
 		return null;
 	}
 
-	private void selectMappings(ShowlNodeShape node, ShowlJoinCondition join, List<ShowlDirectPropertyShape> pool) {
+	private void selectMappings(ShowlNodeShape node, ShowlJoinCondition join, Set<ShowlPropertyShape> pool) {
 		ShowlPropertyShape joinProperty = join.propertyOf(node);
-		Iterator<ShowlDirectPropertyShape> sequence = pool.iterator();
+		Iterator<ShowlPropertyShape> sequence = pool.iterator();
 		while (sequence.hasNext()) {
 			ShowlPropertyShape p = sequence.next();
 			String action = "was NOT selected";
@@ -283,7 +261,7 @@ public class ObsoleteMappingStrategy implements ShowlMappingStrategy {
 
 
 	private void updateRankings(Map<ShowlJoinCondition, RankedJoinCondition> rankingMap,
-			List<ShowlDirectPropertyShape> pool) {
+			Set<ShowlPropertyShape> pool) {
 		
 		for (RankedJoinCondition e : rankingMap.values()) {
 			e.reset();

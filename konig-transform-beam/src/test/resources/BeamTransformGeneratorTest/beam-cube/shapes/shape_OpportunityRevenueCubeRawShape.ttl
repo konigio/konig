@@ -6,6 +6,8 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/shape/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix schema:  <http://schema.org/> .
+@prefix asset:  <http://example.com/asset/WarehouseFactLayer> .
 
 shape:OpportunityRevenueCubeRawShape sh:property  [ 
 		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/day> ; 
@@ -89,4 +91,5 @@ YEAR(?opportunity.dateCreated)''' ;
 		gcp:datasetId "crm" ; 
 		gcp:tableId "RawOpportunityFact" ]  ; 
 	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+	a konig:GoogleBigQueryTable , konig:DataSource ;
+	schema:isPartOf asset:WarehouseFactLayer . 

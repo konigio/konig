@@ -73,6 +73,8 @@ public class ShowlNodeShape implements Traversable {
 	private ShowlPropertyShape targetProperty;
 	private ShowlStatement joinStatement;
 	
+	private ShowlNodeShape targetNode;
+	
 	@Deprecated
 	private ShowlNodeShape logicalNodeShape;
 	
@@ -207,26 +209,41 @@ public class ShowlNodeShape implements Traversable {
 		
 	}
 	
-	@Deprecated
 	public ShowlPropertyShape enumSourceKey(OwlReasoner reasoner) {
 		if (accessor != null && reasoner.isEnumerationClass(owlClass.getId())) {
-			for (ShowlDirectPropertyShape direct : getProperties()) {
-				ShowlExpression e = direct.getSelectedExpression();
-				if (e != null) {
-					System.out.print(e.displayValue());
-					System.out.println();
-				}
-				
-				if (e instanceof ShowlEnumPropertyExpression) {
-					ShowlPropertyShape p = ((ShowlEnumPropertyExpression) e).getSourceProperty();
-					ShowlStatement joinStatement = p.getDeclaringShape().getJoinStatement();
-					if (joinStatement instanceof ShowlEqualStatement) {
-						ShowlEqualStatement equals = (ShowlEqualStatement)joinStatement;
-						return otherProperty(equals, p.getDeclaringShape());
-						
+			
+			ShowlExpression accessorExpression = accessor.getSelectedExpression();
+			if (accessorExpression instanceof ShowlPropertyExpression) {
+				ShowlPropertyShape sourceProperty = ((ShowlPropertyExpression) accessorExpression).getSourceProperty();
+				ShowlNodeShape sourceNode = sourceProperty.getValueShape();
+				if (sourceNode != null) {
+					for (ShowlPropertyShape out : sourceNode.allOutwardProperties()) {
+						URI predicate = out.getPredicate();
+						if (reasoner.isInverseFunctionalProperty(predicate)) {
+							return out.maybeDirect();
+						}
 					}
 				}
 			}
+			
+//			for (ShowlDirectPropertyShape direct : getProperties()) {
+//				ShowlExpression e = direct.getSelectedExpression();
+//				if (e != null) {
+//					System.out.print(e.displayValue());
+//					System.out.println();
+//				}
+//				
+//				if (e instanceof ShowlEnumPropertyExpression) {
+//					ShowlPropertyShape p = ((ShowlEnumPropertyExpression) e).getSourceProperty();
+//					ShowlStatement joinStatement = p.getDeclaringShape().getJoinStatement();
+//					if (joinStatement instanceof ShowlEqualStatement) {
+//						ShowlEqualStatement equals = (ShowlEqualStatement)joinStatement;
+//						return otherProperty(equals, p.getDeclaringShape());
+//						
+//					}
+//				}
+//			}
+			
 		}
 		return null;
 	}
@@ -397,10 +414,7 @@ public class ShowlNodeShape implements Traversable {
 		}
 		ShowlDerivedPropertyList indirect = derivedProperties.get(predicate);
 		if (indirect != null) {
-			for (ShowlDerivedPropertyShape derived : indirect) {
-				// TODO: Do we need special handling for filtered properties?
-				return derived;
-			}
+			return indirect.unfiltered();
 		}
 		
 		return null;
@@ -630,7 +644,19 @@ public class ShowlNodeShape implements Traversable {
 		this.joinStatement = joinStatement;
 	}
 
-	
+	/**
+	 * Get the target node to which this source node is mapped.
+	 * @return The target node to which this source node is mapped, or null if this node is a target node.
+	 */
+	public ShowlNodeShape getTargetNode() {
+		return targetNode;
+	}
 
-	
+	/**
+	 * Set the target node to which this source node is mapped.
+	 * @param targetNode
+	 */
+	public void setTargetNode(ShowlNodeShape targetNode) {
+		this.targetNode = targetNode;
+	}
 }

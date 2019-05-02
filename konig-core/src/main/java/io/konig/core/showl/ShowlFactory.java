@@ -33,4 +33,11 @@ public interface ShowlFactory {
 	
 	ShowlNodeShape createNodeShape(Shape shape) throws ShowlProcessingException;
 	ShowlNodeShape createNodeShape(Shape shape, DataSource ds) throws ShowlProcessingException;
+	ShowlProperty produceProperty(URI predicate) throws ShowlProcessingException;
+	ShowlClass inferDomain(ShowlProperty p);
+
+	ShowlClass inferRange(ShowlProperty p);
+	ShowlClass mostSpecificClass(ShowlClass a, ShowlClass b);
+
+	ShowlNodeShape createShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass);
 }

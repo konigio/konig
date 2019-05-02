@@ -31,8 +31,6 @@ import java.util.Set;
  *
  */
 public interface ShowlExpression {
-
-	public ShowlNodeShape rootNode();
 	
 	public String displayValue();
 
@@ -43,4 +41,6 @@ public interface ShowlExpression {
 	 * @param set  The set to which the properties should be added.
 	 */
 	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set);
+	
+	public void addProperties(Set<ShowlPropertyShape> set);
 }

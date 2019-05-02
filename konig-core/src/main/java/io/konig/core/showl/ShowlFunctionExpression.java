@@ -1,5 +1,8 @@
 package io.konig.core.showl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /*
  * #%L
  * Konig Core
@@ -27,27 +30,28 @@ import org.openrdf.model.URI;
 
 import io.konig.core.util.IriTemplate;
 import io.konig.formula.Formula;
+import io.konig.formula.FormulaUtil;
 import io.konig.formula.FormulaVisitor;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.PathTerm;
 
 public class ShowlFunctionExpression implements ShowlExpression {
 
-	private ShowlNodeShape declaringShape;
+	private ShowlPropertyShape declaringProperty;
 	private FunctionExpression function;
+	private List<ShowlExpression> arguments = new ArrayList<>();
 
-	public ShowlFunctionExpression(ShowlNodeShape declaringShape, FunctionExpression function) {
-		this.declaringShape = declaringShape;
+	public ShowlFunctionExpression(ShowlPropertyShape declaringProperty, FunctionExpression function) {
+		this.declaringProperty = declaringProperty;
 		this.function = function;
 	}
 	
-	public static ShowlFunctionExpression fromIriTemplate(ShowlNodeShape declaringShape, IriTemplate template) {
-		return new ShowlFunctionExpression(declaringShape, FunctionExpression.fromIriTemplate(template));
+	public static ShowlFunctionExpression fromIriTemplate(ShowlPropertyShape declaringProperty, IriTemplate template) {
+		return new ShowlFunctionExpression(declaringProperty, FunctionExpression.fromIriTemplate(template));
 	}
-
-	@Override
-	public ShowlNodeShape rootNode() {
-		return declaringShape.getRoot();
+	
+	public void addArgument(ShowlExpression arg) {
+		arguments.add(arg);
 	}
 
 	@Override
@@ -64,11 +68,26 @@ public class ShowlFunctionExpression implements ShowlExpression {
 	}
 	
 	public ShowlNodeShape getDeclaringShape() {
-		return declaringShape;
+		return declaringProperty.getDeclaringShape();
+	}
+	
+	
+
+	public ShowlPropertyShape getDeclaringProperty() {
+		return declaringProperty;
 	}
 
 	public FunctionExpression getFunction() {
 		return function;
+	}
+
+	public List<ShowlExpression> getArguments() {
+		return arguments;
+	}
+
+
+	public String toString() {
+		return FormulaUtil.simpleString(function);
 	}
 
 	static class MyFormulaVisitor implements FormulaVisitor {
@@ -113,6 +132,14 @@ public class ShowlFunctionExpression implements ShowlExpression {
 		public void exit(Formula formula) {
 			
 			
+		}
+		
+	}
+
+	@Override
+	public void addProperties(Set<ShowlPropertyShape> set) {
+		for (ShowlExpression e : arguments) {
+			e.addProperties(set);
 		}
 		
 	}
