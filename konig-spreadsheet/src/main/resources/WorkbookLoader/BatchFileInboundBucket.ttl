@@ -1,0 +1,37 @@
+
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix gcp:   <http://www.konig.io/ns/gcp/> .
+@prefix schema:  <http://schema.org/> .
+#if($!{parentComponent})
+#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#foreach( $namespace in $namespaceList) 
+@prefix $namespace.Prefix: <$namespace.Name> .
+#end
+#end
+
+<gs://${gcpBucketName}>
+	a konig:GoogleCloudStorageBucket, konig:DataSource;
+	gcp:name "${gcpBucketName}" ;
+	gcp:projectId "${gcpProjectId}" ;#if($!{gcpBucketStorageClass})
+	gcp:storageClass "${gcpBucketStorageClass}" ;#end#if($!{gcpBucketLocation})
+	gcp:location   "${gcpBucketLocation}";#end
+	#if($!{topicName} || $!{eventType})
+		gcp:notificationInfo [
+			#if($!{topicName})
+				gcp:topic "${topicName}";
+				#if($!{eventType})
+					gcp:eventTypes "${eventType}";
+				#else
+					gcp:eventTypes "OBJECT_FINALIZE";
+				#end
+			#else
+				gcp:topic $templateException.topicNameNotDefined();
+			#end
+		] 
+	#end
+	#if($!{parentComponent}) 
+	schema:isPartOf $functions.spaceToComma(${parentComponent});
+	#end 
+.
+
+	

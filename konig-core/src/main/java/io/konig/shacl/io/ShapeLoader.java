@@ -36,7 +36,6 @@ import org.openrdf.rio.turtle.TurtleParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.konig.cadl.Cube;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
@@ -51,8 +50,9 @@ import io.konig.core.pojo.PojoListener;
 import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.pojo.impl.BasicPojoHandler;
 import io.konig.core.pojo.impl.PojoInfo;
-import io.konig.core.vocab.CADL;
 import io.konig.core.vocab.SH;
+import io.konig.datasource.DataSource;
+import io.konig.datasource.DataSourceManager;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
@@ -158,7 +158,9 @@ public class ShapeLoader {
 	public void load(Graph graph) throws ShapeLoadException {
 		
 		PojoContext context = new PojoContext(CONTEXT);
+
 		context.putPojoHandler(Shape.class, new ShapePojoHandler(shapeManager));
+		context.putPojoHandler(DataSource.class, new MasterDataSourcePojoHandler());
 		context.setListener(new PojoListener() {
 
 			@Override
@@ -200,10 +202,17 @@ public class ShapeLoader {
 			if (shape != null) {
 				return shape;
 			}
+			
+			DataSource ds = DataSourceManager.getInstance().findDataSourceById(id);
+			if (ds != null) {
+				return ds;
+			}
 			return super.newInstance(pojoInfo);
 		}
 		
 	}
+	
+	
 	
 
 }

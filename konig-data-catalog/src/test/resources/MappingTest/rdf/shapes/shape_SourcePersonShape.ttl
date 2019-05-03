@@ -21,14 +21,10 @@ $.givenName''' ;
 	sh:nodeKind sh:IRI ; 
 	sh:targetClass schema:Person ; 
 	prov:wasGeneratedBy <http://www.konig.io/activity/YLZBSGwrH0sAAAFnZfiJLA> ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PERSON_STG> . 
+	konig:shapeDataSource <gs://person-staging> . 
 
 <http://www.konig.io/activity/YLZBSGwrH0sAAAFnZfiJLA> a konig:LoadModelFromSpreadsheet ; 
 	as:endTime "2018-11-30T13:54:06.133-05:00"^^xsd:dateTime . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PERSON_STG> gcp:tableReference  [ 
-		gcp:projectId "${gcpProjectId}" ; 
-		gcp:datasetId "schema" ; 
-		gcp:tableId "PERSON_STG" ]  ; 
-	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+<gs://person-staging>  
+	a konig:GoogleCloudStorageBucket , konig:DataSource . 

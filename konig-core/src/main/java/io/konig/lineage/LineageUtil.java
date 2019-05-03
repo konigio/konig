@@ -1,8 +1,8 @@
-package io.konig.transform.beam;
+package io.konig.lineage;
 
 /*
  * #%L
- * Konig Transform Beam
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -21,18 +21,23 @@ package io.konig.transform.beam;
  */
 
 
-import io.konig.core.showl.ShowlNodeShape;
-import io.konig.core.showl.ShowlNodeShapeConsumer;
-import io.konig.core.showl.ShowlProcessingException;
+import java.util.Collections;
 
-public class BeamTransformNodeShapeConsumer implements ShowlNodeShapeConsumer {
+import io.konig.core.showl.ShowlPropertyShape;
 
-	
+public class LineageUtil {
 
-	@Override
-	public void consume(ShowlNodeShape node) throws ShowlProcessingException {
-		
-
+	public static DatasourcePropertyPath toPropertyPath(ShowlPropertyShape p) {
+		DatasourcePropertyPath path = new DatasourcePropertyPath();
+		while (p != null) {
+			path.add(p.getPredicate());
+			p = p.getDeclaringShape().getAccessor();
+		}
+		if (path.size()>1) {
+			Collections.reverse(path);
+		}
+		return path;
 	}
+	
 
 }

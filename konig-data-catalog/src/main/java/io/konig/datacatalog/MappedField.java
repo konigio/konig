@@ -26,7 +26,7 @@ public class MappedField {
 	private String text;
 
 	public MappedField(String text) {
-		this.text = text;
+		this.text = text.replace("<", "&lt;").replace(">", "&gt;");
 	}
 
 	public String getText() {

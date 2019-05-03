@@ -33,6 +33,9 @@ import java.util.Set;
 public interface ShowlExpression {
 	
 	public String displayValue();
+	
+	// TODO: Replace addDeclaredProperties with a more generic method that scans for all properties,
+	//       Not just those rooted at a given sourceNodeShape.
 
 	/**
 	 * Collect from this expression all properties declared by the specified source NodeShape, or any 
@@ -40,7 +43,8 @@ public interface ShowlExpression {
 	 * @param sourceNodeShape
 	 * @param set  The set to which the properties should be added.
 	 */
-	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set);
+	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set)
+	throws ShowlProcessingException;
 	
 	public void addProperties(Set<ShowlPropertyShape> set);
 }

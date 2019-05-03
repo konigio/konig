@@ -43,7 +43,7 @@ public class ReadPersonSourceShapeFn
                 if ((zoneOffset.length() == 0)||zoneOffset.equals("Z")) {
                     stringValue = ((datePart +"T00:00:00.000")+ zoneOffset);
                 }
-                return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMill();
+                return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
             }
         }
         return null;

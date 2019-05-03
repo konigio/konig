@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -490,10 +491,23 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		boolean foundAny = false;
 		
 		if (projectColumn !=null && projectColumn.getIndex()>=0) {
-			String projectList = stringValue(sheetRow, projectColumn);
-			if (projectList==null || !projectList.contains(acceptProject)) {
+			String projectListText = stringValue(sheetRow, projectColumn);
+			
+			if ( projectListText == null) {
 				return false;
 			}
+			
+			StringTokenizer tokenizer = new StringTokenizer(projectListText, " \r\n\t");
+			boolean ok = false;
+			while (tokenizer.hasMoreTokens() && !ok) {
+				String projectId = tokenizer.nextToken();
+				ok = projectId.equals(acceptProject);
+			}
+			
+			if (!ok) {
+				return false;
+			}
+			
 		}
 		List<String> missingRequired = null;
 		for (SheetColumn column : processor.getColumns()) {

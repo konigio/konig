@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.util.IriTemplate;
 import io.konig.formula.Formula;
 import io.konig.formula.FormulaUtil;
@@ -46,8 +47,9 @@ public class ShowlFunctionExpression implements ShowlExpression {
 		this.function = function;
 	}
 	
-	public static ShowlFunctionExpression fromIriTemplate(ShowlPropertyShape declaringProperty, IriTemplate template) {
-		return new ShowlFunctionExpression(declaringProperty, FunctionExpression.fromIriTemplate(template));
+	public static ShowlFunctionExpression fromIriTemplate(ShowlFactory factory, ShowlPropertyShape declaringProperty, IriTemplate template) {
+		ShowlExpressionBuilder builder = new ShowlExpressionBuilder(factory);
+		return builder.functionExpression(declaringProperty,  FunctionExpression.fromIriTemplate(template));
 	}
 	
 	public void addArgument(ShowlExpression arg) {

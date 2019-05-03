@@ -4,7 +4,7 @@ package io.konig.core.pojo.impl;
  * #%L
  * Konig Core
  * %%
- * Copyright (C) 2015 - 2017 Gregory McFall
+ * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,9 @@ package io.konig.core.pojo.impl;
  * #L%
  */
 
-
-import java.util.Set;
-
 import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.vocabulary.RDF;
 
-import io.konig.core.Edge;
 import io.konig.core.KonigException;
-import io.konig.core.Vertex;
 import io.konig.core.pojo.PojoContext;
 import io.konig.core.pojo.PojoCreator;
 
@@ -40,7 +32,7 @@ public class MasterPojoHandler implements PojoHandler {
 	@Override
 	public void buildPojo(PojoInfo pojoInfo) throws KonigException {
 		
-		Class<?> javaClass = selectType(pojoInfo);
+		Class<?> javaClass = PojoUtil.selectType(pojoInfo);
 		if (javaClass != null) {
 
 			PojoContext context = pojoInfo.getContext();
@@ -109,25 +101,7 @@ public class MasterPojoHandler implements PojoHandler {
 		return null;
 	}
 
-	private Class<?> selectType(PojoInfo pojoInfo) {
-		Class<?> best = pojoInfo.getExpectedJavaClass();
-		PojoContext context = pojoInfo.getContext();
-		Vertex v = pojoInfo.getVertex();
-		if (v != null) {
-			Set<Edge> typeSet = v.outProperty(RDF.TYPE);
-			for (Edge e : typeSet) {
-				Value object = e.getObject();
-				if (object instanceof URI) {
-					URI typeId = (URI) object;
-					Class<?> type = context.getJavaClass(typeId);
-					if (type!=null && (best == null || best.isAssignableFrom(type))) {
-						best = type;
-					}
-				}
-			}
-		}
-		return best;
-	}
+	
 
 
 }

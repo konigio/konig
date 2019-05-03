@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.Set;
+
 /*
  * #%L
  * Konig Core
@@ -40,4 +42,6 @@ public interface ShowlFactory {
 	ShowlClass mostSpecificClass(ShowlClass a, ShowlClass b);
 
 	ShowlNodeShape createShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass);
+	
+	Set<ShowlNodeShape> selectCandidateSources(ShowlNodeShape targetShape);
 }

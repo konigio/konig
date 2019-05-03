@@ -85,4 +85,9 @@ public class GoogleCloudStorageBucket extends DataSource {
 		this.notificationInfo = notificationInfo;
 	}
 
+
+	@Override
+	public boolean isEmbeddabled() {
+		return false;
+	}
 }

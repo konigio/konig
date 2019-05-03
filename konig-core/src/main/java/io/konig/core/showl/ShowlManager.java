@@ -39,16 +39,21 @@ import java.util.Set;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.core.Context;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
+import io.konig.core.impl.BasicContext;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.util.IriTemplate;
+import io.konig.core.util.ValueFormat;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.formula.Direction;
@@ -133,6 +138,10 @@ public class ShowlManager implements ShowlClassManager {
 		return shapeManager;
 	}
 	
+	public ShowlFactory getShowlFactory() {
+		return showlFactory;
+	}
+
 	public void load() throws ShowlProcessingException {
 
 		clear();
@@ -284,13 +293,17 @@ public class ShowlManager implements ShowlClassManager {
 		}
 		
 	}
+	
+	
 
 	private void buildTransform(ShowlNodeShape targetNode) {
 		
 		
-		bindVariables(targetNode);
 		
-		Set<ShowlNodeShape> candidates = sourceNodeSelector.selectCandidateSources(showlFactory, targetNode);
+		Set<ShowlNodeShape> candidates = selectCandidateSources(targetNode);
+		
+		addSourcesForVariables(candidates, targetNode);
+		
 		if (candidates.isEmpty()) {
 			if (logger.isWarnEnabled()) {
 				logger.warn("buildTransform:  Cannot build transform for {}.  No candidate sources were found.", 
@@ -298,28 +311,50 @@ public class ShowlManager implements ShowlClassManager {
 			}
 		}
 		
+		buildTransforms(targetNode, candidates);
+		
+		
+		
+		
+	}
+
+	private Set<ShowlNodeShape> selectCandidateSources(ShowlNodeShape targetNode) {
+		Set<ShowlNodeShape> set = sourceNodeSelector.selectCandidateSources(showlFactory, targetNode);
+		for (ShowlNodeShape sourceNode : set) {
+			if (sourceNode.getTargetNode()==null) {
+				sourceNode.setTargetNode(targetNode);
+			}
+		}
+		return set;
+	}
+
+	private void addSourcesForVariables(Set<ShowlNodeShape> candidates, ShowlNodeShape targetNode) {
+		for (PropertyConstraint c : targetNode.getShape().getVariable()) {
+			URI predicate = c.getPredicate();
+			
+			ShowlPropertyShape p = targetNode.findOut(predicate);
+			if (p != null && p.getValueShape()!=null) {
+				
+				Set<ShowlNodeShape> set = selectCandidateSources(p.getValueShape());
+				
+				candidates.addAll(set);
+				
+			}
+		}
+		
+	}
+
+	private void buildTransforms(ShowlNodeShape targetNode, Collection<ShowlNodeShape> candidates) {
 		for (ShowlNodeShape sourceNode : candidates) {
 
 			if (logger.isTraceEnabled()) {
-				logger.trace("buildTransform: From source {} to target {}", sourceNode.getPath(), targetNode.getPath());
+				logger.trace("buildTransforms: From source {} to target {}", sourceNode.getPath(), targetNode.getPath());
 			}
 		    for (ShowlDirectPropertyShape targetProperty : targetNode.getProperties()) {
 		    	
-		    	// Check for a direct match.
 		    	
-		    	boolean matched = matchProperty(sourceNode, targetProperty);
+		    	matchProperty(sourceNode, targetProperty);
 		    	
-		    	if (!matched) {
-		    		
-		    		// Check for a synonym match
-		    	
-			    	ShowlPropertyShape synonym = targetProperty.getSynonym();
-			    	matched = matchProperty(sourceNode, synonym);
-		    	}
-		    	
-		    	if (!matched) {
-		    		System.out.println("now what?");
-		    	}
 		    }
 		}
 		
@@ -341,22 +376,8 @@ public class ShowlManager implements ShowlClassManager {
 	}
 
 
-	private void bindVariables(ShowlNodeShape targetNode) {
-		for (PropertyConstraint constraint : targetNode.getShape().getVariable()) {
-			URI predicate = constraint.getPredicate();
-			
-			ShowlPropertyShape var = targetNode.findOut(predicate);
-			if (var == null) {
-				fail("Variable ?{} not found in {}", predicate.getLocalName(), targetNode.getPath());
-			}
-			
-			ShowlNodeShape varNode = var.getValueShape();
-			if (varNode != null) {
-				Set<ShowlNodeShape> candidates = sourceNodeSelector.selectCandidateSources(showlFactory, varNode);
-			}
-		}
-		
-	}
+	
+
 
 	private void addEnumMappings(ShowlNodeShape targetShape) {
 		
@@ -452,6 +473,7 @@ public class ShowlManager implements ShowlClassManager {
     	if (sourceProperty != null) {
     		
     		
+    		
     		if (!(sourceProperty instanceof ShowlDirectPropertyShape)) {
     			ShowlPropertyShape synonym = sourceProperty.getSynonym();
     			if (synonym instanceof ShowlDirectPropertyShape) {
@@ -478,10 +500,8 @@ public class ShowlManager implements ShowlClassManager {
 			joinCube(nodeA, joinCondition);
 			addConsumable(nodeA);
 		} else if (nodeA.getAccessor()==null && nodeA.hasDataSource() && !isUndefinedClass(nodeA.getOwlClass())) {
-			Set<ShowlNodeShape> candidates = sourceNodeSelector.selectCandidateSources(showlFactory, nodeA);
-			if (candidates.isEmpty() && role==MappingRole.TARGET) {
-				nodeA.setUnmapped(true);
-			}
+			Set<ShowlNodeShape> candidates = selectCandidateSources(nodeA);
+			
 			for (ShowlNodeShape nodeB : candidates) {
 				
 				if (nodeB.getShape() == nodeA.getShape()) {
@@ -572,7 +592,7 @@ public class ShowlManager implements ShowlClassManager {
 			ShowlNodeShape varNode = varProperty.getValueShape();
 			if (varNode != null) {
 			
-				Set<ShowlNodeShape> candidates = sourceNodeSelector.selectCandidateSources(showlFactory, targetNode); 
+				Set<ShowlNodeShape> candidates = selectCandidateSources(targetNode); 
 				for (ShowlNodeShape sourceNode : candidates) {
 					
 					List<ShowlPropertyShape> idList = sourceNode.out(Konig.id);
@@ -1467,7 +1487,7 @@ public class ShowlManager implements ShowlClassManager {
 			ShowlProperty property = produceShowlProperty(Konig.id);
 			ShowlOutwardPropertyShape out = new ShowlOutwardPropertyShape(declaringShape, property);
 			out.setFormula(ShowlFunctionExpression.fromIriTemplate(
-					out, declaringShape.getShape().getIriTemplate()));
+					showlFactory, out, declaringShape.getShape().getIriTemplate()));
 			
 			declaringShape.addDerivedProperty(out);
 		} else if (declaringShape.getShape().getNodeKind() == NodeKind.IRI) {
@@ -1518,8 +1538,12 @@ public class ShowlManager implements ShowlClassManager {
 			if (logger.isTraceEnabled()) {
 				logger.trace("processFormula({})", ps.getPath());
 			}
+
 			setShowlExpression(ps, e);
+			
+			// TODO: We should be able to eliminate this dispatch...
 			e.dispatch(new PathVisitor(ps));
+
 		}
 		
 	}
@@ -1529,7 +1553,6 @@ public class ShowlManager implements ShowlClassManager {
 		ShowlExpressionBuilder builder = new ShowlExpressionBuilder(showlFactory);
 		ShowlExpression ex = builder.expression(ps, e);
 		ps.setFormula(ex);
-		
 		
 	}
 
@@ -2133,21 +2156,106 @@ public class ShowlManager implements ShowlClassManager {
 			
 		}
 
-		
+		@Override
+		public Set<ShowlNodeShape> selectCandidateSources(ShowlNodeShape targetShape) {
+			
+			return ShowlManager.this.selectCandidateSources(targetShape);
+		}
 
 		
 	}
 
 
-	private void addExpression(ShowlPropertyShape a, ShowlPropertyShape b) {
-		if (b instanceof ShowlDirectPropertyShape) {
-			a.addExpression(new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)b));
+	private void addExpression(ShowlPropertyShape target, ShowlPropertyShape source) {
+		if (source instanceof ShowlDirectPropertyShape) {
+			target.addExpression(new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)source));
 		} else {
-			ShowlDerivedPropertyShape derived = (ShowlDerivedPropertyShape) b;
+			ShowlDerivedPropertyShape derived = (ShowlDerivedPropertyShape) source;
+			addClassIriTemplateFormula(target, derived);
 			if (derived.getFormula() != null) {
-				a.addExpression(derived.getFormula());
+				target.addExpression(derived.getFormula());
 			} else {
-				a.addExpression(new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape)b));
+				target.addExpression(new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape)source));
+			}
+		}
+
+		ShowlNodeShape targetNode = target.getValueShape();
+		
+		if (targetNode != null && !reasoner.isEnumerationClass(targetNode.getOwlClass().getId())) {
+		
+			ShowlNodeShape sourceNode = source.getValueShape();
+			if (sourceNode == null) {
+				ShowlPropertyShape synonym = source.getSynonym();
+				if (synonym != null) {
+					sourceNode = synonym.getValueShape();
+				}
+			}
+			
+			if (sourceNode!=null) {
+				List<ShowlNodeShape> list = new ArrayList<>();
+				list.add(sourceNode);
+				buildTransforms(targetNode, list);
+			}
+		}
+		
+	}
+
+	
+	/**
+	 * Use the IRI Template from the OWL Class to inject a formula for the target IRI.
+	 */
+	private void addClassIriTemplateFormula(ShowlPropertyShape target, ShowlDerivedPropertyShape derived) {
+		if (derived.getFormula()==null && derived.getValueShape()!=null) {
+			ShowlClass owlClass = target.getValueType(this);
+			Vertex v = reasoner.getGraph().getVertex(owlClass.getId());
+			if (v != null) {
+				Value templateValue = v.getValue(Konig.iriTemplate);
+				if (templateValue != null) {
+					ShowlNodeShape node = derived.getValueShape();
+					IriTemplate classTemplate = new IriTemplate(templateValue.stringValue());
+					Context classContext = classTemplate.getContext();
+					classContext.compile();
+					
+					IriTemplate template = new IriTemplate();
+					BasicContext context = new BasicContext("");
+					template.setContext(context);
+					
+					
+					for (ValueFormat.Element e : classTemplate.toList()) {
+						switch (e.getType()) {
+						case TEXT :
+							template.addText(e.getText());
+							break;
+							
+						case VARIABLE :
+							URI termId = new URIImpl(classContext.expandIRI(e.getText()));
+							ShowlPropertyShape p = node.findOut(termId);
+							if (p != null) {
+								if (p instanceof ShowlDerivedPropertyShape) {
+									p = p.getSynonym();
+								}
+								
+								if (p instanceof ShowlDirectPropertyShape) {
+									URI predicate = p.getPredicate();
+									context.addTerm(predicate.getLocalName(), predicate.stringValue());
+									
+									template.addVariable(predicate.getLocalName());
+								} else {
+									// abort
+									return;
+								}
+							}
+							break;
+						}
+					}
+					
+					ShowlFunctionExpression e = ShowlFunctionExpression.fromIriTemplate(
+							showlFactory, derived, template);
+					
+					derived.setFormula(e);
+					
+					
+				}
 			}
 		}
 		

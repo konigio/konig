@@ -85,7 +85,6 @@ import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.apache.velocity.runtime.parser.ParseException;
 import org.codehaus.plexus.util.FileUtils;
 import org.konig.omcs.common.GroovyOmcsDeploymentScriptWriter;
-import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandlerException;
@@ -99,11 +98,8 @@ import io.konig.abbrev.MemoryAbbreviationManager;
 import io.konig.aws.common.GroovyAwsDeploymentScriptWriter;
 import io.konig.aws.common.GroovyAwsTearDownScriptWriter;
 import io.konig.aws.datasource.AwsShapeConfig;
-import io.konig.cadl.Cube;
 import io.konig.cadl.CubeEmitter;
 import io.konig.cadl.CubeManager;
-import io.konig.cadl.CubeShapeBuilder;
-import io.konig.cadl.CubeShapeException;
 import io.konig.core.ContextManager;
 import io.konig.core.Graph;
 import io.konig.core.KonigException;
@@ -118,17 +114,17 @@ import io.konig.core.io.SkosEmitter;
 import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
 import io.konig.core.project.ProjectManager;
+import io.konig.core.showl.CompositeNodeShapeConsumer;
 import io.konig.core.showl.CompositeSourceNodeSelector;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.GoogleStorageBucketSourceNodeSelector;
 import io.konig.core.showl.HasDataSourceTypeSelector;
+import io.konig.core.showl.LineageShowlNodeShapeConsumer;
 import io.konig.core.showl.MappingReport;
-import io.konig.core.showl.ObsoleteMappingStrategy;
-import io.konig.core.showl.ShowlManager;
-import io.konig.core.showl.ObsoleteShowlNodeListingConsumer;
 import io.konig.core.showl.RawCubeSourceNodeSelector;
+import io.konig.core.showl.ShowlManager;
+import io.konig.core.showl.ShowlNodeListingConsumer;
 import io.konig.core.showl.ShowlNodeShape;
-import io.konig.core.showl.ShowlSourceNodeSelector;
 import io.konig.core.showl.ShowlTargetNodeSelector;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
@@ -159,8 +155,8 @@ import io.konig.gcp.common.InvalidGoogleCredentialsException;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.deployment.DeploymentConfigEmitter;
 import io.konig.gcp.deployment.GcpConfigManager;
-import io.konig.gcp.deployment.GcpDeploymentConfigManager;
 import io.konig.jsonschema.generator.SimpleJsonSchemaTypeMapper;
+import io.konig.lineage.LineageEmitter;
 import io.konig.maven.project.generator.MavenProjectGeneratorException;
 import io.konig.maven.project.generator.MultiProject;
 import io.konig.maven.project.generator.ParentProjectGenerator;
@@ -197,7 +193,6 @@ import io.konig.schemagen.gcp.BigQueryEnumShapeGenerator;
 import io.konig.schemagen.gcp.BigQueryLabelGenerator;
 import io.konig.schemagen.gcp.BigQueryTableGenerator;
 import io.konig.schemagen.gcp.BigQueryTableMapper;
-import io.konig.schemagen.gcp.CloudSqlAdminManager;
 import io.konig.schemagen.gcp.CloudSqlTableWriter;
 import io.konig.schemagen.gcp.DataFileMapperImpl;
 import io.konig.schemagen.gcp.DatasetMapper;
@@ -401,6 +396,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     private File mavenHome;
     private boolean anyError;
     private CubeManager cubeManager;
+    private LineageEmitter lineageEmitter;
 
 	@Component
 	private MavenProject mavenProject;
@@ -1561,8 +1557,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		// To that end, this method ought to simply configure the batch to include BigQuery transforms.
 		// For now, however, we'll go ahead and run the BigQuery transform job by itself.
 		
-		ObsoleteMappingStrategy mappingStrategy = new ObsoleteMappingStrategy();
-		ObsoleteShowlNodeListingConsumer nodeConsumer = new ObsoleteShowlNodeListingConsumer(mappingStrategy);
+		ShowlNodeListingConsumer listingConsumer = new ShowlNodeListingConsumer();
+		CompositeNodeShapeConsumer nodeConsumer = new CompositeNodeShapeConsumer(listingConsumer, new LineageShowlNodeShapeConsumer());
 		
 //		ShowlSqlTransform transform = new ShowlSqlTransform();
 //		BigQueryTransformConsumer transformConsumer = new BigQueryTransformConsumer(folder);
@@ -1573,7 +1569,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				shapeManager, owlReasoner, targetNodeSelector, nodeSelector(shapeManager), nodeConsumer);
 		showlManager.load();
 		
-		List<ShowlNodeShape> nodeList = nodeConsumer.getList();
+		addLineageEmitter();
+		
+		List<ShowlNodeShape> nodeList = listingConsumer.getList();
 		File projectDir = new File(mavenProject.getBasedir(), "target/generated/beam");
 		if (!nodeList.isEmpty()) {
 			BeamTransformRequest request = BeamTransformRequest.builder()
@@ -1599,6 +1597,19 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 //		visitor.put(Konig.GoogleBigQueryTable, writer, some);
 		
 	}
+	private void addLineageEmitter() {
+		if (lineageEmitter == null) {
+			File outFile = new File(rdf.getShapesDir(), "lineage.ttl");
+			lineageEmitter = new LineageEmitter(outFile);
+			emitter.add(lineageEmitter);
+		}
+		
+	}
+
+
+
+
+
 	private CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
 		return new CompositeSourceNodeSelector(
 				new RawCubeSourceNodeSelector(shapeManager),

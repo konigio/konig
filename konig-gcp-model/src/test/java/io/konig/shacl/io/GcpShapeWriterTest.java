@@ -215,10 +215,10 @@ public class GcpShapeWriterTest {
 		Vertex datasource = v.getVertex(Konig.shapeDataSource);
 		assertTrue(datasource!=null);
 		
-		assertLiteral(datasource, GCP.projectId, "myproject");
-		assertLiteral(datasource, GCP.name, "person.example.com");
-		assertLiteral(datasource, GCP.storageClass, "multi_regional");
-		assertLiteral(datasource, GCP.location, "us");
+		assertLiteral(datasource, GCP.projectId, null);
+		assertLiteral(datasource, GCP.name, null);
+		assertLiteral(datasource, GCP.storageClass, null);
+		assertLiteral(datasource, GCP.location, null);
 		
 	}
 	
@@ -263,8 +263,12 @@ public class GcpShapeWriterTest {
 
 	private void assertLiteral(Vertex u, URI predicate, String expected) {
 		Value v = u.getValue(predicate);
-		assertTrue("Failed to get value '" + predicate.getLocalName() + "'", v != null);
-		assertEquals(expected, v.stringValue());
+		if (expected==null) {
+			assertTrue("Expected value to be null: " + predicate.getLocalName(), v == null);
+		} else {
+			assertTrue("Failed to get value '" + predicate.getLocalName() + "'", v != null);
+			assertEquals(expected, v.stringValue());
+		}
 	
 		
 	}

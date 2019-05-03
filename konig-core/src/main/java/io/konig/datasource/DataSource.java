@@ -1,5 +1,6 @@
 package io.konig.datasource;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -31,19 +32,25 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.annotation.RdfProperty;
+import io.konig.core.pojo.ConditionalEmbeddable;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.DC;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
+import io.konig.lineage.DatasourceProperty;
+import io.konig.lineage.DatasourcePropertyPath;
 import io.konig.shacl.ShapeBuilder;
 
-public class DataSource {
+public class DataSource implements ConditionalEmbeddable {
 	
 	private Resource id;
 	private String identifier;
 	private Set<URI> type = new LinkedHashSet<>();
 	private IriTemplate iriTemplate;
 	private List<URI> isPartOf;
+	private Set<DataSource> receivesDataFrom;
+	
+	private List<DatasourceProperty> datasourceProperty;
  	
 	public DataSource() {
 		
@@ -110,6 +117,9 @@ public class DataSource {
 
 	public void setId(Resource id) {
 		this.id = id;
+		if (id != null) {
+			DataSourceManager.getInstance().add(this);
+		}
 	}
 
 	@RdfProperty(Konig.IRI_TEMPLATE)
@@ -143,5 +153,54 @@ public class DataSource {
 		}
 		return false;
 	}
+
+	@Override
+	public boolean isEmbeddabled() {
+		return true;
+	}
 	
+	public void addDatasourceProperty(DatasourceProperty p) {
+		if (datasourceProperty == null) {
+			datasourceProperty = new ArrayList<>();
+		}
+		datasourceProperty.add(p);
+		p.setPropertySource(this);
+	}
+	
+	public DatasourceProperty findPropertyByPath(DatasourcePropertyPath path) {
+		for (DatasourceProperty p : getDatasourceProperty()) {
+			if (p.getPropertyPath().equals(path)) {
+				return p;
+			}
+		}
+		return null;
+	}
+
+	public DatasourceProperty findPropertyByPredicate(URI predicate) {
+		for (DatasourceProperty p : getDatasourceProperty()) {
+			if (p.getPropertyPath().size()==1) {
+				URI value = p.getPropertyPath().get(0);
+				if (value.equals(predicate)) {
+					return p;
+				}
+			}
+		}
+		
+		return null;
+	}
+	public List<DatasourceProperty> getDatasourceProperty() {
+		return datasourceProperty==null ? Collections.emptyList() : datasourceProperty;
+	}
+
+	@RdfProperty(Konig.Terms.receivesDataFrom)
+	public Set<DataSource> getReceivesDataFrom() {
+		return receivesDataFrom==null ? Collections.emptySet() : receivesDataFrom;
+	}
+	
+	public void addReceivesDataFrom(DataSource ds) {
+		if (receivesDataFrom == null) {
+			receivesDataFrom = new LinkedHashSet<>();
+		}
+		receivesDataFrom.add(ds);
+	}
 }

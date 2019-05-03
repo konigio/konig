@@ -242,7 +242,7 @@ public class SimplePojoEmitter implements PojoEmitter {
 							sink.edge(subject, predicate, object);
 						}
 						
-						if (object instanceof Resource && !context.isIriReference(predicate)) {
+						if (canEmbed(object, predicate, javaObject)) {
 							doEmit((Resource)object, javaObject);
 						}
 					}
@@ -296,12 +296,21 @@ public class SimplePojoEmitter implements PojoEmitter {
 					}
 					sink.edge(subject, predicate, object);
 					
-					if (object instanceof Resource && !context.isIriReference(predicate)) {
+					if (canEmbed(object, predicate, value)) {
 						doEmit((Resource)object, value);
 					}
 				}
 			}
 			
+		}
+
+		private boolean canEmbed(Value object, URI predicate, Object javaObject) {
+			boolean ok = object instanceof Resource && !context.isIriReference(predicate);
+			if (ok && javaObject instanceof ConditionalEmbeddable) {
+				ConditionalEmbeddable e = (ConditionalEmbeddable) javaObject;
+				ok = e.isEmbeddabled();
+			}
+			return ok;
 		}
 
 		private void emitRdfList(Resource subject, URI predicate, Collection<?> javaCollection) {

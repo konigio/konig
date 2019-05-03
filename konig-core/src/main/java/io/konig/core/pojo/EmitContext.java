@@ -54,6 +54,7 @@ public class EmitContext {
 	private Set<Class<?>> memory = new HashSet<>();
 	private Set<Class<?>> skipClass = new HashSet<>();
 	private Set<URI> iriReference = null;
+	private boolean iriReferenceByDefault;
 	
 	private Map<Class<?>, Method> listGetterMap;
 	
@@ -107,12 +108,20 @@ public class EmitContext {
 		}
 	}
 	
+	public boolean isIriReferenceByDefault() {
+		return iriReferenceByDefault;
+	}
+
+	public void setIriReferenceByDefault(boolean iriReferenceByDefault) {
+		this.iriReferenceByDefault = iriReferenceByDefault;
+	}
+
 	public boolean isIgnoredProperty(URI predicate) {
 		return ignoredProperty!=null && ignoredProperty.contains(predicate);
 	}
 	
 	public boolean isIriReference(URI predicate) {
-		return iriReference!=null && iriReference.contains(predicate);
+		return iriReferenceByDefault ||  (iriReference!=null && iriReference.contains(predicate));
 	}
 	
 	public void setLocalNameService(LocalNameService nameService) {
@@ -204,7 +213,7 @@ public class EmitContext {
 							methodMap.put(m, NULL);
 							return null;
 						}
-						// TODO: Should we store the mapping m -> result ?
+						methodMap.put(m,  result);
 						return result;
 					}
 					

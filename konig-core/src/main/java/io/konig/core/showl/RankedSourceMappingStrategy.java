@@ -32,6 +32,7 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 			}
 		}
 		
+		
 		while (!pool.isEmpty() && !rankingMap.isEmpty()) {
 			int originalSize = pool.size();
 			
@@ -39,10 +40,12 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 			
 			if (best != null) {
 				rankingMap.remove(best.getSourceNode());
-				handleSourceNode(manager, targetNode, pool, best);
+				handleSourceNode(manager, pool, best.getSourceNode(), targetNode);
 			}
 			
+			
 			if (pool.size() == originalSize) {
+				
 				break;
 			}
 			
@@ -52,11 +55,15 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 		return pool;
 	}
 	
-	
 
-	private void handleSourceNode(ShowlManager manager, ShowlNodeShape targetNode, Set<ShowlPropertyShape> pool, NodeRanking best) {
+
+	private void handleSourceNode(ShowlManager manager, Set<ShowlPropertyShape> pool, ShowlNodeShape sourceNode, ShowlNodeShape defaultTargetNode) {
 		
-		ShowlNodeShape sourceNode = best.getSourceNode();
+		ShowlNodeShape targetNode = sourceNode.getTargetNode();
+		if (targetNode == null) {
+			targetNode = defaultTargetNode;
+		}
+		
 		if (logger.isTraceEnabled()) {
 			logger.trace("handleSourceNode: Map from source {} to target {}", sourceNode.getPath(), targetNode.getPath());
 		}
@@ -93,6 +100,7 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 				}
 				
 				
+
 			}
 		}
 		
@@ -176,6 +184,15 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 				} else if (hasStaticDataSource(sourceNode)) {
 					
 					
+					ShowlIriReferenceExpression iriRef = iriRef(sourceNode);
+					if (iriRef != null) {
+						return null;
+					}
+					
+					if (hasHardCodedValue(sourceNode.getTargetProperty())) {
+						return null;
+					}
+					
 					ShowlNodeShape leftJoinNode = findJoinNode(leftSourceNode, sourceNode.getTargetProperty());
 					
 					if (leftJoinNode != null) {
@@ -209,12 +226,36 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 	}
 
 
+	private boolean hasHardCodedValue(ShowlPropertyShape targetProperty) {
+		ShowlExpression formula = targetProperty.getFormula();
+		if (formula instanceof ShowlIriReferenceExpression) {
+			targetProperty.setSelectedExpression(formula);
+			return true;
+		}
+		return false;
+	}
+
+
+
+	private ShowlIriReferenceExpression iriRef(ShowlNodeShape sourceNode) {
+		ShowlPropertyShape targetProperty = sourceNode.getTargetProperty();
+		if (targetProperty != null) {
+			for (ShowlExpression e : targetProperty.getExpressionList()) {
+				if (e instanceof ShowlIriReferenceExpression) {
+					return (ShowlIriReferenceExpression) e;
+				}
+			}
+		}
+		return null;
+	}
+
+
 	private ShowlNodeShape findJoinNode(
 			ShowlNodeShape sourceNode,
 			ShowlPropertyShape targetProperty) {
 		
 		if (logger.isTraceEnabled()) {
-			logger.trace("matchTargetProperty({}, {})", sourceNode.getPath(), targetProperty.getPath());
+			logger.trace("findJoinNode({}, {})", sourceNode.getPath(), targetProperty.getPath());
 		}
 		
 		List<ShowlPropertyShape> path = targetProperty.propertyPath();
@@ -405,13 +446,6 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 		e.addProperties(set);
 		return set;
 	}
-
-
-
-
-
-
-
 
 	private static class NodeRanking  {
 		private ShowlNodeShape sourceNode;

@@ -9,11 +9,14 @@ import org.openrdf.model.impl.URIImpl;
 import io.konig.core.showl.ShowlClass;
 import io.konig.core.showl.ShowlDerivedPropertyExpression;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
+import io.konig.core.showl.ShowlDirectPropertyExpression;
+import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlFactory;
 import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIdRefPropertyShape;
 import io.konig.core.showl.ShowlInwardPropertyShape;
+import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlOutwardPropertyShape;
 import io.konig.core.showl.ShowlProcessingException;
@@ -22,6 +25,7 @@ import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.BareExpression;
+import io.konig.formula.ConditionalOrExpression;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.Expression;
@@ -29,6 +33,8 @@ import io.konig.formula.Formula;
 import io.konig.formula.FormulaUtil;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.HasPathStep;
+import io.konig.formula.IriValue;
+import io.konig.formula.LiteralFormula;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
 import io.konig.formula.PredicateObjectList;
@@ -56,6 +62,9 @@ public class ShowlExpressionBuilder {
 		if (formula instanceof QuantifiedExpression) {
 			return quantifiedExpression(p, (QuantifiedExpression) formula);
 		} 
+		if (formula instanceof ConditionalOrExpression) {
+			return conditionalOr(p, (ConditionalOrExpression)formula);
+		}
 		if (formula instanceof PathExpression) {
 			return path(p, (PathExpression) formula);
 		}
@@ -63,9 +72,58 @@ public class ShowlExpressionBuilder {
 			return bare(p, (BareExpression)formula);
 		}
 		
+		if (formula instanceof IriValue) {
+			return iriValue(p, (IriValue)formula);
+		}
+		
+		if (formula instanceof LiteralFormula) {
+			return literal((LiteralFormula)formula);
+		}
 		fail("At {0}, failed to process expression: {1}", p.getPath(), FormulaUtil.simpleString(formula));
 		
 		return null;
+	}
+
+
+	private ShowlExpression iriValue(ShowlPropertyShape p, IriValue formula) {
+
+		URI iri = formula.getIri();
+		
+		ShowlPropertyShape out = p.getDeclaringShape().findOut(iri);
+		if (out != null) {
+			return propertyExpression(out);
+		}
+		ShowlIriReferenceExpression result = new ShowlIriReferenceExpression(iri, p);
+		
+		return result;
+	}
+
+
+	private ShowlExpression propertyExpression(ShowlPropertyShape out) {
+		
+		out = out.maybeDirect();
+		if (out instanceof ShowlDirectPropertyShape) {
+			return new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)out);
+		}
+		
+		return new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape) out);
+	}
+
+
+	private ShowlExpression literal(LiteralFormula formula) {
+		
+		return new ShowlLiteralExpression(formula.getLiteral());
+	}
+
+
+	private ShowlExpression conditionalOr(ShowlPropertyShape p, ConditionalOrExpression formula) {
+
+		PrimaryExpression primary = formula.asPrimaryExpression();
+		if (primary == null) {
+			fail("At {0}, failed to process conditional or expression {1}", p.getPath(), FormulaUtil.simpleString(formula));
+		} 
+		
+		return expression(p, primary);
 	}
 
 
@@ -292,7 +350,7 @@ public class ShowlExpressionBuilder {
 		return expression(p, primary);
 	}
 
-	private ShowlFunctionExpression functionExpression(ShowlPropertyShape p, FunctionExpression formula) {
+	public ShowlFunctionExpression functionExpression(ShowlPropertyShape p, FunctionExpression formula) {
 		ShowlFunctionExpression func = new ShowlFunctionExpression(p, formula);
 		for (Expression arg : formula.getArgList()) {
 			func.getArguments().add(expression(p, arg));

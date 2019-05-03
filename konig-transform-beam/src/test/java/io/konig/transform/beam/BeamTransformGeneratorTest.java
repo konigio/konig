@@ -39,7 +39,6 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.CompositeSourceNodeSelector;
-import io.konig.core.showl.ExplicitDerivedFromFilter;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.GoogleStorageBucketSourceNodeSelector;
 import io.konig.core.showl.HasDataSourceTypeSelector;
@@ -48,11 +47,9 @@ import io.konig.core.showl.RawCubeTargetNodeSelector;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
 import io.konig.core.showl.ShowlNodeShape;
-import io.konig.core.showl.ShowlTargetNodeSelector;
 import io.konig.core.util.IOUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.gcp.datasource.GcpShapeConfig;
-import io.konig.shacl.ShapeFilter;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
@@ -73,6 +70,34 @@ public class BeamTransformGeneratorTest {
 				new ExplicitDerivedFromSelector());
 	}
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
+
+	@Ignore
+	public void testClassIriTemplate() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/class-iri-template");
+		
+	}
+
+	@Ignore
+	public void testNestedRecord() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/nested-record");
+		
+	}
+	
+	@Ignore
+	public void testIriTemplateFormula() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/iri-template-formula");
+		
+	}
+	
+	@Ignore
+	public void testHardCodedEnum() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/hard-coded-enum");
+		
+	}
 
 	@Test
 	public void testBeamCube() throws Exception {
@@ -168,6 +193,7 @@ public class BeamTransformGeneratorTest {
 			
 			assertTrue(!consumer.getList().isEmpty());
 		
+			assertTrue(!consumer.getList().isEmpty());
 			for (ShowlNodeShape targetNodeShape : consumer.getList()) {
 				URI shapeId = RdfUtil.uri(targetNodeShape.getId());
 				File actualDir = request.projectDir(shapeId);

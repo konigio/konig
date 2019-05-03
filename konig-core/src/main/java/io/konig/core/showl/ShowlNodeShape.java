@@ -67,7 +67,6 @@ public class ShowlNodeShape implements Traversable {
 	
 	private List<ShowlJoinCondition> selectedJoins;
 	private ShowlDataSource shapeDataSource;
-	private boolean unmapped;
 	
 	private List<ShowlChannel> channelList;
 	private ShowlPropertyShape targetProperty;
@@ -488,19 +487,7 @@ public class ShowlNodeShape implements Traversable {
 		return selectedJoins == null ? Collections.emptyList() : selectedJoins;
 	}
 
-	/**
-	 * Returns true if there are no shapes that are candidates as sources from which this node may 
-	 * be derived.
-	 */
-	public boolean isUnmapped() {
-		return unmapped;
-	}
-
-
-	public void setUnmapped(boolean unmapped) {
-		this.unmapped = unmapped;
-	}
-
+	
 
 	public NodeKind getNodeKind() {
 		return shape == null ? null : shape.getNodeKind();
@@ -658,5 +645,9 @@ public class ShowlNodeShape implements Traversable {
 	 */
 	public void setTargetNode(ShowlNodeShape targetNode) {
 		this.targetNode = targetNode;
+	}
+
+	public boolean isTargetNode() {
+		return targetNode==null;
 	}
 }

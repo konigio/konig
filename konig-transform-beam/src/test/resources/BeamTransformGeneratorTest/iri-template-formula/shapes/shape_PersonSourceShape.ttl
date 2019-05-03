@@ -1,0 +1,53 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonSourceShape sh:property  [ 
+		sh:path alias:person_id ; 
+		rdf:predicate alias:person_id ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path alias:parent_id ; 
+		rdf:predicate alias:parent_id ; 
+		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource  <gs://personsourceshape-${gcpBucketSuffix}> ; 
+	konig:derivedProperty  [ 
+		sh:path schema:parent ; 
+		rdf:predicate schema:parent ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		konig:stereotype konig:derivedProperty ; 
+		konig:formula '''
+@term parent_id <http://example.com/ns/alias/parent_id>
+
+<http://example.com/person/{parent_id}>''' ; 
+		sh:class schema:Person ]  ; 
+	konig:iriTemplate '''@context {
+   "alias" : "http://example.com/ns/alias/",
+   "person_id" : "alias:person_id"
+}
+
+<http://example.com/person/{person_id}>''' ; 
+	sh:targetClass schema:Person . 
+
+
+<gs://personsourceshape-${gcpBucketSuffix}> gcp:name "personsourceshape-${gcpBucketSuffix}" ; 
+	gcp:location "us" ; 
+	gcp:projectId "${gcpProjectId}" ; 
+	gcp:notificationInfo  [ 
+		gcp:eventTypes "${eventType}" ; 
+		gcp:topic "${topicName}" ]  ; 
+	gcp:storageClass "multi_regional" ; 
+	a konig:GoogleCloudStorageBucket , konig:DataSource . 

@@ -157,5 +157,15 @@ public class IriTemplate extends SimpleValueFormat {
 		out.print(text);
 		out.print('>');
 	}
+
+	public int variablesCount() {
+		int count = 0;
+		for (ValueFormat.Element e : toList()) {
+			if (e.getType() == ValueFormat.ElementType.VARIABLE) {
+				count++;
+			}
+		}
+		return count;
+	}
 	
 }
