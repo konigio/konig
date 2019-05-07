@@ -156,6 +156,8 @@ public class GoogleBigqueryTableVisitor implements DataSourceVisitor {
 			TableSchema tableSchema = tableGenerator.toTableSchema(shape);
 			properties.setSchema(tableSchema);
 			
+			resource.produceMetadata().addDependency(manager.datasetName(datasetId));
+			
 			addStorageBucket(bigquery, resource);
 		}
 		
