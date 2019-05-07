@@ -103,5 +103,30 @@ public class DeploymentConfigWriterTest {
 		
 		assertEquals(expected, actual);
 	}
-
+	
+	@Test
+	public void testStorageBucket() throws Exception {
+		DeploymentConfig config = new DeploymentConfig();
+		StorageBucketResource resource = new StorageBucketResource();
+		resource.setName("example_bucket");
+		StorageBucketProperties properties = new StorageBucketProperties();
+		resource.setProperties(properties);
+		properties.setName("example_bucket");
+		config.addResource(resource);
+		StringWriter out = new StringWriter();
+		writer.write(out, config);
+		
+		
+		String actual = out.toString().replace("\r", "");
+		System.out.println(actual);
+		String expected = 
+				"\n" +
+				"resources: \n" + 
+				"   - \n" + 
+				"      name: example_bucket\n" + 
+				"      type: storage.v1.bucket\n" + 
+				"      properties: \n" + 
+				"         name: example_bucket\n" ;
+		assertEquals(expected, actual);
+	}			
 }
