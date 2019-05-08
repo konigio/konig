@@ -26,6 +26,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.vocabulary.OWL;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
@@ -58,7 +59,9 @@ public class AddEdgeAction implements Action {
 	private Value value() throws SpreadsheetException {
 		OwlReasoner reasoner = processor.getOwlReasoner();
 		SheetColumn column = new SheetColumn(predicate.stringValue());
-		if (!WorkbookUtil.assignValueType(reasoner, predicate, column)) {
+			
+		
+		if (!WorkbookUtil.assignValueType(reasoner, predicate, column) && !reasoner.isTypeOf(predicate, OWL.OBJECTPROPERTY)) {
 			NamespaceManager nsManager = reasoner.getGraph().getNamespaceManager();
 			String subjectName = RdfUtil.compactName(nsManager, subject);
 			String predicateName = RdfUtil.compactName(reasoner.getGraph().getNamespaceManager(), predicate);

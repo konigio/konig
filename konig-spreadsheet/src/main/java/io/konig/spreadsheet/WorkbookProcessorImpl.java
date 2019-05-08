@@ -136,8 +136,19 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			serviceManager.setListener(new BaseServiceListener());
 			addNamespaces();
 			addServices();
+			addDefaultTerms();
 			sortBookListeners();
 		}
+	}
+
+	/**
+	 * Add terms that are assumed by the workbook processor.
+	 */
+	private void addDefaultTerms() {
+
+		graph.edge(Konig.receivesDataFrom, RDF.TYPE, RDF.PROPERTY);
+		graph.edge(Konig.receivesDataFrom, RDF.TYPE, OWL.OBJECTPROPERTY);
+		
 	}
 
 	public boolean isShowStackTrace() {
