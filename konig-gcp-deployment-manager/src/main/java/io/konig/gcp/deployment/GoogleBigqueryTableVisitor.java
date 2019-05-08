@@ -64,10 +64,10 @@ public class GoogleBigqueryTableVisitor implements DataSourceVisitor {
 		String bucketName = bucket.getName();
 		String configName = manager.storageBucketConfigName(bucketName);
 		
-		StorageBucketResource resource = manager.getConfig().findResource(bucketName, StorageBucketResource.class);
+		StorageBucketResource resource = manager.getConfig().findResource(configName, StorageBucketResource.class);
 		if (resource == null) {
 			resource = new StorageBucketResource();
-			resource.setName(bucketName);
+			resource.setName(configName);
 			StorageBucketProperties properties = new StorageBucketProperties();
 			resource.setProperties(properties);
 			properties.setName(bucketName);
@@ -99,17 +99,17 @@ public class GoogleBigqueryTableVisitor implements DataSourceVisitor {
 						String bucketName = manager.storageBucketName(uri);
 						String configName = manager.storageBucketConfigName(bucketName);
 						
-						StorageBucketResource resource = manager.getConfig().findResource(bucketName, StorageBucketResource.class);
+						StorageBucketResource resource = manager.getConfig().findResource(configName, StorageBucketResource.class);
 						if (resource == null) {
 							resource = new StorageBucketResource();
-							resource.setName(bucketName);
+							resource.setName(configName);
 							StorageBucketProperties properties = new StorageBucketProperties();
 							properties.setName(bucketName);
 							resource.setProperties(properties);
 							
 							manager.getConfig().addResource(resource);
 							
-							table.produceMetadata().addDependency(bucketName);
+							table.produceMetadata().addDependency(configName);
 						}
 					}
 				}
