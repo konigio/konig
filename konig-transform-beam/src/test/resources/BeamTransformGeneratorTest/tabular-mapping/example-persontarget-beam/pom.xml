@@ -120,8 +120,26 @@
           <artifactId>exec-maven-plugin</artifactId>
           <version>${maven-exec-plugin.version}</version>
           <configuration>
-            <cleanupDaemonThreads>false</cleanupDaemonThreads>
-          </configuration>
+				<cleanupDaemonThreads>false</cleanupDaemonThreads>
+				<executable>java</executable>
+				<mainClass>com.example.beam.etl.shape.PersonTargetShapeBeam</mainClass>
+				<arguments>
+					<argument>--project=pearson-edw-core</argument>
+					<argument>--runner=DataflowRunner</argument>
+					<argument>--environment=${environment}</argument>					
+					<argument>--gcpTempLocation=gs://pearson-edw-core-dataflow-template/example-persontarget-beam/temp</argument>
+					<argument>--tempLocation=gs://pearson-edw-core-dataflow-template/example-persontarget-beam/temp</argument>
+					<argument>--stagingLocation=gs://pearson-edw-core-dataflow-template/example-persontarget-beam/staging</argument>
+					<argument>--templateLocation=gs://pearson-edw-core-dataflow-template/example-persontarget-beam/template</argument>
+				</arguments>
+			</configuration>
+			<executions>
+				<execution>
+					<goals>
+						<goal>exec</goal>
+					</goals>
+				</execution>
+			</executions>
         </plugin>
       </plugins>
     </pluginManagement>

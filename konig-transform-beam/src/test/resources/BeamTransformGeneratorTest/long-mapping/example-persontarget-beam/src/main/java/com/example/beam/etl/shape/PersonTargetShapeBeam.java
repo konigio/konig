@@ -19,6 +19,7 @@ public class PersonTargetShapeBeam {
         org.apache.beam.sdk.Pipeline p = org.apache.beam.sdk.Pipeline.create(options);
         String sourceURI = sourceURI(options);
         p.apply(FileIO.match().filepattern(sourceURI)).apply(FileIO.readMatches()).apply("ReadFiles", ParDo.of(new ReadPersonSourceShapeFn())).apply("ToPersonTargetShape", ParDo.of(new ToPersonTargetShapeFn())).apply("WritePersonTargetShape", BigQueryIO.writeTableRows().to("schema.PersonTarget").withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER).withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
+        p.run();
     }
 
     public static void main(String[] args) {

@@ -120,8 +120,26 @@
           <artifactId>exec-maven-plugin</artifactId>
           <version>${maven-exec-plugin.version}</version>
           <configuration>
-            <cleanupDaemonThreads>false</cleanupDaemonThreads>
-          </configuration>
+				<cleanupDaemonThreads>false</cleanupDaemonThreads>
+				<executable>java</executable>
+				<mainClass>$mainClass</mainClass>
+				<arguments>
+					<argument>--project=$gcpProjectId</argument>
+					<argument>--runner=DataflowRunner</argument>
+					<argument>--environment=${environment}</argument>					
+					<argument>--gcpTempLocation=gs://${gcpProjectId}-dataflow-template/$projectName/temp</argument>
+					<argument>--tempLocation=gs://${gcpProjectId}-dataflow-template/$projectName/temp</argument>
+					<argument>--stagingLocation=gs://${gcpProjectId}-dataflow-template/$projectName/staging</argument>
+					<argument>--templateLocation=gs://${gcpProjectId}-dataflow-template/$projectName/template</argument>
+				</arguments>
+			</configuration>
+			<executions>
+				<execution>
+					<goals>
+						<goal>exec</goal>
+					</goals>
+				</execution>
+			</executions>
         </plugin>
       </plugins>
     </pluginManagement>

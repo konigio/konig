@@ -22,6 +22,7 @@ package io.konig.transform.beam;
 
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,7 +85,11 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.api.services.bigquery.model.TableRow;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.EClassType;
 import com.helger.jcodemodel.IJExpression;
@@ -168,6 +173,7 @@ public class BeamTransformGenerator {
 	private NamespaceManager nsManager;
 	private JavaDatatypeMapper datatypeMapper;
 	private OwlReasoner reasoner;
+	private String projectId;
 	
 	public BeamTransformGenerator(String basePackage, OwlReasoner reasoner) {
 		this.basePackage = basePackage;
@@ -191,8 +197,10 @@ public class BeamTransformGenerator {
 				File projectDir = projectDir(request, node);
 				childProjectList.add(projectDir);
 				JCodeModel model = new JCodeModel();
+				Worker w = new Worker(null,null);
+				String mainClassName = w.mainClassName(node);
 				try {
-					buildPom(request, projectDir);
+					buildPom(request, projectDir,mainClassName);
 				} catch (IOException e) {
 					throw new BeamTransformGenerationException("Failed to generate pom.xml", e);
 				}
@@ -262,7 +270,8 @@ public class BeamTransformGenerator {
 		
 	}
 
-	private void buildPom(BeamTransformRequest request, File projectDir) throws IOException {
+	private void buildPom(BeamTransformRequest request, File projectDir, String mainClassName) throws IOException, BeamTransformGenerationException {
+		useDefaultCredentials();
 		VelocityEngine engine = new VelocityEngine();
 		engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
 		engine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
@@ -272,6 +281,9 @@ public class BeamTransformGenerator {
 		context.put("groupId", request.getGroupId());
 		context.put("artifactId", projectDir.getName());
 		context.put("version", request.getVersion());
+		context.put("projectName", projectDir.getName());
+		context.put("mainClass", mainClassName);
+		context.put("gcpProjectId", projectId);
 		
 		Template template = engine.getTemplate("BeamTransformGenerator/pom.xml");
 		File pomFile = new File(projectDir, "pom.xml");
@@ -281,7 +293,36 @@ public class BeamTransformGenerator {
 		}
 		
 	}
+	
+	private void useDefaultCredentials() throws BeamTransformGenerationException, IOException {
+		String fileName = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+		if (fileName == null) {
+			throw new BeamTransformGenerationException("Google Credentials not found.  Please define the "
+				+ "'GOOGLE_APPLICATION_CREDENTIALS' environment variable");
+		}
+		File jsonKey = new File(fileName);
+		projectId = readProjectId(jsonKey);
+	}
+	
+	private String readProjectId(File jsonKey) throws IOException, BeamTransformGenerationException {
+		try (
+			FileInputStream input = new FileInputStream(jsonKey)
+		) {
 
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode node = mapper.reader().readTree(input);
+			if (node instanceof ObjectNode) {
+				ObjectNode obj = (ObjectNode) node;
+				node = obj.get("project_id");
+				if (node != null) {
+					return node.asText();
+				}
+			}
+		}
+		
+		throw new BeamTransformGenerationException(jsonKey.getAbsolutePath());
+	}
+	
 	/**
 	 * Generate the Java code for an Apache Beam transform from the data source to the specified target shape.
 	 * @param model The code model in which the Java source code will be stored
@@ -2584,9 +2625,8 @@ ShowlNodeShape valueShape = p.getValueShape();
 							.invoke("withCreateDisposition").arg(createDispositionClass.staticRef("CREATE_NEVER"))
 							.invoke("withWriteDisposition").arg(writeDispositionClass.staticRef("WRITE_APPEND")));
 			
-			
-
 			body.add(pipeline);
+			body.add(p.invoke("run"));
 			
 		}
 
