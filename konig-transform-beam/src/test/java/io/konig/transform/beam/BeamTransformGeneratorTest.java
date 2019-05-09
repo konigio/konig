@@ -176,6 +176,7 @@ public class BeamTransformGeneratorTest {
 				.version("1.0")
 				.projectDir(projectDir)
 				.nodeList(consumer.getList())
+				.gcpProjectId("pearson-edw-core")
 				.build();
 		
 		generator.generateAll(request);

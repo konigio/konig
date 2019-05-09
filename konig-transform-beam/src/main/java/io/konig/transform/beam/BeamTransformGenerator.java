@@ -271,7 +271,6 @@ public class BeamTransformGenerator {
 	}
 
 	private void buildPom(BeamTransformRequest request, File projectDir, String mainClassName) throws IOException, BeamTransformGenerationException {
-		useDefaultCredentials();
 		VelocityEngine engine = new VelocityEngine();
 		engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
 		engine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
@@ -283,7 +282,7 @@ public class BeamTransformGenerator {
 		context.put("version", request.getVersion());
 		context.put("projectName", projectDir.getName());
 		context.put("mainClass", mainClassName);
-		context.put("gcpProjectId", projectId);
+		context.put("gcpProjectId", request.getGcpProjectId());
 		
 		Template template = engine.getTemplate("BeamTransformGenerator/pom.xml");
 		File pomFile = new File(projectDir, "pom.xml");
@@ -294,34 +293,6 @@ public class BeamTransformGenerator {
 		
 	}
 	
-	private void useDefaultCredentials() throws BeamTransformGenerationException, IOException {
-		String fileName = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
-		if (fileName == null) {
-			throw new BeamTransformGenerationException("Google Credentials not found.  Please define the "
-				+ "'GOOGLE_APPLICATION_CREDENTIALS' environment variable");
-		}
-		File jsonKey = new File(fileName);
-		projectId = readProjectId(jsonKey);
-	}
-	
-	private String readProjectId(File jsonKey) throws IOException, BeamTransformGenerationException {
-		try (
-			FileInputStream input = new FileInputStream(jsonKey)
-		) {
-
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode node = mapper.reader().readTree(input);
-			if (node instanceof ObjectNode) {
-				ObjectNode obj = (ObjectNode) node;
-				node = obj.get("project_id");
-				if (node != null) {
-					return node.asText();
-				}
-			}
-		}
-		
-		throw new BeamTransformGenerationException(jsonKey.getAbsolutePath());
-	}
 	
 	/**
 	 * Generate the Java code for an Apache Beam transform from the data source to the specified target shape.

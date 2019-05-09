@@ -1573,6 +1573,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		
 		List<ShowlNodeShape> nodeList = listingConsumer.getList();
 		File projectDir = new File(mavenProject.getBasedir(), "target/generated/beam");
+		GoogleCloudService googleService = new GoogleCloudService();
 		if (!nodeList.isEmpty()) {
 			BeamTransformRequest request = BeamTransformRequest.builder()
 				.groupId(mavenProject.getGroupId())
@@ -1580,6 +1581,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				.version(mavenProject.getVersion())
 				.projectDir(projectDir)
 				.nodeList(nodeList)
+				.gcpProjectId(googleService.getProjectId())
 				.build();
 			String basePackage = mavenProject.getGroupId() + ".beam";
 			BeamTransformGenerator generator = new BeamTransformGenerator(basePackage, owlReasoner);
