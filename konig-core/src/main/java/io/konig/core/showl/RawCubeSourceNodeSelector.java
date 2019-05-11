@@ -48,7 +48,7 @@ public class RawCubeSourceNodeSelector implements ShowlSourceNodeSelector {
 
 
 	@Override
-	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape) {
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlService factory, ShowlNodeShape targetShape) {
 		
 		ShowlPropertyShape accessor = targetShape.getAccessor();
 		if (accessor instanceof ShowlVariablePropertyShape) {

@@ -29,7 +29,7 @@ import io.konig.shacl.Shape;
 
 public class ExplicitDerivedFromSelector implements ShowlSourceNodeSelector {
 	@Override
-	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape) {
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlService factory, ShowlNodeShape targetShape) {
 		Set<ShowlNodeShape> result = new HashSet<>();
 		Set<Shape> candidates = targetShape.getShape().getExplicitDerivedFrom();
 		for (Shape shape : candidates) {

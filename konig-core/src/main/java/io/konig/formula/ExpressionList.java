@@ -42,6 +42,15 @@ public class ExpressionList extends ArrayList<Expression> implements Formula {
 		out.print(')');
 	}
 	
+	
+	@Override
+	public ExpressionList clone() {
+		ExpressionList other = new ExpressionList();
+		for (Expression e : this) {
+			other.add(e.clone());
+		}
+		return other;
+	}
 	@Override
 	public String toString() {
 		StringWriter buffer = new StringWriter();

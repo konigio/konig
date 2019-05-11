@@ -37,6 +37,11 @@ public class ListRelationalExpression extends AbstractFormula implements Relatio
 		this.right = right;
 	}
 	
+	@Override
+	public ListRelationalExpression clone() {
+		return new ListRelationalExpression(operator, left.clone(), right.clone());
+	}
+	
 	public ContainmentOperator getOperator() {
 		return operator;
 	}

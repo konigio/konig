@@ -34,10 +34,10 @@ import io.konig.core.vocab.Konig;
 public class EnumMappingAction {
 	private static final Logger logger = LoggerFactory.getLogger(EnumMappingAction.class);
 	private ShowlNodeShape enumTargetShape;
-	private ShowlFactory factory;
+	private ShowlService factory;
 	private OwlReasoner reasoner;
 
-	public EnumMappingAction(ShowlNodeShape enumTargetShape, ShowlFactory factory, OwlReasoner reasoner) {
+	public EnumMappingAction(ShowlNodeShape enumTargetShape, ShowlService factory, OwlReasoner reasoner) {
 		this.enumTargetShape = enumTargetShape;
 		this.factory = factory;
 		this.reasoner = reasoner;

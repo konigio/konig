@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -23,6 +25,7 @@ package io.konig.formula;
 
 import java.util.List;
 
+import io.konig.core.Context;
 import io.konig.core.KonigException;
 import io.konig.core.io.PrettyPrintWriter;
 
@@ -40,6 +43,40 @@ public class QuantifiedExpression extends Expression {
 
 	public QuantifiedExpression() {
 		
+	}
+	
+	protected QuantifiedExpression(Context context, List<ConditionalAndExpression> orList, List<Triple> statementList) {
+		super(context, orList);
+		this.statementList = statementList;
+	}
+	
+	@Override
+	public QuantifiedExpression clone() {
+		
+		return new QuantifiedExpression(context, clone(orList), cloneStatementList());
+	}
+
+	private List<Triple> cloneStatementList() {
+		if (statementList == null) {
+			return null;
+		}
+		
+		List<Triple> list = new ArrayList<>();
+		for (Triple e : statementList) {
+			list.add(e.clone());
+		}
+		return list;
+	}
+
+	private List<ConditionalAndExpression> clone(List<ConditionalAndExpression> orList) {
+		if (orList == null) {
+			return null;
+		}
+		List<ConditionalAndExpression> result = new ArrayList<>();
+		for (ConditionalAndExpression e : orList) {
+			result.add(e.clone());
+		}
+		return result;
 	}
 
 	public String toSimpleString() {

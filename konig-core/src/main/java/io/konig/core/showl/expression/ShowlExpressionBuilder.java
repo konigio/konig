@@ -1,5 +1,26 @@
 package io.konig.core.showl.expression;
 
+/*
+ * #%L
+ * Konig Core
+ * %%
+ * Copyright (C) 2015 - 2019 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import java.text.MessageFormat;
 import java.util.List;
 
@@ -12,17 +33,19 @@ import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlExpression;
-import io.konig.core.showl.ShowlFactory;
 import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIdRefPropertyShape;
 import io.konig.core.showl.ShowlInwardPropertyShape;
 import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlNodeShapeService;
 import io.konig.core.showl.ShowlOutwardPropertyShape;
 import io.konig.core.showl.ShowlProcessingException;
 import io.konig.core.showl.ShowlProperty;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlSchemaService;
+import io.konig.core.showl.ShowlService;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.BareExpression;
 import io.konig.formula.ConditionalOrExpression;
@@ -46,12 +69,13 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class ShowlExpressionBuilder {
-	
-	private ShowlFactory factory;
 
-	
-	public ShowlExpressionBuilder(ShowlFactory factory) {
-		this.factory = factory;
+	private ShowlSchemaService schemaService;
+	private ShowlNodeShapeService nodeService;
+
+	public ShowlExpressionBuilder(ShowlSchemaService schemaService, ShowlNodeShapeService nodeService) {
+		this.schemaService = schemaService;
+		this.nodeService = nodeService;
 	}
 
 
@@ -151,7 +175,7 @@ public class ShowlExpressionBuilder {
 				DirectionStep dirStep = (DirectionStep) step;
 				URI predicate = dirStep.getTerm().getIri();
 				
-				ShowlProperty property = factory.produceProperty(predicate);
+				ShowlProperty property = schemaService.produceProperty(predicate);
 				shapeIdValue += dirStep.getDirection().getSymbol() + predicate.getLocalName();
 				
 				ShowlNodeShape parentNode = parentNode(shapeIdValue, dirStep, property, p, prior);
@@ -172,8 +196,8 @@ public class ShowlExpressionBuilder {
 				}
 				ShowlNodeShape valueShape = prior.getValueShape();
 				if (valueShape == null) {
-					ShowlProperty property = factory.produceProperty(prior.getPredicate());
-					ShowlClass owlClass = factory.inferRange(property);
+					ShowlProperty property = schemaService.produceProperty(prior.getPredicate());
+					ShowlClass owlClass = schemaService.inferRange(property);
 					valueShape = createNodeShape(prior, shapeIdValue, owlClass, p);
 					prior.setValueShape(valueShape);
 				}
@@ -250,6 +274,7 @@ public class ShowlExpressionBuilder {
 			c.setNodeKind(declaringProperty.getNodeKind());
 		}
 		ShowlOutwardPropertyShape p = new ShowlOutwardPropertyShape(parentNode, property, c);
+		property.addPropertyShape(p);
 		parentNode.addDerivedProperty(p);
 		
 		return p;
@@ -274,10 +299,10 @@ public class ShowlExpressionBuilder {
 		}
 		shape.setNodeKind(kind);
 
-		ShowlNodeShape node = factory.createShowlNodeShape(accessor, shape, owlClass);
+		ShowlNodeShape node = nodeService.createShowlNodeShape(accessor, shape, owlClass);
 
 		if (kind == NodeKind.IRI) {
-			ShowlProperty konigId = factory.produceProperty(Konig.id);
+			ShowlProperty konigId = schemaService.produceProperty(Konig.id);
 			ShowlIdRefPropertyShape p = new ShowlIdRefPropertyShape(node, konigId, idRef);
 			node.addDerivedProperty(p);
 		}
@@ -300,13 +325,13 @@ public class ShowlExpressionBuilder {
 			return p.getDeclaringShape();
 		}
 		
-		ShowlClass owlClass = factory.inferDomain(property);
+		ShowlClass owlClass = schemaService.inferDomain(property);
 		ShowlProperty priorProperty = prior.getProperty();
 		ShowlClass prevClass = dirStep.getDirection() == Direction.OUT ?
-			factory.inferRange(priorProperty) :
-			factory.inferDomain(priorProperty);
+			schemaService.inferRange(priorProperty) :
+			schemaService.inferDomain(priorProperty);
 		
-		owlClass = factory.mostSpecificClass(owlClass, prevClass);
+		owlClass = nodeService.mostSpecificClass(owlClass, prevClass);
 		
 		// Hmmmm.  Are we sure that p=idref always?
 		

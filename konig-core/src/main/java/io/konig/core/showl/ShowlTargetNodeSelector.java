@@ -27,6 +27,6 @@ import io.konig.shacl.Shape;
 
 public interface ShowlTargetNodeSelector {
 	
-	List<ShowlNodeShape> produceTargetNodes(ShowlFactory factory, Shape shape) throws ShowlProcessingException;
+	List<ShowlNodeShape> produceTargetNodes(ShowlService factory, Shape shape) throws ShowlProcessingException;
 
 }

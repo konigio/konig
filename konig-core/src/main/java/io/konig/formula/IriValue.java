@@ -33,4 +33,6 @@ import org.openrdf.model.URI;
 public interface IriValue extends PrimaryExpression {
 // extends PathTerm, PathStep, PrimaryExpression
 	URI getIri();
+	
+	IriValue clone();
 }

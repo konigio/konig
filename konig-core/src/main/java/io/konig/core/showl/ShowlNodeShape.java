@@ -49,8 +49,11 @@ import io.konig.shacl.Shape;
 
 /**
  * A particular instance of a SHACL NodeShape.
- * The instance may be bound to a particular location with a graph via the accessor, and it may
- * be bound to a particular DataSource.
+ * The instance may be bound to a particular location a SHACL description via a PropertyShape accessor,
+ * and it may be bound to a particular DataSource.  
+ * <p>
+ * T
+ * </p>
  * 
  * @author Greg McFall
  *
@@ -73,21 +76,48 @@ public class ShowlNodeShape implements Traversable {
 	private ShowlStatement joinStatement;
 	
 	private ShowlNodeShape targetNode;
+	private ShowlEffectiveNodeShape effectiveNode;
+	
+	private ShowlManager manager;
+	
 	
 	@Deprecated
 	private ShowlNodeShape logicalNodeShape;
 	
 	
 	public ShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
+		this(null, accessor, shape, owlClass);
+	}
+
+	public ShowlNodeShape(ShowlManager manager, ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
 		derivedProperties = new HashMap<>();
+		this.manager = manager;
 		this.accessor = accessor;
 		this.shape = shape;
-		setOwlClass(owlClass);
+		this.owlClass = owlClass;
 		if (accessor != null) {
 			accessor.setValueShape(this);
 		}
 	}
 	
+	
+	public ShowlManager getShowlManager() {
+		return manager;
+	}
+
+
+	public ShowlEffectiveNodeShape getEffectiveNode() {
+		return effectiveNode;
+	}
+
+
+	public ShowlEffectiveNodeShape effectiveNode() {
+		if (effectiveNode == null) {
+			effectiveNode = accessor==null ? ShowlEffectiveNodeShape.forNode(this) : ShowlEffectiveNodeShape.fromRoot(this);
+		}
+		return effectiveNode;
+	}
+
 	public boolean isStaticEnumShape() {
 		return shapeDataSource!=null && shapeDataSource.getDataSource() instanceof StaticDataSource;
 	}
@@ -369,16 +399,8 @@ public class ShowlNodeShape implements Traversable {
 	}
 
 	public void setOwlClass(ShowlClass owlClass) {
-	
-		if (this.owlClass != owlClass) {
-			if (this.owlClass != null) {
-				this.owlClass.getTargetClassOf().remove(this);
-			}
-			this.owlClass = owlClass;
-			if (owlClass != null) {
-				owlClass.addTargetClassOf(this);
-			}
-		}
+			
+		this.owlClass = owlClass;
 		
 	}
 

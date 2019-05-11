@@ -37,6 +37,12 @@ public class LiteralFormula extends AbstractFormula implements PrimaryExpression
 	public Literal getLiteral() {
 		return literal;
 	}
+	
+	@Override
+	public LiteralFormula clone() {
+		// Since this is an immutable entity, we don't need to create a new instance
+		return this;
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

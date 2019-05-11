@@ -37,10 +37,6 @@ public class ShowlDirectPropertyShape extends ShowlPropertyShape {
 	public ShowlDirectPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property,
 			PropertyConstraint propertyConstraint) {
 		super(declaringShape, property, propertyConstraint);
-		
-		if (property != null) {
-			property.addPropertyShape(this);
-		}
 	}
 	
 	public boolean isObjectProperty() {
@@ -49,6 +45,10 @@ public class ShowlDirectPropertyShape extends ShowlPropertyShape {
 		}
 		PropertyConstraint p = getPropertyConstraint();
 		return p.getNodeKind().equals(NodeKind.IRI) || p.getShape()!=null;
+	}
+	
+	void setProperty(ShowlProperty p) {
+		property = p;
 	}
 	
 	public boolean isIriReference() {

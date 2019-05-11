@@ -134,7 +134,7 @@ public class Path2FormulaTranslator {
 		BinaryRelationalExpression binary = new BinaryRelationalExpression(null, add, null);
 		ConditionalAndExpression and = new ConditionalAndExpression();
 		and.add(binary);
-		Expression result = new Expression();
+		Expression result = new BasicExpression();
 		result.setContext(context);
 		result.add(and);
 	

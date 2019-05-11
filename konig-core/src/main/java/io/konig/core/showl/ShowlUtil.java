@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.Set;
+
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
@@ -90,9 +92,51 @@ public class ShowlUtil {
 		) {
 			return KqlType.STRING;
 		}
-		
-		
-		
 		return null;
+	}
+	
+	/**
+	 * Determine whether a given property has a well-defined value.
+	 * A value is well-defined if one of the following conditions is satisfied:
+	 * <ol>
+	 *   <li> The property is direct and has no nested shape.
+	 *   <li> The property has a direct synonym without a nested shape
+	 *   <li> The property is derived from a formula where all the parameters are well-defined.
+	 *   <li> The property has a selected formula where all the parameters are well-defined.
+	 * </ol>
+	 * @return
+	 */
+	public static boolean isWellDefined(ShowlPropertyShape p) {
+		if (p.isDirect() && p.getValueShape()==null) {
+			return true;
+		}
+		
+		ShowlPropertyShape synonym = p.getSynonym();
+		if (synonym!=null && synonym.isDirect() && synonym.getValueShape()==null) {
+			return true;
+		}
+		
+		if (isWellDefined(p.getFormula()) || isWellDefined(p.getSelectedExpression())) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Determine whether a given expression is well defined.
+	 * An expression is well defined if all of its parameters are well defined.
+	 */
+	public static boolean isWellDefined(ShowlExpression e) {
+		if (e == null) {
+			return false;
+		}
+		for (ShowlPropertyShape p : ShowlExpression.parameters(e)) {
+			if (!isWellDefined(p)) {
+				return false;
+			}
+		}
+		
+		return true;
 	}
 }

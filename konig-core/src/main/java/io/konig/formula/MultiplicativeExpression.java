@@ -39,6 +39,15 @@ public class MultiplicativeExpression extends AbstractFormula {
 		return left;
 	}
 	
+	@Override
+	public MultiplicativeExpression clone() {
+		MultiplicativeExpression other = new MultiplicativeExpression(left.clone());
+		for (Factor factor : multiplierList) {
+			other.add(factor.clone());
+		}
+		return other;
+	}
+	
 	public List<Factor> getMultiplierList() {
 		return multiplierList;
 	}

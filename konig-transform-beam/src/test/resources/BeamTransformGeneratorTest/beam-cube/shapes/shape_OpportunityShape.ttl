@@ -1,3 +1,4 @@
+@prefix asset: <http://example.com/ns/asset/> .
 @prefix crm: <http://example.com/ns/crm/> .
 @prefix gcp: <http://www.konig.io/ns/gcp/> .
 @prefix konig: <http://www.konig.io/ns/core/> .
@@ -9,31 +10,32 @@
 
 shape:OpportunityShape sh:property  [ 
 		sh:path schema:dateCreated ; 
-		sh:datatype xsd:dateTime ; 
-		rdf:predicate schema:dateCreated ; 
+		sh:maxCount 1 ; 
 		sh:minCount 1 ; 
-		sh:maxCount 1
+		rdf:predicate schema:dateCreated ; 
+		sh:datatype xsd:dateTime
 	 ]  ,  [ 
 		sh:path crm:customerAccount ; 
 		sh:class crm:Account ; 
-		sh:nodeKind sh:IRI ; 
-		rdf:predicate crm:customerAccount ; 
+		sh:maxCount 1 ; 
 		sh:minCount 1 ; 
-		sh:maxCount 1
+		rdf:predicate crm:customerAccount ; 
+		sh:nodeKind sh:IRI
 	 ]  ,  [ 
 		sh:path crm:salePrice ; 
-		sh:datatype xsd:float ; 
-		rdf:predicate crm:salePrice ; 
+		sh:maxCount 1 ; 
 		sh:minCount 1 ; 
-		sh:maxCount 1 ]  ; 
+		rdf:predicate crm:salePrice ; 
+		sh:datatype xsd:float ]  ; 
 	a sh:Shape ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Opportunity> ; 
+	konig:shapeDataSource <gs://konig-batch-inbound-${environmentName}> , <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Opportunity> ; 
 	sh:targetClass crm:Opportunity ; 
 	sh:nodeKind sh:IRI . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Opportunity> gcp:tableReference  [ 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Opportunity> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
 		gcp:datasetId "crm" ; 
 		gcp:tableId "Opportunity" ]  ; 
-	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf asset:WarehouseOperationalLayer . 

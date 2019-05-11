@@ -39,6 +39,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.CompositeSourceNodeSelector;
+import io.konig.core.showl.DataLayerSourceNodeSelector;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.GoogleStorageBucketSourceNodeSelector;
 import io.konig.core.showl.HasDataSourceTypeSelector;
@@ -71,28 +72,28 @@ public class BeamTransformGeneratorTest {
 	}
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
-	@Ignore
+	@Test
 	public void testClassIriTemplate() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/class-iri-template");
 		
 	}
 
-	@Ignore
+	@Test
 	public void testNestedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/nested-record");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIriTemplateFormula() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/iri-template-formula");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testHardCodedEnum() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/hard-coded-enum");
@@ -109,24 +110,25 @@ public class BeamTransformGeneratorTest {
 	private void prepareBeamCube() {
 
 		showlManager.setTargetNodeSelector(new RawCubeTargetNodeSelector());
+		showlManager.setSourceNodeSelector(new DataLayerSourceNodeSelector());
 		
 	}
 
-	@Ignore
+	@Test
 	public void testModelSummary() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/model-summary", false);
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinById() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-by-id", false);
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDateMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/date-mapping");
@@ -134,21 +136,21 @@ public class BeamTransformGeneratorTest {
 	}
 	
 
-	@Ignore
+	@Test
 	public void testTabularMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/tabular-mapping");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testLongMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/long-mapping");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testEnumMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-mapping");

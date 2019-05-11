@@ -28,6 +28,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
 import io.konig.core.Graph;
+import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
@@ -47,12 +48,12 @@ public class ShowlClass {
 	private Set<ShowlProperty> domainOf = new HashSet<>();
 	private Set<ShowlProperty> rangeOf = new HashSet<>();
 	private Set<ShowlClass> superClasses = null;
-	private ShowlManager manager;
 	private IriTemplate iriTemplate;
 	private Set<ShowlNodeShape> targetClassOf = new HashSet<>();
+	private OwlReasoner reasoner;
 	
-	public ShowlClass(ShowlManager manager, URI owlClassId) {
-		this.manager = manager;
+	public ShowlClass(OwlReasoner reasoner, URI owlClassId) {
+		this.reasoner = reasoner;
 		this.owlClassId = owlClassId;
 	}
 
@@ -61,9 +62,9 @@ public class ShowlClass {
 	}
 	
 	public boolean isSubClassOf(ShowlClass other) {
-		return manager.getReasoner().isSubClassOf(owlClassId, other.getId());
+		return reasoner.isSubClassOf(owlClassId, other.getId());
 	}
-
+	
 	
 	public void addSuperClass(ShowlClass superclass) {
 		if (superClasses == null) {
@@ -107,7 +108,7 @@ public class ShowlClass {
 	public IriTemplate getIriTemplate() {
 		
 		if (iriTemplate == null) {
-			Graph graph = manager.getReasoner().getGraph();
+			Graph graph = reasoner.getGraph();
 			Vertex v = graph.getVertex(owlClassId);
 			if (v != null) {
 				Value value = v.getValue(Konig.iriTemplate);

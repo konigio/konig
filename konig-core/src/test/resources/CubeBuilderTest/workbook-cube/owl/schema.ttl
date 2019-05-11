@@ -8,8 +8,10 @@
 schema: a owl:Ontology ; 
 	vann:preferredNamespacePrefix "schema" . 
 
+schema:Enumeration a owl:Class . 
+
 schema:dateCreated a rdf:Property ; 
-	rdfs:range xsd:date . 
+	rdfs:range xsd:dateTime . 
 
 schema:name a rdf:Property ; 
 	rdfs:range xsd:string . 

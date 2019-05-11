@@ -25,7 +25,6 @@ import java.util.Collections;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.URI;
@@ -37,11 +36,6 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.Direction;
-import io.konig.formula.DirectionStep;
-import io.konig.formula.PathExpression;
-import io.konig.formula.PathStep;
-import io.konig.formula.PrimaryExpression;
-import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
@@ -93,14 +87,14 @@ public class ShowlProperty {
 	 * Get the set of OWL Classes that are known to be in the domain of
 	 * the property. Subclasses are excluded.
 	 */
-	public Set<URI> domainIncludes(ShowlManager manager) {
+	public Set<URI> domainIncludes(ShowlService service) {
 		Set<URI> result = new HashSet<>();
 		if (domain != null  && !Konig.Undefined.equals(domain.getId())) {
 			result.add(domain.getId());
 		}
 		Set<URI> equivalent = new HashSet<>();
 		equivalent.add(predicate);
-		addDomain(equivalent, result, manager, propertyShapes);
+		addDomain(equivalent, result, service, propertyShapes);
 		return result;
 	}
 	
@@ -145,8 +139,8 @@ public class ShowlProperty {
 		
 	}
 
-	private void addDomain(Set<URI> equivalentProperty, Set<URI> result, ShowlManager manager, Set<ShowlPropertyShape> set) {
-		OwlReasoner reasoner = manager.getReasoner();
+	private void addDomain(Set<URI> equivalentProperty, Set<URI> result, ShowlService service, Set<ShowlPropertyShape> set) {
+		OwlReasoner reasoner = service.getOwlReasoner();
 		outer : for (ShowlPropertyShape p : set) {
 			URI owlClass = p.getDeclaringShape().getOwlClass().getId();
 			Iterator<URI> sequence = result.iterator();
@@ -169,27 +163,27 @@ public class ShowlProperty {
 		
 	}
 	
-	public ShowlClass inferDomain(ShowlManager manager) {
+	public ShowlClass inferDomain(ShowlService service) {
 		if (domain != null) {
 			return domain;
 		}
-		Set<URI> domainIncludes = domainIncludes(manager);
+		Set<URI> domainIncludes = domainIncludes(service);
 		
 		return domainIncludes.size()==1 ? 
-				manager.produceOwlClass(domainIncludes.iterator().next()) : 
-				manager.produceOwlClass(Konig.Undefined);
+				service.produceShowlClass(domainIncludes.iterator().next()) : 
+				service.produceShowlClass(Konig.Undefined);
 	}
 
 
-	public ShowlClass inferRange(ShowlManager manager) {
+	public ShowlClass inferRange(ShowlService service) {
 		if (range != null) {
 			return range;
 		}
-		Set<URI> rangeIncludes = rangeIncludes(manager.getReasoner());
+		Set<URI> rangeIncludes = rangeIncludes(service.getOwlReasoner());
 	
 		return rangeIncludes.size()==1 ?
-			manager.produceOwlClass(rangeIncludes.iterator().next()) :
-			manager.produceOwlClass(Konig.Undefined);
+			service.produceShowlClass(rangeIncludes.iterator().next()) :
+			service.produceShowlClass(Konig.Undefined);
 	}
 
 	public ShowlClass getDomain() {

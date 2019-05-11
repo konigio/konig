@@ -39,7 +39,7 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
-import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.Schema;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -62,10 +62,12 @@ public class CubeShapeBuilderTest {
 	public void test() throws Exception {
 		
 		Cube cube = loadCube(
-			uri("http://example.com/ns/cube/OpportunityRevenueCube"), 
+			uri("http://example.com/cube/OpportunityRevenueCube"), 
 			"src/test/resources/CubeBuilderTest/workbook-cube");
 		
 		Shape shape = builder.buildShape(cube);
+		
+		assertEquals("http://example.com/ns/crm/Opportunity", shape.getTargetClass().stringValue());
 		
 		Level accountLevel = cube.findDimensionByName("accountDim").findLevelByName("account");
 		
@@ -74,20 +76,19 @@ public class CubeShapeBuilderTest {
 		
 		QuantifiedExpression formula = accountConstraint.getFormula();
 		assertTrue(formula != null);
-		assertEquals("?opportunity.customerAccount", formula.toSimpleString());
+		assertEquals("$.customerAccount", formula.toSimpleString());
 		
 		Shape accountShape = accountConstraint.getShape();
 		assertTrue(accountShape != null);
 
 		
 		Attribute accountNameAttr = accountLevel.findAttributeByName("name");
-		PropertyConstraint accountNameConstraint = accountShape.getPropertyConstraint(CubeUtil.predicate(cube, accountNameAttr.getId()));
+		PropertyConstraint accountNameConstraint = accountShape.getPropertyConstraint(Schema.name);
+//		CubeUtil.predicate(cube, accountNameAttr.getId())
 		assertTrue(accountNameConstraint != null);
 		
 		formula = accountNameConstraint.getFormula();
-		assertTrue(formula != null);
-		
-		assertEquals("?opportunity.customerAccount.name", formula.toSimpleString());
+		assertTrue(formula == null);
 		
 		assertEquals(1, accountShape.getProperty().size());
 		

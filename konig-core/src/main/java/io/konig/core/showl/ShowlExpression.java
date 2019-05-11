@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.LinkedHashSet;
+
 /*
  * #%L
  * Konig Core
@@ -47,4 +49,12 @@ public interface ShowlExpression {
 	throws ShowlProcessingException;
 	
 	public void addProperties(Set<ShowlPropertyShape> set);
+	
+	public static Set<ShowlPropertyShape> parameters(ShowlExpression e) {
+		Set<ShowlPropertyShape> set = new LinkedHashSet<>();
+		e.addProperties(set);
+		return set;
+	}
+	
+	
 }

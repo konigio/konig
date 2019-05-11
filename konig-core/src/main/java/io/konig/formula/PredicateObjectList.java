@@ -49,6 +49,11 @@ public class PredicateObjectList extends AbstractFormula {
 		return null;
 	}
 
+	
+	@Override
+	public PredicateObjectList clone() {
+		return new PredicateObjectList(path.clone(), objectList.clone());
+	}
 	public PathExpression getPath() {
 		return path;
 	}

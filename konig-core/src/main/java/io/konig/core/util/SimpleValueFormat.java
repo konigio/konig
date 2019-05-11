@@ -48,7 +48,7 @@ public class SimpleValueFormat implements ValueFormat {
 	protected Element createVariable(String text) {
 		return new Variable(text);
 	}
-
+	
 	protected void compile() {
 		
 		elements = new ArrayList<>();
@@ -106,6 +106,10 @@ public class SimpleValueFormat implements ValueFormat {
 		protected String text;
 		
 		
+		@Override
+		public Element clone() {
+			return new Element(text);
+		}
 		
 		public Element(String text) {
 			this.text = text;
@@ -146,6 +150,10 @@ public class SimpleValueFormat implements ValueFormat {
 			super(text);
 		}
 
+		@Override
+		public Variable  clone() {
+			return new Variable(text);
+		}
 
 		@Override
 		public ElementType getType() {

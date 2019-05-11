@@ -23,4 +23,5 @@ package io.konig.formula;
 
 public interface NumericExpression extends Formula {
 
+	NumericExpression clone();
 }

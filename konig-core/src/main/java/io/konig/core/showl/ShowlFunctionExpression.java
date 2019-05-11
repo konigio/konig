@@ -47,8 +47,8 @@ public class ShowlFunctionExpression implements ShowlExpression {
 		this.function = function;
 	}
 	
-	public static ShowlFunctionExpression fromIriTemplate(ShowlFactory factory, ShowlPropertyShape declaringProperty, IriTemplate template) {
-		ShowlExpressionBuilder builder = new ShowlExpressionBuilder(factory);
+	public static ShowlFunctionExpression fromIriTemplate(ShowlSchemaService schemaService, ShowlNodeShapeService nodeService, ShowlPropertyShape declaringProperty, IriTemplate template) {
+		ShowlExpressionBuilder builder = new ShowlExpressionBuilder(schemaService, nodeService);
 		return builder.functionExpression(declaringProperty,  FunctionExpression.fromIriTemplate(template));
 	}
 	

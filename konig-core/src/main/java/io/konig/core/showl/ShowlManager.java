@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.Context;
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
@@ -93,7 +94,7 @@ public class ShowlManager implements ShowlClassManager {
 	private ShowlTargetNodeSelector targetNodeSelector;
 	private ShowlSourceNodeSelector sourceNodeSelector;
 	private Map<Resource, EnumMappingAction> enumMappingActions;
-	private ShowlFactory showlFactory;
+	private ShowlService showlFactory;
 	private ShowlMappingStrategy mappingStrategy;
 	
 	private StaticDataSource staticDataSource = null;
@@ -138,7 +139,7 @@ public class ShowlManager implements ShowlClassManager {
 		return shapeManager;
 	}
 	
-	public ShowlFactory getShowlFactory() {
+	public ShowlService getShowlFactory() {
 		return showlFactory;
 	}
 
@@ -344,23 +345,37 @@ public class ShowlManager implements ShowlClassManager {
 		
 	}
 
-	private void buildTransforms(ShowlNodeShape targetNode, Collection<ShowlNodeShape> candidates) {
+	private void buildTransforms(ShowlNodeShape defaultTargetNode, Collection<ShowlNodeShape> candidates) {
 		for (ShowlNodeShape sourceNode : candidates) {
 
+			ShowlNodeShape targetNode = sourceNode.getTargetNode();
+			if (targetNode == null) {
+				targetNode = defaultTargetNode;
+			}
 			if (logger.isTraceEnabled()) {
 				logger.trace("buildTransforms: From source {} to target {}", sourceNode.getPath(), targetNode.getPath());
 			}
 		    for (ShowlDirectPropertyShape targetProperty : targetNode.getProperties()) {
 		    	
+		    	ShowlExpression formula = targetProperty.getFormula();
+		    	if (formula == null) {
+		    		matchProperty(sourceNode, targetProperty);
+		    	} else {
 		    	
-		    	matchProperty(sourceNode, targetProperty);
+		    		Set<ShowlPropertyShape> set = new LinkedHashSet<>();
+		    		formula.addProperties(set);
+		    		for (ShowlPropertyShape arg : set) {
+		    			matchProperty(sourceNode, arg);
+		    		}
+		    		
+		    	}
 		    	
 		    }
 		}
 		
 		// Add mappings to static enum values
 		
-		for (ShowlDirectPropertyShape direct : targetNode.getProperties()) {
+		for (ShowlDirectPropertyShape direct : defaultTargetNode.getProperties()) {
 			
 			ShowlNodeShape valueShape = direct.getValueShape();
 			if (valueShape != null) {
@@ -422,7 +437,8 @@ public class ShowlManager implements ShowlClassManager {
 	
 
 	private ShowlNodeShape localEnumShape(ShowlNodeShape globalEnumShape, ShowlNodeShape targetShape) {
-		ShowlNodeShape local = new ShowlNodeShape(null, globalEnumShape.getShape(), globalEnumShape.getOwlClass());
+		ShowlNodeShape local = new ShowlNodeShape(this, null, globalEnumShape.getShape(), globalEnumShape.getOwlClass());
+		globalEnumShape.getOwlClass().addTargetClassOf(local);
 		local.setTargetProperty(targetShape.getAccessor());
 		local.setShapeDataSource(new ShowlDataSource(local, staticDataSource()));
 		
@@ -1142,7 +1158,7 @@ public class ShowlManager implements ShowlClassManager {
 				if (property.getDomain() != null) {
 					domainReasoner.require(property.getDomain().getId());
 				} else {
-					domainReasoner.domainIncludes(property.domainIncludes(this));
+					domainReasoner.domainIncludes(property.domainIncludes(showlFactory));
 				}
 			}
 		}
@@ -1194,7 +1210,7 @@ public class ShowlManager implements ShowlClassManager {
 	 */
 	private boolean updateCandidates(Set<URI> candidates, ShowlProperty property) {
 
-		Set<URI> domainIncludes = property.domainIncludes(this);
+		Set<URI> domainIncludes = property.domainIncludes(showlFactory);
 		
 		// Remove owl:Thing and konig:Undefined from consideration
 		Iterator<URI> sequence = domainIncludes.iterator();
@@ -1290,7 +1306,7 @@ public class ShowlManager implements ShowlClassManager {
 									URI predicate = dirStep.getTerm().getIri();
 									ShowlProperty property = getProperty(predicate);
 									if (property != null) {
-										Set<URI> domainIncludes = property.domainIncludes(this);
+										Set<URI> domainIncludes = property.domainIncludes(showlFactory);
 										
 										domainReasoner.domainIncludes(domainIncludes);
 										updated = true;
@@ -1372,7 +1388,8 @@ public class ShowlManager implements ShowlClassManager {
 
 	private ShowlNodeShape createShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
 
-		ShowlNodeShape result = new ShowlNodeShape(accessor, shape, owlClass);
+		ShowlNodeShape result = new ShowlNodeShape(this, accessor, shape, owlClass);
+		owlClass.addTargetClassOf(result);
 		if (Konig.Undefined.equals(owlClass.getId())) {
 			if (classlessShapes != null) {
 				classlessShapes.add(result);
@@ -1426,6 +1443,7 @@ public class ShowlManager implements ShowlClassManager {
 			property.setDomain(declaringShape.getOwlClass());
 			property.setRange(produceOwlClass(RdfUtil.uri(p.getValueClass())));
 			ShowlOutwardPropertyShape out = new ShowlVariablePropertyShape(declaringShape, property);
+			property.addPropertyShape(out);
 			declaringShape.addDerivedProperty(out);
 			if (logger.isTraceEnabled()) {
 				logger.trace("addProperties: add variable ?{} to {}", predicate.getLocalName(), declaringShape.getPath());
@@ -1487,7 +1505,7 @@ public class ShowlManager implements ShowlClassManager {
 			ShowlProperty property = produceShowlProperty(Konig.id);
 			ShowlOutwardPropertyShape out = new ShowlOutwardPropertyShape(declaringShape, property);
 			out.setFormula(ShowlFunctionExpression.fromIriTemplate(
-					showlFactory, out, declaringShape.getShape().getIriTemplate()));
+					showlFactory, showlFactory, out, declaringShape.getShape().getIriTemplate()));
 			
 			declaringShape.addDerivedProperty(out);
 		} else if (declaringShape.getShape().getNodeKind() == NodeKind.IRI) {
@@ -1501,6 +1519,7 @@ public class ShowlManager implements ShowlClassManager {
 	private ShowlDirectPropertyShape createDirectPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property,
 			PropertyConstraint constraint) {
 		ShowlDirectPropertyShape p = new ShowlDirectPropertyShape(declaringShape, property, constraint);
+		property.addPropertyShape(p);
 		if (logger.isTraceEnabled()) {
 			logger.trace("createDirectPropertyShape: created {}", p.getPath());
 		}
@@ -1550,7 +1569,7 @@ public class ShowlManager implements ShowlClassManager {
 
 	private void setShowlExpression(ShowlPropertyShape ps, QuantifiedExpression e) {
 		
-		ShowlExpressionBuilder builder = new ShowlExpressionBuilder(showlFactory);
+		ShowlExpressionBuilder builder = new ShowlExpressionBuilder(showlFactory, showlFactory);
 		ShowlExpression ex = builder.expression(ps, e);
 		ps.setFormula(ex);
 		
@@ -1629,7 +1648,7 @@ public class ShowlManager implements ShowlClassManager {
 							} else {
 								// Get OWL Class for parent shape, i.e. the
 								// property domain.
-								ShowlClass owlClass = property.inferDomain(ShowlManager.this);
+								ShowlClass owlClass = property.inferDomain(showlFactory);
 								DirectionStep prevStep = path.directionStepBefore(i);
 								ShowlClass prevClass = valueClassOf(prevStep);
 								owlClass = theMostSpecificClass(owlClass, prevClass);
@@ -1647,7 +1666,7 @@ public class ShowlManager implements ShowlClassManager {
 							} else {
 								// Get OWL Class for parent shape, i.e. the
 								// property range.
-								ShowlClass owlClass = property.inferRange(ShowlManager.this);
+								ShowlClass owlClass = property.inferRange(showlFactory);
 								DirectionStep prevStep = path.directionStepBefore(i);
 								ShowlClass prevClass = valueClassOf(prevStep);
 								owlClass = theMostSpecificClass(owlClass, prevClass);
@@ -1671,7 +1690,7 @@ public class ShowlManager implements ShowlClassManager {
 						ShowlNodeShape valueShape = prior.getValueShape();
 						if (valueShape == null) {
 							ShowlProperty property = produceShowlProperty(prior.getPredicate());
-							ShowlClass owlClass = property.inferRange(ShowlManager.this);
+							ShowlClass owlClass = property.inferRange(showlFactory);
 							valueShape = createNodeShape(prior, shapeIdValue, owlClass);
 							prior.setValueShape(valueShape);
 						}
@@ -1790,6 +1809,7 @@ public class ShowlManager implements ShowlClassManager {
 				c.setNodeKind(propertyShape.getNodeKind());
 			}
 			ShowlOutwardPropertyShape p = new ShowlOutwardPropertyShape(parentShape, property, c);
+			property.addPropertyShape(p);
 			parentShape.addDerivedProperty(p);
 			if (logger.isTraceEnabled()) {
 				logger.trace("outwardProperty: created {}", p.getPath());
@@ -1832,8 +1852,8 @@ public class ShowlManager implements ShowlClassManager {
 			if (step != null) {
 				ShowlProperty property = produceShowlProperty(step.getTerm().getIri());
 				switch (step.getDirection()) {
-				case OUT: return property.inferRange(ShowlManager.this);
-				case IN: return property.inferDomain(ShowlManager.this);
+				case OUT: return property.inferRange(showlFactory);
+				case IN: return property.inferDomain(showlFactory);
 				}
 			}
 			return produceOwlClass(Konig.Undefined);
@@ -1871,7 +1891,7 @@ public class ShowlManager implements ShowlClassManager {
 		}
 		ShowlClass result = owlClasses.get(owlClass);
 		if (result == null) {
-			result = new ShowlClass(this, owlClass);
+			result = new ShowlClass(getReasoner(), owlClass);
 			owlClasses.put(owlClass, result);
 		}
 		return result;
@@ -2049,7 +2069,7 @@ public class ShowlManager implements ShowlClassManager {
 		return owlClasses.get(classId);
 	}
 	
-	public class Factory implements ShowlFactory {
+	public class Factory implements ShowlService {
 
 		@Override
 		public ShowlNodeShape logicalNodeShape(URI owlClass) throws ShowlProcessingException {
@@ -2074,16 +2094,19 @@ public class ShowlManager implements ShowlClassManager {
 				ShowlClass showlClass = produceOwlClass(owlClass);
 				shape.addShapeDataSource(staticDataSource());
 				
-				ShowlNodeShape node = new ShowlNodeShape(null, shape, showlClass);
+				ShowlNodeShape node = new ShowlNodeShape(ShowlManager.this, null, shape, showlClass);
+				showlClass.addTargetClassOf(node);
 				set.add(node);
 				
 				// For now, we assume that every logical shape describes a named individual.
 				// We may need to back off that assumption in the future.
 				
 				shape.setNodeKind(NodeKind.IRI);
+				shape.setTargetClass(owlClass);
 				addIdProperty(node);
 				
 				node.setShapeDataSource(new ShowlDataSource(node, staticDataSource()));
+				
 				
 				return node;
 			}
@@ -2101,7 +2124,8 @@ public class ShowlManager implements ShowlClassManager {
 
 			ShowlClass showlClass = targetOwlClass(null, shape);
 			
-			ShowlNodeShape nodeShape = new ShowlNodeShape(null, shape, showlClass);
+			ShowlNodeShape nodeShape = new ShowlNodeShape(ShowlManager.this, null, shape, showlClass);
+			showlClass.addTargetClassOf(nodeShape);
 			addProperties(nodeShape);
 			if (logger.isTraceEnabled()) {
 				logger.trace("Factory.createNodeShape({})", RdfUtil.localName(shape.getId()) );
@@ -2125,12 +2149,12 @@ public class ShowlManager implements ShowlClassManager {
 
 		@Override
 		public ShowlClass inferDomain(ShowlProperty p) {
-			return p.inferDomain(ShowlManager.this);
+			return p.inferDomain(showlFactory);
 		}
 
 		@Override
 		public ShowlClass inferRange(ShowlProperty p) {
-			return p.inferRange(ShowlManager.this);
+			return p.inferRange(showlFactory);
 		}
 
 		@Override
@@ -2140,7 +2164,8 @@ public class ShowlManager implements ShowlClassManager {
 
 		@Override
 		public ShowlNodeShape createShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
-			ShowlNodeShape result = new ShowlNodeShape(accessor, shape, owlClass);
+			ShowlNodeShape result = new ShowlNodeShape(ShowlManager.this, accessor, shape, owlClass);
+			owlClass.addTargetClassOf(result);
 			if (Konig.Undefined.equals(owlClass.getId())) {
 				if (classlessShapes != null) {
 					classlessShapes.add(result);
@@ -2160,6 +2185,26 @@ public class ShowlManager implements ShowlClassManager {
 		public Set<ShowlNodeShape> selectCandidateSources(ShowlNodeShape targetShape) {
 			
 			return ShowlManager.this.selectCandidateSources(targetShape);
+		}
+
+		@Override
+		public Graph getGraph() {
+			return reasoner.getGraph();
+		}
+
+		@Override
+		public ShapeManager getShapeManager() {
+			return shapeManager;
+		}
+
+		@Override
+		public ShowlClass produceShowlClass(URI classId) {
+			return ShowlManager.this.produceOwlClass(classId);
+		}
+
+		@Override
+		public OwlReasoner getOwlReasoner() {
+			return reasoner;
 		}
 
 		
@@ -2250,7 +2295,7 @@ public class ShowlManager implements ShowlClassManager {
 					}
 					
 					ShowlFunctionExpression e = ShowlFunctionExpression.fromIriTemplate(
-							showlFactory, derived, template);
+							showlFactory, showlFactory, derived, template);
 					
 					derived.setFormula(e);
 					

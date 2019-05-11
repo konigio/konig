@@ -46,7 +46,7 @@ public class CompositeSourceNodeSelector implements ShowlSourceNodeSelector {
 	}
 
 	@Override
-	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape) {
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlService factory, ShowlNodeShape targetShape) {
 		
 		// We need to ensure that there is only one candidate source node for each
 		// sh:NodeShape.  Therefore, we'll use a map to track the candidates that are supplied.

@@ -43,7 +43,7 @@ public class GoogleStorageBucketSourceNodeSelector implements ShowlSourceNodeSel
 
 
 	@Override
-	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape) {
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlService factory, ShowlNodeShape targetShape) {
 		
 		Set<ShowlNodeShape> result = new HashSet<>();
 		
@@ -71,7 +71,7 @@ public class GoogleStorageBucketSourceNodeSelector implements ShowlSourceNodeSel
 	}
 
 
-	private void addSourceShape(Set<ShowlNodeShape> result, ShowlFactory factory, Shape shape, DataSource ds) {
+	private void addSourceShape(Set<ShowlNodeShape> result, ShowlService factory, Shape shape, DataSource ds) {
 
 		ShowlNodeShape sourceShape = factory.createNodeShape(shape);
 		sourceShape.setShapeDataSource(new ShowlDataSource(sourceShape, ds));

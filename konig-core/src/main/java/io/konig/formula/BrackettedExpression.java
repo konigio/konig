@@ -34,6 +34,11 @@ public class BrackettedExpression extends AbstractFormula implements PrimaryExpr
 	public Expression getExpression() {
 		return expression;
 	}
+	
+	@Override
+	public BrackettedExpression clone() {
+		return new BrackettedExpression(expression.clone());
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

@@ -36,7 +36,7 @@ import io.konig.core.Term;
 import io.konig.core.Term.Kind;
 import io.konig.core.io.PrettyPrintWriter;
 
-public class Expression extends AbstractFormula {
+abstract public class Expression extends AbstractFormula {
 
 	protected List<ConditionalAndExpression> orList;
 	protected Context context;
@@ -53,9 +53,18 @@ public class Expression extends AbstractFormula {
 		}
 	}
 	
+	protected Expression(Context context, List<ConditionalAndExpression> orList) {
+		this.context = context;
+		this.orList = orList;
+	}
+	
 	public Expression() {
 		 orList = new ArrayList<>();
 	}
+
+	@Override
+	abstract public Expression clone();
+	
 	
 	protected Expression(Expression e) {
 		context = e.context;

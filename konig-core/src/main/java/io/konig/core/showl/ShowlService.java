@@ -25,23 +25,21 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.Graph;
+import io.konig.core.OwlReasoner;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
 
-public interface ShowlFactory {
+public interface ShowlService extends ShowlSchemaService, ShowlNodeShapeService {
 	
 	
 	ShowlNodeShape logicalNodeShape(URI owlClass) throws ShowlProcessingException;
 	
-	ShowlNodeShape createNodeShape(Shape shape) throws ShowlProcessingException;
-	ShowlNodeShape createNodeShape(Shape shape, DataSource ds) throws ShowlProcessingException;
-	ShowlProperty produceProperty(URI predicate) throws ShowlProcessingException;
-	ShowlClass inferDomain(ShowlProperty p);
-
-	ShowlClass inferRange(ShowlProperty p);
-	ShowlClass mostSpecificClass(ShowlClass a, ShowlClass b);
-
-	ShowlNodeShape createShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass);
-	
 	Set<ShowlNodeShape> selectCandidateSources(ShowlNodeShape targetShape);
+	
+	ShapeManager getShapeManager();
+	Graph getGraph();
+	
+	OwlReasoner getOwlReasoner();
 }

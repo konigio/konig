@@ -50,6 +50,9 @@ public abstract class AbstractFormula implements Formula {
 		return null;
 	}
 	
+	@Override
+	abstract public Formula clone();
+	
 	
 	public BinaryRelationalExpression asBinaryRelationalExpression() {
 		return null;

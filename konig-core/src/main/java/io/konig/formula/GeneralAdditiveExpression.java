@@ -35,11 +35,21 @@ public class GeneralAdditiveExpression extends AbstractFormula implements Additi
 		this.left = left;
 	}
 	
+	
 	static public GeneralAdditiveExpression wrap(PrimaryExpression primary) {
 
 		UnaryExpression unary = new UnaryExpression(primary);
 		MultiplicativeExpression mult = new MultiplicativeExpression(unary);
 		return new GeneralAdditiveExpression(mult);
+	}
+	
+	@Override
+	public GeneralAdditiveExpression clone() {
+		GeneralAdditiveExpression other = new GeneralAdditiveExpression(left.clone());
+		for (Addend a : addendList) {
+			other.add(a.clone());
+		}
+		return other;
 	}
 
 	public MultiplicativeExpression getLeft() {

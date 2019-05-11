@@ -48,7 +48,6 @@ public class DataSource implements ConditionalEmbeddable {
 	private Set<URI> type = new LinkedHashSet<>();
 	private IriTemplate iriTemplate;
 	private List<URI> isPartOf;
-	private Set<DataSource> receivesDataFrom;
 	
 	private List<DatasourceProperty> datasourceProperty;
  	
@@ -136,10 +135,19 @@ public class DataSource implements ConditionalEmbeddable {
 	public List<URI> getIsPartOf() {
 		return isPartOf==null ? Collections.emptyList() : isPartOf;
 	}
-
-	public void setIsPartof(List<URI> isPartOf) {
-		this.isPartOf = isPartOf;
+	
+	public void addIsPartOf(URI systemId) {
+		if (isPartOf == null) {
+			isPartOf = new ArrayList<>();
+		}
+		if (!isPartOf.contains(systemId)) {
+			isPartOf.add(systemId);
+		}
 	}
+
+//	public void setIsPartof(List<URI> isPartOf) {
+//		this.isPartOf = isPartOf;
+//	}
 	
 	@Override
 	public int hashCode() {
@@ -192,15 +200,4 @@ public class DataSource implements ConditionalEmbeddable {
 		return datasourceProperty==null ? Collections.emptyList() : datasourceProperty;
 	}
 
-	@RdfProperty(Konig.Terms.receivesDataFrom)
-	public Set<DataSource> getReceivesDataFrom() {
-		return receivesDataFrom==null ? Collections.emptySet() : receivesDataFrom;
-	}
-	
-	public void addReceivesDataFrom(DataSource ds) {
-		if (receivesDataFrom == null) {
-			receivesDataFrom = new LinkedHashSet<>();
-		}
-		receivesDataFrom.add(ds);
-	}
 }

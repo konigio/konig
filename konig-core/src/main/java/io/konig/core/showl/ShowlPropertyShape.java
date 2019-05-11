@@ -50,7 +50,7 @@ import io.konig.shacl.Shape;
 public abstract class ShowlPropertyShape implements Traversable {
 	private static final Logger logger = LoggerFactory.getLogger(ShowlPropertyShape.class);
 	private ShowlNodeShape declaringShape;
-	private ShowlProperty property;
+	protected ShowlProperty property;
 	private PropertyConstraint propertyConstraint;
 	private ShowlNodeShape valueShape;
 	private Map<ShowlJoinCondition, ShowlMapping> mappings;
@@ -80,6 +80,7 @@ public abstract class ShowlPropertyShape implements Traversable {
 		}
 		mappings.put(mapping.getJoinCondition(), mapping);
 	}
+	
 	
 	public Collection<ShowlMapping> getMappings() {
 		return mappings==null ? Collections.emptySet() : mappings.values();
@@ -210,7 +211,7 @@ public abstract class ShowlPropertyShape implements Traversable {
 				return manager.produceOwlClass(valueClass);
 			}
 		}
-		return property.inferRange(manager);
+		return property.inferRange(manager.getShowlFactory());
 	}
 	
 	/**
