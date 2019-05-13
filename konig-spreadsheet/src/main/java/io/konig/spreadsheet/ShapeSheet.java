@@ -182,7 +182,7 @@ public class ShapeSheet extends BaseSheetProcessor {
 				String name = func.getName();
 				if ("BigQueryCsvBucket".equals(name) || "GoogleCloudStorageBucket".equals(name)) {
 					generatedBatchFileBucket = true;
-					list.add(new Function("BatchFileInboundBucket",  new SimpleValueMap()));
+					list.add(new Function("BatchEtlBucket",  new SimpleValueMap()));
 					break;
 				}
 			}
