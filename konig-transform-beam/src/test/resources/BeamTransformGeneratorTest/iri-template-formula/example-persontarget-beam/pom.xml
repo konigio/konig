@@ -127,10 +127,10 @@
 					<argument>--project=pearson-edw-core</argument>
 					<argument>--runner=DataflowRunner</argument>
 					<argument>--environment=${environment}</argument>					
-					<argument>--gcpTempLocation=gs://pearson-edw-core-dataflow-template/example-persontarget-beam/temp</argument>
-					<argument>--tempLocation=gs://pearson-edw-core-dataflow-template/example-persontarget-beam/temp</argument>
-					<argument>--stagingLocation=gs://pearson-edw-core-dataflow-template/example-persontarget-beam/staging</argument>
-					<argument>--templateLocation=gs://pearson-edw-core-dataflow-template/example-persontarget-beam/template</argument>
+					<argument>--gcpTempLocation=gs://${batchEtlBucketName}-${environmentName}/schema-PersonTarget-BatchPipeline/temp</argument>
+					<argument>--tempLocation=gs://${batchEtlBucketName}-${environmentName}/schema-PersonTarget-BatchPipeline/temp</argument>
+					<argument>--stagingLocation=gs://${batchEtlBucketName}-${environmentName}/schema-PersonTarget-BatchPipeline/staging</argument>
+					<argument>--templateLocation=gs://${batchEtlBucketName}-${environmentName}/templates/schema-PersonTarget-BatchPipeline</argument>
 				</arguments>
 			</configuration>
 			<executions>

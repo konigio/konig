@@ -34,7 +34,7 @@ public class ReadPersonSourceShapeFn
             ReadableByteChannel rbc = f.open();
             InputStream stream = Channels.newInputStream(rbc);
             try {
-                CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180);
+                CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180 .withFirstRecordAsHeader().withSkipHeaderRecord());
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
                     String gender_code = stringValue(record.get("gender_code"));

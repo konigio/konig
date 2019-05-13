@@ -127,10 +127,10 @@
 					<argument>--project=$gcpProjectId</argument>
 					<argument>--runner=DataflowRunner</argument>
 					<argument>--environment=${environment}</argument>					
-					<argument>--gcpTempLocation=gs://${gcpProjectId}-dataflow-template/$projectName/temp</argument>
-					<argument>--tempLocation=gs://${gcpProjectId}-dataflow-template/$projectName/temp</argument>
-					<argument>--stagingLocation=gs://${gcpProjectId}-dataflow-template/$projectName/staging</argument>
-					<argument>--templateLocation=gs://${gcpProjectId}-dataflow-template/$projectName/template</argument>
+					<argument>--gcpTempLocation=gs://${batchEtlBucketName}-${environmentName}/${templateName}/temp</argument>
+					<argument>--tempLocation=gs://${batchEtlBucketName}-${environmentName}/${templateName}/temp</argument>
+					<argument>--stagingLocation=gs://${batchEtlBucketName}-${environmentName}/${templateName}/staging</argument>
+					<argument>--templateLocation=gs://${batchEtlBucketName}-${environmentName}/templates/${templateName}</argument>
 				</arguments>
 			</configuration>
 			<executions>

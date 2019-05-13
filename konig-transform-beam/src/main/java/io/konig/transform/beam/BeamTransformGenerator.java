@@ -197,10 +197,9 @@ public class BeamTransformGenerator {
 				File projectDir = projectDir(request, node);
 				childProjectList.add(projectDir);
 				JCodeModel model = new JCodeModel();
-				Worker w = new Worker(null,null);
-				String mainClassName = w.mainClassName(node);
+				
 				try {
-					buildPom(request, projectDir,mainClassName);
+					buildPom(request, projectDir, node);
 				} catch (IOException e) {
 					throw new BeamTransformGenerationException("Failed to generate pom.xml", e);
 				}
@@ -270,7 +269,7 @@ public class BeamTransformGenerator {
 		
 	}
 
-	private void buildPom(BeamTransformRequest request, File projectDir, String mainClassName) throws IOException, BeamTransformGenerationException {
+	private void buildPom(BeamTransformRequest request, File projectDir, ShowlNodeShape node) throws IOException, BeamTransformGenerationException {
 		VelocityEngine engine = new VelocityEngine();
 		engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
 		engine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
@@ -281,8 +280,24 @@ public class BeamTransformGenerator {
 		context.put("artifactId", projectDir.getName());
 		context.put("version", request.getVersion());
 		context.put("projectName", projectDir.getName());
-		context.put("mainClass", mainClassName);
 		context.put("gcpProjectId", request.getGcpProjectId());
+		
+		Worker w = new Worker(null,null);
+		String mainClassName = w.mainClassName(node);		
+		context.put("mainClass", mainClassName);		
+		
+		for (DataSource ds : node.getShape().getShapeDataSource()) {
+			if (ds instanceof GoogleBigQueryTable) {
+				GoogleBigQueryTable table = (GoogleBigQueryTable) ds;
+				StringBuilder builder = new StringBuilder();
+				builder.append(table.getTableReference().getDatasetId());
+				builder.append('-');
+				builder.append(table.getTableReference().getTableId());
+				builder.append('-');
+				builder.append("BatchPipeline");
+				context.put("templateName", builder.toString());
+			}
+		}
 		
 		Template template = engine.getTemplate("BeamTransformGenerator/pom.xml");
 		File pomFile = new File(projectDir, "pom.xml");
@@ -1820,7 +1835,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 
 				JTryBlock innerTry = body._try();
 				
-				//       CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180);
+				//       CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180.withFirstRecordAsHeader().withSkipHeaderRecord());
 
 				JBlock innerBody = innerTry.body();
 				
@@ -1832,8 +1847,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 						csvParserClass.staticInvoke("parse")
 						.arg(stream)
 						.arg(standardCharsetsClass.staticRef("UTF_8"))
-						.arg(csvFormatClass.staticRef("RFC4180")));
-				
+						.arg(csvFormatClass.staticRef("RFC4180").invoke("withFirstRecordAsHeader").invoke("withSkipHeaderRecord")));
 				//       for(CSVRecord record : csv) {
 				
 				AbstractJClass csvRecordClass = model.ref(CSVRecord.class);
