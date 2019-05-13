@@ -144,7 +144,7 @@ public class DataSourceGeneratorTest {
 			
 		Properties properties = new Properties();
 		properties.load(getClass().getClassLoader().getResourceAsStream("WorkbookLoader/settings.properties"));
-		properties.setProperty("batchEtlBucketName", "{projectName}-batch-etl");
+		properties.setProperty("batchEtlBucketName", "${projectName}-batch-etl");
 		
 		NamespaceManager nsManager = new MemoryNamespaceManager();
 		nsManager.add("schema", Schema.NAMESPACE);
@@ -164,7 +164,7 @@ public class DataSourceGeneratorTest {
 		
 		GoogleCloudStorageBucket bucket = bucketList.get(0);
 		
-		assertEquals("gs://{projectName}-batch-etl-${environmentName}", bucket.getId().stringValue());
+		assertEquals("gs://${projectName}-batch-etl-${environmentName}", bucket.getId().stringValue());
 	}
 
 	private URI uri(String value) {
