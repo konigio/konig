@@ -34,7 +34,6 @@ public class BeamTransformRequest {
 	private String version;
 	private File projectDir;
 	private List<ShowlNodeShape> nodeList;
-	private String gcpProjectId;
 
 	public String getGroupId() {
 		return groupId;
@@ -72,10 +71,6 @@ public class BeamTransformRequest {
 	public List<ShowlNodeShape> getNodeList() {
 		return nodeList;
 	}
-
-	public String getGcpProjectId() {
-		return gcpProjectId;
-	}
 	
 	public static Builder builder() {
 		return new Builder();
@@ -87,7 +82,6 @@ public class BeamTransformRequest {
 		private String version;
 		private File projectDir;
 		private List<ShowlNodeShape> nodeList;
-		private String gcpProjectId;
 
 		public Builder groupId(String groupId) {
 			this.groupId = groupId;
@@ -114,11 +108,6 @@ public class BeamTransformRequest {
 			return this;
 		}
 		
-		public Builder gcpProjectId(String gcpProjectId) {
-			this.gcpProjectId = gcpProjectId;
-			return this;
-		}
-		
 		public BeamTransformRequest build() {
 			return new BeamTransformRequest(this);
 		}
@@ -130,6 +119,5 @@ public class BeamTransformRequest {
 		this.version = builder.version;
 		this.projectDir = builder.projectDir;
 		this.nodeList = builder.nodeList;
-		this.gcpProjectId = builder.gcpProjectId;
 	}
 }

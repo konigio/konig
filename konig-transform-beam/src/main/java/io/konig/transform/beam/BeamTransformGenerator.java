@@ -173,7 +173,6 @@ public class BeamTransformGenerator {
 	private NamespaceManager nsManager;
 	private JavaDatatypeMapper datatypeMapper;
 	private OwlReasoner reasoner;
-	private String projectId;
 	
 	public BeamTransformGenerator(String basePackage, OwlReasoner reasoner) {
 		this.basePackage = basePackage;
@@ -280,7 +279,6 @@ public class BeamTransformGenerator {
 		context.put("artifactId", projectDir.getName());
 		context.put("version", request.getVersion());
 		context.put("projectName", projectDir.getName());
-		context.put("gcpProjectId", request.getGcpProjectId());
 		
 		Worker w = new Worker(null,null);
 		String mainClassName = w.mainClassName(node);		

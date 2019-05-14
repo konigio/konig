@@ -32,7 +32,7 @@
     <hadoop.version>2.7.3</hadoop.version>
     <maven-surefire-plugin.version>2.21.0</maven-surefire-plugin.version>
     <nemo.version>0.1</nemo.version>
-    
+    <konig.version>2.5.0-SNAPSHOT</konig.version>
     <!-- Properties specific to Konig Beam Transform -->
     <apache.commons-csv.version>1.6</apache.commons-csv.version>
   </properties>
@@ -120,26 +120,8 @@
           <artifactId>exec-maven-plugin</artifactId>
           <version>${maven-exec-plugin.version}</version>
           <configuration>
-				<cleanupDaemonThreads>false</cleanupDaemonThreads>
-				<executable>java</executable>
-				<mainClass>$mainClass</mainClass>
-				<arguments>
-					<argument>--project=$gcpProjectId</argument>
-					<argument>--runner=DataflowRunner</argument>
-					<argument>--environment=${environment}</argument>					
-					<argument>--gcpTempLocation=gs://${batchEtlBucketName}-${environmentName}/${templateName}/temp</argument>
-					<argument>--tempLocation=gs://${batchEtlBucketName}-${environmentName}/${templateName}/temp</argument>
-					<argument>--stagingLocation=gs://${batchEtlBucketName}-${environmentName}/${templateName}/staging</argument>
-					<argument>--templateLocation=gs://${batchEtlBucketName}-${environmentName}/templates/${templateName}</argument>
-				</arguments>
-			</configuration>
-			<executions>
-				<execution>
-					<goals>
-						<goal>exec</goal>
-					</goals>
-				</execution>
-			</executions>
+            <cleanupDaemonThreads>false</cleanupDaemonThreads>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -227,6 +209,49 @@
     <profile>
       <id>dataflow-runner</id>
       <!-- Makes the DataflowRunner available when running a pipeline. -->
+      <build>
+		<plugins>
+			<plugin>
+				<groupId>io.konig</groupId>
+				<artifactId>konig-gcp-maven-plugin</artifactId>
+				<version>${konig.version}</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+	          <groupId>org.codehaus.mojo</groupId>
+	          <artifactId>exec-maven-plugin</artifactId>
+	          <version>${maven-exec-plugin.version}</version>
+	          <configuration>
+					<cleanupDaemonThreads>false</cleanupDaemonThreads>
+					<executable>java</executable>
+					<mainClass>com.example.beam.etl.shape.PersonTargetShapeBeam</mainClass>
+					<arguments>
+						<argument>--project=${gcpProjectId}</argument>
+						<argument>--runner=DataflowRunner</argument>
+						<argument>--environment=${environment}</argument>					
+						<argument>--gcpTempLocation=gs://${batchEtlBucketName}-${environmentName}/${templateName}/temp</argument>
+						<argument>--tempLocation=gs://${batchEtlBucketName}-${environmentName}/${templateName}/temp</argument>
+						<argument>--stagingLocation=gs://${batchEtlBucketName}-${environmentName}/${templateName}/staging</argument>
+						<argument>--templateLocation=gs://${batchEtlBucketName}-${environmentName}/templates/${templateName}</argument>
+					</arguments>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+					</execution>
+				</executions>
+        	</plugin>
+        </plugins>
+	</build>
       <dependencies>
         <dependency>
           <groupId>org.apache.beam</groupId>
