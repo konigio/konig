@@ -22,6 +22,7 @@ package io.konig.transform.beam;
 
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -191,8 +192,9 @@ public class BeamTransformGenerator {
 				File projectDir = projectDir(request, node);
 				childProjectList.add(projectDir);
 				JCodeModel model = new JCodeModel();
+				
 				try {
-					buildPom(request, projectDir);
+					buildPom(request, projectDir, node);
 				} catch (IOException e) {
 					throw new BeamTransformGenerationException("Failed to generate pom.xml", e);
 				}
@@ -262,7 +264,7 @@ public class BeamTransformGenerator {
 		
 	}
 
-	private void buildPom(BeamTransformRequest request, File projectDir) throws IOException {
+	private void buildPom(BeamTransformRequest request, File projectDir, ShowlNodeShape node) throws IOException, BeamTransformGenerationException {
 		VelocityEngine engine = new VelocityEngine();
 		engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
 		engine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
@@ -272,6 +274,24 @@ public class BeamTransformGenerator {
 		context.put("groupId", request.getGroupId());
 		context.put("artifactId", projectDir.getName());
 		context.put("version", request.getVersion());
+		context.put("projectName", projectDir.getName());
+		
+		Worker w = new Worker(null,null);
+		String mainClassName = w.mainClassName(node);		
+		context.put("mainClass", mainClassName);		
+		
+		for (DataSource ds : node.getShape().getShapeDataSource()) {
+			if (ds instanceof GoogleBigQueryTable) {
+				GoogleBigQueryTable table = (GoogleBigQueryTable) ds;
+				StringBuilder builder = new StringBuilder();
+				builder.append(table.getTableReference().getDatasetId());
+				builder.append('-');
+				builder.append(table.getTableReference().getTableId());
+				builder.append('-');
+				builder.append("BatchPipeline");
+				context.put("templateName", builder.toString());
+			}
+		}
 		
 		Template template = engine.getTemplate("BeamTransformGenerator/pom.xml");
 		File pomFile = new File(projectDir, "pom.xml");
@@ -281,7 +301,8 @@ public class BeamTransformGenerator {
 		}
 		
 	}
-
+	
+	
 	/**
 	 * Generate the Java code for an Apache Beam transform from the data source to the specified target shape.
 	 * @param model The code model in which the Java source code will be stored
@@ -1808,7 +1829,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 
 				JTryBlock innerTry = body._try();
 				
-				//       CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180);
+				//       CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180.withFirstRecordAsHeader().withSkipHeaderRecord());
 
 				JBlock innerBody = innerTry.body();
 				
@@ -1820,8 +1841,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 						csvParserClass.staticInvoke("parse")
 						.arg(stream)
 						.arg(standardCharsetsClass.staticRef("UTF_8"))
-						.arg(csvFormatClass.staticRef("RFC4180")));
-				
+						.arg(csvFormatClass.staticRef("RFC4180").invoke("withFirstRecordAsHeader").invoke("withSkipHeaderRecord")));
 				//       for(CSVRecord record : csv) {
 				
 				AbstractJClass csvRecordClass = model.ref(CSVRecord.class);
@@ -2584,9 +2604,8 @@ ShowlNodeShape valueShape = p.getValueShape();
 							.invoke("withCreateDisposition").arg(createDispositionClass.staticRef("CREATE_NEVER"))
 							.invoke("withWriteDisposition").arg(writeDispositionClass.staticRef("WRITE_APPEND")));
 			
-			
-
 			body.add(pipeline);
+			body.add(p.invoke("run"));
 			
 		}
 
