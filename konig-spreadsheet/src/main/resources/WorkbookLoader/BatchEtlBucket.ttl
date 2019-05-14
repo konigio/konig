@@ -9,7 +9,7 @@
 #end
 #end
 
-<gs://${gcpBucketName}>
+<${batchEtlBucketBaseIri}>
 	a konig:GoogleCloudStorageBucket, konig:DataSource;
 	gcp:name "${gcpBucketName}" ;
 	gcp:projectId "${gcpProjectId}" ;#if($!{gcpBucketStorageClass})

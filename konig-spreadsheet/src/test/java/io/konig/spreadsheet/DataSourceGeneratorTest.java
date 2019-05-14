@@ -41,6 +41,7 @@ import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.gcp.datasource.GoogleCloudStorageBucket;
 import io.konig.shacl.Shape;
 import io.konig.shacl.impl.MemoryShapeManager;
 
@@ -134,6 +135,37 @@ public class DataSourceGeneratorTest {
 		assertEquals(tableRef.getTableId(), "Person");
 	}
 
+	@Test
+	public void testBatchEtlBucket() throws Exception {
+		
+		GcpShapeConfig.init();
+		
+		File templateDir = new File("target/WorkbookLoader");
+			
+		Properties properties = new Properties();
+		properties.load(getClass().getClassLoader().getResourceAsStream("WorkbookLoader/settings.properties"));
+		properties.setProperty("batchEtlBucketName", "${projectName}-batch-etl");
+		
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", Schema.NAMESPACE);
+		
+		Shape shape = new Shape(uri("http://example.com/shapes/PersonOriginShape"));
+		shape.setTargetClass(Schema.Person);
+	
+		shapeManager.addShape(shape);
+		
+		DataSourceGenerator generator = new DataSourceGenerator(nsManager, templateDir, properties);
+		generator.generate(shape, "GoogleCloudStorageBucket", shapeManager);
+		
+		List<GoogleCloudStorageBucket> bucketList = shape.getShapeDataSource().stream()
+				.filter(s -> s instanceof GoogleCloudStorageBucket)
+				.map(s -> (GoogleCloudStorageBucket)s)
+				.collect(Collectors.toList());
+		
+		GoogleCloudStorageBucket bucket = bucketList.get(0);
+		
+		assertEquals("gs://${projectName}-batch-etl-${environmentName}", bucket.getId().stringValue());
+	}
 
 	private URI uri(String value) {
 		return new URIImpl(value);
