@@ -42,6 +42,7 @@ import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.datasource.GoogleCloudStorageBucket;
+import io.konig.gcp.datasource.GoogleCloudStorageFolder;
 import io.konig.shacl.Shape;
 import io.konig.shacl.impl.MemoryShapeManager;
 
@@ -167,6 +168,45 @@ public class DataSourceGeneratorTest {
 		assertEquals("gs://${projectName}-batch-etl-${environmentName}", bucket.getId().stringValue());
 	}
 
+	
+	@Test
+	public void testBatchInboundFolder() throws Exception {
+		
+		GcpShapeConfig.init();
+		
+		File templateDir = new File("target/WorkbookLoader");
+			
+		Properties properties = new Properties();
+		properties.load(getClass().getClassLoader().getResourceAsStream("WorkbookLoader/settings.properties"));
+		properties.setProperty("batchEtlBucketName", "${projectName}-batch-etl");
+		
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("schema", Schema.NAMESPACE);
+		
+		Shape shape = new Shape(uri("http://example.com/shapes/PersonOriginShape"));
+		shape.setTargetClass(Schema.Person);
+		shape.setMediaTypeBaseName("application/vnd.pearson.ods.invoiceline");
+		
+		shapeManager.addShape(shape);
+		
+		SimpleValueMap value = new SimpleValueMap();
+		value.put("fileFormat", "csv");
+		
+		Function func = new Function("BatchInboundFolder", value);
+		
+		DataSourceGenerator generator = new DataSourceGenerator(nsManager, templateDir, properties);
+		generator.generate(shape,  func , shapeManager);
+		
+		List<GoogleCloudStorageFolder> bucketList = shape.getShapeDataSource().stream()
+				.filter(s -> s instanceof GoogleCloudStorageFolder)
+				.map(s -> (GoogleCloudStorageFolder)s)
+				.collect(Collectors.toList());
+		
+		GoogleCloudStorageFolder bucket = bucketList.get(0);
+		assertEquals(uri("gs://${projectName}-batch-etl-${environmentName}"),bucket.getIsPartOf().get(0));		
+		assertEquals("gs://${projectName}-batch-etl-${environmentName}/inbound/application/vnd.pearson.ods.invoiceline+csv", bucket.getId().stringValue());
+	}
+	
 	private URI uri(String value) {
 		return new URIImpl(value);
 	}
