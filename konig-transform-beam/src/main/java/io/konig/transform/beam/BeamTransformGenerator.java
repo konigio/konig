@@ -318,7 +318,7 @@ public class BeamTransformGenerator {
 
 
 		private boolean singleSource() {
-			return targetNode.getChannels().size()==1;
+			return singleChannel() != null;
 		}
 
 		private void assertTrue(boolean isTrue, String pattern, Object...args) throws BeamTransformGenerationException {
@@ -779,9 +779,10 @@ public class BeamTransformGenerator {
 
 		void declareReadFileFnClass() throws JClassAlreadyExistsException, BeamTransformGenerationException {
 			
+			ShowlChannel channel = singleChannel();
 			if (singleSource()) {
 			
-				ShowlChannel channel = targetNode.getChannels().get(0);
+				
 				ShowlNodeShape sourceNode = channel.getSourceNode();
 				SourceInfo sourceInfo = new SourceInfo(channel);
 				sourceInfoMap.put(RdfUtil.uri(sourceNode.getId()), sourceInfo);
@@ -792,6 +793,22 @@ public class BeamTransformGenerator {
 			}
 		}
 		
+		private ShowlChannel singleChannel() {
+			ShowlChannel channel = null;
+			for (ShowlChannel c : targetNode.getChannels()) {
+				ShowlNodeShape sourceNode = c.getSourceNode();
+				if (!reasoner.isEnumerationClass(sourceNode.getOwlClass().getId())) {
+					if (channel == null) {
+						channel = c;
+					} else {
+						return null;
+					}
+				}
+			}
+			return channel;
+		}
+
+
 		private void declareFileToKvFn() throws BeamTransformGenerationException, JClassAlreadyExistsException {
 			
 			for (ShowlChannel channel : targetNode.getChannels()) {
@@ -978,14 +995,14 @@ public class BeamTransformGenerator {
 			private JMethod requiredMethod = null;
 			
 			protected void transformProperty(JBlock body, ShowlDirectPropertyShape p, JVar inputRow, JVar outputRow, JVar enumObject) throws BeamTransformGenerationException {
-				
-				
+
 				ShowlExpression e = p.getSelectedExpression();
-				if (e == null) {
-					fail("Mapping not found for property {0}", p.getPath());
-				}
 				
-				if (e instanceof ShowlDirectPropertyExpression) {
+				if (p.getValueShape() != null) {
+					transformObjectProperty(body, p, inputRow, outputRow);
+				} else if (e == null) {
+					fail("Mapping not found for property {0}", p.getPath());
+				} else if (e instanceof ShowlDirectPropertyExpression) {
 					ShowlDirectPropertyShape other = ((ShowlDirectPropertyExpression) e).getSourceProperty();
 					transformDirectProperty(body, p, other, inputRow, outputRow);
 					
