@@ -72,6 +72,7 @@ public class Konig {
 		public static final String generatorOutput = "http://www.konig.io/ns/core/generatorOutput";
 		public static final String DatasourceProperty = "http://www.konig.io/ns/core/DatasourceProperty";
 		public static final String PropertyGenerator = "http://www.konig.io/ns/core/PropertyGenerator";
+		public static final String receivesDataFrom = "http://www.konig.io/ns/core/receivesDataFrom";
 	}
 	
 	// ChangeSet terms
@@ -129,6 +130,7 @@ public class Konig {
 	public static final URI generatorOutput = new URIImpl(Terms.generatorOutput);
 	public static final URI DatasourceProperty = new URIImpl(Terms.DatasourceProperty);
 	public static final URI PropertyGenerator = new URIImpl(Terms.PropertyGenerator);
+	public static final URI receivesDataFrom = new URIImpl(Terms.receivesDataFrom);
 	
 	/**
 	 * A sub-property of konig:derivedFrom which asserts that the "derived from" relationship was defined

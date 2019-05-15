@@ -1,5 +1,9 @@
 package io.konig.spreadsheet;
 
+import java.util.StringTokenizer;
+
+import org.openrdf.model.Literal;
+
 /*
  * #%L
  * Konig Spreadsheet
@@ -27,6 +31,7 @@ import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.LiteralImpl;
 
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
@@ -45,18 +50,15 @@ public class AddEdgeAction implements Action {
 		this.location = location;
 		this.subject = subject;
 		this.predicate = predicate;
-		this.stringValue = stringValue;
+		this.stringValue = stringValue.trim();
 	}
 
 	@Override
 	public void execute() throws SpreadsheetException {
 		
-		Value value = value();
-		processor.getOwlReasoner().getGraph().edge(subject, predicate, value);
-	}
-
-	private Value value() throws SpreadsheetException {
+		Graph graph = processor.getOwlReasoner().getGraph();
 		OwlReasoner reasoner = processor.getOwlReasoner();
+		
 		SheetColumn column = new SheetColumn(predicate.stringValue());
 		if (!WorkbookUtil.assignValueType(reasoner, predicate, column)) {
 			NamespaceManager nsManager = reasoner.getGraph().getNamespaceManager();
@@ -68,14 +70,20 @@ public class AddEdgeAction implements Action {
 		}
 		
 		if (column.getDatatype()!=null) {
-			return new LiteralImpl(stringValue, column.getDatatype());
+			Literal value = new LiteralImpl(stringValue, column.getDatatype());
+			graph.edge(subject, predicate, value);
+		} else {
+		
+			StringTokenizer tokenizer = new StringTokenizer(stringValue, " \t\r\n");
+			while (tokenizer.hasMoreTokens()) {
+				String token = tokenizer.nextToken();
+				Resource value = token.startsWith("_:") ?
+						new BNodeImpl(token.substring(2)) :
+						processor.expandCurie(token, location);
+				graph.edge(subject, predicate, value);
+			}
 		}
 		
-		if (stringValue.startsWith("_:")) {
-			String bnodeId = stringValue.substring(2);
-			return new BNodeImpl(bnodeId);
-		}
-		return processor.expandCurie(stringValue, location);
 	}
 
 }

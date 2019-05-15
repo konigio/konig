@@ -25,6 +25,8 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.OWL;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 
 import io.konig.core.Graph;
@@ -50,6 +52,17 @@ public class WorkbookUtil {
 				}
 			}
 			if (range == null) {
+				
+				if (v.hasProperty(RDF.TYPE, OWL.OBJECTPROPERTY)) {
+					c.setObjectType(OWL.THING);
+					return true;
+				}
+				
+				if (v.hasProperty(RDF.TYPE, OWL.DATATYPEPROPERTY)) {
+					c.setDatatype(RDFS.LITERAL);
+					return true;
+				}
+				
 				return false;
 			}
 			if (owlReasoner.isDatatype(range)) {
@@ -60,6 +73,8 @@ public class WorkbookUtil {
 
 			return true;
 		}
+		
+		
 		
 		return false;
 		
