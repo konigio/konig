@@ -22,7 +22,6 @@ package io.konig.transform.beam;
 
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -116,6 +115,7 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlClass;
+import io.konig.core.showl.ShowlDataSource;
 import io.konig.core.showl.ShowlDerivedPropertyExpression;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
@@ -275,6 +275,7 @@ public class BeamTransformGenerator {
 		context.put("artifactId", projectDir.getName());
 		context.put("version", request.getVersion());
 		context.put("projectName", projectDir.getName());
+		context.put("batchEtlBucketIri", batchEtlBucketIri(node));
 		
 		Worker w = new Worker(null,null);
 		String mainClassName = w.mainClassName(node);		
@@ -303,6 +304,42 @@ public class BeamTransformGenerator {
 	}
 	
 	
+	private String batchEtlBucketIri(ShowlNodeShape node) throws BeamTransformGenerationException {
+		for (ShowlChannel channel : node.getChannels()) {
+			ShowlDataSource ds = channel.getSourceNode().getShapeDataSource();
+			
+			if (ds == null) {
+				for (DataSource s : channel.getSourceNode().getShape().getShapeDataSource()) {
+					String result = bucketBaseIri(s.getId());
+					if (result != null) {
+						return result;
+					}
+				}
+			} else {
+				String result = bucketBaseIri(ds.getDataSource().getId());
+				if (result != null) {
+					return result;
+				}
+			}
+		}
+		fail("Could not detect batchEtlBucketIri for {0}", node.getPath());
+		return null;
+	}
+
+	private String bucketBaseIri(Resource id) {
+		if (id != null) {
+			String value = id.stringValue();
+			if (value.startsWith("gs://")) {
+				int end = value.indexOf('/', 5);
+				if (end > 0) {
+					return value.substring(0,  end);
+				}
+				return value;
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Generate the Java code for an Apache Beam transform from the data source to the specified target shape.
 	 * @param model The code model in which the Java source code will be stored

@@ -236,10 +236,10 @@
 						<argument>--project=${gcpProjectId}</argument>
 						<argument>--runner=DataflowRunner</argument>
 						<argument>--environment=${environment}</argument>					
-						<argument>--gcpTempLocation=gs://${batchEtlBucketName}-${environmentName}/schema-PersonTarget-BatchPipeline/temp</argument>
-						<argument>--tempLocation=gs://${batchEtlBucketName}-${environmentName}/schema-PersonTarget-BatchPipeline/temp</argument>
-						<argument>--stagingLocation=gs://${batchEtlBucketName}-${environmentName}/schema-PersonTarget-BatchPipeline/staging</argument>
-						<argument>--templateLocation=gs://${batchEtlBucketName}-${environmentName}/templates/schema-PersonTarget-BatchPipeline</argument>
+						<argument>--gcpTempLocation=gs://personsourceshape-${gcpBucketSuffix}/schema-PersonTarget-BatchPipeline/temp</argument>
+						<argument>--tempLocation=gs://personsourceshape-${gcpBucketSuffix}/schema-PersonTarget-BatchPipeline/temp</argument>
+						<argument>--stagingLocation=gs://personsourceshape-${gcpBucketSuffix}/schema-PersonTarget-BatchPipeline/staging</argument>
+						<argument>--templateLocation=gs://personsourceshape-${gcpBucketSuffix}/templates/schema-PersonTarget-BatchPipeline</argument>
 					</arguments>
 				</configuration>
 				<executions>
