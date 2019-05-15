@@ -198,7 +198,7 @@ public abstract class ShowlPropertyShape implements Traversable {
 		return root;
 	}
 	
-	public ShowlClass getValueType(ShowlManager manager) {
+	public ShowlClass getValueType(ShowlSchemaService schemaService) {
 		if (propertyConstraint != null) {
 			URI valueClass = RdfUtil.uri(propertyConstraint.getValueClass());
 			if (valueClass == null) {
@@ -208,10 +208,10 @@ public abstract class ShowlPropertyShape implements Traversable {
 				}
 			}
 			if (valueClass != null) {
-				return manager.produceOwlClass(valueClass);
+				return schemaService.produceShowlClass(valueClass);
 			}
 		}
-		return property.inferRange(manager.getShowlFactory());
+		return property.inferRange(schemaService);
 	}
 	
 	/**

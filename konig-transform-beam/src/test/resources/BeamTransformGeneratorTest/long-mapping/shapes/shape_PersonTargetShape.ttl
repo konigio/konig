@@ -10,20 +10,20 @@
 
 shape:PersonTargetShape sh:property  [ 
 		sh:path ex:heightInches ; 
-		sh:datatype xsd:long ; 
-		rdf:predicate ex:heightInches ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1 ]  ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:long ; 
+		rdf:predicate ex:heightInches ]  ; 
 	a sh:Shape ; 
 	konig:explicitDerivedFrom shape:PersonSourceShape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
 	sh:nodeKind sh:IRI ; 
 	sh:targetClass schema:Person . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> gcp:tableReference  [ 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
 		gcp:datasetId "schema" ; 
 		gcp:tableId "PersonTarget" ]  ; 
-	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
 	a konig:GoogleBigQueryTable , konig:DataSource ; 
-	schema:isPartOf sys:EDW . 
+	schema:isPartOf sys:WarehouseOperationalData . 

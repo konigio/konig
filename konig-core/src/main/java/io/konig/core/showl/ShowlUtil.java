@@ -1,5 +1,8 @@
 package io.konig.core.showl;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.URI;
@@ -133,6 +136,51 @@ public class ShowlUtil {
 		}
 		for (ShowlPropertyShape p : ShowlExpression.parameters(e)) {
 			if (!isWellDefined(p)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	/**
+	 * Compute the path of a relative to b.
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static List<URI> relativePath(ShowlNodeShape a, ShowlNodeShape b) {
+		List<URI> result = new ArrayList<>();
+		if (a == b) {
+			return result;
+		}
+		ShowlPropertyShape p = a.getAccessor();
+		while (p!=null) {
+			result.add(p.getPredicate());
+			a = p.getDeclaringShape();
+			if (a == b) {
+				Collections.reverse(result);
+				return result;
+			}
+			p = a.getAccessor();
+			
+		}
+		
+		return null;
+	}
+
+	/**
+	 * Determine whether a given node is well-defined.
+	 * A node is well-defined if each of it's direct properties is well defined, recursively.
+	 */
+	public static boolean isWellDefined(ShowlNodeShape node) {
+		
+		for (ShowlDirectPropertyShape direct : node.getProperties()) {
+			if (direct.getValueShape() != null) {
+				if (!isWellDefined(direct.getValueShape())) {
+					return false;
+				}
+			} else if (!isWellDefined(direct)) {
 				return false;
 			}
 		}

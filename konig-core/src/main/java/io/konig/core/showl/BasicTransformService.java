@@ -26,19 +26,48 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.konig.core.Graph;
+import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
+import io.konig.core.util.IriTemplate;
+import io.konig.core.vocab.Konig;
+import io.konig.shacl.Shape;
 
 public class BasicTransformService implements ShowlTransformService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(BasicTransformService.class);
 
 	private ShowlSourceNodeFactory sourceNodeFactory;
+	private ShowlSchemaService schemaService;
+	private ShowlNodeShapeService nodeService;
 	
 	
-	
-	public BasicTransformService(ShowlSourceNodeFactory sourceNodeFactory) {
+	public BasicTransformService(ShowlSchemaService schemaService, ShowlNodeShapeService nodeService, ShowlSourceNodeFactory sourceNodeFactory) {
+		this.schemaService = schemaService;
+		this.nodeService = nodeService;
 		this.sourceNodeFactory = sourceNodeFactory;
+	}
+	
+	static class State {
+		ShowlNodeShape targetNode;
+		Set<ShowlPropertyShapeGroup> propertyPool;
+		Set<ShowlNodeShape> candidateSet;
+		Set<ShowlPropertyShapeGroup> memory = new HashSet<>();
+		
+		public State(ShowlNodeShape targetNode, Set<ShowlPropertyShapeGroup> propertyPool, Set<ShowlNodeShape> candidateSet) {
+			this.propertyPool = propertyPool;
+			this.candidateSet = candidateSet;
+		}
+		
+		public boolean done() {
+			return propertyPool.isEmpty() || candidateSet.isEmpty();
+		}
+		
 	}
 
 
@@ -46,33 +75,193 @@ public class BasicTransformService implements ShowlTransformService {
 	public Set<ShowlPropertyShapeGroup> computeTransform(ShowlNodeShape targetNode)
 			throws ShowlProcessingException {
 		
-		Set<ShowlPropertyShapeGroup> propertyPool = propertyPool(targetNode);
-		Set<ShowlNodeShape> candidateSet = sourceNodeFactory.candidateSourceNodes(targetNode);
-		if (candidateSet.isEmpty()) {
+		
+		State state = new State(
+				targetNode,
+				propertyPool(targetNode),
+				sourceNodeFactory.candidateSourceNodes(targetNode));
+		
+		if (state.candidateSet.isEmpty()) {
 			logger.warn("Failed to transform {}.  No candidate source shapes were found.", 
 					targetNode.getPath());
 		} else {
 			
-			while (!propertyPool.isEmpty() && !candidateSet.isEmpty()) {
+			
+			while (!state.done()) {
 				
-				ShowlNodeShape sourceShape = nextSource(propertyPool, candidateSet);
+				ShowlNodeShape sourceShape = nextSource(state);
 				if (sourceShape == null) {
 					break;
 				}
+				if (!addChannel(sourceShape)) {
+					break;
+				}
 				
-				computeMapping(sourceShape.effectiveNode(), targetNode.effectiveNode(), propertyPool);
+				computeMapping(sourceShape, state);
+				
+				removeWellDefinedNodes(state);
+				addCandidateSource(state);
 			}
 			
 			
 		}
 		
-		return propertyPool;
+		return state.propertyPool;
 	}
 	
 
-	private void computeMapping(ShowlEffectiveNodeShape sourceNode, ShowlEffectiveNodeShape targetNode,
-			Set<ShowlPropertyShapeGroup> propertyPool) {
+	private void removeWellDefinedNodes(State state) {
 		
+		Iterator<ShowlPropertyShapeGroup> sequence = state.propertyPool.iterator();
+		while (sequence.hasNext()) {
+			ShowlPropertyShapeGroup group = sequence.next();
+			if (group.getValueShape() != null) {
+				ShowlDirectPropertyShape direct = group.direct();
+				if (direct != null && direct.getValueShape()!=null && ShowlUtil.isWellDefined(direct.getValueShape())) {
+					sequence.remove();
+				}
+			}
+		}
+		
+	}
+
+
+	/**
+	 * If the candidate set is empty, try to add a new Candidate source
+	 * @param state
+	 */
+	private void addCandidateSource(State state) {
+		Set<ShowlPropertyShapeGroup> propertyPool = state.propertyPool;
+		if (!propertyPool.isEmpty() && state.candidateSet.isEmpty()) {
+			for (ShowlPropertyShapeGroup targetGroup : propertyPool) {
+				ShowlEffectiveNodeShape parentNode = targetGroup.getDeclaringShape();
+				ShowlClass targetClass = parentNode.getTargetClass();
+				if (isEnumClass(targetClass) && !state.memory.contains(targetGroup)) {
+					state.memory.add(targetGroup);
+					
+					Shape enumShape = nodeService.enumNodeShape(targetClass);
+					
+					ShowlNodeShape enumNode = nodeService.createShowlNodeShape(null, enumShape, targetClass);
+					
+					enumNode.setTargetNode(targetGroup.iterator().next().getDeclaringShape());
+					state.candidateSet.add(enumNode);
+					return;
+				}
+			}
+		}
+		
+		
+	}
+
+
+	private boolean isEnumClass(ShowlClass targetClass) {
+		return targetClass==null ? false : schemaService.getOwlReasoner().isEnumerationClass(targetClass.getId());
+	}
+
+
+	private boolean addChannel(ShowlNodeShape sourceShape) {
+		
+		ShowlNodeShape targetNode = sourceShape.getTargetNode().getRoot();
+	
+		if (targetNode.getChannels().isEmpty()) {
+			targetNode.addChannel(new ShowlChannel(sourceShape, null));
+			return true;
+		} else if (isEnumClass(sourceShape.getOwlClass())) {
+			ShowlStatement join = enumJoinStatement(sourceShape);
+			targetNode.addChannel(new ShowlChannel(sourceShape, join));
+			return true;
+		}
+		return false;
+	}
+
+
+	private ShowlStatement enumJoinStatement(ShowlNodeShape sourceShape) throws ShowlProcessingException {
+		
+		ShowlNodeShape root = sourceShape.getTargetNode().getRoot();
+		
+		ShowlEffectiveNodeShape enumNode = sourceShape.effectiveNode();
+		
+		
+		OwlReasoner reasoner = schemaService.getOwlReasoner();
+
+		for (ShowlChannel channel : root.getChannels()) {
+			
+			ShowlNodeShape channelSourceNode = channel.getSourceNode();
+		
+			ShowlPropertyShapeGroup channelJoinAccessor = findPeer(channelSourceNode, sourceShape.getTargetNode());
+			if (channelJoinAccessor != null) {
+				
+				ShowlEffectiveNodeShape channelJoinNode = channelJoinAccessor.getValueShape();
+				if (channelJoinNode != null) {
+			
+					for (ShowlPropertyShapeGroup enumProperty : enumNode.getProperties()) {	
+						
+						URI predicate = enumProperty.getPredicate();
+						if (reasoner.isInverseFunctionalProperty(predicate)) {
+							
+							ShowlPropertyShapeGroup channelPropertyGroup = channelJoinNode.findPropertyByPredicate(predicate);
+							
+							if (channelPropertyGroup != null) {
+								ShowlPropertyShape channelProperty = channelPropertyGroup.direct();
+								if (channelProperty == null) {
+									for (ShowlPropertyShape p : channelPropertyGroup) {
+										
+										ShowlPropertyShape synonym = p.getSynonym();
+										if (synonym instanceof ShowlDirectPropertyShape) {
+											channelProperty = synonym;
+										} else if (ShowlUtil.isWellDefined(p)) {
+											channelProperty = p;
+											break;
+										}
+									}
+								}
+								if (channelProperty != null) {
+									ShowlExpression left = new ShowlEnumPropertyExpression(enumProperty.direct());
+									ShowlExpression right = channelProperty instanceof ShowlDirectPropertyShape ?
+											new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)channelProperty) :
+											new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape)channelProperty);
+									return new ShowlEqualStatement(left, right);
+								}
+							}
+							
+						}
+					}
+				}
+			}
+			
+			
+			
+		}
+		
+		return null;
+	}
+
+
+	/**
+	 * Find the property within a given source node that maps to the given target node.
+	 * @param sourceNode
+	 * @param targetNode
+	 * @return
+	 */
+	private ShowlPropertyShapeGroup findPeer(ShowlNodeShape sourceNode, ShowlNodeShape targetNode) {
+		
+		List<URI> relativePath = ShowlUtil.relativePath(targetNode, sourceNode.getTargetNode());
+		if (relativePath==null || relativePath.isEmpty()) {
+			return null;
+		}
+		
+		
+		return sourceNode.effectiveNode().findPropertyByPredicatePath(relativePath);
+	}
+
+	// There is something fishy here.  We are using targetNode to build a relative path.
+	// But I don't think we are passing the correct targetNode for that to work.
+	
+	private void computeMapping(ShowlNodeShape source,	State state) {
+		ShowlEffectiveNodeShape sourceNode = source.effectiveNode();
+		ShowlEffectiveNodeShape targetNode = source.getTargetNode().effectiveNode();
+		
+		Set<ShowlPropertyShapeGroup> propertyPool = state.propertyPool;
 		Iterator<ShowlPropertyShapeGroup> sequence = propertyPool.iterator();
 		while (sequence.hasNext()) {
 			ShowlPropertyShapeGroup targetProperty = sequence.next();
@@ -88,17 +277,22 @@ public class BasicTransformService implements ShowlTransformService {
 
 
 
+
+
 	private boolean createMapping(ShowlPropertyShapeGroup sourceProperty, ShowlPropertyShapeGroup targetProperty) {
 		if (sourceProperty != null) {
 			ShowlDirectPropertyShape sourceDirect = sourceProperty.synonymDirect();
 			ShowlDirectPropertyShape targetDirect = targetProperty.synonymDirect();
 			
 			if (targetDirect != null) {
+				
+				// If there is a direct source property, then use a direct mapping.
 				if (sourceDirect != null) {
 					targetDirect.setSelectedExpression(new ShowlDirectPropertyExpression(sourceDirect));
 					return true;
 				}
 				
+				// If there is a well-defined formula for the source property, use it.
 				for (ShowlPropertyShape sourcePropertyElement : sourceProperty) {
 					ShowlExpression formula = sourcePropertyElement.getFormula();
 					if (ShowlUtil.isWellDefined(formula)) {
@@ -106,17 +300,53 @@ public class BasicTransformService implements ShowlTransformService {
 						return true;
 					}
 				}
+				
+				if (useClassIriTemplate(sourceProperty, targetDirect)) {
+					return true;
+				}
 			}
 			if (logger.isWarnEnabled()) {
-				logger.warn("Failed to create mapping: {}...{}", sourceProperty, targetProperty);
+				logger.warn("createMapping: Failed to create mapping: {}...{}", sourceProperty, targetProperty);
 			}
 		}
 		return false;
 	}
 
+	/**
+	 * If the value class of the target property declares an IRI and if one of the source PropertyShapes 
+	 * can populate that template, then use that template expression. 
+	 * @param sourcePropertyGroup
+	 * @param targetProperty
+	 * @return True if the template expression is selected within the target property, and false otherwise.
+	 */
+	private boolean useClassIriTemplate(ShowlPropertyShapeGroup sourcePropertyGroup, ShowlDirectPropertyShape targetProperty) {
+		ShowlClass owlClass = targetProperty.getValueType(schemaService);
+		Graph graph = schemaService.getOwlReasoner().getGraph();
+		Vertex v = graph.getVertex(owlClass.getId());
+		if (v != null) {
+			Value templateValue = v.getValue(Konig.iriTemplate);
+			if (templateValue != null) {
+				IriTemplate iriTemplate = new IriTemplate(templateValue.stringValue());
+				
+				for (ShowlPropertyShape sourceProperty : sourcePropertyGroup) {
+					ShowlFunctionExpression e = ShowlFunctionExpression.fromIriTemplate(schemaService, nodeService, sourceProperty, iriTemplate);
+					if (ShowlUtil.isWellDefined(e)) {
+						targetProperty.setSelectedExpression(e);
+						return true;
+					}
+				}
+			}
+		}
+		
+		
+		return false;
+	}
 
-	private ShowlNodeShape nextSource(Set<ShowlPropertyShapeGroup> propertyPool, Set<ShowlNodeShape> candidateSet) {
+
+	private ShowlNodeShape nextSource(State state) {
 	
+		Set<ShowlPropertyShapeGroup> propertyPool = state.propertyPool;
+		Set<ShowlNodeShape> candidateSet = state.candidateSet;
 		
 		Iterator<ShowlNodeShape> sequence = candidateSet.iterator();
 		if (candidateSet.size() == 1) {

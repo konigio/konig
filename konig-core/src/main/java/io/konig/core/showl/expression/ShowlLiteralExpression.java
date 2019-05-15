@@ -60,6 +60,8 @@ public class ShowlLiteralExpression implements ShowlExpression {
 		
 	}
 
-	
+	public String toString() {
+		return "ShowlLiteralExpression(\"" + literal.stringValue() + "\")";
+	}
 
 }

@@ -55,7 +55,7 @@ public class ShowlClassProcessor {
 	}
 
 	private void enrichProperties(ShowlNodeShape nodeShape) {
-		scanDirectProperties(nodeShape.getProperties());
+		scanDirectProperties(nodeShape);
 		scanDerivedProperties(nodeShape.getDerivedProperties());
 	}
 
@@ -70,10 +70,12 @@ public class ShowlClassProcessor {
 		}
 	}
 
-	private void scanDirectProperties(Collection<? extends ShowlPropertyShape> list) {
-		for (ShowlPropertyShape p : list) {
+	private void scanDirectProperties(ShowlNodeShape node) {
+		ShowlClass owlClass = node.getOwlClass();
+		for (ShowlPropertyShape p : node.getProperties()) {
 			if (p.getPropertyConstraint() != null) {
 				p.getProperty().addPropertyShape(p);
+				owlClass.addDomainOf(p.getProperty());
 			}
 		}
 		

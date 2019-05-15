@@ -52,9 +52,9 @@ public class ShowlInwardPropertyShape extends ShowlDerivedPropertyShape {
 	}
 	
 	@Override
-	public ShowlClass getValueType(ShowlManager manager) {
+	public ShowlClass getValueType(ShowlSchemaService schemaService) {
 		
-		return getProperty().inferDomain(manager.getShowlFactory());
+		return getProperty().inferDomain(schemaService);
 	}
 
 }

@@ -721,7 +721,7 @@ public class ShowlManager implements ShowlClassManager {
 	private void joinInwardObjectProperties(ShowlNodeShape leftNode, ShowlJoinCondition joinCondition) {
 		for (ShowlPropertyShape leftProperty : leftNode.getInwardProperties()) {
 			
-			ShowlClass childClass = leftProperty.getValueType(ShowlManager.this);
+			ShowlClass childClass = leftProperty.getValueType(showlFactory);
 			if (!isUndefinedClass(childClass)) {
 				
 				for (ShowlNodeShape rightNode : childClass.getTargetClassOf()) {
@@ -2207,6 +2207,11 @@ public class ShowlManager implements ShowlClassManager {
 			return reasoner;
 		}
 
+		@Override
+		public Shape enumNodeShape(ShowlClass enumClass) throws ShowlProcessingException {
+			throw new ShowlProcessingException("enumNodeShape method not supported");
+		}
+
 		
 	}
 
@@ -2251,7 +2256,7 @@ public class ShowlManager implements ShowlClassManager {
 	 */
 	private void addClassIriTemplateFormula(ShowlPropertyShape target, ShowlDerivedPropertyShape derived) {
 		if (derived.getFormula()==null && derived.getValueShape()!=null) {
-			ShowlClass owlClass = target.getValueType(this);
+			ShowlClass owlClass = target.getValueType(showlFactory);
 			Vertex v = reasoner.getGraph().getVertex(owlClass.getId());
 			if (v != null) {
 				Value templateValue = v.getValue(Konig.iriTemplate);

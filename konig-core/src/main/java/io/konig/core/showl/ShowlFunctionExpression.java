@@ -66,6 +66,10 @@ public class ShowlFunctionExpression implements ShowlExpression {
 		
 		MyFormulaVisitor visitor = new MyFormulaVisitor(sourceNodeShape, set);
 		function.dispatch(visitor);
+		
+		for (ShowlExpression arg : arguments) {
+			arg.addDeclaredProperties(sourceNodeShape, set);
+		}
 
 	}
 	

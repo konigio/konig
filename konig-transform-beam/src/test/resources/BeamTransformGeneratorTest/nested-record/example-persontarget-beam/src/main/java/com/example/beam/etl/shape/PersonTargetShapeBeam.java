@@ -12,7 +12,7 @@ public class PersonTargetShapeBeam {
 
     private static String sourceURI(PersonTargetShapeBeam.Options options) {
         String envName = options.getEnvironment();
-        return ("gs://personsourceshape-"+ envName);
+        return ("gs://example-inbound-"+ envName);
     }
 
     public static void process(PersonTargetShapeBeam.Options options) {

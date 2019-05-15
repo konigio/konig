@@ -23,6 +23,8 @@ package io.konig.core.showl;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.OwlReasoner;
+
 public interface ShowlSchemaService {
 
 	ShowlClass produceShowlClass(URI classId);
@@ -31,4 +33,9 @@ public interface ShowlSchemaService {
 	ShowlClass inferDomain(ShowlProperty p);
 
 	ShowlClass inferRange(ShowlProperty p);
+
+	OwlReasoner getOwlReasoner();
+
+	
+	ShowlClass mostSpecificClass(ShowlClass a, ShowlClass b);
 }

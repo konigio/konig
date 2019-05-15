@@ -672,4 +672,11 @@ public class ShowlNodeShape implements Traversable {
 	public boolean isTargetNode() {
 		return targetNode==null;
 	}
+
+	public List<ShowlPropertyShape> path() {
+		if (accessor == null) {
+			return new ShowlPropertyPath();
+		}
+		return accessor.propertyPath();
+	}
 }

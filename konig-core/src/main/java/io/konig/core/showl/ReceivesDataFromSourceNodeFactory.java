@@ -65,6 +65,7 @@ public class ReceivesDataFromSourceNodeFactory implements ShowlSourceNodeFactory
 				if (ds != null) {
 					
 					ShowlNodeShape sourceShape = nodeShapeBuilder.buildNodeShape(null, candidate.getShape());
+					sourceShape.setTargetNode(targetNode);
 					sourceShape.setShapeDataSource(new ShowlDataSource(sourceShape, ds));
 					
 					set.add(sourceShape);

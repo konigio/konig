@@ -32,5 +32,12 @@ public interface ShowlNodeShapeService {
 
 	ShowlNodeShape createShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass);
 	
-	ShowlClass mostSpecificClass(ShowlClass a, ShowlClass b);
+	/**
+	 * Get a ShowlNodeShape instance that describes the structure of a given Enumeration class.
+	 * This method will return the same instance for a given class.  The instance will be
+	 * created upon the first request.
+	 * @param enumClass
+	 * @return 
+	 */
+	Shape enumNodeShape(ShowlClass enumClass) throws ShowlProcessingException;
 }

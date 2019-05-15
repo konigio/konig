@@ -131,6 +131,7 @@ import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStaticPropertyShape;
 import io.konig.core.showl.ShowlTemplatePropertyShape;
 import io.konig.core.showl.StaticDataSource;
+import io.konig.core.showl.expression.ShowlLiteralExpression;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.IOUtil;
 import io.konig.core.util.IriTemplate;
@@ -1141,12 +1142,12 @@ public class BeamTransformGenerator {
 				
 				FunctionExpression function = e.getFunction();
 				if (function.getModel() == FunctionModel.CONCAT) {
-					transformConcat(body, p, function, inputRow, outputRow);
+					transformConcat(body, p, e, inputRow, outputRow);
 				}
 				
 			}
 
-			private void transformConcat(JBlock body, ShowlDirectPropertyShape p, FunctionExpression function, JVar inputRow, JVar outputRow) throws BeamTransformGenerationException {
+			private void transformConcat(JBlock body, ShowlDirectPropertyShape p, ShowlFunctionExpression sfunc, JVar inputRow, JVar outputRow) throws BeamTransformGenerationException {
 				declareRequiredMethod();
 				JMethod concatMethod = declareConcatMethod();
 				
@@ -1164,12 +1165,19 @@ public class BeamTransformGenerator {
 				 *     required(inputRow, "$fieldName")
 				 *     
 				 */
-			
-				TableRowExpressionHandler handler = new TableRowExpressionHandler(inputRow);
-				for (Expression arg : function.getArgList()) {
+				
+				TableRowShowlExpressionHandler handler = new TableRowShowlExpressionHandler(inputRow);			
+				for (ShowlExpression arg : sfunc.getArguments()) {
 					IJExpression e = handler.javaExpression(arg);
 					concatInvoke.arg(e);
 				}
+				
+//				FunctionExpression function = sfunc.getFunction();
+//				TableRowExpressionHandler handler = new TableRowExpressionHandler(inputRow);
+//				for (Expression arg : function.getArgList()) {
+//					IJExpression e = handler.javaExpression(arg);
+//					concatInvoke.arg(e);
+//				}
 
 				targetProperty.init(concatInvoke);
 				
@@ -1718,6 +1726,45 @@ ShowlNodeShape valueShape = p.getValueShape();
 			}
 			
 		}
+		
+		private class TableRowShowlExpressionHandler implements ShowlExpressionHandler {
+
+			private JVar inputRow;
+			
+			public TableRowShowlExpressionHandler(JVar inputRow) {
+				this.inputRow = inputRow;
+			}
+
+			@Override
+			public IJExpression javaExpression(ShowlExpression e) throws BeamTransformGenerationException {
+				if (e instanceof ShowlLiteralExpression) {
+
+					Literal literal = ((ShowlLiteralExpression) e).getLiteral();
+					if (literal.getDatatype().equals(XMLSchema.STRING)) {
+						return JExpr.lit(literal.stringValue());
+					} else {
+						fail("Typed literal not supported in expression: {0}", e.toString());
+					}
+				} else if (e instanceof ShowlPropertyExpression) {
+					ShowlPropertyShape p = ((ShowlPropertyExpression)e).getSourceProperty();
+					p = p.maybeDirect();
+					URI iri = p.getPredicate();
+
+					
+					return JExpr.invoke("required").arg(inputRow).arg(JExpr.lit(iri.getLocalName()));
+				} else if (e instanceof ShowlIriReferenceExpression) {
+					ShowlIriReferenceExpression iriRef = (ShowlIriReferenceExpression) e;
+					URI predicate = iriRef.getIriValue();
+
+					return JExpr.invoke("required").arg(inputRow).arg(JExpr.lit(predicate.getLocalName()));
+				}
+
+				fail("Unsupported expression: {0}", e.toString());
+				return null;
+			}
+			
+		}
+		
 		private class TableRowExpressionHandler implements ExpressionHandler {
 			
 			private JVar inputRow;
@@ -2833,6 +2880,10 @@ ShowlNodeShape valueShape = p.getValueShape();
 			return "SourceInfo(" + channel.toString() + ")";
 		}
 		
+	}
+	
+	private interface ShowlExpressionHandler {
+		IJExpression javaExpression(ShowlExpression e) throws BeamTransformGenerationException;
 	}
 	
 	

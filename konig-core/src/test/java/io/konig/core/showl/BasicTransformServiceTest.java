@@ -53,7 +53,7 @@ public class BasicTransformServiceTest {
 	private ReceivesDataFromSourceNodeFactory sourceNodeFactory = new ReceivesDataFromSourceNodeFactory(nodeShapeBuilder, graph);
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	
-	private BasicTransformService transformService = new BasicTransformService(sourceNodeFactory);
+	private BasicTransformService transformService = new BasicTransformService(service, service, sourceNodeFactory);
 
 	@Test
 	public void testTabularMapping() throws Exception {
@@ -75,6 +75,13 @@ public class BasicTransformServiceTest {
 		
 		ShowlDirectPropertyExpression direct = (ShowlDirectPropertyExpression) e;
 		assertEquals("first_name", direct.getSourceProperty().getPredicate().getLocalName());
+		
+		ShowlPropertyShape id = targetNode.findOut(Konig.id);
+		assertTrue(id != null);
+		
+		ShowlExpression idExpression = id.getSelectedExpression();
+		assertTrue(idExpression instanceof ShowlFunctionExpression);
+		
 		
 		
 	}

@@ -41,5 +41,4 @@ public interface ShowlService extends ShowlSchemaService, ShowlNodeShapeService 
 	ShapeManager getShapeManager();
 	Graph getGraph();
 	
-	OwlReasoner getOwlReasoner();
 }

@@ -87,7 +87,7 @@ public class ShowlProperty {
 	 * Get the set of OWL Classes that are known to be in the domain of
 	 * the property. Subclasses are excluded.
 	 */
-	public Set<URI> domainIncludes(ShowlService service) {
+	public Set<URI> domainIncludes(ShowlSchemaService service) {
 		Set<URI> result = new HashSet<>();
 		if (domain != null  && !Konig.Undefined.equals(domain.getId())) {
 			result.add(domain.getId());
@@ -139,7 +139,7 @@ public class ShowlProperty {
 		
 	}
 
-	private void addDomain(Set<URI> equivalentProperty, Set<URI> result, ShowlService service, Set<ShowlPropertyShape> set) {
+	private void addDomain(Set<URI> equivalentProperty, Set<URI> result, ShowlSchemaService service, Set<ShowlPropertyShape> set) {
 		OwlReasoner reasoner = service.getOwlReasoner();
 		outer : for (ShowlPropertyShape p : set) {
 			URI owlClass = p.getDeclaringShape().getOwlClass().getId();
@@ -163,7 +163,7 @@ public class ShowlProperty {
 		
 	}
 	
-	public ShowlClass inferDomain(ShowlService service) {
+	public ShowlClass inferDomain(ShowlSchemaService service) {
 		if (domain != null) {
 			return domain;
 		}
@@ -175,7 +175,7 @@ public class ShowlProperty {
 	}
 
 
-	public ShowlClass inferRange(ShowlService service) {
+	public ShowlClass inferRange(ShowlSchemaService service) {
 		if (range != null) {
 			return range;
 		}

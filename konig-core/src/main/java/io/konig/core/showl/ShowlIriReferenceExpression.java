@@ -66,5 +66,15 @@ public class ShowlIriReferenceExpression implements ShowlExpression {
 		// Do nothing
 		
 	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("ShowlIriReferenceExpression(iriValue: <");
+		builder.append(iriValue.stringValue());
+		builder.append(">, referencedBy: ");
+		builder.append(referencedBy.getPath());
+		builder.append(')');
+		return builder.toString();
+	}
 
 }

@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -54,6 +56,19 @@ public class ShowlEffectiveNodeShape {
 	}
 	
 
+	public ShowlClass getTargetClass() {
+		for (ShowlPropertyShapeGroup group : propertyMap.values()) {
+			for (ShowlPropertyShape p : group) {
+				ShowlNodeShape node = p.getDeclaringShape();
+				ShowlClass targetClass = node.getOwlClass();
+				if (targetClass != null) {
+					return targetClass;
+				}
+			}
+		}
+		
+		return null;
+	}
 
 	
 	private ShowlPropertyShapeGroup findEffectiveProperty(ShowlPropertyShape p) {
@@ -127,6 +142,9 @@ public class ShowlEffectiveNodeShape {
 				return null;
 			}
 			p = node.findPropertyByPredicate(pathElement.getPredicate());
+			if (p == null) {
+				return null;
+			}
 			node = p.getValueShape();
 		}
 		
@@ -154,6 +172,30 @@ public class ShowlEffectiveNodeShape {
 
 	public void setRanking(int ranking) {
 		this.ranking = ranking;
+	}
+
+	public List<ShowlPropertyShapeGroup> path() {
+		if (accessor == null) {
+			return new ArrayList<>();
+		}
+		return accessor.path();
+	}
+
+	public ShowlPropertyShapeGroup findPropertyByPredicatePath(List<URI> path) {
+		ShowlPropertyShapeGroup p = null;
+		ShowlEffectiveNodeShape node = this;
+		for (URI predicate : path) {
+			if (node == null) {
+				return null;
+			}
+			p = node.findPropertyByPredicate(predicate);
+			if (p == null) {
+				return null;
+			}
+			node = p.getValueShape();
+		}
+		
+		return p;
 	}
 
 

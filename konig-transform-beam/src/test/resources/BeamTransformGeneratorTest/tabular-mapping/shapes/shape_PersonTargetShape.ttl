@@ -14,23 +14,15 @@ shape:PersonTargetShape sh:property  [
 		sh:minCount 0 ; 
 		sh:maxCount 1 ]  ; 
 	a sh:Shape ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
-	konig:explicitDerivedFrom shape:PersonSourceShape ; 
+	sh:nodeKind sh:IRI ; 
 	sh:targetClass schema:Person ; 
-	sh:nodeKind sh:IRI . 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
+	konig:explicitDerivedFrom shape:PersonSourceShape . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
-	gcp:tableReference  [ 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
 		gcp:datasetId "schema" ; 
-		gcp:tableId "PersonTarget"
-	 ]  ; 
-	konig:ddlFile  [ 
-		konig:relativePath "target/generated/gcp/bigquery/view/schema.PersonTarget.json" ; 
-		konig:baseProject <urn:maven:io.konig.examples.sheet-download-1.0.0>
-	 ]  ; 
-	konig:transformFile  [ 
-		konig:relativePath "target/generated/gcp/bigquery/scripts/schema.PersonTarget.dml.sql" ; 
-		konig:baseProject <urn:maven:io.konig.examples.sheet-download-1.0.0> ]  ; 
+		gcp:tableId "PersonTarget" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
 	a konig:GoogleBigQueryTable , konig:DataSource ; 
-	schema:isPartOf sys:EDW . 
+	schema:isPartOf sys:WarehouseOperationalData . 

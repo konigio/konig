@@ -45,7 +45,7 @@ import io.konig.core.showl.ShowlProperty;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlSchemaService;
-import io.konig.core.showl.ShowlService;
+import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.BareExpression;
 import io.konig.formula.ConditionalOrExpression;
@@ -56,6 +56,7 @@ import io.konig.formula.Formula;
 import io.konig.formula.FormulaUtil;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.HasPathStep;
+import io.konig.formula.IriTemplateExpression;
 import io.konig.formula.IriValue;
 import io.konig.formula.LiteralFormula;
 import io.konig.formula.PathExpression;
@@ -103,9 +104,17 @@ public class ShowlExpressionBuilder {
 		if (formula instanceof LiteralFormula) {
 			return literal((LiteralFormula)formula);
 		}
+		if (formula instanceof IriTemplateExpression) {
+			return iriTemplate(p, (IriTemplateExpression) formula);
+		}
 		fail("At {0}, failed to process expression: {1}", p.getPath(), FormulaUtil.simpleString(formula));
 		
 		return null;
+	}
+
+
+	private ShowlExpression iriTemplate(ShowlPropertyShape p, IriTemplateExpression formula) {
+		return ShowlFunctionExpression.fromIriTemplate(schemaService, nodeService, p, formula.getTemplate());
 	}
 
 
@@ -113,7 +122,13 @@ public class ShowlExpressionBuilder {
 
 		URI iri = formula.getIri();
 		
-		ShowlPropertyShape out = p.getDeclaringShape().findOut(iri);
+		// Get the parent NodeShape within which to search for the property.
+		// We really ought to rethink this whole method.  It's not clear that the
+		// following approach to finding the parent node is correct in all cases.
+		
+		ShowlNodeShape parent = p.getValueShape()==null ? p.getDeclaringShape() : p.getValueShape();
+		
+		ShowlPropertyShape out = parent.findOut(iri);
 		if (out != null) {
 			return propertyExpression(out);
 		}
@@ -331,7 +346,7 @@ public class ShowlExpressionBuilder {
 			schemaService.inferRange(priorProperty) :
 			schemaService.inferDomain(priorProperty);
 		
-		owlClass = nodeService.mostSpecificClass(owlClass, prevClass);
+		owlClass = schemaService.mostSpecificClass(owlClass, prevClass);
 		
 		// Hmmmm.  Are we sure that p=idref always?
 		
