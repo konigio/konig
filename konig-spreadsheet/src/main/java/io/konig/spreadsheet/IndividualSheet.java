@@ -25,6 +25,7 @@ import java.net.URLEncoder;
 
 
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.Namespace;
@@ -232,8 +233,13 @@ public class IndividualSheet extends BaseSheetProcessor {
 					value = new LiteralImpl(stringValue, datatype);
 					edge(subject, predicate, value);
 				} else {
-					value = iriValue(row, col);
-					edge(subject, predicate, value);
+					
+					StringTokenizer tokenizer = new StringTokenizer(stringValue, " \r\n\t");
+					while (tokenizer.hasMoreTokens()) {
+						String token = tokenizer.nextToken();
+						value = processor.expandCurie(token, row, col);
+						edge(subject, predicate, value);
+					}
 				}
 				
 			} else {
