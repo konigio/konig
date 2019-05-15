@@ -424,7 +424,7 @@ public class DataSourceGenerator {
 				String mediaSubtype = mediaType.substring(slash + 1);
 				context.put("mediaSubtype", mediaSubtype);
 			}
-			
+			context.put("mediaTypeBaseName", mediaType);
 			
 		}
 		putURI("class", shape.getTargetClass());
