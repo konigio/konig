@@ -44,6 +44,7 @@ import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.util.ValueFormat.ElementType;
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.DataSource;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.Shape;
 
@@ -84,6 +85,13 @@ public class ShowlNodeShape implements Traversable {
 		setOwlClass(owlClass);
 		if (accessor != null) {
 			accessor.setValueShape(this);
+		}
+		
+		// This is a hack as a temporary fix for #1372.  This should be refactored later!!!
+		for (DataSource ds : shape.getShapeDataSource()) {
+			if (ds.isA(Konig.GoogleCloudStorageFolder) || ds.isA(Konig.GoogleCloudStorageBucket)) {
+				setShapeDataSource(new ShowlDataSource(this, ds));
+			}
 		}
 	}
 	

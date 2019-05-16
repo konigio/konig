@@ -41,7 +41,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.CompositeSourceNodeSelector;
 import io.konig.core.showl.ExplicitDerivedFromFilter;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
-import io.konig.core.showl.GoogleStorageBucketSourceNodeSelector;
+import io.konig.core.showl.DataSourceTypeSourceNodeSelector;
 import io.konig.core.showl.HasDataSourceTypeSelector;
 import io.konig.core.showl.RawCubeSourceNodeSelector;
 import io.konig.core.showl.ShowlManager;
@@ -69,7 +69,7 @@ public class BeamTransformGeneratorTest {
 	private static CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
 		return new CompositeSourceNodeSelector(
 				new RawCubeSourceNodeSelector(shapeManager),
-				new GoogleStorageBucketSourceNodeSelector(shapeManager),
+				new DataSourceTypeSourceNodeSelector(shapeManager, Konig.GoogleCloudStorageBucket),
 				new ExplicitDerivedFromSelector());
 	}
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
