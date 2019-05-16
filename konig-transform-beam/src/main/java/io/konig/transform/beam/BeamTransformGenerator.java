@@ -2203,7 +2203,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 
 
 
-		private void sourceUriMethod() {
+		private void sourceUriMethod() throws BeamTransformGenerationException {
 			
 			if (singleSource()) {
 				singleSourceUriMethod();
@@ -2213,7 +2213,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 		}
 
 
-		private void multipleSourceUriMethod() {
+		private void multipleSourceUriMethod() throws BeamTransformGenerationException {
 			
 			// private String sourceUri(String pattern, Options options) {
 
@@ -2222,11 +2222,45 @@ ShowlNodeShape valueShape = p.getValueShape();
 			JVar pattern = method.param(stringClass, "pattern");
 			JVar options = method.param(optionsClass, "options");
 			
-			//   return pattern.replace("${environmentName}", options.getEnvironment());
+			//   return pattern.replace("${environmentName}", options.getEnvironment()) + "/*";
+			
+			
+			/*
+			 * We assume that all datasources have the same variable name for the environment name.
+			 * 
+			 * Scan all datasources and confirm this assumption; throw an exception if 
+			 * the assumption is not true.
+			 */
+			
+			String varName = null;
+
+			for (ShowlChannel channel : targetNode.getChannels()) {
+			
+
+				String datasourceId = channel.getSourceNode().getShapeDataSource().getDataSource().getId().stringValue();
+				
+				int varStart = datasourceId.lastIndexOf('$');
+				int varEnd = datasourceId.indexOf('}', varStart)+1;
+				String varName2 = datasourceId.substring(varStart, varEnd);
+				if (varName == null) {
+					varName = varName2;
+				} else if (!varName.equals(varName2)) {
+					String msg = MessageFormat.format("Conflicting variables for environment data sources for {0}", targetNode.getPath());
+					throw new BeamTransformGenerationException(msg);
+				}
+			}
+
+			if (varName == null) {
+				throw new BeamTransformGenerationException("Environment name variable not found for target " + targetNode.getPath());
+			}
+			
+
+			
+			JStringLiteral wildcard = JExpr.lit("/*");
 			
 			method.body()._return(pattern.invoke("replace")
-					.arg(JExpr.lit("${environmentName}"))
-					.arg(options.invoke("getEnvironment")));
+					.arg(JExpr.lit(varName))
+					.arg(options.invoke("getEnvironment")).plus(wildcard));
 			
 			// }
 			
@@ -2249,13 +2283,26 @@ ShowlNodeShape valueShape = p.getValueShape();
 			//  return "$bucketId".replace("${environmentName}", envName);
 
 			ShowlNodeShape sourceNode = targetNode.getChannels().get(0).getSourceNode();
-			GoogleCloudStorageBucket bucket = sourceNode.getShape().findDataSource(GoogleCloudStorageBucket.class);
-			String bucketId = bucket.getId().stringValue();
 			
-			int dollar = bucketId.lastIndexOf('$');
-			bucketId = bucketId.substring(0, dollar);
+	
 			
-			method.body()._return(JExpr.lit(bucketId).plus(envName));
+			String datasourceId = sourceNode.getShapeDataSource().getDataSource().getId().stringValue();
+			
+
+			int varStart = datasourceId.lastIndexOf('$');
+			int varEnd = datasourceId.indexOf('}', varStart)+1;
+			String varName = datasourceId.substring(varStart, varEnd);
+			
+			
+			JStringLiteral pattern = JExpr.lit(datasourceId);
+			
+			JStringLiteral wildcard = JExpr.lit("/*");
+						
+			method.body()._return(pattern.invoke("replace")
+					.arg(JExpr.lit(varName))
+					.arg(options.invoke("getEnvironment")).plus(wildcard));
+			
+			
 			
 			// }
 			

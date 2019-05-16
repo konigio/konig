@@ -117,7 +117,7 @@ import io.konig.core.project.ProjectManager;
 import io.konig.core.showl.CompositeNodeShapeConsumer;
 import io.konig.core.showl.CompositeSourceNodeSelector;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
-import io.konig.core.showl.GoogleStorageBucketSourceNodeSelector;
+import io.konig.core.showl.DataSourceTypeSourceNodeSelector;
 import io.konig.core.showl.HasDataSourceTypeSelector;
 import io.konig.core.showl.LineageShowlNodeShapeConsumer;
 import io.konig.core.showl.MappingReport;
@@ -1613,7 +1613,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	private CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
 		return new CompositeSourceNodeSelector(
 				new RawCubeSourceNodeSelector(shapeManager),
-				new GoogleStorageBucketSourceNodeSelector(shapeManager),
+				new DataSourceTypeSourceNodeSelector(shapeManager, Konig.GoogleCloudStorageFolder),
 				new ExplicitDerivedFromSelector());
 	}
 
