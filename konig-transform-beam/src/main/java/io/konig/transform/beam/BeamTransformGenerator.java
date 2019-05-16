@@ -115,6 +115,7 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlClass;
+import io.konig.core.showl.ShowlDataSource;
 import io.konig.core.showl.ShowlDerivedPropertyExpression;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
@@ -192,8 +193,9 @@ public class BeamTransformGenerator {
 				File projectDir = projectDir(request, node);
 				childProjectList.add(projectDir);
 				JCodeModel model = new JCodeModel();
+				
 				try {
-					buildPom(request, projectDir);
+					buildPom(request, projectDir, node);
 				} catch (IOException e) {
 					throw new BeamTransformGenerationException("Failed to generate pom.xml", e);
 				}
@@ -263,7 +265,7 @@ public class BeamTransformGenerator {
 		
 	}
 
-	private void buildPom(BeamTransformRequest request, File projectDir) throws IOException {
+	private void buildPom(BeamTransformRequest request, File projectDir, ShowlNodeShape node) throws IOException, BeamTransformGenerationException {
 		VelocityEngine engine = new VelocityEngine();
 		engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
 		engine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
@@ -273,6 +275,25 @@ public class BeamTransformGenerator {
 		context.put("groupId", request.getGroupId());
 		context.put("artifactId", projectDir.getName());
 		context.put("version", request.getVersion());
+		context.put("projectName", projectDir.getName());
+		context.put("batchEtlBucketIri", batchEtlBucketIri(node));
+		
+		Worker w = new Worker(null,null);
+		String mainClassName = w.mainClassName(node);		
+		context.put("mainClass", mainClassName);		
+		
+		for (DataSource ds : node.getShape().getShapeDataSource()) {
+			if (ds instanceof GoogleBigQueryTable) {
+				GoogleBigQueryTable table = (GoogleBigQueryTable) ds;
+				StringBuilder builder = new StringBuilder();
+				builder.append(table.getTableReference().getDatasetId());
+				builder.append('-');
+				builder.append(table.getTableReference().getTableId());
+				builder.append('-');
+				builder.append("BatchPipeline");
+				context.put("templateName", builder.toString());
+			}
+		}
 		
 		Template template = engine.getTemplate("BeamTransformGenerator/pom.xml");
 		File pomFile = new File(projectDir, "pom.xml");
@@ -281,6 +302,43 @@ public class BeamTransformGenerator {
 			template.merge(context, writer);
 		}
 		
+	}
+	
+	
+	private String batchEtlBucketIri(ShowlNodeShape node) throws BeamTransformGenerationException {
+		for (ShowlChannel channel : node.getChannels()) {
+			ShowlDataSource ds = channel.getSourceNode().getShapeDataSource();
+			
+			if (ds == null) {
+				for (DataSource s : channel.getSourceNode().getShape().getShapeDataSource()) {
+					String result = bucketBaseIri(s.getId());
+					if (result != null) {
+						return result;
+					}
+				}
+			} else {
+				String result = bucketBaseIri(ds.getDataSource().getId());
+				if (result != null) {
+					return result;
+				}
+			}
+		}
+		fail("Could not detect batchEtlBucketIri for {0}", node.getPath());
+		return null;
+	}
+
+	private String bucketBaseIri(Resource id) {
+		if (id != null) {
+			String value = id.stringValue();
+			if (value.startsWith("gs://")) {
+				int end = value.indexOf('/', 5);
+				if (end > 0) {
+					return value.substring(0,  end);
+				}
+				return value;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -315,7 +373,6 @@ public class BeamTransformGenerator {
 			this.model = model;
 			this.targetNode = targetShape;
 		}
-
 
 		private boolean singleSource() {
 			return singleChannel() != null;
@@ -386,6 +443,7 @@ public class BeamTransformGenerator {
 			
 			return datatypeMapper.javaDatatype(datatype);
 		}
+
 		
 		private JDefinedClass generateTransform() throws BeamTransformGenerationException {
 			
@@ -776,7 +834,6 @@ public class BeamTransformGenerator {
 			}
 		}
 
-
 		void declareReadFileFnClass() throws JClassAlreadyExistsException, BeamTransformGenerationException {
 			
 			ShowlChannel channel = singleChannel();
@@ -785,6 +842,7 @@ public class BeamTransformGenerator {
 				
 				ShowlNodeShape sourceNode = channel.getSourceNode();
 				SourceInfo sourceInfo = new SourceInfo(channel);
+
 				sourceInfoMap.put(RdfUtil.uri(sourceNode.getId()), sourceInfo);
 				ReadFileFnGenerator generator = new ReadFileFnGenerator(sourceInfo);
 				generator.generate();
@@ -793,6 +851,7 @@ public class BeamTransformGenerator {
 			}
 		}
 		
+
 		private ShowlChannel singleChannel() {
 			ShowlChannel channel = null;
 			for (ShowlChannel c : targetNode.getChannels()) {
@@ -1553,6 +1612,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 			}
 		}
 
+
 		private class ToTargetFnGenerator extends BaseTargetFnGenerator {
 
 			private void generate() throws BeamTransformGenerationException, JClassAlreadyExistsException {
@@ -2144,6 +2204,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 				
 			}
 			
+
 		}
 
 		private class ReadFileFnGenerator extends BaseReadFnGenerator {
@@ -2213,7 +2274,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 
 
 
-		private void sourceUriMethod() {
+		private void sourceUriMethod() throws BeamTransformGenerationException {
 			
 			if (singleSource()) {
 				singleSourceUriMethod();
@@ -2223,7 +2284,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 		}
 
 
-		private void multipleSourceUriMethod() {
+		private void multipleSourceUriMethod() throws BeamTransformGenerationException {
 			
 			// private String sourceUri(String pattern, Options options) {
 
@@ -2232,11 +2293,45 @@ ShowlNodeShape valueShape = p.getValueShape();
 			JVar pattern = method.param(stringClass, "pattern");
 			JVar options = method.param(optionsClass, "options");
 			
-			//   return pattern.replace("${environmentName}", options.getEnvironment());
+			//   return pattern.replace("${environmentName}", options.getEnvironment()) + "/*";
+			
+			
+			/*
+			 * We assume that all datasources have the same variable name for the environment name.
+			 * 
+			 * Scan all datasources and confirm this assumption; throw an exception if 
+			 * the assumption is not true.
+			 */
+			
+			String varName = null;
+
+			for (ShowlChannel channel : targetNode.getChannels()) {
+			
+
+				String datasourceId = channel.getSourceNode().getShapeDataSource().getDataSource().getId().stringValue();
+				
+				int varStart = datasourceId.lastIndexOf('$');
+				int varEnd = datasourceId.indexOf('}', varStart)+1;
+				String varName2 = datasourceId.substring(varStart, varEnd);
+				if (varName == null) {
+					varName = varName2;
+				} else if (!varName.equals(varName2)) {
+					String msg = MessageFormat.format("Conflicting variables for environment data sources for {0}", targetNode.getPath());
+					throw new BeamTransformGenerationException(msg);
+				}
+			}
+
+			if (varName == null) {
+				throw new BeamTransformGenerationException("Environment name variable not found for target " + targetNode.getPath());
+			}
+			
+
+			
+			JStringLiteral wildcard = JExpr.lit("/*");
 			
 			method.body()._return(pattern.invoke("replace")
-					.arg(JExpr.lit("${environmentName}"))
-					.arg(options.invoke("getEnvironment")));
+					.arg(JExpr.lit(varName))
+					.arg(options.invoke("getEnvironment")).plus(wildcard));
 			
 			// }
 			
@@ -2259,13 +2354,26 @@ ShowlNodeShape valueShape = p.getValueShape();
 			//  return "$bucketId".replace("${environmentName}", envName);
 
 			ShowlNodeShape sourceNode = targetNode.getChannels().get(0).getSourceNode();
-			GoogleCloudStorageBucket bucket = sourceNode.getShape().findDataSource(GoogleCloudStorageBucket.class);
-			String bucketId = bucket.getId().stringValue();
 			
-			int dollar = bucketId.lastIndexOf('$');
-			bucketId = bucketId.substring(0, dollar);
+	
 			
-			method.body()._return(JExpr.lit(bucketId).plus(envName));
+			String datasourceId = sourceNode.getShapeDataSource().getDataSource().getId().stringValue();
+			
+
+			int varStart = datasourceId.lastIndexOf('$');
+			int varEnd = datasourceId.indexOf('}', varStart)+1;
+			String varName = datasourceId.substring(varStart, varEnd);
+			
+			
+			JStringLiteral pattern = JExpr.lit(datasourceId);
+			
+			JStringLiteral wildcard = JExpr.lit("/*");
+						
+			method.body()._return(pattern.invoke("replace")
+					.arg(JExpr.lit(varName))
+					.arg(options.invoke("getEnvironment")).plus(wildcard));
+			
+			
 			
 			// }
 			
@@ -2651,9 +2759,8 @@ ShowlNodeShape valueShape = p.getValueShape();
 							.invoke("withCreateDisposition").arg(createDispositionClass.staticRef("CREATE_NEVER"))
 							.invoke("withWriteDisposition").arg(writeDispositionClass.staticRef("WRITE_APPEND")));
 			
-			
-
 			body.add(pipeline);
+			body.add(p.invoke("run"));
 			
 		}
 
@@ -2908,5 +3015,6 @@ ShowlNodeShape valueShape = p.getValueShape();
 	private interface ExpressionHandler {
 		
 		IJExpression javaExpression(Expression e) throws BeamTransformGenerationException;
+
 	}
 }

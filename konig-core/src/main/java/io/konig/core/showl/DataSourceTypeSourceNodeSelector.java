@@ -27,18 +27,20 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 
-import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
-public class GoogleStorageBucketSourceNodeSelector implements ShowlSourceNodeSelector {
+public class DataSourceTypeSourceNodeSelector implements ShowlSourceNodeSelector {
 
 	private ShapeManager shapeManager;
+	private URI originDataSource;
 	
 
-	public GoogleStorageBucketSourceNodeSelector(ShapeManager shapeManager) {
+
+	public DataSourceTypeSourceNodeSelector(ShapeManager shapeManager, URI originDataSource) {
 		this.shapeManager = shapeManager;
+		this.originDataSource = originDataSource;
 	}
 
 
@@ -49,7 +51,7 @@ public class GoogleStorageBucketSourceNodeSelector implements ShowlSourceNodeSel
 		
 		for (DataSource ds : targetShape.getShape().getShapeDataSource()) {
 			
-			if (ds.getType().contains(Konig.GoogleCloudStorageBucket)) {
+			if (ds.getType().contains(originDataSource)) {
 				// Self-mapping
 				addSourceShape(result, factory, targetShape.getShape(), ds);
 				return result;
@@ -60,7 +62,7 @@ public class GoogleStorageBucketSourceNodeSelector implements ShowlSourceNodeSel
 		if (owlClass != null) {
 			List<Shape> candidates = shapeManager.getShapesByTargetClass(owlClass);
 			for (Shape shape : candidates) {
-				DataSource ds = shape.findDataSourceByType(Konig.GoogleCloudStorageBucket);
+				DataSource ds = shape.findDataSourceByType(originDataSource);
 				if (ds != null) {
 					addSourceShape(result, factory, shape, ds);
 				}

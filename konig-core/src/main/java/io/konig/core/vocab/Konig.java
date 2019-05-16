@@ -156,6 +156,7 @@ public class Konig {
 	public static final URI StagingDataSource = new URIImpl("http://www.konig.io/ns/core/StagingDataSource");
 	public static final URI ReportingDataSource = new URIImpl("http://www.konig.io/ns/core/ReportingDataSource");
 	public static final URI GoogleCloudStorageBucket = new URIImpl("http://www.konig.io/ns/core/GoogleCloudStorageBucket");
+	public static final URI GoogleCloudStorageFolder = new URIImpl("http://www.konig.io/ns/core/GoogleCloudStorageFolder");
 	public static final URI GoogleCloudSqlTable = new URIImpl("http://www.konig.io/ns/core/GoogleCloudSqlTable");
 	public static final URI OracleTable = new URIImpl("http://www.konig.io/ns/core/OracleTable");
 	public static final URI AwsAuroraTable = new URIImpl("http://www.konig.io/ns/core/AwsAurora");

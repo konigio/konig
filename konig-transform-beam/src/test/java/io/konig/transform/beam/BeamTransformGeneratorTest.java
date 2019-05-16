@@ -37,36 +37,59 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.BasicTransformService;
+import io.konig.core.showl.CompositeSourceNodeSelector;
+import io.konig.core.showl.DataSourceTypeSourceNodeSelector;
+import io.konig.core.showl.ExplicitDerivedFromSelector;
+import io.konig.core.showl.HasDataSourceTypeSelector;
+import io.konig.core.showl.RawCubeSourceNodeSelector;
 import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
 import io.konig.core.showl.ReceivesDataFromTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlClassProcessor;
+import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlNodeShapeBuilder;
 import io.konig.core.showl.ShowlService;
 import io.konig.core.showl.ShowlServiceImpl;
 import io.konig.core.showl.ShowlSourceNodeFactory;
+import io.konig.core.showl.ShowlTargetNodeSelector;
 import io.konig.core.showl.ShowlTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlTransformEngine;
 import io.konig.core.showl.ShowlTransformService;
 import io.konig.core.util.IOUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class BeamTransformGeneratorTest {
 
-	private Graph graph;
-	private ShapeManager shapeManager;
+
+
+	private NamespaceManager nsManager = new MemoryNamespaceManager();
+	private Graph graph = new MemoryGraph(nsManager);
+	private ShapeManager shapeManager = new MemoryShapeManager();
+	private OwlReasoner reasoner = new OwlReasoner(graph);
+	private ShowlTargetNodeSelector targetNodeSelector = new HasDataSourceTypeSelector(Konig.GoogleBigQueryTable);
+	private ShowlNodeListingConsumer consumer = new ShowlNodeListingConsumer();
+	private ShowlManager showlManager = new ShowlManager(
+			shapeManager, reasoner, targetNodeSelector, nodeSelector(shapeManager), consumer);
 	private ShowlTransformEngine engine;
 	private ShowlService showlService;
-	private BeamTransformGenerator generator;
-	private ShowlNodeListingConsumer consumer = new ShowlNodeListingConsumer();
+	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
+
+	private static CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
+		return new CompositeSourceNodeSelector(
+				new RawCubeSourceNodeSelector(shapeManager),
+				new DataSourceTypeSourceNodeSelector(shapeManager, Konig.GoogleCloudStorageBucket),
+				new ExplicitDerivedFromSelector());
+	}
 	
 
 	@Before

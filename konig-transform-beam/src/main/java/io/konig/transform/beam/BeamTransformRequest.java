@@ -71,7 +71,7 @@ public class BeamTransformRequest {
 	public List<ShowlNodeShape> getNodeList() {
 		return nodeList;
 	}
-
+	
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -107,7 +107,7 @@ public class BeamTransformRequest {
 			this.nodeList = nodeList;
 			return this;
 		}
-
+		
 		public BeamTransformRequest build() {
 			return new BeamTransformRequest(this);
 		}

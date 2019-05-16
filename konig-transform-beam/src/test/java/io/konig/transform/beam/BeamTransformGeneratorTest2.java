@@ -28,7 +28,6 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 
@@ -40,8 +39,8 @@ import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.CompositeSourceNodeSelector;
 import io.konig.core.showl.DataLayerSourceNodeSelector;
+import io.konig.core.showl.DataSourceTypeSourceNodeSelector;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
-import io.konig.core.showl.GoogleStorageBucketSourceNodeSelector;
 import io.konig.core.showl.HasDataSourceTypeSelector;
 import io.konig.core.showl.RawCubeSourceNodeSelector;
 import io.konig.core.showl.RawCubeTargetNodeSelector;
@@ -67,7 +66,7 @@ public class BeamTransformGeneratorTest2 {
 	private static CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
 		return new CompositeSourceNodeSelector(
 				new RawCubeSourceNodeSelector(shapeManager),
-				new GoogleStorageBucketSourceNodeSelector(shapeManager),
+				new DataSourceTypeSourceNodeSelector(shapeManager, Konig.GoogleCloudStorageBucket),
 				new ExplicitDerivedFromSelector());
 	}
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);

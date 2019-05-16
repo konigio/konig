@@ -180,11 +180,11 @@ public class ShapeSheet extends BaseSheetProcessor {
 		if (!generatedBatchFileBucket && list!=null) {
 			for (Function func : list) {
 				String name = func.getName();
-				if ("BigQueryCsvBucket".equals(name) || "GoogleCloudStorageBucket".equals(name)) {
+				if ("BigQueryCsvBucket".equals(name) || "GoogleCloudStorageBucket".equals(name) || "BatchInboundFolder".equals(name)) {
 					generatedBatchFileBucket = true;
-					list.add(new Function("BatchFileInboundBucket",  new SimpleValueMap()));
+					list.add(new Function("BatchEtlBucket",  new SimpleValueMap()));
 					break;
-				}
+				} 
 			}
 		}
 	}

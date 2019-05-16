@@ -81,7 +81,7 @@ public class GcpConfigManager {
 	}
 	
 	public String storageBucketConfigName(String bucketName) {
-		return "bucket-" + bucketName;
+		return bucketName;
 	}
 	
 	public URI bigqueryTableIri(String datasetId, String tableId) {

@@ -134,21 +134,21 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			this.owlReasoner = new OwlReasoner(graph);
 	
 			serviceManager.setListener(new BaseServiceListener());
+
 			addNamespaces();
 			addServices();
-			addDefaultTerms();
+			addNamespaces();
+			addTerms();
+			addServices();
 			sortBookListeners();
 		}
 	}
 
-	/**
-	 * Add terms that are assumed by the workbook processor.
-	 */
-	private void addDefaultTerms() {
 
-		graph.edge(Konig.receivesDataFrom, RDF.TYPE, RDF.PROPERTY);
+
+	private void addTerms() {
+		graph.edge(Schema.isPartOf, RDF.TYPE, OWL.OBJECTPROPERTY);
 		graph.edge(Konig.receivesDataFrom, RDF.TYPE, OWL.OBJECTPROPERTY);
-		
 	}
 
 	public boolean isShowStackTrace() {

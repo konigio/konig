@@ -46,7 +46,7 @@ public class DeploymentConfigWriterTest {
 		datasetReference.setDatasetId("example_dataset_id");
 		datasetProperties.setDatasetReference(datasetReference);
 		
-		dataset.setName("example_dataset");
+		dataset.setName("dataset-example_dataset");
 		dataset.setProperties(datasetProperties);
 		
 		config.addResource(dataset);
@@ -57,7 +57,7 @@ public class DeploymentConfigWriterTest {
 		
 		BigqueryTableProperties table = new BigqueryTableProperties();
 		tableResource.setProperties(table);
-		table.setDatasetId("example_dataset");
+		table.setDatasetId("example_dataset_id");
 		List<TableFieldSchema> fields = new ArrayList<>();
 		TableSchema schema = new TableSchema();
 		table.setSchema(schema);
@@ -69,7 +69,7 @@ public class DeploymentConfigWriterTest {
 		
 		GcpMetadata meta = new GcpMetadata();
 		tableResource.setMetadata(meta);
-		meta.addDependency("example_dataset");
+		meta.addDependency("dataset-example_dataset");
 		
 		
 		StringWriter out = new StringWriter();
@@ -82,7 +82,7 @@ public class DeploymentConfigWriterTest {
 				"\n" +
 				"resources: \n" + 
 				"   - \n" + 
-				"      name: example_dataset\n" + 
+				"      name: dataset-example_dataset\n" + 
 				"      type: gcp-types/bigquery-v2:datasets\n" + 
 				"      properties: \n" + 
 				"         datasetReference: \n" + 
@@ -92,9 +92,9 @@ public class DeploymentConfigWriterTest {
 				"      type: gcp-types/bigquery-v2:tables\n" + 
 				"      metadata: \n" + 
 				"         dependsOn: \n" + 
-				"            - example_dataset\n" + 
+				"            - dataset-example_dataset\n" + 
 				"      properties: \n" + 
-				"         datasetId: example_dataset\n" + 
+				"         datasetId: example_dataset_id\n" + 
 				"         schema: \n" + 
 				"            fields: \n" + 
 				"               - \n" + 
@@ -103,5 +103,30 @@ public class DeploymentConfigWriterTest {
 		
 		assertEquals(expected, actual);
 	}
-
+	
+	@Test
+	public void testStorageBucket() throws Exception {
+		DeploymentConfig config = new DeploymentConfig();
+		StorageBucketResource resource = new StorageBucketResource();
+		resource.setName("example_bucket");
+		StorageBucketProperties properties = new StorageBucketProperties();
+		resource.setProperties(properties);
+		properties.setName("example_bucket");
+		config.addResource(resource);
+		StringWriter out = new StringWriter();
+		writer.write(out, config);
+		
+		
+		String actual = out.toString().replace("\r", "");
+		System.out.println(actual);
+		String expected = 
+				"\n" +
+				"resources: \n" + 
+				"   - \n" + 
+				"      name: example_bucket\n" + 
+				"      type: storage.v1.bucket\n" + 
+				"      properties: \n" + 
+				"         name: example_bucket\n" ;
+		assertEquals(expected, actual);
+	}			
 }
