@@ -235,7 +235,7 @@
 					<arguments>
 						<argument>--project=${gcpProjectId}</argument>
 						<argument>--runner=DataflowRunner</argument>
-						<argument>--environment=${environment}</argument>					
+						<argument>--environment=${environmentName}</argument>					
 						<argument>--gcpTempLocation=gs://example-inbound-${environmentName}/schema-PersonTarget-BatchPipeline/temp</argument>
 						<argument>--tempLocation=gs://example-inbound-${environmentName}/schema-PersonTarget-BatchPipeline/temp</argument>
 						<argument>--stagingLocation=gs://example-inbound-${environmentName}/schema-PersonTarget-BatchPipeline/staging</argument>
