@@ -47,7 +47,7 @@ public class ToPersonTargetShapeFn
         TableRow genderRow = new TableRow();
         Object id = gender.getId();
         if (id!= null) {
-            genderRow.set("id", id);
+            genderRow.set("id", id.stringValue());
         }
         Object name = gender.getName();
         if (name!= null) {
