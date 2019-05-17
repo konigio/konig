@@ -38,12 +38,14 @@ public class ReadPersonSourceShapeFn
                     }
                 }
                 Matcher matcher = DATE_PATTERN.matcher(stringValue);
-                String datePart = matcher.group(1);
-                String zoneOffset = matcher.group(2);
-                if ((zoneOffset.length() == 0)||zoneOffset.equals("Z")) {
-                    stringValue = ((datePart +"T00:00:00.000")+ zoneOffset);
+                if (matcher.matches()) {
+                    String datePart = matcher.group(1);
+                    String zoneOffset = matcher.group(2);
+                    if ((zoneOffset.length() == 0)||zoneOffset.equals("Z")) {
+                        stringValue = ((datePart +"T00:00:00.000")+ zoneOffset);
+                    }
+                    return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
                 }
-                return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
             }
         }
         return null;

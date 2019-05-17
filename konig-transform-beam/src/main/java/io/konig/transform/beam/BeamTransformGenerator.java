@@ -2075,13 +2075,15 @@ ShowlNodeShape valueShape = p.getValueShape();
 						//   }
 						//  } 
 						//  Matcher matcher = DATE_PATTERN.matcher(stringValue);
-						//  String datePart = matcher.group(1);
-						//  String zoneOffset = matcher.group(2);
-						//  if (zoneOffset.length() == 0 || zoneOffset.equals("Z")) {
-						//    zoneOffset = "+00:00";
-						//  } 
-						//  stringValue = datePart + "T00:00:00.000" + zoneOffset;
-						//  return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
+						//  if (matcher.matches()) {
+						//    String datePart = matcher.group(1);
+						//    String zoneOffset = matcher.group(2);
+						//    if (zoneOffset.length() == 0 || zoneOffset.equals("Z")) {
+						//      zoneOffset = "+00:00";
+						//    } 
+						//    stringValue = datePart + "T00:00:00.000" + zoneOffset;
+						//    return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
+						//  }
 						
 						JFieldVar datePattern = patternField();
 						
@@ -2105,17 +2107,21 @@ ShowlNodeShape valueShape = p.getValueShape();
 						JVar matcher = block1.decl(matcherClass, "matcher", 
 								datePattern.invoke("matcher").arg(stringValue));
 						
-						JVar datePart = block1.decl(stringClass, "datePart", 
+						JConditional ifMatches = block1._if(matcher.invoke("matches"));
+						
+						JBlock ifMatchesBlock = ifMatches._then();
+						
+						JVar datePart = ifMatchesBlock.decl(stringClass, "datePart", 
 								matcher.invoke("group").arg(JExpr.lit(1)));
 						
-						JVar zoneOffset = block1.decl(stringClass, "zoneOffset", 
+						JVar zoneOffset = ifMatchesBlock.decl(stringClass, "zoneOffset", 
 								matcher.invoke("group").arg(JExpr.lit(2)));
 						
-						block1._if(zoneOffset.invoke("length").eq(JExpr.lit(0))
+						ifMatchesBlock._if(zoneOffset.invoke("length").eq(JExpr.lit(0))
 								.cor(zoneOffset.invoke("equals").arg(JExpr.lit("Z"))))._then().add(
 										JExpr.assign(stringValue, datePart.plus("T00:00:00.000").plus(zoneOffset)));
 						
-						block1._return(instantClass.staticInvoke("from").arg(
+						ifMatchesBlock._return(instantClass.staticInvoke("from").arg(
 								offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli"));
 					
 						
