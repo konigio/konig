@@ -235,7 +235,7 @@
 					<arguments>
 						<argument>--project=${gcpProjectId}</argument>
 						<argument>--runner=DataflowRunner</argument>
-						<argument>--environment=${environment}</argument>					
+						<argument>--environment=${environmentName}</argument>					
 						<argument>--gcpTempLocation=${batchEtlBucketIri}/${templateName}/temp</argument>
 						<argument>--tempLocation=${batchEtlBucketIri}/${templateName}/temp</argument>
 						<argument>--stagingLocation=${batchEtlBucketIri}/${templateName}/staging</argument>

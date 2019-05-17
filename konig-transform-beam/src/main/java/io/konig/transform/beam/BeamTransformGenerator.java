@@ -1190,7 +1190,10 @@ public class BeamTransformGenerator {
 				//  outputRow.set("$fieldName", $field);
 				// }
 				
-				body._if(field.ne(JExpr._null()))._then().add(outputRow.invoke("set").arg(JExpr.lit(fieldName)).arg(field));
+				IJExpression fieldArg = p.getPredicate().equals(Konig.id) ?
+						field.invoke("stringValue") :	field;
+						
+				body._if(field.ne(JExpr._null()))._then().add(outputRow.invoke("set").arg(JExpr.lit(fieldName)).arg(fieldArg));
 				
 				
 			}
