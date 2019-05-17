@@ -1947,7 +1947,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 						csvParserClass.staticInvoke("parse")
 						.arg(stream)
 						.arg(standardCharsetsClass.staticRef("UTF_8"))
-						.arg(csvFormatClass.staticRef("RFC4180")));
+						.arg(csvFormatClass.staticRef("RFC4180").invoke("withFirstRecordAsHeader").invoke("withSkipHeaderRecord")));
 				
 				//       for(CSVRecord record : csv) {
 				

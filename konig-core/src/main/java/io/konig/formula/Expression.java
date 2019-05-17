@@ -41,7 +41,7 @@ abstract public class Expression extends AbstractFormula {
 	protected List<ConditionalAndExpression> orList;
 	protected Context context;
 	
-	public Expression(String text) {
+	protected Expression(String text) {
 		FormulaParser parser = new FormulaParser();
 		try {
 			Expression self = parser.expression(text);

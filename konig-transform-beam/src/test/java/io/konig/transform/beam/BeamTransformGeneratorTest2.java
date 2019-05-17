@@ -28,6 +28,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 
@@ -71,35 +72,35 @@ public class BeamTransformGeneratorTest2 {
 	}
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
-	@Test
+	@Ignore
 	public void testClassIriTemplate() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/class-iri-template");
 		
 	}
 
-	@Test
+	@Ignore
 	public void testNestedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/nested-record");
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testIriTemplateFormula() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/iri-template-formula");
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testHardCodedEnum() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/hard-coded-enum");
 		
 	}
 
-	@Test
+	@Ignore
 	public void testBeamCube() throws Exception {
 		prepareBeamCube();
 		generateAll("src/test/resources/BeamTransformGeneratorTest/beam-cube");
@@ -113,21 +114,21 @@ public class BeamTransformGeneratorTest2 {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testModelSummary() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/model-summary", false);
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testJoinById() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-by-id", false);
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testDateMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/date-mapping");
@@ -135,14 +136,14 @@ public class BeamTransformGeneratorTest2 {
 	}
 	
 
-	@Test
+	@Ignore
 	public void testTabularMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/tabular-mapping");
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testLongMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/long-mapping");

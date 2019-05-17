@@ -216,6 +216,7 @@ public class BasicTransformService implements ShowlTransformService {
 									}
 								}
 								if (channelProperty != null) {
+									// TODO: Map the enum accessor
 									ShowlExpression left = new ShowlEnumPropertyExpression(enumProperty.direct());
 									ShowlExpression right = channelProperty instanceof ShowlDirectPropertyShape ?
 											new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)channelProperty) :
@@ -235,6 +236,8 @@ public class BasicTransformService implements ShowlTransformService {
 		
 		return null;
 	}
+
+
 
 
 	/**
