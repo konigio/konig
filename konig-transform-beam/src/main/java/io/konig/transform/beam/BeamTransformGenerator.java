@@ -1355,6 +1355,15 @@ public class BeamTransformGenerator {
 					
 				}
 				
+				// if (!$targetFieldName.isEmpty()) {
+				//   outputRow.set("$targetFieldName", $targetFieldName);
+				// }
+				
+				body._if(fieldRow.invoke("isEmpty").not())
+					._then().add(
+						outputRow.invoke("set")
+							.arg(JExpr.lit(targetFieldName))
+							.arg(fieldRow));
 				
 			}
 
