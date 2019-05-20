@@ -14,5 +14,18 @@
     <module>$projectDir.Name</module>
 #end    
   </modules>
-  
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.6.0</version>
+				<configuration>
+					<mainClass>none</mainClass>
+					<skip>true</skip>
+					<executable>java</executable>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>  

@@ -41,4 +41,53 @@
 			</plugin>      
     </plugins>
   </build>
+  	<profiles>
+	<profile>
+		<id>deploy-all</id>
+		<build>
+			<plugins>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>exec-maven-plugin</artifactId>
+					<version>1.6.0</version>
+					<executions>
+						<execution>
+							<id>deploy gcp</id>
+							<goals>
+								<goal>exec</goal>
+							</goals>
+							<configuration>
+								<executable>gcloud</executable>
+								<arguments>
+									<argument>deployment-manager</argument>
+									<argument>deployments</argument>
+									<argument>create</argument>
+									<argument>${mavenProject.name}</argument>
+									<argument>--config=../generated/gcp/deployment/config.yaml</argument>
+								</arguments>
+							</configuration>
+						</execution>
+						<execution>
+							<id>install beam</id>
+							<goals>
+								<goal>exec</goal>
+							</goals>
+						</execution>
+					</executions>
+					<configuration>
+						<executable>mvn </executable>
+						<arguments>
+							<argument>install</argument>
+							<argument>exec:java</argument>
+							<argument>-Pdataflow-runner</argument>
+							<argument>-f</argument>
+							<argument>../generated/beam/pom.xml</argument>
+							<argument>-DenvironmentName=${environmentName}</argument>
+						</arguments>
+					</configuration>
+				</plugin>
+			</plugins>
+		</build>
+	</profile>
+</profiles>
 </project>
