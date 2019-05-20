@@ -29,6 +29,9 @@ public class ToPersonTargetShapeFn
             if (state!= null) {
                 address.set("addressRegion", state);
             }
+            if (!address.isEmpty()) {
+                outputRow.set("address", address);
+            }
             if (!outputRow.isEmpty()) {
                 c.output(outputRow);
             }

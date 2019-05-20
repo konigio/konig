@@ -120,6 +120,7 @@ import io.konig.core.showl.ShowlDerivedPropertyExpression;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
+import io.konig.core.showl.ShowlEnumJoinInfo;
 import io.konig.core.showl.ShowlEnumPropertyExpression;
 import io.konig.core.showl.ShowlEqualStatement;
 import io.konig.core.showl.ShowlExpression;
@@ -812,13 +813,11 @@ public class BeamTransformGenerator {
 
 
 		private void addEnumClasses(Set<ShowlClass> enumClasses, ShowlNodeShape node) {
+			
+			if (reasoner.isEnumerationClass(node.getOwlClass().getId())) {
+				enumClasses.add(node.getOwlClass());
+			}
 			for (ShowlDirectPropertyShape p : node.getProperties()) {
-				
-				ShowlExpression e = p.getSelectedExpression();
-				if (e instanceof ShowlEnumPropertyExpression) {
-					ShowlPropertyShape q = ((ShowlEnumPropertyExpression) e).getSourceProperty();
-					enumClasses.add(q.getDeclaringShape().getOwlClass());
-				}
 				if (p.getValueShape() != null) {
 					addEnumClasses(enumClasses, p.getValueShape());
 				}
@@ -1359,15 +1358,13 @@ public class BeamTransformGenerator {
 					logger.trace("transformObjectProperty({})", p.getPath());
 				}
 
-				ShowlPropertyShape enumSourceKey = valueShape.enumSourceKey(reasoner);
-				if (enumSourceKey != null) {
-					transformEnumObject(body, p, enumSourceKey);
-					return;
-				}
-				
-				ShowlIriReferenceExpression iriRef = iriRef(p);
-				if (iriRef != null) {
-					transformHardCodedEnumObject(body, p, iriRef);
+				ShowlEnumJoinInfo enumJoin = ShowlEnumJoinInfo.forEnumProperty(p);
+				if (enumJoin != null) {
+					if (enumJoin.getHardCodedReference() != null) {
+						transformHardCodedEnumObject(body, p, enumJoin.getHardCodedReference());
+					} else {
+						transformEnumObject(body, p, enumJoin);
+					}
 					return;
 				}
 				
@@ -1457,15 +1454,8 @@ ShowlNodeShape valueShape = p.getValueShape();
 				return block.decl(enumClass, varName, fieldRef);
 			}
 
-			private ShowlIriReferenceExpression iriRef(ShowlDirectPropertyShape p) {
-				if (p.getSelectedExpression() instanceof ShowlIriReferenceExpression) {
-					return (ShowlIriReferenceExpression) p.getSelectedExpression();
-				}
-				return null;
-			}
-
 			protected void transformEnumObject(JBlock body, ShowlDirectPropertyShape p, 
-					ShowlPropertyShape enumSourceKey) throws BeamTransformGenerationException {
+					ShowlEnumJoinInfo joinInfo) throws BeamTransformGenerationException {
 				
 
 				ShowlNodeShape valueShape = p.getValueShape();
@@ -1484,7 +1474,7 @@ ShowlNodeShape valueShape = p.getValueShape();
 				JVar outputRowParam = method.param(tableRowClass, "outputRow");
 				
 
-				JVar enumObject = enumObject(method.body(), enumSourceKey, valueShape, inputRowParam);
+				JVar enumObject = enumObject(method.body(), joinInfo, valueShape, inputRowParam);
 				
 				
 				
@@ -1508,36 +1498,25 @@ ShowlNodeShape valueShape = p.getValueShape();
 				
 			}
 
-			protected JVar enumObject(JBlock block, ShowlPropertyShape enumSourceKey, ShowlNodeShape valueShape, JVar inputRow) throws BeamTransformGenerationException {
+			protected JVar enumObject(JBlock block, ShowlEnumJoinInfo joinInfo, ShowlNodeShape valueShape, JVar inputRow) throws BeamTransformGenerationException {
 
 				
-				String enumSourceKeyName = enumSourceKeyName(enumSourceKey, valueShape);
+				String sourceKeyName = joinInfo.getSourceProperty().getPredicate().getLocalName();
+				String enumKeyName = joinInfo.getEnumProperty().getPredicate().getLocalName();
+				
 				
 			
 				String enumClassName = enumClassName(valueShape.getOwlClass().getId());
 				AbstractJClass enumClass = model.directClass(enumClassName);
 				URI property = valueShape.getAccessor().getPredicate();
 				
-				String findMethodName = "findBy" + StringUtil.capitalize(enumSourceKeyName);
-				JInvocation arg = inputRow.invoke("get").arg(JExpr.lit(enumSourceKey.getPredicate().getLocalName())).invoke("toString");
+				String findMethodName = "findBy" + StringUtil.capitalize(enumKeyName);
+				JInvocation arg = inputRow.invoke("get").arg(JExpr.lit(sourceKeyName)).invoke("toString");
 				String varName = property.getLocalName();
 				return block.decl(enumClass, varName, enumClass.staticInvoke(findMethodName).arg(arg));
 			}
 
-			protected String enumSourceKeyName(ShowlPropertyShape enumSourceKey, ShowlNodeShape valueShape) throws BeamTransformGenerationException {
-				URI enumClassId = valueShape.getOwlClass().getId();
-				Map<URI,RdfProperty> propertyMap = enumClassProperties.get(enumClassId);
-				
-				if (propertyMap.containsKey(enumSourceKey.getPredicate())) {
-					return enumSourceKey.getPredicate().getLocalName();
-				}
-				
-				ShowlPropertyShape peer = enumSourceKey.getPeer();
-				if (peer != null && propertyMap.containsKey(peer.getPredicate())) {
-					return peer.getPredicate().getLocalName();
-				}
-				throw new BeamTransformGenerationException("Failed to get enumSourceKeyName for " + enumSourceKey.getPath());
-			}
+			
 
 			protected void transformDirectProperty(JBlock body, ShowlDirectPropertyShape p, ShowlDirectPropertyShape other,
 					JVar inputRow, JVar outputRow) {

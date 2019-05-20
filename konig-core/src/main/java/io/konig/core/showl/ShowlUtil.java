@@ -187,4 +187,72 @@ public class ShowlUtil {
 		
 		return true;
 	}
+
+	public static ShowlPropertyExpression propertyExpression(ShowlPropertyShape p) {
+		
+		return p instanceof ShowlDirectPropertyShape ?
+				new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)p) :
+				new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape)p);
+	}
+
+	public static ShowlChannel channelFor(ShowlNodeShape enumNode, List<ShowlChannel> channelList) {
+		for (ShowlChannel channel : channelList) {
+			if (channel.getSourceNode() == enumNode) {
+				return channel;
+			}
+		}
+		return null;
+	}
+	
+	
+//	public static ShowlEnumJoinInfo enumJoinInfo(ShowlNodeShape enumNode)
+	
+
+	public static ShowlPropertyShape otherProperty(ShowlEqualStatement equal, ShowlNodeShape node) {
+		ShowlPropertyShape left = propertyShape(equal.getLeft());
+		ShowlPropertyShape right = propertyShape(equal.getRight());
+		
+		if (left != null && left.getDeclaringShape()==node) {
+			return right;
+		}
+		
+		if (right!=null && right.getDeclaringShape()!=node) {
+			return left;
+		}
+		
+		return null;
+	}
+	
+	public static ShowlPropertyShape propertyOf(ShowlEqualStatement equal, ShowlNodeShape node) {
+
+		ShowlPropertyShape left = propertyShape(equal.getLeft());
+		
+		if (left != null && left.getDeclaringShape()==node) {
+			return left;
+		}
+
+		ShowlPropertyShape right = propertyShape(equal.getRight());
+		if (right!=null && right.getDeclaringShape()!=node) {
+			return right;
+		}
+		
+		return null;
+	}
+
+	private static ShowlPropertyShape propertyShape(ShowlExpression e) {
+		if (e instanceof ShowlPropertyExpression) {
+			return ((ShowlPropertyExpression) e).getSourceProperty();
+		}
+		return null;
+	}
+
+	public static ShowlPropertyShape propertyOf(ShowlExpression e, ShowlNodeShape node) {
+		if (e instanceof ShowlPropertyExpression) {
+			ShowlPropertyShape p = ((ShowlPropertyExpression) e).getSourceProperty();
+			if (p.getDeclaringShape() == node) {
+				return p;
+			}
+		}
+		return null;
+	}
 }

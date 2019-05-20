@@ -75,6 +75,7 @@ public class ShowlNodeShapeBuilder {
 			logger.trace("addProperties({})", node.getPath());
 		}
 		
+		
 		addIdProperty(node);
 		
 		for (PropertyConstraint c : node.getShape().getProperty()) {
@@ -89,6 +90,8 @@ public class ShowlNodeShapeBuilder {
 		
 	}
 
+
+	
 
 	private void addIdProperty(ShowlNodeShape declaringShape) {
 

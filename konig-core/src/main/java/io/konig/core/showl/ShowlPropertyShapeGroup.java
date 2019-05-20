@@ -240,6 +240,13 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
 		return false;
 	}
 
+	/**
+	 * Return the first ShowlPropertyShape within this group, or null if the group is empty.
+	 */
+	public ShowlPropertyShape first() {
+		return isEmpty() ? null : get(0);
+	}
+
 	
 	
 

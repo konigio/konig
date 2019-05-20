@@ -246,42 +246,27 @@ public class ShowlNodeShape implements Traversable {
 		
 	}
 	
-	public ShowlPropertyShape enumSourceKey(OwlReasoner reasoner) {
-		if (accessor != null && reasoner.isEnumerationClass(owlClass.getId())) {
-			
+	public ShowlPropertyShape enumSourceKey() throws ShowlProcessingException {
+		if (accessor != null) {
+
 			ShowlExpression accessorExpression = accessor.getSelectedExpression();
-			if (accessorExpression instanceof ShowlPropertyExpression) {
-				ShowlPropertyShape sourceProperty = ((ShowlPropertyExpression) accessorExpression).getSourceProperty();
-				ShowlNodeShape sourceNode = sourceProperty.getValueShape();
-				if (sourceNode != null) {
-					for (ShowlPropertyShape out : sourceNode.allOutwardProperties()) {
-						URI predicate = out.getPredicate();
-						if (reasoner.isInverseFunctionalProperty(predicate)) {
-							return out.maybeDirect();
-						}
+			if (accessorExpression instanceof ShowlEnumNodeExpression) {
+				ShowlNodeShape enumNode = ((ShowlEnumNodeExpression) accessorExpression).getEnumNode();
+				
+				ShowlChannel channel = ShowlUtil.channelFor(enumNode, getRoot().getChannels());
+				ShowlStatement join = channel.getJoinStatement();
+				if (join instanceof ShowlEqualStatement) {
+					ShowlPropertyShape key = ShowlUtil.propertyOf((ShowlEqualStatement)join, enumNode);
+					if (key != null) {
+						return key;
 					}
+					
 				}
+
+				throw new ShowlProcessingException("Failed to get enum source key: " + this.getPath());
 			}
-			
-//			for (ShowlDirectPropertyShape direct : getProperties()) {
-//				ShowlExpression e = direct.getSelectedExpression();
-//				if (e != null) {
-//					System.out.print(e.displayValue());
-//					System.out.println();
-//				}
-//				
-//				if (e instanceof ShowlEnumPropertyExpression) {
-//					ShowlPropertyShape p = ((ShowlEnumPropertyExpression) e).getSourceProperty();
-//					ShowlStatement joinStatement = p.getDeclaringShape().getJoinStatement();
-//					if (joinStatement instanceof ShowlEqualStatement) {
-//						ShowlEqualStatement equals = (ShowlEqualStatement)joinStatement;
-//						return otherProperty(equals, p.getDeclaringShape());
-//						
-//					}
-//				}
-//			}
-			
 		}
+			
 		return null;
 	}
 

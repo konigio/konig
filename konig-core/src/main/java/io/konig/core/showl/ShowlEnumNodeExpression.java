@@ -23,32 +23,41 @@ package io.konig.core.showl;
 
 import java.util.Set;
 
-public class ShowlEqualStatement implements ShowlStatement {
+public class ShowlEnumNodeExpression implements ShowlExpression {
 	
-	private ShowlExpression left;
-	private ShowlExpression right;
+	private ShowlNodeShape enumNode;
 	
-	public ShowlEqualStatement(ShowlExpression left, ShowlExpression right) {
-		this.left = left;
-		this.right = right;
+	public ShowlEnumNodeExpression(ShowlNodeShape enumNode) {
+		this.enumNode = enumNode;
+	}
+	
+	
+
+	public ShowlNodeShape getEnumNode() {
+		return enumNode;
 	}
 
-	public ShowlExpression getLeft() {
-		return left;
-	}
 
-	public ShowlExpression getRight() {
-		return right;
-	}
-	
-	public String toString() {
-		return left.displayValue() + " = " + right.displayValue();
+
+	@Override
+	public String displayValue() {
+		return enumNode.toString();
 	}
 
 	@Override
-	public void addDeclaredProperties(ShowlNodeShape sourceNode, Set<ShowlPropertyShape> set) {
-		left.addDeclaredProperties(sourceNode, set);
-		right.addDeclaredProperties(sourceNode, set);
+	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set)
+			throws ShowlProcessingException {
+		// Do nothing since properties are declared separately
+		
+	}
+
+	@Override
+	public void addProperties(Set<ShowlPropertyShape> set) {
+		// Do nothing since properties are declared separately
+	}
+	
+	public String toString() {
+		return displayValue();
 	}
 
 }

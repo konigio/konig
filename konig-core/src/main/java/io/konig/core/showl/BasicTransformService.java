@@ -108,7 +108,7 @@ public class BasicTransformService implements ShowlTransformService {
 		
 		return state.propertyPool;
 	}
-	
+
 
 	private void removeWellDefinedNodes(State state) {
 		
@@ -181,14 +181,33 @@ public class BasicTransformService implements ShowlTransformService {
 		
 		ShowlEffectiveNodeShape enumNode = sourceShape.effectiveNode();
 		
+		ShowlDirectPropertyShape enumId = sourceShape.getProperty(Konig.id);
+		
 		
 		OwlReasoner reasoner = schemaService.getOwlReasoner();
+		ShowlNodeShape targetNode = sourceShape.getTargetNode();
+		
+		ShowlPropertyShape targetAccessor = targetNode.getAccessor();
+
+		// Map the enum accessor
+		
+		ShowlEnumNodeExpression accessorExpression = 
+			new ShowlEnumNodeExpression(enumId.getDeclaringShape());
+		
+		targetAccessor.setSelectedExpression(accessorExpression);
+		
+		if (targetAccessor.getFormula() instanceof ShowlIriReferenceExpression) {
+			
+			// Special handling for hard-coded enum value
+			
+			return new ShowlEqualStatement(new ShowlDirectPropertyExpression(enumId), targetAccessor.getFormula());
+		}
 
 		for (ShowlChannel channel : root.getChannels()) {
 			
 			ShowlNodeShape channelSourceNode = channel.getSourceNode();
 		
-			ShowlPropertyShapeGroup channelJoinAccessor = findPeer(channelSourceNode, sourceShape.getTargetNode());
+			ShowlPropertyShapeGroup channelJoinAccessor = findPeer(channelSourceNode, targetNode);
 			if (channelJoinAccessor != null) {
 				
 				ShowlEffectiveNodeShape channelJoinNode = channelJoinAccessor.getValueShape();
@@ -216,11 +235,11 @@ public class BasicTransformService implements ShowlTransformService {
 									}
 								}
 								if (channelProperty != null) {
-									// TODO: Map the enum accessor
+									
+									// Generate the join statement
+									
 									ShowlExpression left = new ShowlEnumPropertyExpression(enumProperty.direct());
-									ShowlExpression right = channelProperty instanceof ShowlDirectPropertyShape ?
-											new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)channelProperty) :
-											new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape)channelProperty);
+									ShowlExpression right = ShowlUtil.propertyExpression(channelProperty);
 									return new ShowlEqualStatement(left, right);
 								}
 							}
@@ -264,6 +283,9 @@ public class BasicTransformService implements ShowlTransformService {
 		ShowlEffectiveNodeShape sourceNode = source.effectiveNode();
 		ShowlEffectiveNodeShape targetNode = source.getTargetNode().effectiveNode();
 		
+		boolean isEnum = schemaService.getOwlReasoner()
+			.isEnumerationClass(sourceNode.getTargetClass().getId());
+		
 		Set<ShowlPropertyShapeGroup> propertyPool = state.propertyPool;
 		Iterator<ShowlPropertyShapeGroup> sequence = propertyPool.iterator();
 		while (sequence.hasNext()) {
@@ -272,7 +294,7 @@ public class BasicTransformService implements ShowlTransformService {
 			
 			ShowlPropertyShapeGroup sourceProperty = sourceNode.findPropertyByPath(path);
 			
-			if (createMapping(sourceProperty, targetProperty)) {
+			if (createMapping(isEnum, sourceProperty, targetProperty)) {
 				sequence.remove();
 			}
 		}
@@ -282,12 +304,19 @@ public class BasicTransformService implements ShowlTransformService {
 
 
 
-	private boolean createMapping(ShowlPropertyShapeGroup sourceProperty, ShowlPropertyShapeGroup targetProperty) {
+	private boolean createMapping(boolean isEnum, ShowlPropertyShapeGroup sourceProperty, ShowlPropertyShapeGroup targetProperty) {
 		if (sourceProperty != null) {
-			ShowlDirectPropertyShape sourceDirect = sourceProperty.synonymDirect();
 			ShowlDirectPropertyShape targetDirect = targetProperty.synonymDirect();
+			ShowlDirectPropertyShape sourceDirect = sourceProperty.synonymDirect();
+
 			
 			if (targetDirect != null) {
+				
+				if (isEnum) {
+					targetDirect.setSelectedExpression(new ShowlEnumPropertyExpression(sourceDirect));
+					return true;
+
+				}
 				
 				// If there is a direct source property, then use a direct mapping.
 				if (sourceDirect != null) {
