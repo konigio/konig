@@ -231,7 +231,7 @@
 	          <configuration>
 					<cleanupDaemonThreads>false</cleanupDaemonThreads>
 					<executable>java</executable>
-					<mainClass>com.example.beam.etl.shape.PersonTargetShapeBeam</mainClass>
+					<mainClass>${mainClass}</mainClass>
 					<arguments>
 						<argument>--project=${gcpProjectId}</argument>
 						<argument>--runner=DataflowRunner</argument>
