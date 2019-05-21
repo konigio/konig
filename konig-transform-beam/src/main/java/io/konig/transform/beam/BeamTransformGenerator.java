@@ -1191,7 +1191,7 @@ public class BeamTransformGenerator {
 				// }
 				
 				IJExpression fieldArg = p.getPredicate().equals(Konig.id) ?
-						field.invoke("stringValue") :	field;
+						field.invoke("toString") :	field;
 						
 				body._if(field.ne(JExpr._null()))._then().add(outputRow.invoke("set").arg(JExpr.lit(fieldName)).arg(fieldArg));
 				
