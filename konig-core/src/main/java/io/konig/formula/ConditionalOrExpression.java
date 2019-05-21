@@ -1,5 +1,10 @@
 package io.konig.formula;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import io.konig.core.Context;
+
 /*
  * #%L
  * Konig Core
@@ -28,6 +33,9 @@ public class ConditionalOrExpression extends Expression {
 	
 	protected ConditionalOrExpression(Expression e) {
 		super(e);
+	}
+	protected ConditionalOrExpression(Context context, List<ConditionalAndExpression> list) {
+		super(context, list);
 	}
 	
 	public static ConditionalOrExpression wrap(ValueLogical valueLogical) {
@@ -68,4 +76,17 @@ public class ConditionalOrExpression extends Expression {
 		return or;
 	}
 
+	@Override
+	public ConditionalOrExpression clone() {
+
+		List<ConditionalAndExpression> list = null;
+		if (orList != null) {
+			list = new ArrayList<>();
+			for (ConditionalAndExpression e : orList) {
+				list.add(e.clone());
+			}
+		}
+		
+		return new ConditionalOrExpression(context, list);
+	}
 }

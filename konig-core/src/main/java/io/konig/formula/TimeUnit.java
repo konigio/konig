@@ -61,5 +61,10 @@ public class TimeUnit extends Expression {
 	public String toString() {
 		return name;
 	}
+	
+	@Override
+	public TimeUnit clone() {
+		return this;
+	}
 
 }

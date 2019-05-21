@@ -31,6 +31,13 @@ public class FullyQualifiedIri extends AbstractFormula implements PathTerm {
 	public FullyQualifiedIri(URI uri) {
 		this.uri = uri;
 	}
+	
+	@Override
+	public FullyQualifiedIri clone() {
+		// Since this class is immutable, and contains a single immutable field,
+		// we don't actually have to create a new instance.
+		return this;
+	}
 
 	@Override
 	public URI getIri() {

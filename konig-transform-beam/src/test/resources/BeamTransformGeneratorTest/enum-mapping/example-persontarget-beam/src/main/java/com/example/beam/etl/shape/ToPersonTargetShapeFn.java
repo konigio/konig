@@ -53,9 +53,9 @@ public class ToPersonTargetShapeFn
         if (name!= null) {
             genderRow.set("name", name);
         }
-        Object genderCode = gender.getGenderCode();
-        if (genderCode!= null) {
-            genderRow.set("genderCode", genderCode);
+        Object gender_code = inputRow.get("gender_code");
+        if (gender_code!= null) {
+            genderRow.set("genderCode", gender_code);
         }
         if (!genderRow.isEmpty()) {
             outputRow.set("gender", genderRow);

@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -35,6 +37,23 @@ public class CaseStatement extends AbstractFormula implements PrimaryExpression 
 		this.caseCondition = caseCondition;
 		this.whenThenList = whenThenList;
 		this.elseClause = elseClause;
+	}
+	
+	@Override
+	public CaseStatement clone() {
+		Expression otherCaseCondition = caseCondition == null ? null : caseCondition.clone();
+		List<WhenThenClause> otherWhenThenList = whenThenList==null ? null : clone(whenThenList);
+		Expression otherElseClause = elseClause == null ? null : elseClause.clone();
+		
+		return new CaseStatement(otherCaseCondition, otherWhenThenList, otherElseClause);
+	}
+
+	private List<WhenThenClause> clone(List<WhenThenClause> list) {
+		List<WhenThenClause> result = new ArrayList<>();
+		for (WhenThenClause c : list) {
+			result.add(c.clone());
+		}
+		return result;
 	}
 
 	public Expression getCaseCondition() {

@@ -1,5 +1,7 @@
 package io.konig.formula;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -34,6 +36,15 @@ public class ObjectList extends AbstractFormula {
 	
 	public List<Expression> getExpressions() {
 		return list;
+	}
+	
+	@Override
+	public ObjectList clone() {
+		List<Expression> otherList = new ArrayList<>();
+		for (Expression e : list) {
+			otherList.add(e.clone());
+		}
+		return new ObjectList(otherList);
 	}
 
 	@Override

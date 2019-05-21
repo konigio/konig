@@ -121,6 +121,8 @@ public class Konig {
 	public static final URI derivedProperty = new URIImpl(DERIVED_PROPERTY);
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI tabularFieldNamespace = new URIImpl(TABULAR_FIELD_NAMESPACE);
+	public static final URI receivesDataFrom = new URIImpl(Terms.receivesDataFrom);
+	
 
 	public static final URI propertyPath = new URIImpl(Terms.propertyPath);
 	public static final URI propertySource = new URIImpl(Terms.propertySource);
@@ -130,7 +132,6 @@ public class Konig {
 	public static final URI generatorOutput = new URIImpl(Terms.generatorOutput);
 	public static final URI DatasourceProperty = new URIImpl(Terms.DatasourceProperty);
 	public static final URI PropertyGenerator = new URIImpl(Terms.PropertyGenerator);
-	public static final URI receivesDataFrom = new URIImpl(Terms.receivesDataFrom);
 	
 	/**
 	 * A sub-property of konig:derivedFrom which asserts that the "derived from" relationship was defined

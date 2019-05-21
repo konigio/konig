@@ -39,6 +39,15 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 		return new PathExpressionBuilder();
 	}
 	
+	@Override
+	public PathExpression clone() {
+		PathExpression other = new PathExpression();
+		for (PathStep step : stepList) {
+			other.add(step.clone());
+		}
+		return other;
+	}
+	
 	public void add(PathStep step) {
 		stepList.add(step);
 	}

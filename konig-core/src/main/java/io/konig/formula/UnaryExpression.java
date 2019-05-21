@@ -44,6 +44,11 @@ public class UnaryExpression extends AbstractFormula {
 	public PrimaryExpression getPrimary() {
 		return primary;
 	}
+	
+	@Override
+	public UnaryExpression clone() {
+		return new UnaryExpression(operator, primary.clone());
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

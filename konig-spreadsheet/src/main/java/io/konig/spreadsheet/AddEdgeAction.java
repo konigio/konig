@@ -25,11 +25,12 @@ import org.openrdf.model.Literal;
  */
 
 
+
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
-import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
 import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.vocabulary.OWL;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -60,7 +61,10 @@ public class AddEdgeAction implements Action {
 		OwlReasoner reasoner = processor.getOwlReasoner();
 		
 		SheetColumn column = new SheetColumn(predicate.stringValue());
+			
+		
 		if (!WorkbookUtil.assignValueType(reasoner, predicate, column)) {
+
 			NamespaceManager nsManager = reasoner.getGraph().getNamespaceManager();
 			String subjectName = RdfUtil.compactName(nsManager, subject);
 			String predicateName = RdfUtil.compactName(reasoner.getGraph().getNamespaceManager(), predicate);

@@ -135,10 +135,19 @@ public class DataSource implements ConditionalEmbeddable {
 	public List<URI> getIsPartOf() {
 		return isPartOf==null ? Collections.emptyList() : isPartOf;
 	}
-
-	public void setIsPartof(List<URI> isPartOf) {
-		this.isPartOf = isPartOf;
+	
+	public void addIsPartOf(URI systemId) {
+		if (isPartOf == null) {
+			isPartOf = new ArrayList<>();
+		}
+		if (!isPartOf.contains(systemId)) {
+			isPartOf.add(systemId);
+		}
 	}
+
+//	public void setIsPartof(List<URI> isPartOf) {
+//		this.isPartOf = isPartOf;
+//	}
 	
 	@Override
 	public int hashCode() {
@@ -190,6 +199,5 @@ public class DataSource implements ConditionalEmbeddable {
 	public List<DatasourceProperty> getDatasourceProperty() {
 		return datasourceProperty==null ? Collections.emptyList() : datasourceProperty;
 	}
-	
-	
+
 }

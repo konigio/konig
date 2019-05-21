@@ -6,16 +6,16 @@
 
 shape:AddressShape sh:property  [ 
 		sh:path schema:addressLocality ; 
-		rdf:predicate schema:addressLocality ; 
-		sh:datatype xsd:string ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate schema:addressLocality
 	 ]  ,  [ 
 		sh:path schema:addressRegion ; 
-		rdf:predicate schema:addressRegion ; 
-		sh:datatype xsd:string ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1 ]  ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate schema:addressRegion ]  ; 
 	a sh:Shape , sh:NodeShape ; 
-	sh:nodeKind sh:IRI ; 
-	sh:targetClass schema:PostalAddress . 
+	sh:targetClass schema:PostalAddress ; 
+	sh:nodeKind sh:IRI . 

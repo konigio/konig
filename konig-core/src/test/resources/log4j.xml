@@ -31,7 +31,12 @@
 <!-- 
   
 -->
+
 <logger name="io.konig.core.showl" additivity="false">
+      <level value="trace"/>
+      <appender-ref ref="console"/>
+  </logger>
+<logger name="io.konig.cadl" additivity="false">
       <level value="trace"/>
       <appender-ref ref="console"/>
   </logger>

@@ -59,6 +59,12 @@ public class Addend extends AbstractFormula {
 		
 	}
 
+	@Override
+	public Addend clone() {
+		
+		return new Addend(operator, right.clone());
+	}
+
 	
 	
 }

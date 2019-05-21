@@ -23,4 +23,5 @@ package io.konig.formula;
 public interface PathStep extends IriValue {
 	
 
+	PathStep clone();
 }

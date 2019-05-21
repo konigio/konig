@@ -35,6 +35,11 @@ public class BinaryRelationalExpression extends AbstractFormula implements Relat
 		this.right = right;
 	}
 	
+	@Override
+	public BinaryRelationalExpression clone() {
+		return new BinaryRelationalExpression(operator, left.clone(), right==null? null : right.clone());
+	}
+	
 	public BinaryOperator getOperator() {
 		return operator;
 	}

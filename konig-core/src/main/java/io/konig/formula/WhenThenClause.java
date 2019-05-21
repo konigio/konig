@@ -36,6 +36,11 @@ public class WhenThenClause extends AbstractFormula {
 	public Expression getWhen() {
 		return when;
 	}
+	
+	@Override
+	public WhenThenClause clone() {
+		return new WhenThenClause(when.clone(), then.clone());
+	}
 
 	public Expression getThen() {
 		return then;

@@ -24,4 +24,5 @@ package io.konig.formula;
 public interface ValueLogical extends Formula {
 
 
+	ValueLogical clone();
 }

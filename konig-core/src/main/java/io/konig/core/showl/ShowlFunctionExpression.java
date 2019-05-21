@@ -1,5 +1,8 @@
 package io.konig.core.showl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /*
  * #%L
  * Konig Core
@@ -25,29 +28,32 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 
+import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.util.IriTemplate;
 import io.konig.formula.Formula;
+import io.konig.formula.FormulaUtil;
 import io.konig.formula.FormulaVisitor;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.PathTerm;
 
 public class ShowlFunctionExpression implements ShowlExpression {
 
-	private ShowlNodeShape declaringShape;
+	private ShowlPropertyShape declaringProperty;
 	private FunctionExpression function;
+	private List<ShowlExpression> arguments = new ArrayList<>();
 
-	public ShowlFunctionExpression(ShowlNodeShape declaringShape, FunctionExpression function) {
-		this.declaringShape = declaringShape;
+	public ShowlFunctionExpression(ShowlPropertyShape declaringProperty, FunctionExpression function) {
+		this.declaringProperty = declaringProperty;
 		this.function = function;
 	}
 	
-	public static ShowlFunctionExpression fromIriTemplate(ShowlNodeShape declaringShape, IriTemplate template) {
-		return new ShowlFunctionExpression(declaringShape, FunctionExpression.fromIriTemplate(template));
+	public static ShowlFunctionExpression fromIriTemplate(ShowlSchemaService schemaService, ShowlNodeShapeService nodeService, ShowlPropertyShape declaringProperty, IriTemplate template) {
+		ShowlExpressionBuilder builder = new ShowlExpressionBuilder(schemaService, nodeService);
+		return builder.functionExpression(declaringProperty,  FunctionExpression.fromIriTemplate(template));
 	}
-
-	@Override
-	public ShowlNodeShape rootNode() {
-		return declaringShape.getRoot();
+	
+	public void addArgument(ShowlExpression arg) {
+		arguments.add(arg);
 	}
 
 	@Override
@@ -60,15 +66,34 @@ public class ShowlFunctionExpression implements ShowlExpression {
 		
 		MyFormulaVisitor visitor = new MyFormulaVisitor(sourceNodeShape, set);
 		function.dispatch(visitor);
+		
+		for (ShowlExpression arg : arguments) {
+			arg.addDeclaredProperties(sourceNodeShape, set);
+		}
 
 	}
 	
 	public ShowlNodeShape getDeclaringShape() {
-		return declaringShape;
+		return declaringProperty.getDeclaringShape();
+	}
+	
+	
+
+	public ShowlPropertyShape getDeclaringProperty() {
+		return declaringProperty;
 	}
 
 	public FunctionExpression getFunction() {
 		return function;
+	}
+
+	public List<ShowlExpression> getArguments() {
+		return arguments;
+	}
+
+
+	public String toString() {
+		return FormulaUtil.simpleString(function);
 	}
 
 	static class MyFormulaVisitor implements FormulaVisitor {
@@ -113,6 +138,14 @@ public class ShowlFunctionExpression implements ShowlExpression {
 		public void exit(Formula formula) {
 			
 			
+		}
+		
+	}
+
+	@Override
+	public void addProperties(Set<ShowlPropertyShape> set) {
+		for (ShowlExpression e : arguments) {
+			e.addProperties(set);
 		}
 		
 	}

@@ -1,4 +1,4 @@
-package io.konig.core.showl;
+package io.konig.formula;
 
 /*
  * #%L
@@ -21,16 +21,22 @@ package io.konig.core.showl;
  */
 
 
-import org.openrdf.model.URI;
+import java.io.IOException;
 
-import io.konig.datasource.DataSource;
-import io.konig.shacl.Shape;
+import org.openrdf.rio.RDFParseException;
 
-public interface ShowlFactory {
-	
-	
-	ShowlNodeShape logicalNodeShape(URI owlClass) throws ShowlProcessingException;
-	
-	ShowlNodeShape createNodeShape(Shape shape) throws ShowlProcessingException;
-	ShowlNodeShape createNodeShape(Shape shape, DataSource ds) throws ShowlProcessingException;
+import io.konig.core.KonigException;
+
+public class ExpressionFactory {
+
+	public Expression createExpression(String text) {
+		FormulaParser parser = new FormulaParser();
+		try {
+			return parser.expression(text);
+		} catch (RDFParseException | IOException e) {
+			throw new KonigException(e);
+		}
+		
+	}
+
 }

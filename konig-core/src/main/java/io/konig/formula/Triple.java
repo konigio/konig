@@ -47,6 +47,11 @@ public class Triple extends AbstractFormula {
 	public PathTerm getObject() {
 		return object;
 	}
+	
+	@Override
+	public Triple clone() {
+		return new Triple(subject.clone(), predicate.clone(), object.clone());
+	}
 
 
 	@Override

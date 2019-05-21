@@ -54,11 +54,6 @@ public abstract class ShowlPropertyExpression implements ShowlExpression {
 	}
 
 	@Override
-	public ShowlNodeShape rootNode() {
-		return sourceProperty.getRootNode();
-	}
-
-	@Override
 	public String displayValue() {
 		return sourceProperty.getPath();
 	}
@@ -71,6 +66,16 @@ public abstract class ShowlPropertyExpression implements ShowlExpression {
 	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set) throws ShowlProcessingException {
 		if (sourceNodeShape.getRoot().equals(sourceProperty.getRootNode())) {
 			set.add(sourceProperty);
+		}
+	}
+
+	@Override
+	public void addProperties(Set<ShowlPropertyShape> set) {
+		ShowlPropertyShape p = getSourceProperty();
+		if (p.getFormula() != null) {
+			p.getFormula().addProperties(set);
+		} else {
+			set.add(p);
 		}
 	}
 	

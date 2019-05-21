@@ -46,6 +46,11 @@ public class CurieValue extends AbstractFormula implements PathTerm {
 		return context;
 	}
 
+	@Override
+	public CurieValue clone() {
+		// TODO: compute a deep clone of the context
+		return new CurieValue(context, namespacePrefix, localName);
+	}
 	public String getNamespacePrefix() {
 		return namespacePrefix;
 	}

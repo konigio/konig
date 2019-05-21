@@ -24,6 +24,7 @@ package io.konig.core.pojo.impl;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
@@ -79,7 +80,7 @@ public class ResourceHandler implements ValueHandler {
 		} else {
 
 			Constructor<?> constructor = stringConstructor();
-			if (constructor != null) {
+			if (constructor != null && Modifier.isPublic(constructor.getModifiers()) ) {
 				try {
 					javaObject = constructor.newInstance(object.stringValue());
 				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException

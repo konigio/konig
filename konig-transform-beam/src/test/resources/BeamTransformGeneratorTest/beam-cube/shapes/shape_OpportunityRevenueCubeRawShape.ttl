@@ -1,8 +1,10 @@
+@prefix asset: <http://example.com/ns/asset/> .
 @prefix crm: <http://example.com/ns/crm/> .
 @prefix cube: <http://example.com/cube/> .
 @prefix gcp: <http://www.konig.io/ns/gcp/> .
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/shape/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -13,44 +15,45 @@ shape:OpportunityRevenueCubeRawShape sh:property  [
 @term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
 @term dateCreated <http://schema.org/dateCreated>
 
-DAY(?opportunity.dateCreated)''' ; 
-		sh:datatype xsd:dateTime ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/day> ; 
+DAY($.dateCreated)''' ; 
+		sh:maxCount 1 ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/day> ; 
+		sh:datatype xsd:dateTime
 	 ]  ,  [ 
 		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/month> ; 
 		konig:formula '''
 @term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
 @term dateCreated <http://schema.org/dateCreated>
 
-MONTH(?opportunity.dateCreated)''' ; 
-		sh:datatype xsd:dateTime ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/month> ; 
+MONTH($.dateCreated)''' ; 
+		sh:maxCount 1 ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/month> ; 
+		sh:datatype xsd:dateTime
 	 ]  ,  [ 
 		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/year> ; 
 		konig:formula '''
 @term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
 @term dateCreated <http://schema.org/dateCreated>
 
-YEAR(?opportunity.dateCreated)''' ; 
-		sh:datatype xsd:dateTime ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/year> ; 
+YEAR($.dateCreated)''' ; 
+		sh:maxCount 1 ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/timeDim/level/year> ; 
+		sh:datatype xsd:dateTime
 	 ]  ,  [ 
 		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/account> ; 
 		konig:formula '''
 @term opportunity <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity>
 @term customerAccount <http://example.com/ns/crm/customerAccount>
 
-?opportunity.customerAccount''' ; 
+$.customerAccount''' ; 
 		sh:shape <http://example.com/shape/OpportunityRevenueCubeRawShape/level/accountShape> ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/account> ; 
+		sh:class crm:Account ; 
+		sh:maxCount 1 ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/account>
 	 ]  ,  [ 
 		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/industry> ; 
 		konig:formula '''
@@ -58,11 +61,12 @@ YEAR(?opportunity.dateCreated)''' ;
 @term customerAccount <http://example.com/ns/crm/customerAccount>
 @term industry <http://example.com/ns/crm/industry>
 
-?opportunity.customerAccount.industry''' ; 
+$.customerAccount.industry''' ; 
 		sh:shape <http://example.com/shape/OpportunityRevenueCubeRawShape/level/industryShape> ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/industry> ; 
+		sh:class crm:Industry ; 
+		sh:maxCount 1 ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/industry>
 	 ]  ,  [ 
 		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/accountType> ; 
 		konig:formula '''
@@ -70,23 +74,25 @@ YEAR(?opportunity.dateCreated)''' ;
 @term customerAccount <http://example.com/ns/crm/customerAccount>
 @term accountType <http://example.com/ns/crm/accountType>
 
-?opportunity.customerAccount.accountType''' ; 
+$.customerAccount.accountType''' ; 
 		sh:shape <http://example.com/shape/OpportunityRevenueCubeRawShape/level/accountTypeShape> ; 
-		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/accountType> ; 
+		sh:class crm:AccountType ; 
+		sh:maxCount 1 ; 
 		sh:minCount 0 ; 
-		sh:maxCount 1 ]  ; 
+		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/dimension/accountDim/level/accountType> ]  ; 
 	a sh:Shape ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/RawOpportunityFact> ; 
-	sh:targetClass <http://example.com/cube/OpportunityRevenueCube/ns/RawOpportunityFact> ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/OpportunityRevenueCubeRaw> ; 
+	konig:nodeShapeCube cube:OpportunityRevenueCube ; 
 	konig:variable  [ 
 		sh:path <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity> ; 
 		sh:class crm:Opportunity ; 
 		rdf:predicate <http://example.com/cube/OpportunityRevenueCube/ns/source/opportunity> ]  ; 
-	konig:nodeShapeCube cube:OpportunityRevenueCube . 
+	sh:targetClass crm:Opportunity . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/RawOpportunityFact> gcp:tableReference  [ 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/OpportunityRevenueCubeRaw> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
 		gcp:datasetId "crm" ; 
-		gcp:tableId "RawOpportunityFact" ]  ; 
-	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+		gcp:tableId "OpportunityRevenueCubeRaw" ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf asset:WarehouseFactLayer . 

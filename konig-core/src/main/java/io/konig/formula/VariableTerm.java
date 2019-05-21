@@ -63,5 +63,10 @@ public class VariableTerm extends AbstractFormula implements PathTerm {
 	public URI getIri() {
 		return varId;
 	}
+	
+	@Override
+	public VariableTerm clone() {
+		return this;
+	}
 
 }

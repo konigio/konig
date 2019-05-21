@@ -118,6 +118,15 @@ public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 	public List<Expression> getArgList() {
 		return argList;
 	}
+	
+	@Override
+	public FunctionExpression clone() {
+		List<Expression> otherArgList = new ArrayList<>();
+		for (Expression e : argList) {
+			otherArgList.add(e.clone());
+		}
+		return new FunctionExpression(model, otherArgList);
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

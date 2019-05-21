@@ -16,6 +16,8 @@ schema:GenderType a owl:Class ;
 
 schema:Person a owl:Class . 
 
+schema:isPartOf a owl:ObjectProperty . 
+
 schema:Female a schema:GenderType ; 
 	schema:name "Female" . 
 

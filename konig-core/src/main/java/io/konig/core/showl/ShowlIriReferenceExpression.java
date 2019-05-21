@@ -48,10 +48,6 @@ public class ShowlIriReferenceExpression implements ShowlExpression {
 		return referencedBy;
 	}
 
-	@Override
-	public ShowlNodeShape rootNode() {
-		return referencedBy.getRootNode();
-	}
 
 	@Override
 	public String displayValue() {
@@ -63,6 +59,22 @@ public class ShowlIriReferenceExpression implements ShowlExpression {
 		
 		// Do nothing
 
+	}
+
+	@Override
+	public void addProperties(Set<ShowlPropertyShape> set) {
+		// Do nothing
+		
+	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("ShowlIriReferenceExpression(iriValue: <");
+		builder.append(iriValue.stringValue());
+		builder.append(">, referencedBy: ");
+		builder.append(referencedBy.getPath());
+		builder.append(')');
+		return builder.toString();
 	}
 
 }
