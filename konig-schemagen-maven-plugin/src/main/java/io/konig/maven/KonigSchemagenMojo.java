@@ -43,6 +43,7 @@ import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -114,18 +115,29 @@ import io.konig.core.io.SkosEmitter;
 import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
 import io.konig.core.project.ProjectManager;
+import io.konig.core.showl.BasicTransformService;
 import io.konig.core.showl.CompositeNodeShapeConsumer;
 import io.konig.core.showl.CompositeSourceNodeSelector;
-import io.konig.core.showl.ExplicitDerivedFromSelector;
+import io.konig.core.showl.DataLayerSourceNodeSelector;
 import io.konig.core.showl.DataSourceTypeSourceNodeSelector;
+import io.konig.core.showl.DestinationTypeTargetNodeShapeFactory;
+import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.HasDataSourceTypeSelector;
 import io.konig.core.showl.LineageShowlNodeShapeConsumer;
 import io.konig.core.showl.MappingReport;
 import io.konig.core.showl.RawCubeSourceNodeSelector;
+import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
+import io.konig.core.showl.ShowlClassProcessor;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
 import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlNodeShapeBuilder;
+import io.konig.core.showl.ShowlService;
+import io.konig.core.showl.ShowlServiceImpl;
+import io.konig.core.showl.ShowlSourceNodeFactory;
 import io.konig.core.showl.ShowlTargetNodeSelector;
+import io.konig.core.showl.ShowlTransformEngine;
+import io.konig.core.showl.ShowlTransformService;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat;
@@ -1557,44 +1569,44 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		// To that end, this method ought to simply configure the batch to include BigQuery transforms.
 		// For now, however, we'll go ahead and run the BigQuery transform job by itself.
 		
-		ShowlNodeListingConsumer listingConsumer = new ShowlNodeListingConsumer();
-		CompositeNodeShapeConsumer nodeConsumer = new CompositeNodeShapeConsumer(listingConsumer, new LineageShowlNodeShapeConsumer());
+
+		ShowlService showlService = new ShowlServiceImpl(owlReasoner);
+		ShowlNodeShapeBuilder builder = new ShowlNodeShapeBuilder(showlService, showlService);
+		DestinationTypeTargetNodeShapeFactory targetNodeFactory = new DestinationTypeTargetNodeShapeFactory(
+				Collections.singleton(Konig.GoogleBigQueryTable), builder);
+		ShowlSourceNodeFactory sourceNodeFactory = new ReceivesDataFromSourceNodeFactory(builder, owlGraph);
 		
-//		ShowlSqlTransform transform = new ShowlSqlTransform();
-//		BigQueryTransformConsumer transformConsumer = new BigQueryTransformConsumer(folder);
-//		ShowlNodeShapeConsumer nodeConsumer = new ShowlSqlNodeConsumer(transformConsumer, mappingStrategy, transform);
+
+		ShowlTransformService transformService = new BasicTransformService(showlService, showlService, sourceNodeFactory);
 		
-		ShowlTargetNodeSelector targetNodeSelector = new HasDataSourceTypeSelector(Konig.GoogleBigQueryTable);
-		ShowlManager showlManager = new ShowlManager(
-				shapeManager, owlReasoner, targetNodeSelector, nodeSelector(shapeManager), nodeConsumer);
-		showlManager.load();
+
+		ShowlClassProcessor classProcessor = new ShowlClassProcessor(showlService, showlService);
+		classProcessor.buildAll(shapeManager);
+
+		ShowlNodeListingConsumer consumer = new ShowlNodeListingConsumer();
+		ShowlTransformEngine engine = new ShowlTransformEngine(targetNodeFactory, shapeManager, transformService, consumer);
+		engine.run();
 		
-		addLineageEmitter();
+		if (!consumer.getList().isEmpty()) {
 		
-		List<ShowlNodeShape> nodeList = listingConsumer.getList();
-		File projectDir = new File(mavenProject.getBasedir(), "target/generated/beam");
-		if (!nodeList.isEmpty()) {
+			File projectDir = new File(mavenProject.getBasedir(), "target/generated/beam");
 			BeamTransformRequest request = BeamTransformRequest.builder()
 				.groupId(mavenProject.getGroupId())
 				.artifactBaseId(mavenProject.getArtifactId())
 				.version(mavenProject.getVersion())
 				.projectDir(projectDir)
-				.nodeList(nodeList)
+				.nodeList(consumer.getList())
 				.build();
+	
+			
 			String basePackage = mavenProject.getGroupId() + ".beam";
-			BeamTransformGenerator generator = new BeamTransformGenerator(basePackage, owlReasoner);
+			BeamTransformGenerator generator =  new BeamTransformGenerator(basePackage, owlReasoner);
 			generator.generateAll(request);
+
+			addLineageEmitter();
 		}
-		
-		// The remaining lines comment out the old implementation.  
-		// Once the new solution is stable, we should delete these lines.
-		
-//		ProjectFolder folder = new ProjectFolder(project, googleCloudPlatform.getBigquery().getScripts());
-//		SqlTransformWriter writer = new SqlTransformWriter(folder);
-//		RoutedSqlTransformVisitor visitor = sqlTransformVisitor();
-//		boolean some = TransformProcessingScope.SOME == googleCloudPlatform.getBigquery().getTransformScope() ?
-//				true : false;
-//		visitor.put(Konig.GoogleBigQueryTable, writer, some);
+
+	
 		
 	}
 	private void addLineageEmitter() {
