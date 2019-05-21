@@ -59,6 +59,10 @@ public class BigQueryInfo {
 	@Parameter(property="konig.gcp.bigquery.transformScope")
 	private TransformProcessingScope transformScope;
 	
+
+	@Parameter(property="konig.gcp.bigquery.enumConfig", required=true)
+	private BigQueryEnumGeneratorConfig enumConfig;
+	
 	
 	public File getDirectory() {
 		return directory;
@@ -128,8 +132,15 @@ public class BigQueryInfo {
 	public TransformProcessingScope getTransformScope() {
 		return transformScope;
 	}
+	
 	public void setTransformScope(TransformProcessingScope transformScope) {
 		this.transformScope = transformScope;
+	}
+	public BigQueryEnumGeneratorConfig getEnumConfig() {
+		return enumConfig;
+	}
+	public void setEnumConfig(BigQueryEnumGeneratorConfig enumConfig) {
+		this.enumConfig = enumConfig;
 	}
 	
 	
