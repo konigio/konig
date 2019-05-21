@@ -41,7 +41,9 @@ public class DataLayerSourceNodeSelector implements ShowlSourceNodeSelector {
 		if (!Konig.Undefined.equals(targetClass)) {
 			Set<URI> sourceSystemSet = sourceSystemSet(factory, targetShape);
 			if (!sourceSystemSet.isEmpty()) {
-				for (Shape sourceShape : factory.getShapeManager().getShapesByTargetClass(targetClass)) {
+				ShowlClass owlClass = targetShape.getOwlClass();
+				for (ShowlNodeShape sourceNode : owlClass.getTargetClassOf()) {
+					Shape sourceShape = sourceNode.getShape();
 					if (sourceShape == targetShape.getShape()) {
 						continue;
 					}
