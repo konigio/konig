@@ -17,11 +17,13 @@ import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
 
 public class ReadPersonSourceShapeFn
     extends DoFn<FileIO.ReadableFile, TableRow>
 {
     private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
+    private static final Logger LOGGER = Logger.getGlobal();
 
     private Long temporalValue(String stringValue) {
         if (stringValue!= null) {
@@ -71,13 +73,21 @@ public class ReadPersonSourceShapeFn
                 CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180 .withFirstRecordAsHeader().withSkipHeaderRecord());
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
-                    Long birth_date = temporalValue(record.get("birth_date"));
-                    if (birth_date!= null) {
-                        row.set("birth_date", birth_date);
+                    try {
+                        Long birth_date = temporalValue(record.get("birth_date"));
+                        if (birth_date!= null) {
+                            row.set("birth_date", birth_date);
+                        }
+                    } catch (final Exception e) {
+                        LOGGER.warning(e.getMessage());
                     }
-                    String person_id = stringValue(record.get("person_id"));
-                    if (person_id!= null) {
-                        row.set("person_id", person_id);
+                    try {
+                        String person_id = stringValue(record.get("person_id"));
+                        if (person_id!= null) {
+                            row.set("person_id", person_id);
+                        }
+                    } catch (final Exception e) {
+                        LOGGER.warning(e.getMessage());
                     }
                     if (!row.isEmpty()) {
                         c.output(row);

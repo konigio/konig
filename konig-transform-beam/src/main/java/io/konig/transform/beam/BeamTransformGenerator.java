@@ -1829,6 +1829,8 @@ ShowlNodeShape valueShape = p.getValueShape();
 			protected Map<Class<?>, JMethod> getterMap = new HashMap<>();
 			protected JDefinedClass thisClass;
 			private JFieldVar patternField = null;
+
+			private AbstractJClass loggerClass;
 			
 			public BaseReadFnGenerator(SourceInfo sourceInfo) {
 				this.sourceInfo = sourceInfo;
@@ -1839,6 +1841,12 @@ ShowlNodeShape valueShape = p.getValueShape();
 				
 				List<ShowlPropertyShape> sourceProperties = sourceProperties();
 				
+				//private static final Logger LOGGER = Logger.getGlobal();
+				
+				AbstractJClass loggerClass = model.ref(Logger.class);
+				JFieldVar logger = thisClass.field(JMod.PRIVATE | JMod.FINAL | JMod.STATIC , loggerClass, 
+						"LOGGER", 
+						loggerClass.staticInvoke("getGlobal"));
 				
 				// @ProcessElement
 				// public void processElement(ProcessContext c) {
@@ -1915,8 +1923,13 @@ ShowlNodeShape valueShape = p.getValueShape();
 						fail("Getter not found for {0}", datatype.getSimpleName());
 					}
 					
+					//try {
+					
+					JTryBlock innerForTry = forEachRecord._try();
+					JBlock innerForBody = innerForTry.body();
+					
 					//     $fieldName = ${getter}(record.get("${fieldName}"));
-					JVar fieldVar = forEachRecord.decl(datatypeClass, fieldName, 
+					JVar fieldVar = innerForBody.decl(datatypeClass, fieldName, 
 							JExpr.invoke(getter)
 							.arg(record.invoke("get")
 							.arg(JExpr.lit(fieldName))));
@@ -1925,12 +1938,21 @@ ShowlNodeShape valueShape = p.getValueShape();
 					
 					//     if ($fieldName != null) {
 					//       row.set("$fieldName", $fieldName);
-					forEachRecord
+					innerForBody
 							._if(fieldVar.ne(JExpr._null()))
 							._then().add(row.invoke("set").arg(JExpr.lit(fieldName)).arg(fieldVar));
 					
 					
 					//     }
+					
+					AbstractJClass exceptionClass = model.directClass(Exception.class.getName());
+					
+					//	} catch (final Exception e) {
+		            //       LOGGER.warning(e.getMessage());
+		            //   }
+					JCatchBlock catchBlock = innerForTry._catch(exceptionClass);
+					JVar e = catchBlock.param("e");
+					catchBlock.body().add(logger.invoke("warning").arg(e.invoke("getMessage")));
 					
 				}
 

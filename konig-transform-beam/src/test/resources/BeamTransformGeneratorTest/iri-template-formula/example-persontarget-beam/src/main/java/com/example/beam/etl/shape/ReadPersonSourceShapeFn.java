@@ -12,10 +12,12 @@ import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
 
 public class ReadPersonSourceShapeFn
     extends DoFn<FileIO.ReadableFile, TableRow>
 {
+    private static final Logger LOGGER = Logger.getGlobal();
 
     private String stringValue(String stringValue) {
         if (stringValue!= null) {
@@ -37,13 +39,21 @@ public class ReadPersonSourceShapeFn
                 CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180 .withFirstRecordAsHeader().withSkipHeaderRecord());
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
-                    String parent_id = stringValue(record.get("parent_id"));
-                    if (parent_id!= null) {
-                        row.set("parent_id", parent_id);
+                    try {
+                        String parent_id = stringValue(record.get("parent_id"));
+                        if (parent_id!= null) {
+                            row.set("parent_id", parent_id);
+                        }
+                    } catch (final Exception e) {
+                        LOGGER.warning(e.getMessage());
                     }
-                    String person_id = stringValue(record.get("person_id"));
-                    if (person_id!= null) {
-                        row.set("person_id", person_id);
+                    try {
+                        String person_id = stringValue(record.get("person_id"));
+                        if (person_id!= null) {
+                            row.set("person_id", person_id);
+                        }
+                    } catch (final Exception e) {
+                        LOGGER.warning(e.getMessage());
                     }
                     if (!row.isEmpty()) {
                         c.output(row);

@@ -12,10 +12,12 @@ import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
 
 public class ReadPersonSourceShapeFn
     extends DoFn<FileIO.ReadableFile, TableRow>
 {
+    private static final Logger LOGGER = Logger.getGlobal();
 
     private String stringValue(String stringValue) {
         if (stringValue!= null) {
@@ -37,25 +39,45 @@ public class ReadPersonSourceShapeFn
                 CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180 .withFirstRecordAsHeader().withSkipHeaderRecord());
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
-                    String address_id = stringValue(record.get("address_id"));
-                    if (address_id!= null) {
-                        row.set("address_id", address_id);
+                    try {
+                        String address_id = stringValue(record.get("address_id"));
+                        if (address_id!= null) {
+                            row.set("address_id", address_id);
+                        }
+                    } catch (final Exception e) {
+                        LOGGER.warning(e.getMessage());
                     }
-                    String city = stringValue(record.get("city"));
-                    if (city!= null) {
-                        row.set("city", city);
+                    try {
+                        String city = stringValue(record.get("city"));
+                        if (city!= null) {
+                            row.set("city", city);
+                        }
+                    } catch (final Exception e) {
+                        LOGGER.warning(e.getMessage());
                     }
-                    String id = stringValue(record.get("id"));
-                    if (id!= null) {
-                        row.set("id", id);
+                    try {
+                        String id = stringValue(record.get("id"));
+                        if (id!= null) {
+                            row.set("id", id);
+                        }
+                    } catch (final Exception e) {
+                        LOGGER.warning(e.getMessage());
                     }
-                    String person_id = stringValue(record.get("person_id"));
-                    if (person_id!= null) {
-                        row.set("person_id", person_id);
+                    try {
+                        String person_id = stringValue(record.get("person_id"));
+                        if (person_id!= null) {
+                            row.set("person_id", person_id);
+                        }
+                    } catch (final Exception e) {
+                        LOGGER.warning(e.getMessage());
                     }
-                    String state = stringValue(record.get("state"));
-                    if (state!= null) {
-                        row.set("state", state);
+                    try {
+                        String state = stringValue(record.get("state"));
+                        if (state!= null) {
+                            row.set("state", state);
+                        }
+                    } catch (final Exception e) {
+                        LOGGER.warning(e.getMessage());
                     }
                     if (!row.isEmpty()) {
                         c.output(row);
