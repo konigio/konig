@@ -1,6 +1,7 @@
 package io.konig.formula;
 
 import java.io.StringWriter;
+import java.util.ArrayList;
 
 /*
  * #%L
@@ -40,7 +41,15 @@ public class HasPathStep extends AbstractFormula implements PathStep {
 		return constraints;
 	}
 	
-	
+	@Override
+	public HasPathStep clone() {
+		HasPathStep other = new HasPathStep(new ArrayList<>());
+		for (PredicateObjectList pol : constraints) {
+			other.getConstraints().add(pol.clone());
+		}
+		return other;
+		
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

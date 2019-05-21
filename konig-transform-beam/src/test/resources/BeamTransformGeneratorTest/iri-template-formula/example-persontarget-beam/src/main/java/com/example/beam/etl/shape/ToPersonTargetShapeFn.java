@@ -16,10 +16,8 @@ public class ToPersonTargetShapeFn
             TableRow outputRow = new TableRow();
             Object id = concat("http://example.com/person/", required(inputRow, "person_id"));
             outputRow.set("id", id);
-            StringBuilder parentBuilder = new StringBuilder();
-            parentBuilder.append("http://example.com/person/");
-            parentBuilder.append(inputRow.get("parent_id"));
-            outputRow.set("parent", parentBuilder.toString());
+            Object parent = concat("http://example.com/person/", required(inputRow, "parent_id"));
+            outputRow.set("parent", parent);
             if (!outputRow.isEmpty()) {
                 c.output(outputRow);
             }

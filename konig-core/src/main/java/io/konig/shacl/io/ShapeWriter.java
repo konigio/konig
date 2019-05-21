@@ -55,6 +55,7 @@ import io.konig.core.pojo.SimplePojoEmitter;
 import io.konig.core.util.IOUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
+import io.konig.core.vocab.Schema;
 import io.konig.shacl.Shape;
 
 public class ShapeWriter {
@@ -76,7 +77,7 @@ public class ShapeWriter {
 		EmitContext context = new EmitContext(graph);
 		context.addIriReference(SH.shape, SH.path, SH.targetClass, SH.valueClass, Konig.aggregationOf, Konig.rollUpBy,
 				Konig.defaultShapeFor, Konig.inputShapeOf, Konig.tabularOriginShape, Konig.preferredTabularShape,
-				Konig.explicitDerivedFrom, SKOS.BROADER, Konig.nodeShapeCube,
+				Konig.explicitDerivedFrom, SKOS.BROADER, Konig.nodeShapeCube, Schema.isPartOf,
 				SH.xone, SH.and, SH.or, SH.not);
 		context.setLocalNameService(nameService);
 		context.addIgnoredProperty(Konig.equivalentPath);

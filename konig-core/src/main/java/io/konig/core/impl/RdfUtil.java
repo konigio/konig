@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -793,6 +794,14 @@ public class RdfUtil {
 		}
 		
 		return false;
+	}
+	
+	public static String toTurtle(Literal literal) {
+		StringWriter writer = new StringWriter();
+		PrettyPrintWriter out = new PrettyPrintWriter(writer);
+		writeLiteral(out, literal);
+		out.flush();
+		return writer.toString();
 	}
 	
 	public static void writeLiteral(PrettyPrintWriter writer, Literal literal) {

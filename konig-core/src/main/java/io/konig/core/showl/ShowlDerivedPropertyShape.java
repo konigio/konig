@@ -25,8 +25,6 @@ import io.konig.shacl.PropertyConstraint;
 
 public abstract class ShowlDerivedPropertyShape extends ShowlPropertyShape {
 	
-	private ShowlExpression formula;
-	
 	public ShowlDerivedPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, PropertyConstraint constraint) {
 		super(declaringShape, property, constraint);
 	}
@@ -43,14 +41,6 @@ public abstract class ShowlDerivedPropertyShape extends ShowlPropertyShape {
 	@Override
 	public boolean isDirect() {
 		return false;
-	}
-
-	public ShowlExpression getFormula() {
-		return formula;
-	}
-
-	public void setFormula(ShowlExpression formula) {
-		this.formula = formula;
 	}
 
 	

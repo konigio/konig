@@ -50,8 +50,11 @@ import io.konig.shacl.Shape;
 
 /**
  * A particular instance of a SHACL NodeShape.
- * The instance may be bound to a particular location with a graph via the accessor, and it may
- * be bound to a particular DataSource.
+ * The instance may be bound to a particular location a SHACL description via a PropertyShape accessor,
+ * and it may be bound to a particular DataSource.  
+ * <p>
+ * T
+ * </p>
  * 
  * @author Greg McFall
  *
@@ -68,33 +71,61 @@ public class ShowlNodeShape implements Traversable {
 	
 	private List<ShowlJoinCondition> selectedJoins;
 	private ShowlDataSource shapeDataSource;
-	private boolean unmapped;
 	
 	private List<ShowlChannel> channelList;
 	private ShowlPropertyShape targetProperty;
 	private ShowlStatement joinStatement;
+	
+	private ShowlNodeShape targetNode;
+	private ShowlEffectiveNodeShape effectiveNode;
+	
+	private ShowlManager manager;
+	
 	
 	@Deprecated
 	private ShowlNodeShape logicalNodeShape;
 	
 	
 	public ShowlNodeShape(ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
+		this(null, accessor, shape, owlClass);
+	}
+
+	public ShowlNodeShape(ShowlManager manager, ShowlPropertyShape accessor, Shape shape, ShowlClass owlClass) {
 		derivedProperties = new HashMap<>();
+		this.manager = manager;
 		this.accessor = accessor;
 		this.shape = shape;
-		setOwlClass(owlClass);
+		this.owlClass = owlClass;
 		if (accessor != null) {
 			accessor.setValueShape(this);
 		}
 		
 		// This is a hack as a temporary fix for #1372.  This should be refactored later!!!
-		for (DataSource ds : shape.getShapeDataSource()) {
-			if (ds.isA(Konig.GoogleCloudStorageFolder) || ds.isA(Konig.GoogleCloudStorageBucket)) {
-				setShapeDataSource(new ShowlDataSource(this, ds));
-			}
-		}
+//		for (DataSource ds : shape.getShapeDataSource()) {
+//			if (ds.isA(Konig.GoogleCloudStorageFolder) || ds.isA(Konig.GoogleCloudStorageBucket)) {
+//				setShapeDataSource(new ShowlDataSource(this, ds));
+//			}
+//		}
 	}
 	
+	
+	public ShowlManager getShowlManager() {
+		return manager;
+	}
+
+
+	public ShowlEffectiveNodeShape getEffectiveNode() {
+		return effectiveNode;
+	}
+
+
+	public ShowlEffectiveNodeShape effectiveNode() {
+		if (effectiveNode == null) {
+			effectiveNode = accessor==null ? ShowlEffectiveNodeShape.forNode(this) : ShowlEffectiveNodeShape.fromRoot(this);
+		}
+		return effectiveNode;
+	}
+
 	public boolean isStaticEnumShape() {
 		return shapeDataSource!=null && shapeDataSource.getDataSource() instanceof StaticDataSource;
 	}
@@ -215,26 +246,27 @@ public class ShowlNodeShape implements Traversable {
 		
 	}
 	
-	public ShowlPropertyShape enumSourceKey(OwlReasoner reasoner) {
-		if (accessor != null && reasoner.isEnumerationClass(owlClass.getId())) {
-			for (ShowlDirectPropertyShape direct : getProperties()) {
-				ShowlExpression e = direct.getSelectedExpression();
-				if (e != null) {
-					System.out.print(e.displayValue());
-					System.out.println();
-				}
+	public ShowlPropertyShape enumSourceKey() throws ShowlProcessingException {
+		if (accessor != null) {
+
+			ShowlExpression accessorExpression = accessor.getSelectedExpression();
+			if (accessorExpression instanceof ShowlEnumNodeExpression) {
+				ShowlNodeShape enumNode = ((ShowlEnumNodeExpression) accessorExpression).getEnumNode();
 				
-				if (e instanceof ShowlEnumPropertyExpression) {
-					ShowlPropertyShape p = ((ShowlEnumPropertyExpression) e).getSourceProperty();
-					ShowlStatement joinStatement = p.getDeclaringShape().getJoinStatement();
-					if (joinStatement instanceof ShowlEqualStatement) {
-						ShowlEqualStatement equals = (ShowlEqualStatement)joinStatement;
-						return otherProperty(equals, p.getDeclaringShape());
-						
+				ShowlChannel channel = ShowlUtil.channelFor(enumNode, getRoot().getChannels());
+				ShowlStatement join = channel.getJoinStatement();
+				if (join instanceof ShowlEqualStatement) {
+					ShowlPropertyShape key = ShowlUtil.propertyOf((ShowlEqualStatement)join, enumNode);
+					if (key != null) {
+						return key;
 					}
+					
 				}
+
+				throw new ShowlProcessingException("Failed to get enum source key: " + this.getPath());
 			}
 		}
+			
 		return null;
 	}
 
@@ -360,16 +392,8 @@ public class ShowlNodeShape implements Traversable {
 	}
 
 	public void setOwlClass(ShowlClass owlClass) {
-	
-		if (this.owlClass != owlClass) {
-			if (this.owlClass != null) {
-				this.owlClass.getTargetClassOf().remove(this);
-			}
-			this.owlClass = owlClass;
-			if (owlClass != null) {
-				owlClass.addTargetClassOf(this);
-			}
-		}
+			
+		this.owlClass = owlClass;
 		
 	}
 
@@ -404,10 +428,7 @@ public class ShowlNodeShape implements Traversable {
 		}
 		ShowlDerivedPropertyList indirect = derivedProperties.get(predicate);
 		if (indirect != null) {
-			for (ShowlDerivedPropertyShape derived : indirect) {
-				// TODO: Do we need special handling for filtered properties?
-				return derived;
-			}
+			return indirect.unfiltered();
 		}
 		
 		return null;
@@ -481,19 +502,7 @@ public class ShowlNodeShape implements Traversable {
 		return selectedJoins == null ? Collections.emptyList() : selectedJoins;
 	}
 
-	/**
-	 * Returns true if there are no shapes that are candidates as sources from which this node may 
-	 * be derived.
-	 */
-	public boolean isUnmapped() {
-		return unmapped;
-	}
-
-
-	public void setUnmapped(boolean unmapped) {
-		this.unmapped = unmapped;
-	}
-
+	
 
 	public NodeKind getNodeKind() {
 		return shape == null ? null : shape.getNodeKind();
@@ -637,7 +646,30 @@ public class ShowlNodeShape implements Traversable {
 		this.joinStatement = joinStatement;
 	}
 
-	
+	/**
+	 * Get the target node to which this source node is mapped.
+	 * @return The target node to which this source node is mapped, or null if this node is a target node.
+	 */
+	public ShowlNodeShape getTargetNode() {
+		return targetNode;
+	}
 
-	
+	/**
+	 * Set the target node to which this source node is mapped.
+	 * @param targetNode
+	 */
+	public void setTargetNode(ShowlNodeShape targetNode) {
+		this.targetNode = targetNode;
+	}
+
+	public boolean isTargetNode() {
+		return targetNode==null;
+	}
+
+	public List<ShowlPropertyShape> path() {
+		if (accessor == null) {
+			return new ShowlPropertyPath();
+		}
+		return accessor.propertyPath();
+	}
 }

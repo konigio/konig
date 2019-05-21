@@ -47,6 +47,11 @@ public class LocalNameTerm extends AbstractFormula implements PathTerm {
 	public Context getContext() {
 		return context;
 	}
+	
+	@Override
+	public LocalNameTerm clone() {
+		return new LocalNameTerm(context, localName);
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

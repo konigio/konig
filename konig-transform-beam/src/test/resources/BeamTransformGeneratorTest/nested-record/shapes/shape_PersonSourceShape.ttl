@@ -1,5 +1,4 @@
 @prefix alias: <http://example.com/ns/alias/> .
-@prefix gcp: <http://www.konig.io/ns/gcp/> .
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix schema: <http://schema.org/> .
@@ -9,55 +8,49 @@
 
 shape:PersonSourceShape sh:property  [ 
 		sh:path alias:person_id ; 
-		rdf:predicate alias:person_id ; 
-		sh:datatype xsd:string ; 
 		sh:minCount 1 ; 
-		sh:maxCount 1
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:person_id
 	 ]  ,  [ 
 		sh:path alias:address_id ; 
+		sh:class schema:PostalAddress ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
 		konig:formula '''
 @term address <http://schema.org/address>
 
 $.address''' ; 
-		rdf:predicate alias:address_id ; 
 		sh:nodeKind sh:IRI ; 
-		sh:class schema:PostalAddress ; 
-		sh:minCount 1 ; 
-		sh:maxCount 1
+		rdf:predicate alias:address_id
 	 ]  ,  [ 
 		sh:path alias:city ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
 		konig:formula '''
 @term address <http://schema.org/address>
 @term addressLocality <http://schema.org/addressLocality>
 
 $.address.addressLocality''' ; 
-		rdf:predicate alias:city ; 
 		sh:datatype xsd:string ; 
-		sh:minCount 0 ; 
-		sh:maxCount 1
+		rdf:predicate alias:city
 	 ]  ,  [ 
 		sh:path alias:state ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
 		konig:formula '''
 @term address <http://schema.org/address>
 @term addressRegion <http://schema.org/addressRegion>
 
 $.address.addressRegion''' ; 
-		rdf:predicate alias:state ; 
 		sh:datatype xsd:string ; 
-		sh:minCount 0 ; 
-		sh:maxCount 1 ]  ; 
+		rdf:predicate alias:state ]  ; 
 	a sh:Shape ; 
-	konig:shapeDataSource <gs://personsourceshape-${gcpBucketSuffix}> ; 
+	sh:targetClass schema:Person ; 
+	konig:shapeDataSource <gs://example-inbound-${environmentName}> ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
    "person_id" : "alias:person_id"
 }
 
-<http://example.com/person/{person_id}>''' ; 
-	sh:targetClass schema:Person . 
-
-<gs://personsourceshape-${gcpBucketSuffix}> gcp:name "personsourceshape-${gcpBucketSuffix}" ; 
-	gcp:location "us" ; 
-	gcp:storageClass "multi_regional" ; 
-	gcp:projectId "${gcpProjectId}" ; 
-	a konig:GoogleCloudStorageBucket , konig:DataSource . 
+<http://example.com/person/{person_id}>''' . 

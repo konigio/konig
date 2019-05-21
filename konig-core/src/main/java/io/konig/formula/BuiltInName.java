@@ -31,6 +31,11 @@ public class BuiltInName extends AbstractFormula implements IriValue {
 	public BuiltInName(URI uri) {
 		this.uri = uri;
 	}
+	
+	@Override
+	public BuiltInName clone() {
+		return new BuiltInName(uri);
+	}
 
 	@Override
 	public URI getIri() {

@@ -33,6 +33,11 @@ public class Factor extends AbstractFormula {
 		this.right = right;
 	}
 	
+	@Override
+	public Factor clone() {
+		return new Factor(operator, right.clone());
+	}
+	
 	public MultiplicativeOperator getOperator() {
 		return operator;
 	}

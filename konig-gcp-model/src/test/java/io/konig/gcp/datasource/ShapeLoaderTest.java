@@ -34,6 +34,7 @@ import org.openrdf.model.vocabulary.RDF;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
+import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -48,6 +49,45 @@ public class ShapeLoaderTest {
 	@Before
 	public void setUp() {
 		GcpShapeConfig.init();
+	}
+	
+	@Test 
+	public void testIsPartOf() {
+		MemoryGraph graph = new MemoryGraph();
+		
+		URI shapeId = uri("http://example.com/PersonShape");
+		
+		URI tableId = uri("http://example.com/table/Person");
+		
+		URI stageId = uri("http://example.com/sys/WarehouseStaging");
+		
+		graph.builder()
+			.beginSubject(shapeId)
+				.addProperty(RDF.TYPE, SH.Shape)
+				.addProperty(Konig.shapeDataSource, tableId)
+			.endSubject()
+			.beginSubject(tableId)
+				.addProperty(RDF.TYPE, Konig.GoogleCloudSqlTable)
+				.addProperty(Schema.isPartOf, stageId)
+			.endSubject()
+			;
+		
+		
+		
+		
+		shapeLoader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		List<DataSource> list = shape.getShapeDataSource();
+		assertEquals(1, list.size());
+		
+		DataSource ds = list.get(0);
+		assertTrue(ds instanceof GoogleCloudSqlTable);
+		
+		GoogleCloudSqlTable table = (GoogleCloudSqlTable) ds;
+		assertEquals(1, table.getIsPartOf().size());
+		assertEquals(stageId, table.getIsPartOf().get(0));
 	}
 	
 	@Test

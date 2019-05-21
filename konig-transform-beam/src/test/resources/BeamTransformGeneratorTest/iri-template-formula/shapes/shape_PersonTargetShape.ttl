@@ -9,21 +9,21 @@
 
 shape:PersonTargetShape sh:property  [ 
 		sh:path schema:parent ; 
-		rdf:predicate schema:parent ; 
-		sh:nodeKind sh:IRI ; 
-		sh:minCount 0 ; 
 		sh:maxCount 1 ; 
-		sh:class schema:Person ]  ; 
+		sh:minCount 0 ; 
+		sh:class schema:Person ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate schema:parent ]  ; 
 	a sh:Shape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
-	sh:nodeKind sh:IRI ; 
 	konig:explicitDerivedFrom shape:PersonSourceShape ; 
-	sh:targetClass schema:Person . 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI . 
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
-		gcp:datasetId "schema" ; 
-		gcp:tableId "PersonTarget" ]  ; 
+		gcp:tableId "PersonTarget" ; 
+		gcp:datasetId "schema" ]  ; 
 	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
 	a konig:GoogleBigQueryTable , konig:DataSource ; 
-	schema:isPartOf sys:EDW . 
+	schema:isPartOf sys:WarehouseOperationalData . 

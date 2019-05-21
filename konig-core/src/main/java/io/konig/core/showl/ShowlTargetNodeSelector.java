@@ -25,8 +25,13 @@ import java.util.List;
 
 import io.konig.shacl.Shape;
 
+/**
+ * @deprecated Use {@link ShowlTargetNodeShapeFactory}
+ *
+ */
 public interface ShowlTargetNodeSelector {
 	
-	List<ShowlNodeShape> produceTargetNodes(ShowlFactory factory, Shape shape) throws ShowlProcessingException;
+	
+	List<ShowlNodeShape> produceTargetNodes(ShowlService factory, Shape shape) throws ShowlProcessingException;
 
 }

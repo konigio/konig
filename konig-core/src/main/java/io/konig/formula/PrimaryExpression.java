@@ -23,4 +23,5 @@ package io.konig.formula;
 
 public interface PrimaryExpression extends Formula {
 
+	PrimaryExpression clone();
 }

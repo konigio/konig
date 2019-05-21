@@ -33,15 +33,10 @@ public class ShowlDirectPropertyShape extends ShowlPropertyShape {
 	
 	private static Logger logger = LoggerFactory.getLogger(ShowlDirectPropertyShape.class);
 
-	private ShowlExpression selectedExpression;
 	
 	public ShowlDirectPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property,
 			PropertyConstraint propertyConstraint) {
 		super(declaringShape, property, propertyConstraint);
-		
-		if (property != null) {
-			property.addPropertyShape(this);
-		}
 	}
 	
 	public boolean isObjectProperty() {
@@ -50,6 +45,10 @@ public class ShowlDirectPropertyShape extends ShowlPropertyShape {
 		}
 		PropertyConstraint p = getPropertyConstraint();
 		return p.getNodeKind().equals(NodeKind.IRI) || p.getShape()!=null;
+	}
+	
+	void setProperty(ShowlProperty p) {
+		property = p;
 	}
 	
 	public boolean isIriReference() {
@@ -101,23 +100,5 @@ public class ShowlDirectPropertyShape extends ShowlPropertyShape {
 		}
 		return path;
 	}
-
-	/**
-	 * Get the expression that was selected to construct the value for this property.
-	 */
-	public ShowlExpression getSelectedExpression() {
-		return selectedExpression;
-	}
-
-	/**
-	 * Set the expression that was selected to construct the value for this property.
-	 */
-	public void setSelectedExpression(ShowlExpression selectedExpression) {
-		this.selectedExpression = selectedExpression;
-		if (logger.isTraceEnabled()) {
-			logger.trace("setSelectedExpression {} = {}", getPath(), selectedExpression.displayValue());
-		}
-	}
-
 
 }

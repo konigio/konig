@@ -33,7 +33,7 @@ public class ShowlRootTargetClassSelector implements ShowlSourceNodeSelector {
 	}
 
 	@Override
-	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape) {
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlService factory, ShowlNodeShape targetShape) {
 		Set<ShowlNodeShape> result=new HashSet<>();
 		ShowlClass owlClass = targetShape.getOwlClass();
 		if (!ShowlUtil.isUndefinedClass(owlClass)) {

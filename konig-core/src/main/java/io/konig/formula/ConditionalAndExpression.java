@@ -36,6 +36,15 @@ public class ConditionalAndExpression extends AbstractFormula {
 	public List<ValueLogical> getAndList() {
 		return andList;
 	}
+	
+	@Override 
+	public ConditionalAndExpression clone() {
+		ConditionalAndExpression other = new ConditionalAndExpression();
+		for (ValueLogical e : andList) {
+			other.andList.add(e.clone());
+		}
+		return other;
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

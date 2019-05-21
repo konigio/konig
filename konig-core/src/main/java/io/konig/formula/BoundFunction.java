@@ -29,6 +29,11 @@ public class BoundFunction extends AbstractFormula implements BuiltInCall {
 	public BoundFunction(PathExpression argument) {
 		this.argument = argument;
 	}
+	
+	@Override
+	public BoundFunction clone() {
+		return new BoundFunction(argument.clone());
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

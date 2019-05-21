@@ -34,6 +34,11 @@ public class IfFunction extends AbstractFormula implements BuiltInCall {
 		this.whenTrue = whenTrue;
 		this.whenFalse = whenFalse;
 	}
+	
+	@Override
+	public IfFunction clone() {
+		return new IfFunction(condition.clone(), whenTrue.clone(), whenFalse.clone());
+	}
 
 	public Expression getCondition() {
 		return condition;

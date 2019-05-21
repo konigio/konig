@@ -23,8 +23,11 @@ package io.konig.core.showl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.konig.shacl.Shape;
@@ -43,19 +46,27 @@ public class CompositeSourceNodeSelector implements ShowlSourceNodeSelector {
 	}
 
 	@Override
-	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape) {
-		Set<ShowlNodeShape> set = null;
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlService factory, ShowlNodeShape targetShape) {
+		
+		// We need to ensure that there is only one candidate source node for each
+		// sh:NodeShape.  Therefore, we'll use a map to track the candidates that are supplied.
+		//
+		// This is not a good design because it means that the selectors in the list may be creating
+		// duplicates that get thrown away.  It would be better if the design avoided creating
+		// the duplicates in the first place.
+		
+		Map<Shape,ShowlNodeShape> map = new HashMap<>();
+		
 		for (ShowlSourceNodeSelector s : list) {
 			Set<ShowlNodeShape> t = s.selectCandidateSources(factory, targetShape);
 			if (!t.isEmpty()) {
-				if (set == null) {
-					set = new HashSet<>();
+				for (ShowlNodeShape sourceNode : t) {
+					map.put(sourceNode.getShape(), sourceNode);
 				}
-				set.addAll(t);
 			}
 		}
 		
-		return set==null ? Collections.emptySet() : set;
+		return new LinkedHashSet<>( map.values() );
 	}
 
 }

@@ -44,5 +44,6 @@ public interface ValueFormat {
 	public interface Element {
 		ElementType getType();
 		String getText();
+		Element clone();
 	}
 }

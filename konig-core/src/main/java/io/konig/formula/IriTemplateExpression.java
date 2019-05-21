@@ -40,6 +40,11 @@ public class IriTemplateExpression implements PrimaryExpression {
 		out.print('>');
 
 	}
+	
+	@Override
+	public IriTemplateExpression clone() {
+		return new IriTemplateExpression(template.clone());
+	}
 
 	@Override
 	public void dispatch(FormulaVisitor visitor) {

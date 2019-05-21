@@ -49,9 +49,6 @@ public class ShowlEqualStatement implements ShowlStatement {
 	public void addDeclaredProperties(ShowlNodeShape sourceNode, Set<ShowlPropertyShape> set) {
 		left.addDeclaredProperties(sourceNode, set);
 		right.addDeclaredProperties(sourceNode, set);
-		
 	}
-
-
 
 }

@@ -2,6 +2,7 @@ package io.konig.core.util;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.openrdf.model.Literal;
@@ -54,6 +55,18 @@ public class IriTemplate extends SimpleValueFormat {
 	public IriTemplate(String text) {
 		super();
 		parse(text);
+	}
+	
+	@Override
+	public IriTemplate clone() {
+		IriTemplate other = new IriTemplate();
+		// TODO: perform a deep clone of the context instead of sharing
+		other.context = context;
+		other.elements = new ArrayList<>();
+		for (ValueFormat.Element e : toList()) {
+			other.elements.add(  (SimpleValueFormat.Element)e.clone()  );
+		}
+		return other;
 	}
 
 	private void parse(String input) {

@@ -41,6 +41,11 @@ public class DirectionStep extends AbstractFormula implements PathStep {
 	public PathTerm getTerm() {
 		return term;
 	}
+	
+	@Override
+	public DirectionStep clone() {
+		return new DirectionStep(direction, term);
+	}
 
 	@Override
 	public void print(PrettyPrintWriter out) {

@@ -20,10 +20,9 @@ package io.konig.core.showl;
  * #L%
  */
 
-
-import java.util.List;
+import java.util.Set;
 
 public interface ShowlMappingStrategy {
 	
-	public List<ShowlDirectPropertyShape> selectMappings(ShowlManager manager, ShowlNodeShape target);
+	public Set<ShowlPropertyShape> selectMappings(ShowlManager manager, ShowlNodeShape target);
 }

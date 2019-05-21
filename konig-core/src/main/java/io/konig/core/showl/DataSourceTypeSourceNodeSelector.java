@@ -27,7 +27,6 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 
-import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -46,7 +45,7 @@ public class DataSourceTypeSourceNodeSelector implements ShowlSourceNodeSelector
 
 
 	@Override
-	public Set<ShowlNodeShape> selectCandidateSources(ShowlFactory factory, ShowlNodeShape targetShape) {
+	public Set<ShowlNodeShape> selectCandidateSources(ShowlService factory, ShowlNodeShape targetShape) {
 		
 		Set<ShowlNodeShape> result = new HashSet<>();
 		
@@ -74,7 +73,7 @@ public class DataSourceTypeSourceNodeSelector implements ShowlSourceNodeSelector
 	}
 
 
-	private void addSourceShape(Set<ShowlNodeShape> result, ShowlFactory factory, Shape shape, DataSource ds) {
+	private void addSourceShape(Set<ShowlNodeShape> result, ShowlService factory, Shape shape, DataSource ds) {
 
 		ShowlNodeShape sourceShape = factory.createNodeShape(shape);
 		sourceShape.setShapeDataSource(new ShowlDataSource(sourceShape, ds));

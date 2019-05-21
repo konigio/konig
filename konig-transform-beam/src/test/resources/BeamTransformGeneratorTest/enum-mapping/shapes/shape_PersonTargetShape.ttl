@@ -4,24 +4,26 @@
 @prefix schema: <http://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:PersonTargetShape sh:property  [ 
 		sh:path schema:gender ; 
 		rdf:predicate schema:gender ; 
-		sh:shape shape:GenderShape ; 
 		sh:class schema:GenderType ; 
-		sh:minCount 0 ; 
-		sh:maxCount 1 ]  ; 
+		sh:shape shape:GenderShape ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ]  ; 
 	a sh:Shape ; 
-	konig:explicitDerivedFrom shape:PersonSourceShape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
+	konig:explicitDerivedFrom shape:PersonSourceShape ; 
 	sh:nodeKind sh:IRI ; 
 	sh:targetClass schema:Person . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
-	gcp:tableReference  [ 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
-		gcp:tableId "PersonTarget" ; 
-		gcp:datasetId "schema" ]  ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "PersonTarget" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:WarehouseOperationalData . 

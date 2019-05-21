@@ -1,5 +1,10 @@
 package io.konig.core.showl;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
@@ -90,9 +95,164 @@ public class ShowlUtil {
 		) {
 			return KqlType.STRING;
 		}
+		return null;
+	}
+	
+	/**
+	 * Determine whether a given property has a well-defined value.
+	 * A value is well-defined if one of the following conditions is satisfied:
+	 * <ol>
+	 *   <li> The property is direct and has no nested shape.
+	 *   <li> The property has a direct synonym without a nested shape
+	 *   <li> The property is derived from a formula where all the parameters are well-defined.
+	 *   <li> The property has a selected formula where all the parameters are well-defined.
+	 * </ol>
+	 * @return
+	 */
+	public static boolean isWellDefined(ShowlPropertyShape p) {
+		if (p.isDirect() && p.getValueShape()==null) {
+			return true;
+		}
 		
+		ShowlPropertyShape synonym = p.getSynonym();
+		if (synonym!=null && synonym.isDirect() && synonym.getValueShape()==null) {
+			return true;
+		}
 		
+		if (isWellDefined(p.getFormula()) || isWellDefined(p.getSelectedExpression())) {
+			return true;
+		}
 		
+		return false;
+	}
+	
+	/**
+	 * Determine whether a given expression is well defined.
+	 * An expression is well defined if all of its parameters are well defined.
+	 */
+	public static boolean isWellDefined(ShowlExpression e) {
+		if (e == null) {
+			return false;
+		}
+		for (ShowlPropertyShape p : ShowlExpression.parameters(e)) {
+			if (!isWellDefined(p)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	/**
+	 * Compute the path of a relative to b.
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static List<URI> relativePath(ShowlNodeShape a, ShowlNodeShape b) {
+		List<URI> result = new ArrayList<>();
+		if (a == b) {
+			return result;
+		}
+		ShowlPropertyShape p = a.getAccessor();
+		while (p!=null) {
+			result.add(p.getPredicate());
+			a = p.getDeclaringShape();
+			if (a == b) {
+				Collections.reverse(result);
+				return result;
+			}
+			p = a.getAccessor();
+			
+		}
+		
+		return null;
+	}
+
+	/**
+	 * Determine whether a given node is well-defined.
+	 * A node is well-defined if each of it's direct properties is well defined, recursively.
+	 */
+	public static boolean isWellDefined(ShowlNodeShape node) {
+		
+		for (ShowlDirectPropertyShape direct : node.getProperties()) {
+			if (direct.getValueShape() != null) {
+				if (!isWellDefined(direct.getValueShape())) {
+					return false;
+				}
+			} else if (!isWellDefined(direct)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	public static ShowlPropertyExpression propertyExpression(ShowlPropertyShape p) {
+		
+		return p instanceof ShowlDirectPropertyShape ?
+				new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)p) :
+				new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape)p);
+	}
+
+	public static ShowlChannel channelFor(ShowlNodeShape enumNode, List<ShowlChannel> channelList) {
+		for (ShowlChannel channel : channelList) {
+			if (channel.getSourceNode() == enumNode) {
+				return channel;
+			}
+		}
+		return null;
+	}
+	
+	
+//	public static ShowlEnumJoinInfo enumJoinInfo(ShowlNodeShape enumNode)
+	
+
+	public static ShowlPropertyShape otherProperty(ShowlEqualStatement equal, ShowlNodeShape node) {
+		ShowlPropertyShape left = propertyShape(equal.getLeft());
+		ShowlPropertyShape right = propertyShape(equal.getRight());
+		
+		if (left != null && left.getDeclaringShape()==node) {
+			return right;
+		}
+		
+		if (right!=null && right.getDeclaringShape()!=node) {
+			return left;
+		}
+		
+		return null;
+	}
+	
+	public static ShowlPropertyShape propertyOf(ShowlEqualStatement equal, ShowlNodeShape node) {
+
+		ShowlPropertyShape left = propertyShape(equal.getLeft());
+		
+		if (left != null && left.getDeclaringShape()==node) {
+			return left;
+		}
+
+		ShowlPropertyShape right = propertyShape(equal.getRight());
+		if (right!=null && right.getDeclaringShape()!=node) {
+			return right;
+		}
+		
+		return null;
+	}
+
+	private static ShowlPropertyShape propertyShape(ShowlExpression e) {
+		if (e instanceof ShowlPropertyExpression) {
+			return ((ShowlPropertyExpression) e).getSourceProperty();
+		}
+		return null;
+	}
+
+	public static ShowlPropertyShape propertyOf(ShowlExpression e, ShowlNodeShape node) {
+		if (e instanceof ShowlPropertyExpression) {
+			ShowlPropertyShape p = ((ShowlPropertyExpression) e).getSourceProperty();
+			if (p.getDeclaringShape() == node) {
+				return p;
+			}
+		}
 		return null;
 	}
 }

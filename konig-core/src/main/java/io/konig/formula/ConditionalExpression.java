@@ -35,6 +35,11 @@ public class ConditionalExpression extends AbstractFormula implements Relational
 		this.whenTrue = whenTrue;
 		this.whenFalse = whenFalse;
 	}
+	
+	@Override
+	public ConditionalExpression clone() {
+		return new ConditionalExpression(condition.clone(), whenTrue.clone(), whenFalse.clone());
+	}
 
 	public NumericExpression getCondition() {
 		return condition;

@@ -26,4 +26,5 @@ import org.openrdf.model.URI;
 public interface PathTerm extends IriValue {
 
 	URI getIri();
+	PathTerm clone();
 }

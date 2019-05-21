@@ -1,5 +1,10 @@
 package io.konig.formula;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import io.konig.core.Context;
+
 /*
  * #%L
  * Konig Core
@@ -29,9 +34,28 @@ public class BareExpression extends ConditionalOrExpression {
 		super(e);
 	}
 	
+	private BareExpression(Context context, List<ConditionalAndExpression> list) {
+		super(context, list);
+		
+	}
+	
 	@Override
 	public void print(PrettyPrintWriter out) {
 		printOrList(out);
+	}
+	
+	@Override
+	public BareExpression clone() {
+
+		List<ConditionalAndExpression> list = null;
+		if (orList != null) {
+			list = new ArrayList<>();
+			for (ConditionalAndExpression e : orList) {
+				list.add(e.clone());
+			}
+		}
+		
+		return new BareExpression(context, list);
 	}
 	
 	public static BareExpression wrap(PrimaryExpression primary) {

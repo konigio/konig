@@ -1,0 +1,42 @@
+@prefix asset: <http://example.com/ns/asset/> .
+@prefix crm: <http://example.com/ns/crm/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:AccountShape sh:property  [ 
+		sh:path schema:name ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate schema:name
+	 ]  ,  [ 
+		sh:path crm:accountType ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate crm:accountType ; 
+		sh:class crm:AccountType
+	 ]  ,  [ 
+		sh:path crm:industry ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate crm:industry ; 
+		sh:class crm:Industry ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <gs://konig-batch-inbound-${environmentName}> , <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Account> ; 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass crm:Account . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/crm/tables/Account> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:tableId "Account" ; 
+		gcp:datasetId "crm" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf asset:WarehouseOperationalLayer . 

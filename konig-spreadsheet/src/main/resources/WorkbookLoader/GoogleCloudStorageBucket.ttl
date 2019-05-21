@@ -2,7 +2,15 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
 @prefix schema:  <http://schema.org/> .
+#if($!{parentComponent})
+#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#foreach( $namespace in $namespaceList) 
+@prefix $namespace.Prefix: <$namespace.Name> .
+#end
+#end
 
 <${shapeId}> konig:shapeDataSource <gs://${gcpBucketName}> .
-<gs://${gcpBucketName}> a konig:GoogleCloudStorageBucket .
+<gs://${gcpBucketName}> a konig:GoogleCloudStorageBucket #if($!{parentComponent});
+  schema:isPartOf $functions.spaceToComma(${parentComponent})#end
+.
 	

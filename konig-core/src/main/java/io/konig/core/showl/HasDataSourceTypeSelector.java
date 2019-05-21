@@ -39,7 +39,7 @@ public class HasDataSourceTypeSelector implements ShowlTargetNodeSelector {
 	}
 
 	@Override
-	public List<ShowlNodeShape> produceTargetNodes(ShowlFactory factory, Shape shape) throws ShowlProcessingException {
+	public List<ShowlNodeShape> produceTargetNodes(ShowlService factory, Shape shape) throws ShowlProcessingException {
 		
 		for (DataSource ds : shape.getShapeDataSource()) {
 			if (ds.isA(dataSourceType)) {

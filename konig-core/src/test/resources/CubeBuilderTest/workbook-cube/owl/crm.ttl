@@ -1,23 +1,51 @@
 @prefix crm: <http://example.com/ns/crm/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
 @prefix vann: <http://purl.org/vocab/vann/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 crm: a owl:Ontology ; 
 	vann:preferredNamespacePrefix "crm" . 
 
+crm:Account a owl:Class . 
+
+crm:AccountType a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration ; 
+	gcp:preferredGcpDatasetId "${classNamespacePrefix}" . 
+
+crm:Industry a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration ; 
+	gcp:preferredGcpDatasetId "${classNamespacePrefix}" . 
+
 crm:Opportunity a owl:Class . 
 
 crm:accountType a rdf:Property ; 
+	rdfs:domain crm:Account ; 
 	rdfs:range crm:AccountType . 
 
 crm:customerAccount a rdf:Property ; 
+	rdfs:domain crm:Opportunity ; 
 	rdfs:range crm:Account . 
 
 crm:industry a rdf:Property ; 
+	rdfs:domain crm:Account ; 
 	rdfs:range crm:Industry . 
 
 crm:salePrice a rdf:Property ; 
+	rdfs:domain crm:Opportunity ; 
 	rdfs:range xsd:float . 
+
+crm:Auto a crm:Industry ; 
+	schema:name "Auto" . 
+
+crm:CorporateAccount a crm:AccountType ; 
+	schema:name "CorporateAccount" . 
+
+crm:Electronics a crm:Industry ; 
+	schema:name "Electronics" . 
+
+crm:PersonalAccount a crm:AccountType ; 
+	schema:name "PersonalAccount" . 

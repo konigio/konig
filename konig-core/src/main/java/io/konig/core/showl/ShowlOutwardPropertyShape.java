@@ -31,7 +31,6 @@ public class ShowlOutwardPropertyShape extends ShowlDerivedPropertyShape {
 	
 	public ShowlOutwardPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, PropertyConstraint c) {
 		super(declaringShape, property, c);
-		property.addPropertyShape(this);
 	}
 
 }

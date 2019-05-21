@@ -8,5 +8,7 @@
 konig: a owl:Ontology ; 
 	vann:preferredNamespacePrefix "konig" . 
 
+konig:receivesDataFrom a rdf:Property , owl:ObjectProperty . 
+
 konig:uid a rdf:Property ; 
 	rdfs:range xsd:string . 

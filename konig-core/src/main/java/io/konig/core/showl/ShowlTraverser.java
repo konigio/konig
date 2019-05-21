@@ -22,18 +22,23 @@ package io.konig.core.showl;
 
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 
+import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
-import io.konig.formula.PathTerm;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.PropertyConstraint;
@@ -42,26 +47,115 @@ import io.konig.shacl.Shape;
 public class ShowlTraverser {
 	
 	private ShowlManager manager;
+	private Map<URI,ShowlClass> classMap = new HashMap<>();
 
 
 	public ShowlTraverser(ShowlManager manager) {
 		this.manager = manager;
 	}
 
+	
 
+	public ShowlManager getManager() {
+		return manager;
+	}
+
+
+
+	public ShowlPropertyShape findPropertyByLocalName(URI owlClassId, String propertyLocalName) {
+		ShowlClass owlClass = owlClass(owlClassId);
+		
+		// Look for a property with the same local name in all NodeShapes
+		for (ShowlNodeShape node : owlClass.getTargetClassOf()) {
+			for (ShowlPropertyShape p : node.allOutwardProperties()) {
+				if (p.getPredicate().getLocalName().equals(propertyLocalName)) {
+					return p;
+				}
+			}
+		}
+		
+		// No property was found in the NodeShapes.
+		// If the OWL Class is an enumeration, then search for individuals that have the property.
+		
+		if (manager.getReasoner().isEnumerationClass(owlClassId)) {
+			List<Vertex> list = manager.getReasoner().getGraph().v(owlClassId).in(RDF.TYPE).toVertexList();
+			for (Vertex v : list) {
+				for (Edge e : v.outEdgeSet()) {
+					if (e.getPredicate().getLocalName().equals(propertyLocalName)) {
+						PropertyConstraint constraint = new PropertyConstraint(e.getPredicate());
+						if (e.getObject() instanceof Literal) {
+							Literal literal = (Literal) e.getObject();
+							constraint.setDatatype(literal.getDatatype());
+						}
+						
+						// Construct a dummy ShowlPropertyShape
+						
+						ShowlProperty property = manager.produceShowlProperty(e.getPredicate());
+						ShowlDirectPropertyShape p = new ShowlDirectPropertyShape(null, null, constraint);
+						p.setProperty(property);
+						return p;
+					}
+				}
+			}
+		}
+		
+		return null;
+		
+	}
 
 	public ShowlClass owlClass(URI owlClassId) {
 		
-		ShowlClass owlClass = manager.findClassById(owlClassId);
+		ShowlClass owlClass = classMap.get(owlClassId);
 		if (owlClass == null) {
 			owlClass = manager.produceOwlClass(owlClassId);
-			for (Shape shape : manager.getShapeManager().listShapes()) {
-				ShowlNodeShape node = new ShowlNodeShape(null, shape, owlClass);
+			classMap.put(owlClassId, owlClass);
+			for (Shape shape : manager.getShapeManager().getShapesByTargetClass(owlClassId)) {
+				ShowlNodeShape node = new ShowlNodeShape(manager, null, shape, owlClass);
+				owlClass.addTargetClassOf(node);
 				manager.addIdProperty(node);
+				manager.addProperties(node);
 			}
 		}
 			
 		return owlClass;
+	}
+	
+	public Set<URI> valueClass(URI targetClass, QuantifiedExpression formula) {
+		ShowlClass owlClass = owlClass(targetClass);
+		
+		PrimaryExpression primary = formula.asPrimaryExpression();
+		if (primary instanceof PathExpression) {
+			PathExpression path = (PathExpression) primary;
+			Set<ShowlProperty> propertySet = null;
+			for (PathStep step : path.getStepList()) {
+				if (step instanceof DirectionStep) {
+					DirectionStep dirStep = (DirectionStep) step;
+					switch (dirStep.getDirection()) {
+					case OUT : 
+						URI predicate = dirStep.getIri();
+						propertySet = propertySet==null ? out(owlClass, predicate) : out(propertySet, predicate);
+						break;
+						
+					case IN :
+						throw new RuntimeException("In steps not supported yet");
+					}
+				}
+			}
+			
+			// PropertySet contains the set of possible properties
+			
+			Set<URI> result = new HashSet<>();
+			for (ShowlProperty p : propertySet) {
+				if (p.getRange() != null) {
+					result.add(p.getRange().getId());
+				} else {
+					result.addAll(  p.rangeIncludes(manager.getReasoner())  );
+				}
+			}
+			return result;
+		}
+		
+		return null;
 	}
 	
 	public Set<ShowlProperty> traverse(URI variable, URI owlClass, QuantifiedExpression formula) {
@@ -76,36 +170,27 @@ public class ShowlTraverser {
 
 	private Set<ShowlProperty> traversePath(URI variable, URI owlClassId, PathExpression path) {
 		if (variable!=null && owlClassId !=null && path!=null) {
-			List<PathStep> list = path.getStepList();
-			PathStep first = list.get(0);
 			
-			if (first instanceof DirectionStep) {
-				DirectionStep dirStep = (DirectionStep) first;
-				PathTerm term = dirStep.getTerm();
+			ShowlClass owlClass = owlClass(owlClassId);
+			Set<ShowlProperty> propertySet = null;
+			
+			for (PathStep step : path.getStepList()) {
 				
-				if (term.getIri().getLocalName().equals(variable.getLocalName())) {
-					ShowlClass owlClass = owlClass(owlClassId);
-					Set<ShowlProperty> propertySet = null;
-					for (int i=1; i<list.size(); i++) {
-						PathStep step = list.get(i);
+				if (step instanceof DirectionStep) {
+					DirectionStep dirStep = (DirectionStep) step;
+					URI predicate = dirStep.getTerm().getIri();
+					
+					switch (dirStep.getDirection()) {
+					case OUT :
+						propertySet = propertySet==null ? out(owlClass, predicate) : out(propertySet, predicate);
+						break;
 						
-						if (step instanceof DirectionStep) {
-							dirStep = (DirectionStep) step;
-							URI predicate = dirStep.getTerm().getIri();
-							
-							switch (dirStep.getDirection()) {
-							case OUT :
-								propertySet = propertySet==null ? out(owlClass, predicate) : out(propertySet, predicate);
-								break;
-								
-							case IN:
-								throw new RuntimeException("In steps not supported yet");
-							}
-						}
+					case IN:
+						throw new RuntimeException("In steps not supported yet");
 					}
-					return propertySet == null ? Collections.emptySet() : propertySet;
 				}
 			}
+			return propertySet == null ? Collections.emptySet() : propertySet;
 		}
 		
 		
@@ -162,7 +247,7 @@ public class ShowlTraverser {
 				classes.add(range);
 			} else {
 				for (URI owlClassId  : p.rangeIncludes(manager.getReasoner()) ) {
-					classes.add(manager.produceOwlClass(owlClassId));
+					classes.add(owlClass(owlClassId));
 				}
 			}
 			
@@ -192,6 +277,7 @@ public class ShowlTraverser {
 					ShowlProperty property = produceProperty(predicate, owlClass);
 					result.add(property);
 					ShowlDirectPropertyShape ps = new ShowlDirectPropertyShape(node, property, p);
+					property.addPropertyShape(ps);
 					node.addProperty(ps);
 				}
 			}
@@ -243,6 +329,7 @@ public class ShowlTraverser {
 					ShowlProperty property = produceProperty(predicate, owlClass);
 					result.add(property);
 					ShowlDirectPropertyShape ps = new ShowlDirectPropertyShape(node, property, p);
+					property.addPropertyShape(ps);
 					node.addProperty(ps);
 				}
 			}
