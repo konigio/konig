@@ -44,7 +44,7 @@ public class DataSourceGeneratorFactory implements WorkbookListener {
 
 	@Override
 	public void beginWorkbook(Workbook workbook) {
-		generator = new DataSourceGenerator(nsManager, templateDir, settings.getProperties());
+		generator = null;
 	}
 
 	@Override
@@ -57,6 +57,9 @@ public class DataSourceGeneratorFactory implements WorkbookListener {
 	}
 	
 	public DataSourceGenerator getDataSourceGenerator() {
+		if (generator == null) {
+			generator = new DataSourceGenerator(nsManager, templateDir, settings.getProperties());
+		}
 		return generator;
 	}
 
