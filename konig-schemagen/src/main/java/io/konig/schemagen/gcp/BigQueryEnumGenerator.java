@@ -34,6 +34,8 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -54,10 +56,21 @@ import io.konig.shacl.io.json.ValueSelector;
 
 public class BigQueryEnumGenerator {
 	
+	private static Logger logger =LoggerFactory.getLogger(BigQueryEnumGenerator.class);
+	
 	private ShapeManager shapeManager;
+	private boolean failOnCardinalityViolation = true;
 	
 	public BigQueryEnumGenerator(ShapeManager shapeManager) {
 		this.shapeManager = shapeManager;
+	}
+
+	public boolean isFailOnCardinalityViolation() {
+		return failOnCardinalityViolation;
+	}
+
+	public void setFailOnCardinalityViolation(boolean failOnCardinalityViolation) {
+		this.failOnCardinalityViolation = failOnCardinalityViolation;
 	}
 
 	public void generate(Graph graph, DataFileMapper dataFileMapper) throws IOException {
@@ -176,10 +189,11 @@ public class BigQueryEnumGenerator {
 		return null;
 	}
 
-	static class TypeSelector implements ValueSelector {
+	class TypeSelector implements ValueSelector {
 		private OwlReasoner reasoner;
 		private Vertex vertex;
 		private URI type;
+		
 
 
 		public TypeSelector(URI type, OwlReasoner reasoner) {
@@ -207,18 +221,33 @@ public class BigQueryEnumGenerator {
 				}
 				return reasoner.mostSpecificType(set, type);
 			}
-			
 			StringBuilder msg = new StringBuilder();
 			msg.append("Expected single value for ");
 			msg.append(predicate.getLocalName());
 			msg.append(" property of ");
 			msg.append(subject.getId().stringValue());
 			msg.append(" but found ");
+			
+			String comma = "";
+			Value first = null;
 			for (Value v : options) {
+				msg.append(comma);
+				msg.append('"');
 				msg.append(v.stringValue());
-				msg.append(' ');
+				msg.append('"');
+				
+				if (first == null) {
+					first = v;
+					comma = ", ";
+				}
 			}
-			throw new KonigException(msg.toString());
+			if (failOnCardinalityViolation) {
+				throw new KonigException(msg.toString());
+			}
+			msg.append(".  Using \"");
+			msg.append(first.stringValue());
+			msg.append('"');
+			return first;
 		}
 		
 	}

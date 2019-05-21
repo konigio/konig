@@ -1537,6 +1537,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			if (bigQuery != null) {
 
 				BigQueryEnumGenerator enumGenerator = new BigQueryEnumGenerator(shapeManager);
+				enumGenerator.setFailOnCardinalityViolation(bigQuery.getEnumConfig().isFailOnCardinalityViolation());
 				
 				File bqDataDir = Configurator.checkNull(bigQuery.getData());
 				File bqSchemaDir = Configurator.checkNull(bigQuery.getSchema());
