@@ -2085,8 +2085,7 @@ ShowlNodeShape valueShape = p.getValueShape();
               javaClass == Integer.class ? model.ref(Long.class) :
               model.ref(javaClass);
           
-          JCodeModel codeModel = new JCodeModel();
-          AbstractJClass exception = codeModel.ref( Exception.class );          
+          AbstractJClass exception = model.ref( Exception.class );          
 
           
           // $returnType ${returnType}Value(String stringValue) {
