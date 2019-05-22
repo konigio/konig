@@ -188,13 +188,42 @@ public class BasicTransformService implements ShowlTransformService {
 		ShowlNodeShape targetNode = sourceShape.getTargetNode();
 		
 		ShowlPropertyShape targetAccessor = targetNode.getAccessor();
+		
+		// Consider the case where the Source shape contains an IRI reference to the enum member.
+		//
+		// For instance, suppose we have the following mapping:
+		//
+		//    {TargetPersonShape}.gender ... {SourcePersonShape}.gender_id
+		//    
+		//  In this case, targetAccessor.selectedExpression will be a ShowlDirectPropertyExpression that
+		//  wraps {SourcePersonShape}.gender_id
+		
+		if (targetAccessor.getSelectedExpression() instanceof ShowlDirectPropertyExpression) {
+			return new ShowlEqualStatement(new ShowlDirectPropertyExpression(enumId), targetAccessor.getSelectedExpression());
+		}
+		
+		
 
 		// Map the enum accessor
 		
-		ShowlEnumNodeExpression accessorExpression = 
-			new ShowlEnumNodeExpression(enumId.getDeclaringShape());
 		
-		targetAccessor.setSelectedExpression(accessorExpression);
+
+		// If the targetAccessor is not null and the targetNode has a konig:id
+		// property, then the targetNode accessor will be reset when the
+		// konig:id property is mapped.  We should not change it here.
+		//
+		// This dependency on the future mapping of konig:id is unfortunate.
+		// I wish we didn't have to have that dependency.  Is there a cleaner
+		// solution?
+		
+		if (targetAccessor.getSelectedExpression() == null || 
+			targetNode.getProperty(Konig.id)==null
+		) {
+			ShowlEnumNodeExpression accessorExpression = 
+					new ShowlEnumNodeExpression(enumId.getDeclaringShape());
+			targetAccessor.setSelectedExpression(accessorExpression);			
+		}
+		
 		
 		if (targetAccessor.getFormula() instanceof ShowlIriReferenceExpression) {
 			
@@ -313,6 +342,17 @@ public class BasicTransformService implements ShowlTransformService {
 			if (targetDirect != null) {
 				
 				if (isEnum) {
+					if (Konig.id.equals(sourceDirect.getPredicate())) {
+						ShowlPropertyShape enumAccessor = targetDirect.getDeclaringShape().getAccessor();
+						if (enumAccessor != null) {
+							ShowlExpression enumAccessorExpression = enumAccessor.getSelectedExpression();
+							if (enumAccessorExpression != null && !(enumAccessorExpression instanceof ShowlEnumNodeExpression)) {
+								targetDirect.setSelectedExpression(enumAccessor.getSelectedExpression());
+								enumAccessor.setSelectedExpression(new ShowlEnumNodeExpression(sourceDirect.getDeclaringShape()));
+								return true;
+							}
+						}
+					}
 					targetDirect.setSelectedExpression(new ShowlEnumPropertyExpression(sourceDirect));
 					return true;
 

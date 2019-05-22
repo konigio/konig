@@ -1,0 +1,29 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonTargetShape sh:property  [ 
+		sh:path schema:gender ; 
+		sh:shape shape:GenderShape ; 
+		sh:class schema:GenderType ; 
+		rdf:predicate schema:gender ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ]  ; 
+	a sh:Shape ; 
+	konig:explicitDerivedFrom shape:PersonSourceShape ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:tableId "PersonTarget" ; 
+		gcp:datasetId "schema" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:WarehouseOperationalData . 
