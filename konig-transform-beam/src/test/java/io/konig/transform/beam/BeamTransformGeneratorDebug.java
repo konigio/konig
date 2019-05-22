@@ -28,13 +28,10 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Test;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
@@ -50,7 +47,6 @@ import io.konig.core.showl.ExplicitDerivedFromSelector;
 import io.konig.core.showl.HasDataSourceTypeSelector;
 import io.konig.core.showl.RawCubeSourceNodeSelector;
 import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
-import io.konig.core.showl.ReceivesDataFromTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlClassProcessor;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
@@ -116,12 +112,8 @@ public class BeamTransformGeneratorDebug {
 	}
 
 
-	private URI uri(String stringValue) {
-		return new URIImpl(stringValue);
-	}
-
-	@Test
-	public void debug() throws Exception {
+	@Ignore
+	public void test() throws Exception {
 		generateAll("src/test/resources/BeamTransformGeneratorDebug/rdf", false);
 		
 	}
