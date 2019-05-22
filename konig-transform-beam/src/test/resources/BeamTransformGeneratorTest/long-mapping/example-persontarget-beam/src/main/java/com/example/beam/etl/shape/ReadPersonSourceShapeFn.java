@@ -17,9 +17,14 @@ public class ReadPersonSourceShapeFn
     extends DoFn<FileIO.ReadableFile, TableRow>
 {
 
-    private Long longValue(String stringValue) {
+    private Long longValue(String stringValue)
+        throws java.lang.Exception
+    {
         if (stringValue!= null) {
             stringValue = stringValue.trim();
+            if (stringValue == "InjectErrorForTesting") {
+                throw new java.lang.Exception("Error in pipeline : InjectErrorForTesting");
+            }
             if (stringValue.length()> 0) {
                 return new Long(stringValue);
             }
@@ -27,9 +32,14 @@ public class ReadPersonSourceShapeFn
         return null;
     }
 
-    private String stringValue(String stringValue) {
+    private String stringValue(String stringValue)
+        throws java.lang.Exception
+    {
         if (stringValue!= null) {
             stringValue = stringValue.trim();
+            if (stringValue == "InjectErrorForTesting") {
+                throw new java.lang.Exception("Error in pipeline : InjectErrorForTesting");
+            }
             if (stringValue.length()> 0) {
                 return stringValue;
             }
