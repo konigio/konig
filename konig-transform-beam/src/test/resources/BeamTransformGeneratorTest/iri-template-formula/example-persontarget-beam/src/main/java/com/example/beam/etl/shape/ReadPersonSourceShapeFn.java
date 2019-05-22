@@ -18,12 +18,12 @@ public class ReadPersonSourceShapeFn
 {
 
     private String stringValue(String stringValue)
-        throws java.lang.Exception
+        throws Exception
     {
         if (stringValue!= null) {
             stringValue = stringValue.trim();
             if (stringValue == "InjectErrorForTesting") {
-                throw new java.lang.Exception("Error in pipeline : InjectErrorForTesting");
+                throw new Exception("Error in pipeline : InjectErrorForTesting");
             }
             if (stringValue.length()> 0) {
                 return stringValue;
