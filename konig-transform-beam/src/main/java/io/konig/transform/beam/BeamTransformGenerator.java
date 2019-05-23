@@ -1879,6 +1879,11 @@ ShowlNodeShape valueShape = p.getValueShape();
         
         List<ShowlPropertyShape> sourceProperties = sourceProperties();
         
+        // private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
+        AbstractJClass loggerClass = model.ref(Logger.class);
+		JFieldVar logger = thisClass.field(JMod.PRIVATE | JMod.FINAL | JMod.STATIC , loggerClass, 
+				"LOGGER", 
+				model.ref(LoggerFactory.class).staticInvoke("getLogger").arg("ReadFn"));
         
         // @ProcessElement
         // public void processElement(ProcessContext c) {
@@ -1931,6 +1936,29 @@ ShowlNodeShape valueShape = p.getValueShape();
             .arg(stream)
             .arg(standardCharsetsClass.staticRef("UTF_8"))
             .arg(csvFormatClass.staticRef("RFC4180").invoke("withFirstRecordAsHeader").invoke("withSkipHeaderRecord")));
+     // validateHeaders(csv);
+        innerBody.add(JExpr.invoke("validateHeaders").arg(csv));
+        
+        AbstractJClass hashMap = model.ref(HashMap.class).narrow(model.ref(String.class), model.ref(Integer.class));
+        
+        //private void validateHeaders(CSVParser csv)
+        JMethod methodValidateHeaders = thisClass.method(JMod.PRIVATE, model.VOID , "validateHeaders");
+        methodValidateHeaders.param(csvParserClass, "csv");
+        
+        //private void validateHeader(HashMap headerMap, String columnName, StringBuilder builder) 
+        JMethod methodValidateHeader = thisClass.method(JMod.PRIVATE, model.VOID , "validateHeader");
+        methodValidateHeader.param(model.ref(HashMap.class), "headerMap");        
+        JVar columnName = methodValidateHeader.param(model.ref(String.class), "columnName");
+        methodValidateHeader.param(model.ref(StringBuilder.class), "builder");
+        
+        JBlock methodValidateHeaderBody = methodValidateHeaders.body();
+        
+        //HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
+        JVar headerMap = methodValidateHeaderBody.decl(hashMap, "headerMap")
+        		.init(csv.invoke("getHeaderMap").castTo(hashMap));
+        
+        //StringBuilder builder = new StringBuilder();
+        JVar builder = methodValidateHeaderBody.decl(model.ref(StringBuilder.class), "builder").init(JExpr._new(model.ref(StringBuilder.class)));
         
         //       for(CSVRecord record : csv) {
         
@@ -1956,8 +1984,14 @@ ShowlNodeShape valueShape = p.getValueShape();
             fail("Getter not found for {0}", datatype.getSimpleName());
           }
           
+          //if (record.get("${fieldName}")!= null) {
+          JBlock ifHeaderBlock = forEachRecord._if(record.invoke("get").arg(JExpr.lit(fieldName)).neNull())._then();
+          
+          //validateHeader(headerMap, ${fieldName}, builder);
+          methodValidateHeaderBody.add(JExpr.invoke("validateHeader").arg(headerMap).arg(fieldName).arg(builder));
+          
           //     $fieldName = ${getter}(record.get("${fieldName}"));
-          JVar fieldVar = forEachRecord.decl(datatypeClass, fieldName, 
+          JVar fieldVar = ifHeaderBlock.decl(datatypeClass, fieldName, 
               JExpr.invoke(getter)
               .arg(record.invoke("get")
               .arg(JExpr.lit(fieldName))));
@@ -1966,7 +2000,7 @@ ShowlNodeShape valueShape = p.getValueShape();
           
           //     if ($fieldName != null) {
           //       row.set("$fieldName", $fieldName);
-          forEachRecord
+          ifHeaderBlock
               ._if(fieldVar.ne(JExpr._null()))
               ._then().add(row.invoke("set").arg(JExpr.lit(fieldName)).arg(fieldVar));
           
@@ -2004,7 +2038,15 @@ ShowlNodeShape valueShape = p.getValueShape();
         JVar e = catchBlock.param("e");
         catchBlock.body().add(e.invoke("printStackTrace"));
         
+     // if (builder.length()> 0) {
+        JBlock headerBlock = methodValidateHeaderBody._if(builder.invoke("length").gt(JExpr.lit(0)))._then();
+        //LOGGER.warn("Mapping for {} not found", builder.toString());
+        headerBlock.add(logger.invoke("warn").arg("Mapping for {} not found").arg(builder.invoke("toString")));
         
+        //if (headerMap.get(columnName) == null) {
+        JBlock headerBlock1 = methodValidateHeader.body()._if(headerMap.invoke("get").arg(columnName).eqNull())._then();
+        //builder.append(columnName);
+        headerBlock1.add(builder.invoke("append").arg(columnName));
             
         
         

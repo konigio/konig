@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.google.api.services.bigquery.model.TableRow;
@@ -17,11 +18,14 @@ import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReadPersonSourceShapeFn
     extends DoFn<FileIO.ReadableFile, TableRow>
 {
     private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
+    private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
 
     private Long temporalValue(String stringValue) {
         if (stringValue!= null) {
@@ -69,15 +73,20 @@ public class ReadPersonSourceShapeFn
             InputStream stream = Channels.newInputStream(rbc);
             try {
                 CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180 .withFirstRecordAsHeader().withSkipHeaderRecord());
+                validateHeaders(csv);
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
-                    Long birth_date = temporalValue(record.get("birth_date"));
-                    if (birth_date!= null) {
-                        row.set("birth_date", birth_date);
+                    if (record.get("birth_date")!= null) {
+                        Long birth_date = temporalValue(record.get("birth_date"));
+                        if (birth_date!= null) {
+                            row.set("birth_date", birth_date);
+                        }
                     }
-                    String person_id = stringValue(record.get("person_id"));
-                    if (person_id!= null) {
-                        row.set("person_id", person_id);
+                    if (record.get("person_id")!= null) {
+                        String person_id = stringValue(record.get("person_id"));
+                        if (person_id!= null) {
+                            row.set("person_id", person_id);
+                        }
                     }
                     if (!row.isEmpty()) {
                         c.output(row);
@@ -88,6 +97,22 @@ public class ReadPersonSourceShapeFn
             }
         } catch (final Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void validateHeaders(CSVParser csv) {
+        HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
+        StringBuilder builder = new StringBuilder();
+        validateHeader(headerMap, "birth_date", builder);
+        validateHeader(headerMap, "person_id", builder);
+        if (builder.length()> 0) {
+            LOGGER.warn("Mapping for {} not found", builder.toString());
+        }
+    }
+
+    private void validateHeader(HashMap headerMap, String columnName, StringBuilder builder) {
+        if (headerMap.get(columnName) == null) {
+            builder.append(columnName);
         }
     }
 }
