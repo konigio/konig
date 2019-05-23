@@ -23,9 +23,14 @@ public class ReadPersonSourceShapeFn
 {
     private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
 
-    private Long temporalValue(String stringValue) {
+    private Long temporalValue(String stringValue)
+        throws Exception
+    {
         if (stringValue!= null) {
             stringValue = stringValue.trim();
+            if (stringValue.equals("InjectErrorForTesting")) {
+                throw new Exception("Error in pipeline : InjectErrorForTesting");
+            }
             if (stringValue.length()> 0) {
                 if (stringValue.contains("T")) {
                     if (stringValue.contains("/")) {
@@ -51,9 +56,14 @@ public class ReadPersonSourceShapeFn
         return null;
     }
 
-    private String stringValue(String stringValue) {
+    private String stringValue(String stringValue)
+        throws Exception
+    {
         if (stringValue!= null) {
             stringValue = stringValue.trim();
+            if (stringValue.equals("InjectErrorForTesting")) {
+                throw new Exception("Error in pipeline : InjectErrorForTesting");
+            }
             if (stringValue.length()> 0) {
                 return stringValue;
             }
