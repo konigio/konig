@@ -3,7 +3,6 @@ package io.konig.core.showl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -251,6 +250,17 @@ public class ShowlUtil {
 			ShowlPropertyShape p = ((ShowlPropertyExpression) e).getSourceProperty();
 			if (p.getDeclaringShape() == node) {
 				return p;
+			}
+		}
+		return null;
+	}
+	
+	public static ShowlDirectPropertyShape propertyMappedTo(ShowlNodeShape targetNode, ShowlPropertyShape sourceProperty) {
+		for (ShowlDirectPropertyShape direct : targetNode.getProperties()) {
+			ShowlExpression e = direct.getSelectedExpression();
+			ShowlPropertyShape p = propertyShape(e);
+			if (p == sourceProperty) {
+				return direct;
 			}
 		}
 		return null;

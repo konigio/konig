@@ -196,6 +196,14 @@ public class BeamTransformGeneratorTest {
 		
 	}
 
+	
+	@Test
+	public void testEnumIriReference() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-iri-reference");
+		
+	}
+
 	public void generateAll(String path) throws Exception {
 		generateAll(path, true);
 	}

@@ -534,6 +534,7 @@ public class BeamTransformGenerator {
         
         Map<URI, JFieldVar> enumIndex = enumIndex(enumClass, propertyMap);
         
+        
         enumClassProperties.put(owlClass, propertyMap);
         
         JBlock staticInit = enumClass.init();
@@ -1079,38 +1080,6 @@ public class BeamTransformGenerator {
         }
         
 
-        // TODO: Finish reimplementation here!!!
-        
-        
-//        ShowlMapping mapping = p.getSelectedMapping();
-//        if (mapping == null) {
-//          fail("Mapping not found for property {0}", p.getPath());
-//        }
-//        
-//        ShowlPropertyShape other = mapping.findOther(p);
-//        
-//        if (p.getValueShape() != null) {
-//          transformObjectProperty(body, p, inputRow, outputRow);
-//          
-//        } else if (other instanceof ShowlStaticPropertyShape) {
-//          transformStaticProperty(body, p, (ShowlStaticPropertyShape)other, inputRow, outputRow, enumObject);
-//          
-//        } else if (other instanceof ShowlTemplatePropertyShape) {
-//          
-//          transformTemplateProperty(body, p, (ShowlTemplatePropertyShape)other, inputRow, outputRow);
-//          
-//        } else if (other instanceof ShowlDirectPropertyShape) {
-//          transformDirectProperty(body, p, (ShowlDirectPropertyShape)other, inputRow, outputRow);
-//          
-//        } else {
-//          other = other.getPeer();
-//          if (other instanceof ShowlDirectPropertyShape) {
-//            transformDirectProperty(body, p, (ShowlDirectPropertyShape) other, inputRow, outputRow);
-//          } else {
-//            fail("Failed to transform {0}", p.getPath());
-//          }
-//          
-//        } 
         
         
         
@@ -1221,6 +1190,8 @@ public class BeamTransformGenerator {
         FunctionExpression function = e.getFunction();
         if (function.getModel() == FunctionModel.CONCAT) {
           transformConcat(body, p, e, inputRow, outputRow);
+        } else {
+        	fail("Function {0} not supported at {1}", function.toSimpleString(), p.getPath());
         }
         
       }
@@ -1473,24 +1444,32 @@ ShowlNodeShape valueShape = p.getValueShape();
         
         JVar outputRowParam = method.param(tableRowClass, "outputRow");
         
+        BeamEnumInfo enumInfo = new BeamEnumInfo(joinInfo);
 
-        JVar enumObject = enumObject(method.body(), joinInfo, valueShape, inputRowParam);
+        enumObject(enumInfo, method.body(), valueShape, inputRowParam);
         
-        
+        JVar enumObject = enumInfo.getEnumObjectVar();
+        JBlock thenBlock = enumInfo.getConditionalStatement()._then();
         
         // TableRow $targetFieldName = new TableRow();
         
-        JVar fieldRow = method.body().decl(tableRowClass, targetFieldName + "Row", tableRowClass._new());
+        JVar fieldRow = thenBlock.decl(tableRowClass, targetFieldName + "Row", tableRowClass._new());
         
         for (ShowlDirectPropertyShape direct : valueShape.getProperties()) {
-          transformProperty(method.body(), direct, inputRowParam, fieldRow, enumObject);
+        	
+        	if (direct == joinInfo.getTargetProperty()) {
+        		// outputRow.set("$propertyName", $sourceKeyVar);
+        		thenBlock.add(
+        				fieldRow.invoke("set").arg(JExpr.lit(direct.getPredicate().getLocalName())).arg(enumInfo.getSourceKeyVar()));
+        		continue;
+        	}
+          transformProperty(thenBlock, direct, inputRowParam, fieldRow, enumObject);
           
         }
         //     if (!$fieldRow.isEmpty()) {
             //       outputRow.set("$targetFieldName", $targetFieldName);
             //     }
-        method.body()._if(fieldRow.invoke("isEmpty").not())._then()
-          .add(outputRowParam.invoke("set").arg(JExpr.lit(targetFieldName)).arg(fieldRow));
+        thenBlock.add(outputRowParam.invoke("set").arg(JExpr.lit(targetFieldName)).arg(fieldRow));
         
         
         
@@ -1498,22 +1477,39 @@ ShowlNodeShape valueShape = p.getValueShape();
         
       }
 
-      protected JVar enumObject(JBlock block, ShowlEnumJoinInfo joinInfo, ShowlNodeShape valueShape, JVar inputRow) throws BeamTransformGenerationException {
+      protected void enumObject(BeamEnumInfo enumInfo, JBlock block, ShowlNodeShape valueShape, JVar inputRow) throws BeamTransformGenerationException {
 
+    	  ShowlEnumJoinInfo joinInfo = enumInfo.getJoinInfo();
         
         String sourceKeyName = joinInfo.getSourceProperty().getPredicate().getLocalName();
-        String enumKeyName = joinInfo.getEnumProperty().getPredicate().getLocalName();
-        
-        
-      
+
         String enumClassName = enumClassName(valueShape.getOwlClass().getId());
         AbstractJClass enumClass = model.directClass(enumClassName);
         URI property = valueShape.getAccessor().getPredicate();
-        
-        String findMethodName = "findBy" + StringUtil.capitalize(enumKeyName);
-        JInvocation arg = inputRow.invoke("get").arg(JExpr.lit(sourceKeyName)).invoke("toString");
         String varName = property.getLocalName();
-        return block.decl(enumClass, varName, enumClass.staticInvoke(findMethodName).arg(arg));
+        String enumKeyName = joinInfo.getEnumProperty().getPredicate().getLocalName();
+        
+        String findMethodName = joinInfo.getEnumProperty().getPredicate().equals(Konig.id) ?
+        		"valueOf" : "findBy" + StringUtil.capitalize(enumKeyName);
+        
+        // Object $sourceKeyName = inputRow.get("$sourceKeyName");
+        // if ($sourceKeyName != null) {
+        //   $varName = $enumClass.$findMethodName($sourceKeyName);
+        //  ...
+        //  }
+        
+        
+        AbstractJClass objectClass = model.ref(Object.class);
+        
+        JVar sourceKeyVar = block.decl(objectClass, sourceKeyName, inputRow.invoke("get").arg(JExpr.lit(sourceKeyName)).invoke("toString"));
+        
+        JConditional conditional = block._if(sourceKeyVar.neNull());
+        JVar enumObjectVar = conditional._then().decl(enumClass, varName, enumClass.staticInvoke(findMethodName).arg(sourceKeyVar));
+        
+        enumInfo.setSourceKeyVar(sourceKeyVar);
+        enumInfo.setEnumObjectVar(enumObjectVar);
+        enumInfo.setConditionalStatement(conditional);
+        
       }
 
       
@@ -2085,11 +2081,11 @@ ShowlNodeShape valueShape = p.getValueShape();
               javaClass == Integer.class ? model.ref(Long.class) :
               model.ref(javaClass);
           
-          AbstractJClass exception = model.ref( Exception.class );          
+          
 
           
           // $returnType ${returnType}Value(String stringValue) {
-          JMethod method = thisClass.method(JMod.PRIVATE, returnType, methodName)._throws(exception);
+          JMethod method = thisClass.method(JMod.PRIVATE, returnType, methodName);
 
           getterMap.put(javaClass, method);
           JVar stringValue = method.param(stringClass, "stringValue");
@@ -2102,12 +2098,6 @@ ShowlNodeShape valueShape = p.getValueShape();
           //     stringValue = stringValue.trim();
           if1._then().assign(stringValue, stringValue.invoke("trim"));
         
-          // if (stringValue == "InjectErrorForTesting") 
-          JBlock errorTestingBlock =  if1._then()._if(stringValue.eq(JExpr.lit("InjectErrorForTesting")))._then();
-         
-          // throw new java.lang.Exception("Error in pipeline : InjectErrorForTesting");         
-          errorTestingBlock._throw(JExpr._new(exception).arg("Error in pipeline : InjectErrorForTesting"));
-         
           //     if (stringValue.length() > 0) {
           
           JBlock block1 = if1._then()._if(stringValue.invoke("length").gt(JExpr.lit(0)))._then();
@@ -3016,5 +3006,49 @@ ShowlNodeShape valueShape = p.getValueShape();
     
     IJExpression javaExpression(Expression e) throws BeamTransformGenerationException;
 
+  }
+  
+  private static class BeamEnumInfo {
+	  
+	  private JVar enumObjectVar;
+	  private JConditional conditionalStatement;
+	  private ShowlEnumJoinInfo joinInfo;
+	  private JVar sourceKeyVar;
+	  
+	public BeamEnumInfo(ShowlEnumJoinInfo joinInfo) {
+		this.joinInfo = joinInfo;
+	}
+
+	public JVar getEnumObjectVar() {
+		return enumObjectVar;
+	}
+
+	public void setEnumObjectVar(JVar enumObjectVar) {
+		this.enumObjectVar = enumObjectVar;
+	}
+
+	public JConditional getConditionalStatement() {
+		return conditionalStatement;
+	}
+
+	public void setConditionalStatement(JConditional conditionalStatement) {
+		this.conditionalStatement = conditionalStatement;
+	}
+
+	public ShowlEnumJoinInfo getJoinInfo() {
+		return joinInfo;
+	}
+
+	public JVar getSourceKeyVar() {
+		return sourceKeyVar;
+	}
+
+	public void setSourceKeyVar(JVar sourceKeyVar) {
+		this.sourceKeyVar = sourceKeyVar;
+	}
+	
+	
+	  
+	  
   }
 }

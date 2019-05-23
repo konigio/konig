@@ -23,18 +23,25 @@ package io.konig.core.showl;
 
 public class ShowlEnumJoinInfo {
 	
+	private ShowlPropertyShape targetProperty;
 	private ShowlPropertyShape enumProperty;
 	private ShowlPropertyShape sourceProperty;
 	private ShowlIriReferenceExpression hardCodedReference;
 	
-	private ShowlEnumJoinInfo(ShowlPropertyShape enumProperty, ShowlPropertyShape sourceProperty) {
+	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlPropertyShape sourceProperty) {
+		this.targetProperty = targetProperty;
 		this.enumProperty = enumProperty;
 		this.sourceProperty = sourceProperty;
 	}
 	
-	public ShowlEnumJoinInfo(ShowlPropertyShape enumProperty, ShowlIriReferenceExpression hardCodedReference) {
+	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlIriReferenceExpression hardCodedReference) {
+		this.targetProperty = targetProperty;
 		this.enumProperty = enumProperty;
 		this.hardCodedReference = hardCodedReference;
+	}
+
+	public ShowlPropertyShape getTargetProperty() {
+		return targetProperty;
 	}
 
 	public ShowlIriReferenceExpression getHardCodedReference() {
@@ -60,18 +67,20 @@ public class ShowlEnumJoinInfo {
 					ShowlPropertyShape sourceProperty = ShowlUtil.otherProperty(equal, enumNode);
 					
 					if (enumProperty != null) {
+						
+						ShowlPropertyShape targetJoinProperty = ShowlUtil.propertyMappedTo(targetProperty.getValueShape(), sourceProperty);
 					
 						if (sourceProperty != null) {
-							return new ShowlEnumJoinInfo(enumProperty, sourceProperty);
+							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, sourceProperty);
 						}
 						
 						
 						if (equal.getLeft() instanceof ShowlIriReferenceExpression) {
-							return new ShowlEnumJoinInfo(enumProperty, (ShowlIriReferenceExpression) equal.getLeft());
+							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlIriReferenceExpression) equal.getLeft());
 						}
 						
 						if (equal.getRight() instanceof ShowlIriReferenceExpression) {
-							return new ShowlEnumJoinInfo(enumProperty, (ShowlIriReferenceExpression)equal.getRight());
+							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlIriReferenceExpression)equal.getRight());
 						}
 					}
 				}

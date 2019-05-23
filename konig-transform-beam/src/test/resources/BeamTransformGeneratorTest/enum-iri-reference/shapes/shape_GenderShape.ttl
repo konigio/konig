@@ -1,0 +1,22 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:GenderShape sh:property  [ 
+		sh:path schema:name ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate schema:name ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		sh:path ex:genderCode ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate ex:genderCode ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape , sh:NodeShape ; 
+	sh:targetClass schema:GenderType ; 
+	sh:nodeKind sh:IRI . 

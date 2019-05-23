@@ -43,19 +43,19 @@ public class ToPersonTargetShapeFn
     }
 
     private void transformGender(TableRow inputRow, TableRow outputRow) {
-        Object gender_code = inputRow.get("gender_code").toString();
-        if (gender_code!= null) {
-            GenderType gender = GenderType.findByGenderCode(gender_code);
+        Object gender_id = inputRow.get("gender_id").toString();
+        if (gender_id!= null) {
+            GenderType gender = GenderType.valueOf(gender_id);
             TableRow genderRow = new TableRow();
-            Object id = gender.getId();
-            if (id!= null) {
-                genderRow.set("id", id.toString());
-            }
+            genderRow.set("id", gender_id);
             Object name = gender.getName();
             if (name!= null) {
                 genderRow.set("name", name);
             }
-            genderRow.set("genderCode", gender_code);
+            Object genderCode = gender.getGenderCode();
+            if (genderCode!= null) {
+                genderRow.set("genderCode", genderCode);
+            }
             outputRow.set("gender", genderRow);
         }
     }

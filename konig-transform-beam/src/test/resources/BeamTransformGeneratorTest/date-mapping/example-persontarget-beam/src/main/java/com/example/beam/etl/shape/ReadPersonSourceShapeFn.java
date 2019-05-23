@@ -28,7 +28,7 @@ public class ReadPersonSourceShapeFn
     {
         if (stringValue!= null) {
             stringValue = stringValue.trim();
-            if (stringValue == "InjectErrorForTesting") {
+            if (stringValue.equals("InjectErrorForTesting")) {
                 throw new Exception("Error in pipeline : InjectErrorForTesting");
             }
             if (stringValue.length()> 0) {
@@ -61,7 +61,7 @@ public class ReadPersonSourceShapeFn
     {
         if (stringValue!= null) {
             stringValue = stringValue.trim();
-            if (stringValue == "InjectErrorForTesting") {
+            if (stringValue.equals("InjectErrorForTesting")) {
                 throw new Exception("Error in pipeline : InjectErrorForTesting");
             }
             if (stringValue.length()> 0) {
