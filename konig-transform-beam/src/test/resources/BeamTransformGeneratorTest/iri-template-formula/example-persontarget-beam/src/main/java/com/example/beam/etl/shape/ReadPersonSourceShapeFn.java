@@ -21,21 +21,6 @@ public class ReadPersonSourceShapeFn
 {
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
 
-    private String stringValue(String stringValue)
-        throws Exception
-    {
-        if (stringValue!= null) {
-            stringValue = stringValue.trim();
-            if (stringValue.equals("InjectErrorForTesting")) {
-                throw new Exception("Error in pipeline : InjectErrorForTesting");
-            }
-            if (stringValue.length()> 0) {
-                return stringValue;
-            }
-        }
-        return null;
-    }
-
     @ProcessElement
     public void processElement(ProcessContext c) {
         try {
@@ -47,17 +32,13 @@ public class ReadPersonSourceShapeFn
                 validateHeaders(csv);
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
-                    if (record.get("parent_id")!= null) {
-                        String parent_id = stringValue(record.get("parent_id"));
-                        if (parent_id!= null) {
-                            row.set("parent_id", parent_id);
-                        }
+                    String parent_id = stringValue(csv, "parent_id", record);
+                    if (parent_id!= null) {
+                        row.set("parent_id", parent_id);
                     }
-                    if (record.get("person_id")!= null) {
-                        String person_id = stringValue(record.get("person_id"));
-                        if (person_id!= null) {
-                            row.set("person_id", person_id);
-                        }
+                    String person_id = stringValue(csv, "person_id", record);
+                    if (person_id!= null) {
+                        row.set("person_id", person_id);
                     }
                     if (!row.isEmpty()) {
                         c.output(row);
@@ -85,5 +66,26 @@ public class ReadPersonSourceShapeFn
         if (headerMap.get(columnName) == null) {
             builder.append(columnName);
         }
+    }
+
+    private String stringValue(CSVParser csv, String fieldName, CSVRecord record)
+        throws Exception
+    {
+        HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
+        if (headerMap.get(fieldName)!= null) {
+            {
+                String stringValue = record.get(fieldName);
+                if (stringValue!= null) {
+                    stringValue = stringValue.trim();
+                    if (stringValue.equals("InjectErrorForTesting")) {
+                        throw new Exception("Error in pipeline : InjectErrorForTesting");
+                    }
+                    if (stringValue.length()> 0) {
+                        return stringValue;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

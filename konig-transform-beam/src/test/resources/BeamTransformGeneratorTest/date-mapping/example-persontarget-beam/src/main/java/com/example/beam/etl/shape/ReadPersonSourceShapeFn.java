@@ -24,56 +24,8 @@ import org.slf4j.LoggerFactory;
 public class ReadPersonSourceShapeFn
     extends DoFn<FileIO.ReadableFile, TableRow>
 {
-    private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
-
-    private Long temporalValue(String stringValue)
-        throws Exception
-    {
-        if (stringValue!= null) {
-            stringValue = stringValue.trim();
-            if (stringValue.equals("InjectErrorForTesting")) {
-                throw new Exception("Error in pipeline : InjectErrorForTesting");
-            }
-            if (stringValue.length()> 0) {
-                if (stringValue.contains("T")) {
-                    if (stringValue.contains("/")) {
-                        return Instant.from(ZonedDateTime.parse(stringValue)).toEpochMilli();
-                    } else {
-                        if (stringValue.contains("Z")) {
-                            return Instant.parse(stringValue).toEpochMilli();
-                        }
-                        return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
-                    }
-                }
-                Matcher matcher = DATE_PATTERN.matcher(stringValue);
-                if (matcher.matches()) {
-                    String datePart = matcher.group(1);
-                    String zoneOffset = matcher.group(2);
-                    if ((zoneOffset.length() == 0)||zoneOffset.equals("Z")) {
-                        stringValue = ((datePart +"T00:00:00.000")+ zoneOffset);
-                    }
-                    return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
-                }
-            }
-        }
-        return null;
-    }
-
-    private String stringValue(String stringValue)
-        throws Exception
-    {
-        if (stringValue!= null) {
-            stringValue = stringValue.trim();
-            if (stringValue.equals("InjectErrorForTesting")) {
-                throw new Exception("Error in pipeline : InjectErrorForTesting");
-            }
-            if (stringValue.length()> 0) {
-                return stringValue;
-            }
-        }
-        return null;
-    }
+    private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
 
     @ProcessElement
     public void processElement(ProcessContext c) {
@@ -86,17 +38,13 @@ public class ReadPersonSourceShapeFn
                 validateHeaders(csv);
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
-                    if (record.get("birth_date")!= null) {
-                        Long birth_date = temporalValue(record.get("birth_date"));
-                        if (birth_date!= null) {
-                            row.set("birth_date", birth_date);
-                        }
+                    Long birth_date = temporalValue(csv, "birth_date", record);
+                    if (birth_date!= null) {
+                        row.set("birth_date", birth_date);
                     }
-                    if (record.get("person_id")!= null) {
-                        String person_id = stringValue(record.get("person_id"));
-                        if (person_id!= null) {
-                            row.set("person_id", person_id);
-                        }
+                    String person_id = stringValue(csv, "person_id", record);
+                    if (person_id!= null) {
+                        row.set("person_id", person_id);
                     }
                     if (!row.isEmpty()) {
                         c.output(row);
@@ -124,5 +72,65 @@ public class ReadPersonSourceShapeFn
         if (headerMap.get(columnName) == null) {
             builder.append(columnName);
         }
+    }
+
+    private Long temporalValue(CSVParser csv, String fieldName, CSVRecord record)
+        throws Exception
+    {
+        HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
+        if (headerMap.get(fieldName)!= null) {
+            {
+                String stringValue = record.get(fieldName);
+                if (stringValue!= null) {
+                    stringValue = stringValue.trim();
+                    if (stringValue.equals("InjectErrorForTesting")) {
+                        throw new Exception("Error in pipeline : InjectErrorForTesting");
+                    }
+                    if (stringValue.length()> 0) {
+                        if (stringValue.contains("T")) {
+                            if (stringValue.contains("/")) {
+                                return Instant.from(ZonedDateTime.parse(stringValue)).toEpochMilli();
+                            } else {
+                                if (stringValue.contains("Z")) {
+                                    return Instant.parse(stringValue).toEpochMilli();
+                                }
+                                return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
+                            }
+                        }
+                        Matcher matcher = DATE_PATTERN.matcher(stringValue);
+                        if (matcher.matches()) {
+                            String datePart = matcher.group(1);
+                            String zoneOffset = matcher.group(2);
+                            if ((zoneOffset.length() == 0)||zoneOffset.equals("Z")) {
+                                stringValue = ((datePart +"T00:00:00.000")+ zoneOffset);
+                            }
+                            return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private String stringValue(CSVParser csv, String fieldName, CSVRecord record)
+        throws Exception
+    {
+        HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
+        if (headerMap.get(fieldName)!= null) {
+            {
+                String stringValue = record.get(fieldName);
+                if (stringValue!= null) {
+                    stringValue = stringValue.trim();
+                    if (stringValue.equals("InjectErrorForTesting")) {
+                        throw new Exception("Error in pipeline : InjectErrorForTesting");
+                    }
+                    if (stringValue.length()> 0) {
+                        return stringValue;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

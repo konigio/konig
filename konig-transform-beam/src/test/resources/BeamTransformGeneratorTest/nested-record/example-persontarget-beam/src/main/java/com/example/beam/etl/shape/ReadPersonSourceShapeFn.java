@@ -21,21 +21,6 @@ public class ReadPersonSourceShapeFn
 {
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
 
-    private String stringValue(String stringValue)
-        throws Exception
-    {
-        if (stringValue!= null) {
-            stringValue = stringValue.trim();
-            if (stringValue.equals("InjectErrorForTesting")) {
-                throw new Exception("Error in pipeline : InjectErrorForTesting");
-            }
-            if (stringValue.length()> 0) {
-                return stringValue;
-            }
-        }
-        return null;
-    }
-
     @ProcessElement
     public void processElement(ProcessContext c) {
         try {
@@ -47,35 +32,25 @@ public class ReadPersonSourceShapeFn
                 validateHeaders(csv);
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
-                    if (record.get("address_id")!= null) {
-                        String address_id = stringValue(record.get("address_id"));
-                        if (address_id!= null) {
-                            row.set("address_id", address_id);
-                        }
+                    String address_id = stringValue(csv, "address_id", record);
+                    if (address_id!= null) {
+                        row.set("address_id", address_id);
                     }
-                    if (record.get("city")!= null) {
-                        String city = stringValue(record.get("city"));
-                        if (city!= null) {
-                            row.set("city", city);
-                        }
+                    String city = stringValue(csv, "city", record);
+                    if (city!= null) {
+                        row.set("city", city);
                     }
-                    if (record.get("id")!= null) {
-                        String id = stringValue(record.get("id"));
-                        if (id!= null) {
-                            row.set("id", id);
-                        }
+                    String id = stringValue(csv, "id", record);
+                    if (id!= null) {
+                        row.set("id", id);
                     }
-                    if (record.get("person_id")!= null) {
-                        String person_id = stringValue(record.get("person_id"));
-                        if (person_id!= null) {
-                            row.set("person_id", person_id);
-                        }
+                    String person_id = stringValue(csv, "person_id", record);
+                    if (person_id!= null) {
+                        row.set("person_id", person_id);
                     }
-                    if (record.get("state")!= null) {
-                        String state = stringValue(record.get("state"));
-                        if (state!= null) {
-                            row.set("state", state);
-                        }
+                    String state = stringValue(csv, "state", record);
+                    if (state!= null) {
+                        row.set("state", state);
                     }
                     if (!row.isEmpty()) {
                         c.output(row);
@@ -106,5 +81,26 @@ public class ReadPersonSourceShapeFn
         if (headerMap.get(columnName) == null) {
             builder.append(columnName);
         }
+    }
+
+    private String stringValue(CSVParser csv, String fieldName, CSVRecord record)
+        throws Exception
+    {
+        HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
+        if (headerMap.get(fieldName)!= null) {
+            {
+                String stringValue = record.get(fieldName);
+                if (stringValue!= null) {
+                    stringValue = stringValue.trim();
+                    if (stringValue.equals("InjectErrorForTesting")) {
+                        throw new Exception("Error in pipeline : InjectErrorForTesting");
+                    }
+                    if (stringValue.length()> 0) {
+                        return stringValue;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

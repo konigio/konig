@@ -1877,7 +1877,7 @@ ShowlNodeShape valueShape = p.getValueShape();
       
       protected void processElement() throws BeamTransformGenerationException {
         
-        List<ShowlPropertyShape> sourceProperties = sourceProperties();
+        
         
         // private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
         AbstractJClass loggerClass = model.ref(Logger.class);
@@ -1936,7 +1936,8 @@ ShowlNodeShape valueShape = p.getValueShape();
             .arg(stream)
             .arg(standardCharsetsClass.staticRef("UTF_8"))
             .arg(csvFormatClass.staticRef("RFC4180").invoke("withFirstRecordAsHeader").invoke("withSkipHeaderRecord")));
-     // validateHeaders(csv);
+        
+        // validateHeaders(csv);
         innerBody.add(JExpr.invoke("validateHeaders").arg(csv));
         
         AbstractJClass hashMap = model.ref(HashMap.class).narrow(model.ref(String.class), model.ref(Integer.class));
@@ -1973,6 +1974,7 @@ ShowlNodeShape valueShape = p.getValueShape();
         AbstractJClass tableRowClass = model.ref(TableRow.class);
         JVar row = forEachRecord.decl(tableRowClass, "row").init(tableRowClass._new());
         
+        List<ShowlPropertyShape> sourceProperties = sourceProperties();
 
         for (ShowlPropertyShape sourceProperty : sourceProperties) {
           Class<?> datatype = javaType(sourceProperty);
@@ -1984,23 +1986,21 @@ ShowlNodeShape valueShape = p.getValueShape();
             fail("Getter not found for {0}", datatype.getSimpleName());
           }
           
-          //if (record.get("${fieldName}")!= null) {
-          JBlock ifHeaderBlock = forEachRecord._if(record.invoke("get").arg(JExpr.lit(fieldName)).neNull())._then();
-          
           //validateHeader(headerMap, ${fieldName}, builder);
           methodValidateHeaderBody.add(JExpr.invoke("validateHeader").arg(headerMap).arg(fieldName).arg(builder));
           
           //     $fieldName = ${getter}(record.get("${fieldName}"));
-          JVar fieldVar = ifHeaderBlock.decl(datatypeClass, fieldName, 
+          JVar fieldVar = forEachRecord.decl(datatypeClass, fieldName, 
               JExpr.invoke(getter)
-              .arg(record.invoke("get")
-              .arg(JExpr.lit(fieldName))));
+              .arg(csv)
+              .arg(JExpr.lit(fieldName))
+              .arg(record));
           
           registerSourceField(sourceProperty, fieldVar);
           
           //     if ($fieldName != null) {
           //       row.set("$fieldName", $fieldName);
-          ifHeaderBlock
+          forEachRecord
               ._if(fieldVar.ne(JExpr._null()))
               ._then().add(row.invoke("set").arg(JExpr.lit(fieldName)).arg(fieldVar));
           
@@ -2123,21 +2123,34 @@ ShowlNodeShape valueShape = p.getValueShape();
               javaClass == Integer.class ? model.ref(Long.class) :
               model.ref(javaClass);
           
+          AbstractJClass hashMap = model.ref(HashMap.class).narrow(model.ref(String.class), model.ref(Integer.class)); 
+          
           AbstractJClass exception = model.ref( Exception.class ); 
           
           // $returnType ${returnType}Value(String stringValue) {
           JMethod method = thisClass.method(JMod.PRIVATE, returnType, methodName)._throws(exception);
 
           getterMap.put(javaClass, method);
-          JVar stringValue = method.param(stringClass, "stringValue");
-          
+          JVar csvParser = method.param(model.ref(CSVParser.class), "csv");
+          JVar fieldName = method.param(stringClass, "fieldName");
+          JVar record = method.param(model.ref(CSVRecord.class), "record");
+         
           //   if (stringValue != null) {
           
-          JConditional if1 = method.body()
-            ._if(stringValue.ne(JExpr._null()));
+          JVar headerMap = method.body().decl(hashMap, "headerMap")
+            		.init(csvParser.invoke("getHeaderMap").castTo(hashMap));
+            
+          JBlock ifConditionBlock = method.body()._if(headerMap.invoke("get").arg(fieldName).ne(JExpr._null()))._then().block();
+
+          JVar stringValue = ifConditionBlock.decl(stringClass, "stringValue").init(record.invoke("get").arg(fieldName));
+          JConditional if1 = ifConditionBlock._if(stringValue.ne(JExpr._null()));
+         
+          
           
           //     stringValue = stringValue.trim();
           if1._then().assign(stringValue, stringValue.invoke("trim"));
+          
+          
           
           // if (stringValue.equals("InjectErrorForTesting")) 
           JBlock errorTestingBlock =  if1._then()._if(stringValue.invoke("equals").arg(JExpr.lit("InjectErrorForTesting")))._then();
