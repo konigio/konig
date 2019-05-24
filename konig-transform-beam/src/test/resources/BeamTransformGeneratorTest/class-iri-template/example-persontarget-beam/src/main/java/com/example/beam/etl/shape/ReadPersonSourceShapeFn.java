@@ -21,9 +21,14 @@ public class ReadPersonSourceShapeFn
 {
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
 
-    private String stringValue(String stringValue) {
+    private String stringValue(String stringValue)
+        throws Exception
+    {
         if (stringValue!= null) {
             stringValue = stringValue.trim();
+            if (stringValue.equals("InjectErrorForTesting")) {
+                throw new Exception("Error in pipeline : InjectErrorForTesting");
+            }
             if (stringValue.length()> 0) {
                 return stringValue;
             }

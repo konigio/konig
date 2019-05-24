@@ -2123,11 +2123,10 @@ ShowlNodeShape valueShape = p.getValueShape();
               javaClass == Integer.class ? model.ref(Long.class) :
               model.ref(javaClass);
           
-          
-
+          AbstractJClass exception = model.ref( Exception.class ); 
           
           // $returnType ${returnType}Value(String stringValue) {
-          JMethod method = thisClass.method(JMod.PRIVATE, returnType, methodName);
+          JMethod method = thisClass.method(JMod.PRIVATE, returnType, methodName)._throws(exception);
 
           getterMap.put(javaClass, method);
           JVar stringValue = method.param(stringClass, "stringValue");
@@ -2139,7 +2138,12 @@ ShowlNodeShape valueShape = p.getValueShape();
           
           //     stringValue = stringValue.trim();
           if1._then().assign(stringValue, stringValue.invoke("trim"));
-        
+          
+          // if (stringValue.equals("InjectErrorForTesting")) 
+          JBlock errorTestingBlock =  if1._then()._if(stringValue.invoke("equals").arg(JExpr.lit("InjectErrorForTesting")))._then();
+          // throw new java.lang.Exception("Error in pipeline : InjectErrorForTesting");  
+          errorTestingBlock._throw(JExpr._new(exception).arg("Error in pipeline : InjectErrorForTesting"));
+          
           //     if (stringValue.length() > 0) {
           
           JBlock block1 = if1._then()._if(stringValue.invoke("length").gt(JExpr.lit(0)))._then();
