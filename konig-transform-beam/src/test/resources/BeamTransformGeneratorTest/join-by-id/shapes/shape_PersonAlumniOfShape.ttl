@@ -1,4 +1,4 @@
-@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix alias: <http://example.com/ns/alias/> .
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix schema: <http://schema.org/> .
@@ -7,19 +7,17 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:PersonAlumniOfShape sh:property  [ 
-		sh:path schema:alumniOf ; 
-		rdf:predicate schema:alumniOf ; 
-		sh:nodeKind sh:IRI ; 
+		sh:path alias:alumni_of ; 
 		sh:class schema:Organization ; 
+		rdf:predicate alias:alumni_of ; 
+		sh:nodeKind sh:IRI ; 
+		sh:minCount 0 ; 
 		sh:maxCount 1 ; 
-		sh:minCount 0 ]  ; 
-	a sh:Shape ; 
-	sh:nodeKind sh:IRI ; 
-	sh:targetClass schema:Person ; 
-	konig:shapeDataSource <gs://personalumniofshape-${gcpBucketSuffix}> . 
+		konig:formula '''
+@term alumniOf <http://schema.org/alumniOf>
 
-<gs://personalumniofshape-${gcpBucketSuffix}> gcp:name "personalumniofshape-${gcpBucketSuffix}" ; 
-	gcp:location "us" ; 
-	gcp:projectId "${gcpProjectId}" ; 
-	gcp:storageClass "multi_regional" ; 
-	a konig:GoogleCloudStorageBucket , konig:DataSource . 
+$.alumniOf''' ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <gs://example-inbound-${environmentName}> ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI . 

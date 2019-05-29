@@ -1,4 +1,4 @@
-@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix alias: <http://example.com/ns/alias/> .
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix schema: <http://schema.org/> .
@@ -7,18 +7,16 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:PersonNameShape sh:property  [ 
-		sh:path schema:givenName ; 
-		rdf:predicate schema:givenName ; 
+		sh:path alias:first_name ; 
+		rdf:predicate alias:first_name ; 
 		sh:datatype xsd:string ; 
+		sh:minCount 0 ; 
 		sh:maxCount 1 ; 
-		sh:minCount 0 ]  ; 
-	a sh:Shape ; 
-	sh:nodeKind sh:IRI ; 
-	sh:targetClass schema:Person ; 
-	konig:shapeDataSource <gs://personnameshape-${gcpBucketSuffix}> . 
+		konig:formula '''
+@term givenName <http://schema.org/givenName>
 
-<gs://personnameshape-${gcpBucketSuffix}> gcp:name "personnameshape-${gcpBucketSuffix}" ; 
-	gcp:location "us" ; 
-	gcp:projectId "${gcpProjectId}" ; 
-	gcp:storageClass "multi_regional" ; 
-	a konig:GoogleCloudStorageBucket , konig:DataSource . 
+$.givenName''' ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <gs://example-inbound-${environmentName}> ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI . 

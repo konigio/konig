@@ -198,6 +198,16 @@ public class ShowlEffectiveNodeShape {
 		return p;
 	}
 
+	public ShowlNodeShape directNode() {
+		for (ShowlPropertyShapeGroup group : getProperties()) {
+			ShowlPropertyShape direct = group.synonymDirect();
+			if (direct != null) {
+				return direct.getDeclaringShape();
+			}
+		}
+		return null;
+	}
+
 
 	
 }

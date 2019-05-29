@@ -14,7 +14,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
-public class ReadPersonNameFn
+public class ReadAddressSourceFn
     extends DoFn<FileIO.ReadableFile, KV<String, TableRow>>
 {
 
@@ -43,16 +43,20 @@ public class ReadPersonNameFn
                 CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180 .withFirstRecordAsHeader().withSkipHeaderRecord());
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
-                    String first_name = stringValue(record.get("first_name"));
-                    if (first_name!= null) {
-                        row.set("first_name", first_name);
+                    String addressOf = stringValue(record.get("addressOf"));
+                    if (addressOf!= null) {
+                        row.set("addressOf", addressOf);
                     }
-                    String id = stringValue(record.get("id"));
-                    if (id!= null) {
-                        row.set("id", id);
+                    String city = stringValue(record.get("city"));
+                    if (city!= null) {
+                        row.set("city", city);
+                    }
+                    String state = stringValue(record.get("state"));
+                    if (state!= null) {
+                        row.set("state", state);
                     }
                     if (!row.isEmpty()) {
-                        c.output(KV.of(id.toString(), row));
+                        c.output(KV.of(addressOf.toString(), row));
                     }
                 }
             } finally {

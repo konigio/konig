@@ -4,30 +4,32 @@
 @prefix schema: <http://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix shape: <http://example.com/shapes/> .
+@prefix sys: <http://example.com/ns/sys/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 shape:BqPersonShape sh:property  [ 
 		sh:path schema:givenName ; 
 		rdf:predicate schema:givenName ; 
 		sh:datatype xsd:string ; 
-		sh:maxCount 1 ; 
-		sh:minCount 0
+		sh:minCount 0 ; 
+		sh:maxCount 1
 	 ]  ,  [ 
 		sh:path schema:alumniOf ; 
+		sh:class schema:Organization ; 
 		rdf:predicate schema:alumniOf ; 
 		sh:nodeKind sh:IRI ; 
-		sh:class schema:Organization ; 
-		sh:maxCount 1 ; 
-		sh:minCount 0 ]  ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]  ; 
 	a sh:Shape ; 
-	sh:nodeKind sh:IRI ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/BqPerson> ; 
+	konig:explicitDerivedFrom shape:PersonNameShape , shape:PersonAlumniOfShape ; 
 	sh:targetClass schema:Person ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> ; 
-	konig:explicitDerivedFrom shape:PersonAlumniOfShape , shape:PersonNameShape . 
+	sh:nodeKind sh:IRI . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/Person> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/BqPerson> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
 	gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
-		gcp:datasetId "schema" ; 
-		gcp:tableId "Person" ]  ; 
-	a konig:GoogleBigQueryTable , konig:DataSource . 
+		gcp:tableId "BqPerson" ; 
+		gcp:datasetId "schema" ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:WarehouseOperationalData . 

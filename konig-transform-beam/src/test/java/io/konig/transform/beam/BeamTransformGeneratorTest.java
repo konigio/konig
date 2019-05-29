@@ -43,22 +43,16 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.BasicTransformService;
-import io.konig.core.showl.CompositeSourceNodeSelector;
-import io.konig.core.showl.DataSourceTypeSourceNodeSelector;
-import io.konig.core.showl.ExplicitDerivedFromSelector;
-import io.konig.core.showl.HasDataSourceTypeSelector;
-import io.konig.core.showl.RawCubeSourceNodeSelector;
+import io.konig.core.showl.DestinationTypeTargetNodeShapeFactory;
 import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
 import io.konig.core.showl.ReceivesDataFromTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlClassProcessor;
-import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlNodeShapeBuilder;
 import io.konig.core.showl.ShowlService;
 import io.konig.core.showl.ShowlServiceImpl;
 import io.konig.core.showl.ShowlSourceNodeFactory;
-import io.konig.core.showl.ShowlTargetNodeSelector;
 import io.konig.core.showl.ShowlTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlTransformEngine;
 import io.konig.core.showl.ShowlTransformService;
@@ -76,20 +70,21 @@ public class BeamTransformGeneratorTest {
 	private Graph graph = new MemoryGraph(nsManager);
 	private ShapeManager shapeManager = new MemoryShapeManager();
 	private OwlReasoner reasoner = new OwlReasoner(graph);
-	private ShowlTargetNodeSelector targetNodeSelector = new HasDataSourceTypeSelector(Konig.GoogleBigQueryTable);
 	private ShowlNodeListingConsumer consumer = new ShowlNodeListingConsumer();
-	private ShowlManager showlManager = new ShowlManager(
-			shapeManager, reasoner, targetNodeSelector, nodeSelector(shapeManager), consumer);
-	private ShowlTransformEngine engine;
-	private ShowlService showlService;
+	private ShowlService showlService = new ShowlServiceImpl(reasoner);
+	private ShowlNodeShapeBuilder nodeShapeBuilder = new ShowlNodeShapeBuilder(showlService, showlService);
+
+	private DestinationTypeTargetNodeShapeFactory targetNodeFactory = new DestinationTypeTargetNodeShapeFactory(
+			Collections.singleton(Konig.GoogleBigQueryTable), nodeShapeBuilder);
+	
+	private ReceivesDataFromSourceNodeFactory sourceNodeFactory = new ReceivesDataFromSourceNodeFactory(nodeShapeBuilder, graph);
+
+	private ShowlTransformService transformService = new BasicTransformService(showlService, showlService, sourceNodeFactory);
+
+	private ShowlTransformEngine engine = new ShowlTransformEngine(targetNodeFactory, shapeManager, transformService, consumer);
 	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
 
-	private static CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
-		return new CompositeSourceNodeSelector(
-				new RawCubeSourceNodeSelector(shapeManager),
-				new DataSourceTypeSourceNodeSelector(shapeManager, Konig.GoogleCloudStorageBucket),
-				new ExplicitDerivedFromSelector());
-	}
+	
 	
 
 	@Before
@@ -201,6 +196,14 @@ public class BeamTransformGeneratorTest {
 	public void testEnumIriReference() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-iri-reference");
+		
+	}
+	
+
+	@Test
+	public void testJoinNestedRecord() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record", false);
 		
 	}
 
