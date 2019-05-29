@@ -113,9 +113,17 @@ public class BeamTransformGeneratorTest {
 	}
 
 	@Test
+	public void testTrivialIriTemplate() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/trivial-iri-template", false);
+		
+	}
+	
+
+	@Test
 	public void testClassIriTemplate() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/class-iri-template");
+		generateAll("src/test/resources/BeamTransformGeneratorTest/class-iri-template", false);
 		
 	}
 
@@ -129,7 +137,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testIriTemplateFormula() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/iri-template-formula");
+		generateAll("src/test/resources/BeamTransformGeneratorTest/iri-template-formula", false);
 		
 	}
 	
@@ -173,7 +181,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testTabularMapping() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/tabular-mapping");
+		generateAll("src/test/resources/BeamTransformGeneratorTest/tabular-mapping", false);
 		
 	}
 	
