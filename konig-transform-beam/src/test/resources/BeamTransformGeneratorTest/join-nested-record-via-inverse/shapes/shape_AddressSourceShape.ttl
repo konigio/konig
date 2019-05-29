@@ -1,0 +1,47 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:AddressSourceShape sh:property  [ 
+		sh:path alias:address_of ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate alias:address_of ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		konig:formula '''
+@term address <http://schema.org/address>
+
+$^address''' ; 
+		sh:class schema:Person
+	 ]  ,  [ 
+		sh:path alias:city ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:city ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ; 
+		konig:formula '''
+@term addressLocality <http://schema.org/addressLocality>
+
+$.addressLocality'''
+	 ]  ,  [ 
+		sh:path alias:state ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:state ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ; 
+		konig:formula '''
+@term addressRegion <http://schema.org/addressRegion>
+
+$.addressRegion''' ]  ; 
+	a sh:Shape ; 
+	konig:mediaTypeBaseName "application/vnd.example.source.address" ; 
+	konig:shapeDataSource <gs://example-inbound-${environmentName}/inbound/application/vnd.example.source.address+csv> ; 
+	sh:targetClass schema:PostalAddress . 
+
+<gs://example-inbound-${environmentName}/inbound/application/vnd.example.source.address+csv> a konig:GoogleCloudStorageFolder , konig:DataSource ; 
+	schema:isPartOf <gs://example-inbound-${environmentName}> , sys:WarehouseStaging . 

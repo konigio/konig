@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -42,6 +43,24 @@ import io.konig.core.vocab.Schema;
 public class FormulaParserTest {
 
 	private FormulaParser parser = new FormulaParser();
+	
+	@Test
+	public void testInversePath() throws Exception {
+		String text = "$^address";
+
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		service.add(Schema.address);
+		
+		FormulaParser parser = new FormulaParser(null, service);
+
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		String actual = e.toSimpleString();
+		
+		String expected = text;
+		
+		assertEquals(expected, actual);
+		
+	}
 	
 	@Test
 	public void testIriTemplate() throws Exception {
