@@ -349,6 +349,13 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 		p.setDecimalScale(decimalScale);
 		p.setPreferredTabularShape(preferredTabularShapeId);
 		
+		// Record the RDF Property so that it is available to the local name service
+		// when parsing KQL formulas later.
+		
+		URI predicate = p.getPredicate();
+		if (predicate != null) {
+			reasoner.getGraph().edge(predicate, RDF.TYPE, RDF.PROPERTY);
+		}
 	}
 	
 	

@@ -207,6 +207,14 @@ public class BeamTransformGeneratorTest {
 		
 	}
 
+
+	@Test
+	public void testJoinNestedRecordViaInverse() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record-via-inverse", false);
+		
+	}
+
 	public void generateAll(String path) throws Exception {
 		generateAll(path, true);
 	}

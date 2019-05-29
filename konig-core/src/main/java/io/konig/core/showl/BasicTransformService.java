@@ -212,26 +212,43 @@ public class BasicTransformService implements ShowlTransformService {
 				
 				
 			} else {
-				// Look for inverse attribute of accessor, and see if the sourceShape contains this value
 				
 				ShowlPropertyShape targetId = targetAccessor.getDeclaringShape().findOut(Konig.id);
+				URI targetAccessorPredicate = targetAccessor.getPredicate();
 				
-				if (targetId.getSelectedExpression() != null) {
-					ShowlExpression leftJoinExpression = targetId.getSelectedExpression();
-					Set<URI> inverseSet = schemaService.getOwlReasoner().inverseOf(targetAccessor.getPredicate());
-					
-					for (URI inverseProperty : inverseSet) {
-						ShowlPropertyShape sourceJoinProperty = sourceShape.findOut(inverseProperty);
-						if (sourceJoinProperty != null) {
-							ShowlEqualStatement join = new ShowlEqualStatement(leftJoinExpression, ShowlUtil.propertyExpression(sourceJoinProperty));
-							targetRoot.addChannel(new ShowlChannel(sourceShape, join));
-							return true;
+				if (targetId != null) {
+					if (targetId.getSelectedExpression() != null) {
+						ShowlExpression leftJoinExpression = targetId.getSelectedExpression();
+						
+						// Look for owl:inverseOf attribute of accessor, and see if the sourceShape contains this value
+						
+						Set<URI> inverseSet = schemaService.getOwlReasoner().inverseOf(targetAccessorPredicate);
+						
+						for (URI inverseProperty : inverseSet) {
+							ShowlPropertyShape sourceJoinProperty = sourceShape.findOut(inverseProperty);
+							if (sourceJoinProperty != null) {
+								ShowlEqualStatement join = new ShowlEqualStatement(leftJoinExpression, ShowlUtil.propertyExpression(sourceJoinProperty));
+								targetRoot.addChannel(new ShowlChannel(sourceShape, join));
+								return true;
+							}
+						}
+						
+						// Look for inverse path in sourceShape
+						
+						for (ShowlInwardPropertyShape inwardProperty : sourceShape.getInwardProperties()) {
+							URI inwardPredicate = inwardProperty.getPredicate();
+							ShowlPropertyShape inwardDirect = inwardProperty.getSynonym();
+							if (inwardDirect instanceof ShowlDirectPropertyShape && targetAccessorPredicate.equals(inwardPredicate)) {
+								ShowlEqualStatement join = new ShowlEqualStatement(leftJoinExpression, ShowlUtil.propertyExpression(inwardDirect));
+								targetRoot.addChannel(new ShowlChannel(sourceShape, join));
+								return true;
+								
+							}
 						}
 					}
+					
+					
 				}
-				
-				
-				
 			}
 		}
 		
