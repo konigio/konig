@@ -528,7 +528,7 @@ public class BasicTransformService implements ShowlTransformService {
 				IriTemplate iriTemplate = new IriTemplate(templateValue.stringValue());
 				
 				for (ShowlPropertyShape sourceProperty : sourcePropertyGroup) {
-					ShowlFunctionExpression e = ShowlFunctionExpression.fromIriTemplate(schemaService, nodeService, sourceProperty, iriTemplate);
+					ShowlExpression e = ShowlFunctionExpression.fromIriTemplate(schemaService, nodeService, sourceProperty, iriTemplate);
 					if (ShowlUtil.isWellDefined(e)) {
 						targetProperty.setSelectedExpression(e);
 						return true;

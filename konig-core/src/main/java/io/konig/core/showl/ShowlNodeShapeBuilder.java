@@ -76,7 +76,6 @@ public class ShowlNodeShapeBuilder {
 		}
 		
 		
-		addIdProperty(node);
 		
 		for (PropertyConstraint c : node.getShape().getProperty()) {
 			addDirectProperty(node, c.getPredicate(), c);
@@ -86,7 +85,8 @@ public class ShowlNodeShapeBuilder {
 			addDerivedProperty(node, c);
 		}
 		
-		
+
+		addIdProperty(node);
 		
 	}
 

@@ -2299,7 +2299,7 @@ public class ShowlManager implements ShowlClassManager {
 						}
 					}
 					
-					ShowlFunctionExpression e = ShowlFunctionExpression.fromIriTemplate(
+					ShowlExpression e = ShowlFunctionExpression.fromIriTemplate(
 							showlFactory, showlFactory, derived, template);
 					
 					derived.setFormula(e);

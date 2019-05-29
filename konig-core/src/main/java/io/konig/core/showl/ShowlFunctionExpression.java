@@ -27,9 +27,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
+import io.konig.core.Context;
 import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.util.IriTemplate;
+import io.konig.core.util.ValueFormat.Element;
+import io.konig.core.util.ValueFormat.ElementType;
 import io.konig.formula.Formula;
 import io.konig.formula.FormulaUtil;
 import io.konig.formula.FormulaVisitor;
@@ -47,7 +51,23 @@ public class ShowlFunctionExpression implements ShowlExpression {
 		this.function = function;
 	}
 	
-	public static ShowlFunctionExpression fromIriTemplate(ShowlSchemaService schemaService, ShowlNodeShapeService nodeService, ShowlPropertyShape declaringProperty, IriTemplate template) {
+	public static ShowlExpression fromIriTemplate(ShowlSchemaService schemaService, ShowlNodeShapeService nodeService, ShowlPropertyShape declaringProperty, IriTemplate template) {
+		
+		List<? extends Element> list = template.toList();
+		
+		if (list.size() == 1) {
+			Element e = list.get(0);
+			if (e.getType() == ElementType.VARIABLE) {
+				Context c = template.getContext();
+				URI predicate = new URIImpl(c.expandIRI(e.getText()));
+				ShowlPropertyShape arg = declaringProperty.getDeclaringShape().findOut(predicate);
+				if (arg != null) {
+					arg = arg.maybeDirect();
+					return ShowlUtil.propertyExpression(arg);
+				}
+			}
+		}
+		
 		ShowlExpressionBuilder builder = new ShowlExpressionBuilder(schemaService, nodeService);
 		return builder.functionExpression(declaringProperty,  FunctionExpression.fromIriTemplate(template));
 	}

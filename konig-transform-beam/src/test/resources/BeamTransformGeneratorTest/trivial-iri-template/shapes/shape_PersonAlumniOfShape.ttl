@@ -1,0 +1,35 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonAlumniOfShape sh:property  [ 
+		sh:path alias:ID ; 
+		sh:class schema:Person ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate alias:ID
+	 ]  ,  [ 
+		sh:path alias:alumni_of ; 
+		konig:formula '''
+@term alumniOf <http://schema.org/alumniOf>
+
+$.alumniOf''' ; 
+		sh:class schema:Organization ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate alias:alumni_of ]  ; 
+	a sh:Shape ; 
+	konig:iriTemplate '''@context {
+   "alias" : "http://example.com/ns/alias/",
+   "ID" : "alias:ID"
+}
+
+<{ID}>''' ; 
+	konig:shapeDataSource <gs://example-inbound-${environmentName}> ; 
+	sh:targetClass schema:Person . 
