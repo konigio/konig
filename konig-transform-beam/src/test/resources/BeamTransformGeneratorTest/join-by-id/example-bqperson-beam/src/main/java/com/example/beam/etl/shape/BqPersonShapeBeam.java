@@ -16,20 +16,20 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 
 public class BqPersonShapeBeam {
-    static final TupleTag<String> personAlumniOfTag = new TupleTag<String>();
-    static final TupleTag<String> personNameTag = new TupleTag<String>();
+    static final TupleTag<TableRow> personAlumniOfTag = new TupleTag<TableRow>();
+    static final TupleTag<TableRow> personNameTag = new TupleTag<TableRow>();
 
     private static String sourceURI(String pattern, BqPersonShapeBeam.Options options) {
-        return pattern.replace("${gcpBucketSuffix}", options.getEnvironment());
+        return pattern.replace("${environmentName}", options.getEnvironment());
     }
 
     public static void process(BqPersonShapeBeam.Options options) {
         org.apache.beam.sdk.Pipeline p = org.apache.beam.sdk.Pipeline.create(options);
-        PCollection<FileIO.ReadableFile> personAlumniOf = p.apply(FileIO.match().filepattern(sourceURI("gs://personalumniofshape-${gcpBucketSuffix}", options))).apply(FileIO.readMatches()).apply(ParDo.of(new ReadPersonAlumniOfFn()));
-        PCollection<FileIO.ReadableFile> personName = p.apply(FileIO.match().filepattern(sourceURI("gs://personnameshape-${gcpBucketSuffix}", options))).apply(FileIO.readMatches()).apply(ParDo.of(new ReadPersonNameFn()));
+        PCollection<FileIO.ReadableFile> personAlumniOf = p.apply(FileIO.match().filepattern(sourceURI("gs://example-inbound-${environmentName}/*", options))).apply(FileIO.readMatches()).apply(ParDo.of(new ReadPersonAlumniOfFn()));
+        PCollection<FileIO.ReadableFile> personName = p.apply(FileIO.match().filepattern(sourceURI("gs://example-inbound-${environmentName}/*", options))).apply(FileIO.readMatches()).apply(ParDo.of(new ReadPersonNameFn()));
         PCollection<KV<String, CoGbkResult>> kvpCollection = KeyedPCollectionTuple.of(personAlumniOfTag, personAlumniOf).and(personNameTag, personName).apply(CoGroupByKey.<String> create());
         TableRow<TableRow> outputRowCollection = kvpCollection.apply(ParDo.of(new MergePersonAlumniOfAndPersonNameFn()));
-        outputRowCollection.apply("WriteBqPerson", BigQueryIO.writeTableRows().to("schema.Person").withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER).withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
+        outputRowCollection.apply("WriteBqPerson", BigQueryIO.writeTableRows().to("schema.BqPerson").withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER).withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
     }
 
     public static void main(String[] args) {

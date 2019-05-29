@@ -72,11 +72,12 @@ public abstract class ShowlPropertyExpression implements ShowlExpression {
 	@Override
 	public void addProperties(Set<ShowlPropertyShape> set) {
 		ShowlPropertyShape p = getSourceProperty();
-		if (p.getFormula() != null) {
-			p.getFormula().addProperties(set);
-		} else {
-			set.add(p);
-		}
+		set.add(p);
+//		if (p.getFormula() != null) {
+//			p.getFormula().addProperties(set);
+//		} else {
+//			set.add(p);
+//		}
 	}
 	
 	

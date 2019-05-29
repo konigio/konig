@@ -14,7 +14,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
-public class ReadPersonNameFn
+public class ReadPersonNameSourceFn
     extends DoFn<FileIO.ReadableFile, KV<String, TableRow>>
 {
 

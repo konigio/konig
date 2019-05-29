@@ -1,0 +1,26 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonNameSourceShape sh:property  [ 
+		sh:path schema:first_name ; 
+		konig:formula '''
+@term givenName <http://schema.org/givenName>
+
+$.givenName''' ; 
+		rdf:predicate schema:first_name ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	konig:mediaTypeBaseName "application/vnd.example.source.person-name" ; 
+	konig:shapeDataSource <gs://example-inbound-${environmentName}/inbound/application/vnd.example.source.person-name+csv> ; 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:Person . 
+
+<gs://example-inbound-${environmentName}/inbound/application/vnd.example.source.person-name+csv> a konig:GoogleCloudStorageFolder , konig:DataSource ; 
+	schema:isPartOf <gs://example-inbound-${environmentName}> , sys:WarehouseStaging . 

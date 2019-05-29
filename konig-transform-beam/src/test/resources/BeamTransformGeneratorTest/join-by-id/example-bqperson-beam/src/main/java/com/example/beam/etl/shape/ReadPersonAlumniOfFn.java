@@ -18,9 +18,14 @@ public class ReadPersonAlumniOfFn
     extends DoFn<FileIO.ReadableFile, KV<String, TableRow>>
 {
 
-    private String stringValue(String stringValue) {
+    private String stringValue(String stringValue)
+        throws Exception
+    {
         if (stringValue!= null) {
             stringValue = stringValue.trim();
+            if (stringValue.equals("InjectErrorForTesting")) {
+                throw new Exception("Error in pipeline : InjectErrorForTesting");
+            }
             if (stringValue.length()> 0) {
                 return stringValue;
             }
@@ -38,9 +43,9 @@ public class ReadPersonAlumniOfFn
                 CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180 .withFirstRecordAsHeader().withSkipHeaderRecord());
                 for (CSVRecord record: csv) {
                     TableRow row = new TableRow();
-                    String alumniOf = stringValue(record.get("alumniOf"));
-                    if (alumniOf!= null) {
-                        row.set("alumniOf", alumniOf);
+                    String alumni_of = stringValue(record.get("alumni_of"));
+                    if (alumni_of!= null) {
+                        row.set("alumni_of", alumni_of);
                     }
                     String id = stringValue(record.get("id"));
                     if (id!= null) {
