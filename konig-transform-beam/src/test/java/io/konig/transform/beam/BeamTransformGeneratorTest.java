@@ -203,7 +203,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testJoinNestedRecord() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record");
+		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record", false);
 		
 	}
 
