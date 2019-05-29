@@ -44,6 +44,24 @@ public class FormulaParserTest {
 
 	private FormulaParser parser = new FormulaParser();
 	
+
+	@Test
+	public void testSelfReference() throws Exception {
+		String text = "$";
+
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		
+		FormulaParser parser = new FormulaParser(null, service);
+
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		String actual = e.toSimpleString();
+		
+		String expected = text;
+		
+		assertEquals(expected, actual);
+		
+	}
+	
 	@Test
 	public void testInversePath() throws Exception {
 		String text = "$^address";

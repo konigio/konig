@@ -76,6 +76,8 @@ public class PathExpression extends AbstractFormula implements PrimaryExpression
 				PathStep step = sequence.next();
 				step.print(out);
 			}
+		} else {
+			out.print('$');
 		}
 
 	}
