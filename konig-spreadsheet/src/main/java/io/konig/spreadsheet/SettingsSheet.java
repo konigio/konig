@@ -176,7 +176,7 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	}
 	
 	private void persist() {
-		if (outDir != null) {
+		if (outDir != null && settings!=null) {
 			outDir.mkdirs();
 			String fileName = processor.getActiveWorkbook().getFile().getName();
 			int dot = fileName.lastIndexOf('.');
