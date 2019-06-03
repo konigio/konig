@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
 import org.openrdf.model.URI;
 
 import io.konig.core.Graph;
@@ -111,14 +111,19 @@ public class BeamTransformGeneratorDebug {
 		generator =  new BeamTransformGenerator("com.example.beam.etl", reasoner);
 	}
 
-
-	@Ignore
+	public static void main(String[] arg) throws Exception {
+		BeamTransformGeneratorDebug debug = new BeamTransformGeneratorDebug();
+		debug.setUp();
+		debug.test();
+	}
+	
+	@Test
 	public void test() throws Exception {
 		generateAll("src/test/resources/BeamTransformGeneratorDebug/rdf", false);
 		
 	}
 	
-
+  
 
 	public void generateAll(String path) throws Exception {
 		generateAll(path, true);

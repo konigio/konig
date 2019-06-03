@@ -5,7 +5,7 @@
 		<groupId>io.konig</groupId>
 		<artifactId>konig-parent</artifactId>
 		<relativePath>../konig-parent/pom.xml</relativePath>
-		<version>2.5.0</version>
+		<version>2.6.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>konig-aws-common</artifactId>

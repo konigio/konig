@@ -40,10 +40,6 @@ public class ReadPersonSourceShapeFn
                     if (city!= null) {
                         row.set("city", city);
                     }
-                    String id = stringValue(csv, "id", record);
-                    if (id!= null) {
-                        row.set("id", id);
-                    }
                     String person_id = stringValue(csv, "person_id", record);
                     if (person_id!= null) {
                         row.set("person_id", person_id);
@@ -69,7 +65,6 @@ public class ReadPersonSourceShapeFn
         StringBuilder builder = new StringBuilder();
         validateHeader(headerMap, "address_id", builder);
         validateHeader(headerMap, "city", builder);
-        validateHeader(headerMap, "id", builder);
         validateHeader(headerMap, "person_id", builder);
         validateHeader(headerMap, "state", builder);
         if (builder.length()> 0) {

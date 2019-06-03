@@ -182,7 +182,7 @@ public class RdbmsShapeGenerator {
 			}
 		}
 		
-		rdbmsShape.setProperty(rdbmsProperty);
+		rdbmsShape.setPropertyList(rdbmsProperty);
 	}
 	
 //	private void addSyntheticKey(Shape rdbmsShape, String suffix, URI relationshipProperty) throws RDFParseException, IOException {

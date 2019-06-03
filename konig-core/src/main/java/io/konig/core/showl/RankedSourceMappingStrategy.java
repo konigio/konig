@@ -358,7 +358,7 @@ public class RankedSourceMappingStrategy implements ShowlMappingStrategy {
 								Set<ShowlNodeShape> set = manager.getShowlFactory().selectCandidateSources(qElement.getValueShape());
 								if (!set.isEmpty()) {
 									Set<ShowlPropertyShape> unmapped = selectMappings(qElement.getValueShape());
-									System.out.println(unmapped.size());
+//									System.out.println(unmapped.size());
 								}
 
 							}

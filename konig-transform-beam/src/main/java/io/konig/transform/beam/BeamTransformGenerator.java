@@ -1065,7 +1065,7 @@ public class BeamTransformGenerator {
         if (p.getValueShape() != null) {
           transformObjectProperty(sourceInfo, body, p, inputRow, outputRow);
         } else if (e == null) {
-          fail("Mapping not found for property {0}", p.getPath());
+          fail("Mapping not found for property {0}({1})", p.getPath(), new Integer(p.hashCode()).toString());
         } else if (e instanceof ShowlDirectPropertyExpression) {
           ShowlDirectPropertyShape other = ((ShowlDirectPropertyExpression) e).getSourceProperty();
           transformDirectProperty(body, p, other, inputRow, outputRow);
@@ -1165,7 +1165,11 @@ public class BeamTransformGenerator {
       }
 
       private void transformEnumProperty(JBlock body, ShowlDirectPropertyShape p, ShowlEnumPropertyExpression e,
-          JVar inputRow, JVar outputRow, JVar enumObject) {
+          JVar inputRow, JVar outputRow, JVar enumObject) throws BeamTransformGenerationException {
+      	
+      	if (enumObject == null) {
+      		throw new BeamTransformGenerationException("enumObject must not be null for " + p.getPath());
+      	}
         
         URI predicate = p.getPredicate();
         String fieldName = predicate.getLocalName();

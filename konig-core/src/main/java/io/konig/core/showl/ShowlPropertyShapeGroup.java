@@ -165,6 +165,9 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
 				return (ShowlDirectPropertyShape) p;
 			}
 			
+		}
+		for (ShowlPropertyShape p : this) {
+
 			ShowlPropertyShape synonym = p.getSynonym();
 			if (synonym instanceof ShowlDirectPropertyShape) {
 				return (ShowlDirectPropertyShape) synonym;

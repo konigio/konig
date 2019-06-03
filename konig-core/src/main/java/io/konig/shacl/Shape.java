@@ -149,7 +149,7 @@ public class Shape implements Cloneable {
 		Shape clone = clone();
 
 		List<PropertyConstraint> propertyList = new ArrayList<>();
-		clone.setProperty(propertyList);
+		clone.property = propertyList;
 		for (PropertyConstraint p : getProperty()) {
 			propertyList.add(p.deepClone());
 		}
@@ -187,8 +187,9 @@ public class Shape implements Cloneable {
 		return property==null ? EMPTY_PROPERTY_LIST : property;
 	}
 	
+
 	
-	public void setProperty(List<PropertyConstraint> list) {
+	public void setPropertyList(List<PropertyConstraint> list) {
 		property = list;
 	}
 	
@@ -285,6 +286,11 @@ public class Shape implements Cloneable {
 			}
 		}
 		return null;
+	}
+
+	@RdfProperty(SH.PROPERTY)
+	public void addProperty(PropertyConstraint c) {
+		add(c);
 	}
 	
 	@RdfProperty(SH.PROPERTY)
@@ -863,6 +869,5 @@ public class Shape implements Cloneable {
 	public void setNodeShapeCube(Cube nodeShapeCube) {
 		this.nodeShapeCube = nodeShapeCube;
 	}
-	
 	
 }
