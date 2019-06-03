@@ -230,7 +230,7 @@ public class ClassAnalyzer {
 		if (shape.getOr()!=null) {
 
 			List<PropertyConstraint> sink = new ArrayList<>();
-			shape.setProperty(sink);
+			shape.setPropertyList(sink);
 			Map<URI,List<PropertyConstraint>> map = orPropertyMap(shape);
 			shape.setOr(null);
 			for (Entry<URI, List<PropertyConstraint>> e : map.entrySet()) {

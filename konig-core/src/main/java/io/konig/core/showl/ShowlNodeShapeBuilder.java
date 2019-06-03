@@ -81,6 +81,8 @@ public class ShowlNodeShapeBuilder {
 			addDirectProperty(node, c.getPredicate(), c);
 		}
 		
+		processFormulas(node);
+		
 		for (PropertyConstraint c : node.getShape().getDerivedProperty()) {
 			addDerivedProperty(node, c);
 		}
@@ -92,6 +94,16 @@ public class ShowlNodeShapeBuilder {
 
 
 	
+
+	private void processFormulas(ShowlNodeShape node) {
+		for (ShowlDirectPropertyShape direct : node.getProperties()) {
+			processFormula(direct);
+			if (direct.getValueShape() != null) {
+				processFormulas(direct.getValueShape());
+			}
+		}
+		
+	}
 
 	private void addIdProperty(ShowlNodeShape declaringShape) {
 
@@ -145,8 +157,6 @@ public class ShowlNodeShapeBuilder {
 			if (logger.isTraceEnabled()) {
 				logger.trace("addDirectProperty: {}", direct.getPath());
 			}
-			
-			processFormula(direct);
 						
 			if (recursive && c!=null && c.getShape()!=null) {
 				buildNodeShape(direct, c.getShape());
@@ -169,6 +179,8 @@ public class ShowlNodeShapeBuilder {
 				synonym.addExpression(propertyExpression(p));
 			}
 		}
+		
+		
 		
 	}
 

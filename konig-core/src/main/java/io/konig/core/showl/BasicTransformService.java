@@ -134,7 +134,18 @@ public class BasicTransformService implements ShowlTransformService {
 	private void addCandidateSource(State state) {
 		Set<ShowlPropertyShapeGroup> propertyPool = state.propertyPool;
 		if (!propertyPool.isEmpty() && state.candidateSet.isEmpty()) {
-			for (ShowlPropertyShapeGroup targetGroup : propertyPool) {
+			Iterator<ShowlPropertyShapeGroup> sequence = propertyPool.iterator();
+			while ( sequence.hasNext() ) {
+				ShowlPropertyShapeGroup targetGroup = sequence.next();
+				ShowlDirectPropertyShape targetDirect = targetGroup.direct();
+				if (targetDirect.getSelectedExpression() != null) {
+					if (logger.isTraceEnabled()) {
+						logger.trace("addCandidateSource: Removing property from pool because it was mapped out of sequence: {}", targetDirect.getPath());
+					}
+					sequence.remove();
+					continue;
+				}
+				
 				ShowlEffectiveNodeShape parentNode = targetGroup.getDeclaringShape();
 				ShowlClass targetClass = parentNode.getTargetClass();
 				if (!state.memory.contains(targetGroup)) {
@@ -452,6 +463,7 @@ public class BasicTransformService implements ShowlTransformService {
 			
 			if (createMapping(isEnum, sourceProperty, targetProperty)) {
 				sequence.remove();
+				setAccessorExpression(targetProperty);
 			}
 		}
 	}
@@ -460,14 +472,52 @@ public class BasicTransformService implements ShowlTransformService {
 
 
 
-	private boolean createMapping(boolean isEnum, ShowlPropertyShapeGroup sourceProperty, ShowlPropertyShapeGroup targetProperty) {
-		if (sourceProperty != null) {
-			ShowlDirectPropertyShape targetDirect = targetProperty.synonymDirect();
-			ShowlDirectPropertyShape sourceDirect = sourceProperty.synonymDirect();
-
+	private void setAccessorExpression(ShowlPropertyShapeGroup targetProperty) {
+		if (targetProperty.getPredicate().equals(Konig.id)) {
+			ShowlPropertyShape direct = targetProperty.direct();
+			if (direct != null && direct.getSelectedExpression()!=null) {
+				ShowlPropertyShape accessor = direct.getDeclaringShape().getAccessor();
+				if (accessor != null && accessor.getSelectedExpression()==null) {
+					accessor.setSelectedExpression(direct.getSelectedExpression());
+					if (logger.isTraceEnabled()) {
+						logger.trace("setAccessorExpression: {} = {}", accessor.getPath(), direct.getSelectedExpression().displayValue() );
+					}
+				}
+			}
+		} else if (targetProperty.getValueShape() != null) {
 			
-			if (targetDirect != null) {
+			ShowlEffectiveNodeShape node = targetProperty.getValueShape();
+			ShowlPropertyShapeGroup group = node.findPropertyByPredicate(Konig.id);
+			if (group != null) {
 				
+				ShowlDirectPropertyShape direct = group.direct();
+				if (direct != null && direct.getSelectedExpression()==null) {
+					ShowlDirectPropertyShape targetDirect = targetProperty.direct();
+					if (targetDirect != null && targetDirect.getSelectedExpression()!=null) {
+						direct.setSelectedExpression(targetDirect.getSelectedExpression());
+						if (logger.isTraceEnabled()) {
+							logger.trace("setAccessorExpression: {} = {}", direct.getPath(), targetDirect.getSelectedExpression().displayValue());
+						}
+					}
+				}
+			}
+		}
+		
+	}
+
+
+	private boolean createMapping(boolean isEnum, ShowlPropertyShapeGroup sourceProperty, ShowlPropertyShapeGroup targetProperty) {
+		ShowlDirectPropertyShape targetDirect = targetProperty.synonymDirect();
+		if (targetDirect != null) {
+			if (targetDirect.getSelectedExpression() != null) {
+				if (logger.isTraceEnabled()) {
+					logger.trace("createMapping: Mapping already established, {} = {}", targetDirect.getPath(), targetDirect.getSelectedExpression().displayValue());
+				}
+				return true;
+			}
+			if (sourceProperty != null) {
+				ShowlDirectPropertyShape sourceDirect = sourceProperty.synonymDirect();
+
 				if (isEnum) {
 					if (Konig.id.equals(sourceDirect.getPredicate())) {
 						ShowlPropertyShape enumAccessor = targetDirect.getDeclaringShape().getAccessor();
@@ -481,16 +531,23 @@ public class BasicTransformService implements ShowlTransformService {
 						}
 					}
 					targetDirect.setSelectedExpression(new ShowlEnumPropertyExpression(sourceDirect));
+					// Make sure the accessor is using a ShowlEnumNodeExpression as the mapping.
+					
+					ShowlPropertyShape accessor = targetDirect.getDeclaringShape().getAccessor();
+					if (accessor != null && !(accessor.getSelectedExpression() instanceof ShowlEnumNodeExpression)) {
+						ShowlNodeShape enumNode = sourceDirect.getDeclaringShape();
+						accessor.setSelectedExpression(new ShowlEnumNodeExpression(enumNode));
+					}
 					return true;
 
 				}
-				
+
 				// If there is a direct source property, then use a direct mapping.
 				if (sourceDirect != null) {
 					targetDirect.setSelectedExpression(new ShowlDirectPropertyExpression(sourceDirect));
 					return true;
 				}
-				
+
 				// If there is a well-defined formula for the source property, use it.
 				for (ShowlPropertyShape sourcePropertyElement : sourceProperty) {
 					ShowlExpression formula = sourcePropertyElement.getFormula();
@@ -499,13 +556,13 @@ public class BasicTransformService implements ShowlTransformService {
 						return true;
 					}
 				}
-				
+
 				if (useClassIriTemplate(sourceProperty, targetDirect)) {
 					return true;
 				}
-			}
-			if (logger.isWarnEnabled()) {
-				logger.warn("createMapping: Failed to create mapping: {}...{}", sourceProperty, targetProperty);
+				if (logger.isWarnEnabled()) {
+					logger.warn("createMapping: Failed to create mapping: {}...{}", sourceProperty, targetProperty);
+				}
 			}
 		}
 		return false;
