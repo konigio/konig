@@ -248,11 +248,24 @@ public class PlainTextModelValidationReportWriter implements ModelValidationRepo
 				if (c.getNameHasWrongCase()) {
 					wrongCaseMessage(expectedStyle);
 				}
+				if (c.isNoProperties()) {
+					noPropertiesMessage();
+				}
 				out.popIndent();
 				
 				printAllPropertyShapeReports(c, out);
 				
 			}
+			
+		}
+
+		private void noPropertiesMessage() {
+
+
+			String msg = "SHOULD declare at least one property, but has none";
+			out.indent();
+			out.println(msg);
+			out.println();
 			
 		}
 

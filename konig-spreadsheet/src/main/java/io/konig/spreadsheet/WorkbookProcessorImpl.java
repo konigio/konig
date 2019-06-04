@@ -136,8 +136,6 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			serviceManager.setListener(new BaseServiceListener());
 
 			addNamespaces();
-			addServices();
-			addNamespaces();
 			addTerms();
 			addServices();
 			sortBookListeners();
@@ -180,6 +178,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 
 	private void addServices() {
 		settings =  new SettingsSheet(this);
+		addService(SettingsSheet.class, settings);
 		NamespaceManager nsManager = graph.getNamespaceManager();
 		DataSourceGeneratorFactory dataSourceGeneratorFactory = new DataSourceGeneratorFactory(nsManager, templateDir, settings);
 		
@@ -714,7 +713,9 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 		public void onRegister(Object service) {
 			if (service instanceof WorkbookListener) {
 				WorkbookListener listener =(WorkbookListener)service; 
-				bookListeners.add(listener);
+				if (!bookListeners.contains(listener)) {
+					bookListeners.add(listener);
+				}
 				if (activeBook != null) {
 					listener.beginWorkbook(activeBook);
 				}

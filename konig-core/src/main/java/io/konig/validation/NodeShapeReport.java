@@ -32,6 +32,7 @@ public class NodeShapeReport implements Comparable<NodeShapeReport>, ReportEleme
 	private Resource shapeId;
 	private List<PropertyShapeReport> propertyReports = new ArrayList<>();
 	private boolean nameHasWrongCase;
+	private boolean noProperties;
 
 	public NodeShapeReport(Resource shapeId) {
 		this.shapeId = shapeId;
@@ -52,6 +53,7 @@ public class NodeShapeReport implements Comparable<NodeShapeReport>, ReportEleme
 	public boolean isValid() {
 		return 
 			!nameHasWrongCase &&	
+			!noProperties &&
 			!hasNonEmptyPropertyReport();
 	}
 
@@ -92,6 +94,14 @@ public class NodeShapeReport implements Comparable<NodeShapeReport>, ReportEleme
 	public int errorCount() {
 		
 		return Sum.whereTrue(nameHasWrongCase) + Sum.errorCount(propertyReports);
+	}
+
+	public boolean isNoProperties() {
+		return noProperties;
+	}
+
+	public void setNoProperties(boolean noProperties) {
+		this.noProperties = noProperties;
 	}
 	
 }
