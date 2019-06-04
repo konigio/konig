@@ -542,9 +542,21 @@ public class BeamTransformGenerator {
         
         enumClassProperties.put(owlClass, propertyMap);
         
+        //  private static Map<String, $enumClassName> localNameMap = new HashMap<>();
+        
+        AbstractJClass stringClass = model.ref(String.class);
+        AbstractJClass mapClass = model.ref(Map.class).narrow(stringClass).narrow(enumClass);
+        AbstractJClass hashMapClass = model.ref(HashMap.class).narrow(stringClass).narrow(enumClass);
+        
+        JVar localNameMap = enumClass.field(JMod.PRIVATE | JMod.STATIC | JMod.FINAL, mapClass, "localNameMap").init(hashMapClass._new());
+        
+        JBlock initBlock = enumClass.init();
+        
         JBlock staticInit = enumClass.init();
         for (Vertex individual : individuals) {
-          enumMember(enumIndex, enumClass, staticInit, individual);
+          JEnumConstant constant = enumMember(enumIndex, enumClass, staticInit, individual);
+          
+          String fieldName = constant.name();
         }
         
         for (Map.Entry<URI, JFieldVar> entry : enumIndex.entrySet()) {
@@ -568,10 +580,18 @@ public class BeamTransformGenerator {
         //   private IRI id;
         
         JFieldVar idField = enumClass.field(JMod.PRIVATE, iriClass, "id");
-        AbstractJClass stringClass = model.ref(String.class);
+
+        //  public $enumClassName findByLocalName(String localName) {
+        //    return localNameMap.get(localName);
+        //  }
+        
+        JMethod findByLocalNameMethod = enumClass.method(JMod.PUBLIC | JMod.STATIC, enumClass, "findByLocalName");
+        JVar localNameVar = findByLocalNameMethod.param(stringClass, "localName");
+        findByLocalNameMethod.body()._return(localNameMap.invoke("get").arg(localNameVar));
         
         //   public $enumClassName id(String namespace, String localName) {
         //     id = new IRI(namespace, localName);
+        //     localNameMap.put(localName, this);
         //     return this;
         //   }
         
@@ -580,6 +600,7 @@ public class BeamTransformGenerator {
         JVar localNameParam = idMethod.param(stringClass, "localName");
         
         idMethod.body().assign(idField, iriClass._new().arg(namespaceParam).arg(localNameParam));
+        idMethod.body().add(localNameMap.invoke("put").arg(localNameParam).arg(JExpr._this()));
         idMethod.body()._return(JExpr._this());
         
         
@@ -589,6 +610,8 @@ public class BeamTransformGenerator {
         
         enumClass.method(JMod.PUBLIC, iriClass, "getId").body()._return(idField);
         
+        
+       
         
         for (RdfProperty rdfProperty : propertyMap.values()) {
           URI propertyId = rdfProperty.getId();
@@ -651,7 +674,7 @@ public class BeamTransformGenerator {
     }
 
 
-    private void enumMember(Map<URI, JFieldVar> enumIndex, JDefinedClass enumClass, JBlock staticInit, Vertex individual) throws BeamTransformGenerationException {
+    private JEnumConstant enumMember(Map<URI, JFieldVar> enumIndex, JDefinedClass enumClass, JBlock staticInit, Vertex individual) throws BeamTransformGenerationException {
       String fieldName = enumMemberName(RdfUtil.uri(individual.getId()));
       
       // Suppose we are building the following enumeration...
@@ -753,7 +776,7 @@ public class BeamTransformGenerator {
 
       staticInit.add(invoke);
       
-      
+      return constant;
     }
 
 
@@ -796,9 +819,27 @@ public class BeamTransformGenerator {
       
       String localName = individualId.getLocalName();
       localName = localName.replace("%20", "_");
-      localName = localName.replace("%", "x");
       
-      return localName;
+      int first = localName.codePointAt(0);
+      
+      if (!Character.isJavaIdentifierStart(first)) {
+      	localName = "_" + localName;
+      }
+      
+      StringBuilder builder = new StringBuilder();
+      for (int i=0; i<localName.length();) {
+      	int c = localName.charAt(i);
+      	if (Character.isJavaIdentifierPart(c)) {
+      		builder.appendCodePoint(c);
+      	} else {
+      		builder.append('_');
+      	}
+      	i += Character.charCount(c);
+      }
+      
+      
+      
+      return builder.toString();
     }
 
     private String enumClassName(URI enumClass) throws BeamTransformGenerationException {
@@ -1499,18 +1540,22 @@ public class BeamTransformGenerator {
         String enumKeyName = joinInfo.getEnumProperty().getPredicate().getLocalName();
         
         String findMethodName = joinInfo.getEnumProperty().getPredicate().equals(Konig.id) ?
-        		"valueOf" : "findBy" + StringUtil.capitalize(enumKeyName);
+        		"findByLocalName" : "findBy" + StringUtil.capitalize(enumKeyName);
         
-        // Object $sourceKeyName = inputRow.get("$sourceKeyName");
+        /*
+         *  For now we assume that the source key is a string.  We'll relax this assumption later.
+         */
+        
+        // String $sourceKeyName = inputRow.get("$sourceKeyName").toString();
         // if ($sourceKeyName != null) {
         //   $varName = $enumClass.$findMethodName($sourceKeyName);
         //  ...
         //  }
         
         
-        AbstractJClass objectClass = model.ref(Object.class);
+        AbstractJClass stringClass = model.ref(String.class);
         
-        JVar sourceKeyVar = block.decl(objectClass, sourceKeyName, inputRow.invoke("get").arg(JExpr.lit(sourceKeyName)).invoke("toString"));
+        JVar sourceKeyVar = block.decl(stringClass, sourceKeyName, inputRow.invoke("get").arg(JExpr.lit(sourceKeyName)).invoke("toString"));
         
         JConditional conditional = block._if(sourceKeyVar.neNull());
         JVar enumObjectVar = conditional._then().decl(enumClass, varName, enumClass.staticInvoke(findMethodName).arg(sourceKeyVar));

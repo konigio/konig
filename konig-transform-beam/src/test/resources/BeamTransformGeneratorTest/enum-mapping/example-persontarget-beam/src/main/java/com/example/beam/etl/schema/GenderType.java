@@ -9,6 +9,7 @@ public enum GenderType {
     Female,
     Male;
     private static final Map<String, GenderType> genderCodeMap = new HashMap<String, GenderType>();
+    private static final Map<String, GenderType> localNameMap = new HashMap<String, GenderType>();
     private IRI id;
     private GreekGod personifiedBy;
     private String name;
@@ -25,8 +26,13 @@ public enum GenderType {
         return genderCodeMap.get(genderCode);
     }
 
+    public static GenderType findByLocalName(String localName) {
+        return localNameMap.get(localName);
+    }
+
     private GenderType id(String namespace, String localName) {
         id = new IRI(namespace, localName);
+        localNameMap.put(localName, this);
         return this;
     }
 

@@ -43,9 +43,9 @@ public class ToPersonTargetShapeFn
     }
 
     private void transformGender(TableRow inputRow, TableRow outputRow) {
-        Object gender_id = inputRow.get("gender_id").toString();
+        String gender_id = inputRow.get("gender_id").toString();
         if (gender_id!= null) {
-            GenderType gender = GenderType.valueOf(gender_id);
+            GenderType gender = GenderType.findByLocalName(gender_id);
             TableRow genderRow = new TableRow();
             genderRow.set("id", gender_id);
             Object name = gender.getName();

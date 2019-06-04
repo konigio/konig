@@ -43,7 +43,7 @@ public class ToPersonTargetShapeFn
     }
 
     private void transformGender(TableRow inputRow, TableRow outputRow) {
-        Object gender_code = inputRow.get("gender_code").toString();
+        String gender_code = inputRow.get("gender_code").toString();
         if (gender_code!= null) {
             GenderType gender = GenderType.findByGenderCode(gender_code);
             TableRow genderRow = new TableRow();
