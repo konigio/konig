@@ -23,6 +23,7 @@ package io.konig.core.showl;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -665,7 +666,7 @@ public class BasicTransformService implements ShowlTransformService {
 	 * Get the set of properties that need to be mapped.
 	 */
 	private Set<ShowlPropertyShapeGroup> propertyPool(ShowlNodeShape targetNode) {
-		Set<ShowlPropertyShapeGroup> pool = new HashSet<>();
+		Set<ShowlPropertyShapeGroup> pool = new LinkedHashSet<>();
 		
 		addPropertiesToPool(pool, targetNode.effectiveNode());
 		
