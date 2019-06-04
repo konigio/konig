@@ -24,10 +24,10 @@ package io.konig.validation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.StringWriter;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
@@ -91,11 +91,11 @@ public class ModelValidatorTest {
 
 	@Test
 	public void testRequiresMinCount() {
-		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		URI personShapeId = uri("http://example.com/shapes/PersonShape");
 		new ShapeBuilder(shapeManager)
 			.beginShape(uri("http://example.com/shapes/ProductShape"))
 			.endShape()
-			.beginShape(shapeId)
+			.beginShape(personShapeId)
 				.beginProperty(Schema.parent)
 				.endProperty()
 				.beginProperty(Schema.familyName)
@@ -107,13 +107,15 @@ public class ModelValidatorTest {
 		ModelValidationReport report = validator.process(request);
 		
 		List<NodeShapeReport> nodeReports = report.getShapeReports();
-		assertEquals(1, nodeReports.size());
+		assertEquals(2, nodeReports.size());
 		
-		PropertyShapeReport familyName = nodeReports.get(0).findPropertyReport(Schema.familyName);
+		NodeShapeReport personReport = report.findNodeReport(personShapeId);
+		assertTrue(personReport != null);
+		PropertyShapeReport familyName = personReport.findPropertyReport(Schema.familyName);
 		assertTrue(familyName != null);
 		assertTrue(!familyName.isRequiresMinCount());
 		
-		PropertyShapeReport parent = nodeReports.get(0).findPropertyReport(Schema.parent);
+		PropertyShapeReport parent = personReport.findPropertyReport(Schema.parent);
 		assertTrue(parent.isRequiresMinCount());
 		
 		
@@ -179,6 +181,23 @@ public class ModelValidatorTest {
 	
 	private Value literal(String value) {
 		return new LiteralImpl(value);
+	}
+	
+	@Test
+	public void testNoProperties() throws Exception {
+
+		URI shapeId = uri("http://example.com/shapes/PersonShape");
+		new ShapeBuilder(shapeManager)
+			.beginShape(shapeId)
+			.endShape();
+		
+		ModelValidationReport report = validator.process(request);
+		
+		List<NodeShapeReport> shapeReports = report.getShapeReports();
+		assertEquals(1, shapeReports.size());
+		NodeShapeReport shapeReport = shapeReports.get(0);
+		assertTrue(shapeReport.isNoProperties());
+		
 	}
 
 	@Test
@@ -257,7 +276,6 @@ public class ModelValidatorTest {
 				.beginProperty(Schema.email)
 					.datatype(XMLSchema.STRING)
 					.beginValueShape("http://example.com/shapes/FooShape")
-					
 					.endValueShape()
 				.endProperty()
 				.beginProperty(Schema.telephone)
@@ -270,7 +288,7 @@ public class ModelValidatorTest {
 		ModelValidationReport report = validator.process(request);
 		
 		List<NodeShapeReport> shapeReports = report.getShapeReports();
-		assertEquals(1, shapeReports.size());
+		assertEquals(2, shapeReports.size());
 		
 		NodeShapeReport shapeReport = shapeReports.get(0);
 		
@@ -403,7 +421,7 @@ public class ModelValidatorTest {
 		ModelValidationReport report = validator.process(request);
 		
 		NodeShapeReport personReport = report.findNodeReport(personShape);
-		assertTrue(personReport == null);
+		assertTrue(!personReport.getNameHasWrongCase());
 	
 		NodeShapeReport productReport = report.findNodeReport(productShape);
 		assertTrue(productReport.getNameHasWrongCase());

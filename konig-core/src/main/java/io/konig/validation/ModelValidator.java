@@ -305,6 +305,11 @@ public class ModelValidator {
 							shapeReport.setNameHasWrongCase(true);
 						}
 					}
+					
+					if (shape.getProperty().isEmpty()) {
+						shapeReport.setNoProperties(true);
+					}
+					
 					for (PropertyConstraint p : shape.getProperty()) {
 						validatePropertyConstraint(shapeReport, p);
 					}
