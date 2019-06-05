@@ -207,7 +207,8 @@ public class BasicTransformService implements ShowlTransformService {
 			targetRoot.addChannel(new ShowlChannel(sourceShape, join));
 
 			if (logger.isTraceEnabled()) {
-				logger.trace("addChannel({}, {})", sourceShape.getPath(), join.toString());
+				String joinString = join==null ? "null" : join.toString();
+				logger.trace("addChannel({}, {})", sourceShape.getPath(), joinString);
 			}
 			
 			return true;
@@ -561,6 +562,11 @@ public class BasicTransformService implements ShowlTransformService {
 				if (useClassIriTemplate(sourceProperty, targetDirect)) {
 					return true;
 				}
+				
+				if (useHasValue(sourceProperty, targetDirect)) {
+					return true;
+				}
+				
 				if (logger.isWarnEnabled()) {
 					logger.warn("createMapping: Failed to create mapping: {}...{}", sourceProperty, targetProperty);
 				}
@@ -568,6 +574,20 @@ public class BasicTransformService implements ShowlTransformService {
 		}
 		return false;
 	}
+
+	private boolean useHasValue(ShowlPropertyShapeGroup sourcePropertyGroup, ShowlDirectPropertyShape targetDirect) {
+		
+		for (ShowlPropertyShape sourceProperty : sourcePropertyGroup) {
+			Set<ShowlExpression> valueSet = sourceProperty.getHasValue();
+			if (valueSet.size() == 1) {
+				ShowlExpression e = valueSet.iterator().next();
+				targetDirect.setSelectedExpression(e);
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	/**
 	 * If the value class of the target property declares an IRI and if one of the source PropertyShapes 

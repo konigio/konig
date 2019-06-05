@@ -137,7 +137,7 @@ public class ShowlFunctionExpression implements ShowlExpression {
 					set.add(p);
 				} else {
 					for (ShowlDerivedPropertyShape derived : sourceNodeShape.getDerivedProperty(predicate)) {
-						if (derived.getHasValue().isEmpty()) {
+						if (derived.getHasValueDeprecated().isEmpty()) {
 							p = derived.getSynonym();
 							if (p instanceof ShowlDirectPropertyShape) {
 								set.add(p);

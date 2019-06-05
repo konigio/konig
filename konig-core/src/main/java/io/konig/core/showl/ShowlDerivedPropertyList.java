@@ -44,7 +44,7 @@ public class ShowlDerivedPropertyList extends ArrayList<ShowlDerivedPropertyShap
 	 */
 	public ShowlDerivedPropertyShape unfiltered() {
 		for (ShowlDerivedPropertyShape p : this) {
-			if (p.getHasValue().isEmpty()) {
+			if (p.getHasValueDeprecated().isEmpty()) {
 				return p;
 			}
 		}

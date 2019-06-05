@@ -1,0 +1,19 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+ex: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "ex" ; 
+	rdfs:label "Example Ontology" . 
+
+ex:Identity a owl:Class . 
+
+ex:System a owl:Class . 
+
+ex:identifiedBy a rdf:Property . 
+
+ex:identifier a rdf:Property . 
+
+ex:identityProvider a rdf:Property . 

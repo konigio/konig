@@ -26,13 +26,18 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import io.konig.core.Vertex;
 import io.konig.core.showl.ShowlClass;
 import io.konig.core.showl.ShowlDerivedPropertyExpression;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
+import io.konig.core.showl.ShowlEnumIndivdiualReference;
 import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlFilterExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIdRefPropertyShape;
 import io.konig.core.showl.ShowlInwardPropertyShape;
@@ -45,7 +50,7 @@ import io.konig.core.showl.ShowlProperty;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlSchemaService;
-import io.konig.core.util.IriTemplate;
+import io.konig.core.showl.ShowlUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.BareExpression;
 import io.konig.formula.ConditionalOrExpression;
@@ -70,6 +75,8 @@ import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class ShowlExpressionBuilder {
+	
+	private static final Logger logger = LoggerFactory.getLogger(ShowlExpressionBuilder.class);
 
 	private ShowlSchemaService schemaService;
 	private ShowlNodeShapeService nodeService;
@@ -132,11 +139,27 @@ public class ShowlExpressionBuilder {
 		if (out != null) {
 			return propertyExpression(out);
 		}
+		
+		Vertex v = schemaService.getOwlReasoner().getGraph().getVertex(iri);
+		if (v != null) {
+			// For now, we assume that if the individual is in the graph, then it is a member of an enumeration.
+			// We should probably confirm that the OWL Class of the individual is a subclass of schema:Enumeration
+			
+			return new ShowlEnumIndivdiualReference(iri);
+		}
+		
 		ShowlIriReferenceExpression result = new ShowlIriReferenceExpression(iri, p);
 		
 		return result;
 	}
 
+	private ShowlPropertyExpression asPropertyExpression(ShowlPropertyShape p) {
+		if (p instanceof ShowlDirectPropertyShape) {
+			return new ShowlDirectPropertyExpression((ShowlDirectPropertyShape) p);
+		}
+		
+		return new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape) p);
+	}
 
 	private ShowlExpression propertyExpression(ShowlPropertyShape out) {
 		
@@ -176,11 +199,13 @@ public class ShowlExpressionBuilder {
 		return expression(p, primary);
 	}
 
-
 	private ShowlExpression path(ShowlPropertyShape p, PathExpression formula) {
+		return path(p, null, formula);
+	}
+
+	private ShowlExpression path(ShowlPropertyShape p, ShowlPropertyShape prior, PathExpression formula) {
 		
 		List<PathStep> stepList = formula.getStepList();
-		ShowlDerivedPropertyShape prior = null;
 		String shapeIdValue = p.getDeclaringShape().getId().stringValue();
 		
 		
@@ -220,41 +245,32 @@ public class ShowlExpressionBuilder {
 			}
 		}
 		
-		return new ShowlDerivedPropertyExpression(prior);
+		return asPropertyExpression(prior);
 	}
 
-	private void buildHasStep(ShowlPropertyShape prior, HasPathStep step) {
+	private void buildHasStep(ShowlPropertyShape prior, HasPathStep step) throws ShowlProcessingException {
 		
 
 		for (PredicateObjectList pol : step.getConstraints()) {
 			PathExpression path = pol.getPath();
 			
+			ShowlExpression showlPath = path(prior, prior, path);
+			
+			ShowlPropertyShape field = ShowlUtil.asPropertyShape(showlPath);
+			
+			if (field == null) {
+				fail("Cannot convert expression to PropertyShape {}", showlPath.displayValue());
+			}
 			
 			
 			for (Expression e : pol.getObjectList().getExpressions()) {
 				
 				ShowlExpression expression = expression(prior, e);
+				field.addHasValue(new ShowlFilterExpression(expression));
 				
-				if (expression instanceof ShowlPropertyExpression) {
-					ShowlPropertyExpression p = (ShowlPropertyExpression) expression;
-					// TODO: finish the implementation
+				if (logger.isTraceEnabled()) {
+					logger.trace("buildHasStep: {} = {}", field.getPath(), expression.displayValue());
 				}
-				
-//				primaryexpression primary = e.asprimaryexpression();
-//				if (primary == null) {
-//					error("expression not supported");
-//				}
-//				
-//				if (primary instanceof irivalue) {
-//					irivalue value = (irivalue) primary;
-//					uri iri = value.getiri();
-//					last.addhasvalue(iri);
-//				} else if (primary instanceof literalformula) {
-//					literalformula formula = (literalformula) primary;
-//					last.addhasvalue(formula.getliteral());
-//				}
-				
-				
 				
 			}
 		}
@@ -274,7 +290,7 @@ public class ShowlExpressionBuilder {
 
 
 	private ShowlDerivedPropertyShape outwardProperty(ShowlNodeShape parentNode, ShowlProperty property,
-			ShowlDerivedPropertyShape prior, ShowlPropertyShape declaringProperty) {
+			ShowlPropertyShape prior, ShowlPropertyShape declaringProperty) {
 		
 		
 		ShowlDerivedPropertyShape existing = parentNode.getDerivedProperty(property.getPredicate()).unfiltered();

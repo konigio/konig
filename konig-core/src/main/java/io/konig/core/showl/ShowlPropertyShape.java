@@ -58,9 +58,11 @@ public abstract class ShowlPropertyShape implements Traversable {
 	private Map<ShowlJoinCondition, ShowlMapping> mappings;
 	private Map<ShowlPropertyShape, ShowlJoinCondition> joinConditions;
 	private ShowlMapping selectedMapping;
-	private Set<Value> hasValue;
+	private Set<Value> hasValueDeprecated;
 	private ShowlExpression selectedExpression;
 	private Set<ShowlPropertyShape> peerGroup = new HashSet<>();
+	
+	private Set<ShowlExpression> hasValue;
 	
 	private ShowlExpression formula;
 	private Set<ShowlExpression> usedIn;
@@ -280,15 +282,15 @@ public abstract class ShowlPropertyShape implements Traversable {
 		this.selectedMapping = selectedMapping;
 	}
 
-	public Set<Value> getHasValue() {
-		return hasValue==null ? Collections.emptySet() : hasValue;
+	public Set<Value> getHasValueDeprecated() {
+		return hasValueDeprecated==null ? Collections.emptySet() : hasValueDeprecated;
 	}
 	
-	public void addHasValue(Value value) {
-		if (hasValue == null) {
-			hasValue = new LinkedHashSet<>();
+	public void addHasValueDeprecated(Value value) {
+		if (hasValueDeprecated == null) {
+			hasValueDeprecated = new LinkedHashSet<>();
 		}
-		hasValue.add(value);
+		hasValueDeprecated.add(value);
 	}
 
 	public List<ShowlExpression> getExpressionList() {
@@ -399,6 +401,16 @@ public abstract class ShowlPropertyShape implements Traversable {
 		}
 		usedIn.add(e);
 	}
+	
+	
+	public void addHasValue(ShowlExpression e) {
+		if (hasValue == null) {
+			hasValue = new LinkedHashSet<>();
+		}
+		hasValue.add(e);
+	}
 
-
+	public Set<ShowlExpression> getHasValue() {
+		return hasValue == null ? Collections.emptySet() : hasValue;
+	}
 }

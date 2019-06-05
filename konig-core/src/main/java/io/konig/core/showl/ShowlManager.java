@@ -1772,10 +1772,10 @@ public class ShowlManager implements ShowlClassManager {
 					if (primary instanceof IriValue) {
 						IriValue value = (IriValue) primary;
 						URI iri = value.getIri();
-						last.addHasValue(iri);
+						last.addHasValueDeprecated(iri);
 					} else if (primary instanceof LiteralFormula) {
 						LiteralFormula formula = (LiteralFormula) primary;
-						last.addHasValue(formula.getLiteral());
+						last.addHasValueDeprecated(formula.getLiteral());
 					}
 					
 					
