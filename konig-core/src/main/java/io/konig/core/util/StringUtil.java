@@ -365,4 +365,17 @@ public class StringUtil {
 		
 		return null;
 	}
+	
+	public static String mediaTypePart(String source) {
+		StringBuilder builder = new StringBuilder();
+		for (int i=0; i<source.length();) {
+			int c = source.codePointAt(i);
+			if (!Character.isAlphabetic(c) && !Character.isDigit(c)) {
+				c = '-';
+			}
+			builder.appendCodePoint(c);
+			i += Character.charCount(c);
+		}
+		return builder.toString();
+	}
 }

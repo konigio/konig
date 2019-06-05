@@ -57,6 +57,7 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 	private static final String DEFAULT_DATA_SOURCE = "defaultDataSource";
 	private static final String DICTIONARY_DEFAULT_MAX_LENGTH = "dictionary.defaultMaxLength";
 	public static final String ABBREVIATION_SCHEME_IRI = "abbreviationSchemeIri";
+	public static final String MEDIA_TYPE_VENDOR_NAME = "mediaTypeVendorName";
 	
 	private static final SheetColumn SETTING_NAME = new SheetColumn("Setting Name", true);
 	private static final SheetColumn SETTING_VALUE =  new SheetColumn("Setting Value", true);
@@ -335,6 +336,10 @@ public class SettingsSheet extends BaseSheetProcessor implements WorkbookListene
 		}
 		
 		return defaultSubject;
+	}
+	
+	public String getMediaTypeVendorName() {
+		return settings.getProperty(MEDIA_TYPE_VENDOR_NAME);
 	}
 
 	public String getPropertyBaseURL() {
