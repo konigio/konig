@@ -1459,7 +1459,7 @@ public class BeamTransformGenerator {
 
 
       private void transformHardCodedEnumObject(BeamChannel sourceInfo, JBlock body, ShowlDirectPropertyShape p,
-          ShowlIriReferenceExpression iriRef) throws BeamTransformGenerationException {
+      		ShowlEnumIndivdiualReference iriRef) throws BeamTransformGenerationException {
         
       	ShowlNodeShape valueShape = p.getValueShape();
         
@@ -1500,7 +1500,7 @@ public class BeamTransformGenerator {
         
       }
 
-      private JVar hardCodedEnumObject(JBlock block, ShowlIriReferenceExpression iriRef, ShowlNodeShape valueShape) throws BeamTransformGenerationException {
+      private JVar hardCodedEnumObject(JBlock block, ShowlEnumIndivdiualReference iriRef, ShowlNodeShape valueShape) throws BeamTransformGenerationException {
 
         
       

@@ -26,7 +26,7 @@ public class ShowlEnumJoinInfo {
 	private ShowlPropertyShape targetProperty;
 	private ShowlPropertyShape enumProperty;
 	private ShowlPropertyShape sourceProperty;
-	private ShowlIriReferenceExpression hardCodedReference;
+	private ShowlEnumIndivdiualReference hardCodedReference;
 	
 	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlPropertyShape sourceProperty) {
 		this.targetProperty = targetProperty;
@@ -34,7 +34,7 @@ public class ShowlEnumJoinInfo {
 		this.sourceProperty = sourceProperty;
 	}
 	
-	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlIriReferenceExpression hardCodedReference) {
+	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlEnumIndivdiualReference hardCodedReference) {
 		this.targetProperty = targetProperty;
 		this.enumProperty = enumProperty;
 		this.hardCodedReference = hardCodedReference;
@@ -44,7 +44,7 @@ public class ShowlEnumJoinInfo {
 		return targetProperty;
 	}
 
-	public ShowlIriReferenceExpression getHardCodedReference() {
+	public ShowlEnumIndivdiualReference getHardCodedReference() {
 		return hardCodedReference;
 	}
 
@@ -75,12 +75,12 @@ public class ShowlEnumJoinInfo {
 						}
 						
 						
-						if (equal.getLeft() instanceof ShowlIriReferenceExpression) {
-							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlIriReferenceExpression) equal.getLeft());
+						if (equal.getLeft() instanceof ShowlEnumIndivdiualReference) {
+							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndivdiualReference) equal.getLeft());
 						}
 						
-						if (equal.getRight() instanceof ShowlIriReferenceExpression) {
-							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlIriReferenceExpression)equal.getRight());
+						if (equal.getRight() instanceof ShowlEnumIndivdiualReference) {
+							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndivdiualReference)equal.getRight());
 						}
 					}
 				}
