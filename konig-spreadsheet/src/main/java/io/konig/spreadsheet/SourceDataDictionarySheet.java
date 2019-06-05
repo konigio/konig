@@ -132,6 +132,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 		
 		boolean isNewShape = processor.getShapeManager().getShapeById(shapeId)==null;
 		Shape shape = produceShape(shapeId);
+		setMediaType(row, shape, sourceSystemValue, sourceObjectNameValue);
 		shape.addType(Konig.TabularNodeShape);
 		
 		PropertyConstraint p = dataDictionaryPropertyConstraint(row, FIELD, shape, fieldValue);
@@ -198,6 +199,27 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 
 	}
 
+
+	private void setMediaType(SheetRow row, Shape shape, String sourceSystemValue, String sourceObjectNameValue) throws SpreadsheetException {
+		if (shape.getMediaTypeBaseName() == null) {
+			String vendorName = settings.getMediaTypeVendorName();
+			if (vendorName == null) {
+				fail(row, SOURCE_OBJECT_NAME, "{} property must be defined", SettingsSheet.MEDIA_TYPE_VENDOR_NAME);
+			}
+			sourceSystemValue = StringUtil.mediaTypePart(sourceSystemValue);
+			sourceObjectNameValue = StringUtil.mediaTypePart(sourceObjectNameValue);
+			StringBuilder builder = new StringBuilder();
+			builder.append("application/vnd.");
+			builder.append(vendorName);
+			builder.append('.');
+			builder.append(sourceSystemValue);
+			builder.append('.');
+			builder.append(sourceObjectNameValue);
+			
+			shape.setMediaTypeBaseName(builder.toString());
+		}
+		
+	}
 
 	private URI getRdfDatatype(String typeName, PropertyConstraint constraint) {
 		if (typeName==null) {
