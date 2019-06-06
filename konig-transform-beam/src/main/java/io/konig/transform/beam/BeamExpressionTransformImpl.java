@@ -26,23 +26,40 @@ import java.text.MessageFormat;
 import org.openrdf.model.Literal;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.JCodeModel;
+import com.helger.jcodemodel.JDefinedClass;
 import com.helger.jcodemodel.JExpr;
+import com.helger.jcodemodel.JForEach;
+import com.helger.jcodemodel.JInvocation;
+import com.helger.jcodemodel.JMethod;
+import com.helger.jcodemodel.JMod;
+import com.helger.jcodemodel.JVar;
 
 import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.expression.ShowlLiteralExpression;
+import io.konig.formula.FunctionExpression;
+import io.konig.formula.FunctionModel;
 
 public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 
 	private BeamPropertyManager manager;
 	private JCodeModel model;
+	private JDefinedClass targetClass;
 	
-	public BeamExpressionTransformImpl(BeamPropertyManager manager, JCodeModel model) {
+	private JMethod concatMethod;
+	
+	public BeamExpressionTransformImpl(
+			BeamPropertyManager manager, 
+			JCodeModel model, 
+			JDefinedClass targetClass) {
 		this.manager = manager;
 		this.model = model;
+		this.targetClass = targetClass;
 	}
 
 	@Override
@@ -68,7 +85,75 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			return struct((ShowlStructExpression)e);
 		}
 		
+		if (e instanceof ShowlFunctionExpression) {
+			return function((ShowlFunctionExpression) e);
+		}
+		
 		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
+	}
+
+	private IJExpression function(ShowlFunctionExpression e) throws BeamTransformGenerationException {
+	
+		FunctionExpression function = e.getFunction();
+		 if (function.getModel() == FunctionModel.CONCAT) {
+			 return concat(e);
+     } else {
+     	fail("Function {0} not supported at {1}", function.toSimpleString(), e.getDeclaringProperty().getPath());
+     }
+		return null;
+	}
+
+	private IJExpression concat(ShowlFunctionExpression e) throws BeamTransformGenerationException {
+		JMethod concatMethod = concatMethod();
+		
+		JInvocation invoke = JExpr.invoke(concatMethod);
+		
+		for (ShowlExpression arg : e.getArguments()) {
+			IJExpression javaArg = transform(arg);
+			invoke.arg(javaArg);
+		}
+		
+		
+		return invoke;
+	}
+
+
+	private JMethod concatMethod() {
+		if (concatMethod == null) {
+			AbstractJClass stringClass = model.ref(String.class);
+			AbstractJClass objectClass = model.ref(Object.class);
+			
+			// private String concat(Object...arg) {
+			
+			concatMethod = targetClass.method(JMod.PRIVATE, stringClass, "concat");
+			JVar arg = concatMethod.param(objectClass, "arg");
+			
+			//   for (Object obj : arg) {
+			//     if (obj == null) {
+			//       return null;
+			//     }
+			//   }
+			
+			JForEach validationLoop = concatMethod.body().forEach(objectClass, "obj", arg);
+			validationLoop.body()._if(validationLoop.var().eqNull())._then()._return(JExpr._null());
+			
+
+//      StringBuilder builder = new StringBuilder();
+//      for (Object obj : arg) {
+//        builder.append(obj);
+//      }
+//      
+//      return builder;	
+			
+			AbstractJClass stringBuilderClass = model.ref(StringBuilder.class);
+			JVar builder = concatMethod.body().decl(stringBuilderClass, "builder").init(stringBuilderClass._new());
+			
+			JForEach loop = concatMethod.body().forEach(objectClass, "obj", arg);
+			loop.body().add(builder.invoke("append").arg(loop.var()));
+			
+			concatMethod.body()._return(builder.invoke("toString"));
+		}
+		return concatMethod;
 	}
 
 	private IJExpression struct(ShowlStructExpression e) {

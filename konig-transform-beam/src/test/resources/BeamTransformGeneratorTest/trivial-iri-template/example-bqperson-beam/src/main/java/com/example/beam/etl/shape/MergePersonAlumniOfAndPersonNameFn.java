@@ -16,8 +16,8 @@ public class MergePersonAlumniOfAndPersonNameFn
     public void processElement(DoFn.ProcessContext c) {
         try {
             ErrorBuilder errorBuilder = new ErrorBuilder();
-            KV<String, CoGbkResult> e = c.element();
             TableRow outputRow = new TableRow();
+            KV<String, CoGbkResult> e = c.element();
             TableRow personAlumniOfRow = sourceRow(e, BqPersonShapeBeam.personAlumniOfTag);
             TableRow personNameRow = sourceRow(e, BqPersonShapeBeam.personNameTag);
             id(personAlumniOfRow, outputRow, errorBuilder);
@@ -27,6 +27,11 @@ public class MergePersonAlumniOfAndPersonNameFn
                 c.output(outputRow);
             }
         }
+    }
+
+    public TableRow sourceRow(KV<String, CoGbkResult> e, TupleTag<TableRow> tag) {
+        Iterator<TableRow> sequence = e.getValue().getAll(tag).iterator();
+        return (sequence.hasNext()?sequence.next():null);
     }
 
     private void id(TableRow personAlumniOfRow, TableRow outputRow, ErrorBuilder errorBuilder) {
@@ -54,10 +59,5 @@ public class MergePersonAlumniOfAndPersonNameFn
         } else {
             errorBuilder.addError("Cannot set givenName because {PersonNameShape}.first_name is null");
         }
-    }
-
-    public TableRow sourceRow(KV<String, CoGbkResult> e, TupleTag<TableRow> tag) {
-        Iterator<TableRow> sequence = e.getValue().getAll(tag).iterator();
-        return (sequence.hasNext()?sequence.next():null);
     }
 }
