@@ -265,4 +265,12 @@ public class ShowlUtil {
 		}
 		return null;
 	}
+
+	public static ShowlPropertyShape asPropertyShape(ShowlExpression e) {
+		if (e instanceof ShowlPropertyExpression) {
+			ShowlPropertyExpression p = (ShowlPropertyExpression) e;
+			return p.getSourceProperty();
+		}
+		return null;
+	}
 }

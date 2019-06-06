@@ -222,6 +222,13 @@ public class BeamTransformGeneratorTest {
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record-via-inverse", false);
 		
 	}
+	
+	@Test
+	public void testPathFilterMapping() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/path-filter-mapping");
+		
+	}
 
 	public void generateAll(String path) throws Exception {
 		generateAll(path, true);

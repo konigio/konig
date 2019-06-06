@@ -121,10 +121,12 @@ import io.konig.core.showl.ShowlDerivedPropertyExpression;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
+import io.konig.core.showl.ShowlEnumIndivdiualReference;
 import io.konig.core.showl.ShowlEnumJoinInfo;
 import io.konig.core.showl.ShowlEnumPropertyExpression;
 import io.konig.core.showl.ShowlEqualStatement;
 import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlFilterExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlNodeShape;
@@ -1103,6 +1105,10 @@ public class BeamTransformGenerator {
 
         ShowlExpression e = p.getSelectedExpression();
         
+        if (e instanceof ShowlFilterExpression) {
+        	e = ((ShowlFilterExpression) e).getValue();
+        }
+        
         if (p.getValueShape() != null) {
           transformObjectProperty(sourceInfo, body, p, inputRow, outputRow);
         } else if (e == null) {
@@ -1121,6 +1127,9 @@ public class BeamTransformGenerator {
         } else if (e instanceof ShowlDerivedPropertyExpression) {
           transformDerivedProperty(body, p, (ShowlDerivedPropertyExpression) e, inputRow, outputRow);
           
+        } else if (e instanceof ShowlEnumIndivdiualReference) {
+        	transformEnumIndividualReference(body, p, (ShowlEnumIndivdiualReference)e, inputRow, outputRow);
+          
         } else {
           fail("At {0}, expression not supported: {1}", p.getPath(), e.displayValue());
         }
@@ -1131,7 +1140,19 @@ public class BeamTransformGenerator {
         
       }
 
-      private void transformDerivedProperty(JBlock body, ShowlDirectPropertyShape p,
+      private void transformEnumIndividualReference(JBlock body, ShowlDirectPropertyShape p,
+					ShowlEnumIndivdiualReference e, JVar inputRow, JVar outputRow) {
+      	
+      	String targetPropertyName = p.getPredicate().getLocalName();
+      	String enumValue = e.getIriValue().getLocalName();
+				
+        //   outputRow.set("$targetPropertyName", inputRow.get("$enumValue");
+      	
+      	body.add(outputRow.invoke("set").arg(JExpr.lit(targetPropertyName)).arg(enumValue));
+				
+			}
+
+			private void transformDerivedProperty(JBlock body, ShowlDirectPropertyShape p,
           ShowlDerivedPropertyExpression e, JVar inputRow, JVar outputRow) throws BeamTransformGenerationException {
         
         PropertyConstraint constraint = e.getSourceProperty().getPropertyConstraint();
@@ -1399,14 +1420,35 @@ public class BeamTransformGenerator {
         
         JVar fieldRow = body.decl(tableRowClass, targetFieldName, tableRowClass._new());
         
+        List<ShowlDirectPropertyShape> filterList = null;
         
         for (ShowlDirectPropertyShape direct : valueShape.getProperties()) {
-          transformProperty(sourceInfo, body, direct, inputRow, fieldRow, null);
+        	
+
+          ShowlExpression e = direct.getSelectedExpression();
+
+          if (e instanceof ShowlFilterExpression) {
+          	if (filterList == null) {
+          		filterList = new ArrayList<>();
+          	}
+          	filterList.add(direct);
+          } else {
+        	
+          	transformProperty(sourceInfo, body, direct, inputRow, fieldRow, null);
+          }
           
         }
         
-        body._if(fieldRow.invoke("isEmpty").not())
-          ._then().add(
+        JBlock thenBlock = body._if(fieldRow.invoke("isEmpty").not())
+          ._then();
+        
+        if (filterList != null) {
+        	for (ShowlDirectPropertyShape direct : filterList) {
+        		transformProperty(sourceInfo, thenBlock, direct, inputRow, fieldRow, null);
+        	}
+        }
+        
+        thenBlock.add(
             outputRow.invoke("set")
               .arg(JExpr.lit(targetFieldName))
               .arg(fieldRow));
@@ -1417,7 +1459,7 @@ public class BeamTransformGenerator {
 
 
       private void transformHardCodedEnumObject(BeamChannel sourceInfo, JBlock body, ShowlDirectPropertyShape p,
-          ShowlIriReferenceExpression iriRef) throws BeamTransformGenerationException {
+      		ShowlEnumIndivdiualReference iriRef) throws BeamTransformGenerationException {
         
       	ShowlNodeShape valueShape = p.getValueShape();
         
@@ -1458,7 +1500,7 @@ public class BeamTransformGenerator {
         
       }
 
-      private JVar hardCodedEnumObject(JBlock block, ShowlIriReferenceExpression iriRef, ShowlNodeShape valueShape) throws BeamTransformGenerationException {
+      private JVar hardCodedEnumObject(JBlock block, ShowlEnumIndivdiualReference iriRef, ShowlNodeShape valueShape) throws BeamTransformGenerationException {
 
         
       

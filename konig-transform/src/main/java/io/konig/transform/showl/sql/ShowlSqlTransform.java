@@ -374,7 +374,7 @@ public class ShowlSqlTransform {
 				ShowlNodeShape node = targetProperty.getValueShape();
 				if (node != null) {
 					for (ShowlPropertyShape p : node.allOutwardProperties()) {
-						for (Value value : p.getHasValue()) {
+						for (Value value : p.getHasValueDeprecated()) {
 
 							
 							ShowlMapping m = p.getSelectedMapping();
@@ -437,8 +437,8 @@ public class ShowlSqlTransform {
 				return valueExpression(other, formula);
 			}
 			
-			if (other.getHasValue().size()==1) {
-				Value value = other.getHasValue().iterator().next();
+			if (other.getHasValueDeprecated().size()==1) {
+				Value value = other.getHasValueDeprecated().iterator().next();
 				if (value instanceof URI) {
 					// For now we assume that hasValue members belong to an Enumeration
 					// and we supply only the local name.
