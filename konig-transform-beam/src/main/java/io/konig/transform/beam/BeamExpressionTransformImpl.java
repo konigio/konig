@@ -27,6 +27,7 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import com.google.cloud.Date;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.JCodeModel;
@@ -45,6 +46,7 @@ import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlStructExpression;
+import io.konig.core.showl.ShowlSystimeExpression;
 import io.konig.core.showl.expression.ShowlLiteralExpression;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.FunctionModel;
@@ -105,7 +107,17 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			return enumIndividualReference((ShowlEnumIndivdiualReference)e);
 		}
 		
+		if (e instanceof ShowlSystimeExpression) {
+			return systime();
+		}
+		
 		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
+	}
+
+	private IJExpression systime() {
+		AbstractJClass longClass = model.ref(Long.class);
+		AbstractJClass dateClass = model.ref(Date.class);
+		return longClass._new().arg(dateClass._new().invoke("getTime"));
 	}
 
 	private IJExpression enumIndividualReference(ShowlEnumIndivdiualReference e) {

@@ -229,6 +229,14 @@ public class BeamTransformGeneratorTest {
 		generateAll("src/test/resources/BeamTransformGeneratorTest/path-filter-mapping");
 		
 	}
+	
+	
+	@Test
+	public void testSystime() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/systime");
+		
+	}
 
 	public void generateAll(String path) throws Exception {
 		generateAll(path, true);
