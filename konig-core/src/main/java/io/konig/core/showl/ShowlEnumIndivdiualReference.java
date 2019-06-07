@@ -60,7 +60,7 @@ public class ShowlEnumIndivdiualReference implements ShowlExpression {
 	
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("ShowlIriReferenceExpression(iriValue: <");
+		builder.append("ShowlEnumIndivdiualReference(iriValue: <");
 		builder.append(iriValue.stringValue());
 		builder.append(">)");
 		return builder.toString();

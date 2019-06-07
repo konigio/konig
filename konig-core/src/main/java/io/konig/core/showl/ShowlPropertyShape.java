@@ -1,7 +1,5 @@
 package io.konig.core.showl;
 
-import java.text.MessageFormat;
-
 /*
  * #%L
  * Konig Core
@@ -33,11 +31,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
@@ -119,6 +119,24 @@ public abstract class ShowlPropertyShape implements Traversable {
 		return valueShape==null;
 	}
 	
+	public boolean isEnumIndividual(OwlReasoner reasoner) {
+		Resource owlClassId = getOwlClassId();
+		return reasoner.isEnumerationClass(owlClassId);
+	}
+	
+	public URI getOwlClassId() {
+		URI valueClass = propertyConstraint==null ? null : RdfUtil.uri( propertyConstraint.getValueClass() );
+		if (valueClass != null) {
+			return valueClass;
+		}
+		if (valueShape != null) {
+			return valueShape.getOwlClass().getId();
+		}
+		ShowlClass range = property.getRange();
+		return range == null ? null : range.getId();
+		
+	}
+
 	public ShowlDerivedPropertyShape asDerivedPropertyShape() {
 		return null;
 	}
@@ -412,5 +430,13 @@ public abstract class ShowlPropertyShape implements Traversable {
 
 	public Set<ShowlExpression> getHasValue() {
 		return hasValue == null ? Collections.emptySet() : hasValue;
+	}
+	
+	public boolean isEnumIndividual() {
+		return getSelectedExpression() instanceof ShowlEnumNodeExpression;
+	}
+
+	public boolean isEnumProperty() {
+		return ShowlUtil.isEnumSourceNode(getDeclaringShape());
 	}
 }

@@ -32,6 +32,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.formula.KqlType;
 
 public class ShowlUtil {
+	public static final String ENUM_SHAPE_BASE_IRI = "urn:konig:enumShape/";
 
 	public static boolean isUndefinedClass(ShowlClass owlClass) {
 		
@@ -272,5 +273,17 @@ public class ShowlUtil {
 			return p.getSourceProperty();
 		}
 		return null;
+	}
+
+	public static boolean isEnumSourceNode(ShowlNodeShape sourceNode) {
+		ShowlNodeShape targetNode = sourceNode.getTargetNode();
+		if (targetNode != null) {
+			ShowlPropertyShape accessor = targetNode.getAccessor();
+			if (accessor != null) {
+				ShowlExpression e = accessor.getSelectedExpression();
+				return e instanceof ShowlEnumNodeExpression;
+			}
+		}
+		return false;
 	}
 }

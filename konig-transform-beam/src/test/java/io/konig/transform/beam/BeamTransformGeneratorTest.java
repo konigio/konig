@@ -123,7 +123,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testClassIriTemplate() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/class-iri-template", false);
+		generateAll("src/test/resources/BeamTransformGeneratorTest/class-iri-template");
 		
 	}
 
@@ -181,7 +181,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testTabularMapping() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/tabular-mapping", false);
+		generateAll("src/test/resources/BeamTransformGeneratorTest/tabular-mapping");
 		
 	}
 	
