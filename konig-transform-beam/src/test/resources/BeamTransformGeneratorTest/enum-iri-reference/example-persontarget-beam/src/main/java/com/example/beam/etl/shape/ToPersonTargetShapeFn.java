@@ -1,62 +1,77 @@
 package com.example.beam.etl.shape;
 
+import com.example.beam.etl.common.ErrorBuilder;
 import com.example.beam.etl.schema.GenderType;
 import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
-import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 
 public class ToPersonTargetShapeFn
     extends DoFn<TableRow, TableRow>
 {
 
-    @ProcessElement
-    public void processElement(ProcessContext c) {
+    @DoFn.ProcessElement
+    public void processElement(DoFn.ProcessContext c) {
         try {
-            TableRow inputRow = c.element();
+            ErrorBuilder errorBuilder = new ErrorBuilder();
             TableRow outputRow = new TableRow();
-            Object id = concat("http://example.com/person/", required(inputRow, "person_id"));
-            outputRow.set("id", id);
-            transformGender(inputRow, outputRow);
+            TableRow personSourceRow = c.element();
+            id(personSourceRow, outputRow, errorBuilder);
+            gender(outputRow, errorBuilder);
             if (!outputRow.isEmpty()) {
                 c.output(outputRow);
             }
-        } catch (final Throwable oops) {
-            oops.printStackTrace();
         }
     }
 
-    private Object required(TableRow row, String fieldName) {
-        Object value = row.get(fieldName);
-        if (value == null) {
-            throw new RuntimeException((("Field "+ fieldName)+" must not be null."));
+    private void id(TableRow personSourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
+        if (person_id!= null) {
+            outputRow.set("id", concat("http://example.com/person/", person_id));
+        } else {
+            errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
         }
-        return value;
     }
 
-    private String concat(Object... args) {
+    private String concat(Object arg) {
+        for (Object obj: arg) {
+            if (obj == null) {
+                return null;
+            }
+        }
         StringBuilder builder = new StringBuilder();
-        for (Object value: args) {
-            builder.append(value.toString());
+        for (Object obj: arg) {
+            builder.append(obj);
         }
         return builder.toString();
     }
 
-    private void transformGender(TableRow inputRow, TableRow outputRow) {
-        String gender_id = inputRow.get("gender_id").toString();
-        if (gender_id!= null) {
-            GenderType gender = GenderType.findByLocalName(gender_id);
+    private void gender(TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object personSourceRow_gender_id = personSourceRow.get("personSourceRow_gender_id");
+        if (personSourceRow_gender_id!= null) {
             TableRow genderRow = new TableRow();
-            genderRow.set("id", gender_id);
-            Object name = gender.getName();
-            if (name!= null) {
-                genderRow.set("name", name);
-            }
-            Object genderCode = gender.getGenderCode();
-            if (genderCode!= null) {
-                genderRow.set("genderCode", genderCode);
-            }
+            GenderType gender = GenderType.findByLocalName(personSourceRow_gender_id.toString());
+            genderRow.set("id", personSourceRow_gender_id);
+            gender_name(gender, genderRow, errorBuilder);
+            gender_genderCode(gender, genderRow, errorBuilder);
             outputRow.set("gender", genderRow);
+        }
+    }
+
+    private void gender_name(GenderType gender, TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object name = gender.getName();
+        if (name!= null) {
+            outputRow.set("name", name);
+        } else {
+            errorBuilder.addError("Cannot set gender.name because {GenderType}.name is null");
+        }
+    }
+
+    private void gender_genderCode(GenderType gender, TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object genderCode = gender.getGenderCode();
+        if (genderCode!= null) {
+            outputRow.set("genderCode", genderCode);
+        } else {
+            errorBuilder.addError("Cannot set gender.genderCode because {GenderType}.genderCode is null");
         }
     }
 }

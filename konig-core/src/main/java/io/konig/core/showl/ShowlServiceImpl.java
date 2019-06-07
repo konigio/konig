@@ -158,7 +158,7 @@ public class ShowlServiceImpl implements ShowlService {
 			throw new ShowlProcessingException("Prefix not found for namespace <" + classId.getNamespace() + ">");
 		}
 		StringBuilder builder = new StringBuilder();
-		builder.append("urn:konig:enumShape/");
+		builder.append(ShowlUtil.ENUM_SHAPE_BASE_IRI);
 		builder.append(ns.getPrefix());
 		builder.append('/');
 		builder.append(classId.getLocalName());

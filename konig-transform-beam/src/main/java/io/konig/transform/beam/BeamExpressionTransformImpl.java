@@ -24,6 +24,7 @@ package io.konig.transform.beam;
 import java.text.MessageFormat;
 
 import org.openrdf.model.Literal;
+import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.helger.jcodemodel.AbstractJClass;
@@ -37,8 +38,11 @@ import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
 import com.helger.jcodemodel.JVar;
 
+import io.konig.core.showl.ShowlEnumIndivdiualReference;
 import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlFilterExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
+import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.expression.ShowlLiteralExpression;
@@ -89,7 +93,32 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			return function((ShowlFunctionExpression) e);
 		}
 		
+		if (e instanceof ShowlFilterExpression) {
+			return filter((ShowlFilterExpression)e);
+		}
+		
+		if (e instanceof ShowlIriReferenceExpression) {
+			return iriReference((ShowlIriReferenceExpression)e);
+		}
+		
+		if (e instanceof ShowlEnumIndivdiualReference) {
+			return enumIndividualReference((ShowlEnumIndivdiualReference)e);
+		}
+		
 		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
+	}
+
+	private IJExpression enumIndividualReference(ShowlEnumIndivdiualReference e) {
+		URI iri = e.getIriValue();
+		return JExpr.lit(iri.getLocalName());
+	}
+
+	private IJExpression iriReference(ShowlIriReferenceExpression e) {
+		return JExpr.lit(e.getIriValue().stringValue());
+	}
+
+	private IJExpression filter(ShowlFilterExpression e) throws BeamTransformGenerationException {		
+		return transform(e.getValue());
 	}
 
 	private IJExpression function(ShowlFunctionExpression e) throws BeamTransformGenerationException {

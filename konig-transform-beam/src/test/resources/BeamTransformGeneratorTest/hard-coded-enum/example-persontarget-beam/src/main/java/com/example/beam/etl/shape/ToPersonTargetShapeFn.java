@@ -1,64 +1,82 @@
 package com.example.beam.etl.shape;
 
+import com.example.beam.etl.common.ErrorBuilder;
 import com.example.beam.etl.schema.GenderType;
 import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
-import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 
 public class ToPersonTargetShapeFn
     extends DoFn<TableRow, TableRow>
 {
 
-    @ProcessElement
-    public void processElement(ProcessContext c) {
+    @DoFn.ProcessElement
+    public void processElement(DoFn.ProcessContext c) {
         try {
-            TableRow inputRow = c.element();
+            ErrorBuilder errorBuilder = new ErrorBuilder();
             TableRow outputRow = new TableRow();
-            Object id = concat("http://example.com/person/", required(inputRow, "person_id"));
-            outputRow.set("id", id);
-            setGender(outputRow);
-            Object first_name = inputRow.get("first_name");
-            if (first_name!= null) {
-                outputRow.set("givenName", first_name);
-            }
+            TableRow personSourceRow = c.element();
+            id(personSourceRow, outputRow, errorBuilder);
+            gender(outputRow, errorBuilder);
+            givenName(personSourceRow, outputRow, errorBuilder);
             if (!outputRow.isEmpty()) {
                 c.output(outputRow);
             }
-        } catch (final Throwable oops) {
-            oops.printStackTrace();
         }
     }
 
-    private Object required(TableRow row, String fieldName) {
-        Object value = row.get(fieldName);
-        if (value == null) {
-            throw new RuntimeException((("Field "+ fieldName)+" must not be null."));
+    private void id(TableRow personSourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
+        if (person_id!= null) {
+            outputRow.set("id", concat("http://example.com/person/", person_id));
+        } else {
+            errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
         }
-        return value;
     }
 
-    private String concat(Object... args) {
+    private String concat(Object arg) {
+        for (Object obj: arg) {
+            if (obj == null) {
+                return null;
+            }
+        }
         StringBuilder builder = new StringBuilder();
-        for (Object value: args) {
-            builder.append(value.toString());
+        for (Object obj: arg) {
+            builder.append(obj);
         }
         return builder.toString();
     }
 
-    private void setGender(TableRow outputRow) {
-        GenderType gender = GenderType.Male;
+    private void gender(TableRow outputRow, ErrorBuilder errorBuilder) {
         TableRow genderRow = new TableRow();
-        Object id = gender.getId();
+        GenderType gender = GenderType.Male;
+        gender_id(gender, genderRow, errorBuilder);
+        gender_name(gender, genderRow, errorBuilder);
+    }
+
+    private void gender_id(GenderType gender, TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object id = gender.getId().getLocalName();
         if (id!= null) {
-            genderRow.set("id", id.toString());
+            outputRow.set("id", id);
+        } else {
+            errorBuilder.addError("Cannot set gender.id because {GenderType}.id is null");
         }
+    }
+
+    private void gender_name(GenderType gender, TableRow outputRow, ErrorBuilder errorBuilder) {
         Object name = gender.getName();
         if (name!= null) {
-            genderRow.set("name", name);
+            outputRow.set("name", name);
+        } else {
+            errorBuilder.addError("Cannot set gender.name because {GenderType}.name is null");
         }
-        if (!genderRow.isEmpty()) {
-            outputRow.set("gender", genderRow);
+    }
+
+    private void givenName(TableRow personSourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object first_name = ((personSourceRow == null)?null:personSourceRow.get("first_name"));
+        if (first_name!= null) {
+            outputRow.set("givenName", first_name);
+        } else {
+            errorBuilder.addError("Cannot set givenName because {PersonSourceShape}.first_name is null");
         }
     }
 }
