@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -345,7 +346,9 @@ public class BasicPojoHandler implements PojoHandler {
 			try {
 				idMethod.invoke(javaObject, uri);
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				throw new KonigException(e);
+				String msg = MessageFormat.format("Failed to invoke {0}.{1} for {2}", 
+						javaObject.getClass().getSimpleName(), idMethod.getName(), id.stringValue());
+				throw new KonigException(msg, e);
 			}
 		}
 		

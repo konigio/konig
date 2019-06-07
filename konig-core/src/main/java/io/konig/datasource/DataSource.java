@@ -48,6 +48,7 @@ public class DataSource implements ConditionalEmbeddable {
 	private Set<URI> type = new LinkedHashSet<>();
 	private IriTemplate iriTemplate;
 	private List<URI> isPartOf;
+	private URI overlaySortProperty;
 	
 	private List<DatasourceProperty> datasourceProperty;
  	
@@ -200,4 +201,16 @@ public class DataSource implements ConditionalEmbeddable {
 		return datasourceProperty==null ? Collections.emptyList() : datasourceProperty;
 	}
 
+	@RdfProperty(Konig.Terms.overlaySortProperty)
+	public URI getOverlaySortProperty() {
+		return overlaySortProperty;
+	}
+
+	public void setOverlaySortProperty(URI overlaySortProperty) {
+		this.overlaySortProperty = overlaySortProperty;
+	}
+
+	
+
+	
 }

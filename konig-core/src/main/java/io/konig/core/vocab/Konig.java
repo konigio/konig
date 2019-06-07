@@ -73,6 +73,7 @@ public class Konig {
 		public static final String DatasourceProperty = "http://www.konig.io/ns/core/DatasourceProperty";
 		public static final String PropertyGenerator = "http://www.konig.io/ns/core/PropertyGenerator";
 		public static final String receivesDataFrom = "http://www.konig.io/ns/core/receivesDataFrom";
+		public static final String overlaySortProperty = "http://www.konig.io/ns/core/overlaySortProperty";
 	}
 	
 	// ChangeSet terms
@@ -122,6 +123,7 @@ public class Konig {
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI tabularFieldNamespace = new URIImpl(TABULAR_FIELD_NAMESPACE);
 	public static final URI receivesDataFrom = new URIImpl(Terms.receivesDataFrom);
+	public static final URI overlaySortProperty = new URIImpl(Terms.overlaySortProperty);
 	
 
 	public static final URI propertyPath = new URIImpl(Terms.propertyPath);

@@ -2,12 +2,11 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
 @prefix schema:  <http://schema.org/> .
-#if($!{parentComponent})
-#set ( $namespaceList = $functions.listNamespaces($parentComponent) )
+#if( $!{parentComponent} || $!{overlaySortProperty} )
+#set ( $namespaceList = $functions.listNamespaces( "$!{parentComponent} $!{overlaySortProperty}" ) )
 #foreach( $namespace in $namespaceList) 
 @prefix $namespace.Prefix: <$namespace.Name> .
-#end
-#end
+#end#end
 
 <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}>
 	a konig:GoogleBigQueryTable, konig:DataSource;
@@ -19,7 +18,8 @@
 	];
 	#if($!{parentComponent}) 
 	schema:isPartOf $functions.spaceToComma(${parentComponent});
-	#end
+	#end#if($!{overlaySortProperty})
+	konig:overlaySortProperty $!{overlaySortProperty}#end
 .
 
 <${shapeId}> konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}>

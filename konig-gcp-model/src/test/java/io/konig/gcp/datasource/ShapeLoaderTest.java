@@ -1,5 +1,8 @@
 package io.konig.gcp.datasource;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /*
  * #%L
  * Konig Google Cloud Platform Model
@@ -24,9 +27,8 @@ package io.konig.gcp.datasource;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
@@ -49,6 +51,47 @@ public class ShapeLoaderTest {
 	@Before
 	public void setUp() {
 		GcpShapeConfig.init();
+	}
+	
+	@Test
+	public void testOverlaySortProperty() {
+
+		MemoryGraph graph = new MemoryGraph();
+		
+		URI sortPropertyValue = uri("http://example.com/ns/core/lastModified");
+		
+		URI shapeId = uri("http://example.com/PersonShape");
+		
+		URI tableId = uri("http://example.com/table/Person");
+		
+		URI stageId = uri("http://example.com/sys/WarehouseStaging");
+		
+		graph.builder()
+			.beginSubject(shapeId)
+				.addProperty(RDF.TYPE, SH.Shape)
+				.addProperty(Konig.shapeDataSource, tableId)
+			.endSubject()
+			.beginSubject(tableId)
+				.addProperty(RDF.TYPE, Konig.GoogleCloudSqlTable)
+				.addProperty(Schema.isPartOf, stageId)
+				.addProperty(Konig.overlaySortProperty, sortPropertyValue)
+			.endSubject()
+			;
+		
+		
+		
+		
+		shapeLoader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		List<DataSource> list = shape.getShapeDataSource();
+		assertEquals(1, list.size());
+		
+		DataSource ds = list.get(0);
+		URI sortProperty = ds.getOverlaySortProperty();
+		assertTrue(sortProperty!=null);
+		assertEquals(sortPropertyValue.stringValue(), sortProperty.stringValue());
 	}
 	
 	@Test 
