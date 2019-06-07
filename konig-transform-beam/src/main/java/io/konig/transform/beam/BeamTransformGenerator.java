@@ -136,6 +136,7 @@ import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStaticPropertyShape;
 import io.konig.core.showl.ShowlStructExpression;
+import io.konig.core.showl.ShowlSystimeExpression;
 import io.konig.core.showl.ShowlTemplatePropertyShape;
 import io.konig.core.showl.ShowlUtil;
 import io.konig.core.showl.StaticDataSource;
@@ -1444,9 +1445,12 @@ public class BeamTransformGenerator {
 					sourceInfoSet.add(info);
 				}
 				
+				ShowlExpression e = direct.getSelectedExpression();
+				
 				if (
 						sourceInfoSet.isEmpty() && 
-						!(direct.getSelectedExpression() instanceof ShowlFilterExpression) && 
+						!(e instanceof ShowlFilterExpression) && 
+						!(e instanceof ShowlSystimeExpression) &&
 						!direct.isEnumIndividual(reasoner)
 				) {
 					throw new BeamTransformGenerationException("SourceInfo not found for " + direct.getPath());

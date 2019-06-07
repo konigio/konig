@@ -460,6 +460,12 @@ public class BasicTransformService implements ShowlTransformService {
 		Iterator<ShowlPropertyShapeGroup> sequence = propertyPool.iterator();
 		while (sequence.hasNext()) {
 			ShowlPropertyShapeGroup targetProperty = sequence.next();
+			
+			if (mapModified(targetProperty)) {
+				sequence.remove();
+				continue;
+			}
+			
 			List<ShowlPropertyShapeGroup> path = targetProperty.relativePath(targetNode);
 			
 			ShowlPropertyShapeGroup sourceProperty = sourceNode.findPropertyByPath(path);
@@ -473,6 +479,15 @@ public class BasicTransformService implements ShowlTransformService {
 
 
 
+
+
+	private boolean mapModified(ShowlPropertyShapeGroup targetProperty) {
+		if (targetProperty.getPredicate().equals(Konig.modified)) {
+			targetProperty.direct().setSelectedExpression(new ShowlSystimeExpression());
+			return true;
+		}
+		return false;
+	}
 
 
 	private void setAccessorExpression(ShowlPropertyShapeGroup targetProperty) {
