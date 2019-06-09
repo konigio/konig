@@ -52,7 +52,7 @@ public class ChangeSetProcessor {
 			
 			if (e.matches(Konig.Falsehood, value)) {
 				target.remove(e);
-			} else if (e.matches(Konig.Dictum, value)) {
+			} else if (e.matches(Konig.Assertion, value)) {
 				target.edge(e);
 			}
 		}

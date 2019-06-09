@@ -175,6 +175,17 @@ public class ShowlProperty {
 	}
 
 
+	public URI inferRange(OwlReasoner reasoner) {
+		if (range != null) {
+			return range.getId();
+		}
+		Set<URI> rangeIncludes = rangeIncludes(reasoner);
+
+		return rangeIncludes.size()==1 ?
+			rangeIncludes.iterator().next() :
+			null;
+	}
+
 	public ShowlClass inferRange(ShowlSchemaService service) {
 		if (range != null) {
 			return range;

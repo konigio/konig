@@ -127,7 +127,7 @@ public class ChangeSetFactoryTest {
 		assertTrue(shape != null);
 		
 		assertChange(shape, SH.targetClass, FOAF.PERSON, Konig.Falsehood);
-		assertChange(shape, SH.targetClass, Schema.Person, Konig.Dictum);
+		assertChange(shape, SH.targetClass, Schema.Person, Konig.Assertion);
 		assertEquals(2, delta.size());
 		
 		
@@ -313,7 +313,7 @@ public class ChangeSetFactoryTest {
 		
 		assertUndefined(aliceNode, Schema.givenName);
 		assertLiteral(aliceNode, Schema.familyName, "Jones", Konig.Falsehood);
-		assertLiteral(aliceNode, Schema.familyName, "Smith", Konig.Dictum);
+		assertLiteral(aliceNode, Schema.familyName, "Smith", Konig.Assertion);
 		
 //		PlainTextChangeSetReportWriter reporter = new PlainTextChangeSetReportWriter(nsManager);
 //		reporter.write(delta, System.out);
@@ -327,8 +327,8 @@ public class ChangeSetFactoryTest {
 		Vertex contactPointNode = aliceNode.asTraversal().out(Schema.contactPoint).firstVertex();
 		assertLiteral(contactPointNode, Schema.contactType, "Work", Konig.KeyValue);
 		assertLiteral(contactPointNode, Schema.telephone, "555-123-4567", Konig.Falsehood);
-		assertLiteral(contactPointNode, Schema.telephone, "555-987-6543", Konig.Dictum);
-		assertValue(contactPointNode, Schema.gender, Schema.Female, Konig.Dictum);
+		assertLiteral(contactPointNode, Schema.telephone, "555-987-6543", Konig.Assertion);
+		assertValue(contactPointNode, Schema.gender, Schema.Female, Konig.Assertion);
 		
 	}
 

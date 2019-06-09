@@ -2,8 +2,8 @@
 @prefix konig: <http://www.konig.io/ns/core/> .
 @prefix gcp:   <http://www.konig.io/ns/gcp/> .
 @prefix schema:  <http://schema.org/> .
-#if( $!{parentComponent} || $!{overlaySortProperty} )
-#set ( $namespaceList = $functions.listNamespaces( "$!{parentComponent} $!{overlaySortProperty}" ) )
+#if( $!{parentComponent} || $!{etlPattern} )
+#set ( $namespaceList = $functions.listNamespaces( "$!{parentComponent} $!{etlPattern}" ) )
 #foreach( $namespace in $namespaceList) 
 @prefix $namespace.Prefix: <$namespace.Name> .
 #end#end
@@ -18,8 +18,8 @@
 	];
 	#if($!{parentComponent}) 
 	schema:isPartOf $functions.spaceToComma(${parentComponent});
-	#end#if($!{overlaySortProperty})
-	konig:overlaySortProperty $!{overlaySortProperty}#end
+	#end#if($!{etlPattern})
+	konig:etlPattern $functions.spaceToComma(${etlPattern})#end
 .
 
 <${shapeId}> konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/${gcpDatasetId}/tables/${bigQueryTableId}>

@@ -7,6 +7,8 @@ import java.util.List;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import io.konig.core.impl.RdfUtil;
+
 /*
  * #%L
  * Konig Core
@@ -285,5 +287,20 @@ public class ShowlUtil {
 			}
 		}
 		return false;
+	}
+	
+	public static String shortShapeName(URI shapeId) {
+		String localName = shapeId.getLocalName();
+		if (localName.endsWith("_Shape")) {
+			return localName.substring(0, localName.length()-6);
+		}
+		if (localName.endsWith("Shape")) {
+			return localName.substring(0, localName.length()-5);
+		}
+		return localName;
+	}
+	
+	public static String shortShapeName(ShowlNodeShape node) {
+		return shortShapeName(RdfUtil.uri(node.getId()));
 	}
 }

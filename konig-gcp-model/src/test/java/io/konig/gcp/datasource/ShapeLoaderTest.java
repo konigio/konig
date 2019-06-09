@@ -25,9 +25,9 @@ import static org.junit.Assert.assertTrue;
 
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -54,11 +54,10 @@ public class ShapeLoaderTest {
 	}
 	
 	@Test
-	public void testOverlaySortProperty() {
+	public void testEtlPattern() {
 
 		MemoryGraph graph = new MemoryGraph();
 		
-		URI sortPropertyValue = uri("http://example.com/ns/core/lastModified");
 		
 		URI shapeId = uri("http://example.com/PersonShape");
 		
@@ -74,11 +73,9 @@ public class ShapeLoaderTest {
 			.beginSubject(tableId)
 				.addProperty(RDF.TYPE, Konig.GoogleCloudSqlTable)
 				.addProperty(Schema.isPartOf, stageId)
-				.addProperty(Konig.overlaySortProperty, sortPropertyValue)
+				.addProperty(Konig.etlPattern, Konig.OverlayPattern)
 			.endSubject()
 			;
-		
-		
 		
 		
 		shapeLoader.load(graph);
@@ -89,9 +86,9 @@ public class ShapeLoaderTest {
 		assertEquals(1, list.size());
 		
 		DataSource ds = list.get(0);
-		URI sortProperty = ds.getOverlaySortProperty();
-		assertTrue(sortProperty!=null);
-		assertEquals(sortPropertyValue.stringValue(), sortProperty.stringValue());
+		Set<URI> patternSet = ds.getEtlPattern();
+		assertTrue(patternSet.contains(Konig.OverlayPattern));
+		assertEquals(1, patternSet.size());
 	}
 	
 	@Test 

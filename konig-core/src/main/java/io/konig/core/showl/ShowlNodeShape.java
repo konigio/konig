@@ -44,7 +44,6 @@ import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.util.ValueFormat.ElementType;
 import io.konig.core.vocab.Konig;
-import io.konig.datasource.DataSource;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.Shape;
 
@@ -543,6 +542,22 @@ public class ShowlNodeShape implements Traversable {
 		}
 		channelList.add(channel);
 		
+	}
+	
+	public List<ShowlChannel> nonEnumChannels(OwlReasoner reasoner) {
+
+		List<ShowlChannel> list = null;
+    for (ShowlChannel c : getChannels()) {
+      ShowlNodeShape sourceNode = c.getSourceNode();
+      if (!reasoner.isEnumerationClass(sourceNode.getOwlClass().getId())) {
+        if (list == null) {
+        	list = new ArrayList<>();
+        	list.add(c);
+        }
+      }
+    }
+    
+    return list==null ? Collections.emptyList() : list;
 	}
 
 	public List<ShowlChannel> getChannels() {

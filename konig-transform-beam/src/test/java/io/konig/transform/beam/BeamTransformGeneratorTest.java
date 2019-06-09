@@ -58,6 +58,7 @@ import io.konig.core.showl.ShowlTransformEngine;
 import io.konig.core.showl.ShowlTransformService;
 import io.konig.core.util.IOUtil;
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.DataSourceManager;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
@@ -66,33 +67,26 @@ public class BeamTransformGeneratorTest {
 
 
 
-	private NamespaceManager nsManager = new MemoryNamespaceManager();
-	private Graph graph = new MemoryGraph(nsManager);
-	private ShapeManager shapeManager = new MemoryShapeManager();
-	private OwlReasoner reasoner = new OwlReasoner(graph);
-	private ShowlNodeListingConsumer consumer = new ShowlNodeListingConsumer();
-	private ShowlService showlService = new ShowlServiceImpl(reasoner);
-	private ShowlNodeShapeBuilder nodeShapeBuilder = new ShowlNodeShapeBuilder(showlService, showlService);
+	private NamespaceManager nsManager;
+	private Graph graph;
+	private ShapeManager shapeManager;
+	private OwlReasoner reasoner;
+	private ShowlNodeListingConsumer consumer;
+	private ShowlService showlService;
 
-	private DestinationTypeTargetNodeShapeFactory targetNodeFactory = new DestinationTypeTargetNodeShapeFactory(
-			Collections.singleton(Konig.GoogleBigQueryTable), nodeShapeBuilder);
-	
-	private ReceivesDataFromSourceNodeFactory sourceNodeFactory = new ReceivesDataFromSourceNodeFactory(nodeShapeBuilder, graph);
-
-	private ShowlTransformService transformService = new BasicTransformService(showlService, showlService, sourceNodeFactory);
-
-	private ShowlTransformEngine engine = new ShowlTransformEngine(targetNodeFactory, shapeManager, transformService, consumer);
-	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
+	private ShowlTransformEngine engine;
+	private BeamTransformGenerator generator;
 
 	
 	
 
 	@Before
 	public void setUp() {
-
-		graph = new MemoryGraph(new MemoryNamespaceManager());
+		nsManager = new MemoryNamespaceManager();
+		graph = new MemoryGraph(nsManager);
 		shapeManager = new MemoryShapeManager();
-		OwlReasoner reasoner = new OwlReasoner(graph);
+		reasoner = new OwlReasoner(graph);
+		consumer = new ShowlNodeListingConsumer();
 		
 		Set<URI> targetSystems = Collections.singleton(uri("http://example.com/ns/sys/WarehouseOperationalData"));
 		showlService = new ShowlServiceImpl(reasoner);
@@ -110,6 +104,16 @@ public class BeamTransformGeneratorTest {
 
 	private URI uri(String stringValue) {
 		return new URIImpl(stringValue);
+	}
+	
+	
+	
+
+	@Test
+	public void testOverlay() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/overlay");
+		
 	}
 
 	@Test
@@ -148,11 +152,10 @@ public class BeamTransformGeneratorTest {
 		
 	}
 
-	@Ignore
-	public void testBeamCube() throws Exception {
-		generateAll("src/test/resources/BeamTransformGeneratorTest/beam-cube");
-		
-	}
+//	public void testBeamCube() throws Exception {
+//		generateAll("src/test/resources/BeamTransformGeneratorTest/beam-cube");
+//		
+//	}
 	
 
 
@@ -243,6 +246,8 @@ public class BeamTransformGeneratorTest {
 	}
 	
 	public void generateAll(String path, boolean withValidation) throws Exception {
+		
+		DataSourceManager.getInstance().clear();
 		
 		File rdfDir = new File(path);
 		assertTrue(rdfDir.exists());

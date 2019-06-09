@@ -287,7 +287,7 @@ public class ChangeSetFactory {
 			for (Entry<URI, Set<Edge>> entry : out) {
 				Set<Edge> set = entry.getValue();
 				for (Edge e : set) {
-					changes.edge(e).addAnnotation(RDF.TYPE, Konig.Dictum);
+					changes.edge(e).addAnnotation(RDF.TYPE, Konig.Assertion);
 					count++;
 					Value object = e.getObject();
 					if (object instanceof BNode) {
@@ -303,7 +303,7 @@ public class ChangeSetFactory {
 
 
 		private void add(Resource subject, URI predicate, Value object) {
-			changes.edge(subject, predicate, object).addAnnotation(RDF.TYPE, Konig.Dictum);
+			changes.edge(subject, predicate, object).addAnnotation(RDF.TYPE, Konig.Assertion);
 		}
 
 

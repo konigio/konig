@@ -22,6 +22,7 @@ package io.konig.core.showl;
 
 import java.util.Collections;
 
+import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
