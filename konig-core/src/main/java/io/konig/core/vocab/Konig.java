@@ -73,10 +73,12 @@ public class Konig {
 		public static final String DatasourceProperty = "http://www.konig.io/ns/core/DatasourceProperty";
 		public static final String PropertyGenerator = "http://www.konig.io/ns/core/PropertyGenerator";
 		public static final String receivesDataFrom = "http://www.konig.io/ns/core/receivesDataFrom";
+		public static final String etlPattern = "http://www.konig.io/ns/core/etlPattern";
+		public static final String OverlayPattern = "http://www.konig.io/ns/core/OverlayPattern";
 	}
 	
 	// ChangeSet terms
-	public static final URI Dictum = new URIImpl("http://www.konig.io/ns/core/Dictum");
+	public static final URI Assertion = new URIImpl("http://www.konig.io/ns/core/Assertion");
 	public static final URI Falsehood = new URIImpl("http://www.konig.io/ns/core/Falsehood");
 	public static final URI KeyValue = new URIImpl("http://www.konig.io/ns/core/KeyValue");
 	public static final URI KeyTerm = new URIImpl("http://www.konig.io/ns/core/KeyTerm");
@@ -122,6 +124,8 @@ public class Konig {
 	public static final URI NullShape = new URIImpl("http://www.konig.io/shapes/NullShape");
 	public static final URI tabularFieldNamespace = new URIImpl(TABULAR_FIELD_NAMESPACE);
 	public static final URI receivesDataFrom = new URIImpl(Terms.receivesDataFrom);
+	public static final URI etlPattern = new URIImpl(Terms.etlPattern);
+	public static final URI OverlayPattern = new URIImpl(Terms.OverlayPattern);
 	
 
 	public static final URI propertyPath = new URIImpl(Terms.propertyPath);

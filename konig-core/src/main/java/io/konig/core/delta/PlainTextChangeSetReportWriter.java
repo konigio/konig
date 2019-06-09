@@ -304,14 +304,14 @@ public class PlainTextChangeSetReportWriter implements ChangeSetReportWriter {
 		private String functionString(Edge edge) {
 			Value value = edge.getAnnotation(RDF.TYPE);
 			String result = 
-				Konig.Dictum.equals(value)      ? ADD :
+				Konig.Assertion.equals(value)      ? ADD :
 				Konig.Falsehood.equals(value)   ? REMOVE :
 				Konig.KeyValue.equals(value) 	? KEYVALUE :
 				Konig.KeyTerm.equals(value) 	? KEYTERM :
 				match(edge, Konig.Falsehood, Konig.KeyValue, value) ? REMOVE_KEYVALUE :
-				match(edge, Konig.Dictum,  Konig.KeyValue, value) ? ADD_KEYVALUE :
+				match(edge, Konig.Assertion,  Konig.KeyValue, value) ? ADD_KEYVALUE :
 				match(edge, Konig.Falsehood, Konig.KeyTerm, value)  ? REMOVE_KEYTERM :
-				match(edge, Konig.Dictum,  Konig.KeyTerm, value)  ? ADD_KEYTERM :
+				match(edge, Konig.Assertion,  Konig.KeyTerm, value)  ? ADD_KEYTERM :
 				NONE;
 			return result;
 		}

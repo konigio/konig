@@ -219,6 +219,23 @@ public abstract class ShowlPropertyShape implements Traversable {
 		}
 		return root;
 	}
+
+
+	public URI getValueType(OwlReasoner reasoner) {
+		if (propertyConstraint != null) {
+			URI valueClass = RdfUtil.uri(propertyConstraint.getValueClass());
+			if (valueClass == null) {
+				Shape shape = propertyConstraint.getShape();
+				if (shape != null) {
+					valueClass = shape.getTargetClass();
+				}
+			}
+			if (valueClass != null) {
+				return valueClass;
+			}
+		}
+		return property.inferRange(reasoner);
+	}
 	
 	public ShowlClass getValueType(ShowlSchemaService schemaService) {
 		if (propertyConstraint != null) {

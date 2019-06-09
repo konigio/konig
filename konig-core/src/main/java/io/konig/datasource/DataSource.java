@@ -48,6 +48,7 @@ public class DataSource implements ConditionalEmbeddable {
 	private Set<URI> type = new LinkedHashSet<>();
 	private IriTemplate iriTemplate;
 	private List<URI> isPartOf;
+	private Set<URI> etlPattern;
 	
 	private List<DatasourceProperty> datasourceProperty;
  	
@@ -200,4 +201,18 @@ public class DataSource implements ConditionalEmbeddable {
 		return datasourceProperty==null ? Collections.emptyList() : datasourceProperty;
 	}
 
+	public void addEtlPattern(URI pattern) {
+		if (etlPattern==null) {
+			etlPattern = new LinkedHashSet<>();
+		}
+		etlPattern.add(pattern);
+	}
+	
+
+	@RdfProperty(Konig.Terms.etlPattern)
+	public Set<URI> getEtlPattern() {
+		return etlPattern == null ? Collections.emptySet() : etlPattern;
+	}
+
+	
 }

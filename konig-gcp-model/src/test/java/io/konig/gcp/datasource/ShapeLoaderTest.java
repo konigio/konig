@@ -1,5 +1,8 @@
 package io.konig.gcp.datasource;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /*
  * #%L
  * Konig Google Cloud Platform Model
@@ -22,11 +25,10 @@ package io.konig.gcp.datasource;
 
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
@@ -49,6 +51,44 @@ public class ShapeLoaderTest {
 	@Before
 	public void setUp() {
 		GcpShapeConfig.init();
+	}
+	
+	@Test
+	public void testEtlPattern() {
+
+		MemoryGraph graph = new MemoryGraph();
+		
+		
+		URI shapeId = uri("http://example.com/PersonShape");
+		
+		URI tableId = uri("http://example.com/table/Person");
+		
+		URI stageId = uri("http://example.com/sys/WarehouseStaging");
+		
+		graph.builder()
+			.beginSubject(shapeId)
+				.addProperty(RDF.TYPE, SH.Shape)
+				.addProperty(Konig.shapeDataSource, tableId)
+			.endSubject()
+			.beginSubject(tableId)
+				.addProperty(RDF.TYPE, Konig.GoogleCloudSqlTable)
+				.addProperty(Schema.isPartOf, stageId)
+				.addProperty(Konig.etlPattern, Konig.OverlayPattern)
+			.endSubject()
+			;
+		
+		
+		shapeLoader.load(graph);
+		
+		Shape shape = shapeManager.getShapeById(shapeId);
+		
+		List<DataSource> list = shape.getShapeDataSource();
+		assertEquals(1, list.size());
+		
+		DataSource ds = list.get(0);
+		Set<URI> patternSet = ds.getEtlPattern();
+		assertTrue(patternSet.contains(Konig.OverlayPattern));
+		assertEquals(1, patternSet.size());
 	}
 	
 	@Test 
