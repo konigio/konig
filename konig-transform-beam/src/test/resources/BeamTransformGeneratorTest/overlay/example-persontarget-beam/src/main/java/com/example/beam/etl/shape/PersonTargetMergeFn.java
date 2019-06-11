@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.Map;
 import com.example.beam.etl.common.ErrorBuilder;
 import com.google.api.client.util.DateTime;
-import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.Date;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
@@ -13,29 +12,31 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 
 public class PersonTargetMergeFn
-    extends DoFn<KV<String, CoGbkResult> , TableRow>
+    extends DoFn<KV<String, CoGbkResult> , com.google.api.services.bigquery.model.TableRow>
 {
+    public static TupleTag<String> deadLetterTag = new TupleTag<String>();
+    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
 
     @ProcessElement
     public void processElement(DoFn.ProcessContext c) {
         try {
             KV<String, CoGbkResult> e = c.element();
-            TableRow outputRow = baselineRow(e, personTargetTag);
+            com.google.api.services.bigquery.model.TableRow outputRow = baselineRow(e, personTargetTag);
             overlay(outputRow, e, personSourceTag);
             if (!outputRow.isEmpty()) {
-                c.output(outputRow);
+                c.output(successTag, outputRow);
             }
         } catch (final Throwable oops) {
-            oops.printStackTrace()();
+            c.output(deadLetterTag, oops.getMessage());
         }
     }
 
-    private TableRow baselineRow(KV<String, CoGbkResult> e, TupleTag<TableRow> tupleTag) {
-        Iterator<TableRow> sequence = e.getValue().getAll(tupleTag).iterator();
-        TableRow result = null;
+    private com.google.api.services.bigquery.model.TableRow baselineRow(KV<String, CoGbkResult> e, TupleTag<com.google.api.services.bigquery.model.TableRow> tupleTag) {
+        Iterator<com.google.api.services.bigquery.model.TableRow> sequence = e.getValue().getAll(tupleTag).iterator();
+        com.google.api.services.bigquery.model.TableRow result = null;
         Long latest = null;
         while (sequence.hasNext()) {
-            TableRow row = sequence.next();
+            com.google.api.services.bigquery.model.TableRow row = sequence.next();
             Long modified = dateTime(row, "modified");
             if ((modified!= null)&&((latest == null)||(modified >latest))) {
                 latest = modified;
@@ -43,12 +44,12 @@ public class PersonTargetMergeFn
             }
         }
         if (result == null) {
-            result = new TableRow();
+            result = new com.google.api.services.bigquery.model.TableRow();
         }
         return result;
     }
 
-    private Long dateTime(TableRow row, String fieldName) {
+    private Long dateTime(com.google.api.services.bigquery.model.TableRow row, String fieldName) {
         Object value = row.get(fieldName);
         Long result = null;
         if (value instanceof String) {
@@ -62,19 +63,19 @@ public class PersonTargetMergeFn
         return result;
     }
 
-    private void overlay(TableRow outputRow, KV<String, CoGbkResult> e, TupleTag<TableRow> tupleTag) {
-        Iterator<TableRow> sequence = e.getValue().getAll(tupleTag).iterator();
+    private void overlay(com.google.api.services.bigquery.model.TableRow outputRow, KV<String, CoGbkResult> e, TupleTag<com.google.api.services.bigquery.model.TableRow> tupleTag) {
+        Iterator<com.google.api.services.bigquery.model.TableRow> sequence = e.getValue().getAll(tupleTag).iterator();
         while (sequence.hasNext()) {
-            TableRow sourceRow = sequence.next();
-            TableRow targetRow = transform(sourceRow);
+            com.google.api.services.bigquery.model.TableRow sourceRow = sequence.next();
+            com.google.api.services.bigquery.model.TableRow targetRow = transform(sourceRow);
             if (targetRow!= null) {
                 copy(targetRow, outputRow);
             }
         }
     }
 
-    private TableRow transform(TableRow sourceRow) {
-        TableRow targetRow = new TableRow();
+    private com.google.api.services.bigquery.model.TableRow transform(com.google.api.services.bigquery.model.TableRow sourceRow) {
+        com.google.api.services.bigquery.model.TableRow targetRow = new com.google.api.services.bigquery.model.TableRow();
         ErrorBuilder errorBuilder = new ErrorBuilder();
         id(sourceRow, targetRow, errorBuilder);
         email(sourceRow, targetRow, errorBuilder);
@@ -83,7 +84,7 @@ public class PersonTargetMergeFn
         return targetRow;
     }
 
-    private void id(TableRow sourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void id(com.google.api.services.bigquery.model.TableRow sourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_id = ((sourceRow == null)?null:sourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
@@ -105,7 +106,7 @@ public class PersonTargetMergeFn
         return builder.toString();
     }
 
-    private void email(TableRow sourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void email(com.google.api.services.bigquery.model.TableRow sourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object email = ((sourceRow == null)?null:sourceRow.get("email"));
         if (email!= null) {
             outputRow.set("email", email);
@@ -114,7 +115,7 @@ public class PersonTargetMergeFn
         }
     }
 
-    private void givenName(TableRow sourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void givenName(com.google.api.services.bigquery.model.TableRow sourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object first_name = ((sourceRow == null)?null:sourceRow.get("first_name"));
         if (first_name!= null) {
             outputRow.set("givenName", first_name);
@@ -123,18 +124,18 @@ public class PersonTargetMergeFn
         }
     }
 
-    private void modified(TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void modified(com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         outputRow.set("modified", new Long(new Date().getTime()));
     }
 
-    private void copy(TableRow targetRow, TableRow outputRow) {
+    private void copy(com.google.api.services.bigquery.model.TableRow targetRow, com.google.api.services.bigquery.model.TableRow outputRow) {
         for (Map.Entry<String, Object> entry: targetRow.entrySet()) {
             String fieldName = entry.getKey();
             Object value = entry.getValue();
-            if (value instanceof TableRow) {
+            if (value instanceof com.google.api.services.bigquery.model.TableRow) {
                 Object outputValue = outputRow.get(fieldName);
-                if (outputValue instanceof TableRow) {
-                    copy(((TableRow) value), ((TableRow) outputValue));
+                if (outputValue instanceof com.google.api.services.bigquery.model.TableRow) {
+                    copy(((com.google.api.services.bigquery.model.TableRow) value), ((com.google.api.services.bigquery.model.TableRow) outputValue));
                 } else {
                     outputRow.put(fieldName, value);
                 }

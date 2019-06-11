@@ -2,28 +2,36 @@ package com.example.beam.etl.shape;
 
 import com.example.beam.etl.common.ErrorBuilder;
 import com.example.beam.etl.schema.GenderType;
-import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.values.TupleTag;
 
 public class ToPersonTargetShapeFn
-    extends DoFn<TableRow, TableRow>
+    extends DoFn<com.google.api.services.bigquery.model.TableRow, com.google.api.services.bigquery.model.TableRow>
 {
+    public static TupleTag<String> deadLetterTag = new TupleTag<String>();
+    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
 
     @DoFn.ProcessElement
     public void processElement(DoFn.ProcessContext c) {
         try {
             ErrorBuilder errorBuilder = new ErrorBuilder();
-            TableRow outputRow = new TableRow();
-            TableRow personSourceRow = c.element();
+            com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
+            com.google.api.services.bigquery.model.TableRow personSourceRow = c.element();
             id(personSourceRow, outputRow, errorBuilder);
             gender(outputRow, errorBuilder);
             if (!outputRow.isEmpty()) {
-                c.output(outputRow);
+                c.output(successTag, outputRow);
             }
+            if (errorBuilder.length()> 0) {
+                errorBuilder.addError(outputRow.toString());
+                throw new Exception(errorBuilder.toString());
+            }
+        } catch (final Throwable oops) {
+            c.output(deadLetterTag, oops.getMessage());
         }
     }
 
-    private void id(TableRow personSourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
@@ -45,10 +53,10 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private void gender(TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void gender(com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object personSourceRow_gender_id = personSourceRow.get("personSourceRow_gender_id");
         if (personSourceRow_gender_id!= null) {
-            TableRow genderRow = new TableRow();
+            com.google.api.services.bigquery.model.TableRow genderRow = new com.google.api.services.bigquery.model.TableRow();
             GenderType gender = GenderType.findByLocalName(personSourceRow_gender_id.toString());
             genderRow.set("id", personSourceRow_gender_id);
             gender_name(gender, genderRow, errorBuilder);
@@ -57,7 +65,7 @@ public class ToPersonTargetShapeFn
         }
     }
 
-    private void gender_name(GenderType gender, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void gender_name(GenderType gender, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object name = gender.getName();
         if (name!= null) {
             outputRow.set("name", name);
@@ -66,7 +74,7 @@ public class ToPersonTargetShapeFn
         }
     }
 
-    private void gender_genderCode(GenderType gender, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void gender_genderCode(GenderType gender, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object genderCode = gender.getGenderCode();
         if (genderCode!= null) {
             outputRow.set("genderCode", genderCode);
