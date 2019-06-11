@@ -1549,7 +1549,7 @@ public class BeamTransformGenerator {
 		      	JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, methodName);
 		      	
 		      	BeamTargetProperty beamTargetProperty = targetProperty(direct, pman);
-		
+		      	
 		      	
 		      	for (BeamChannel info : beamTargetProperty.getChannelList()) {
 		    			JVar sourceRow = info.getSourceRow();
@@ -1998,7 +1998,7 @@ public class BeamTransformGenerator {
 				tryBlock.body()._if(outputRow.invoke("isEmpty").not())._then().add(c.invoke("output").arg(successTag).arg(outputRow));
          
 				JBlock exceptionBlock = tryBlock.body()
-			        ._if(errorBuilder.invoke("length").gt0())
+			        ._if(errorBuilder.invoke("isEmpty").not())
 			        ._then();
 				exceptionBlock.add(errorBuilder.invoke("addError").arg(outputRow.invoke("toString")));
 			    exceptionBlock._throw(JExpr._new(model.ref(Exception.class)).arg(errorBuilder.invoke("toString")));

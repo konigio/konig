@@ -21,7 +21,7 @@ public class ToPersonTargetShapeFn
             if (!outputRow.isEmpty()) {
                 c.output(successTag, outputRow);
             }
-            if (errorBuilder.length()> 0) {
+            if (!errorBuilder.isEmpty()) {
                 errorBuilder.addError(outputRow.toString());
                 throw new Exception(errorBuilder.toString());
             }
