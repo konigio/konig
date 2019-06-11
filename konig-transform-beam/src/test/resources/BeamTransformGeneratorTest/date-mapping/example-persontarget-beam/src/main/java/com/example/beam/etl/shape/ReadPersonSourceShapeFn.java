@@ -36,11 +36,11 @@ public class ReadPersonSourceShapeFn
             FileIO.ReadableFile f = c.element();
             ReadableByteChannel rbc = f.open();
             InputStream stream = Channels.newInputStream(rbc);
-            StringBuilder builder = new StringBuilder();
             try {
                 CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180 .withFirstRecordAsHeader().withSkipHeaderRecord());
                 validateHeaders(csv);
                 for (CSVRecord record: csv) {
+                    StringBuilder builder = new StringBuilder();
                     try {
                         com.google.api.services.bigquery.model.TableRow row = new com.google.api.services.bigquery.model.TableRow();
                         Long birth_date = temporalValue(csv, "birth_date", record, builder);

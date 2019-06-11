@@ -33,11 +33,11 @@ public class ReadAddressSourceFn
             FileIO.ReadableFile f = c.element();
             ReadableByteChannel rbc = f.open();
             InputStream stream = Channels.newInputStream(rbc);
-            StringBuilder builder = new StringBuilder();
             try {
                 CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180 .withFirstRecordAsHeader().withSkipHeaderRecord());
                 validateHeaders(csv);
                 for (CSVRecord record: csv) {
+                    StringBuilder builder = new StringBuilder();
                     try {
                         TableRow row = new TableRow();
                         String addressOf = stringValue(csv, "addressOf", record, builder);

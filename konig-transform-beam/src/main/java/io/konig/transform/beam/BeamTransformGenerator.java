@@ -1131,8 +1131,7 @@ public class BeamTransformGenerator {
 		    JVar stream = body.decl(inputStreamType, "stream").init(
 		        channelsClass.staticInvoke("newInputStream").arg(rbc));
 		    
-		    JVar exceptionMessageBr = body.decl(model.ref(StringBuilder.class), "builder")
-					.init(JExpr._new(model.ref(StringBuilder.class)));
+		    
 		    
 		    //     try {
 		
@@ -1141,7 +1140,7 @@ public class BeamTransformGenerator {
 		    //       CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180);
 		
 		    JBlock innerBody = innerTry.body();
-		    
+		   
 		    AbstractJClass csvParserClass = model.ref(CSVParser.class);
 		    AbstractJClass standardCharsetsClass = model.ref(StandardCharsets.class);
 		    AbstractJClass csvFormatClass = model.ref(CSVFormat.class);
@@ -1182,7 +1181,11 @@ public class BeamTransformGenerator {
 		    JForEach forEachRecordLoop = innerBody.forEach(csvRecordClass, "record", csv);
 		    JVar record = forEachRecordLoop.var();
 		    JBlock forEachRecord = forEachRecordLoop.body();
+		    JVar exceptionMessageBr = forEachRecord.decl(model.ref(StringBuilder.class), "builder")
+					.init(JExpr._new(model.ref(StringBuilder.class)));
 		    JTryBlock innerForTry = forEachRecord._try();
+		    
+		    
 		    
 		    //         TableRow row = new TableRow();
 		    
