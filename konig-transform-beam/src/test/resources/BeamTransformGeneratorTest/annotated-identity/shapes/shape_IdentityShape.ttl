@@ -1,0 +1,23 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix id: <http://example.com/ns/id/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:IdentityShape sh:property  [ 
+		sh:path id:identifier ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate id:identifier
+	 ]  ,  [ 
+		sh:path id:identityProvider ; 
+		sh:class sys:InformationSystem ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate id:identityProvider ]  ; 
+	a sh:Shape , sh:NodeShape ; 
+	sh:targetClass ex:Identity . 

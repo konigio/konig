@@ -114,6 +114,11 @@ public class ShowlProperty {
 		outer: for (ShowlPropertyShape p : set) {
 			PropertyConstraint constraint = p.getPropertyConstraint();
 			if (constraint != null) {
+				URI datatype = constraint.getDatatype();
+				if (datatype != null) {
+					result.add(datatype);
+					continue;
+				}
 				URI valueClass = RdfUtil.uri(constraint.getValueClass());
 				if (valueClass == null) {
 					Shape valueShape = constraint.getShape();

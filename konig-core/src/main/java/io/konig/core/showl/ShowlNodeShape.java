@@ -1,5 +1,6 @@
 package io.konig.core.showl;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 
 /*
@@ -40,6 +41,7 @@ import org.openrdf.model.impl.URIImpl;
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.util.ValueFormat.ElementType;
@@ -686,5 +688,40 @@ public class ShowlNodeShape implements Traversable {
 			return new ShowlPropertyPath();
 		}
 		return accessor.propertyPath();
+	}
+
+	public void applyPath(ShowlAlternativePath path, ShowlExpressionBuilder builder) throws ShowlProcessingException {
+
+		ShowlNodeShape sourceNode = path.getNode();
+		
+		applyPath(sourceNode, this, builder);
+		
+	}
+	
+	
+	private void applyPath(ShowlNodeShape sourceNode, ShowlNodeShape targetNode, ShowlExpressionBuilder builder) {
+
+		for (ShowlDirectPropertyShape targetDirect : targetNode.getProperties()) {
+			ShowlDerivedPropertyList derivedList = sourceNode.getDerivedProperty(targetDirect.getPredicate());
+			if (derivedList != null) {
+				if (derivedList.size() == 1) {
+					ShowlDerivedPropertyShape sourceDerived = derivedList.get(0);
+					if (sourceDerived.getValueShape() != null) {
+						if (targetDirect.getValueShape()!=null) {
+							applyPath(sourceDerived.getValueShape(), targetDirect.getValueShape(), builder);
+						}
+					} else {
+						ShowlExpression e = builder.expression(sourceDerived);
+						targetDirect.setSelectedExpression(e);
+					}
+					
+					
+				} else {
+					String msg = MessageFormat.format("Invalid alternative path {0}", sourceNode.getPath());
+					throw new ShowlProcessingException(msg);
+				}
+			}
+		}
+		
 	}
 }

@@ -644,5 +644,22 @@ public class FormulaParserTest {
 	
 		assertEquals(expected, actual);
 	}
+	
+
+	@Test
+	public void testIriFunction() throws Exception {
+		
+		String text = "IRI(\"someString\")";
+		
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+	
+		PrimaryExpression primary = e.asPrimaryExpression();
+		
+		assertTrue(primary instanceof FunctionExpression);
+		FunctionExpression func = (FunctionExpression) primary;
+		FunctionModel model = func.getModel();
+		assertTrue(model == FunctionModel.IRI);
+		
+	}
 
 }

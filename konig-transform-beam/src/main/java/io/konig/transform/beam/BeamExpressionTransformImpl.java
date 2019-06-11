@@ -29,11 +29,15 @@ import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.google.cloud.Date;
 import com.helger.jcodemodel.AbstractJClass;
+import com.helger.jcodemodel.AbstractJType;
 import com.helger.jcodemodel.IJExpression;
+import com.helger.jcodemodel.JBlock;
 import com.helger.jcodemodel.JCodeModel;
+import com.helger.jcodemodel.JConditional;
 import com.helger.jcodemodel.JDefinedClass;
 import com.helger.jcodemodel.JExpr;
 import com.helger.jcodemodel.JForEach;
+import com.helger.jcodemodel.JForLoop;
 import com.helger.jcodemodel.JInvocation;
 import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
@@ -58,6 +62,8 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 	private JDefinedClass targetClass;
 	
 	private JMethod concatMethod;
+	private JMethod localNameMethod;
+	private JMethod stripSpacesMethod;
 	
 	public BeamExpressionTransformImpl(
 			BeamPropertyManager manager, 
@@ -136,12 +142,96 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 	private IJExpression function(ShowlFunctionExpression e) throws BeamTransformGenerationException {
 	
 		FunctionExpression function = e.getFunction();
-		 if (function.getModel() == FunctionModel.CONCAT) {
+		FunctionModel model = function.getModel();
+		 if (model == FunctionModel.CONCAT) {
 			 return concat(e);
+		 } else if (model == FunctionModel.IRI) {
+			 return iriFunction(e);
+		 } else if (model == FunctionModel.STRIP_SPACES) {
+			 return stripSpaces(e);
      } else {
      	fail("Function {0} not supported at {1}", function.toSimpleString(), e.getDeclaringProperty().getPath());
      }
 		return null;
+	}
+
+	private IJExpression stripSpaces(ShowlFunctionExpression e) throws BeamTransformGenerationException {
+		ShowlExpression arg = e.getArguments().get(0);
+		
+		IJExpression stringValue = transform(arg);
+		
+		JMethod method = stripSpacesMethod();
+		return JExpr.invoke(method).arg(stringValue.invoke("toString"));
+	}
+
+	private JMethod stripSpacesMethod() {
+		if (stripSpacesMethod == null) {
+			AbstractJClass stringClass = model.ref(String.class);
+			AbstractJClass stringBuilderClass = model.ref(StringBuilder.class);
+			AbstractJType intType = model._ref(int.class);
+			AbstractJClass characterClass = model.ref(Character.class);
+			
+			stripSpacesMethod = targetClass.method(JMod.PRIVATE, stringClass, "stripSpaces");
+			JVar text = stripSpacesMethod.param(stringClass, "text");
+			JBlock block = stripSpacesMethod.body();
+			
+			JVar builder = block.decl(stringBuilderClass, "builder").init(stringBuilderClass._new());
+			
+			JForLoop forLoop = block._for();
+			JVar i = forLoop.init(intType, "i", JExpr.lit(0));
+			forLoop.test(i.lt(text.invoke("length")));
+			
+			JBlock forBody = forLoop.body();
+			
+			JVar c = forBody.decl(intType, "c").init(text.invoke("codePointAt").arg(i));
+			forBody._if(characterClass.staticInvoke("isSpaceChar").arg(c))._then().add(builder.invoke("appendCodePoint").arg(c));
+			forBody.add(i.assignPlus(characterClass.staticInvoke("charCount").arg(c)));
+			block._return(builder.invoke("toString"));
+		}
+		return stripSpacesMethod;
+	}
+
+	private IJExpression iriFunction(ShowlFunctionExpression e) throws BeamTransformGenerationException {
+		
+		ShowlExpression arg = e.getArguments().get(0);
+		
+		IJExpression stringValue = transform(arg);
+		
+		JMethod localName = localNameMethod();
+		
+		
+		// For now, we assume that every IRI is a reference to a named individual within an Enumeration.
+		// Thus, we should return just the local name portion of the string value.
+		// We may need to support other use cases in the future.
+		// We should probably confirm that the referenced individual is an enumeration.
+		
+		AbstractJClass stringClass = model.ref(String.class);
+		
+		return JExpr.invoke(localName).arg(stringValue.castTo(stringClass));
+	}
+
+	private JMethod localNameMethod() {
+		if (localNameMethod == null) {
+			AbstractJClass stringClass = model.ref(String.class);
+			AbstractJType intType = model._ref(int.class);
+			
+			localNameMethod = targetClass.method(JMod.PRIVATE, stringClass, "localName");
+			JVar iriString = localNameMethod.param(stringClass, "iriString");
+			
+			JConditional ifStatement = localNameMethod.body()._if(iriString.neNull());
+			JBlock thenBlock = ifStatement._then();
+			JVar start = thenBlock.decl(intType, "start").init(iriString.invoke("lastIndexOf").arg(JExpr.lit('/')));
+			JConditional if2 = thenBlock._if(start.lt(0));
+			JBlock then2 = if2._then();
+			then2.assign(start, iriString.invoke("lastIndexOf").arg(JExpr.lit('#')));
+			JConditional if3 = then2._if(start.lt(0));
+			if3._then().assign(start, iriString.invoke("lastIndexOf").arg(JExpr.lit(':')));
+			
+			thenBlock._if(start.gte(JExpr.lit(0)))._then()._return(iriString.invoke("substring").arg(start.plus(JExpr.lit(1))));
+			
+			localNameMethod.body()._return(JExpr._null());
+		}
+		return localNameMethod;
 	}
 
 	private IJExpression concat(ShowlFunctionExpression e) throws BeamTransformGenerationException {
@@ -167,7 +257,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			// private String concat(Object...arg) {
 			
 			concatMethod = targetClass.method(JMod.PRIVATE, stringClass, "concat");
-			JVar arg = concatMethod.param(objectClass, "arg");
+			JVar arg = concatMethod.varParam(objectClass, "arg");
 			
 			//   for (Object obj : arg) {
 			//     if (obj == null) {
