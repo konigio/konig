@@ -26,20 +26,20 @@ public class PersonTargetShapeBeam {
         String sourceURI = sourceURI(options);
         String pattern = "gs://example-inbound-${environmentName}/invalid/{0}".replace("${environmentName}", options.getEnvironment());
         PCollectionTuple outputTuple = p.apply(org.apache.beam.sdk.io.FileIO.match().filepattern(sourceURI)).apply(org.apache.beam.sdk.io.FileIO.readMatches()).apply("ReadFiles", ParDo.of(new ReadPersonSourceShapeFn()).withOutputTags(ReadPersonSourceShapeFn.successTag, TupleTagList.of(ReadPersonSourceShapeFn.deadLetterTag)));
-        outputTuple.setCoder(StringUtf8Coder.of()).apply("writeErrorDocument", org.apache.beam.sdk.io.FileIO.<String, String> writeDynamic().via(TextIO.sink()).by(new SerializableFunction() {
+        outputTuple.get(ReadPersonSourceShapeFn.deadLetterTag).setCoder(StringUtf8Coder.of()).apply("writeErrorDocument", org.apache.beam.sdk.io.FileIO.<String, String> writeDynamic().via(TextIO.sink()).by(new SerializableFunction() {
 
             @Override
-            public Object apply() {
+            public Object apply(Object input) {
                 return UUID.randomUUID().toString();
             }
         }
         ).to(MessageFormat.format(pattern, "application/vnd.example.ns.shape.person")).withNumShards(1).withDestinationCoder(StringUtf8Coder.of()).withNaming(key -> org.apache.beam.sdk.io.FileIO.Write.defaultNaming(key, ".csv")));
         PCollectionTuple outputTuple2 = outputTuple.get(ReadPersonSourceShapeFn.successTag).apply("ToPersonTargetShape", ParDo.of(new ToPersonTargetShapeFn()).withOutputTags(ToPersonTargetShapeFn.successTag, TupleTagList.of(ToPersonTargetShapeFn.deadLetterTag)));
         outputTuple2 .get(ToPersonTargetShapeFn.successTag).apply("WritePersonTargetShape", BigQueryIO.writeTableRows().to("schema.PersonTarget").withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER).withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
-        outputTuple2 .setCoder(StringUtf8Coder.of()).apply("writeErrorDocument", org.apache.beam.sdk.io.FileIO.<String, String> writeDynamic().via(TextIO.sink()).by(new SerializableFunction() {
+        outputTuple2 .get(ToPersonTargetShapeFn.deadLetterTag).setCoder(StringUtf8Coder.of()).apply("writeErrorDocument", org.apache.beam.sdk.io.FileIO.<String, String> writeDynamic().via(TextIO.sink()).by(new SerializableFunction() {
 
             @Override
-            public Object apply() {
+            public Object apply(Object input) {
                 return UUID.randomUUID().toString();
             }
         }

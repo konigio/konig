@@ -35,10 +35,10 @@ public class PersonTargetShapeBeam {
         org.apache.beam.sdk.Pipeline p = org.apache.beam.sdk.Pipeline.create(options);
         String pattern = "gs://example-inbound-${environmentName}/invalid/{0}".replace("${environmentName}", options.getEnvironment());
         PCollectionTuple personSource = p.apply(FileIO.match().filepattern(sourceURI("gs://example-inbound-${environmentName}/*", options))).apply(FileIO.readMatches()).apply(ParDo.of(new ReadPersonSourceFn()).withOutputTags(ReadPersonSourceFn.successTag, TupleTagList.of(ReadPersonSourceFn.deadLetterTag)));
-        personSource.setCoder(StringUtf8Coder.of()).apply("writeErrorDocument", FileIO.<String, String> writeDynamic().via(TextIO.sink()).by(new SerializableFunction() {
+        personSource.get(ReadPersonSourceFn.deadLetterTag).setCoder(StringUtf8Coder.of()).apply("writeErrorDocument", FileIO.<String, String> writeDynamic().via(TextIO.sink()).by(new SerializableFunction() {
 
             @Override
-            public Object apply() {
+            public Object apply(Object input) {
                 return UUID.randomUUID().toString();
             }
         }
@@ -50,10 +50,10 @@ public class PersonTargetShapeBeam {
         PCollection<KV<String, CoGbkResult>> kvpCollection = KeyedPCollectionTuple.of(personSourceTag, personSource.get(ReadPersonSourceFn.successTag)).and(personTargetTag, personTargetTable.get(PersonTargetToKvFn.successTag)).apply(CoGroupByKey.<String> create());
         PCollectionTuple outputRowCollection = kvpCollection.apply(ParDo.of(new PersonTargetMergeFn()).withOutputTags(PersonTargetMergeFn.successTag, TupleTagList.of(PersonTargetMergeFn.deadLetterTag)));
         outputRowCollection.get(PersonTargetMergeFn.successTag).apply("WritePersonTarget", BigQueryIO.writeTableRows().to("schema.PersonTarget").withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER).withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
-        outputRowCollection.setCoder(StringUtf8Coder.of()).apply("writeErrorDocument", FileIO.<String, String> writeDynamic().via(TextIO.sink()).by(new SerializableFunction() {
+        outputRowCollection.get(PersonTargetMergeFn.deadLetterTag).setCoder(StringUtf8Coder.of()).apply("writeErrorDocument", FileIO.<String, String> writeDynamic().via(TextIO.sink()).by(new SerializableFunction() {
 
             @Override
-            public Object apply() {
+            public Object apply(Object input) {
                 return UUID.randomUUID().toString();
             }
         }

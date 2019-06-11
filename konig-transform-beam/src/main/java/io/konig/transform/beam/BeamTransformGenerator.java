@@ -1550,6 +1550,7 @@ public class BeamTransformGenerator {
 		      	
 		      	BeamTargetProperty beamTargetProperty = targetProperty(direct, pman);
 		      	
+		      	System.out.println( beamTargetProperty.getChannelList().size() +  "===" + method.name());
 		      	
 		      	for (BeamChannel info : beamTargetProperty.getChannelList()) {
 		    			JVar sourceRow = info.getSourceRow();
@@ -3299,10 +3300,8 @@ public class BeamTransformGenerator {
               .invoke("to").arg(targetTableSpec)
               .invoke("withCreateDisposition").arg(createDispositionClass.staticRef("CREATE_NEVER"))
               .invoke("withWriteDisposition").arg(writeDispositionClass.staticRef("WRITE_APPEND"))));
-      
-      outputRowCollection.invoke("get").arg(mergeFnClass.staticRef("deadLetterTag"));
     		  
-      body.add(writeExceptionDocument(outputRowCollection, ".txt", targetNode.getShape().getMediaTypeBaseName()));
+      body.add(writeExceptionDocument(outputRowCollection, ".txt", targetNode.getShape().getMediaTypeBaseName(),mergeFnClass));
     }
 
 
@@ -3481,8 +3480,7 @@ public class BeamTransformGenerator {
               				  .arg(tupleTagListClass.staticInvoke("of").arg(readFn.staticRef("deadLetterTag"))))
               );
         
-        pcollectionTuple.invoke("get").arg(readFn.staticRef("deadLetterTag"));
-        block.add(writeExceptionDocument(pcollectionTuple, ".csv", node.getShape().getMediaTypeBaseName()));
+        block.add(writeExceptionDocument(pcollectionTuple, ".csv", node.getShape().getMediaTypeBaseName(), readFn));
         sourceInfo.setPcollection(pcollectionTuple);
         sourceInfo.setTupleTag(tagVar);
       }
@@ -3507,11 +3505,12 @@ public class BeamTransformGenerator {
                .arg(optionsVar.invoke("getEnvironment")));
    }
    
-   private IJStatement writeExceptionDocument(JVar outputTuple, String fileFormat, String contentType) {
+   private IJStatement writeExceptionDocument(JVar outputTuple, String fileFormat, String contentType, JDefinedClass fnClass) {
    	
 			AbstractJClass stringClass = model.ref(String.class);
 			JDefinedClass anonymousUUIDGenerator = model.anonymousClass(SerializableFunction.class);
 			JMethod methodUUID = anonymousUUIDGenerator.method(JMod.PUBLIC, model.ref(Object.class), "apply");
+			methodUUID.param(model.ref(Object.class), "input");
 			JBlock methodBody = methodUUID.body();
 			methodUUID.annotate(Override.class);
 			methodBody._return(model.ref(UUID.class).staticInvoke("randomUUID").invoke("toString"));
@@ -3519,8 +3518,9 @@ public class BeamTransformGenerator {
 			JLambdaParam key = lambda.addParam("key");
 			lambda.body().lambdaExpr(
 					model.ref(FileIO.class).staticRef("Write").invoke("defaultNaming").arg(key).arg(fileFormat));
-
-			return outputTuple.invoke("setCoder").arg(model.ref(StringUtf8Coder.class).staticInvoke("of"))
+		
+			return outputTuple.invoke("get").arg(fnClass.staticRef("deadLetterTag"))
+					.invoke("setCoder").arg(model.ref(StringUtf8Coder.class).staticInvoke("of"))
 					.invoke("apply").arg("writeErrorDocument").arg(model.ref(FileIO.class).staticInvoke("writeDynamic").narrow(stringClass).narrow(stringClass)
 							.invoke("via").arg(model.ref(TextIO.class).staticInvoke("sink"))
 							.invoke("by").arg(JExpr._new(anonymousUUIDGenerator))
@@ -3587,9 +3587,8 @@ public class BeamTransformGenerator {
       
       ShowlNodeShape sourceNode = sourceInfoMap.values().iterator().next().getChannel().getSourceNode();
       exceptionMessageDocument(sourceNode, pattern, optionsVar);
-      outputTuple.invoke("get").arg(readFileFnClass.staticRef("deadLetterTag"));
       
-      body.add(writeExceptionDocument(outputTuple, ".csv", sourceNode.getShape().getMediaTypeBaseName()));
+      body.add(writeExceptionDocument(outputTuple, ".csv", sourceNode.getShape().getMediaTypeBaseName(), readFileFnClass));
       
       JVar outputTuple2 = body.decl(model.ref(PCollectionTuple.class), "outputTuple2");
       
@@ -3620,9 +3619,7 @@ public class BeamTransformGenerator {
                   .invoke("withCreateDisposition").arg(createDispositionClass.staticRef("CREATE_NEVER"))
                   .invoke("withWriteDisposition").arg(writeDispositionClass.staticRef("WRITE_APPEND"))));
           
-      outputTuple2.invoke("get").arg(toTargetFnClass.staticRef("deadLetterTag"));
-          
-      body.add(writeExceptionDocument(outputTuple2, ".txt", targetNode.getShape().getMediaTypeBaseName()));
+      body.add(writeExceptionDocument(outputTuple2, ".txt", targetNode.getShape().getMediaTypeBaseName(),toTargetFnClass));
          
       body.add(p.invoke("run"));
       
