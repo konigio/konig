@@ -310,7 +310,8 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 			
 		}
 
-		String snake_case_name = StringUtil.LABEL_TO_SNAKE_CASE(fieldName);
+//		String snake_case_name = StringUtil.LABEL_TO_SNAKE_CASE(fieldName);
+		String snake_case_name = fieldName;
 		String baseURL = settings.getPropertyBaseURL();
 		
 		URI predicate = new URIImpl(concatPath(baseURL, snake_case_name));
@@ -365,7 +366,9 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 			fail(null, null, SettingsSheet.SHAPE_URL_TEMPLATE + " must be defined on the Settings sheet");
 		}
 		else{
-			String shapeURL = sourceSystemName==null ? shapeURLTemplate : shapeURLTemplate.replace("{SOURCE_SYSTEM}", StringUtil.LABEL_TO_SNAKE_CASE(sourceSystemName));
+//			String shapeLocalName = StringUtil.LABEL_TO_SNAKE_CASE(sourceSystemName);
+			String shapeLocalName = sourceSystemName;
+			String shapeURL = sourceSystemName==null ? shapeURLTemplate : shapeURLTemplate.replace("{SOURCE_SYSTEM}", shapeLocalName);
 			shapeURL=shapeURL.replace("{SOURCE_OBJECT_NAME}", StringUtil.LABEL_TO_SNAKE_CASE(shapeIdLocalName));		
 			if(settings!=null){
 				for(Object key:settings.getProperties().keySet()){
