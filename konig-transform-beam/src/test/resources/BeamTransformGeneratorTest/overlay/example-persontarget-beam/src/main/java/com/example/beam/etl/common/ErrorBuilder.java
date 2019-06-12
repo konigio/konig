@@ -1,7 +1,7 @@
 package com.example.beam.etl.common;
 
 public class ErrorBuilder {
-    private StringBuilder buffer;
+    private StringBuilder buffer = new StringBuilder();
 
     public boolean isEmpty() {
         return (buffer.length() == 0);

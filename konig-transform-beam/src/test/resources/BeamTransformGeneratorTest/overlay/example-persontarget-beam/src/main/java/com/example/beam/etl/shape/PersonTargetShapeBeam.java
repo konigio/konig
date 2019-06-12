@@ -42,7 +42,7 @@ public class PersonTargetShapeBeam {
                 return UUID.randomUUID().toString();
             }
         }
-        ).to(MessageFormat.format(pattern, "application/vnd.example.ns.shape.person")).withNumShards(1).withDestinationCoder(StringUtf8Coder.of()).withNaming(key -> FileIO.Write.defaultNaming(key, ".csv")));
+        ).to(MessageFormat.format(pattern, "application/vnd.example.ns.shape.person")).withNumShards(1).withDestinationCoder(StringUtf8Coder.of()).withNaming(key -> FileIO.Write.defaultNaming(("file-"+ key), ".csv")));
         TableReference targetTableRef = new TableReference();
         targetTableRef.setDatasetId("schema");
         targetTableRef.setTableId("PersonTarget");
@@ -57,7 +57,7 @@ public class PersonTargetShapeBeam {
                 return UUID.randomUUID().toString();
             }
         }
-        ).to(MessageFormat.format(pattern, "application/vnd.example.ns.shape.person")).withNumShards(1).withDestinationCoder(StringUtf8Coder.of()).withNaming(key -> FileIO.Write.defaultNaming(key, ".txt")));
+        ).to(MessageFormat.format(pattern, "application/vnd.example.ns.shape.person")).withNumShards(1).withDestinationCoder(StringUtf8Coder.of()).withNaming(key -> FileIO.Write.defaultNaming(("file-"+ key), ".txt")));
         p.run();
     }
 

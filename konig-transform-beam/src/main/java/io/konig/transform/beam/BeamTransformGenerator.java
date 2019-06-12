@@ -2058,6 +2058,7 @@ public class BeamTransformGenerator {
 								
 								errorBuilderClass = model._class(JMod.PUBLIC, errorBuilderClassName);
 								JVar buffer = errorBuilderClass.field(JMod.PRIVATE, stringBuilderClass, "buffer");
+								buffer.init(JExpr._new(stringBuilderClass));
 								
 								JMethod isEmpty = errorBuilderClass.method(JMod.PUBLIC, boolean.class, "isEmpty");
 								isEmpty.body()._return(buffer.invoke("length").eq(JExpr.lit(0)));
@@ -2646,10 +2647,10 @@ public class BeamTransformGenerator {
 		        
 		        AbstractJClass stringClass = model.ref(String.class);
 		        
-		        JVar sourceKeyVar = block.decl(stringClass, sourceKeyName, model.ref(String.class)
-		        		.staticInvoke("valueOf").arg(inputRow.invoke("get").arg(JExpr.lit(sourceKeyName))));
+		        JVar sourceKeyVar = block.decl(stringClass, sourceKeyName, inputRow.invoke("get").arg(JExpr.lit(sourceKeyName)));
 		        
 		        JConditional conditional = block._if(sourceKeyVar.neNull());
+		        conditional._then().assign(sourceKeyVar, sourceKeyVar.invoke("toString"));
 		        JVar enumObjectVar = conditional._then().decl(enumClass, varName, enumClass.staticInvoke(findMethodName).arg(sourceKeyVar));
 		        
 		        enumInfo.setSourceKeyVar(sourceKeyVar);
@@ -3677,7 +3678,7 @@ public class BeamTransformGenerator {
 			JLambda lambda = new JLambda();
 			JLambdaParam key = lambda.addParam("key");
 			lambda.body().lambdaExpr(
-					model.ref(FileIO.class).staticRef("Write").invoke("defaultNaming").arg(key).arg(fileFormat));
+					model.ref(FileIO.class).staticRef("Write").invoke("defaultNaming").arg(JExpr.lit("file-").plus(key)).arg(fileFormat));
 		
 			return outputTuple.invoke("get").arg(fnClass.staticRef("deadLetterTag"))
 					.invoke("setCoder").arg(model.ref(StringUtf8Coder.class).staticInvoke("of"))
