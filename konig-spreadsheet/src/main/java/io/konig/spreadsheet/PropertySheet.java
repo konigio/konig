@@ -80,7 +80,7 @@ public class PropertySheet extends BaseSheetProcessor {
 	@SuppressWarnings("unchecked")
 	public PropertySheet(WorkbookProcessor processor) {
 		super(processor);
-		dependsOn(OntologySheet.class);
+		dependsOn(OntologySheet.class, SettingsSheet.class);
 	}
 
 	@Override

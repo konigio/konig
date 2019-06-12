@@ -20,7 +20,6 @@ package io.konig.transform.beam;
  * #L%
  */
 
-
 import com.google.api.services.bigquery.model.TableRow;
 
 import org.apache.beam.sdk.transforms.DoFn;
