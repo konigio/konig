@@ -45,6 +45,8 @@ public class FunctionExpression extends AbstractFormula implements BuiltInCall {
 	public static final String CONCAT = "CONCAT";
 	public static final String SUBSTR = "SUBSTR";
 	public static final String STRPOS = "STRPOS";
+	public static final String IRI = "IRI";
+	public static final String STRIP_SPACES = "STRIP_SPACES";
 
 	private String functionName;
 	private List<Expression> argList = new ArrayList<>();

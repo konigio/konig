@@ -377,6 +377,12 @@ public abstract class ShowlPropertyShape implements Traversable {
 		Collections.reverse(list);
 		return list;
 	}
+	
+	public ShowlDirectPropertyShape direct() {
+		ShowlPropertyShape maybe = maybeDirect();
+		
+		return maybe instanceof ShowlDirectPropertyShape ? (ShowlDirectPropertyShape) maybe : null;
+	}
 
 	/**
 	 * Return the synonym of this property if the synonym is direct.  Otherwise, return this property.

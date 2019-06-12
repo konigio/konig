@@ -23,6 +23,7 @@ package io.konig.core.showl.expression;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -86,6 +87,30 @@ public class ShowlExpressionBuilder {
 		this.nodeService = nodeService;
 	}
 
+	public ShowlExpression expression(ShowlPropertyShape p) throws ShowlProcessingException {
+		ShowlDirectPropertyShape direct = p.direct();
+		if (direct != null) {
+			return new ShowlDirectPropertyExpression(direct);
+		}
+		
+		Set<ShowlExpression> hasValue = p.getHasValue();
+		if (hasValue.size()>1) {
+			throw new ShowlProcessingException("Cannot handle multiple 'hasValue' constraints at " + p.getPath());
+		}
+		
+		if (hasValue.size()==1) {
+			return hasValue.iterator().next();
+		}
+		PropertyConstraint c = p.getPropertyConstraint();
+		if (c != null) {
+			Formula formula = c.getFormula();
+			if (formula != null) {
+				return expression(p, formula);
+			}
+		}
+		
+		throw new ShowlProcessingException("Cannot construct expression for " + p.getPath());
+	}
 
 	public ShowlExpression expression(ShowlPropertyShape p, Formula formula) throws ShowlProcessingException {
 		if (formula instanceof FunctionExpression) {
@@ -293,11 +318,11 @@ public class ShowlExpressionBuilder {
 			ShowlPropertyShape prior, ShowlPropertyShape declaringProperty) {
 		
 		
-		ShowlDerivedPropertyShape existing = parentNode.getDerivedProperty(property.getPredicate()).unfiltered();
-				parentNode.findProperty(property.getPredicate());
-		if (existing != null) {
-			return existing;
-		}
+//		ShowlDerivedPropertyShape existing = parentNode.getDerivedProperty(property.getPredicate()).unfiltered();
+//				parentNode.findProperty(property.getPredicate());
+//		if (existing != null) {
+//			return existing;
+//		}
 
 		PropertyConstraint c = null;
 		if (prior==null) {

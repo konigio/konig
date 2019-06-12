@@ -83,16 +83,18 @@ public class PersonTargetMergeFn
         return targetRow;
     }
 
-    private void id(TableRow sourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private boolean id(TableRow sourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_id = ((sourceRow == null)?null:sourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
+            return true;
         } else {
             errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
+            return false;
         }
     }
 
-    private String concat(Object arg) {
+    private String concat(Object... arg) {
         for (Object obj: arg) {
             if (obj == null) {
                 return null;
@@ -105,26 +107,31 @@ public class PersonTargetMergeFn
         return builder.toString();
     }
 
-    private void email(TableRow sourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private boolean email(TableRow sourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
         Object email = ((sourceRow == null)?null:sourceRow.get("email"));
         if (email!= null) {
             outputRow.set("email", email);
+            return true;
         } else {
             errorBuilder.addError("Cannot set email because {PersonSourceShape}.email is null");
+            return false;
         }
     }
 
-    private void givenName(TableRow sourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private boolean givenName(TableRow sourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
         Object first_name = ((sourceRow == null)?null:sourceRow.get("first_name"));
         if (first_name!= null) {
             outputRow.set("givenName", first_name);
+            return true;
         } else {
             errorBuilder.addError("Cannot set givenName because {PersonSourceShape}.first_name is null");
+            return false;
         }
     }
 
-    private void modified(TableRow outputRow, ErrorBuilder errorBuilder) {
+    private boolean modified(TableRow outputRow, ErrorBuilder errorBuilder) {
         outputRow.set("modified", new Long(new Date().getTime()));
+        return true;
     }
 
     private void copy(TableRow targetRow, TableRow outputRow) {

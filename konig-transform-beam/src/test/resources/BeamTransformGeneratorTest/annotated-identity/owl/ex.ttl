@@ -1,0 +1,28 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix id: <http://example.com/ns/id/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "ex" ; 
+	rdfs:label "Example Ontology" . 
+
+ex:Identity a owl:Class . 
+
+ex:IdentityAssertion a owl:Class ; 
+	rdfs:subClassOf konig:Assertion . 
+
+ex:externalIdentifier a rdf:Property . 
+
+ex:identifiedByValue a rdf:Property ; 
+	rdfs:subPropertyOf rdf:object ; 
+	rdfs:domain ex:IdentityAssertion ; 
+	rdfs:range id:Identity . 
+
+ex:originatingFeed a rdf:Property ; 
+	rdfs:domain ex:IdentityAssertion ; 
+	rdfs:range xsd:string . 

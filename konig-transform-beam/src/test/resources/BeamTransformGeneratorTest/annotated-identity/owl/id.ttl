@@ -1,0 +1,25 @@
+@prefix id: <http://example.com/ns/id/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+id: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "id" ; 
+	rdfs:label "Id Ontology" ; 
+	rdfs:comment "An ontology for managing external identifiers" . 
+
+id:Identity a owl:Class . 
+
+id:identifiedBy a rdf:Property , owl:InverseFunctionalProperty , owl:ObjectProperty ; 
+	rdfs:range id:Identity . 
+
+id:identifier a rdf:Property , owl:DatatypeProperty ; 
+	rdfs:domain id:Identity ; 
+	rdfs:range xsd:string . 
+
+id:identityProvider a rdf:Property , owl:ObjectProperty ; 
+	rdfs:domain id:Identity ; 
+	rdfs:range sys:InformationSystem . 

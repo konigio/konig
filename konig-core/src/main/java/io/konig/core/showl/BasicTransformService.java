@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -119,6 +121,8 @@ public class BasicTransformService implements ShowlTransformService {
 			if (group.getValueShape() != null) {
 				ShowlDirectPropertyShape direct = group.direct();
 				if (direct != null && direct.getValueShape()!=null && ShowlUtil.isWellDefined(direct.getValueShape())) {
+					
+					
 //					direct.setSelectedExpression(new ShowlStructExpression(direct));
 					sequence.remove();
 				}
@@ -126,7 +130,6 @@ public class BasicTransformService implements ShowlTransformService {
 		}
 		
 	}
-
 
 	/**
 	 * If the candidate set is empty, try to add a new Candidate source
@@ -534,6 +537,11 @@ public class BasicTransformService implements ShowlTransformService {
 				return true;
 			}
 			if (sourceProperty != null) {
+				
+				if (alternativePathsMapping(isEnum, sourceProperty, targetProperty)) {
+					return true;
+				}
+				
 				ShowlDirectPropertyShape sourceDirect = sourceProperty.synonymDirect();
 
 				if (isEnum) {
@@ -591,6 +599,38 @@ public class BasicTransformService implements ShowlTransformService {
 		return false;
 	}
 
+	private boolean alternativePathsMapping(boolean isEnum, ShowlPropertyShapeGroup sourcePropertyGroup,
+			ShowlPropertyShapeGroup targetProperty) {
+		
+		if (sourcePropertyGroup.size()>1 && sourcePropertyGroup.getValueShape()!=null) {
+			ShowlDirectPropertyShape targetDirect = targetProperty.direct();
+			ShowlNodeShape targetValueShape = targetDirect.getValueShape();
+			ShowlEffectiveNodeShape sourceNode = sourcePropertyGroup.getDeclaringShape();
+			if (sourceNode.getAccessor()==null) {
+				List<ShowlAlternativePath> pathList = new ArrayList<>();
+				for (ShowlPropertyShape p : sourcePropertyGroup) {
+					ShowlNodeShape node = p.getValueShape();
+					if (node != null && ShowlAlternativePath.canApplyPath(node, targetValueShape)) {
+						ShowlAlternativePath path = ShowlAlternativePath.forNode(node);
+						if (path != null) {
+							pathList.add(path);
+						}
+					}
+				}
+				
+				
+				if (!pathList.isEmpty()) {
+					targetDirect.setSelectedExpression(new AlternativePathsExpression(pathList));
+					return true;
+				}
+			}
+			
+		}
+		
+		return false;
+	}
+
+
 	private boolean useHasValue(ShowlPropertyShapeGroup sourcePropertyGroup, ShowlDirectPropertyShape targetDirect) {
 		
 		for (ShowlPropertyShape sourceProperty : sourcePropertyGroup) {
@@ -598,6 +638,7 @@ public class BasicTransformService implements ShowlTransformService {
 			if (valueSet.size() == 1) {
 				ShowlExpression e = valueSet.iterator().next();
 				targetDirect.setSelectedExpression(e);
+				
 				return true;
 			}
 		}

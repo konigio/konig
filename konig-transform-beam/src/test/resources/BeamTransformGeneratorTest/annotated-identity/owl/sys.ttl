@@ -1,0 +1,45 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+sys: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "sys" ; 
+	rdfs:label "System Ontology" ; 
+	rdfs:comment "A namespace for software systems within the enterprise" . 
+
+sys:InformationSystem a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration ; 
+	gcp:preferredGcpDatasetId "${classNamespacePrefix}" . 
+
+sys:Alpha a sys:InformationSystem ; 
+	schema:name "Alpha" . 
+
+sys:Alpha.CRM a sys:InformationSystem ; 
+	schema:name "Alpha.CRM" ; 
+	schema:isPartOf sys:Alpha . 
+
+sys:Alpha.MDM a sys:InformationSystem ; 
+	schema:name "Alpha.MDM" ; 
+	schema:isPartOf sys:Alpha . 
+
+sys:Beta a sys:InformationSystem ; 
+	schema:name "Beta" . 
+
+sys:Beta.CRM a sys:InformationSystem ; 
+	schema:name "Beta.CRM" ; 
+	schema:isPartOf sys:Beta . 
+
+sys:Beta.MDM a sys:InformationSystem ; 
+	schema:name "Beta.MDM" ; 
+	schema:isPartOf sys:Beta . 
+
+sys:WarehouseOperationalData a sys:InformationSystem ; 
+	schema:name "WarehouseOperationalData" ; 
+	konig:receivesDataFrom sys:WarehouseStaging . 
+
+sys:WarehouseStaging a sys:InformationSystem ; 
+	schema:name "WarehouseStaging" . 
