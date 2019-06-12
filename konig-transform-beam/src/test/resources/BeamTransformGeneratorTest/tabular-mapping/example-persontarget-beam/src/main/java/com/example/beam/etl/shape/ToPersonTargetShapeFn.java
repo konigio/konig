@@ -1,31 +1,37 @@
 package com.example.beam.etl.shape;
 
 import com.example.beam.etl.common.ErrorBuilder;
-import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
+import org.apache.beam.sdk.values.TupleTag;
 
 public class ToPersonTargetShapeFn
-    extends DoFn<TableRow, TableRow>
+    extends DoFn<com.google.api.services.bigquery.model.TableRow, com.google.api.services.bigquery.model.TableRow>
 {
+    public static TupleTag<String> deadLetterTag = new TupleTag<String>();
+    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
 
     @DoFn.ProcessElement
     public void processElement(ProcessContext c) {
         try {
             ErrorBuilder errorBuilder = new ErrorBuilder();
-            TableRow outputRow = new TableRow();
-            TableRow personSourceRow = c.element();
+            com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
+            com.google.api.services.bigquery.model.TableRow personSourceRow = c.element();
             id(personSourceRow, outputRow, errorBuilder);
             givenName(personSourceRow, outputRow, errorBuilder);
             if (!outputRow.isEmpty()) {
-                c.output(outputRow);
+                c.output(successTag, outputRow);
+            }
+            if (!errorBuilder.isEmpty()) {
+                errorBuilder.addError(outputRow.toString());
+                throw new Exception(errorBuilder.toString());
             }
         } catch (final Throwable oops) {
-            oops.printStackTrace();
+            c.output(deadLetterTag, oops.getMessage());
         }
     }
 
-    private boolean id(TableRow personSourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private boolean id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
@@ -49,7 +55,7 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private boolean givenName(TableRow personSourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+    private boolean givenName(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object first_name = ((personSourceRow == null)?null:personSourceRow.get("first_name"));
         if (first_name!= null) {
             outputRow.set("givenName", first_name);
