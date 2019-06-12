@@ -116,28 +116,23 @@ import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
 import io.konig.core.project.ProjectManager;
 import io.konig.core.showl.BasicTransformService;
-import io.konig.core.showl.CompositeNodeShapeConsumer;
 import io.konig.core.showl.CompositeSourceNodeSelector;
-import io.konig.core.showl.DataLayerSourceNodeSelector;
 import io.konig.core.showl.DataSourceTypeSourceNodeSelector;
 import io.konig.core.showl.DestinationTypeTargetNodeShapeFactory;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
-import io.konig.core.showl.HasDataSourceTypeSelector;
-import io.konig.core.showl.LineageShowlNodeShapeConsumer;
 import io.konig.core.showl.MappingReport;
 import io.konig.core.showl.RawCubeSourceNodeSelector;
 import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
 import io.konig.core.showl.ShowlClassProcessor;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
-import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlNodeShapeBuilder;
 import io.konig.core.showl.ShowlService;
 import io.konig.core.showl.ShowlServiceImpl;
 import io.konig.core.showl.ShowlSourceNodeFactory;
-import io.konig.core.showl.ShowlTargetNodeSelector;
 import io.konig.core.showl.ShowlTransformEngine;
 import io.konig.core.showl.ShowlTransformService;
+import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.util.BasicJavaDatatypeMapper;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat;
@@ -1601,7 +1596,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 			
 			String basePackage = mavenProject.getGroupId() + ".beam";
-			BeamTransformGenerator generator =  new BeamTransformGenerator(basePackage, owlReasoner);
+			ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
+			BeamTransformGenerator generator =  new BeamTransformGenerator(basePackage, owlReasoner, expressionBuilder);
 			generator.generateAll(request);
 
 			addLineageEmitter();

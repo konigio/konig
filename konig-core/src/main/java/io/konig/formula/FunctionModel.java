@@ -65,6 +65,14 @@ public class FunctionModel {
 		.param("sourceString", KqlType.STRING)
 		.param("subString", KqlType.STRING);
 	
+	public static final FunctionModel IRI =
+			new FunctionModel(FunctionExpression.IRI, KqlType.IRI)
+			 .param("stringValue", KqlType.STRING);
+	
+	public static final FunctionModel STRIP_SPACES =
+			new FunctionModel(FunctionExpression.STRIP_SPACES, KqlType.STRING)
+			 .param("stringValue", KqlType.STRING);
+	
 
 	public static final FunctionModel SUBSTR = 
 		new FunctionModel(FunctionExpression.SUBSTR, KqlType.STRING)

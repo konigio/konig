@@ -25,11 +25,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.konig.core.showl.ShowlAlternativePath;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
-import io.konig.datasource.DataSource;
-import io.konig.datasource.TableDataSource;
+import io.konig.core.showl.expression.ShowlExpressionBuilder;
 
 public class BeamTargetProperty {
 
@@ -100,7 +100,19 @@ public class BeamTargetProperty {
 		
 		
 	}
-	
+
+	public void applyPath(ShowlAlternativePath path, ShowlExpressionBuilder builder) throws BeamTransformGenerationException {
+		ShowlNodeShape targetNode = directProperty.getValueShape();
+		
+		try {
+			targetNode.applyPath(path, builder);
+		} catch (Throwable oops) {
+			throw new BeamTransformGenerationException("failed to apply path", oops);
+		}
+		
+		
+		
+	}
 	
 	
 }

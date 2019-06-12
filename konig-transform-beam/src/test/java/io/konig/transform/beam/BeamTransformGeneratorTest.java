@@ -43,7 +43,6 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.BasicTransformService;
-import io.konig.core.showl.DestinationTypeTargetNodeShapeFactory;
 import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
 import io.konig.core.showl.ReceivesDataFromTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlClassProcessor;
@@ -56,8 +55,8 @@ import io.konig.core.showl.ShowlSourceNodeFactory;
 import io.konig.core.showl.ShowlTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlTransformEngine;
 import io.konig.core.showl.ShowlTransformService;
+import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.util.IOUtil;
-import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSourceManager;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
@@ -97,8 +96,8 @@ public class BeamTransformGeneratorTest {
 		ShowlTransformService transformService = new BasicTransformService(showlService, showlService, sourceNodeFactory);
 		
 		engine = new ShowlTransformEngine(targetNodeShapeFactory, shapeManager, transformService, consumer);
-		
-		generator =  new BeamTransformGenerator("com.example.beam.etl", reasoner);
+		ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
+		generator =  new BeamTransformGenerator("com.example.beam.etl", reasoner, expressionBuilder);
 	}
 
 
@@ -233,11 +232,18 @@ public class BeamTransformGeneratorTest {
 		
 	}
 	
-	
+
 	@Test
 	public void testSystime() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/systime");
+		
+	}
+	
+	@Test
+	public void testAnnotatedIdentity() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/annotated-identity", false);
 		
 	}
 

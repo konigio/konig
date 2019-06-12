@@ -59,6 +59,7 @@ import io.konig.core.showl.ShowlTargetNodeSelector;
 import io.konig.core.showl.ShowlTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlTransformEngine;
 import io.konig.core.showl.ShowlTransformService;
+import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.util.IOUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.gcp.datasource.GcpShapeConfig;
@@ -79,7 +80,7 @@ public class BeamTransformGeneratorDebug {
 			shapeManager, reasoner, targetNodeSelector, nodeSelector(shapeManager), consumer);
 	private ShowlTransformEngine engine;
 	private ShowlService showlService;
-	private BeamTransformGenerator generator = new BeamTransformGenerator("com.example.beam.etl", reasoner);
+	private BeamTransformGenerator generator;
 
 	private static CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
 		return new CompositeSourceNodeSelector(
@@ -108,7 +109,8 @@ public class BeamTransformGeneratorDebug {
 		
 		engine = new ShowlTransformEngine(targetNodeShapeFactory, shapeManager, transformService, consumer);
 		
-		generator =  new BeamTransformGenerator("com.example.beam.etl", reasoner);
+		ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
+		generator =  new BeamTransformGenerator("com.example.beam.etl", reasoner, expressionBuilder);
 	}
 
 	public static void main(String[] arg) throws Exception {

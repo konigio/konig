@@ -3,6 +3,8 @@ package io.konig.formula;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import io.konig.core.vocab.SH;
+
 /*
  * #%L
  * Konig Core
@@ -29,7 +31,8 @@ public enum KqlType {
 	INTEGER(XMLSchema.LONG),
 	NUMBER(XMLSchema.DOUBLE),
 	BOOLEAN(XMLSchema.BOOLEAN),
-	INSTANT(XMLSchema.DATETIME);
+	INSTANT(XMLSchema.DATETIME), 
+	IRI(SH.IRI);
 	
 	private URI rdfType;
 	

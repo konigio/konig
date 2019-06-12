@@ -1,0 +1,65 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonSourceShape sh:property  [ 
+		sh:path alias:first_name ; 
+		konig:formula '''
+@term givenName <http://schema.org/givenName>
+
+$.givenName''' ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:first_name
+	 ]  ,  [ 
+		sh:path alias:originating_system ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:originating_system
+	 ]  ,  [ 
+		sh:path alias:originating_feed ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:originating_feed
+	 ]  ,  [ 
+		sh:path alias:mdm_id ; 
+		konig:formula '''
+@term externalIdentifier <http://example.com/ns/core/externalIdentifier>
+@term originatingFeed <http://example.com/ns/core/originatingFeed>
+@term originating_feed <http://example.com/ns/alias/originating_feed>
+@term identifiedByValue <http://example.com/ns/core/identifiedByValue>
+@term identityProvider <http://example.com/ns/id/identityProvider>
+@term originating_system <http://example.com/ns/alias/originating_system>
+@term identifier <http://example.com/ns/id/identifier>
+
+$.externalIdentifier[originatingFeed $.originating_feed].identifiedByValue[identityProvider IRI(CONCAT("http://example.com/ns/sys/", STRIP_SPACES($.originating_system), ".MDM"))].identifier''' ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:mdm_id
+	 ]  ,  [ 
+		sh:path alias:crm_id ; 
+		konig:formula '''
+@term externalIdentifier <http://example.com/ns/core/externalIdentifier>
+@term originatingFeed <http://example.com/ns/core/originatingFeed>
+@term originating_feed <http://example.com/ns/alias/originating_feed>
+@term identifiedByValue <http://example.com/ns/core/identifiedByValue>
+@term identityProvider <http://example.com/ns/id/identityProvider>
+@term originating_system <http://example.com/ns/alias/originating_system>
+@term identifier <http://example.com/ns/id/identifier>
+
+$.externalIdentifier[originatingFeed $.originating_feed].identifiedByValue[identityProvider IRI(CONCAT("http://example.com/ns/sys/", STRIP_SPACES($.originating_system), ".CRM"))].identifier''' ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:crm_id ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <gs://example-inbound-${environmentName}> ; 
+	sh:targetClass schema:Person . 

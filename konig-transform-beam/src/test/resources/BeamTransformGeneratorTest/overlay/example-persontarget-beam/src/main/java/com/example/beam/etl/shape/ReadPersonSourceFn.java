@@ -127,7 +127,7 @@ public class ReadPersonSourceFn
         return null;
     }
 
-    private String concat(Object arg) {
+    private String concat(Object... arg) {
         for (Object obj: arg) {
             if (obj == null) {
                 return null;
