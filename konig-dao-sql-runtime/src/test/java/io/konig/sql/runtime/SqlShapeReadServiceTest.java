@@ -27,6 +27,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 import java.io.Writer;
 
+import javax.xml.ws.soap.AddressingFeature;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.impl.URIImpl;
