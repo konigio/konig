@@ -63,7 +63,6 @@ public class ToPersonTargetShapeFn
             GenderType gender = GenderType.findByLocalName(personSourceRow_gender_id.toString());
             genderRow.set("id", personSourceRow_gender_id);
             gender_name(gender, genderRow, errorBuilder);
-            gender_genderCode(gender, genderRow, errorBuilder);
             outputRow.set("gender", genderRow);
         }
     }
@@ -75,17 +74,6 @@ public class ToPersonTargetShapeFn
             return true;
         } else {
             errorBuilder.addError("Cannot set gender.name because {GenderType}.name is null");
-            return false;
-        }
-    }
-
-    private boolean gender_genderCode(GenderType gender, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object genderCode = gender.getGenderCode();
-        if (genderCode!= null) {
-            outputRow.set("genderCode", genderCode);
-            return true;
-        } else {
-            errorBuilder.addError("Cannot set gender.genderCode because {GenderType}.genderCode is null");
             return false;
         }
     }

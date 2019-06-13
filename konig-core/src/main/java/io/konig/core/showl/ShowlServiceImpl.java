@@ -21,16 +21,23 @@ package io.konig.core.showl;
  */
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.NodeKind;
@@ -39,6 +46,7 @@ import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 
 public class ShowlServiceImpl implements ShowlService {
+	private static Logger logger = LoggerFactory.getLogger(ShowlServiceImpl.class);
 	
 	private Map<URI,ShowlClass> classMap = new HashMap<>();
 	private Map<URI,ShowlProperty> propertyMap = new HashMap<>();
@@ -169,7 +177,6 @@ public class ShowlServiceImpl implements ShowlService {
 		shape.setNodeKind(NodeKind.IRI);
 		shape.setTargetClass(classId);
 		
-		// Add only those properties referenced by some other shape
 		
 		ShowlClass owlClass = classMap.get(classId);
 		if (owlClass == null) {
@@ -181,29 +188,65 @@ public class ShowlServiceImpl implements ShowlService {
 		return shape;
 	}
 
-	private void addProperties(Shape shape, ShowlClass owlClass) {
-		for (ShowlProperty property : owlClass.getDomainOf()) {
-			PropertyConstraint constraint = shape.getPropertyConstraint(property.getPredicate());
-			if (constraint == null) {
-				constraint = new PropertyConstraint(property.getPredicate());
-				shape.add(constraint);
-				ShowlClass range = property.inferRange(this);
-				if (range != null) {
-					if (reasoner.isDatatype(range.getId())) {
-						constraint.setDatatype(range.getId());
+	private void addProperties(Shape shape, ShowlClass owlClass) throws  ShowlProcessingException {
+		
+		URI classId = owlClass.getId();
+		
+		List<Vertex> individualList = reasoner.getGraph().v(classId).in(RDF.TYPE).toVertexList();
+		
+		if (individualList.isEmpty()) {
+			throw new ShowlProcessingException("No members found in enumeration " + classId.getLocalName());
+		}
+		
+		for (Vertex member : individualList) {
+		
+			
+			for (Entry<URI,Set<Edge>> entry : member.outEdges()) {
+				Set<Edge> edgeSet  = entry.getValue();
+				URI predicate = entry.getKey();
+				if (predicate.equals(RDF.TYPE)) {
+					continue;
+				}
+				if (edgeSet.size()>1) {
+					logger.warn("Ignoring property {}.{} because multi-valued properties are not supported yet.", 
+							classId.getLocalName(), predicate.getLocalName());
+					continue;
+				}
+
+				ShowlProperty property = propertyMap.get(predicate);
+				
+				URI range = (property==null) ? null :  property.inferRange(reasoner);
+				
+				if (range == null) {
+					logger.warn("Ignoring property {}.{} because the range is not known.",
+							classId.getLocalName(), predicate.getLocalName());
+					continue;
+				}
+
+				PropertyConstraint constraint = shape.getPropertyConstraint(predicate);
+				if (constraint==null) {
+					constraint = new PropertyConstraint(predicate);
+					shape.add(constraint);
+				
+					if (reasoner.isDatatype(range)) {
+						constraint.setDatatype(range);
 					} else {
-						constraint.setValueClass(range.getId());
+						constraint.setValueClass(range);
 						
 						// For now, we don't support nested shapes on enumeration classes.
 						constraint.setNodeKind(NodeKind.IRI);
+						
 					}
+					// For now we require that every property be optional and single-valued
+					constraint.setMinCount(0);
+					constraint.setMaxCount(1);
+			
 				}
-				// For now we require that every property be optional and single-valued
-				constraint.setMinCount(0);
-				constraint.setMaxCount(1);
 			}
 		}
-		
+		if (shape.getProperty().isEmpty()) {
+			throw new ShowlProcessingException("No properties found in enumeration class " + classId.getLocalName());
+		}
 	}
 
 }
