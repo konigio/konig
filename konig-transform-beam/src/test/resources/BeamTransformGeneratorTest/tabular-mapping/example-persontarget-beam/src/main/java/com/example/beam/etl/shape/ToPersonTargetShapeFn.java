@@ -16,7 +16,7 @@ public class ToPersonTargetShapeFn
         try {
             ErrorBuilder errorBuilder = new ErrorBuilder();
             com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
-            com.google.api.services.bigquery.model.TableRow personSourceRow = c.element();
+            com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
             id(personSourceRow, outputRow, errorBuilder);
             givenName(personSourceRow, outputRow, errorBuilder);
             if (!outputRow.isEmpty()) {

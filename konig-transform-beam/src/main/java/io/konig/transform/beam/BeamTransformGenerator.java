@@ -1899,8 +1899,7 @@ public class BeamTransformGenerator {
 		        
 		        
 		        AbstractJClass objectClass = model.ref(Object.class);
-		        JVar sourceKeyVar = block.decl(objectClass, sourceKeyName, inputRow.invoke("get").arg(JExpr.lit(sourceKeyName)));
-		        
+		        JVar sourceKeyVar = block.decl(objectClass, sourceKeyName, inputRow.invoke("get").arg(JExpr.lit(sourceProperty.getPredicate().getLocalName())));		        
 						
 		        block = block._if(sourceKeyVar.neNull())._then();
 		
@@ -2030,6 +2029,13 @@ public class BeamTransformGenerator {
 						
 						ShowlExpression e = direct.getSelectedExpression();
 						
+						if (direct.isEnumIndividual()) {
+                            ShowlEnumJoinInfo enumJoinInfo = ShowlEnumJoinInfo.forEnumProperty(direct);
+                            if (enumJoinInfo.getSourceProperty() != null) {
+                                BeamChannel beamChannel = beamChannel(enumJoinInfo.getSourceProperty().getDeclaringShape());
+                                beamChannelSet.add(beamChannel);
+                            }
+                        }
 						if (
 								beamChannelSet.isEmpty() && 
 								!(e instanceof ShowlFilterExpression) && 
@@ -3010,7 +3016,7 @@ public class BeamTransformGenerator {
 				String sourceRowName = sourceRowName(beamChannel.getChannel());
 
 				// TableRow $sourceRowName = context.element();
-        JVar sourceRowVar = block.decl(tableRowClass, sourceRowName, c.invoke("element"));
+				JVar sourceRowVar = block.decl(tableRowClass, sourceRowName, c.invoke("element").castTo(tableRowClass));
         
         beamChannel.setSourceRow(sourceRowVar);
 				return sourceRowVar;

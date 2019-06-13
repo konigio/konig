@@ -17,9 +17,9 @@ public class ToPersonTargetShapeFn
         try {
             ErrorBuilder errorBuilder = new ErrorBuilder();
             com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
-            com.google.api.services.bigquery.model.TableRow personSourceRow = c.element();
+            com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
             id(personSourceRow, outputRow, errorBuilder);
-            gender(outputRow, errorBuilder);
+            gender(personSourceRow, outputRow, errorBuilder);
             if (!outputRow.isEmpty()) {
                 c.output(successTag, outputRow);
             }
@@ -56,8 +56,8 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private boolean gender(com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object personSourceRow_gender_id = personSourceRow.get("personSourceRow_gender_id");
+    private boolean gender(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object personSourceRow_gender_id = personSourceRow.get("gender_id");
         if (personSourceRow_gender_id!= null) {
             com.google.api.services.bigquery.model.TableRow genderRow = new com.google.api.services.bigquery.model.TableRow();
             GenderType gender = GenderType.findByLocalName(personSourceRow_gender_id.toString());
