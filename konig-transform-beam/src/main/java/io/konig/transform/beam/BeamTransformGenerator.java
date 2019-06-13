@@ -195,6 +195,9 @@ public class BeamTransformGenerator {
   private OwlReasoner reasoner;
   private ShowlExpressionBuilder expressionBuilder;
   
+  private boolean failFast;
+  private boolean encounteredError;
+  
   public BeamTransformGenerator(String basePackage, OwlReasoner reasoner, ShowlExpressionBuilder expressionBuilder) {
     this.basePackage = basePackage;
     this.reasoner = reasoner;
@@ -207,7 +210,19 @@ public class BeamTransformGenerator {
   	return basePackage + ".common.ErrorBuilder";
   }
   
-  @SuppressWarnings("deprecation")
+  public boolean isFailFast() {
+		return failFast;
+	}
+
+	public void setFailFast(boolean failFast) {
+		this.failFast = failFast;
+	}
+
+	public boolean isEncounteredError() {
+		return encounteredError;
+	}
+
+	@SuppressWarnings("deprecation")
   public void generateAll(BeamTransformRequest request) throws BeamTransformGenerationException, IOException {
 
     
@@ -218,28 +233,38 @@ public class BeamTransformGenerator {
       // Consider refactoring so that we don't need to check that explicitDerivedFrom is not empty.
       // The list of nodes from the request should already be filtered!
       
-//      if (!node.getShape().getExplicitDerivedFrom().isEmpty()) {
         File projectDir = projectDir(request, node);
         childProjectList.add(projectDir);
         JCodeModel model = new JCodeModel();
         
         try {
           buildPom(request, projectDir, node);
-        } catch (IOException e) {
-          throw new BeamTransformGenerationException("Failed to generate pom.xml", e);
+        } catch (Throwable e) {
+        	String msg = "Failed to generate pom.xml for " + node.getPath();
+        	if (failFast) {
+        		throw new BeamTransformGenerationException(msg, e);
+        	} else {
+        		logger.error(msg, e);
+        		encounteredError = true;
+        	}
         }
-        generateTransform(model, node);
         try {
+          generateTransform(model, node);
           
           File javaDir = new File(projectDir, "src/main/java");
           javaDir.mkdirs();
           
           model.build(javaDir);
           rewrite(javaDir);
-        } catch (IOException e) {
-          throw new BeamTransformGenerationException("Failed to save Beam Transform code", e);
+        } catch (Throwable e) {
+        	String msg = "Failed to produce transform for " + node.getPath();
+        	if (failFast) {
+            throw new BeamTransformGenerationException("Failed to save Beam Transform code", e);
+        	} else {
+        		logger.error(msg, e);
+        		encounteredError = true;
+        	}
         }
-//      }
     }
 
     generateBeamParentPom(request, childProjectList);

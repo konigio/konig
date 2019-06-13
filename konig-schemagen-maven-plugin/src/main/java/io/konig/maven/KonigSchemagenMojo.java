@@ -1586,6 +1586,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		ShowlNodeListingConsumer consumer = new ShowlNodeListingConsumer();
 		ShowlTransformEngine engine = new ShowlTransformEngine(targetNodeFactory, shapeManager, transformService, consumer);
 		engine.run();
+		if (engine.isEncounteredErrors()) {
+			anyError = true;
+		}
 		
 		if (!consumer.getList().isEmpty()) {
 		
@@ -1603,6 +1606,10 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
 			BeamTransformGenerator generator =  new BeamTransformGenerator(basePackage, owlReasoner, expressionBuilder);
 			generator.generateAll(request);
+			
+			if (generator.isEncounteredError()) {
+				anyError = true;
+			}
 
 			addLineageEmitter();
 		}

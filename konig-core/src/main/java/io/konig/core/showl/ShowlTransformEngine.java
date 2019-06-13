@@ -27,6 +27,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.core.KonigException;
 import io.konig.core.impl.RdfUtil;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
@@ -37,6 +38,8 @@ public class ShowlTransformEngine {
 	private ShapeManager shapeManager;
 	private ShowlTransformService transformService;
 	private ShowlNodeShapeConsumer consumer;
+	private boolean failFast;
+	private boolean encounteredErrors;
 
 	
 	public ShowlTransformEngine(ShowlTargetNodeShapeFactory targetNodeShapeFactory, ShapeManager shapeManager,
@@ -47,6 +50,26 @@ public class ShowlTransformEngine {
 		this.consumer = consumer;
 	}
 
+	public boolean isFailFast() {
+		return failFast;
+	}
+
+
+	/**
+	 * Check whether this engine encountered (and suppressed) any errors.
+	 */
+	public boolean isEncounteredErrors() {
+		return encounteredErrors;
+	}
+
+
+
+	public void setFailFast(boolean failFast) {
+		this.failFast = failFast;
+	}
+
+
+
 	/**
 	 * Build transforms for all target NodeShapes, and notify the consumer for post processing.
 	 */
@@ -54,25 +77,37 @@ public class ShowlTransformEngine {
 		for (Shape shape : shapeManager.listShapes()) {
 			List<ShowlNodeShape> targetNodeList = targetNodeShapeFactory.createTargetNodeShapes(shape);
 			for (ShowlNodeShape targetNode : targetNodeList) {
-				Set<ShowlPropertyShapeGroup> unmapped = transformService.computeTransform(targetNode);
-				if (unmapped.isEmpty()) {
-					if (consumer != null) {
-						consumer.consume(targetNode);
+				try {
+					Set<ShowlPropertyShapeGroup> unmapped = transformService.computeTransform(targetNode);
+					if (unmapped.isEmpty()) {
+						if (consumer != null) {
+							consumer.consume(targetNode);
+						}
+					} else if (logger.isWarnEnabled()){
+						StringBuilder builder = new StringBuilder();
+						builder.append("run: Failed to compute transform for ");
+						builder.append(RdfUtil.localName(shape.getId()));
+						builder.append(".  The following properties were not mapped:\n");
+						for (ShowlPropertyShapeGroup group : unmapped) {
+							builder.append("   ");
+							builder.append(group.pathString());
+							builder.append("\n");
+						}
+						logger.warn(builder.toString());
 					}
-				} else if (logger.isWarnEnabled()){
-					StringBuilder builder = new StringBuilder();
-					builder.append("run: Failed to compute transform for ");
-					builder.append(RdfUtil.localName(shape.getId()));
-					builder.append(".  The following properties were not mapped:\n");
-					for (ShowlPropertyShapeGroup group : unmapped) {
-						builder.append("   ");
-						builder.append(group.pathString());
-						builder.append("\n");
+				} catch (Throwable oops) {
+					String msg = "Failed to compute transform for " + targetNode.getPath();
+					if (failFast) {
+						throw new KonigException(msg);
+					} else {
+						logger.error(msg, oops);
 					}
-					logger.warn(builder.toString());
 				}
 			}
 		}
 	}
+
+
+
 
 }
