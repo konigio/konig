@@ -116,10 +116,12 @@ import io.konig.core.project.Project;
 import io.konig.core.project.ProjectFolder;
 import io.konig.core.project.ProjectManager;
 import io.konig.core.showl.BasicTransformService;
+import io.konig.core.showl.CompositeSourceNodeFactory;
 import io.konig.core.showl.CompositeSourceNodeSelector;
 import io.konig.core.showl.DataSourceTypeSourceNodeSelector;
 import io.konig.core.showl.DestinationTypeTargetNodeShapeFactory;
 import io.konig.core.showl.ExplicitDerivedFromSelector;
+import io.konig.core.showl.ExplicitDerivedFromSourceNodeFactory;
 import io.konig.core.showl.MappingReport;
 import io.konig.core.showl.RawCubeSourceNodeSelector;
 import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
@@ -1570,7 +1572,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 		ShowlNodeShapeBuilder builder = new ShowlNodeShapeBuilder(showlService, showlService);
 		DestinationTypeTargetNodeShapeFactory targetNodeFactory = new DestinationTypeTargetNodeShapeFactory(
 				Collections.singleton(Konig.GoogleBigQueryTable), builder);
-		ShowlSourceNodeFactory sourceNodeFactory = new ReceivesDataFromSourceNodeFactory(builder, owlGraph);
+		CompositeSourceNodeFactory sourceNodeFactory = new CompositeSourceNodeFactory();
+		sourceNodeFactory.add(new ExplicitDerivedFromSourceNodeFactory(builder));
+		sourceNodeFactory.add(new ReceivesDataFromSourceNodeFactory(builder, owlGraph));
 		
 
 		ShowlTransformService transformService = new BasicTransformService(showlService, showlService, sourceNodeFactory);

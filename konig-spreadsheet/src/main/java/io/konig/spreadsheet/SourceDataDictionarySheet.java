@@ -24,6 +24,7 @@ package io.konig.spreadsheet;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -78,6 +79,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 
 	private SettingsSheet settings;
 	private IndividualSheet individuals;
+	private Set<URI> shapeIdSet = new HashSet<>();
 	
 	@SuppressWarnings("unchecked")
 	public SourceDataDictionarySheet(WorkbookProcessor processor, SettingsSheet settings, IndividualSheet individuals) {
@@ -130,7 +132,6 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 			fail(row, DECIMAL_SCALE, "Decimal Scale must be less than or equal to Decimal Precision");
 		}
 		
-		boolean isNewShape = processor.getShapeManager().getShapeById(shapeId)==null;
 		Shape shape = produceShape(shapeId);
 		setMediaType(row, shape, sourceSystemValue, sourceObjectNameValue);
 		shape.addType(Konig.TabularNodeShape);
@@ -178,7 +179,8 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 					formulaValue), processor);
 		}
 		
-		if (isNewShape) {
+		if (!shapeIdSet.contains(shapeId)) {
+			shapeIdSet.add(shapeId);
 			List<Function> dataSourceList = settings.getDefaultDataSource();
 			if (dataSourceList !=null) {
 	
