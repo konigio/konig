@@ -1,10 +1,10 @@
 package com.example.beam.etl.shape;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import com.example.beam.etl.common.ErrorBuilder;
 import com.google.api.client.util.DateTime;
-import com.google.cloud.Date;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;

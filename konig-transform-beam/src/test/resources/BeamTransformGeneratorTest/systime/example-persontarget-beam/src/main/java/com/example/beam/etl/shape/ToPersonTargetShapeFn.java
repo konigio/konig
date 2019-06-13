@@ -1,7 +1,7 @@
 package com.example.beam.etl.shape;
 
+import java.util.Date;
 import com.example.beam.etl.common.ErrorBuilder;
-import com.google.cloud.Date;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.values.TupleTag;
