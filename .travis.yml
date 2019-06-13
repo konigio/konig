@@ -1,5 +1,9 @@
 language: java
 
+jdk:
+  - oraclejdk8
+  - openjdk8
+
 before_install: 
   - cd konig-parent
   - echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
