@@ -98,11 +98,6 @@
 			<artifactId>appengine-api-1.0-sdk</artifactId>
 			<version>1.9.55</version>
 		</dependency>
-		<dependency>
-		    <groupId>javax.activation</groupId>
-		    <artifactId>activation</artifactId>
-		    <version>1.1.1</version>
-		</dependency>
 	</dependencies>
 
   <build>
