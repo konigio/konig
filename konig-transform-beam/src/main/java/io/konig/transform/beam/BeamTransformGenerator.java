@@ -238,17 +238,6 @@ public class BeamTransformGenerator {
         JCodeModel model = new JCodeModel();
         
         try {
-          buildPom(request, projectDir, node);
-        } catch (Throwable e) {
-        	String msg = "Failed to generate pom.xml for " + node.getPath();
-        	if (failFast) {
-        		throw new BeamTransformGenerationException(msg, e);
-        	} else {
-        		logger.error(msg, e);
-        		encounteredError = true;
-        	}
-        }
-        try {
           generateTransform(model, node);
           
           File javaDir = new File(projectDir, "src/main/java");
@@ -260,6 +249,18 @@ public class BeamTransformGenerator {
         	String msg = "Failed to produce transform for " + node.getPath();
         	if (failFast) {
             throw new BeamTransformGenerationException("Failed to save Beam Transform code", e);
+        	} else {
+        		logger.error(msg, e);
+        		encounteredError = true;
+        	}
+        }
+
+        try {
+          buildPom(request, projectDir, node);
+        } catch (Throwable e) {
+        	String msg = "Failed to generate pom.xml for " + node.getPath();
+        	if (failFast) {
+        		throw new BeamTransformGenerationException(msg, e);
         	} else {
         		logger.error(msg, e);
         		encounteredError = true;
@@ -363,14 +364,7 @@ public class BeamTransformGenerator {
     for (ShowlChannel channel : node.getChannels()) {
       ShowlDataSource ds = channel.getSourceNode().getShapeDataSource();
       
-      if (ds == null) {
-        for (DataSource s : channel.getSourceNode().getShape().getShapeDataSource()) {
-          String result = bucketBaseIri(s.getId());
-          if (result != null) {
-            return result;
-          }
-        }
-      } else {
+      if (ds != null) {
         String result = bucketBaseIri(ds.getDataSource().getId());
         if (result != null) {
           return result;
