@@ -40,23 +40,16 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.BasicTransformService;
-import io.konig.core.showl.CompositeSourceNodeSelector;
-import io.konig.core.showl.DataSourceTypeSourceNodeSelector;
+import io.konig.core.showl.CompositeSourceNodeFactory;
 import io.konig.core.showl.DestinationTypeTargetNodeShapeFactory;
-import io.konig.core.showl.ExplicitDerivedFromSelector;
-import io.konig.core.showl.HasDataSourceTypeSelector;
-import io.konig.core.showl.RawCubeSourceNodeSelector;
+import io.konig.core.showl.ExplicitDerivedFromSourceNodeFactory;
 import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
 import io.konig.core.showl.ShowlClassProcessor;
-import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlNodeShapeBuilder;
 import io.konig.core.showl.ShowlService;
 import io.konig.core.showl.ShowlServiceImpl;
-import io.konig.core.showl.ShowlSourceNodeFactory;
-import io.konig.core.showl.ShowlTargetNodeSelector;
-import io.konig.core.showl.ShowlTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlTransformEngine;
 import io.konig.core.showl.ShowlTransformService;
 import io.konig.core.showl.expression.ShowlExpressionBuilder;
@@ -70,44 +63,39 @@ public class BeamTransformGeneratorDebug {
 
 
 
-	private NamespaceManager nsManager = new MemoryNamespaceManager();
-	private Graph graph = new MemoryGraph(nsManager);
-	private ShapeManager shapeManager = new MemoryShapeManager();
-	private OwlReasoner reasoner = new OwlReasoner(graph);
-	private ShowlTargetNodeSelector targetNodeSelector = new HasDataSourceTypeSelector(Konig.GoogleBigQueryTable);
-	private ShowlNodeListingConsumer consumer = new ShowlNodeListingConsumer();
-	private ShowlManager showlManager = new ShowlManager(
-			shapeManager, reasoner, targetNodeSelector, nodeSelector(shapeManager), consumer);
+	private NamespaceManager nsManager;
+	private Graph graph;
+	private ShapeManager shapeManager;
+	private OwlReasoner reasoner;
+	private ShowlNodeListingConsumer consumer;
 	private ShowlTransformEngine engine;
 	private ShowlService showlService;
 	private BeamTransformGenerator generator;
 
-	private static CompositeSourceNodeSelector nodeSelector(ShapeManager shapeManager) {
-		return new CompositeSourceNodeSelector(
-				new RawCubeSourceNodeSelector(shapeManager),
-				new DataSourceTypeSourceNodeSelector(shapeManager, Konig.GoogleCloudStorageBucket),
-				new ExplicitDerivedFromSelector());
-	}
 	
 
 	@Before
 	public void setUp() {
-
-		graph = new MemoryGraph(new MemoryNamespaceManager());
+		nsManager = new MemoryNamespaceManager();
+		graph = new MemoryGraph(nsManager);
 		shapeManager = new MemoryShapeManager();
-		OwlReasoner reasoner = new OwlReasoner(graph);
+		reasoner = new OwlReasoner(graph);
+		consumer = new ShowlNodeListingConsumer();
 		
 		showlService = new ShowlServiceImpl(reasoner);
+
 		ShowlNodeShapeBuilder builder = new ShowlNodeShapeBuilder(showlService, showlService);
+		DestinationTypeTargetNodeShapeFactory targetNodeFactory = new DestinationTypeTargetNodeShapeFactory(
+				Collections.singleton(Konig.GoogleBigQueryTable), builder);
+		CompositeSourceNodeFactory sourceNodeFactory = new CompositeSourceNodeFactory();
+		sourceNodeFactory.add(new ExplicitDerivedFromSourceNodeFactory(builder));
+		sourceNodeFactory.add(new ReceivesDataFromSourceNodeFactory(builder, graph));
 		
 
-		ShowlSourceNodeFactory sourceNodeFactory = new ReceivesDataFromSourceNodeFactory(builder, graph);
-		
-		ShowlTargetNodeShapeFactory targetNodeShapeFactory = new DestinationTypeTargetNodeShapeFactory(
-				Collections.singleton(Konig.GoogleBigQueryTable), builder);
 		ShowlTransformService transformService = new BasicTransformService(showlService, showlService, sourceNodeFactory);
 		
-		engine = new ShowlTransformEngine(targetNodeShapeFactory, shapeManager, transformService, consumer);
+		
+		engine = new ShowlTransformEngine(targetNodeFactory, shapeManager, transformService, consumer);
 		
 		ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
 		generator =  new BeamTransformGenerator("com.example.beam.etl", reasoner, expressionBuilder);

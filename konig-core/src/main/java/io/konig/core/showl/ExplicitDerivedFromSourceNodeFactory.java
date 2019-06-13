@@ -51,6 +51,7 @@ public class ExplicitDerivedFromSourceNodeFactory implements ShowlSourceNodeFact
 	
 					node.setTargetNode(targetNode);
 					node.setShapeDataSource(new ShowlDataSource(node, ds));
+					result.add(node);
 				}
 				
 			}

@@ -65,6 +65,7 @@ public class BasicTransformService implements ShowlTransformService {
 		public State(ShowlNodeShape targetNode, Set<ShowlPropertyShapeGroup> propertyPool, Set<ShowlNodeShape> candidateSet) {
 			this.propertyPool = propertyPool;
 			this.candidateSet = candidateSet;
+			this.targetNode = targetNode;
 		}
 		
 		public boolean done() {
@@ -83,6 +84,10 @@ public class BasicTransformService implements ShowlTransformService {
 				targetNode,
 				propertyPool(targetNode),
 				sourceNodeFactory.candidateSourceNodes(targetNode));
+		
+		if (state.propertyPool.isEmpty()) {
+			throw new ShowlProcessingException("No properties found in target node " + targetNode.getPath());
+		}
 		
 		if (state.candidateSet.isEmpty()) {
 			logger.warn("Failed to transform {}.  No candidate source shapes were found.", 
@@ -124,6 +129,9 @@ public class BasicTransformService implements ShowlTransformService {
 					
 					
 //					direct.setSelectedExpression(new ShowlStructExpression(direct));
+					if (logger.isTraceEnabled()) {
+						logger.trace("Nested record is well-defined: {}", direct.getPath());
+					}
 					sequence.remove();
 				}
 			}
@@ -269,6 +277,7 @@ public class BasicTransformService implements ShowlTransformService {
 		}
 		
 		if (logger.isWarnEnabled()) {
+			
 			logger.warn("Failed to create channel for {} in transform of {}", sourceShape.getPath(), sourceShape.getTargetNode().getPath());
 		}
 		return false;
@@ -591,8 +600,8 @@ public class BasicTransformService implements ShowlTransformService {
 					return true;
 				}
 				
-				if (logger.isWarnEnabled()) {
-					logger.warn("createMapping: Failed to create mapping: {}...{}", sourceProperty, targetProperty);
+				if (logger.isTraceEnabled() && sourceProperty.getValueShape()==null) {
+					logger.trace("createMapping: Failed to create mapping: {}...{}", sourceProperty, targetProperty);
 				}
 			}
 		}
