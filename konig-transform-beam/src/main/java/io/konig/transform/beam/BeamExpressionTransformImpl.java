@@ -22,12 +22,12 @@ package io.konig.transform.beam;
 
 
 import java.text.MessageFormat;
+import java.util.Date;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
-import com.google.cloud.Date;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.AbstractJType;
 import com.helger.jcodemodel.IJExpression;
