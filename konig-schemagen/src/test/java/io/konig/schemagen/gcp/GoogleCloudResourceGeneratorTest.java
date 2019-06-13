@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -43,7 +44,7 @@ import io.konig.shacl.io.ShapeLoader;
 public class GoogleCloudResourceGeneratorTest {
 	
 
-	@Test
+	@Ignore
 	public void testBigQueryTable() throws Exception {
 		GcpShapeConfig.init();
 		ShapeManager shapeManager = loadShapes("GoogleCloudResourceGeneratorTest/testBigQueryTable.ttl");
