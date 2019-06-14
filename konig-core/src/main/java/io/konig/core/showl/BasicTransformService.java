@@ -143,13 +143,16 @@ public class BasicTransformService implements ShowlTransformService {
 	 * If the candidate set is empty, try to add a new Candidate source
 	 * @param state
 	 */
-	private void addCandidateSource(State state) {
+	private void addCandidateSource(State state) throws ShowlProcessingException {
 		Set<ShowlPropertyShapeGroup> propertyPool = state.propertyPool;
 		if (!propertyPool.isEmpty() && state.candidateSet.isEmpty()) {
 			Iterator<ShowlPropertyShapeGroup> sequence = propertyPool.iterator();
 			while ( sequence.hasNext() ) {
 				ShowlPropertyShapeGroup targetGroup = sequence.next();
 				ShowlDirectPropertyShape targetDirect = targetGroup.direct();
+				if (targetDirect == null) {
+					throw new ShowlProcessingException("Direct property missing for " + targetGroup.pathString());
+				}
 				if (targetDirect.getSelectedExpression() != null) {
 					if (logger.isTraceEnabled()) {
 						logger.trace("addCandidateSource: Removing property from pool because it was mapped out of sequence: {}", targetDirect.getPath());
