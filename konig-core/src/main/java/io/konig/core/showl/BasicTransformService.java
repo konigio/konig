@@ -151,7 +151,7 @@ public class BasicTransformService implements ShowlTransformService {
 				ShowlPropertyShapeGroup targetGroup = sequence.next();
 				ShowlDirectPropertyShape targetDirect = targetGroup.direct();
 				if (targetDirect == null) {
-					throw new ShowlProcessingException("Direct property missing for " + targetGroup.pathString());
+					throw new ShowlProcessingException("Direct property missing for " + targetGroup.pathString() + ", perhaps because derived properties are not yet supported.");
 				}
 				if (targetDirect.getSelectedExpression() != null) {
 					if (logger.isTraceEnabled()) {
