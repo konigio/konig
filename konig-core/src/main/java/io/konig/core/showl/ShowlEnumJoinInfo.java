@@ -21,12 +21,28 @@ package io.konig.core.showl;
  */
 
 
+/**
+ * Encapsulates some expression derived from source data that references a given property
+ * on the enumeration class
+ * @author Greg McFall
+ *
+ */
 public class ShowlEnumJoinInfo {
 	
+	// The property on the target node that stores a member of the enumeration.
 	private ShowlPropertyShape targetProperty;
+	
+	// The property on the enumeration class that is referenced by the source node.
 	private ShowlPropertyShape enumProperty;
+	
+	// A property from the source node that references the enumProperty
 	private ShowlPropertyShape sourceProperty;
+	
+	// A hard-coded reference to the enum member
 	private ShowlEnumIndivdiualReference hardCodedReference;
+	
+	// An arbitrary expression for the enumProperty
+	private ShowlExpression expression;
 	
 	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlPropertyShape sourceProperty) {
 		this.targetProperty = targetProperty;
@@ -38,6 +54,17 @@ public class ShowlEnumJoinInfo {
 		this.targetProperty = targetProperty;
 		this.enumProperty = enumProperty;
 		this.hardCodedReference = hardCodedReference;
+	}
+
+	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty,
+			ShowlExpression expression) {
+		this.targetProperty = targetProperty;
+		this.enumProperty = enumProperty;
+		this.expression = expression;
+	}
+
+	public ShowlExpression getExpression() {
+		return expression;
 	}
 
 	public ShowlPropertyShape getTargetProperty() {
@@ -81,6 +108,17 @@ public class ShowlEnumJoinInfo {
 						
 						if (equal.getRight() instanceof ShowlEnumIndivdiualReference) {
 							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndivdiualReference)equal.getRight());
+						}
+						
+						// This code is getting complex.  We probably ought to take a step back and think about refactoring to 
+						// simplify.  But for now, let's just add to the complexity (sigh!)
+						
+						ShowlExpression enumExpression = ShowlUtil.enumExpression(equal);
+						if (enumExpression != null) {
+							ShowlExpression other = equal.otherExpression(enumExpression);
+							if (other != null) {
+								return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, other);
+							}
 						}
 					}
 				}

@@ -1,0 +1,47 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:AnimalTargetShape sh:property  [ 
+		sh:path ex:genus ; 
+		konig:formula '''
+@prefix ex: <http://example.com/ns/core/> .
+@term species <http://example.com/ns/core/species>
+@term name <http://schema.org/name>
+
+
+   CASE
+      WHEN $.species.name IN ("Pan troglodytes" , "Pan paniscus") THEN ex:Pan
+      WHEN $.species.name IN ("Pongo abelii" , "Pongo pygmaeus" , "Pongo tapanuliensis") THEN ex:Pongo
+   END''' ; 
+		sh:class ex:Genus ; 
+		sh:shape shape:EnumShape ; 
+		rdf:predicate ex:genus ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		sh:path ex:species ; 
+		sh:class ex:Species ; 
+		sh:shape shape:EnumShape ; 
+		rdf:predicate ex:species ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ]  ; 
+	a sh:Shape ; 
+	konig:explicitDerivedFrom shape:PersonSourceShape ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/ex/tables/AnimalTarget> ; 
+	sh:targetClass ex:Animal ; 
+	sh:nodeKind sh:IRI . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/ex/tables/AnimalTarget> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:tableId "AnimalTarget" ; 
+		gcp:datasetId "ex" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:WarehouseOperationalData . 

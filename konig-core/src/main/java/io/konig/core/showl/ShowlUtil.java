@@ -303,4 +303,21 @@ public class ShowlUtil {
 	public static String shortShapeName(ShowlNodeShape node) {
 		return shortShapeName(RdfUtil.uri(node.getId()));
 	}
+
+	public static ShowlExpression enumExpression(ShowlEqualStatement equal) {
+		ShowlExpression left = equal.getLeft();
+		if (isEnumExpression(left)) {
+			return left;
+		}
+		ShowlExpression right = equal.getRight();
+		if (isEnumExpression(right)) {
+			return right;
+		}
+		return null;
+	}
+
+	private static boolean isEnumExpression(ShowlExpression e) {
+		
+		return e instanceof ShowlEnumPropertyExpression || e instanceof ShowlEnumIndivdiualReference;
+	}
 }

@@ -24,6 +24,10 @@ package io.konig.core.showl;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.URI;
+
+import io.konig.core.OwlReasoner;
+
 /**
  * A structure that is derived from a collection of alternative paths.
  * @author Greg McFall
@@ -65,6 +69,16 @@ public class AlternativePathsExpression implements ShowlExpression {
 			set.addAll(path.getParameters());
 		}
 
+	}
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		URI result = null;
+		for (ShowlAlternativePath p : pathList) {
+			URI type = p.valueType(reasoner);
+			result = (URI) reasoner.leastCommonSuperClass(result, type);
+		}
+		return result;
 	}
 
 }

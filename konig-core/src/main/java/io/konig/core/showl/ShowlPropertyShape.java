@@ -176,6 +176,40 @@ public abstract class ShowlPropertyShape implements Traversable {
 		}
 		return false;
 	}
+	
+	public String fullPath() {
+		List<String> stepList = new ArrayList<>();
+		ShowlPropertyShape p = this;
+		while (p != null) {
+			stepList.add(p.getPredicate().getLocalName());
+			
+			ShowlNodeShape node = p.getDeclaringShape();
+			p = node.getAccessor();
+			if (p == null) {
+				p = node.getTargetProperty();
+				if ( p != null) {
+					p = p.getDeclaringShape().getAccessor();
+				} else {
+					node = node.getTargetNode();
+					if (node != null) {
+						p = node.getAccessor();
+						if (p != null) {
+							p = p.getDeclaringShape().getAccessor();
+						}
+					}
+				}
+			}
+		}
+		Collections.reverse(stepList);
+		StringBuilder builder = new StringBuilder();
+		String dot = "";
+		for (String fieldName : stepList) {
+			builder.append(dot);
+			builder.append(fieldName);
+			dot = ".";
+		}
+		return builder.toString();
+	}
 
 	@Override
 	public String getPath() {

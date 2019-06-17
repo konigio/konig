@@ -22,12 +22,19 @@ package io.konig.transform.beam;
 
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.AbstractJType;
 import com.helger.jcodemodel.IJExpression;
@@ -43,33 +50,47 @@ import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
 import com.helger.jcodemodel.JVar;
 
+import io.konig.core.OwlReasoner;
+import io.konig.core.showl.ShowlCaseStatement;
 import io.konig.core.showl.ShowlEnumIndivdiualReference;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlFilterExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIriReferenceExpression;
+import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyExpression;
+import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.ShowlSystimeExpression;
+import io.konig.core.showl.ShowlUtil;
+import io.konig.core.showl.ShowlWhenThenClause;
 import io.konig.core.showl.expression.ShowlLiteralExpression;
+import io.konig.core.util.StringUtil;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.FunctionModel;
 
 public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 
-	private BeamPropertyManager manager;
+	private OwlReasoner reasoner;
+	private BeamPropertyManager propertyManager;
+	private BeamTypeManager typeManager;
 	private JCodeModel model;
 	private JDefinedClass targetClass;
 	
 	private JMethod concatMethod;
 	private JMethod localNameMethod;
 	private JMethod stripSpacesMethod;
+	private int caseCount = 0;
 	
 	public BeamExpressionTransformImpl(
+			OwlReasoner reasoner,
+			BeamTypeManager typeManager,
 			BeamPropertyManager manager, 
 			JCodeModel model, 
 			JDefinedClass targetClass) {
-		this.manager = manager;
+		this.reasoner = reasoner;
+		this.typeManager = typeManager;
+		this.propertyManager = manager;
 		this.model = model;
 		this.targetClass = targetClass;
 	}
@@ -89,7 +110,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		
 		if (e instanceof ShowlPropertyExpression) {
 			ShowlPropertyExpression p = (ShowlPropertyExpression) e;
-			BeamSourceProperty b = manager.forPropertyShape(p.getSourceProperty());
+			BeamSourceProperty b = propertyManager.forPropertyShape(p.getSourceProperty());
 			return b.getVar();
 		}
 		
@@ -117,7 +138,85 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			return systime();
 		}
 		
+		if (e instanceof ShowlCaseStatement) {
+			return caseStatement((ShowlCaseStatement)e);
+		}
+		
 		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
+	}
+
+	private IJExpression caseStatement(ShowlCaseStatement e) throws BeamTransformGenerationException {
+		caseCount++;
+		String methodName = "case" + caseCount;
+		
+		URI valueType = e.valueType(reasoner);
+		AbstractJType resultType = typeManager.javaType(valueType);
+		AbstractJType errorBuilderClass = typeManager.errorBuilderClass();
+		AbstractJType tableRowClass = model.ref(TableRow.class);
+		
+		
+		JMethod method = targetClass.method(JMod.PRIVATE, resultType, methodName);
+
+		
+		String resultParamName = StringUtil.firstLetterLowerCase(valueType.getLocalName());
+		JVar resultParam = method.body().decl(resultType, resultParamName).init(JExpr._null());
+		
+		List<ShowlPropertyShape> propertyList = caseParamList(e);
+		List<NodeTableRow> tableRowList = tableRowList(method, propertyList);
+		
+		
+		int whenIndex = 0;
+		for (ShowlWhenThenClause whenThen : e.getWhenThenList()) {
+			whenIndex++;
+			
+			ShowlExpression whenExpression = whenThen.getWhen();
+			String whenMethodName = methodName + "_when" + whenIndex;
+			JConditional ifStatement = whenExpression(method.body(), whenMethodName, whenExpression);
+		}
+		
+		
+		return resultParam;
+	}
+
+
+	private JConditional whenExpression(JBlock block, String whenMethodName, ShowlExpression whenExpression) {
+		AbstractJType booleanType = model._ref(boolean.class);
+		
+		JMethod method = targetClass.method(JMod.PRIVATE, booleanType, whenMethodName);
+		
+		JConditional ifStatement = block._if(JExpr.invoke(method));
+		
+		
+		return ifStatement;
+	}
+
+	private List<NodeTableRow> tableRowList(JMethod method, List<ShowlPropertyShape> propertyList) {
+		Set<ShowlNodeShape> nodeSet = new HashSet<>();
+		for (ShowlPropertyShape p : propertyList) {
+			ShowlNodeShape node = p.getRootNode();
+			nodeSet.add(node);
+		}
+		
+		List<ShowlNodeShape> nodeList = new ArrayList<>(nodeSet);
+		Collections.sort(nodeList, new BeamNodeComparator());
+		
+		AbstractJClass tableRowClass = model.ref(TableRow.class);
+		List<NodeTableRow> result = new ArrayList<>(nodeList.size());
+		for (ShowlNodeShape node : nodeList) {
+			String paramName = StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(node)) + "Row";
+			JVar var = method.param(tableRowClass, paramName);
+			result.add(new NodeTableRow(node, var));
+		}
+		
+		return result;
+	}
+
+	private List<ShowlPropertyShape> caseParamList(ShowlCaseStatement caseStatement) {
+		Set<ShowlPropertyShape> propertySet = new HashSet<>();
+		caseStatement.addProperties(propertySet);
+		List<ShowlPropertyShape> propertyList = new ArrayList<>(propertySet);
+		
+		return propertyList;
 	}
 
 	private IJExpression systime() {

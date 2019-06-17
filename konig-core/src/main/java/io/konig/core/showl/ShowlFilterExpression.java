@@ -23,6 +23,10 @@ package io.konig.core.showl;
 
 import java.util.Set;
 
+import org.openrdf.model.URI;
+
+import io.konig.core.OwlReasoner;
+
 public class ShowlFilterExpression implements ShowlExpression {
 
 	private ShowlExpression value;
@@ -58,6 +62,16 @@ public class ShowlFilterExpression implements ShowlExpression {
 
 	public ShowlExpression getValue() {
 		return value;
+	}
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		// To implement this method, we would need to capture the
+		// NodeShape that uses the HasValue filter, and return the type of
+		// that node.
+		
+		
+		throw new ShowlProcessingException("Not implemented");
 	}
 
 }

@@ -1,28 +1,9 @@
 package io.konig.transform.beam;
 
-/*
- * #%L
- * Konig Transform Beam
- * %%
- * Copyright (C) 2015 - 2019 Gregory McFall
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
- */
+import java.util.HashSet;
+import java.util.Set;
 
-import org.apache.avro.data.ErrorBuilder;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 
 import com.google.api.services.bigquery.model.TableRow;
 
@@ -181,8 +162,74 @@ public class Scratch {
           return false;
       }
   }
+  
+ 
+  private boolean genus(TableRow outputRow, ErrorBuilder errorBuilder) {
+    Genus genus = case1(outputRow, errorBuilder);
 
-  private boolean externalIdentifier_identifiedByValue_identifier__mdm_id(TableRow personSourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
+    if (genus != null) {
+      TableRow genusRow = new TableRow();
+    	genus_id(genus, genusRow, errorBuilder);
+    	genus_name(genus, genusRow, errorBuilder);
+    }
+    return true;
+}
+
+  private Genus case1(TableRow animalTargetRow, ErrorBuilder errorBuilder) {
+  	Genus genus=null;
+  	if (case1_when1(animalTargetRow, errorBuilder)) {
+  		genus = Genus.findByLocalName("Pan");
+  	} else if (case1_when2(animalTargetRow, errorBuilder)) {
+  		genus = Genus.findByLocalName("Pongo");
+  	}
+    if (genus == null) {
+    }
+		return genus;
+	}
+
+	private boolean case1_when2(TableRow animalTargetRow, ErrorBuilder errorBuilder) {
+
+  	Set<Object> set = new HashSet<>();
+  	set.add("Pongo abelii");
+  	set.add("Pongo pygmaeus");
+  	set.add("Pongo tapanuliensis");
+  	
+  	Object species_name = get(animalTargetRow, "species", "name");
+  	return set.contains(species_name);
+	}
+
+	private boolean case1_when1(TableRow animalTargetRow, ErrorBuilder errorBuilder) {
+
+  	Set<Object> set = new HashSet<>();
+  	set.add("Pan troglodytes");
+  	set.add("Pan paniscus");
+  	
+  	Object value = get(animalTargetRow, "species", "name");
+		return set.contains(value);
+	}
+
+	private void genus_name(Genus genus, TableRow genusRow, ErrorBuilder errorBuilder) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void genus_id(Genus genus, TableRow genusRow, ErrorBuilder errorBuilder) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private Object get(Object value, String...fieldNameList) {
+		for (String fieldName : fieldNameList) {
+			if (value instanceof TableRow) {
+				value = ((TableRow)value).get(fieldName);
+			} else {
+				return null;
+			}
+		}
+		return value;
+	}
+
+	private boolean externalIdentifier_identifiedByValue_identifier__mdm_id(TableRow personSourceRow, TableRow outputRow, ErrorBuilder errorBuilder) {
       Object mdm_id = ((personSourceRow == null)?null:personSourceRow.get("mdm_id"));
       if (mdm_id!= null) {
           outputRow.set("identifier", mdm_id);
@@ -246,4 +293,12 @@ public class Scratch {
         return buffer.toString();
     }
 }
+	
+	enum Genus {
+		Pan;
+		
+		static Genus findByLocalName(String localName) {
+			return null;
+		}
+	}
 }

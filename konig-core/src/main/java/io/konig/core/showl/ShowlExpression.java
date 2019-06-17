@@ -25,6 +25,10 @@ import java.util.LinkedHashSet;
 
 import java.util.Set;
 
+import org.openrdf.model.URI;
+
+import io.konig.core.OwlReasoner;
+
 /**
  * An expression that constructs the value of a target property within the 
  * context of an ETL process.
@@ -56,5 +60,6 @@ public interface ShowlExpression {
 		return set;
 	}
 	
+	public URI valueType(OwlReasoner reasoner);
 	
 }

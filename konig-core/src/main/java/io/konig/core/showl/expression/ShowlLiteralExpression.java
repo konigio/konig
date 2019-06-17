@@ -24,7 +24,10 @@ package io.konig.core.showl.expression;
 import java.util.Set;
 
 import org.openrdf.model.Literal;
+import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.XMLSchema;
 
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlNodeShape;
@@ -62,6 +65,15 @@ public class ShowlLiteralExpression implements ShowlExpression {
 
 	public String toString() {
 		return "ShowlLiteralExpression(\"" + literal.stringValue() + "\")";
+	}
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		URI type = literal.getDatatype();
+		if (type == null) {
+			type = XMLSchema.STRING;
+		}
+		return type;
 	}
 
 }

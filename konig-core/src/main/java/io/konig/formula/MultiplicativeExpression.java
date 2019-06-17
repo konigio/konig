@@ -38,6 +38,14 @@ public class MultiplicativeExpression extends AbstractFormula {
 	public UnaryExpression getLeft() {
 		return left;
 	}
+
+	@Override
+	public PrimaryExpression asPrimaryExpression() {
+		if (multiplierList==null || multiplierList.isEmpty()) {
+			return left.getPrimary();
+		}
+		return null;
+	}
 	
 	@Override
 	public MultiplicativeExpression clone() {

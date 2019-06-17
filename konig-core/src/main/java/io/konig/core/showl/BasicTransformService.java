@@ -1,5 +1,6 @@
 package io.konig.core.showl;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 
 /*
@@ -39,6 +40,8 @@ import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.vocab.Konig;
+import io.konig.shacl.NodeKind;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class BasicTransformService implements ShowlTransformService {
@@ -396,6 +399,22 @@ public class BasicTransformService implements ShowlTransformService {
 			if (channelJoinAccessor != null) {
 				
 				ShowlEffectiveNodeShape channelJoinNode = channelJoinAccessor.getValueShape();
+				if (channelJoinNode == null) {
+					
+					ShowlDirectPropertyShape channelJoinAccessorDirect = channelJoinAccessor.direct();
+					if (channelJoinAccessorDirect != null) {
+						PropertyConstraint constraint = channelJoinAccessorDirect.getPropertyConstraint();
+						if (constraint.getNodeKind() == NodeKind.IRI && constraint.getShape()==null) {
+							// channelJoinAccessor is an IRI reference  We can use it to join.
+
+							ShowlExpression left = new ShowlEnumPropertyExpression(enumId.direct());
+							ShowlExpression right = ShowlUtil.propertyExpression(channelJoinAccessorDirect);
+							return new ShowlEqualStatement(left, right);
+							
+						}
+					}
+					
+				}
 				if (channelJoinNode != null) {
 			
 					for (ShowlPropertyShapeGroup enumProperty : enumNode.getProperties()) {	
@@ -433,12 +452,24 @@ public class BasicTransformService implements ShowlTransformService {
 					}
 				}
 			}
-			
-			
-			
 		}
 		
-		return null;
+		ShowlPropertyShape targetProperty = targetNode.getAccessor();
+		if (targetProperty!=null) {
+			ShowlExpression formula = targetProperty.getFormula();
+			if (formula != null) {
+				ShowlExpression left = new ShowlEnumPropertyExpression(enumId.direct());
+				ShowlExpression right = formula;
+				return new ShowlEqualStatement(left, right);
+			}
+		}
+		
+		String msg = MessageFormat.format("Failed to create join condition for {0} at {1}", 
+				sourceShape.getPath(), 
+				sourceShape.getTargetNode()==null ? "null" : sourceShape.getTargetNode().getPath());
+		
+		throw new ShowlProcessingException(msg);
+		
 	}
 
 

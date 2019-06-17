@@ -22,6 +22,7 @@ package io.konig.core.showl.expression;
 
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -31,7 +32,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.Vertex;
+import io.konig.core.showl.ShowlCaseStatement;
 import io.konig.core.showl.ShowlClass;
+import io.konig.core.showl.ShowlContainmentOperator;
 import io.konig.core.showl.ShowlDerivedPropertyExpression;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
@@ -43,6 +46,7 @@ import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIdRefPropertyShape;
 import io.konig.core.showl.ShowlInwardPropertyShape;
 import io.konig.core.showl.ShowlIriReferenceExpression;
+import io.konig.core.showl.ShowlListRelationalExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlNodeShapeService;
 import io.konig.core.showl.ShowlOutwardPropertyShape;
@@ -52,8 +56,10 @@ import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlSchemaService;
 import io.konig.core.showl.ShowlUtil;
+import io.konig.core.showl.ShowlWhenThenClause;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.BareExpression;
+import io.konig.formula.CaseStatement;
 import io.konig.formula.ConditionalOrExpression;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
@@ -61,9 +67,11 @@ import io.konig.formula.Expression;
 import io.konig.formula.Formula;
 import io.konig.formula.FormulaUtil;
 import io.konig.formula.FunctionExpression;
+import io.konig.formula.GeneralAdditiveExpression;
 import io.konig.formula.HasPathStep;
 import io.konig.formula.IriTemplateExpression;
 import io.konig.formula.IriValue;
+import io.konig.formula.ListRelationalExpression;
 import io.konig.formula.LiteralFormula;
 import io.konig.formula.PathExpression;
 import io.konig.formula.PathStep;
@@ -71,6 +79,7 @@ import io.konig.formula.PredicateObjectList;
 import io.konig.formula.PrimaryExpression;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.formula.VariableTerm;
+import io.konig.formula.WhenThenClause;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
@@ -113,6 +122,9 @@ public class ShowlExpressionBuilder {
 	}
 
 	public ShowlExpression expression(ShowlPropertyShape p, Formula formula) throws ShowlProcessingException {
+		if (formula == null) {
+			return null;
+		}
 		if (formula instanceof FunctionExpression) {
 			return functionExpression(p, (FunctionExpression) formula);
 		} 
@@ -139,11 +151,62 @@ public class ShowlExpressionBuilder {
 		if (formula instanceof IriTemplateExpression) {
 			return iriTemplate(p, (IriTemplateExpression) formula);
 		}
+		if (formula instanceof ListRelationalExpression) {
+			return listRelational(p, (ListRelationalExpression)formula);
+		}
+		if (formula instanceof CaseStatement) {
+			return caseStatement(p, (CaseStatement)formula);
+		}
+		if (formula instanceof GeneralAdditiveExpression) {
+			return additive(p, (GeneralAdditiveExpression) formula);
+		}
 		fail("At {0}, failed to process expression: {1}", p.getPath(), FormulaUtil.simpleString(formula));
 		
 		return null;
 	}
 
+
+	private ShowlExpression additive(ShowlPropertyShape p, GeneralAdditiveExpression formula) {
+		PrimaryExpression primary = formula.asPrimaryExpression();
+		if (primary != null) {
+			return expression(p, primary);
+		}
+		fail("At {0}, failed to process expression: {1}", p.getPath(), FormulaUtil.simpleString(formula));
+		return null;
+	}
+
+	private ShowlExpression caseStatement(ShowlPropertyShape p, CaseStatement formula) {
+		List<ShowlWhenThenClause> whenThenList = new ArrayList<>();
+		for (WhenThenClause clause : formula.getWhenThenList()) {
+			whenThenList.add(new ShowlWhenThenClause(
+					expression(p, clause.getWhen()), 
+					expression(p, clause.getThen())));
+		}
+		
+		return new ShowlCaseStatement(
+				expression(p, formula.getCaseCondition()),
+				whenThenList, 
+				expression(p, formula.getElseClause()));
+	}
+
+	private ShowlListRelationalExpression listRelational(ShowlPropertyShape p, ListRelationalExpression formula) {
+		ShowlContainmentOperator operator = null;
+		switch (formula.getOperator()) {
+		case IN :
+			operator = ShowlContainmentOperator.IN;
+			break;
+			
+		case NOT_IN :
+			operator = ShowlContainmentOperator.NOT_IN;
+			break;
+		}
+		ShowlExpression left = expression(p, formula.getLeft());
+		List<ShowlExpression> right = new ArrayList<>();
+		for (Expression e : formula.getRight()) {
+			right.add(expression(p, e));
+		}
+		return new ShowlListRelationalExpression(p, left, operator, right);
+	}
 
 	private ShowlExpression iriTemplate(ShowlPropertyShape p, IriTemplateExpression formula) {
 		return ShowlFunctionExpression.fromIriTemplate(schemaService, nodeService, p, formula.getTemplate());
@@ -206,11 +269,17 @@ public class ShowlExpressionBuilder {
 	private ShowlExpression conditionalOr(ShowlPropertyShape p, ConditionalOrExpression formula) {
 
 		PrimaryExpression primary = formula.asPrimaryExpression();
-		if (primary == null) {
-			fail("At {0}, failed to process conditional or expression {1}", p.getPath(), FormulaUtil.simpleString(formula));
-		} 
+		if (primary != null) {
+			return expression(p, primary);
+		}
 		
-		return expression(p, primary);
+		ListRelationalExpression listRelational = formula.asListRelationalExpression();
+		if (listRelational != null) {
+			return listRelational(p, listRelational);
+		}
+		
+		fail("At {0}, failed to process conditional or expression {1}", p.getPath(), FormulaUtil.simpleString(formula));
+		return null;
 	}
 
 

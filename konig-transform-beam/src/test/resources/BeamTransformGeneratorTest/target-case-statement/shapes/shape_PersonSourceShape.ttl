@@ -1,0 +1,4 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+
+shape:PersonSourceShape a sh:Shape , sh:NodeShape . 

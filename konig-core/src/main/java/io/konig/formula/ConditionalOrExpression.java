@@ -60,6 +60,19 @@ public class ConditionalOrExpression extends Expression {
 		
 		return or;
 	}
+	
+	public ListRelationalExpression asListRelationalExpression() {
+		if (orList.size()==1) {
+			ConditionalAndExpression and = orList.get(0);
+			if (and.getAndList().size()==1) {
+				ValueLogical value = and.getAndList().get(0);
+				if (value instanceof ListRelationalExpression) {
+					return (ListRelationalExpression) value;
+				}
+			}
+		}
+		return null;
+	}
 
 	public static ConditionalOrExpression wrap(PrimaryExpression primary) {
 		UnaryExpression unary = new UnaryExpression(primary);
