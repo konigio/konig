@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.formula.Direction;
 import io.konig.formula.DirectionStep;
 import io.konig.formula.PathExpression;
@@ -461,5 +462,14 @@ public abstract class ShowlPropertyShape implements Traversable {
 
 	public boolean isEnumProperty() {
 		return ShowlUtil.isEnumSourceNode(getDeclaringShape());
+	}
+
+	public boolean isUniqueKey() {
+		ShowlPropertyShape peer = maybeDirect();
+		PropertyConstraint constraint = peer.getPropertyConstraint();
+		if (constraint != null) {
+			return Konig.uniqueKey.equals(constraint.getStereotype());
+		}
+		return false;
 	}
 }

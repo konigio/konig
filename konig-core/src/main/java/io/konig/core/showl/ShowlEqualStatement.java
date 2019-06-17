@@ -51,4 +51,10 @@ public class ShowlEqualStatement implements ShowlStatement {
 		right.addDeclaredProperties(sourceNode, set);
 	}
 
+	@Override
+	public void addProperties(Set<ShowlPropertyShape> set) {
+		left.addProperties(set);
+		right.addProperties(set);
+	}
+
 }
