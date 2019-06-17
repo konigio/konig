@@ -273,7 +273,7 @@ public class BeamTransformGenerator {
     
   }
   
-  private void generateBeamParentPom(BeamTransformRequest request, List<File> childProjectList) throws IOException {
+  private void generateBeamParentPom(BeamTransformRequest request, List<File> childProjectList) throws IOException, BeamTransformGenerationException {
     if (!childProjectList.isEmpty()) {
       File baseDir = request.getProjectDir();
       
@@ -288,7 +288,9 @@ public class BeamTransformGenerator {
       context.put("artifactId", request.parentArtifactId());
       context.put("version", request.getVersion());
       context.put("childProjectList", childProjectList);
-      
+      if(!request.getNodeList().isEmpty()) {
+    	  context.put("batchEtlBucketIri", batchEtlBucketIri(request.getNodeList().get(0)));  
+      }
       Template template = engine.getTemplate("BeamTransformGenerator/parentPom.xml");
       
       try (FileWriter writer = new FileWriter(pomFile)) {
