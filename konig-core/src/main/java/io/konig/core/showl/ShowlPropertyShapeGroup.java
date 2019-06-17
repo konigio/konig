@@ -250,6 +250,16 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
 		return isEmpty() ? null : get(0);
 	}
 
+	public boolean isUniqueKey() {
+		
+		for (ShowlPropertyShape p : this) {
+			if (p.isUniqueKey()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	
 	
 

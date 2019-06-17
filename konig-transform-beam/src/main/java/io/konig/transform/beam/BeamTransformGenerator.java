@@ -152,6 +152,7 @@ import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlSchemaService;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.ShowlSystimeExpression;
@@ -192,18 +193,21 @@ public class BeamTransformGenerator {
   private String basePackage;
   private NamespaceManager nsManager;
   private JavaDatatypeMapper datatypeMapper;
+  private ShowlSchemaService schemaService;
   private OwlReasoner reasoner;
   private ShowlExpressionBuilder expressionBuilder;
   
   private boolean failFast;
   private boolean encounteredError;
   
-  public BeamTransformGenerator(String basePackage, OwlReasoner reasoner, ShowlExpressionBuilder expressionBuilder) {
+  public BeamTransformGenerator(String basePackage, ShowlSchemaService schemaService, ShowlExpressionBuilder expressionBuilder) {
     this.basePackage = basePackage;
-    this.reasoner = reasoner;
+    this.schemaService = schemaService;
+    this.reasoner = schemaService.getOwlReasoner();
     this.expressionBuilder = expressionBuilder;
     this.nsManager = reasoner.getGraph().getNamespaceManager();
     datatypeMapper = new BasicJavaDatatypeMapper();
+    
   }
   
   private String errorBuilderClassName() {
@@ -607,7 +611,8 @@ public class BeamTransformGenerator {
 
         Map<URI, RdfProperty> propertyMap = enumProperties(individuals);
         
-        Map<URI, JFieldVar> enumIndex = enumIndex(enumClass, propertyMap);
+        
+        Map<URI, JFieldVar> enumIndex = enumIndex(owlClass, enumClass, propertyMap);
         
         
         enumClassProperties.put(owlClass, propertyMap);
@@ -723,22 +728,27 @@ public class BeamTransformGenerator {
       }
     }
 
-    private Map<URI, JFieldVar> enumIndex(JDefinedClass enumClass, Map<URI, RdfProperty> propertyMap) {
+    private Map<URI, JFieldVar> enumIndex(URI owlClass, JDefinedClass enumClass, Map<URI, RdfProperty> propertyMap) throws BeamTransformGenerationException {
+
       Map<URI, JFieldVar> map = new HashMap<>();
-      for (RdfProperty property : propertyMap.values()) {
+    	Set<ShowlPropertyShape> set = ShowlUtil.uniqueKeys(owlClass, targetNode);
+    	for (ShowlPropertyShape p : set) {
+    		RdfProperty property = propertyMap.get(p.getPredicate());
+    	
+    		if (property == null) {
+    			fail("Enum property {0} not found for {1}", p.getPath(), RdfUtil.localName(targetNode.getId()));
+    		}
 
         URI propertyId = property.getId();
         JFieldVar mapField = null;
-        if (reasoner.isInverseFunctionalProperty(propertyId)) {
-          Class<?> datatypeJavaClass = datatypeMapper.javaDatatype(property.getRange());
-          AbstractJClass datatypeClass = model.ref(datatypeJavaClass);
-          String fieldName = propertyId.getLocalName();
-          AbstractJClass mapClass = model.ref(Map.class).narrow(datatypeClass, enumClass);
-          AbstractJClass hashMapClass = model.ref(HashMap.class).narrow(datatypeClass, enumClass);
-          mapField = enumClass.field(JMod.PRIVATE | JMod.STATIC | JMod.FINAL, mapClass, fieldName + "Map", hashMapClass._new());
-          
-          map.put(propertyId, mapField);
-        }
+        Class<?> datatypeJavaClass = datatypeMapper.javaDatatype(property.getRange());
+        AbstractJClass datatypeClass = model.ref(datatypeJavaClass);
+        String fieldName = propertyId.getLocalName();
+        AbstractJClass mapClass = model.ref(Map.class).narrow(datatypeClass, enumClass);
+        AbstractJClass hashMapClass = model.ref(HashMap.class).narrow(datatypeClass, enumClass);
+        mapField = enumClass.field(JMod.PRIVATE | JMod.STATIC | JMod.FINAL, mapClass, fieldName + "Map", hashMapClass._new());
+        
+        map.put(propertyId, mapField);
       }
       return map;
     }

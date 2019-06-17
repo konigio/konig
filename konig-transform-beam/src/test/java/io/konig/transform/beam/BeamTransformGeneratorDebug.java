@@ -98,7 +98,7 @@ public class BeamTransformGeneratorDebug {
 		engine = new ShowlTransformEngine(targetNodeFactory, shapeManager, transformService, consumer);
 		
 		ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
-		generator =  new BeamTransformGenerator("com.example.beam.etl", reasoner, expressionBuilder);
+		generator =  new BeamTransformGenerator("com.example.beam.etl", showlService, expressionBuilder);
 	}
 
 	public static void main(String[] arg) throws Exception {

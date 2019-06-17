@@ -401,11 +401,19 @@ public class BasicTransformService implements ShowlTransformService {
 					for (ShowlPropertyShapeGroup enumProperty : enumNode.getProperties()) {	
 						
 						URI predicate = enumProperty.getPredicate();
-						if (reasoner.isInverseFunctionalProperty(predicate)) {
+						ShowlPropertyShapeGroup channelPropertyGroup = channelJoinNode.findPropertyByPredicate(predicate);
+						if (channelPropertyGroup != null) {
+
+							ShowlPropertyShape targetProperty = targetNode.getProperty(predicate);
 							
-							ShowlPropertyShapeGroup channelPropertyGroup = channelJoinNode.findPropertyByPredicate(predicate);
 							
-							if (channelPropertyGroup != null) {
+							if (
+									reasoner.isInverseFunctionalProperty(predicate) || 
+									channelPropertyGroup.isUniqueKey() || 
+									(targetProperty!=null && targetProperty.isUniqueKey())
+							) {
+							
+							
 								ShowlPropertyShape channelProperty = channelPropertyGroup.direct();
 								if (channelProperty == null) {
 									for (ShowlPropertyShape p : channelPropertyGroup) {

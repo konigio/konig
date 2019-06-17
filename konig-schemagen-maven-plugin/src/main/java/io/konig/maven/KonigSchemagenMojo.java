@@ -1621,7 +1621,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			String basePackage = mavenProject.getGroupId() + ".beam";
 			ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
-			BeamTransformGenerator generator =  new BeamTransformGenerator(basePackage, owlReasoner, expressionBuilder);
+			BeamTransformGenerator generator =  new BeamTransformGenerator(basePackage, showlService, expressionBuilder);
 			generator.generateAll(request);
 			
 			if (generator.isEncounteredError()) {

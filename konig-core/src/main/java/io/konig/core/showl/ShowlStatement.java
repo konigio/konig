@@ -31,4 +31,6 @@ public interface ShowlStatement {
 	 * @param set The set of properties declared by sourceNode, or by a NodeShape nested within sourceNode.
 	 */
 	void addDeclaredProperties(ShowlNodeShape sourceNode, Set<ShowlPropertyShape> set);
+	
+	void addProperties(Set<ShowlPropertyShape> set);
 }
