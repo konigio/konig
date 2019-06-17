@@ -79,6 +79,7 @@
 									<argument>-f</argument>
 									<argument>../generated/beam/pom.xml</argument>
 									<argument>-DenvironmentName=${environmentName}</argument>
+									${addOptionalParameters}
 								</arguments>
 							</configuration>
 						</execution>

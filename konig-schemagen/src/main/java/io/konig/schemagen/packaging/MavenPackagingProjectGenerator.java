@@ -71,6 +71,7 @@ public class MavenPackagingProjectGenerator {
 	private static final String ASSEMBLY_DESCRIPTOR_PATTERN = "$'{'project.basedir'}'/src/assembly/{0}-{1}.xml";
 	private static final String ASSEMBLY_ID_PATTERN = "zip-{0}-{1}";
 	private static final String ASSEMBLY_SOURCE_DIR_PATTERN = "$'{'project.basedir'}'/src/main/resources/env/{0}/{1}";
+	private static final String OPTIONAL_PARAMETERS = "addOptionalParameters";
 	
 	public MavenPackagingProjectGenerator() {
 	}
@@ -93,9 +94,27 @@ public class MavenPackagingProjectGenerator {
 		VelocityContext context = new VelocityContext();
 		context.put("mavenProject", request.getMavenProject());
 		context.put(ASSEMBLY_LIST, assemblyList(request));
+		context.put(OPTIONAL_PARAMETERS, addOptionalParameters());
 		return context;
 	}
-
+	
+	 private String addOptionalParameters() {
+			StringBuilder br = new StringBuilder();
+			br.append("#if($!{gcpNetwork})");
+			br.append("<argument>-DgcpNetwork=${gcpNetwork}</argument>");
+			br.append("#end");
+			br.append("#if($!{gcpSubNetwork})");
+			br.append("<argument>-DgcpSubNetwork=${gcpSubNetwork}</argument>");
+			br.append("#end");
+			br.append("#if($!{gcpWorkerMachineType})");
+			br.append("<argument>-DgcpWorkerMachineType=${gcpWorkerMachineType}</argument>");
+			br.append("#end");
+			br.append("#if($!{region})");
+			br.append("<argument>-Dregion=${region}</argument>");
+			br.append("#end ");
+			return br.toString();
+	}
+	 
 	private List<AssemblyConfig> assemblyList(PackagingProjectRequest request) {
 		List<AssemblyConfig> list = new ArrayList<>();
 		File envRoot = new File(request.getBasedir(), ENV_PATH);

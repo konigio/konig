@@ -240,6 +240,7 @@
 						<argument>--tempLocation=${batchEtlBucketIri}/${templateName}/temp</argument>
 						<argument>--stagingLocation=${batchEtlBucketIri}/${templateName}/staging</argument>
 						<argument>--templateLocation=${batchEtlBucketIri}/templates/${templateName}</argument>
+						${addOptionalParameters}
 					</arguments>
 				</configuration>
 				<executions>
