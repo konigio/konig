@@ -52,7 +52,8 @@
 					<version>1.6.0</version>
 					<executions>
 						<execution>
-							<id>deploy gcp</id>
+							<id>first-execution</id>
+							<phase>install</phase>
 							<goals>
 								<goal>exec</goal>
 							</goals>
@@ -68,27 +69,70 @@
 							</configuration>
 						</execution>
 						<execution>
-							<id>install beam</id>
-							<goals>
-								<goal>exec</goal>
-							</goals>
+							<id>default-cli</id>
+							<configuration>
+								<executable>mvn </executable>
+								<arguments>
+									<argument>install</argument>
+									<argument>exec:java</argument>
+									<argument>-Pdataflow-runner</argument>
+									<argument>-f</argument>
+									<argument>../generated/beam/pom.xml</argument>
+									<argument>-DenvironmentName=${environmentName}</argument>
+									${addOptionalParameters}
+								</arguments>
+							</configuration>
 						</execution>
 					</executions>
-					<configuration>
-						<executable>mvn </executable>
-						<arguments>
-							<argument>install</argument>
-							<argument>exec:java</argument>
-							<argument>-Pdataflow-runner</argument>
-							<argument>-f</argument>
-							<argument>../generated/beam/pom.xml</argument>
-							<argument>-DenvironmentName=${environmentName}</argument>
-							${addOptionalParameters}
-						</arguments>
-					</configuration>
 				</plugin>
 			</plugins>
 		</build>
 	</profile>
+	
+	<profile>
+			<id>undeploy-all</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>1.6.0</version>
+						<executions>
+							<execution>
+								<id>first-execution</id>
+								<phase>install</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>mvn </executable>
+									<arguments>
+										<argument>install</argument>
+										<argument>exec:exec</argument>
+										<argument>-Pundeploy-dataflow-template</argument>
+										<argument>-f</argument>
+										<argument>../generated/beam/pom.xml</argument>
+										<argument>-DenvironmentName=${environmentName}</argument>
+									</arguments>
+								</configuration>
+							</execution>
+							<execution>
+								<id>default-cli</id>
+								<configuration>
+									<executable>gcloud </executable>
+									<arguments>
+										<argument>deployment-manager</argument>
+										<argument>deployments</argument>
+										<argument>delete</argument>
+										<argument>${mavenProject.name}</argument>
+										<argument>-q</argument>
+									</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 </profiles>
 </project>
