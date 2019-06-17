@@ -319,6 +319,23 @@ public class BeamTransformGenerator {
     }
     
   }
+  
+  private String addOptionalParameters() {
+      StringBuilder br = new StringBuilder();
+      br.append("#if($!{gcpNetwork})");
+      br.append("<argument>-DgcpNetwork=${gcpNetwork}</argument>");
+      br.append("#end");
+      br.append("#if($!{gcpSubNetwork})");
+      br.append("<argument>-DgcpSubNetwork=${gcpSubNetwork}</argument>");
+      br.append("#end");
+      br.append("#if($!{gcpWorkerMachineType})");
+      br.append("<argument>-DgcpWorkerMachineType=${gcpWorkerMachineType}</argument>");
+      br.append("#end");
+      br.append("#if($!{region})");
+      br.append("<argument>-Dregion=${region}</argument>");
+      br.append("#end ");
+      return br.toString();
+}
 
   private void buildPom(BeamTransformRequest request, File projectDir, ShowlNodeShape node) throws IOException, BeamTransformGenerationException {
     VelocityEngine engine = new VelocityEngine();
@@ -332,6 +349,7 @@ public class BeamTransformGenerator {
     context.put("version", request.getVersion());
     context.put("projectName", projectDir.getName());
     context.put("batchEtlBucketIri", batchEtlBucketIri(node));
+    context.put("addOptionalParameters", addOptionalParameters());
     
     Worker w = new Worker(null,null);
     String mainClassName = w.mainClassName(node);   
@@ -3401,7 +3419,19 @@ public class BeamTransformGenerator {
       
       optionsClass.method(JMod.PUBLIC, model.VOID, "setEnvironment").param(String.class, "envName");
       
-
+      
+      optionsClass.method(JMod.PUBLIC, String.class, "getNetwork");
+      
+      optionsClass.method(JMod.PUBLIC, model.VOID, "setNetwork").param(String.class, "gcpNetwork");
+      
+      optionsClass.method(JMod.PUBLIC, String.class, "getSubnetwork");
+      
+      optionsClass.method(JMod.PUBLIC, model.VOID, "setSubnetwork").param(String.class, "subnetwork");
+      
+      optionsClass.method(JMod.PUBLIC, String.class, "getWorkerMachineType");
+      
+      optionsClass.method(JMod.PUBLIC, model.VOID, "setWorkerMachineType").param(String.class, "workerMachineType");
+      
       // }
     }
 

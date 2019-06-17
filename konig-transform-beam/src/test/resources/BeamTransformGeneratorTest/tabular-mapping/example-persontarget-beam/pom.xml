@@ -240,6 +240,7 @@
 						<argument>--tempLocation=gs://example-inbound-${environmentName}/schema-PersonTarget-BatchPipeline/temp</argument>
 						<argument>--stagingLocation=gs://example-inbound-${environmentName}/schema-PersonTarget-BatchPipeline/staging</argument>
 						<argument>--templateLocation=gs://example-inbound-${environmentName}/templates/schema-PersonTarget-BatchPipeline</argument>
+						#if($!{gcpNetwork})<argument>--network=${gcpNetwork}</argument>#end#if($!{gcpSubNetwork})<argument>--subnetwork=${gcpSubNetwork}</argument>#end#if($!{gcpWorkerMachineType})<argument>--workerMachineType=${gcpWorkerMachineType}</argument>#end#if($!{region})<argument>--region=${region}</argument>#end 
 					</arguments>
 				</configuration>
 				<executions>
