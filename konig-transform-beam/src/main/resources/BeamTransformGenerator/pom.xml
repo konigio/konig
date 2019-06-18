@@ -130,9 +130,48 @@
   <profiles>
     <profile>
       <id>direct-runner</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
+      <build>
+		<plugins>
+			<plugin>
+				<groupId>io.konig</groupId>
+				<artifactId>konig-gcp-maven-plugin</artifactId>
+				<version>${konig.version}</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+			  <groupId>org.codehaus.mojo</groupId>
+	          <artifactId>exec-maven-plugin</artifactId>
+	          <version>${maven-exec-plugin.version}</version>
+	          <configuration>
+					<cleanupDaemonThreads>false</cleanupDaemonThreads>
+					<executable>java</executable>
+					<mainClass>com.pearson.metis.beam.shape.ProductShapeBeam</mainClass>
+					<arguments>
+					<argument>--project=${gcpProjectId}</argument>
+						<argument>--runner=DataflowRunner</argument>
+						<argument>--environment=${environmentName}</argument>					
+						<argument>--gcpTempLocation=${batchEtlBucketIri}/${templateName}/temp</argument>
+						<argument>--tempLocation=${batchEtlBucketIri}/${templateName}/temp</argument>
+						${addOptionalParameters}
+					</arguments>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+					</execution>
+				</executions>
+        	</plugin>
+        </plugins>
+      </build>
       <!-- Makes the DirectRunner available when running a pipeline. -->
       <dependencies>
         <dependency>
