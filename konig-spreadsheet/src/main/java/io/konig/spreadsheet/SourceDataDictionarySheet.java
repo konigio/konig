@@ -214,9 +214,9 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 			builder.append("application/vnd.");
 			builder.append(vendorName);
 			builder.append('.');
-			builder.append(sourceSystemValue);
+			builder.append(sourceSystemValue.toLowerCase());
 			builder.append('.');
-			builder.append(sourceObjectNameValue);
+			builder.append(sourceObjectNameValue.toLowerCase());
 			
 			shape.setMediaTypeBaseName(builder.toString());
 		}
