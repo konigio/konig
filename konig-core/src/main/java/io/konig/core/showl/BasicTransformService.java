@@ -383,7 +383,7 @@ public class BasicTransformService implements ShowlTransformService {
 		}
 		
 		
-		if (targetAccessor.getFormula() instanceof ShowlEnumIndivdiualReference ||
+		if (targetAccessor.getFormula() instanceof ShowlEnumIndividualReference ||
 				targetAccessor.getFormula() instanceof ShowlIriReferenceExpression) {
 			
 			// Special handling for hard-coded enum value

@@ -318,6 +318,6 @@ public class ShowlUtil {
 
 	private static boolean isEnumExpression(ShowlExpression e) {
 		
-		return e instanceof ShowlEnumPropertyExpression || e instanceof ShowlEnumIndivdiualReference;
+		return e instanceof ShowlEnumPropertyExpression || e instanceof ShowlEnumIndividualReference;
 	}
 }

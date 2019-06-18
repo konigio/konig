@@ -141,7 +141,7 @@ import io.konig.core.showl.ShowlDerivedPropertyList;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
-import io.konig.core.showl.ShowlEnumIndivdiualReference;
+import io.konig.core.showl.ShowlEnumIndividualReference;
 import io.konig.core.showl.ShowlEnumJoinInfo;
 import io.konig.core.showl.ShowlEnumNodeExpression;
 import io.konig.core.showl.ShowlEnumPropertyExpression;
@@ -1994,7 +1994,7 @@ public class BeamTransformGenerator {
 					) throws BeamTransformGenerationException {
 							
 						ShowlDirectPropertyShape direct = beamTargetProperty.getDirectProperty();
-						ShowlEnumIndivdiualReference ref = enumJoinInfo.getHardCodedReference();
+						ShowlEnumIndividualReference ref = enumJoinInfo.getHardCodedReference();
 						URI enumIndividualId = ref.getIriValue();
 						String enumMemberName = enumMemberName(enumIndividualId);
 						String enumClassName = enumClassName(beamTargetProperty.getDirectProperty().getOwlClassId());
@@ -2305,8 +2305,8 @@ public class BeamTransformGenerator {
 		        } else if (e instanceof ShowlDerivedPropertyExpression) {
 		          transformDerivedProperty(body, p, (ShowlDerivedPropertyExpression) e, inputRow, outputRow);
 		          
-		        } else if (e instanceof ShowlEnumIndivdiualReference) {
-		        	transformEnumIndividualReference(body, p, (ShowlEnumIndivdiualReference)e, inputRow, outputRow);
+		        } else if (e instanceof ShowlEnumIndividualReference) {
+		        	transformEnumIndividualReference(body, p, (ShowlEnumIndividualReference)e, inputRow, outputRow);
 		          
 		        } else {
 		          fail("At {0}, expression not supported: {1}", p.getPath(), e.displayValue());
@@ -2320,7 +2320,7 @@ public class BeamTransformGenerator {
 		
 
 					private void transformEnumIndividualReference(JBlock body, ShowlDirectPropertyShape p,
-							ShowlEnumIndivdiualReference e, JVar inputRow, JVar outputRow) {
+							ShowlEnumIndividualReference e, JVar inputRow, JVar outputRow) {
 		      	
 		      	String targetPropertyName = p.getPredicate().getLocalName();
 		      	String enumValue = e.getIriValue().getLocalName();
@@ -2614,7 +2614,7 @@ public class BeamTransformGenerator {
 		
 		
 		      private void transformHardCodedEnumObject(BeamChannel sourceInfo, JBlock body, ShowlDirectPropertyShape p,
-		      		ShowlEnumIndivdiualReference iriRef) throws BeamTransformGenerationException {
+		      		ShowlEnumIndividualReference iriRef) throws BeamTransformGenerationException {
 		        
 		      	ShowlNodeShape valueShape = p.getValueShape();
 		        
@@ -2655,7 +2655,7 @@ public class BeamTransformGenerator {
 		        
 		      }
 		
-		      private JVar hardCodedEnumObject(JBlock block, ShowlEnumIndivdiualReference iriRef, ShowlNodeShape valueShape) throws BeamTransformGenerationException {
+		      private JVar hardCodedEnumObject(JBlock block, ShowlEnumIndividualReference iriRef, ShowlNodeShape valueShape) throws BeamTransformGenerationException {
 		
 		        
 		      

@@ -29,13 +29,13 @@ import org.openrdf.model.vocabulary.RDF;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
 
-public class ShowlEnumIndivdiualReference implements ShowlExpression {
+public class ShowlEnumIndividualReference implements ShowlExpression {
 
 	private URI iriValue;
 
 	
 
-	public ShowlEnumIndivdiualReference(URI iriValue) {
+	public ShowlEnumIndividualReference(URI iriValue) {
 		this.iriValue = iriValue;
 	}
 

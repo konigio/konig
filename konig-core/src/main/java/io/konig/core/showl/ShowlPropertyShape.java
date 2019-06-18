@@ -496,4 +496,16 @@ public abstract class ShowlPropertyShape implements Traversable {
 	public boolean isEnumProperty() {
 		return ShowlUtil.isEnumSourceNode(getDeclaringShape());
 	}
+
+	public boolean isTargetProperty() {
+		ShowlNodeShape node = getDeclaringShape();
+		if (node.getTargetNode()!=null || node.getTargetProperty()!=null) {
+			return false;
+		}
+		ShowlNodeShape root = getRootNode();
+		if (root.getTargetNode()!=null || node.getTargetProperty()!=null) {
+			return false;
+		}
+		return true;
+	}
 }

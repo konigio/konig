@@ -1,9 +1,11 @@
 package io.konig.transform.beam;
 
 import java.text.MessageFormat;
+import java.util.Set;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.helger.jcodemodel.AbstractJClass;
@@ -12,6 +14,7 @@ import com.helger.jcodemodel.JCodeModel;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
 
 public class BeamTypeManagerImpl implements BeamTypeManager {
 	
@@ -78,4 +81,19 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
   private String errorBuilderClassName() {
   	return basePackage + ".common.ErrorBuilder";
   }
+
+	@Override
+	public AbstractJClass enumClass(URI owlClass) throws BeamTransformGenerationException {
+		String className = enumClassName(owlClass);
+		return model._getClass(className);
+	}
+
+	@Override
+	public URI enumClassOfIndividual(URI individualId) throws BeamTransformGenerationException {
+		Vertex v = reasoner.getGraph().getVertex(individualId);
+		if (v != null) {
+			return reasoner.mostSpecificTypeOf(v);
+		}
+		throw new BeamTransformGenerationException("Type of " + individualId.stringValue() + " is not known.");
+	}
 }

@@ -39,7 +39,7 @@ public class ShowlEnumJoinInfo {
 	private ShowlPropertyShape sourceProperty;
 	
 	// A hard-coded reference to the enum member
-	private ShowlEnumIndivdiualReference hardCodedReference;
+	private ShowlEnumIndividualReference hardCodedReference;
 	
 	// An arbitrary expression for the enumProperty
 	private ShowlExpression expression;
@@ -50,7 +50,7 @@ public class ShowlEnumJoinInfo {
 		this.sourceProperty = sourceProperty;
 	}
 	
-	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlEnumIndivdiualReference hardCodedReference) {
+	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlEnumIndividualReference hardCodedReference) {
 		this.targetProperty = targetProperty;
 		this.enumProperty = enumProperty;
 		this.hardCodedReference = hardCodedReference;
@@ -71,7 +71,7 @@ public class ShowlEnumJoinInfo {
 		return targetProperty;
 	}
 
-	public ShowlEnumIndivdiualReference getHardCodedReference() {
+	public ShowlEnumIndividualReference getHardCodedReference() {
 		return hardCodedReference;
 	}
 
@@ -102,12 +102,12 @@ public class ShowlEnumJoinInfo {
 						}
 						
 						
-						if (equal.getLeft() instanceof ShowlEnumIndivdiualReference) {
-							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndivdiualReference) equal.getLeft());
+						if (equal.getLeft() instanceof ShowlEnumIndividualReference) {
+							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndividualReference) equal.getLeft());
 						}
 						
-						if (equal.getRight() instanceof ShowlEnumIndivdiualReference) {
-							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndivdiualReference)equal.getRight());
+						if (equal.getRight() instanceof ShowlEnumIndividualReference) {
+							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndividualReference)equal.getRight());
 						}
 						
 						// This code is getting complex.  We probably ought to take a step back and think about refactoring to 

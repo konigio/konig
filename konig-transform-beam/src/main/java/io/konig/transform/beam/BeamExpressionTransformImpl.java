@@ -22,12 +22,15 @@ package io.konig.transform.beam;
 
 
 import java.text.MessageFormat;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.openrdf.model.Literal;
@@ -48,15 +51,18 @@ import com.helger.jcodemodel.JForLoop;
 import com.helger.jcodemodel.JInvocation;
 import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
+import com.helger.jcodemodel.JStringLiteral;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.showl.ShowlCaseStatement;
-import io.konig.core.showl.ShowlEnumIndivdiualReference;
+import io.konig.core.showl.ShowlContainmentOperator;
+import io.konig.core.showl.ShowlEnumIndividualReference;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlFilterExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIriReferenceExpression;
+import io.konig.core.showl.ShowlListRelationalExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
@@ -80,7 +86,10 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 	private JMethod concatMethod;
 	private JMethod localNameMethod;
 	private JMethod stripSpacesMethod;
+	private JMethod pathGetter;
 	private int caseCount = 0;
+	private ArrayDeque<BlockInfo> blockStack;
+
 	
 	public BeamExpressionTransformImpl(
 			OwlReasoner reasoner,
@@ -109,9 +118,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		} 
 		
 		if (e instanceof ShowlPropertyExpression) {
-			ShowlPropertyExpression p = (ShowlPropertyExpression) e;
-			BeamSourceProperty b = propertyManager.forPropertyShape(p.getSourceProperty());
-			return b.getVar();
+			return property((ShowlPropertyExpression)e);
 		}
 		
 		if (e instanceof ShowlStructExpression) {
@@ -130,8 +137,8 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			return iriReference((ShowlIriReferenceExpression)e);
 		}
 		
-		if (e instanceof ShowlEnumIndivdiualReference) {
-			return enumIndividualReference((ShowlEnumIndivdiualReference)e);
+		if (e instanceof ShowlEnumIndividualReference) {
+			return enumIndividualReference((ShowlEnumIndividualReference)e);
 		}
 		
 		if (e instanceof ShowlSystimeExpression) {
@@ -142,7 +149,117 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			return caseStatement((ShowlCaseStatement)e);
 		}
 		
+		if (e instanceof ShowlListRelationalExpression) {
+			return listRelationalExpression((ShowlListRelationalExpression)e);
+		}
+		
 		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
+	}
+
+	private IJExpression property(ShowlPropertyExpression e) throws BeamTransformGenerationException {
+
+		BlockInfo blockInfo = peekBlockInfo();
+		if (blockInfo != null) {
+			
+			ShowlPropertyShape p = e.getSourceProperty();
+			if (p.isTargetProperty()) {
+				return invokePathGetter(p);
+			} else {
+				fail("Don't know how to get source property {0}", p.getPath());
+			}
+			
+		}
+
+		BeamSourceProperty b = propertyManager.forPropertyShape(e.getSourceProperty());
+		return b.getVar();
+	}
+
+	
+
+	private IJExpression invokePathGetter(ShowlPropertyShape p) throws BeamTransformGenerationException {
+		BlockInfo info = peekBlockInfo();
+		
+		ShowlNodeShape rootNode = p.getRootNode();
+		NodeTableRow rowInfo = info.getNodeTableRow(rootNode);
+		
+
+		List<String> fieldList = new ArrayList<>();
+		while (p != null) {
+			fieldList.add(p.getPredicate().getLocalName());
+			p = p.getDeclaringShape().getAccessor();
+		}
+		Collections.reverse(fieldList);
+		
+		JMethod pathGetter = pathGetter();
+		
+		JInvocation result = JExpr.invoke(pathGetter);
+		result.arg(rowInfo.getTableRowVar());
+		for (String fieldName : fieldList) {
+			result.arg(JExpr.lit(fieldName));
+		}
+		
+		return result;
+	}
+
+	private JMethod pathGetter() {
+		if (pathGetter == null) {
+			AbstractJClass objectClass = model.ref(Object.class);
+			AbstractJClass stringClass = model.ref(String.class);
+			AbstractJClass tableRowClass = model.ref(TableRow.class);
+			
+			pathGetter = targetClass.method(JMod.PRIVATE, objectClass, "get");
+			JVar value = pathGetter.param(objectClass, "value");
+			JVar fieldNameList = pathGetter.varParam(stringClass, "fieldNameList");
+			
+			JForEach loop = pathGetter.body().forEach(stringClass, "fieldName", fieldNameList);
+			JConditional ifStatement = loop.body()._if(value._instanceof(tableRowClass));
+			ifStatement._then().assign(value, value.castTo(tableRowClass).invoke("get").arg(loop.var()));
+			ifStatement._else()._return(JExpr._null());
+			pathGetter.body()._return(value);
+		}
+		return pathGetter;
+	}
+
+	private IJExpression listRelationalExpression(ShowlListRelationalExpression e) throws BeamTransformGenerationException {
+		BlockInfo blockInfo = peekBlockInfo();
+		if (blockInfo == null) {
+			// We should implement a method that returns the boolean value from this expression.
+			// For now, however, we'll just throw an exception.
+			fail("Cannot support IN operation without BlockInfo yet.");
+		}
+		JBlock block = blockInfo.block;
+		AbstractJClass objectClass = model.ref(Object.class);
+		AbstractJClass setClass = model.ref(Set.class).narrow(objectClass);
+		AbstractJClass hashSetClass = model.ref(HashSet.class);
+		
+		JVar set = block.decl(setClass, blockInfo.nextSetName()).init(hashSetClass._new());
+		
+		List<IJExpression> argList = new ArrayList<>(e.getRight().size());
+		
+		for (ShowlExpression member : e.getRight()) {
+			argList.add(transform(member));
+		}
+		
+		for (IJExpression value : argList) {
+			block.add(set.invoke("add").arg(value));
+		}
+		
+		ShowlExpression left = e.getLeft();
+		
+		
+		String valueName = blockInfo.valueName(left);
+		JVar value = block.decl(objectClass, valueName).init(transform(left));
+		
+		IJExpression result = set.invoke("contains").arg(value);
+		if (e.getOperator() == ShowlContainmentOperator.NOT_IN) {
+			result.not();
+		}
+	
+		return result;
+	}
+
+	private BlockInfo peekBlockInfo() {
+		return blockStack==null || blockStack.isEmpty() ? null : blockStack.getLast();
 	}
 
 	private IJExpression caseStatement(ShowlCaseStatement e) throws BeamTransformGenerationException {
@@ -152,7 +269,6 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		URI valueType = e.valueType(reasoner);
 		AbstractJType resultType = typeManager.javaType(valueType);
 		AbstractJType errorBuilderClass = typeManager.errorBuilderClass();
-		AbstractJType tableRowClass = model.ref(TableRow.class);
 		
 		
 		JMethod method = targetClass.method(JMod.PRIVATE, resultType, methodName);
@@ -162,8 +278,16 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		JVar resultParam = method.body().decl(resultType, resultParamName).init(JExpr._null());
 		
 		List<ShowlPropertyShape> propertyList = caseParamList(e);
-		List<NodeTableRow> tableRowList = tableRowList(method, propertyList);
+		Map<ShowlNodeShape, NodeTableRow> tableRowMap = tableRowMap(method, propertyList);
 		
+		JVar errorBuilderVar = method.param(errorBuilderClass, "errorBuilder");
+		
+		BlockInfo blockInfo = beginBlock(method.body())
+				.nodeTableRowMap(tableRowMap)
+				.enumValueType(EnumValueType.OBJECT)
+				.errorBuilderVar(errorBuilderVar);
+		
+		JConditional ifStatement = null;
 		
 		int whenIndex = 0;
 		for (ShowlWhenThenClause whenThen : e.getWhenThenList()) {
@@ -171,26 +295,82 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			
 			ShowlExpression whenExpression = whenThen.getWhen();
 			String whenMethodName = methodName + "_when" + whenIndex;
-			JConditional ifStatement = whenExpression(method.body(), whenMethodName, whenExpression);
+			JInvocation condition = whenExpression(whenMethodName, whenExpression, blockInfo);
+			
+			JBlock thenBlock = null;
+			if (ifStatement == null) {
+				ifStatement = method.body()._if(condition);
+				thenBlock = ifStatement._then();
+				
+			} else {
+				thenBlock = ifStatement._elseif(condition)._then();
+			}
+			IJExpression then = transform(whenThen.getThen());
+			thenBlock.assign(resultParam, then);
 		}
+		
+		endBlock();
+		
+		JInvocation invoke = JExpr.invoke(method);
 		
 		
 		return resultParam;
 	}
 
 
-	private JConditional whenExpression(JBlock block, String whenMethodName, ShowlExpression whenExpression) {
+	private JInvocation whenExpression(String whenMethodName, ShowlExpression whenExpression, BlockInfo callerBlock ) throws BeamTransformGenerationException {
 		AbstractJType booleanType = model._ref(boolean.class);
 		
 		JMethod method = targetClass.method(JMod.PRIVATE, booleanType, whenMethodName);
 		
-		JConditional ifStatement = block._if(JExpr.invoke(method));
+		JInvocation invocation = JExpr.invoke(method);
 		
+		Set<ShowlPropertyShape> propertyParameters = new HashSet<>();
 		
-		return ifStatement;
+		whenExpression.addProperties(propertyParameters);
+		
+		Map<ShowlNodeShape, NodeTableRow> thisTableRowMap = tableRowMap(method, propertyParameters);
+		AbstractJClass errorBuilderClass = typeManager.errorBuilderClass();
+		
+		JVar errorBuilderVar = method.param(errorBuilderClass, "errorBuilder");
+		beginBlock(method.body())
+			.nodeTableRowMap(thisTableRowMap)
+			.enumValueType(EnumValueType.OBJECT)
+			.errorBuilderVar(errorBuilderVar);
+		
+		for (NodeTableRow param : thisTableRowMap.values()) {
+			NodeTableRow argValue = callerBlock.getNodeTableRowMap().get(param.getNode());
+			if (argValue == null) {
+				fail("While building WHEN expression {0}, argument not found: {1}", 
+						whenExpression.displayValue(), param.getNode().getPath());
+			}
+			invocation.arg(argValue.getTableRowVar());
+		}
+		invocation.arg(callerBlock.getErrorBuilderVar());
+		
+		IJExpression result = transform(whenExpression);
+		
+		method.body()._return(result);
+		
+		endBlock();
+		
+		return invocation;
 	}
 
-	private List<NodeTableRow> tableRowList(JMethod method, List<ShowlPropertyShape> propertyList) {
+	private void endBlock() {
+		blockStack.removeLast();
+	}
+
+	private BlockInfo beginBlock(JBlock block) {
+		if (blockStack == null) {
+			blockStack = new ArrayDeque<>();
+		}
+		BlockInfo info = new BlockInfo(block);
+		blockStack.addLast(info);
+		return info;
+	}
+
+	private Map<ShowlNodeShape, NodeTableRow> tableRowMap(JMethod method, Collection<ShowlPropertyShape> propertyList) {
 		Set<ShowlNodeShape> nodeSet = new HashSet<>();
 		for (ShowlPropertyShape p : propertyList) {
 			ShowlNodeShape node = p.getRootNode();
@@ -201,14 +381,19 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		Collections.sort(nodeList, new BeamNodeComparator());
 		
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
-		List<NodeTableRow> result = new ArrayList<>(nodeList.size());
+		List<NodeTableRow> tableRowList = new ArrayList<>(nodeList.size());
 		for (ShowlNodeShape node : nodeList) {
 			String paramName = StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(node)) + "Row";
 			JVar var = method.param(tableRowClass, paramName);
-			result.add(new NodeTableRow(node, var));
+			tableRowList.add(new NodeTableRow(node, var));
 		}
 		
-		return result;
+		Map<ShowlNodeShape,NodeTableRow> map = new LinkedHashMap<>();
+		for (NodeTableRow tableRow : tableRowList) {
+			map.put(tableRow.getNode(), tableRow);
+		}
+		
+		return map;
 	}
 
 	private List<ShowlPropertyShape> caseParamList(ShowlCaseStatement caseStatement) {
@@ -225,9 +410,16 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		return longClass._new().arg(dateClass._new().invoke("getTime"));
 	}
 
-	private IJExpression enumIndividualReference(ShowlEnumIndivdiualReference e) {
+	private IJExpression enumIndividualReference(ShowlEnumIndividualReference e) throws BeamTransformGenerationException {
 		URI iri = e.getIriValue();
-		return JExpr.lit(iri.getLocalName());
+		JStringLiteral localName = JExpr.lit(iri.getLocalName());
+		BlockInfo blockInfo = peekBlockInfo();
+		if (blockInfo != null && blockInfo.getEnumValueType()==EnumValueType.OBJECT) {
+			URI owlClass = typeManager.enumClassOfIndividual(iri);
+			AbstractJClass javaClass = typeManager.enumClass(owlClass);
+			return javaClass.staticInvoke("findByLocalName").arg(localName);
+		}
+		return localName;
 	}
 
 	private IJExpression iriReference(ShowlIriReferenceExpression e) {
@@ -395,6 +587,96 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		String msg = MessageFormat.format(pattern, arg);
 		throw new BeamTransformGenerationException(msg);
 		
+	}
+	
+	private static class BlockInfo {
+		JBlock block;
+		int setCount=0;
+		int valueCount = 0;
+		Map<ShowlNodeShape, NodeTableRow> nodeTableRowMap;
+		JVar errorBuilderVar;
+		EnumValueType enumValueType = EnumValueType.LOCAL_NAME;
+		
+		
+		public BlockInfo(JBlock block) {
+			this.block = block;
+		}
+
+		public BlockInfo nodeTableRowMap(Map<ShowlNodeShape, NodeTableRow> tableRowMap) {
+			this.nodeTableRowMap = tableRowMap;
+			return this;
+			
+		}
+
+
+		public EnumValueType getEnumValueType() {
+			return enumValueType;
+		}
+
+		public BlockInfo enumValueType(EnumValueType enumValueType) {
+			this.enumValueType = enumValueType;
+			return this;
+		}
+
+		public NodeTableRow getNodeTableRow(ShowlNodeShape node) throws BeamTransformGenerationException {
+			NodeTableRow result = nodeTableRowMap == null ? null : nodeTableRowMap.get(node);
+			if (result == null) {
+				throw new BeamTransformGenerationException("NodeTableRow not found for " + node.getPath());
+			}
+			
+			return result;
+		}
+
+		public JVar getErrorBuilderVar() {
+			return errorBuilderVar;
+		}
+
+		public BlockInfo errorBuilderVar(JVar errorBuilderVar) {
+			this.errorBuilderVar = errorBuilderVar;
+			return this;
+		}
+
+		public Map<ShowlNodeShape, NodeTableRow> getNodeTableRowMap() {
+			return nodeTableRowMap;
+		}
+
+		public String valueName(ShowlExpression e) {
+			if (e instanceof ShowlPropertyExpression) {
+				ShowlPropertyShape p = ((ShowlPropertyExpression) e).getSourceProperty();
+				return valueName(p);
+			}
+			return ++valueCount==1 ? "value" : "value" + valueCount;
+		}
+
+		private String valueName(ShowlPropertyShape p) {
+			List<String> nameParts = new ArrayList<>();
+			while (p != null) {
+				nameParts.add(p.getPredicate().getLocalName());
+				p = p.getDeclaringShape().getAccessor();
+			}
+			Collections.reverse(nameParts);
+			
+			StringBuilder builder = new StringBuilder();
+			String delim = "";
+			for (String text : nameParts) {
+				builder.append(delim);
+				delim = "_";
+				builder.append(text);
+			}
+			
+			return builder.toString();
+		}
+
+		public String nextSetName() {
+			return ++setCount==1 ? "set" : "set" + setCount;
+		}
+
+		
+	}
+	
+	private enum EnumValueType {
+		OBJECT,
+		LOCAL_NAME;
 	}
 
 }

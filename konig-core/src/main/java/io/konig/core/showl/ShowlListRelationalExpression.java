@@ -22,6 +22,10 @@ public class ShowlListRelationalExpression implements ShowlExpression {
 		this.right = right;
 	}
 
+	public ShowlContainmentOperator getOperator() {
+		return operator;
+	}
+
 	public ShowlPropertyShape getReferencedBy() {
 		return referencedBy;
 	}

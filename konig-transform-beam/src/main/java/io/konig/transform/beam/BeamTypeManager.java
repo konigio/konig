@@ -9,5 +9,7 @@ public interface BeamTypeManager {
 
 	AbstractJType javaType(URI rdfType) throws BeamTransformGenerationException;
 	AbstractJClass errorBuilderClass() throws BeamTransformGenerationException;
+	AbstractJClass enumClass(URI owlClass) throws BeamTransformGenerationException;
+	URI enumClassOfIndividual(URI iri) throws BeamTransformGenerationException;
 	
 }

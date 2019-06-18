@@ -39,7 +39,7 @@ import io.konig.core.showl.ShowlDerivedPropertyExpression;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
-import io.konig.core.showl.ShowlEnumIndivdiualReference;
+import io.konig.core.showl.ShowlEnumIndividualReference;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlFilterExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
@@ -233,7 +233,7 @@ public class ShowlExpressionBuilder {
 			// For now, we assume that if the individual is in the graph, then it is a member of an enumeration.
 			// We should probably confirm that the OWL Class of the individual is a subclass of schema:Enumeration
 			
-			return new ShowlEnumIndivdiualReference(iri);
+			return new ShowlEnumIndividualReference(iri);
 		}
 		
 		ShowlIriReferenceExpression result = new ShowlIriReferenceExpression(iri, p);
