@@ -150,6 +150,7 @@ import io.konig.core.showl.ShowlFilterExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlPredicatePath;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlSchemaService;
@@ -731,12 +732,12 @@ public class BeamTransformGenerator {
     private Map<URI, JFieldVar> enumIndex(URI owlClass, JDefinedClass enumClass, Map<URI, RdfProperty> propertyMap) throws BeamTransformGenerationException {
 
       Map<URI, JFieldVar> map = new HashMap<>();
-    	Set<ShowlPropertyShape> set = ShowlUtil.uniqueKeys(owlClass, targetNode);
-    	for (ShowlPropertyShape p : set) {
-    		RdfProperty property = propertyMap.get(p.getPredicate());
+    	Set<ShowlPredicatePath> set = ShowlUtil.uniqueKeys(owlClass, targetNode);
+    	for (ShowlPredicatePath p : set) {
+    		RdfProperty property = propertyMap.get(p.getLast());
     	
     		if (property == null) {
-    			fail("Enum property {0} not found for {1}", p.getPath(), RdfUtil.localName(targetNode.getId()));
+    			fail("Enum property {0} not found for {1}", p.toString(), RdfUtil.localName(targetNode.getId()));
     		}
 
         URI propertyId = property.getId();
