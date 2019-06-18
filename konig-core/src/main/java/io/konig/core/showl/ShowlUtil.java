@@ -10,7 +10,6 @@ import java.util.Set;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
-import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 
 /*
@@ -314,18 +313,17 @@ public class ShowlUtil {
 	 * @param targetShape The target NodeShape to be scanned
 	 * @return
 	 */
-	public static Set<ShowlPropertyShape> uniqueKeys(URI enumClass, ShowlNodeShape targetShape) {
-		Set<ShowlPropertyShape> result = new HashSet<>();
+	public static Set<ShowlPredicatePath> uniqueKeys(URI enumClass, ShowlNodeShape targetShape) {
 		// Scan targetShape for join statements that involve the given enumClass.
-		
+		Set<ShowlPropertyShape> properties = new HashSet<>();
 		for (ShowlChannel channel : targetShape.getChannels()) {
 			ShowlStatement statement = channel.getJoinStatement();
 			if (statement != null) {
-				statement.addProperties(result);
+				statement.addProperties(properties);
 			}
 		}
 		
-		Iterator<ShowlPropertyShape> sequence = result.iterator();
+		Iterator<ShowlPropertyShape> sequence = properties.iterator();
 		while (sequence.hasNext()) {
 			ShowlPropertyShape p = sequence.next();
 			ShowlNodeShape node = p.getDeclaringShape();
@@ -333,6 +331,11 @@ public class ShowlUtil {
 				continue;
 			}
 			sequence.remove();
+		}
+
+		Set<ShowlPredicatePath> result = new HashSet<>();
+		for (ShowlPropertyShape p : properties) {
+			result.add(ShowlPredicatePath.forProperty(p));
 		}
 		
 		return result;
