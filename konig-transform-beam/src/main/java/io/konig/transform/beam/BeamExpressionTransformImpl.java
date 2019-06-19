@@ -164,9 +164,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			ShowlPropertyShape p = e.getSourceProperty();
 			if (p.isTargetProperty()) {
 				return invokePathGetter(p);
-			} else {
-				fail("Don't know how to get source property {0}", p.getPath());
-			}
+			} 
 			
 		}
 
@@ -227,7 +225,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			// For now, however, we'll just throw an exception.
 			fail("Cannot support IN operation without BlockInfo yet.");
 		}
-		JBlock block = blockInfo.block;
+		JBlock block = blockInfo.getBlock();
 		AbstractJClass objectClass = model.ref(Object.class);
 		AbstractJClass setClass = model.ref(Set.class).narrow(objectClass);
 		AbstractJClass hashSetClass = model.ref(HashSet.class);
@@ -263,12 +261,19 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 	}
 
 	private IJExpression caseStatement(ShowlCaseStatement e) throws BeamTransformGenerationException {
+		
+		// First we generate a method that computes and returns the output of the CASE statement.
+		// Then we'll generate an invocation of that method and return the invocation.
+		
+		// Here we go.  First up, generate the method that compute the output of the CASE statement.
+		
 		caseCount++;
 		String methodName = "case" + caseCount;
 		
 		URI valueType = e.valueType(reasoner);
 		AbstractJType resultType = typeManager.javaType(valueType);
 		AbstractJType errorBuilderClass = typeManager.errorBuilderClass();
+		
 		
 		
 		JMethod method = targetClass.method(JMod.PRIVATE, resultType, methodName);
@@ -311,10 +316,27 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		
 		endBlock();
 		
+		method.body()._return(resultParam);
+		
+		// Next up, generate an invocation of the method that we just created.
+		
+		// Start by getting information about the caller's block.
+
+//		BlockInfo callerBlock = peekBlockInfo();
+//		
+//		if (callerBlock == null) {
+//			fail("Caller block must be defined for case statement {0}", e.displayValue());
+//		}
+		
 		JInvocation invoke = JExpr.invoke(method);
+//		for (NodeTableRow paramInfo : tableRowMap.values()) {
+//			ShowlNodeShape node = paramInfo.getNode();
+//			NodeTableRow  callerParamInfo = callerBlock.getNodeTableRow(node);
+//			invoke.arg(callerParamInfo.getTableRowVar());
+//		}
 		
 		
-		return resultParam;
+		return invoke;
 	}
 
 
@@ -357,11 +379,13 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		return invocation;
 	}
 
-	private void endBlock() {
+	@Override
+	public void endBlock() {
 		blockStack.removeLast();
 	}
 
-	private BlockInfo beginBlock(JBlock block) {
+	@Override
+	public BlockInfo beginBlock(JBlock block) {
 		if (blockStack == null) {
 			blockStack = new ArrayDeque<>();
 		}
@@ -589,94 +613,4 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		
 	}
 	
-	private static class BlockInfo {
-		JBlock block;
-		int setCount=0;
-		int valueCount = 0;
-		Map<ShowlNodeShape, NodeTableRow> nodeTableRowMap;
-		JVar errorBuilderVar;
-		EnumValueType enumValueType = EnumValueType.LOCAL_NAME;
-		
-		
-		public BlockInfo(JBlock block) {
-			this.block = block;
-		}
-
-		public BlockInfo nodeTableRowMap(Map<ShowlNodeShape, NodeTableRow> tableRowMap) {
-			this.nodeTableRowMap = tableRowMap;
-			return this;
-			
-		}
-
-
-		public EnumValueType getEnumValueType() {
-			return enumValueType;
-		}
-
-		public BlockInfo enumValueType(EnumValueType enumValueType) {
-			this.enumValueType = enumValueType;
-			return this;
-		}
-
-		public NodeTableRow getNodeTableRow(ShowlNodeShape node) throws BeamTransformGenerationException {
-			NodeTableRow result = nodeTableRowMap == null ? null : nodeTableRowMap.get(node);
-			if (result == null) {
-				throw new BeamTransformGenerationException("NodeTableRow not found for " + node.getPath());
-			}
-			
-			return result;
-		}
-
-		public JVar getErrorBuilderVar() {
-			return errorBuilderVar;
-		}
-
-		public BlockInfo errorBuilderVar(JVar errorBuilderVar) {
-			this.errorBuilderVar = errorBuilderVar;
-			return this;
-		}
-
-		public Map<ShowlNodeShape, NodeTableRow> getNodeTableRowMap() {
-			return nodeTableRowMap;
-		}
-
-		public String valueName(ShowlExpression e) {
-			if (e instanceof ShowlPropertyExpression) {
-				ShowlPropertyShape p = ((ShowlPropertyExpression) e).getSourceProperty();
-				return valueName(p);
-			}
-			return ++valueCount==1 ? "value" : "value" + valueCount;
-		}
-
-		private String valueName(ShowlPropertyShape p) {
-			List<String> nameParts = new ArrayList<>();
-			while (p != null) {
-				nameParts.add(p.getPredicate().getLocalName());
-				p = p.getDeclaringShape().getAccessor();
-			}
-			Collections.reverse(nameParts);
-			
-			StringBuilder builder = new StringBuilder();
-			String delim = "";
-			for (String text : nameParts) {
-				builder.append(delim);
-				delim = "_";
-				builder.append(text);
-			}
-			
-			return builder.toString();
-		}
-
-		public String nextSetName() {
-			return ++setCount==1 ? "set" : "set" + setCount;
-		}
-
-		
-	}
-	
-	private enum EnumValueType {
-		OBJECT,
-		LOCAL_NAME;
-	}
-
 }

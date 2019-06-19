@@ -1889,18 +1889,88 @@ public class BeamTransformGenerator {
 						String enumClassName = enumClassName(targetDirectProperty.getOwlClassId());
 						JDefinedClass enumClass = model._getClass(enumClassName);
 						
-						ShowlExpression e = enumJoinInfo.getExpression();
+						ShowlExpression joinExpression = enumJoinInfo.getExpression();
 						BeamExpressionTransform etran = etran();
 						
-						IJExpression initExpression = etran.transform(e);
+						IJExpression initExpression = etran.transform(joinExpression);
 						JVar enumMember = body.decl(enumClass, targetPropertyName).init(initExpression);
+						JConditional ifStatement = body._if(enumMember.neNull()); 
+						
+						AbstractJClass tableRowClass = model.ref(TableRow.class);
+						String enumRowName = targetPropertyName + "Row";
+						
+						JBlock thenBlock = ifStatement._then();
+						JVar enumRow = thenBlock.decl(tableRowClass, enumRowName).init(tableRowClass._new());
+
+						AbstractJType booleanType = model._ref(boolean.class);
+						JVar ok = thenBlock.decl(booleanType, "ok").init(JExpr.TRUE);
+						String prefix = methodName + "_";
+						for (ShowlDirectPropertyShape child : targetDirectProperty.getValueShape().getProperties()) {
+							JMethod fieldMethod = enumPropertyMethod(prefix, enumClass, child);
+							thenBlock.assign(ok, ok.cand(JExpr.invoke(fieldMethod).arg(enumMember).arg(enumRow).arg(errorBuilder)));
+						
+						}
+						thenBlock._if(ok)._then().add(outputRow.invoke("set")
+								.arg(JExpr.lit(beamTargetProperty.getDirectProperty().getPredicate().getLocalName()))
+								.arg(enumRow)
+							);
+						thenBlock._return(ok);
 						
 						
+						body._return(JExpr.FALSE);
 						
-						body.addSingleLineComment("Do nothing now.  Construction of this property is deferred because it relies on other properties.");
+					}
+
+					private JMethod enumPropertyMethod(String prefix, JDefinedClass enumClass, ShowlDirectPropertyShape p) throws BeamTransformGenerationException {
+						AbstractJType booleanType = model._ref(boolean.class);
+						AbstractJClass tableRowClass = model.ref(TableRow.class);
+						AbstractJClass errorBuilderClass = errorBuilderClass();
 						
-						body._return(JExpr.TRUE);
 						
+						String methodName = prefix + p.getPredicate().getLocalName();
+						JMethod method = thisClass.method(JMod.PRIVATE, booleanType, methodName);
+						
+						String enumMemberName = StringUtil.firstLetterLowerCase(enumClass.name());
+						String rowName = enumMemberName + "Row";
+						
+						JVar enumMember = method.param(enumClass, enumMemberName);
+						JVar row = method.param(tableRowClass, rowName);
+						JVar errorBuilder = method.param(errorBuilderClass, "errorBuilder");
+						
+						URI predicate = p.getPredicate();
+						
+						if (Konig.id.equals(predicate)) {
+							method.body().add(row.invoke("set").arg(JExpr.lit("id")).arg(enumMember.invoke("getId").invoke("getLocalName")));
+							method.body()._return(JExpr.TRUE);
+						} else {
+							AbstractJClass objectClass = model.ref(Object.class);
+							
+							String getterName = "get" + StringUtil.capitalize(predicate.getLocalName());
+							
+							JVar value = method.body().decl(objectClass, predicate.getLocalName()).init(enumMember.invoke(getterName));
+							JConditional ifStatement = method.body()._if(value.neNull());
+							JBlock thenBlock = ifStatement._then();
+							thenBlock.add(row.invoke("set").arg(JExpr.lit(predicate.getLocalName())).arg(value));
+							thenBlock._return(JExpr.TRUE);
+							
+							PropertyConstraint constraint = p.getPropertyConstraint();
+							if (constraint != null) {
+								Integer minCount = constraint.getMinCount();
+								if (minCount!=null && minCount>0) {
+									JBlock elseBlock = ifStatement._else();
+									StringBuilder msg = new StringBuilder();
+									msg.append(p.getPath());
+									msg.append(" must not be null, but is not defined for ");
+									JInvocation invoke = errorBuilder.invoke("addError")
+											.arg(JExpr.lit(msg.toString()).plus(enumMember.invoke("name")));
+									
+									elseBlock.add(invoke);
+									elseBlock._return(JExpr.FALSE);
+								}
+							}
+						}
+						
+						return method;
 					}
 
 					private void joinEnumNode(String methodName, String methodNameSuffix, JBlock block, JVar outputRow, 
