@@ -61,5 +61,17 @@ public class AnimalTargetShapeBeam {
         public String getEnvironment();
 
         public void setEnvironment(String envName);
+
+        public String getNetwork();
+
+        public void setNetwork(String gcpNetwork);
+
+        public String getSubnetwork();
+
+        public void setSubnetwork(String subnetwork);
+
+        public String getWorkerMachineType();
+
+        public void setWorkerMachineType(String workerMachineType);
     }
 }
