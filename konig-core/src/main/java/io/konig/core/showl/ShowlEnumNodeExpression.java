@@ -23,6 +23,10 @@ package io.konig.core.showl;
 
 import java.util.Set;
 
+import org.openrdf.model.URI;
+
+import io.konig.core.OwlReasoner;
+
 public class ShowlEnumNodeExpression implements ShowlExpression {
 	
 	private ShowlNodeShape enumNode;
@@ -58,6 +62,14 @@ public class ShowlEnumNodeExpression implements ShowlExpression {
 	
 	public String toString() {
 		return displayValue();
+	}
+
+
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		
+		return enumNode.getOwlClass().getId();
 	}
 
 }

@@ -8,6 +8,7 @@ import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.Context;
 import io.konig.core.KonigException;
+import io.konig.core.OwlReasoner;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.util.ValueFormat.ElementType;

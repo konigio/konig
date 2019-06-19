@@ -177,6 +177,40 @@ public abstract class ShowlPropertyShape implements Traversable {
 		}
 		return false;
 	}
+	
+	public String fullPath() {
+		List<String> stepList = new ArrayList<>();
+		ShowlPropertyShape p = this;
+		while (p != null) {
+			stepList.add(p.getPredicate().getLocalName());
+			
+			ShowlNodeShape node = p.getDeclaringShape();
+			p = node.getAccessor();
+			if (p == null) {
+				p = node.getTargetProperty();
+				if ( p != null) {
+					p = p.getDeclaringShape().getAccessor();
+				} else {
+					node = node.getTargetNode();
+					if (node != null) {
+						p = node.getAccessor();
+						if (p != null) {
+							p = p.getDeclaringShape().getAccessor();
+						}
+					}
+				}
+			}
+		}
+		Collections.reverse(stepList);
+		StringBuilder builder = new StringBuilder();
+		String dot = "";
+		for (String fieldName : stepList) {
+			builder.append(dot);
+			builder.append(fieldName);
+			dot = ".";
+		}
+		return builder.toString();
+	}
 
 	@Override
 	public String getPath() {
@@ -464,6 +498,18 @@ public abstract class ShowlPropertyShape implements Traversable {
 		return ShowlUtil.isEnumSourceNode(getDeclaringShape());
 	}
 
+	public boolean isTargetProperty() {
+		ShowlNodeShape node = getDeclaringShape();
+		if (node.getTargetNode()!=null || node.getTargetProperty()!=null) {
+			return false;
+		}
+		ShowlNodeShape root = getRootNode();
+		if (root.getTargetNode()!=null || node.getTargetProperty()!=null) {
+			return false;
+		}
+		return true;
+	}
+		
 	public boolean isUniqueKey() {
 		ShowlPropertyShape peer = maybeDirect();
 		PropertyConstraint constraint = peer.getPropertyConstraint();

@@ -22,11 +22,18 @@ package io.konig.transform.beam;
 
 
 import com.helger.jcodemodel.IJExpression;
+import com.helger.jcodemodel.JBlock;
 
 import io.konig.core.showl.ShowlExpression;
 
 public interface BeamExpressionTransform {
 	
 	IJExpression transform(ShowlExpression e) throws BeamTransformGenerationException;
+
+	BlockInfo beginBlock(JBlock block);
+
+	void endBlock();
+
+	BlockInfo peekBlockInfo() throws BeamTransformGenerationException;
 
 }

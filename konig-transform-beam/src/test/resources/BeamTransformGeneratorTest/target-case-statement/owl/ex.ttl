@@ -1,0 +1,56 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "ex" ; 
+	rdfs:label "Example Ontology" . 
+
+ex:Animal a owl:Class . 
+
+ex:Genus a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration ; 
+	gcp:preferredGcpDatasetId "${classNamespacePrefix}" . 
+
+ex:Species a owl:Class ; 
+	rdfs:subClassOf schema:Enumeration ; 
+	gcp:preferredGcpDatasetId "${classNamespacePrefix}" . 
+
+ex:genderCode a rdf:Property , owl:InverseFunctionalProperty ; 
+	rdfs:range xsd:string . 
+
+ex:genus a rdf:Property . 
+
+ex:personifiedBy a rdf:Property ; 
+	rdfs:range ex:GreekGod . 
+
+ex:species a rdf:Property . 
+
+ex:Pan a ex:Genus ; 
+	schema:name "Pan" ; 
+	rdfs:comment "Chimpanzees" . 
+
+ex:PanPaniscus a ex:Species ; 
+	schema:name "Pan paniscus" ; 
+	rdfs:comment "Bonobo" . 
+
+ex:PanTroglodytes a ex:Species ; 
+	schema:name "Pan troglodytes" ; 
+	rdfs:comment "Common Chimpanzee" . 
+
+ex:Pongo a ex:Genus ; 
+	schema:name "Pongo" ; 
+	rdfs:comment "Orangutans" . 
+
+ex:PongoAbelii a ex:Species ; 
+	schema:name "Pongo abelii" , "Pongo tapanuliensis" ; 
+	rdfs:comment "Sumatran Orangutan" , "Tapanuli Orangutan" . 
+
+ex:PongoPygmaeus a ex:Species ; 
+	schema:name "Pongo pygmaeus" ; 
+	rdfs:comment "Bornean Orangutan" . 

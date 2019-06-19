@@ -23,6 +23,10 @@ package io.konig.core.showl;
 
 import java.util.Set;
 
+import org.openrdf.model.URI;
+
+import io.konig.core.OwlReasoner;
+
 /**
  * An expression that evaluates to a single source property.
  * This expression is used to describe a one-to-one mapping between a source property 
@@ -80,6 +84,13 @@ public abstract class ShowlPropertyExpression implements ShowlExpression {
 //		}
 	}
 	
-	
+
+
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		ShowlPropertyShape p = sourceProperty.maybeDirect();
+		return p.getValueType(reasoner);
+	}
 
 }

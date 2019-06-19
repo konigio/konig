@@ -999,4 +999,9 @@ public class OwlReasoner {
 			isTypeOf(target, OWL.SYMMETRICPROPERTY) || 
 			isTypeOf(target, OWL.TRANSITIVEPROPERTY);
 	}
+
+	public URI mostSpecificTypeOf(Vertex v) {
+		Set<URI> typeSet = v.asTraversal().out(RDF.TYPE).toUriSet();
+		return (URI) mostSpecificType(typeSet, null);
+	}
 }

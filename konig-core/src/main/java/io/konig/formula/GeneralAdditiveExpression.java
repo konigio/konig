@@ -42,6 +42,14 @@ public class GeneralAdditiveExpression extends AbstractFormula implements Additi
 		MultiplicativeExpression mult = new MultiplicativeExpression(unary);
 		return new GeneralAdditiveExpression(mult);
 	}
+
+	@Override
+	public PrimaryExpression asPrimaryExpression() {
+		if (addendList==null || addendList.isEmpty()) {
+			return left.asPrimaryExpression();
+		}
+		return null;
+	}
 	
 	@Override
 	public GeneralAdditiveExpression clone() {

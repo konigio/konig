@@ -23,6 +23,11 @@ package io.konig.core.showl;
 
 import java.util.Set;
 
+import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.XMLSchema;
+
+import io.konig.core.OwlReasoner;
+
 public class ShowlSystimeExpression implements ShowlExpression {
 
 	public ShowlSystimeExpression() {
@@ -43,6 +48,12 @@ public class ShowlSystimeExpression implements ShowlExpression {
 	@Override
 	public void addProperties(Set<ShowlPropertyShape> set) {
 		// Do nothing
+	}
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		
+		return XMLSchema.DATETIME;
 	}
 
 }

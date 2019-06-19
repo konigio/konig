@@ -19,7 +19,7 @@ public class ToPersonTargetShapeFn
             com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
             id(personSourceRow, outputRow, errorBuilder);
             identifiedBy(personSourceRow, outputRow, errorBuilder);
-            if (!outputRow.isEmpty()) {
+            if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
                 c.output(successTag, outputRow);
             }
             if (!errorBuilder.isEmpty()) {
@@ -31,14 +31,12 @@ public class ToPersonTargetShapeFn
         }
     }
 
-    private boolean id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-            return true;
         } else {
             errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
-            return false;
         }
     }
 
@@ -55,31 +53,25 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private boolean identifiedBy(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void identifiedBy(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         com.google.api.services.bigquery.model.TableRow identifiedBy = new com.google.api.services.bigquery.model.TableRow();
         identifiedBy_identityProvider(identifiedBy, errorBuilder);
         identifiedBy_identifier(personSourceRow, identifiedBy, errorBuilder);
         if (errorBuilder.isEmpty()&&(!identifiedBy.isEmpty())) {
             outputRow.set("identifiedBy", identifiedBy);
-            return true;
-        } else {
-            return false;
         }
     }
 
-    private boolean identifiedBy_identityProvider(com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void identifiedBy_identityProvider(com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         outputRow.set("identityProvider", "MDM");
-        return true;
     }
 
-    private boolean identifiedBy_identifier(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void identifiedBy_identifier(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object mdm_id = ((personSourceRow == null)?null:personSourceRow.get("mdm_id"));
         if (mdm_id!= null) {
             outputRow.set("identifier", mdm_id);
-            return true;
         } else {
             errorBuilder.addError("Cannot set identifiedBy.identifier because {PersonSourceShape}.mdm_id is null");
-            return false;
         }
     }
 }

@@ -24,14 +24,18 @@ package io.konig.core.showl;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 
-public class ShowlEnumIndivdiualReference implements ShowlExpression {
+import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
+
+public class ShowlEnumIndividualReference implements ShowlExpression {
 
 	private URI iriValue;
 
 	
 
-	public ShowlEnumIndivdiualReference(URI iriValue) {
+	public ShowlEnumIndividualReference(URI iriValue) {
 		this.iriValue = iriValue;
 	}
 
@@ -64,6 +68,16 @@ public class ShowlEnumIndivdiualReference implements ShowlExpression {
 		builder.append(iriValue.stringValue());
 		builder.append(">)");
 		return builder.toString();
+	}
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		URI result = null;
+	  Vertex v = reasoner.getGraph().getVertex(iriValue);
+	  if (v != null) {
+	  	result = reasoner.mostSpecificTypeOf(v);
+	  }
+		return result;
 	}
 
 }

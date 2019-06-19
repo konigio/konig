@@ -1,8 +1,8 @@
-package io.konig.transform.beam;
+package io.konig.core.showl.expression;
 
 /*
  * #%L
- * Konig Transform Beam
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -24,28 +24,44 @@ package io.konig.transform.beam;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.konig.core.showl.ShowlPropertyShape;
-
-public class BeamPropertyManagerImpl implements BeamPropertyManager {
+public class Indentation {
 	
-	private Map<ShowlPropertyShape, BeamSourceProperty> map = new HashMap<>();
+	private static Map<StringBuilder, Indentation> map = new HashMap<>();
+	
+	private int depth=0;
+	private StringBuilder builder;
 
-	public BeamPropertyManagerImpl() {
+	
+	public Indentation(StringBuilder builder) {
+		this.builder = builder;
 	}
 
-	@Override
-	public void add(BeamSourceProperty p) {
-		map.put(p.getPropertyShape(), p);
-
-	}
-
-	@Override
-	public BeamSourceProperty forPropertyShape(ShowlPropertyShape p) throws BeamTransformGenerationException {
-		BeamSourceProperty result = map.get(p);
+	public static Indentation get(StringBuilder builder) {
+		Indentation result = map.get(builder);
 		if (result == null) {
-			throw new BeamTransformGenerationException("Failed to find BeamSourceProperty for " + p.getPath());
+			result = new Indentation(builder);
 		}
 		return result;
+	}
+	
+	public void push() {
+		depth++;
+		if (depth == 1) {
+			map.put(builder, this);
+		}
+	}
+	
+	public void pop() {
+		 depth--;
+		 if (depth == 0) {
+			 map.remove(builder);
+		 }
+	}
+	
+	public void indent(StringBuilder builder) {
+		for (int i=0; i<depth; i++) {
+			builder.append("  ");
+		}
 	}
 
 }

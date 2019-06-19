@@ -23,6 +23,10 @@ package io.konig.core.showl;
 
 import java.util.Set;
 
+import org.openrdf.model.URI;
+
+import io.konig.core.OwlReasoner;
+
 public class ShowlStructExpression implements ShowlExpression {
 	
 	private ShowlDirectPropertyShape propertyShape;
@@ -54,6 +58,11 @@ public class ShowlStructExpression implements ShowlExpression {
 			}
 		}
 		
+	}
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		return propertyShape.maybeDirect().getValueType(reasoner);
 	}
 
 }

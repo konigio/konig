@@ -19,7 +19,7 @@ public class ToPersonTargetShapeFn
             com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
             heightInches(personSourceRow, outputRow, errorBuilder);
             id(personSourceRow, outputRow, errorBuilder);
-            if (!outputRow.isEmpty()) {
+            if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
                 c.output(successTag, outputRow);
             }
             if (!errorBuilder.isEmpty()) {
@@ -31,25 +31,21 @@ public class ToPersonTargetShapeFn
         }
     }
 
-    private boolean heightInches(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void heightInches(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_height = ((personSourceRow == null)?null:personSourceRow.get("person_height"));
         if (person_height!= null) {
             outputRow.set("heightInches", person_height);
-            return true;
         } else {
             errorBuilder.addError("Cannot set heightInches because {PersonSourceShape}.person_height is null");
-            return false;
         }
     }
 
-    private boolean id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-            return true;
         } else {
             errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
-            return false;
         }
     }
 

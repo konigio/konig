@@ -21,12 +21,28 @@ package io.konig.core.showl;
  */
 
 
+/**
+ * Encapsulates some expression derived from source data that references a given property
+ * on the enumeration class
+ * @author Greg McFall
+ *
+ */
 public class ShowlEnumJoinInfo {
 	
+	// The property on the target node that stores a member of the enumeration.
 	private ShowlPropertyShape targetProperty;
+	
+	// The property on the enumeration class that is referenced by the source node.
 	private ShowlPropertyShape enumProperty;
+	
+	// A property from the source node that references the enumProperty
 	private ShowlPropertyShape sourceProperty;
-	private ShowlEnumIndivdiualReference hardCodedReference;
+	
+	// A hard-coded reference to the enum member
+	private ShowlEnumIndividualReference hardCodedReference;
+	
+	// An arbitrary expression for the enumProperty
+	private ShowlExpression expression;
 	
 	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlPropertyShape sourceProperty) {
 		this.targetProperty = targetProperty;
@@ -34,17 +50,28 @@ public class ShowlEnumJoinInfo {
 		this.sourceProperty = sourceProperty;
 	}
 	
-	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlEnumIndivdiualReference hardCodedReference) {
+	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty, ShowlEnumIndividualReference hardCodedReference) {
 		this.targetProperty = targetProperty;
 		this.enumProperty = enumProperty;
 		this.hardCodedReference = hardCodedReference;
+	}
+
+	private ShowlEnumJoinInfo(ShowlPropertyShape targetProperty, ShowlPropertyShape enumProperty,
+			ShowlExpression expression) {
+		this.targetProperty = targetProperty;
+		this.enumProperty = enumProperty;
+		this.expression = expression;
+	}
+
+	public ShowlExpression getExpression() {
+		return expression;
 	}
 
 	public ShowlPropertyShape getTargetProperty() {
 		return targetProperty;
 	}
 
-	public ShowlEnumIndivdiualReference getHardCodedReference() {
+	public ShowlEnumIndividualReference getHardCodedReference() {
 		return hardCodedReference;
 	}
 
@@ -75,12 +102,23 @@ public class ShowlEnumJoinInfo {
 						}
 						
 						
-						if (equal.getLeft() instanceof ShowlEnumIndivdiualReference) {
-							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndivdiualReference) equal.getLeft());
+						if (equal.getLeft() instanceof ShowlEnumIndividualReference) {
+							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndividualReference) equal.getLeft());
 						}
 						
-						if (equal.getRight() instanceof ShowlEnumIndivdiualReference) {
-							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndivdiualReference)equal.getRight());
+						if (equal.getRight() instanceof ShowlEnumIndividualReference) {
+							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, (ShowlEnumIndividualReference)equal.getRight());
+						}
+						
+						// This code is getting complex.  We probably ought to take a step back and think about refactoring to 
+						// simplify.  But for now, let's just add to the complexity (sigh!)
+						
+						ShowlExpression enumExpression = ShowlUtil.enumExpression(equal);
+						if (enumExpression != null) {
+							ShowlExpression other = equal.otherExpression(enumExpression);
+							if (other != null) {
+								return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, other);
+							}
 						}
 					}
 				}

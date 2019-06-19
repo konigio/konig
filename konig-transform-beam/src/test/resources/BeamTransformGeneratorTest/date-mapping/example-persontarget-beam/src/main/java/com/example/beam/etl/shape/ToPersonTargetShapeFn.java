@@ -19,7 +19,7 @@ public class ToPersonTargetShapeFn
             com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
             id(personSourceRow, outputRow, errorBuilder);
             birthDate(personSourceRow, outputRow, errorBuilder);
-            if (!outputRow.isEmpty()) {
+            if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
                 c.output(successTag, outputRow);
             }
             if (!errorBuilder.isEmpty()) {
@@ -31,14 +31,12 @@ public class ToPersonTargetShapeFn
         }
     }
 
-    private boolean id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-            return true;
         } else {
             errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
-            return false;
         }
     }
 
@@ -55,14 +53,12 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private boolean birthDate(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void birthDate(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object birth_date = ((personSourceRow == null)?null:personSourceRow.get("birth_date"));
         if (birth_date!= null) {
             outputRow.set("birthDate", birth_date);
-            return true;
         } else {
             errorBuilder.addError("Cannot set birthDate because {PersonSourceShape}.birth_date is null");
-            return false;
         }
     }
 }

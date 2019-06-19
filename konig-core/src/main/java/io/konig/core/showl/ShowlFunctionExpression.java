@@ -30,10 +30,12 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
 import io.konig.core.Context;
+import io.konig.core.OwlReasoner;
 import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.util.IriTemplate;
 import io.konig.core.util.ValueFormat.Element;
 import io.konig.core.util.ValueFormat.ElementType;
+import io.konig.core.vocab.SH;
 import io.konig.formula.Formula;
 import io.konig.formula.FormulaUtil;
 import io.konig.formula.FormulaVisitor;
@@ -168,6 +170,16 @@ public class ShowlFunctionExpression implements ShowlExpression {
 			e.addProperties(set);
 		}
 		
+	}
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		URI type = function.getModel().getReturnType().getRdfType();
+		if (type == SH.IRI) {
+			// Don't know what kind of entity is being referenced by the IRI.
+			throw new ShowlProcessingException("Type not known");
+		}
+		return type;
 	}
 
 }

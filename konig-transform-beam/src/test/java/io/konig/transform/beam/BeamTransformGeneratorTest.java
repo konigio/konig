@@ -63,9 +63,6 @@ import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
 public class BeamTransformGeneratorTest {
-
-
-
 	private NamespaceManager nsManager;
 	private Graph graph;
 	private ShapeManager shapeManager;
@@ -75,9 +72,6 @@ public class BeamTransformGeneratorTest {
 
 	private ShowlTransformEngine engine;
 	private BeamTransformGenerator generator;
-
-	
-	
 
 	@Before
 	public void setUp() {
@@ -108,7 +102,7 @@ public class BeamTransformGeneratorTest {
 	
 	
 
-	@Test
+
 	public void testOverlay() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/overlay");
@@ -147,7 +141,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testHardCodedEnum() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/hard-coded-enum");
+		generateAll("src/test/resources/BeamTransformGeneratorTest/hard-coded-enum", false);
 		
 	}
 
@@ -244,6 +238,13 @@ public class BeamTransformGeneratorTest {
 	public void testAnnotatedIdentity() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/annotated-identity", false);
+		
+	}
+	
+	@Test
+	public void testTargetCaseStatement() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/target-case-statement");
 		
 	}
 

@@ -19,7 +19,7 @@ public class ToPersonTargetShapeFn
             com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
             id(personSourceRow, outputRow, errorBuilder);
             address(personSourceRow, outputRow, errorBuilder);
-            if (!outputRow.isEmpty()) {
+            if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
                 c.output(successTag, outputRow);
             }
             if (!errorBuilder.isEmpty()) {
@@ -31,14 +31,12 @@ public class ToPersonTargetShapeFn
         }
     }
 
-    private boolean id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-            return true;
         } else {
             errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
-            return false;
         }
     }
 
@@ -55,49 +53,40 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private boolean address(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void address(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         com.google.api.services.bigquery.model.TableRow address = new com.google.api.services.bigquery.model.TableRow();
         address_id(personSourceRow, address, errorBuilder);
         address_addressLocality(personSourceRow, address, errorBuilder);
         address_addressRegion(personSourceRow, address, errorBuilder);
         if (errorBuilder.isEmpty()&&(!address.isEmpty())) {
             outputRow.set("address", address);
-            return true;
-        } else {
-            return false;
         }
     }
 
-    private boolean address_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void address_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object address_id = ((personSourceRow == null)?null:personSourceRow.get("address_id"));
         if (address_id!= null) {
             outputRow.set("id", address_id);
-            return true;
         } else {
             errorBuilder.addError("Cannot set address.id because {PersonSourceShape}.address_id is null");
-            return false;
         }
     }
 
-    private boolean address_addressLocality(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void address_addressLocality(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object city = ((personSourceRow == null)?null:personSourceRow.get("city"));
         if (city!= null) {
             outputRow.set("addressLocality", city);
-            return true;
         } else {
             errorBuilder.addError("Cannot set address.addressLocality because {PersonSourceShape}.city is null");
-            return false;
         }
     }
 
-    private boolean address_addressRegion(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void address_addressRegion(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object state = ((personSourceRow == null)?null:personSourceRow.get("state"));
         if (state!= null) {
             outputRow.set("addressRegion", state);
-            return true;
         } else {
             errorBuilder.addError("Cannot set address.addressRegion because {PersonSourceShape}.state is null");
-            return false;
         }
     }
 }

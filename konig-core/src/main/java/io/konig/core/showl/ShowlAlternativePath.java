@@ -24,8 +24,11 @@ package io.konig.core.showl;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.konig.core.OwlReasoner;
 
 public class ShowlAlternativePath {
 	private static Logger logger = LoggerFactory.getLogger(ShowlAlternativePath.class);
@@ -112,7 +115,28 @@ public class ShowlAlternativePath {
 	public Set<ShowlDirectPropertyShape> getParameters() {
 		return parameters;
 	}
-	
 
+	public URI valueType(OwlReasoner reasoner) {
+		return valueType(node, reasoner);
+	}
+
+	private URI valueType(ShowlNodeShape node, OwlReasoner reasoner) {
+
+		URI result = null;
+		while (result == null) {
+			for (ShowlDerivedPropertyList derivedList : node.getDerivedProperties()) {
+				
+				
+				ShowlDerivedPropertyShape derived = derivedList.get(0);
+				node = derived.getValueShape();
+				if (node == null) {
+					ShowlPropertyShape p = derived.maybeDirect();
+					result = p.getValueType(reasoner);
+				}
+			}
+		}
+		
+		return result;
+	}
 
 }

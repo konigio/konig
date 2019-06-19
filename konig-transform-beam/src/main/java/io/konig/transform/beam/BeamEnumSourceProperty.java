@@ -29,6 +29,7 @@ import com.helger.jcodemodel.JCodeModel;
 import com.helger.jcodemodel.JInvocation;
 import com.helger.jcodemodel.JVar;
 
+import io.konig.core.KonigException;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
@@ -46,6 +47,10 @@ public class BeamEnumSourceProperty extends BeamSourceProperty {
 		String sourcePropertyName = predicate.getLocalName();
 		
 		JVar enumMember = getBeamChannel().getSourceRowParam();
+		
+		if (enumMember == null) {
+			throw new KonigException("sourceRowParam not defined for " + getPropertyShape().getPath());
+		}
 		
 		String getterName = "get" + StringUtil.capitalize(sourcePropertyName);
 		
