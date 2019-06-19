@@ -2,11 +2,15 @@ package io.konig.core.showl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 
 /*
@@ -319,5 +323,35 @@ public class ShowlUtil {
 	private static boolean isEnumExpression(ShowlExpression e) {
 		
 		return e instanceof ShowlEnumPropertyExpression || e instanceof ShowlEnumIndividualReference;
+	}
+	
+	/**
+	 * Get the list of all enum properties referenced by a join condition within a given target NodeShape.
+	 * @param enumClass The enum class of interest
+	 * @param targetShape The target NodeShape to be scanned
+	 * @return
+	 */
+	public static Set<ShowlPropertyShape> uniqueKeys(URI enumClass, ShowlNodeShape targetShape) {
+		Set<ShowlPropertyShape> result = new HashSet<>();
+		// Scan targetShape for join statements that involve the given enumClass.
+		
+		for (ShowlChannel channel : targetShape.getChannels()) {
+			ShowlStatement statement = channel.getJoinStatement();
+			if (statement != null) {
+				statement.addProperties(result);
+			}
+		}
+		
+		Iterator<ShowlPropertyShape> sequence = result.iterator();
+		while (sequence.hasNext()) {
+			ShowlPropertyShape p = sequence.next();
+			ShowlNodeShape node = p.getDeclaringShape();
+			if (node.getOwlClass().getId().equals(enumClass) && !Konig.id.equals(p.getPredicate())) {
+				continue;
+			}
+			sequence.remove();
+		}
+		
+		return result;
 	}
 }

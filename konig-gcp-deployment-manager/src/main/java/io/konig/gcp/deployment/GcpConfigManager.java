@@ -39,6 +39,8 @@ import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import io.konig.core.Graph;
+import io.konig.core.KonigException;
+import io.konig.core.util.ErrorHandler;
 import io.konig.datasource.DataSource;
 import io.konig.datasource.DataSourceVisitor;
 import io.konig.schemagen.gcp.BigQueryTableGenerator;
@@ -51,6 +53,7 @@ public class GcpConfigManager {
 	private DeploymentConfig config = new DeploymentConfig();
 	private List<DataSourceVisitor> visitors = new ArrayList<>();
 	private File globalConfigTemplate;
+	private ErrorHandler errorHandler;
 	
 	
 	
@@ -59,6 +62,20 @@ public class GcpConfigManager {
 		addVisitors(bigQueryTableGenerator);
 	}
 	
+	
+	
+	public ErrorHandler getErrorHandler() {
+		return errorHandler;
+	}
+
+
+
+	public void setErrorHandler(ErrorHandler errorHandler) {
+		this.errorHandler = errorHandler;
+	}
+
+
+
 	private void addVisitors(BigQueryTableGenerator bigQueryTableGenerator) {
 		
 		visitors.add(new GoogleBigqueryTableVisitor(this, bigQueryTableGenerator));
@@ -105,7 +122,16 @@ public class GcpConfigManager {
 		for (Shape shape : shapeManager.listShapes()) {
 			for (DataSource ds : shape.getShapeDataSource()) {
 				for (DataSourceVisitor visitor : visitors) {
-					visitor.visit(graph, shape, ds);
+					try {
+						visitor.visit(graph, shape, ds);
+					} catch (Throwable oops) {
+						if (errorHandler == null) {
+							throw oops instanceof RuntimeException ? (RuntimeException) oops :
+								new KonigException(oops);
+						} else {
+							errorHandler.handle(oops);
+						}
+					}
 				}
 			}
 		}

@@ -153,6 +153,7 @@ import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlSchemaService;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.ShowlSystimeExpression;
@@ -193,18 +194,21 @@ public class BeamTransformGenerator {
   private String basePackage;
   private NamespaceManager nsManager;
   private JavaDatatypeMapper datatypeMapper;
+  private ShowlSchemaService schemaService;
   private OwlReasoner reasoner;
   private ShowlExpressionBuilder expressionBuilder;
   
   private boolean failFast;
   private boolean encounteredError;
   
-  public BeamTransformGenerator(String basePackage, OwlReasoner reasoner, ShowlExpressionBuilder expressionBuilder) {
+  public BeamTransformGenerator(String basePackage, ShowlSchemaService schemaService, ShowlExpressionBuilder expressionBuilder) {
     this.basePackage = basePackage;
-    this.reasoner = reasoner;
+    this.schemaService = schemaService;
+    this.reasoner = schemaService.getOwlReasoner();
     this.expressionBuilder = expressionBuilder;
     this.nsManager = reasoner.getGraph().getNamespaceManager();
     datatypeMapper = new BasicJavaDatatypeMapper();
+    
   }
   
   private String errorBuilderClassName() {
@@ -274,7 +278,7 @@ public class BeamTransformGenerator {
     
   }
   
-  private void generateBeamParentPom(BeamTransformRequest request, List<File> childProjectList) throws IOException {
+  private void generateBeamParentPom(BeamTransformRequest request, List<File> childProjectList) throws IOException, BeamTransformGenerationException {
     if (!childProjectList.isEmpty()) {
       File baseDir = request.getProjectDir();
       
@@ -289,7 +293,9 @@ public class BeamTransformGenerator {
       context.put("artifactId", request.parentArtifactId());
       context.put("version", request.getVersion());
       context.put("childProjectList", childProjectList);
-      
+      if(!request.getNodeList().isEmpty()) {
+    	  context.put("batchEtlBucketIri", batchEtlBucketIri(request.getNodeList().get(0)));  
+      }
       Template template = engine.getTemplate("BeamTransformGenerator/parentPom.xml");
       
       try (FileWriter writer = new FileWriter(pomFile)) {
@@ -320,6 +326,23 @@ public class BeamTransformGenerator {
     }
     
   }
+  
+  private String addOptionalParameters() {
+      StringBuilder br = new StringBuilder();
+      br.append("#if($!{gcpNetwork})");
+      br.append("<argument>-DgcpNetwork=${gcpNetwork}</argument>");
+      br.append("#end");
+      br.append("#if($!{gcpSubNetwork})");
+      br.append("<argument>-DgcpSubNetwork=${gcpSubNetwork}</argument>");
+      br.append("#end");
+      br.append("#if($!{gcpWorkerMachineType})");
+      br.append("<argument>-DgcpWorkerMachineType=${gcpWorkerMachineType}</argument>");
+      br.append("#end");
+      br.append("#if($!{region})");
+      br.append("<argument>-Dregion=${region}</argument>");
+      br.append("#end ");
+      return br.toString();
+}
 
   private void buildPom(BeamTransformRequest request, File projectDir, ShowlNodeShape node) throws IOException, BeamTransformGenerationException {
     VelocityEngine engine = new VelocityEngine();
@@ -333,6 +356,7 @@ public class BeamTransformGenerator {
     context.put("version", request.getVersion());
     context.put("projectName", projectDir.getName());
     context.put("batchEtlBucketIri", batchEtlBucketIri(node));
+    context.put("addOptionalParameters", addOptionalParameters());
     
     Worker w = new Worker(null,null);
     String mainClassName = w.mainClassName(node);   
@@ -594,7 +618,8 @@ public class BeamTransformGenerator {
 
         Map<URI, RdfProperty> propertyMap = enumProperties(individuals);
         
-        Map<URI, JFieldVar> enumIndex = enumIndex(enumClass, propertyMap);
+        
+        Map<URI, JFieldVar> enumIndex = enumIndex(owlClass, enumClass, propertyMap);
         
         
         enumClassProperties.put(owlClass, propertyMap);
@@ -710,22 +735,27 @@ public class BeamTransformGenerator {
       }
     }
 
-    private Map<URI, JFieldVar> enumIndex(JDefinedClass enumClass, Map<URI, RdfProperty> propertyMap) {
+    private Map<URI, JFieldVar> enumIndex(URI owlClass, JDefinedClass enumClass, Map<URI, RdfProperty> propertyMap) throws BeamTransformGenerationException {
+
       Map<URI, JFieldVar> map = new HashMap<>();
-      for (RdfProperty property : propertyMap.values()) {
+    	Set<ShowlPropertyShape> set = ShowlUtil.uniqueKeys(owlClass, targetNode);
+    	for (ShowlPropertyShape p : set) {
+    		RdfProperty property = propertyMap.get(p.getPredicate());
+    	
+    		if (property == null) {
+    			fail("Enum property {0} not found for {1}", p.getPath(), RdfUtil.localName(targetNode.getId()));
+    		}
 
         URI propertyId = property.getId();
         JFieldVar mapField = null;
-        if (reasoner.isInverseFunctionalProperty(propertyId)) {
-          Class<?> datatypeJavaClass = datatypeMapper.javaDatatype(property.getRange());
-          AbstractJClass datatypeClass = model.ref(datatypeJavaClass);
-          String fieldName = propertyId.getLocalName();
-          AbstractJClass mapClass = model.ref(Map.class).narrow(datatypeClass, enumClass);
-          AbstractJClass hashMapClass = model.ref(HashMap.class).narrow(datatypeClass, enumClass);
-          mapField = enumClass.field(JMod.PRIVATE | JMod.STATIC | JMod.FINAL, mapClass, fieldName + "Map", hashMapClass._new());
-          
-          map.put(propertyId, mapField);
-        }
+        Class<?> datatypeJavaClass = datatypeMapper.javaDatatype(property.getRange());
+        AbstractJClass datatypeClass = model.ref(datatypeJavaClass);
+        String fieldName = propertyId.getLocalName();
+        AbstractJClass mapClass = model.ref(Map.class).narrow(datatypeClass, enumClass);
+        AbstractJClass hashMapClass = model.ref(HashMap.class).narrow(datatypeClass, enumClass);
+        mapField = enumClass.field(JMod.PRIVATE | JMod.STATIC | JMod.FINAL, mapClass, fieldName + "Map", hashMapClass._new());
+        
+        map.put(propertyId, mapField);
       }
       return map;
     }
@@ -3560,7 +3590,19 @@ public class BeamTransformGenerator {
       
       optionsClass.method(JMod.PUBLIC, model.VOID, "setEnvironment").param(String.class, "envName");
       
-
+      
+      optionsClass.method(JMod.PUBLIC, String.class, "getNetwork");
+      
+      optionsClass.method(JMod.PUBLIC, model.VOID, "setNetwork").param(String.class, "gcpNetwork");
+      
+      optionsClass.method(JMod.PUBLIC, String.class, "getSubnetwork");
+      
+      optionsClass.method(JMod.PUBLIC, model.VOID, "setSubnetwork").param(String.class, "subnetwork");
+      
+      optionsClass.method(JMod.PUBLIC, String.class, "getWorkerMachineType");
+      
+      optionsClass.method(JMod.PUBLIC, model.VOID, "setWorkerMachineType").param(String.class, "workerMachineType");
+      
       // }
     }
 

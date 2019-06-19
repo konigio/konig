@@ -130,9 +130,48 @@
   <profiles>
     <profile>
       <id>direct-runner</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
+      <build>
+		<plugins>
+			<plugin>
+				<groupId>io.konig</groupId>
+				<artifactId>konig-gcp-maven-plugin</artifactId>
+				<version>${konig.version}</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+			  <groupId>org.codehaus.mojo</groupId>
+	          <artifactId>exec-maven-plugin</artifactId>
+	          <version>${maven-exec-plugin.version}</version>
+	          <configuration>
+					<cleanupDaemonThreads>false</cleanupDaemonThreads>
+					<executable>java</executable>
+					<mainClass>com.pearson.metis.beam.shape.ProductShapeBeam</mainClass>
+					<arguments>
+					<argument>--project=${gcpProjectId}</argument>
+						<argument>--runner=DataflowRunner</argument>
+						<argument>--environment=${environmentName}</argument>					
+						<argument>--gcpTempLocation=gs://example-inbound-${environmentName}/schema-PersonTarget-BatchPipeline/temp</argument>
+						<argument>--tempLocation=gs://example-inbound-${environmentName}/schema-PersonTarget-BatchPipeline/temp</argument>
+						#if($!{gcpNetwork})<argument>-DgcpNetwork=${gcpNetwork}</argument>#end#if($!{gcpSubNetwork})<argument>-DgcpSubNetwork=${gcpSubNetwork}</argument>#end#if($!{gcpWorkerMachineType})<argument>-DgcpWorkerMachineType=${gcpWorkerMachineType}</argument>#end#if($!{region})<argument>-Dregion=${region}</argument>#end 
+					</arguments>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+					</execution>
+				</executions>
+        	</plugin>
+        </plugins>
+      </build>
       <!-- Makes the DirectRunner available when running a pipeline. -->
       <dependencies>
         <dependency>
@@ -240,6 +279,7 @@
 						<argument>--tempLocation=gs://example-inbound-${environmentName}/schema-PersonTarget-BatchPipeline/temp</argument>
 						<argument>--stagingLocation=gs://example-inbound-${environmentName}/schema-PersonTarget-BatchPipeline/staging</argument>
 						<argument>--templateLocation=gs://example-inbound-${environmentName}/templates/schema-PersonTarget-BatchPipeline</argument>
+						#if($!{gcpNetwork})<argument>-DgcpNetwork=${gcpNetwork}</argument>#end#if($!{gcpSubNetwork})<argument>-DgcpSubNetwork=${gcpSubNetwork}</argument>#end#if($!{gcpWorkerMachineType})<argument>-DgcpWorkerMachineType=${gcpWorkerMachineType}</argument>#end#if($!{region})<argument>-Dregion=${region}</argument>#end 
 					</arguments>
 				</configuration>
 				<executions>

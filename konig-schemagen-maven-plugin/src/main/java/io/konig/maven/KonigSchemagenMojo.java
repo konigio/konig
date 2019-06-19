@@ -136,6 +136,7 @@ import io.konig.core.showl.ShowlTransformEngine;
 import io.konig.core.showl.ShowlTransformService;
 import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.util.BasicJavaDatatypeMapper;
+import io.konig.core.util.ErrorHandler;
 import io.konig.core.util.SimpleValueFormat;
 import io.konig.core.util.ValueFormat;
 import io.konig.core.vocab.Konig;
@@ -387,25 +388,26 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	 
 
 	private RdfConfig rdf;
-    private NamespaceManager nsManager;
-    private OwlReasoner owlReasoner;
-    private ShapeManager shapeManager;
-    private ShapeInjector shapeInjector;
-    private DatasetMapper datasetMapper;
-    private ShapeMediaTypeNamer mediaTypeNamer;
-    private Graph owlGraph;
-    private AbbreviationManager abbrevManager;
-    private ContextManager contextManager;
-    private ClassStructure structure;
-    private SimpleLocalNameService localNameService;
-    private CompositeEmitter emitter;
-    private Project project;
-    private SqlTransformGenerator mysqlTransformGenerator;
-    private RoutedSqlTransformVisitor sqlTransformVisitor;
-    private File mavenHome;
-    private boolean anyError;
-    private CubeManager cubeManager;
-    private LineageEmitter lineageEmitter;
+  private NamespaceManager nsManager;
+  private OwlReasoner owlReasoner;
+  private ShapeManager shapeManager;
+  private ShapeInjector shapeInjector;
+  private DatasetMapper datasetMapper;
+  private ShapeMediaTypeNamer mediaTypeNamer;
+  private Graph owlGraph;
+  private AbbreviationManager abbrevManager;
+  private ContextManager contextManager;
+  private ClassStructure structure;
+  private SimpleLocalNameService localNameService;
+  private CompositeEmitter emitter;
+  private Project project;
+  private SqlTransformGenerator mysqlTransformGenerator;
+  private RoutedSqlTransformVisitor sqlTransformVisitor;
+  private File mavenHome;
+  private boolean anyError;
+  private CubeManager cubeManager;
+  private LineageEmitter lineageEmitter;
+  private ErrorHandler errorHandler;
 
 	@Component
 	private MavenProject mavenProject;
@@ -1478,6 +1480,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 //			GcpDeploymentConfigManager deployManager = new GcpDeploymentConfigManager();
 			
 			GoogleCloudResourceGenerator resourceGenerator = new GoogleCloudResourceGenerator(shapeManager, owlReasoner);
+			if (!failOnError) {
+				resourceGenerator.setErrorHandler(errorHandler());
+			}
 //			resourceGenerator.setBigqueryTableListener(deployManager.createBigQueryTableListener());
 	
 			if (bigQuery != null) {
@@ -1525,6 +1530,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			BigQueryTableGenerator bigQueryTableGenerator = new BigQueryTableGenerator(shapeManager, null, owlReasoner);
 			GcpConfigManager configManager = new GcpConfigManager(bigQueryTableGenerator, globalGcpYamlTemplate());
+			configManager.setErrorHandler(errorHandler());
 			File gcpConfigFile = new File(deploymentDir, "config.yaml");
 			emitter.add(new DeploymentConfigEmitter(shapeManager, configManager, gcpConfigFile));
 			
@@ -1560,6 +1566,17 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 
 	
+
+
+	private ErrorHandler errorHandler() {
+		if (errorHandler == null) {
+			errorHandler = new MyErrorHandler();
+		}
+		return errorHandler;
+	}
+
+
+
 
 
 	private void configureBigQueryTransform() throws BeamTransformGenerationException, IOException {
@@ -1604,7 +1621,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			String basePackage = mavenProject.getGroupId() + ".beam";
 			ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
-			BeamTransformGenerator generator =  new BeamTransformGenerator(basePackage, owlReasoner, expressionBuilder);
+			BeamTransformGenerator generator =  new BeamTransformGenerator(basePackage, showlService, expressionBuilder);
 			generator.generateAll(request);
 			
 			if (generator.isEncounteredError()) {
@@ -1916,5 +1933,15 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			CalculateMaximumRowSize calculator = new CalculateMaximumRowSize();
 			calculator.addMaximumRowSizeAll(shapeManager.listShapes(), nsManager);
 		}
+	}
+	
+	class MyErrorHandler implements ErrorHandler {
+
+		@Override
+		public void handle(Throwable error) {
+			getLog().error(error.getMessage());
+			anyError = true;
+		}
+		
 	}
 }

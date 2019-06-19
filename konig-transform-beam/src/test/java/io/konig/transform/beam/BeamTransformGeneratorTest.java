@@ -91,7 +91,7 @@ public class BeamTransformGeneratorTest {
 		
 		engine = new ShowlTransformEngine(targetNodeShapeFactory, shapeManager, transformService, consumer);
 		ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
-		generator =  new BeamTransformGenerator("com.example.beam.etl", reasoner, expressionBuilder);
+		generator =  new BeamTransformGenerator("com.example.beam.etl", showlService, expressionBuilder);
 	}
 
 

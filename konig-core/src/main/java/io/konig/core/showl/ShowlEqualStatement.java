@@ -58,5 +58,11 @@ public class ShowlEqualStatement implements ShowlStatement {
 			right==e ? left :
 			null;
 	}
+	
+	@Override
+	public void addProperties(Set<ShowlPropertyShape> set) {
+		left.addProperties(set);
+		right.addProperties(set);
+	}
 
 }

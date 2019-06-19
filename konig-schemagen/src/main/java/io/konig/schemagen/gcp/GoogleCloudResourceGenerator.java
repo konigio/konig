@@ -28,11 +28,11 @@ import java.util.List;
 import io.konig.core.KonigException;
 import io.konig.core.OwlReasoner;
 import io.konig.core.project.ProjectFolder;
+import io.konig.core.util.ErrorHandler;
 import io.konig.gcp.common.BigQueryTableListener;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeHandler;
 import io.konig.shacl.ShapeManager;
-import io.konig.shacl.ShapeNamer;
 import io.konig.shacl.ShapeVisitor;
 import io.konig.transform.proto.BigQueryChannelFactory;
 import io.konig.transform.proto.ShapeModelFactory;
@@ -44,6 +44,7 @@ public class GoogleCloudResourceGenerator {
 	private List<ShapeVisitor> visitors = new ArrayList<>();
 	private ShapeModelFactory shapeModelFactory;
 	private BigQueryTableListener bigqueryTableListener;
+	private ErrorHandler errorHandler;
 	
 	public GoogleCloudResourceGenerator(ShapeManager shapeManager,OwlReasoner owlReasoner ) {
 		this.shapeManager = shapeManager;
@@ -51,7 +52,18 @@ public class GoogleCloudResourceGenerator {
 	}
 	
 	
-	
+	public ErrorHandler getErrorHandler() {
+		return errorHandler;
+	}
+
+
+
+	public void setErrorHandler(ErrorHandler errorHandler) {
+		this.errorHandler = errorHandler;
+	}
+
+
+
 	public BigQueryTableListener getBigqueryTableListener() {
 		return bigqueryTableListener;
 	}
@@ -107,7 +119,17 @@ public class GoogleCloudResourceGenerator {
 		
 		for (Shape shape : shapeList) {
 			for (ShapeVisitor visitor : visitors) {
-				visitor.visit(shape);
+				try {
+					visitor.visit(shape);
+				} catch (Throwable oops) {
+					if (errorHandler == null) {
+						throw 
+							(oops instanceof RuntimeException) ? (RuntimeException) oops :
+							new KonigException(oops);
+					} else {
+						errorHandler.handle(oops);
+					}
+				}
 			}
 		}
 		

@@ -25,6 +25,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -233,6 +234,13 @@ public class BigQueryTableGenerator {
 				}
 			}
 			TableSchema fieldSchema = toTableSchema(valueShape, traversal);
+			if (fieldSchema.getFields().isEmpty()) {
+				URI shapeId = RdfUtil.uri(valueShape.getId());
+				String shapeName = shapeId == null ? "ANONYMOUS" : shapeId.getLocalName();
+				
+				String msg = MessageFormat.format("{0} at {1} contains no properties", shapeName, fieldName);
+				throw new SchemaGeneratorException(msg);
+			}
 			result.setFields(fieldSchema.getFields());
 		}
 		
