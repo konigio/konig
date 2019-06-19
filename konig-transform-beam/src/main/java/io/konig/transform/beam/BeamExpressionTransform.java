@@ -34,4 +34,6 @@ public interface BeamExpressionTransform {
 
 	void endBlock();
 
+	BlockInfo peekBlockInfo() throws BeamTransformGenerationException;
+
 }

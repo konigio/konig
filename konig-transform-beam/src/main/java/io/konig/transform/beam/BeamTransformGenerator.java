@@ -1087,19 +1087,13 @@ public class BeamTransformGenerator {
       protected JMethod concatMethod = null;
       protected JMethod requiredMethod = null;
 
-			protected	BeamPropertyManager pman;
 			protected	BeamExpressionTransform etran;
 			
-			protected BeamPropertyManager pman() {
-				if (pman == null) {
-					pman = new BeamPropertyManagerImpl();
-				}
-				return pman;
-			}
+		
 			
 			protected BeamExpressionTransform etran() {
 				if (etran == null) {
-					etran = new BeamExpressionTransformImpl(reasoner, typeManager(), pman(), model, thisClass);
+					etran = new BeamExpressionTransformImpl(reasoner, typeManager(), model, thisClass);
 				}
 				return etran;
 			}
@@ -1589,167 +1583,173 @@ public class BeamTransformGenerator {
 		      		fullMethodName += methodNameSuffix;
 		      	}
 		      	
-		      	// private boolean $methodName(TableRow $sourceRow1, TableRow $sourceRow2, ..., TableRow outputRow, ErrorBuilder errorBuilder) {
+		      	// private void $methodName(TableRow $sourceRow1, TableRow $sourceRow2, ..., TableRow outputRow, ErrorBuilder errorBuilder) {
 		      	
-		      	JMethod method = thisClass.method(JMod.PRIVATE, model.BOOLEAN, fullMethodName);
+		      	JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, fullMethodName);
 		      	
-		      	BeamTargetProperty beamTargetProperty = targetProperty(direct, pman);
+		      	BlockInfo blockInfo = etran().beginBlock(method.body());
+		      	// TODO: declare nodeTableRow
+		      	try {
 		      	
-		      	for (BeamChannel info : beamTargetProperty.getChannelList()) {
-		    			JVar sourceRow = info.getSourceRow();
-		      		if (sourceRow != null) {
-			      		String sourceRowName = sourceRow.name();
-			      		JVar sourceRowParam = method.param(sourceRow.type(), sourceRowName);
-			      		info.setSourceRowParam(sourceRowParam);
-		      		}
-		      	}
-		
-		      	JVar outputRowParam = method.param(tableRowClass, "outputRow");
-		      	JVar errorBuilderParam = method.param(errorBuilderClass, "errorBuilder");
-		      	
-		      	if (direct.isEnumIndividual()) {
-		      		ShowlEnumJoinInfo enumJoinInfo = ShowlEnumJoinInfo.forEnumProperty(direct);
-		      		processEnumNode(methodName, methodNameSuffix, method.body(), outputRowParam, beamTargetProperty, enumJoinInfo, errorBuilderParam);
-		      		
-		      	} else if (direct.getValueShape() != null) {
-		      		
-		      		
-		      		if (methodNameSuffix==null && direct.getSelectedExpression() instanceof AlternativePathsExpression) {
-		      			
-		      			AbstractJType booleanType = model._ref(boolean.class);
-		      			JVar ok = method.body().decl(booleanType, "ok").init(JExpr.TRUE);
-		      			
-		      			AlternativePathsExpression e = (AlternativePathsExpression) direct.getSelectedExpression();
-		      			for (ShowlAlternativePath path : e.getPathList()) {
-
-//		            if (personSourceRow.get("mdm_id") != null) {
-//		            	externalIdentifier__mdm_id(personSourceRow, outputRow, errorBuilder);
-//		            }
-		      				StringBuilder suffix = new StringBuilder();
-	      					suffix.append('_');
-		      				IJExpression condition = null;
-		      				for (ShowlPropertyShape param : path.getParameters()) {
-		      					BeamChannel paramChannel = beamTargetProperty.channelFor(param);
-		      					
-		      					IJExpression paramNotNull =
-		      							paramChannel.getSourceRowParam().invoke("get").arg(JExpr.lit(param.getPredicate().getLocalName())).neNull();
-		      					
-		      					condition = condition == null ? paramNotNull : condition.cand(paramNotNull);
-		      					suffix.append('_');
-		      					suffix.append(param.getPredicate().getLocalName());
-		      				}
-		      				JBlock block = method.body();
-		      				JConditional ifStatement = block._if(condition);
-		      				
-		      				methodNameSuffix = suffix.toString();
-		      				JMethod pathMethod = pathMethod(
-		      						path,
-		    		      		methodName, 
-		    		      		suffix.toString(),
-		    		      		beamTargetProperty);
-		      				
-		      				JInvocation pathInvocation = JExpr.invoke(pathMethod);
-		      				for (JVar pathParam : pathMethod.params()) {
-		      					pathInvocation.arg(pathParam);
-		      				}
-		      				ifStatement._then().add(ok.assign(ok.cand(pathInvocation)));
-		      			}
-		      			method.body()._return(ok);
-		      		} else {
-		      		
-			      		//  TableRow $nestedRecord = new TableRow();
-			      		JVar nestedRecord = method.body().decl(tableRowClass, direct.getPredicate().getLocalName()).init(tableRowClass._new());
-			
-			      		String prefix = methodName + "_";
-			  				for (ShowlDirectPropertyShape child : direct.getValueShape().getProperties()) {
-			  					PropertyMethod childMethod = processProperty(prefix, methodNameSuffix, child);
-			  					
-			  					invokePropertyMethod(method.body(), childMethod, nestedRecord);
-			  				}
-			  				
-			  				//  if (errorBuilder.isEmpty() && !$nestedRecord.isEmpty() ) {
-			  				//    outputRow.set("$targetProperty", $nestedRecord);
-			  				//    return true;
-			  				//  } else {
-			  				//    return false;
-			  				//  }
-			  				
-			  				JConditional ifStatement = method.body()._if(errorBuilderParam.invoke("isEmpty").cand(nestedRecord.invoke("isEmpty").not()));
-			  				
-			  				ifStatement._then().add(
-			  						outputRowParam.invoke("set").arg(JExpr.lit(direct.getPredicate().getLocalName())).arg(nestedRecord))._return(JExpr.TRUE);
-			  				
-			  				ifStatement._else()._return(JExpr.FALSE);
-		      		}
-		  				
-		  				
-		      		
-		      	} else {
-		
-		      	
-			      	for (BeamSourceProperty sourceProperty : beamTargetProperty.getSourcePropertyList()) {
-			      		sourceProperty.generateVar(model, method.body());
-			      	}
-			
-			    		
-			    		// if ($sourceProperty1 !=null && $sourceProperty2!=null ...) {
-			    		//   outputRow.set("$targetProperty", $expression);
-			      	//   return true;
-			    		// } else {
-			      	//    $addErrorMessage
-			      	//    return false;
-			      	// }
+			      	BeamTargetProperty beamTargetProperty = targetProperty(direct);
 			      	
-			      	IJExpression condition = null;
-			      	for (BeamSourceProperty sourceProperty : beamTargetProperty.getSourcePropertyList()) {
-			      		
-			      		IJExpression c = sourceProperty.getVar().neNull();
-			      		
-			      		if (condition == null) {
-			      			condition = c;
-			      		} else {
-			      			condition = condition.cand(c);
+			      	for (BeamChannel info : beamTargetProperty.getChannelList()) {
+			    			JVar sourceRow = info.getSourceRow();
+			      		if (sourceRow != null) {
+				      		String sourceRowName = sourceRow.name();
+				      		JVar sourceRowParam = method.param(sourceRow.type(), sourceRowName);
+				      		info.setSourceRowParam(sourceRowParam);
 			      		}
 			      	}
+			
+			      	JVar outputRowParam = method.param(tableRowClass, "outputRow");
+			      	JVar errorBuilderParam = method.param(errorBuilderClass, "errorBuilder");
+			      	blockInfo.errorBuilderVar(errorBuilderParam);
+			      	blockInfo.addNodeTableRow(new NodeTableRow(direct.getDeclaringShape(), outputRowParam));
 			      	
-			      	JConditional ifStatement = condition==null ? null : method.body()._if(condition);
-			      	
-			      	String targetPropertyName = direct.getPredicate().getLocalName();
-			      	
-			      	ShowlExpression e = selectedExpression(direct);
-			      	
-			      	IJExpression value = etran().transform(e);
-			      	
-			      	JBlock thenBlock = condition==null ? method.body() : ifStatement._then();
+			      	if (direct.isEnumIndividual()) {
+			      		ShowlEnumJoinInfo enumJoinInfo = ShowlEnumJoinInfo.forEnumProperty(direct);
+			      		processEnumNode(methodName, methodNameSuffix, method.body(), outputRowParam, beamTargetProperty, enumJoinInfo, errorBuilderParam);
 			      		
-			      	thenBlock.add(outputRowParam.invoke("set")
-			      			.arg(JExpr.lit(targetPropertyName)).arg(value))._return(JExpr.TRUE);
-			      	
-			      	
-			      	if (condition != null) {
-		
-				      	// Construct the error message.
+			      	} else if (direct.getValueShape() != null) {
 			      		
-				      	if (beamTargetProperty.getSourcePropertyList().size()==1) {
+			      		
+			      		if (methodNameSuffix==null && direct.getSelectedExpression() instanceof AlternativePathsExpression) {
+			      			
+			      			
+			      			AlternativePathsExpression e = (AlternativePathsExpression) direct.getSelectedExpression();
+			      			for (ShowlAlternativePath path : e.getPathList()) {
+	
+	//		            if (personSourceRow.get("mdm_id") != null) {
+	//		            	externalIdentifier__mdm_id(personSourceRow, outputRow, errorBuilder);
+	//		            }
+			      				StringBuilder suffix = new StringBuilder();
+		      					suffix.append('_');
+			      				IJExpression condition = null;
+			      				for (ShowlPropertyShape param : path.getParameters()) {
+			      					BeamChannel paramChannel = beamTargetProperty.channelFor(param);
+			      					
+			      					IJExpression paramNotNull =
+			      							paramChannel.getSourceRowParam().invoke("get").arg(JExpr.lit(param.getPredicate().getLocalName())).neNull();
+			      					
+			      					condition = condition == null ? paramNotNull : condition.cand(paramNotNull);
+			      					suffix.append('_');
+			      					suffix.append(param.getPredicate().getLocalName());
+			      				}
+			      				JBlock block = method.body();
+			      				JConditional ifStatement = block._if(condition);
+			      				
+			      				methodNameSuffix = suffix.toString();
+			      				JMethod pathMethod = pathMethod(
+			      						path,
+			    		      		methodName, 
+			    		      		suffix.toString(),
+			    		      		beamTargetProperty);
+			      				
+			      				JInvocation pathInvocation = JExpr.invoke(pathMethod);
+			      				for (JVar pathParam : pathMethod.params()) {
+			      					pathInvocation.arg(pathParam);
+			      				}
+			      				ifStatement._then().add(pathInvocation);
+			      			}
+			      		} else {
+			      		
+				      		//  TableRow $nestedRecord = new TableRow();
+				      		JVar nestedRecord = method.body().decl(tableRowClass, direct.getPredicate().getLocalName()).init(tableRowClass._new());
+				
+				      		String prefix = methodName + "_";
+				  				for (ShowlDirectPropertyShape child : direct.getValueShape().getProperties()) {
+				  					PropertyMethod childMethod = processProperty(prefix, methodNameSuffix, child);
+				  					
+				  					invokePropertyMethod(method.body(), childMethod, nestedRecord);
+				  				}
+				  				
+				  				//  if (errorBuilder.isEmpty() && !$nestedRecord.isEmpty() ) {
+				  				//    outputRow.set("$targetProperty", $nestedRecord);
+				  				//    return true;
+				  				//  } else {
+				  				//    return false;
+				  				//  }
+				  				
+				  				JConditional ifStatement = method.body()._if(errorBuilderParam.invoke("isEmpty").cand(nestedRecord.invoke("isEmpty").not()));
+				  				
+				  				ifStatement._then().add(
+				  						outputRowParam.invoke("set").arg(JExpr.lit(direct.getPredicate().getLocalName())).arg(nestedRecord));
+				  				
+				  				
+			      		}
+			  				
+			  				
+			      		
+			      	} else {
+			
+			      	
+				      	for (BeamSourceProperty sourceProperty : beamTargetProperty.getSourcePropertyList()) {
+				      		sourceProperty.generateVar(model, method.body());
+				      	}
+				
+				    		
+				    		// if ($sourceProperty1 !=null && $sourceProperty2!=null ...) {
+				    		//   outputRow.set("$targetProperty", $expression);
+				      	//   return true;
+				    		// } else {
+				      	//    $addErrorMessage
+				      	//    return false;
+				      	// }
+				      	
+				      	IJExpression condition = null;
+				      	for (BeamSourceProperty sourceProperty : beamTargetProperty.getSourcePropertyList()) {
 				      		
-				      		String sourcePath = beamTargetProperty.getSourcePropertyList().get(0).canonicalPath();
+				      		IJExpression c = sourceProperty.getVar().neNull();
 				      		
-				      		StringBuilder message = new StringBuilder();
-				      		message.append("Cannot set ");
-				      		message.append(beamTargetProperty.simplePath());
-				      		message.append(" because ");
-				      		message.append(sourcePath);
-				      		message.append(" is null");
+				      		if (condition == null) {
+				      			condition = c;
+				      		} else {
+				      			condition = condition.cand(c);
+				      		}
+				      	}
+				      	
+				      	JConditional ifStatement = condition==null ? null : method.body()._if(condition);
+				      	
+				      	String targetPropertyName = direct.getPredicate().getLocalName();
+				      	
+				      	ShowlExpression e = selectedExpression(direct);
+				      	
+				      	IJExpression value = etran().transform(e);
+				      	
+				      	JBlock thenBlock = condition==null ? method.body() : ifStatement._then();
 				      		
-				      		ifStatement._else().add(errorBuilderParam.invoke("addError").arg(JExpr.lit(message.toString())))._return(JExpr.FALSE);
+				      	thenBlock.add(outputRowParam.invoke("set")
+				      			.arg(JExpr.lit(targetPropertyName)).arg(value));
+				      	
+				      	
+				      	if (condition != null) {
+			
+					      	// Construct the error message.
 				      		
-				      	} else {
-				      		throw new BeamTransformGenerationException("Multiple source properties not supported yet");
+					      	if (beamTargetProperty.getSourcePropertyList().size()==1) {
+					      		
+					      		String sourcePath = beamTargetProperty.getSourcePropertyList().get(0).canonicalPath();
+					      		
+					      		StringBuilder message = new StringBuilder();
+					      		message.append("Cannot set ");
+					      		message.append(beamTargetProperty.simplePath());
+					      		message.append(" because ");
+					      		message.append(sourcePath);
+					      		message.append(" is null");
+					      		
+					      		ifStatement._else().add(errorBuilderParam.invoke("addError").arg(JExpr.lit(message.toString())));
+					      		
+					      	} else {
+					      		throw new BeamTransformGenerationException("Multiple source properties not supported yet");
+					      	}
 				      	}
 			      	}
+			      
+			      	return new PropertyMethod(beamTargetProperty, method);
+		      	} finally {
+		      		etran().endBlock();
 		      	}
-		      
-		      	return new PropertyMethod(beamTargetProperty, method);
 					}
 		      
 		      protected void invokePropertyMethod(JBlock callerBlock, PropertyMethod method, JVar outputRow) {
@@ -1795,7 +1795,6 @@ public class BeamTransformGenerator {
 		      	}
 		      	
 		      	AbstractJClass tableRowClass = model.ref(TableRow.class);
-		      	AbstractJType booleanType = model._ref(boolean.class);
 		
 		      	JVar outputRowParam = method.param(tableRowClass, "outputRow");
 		      	JVar errorBuilderParam = method.param(errorBuilderClass(), "errorBuilder");
@@ -1825,17 +1824,8 @@ public class BeamTransformGenerator {
 	  				JConditional ifStatement = method.body()._if(errorBuilderParam.invoke("isEmpty").cand(nestedRecord.invoke("isEmpty").not()));
 	  				
 	  				ifStatement._then().add(
-	  						outputRowParam.invoke("set").arg(JExpr.lit(direct.getPredicate().getLocalName())).arg(nestedRecord))._return(JExpr.TRUE);
+	  						outputRowParam.invoke("set").arg(JExpr.lit(direct.getPredicate().getLocalName())).arg(nestedRecord));
 	  				
-	  				ifStatement._else()._return(JExpr.FALSE);
-      		
-		      	
-		      	
-		      	
-		      	
-		      	
-		      	
-		      	
 						return method;
 					}
 
@@ -1902,33 +1892,41 @@ public class BeamTransformGenerator {
 						JBlock thenBlock = ifStatement._then();
 						JVar enumRow = thenBlock.decl(tableRowClass, enumRowName).init(tableRowClass._new());
 
-						AbstractJType booleanType = model._ref(boolean.class);
-						JVar ok = thenBlock.decl(booleanType, "ok").init(JExpr.TRUE);
 						String prefix = methodName + "_";
 						for (ShowlDirectPropertyShape child : targetDirectProperty.getValueShape().getProperties()) {
 							JMethod fieldMethod = enumPropertyMethod(prefix, enumClass, child);
-							thenBlock.assign(ok, ok.cand(JExpr.invoke(fieldMethod).arg(enumMember).arg(enumRow).arg(errorBuilder)));
+							thenBlock.add(JExpr.invoke(fieldMethod).arg(enumMember).arg(enumRow).arg(errorBuilder));
 						
 						}
-						thenBlock._if(ok)._then().add(outputRow.invoke("set")
+						thenBlock.add(outputRow.invoke("set")
 								.arg(JExpr.lit(beamTargetProperty.getDirectProperty().getPredicate().getLocalName()))
 								.arg(enumRow)
 							);
-						thenBlock._return(ok);
 						
+						PropertyConstraint constraint = targetDirectProperty.getPropertyConstraint();
+						if (constraint!=null) {
+							Integer minCount = constraint.getMinCount();
+							if (minCount!=null && minCount>0) {
+								// errorBuilder.addError(MessageFormat.format("Required field '$fieldName' is NULL");
+								
+								JStringLiteral message = JExpr.lit(
+										"Required field '" + targetDirectProperty.getPredicate().getLocalName() + "' is NULL");
+
+								body.add(errorBuilder.invoke("addError").arg(message));
+							}
+						}
 						
-						body._return(JExpr.FALSE);
 						
 					}
 
 					private JMethod enumPropertyMethod(String prefix, JDefinedClass enumClass, ShowlDirectPropertyShape p) throws BeamTransformGenerationException {
-						AbstractJType booleanType = model._ref(boolean.class);
+					
 						AbstractJClass tableRowClass = model.ref(TableRow.class);
 						AbstractJClass errorBuilderClass = errorBuilderClass();
 						
 						
 						String methodName = prefix + p.getPredicate().getLocalName();
-						JMethod method = thisClass.method(JMod.PRIVATE, booleanType, methodName);
+						JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, methodName);
 						
 						String enumMemberName = StringUtil.firstLetterLowerCase(enumClass.name());
 						String rowName = enumMemberName + "Row";
@@ -1941,7 +1939,6 @@ public class BeamTransformGenerator {
 						
 						if (Konig.id.equals(predicate)) {
 							method.body().add(row.invoke("set").arg(JExpr.lit("id")).arg(enumMember.invoke("getId").invoke("getLocalName")));
-							method.body()._return(JExpr.TRUE);
 						} else {
 							AbstractJClass objectClass = model.ref(Object.class);
 							
@@ -1951,7 +1948,7 @@ public class BeamTransformGenerator {
 							JConditional ifStatement = method.body()._if(value.neNull());
 							JBlock thenBlock = ifStatement._then();
 							thenBlock.add(row.invoke("set").arg(JExpr.lit(predicate.getLocalName())).arg(value));
-							thenBlock._return(JExpr.TRUE);
+							
 							
 							PropertyConstraint constraint = p.getPropertyConstraint();
 							if (constraint != null) {
@@ -1965,7 +1962,6 @@ public class BeamTransformGenerator {
 											.arg(JExpr.lit(msg.toString()).plus(enumMember.invoke("name")));
 									
 									elseBlock.add(invoke);
-									elseBlock._return(JExpr.FALSE);
 								}
 							}
 						}
@@ -2048,9 +2044,11 @@ public class BeamTransformGenerator {
 							}
 						}
 						
-						//  outputRow.set("$targetPropertyName", $nestedRecord);
-						
-						block.add(outputRow.invoke("set").arg(JExpr.lit(targetPropertyName)).arg(nestedRecord));
+						//  if (!outputRow.isEmpty()) {
+						//    outputRow.set("$targetPropertyName", $nestedRecord);
+						//  }
+						block._if(outputRow.invoke("isEmpty").not())._then().add(
+								outputRow.invoke("set").arg(JExpr.lit(targetPropertyName)).arg(nestedRecord));
 						
 					}
 		
@@ -2119,7 +2117,7 @@ public class BeamTransformGenerator {
 					}
 		
 		      
-		      protected BeamTargetProperty targetProperty(ShowlDirectPropertyShape direct, BeamPropertyManager pman) throws BeamTransformGenerationException {
+		      protected BeamTargetProperty targetProperty(ShowlDirectPropertyShape direct) throws BeamTransformGenerationException {
 		      	
 		      	BeamTargetProperty result = new BeamTargetProperty(direct);
 		
@@ -2171,7 +2169,7 @@ public class BeamTransformGenerator {
 									new BeamEnumSourceProperty(channel, s) :
 									new BeamSourceProperty(channel, s);
 							sourcePropertyList.add(sourceProperty);
-							pman().add(sourceProperty);
+							etran().peekBlockInfo().add(sourceProperty);
 						}
 		      	
 						Collections.sort(sourcePropertyList);
@@ -2194,7 +2192,7 @@ public class BeamTransformGenerator {
 								JVar buffer = errorBuilderClass.field(JMod.PRIVATE, stringBuilderClass, "buffer");
 								buffer.init(JExpr._new(stringBuilderClass));
 								
-								JMethod isEmpty = errorBuilderClass.method(JMod.PUBLIC, boolean.class, "isEmpty");
+								JMethod isEmpty = errorBuilderClass.method(JMod.PUBLIC, model._ref(boolean.class), "isEmpty");
 								isEmpty.body()._return(buffer.invoke("length").eq(JExpr.lit(0)));
 								
 								JMethod addError = errorBuilderClass.method(JMod.PUBLIC, model.VOID, "addError");
@@ -2256,48 +2254,59 @@ public class BeamTransformGenerator {
 						JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC, tupleTagClass.narrow(tableRowClass), "successTag")
 								.init(tupleTagClass._new().narrow(tableRowClass));
 		
-						method.annotate(ProcessElement.class);
-						JVar c = method.param(processContextClass, "c");
-		
-						// try {
-						JTryBlock tryBlock = method.body()._try();
-		
-						// ErrorBuilder errorBuilder = new ErrorBuilder();
-						JVar errorBuilder = tryBlock.body().decl(errorBuilderClass, "errorBuilder").init(errorBuilderClass._new());
-		
-						// TableRow outputRow = new TableRow();
-		
-						JVar outputRow = tryBlock.body().decl(tableRowClass, "outputRow").init(tableRowClass._new());
-		
-						// KV<String, CoGbkResult> e = c.element();
-		
-						/* ... OR ... */
-		
-						// TableRow inputRow = c.element();
-		
-						contextElement(tryBlock.body(), c);
-		
-						Collection<ShowlDirectPropertyShape> propertyList = sortProperties(targetNode);
-		
-						for (ShowlDirectPropertyShape direct : propertyList) {
-							PropertyMethod childMethod = processProperty("", null, direct);
-							invokePropertyMethod(tryBlock.body(), childMethod, outputRow);
+						BlockInfo blockInfo = etran().beginBlock(method.body());
+						
+						try {
+						
+							method.annotate(ProcessElement.class);
+							JVar c = method.param(processContextClass, "c");
+			
+							// try {
+							JTryBlock tryBlock = method.body()._try();
+			
+							// ErrorBuilder errorBuilder = new ErrorBuilder();
+							JVar errorBuilder = tryBlock.body().decl(errorBuilderClass, "errorBuilder").init(errorBuilderClass._new());
+							blockInfo.errorBuilderVar(errorBuilder);
+			
+							// TableRow outputRow = new TableRow();
+			
+							JVar outputRow = tryBlock.body().decl(tableRowClass, "outputRow").init(tableRowClass._new());
+							
+							blockInfo.addNodeTableRow(new NodeTableRow(targetNode, outputRow));
+			
+							// KV<String, CoGbkResult> e = c.element();
+			
+							/* ... OR ... */
+			
+							// TableRow inputRow = c.element();
+			
+							contextElement(tryBlock.body(), c);
+			
+							Collection<ShowlDirectPropertyShape> propertyList = sortProperties(targetNode);
+			
+							for (ShowlDirectPropertyShape direct : propertyList) {
+								PropertyMethod childMethod = processProperty("", null, direct);
+								invokePropertyMethod(tryBlock.body(), childMethod, outputRow);
+							}
+			
+							// if (!outputRow.isEmpty() && errorBuilder.isEmpty()) {
+							//   c.output(outputRow);
+							// }
+			
+							tryBlock.body()._if(outputRow.invoke("isEmpty").not().cand(errorBuilder.invoke("isEmpty")))._then()
+									.add(c.invoke("output").arg(successTag).arg(outputRow));
+			
+							JBlock exceptionBlock = tryBlock.body()._if(errorBuilder.invoke("isEmpty").not())._then();
+							exceptionBlock.add(errorBuilder.invoke("addError").arg(outputRow.invoke("toString")));
+							exceptionBlock._throw(JExpr._new(model.ref(Exception.class)).arg(errorBuilder.invoke("toString")));
+			
+							JCatchBlock catchBlock = tryBlock._catch(throwableClass);
+							JVar oopsVar = catchBlock.param("oops");
+							catchBlock.body().add(c.invoke("output").arg(deadLetterTag).arg(oopsVar.invoke("getMessage")));
+							
+						} finally {
+							etran().endBlock();
 						}
-		
-						// if (!outputRow.isEmpty()) {
-						//   c.output(outputRow);
-						// }
-		
-						tryBlock.body()._if(outputRow.invoke("isEmpty").not())._then()
-								.add(c.invoke("output").arg(successTag).arg(outputRow));
-		
-						JBlock exceptionBlock = tryBlock.body()._if(errorBuilder.invoke("isEmpty").not())._then();
-						exceptionBlock.add(errorBuilder.invoke("addError").arg(outputRow.invoke("toString")));
-						exceptionBlock._throw(JExpr._new(model.ref(Exception.class)).arg(errorBuilder.invoke("toString")));
-		
-						JCatchBlock catchBlock = tryBlock._catch(throwableClass);
-						JVar oopsVar = catchBlock.param("oops");
-						catchBlock.body().add(c.invoke("output").arg(deadLetterTag).arg(oopsVar.invoke("getMessage")));
 		
 					}
 		
@@ -3055,7 +3064,7 @@ public class BeamTransformGenerator {
         BeamSourceProperty beamProperty = new BeamSourceProperty(beamChannel, sourceProperty);
         beamProperty.setVar(fieldVar);
         
-        pman().add(beamProperty);
+        etran().peekBlockInfo().add(beamProperty);
         
       }
       

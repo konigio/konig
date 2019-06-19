@@ -78,7 +78,6 @@ import io.konig.formula.FunctionModel;
 public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 
 	private OwlReasoner reasoner;
-	private BeamPropertyManager propertyManager;
 	private BeamTypeManager typeManager;
 	private JCodeModel model;
 	private JDefinedClass targetClass;
@@ -94,12 +93,10 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 	public BeamExpressionTransformImpl(
 			OwlReasoner reasoner,
 			BeamTypeManager typeManager,
-			BeamPropertyManager manager, 
 			JCodeModel model, 
 			JDefinedClass targetClass) {
 		this.reasoner = reasoner;
 		this.typeManager = typeManager;
-		this.propertyManager = manager;
 		this.model = model;
 		this.targetClass = targetClass;
 	}
@@ -159,16 +156,18 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 	private IJExpression property(ShowlPropertyExpression e) throws BeamTransformGenerationException {
 
 		BlockInfo blockInfo = peekBlockInfo();
-		if (blockInfo != null) {
-			
-			ShowlPropertyShape p = e.getSourceProperty();
-			if (p.isTargetProperty()) {
-				return invokePathGetter(p);
-			} 
-			
+		if (blockInfo == null) {
+			fail("Cannot generate expression for {0} because BlockInfo is not defined.", 
+					e.getSourceProperty().getPath());
 		}
+			
+		ShowlPropertyShape p = e.getSourceProperty();
+		if (p.isTargetProperty()) {
+			return invokePathGetter(p);
+		} 
+			
 
-		BeamSourceProperty b = propertyManager.forPropertyShape(e.getSourceProperty());
+		BeamSourceProperty b = blockInfo.forPropertyShape(e.getSourceProperty());
 		return b.getVar();
 	}
 
@@ -256,8 +255,12 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		return result;
 	}
 
-	private BlockInfo peekBlockInfo() {
-		return blockStack==null || blockStack.isEmpty() ? null : blockStack.getLast();
+	@Override
+	public BlockInfo peekBlockInfo() throws BeamTransformGenerationException {
+		if (blockStack==null || blockStack.isEmpty()) {
+			fail("BlockInfo stack is empty");
+		}
+		return  blockStack.getLast();
 	}
 
 	private IJExpression caseStatement(ShowlCaseStatement e) throws BeamTransformGenerationException {
@@ -322,19 +325,20 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		
 		// Start by getting information about the caller's block.
 
-//		BlockInfo callerBlock = peekBlockInfo();
-//		
-//		if (callerBlock == null) {
-//			fail("Caller block must be defined for case statement {0}", e.displayValue());
-//		}
+		BlockInfo callerBlock = peekBlockInfo();
 		
 		JInvocation invoke = JExpr.invoke(method);
-//		for (NodeTableRow paramInfo : tableRowMap.values()) {
-//			ShowlNodeShape node = paramInfo.getNode();
-//			NodeTableRow  callerParamInfo = callerBlock.getNodeTableRow(node);
-//			invoke.arg(callerParamInfo.getTableRowVar());
-//		}
+		for (NodeTableRow paramInfo : tableRowMap.values()) {
+			ShowlNodeShape node = paramInfo.getNode();
+			NodeTableRow  callerParamInfo = callerBlock.getNodeTableRow(node);
+			invoke.arg(callerParamInfo.getTableRowVar());
+		}
 		
+		JVar callerErrorBuilder = callerBlock.getErrorBuilderVar();
+		if (callerErrorBuilder == null) {
+			fail("ErrorBuilder variable not defined while invoking {0}", e.displayValue());
+		}
+		invoke.arg(callerErrorBuilder);
 		
 		return invoke;
 	}

@@ -24,14 +24,14 @@ shape:AnimalTargetShape sh:property  [
 		sh:shape shape:EnumShape ; 
 		rdf:predicate ex:genus ; 
 		sh:maxCount 1 ; 
-		sh:minCount 0
+		sh:minCount 1
 	 ]  ,  [ 
 		sh:path ex:species ; 
 		sh:class ex:Species ; 
 		sh:shape shape:EnumShape ; 
 		rdf:predicate ex:species ; 
 		sh:maxCount 1 ; 
-		sh:minCount 0 ]  ; 
+		sh:minCount 1 ]  ; 
 	a sh:Shape ; 
 	konig:explicitDerivedFrom shape:PersonSourceShape ; 
 	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/ex/tables/AnimalTarget> ; 
