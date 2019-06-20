@@ -51,6 +51,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.NullableCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.FileIO.ReadableFile;
@@ -329,18 +330,18 @@ public class BeamTransformGenerator {
   }
   
   private String addOptionalParameters() {
-      StringBuilder br = new StringBuilder();
+	  StringBuilder br = new StringBuilder();
       br.append("#if($!{gcpNetwork})");
-      br.append("<argument>-DgcpNetwork=${gcpNetwork}</argument>");
+      br.append("<argument>--network=${gcpNetwork}</argument>");
       br.append("#end");
       br.append("#if($!{gcpSubNetwork})");
-      br.append("<argument>-DgcpSubNetwork=${gcpSubNetwork}</argument>");
+      br.append("<argument>--subnetwork=${gcpSubNetwork}</argument>");
       br.append("#end");
       br.append("#if($!{gcpWorkerMachineType})");
-      br.append("<argument>-DgcpWorkerMachineType=${gcpWorkerMachineType}</argument>");
+      br.append("<argument>--workerMachineType=${gcpWorkerMachineType}</argument>");
       br.append("#end");
       br.append("#if($!{region})");
-      br.append("<argument>-Dregion=${region}</argument>");
+      br.append("<argument>--region=${region}</argument>");
       br.append("#end ");
       return br.toString();
 }
@@ -1617,7 +1618,6 @@ public class BeamTransformGenerator {
 		      	// private void $methodName(TableRow $sourceRow1, TableRow $sourceRow2, ..., TableRow outputRow, ErrorBuilder errorBuilder) {
 		      	
 		      	JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, fullMethodName);
-		      	
 		      	BlockInfo blockInfo = etran().beginBlock(method.body());
 		      	// TODO: declare nodeTableRow
 		      	try {
@@ -3908,13 +3908,13 @@ public class BeamTransformGenerator {
 					model.ref(FileIO.class).staticRef("Write").invoke("defaultNaming").arg(JExpr.lit("file-").plus(key)).arg(fileFormat));
 		
 			return outputTuple.invoke("get").arg(fnClass.staticRef("deadLetterTag"))
-					.invoke("setCoder").arg(model.ref(StringUtf8Coder.class).staticInvoke("of"))
+					.invoke("setCoder").arg(model.ref(NullableCoder.class).staticInvoke("of").arg(model.ref(StringUtf8Coder.class).staticInvoke("of")))
 					.invoke("apply").arg("writeErrorDocument").arg(model.ref(FileIO.class).staticInvoke("writeDynamic").narrow(stringClass).narrow(stringClass)
 							.invoke("via").arg(model.ref(TextIO.class).staticInvoke("sink"))
 							.invoke("by").arg(JExpr._new(anonymousUUIDGenerator))
 							.invoke("to").arg(model.ref(MessageFormat.class).staticInvoke("format").arg(JExpr.ref("pattern")).arg(contentType))
 							.invoke("withNumShards").arg(1)
-							.invoke("withDestinationCoder").arg(model.ref(StringUtf8Coder.class).staticInvoke("of"))
+							.invoke("withDestinationCoder").arg(model.ref(NullableCoder.class).staticInvoke("of").arg(model.ref(StringUtf8Coder.class).staticInvoke("of")))
 							.invoke("withNaming").arg(lambda));
    }
 
