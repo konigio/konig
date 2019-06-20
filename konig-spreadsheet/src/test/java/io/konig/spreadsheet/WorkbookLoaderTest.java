@@ -1708,7 +1708,7 @@ public class WorkbookLoaderTest {
 		assertTrue(shape2!=null);
 	}
 	
-	@Ignore
+	@Test
 	public void testDataDictionaryForInteger() throws Exception {
 
 		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
@@ -1760,7 +1760,7 @@ public class WorkbookLoaderTest {
 				pc.getMinInclusive().intValue()==-2147483648 && pc.getMaxInclusive().intValue()==2147483647);
 		
 		pc=shape2.getPropertyConstraint(uri("http://example.com/alias/ORDER_NUMBER"));
-		
+		assertTrue(Konig.uniqueKey.equals(pc.getStereotype()));
 		assertTrue(XMLSchema.INTEGER.equals(pc.getDatatype()) && pc.getMinInclusive().intValue()==0 
 				&& pc.getMaxInclusive().longValue() == 4294967295L);
 		
