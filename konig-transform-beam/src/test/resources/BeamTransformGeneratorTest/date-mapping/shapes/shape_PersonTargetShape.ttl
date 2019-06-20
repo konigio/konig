@@ -12,7 +12,14 @@ shape:PersonTargetShape sh:property  [
 		sh:datatype xsd:date ; 
 		rdf:predicate schema:birthDate ; 
 		sh:maxCount 1 ; 
-		sh:minCount 0 ]  ; 
+		sh:minCount 0 
+		]  , [ 
+		sh:path schema:modifiedDate ; 
+		sh:datatype xsd:dateTime ;
+		rdf:predicate schema:modifiedDate ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 		
+	 ]  ;
 	a sh:Shape ; 
 	sh:nodeKind sh:IRI ; 
 	sh:targetClass schema:Person ; 

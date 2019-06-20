@@ -10,6 +10,7 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.google.api.client.util.DateTime;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
@@ -47,6 +48,10 @@ public class ReadPersonSourceShapeFn
                         if (birth_date!= null) {
                             row.set("birth_date", birth_date);
                         }
+                        Long modified_date = temporalValue(csv, "modified_date", record, builder);
+                        if (modified_date!= null) {
+                            row.set("modified_date", modified_date);
+                        }
                         String person_id = stringValue(csv, "person_id", record, builder);
                         if (person_id!= null) {
                             row.set("person_id", person_id);
@@ -82,6 +87,7 @@ public class ReadPersonSourceShapeFn
         HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
         StringBuilder builder = new StringBuilder();
         validateHeader(headerMap, "birth_date", builder);
+        validateHeader(headerMap, "modified_date", builder);
         validateHeader(headerMap, "person_id", builder);
         if (builder.length()> 0) {
             LOGGER.warn("Mapping for {} not found", builder.toString());
@@ -112,6 +118,9 @@ public class ReadPersonSourceShapeFn
                     }
                     if (stringValue.length()> 0) {
                         try {
+                            if (new DateTime(stringValue).isDateOnly()) {
+                                return new DateTime(stringValue).getValue();
+                            }
                             if (stringValue.contains("T")) {
                                 if (stringValue.contains("/")) {
                                     return Instant.from(ZonedDateTime.parse(stringValue)).toEpochMilli();
