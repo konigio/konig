@@ -145,6 +145,9 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 			p.setStereotype(Konig.primaryKey);
 		} else if(constraintsValue!=null && constraintsValue.contains("NOT NULL")){
 			p.setMinCount(1);
+		} else if(constraintsValue!=null && constraintsValue.contains("Unique Key")){
+			p.setStereotype(Konig.uniqueKey);
+			p.setMinCount(0);
 		} else {
 			p.setMinCount(0);
 		}

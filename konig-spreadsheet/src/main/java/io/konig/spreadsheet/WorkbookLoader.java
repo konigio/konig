@@ -1695,6 +1695,10 @@ public class WorkbookLoader {
 			else if(constraints!=null && constraints.contains("NOT NULL")){
 				p.setMinCount(1);
 			}
+			else if(constraints!=null && constraints.contains("Unique Key")){
+				p.setStereotype(Konig.uniqueKey);
+				p.setMinCount(0);
+			} 
 			else{
 				p.setMinCount(0);
 			}
