@@ -18,6 +18,7 @@ public class ToPersonTargetShapeFn
             com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
             com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
             id(personSourceRow, outputRow, errorBuilder);
+            modifiedDate(personSourceRow, outputRow, errorBuilder);
             birthDate(personSourceRow, outputRow, errorBuilder);
             if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
                 c.output(successTag, outputRow);
@@ -51,6 +52,15 @@ public class ToPersonTargetShapeFn
             builder.append(obj);
         }
         return builder.toString();
+    }
+
+    private void modifiedDate(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object modified_date = ((personSourceRow == null)?null:personSourceRow.get("modified_date"));
+        if (modified_date!= null) {
+            outputRow.set("modifiedDate", modified_date);
+        } else {
+            errorBuilder.addError("Cannot set modifiedDate because {PersonSourceShape}.modified_date is null");
+        }
     }
 
     private void birthDate(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
