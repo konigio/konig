@@ -1487,7 +1487,11 @@ public class BeamTransformGenerator {
 		        AbstractJClass doubleClass = model.ref(Double.class);
 		        tryBody._return(doubleClass._new().arg(stringValue));
 		        
-		      } else if (javaClass == GregorianCalendar.class) {
+		      } else if (javaClass == Float.class) {
+			        AbstractJClass floatClass = model.ref(Float.class);
+			        tryBody._return(floatClass._new().arg(stringValue));
+			        
+			  } else if (javaClass == GregorianCalendar.class) {
 		        
 		        // if (stringValue.contains("T")) {
 		        //   if (stringValue.contains("/") {
