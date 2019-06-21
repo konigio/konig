@@ -57,6 +57,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 	private static final SheetColumn SECURITY_CLASSIFICATION = new SheetColumn("Security Classification");
 	private static final SheetColumn PII_CLASSIFICATION = new SheetColumn("PII Classification");
 	private static final SheetColumn PROJECT = new SheetColumn("Project");
+	private static final SheetColumn DERIVED_PROPERTY = new SheetColumn("Derived");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
 		SOURCE_TYPE,
@@ -74,7 +75,8 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 		DATA_STEWARD,
 		SECURITY_CLASSIFICATION,
 		PII_CLASSIFICATION,
-		PROJECT
+		PROJECT,
+		DERIVED_PROPERTY
 	};
 
 	private SettingsSheet settings;
@@ -320,13 +322,19 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 		String baseURL = settings.getPropertyBaseURL();
 		
 		URI predicate = new URIImpl(concatPath(baseURL, snake_case_name));
+		Boolean derivedProperty = booleanValue(row, DERIVED_PROPERTY);
 		
 		PropertyConstraint p = shape.getPropertyConstraint(predicate);
 		if (p != null) {
 			warn(location(row, col), "Duplicate definition of property {0} on {1}", fieldName, compactName(shape.getId()));
 		} else {
 			p = new PropertyConstraint(predicate);
-			shape.add(p);
+			if (derivedProperty != null && derivedProperty) {
+				p.setStereotype(Konig.derivedProperty);
+				shape.addDerivedProperty(p);
+			} else {
+				shape.add(p);
+			}
 		}
 		p.setMaxCount(1);
 		return p;

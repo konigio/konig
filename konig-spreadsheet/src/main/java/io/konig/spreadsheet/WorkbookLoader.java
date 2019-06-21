@@ -243,6 +243,7 @@ public class WorkbookLoader {
 	private static final String DATA_STEWARD = "Data Steward";
 	private static final String TARGET_OBJECT_NAME = "Target Object Name\n(Flatfile or Aurora Tables)";
 	private static final String TARGET_FIELD_NAME = "Target field Name";
+	private static final String DERIVED_PROPERTY = "Derived";
 	
 	//Data Dictionary Abbreviations
 	private static final String TERM = "Term";
@@ -607,6 +608,7 @@ public class WorkbookLoader {
 		private int piiClassifCol = UNDEFINED;
 		private int targetObjectNameCol = UNDEFINED;
 		private int targetFieldNameCol = UNDEFINED;
+		private int derivedPropertyCol = UNDEFINED;
 		
 		private int termCol = UNDEFINED;
 		private int abbreviationCol = UNDEFINED;
@@ -1634,7 +1636,7 @@ public class WorkbookLoader {
 			
 			PropertyConstraint p;
 			try {
-				p = dataDictionaryPropertyConstraint(shape, propertyIdValue);
+				p = dataDictionaryPropertyConstraint(row, shape, propertyIdValue);
 			} catch (JsonPathParseException | IOException e) {
 				throw new SpreadsheetException(e);
 			}
@@ -1727,8 +1729,9 @@ public class WorkbookLoader {
 			setDefaultDataSource(shapeId);
 			
 		}
-
-		private PropertyConstraint dataDictionaryPropertyConstraint(Shape shape, String propertyIdValue) throws SpreadsheetException, JsonPathParseException, IOException {
+		
+		
+		private PropertyConstraint dataDictionaryPropertyConstraint(Row row, Shape shape, String propertyIdValue) throws SpreadsheetException, JsonPathParseException, IOException {
 			
 			if (propertyIdValue.startsWith("$")) {
 				return jsonPathProcessor().parse(shape, propertyIdValue);
@@ -1737,12 +1740,26 @@ public class WorkbookLoader {
 			URI predicate = expandPropertyId(concatPath(getPropertyBaseURL(),propertyIdValue));
 			
 			PropertyConstraint p = shape.getPropertyConstraint(predicate);
+			Boolean derivedProperty = booleanValue(row, derivedPropertyCol);
+			
 
 			if (p != null) {
 				logger.warn("Duplicate definition of property '{}' on '{}'", predicate.getLocalName(),
 						RdfUtil.localName(shape.getId()));
-			} else {
-				p = new PropertyConstraint(predicate);
+			} else if(derivedProperty != null && derivedProperty) {
+				p = new PropertyConstraint(predicate);		
+				Namespace ns = nsManager.findByName(predicate.getNamespace());
+				if (ns != null) {
+					StringBuilder builder = new StringBuilder();
+					builder.append(ns.getPrefix());
+					builder.append(':');
+					builder.append(predicate.getLocalName());
+					p.setPredicate(new URIImpl(builder.toString()));
+				}						
+				p.setStereotype(Konig.derivedProperty);
+				shape.addDerivedProperty(p);		
+			}else {
+				p = new PropertyConstraint(predicate);	
 				shape.add(p);
 			}
 
@@ -2037,7 +2054,7 @@ public class WorkbookLoader {
 			sourceSystemCol = sourceObjectNameCol = fieldCol = dataTypeCol = pcMaxLengthCol = pcMinLengthCol =
 					decimalPrecisionCol = decimalScaleCol = constraintsCol = businessNameCol = businessDefinitionCol = 
 					dataStewardCol = securityClassifCol = piiClassifCol =
-					targetObjectNameCol = targetFieldNameCol = pcFormulaCol = UNDEFINED;
+					targetObjectNameCol = targetFieldNameCol = pcFormulaCol = derivedPropertyCol = UNDEFINED;
 
 			int firstRow = sheet.getFirstRowNum();
 			Row row = sheet.getRow(firstRow);
@@ -2120,6 +2137,10 @@ public class WorkbookLoader {
 						
 					case FORMULA :
 						pcFormulaCol = i;
+						break;
+					
+					case DERIVED_PROPERTY :
+						derivedPropertyCol = i;
 						break;
 					
 					}
