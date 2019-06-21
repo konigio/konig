@@ -45,12 +45,12 @@ public final class KonigGcpMojo extends AbstractMojo {
 
 	public void execute() throws MojoExecutionException {
 		String fileName = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
-		File jsonKey = new File(fileName);
 		String projectId;
 		try {
+			File jsonKey = new File(fileName);
 			projectId = readProjectId(jsonKey);
-		} catch (IOException e) {
-			throw new MojoExecutionException("Invalid JSON key file: " + jsonKey);
+		} catch (Exception e) {
+			throw new MojoExecutionException("Please set the GOOGLE_APPLICATION_CREDENTIALS environment variable");
 		}
 		
 		Properties projectProps = mavenProject.getProperties();
@@ -59,12 +59,11 @@ public final class KonigGcpMojo extends AbstractMojo {
 	}
 
 	private void copyProperty(String name, String value, Properties projectProps) {
-		projectProps.setProperty(name, value.toString());
+		projectProps.setProperty(name, value);
 	}
 
-	private String readProjectId(File jsonKey) throws MojoExecutionException, FileNotFoundException, IOException {
+	private String readProjectId(File jsonKey) throws MojoExecutionException,IOException {
 		try (FileInputStream input = new FileInputStream(jsonKey)) {
-
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode node = mapper.reader().readTree(input);
 			if (node instanceof ObjectNode) {
