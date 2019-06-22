@@ -86,6 +86,15 @@ public abstract class ShowlPropertyShape implements Traversable {
 		mappings.put(mapping.getJoinCondition(), mapping);
 	}
 	
+	public boolean isRequired() {
+		ShowlPropertyShape delegate = maybeDirect();
+		PropertyConstraint constraint = delegate.getPropertyConstraint();
+		if (constraint != null) {
+			Integer maxCount = constraint.getMaxCount();
+			return maxCount==null || maxCount>1;
+		}
+		return false;
+	}
 	
 	public Collection<ShowlMapping> getMappings() {
 		return mappings==null ? Collections.emptySet() : mappings.values();

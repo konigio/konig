@@ -99,7 +99,6 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
-import com.helger.jcodemodel.AbstractJType;
 import com.helger.jcodemodel.EClassType;
 import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.IJStatement;
@@ -133,6 +132,7 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.AlternativePathsExpression;
 import io.konig.core.showl.ShowlAlternativePath;
+import io.konig.core.showl.ShowlArrayExpression;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlClass;
 import io.konig.core.showl.ShowlDataSource;
@@ -1630,15 +1630,19 @@ public class BeamTransformGenerator {
 				      		String sourceRowName = sourceRow.name();
 				      		JVar sourceRowParam = method.param(sourceRow.type(), sourceRowName);
 				      		info.setSourceRowParam(sourceRowParam);
+				      		blockInfo.addNodeTableRow(new NodeTableRow(info.getFocusNode(), sourceRowParam));
 			      		}
 			      	}
 			
 			      	JVar outputRowParam = method.param(tableRowClass, "outputRow");
 			      	JVar errorBuilderParam = method.param(errorBuilderClass, "errorBuilder");
+			      	blockInfo.outputRow(outputRowParam);
 			      	blockInfo.errorBuilderVar(errorBuilderParam);
 			      	blockInfo.addNodeTableRow(new NodeTableRow(direct.getDeclaringShape(), outputRowParam));
 			      	
-			      	if (direct.isEnumIndividual()) {
+			      	if (direct.getSelectedExpression() instanceof ShowlArrayExpression) {
+			      		processArrayProperty(methodName, methodNameSuffix, beamTargetProperty);
+			      	} else 	if (direct.isEnumIndividual()) {
 			      		ShowlEnumJoinInfo enumJoinInfo = ShowlEnumJoinInfo.forEnumProperty(direct);
 			      		processEnumNode(methodName, methodNameSuffix, method.body(), outputRowParam, beamTargetProperty, enumJoinInfo, errorBuilderParam);
 			      		
@@ -1783,7 +1787,83 @@ public class BeamTransformGenerator {
 		      	}
 					}
 		      
-		      protected void invokePropertyMethod(JBlock callerBlock, PropertyMethod method, JVar outputRow) {
+		      private void processArrayProperty(String methodName, String methodNameSuffix, 
+							BeamTargetProperty beamTargetProperty) throws BeamTransformGenerationException {
+					
+		      	BlockInfo blockInfo = etran().peekBlockInfo();
+		      	
+		      	ShowlArrayExpression e = (ShowlArrayExpression) beamTargetProperty.getDirectProperty().getSelectedExpression();
+		      	
+		      	AbstractJClass tableRowClass = model.ref(TableRow.class);
+		      	AbstractJClass listClass = model.ref(List.class).narrow(tableRowClass);
+		      	AbstractJClass arrayListClass = model.ref(ArrayList.class);
+		      	
+		      	JBlock block = blockInfo.getBlock();
+		      	
+		      	JVar list = block.decl(listClass, "list").init(arrayListClass._new());
+		      	blockInfo.setListVar(list);
+		      	
+		      	int memberIndex = 0;
+		      	
+		      	for (ShowlExpression member : e.getMemberList()) {
+		      		if (member instanceof ShowlStructExpression) {
+		      			processArrayMember(methodName, methodNameSuffix, memberIndex, list, (ShowlStructExpression) member);
+		      			
+		      		} else {
+		      			fail("Array member of type {0} not supported for {1}", 
+		      					member.getClass().getSimpleName(), beamTargetProperty.getDirectProperty().getPath());
+		      		}
+		      		memberIndex++;
+		      	}
+		      	
+		      	String fieldName = beamTargetProperty.getDirectProperty().getPredicate().getLocalName();
+		      	JConditional ifStatement = block._if(list.invoke("isEmpty").not());
+		      	ifStatement._then().add(
+		      			blockInfo.getOutputRow().invoke("set")
+		      			.arg(JExpr.lit(fieldName))
+		      			.arg(list));
+		      	
+		      	if (beamTargetProperty.getDirectProperty().isRequired()) {
+		      		String err = MessageFormat.format(
+		      				"The ''{0}'' collection must contain at least one value, but found none", fieldName);
+		      		ifStatement._else().add(
+		      				blockInfo.getErrorBuilderVar().invoke("addError").arg(JExpr.lit(err)));
+		      	}
+						
+					}
+
+					private void processArrayMember(String methodName, String methodNameSuffix, int memberIndex, JVar list,
+							ShowlStructExpression member) throws BeamTransformGenerationException {
+						
+						methodName = methodName + '_' + memberIndex;
+						
+						String fullMethodName = methodNameSuffix == null ? methodName : methodName + methodNameSuffix;
+
+						BeamExpressionTransform etran = etran();
+						BlockInfo callerBlockInfo = etran.peekBlockInfo();
+						
+						JVar callerList = callerBlockInfo.getListVar();
+						
+						
+						JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, fullMethodName);
+						BeamMethod beamMethod = new BeamMethod(method);
+						BlockInfo thisBlock = etran().beginBlock(method.body());
+						try {
+							thisBlock.addListParam(beamMethod, callerList.type(), callerList.name());
+							thisBlock.addRowParameters(beamMethod, targetNode, member);
+							beamMethod.addErrorBuilderParam(errorBuilderClass());
+							
+							
+							
+						} finally {
+							etran().endBlock();
+						}
+						
+
+						callerBlockInfo.invoke(beamMethod);
+					}
+
+					protected void invokePropertyMethod(JBlock callerBlock, PropertyMethod method, JVar outputRow) {
 		      	JMethod jmethod = method.getMethod();
 		      	JInvocation invoke = JExpr.invoke(jmethod);
 		      	BeamTargetProperty beamTargetProperty = method.getTargetProperty();
@@ -2178,6 +2258,7 @@ public class BeamTransformGenerator {
 								beamChannelSet.isEmpty() && 
 								!(e instanceof ShowlFilterExpression) && 
 								!(e instanceof ShowlSystimeExpression) &&
+								!(e instanceof ShowlArrayExpression) &&
 								!(e instanceof AlternativePathsExpression) &&
 								!direct.isEnumIndividual(reasoner)
 						) {
