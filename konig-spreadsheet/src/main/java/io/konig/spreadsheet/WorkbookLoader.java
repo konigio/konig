@@ -1756,7 +1756,6 @@ public class WorkbookLoader {
 					builder.append(predicate.getLocalName());
 					p.setPredicate(new URIImpl(builder.toString()));
 				}						
-				p.setStereotype(Konig.derivedProperty);
 				shape.addDerivedProperty(p);		
 			}else {
 				p = new PropertyConstraint(predicate);	

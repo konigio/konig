@@ -1675,7 +1675,6 @@ public class WorkbookLoaderTest {
 		assertTrue(shape != null);
 		assertEquals(1, shape.getDerivedProperty().size());
 		PropertyConstraint pc = shape.getDerivedProperty().get(0);
-		assertTrue(Konig.derivedProperty.equals(pc.getStereotype()));
 		assertEquals(uri("ex:ORDER_KEY"), pc.getPredicate());
 	}
 	

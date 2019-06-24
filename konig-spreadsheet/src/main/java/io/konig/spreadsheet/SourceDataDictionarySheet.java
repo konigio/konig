@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -330,7 +331,15 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 		} else {
 			p = new PropertyConstraint(predicate);
 			if (derivedProperty != null && derivedProperty) {
-				p.setStereotype(Konig.derivedProperty);
+				NamespaceManager nsManager = processor.getGraph().getNamespaceManager();
+				Namespace ns = nsManager.findByName(predicate.getNamespace());
+				if (ns != null) {
+					StringBuilder builder = new StringBuilder();
+					builder.append(ns.getPrefix());
+					builder.append(':');
+					builder.append(predicate.getLocalName());
+					p.setPredicate(new URIImpl(builder.toString()));
+				}	
 				shape.addDerivedProperty(p);
 			} else {
 				shape.add(p);
