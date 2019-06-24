@@ -10,7 +10,8 @@ import com.helger.jcodemodel.JVar;
 
 public class BeamMethod {
 	
-	
+	private String methodNameBase;
+	private String methodNameSuffix;
 	private JMethod method;
 	private List<BeamParameter> parameters = new ArrayList<>();
 	
@@ -41,5 +42,18 @@ public class BeamMethod {
 		JVar param = method.param(errorBuilderClass, "errorBuilder");
 		addParameter(BeamParameter.ofErrorBuilder(param));
 	}
+	public String getMethodNameBase() {
+		return methodNameBase;
+	}
+	public void setMethodNameBase(String methodNameBase) {
+		this.methodNameBase = methodNameBase;
+	}
+	public String getMethodNameSuffix() {
+		return methodNameSuffix;
+	}
+	public void setMethodNameSuffix(String methodNameSuffix) {
+		this.methodNameSuffix = methodNameSuffix;
+	}
 
+	
 }

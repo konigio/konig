@@ -1,5 +1,7 @@
 package io.konig.transform.beam;
 
+import java.text.MessageFormat;
+
 /*
  * #%L
  * Konig Transform Beam
@@ -29,7 +31,10 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+
+import org.openrdf.model.URI;
 
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
@@ -41,10 +46,12 @@ import com.helger.jcodemodel.JInvocation;
 import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JVar;
 
+import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.ShowlUtil;
 import io.konig.core.util.StringUtil;
 
@@ -59,6 +66,8 @@ public class BlockInfo implements BeamPropertyManager {
 	private JVar outputRow;
 	private JVar errorBuilderVar;
 	private EnumValueType enumValueType = EnumValueType.LOCAL_NAME;
+	private BeamMethod beamMethod;
+	private BeamPropertySink propertySink;
 
 	private Map<ShowlPropertyShape, BeamSourceProperty> map = new HashMap<>();
 	
@@ -67,12 +76,46 @@ public class BlockInfo implements BeamPropertyManager {
 		this.block = block;
 	}
 
+	public BeamMethod getBeamMethod() {
+		return beamMethod;
+	}
+
+	public BlockInfo beamMethod(BeamMethod beamMethod) {
+		this.beamMethod = beamMethod;
+		return this;
+	}
+
 	public BlockInfo nodeTableRowMap(Map<ShowlNodeShape, NodeTableRow> tableRowMap) {
 		this.nodeTableRowMap = tableRowMap;
 		return this;
 		
 	}
+	
+	public BeamSourceProperty createSourceProperty(ShowlPropertyShape p) throws BeamTransformGenerationException {
+		BeamSourceProperty result = map.get(p);
+		if (result == null) {
+			result = new BeamSourceProperty(null, p);
+			JCodeModel model = beamMethod.getMethod().owner();
+			AbstractJClass objectClass = model.ref(Object.class);
+			String fieldName = p.getPredicate().getLocalName();
+			JVar var = block.decl(objectClass, fieldName);
+			
+			ShowlNodeShape node = p.getDeclaringShape();
+			NodeTableRow row = getNodeTableRow(node);
+			
+			var.init(row.getTableRowVar().invoke("get").arg(JExpr.lit(fieldName)));
+			
+			result.setVar(var);
+			
+			map.put(p, result);
+			
+		}
+		return result;
+	}
 
+	/**
+	 * The row that this block is expected to populate.
+	 */
 	public JVar getOutputRow() {
 		return outputRow;
 	}
@@ -264,6 +307,19 @@ public class BlockInfo implements BeamPropertyManager {
 	public void addListParam(BeamMethod beamMethod, AbstractJType paramType, String paramName) {
 		BeamParameter param = beamMethod.addListParam(paramType, paramName);
 		listVar = param.getVar();
+		propertySink = new BeamListSink(listVar);
 	}
+
+	public BeamPropertySink getPropertySink() throws BeamTransformGenerationException {
+		if (propertySink == null) {
+			throw new BeamTransformGenerationException("propertySink is null");
+		}
+		return propertySink;
+	}
+
+	public void setPropertySink(BeamPropertySink propertySink) {
+		this.propertySink = propertySink;
+	}
+
 
 }

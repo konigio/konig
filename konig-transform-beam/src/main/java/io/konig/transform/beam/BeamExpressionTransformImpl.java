@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -57,6 +58,7 @@ import com.helger.jcodemodel.JVar;
 import io.konig.core.OwlReasoner;
 import io.konig.core.showl.ShowlCaseStatement;
 import io.konig.core.showl.ShowlContainmentOperator;
+import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlEnumIndividualReference;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlFilterExpression;
@@ -616,5 +618,44 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		throw new BeamTransformGenerationException(msg);
 		
 	}
+	
+
+	@Override
+	public void processProperty(ShowlDirectPropertyShape targetProperty, ShowlExpression e) throws BeamTransformGenerationException {
+		
+		if (e instanceof ShowlStructExpression) {
+			processStruct(targetProperty, (ShowlStructExpression) e);
+		} else {
+			fail("Unsupported expression type ''{0}'' at {1}", e.getClass().getSimpleName(), targetProperty.getPath());
+		}
+		
+	}
+
+
+	private void processStruct(ShowlDirectPropertyShape targetProperty, ShowlStructExpression struct) throws BeamTransformGenerationException {
+		
+		
+		AbstractJClass tableRowClass = model.ref(TableRow.class);
+		
+		
+		BlockInfo blockInfo = peekBlockInfo();
+		JBlock block = blockInfo.getBlock();
+		
+		String fieldName = targetProperty.getPredicate().getLocalName();
+		JVar structVar = block.decl(tableRowClass, fieldName + "Row")
+				.init(tableRowClass._new());
+		
+		for (Entry<URI, ShowlExpression> entry : struct.entrySet()) {
+			URI predicate = entry.getKey();
+			ShowlExpression e = entry.getValue();
+		}
+
+		JVar outputRow = blockInfo.getOutputRow();
+		JConditional ifStatement = block._if(structVar.invoke("isEmpty").not());
+		
+		blockInfo.getPropertySink().captureProperty(this, ifStatement, targetProperty, structVar);
+		
+	}
+
 	
 }

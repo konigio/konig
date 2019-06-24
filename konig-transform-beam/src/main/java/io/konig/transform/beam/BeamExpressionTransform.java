@@ -24,6 +24,7 @@ package io.konig.transform.beam;
 import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.JBlock;
 
+import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlExpression;
 
 public interface BeamExpressionTransform {
@@ -35,5 +36,8 @@ public interface BeamExpressionTransform {
 	void endBlock();
 
 	BlockInfo peekBlockInfo() throws BeamTransformGenerationException;
+
+	void processProperty(ShowlDirectPropertyShape targetProperty, ShowlExpression member) 
+			throws BeamTransformGenerationException;
 
 }

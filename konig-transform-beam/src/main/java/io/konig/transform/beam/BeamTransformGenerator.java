@@ -1807,7 +1807,8 @@ public class BeamTransformGenerator {
 		      	
 		      	for (ShowlExpression member : e.getMemberList()) {
 		      		if (member instanceof ShowlStructExpression) {
-		      			processArrayMember(methodName, methodNameSuffix, memberIndex, list, (ShowlStructExpression) member);
+		      			processArrayMember(methodName, methodNameSuffix, memberIndex, list, (ShowlStructExpression) member,
+		      					beamTargetProperty.getDirectProperty());
 		      			
 		      		} else {
 		      			fail("Array member of type {0} not supported for {1}", 
@@ -1833,7 +1834,7 @@ public class BeamTransformGenerator {
 					}
 
 					private void processArrayMember(String methodName, String methodNameSuffix, int memberIndex, JVar list,
-							ShowlStructExpression member) throws BeamTransformGenerationException {
+							ShowlExpression member, ShowlDirectPropertyShape targetProperty) throws BeamTransformGenerationException {
 						
 						methodName = methodName + '_' + memberIndex;
 						
@@ -1852,6 +1853,9 @@ public class BeamTransformGenerator {
 							thisBlock.addListParam(beamMethod, callerList.type(), callerList.name());
 							thisBlock.addRowParameters(beamMethod, targetNode, member);
 							beamMethod.addErrorBuilderParam(errorBuilderClass());
+							
+							etran().processProperty(targetProperty, member);
+							
 							
 							
 							
