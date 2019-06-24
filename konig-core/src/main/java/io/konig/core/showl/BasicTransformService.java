@@ -30,6 +30,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.slf4j.Logger;
@@ -219,6 +220,10 @@ public class BasicTransformService implements ShowlTransformService {
 			}
 			
 			return true;
+		} else if (channelAlreadyExists(sourceShape, targetRoot)) { 
+			logger.warn("addChannel: Channel for {} already exists.");
+			return true;
+			
 		} else if (isEnumClass(sourceShape.getOwlClass())) {
 			ShowlStatement join = enumJoinStatement(sourceShape);
 			targetRoot.addChannel(new ShowlChannel(sourceShape, join));
@@ -285,6 +290,23 @@ public class BasicTransformService implements ShowlTransformService {
 		if (logger.isWarnEnabled()) {
 			
 			logger.warn("Failed to create channel for {} in transform of {}", sourceShape.getPath(), sourceShape.getTargetNode().getPath());
+		}
+		return false;
+	}
+
+
+	/**
+	 * This is a bit of a hack.  We should never attempt to add a channel that already exists.
+	 * The fact that we need to check for an existing channel suggests that we have a bug elsewhere in the
+	 * code.  We ought to track down the root cause of that bug instead of masking it by ignoring requests
+	 * to create a channel when the channel already exists.
+	 */
+	private boolean channelAlreadyExists(ShowlNodeShape sourceShape, ShowlNodeShape targetRoot) {
+		Resource sourceShapeId = sourceShape.getId();
+		for (ShowlChannel channel : targetRoot.getChannels()) {
+			if (channel.getSourceNode().getId().equals(sourceShapeId)) {
+				return true;
+			}
 		}
 		return false;
 	}

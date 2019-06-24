@@ -569,7 +569,7 @@ public class FormulaParser {
 		private PathTerm tryCurieOrLocalName() throws IOException, RDFParseException {
 			
 			int c = next();
-			if (Character.isLetter(c)) {
+			if (Character.isLetterOrDigit(c)) {
 				
 				StringBuilder buffer = buffer();
 				do {
@@ -580,7 +580,7 @@ public class FormulaParser {
 				if (c == ':') {
 					String prefix = predicate;
 					c = read();
-					if (Character.isLetter(c)) {
+					if (Character.isLetterOrDigit(c)) {
 						buffer = buffer();
 						do {
 							buffer.appendCodePoint(c);
