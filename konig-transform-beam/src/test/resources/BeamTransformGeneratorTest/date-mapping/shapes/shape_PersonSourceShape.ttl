@@ -12,7 +12,17 @@ shape:PersonSourceShape sh:property  [
 		rdf:predicate alias:person_id ; 
 		sh:maxCount 1 ; 
 		sh:minCount 1
-	 ]  ,  [ 
+	 ]  , [ 
+		sh:path alias:modified_date ; 
+		sh:datatype xsd:dateTime ; 
+		rdf:predicate alias:modified_date ; 
+		konig:formula '''
+@term modifiedDate <http://schema.org/modifiedDate>
+
+$.modifiedDate''' ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0
+	 ] , [ 
 		sh:path alias:birth_date ; 
 		sh:datatype xsd:date ; 
 		rdf:predicate alias:birth_date ; 

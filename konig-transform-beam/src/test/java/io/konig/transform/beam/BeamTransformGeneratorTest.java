@@ -189,6 +189,13 @@ public class BeamTransformGeneratorTest {
 	}
 	
 	@Test
+	public void testFloatMapping() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/float-mapping");
+		
+	}
+	
+	@Test
 	public void testEnumMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-mapping");
