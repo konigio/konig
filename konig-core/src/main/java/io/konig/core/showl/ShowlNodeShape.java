@@ -680,7 +680,7 @@ public class ShowlNodeShape implements Traversable {
 	}
 
 	public boolean isTargetNode() {
-		return targetNode==null;
+		return targetNode==null && targetProperty==null;
 	}
 
 	public List<ShowlPropertyShape> path() {

@@ -109,7 +109,7 @@ public class BeamTransformGeneratorTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testTrivialIriTemplate() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/trivial-iri-template", false);
@@ -117,28 +117,28 @@ public class BeamTransformGeneratorTest {
 	}
 	
 
-	@Ignore
+	@Test
 	public void testClassIriTemplate() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/class-iri-template");
 		
 	}
 
-	@Ignore
+	@Test
 	public void testNestedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/nested-record");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIriTemplateFormula() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/iri-template-formula", false);
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testHardCodedEnum() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/hard-coded-enum", false);
@@ -152,21 +152,21 @@ public class BeamTransformGeneratorTest {
 	
 
 
-	@Ignore
+	@Test
 	public void testModelSummary() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/model-summary", false);
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinById() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-by-id", false);
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDateMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/date-mapping");
@@ -174,21 +174,21 @@ public class BeamTransformGeneratorTest {
 	}
 	
 
-	@Ignore
+	@Test
 	public void testTabularMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/tabular-mapping");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testLongMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/long-mapping");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testEnumMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-mapping");
@@ -196,7 +196,7 @@ public class BeamTransformGeneratorTest {
 	}
 
 	
-	@Ignore
+	@Test
 	public void testEnumIriReference() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-iri-reference");
@@ -204,7 +204,7 @@ public class BeamTransformGeneratorTest {
 	}
 	
 
-	@Ignore
+	@Test
 	public void testJoinNestedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record", false);
@@ -212,36 +212,29 @@ public class BeamTransformGeneratorTest {
 	}
 
 
-	@Ignore
+	@Test
 	public void testJoinNestedRecordViaInverse() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record-via-inverse", false);
 		
 	}
-	
-	@Ignore
-	public void testPathFilterMapping() throws Exception {
-		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/path-filter-mapping");
-		
-	}
-	
 
-	@Ignore
+
+	@Test
 	public void testSystime() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/systime");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testAnnotatedIdentity() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/annotated-identity", false);
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testTargetCaseStatement() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/target-case-statement");
@@ -251,7 +244,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testRepeatedRecord() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/repeated-record");
+		generateAll("src/test/resources/BeamTransformGeneratorTest/repeated-record", false);
 		
 	}
 
@@ -287,6 +280,10 @@ public class BeamTransformGeneratorTest {
 				.build();
 		
 		generator.generateAll(request);
+		
+		if (generator.isEncounteredError()) {
+			fail("BeamTransformGenerator encountered an error (see stack trace in log)");
+		}
 		
 		if (withValidation) {
 			

@@ -37,9 +37,13 @@ public class ReadPersonSourceShapeFn
                     StringBuilder builder = new StringBuilder();
                     try {
                         com.google.api.services.bigquery.model.TableRow row = new com.google.api.services.bigquery.model.TableRow();
-                        String mdm_id = stringValue(csv, "mdm_id", record, builder);
-                        if (mdm_id!= null) {
-                            row.set("mdm_id", mdm_id);
+                        String father_name = stringValue(csv, "father_name", record, builder);
+                        if (father_name!= null) {
+                            row.set("father_name", father_name);
+                        }
+                        String mother_name = stringValue(csv, "mother_name", record, builder);
+                        if (mother_name!= null) {
+                            row.set("mother_name", mother_name);
                         }
                         String person_id = stringValue(csv, "person_id", record, builder);
                         if (person_id!= null) {
@@ -75,7 +79,8 @@ public class ReadPersonSourceShapeFn
     private void validateHeaders(CSVParser csv) {
         HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
         StringBuilder builder = new StringBuilder();
-        validateHeader(headerMap, "mdm_id", builder);
+        validateHeader(headerMap, "father_name", builder);
+        validateHeader(headerMap, "mother_name", builder);
         validateHeader(headerMap, "person_id", builder);
         if (builder.length()> 0) {
             LOGGER.warn("Mapping for {} not found", builder.toString());

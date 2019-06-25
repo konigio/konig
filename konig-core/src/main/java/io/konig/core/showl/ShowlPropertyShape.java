@@ -503,8 +503,8 @@ public abstract class ShowlPropertyShape implements Traversable {
 		return getSelectedExpression() instanceof ShowlEnumNodeExpression;
 	}
 
-	public boolean isEnumProperty() {
-		return ShowlUtil.isEnumSourceNode(getDeclaringShape());
+	public boolean isEnumProperty(OwlReasoner reasoner) {
+		return ShowlUtil.isEnumSourceNode(getDeclaringShape(), reasoner);
 	}
 
 	public boolean isTargetProperty() {

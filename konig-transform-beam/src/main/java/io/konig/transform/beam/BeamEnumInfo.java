@@ -21,14 +21,34 @@ package io.konig.transform.beam;
  */
 
 
-import com.helger.jcodemodel.IJExpression;
-import com.helger.jcodemodel.JConditional;
+import com.helger.jcodemodel.JVar;
 
-import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlNodeShape;
 
-public interface BeamPropertySink {
+public class BeamEnumInfo {
 	
-	void captureProperty(BeamExpressionTransform etran, JConditional ifStatement, ShowlPropertyShape targetProperty, IJExpression propertyValue) 
-			throws BeamTransformGenerationException;
-		
+	private EnumValueType enumValueType;
+	private JVar enumValue;
+	private ShowlNodeShape enumNode;
+	
+	public BeamEnumInfo(EnumValueType enumValueType, JVar enumValue, ShowlNodeShape enumNode) {
+		this.enumValueType = enumValueType;
+		this.enumValue = enumValue;
+		this.enumNode = enumNode;
+	}
+
+	public EnumValueType getEnumValueType() {
+		return enumValueType;
+	}
+
+	public JVar getEnumValue() {
+		return enumValue;
+	}
+
+	public ShowlNodeShape getEnumNode() {
+		return enumNode;
+	}
+	
+	
+	
 }

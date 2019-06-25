@@ -23,30 +23,32 @@ package io.konig.transform.beam;
 
 import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.JConditional;
+import com.helger.jcodemodel.JExpr;
+import com.helger.jcodemodel.JStringLiteral;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.showl.ShowlPropertyShape;
 
-public class BeamListSink implements BeamPropertySink {
+public class BeamRowSink implements BeamPropertySink {
 	
-	private JVar listVar;
+	public static BeamRowSink INSTANCE = new BeamRowSink();
 
-
-	public BeamListSink(JVar listVar) {
-		this.listVar = listVar;
+	private BeamRowSink() {
 	}
-
 
 	@Override
 	public void captureProperty(BeamExpressionTransform etran, JConditional ifStatement,
 			ShowlPropertyShape targetProperty, IJExpression propertyValue) throws BeamTransformGenerationException {
 		
+		JVar outputRow = etran.peekBlockInfo().getOutputRow();
 		
-		ifStatement._then().add(listVar.invoke("add").arg(propertyValue));
+		if (outputRow == null) {
+			throw new BeamTransformGenerationException("outputRow for property " + targetProperty.getPath() + " is null");
+		}
 		
-		
+		JStringLiteral fieldName = JExpr.lit(targetProperty.getPredicate().getLocalName());
+		ifStatement._then().add(outputRow.invoke("set").arg(fieldName).arg(propertyValue));
+
 	}
-
-
 
 }

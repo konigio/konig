@@ -1,6 +1,0 @@
-@prefix gcp: <http://www.konig.io/ns/gcp/> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix vann: <http://purl.org/vocab/vann/> .
-
-gcp: a owl:Ontology ; 
-	vann:preferredNamespacePrefix "gcp" . 

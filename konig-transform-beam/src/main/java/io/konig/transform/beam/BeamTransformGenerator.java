@@ -133,6 +133,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.AlternativePathsExpression;
 import io.konig.core.showl.ShowlAlternativePath;
 import io.konig.core.showl.ShowlArrayExpression;
+import io.konig.core.showl.ShowlBasicStructExpression;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlClass;
 import io.konig.core.showl.ShowlDataSource;
@@ -1169,6 +1170,8 @@ public class BeamTransformGenerator {
 		    method.annotate(model.directClass(ProcessElement.class.getName()));
 		    AbstractJClass processContextClass = model.directClass(ProcessContext.class.getName());
 		    
+		    etran().beginBlock(method.body());
+		    
 		    JVar c = method.param(processContextClass, "c");
 		    
 		    //   try {
@@ -1349,7 +1352,7 @@ public class BeamTransformGenerator {
 		    headerBlock1.add(builder.invoke("append").arg(columnName));
 		    headerBlock1.add(builder.invoke("append").arg(";"));
 		    
-		    
+		    etran().endBlock();
 		  }
 		
 		
@@ -1619,6 +1622,11 @@ public class BeamTransformGenerator {
 		      	JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, fullMethodName);
 		      	
 		      	BlockInfo blockInfo = etran().beginBlock(method.body());
+		      	BeamMethod beamMethod = new BeamMethod(method);
+		      	beamMethod.setMethodNameBase(methodName);
+		      	beamMethod.setMethodNameSuffix(methodNameSuffix);
+		      	
+		      	blockInfo.beamMethod(beamMethod);
 		      	// TODO: declare nodeTableRow
 		      	try {
 		      	
@@ -1845,16 +1853,18 @@ public class BeamTransformGenerator {
 						
 						JVar callerList = callerBlockInfo.getListVar();
 						
-						
 						JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, fullMethodName);
 						BeamMethod beamMethod = new BeamMethod(method);
 						BlockInfo thisBlock = etran().beginBlock(method.body());
 						try {
+							thisBlock.beamMethod(beamMethod);
+							beamMethod.setMethodNameBase(methodName);
+							beamMethod.setMethodNameSuffix(methodNameSuffix);
 							thisBlock.addListParam(beamMethod, callerList.type(), callerList.name());
-							thisBlock.addRowParameters(beamMethod, targetNode, member);
+							etran.addRowParameters(beamMethod, member);
 							beamMethod.addErrorBuilderParam(errorBuilderClass());
 							
-							etran().processProperty(targetProperty, member);
+							etran.processProperty(targetProperty, member);
 							
 							
 							
@@ -2226,7 +2236,7 @@ public class BeamTransformGenerator {
 		      protected ShowlExpression selectedExpression(ShowlDirectPropertyShape direct) {
 						ShowlExpression e = direct.getSelectedExpression();
 						if (e == null && direct.getValueShape()!=null) {
-							return new ShowlStructExpression(direct);
+							return new ShowlBasicStructExpression(direct);
 						}
 						return e;
 					}
@@ -2281,7 +2291,7 @@ public class BeamTransformGenerator {
 							
 							BeamChannel channel = result.channelFor(s);
 							
-							BeamSourceProperty sourceProperty = s.isEnumProperty() ?
+							BeamSourceProperty sourceProperty = s.isEnumProperty(reasoner) ?
 									new BeamEnumSourceProperty(channel, s) :
 									new BeamSourceProperty(channel, s);
 							sourcePropertyList.add(sourceProperty);
@@ -3264,7 +3274,7 @@ public class BeamTransformGenerator {
 				
 				// Since we did not match the primary channel, consider the case of an enumerated value.
 				
-				if (ShowlUtil.isEnumSourceNode(sourceRoot)) {
+				if (ShowlUtil.isEnumSourceNode(sourceRoot, reasoner)) {
 					if (beamChannelMap == null) {
 						beamChannelMap = new HashMap<>();
 					}

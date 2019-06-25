@@ -22,17 +22,18 @@ package io.konig.transform.beam;
 
 
 import java.text.MessageFormat;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -60,6 +61,8 @@ import io.konig.core.showl.ShowlCaseStatement;
 import io.konig.core.showl.ShowlContainmentOperator;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlEnumIndividualReference;
+import io.konig.core.showl.ShowlEnumPropertyExpression;
+import io.konig.core.showl.ShowlEnumStructExpression;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlFilterExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
@@ -74,6 +77,7 @@ import io.konig.core.showl.ShowlUtil;
 import io.konig.core.showl.ShowlWhenThenClause;
 import io.konig.core.showl.expression.ShowlLiteralExpression;
 import io.konig.core.util.StringUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.FunctionModel;
 
@@ -89,7 +93,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 	private JMethod stripSpacesMethod;
 	private JMethod pathGetter;
 	private int caseCount = 0;
-	private ArrayDeque<BlockInfo> blockStack;
+	private ArrayList<BlockInfo> blockStack;
 
 	
 	public BeamExpressionTransformImpl(
@@ -262,7 +266,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		if (blockStack==null || blockStack.isEmpty()) {
 			fail("BlockInfo stack is empty");
 		}
-		return  blockStack.getLast();
+		return  blockStack.get(blockStack.size()-1);
 	}
 
 	private IJExpression caseStatement(ShowlCaseStatement e) throws BeamTransformGenerationException {
@@ -294,8 +298,15 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		
 		BlockInfo blockInfo = beginBlock(method.body())
 				.nodeTableRowMap(tableRowMap)
-				.enumValueType(EnumValueType.OBJECT)
 				.errorBuilderVar(errorBuilderVar);
+		
+		if (reasoner.isEnumerationClass(valueType)) {
+			
+			// For now we will use EnumValueType.OBJECT.
+			// But that's not always true.  How do we detect whether it should be EnumValueType.LOCAL_NAME?
+			
+			blockInfo.setEnumInfo(new BeamEnumInfo(EnumValueType.OBJECT, resultParam, null));
+		}
 		
 		JConditional ifStatement = null;
 		
@@ -363,7 +374,6 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		JVar errorBuilderVar = method.param(errorBuilderClass, "errorBuilder");
 		beginBlock(method.body())
 			.nodeTableRowMap(thisTableRowMap)
-			.enumValueType(EnumValueType.OBJECT)
 			.errorBuilderVar(errorBuilderVar);
 		
 		for (NodeTableRow param : thisTableRowMap.values()) {
@@ -387,16 +397,16 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 
 	@Override
 	public void endBlock() {
-		blockStack.removeLast();
+		blockStack.remove(blockStack.size()-1);
 	}
 
 	@Override
 	public BlockInfo beginBlock(JBlock block) {
 		if (blockStack == null) {
-			blockStack = new ArrayDeque<>();
+			blockStack = new ArrayList<>();
 		}
 		BlockInfo info = new BlockInfo(block);
-		blockStack.addLast(info);
+		blockStack.add(info);
 		return info;
 	}
 
@@ -444,7 +454,9 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		URI iri = e.getIriValue();
 		JStringLiteral localName = JExpr.lit(iri.getLocalName());
 		BlockInfo blockInfo = peekBlockInfo();
-		if (blockInfo != null && blockInfo.getEnumValueType()==EnumValueType.OBJECT) {
+		BeamEnumInfo enumInfo = blockInfo==null ? null : blockInfo.getEnumInfo();
+		
+		if (enumInfo != null && enumInfo.getEnumValueType()==EnumValueType.OBJECT) {
 			URI owlClass = typeManager.enumClassOfIndividual(iri);
 			AbstractJClass javaClass = typeManager.enumClass(owlClass);
 			return javaClass.staticInvoke("findByLocalName").arg(localName);
@@ -645,17 +657,290 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		JVar structVar = block.decl(tableRowClass, fieldName + "Row")
 				.init(tableRowClass._new());
 		
-		for (Entry<URI, ShowlExpression> entry : struct.entrySet()) {
-			URI predicate = entry.getKey();
-			ShowlExpression e = entry.getValue();
+		
+		if (struct instanceof ShowlEnumStructExpression) {
+			ShowlNodeShape enumNode = ((ShowlEnumStructExpression) struct).getEnumNodeShape();
+			blockInfo.addNodeTableRow(new NodeTableRow(enumNode, structVar));
+		} else {
+			blockInfo.addNodeTableRow(new NodeTableRow(targetProperty.getValueShape(), structVar));
 		}
+		
+		processStructPropertyList(targetProperty, struct);
+		
+		
 
-		JVar outputRow = blockInfo.getOutputRow();
 		JConditional ifStatement = block._if(structVar.invoke("isEmpty").not());
 		
 		blockInfo.getPropertySink().captureProperty(this, ifStatement, targetProperty, structVar);
 		
 	}
 
+	private void processStructPropertyList(ShowlDirectPropertyShape targetProperty, ShowlStructExpression struct) throws BeamTransformGenerationException {
+		ShowlNodeShape targetNode = targetProperty.getValueShape();
+		
+		for (Entry<URI, ShowlExpression> entry : struct.entrySet()) {
+			URI predicate = entry.getKey();
+			ShowlExpression e = entry.getValue();
+			
+			ShowlDirectPropertyShape direct = targetNode.getProperty(predicate);
+			processStructField(direct, e);
+		}
+		
+	}
+
+	private void processStructField(ShowlDirectPropertyShape direct, ShowlExpression e) throws BeamTransformGenerationException {
+		
+		BlockInfo callerBlockInfo = peekBlockInfo();
+		URI predicate = direct.getPredicate();
+		BeamMethod beamMethod = callerBlockInfo.createMethod(predicate.getLocalName(), model.VOID);
+		
+		BlockInfo thisBlockInfo = beginBlock(beamMethod.getMethod().body());
+		try {
+		  thisBlockInfo.beamMethod(beamMethod);
+			addRowParameters(beamMethod, e);
+			addOutputRowParam(beamMethod, direct.getDeclaringShape());
+			
+			// Declare variables that hold the source values.
+			
+			declareLocalVariables(direct, e);
+
+			
+			if (e instanceof ShowlStructExpression) {
+				processStructPropertyList(direct, (ShowlStructExpression) e);
+			}
+
+			// For now, we assume that this method should set values on an output TableRow.
+			// Later we'll need to handle the case where this method must append values to a List.
+			thisBlockInfo.setPropertySink(BeamRowSink.INSTANCE);
+			
 	
+			captureValue(direct, e);
+			
+			
+			
+		} finally {
+			endBlock();
+		}
+		
+		callerBlockInfo.invoke(beamMethod);
+	}
+	
+
+	private void addOutputRowParam(BeamMethod beamMethod, ShowlNodeShape node) throws BeamTransformGenerationException {
+		
+		BlockInfo blockInfo = peekBlockInfo();
+		
+		JCodeModel model = beamMethod.getMethod().owner();
+		AbstractJClass tableRowClass = model.ref(TableRow.class);
+		
+		JVar outputRow = beamMethod.getMethod().param(tableRowClass, "outputRow");
+		blockInfo.outputRow(outputRow);
+		
+		BeamEnumInfo enumInfo = findEnumInfo();
+		if (enumInfo!=null) {
+			node = enumInfo.getEnumNode();
+		}
+		
+		beamMethod.addParameter(BeamParameter.ofTargetRow(outputRow, node));
+		
+		blockInfo.addNodeTableRow(new NodeTableRow(node, outputRow));
+		
+		
+		
+		
+	}
+
+	private void declareLocalVariables(ShowlDirectPropertyShape targetProperty, ShowlExpression e) throws BeamTransformGenerationException {
+		
+		BlockInfo blockInfo = peekBlockInfo();
+		JBlock block = blockInfo.getBlock();
+		
+		if (targetProperty.getValueShape() != null) {
+			// Declare a TableRow variable that will hold the values of the value shape.
+			AbstractJClass tableRowClass = model.ref(TableRow.class);
+			
+			String rowName = targetProperty.getPredicate().getLocalName() + "Row";
+			
+			JVar rowVar = block.decl(tableRowClass, rowName).init(tableRowClass._new());
+			blockInfo.addNodeTableRow(new NodeTableRow(targetProperty.getValueShape(), rowVar));
+			
+			if (e instanceof ShowlEnumStructExpression) {
+				ShowlEnumStructExpression enumStruct = (ShowlEnumStructExpression) e;				
+
+				AbstractJClass valueType = typeManager.enumClass(enumStruct.getEnumNodeShape().getOwlClass().getId());
+				blockInfo.addNodeTableRow(new NodeTableRow(enumStruct.getEnumNodeShape(), rowVar));
+				JVar enumValueVar = block.decl(valueType, targetProperty.getPredicate().getLocalName());
+				BeamEnumInfo info = new BeamEnumInfo(EnumValueType.OBJECT, enumValueVar, enumStruct.getEnumNodeShape());
+				blockInfo.setEnumInfo(info);
+				
+			}
+			
+		} else if (e instanceof ShowlEnumPropertyExpression) {
+
+			AbstractJClass objectClass = model.ref(Object.class);
+
+			
+			ShowlPropertyShape p = ((ShowlEnumPropertyExpression) e).getSourceProperty();
+
+			// The first parameter of the enclosing method should be the enum object from which we can get field values.
+			// Is there a better way to get a reference to this parameter?
+			
+			JVar enumObject = blockInfo.getBeamMethod().getParameters().get(0).getVar();
+			
+			String getterName = "get" + StringUtil.capitalize(p.getPredicate().getLocalName());
+			
+			JInvocation initValue = enumObject.invoke(getterName);
+			
+			String varName = p.getPredicate().getLocalName();
+			JVar var = block.decl(objectClass, varName).init(initValue);
+			blockInfo.add(new BeamSourceProperty(p, var));
+			
+			
+		} else {
+			// Declare the source properties
+			AbstractJClass objectClass = model.ref(Object.class);
+			BeamMethod beamMethod = blockInfo.getBeamMethod();
+			
+			
+			
+			Set<ShowlPropertyShape> sourceProperties = beamMethod.getSourceProperties();
+			for (ShowlPropertyShape p : sourceProperties) {
+				
+				JVar sourceTableRow = blockInfo.getNodeTableRow(p.getDeclaringShape()).getTableRowVar();
+				String varName = p.getPredicate().getLocalName();
+				JVar var = block.decl(objectClass, varName);
+				var.init(sourceTableRow.invoke("get").arg(JExpr.lit(varName)));
+				
+				blockInfo.add(new BeamSourceProperty(p, var));
+			}
+		}
+		
+	}
+
+	private void captureValue(ShowlPropertyShape targetProperty, ShowlExpression e) throws BeamTransformGenerationException {
+		
+		IJExpression value = null;
+		BlockInfo blockInfo = peekBlockInfo();
+		JBlock block = blockInfo.getBlock();
+		
+		JConditional ifStatement = null;
+		if (e instanceof ShowlEnumStructExpression) {
+			ShowlEnumStructExpression enumStruct = (ShowlEnumStructExpression) e;
+			BeamEnumInfo enumInfo = blockInfo.getEnumInfo();
+			
+			JVar valueVar = enumInfo==null ? null : enumInfo.getEnumValue();
+			
+			if (valueVar == null) {
+				fail("Variable for enum value not found at {0}", targetProperty.getPath());
+			}
+			
+			ShowlExpression idExpression = enumStruct.get(Konig.id);
+			if (idExpression == null) {
+				fail("No expression for konig:id at {0}", targetProperty.getPath());
+			}
+			value = transform(idExpression);
+			valueVar.init(value);
+			
+			value = blockInfo.getNodeTableRow(targetProperty.getValueShape()).getTableRowVar();
+			
+			ifStatement = block._if(value.invoke("isEmpty").not());
+		} else {
+			value = transform(e);
+			if (!(value instanceof JVar)) {
+				
+				AbstractJType valueType =  model.ref(Object.class);
+						
+				JVar valueVar = block.decl(valueType, targetProperty.getPredicate().getLocalName());
+				valueVar.init(value);
+				value = valueVar;
+			}
+			ifStatement = block._if(value.neNull());
+		}
+		
+		
+
+		blockInfo.getPropertySink().captureProperty(this, ifStatement, targetProperty, value);
+		
+	}
+
+	@Override
+	public void addRowParameters(BeamMethod beamMethod, ShowlExpression e) throws BeamTransformGenerationException {
+		
+		BlockInfo blockInfo = peekBlockInfo();
+		
+	  // Collect the source properties upon which the expression depends.
+		
+		Set<ShowlPropertyShape> propertySet = new HashSet<>();
+		e.addProperties(propertySet);
+
+		// We need to filter out the Enum properties unless the expression is an enum field.
+		// It would be better if we could pass a filter when we 'addProperties'.
+		// But since that is not an option, we filter them now.
+		
+		if (!ShowlUtil.isEnumField(e)) {
+			Iterator<ShowlPropertyShape> sequence = propertySet.iterator();
+			while (sequence.hasNext()) {
+				ShowlPropertyShape p = sequence.next();
+				if (ShowlUtil.isEnumProperty(p)) {
+					sequence.remove();
+				}
+			}
+		}
+		
+		beamMethod.setSourceProperties(propertySet);
+		
+		
+		Set<ShowlNodeShape> nodeSet = new HashSet<>();
+		for (ShowlPropertyShape p : propertySet) {
+			nodeSet.add(p.getDeclaringShape());
+		}
+		
+		List<ShowlNodeShape> nodeList = new ArrayList<>(nodeSet);
+		Collections.sort(nodeList, new Comparator<ShowlNodeShape>() {
+
+			@Override
+			public int compare(ShowlNodeShape a, ShowlNodeShape b) {
+				String aPath = a.getPath();
+				String bPath = b.getPath();
+				
+				return aPath.compareTo(bPath);
+			}
+		});
+		
+		JMethod method = beamMethod.getMethod();
+		JCodeModel model = method.owner();
+		
+		AbstractJClass tableRowClass = model.ref(TableRow.class);
+		for (ShowlNodeShape node : nodeList) {
+			
+			if (e instanceof ShowlEnumPropertyExpression) {
+				BeamEnumInfo enumInfo = findEnumInfo();
+				JVar enumValueVar = enumInfo==null ? null : enumInfo.getEnumValue();
+				if (enumValueVar == null) {
+					fail("Enum value not found in call stack while generating {0}", beamMethod.getMethod().name());
+				}
+				
+				JVar enumValueParam = method.param(enumValueVar.type(), enumValueVar.name());
+				beamMethod.addParameter(BeamParameter.ofEnumValue(enumValueParam));
+			} else {
+				String rowName = StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(node) + "Row");
+				JVar param = method.param(tableRowClass, rowName);
+				blockInfo.addNodeTableRow(new NodeTableRow(node, param));
+				beamMethod.addParameter(BeamParameter.ofSourceRow(param, node));
+			}
+		}
+		
+	}
+
+	private BeamEnumInfo findEnumInfo() {
+		for (int i=blockStack.size()-1; i>=0; i--) {
+			BlockInfo info = blockStack.get(i);
+			BeamEnumInfo enumInfo = info.getEnumInfo();
+			if (enumInfo!=null) {
+				return enumInfo;
+			}
+			
+		}
+		return null;
+	}
 }

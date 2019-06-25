@@ -1,8 +1,0 @@
-@prefix konig: <http://www.konig.io/ns/core/> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix vann: <http://purl.org/vocab/vann/> .
-
-konig: a owl:Ontology ; 
-	vann:preferredNamespacePrefix "konig" . 
-
-konig:receivesDataFrom a owl:ObjectProperty . 

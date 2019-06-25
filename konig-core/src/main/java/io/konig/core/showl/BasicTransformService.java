@@ -743,7 +743,7 @@ public class BasicTransformService implements ShowlTransformService {
 				if (logger.isTraceEnabled()) {
 					logger.trace("addMembers: Building {}[{}]", sourcePropertyGroup.pathString(), memberIndex++);
 				}
-				ShowlStructExpression struct = new ShowlStructExpression(targetDirect);
+				ShowlStructExpression struct = new ShowlBasicStructExpression(targetDirect);
 				addStructProperties(struct, targetDirect, sourceProperty);
 				array.addMember(struct);
 				
@@ -788,7 +788,6 @@ public class BasicTransformService implements ShowlTransformService {
 								if (value instanceof ShowlFilterExpression) {
 									value = ((ShowlFilterExpression) value).getValue();
 								}
-								struct.put(predicate, value);
 								selectedSourceField = sourceField;
 								if (value instanceof ShowlEnumIndividualReference) {
 									if (targetField.getValueShape()!=null) {
@@ -796,10 +795,13 @@ public class BasicTransformService implements ShowlTransformService {
 										ShowlClass enumClass = sourceField.getValueType(schemaService);
 										ShowlNodeShape enumNode = enumNode(enumClass);
 										enumNode.setTargetProperty(targetField);
-										ShowlStructExpression enumStruct = new ShowlStructExpression(targetField);
+										ShowlEnumStructExpression enumStruct = new ShowlEnumStructExpression(targetField, enumNode);
+
+										struct.put(predicate, enumStruct);
 										addEnumStructProperties(enumStruct, targetField.getValueShape(), enumNode);
 										ShowlDirectPropertyShape enumId = enumNode.getProperty(Konig.id);
 										ShowlEnumIndividualReference enumRef = (ShowlEnumIndividualReference) value;
+										enumStruct.put(Konig.id, enumRef);
 										ShowlStatement joinCondition = 
 												new ShowlEqualStatement(
 														new ShowlDirectPropertyExpression(enumId), 
@@ -810,6 +812,8 @@ public class BasicTransformService implements ShowlTransformService {
 										continue;
 										
 									}
+
+									struct.put(predicate, value);
 									
 								}
 							} else if (valueSet.size()>1) {
@@ -844,7 +848,7 @@ public class BasicTransformService implements ShowlTransformService {
 				if (targetValueNode != null) {
 
 					if (selectedSourceField != null) {
-						ShowlStructExpression child = new ShowlStructExpression(targetField);
+						ShowlStructExpression child = new ShowlBasicStructExpression(targetField);
 						addStructProperties(child, targetField,
 								selectedSourceField);
 						

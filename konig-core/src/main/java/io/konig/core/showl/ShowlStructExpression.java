@@ -32,11 +32,11 @@ import org.slf4j.LoggerFactory;
 import io.konig.core.OwlReasoner;
 
 @SuppressWarnings("serial")
-public class ShowlStructExpression extends LinkedHashMap<URI, ShowlExpression> implements ShowlExpression {
+abstract public class ShowlStructExpression extends LinkedHashMap<URI, ShowlExpression> implements ShowlExpression {
 	private static final Logger logger = LoggerFactory.getLogger(ShowlStructExpression.class);
 	private ShowlDirectPropertyShape propertyShape;
 	
-	public ShowlStructExpression(ShowlDirectPropertyShape propertyShape) {
+	protected ShowlStructExpression(ShowlDirectPropertyShape propertyShape) {
 		this.propertyShape = propertyShape;
 	}
 

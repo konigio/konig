@@ -39,5 +39,8 @@ public interface BeamExpressionTransform {
 
 	void processProperty(ShowlDirectPropertyShape targetProperty, ShowlExpression member) 
 			throws BeamTransformGenerationException;
+	
+	void addRowParameters(BeamMethod beamMethod, ShowlExpression e) throws BeamTransformGenerationException;
+
 
 }

@@ -1,8 +1,8 @@
-package io.konig.transform.beam;
+package io.konig.core.showl;
 
 /*
  * #%L
- * Konig Transform Beam
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -21,14 +21,18 @@ package io.konig.transform.beam;
  */
 
 
-import com.helger.jcodemodel.IJExpression;
-import com.helger.jcodemodel.JConditional;
-
-import io.konig.core.showl.ShowlPropertyShape;
-
-public interface BeamPropertySink {
+@SuppressWarnings("serial")
+public class ShowlEnumStructExpression extends ShowlStructExpression {
 	
-	void captureProperty(BeamExpressionTransform etran, JConditional ifStatement, ShowlPropertyShape targetProperty, IJExpression propertyValue) 
-			throws BeamTransformGenerationException;
-		
+	private ShowlNodeShape enumNodeShape;
+
+	public ShowlEnumStructExpression(ShowlDirectPropertyShape propertyShape, ShowlNodeShape enumNodeShape) {
+		super(propertyShape);
+		this.enumNodeShape = enumNodeShape;
+	}
+
+	public ShowlNodeShape getEnumNodeShape() {
+		return enumNodeShape;
+	}
+
 }
