@@ -580,12 +580,12 @@ public class FormulaParser {
 				if (c == ':') {
 					String prefix = predicate;
 					c = read();
-					if (Character.isLetter(c)) {
+					if (Character.isLetterOrDigit(c)) {
 						buffer = buffer();
 						do {
 							buffer.appendCodePoint(c);
 							c = read();
-						} while (Character.isLetter(c) || Character.isDigit(c) || c=='_');
+						} while (Character.isLetterOrDigit(c) || c=='_');
 						String localName = buffer.toString();
 						unread(c);
 						Context context = getContext();
