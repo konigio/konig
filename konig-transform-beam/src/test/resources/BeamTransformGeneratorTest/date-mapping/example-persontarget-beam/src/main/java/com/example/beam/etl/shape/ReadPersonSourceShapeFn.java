@@ -118,8 +118,9 @@ public class ReadPersonSourceShapeFn
                     }
                     if (stringValue.length()> 0) {
                         try {
-                            if (new DateTime(stringValue).isDateOnly()) {
-                                return new DateTime(stringValue).getValue();
+                            DateTime dateTimeValue = new DateTime(stringValue);
+                            if (dateTimeValue.isDateOnly()) {
+                                return dateTimeValue.getValue();
                             }
                             if (stringValue.contains("T")) {
                                 if (stringValue.contains("/")) {
