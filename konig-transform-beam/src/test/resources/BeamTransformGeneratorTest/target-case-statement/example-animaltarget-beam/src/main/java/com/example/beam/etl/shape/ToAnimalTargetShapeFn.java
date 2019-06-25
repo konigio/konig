@@ -69,15 +69,15 @@ public class ToAnimalTargetShapeFn
     }
 
     private com.example.beam.etl.ex.Genus case1(com.google.api.services.bigquery.model.TableRow animalTargetRow, ErrorBuilder errorBuilder) {
-        com.example.beam.etl.ex.Genus genus = null;
+        com.example.beam.etl.ex.Genus genusCase = null;
         if (case1_when1(animalTargetRow, errorBuilder)) {
-            genus = com.example.beam.etl.ex.Genus.findByLocalName("Pan");
+            genusCase = com.example.beam.etl.ex.Genus.findByLocalName("Pan");
         } else {
             if (case1_when2(animalTargetRow, errorBuilder)) {
-                genus = com.example.beam.etl.ex.Genus.findByLocalName("Pongo");
+                genusCase = com.example.beam.etl.ex.Genus.findByLocalName("Pongo");
             }
         }
-        return genus;
+        return genusCase;
     }
 
     private boolean case1_when1(com.google.api.services.bigquery.model.TableRow animalTargetRow, ErrorBuilder errorBuilder) {
