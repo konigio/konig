@@ -2168,9 +2168,9 @@ public class BeamTransformGenerator {
 						Set<BeamChannel> beamChannelSet = new HashSet<>();
 						
 						for (ShowlPropertyShape sourceProperty : sourcePropertySet) {
-							ShowlNodeShape sourceNode = sourceProperty.getDeclaringShape();
-							BeamChannel beamChannel = beamChannel(sourceNode);
-							beamChannelSet.add(beamChannel);
+								ShowlNodeShape sourceNode = sourceProperty.getDeclaringShape();
+								BeamChannel beamChannel = beamChannel(sourceNode);
+								beamChannelSet.add(beamChannel);
 						}
 						
 						ShowlExpression e = direct.getSelectedExpression();
@@ -3179,23 +3179,42 @@ public class BeamTransformGenerator {
 				
 				// We created the primary BeamChannel in the contextElement(...) method.
 				// If the sourceNode parameter matches, return the primary Channel. 
+				if (beamChannelMap == null) {
+					beamChannelMap = new HashMap<>();
+				}
 				
 				ShowlNodeShape sourceRoot = sourceNode.getRoot();
+				
 				if (beamChannel.getChannel().getSourceNode() == sourceRoot) {
+					beamChannelMap.put(sourceRoot, beamChannel);
 					return beamChannel;
 				}
+				
+				
+				if(sourceNode.isTargetNode()) {
+					BeamChannel result = beamChannelMap.get(sourceNode.getRoot());
+					if (result == null) {
+						ShowlChannel channel = new ShowlChannel(sourceRoot, null);
+						result =  new BeamChannel(channel);
+						if(beamChannel != null){
+							result.setSourceRow(beamChannel.getSourceRow());
+						}
+						beamChannelMap.put(sourceNode.getRoot(), result);
+					}
+					return result;
+				}
+				
 				
 				// Since we did not match the primary channel, consider the case of an enumerated value.
 				
 				if (ShowlUtil.isEnumSourceNode(sourceRoot)) {
-					if (beamChannelMap == null) {
-						beamChannelMap = new HashMap<>();
-					}
 					BeamChannel result = beamChannelMap.get(sourceNode);
 					if (result == null) {
-					
 						ShowlChannel channel = new ShowlChannel(sourceRoot, null);
 						result =  new BeamChannel(channel);
+						if(beamChannel != null){
+							result.setSourceRow(beamChannel.getSourceRow());
+						}
 						beamChannelMap.put(sourceRoot, result);
 					}
 					return result;

@@ -668,6 +668,13 @@ public class BasicTransformService implements ShowlTransformService {
 					logger.trace("createMapping: Failed to create mapping: {}...{}", sourceProperty, targetProperty);
 				}
 			}
+			else {
+				ShowlExpression formula = targetDirect.getFormula();
+				if (formula != null) {
+				targetDirect.setSelectedExpression(formula);
+				return true;
+				}
+			}
 		}
 		return false;
 	}

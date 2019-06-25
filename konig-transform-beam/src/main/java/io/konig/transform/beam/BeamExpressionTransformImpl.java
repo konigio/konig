@@ -109,6 +109,8 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
       Literal literal = ((ShowlLiteralExpression) e).getLiteral();
       if (literal.getDatatype().equals(XMLSchema.STRING)) {
         return JExpr.lit(literal.stringValue());
+      } else if (literal.getDatatype().equals(XMLSchema.BOOLEAN)) {
+    	  return JExpr.lit(true);
       } else {
         fail("Typed literal not supported in expression: {0}", e.toString());
       }
@@ -282,7 +284,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		JMethod method = targetClass.method(JMod.PRIVATE, resultType, methodName);
 
 		
-		String resultParamName = StringUtil.firstLetterLowerCase(valueType.getLocalName());
+		String resultParamName = StringUtil.firstLetterLowerCase(valueType.getLocalName()) + "Case";
 		JVar resultParam = method.body().decl(resultType, resultParamName).init(JExpr._null());
 		
 		List<ShowlPropertyShape> propertyList = caseParamList(e);
