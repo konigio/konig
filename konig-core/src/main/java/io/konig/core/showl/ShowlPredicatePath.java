@@ -20,8 +20,6 @@ package io.konig.core.showl;
  * #L%
  */
 
-
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 

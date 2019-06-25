@@ -21,26 +21,34 @@ package io.konig.transform.beam;
  */
 
 
-import com.helger.jcodemodel.IJExpression;
-import com.helger.jcodemodel.JBlock;
+import com.helger.jcodemodel.JVar;
 
-import io.konig.core.showl.ShowlDirectPropertyShape;
-import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlNodeShape;
 
-public interface BeamExpressionTransform {
+public class BeamEnumInfo {
 	
-	IJExpression transform(ShowlExpression e) throws BeamTransformGenerationException;
-
-	BlockInfo beginBlock(JBlock block);
-
-	void endBlock();
-
-	BlockInfo peekBlockInfo() throws BeamTransformGenerationException;
-
-	void processProperty(ShowlDirectPropertyShape targetProperty, ShowlExpression member) 
-			throws BeamTransformGenerationException;
+	private EnumValueType enumValueType;
+	private JVar enumValue;
+	private ShowlNodeShape enumNode;
 	
-	void addRowParameters(BeamMethod beamMethod, ShowlExpression e) throws BeamTransformGenerationException;
+	public BeamEnumInfo(EnumValueType enumValueType, JVar enumValue, ShowlNodeShape enumNode) {
+		this.enumValueType = enumValueType;
+		this.enumValue = enumValue;
+		this.enumNode = enumNode;
+	}
 
+	public EnumValueType getEnumValueType() {
+		return enumValueType;
+	}
 
+	public JVar getEnumValue() {
+		return enumValue;
+	}
+
+	public ShowlNodeShape getEnumNode() {
+		return enumNode;
+	}
+	
+	
+	
 }

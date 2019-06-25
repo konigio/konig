@@ -225,14 +225,7 @@ public class BeamTransformGeneratorTest {
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record-via-inverse", false);
 		
 	}
-	
-	@Test
-	public void testPathFilterMapping() throws Exception {
-		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/path-filter-mapping");
-		
-	}
-	
+
 
 	@Test
 	public void testSystime() throws Exception {
@@ -252,6 +245,13 @@ public class BeamTransformGeneratorTest {
 	public void testTargetCaseStatement() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/target-case-statement");
+		
+	}
+	
+	@Test
+	public void testRepeatedRecord() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/repeated-record", false);
 		
 	}
 
@@ -287,6 +287,10 @@ public class BeamTransformGeneratorTest {
 				.build();
 		
 		generator.generateAll(request);
+		
+		if (generator.isEncounteredError()) {
+			fail("BeamTransformGenerator encountered an error (see stack trace in log)");
+		}
 		
 		if (withValidation) {
 			

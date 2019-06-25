@@ -22,25 +22,13 @@ package io.konig.transform.beam;
 
 
 import com.helger.jcodemodel.IJExpression;
-import com.helger.jcodemodel.JBlock;
+import com.helger.jcodemodel.JConditional;
 
-import io.konig.core.showl.ShowlDirectPropertyShape;
-import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlPropertyShape;
 
-public interface BeamExpressionTransform {
+public interface BeamPropertySink {
 	
-	IJExpression transform(ShowlExpression e) throws BeamTransformGenerationException;
-
-	BlockInfo beginBlock(JBlock block);
-
-	void endBlock();
-
-	BlockInfo peekBlockInfo() throws BeamTransformGenerationException;
-
-	void processProperty(ShowlDirectPropertyShape targetProperty, ShowlExpression member) 
+	void captureProperty(BeamExpressionTransform etran, JConditional ifStatement, ShowlPropertyShape targetProperty, IJExpression propertyValue) 
 			throws BeamTransformGenerationException;
-	
-	void addRowParameters(BeamMethod beamMethod, ShowlExpression e) throws BeamTransformGenerationException;
-
-
+		
 }

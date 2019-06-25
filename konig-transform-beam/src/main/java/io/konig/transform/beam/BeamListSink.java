@@ -22,25 +22,31 @@ package io.konig.transform.beam;
 
 
 import com.helger.jcodemodel.IJExpression;
-import com.helger.jcodemodel.JBlock;
+import com.helger.jcodemodel.JConditional;
+import com.helger.jcodemodel.JVar;
 
-import io.konig.core.showl.ShowlDirectPropertyShape;
-import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlPropertyShape;
 
-public interface BeamExpressionTransform {
+public class BeamListSink implements BeamPropertySink {
 	
-	IJExpression transform(ShowlExpression e) throws BeamTransformGenerationException;
+	private JVar listVar;
 
-	BlockInfo beginBlock(JBlock block);
 
-	void endBlock();
+	public BeamListSink(JVar listVar) {
+		this.listVar = listVar;
+	}
 
-	BlockInfo peekBlockInfo() throws BeamTransformGenerationException;
 
-	void processProperty(ShowlDirectPropertyShape targetProperty, ShowlExpression member) 
-			throws BeamTransformGenerationException;
-	
-	void addRowParameters(BeamMethod beamMethod, ShowlExpression e) throws BeamTransformGenerationException;
+	@Override
+	public void captureProperty(BeamExpressionTransform etran, JConditional ifStatement,
+			ShowlPropertyShape targetProperty, IJExpression propertyValue) throws BeamTransformGenerationException {
+		
+		
+		ifStatement._then().add(listVar.invoke("add").arg(propertyValue));
+		
+		
+	}
+
 
 
 }
