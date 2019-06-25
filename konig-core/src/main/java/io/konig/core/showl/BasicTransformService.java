@@ -830,7 +830,7 @@ public class BasicTransformService implements ShowlTransformService {
 							}
 						}
 						
-					} else {
+					} else if (!list.isEmpty()) {
 						// TODO: handle multiple variants
 						String msg = MessageFormat.format("Cannot handle multiple variants at {}.{}", 
 								sourceNode.getPath(), predicate.getLocalName() );
