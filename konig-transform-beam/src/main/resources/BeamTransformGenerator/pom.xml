@@ -152,10 +152,10 @@
 	          <configuration>
 					<cleanupDaemonThreads>false</cleanupDaemonThreads>
 					<executable>java</executable>
-					<mainClass>com.pearson.metis.beam.shape.ProductShapeBeam</mainClass>
+					<mainClass>${mainClass}</mainClass>
 					<arguments>
 					<argument>--project=${gcpProjectId}</argument>
-						<argument>--runner=DataflowRunner</argument>
+						<argument>--runner=DirectRunner</argument>
 						<argument>--environment=${environmentName}</argument>					
 						<argument>--gcpTempLocation=${batchEtlBucketIri}/${templateName}/temp</argument>
 						<argument>--tempLocation=${batchEtlBucketIri}/${templateName}/temp</argument>
