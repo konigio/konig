@@ -280,7 +280,7 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			Cell cell = row.getCell(column);
 			text = cellStringValue(cell);
 		}
-
+	
 		return text == null || text.isEmpty() ? null : text.replaceAll("(^\\h*)|(\\h*$)", "");
 	}
 
@@ -748,6 +748,14 @@ public class WorkbookProcessorImpl implements WorkbookProcessor {
 			return null;
 		}
 		String text = stringValue(sheetRow, col);
+		return expandCurie(text, sheetRow, col);
+	}
+	
+	@Override
+	public URI iriValue(String text, SheetRow sheetRow, SheetColumn col) throws SpreadsheetException {
+		if (!col.exists()) {
+			return null;
+		}
 		return expandCurie(text, sheetRow, col);
 	}
 	

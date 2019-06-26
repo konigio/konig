@@ -211,6 +211,9 @@ abstract public class BaseSheetProcessor implements SheetProcessor {
 		return processor.iriValue(row, column);
 	}
 
+	protected URI iriValue(String text, SheetRow row, SheetColumn column) throws SpreadsheetException {
+		return processor.iriValue(text, row, column);
+	}
 
 	protected Resource resourceValue(SheetRow row, SheetColumn column) throws SpreadsheetException {
 		String text = stringValue(row, column);
