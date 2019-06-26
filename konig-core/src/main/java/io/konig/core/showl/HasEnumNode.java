@@ -21,19 +21,8 @@ package io.konig.core.showl;
  */
 
 
-@SuppressWarnings("serial")
-public class ShowlEnumStructExpression extends ShowlStructExpression implements HasEnumNode {
+public interface HasEnumNode {
 	
-	private ShowlNodeShape enumNodeShape;
-
-	public ShowlEnumStructExpression(ShowlDirectPropertyShape propertyShape, ShowlNodeShape enumNodeShape) {
-		super(propertyShape);
-		this.enumNodeShape = enumNodeShape;
-	}
-
-	@Override
-	public ShowlNodeShape getEnumNode() {
-		return enumNodeShape;
-	}
+	ShowlNodeShape getEnumNode();
 
 }
