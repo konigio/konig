@@ -659,7 +659,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		
 		
 		if (struct instanceof ShowlEnumStructExpression) {
-			ShowlNodeShape enumNode = ((ShowlEnumStructExpression) struct).getEnumNodeShape();
+			ShowlNodeShape enumNode = ((ShowlEnumStructExpression) struct).getEnumNode();
 			blockInfo.addNodeTableRow(new NodeTableRow(enumNode, structVar));
 		} else {
 			blockInfo.addNodeTableRow(new NodeTableRow(targetProperty.getValueShape(), structVar));
@@ -767,10 +767,10 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			if (e instanceof ShowlEnumStructExpression) {
 				ShowlEnumStructExpression enumStruct = (ShowlEnumStructExpression) e;				
 
-				AbstractJClass valueType = typeManager.enumClass(enumStruct.getEnumNodeShape().getOwlClass().getId());
-				blockInfo.addNodeTableRow(new NodeTableRow(enumStruct.getEnumNodeShape(), rowVar));
+				AbstractJClass valueType = typeManager.enumClass(enumStruct.getEnumNode().getOwlClass().getId());
+				blockInfo.addNodeTableRow(new NodeTableRow(enumStruct.getEnumNode(), rowVar));
 				JVar enumValueVar = block.decl(valueType, targetProperty.getPredicate().getLocalName());
-				BeamEnumInfo info = new BeamEnumInfo(EnumValueType.OBJECT, enumValueVar, enumStruct.getEnumNodeShape());
+				BeamEnumInfo info = new BeamEnumInfo(EnumValueType.OBJECT, enumValueVar, enumStruct.getEnumNode());
 				blockInfo.setEnumInfo(info);
 				
 			}
