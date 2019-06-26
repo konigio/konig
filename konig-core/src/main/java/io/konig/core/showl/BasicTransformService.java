@@ -818,13 +818,13 @@ public class BasicTransformService implements ShowlTransformService {
 								}
 							} else if (valueSet.size()>1) {
 								// TODO: handle multiple values
-								String msg = MessageFormat.format("Cannot handle multiple values at {}.{}", 
+								String msg = MessageFormat.format("Cannot handle multiple values at {0}.{1}", 
 										sourceNode.getPath(), predicate.getLocalName() );
 								throw new ShowlProcessingException(msg);
 							} else {
 
 								// TODO: handle multiple variants
-								String msg = MessageFormat.format("Cannot derived field at {}.{}", 
+								String msg = MessageFormat.format("Cannot derived field at {0}.{1}", 
 										sourceNode.getPath(), predicate.getLocalName() );
 								throw new ShowlProcessingException(msg);
 							}
@@ -832,7 +832,7 @@ public class BasicTransformService implements ShowlTransformService {
 						
 					} else {
 						// TODO: handle multiple variants
-						String msg = MessageFormat.format("Cannot handle multiple variants at {}.{}", 
+						String msg = MessageFormat.format("Cannot handle multiple variants at {0}.{1}", 
 								sourceNode.getPath(), predicate.getLocalName() );
 						throw new ShowlProcessingException(msg);
 					}

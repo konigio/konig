@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.Vertex;
+import io.konig.core.showl.ShowlBinaryRelationalExpression;
 import io.konig.core.showl.ShowlCaseStatement;
 import io.konig.core.showl.ShowlClass;
 import io.konig.core.showl.ShowlContainmentOperator;
@@ -59,6 +60,7 @@ import io.konig.core.showl.ShowlUtil;
 import io.konig.core.showl.ShowlWhenThenClause;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.BareExpression;
+import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.CaseStatement;
 import io.konig.formula.ConditionalOrExpression;
 import io.konig.formula.Direction;
@@ -160,12 +162,20 @@ public class ShowlExpressionBuilder {
 		if (formula instanceof GeneralAdditiveExpression) {
 			return additive(p, (GeneralAdditiveExpression) formula);
 		}
+		if (formula instanceof BinaryRelationalExpression) {
+			return binaryRelational(p, (BinaryRelationalExpression) formula);
+		}
 		fail("At {0}, failed to process expression: {1}", p.getPath(), FormulaUtil.simpleString(formula));
 		
 		return null;
 	}
 
-
+	private ShowlExpression binaryRelational(ShowlPropertyShape p, BinaryRelationalExpression formula) {
+		ShowlExpression left = expression(p, formula.getLeft());
+		ShowlExpression right = expression(p, formula.getRight());
+		return new ShowlBinaryRelationalExpression(p, left, formula.getOperator(), right);
+	}
+	
 	private ShowlExpression additive(ShowlPropertyShape p, GeneralAdditiveExpression formula) {
 		PrimaryExpression primary = formula.asPrimaryExpression();
 		if (primary != null) {
@@ -278,6 +288,10 @@ public class ShowlExpressionBuilder {
 			return listRelational(p, listRelational);
 		}
 		
+		BinaryRelationalExpression relationalExpression = formula.asBinaryRelationalExpression();
+		if(relationalExpression != null) {
+			return expression(p, relationalExpression);
+		}
 		fail("At {0}, failed to process conditional or expression {1}", p.getPath(), FormulaUtil.simpleString(formula));
 		return null;
 	}
