@@ -65,6 +65,6 @@ public class ToPersonTargetShapeFn
     }
 
     private void modified(com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        outputRow.set("modified", new Long(new Date().getTime()));
+    	outputRow.set("modified", new Long((new Date().getTime()/ 1000L)));
     }
 }
