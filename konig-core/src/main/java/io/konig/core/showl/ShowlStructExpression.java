@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.LinkedHashMap;
+
 /*
  * #%L
  * Konig Core
@@ -24,14 +26,17 @@ package io.konig.core.showl;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.OwlReasoner;
 
-public class ShowlStructExpression implements ShowlExpression {
-	
+@SuppressWarnings("serial")
+abstract public class ShowlStructExpression extends LinkedHashMap<URI, ShowlExpression> implements ShowlExpression {
+	private static final Logger logger = LoggerFactory.getLogger(ShowlStructExpression.class);
 	private ShowlDirectPropertyShape propertyShape;
 	
-	public ShowlStructExpression(ShowlDirectPropertyShape propertyShape) {
+	protected ShowlStructExpression(ShowlDirectPropertyShape propertyShape) {
 		this.propertyShape = propertyShape;
 	}
 
@@ -43,26 +48,29 @@ public class ShowlStructExpression implements ShowlExpression {
 	@Override
 	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set)
 			throws ShowlProcessingException {
-		for (ShowlPropertyShape p : propertyShape.getValueShape().getProperties()) {
-			if (p.getSelectedExpression() != null) {
-				p.getSelectedExpression().addDeclaredProperties(sourceNodeShape, set);
-			}
+		for (ShowlExpression e : values()) {
+			e.addDeclaredProperties(sourceNodeShape, set);
 		}
+	}
+	
+	@Override
+	public ShowlExpression put(URI key, ShowlExpression value) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("put({}, {})", key.getLocalName(), value.displayValue());
+		}
+		return super.put(key, value);
 	}
 
 	@Override
 	public void addProperties(Set<ShowlPropertyShape> set) {
-		for (ShowlPropertyShape p : propertyShape.getValueShape().getProperties()) {
-			if (p.getSelectedExpression() != null) {
-				p.getSelectedExpression().addProperties(set);
-			}
+		for (ShowlExpression e : values()) {
+			e.addProperties(set);
 		}
-		
 	}
 
 	@Override
 	public URI valueType(OwlReasoner reasoner) {
 		return propertyShape.maybeDirect().getValueType(reasoner);
 	}
-
+	
 }

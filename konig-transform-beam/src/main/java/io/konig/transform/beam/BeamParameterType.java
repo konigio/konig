@@ -21,26 +21,10 @@ package io.konig.transform.beam;
  */
 
 
-import com.helger.jcodemodel.IJExpression;
-import com.helger.jcodemodel.JBlock;
-
-import io.konig.core.showl.ShowlDirectPropertyShape;
-import io.konig.core.showl.ShowlExpression;
-
-public interface BeamExpressionTransform {
-	
-	IJExpression transform(ShowlExpression e) throws BeamTransformGenerationException;
-
-	BlockInfo beginBlock(JBlock block);
-
-	void endBlock();
-
-	BlockInfo peekBlockInfo() throws BeamTransformGenerationException;
-
-	void processProperty(ShowlDirectPropertyShape targetProperty, ShowlExpression member) 
-			throws BeamTransformGenerationException;
-	
-	void addRowParameters(BeamMethod beamMethod, ShowlExpression e) throws BeamTransformGenerationException;
-
-
+public enum BeamParameterType {
+	SOURCE_TABLE_ROW,
+	TARGET_TABLE_ROW,
+	ERROR_BUILDER,
+	LIST_VALUE,
+	ENUM_VALUE
 }

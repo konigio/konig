@@ -170,9 +170,7 @@ public class BasicTransformService implements ShowlTransformService {
 					state.memory.add(targetGroup);
 					if (isEnumClass(targetClass)) {
 						
-						Shape enumShape = nodeService.enumNodeShape(targetClass);
-						
-						ShowlNodeShape enumNode = nodeService.createShowlNodeShape(null, enumShape, targetClass);
+						ShowlNodeShape enumNode = enumNode(targetClass);
 						
 						enumNode.setTargetNode(targetGroup.iterator().next().getDeclaringShape());
 						state.candidateSet.add(enumNode);
@@ -198,6 +196,11 @@ public class BasicTransformService implements ShowlTransformService {
 		}
 		
 		
+	}
+	
+	private ShowlNodeShape enumNode(ShowlClass enumClass) {
+		Shape enumShape = nodeService.enumNodeShape(enumClass);
+		return nodeService.createShowlNodeShape(null, enumShape, enumClass);
 	}
 
 
@@ -294,8 +297,6 @@ public class BasicTransformService implements ShowlTransformService {
 
 		ShowlPropertyShape leftId = sourceShape.findOut(Konig.id);
 		
-		
-		
 		if (leftId != null) {
 			ShowlExpression leftExpression = expression(leftId);
 			ShowlNodeShape targetRoot = sourceShape.getTargetNode().getRoot();
@@ -319,7 +320,6 @@ public class BasicTransformService implements ShowlTransformService {
 		}
 		return false;
 	}
-
 
 	private ShowlExpression expression(ShowlPropertyShape p) throws ShowlProcessingException {
 		if (p instanceof ShowlDirectPropertyShape) {
@@ -390,6 +390,7 @@ public class BasicTransformService implements ShowlTransformService {
 			
 			return new ShowlEqualStatement(new ShowlDirectPropertyExpression(enumId), targetAccessor.getFormula());
 		}
+		
 
 		for (ShowlChannel channel : root.getChannels()) {
 			
@@ -397,6 +398,11 @@ public class BasicTransformService implements ShowlTransformService {
 		
 			ShowlPropertyShapeGroup channelJoinAccessor = findPeer(channelSourceNode, targetNode);
 			if (channelJoinAccessor != null) {
+				
+				ShowlStatement result = enumFilter(targetNode, sourceShape, channelJoinAccessor);
+				if (result != null) {
+					return result;
+				}
 				
 				ShowlEffectiveNodeShape channelJoinNode = channelJoinAccessor.getValueShape();
 				if (channelJoinNode == null) {
@@ -481,6 +487,63 @@ public class BasicTransformService implements ShowlTransformService {
 	}
 
 
+
+	private ShowlStatement enumFilter(ShowlNodeShape targetNode, ShowlNodeShape sourceShape,
+			ShowlPropertyShapeGroup channelJoinAccessor) {
+		
+		if ( hasFilter(channelJoinAccessor) ) {
+		
+			ShowlPropertyShape multiValuedProperty = findMultiValuedProperty(targetNode.getAccessor());
+			if (multiValuedProperty != null) {
+				ShowlExpression e = multiValuedProperty.getSelectedExpression();
+				if (e == null) {
+					e = new ShowlArrayExpression();
+					multiValuedProperty.setSelectedExpression(e);
+				}
+				if (e instanceof ShowlArrayExpression) {
+					
+					
+					// TODO: build array expression
+					
+					ShowlArrayExpression array = (ShowlArrayExpression) e;
+					return new ArrayFilterStatement(multiValuedProperty, targetNode);
+				}
+				
+			}
+		
+			
+			throw new ShowlProcessingException("Failed to create enum filter for " + targetNode.getPath());
+		}
+		
+		return null;
+	}
+
+
+
+	private ShowlPropertyShape findMultiValuedProperty(ShowlPropertyShape p) {
+		while (p != null) {
+			PropertyConstraint constraint = p.getPropertyConstraint();
+			if (constraint != null) {
+				Integer maxCount = constraint.getMaxCount();
+				if ( maxCount == null || maxCount>1 ) {
+					return p;
+				}
+			}
+
+			p = p.getDeclaringShape().getAccessor();
+		}
+		return null;
+	}
+
+
+	private boolean hasFilter(ShowlPropertyShapeGroup channelJoinAccessor) {
+		for (ShowlPropertyShape p : channelJoinAccessor) {
+			if (!p.getHasValue().isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 
 	/**
@@ -649,9 +712,181 @@ public class BasicTransformService implements ShowlTransformService {
 		}
 		return false;
 	}
+	
+	private boolean arrayMapping(ShowlPropertyShapeGroup sourcePropertyGroup, ShowlPropertyShapeGroup targetPropertyGroup) {
+		ShowlDirectPropertyShape targetDirect = targetPropertyGroup.direct();
+		PropertyConstraint constraint = targetDirect.getPropertyConstraint();
+		if (constraint != null) {
+			Integer maxCount = constraint.getMaxCount();
+			if (maxCount==null || maxCount>1) {
+				// Multi-valued property detected
+				
+				ShowlArrayExpression array = new ShowlArrayExpression();
+				
+				addMembers(array, targetDirect, sourcePropertyGroup);
+				
+				targetDirect.setSelectedExpression(array);
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	private void addMembers(ShowlArrayExpression array, ShowlDirectPropertyShape targetDirect,
+			ShowlPropertyShapeGroup sourcePropertyGroup) {
+		
+		if (targetDirect.getValueShape() != null) {
+
+			int memberIndex = 0;
+			for (ShowlPropertyShape sourceProperty : sourcePropertyGroup) {
+				if (logger.isTraceEnabled()) {
+					logger.trace("addMembers: Building {}[{}]", sourcePropertyGroup.pathString(), memberIndex++);
+				}
+				ShowlStructExpression struct = new ShowlBasicStructExpression(targetDirect);
+				addStructProperties(struct, targetDirect, sourceProperty);
+				array.addMember(struct);
+				
+			}
+			
+		} else {
+			// TODO: Support array of IRI reference and array of datatype values
+			throw new ShowlProcessingException("Array of IRI reference or datatype value not supported yet: " + targetDirect.getPath());
+		}
+		
+		
+	}
+
+
+	private void addStructProperties(ShowlStructExpression struct, ShowlDirectPropertyShape targetDirect,
+			ShowlPropertyShape sourceProperty) {
+		
+		ShowlNodeShape sourceNode = sourceProperty.getValueShape();
+		if (sourceNode != null) {
+			
+			for (ShowlDirectPropertyShape targetField : targetDirect.getValueShape().getProperties()) {
+				URI predicate = targetField.getPredicate();
+				ShowlDirectPropertyShape sourceDirectField = sourceNode.getProperty(predicate);
+				ShowlPropertyShape selectedSourceField = null;
+				if (sourceDirectField != null) {
+					struct.put(predicate, new ShowlDirectPropertyExpression(sourceDirectField));
+				} else {
+					ShowlDerivedPropertyList list = sourceNode.getDerivedProperty(predicate);
+					
+					
+					if (list.size() == 1) {
+						ShowlDerivedPropertyShape sourceField = list.get(0);
+						sourceDirectField = sourceField.direct();
+						
+						if (sourceDirectField != null) {
+							struct.put(predicate, new ShowlDirectPropertyExpression(sourceDirectField));
+							selectedSourceField = sourceDirectField;
+						} else {
+							Set<ShowlExpression> valueSet = sourceField.getHasValue();
+							if (valueSet.size()==1) {
+								ShowlExpression value = valueSet.iterator().next();
+								if (value instanceof ShowlFilterExpression) {
+									value = ((ShowlFilterExpression) value).getValue();
+								}
+								selectedSourceField = sourceField;
+								if (value instanceof ShowlEnumIndividualReference) {
+									if (targetField.getValueShape()!=null) {
+										
+										ShowlClass enumClass = sourceField.getValueType(schemaService);
+										ShowlNodeShape enumNode = enumNode(enumClass);
+										enumNode.setTargetProperty(targetField);
+										ShowlEnumStructExpression enumStruct = new ShowlEnumStructExpression(targetField, enumNode);
+
+										struct.put(predicate, enumStruct);
+										addEnumStructProperties(enumStruct, targetField.getValueShape(), enumNode);
+										ShowlDirectPropertyShape enumId = enumNode.getProperty(Konig.id);
+										ShowlEnumIndividualReference enumRef = (ShowlEnumIndividualReference) value;
+										enumStruct.put(Konig.id, enumRef);
+										ShowlStatement joinCondition = 
+												new ShowlEqualStatement(
+														new ShowlDirectPropertyExpression(enumId), 
+														enumRef);
+										
+										ShowlChannel channel = new ShowlChannel(enumNode, joinCondition);
+										targetDirect.getRootNode().addChannel(channel);
+										continue;
+										
+									}
+
+									struct.put(predicate, value);
+									
+								}
+							} else if (valueSet.size()>1) {
+								// TODO: handle multiple values
+								String msg = MessageFormat.format("Cannot handle multiple values at {}.{}", 
+										sourceNode.getPath(), predicate.getLocalName() );
+								throw new ShowlProcessingException(msg);
+							} else {
+
+								// TODO: handle multiple variants
+								String msg = MessageFormat.format("Cannot derived field at {}.{}", 
+										sourceNode.getPath(), predicate.getLocalName() );
+								throw new ShowlProcessingException(msg);
+							}
+						}
+						
+					} else {
+						// TODO: handle multiple variants
+						String msg = MessageFormat.format("Cannot handle multiple variants at {}.{}", 
+								sourceNode.getPath(), predicate.getLocalName() );
+						throw new ShowlProcessingException(msg);
+					}
+				}
+				
+				if (selectedSourceField != null && targetField.getSelectedExpression()==null) {
+					targetField.setSelectedExpression(ShowlDelegationExpression.getInstance());
+				}
+				
+				ShowlNodeShape targetValueNode = targetField.getValueShape();
+				
+				
+				if (targetValueNode != null) {
+
+					if (selectedSourceField != null) {
+						ShowlStructExpression child = new ShowlBasicStructExpression(targetField);
+						addStructProperties(child, targetField,
+								selectedSourceField);
+						
+					} else {
+
+						String msg = MessageFormat.format("Target field {0} contains a nested record, but no mapping was found.", 
+								targetField.getPath());
+						throw new ShowlProcessingException(msg);
+					}
+				}
+			}
+		}
+		
+	}
+
+
+	private void addEnumStructProperties(ShowlStructExpression enumStruct, ShowlNodeShape targetNode,
+			ShowlNodeShape enumNode) {
+		
+		for (ShowlDirectPropertyShape targetProperty : targetNode.getProperties()) {
+			ShowlDirectPropertyShape enumProperty = enumNode.getProperty(targetProperty.getPredicate());
+			if (enumProperty == null) {
+				throw new ShowlProcessingException("Enum property not found for " + targetProperty.getPath());
+			}
+			enumStruct.put(targetProperty.getPredicate(), new ShowlEnumPropertyExpression(enumProperty));
+		}
+		
+	}
+
 
 	private boolean alternativePathsMapping(boolean isEnum, ShowlPropertyShapeGroup sourcePropertyGroup,
 			ShowlPropertyShapeGroup targetProperty) {
+		
+		if (arrayMapping(sourcePropertyGroup, targetProperty)) {
+			return true;
+		}
+		
+		// TODO: remove the following code block
 		
 		if (sourcePropertyGroup.size()>1 && sourcePropertyGroup.getValueShape()!=null) {
 			ShowlDirectPropertyShape targetDirect = targetProperty.direct();

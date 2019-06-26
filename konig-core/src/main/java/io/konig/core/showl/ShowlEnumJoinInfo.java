@@ -84,7 +84,8 @@ public class ShowlEnumJoinInfo {
 	}
 
 	public static ShowlEnumJoinInfo forEnumProperty(ShowlPropertyShape targetProperty) throws ShowlProcessingException {
-		if (targetProperty.getSelectedExpression() instanceof ShowlEnumNodeExpression) {
+		ShowlExpression e = targetProperty.getSelectedExpression();
+		if (e instanceof ShowlEnumNodeExpression) {
 			ShowlNodeShape enumNode = ((ShowlEnumNodeExpression)targetProperty.getSelectedExpression()).getEnumNode();
 			ShowlChannel channel = ShowlUtil.channelFor(enumNode, targetProperty.getRootNode().getChannels());
 			if (channel != null) {

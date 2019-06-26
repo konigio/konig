@@ -41,6 +41,11 @@ public class BeamSourceProperty implements Comparable<BeamSourceProperty> {
 		this.propertyShape = propertyShape;
 	}
 
+	public BeamSourceProperty(ShowlPropertyShape p, JVar var) {
+		propertyShape = p;
+		this.var = var;
+	}
+
 	public BeamChannel getBeamChannel() {
 		return beamChannel;
 	}
