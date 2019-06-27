@@ -130,7 +130,12 @@ public abstract class ShowlPropertyShape implements Traversable {
 	}
 	
 	public boolean isEnumIndividual(OwlReasoner reasoner) {
-		Resource owlClassId = getOwlClassId();
+		Resource owlClassId = null;
+		if (Konig.id.equals(getPredicate())) {
+			owlClassId = getDeclaringShape().getOwlClass().getId();
+		} else {
+			owlClassId = getOwlClassId();
+		}
 		return owlClassId==null ? false : reasoner.isEnumerationClass(owlClassId);
 	}
 	
