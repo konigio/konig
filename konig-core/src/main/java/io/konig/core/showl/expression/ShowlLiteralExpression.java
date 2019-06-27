@@ -76,4 +76,9 @@ public class ShowlLiteralExpression implements ShowlExpression {
 		return type;
 	}
 
+	@Override
+	public ShowlLiteralExpression transform() {
+		return this;
+	}
+
 }

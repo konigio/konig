@@ -38,6 +38,12 @@ import io.konig.core.OwlReasoner;
  */
 public interface ShowlExpression {
 	
+	/**
+	 * Return a copy of this expression where every PropertyShape expression is replaced
+	 * with its 'selectedExpression'
+	 */
+	ShowlExpression transform();
+	
 	public String displayValue();
 	
 	// TODO: Replace addDeclaredProperties with a more generic method that scans for all properties,

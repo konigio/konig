@@ -31,11 +31,18 @@ import io.konig.core.OwlReasoner;
 
 public class ShowlArrayExpression implements ShowlExpression {
 	
-	List<ShowlExpression> memberList = new ArrayList<>();
+	List<ShowlExpression> memberList;
 
 	public ShowlArrayExpression() {
+		this(new ArrayList<>());
 	}
 	
+	public ShowlArrayExpression(List<ShowlExpression> memberList) {
+		this.memberList = memberList;
+	}
+
+
+
 	public void addMember(ShowlExpression member) {
 		memberList.add(member);
 	}
@@ -88,6 +95,12 @@ public class ShowlArrayExpression implements ShowlExpression {
 		// We may need to do something more sophisticated.
 		
 		return memberList.get(0).valueType(reasoner);
+	}
+
+	@Override
+	public ShowlArrayExpression transform() {
+		
+		return new ShowlArrayExpression(ShowlUtil.transform(memberList));
 	}
 
 }

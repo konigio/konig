@@ -74,4 +74,9 @@ public class ShowlFilterExpression implements ShowlExpression {
 		throw new ShowlProcessingException("Not implemented");
 	}
 
+	@Override
+	public ShowlFilterExpression transform() {
+		return new ShowlFilterExpression(value.transform());
+	}
+
 }

@@ -88,6 +88,12 @@ public class ShowlBinaryRelationalExpression implements ShowlExpression {
 	public URI valueType(OwlReasoner reasoner) {
 		return XMLSchema.BOOLEAN;
 	}
+
+	@Override
+	public ShowlBinaryRelationalExpression transform() {
+		
+		return new ShowlBinaryRelationalExpression(operator, left.transform(), right.transform());
+	}
 	
 	
 

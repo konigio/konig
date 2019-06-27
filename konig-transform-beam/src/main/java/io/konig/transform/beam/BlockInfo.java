@@ -235,6 +235,10 @@ public class BlockInfo implements BeamPropertyManager {
 		sourcePropertyMap.put(p.getPropertyShape(), p);
 
 	}
+	
+	public BeamSourceProperty getBeamSourceProperty(ShowlPropertyShape p) {
+		return sourcePropertyMap.get(p);
+	}
 
 	@Override
 	public BeamSourceProperty forPropertyShape(ShowlPropertyShape p) throws BeamTransformGenerationException {

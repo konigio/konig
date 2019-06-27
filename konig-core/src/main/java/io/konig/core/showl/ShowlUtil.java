@@ -402,6 +402,19 @@ public class ShowlUtil {
 		return reasoner.isInverseFunctionalProperty(p.getPredicate());
 	}
 
+	public static List<ShowlExpression> transform(List<ShowlExpression> memberList) {
+		List<ShowlExpression> result = new ArrayList<>();
+		for (ShowlExpression e : memberList) {
+			result.add(e.transform());
+		}
+		return result;
+	}
+
+	public static ShowlExpression transform(ShowlExpression e) {
+		
+		return e==null ? null : e.transform();
+	}
+
 
 	
 }

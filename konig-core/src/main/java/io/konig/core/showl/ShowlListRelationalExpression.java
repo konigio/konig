@@ -102,4 +102,9 @@ public class ShowlListRelationalExpression implements ShowlExpression {
 		return XMLSchema.BOOLEAN;
 	}
 
+	@Override
+	public ShowlListRelationalExpression transform() {
+		return new ShowlListRelationalExpression(referencedBy, left.transform(), operator, ShowlUtil.transform(right));
+	}
+
 }

@@ -72,4 +72,10 @@ public class ShowlEnumNodeExpression implements ShowlExpression, HasEnumNode {
 		return enumNode.getOwlClass().getId();
 	}
 
+
+	@Override
+	public ShowlEnumNodeExpression transform() {
+		return this;
+	}
+
 }

@@ -29,9 +29,10 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import io.konig.core.OwlReasoner;
 
 public class ShowlSystimeExpression implements ShowlExpression {
+	
+	public static final ShowlSystimeExpression INSTANCE = new ShowlSystimeExpression();
 
-	public ShowlSystimeExpression() {
-		// TODO Auto-generated constructor stub
+	private ShowlSystimeExpression() {
 	}
 
 	@Override
@@ -54,6 +55,11 @@ public class ShowlSystimeExpression implements ShowlExpression {
 	public URI valueType(OwlReasoner reasoner) {
 		
 		return XMLSchema.DATETIME;
+	}
+
+	@Override
+	public ShowlSystimeExpression transform() {
+		return this;
 	}
 
 }

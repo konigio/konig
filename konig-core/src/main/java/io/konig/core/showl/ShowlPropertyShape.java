@@ -267,6 +267,9 @@ public abstract class ShowlPropertyShape implements Traversable {
 
 	public URI getValueType(OwlReasoner reasoner) {
 		if (propertyConstraint != null) {
+			if (propertyConstraint.getDatatype() != null) {
+				return propertyConstraint.getDatatype();
+			}
 			URI valueClass = RdfUtil.uri(propertyConstraint.getValueClass());
 			if (valueClass == null) {
 				Shape shape = propertyConstraint.getShape();
@@ -400,6 +403,10 @@ public abstract class ShowlPropertyShape implements Traversable {
 		return other.isDeclaredWithin(declaringShape) || isDeclaredWithin(other.getDeclaringShape());
 	}
 	
+	/*
+	 * We ought to rethink how we handle synonyms.  This ought to return a set of properties since
+	 * in theory there might be many synonyms.
+	 */
 	public ShowlPropertyShape getSynonym() {
 		for (ShowlExpression e : expressionList) {
 			if (e instanceof ShowlPropertyExpression) {
@@ -411,6 +418,30 @@ public abstract class ShowlPropertyShape implements Traversable {
 			}
 		}
 		return null;
+	}
+	
+	public Set<ShowlPropertyShape> synonyms() {
+		Set<ShowlPropertyShape> set = new HashSet<>();
+		addSynonym(set, this);
+		
+		
+		return set;
+	}
+
+	private void addSynonym(Set<ShowlPropertyShape> set, ShowlPropertyShape p) {
+		
+		if (!set.contains(p)) {
+			set.add(p);
+			for (ShowlExpression e : p.getExpressionList()) {
+				if (e instanceof ShowlPropertyExpression) {
+					ShowlPropertyShape other = ((ShowlPropertyExpression) e).getSourceProperty();
+					if (inSameNodeShape(other)) {
+						addSynonym(set, other);
+					}
+				}
+			}
+		}
+		
 	}
 
 	public List<ShowlPropertyShape> propertyPath() {

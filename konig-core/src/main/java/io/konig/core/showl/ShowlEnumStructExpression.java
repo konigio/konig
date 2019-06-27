@@ -36,4 +36,9 @@ public class ShowlEnumStructExpression extends ShowlStructExpression implements 
 		return enumNodeShape;
 	}
 
+	@Override
+	protected ShowlStructExpression copy() {
+		return new ShowlEnumStructExpression(getPropertyShape(), enumNodeShape);
+	}
+
 }

@@ -90,4 +90,9 @@ public class ShowlIriReferenceExpression implements ShowlExpression {
 		return result;
 	}
 
+	@Override
+	public ShowlIriReferenceExpression transform() {
+		return this;
+	}
+
 }
