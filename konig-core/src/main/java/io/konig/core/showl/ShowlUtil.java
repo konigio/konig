@@ -10,6 +10,7 @@ import java.util.Set;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
 
 /*
@@ -35,6 +36,7 @@ import io.konig.core.impl.RdfUtil;
 
 import io.konig.core.vocab.Konig;
 import io.konig.formula.KqlType;
+import io.konig.shacl.PropertyConstraint;
 
 public class ShowlUtil {
 	public static final String ENUM_SHAPE_BASE_IRI = "urn:konig:enumShape/";
@@ -280,16 +282,8 @@ public class ShowlUtil {
 		return null;
 	}
 
-	public static boolean isEnumSourceNode(ShowlNodeShape sourceNode) {
-		ShowlNodeShape targetNode = sourceNode.getTargetNode();
-		if (targetNode != null) {
-			ShowlPropertyShape accessor = targetNode.getAccessor();
-			if (accessor != null) {
-				ShowlExpression e = accessor.getSelectedExpression();
-				return e instanceof ShowlEnumNodeExpression;
-			}
-		}
-		return false;
+	public static boolean isEnumSourceNode(ShowlNodeShape sourceNode, OwlReasoner reasoner) {
+		return !sourceNode.isTargetNode() && reasoner.isEnumerationClass(sourceNode.getOwlClass().getId());
 	}
 	
 	public static String shortShapeName(URI shapeId) {
@@ -357,4 +351,57 @@ public class ShowlUtil {
 		
 		return result;
 	}
+
+	public static boolean isEnumNode(ShowlExpression e) {
+		
+		return  e instanceof ShowlEnumNodeExpression || e instanceof ShowlEnumStructExpression ;
+	}
+
+	public static boolean isEnumProperty(ShowlPropertyShape p) {
+		while (p!=null) {
+			ShowlNodeShape node = p.getDeclaringShape();
+			if (RdfUtil.uri(node.getId()).getNamespace().startsWith(ENUM_SHAPE_BASE_IRI)) {
+				return true;
+			}
+			p = node.getAccessor();
+		}
+		return false;
+	}
+
+	public static boolean isEnumField(ShowlExpression e) {
+		return e instanceof ShowlEnumPropertyExpression;
+	}
+
+	public static boolean isEnumNode(ShowlNodeShape node) {
+		return node.getShape().getId().stringValue().startsWith(ENUM_SHAPE_BASE_IRI);
+	}
+
+	public static ShowlNodeShape containingEnumNode(ShowlPropertyShape p, OwlReasoner owlReasoner) {
+		while (p != null) {
+			ShowlNodeShape node = p.getDeclaringShape();
+			if (owlReasoner.isEnumerationClass(node.getOwlClass().getId())) {
+				return node;
+			}
+			p = node.getAccessor();
+		}
+		return null;
+	}
+
+	public static boolean isUniqueKey(ShowlPropertyShape p, OwlReasoner reasoner) {
+		if (Konig.id.equals(p.getPredicate())) {
+			return true;
+		}
+		PropertyConstraint constraint = p.getPropertyConstraint();
+		if (constraint != null) {
+			URI stereotype = constraint.getStereotype();
+			if (Konig.uniqueKey.equals(stereotype) || Konig.primaryKey.equals(stereotype)) {
+				return true;
+			}
+		}
+		
+		return reasoner.isInverseFunctionalProperty(p.getPredicate());
+	}
+
+
+	
 }

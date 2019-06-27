@@ -585,7 +585,7 @@ public class FormulaParser {
 						do {
 							buffer.appendCodePoint(c);
 							c = read();
-						} while (Character.isLetter(c) || Character.isDigit(c) || c=='_');
+						} while (Character.isLetterOrDigit(c) || c=='_');
 						String localName = buffer.toString();
 						unread(c);
 						Context context = getContext();

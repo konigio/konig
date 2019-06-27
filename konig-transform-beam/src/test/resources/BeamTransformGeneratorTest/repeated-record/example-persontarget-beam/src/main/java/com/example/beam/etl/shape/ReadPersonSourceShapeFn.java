@@ -4,13 +4,7 @@ import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import com.google.api.client.util.DateTime;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
@@ -29,7 +23,6 @@ public class ReadPersonSourceShapeFn
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
     public static TupleTag<String> deadLetterTag = new TupleTag<String>();
     public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
-    private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
 
     @ProcessElement
     public void processElement(ProcessContext c) {
@@ -44,13 +37,13 @@ public class ReadPersonSourceShapeFn
                     StringBuilder builder = new StringBuilder();
                     try {
                         com.google.api.services.bigquery.model.TableRow row = new com.google.api.services.bigquery.model.TableRow();
-                        Long birth_date = temporalValue(csv, "birth_date", record, builder);
-                        if (birth_date!= null) {
-                            row.set("birth_date", birth_date);
+                        String father_name = stringValue(csv, "father_name", record, builder);
+                        if (father_name!= null) {
+                            row.set("father_name", father_name);
                         }
-                        Long modified_date = temporalValue(csv, "modified_date", record, builder);
-                        if (modified_date!= null) {
-                            row.set("modified_date", modified_date);
+                        String mother_name = stringValue(csv, "mother_name", record, builder);
+                        if (mother_name!= null) {
+                            row.set("mother_name", mother_name);
                         }
                         String person_id = stringValue(csv, "person_id", record, builder);
                         if (person_id!= null) {
@@ -86,8 +79,8 @@ public class ReadPersonSourceShapeFn
     private void validateHeaders(CSVParser csv) {
         HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
         StringBuilder builder = new StringBuilder();
-        validateHeader(headerMap, "birth_date", builder);
-        validateHeader(headerMap, "modified_date", builder);
+        validateHeader(headerMap, "father_name", builder);
+        validateHeader(headerMap, "mother_name", builder);
         validateHeader(headerMap, "person_id", builder);
         if (builder.length()> 0) {
             LOGGER.warn("Mapping for {} not found", builder.toString());
@@ -99,57 +92,6 @@ public class ReadPersonSourceShapeFn
             builder.append(columnName);
             builder.append(";");
         }
-    }
-
-    private Long temporalValue(CSVParser csv,
-        String fieldName,
-        CSVRecord record,
-        StringBuilder exceptionMessageBr)
-        throws Exception
-    {
-        HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
-        if (headerMap.get(fieldName)!= null) {
-            {
-                String stringValue = record.get(fieldName);
-                if (stringValue!= null) {
-                    stringValue = stringValue.trim();
-                    if (stringValue.equals("InjectErrorForTesting")) {
-                        throw new Exception("Error in pipeline : InjectErrorForTesting");
-                    }
-                    if (stringValue.length()> 0) {
-                        try {
-                            DateTime dateTimeValue = new DateTime(stringValue);
-                            if (dateTimeValue.isDateOnly()) {
-                                return dateTimeValue.getValue();
-                            }
-                            if (stringValue.contains("T")) {
-                                if (stringValue.contains("/")) {
-                                    return Instant.from(ZonedDateTime.parse(stringValue)).toEpochMilli();
-                                } else {
-                                    if (stringValue.contains("Z")) {
-                                        return Instant.parse(stringValue).toEpochMilli();
-                                    }
-                                    return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
-                                }
-                            }
-                            Matcher matcher = DATE_PATTERN.matcher(stringValue);
-                            if (matcher.matches()) {
-                                String datePart = matcher.group(1);
-                                String zoneOffset = matcher.group(2);
-                                if ((zoneOffset.length() == 0)||zoneOffset.equals("Z")) {
-                                    stringValue = ((datePart +"T00:00:00.000")+ zoneOffset);
-                                }
-                                return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
-                            }
-                        } catch (final Exception ex) {
-                            String message = String.format("Invalid temporal value for %s;", fieldName);
-                            exceptionMessageBr.append(message);
-                        }
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     private String stringValue(CSVParser csv,

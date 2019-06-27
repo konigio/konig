@@ -1,0 +1,17 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+shape: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "shape" ; 
+	rdfs:label "Shape Ontology" . 
+
+shape:GenderShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.gendertype" . 
+
+shape:ParentShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.parentshape" . 
+
+shape:PersonSourceShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.person" . 
+
+shape:PersonTargetShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.person" . 

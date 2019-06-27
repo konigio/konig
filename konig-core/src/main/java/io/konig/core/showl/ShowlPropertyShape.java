@@ -86,6 +86,15 @@ public abstract class ShowlPropertyShape implements Traversable {
 		mappings.put(mapping.getJoinCondition(), mapping);
 	}
 	
+	public boolean isRequired() {
+		ShowlPropertyShape delegate = maybeDirect();
+		PropertyConstraint constraint = delegate.getPropertyConstraint();
+		if (constraint != null) {
+			Integer maxCount = constraint.getMaxCount();
+			return maxCount==null || maxCount>1;
+		}
+		return false;
+	}
 	
 	public Collection<ShowlMapping> getMappings() {
 		return mappings==null ? Collections.emptySet() : mappings.values();
@@ -494,8 +503,8 @@ public abstract class ShowlPropertyShape implements Traversable {
 		return getSelectedExpression() instanceof ShowlEnumNodeExpression;
 	}
 
-	public boolean isEnumProperty() {
-		return ShowlUtil.isEnumSourceNode(getDeclaringShape());
+	public boolean isEnumProperty(OwlReasoner reasoner) {
+		return ShowlUtil.isEnumSourceNode(getDeclaringShape(), reasoner);
 	}
 
 	public boolean isTargetProperty() {
