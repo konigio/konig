@@ -27,7 +27,7 @@ import org.openrdf.model.URI;
 
 import io.konig.core.OwlReasoner;
 
-public class ShowlEnumNodeExpression implements ShowlExpression {
+public class ShowlEnumNodeExpression implements ShowlExpression, HasEnumNode {
 	
 	private ShowlNodeShape enumNode;
 	
@@ -36,7 +36,7 @@ public class ShowlEnumNodeExpression implements ShowlExpression {
 	}
 	
 	
-
+	@Override
 	public ShowlNodeShape getEnumNode() {
 		return enumNode;
 	}

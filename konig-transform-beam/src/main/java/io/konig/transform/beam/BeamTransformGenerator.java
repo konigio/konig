@@ -750,13 +750,17 @@ public class BeamTransformGenerator {
     		}
 
         URI propertyId = property.getId();
-        JFieldVar mapField = null;
-        Class<?> datatypeJavaClass = datatypeMapper.javaDatatype(property.getRange());
-        AbstractJClass datatypeClass = model.ref(datatypeJavaClass);
         String fieldName = propertyId.getLocalName();
-        AbstractJClass mapClass = model.ref(Map.class).narrow(datatypeClass, enumClass);
-        AbstractJClass hashMapClass = model.ref(HashMap.class).narrow(datatypeClass, enumClass);
-        mapField = enumClass.field(JMod.PRIVATE | JMod.STATIC | JMod.FINAL, mapClass, fieldName + "Map", hashMapClass._new());
+        String mapName = fieldName + "Map";
+        JFieldVar mapField = enumClass.fields().get(mapName);
+        
+        if (mapField==null) {
+          Class<?> datatypeJavaClass = datatypeMapper.javaDatatype(property.getRange());
+          AbstractJClass datatypeClass = model.ref(datatypeJavaClass);
+          AbstractJClass mapClass = model.ref(Map.class).narrow(datatypeClass, enumClass);
+          AbstractJClass hashMapClass = model.ref(HashMap.class).narrow(datatypeClass, enumClass);
+          mapField = enumClass.field(JMod.PRIVATE | JMod.STATIC | JMod.FINAL, mapClass, mapName, hashMapClass._new());
+        }
         
         map.put(propertyId, mapField);
       }
