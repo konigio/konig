@@ -518,7 +518,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 	private IJExpression systime() {
 		AbstractJClass longClass = model.ref(Long.class);
 		AbstractJClass dateClass = model.ref(Date.class);
-		return longClass._new().arg(dateClass._new().invoke("getTime"));
+		return longClass._new().arg(dateClass._new().invoke("getTime").div(1000L));
 	}
 
 	private IJExpression enumIndividualReference(ShowlEnumIndividualReference e) throws BeamTransformGenerationException {
