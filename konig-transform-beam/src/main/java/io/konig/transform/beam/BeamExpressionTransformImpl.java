@@ -57,6 +57,7 @@ import com.helger.jcodemodel.JStringLiteral;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.OwlReasoner;
+import io.konig.core.showl.ShowlBinaryRelationalExpression;
 import io.konig.core.showl.ShowlCaseStatement;
 import io.konig.core.showl.ShowlContainmentOperator;
 import io.konig.core.showl.ShowlDirectPropertyShape;
@@ -93,7 +94,12 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 	private JMethod stripSpacesMethod;
 	private JMethod pathGetter;
 	private int caseCount = 0;
+	private int varCount = 0;
+	
+	private boolean treatNullAsFalse;
 	private ArrayList<BlockInfo> blockStack;
+	
+	private BeamLiteralFactory literalFactory;
 
 	
 	public BeamExpressionTransformImpl(
@@ -105,6 +111,8 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		this.typeManager = typeManager;
 		this.model = model;
 		this.targetClass = targetClass;
+		
+		literalFactory = new BeamLiteralFactory(model);
 	}
 
 	@Override
@@ -113,11 +121,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		if (e instanceof ShowlLiteralExpression) {
 
       Literal literal = ((ShowlLiteralExpression) e).getLiteral();
-      if (literal.getDatatype().equals(XMLSchema.STRING)) {
-        return JExpr.lit(literal.stringValue());
-      } else {
-        fail("Typed literal not supported in expression: {0}", e.toString());
-      }
+      return literalFactory.javaExpression(literal);
 		} 
 		
 		if (e instanceof ShowlPropertyExpression) {
@@ -156,7 +160,54 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			return listRelationalExpression((ShowlListRelationalExpression)e);
 		}
 		
+		if (e instanceof ShowlBinaryRelationalExpression) {
+			return binaryRelationalExpression((ShowlBinaryRelationalExpression)e);
+		}
+		
 		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
+	}
+
+	private IJExpression binaryRelationalExpression(ShowlBinaryRelationalExpression e) throws BeamTransformGenerationException {
+		IJExpression left = transform(e.getLeft());
+		IJExpression right = transform(e.getRight());
+		
+		BlockInfo blockInfo = peekBlockInfo();
+		JBlock block = blockInfo.getBlock();
+		
+		AbstractJClass objectClass = model.ref(Object.class);
+		
+		JVar leftVar = block.decl(objectClass, nextVarName()).init(left);
+		
+		
+		switch (e.getOperator()) {
+		case EQUALS :
+			
+			if (treatNullAsFalse) {
+				return JExpr.cond(leftVar.neNull().cand(leftVar.invoke("equals").arg(right)), leftVar, JExpr.FALSE);
+			}
+			
+			JConditional ifStatement = block._if(leftVar.eqNull());
+			JVar errorBuilder = blockInfo.getErrorBuilderVar();
+			StringBuilder message = new StringBuilder();
+			message.append(e.displayValue());
+			message.append(" must not be null");
+			
+			ifStatement._then().add(errorBuilder.invoke("addError").arg(JExpr.lit(message.toString())));
+			ifStatement._then()._return(JExpr._null());
+			
+			return leftVar.neNull().cand(leftVar.invoke("equals").arg(right));
+			
+			
+		default :
+			fail("{0} operator not supported in {1}", e.getOperator().name(), e.displayValue());
+		}
+		
+		return null;
+	}
+
+	private String nextVarName() {
+		varCount++;
+		return "var" + varCount;
 	}
 
 	private IJExpression property(ShowlPropertyExpression e) throws BeamTransformGenerationException {
@@ -173,8 +224,16 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		} 
 			
 
-		BeamSourceProperty b = blockInfo.forPropertyShape(e.getSourceProperty());
-		return b.getVar();
+		BeamSourceProperty b = blockInfo.getBeamSourceProperty(p);
+		if (b != null) {
+			return b.getVar();
+		}
+		
+		// There is no pre-declared variable for this property.  Try getting it directly from a TableRow.
+		
+		NodeTableRow nodeRow = blockInfo.getNodeTableRow(p.getRootNode());
+		return nodeRow.getTableRowVar().invoke("get").arg(JExpr.lit(p.getPredicate().getLocalName()));
+		
 	}
 
 	
@@ -288,7 +347,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		JMethod method = targetClass.method(JMod.PRIVATE, resultType, methodName);
 
 		
-		String resultParamName = StringUtil.firstLetterLowerCase(valueType.getLocalName());
+		String resultParamName = StringUtil.firstLetterLowerCase(valueType.getLocalName()) + "Value";
 		JVar resultParam = method.body().decl(resultType, resultParamName).init(JExpr._null());
 		
 		List<ShowlPropertyShape> propertyList = caseParamList(e);
@@ -375,24 +434,36 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		beginBlock(method.body())
 			.nodeTableRowMap(thisTableRowMap)
 			.errorBuilderVar(errorBuilderVar);
+
+		boolean treatValue = treatNullAsFalse(true);
+		try {
 		
-		for (NodeTableRow param : thisTableRowMap.values()) {
-			NodeTableRow argValue = callerBlock.getNodeTableRowMap().get(param.getNode());
-			if (argValue == null) {
-				fail("While building WHEN expression {0}, argument not found: {1}", 
-						whenExpression.displayValue(), param.getNode().getPath());
+			for (NodeTableRow param : thisTableRowMap.values()) {
+				NodeTableRow argValue = callerBlock.getNodeTableRowMap().get(param.getNode());
+				if (argValue == null) {
+					fail("While building WHEN expression {0}, argument not found: {1}", 
+							whenExpression.displayValue(), param.getNode().getPath());
+				}
+				invocation.arg(argValue.getTableRowVar());
 			}
-			invocation.arg(argValue.getTableRowVar());
+			invocation.arg(callerBlock.getErrorBuilderVar());
+			
+			IJExpression result = transform(whenExpression);
+			
+			method.body()._return(result);
+		} finally {
+			treatNullAsFalse(treatValue);
+			endBlock();
 		}
-		invocation.arg(callerBlock.getErrorBuilderVar());
 		
-		IJExpression result = transform(whenExpression);
-		
-		method.body()._return(result);
-		
-		endBlock();
 		
 		return invocation;
+	}
+
+	private boolean treatNullAsFalse(boolean value) {
+		boolean result = treatNullAsFalse;
+		treatNullAsFalse = value;
+		return result;
 	}
 
 	@Override

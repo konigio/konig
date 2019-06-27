@@ -71,4 +71,9 @@ public class ShowlDelegationExpression implements ShowlExpression {
 		return null;
 	}
 
+	@Override
+	public ShowlDelegationExpression transform() {
+		return this;
+	}
+
 }

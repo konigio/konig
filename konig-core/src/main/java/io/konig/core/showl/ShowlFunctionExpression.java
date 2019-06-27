@@ -46,13 +46,23 @@ public class ShowlFunctionExpression implements ShowlExpression {
 
 	private ShowlPropertyShape declaringProperty;
 	private FunctionExpression function;
-	private List<ShowlExpression> arguments = new ArrayList<>();
+	private List<ShowlExpression> arguments;
 
 	public ShowlFunctionExpression(ShowlPropertyShape declaringProperty, FunctionExpression function) {
-		this.declaringProperty = declaringProperty;
-		this.function = function;
+		this(declaringProperty, function, new ArrayList<>());
 	}
 	
+	
+	
+	public ShowlFunctionExpression(ShowlPropertyShape declaringProperty, FunctionExpression function,
+			List<ShowlExpression> arguments) {
+		this.declaringProperty = declaringProperty;
+		this.function = function;
+		this.arguments = arguments;
+	}
+
+
+
 	public static ShowlExpression fromIriTemplate(ShowlSchemaService schemaService, ShowlNodeShapeService nodeService, ShowlPropertyShape declaringProperty, IriTemplate template) {
 		
 		List<? extends Element> list = template.toList();
@@ -180,6 +190,11 @@ public class ShowlFunctionExpression implements ShowlExpression {
 			throw new ShowlProcessingException("Type not known");
 		}
 		return type;
+	}
+
+	@Override
+	public ShowlFunctionExpression transform() {
+		return new ShowlFunctionExpression(declaringProperty, function, ShowlUtil.transform(arguments));
 	}
 
 }

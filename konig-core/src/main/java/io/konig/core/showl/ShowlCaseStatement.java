@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -111,6 +113,20 @@ public class ShowlCaseStatement implements ShowlExpression {
 		for (ShowlWhenThenClause c : whenThenList) {
 			URI type = c.getThen().valueType(reasoner);
 			result = (URI) reasoner.leastCommonSuperClass(result, type);
+		}
+		return result;
+	}
+
+	@Override
+	public ShowlCaseStatement transform() {
+		
+		return new ShowlCaseStatement(ShowlUtil.transform(caseCondition), transform(whenThenList), ShowlUtil.transform(elseClause));
+	}
+
+	private List<ShowlWhenThenClause> transform(List<ShowlWhenThenClause> list) {
+		List<ShowlWhenThenClause> result = new ArrayList<>();
+		for (ShowlWhenThenClause clause : list) {
+			result.add(clause.transform());
 		}
 		return result;
 	}

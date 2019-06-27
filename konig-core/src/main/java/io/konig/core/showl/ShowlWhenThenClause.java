@@ -81,4 +81,9 @@ public class ShowlWhenThenClause implements ShowlExpression {
 		return then.valueType(reasoner);
 	}
 
+	@Override
+	public ShowlWhenThenClause transform() {
+		return new ShowlWhenThenClause(when.transform(), then.transform());
+	}
+
 }

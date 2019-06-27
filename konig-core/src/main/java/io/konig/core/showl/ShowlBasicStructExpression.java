@@ -28,4 +28,12 @@ public class ShowlBasicStructExpression extends ShowlStructExpression {
 		super(propertyShape);
 	}
 
+	@Override
+	protected ShowlStructExpression copy() {
+		
+		return new ShowlBasicStructExpression(getPropertyShape());
+	}
+
+	
+
 }
