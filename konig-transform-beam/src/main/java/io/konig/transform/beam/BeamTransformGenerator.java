@@ -1786,15 +1786,21 @@ public class BeamTransformGenerator {
 					      	if (beamTargetProperty.getSourcePropertyList().size()==1) {
 					      		
 					      		String sourcePath = beamTargetProperty.getSourcePropertyList().get(0).canonicalPath();
+					      		PropertyConstraint constraint = beamTargetProperty.getDirectProperty().getPropertyConstraint();
+					      		if (constraint!=null) {
+					      			Integer minCount = constraint.getMinCount();
+									if (minCount!=null && minCount>0) {
+										StringBuilder message = new StringBuilder();
+							      		message.append("Cannot set ");
+							      		message.append(beamTargetProperty.simplePath());
+							      		message.append(" because ");
+							      		message.append(sourcePath);
+							      		message.append(" is null");
+							      		
+							      		ifStatement._else().add(errorBuilderParam.invoke("addError").arg(JExpr.lit(message.toString())));
+									}
+					      		}
 					      		
-					      		StringBuilder message = new StringBuilder();
-					      		message.append("Cannot set ");
-					      		message.append(beamTargetProperty.simplePath());
-					      		message.append(" because ");
-					      		message.append(sourcePath);
-					      		message.append(" is null");
-					      		
-					      		ifStatement._else().add(errorBuilderParam.invoke("addError").arg(JExpr.lit(message.toString())));
 					      		
 					      	} else {
 					      		throw new BeamTransformGenerationException("Multiple source properties not supported yet");

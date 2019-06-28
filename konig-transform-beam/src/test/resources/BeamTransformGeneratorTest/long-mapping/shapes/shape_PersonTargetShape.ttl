@@ -10,7 +10,7 @@
 
 shape:PersonTargetShape sh:property  [ 
 		sh:path ex:heightInches ; 
-		sh:minCount 0 ; 
+		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		sh:datatype xsd:long ; 
 		rdf:predicate ex:heightInches ]  ; 

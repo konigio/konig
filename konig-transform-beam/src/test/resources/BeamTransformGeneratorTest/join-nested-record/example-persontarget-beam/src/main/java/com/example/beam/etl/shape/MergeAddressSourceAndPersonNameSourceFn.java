@@ -3,6 +3,7 @@ package com.example.beam.etl.shape;
 import java.util.Iterator;
 import com.example.beam.etl.common.ErrorBuilder;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
@@ -14,7 +15,7 @@ public class MergeAddressSourceAndPersonNameSourceFn
     public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
 
     @DoFn.ProcessElement
-    public void processElement(DoFn.ProcessContext c) {
+    public void processElement(ProcessContext c) {
         try {
             ErrorBuilder errorBuilder = new ErrorBuilder();
             com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
@@ -24,7 +25,7 @@ public class MergeAddressSourceAndPersonNameSourceFn
             id(personNameSourceRow, outputRow, errorBuilder);
             address(addressSourceRow, outputRow, errorBuilder);
             givenName(personNameSourceRow, outputRow, errorBuilder);
-            if (!outputRow.isEmpty()) {
+            if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
                 c.output(successTag, outputRow);
             }
             if (!errorBuilder.isEmpty()) {
@@ -45,8 +46,6 @@ public class MergeAddressSourceAndPersonNameSourceFn
         Object id = ((personNameSourceRow == null)?null:personNameSourceRow.get("id"));
         if (id!= null) {
             outputRow.set("id", id);
-        } else {
-            errorBuilder.addError("Cannot set id because {PersonNameSourceShape}.id is null");
         }
     }
 
@@ -54,7 +53,7 @@ public class MergeAddressSourceAndPersonNameSourceFn
         com.google.api.services.bigquery.model.TableRow address = new com.google.api.services.bigquery.model.TableRow();
         address_addressLocality(addressSourceRow, address, errorBuilder);
         address_addressRegion(addressSourceRow, address, errorBuilder);
-        if (!address.isEmpty()) {
+        if (errorBuilder.isEmpty()&&(!address.isEmpty())) {
             outputRow.set("address", address);
         }
     }
@@ -63,8 +62,6 @@ public class MergeAddressSourceAndPersonNameSourceFn
         Object city = ((addressSourceRow == null)?null:addressSourceRow.get("city"));
         if (city!= null) {
             outputRow.set("addressLocality", city);
-        } else {
-            errorBuilder.addError("Cannot set address.addressLocality because {AddressSourceShape}.city is null");
         }
     }
 
@@ -72,8 +69,6 @@ public class MergeAddressSourceAndPersonNameSourceFn
         Object state = ((addressSourceRow == null)?null:addressSourceRow.get("state"));
         if (state!= null) {
             outputRow.set("addressRegion", state);
-        } else {
-            errorBuilder.addError("Cannot set address.addressRegion because {AddressSourceShape}.state is null");
         }
     }
 

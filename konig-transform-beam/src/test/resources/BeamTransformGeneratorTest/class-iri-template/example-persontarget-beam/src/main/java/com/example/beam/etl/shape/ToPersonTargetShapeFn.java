@@ -35,8 +35,6 @@ public class ToPersonTargetShapeFn
         Object employer_id = ((personSourceRow == null)?null:personSourceRow.get("employer_id"));
         if (employer_id!= null) {
             outputRow.set("worksFor", concat("http://example.com/org/", employer_id));
-        } else {
-            errorBuilder.addError("Cannot set worksFor because {PersonSourceShape}.employer_id is null");
         }
     }
 
@@ -57,8 +55,6 @@ public class ToPersonTargetShapeFn
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-        } else {
-            errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
         }
     }
 }
