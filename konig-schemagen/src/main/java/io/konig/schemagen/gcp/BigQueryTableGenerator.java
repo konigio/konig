@@ -201,8 +201,10 @@ public class BigQueryTableGenerator {
 				logger.error("konig:synthicKey is applicable only for shapes with datasource GoogleCloudSqlTable or AwsAurora");
 				p.setStereotype(null);
 			}
-			TableFieldSchema field = toField(p, traversal);
-			list.add(field);
+			if (p.getPredicate() != null) {
+				TableFieldSchema field = toField(p, traversal);
+				list.add(field);
+			}
 		}
 		return list;
 	}

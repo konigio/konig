@@ -65,4 +65,23 @@ public class ShowlEqualStatement implements ShowlStatement {
 		right.addProperties(set);
 	}
 
+	public ShowlExpression expressionOf(ShowlNodeShape node) {
+		ShowlExpression e = expressionOf(node, left);
+		if (e != null) {
+			return e;
+		}
+		return expressionOf(node, right);
+	}
+
+	private ShowlExpression expressionOf(ShowlNodeShape node, ShowlExpression e) {
+		if (e instanceof ShowlPropertyExpression) {
+			ShowlPropertyExpression pe = (ShowlPropertyExpression)e;
+			ShowlPropertyShape p = pe.getSourceProperty();
+			if (node.encapsulates(p)) {
+				return e;
+			}
+		}
+		return null;
+	}
+
 }

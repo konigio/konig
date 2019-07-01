@@ -37,7 +37,6 @@ import java.util.Set;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
@@ -59,11 +58,14 @@ import com.helger.jcodemodel.JVar;
 import io.konig.core.OwlReasoner;
 import io.konig.core.showl.ShowlBinaryRelationalExpression;
 import io.konig.core.showl.ShowlCaseStatement;
+import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlContainmentOperator;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlEnumIndividualReference;
+import io.konig.core.showl.ShowlEnumNodeExpression;
 import io.konig.core.showl.ShowlEnumPropertyExpression;
 import io.konig.core.showl.ShowlEnumStructExpression;
+import io.konig.core.showl.ShowlEqualStatement;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlFilterExpression;
 import io.konig.core.showl.ShowlFunctionExpression;
@@ -72,6 +74,7 @@ import io.konig.core.showl.ShowlListRelationalExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.ShowlSystimeExpression;
 import io.konig.core.showl.ShowlUtil;
@@ -164,8 +167,56 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 			return binaryRelationalExpression((ShowlBinaryRelationalExpression)e);
 		}
 		
+		if (e instanceof ShowlEnumNodeExpression) {
+			return enumNode((ShowlEnumNodeExpression)e);
+		}
+		
 		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
 	}
+
+	private IJExpression enumNode(ShowlEnumNodeExpression e) throws BeamTransformGenerationException {
+		ShowlChannel channel = e.getChannel();
+		if (channel == null) {
+			fail("Cannot transform {0} because channel is not defined", e.displayValue());
+		}
+		ShowlStatement statement = channel.getJoinStatement();
+		if (statement == null) {
+			fail("Cannot transform {0} because join statement is not defined", e.displayValue());
+		}
+		
+		if (statement instanceof ShowlEqualStatement) {
+			ShowlNodeShape enumNode = e.getEnumNode();
+			ShowlEqualStatement equal = (ShowlEqualStatement) statement;
+			ShowlExpression enumPropertyExpression = equal.expressionOf(enumNode);
+			if (enumPropertyExpression instanceof ShowlPropertyExpression) {
+				ShowlPropertyShape enumPropertyShape = ((ShowlPropertyExpression)enumPropertyExpression).getSourceProperty();
+				URI enumClassId = enumNode.getOwlClass().getId();
+				AbstractJClass enumClass = typeManager.enumClass(enumClassId);
+				ShowlExpression otherExpression = equal.otherExpression(enumPropertyExpression);
+				IJExpression otherJavaExpression = transform(otherExpression);
+				
+				URI predicate = enumPropertyShape.getPredicate();
+				
+				String getter = "findBy" + StringUtil.capitalize(predicate.getLocalName());
+				
+				IJExpression result = enumClass.staticInvoke(getter).arg(otherJavaExpression);
+				
+				String varName = nextVarName();
+				
+				JBlock block = peekBlockInfo().getBlock();
+				JVar var = block.decl(enumClass, varName).init(result);
+				
+				
+				return var;
+			}
+			
+		} 
+
+		fail("Join statement of {0} not supported", e.displayValue());
+		
+		return null;
+	}
+
 
 	private IJExpression binaryRelationalExpression(ShowlBinaryRelationalExpression e) throws BeamTransformGenerationException {
 		IJExpression left = transform(e.getLeft());
@@ -402,8 +453,11 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		JInvocation invoke = JExpr.invoke(method);
 		for (NodeTableRow paramInfo : tableRowMap.values()) {
 			ShowlNodeShape node = paramInfo.getNode();
-			NodeTableRow  callerParamInfo = callerBlock.getNodeTableRow(node);
-			invoke.arg(callerParamInfo.getTableRowVar());
+			
+			NodeTableRow  callerParamInfo = callerBlock.maybeNullNodeTableRow(node);
+			if (callerParamInfo != null) {
+				invoke.arg(callerParamInfo.getTableRowVar());
+			}
 		}
 		
 		JVar callerErrorBuilder = callerBlock.getErrorBuilderVar();

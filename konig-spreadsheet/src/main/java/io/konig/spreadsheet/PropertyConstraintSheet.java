@@ -269,6 +269,12 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 						location(row, PROPERTY_ID), 
 						p, 
 						propertyPathText), processor);
+
+			if (Konig.derivedProperty.equals(stereotype)) {
+				shape.addDerivedProperty(p);
+			} else {
+				shape.add(p);
+			}
 			break;
 		}
 		

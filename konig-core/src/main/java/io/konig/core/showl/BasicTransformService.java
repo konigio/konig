@@ -120,8 +120,67 @@ public class BasicTransformService implements ShowlTransformService {
 		}
 		
 		handleTargetFormulas(state);
+		handleTeleportFormulas(state);
 		
 		return state.propertyPool;
+	}
+
+
+	private void handleTeleportFormulas(State state) {
+		
+		Iterator<ShowlPropertyShapeGroup> sequence = state.propertyPool.iterator();
+		while (sequence.hasNext()) {
+			ShowlPropertyShapeGroup group = sequence.next();
+			ShowlDirectPropertyShape direct = group.direct();
+			if (direct != null) {
+				ShowlTeleportExpression teleport = teleport(group);
+				if (teleport != null) {
+					ShowlExpression delegate = teleport.getDelegate();
+					ShowlNodeShape focusNode = teleport.getFocusNode();
+					
+					Set<ShowlPropertyShape> set = new HashSet<>();
+					delegate.addProperties(set);
+	
+					int count = 0;
+					
+					loop2 : 
+					for (ShowlPropertyShape p : set) {
+						if (p.getSelectedExpression() != null) {
+							count++;
+						} else {
+							for (ShowlChannel channel : state.targetNode.getChannels()) {
+								ShowlNodeShape sourceNode = channel.getSourceNode();
+								ShowlExpression e = findMatch(sourceNode, p);
+								if (e != null) {
+									p.setSelectedExpression(e);
+									count++;
+									continue loop2;
+								}
+							}
+						}
+						
+					}
+					
+					if (count == set.size()) {
+						direct.setSelectedExpression(delegate.transform());
+						sequence.remove();
+					}
+				}
+				
+			}
+		}
+		
+	}
+
+
+	private ShowlTeleportExpression teleport(ShowlPropertyShapeGroup group) {
+		for (ShowlPropertyShape p : group) {
+			ShowlExpression formula = p.getFormula();
+			if (formula instanceof ShowlTeleportExpression) {
+				return (ShowlTeleportExpression) formula;
+			}
+		}
+		return null;
 	}
 
 
@@ -155,7 +214,10 @@ public class BasicTransformService implements ShowlTransformService {
 							}
 						}
 						if (count == set.size()) {
+							ShowlExpression e = formula.transform();
+							direct.setSelectedExpression(e);
 							sequence.remove();
+							
 						}
 					}
 				}
@@ -183,7 +245,8 @@ public class BasicTransformService implements ShowlTransformService {
 					if (sourceKeyExpression != null) {
 					
 						ShowlNodeShape enumSourceNode = enumSourceNode(enumTargetNode);
-						enumTargetNode.getAccessor().setSelectedExpression(new ShowlEnumNodeExpression(enumSourceNode));
+						ShowlEnumNodeExpression enumNodeExpression = new ShowlEnumNodeExpression(enumSourceNode);
+						enumTargetNode.getAccessor().setSelectedExpression(enumNodeExpression);
 						
 						ShowlPropertyShape sourceKey = enumSourceNode.getProperty(uniqueKey.getPredicate());
 						if (sourceKey == null) {
@@ -195,6 +258,8 @@ public class BasicTransformService implements ShowlTransformService {
 						ShowlEqualStatement statement = new ShowlEqualStatement(expression(sourceKey), sourceKeyExpression);
 						ShowlChannel channel = new ShowlChannel(enumSourceNode, statement);
 						state.targetNode.addChannel(channel);
+						
+						enumNodeExpression.setChannel(channel);
 					}
 				}
 			}

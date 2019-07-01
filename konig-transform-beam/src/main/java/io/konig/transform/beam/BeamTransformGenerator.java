@@ -1634,7 +1634,8 @@ public class BeamTransformGenerator {
 		      	// private void $methodName(TableRow $sourceRow1, TableRow $sourceRow2, ..., TableRow outputRow, ErrorBuilder errorBuilder) {
 		      	
 		      	JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, fullMethodName);
-		      	BlockInfo blockInfo = etran().beginBlock(method.body());
+		      	BeamExpressionTransform etran = etran();
+		      	BlockInfo blockInfo = etran.beginBlock(method.body());
 		      	BeamMethod beamMethod = new BeamMethod(method);
 		      	beamMethod.setMethodNameBase(methodName);
 		      	beamMethod.setMethodNameSuffix(methodNameSuffix);
@@ -1739,9 +1740,8 @@ public class BeamTransformGenerator {
 			      		
 			      	} else {
 			
-			      	
 				      	for (BeamSourceProperty sourceProperty : beamTargetProperty.getSourcePropertyList()) {
-				      		sourceProperty.generateVar(model, method.body());
+				      		sourceProperty.generateVar(model, method.body(), etran);
 				      	}
 				
 				    		
@@ -1797,14 +1797,18 @@ public class BeamTransformGenerator {
 					      		ifStatement._else().add(errorBuilderParam.invoke("addError").arg(JExpr.lit(message.toString())));
 					      		
 					      	} else {
-					      		throw new BeamTransformGenerationException("Multiple source properties not supported yet");
+					      		StringBuilder message = new StringBuilder();
+					      		message.append("Cannot set ");
+					      		message.append(beamTargetProperty.simplePath());
+					      		
+					      		ifStatement._else().add(errorBuilderParam.invoke("addError").arg(JExpr.lit(message.toString())));
 					      	}
 				      	}
 			      	}
 			      
 			      	return new PropertyMethod(beamTargetProperty, method);
 		      	} finally {
-		      		etran().endBlock();
+		      		etran.endBlock();
 		      	}
 					}
 		      
@@ -2281,16 +2285,16 @@ public class BeamTransformGenerator {
                                 beamChannelSet.add(beamChannel);
                             }
                         }
-						if (
-								beamChannelSet.isEmpty() && 
-								!(e instanceof ShowlFilterExpression) && 
-								!(e instanceof ShowlSystimeExpression) &&
-								!(e instanceof ShowlArrayExpression) &&
-								!(e instanceof AlternativePathsExpression) &&
-								!direct.isEnumIndividual(reasoner)
-						) {
-							throw new BeamTransformGenerationException("BeamChannel not found for " + direct.getPath());
-						}
+//						if (
+//								beamChannelSet.isEmpty() && 
+//								!(e instanceof ShowlFilterExpression) && 
+//								!(e instanceof ShowlSystimeExpression) &&
+//								!(e instanceof ShowlArrayExpression) &&
+//								!(e instanceof AlternativePathsExpression) &&
+//								!direct.isEnumIndividual(reasoner)
+//						) {
+//							throw new BeamTransformGenerationException("BeamChannel not found for " + direct.getPath());
+//						}
 						
 						List<BeamChannel> channelList = new ArrayList<>(beamChannelSet);
 						Collections.sort(channelList);
