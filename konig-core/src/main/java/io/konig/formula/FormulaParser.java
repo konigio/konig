@@ -930,6 +930,7 @@ public class FormulaParser {
 				case '[' :
 					path.add(hasStep());
 				}
+				skipSpace();
 				next = peek();
 			}
 			
