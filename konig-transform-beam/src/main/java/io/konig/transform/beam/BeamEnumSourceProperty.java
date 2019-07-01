@@ -24,13 +24,17 @@ package io.konig.transform.beam;
 import org.openrdf.model.URI;
 
 import com.helger.jcodemodel.AbstractJClass;
+import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.JBlock;
 import com.helger.jcodemodel.JCodeModel;
 import com.helger.jcodemodel.JInvocation;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.KonigException;
+import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlUtil;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
 
@@ -40,16 +44,30 @@ public class BeamEnumSourceProperty extends BeamSourceProperty {
 		super(beamChannel, propertyShape);
 	}
 
-	public void generateVar(JCodeModel model, JBlock block) {
+	@Override
+	public void generateVar(JCodeModel model, JBlock block, BeamExpressionTransform etran) throws BeamTransformGenerationException {
 		
 		URI predicate = getPredicate();
 		AbstractJClass objectClass = model.ref(Object.class);
 		String sourcePropertyName = predicate.getLocalName();
 		
-		JVar enumMember = getBeamChannel().getSourceRowParam();
+		IJExpression enumMember = getBeamChannel().getSourceRowParam();
 		
 		if (enumMember == null) {
-			throw new KonigException("sourceRowParam not defined for " + getPropertyShape().getPath());
+			
+			ShowlNodeShape enumNode = enumNode();
+			ShowlNodeShape enumTarget = enumNode.getTargetNode();
+			
+			ShowlPropertyShape targetAccessor = enumTarget.getAccessor();
+			ShowlExpression targetAccessorExpression = targetAccessor==null ? null : targetAccessor.getSelectedExpression();
+			
+			if (targetAccessorExpression != null) {
+				enumMember = etran.transform(targetAccessorExpression);
+			}
+			
+			if (enumMember == null) {
+				throw new KonigException("sourceRowParam not defined for " + getPropertyShape().getPath());
+			}
 		}
 		
 		String getterName = "get" + StringUtil.capitalize(sourcePropertyName);
@@ -62,6 +80,19 @@ public class BeamEnumSourceProperty extends BeamSourceProperty {
 		JVar sourcePropertyVar = block.decl(objectClass, sourcePropertyName).init(initValue);
 		
 		setVar(sourcePropertyVar);
+	}
+
+	private ShowlNodeShape enumNode() throws BeamTransformGenerationException {
+		
+		ShowlPropertyShape p = getPropertyShape();
+		while (p != null) {
+			ShowlNodeShape node  = p.getDeclaringShape();
+			if (ShowlUtil.isEnumNode(node)) {
+				return node;
+			}
+			p = node.getAccessor();
+		}
+		throw new BeamTransformGenerationException("Enum node not found for " + getPropertyShape().getPath());
 	}
 
 }

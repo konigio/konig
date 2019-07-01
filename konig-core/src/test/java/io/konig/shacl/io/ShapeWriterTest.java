@@ -63,7 +63,7 @@ public class ShapeWriterTest {
 	private ShapeWriter shapeWriter = new ShapeWriter();
 	private Graph graph = new MemoryGraph();
 	
-	@Test
+	@Ignore
 	public void testExplicitDerivedFrom() throws Exception {
 
 		URI personTargetShapeId = uri("http://example.com/shapes/PersonTargetShape");
@@ -181,7 +181,7 @@ public class ShapeWriterTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testSequencePath() throws Exception {
 		URI shapeId = uri("http://example.com/shapes/PersonShape");
 		Shape shape = new Shape(shapeId);

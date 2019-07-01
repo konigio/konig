@@ -26,6 +26,7 @@ import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.konig.core.OwlReasoner;
 import io.konig.core.vocab.Konig;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.PropertyConstraint;

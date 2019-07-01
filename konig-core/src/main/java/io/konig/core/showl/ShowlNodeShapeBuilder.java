@@ -22,6 +22,7 @@ package io.konig.core.showl;
 
 
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,10 @@ import io.konig.core.showl.expression.ShowlExpressionBuilder;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.QuantifiedExpression;
 import io.konig.shacl.NodeKind;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.PropertyPath;
+import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 
 public class ShowlNodeShapeBuilder {
@@ -141,10 +145,61 @@ public class ShowlNodeShapeBuilder {
 				buildNodeShape(p, c.getShape());
 			}
 			
+		} else {
+			PropertyPath path = c.getPath();
+			if (path instanceof SequencePath) {
+				addSequencePath(node, c, (SequencePath)path);
+			}
 		}
 		
 	}
 
+
+	private void addSequencePath(ShowlNodeShape node, PropertyConstraint c, SequencePath path) {
+		ShowlNodeShape focusNode = node;
+		String shapeIdValue = node.getShape().getId().stringValue();
+		
+		ShowlPropertyShape last = null;
+		int end = path.size()-1;
+		for (int i=0; i<=end; i++) {
+			PropertyPath element = path.get(i);
+			if (element instanceof PredicatePath) {
+				URI predicate = ((PredicatePath) element).getPredicate();
+
+				ShowlProperty property = schemaService.produceProperty(predicate);
+				ShowlDerivedPropertyShape p = new ShowlOutwardPropertyShape(node, property, null);
+				property.addPropertyShape(p);
+				node.addDerivedProperty(p);
+				
+				last = p;
+
+				if (logger.isTraceEnabled()) {
+					logger.trace("addSequencePath: {}", p.getPath());
+				}
+				
+				if (i<end) {
+					shapeIdValue = shapeIdValue + '.' + predicate.getLocalName();
+					URI shapeId = new URIImpl(shapeIdValue);
+					Shape shape = new Shape(shapeId);
+					
+					node = new ShowlNodeShape(p, shape, null);
+					p.setValueShape(node);
+				}
+				
+			} else {
+				throw new ShowlProcessingException("Nested SequencePath not supported");
+			}
+		}
+		
+		if (c.getFormula() != null) {
+
+			QuantifiedExpression formula = c.getFormula();
+			ShowlExpressionBuilder builder = new ShowlExpressionBuilder(schemaService, nodeService);
+			ShowlExpression ex = builder.expression(node.getAccessor(), formula);
+			last.setFormula(new ShowlTeleportExpression(focusNode, ex));
+		}
+		
+	}
 
 	private void addDirectProperty(ShowlNodeShape node, URI predicate, PropertyConstraint c) {
 		
@@ -160,6 +215,12 @@ public class ShowlNodeShapeBuilder {
 						
 			if (recursive && c!=null && c.getShape()!=null) {
 				buildNodeShape(direct, c.getShape());
+			}
+		} else {
+
+			PropertyPath path = c.getPath();
+			if (path instanceof SequencePath) {
+				addSequencePath(node, c, (SequencePath)path);
 			}
 		}
 		
