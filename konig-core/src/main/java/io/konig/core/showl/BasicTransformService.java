@@ -32,6 +32,7 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -626,10 +627,13 @@ public class BasicTransformService implements ShowlTransformService {
 				ShowlEffectiveNodeShape channelJoinNode = channelJoinAccessor.getValueShape();
 				if (channelJoinNode == null) {
 					
-					ShowlDirectPropertyShape channelJoinAccessorDirect = channelJoinAccessor.direct();
+					ShowlDirectPropertyShape channelJoinAccessorDirect = channelJoinAccessor.synonymDirect();
 					if (channelJoinAccessorDirect != null) {
 						PropertyConstraint constraint = channelJoinAccessorDirect.getPropertyConstraint();
-						if (constraint.getNodeKind() == NodeKind.IRI && constraint.getShape()==null) {
+						if ((
+									constraint.getNodeKind() == NodeKind.IRI ||
+									XMLSchema.STRING.equals(constraint.getDatatype())
+								) && constraint.getShape()==null) {
 							// channelJoinAccessor is an IRI reference  We can use it to join.
 
 							ShowlExpression left = new ShowlEnumPropertyExpression(enumId.direct());
