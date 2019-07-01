@@ -1645,6 +1645,7 @@ public class BeamTransformGenerator {
 		      	try {
 		      	
 			      	BeamTargetProperty beamTargetProperty = targetProperty(direct);
+			      	List<PropertyMethodParameter> paramList = new ArrayList<>();
 			      	
 			      	for (BeamChannel info : beamTargetProperty.getChannelList()) {
 			    			JVar sourceRow = info.getSourceRow();
@@ -1653,6 +1654,8 @@ public class BeamTransformGenerator {
 				      		JVar sourceRowParam = method.param(sourceRow.type(), sourceRowName);
 				      		info.setSourceRowParam(sourceRowParam);
 				      		blockInfo.addNodeTableRow(new NodeTableRow(info.getFocusNode(), sourceRowParam));
+				      		
+				      		paramList.add(new PropertyMethodParameter(info));
 			      		}
 			      	}
 			
@@ -1806,7 +1809,7 @@ public class BeamTransformGenerator {
 				      	}
 			      	}
 			      
-			      	return new PropertyMethod(beamTargetProperty, method);
+			      	return new PropertyMethod(beamTargetProperty, method, paramList);
 		      	} finally {
 		      		etran.endBlock();
 		      	}
@@ -1897,9 +1900,9 @@ public class BeamTransformGenerator {
 					protected void invokePropertyMethod(JBlock callerBlock, PropertyMethod method, JVar outputRow) {
 		      	JMethod jmethod = method.getMethod();
 		      	JInvocation invoke = JExpr.invoke(jmethod);
-		      	BeamTargetProperty beamTargetProperty = method.getTargetProperty();
 		      	
-		      	for (BeamChannel info : beamTargetProperty.getChannelList()) {
+		      	for (PropertyMethodParameter param : method.getParameterList()) {
+		      		BeamChannel info = param.getChannel();
 		    			JVar sourceRow = info.getSourceRow();
 		      		if (sourceRow != null) {
 			      		invoke.arg(sourceRow);
@@ -2260,7 +2263,9 @@ public class BeamTransformGenerator {
 		
 		      
 		      protected BeamTargetProperty targetProperty(ShowlDirectPropertyShape direct) throws BeamTransformGenerationException {
-		      	
+		      	if (logger.isTraceEnabled()) {
+		      		logger.trace("targetProperty: {}", direct.getPath());
+		      	}
 		      	BeamTargetProperty result = new BeamTargetProperty(direct);
 		
 		      	Set<ShowlPropertyShape> sourcePropertySet = new HashSet<>();
@@ -2274,6 +2279,9 @@ public class BeamTransformGenerator {
 							ShowlNodeShape sourceNode = sourceProperty.getDeclaringShape();
 							BeamChannel beamChannel = beamChannel(sourceNode);
 							beamChannelSet.add(beamChannel);
+							if (logger.isTraceEnabled()) {
+								logger.trace("targetProperty: beamChannelSet.add({})", sourceNode.getPath());
+							}
 						}
 						
 						ShowlExpression e = direct.getSelectedExpression();
@@ -5061,12 +5069,43 @@ public class BeamTransformGenerator {
   	
   }
   
+  /**
+   * @deprecated Should be replaced by BeamParameter
+   * @author Greg McFall
+   *
+   */
+  static class PropertyMethodParameter {
+  
+  	private BeamChannel channel;
+
+		public PropertyMethodParameter(BeamChannel channel) {
+			this.channel = channel;
+		}
+
+		public BeamChannel getChannel() {
+			return channel;
+		}
+  	
+		
+  }
+  
+  /**
+   * Encapsulates information about a method that constructs the value for a target property.
+   * @deprecated This should be replaced by BeamMethod
+   * @author Greg McFall
+   *
+   */
   static class PropertyMethod {
   	private BeamTargetProperty targetProperty;
   	private JMethod method;
-		public PropertyMethod(BeamTargetProperty targetProperty, JMethod method) {
+  	private List<PropertyMethodParameter> parameterList;
+  	
+  	
+		public PropertyMethod(BeamTargetProperty targetProperty, JMethod method,
+				List<PropertyMethodParameter> parameterList) {
 			this.targetProperty = targetProperty;
 			this.method = method;
+			this.parameterList = parameterList;
 		}
 		public BeamTargetProperty getTargetProperty() {
 			return targetProperty;
@@ -5074,6 +5113,14 @@ public class BeamTransformGenerator {
 		public JMethod getMethod() {
 			return method;
 		}
+		public List<PropertyMethodParameter> getParameterList() {
+			return parameterList;
+		}
+		public void setParameterList(List<PropertyMethodParameter> parameterList) {
+			this.parameterList = parameterList;
+		}
+		
+		
   	
   }
 }
