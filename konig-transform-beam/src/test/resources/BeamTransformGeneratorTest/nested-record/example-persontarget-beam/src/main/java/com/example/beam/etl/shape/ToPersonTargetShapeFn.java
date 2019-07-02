@@ -35,8 +35,6 @@ public class ToPersonTargetShapeFn
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-        } else {
-            errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
         }
     }
 
@@ -67,8 +65,6 @@ public class ToPersonTargetShapeFn
         Object address_id = ((personSourceRow == null)?null:personSourceRow.get("address_id"));
         if (address_id!= null) {
             outputRow.set("id", address_id);
-        } else {
-            errorBuilder.addError("Cannot set address.id because {PersonSourceShape}.address_id is null");
         }
     }
 
@@ -76,8 +72,6 @@ public class ToPersonTargetShapeFn
         Object city = ((personSourceRow == null)?null:personSourceRow.get("city"));
         if (city!= null) {
             outputRow.set("addressLocality", city);
-        } else {
-            errorBuilder.addError("Cannot set address.addressLocality because {PersonSourceShape}.city is null");
         }
     }
 
@@ -85,8 +79,6 @@ public class ToPersonTargetShapeFn
         Object state = ((personSourceRow == null)?null:personSourceRow.get("state"));
         if (state!= null) {
             outputRow.set("addressRegion", state);
-        } else {
-            errorBuilder.addError("Cannot set address.addressRegion because {PersonSourceShape}.state is null");
         }
     }
 }

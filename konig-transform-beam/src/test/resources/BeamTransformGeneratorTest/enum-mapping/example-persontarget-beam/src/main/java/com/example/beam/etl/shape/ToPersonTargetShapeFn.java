@@ -36,8 +36,6 @@ public class ToPersonTargetShapeFn
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-        } else {
-            errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
         }
     }
 
@@ -72,8 +70,6 @@ public class ToPersonTargetShapeFn
         Object id = gender.getId().getLocalName();
         if (id!= null) {
             outputRow.set("id", id);
-        } else {
-            errorBuilder.addError("Cannot set gender.id because {GenderType}.id is null");
         }
     }
 
