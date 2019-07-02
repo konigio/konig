@@ -51,10 +51,22 @@ public class ToAnimalTargetShapeFn
     private void species_name(Species species, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object name = species.getName();
         if (name!= null) {
-            outputRow.set("name", name);
+            outputRow.set("name", stringValue(name, errorBuilder));
         } else {
             errorBuilder.addError("Cannot set species.name because {Species}.name is null");
         }
+    }
+
+    private String stringValue(Object name, ErrorBuilder errorBuilder) {
+        try {
+            if ((name!= null)&&(name instanceof String)) {
+                return ((String) name);
+            }
+        } catch (final Exception ex) {
+            String message = String.format("Invalid String value %s for field name;", String.valueOf(name));
+            errorBuilder.addError(message);
+        }
+        return null;
     }
 
     private void genus(com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {

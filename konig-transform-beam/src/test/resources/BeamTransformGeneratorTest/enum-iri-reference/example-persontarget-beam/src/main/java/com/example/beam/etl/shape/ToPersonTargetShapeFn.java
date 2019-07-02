@@ -68,9 +68,21 @@ public class ToPersonTargetShapeFn
     private void gender_name(GenderType gender, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object name = gender.getName();
         if (name!= null) {
-            outputRow.set("name", name);
+            outputRow.set("name", stringValue(name, errorBuilder));
         } else {
             errorBuilder.addError("Cannot set gender.name because {GenderType}.name is null");
         }
+    }
+
+    private String stringValue(Object name, ErrorBuilder errorBuilder) {
+        try {
+            if ((name!= null)&&(name instanceof String)) {
+                return ((String) name);
+            }
+        } catch (final Exception ex) {
+            String message = String.format("Invalid String value %s for field name;", String.valueOf(name));
+            errorBuilder.addError(message);
+        }
+        return null;
     }
 }

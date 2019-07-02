@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -100,6 +101,7 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
+import com.helger.jcodemodel.AbstractJType;
 import com.helger.jcodemodel.EClassType;
 import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.IJStatement;
@@ -1597,7 +1599,7 @@ public class BeamTransformGenerator {
 					abstract protected void declareClass() throws BeamTransformGenerationException;
 					
 		      abstract protected BeamChannel beamChannel(ShowlNodeShape sourceNode) throws BeamTransformGenerationException;
-		      
+		      protected Map<AbstractJType, String> getterMap = new HashMap<>();
 		      protected JDefinedClass generate() throws BeamTransformGenerationException {
 						declareClass();
 		      	processElementMethod();
@@ -1775,8 +1777,7 @@ public class BeamTransformGenerator {
 				      	
 				      	JBlock thenBlock = condition==null ? method.body() : ifStatement._then();
 				      		
-				      	thenBlock.add(outputRowParam.invoke("set")
-				      			.arg(JExpr.lit(targetPropertyName)).arg(value));
+				      	addValidationMethod(direct, e, value, thenBlock, errorBuilderParam);
 				      	
 				      	
 				      	if (condition != null) {
@@ -1813,7 +1814,53 @@ public class BeamTransformGenerator {
 		      		etran().endBlock();
 		      	}
 					}
+		      private void addValidationMethod(ShowlDirectPropertyShape direct, ShowlExpression e,IJExpression value, JBlock block,JVar errorBuilderParam) throws BeamTransformGenerationException {
+		    	  String targetPropertyName = direct.getPredicate().getLocalName();
+		    	  if(direct.getPropertyConstraint() != null && e instanceof ShowlPropertyExpression) {
+			      		ShowlPropertyExpression propertyExpr = (ShowlPropertyExpression)e;
+			      		URI datatype = direct.getPropertyConstraint().getDatatype();
+			      		if( datatype != null) {
+					      	AbstractJType targetDatatype = typeManager.javaType(datatype);
+					      	String validationMethod = targetDatatype.name().toLowerCase() + "Value";
+					      	if(getterMap.get(targetDatatype) == null) {
+						      	declareDatatypeValidationMethod(targetDatatype, propertyExpr, targetPropertyName);
+						      	block.add(JExpr.ref("outputRow").invoke("set")
+							      			.arg(JExpr.lit(targetPropertyName)).arg(JExpr.invoke(validationMethod).arg(value).arg(errorBuilderParam)));
+					      	}
+					      	getterMap.put(targetDatatype, validationMethod);
+			      		}
+			      	} else {
+			      		block.add(JExpr.ref("outputRow").invoke("set")
+				      			.arg(JExpr.lit(targetPropertyName)).arg(value));
+			      	}
+		      }
 		      
+		      private void declareDatatypeValidationMethod(AbstractJType targetDatatype, ShowlPropertyExpression value, String targetPropertyName) throws BeamTransformGenerationException {
+		    	  String methodName = targetDatatype.name().toLowerCase() + "Value";
+		    	  JMethod method = thisClass.method(JMod.PRIVATE, targetDatatype, methodName);
+		    	  JBlock methodBody = method.body();
+		    	  JTryBlock tryBlock = methodBody._try();
+		          JBlock tryBody = tryBlock.body();
+		          ShowlPropertyShape p = value.getSourceProperty();
+		          JVar fieldObject = method.param(model.ref(Object.class), p.getPredicate().getLocalName());
+			      JDefinedClass errorBuilderClass = errorBuilderClass();
+			      JVar errorBuilder = method.param(errorBuilderClass, "errorBuilder");
+			      JConditional condition = tryBody._if(fieldObject.neNull().cand(fieldObject._instanceof(targetDatatype)));
+			      if (targetDatatype == model.ref(String.class) || 
+			    		  targetDatatype == model.ref(Long.class) || targetDatatype == model.ref(Integer.class) ||
+			    		  targetDatatype == model.ref(Double.class) || targetDatatype == model.ref(Float.class) || 
+			    		  targetDatatype == model.ref(Date.class)){
+			    	  condition._then()._return(fieldObject.castTo(targetDatatype));
+			      } else if (targetDatatype == model.ref(Boolean.class)) {	
+			    	  condition._then()._return(JExpr.lit("true").invoke("equalsIgnoreCase").arg(fieldObject.castTo(targetDatatype)));        
+			      }
+			      JCatchBlock catchBlock = tryBlock._catch(model.ref(Exception.class));
+			      JVar message = catchBlock.body().decl(model._ref(String.class), "message");
+			      message.init(model.directClass("String").staticInvoke("format").arg("Invalid "+ targetDatatype.name() + " value %s for field "+ targetPropertyName +";").arg(model.ref(String.class).staticInvoke("valueOf").arg(fieldObject)));
+			      catchBlock.body().add(errorBuilder.invoke("addError").arg(message));
+			      method.body()._return(JExpr._null());
+			      
+		      }
 		      private void processArrayProperty(String methodName, String methodNameSuffix, 
 							BeamTargetProperty beamTargetProperty) throws BeamTransformGenerationException {
 					
@@ -1882,7 +1929,10 @@ public class BeamTransformGenerator {
 							thisBlock.addListParam(beamMethod, callerList.type(), callerList.name());
 							etran.addRowParameters(beamMethod, member);
 							beamMethod.addErrorBuilderParam(errorBuilderClass());
-							
+							thisBlock.setGetterMap(getterMap);
+							thisBlock.setDefinedClass(thisClass);
+							thisBlock.setCodeModel(model);
+							thisBlock.setTypeManager(typeManager());
 							etran.processProperty(targetProperty, member);
 							
 							

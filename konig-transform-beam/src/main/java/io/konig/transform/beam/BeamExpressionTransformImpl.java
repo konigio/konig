@@ -768,6 +768,8 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		BlockInfo thisBlockInfo = beginBlock(beamMethod.getMethod().body());
 		try {
 		  thisBlockInfo.beamMethod(beamMethod);
+		  thisBlockInfo.setDefinedClass(callerBlockInfo.getDefinedClass());
+          thisBlockInfo.setGetterMap(callerBlockInfo.getGetterMap());
 			addRowParameters(beamMethod, e);
 			addOutputRowParam(beamMethod, direct.getDeclaringShape());
 			

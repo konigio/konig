@@ -1,6 +1,5 @@
 package com.example.beam.etl.shape;
 
-import java.util.Date;
 import com.example.beam.etl.common.ErrorBuilder;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
@@ -18,9 +17,9 @@ public class ToPersonTargetShapeFn
             ErrorBuilder errorBuilder = new ErrorBuilder();
             com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
             com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
+            heightInches(personSourceRow, outputRow, errorBuilder);
             id(personSourceRow, outputRow, errorBuilder);
-            givenName(personSourceRow, outputRow, errorBuilder);
-            modified(outputRow, errorBuilder);
+            isDummyFlag(personSourceRow, outputRow, errorBuilder);
             if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
                 c.output(successTag, outputRow);
             }
@@ -31,6 +30,25 @@ public class ToPersonTargetShapeFn
         } catch (final Throwable oops) {
             c.output(deadLetterTag, oops.getMessage());
         }
+    }
+
+    private void heightInches(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object person_height = ((personSourceRow == null)?null:personSourceRow.get("person_height"));
+        if (person_height!= null) {
+            outputRow.set("heightInches", floatValue(person_height, errorBuilder));
+        }
+    }
+
+    private Float floatValue(Object person_height, ErrorBuilder errorBuilder) {
+        try {
+            if ((person_height!= null)&&(person_height instanceof Float)) {
+                return ((Float) person_height);
+            }
+        } catch (final Exception ex) {
+            String message = String.format("Invalid Float value %s for field heightInches;", String.valueOf(person_height));
+            errorBuilder.addError(message);
+        }
+        return null;
     }
 
     private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
@@ -53,26 +71,22 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private void givenName(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object first_name = ((personSourceRow == null)?null:personSourceRow.get("first_name"));
-        if (first_name!= null) {
-            outputRow.set("givenName", stringValue(first_name, errorBuilder));
+    private void isDummyFlag(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+        Object dummy_flag = ((personSourceRow == null)?null:personSourceRow.get("dummy_flag"));
+        if (dummy_flag!= null) {
+            outputRow.set("isDummyFlag", booleanValue(dummy_flag, errorBuilder));
         }
     }
 
-    private String stringValue(Object first_name, ErrorBuilder errorBuilder) {
+    private Boolean booleanValue(Object dummy_flag, ErrorBuilder errorBuilder) {
         try {
-            if ((first_name!= null)&&(first_name instanceof String)) {
-                return ((String) first_name);
+            if ((dummy_flag!= null)&&(dummy_flag instanceof Boolean)) {
+                return "true".equalsIgnoreCase(((Boolean) dummy_flag));
             }
         } catch (final Exception ex) {
-            String message = String.format("Invalid String value %s for field givenName;", String.valueOf(first_name));
+            String message = String.format("Invalid Boolean value %s for field isDummyFlag;", String.valueOf(dummy_flag));
             errorBuilder.addError(message);
         }
         return null;
-    }
-
-    private void modified(com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        outputRow.set("modified", new Long((new Date().getTime()/ 1000L)));
     }
 }

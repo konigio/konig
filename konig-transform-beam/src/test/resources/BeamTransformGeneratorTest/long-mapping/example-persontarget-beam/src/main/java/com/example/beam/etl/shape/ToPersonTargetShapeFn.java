@@ -34,10 +34,22 @@ public class ToPersonTargetShapeFn
     private void heightInches(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_height = ((personSourceRow == null)?null:personSourceRow.get("person_height"));
         if (person_height!= null) {
-            outputRow.set("heightInches", person_height);
+            outputRow.set("heightInches", longValue(person_height, errorBuilder));
         } else {
             errorBuilder.addError("Cannot set heightInches because {PersonSourceShape}.person_height is null");
         }
+    }
+
+    private Long longValue(Object person_height, ErrorBuilder errorBuilder) {
+        try {
+            if ((person_height!= null)&&(person_height instanceof Long)) {
+                return ((Long) person_height);
+            }
+        } catch (final Exception ex) {
+            String message = String.format("Invalid Long value %s for field heightInches;", String.valueOf(person_height));
+            errorBuilder.addError(message);
+        }
+        return null;
     }
 
     private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {

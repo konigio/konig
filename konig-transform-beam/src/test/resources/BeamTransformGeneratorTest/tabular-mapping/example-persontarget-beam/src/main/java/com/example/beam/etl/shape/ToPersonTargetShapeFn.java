@@ -54,7 +54,19 @@ public class ToPersonTargetShapeFn
     private void givenName(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object first_name = ((personSourceRow == null)?null:personSourceRow.get("first_name"));
         if (first_name!= null) {
-            outputRow.set("givenName", first_name);
+            outputRow.set("givenName", stringValue(first_name, errorBuilder));
         }
+    }
+
+    private String stringValue(Object first_name, ErrorBuilder errorBuilder) {
+        try {
+            if ((first_name!= null)&&(first_name instanceof String)) {
+                return ((String) first_name);
+            }
+        } catch (final Exception ex) {
+            String message = String.format("Invalid String value %s for field givenName;", String.valueOf(first_name));
+            errorBuilder.addError(message);
+        }
+        return null;
     }
 }

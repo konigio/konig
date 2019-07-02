@@ -22,6 +22,7 @@ package io.konig.transform.beam;
 
 
 import java.text.MessageFormat;
+import java.util.Date;
 import java.util.Set;
 
 import org.openrdf.model.Namespace;
@@ -61,6 +62,21 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 		}
 		if (XMLSchema.STRING.equals(rdfType)) {
 			return model.ref(String.class);
+		}
+		if (XMLSchema.INTEGER.equals(rdfType)) {
+			return model.ref(Long.class);
+		}
+		if (XMLSchema.LONG.equals(rdfType)) {
+			return model.ref(Long.class);
+		}
+		if (XMLSchema.INT.equals(rdfType)) {
+			return model.ref(Integer.class);
+		}
+		if (XMLSchema.DATE.equals(rdfType)) {
+			return model.ref(Date.class);
+		}
+		if (XMLSchema.FLOAT.equals(rdfType)) {
+			return model.ref(Float.class);
 		}
 		if (reasoner.isEnumerationClass(rdfType)) {
 			return model.ref(enumClassName(rdfType));

@@ -1,5 +1,6 @@
 package com.example.beam.etl.shape;
 
+import java.util.Date;
 import com.example.beam.etl.common.ErrorBuilder;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
@@ -55,14 +56,38 @@ public class ToPersonTargetShapeFn
     private void modifiedDate(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object modified_date = ((personSourceRow == null)?null:personSourceRow.get("modified_date"));
         if (modified_date!= null) {
-            outputRow.set("modifiedDate", modified_date);
+            outputRow.set("modifiedDate", longValue(modified_date, errorBuilder));
         }
+    }
+
+    private Long longValue(Object modified_date, ErrorBuilder errorBuilder) {
+        try {
+            if ((modified_date!= null)&&(modified_date instanceof Long)) {
+                return ((Long) modified_date);
+            }
+        } catch (final Exception ex) {
+            String message = String.format("Invalid Long value %s for field modifiedDate;", String.valueOf(modified_date));
+            errorBuilder.addError(message);
+        }
+        return null;
     }
 
     private void birthDate(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object birth_date = ((personSourceRow == null)?null:personSourceRow.get("birth_date"));
         if (birth_date!= null) {
-            outputRow.set("birthDate", birth_date);
+            outputRow.set("birthDate", dateValue(birth_date, errorBuilder));
         }
+    }
+
+    private Date dateValue(Object birth_date, ErrorBuilder errorBuilder) {
+        try {
+            if ((birth_date!= null)&&(birth_date instanceof Date)) {
+                return ((Date) birth_date);
+            }
+        } catch (final Exception ex) {
+            String message = String.format("Invalid Date value %s for field birthDate;", String.valueOf(birth_date));
+            errorBuilder.addError(message);
+        }
+        return null;
     }
 }

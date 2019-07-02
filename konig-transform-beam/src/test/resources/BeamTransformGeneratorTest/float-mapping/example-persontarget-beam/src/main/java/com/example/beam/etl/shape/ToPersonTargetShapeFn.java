@@ -34,8 +34,20 @@ public class ToPersonTargetShapeFn
     private void heightInches(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_height = ((personSourceRow == null)?null:personSourceRow.get("person_height"));
         if (person_height!= null) {
-            outputRow.set("heightInches", person_height);
+            outputRow.set("heightInches", floatValue(person_height, errorBuilder));
         }
+    }
+
+    private Float floatValue(Object person_height, ErrorBuilder errorBuilder) {
+        try {
+            if ((person_height!= null)&&(person_height instanceof Float)) {
+                return ((Float) person_height);
+            }
+        } catch (final Exception ex) {
+            String message = String.format("Invalid Float value %s for field heightInches;", String.valueOf(person_height));
+            errorBuilder.addError(message);
+        }
+        return null;
     }
 
     private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {

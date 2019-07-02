@@ -132,6 +132,13 @@ public class BeamTransformGeneratorTest {
 	}
 	
 	@Test
+	public void testBoolean() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/boolean-mapping");
+		
+	}
+	
+	@Test
 	public void testIriTemplateFormula() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/iri-template-formula", false);

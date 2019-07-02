@@ -1,0 +1,35 @@
+@prefix ex: <http://example.com/ns/core/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonTargetShape sh:property  [ 
+		sh:path ex:heightInches ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:float ; 
+		rdf:predicate ex:heightInches ] ,
+		[ 
+		sh:path ex:isDummyFlag ; 
+		sh:datatype xsd:boolean ; 
+		rdf:predicate ex:isDummyFlag ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ]		; 
+	a sh:Shape ; 
+	konig:explicitDerivedFrom shape:PersonSourceShape ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
+	sh:nodeKind sh:IRI ; 
+	sh:targetClass schema:Person . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "PersonTarget" ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:WarehouseOperationalData . 
