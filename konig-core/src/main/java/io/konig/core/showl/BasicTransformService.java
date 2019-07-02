@@ -1097,7 +1097,13 @@ public class BasicTransformService implements ShowlTransformService {
 									value = ((ShowlFilterExpression) value).getValue();
 								}
 								selectedSourceField = sourceField;
-								if (value instanceof ShowlEnumIndividualReference) {
+								if (value instanceof ShowlFunctionExpression) {
+									if (targetField.getValueShape()==null) {
+										struct.put(predicate, value);
+									} else {
+										fail("Function returning a struct not supported yet at {0}", sourceProperty.getPath());
+									}
+								} else if (value instanceof ShowlEnumIndividualReference) {
 									if (targetField.getValueShape()!=null) {
 										
 										ShowlClass enumClass = sourceField.getValueType(schemaService);
@@ -1169,6 +1175,13 @@ public class BasicTransformService implements ShowlTransformService {
 				}
 			}
 		}
+		
+	}
+
+
+	private void fail(String pattern, Object...arguments) throws ShowlProcessingException {
+		String msg = MessageFormat.format(pattern, arguments);
+		throw new ShowlProcessingException(msg);
 		
 	}
 
