@@ -74,15 +74,19 @@ public class ToPersonTargetShapeFn
     private void isDummyFlag(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object dummy_flag = ((personSourceRow == null)?null:personSourceRow.get("dummy_flag"));
         if (dummy_flag!= null) {
-            outputRow.set("isDummyFlag", booleanValue(dummy_flag, errorBuilder, "isDummyFlag"));
+            outputRow.set("isDummyFlag", longToBooleanValue(dummy_flag, errorBuilder, "isDummyFlag"));
         }
     }
 
-    private Boolean booleanValue(Object dummy_flag, ErrorBuilder errorBuilder, String targetPropertyName) {
+    private Boolean longToBooleanValue(Object dummy_flag, ErrorBuilder errorBuilder, String targetPropertyName) {
         try {
-            if ((dummy_flag!= null)&&(dummy_flag instanceof Boolean)) {
-                return ((Boolean) dummy_flag);
+            if ((dummy_flag!= null)&&(dummy_flag instanceof Long)) {
+                Long longValue = new Long(dummy_flag);
+                if (1 == longValue) {
+                    return true;
+                }
             }
+            return false;
         } catch (final Exception ex) {
             String message = String.format("Invalid Boolean value %s for field %s;", String.valueOf(dummy_flag), targetPropertyName);
             errorBuilder.addError(message);

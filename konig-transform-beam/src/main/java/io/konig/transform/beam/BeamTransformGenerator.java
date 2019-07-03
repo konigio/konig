@@ -1814,15 +1814,21 @@ public class BeamTransformGenerator {
 					}
 		      private void addValidationMethod(ShowlDirectPropertyShape direct, ShowlExpression e,IJExpression value, JBlock block,JVar errorBuilderParam) throws BeamTransformGenerationException {
 		    	  String targetPropertyName = direct.getPredicate().getLocalName();
+		    	  
 		    	  if(direct.getPropertyConstraint() != null && e instanceof ShowlPropertyExpression) {
-			      		ShowlPropertyExpression propertyExpr = (ShowlPropertyExpression)e;
+			      		ShowlPropertyExpression propertyExpr = (ShowlPropertyExpression)e;			      		
 			      		URI datatype = direct.getPropertyConstraint().getDatatype();
 			      		if( datatype != null) {
 					      	AbstractJType targetDatatype = typeManager.javaType(datatype);
-					      	String validationMethod = targetDatatype.name().toLowerCase() + "Value";
-						    declareDatatypeValidationMethod(targetDatatype, propertyExpr, targetPropertyName);
+					      	 URI sDatatype = propertyExpr.getSourceProperty().getPropertyConstraint().getDatatype();
+					    	  AbstractJType sourceDatatype = typeManager.javaType(sDatatype);
+					    	  String methodName = targetDatatype.name().toLowerCase() + "Value";
+					    	  if(sourceDatatype == model.ref(Long.class) && targetDatatype == model.ref(Boolean.class)){
+					    		  methodName = sourceDatatype.name().toLowerCase() + "To" + targetDatatype.name() + "Value"; 
+					    	  }
+						    declareDatatypeValidationMethod(targetDatatype, propertyExpr, methodName);
 					      	block.add(JExpr.ref("outputRow").invoke("set")
-					      			.arg(JExpr.lit(targetPropertyName)).arg(JExpr.invoke(validationMethod)
+					      			.arg(JExpr.lit(targetPropertyName)).arg(JExpr.invoke(methodName)
 					      					.arg(value)
 					      					.arg(errorBuilderParam)
 					      					.arg(targetPropertyName)));
@@ -1836,9 +1842,13 @@ public class BeamTransformGenerator {
 			      	}
 		      }
 		      
-		      private void declareDatatypeValidationMethod(AbstractJType targetDatatype, ShowlPropertyExpression value, String targetPropertyName) throws BeamTransformGenerationException {
-		    	  if(getterMap.get(targetDatatype) == null) {
-			    	  String methodName = targetDatatype.name().toLowerCase() + "Value";
+		      private void declareDatatypeValidationMethod(AbstractJType targetDatatype, ShowlPropertyExpression value, String methodName) throws BeamTransformGenerationException {
+		    	  URI sDatatype = value.getSourceProperty().getPropertyConstraint().getDatatype();
+		    	  AbstractJType sourceDatatype = typeManager.javaType(sDatatype);
+		    	  
+		    	  if(getterMap.get(targetDatatype) == null 
+		    			  || (getterMap.get(targetDatatype) != null && !getterMap.get(targetDatatype).equals(methodName))) {
+		    		  
 			    	  JMethod method = thisClass.method(JMod.PRIVATE, targetDatatype, methodName);
 			    	  JBlock methodBody = method.body();
 			    	  JTryBlock tryBlock = methodBody._try();
@@ -1848,8 +1858,19 @@ public class BeamTransformGenerator {
 				      JDefinedClass errorBuilderClass = errorBuilderClass();
 				      JVar errorBuilder = method.param(errorBuilderClass, "errorBuilder");
 				      JVar targetProperty = method.param(model.ref(String.class), "targetPropertyName");
-				      JConditional condition = tryBody._if(fieldObject.neNull().cand(fieldObject._instanceof(targetDatatype)));
-				      condition._then()._return(fieldObject.castTo(targetDatatype));				      
+				     
+				      if(sourceDatatype == model.ref(Long.class) && targetDatatype == model.ref(Boolean.class)){
+				    	  JConditional condition = tryBody._if(fieldObject.neNull().cand(fieldObject._instanceof(sourceDatatype)));				    	  
+					      JBlock ifBlock = condition._then();
+					      JVar longValue = ifBlock.decl(model.ref(Long.class), "longValue");
+					      longValue.init(model.ref(Long.class)._new().arg(fieldObject));
+					      ifBlock._if(JExpr.lit(1).eq(longValue))._then()._return(JExpr.lit(true));
+					      tryBody._return(JExpr.lit(false));
+					      
+				      } else {
+				    	  JConditional condition = tryBody._if(fieldObject.neNull().cand(fieldObject._instanceof(targetDatatype)));
+					      condition._then()._return(fieldObject.castTo(targetDatatype));	
+				      }
 				      JCatchBlock catchBlock = tryBlock._catch(model.ref(Exception.class));
 				      JVar message = catchBlock.body().decl(model.directClass("String"), "message");
 				      message.init(model.directClass("String").staticInvoke("format")

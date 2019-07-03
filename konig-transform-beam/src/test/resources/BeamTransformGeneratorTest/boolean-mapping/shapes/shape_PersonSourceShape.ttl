@@ -25,7 +25,7 @@ $.heightInches''' ],  [
 		sh:path alias:dummy_flag ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ; 
-		sh:datatype xsd:integer ; 
+		sh:datatype xsd:long ; 
 		rdf:predicate alias:dummy_flag ; 
 		konig:formula '''
 @term isDummyFlag <http://example.com/ns/core/isDummyFlag>
