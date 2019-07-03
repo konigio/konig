@@ -349,7 +349,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 			return null;
 		}
 		Set<URI> set = individuals.getIndividualManager().getIndividualsByName(name);
-		if (set == null) {
+		if (set == null || set.isEmpty()) {
 			fail(row, col, "No individual found with name ''{0}'' ", name);
 		}
 		if (set.size()>1) {
