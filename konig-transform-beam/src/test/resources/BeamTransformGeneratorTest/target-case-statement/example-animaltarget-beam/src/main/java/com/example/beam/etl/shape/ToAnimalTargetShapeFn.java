@@ -125,8 +125,6 @@ public class ToAnimalTargetShapeFn
         Object id = ((animalSourceRow == null)?null:animalSourceRow.get("id"));
         if (id!= null) {
             outputRow.set("id", id);
-        } else {
-            errorBuilder.addError("Cannot set id because {AnimalSourceShape}.id is null");
         }
     }
 }

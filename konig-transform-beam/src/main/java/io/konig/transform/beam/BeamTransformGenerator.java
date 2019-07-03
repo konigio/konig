@@ -1782,7 +1782,7 @@ public class BeamTransformGenerator {
 				      			.arg(JExpr.lit(targetPropertyName)).arg(value));
 				      	
 				      	
-				      	if (condition != null) {
+				      	if (condition != null && direct.isRequired()) {
 			
 					      	// Construct the error message.
 				      		
@@ -1814,8 +1814,8 @@ public class BeamTransformGenerator {
 		      		etran.endBlock();
 		      	}
 					}
-		      
-		      private void processArrayProperty(String methodName, String methodNameSuffix, 
+
+					private void processArrayProperty(String methodName, String methodNameSuffix, 
 							BeamTargetProperty beamTargetProperty) throws BeamTransformGenerationException {
 					
 		      	BlockInfo blockInfo = etran().peekBlockInfo();
@@ -2048,17 +2048,12 @@ public class BeamTransformGenerator {
 								.arg(enumRow)
 							);
 						
-						PropertyConstraint constraint = targetDirectProperty.getPropertyConstraint();
-						if (constraint!=null) {
-							Integer minCount = constraint.getMinCount();
-							if (minCount!=null && minCount>0) {
-								// errorBuilder.addError(MessageFormat.format("Required field '$fieldName' is NULL");
+						if (targetDirectProperty.isRequired()) {
 								
-								JStringLiteral message = JExpr.lit(
-										"Required field '" + targetDirectProperty.getPredicate().getLocalName() + "' is NULL");
+							JStringLiteral message = JExpr.lit(
+									"Required field '" + targetDirectProperty.getPredicate().getLocalName() + "' is NULL");
 
-								body.add(errorBuilder.invoke("addError").arg(message));
-							}
+							body.add(errorBuilder.invoke("addError").arg(message));
 						}
 						
 						
@@ -2095,19 +2090,15 @@ public class BeamTransformGenerator {
 							thenBlock.add(row.invoke("set").arg(JExpr.lit(predicate.getLocalName())).arg(value));
 							
 							
-							PropertyConstraint constraint = p.getPropertyConstraint();
-							if (constraint != null) {
-								Integer minCount = constraint.getMinCount();
-								if (minCount!=null && minCount>0) {
-									JBlock elseBlock = ifStatement._else();
-									StringBuilder msg = new StringBuilder();
-									msg.append(p.getPath());
-									msg.append(" must not be null, but is not defined for ");
-									JInvocation invoke = errorBuilder.invoke("addError")
-											.arg(JExpr.lit(msg.toString()).plus(enumMember.invoke("name")));
-									
-									elseBlock.add(invoke);
-								}
+							if (p.isRequired()) {
+								JBlock elseBlock = ifStatement._else();
+								StringBuilder msg = new StringBuilder();
+								msg.append(p.getPath());
+								msg.append(" must not be null, but is not defined for ");
+								JInvocation invoke = errorBuilder.invoke("addError")
+										.arg(JExpr.lit(msg.toString()).plus(enumMember.invoke("name")));
+								
+								elseBlock.add(invoke);
 							}
 						}
 						

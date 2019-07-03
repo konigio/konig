@@ -90,8 +90,8 @@ public abstract class ShowlPropertyShape implements Traversable {
 		ShowlPropertyShape delegate = maybeDirect();
 		PropertyConstraint constraint = delegate.getPropertyConstraint();
 		if (constraint != null) {
-			Integer maxCount = constraint.getMaxCount();
-			return maxCount==null || maxCount>1;
+			Integer minCount = constraint.getMinCount();
+			return minCount!=null && minCount>0;
 		}
 		return false;
 	}
