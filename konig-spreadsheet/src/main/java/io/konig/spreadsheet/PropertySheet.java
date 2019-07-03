@@ -23,6 +23,7 @@ package io.konig.spreadsheet;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -200,7 +201,7 @@ public class PropertySheet extends BaseSheetProcessor {
 
 		Graph graph = processor.getGraph();
 		Vertex v = graph.getVertex(propertyId);
-		Set<Edge> edgeSet = v.outProperty(Schema.domainIncludes);
+		Set<Edge> edgeSet = new HashSet<>(v.outProperty(Schema.domainIncludes));
 		for (Edge e : edgeSet) {
 			graph.remove(e);
 		}
