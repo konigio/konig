@@ -56,17 +56,17 @@ public class ToPersonTargetShapeFn
     private void modifiedDate(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object modified_date = ((personSourceRow == null)?null:personSourceRow.get("modified_date"));
         if (modified_date!= null) {
-            outputRow.set("modifiedDate", longValue(modified_date, errorBuilder));
+            outputRow.set("modifiedDate", longValue(modified_date, errorBuilder, "modifiedDate"));
         }
     }
 
-    private Long longValue(Object modified_date, ErrorBuilder errorBuilder) {
+    private Long longValue(Object modified_date, ErrorBuilder errorBuilder, String targetPropertyName) {
         try {
             if ((modified_date!= null)&&(modified_date instanceof Long)) {
                 return ((Long) modified_date);
             }
         } catch (final Exception ex) {
-            String message = String.format("Invalid Long value %s for field modifiedDate;", String.valueOf(modified_date));
+            String message = String.format("Invalid Long value %s for field %s;", String.valueOf(modified_date), targetPropertyName);
             errorBuilder.addError(message);
         }
         return null;
@@ -75,17 +75,17 @@ public class ToPersonTargetShapeFn
     private void birthDate(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object birth_date = ((personSourceRow == null)?null:personSourceRow.get("birth_date"));
         if (birth_date!= null) {
-            outputRow.set("birthDate", dateValue(birth_date, errorBuilder));
+            outputRow.set("birthDate", dateValue(birth_date, errorBuilder, "birthDate"));
         }
     }
 
-    private Date dateValue(Object birth_date, ErrorBuilder errorBuilder) {
+    private Date dateValue(Object birth_date, ErrorBuilder errorBuilder, String targetPropertyName) {
         try {
             if ((birth_date!= null)&&(birth_date instanceof Date)) {
                 return ((Date) birth_date);
             }
         } catch (final Exception ex) {
-            String message = String.format("Invalid Date value %s for field birthDate;", String.valueOf(birth_date));
+            String message = String.format("Invalid Date value %s for field %s;", String.valueOf(birth_date), targetPropertyName);
             errorBuilder.addError(message);
         }
         return null;

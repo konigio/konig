@@ -35,17 +35,17 @@ public class ToPersonTargetShapeFn
     private void heightInches(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object person_height = ((personSourceRow == null)?null:personSourceRow.get("person_height"));
         if (person_height!= null) {
-            outputRow.set("heightInches", floatValue(person_height, errorBuilder));
+            outputRow.set("heightInches", floatValue(person_height, errorBuilder, "heightInches"));
         }
     }
 
-    private Float floatValue(Object person_height, ErrorBuilder errorBuilder) {
+    private Float floatValue(Object person_height, ErrorBuilder errorBuilder, String targetPropertyName) {
         try {
             if ((person_height!= null)&&(person_height instanceof Float)) {
                 return ((Float) person_height);
             }
         } catch (final Exception ex) {
-            String message = String.format("Invalid Float value %s for field heightInches;", String.valueOf(person_height));
+            String message = String.format("Invalid Float value %s for field %s;", String.valueOf(person_height), targetPropertyName);
             errorBuilder.addError(message);
         }
         return null;
@@ -74,17 +74,17 @@ public class ToPersonTargetShapeFn
     private void isDummyFlag(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object dummy_flag = ((personSourceRow == null)?null:personSourceRow.get("dummy_flag"));
         if (dummy_flag!= null) {
-            outputRow.set("isDummyFlag", booleanValue(dummy_flag, errorBuilder));
+            outputRow.set("isDummyFlag", booleanValue(dummy_flag, errorBuilder, "isDummyFlag"));
         }
     }
 
-    private Boolean booleanValue(Object dummy_flag, ErrorBuilder errorBuilder) {
+    private Boolean booleanValue(Object dummy_flag, ErrorBuilder errorBuilder, String targetPropertyName) {
         try {
             if ((dummy_flag!= null)&&(dummy_flag instanceof Boolean)) {
-                return "true".equalsIgnoreCase(((Boolean) dummy_flag));
+                return ((Boolean) dummy_flag);
             }
         } catch (final Exception ex) {
-            String message = String.format("Invalid Boolean value %s for field isDummyFlag;", String.valueOf(dummy_flag));
+            String message = String.format("Invalid Boolean value %s for field %s;", String.valueOf(dummy_flag), targetPropertyName);
             errorBuilder.addError(message);
         }
         return null;

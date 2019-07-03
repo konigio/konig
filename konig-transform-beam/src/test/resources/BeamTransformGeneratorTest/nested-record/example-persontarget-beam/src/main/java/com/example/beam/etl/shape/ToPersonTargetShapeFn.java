@@ -71,17 +71,17 @@ public class ToPersonTargetShapeFn
     private void address_addressLocality(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object city = ((personSourceRow == null)?null:personSourceRow.get("city"));
         if (city!= null) {
-            outputRow.set("addressLocality", stringValue(city, errorBuilder));
+            outputRow.set("addressLocality", stringValue(city, errorBuilder, "addressLocality"));
         }
     }
 
-    private String stringValue(Object city, ErrorBuilder errorBuilder) {
+    private String stringValue(Object city, ErrorBuilder errorBuilder, String targetPropertyName) {
         try {
             if ((city!= null)&&(city instanceof String)) {
                 return ((String) city);
             }
         } catch (final Exception ex) {
-            String message = String.format("Invalid String value %s for field addressLocality;", String.valueOf(city));
+            String message = String.format("Invalid String value %s for field %s;", String.valueOf(city), targetPropertyName);
             errorBuilder.addError(message);
         }
         return null;
@@ -90,6 +90,7 @@ public class ToPersonTargetShapeFn
     private void address_addressRegion(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object state = ((personSourceRow == null)?null:personSourceRow.get("state"));
         if (state!= null) {
+            outputRow.set("addressRegion", stringValue(state, errorBuilder, "addressRegion"));
         }
     }
 }

@@ -764,15 +764,20 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		BlockInfo callerBlockInfo = peekBlockInfo();
 		URI predicate = direct.getPredicate();
 		BeamMethod beamMethod = callerBlockInfo.createMethod(predicate.getLocalName(), model.VOID);
-		
 		BlockInfo thisBlockInfo = beginBlock(beamMethod.getMethod().body());
+		
 		try {
 		  thisBlockInfo.beamMethod(beamMethod);
 		  thisBlockInfo.setDefinedClass(callerBlockInfo.getDefinedClass());
-          thisBlockInfo.setGetterMap(callerBlockInfo.getGetterMap());
+		  thisBlockInfo.setTypeManager(typeManager);
+		 
 			addRowParameters(beamMethod, e);
 			addOutputRowParam(beamMethod, direct.getDeclaringShape());
-			
+			 if(!hasErrorBuilderParam(beamMethod)){
+					JVar errorBuilder = beamMethod.getMethod().param(typeManager.errorBuilderClass(), "errorBuilder");				
+					beamMethod.addParameter(BeamParameter.ofErrorBuilder(errorBuilder));
+					thisBlockInfo.errorBuilderVar(errorBuilder);
+				}
 			// Declare variables that hold the source values.
 			
 			declareLocalVariables(direct, e);
@@ -1001,10 +1006,22 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 				blockInfo.addNodeTableRow(new NodeTableRow(node, param));
 				beamMethod.addParameter(BeamParameter.ofSourceRow(param, node));
 			}
+			if(!hasErrorBuilderParam(beamMethod)){
+				JVar errorBuilder = method.param(typeManager.errorBuilderClass(), "errorBuilder");				
+				beamMethod.addParameter(BeamParameter.ofErrorBuilder(errorBuilder));
+				blockInfo.errorBuilderVar(errorBuilder);
+			}
 		}
 		
 	}
-
+	private boolean hasErrorBuilderParam(BeamMethod beamMethod) {
+		for (BeamParameter param : beamMethod.getParameters()) {
+			if(param.getParamType().equals(BeamParameterType.ERROR_BUILDER)){
+				return true;
+			}					
+		}
+		return false;
+	}
 	private BeamEnumInfo findEnumInfo() {
 		for (int i=blockStack.size()-1; i>=0; i--) {
 			BlockInfo info = blockStack.get(i);

@@ -1,8 +1,8 @@
 package io.konig.transform.beam;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.openrdf.model.URI;
 
@@ -39,7 +39,6 @@ import com.helger.jcodemodel.JStringLiteral;
 import com.helger.jcodemodel.JTryBlock;
 import com.helger.jcodemodel.JVar;
 
-import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.shacl.PropertyConstraint;
 
@@ -55,7 +54,6 @@ public class BeamRowSink implements BeamPropertySink {
 			ShowlPropertyShape targetProperty, IJExpression propertyValue) throws BeamTransformGenerationException {
 
 		JVar outputRow = etran.peekBlockInfo().getOutputRow();
-		Map<AbstractJType, String> getterMap = etran.peekBlockInfo().getGetterMap();
 		BeamTypeManager typeManager = etran.peekBlockInfo().getTypeManager();
 		if (outputRow == null) {
 			throw new BeamTransformGenerationException(
@@ -69,12 +67,11 @@ public class BeamRowSink implements BeamPropertySink {
 			if (datatype != null) {
 				AbstractJType targetDatatype = typeManager.javaType(datatype);
 				String validationMethod = targetDatatype.name().toLowerCase() + "Value";
-				if (getterMap.get(targetDatatype) == null) {
-					declareDatatypeValidationMethod(targetDatatype, targetProperty, fieldName, etran.peekBlockInfo());
-					ifStatement._then().add(JExpr.ref("outputRow").invoke("set").arg(fieldName)
-							.arg(JExpr.invoke(validationMethod).arg(propertyValue)));
-				}
-				getterMap.put(targetDatatype, validationMethod);
+				declareDatatypeValidationMethod(targetDatatype, targetProperty, etran.peekBlockInfo());
+				ifStatement._then().add(JExpr.ref("outputRow").invoke("set").arg(fieldName)
+						.arg(JExpr.invoke(validationMethod).arg(propertyValue).arg(JExpr.ref("errorBuilder")).arg(fieldName)));
+			} else {
+				ifStatement._then().add(outputRow.invoke("set").arg(fieldName).arg(propertyValue));
 			}
 		} else {
 			ifStatement._then().add(outputRow.invoke("set").arg(fieldName).arg(propertyValue));
@@ -82,8 +79,7 @@ public class BeamRowSink implements BeamPropertySink {
 
 	}
 
-	private void declareDatatypeValidationMethod(AbstractJType targetDatatype, ShowlPropertyShape p,
-			JStringLiteral targetPropertyName, BlockInfo info) {
+	private void declareDatatypeValidationMethod(AbstractJType targetDatatype, ShowlPropertyShape p, BlockInfo info) throws BeamTransformGenerationException {
 		String methodName = targetDatatype.name().toLowerCase() + "Value";
 		isMethodExist(info, methodName);
 		if (!isMethodExist(info, methodName)) {
@@ -93,42 +89,29 @@ public class BeamRowSink implements BeamPropertySink {
 			JTryBlock tryBlock = methodBody._try();
 			JBlock tryBody = tryBlock.body();
 			JVar fieldObject = method.param(info.getCodeModel().ref(Object.class), p.getPredicate().getLocalName());
-			JVar errorBuilder = method.param(info.getCodeModel().ref(ErrorBuilder.class), "errorBuilder");
-
-			if (targetDatatype == info.getCodeModel().ref(String.class)) {
-				tryBody._return(fieldObject);
-
-			} else if (targetDatatype == info.getCodeModel().ref(Boolean.class)) {
-				tryBody._return(JExpr.lit("true").invoke("equalsIgnoreCase").arg(fieldObject));
-
-			} else if (targetDatatype == info.getCodeModel().ref(Long.class)
-					|| targetDatatype == info.getCodeModel().ref(Integer.class)) {
-				tryBody._return(targetDatatype._new().arg(fieldObject));
-
-			} else if (targetDatatype == info.getCodeModel().ref(Double.class)) {
-				tryBody._return(targetDatatype._new().arg(fieldObject));
-
-			} else if (targetDatatype == info.getCodeModel().ref(Float.class)) {
-				tryBody._return(targetDatatype._new().arg(fieldObject));
-			}
-
+			JVar errorBuilder = method.param(info.getTypeManager().errorBuilderClass(), "errorBuilder");
+			JVar targetProperty = method.param(info.getCodeModel().ref(String.class), "targetPropertyName");
+			JConditional condition = tryBody._if(fieldObject.neNull().cand(fieldObject._instanceof(targetDatatype)));
+			condition._then()._return(fieldObject.castTo(targetDatatype));
 			JCatchBlock catchBlock = tryBlock._catch(info.getCodeModel().ref(Exception.class));
-			JVar message = catchBlock.body().decl(info.getCodeModel()._ref(String.class), "message");
+			JVar message = catchBlock.body().decl(info.getCodeModel().directClass("String"), "message");
 			message.init(info.getCodeModel().directClass("String").staticInvoke("format")
-					.arg("Invalid " + targetDatatype.name() + " value %s for field " + targetPropertyName + ";")
-					.arg(fieldObject.invoke("toString")));
+					.arg("Invalid " + targetDatatype.name() + " value %s for field " + p.getPredicate().getLocalName()
+							+ ";")
+					.arg(info.getCodeModel().directClass("String").staticInvoke("valueOf").arg(fieldObject))
+					.arg(JExpr.ref(targetProperty)));
 			catchBlock.body().add(errorBuilder.invoke("addError").arg(message));
 			method.body()._return(JExpr._null());
 		}
 
 	}
 
-	private boolean isMethodExist(BlockInfo info, String methodName){
+	private boolean isMethodExist(BlockInfo info, String methodName) {
 		Collection<JMethod> methods = info.getDefinedClass().methods();
 		Iterator<JMethod> i = methods.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			JMethod method = i.next();
-			if(methodName.equals(method.name())){
+			if (methodName.equals(method.name())) {
 				return true;
 			}
 		}

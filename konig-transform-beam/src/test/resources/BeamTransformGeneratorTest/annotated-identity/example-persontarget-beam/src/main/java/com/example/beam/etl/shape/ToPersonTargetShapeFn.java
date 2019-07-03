@@ -16,10 +16,10 @@ public class ToPersonTargetShapeFn
         try {
             ErrorBuilder errorBuilder = new ErrorBuilder();
             com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
-            com.google.api.services.bigquery.model.TableRow personSourceRow = c.element();
+            com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
             externalIdentifier(personSourceRow, outputRow, errorBuilder);
             givenName(personSourceRow, outputRow, errorBuilder);
-            if (!outputRow.isEmpty()) {
+            if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
                 c.output(successTag, outputRow);
             }
             if (!errorBuilder.isEmpty()) {
@@ -31,15 +31,13 @@ public class ToPersonTargetShapeFn
         }
     }
 
-    private boolean externalIdentifier(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        boolean ok = true;
+    private void externalIdentifier(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         if (personSourceRow.get("mdm_id")!= null) {
-            ok = (ok&&externalIdentifier__mdm_id(personSourceRow, outputRow, errorBuilder));
+            externalIdentifier__mdm_id(personSourceRow, outputRow, errorBuilder);
         }
         if (personSourceRow.get("crm_id")!= null) {
-            ok = (ok&&externalIdentifier__crm_id(personSourceRow, outputRow, errorBuilder));
+            externalIdentifier__crm_id(personSourceRow, outputRow, errorBuilder);
         }
-        return ok;
     }
 
     private boolean externalIdentifier__mdm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
@@ -48,43 +46,45 @@ public class ToPersonTargetShapeFn
         externalIdentifier_originatingFeed__mdm_id(personSourceRow, externalIdentifier, errorBuilder);
         if (errorBuilder.isEmpty()&&(!externalIdentifier.isEmpty())) {
             outputRow.set("externalIdentifier", externalIdentifier);
-            return true;
-        } else {
-            return false;
         }
     }
 
-    private boolean externalIdentifier_identifiedByValue__mdm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void externalIdentifier_identifiedByValue__mdm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         com.google.api.services.bigquery.model.TableRow identifiedByValue = new com.google.api.services.bigquery.model.TableRow();
         externalIdentifier_identifiedByValue_identifier__mdm_id(personSourceRow, identifiedByValue, errorBuilder);
         externalIdentifier_identifiedByValue_identityProvider__mdm_id(personSourceRow, identifiedByValue, errorBuilder);
         if (errorBuilder.isEmpty()&&(!identifiedByValue.isEmpty())) {
             outputRow.set("identifiedByValue", identifiedByValue);
-            return true;
-        } else {
-            return false;
         }
     }
 
-    private boolean externalIdentifier_identifiedByValue_identifier__mdm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void externalIdentifier_identifiedByValue_identifier__mdm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object mdm_id = ((personSourceRow == null)?null:personSourceRow.get("mdm_id"));
         if (mdm_id!= null) {
-            outputRow.set("identifier", mdm_id);
-            return true;
+            outputRow.set("identifier", stringValue(mdm_id, errorBuilder, "identifier"));
         } else {
             errorBuilder.addError("Cannot set externalIdentifier.identifiedByValue.identifier because {PersonSourceShape}.mdm_id is null");
-            return false;
         }
     }
 
-    private boolean externalIdentifier_identifiedByValue_identityProvider__mdm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private String stringValue(Object mdm_id, ErrorBuilder errorBuilder, String targetPropertyName) {
+        try {
+            if ((mdm_id!= null)&&(mdm_id instanceof String)) {
+                return ((String) mdm_id);
+            }
+        } catch (final Exception ex) {
+            String message = String.format("Invalid String value %s for field %s;", String.valueOf(mdm_id), targetPropertyName);
+            errorBuilder.addError(message);
+        }
+        return null;
+    }
+
+    private void externalIdentifier_identifiedByValue_identityProvider__mdm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object originating_system = ((personSourceRow == null)?null:personSourceRow.get("originating_system"));
         if (originating_system!= null) {
             outputRow.set("identityProvider", localName(((String) concat("http://example.com/ns/sys/", stripSpaces(originating_system.toString()), ".MDM"))));
-            return true;
         } else {
             errorBuilder.addError("Cannot set externalIdentifier.identifiedByValue.identityProvider because {PersonSourceShape}.externalIdentifier.originating_system is null");
-            return false;
         }
     }
 
@@ -129,14 +129,12 @@ public class ToPersonTargetShapeFn
         return null;
     }
 
-    private boolean externalIdentifier_originatingFeed__mdm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void externalIdentifier_originatingFeed__mdm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object originating_feed = ((personSourceRow == null)?null:personSourceRow.get("originating_feed"));
         if (originating_feed!= null) {
             outputRow.set("originatingFeed", originating_feed);
-            return true;
         } else {
             errorBuilder.addError("Cannot set externalIdentifier.originatingFeed because {PersonSourceShape}.originating_feed is null");
-            return false;
         }
     }
 
@@ -146,65 +144,49 @@ public class ToPersonTargetShapeFn
         externalIdentifier_originatingFeed__crm_id(personSourceRow, externalIdentifier, errorBuilder);
         if (errorBuilder.isEmpty()&&(!externalIdentifier.isEmpty())) {
             outputRow.set("externalIdentifier", externalIdentifier);
-            return true;
-        } else {
-            return false;
         }
     }
 
-    private boolean externalIdentifier_identifiedByValue__crm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void externalIdentifier_identifiedByValue__crm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         com.google.api.services.bigquery.model.TableRow identifiedByValue = new com.google.api.services.bigquery.model.TableRow();
         externalIdentifier_identifiedByValue_identifier__crm_id(personSourceRow, identifiedByValue, errorBuilder);
         externalIdentifier_identifiedByValue_identityProvider__crm_id(personSourceRow, identifiedByValue, errorBuilder);
         if (errorBuilder.isEmpty()&&(!identifiedByValue.isEmpty())) {
             outputRow.set("identifiedByValue", identifiedByValue);
-            return true;
-        } else {
-            return false;
         }
     }
 
-    private boolean externalIdentifier_identifiedByValue_identifier__crm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void externalIdentifier_identifiedByValue_identifier__crm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object crm_id = ((personSourceRow == null)?null:personSourceRow.get("crm_id"));
         if (crm_id!= null) {
-            outputRow.set("identifier", crm_id);
-            return true;
+            outputRow.set("identifier", stringValue(crm_id, errorBuilder, "identifier"));
         } else {
             errorBuilder.addError("Cannot set externalIdentifier.identifiedByValue.identifier because {PersonSourceShape}.crm_id is null");
-            return false;
         }
     }
 
-    private boolean externalIdentifier_identifiedByValue_identityProvider__crm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void externalIdentifier_identifiedByValue_identityProvider__crm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object originating_system = ((personSourceRow == null)?null:personSourceRow.get("originating_system"));
         if (originating_system!= null) {
             outputRow.set("identityProvider", localName(((String) concat("http://example.com/ns/sys/", stripSpaces(originating_system.toString()), ".CRM"))));
-            return true;
         } else {
             errorBuilder.addError("Cannot set externalIdentifier.identifiedByValue.identityProvider because {PersonSourceShape}.externalIdentifier.originating_system is null");
-            return false;
         }
     }
 
-    private boolean externalIdentifier_originatingFeed__crm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void externalIdentifier_originatingFeed__crm_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object originating_feed = ((personSourceRow == null)?null:personSourceRow.get("originating_feed"));
         if (originating_feed!= null) {
             outputRow.set("originatingFeed", originating_feed);
-            return true;
         } else {
             errorBuilder.addError("Cannot set externalIdentifier.originatingFeed because {PersonSourceShape}.originating_feed is null");
-            return false;
         }
     }
 
-    private boolean givenName(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
+    private void givenName(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
         Object first_name = ((personSourceRow == null)?null:personSourceRow.get("first_name"));
         if (first_name!= null) {
-            outputRow.set("givenName", first_name);
-            return true;
-        } else {
-            errorBuilder.addError("Cannot set givenName because {PersonSourceShape}.first_name is null");
-            return false;
+            outputRow.set("givenName", stringValue(first_name, errorBuilder, "givenName"));
         }
     }
 }

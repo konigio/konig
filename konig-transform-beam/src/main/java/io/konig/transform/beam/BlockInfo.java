@@ -68,11 +68,11 @@ public class BlockInfo implements BeamPropertyManager {
 	
 	private BeamMethod beamMethod;
 	private BeamPropertySink propertySink;
-	private Map<AbstractJType, String> getterMap = new HashMap<>();
 	private Map<ShowlPropertyShape, BeamSourceProperty> sourcePropertyMap = new HashMap<>();
 	private BeamTypeManager typeManager;
 	private JDefinedClass definedClass;
 	private JCodeModel codeModel;
+	private JDefinedClass errorBuilder;
 	
 	public BlockInfo(JBlock block) {
 		this.block = block;
@@ -347,14 +347,6 @@ public class BlockInfo implements BeamPropertyManager {
 		return result;
 	}
 	
-	public void setGetterMap(Map<AbstractJType, String> getterMap) {
-		this.getterMap = getterMap;
-	}
-	
-	public Map<AbstractJType, String> getGetterMap() {
-		return getterMap;
-	}
-
 	public void setTypeManager(BeamTypeManager typeManager) {
 		this.typeManager = typeManager;
 	}
@@ -379,7 +371,7 @@ public class BlockInfo implements BeamPropertyManager {
 	}
 	
 	public JCodeModel getCodeModel() {
-		if(typeManager == null) {
+		if(codeModel == null) {
 		  codeModel = new JCodeModel();
 		}
 		return codeModel;

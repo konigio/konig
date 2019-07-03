@@ -1769,8 +1769,6 @@ public class BeamTransformGenerator {
 				      	
 				      	JConditional ifStatement = condition==null ? null : method.body()._if(condition);
 				      	
-				      	String targetPropertyName = direct.getPredicate().getLocalName();
-				      	
 				      	ShowlExpression e = selectedExpression(direct);
 				      	
 				      	IJExpression value = etran().transform(e);
@@ -1822,13 +1820,16 @@ public class BeamTransformGenerator {
 			      		if( datatype != null) {
 					      	AbstractJType targetDatatype = typeManager.javaType(datatype);
 					      	String validationMethod = targetDatatype.name().toLowerCase() + "Value";
-					      	if(getterMap.get(targetDatatype) == null) {
-						      	declareDatatypeValidationMethod(targetDatatype, propertyExpr, targetPropertyName);
-						      	block.add(JExpr.ref("outputRow").invoke("set")
-							      			.arg(JExpr.lit(targetPropertyName)).arg(JExpr.invoke(validationMethod).arg(value).arg(errorBuilderParam)));
-					      	}
-					      	getterMap.put(targetDatatype, validationMethod);
-			      		}
+						    declareDatatypeValidationMethod(targetDatatype, propertyExpr, targetPropertyName);
+					      	block.add(JExpr.ref("outputRow").invoke("set")
+					      			.arg(JExpr.lit(targetPropertyName)).arg(JExpr.invoke(validationMethod)
+					      					.arg(value)
+					      					.arg(errorBuilderParam)
+					      					.arg(targetPropertyName)));
+			      		} else {
+				      		block.add(JExpr.ref("outputRow").invoke("set")
+					      			.arg(JExpr.lit(targetPropertyName)).arg(value));
+				      	}
 			      	} else {
 			      		block.add(JExpr.ref("outputRow").invoke("set")
 				      			.arg(JExpr.lit(targetPropertyName)).arg(value));
@@ -1836,31 +1837,31 @@ public class BeamTransformGenerator {
 		      }
 		      
 		      private void declareDatatypeValidationMethod(AbstractJType targetDatatype, ShowlPropertyExpression value, String targetPropertyName) throws BeamTransformGenerationException {
-		    	  String methodName = targetDatatype.name().toLowerCase() + "Value";
-		    	  JMethod method = thisClass.method(JMod.PRIVATE, targetDatatype, methodName);
-		    	  JBlock methodBody = method.body();
-		    	  JTryBlock tryBlock = methodBody._try();
-		          JBlock tryBody = tryBlock.body();
-		          ShowlPropertyShape p = value.getSourceProperty();
-		          JVar fieldObject = method.param(model.ref(Object.class), p.getPredicate().getLocalName());
-			      JDefinedClass errorBuilderClass = errorBuilderClass();
-			      JVar errorBuilder = method.param(errorBuilderClass, "errorBuilder");
-			      JConditional condition = tryBody._if(fieldObject.neNull().cand(fieldObject._instanceof(targetDatatype)));
-			      if (targetDatatype == model.ref(String.class) || 
-			    		  targetDatatype == model.ref(Long.class) || targetDatatype == model.ref(Integer.class) ||
-			    		  targetDatatype == model.ref(Double.class) || targetDatatype == model.ref(Float.class) || 
-			    		  targetDatatype == model.ref(Date.class)){
-			    	  condition._then()._return(fieldObject.castTo(targetDatatype));
-			      } else if (targetDatatype == model.ref(Boolean.class)) {	
-			    	  condition._then()._return(JExpr.lit("true").invoke("equalsIgnoreCase").arg(fieldObject.castTo(targetDatatype)));        
-			      }
-			      JCatchBlock catchBlock = tryBlock._catch(model.ref(Exception.class));
-			      JVar message = catchBlock.body().decl(model._ref(String.class), "message");
-			      message.init(model.directClass("String").staticInvoke("format").arg("Invalid "+ targetDatatype.name() + " value %s for field "+ targetPropertyName +";").arg(model.ref(String.class).staticInvoke("valueOf").arg(fieldObject)));
-			      catchBlock.body().add(errorBuilder.invoke("addError").arg(message));
-			      method.body()._return(JExpr._null());
-			      
+		    	  if(getterMap.get(targetDatatype) == null) {
+			    	  String methodName = targetDatatype.name().toLowerCase() + "Value";
+			    	  JMethod method = thisClass.method(JMod.PRIVATE, targetDatatype, methodName);
+			    	  JBlock methodBody = method.body();
+			    	  JTryBlock tryBlock = methodBody._try();
+			          JBlock tryBody = tryBlock.body();
+			          ShowlPropertyShape p = value.getSourceProperty();
+			          JVar fieldObject = method.param(model.ref(Object.class), p.getPredicate().getLocalName());
+				      JDefinedClass errorBuilderClass = errorBuilderClass();
+				      JVar errorBuilder = method.param(errorBuilderClass, "errorBuilder");
+				      JVar targetProperty = method.param(model.ref(String.class), "targetPropertyName");
+				      JConditional condition = tryBody._if(fieldObject.neNull().cand(fieldObject._instanceof(targetDatatype)));
+				      condition._then()._return(fieldObject.castTo(targetDatatype));				      
+				      JCatchBlock catchBlock = tryBlock._catch(model.ref(Exception.class));
+				      JVar message = catchBlock.body().decl(model.directClass("String"), "message");
+				      message.init(model.directClass("String").staticInvoke("format")
+				    		  .arg("Invalid "+ targetDatatype.name() + " value %s for field %s;")
+				    		  .arg(model.directClass("String").staticInvoke("valueOf").arg(fieldObject))
+				    		  .arg(JExpr.ref(targetProperty)));
+				      catchBlock.body().add(errorBuilder.invoke("addError").arg(message));
+				      method.body()._return(JExpr._null());
+				      getterMap.put(targetDatatype, methodName);
+			      }			      
 		      }
+		      
 		      private void processArrayProperty(String methodName, String methodNameSuffix, 
 							BeamTargetProperty beamTargetProperty) throws BeamTransformGenerationException {
 					
@@ -1928,8 +1929,7 @@ public class BeamTransformGenerator {
 							beamMethod.setMethodNameSuffix(methodNameSuffix);
 							thisBlock.addListParam(beamMethod, callerList.type(), callerList.name());
 							etran.addRowParameters(beamMethod, member);
-							beamMethod.addErrorBuilderParam(errorBuilderClass());
-							thisBlock.setGetterMap(getterMap);
+							//beamMethod.addErrorBuilderParam(errorBuilderClass());
 							thisBlock.setDefinedClass(thisClass);
 							thisBlock.setCodeModel(model);
 							thisBlock.setTypeManager(typeManager());
