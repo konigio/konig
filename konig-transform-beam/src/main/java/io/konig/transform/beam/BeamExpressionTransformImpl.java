@@ -234,7 +234,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		case EQUALS :
 			
 			if (treatNullAsFalse) {
-				return JExpr.cond(leftVar.neNull().cand(leftVar.invoke("equals").arg(right)), leftVar, JExpr.FALSE);
+				return JExpr.cond(leftVar.neNull().cand(leftVar.invoke("equals").arg(right)), JExpr.TRUE, JExpr.FALSE);
 			}
 			
 			JConditional ifStatement = block._if(leftVar.eqNull());
