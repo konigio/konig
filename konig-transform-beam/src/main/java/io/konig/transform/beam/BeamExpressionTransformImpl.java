@@ -199,12 +199,15 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 				
 				String getter = "findBy" + StringUtil.capitalize(predicate.getLocalName());
 				
-				IJExpression result = enumClass.staticInvoke(getter).arg(otherJavaExpression);
+				URI rdfType = otherExpression.valueType(reasoner);
+				AbstractJType otherType = typeManager.javaType(rdfType);
+				
+				IJExpression initExpr = enumClass.staticInvoke(getter).arg(otherJavaExpression.castTo(otherType));
 				
 				String varName = nextVarName();
 				
 				JBlock block = peekBlockInfo().getBlock();
-				JVar var = block.decl(enumClass, varName).init(result);
+				JVar var = block.decl(enumClass, varName).init(initExpr);
 				
 				
 				return var;
