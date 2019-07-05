@@ -33,6 +33,7 @@ import org.openrdf.model.vocabulary.SKOS;
 
 import io.konig.core.impl.SimpleLocalNameService;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.OwlVocab;
 
 
 public class ClassSheet extends BaseSheetProcessor {
@@ -99,7 +100,7 @@ public class ClassSheet extends BaseSheetProcessor {
 			edge(subclassId, RDF.TYPE, OWL.CLASS);
 		}
 		if(!uniqueKey.isEmpty()) {
-			edge(classId, Konig.hasKey, uniqueKey);
+			edge(classId, OwlVocab.hasKey, uniqueKey);
 		}
 		termStatus(classId, termStatus);
 

@@ -42,7 +42,6 @@ public class Konig {
 	public static final String EQUIVALENT_PATH = "http://www.konig.io/ns/core/equivalentPath";
 	public static final String SOURCE_PATH = "http://www.konig.io/ns/core/sourcePath";
 	public static final String TERM_STATUS = "http://www.konig.io/ns/core/termStatus";
-	public static final String HAS_KEY = "http://www.konig.io/ns/core/hasKey";
 	
 	public static final String RELATIVE_PATH = "http://www.konig.io/ns/core/relativePath";
 	public static final String BASE_PROJECT = "http://www.konig.io/ns/core/baseProject";
@@ -96,7 +95,6 @@ public class Konig {
 	public static final URI shapeInstanceCount = new URIImpl("http://www.konig.io/ns/core/shapeInstanceCount");
 	public static final URI TermStatus = new URIImpl("http://www.konig.io/ns/core/TermStatus");
 	public static final URI termStatus = new URIImpl("http://www.konig.io/ns/core/termStatus");
-	public static final URI hasKey = new URIImpl(HAS_KEY);
 	// Generic Data Modeling
 
 	public static final URI EnumNamespace = new URIImpl("http://www.konig.io/ns/core/EnumNamespace");

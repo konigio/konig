@@ -45,6 +45,7 @@ import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
+import io.konig.core.vocab.OwlVocab;
 import io.konig.core.vocab.Schema;
 
 public class CompactTurtleWriterTest {
@@ -77,13 +78,13 @@ public class CompactTurtleWriterTest {
 		List<URI> list = new ArrayList();
 		list.add(uri("http://example.com/key1"));
 		list.add(uri("http://example.com/key2"));
-		graph.edge(uri("http://example.com/alice"), Konig.hasKey, list);
+		graph.edge(uri("http://example.com/alice"), OwlVocab.hasKey, list);
 		
 		StringWriter writer = new StringWriter();
 		RdfUtil.prettyPrintTurtle(graph, writer);
 		
 		String expected = 
-			"<http://example.com/alice> <http://www.konig.io/ns/core/hasKey> (<http://example.com/key1> <http://example.com/key2>) .";
+			"<http://example.com/alice> <http://www.w3.org/2002/07/owl#hasKey> (<http://example.com/key1> <http://example.com/key2>) .";
 		String actual = writer.toString();
 		assertTrue(actual.contains(expected));
 	}
