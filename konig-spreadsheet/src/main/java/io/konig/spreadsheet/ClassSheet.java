@@ -32,6 +32,7 @@ import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.SKOS;
 
 import io.konig.core.impl.SimpleLocalNameService;
+import io.konig.core.vocab.Konig;
 
 
 public class ClassSheet extends BaseSheetProcessor {
@@ -43,6 +44,7 @@ public class ClassSheet extends BaseSheetProcessor {
 	private static final SheetColumn SUBJECT = new SheetColumn("Subject");
 	private static final SheetColumn STATUS = new SheetColumn("Status");
 	private static final SheetColumn PROJECT = new SheetColumn("Project");
+	private static final SheetColumn UNIQUE_KEY = new SheetColumn("Unique Key");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[] {
 		CLASS_NAME,
@@ -52,7 +54,8 @@ public class ClassSheet extends BaseSheetProcessor {
 		IRI_TEMPLATE,
 		SUBJECT,
 		STATUS,
-		PROJECT
+		PROJECT,
+		UNIQUE_KEY
 	};
 	
 	private SettingsSheet settings;
@@ -78,6 +81,7 @@ public class ClassSheet extends BaseSheetProcessor {
 		String iriTemplate = stringValue(row, IRI_TEMPLATE);
 		Collection<URI> subjectArea = iriList(row, SUBJECT);
 		URI termStatus = iriValue(row, STATUS);
+		List<URI> uniqueKey = iriList(row, UNIQUE_KEY);
 		
 		if (subjectArea.isEmpty()) {
 			subjectArea = settings.getDefaultSubject();
@@ -94,7 +98,9 @@ public class ClassSheet extends BaseSheetProcessor {
 			edge(classId, RDFS.SUBCLASSOF, subclassId);
 			edge(subclassId, RDF.TYPE, OWL.CLASS);
 		}
-		
+		if(!uniqueKey.isEmpty()) {
+			edge(classId, Konig.hasKey, uniqueKey);
+		}
 		termStatus(classId, termStatus);
 
 		if (iriTemplate != null) {
