@@ -25,6 +25,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Ignore;
@@ -42,6 +44,7 @@ import io.konig.core.Graph;
 import io.konig.core.Vertex;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 
 public class CompactTurtleWriterTest {
@@ -63,6 +66,24 @@ public class CompactTurtleWriterTest {
 		
 		String expected = 
 			"<http://example.com/alice> <http://schema.org/parent> (<http://example.com/bob> <http://example.com/cathy>) .";
+		String actual = writer.toString();
+		assertTrue(actual.contains(expected));
+	}
+	
+	@Test
+	public void testList1() throws Exception {
+		Graph graph = new MemoryGraph();
+	
+		List<URI> list = new ArrayList();
+		list.add(uri("http://example.com/key1"));
+		list.add(uri("http://example.com/key2"));
+		graph.edge(uri("http://example.com/alice"), Konig.hasKey, list);
+		
+		StringWriter writer = new StringWriter();
+		RdfUtil.prettyPrintTurtle(graph, writer);
+		
+		String expected = 
+			"<http://example.com/alice> <http://www.konig.io/ns/core/hasKey> (<http://example.com/key1> <http://example.com/key2>) .";
 		String actual = writer.toString();
 		assertTrue(actual.contains(expected));
 	}
