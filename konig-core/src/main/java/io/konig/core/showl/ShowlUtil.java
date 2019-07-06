@@ -356,6 +356,17 @@ public class ShowlUtil {
 		
 		return  e instanceof ShowlEnumNodeExpression || e instanceof ShowlEnumStructExpression ;
 	}
+	
+	public static ShowlNodeShape parentEnumNode(ShowlPropertyShape p) {
+		while (p!=null) {
+			ShowlNodeShape node = p.getDeclaringShape();
+			if (RdfUtil.uri(node.getId()).getNamespace().startsWith(ENUM_SHAPE_BASE_IRI)) {
+				return node;
+			}
+			p = node.getAccessor();
+		}
+		return null;
+	}
 
 	public static boolean isEnumProperty(ShowlPropertyShape p) {
 		while (p!=null) {
@@ -413,6 +424,21 @@ public class ShowlUtil {
 	public static ShowlExpression transform(ShowlExpression e) {
 		
 		return e==null ? null : e.transform();
+	}
+
+	public static ShowlNodeShape parentEnumNode(ShowlPropertyShape p, OwlReasoner reasoner) {
+		ShowlNodeShape result = parentEnumNode(p);
+		if (result == null) {
+			while (p != null) {
+				ShowlNodeShape node = p.getDeclaringShape();
+				URI owlClass = node.getOwlClass().getId();
+				if (reasoner.isEnumerationClass(owlClass)) {
+					return node;
+				}
+				p = node.getAccessor();
+			}
+		}
+		return result;
 	}
 
 

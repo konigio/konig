@@ -563,4 +563,11 @@ public abstract class ShowlPropertyShape implements Traversable {
 		}
 		return false;
 	}
+
+	public ShowlPropertyShapeGroup asGroup() {
+		
+		ShowlEffectiveNodeShape node = getDeclaringShape().effectiveNode();
+		
+		return node.findPropertyByPredicate(getPredicate());
+	}
 }

@@ -260,6 +260,10 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
 		return false;
 	}
 
+	public ShowlNodeShape rootNode() {
+		return isEmpty() ? null : get(0).getRootNode();
+	}
+
 	
 	
 

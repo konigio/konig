@@ -156,10 +156,10 @@ import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPredicatePath;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlPropertyShapeGroup;
 import io.konig.core.showl.ShowlSchemaService;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStructExpression;
-import io.konig.core.showl.ShowlSystimeExpression;
 import io.konig.core.showl.ShowlUtil;
 import io.konig.core.showl.StaticDataSource;
 import io.konig.core.showl.expression.ShowlExpressionBuilder;
@@ -2262,11 +2262,22 @@ public class BeamTransformGenerator {
 		      	Set<ShowlPropertyShape> sourcePropertySet = new HashSet<>();
 		      	
 		      	addProperties(direct, sourcePropertySet);
+		      	
+		      	Set<ShowlPropertyShapeGroup> groupSet = new HashSet<>();
+		      	addPropertyGroups(direct, groupSet);
+		      	
+		      	for (ShowlPropertyShapeGroup g : groupSet) {
+		      		logger.trace(g.pathString());
+		      	}
 						
 						
 						Set<BeamChannel> beamChannelSet = new HashSet<>();
 						
+						
 						for (ShowlPropertyShape sourceProperty : sourcePropertySet) {
+							if (sourceProperty.isTargetProperty()) {
+								System.out.print("");
+							}
 							ShowlNodeShape sourceNode = sourceProperty.getDeclaringShape();
 							BeamChannel beamChannel = beamChannel(sourceNode);
 							beamChannelSet.add(beamChannel);
@@ -2318,8 +2329,8 @@ public class BeamTransformGenerator {
 						
 		      	return result;
 		      }
-		
-		      protected JDefinedClass errorBuilderClass() throws BeamTransformGenerationException {
+
+					protected JDefinedClass errorBuilderClass() throws BeamTransformGenerationException {
 						String errorBuilderClassName = errorBuilderClassName();
 						JDefinedClass errorBuilderClass = model._getClass(errorBuilderClassName);
 						
@@ -2357,6 +2368,27 @@ public class BeamTransformGenerator {
 						return errorBuilderClass;
 						
 					}
+					
+
+					
+		      private void addPropertyGroups(ShowlDirectPropertyShape direct, Set<ShowlPropertyShapeGroup> groupSet) throws BeamTransformGenerationException {
+						ShowlExpression e = direct.getSelectedExpression();
+						if (e != null) {
+							BeamUtil.collectSourceProperties(groupSet, e, reasoner);
+							
+						} else if (direct.getValueShape() != null) {
+							// In the future, we might construct a ShowlStructExpression for all
+							// properties with a value Shape.  In that case, we would never reach this block of code.
+							
+							for (ShowlDirectPropertyShape p : direct.getValueShape().getProperties()) {
+								addPropertyGroups(p, groupSet);
+							}
+						} else {
+							fail("{0} has no selectedExpression and no valueShape", direct.getPath());
+						}
+						
+					}
+					
 		      // TODO: Eliminate this method.
 		      // We should be using ShowlStructExpression for well-defined value shapes instead of omitting the selected expression.
 		      // This method is a temporary work around.
@@ -2370,6 +2402,12 @@ public class BeamTransformGenerator {
 								}
 							} else {
 								throw new BeamTransformGenerationException("Property has no selected expression: " + direct.getPath());
+							}
+						} else if (e instanceof ShowlEnumNodeExpression) {
+							ShowlEnumNodeExpression enumExpr = (ShowlEnumNodeExpression)e;
+							ShowlChannel channel = enumExpr.getChannel();
+							if (channel != null && channel.getJoinStatement()!=null) {
+								sourcePropertySet.addAll(BeamUtil.nonEnumProperties(channel.getJoinStatement(), reasoner));
 							}
 						} else {
 		

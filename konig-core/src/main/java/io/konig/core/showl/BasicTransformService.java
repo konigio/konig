@@ -430,7 +430,24 @@ public class BasicTransformService implements ShowlTransformService {
 			return true;
 		} else if (isEnumClass(sourceShape.getOwlClass())) {
 			ShowlStatement join = enumJoinStatement(sourceShape);
-			targetRoot.addChannel(new ShowlChannel(sourceShape, join));
+			ShowlChannel channel = new ShowlChannel(sourceShape, join);
+			
+			// The following if statement is ugly.  Probably ought to have enumJoinStatement method create the ShowlChannel and
+			// perform this work.
+				
+			if (sourceShape.getTargetNode()!=null) {
+				ShowlNodeShape targetNode = sourceShape.getTargetNode();
+				ShowlPropertyShape targetAccessor = targetNode.getAccessor();
+				if (targetAccessor!=null) {
+
+					ShowlExpression e = targetAccessor.getSelectedExpression();
+					if (e instanceof ShowlEnumNodeExpression) {
+						ShowlEnumNodeExpression enumNodeExpr = (ShowlEnumNodeExpression) e;
+						enumNodeExpr.setChannel(channel);
+					}
+				}
+			}
+			targetRoot.addChannel(channel);
 
 			if (logger.isTraceEnabled()) {
 				String joinString = join == null ? "null" : join.toString();

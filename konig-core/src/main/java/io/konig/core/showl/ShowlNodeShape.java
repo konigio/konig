@@ -637,7 +637,10 @@ public class ShowlNodeShape implements Traversable {
 	 * source NodeShape is bound.
 	 */
 	public ShowlPropertyShape getTargetProperty() {
-		return targetProperty;
+		return 
+			targetProperty!=null ? targetProperty : 
+			targetNode != null ? targetNode.getAccessor() :
+			null;
 	}
 
 	public void setTargetProperty(ShowlPropertyShape targetProperty) {

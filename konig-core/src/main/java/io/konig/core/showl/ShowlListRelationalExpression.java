@@ -78,6 +78,11 @@ public class ShowlListRelationalExpression implements ShowlExpression {
 	}
 
 	@Override
+	public String toString() {
+		return displayValue();
+	}
+	
+	@Override
 	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set)
 			throws ShowlProcessingException {
 		left.addDeclaredProperties(sourceNodeShape, set);

@@ -28,6 +28,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlNodeShape;
 
+@Deprecated
 public class BeamChannel implements Comparable<BeamChannel> {
 
 	private ShowlChannel channel;

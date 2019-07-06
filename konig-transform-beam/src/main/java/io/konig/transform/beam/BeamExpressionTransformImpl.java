@@ -23,13 +23,11 @@ package io.konig.transform.beam;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -60,6 +58,7 @@ import io.konig.core.showl.ShowlBinaryRelationalExpression;
 import io.konig.core.showl.ShowlCaseStatement;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlContainmentOperator;
+import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlEnumIndividualReference;
 import io.konig.core.showl.ShowlEnumNodeExpression;
@@ -74,6 +73,7 @@ import io.konig.core.showl.ShowlListRelationalExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlPropertyShapeGroup;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.ShowlSystimeExpression;
@@ -362,9 +362,37 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		
 		ShowlExpression left = e.getLeft();
 		
+		// The following block of code is unfortunate.
+		// Special handling for the case where a target property is being referenced.
+		// Is there a better way to address this?
+		if (left instanceof ShowlPropertyExpression) {
+			ShowlPropertyShape p = ((ShowlPropertyExpression) left).getSourceProperty();
+			if (p.isTargetProperty()) {
+				if (p instanceof ShowlDerivedPropertyShape) {
+					ShowlPropertyShapeGroup group = p.asGroup();
+					ShowlDirectPropertyShape direct = group.direct();
+					if (direct != null) {
+						ShowlExpression s = direct.getSelectedExpression();
+						if (s != null) {
+							left = s;
+						}
+					}
+				}
+			}
+		}
 		
+		
+		IJExpression valueInit = transform(left);
 		String valueName = blockInfo.valueName(left);
-		JVar value = block.decl(objectClass, valueName).init(transform(left));
+
+		URI leftRdfType = left.valueType(reasoner);
+		if (reasoner.isEnumerationClass(leftRdfType)) {
+			valueInit = JExpr.cond(valueInit.eqNull(), JExpr._null(), valueInit.invoke("getId").invoke("stringValue"));
+		}
+		
+		JVar value = block.decl(objectClass, valueName).init(valueInit);
+		
+		
 		
 		IJExpression result = set.invoke("contains").arg(value);
 		if (e.getOperator() == ShowlContainmentOperator.NOT_IN) {
@@ -404,8 +432,9 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		String resultParamName = StringUtil.firstLetterLowerCase(valueType.getLocalName()) + "Value";
 		JVar resultParam = method.body().decl(resultType, resultParamName).init(JExpr._null());
 		
-		List<ShowlPropertyShape> propertyList = caseParamList(e);
-		Map<ShowlNodeShape, NodeTableRow> tableRowMap = tableRowMap(method, propertyList);
+//		List<ShowlPropertyShape> propertyList = caseParamList(e);
+//		Map<ShowlNodeShape, NodeTableRow> tableRowMap = tableRowMap(method, propertyList);
+		Map<ShowlNodeShape, NodeTableRow> tableRowMap = BeamUtil.tableRowMap(model, method, e, reasoner);
 		
 		JVar errorBuilderVar = method.param(errorBuilderClass, "errorBuilder");
 		
@@ -480,11 +509,8 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		
 		JInvocation invocation = JExpr.invoke(method);
 		
-		Set<ShowlPropertyShape> propertyParameters = new HashSet<>();
 		
-		whenExpression.addProperties(propertyParameters);
-		
-		Map<ShowlNodeShape, NodeTableRow> thisTableRowMap = tableRowMap(method, propertyParameters);
+		Map<ShowlNodeShape, NodeTableRow> thisTableRowMap = BeamUtil.tableRowMap(model, method, whenExpression, reasoner);
 		AbstractJClass errorBuilderClass = typeManager.errorBuilderClass();
 		
 		JVar errorBuilderVar = method.param(errorBuilderClass, "errorBuilder");
@@ -538,39 +564,7 @@ public class BeamExpressionTransformImpl implements BeamExpressionTransform {
 		return info;
 	}
 
-	private Map<ShowlNodeShape, NodeTableRow> tableRowMap(JMethod method, Collection<ShowlPropertyShape> propertyList) {
-		Set<ShowlNodeShape> nodeSet = new HashSet<>();
-		for (ShowlPropertyShape p : propertyList) {
-			ShowlNodeShape node = p.getRootNode();
-			nodeSet.add(node);
-		}
-		
-		List<ShowlNodeShape> nodeList = new ArrayList<>(nodeSet);
-		Collections.sort(nodeList, new BeamNodeComparator());
-		
-		AbstractJClass tableRowClass = model.ref(TableRow.class);
-		List<NodeTableRow> tableRowList = new ArrayList<>(nodeList.size());
-		for (ShowlNodeShape node : nodeList) {
-			String paramName = StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(node)) + "Row";
-			JVar var = method.param(tableRowClass, paramName);
-			tableRowList.add(new NodeTableRow(node, var));
-		}
-		
-		Map<ShowlNodeShape,NodeTableRow> map = new LinkedHashMap<>();
-		for (NodeTableRow tableRow : tableRowList) {
-			map.put(tableRow.getNode(), tableRow);
-		}
-		
-		return map;
-	}
-
-	private List<ShowlPropertyShape> caseParamList(ShowlCaseStatement caseStatement) {
-		Set<ShowlPropertyShape> propertySet = new HashSet<>();
-		caseStatement.addProperties(propertySet);
-		List<ShowlPropertyShape> propertyList = new ArrayList<>(propertySet);
-		
-		return propertyList;
-	}
+	
 
 	private IJExpression systime() {
 		AbstractJClass longClass = model.ref(Long.class);
