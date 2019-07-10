@@ -1655,6 +1655,29 @@ public class WorkbookLoaderTest {
 		}
 	}
 	
+	@Test
+	public void testDataDictionaryForDerivedProperty() throws Exception {
+		InputStream input = getClass().getClassLoader().getResourceAsStream("data-dictionary.xlsx");
+		Workbook book = WorkbookFactory.create(input);
+		Graph graph = new MemoryGraph();
+		NamespaceManager nsManager = new MemoryNamespaceManager();
+		nsManager.add("ex", "http://example.com/alias/");
+		graph.setNamespaceManager(nsManager);
+		
+		WorkbookLoader loader = new WorkbookLoader(nsManager);
+		File file = new File("src/test/resources/data-dictionary.xlsx");
+		loader.load(book, graph, file);
+		input.close();
+		ShapeManager s = loader.getShapeManager();
+
+		URI shapeId = uri("http://example.com/shapes/ORACLE_EBS/OE_ORDER_LINES_ALL");
+		Shape shape = s.getShapeById(shapeId);
+		assertTrue(shape != null);
+		assertEquals(1, shape.getDerivedProperty().size());
+		PropertyConstraint pc = shape.getDerivedProperty().get(0);
+		assertEquals(uri("ex:ORDER_KEY"), pc.getPredicate());
+	}
+	
 	@Ignore
 	public void testDataDictionaryForString() throws Exception {
 

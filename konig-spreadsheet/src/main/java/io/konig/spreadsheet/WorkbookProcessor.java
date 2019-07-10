@@ -43,6 +43,8 @@ public interface WorkbookProcessor extends SpreadsheetExceptionHandler {
 	
 	URI iriValue(SheetRow row, SheetColumn col) throws SpreadsheetException;
 	
+	URI iriValue(String text, SheetRow row, SheetColumn col) throws SpreadsheetException;
+	
 	Workbook getActiveWorkbook();
 	
 	void addSheetProcessor(SheetProcessor processor);

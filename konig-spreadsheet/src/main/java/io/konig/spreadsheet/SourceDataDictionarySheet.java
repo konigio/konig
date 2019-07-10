@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -57,6 +58,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 	private static final SheetColumn SECURITY_CLASSIFICATION = new SheetColumn("Security Classification");
 	private static final SheetColumn PII_CLASSIFICATION = new SheetColumn("PII Classification");
 	private static final SheetColumn PROJECT = new SheetColumn("Project");
+	private static final SheetColumn DERIVED_PROPERTY = new SheetColumn("Derived");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
 		SOURCE_TYPE,
@@ -74,7 +76,8 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 		DATA_STEWARD,
 		SECURITY_CLASSIFICATION,
 		PII_CLASSIFICATION,
-		PROJECT
+		PROJECT,
+		DERIVED_PROPERTY
 	};
 
 	private SettingsSheet settings;
@@ -319,14 +322,25 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 		String snake_case_name = fieldName;
 		String baseURL = settings.getPropertyBaseURL();
 		
-		URI predicate = new URIImpl(concatPath(baseURL, snake_case_name));
+		Boolean derivedProperty = booleanValue(row, DERIVED_PROPERTY);
+		
+		URI predicate = null; 
+		if (derivedProperty != null && derivedProperty) {
+			predicate = iriValue(concatPath(baseURL, stringValue(row, FIELD)),row, FIELD);
+		} else {
+			predicate = new URIImpl(concatPath(baseURL, snake_case_name));
+		}
 		
 		PropertyConstraint p = shape.getPropertyConstraint(predicate);
 		if (p != null) {
 			warn(location(row, col), "Duplicate definition of property {0} on {1}", fieldName, compactName(shape.getId()));
 		} else {
 			p = new PropertyConstraint(predicate);
-			shape.add(p);
+			if (derivedProperty != null && derivedProperty) {
+				shape.addDerivedProperty(p);
+			} else {
+				shape.add(p);
+			}
 		}
 		p.setMaxCount(1);
 		return p;
