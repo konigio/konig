@@ -697,7 +697,9 @@ public class MemoryGraph implements Graph, Transaction {
 				edge(next.getId(), RDF.FIRST, value);
 				prev = next;
 			}
-			
+			if(prev != null) {
+				edge(prev.getId(), RDF.REST, RDF.NIL);
+			}
 		}
 		return result;
 	}
