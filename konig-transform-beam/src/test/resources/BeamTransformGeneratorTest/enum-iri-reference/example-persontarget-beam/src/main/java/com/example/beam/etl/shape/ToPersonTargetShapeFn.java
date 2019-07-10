@@ -36,8 +36,6 @@ public class ToPersonTargetShapeFn
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-        } else {
-            errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
         }
     }
 

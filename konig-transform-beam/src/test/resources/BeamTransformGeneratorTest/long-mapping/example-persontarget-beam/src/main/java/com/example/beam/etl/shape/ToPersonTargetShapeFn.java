@@ -35,8 +35,6 @@ public class ToPersonTargetShapeFn
         Object person_height = ((personSourceRow == null)?null:personSourceRow.get("person_height"));
         if (person_height!= null) {
             outputRow.set("heightInches", person_height);
-        } else {
-            errorBuilder.addError("Cannot set heightInches because {PersonSourceShape}.person_height is null");
         }
     }
 
@@ -44,8 +42,6 @@ public class ToPersonTargetShapeFn
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-        } else {
-            errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
         }
     }
 

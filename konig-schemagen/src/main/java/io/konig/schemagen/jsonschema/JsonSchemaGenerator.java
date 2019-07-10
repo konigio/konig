@@ -199,6 +199,10 @@ public class JsonSchemaGenerator extends Generator {
 			
 			URI propertyId = property.getPredicate();
 			
+			if (propertyId == null) {
+				return;
+			}
+			
 			String fieldName = propertyId.getLocalName();
 
 			Integer maxCount = property.getMaxCount();

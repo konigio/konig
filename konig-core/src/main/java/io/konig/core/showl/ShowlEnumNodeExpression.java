@@ -27,16 +27,17 @@ import org.openrdf.model.URI;
 
 import io.konig.core.OwlReasoner;
 
-public class ShowlEnumNodeExpression implements ShowlExpression {
+public class ShowlEnumNodeExpression implements ShowlExpression, HasEnumNode {
 	
 	private ShowlNodeShape enumNode;
+	private ShowlChannel channel;
 	
 	public ShowlEnumNodeExpression(ShowlNodeShape enumNode) {
 		this.enumNode = enumNode;
 	}
 	
 	
-
+	@Override
 	public ShowlNodeShape getEnumNode() {
 		return enumNode;
 	}
@@ -51,25 +52,61 @@ public class ShowlEnumNodeExpression implements ShowlExpression {
 	@Override
 	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set)
 			throws ShowlProcessingException {
-		// Do nothing since properties are declared separately
+
+		ShowlEqualStatement equal = equalStatement();
+		if (equal != null) {
+			equal.getLeft().addDeclaredProperties(sourceNodeShape, set);
+			equal.getRight().addDeclaredProperties(sourceNodeShape, set);
+		}
 		
 	}
 
 	@Override
 	public void addProperties(Set<ShowlPropertyShape> set) {
-		// Do nothing since properties are declared separately
+		ShowlEqualStatement equal = equalStatement();
+		if (equal != null) {
+			equal.getLeft().addProperties(set);
+			equal.getRight().addProperties(set);
+		}
 	}
 	
+	private ShowlEqualStatement equalStatement() {
+		if (channel != null) {
+			ShowlStatement statement = channel.getJoinStatement();
+			if (statement instanceof ShowlEqualStatement) {
+				return (ShowlEqualStatement) statement;
+			}
+		}
+		return null;
+	}
+
+
 	public String toString() {
 		return displayValue();
 	}
 
 
 
+	public ShowlChannel getChannel() {
+		return channel;
+	}
+
+
+	public void setChannel(ShowlChannel channel) {
+		this.channel = channel;
+	}
+
+
 	@Override
 	public URI valueType(OwlReasoner reasoner) {
 		
 		return enumNode.getOwlClass().getId();
+	}
+
+
+	@Override
+	public ShowlEnumNodeExpression transform() {
+		return this;
 	}
 
 }

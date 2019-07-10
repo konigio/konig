@@ -21,44 +21,48 @@ package io.konig.core.showl;
  */
 
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.OwlReasoner;
+import io.konig.formula.BinaryOperator;
 
-public class ShowlArrayExpression implements ShowlExpression {
+public class ShowlBinaryRelationalExpression implements ShowlExpression {
+
+	private BinaryOperator operator;
+	private ShowlExpression left;
+	private ShowlExpression right;
 	
-	List<ShowlExpression> memberList;
-
-	public ShowlArrayExpression() {
-		this(new ArrayList<>());
-	}
-	
-	public ShowlArrayExpression(List<ShowlExpression> memberList) {
-		this.memberList = memberList;
+	public ShowlBinaryRelationalExpression(BinaryOperator operator, ShowlExpression left, ShowlExpression right) {
+		this.operator = operator;
+		this.left = left;
+		this.right = right;
 	}
 
+	public BinaryOperator getOperator() {
+		return operator;
+	}
 
+	public ShowlExpression getLeft() {
+		return left;
+	}
 
-	public void addMember(ShowlExpression member) {
-		memberList.add(member);
+	public ShowlExpression getRight() {
+		return right;
 	}
 
 	@Override
 	public String displayValue() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("Array[");
-		String comma = "";
-		for (ShowlExpression e : memberList) {
-			builder.append(comma);
-			comma = ", ";
-			builder.append(e.displayValue());
-		}
 		
-		builder.append(']');
+		StringBuilder builder = new StringBuilder();
+		builder.append(left.displayValue());
+		builder.append(' ');
+		builder.append(operator.getText());
+		builder.append(' ');
+		builder.append(right.displayValue());
+		
 		return builder.toString();
 	}
 	
@@ -70,37 +74,27 @@ public class ShowlArrayExpression implements ShowlExpression {
 	@Override
 	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set)
 			throws ShowlProcessingException {
-		for (ShowlExpression e : memberList) {
-			e.addDeclaredProperties(sourceNodeShape, set);
-		}
-		
-	}
-
-	public List<ShowlExpression> getMemberList() {
-		return memberList;
+		left.addDeclaredProperties(sourceNodeShape, set);
+		right.addDeclaredProperties(sourceNodeShape, set);
 	}
 
 	@Override
 	public void addProperties(Set<ShowlPropertyShape> set) {
-
-		for (ShowlExpression e : memberList) {
-			e.addProperties(set);
-		}
-		
+		left.addProperties(set);
+		right.addProperties(set);
 	}
 
 	@Override
 	public URI valueType(OwlReasoner reasoner) {
-		// For now, we assume that all members of the list return the same type.
-		// We may need to do something more sophisticated.
-		
-		return memberList.get(0).valueType(reasoner);
+		return XMLSchema.BOOLEAN;
 	}
 
 	@Override
-	public ShowlArrayExpression transform() {
+	public ShowlBinaryRelationalExpression transform() {
 		
-		return new ShowlArrayExpression(ShowlUtil.transform(memberList));
+		return new ShowlBinaryRelationalExpression(operator, left.transform(), right.transform());
 	}
+	
+	
 
 }

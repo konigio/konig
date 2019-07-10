@@ -75,7 +75,7 @@ public class BeamSourceProperty implements Comparable<BeamSourceProperty> {
 		return propertyShape.getPath();
 	}
 	
-	public void generateVar(JCodeModel model, JBlock block) {
+	public void generateVar(JCodeModel model, JBlock block, BeamExpressionTransform etran) throws BeamTransformGenerationException {
 		
 		
 		//  Object $sourcePropertyName = $sourceRowParam==null?null:$sourceRowParam.get("$sourcePropertyName");

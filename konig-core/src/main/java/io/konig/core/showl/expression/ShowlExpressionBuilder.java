@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.konig.core.Vertex;
+import io.konig.core.showl.ShowlBinaryRelationalExpression;
 import io.konig.core.showl.ShowlCaseStatement;
 import io.konig.core.showl.ShowlClass;
 import io.konig.core.showl.ShowlContainmentOperator;
@@ -59,6 +60,7 @@ import io.konig.core.showl.ShowlUtil;
 import io.konig.core.showl.ShowlWhenThenClause;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.BareExpression;
+import io.konig.formula.BinaryRelationalExpression;
 import io.konig.formula.CaseStatement;
 import io.konig.formula.ConditionalOrExpression;
 import io.konig.formula.Direction;
@@ -278,10 +280,23 @@ public class ShowlExpressionBuilder {
 			return listRelational(p, listRelational);
 		}
 		
+		BinaryRelationalExpression binaryRelational = formula.asBinaryRelationalExpression();
+		if (binaryRelational != null) {
+			return binaryRelational(p, binaryRelational);
+		}
+		
 		fail("At {0}, failed to process conditional or expression {1}", p.getPath(), FormulaUtil.simpleString(formula));
 		return null;
 	}
 
+
+	private ShowlExpression binaryRelational(ShowlPropertyShape p, BinaryRelationalExpression binaryRelational) {
+		
+		ShowlExpression left = expression(p, binaryRelational.getLeft());
+		ShowlExpression right = expression(p, binaryRelational.getRight());
+		
+		return new ShowlBinaryRelationalExpression(binaryRelational.getOperator(), left, right);
+	}
 
 	private ShowlExpression bare(ShowlPropertyShape p, BareExpression formula) {
 

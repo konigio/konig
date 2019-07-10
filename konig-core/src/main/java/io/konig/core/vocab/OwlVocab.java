@@ -33,4 +33,5 @@ public class OwlVocab {
 	public static final URI IrreflexiveProperty = new URIImpl("http://www.w3.org/2002/07/owl#IrreflexiveProperty");
 	public static final URI AsymetricProperty = new URIImpl("http://www.w3.org/2002/07/owl#AsymetricProperty");
 	public static final URI maxQualifiedCardinality = new URIImpl("http://www.w3.org/2002/07/owl#maxQualifiedCardinality");
+	public static final URI hasKey = new URIImpl("http://www.w3.org/2002/07/owl#hasKey");
 }

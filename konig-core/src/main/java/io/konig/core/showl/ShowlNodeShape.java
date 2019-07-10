@@ -724,4 +724,14 @@ public class ShowlNodeShape implements Traversable {
 		}
 		
 	}
+
+	public boolean encapsulates(ShowlPropertyShape p) {
+		while (p != null) {
+			if (p.getDeclaringShape() == this) {
+				return true;
+			}
+			p = p.getDeclaringShape().getAccessor();
+		}
+		return false;
+	}
 }

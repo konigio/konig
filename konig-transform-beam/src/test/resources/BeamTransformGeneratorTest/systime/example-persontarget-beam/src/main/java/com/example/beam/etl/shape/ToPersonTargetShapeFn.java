@@ -37,8 +37,6 @@ public class ToPersonTargetShapeFn
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-        } else {
-            errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
         }
     }
 
@@ -59,12 +57,10 @@ public class ToPersonTargetShapeFn
         Object first_name = ((personSourceRow == null)?null:personSourceRow.get("first_name"));
         if (first_name!= null) {
             outputRow.set("givenName", first_name);
-        } else {
-            errorBuilder.addError("Cannot set givenName because {PersonSourceShape}.first_name is null");
         }
     }
 
     private void modified(com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        outputRow.set("modified", new Long(new Date().getTime()));
+        outputRow.set("modified", new Long((new Date().getTime()/ 1000L)));
     }
 }

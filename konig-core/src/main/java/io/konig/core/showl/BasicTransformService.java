@@ -32,6 +32,7 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,7 @@ public class BasicTransformService implements ShowlTransformService {
 		ShowlNodeShape targetNode;
 		Set<ShowlPropertyShapeGroup> propertyPool;
 		Set<ShowlNodeShape> candidateSet;
-		Set<ShowlPropertyShapeGroup> memory = new HashSet<>();
+		Set<Object> memory = new HashSet<>();
 		
 		public State(ShowlNodeShape targetNode, Set<ShowlPropertyShapeGroup> propertyPool, Set<ShowlNodeShape> candidateSet) {
 			this.propertyPool = propertyPool;
@@ -88,6 +89,8 @@ public class BasicTransformService implements ShowlTransformService {
 				propertyPool(targetNode),
 				sourceNodeFactory.candidateSourceNodes(targetNode));
 		
+		state.memory.add(targetNode);
+		
 		if (state.propertyPool.isEmpty()) {
 			throw new ShowlProcessingException("No properties found in target node " + targetNode.getPath());
 		}
@@ -104,12 +107,12 @@ public class BasicTransformService implements ShowlTransformService {
 				if (sourceShape == null) {
 					break;
 				}
-				if (!addChannel(sourceShape)) {
+				if (!addChannel(sourceShape, targetNode)) {
 					break;
 				}
 				
 				computeMapping(sourceShape, state);
-				
+				mapEnumProperties(state);
 				removeWellDefinedNodes(state);
 				addCandidateSource(state);
 			}
@@ -117,7 +120,210 @@ public class BasicTransformService implements ShowlTransformService {
 			
 		}
 		
+		handleTargetFormulas(state);
+		handleTeleportFormulas(state);
+		
 		return state.propertyPool;
+	}
+
+
+	private void handleTeleportFormulas(State state) {
+		
+		Iterator<ShowlPropertyShapeGroup> sequence = state.propertyPool.iterator();
+		while (sequence.hasNext()) {
+			ShowlPropertyShapeGroup group = sequence.next();
+			ShowlDirectPropertyShape direct = group.direct();
+			if (direct != null) {
+				ShowlTeleportExpression teleport = teleport(group);
+				if (teleport != null) {
+					ShowlExpression delegate = teleport.getDelegate();
+					ShowlNodeShape focusNode = teleport.getFocusNode();
+					
+					Set<ShowlPropertyShape> set = new HashSet<>();
+					delegate.addProperties(set);
+	
+					int count = 0;
+					
+					loop2 : 
+					for (ShowlPropertyShape p : set) {
+						if (p.getSelectedExpression() != null) {
+							count++;
+						} else {
+							for (ShowlChannel channel : state.targetNode.getChannels()) {
+								ShowlNodeShape sourceNode = channel.getSourceNode();
+								ShowlExpression e = findMatch(sourceNode, p);
+								if (e != null) {
+									p.setSelectedExpression(e);
+									count++;
+									continue loop2;
+								}
+							}
+						}
+						
+					}
+					
+					if (count == set.size()) {
+						direct.setSelectedExpression(delegate.transform());
+						sequence.remove();
+					}
+				}
+				
+			}
+		}
+		
+	}
+
+
+	private ShowlTeleportExpression teleport(ShowlPropertyShapeGroup group) {
+		for (ShowlPropertyShape p : group) {
+			ShowlExpression formula = p.getFormula();
+			if (formula instanceof ShowlTeleportExpression) {
+				return (ShowlTeleportExpression) formula;
+			}
+		}
+		return null;
+	}
+
+
+	private void handleTargetFormulas(State state) {
+		
+		if (!state.propertyPool.isEmpty()) {
+			Iterator<ShowlPropertyShapeGroup> sequence = state.propertyPool.iterator();
+			while (sequence.hasNext()) {
+				ShowlPropertyShapeGroup group = sequence.next();
+				ShowlDirectPropertyShape direct = group.direct();
+				if (direct != null) {
+					ShowlExpression formula = direct.getFormula();
+					if (formula != null) {
+						Set<ShowlPropertyShape> set = new HashSet<>();
+						formula.addProperties(set);
+						
+						int count = 0;
+						for (ShowlPropertyShape p : set) {
+							ShowlExpression e = p.getSelectedExpression();
+							if (e == null) {
+								if (!p.isDirect()) {
+									ShowlDirectPropertyShape pDirect = p.getDeclaringShape().getProperty(p.getPredicate());
+									e = pDirect.getSelectedExpression();
+									if (e != null) {
+										p.setSelectedExpression(e);
+									}
+								}
+							}
+							if (e!=null) {
+								count++;
+							}
+						}
+						if (count == set.size()) {
+							ShowlExpression e = formula.transform();
+							direct.setSelectedExpression(e);
+							sequence.remove();
+							
+						}
+					}
+				}
+			}
+		}
+		
+	}
+
+
+	private void mapEnumProperties(State state) {
+		
+		
+		for (ShowlPropertyShapeGroup group : state.propertyPool) {
+			ShowlDirectPropertyShape direct = group.direct();
+			
+			if (direct==null || direct.getSelectedExpression() != null) {
+				continue;
+			}
+			ShowlNodeShape enumTargetNode = ShowlUtil.containingEnumNode(direct, schemaService.getOwlReasoner());
+			if (enumTargetNode != null) {
+				ShowlDirectPropertyShape uniqueKey = uniqueKey(enumTargetNode);
+				if (uniqueKey != null) {
+					ShowlExpression sourceKeyExpression = uniqueKey.getSelectedExpression();
+					
+					if (sourceKeyExpression != null) {
+					
+						ShowlNodeShape enumSourceNode = enumSourceNode(enumTargetNode);
+						ShowlEnumNodeExpression enumNodeExpression = new ShowlEnumNodeExpression(enumSourceNode);
+						enumTargetNode.getAccessor().setSelectedExpression(enumNodeExpression);
+						
+						ShowlPropertyShape sourceKey = enumSourceNode.getProperty(uniqueKey.getPredicate());
+						if (sourceKey == null) {
+							throw new ShowlProcessingException("Unique key '" + uniqueKey.getPredicate().getLocalName() + 
+									"' not found in for " + enumTargetNode.getPath());
+						}
+						computeEnumMapping(enumSourceNode, enumTargetNode);
+						
+						ShowlEqualStatement statement = new ShowlEqualStatement(expression(sourceKey), sourceKeyExpression);
+						ShowlChannel channel = new ShowlChannel(enumSourceNode, statement);
+						state.targetNode.addChannel(channel);
+						
+						enumNodeExpression.setChannel(channel);
+					}
+				}
+			}
+		}
+		
+	}
+
+
+	
+
+
+	private void computeEnumMapping(ShowlNodeShape enumSourceNode, ShowlNodeShape enumTargetNode) {
+		
+		for (ShowlPropertyShape targetProperty : enumTargetNode.getProperties()) {
+			ShowlPropertyShape sourceProperty = enumSourceNode.getProperty(targetProperty.getPredicate());
+			if (sourceProperty == null) {
+				continue;
+			}
+			
+			if (targetProperty.getValueShape() != null) {
+				if (sourceProperty.getValueShape()!=null) {
+					if (targetProperty.getSelectedExpression()==null) {
+						targetProperty.setSelectedExpression(new ShowlEnumNodeExpression(sourceProperty.getValueShape()));
+					}
+					computeEnumMapping(sourceProperty.getValueShape(), targetProperty.getValueShape());
+				}
+			} else if (targetProperty.getSelectedExpression()==null){
+				targetProperty.setSelectedExpression(new ShowlEnumPropertyExpression(sourceProperty));
+			}
+		}
+		
+	}
+
+
+	private ShowlNodeShape enumSourceNode(ShowlNodeShape enumTargetNode) {
+		// First check to see if we have already created an enum source node
+		ShowlExpression e = enumTargetNode.getAccessor().getSelectedExpression();
+		if (e instanceof HasEnumNode) {
+			return ((HasEnumNode) e).getEnumNode();
+		}
+		for (ShowlPropertyShape p : enumTargetNode.getProperties()) {
+			if (p instanceof HasEnumNode) {
+				return ((HasEnumNode) p).getEnumNode();
+			}
+		}
+		
+		ShowlNodeShape enumSourceNode = enumNode(enumTargetNode.getOwlClass());
+		
+		enumSourceNode.setTargetNode(enumTargetNode);
+		enumSourceNode.setTargetProperty(enumTargetNode.getAccessor());
+		
+		return enumSourceNode;
+	}
+
+
+	private ShowlDirectPropertyShape uniqueKey(ShowlNodeShape enumNode) {
+		for (ShowlDirectPropertyShape p : enumNode.getProperties()) {
+			if (p.getSelectedExpression() != null && ShowlUtil.isUniqueKey(p, schemaService.getOwlReasoner())) {
+				return p;
+			}
+		}
+		
+		return null;
 	}
 
 
@@ -178,17 +384,20 @@ public class BasicTransformService implements ShowlTransformService {
 					} else {
 						
 						ShowlNodeShape targetNodeShape = parentNode.directNode();
-						Set<ShowlNodeShape> candidates = sourceNodeFactory.candidateSourceNodes(targetNodeShape);
-						if (!candidates.isEmpty()) {
-							state.candidateSet.addAll(candidates);
-							
-							if (logger.isTraceEnabled()) {
-								logger.trace("addCandidateSource: For {}, adding candidates...", targetGroup.pathString());
-								for (ShowlNodeShape c : candidates) {
-									logger.trace("    " + c.getPath());
+						if (!state.memory.contains(targetNodeShape)) {
+							state.memory.add(targetNodeShape);
+							Set<ShowlNodeShape> candidates = sourceNodeFactory.candidateSourceNodes(targetNodeShape);
+							if (!candidates.isEmpty()) {
+								state.candidateSet.addAll(candidates);
+								
+								if (logger.isTraceEnabled()) {
+									logger.trace("addCandidateSource: For {}, adding candidates...", targetGroup.pathString());
+									for (ShowlNodeShape c : candidates) {
+										logger.trace("    " + c.getPath());
+									}
 								}
+								return;
 							}
-							return;
 						}
 					}
 				}
@@ -208,86 +417,97 @@ public class BasicTransformService implements ShowlTransformService {
 		return targetClass==null ? false : schemaService.getOwlReasoner().isEnumerationClass(targetClass.getId());
 	}
 
+	private boolean addChannel(ShowlNodeShape sourceShape, ShowlNodeShape targetRoot) {
 
-	private boolean addChannel(ShowlNodeShape sourceShape) {
-		
-		
-		ShowlNodeShape targetRoot = sourceShape.getTargetNode().getRoot();
-	
+
 		if (targetRoot.getChannels().isEmpty()) {
 			targetRoot.addChannel(new ShowlChannel(sourceShape, null));
 
 			if (logger.isTraceEnabled()) {
 				logger.trace("addChannel({})", sourceShape.getPath());
 			}
-			
+
 			return true;
 		} else if (isEnumClass(sourceShape.getOwlClass())) {
 			ShowlStatement join = enumJoinStatement(sourceShape);
 			targetRoot.addChannel(new ShowlChannel(sourceShape, join));
 
 			if (logger.isTraceEnabled()) {
-				String joinString = join==null ? "null" : join.toString();
+				String joinString = join == null ? "null" : join.toString();
 				logger.trace("addChannel({}, {})", sourceShape.getPath(), joinString);
 			}
-			
+
+			return true;
+		} else if (channelExists(sourceShape, targetRoot)) {
 			return true;
 		} else {
 			ShowlNodeShape targetNode = sourceShape.getTargetNode();
 			ShowlPropertyShape targetAccessor = targetNode.getAccessor();
 			if (targetAccessor == null) {
 				// Top-level source shape.
-				
+
 				if (joinById(sourceShape)) {
 					return true;
 				}
-				
-				
-				
+
 			} else {
-				
+
 				ShowlPropertyShape targetId = targetAccessor.getDeclaringShape().findOut(Konig.id);
 				URI targetAccessorPredicate = targetAccessor.getPredicate();
-				
+
 				if (targetId != null) {
 					if (targetId.getSelectedExpression() != null) {
 						ShowlExpression leftJoinExpression = targetId.getSelectedExpression();
-						
-						// Look for owl:inverseOf attribute of accessor, and see if the sourceShape contains this value
-						
+
+						// Look for owl:inverseOf attribute of accessor, and see if the
+						// sourceShape contains this value
+
 						Set<URI> inverseSet = schemaService.getOwlReasoner().inverseOf(targetAccessorPredicate);
-						
+
 						for (URI inverseProperty : inverseSet) {
 							ShowlPropertyShape sourceJoinProperty = sourceShape.findOut(inverseProperty);
 							if (sourceJoinProperty != null) {
-								ShowlEqualStatement join = new ShowlEqualStatement(leftJoinExpression, ShowlUtil.propertyExpression(sourceJoinProperty));
+								ShowlEqualStatement join = new ShowlEqualStatement(leftJoinExpression,
+										ShowlUtil.propertyExpression(sourceJoinProperty));
 								targetRoot.addChannel(new ShowlChannel(sourceShape, join));
 								return true;
 							}
 						}
-						
+
 						// Look for inverse path in sourceShape
-						
+
 						for (ShowlInwardPropertyShape inwardProperty : sourceShape.getInwardProperties()) {
 							URI inwardPredicate = inwardProperty.getPredicate();
 							ShowlPropertyShape inwardDirect = inwardProperty.getSynonym();
 							if (inwardDirect instanceof ShowlDirectPropertyShape && targetAccessorPredicate.equals(inwardPredicate)) {
-								ShowlEqualStatement join = new ShowlEqualStatement(leftJoinExpression, ShowlUtil.propertyExpression(inwardDirect));
+								ShowlEqualStatement join = new ShowlEqualStatement(leftJoinExpression,
+										ShowlUtil.propertyExpression(inwardDirect));
 								targetRoot.addChannel(new ShowlChannel(sourceShape, join));
 								return true;
-								
+
 							}
 						}
 					}
-					
-					
+
 				}
 			}
 		}
-		
+
 		if (logger.isWarnEnabled()) {
-			
-			logger.warn("Failed to create channel for {} in transform of {}", sourceShape.getPath(), sourceShape.getTargetNode().getPath());
+
+			logger.warn("Failed to create channel for {} in transform of {}", sourceShape.getPath(),
+					sourceShape.getTargetNode().getPath());
+		}
+		return false;
+	}
+
+	
+
+	private boolean channelExists(ShowlNodeShape sourceShape, ShowlNodeShape targetRoot) {
+		for (ShowlChannel channel : targetRoot.getChannels()) {
+			if (channel.getSourceNode() == sourceShape) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -407,10 +627,13 @@ public class BasicTransformService implements ShowlTransformService {
 				ShowlEffectiveNodeShape channelJoinNode = channelJoinAccessor.getValueShape();
 				if (channelJoinNode == null) {
 					
-					ShowlDirectPropertyShape channelJoinAccessorDirect = channelJoinAccessor.direct();
+					ShowlDirectPropertyShape channelJoinAccessorDirect = channelJoinAccessor.synonymDirect();
 					if (channelJoinAccessorDirect != null) {
 						PropertyConstraint constraint = channelJoinAccessorDirect.getPropertyConstraint();
-						if (constraint.getNodeKind() == NodeKind.IRI && constraint.getShape()==null) {
+						if ((
+									constraint.getNodeKind() == NodeKind.IRI ||
+									XMLSchema.STRING.equals(constraint.getDatatype())
+								) && constraint.getShape()==null) {
 							// channelJoinAccessor is an IRI reference  We can use it to join.
 
 							ShowlExpression left = new ShowlEnumPropertyExpression(enumId.direct());
@@ -587,7 +810,7 @@ public class BasicTransformService implements ShowlTransformService {
 			
 			ShowlPropertyShapeGroup sourceProperty = sourceNode.findPropertyByPath(path);
 			
-			if (createMapping(isEnum, sourceProperty, targetProperty)) {
+			if (createMapping(isEnum, source, sourceProperty, targetProperty)) {
 				sequence.remove();
 				setAccessorExpression(targetProperty);
 			}
@@ -600,7 +823,7 @@ public class BasicTransformService implements ShowlTransformService {
 
 	private boolean mapModified(ShowlPropertyShapeGroup targetProperty) {
 		if (targetProperty.getPredicate().equals(Konig.modified)) {
-			targetProperty.direct().setSelectedExpression(new ShowlSystimeExpression());
+			targetProperty.direct().setSelectedExpression(ShowlSystimeExpression.INSTANCE);
 			return true;
 		}
 		return false;
@@ -641,7 +864,7 @@ public class BasicTransformService implements ShowlTransformService {
 	}
 
 
-	private boolean createMapping(boolean isEnum, ShowlPropertyShapeGroup sourceProperty, ShowlPropertyShapeGroup targetProperty) {
+	private boolean createMapping(boolean isEnum, ShowlNodeShape sourceNode, ShowlPropertyShapeGroup sourceProperty, ShowlPropertyShapeGroup targetProperty) {
 		ShowlDirectPropertyShape targetDirect = targetProperty.synonymDirect();
 		if (targetDirect != null) {
 			if (targetDirect.getSelectedExpression() != null) {
@@ -650,7 +873,9 @@ public class BasicTransformService implements ShowlTransformService {
 				}
 				return true;
 			}
-			if (sourceProperty != null) {
+			if (sourceProperty == null) {
+				return createMappingFromFormula(sourceNode, targetDirect);
+			} else {
 				
 				if (alternativePathsMapping(isEnum, sourceProperty, targetProperty)) {
 					return true;
@@ -713,6 +938,89 @@ public class BasicTransformService implements ShowlTransformService {
 		return false;
 	}
 	
+	private boolean createMappingFromFormula(ShowlNodeShape sourceNode, ShowlDirectPropertyShape targetDirect) {
+		ShowlExpression e = targetDirect.getFormula();
+		if (e != null) {
+			Set<ShowlPropertyShape> set = new HashSet<>();
+			e.addProperties(set);
+			
+			int count = 0;
+			for (ShowlPropertyShape p : set) {
+				if (
+						p.getSelectedExpression()!=null || 
+						createMapping(sourceNode, p)
+					) {
+					count++;
+				}
+			}
+			if (count == set.size()) {
+				targetDirect.setSelectedExpression(e.transform());
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	private boolean createMapping(ShowlNodeShape sourceNode, ShowlPropertyShape targetProperty) {
+		
+		Set<ShowlPropertyShape> synonyms = targetProperty.synonyms();
+		
+		for (ShowlPropertyShape s : synonyms) {
+			ShowlExpression match = findMatch(sourceNode, s);
+			if (match != null) {
+				targetProperty.setSelectedExpression(match);
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+
+	
+
+
+	private ShowlExpression findMatch(ShowlNodeShape sourceNode, ShowlPropertyShape targetProperty) {
+		
+		
+		List<ShowlPropertyShape> path = targetProperty.propertyPath();
+		ShowlPropertyShape joinProperty = sourceNode.getTargetProperty();
+		ShowlNodeShape joinNode = joinProperty==null ? sourceNode.getTargetNode() : joinProperty.getDeclaringShape();
+		
+		for (int i=0; i<path.size(); i++) {
+			ShowlPropertyShape pathElement = path.get(i);
+			ShowlPropertyShapeGroup group = null;
+			if (pathElement.getDeclaringShape() == joinNode) {
+				ShowlEffectiveNodeShape node = sourceNode.effectiveNode();
+				for (int j=i; j<path.size(); j++) {
+					if (node == null) {
+						return null;
+					}
+					URI predicate = path.get(j).getPredicate();
+					group = node.findPropertyByPredicate(predicate);
+					if (group == null) {
+						return null;
+					}
+					node = group.getValueShape();
+				}
+				
+				if (group != null) {
+					// For now, we only match direct properties.
+					// We might want to consider other options going forward.
+					ShowlDirectPropertyShape direct = group.direct();
+					if (direct!=null) {
+						return new ShowlDirectPropertyExpression(direct);
+					}
+				}
+			}
+			
+		}
+		
+		return null;
+	}
+
+
 	private boolean arrayMapping(ShowlPropertyShapeGroup sourcePropertyGroup, ShowlPropertyShapeGroup targetPropertyGroup) {
 		ShowlDirectPropertyShape targetDirect = targetPropertyGroup.direct();
 		PropertyConstraint constraint = targetDirect.getPropertyConstraint();
@@ -789,7 +1097,13 @@ public class BasicTransformService implements ShowlTransformService {
 									value = ((ShowlFilterExpression) value).getValue();
 								}
 								selectedSourceField = sourceField;
-								if (value instanceof ShowlEnumIndividualReference) {
+								if (value instanceof ShowlFunctionExpression) {
+									if (targetField.getValueShape()==null) {
+										struct.put(predicate, value);
+									} else {
+										fail("Function returning a struct not supported yet at {0}", sourceProperty.getPath());
+									}
+								} else if (value instanceof ShowlEnumIndividualReference) {
 									if (targetField.getValueShape()!=null) {
 										
 										ShowlClass enumClass = sourceField.getValueType(schemaService);
@@ -830,7 +1144,7 @@ public class BasicTransformService implements ShowlTransformService {
 							}
 						}
 						
-					} else {
+					} else if (!list.isEmpty()) {
 						// TODO: handle multiple variants
 						String msg = MessageFormat.format("Cannot handle multiple variants at {}.{}", 
 								sourceNode.getPath(), predicate.getLocalName() );
@@ -861,6 +1175,13 @@ public class BasicTransformService implements ShowlTransformService {
 				}
 			}
 		}
+		
+	}
+
+
+	private void fail(String pattern, Object...arguments) throws ShowlProcessingException {
+		String msg = MessageFormat.format(pattern, arguments);
+		throw new ShowlProcessingException(msg);
 		
 	}
 
@@ -1041,7 +1362,7 @@ public class BasicTransformService implements ShowlTransformService {
 			ShowlEffectiveNodeShape eNode) {
 		
 		for (ShowlPropertyShapeGroup p : eNode.getProperties()) {
-			if (p.withSelectedExpression()==null) {
+			if (p.withSelectedExpression()==null && p.direct()!=null) {
 				pool.add(p);
 				
 				if (logger.isTraceEnabled()) {

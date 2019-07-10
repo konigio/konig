@@ -24,42 +24,61 @@ package io.konig.core.showl;
 import java.util.Set;
 
 import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.OwlReasoner;
 
-public class ShowlSystimeExpression implements ShowlExpression {
+public class ShowlTeleportExpression implements ShowlExpression {
 	
-	public static final ShowlSystimeExpression INSTANCE = new ShowlSystimeExpression();
+	private ShowlNodeShape focusNode;
+	private ShowlExpression delegate;
+	
 
-	private ShowlSystimeExpression() {
+	public ShowlTeleportExpression(ShowlNodeShape focusNode, ShowlExpression delegate) {
+		this.focusNode = focusNode;
+		this.delegate = delegate;
+	}
+
+	public ShowlNodeShape getFocusNode() {
+		return focusNode;
+	}
+
+	public ShowlExpression getDelegate() {
+		return delegate;
+	}
+
+	@Override
+	public ShowlExpression transform() {
+		return new ShowlTeleportExpression(focusNode, delegate.transform());
 	}
 
 	@Override
 	public String displayValue() {
-		return ShowlSystimeExpression.class.getSimpleName();
+		return delegate.displayValue();
 	}
 
 	@Override
 	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set)
 			throws ShowlProcessingException {
-		// Do nothing
+		
+		delegate.addDeclaredProperties(sourceNodeShape, set);
+		
 	}
 
 	@Override
 	public void addProperties(Set<ShowlPropertyShape> set) {
-		// Do nothing
+		
+		delegate.addProperties(set);
+		
 	}
 
 	@Override
 	public URI valueType(OwlReasoner reasoner) {
-		
-		return XMLSchema.DATETIME;
+		return delegate.valueType(reasoner);
 	}
 
 	@Override
-	public ShowlSystimeExpression transform() {
-		return this;
+	public String toString() {
+		return displayValue();
 	}
 
 }

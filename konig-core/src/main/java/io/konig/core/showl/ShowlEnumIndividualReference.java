@@ -80,4 +80,9 @@ public class ShowlEnumIndividualReference implements ShowlExpression {
 		return result;
 	}
 
+	@Override
+	public ShowlEnumIndividualReference transform() {
+		return this;
+	}
+
 }

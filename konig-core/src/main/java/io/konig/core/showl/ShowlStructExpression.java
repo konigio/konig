@@ -1,6 +1,7 @@
 package io.konig.core.showl;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /*
  * #%L
@@ -44,6 +45,11 @@ abstract public class ShowlStructExpression extends LinkedHashMap<URI, ShowlExpr
 	public String displayValue() {
 		return propertyShape.getPath();
 	}
+	
+
+	public ShowlDirectPropertyShape getPropertyShape() {
+		return propertyShape;
+	}
 
 	@Override
 	public void addDeclaredProperties(ShowlNodeShape sourceNodeShape, Set<ShowlPropertyShape> set)
@@ -71,6 +77,20 @@ abstract public class ShowlStructExpression extends LinkedHashMap<URI, ShowlExpr
 	@Override
 	public URI valueType(OwlReasoner reasoner) {
 		return propertyShape.maybeDirect().getValueType(reasoner);
+	}
+	
+	abstract protected ShowlStructExpression copy();
+	
+	
+	@Override 
+	public ShowlStructExpression transform() {
+		ShowlStructExpression copy = copy();
+
+		for (Map.Entry<URI,ShowlExpression> entry : entrySet()) {
+			copy.put(entry.getKey(), entry.getValue().transform());
+		}
+		return copy;
+		
 	}
 	
 }

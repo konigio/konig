@@ -40,6 +40,7 @@ import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.DCTERMS;
 
+import io.konig.core.Edge;
 import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.Vertex;
@@ -107,6 +108,12 @@ abstract public class BaseSheetProcessor implements SheetProcessor {
 	protected void edge(Resource subject, URI predicate, Value object) {
 		if (subject!=null && predicate!=null && object!=null) {
 			processor.getGraph().edge(subject, predicate, object);
+		}
+	}
+	
+	protected void edge(Resource subject, URI predicate, List<URI> list) {
+		if (subject!=null && predicate!=null && !list.isEmpty()) {
+			processor.getGraph().edge(subject, predicate, list);
 		}
 	}
 	

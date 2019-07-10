@@ -750,13 +750,17 @@ public class BeamTransformGenerator {
     		}
 
         URI propertyId = property.getId();
-        JFieldVar mapField = null;
-        Class<?> datatypeJavaClass = datatypeMapper.javaDatatype(property.getRange());
-        AbstractJClass datatypeClass = model.ref(datatypeJavaClass);
         String fieldName = propertyId.getLocalName();
-        AbstractJClass mapClass = model.ref(Map.class).narrow(datatypeClass, enumClass);
-        AbstractJClass hashMapClass = model.ref(HashMap.class).narrow(datatypeClass, enumClass);
-        mapField = enumClass.field(JMod.PRIVATE | JMod.STATIC | JMod.FINAL, mapClass, fieldName + "Map", hashMapClass._new());
+        String mapName = fieldName + "Map";
+        JFieldVar mapField = enumClass.fields().get(mapName);
+        
+        if (mapField==null) {
+          Class<?> datatypeJavaClass = datatypeMapper.javaDatatype(property.getRange());
+          AbstractJClass datatypeClass = model.ref(datatypeJavaClass);
+          AbstractJClass mapClass = model.ref(Map.class).narrow(datatypeClass, enumClass);
+          AbstractJClass hashMapClass = model.ref(HashMap.class).narrow(datatypeClass, enumClass);
+          mapField = enumClass.field(JMod.PRIVATE | JMod.STATIC | JMod.FINAL, mapClass, mapName, hashMapClass._new());
+        }
         
         map.put(propertyId, mapField);
       }
@@ -1630,7 +1634,8 @@ public class BeamTransformGenerator {
 		      	// private void $methodName(TableRow $sourceRow1, TableRow $sourceRow2, ..., TableRow outputRow, ErrorBuilder errorBuilder) {
 		      	
 		      	JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, fullMethodName);
-		      	BlockInfo blockInfo = etran().beginBlock(method.body());
+		      	BeamExpressionTransform etran = etran();
+		      	BlockInfo blockInfo = etran.beginBlock(method.body());
 		      	BeamMethod beamMethod = new BeamMethod(method);
 		      	beamMethod.setMethodNameBase(methodName);
 		      	beamMethod.setMethodNameSuffix(methodNameSuffix);
@@ -1640,6 +1645,7 @@ public class BeamTransformGenerator {
 		      	try {
 		      	
 			      	BeamTargetProperty beamTargetProperty = targetProperty(direct);
+			      	List<PropertyMethodParameter> paramList = new ArrayList<>();
 			      	
 			      	for (BeamChannel info : beamTargetProperty.getChannelList()) {
 			    			JVar sourceRow = info.getSourceRow();
@@ -1648,6 +1654,8 @@ public class BeamTransformGenerator {
 				      		JVar sourceRowParam = method.param(sourceRow.type(), sourceRowName);
 				      		info.setSourceRowParam(sourceRowParam);
 				      		blockInfo.addNodeTableRow(new NodeTableRow(info.getFocusNode(), sourceRowParam));
+				      		
+				      		paramList.add(new PropertyMethodParameter(info));
 			      		}
 			      	}
 			
@@ -1735,9 +1743,8 @@ public class BeamTransformGenerator {
 			      		
 			      	} else {
 			
-			      	
 				      	for (BeamSourceProperty sourceProperty : beamTargetProperty.getSourcePropertyList()) {
-				      		sourceProperty.generateVar(model, method.body());
+				      		sourceProperty.generateVar(model, method.body(), etran);
 				      	}
 				
 				    		
@@ -1775,7 +1782,7 @@ public class BeamTransformGenerator {
 				      			.arg(JExpr.lit(targetPropertyName)).arg(value));
 				      	
 				      	
-				      	if (condition != null) {
+				      	if (condition != null && direct.isRequired()) {
 			
 					      	// Construct the error message.
 				      		
@@ -1793,18 +1800,22 @@ public class BeamTransformGenerator {
 					      		ifStatement._else().add(errorBuilderParam.invoke("addError").arg(JExpr.lit(message.toString())));
 					      		
 					      	} else {
-					      		throw new BeamTransformGenerationException("Multiple source properties not supported yet");
+					      		StringBuilder message = new StringBuilder();
+					      		message.append("Cannot set ");
+					      		message.append(beamTargetProperty.simplePath());
+					      		
+					      		ifStatement._else().add(errorBuilderParam.invoke("addError").arg(JExpr.lit(message.toString())));
 					      	}
 				      	}
 			      	}
 			      
-			      	return new PropertyMethod(beamTargetProperty, method);
+			      	return new PropertyMethod(beamTargetProperty, method, paramList);
 		      	} finally {
-		      		etran().endBlock();
+		      		etran.endBlock();
 		      	}
 					}
-		      
-		      private void processArrayProperty(String methodName, String methodNameSuffix, 
+
+					private void processArrayProperty(String methodName, String methodNameSuffix, 
 							BeamTargetProperty beamTargetProperty) throws BeamTransformGenerationException {
 					
 		      	BlockInfo blockInfo = etran().peekBlockInfo();
@@ -1889,9 +1900,9 @@ public class BeamTransformGenerator {
 					protected void invokePropertyMethod(JBlock callerBlock, PropertyMethod method, JVar outputRow) {
 		      	JMethod jmethod = method.getMethod();
 		      	JInvocation invoke = JExpr.invoke(jmethod);
-		      	BeamTargetProperty beamTargetProperty = method.getTargetProperty();
 		      	
-		      	for (BeamChannel info : beamTargetProperty.getChannelList()) {
+		      	for (PropertyMethodParameter param : method.getParameterList()) {
+		      		BeamChannel info = param.getChannel();
 		    			JVar sourceRow = info.getSourceRow();
 		      		if (sourceRow != null) {
 			      		invoke.arg(sourceRow);
@@ -2037,17 +2048,12 @@ public class BeamTransformGenerator {
 								.arg(enumRow)
 							);
 						
-						PropertyConstraint constraint = targetDirectProperty.getPropertyConstraint();
-						if (constraint!=null) {
-							Integer minCount = constraint.getMinCount();
-							if (minCount!=null && minCount>0) {
-								// errorBuilder.addError(MessageFormat.format("Required field '$fieldName' is NULL");
+						if (targetDirectProperty.isRequired()) {
 								
-								JStringLiteral message = JExpr.lit(
-										"Required field '" + targetDirectProperty.getPredicate().getLocalName() + "' is NULL");
+							JStringLiteral message = JExpr.lit(
+									"Required field '" + targetDirectProperty.getPredicate().getLocalName() + "' is NULL");
 
-								body.add(errorBuilder.invoke("addError").arg(message));
-							}
+							body.add(errorBuilder.invoke("addError").arg(message));
 						}
 						
 						
@@ -2084,19 +2090,15 @@ public class BeamTransformGenerator {
 							thenBlock.add(row.invoke("set").arg(JExpr.lit(predicate.getLocalName())).arg(value));
 							
 							
-							PropertyConstraint constraint = p.getPropertyConstraint();
-							if (constraint != null) {
-								Integer minCount = constraint.getMinCount();
-								if (minCount!=null && minCount>0) {
-									JBlock elseBlock = ifStatement._else();
-									StringBuilder msg = new StringBuilder();
-									msg.append(p.getPath());
-									msg.append(" must not be null, but is not defined for ");
-									JInvocation invoke = errorBuilder.invoke("addError")
-											.arg(JExpr.lit(msg.toString()).plus(enumMember.invoke("name")));
-									
-									elseBlock.add(invoke);
-								}
+							if (p.isRequired()) {
+								JBlock elseBlock = ifStatement._else();
+								StringBuilder msg = new StringBuilder();
+								msg.append(p.getPath());
+								msg.append(" must not be null, but is not defined for ");
+								JInvocation invoke = errorBuilder.invoke("addError")
+										.arg(JExpr.lit(msg.toString()).plus(enumMember.invoke("name")));
+								
+								elseBlock.add(invoke);
 							}
 						}
 						
@@ -2252,7 +2254,9 @@ public class BeamTransformGenerator {
 		
 		      
 		      protected BeamTargetProperty targetProperty(ShowlDirectPropertyShape direct) throws BeamTransformGenerationException {
-		      	
+		      	if (logger.isTraceEnabled()) {
+		      		logger.trace("targetProperty: {}", direct.getPath());
+		      	}
 		      	BeamTargetProperty result = new BeamTargetProperty(direct);
 		
 		      	Set<ShowlPropertyShape> sourcePropertySet = new HashSet<>();
@@ -2266,6 +2270,9 @@ public class BeamTransformGenerator {
 							ShowlNodeShape sourceNode = sourceProperty.getDeclaringShape();
 							BeamChannel beamChannel = beamChannel(sourceNode);
 							beamChannelSet.add(beamChannel);
+							if (logger.isTraceEnabled()) {
+								logger.trace("targetProperty: beamChannelSet.add({})", sourceNode.getPath());
+							}
 						}
 						
 						ShowlExpression e = direct.getSelectedExpression();
@@ -2277,16 +2284,16 @@ public class BeamTransformGenerator {
                                 beamChannelSet.add(beamChannel);
                             }
                         }
-						if (
-								beamChannelSet.isEmpty() && 
-								!(e instanceof ShowlFilterExpression) && 
-								!(e instanceof ShowlSystimeExpression) &&
-								!(e instanceof ShowlArrayExpression) &&
-								!(e instanceof AlternativePathsExpression) &&
-								!direct.isEnumIndividual(reasoner)
-						) {
-							throw new BeamTransformGenerationException("BeamChannel not found for " + direct.getPath());
-						}
+//						if (
+//								beamChannelSet.isEmpty() && 
+//								!(e instanceof ShowlFilterExpression) && 
+//								!(e instanceof ShowlSystimeExpression) &&
+//								!(e instanceof ShowlArrayExpression) &&
+//								!(e instanceof AlternativePathsExpression) &&
+//								!direct.isEnumIndividual(reasoner)
+//						) {
+//							throw new BeamTransformGenerationException("BeamChannel not found for " + direct.getPath());
+//						}
 						
 						List<BeamChannel> channelList = new ArrayList<>(beamChannelSet);
 						Collections.sort(channelList);
@@ -5053,12 +5060,43 @@ public class BeamTransformGenerator {
   	
   }
   
+  /**
+   * @deprecated Should be replaced by BeamParameter
+   * @author Greg McFall
+   *
+   */
+  static class PropertyMethodParameter {
+  
+  	private BeamChannel channel;
+
+		public PropertyMethodParameter(BeamChannel channel) {
+			this.channel = channel;
+		}
+
+		public BeamChannel getChannel() {
+			return channel;
+		}
+  	
+		
+  }
+  
+  /**
+   * Encapsulates information about a method that constructs the value for a target property.
+   * @deprecated This should be replaced by BeamMethod
+   * @author Greg McFall
+   *
+   */
   static class PropertyMethod {
   	private BeamTargetProperty targetProperty;
   	private JMethod method;
-		public PropertyMethod(BeamTargetProperty targetProperty, JMethod method) {
+  	private List<PropertyMethodParameter> parameterList;
+  	
+  	
+		public PropertyMethod(BeamTargetProperty targetProperty, JMethod method,
+				List<PropertyMethodParameter> parameterList) {
 			this.targetProperty = targetProperty;
 			this.method = method;
+			this.parameterList = parameterList;
 		}
 		public BeamTargetProperty getTargetProperty() {
 			return targetProperty;
@@ -5066,6 +5104,14 @@ public class BeamTransformGenerator {
 		public JMethod getMethod() {
 			return method;
 		}
+		public List<PropertyMethodParameter> getParameterList() {
+			return parameterList;
+		}
+		public void setParameterList(List<PropertyMethodParameter> parameterList) {
+			this.parameterList = parameterList;
+		}
+		
+		
   	
   }
 }

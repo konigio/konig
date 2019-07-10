@@ -36,8 +36,6 @@ public class ToPersonTargetShapeFn
         Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
         if (person_id!= null) {
             outputRow.set("id", concat("http://example.com/person/", person_id));
-        } else {
-            errorBuilder.addError("Cannot set id because {PersonSourceShape}.person_id is null");
         }
     }
 
@@ -58,8 +56,6 @@ public class ToPersonTargetShapeFn
         Object modified_date = ((personSourceRow == null)?null:personSourceRow.get("modified_date"));
         if (modified_date!= null) {
             outputRow.set("modifiedDate", modified_date);
-        } else {
-            errorBuilder.addError("Cannot set modifiedDate because {PersonSourceShape}.modified_date is null");
         }
     }
 
@@ -67,8 +63,6 @@ public class ToPersonTargetShapeFn
         Object birth_date = ((personSourceRow == null)?null:personSourceRow.get("birth_date"));
         if (birth_date!= null) {
             outputRow.set("birthDate", birth_date);
-        } else {
-            errorBuilder.addError("Cannot set birthDate because {PersonSourceShape}.birth_date is null");
         }
     }
 }

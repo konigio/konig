@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -25,11 +27,14 @@ import java.util.List;
 import java.util.Set;
 
 import org.openrdf.model.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.konig.core.OwlReasoner;
 
 public class ShowlCaseStatement implements ShowlExpression {
 
+	private static Logger logger = LoggerFactory.getLogger(ShowlCaseStatement.class);
 	private ShowlExpression caseCondition;
 	private List<ShowlWhenThenClause> whenThenList;
 	private ShowlExpression elseClause;
@@ -111,6 +116,25 @@ public class ShowlCaseStatement implements ShowlExpression {
 		for (ShowlWhenThenClause c : whenThenList) {
 			URI type = c.getThen().valueType(reasoner);
 			result = (URI) reasoner.leastCommonSuperClass(result, type);
+		}
+		return result;
+	}
+
+	@Override
+	public ShowlCaseStatement transform() {
+		
+		ShowlCaseStatement result =  new ShowlCaseStatement(ShowlUtil.transform(caseCondition), transform(whenThenList), ShowlUtil.transform(elseClause));
+		if (logger.isTraceEnabled()) {
+			logger.trace("transform: from...\n {}", displayValue());
+			logger.trace("transform: to...\n{}", result.displayValue());
+		}
+		return result;
+	}
+
+	private List<ShowlWhenThenClause> transform(List<ShowlWhenThenClause> list) {
+		List<ShowlWhenThenClause> result = new ArrayList<>();
+		for (ShowlWhenThenClause clause : list) {
+			result.add(clause.transform());
 		}
 		return result;
 	}

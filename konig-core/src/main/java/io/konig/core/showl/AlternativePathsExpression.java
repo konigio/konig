@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Core
@@ -79,6 +81,12 @@ public class AlternativePathsExpression implements ShowlExpression {
 			result = (URI) reasoner.leastCommonSuperClass(result, type);
 		}
 		return result;
+	}
+
+	@Override
+	public ShowlExpression transform() {
+		// Not sure this is correct
+		return this;
 	}
 
 }

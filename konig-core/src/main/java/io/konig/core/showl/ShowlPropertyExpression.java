@@ -85,6 +85,13 @@ public abstract class ShowlPropertyExpression implements ShowlExpression {
 	}
 	
 
+	@Override
+	public ShowlExpression transform() {
+		if (sourceProperty.getSelectedExpression() != null) {
+			return sourceProperty.getSelectedExpression();
+		}
+		return this;
+	}
 
 
 	@Override

@@ -36,6 +36,7 @@ import io.konig.core.impl.RdfUtil;
 
 import io.konig.core.vocab.Konig;
 import io.konig.formula.KqlType;
+import io.konig.shacl.PropertyConstraint;
 
 public class ShowlUtil {
 	public static final String ENUM_SHAPE_BASE_IRI = "urn:konig:enumShape/";
@@ -374,4 +375,46 @@ public class ShowlUtil {
 	public static boolean isEnumNode(ShowlNodeShape node) {
 		return node.getShape().getId().stringValue().startsWith(ENUM_SHAPE_BASE_IRI);
 	}
+
+	public static ShowlNodeShape containingEnumNode(ShowlPropertyShape p, OwlReasoner owlReasoner) {
+		while (p != null) {
+			ShowlNodeShape node = p.getDeclaringShape();
+			if (owlReasoner.isEnumerationClass(node.getOwlClass().getId())) {
+				return node;
+			}
+			p = node.getAccessor();
+		}
+		return null;
+	}
+
+	public static boolean isUniqueKey(ShowlPropertyShape p, OwlReasoner reasoner) {
+		if (Konig.id.equals(p.getPredicate())) {
+			return true;
+		}
+		PropertyConstraint constraint = p.getPropertyConstraint();
+		if (constraint != null) {
+			URI stereotype = constraint.getStereotype();
+			if (Konig.uniqueKey.equals(stereotype) || Konig.primaryKey.equals(stereotype)) {
+				return true;
+			}
+		}
+		
+		return reasoner.isInverseFunctionalProperty(p.getPredicate());
+	}
+
+	public static List<ShowlExpression> transform(List<ShowlExpression> memberList) {
+		List<ShowlExpression> result = new ArrayList<>();
+		for (ShowlExpression e : memberList) {
+			result.add(e.transform());
+		}
+		return result;
+	}
+
+	public static ShowlExpression transform(ShowlExpression e) {
+		
+		return e==null ? null : e.transform();
+	}
+
+
+	
 }
