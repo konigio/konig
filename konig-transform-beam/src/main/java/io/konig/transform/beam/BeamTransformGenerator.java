@@ -140,6 +140,7 @@ import io.konig.core.showl.ShowlDerivedPropertyList;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
+import io.konig.core.showl.ShowlEffectiveNodeShape;
 import io.konig.core.showl.ShowlEnumIndividualReference;
 import io.konig.core.showl.ShowlEnumJoinInfo;
 import io.konig.core.showl.ShowlEnumNodeExpression;
@@ -445,6 +446,7 @@ public class BeamTransformGenerator {
 //    private JDefinedClass readFileFnClass;
     protected JDefinedClass optionsClass;
     private JDefinedClass toTargetFnClass;
+    private JDefinedClass mergeClass;
     
     private JDefinedClass iriClass;
     
@@ -482,7 +484,7 @@ public class BeamTransformGenerator {
     
     private Class<?> javaType(ShowlPropertyShape p) throws BeamTransformGenerationException {
       Class<?> type = tryJavaDatatype(p);
-      if (type == null) {
+      if (type == null || type == URI.class) {
         
         if (Konig.id.equals(p.getPredicate())) {
           return String.class;
@@ -534,7 +536,7 @@ public class BeamTransformGenerator {
     
     protected JDefinedClass generateTransform() throws BeamTransformGenerationException {
       
-      try {
+      try { 
         declareEnumClasses();
         declareReadFileFnClass();
         declareToTargetClass();
@@ -966,8 +968,10 @@ public class BeamTransformGenerator {
 
     private void declareToTargetClass() throws BeamTransformGenerationException, JClassAlreadyExistsException {
       if (singleSource()) {
-        ToTargetFnGenerator generator = new ToTargetFnGenerator();
-        generator.generate();
+
+    	SimpleTargetFnGenerator generator = new SimpleTargetFnGenerator(basePackage,nsManager,model,reasoner,typeManager);
+        //ToTargetFnGenerator2 generator = new ToTargetFnGenerator2();
+    	toTargetFnClass = generator.generate(targetNode);
       }
     }
 
@@ -1582,7 +1586,7 @@ public class BeamTransformGenerator {
 		}
 
 
-		abstract class BaseTargetFnGenerator extends FnGenerator {
+		abstract class BaseTargetFnGenerator2 extends FnGenerator {
 		
 		
 		
@@ -2831,7 +2835,7 @@ public class BeamTransformGenerator {
 		    }
 
 
-		class OverlayReadTargetFnGenerator {
+		class OverlayReadTargetFnGenerator2 {
     	
     	private GetKeyMethodGenerator getKeyMethodGenerator;
     	
@@ -2839,7 +2843,7 @@ public class BeamTransformGenerator {
     	
     	
     	
-    	public OverlayReadTargetFnGenerator(GetKeyMethodGenerator getKeyMethodGenerator) {
+    	public OverlayReadTargetFnGenerator2(GetKeyMethodGenerator getKeyMethodGenerator) {
 				this.getKeyMethodGenerator = getKeyMethodGenerator;
 			}
 
@@ -2982,10 +2986,15 @@ public class BeamTransformGenerator {
 					}
 					
 					AbstractJClass stringClass = model.ref(String.class);
-					IJExpression initValue = etran().transform(e);
+				
 					
+					if(e != null) {
+						IJExpression initValue = etran().transform(e);
 					keyPropertyVar = block.decl(stringClass, keyProperty.getPredicate().getLocalName()).init(initValue);
-					
+					} else {
+						keyPropertyVar = block.decl(stringClass, keyProperty.getPredicate().getLocalName());
+						
+					}
 					BlockInfo blockInfo = etran().peekBlockInfo();
 					blockInfo.putPropertyValue(keyProperty.asGroup(), keyPropertyVar);
 					
@@ -3032,7 +3041,7 @@ public class BeamTransformGenerator {
 
     }
     
-    private class ToTargetFnGenerator extends BaseTargetFnGenerator {
+    private class ToTargetFnGenerator2 extends BaseTargetFnGenerator2 {
 
     	private BeamChannel beamChannel;
     	private Map<ShowlNodeShape, BeamChannel> beamChannelMap;
@@ -3111,10 +3120,10 @@ public class BeamTransformGenerator {
       
     }
     
-    private class MergeFnGenerator extends BaseTargetFnGenerator {
+    private class MergeFnGenerator2 extends BaseTargetFnGenerator2 {
       private GroupInfo groupInfo;
 
-      private MergeFnGenerator(GroupInfo groupInfo) {
+      private MergeFnGenerator2(GroupInfo groupInfo) {
         this.groupInfo = groupInfo;
       }
       
@@ -3561,16 +3570,16 @@ public class BeamTransformGenerator {
       AbstractJClass pcollectionTupleClass = model.ref(PCollectionTuple.class);
       AbstractJClass tupleTagListClass = model.ref(TupleTagList.class);
       AbstractJClass parDoClass = model.ref(ParDo.class);
-      JDefinedClass mergeFnClass = groupInfo.getMergeFnClass();
+      //JDefinedClass mergeFnClass = groupInfo.getMergeFnClass();
       
       JVar kvpCollection = groupInfo.getKvpCollection();
       
       JVar outputRowCollection = body.decl(pcollectionTupleClass, "outputRowCollection");
       
       outputRowCollection.init(kvpCollection.invoke("apply")
-    	        .arg(parDoClass.staticInvoke("of").arg(mergeFnClass._new())
-    	        		.invoke("withOutputTags").arg(mergeFnClass.staticRef("successTag"))
-    	        				.arg(tupleTagListClass.staticInvoke("of").arg(mergeFnClass.staticRef("deadLetterTag")))));
+    	        .arg(parDoClass.staticInvoke("of").arg(mergeClass._new())
+    	        		.invoke("withOutputTags").arg(mergeClass.staticRef("successTag"))
+    	        				.arg(tupleTagListClass.staticInvoke("of").arg(mergeClass.staticRef("deadLetterTag")))));
       
       String targetTableSpec = targetTableSpec();
       String writeLabel = "Write" + RdfUtil.shortShapeName(targetNode.getId());
@@ -3578,21 +3587,32 @@ public class BeamTransformGenerator {
       AbstractJClass createDispositionClass = model.ref(CreateDisposition.class);
       AbstractJClass writeDispositionClass = model.ref(WriteDisposition.class);
       
-      body.add(outputRowCollection.invoke("get").arg(mergeFnClass.staticRef("successTag"))
+      body.add(outputRowCollection.invoke("get").arg(mergeClass.staticRef("successTag"))
     		  .invoke("apply").arg(JExpr.lit(writeLabel)).arg(bigQueryIoClass.staticInvoke("writeTableRows")
               .invoke("to").arg(targetTableSpec)
               .invoke("withCreateDisposition").arg(createDispositionClass.staticRef("CREATE_NEVER"))
               .invoke("withWriteDisposition").arg(writeDispositionClass.staticRef("WRITE_APPEND"))));
     		  
-      body.add(writeExceptionDocument(outputRowCollection, ".txt", targetNode.getShape().getMediaTypeBaseName(),mergeFnClass));
+      body.add(writeExceptionDocument(outputRowCollection, ".txt", targetNode.getShape().getMediaTypeBaseName(),mergeClass));
     }
 
 
     protected void generateMergeFnClasses(List<GroupInfo> groupList) throws BeamTransformGenerationException {
-      for (GroupInfo groupInfo : groupList) {
-        MergeFnGenerator generator = new MergeFnGenerator(groupInfo);
-        generator.generate();
-      }
+		Map<ShowlEffectiveNodeShape, IJExpression> map = new HashMap<>();
+		for (ShowlChannel channel : targetNode.getChannels()) {
+			ShowlEffectiveNodeShape sourceNode = channel.getSourceNode().effectiveNode();
+			if (!map.containsKey(sourceNode)) {
+				String sName = RdfUtil.shortShapeName(sourceNode.canonicalNode().getId()) + "Tag";
+				IJExpression var = this.mainClass.staticRef(sName);
+				map.put(sourceNode, var);
+			}
+		}
+		MergeTargetFnGenerator generator = new MergeTargetFnGenerator(map,basePackage,nsManager,model,reasoner,typeManager);
+		mergeClass = generator.generate(targetNode);
+     // for (GroupInfo groupInfo : groupList) {
+        //MergeFnGenerator2 generator = new MergeFnGenerator2(groupInfo);
+        
+     //}
       
     }
 
@@ -4021,7 +4041,7 @@ public class BeamTransformGenerator {
 
 		protected void generateMergeFnClasses(List<GroupInfo> groupList) throws BeamTransformGenerationException {
 
-			OverlayMergeFnGenerator generator = new OverlayMergeFnGenerator();
+			OverlayMergeFnGenerator2 generator = new OverlayMergeFnGenerator2();
 			mergeClass = generator.generate();
 			groupInfo.setMergeFnClass(mergeClass);
 		}
@@ -4094,7 +4114,7 @@ public class BeamTransformGenerator {
 			return StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(RdfUtil.uri(targetNode.getId()))) + "Table";
 		}
 
-		class OverlayMergeFnGenerator extends BaseTargetFnGenerator {
+		class OverlayMergeFnGenerator2 extends BaseTargetFnGenerator2 {
 					private JMethod dateTimeMethod;
 					
 					public JDefinedClass generate() throws BeamTransformGenerationException {
@@ -4575,7 +4595,7 @@ public class BeamTransformGenerator {
 		private JDefinedClass generateTargetToKvFn() throws BeamTransformGenerationException {
 			GetKeyMethodGenerator getKeyMethodGenerator = createGetKeyMethodGeneratorForTarget();
 			
-			OverlayReadTargetFnGenerator generator = new OverlayReadTargetFnGenerator(getKeyMethodGenerator);
+			OverlayReadTargetFnGenerator2 generator = new OverlayReadTargetFnGenerator2(getKeyMethodGenerator);
 			return generator.generate();
 			
 		}

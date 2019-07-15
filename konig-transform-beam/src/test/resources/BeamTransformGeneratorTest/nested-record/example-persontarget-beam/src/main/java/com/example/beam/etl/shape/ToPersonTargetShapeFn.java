@@ -1,41 +1,46 @@
 package com.example.beam.etl.shape;
 
 import com.example.beam.etl.common.ErrorBuilder;
+import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.values.TupleTag;
 
 public class ToPersonTargetShapeFn
-    extends DoFn<com.google.api.services.bigquery.model.TableRow, com.google.api.services.bigquery.model.TableRow>
+    extends DoFn<TableRow, TableRow>
 {
     public static TupleTag<String> deadLetterTag = new TupleTag<String>();
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
+    public static TupleTag<TableRow> successTag = new TupleTag<TableRow>();
 
     @DoFn.ProcessElement
-    public void processElement(ProcessContext c) {
+    public void processElement(DoFn.ProcessContext c) {
+        ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
-            ErrorBuilder errorBuilder = new ErrorBuilder();
-            com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
-            com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
-            id(personSourceRow, outputRow, errorBuilder);
-            address(personSourceRow, outputRow, errorBuilder);
-            if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
-                c.output(successTag, outputRow);
+            TableRow outputRow = new TableRow();
+            TableRow personSourceRow = ((TableRow) c.element());
+            id(errorBuilder, outputRow, personSourceRow);
+            address(errorBuilder, outputRow, personSourceRow);
+            if (outputRow.isEmpty()) {
+                errorBuilder.addError("record is empty");
             }
             if (!errorBuilder.isEmpty()) {
-                errorBuilder.addError(outputRow.toString());
-                throw new Exception(errorBuilder.toString());
+                c.output(deadLetterTag, errorBuilder.toString());
+            } else {
+                c.output(successTag, outputRow);
             }
         } catch (final Throwable oops) {
-            c.output(deadLetterTag, oops.getMessage());
+            errorBuilder.addError(oops.getMessage());
+            c.output(deadLetterTag, errorBuilder.toString());
         }
     }
 
-    private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
-        if (person_id!= null) {
-            outputRow.set("id", concat("http://example.com/person/", person_id));
+    private String id(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
+        String id = ((String) concat("http://example.com/person/", personSourceRow.get("person_id")));
+        if (id!= null) {
+            personTargetRow.set("id", id);
+        } else {
+            errorBuilder.addError("Required property 'id' is null");
         }
+        return id;
     }
 
     private String concat(Object... arg) {
@@ -51,34 +56,40 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private void address(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        com.google.api.services.bigquery.model.TableRow address = new com.google.api.services.bigquery.model.TableRow();
-        address_id(personSourceRow, address, errorBuilder);
-        address_addressLocality(personSourceRow, address, errorBuilder);
-        address_addressRegion(personSourceRow, address, errorBuilder);
-        if (errorBuilder.isEmpty()&&(!address.isEmpty())) {
-            outputRow.set("address", address);
+    private TableRow address(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
+        TableRow addressRow = new TableRow();
+        address_id(errorBuilder, addressRow, personSourceRow);
+        address_addressLocality(errorBuilder, addressRow, personSourceRow);
+        address_addressRegion(errorBuilder, addressRow, personSourceRow);
+        if (addressRow!= null) {
+            personTargetRow.set("address", addressRow);
         }
+        return addressRow;
     }
 
-    private void address_id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object address_id = ((personSourceRow == null)?null:personSourceRow.get("address_id"));
-        if (address_id!= null) {
-            outputRow.set("id", address_id);
+    private String address_id(ErrorBuilder errorBuilder, TableRow addressRow, TableRow personSourceRow) {
+        String id = ((String) personSourceRow.get("address_id"));
+        if (id!= null) {
+            addressRow.set("id", id);
+        } else {
+            errorBuilder.addError("Required property 'address.id' is null");
         }
+        return id;
     }
 
-    private void address_addressLocality(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object city = ((personSourceRow == null)?null:personSourceRow.get("city"));
-        if (city!= null) {
-            outputRow.set("addressLocality", city);
+    private String address_addressLocality(ErrorBuilder errorBuilder, TableRow addressRow, TableRow personSourceRow) {
+        String addressLocality = ((String) personSourceRow.get("city"));
+        if (addressLocality!= null) {
+            addressRow.set("addressLocality", addressLocality);
         }
+        return addressLocality;
     }
 
-    private void address_addressRegion(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object state = ((personSourceRow == null)?null:personSourceRow.get("state"));
-        if (state!= null) {
-            outputRow.set("addressRegion", state);
+    private String address_addressRegion(ErrorBuilder errorBuilder, TableRow addressRow, TableRow personSourceRow) {
+        String addressRegion = ((String) personSourceRow.get("state"));
+        if (addressRegion!= null) {
+            addressRow.set("addressRegion", addressRegion);
         }
+        return addressRegion;
     }
 }
