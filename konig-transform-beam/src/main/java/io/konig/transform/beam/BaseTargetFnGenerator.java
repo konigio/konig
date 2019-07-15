@@ -1,5 +1,26 @@
 package io.konig.transform.beam;
 
+/*
+ * #%L
+ * Konig Transform Beam
+ * %%
+ * Copyright (C) 2015 - 2019 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import java.text.MessageFormat;
 
 import org.apache.beam.sdk.transforms.DoFn;
@@ -49,7 +70,7 @@ public class BaseTargetFnGenerator {
 		this.typeManager = typeManager;
 	}
 
-	public void generate(ShowlNodeShape targetNode) throws BeamTransformGenerationException {
+	public JDefinedClass generate(ShowlNodeShape targetNode) throws BeamTransformGenerationException {
 
   	String prefix = namespacePrefix(targetNode.getId());
     String localName = RdfUtil.localName(targetNode.getId());
@@ -69,12 +90,13 @@ public class BaseTargetFnGenerator {
 		} catch (JClassAlreadyExistsException e) {
 			throw new BeamTransformGenerationException("Failed to generate class " + className, e);
 		}
+		return theClass;
 	}
 
   private void processElementMethod(JDefinedClass thisClass, ShowlNodeShape targetNode, BeamExpressionTransform etran) 
   		throws BeamTransformGenerationException {
   	
-  	AbstractJClass errorBuilderClass = typeManager.errorBuilderClass();
+	  	AbstractJClass errorBuilderClass = errorBuilderClass();
 		AbstractJClass processContextClass = model.ref(ProcessContext.class);
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
 		AbstractJClass stringClass = model.ref(String.class);
@@ -202,4 +224,47 @@ public class BaseTargetFnGenerator {
   protected BeamTransformGenerationException fail(String pattern, Object...args) throws BeamTransformGenerationException {
     throw new BeamTransformGenerationException(MessageFormat.format(pattern, args));
   }
+  
+  protected JDefinedClass errorBuilderClass() throws BeamTransformGenerationException {
+		String errorBuilderClassName = errorBuilderClassName();
+		JDefinedClass errorBuilderClass = model._getClass(errorBuilderClassName);
+		
+		if (errorBuilderClass == null) {
+			
+			try {
+				
+				AbstractJClass stringBuilderClass = model.ref(StringBuilder.class);
+				AbstractJClass stringClass = model.ref(String.class);
+				
+				errorBuilderClass = model._class(JMod.PUBLIC, errorBuilderClassName);
+				JVar buffer = errorBuilderClass.field(JMod.PRIVATE, stringBuilderClass, "buffer");
+				buffer.init(JExpr._new(stringBuilderClass));
+				
+				JMethod isEmpty = errorBuilderClass.method(JMod.PUBLIC, model._ref(boolean.class), "isEmpty");
+				isEmpty.body()._return(buffer.invoke("length").eq(JExpr.lit(0)));
+				
+				JMethod addError = errorBuilderClass.method(JMod.PUBLIC, model.VOID, "addError");
+				JVar text = addError.param(stringClass, "text");
+				
+				addError.body()._if(JExpr.invoke("isEmpty").not())._then().add(buffer.invoke("append").arg(JExpr.lit("; ")));
+				addError.body().add(buffer.invoke("append").arg(text));
+				
+				JMethod toString = errorBuilderClass.method(JMod.PUBLIC, stringClass, "toString");
+				toString.body()._return(buffer.invoke("toString"));
+				
+				
+				
+			} catch (JClassAlreadyExistsException e) {
+				throw new BeamTransformGenerationException("Failed to create ErrorBuilder class", e);
+			}
+			
+		}
+		
+		return errorBuilderClass;
+		
+	}
+  
+  private String errorBuilderClassName() {
+	  	return basePackage + ".common.ErrorBuilder";
+	  }
 }

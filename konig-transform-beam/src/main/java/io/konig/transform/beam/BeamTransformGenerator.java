@@ -140,6 +140,7 @@ import io.konig.core.showl.ShowlDerivedPropertyList;
 import io.konig.core.showl.ShowlDerivedPropertyShape;
 import io.konig.core.showl.ShowlDirectPropertyExpression;
 import io.konig.core.showl.ShowlDirectPropertyShape;
+import io.konig.core.showl.ShowlEffectiveNodeShape;
 import io.konig.core.showl.ShowlEnumIndividualReference;
 import io.konig.core.showl.ShowlEnumJoinInfo;
 import io.konig.core.showl.ShowlEnumNodeExpression;
@@ -482,7 +483,7 @@ public class BeamTransformGenerator {
     
     private Class<?> javaType(ShowlPropertyShape p) throws BeamTransformGenerationException {
       Class<?> type = tryJavaDatatype(p);
-      if (type == null) {
+      if (type == null || type == URI.class) {
         
         if (Konig.id.equals(p.getPredicate())) {
           return String.class;
@@ -534,7 +535,7 @@ public class BeamTransformGenerator {
     
     protected JDefinedClass generateTransform() throws BeamTransformGenerationException {
       
-      try {
+      try { 
         declareEnumClasses();
         declareReadFileFnClass();
         declareToTargetClass();
@@ -966,8 +967,10 @@ public class BeamTransformGenerator {
 
     private void declareToTargetClass() throws BeamTransformGenerationException, JClassAlreadyExistsException {
       if (singleSource()) {
-        ToTargetFnGenerator generator = new ToTargetFnGenerator();
-        generator.generate();
+
+    	SimpleTargetFnGenerator generator = new SimpleTargetFnGenerator(basePackage,nsManager,model,reasoner,typeManager);
+        //ToTargetFnGenerator2 generator = new ToTargetFnGenerator2();
+    	toTargetFnClass = generator.generate(targetNode);
       }
     }
 
@@ -1582,7 +1585,7 @@ public class BeamTransformGenerator {
 		}
 
 
-		abstract class BaseTargetFnGenerator extends FnGenerator {
+		abstract class BaseTargetFnGenerator2 extends FnGenerator {
 		
 		
 		
@@ -2831,7 +2834,7 @@ public class BeamTransformGenerator {
 		    }
 
 
-		class OverlayReadTargetFnGenerator {
+		class OverlayReadTargetFnGenerator2 {
     	
     	private GetKeyMethodGenerator getKeyMethodGenerator;
     	
@@ -2839,7 +2842,7 @@ public class BeamTransformGenerator {
     	
     	
     	
-    	public OverlayReadTargetFnGenerator(GetKeyMethodGenerator getKeyMethodGenerator) {
+    	public OverlayReadTargetFnGenerator2(GetKeyMethodGenerator getKeyMethodGenerator) {
 				this.getKeyMethodGenerator = getKeyMethodGenerator;
 			}
 
@@ -3032,7 +3035,7 @@ public class BeamTransformGenerator {
 
     }
     
-    private class ToTargetFnGenerator extends BaseTargetFnGenerator {
+    private class ToTargetFnGenerator2 extends BaseTargetFnGenerator2 {
 
     	private BeamChannel beamChannel;
     	private Map<ShowlNodeShape, BeamChannel> beamChannelMap;
@@ -3111,10 +3114,10 @@ public class BeamTransformGenerator {
       
     }
     
-    private class MergeFnGenerator extends BaseTargetFnGenerator {
+    private class MergeFnGenerator2 extends BaseTargetFnGenerator2 {
       private GroupInfo groupInfo;
 
-      private MergeFnGenerator(GroupInfo groupInfo) {
+      private MergeFnGenerator2(GroupInfo groupInfo) {
         this.groupInfo = groupInfo;
       }
       
@@ -3589,10 +3592,21 @@ public class BeamTransformGenerator {
 
 
     protected void generateMergeFnClasses(List<GroupInfo> groupList) throws BeamTransformGenerationException {
-      for (GroupInfo groupInfo : groupList) {
-        MergeFnGenerator generator = new MergeFnGenerator(groupInfo);
-        generator.generate();
-      }
+		Map<ShowlEffectiveNodeShape, IJExpression> map = new HashMap<>();
+		for (ShowlChannel channel : targetNode.getChannels()) {
+			ShowlEffectiveNodeShape sourceNode = channel.getSourceNode().effectiveNode();
+			if (!map.containsKey(sourceNode)) {
+				String sName = RdfUtil.shortShapeName(sourceNode.canonicalNode().getId()) + "Tag";
+				IJExpression var = this.mainClass.staticRef(sName);
+				map.put(sourceNode, var);
+			}
+		}
+		MergeTargetFnGenerator generator = new MergeTargetFnGenerator(map,basePackage,nsManager,model,reasoner,typeManager);
+        generator.generate(targetNode);
+     // for (GroupInfo groupInfo : groupList) {
+        //MergeFnGenerator2 generator = new MergeFnGenerator2(groupInfo);
+        
+     //}
       
     }
 
@@ -4021,7 +4035,7 @@ public class BeamTransformGenerator {
 
 		protected void generateMergeFnClasses(List<GroupInfo> groupList) throws BeamTransformGenerationException {
 
-			OverlayMergeFnGenerator generator = new OverlayMergeFnGenerator();
+			OverlayMergeFnGenerator2 generator = new OverlayMergeFnGenerator2();
 			mergeClass = generator.generate();
 			groupInfo.setMergeFnClass(mergeClass);
 		}
@@ -4094,7 +4108,7 @@ public class BeamTransformGenerator {
 			return StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(RdfUtil.uri(targetNode.getId()))) + "Table";
 		}
 
-		class OverlayMergeFnGenerator extends BaseTargetFnGenerator {
+		class OverlayMergeFnGenerator2 extends BaseTargetFnGenerator2 {
 					private JMethod dateTimeMethod;
 					
 					public JDefinedClass generate() throws BeamTransformGenerationException {
@@ -4575,7 +4589,7 @@ public class BeamTransformGenerator {
 		private JDefinedClass generateTargetToKvFn() throws BeamTransformGenerationException {
 			GetKeyMethodGenerator getKeyMethodGenerator = createGetKeyMethodGeneratorForTarget();
 			
-			OverlayReadTargetFnGenerator generator = new OverlayReadTargetFnGenerator(getKeyMethodGenerator);
+			OverlayReadTargetFnGenerator2 generator = new OverlayReadTargetFnGenerator2(getKeyMethodGenerator);
 			return generator.generate();
 			
 		}

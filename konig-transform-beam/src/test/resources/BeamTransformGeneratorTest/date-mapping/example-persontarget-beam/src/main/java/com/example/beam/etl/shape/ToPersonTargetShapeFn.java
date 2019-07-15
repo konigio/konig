@@ -1,42 +1,47 @@
 package com.example.beam.etl.shape;
 
 import com.example.beam.etl.common.ErrorBuilder;
+import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.values.TupleTag;
 
 public class ToPersonTargetShapeFn
-    extends DoFn<com.google.api.services.bigquery.model.TableRow, com.google.api.services.bigquery.model.TableRow>
+    extends DoFn<TableRow, TableRow>
 {
     public static TupleTag<String> deadLetterTag = new TupleTag<String>();
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
+    public static TupleTag<TableRow> successTag = new TupleTag<TableRow>();
 
     @DoFn.ProcessElement
-    public void processElement(ProcessContext c) {
+    public void processElement(DoFn.ProcessContext c) {
+        ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
-            ErrorBuilder errorBuilder = new ErrorBuilder();
-            com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
-            com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
-            id(personSourceRow, outputRow, errorBuilder);
-            modifiedDate(personSourceRow, outputRow, errorBuilder);
-            birthDate(personSourceRow, outputRow, errorBuilder);
-            if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
-                c.output(successTag, outputRow);
+            TableRow outputRow = new TableRow();
+            TableRow personSourceRow = ((TableRow) c.element());
+            id(errorBuilder, outputRow, personSourceRow);
+            modifiedDate(errorBuilder, outputRow, personSourceRow);
+            birthDate(errorBuilder, outputRow, personSourceRow);
+            if (outputRow.isEmpty()) {
+                errorBuilder.addError("record is empty");
             }
             if (!errorBuilder.isEmpty()) {
-                errorBuilder.addError(outputRow.toString());
-                throw new Exception(errorBuilder.toString());
+                c.output(deadLetterTag, errorBuilder.toString());
+            } else {
+                c.output(successTag, outputRow);
             }
         } catch (final Throwable oops) {
-            c.output(deadLetterTag, oops.getMessage());
+            errorBuilder.addError(oops.getMessage());
+            c.output(deadLetterTag, errorBuilder.toString());
         }
     }
 
-    private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
-        if (person_id!= null) {
-            outputRow.set("id", concat("http://example.com/person/", person_id));
+    private String id(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
+        String id = ((String) concat("http://example.com/person/", personSourceRow.get("person_id")));
+        if (id!= null) {
+            personTargetRow.set("id", id);
+        } else {
+            errorBuilder.addError("Required property 'id' is null");
         }
+        return id;
     }
 
     private String concat(Object... arg) {
@@ -52,17 +57,19 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private void modifiedDate(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object modified_date = ((personSourceRow == null)?null:personSourceRow.get("modified_date"));
-        if (modified_date!= null) {
-            outputRow.set("modifiedDate", modified_date);
+    private Long modifiedDate(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
+        Long modifiedDate = ((Long) personSourceRow.get("modified_date"));
+        if (modifiedDate!= null) {
+            personTargetRow.set("modifiedDate", modifiedDate);
         }
+        return modifiedDate;
     }
 
-    private void birthDate(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object birth_date = ((personSourceRow == null)?null:personSourceRow.get("birth_date"));
-        if (birth_date!= null) {
-            outputRow.set("birthDate", birth_date);
+    private Long birthDate(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
+        Long birthDate = ((Long) personSourceRow.get("birth_date"));
+        if (birthDate!= null) {
+            personTargetRow.set("birthDate", birthDate);
         }
+        return birthDate;
     }
 }

@@ -99,6 +99,7 @@ public class BeamTransformGeneratorTest {
 		return new URIImpl(stringValue);
 	}
 
+	@Ignore
 	public void testOverlay() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/overlay");
@@ -113,28 +114,28 @@ public class BeamTransformGeneratorTest {
 	}
 	
 
-	@Ignore
+	@Test
 	public void testClassIriTemplate() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/class-iri-template");
 		
 	}
 
-	@Ignore
+	@Test
 	public void testNestedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/nested-record");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testIriTemplateFormula() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/iri-template-formula", false);
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testHardCodedEnum() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/hard-coded-enum", false);
@@ -148,7 +149,7 @@ public class BeamTransformGeneratorTest {
 	
 
 
-	@Ignore
+	@Test
 	public void testModelSummary() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/model-summary", false);
@@ -162,7 +163,7 @@ public class BeamTransformGeneratorTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testDateMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/date-mapping");
@@ -170,28 +171,28 @@ public class BeamTransformGeneratorTest {
 	}
 	
 
-	@Ignore
+	@Test
 	public void testTabularMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/tabular-mapping");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testLongMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/long-mapping");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testFloatMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/float-mapping");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testEnumMapping() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-mapping");
@@ -199,7 +200,7 @@ public class BeamTransformGeneratorTest {
 	}
 
 	
-	@Ignore
+	@Test
 	public void testEnumIriReference() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-iri-reference");
@@ -223,7 +224,7 @@ public class BeamTransformGeneratorTest {
 	}
 
 
-	@Ignore
+	@Test
 	public void testSystime() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/systime");
@@ -237,14 +238,14 @@ public class BeamTransformGeneratorTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testTargetCaseStatement() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/target-case-statement");
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testRepeatedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/repeated-record", false);
