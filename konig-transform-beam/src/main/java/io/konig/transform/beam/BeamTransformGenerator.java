@@ -446,6 +446,7 @@ public class BeamTransformGenerator {
 //    private JDefinedClass readFileFnClass;
     protected JDefinedClass optionsClass;
     private JDefinedClass toTargetFnClass;
+    private JDefinedClass mergeClass;
     
     private JDefinedClass iriClass;
     
@@ -2985,10 +2986,15 @@ public class BeamTransformGenerator {
 					}
 					
 					AbstractJClass stringClass = model.ref(String.class);
-					IJExpression initValue = etran().transform(e);
+				
 					
+					if(e != null) {
+						IJExpression initValue = etran().transform(e);
 					keyPropertyVar = block.decl(stringClass, keyProperty.getPredicate().getLocalName()).init(initValue);
-					
+					} else {
+						keyPropertyVar = block.decl(stringClass, keyProperty.getPredicate().getLocalName());
+						
+					}
 					BlockInfo blockInfo = etran().peekBlockInfo();
 					blockInfo.putPropertyValue(keyProperty.asGroup(), keyPropertyVar);
 					
@@ -3564,16 +3570,16 @@ public class BeamTransformGenerator {
       AbstractJClass pcollectionTupleClass = model.ref(PCollectionTuple.class);
       AbstractJClass tupleTagListClass = model.ref(TupleTagList.class);
       AbstractJClass parDoClass = model.ref(ParDo.class);
-      JDefinedClass mergeFnClass = groupInfo.getMergeFnClass();
+      //JDefinedClass mergeFnClass = groupInfo.getMergeFnClass();
       
       JVar kvpCollection = groupInfo.getKvpCollection();
       
       JVar outputRowCollection = body.decl(pcollectionTupleClass, "outputRowCollection");
       
       outputRowCollection.init(kvpCollection.invoke("apply")
-    	        .arg(parDoClass.staticInvoke("of").arg(mergeFnClass._new())
-    	        		.invoke("withOutputTags").arg(mergeFnClass.staticRef("successTag"))
-    	        				.arg(tupleTagListClass.staticInvoke("of").arg(mergeFnClass.staticRef("deadLetterTag")))));
+    	        .arg(parDoClass.staticInvoke("of").arg(mergeClass._new())
+    	        		.invoke("withOutputTags").arg(mergeClass.staticRef("successTag"))
+    	        				.arg(tupleTagListClass.staticInvoke("of").arg(mergeClass.staticRef("deadLetterTag")))));
       
       String targetTableSpec = targetTableSpec();
       String writeLabel = "Write" + RdfUtil.shortShapeName(targetNode.getId());
@@ -3581,13 +3587,13 @@ public class BeamTransformGenerator {
       AbstractJClass createDispositionClass = model.ref(CreateDisposition.class);
       AbstractJClass writeDispositionClass = model.ref(WriteDisposition.class);
       
-      body.add(outputRowCollection.invoke("get").arg(mergeFnClass.staticRef("successTag"))
+      body.add(outputRowCollection.invoke("get").arg(mergeClass.staticRef("successTag"))
     		  .invoke("apply").arg(JExpr.lit(writeLabel)).arg(bigQueryIoClass.staticInvoke("writeTableRows")
               .invoke("to").arg(targetTableSpec)
               .invoke("withCreateDisposition").arg(createDispositionClass.staticRef("CREATE_NEVER"))
               .invoke("withWriteDisposition").arg(writeDispositionClass.staticRef("WRITE_APPEND"))));
     		  
-      body.add(writeExceptionDocument(outputRowCollection, ".txt", targetNode.getShape().getMediaTypeBaseName(),mergeFnClass));
+      body.add(writeExceptionDocument(outputRowCollection, ".txt", targetNode.getShape().getMediaTypeBaseName(),mergeClass));
     }
 
 
@@ -3602,7 +3608,7 @@ public class BeamTransformGenerator {
 			}
 		}
 		MergeTargetFnGenerator generator = new MergeTargetFnGenerator(map,basePackage,nsManager,model,reasoner,typeManager);
-        generator.generate(targetNode);
+		mergeClass = generator.generate(targetNode);
      // for (GroupInfo groupInfo : groupList) {
         //MergeFnGenerator2 generator = new MergeFnGenerator2(groupInfo);
         

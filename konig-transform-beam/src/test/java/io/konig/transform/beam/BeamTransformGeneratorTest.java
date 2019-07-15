@@ -156,7 +156,7 @@ public class BeamTransformGeneratorTest {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testJoinById() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-by-id", false);
