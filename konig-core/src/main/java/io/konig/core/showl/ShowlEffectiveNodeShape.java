@@ -30,7 +30,9 @@ import java.util.Map;
 
 import org.openrdf.model.URI;
 
-public class ShowlEffectiveNodeShape {
+import io.konig.core.impl.RdfUtil;
+
+public class ShowlEffectiveNodeShape implements Comparable<ShowlEffectiveNodeShape> {
 	
 	private ShowlPropertyShapeGroup accessor;
 	
@@ -53,6 +55,28 @@ public class ShowlEffectiveNodeShape {
 		ShowlPropertyShapeGroup ep = eroot.findEffectiveProperty(node.getAccessor());
 		return ep==null ? null : ep.getValueShape();
 		
+	}
+	
+	public ShowlNodeShape canonicalNode() {
+		for (ShowlPropertyShapeGroup g : propertyMap.values()) {
+			ShowlPropertyShape p = g.direct();
+			if (p != null) {
+				return p.getDeclaringShape();
+			}
+		}
+		
+		if (accessor != null) {
+			ShowlPropertyShape p = accessor.direct();
+			if (p != null && p.getValueShape()!=null) {
+				return p.getValueShape();
+			}
+		}
+		
+		if (propertyMap.isEmpty()) {
+			throw new IllegalStateException();
+		}
+		
+		return propertyMap.values().iterator().next().iterator().next().getDeclaringShape();
 	}
 	
 
@@ -152,6 +176,10 @@ public class ShowlEffectiveNodeShape {
 	}
 	
 	public String toString() {
+		ShowlNodeShape node = canonicalNode();
+		if (node != null) {
+			return node.getPath();
+		}
 		if (!propertyMap.isEmpty()) {
 			ShowlPropertyShapeGroup p = propertyMap.values().iterator().next();
 			if (!p.isEmpty()) {
@@ -206,6 +234,17 @@ public class ShowlEffectiveNodeShape {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public int compareTo(ShowlEffectiveNodeShape other) {
+		ShowlNodeShape thisCanonical = canonicalNode();
+		ShowlNodeShape otherCanonical = other.canonicalNode();
+		
+		String thisName = RdfUtil.uri(thisCanonical.getId()).getLocalName();
+		String otherName = RdfUtil.uri(otherCanonical.getId()).getLocalName();
+		
+		return thisName.compareTo(otherName);
 	}
 
 

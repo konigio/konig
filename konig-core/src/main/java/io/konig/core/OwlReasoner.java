@@ -611,6 +611,9 @@ public class OwlReasoner {
 	 * @return True if a and b are equal or a is a subClassOf b (or one of b's ancestors).
 	 */
 	public boolean isSubClassOf(Resource a, Resource b) {
+		if (a == null) {
+			throw new IllegalArgumentException("Resource must not be null");
+		}
 		if (a.equals(b)) {
 			return true;
 		}

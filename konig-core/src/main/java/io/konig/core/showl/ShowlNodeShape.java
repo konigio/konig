@@ -692,42 +692,7 @@ public class ShowlNodeShape implements Traversable {
 		}
 		return accessor.propertyPath();
 	}
-
-	public void applyPath(ShowlAlternativePath path, ShowlExpressionBuilder builder) throws ShowlProcessingException {
-
-		ShowlNodeShape sourceNode = path.getNode();
-		
-		applyPath(sourceNode, this, builder);
-		
-	}
 	
-	
-	private void applyPath(ShowlNodeShape sourceNode, ShowlNodeShape targetNode, ShowlExpressionBuilder builder) {
-
-		for (ShowlDirectPropertyShape targetDirect : targetNode.getProperties()) {
-			ShowlDerivedPropertyList derivedList = sourceNode.getDerivedProperty(targetDirect.getPredicate());
-			if (derivedList != null) {
-				if (derivedList.size() == 1) {
-					ShowlDerivedPropertyShape sourceDerived = derivedList.get(0);
-					if (sourceDerived.getValueShape() != null) {
-						if (targetDirect.getValueShape()!=null) {
-							applyPath(sourceDerived.getValueShape(), targetDirect.getValueShape(), builder);
-						}
-					} else {
-						ShowlExpression e = builder.expression(sourceDerived);
-						targetDirect.setSelectedExpression(e);
-					}
-					
-					
-				} else {
-					String msg = MessageFormat.format("Invalid alternative path {0}", sourceNode.getPath());
-					throw new ShowlProcessingException(msg);
-				}
-			}
-		}
-		
-	}
-
 	public boolean encapsulates(ShowlPropertyShape p) {
 		while (p != null) {
 			if (p.getDeclaringShape() == this) {

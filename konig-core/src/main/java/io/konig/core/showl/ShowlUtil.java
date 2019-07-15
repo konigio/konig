@@ -441,6 +441,18 @@ public class ShowlUtil {
 		return result;
 	}
 
+	public static ShowlNodeShape enumClassNode(ShowlNodeShape enumNode) {
+		ShowlPropertyShape accessor = enumNode.getAccessor();
+		if (accessor != null) {
+			ShowlExpression s = accessor.getSelectedExpression();
+			if (s instanceof ShowlEnumNodeExpression) {
+				ShowlEnumNodeExpression e = (ShowlEnumNodeExpression) s;
+				return e.getEnumNode();
+			}
+		}
+		return null;
+	}
+
 
 	
 }

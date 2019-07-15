@@ -92,6 +92,12 @@ public abstract class ShowlPropertyShape implements Traversable {
 		if (constraint != null) {
 			Integer minCount = constraint.getMinCount();
 			return minCount!=null && minCount>0;
+		} else if (Konig.id.equals(getPredicate())) {
+			// This is a bit of a hack.  We assume that whenever the konig:id property
+			// is declared that it is required.
+			// We really ought to generate a PropertyConstraint when the konig:id pseudo-property is generated
+			// to specify whether the field is required.
+			return true;
 		}
 		return false;
 	}
@@ -271,6 +277,9 @@ public abstract class ShowlPropertyShape implements Traversable {
 
 
 	public URI getValueType(OwlReasoner reasoner) {
+		if (Konig.id.equals(getPredicate())) {
+			return getDeclaringShape().getOwlClass().getId();
+		}
 		if (propertyConstraint != null) {
 			if (propertyConstraint.getDatatype() != null) {
 				return propertyConstraint.getDatatype();

@@ -1,5 +1,7 @@
 package io.konig.transform.beam;
 
+import com.helger.jcodemodel.AbstractJType;
+
 /*
  * #%L
  * Konig Transform Beam
@@ -23,43 +25,68 @@ package io.konig.transform.beam;
 
 import com.helger.jcodemodel.JVar;
 
+import io.konig.core.showl.ShowlEffectiveNodeShape;
 import io.konig.core.showl.ShowlNodeShape;
 
-public class BeamParameter {
+public class BeamParameter implements Comparable<BeamParameter> {
 
 	private BeamParameterType paramType;
+	private AbstractJType varType;
+	private String varName;
 	private JVar var;
 	private ShowlNodeShape sourceNode;
+	private ShowlEffectiveNodeShape node;
 	
-	public static BeamParameter ofSourceRow(JVar var, ShowlNodeShape node) {
-		return new BeamParameter(BeamParameterType.SOURCE_TABLE_ROW, var, node);
+	public static BeamParameter pattern(BeamParameterType type, ShowlEffectiveNodeShape node) {
+		return new BeamParameter(null, null, node, type);
 	}
 	
-	public static BeamParameter ofTargetRow(JVar var, ShowlNodeShape node) {
-		return new BeamParameter(BeamParameterType.TARGET_TABLE_ROW, var, node);
+	public static BeamParameter ofNodeRow(AbstractJType varType, String varName, ShowlEffectiveNodeShape node) {
+		return new BeamParameter(varType, varName, node, BeamParameterType.TABLE_ROW);
 	}
 	
-	public static BeamParameter ofList(JVar list) {
-		return new BeamParameter(BeamParameterType.LIST_VALUE, list, null);
+	public static BeamParameter ofList(AbstractJType varType, String varName) {
+		return new BeamParameter(varType, BeamParameterType.LIST_VALUE, varName, null);
 	}
 	
-	public static BeamParameter ofErrorBuilder(JVar var) {
-		return new BeamParameter(BeamParameterType.ERROR_BUILDER, var, null);
+	public static BeamParameter ofErrorBuilder(AbstractJType varType) {
+		return new BeamParameter(varType, BeamParameterType.ERROR_BUILDER, "errorBuilder", null);
 	}
 	
-	public static BeamParameter ofEnumValue(JVar var) {
-		return new BeamParameter(BeamParameterType.ENUM_VALUE, var, null);
+	public static BeamParameter ofEnumValue(AbstractJType varType, String varName, ShowlEffectiveNodeShape node) {
+		return new BeamParameter(varType, varName, node, BeamParameterType.ENUM_VALUE);
 	}
 	
 	
 	public String toString() {
-		return "BeamParameter(" + var.name() + ")";
+		return "BeamParameter(" + varName + ")";
 	}
 	
-	private BeamParameter(BeamParameterType paramType, JVar var, ShowlNodeShape sourceNode) {
+	private BeamParameter(AbstractJType varType, String varName, ShowlEffectiveNodeShape node, BeamParameterType type) {
+		this.varType = varType;
+		this.varName = varName;
+		this.node = node;
+		this.paramType = type;
+	}
+	
+	private BeamParameter(AbstractJType varType, BeamParameterType paramType, String varName, ShowlNodeShape sourceNode) {
+		this.varType = varType;
 		this.paramType = paramType;
-		this.var = var;
+		this.varName = varName;
 		this.sourceNode = sourceNode;
+	}
+
+	private BeamParameter(ShowlEffectiveNodeShape node, BeamParameterType paramType, ShowlNodeShape sourceNode, JVar var) {
+		this.node = node;
+		this.paramType = paramType;
+		this.sourceNode = sourceNode;
+		this.var = var;
+	}
+	
+	
+
+	public String getVarName() {
+		return varName;
 	}
 
 	public BeamParameterType getParamType() {
@@ -70,9 +97,33 @@ public class BeamParameter {
 		return var;
 	}
 
+	public void setVar(JVar var) {
+		this.var = var;
+	}
+
+	public AbstractJType getVarType() {
+		return varType;
+	}
+
 	public ShowlNodeShape getSourceNode() {
 		return sourceNode;
 	}
+
+	public ShowlEffectiveNodeShape getNode() {
+		return node;
+	}
 	
+	public boolean matches(BeamParameter other) {
+		return node==other.node && paramType==other.paramType;
+	}
+
+	@Override
+	public int compareTo(BeamParameter other) {
+		return var.name().compareTo(other.var.name());
+	}
+	
+	public BeamParameter copy(JVar var) {
+		return new BeamParameter(node, paramType, sourceNode, var);
+	}
 
 }

@@ -28,6 +28,8 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.OWL;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.Context;
 import io.konig.core.OwlReasoner;
@@ -186,8 +188,7 @@ public class ShowlFunctionExpression implements ShowlExpression {
 	public URI valueType(OwlReasoner reasoner) {
 		URI type = function.getModel().getReturnType().getRdfType();
 		if (type == SH.IRI) {
-			// Don't know what kind of entity is being referenced by the IRI.
-			throw new ShowlProcessingException("Type not known");
+			return XMLSchema.ANYURI;
 		}
 		return type;
 	}

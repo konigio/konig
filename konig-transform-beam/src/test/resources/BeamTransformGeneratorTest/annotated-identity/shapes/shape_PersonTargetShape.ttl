@@ -16,8 +16,9 @@ shape:PersonTargetShape sh:property  [
 		rdf:predicate schema:givenName
 	 ]  ,  [ 
 		sh:path ex:externalIdentifier ; 
+		sh:class ex:IdentityAssertion ;
 		sh:shape shape:IdentityAssertionShape ; 
-		sh:minCount 0 ; 
+		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		rdf:predicate ex:externalIdentifier ]  ; 
 	a sh:Shape ; 

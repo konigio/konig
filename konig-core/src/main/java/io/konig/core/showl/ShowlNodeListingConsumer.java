@@ -24,6 +24,8 @@ package io.konig.core.showl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openrdf.model.URI;
+
 public class ShowlNodeListingConsumer implements ShowlNodeShapeConsumer {
 	
 	private List<ShowlNodeShape> list = new ArrayList<>();
@@ -42,6 +44,14 @@ public class ShowlNodeListingConsumer implements ShowlNodeShapeConsumer {
 		return list;
 	}
 	
-	
+	public ShowlNodeShape findById(URI shapeId) {
+		for (ShowlNodeShape node : list) {
+			if (shapeId.equals(node.getId())) {
+				return node;
+			}
+		}
+		
+		return null;
+	}
 
 }

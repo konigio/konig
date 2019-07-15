@@ -23,6 +23,7 @@ package io.konig.core.showl;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +121,12 @@ public class ShowlNodeShapeBuilder {
 			
 			declaringShape.addDerivedProperty(out);
 		} else if (declaringShape.getShape().getNodeKind() == NodeKind.IRI) {
-			addDirectProperty(declaringShape, Konig.id, null);
+			PropertyConstraint c = new PropertyConstraint(Konig.id);
+			c.setMinCount(1);
+			c.setMaxCount(1);
+			c.setDatatype(XMLSchema.ANYURI);
+			
+			addDirectProperty(declaringShape, Konig.id, c);
 		}
 		
 	}
