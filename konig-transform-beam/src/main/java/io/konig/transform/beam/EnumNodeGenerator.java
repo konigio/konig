@@ -42,6 +42,7 @@ import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlUtil;
 import io.konig.core.util.StringUtil;
+import io.konig.core.vocab.Konig;
 
 public class EnumNodeGenerator extends TargetPropertyGenerator {
 
@@ -123,11 +124,20 @@ public class EnumNodeGenerator extends TargetPropertyGenerator {
 			ShowlPropertyExpression e = ShowlPropertyExpression.of(sourceProperty);
 			IJExpression sourceField = etran.transform(e);
 			
-			String targetFieldName = joinInfo.getTargetProperty().getPredicate().getLocalName();
+			
+			RdfJavaType sourceFieldType = etran.getTypeManager().rdfJavaType(sourceProperty);
+			
+			URI joinTargetPredicate = joinInfo.getTargetProperty().getPredicate();
+			
+			String targetFieldName = Konig.id.equals(joinTargetPredicate) ?
+					"LocalName" :
+					joinTargetPredicate.getLocalName();
+			
+			
 			
 			String findMethodName = "findBy" + StringUtil.capitalize(targetFieldName);
 			
-			fieldValue = enumType.staticInvoke(findMethodName).arg(sourceField);
+			fieldValue = enumType.staticInvoke(findMethodName).arg(sourceField.castTo(sourceFieldType.getJavaType()));
 			
 		} else if (joinInfo.getExpression() != null) {
 			

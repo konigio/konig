@@ -57,7 +57,7 @@ public class ToPersonTargetShapeFn
     }
 
     private TableRow gender(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
-        com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByGenderCode(personSourceRow.get("gender_code"));
+        com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByGenderCode(((String) personSourceRow.get("gender_code")));
         TableRow genderRow = new TableRow();
         gender_id(errorBuilder, genderRow, gender);
         gender_name(errorBuilder, genderRow, gender);

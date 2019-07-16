@@ -37,7 +37,7 @@ public class ToAnimalTargetShapeFn
     }
 
     private TableRow species(ErrorBuilder errorBuilder, TableRow animalTargetRow, TableRow animalSourceRow) {
-        com.example.beam.etl.ex.Species species = com.example.beam.etl.ex.Species.findById(animalSourceRow.get("species"));
+        com.example.beam.etl.ex.Species species = com.example.beam.etl.ex.Species.findByLocalName(((String) animalSourceRow.get("species")));
         TableRow speciesRow = new TableRow();
         species_id(errorBuilder, speciesRow, animalSourceRow);
         species_name(errorBuilder, speciesRow, species);

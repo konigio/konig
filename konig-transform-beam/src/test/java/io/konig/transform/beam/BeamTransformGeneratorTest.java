@@ -106,7 +106,7 @@ public class BeamTransformGeneratorTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testTrivialIriTemplate() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/trivial-iri-template", false);
@@ -208,7 +208,7 @@ public class BeamTransformGeneratorTest {
 	}
 	
 
-	@Ignore
+	@Test
 	public void testJoinNestedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record", false);

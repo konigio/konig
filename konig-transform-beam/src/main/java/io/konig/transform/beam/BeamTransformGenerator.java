@@ -475,14 +475,25 @@ public class BeamTransformGenerator {
     }
     
     protected URI keyType(ShowlPropertyShape p) {
-			if (p.getPredicate().equals(Konig.id)) {
+			if (isIriReference(p)) {
 				return XMLSchema.STRING;
 			}
 			
 			return p.getValueType(reasoner);
 		}
     
-    private Class<?> javaType(ShowlPropertyShape p) throws BeamTransformGenerationException {
+    private boolean isIriReference(ShowlPropertyShape p) {
+			if (Konig.id.equals(p.getPredicate())) {
+				return true;
+			}
+			PropertyConstraint c = p.getPropertyConstraint();
+			if (c!=null && c.getNodeKind()==NodeKind.IRI) {
+				return true;
+			}
+			return false;
+		}
+
+		private Class<?> javaType(ShowlPropertyShape p) throws BeamTransformGenerationException {
       Class<?> type = tryJavaDatatype(p);
       if (type == null || type == URI.class) {
         
