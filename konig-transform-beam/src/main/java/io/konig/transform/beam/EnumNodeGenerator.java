@@ -127,15 +127,12 @@ public class EnumNodeGenerator extends TargetPropertyGenerator {
 			
 			RdfJavaType sourceFieldType = etran.getTypeManager().rdfJavaType(sourceProperty);
 			
-			URI joinTargetPredicate = joinInfo.getTargetProperty().getPredicate();
 			
-			String targetFieldName = Konig.id.equals(joinTargetPredicate) ?
-					"LocalName" :
-					joinTargetPredicate.getLocalName();
+			URI enumPropertyId = joinInfo.getEnumProperty().getPredicate();
 			
-			
-			
-			String findMethodName = "findBy" + StringUtil.capitalize(targetFieldName);
+			String findMethodName = Konig.id.equals(enumPropertyId) ?
+					"findByLocalName" :
+					"findBy" + StringUtil.capitalize(enumPropertyId.getLocalName());
 			
 			fieldValue = enumType.staticInvoke(findMethodName).arg(sourceField.castTo(sourceFieldType.getJavaType()));
 			

@@ -201,7 +201,9 @@ public class BeamExpressionTransform  {
 				
 				URI predicate = enumPropertyShape.getPredicate();
 				
-				String getter = "findBy" + StringUtil.capitalize(predicate.getLocalName());
+				String getter = predicate.equals(Konig.id) ?
+						"findByLocalName" :
+						"findBy" + StringUtil.capitalize(predicate.getLocalName());
 				
 				URI rdfType = otherExpression.valueType(reasoner);
 				AbstractJType otherType = typeManager.javaType(rdfType);
@@ -752,6 +754,7 @@ public class BeamExpressionTransform  {
 	
 		// TODO: finish building the struct
 		
+		fail("Not implemented");
 		
 		
 		return structVar;
@@ -1233,8 +1236,17 @@ public class BeamExpressionTransform  {
 		
 		
 		if (fieldType == null) {
+		
 			if (Konig.id.equals(targetProperty.getPredicate())) {
 				fieldType = model.ref(String.class);
+				if (fieldValue instanceof JVar) {
+					JVar fieldValueVar = (JVar) fieldValue;
+					String fieldValueType = fieldValueVar.type().fullName();
+					if (!String.class.getName().equals(fieldValueType)) {
+						fieldValue = fieldValue.invoke("getId").invoke("getLocalName");
+					}
+							
+				}
 			} else {
 				ShowlExpression e = targetProperty.getSelectedExpression();
 				fieldType = getTypeManager().javaType(e);
@@ -1244,6 +1256,8 @@ public class BeamExpressionTransform  {
 		String fieldName = targetProperty.getPredicate().getLocalName();
 		
 		BlockInfo blockInfo = peekBlockInfo();
+		
+		
 		
 		JVar var = blockInfo.getBlock().decl(fieldType, fieldName).init(fieldValue.castTo(fieldType));
 		

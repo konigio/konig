@@ -328,6 +328,7 @@ public class ShowlUtil {
 		// Scan targetShape for join statements that involve the given enumClass.
 		Set<ShowlPropertyShape> properties = new HashSet<>();
 		for (ShowlChannel channel : targetShape.getChannels()) {
+			
 			ShowlStatement statement = channel.getJoinStatement();
 			if (statement != null) {
 				statement.addProperties(properties);
@@ -338,8 +339,10 @@ public class ShowlUtil {
 		while (sequence.hasNext()) {
 			ShowlPropertyShape p = sequence.next();
 			ShowlNodeShape node = p.getDeclaringShape();
-			if (node.getOwlClass().getId().equals(enumClass) && !Konig.id.equals(p.getPredicate())) {
-				continue;
+			if (node.getOwlClass().getId().equals(enumClass)) {
+				if (!Konig.id.equals(p.getPredicate())) {
+					continue;
+				}
 			}
 			sequence.remove();
 		}

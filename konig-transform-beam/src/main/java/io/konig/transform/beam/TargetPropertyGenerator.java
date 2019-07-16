@@ -87,6 +87,7 @@ public abstract class TargetPropertyGenerator {
 			builder.append('_');
 		}
 		builder.append(propertyName);
+		appendMethodNameSuffix(builder);
 		
 		
 		RdfJavaType returnType = returnType(targetProperty);
@@ -108,6 +109,13 @@ public abstract class TargetPropertyGenerator {
 		}
 		
 		return beamMethod;
+	}
+
+	protected void appendMethodNameSuffix(StringBuilder builder) {
+		// Do nothing
+		// Subclasses may override
+		
+		
 	}
 
 	protected RdfJavaType returnType(ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {

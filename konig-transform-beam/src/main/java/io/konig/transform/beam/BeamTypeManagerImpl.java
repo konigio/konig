@@ -1,5 +1,7 @@
 package io.konig.transform.beam;
 
+import java.awt.List;
+
 /*
  * #%L
  * Konig Transform Beam
@@ -167,7 +169,14 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 		PropertyConstraint constraint = p.getPropertyConstraint();
 		if (constraint != null) {
 			if (constraint.getMaxCount() == null) {
-				fail("Collection property not supported yet: {0}", p.getPath());
+				
+				// For now, we only support lists of records.
+				// In the future, we'll need to support lists of simple values.
+
+				AbstractJClass tableRowClass = model.ref(TableRow.class);
+				AbstractJClass listClass = model.ref(List.class).narrow(tableRowClass);
+				
+				return new RdfJavaType(rdfType, listClass);
 			}
 			if (constraint.getNodeKind() == NodeKind.IRI  && constraint.getShape()==null) {
 				return new RdfJavaType(rdfType, model.ref(String.class));

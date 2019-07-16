@@ -185,7 +185,7 @@ public class AlternativePathsGenerator extends StructPropertyGenerator {
 		
 	}
 
-	private BeamMethod fieldMethod(BeamMethod callerMethod, ShowlPropertyShape targetProperty, ShowlExpression e) throws BeamTransformGenerationException {
+	protected BeamMethod fieldMethod(BeamMethod callerMethod, ShowlPropertyShape targetProperty, ShowlExpression e) throws BeamTransformGenerationException {
 		JCodeModel model = etran.codeModel();
 		AbstractJType booleanType = model._ref(boolean.class);
 		

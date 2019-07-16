@@ -90,7 +90,9 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,6 +128,7 @@ import com.helger.jcodemodel.JWhileLoop;
 
 import io.konig.core.Context;
 import io.konig.core.Edge;
+import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
@@ -152,6 +155,7 @@ import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPredicatePath;
+import io.konig.core.showl.ShowlProperty;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlPropertyShapeGroup;
@@ -778,7 +782,8 @@ public class BeamTransformGenerator {
     }
 
 
-    private JEnumConstant enumMember(Map<URI, JFieldVar> enumIndex, JDefinedClass enumClass, JBlock staticInit, Vertex individual) throws BeamTransformGenerationException {
+
+		private JEnumConstant enumMember(Map<URI, JFieldVar> enumIndex, JDefinedClass enumClass, JBlock staticInit, Vertex individual) throws BeamTransformGenerationException {
       String fieldName = enumMemberName(RdfUtil.uri(individual.getId()));
       
       // Suppose we are building the following enumeration...
@@ -1278,7 +1283,23 @@ public class BeamTransformGenerator {
 		    
 		    List<ShowlPropertyShape> sourceProperties = sourceProperties();
 		
+		    Set<URI> predicateSet = new HashSet<>();
 		    for (ShowlPropertyShape sourceProperty : sourceProperties) {
+		    	
+		    	// It is possible that sourceProperties contains two different instances
+		    	// of the same predicate.  We really ought to refactor by use a set of
+		    	// ShowlPropertyShapeGroup instead of a list of ShowlPropertyShape.
+		    	
+		    	// For now, however, we'll just use a HashSet to keep track of properties that
+		    	// have been processed to ensure that we do not process the same property twice.
+		    	
+		    	URI predicate = sourceProperty.getPredicate();
+		    	if (predicateSet.contains(predicate)) {
+		    		continue;
+		    	}
+		    	
+		    	predicateSet.add(predicate);
+		    	
 		      Class<?> datatype = javaType(sourceProperty);
 		      
 		      AbstractJClass datatypeClass = datatype==GregorianCalendar.class ? model.ref(Long.class) : model.ref(datatype);

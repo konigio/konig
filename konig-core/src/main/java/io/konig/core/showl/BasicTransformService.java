@@ -873,6 +873,30 @@ public class BasicTransformService implements ShowlTransformService {
 					return true;
 
 				}
+				
+				if (sourceDirect!=null && targetDirect.isEnumIndividual(schemaService.getOwlReasoner()) && targetDirect.getValueShape()!=null) {
+					
+					ShowlClass enumClass = targetDirect.getValueType(schemaService);
+					Shape enumNodeShape = nodeService.enumNodeShape(enumClass);
+					ShowlNodeShape enumNode = nodeService.createShowlNodeShape(null, enumNodeShape, enumClass);
+					enumNode.setTargetNode(targetDirect.getValueShape());
+					enumNode.setTargetProperty(targetDirect);
+					
+					ShowlEnumNodeExpression enumNodeExpr = new ShowlEnumNodeExpression(enumNode);
+					targetDirect.setSelectedExpression(enumNodeExpr);
+					ShowlPropertyShape enumId = enumNode.getProperty(Konig.id);
+					
+					ShowlStatement joinStatement = new ShowlEqualStatement(
+							ShowlUtil.propertyExpression(enumId), ShowlUtil.propertyExpression(sourceDirect));
+					
+					
+					ShowlChannel channel = new ShowlChannel(enumNode, joinStatement);
+					enumNodeExpr.setChannel(channel);
+					
+					targetDirect.getRootNode().addChannel(channel);
+					
+					return true;
+				}
 
 				// If there is a direct source property, then use a direct mapping.
 				if (sourceDirect != null) {

@@ -42,10 +42,10 @@ import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlUtil;
 
 public class StructPropertyGenerator extends TargetPropertyGenerator {
+	
 
 	public StructPropertyGenerator(BeamExpressionTransform etran) {
 		super(etran);
-		// TODO Auto-generated constructor stub
 	}
 	
 	
