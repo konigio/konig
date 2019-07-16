@@ -1443,9 +1443,7 @@ public class BeamTransformGenerator {
 		
 		      AbstractJClass stringClass = model.ref(String.class);
 		      AbstractJClass returnType = 
-		          javaClass == GregorianCalendar.class ? model.ref(Long.class) : 
-		          javaClass == Integer.class ? model.ref(Long.class) :
-		          model.ref(javaClass);
+		          javaClass == GregorianCalendar.class ? model.ref(Long.class) : model.ref(javaClass);
 		      
 		      AbstractJClass hashMap = model.ref(HashMap.class).narrow(model.ref(String.class), model.ref(Integer.class)); 
 		      
@@ -1493,11 +1491,15 @@ public class BeamTransformGenerator {
 		      } else if (javaClass==Boolean.class) {
 		    	  tryBody._return(JExpr.lit("true").invoke("equalsIgnoreCase").arg(stringValue));
 		        
-		      } else if (javaClass == Long.class || javaClass == Integer.class) {
+		      } else if (javaClass == Long.class) { 
 		        AbstractJClass longClass = model.ref(Long.class);
 		        tryBody._return(longClass._new().arg(stringValue));
 		        
-		      } else if (javaClass == Double.class || javaClass==double.class) {
+		      } else if (javaClass == Integer.class){
+		    	AbstractJClass intergerClass = model.ref(Integer.class);
+			    tryBody._return(intergerClass._new().arg(stringValue));
+			      
+		      } else if (javaClass == Double.class || javaClass == double.class) {
 		        AbstractJClass doubleClass = model.ref(Double.class);
 		        tryBody._return(doubleClass._new().arg(stringValue));
 		        

@@ -268,7 +268,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 			case "INT":
 				constraint.setMinInclusive(-2147483648);
 				constraint.setMaxInclusive(2147483647);
-				return XMLSchema.INTEGER;
+				return XMLSchema.INT;
 				
 			case "INT64":
 				return XMLSchema.LONG;
@@ -278,9 +278,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 				constraint.setMaxInclusive(4294967295L);
 				return XMLSchema.INTEGER;
 			case "BIGINT":
-				constraint.setMinInclusive(-9223372036854775808L);
-				constraint.setMaxInclusive(9223372036854775807L);
-				return XMLSchema.INTEGER;
+				return XMLSchema.LONG;
 			case "UNSIGNED BIGINT":
 				constraint.setMinInclusive(0);
 				constraint.setMaxInclusive(new BigInteger("18446744073709551615"));
