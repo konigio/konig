@@ -73,7 +73,16 @@ public class CurieValue extends AbstractFormula implements PathTerm {
 		if (term == null) {
 			throw new KonigException("Cannot resolve namespace prefix: " + namespacePrefix);
 		}
-		StringBuilder builder = new StringBuilder(term.getExpandedIdValue());
+		// This is a complete hack to fix a bug elsewhere in the system.
+		// The hack will not always work!!!
+		// We really need to fix the root cause.
+		
+		String namespace = term.getExpandedIdValue();
+		if (!namespace.endsWith("/") && !namespace.endsWith("#") && !namespace.endsWith(":")) {
+			namespace = namespace + "/";
+		}
+		
+		StringBuilder builder = new StringBuilder(namespace);
 		builder.append(localName);
 		
 		return new URIImpl(builder.toString());

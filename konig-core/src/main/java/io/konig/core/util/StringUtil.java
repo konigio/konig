@@ -3,6 +3,8 @@ package io.konig.core.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.openrdf.model.URI;
+
 /*
  * #%L
  * konig-core
@@ -378,4 +380,29 @@ public class StringUtil {
 		}
 		return builder.toString();
 	}
+	
+	public static String javaIdentifier(String text) {
+    
+    text = text.replace("%20", "_");
+   
+    
+    int first = text.codePointAt(0);
+
+    StringBuilder builder = new StringBuilder();
+    if (!Character.isJavaIdentifierStart(first)) {
+    	builder.append('_');
+    }
+    
+    for (int i=0; i<text.length();) {
+    	int c = text.charAt(i);
+    	if (Character.isJavaIdentifierPart(c)) {
+    		builder.appendCodePoint(c);
+    	} else {
+    		builder.append('_');
+    	}
+    	i += Character.charCount(c);
+    }
+    
+    return builder.toString();
+  }
 }

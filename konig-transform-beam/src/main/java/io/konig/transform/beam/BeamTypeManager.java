@@ -25,12 +25,29 @@ import org.openrdf.model.URI;
 
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.AbstractJType;
+import com.helger.jcodemodel.IJExpression;
+
+import io.konig.core.OwlReasoner;
+import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlPropertyShape;
 
 public interface BeamTypeManager {
 
+	RdfJavaType rdfJavaType(ShowlPropertyShape p) throws BeamTransformGenerationException;
+	
+	/**
+	 * Compute the Java class used to represent values of a given RDF type.
+	 * @param rdfType The RDF type whose corresponding Java type is requested.
+	 * @return The Java class that represents values of the given RDF type. 
+	 * If rdfType is a datatype, then return a simple Java class such as String, Boolean, Long, etc.
+	 * If rdfType is a subclass of schema:Enumeration, return the corresponding Java enum.
+	 * Otherwise, return TableRow (for arbitrary Resource values).
+	 * @throws BeamTransformGenerationException
+	 */
 	AbstractJType javaType(URI rdfType) throws BeamTransformGenerationException;
 	AbstractJClass errorBuilderClass() throws BeamTransformGenerationException;
 	AbstractJClass enumClass(URI owlClass) throws BeamTransformGenerationException;
 	URI enumClassOfIndividual(URI iri) throws BeamTransformGenerationException;
+	AbstractJType javaType(ShowlExpression e) throws BeamTransformGenerationException;
 	
 }

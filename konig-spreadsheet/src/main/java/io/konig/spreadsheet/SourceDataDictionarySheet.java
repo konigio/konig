@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -58,7 +57,6 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 	private static final SheetColumn SECURITY_CLASSIFICATION = new SheetColumn("Security Classification");
 	private static final SheetColumn PII_CLASSIFICATION = new SheetColumn("PII Classification");
 	private static final SheetColumn PROJECT = new SheetColumn("Project");
-	private static final SheetColumn DERIVED_PROPERTY = new SheetColumn("Derived");
 	
 	private static final SheetColumn[] COLUMNS = new SheetColumn[]{
 		SOURCE_TYPE,
@@ -76,8 +74,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 		DATA_STEWARD,
 		SECURITY_CLASSIFICATION,
 		PII_CLASSIFICATION,
-		PROJECT,
-		DERIVED_PROPERTY
+		PROJECT
 	};
 
 	private SettingsSheet settings;
@@ -271,7 +268,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 			case "INT":
 				constraint.setMinInclusive(-2147483648);
 				constraint.setMaxInclusive(2147483647);
-				return XMLSchema.INTEGER;
+				return XMLSchema.INT;
 				
 			case "INT64":
 				return XMLSchema.LONG;
@@ -281,9 +278,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 				constraint.setMaxInclusive(4294967295L);
 				return XMLSchema.INTEGER;
 			case "BIGINT":
-				constraint.setMinInclusive(-9223372036854775808L);
-				constraint.setMaxInclusive(9223372036854775807L);
-				return XMLSchema.INTEGER;
+				return XMLSchema.LONG;
 			case "UNSIGNED BIGINT":
 				constraint.setMinInclusive(0);
 				constraint.setMaxInclusive(new BigInteger("18446744073709551615"));
@@ -322,25 +317,14 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 		String snake_case_name = fieldName;
 		String baseURL = settings.getPropertyBaseURL();
 		
-		Boolean derivedProperty = booleanValue(row, DERIVED_PROPERTY);
-		
-		URI predicate = null; 
-		if (derivedProperty != null && derivedProperty) {
-			predicate = iriValue(concatPath(baseURL, stringValue(row, FIELD)),row, FIELD);
-		} else {
-			predicate = new URIImpl(concatPath(baseURL, snake_case_name));
-		}
+		URI predicate = new URIImpl(concatPath(baseURL, snake_case_name));
 		
 		PropertyConstraint p = shape.getPropertyConstraint(predicate);
 		if (p != null) {
 			warn(location(row, col), "Duplicate definition of property {0} on {1}", fieldName, compactName(shape.getId()));
 		} else {
 			p = new PropertyConstraint(predicate);
-			if (derivedProperty != null && derivedProperty) {
-				shape.addDerivedProperty(p);
-			} else {
-				shape.add(p);
-			}
+			shape.add(p);
 		}
 		p.setMaxCount(1);
 		return p;

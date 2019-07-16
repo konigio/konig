@@ -66,12 +66,8 @@ public class ShowlFilterExpression implements ShowlExpression {
 
 	@Override
 	public URI valueType(OwlReasoner reasoner) {
-		// To implement this method, we would need to capture the
-		// NodeShape that uses the HasValue filter, and return the type of
-		// that node.
-		
-		
-		throw new ShowlProcessingException("Not implemented");
+		// It's not clear that this is the correct implementation.
+		return value.valueType(reasoner);
 	}
 
 	@Override

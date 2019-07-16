@@ -21,9 +21,16 @@ package io.konig.transform.beam;
  */
 
 
-public enum BeamParameterType {
-	TABLE_ROW,
-	ERROR_BUILDER,
-	LIST_VALUE,
-	ENUM_VALUE
+import com.helger.jcodemodel.JCodeModel;
+
+import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
+
+public class SimpleTargetFnGenerator extends BaseTargetFnGenerator {
+
+	public SimpleTargetFnGenerator(String basePackage, NamespaceManager nsManager, JCodeModel model, OwlReasoner reasoner,
+			BeamTypeManager typeManager) {
+		super(basePackage, nsManager, model, reasoner, typeManager);
+	}
+	
 }

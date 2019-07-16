@@ -100,4 +100,11 @@ public abstract class ShowlPropertyExpression implements ShowlExpression {
 		return p.getValueType(reasoner);
 	}
 
+	public static ShowlPropertyExpression of(ShowlPropertyShape p) {
+		if (p.isDirect()) {
+			return new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)p);
+		}
+		return new ShowlDerivedPropertyExpression((ShowlDerivedPropertyShape)p);
+	}
+
 }

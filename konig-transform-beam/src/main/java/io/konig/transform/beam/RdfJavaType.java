@@ -21,9 +21,30 @@ package io.konig.transform.beam;
  */
 
 
-public enum BeamParameterType {
-	TABLE_ROW,
-	ERROR_BUILDER,
-	LIST_VALUE,
-	ENUM_VALUE
+import org.openrdf.model.URI;
+
+import com.helger.jcodemodel.AbstractJType;
+
+public class RdfJavaType {
+	
+	private URI rdfType;
+	private AbstractJType javaType;
+	
+	public RdfJavaType(URI rdfType, AbstractJType javaType) {
+		this.rdfType = rdfType;
+		this.javaType = javaType;
+	}
+
+	public URI getRdfType() {
+		return rdfType;
+	}
+
+	public AbstractJType getJavaType() {
+		return javaType;
+	}
+	
+	public boolean isSimpleType() {
+		return javaType.fullName().startsWith("java.");
+	}
+
 }

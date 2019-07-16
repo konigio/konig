@@ -1,5 +1,7 @@
 package io.konig.transform.beam;
 
+import java.awt.List;
+
 /*
  * #%L
  * Konig Transform Beam
@@ -28,6 +30,7 @@ import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.AbstractJType;
 import com.helger.jcodemodel.JCodeModel;
@@ -35,6 +38,11 @@ import com.helger.jcodemodel.JCodeModel;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.showl.ShowlExpression;
+import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.vocab.Konig;
+import io.konig.shacl.NodeKind;
+import io.konig.shacl.PropertyConstraint;
 
 public class BeamTypeManagerImpl implements BeamTypeManager {
 	
@@ -58,6 +66,9 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 		if (XMLSchema.DATETIME.equals(rdfType)) {
 			return model.ref(Long.class);
 		}
+		if (XMLSchema.ANYURI.equals(rdfType)) {
+			return model.ref(String.class);
+		}
 		if (XMLSchema.STRING.equals(rdfType)) {
 			return model.ref(String.class);
 		}
@@ -71,7 +82,13 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 			return model.ref(Integer.class);
 		}
 		if (XMLSchema.DATE.equals(rdfType)) {
-			return model.ref(Date.class);
+			return model.ref(Long.class);
+		}
+		if (XMLSchema.DOUBLE.equals(rdfType)) {
+			return model.ref(Double.class);
+		}
+		if (XMLSchema.DECIMAL.equals(rdfType)) {
+			return model.ref(Double.class);
 		}
 		if (XMLSchema.FLOAT.equals(rdfType)) {
 			return model.ref(Float.class);
@@ -79,8 +96,8 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 		if (reasoner.isEnumerationClass(rdfType)) {
 			return model.ref(enumClassName(rdfType));
 		}
-		fail("Java type not supported: {0}", rdfType.stringValue());
-		return null;
+		
+		return model.ref(TableRow.class);
 	}
 
   private String enumClassName(URI enumClass) throws BeamTransformGenerationException {
@@ -120,7 +137,11 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 	@Override
 	public AbstractJClass enumClass(URI owlClass) throws BeamTransformGenerationException {
 		String className = enumClassName(owlClass);
-		return model._getClass(className);
+		AbstractJClass result = model._getClass(className);
+		if (result == null) {
+			throw new BeamTransformGenerationException("Class not found: " + className);
+		}
+		return result;
 	}
 
 	@Override
@@ -130,5 +151,44 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 			return reasoner.mostSpecificTypeOf(v);
 		}
 		throw new BeamTransformGenerationException("Type of " + individualId.stringValue() + " is not known.");
+	}
+
+	@Override
+	public RdfJavaType rdfJavaType(ShowlPropertyShape p) throws BeamTransformGenerationException {
+		
+
+		URI rdfType = p.getValueType(reasoner);
+		if (rdfType == null) {
+			throw new BeamTransformGenerationException("RDF type not known for " + p.getPath());
+		}
+		
+		if (Konig.id.equals(p.getPredicate())) {
+			return new RdfJavaType(rdfType, model.ref(String.class)); 
+		}
+		
+		PropertyConstraint constraint = p.getPropertyConstraint();
+		if (constraint != null) {
+			if (constraint.getMaxCount() == null) {
+				
+				// For now, we only support lists of records.
+				// In the future, we'll need to support lists of simple values.
+
+				AbstractJClass tableRowClass = model.ref(TableRow.class);
+				AbstractJClass listClass = model.ref(List.class).narrow(tableRowClass);
+				
+				return new RdfJavaType(rdfType, listClass);
+			}
+			if (constraint.getNodeKind() == NodeKind.IRI  && constraint.getShape()==null) {
+				return new RdfJavaType(rdfType, model.ref(String.class));
+			}
+		} 
+		return new RdfJavaType(rdfType, javaType(rdfType));
+	}
+
+	@Override
+	public AbstractJType javaType(ShowlExpression e) throws BeamTransformGenerationException {
+		URI rdfType = e.valueType(reasoner);
+		
+		return javaType(rdfType);
 	}
 }

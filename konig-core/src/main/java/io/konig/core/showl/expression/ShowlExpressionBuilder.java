@@ -92,6 +92,8 @@ public class ShowlExpressionBuilder {
 
 	private ShowlSchemaService schemaService;
 	private ShowlNodeShapeService nodeService;
+	
+	private transient ShowlNodeShape pathRoot;
 
 	public ShowlExpressionBuilder(ShowlSchemaService schemaService, ShowlNodeShapeService nodeService) {
 		this.schemaService = schemaService;
@@ -127,44 +129,54 @@ public class ShowlExpressionBuilder {
 		if (formula == null) {
 			return null;
 		}
-		if (formula instanceof FunctionExpression) {
-			return functionExpression(p, (FunctionExpression) formula);
-		} 
-		if (formula instanceof QuantifiedExpression) {
-			return quantifiedExpression(p, (QuantifiedExpression) formula);
-		} 
-		if (formula instanceof ConditionalOrExpression) {
-			return conditionalOr(p, (ConditionalOrExpression)formula);
+		boolean newRoot = (pathRoot == null);
+		if (newRoot) {
+			pathRoot = p.getDeclaringShape();
 		}
-		if (formula instanceof PathExpression) {
-			return path(p, (PathExpression) formula);
+		try {
+			if (formula instanceof FunctionExpression) {
+				return functionExpression(p, (FunctionExpression) formula);
+			} 
+			if (formula instanceof QuantifiedExpression) {
+				return quantifiedExpression(p, (QuantifiedExpression) formula);
+			} 
+			if (formula instanceof ConditionalOrExpression) {
+				return conditionalOr(p, (ConditionalOrExpression)formula);
+			}
+			if (formula instanceof PathExpression) {
+				return path(p, (PathExpression) formula);
+			}
+			if (formula instanceof BareExpression) {
+				return bare(p, (BareExpression)formula);
+			}
+			
+			if (formula instanceof IriValue) {
+				return iriValue(p, (IriValue)formula);
+			}
+			
+			if (formula instanceof LiteralFormula) {
+				return literal((LiteralFormula)formula);
+			}
+			if (formula instanceof IriTemplateExpression) {
+				return iriTemplate(p, (IriTemplateExpression) formula);
+			}
+			if (formula instanceof ListRelationalExpression) {
+				return listRelational(p, (ListRelationalExpression)formula);
+			}
+			if (formula instanceof CaseStatement) {
+				return caseStatement(p, (CaseStatement)formula);
+			}
+			if (formula instanceof GeneralAdditiveExpression) {
+				return additive(p, (GeneralAdditiveExpression) formula);
+			}
+			fail("At {0}, failed to process expression: {1}", p.getPath(), FormulaUtil.simpleString(formula));
+			
+			return null;
+		} finally {
+			if (newRoot) {
+				pathRoot = null;
+			}
 		}
-		if (formula instanceof BareExpression) {
-			return bare(p, (BareExpression)formula);
-		}
-		
-		if (formula instanceof IriValue) {
-			return iriValue(p, (IriValue)formula);
-		}
-		
-		if (formula instanceof LiteralFormula) {
-			return literal((LiteralFormula)formula);
-		}
-		if (formula instanceof IriTemplateExpression) {
-			return iriTemplate(p, (IriTemplateExpression) formula);
-		}
-		if (formula instanceof ListRelationalExpression) {
-			return listRelational(p, (ListRelationalExpression)formula);
-		}
-		if (formula instanceof CaseStatement) {
-			return caseStatement(p, (CaseStatement)formula);
-		}
-		if (formula instanceof GeneralAdditiveExpression) {
-			return additive(p, (GeneralAdditiveExpression) formula);
-		}
-		fail("At {0}, failed to process expression: {1}", p.getPath(), FormulaUtil.simpleString(formula));
-		
-		return null;
 	}
 
 
@@ -309,14 +321,13 @@ public class ShowlExpressionBuilder {
 	}
 
 	private ShowlExpression path(ShowlPropertyShape p, PathExpression formula) {
-		return path(p, null, formula);
+		return path(p, pathRoot, null, formula);
 	}
 
-	private ShowlExpression path(ShowlPropertyShape p, ShowlPropertyShape prior, PathExpression formula) {
+	private ShowlExpression path(ShowlPropertyShape p, ShowlNodeShape root, ShowlPropertyShape prior, PathExpression formula) {
 		
 		List<PathStep> stepList = formula.getStepList();
 		String shapeIdValue = p.getDeclaringShape().getId().stringValue();
-		
 		
 		for (int i=0; i<stepList.size(); i++) {
 			PathStep step = stepList.get(i);
@@ -325,9 +336,9 @@ public class ShowlExpressionBuilder {
 				URI predicate = dirStep.getTerm().getIri();
 				
 				ShowlProperty property = schemaService.produceProperty(predicate);
-				shapeIdValue += dirStep.getDirection().getSymbol() + predicate.getLocalName();
 				
-				ShowlNodeShape parentNode = parentNode(shapeIdValue, dirStep, property, p, prior);
+				ShowlNodeShape parentNode = parentNode(shapeIdValue, dirStep, property, p, root, prior);
+				shapeIdValue += dirStep.getDirection().getSymbol() + predicate.getLocalName();
 				switch (dirStep.getDirection()) {
 				case OUT :
 					prior = outwardProperty(parentNode, property, prior, p);
@@ -363,7 +374,7 @@ public class ShowlExpressionBuilder {
 		for (PredicateObjectList pol : step.getConstraints()) {
 			PathExpression path = pol.getPath();
 			
-			ShowlExpression showlPath = path(prior, prior, path);
+			ShowlExpression showlPath = path(prior, null, prior, path);
 			
 			ShowlPropertyShape field = ShowlUtil.asPropertyShape(showlPath);
 			
@@ -456,13 +467,14 @@ public class ShowlExpressionBuilder {
 		DirectionStep dirStep, 
 		ShowlProperty property, 
 		ShowlPropertyShape p, 
+		ShowlNodeShape root, 
 		ShowlPropertyShape prior
 	) {
 		if (dirStep.getTerm() instanceof VariableTerm) {
 			return varRoot(dirStep.getTerm().getIri(), p);
 		}
 		if (prior == null) {
-			return p.getDeclaringShape();
+			return root;
 		}
 		
 		ShowlClass owlClass = schemaService.inferDomain(property);

@@ -25,16 +25,14 @@ import java.text.MessageFormat;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.google.api.services.bigquery.model.TableRow;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.AbstractJType;
 import com.helger.jcodemodel.JBlock;
@@ -46,21 +44,22 @@ import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
 import com.helger.jcodemodel.JVar;
 
-import io.konig.core.showl.ShowlEnumStructExpression;
+import io.konig.core.showl.ShowlEffectiveNodeShape;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
-import io.konig.core.showl.ShowlUtil;
-import io.konig.core.util.StringUtil;
+import io.konig.core.showl.ShowlPropertyShapeGroup;
 
-public class BlockInfo implements BeamPropertyManager {
+public class BlockInfo {
 
+	private static Logger logger = LoggerFactory.getLogger(BlockInfo.class);
 
 	private JBlock block;
 	private int setCount=0;
 	private int valueCount = 0;
-	private Map<ShowlNodeShape, NodeTableRow> nodeTableRowMap;
+	
+	private Map<ShowlEffectiveNodeShape, JVar> tableRowMap = new HashMap<>();
 	private JVar listVar;
 	private JVar outputRow;
 	private JVar errorBuilderVar;
@@ -69,7 +68,9 @@ public class BlockInfo implements BeamPropertyManager {
 	private BeamMethod beamMethod;
 	private BeamPropertySink propertySink;
 
-	private Map<ShowlPropertyShape, BeamSourceProperty> sourcePropertyMap = new HashMap<>();
+	private Map<ShowlPropertyShapeGroup, JVar> propertyValueMap = new HashMap<>();
+	
+	private Map<ShowlEffectiveNodeShape, JVar> enumMemberMap = new HashMap<>();
 	
 	
 	public BlockInfo(JBlock block) {
@@ -85,33 +86,6 @@ public class BlockInfo implements BeamPropertyManager {
 		return this;
 	}
 
-	public BlockInfo nodeTableRowMap(Map<ShowlNodeShape, NodeTableRow> tableRowMap) {
-		this.nodeTableRowMap = tableRowMap;
-		return this;
-		
-	}
-	
-	public BeamSourceProperty createSourceProperty(ShowlPropertyShape p) throws BeamTransformGenerationException {
-		BeamSourceProperty result = sourcePropertyMap.get(p);
-		if (result == null) {
-			result = new BeamSourceProperty(null, p);
-			JCodeModel model = beamMethod.getMethod().owner();
-			AbstractJClass objectClass = model.ref(Object.class);
-			String fieldName = p.getPredicate().getLocalName();
-			JVar var = block.decl(objectClass, fieldName);
-			
-			ShowlNodeShape node = p.getDeclaringShape();
-			NodeTableRow row = getNodeTableRow(node);
-			
-			var.init(row.getTableRowVar().invoke("get").arg(JExpr.lit(fieldName)));
-			
-			result.setVar(var);
-			
-			sourcePropertyMap.put(p, result);
-			
-		}
-		return result;
-	}
 
 	/**
 	 * The row that this block is expected to populate.
@@ -142,12 +116,6 @@ public class BlockInfo implements BeamPropertyManager {
 		this.listVar = listVar;
 	}
 
-	public void addNodeTableRow(NodeTableRow value) {
-		if (nodeTableRowMap == null) {
-			nodeTableRowMap = new LinkedHashMap<>();
-		}
-		nodeTableRowMap.put(value.getNode(), value);
-	}
 	
 	
 	
@@ -159,29 +127,11 @@ public class BlockInfo implements BeamPropertyManager {
 		this.enumInfo = enumInfo;
 	}
 
-	public NodeTableRow maybeNullNodeTableRow(ShowlNodeShape node) {
-		return nodeTableRowMap == null ? null : nodeTableRowMap.get(node);
-	}
 
-	public NodeTableRow getNodeTableRow(ShowlNodeShape node) throws BeamTransformGenerationException {
-		NodeTableRow result = nodeTableRowMap == null ? null : nodeTableRowMap.get(node);
-		if (result == null) {
-			StringBuilder message = new StringBuilder();
-			message.append("NodeTableRow not found for ");
-			message.append(node.getPath());
-			if (beamMethod != null) {
-				message.append(" in ");
-				message.append(beamMethod.getMethod().name());
-			}
-			throw new BeamTransformGenerationException(message.toString());
+	public JVar getErrorBuilderVar() throws BeamTransformGenerationException {
+		if (errorBuilderVar == null) {
+			throw new BeamTransformGenerationException("ErrorBuilder variable not declared");
 		}
-		
-		return result;
-	}
-	
-	
-
-	public JVar getErrorBuilderVar() {
 		return errorBuilderVar;
 	}
 
@@ -190,9 +140,6 @@ public class BlockInfo implements BeamPropertyManager {
 		return this;
 	}
 
-	public Map<ShowlNodeShape, NodeTableRow> getNodeTableRowMap() {
-		return nodeTableRowMap;
-	}
 
 	public String valueName(ShowlExpression e) {
 		if (e instanceof ShowlPropertyExpression) {
@@ -230,79 +177,60 @@ public class BlockInfo implements BeamPropertyManager {
 	}
 
 
-	@Override
-	public void add(BeamSourceProperty p) {
-		sourcePropertyMap.put(p.getPropertyShape(), p);
-
-	}
-	
-	public BeamSourceProperty getBeamSourceProperty(ShowlPropertyShape p) {
-		return sourcePropertyMap.get(p);
-	}
-
-	@Override
-	public BeamSourceProperty forPropertyShape(ShowlPropertyShape p) throws BeamTransformGenerationException {
-		BeamSourceProperty result = sourcePropertyMap.get(p);
-		if (result == null) {
-			throw new BeamTransformGenerationException("Failed to find BeamSourceProperty for " + p.getPath());
-		}
-		return result;
-	}
-
 	
 
-	public void invoke(BeamMethod beamMethod) throws BeamTransformGenerationException {
-		JMethod method = beamMethod.getMethod();
-		
-		JInvocation invoke = JExpr.invoke(method);
-		for (BeamParameter param : beamMethod.getParameters()) {
-			switch (param.getParamType()) {
-			
-			case ENUM_VALUE :
-				
-				if (enumInfo==null || enumInfo.getEnumValue() == null) {
-					throw new BeamTransformGenerationException("Cannot invoke " + method.name() + " because the call does not declare a variable that holds the enum value");
-				}
-				invoke.arg(enumInfo.getEnumValue());
-				break;
-				
-			case ERROR_BUILDER :
-				
-				if (errorBuilderVar == null) {
-					throw new BeamTransformGenerationException("Cannot invoke " + method.name() + " because the caller block does not declare the errorBuilder variable.");
-				}
-				invoke.arg(errorBuilderVar);
-				break;
+//	public void invoke(BeamMethod beamMethod) throws BeamTransformGenerationException {
+//		JMethod method = beamMethod.getMethod();
+//		
+//		JInvocation invoke = JExpr.invoke(method);
+//		for (BeamParameter param : beamMethod.getParameters()) {
+//			switch (param.getParamType()) {
+//			
+//			case ENUM_VALUE :
+//				
+//				if (enumInfo==null || enumInfo.getEnumValue() == null) {
+//					throw new BeamTransformGenerationException("Cannot invoke " + method.name() + " because the call does not declare a variable that holds the enum value");
+//				}
+//				invoke.arg(enumInfo.getEnumValue());
+//				break;
+//				
+//			case ERROR_BUILDER :
+//				
+//				if (errorBuilderVar == null) {
+//					throw new BeamTransformGenerationException("Cannot invoke " + method.name() + " because the caller block does not declare the errorBuilder variable.");
+//				}
+//				invoke.arg(errorBuilderVar);
+//				break;
+//
+//			case TARGET_TABLE_ROW:
+//			case SOURCE_TABLE_ROW :
+//				ShowlNodeShape node = param.getSourceNode();
+//				NodeTableRow rowInfo = maybeNullNodeTableRow(node);
+//				
+//				if (rowInfo == null || rowInfo.getTableRowVar()==null) {
+//					throw new BeamTransformGenerationException(
+//							"Cannot invoke " + method.name() + " because the caller block does not declare a TableRow for " + node.getPath());
+//				}
+//				invoke.arg(rowInfo.getTableRowVar());
+//				break;
+//				
+//			case LIST_VALUE :
+//				if (listVar == null) {
+//					throw new BeamTransformGenerationException(
+//							"Cannot invoke " + method.name() + " because the caller block does not declare the List variable");
+//				}
+//				invoke.arg(listVar);
+//				break;
+//				
+//				
+//			}
+//		}
+//		
+//		block.add(invoke);
+//		
+//	}
 
-			case TARGET_TABLE_ROW:
-			case SOURCE_TABLE_ROW :
-				ShowlNodeShape node = param.getSourceNode();
-				NodeTableRow rowInfo = maybeNullNodeTableRow(node);
-				
-				if (rowInfo == null || rowInfo.getTableRowVar()==null) {
-					throw new BeamTransformGenerationException(
-							"Cannot invoke " + method.name() + " because the caller block does not declare a TableRow for " + node.getPath());
-				}
-				invoke.arg(rowInfo.getTableRowVar());
-				break;
-				
-			case LIST_VALUE :
-				if (listVar == null) {
-					throw new BeamTransformGenerationException(
-							"Cannot invoke " + method.name() + " because the caller block does not declare the List variable");
-				}
-				invoke.arg(listVar);
-				break;
-				
-				
-			}
-		}
-		
-		block.add(invoke);
-		
-	}
-
-	public void addListParam(BeamMethod beamMethod, AbstractJType paramType, String paramName) {
+	public void addListParam(BeamMethod beamMethod, AbstractJType paramType, String paramName) throws BeamTransformGenerationException {
 		BeamParameter param = beamMethod.addListParam(paramType, paramName);
 		listVar = param.getVar();
 		propertySink = new BeamListSink(listVar);
@@ -325,26 +253,64 @@ public class BlockInfo implements BeamPropertyManager {
 			throw new BeamTransformGenerationException(message);
 		}
 		
-		String methodNameSuffix = beamMethod.getMethodNameSuffix();
 		
 		StringBuilder builder = new StringBuilder();
-		builder.append(beamMethod.getMethodNameBase());
+		builder.append(beamMethod.name());
 		builder.append('_');
 		builder.append(localName);
-		String methodNameBase = builder.toString();
 		
-		if (methodNameSuffix != null) {
-			builder.append(methodNameSuffix);
-		}
 		JDefinedClass theClass = beamMethod.getMethod().owningClass();
 		JMethod method = theClass.method(JMod.PRIVATE, returnType, builder.toString());
 		
 		BeamMethod result = new BeamMethod(method);
-		result.setMethodNameBase(methodNameBase);
-		result.setMethodNameSuffix(methodNameSuffix);
 		return result;
 	}
 
+	public void putTableRow(ShowlEffectiveNodeShape node, JVar tableRowVar) {
+//		if (logger.isTraceEnabled()) {
+//			logger.trace("putTableRow: {} (hashCode={})", node.canonicalNode().getPath(), node.hashCode());
+//		}
+		tableRowMap.put(node, tableRowVar);
+	}
+
+	public JVar getTableRowVar(ShowlEffectiveNodeShape node) {
+		JVar var = tableRowMap.get(node);
+	
+//		if (var == null) {
+//			logger.warn("TableRow variable not found for {} (hashCode={})", node.canonicalNode().getPath() , node.hashCode());
+//		}
+		return var;
+	}
+
+
+	public JVar getPropertyValue(ShowlPropertyShapeGroup group) {
+		return propertyValueMap.get(group);
+	}
+	
+	public void putPropertyValue(ShowlPropertyShapeGroup group, JVar value) {
+		propertyValueMap.put(group, value);
+	}
+
+	public void putEnumMember(ShowlEffectiveNodeShape enumNode, JVar enumVar) {
+		enumMemberMap.put(enumNode, enumVar);
+		if (logger.isTraceEnabled()) {
+			logger.trace("putEnumMember({}, hashCode={})", enumNode.canonicalNode().getPath(), enumNode.hashCode());
+			System.out.print("");
+		}
+	}
+	
+	public JVar getEnumMember(ShowlEffectiveNodeShape enumNode) throws BeamTransformGenerationException {
+		if (enumNode==null) {
+			throw new BeamTransformGenerationException("enumNode is null");
+		}
+		JVar result = enumMemberMap.get(enumNode);
+		if (result == null && logger.isTraceEnabled()) {
+			logger.trace("getEnumMember({}, hashCode={})... enum member not found", 
+					enumNode.canonicalNode().getPath(), 
+					enumNode.hashCode());
+		}
+		return result;
+	}
 
 
 }

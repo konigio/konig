@@ -328,6 +328,7 @@ public class ShowlUtil {
 		// Scan targetShape for join statements that involve the given enumClass.
 		Set<ShowlPropertyShape> properties = new HashSet<>();
 		for (ShowlChannel channel : targetShape.getChannels()) {
+			
 			ShowlStatement statement = channel.getJoinStatement();
 			if (statement != null) {
 				statement.addProperties(properties);
@@ -338,8 +339,10 @@ public class ShowlUtil {
 		while (sequence.hasNext()) {
 			ShowlPropertyShape p = sequence.next();
 			ShowlNodeShape node = p.getDeclaringShape();
-			if (node.getOwlClass().getId().equals(enumClass) && !Konig.id.equals(p.getPredicate())) {
-				continue;
+			if (node.getOwlClass().getId().equals(enumClass)) {
+				if (!Konig.id.equals(p.getPredicate())) {
+					continue;
+				}
 			}
 			sequence.remove();
 		}
@@ -355,6 +358,17 @@ public class ShowlUtil {
 	public static boolean isEnumNode(ShowlExpression e) {
 		
 		return  e instanceof ShowlEnumNodeExpression || e instanceof ShowlEnumStructExpression ;
+	}
+	
+	public static ShowlNodeShape parentEnumNode(ShowlPropertyShape p) {
+		while (p!=null) {
+			ShowlNodeShape node = p.getDeclaringShape();
+			if (RdfUtil.uri(node.getId()).getNamespace().startsWith(ENUM_SHAPE_BASE_IRI)) {
+				return node;
+			}
+			p = node.getAccessor();
+		}
+		return null;
 	}
 
 	public static boolean isEnumProperty(ShowlPropertyShape p) {
@@ -413,6 +427,33 @@ public class ShowlUtil {
 	public static ShowlExpression transform(ShowlExpression e) {
 		
 		return e==null ? null : e.transform();
+	}
+
+	public static ShowlNodeShape parentEnumNode(ShowlPropertyShape p, OwlReasoner reasoner) {
+		ShowlNodeShape result = parentEnumNode(p);
+		if (result == null) {
+			while (p != null) {
+				ShowlNodeShape node = p.getDeclaringShape();
+				URI owlClass = node.getOwlClass().getId();
+				if (reasoner.isEnumerationClass(owlClass)) {
+					return node;
+				}
+				p = node.getAccessor();
+			}
+		}
+		return result;
+	}
+
+	public static ShowlNodeShape enumClassNode(ShowlNodeShape enumNode) {
+		ShowlPropertyShape accessor = enumNode.getAccessor();
+		if (accessor != null) {
+			ShowlExpression s = accessor.getSelectedExpression();
+			if (s instanceof ShowlEnumNodeExpression) {
+				ShowlEnumNodeExpression e = (ShowlEnumNodeExpression) s;
+				return e.getEnumNode();
+			}
+		}
+		return null;
 	}
 
 

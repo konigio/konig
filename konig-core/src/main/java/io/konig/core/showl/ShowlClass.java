@@ -134,4 +134,8 @@ public class ShowlClass {
 		}
 		return false;
 	}
+
+	public boolean isEnum(OwlReasoner owlReasoner) {
+		return owlReasoner.isEnumerationClass(getId());
+	}
 }

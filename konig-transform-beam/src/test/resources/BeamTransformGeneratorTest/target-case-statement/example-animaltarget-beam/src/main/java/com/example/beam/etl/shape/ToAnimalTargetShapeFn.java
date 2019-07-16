@@ -3,84 +3,98 @@ package com.example.beam.etl.shape;
 import java.util.HashSet;
 import java.util.Set;
 import com.example.beam.etl.common.ErrorBuilder;
-import com.example.beam.etl.ex.Species;
+import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.values.TupleTag;
 
 public class ToAnimalTargetShapeFn
-    extends DoFn<com.google.api.services.bigquery.model.TableRow, com.google.api.services.bigquery.model.TableRow>
+    extends DoFn<TableRow, TableRow>
 {
     public static TupleTag<String> deadLetterTag = new TupleTag<String>();
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
+    public static TupleTag<TableRow> successTag = new TupleTag<TableRow>();
 
     @DoFn.ProcessElement
-    public void processElement(ProcessContext c) {
+    public void processElement(DoFn.ProcessContext c) {
+        ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
-            ErrorBuilder errorBuilder = new ErrorBuilder();
-            com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
-            com.google.api.services.bigquery.model.TableRow animalSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
-            species(animalSourceRow, outputRow, errorBuilder);
-            genus(outputRow, errorBuilder);
-            id(animalSourceRow, outputRow, errorBuilder);
-            if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
-                c.output(successTag, outputRow);
+            TableRow outputRow = new TableRow();
+            TableRow animalSourceRow = ((TableRow) c.element());
+            species(errorBuilder, outputRow, animalSourceRow);
+            genus(errorBuilder, outputRow);
+            id(errorBuilder, outputRow, animalSourceRow);
+            if (outputRow.isEmpty()) {
+                errorBuilder.addError("record is empty");
             }
             if (!errorBuilder.isEmpty()) {
-                errorBuilder.addError(outputRow.toString());
-                throw new Exception(errorBuilder.toString());
+                c.output(deadLetterTag, errorBuilder.toString());
+            } else {
+                c.output(successTag, outputRow);
             }
         } catch (final Throwable oops) {
-            c.output(deadLetterTag, oops.getMessage());
+            errorBuilder.addError(oops.getMessage());
+            c.output(deadLetterTag, errorBuilder.toString());
         }
     }
 
-    private void species(com.google.api.services.bigquery.model.TableRow animalSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object animalSourceRow_species = animalSourceRow.get("species");
-        if (animalSourceRow_species!= null) {
-            com.google.api.services.bigquery.model.TableRow speciesRow = new com.google.api.services.bigquery.model.TableRow();
-            Species species = Species.findByLocalName(animalSourceRow_species.toString());
-            speciesRow.set("id", animalSourceRow_species);
-            species_name(species, speciesRow, errorBuilder);
-            if (!outputRow.isEmpty()) {
-                outputRow.set("species", speciesRow);
-            }
-        }
-    }
-
-    private void species_name(Species species, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object name = species.getName();
-        if (name!= null) {
-            outputRow.set("name", name);
+    private TableRow species(ErrorBuilder errorBuilder, TableRow animalTargetRow, TableRow animalSourceRow) {
+        com.example.beam.etl.ex.Species species = com.example.beam.etl.ex.Species.findByLocalName(((String) animalSourceRow.get("species")));
+        TableRow speciesRow = new TableRow();
+        species_id(errorBuilder, speciesRow, animalSourceRow);
+        species_name(errorBuilder, speciesRow, species);
+        if (!speciesRow.isEmpty()) {
+            animalTargetRow.set("species", speciesRow);
         } else {
-            errorBuilder.addError("Cannot set species.name because {Species}.name is null");
+            errorBuilder.addError("Required property 'species' is null");
         }
+        return speciesRow;
     }
 
-    private void genus(com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        com.example.beam.etl.ex.Genus genus = case1(outputRow, errorBuilder);
-        if (genus!= null) {
-            com.google.api.services.bigquery.model.TableRow genusRow = new com.google.api.services.bigquery.model.TableRow();
-            genus_id(genus, genusRow, errorBuilder);
-            genus_name(genus, genusRow, errorBuilder);
-            outputRow.set("genus", genusRow);
+    private String species_id(ErrorBuilder errorBuilder, TableRow speciesRow, TableRow animalSourceRow) {
+        String id = ((String) animalSourceRow.get("species"));
+        if (id!= null) {
+            speciesRow.set("id", id);
+        } else {
+            errorBuilder.addError("Required property 'species.id' is null");
         }
-        errorBuilder.addError("Required field 'genus' is NULL");
+        return id;
     }
 
-    private com.example.beam.etl.ex.Genus case1(com.google.api.services.bigquery.model.TableRow animalTargetRow, ErrorBuilder errorBuilder) {
+    private String species_name(ErrorBuilder errorBuilder, TableRow speciesRow, com.example.beam.etl.ex.Species species) {
+        String name = ((String)((species!= null)?species.getName():null));
+        if (name!= null) {
+            speciesRow.set("name", name);
+        } else {
+            errorBuilder.addError("Required property 'species.name' is null");
+        }
+        return name;
+    }
+
+    private TableRow genus(ErrorBuilder errorBuilder, TableRow animalTargetRow) {
+        com.example.beam.etl.ex.Genus genus = case1(errorBuilder, animalTargetRow);
+        TableRow genusRow = new TableRow();
+        genus_id(errorBuilder, genusRow, genus);
+        genus_name(errorBuilder, genusRow, genus);
+        if (!genusRow.isEmpty()) {
+            animalTargetRow.set("genus", genusRow);
+        } else {
+            errorBuilder.addError("Required property 'genus' is null");
+        }
+        return genusRow;
+    }
+
+    private com.example.beam.etl.ex.Genus case1(ErrorBuilder errorBuilder, TableRow animalTargetRow) {
         com.example.beam.etl.ex.Genus genusValue = null;
-        if (case1_when1(animalTargetRow, errorBuilder)) {
+        if (case1_when1(errorBuilder, animalTargetRow)) {
             genusValue = com.example.beam.etl.ex.Genus.findByLocalName("Pan");
         } else {
-            if (case1_when2(animalTargetRow, errorBuilder)) {
+            if (case1_when2(errorBuilder, animalTargetRow)) {
                 genusValue = com.example.beam.etl.ex.Genus.findByLocalName("Pongo");
             }
         }
         return genusValue;
     }
 
-    private boolean case1_when1(com.google.api.services.bigquery.model.TableRow animalTargetRow, ErrorBuilder errorBuilder) {
+    private boolean case1_when1(ErrorBuilder errorBuilder, TableRow animalTargetRow) {
         Set<Object> set = new HashSet();
         set.add("Pan troglodytes");
         set.add("Pan paniscus");
@@ -90,8 +104,8 @@ public class ToAnimalTargetShapeFn
 
     private Object get(Object value, String... fieldNameList) {
         for (String fieldName: fieldNameList) {
-            if (value instanceof com.google.api.services.bigquery.model.TableRow) {
-                value = ((com.google.api.services.bigquery.model.TableRow) value).get(fieldName);
+            if (value instanceof TableRow) {
+                value = ((TableRow) value).get(fieldName);
             } else {
                 return null;
             }
@@ -99,7 +113,7 @@ public class ToAnimalTargetShapeFn
         return value;
     }
 
-    private boolean case1_when2(com.google.api.services.bigquery.model.TableRow animalTargetRow, ErrorBuilder errorBuilder) {
+    private boolean case1_when2(ErrorBuilder errorBuilder, TableRow animalTargetRow) {
         Set<Object> set = new HashSet();
         set.add("Pongo abelii");
         set.add("Pongo pygmaeus");
@@ -108,23 +122,33 @@ public class ToAnimalTargetShapeFn
         return set.contains(species_name);
     }
 
-    private void genus_id(com.example.beam.etl.ex.Genus genus, com.google.api.services.bigquery.model.TableRow genusRow, ErrorBuilder errorBuilder) {
-        genusRow.set("id", genus.getId().getLocalName());
+    private String genus_id(ErrorBuilder errorBuilder, TableRow genusRow, com.example.beam.etl.ex.Genus genus) {
+        String id = ((String)((genus!= null)?genus.getId().getLocalName():null));
+        if (id!= null) {
+            genusRow.set("id", id);
+        } else {
+            errorBuilder.addError("Required property 'genus.id' is null");
+        }
+        return id;
     }
 
-    private void genus_name(com.example.beam.etl.ex.Genus genus, com.google.api.services.bigquery.model.TableRow genusRow, ErrorBuilder errorBuilder) {
-        Object name = genus.getName();
+    private String genus_name(ErrorBuilder errorBuilder, TableRow genusRow, com.example.beam.etl.ex.Genus genus) {
+        String name = ((String)((genus!= null)?genus.getName():null));
         if (name!= null) {
             genusRow.set("name", name);
         } else {
-            errorBuilder.addError(("{AnimalTargetShape}.genus.name must not be null, but is not defined for "+ genus.name()));
+            errorBuilder.addError("Required property 'genus.name' is null");
         }
+        return name;
     }
 
-    private void id(com.google.api.services.bigquery.model.TableRow animalSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object id = ((animalSourceRow == null)?null:animalSourceRow.get("id"));
+    private String id(ErrorBuilder errorBuilder, TableRow animalTargetRow, TableRow animalSourceRow) {
+        String id = ((String) animalSourceRow.get("id"));
         if (id!= null) {
-            outputRow.set("id", id);
+            animalTargetRow.set("id", id);
+        } else {
+            errorBuilder.addError("Required property 'id' is null");
         }
+        return id;
     }
 }

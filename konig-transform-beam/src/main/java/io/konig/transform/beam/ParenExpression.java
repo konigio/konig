@@ -21,13 +21,22 @@ package io.konig.transform.beam;
  */
 
 
-import io.konig.core.showl.ShowlPropertyShape;
+import com.helger.jcodemodel.IJExpression;
+import com.helger.jcodemodel.IJFormatter;
 
-public interface BeamPropertyManager {
+@SuppressWarnings("serial")
+public class ParenExpression implements IJExpression {
 
+  private IJExpression expression;
 
-	void add(BeamSourceProperty p);
-	
-	BeamSourceProperty forPropertyShape(ShowlPropertyShape p) throws BeamTransformGenerationException;
+  public ParenExpression(IJExpression expression) {
+      this.expression = expression;
+  }
 
+  @Override
+  public void generate(IJFormatter formatter) {
+      formatter.print('(');
+      expression.generate(formatter);
+      formatter.print(')');
+  }
 }

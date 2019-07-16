@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import io.konig.core.vocab.Konig;
+
 /*
  * #%L
  * Konig Core
@@ -99,6 +101,9 @@ public class ShowlEnumJoinInfo {
 						ShowlPropertyShape targetJoinProperty = ShowlUtil.propertyMappedTo(targetProperty.getValueShape(), sourceProperty);
 					
 						if (sourceProperty != null) {
+							if (targetJoinProperty == null && enumProperty.getPredicate().equals(Konig.id)) {
+								targetJoinProperty = targetProperty;
+							}
 							return new ShowlEnumJoinInfo(targetJoinProperty, enumProperty, sourceProperty);
 						}
 						

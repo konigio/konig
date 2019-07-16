@@ -1,42 +1,46 @@
 package com.example.beam.etl.shape;
 
 import com.example.beam.etl.common.ErrorBuilder;
-import com.example.beam.etl.schema.GenderType;
+import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.values.TupleTag;
 
 public class ToPersonTargetShapeFn
-    extends DoFn<com.google.api.services.bigquery.model.TableRow, com.google.api.services.bigquery.model.TableRow>
+    extends DoFn<TableRow, TableRow>
 {
     public static TupleTag<String> deadLetterTag = new TupleTag<String>();
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
+    public static TupleTag<TableRow> successTag = new TupleTag<TableRow>();
 
     @DoFn.ProcessElement
-    public void processElement(ProcessContext c) {
+    public void processElement(DoFn.ProcessContext c) {
+        ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
-            ErrorBuilder errorBuilder = new ErrorBuilder();
-            com.google.api.services.bigquery.model.TableRow outputRow = new com.google.api.services.bigquery.model.TableRow();
-            com.google.api.services.bigquery.model.TableRow personSourceRow = ((com.google.api.services.bigquery.model.TableRow) c.element());
-            id(personSourceRow, outputRow, errorBuilder);
-            gender(personSourceRow, outputRow, errorBuilder);
-            if ((!outputRow.isEmpty())&&errorBuilder.isEmpty()) {
-                c.output(successTag, outputRow);
+            TableRow outputRow = new TableRow();
+            TableRow personSourceRow = ((TableRow) c.element());
+            id(errorBuilder, outputRow, personSourceRow);
+            gender(errorBuilder, outputRow, personSourceRow);
+            if (outputRow.isEmpty()) {
+                errorBuilder.addError("record is empty");
             }
             if (!errorBuilder.isEmpty()) {
-                errorBuilder.addError(outputRow.toString());
-                throw new Exception(errorBuilder.toString());
+                c.output(deadLetterTag, errorBuilder.toString());
+            } else {
+                c.output(successTag, outputRow);
             }
         } catch (final Throwable oops) {
-            c.output(deadLetterTag, oops.getMessage());
+            errorBuilder.addError(oops.getMessage());
+            c.output(deadLetterTag, errorBuilder.toString());
         }
     }
 
-    private void id(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object person_id = ((personSourceRow == null)?null:personSourceRow.get("person_id"));
-        if (person_id!= null) {
-            outputRow.set("id", concat("http://example.com/person/", person_id));
+    private String id(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
+        String id = ((String) concat("http://example.com/person/", personSourceRow.get("person_id")));
+        if (id!= null) {
+            personTargetRow.set("id", id);
+        } else {
+            errorBuilder.addError("Required property 'id' is null");
         }
+        return id;
     }
 
     private String concat(Object... arg) {
@@ -52,33 +56,45 @@ public class ToPersonTargetShapeFn
         return builder.toString();
     }
 
-    private void gender(com.google.api.services.bigquery.model.TableRow personSourceRow, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object personSourceRow_gender_code = personSourceRow.get("gender_code");
-        if (personSourceRow_gender_code!= null) {
-            com.google.api.services.bigquery.model.TableRow genderRow = new com.google.api.services.bigquery.model.TableRow();
-            GenderType gender = GenderType.findByGenderCode(personSourceRow_gender_code.toString());
-            gender_id(gender, genderRow, errorBuilder);
-            gender_name(gender, genderRow, errorBuilder);
-            genderRow.set("genderCode", personSourceRow_gender_code);
-            if (!outputRow.isEmpty()) {
-                outputRow.set("gender", genderRow);
-            }
+    private TableRow gender(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
+        com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByGenderCode(((String) personSourceRow.get("gender_code")));
+        TableRow genderRow = new TableRow();
+        gender_id(errorBuilder, genderRow, gender);
+        gender_name(errorBuilder, genderRow, gender);
+        gender_genderCode(errorBuilder, genderRow, personSourceRow);
+        if (!genderRow.isEmpty()) {
+            personTargetRow.set("gender", genderRow);
         }
+        return genderRow;
     }
 
-    private void gender_id(GenderType gender, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object id = gender.getId().getLocalName();
+    private String gender_id(ErrorBuilder errorBuilder, TableRow genderRow, com.example.beam.etl.schema.GenderType gender) {
+        String id = ((String)((gender!= null)?gender.getId().getLocalName():null));
         if (id!= null) {
-            outputRow.set("id", id);
+            genderRow.set("id", id);
+        } else {
+            errorBuilder.addError("Required property 'gender.id' is null");
         }
+        return id;
     }
 
-    private void gender_name(GenderType gender, com.google.api.services.bigquery.model.TableRow outputRow, ErrorBuilder errorBuilder) {
-        Object name = gender.getName();
+    private String gender_name(ErrorBuilder errorBuilder, TableRow genderRow, com.example.beam.etl.schema.GenderType gender) {
+        String name = ((String)((gender!= null)?gender.getName():null));
         if (name!= null) {
-            outputRow.set("name", name);
+            genderRow.set("name", name);
         } else {
-            errorBuilder.addError("Cannot set gender.name because {GenderType}.name is null");
+            errorBuilder.addError("Required property 'gender.name' is null");
         }
+        return name;
+    }
+
+    private String gender_genderCode(ErrorBuilder errorBuilder, TableRow genderRow, TableRow personSourceRow) {
+        String genderCode = ((String) personSourceRow.get("gender_code"));
+        if (genderCode!= null) {
+            genderRow.set("genderCode", genderCode);
+        } else {
+            errorBuilder.addError("Required property 'gender.genderCode' is null");
+        }
+        return genderCode;
     }
 }

@@ -1,8 +1,8 @@
-package io.konig.transform.beam;
+package io.konig.core.showl;
 
 /*
  * #%L
- * Konig Transform Beam
+ * Konig Core
  * %%
  * Copyright (C) 2015 - 2019 Gregory McFall
  * %%
@@ -21,9 +21,22 @@ package io.konig.transform.beam;
  */
 
 
-public enum BeamParameterType {
-	TABLE_ROW,
-	ERROR_BUILDER,
-	LIST_VALUE,
-	ENUM_VALUE
+import java.util.List;
+
+public class ShowlAlternativePathsExpression extends ShowlListExpression {
+
+	public ShowlAlternativePathsExpression() {
+	}
+
+	public ShowlAlternativePathsExpression(List<ShowlExpression> memberList) {
+		super(memberList);
+	}
+
+
+	@Override
+	public ShowlAlternativePathsExpression transform() {
+		return new ShowlAlternativePathsExpression(ShowlUtil.transform(memberList));
+	}
+	
+
 }
