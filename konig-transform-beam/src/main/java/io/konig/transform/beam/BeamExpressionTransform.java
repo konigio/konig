@@ -414,7 +414,10 @@ public class BeamExpressionTransform  {
 		String valueName = blockInfo.valueName(left);
 
 		URI leftRdfType = left.valueType(reasoner);
-		if (reasoner.isEnumerationClass(leftRdfType)) {
+		
+		if (reasoner.isEnumerationClass(leftRdfType) && left instanceof ShowlPropertyExpression) {
+			valueInit = JExpr.cond(valueInit.eqNull(), JExpr._null(), valueInit);
+		} else if(reasoner.isEnumerationClass(leftRdfType)) {
 			valueInit = JExpr.cond(valueInit.eqNull(), JExpr._null(), valueInit.invoke("getId").invoke("stringValue"));
 		}
 		
