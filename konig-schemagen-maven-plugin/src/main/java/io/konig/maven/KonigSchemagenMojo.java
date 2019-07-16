@@ -726,11 +726,12 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	}
 
 
-	private void preprocessResources() throws MojoExecutionException, IOException, RDFParseException, RDFHandlerException {
+	private void preprocessResources() throws MojoExecutionException, IOException, RDFParseException, RDFHandlerException, ConfigurationException {
     	AuroraInfo aurora=null;
     	BigQueryInfo bigQuery=null;
     	CloudSqlInfo cloudSql=null; 	
-	
+    	Configurator config = configurator();
+		config.configure(googleCloudPlatform);
 		if (profiles != null) {
 			for (OwlProfile profile : profiles) {
 				switch (profile) {
@@ -754,7 +755,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
     	if(amazonWebServices!=null && amazonWebServices.getAurora()!=null){
     		aurora=amazonWebServices.getAurora();
     	}
-    	else if(googleCloudPlatform!=null && googleCloudPlatform.getBigquery()!=null && buildTarget==BuildTarget.RDF){
+    	else if(googleCloudPlatform!=null && googleCloudPlatform.getBigquery()!=null){
     		generateBigQueryEnumShapes();
     		
     		
