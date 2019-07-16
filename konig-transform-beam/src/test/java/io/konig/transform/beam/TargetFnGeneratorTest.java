@@ -106,7 +106,7 @@ public class TargetFnGeneratorTest {
 	}
 
 
-	@Test
+	@Ignore
 	public void testRepeatedRecord() throws Exception {
 		
 		generate("src/test/resources/BeamTransformGeneratorTest/repeated-record", personTargetShapeId);

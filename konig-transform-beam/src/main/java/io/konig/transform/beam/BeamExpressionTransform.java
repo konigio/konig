@@ -135,7 +135,7 @@ public class BeamExpressionTransform  {
 			return property((ShowlPropertyExpression)e);
 		}
 		
-		if (e instanceof ShowlStructExpression) {
+		if (e instanceof ShowlBasicStructExpression) {
 			return struct((ShowlBasicStructExpression)e);
 		}
 		
